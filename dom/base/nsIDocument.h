@@ -2091,9 +2091,6 @@ public:
     return mHaveFiredTitleChange;
   }
 
-  /**
-   * See GetAnonymousElementByAttribute on nsIDOMDocumentXBL.
-   */
   virtual Element*
     GetAnonymousElementByAttribute(nsIContent* aElement,
                                    nsAtom* aAttrName,
@@ -2987,9 +2984,6 @@ public:
   Element* GetBindingParent(nsINode& aNode);
   void LoadBindingDocument(const nsAString& aURI,
                            nsIPrincipal& aSubjectPrincipal,
-                           mozilla::ErrorResult& rv);
-  void LoadBindingDocument(const nsAString& aURI,
-                           const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal,
                            mozilla::ErrorResult& rv);
   mozilla::dom::XPathExpression*
     CreateExpression(const nsAString& aExpression,

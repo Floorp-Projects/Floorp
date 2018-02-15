@@ -962,24 +962,13 @@ html|*.addon-webext-perm-list {
 }
 
 .popup-notification-description[popupid="addon-webext-permissions"],
-.popup-notification-description[popupid="addon-installed"] {
-  display: none;
+.popup-notification-description[popupid="addon-webext-permissions-notification"] {
+  margin-inline-start: -1px;
 }
 
 .addon-webext-perm-notification-content,
 .addon-installed-notification-content {
   margin-top: 0;
-}
-
-#addon-webext-perm-header {
-  /* Align the text more closely with the icon by clearing some top line height. */
-  margin-top: -1px;
-  margin-inline-start: 0;
-}
-
-#addon-installed-notification-header {
-  /* Align the text more closely with the icon by clearing some top line height. */
-  margin-top: -1px;
 }
 
 .addon-webext-name {

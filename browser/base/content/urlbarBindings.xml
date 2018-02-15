@@ -141,6 +141,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       ]]></constructor>
 
       <destructor><![CDATA[
+        // Somehow, it's possible for the XBL destructor to fire without the
+        // constructor ever having fired. Fix:
+        if (!this._prefs) {
+          return;
+        }
         this._prefs.removeObserver("", this);
         this._prefs = null;
         Services.prefs.removeObserver("browser.search.suggest.enabled", this);

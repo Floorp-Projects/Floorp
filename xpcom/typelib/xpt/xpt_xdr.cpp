@@ -38,7 +38,7 @@ CHECK_COUNT(NotNull<XPTCursor*> cursor, uint32_t space)
     return true;
 }
 
-XPT_PUBLIC_API(void)
+void
 XPT_InitXDRState(XPTState* state, char *data, uint32_t len)
 {
     state->next_cursor[0] = state->next_cursor[1] = 1;
@@ -47,13 +47,13 @@ XPT_InitXDRState(XPTState* state, char *data, uint32_t len)
 }
 
 /* All offsets are 1-based */
-XPT_PUBLIC_API(void)
+void
 XPT_SetDataOffset(XPTState *state, uint32_t data_offset)
 {
    state->data_offset = data_offset;
 }
 
-XPT_PUBLIC_API(bool)
+bool
 XPT_MakeCursor(XPTState *state, XPTPool pool, uint32_t len,
                NotNull<XPTCursor*> cursor)
 {
@@ -76,7 +76,7 @@ XPT_MakeCursor(XPTState *state, XPTPool pool, uint32_t len,
     return true;
 }
 
-XPT_PUBLIC_API(bool)
+bool
 XPT_SeekTo(NotNull<XPTCursor*> cursor, uint32_t offset)
 {
     /* XXX do some real checking and update len and stuff */
@@ -84,7 +84,7 @@ XPT_SeekTo(NotNull<XPTCursor*> cursor, uint32_t offset)
     return true;
 }
 
-XPT_PUBLIC_API(bool)
+bool
 XPT_SkipStringInline(NotNull<XPTCursor*> cursor)
 {
     uint16_t length;
@@ -99,7 +99,7 @@ XPT_SkipStringInline(NotNull<XPTCursor*> cursor)
     return true;
 }
 
-XPT_PUBLIC_API(bool)
+bool
 XPT_DoCString(XPTArena *arena, NotNull<XPTCursor*> cursor, char **identp,
               bool ignore)
 {
@@ -152,7 +152,7 @@ XPT_DoCString(XPTArena *arena, NotNull<XPTCursor*> cursor, char **identp,
  *
  * (http://www.mozilla.org/scriptable/typelib_file.html#iid)
  */
-XPT_PUBLIC_API(bool)
+bool
 XPT_DoIID(NotNull<XPTCursor*> cursor, nsID *iidp)
 {
     int i;
@@ -185,7 +185,7 @@ XPT_DoIID(NotNull<XPTCursor*> cursor, nsID *iidp)
         return true;                              \
     } while(0)
 
-XPT_PUBLIC_API(bool)
+bool
 XPT_Do64(NotNull<XPTCursor*> cursor, int64_t *u64p)
 {
     XPT_DOINT(int64_t, mozilla::BigEndian::readInt64, u64p);
@@ -197,13 +197,13 @@ XPT_Do64(NotNull<XPTCursor*> cursor, int64_t *u64p)
  * well-aligned cases and do a single store, if they cared.  I might care
  * later.
  */
-XPT_PUBLIC_API(bool)
+bool
 XPT_Do32(NotNull<XPTCursor*> cursor, uint32_t *u32p)
 {
     XPT_DOINT(uint32_t, mozilla::BigEndian::readUint32, u32p);
 }
 
-XPT_PUBLIC_API(bool)
+bool
 XPT_Do16(NotNull<XPTCursor*> cursor, uint16_t *u16p)
 {
     XPT_DOINT(uint16_t, mozilla::BigEndian::readUint16, u16p);
@@ -211,7 +211,7 @@ XPT_Do16(NotNull<XPTCursor*> cursor, uint16_t *u16p)
 
 #undef XPT_DOINT
 
-XPT_PUBLIC_API(bool)
+bool
 XPT_Do8(NotNull<XPTCursor*> cursor, uint8_t *u8p)
 {
     if (!CHECK_COUNT(cursor, 1))

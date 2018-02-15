@@ -169,7 +169,7 @@ function securityOnLoad(uri, windowInfo) {
   security.init(uri, windowInfo);
 
   var info = security._getSecurityInfo();
-  if (!info) {
+  if (!info || uri.scheme === "about") {
     document.getElementById("securityTab").hidden = true;
     return;
   }

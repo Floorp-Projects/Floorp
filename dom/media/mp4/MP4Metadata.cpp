@@ -108,10 +108,6 @@ MP4Metadata::MP4Metadata(ByteStream* aSource)
   Mp4parseIo io = { read_source, &mSourceAdaptor };
   mParser.reset(mp4parse_new(&io));
   MOZ_ASSERT(mParser);
-
-  if (MOZ_LOG_TEST(gMP4MetadataLog, LogLevel::Debug)) {
-    mp4parse_log(true);
-  }
 }
 
 MP4Metadata::~MP4Metadata()
@@ -256,6 +252,7 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
     case MP4PARSE_CODEC_AAC: codec_string = "aac"; break;
     case MP4PARSE_CODEC_OPUS: codec_string = "opus"; break;
     case MP4PARSE_CODEC_FLAC: codec_string = "flac"; break;
+    case MP4PARSE_CODEC_ALAC: codec_string = "alac"; break;
     case MP4PARSE_CODEC_AVC: codec_string = "h.264"; break;
     case MP4PARSE_CODEC_VP9: codec_string = "vp9"; break;
     case MP4PARSE_CODEC_MP3: codec_string = "mp3"; break;

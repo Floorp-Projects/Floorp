@@ -6,7 +6,6 @@
 #include "nsXMLPrettyPrinter.h"
 #include "nsContentUtils.h"
 #include "nsICSSDeclaration.h"
-#include "nsIDOMDocumentXBL.h"
 #include "nsIObserver.h"
 #include "nsSyncLoadService.h"
 #include "nsPIDOMWindow.h"

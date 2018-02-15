@@ -529,6 +529,12 @@
                         accesskey="&preferencesCmd2.accesskey;"
                         oncommand="openPreferences(undefined, {origin: 'menubar'});"/>
 #endif
+#ifdef MOZ_DEBUG
+              <menuitem label="&ldbCmd.label;"
+                        accesskey="&ldbCmd.accesskey;"
+                        oncommand="toOpenWindowByType('mozapp:layoutdebug',
+                                          'chrome://layoutdebug/content/');"/>
+#endif
               </menupopup>
             </menu>
 

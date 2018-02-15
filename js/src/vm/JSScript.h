@@ -215,6 +215,8 @@ class ScriptCounts
     // none exists yet. Returns null if the allocation failed.
     PCCounts* getThrowCounts(size_t offset);
 
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
+
   private:
     friend class ::JSScript;
     friend struct ScriptAndCounts;

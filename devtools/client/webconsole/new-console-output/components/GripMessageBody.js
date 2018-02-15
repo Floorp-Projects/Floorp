@@ -6,12 +6,6 @@
 
 "use strict";
 
-// If this is being run from Mocha, then the browser loader hasn't set up
-// define. We need to do that before loading Rep.
-if (typeof define === "undefined") {
-  require("amd-loader");
-}
-
 // React
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
@@ -102,7 +96,7 @@ function cleanupStyle(userProvidedStyle, createElement) {
   // Return a style object as expected by React DOM components, e.g.
   // {color: "red"}
   // without forbidden properties and values.
-  return [...dummy.style]
+  return Array.from(dummy.style)
     .filter(name => {
       return allowedStylesRegex.test(name)
         && !forbiddenValuesRegexs.some(regex => regex.test(dummy.style[name]));

@@ -3,7 +3,9 @@ from __future__ import absolute_import
 import os
 import sys
 import unittest
-import psutil
+
+from mozprocess import ProcessHandler
+
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -27,7 +29,7 @@ class ProcTest(unittest.TestCase):
         """
         returncode = proc.proc.returncode
         didtimeout = proc.didTimeout
-        detected = psutil.pid_exists(proc.pid)
+        detected = ProcessHandler.pid_exists(proc.pid)
         output = ''
         # ProcessHandler has output when store_output is set to True in the constructor
         # (this is the default)

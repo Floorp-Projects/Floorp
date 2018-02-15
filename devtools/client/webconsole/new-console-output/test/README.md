@@ -3,7 +3,7 @@ The console panel uses currently two different frameworks for tests:
 
 * Mochitest - [Mochitest](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Mochitest) is an automated testing framework built on top of the MochiKit JavaScript libraries. It's just one of the automated regression testing frameworks used by Mozilla.
 
-Mochitests are located in `new-console-output/test/mochitest/` and can be run with the following command:
+Mochitests are located in `devtools/client/webconsole/new-console-output/test/mochitest/` and can be run with the following command:
 
 ```sh
 ./mach test devtools/client/webconsole/new-console-output/test/mochitest/
@@ -17,7 +17,13 @@ These tests can be run on CI when pushing to TRY. Not all tests are enabled at t
 These tests are located in `new-console-output/test/components/` and `new-console-output/test/store/`, and can be run with the following command:
 
 ```sh
-npm test # Or yarn test
+devtools/client/webconsole/new-console-output/test/ && npm install && npm test
+```
+
+or using yarn with
+
+```sh
+devtools/client/webconsole/new-console-output/test/ && yarn && yarn test
 ```
 
 **⚠️️️️️️️️️️ These tests are not ran on CI at the moment. You need to run them manually when working on the console. (See Bug 1312823)**

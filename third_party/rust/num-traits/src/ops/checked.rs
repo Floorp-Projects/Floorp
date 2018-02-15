@@ -1,4 +1,4 @@
-use std::ops::{Add, Sub, Mul, Div};
+use core::ops::{Add, Sub, Mul, Div, Shl, Shr};
 
 /// Performs addition that returns `None` instead of wrapping around on
 /// overflow.
@@ -90,3 +90,73 @@ checked_impl!(CheckedDiv, checked_div, i32);
 checked_impl!(CheckedDiv, checked_div, i64);
 checked_impl!(CheckedDiv, checked_div, isize);
 
+/// Performs a left shift that returns `None` on overflow.
+pub trait CheckedShl: Sized + Shl<u32, Output=Self> {
+    /// Shifts a number to the left, checking for overflow. If overflow happens,
+    /// `None` is returned.
+    ///
+    /// ```
+    /// use num_traits::CheckedShl;
+    ///
+    /// let x: u16 = 0x0001;
+    ///
+    /// assert_eq!(CheckedShl::checked_shl(&x, 0),  Some(0x0001));
+    /// assert_eq!(CheckedShl::checked_shl(&x, 1),  Some(0x0002));
+    /// assert_eq!(CheckedShl::checked_shl(&x, 15), Some(0x8000));
+    /// assert_eq!(CheckedShl::checked_shl(&x, 16), None);
+    /// ```
+    fn checked_shl(&self, rhs: u32) -> Option<Self>;
+}
+
+macro_rules! checked_shift_impl {
+    ($trait_name:ident, $method:ident, $t:ty) => {
+        impl $trait_name for $t {
+            #[inline]
+            fn $method(&self, rhs: u32) -> Option<$t> {
+                <$t>::$method(*self, rhs)
+            }
+        }
+    }
+}
+
+checked_shift_impl!(CheckedShl, checked_shl, u8);
+checked_shift_impl!(CheckedShl, checked_shl, u16);
+checked_shift_impl!(CheckedShl, checked_shl, u32);
+checked_shift_impl!(CheckedShl, checked_shl, u64);
+checked_shift_impl!(CheckedShl, checked_shl, usize);
+
+checked_shift_impl!(CheckedShl, checked_shl, i8);
+checked_shift_impl!(CheckedShl, checked_shl, i16);
+checked_shift_impl!(CheckedShl, checked_shl, i32);
+checked_shift_impl!(CheckedShl, checked_shl, i64);
+checked_shift_impl!(CheckedShl, checked_shl, isize);
+
+/// Performs a right shift that returns `None` on overflow.
+pub trait CheckedShr: Sized + Shr<u32, Output=Self> {
+    /// Shifts a number to the left, checking for overflow. If overflow happens,
+    /// `None` is returned.
+    ///
+    /// ```
+    /// use num_traits::CheckedShr;
+    ///
+    /// let x: u16 = 0x8000;
+    ///
+    /// assert_eq!(CheckedShr::checked_shr(&x, 0),  Some(0x8000));
+    /// assert_eq!(CheckedShr::checked_shr(&x, 1),  Some(0x4000));
+    /// assert_eq!(CheckedShr::checked_shr(&x, 15), Some(0x0001));
+    /// assert_eq!(CheckedShr::checked_shr(&x, 16), None);
+    /// ```
+    fn checked_shr(&self, rhs: u32) -> Option<Self>;
+}
+
+checked_shift_impl!(CheckedShr, checked_shr, u8);
+checked_shift_impl!(CheckedShr, checked_shr, u16);
+checked_shift_impl!(CheckedShr, checked_shr, u32);
+checked_shift_impl!(CheckedShr, checked_shr, u64);
+checked_shift_impl!(CheckedShr, checked_shr, usize);
+
+checked_shift_impl!(CheckedShr, checked_shr, i8);
+checked_shift_impl!(CheckedShr, checked_shr, i16);
+checked_shift_impl!(CheckedShr, checked_shr, i32);
+checked_shift_impl!(CheckedShr, checked_shr, i64);
+checked_shift_impl!(CheckedShr, checked_shr, isize);

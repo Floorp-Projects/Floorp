@@ -393,12 +393,6 @@ public:
     rv = CloseStreams();
   }
 
-  NS_IMETHODIMP_TO_ERRORRESULT(RemoveTrack, ErrorResult &rv,
-                               mozilla::dom::MediaStreamTrack& aTrack)
-  {
-    rv = RemoveTrack(aTrack);
-  }
-
   already_AddRefed<TransceiverImpl> CreateTransceiverImpl(
       const nsAString& aKind,
       dom::MediaStreamTrack* aSendTrack,

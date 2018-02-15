@@ -781,7 +781,8 @@ struct JSCompartment
                                 size_t* nonSyntacticLexicalScopes,
                                 size_t* templateLiteralMap,
                                 size_t* jitCompartment,
-                                size_t* privateData);
+                                size_t* privateData,
+                                size_t* scriptCountsMapArg);
 
     // Object group tables and other state in the compartment.
     js::ObjectGroupCompartment   objectGroups;

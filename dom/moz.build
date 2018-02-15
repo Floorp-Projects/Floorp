@@ -21,7 +21,6 @@ interfaces = [
     'events',
     'sidebar',
     'range',
-    'xbl',
     'xul',
     'security',
     'storage',

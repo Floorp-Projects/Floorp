@@ -8,6 +8,7 @@
   "dependencies": {
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
     "babel-plugin-transform-react-jsx": "^6.24.1",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "codemirror": "^5.24.2",
     "devtools-config": "=0.0.12",
     "devtools-contextmenu": "=0.0.3",
@@ -15,15 +16,14 @@
     "devtools-modules": "=0.0.32",
     "devtools-source-editor": "=0.0.3",
     "jszip": "^3.1.3",
-    "react": "=15.6.1",
-    "react-dom": "=15.6.1",
-    "react-redux": "=5.0.3",
-    "redux": "^3.6.0",
+    "react": "=16.2.0",
+    "react-dom": "=16.2.0",
+    "react-prop-types": "=0.4.0",
+    "react-redux": "=5.0.6",
+    "redux": "^3.7.2",
     "reselect": "^3.0.1"
   },
   "devDependencies": {
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-register": "^6.24.0",
     "file-loader": "^0.10.1"
   },
   "scripts": {

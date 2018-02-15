@@ -273,7 +273,10 @@ Animation::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
   }
 
   Nullable<TimeDuration> previousCurrentTime = GetCurrentTime();
+
+  ApplyPendingPlaybackRate();
   mStartTime = aNewStartTime;
+
   if (!aNewStartTime.IsNull()) {
     if (mPlaybackRate != 0.0) {
       mHoldTime.SetNull();
@@ -298,19 +301,20 @@ Animation::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
 
 // https://drafts.csswg.org/web-animations/#current-time
 Nullable<TimeDuration>
-Animation::GetCurrentTime() const
+Animation::GetCurrentTimeForHoldTime(
+  const Nullable<TimeDuration>& aHoldTime) const
 {
   Nullable<TimeDuration> result;
-  if (!mHoldTime.IsNull()) {
-    result = mHoldTime;
+  if (!aHoldTime.IsNull()) {
+    result = aHoldTime;
     return result;
   }
 
   if (mTimeline && !mStartTime.IsNull()) {
     Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTime();
     if (!timelineTime.IsNull()) {
-      result.SetValue((timelineTime.Value() - mStartTime.Value())
-                        .MultDouble(mPlaybackRate));
+      result = CurrentTimeFromTimelineTime(
+        timelineTime.Value(), mStartTime.Value(), mPlaybackRate);
     }
   }
   return result;
@@ -336,6 +340,8 @@ Animation::SetCurrentTime(const TimeDuration& aSeekTime)
   if (mPendingState == PendingState::PausePending) {
     // Finish the pause operation
     mHoldTime.SetValue(aSeekTime);
+
+    ApplyPendingPlaybackRate();
     mStartTime.SetNull();
 
     if (mReady) {
@@ -351,10 +357,12 @@ Animation::SetCurrentTime(const TimeDuration& aSeekTime)
   PostUpdate();
 }
 
-// https://drafts.csswg.org/web-animations/#set-the-animation-playback-rate
+// https://drafts.csswg.org/web-animations/#set-the-playback-rate
 void
 Animation::SetPlaybackRate(double aPlaybackRate)
 {
+  mPendingPlaybackRate.reset();
+
   if (aPlaybackRate == mPlaybackRate) {
     return;
   }
@@ -380,6 +388,83 @@ Animation::SetPlaybackRate(double aPlaybackRate)
     nsNodeUtils::AnimationChanged(this);
   }
   PostUpdate();
+}
+
+// https://drafts.csswg.org/web-animations/#seamlessly-update-the-playback-rate
+void
+Animation::UpdatePlaybackRate(double aPlaybackRate)
+{
+  if (mPendingPlaybackRate && mPendingPlaybackRate.value() == aPlaybackRate) {
+    return;
+  }
+
+  mPendingPlaybackRate = Some(aPlaybackRate);
+
+  // If we already have a pending task, there is nothing more to do since the
+  // playback rate will be applied then.
+  if (Pending()) {
+    return;
+  }
+
+  AutoMutationBatchForAnimation mb(*this);
+
+  AnimationPlayState playState = PlayState();
+  if (playState == AnimationPlayState::Idle ||
+      playState == AnimationPlayState::Paused) {
+    // We are either idle or paused. In either case we can apply the pending
+    // playback rate immediately.
+    ApplyPendingPlaybackRate();
+
+    // We don't need to update timing or post an update here because:
+    //
+    // * the current time hasn't changed -- it's either unresolved or fixed
+    //   with a hold time -- so the output won't have changed
+    // * the finished state won't have changed even if the sign of the
+    //   playback rate changed since we're not finished (we're paused or idle)
+    // * the playback rate on layers doesn't need to be updated since we're not
+    //   moving. Once we get a start time etc. we'll update the playback rate
+    //   then.
+    //
+    // All we need to do is update observers so that, e.g. DevTools, report the
+    // right information.
+    if (IsRelevant()) {
+      nsNodeUtils::AnimationChanged(this);
+    }
+  } else if (playState == AnimationPlayState::Finished) {
+    MOZ_ASSERT(mTimeline && !mTimeline->GetCurrentTime().IsNull(),
+               "If we have no active timeline, we should be idle or paused");
+    if (aPlaybackRate != 0) {
+      // The unconstrained current time can only be unresolved if either we
+      // don't have an active timeline (and we already asserted that is not
+      // true) or we have an unresolved start time (in which case we should be
+      // paused).
+      MOZ_ASSERT(!GetUnconstrainedCurrentTime().IsNull(),
+                 "Unconstrained current time should be resolved");
+      TimeDuration unconstrainedCurrentTime =
+        GetUnconstrainedCurrentTime().Value();
+      TimeDuration timelineTime = mTimeline->GetCurrentTime().Value();
+      mStartTime = StartTimeFromTimelineTime(
+        timelineTime, unconstrainedCurrentTime, aPlaybackRate);
+    } else {
+      mStartTime = mTimeline->GetCurrentTime();
+    }
+
+    ApplyPendingPlaybackRate();
+
+    // Even though we preserve the current time, we might now leave the finished
+    // state (e.g. if the playback rate changes sign) so we need to update
+    // timing.
+    UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
+    if (IsRelevant()) {
+      nsNodeUtils::AnimationChanged(this);
+    }
+    PostUpdate();
+  } else {
+    ErrorResult rv;
+    Play(rv, LimitBehavior::Continue);
+    MOZ_ASSERT(!rv.Failed(),
+               "We should only fail to play when using auto-rewind behavior");
+  }
 }
 
 // https://drafts.csswg.org/web-animations/#play-state
@@ -454,13 +539,17 @@ Animation::Cancel()
 void
 Animation::Finish(ErrorResult& aRv)
 {
-  if (mPlaybackRate == 0 ||
-      (mPlaybackRate > 0 && EffectEnd() == TimeDuration::Forever())) {
+  double effectivePlaybackRate = CurrentOrPendingPlaybackRate();
+
+  if (effectivePlaybackRate == 0 ||
+      (effectivePlaybackRate > 0 && EffectEnd() == TimeDuration::Forever())) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
   AutoMutationBatchForAnimation mb(*this);
+
+  ApplyPendingPlaybackRate();
 
   // Seek to the end
   TimeDuration limit =
@@ -478,8 +567,8 @@ Animation::Finish(ErrorResult& aRv)
   if (mStartTime.IsNull() &&
       mTimeline &&
       !mTimeline->GetCurrentTime().IsNull()) {
-    mStartTime.SetValue(mTimeline->GetCurrentTime().Value() -
-                        limit.MultDouble(1.0 / mPlaybackRate));
+    mStartTime = StartTimeFromTimelineTime(
+      mTimeline->GetCurrentTime().Value(), limit, mPlaybackRate);
     didChange = true;
   }
 
@@ -529,25 +618,24 @@ Animation::Reverse(ErrorResult& aRv)
     return;
   }
 
-  if (mPlaybackRate == 0.0) {
+  double effectivePlaybackRate = CurrentOrPendingPlaybackRate();
+
+  if (effectivePlaybackRate == 0.0) {
     return;
   }
 
-  AutoMutationBatchForAnimation mb(*this);
+  Maybe<double> originalPendingPlaybackRate = mPendingPlaybackRate;
 
-  SilentlySetPlaybackRate(-mPlaybackRate);
+  mPendingPlaybackRate = Some(-effectivePlaybackRate);
+
   Play(aRv, LimitBehavior::AutoRewind);
 
   // If Play() threw, restore state and don't report anything to mutation
   // observers.
   if (aRv.Failed()) {
-    SilentlySetPlaybackRate(-mPlaybackRate);
-    return;
+    mPendingPlaybackRate = originalPendingPlaybackRate;
   }
 
-  if (IsRelevant()) {
-    nsNodeUtils::AnimationChanged(this);
-  }
   // Play(), above, unconditionally calls PostUpdate so we don't need to do
   // it here.
 }
@@ -677,6 +765,27 @@ Animation::GetCurrentOrPendingStartTime() const
 {
   Nullable<TimeDuration> result;
 
+  // If we have a pending playback rate, work out what start time we will use
+  // when we come to updating that playback rate.
+  //
+  // This logic roughly shadows that in ResumeAt but is just different enough
+  // that it is difficult to extract out the common functionality (and
+  // extracting that functionality out would make it harder to match ResumeAt up
+  // against the spec).
+  if (mPendingPlaybackRate && !mPendingReadyTime.IsNull() &&
+      !mStartTime.IsNull()) {
+    // If we have a hold time, use it as the current time to match.
+    TimeDuration currentTimeToMatch =
+      !mHoldTime.IsNull()
+        ? mHoldTime.Value()
+        : CurrentTimeFromTimelineTime(
+            mPendingReadyTime.Value(), mStartTime.Value(), mPlaybackRate);
+
+    result = StartTimeFromTimelineTime(
+      mPendingReadyTime.Value(), currentTimeToMatch, *mPendingPlaybackRate);
+    return result;
+  }
+
   if (!mStartTime.IsNull()) {
     result = mStartTime;
     return result;
@@ -687,20 +796,10 @@ Animation::GetCurrentOrPendingStartTime() const
   }
 
   // Calculate the equivalent start time from the pending ready time.
-  result = StartTimeFromReadyTime(mPendingReadyTime.Value());
+  result = StartTimeFromTimelineTime(
+    mPendingReadyTime.Value(), mHoldTime.Value(), mPlaybackRate);
 
   return result;
-}
-
-TimeDuration
-Animation::StartTimeFromReadyTime(const TimeDuration& aReadyTime) const
-{
-  MOZ_ASSERT(!mHoldTime.IsNull(), "Hold time should be set in order to"
-                                  " convert a ready time to a start time");
-  if (mPlaybackRate == 0) {
-    return aReadyTime;
-  }
-  return aReadyTime - mHoldTime.Value().MultDouble(1 / mPlaybackRate);
 }
 
 TimeStamp
@@ -733,7 +832,7 @@ Animation::AnimationTimeToTimeStamp(const StickyTimeDuration& aTime) const
   }
 
   // Invert the standard relation:
-  //   animation time = (timeline time - start time) * playback rate
+  //   current time = (timeline time - start time) * playback rate
   TimeDuration timelineTime =
     TimeDuration(aTime).MultDouble(1.0 / mPlaybackRate) + mStartTime.Value();
 
@@ -765,21 +864,11 @@ Animation::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
       mStartTime.SetNull();
     }
   } else {
-    mStartTime.SetValue(mTimeline->GetCurrentTime().Value() -
-                          (aSeekTime.MultDouble(1 / mPlaybackRate)));
+    mStartTime = StartTimeFromTimelineTime(
+      mTimeline->GetCurrentTime().Value(), aSeekTime, mPlaybackRate);
   }
 
   mPreviousCurrentTime.SetNull();
-}
-
-void
-Animation::SilentlySetPlaybackRate(double aPlaybackRate)
-{
-  Nullable<TimeDuration> previousTime = GetCurrentTime();
-  mPlaybackRate = aPlaybackRate;
-  if (!previousTime.IsNull()) {
-    SilentlySetCurrentTime(previousTime.Value());
-  }
 }
 
 // https://drafts.csswg.org/web-animations/#cancel-an-animation
@@ -1001,8 +1090,8 @@ Animation::ComposeStyle(ComposeAnimationResult&& aComposeResult,
         timeToUse = mTimeline->ToTimelineTime(TimeStamp::Now());
       }
       if (!timeToUse.IsNull()) {
-        mHoldTime.SetValue((timeToUse.Value() - mStartTime.Value())
-                            .MultDouble(mPlaybackRate));
+        mHoldTime = CurrentTimeFromTimelineTime(
+          timeToUse.Value(), mStartTime.Value(), mPlaybackRate);
       }
     }
 
@@ -1045,14 +1134,16 @@ Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior)
 
   bool abortedPause = mPendingState == PendingState::PausePending;
 
+  double effectivePlaybackRate = CurrentOrPendingPlaybackRate();
+
   Nullable<TimeDuration> currentTime = GetCurrentTime();
-  if (mPlaybackRate > 0.0 &&
+  if (effectivePlaybackRate > 0.0 &&
       (currentTime.IsNull() ||
        (aLimitBehavior == LimitBehavior::AutoRewind &&
         (currentTime.Value() < TimeDuration() ||
          currentTime.Value() >= EffectEnd())))) {
     mHoldTime.SetValue(TimeDuration(0));
-  } else if (mPlaybackRate < 0.0 &&
+  } else if (effectivePlaybackRate < 0.0 &&
              (currentTime.IsNull() ||
               (aLimitBehavior == LimitBehavior::AutoRewind &&
                (currentTime.Value() <= TimeDuration() ||
@@ -1062,7 +1153,7 @@ Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior)
       return;
     }
     mHoldTime.SetValue(TimeDuration(EffectEnd()));
-  } else if (mPlaybackRate == 0.0 && currentTime.IsNull()) {
+  } else if (effectivePlaybackRate == 0.0 && currentTime.IsNull()) {
     mHoldTime.SetValue(TimeDuration(0));
   }
 
@@ -1072,11 +1163,18 @@ Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior)
     reuseReadyPromise = true;
   }
 
-  // If the hold time is null then we're either already playing normally (and
-  // we can ignore this call) or we aborted a pending pause operation (in which
-  // case, for consistency, we need to go through the motions of doing an
-  // asynchronous start even though we already have a resolved start time).
-  if (mHoldTime.IsNull() && !abortedPause) {
+  // If the hold time is null then we're already playing normally and,
+  // typically, we can bail out here.
+  //
+  // However, there are two cases where we can't do that:
+  //
+  // (a) If we just aborted a pause. In this case, for consistency, we need to
+  //     go through the motions of doing an asynchronous start.
+  //
+  // (b) If we have timing changes (specifically a change to the playbackRate)
+  //     that should be applied asynchronously.
+  //
+  if (mHoldTime.IsNull() && !abortedPause && !mPendingPlaybackRate) {
     return;
   }
 
@@ -1173,6 +1271,7 @@ Animation::PauseNoUpdate(ErrorResult& aRv)
   }
 }
 
+// https://drafts.csswg.org/web-animations/#play-an-animation
 void
 Animation::ResumeAt(const TimeDuration& aReadyTime)
 {
@@ -1185,17 +1284,39 @@ Animation::ResumeAt(const TimeDuration& aReadyTime)
              "An animation in the play-pending state should have either a"
              " resolved hold time or resolved start time");
 
-  // If we aborted a pending pause operation we will already have a start time
-  // we should use. In all other cases, we resolve it from the ready time.
-  if (mStartTime.IsNull()) {
-    mStartTime = StartTimeFromReadyTime(aReadyTime);
+  AutoMutationBatchForAnimation mb(*this);
+  bool hadPendingPlaybackRate = mPendingPlaybackRate.isSome();
+
+  if (!mHoldTime.IsNull()) {
+    // The hold time is set, so we don't need any special handling to preserve
+    // the current time.
+    ApplyPendingPlaybackRate();
+    mStartTime =
+      StartTimeFromTimelineTime(aReadyTime, mHoldTime.Value(), mPlaybackRate);
     if (mPlaybackRate != 0) {
       mHoldTime.SetNull();
     }
+  } else if (!mStartTime.IsNull() && mPendingPlaybackRate) {
+    // Apply any pending playback rate, preserving the current time.
+    TimeDuration currentTimeToMatch = CurrentTimeFromTimelineTime(
+      aReadyTime, mStartTime.Value(), mPlaybackRate);
+    ApplyPendingPlaybackRate();
+    mStartTime =
+      StartTimeFromTimelineTime(aReadyTime, currentTimeToMatch, mPlaybackRate);
+    if (mPlaybackRate == 0) {
+      mHoldTime.SetValue(currentTimeToMatch);
+    }
   }
+
   mPendingState = PendingState::NotPending;
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
+
+  // If we had a pending playback rate, we will have now applied it so we need
+  // to notify observers.
+  if (hadPendingPlaybackRate && IsRelevant()) {
+    nsNodeUtils::AnimationChanged(this);
+  }
 
   if (mReady) {
     mReady->MaybeResolve(this);
@@ -1209,9 +1330,10 @@ Animation::PauseAt(const TimeDuration& aReadyTime)
              "Expected to pause a pause-pending animation");
 
   if (!mStartTime.IsNull() && mHoldTime.IsNull()) {
-    mHoldTime.SetValue((aReadyTime - mStartTime.Value())
-                        .MultDouble(mPlaybackRate));
+    mHoldTime = CurrentTimeFromTimelineTime(
+      aReadyTime, mStartTime.Value(), mPlaybackRate);
   }
+  ApplyPendingPlaybackRate();
   mStartTime.SetNull();
   mPendingState = PendingState::NotPending;
 
@@ -1271,8 +1393,10 @@ Animation::UpdateFinishedState(SeekFlag aSeekFlag,
                mTimeline &&
                !mTimeline->GetCurrentTime().IsNull()) {
       if (aSeekFlag == SeekFlag::DidSeek && !mHoldTime.IsNull()) {
-        mStartTime.SetValue(mTimeline->GetCurrentTime().Value() -
-                             (mHoldTime.Value().MultDouble(1 / mPlaybackRate)));
+        mStartTime =
+          StartTimeFromTimelineTime(mTimeline->GetCurrentTime().Value(),
+                                    mHoldTime.Value(),
+                                    mPlaybackRate);
       }
       mHoldTime.SetNull();
     }
@@ -1357,6 +1481,8 @@ Animation::ResetPendingTasks()
   }
 
   CancelPendingTasks();
+  ApplyPendingPlaybackRate();
+
   if (mReady) {
     mReady->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     mReady = nullptr;

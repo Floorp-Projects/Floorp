@@ -35,10 +35,6 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
   : mBuilder(&aBuilder)
   , mScale(1.0f, 1.0f)
 {
-  if (aTransformPtr) {
-    mTransform = *aTransformPtr;
-  }
-
   // Compute scale for fallback rendering.
   gfx::Matrix transform2d;
   if (aBoundTransform && aBoundTransform->CanDraw2D(&transform2d)) {
@@ -57,7 +53,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                 aBackfaceVisible);
 
   mAffectsClipPositioning =
-      !mTransform.IsIdentity() ||
+      (aTransformPtr && !aTransformPtr->IsIdentity()) ||
       (aBounds.TopLeft() != LayoutDevicePoint());
 }
 

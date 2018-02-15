@@ -363,7 +363,8 @@ StatsCompartmentCallback(JSContext* cx, void* data, JSCompartment* compartment)
                                         &cStats.nonSyntacticLexicalScopesTable,
                                         &cStats.templateLiteralMap,
                                         &cStats.jitCompartment,
-                                        &cStats.privateData);
+                                        &cStats.privateData,
+                                        &cStats.scriptCountsMap);
 }
 
 static void

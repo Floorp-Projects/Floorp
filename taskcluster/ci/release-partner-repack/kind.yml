@@ -8,6 +8,7 @@ transforms:
    - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.partner_repack:transforms
    - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.release_notifications:transforms
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
@@ -23,50 +24,6 @@ job-defaults:
       using: buildbot
       release-promotion: true
       product: firefox
-   notifications:
-      completed:
-         subject: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         message: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         plugins:
-            by-project:
-               mozilla-beta: ["log_collect"]
-               mozilla-release: ["log_collect"]
-               default: []
-
-      failed:
-         subject: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         message: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         plugins:
-            by-project:
-               mozilla-beta: ["log_collect", "ses"]
-               mozilla-release: ["log_collect", "ses"]
-               default: ["ses"]
-         emails:
-            by-project:
-               mozilla-beta: ["release-automation-notifications@mozilla.com"]
-               mozilla-release: ["release-automation-notifications@mozilla.com"]
-               try: ["{task_def[metadata][owner]}"]
-               maple: ["release+tcstaging@mozilla.com"]
-               default: []
-
-      exception:
-         subject: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         message: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
-         plugins:
-            by-project:
-               mozilla-beta: ["log_collect", "ses"]
-               mozilla-release: ["log_collect", "ses"]
-               default: ["ses"]
-         emails:
-            by-project:
-               mozilla-beta: ["release-automation-notifications@mozilla.com"]
-               mozilla-release: ["release-automation-notifications@mozilla.com"]
-               try: ["{task_def[metadata][owner]}"]
-               maple: ["release+tcstaging@mozilla.com"]
-               default: []
-   index:
-      type: release
-      product: firefox
 
 jobs:
    firefox-linux:
@@ -80,9 +37,6 @@ jobs:
                   default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
       run:
          buildername: release-{branch}-firefox-linux_partner_repacks
-      routes:
-         - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.partner_repacks.linux
-         - index.releases.v1.{branch}.latest.{product}.latest.partner_repacks.linux
 
    firefox-linux64:
       label: firefox linux64 partner repacks
@@ -95,9 +49,6 @@ jobs:
                   default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
       run:
          buildername: release-{branch}-firefox-linux64_partner_repacks
-      routes:
-         - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.partner_repacks.linux64
-         - index.releases.v1.{branch}.latest.{product}.latest.partner_repacks.linux64
 
    firefox-macosx:
       label: firefox macosx64 partner repacks
@@ -110,9 +61,6 @@ jobs:
                   default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
       run:
          buildername: release-{branch}-firefox-macosx64_partner_repacks
-      routes:
-         - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.partner_repacks.macosx64
-         - index.releases.v1.{branch}.latest.{product}.latest.partner_repacks.macosx64
 
    firefox-win32:
       label: firefox win32 partner repacks
@@ -125,9 +73,6 @@ jobs:
                   default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
       run:
          buildername: release-{branch}-firefox-win32_partner_repacks
-      routes:
-         - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.partner_repacks.win32
-         - index.releases.v1.{branch}.latest.{product}.latest.partner_repacks.win32
 
    firefox-win64:
       label: firefox win64 partner repacks
@@ -140,9 +85,6 @@ jobs:
                   default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
       run:
          buildername: release-{branch}-firefox-win64_partner_repacks
-      routes:
-         - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.partner_repacks.win64
-         - index.releases.v1.{branch}.latest.{product}.latest.partner_repacks.win64
 
    firefox-macosx-eme-free:
       label: firefox macosx64 EME-free repacks
@@ -155,9 +97,6 @@ jobs:
                   default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
       run:
          buildername: release-{branch}-firefox-macosx64_partner_repacks
-      routes:
-         - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.eme_free_repacks.macosx64
-         - index.releases.v1.{branch}.latest.{product}.latest.eme_free_repacks.macosx64
 
    firefox-win32-eme-free:
       label: firefox win32 EME-free repacks
@@ -170,9 +109,6 @@ jobs:
                   default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
       run:
          buildername: release-{branch}-firefox-win32_partner_repacks
-      routes:
-         - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.eme_free_repacks.win32
-         - index.releases.v1.{branch}.latest.{product}.latest.eme_free_repacks.win32
 
    firefox-win64-eme-free:
       label: firefox win64 EME-free repacks
@@ -185,6 +121,3 @@ jobs:
                   default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
       run:
          buildername: release-{branch}-firefox-win64_partner_repacks
-      routes:
-         - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.eme_free_repacks.win64
-         - index.releases.v1.{branch}.latest.{product}.latest.eme_free_repacks.win64

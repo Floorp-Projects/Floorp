@@ -6,7 +6,6 @@
 /* import-globals-from editBookmarkOverlay.js */
 // Via downloadsViewOverlay.xul -> allDownloadsViewOverlay.xul
 /* import-globals-from ../../../../toolkit/content/contentAreaUtils.js */
-/* import-globals-from ../../../base/content/browser-sync.js */
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -177,7 +176,6 @@ var PlacesOrganizer = {
             .removeChild(document.getElementById("placesContext_show:info"));
 
     ContentArea.focus();
-    gSync.init();
   },
 
   QueryInterface: function PO_QueryInterface(aIID) {

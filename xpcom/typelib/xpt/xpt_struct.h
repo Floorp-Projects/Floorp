@@ -12,9 +12,8 @@
 #define __xpt_struct_h__
 
 #include "xpt_arena.h"
+#include "nsID.h"
 #include <stdint.h>
-
-extern "C" {
 
 /*
  * Originally, I was going to have structures that exactly matched the on-disk
@@ -27,30 +26,14 @@ extern "C" {
 
 /* Structures for the typelib components */
 
-typedef struct XPTHeader XPTHeader;
-typedef struct XPTInterfaceDirectoryEntry XPTInterfaceDirectoryEntry;
-typedef struct XPTInterfaceDescriptor XPTInterfaceDescriptor;
-typedef struct XPTConstDescriptor XPTConstDescriptor;
-typedef struct XPTMethodDescriptor XPTMethodDescriptor;
-typedef struct XPTParamDescriptor XPTParamDescriptor;
-typedef struct XPTTypeDescriptor XPTTypeDescriptor;
-typedef struct XPTTypeDescriptorPrefix XPTTypeDescriptorPrefix;
-
-#ifndef nsID_h__
-/*
- * We can't include nsID.h, because it's full of C++ goop and we're not doing
- * C++ here, so we define our own minimal struct.  We protect against multiple
- * definitions of this struct, though, and use the same field naming.
- */
-struct nsID {
-    uint32_t m0;
-    uint16_t m1;
-    uint16_t m2;
-    uint8_t  m3[8];
-};
-
-typedef struct nsID nsID;
-#endif
+struct XPTHeader;
+struct XPTInterfaceDirectoryEntry;
+struct XPTInterfaceDescriptor;
+struct XPTConstDescriptor;
+struct XPTMethodDescriptor;
+struct XPTParamDescriptor;
+struct XPTTypeDescriptor;
+struct XPTTypeDescriptorPrefix;
 
 /*
  * Every XPCOM typelib file begins with a header.
@@ -356,11 +339,9 @@ struct XPTMethodDescriptor {
  * present.
  */
 
-#define XPT_ANN_LAST	                0x80
+#define XPT_ANN_LAST                    0x80
 #define XPT_ANN_IS_LAST(flags)          (flags & XPT_ANN_LAST)
 #define XPT_ANN_PRIVATE                 0x40
 #define XPT_ANN_IS_PRIVATE(flags)       (flags & XPT_ANN_PRIVATE)
-
-}
 
 #endif /* __xpt_struct_h__ */

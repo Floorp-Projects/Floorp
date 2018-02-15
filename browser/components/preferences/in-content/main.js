@@ -41,6 +41,7 @@ const CONTAINERS_KEY = "privacy.containers";
 const HOMEPAGE_OVERRIDE_KEY = "homepage_override";
 const URL_OVERRIDES_TYPE = "url_overrides";
 const NEW_TAB_KEY = "newTabURL";
+const NEW_TAB_STRING_ID = "extensionControlled.newTabURL2";
 
 /*
  * Preferences where we store handling information about the feed type.
@@ -359,10 +360,12 @@ var gMainPane = {
 
     this.updateBrowserStartupLastSession();
 
-    handleControllingExtension(URL_OVERRIDES_TYPE, NEW_TAB_KEY);
+    handleControllingExtension(
+      URL_OVERRIDES_TYPE, NEW_TAB_KEY, NEW_TAB_STRING_ID);
     let newTabObserver = {
       observe(subject, topic, data) {
-          handleControllingExtension(URL_OVERRIDES_TYPE, NEW_TAB_KEY);
+        handleControllingExtension(
+          URL_OVERRIDES_TYPE, NEW_TAB_KEY, NEW_TAB_STRING_ID);
       },
     };
     Services.obs.addObserver(newTabObserver, "newtab-url-changed");
@@ -663,7 +666,7 @@ var gMainPane = {
     this.readBrowserContainersCheckbox();
   },
 
-  separateProfileModeChange() {
+  async separateProfileModeChange() {
     if (AppConstants.MOZ_DEV_EDITION) {
       function quitApp() {
         Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestartNotSameProfile);
@@ -686,7 +689,7 @@ var gMainPane = {
       }
 
       let separateProfileModeCheckbox = document.getElementById("separateProfileMode");
-      let button_index = confirmRestartPrompt(separateProfileModeCheckbox.checked,
+      let button_index = await confirmRestartPrompt(separateProfileModeCheckbox.checked,
         0, false, true);
       switch (button_index) {
         case CONFIRM_RESTART_PROMPT_CANCEL:
@@ -772,7 +775,8 @@ var gMainPane = {
       setInputDisabledStates(false);
     } else {
       // Asynchronously update the extension controlled UI.
-      handleControllingExtension(PREF_SETTING_TYPE, HOMEPAGE_OVERRIDE_KEY)
+      handleControllingExtension(
+        PREF_SETTING_TYPE, HOMEPAGE_OVERRIDE_KEY, "extensionControlled.homepage_override2")
         .then(setInputDisabledStates);
     }
 
@@ -1105,7 +1109,8 @@ var gMainPane = {
   async updateProxySettingsUI() {
     let controllingExtension = await getControllingExtension(PREF_SETTING_TYPE, PROXY_KEY);
     let fragment = controllingExtension ?
-      getControllingExtensionFragment(PROXY_KEY, controllingExtension, this._brandShortName) :
+      getControllingExtensionFragment(
+        "extensionControlled.proxyConfig", controllingExtension, this._brandShortName) :
       BrowserUtils.getLocalizedFragment(
         document,
         this._prefsBundle.getString("connectionDesc.label"),

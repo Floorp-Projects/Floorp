@@ -11,6 +11,7 @@
 
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
+#include "nsStyleContextInlines.h"
 #include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
 #include "nsSpecialCasingData.h"

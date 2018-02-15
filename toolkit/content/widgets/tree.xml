@@ -38,8 +38,16 @@
         <xul:textbox anonid="input" class="tree-input" left="0" top="0" hidden="true"/>
       </xul:stack>
       <xul:hbox xbl:inherits="collapsed=hidehscroll">
-        <xul:scrollbar orient="horizontal" flex="1" increment="16" style="position:relative; z-index:2147483647;"/>
-        <xul:scrollcorner xbl:inherits="collapsed=hidevscroll"/>
+        <xul:scrollbar orient="horizontal" flex="1" increment="16" style="position:relative; z-index:2147483647;"
+          oncontextmenu="event.stopPropagation(); event.preventDefault();"
+          onclick="event.stopPropagation(); event.preventDefault();"
+          ondblclick="event.stopPropagation();"
+          oncommand="event.stopPropagation();"/>
+        <xul:scrollcorner xbl:inherits="collapsed=hidevscroll"
+          oncontextmenu="event.stopPropagation(); event.preventDefault();"
+          onclick="event.stopPropagation(); event.preventDefault();"
+          ondblclick="event.stopPropagation();"
+          oncommand="event.stopPropagation();"/>
       </xul:hbox>
     </content>
 
@@ -1052,7 +1060,11 @@
       <xul:hbox flex="1" class="tree-bodybox">
         <children/>
       </xul:hbox>
-      <xul:scrollbar height="0" minwidth="0" minheight="0" orient="vertical" xbl:inherits="collapsed=hidevscroll" style="position:relative; z-index:2147483647;"/>
+      <xul:scrollbar height="0" minwidth="0" minheight="0" orient="vertical" xbl:inherits="collapsed=hidevscroll" style="position:relative; z-index:2147483647;"
+        oncontextmenu="event.stopPropagation(); event.preventDefault();"
+        onclick="event.stopPropagation(); event.preventDefault();"
+        ondblclick="event.stopPropagation();"
+        oncommand="event.stopPropagation();"/>
     </content>
     <handlers>
       <handler event="underflow">

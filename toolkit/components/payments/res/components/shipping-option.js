@@ -14,6 +14,8 @@ class ShippingOption extends ObservedPropertiesMixin(RichOption) {
   static get observedAttributes() {
     return RichOption.observedAttributes.concat([
       "label",
+      "amount-currency",
+      "amount-value",
     ]);
   }
 
@@ -21,27 +23,26 @@ class ShippingOption extends ObservedPropertiesMixin(RichOption) {
     super();
 
     this.amount = null;
-    this._amount = document.createElement("currency-amount");
-    this._amount.classList.add("amount");
+    this._currencyAmount = document.createElement("currency-amount");
+    this._currencyAmount.classList.add("amount");
     this._label = document.createElement("span");
     this._label.classList.add("label");
   }
 
   connectedCallback() {
-    this.appendChild(this._amount);
+    this.appendChild(this._currencyAmount);
     this.appendChild(this._label);
     super.connectedCallback();
   }
 
   render() {
-    // An amount is required to render the shipping option.
-    if (!this.amount) {
-      return;
-    }
-
-    this._amount.currency = this.amount.currency;
-    this._amount.value = this.amount.value;
     this._label.textContent = this.label;
+    this._currencyAmount.currency = this.amountCurrency;
+    this._currencyAmount.value = this.amountValue;
+    // Need to call render after setting these properties
+    // if we want the amount to get displayed in the same
+    // render pass as the label.
+    this._currencyAmount.render();
   }
 }
 

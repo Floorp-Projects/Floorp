@@ -106,7 +106,6 @@
 #include "nsIDeviceSensors.h"
 #include "nsIContent.h"
 #include "nsIDocShell.h"
-#include "nsIDocCharset.h"
 #include "nsIDocument.h"
 #include "Crypto.h"
 #include "nsIDOMDocument.h"
@@ -6908,15 +6907,7 @@ nsGlobalWindowOuter::GetInterfaceInternal(const nsIID& aIID, void** aSink)
   NS_ENSURE_ARG_POINTER(aSink);
   *aSink = nullptr;
 
-  if (aIID.Equals(NS_GET_IID(nsIDocCharset))) {
-    nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-    NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
-
-    NS_WARNING("Using deprecated nsIDocCharset: use nsIDocShell.GetCharset() instead ");
-    nsCOMPtr<nsIDocCharset> docCharset(do_QueryInterface(outer->mDocShell));
-    docCharset.forget(aSink);
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIWebNavigation))) {
+  if (aIID.Equals(NS_GET_IID(nsIWebNavigation))) {
     nsGlobalWindowOuter* outer = GetOuterWindowInternal();
     NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
 

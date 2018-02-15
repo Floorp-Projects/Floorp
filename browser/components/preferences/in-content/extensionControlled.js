@@ -96,7 +96,7 @@ async function getControllingExtension(type, settingName) {
   return addon;
 }
 
-async function handleControllingExtension(type, settingName) {
+async function handleControllingExtension(type, settingName, stringId) {
   let addon = await getControllingExtension(type, settingName);
 
   // Sometimes the ExtensionSettingsStore gets in a bad state where it thinks
@@ -106,7 +106,7 @@ async function handleControllingExtension(type, settingName) {
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=1411046 for an example.
   if (addon) {
     extensionControlledIds[settingName] = addon.id;
-    showControllingExtension(settingName, addon);
+    showControllingExtension(settingName, addon, stringId);
   } else {
     let elements = getControllingExtensionEls(settingName);
     if (extensionControlledIds[settingName]
@@ -122,9 +122,8 @@ async function handleControllingExtension(type, settingName) {
   return !!addon;
 }
 
-function getControllingExtensionFragment(settingName, addon, ...extraArgs) {
-  let msg = document.getElementById("bundlePreferences")
-                    .getString(`extensionControlled.${settingName}`);
+function getControllingExtensionFragment(stringId, addon, ...extraArgs) {
+  let msg = document.getElementById("bundlePreferences").getString(stringId);
   let image = document.createElement("image");
   const defaultIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
   image.setAttribute("src", addon.iconURL || defaultIcon);
@@ -135,7 +134,8 @@ function getControllingExtensionFragment(settingName, addon, ...extraArgs) {
   return BrowserUtils.getLocalizedFragment(document, msg, addonBit, ...extraArgs);
 }
 
-async function showControllingExtension(settingName, addon) {
+async function showControllingExtension(
+  settingName, addon, stringId = `extensionControlled.${settingName}`) {
   // Tell the user what extension is controlling the setting.
   let elements = getControllingExtensionEls(settingName);
   let extraArgs = getExtensionControlledArgs(settingName);
@@ -149,7 +149,7 @@ async function showControllingExtension(settingName, addon) {
   }
 
   let fragment = getControllingExtensionFragment(
-    settingName, addon, ...extraArgs);
+    stringId, addon, ...extraArgs);
   description.appendChild(fragment);
 
   if (elements.button) {

@@ -37,6 +37,7 @@ browser.jar:
     content/browser/ext-windows.js
     content/browser/ext-c-browser.js
     content/browser/ext-c-devtools-inspectedWindow.js
+    content/browser/ext-c-devtools-network.js
     content/browser/ext-c-devtools-panels.js
     content/browser/ext-c-devtools.js
     content/browser/ext-c-menus.js
