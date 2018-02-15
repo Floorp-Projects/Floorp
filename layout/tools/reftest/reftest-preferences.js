@@ -93,18 +93,20 @@ user_pref("browser.safebrowsing.phishing.enabled", false);
 user_pref("browser.safebrowsing.malware.enabled", false);
 user_pref("browser.safebrowsing.blockedURIs.enabled", false);
 user_pref("browser.safebrowsing.passwords.enabled", false);
+user_pref("browser.safebrowsing.downloads.enabled", false);
+user_pref("plugins.show_infobar", false);
 user_pref("browser.safebrowsing.downloads.remote.url", "http://127.0.0.1/safebrowsing-dummy/gethash");
-user_pref("browser.safebrowsing.provider.google.gethashURL", "http://127.0.0.1/safebrowsing-dummy/gethash");
-user_pref("browser.safebrowsing.provider.google.updateURL", "http://127.0.0.1/safebrowsing-dummy/update");
-user_pref("browser.safebrowsing.provider.google4.gethashURL", "http://127.0.0.1/safebrowsing-dummy/gethash");
-user_pref("browser.safebrowsing.provider.google4.updateURL", "http://127.0.0.1/safebrowsing-dummy/update");
+user_pref("browser.safebrowsing.provider.google.gethashURL", "http://127.0.0.1/safebrowsing-dummyg/gethash");
+user_pref("browser.safebrowsing.provider.google.updateURL", "http://127.0.0.1/safebrowsing-dummyg/update");
+user_pref("browser.safebrowsing.provider.google4.gethashURL", "http://127.0.0.1/safebrowsing-dummyg4/gethash");
+user_pref("browser.safebrowsing.provider.google4.updateURL", "http://127.0.0.1/safebrowsing-dummyg4/update");
 // Likewise for lists served from the Mozilla server.
 user_pref("plugins.flashBlock.enabled", false);
 user_pref("privacy.trackingprotection.annotate_channels", false);
 user_pref("privacy.trackingprotection.enabled", false);
 user_pref("privacy.trackingprotection.pbmode.enabled", false);
-user_pref("browser.safebrowsing.provider.mozilla.gethashURL", "http://127.0.0.1/safebrowsing-dummy/gethash");
-user_pref("browser.safebrowsing.provider.mozilla.updateURL", "http://127.0.0.1/safebrowsing-dummy/update");
+user_pref("browser.safebrowsing.provider.mozilla.gethashURL", "http://127.0.0.1/safebrowsing-dummym/gethash");
+user_pref("browser.safebrowsing.provider.mozilla.updateURL", "http://127.0.0.1/safebrowsing-dummym/update");
 // And for snippets.
 user_pref("browser.snippets.enabled", false);
 user_pref("browser.snippets.syncPromo.enabled", false);
