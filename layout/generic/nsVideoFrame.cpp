@@ -809,7 +809,7 @@ nsVideoFrame::OnVisibilityChange(Visibility aNewVisibility,
                                  const Maybe<OnNonvisible>& aNonvisibleAction)
 {
   if (HasVideoElement()) {
-    static_cast<HTMLMediaElement*>(mContent)->OnVisibilityChange(aNewVisibility);
+    static_cast<HTMLMediaElement*>(GetContent())->OnVisibilityChange(aNewVisibility);
   }
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mPosterImage);
@@ -822,7 +822,7 @@ nsVideoFrame::OnVisibilityChange(Visibility aNewVisibility,
 }
 
 bool nsVideoFrame::HasVideoElement() {
-  return static_cast<HTMLMediaElement*>(mContent)->IsVideo();
+  return static_cast<HTMLMediaElement*>(GetContent())->IsVideo();
 }
 
 bool nsVideoFrame::HasVideoData()
@@ -837,5 +837,5 @@ bool nsVideoFrame::HasVideoData()
 
 void nsVideoFrame::UpdateTextTrack()
 {
-  static_cast<HTMLMediaElement*>(mContent)->NotifyCueDisplayStatesChanged();
+  static_cast<HTMLMediaElement*>(GetContent())->NotifyCueDisplayStatesChanged();
 }

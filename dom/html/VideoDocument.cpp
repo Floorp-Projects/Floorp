@@ -115,8 +115,8 @@ VideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
                                                           NOT_FROM_PARSER));
   if (!element)
     return NS_ERROR_OUT_OF_MEMORY;
-  element->SetAutoplay(true);
-  element->SetControls(true);
+  element->SetAutoplay(true, IgnoreErrors());
+  element->SetControls(true, IgnoreErrors());
   element->LoadWithChannel(aChannel, aListener);
   UpdateTitle(aChannel);
 

@@ -22,7 +22,6 @@
 
 #include "AutoplayPolicy.h"
 #include "base/basictypes.h"
-#include "nsIDOMHTMLMediaElement.h"
 #include "TimeRanges.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
@@ -974,8 +973,9 @@ private:
     SetSuspended(aSuspend);
     if (aSuspend == nsISuspendedTypes::SUSPENDED_PAUSE ||
         aSuspend == nsISuspendedTypes::SUSPENDED_PAUSE_DISPOSABLE) {
-        nsresult rv = mOwner->Pause();
-        if (NS_WARN_IF(NS_FAILED(rv))) {
+        IgnoredErrorResult rv;
+        mOwner->Pause(rv);
+        if (NS_WARN_IF(rv.Failed())) {
           return;
         }
     }
@@ -1470,9 +1470,6 @@ private:
   bool mSrcIsUnsupportedTypeMedia;
 };
 
-NS_IMPL_ADDREF_INHERITED(HTMLMediaElement, nsGenericHTMLElement)
-NS_IMPL_RELEASE_INHERITED(HTMLMediaElement, nsGenericHTMLElement)
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLMediaElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLElement)
@@ -1531,17 +1528,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLE
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSetMediaKeysDOMPromise)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(HTMLMediaElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLMediaElement)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
-
-// nsIDOMHTMLMediaElement
-NS_IMPL_URI_ATTR(HTMLMediaElement, Src, src)
-NS_IMPL_BOOL_ATTR(HTMLMediaElement, Controls, controls)
-NS_IMPL_BOOL_ATTR(HTMLMediaElement, Autoplay, autoplay)
-NS_IMPL_BOOL_ATTR(HTMLMediaElement, Loop, loop)
-NS_IMPL_BOOL_ATTR(HTMLMediaElement, DefaultMuted, muted)
-NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLMediaElement, Preload, preload, nullptr)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLMediaElement, nsGenericHTMLElement)
 
 void
 HTMLMediaElement::ContentRemoved(nsIDocument* aDocument,
@@ -1552,12 +1539,6 @@ HTMLMediaElement::ContentRemoved(nsIDocument* aDocument,
   if (aChild == mSourcePointer) {
     mSourcePointer = aPreviousSibling;
   }
-}
-
-NS_IMETHODIMP_(bool)
-HTMLMediaElement::IsVideo()
-{
-  return false;
 }
 
 already_AddRefed<MediaSource>
@@ -1573,7 +1554,7 @@ HTMLMediaElement::GetMozDebugReaderData(nsAString& aString)
   if (mDecoder && !mSrcStream) {
     nsAutoCString result;
     mDecoder->GetMozDebugReaderData(result);
-    aString = NS_ConvertUTF8toUTF16(result);
+    CopyUTF8toUTF16(result, aString);
   }
 }
 
@@ -1724,24 +1705,12 @@ HTMLMediaElement::Ended()
          (mSrcStream && !mSrcStream->Active());
 }
 
-NS_IMETHODIMP HTMLMediaElement::GetEnded(bool* aEnded)
-{
-  *aEnded = Ended();
-  return NS_OK;
-}
-
-NS_IMETHODIMP HTMLMediaElement::GetCurrentSrc(nsAString & aCurrentSrc)
+void
+HTMLMediaElement::GetCurrentSrc(nsAString & aCurrentSrc)
 {
   nsAutoCString src;
   GetCurrentSpec(src);
-  aCurrentSrc = NS_ConvertUTF8toUTF16(src);
-  return NS_OK;
-}
-
-NS_IMETHODIMP HTMLMediaElement::GetNetworkState(uint16_t* aNetworkState)
-{
-  *aNetworkState = NetworkState();
-  return NS_OK;
+  CopyUTF8toUTF16(src, aCurrentSrc);
 }
 
 nsresult
@@ -1980,7 +1949,8 @@ static bool HasSourceChildren(nsIContent* aElement)
   return false;
 }
 
-NS_IMETHODIMP HTMLMediaElement::Load()
+void
+HTMLMediaElement::Load()
 {
   LOG(LogLevel::Debug,
       ("%p Load() hasSrcAttrStream=%d hasSrcAttr=%d hasSourceChildren=%d "
@@ -1989,13 +1959,11 @@ NS_IMETHODIMP HTMLMediaElement::Load()
        HasSourceChildren(this), EventStateManager::IsHandlingUserInput()));
 
   if (mIsRunningLoadMethod) {
-    return NS_OK;
+    return;
   }
 
   mIsDoingExplicitLoad = true;
   DoLoad();
-
-  return NS_OK;
 }
 
 void HTMLMediaElement::DoLoad()
@@ -2027,7 +1995,7 @@ void HTMLMediaElement::DoLoad()
   SetPlayedOrSeeked(false);
   mIsRunningLoadMethod = true;
   AbortExistingLoads();
-  SetPlaybackRate(mDefaultPlaybackRate);
+  SetPlaybackRate(mDefaultPlaybackRate, IgnoreErrors());
   QueueSelectResourceTask();
   ResetState();
   mIsRunningLoadMethod = false;
@@ -2657,15 +2625,8 @@ nsresult HTMLMediaElement::LoadWithChannel(nsIChannel* aChannel,
     return rv;
   }
 
-  SetPlaybackRate(mDefaultPlaybackRate);
+  SetPlaybackRate(mDefaultPlaybackRate, IgnoreErrors());
   DispatchAsyncEvent(NS_LITERAL_STRING("loadstart"));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP HTMLMediaElement::GetReadyState(uint16_t* aReadyState)
-{
-  *aReadyState = ReadyState();
 
   return NS_OK;
 }
@@ -2674,12 +2635,6 @@ bool
 HTMLMediaElement::Seeking() const
 {
   return mDecoder && mDecoder->IsSeeking();
-}
-
-NS_IMETHODIMP HTMLMediaElement::GetSeeking(bool* aSeeking)
-{
-  *aSeeking = Seeking();
-  return NS_OK;
 }
 
 double
@@ -2697,12 +2652,6 @@ HTMLMediaElement::CurrentTime() const
   }
 
   return mDefaultPlaybackStartPosition;
-}
-
-NS_IMETHODIMP HTMLMediaElement::GetCurrentTime(double* aCurrentTime)
-{
-  *aCurrentTime = CurrentTime();
-  return NS_OK;
 }
 
 void
@@ -2924,19 +2873,6 @@ HTMLMediaElement::Seek(double aTime,
   return promise.forget();
 }
 
-NS_IMETHODIMP HTMLMediaElement::SetCurrentTime(double aCurrentTime)
-{
-  // Detect for a NaN and invalid values.
-  if (mozilla::IsNaN(aCurrentTime)) {
-    LOG(LogLevel::Debug, ("%p SetCurrentTime(%f) failed: bad time", this, aCurrentTime));
-    return NS_ERROR_FAILURE;
-  }
-
-  ErrorResult rv;
-  SetCurrentTime(aCurrentTime, rv);
-  return rv.StealNSResult();
-}
-
 double
 HTMLMediaElement::Duration() const
 {
@@ -2951,12 +2887,6 @@ HTMLMediaElement::Duration() const
   return std::numeric_limits<double>::quiet_NaN();
 }
 
-NS_IMETHODIMP HTMLMediaElement::GetDuration(double* aDuration)
-{
-  *aDuration = Duration();
-  return NS_OK;
-}
-
 already_AddRefed<TimeRanges>
 HTMLMediaElement::Seekable() const
 {
@@ -2964,20 +2894,6 @@ HTMLMediaElement::Seekable() const
     mDecoder ? mDecoder->GetSeekable() : media::TimeIntervals();
   RefPtr<TimeRanges> ranges = new TimeRanges(ToSupports(OwnerDoc()), seekable);
   return ranges.forget();
-}
-
-NS_IMETHODIMP HTMLMediaElement::GetSeekable(nsIDOMTimeRanges** aSeekable)
-{
-  RefPtr<TimeRanges> ranges = Seekable();
-  ranges.forget(aSeekable);
-  return NS_OK;
-}
-
-NS_IMETHODIMP HTMLMediaElement::GetPaused(bool* aPaused)
-{
-  *aPaused = Paused();
-
-  return NS_OK;
 }
 
 already_AddRefed<TimeRanges>
@@ -3008,13 +2924,6 @@ HTMLMediaElement::Played()
   return ranges.forget();
 }
 
-NS_IMETHODIMP HTMLMediaElement::GetPlayed(nsIDOMTimeRanges** aPlayed)
-{
-  RefPtr<TimeRanges> ranges = Played();
-  ranges.forget(aPlayed);
-  return NS_OK;
-}
-
 void
 HTMLMediaElement::Pause(ErrorResult& aRv)
 {
@@ -3042,19 +2951,6 @@ HTMLMediaElement::Pause(ErrorResult& aRv)
   }
 }
 
-NS_IMETHODIMP HTMLMediaElement::Pause()
-{
-  ErrorResult rv;
-  Pause(rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP HTMLMediaElement::GetVolume(double* aVolume)
-{
-  *aVolume = Volume();
-  return NS_OK;
-}
-
 void
 HTMLMediaElement::SetVolume(double aVolume, ErrorResult& aRv)
 {
@@ -3074,13 +2970,6 @@ HTMLMediaElement::SetVolume(double aVolume, ErrorResult& aRv)
   DispatchAsyncEvent(NS_LITERAL_STRING("volumechange"));
 }
 
-NS_IMETHODIMP HTMLMediaElement::SetVolume(double aVolume)
-{
-  ErrorResult rv;
-  SetVolume(aVolume, rv);
-  return rv.StealNSResult();
-}
-
 void
 HTMLMediaElement::MozGetMetadata(JSContext* cx,
                                  JS::MutableHandle<JSObject*> aRetval,
@@ -3098,7 +2987,8 @@ HTMLMediaElement::MozGetMetadata(JSContext* cx,
   }
   if (mTags) {
     for (auto iter = mTags->ConstIter(); !iter.Done(); iter.Next()) {
-      nsString wideValue = NS_ConvertUTF8toUTF16(iter.UserData());
+      nsString wideValue;
+      CopyUTF8toUTF16(iter.UserData(), wideValue);
       JS::Rooted<JSString*> string(cx,
                                    JS_NewUCStringCopyZ(cx, wideValue.Data()));
       if (!string || !JS_DefineProperty(cx, tags, iter.Key().Data(), string,
@@ -3113,27 +3003,8 @@ HTMLMediaElement::MozGetMetadata(JSContext* cx,
   aRetval.set(tags);
 }
 
-NS_IMETHODIMP
-HTMLMediaElement::MozGetMetadata(JSContext* cx, JS::MutableHandle<JS::Value> aValue)
-{
-  ErrorResult rv;
-  JS::Rooted<JSObject*> obj(cx);
-  MozGetMetadata(cx, &obj, rv);
-  if (!rv.Failed()) {
-    MOZ_ASSERT(obj);
-    aValue.setObject(*obj);
-  }
-
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP HTMLMediaElement::GetMuted(bool* aMuted)
-{
-  *aMuted = Muted();
-  return NS_OK;
-}
-
-void HTMLMediaElement::SetMutedInternal(uint32_t aMuted)
+void
+HTMLMediaElement::SetMutedInternal(uint32_t aMuted)
 {
   uint32_t oldMuted = mMuted;
   mMuted = aMuted;
@@ -3145,7 +3016,8 @@ void HTMLMediaElement::SetMutedInternal(uint32_t aMuted)
   SetVolumeInternal();
 }
 
-void HTMLMediaElement::SetVolumeInternal()
+void
+HTMLMediaElement::SetVolumeInternal()
 {
   float effectiveVolume = ComputedVolume();
 
@@ -3161,10 +3033,11 @@ void HTMLMediaElement::SetVolumeInternal()
     AudioChannelService::AudibleChangedReasons::eVolumeChanged);
 }
 
-NS_IMETHODIMP HTMLMediaElement::SetMuted(bool aMuted)
+void
+HTMLMediaElement::SetMuted(bool aMuted)
 {
   if (aMuted == Muted()) {
-    return NS_OK;
+    return;
   }
 
   if (aMuted) {
@@ -3174,7 +3047,6 @@ NS_IMETHODIMP HTMLMediaElement::SetMuted(bool aMuted)
   }
 
   DispatchAsyncEvent(NS_LITERAL_STRING("volumechange"));
-  return NS_OK;
 }
 
 class HTMLMediaElement::StreamCaptureTrackSource :
@@ -3767,12 +3639,6 @@ HTMLMediaElement::MozCaptureStreamUntilEnded(ErrorResult& aRv)
   return stream.forget();
 }
 
-NS_IMETHODIMP HTMLMediaElement::GetMozAudioCaptured(bool* aCaptured)
-{
-  *aCaptured = MozAudioCaptured();
-  return NS_OK;
-}
-
 class MediaElementSetForURI : public nsURIHashKey {
 public:
   explicit MediaElementSetForURI(const nsIURI* aKey) : nsURIHashKey(aKey) {}
@@ -3961,6 +3827,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mShutdownObserver(new ShutdownObserver),
     mSourcePointer(nullptr),
     mNetworkState(NETWORK_EMPTY),
+    mReadyState(HAVE_NOTHING),
     mCurrentLoadID(0),
     mLoadWaitStatus(NOT_WAITING),
     mVolume(1.0),
@@ -4845,7 +4712,7 @@ HTMLMediaElement::GetCanPlay(const nsAString& aType,
   return status;
 }
 
-NS_IMETHODIMP
+void
 HTMLMediaElement::CanPlayType(const nsAString& aType, nsAString& aResult)
 {
   DecoderDoctorDiagnostics diagnostics;
@@ -4870,8 +4737,6 @@ HTMLMediaElement::CanPlayType(const nsAString& aType, nsAString& aResult)
   LOG(LogLevel::Debug, ("%p CanPlayType(%s) = \"%s\"", this,
                      NS_ConvertUTF16toUTF8(aType).get(),
                      NS_ConvertUTF16toUTF8(aResult).get()));
-
-  return NS_OK;
 }
 
 void
@@ -6760,13 +6625,6 @@ HTMLMediaElement::Buffered() const
   return ranges.forget();
 }
 
-nsresult HTMLMediaElement::GetBuffered(nsIDOMTimeRanges** aBuffered)
-{
-  RefPtr<TimeRanges> ranges = Buffered();
-  ranges.forget(aBuffered);
-  return NS_OK;
-}
-
 void HTMLMediaElement::SetRequestHeaders(nsIHttpChannel* aChannel)
 {
   // Send Accept header for video and audio types only (Bug 489071)
@@ -6862,12 +6720,6 @@ HTMLMediaElement::MozFragmentEnd()
   return (mFragmentEnd < 0.0 || mFragmentEnd > duration) ? duration : mFragmentEnd;
 }
 
-NS_IMETHODIMP HTMLMediaElement::GetMozFragmentEnd(double* aTime)
-{
-  *aTime = MozFragmentEnd();
-  return NS_OK;
-}
-
 static double ClampPlaybackRate(double aPlaybackRate)
 {
   MOZ_ASSERT(aPlaybackRate >= 0.0);
@@ -6884,12 +6736,6 @@ static double ClampPlaybackRate(double aPlaybackRate)
   return aPlaybackRate;
 }
 
-NS_IMETHODIMP HTMLMediaElement::GetDefaultPlaybackRate(double* aDefaultPlaybackRate)
-{
-  *aDefaultPlaybackRate = DefaultPlaybackRate();
-  return NS_OK;
-}
-
 void
 HTMLMediaElement::SetDefaultPlaybackRate(double aDefaultPlaybackRate, ErrorResult& aRv)
 {
@@ -6900,19 +6746,6 @@ HTMLMediaElement::SetDefaultPlaybackRate(double aDefaultPlaybackRate, ErrorResul
 
   mDefaultPlaybackRate = ClampPlaybackRate(aDefaultPlaybackRate);
   DispatchAsyncEvent(NS_LITERAL_STRING("ratechange"));
-}
-
-NS_IMETHODIMP HTMLMediaElement::SetDefaultPlaybackRate(double aDefaultPlaybackRate)
-{
-  ErrorResult rv;
-  SetDefaultPlaybackRate(aDefaultPlaybackRate, rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP HTMLMediaElement::GetPlaybackRate(double* aPlaybackRate)
-{
-  *aPlaybackRate = PlaybackRate();
-  return NS_OK;
 }
 
 void
@@ -6945,29 +6778,17 @@ HTMLMediaElement::SetPlaybackRate(double aPlaybackRate, ErrorResult& aRv)
   DispatchAsyncEvent(NS_LITERAL_STRING("ratechange"));
 }
 
-NS_IMETHODIMP HTMLMediaElement::SetPlaybackRate(double aPlaybackRate)
-{
-  ErrorResult rv;
-  SetPlaybackRate(aPlaybackRate, rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP HTMLMediaElement::GetMozPreservesPitch(bool* aPreservesPitch)
-{
-  *aPreservesPitch = MozPreservesPitch();
-  return NS_OK;
-}
-
-NS_IMETHODIMP HTMLMediaElement::SetMozPreservesPitch(bool aPreservesPitch)
+void
+HTMLMediaElement::SetMozPreservesPitch(bool aPreservesPitch)
 {
   mPreservesPitch = aPreservesPitch;
   if (mDecoder) {
     mDecoder->SetPreservesPitch(mPreservesPitch);
   }
-  return NS_OK;
 }
 
-ImageContainer* HTMLMediaElement::GetImageContainer()
+ImageContainer*
+HTMLMediaElement::GetImageContainer()
 {
   VideoFrameContainer* container = GetVideoFrameContainer();
   return container ? container->GetImageContainer() : nullptr;
