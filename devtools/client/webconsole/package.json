@@ -2,11 +2,11 @@
   "name": "webconsole",
   "version": "0.0.1",
   "engines": {
-    "node": ">=6.9.0"
+    "node": ">=7.10.0"
   },
   "scripts": {
     "start": "cross-env NODE_ENV=production node bin/dev-server",
-    "dev": "node bin/dev-server"
+    "dev": " cross-env NODE_ENV=development node bin/dev-server"
   },
   "dependencies": {
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
