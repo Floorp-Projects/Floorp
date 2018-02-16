@@ -339,7 +339,7 @@ async function confirmRestartPrompt(aRestartToEnable, aDefaultButtonIndex,
       "feature-enable-requires-restart" : "feature-disable-requires-restart"],
     ["should-restart-title"],
     ["should-restart-ok"],
-    ["revert-no-restart-button"],
+    ["cancel-no-restart-button"],
     ["restart-later"],
   ]);
 

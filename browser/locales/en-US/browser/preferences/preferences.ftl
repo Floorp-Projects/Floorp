@@ -55,5 +55,5 @@ feature-enable-requires-restart = { -brand-short-name } must restart to enable t
 feature-disable-requires-restart = { -brand-short-name } must restart to disable this feature.
 should-restart-title = Restart { -brand-short-name }
 should-restart-ok = Restart { -brand-short-name } now
-revert-no-restart-button = Revert
+cancel-no-restart-button = Cancel
 restart-later = Restart Later
