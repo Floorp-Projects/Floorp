@@ -32,13 +32,13 @@ Line fetch_line(int address) {
 }
 
 void brush_vs(
+    VertexInfo vi,
     int prim_address,
-    vec2 local_pos,
     RectWithSize local_rect,
-    ivec2 user_data,
+    ivec3 user_data,
     PictureTask pic_task
 ) {
-    vLocalPos = local_pos;
+    vLocalPos = vi.local_pos;
 
     // Note: `line` name is reserved in HLSL
     Line line_prim = fetch_line(prim_address);
@@ -65,6 +65,9 @@ void brush_vs(
             pos = local_rect.p0.yx;
             size = local_rect.size.yx;
             break;
+        default:
+            vAxisSelect = 0.0;
+            pos = size = vec2(0.0);
     }
 
     vLocalOrigin = pos;
@@ -108,6 +111,8 @@ void brush_vs(
                            size.y);
             break;
         }
+        default:
+            vParams = vec4(0.0);
     }
 }
 #endif
@@ -223,6 +228,7 @@ vec4 brush_fs() {
 
             break;
         }
+        default: break;
     }
 
     return vColor * alpha;
