@@ -204,6 +204,7 @@
 # include <sys/mman.h>
 # include <unistd.h>
 #endif
+
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jsprf.h"
@@ -241,10 +242,10 @@
 #include "vm/TraceLogging.h"
 #include "vm/WrapperObject.h"
 
-#include "gc/GCIteration-inl.h"
 #include "gc/Heap-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
+#include "gc/PrivateIterators-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
