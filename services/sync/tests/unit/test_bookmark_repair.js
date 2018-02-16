@@ -77,6 +77,7 @@ async function promiseValidationDone(expected) {
 
 async function cleanup(server) {
   await bookmarksEngine._store.wipe();
+  await bookmarksEngine.resetClient();
   await clientsEngine._store.wipe();
   Svc.Prefs.resetBranch("");
   Service.recordManager.clearCache();
@@ -152,14 +153,14 @@ add_task(async function test_bookmark_repair_integration() {
     deepEqual((await PlacesSyncUtils.bookmarks.pullChanges()), {},
       `Should not upload tombstone for ${bookmarkInfo.guid}`);
 
-    // Remove the bookmark from the buffer, too.
+    // Remove the bookmark from the mirror, too.
     let itemRows = await buf.db.execute(`
       SELECT guid, kind, title, urlId
       FROM items
       WHERE guid = :guid`,
       { guid: bookmarkInfo.guid });
     equal(itemRows.length, 1, `Bookmark ${
-      bookmarkInfo.guid} should exist in buffer`);
+      bookmarkInfo.guid} should exist in mirror`);
     let bufInfos = [];
     for (let row of itemRows) {
       bufInfos.push({
@@ -299,6 +300,12 @@ add_task(async function test_bookmark_repair_integration() {
     await PlacesUtils.bookmarks.remove(bookmarkInfo.guid, {
       source: PlacesUtils.bookmarks.SOURCE_SYNC,
     });
+    await buf.db.execute(`DELETE FROM items WHERE guid = :guid`,
+                         { guid: bookmarkInfo.guid });
+    await buf.db.execute(`
+      REPLACE INTO meta(key, value)
+      VALUES(:key, :value)`,
+      metaInfos);
     restoreInitialRepairState();
     ok(Services.prefs.prefHasUserValue("services.sync.repairs.bookmarks.state"),
       "Initial client should still be repairing");
@@ -307,7 +314,8 @@ add_task(async function test_bookmark_repair_integration() {
     let revalidationPromise = promiseValidationDone([]);
     await Service.sync();
     let restoredBookmarkInfo = await PlacesUtils.bookmarks.fetch(bookmarkInfo.guid);
-    ok(restoredBookmarkInfo, "Missing bookmark should be downloaded to initial client");
+    ok(restoredBookmarkInfo, `Missing bookmark ${
+      bookmarkInfo.guid} should be downloaded to initial client`);
     checkRecordedEvents([{
       object: "processcommand",
       method: "repairResponse",
@@ -386,7 +394,7 @@ add_task(async function test_repair_client_missing() {
     await PlacesUtils.bookmarks.remove(bookmarkInfo.guid, {
       source: PlacesUtils.bookmarks.SOURCE_SYNC,
     });
-    // Delete the bookmark from the buffer, too.
+    // Delete the bookmark from the mirror, too.
     let buf = await bookmarksEngine._store.ensureOpenMirror();
     await buf.db.execute(`DELETE FROM items WHERE guid = :guid`,
                          { guid: bookmarkInfo.guid });
