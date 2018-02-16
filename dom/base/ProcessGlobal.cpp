@@ -59,7 +59,7 @@ ProcessGlobal::GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& aNames,
 ProcessGlobal*
 ProcessGlobal::Get()
 {
-  nsCOMPtr<nsIMessageSender> service = do_GetService(NS_CHILDPROCESSMESSAGEMANAGER_CONTRACTID);
+  nsCOMPtr<nsIGlobalObject> service = do_GetService(NS_CHILDPROCESSMESSAGEMANAGER_CONTRACTID);
   if (!service) {
     return nullptr;
   }

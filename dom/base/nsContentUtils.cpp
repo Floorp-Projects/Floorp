@@ -7790,10 +7790,7 @@ nsContentUtils::CallOnAllRemoteChildren(ChromeMessageBroadcaster* aManager,
       continue;
     }
 
-    nsCOMPtr<nsIMessageSender> tabMM = do_QueryInterface(childMM);
-
-    mozilla::dom::ipc::MessageManagerCallback* cb =
-     static_cast<nsFrameMessageManager*>(tabMM.get())->GetCallback();
+    mozilla::dom::ipc::MessageManagerCallback* cb = childMM->GetCallback();
     if (cb) {
       nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
       TabParent* remote = TabParent::GetFrom(fl);

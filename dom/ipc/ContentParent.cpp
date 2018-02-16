@@ -536,7 +536,7 @@ ScriptableCPInfo::GetMessageManager(nsISupports** aMessenger)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsCOMPtr<nsIMessageSender> manager = mContentParent->GetMessageManager();
+  RefPtr<ChromeMessageSender> manager = mContentParent->GetMessageManager();
   manager.forget(aMessenger);
   return NS_OK;
 }

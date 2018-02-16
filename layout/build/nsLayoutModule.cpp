@@ -321,7 +321,7 @@ nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 nsresult NS_NewEventListenerService(nsIEventListenerService** aResult);
 nsresult NS_NewGlobalMessageManager(nsISupports** aResult);
 nsresult NS_NewParentProcessMessageManager(nsISupports** aResult);
-nsresult NS_NewChildProcessMessageManager(nsIMessageSender** aResult);
+nsresult NS_NewChildProcessMessageManager(nsISupports** aResult);
 
 nsresult NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
@@ -399,7 +399,7 @@ MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewCon
 MAKE_CTOR(CreateEventListenerService,     nsIEventListenerService,     NS_NewEventListenerService)
 MAKE_CTOR(CreateGlobalMessageManager,     nsISupports,                 NS_NewGlobalMessageManager)
 MAKE_CTOR(CreateParentMessageManager,     nsISupports,                 NS_NewParentProcessMessageManager)
-MAKE_CTOR(CreateChildMessageManager,      nsIMessageSender,            NS_NewChildProcessMessageManager)
+MAKE_CTOR(CreateChildMessageManager,      nsISupports,                 NS_NewChildProcessMessageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDataDocumentContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoDataProtocolContentPolicy)
 MAKE_CTOR(CreatePluginDocument,           nsIDocument,                 NS_NewPluginDocument)

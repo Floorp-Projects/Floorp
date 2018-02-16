@@ -149,6 +149,20 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameMessageManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameMessageManager)
 
+nsresult 
+MessageManagerCallback::DoGetRemoteType(nsAString& aRemoteType) const
+{
+  aRemoteType.Truncate();
+  mozilla::dom::ChromeMessageSender* parent = GetProcessMessageManager();
+  if (!parent) {
+    return NS_OK;
+  }
+
+  ErrorResult rv;
+  parent->GetRemoteType(aRemoteType, rv);
+  return rv.StealNSResult();
+}
+
 bool
 MessageManagerCallback::BuildClonedMessageDataForParent(nsIContentParent* aParent,
                                                         StructuredCloneData& aData,
@@ -725,22 +739,6 @@ nsFrameMessageManager::DispatchAsyncMessage(JSContext* aCx,
                                         aPrincipal);
 }
 
-// nsIMessageSender
-
-NS_IMETHODIMP
-nsFrameMessageManager::SendAsyncMessage(const nsAString& aMessageName,
-                                        JS::Handle<JS::Value> aJSON,
-                                        JS::Handle<JS::Value> aObjects,
-                                        nsIPrincipal* aPrincipal,
-                                        JS::Handle<JS::Value> aTransfers,
-                                        JSContext* aCx,
-                                        uint8_t aArgc)
-{
-  return DispatchAsyncMessage(aMessageName, aJSON, aObjects, aPrincipal,
-                              aTransfers, aCx, aArgc);
-}
-
-
 class MMListenerRemover
 {
 public:
@@ -1126,22 +1124,14 @@ nsFrameMessageManager::GetInitialProcessData(JSContext* aCx,
   aInitialProcessData.set(init);
 }
 
-already_AddRefed<nsIMessageSender>
+already_AddRefed<ChromeMessageSender>
 nsFrameMessageManager::GetProcessMessageManager(ErrorResult& aError)
 {
-  nsCOMPtr<nsIMessageSender> pmm;
+  RefPtr<ChromeMessageSender> pmm;
   if (mCallback) {
     pmm = mCallback->GetProcessMessageManager();
   }
   return pmm.forget();
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::GetProcessMessageManager(nsIMessageSender** aPMM)
-{
-  ErrorResult rv;
-  *aPMM = GetProcessMessageManager(rv).take();
-  return rv.StealNSResult();
 }
 
 void
@@ -1151,14 +1141,6 @@ nsFrameMessageManager::GetRemoteType(nsAString& aRemoteType, ErrorResult& aError
   if (mCallback) {
     aError = mCallback->DoGetRemoteType(aRemoteType);
   }
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::GetRemoteType(nsAString& aRemoteType)
-{
-  ErrorResult rv;
-  GetRemoteType(aRemoteType, rv);
-  return rv.StealNSResult();
 }
 
 namespace {
@@ -1841,7 +1823,7 @@ nsFrameMessageManager::NewProcessMessageManager(bool aIsRemote)
 }
 
 nsresult
-NS_NewChildProcessMessageManager(nsIMessageSender** aResult)
+NS_NewChildProcessMessageManager(nsISupports** aResult)
 {
   NS_ASSERTION(!nsFrameMessageManager::GetChildProcessManager(),
                "Re-creating sChildProcessManager");
@@ -1857,8 +1839,7 @@ NS_NewChildProcessMessageManager(nsIMessageSender** aResult)
   nsFrameMessageManager::SetChildProcessManager(mm);
   RefPtr<ProcessGlobal> global = new ProcessGlobal(mm);
   NS_ENSURE_TRUE(global->Init(), NS_ERROR_UNEXPECTED);
-  global.forget(aResult);
-  return NS_OK;
+  return CallQueryInterface(global, aResult);
 }
 
 bool

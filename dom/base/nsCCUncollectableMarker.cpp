@@ -101,11 +101,9 @@ MarkChildMessageManagers(ChromeMessageBroadcaster* aMM)
       ChromeMessageBroadcaster::From(childMM);
     ChromeMessageBroadcaster* nonLeafMM = strongNonLeafMM;
 
-    nsCOMPtr<nsIMessageSender> strongTabMM = do_QueryInterface(childMM);
-    nsIMessageSender* tabMM = strongTabMM;
+    MessageListenerManager* tabMM = childMM;
 
     strongNonLeafMM = nullptr;
-    strongTabMM = nullptr;
     childMM = nullptr;
 
     if (nonLeafMM) {
@@ -117,8 +115,7 @@ MarkChildMessageManagers(ChromeMessageBroadcaster* aMM)
 
     //XXX hack warning, but works, since we know that
     //    callback is frameloader.
-    mozilla::dom::ipc::MessageManagerCallback* cb =
-      static_cast<nsFrameMessageManager*>(tabMM)->GetCallback();
+    mozilla::dom::ipc::MessageManagerCallback* cb = tabMM->GetCallback();
     if (cb) {
       nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
       EventTarget* et = fl->GetTabChildGlobalAsEventTarget();
