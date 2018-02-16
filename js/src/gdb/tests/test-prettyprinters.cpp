@@ -26,13 +26,13 @@ FRAGMENT(prettyprinters, implemented_types) {
 
   breakpoint();
 
-  (void) i;
-  (void) a;
-  (void) b;
-  (void) c;
-  (void) c_;
-  (void) e;
-  (void) e_;
-  (void) f;
-  (void) h;
+  use(i);
+  use(a);
+  use(b);
+  use(c);
+  use(c_);
+  use(e);
+  use(e_);
+  use(f);
+  use(h);
 }

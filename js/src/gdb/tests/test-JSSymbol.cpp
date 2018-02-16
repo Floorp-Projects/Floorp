@@ -13,8 +13,8 @@ FRAGMENT(JSSymbol, simple) {
 
   breakpoint();
 
-  (void) unique;
-  (void) unique_with_desc;
-  (void) registry;
-  (void) well_known;
+  use(unique);
+  use(unique_with_desc);
+  use(registry);
+  use(well_known);
 }

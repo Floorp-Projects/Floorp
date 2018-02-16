@@ -7,5 +7,5 @@ FRAGMENT(typedef_printers, one) {
 
   breakpoint();
 
-  (void) i;
+  use(i);
 }
