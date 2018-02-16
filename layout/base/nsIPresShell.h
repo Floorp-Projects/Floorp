@@ -354,16 +354,13 @@ public:
 
   /**
    * Perform initialization. Constructs the frame for the root content
-   * object and then enqueues a reflow of the frame model into the
-   * specified width and height.
-   *
-   * The coordinates for aWidth and aHeight must be in standard nscoords.
+   * object and then enqueues a reflow of the frame model.
    *
    * Callers of this method must hold a reference to this shell that
    * is guaranteed to survive through arbitrary script execution.
    * Calling Initialize can execute arbitrary script.
    */
-  virtual nsresult Initialize(nscoord aWidth, nscoord aHeight) = 0;
+  virtual nsresult Initialize() = 0;
 
   enum class ResizeReflowOptions : uint32_t {
     // the resulting BSize should be exactly as given
