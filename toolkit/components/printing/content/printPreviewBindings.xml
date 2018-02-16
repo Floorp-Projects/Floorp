@@ -99,7 +99,7 @@
       <xul:data value="&customPrompt.title;"/>
     </content>
 
-    <implementation implements="nsIMessageListener">
+    <implementation>
       <field name="mPrintButton">
         document.getAnonymousNodes(this)[0]
       </field>
@@ -441,7 +441,6 @@
         ]]></body>
       </method>
 
-      <!-- nsIMessageListener -->
       <method name="receiveMessage">
         <parameter name="message"/>
         <body>
