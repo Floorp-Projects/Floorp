@@ -7,6 +7,7 @@
 #include "SharedSurfacesChild.h"
 #include "SharedSurfacesParent.h"
 #include "CompositorManagerChild.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
@@ -192,7 +193,7 @@ SharedSurfacesChild::ShareInternal(SourceSurfaceSharedData* aSurface,
   MOZ_ASSERT(aUserData);
 
   CompositorManagerChild* manager = CompositorManagerChild::GetInstance();
-  if (NS_WARN_IF(!manager || !manager->CanSend())) {
+  if (NS_WARN_IF(!manager || !manager->CanSend() || !gfxVars::UseWebRender())) {
     // We cannot try to share the surface, most likely because the GPU process
     // crashed. Ideally, we would retry when it is ready, but the handles may be
     // a scarce resource, which can cause much more serious problems if we run
@@ -391,9 +392,13 @@ SharedSurfacesChild::Unshare(const wr::ExternalImageId& aId,
 
   if (manager->OtherPid() == base::GetCurrentProcId()) {
     // We are in the combined UI/GPU process. Call directly to it to remove its
-    // wrapper surface to free the underlying buffer.
-    MOZ_ASSERT(manager->OwnsExternalImageId(aId));
-    SharedSurfacesParent::RemoveSameProcess(aId);
+    // wrapper surface to free the underlying buffer, but only if the external
+    // image ID is owned by the manager. It can be different if the surface was
+    // last shared with the GPU process, which crashed several times, and its
+    // job was moved into the parent process.
+    if (manager->OwnsExternalImageId(aId)) {
+      SharedSurfacesParent::RemoveSameProcess(aId);
+    }
   } else if (manager->OwnsExternalImageId(aId)) {
     // Only attempt to release current mappings in the GPU process. It is
     // possible we had a surface that was previously shared, the GPU process
