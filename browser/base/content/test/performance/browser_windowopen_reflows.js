@@ -36,6 +36,12 @@ if (Services.appinfo.OS == "WINNT" || Services.appinfo.OS == "Darwin") {
   EXPECTED_REFLOWS.push(
     {
       stack: [
+        "select@chrome://global/content/bindings/textbox.xml",
+        "focusAndSelectUrlBar@chrome://browser/content/browser.js",
+      ],
+    },
+    {
+      stack: [
         "rect@chrome://browser/content/browser-tabsintitlebar.js",
         "_update@chrome://browser/content/browser-tabsintitlebar.js",
         "init@chrome://browser/content/browser-tabsintitlebar.js",
