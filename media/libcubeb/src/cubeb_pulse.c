@@ -117,12 +117,14 @@ struct cubeb {
 };
 
 struct cubeb_stream {
+  /* Note: Must match cubeb_stream layout in cubeb.c. */
   cubeb * context;
+  void * user_ptr;
+  /**/
   pa_stream * output_stream;
   pa_stream * input_stream;
   cubeb_data_callback data_callback;
   cubeb_state_callback state_callback;
-  void * user_ptr;
   pa_time_event * drain_timer;
   pa_sample_spec output_sample_spec;
   pa_sample_spec input_sample_spec;
