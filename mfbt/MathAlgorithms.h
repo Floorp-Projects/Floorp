@@ -116,10 +116,10 @@ template<> struct AbsReturnType<long double> { typedef long double Type; };
 } // namespace detail
 
 template<typename T>
-inline typename detail::AbsReturnType<T>::Type
+inline constexpr typename detail::AbsReturnType<T>::Type
 Abs(const T aValue)
 {
-  typedef typename detail::AbsReturnType<T>::Type ReturnType;
+  using ReturnType = typename detail::AbsReturnType<T>::Type;
   return aValue >= 0 ? ReturnType(aValue) : ~ReturnType(aValue) + 1;
 }
 
