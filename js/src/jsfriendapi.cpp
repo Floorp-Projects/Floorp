@@ -17,7 +17,7 @@
 #include "builtin/Promise.h"
 #include "builtin/TestingFunctions.h"
 #include "gc/GCInternals.h"
-#include "gc/Iteration.h"
+#include "gc/PublicIterators.h"
 #include "js/Proxy.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/ArgumentsObject.h"

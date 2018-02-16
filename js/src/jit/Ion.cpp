@@ -54,7 +54,7 @@
 #include "vm/TraceLogging.h"
 #include "vtune/VTuneWrapper.h"
 
-#include "gc/GCIteration-inl.h"
+#include "gc/PrivateIterators-inl.h"
 #include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"

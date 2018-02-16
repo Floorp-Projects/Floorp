@@ -6,8 +6,8 @@
 
 #include "gc/Zone.h"
 
-#include "gc/Iteration.h"
 #include "gc/Policy.h"
+#include "gc/PublicIterators.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/JitCompartment.h"

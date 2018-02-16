@@ -35,8 +35,8 @@
 
 #include "jsgcinlines.h"
 
-#include "gc/GCIteration-inl.h"
 #include "gc/Nursery-inl.h"
+#include "gc/PrivateIterators-inl.h"
 #include "vm/JSCompartment-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/String-inl.h"
