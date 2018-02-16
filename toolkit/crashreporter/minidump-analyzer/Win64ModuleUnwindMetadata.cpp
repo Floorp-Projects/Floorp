@@ -13,6 +13,7 @@
 #include <winnt.h>
 #include <ImageHlp.h>
 #include <iostream>
+#include <set>
 #include <sstream>
 #include <string>
 

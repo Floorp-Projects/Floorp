@@ -9,7 +9,6 @@ include protocol PColorPicker;
 include protocol PContent;
 include protocol PContentBridge;
 include protocol PDocAccessible;
-include protocol PDocumentRenderer;
 include protocol PFilePicker;
 include protocol PIndexedDBPermissionRequest;
 include protocol PRenderFrame;
@@ -110,7 +109,6 @@ nested(upto inside_cpow) sync protocol PBrowser
 
     manages PColorPicker;
     manages PDocAccessible;
-    manages PDocumentRenderer;
     manages PFilePicker;
     manages PIndexedDBPermissionRequest;
     manages PRenderFrame;
@@ -730,24 +728,6 @@ child:
     async ActivateFrameEvent(nsString aType, bool capture);
 
     async LoadRemoteScript(nsString aURL, bool aRunInGlobalScope);
-
-    /**
-     * Create a asynchronous request to render whatever document is
-     * loaded in the child when this message arrives.  When the
-     * request finishes, PDocumentRenderer:__delete__ is sent back to
-     * this side to notify completion.
-     *
-     * |documentRect| is the area of the remote document to draw,
-     * transformed by |transform|.  The rendered area will have the
-     * default background color |bgcolor|.  |renderFlags| are the
-     * nsIPresShell::RenderDocument() flags to use on the remote side,
-     * and if true, |flushLayout| will do just that before rendering
-     * the document.  The rendered image will be of size |renderSize|.
-     */
-    async PDocumentRenderer(nsRect documentRect, Matrix transform,
-                            nsString bgcolor,
-                            uint32_t renderFlags, bool flushLayout,
-                            IntSize renderSize);
 
     /**
      * Sent by the chrome process when it no longer wants this remote

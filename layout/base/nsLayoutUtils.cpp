@@ -8035,14 +8035,15 @@ nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(nsIFrame *aSubtreeRoot)
 
 static void
 GetFontFacesForFramesInner(nsIFrame* aFrame,
-                           nsLayoutUtils::UsedFontFaceTable& aFontFaces)
+                           nsLayoutUtils::UsedFontFaceTable& aFontFaces,
+                           uint32_t aMaxRanges)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
   if (aFrame->IsTextFrame()) {
     if (!aFrame->GetPrevContinuation()) {
       nsLayoutUtils::GetFontFacesForText(aFrame, 0, INT32_MAX, true,
-                                         aFontFaces);
+                                         aFontFaces, aMaxRanges);
     }
     return;
   }
@@ -8054,19 +8055,20 @@ GetFontFacesForFramesInner(nsIFrame* aFrame,
     for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
       nsIFrame* child = e.get();
       child = nsPlaceholderFrame::GetRealFrameFor(child);
-      GetFontFacesForFramesInner(child, aFontFaces);
+      GetFontFacesForFramesInner(child, aFontFaces, aMaxRanges);
     }
   }
 }
 
 /* static */ nsresult
 nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
-                                     UsedFontFaceTable& aFontFaces)
+                                     UsedFontFaceTable& aFontFaces,
+                                     uint32_t aMaxRanges)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
   while (aFrame) {
-    GetFontFacesForFramesInner(aFrame, aFontFaces);
+    GetFontFacesForFramesInner(aFrame, aFontFaces, aMaxRanges);
     aFrame = GetNextContinuationOrIBSplitSibling(aFrame);
   }
 
@@ -8075,9 +8077,12 @@ nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
 
 static void
 AddFontsFromTextRun(gfxTextRun* aTextRun,
+                    nsIContent* aContent,
+                    gfxSkipCharsIterator& aSkipIter,
                     uint32_t aOffset,
                     uint32_t aLength,
-                    nsLayoutUtils::UsedFontFaceTable& aFontFaces)
+                    nsLayoutUtils::UsedFontFaceTable& aFontFaces,
+                    uint32_t aMaxRanges)
 {
   gfxTextRun::Range range(aOffset, aOffset + aLength);
   gfxTextRun::GlyphRunIterator iter(aTextRun, range);
@@ -8085,15 +8090,21 @@ AddFontsFromTextRun(gfxTextRun* aTextRun,
     gfxFontEntry *fe = iter.GetGlyphRun()->mFont->GetFontEntry();
     // if we have already listed this face, just make sure the match type is
     // recorded
-    InspectorFontFace* existingFace = aFontFaces.Get(fe);
-    if (existingFace) {
-      existingFace->AddMatchType(iter.GetGlyphRun()->mMatchType);
+    InspectorFontFace* fontFace = aFontFaces.Get(fe);
+    if (fontFace) {
+      fontFace->AddMatchType(iter.GetGlyphRun()->mMatchType);
     } else {
       // A new font entry we haven't seen before
-      InspectorFontFace* ff =
-        new InspectorFontFace(fe, aTextRun->GetFontGroup(),
-                              iter.GetGlyphRun()->mMatchType);
-      aFontFaces.Put(fe, ff);
+      fontFace = new InspectorFontFace(fe, aTextRun->GetFontGroup(),
+                                       iter.GetGlyphRun()->mMatchType);
+      aFontFaces.Put(fe, fontFace);
+    }
+    if (fontFace->RangeCount() < aMaxRanges) {
+      uint32_t start = aSkipIter.ConvertSkippedToOriginal(iter.GetStringStart());
+      uint32_t end = aSkipIter.ConvertSkippedToOriginal(iter.GetStringEnd());
+      RefPtr<nsRange> range;
+      nsRange::CreateRange(aContent, start, aContent, end, getter_AddRefs(range));
+      fontFace->AddRange(range);
     }
   }
 }
@@ -8103,7 +8114,8 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
                                    int32_t aStartOffset,
                                    int32_t aEndOffset,
                                    bool aFollowContinuations,
-                                   UsedFontFaceTable& aFontFaces)
+                                   UsedFontFaceTable& aFontFaces,
+                                   uint32_t aMaxRanges)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
@@ -8138,7 +8150,8 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
 
     uint32_t skipStart = iter.ConvertOriginalToSkipped(fstart);
     uint32_t skipEnd = iter.ConvertOriginalToSkipped(fend);
-    AddFontsFromTextRun(textRun, skipStart, skipEnd - skipStart, aFontFaces);
+    AddFontsFromTextRun(textRun, aFrame->GetContent(), iter,
+                        skipStart, skipEnd - skipStart, aFontFaces, aMaxRanges);
     curr = next;
   } while (aFollowContinuations && curr);
 
