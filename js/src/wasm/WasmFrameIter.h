@@ -108,12 +108,13 @@ class ExitReason
   public:
     enum class Fixed : uint32_t
     {
-        None,          // default state, the pc is in wasm code
-        ImportJit,     // fast-path call directly into JIT code
-        ImportInterp,  // slow-path call into C++ Invoke()
-        BuiltinNative, // fast-path call directly into native C++ code
-        Trap,          // call to trap handler
-        DebugTrap      // call to debug trap handler
+        None,            // default state, the pc is in wasm code
+        FakeInterpEntry, // slow-path entry call from C++ WasmCall()
+        ImportJit,       // fast-path call directly into JIT code
+        ImportInterp,    // slow-path call into C++ Invoke()
+        BuiltinNative,   // fast-path call directly into native C++ code
+        Trap,            // call to trap handler
+        DebugTrap        // call to debug trap handler
     };
 
     MOZ_IMPLICIT ExitReason(Fixed exitReason)
@@ -141,6 +142,7 @@ class ExitReason
     bool isFixed() const { return (payload_ & 0x1) == 0; }
     bool isNone() const { return isFixed() && fixed() == Fixed::None; }
     bool isNative() const { return !isFixed() || fixed() == Fixed::BuiltinNative; }
+    bool isInterpEntry() const { return isFixed() && fixed() == Fixed::FakeInterpEntry; }
 
     uint32_t encode() const {
         return payload_;
@@ -186,7 +188,7 @@ class ProfilingFrameIterator
                            const JS::ProfilingFrameIterator::RegisterState& state);
 
     void operator++();
-    bool done() const { return !codeRange_; }
+    bool done() const { return !codeRange_ && exitReason_.isNone(); }
 
     void* stackAddress() const { MOZ_ASSERT(!done()); return stackAddress_; }
     uint8_t* unwoundIonCallerFP() const { MOZ_ASSERT(done()); return unwoundIonCallerFP_; }

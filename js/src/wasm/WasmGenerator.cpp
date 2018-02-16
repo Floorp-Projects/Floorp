@@ -159,17 +159,11 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
 {
     // Perform fallible metadata, linkdata, assumption allocations.
 
+    MOZ_ASSERT(isAsmJS() == !!maybeAsmJSMetadata);
     if (maybeAsmJSMetadata) {
-        MOZ_ASSERT(isAsmJS());
-        metadataTier_ = &maybeAsmJSMetadata->metadata(tier());
         metadata_ = maybeAsmJSMetadata;
     } else {
-        MOZ_ASSERT(!isAsmJS());
-        auto metadataTier = js::MakeUnique<MetadataTier>(tier());
-        if (!metadataTier)
-            return false;
-        metadataTier_ = metadataTier.get();
-        metadata_ = js_new<Metadata>(Move(metadataTier));
+        metadata_ = js_new<Metadata>();
         if (!metadata_)
             return false;
     }
@@ -192,10 +186,13 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
             return false;
     }
 
-    if (!linkData_.initTier1(tier(), *metadata_))
+    linkDataTier_ = js::MakeUnique<LinkDataTier>(tier());
+    if (!linkDataTier_)
         return false;
 
-    linkDataTier_ = &linkData_.linkData(tier());
+    metadataTier_ = js::MakeUnique<MetadataTier>(tier());
+    if (!metadataTier_)
+        return false;
 
     if (!assumptions_.clone(compileArgs_->assumptions))
         return false;
@@ -972,7 +969,8 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     if (!finishMetadata(bytecode))
         return nullptr;
 
-    return ModuleSegment::create(tier(), masm_, bytecode, *linkDataTier_, *metadata_);
+    return ModuleSegment::create(tier(), masm_, bytecode, *linkDataTier_, *metadata_,
+                                 metadataTier_->codeRanges);
 }
 
 SharedModule
@@ -1000,14 +998,18 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
             return nullptr;
     }
 
-    SharedCode code = js_new<Code>(Move(moduleSegment), *metadata_, Move(jumpTables));
+    auto codeTier = js::MakeUnique<CodeTier>(tier(), Move(metadataTier_), Move(moduleSegment));
+    if (!codeTier)
+        return nullptr;
+
+    SharedCode code = js_new<Code>(Move(codeTier), *metadata_, Move(jumpTables));
     if (!code)
         return nullptr;
 
     SharedModule module(js_new<Module>(Move(assumptions_),
                                        *code,
                                        Move(maybeDebuggingBytes),
-                                       Move(linkData_),
+                                       LinkData(Move(linkDataTier_)),
                                        Move(env_->imports),
                                        Move(env_->exports),
                                        Move(env_->dataSegments),
@@ -1036,9 +1038,10 @@ ModuleGenerator::finishTier2(Module& module)
     if (!moduleSegment)
         return false;
 
-    module.finishTier2(linkData_.takeLinkData(tier()),
-                       metadata_->takeMetadata(tier()),
-                       Move(moduleSegment),
-                       env_);
+    auto tier2 = js::MakeUnique<CodeTier>(tier(), Move(metadataTier_), Move(moduleSegment));
+    if (!tier2)
+        return false;
+
+    module.finishTier2(Move(linkDataTier_), Move(tier2), env_);
     return true;
 }
