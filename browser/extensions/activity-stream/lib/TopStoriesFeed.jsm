@@ -143,7 +143,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
       .filter(s => !NewTabUtils.blockedLinks.isBlocked({"url": s.url}))
       .map(s => ({
         "guid": s.id,
-        "hostname": shortURL(Object.assign({}, s, {url: s.url})),
+        "hostname": s.domain || shortURL(Object.assign({}, s, {url: s.url})),
         "type": (Date.now() - (s.published_timestamp * 1000)) <= STORIES_NOW_THRESHOLD ? "now" : "trending",
         "context": s.context,
         "icon": s.icon,
