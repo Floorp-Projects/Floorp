@@ -7,7 +7,7 @@ loader: taskgraph.loader.transform:loader
 kind-dependencies:
    - post-balrog-dummy
    - post-beetmover-dummy
-   - release-updates-builder
+   - release-balrog-submit-toplevel
    - release-update-verify-config
 
 transforms:
