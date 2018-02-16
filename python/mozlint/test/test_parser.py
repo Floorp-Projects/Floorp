@@ -48,6 +48,7 @@ def test_parse_valid_linter(parse):
     'invalid_extension.ym',
     'invalid_include.yml',
     'invalid_exclude.yml',
+    'invalid_support_files.yml',
     'missing_attrs.yml',
     'missing_definition.yml',
     'non_existing_include.yml',

@@ -1,0 +1,10 @@
+---
+SupportFilesLinter:
+    description: Linter that has a few support files
+    include:
+        - files
+    support-files:
+        - '**/*.py'
+    type: external
+    extensions: ['.js', '.jsm']
+    payload: external:passes
