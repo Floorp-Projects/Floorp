@@ -22,12 +22,6 @@ var with_new_tab_opened = async function(options, taskFn) {
   gBrowser.removeTab(tab);
 };
 
-add_task(async function() {
-  await SpecialPowers.pushPrefEnv({"set": [
-                                    ["view_source.tab", true],
-                                  ]});
-});
-
 add_task(async function test_regular_page() {
   function test_expect_view_source_enabled(browser) {
     ok(!XULBrowserWindow.canViewSource.hasAttribute("disabled"),

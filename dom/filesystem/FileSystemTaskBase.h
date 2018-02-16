@@ -10,6 +10,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/PFileSystemRequestChild.h"
+#include "nsIGlobalObject.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {

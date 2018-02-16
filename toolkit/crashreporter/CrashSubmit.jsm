@@ -6,7 +6,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
-Cu.importGlobalProperties(["File"]);
+Cu.importGlobalProperties(["File", "XMLHttpRequest"]);
 
 ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
@@ -213,8 +213,7 @@ Submitter.prototype = {
       serverURL = envOverride;
     }
 
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-              .createInstance(Ci.nsIXMLHttpRequest);
+    let xhr = new XMLHttpRequest();
     xhr.open("POST", serverURL, true);
 
     let formData = Cc["@mozilla.org/files/formdata;1"]

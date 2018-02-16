@@ -2334,7 +2334,7 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
     MOZ_CRASH("old style system disabled");
 #endif
   } else {
-    styleSet = new ServoStyleSet(ServoStyleSet::Kind::Master);
+    styleSet = new ServoStyleSet();
   }
 
   styleSet->BeginUpdate();

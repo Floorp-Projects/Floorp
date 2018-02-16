@@ -586,25 +586,59 @@ impl PicturePrimitive {
     }
 
     pub fn write_gpu_blocks(&self, request: &mut GpuDataRequest) {
+        // TODO(gw): It's unfortunate that we pay a fixed cost
+        //           of 5 GPU blocks / picture, just due to the size
+        //           of the color matrix. There aren't typically very
+        //           many pictures in a scene, but we should consider
+        //           making this more efficient for the common case.
         match self.kind {
             PictureKind::TextShadow { .. } => {
-                request.push([0.0; 4])
+                for _ in 0 .. 5 {
+                    request.push([0.0; 4]);
+                }
             }
             PictureKind::Image { composite_mode, .. } => {
                 match composite_mode {
                     Some(PictureCompositeMode::Filter(FilterOp::ColorMatrix(m))) => {
-                        // When we start pushing Image pictures through the brush path
-                        // this may need to change as the number of GPU blocks written will
-                        // need to be determinate.
                         for i in 0..5 {
                             request.push([m[i], m[i+5], m[i+10], m[i+15]]);
                         }
-                    },
-                    _ => request.push([0.0; 4]),
+                    }
+                    Some(PictureCompositeMode::Filter(filter)) => {
+                        let amount = match filter {
+                            FilterOp::Contrast(amount) => amount,
+                            FilterOp::Grayscale(amount) => amount,
+                            FilterOp::HueRotate(angle) => 0.01745329251 * angle,
+                            FilterOp::Invert(amount) => amount,
+                            FilterOp::Saturate(amount) => amount,
+                            FilterOp::Sepia(amount) => amount,
+                            FilterOp::Brightness(amount) => amount,
+                            FilterOp::Opacity(_, amount) => amount,
+
+                            // Go through different paths
+                            FilterOp::Blur(..) |
+                            FilterOp::DropShadow(..) |
+                            FilterOp::ColorMatrix(_) => 0.0,
+                        };
+
+                        request.push([amount, 1.0 - amount, 0.0, 0.0]);
+
+                        for _ in 0 .. 4 {
+                            request.push([0.0; 4]);
+                        }
+                    }
+                    _ => {
+                        for _ in 0 .. 5 {
+                            request.push([0.0; 4]);
+                        }
+                    }
                 }
             }
             PictureKind::BoxShadow { color, .. } => {
                 request.push(color.premultiplied());
+                for _ in 0 .. 4 {
+                    request.push([0.0; 4]);
+                }
             }
         }
     }

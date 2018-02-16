@@ -373,35 +373,6 @@ tests.push({
 });
 
 // ------------------------------------------------------------------------------
-tests.push({
-  name: "C.2",
-  desc: "Fix roots titles",
-
-  setup() {
-    // Sanity check: ensure that roots titles are correct. We can use our check.
-    this.check();
-    // Change some roots' titles.
-    bs.setItemTitle(bs.placesRoot, "bad title");
-    Assert.equal(bs.getItemTitle(bs.placesRoot), "bad title");
-    bs.setItemTitle(bs.unfiledBookmarksFolder, "bad title");
-    Assert.equal(bs.getItemTitle(bs.unfiledBookmarksFolder), "bad title");
-  },
-
-  check() {
-    // Ensure all roots titles are correct.
-    Assert.equal(bs.getItemTitle(bs.placesRoot), "");
-    Assert.equal(bs.getItemTitle(bs.bookmarksMenuFolder),
-                 PlacesUtils.getString("BookmarksMenuFolderTitle"));
-    Assert.equal(bs.getItemTitle(bs.tagsFolder),
-                 PlacesUtils.getString("TagsFolderTitle"));
-    Assert.equal(bs.getItemTitle(bs.unfiledBookmarksFolder),
-                 PlacesUtils.getString("OtherBookmarksFolderTitle"));
-    Assert.equal(bs.getItemTitle(bs.toolbarFolder),
-                 PlacesUtils.getString("BookmarksToolbarFolderTitle"));
-  }
-});
-
-// ------------------------------------------------------------------------------
 
 tests.push({
   name: "D.1",

@@ -5217,7 +5217,8 @@ nsContentUtils::ParseFragmentHTML(const nsAString& aSourceBuffer,
     nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
 
     nsTreeSanitizer sanitizer(nsIParserUtils::SanitizerAllowStyle |
-                              nsIParserUtils::SanitizerAllowComments);
+                              nsIParserUtils::SanitizerAllowComments |
+                              nsIParserUtils::SanitizerLogRemovals);
     sanitizer.Sanitize(fragment);
 
     ErrorResult error;
@@ -5310,7 +5311,8 @@ nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
     RefPtr<DocumentFragment> fragment = static_cast<DocumentFragment*>(*aReturn);
 
     nsTreeSanitizer sanitizer(nsIParserUtils::SanitizerAllowStyle |
-                              nsIParserUtils::SanitizerAllowComments);
+                              nsIParserUtils::SanitizerAllowComments |
+                              nsIParserUtils::SanitizerLogRemovals);
     sanitizer.Sanitize(fragment);
   }
 

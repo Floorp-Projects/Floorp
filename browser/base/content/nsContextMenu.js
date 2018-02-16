@@ -866,9 +866,8 @@ nsContextMenu.prototype = {
 
   // View Partial Source
   viewPartialSource(aContext) {
-    let inWindow = !Services.prefs.getBoolPref("view_source.tab");
     let {browser} = this;
-    let openSelectionFn = inWindow ? null : function() {
+    let openSelectionFn = function() {
       let tabBrowser = gBrowser;
       // In the case of popups, we need to find a non-popup browser window.
       // We might also not have a tabBrowser reference (if this isn't in a

@@ -1,6 +1,8 @@
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
 });
@@ -11,8 +13,7 @@ var httpbody = "<?xml version='1.0' ?><root>0123456789</root>";
 
 function syncXHR()
 {
-  var xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-            .createInstance(Ci.nsIXMLHttpRequest);
+  var xhr = new XMLHttpRequest();
   xhr.open("GET", URL + testpath, false);
   xhr.send(null);    
 }

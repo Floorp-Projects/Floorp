@@ -140,7 +140,7 @@ add_task(async function test_duping() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
       children: [{
         guid: "folderAAAAAA",
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -221,17 +221,17 @@ add_task(async function test_duping() {
       guid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 1,
-      title: "Bookmarks Toolbar",
+      title: BookmarksToolbarTitle,
     }, {
       guid: PlacesUtils.bookmarks.unfiledGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 3,
-      title: "Other Bookmarks",
+      title: UnfiledBookmarksTitle,
     }, {
       guid: PlacesUtils.bookmarks.mobileGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 4,
-      title: "mobile",
+      title: MobileBookmarksTitle,
     }],
   }, "Should dedupe matching NEW bookmarks");
 

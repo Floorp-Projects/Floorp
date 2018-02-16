@@ -45,7 +45,7 @@ def resolve_rpath(filename):
                     return path
 
     sys.stderr.write('@rpath could not be resolved from %s\n' % filename)
-    exit(1)
+    sys.exit(1)
 
 def scan_directory(path):
     dylibCopied = False
@@ -60,36 +60,44 @@ def scan_directory(path):
 
             try:
                 otoolOut = subprocess.check_output([substs['OTOOL'], '-L', filename])
-            except:
+            except Exception:
                 # Errors are expected on non-mach executables, ignore them and continue
                 continue
 
             for line in otoolOut.splitlines():
-                if line.find(DYLIB_NAME) != -1:
+                if DYLIB_NAME in line:
                     absDylibPath = line.split()[0]
 
                     # Don't try to rewrite binaries twice
-                    if absDylibPath.find('@executable_path/') == 0:
+                    if absDylibPath.startswith('@executable_path/'):
                         continue
 
                     if not dylibCopied:
-                        if absDylibPath.find('@rpath/') == 0:
+                        if absDylibPath.startswith('@rpath/'):
                             rpath = resolve_rpath(filename)
                             copyDylibPath = absDylibPath.replace('@rpath', rpath)
                         else:
                             copyDylibPath = absDylibPath
 
-                        # Copy the runtime once to the main directory, which is passed
-                        # as the argument to this function.
-                        shutil.copy(copyDylibPath, path)
+                        if os.path.isfile(copyDylibPath):
+                            # Copy the runtime once to the main directory, which is passed
+                            # as the argument to this function.
+                            shutil.copy(copyDylibPath, path)
 
-                        # Now rewrite the library itself
-                        subprocess.check_call([substs['INSTALL_NAME_TOOL'], '-id', '@executable_path/' + DYLIB_NAME, os.path.join(path, DYLIB_NAME)])
-                        dylibCopied = True
+                            # Now rewrite the library itself
+                            subprocess.check_call([substs['INSTALL_NAME_TOOL'], '-id', '@executable_path/' + DYLIB_NAME, os.path.join(path, DYLIB_NAME)])
+                            dylibCopied = True
+                        else:
+                            sys.stderr.write('dylib path in %s was not found at: %s\n' % (filename, copyDylibPath))
 
                     # Now use install_name_tool to rewrite the path in our binary
-                    subprocess.check_call([substs['INSTALL_NAME_TOOL'], '-change', absDylibPath, '@executable_path/' + DYLIB_NAME, filename])
+                    relpath = '' if path == root else os.path.relpath(path, root) + '/'
+                    subprocess.check_call([substs['INSTALL_NAME_TOOL'], '-change', absDylibPath, '@executable_path/' + relpath + DYLIB_NAME, filename])
                     break
+
+    if not dylibCopied:
+        sys.stderr.write('%s could not be found\n' % DYLIB_NAME)
+        sys.exit(1)
 
 if __name__ == '__main__':
     for d in sys.argv[1:]:

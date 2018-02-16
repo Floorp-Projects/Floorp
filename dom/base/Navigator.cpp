@@ -1071,12 +1071,12 @@ Navigator::SendBeacon(const nsAString& aUrl,
   }
 
   if (aData.Value().IsBlob()) {
-    BodyExtractor<nsIXHRSendable> body(&aData.Value().GetAsBlob());
+    BodyExtractor<const Blob> body(&aData.Value().GetAsBlob());
     return SendBeaconInternal(aUrl, &body, eBeaconTypeBlob, aRv);
   }
 
   if (aData.Value().IsFormData()) {
-    BodyExtractor<nsIXHRSendable> body(&aData.Value().GetAsFormData());
+    BodyExtractor<const FormData> body(&aData.Value().GetAsFormData());
     return SendBeaconInternal(aUrl, &body, eBeaconTypeOther, aRv);
   }
 
@@ -1086,7 +1086,7 @@ Navigator::SendBeacon(const nsAString& aUrl,
   }
 
   if (aData.Value().IsURLSearchParams()) {
-    BodyExtractor<nsIXHRSendable> body(&aData.Value().GetAsURLSearchParams());
+    BodyExtractor<const URLSearchParams> body(&aData.Value().GetAsURLSearchParams());
     return SendBeaconInternal(aUrl, &body, eBeaconTypeOther, aRv);
   }
 

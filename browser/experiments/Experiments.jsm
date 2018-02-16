@@ -14,6 +14,8 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 ChromeUtils.defineModuleGetter(this, "UpdateUtils",
                                "resource://gre/modules/UpdateUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonManager",
@@ -937,7 +939,7 @@ Experiments.Experiments.prototype = {
    */
   _httpGetRequest(url) {
     this._log.trace("httpGetRequest(" + url + ")");
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
+    let xhr = new XMLHttpRequest();
 
     this._networkRequest = xhr;
     return new Promise((resolve, reject) => {

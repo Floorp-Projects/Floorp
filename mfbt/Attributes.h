@@ -238,6 +238,13 @@
 #  endif
 #endif
 
+#ifdef __clang__
+#  ifdef MOZ_HAVE_NO_SANITIZE_ATTR
+#    define MOZ_HAVE_UNSIGNED_OVERFLOW_SANITIZE_ATTR
+#    define MOZ_HAVE_SIGNED_OVERFLOW_SANITIZE_ATTR
+#  endif
+#endif
+
 /*
  * MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW disables *un*signed integer overflow
  * checking on the function it annotates, in builds configured to perform it.
@@ -271,7 +278,7 @@
  * slowdown to execute that instrumentation.  Use this attribute to eliminate
  * those costs -- but only after carefully verifying that no overflow can occur.
  */
-#if defined(MOZ_HAVE_NO_SANITIZE_ATTR)
+#ifdef MOZ_HAVE_UNSIGNED_OVERFLOW_SANITIZE_ATTR
 #  define MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW __attribute__((no_sanitize("unsigned-integer-overflow")))
 #else
 #  define MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW /* nothing */
@@ -299,7 +306,7 @@
  * slowdown to execute that instrumentation.  Use this attribute to eliminate
  * those costs -- but only after carefully verifying that no overflow can occur.
  */
-#if defined(MOZ_HAVE_NO_SANITIZE_ATTR)
+#ifdef MOZ_HAVE_SIGNED_OVERFLOW_SANITIZE_ATTR
 #  define MOZ_NO_SANITIZE_SIGNED_OVERFLOW __attribute__((no_sanitize("signed-integer-overflow")))
 #else
 #  define MOZ_NO_SANITIZE_SIGNED_OVERFLOW /* nothing */

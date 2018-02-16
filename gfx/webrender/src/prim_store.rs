@@ -190,14 +190,23 @@ pub enum BrushKind {
         orientation: LineOrientation,
     },
     Picture,
+    Image {
+        request: ImageRequest,
+        current_epoch: Epoch,
+        alpha_type: AlphaType,
+    },
 }
 
 impl BrushKind {
     fn supports_segments(&self) -> bool {
         match *self {
             BrushKind::Solid { .. } |
-            BrushKind::Picture => true,
-            _ => false,
+            BrushKind::Picture |
+            BrushKind::Image { .. } => true,
+
+            BrushKind::Mask { .. } |
+            BrushKind::Clear |
+            BrushKind::Line { .. } => false,
         }
     }
 }
@@ -274,7 +283,8 @@ impl BrushPrimitive {
     fn write_gpu_blocks(&self, request: &mut GpuDataRequest) {
         // has to match VECS_PER_SPECIFIC_BRUSH
         match self.kind {
-            BrushKind::Picture => {
+            BrushKind::Picture |
+            BrushKind::Image { .. } => {
             }
             BrushKind::Solid { color } => {
                 request.push(color.premultiplied());
@@ -1007,6 +1017,7 @@ impl PrimitiveStore {
                     BrushKind::Solid { ref color } => PrimitiveOpacity::from_alpha(color.a),
                     BrushKind::Mask { .. } => PrimitiveOpacity::translucent(),
                     BrushKind::Line { .. } => PrimitiveOpacity::translucent(),
+                    BrushKind::Image { .. } => PrimitiveOpacity::translucent(),
                     BrushKind::Picture => {
                         // TODO(gw): This is not currently used. In the future
                         //           we should detect opaque pictures.
@@ -1298,7 +1309,36 @@ impl PrimitiveStore {
                     );
                 }
             }
-            PrimitiveKind::Brush |
+            PrimitiveKind::Brush => {
+                let brush = &mut self.cpu_brushes[metadata.cpu_prim_index.0];
+
+                match brush.kind {
+                    BrushKind::Image { request, ref mut current_epoch, .. } => {
+                        let image_properties = frame_state
+                            .resource_cache
+                            .get_image_properties(request.key);
+
+                        if let Some(image_properties) = image_properties {
+                            // See if this image has been updated since we last hit this code path.
+                            // If so, we need to update the opacity.
+                            if image_properties.epoch != *current_epoch {
+                                *current_epoch = image_properties.epoch;
+                                metadata.opacity.is_opaque = image_properties.descriptor.is_opaque;
+                            }
+                        }
+
+                        frame_state.resource_cache.request_image(
+                            request,
+                            frame_state.gpu_cache,
+                        );
+                    }
+                    BrushKind::Mask { .. } |
+                    BrushKind::Solid { .. } |
+                    BrushKind::Clear |
+                    BrushKind::Line { .. } |
+                    BrushKind::Picture { .. } => {}
+                }
+            }
             PrimitiveKind::AlignedGradient |
             PrimitiveKind::AngleGradient |
             PrimitiveKind::RadialGradient => {}

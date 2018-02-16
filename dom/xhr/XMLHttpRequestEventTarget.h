@@ -8,13 +8,11 @@
 #define mozilla_dom_XMLHttpRequestEventTarget_h
 
 #include "mozilla/DOMEventTargetHelper.h"
-#include "nsIXMLHttpRequest.h"
 
 namespace mozilla {
 namespace dom {
 
-class XMLHttpRequestEventTarget : public DOMEventTargetHelper,
-                                  public nsIXMLHttpRequestEventTarget
+class XMLHttpRequestEventTarget : public DOMEventTargetHelper
 {
 protected:
   explicit XMLHttpRequestEventTarget(DOMEventTargetHelper* aOwner)
@@ -30,7 +28,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XMLHttpRequestEventTarget,
                                            DOMEventTargetHelper)
-  NS_DECL_NSIXMLHTTPREQUESTEVENTTARGET
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
   IMPL_EVENT_HANDLER(loadstart)

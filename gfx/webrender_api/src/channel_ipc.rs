@@ -2,12 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use ipc_channel::ipc::{self, IpcBytesReceiver, IpcBytesSender, IpcReceiver, IpcSender};
 use serde::{Deserialize, Serialize};
 use std::io::{Error, ErrorKind};
-use std::io;
-use std::error;
-
-use ipc_channel::ipc::{self, IpcSender, IpcReceiver, IpcBytesSender, IpcBytesReceiver};
+use std::{error, io};
 
 ///
 /// Handles the channel implementation when IPC is enabled.

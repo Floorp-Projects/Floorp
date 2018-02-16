@@ -215,7 +215,9 @@ pub fn main_wrapper<E: Example>(
                 glutin::VirtualKeyCode::O => renderer.toggle_debug_flags(webrender::DebugFlags::RENDER_TARGET_DBG),
                 glutin::VirtualKeyCode::I => renderer.toggle_debug_flags(webrender::DebugFlags::TEXTURE_CACHE_DBG),
                 glutin::VirtualKeyCode::S => renderer.toggle_debug_flags(webrender::DebugFlags::COMPACT_PROFILER),
-                glutin::VirtualKeyCode::Q => renderer.toggle_debug_flags(webrender::DebugFlags::GPU_TIME_QUERIES | webrender::DebugFlags::GPU_SAMPLE_QUERIES),
+                glutin::VirtualKeyCode::Q => renderer.toggle_debug_flags(
+                    webrender::DebugFlags::GPU_TIME_QUERIES | webrender::DebugFlags::GPU_SAMPLE_QUERIES
+                ),
                 glutin::VirtualKeyCode::Key1 => txn.set_window_parameters(
                     framebuffer_size,
                     DeviceUintRect::new(DeviceUintPoint::zero(), framebuffer_size),

@@ -19,6 +19,8 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 const SOURCE = "https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT";
 const OUTPUT = "nsSTSPreloadList.inc";
 const ERROR_OUTPUT = "nsSTSPreloadList.errors";
@@ -43,8 +45,7 @@ const HEADER = "/* This Source Code Form is subject to the terms of the Mozilla 
 const GPERF_DELIM = "%%\n";
 
 function download() {
-  let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-            .createInstance(Ci.nsIXMLHttpRequest);
+  let req = new XMLHttpRequest();
   req.open("GET", SOURCE, false); // doing the request synchronously
   try {
     req.send();
@@ -166,8 +167,7 @@ RedirectAndAuthStopper.prototype = {
 };
 
 function getHSTSStatus(host, resultList) {
-  let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-            .createInstance(Ci.nsIXMLHttpRequest);
+  let req = new XMLHttpRequest();
   let inResultList = false;
   let uri = "https://" + host.name + "/";
   req.open("GET", uri, true);

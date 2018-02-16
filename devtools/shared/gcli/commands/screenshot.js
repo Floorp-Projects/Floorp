@@ -428,10 +428,8 @@ function saveToClipboard(context, reply) {
  */
 function uploadToImgur(reply) {
   return new Promise((resolve, reject) => {
-    const xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                  .createInstance(Ci.nsIXMLHttpRequest);
-    const fd = Cc["@mozilla.org/files/formdata;1"]
-                  .createInstance(Ci.nsIDOMFormData);
+    const xhr = new XMLHttpRequest();
+    const fd = new FormData();
     fd.append("image", reply.data.split(",")[1]);
     fd.append("type", "base64");
     fd.append("title", reply.filename);

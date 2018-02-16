@@ -11,6 +11,8 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "NS_ASSERT", "resource://gre/modules/debug.js");
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 const SEARCH_RESPONSE_SUGGESTION_JSON = "application/x-suggestions+json";
 const DEFAULT_FORM_HISTORY_PARAM      = "searchbar-history";
 const HTTP_OK            = 200;
@@ -224,8 +226,7 @@ this.SearchSuggestionController.prototype = {
    */
   _fetchRemote(searchTerm, engine, privateMode, userContextId) {
     let deferredResponse = PromiseUtils.defer();
-    this._request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                    createInstance(Ci.nsIXMLHttpRequest);
+    this._request = new XMLHttpRequest();
     let submission = engine.getSubmission(searchTerm,
                                           SEARCH_RESPONSE_SUGGESTION_JSON);
     let method = (submission.postData ? "POST" : "GET");

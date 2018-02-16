@@ -226,7 +226,7 @@ SetJournalMode(nsCOMPtr<mozIStorageConnection>& aDBConn,
 nsresult
 CreateRoot(nsCOMPtr<mozIStorageConnection>& aDBConn,
            const nsCString& aRootName, const nsCString& aGuid,
-           const nsAString& titleString)
+           const nsCString& titleString)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -258,7 +258,7 @@ CreateRoot(nsCOMPtr<mozIStorageConnection>& aDBConn,
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("item_position"), itemPosition);
   if (NS_FAILED(rv)) return rv;
   rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("item_title"),
-                                  NS_ConvertUTF16toUTF8(titleString));
+                                  titleString);
   if (NS_FAILED(rv)) return rv;
   rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("date_added"), timestamp);
   if (NS_FAILED(rv)) return rv;
@@ -1214,7 +1214,12 @@ Database::InitSchema(bool* aDatabaseMigrated)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 60 uses schema version 42.
+      if (currentSchemaVersion < 43) {
+        rv = MigrateV43Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 60 uses schema version 43.
 
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
@@ -1222,11 +1227,6 @@ Database::InitSchema(bool* aDatabaseMigrated)
       // CONNECTION AND CAUSE FURTHER STEPS TO FAIL.
       // In case, set a bool and do the async work in the ScopeExit guard just
       // before the migration steps.
-
-      rv = UpdateBookmarkRootTitles();
-      // We don't want a broken localization to cause us to think
-      // the database is corrupt and needs to be replaced.
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
   else {
@@ -1329,42 +1329,29 @@ Database::CreateBookmarkRoots()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIStringBundleService> bundleService =
-    services::GetStringBundleService();
-  NS_ENSURE_STATE(bundleService);
-  nsCOMPtr<nsIStringBundle> bundle;
-  nsresult rv = bundleService->CreateBundle(PLACES_BUNDLE, getter_AddRefs(bundle));
-  if (NS_FAILED(rv)) return rv;
-
-  nsAutoString rootTitle;
   // The first root's title is an empty string.
-  rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("places"),
-                  NS_LITERAL_CSTRING("root________"), rootTitle);
+  nsresult rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("places"),
+                           NS_LITERAL_CSTRING("root________"), EmptyCString());
   if (NS_FAILED(rv)) return rv;
 
-  // Fetch the internationalized folder name from the string bundle.
-  rv = bundle->GetStringFromName("BookmarksMenuFolderTitle", rootTitle);
-  if (NS_FAILED(rv)) return rv;
+  // For the other roots, the UI doesn't rely on the value in the database, so
+  // just set it to something simple to make it easier for humans to read.
+
   rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("menu"),
-                  NS_LITERAL_CSTRING("menu________"), rootTitle);
+                  NS_LITERAL_CSTRING("menu________"), NS_LITERAL_CSTRING("menu"));
   if (NS_FAILED(rv)) return rv;
 
-  rv = bundle->GetStringFromName("BookmarksToolbarFolderTitle", rootTitle);
-  if (NS_FAILED(rv)) return rv;
   rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("toolbar"),
-                  NS_LITERAL_CSTRING("toolbar_____"), rootTitle);
+                  NS_LITERAL_CSTRING("toolbar_____"), NS_LITERAL_CSTRING("toolbar"));
   if (NS_FAILED(rv)) return rv;
 
-  rv = bundle->GetStringFromName("TagsFolderTitle", rootTitle);
-  if (NS_FAILED(rv)) return rv;
   rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("tags"),
-                  NS_LITERAL_CSTRING("tags________"), rootTitle);
+                  NS_LITERAL_CSTRING("tags________"), NS_LITERAL_CSTRING("tags"));
   if (NS_FAILED(rv)) return rv;
 
-  rv = bundle->GetStringFromName("OtherBookmarksFolderTitle", rootTitle);
   if (NS_FAILED(rv)) return rv;
   rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("unfiled"),
-                  NS_LITERAL_CSTRING("unfiled_____"), rootTitle);
+                  NS_LITERAL_CSTRING("unfiled_____"), NS_LITERAL_CSTRING("unfiled"));
   if (NS_FAILED(rv)) return rv;
 
   int64_t mobileRootId = CreateMobileRoot();
@@ -1483,72 +1470,7 @@ Database::InitTempEntities()
 }
 
 nsresult
-Database::UpdateBookmarkRootTitles()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIStringBundleService> bundleService =
-    services::GetStringBundleService();
-  NS_ENSURE_STATE(bundleService);
-
-  nsCOMPtr<nsIStringBundle> bundle;
-  nsresult rv = bundleService->CreateBundle(PLACES_BUNDLE, getter_AddRefs(bundle));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<mozIStorageAsyncStatement> stmt;
-  rv = mMainConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
-    "UPDATE moz_bookmarks SET title = :new_title WHERE guid = :guid"
-  ), getter_AddRefs(stmt));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
-  rv = stmt->NewBindingParamsArray(getter_AddRefs(paramsArray));
-  if (NS_FAILED(rv)) return rv;
-
-  const char *rootGuids[] = { "menu________"
-                            , "toolbar_____"
-                            , "tags________"
-                            , "unfiled_____"
-                            , "mobile______"
-                            };
-  const char *titleStringIDs[] = { "BookmarksMenuFolderTitle"
-                                 , "BookmarksToolbarFolderTitle"
-                                 , "TagsFolderTitle"
-                                 , "OtherBookmarksFolderTitle"
-                                 , "MobileBookmarksFolderTitle"
-                                 };
-
-  for (uint32_t i = 0; i < ArrayLength(rootGuids); ++i) {
-    nsAutoString title;
-    rv = bundle->GetStringFromName(titleStringIDs[i], title);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<mozIStorageBindingParams> params;
-    rv = paramsArray->NewBindingParams(getter_AddRefs(params));
-    if (NS_FAILED(rv)) return rv;
-    rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"),
-                                      nsDependentCString(rootGuids[i]));
-    if (NS_FAILED(rv)) return rv;
-    rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("new_title"),
-                                      NS_ConvertUTF16toUTF8(title));
-    if (NS_FAILED(rv)) return rv;
-    rv = paramsArray->AddParams(params);
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  rv = stmt->BindParameters(paramsArray);
-  if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<mozIStoragePendingStatement> pendingStmt;
-  rv = stmt->ExecuteAsync(nullptr, getter_AddRefs(pendingStmt));
-  if (NS_FAILED(rv)) return rv;
-
-  return NS_OK;
-}
-
-nsresult
 Database::MigrateV31Up() {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "DROP TABLE IF EXISTS moz_bookmarks_roots"
   ));
@@ -1559,8 +1481,6 @@ Database::MigrateV31Up() {
 
 nsresult
 Database::MigrateV32Up() {
-  MOZ_ASSERT(NS_IsMainThread());
-
   // Remove some old and no more used Places preferences that may be confusing
   // for the user.
   mozilla::Unused << Preferences::ClearUser("places.history.expiration.transient_optimal_database_size");
@@ -1656,8 +1576,6 @@ Database::MigrateV32Up() {
 
 nsresult
 Database::MigrateV33Up() {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "DROP INDEX IF EXISTS moz_places_url_uniqueindex"
   ));
@@ -1689,8 +1607,6 @@ Database::MigrateV33Up() {
 
 nsresult
 Database::MigrateV34Up() {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "DELETE FROM moz_keywords WHERE id IN ( "
       "SELECT id FROM moz_keywords k "
@@ -1704,8 +1620,6 @@ Database::MigrateV34Up() {
 
 nsresult
 Database::MigrateV35Up() {
-  MOZ_ASSERT(NS_IsMainThread());
-
   int64_t mobileRootId = CreateMobileRoot();
   if (mobileRootId <= 0)  {
     // Either the schema is broken or there isn't any root. The latter can
@@ -1775,8 +1689,6 @@ Database::MigrateV35Up() {
 
 nsresult
 Database::MigrateV36Up() {
-  MOZ_ASSERT(NS_IsMainThread());
-
   // Add sync status and change counter tracking columns for bookmarks.
   nsCOMPtr<mozIStorageStatement> syncStatusStmt;
   nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -1821,8 +1733,6 @@ Database::MigrateV36Up() {
 
 nsresult
 Database::MigrateV37Up() {
-  MOZ_ASSERT(NS_IsMainThread());
-
   // Move favicons to the new database.
   // For now we retain the old moz_favicons table, but we empty it.
   // This allows for a "safer" downgrade, even if icons will be lost in the
@@ -1898,8 +1808,6 @@ Database::MigrateV37Up() {
 nsresult
 Database::MigrateV38Up()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT description, preview_image_url FROM moz_places"
@@ -1921,8 +1829,6 @@ Database::MigrateV38Up()
 
 nsresult
 Database::MigrateV39Up() {
-  MOZ_ASSERT(NS_IsMainThread());
-
   // Create an index on dateAdded.
   nsresult rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_BOOKMARKS_DATEADDED);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1932,7 +1838,6 @@ Database::MigrateV39Up() {
 
 nsresult
 Database::MigrateV40Up() {
-  MOZ_ASSERT(NS_IsMainThread());
   // We are changing the hashing function to crop the hashed text to a maximum
   // length, thus we must recalculate the hashes.
   // Due to this, on downgrade some of these may not match, it should be limited
@@ -1957,7 +1862,6 @@ Database::MigrateV40Up() {
 
 nsresult
 Database::MigrateV41Up() {
-  MOZ_ASSERT(NS_IsMainThread());
   // Remove old favicons entities.
   nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "DROP INDEX IF EXISTS moz_places_faviconindex"));
@@ -1970,7 +1874,6 @@ Database::MigrateV41Up() {
 
 nsresult
 Database::MigrateV42Up() {
-  MOZ_ASSERT(NS_IsMainThread());
   // auto_vacuum of the favicons database was broken, we may have to set it again.
   int32_t vacuum = 0;
   {
@@ -1992,6 +1895,43 @@ Database::MigrateV42Up() {
     // For the change to be effective, we must vacuum the database.
     mShouldVacuumIcons = true;
   }
+  return NS_OK;
+}
+
+nsresult
+Database::MigrateV43Up() {
+  // moz_keywords doesn't properly disallow multiple keyword for the same URI
+  // because for postData NULL != NULL. We should use an empty string instead.
+
+  // To avoid constraint failures, we must first remove duplicate keywords.
+  // This may cause a dataloss, but the only alternative would be to modify the
+  // related url, and that's far more complex.
+  nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_keywords "
+    "WHERE post_data ISNULL "
+      "AND id NOT IN ( "
+        "SELECT MAX(id) "
+        "FROM moz_keywords "
+        "WHERE post_data ISNULL "
+        "GROUP BY place_id "
+      ")"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // We must recalculate foreign_count for all the touched places.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_places "
+    "SET foreign_count = (SELECT count(*) FROM moz_bookmarks WHERE fk = moz_places.id) + "
+                        "(SELECT count(*) FROM moz_keywords WHERE place_id = moz_places.id) "
+    "WHERE id IN (SELECT DISTINCT place_id FROM moz_keywords) "
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_keywords "
+    "SET post_data = '' "
+    "WHERE post_data ISNULL "
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 

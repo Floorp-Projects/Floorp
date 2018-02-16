@@ -57,7 +57,7 @@ describe("EvaluationResult component:", () => {
     const wrapper = render(EvaluationResult({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
     expect(text).toBe("Error");
-    expect(wrapper.find(".message.error").length).toBe(1);
+    expect(wrapper.hasClass("error")).toBe(true);
   });
 
   it("renders thrown string", () => {
@@ -65,7 +65,7 @@ describe("EvaluationResult component:", () => {
     const wrapper = render(EvaluationResult({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
     expect(text).toBe("Error: tomato");
-    expect(wrapper.find(".message.error").length).toBe(1);
+    expect(wrapper.hasClass("error")).toBe(true);
   });
 
   it("renders an inspect command result", () => {

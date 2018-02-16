@@ -13,9 +13,10 @@
 // 4. [paste the output into the appropriate section in
 //     security/manager/tools/PreloadedHPKPins.json]
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 function downloadRoots() {
-  let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-              .createInstance(Ci.nsIXMLHttpRequest);
+  let req = new XMLHttpRequest();
   req.open("GET", "https://pki.google.com/roots.pem", false);
   try {
     req.send();

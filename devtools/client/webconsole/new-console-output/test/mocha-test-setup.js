@@ -2,47 +2,58 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-// Configure enzyme with React 16 adapter.
-const Enzyme = require("enzyme");
-const Adapter = require("enzyme-adapter-react-16");
-Enzyme.configure({ adapter: new Adapter() });
+const mcRoot = `${__dirname}/../../../../../`;
+const getModule = mcPath => `module.exports = require("${mcRoot}${mcPath}");`;
 
 // Point to vendored-in files and mocks when needed.
 const requireHacker = require("require-hacker");
-requireHacker.global_hook("default", path => {
+requireHacker.global_hook("default", (path, module) => {
   switch (path) {
     // For Enzyme
     case "react-dom":
-      return `const ReactDOM = require('devtools/client/shared/vendor/react-dom'); module.exports = ReactDOM`;
+      return getModule("devtools/client/shared/vendor/react-dom");
     case "react-dom/server":
-      return `const ReactDOMServer = require('devtools/client/shared/vendor/react-dom-server'); module.exports = ReactDOMServer`;
-    case "react-addons-test-utils":
-      return `const TestUtils = require('devtools/client/shared/vendor/react-dom-test-utils'); module.exports = TestUtils`;
+      return getModule("devtools/client/shared/vendor/react-dom-server");
+    case "react-dom/test-utils":
+      return getModule("devtools/client/shared/vendor/react-dom-test-utils-dev");
     case "react-redux":
-      return `const ReactRedux = require('devtools/client/shared/vendor/react-redux'); module.exports = ReactRedux`;
+      return getModule("devtools/client/shared/vendor/react-redux");
     // Use react-dev. This would be handled by browserLoader in Firefox.
     case "react":
     case "devtools/client/shared/vendor/react":
-      return `const React = require('devtools/client/shared/vendor/react-dev'); module.exports = React`;
-    // For Rep's use of AMD
-    case "devtools/client/shared/vendor/react.default":
-      return `const React = require('devtools/client/shared/vendor/react-dev'); module.exports = React`;
+      return getModule("devtools/client/shared/vendor/react-dev");
   }
 
   // Some modules depend on Chrome APIs which don't work in mocha. When such a module
   // is required, replace it with a mock version.
   switch (path) {
     case "devtools/shared/l10n":
-      return `module.exports = require("devtools/client/webconsole/new-console-output/test/fixtures/LocalizationHelper")`;
+      return getModule(
+        "devtools/client/webconsole/new-console-output/test/fixtures/LocalizationHelper");
     case "devtools/shared/plural-form":
-      return `module.exports = require("devtools/client/webconsole/new-console-output/test/fixtures/PluralForm")`;
+      return getModule(
+        "devtools/client/webconsole/new-console-output/test/fixtures/PluralForm");
     case "Services":
     case "Services.default":
-      return `module.exports = require("devtools/client/webconsole/new-console-output/test/fixtures/Services")`;
+      return getModule(
+        "devtools/client/webconsole/new-console-output/test/fixtures/Services");
     case "devtools/shared/client/object-client":
       return `() => {}`;
     case "devtools/client/netmonitor/src/components/TabboxPanel":
       return "{}";
   }
+
+  // We need to rewrite all the modules assuming the root is mozilla-central and give them
+  // an absolute path.
+  if (path.startsWith("devtools/")) {
+    return getModule(path);
+  }
+
   return undefined;
 });
+
+// Configure enzyme with React 16 adapter. This needs to be done after we set the
+// requireHack hook so `require()` calls in Enzyme are handled as well.
+const Enzyme = require("enzyme");
+const Adapter = require("enzyme-adapter-react-16");
+Enzyme.configure({ adapter: new Adapter() });
