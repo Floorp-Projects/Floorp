@@ -1080,6 +1080,11 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short RESULTS_AS_ROOTS_QUERY = 8;
 
   /**
+   * This returns nsINavHistoryQueryResultNode for each left-pane root.
+   */
+  const unsigned short RESULTS_AS_LEFT_PANE_QUERY = 9;
+
+  /**
    * The sorting mode to be used for this query.
    * mode is one of SORT_BY_*
    */
@@ -1139,7 +1144,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   attribute boolean includeHidden;
 
   /**
-   * This is the maximum number of results that you want. The query is exeucted,
+   * This is the maximum number of results that you want. The query is executed,
    * the results are sorted, and then the top 'maxResults' results are taken
    * and returned. Set to 0 (the default) to get all results.
    *
