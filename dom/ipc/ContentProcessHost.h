@@ -27,6 +27,16 @@ public:
                      bool aIsFileContent = false);
   ~ContentProcessHost();
 
+  // Launch the subprocess asynchronously. On failure, false is returned.
+  // Otherwise, true is returned, and either the OnProcessHandleReady method is
+  // called when the process is created, or OnProcessLaunchError will be called
+  // if the process could not be spawned due to an asynchronous error.
+  bool Launch(StringVector aExtraOpts);
+
+  // Called on the IO thread.
+  void OnProcessHandleReady(ProcessHandle aProcessHandle) override;
+  void OnProcessLaunchError() override;
+
 private:
   DISALLOW_COPY_AND_ASSIGN(ContentProcessHost);
 
