@@ -3398,7 +3398,7 @@ IsAboutToBeFinalizedInternal(T** thingp)
 }
 
 template <typename S>
-struct IsAboutToBeFinalizedFunctor : public IdentityDefaultAdaptor<S> {
+struct IsAboutToBeFinalizedInternalFunctor : public IdentityDefaultAdaptor<S> {
     template <typename T> S operator()(T* t, bool* rv) {
         *rv = IsAboutToBeFinalizedInternal(&t);
         return js::gc::RewrapTaggedPointer<S, T>::wrap(t);
@@ -3410,7 +3410,7 @@ static bool
 IsAboutToBeFinalizedInternal(T* thingp)
 {
     bool rv = false;
-    *thingp = DispatchTyped(IsAboutToBeFinalizedFunctor<T>(), *thingp, &rv);
+    *thingp = DispatchTyped(IsAboutToBeFinalizedInternalFunctor<T>(), *thingp, &rv);
     return rv;
 }
 
