@@ -913,81 +913,91 @@ MacroAssembler::wasmTrapInstruction()
 }
 
 void
-MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry)
+MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output,
+                                           bool isSaturating, Label* oolEntry)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-MacroAssembler::wasmTruncateDoubleToInt32(FloatRegister input, Register output, Label* oolEntry)
+MacroAssembler::wasmTruncateDoubleToInt32(FloatRegister input, Register output,
+                                          bool isSaturating, Label* oolEntry)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, Label* oolEntry)
+MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output,
+                                            bool isSaturating, Label* oolEntry)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input, Register output, Label* oolEntry)
+MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input, Register output,
+                                           bool isSaturating, Label* oolEntry)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-MacroAssembler::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, Label* oolEntry,
+MacroAssembler::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output,
+                                          bool isSaturating, Label* oolEntry,
                                           Label* oolRejoin, FloatRegister tempDouble)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-MacroAssembler::wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
+MacroAssembler::wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output,
+                                           bool isSaturating, Label* oolEntry,
                                            Label* oolRejoin, FloatRegister tempDouble)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-MacroAssembler::wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, Label* oolEntry,
+MacroAssembler::wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output,
+                                           bool isSaturating, Label* oolEntry,
                                            Label* oolRejoin, FloatRegister tempDouble)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-MacroAssembler::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
+MacroAssembler::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output,
+                                            bool isSaturating, Label* oolEntry,
                                             Label* oolRejoin, FloatRegister tempDouble)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-MacroAssembler::oolWasmTruncateCheckF32ToI32(FloatRegister input, bool isUnsigned,
+MacroAssembler::oolWasmTruncateCheckF32ToI32(FloatRegister input, Register output, TruncFlags flags,
                                              wasm::BytecodeOffset off, Label* rejoin)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-MacroAssembler::oolWasmTruncateCheckF64ToI32(FloatRegister input, bool isUnsigned,
+MacroAssembler::oolWasmTruncateCheckF64ToI32(FloatRegister input, Register output, TruncFlags flags,
                                              wasm::BytecodeOffset off, Label* rejoin)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-MacroAssembler::oolWasmTruncateCheckF32ToI64(FloatRegister input, bool isUnsigned,
-                                             wasm::BytecodeOffset off, Label* rejoin)
+MacroAssembler::oolWasmTruncateCheckF32ToI64(FloatRegister input, Register64 output,
+                                             TruncFlags flags, wasm::BytecodeOffset off,
+                                             Label* rejoin)
 {
     MOZ_CRASH("NYI");
 }
 
 void
-MacroAssembler::oolWasmTruncateCheckF64ToI64(FloatRegister input, bool isUnsigned,
-                                             wasm::BytecodeOffset off, Label* rejoin)
+MacroAssembler::oolWasmTruncateCheckF64ToI64(FloatRegister input, Register64 output,
+                                             TruncFlags flags, wasm::BytecodeOffset off,
+                                             Label* rejoin)
 {
     MOZ_CRASH("NYI");
 }

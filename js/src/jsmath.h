@@ -10,6 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 
 #include <cmath>
+#include <stdint.h>
 
 #include "NamespaceImports.h"
 
@@ -343,7 +344,7 @@ extern float
 math_roundf_impl(float x);
 
 extern double
-powi(double x, int y);
+powi(double x, int32_t y);
 
 extern double
 ecmaPow(double x, double y);

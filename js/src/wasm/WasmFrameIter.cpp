@@ -626,6 +626,9 @@ wasm::GenerateJitEntryPrologue(MacroAssembler& masm, Offsets* offsets)
         offsets->begin = masm.currentOffset();
         MOZ_ASSERT(BeforePushRetAddr == 0);
         masm.push(lr);
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+        offsets->begin = masm.currentOffset();
+        masm.push(ra);
 #else
         // The x86/x64 call instruction pushes the return address.
         offsets->begin = masm.currentOffset();
@@ -1115,6 +1118,10 @@ ThunkedNativeToDescription(SymbolicAddress func)
         return "call to native i64.trunc_u/f64 (in wasm)";
       case SymbolicAddress::TruncateDoubleToInt64:
         return "call to native i64.trunc_s/f64 (in wasm)";
+      case SymbolicAddress::SaturatingTruncateDoubleToUint64:
+        return "call to native i64.trunc_u:sat/f64 (in wasm)";
+      case SymbolicAddress::SaturatingTruncateDoubleToInt64:
+        return "call to native i64.trunc_s:sat/f64 (in wasm)";
       case SymbolicAddress::Uint64ToDouble:
         return "call to native f64.convert_u/i64 (in wasm)";
       case SymbolicAddress::Uint64ToFloat32:

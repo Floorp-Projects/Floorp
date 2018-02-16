@@ -655,10 +655,10 @@ js::minmax_impl(JSContext* cx, bool max, HandleValue a, HandleValue b, MutableHa
 }
 
 double
-js::powi(double x, int y)
+js::powi(double x, int32_t y)
 {
     AutoUnsafeCallWithABI unsafe;
-    unsigned n = (y < 0) ? -y : y;
+    uint32_t n = Abs(y);
     double m = x;
     double p = 1;
     while (true) {

@@ -1,0 +1,17 @@
+@font-face {
+  font-family: capitals;
+  src: url(GentiumPlus-R.woff) format("woff");
+  unicode-range: U+0041-005A;
+}
+@font-face {
+  font-family: lowercase;
+  src: url(GentiumPlus-R.woff) format("woff");
+  unicode-range: U+0061-007A;
+}
+@font-face {
+  font-family: gentium;
+  src: url(GentiumPlus-R.woff) format("woff");
+}
+.gentium {
+  font-family: capitals, lowercase, gentium, sans-serif;
+}

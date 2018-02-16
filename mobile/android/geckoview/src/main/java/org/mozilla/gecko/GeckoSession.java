@@ -233,10 +233,28 @@ public class GeckoSession extends LayerSession
                             type, message.getString("access"),
                             new PermissionCallback(type, callback));
                 } else if ("GeckoView:MediaPermission".equals(event)) {
+                    GeckoBundle[] videoBundles = message.getBundleArray("video");
+                    GeckoBundle[] audioBundles = message.getBundleArray("audio");
+                    PermissionDelegate.MediaSource[] videos = null;
+                    PermissionDelegate.MediaSource[] audios = null;
+
+                    if (videoBundles != null) {
+                        videos = new PermissionDelegate.MediaSource[videoBundles.length];
+                        for (int i = 0; i < videoBundles.length; i++) {
+                            videos[i] = new PermissionDelegate.MediaSource(videoBundles[i]);
+                        }
+                    }
+
+                    if (audioBundles != null) {
+                        audios = new PermissionDelegate.MediaSource[audioBundles.length];
+                        for (int i = 0; i < audioBundles.length; i++) {
+                            audios[i] = new PermissionDelegate.MediaSource(audioBundles[i]);
+                        }
+                    }
+
                     listener.requestMediaPermission(
                             GeckoSession.this, message.getString("uri"),
-                            message.getBundleArray("video"), message.getBundleArray("audio"),
-                            new PermissionCallback("media", callback));
+                            videos, audios, new PermissionCallback("media", callback));
                 }
             }
         };
@@ -284,9 +302,9 @@ public class GeckoSession extends LayerSession
         }
 
         @Override // PermissionDelegate.MediaCallback
-        public void grant(final GeckoBundle video, final GeckoBundle audio) {
-            grant(video != null ? video.getString("id") : null,
-                  audio != null ? audio.getString("id") : null);
+        public void grant(final PermissionDelegate.MediaSource video, final PermissionDelegate.MediaSource audio) {
+            grant(video != null ? video.id : null,
+                  audio != null ? audio.id : null);
         }
     }
 
@@ -896,9 +914,9 @@ public class GeckoSession extends LayerSession
         }
 
         @Override // ChoiceCallback
-        public void confirm(GeckoBundle item) {
+        public void confirm(PromptDelegate.Choice item) {
             if ("choice".equals(mType)) {
-                confirm(item == null ? null : item.getString("id"));
+                confirm(item == null ? null : item.id);
                 return;
             } else {
                 throw new UnsupportedOperationException();
@@ -906,7 +924,7 @@ public class GeckoSession extends LayerSession
         }
 
         @Override // ChoiceCallback
-        public void confirm(GeckoBundle[] items) {
+        public void confirm(PromptDelegate.Choice[] items) {
             if (("menu".equals(mMode) || "single".equals(mMode)) &&
                 (items == null || items.length != 1)) {
                 throw new IllegalArgumentException();
@@ -918,7 +936,7 @@ public class GeckoSession extends LayerSession
                 }
                 final String[] ids = new String[items.length];
                 for (int i = 0; i < ids.length; i++) {
-                    ids[i] = (items[i] == null) ? null : items[i].getString("id");
+                    ids[i] = (items[i] == null) ? null : items[i].id;
                 }
                 confirm(ids);
                 return;
@@ -1037,23 +1055,34 @@ public class GeckoSession extends LayerSession
                 break;
             }
             case "auth": {
-                delegate.promptForAuth(session, title, msg, message.getBundle("options"), cb);
+                delegate.promptForAuth(session, title, msg, new PromptDelegate.AuthenticationOptions(message.getBundle("options")), cb);
                 break;
             }
             case "choice": {
                 final int intMode;
                 if ("menu".equals(mode)) {
-                    intMode = PromptDelegate.CHOICE_TYPE_MENU;
+                    intMode = PromptDelegate.Choice.CHOICE_TYPE_MENU;
                 } else if ("single".equals(mode)) {
-                    intMode = PromptDelegate.CHOICE_TYPE_SINGLE;
+                    intMode = PromptDelegate.Choice.CHOICE_TYPE_SINGLE;
                 } else if ("multiple".equals(mode)) {
-                    intMode = PromptDelegate.CHOICE_TYPE_MULTIPLE;
+                    intMode = PromptDelegate.Choice.CHOICE_TYPE_MULTIPLE;
                 } else {
                     callback.sendError("Invalid mode");
                     return;
                 }
+
+                GeckoBundle[] choiceBundles = message.getBundleArray("choices");
+                PromptDelegate.Choice choices[];
+                if (choiceBundles == null || choiceBundles.length == 0) {
+                    choices = null;
+                } else {
+                    choices = new PromptDelegate.Choice[choiceBundles.length];
+                    for (int i = 0; i < choiceBundles.length; i++) {
+                        choices[i] = new PromptDelegate.Choice(choiceBundles[i]);
+                    }
+                }
                 delegate.promptForChoice(session, title, msg, intMode,
-                                         message.getBundleArray("choices"), cb);
+                                         choices, cb);
                 break;
             }
             case "color": {
@@ -1493,39 +1522,74 @@ public class GeckoSession extends LayerSession
             void confirm(String username, String password);
         }
 
-        /**
-         * The auth prompt is for a network host.
-         */
-        static final int AUTH_FLAG_HOST = 1;
-        /**
-         * The auth prompt is for a proxy.
-         */
-        static final int AUTH_FLAG_PROXY = 2;
-        /**
-         * The auth prompt should only request a password.
-         */
-        static final int AUTH_FLAG_ONLY_PASSWORD = 8;
-        /**
-         * The auth prompt is the result of a previous failed login.
-         */
-        static final int AUTH_FLAG_PREVIOUS_FAILED = 16;
-        /**
-         * The auth prompt is for a cross-origin sub-resource.
-         */
-        static final int AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE = 32;
+        class AuthenticationOptions {
+            /**
+             * The auth prompt is for a network host.
+             */
+            public static final int AUTH_FLAG_HOST = 1;
+            /**
+             * The auth prompt is for a proxy.
+             */
+            public static final int AUTH_FLAG_PROXY = 2;
+            /**
+             * The auth prompt should only request a password.
+             */
+            public static final int AUTH_FLAG_ONLY_PASSWORD = 8;
+            /**
+             * The auth prompt is the result of a previous failed login.
+             */
+            public static final int AUTH_FLAG_PREVIOUS_FAILED = 16;
+            /**
+             * The auth prompt is for a cross-origin sub-resource.
+             */
+            public static final int AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE = 32;
 
-        /**
-         * The auth request is unencrypted or the encryption status is unknown.
-         */
-        static final int AUTH_LEVEL_NONE = 0;
-        /**
-         * The auth request only encrypts password but not data.
-         */
-        static final int AUTH_LEVEL_PW_ENCRYPTED = 1;
-        /**
-         * The auth request encrypts both password and data.
-         */
-        static final int AUTH_LEVEL_SECURE = 2;
+            /**
+             * The auth request is unencrypted or the encryption status is unknown.
+             */
+            public static final int AUTH_LEVEL_NONE = 0;
+            /**
+             * The auth request only encrypts password but not data.
+             */
+            public static final int AUTH_LEVEL_PW_ENCRYPTED = 1;
+            /**
+             * The auth request encrypts both password and data.
+             */
+            public static final int AUTH_LEVEL_SECURE = 2;
+
+            /**
+             * An int bit-field of AUTH_FLAG_* flags.
+             */
+            public int flags;
+
+            /**
+             * A string containing the URI for the auth request or null if unknown.
+             */
+            public String uri;
+
+            /**
+             * An int, one of AUTH_LEVEL_*, indicating level of encryption.
+             */
+            public int level;
+
+            /**
+             * A string containing the initial username or null if password-only.
+             */
+            public String username;
+
+            /**
+             * A string containing the initial password.
+             */
+            public String password;
+
+            /* package */ AuthenticationOptions(GeckoBundle options) {
+                flags = options.getInt("flags");
+                uri = options.getString("uri");
+                level = options.getInt("level");
+                username = options.getString("username");
+                password = options.getString("password");
+            }
+        }
 
         /**
          * Display a prompt for authentication credentials.
@@ -1542,7 +1606,82 @@ public class GeckoSession extends LayerSession
          * @param callback Callback interface.
          */
         void promptForAuth(GeckoSession session, String title, String msg,
-                           GeckoBundle options, AuthCallback callback);
+                           AuthenticationOptions options, AuthCallback callback);
+
+        class Choice {
+            /**
+             * Display choices in a menu that dismisses as soon as an item is chosen.
+             */
+            public static final int CHOICE_TYPE_MENU = 1;
+
+            /**
+             * Display choices in a list that allows a single selection.
+             */
+            public static final int CHOICE_TYPE_SINGLE = 2;
+
+            /**
+             * Display choices in a list that allows multiple selections.
+             */
+            public static final int CHOICE_TYPE_MULTIPLE = 3;
+
+            /**
+             * A boolean indicating if the item is disabled. Item should not be
+             * selectable if this is true.
+             */
+            public boolean disabled;
+
+            /**
+             * A String giving the URI of the item icon, or null if none exists
+             * (only valid for menus)
+             */
+            public String icon;
+
+            /**
+             * A String giving the ID of the item or group
+             */
+            public String id;
+
+            /**
+             * A Choice array of sub-items in a group, or null if not a group
+             */
+            public Choice[] items;
+
+            /**
+             * A string giving the label for displaying the item or group
+             */
+            public String label;
+
+            /**
+             * A boolean indicating if the item should be pre-selected
+             * (pre-checked for menu items)
+             */
+            public boolean selected;
+
+            /**
+             * A boolean indicating if the item should be a menu separator
+             * (only valid for menus)
+             */
+            public boolean separator;
+
+            /* package */ Choice(GeckoBundle choice) {
+                disabled = choice.getBoolean("disabled");
+                icon = choice.getString("icon");
+                id = choice.getString("id");
+                label = choice.getString("label");
+                selected = choice.getBoolean("label");
+                separator = choice.getBoolean("separator");
+
+                GeckoBundle[] choices = choice.getBundleArray("items");
+                if (choices == null) {
+                    items = null;
+                } else {
+                    items = new Choice[choices.length];
+                    for (int i = 0; i < choices.length; i++) {
+                        items[i] = new Choice(choices[i]);
+                    }
+                }
+            }
+        }
 
         /**
          * Callback interface for notifying the result of menu or list choice.
@@ -1568,35 +1707,21 @@ public class GeckoSession extends LayerSession
              * Called by the prompt implementation when the menu or single-choice list is
              * dismissed by the user.
              *
-             * @param item Bundle representing the selected item; must be an original
-             *             GeckoBundle object that was passed to the implementation.
+             * @param item Choice representing the selected item; must be an original
+             *             Choice object that was passed to the implementation.
              */
-            void confirm(GeckoBundle item);
+            void confirm(Choice item);
 
             /**
              * Called by the prompt implementation when the multiple-choice list is
              * dismissed by the user.
              *
-             * @param items Bundle array representing the selected items; must be original
-             *             GeckoBundle objects that were passed to the implementation.
+             * @param items Choice array representing the selected items; must be original
+             *              Choice objects that were passed to the implementation.
              */
-            void confirm(GeckoBundle[] items);
+            void confirm(Choice[] items);
         }
 
-        /**
-         * Display choices in a menu that dismisses as soon as an item is chosen.
-         */
-        static final int CHOICE_TYPE_MENU = 1;
-
-        /**
-         * Display choices in a list that allows a single selection.
-         */
-        static final int CHOICE_TYPE_SINGLE = 2;
-
-        /**
-         * Display choices in a list that allows multiple selections.
-         */
-        static final int CHOICE_TYPE_MULTIPLE = 3;
 
         /**
          * Display a menu prompt or list prompt.
@@ -1610,7 +1735,7 @@ public class GeckoSession extends LayerSession
          *                "icon": String, URI of the item icon or null if none
          *                        (only valid for menus);
          *                "id": String, ID of the item or group;
-         *                "items": GeckoBundle[], array of sub-items in a group or null
+         *                "items": Choice[], array of sub-items in a group or null
          *                         if not a group.
          *                "label": String, label for displaying the item or group;
          *                "selected": boolean, true if the item should be pre-selected
@@ -1620,7 +1745,7 @@ public class GeckoSession extends LayerSession
          * @param callback Callback interface.
          */
         void promptForChoice(GeckoSession session, String title, String msg, int type,
-                             GeckoBundle[] choices, ChoiceCallback callback);
+                             Choice[] choices, ChoiceCallback callback);
 
         /**
          * Display a color prompt.
@@ -1826,6 +1951,131 @@ public class GeckoSession extends LayerSession
         void requestContentPermission(GeckoSession session, String uri, String type,
                                       String access, Callback callback);
 
+        class MediaSource {
+            /**
+             * The media source is a camera.
+             */
+            public static final int SOURCE_CAMERA = 0;
+
+            /**
+             * The media source is the screen.
+             */
+            public static final int SOURCE_SCREEN  = 1;
+
+            /**
+             * The media source is an application.
+             */
+            public static final int SOURCE_APPLICATION = 2;
+
+            /**
+             * The media source is a window.
+             */
+            public static final int SOURCE_WINDOW = 3;
+
+            /**
+             * The media source is the browser.
+             */
+            public static final int SOURCE_BROWSER = 4;
+
+            /**
+             * The media source is a microphone.
+             */
+            public static final int SOURCE_MICROPHONE = 5;
+
+            /**
+             * The media source is audio capture.
+             */
+            public static final int SOURCE_AUDIOCAPTURE = 6;
+
+            /**
+             * The media source does not fall into any of the other categories.
+             */
+            public static final int SOURCE_OTHER = 7;
+
+            /**
+             * The media type is video.
+             */
+            public static final int TYPE_VIDEO = 0;
+
+            /**
+             * The media type is audio.
+             */
+            public static final int TYPE_AUDIO = 1;
+
+            /**
+             * A string giving the origin-specific source identifier.
+             */
+            public String id;
+
+            /**
+             * A string giving the non-origin-specific source identifier.
+             */
+            public String rawId;
+
+            /**
+             * A string giving the name of the video source from the system
+             * (for example, "Camera 0, Facing back, Orientation 90").
+             * May be empty.
+             */
+            public String name;
+
+            /**
+             * An int giving the media source type.
+             * Possible values for a video source are:
+             * SOURCE_CAMERA, SOURCE_SCREEN, SOURCE_APPLICATION, SOURCE_WINDOW, SOURCE_BROWSER, and SOURCE_OTHER.
+             * Possible values for an audio source are:
+             * SOURCE_MICROPHONE, SOURCE_AUDIOCAPTURE, and SOURCE_OTHER.
+             */
+            public int source;
+
+            /**
+             * An int giving the type of media, must be either TYPE_VIDEO or TYPE_AUDIO.
+             */
+            public int type;
+
+            private static int getSourceFromString(String src) {
+                // The strings here should match those in MediaSourceEnum in MediaStreamTrack.webidl
+                if ("camera".equals(src)) {
+                    return SOURCE_CAMERA;
+                } else if ("screen".equals(src)) {
+                    return SOURCE_SCREEN;
+                } else if ("application".equals(src)) {
+                    return SOURCE_APPLICATION;
+                } else if ("window".equals(src)) {
+                    return SOURCE_WINDOW;
+                } else if ("browser".equals(src)) {
+                    return SOURCE_BROWSER;
+                } else if ("microphone".equals(src)) {
+                    return SOURCE_MICROPHONE;
+                } else if ("audioCapture".equals(src)) {
+                    return SOURCE_AUDIOCAPTURE;
+                } else if ("other".equals(src)) {
+                    return SOURCE_OTHER;
+                } else {
+                    throw new IllegalArgumentException("String: " + src + " is not a valid media source string");
+                }
+            }
+
+            private static int getTypeFromString(String type) {
+                // The strings here should match the possible types in MediaDevice::MediaDevice in MediaManager.cpp
+                if ("video".equals(type)) {
+                    return TYPE_VIDEO;
+                } else if ("audio".equals(type)) {
+                    return TYPE_AUDIO;
+                } else {
+                    throw new IllegalArgumentException("String: " + type + " is not a valid media type string");
+                }
+            }
+
+            public MediaSource(GeckoBundle media) {
+                id = media.getString("id");
+                rawId = media.getString("id");
+                name = media.getString("name");
+                source = getSourceFromString(media.getString("source"));
+                type = getTypeFromString(media.getString("type"));
+            }
+        }
+
         /**
          * Callback interface for notifying the result of a media permission request,
          * including which media source(s) to use.
@@ -1846,14 +2096,14 @@ public class GeckoSession extends LayerSession
              * Called by the implementation after permissions are granted; the
              * implementation must call one of grant() or reject() for every request.
              *
-             * @param video Bundle for the video source to use (must be an original
-             *              GeckoBundle object that was passed to the implementation);
+             * @param video MediaSource for the video source to use (must be an original
+             *              MediaSource object that was passed to the implementation);
              *              or null when video is not requested.
-             * @param audio Bundle for the audio source to use (must be an original
-             *              GeckoBundle object that was passed to the implementation);
+             * @param audio MediaSource for the audio source to use (must be an original
+             *              MediaSource object that was passed to the implementation);
              *              or null when audio is not requested.
              */
-            void grant(final GeckoBundle video, final GeckoBundle audio);
+            void grant(final MediaSource video, final MediaSource audio);
 
             /**
              * Called by the implementation when permissions are not granted; the
@@ -1869,25 +2119,10 @@ public class GeckoSession extends LayerSession
          * @param session GeckoSession instance requesting the permission.
          * @param uri The URI of the content requesting the permission.
          * @param video List of video sources, or null if not requesting video.
-         *              Each bundle represents a video source, with keys,
-         *              "id": String, the origin-specific source identifier;
-         *              "rawId": String, the non-origin-specific source identifier;
-         *              "name": String, the name of the video source from the system
-         *                      (for example, "Camera 0, Facing back, Orientation 90");
-         *                      may be empty;
-         *              "mediaSource": String, the media source type; possible values are,
-         *                             "camera", "screen", "application", "window",
-         *                             "browser", and "other";
-         *              "type": String, always "video";
          * @param audio List of audio sources, or null if not requesting audio.
-         *              Each bundle represents an audio source with same keys and possible
-         *              values as video source bundles above, except for:
-         *              "mediaSource", String; possible values are "microphone",
-         *                             "audioCapture", and "other";
-         *              "type", String, always "audio";
          * @param callback Callback interface.
          */
-        void requestMediaPermission(GeckoSession session, String uri, GeckoBundle[] video,
-                                    GeckoBundle[] audio, MediaCallback callback);
+        void requestMediaPermission(GeckoSession session, String uri, MediaSource[] video,
+                                    MediaSource[] audio, MediaCallback callback);
     }
 }

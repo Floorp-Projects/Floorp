@@ -776,11 +776,27 @@ SandboxBroker::SetSecurityLevelForPluginProcess(int32_t aSandboxLevel)
     sandbox::MITIGATION_HEAP_TERMINATE |
     sandbox::MITIGATION_SEHOP |
     sandbox::MITIGATION_DEP_NO_ATL_THUNK |
-    sandbox::MITIGATION_DEP;
+    sandbox::MITIGATION_DEP |
+    sandbox::MITIGATION_HARDEN_TOKEN_IL_POLICY |
+    sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
+    sandbox::MITIGATION_NONSYSTEM_FONT_DISABLE |
+    sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
+
+  if (!sRunningFromNetworkDrive) {
+    mitigations |= sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE |
+                   sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL;
+  }
 
   result = mPolicy->SetProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result,
                          "Invalid flags for SetProcessMitigations.");
+
+  sandbox::MitigationFlags delayedMitigations =
+    sandbox::MITIGATION_DLL_SEARCH_ORDER;
+
+  result = mPolicy->SetDelayedProcessMitigations(delayedMitigations);
+  SANDBOX_ENSURE_SUCCESS(result,
+                         "Invalid flags for SetDelayedProcessMitigations.");
 
   if (aSandboxLevel >= 2) {
     // Level 2 and above uses low integrity, so we need to give write access to

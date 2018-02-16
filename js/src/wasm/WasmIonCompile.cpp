@@ -725,11 +725,11 @@ class FunctionCompiler
     }
 
     template <class T>
-    MDefinition* truncate(MDefinition* op, bool isUnsigned)
+    MDefinition* truncate(MDefinition* op, TruncFlags flags)
     {
         if (inDeadCode())
             return nullptr;
-        auto* ins = T::New(alloc(), op, isUnsigned, bytecodeOffset());
+        auto* ins = T::New(alloc(), op, flags, bytecodeOffset());
         curBlock_->add(ins);
         return ins;
     }
@@ -2413,21 +2413,26 @@ EmitConversionWithType(FunctionCompiler& f,
 
 static bool
 EmitTruncate(FunctionCompiler& f, ValType operandType, ValType resultType,
-             bool isUnsigned)
+             bool isUnsigned, bool isSaturating)
 {
     MDefinition* input;
     if (!f.iter().readConversion(operandType, resultType, &input))
         return false;
 
+    TruncFlags flags = 0;
+    if (isUnsigned)
+        flags |= TRUNC_UNSIGNED;
+    if (isSaturating)
+        flags |= TRUNC_SATURATING;
     if (resultType == ValType::I32) {
         if (f.env().isAsmJS())
             f.iter().setResult(f.unary<MTruncateToInt32>(input));
         else
-            f.iter().setResult(f.truncate<MWasmTruncateToInt32>(input, isUnsigned));
+            f.iter().setResult(f.truncate<MWasmTruncateToInt32>(input, flags));
     } else {
         MOZ_ASSERT(resultType == ValType::I64);
         MOZ_ASSERT(!f.env().isAsmJS());
-        f.iter().setResult(f.truncate<MWasmTruncateToInt64>(input, isUnsigned));
+        f.iter().setResult(f.truncate<MWasmTruncateToInt64>(input, flags));
     }
     return true;
 }
@@ -3924,19 +3929,19 @@ EmitBodyExprs(FunctionCompiler& f)
             CHECK(EmitConversion<MWrapInt64ToInt32>(f, ValType::I64, ValType::I32));
           case uint16_t(Op::I32TruncSF32):
           case uint16_t(Op::I32TruncUF32):
-            CHECK(EmitTruncate(f, ValType::F32, ValType::I32, Op(op.b0) == Op::I32TruncUF32));
+            CHECK(EmitTruncate(f, ValType::F32, ValType::I32, Op(op.b0) == Op::I32TruncUF32, false));
           case uint16_t(Op::I32TruncSF64):
           case uint16_t(Op::I32TruncUF64):
-            CHECK(EmitTruncate(f, ValType::F64, ValType::I32, Op(op.b0) == Op::I32TruncUF64));
+            CHECK(EmitTruncate(f, ValType::F64, ValType::I32, Op(op.b0) == Op::I32TruncUF64, false));
           case uint16_t(Op::I64ExtendSI32):
           case uint16_t(Op::I64ExtendUI32):
             CHECK(EmitExtendI32(f, Op(op.b0) == Op::I64ExtendUI32));
           case uint16_t(Op::I64TruncSF32):
           case uint16_t(Op::I64TruncUF32):
-            CHECK(EmitTruncate(f, ValType::F32, ValType::I64, Op(op.b0) == Op::I64TruncUF32));
+            CHECK(EmitTruncate(f, ValType::F32, ValType::I64, Op(op.b0) == Op::I64TruncUF32, false));
           case uint16_t(Op::I64TruncSF64):
           case uint16_t(Op::I64TruncUF64):
-            CHECK(EmitTruncate(f, ValType::F64, ValType::I64, Op(op.b0) == Op::I64TruncUF64));
+            CHECK(EmitTruncate(f, ValType::F64, ValType::I64, Op(op.b0) == Op::I64TruncUF64, false));
           case uint16_t(Op::F32ConvertSI32):
             CHECK(EmitConversion<MToFloat32>(f, ValType::I32, ValType::F32));
           case uint16_t(Op::F32ConvertUI32):
@@ -3979,6 +3984,35 @@ EmitBodyExprs(FunctionCompiler& f)
           case uint16_t(Op::I64Extend32S):
             CHECK(EmitSignExtend(f, 4, 8));
 #endif
+
+          // Numeric operations
+          case uint16_t(Op::NumericPrefix): {
+#ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
+            switch (op.b1) {
+              case uint16_t(NumericOp::I32TruncSSatF32):
+              case uint16_t(NumericOp::I32TruncUSatF32):
+                CHECK(EmitTruncate(f, ValType::F32, ValType::I32,
+                                   NumericOp(op.b1) == NumericOp::I32TruncUSatF32, true));
+              case uint16_t(NumericOp::I32TruncSSatF64):
+              case uint16_t(NumericOp::I32TruncUSatF64):
+                CHECK(EmitTruncate(f, ValType::F64, ValType::I32,
+                                   NumericOp(op.b1) == NumericOp::I32TruncUSatF64, true));
+              case uint16_t(NumericOp::I64TruncSSatF32):
+              case uint16_t(NumericOp::I64TruncUSatF32):
+                CHECK(EmitTruncate(f, ValType::F32, ValType::I64,
+                                   NumericOp(op.b1) == NumericOp::I64TruncUSatF32, true));
+              case uint16_t(NumericOp::I64TruncSSatF64):
+              case uint16_t(NumericOp::I64TruncUSatF64):
+                CHECK(EmitTruncate(f, ValType::F64, ValType::I64,
+                                   NumericOp(op.b1) == NumericOp::I64TruncUSatF64, true));
+              default:
+                return f.iter().unrecognizedOpcode(&op);
+            }
+            break;
+#else
+            return f.iter().unrecognizedOpcode(&op);
+#endif
+          }
 
           // Thread operations
           case uint16_t(Op::ThreadPrefix): {

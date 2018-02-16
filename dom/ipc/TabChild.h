@@ -475,27 +475,6 @@ public:
 
   virtual bool DeallocPDocAccessibleChild(PDocAccessibleChild*) override;
 
-  virtual PDocumentRendererChild*
-  AllocPDocumentRendererChild(const nsRect& aDocumentRect,
-                              const gfx::Matrix& aTransform,
-                              const nsString& aBggcolor,
-                              const uint32_t& aRenderFlags,
-                              const bool& aFlushLayout,
-                              const nsIntSize& arenderSize) override;
-
-  virtual bool
-  DeallocPDocumentRendererChild(PDocumentRendererChild* aCctor) override;
-
-  virtual mozilla::ipc::IPCResult
-  RecvPDocumentRendererConstructor(PDocumentRendererChild* aActor,
-                                   const nsRect& aDocumentRect,
-                                   const gfx::Matrix& aTransform,
-                                   const nsString& aBgcolor,
-                                   const uint32_t& aRenderFlags,
-                                   const bool& aFlushLayout,
-                                   const nsIntSize& aRenderSize) override;
-
-
   virtual PColorPickerChild*
   AllocPColorPickerChild(const nsString& aTitle,
                          const nsString& aInitialColor) override;
