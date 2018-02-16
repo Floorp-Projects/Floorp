@@ -1,0 +1,111 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+   # For the $platform_info.txt files.
+   - post-beetmover-dummy
+
+transforms:
+   - taskgraph.transforms.release_deps:transforms
+   - taskgraph.transforms.worker_type:transforms
+   - taskgraph.transforms.release_notifications:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+   run-on-projects: []  # to make sure this never runs in CI
+   shipping-phase: promote
+   worker-type:
+      by-project:
+         maple: scriptworker-prov-v1/balrog-dev
+         birch: scriptworker-prov-v1/balrog-dev
+         mozilla-beta: scriptworker-prov-v1/balrogworker-v1
+         mozilla-release: scriptworker-prov-v1/balrogworker-v1
+         default: invalid/invalid
+   worker:
+      implementation: balrog
+      balrog-action: submit-toplevel
+      require-mirrors: true
+
+jobs:
+   firefox:
+      name: submit-toplevel-firefox-release-to-balrog
+      description: Submit toplevel Firefox release to balrog
+      shipping-product: firefox
+      worker:
+         product: firefox
+         archive-domain:
+            by-project:
+               mozilla-beta: archive.mozilla.org
+               mozilla-release: archive.mozilla.org
+               default: ftp.stage.mozaws.net
+         download-domain:
+            by-project:
+               mozilla-beta: download.mozilla.org
+               mozilla-release: download.mozilla.org
+               default: download.mozilla.org
+         channel-names:
+            by-project:
+               maple: ["beta", "beta-localtest", "beta-cdntest"]
+               birch: ["release", "release-localtest", "release-cdntest"]
+               mozilla-beta: ["beta", "beta-localtest", "beta-cdntest"]
+               mozilla-release: ["release", "release-localtest", "release-cdntest"]
+               default: []
+         publish-rules:
+            by-project:
+               maple: [32]
+               birch: [145]
+               mozilla-beta: [32]
+               mozilla-release: [145]
+               default: []
+         rules-to-update:
+            by-project:
+               maple: ["firefox-beta-cdntest", "firefox-beta-localtest"]
+               birch: ["firefox-release-cdntest", "firefox-release-localtest"]
+               mozilla-beta: ["firefox-beta-cdntest", "firefox-beta-localtest"]
+               mozilla-release: ["firefox-release-cdntest", "firefox-release-localtest"]
+               default: []
+         platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
+      treeherder:
+         platform: linux64/opt
+         symbol: Rel(BPFx)
+         tier: 1
+         kind: build
+
+   devedition:
+      name: submit-toplevel-devedition-release-to-balrog
+      description: submit toplevel Devedition release to balrog
+      shipping-product: devedition
+      worker:
+         product: devedition
+         archive-domain:
+            by-project:
+               mozilla-beta: archive.mozilla.org
+               default: ftp.stage.mozaws.net
+         download-domain:
+            by-project:
+               mozilla-beta: download.mozilla.org
+               default: download.mozilla.org
+         channel-names:
+            by-project:
+               maple: ["aurora", "aurora-localtest", "aurora-cdntest"]
+               mozilla-beta: ["aurora", "aurora-localtest", "aurora-cdntest"]
+               default: []
+         publish-rules:
+            by-project:
+               maple: [10]
+               mozilla-beta: [10]
+               default: []
+         rules-to-update:
+            by-project:
+               maple: ["devedition-cdntest", "devedition-localtest"]
+               mozilla-beta: ["devedition-cdntest", "devedition-localtest"]
+               default: []
+         platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
+      treeherder:
+         platform: linux64/opt
+         symbol: Rel(BPDev)
+         tier: 1
+         kind: build

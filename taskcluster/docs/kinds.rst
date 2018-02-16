@@ -234,9 +234,21 @@ PushApk publishes Android packages onto Google Play Store. Jobs of this kind tak
 all the signed multi-locales (aka "multi") APKs for a given release and upload them
 all at once. They also depend on the breakpoint.
 
-release-balrog-publishing
+release-balrog-submit-toplevel
+----------------------
+Push a top-level release blob to Balrog.
+
+release-secondary-balrog-submit-toplevel
+----------------------
+Push a top-level RC release blob to Balrog.
+
+release-balrog-scheduling
 ----------------------
 Schedule a release to go live in Balrog.
+
+release-secondary-balrog-scheduling
+----------------------
+Schedule an RC release to go live in Balrog.
 
 release-binary-transparency
 ---------------------------

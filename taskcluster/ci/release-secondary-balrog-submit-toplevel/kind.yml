@@ -1,0 +1,67 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+   # For the $platform_info.txt files.
+   - post-beetmover-dummy
+
+transforms:
+   - taskgraph.transforms.release_deps:transforms
+   - taskgraph.transforms.worker_type:transforms
+   - taskgraph.transforms.release_notifications:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+   run-on-projects: []  # to make sure this never runs in CI
+   shipping-phase: promote
+   worker-type:
+      by-project:
+         maple: scriptworker-prov-v1/balrog-dev
+         birch: scriptworker-prov-v1/balrog-dev
+         mozilla-beta: scriptworker-prov-v1/balrogworker-v1
+         mozilla-release: scriptworker-prov-v1/balrogworker-v1
+         default: invalid/invalid
+   worker:
+      implementation: balrog
+      balrog-action: submit-toplevel
+      require-mirrors: true
+      platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
+
+jobs:
+   firefox:
+      name: submit-toplevel-rc-firefox-release-to-balrog
+      description: submit toplevel RC Firefox release to balrog
+      shipping-product: firefox
+      worker:
+         product: firefox
+         archive-domain:
+            by-project:
+               mozilla-release: archive.mozilla.org
+               default: ftp.stage.mozaws.net
+         download-domain:
+            by-project:
+               mozilla-release: download.mozilla.org
+               default: download.mozilla.org
+         channel-names:
+            by-project:
+               birch: ["beta", "beta-localtest", "beta-cdntest"]
+               mozilla-release: ["beta", "beta-localtest", "beta-cdntest"]
+               default: []
+         publish-rules:
+            by-project:
+               birch: [32]
+               mozilla-release: [32]
+               default: []
+         rules-to-update:
+            by-project:
+               birch: ["firefox-beta-cdntest", "firefox-beta-localtest"]
+               mozilla-release: ["firefox-beta-cdntest", "firefox-beta-localtest"]
+               default: []
+      treeherder:
+         platform: linux64/opt
+         symbol: Rel(BPFxRC)
+         tier: 1
+         kind: build
