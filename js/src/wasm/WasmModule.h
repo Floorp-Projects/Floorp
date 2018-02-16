@@ -79,25 +79,15 @@ typedef UniquePtr<LinkDataTier> UniqueLinkDataTier;
 
 class LinkData
 {
-    SharedMetadata             metadata_;
-    UniqueLinkDataTier         linkData1_;     // Always present
-    mutable UniqueLinkDataTier linkData2_;     // Access only if hasTier2() is true
+    UniqueLinkDataTier         linkData1_; // Always present
+    mutable UniqueLinkDataTier linkData2_; // Access only if hasTier2() is true
 
   public:
-    bool initTier1(Tier tier, const Metadata& metadata);
+    LinkData() {}
+    explicit LinkData(UniqueLinkDataTier linkData) : linkData1_(Move(linkData)) {}
 
-    bool hasTier2() const { return metadata_->hasTier2(); }
     void setTier2(UniqueLinkDataTier linkData) const;
-    Tiers tiers() const;
-
     const LinkDataTier& linkData(Tier tier) const;
-    LinkDataTier& linkData(Tier tier);
-
-    UniquePtr<LinkDataTier> takeLinkData(Tier tier) {
-        MOZ_ASSERT(!hasTier2());
-        MOZ_ASSERT(linkData1_->tier == tier);
-        return Move(linkData1_);
-    }
 
     WASM_DECLARE_SERIALIZABLE(LinkData)
 };
@@ -220,8 +210,7 @@ class Module : public JS::WasmModule
     // and made visible.
 
     void startTier2(const CompileArgs& args);
-    void finishTier2(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
-                     UniqueModuleSegment code2, ModuleEnvironment* env2);
+    void finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2, ModuleEnvironment* env2);
     void blockOnTier2Complete() const;
 
     // JS API and JS::WasmModule implementation:

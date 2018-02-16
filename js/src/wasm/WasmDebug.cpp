@@ -395,8 +395,8 @@ DebugState::toggleBreakpointTrap(JSRuntime* rt, uint32_t offset, bool enabled)
     size_t debugTrapOffset = callSite->returnAddressOffset();
 
     const ModuleSegment& codeSegment = code_->segment(Tier::Debug);
-    const CodeRange* codeRange = code_->lookupRange(codeSegment.base() + debugTrapOffset);
-    MOZ_ASSERT(codeRange && codeRange->isFunction());
+    const CodeRange* codeRange = code_->lookupFuncRange(codeSegment.base() + debugTrapOffset);
+    MOZ_ASSERT(codeRange);
 
     if (stepModeCounters_.initialized() && stepModeCounters_.lookup(codeRange->funcIndex()))
         return; // no need to toggle when step mode is enabled

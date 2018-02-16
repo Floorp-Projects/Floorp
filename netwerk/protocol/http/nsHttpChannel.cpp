@@ -1328,26 +1328,61 @@ EnsureMIMEOfScript(nsIURI* aURI, nsHttpResponseHead* aResponseHead, nsILoadInfo*
 
     if (nsContentUtils::IsJavascriptMIMEType(typeString)) {
         // script load has type script
-        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_INCORRECT_MIME, 1);
+        AccumulateCategorical(Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_2::javaScript);
         return NS_OK;
+    }
+
+    nsCOMPtr<nsIURI> requestURI;
+    aLoadInfo->LoadingPrincipal()->GetURI(getter_AddRefs(requestURI));
+
+    nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+    nsresult rv = ssm->CheckSameOriginURI(requestURI, aURI, false);
+    if (NS_SUCCEEDED(rv)) {
+        //same origin
+        AccumulateCategorical(Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_2::same_origin);
+    } else {
+        bool cors = false;
+        nsAutoCString corsOrigin;
+        rv = aResponseHead->GetHeader(nsHttp::ResolveAtom("Access-Control-Allow-Origin"), corsOrigin);
+        if (NS_SUCCEEDED(rv)) {
+            if (corsOrigin.Equals("*")) {
+                cors = true;
+            } else {
+                nsCOMPtr<nsIURI> corsOriginURI;
+                rv = NS_NewURI(getter_AddRefs(corsOriginURI), corsOrigin);
+                if (NS_SUCCEEDED(rv)) {
+                    rv = ssm->CheckSameOriginURI(requestURI, corsOriginURI, false);
+                    if (NS_SUCCEEDED(rv)) {
+                        cors = true;
+                    }
+                }
+            }
+        }
+        if (cors) {
+            //cors origin
+            AccumulateCategorical(Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_2::CORS_origin);
+        } else {
+            //cross origin
+            AccumulateCategorical(Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_2::cross_origin);
+        }
     }
 
     bool block = false;
     if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("image/"))) {
         // script load has type image
-        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_INCORRECT_MIME, 2);
+        AccumulateCategorical(Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_2::image);
         block = true;
     } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("audio/"))) {
         // script load has type audio
-        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_INCORRECT_MIME, 3);
+        AccumulateCategorical(Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_2::audio);
         block = true;
     } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("video/"))) {
         // script load has type video
-        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_INCORRECT_MIME, 4);
+        AccumulateCategorical(Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_2::video);
         block = true;
     } else if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/csv"))) {
         // script load has type text/csv
-        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_INCORRECT_MIME, 6);
+        AccumulateCategorical(Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_2::text_csv);
         block = true;
     }
 
@@ -1373,42 +1408,42 @@ EnsureMIMEOfScript(nsIURI* aURI, nsHttpResponseHead* aResponseHead, nsILoadInfo*
 
     if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/plain"))) {
         // script load has type text/plain
-        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_INCORRECT_MIME, 5);
+        AccumulateCategorical(Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_2::text_plain);
         return NS_OK;
     }
 
     if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/xml"))) {
         // script load has type text/xml
-        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_INCORRECT_MIME, 7);
+        AccumulateCategorical(Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_2::text_xml);
         return NS_OK;
     }
 
     if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("application/octet-stream"))) {
         // script load has type application/octet-stream
-        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_INCORRECT_MIME, 8);
+        AccumulateCategorical(Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_2::app_octet_stream);
         return NS_OK;
     }
 
     if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("application/xml"))) {
         // script load has type application/xml
-        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_INCORRECT_MIME, 9);
+        AccumulateCategorical(Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_2::app_xml);
         return NS_OK;
     }
 
     if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/html"))) {
         // script load has type text/html
-        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_INCORRECT_MIME, 10);
+        AccumulateCategorical(Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_2::text_html);
         return NS_OK;
     }
 
     if (contentType.IsEmpty()) {
         // script load has no type
-        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_INCORRECT_MIME, 11);
+        AccumulateCategorical(Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_2::empty);
         return NS_OK;
     }
 
     // script load has unknown type
-    Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_INCORRECT_MIME, 0);
+    AccumulateCategorical(Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_2::unknown);
     return NS_OK;
 }
 

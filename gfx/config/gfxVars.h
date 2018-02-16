@@ -137,6 +137,12 @@ public:                                                         \
   static const DataType& CxxName() {                            \
     return sInstance->mVar##CxxName.Get();                      \
   }                                                             \
+  static DataType Get##CxxName##OrDefault() {                   \
+    if (!sInstance) {                                           \
+      return DefaultValue;                                      \
+    }                                                           \
+    return sInstance->mVar##CxxName.Get();                      \
+  }                                                             \
   static void Set##CxxName(const DataType& aValue) {            \
     if (sInstance->mVar##CxxName.Set(aValue)) {                 \
       sInstance->NotifyReceivers(&sInstance->mVar##CxxName);    \

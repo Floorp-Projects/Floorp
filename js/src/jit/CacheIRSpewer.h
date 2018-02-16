@@ -27,23 +27,57 @@ class CacheIRSpewer
     mozilla::Maybe<JSONPrinter> json;
     static CacheIRSpewer cacheIRspewer;
 
-  public:
-
     CacheIRSpewer();
     ~CacheIRSpewer();
 
-    static CacheIRSpewer& singleton() { return cacheIRspewer; }
-
-    bool init();
     bool enabled() { return json.isSome(); }
 
     // These methods can only be called when enabled() is true.
     Mutex& lock() { MOZ_ASSERT(enabled()); return outputLock; }
 
-    void beginCache(LockGuard<Mutex>&, const IRGenerator& generator);
-    void valueProperty(LockGuard<Mutex>&, const char* name, const Value& v);
-    void attached(LockGuard<Mutex>&, const char* name);
-    void endCache(LockGuard<Mutex>&);
+    void beginCache(const IRGenerator& generator);
+    void valueProperty(const char* name, const Value& v);
+    void attached(const char* name);
+    void endCache();
+
+  public:
+    static CacheIRSpewer& singleton() { return cacheIRspewer; }
+    bool init();
+
+    class MOZ_RAII Guard {
+        CacheIRSpewer& sp_;
+        const IRGenerator& gen_;
+        const char* name_;
+
+      public:
+        Guard(const IRGenerator& gen, const char* name)
+          : sp_(CacheIRSpewer::singleton()),
+            gen_(gen),
+            name_(name)
+        {
+          if (sp_.enabled()) {
+            sp_.lock().lock();
+            sp_.beginCache(gen_);
+          }
+        }
+
+        ~Guard() {
+          if (sp_.enabled()) {
+            if (name_ != nullptr)
+              sp_.attached(name_);
+            sp_.endCache();
+            sp_.lock().unlock();
+          }
+        }
+
+        void valueProperty(const char* name, const Value& v) const {
+          sp_.valueProperty(name, v);
+        }
+
+        explicit operator bool() const {
+          return sp_.enabled();
+        }
+    };
 };
 
 } // namespace jit
