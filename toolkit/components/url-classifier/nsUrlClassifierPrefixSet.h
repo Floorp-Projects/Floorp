@@ -68,6 +68,9 @@ private:
   nsresult WritePrefixes(nsIOutputStream* out);
   nsresult LoadPrefixes(nsIInputStream* in);
 
+  template<typename T>
+  void CalculateTArrayChecksum(nsTArray<T>& aArray, uint32_t* outChecksum);
+
   // Lock to prevent races between the url-classifier thread (which does most
   // of the operations) and the main thread (which does memory reporting).
   // It should be held for all operations between Init() and destruction that
@@ -81,6 +84,8 @@ private:
   // prefix from mIndexPrefix. Then every "delta" corresponds
   // to a prefix in the PrefixSet.
   nsTArray<nsTArray<uint16_t> > mIndexDeltas;
+  uint32_t mIndexDeltasChecksum;
+
   // how many prefixes we have.
   uint32_t mTotalPrefixes;
 

@@ -6,6 +6,7 @@
 
 #include "nsUrlClassifierPrefixSet.h"
 #include "nsIUrlClassifierPrefixSet.h"
+#include "crc32c.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsPrintfCString.h"
@@ -41,6 +42,7 @@ const uint32_t nsUrlClassifierPrefixSet::MAX_BUFFER_SIZE;
 
 nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
   : mLock("nsUrlClassifierPrefixSet.mLock")
+  , mIndexDeltasChecksum(~0)
   , mTotalPrefixes(0)
   , mMemoryReportPath()
 {
@@ -117,10 +119,6 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLen
       // Compact the previous element.
       // Note there is always at least one element when we get here,
       // because we created the first element before the loop.
-// Bug 1362761 : Remove Compact from NIGHTLY build for debug purpose
-#ifndef NIGHTLY_BUILD
-      mIndexDeltas.LastElement().Compact();
-#endif
       if (!mIndexDeltas.AppendElement(fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -142,14 +140,16 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLen
     previousItem = aPrefixes[i];
   }
 
-// Bug 1362761 : Remove Compact from NIGHTLY build for debug purpose
-#ifndef NIGHTLY_BUILD
   mIndexDeltas.LastElement().Compact();
+
+  // The hdr pointer of the last element of nsTArray may change after calling
+  // mIndexDeltas.LastElement().Compact(), so calculate checksum after the call.
+  CalculateTArrayChecksum(mIndexDeltas, &mIndexDeltasChecksum);
+
   mIndexDeltas.Compact();
   mIndexPrefixes.Compact();
-#endif
 
-  LOG(("Total number of indices: %d", aLength));
+  LOG(("Total number of indices: %d (crc=%u)", aLength, mIndexDeltasChecksum));
   LOG(("Total number of deltas: %d", totalDeltas));
   LOG(("Total number of delta chunks: %zu", mIndexDeltas.Length()));
 
@@ -504,6 +504,18 @@ nsUrlClassifierPrefixSet::WritePrefixes(nsIOutputStream* out)
 {
   mCanary.Check();
 
+  // In Bug 1362761, crashes happened while reading mIndexDeltas[i].
+  // We suspect that this is due to memory corruption so to test this
+  // hypothesis, we will crash the browser. Once we have established
+  // memory corruption as the root cause, we can attempt to gracefully
+  // handle this.
+  uint32_t checksum;
+  CalculateTArrayChecksum(mIndexDeltas, &checksum);
+  if (checksum != mIndexDeltasChecksum) {
+    LOG(("The contents of mIndexDeltas doesn't match the checksum!"));
+    MOZ_CRASH("Memory corruption detected in mIndexDeltas.");
+  }
+
   uint32_t written;
   uint32_t writelen = sizeof(uint32_t);
   uint32_t magic = PREFIXSET_VERSION_MAGIC;
@@ -560,4 +572,20 @@ nsUrlClassifierPrefixSet::WritePrefixes(nsIOutputStream* out)
   LOG(("Saving PrefixSet successful\n"));
 
   return NS_OK;
+}
+
+template<typename T>
+void
+nsUrlClassifierPrefixSet::CalculateTArrayChecksum(nsTArray<T>& aArray,
+                                                  uint32_t* outChecksum)
+{
+  *outChecksum = ~0;
+
+  for (size_t i = 0; i < aArray.Length(); i++) {
+    const T& element = aArray[i];
+    const void* pointer = &element;
+    *outChecksum = ComputeCrc32c(*outChecksum,
+                                 reinterpret_cast<const uint8_t*>(pointer),
+                                 sizeof(void*));
+  }
 }
