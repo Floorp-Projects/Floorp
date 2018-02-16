@@ -5138,6 +5138,7 @@ void
 nsDisplayCompositorHitTestInfo::WriteDebugInfo(std::stringstream& aStream)
 {
   aStream << nsPrintfCString(" (hitTestInfo 0x%x)", (int)mHitTestInfo).get();
+  AppendToString(aStream, mArea, " hitTestArea");
 }
 
 uint32_t
