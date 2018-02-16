@@ -13,8 +13,11 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/MemoryChecking.h"
 #include "mozilla/Types.h"
+#include "mozilla/TypeTraits.h"
 
+#include <limits>
 #include <stdint.h>
 
 namespace mozilla {
@@ -36,26 +39,26 @@ namespace mozilla {
 
 struct FloatTypeTraits
 {
-  typedef uint32_t Bits;
+  using Bits = uint32_t;
 
-  static const unsigned kExponentBias = 127;
-  static const unsigned kExponentShift = 23;
+  static constexpr unsigned kExponentBias = 127;
+  static constexpr unsigned kExponentShift = 23;
 
-  static const Bits kSignBit         = 0x80000000UL;
-  static const Bits kExponentBits    = 0x7F800000UL;
-  static const Bits kSignificandBits = 0x007FFFFFUL;
+  static constexpr Bits kSignBit         = 0x80000000UL;
+  static constexpr Bits kExponentBits    = 0x7F800000UL;
+  static constexpr Bits kSignificandBits = 0x007FFFFFUL;
 };
 
 struct DoubleTypeTraits
 {
-  typedef uint64_t Bits;
+  using Bits = uint64_t;
 
-  static const unsigned kExponentBias = 1023;
-  static const unsigned kExponentShift = 52;
+  static constexpr unsigned kExponentBias = 1023;
+  static constexpr unsigned kExponentShift = 52;
 
-  static const Bits kSignBit         = 0x8000000000000000ULL;
-  static const Bits kExponentBits    = 0x7ff0000000000000ULL;
-  static const Bits kSignificandBits = 0x000fffffffffffffULL;
+  static constexpr Bits kSignBit         = 0x8000000000000000ULL;
+  static constexpr Bits kExponentBits    = 0x7ff0000000000000ULL;
+  static constexpr Bits kSignificandBits = 0x000fffffffffffffULL;
 };
 
 template<typename T> struct SelectTrait;
@@ -91,8 +94,8 @@ template<> struct SelectTrait<double> : public DoubleTypeTraits {};
 template<typename T>
 struct FloatingPoint : public SelectTrait<T>
 {
-  typedef SelectTrait<T> Base;
-  typedef typename Base::Bits Bits;
+  using Base = SelectTrait<T>;
+  using Bits = typename Base::Bits;
 
   static_assert((Base::kSignBit & Base::kExponentBits) == 0,
                 "sign bit shouldn't overlap exponent bits");
@@ -328,38 +331,134 @@ MinNumberValue()
   return BitwiseCast<T>(Bits(1));
 }
 
-/**
- * If aValue is equal to some int32_t value, set *aInt32 to that value and
- * return true; otherwise return false.
- *
- * Note that negative zero is "equal" to zero here. To test whether a value can
- * be losslessly converted to int32_t and back, use NumberIsInt32 instead.
- */
-template<typename T>
-static MOZ_ALWAYS_INLINE bool
-NumberEqualsInt32(T aValue, int32_t* aInt32)
+namespace detail {
+
+template<typename Float, typename SignedInteger>
+inline bool
+NumberEqualsSignedInteger(Float aValue, SignedInteger* aInteger)
 {
-  /*
-   * XXX Casting a floating-point value that doesn't truncate to int32_t, to
-   *     int32_t, induces undefined behavior.  We should definitely fix this
-   *     (bug 744965), but as apparently it "works" in practice, it's not a
-   *     pressing concern now.
-   */
-  return aValue == (*aInt32 = int32_t(aValue));
+  static_assert(IsSame<Float, float>::value || IsSame<Float, double>::value,
+                "Float must be an IEEE-754 floating point type");
+  static_assert(IsSigned<SignedInteger>::value,
+                "this algorithm only works for signed types: a different one "
+                "will be required for unsigned types");
+  static_assert(sizeof(SignedInteger) >= sizeof(int),
+                "this function *might* require some finessing for signed types "
+                "subject to integral promotion before it can be used on them");
+
+  MOZ_MAKE_MEM_UNDEFINED(aInteger, sizeof(*aInteger));
+
+  // NaNs and infinities are not integers.
+  if (!IsFinite(aValue)) {
+    return false;
+  }
+
+  // Otherwise do direct comparisons against the minimum/maximum |SignedInteger|
+  // values that can be encoded in |Float|.
+
+  constexpr SignedInteger MaxIntValue =
+    std::numeric_limits<SignedInteger>::max(); // e.g. INT32_MAX
+  constexpr SignedInteger MinValue =
+    std::numeric_limits<SignedInteger>::min(); // e.g. INT32_MIN
+
+  static_assert(IsPowerOfTwo(Abs(MinValue)),
+                "MinValue should be is a small power of two, thus exactly "
+                "representable in float/double both");
+
+  constexpr unsigned SignedIntegerWidth = CHAR_BIT * sizeof(SignedInteger);
+  constexpr unsigned ExponentShift = FloatingPoint<Float>::kExponentShift;
+
+  // Careful!  |MaxIntValue| may not be the maximum |SignedInteger| value that
+  // can be encoded in |Float|.  Its |SignedIntegerWidth - 1| bits of precision
+  // may exceed |Float|'s |ExponentShift + 1| bits of precision.  If necessary,
+  // compute the maximum |SignedInteger| that fits in |Float| from IEEE-754
+  // first principles.  (|MinValue| doesn't have this problem because as a
+  // [relatively] small power of two it's always representable in |Float|.)
+
+  // Per C++11 [expr.const]p2, unevaluated subexpressions of logical AND/OR and
+  // conditional expressions *may* contain non-constant expressions, without
+  // making the enclosing expression not constexpr.  MSVC implements this -- but
+  // it sometimes warns about undefined behavior in unevaluated subexpressions.
+  // This bites us if we initialize |MaxValue| the obvious way including an
+  // |uint64_t(1) << (SignedIntegerWidth - 2 - ExponentShift)| subexpression.
+  // Pull that shift-amount out and give it a not-too-huge value when it's in an
+  // unevaluated subexpression.  🙄
+  constexpr unsigned PrecisionExceededShiftAmount =
+    ExponentShift > SignedIntegerWidth - 1
+    ? 0
+    : SignedIntegerWidth - 2 - ExponentShift;
+
+  constexpr SignedInteger MaxValue =
+   ExponentShift > SignedIntegerWidth - 1
+    ? MaxIntValue
+    : SignedInteger((uint64_t(1) << (SignedIntegerWidth - 1)) -
+                    (uint64_t(1) << PrecisionExceededShiftAmount));
+
+  if (static_cast<Float>(MinValue) <= aValue &&
+      aValue <= static_cast<Float>(MaxValue))
+  {
+    auto possible = static_cast<SignedInteger>(aValue);
+    if (static_cast<Float>(possible) == aValue) {
+      *aInteger = possible;
+      return true;
+    }
+  }
+
+  return false;
 }
 
+template<typename Float, typename SignedInteger>
+inline bool
+NumberIsSignedInteger(Float aValue, SignedInteger* aInteger)
+{
+  static_assert(IsSame<Float, float>::value || IsSame<Float, double>::value,
+                "Float must be an IEEE-754 floating point type");
+  static_assert(IsSigned<SignedInteger>::value,
+                "this algorithm only works for signed types: a different one "
+                "will be required for unsigned types");
+  static_assert(sizeof(SignedInteger) >= sizeof(int),
+                "this function *might* require some finessing for signed types "
+                "subject to integral promotion before it can be used on them");
+
+  MOZ_MAKE_MEM_UNDEFINED(aInteger, sizeof(*aInteger));
+
+  if (IsNegativeZero(aValue)) {
+    return false;
+  }
+
+  return NumberEqualsSignedInteger(aValue, aInteger);
+}
+
+} // namespace detail
+
 /**
- * If d can be converted to int32_t and back to an identical double value,
- * set *aInt32 to that value and return true; otherwise return false.
+ * If |aValue| is identical to some |int32_t| value, set |*aInt32| to that value
+ * and return true.  Otherwise return false, leaving |*aInt32| in an
+ * indeterminate state.
  *
- * The difference between this and NumberEqualsInt32 is that this method returns
- * false for negative zero.
+ * This method returns false for negative zero.  If you want to consider -0 to
+ * be 0, use NumberEqualsInt32 below.
  */
 template<typename T>
 static MOZ_ALWAYS_INLINE bool
 NumberIsInt32(T aValue, int32_t* aInt32)
 {
-  return !IsNegativeZero(aValue) && NumberEqualsInt32(aValue, aInt32);
+  return detail::NumberIsSignedInteger(aValue, aInt32);
+}
+
+/**
+ * If |aValue| is equal to some int32_t value (where -0 and +0 are considered
+ * equal), set |*aInt32| to that value and return true.  Otherwise return false,
+ * leaving |*aInt32| in an indeterminate state.
+ *
+ * |NumberEqualsInt32(-0.0, ...)| will return true.  To test whether a value can
+ * be losslessly converted to |int32_t| and back, use NumberIsInt32 above.
+ */
+template<typename T>
+static MOZ_ALWAYS_INLINE bool
+NumberEqualsInt32(T aValue, int32_t* aInt32)
+{
+  return detail::NumberEqualsSignedInteger(aValue, aInt32);
 }
 
 /**
