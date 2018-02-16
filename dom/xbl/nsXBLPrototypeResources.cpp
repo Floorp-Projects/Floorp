@@ -236,3 +236,27 @@ nsXBLPrototypeResources::AppendStyleSheetsTo(
 {
   aResult.AppendElements(mStyleSheetList);
 }
+
+MOZ_DEFINE_MALLOC_SIZE_OF(ServoAuthorStylesMallocSizeOf)
+MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ServoAuthorStylesMallocEnclosingSizeOf)
+
+size_t
+nsXBLPrototypeResources::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mStyleSheetList.ShallowSizeOfExcludingThis(aMallocSizeOf);
+#ifdef MOZ_OLD_STYLE
+  n += mRuleProcessor ? mRuleProcessor->SizeOfIncludingThis(aMallocSizeOf) : 0;
+#endif
+  n += mServoStyles ? Servo_AuthorStyles_SizeOfIncludingThis(
+      ServoAuthorStylesMallocSizeOf,
+      ServoAuthorStylesMallocEnclosingSizeOf,
+      mServoStyles.get()) : 0;
+  n += mStyleRuleMap ? mStyleRuleMap->SizeOfIncludingThis(aMallocSizeOf) : 0;
+
+  // Measurement of the following members may be added later if DMD finds it
+  // is worthwhile:
+  // - mLoader
+
+  return n;
+}

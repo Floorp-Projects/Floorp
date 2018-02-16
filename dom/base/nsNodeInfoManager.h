@@ -22,6 +22,7 @@ class nsAtom;
 class nsIDocument;
 class nsIDOMDocumentType;
 class nsIPrincipal;
+class nsWindowSizes;
 struct PLHashEntry;
 struct PLHashTable;
 template<class T> struct already_AddRefed;
@@ -135,6 +136,8 @@ public:
              ? true
              : mMathMLEnabled == eTriFalse ? false : InternalMathMLEnabled();
   }
+
+  void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
 
 protected:
   friend class nsDocument;
