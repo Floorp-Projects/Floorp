@@ -85,6 +85,10 @@ add_task(async function() {
       let inRange = (val, min, max) => min <= val && val <= max;
       let width = frame.width;
 
+      const spaceBeforeFirstTab = AppConstants.platform == "macosx" ? 100 : 0;
+      let inFirstTab = r =>
+        inRange(r.x1, spaceBeforeFirstTab, spaceBeforeFirstTab + 50) && r.y1 < 30;
+
       let exceptions = [
         {name: "bug 1403648 - urlbar down arrow shouldn't flicker",
          condition: r => // 5x9px area, sometimes less at the end of the opacity transition
@@ -102,6 +106,10 @@ add_task(async function() {
                          // where there's an additional devtools toolbar icon.
                          AppConstants.MOZ_DEV_EDITION ? inRange(r.x1, 100, 120) :
                                                         inRange(r.x1, 65, 100)
+        },
+
+        {name: "bug 1401955 - about:home favicon should be visible at first paint",
+         condition: r => inFirstTab(r) && inRange(r.h, 14, 15) && inRange(r.w, 14, 15)
         },
       ];
 
