@@ -31,7 +31,7 @@ window.gActivityStreamStrings = {
   "confirm_history_delete_p1": "Opravdu chcete smazat všechny výskyty této stránky z vaší historie?",
   "confirm_history_delete_notice_p2": "Tuto akci nelze vzít zpět.",
   "menu_action_save_to_pocket": "Uložit do služby Pocket",
-  "search_for_something_with": "Vyhledat {search_term} s:",
+  "search_for_something_with": "Vyhledat {search_term} pomocí:",
   "search_button": "Vyhledat",
   "search_header": "Vyhledat pomocí {search_engine_name}",
   "search_web_placeholder": "Vyhledat na webu",
