@@ -668,6 +668,14 @@ IToplevelProtocol::Open(MessageChannel* aChannel,
   return GetIPCChannel()->Open(aChannel, aEventTarget, aSide);
 }
 
+bool
+IToplevelProtocol::OpenWithAsyncPid(mozilla::ipc::Transport* aTransport,
+                                    MessageLoop* aThread,
+                                    mozilla::ipc::Side aSide)
+{
+  return GetIPCChannel()->Open(aTransport, aThread, aSide);
+}
+
 void
 IToplevelProtocol::Close()
 {
