@@ -165,8 +165,10 @@ class Message extends Component {
         },
         StackTrace({
           stacktrace: stacktrace,
-          onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
-          onViewSourceInScratchpad: serviceContainer.onViewSourceInScratchpad,
+          onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger
+            || serviceContainer.onViewSource,
+          onViewSourceInScratchpad: serviceContainer.onViewSourceInScratchpad
+            || serviceContainer.onViewSource,
           sourceMapService: serviceContainer.sourceMapService,
         })
       );
@@ -193,7 +195,7 @@ class Message extends Component {
           note.frame ? FrameView({
             frame: note.frame,
             onClick: serviceContainer
-              ? serviceContainer.onViewSourceInDebugger
+              ? serviceContainer.onViewSourceInDebugger || serviceContainer.onViewSource
               : undefined,
             showEmptyPathAsHost: true,
             sourceMapService: serviceContainer
@@ -213,11 +215,13 @@ class Message extends Component {
       if (source === MESSAGE_SOURCE.CSS) {
         onFrameClick = serviceContainer.onViewSourceInStyleEditor;
       } else if (/^Scratchpad\/\d+$/.test(frame.source)) {
-        onFrameClick = serviceContainer.onViewSourceInScratchpad;
+        onFrameClick = serviceContainer.onViewSourceInScratchpad
+          || serviceContainer.onViewSource;
       } else {
         // Point everything else to debugger, if source not available,
         // it will fall back to view-source.
-        onFrameClick = serviceContainer.onViewSourceInDebugger;
+        onFrameClick = serviceContainer.onViewSourceInDebugger
+          || serviceContainer.onViewSource;
       }
     }
 
