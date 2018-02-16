@@ -57,6 +57,8 @@ py2:
         - tools/update-packaging
         - xpcom
     extensions: ['py']
+    support-files:
+        - 'tools/lint/python/*compat*'
     type: external
     payload: python.compat:lintpy2
     setup: python.compat:setuppy2

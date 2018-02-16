@@ -41,6 +41,9 @@ flake8:
     exclude: []
     # The configure option is used by the build system
     extensions: ['configure', 'py']
+    support-files:
+        - '**/.flake8'
+        - 'tools/lint/python/flake8*'
     type: external
     payload: python.flake8:lint
     setup: python.flake8:setup
