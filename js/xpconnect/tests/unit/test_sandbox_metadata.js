@@ -11,6 +11,8 @@ function run_test()
     addonId: "12345"
   });
 
+  Components.utils.importGlobalProperties(["XMLHttpRequest"]);
+
   Assert.equal(Components.utils.getSandboxMetadata(sandbox), "test metadata");
   Assert.equal(Components.utils.getSandboxAddonId(sandbox), "12345");
 
@@ -33,8 +35,7 @@ function run_test()
   Assert.equal(metadata.foo, "bar");
 
   let thrown = false;
-  let reflector = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                    .createInstance(Components.interfaces.nsIXMLHttpRequest);
+  let reflector = new XMLHttpRequest();
 
   try {
     Components.utils.setSandboxMetadata(sandbox, { foo: reflector });

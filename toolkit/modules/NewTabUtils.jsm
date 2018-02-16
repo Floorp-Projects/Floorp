@@ -1380,6 +1380,19 @@ var ActivityStreamLinks = {
   },
 
   /**
+   * Helper function which makes the call to the Pocket API to archive an item from
+   * a user's saved to Pocket feed.
+   *
+   * @param {Integer} aItemID
+   *           The unique pocket ID used to find the item to be archived
+   *
+   *@returns {Promise} Returns a promise at completion
+   */
+  archivePocketEntry(aItemID) {
+    return new Promise((success, error) => pktApi.archiveItem(aItemID, {success, error}));
+  },
+
+  /**
    * Get the Highlights links to show on Activity Stream
    *
    * @param {Object} aOptions

@@ -6,7 +6,7 @@
  * The test has the following components:
  *
  * testViaXHR() checks that internal redirects occur correctly for requests
- * made with nsIXMLHttpRequest objects.
+ * made with XMLHttpRequest objects.
  *
  * testViaAsyncOpen() checks that internal redirects occur correctly when made
  * with nsIHTTPChannel.asyncOpen2().
@@ -25,6 +25,8 @@
 
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+
+Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 // the topic we observe to use the API.  http-on-opening-request might also
 // work for some purposes.
@@ -209,9 +211,7 @@ function runXHRTest(uri, headerValue)
 {
   // Check that making an XHR request for uri winds up redirecting to a result with the
   // appropriate headerValue
-  var xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"];
-
-  var req = xhr.createInstance(Ci.nsIXMLHttpRequest);
+  var req = new XMLHttpRequest();
   req.open("GET", uri, false);
   req.send();
   Assert.equal(req.getResponseHeader(testHeaderName), headerValue);

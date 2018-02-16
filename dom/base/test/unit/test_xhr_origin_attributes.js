@@ -23,7 +23,7 @@ function run_test() {
   do_test_pending();
   server.registerPathHandler("/foo", handler);
 
-  let xhr = Cc['@mozilla.org/xmlextras/xmlhttprequest;1'].createInstance(Ci.nsIXMLHttpRequest);
+  let xhr = new XMLHttpRequest();
   xhr.open("GET", "http://localhost:" + server.identity.primaryPort + "/foo", true);
   xhr.send(null);
 
@@ -31,7 +31,7 @@ function run_test() {
     // We create another XHR to connect to the same site, but this time we
     // specify with different origin attributes, which will make the XHR use a
     // different cookie-jar than the previous one.
-    let xhr2 = Cc['@mozilla.org/xmlextras/xmlhttprequest;1'].createInstance(Ci.nsIXMLHttpRequest);
+    let xhr2 = new XMLHttpRequest();
     xhr2.open("GET", "http://localhost:" + server.identity.primaryPort + "/foo", true);
     xhr2.setOriginAttributes({userContextId: 1});
     xhr2.send(null);

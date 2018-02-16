@@ -435,7 +435,10 @@ var gEditItemOverlay = {
       var lastUsed =
         PlacesUtils.annotations.getItemAnnotation(folderId, LAST_USED_ANNO);
       let guid = await PlacesUtils.promiseItemGuid(folderId);
-      let title = (await PlacesUtils.bookmarks.fetch(guid)).title;
+      let bm = await PlacesUtils.bookmarks.fetch(guid);
+      // Since this could be a root mobile folder, we should get the proper
+      // title.
+      let title = PlacesUtils.bookmarks.getLocalizedTitle(bm);
       this._recentFolders.push({ folderId, guid, title, lastUsed });
     }
     this._recentFolders.sort(function(a, b) {

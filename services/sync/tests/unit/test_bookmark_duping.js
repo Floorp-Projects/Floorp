@@ -8,6 +8,7 @@ ChromeUtils.import("resource://services-sync/service.js");
 ChromeUtils.import("resource://services-sync/util.js");
 ChromeUtils.import("resource://services-sync/bookmark_validator.js");
 
+const BookmarksToolbarTitle = "toolbar";
 const bms = PlacesUtils.bookmarks;
 
 add_task(async function setup() {
@@ -631,7 +632,7 @@ add_task(async function test_dupe_empty_folder() {
       id: newFolderGUID,
       type: "folder",
       title: "Folder 1",
-      parentName: "Bookmarks Toolbar",
+      parentName: BookmarksToolbarTitle,
       parentid: "toolbar",
       children: [],
     }), Date.now() / 1000 + 500);

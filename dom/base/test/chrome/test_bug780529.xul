@@ -29,12 +29,8 @@ ok(sink instanceof Components.interfaces.nsIChannelEventSink,
 ok("asyncOnChannelRedirect" in sink,
    "Should have the right methods for an event sink");
 
-is(callbacks.getInterface(Components.interfaces.nsIXMLHttpRequest), req,
-   "Should have the right object");
 sinkReq = sink.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
 isnot(sinkReq, callbacks, "Sink should not be the XHR object");
-is(sinkReq.getInterface(Components.interfaces.nsIXMLHttpRequest), req,
-   "Should have the XHR object now");
   ]]>
   </script>
 </window>

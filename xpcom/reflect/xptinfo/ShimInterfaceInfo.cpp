@@ -59,7 +59,6 @@
 #include "nsISelection.h"
 #include "nsITreeBoxObject.h"
 #include "nsIWebBrowserPersistable.h"
-#include "nsIXMLHttpRequest.h"
 
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/CharacterDataBinding.h"
@@ -127,8 +126,6 @@
 #include "mozilla/dom/UIEventBinding.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/dom/XMLDocumentBinding.h"
-#include "mozilla/dom/XMLHttpRequestEventTargetBinding.h"
-#include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/dom/XMLSerializerBinding.h"
 #include "mozilla/dom/XULCommandEventBinding.h"
 #include "mozilla/dom/XULDocumentBinding.h"
@@ -238,8 +235,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIWebBrowserPersistable, FrameLoader),
   DEFINE_SHIM(WheelEvent),
   DEFINE_SHIM(XMLDocument),
-  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIXMLHttpRequestEventTarget, XMLHttpRequestEventTarget),
-  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIXMLHttpRequestUpload, XMLHttpRequestUpload),
   DEFINE_SHIM(XULCommandEvent),
   DEFINE_SHIM(XULElement),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsISelection, Selection),

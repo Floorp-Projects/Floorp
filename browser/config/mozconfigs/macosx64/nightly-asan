@@ -16,4 +16,9 @@ export MOZ_PACKAGE_JSSHELL=1
 export MOZ_PKG_SPECIAL=asan
 
 . "$topsrcdir/build/macosx/mozconfig.common"
+
+# This is disabled by mozconfig.asan and reenabled by mozconfig.common.
+# Ensure it is disabled since it conflicts with ASan.
+ac_add_options --disable-crashreporter
+
 . "$topsrcdir/build/mozconfig.common.override"

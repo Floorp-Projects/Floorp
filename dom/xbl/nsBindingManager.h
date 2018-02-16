@@ -142,10 +142,6 @@ public:
   bool MediumFeaturesChanged(nsPresContext* aPresContext,
                              mozilla::MediaFeatureChangeReason);
 
-  // Update the content bindings in mBoundContentSet due to medium features
-  // changed.
-  void UpdateBoundContentBindingsForServo(nsPresContext* aPresContext);
-
   void AppendAllSheets(nsTArray<mozilla::StyleSheet*>& aArray);
 
   void Traverse(nsIContent *aContent,

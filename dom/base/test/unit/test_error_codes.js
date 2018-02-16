@@ -11,8 +11,7 @@ var prefs = Components.classes["@mozilla.org/preferences-service;1"].
 
 var asyncXHR = {
   load: function() {
-    var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                            .createInstance(Components.interfaces.nsIXMLHttpRequest);
+    var request = new XMLHttpRequest();
     request.open("GET", "http://localhost:4444/test_error_code.xml", true);
 
     var self = this;

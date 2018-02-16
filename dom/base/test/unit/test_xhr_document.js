@@ -24,7 +24,7 @@ function run_test() {
   var parser = Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
   parser.init();
   let doc = parser.parseFromString(docbody, "text/html");
-  let xhr = Cc['@mozilla.org/xmlextras/xmlhttprequest;1'].createInstance(Ci.nsIXMLHttpRequest);
+  let xhr = new XMLHttpRequest();
   xhr.onload = function() {
     Assert.equal(xhr.responseText, docbody);
     server.stop(do_test_finished);

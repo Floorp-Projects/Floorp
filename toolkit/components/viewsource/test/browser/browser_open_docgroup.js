@@ -18,17 +18,11 @@ add_task(async function setup() {
  * Tests that we can open View Source in a tab.
  */
 add_task(async function test_view_source_in_tab() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["view_source.tab", true],
-    ],
-  });
-
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: "http://example.com",
   }, async function(browser) {
-    let sourceTab = await openViewSource(browser);
+    let sourceTab = await openViewSourceForBrowser(browser);
     let sourceBrowser = sourceTab.linkedBrowser;
 
     await ContentTask.spawn(sourceBrowser, null, async function() {
@@ -37,32 +31,6 @@ add_task(async function test_view_source_in_tab() {
     });
 
     await BrowserTestUtils.removeTab(sourceTab);
-  });
-
-  await SpecialPowers.popPrefEnv();
-});
-
-/**
- * Tests that we can open View Source in a window.
- */
-add_task(async function test_view_source_in_window() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["view_source.tab", false],
-    ],
-  });
-
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "http://example.com",
-  }, async function(browser) {
-    let sourceWin = await openViewSource(browser);
-    await ContentTask.spawn(sourceWin.gBrowser, null, async function() {
-      Assert.equal(content.document.body.id, "viewsource",
-                   "View source mode enabled");
-    });
-
-    await closeViewSourceWindow(sourceWin);
   });
 
   await SpecialPowers.popPrefEnv();

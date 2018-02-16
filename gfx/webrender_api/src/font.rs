@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use {ColorU, IdNamespace, LayoutPoint};
 #[cfg(target_os = "macos")]
 use core_foundation::string::CFString;
 #[cfg(target_os = "macos")]
@@ -16,6 +15,7 @@ use serde::ser::{Serialize, Serializer};
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
+use {ColorU, IdNamespace, LayoutPoint};
 
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]

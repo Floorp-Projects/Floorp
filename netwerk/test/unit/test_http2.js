@@ -1,5 +1,7 @@
 // test HTTP/2
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 // Generate a small and a large post with known pre-calculated md5 sums
 function generateContent(size) {
   var content = "";
@@ -382,8 +384,7 @@ function checkXhr(xhr) {
 
 // Fires off an XHR request over h2
 function test_http2_xhr() {
-  var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-            .createInstance(Ci.nsIXMLHttpRequest);
+  var req = new XMLHttpRequest();
   req.open("GET", "https://localhost:" + serverPort + "/", true);
   req.addEventListener("readystatechange", function (evt) { checkXhr(req); });
   req.send(null);
@@ -1203,8 +1204,7 @@ CertOverrideListener.prototype = {
 };
 
 function addCertOverride(host, port, bits) {
-  var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-            .createInstance(Ci.nsIXMLHttpRequest);
+  var req = new XMLHttpRequest();
   try {
     var url;
     if (port) {

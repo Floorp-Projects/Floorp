@@ -657,7 +657,7 @@ Blocklist.prototype = {
       request = aEvent.target.channel.QueryInterface(Ci.nsIRequest);
       status = request.status;
     }
-    var statusText = "nsIXMLHttpRequest channel unavailable";
+    var statusText = "XMLHttpRequest channel unavailable";
     // When status is 0 we don't have a valid channel.
     if (status != 0) {
       try {

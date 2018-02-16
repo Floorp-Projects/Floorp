@@ -47,7 +47,7 @@ const getTree = (rootGuid, onlyChildren) => {
   function convert(node, parent) {
     let treenode = {
       id: node.guid,
-      title: node.title || "",
+      title: PlacesUtils.bookmarks.getLocalizedTitle(node) || "",
       index: node.index,
       dateAdded: node.dateAdded / 1000,
       type: BOOKMARKS_TYPES_TO_API_TYPES_MAP.get(node.typeCode),
@@ -91,7 +91,7 @@ const getTree = (rootGuid, onlyChildren) => {
 const convertBookmarks = result => {
   let node = {
     id: result.guid,
-    title: result.title || "",
+    title: PlacesUtils.bookmarks.getLocalizedTitle(result) || "",
     index: result.index,
     dateAdded: result.dateAdded.getTime(),
     type: BOOKMARKS_TYPES_TO_API_TYPES_MAP.get(result.type),

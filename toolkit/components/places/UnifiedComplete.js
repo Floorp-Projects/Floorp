@@ -1503,7 +1503,7 @@ Search.prototype = {
       value = PlacesUtils.mozActionURI("keyword", {
         url,
         input: this._originalSearchString,
-        postData,
+        postData
       });
     }
     // The title will end up being "host: queryString"

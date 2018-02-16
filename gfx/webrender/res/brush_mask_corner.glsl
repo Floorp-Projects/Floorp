@@ -24,10 +24,10 @@ BrushMaskCornerPrimitive fetch_primitive(int address) {
 }
 
 void brush_vs(
+    VertexInfo vi,
     int prim_address,
-    vec2 local_pos,
     RectWithSize local_rect,
-    ivec2 user_data,
+    ivec3 user_data,
     PictureTask pic_task
 ) {
     // Load the specific primitive.
@@ -38,7 +38,7 @@ void brush_vs(
     vClipCenter_Radius = vec4(local_rect.p0 + prim.radius, prim.radius);
 
     vLocalRect = vec4(local_rect.p0, local_rect.p0 + local_rect.size);
-    vLocalPos = local_pos;
+    vLocalPos = vi.local_pos;
 }
 #endif
 

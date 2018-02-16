@@ -1032,7 +1032,7 @@ impl YamlFrameWriter {
                 }
                 ScrollFrame(item) => {
                     str_node(&mut v, "type", "scroll-frame");
-                    usize_node(&mut v, "id", clip_id_mapper.add_id(item.id));
+                    usize_node(&mut v, "id", clip_id_mapper.add_id(item.scroll_frame_id));
                     size_node(&mut v, "content-size", &base.rect().size);
                     rect_node(&mut v, "bounds", &base.local_clip().clip_rect());
 

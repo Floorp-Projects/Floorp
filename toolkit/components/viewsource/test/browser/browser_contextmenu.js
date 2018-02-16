@@ -8,62 +8,39 @@ var gViewSourceWindow, gContextMenu, gCopyLinkMenuItem, gCopyEmailMenuItem;
 var expectedData = [];
 
 add_task(async function() {
-  // Full source in view source window
-  let newWindow = await loadViewSourceWindow(source);
-  await SimpleTest.promiseFocus(newWindow);
+  // Full source in view source tab
+  let newTab = await openDocument(source);
+  await onViewSourceWindowOpen(window);
 
-  await onViewSourceWindowOpen(newWindow, false);
-
-  let contextMenu = gViewSourceWindow.document.getElementById("viewSourceContextMenu");
+  let contextMenu = document.getElementById("contentAreaContextMenu");
 
   for (let test of expectedData) {
-    await checkMenuItems(contextMenu, false, test[0], test[1], test[2], test[3]);
-  }
-
-  await new Promise(resolve => {
-    closeViewSourceWindow(newWindow, resolve);
-  });
-
-  // Selection source in view source tab
-  expectedData = [];
-  let newTab = await openDocumentSelect(source, "body");
-  await onViewSourceWindowOpen(window, true);
-
-  contextMenu = document.getElementById("contentAreaContextMenu");
-
-  for (let test of expectedData) {
-    await checkMenuItems(contextMenu, true, test[0], test[1], test[2], test[3]);
+    await checkMenuItems(contextMenu, test[0], test[1], test[2], test[3]);
   }
 
   gBrowser.removeTab(newTab);
 
-  // Selection source in view source window
-  await pushPrefs(["view_source.tab", false]);
-
+  // Selection source in view source tab
   expectedData = [];
-  newWindow = await openDocumentSelect(source, "body");
-  await SimpleTest.promiseFocus(newWindow);
+  newTab = await openDocumentSelect(source, "body");
+  await onViewSourceWindowOpen(window);
 
-  await onViewSourceWindowOpen(newWindow, false);
-
-  contextMenu = newWindow.document.getElementById("viewSourceContextMenu");
+  contextMenu = document.getElementById("contentAreaContextMenu");
 
   for (let test of expectedData) {
-    await checkMenuItems(contextMenu, false, test[0], test[1], test[2], test[3]);
+    await checkMenuItems(contextMenu, test[0], test[1], test[2], test[3]);
   }
 
-  await new Promise(resolve => {
-    closeViewSourceWindow(newWindow, resolve);
-  });
+  gBrowser.removeTab(newTab);
 });
 
-async function onViewSourceWindowOpen(aWindow, aIsTab) {
+async function onViewSourceWindowOpen(aWindow) {
   gViewSourceWindow = aWindow;
 
-  gCopyLinkMenuItem = aWindow.document.getElementById(aIsTab ? "context-copylink" : "context-copyLink");
-  gCopyEmailMenuItem = aWindow.document.getElementById(aIsTab ? "context-copyemail" : "context-copyEmail");
+  gCopyLinkMenuItem = aWindow.document.getElementById("context-copylink");
+  gCopyEmailMenuItem = aWindow.document.getElementById("context-copyemail");
 
-  let browser = aIsTab ? gBrowser.selectedBrowser : gViewSourceWindow.gBrowser;
+  let browser = gBrowser.selectedBrowser;
   await ContentTask.spawn(browser, null, async function(arg) {
     let tags = content.document.querySelectorAll("a[href]");
     Assert.equal(tags[0].href, "view-source:http://example.com/", "Link has correct href");
@@ -75,9 +52,9 @@ async function onViewSourceWindowOpen(aWindow, aIsTab) {
   expectedData.push(["span", false, false, null]);
 }
 
-async function checkMenuItems(contextMenu, isTab, selector, copyLinkExpected, copyEmailExpected, expectedClipboardContent) {
+async function checkMenuItems(contextMenu, selector, copyLinkExpected, copyEmailExpected, expectedClipboardContent) {
 
-  let browser = isTab ? gBrowser.selectedBrowser : gViewSourceWindow.gBrowser;
+  let browser = gBrowser.selectedBrowser;
   await ContentTask.spawn(browser, { selector }, async function(arg) {
     content.document.querySelector(arg.selector).scrollIntoView();
   });

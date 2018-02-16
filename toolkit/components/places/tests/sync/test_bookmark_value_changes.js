@@ -82,7 +82,7 @@ add_task(async function test_value_combo() {
         type: "bookmark",
         parentid: "toolbar",
         hasDupe: false,
-        parentName: "Bookmarks Toolbar",
+        parentName: BookmarksToolbarTitle,
         dateAdded: bzBmk.dateAdded.getTime(),
         bmkUri: "https://bugzilla.mozilla.org/",
         title: "Bugzilla",
@@ -100,7 +100,7 @@ add_task(async function test_value_combo() {
         hasDupe: false,
         parentName: "",
         dateAdded: menuInfo.dateAdded.getTime(),
-        title: "Bookmarks Toolbar",
+        title: BookmarksToolbarTitle,
         children: ["fxBmk_______", "tFolder_____", "bzBmk_______"],
       },
     },
@@ -356,7 +356,7 @@ add_task(async function test_value_only_changes() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
       children: [{
         guid: "folderAAAAAA",
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -428,17 +428,17 @@ add_task(async function test_value_only_changes() {
       guid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 1,
-      title: "Bookmarks Toolbar",
+      title: BookmarksToolbarTitle,
     }, {
       guid: PlacesUtils.bookmarks.unfiledGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 3,
-      title: "Other Bookmarks",
+      title: UnfiledBookmarksTitle,
     }, {
       guid: PlacesUtils.bookmarks.mobileGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 4,
-      title: "mobile",
+      title: MobileBookmarksTitle,
     }],
   }, "Should not change structure for value-only changes");
 

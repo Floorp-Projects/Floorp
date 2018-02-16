@@ -12,11 +12,9 @@ ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const XMLHttpRequest = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1");
-
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
-Cu.importGlobalProperties(["TextDecoder"]);
+Cu.importGlobalProperties(["TextDecoder", "XMLHttpRequest"]);
 
 // Define our prefs
 const PREF_CLIENT_ID = "asanreporter.clientid";
