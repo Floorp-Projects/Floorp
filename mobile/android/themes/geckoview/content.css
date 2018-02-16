@@ -101,7 +101,7 @@ xul|button,
 textarea,
 button,
 xul|button,
-* > input:not(:-moz-any([type="image"], [type="checkbox"], [type="radio"])) {
+* > input:not(:-moz-any([type="image"], [type="checkbox"], [type="radio"], [type="range"])) {
   border-radius: var(--form_border_radius);
 }
 
@@ -109,7 +109,7 @@ select[size],
 select[multiple],
 select[size][multiple],
 textarea,
-* > input:not(:-moz-any([type="image"], [type="checkbox"], [type="radio"])) {
+* > input:not(:-moz-any([type="image"], [type="checkbox"], [type="radio"], [type="range"])) {
   border-style: solid;
   border-color: var(--form_border);
   color: var(--form_text);
