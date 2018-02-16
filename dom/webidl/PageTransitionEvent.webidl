@@ -19,9 +19,14 @@ interface PageTransitionEvent : Event
    * session history, |persisted| is true for the PageHide event.
    */
   readonly attribute boolean persisted;
+
+  // Whether the document is in the middle of a frame swap.
+  [ChromeOnly]
+  readonly attribute boolean inFrameSwap;
 };
 
 dictionary PageTransitionEventInit : EventInit
 {
   boolean persisted = false;
+  boolean inFrameSwap = false;
 };
