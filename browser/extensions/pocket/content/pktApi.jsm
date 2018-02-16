@@ -385,6 +385,22 @@ var pktApi = (function() {
     }
 
     /**
+     * Archive an item identified by item id from the users list
+     * @param  {string} itemId  The id from the item we want to archive
+     * @param  {Object | undefined} options Can provide an actionInfo object with
+     *                                      further data to send to the API. Can
+     *                                      have success and error callbacks
+     * @return {Boolean} Returns Boolean whether the api call started sucessfully
+     */
+    function archiveItem(itemId, options) {
+        var action = {
+            action: "archive",
+            item_id: itemId
+        };
+        return sendAction(action, options);
+    }
+
+    /**
      * General function to send all kinds of actions like adding of links or
      * removing of items via the API
      * @param  {Object}  action  Action object
@@ -652,6 +668,7 @@ var pktApi = (function() {
         clearUserData,
         addLink,
         deleteItem,
+        archiveItem,
         addTagsToItem,
         addTagsToURL,
         getTags,
