@@ -20,6 +20,9 @@ var globals = require("../globals");
 
 const rootDir = helpers.rootDir;
 
+// When updating EXTRA_SCRIPTS or MAPPINGS, be sure to also update the
+// 'support-files' config in `tools/lint/eslint.yml`.
+
 // These are scripts not included in global-scripts.inc, but which are loaded
 // via overlays.
 const EXTRA_SCRIPTS = [
