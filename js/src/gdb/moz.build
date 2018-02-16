@@ -6,8 +6,13 @@
 
 GeckoProgram('gdb-tests', linkage=None)
 
+SOURCES += [
+    # This file must not be unified with any of the test files, or the use()
+    # and breakpoint() functions might get optimized out.
+    'gdb-tests.cpp'
+]
+
 UNIFIED_SOURCES += [
-    'gdb-tests.cpp',
     'tests/test-asmjs.cpp',
     'tests/test-ExecutableAllocator.cpp',
     'tests/test-GCCellPtr.cpp',

@@ -24,6 +24,13 @@
 
 void breakpoint();
 
+extern void usePointer(const void* ptr);
+
+template <typename T>
+void use(const T& thing) {
+    usePointer(&thing);
+}
+
 struct GDBFragment {
     GDBFragment() {
         next = allFragments;

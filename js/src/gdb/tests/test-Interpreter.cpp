@@ -73,7 +73,7 @@ FRAGMENT(Interpreter, Regs) {
 
   breakpoint();
 
-  (void) regs;
+  use(regs);
 }
 
 FRAGMENT(Interpreter, AbstractFramePtr) {
@@ -95,8 +95,8 @@ FRAGMENT(Interpreter, AbstractFramePtr) {
 
     breakpoint();
 
-    (void) sfidptr;
-    (void) ifptr;
-    (void) bfptr;
-    (void) rfptr;
+    use(sfidptr);
+    use(ifptr);
+    use(bfptr);
+    use(rfptr);
 }

@@ -28,13 +28,13 @@ FRAGMENT(JSString, simple) {
 
   breakpoint();
 
-  (void) empty;
-  (void) x;
-  (void) z;
-  (void) stars;
-  (void) xz;
-  (void) doubleStars;
-  (void) xRaw;
+  use(empty);
+  use(x);
+  use(z);
+  use(stars);
+  use(xz);
+  use(doubleStars);
+  use(xRaw);
 }
 
 FRAGMENT(JSString, null) {
@@ -43,8 +43,8 @@ FRAGMENT(JSString, null) {
 
   breakpoint();
 
-  (void) null;
-  (void) nullRaw;
+  use(null);
+  use(nullRaw);
 }
 
 FRAGMENT(JSString, subclasses) {
@@ -52,12 +52,12 @@ FRAGMENT(JSString, subclasses) {
 
   breakpoint();
 
-  (void) flat;
+  use(flat);
 }
 
 FRAGMENT(JSString, atom) {
   JSAtom* molybdenum = js::Atomize(cx, "molybdenum", 10);
   breakpoint();
 
-  (void) molybdenum;
+  use(molybdenum);
 }

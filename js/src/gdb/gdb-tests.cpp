@@ -26,6 +26,11 @@ static const JSClass global_class = {
     &global_classOps
 };
 
+void
+usePointer(const void* ptr) {
+    asm("");
+}
+
 template<typename T>
 static inline T*
 checkPtr(T* ptr)
