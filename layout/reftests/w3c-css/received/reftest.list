@@ -1080,9 +1080,9 @@ fuzzy-if(OSX,15,16) == css-writing-modes/text-combine-upright-decorations-001.ht
 == css-writing-modes/text-combine-upright-layout-rules-001.html css-writing-modes/reference/text-combine-upright-layout-rules-001-ref.html
 == css-writing-modes/text-combine-upright-line-breaking-rules-001.html css-writing-modes/text-combine-upright-line-breaking-rules-001-ref.html
 fuzzy(255,960) == css-writing-modes/text-combine-upright-value-all-001.html css-writing-modes/reference/text-combine-upright-value-single-character.html
-fuzzy(255,960) fails-if(webrender) == css-writing-modes/text-combine-upright-value-all-002.html css-writing-modes/reference/vertical-ahem-1x1-ref.html
+fuzzy(255,960) == css-writing-modes/text-combine-upright-value-all-002.html css-writing-modes/reference/vertical-ahem-1x1-ref.html
 fuzzy(255,960) != css-writing-modes/text-combine-upright-value-all-002.html css-writing-modes/reference/horizontal-ahem-1x1-notref.html
-fuzzy(255,960) fails-if(webrender) == css-writing-modes/text-combine-upright-value-all-003.html css-writing-modes/reference/vertical-ahem-1x1-ref.html
+fuzzy(255,960) == css-writing-modes/text-combine-upright-value-all-003.html css-writing-modes/reference/vertical-ahem-1x1-ref.html
 fuzzy(255,960) != css-writing-modes/text-combine-upright-value-all-003.html css-writing-modes/reference/horizontal-ahem-1x1-notref.html
 skip == css-writing-modes/text-combine-upright-value-digits2-001.html css-writing-modes/reference/text-combine-upright-value-single-character.html
 skip == css-writing-modes/text-combine-upright-value-digits2-002.html css-writing-modes/reference/vertical-ahem-1x1-ref.html

@@ -10,8 +10,7 @@ function sendMessageToJava(message) {
 function _evalURI(uri, sandbox) {
   // We explicitly allow Cross-Origin requests, since it is useful for
   // testing, but we allow relative URLs by maintaining our baseURI.
-  let req = SpecialPowers.Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                         .createInstance();
+  let req = new XMLHttpRequest();
 
   let baseURI = SpecialPowers.Services.io
                              .newURI(window.document.baseURI, window.document.characterSet);

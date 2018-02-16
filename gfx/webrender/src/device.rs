@@ -70,6 +70,7 @@ pub enum DepthFunction {
 pub enum TextureFilter {
     Nearest,
     Linear,
+    Trilinear,
 }
 
 #[derive(Debug)]
@@ -924,7 +925,9 @@ impl Device {
     }
 
     pub fn create_texture(
-        &mut self, target: TextureTarget, format: ImageFormat,
+        &mut self,
+        target: TextureTarget,
+        format: ImageFormat,
     ) -> Texture {
         Texture {
             id: self.gl.gen_textures(1)[0],
@@ -941,15 +944,21 @@ impl Device {
     }
 
     fn set_texture_parameters(&mut self, target: gl::GLuint, filter: TextureFilter) {
-        let filter = match filter {
+        let mag_filter = match filter {
+            TextureFilter::Nearest => gl::NEAREST,
+            TextureFilter::Linear | TextureFilter::Trilinear => gl::LINEAR,
+        };
+
+        let min_filter = match filter {
             TextureFilter::Nearest => gl::NEAREST,
             TextureFilter::Linear => gl::LINEAR,
+            TextureFilter::Trilinear => gl::LINEAR_MIPMAP_LINEAR,
         };
 
         self.gl
-            .tex_parameter_i(target, gl::TEXTURE_MAG_FILTER, filter as gl::GLint);
+            .tex_parameter_i(target, gl::TEXTURE_MAG_FILTER, mag_filter as gl::GLint);
         self.gl
-            .tex_parameter_i(target, gl::TEXTURE_MIN_FILTER, filter as gl::GLint);
+            .tex_parameter_i(target, gl::TEXTURE_MIN_FILTER, min_filter as gl::GLint);
 
         self.gl
             .tex_parameter_i(target, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as gl::GLint);
@@ -2227,6 +2236,11 @@ impl<'a> UploadTarget<'a> {
                 );
             }
             _ => panic!("BUG: Unexpected texture target!"),
+        }
+
+        // If using tri-linear filtering, build the mip-map chain for this texture.
+        if self.texture.filter == TextureFilter::Trilinear {
+            self.gl.generate_mipmap(self.texture.target);
         }
 
         // Reset row length to 0, otherwise the stride would apply to all texture uploads.

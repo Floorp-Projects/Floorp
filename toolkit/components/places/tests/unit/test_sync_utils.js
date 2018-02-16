@@ -1894,7 +1894,7 @@ add_task(async function test_fetch() {
       parentRecordId: "menu",
       description: "Folder description",
       childRecordIds: [folderBmk.recordId, folderSep.recordId],
-      parentTitle: "Bookmarks Menu",
+      parentTitle: "menu",
       dateAdded: item.dateAdded,
       title: "",
     }, "Should include description, children, title, and parent title in folder");
@@ -1912,7 +1912,7 @@ add_task(async function test_fetch() {
     deepEqual(item.tags, ["taggy"], "Should return tags");
     equal(item.description, "Bookmark description", "Should return bookmark description");
     strictEqual(item.loadInSidebar, true, "Should return sidebar anno");
-    equal(item.parentTitle, "Bookmarks Menu", "Should return parent title");
+    equal(item.parentTitle, "menu", "Should return parent title");
     strictEqual(item.title, "", "Should return empty title");
   }
 

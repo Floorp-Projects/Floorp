@@ -44,6 +44,8 @@ void main(void) {
         case DIR_VERTICAL:
             vOffsetScale = vec2(0.0, 1.0 / texture_size.y);
             break;
+        default:
+            vOffsetScale = vec2(0.0);
     }
 
     vUvRect = vec4(src_rect.p0 + vec2(0.5),

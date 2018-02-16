@@ -788,24 +788,6 @@ nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
 }
 
 void
-nsBindingManager::UpdateBoundContentBindingsForServo(nsPresContext* aPresContext)
-{
-  MOZ_ASSERT(mDocument->IsStyledByServo(),
-             "This should be called only by servo-backend!");
-
-  RefPtr<nsPresContext> presContext = aPresContext;
-
-  EnumerateBoundContentBindings([=](nsXBLBinding* aBinding) {
-    nsXBLPrototypeBinding* protoBinding = aBinding->PrototypeBinding();
-    ServoStyleSet* styleSet = protoBinding->GetServoStyleSet();
-    if (styleSet && styleSet->StyleSheetsHaveChanged()) {
-      protoBinding->ComputeServoStyleSet(presContext);
-    }
-    return true;
-  });
-}
-
-void
 nsBindingManager::AppendAllSheets(nsTArray<StyleSheet*>& aArray)
 {
   EnumerateBoundContentBindings([&aArray](nsXBLBinding* aBinding) {

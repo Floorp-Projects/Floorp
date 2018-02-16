@@ -11,14 +11,12 @@ extern crate webrender;
 mod boilerplate;
 
 use boilerplate::{Example, HandyDandyRectBuilder};
-use rayon::Configuration as ThreadPoolConfig;
-use rayon::ThreadPool;
+use rayon::{Configuration as ThreadPoolConfig, ThreadPool};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
-use std::sync::mpsc::{channel, Receiver, Sender};
-use webrender::api::{self,
-    DisplayListBuilder, DocumentId, PipelineId, RenderApi, ResourceUpdates};
+use std::sync::mpsc::{Receiver, Sender, channel};
+use webrender::api::{self, DisplayListBuilder, DocumentId, PipelineId, RenderApi, ResourceUpdates};
 
 // This example shows how to implement a very basic BlobImageRenderer that can only render
 // a checkerboard pattern.

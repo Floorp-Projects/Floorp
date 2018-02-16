@@ -227,8 +227,6 @@ this.PlacesDBUtils = {
   },
 
   async _getCoherenceStatements() {
-    let updateRootTitleSql = `UPDATE moz_bookmarks SET title = :title
-                              WHERE id = :root_id AND title <> :title`;
     let cleanupStatements = [
       // MOZ_ANNO_ATTRIBUTES
       // A.1 remove obsolete annotations from moz_annos.
@@ -283,47 +281,6 @@ this.PlacesDBUtils = {
           WHERE NOT EXISTS
             (SELECT id FROM moz_places WHERE id = a.place_id LIMIT 1)
         )`
-      },
-
-      // MOZ_BOOKMARKS
-      // C.2 fix roots titles
-      // Some alpha version has wrong roots title, and this also fixes them if
-      // locale has changed.
-      { query: updateRootTitleSql,
-        params: {
-          root_id: PlacesUtils.placesRootId,
-          title: "",
-        }
-      },
-      { query: updateRootTitleSql,
-        params: {
-          root_id: PlacesUtils.bookmarksMenuFolderId,
-          title: PlacesUtils.getString("BookmarksMenuFolderTitle"),
-        }
-      },
-      { query: updateRootTitleSql,
-        params: {
-          root_id: PlacesUtils.bookmarksMenuFolderId,
-          title: PlacesUtils.getString("BookmarksMenuFolderTitle"),
-        }
-      },
-      { query: updateRootTitleSql,
-        params: {
-          root_id: PlacesUtils.toolbarFolderId,
-          title: PlacesUtils.getString("BookmarksToolbarFolderTitle"),
-        }
-      },
-      { query: updateRootTitleSql,
-        params: {
-          root_id: PlacesUtils.unfiledBookmarksFolderId,
-          title: PlacesUtils.getString("OtherBookmarksFolderTitle"),
-        }
-      },
-      { query: updateRootTitleSql,
-        params: {
-          root_id: PlacesUtils.tagsFolderId,
-          title: PlacesUtils.getString("TagsFolderTitle"),
-        }
       },
 
       // D.1 remove items without a valid place

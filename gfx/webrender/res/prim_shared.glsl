@@ -288,7 +288,7 @@ struct ClipArea {
 ClipArea fetch_clip_area(int index) {
     ClipArea area;
 
-    if (index == 0x7FFFFFFF) { //special sentinel task index
+    if (index == 0x7FFF) { //special sentinel task index
         area.common_data = RenderTaskCommonData(
             RectWithSize(vec2(0.0), vec2(0.0)),
             0.0
@@ -368,6 +368,7 @@ Glyph fetch_glyph(int specific_prim_address,
         case SUBPX_DIR_VERTICAL:
             glyph.y = floor(glyph.y + 0.125);
             break;
+        default: break;
     }
 
     return Glyph(glyph);
@@ -554,6 +555,8 @@ vec2 compute_snap_offset(vec2 local_pos,
 struct VertexInfo {
     vec2 local_pos;
     vec2 screen_pos;
+    float w;
+    vec2 snapped_device_pos;
 };
 
 VertexInfo write_vertex(RectWithSize instance_rect,
@@ -579,13 +582,20 @@ VertexInfo write_vertex(RectWithSize instance_rect,
     vec2 device_pos = world_pos.xy / world_pos.w * uDevicePixelRatio;
 
     // Apply offsets for the render task to get correct screen location.
-    vec2 final_pos = device_pos + snap_offset -
+    vec2 snapped_device_pos = device_pos + snap_offset;
+    vec2 final_pos = snapped_device_pos -
                      task.content_origin +
                      task.common_data.task_rect.p0;
 
     gl_Position = uTransform * vec4(final_pos, z, 1.0);
 
-    VertexInfo vi = VertexInfo(clamped_local_pos, device_pos);
+    VertexInfo vi = VertexInfo(
+        clamped_local_pos,
+        device_pos,
+        world_pos.w,
+        snapped_device_pos
+    );
+
     return vi;
 }
 
@@ -666,7 +676,13 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
         clip_edge_mask
     );
 
-    VertexInfo vi = VertexInfo(local_pos, device_pos);
+    VertexInfo vi = VertexInfo(
+        local_pos,
+        device_pos,
+        world_pos.w,
+        device_pos
+    );
+
     return vi;
 }
 
