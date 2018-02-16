@@ -6854,7 +6854,7 @@ nsIFrame::GetNearestWidget(nsPoint& aOffset) const
   return widget;
 }
 
-Matrix4x4
+Matrix4x4Flagged
 nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
                              nsIFrame** aOutAncestor,
                              uint32_t aFlags)
@@ -6915,7 +6915,7 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
 
         *aOutAncestor = docRootFrame;
         Matrix4x4 docRootTransformToTop =
-          nsLayoutUtils::GetTransformToAncestor(docRootFrame, nullptr);
+          nsLayoutUtils::GetTransformToAncestor(docRootFrame, nullptr).GetMatrix();
         if (docRootTransformToTop.IsSingular()) {
           NS_WARNING("Containing document is invisible, we can't compute a valid transform");
         } else {
@@ -7203,7 +7203,7 @@ nsIFrame::TryUpdateTransformOnly(Layer** aLayerResult)
     return false;
   }
 
-  gfx::Matrix4x4 transform3d;
+  gfx::Matrix4x4Flagged transform3d;
   if (!nsLayoutUtils::GetLayerTransformForFrame(this, &transform3d)) {
     // We're not able to compute a layer transform that we know would
     // be used at the next layers transaction, so we can't only update
@@ -7228,7 +7228,7 @@ nsIFrame::TryUpdateTransformOnly(Layer** aLayerResult)
       !gfx::FuzzyEqual(transform._12, previousTransform._12, kError)) {
     return false;
   }
-  layer->SetBaseTransformForNextTransaction(transform3d);
+  layer->SetBaseTransformForNextTransaction(transform3d.GetMatrix());
   *aLayerResult = layer;
   return true;
 }

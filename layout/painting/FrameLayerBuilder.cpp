@@ -3330,7 +3330,7 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
         containingPaintedLayerData->mMaybeHitRegion, rect);
       containingPaintedLayerData->mMaybeHitRegion.SimplifyOutward(8);
     }
-    Maybe<Matrix4x4> matrixCache;
+    Maybe<Matrix4x4Flagged> matrixCache;
     nsLayoutUtils::TransformToAncestorAndCombineRegions(
       data->mHitRegion,
       mContainerReferenceFrame,
@@ -5836,7 +5836,7 @@ FrameLayerBuilder::GetPaintedLayerScaleForFrame(nsIFrame* aFrame)
 
   float resolution = presCtx->PresShell()->GetResolution();
 
-  Matrix4x4 transform = Matrix4x4::Scaling(resolution, resolution, 1.0);
+  Matrix4x4Flagged transform = Matrix4x4::Scaling(resolution, resolution, 1.0);
   if (aFrame != root) {
     // aTransform is applied first, then the scale is applied to the result
     transform = nsLayoutUtils::GetTransformToAncestor(aFrame, root) * transform;
