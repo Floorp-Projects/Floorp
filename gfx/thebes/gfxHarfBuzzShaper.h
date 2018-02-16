@@ -52,7 +52,8 @@ public:
 
     hb_position_t GetGlyphVAdvance(hb_codepoint_t glyph) const;
 
-    void GetGlyphVOrigin(hb_codepoint_t aGlyph,
+    void GetGlyphVOrigin(mozilla::gfx::DrawTarget& aDT,
+                         hb_codepoint_t aGlyph,
                          hb_position_t *aX, hb_position_t *aY) const;
 
     // get harfbuzz horizontal advance in 16.16 fixed point format.
@@ -114,7 +115,7 @@ protected:
                               nsTArray<nsPoint>& aPositions,
                               uint32_t aAppUnitsPerDevUnit);
 
-    bool InitializeVertical();
+    void InitializeVertical();
     bool LoadHmtxTable();
 
     struct Glyf { // we only need the bounding-box at the beginning
@@ -175,6 +176,10 @@ protected:
     mutable int32_t    mNumLongHMetrics;
     // Similarly for vhea if it's a vertical font.
     mutable int32_t    mNumLongVMetrics;
+
+    // Default y-coordinate for glyph vertical origin, used if the font
+    // does not actually have vertical-layout metrics.
+    mutable gfxFloat mDefaultVOrg;
 
     // Whether the font implements GetGlyph, or we should read tables
     // directly
