@@ -98,9 +98,8 @@ private:
 
 } // namespace mozilla
 
-ServoStyleSet::ServoStyleSet(Kind aKind)
-  : mKind(aKind)
-  , mDocument(nullptr)
+ServoStyleSet::ServoStyleSet()
+  : mDocument(nullptr)
   , mAuthorStyleDisabled(false)
   , mStylistState(StylistState::NotDirty)
   , mUserFontSetUpdateGeneration(0)
@@ -116,34 +115,6 @@ ServoStyleSet::~ServoStyleSet()
       sheet->DropStyleSet(this);
     }
   }
-}
-
-UniquePtr<ServoStyleSet>
-ServoStyleSet::CreateXBLServoStyleSet(
-  nsPresContext* aPresContext,
-  const nsTArray<RefPtr<ServoStyleSheet>>& aNewSheets)
-{
-  auto set = MakeUnique<ServoStyleSet>(Kind::ForXBL);
-  set->Init(aPresContext);
-
-  // The XBL style sheets aren't document level sheets, but we need to
-  // decide a particular SheetType to add them to style set. This type
-  // doesn't affect the place where we pull those rules from
-  // stylist::push_applicable_declarations_as_xbl_only_stylist().
-  set->ReplaceSheets(SheetType::Doc, aNewSheets);
-
-  // Update stylist immediately.
-  //
-  // NOTE(emilio): that this _needs_ to be the only call to UpdateStylist for
-  // XBL bindings, otherwise the Servo-side Device may have stale pres context
-  // pointers and such, which are not great.
-  set->UpdateStylist();
-
-  // XBL resources are shared for a given URL, even across documents, so we
-  // can't safely keep this reference.
-  set->mDocument = nullptr;
-
-  return set;
 }
 
 nsPresContext*
@@ -214,7 +185,6 @@ ServoStyleSet::InvalidateStyleForCSSRuleChanges()
 void
 ServoStyleSet::InvalidateStyleForDocumentStateChanges(EventStates aStatesChanged)
 {
-  MOZ_ASSERT(IsMaster());
   MOZ_ASSERT(mDocument);
   MOZ_ASSERT(!aStatesChanged.IsEmpty());
 
@@ -1475,7 +1445,7 @@ ServoStyleSet::UpdateStylist()
     // There's no need to compute invalidations and such for an XBL styleset,
     // since they are loaded and unloaded synchronously, and they don't have to
     // deal with dynamic content changes.
-    Element* root = IsMaster() ? mDocument->GetRootElement() : nullptr;
+    Element* root = mDocument->GetRootElement();
     const ServoElementSnapshotTable* snapshots = nullptr;
     if (nsPresContext* pc = GetPresContext()) {
       snapshots = &pc->RestyleManager()->AsServo()->Snapshots();
@@ -1484,7 +1454,6 @@ ServoStyleSet::UpdateStylist()
   }
 
   if (MOZ_UNLIKELY(mStylistState & StylistState::XBLStyleSheetsDirty)) {
-    MOZ_ASSERT(IsMaster(), "Only master styleset can mark XBL stylesets dirty!");
     MOZ_ASSERT(GetPresContext(), "How did they get dirty?");
     mDocument->BindingManager()->EnumerateBoundContentBindings(
       [&](nsXBLBinding* aBinding) {
