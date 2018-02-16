@@ -34,8 +34,8 @@
 #include "vm/Time.h"
 #include "vm/UnboxedObject.h"
 
-#include "gc/GCIteration-inl.h"
 #include "gc/Marking-inl.h"
+#include "gc/PrivateIterators-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"

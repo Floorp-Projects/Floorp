@@ -15,8 +15,8 @@
 #include "jsiter.h"
 #include "jswrapper.h"
 
-#include "gc/Iteration.h"
 #include "gc/Policy.h"
+#include "gc/PublicIterators.h"
 #include "jit/JitCompartment.h"
 #include "jit/JitOptions.h"
 #include "js/Date.h"
