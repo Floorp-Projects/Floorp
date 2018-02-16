@@ -152,8 +152,8 @@ var Bookmarks = Object.freeze({
   userContentRoots: ["toolbar_____", "menu________", "unfiled_____", "mobile______"],
 
   /**
-   * GUIDs associated with virtual queries that are used for display in the left
-   * pane.
+   * GUIDs associated with virtual queries that are used for displaying bookmark
+   * folders in the left pane.
    */
   virtualMenuGuid: "menu_______v",
   virtualToolbarGuid: "toolbar____v",

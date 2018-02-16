@@ -37,58 +37,41 @@
      * Bug 510634 -  Wrong icons on bookmarks sidebar
      * https://bugzilla.mozilla.org/show_bug.cgi?id=510634
      *
-     * Ensures that properties for special queries are set on their tree nodes,
-     * even if PlacesUIUtils.leftPaneFolderId was not initialized.
+     * Ensures that properties for special queries are set on their tree nodes.
      */
 
     SimpleTest.waitForExplicitFinish();
 
     function runTest() {
-      // We need to cache and restore the getters in order to simulate
-      // Bug 510634.
-      let leftPaneGetters = new Map([["leftPaneFolderId", null]]);
-      for (let [key, val] of leftPaneGetters) {
-        if (!val) {
-          let getter = Object.getOwnPropertyDescriptor(PlacesUIUtils, key).get;
-          if (typeof getter == "function") {
-            leftPaneGetters.set(key, getter);
-          }
-        }
-      }
-
-      function restoreLeftPaneGetters() {
-        for (let [key, getter] of leftPaneGetters) {
-          Object.defineProperty(PlacesUIUtils, key, {
-            enumerable: true, configurable: true, get: getter
-          });
-        }
-      }
-
-      let leftPaneFolderId = PlacesUIUtils.leftPaneFolderId;
-      restoreLeftPaneGetters();
-
       // Setup the places tree contents.
       let tree = document.getElementById("tree");
-      tree.place = "place:queryType=1&folder=" + leftPaneFolderId;
+      tree.place = `place:type=${Ci.nsINavHistoryQueryOptions.RESULTS_AS_LEFT_PANE_QUERY}&excludeItems=1&expandQueries=0`;
 
       // The query-property is set on the title column for each row.
       let titleColumn = tree.treeBoxObject.columns.getColumnAt(0);
 
       // Open All Bookmarks
-      tree.selectItems([PlacesUIUtils.leftPaneQueries["AllBookmarks"]]);
+      tree.selectItems([PlacesUtils.virtualAllBookmarksGuid]);
       PlacesUtils.asContainer(tree.selectedNode).containerOpen = true;
       is(tree.selectedNode.uri,
          "place:type=" + Ci.nsINavHistoryQueryOptions.RESULTS_AS_ROOTS_QUERY +
          "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS,
          "Opened All Bookmarks");
 
-      for (let queryName of ["History", "Downloads", "Tags", "AllBookmarks"]) {
+      const topLevelGuids = [
+        PlacesUtils.virtualHistoryGuid,
+        PlacesUtils.virtualDownloadsGuid,
+        PlacesUtils.virtualTagsGuid,
+        PlacesUtils.virtualAllBookmarksGuid
+      ];
+
+      for (let queryName of topLevelGuids) {
         let found = false;
         for (let i = 0; i < tree.view.rowCount && !found; i++) {
           rowProperties = tree.view.getCellProperties(i, titleColumn).split(" ");
           found = rowProperties.includes("OrganizerQuery_" + queryName);
         }
-        ok(found, "OrganizerQuery_" + queryName + " is set");
+        ok(found, `OrganizerQuery_${queryName} is set`);
       }
 
       const folderGuids = [
@@ -103,14 +86,11 @@
           rowProperties = tree.view.getCellProperties(i, titleColumn).split(" ");
           found = rowProperties.includes("queryFolder_" + guid);
         }
-        ok(found, "queryFolder_" + guid + " is set");
+        ok(found, `queryFolder_${guid} is set`);
       }
 
       // Close the root node
       tree.result.root.containerOpen = false;
-
-      // Restore the getters for the next test.
-      restoreLeftPaneGetters();
 
       SimpleTest.finish();
     }
