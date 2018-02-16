@@ -36,7 +36,7 @@
 
 using namespace clang;
 
-const std::string GENERATED("__GENERATED__/");
+const std::string GENERATED("__GENERATED__" PATHSEP_STRING);
 
 // Absolute path to directory containing source code.
 std::string Srcdir;
@@ -1484,9 +1484,9 @@ protected:
       return false;
     }
 
-    ensurePath(Args[1] + "/");
+    ensurePath(Args[1] + PATHSEP_STRING);
     Outdir = getAbsolutePath(Args[1]);
-    Outdir += "/";
+    Outdir += PATHSEP_STRING;
 
     Objdir = getAbsolutePath(Args[2]);
     if (Objdir.empty()) {
@@ -1496,7 +1496,7 @@ protected:
       D.Report(DiagID) << Args[2];
       return false;
     }
-    Objdir += "/";
+    Objdir += PATHSEP_STRING;
 
     printf("MOZSEARCH: %s %s %s\n", Srcdir.c_str(), Outdir.c_str(),
            Objdir.c_str());

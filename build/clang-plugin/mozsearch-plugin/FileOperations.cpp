@@ -27,11 +27,11 @@
 // the path.
 void ensurePath(std::string Path) {
   size_t Pos = 0;
-  if (Path[0] == '/') {
+  if (Path[0] == PATHSEP_CHAR) {
     Pos++;
   }
 
-  while ((Pos = Path.find('/', Pos)) != std::string::npos) {
+  while ((Pos = Path.find(PATHSEP_CHAR, Pos)) != std::string::npos) {
     std::string Portion = Path.substr(0, Pos);
     if (!Portion.empty()) {
 #if defined(_WIN32) || defined(_WIN64)
