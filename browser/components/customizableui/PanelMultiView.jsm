@@ -59,6 +59,12 @@ ChromeUtils.defineModuleGetter(this, "BrowserUtils",
 ChromeUtils.defineModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
 
+/**
+ * Safety timeout after which asynchronous events will be canceled if any of the
+ * registered blockers does not return.
+ */
+const BLOCKERS_TIMEOUT_MS = 10000;
+
 const TRANSITION_PHASES = Object.freeze({
   START: 1,
   PREPARE: 2,
@@ -81,6 +87,12 @@ this.AssociatedToNode = class {
      * Node associated to this object.
      */
     this.node = node;
+
+    /**
+     * This promise is resolved when the current set of blockers set by event
+     * handlers have all been processed.
+     */
+    this._blockersPromise = Promise.resolve();
   }
 
   /**
@@ -132,6 +144,63 @@ this.AssociatedToNode = class {
     });
     this.node.dispatchEvent(event);
     return event.defaultPrevented;
+  }
+
+  /**
+   * Dispatches a custom event on this element and waits for any blocking
+   * promises registered using the "addBlocker" function on the details object.
+   * If this function is called again, the event is only dispatched after all
+   * the previously registered blockers have returned.
+   *
+   * The event can be canceled either by resolving any blocking promise to the
+   * boolean value "false" or by calling preventDefault on the event. Rejections
+   * and exceptions will be reported and will cancel the event.
+   *
+   * Blocking should be used sporadically because it slows down the interface.
+   * Also, non-reentrancy is not strictly guaranteed because a safety timeout of
+   * BLOCKERS_TIMEOUT_MS is implemented, after which the event will be canceled.
+   * This helps to prevent deadlocks if any of the event handlers does not
+   * resolve a blocker promise.
+   *
+   * @note Since there is no use case for dispatching different asynchronous
+   *       events in parallel for the same element, this function will also wait
+   *       for previous blockers when the event name is different.
+   *
+   * @param eventName
+   *        Name of the custom event to dispatch.
+   *
+   * @resolves True if the event was canceled by a handler, false otherwise.
+   */
+  async dispatchAsyncEvent(eventName) {
+    // Wait for all the previous blockers before dispatching the event.
+    let blockersPromise = this._blockersPromise.catch(() => {});
+    return this._blockersPromise = blockersPromise.then(async () => {
+      let blockers = new Set();
+      let cancel = this.dispatchCustomEvent(eventName, {
+        addBlocker(promise) {
+          // Any exception in the blocker will cancel the operation.
+          blockers.add(promise.catch(ex => {
+            Cu.reportError(ex);
+            return true;
+          }));
+        },
+      }, true);
+      if (blockers.size) {
+        let timeoutPromise = new Promise((resolve, reject) => {
+          this.window.setTimeout(reject, BLOCKERS_TIMEOUT_MS);
+        });
+        try {
+          let results = await Promise.race([Promise.all(blockers),
+                                            timeoutPromise]);
+          cancel = cancel || results.some(result => result === false);
+        } catch (ex) {
+          Cu.reportError(new Error(
+            `One of the blockers for ${eventName} timed out.`));
+          return true;
+        }
+      }
+      return cancel;
+    });
   }
 };
 
@@ -570,24 +639,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         // Emit the ViewShowing event so that the widget definition has a chance
         // to lazily populate the subview with things or perhaps even cancel this
         // whole operation.
-        let detail = {
-          blockers: new Set(),
-          addBlocker(promise) {
-            this.blockers.add(promise);
-          }
-        };
-        let cancel = nextPanelView.dispatchCustomEvent("ViewShowing", detail, true);
-        if (detail.blockers.size) {
-          try {
-            let results = await Promise.all(detail.blockers);
-            cancel = cancel || results.some(val => val === false);
-          } catch (e) {
-            Cu.reportError(e);
-            cancel = true;
-          }
-        }
-
-        if (cancel) {
+        if (await nextPanelView.dispatchAsyncEvent("ViewShowing")) {
           this._viewShowing = null;
           return false;
         }
