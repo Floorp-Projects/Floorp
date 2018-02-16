@@ -30,7 +30,7 @@ add_task(async function test_duping() {
     id: "bookmarkGGGG",
     type: "bookmark",
     title: "G",
-    url: "http://example.com/g",
+    bmkUri: "http://example.com/g",
   }]), { needsMerge: false });
   await PlacesTestUtils.markBookmarksAsSynced();
 

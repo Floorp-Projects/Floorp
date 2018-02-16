@@ -316,15 +316,29 @@ class SyncedBookmarksMirror {
     // to merge again on the next sync.
     let { missingParents, missingChildren } = await this.fetchRemoteOrphans();
     if (missingParents.length) {
-      MirrorLog.debug("Temporarily reparenting remote items with missing " +
-                      "parents to unfiled", missingParents);
+      MirrorLog.warn("Temporarily reparenting remote items with missing " +
+                     "parents to unfiled", missingParents);
       this.recordTelemetryEvent("mirror", "orphans", "parents",
                                 { count: String(missingParents.length) });
     }
     if (missingChildren.length) {
-      MirrorLog.debug("Remote tree missing items", missingChildren);
+      MirrorLog.warn("Remote tree missing items", missingChildren);
       this.recordTelemetryEvent("mirror", "orphans", "children",
                                 { count: String(missingChildren.length) });
+    }
+
+    let { missingLocal, missingRemote } = await this.fetchInconsistencies();
+    if (missingLocal.length) {
+      MirrorLog.warn("Remote tree has merged items that don't exist locally",
+                     missingLocal);
+      this.recordTelemetryEvent("mirror", "inconsistencies", "local",
+                                { count: String(missingLocal.length) });
+    }
+    if (missingRemote.length) {
+      MirrorLog.error("Local tree has synced items that don't exist remotely",
+                      missingRemote);
+      this.recordTelemetryEvent("mirror", "inconsistencies", "remote",
+                                { count: String(missingRemote.length) });
     }
 
     // It's safe to build the remote tree outside the transaction because
@@ -728,6 +742,62 @@ class SyncedBookmarksMirror {
       let missingChild = row.getResultByName("missingChild");
       if (missingChild) {
         infos.missingChildren.push(guid);
+      }
+    }
+
+    return infos;
+  }
+
+  /**
+   * Checks the sync statuses of all items for consistency. All merged items in
+   * the remote tree should exist as either items or tombstones in the local
+   * tree, and all NORMAL items in the local tree should exist in the remote
+   * tree.
+   *
+   * @return {Object.<String, String[]>}
+   *         An object containing GUIDs for each problem type:
+   *           - `missingLocal`: Merged items in the remote tree that aren't
+   *             mentioned in the local tree.
+   *           - `missingRemote`: NORMAL items in the local tree that aren't
+   *             mentioned in the remote tree.
+   */
+  async fetchInconsistencies() {
+    let infos = {
+      missingLocal: [],
+      missingRemote: [],
+    };
+
+    let problemRows = await this.db.execute(`
+      SELECT v.guid, 1 AS missingLocal, 0 AS missingRemote
+      FROM items v
+      LEFT JOIN moz_bookmarks b ON b.guid = v.guid
+      LEFT JOIN moz_bookmarks_deleted d ON d.guid = v.guid
+      WHERE NOT v.needsMerge AND
+            NOT v.isDeleted AND
+            b.guid IS NULL AND
+            d.guid IS NULL
+      UNION ALL
+      SELECT b.guid, 0 AS missingLocal, 1 AS missingRemote
+      FROM moz_bookmarks b
+      LEFT JOIN items v ON v.guid = b.guid
+      WHERE b.syncStatus = :syncStatus AND
+            v.guid IS NULL
+      UNION ALL
+      SELECT d.guid, 0 AS missingLocal, 1 AS missingRemote
+      FROM moz_bookmarks_deleted d
+      LEFT JOIN items v ON v.guid = d.guid
+      WHERE v.guid IS NULL`,
+      { syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL });
+
+    for (let row of problemRows) {
+      let guid = row.getResultByName("guid");
+      let missingLocal = row.getResultByName("missingLocal");
+      if (missingLocal) {
+        infos.missingLocal.push(guid);
+      }
+      let missingRemote = row.getResultByName("missingRemote");
+      if (missingRemote) {
+        infos.missingRemote.push(guid);
       }
     }
 
