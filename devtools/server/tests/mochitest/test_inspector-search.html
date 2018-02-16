@@ -29,13 +29,13 @@ window.onload = function () {
   // coming back as expected.
   // See also test_inspector-search-front.html.
 
-  addAsyncTest(function* setup() {
+  addAsyncTest(async function setup() {
     info("Setting up inspector and walker actors.");
 
     let url = document.getElementById("inspectorContent").href;
 
     // eslint-disable-next-line new-cap
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       attachURL(url, function (err, client, tab, doc) {
         inspectee = doc;
         inspector = InspectorFront(client, tab);
@@ -43,7 +43,7 @@ window.onload = function () {
       });
     });
 
-    let walkerFront = yield inspector.getWalker();
+    let walkerFront = await inspector.getWalker();
     ok(walkerFront, "getWalker() should return an actor.");
 
     walkerActor = DebuggerServer.searchAllConnectionsForActor(walkerFront.actorID);
@@ -55,7 +55,7 @@ window.onload = function () {
     runNextTest();
   });
 
-  addAsyncTest(function* testIndexExists() {
+  addAsyncTest(function testIndexExists() {
     info("Testing basic index APIs exist.");
 
     let index = new WalkerIndex(walkerActor);
@@ -69,7 +69,7 @@ window.onload = function () {
     runNextTest();
   });
 
-  addAsyncTest(function* testSearchExists() {
+  addAsyncTest(function testSearchExists() {
     info("Testing basic search APIs exist.");
 
     ok(walkerSearch, "walker search exists on the WalkerActor");
@@ -87,7 +87,7 @@ window.onload = function () {
     runNextTest();
   });
 
-  addAsyncTest(function* testEmptySearch() {
+  addAsyncTest(function testEmptySearch() {
     info("Testing search with an empty query.");
     let results = walkerSearch.search("");
     is(results.length, 0, "No results when searching for ''");
@@ -104,7 +104,7 @@ window.onload = function () {
     runNextTest();
   });
 
-  addAsyncTest(function* testBasicSearchData() {
+  addAsyncTest(function testBasicSearchData() {
     let testData = [
     {
       desc: "Search for tag with one result.",
@@ -177,7 +177,7 @@ window.onload = function () {
     runNextTest();
   });
 
-  addAsyncTest(function* testPseudoElements() {
+  addAsyncTest(function testPseudoElements() {
     info("Testing ::before and ::after element matching");
 
     let beforeElt = new _documentWalker(inspectee.querySelector("#pseudo"),
@@ -217,7 +217,7 @@ window.onload = function () {
     runNextTest();
   });
 
-  addAsyncTest(function* testSearchMutationChangeResults() {
+  addAsyncTest(async function testSearchMutationChangeResults() {
     info("Testing search before and after a mutation.");
     let expected = [
       {node: inspectee.querySelectorAll("h3")[0], type: "tag"},
@@ -228,7 +228,7 @@ window.onload = function () {
     let results = walkerSearch.search("h3");
     isDeeply(results, expected, "Search works with tag results");
 
-    yield mutateDocumentAndWaitForMutation(() => {
+    await mutateDocumentAndWaitForMutation(() => {
       expected[0].node.remove();
     });
 
@@ -239,7 +239,7 @@ window.onload = function () {
     ], "Results are updated after removal");
 
     // eslint-disable-next-line new-cap
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       info("Waiting for a mutation to happen");
       let observer = new inspectee.defaultView.MutationObserver(() => {
         resolve();
@@ -256,7 +256,7 @@ window.onload = function () {
     ], "Results are updated after addition");
 
     // eslint-disable-next-line new-cap
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       info("Waiting for a mutation to happen");
       let observer = new inspectee.defaultView.MutationObserver(() => {
         resolve();

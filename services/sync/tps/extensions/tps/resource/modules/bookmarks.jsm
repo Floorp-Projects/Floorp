@@ -455,13 +455,13 @@ Bookmark.prototype = {
    */
   async SetLoadInSidebar(loadInSidebar) {
     let itemId = await PlacesUtils.promiseItemId(this.props.guid);
-    if (loadInSidebar == true)
+    if (loadInSidebar)
       PlacesUtils.annotations.setItemAnnotation(itemId,
                                     "bookmarkProperties/loadInSidebar",
                                     true,
                                     0,
                                     PlacesUtils.annotations.EXPIRE_NEVER);
-    else if (loadInSidebar == false)
+    else if (!loadInSidebar)
       PlacesUtils.annotations.removeItemAnnotation(itemId,
                                        "bookmarkProperties/loadInSidebar");
   },

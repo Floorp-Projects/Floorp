@@ -78,7 +78,7 @@ var FormValidationHandler =
 
   _onPopupHiding(aEvent) {
     aEvent.originalTarget.removeEventListener("popuphiding", this, true);
-    let tabBrowser = aEvent.originalTarget.ownerDocument.getElementById("content");
+    let tabBrowser = aEvent.originalTarget.ownerGlobal.gBrowser;
     tabBrowser.selectedBrowser.removeEventListener("scroll", this, true);
     tabBrowser.selectedBrowser.removeEventListener("FullZoomChange", this);
     tabBrowser.selectedBrowser.removeEventListener("TextZoomChange", this);

@@ -1110,6 +1110,8 @@ nsSocketTransport::ResolveHost()
         dnsFlags |= nsIDNSService::RESOLVE_DISABLE_IPV6;
     if (mConnectionFlags & nsSocketTransport::DISABLE_IPV4)
         dnsFlags |= nsIDNSService::RESOLVE_DISABLE_IPV4;
+    if (mConnectionFlags & nsSocketTransport::DISABLE_TRR)
+        dnsFlags |= nsIDNSService::RESOLVE_DISABLE_TRR;
 
     NS_ASSERTION(!(dnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV6) ||
                  !(dnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV4),
@@ -1802,6 +1804,17 @@ nsSocketTransport::RecoverFromError()
                 mState = STATE_CLOSED;
                 mConnectionFlags &= ~(DISABLE_IPV6 | DISABLE_IPV4);
                 tryAgain = true;
+            } else if (!(mConnectionFlags & DISABLE_TRR)) {
+                bool trrEnabled;
+                mDNSRecord->IsTRR(&trrEnabled);
+                if (trrEnabled) {
+                    // Drop state to closed.  This will trigger a new round of
+                    // DNS resolving.
+                    SOCKET_LOG(("  failed to connect with TRR enabled, try w/o\n"));
+                    mState = STATE_CLOSED;
+                    mConnectionFlags |= DISABLE_TRR;
+                    tryAgain = true;
+                }
             }
         }
     }

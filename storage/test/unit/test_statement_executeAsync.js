@@ -95,7 +95,7 @@ function execAsync(aStmt, aOptions, aResults) {
         do_throw("handleResult invoked with 0 result rows!");
     },
     handleError(aError) {
-      if (errorCodeSeen != false)
+      if (errorCodeSeen)
         do_throw("handleError called when we already had an error!");
       errorCodeSeen = aError.result;
     },
@@ -107,7 +107,7 @@ function execAsync(aStmt, aOptions, aResults) {
         do_throw("Expected " + resultsExpected + " rows of results but " +
                  "got " + resultsSeen + " rows!", caller);
 
-      if (errorCodeExpected == true && errorCodeSeen == false)
+      if (errorCodeExpected && !errorCodeSeen)
         do_throw("Expected an error, but did not see one.", caller);
       else if (errorCodeExpected != errorCodeSeen)
         do_throw("Expected error code " + errorCodeExpected + " but got " +

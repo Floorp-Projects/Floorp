@@ -8,10 +8,10 @@
  * Test that the PromisesActor exists in the TabActors and ChromeActors.
  */
 
-add_task(function* () {
-  let client = yield startTestDebuggerServer("promises-actor-test");
+add_task(async function () {
+  let client = await startTestDebuggerServer("promises-actor-test");
 
-  let response = yield listTabs(client);
+  let response = await listTabs(client);
   let targetTab = findTab(response.tabs, "promises-actor-test");
   ok(targetTab, "Found our target tab.");
 
@@ -26,7 +26,7 @@ add_task(function* () {
       "Should have a tab context PromisesActor.");
   });
 
-  let chromeActors = yield getChromeActors(client);
+  let chromeActors = await getChromeActors(client);
   ok(typeof chromeActors.promisesActor === "string",
     "Should have a chrome context PromisesActor.");
 });

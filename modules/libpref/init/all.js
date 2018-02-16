@@ -2091,6 +2091,10 @@ pref("network.dnsCacheExpiration", 60);
 // Get TTL; not supported on all platforms; nop on the unsupported ones.
 pref("network.dns.get-ttl", true);
 
+// For testing purposes! Makes the native resolver resolve IPv4 "localhost"
+// instead of the actual given name.
+pref("network.dns.native-is-localhost", false);
+
 // The grace period allows the DNS cache to use expired entries, while kicking off
 // a revalidation in the background.
 pref("network.dnsCacheExpirationGracePeriod", 60);
@@ -5403,6 +5407,30 @@ pref("network.captive-portal-service.maxInterval", 1500000); // 25 minutes
 // Every 10 checks, the delay is increased by a factor of 5
 pref("network.captive-portal-service.backoffFactor", "5.0");
 pref("network.captive-portal-service.enabled", false);
+
+// DNS Trusted Recursive Resolver
+// 0 - off, 1 - race, 2 TRR first, 3 TRR only, 4 shadow
+pref("network.trr.mode", 0);
+// DNS-over-HTTP service to use, must be HTTPS://
+pref("network.trr.uri", "");
+// credentials to pass to DOH end-point
+pref("network.trr.credentials", "");
+// Wait for captive portal confirmation before enabling TRR
+pref("network.trr.wait-for-portal", true);
+// Allow RFC1918 address in responses?
+pref("network.trr.allow-rfc1918", false);
+// Use GET (rather than POST)
+pref("network.trr.useGET", false);
+// Before TRR is widely used the NS record for this host is fetched
+// from the DOH end point to ensure proper configuration
+pref("network.trr.confirmationNS", "example.com");
+// hardcode the resolution of the hostname in network.trr.uri instead of
+// relying on the system resolver to do it for you
+pref("network.trr.bootstrapAddress", "");
+// TRR blacklist entry expire time (in seconds). Default is 72 hours.
+pref("network.trr.blacklist-duration", 259200);
+// Single TRR request timeout, in milliseconds
+pref("network.trr.request-timeout", 3000);
 
 pref("captivedetect.canonicalURL", "http://detectportal.firefox.com/success.txt");
 pref("captivedetect.canonicalContent", "success\n");

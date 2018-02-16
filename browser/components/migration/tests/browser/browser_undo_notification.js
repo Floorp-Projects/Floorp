@@ -1,20 +1,6 @@
 "use strict";
 
-let scope = {};
-ChromeUtils.import("resource:///modules/AutoMigrate.jsm", scope);
-let oldCanUndo = scope.AutoMigrate.canUndo;
-let oldUndo = scope.AutoMigrate.undo;
-registerCleanupFunction(function() {
-  scope.AutoMigrate.canUndo = oldCanUndo;
-  scope.AutoMigrate.undo = oldUndo;
-});
-
-const kExpectedNotificationId = "automigration-undo";
-
 add_task(async function autoMigrationUndoNotificationShows() {
-  let getNotification = browser =>
-    gBrowser.getNotificationBox(browser).getNotificationWithValue(kExpectedNotificationId);
-
   scope.AutoMigrate.canUndo = () => true;
   let undoCalled;
   scope.AutoMigrate.undo = () => { undoCalled = true; };
@@ -25,13 +11,8 @@ add_task(async function autoMigrationUndoNotificationShows() {
     Services.prefs.setCharPref("browser.migrate.automigrate.browser", "someunknownbrowser");
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url, false);
     let browser = tab.linkedBrowser;
-    if (!getNotification(browser)) {
-      info(`Notification for ${url} not immediately present, waiting for it.`);
-      await BrowserTestUtils.waitForNotificationBar(gBrowser, browser, kExpectedNotificationId);
-    }
-
+    let notification = await getOrWaitForNotification(browser, url);
     ok(true, `Got notification for ${url}`);
-    let notification = getNotification(browser);
     let notificationBox = notification.parentNode;
     notification.querySelector("button.notification-button-default").click();
     ok(!undoCalled, "Undo should not be called when clicking the default button");
@@ -42,13 +23,8 @@ add_task(async function autoMigrationUndoNotificationShows() {
     Services.prefs.setCharPref("browser.migrate.automigrate.browser", "chrome");
     tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url, false);
     browser = tab.linkedBrowser;
-    if (!getNotification(browser)) {
-      info(`Notification for ${url} not immediately present, waiting for it.`);
-      await BrowserTestUtils.waitForNotificationBar(gBrowser, browser, kExpectedNotificationId);
-    }
-
+    notification = await getOrWaitForNotification(browser, url);
     ok(true, `Got notification for ${url}`);
-    notification = getNotification(browser);
     notificationBox = notification.parentNode;
     // Set up the survey:
     await SpecialPowers.pushPrefEnv({set: [

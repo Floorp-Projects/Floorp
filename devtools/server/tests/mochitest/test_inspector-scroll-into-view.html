@@ -34,10 +34,10 @@ addTest(function setup() {
   });
 });
 
-addTest(Task.async(function* testScrollIntoView() {
+addTest(async function testScrollIntoView() {
   let id = "#scroll-into-view";
   let rect = gInspectee.querySelector(id).getBoundingClientRect();
-  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, id);
+  let nodeFront = await gWalker.querySelector(gWalker.rootNode, id);
   let inViewport = rect.x >= 0 &&
                    rect.y >= 0 &&
                    rect.y <= gInspectee.defaultView.innerHeight &&
@@ -45,7 +45,7 @@ addTest(Task.async(function* testScrollIntoView() {
 
   ok(!inViewport, "Element is not in viewport.");
 
-  yield nodeFront.scrollIntoView();
+  await nodeFront.scrollIntoView();
 
   SimpleTest.executeSoon(() => {
     rect = gInspectee.querySelector(id).getBoundingClientRect();
@@ -58,7 +58,7 @@ addTest(Task.async(function* testScrollIntoView() {
 
     runNextTest();
   });
-}));
+});
 
 addTest(function cleanup() {
   gWalker = null;

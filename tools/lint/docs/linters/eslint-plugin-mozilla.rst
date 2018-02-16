@@ -163,6 +163,12 @@ Checks that function argument names don't start with lowercase 'a' followed by
 a capital letter. This is to prevent the use of Hungarian notation whereby the
 first letter is a prefix that indicates the type or intended use of a variable.
 
+no-compare-against-boolean-literals
+-----------------------------------
+
+Checks that boolean expressions do not compare against literal values
+of `true` or `false`. This is to prevent overly verbose code such as
+`if (isEnabled == true)` when `if (isEnabled)` would suffice.
 
 no-cpows-in-tests
 -----------------

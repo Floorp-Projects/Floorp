@@ -258,7 +258,7 @@ NSSDialogs.prototype = {
         this.viewCertDetails(certDetailsList[selectedIndex.value], ctx);
         continue;
       } else if (response.button == 0 /* buttons[0] */) {
-        if (response.rememberBox == true) {
+        if (response.rememberBox) {
           let caud = ctx.QueryInterface(Ci.nsIClientAuthUserDecision);
           if (caud) {
             caud.rememberClientAuthCertificate = true;

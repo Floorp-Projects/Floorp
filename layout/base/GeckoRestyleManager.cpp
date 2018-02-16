@@ -1861,7 +1861,6 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
       // descendants have been resolved), we don't want to consume it
       // for the inner frame.
       mContent->GetPrimaryFrame() == mFrame) {
-    mContent->OwnerDoc()->FlushPendingLinkUpdates();
     nsAutoPtr<RestyleTracker::RestyleData> restyleData;
     if (mRestyleTracker.GetRestyleData(mContent->AsElement(), restyleData)) {
       nsChangeHint changeToAppend =

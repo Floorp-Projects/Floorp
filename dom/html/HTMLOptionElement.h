@@ -90,10 +90,6 @@ public:
 
   nsresult CopyInnerTo(mozilla::dom::Element* aDest, bool aPreallocateChildren);
 
-  virtual bool IsDisabled() const override {
-    return State().HasState(NS_EVENT_STATE_DISABLED);
-  }
-
   bool Disabled() const
   {
     return GetBoolAttr(nsGkAtoms::disabled);

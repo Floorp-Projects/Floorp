@@ -222,10 +222,10 @@ fails == flexbox-min-height-auto-002b.html flexbox-min-height-auto-002-ref.html 
 == flexbox-writing-mode-007.html flexbox-writing-mode-007-ref.html
 == flexbox-writing-mode-008.html flexbox-writing-mode-008-ref.html
 == flexbox-writing-mode-009.html flexbox-writing-mode-009-ref.html
-fuzzy(1,16) == flexbox-writing-mode-010.html flexbox-writing-mode-010-ref.html
-fuzzy(1,16) == flexbox-writing-mode-011.html flexbox-writing-mode-011-ref.html
+== flexbox-writing-mode-010.html flexbox-writing-mode-010-ref.html
+== flexbox-writing-mode-011.html flexbox-writing-mode-011-ref.html
 == flexbox-writing-mode-012.html flexbox-writing-mode-012-ref.html
-fuzzy(1,10) == flexbox-writing-mode-013.html flexbox-writing-mode-013-ref.html
+== flexbox-writing-mode-013.html flexbox-writing-mode-013-ref.html
 == flexbox-writing-mode-014.html flexbox-writing-mode-014-ref.html
 == flexbox-writing-mode-015.html flexbox-writing-mode-015-ref.html
 

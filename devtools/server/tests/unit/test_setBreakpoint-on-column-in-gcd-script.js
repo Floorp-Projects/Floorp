@@ -3,7 +3,7 @@
 var SOURCE_URL = getFileUrl("setBreakpoint-on-column-in-gcd-script.js");
 
 function run_test() {
-  return Task.spawn(function* () {
+  return (async function () {
     do_test_pending();
 
     let global = testGlobal("test");
@@ -14,24 +14,24 @@ function run_test() {
     DebuggerServer.init(() => true);
     DebuggerServer.addTestGlobal(global);
     let client = new DebuggerClient(DebuggerServer.connectPipe());
-    yield connect(client);
+    await connect(client);
 
-    let { tabs } = yield listTabs(client);
+    let { tabs } = await listTabs(client);
     let tab = findTab(tabs, "test");
-    let [, tabClient] = yield attachTab(client, tab);
-    let [, threadClient] = yield attachThread(tabClient);
-    yield resume(threadClient);
+    let [, tabClient] = await attachTab(client, tab);
+    let [, threadClient] = await attachThread(tabClient);
+    await resume(threadClient);
 
-    let { sources } = yield getSources(threadClient);
+    let { sources } = await getSources(threadClient);
     let source = findSource(sources, SOURCE_URL);
     let sourceClient = threadClient.source(source);
 
     let location = { line: 6, column: 17 };
-    let [packet, breakpointClient] = yield setBreakpoint(sourceClient, location);
+    let [packet, breakpointClient] = await setBreakpoint(sourceClient, location);
     Assert.ok(packet.isPending);
     Assert.equal(false, "actualLocation" in packet);
 
-    packet = yield executeOnNextTickAndWaitForPause(function () {
+    packet = await executeOnNextTickAndWaitForPause(function () {
       reload(tabClient).then(function () {
         loadSubScriptWithOptions(SOURCE_URL, {target: global, ignoreCache: true});
       });
@@ -50,9 +50,9 @@ function run_test() {
     Assert.equal(variables.a.value, 1);
     Assert.equal(variables.b.value.type, "undefined");
     Assert.equal(variables.c.value.type, "undefined");
-    yield resume(threadClient);
+    await resume(threadClient);
 
-    yield close(client);
+    await close(client);
     do_test_finished();
-  });
+  })();
 }

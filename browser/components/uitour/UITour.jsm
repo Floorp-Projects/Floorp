@@ -155,7 +155,7 @@ this.UITour = {
         // The pocket's urlbar page action button is pre-defined in the DOM.
         // It would be hidden if toggled off from the urlbar.
         let node = aDocument.getElementById("pocket-button-box");
-        if (node && node.hidden == false) {
+        if (node && !node.hidden) {
           return node;
         }
         return aDocument.getElementById("pageAction-panel-pocket");
@@ -221,7 +221,7 @@ this.UITour = {
         // The bookmark's urlbar page action button is pre-defined in the DOM.
         // It would be hidden if toggled off from the urlbar.
         let node = aDocument.getElementById("star-button-box");
-        if (node && node.hidden == false) {
+        if (node && !node.hidden) {
           return node;
         }
         return aDocument.getElementById("pageAction-panel-bookmark");

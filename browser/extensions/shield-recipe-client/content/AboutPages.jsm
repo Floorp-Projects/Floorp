@@ -13,6 +13,9 @@ ChromeUtils.defineModuleGetter(
 ChromeUtils.defineModuleGetter(
   this, "AddonStudies", "resource://shield-recipe-client/lib/AddonStudies.jsm",
 );
+ChromeUtils.defineModuleGetter(
+  this, "RecipeRunner", "resource://shield-recipe-client/lib/RecipeRunner.jsm",
+);
 
 this.EXPORTED_SYMBOLS = ["AboutPages"];
 
@@ -212,6 +215,11 @@ XPCOMUtils.defineLazyGetter(this.AboutPages, "aboutStudies", () => {
     getShieldLearnMoreHref() {
       return Services.urlFormatter.formatURLPref(SHIELD_LEARN_MORE_URL_PREF);
     },
+
+    getStudiesEnabled() {
+      RecipeRunner.checkPrefs();
+      return RecipeRunner.enabled;
+    }
   });
 
   return aboutStudies;

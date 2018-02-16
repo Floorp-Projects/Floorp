@@ -18,9 +18,9 @@ Bug 1132764 - Test controlling the maximum allocations log length over the RDP.
 window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
-  Task.spawn(function* () {
-    let { memory, client } = yield startServerAndGetSelectedTabMemory();
-    yield memory.attach();
+  (async function () {
+    let { memory, client } = await startServerAndGetSelectedTabMemory();
+    await memory.attach();
 
     let allocs = [];
     let eventsFired = 0;
@@ -41,38 +41,38 @@ window.onload = function () {
 
     memory.on("allocations", onAlloc);
 
-    yield memory.startRecordingAllocations({
+    await memory.startRecordingAllocations({
       drainAllocationsTimeout: 10
     });
 
-    yield waitUntil(() => eventsFired > 5);
+    await waitUntil(() => eventsFired > 5);
     ok(eventsFired > 5,
        "Some allocation events fired without allocating much via auto drain");
-    yield memory.stopRecordingAllocations();
+    await memory.stopRecordingAllocations();
 
     // Set a really high auto drain timer so we can test if
     // it fires on GC
     eventsFired = 0;
     let startTime = performance.now();
     let drainTimer = 1000000;
-    yield memory.startRecordingAllocations({
+    await memory.startRecordingAllocations({
       drainAllocationsTimeout: drainTimer
     });
 
     startAllocating();
-    yield waitUntil(() => {
+    await waitUntil(() => {
       Cu.forceGC();
       return eventsFired > 1;
     });
     stopAllocating();
     ok(performance.now() - drainTimer < startTime,
        "Allocation events fired on GC before timer");
-    yield memory.stopRecordingAllocations();
+    await memory.stopRecordingAllocations();
 
     memory.off("allocations", onAlloc);
-    yield memory.detach();
+    await memory.detach();
     destroyServerAndFinish(client);
-  });
+  })();
 };
 </script>
 </pre>

@@ -20,9 +20,9 @@ window.onload = function () {
 
   let EventEmitter = require("devtools/shared/event-emitter");
 
-  Task.spawn(function* () {
-    let { memory, client } = yield startServerAndGetSelectedTabMemory();
-    yield memory.attach();
+  (async function () {
+    let { memory, client } = await startServerAndGetSelectedTabMemory();
+    await memory.attach();
 
     let gotGcEvent = new Promise(resolve => {
       EventEmitter.on(memory, "garbage-collection", gcData => {
@@ -32,11 +32,11 @@ window.onload = function () {
     });
 
     memory.forceGarbageCollection();
-    yield gotGcEvent;
+    await gotGcEvent;
 
-    yield memory.detach();
+    await memory.detach();
     destroyServerAndFinish(client);
-  });
+  })();
 };
 </script>
 </pre>

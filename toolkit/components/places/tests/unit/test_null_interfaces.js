@@ -62,7 +62,7 @@ function run_test() {
       let args = Array(num).fill(null);
 
       let tryAgain = true;
-      while (tryAgain == true) {
+      while (tryAgain) {
         try {
           info(`Calling with args: ${JSON.stringify(args)}`);
           func.apply(s, args);

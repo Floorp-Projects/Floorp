@@ -3872,7 +3872,7 @@ this.XPIProvider = {
           this.updateAddonDisabledState(theme, true, undefined, aPendingRestart);
       } else if (isChangedAddon) {
         newSkin = theme.internalName;
-      } else if (theme.userDisabled == false && !theme.pendingUninstall) {
+      } else if (!theme.userDisabled && !theme.pendingUninstall) {
         previousTheme = theme;
       }
     }

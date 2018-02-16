@@ -14,7 +14,6 @@
 
 a {
   -moz-user-focus: normal;
-  -moz-user-input: enabled;
   cursor: pointer;
   text-decoration: underline;
 }

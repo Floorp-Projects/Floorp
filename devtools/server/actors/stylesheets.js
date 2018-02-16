@@ -7,7 +7,6 @@
 const {Ci} = require("chrome");
 const Services = require("Services");
 const defer = require("devtools/shared/defer");
-const {Task} = require("devtools/shared/task");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {fetch} = require("devtools/shared/DevToolsUtils");
@@ -404,7 +403,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    *           - contentType: the content type of the document
    *         If an error occurs, the promise is rejected with that error.
    */
-  fetchStylesheet: Task.async(function* (href) {
+  async fetchStylesheet(href) {
     // Check if network monitor observed this load, and if so, use that.
     let result = this.fetchStylesheetFromNetworkMonitor(href);
     if (result) {
@@ -431,7 +430,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     }
 
     try {
-      result = yield fetch(this.href, options);
+      result = await fetch(this.href, options);
     } catch (e) {
       // The list of excluded protocols can be missing some protocols, try to use the
       // system principal if the first fetch failed.
@@ -439,11 +438,11 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
         ` using system principal instead.`);
       options.window = undefined;
       options.principal = undefined;
-      result = yield fetch(this.href, options);
+      result = await fetch(this.href, options);
     }
 
     return result;
-  }),
+  },
 
   /**
    * Try to locate the console actor if it exists via our parent actor (the tab).
@@ -725,15 +724,15 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    * Protocol method for getting a list of StyleSheetActors representing
    * all the style sheets in this document.
    */
-  getStyleSheets: Task.async(function* () {
+  async getStyleSheets() {
     let actors = [];
 
     for (let win of this.parentActor.windows) {
-      let sheets = yield this._addStyleSheets(win);
+      let sheets = await this._addStyleSheets(win);
       actors = actors.concat(sheets);
     }
     return actors;
-  }),
+  },
 
   /**
    * Check if we should be showing this stylesheet.
@@ -782,7 +781,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    *         Promise that resolves to an array of StyleSheetActors
    */
   _addStyleSheets: function (win) {
-    return Task.spawn(function* () {
+    return (async function () {
       let doc = win.document;
       // We have to set this flag in order to get the
       // StyleSheetApplicableStateChanged events.  See Document.webidl.
@@ -802,11 +801,11 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
         actors.push(actor);
 
         // Get all sheets, including imported ones
-        let imports = yield this._getImported(doc, actor);
+        let imports = await this._getImported(doc, actor);
         actors = actors.concat(imports);
       }
       return actors;
-    }.bind(this));
+    }.bind(this))();
   },
 
   /**
@@ -820,8 +819,8 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    *         A promise that resolves with an array of StyleSheetActors
    */
   _getImported: function (doc, styleSheet) {
-    return Task.spawn(function* () {
-      let rules = yield styleSheet.getCSSRules();
+    return (async function () {
+      let rules = await styleSheet.getCSSRules();
       let imported = [];
 
       for (let i = 0; i < rules.length; i++) {
@@ -841,7 +840,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
           imported.push(actor);
 
           // recurse imports in this stylesheet as well
-          let children = yield this._getImported(doc, actor);
+          let children = await this._getImported(doc, actor);
           imported = imported.concat(children);
         } else if (rule.type != CSSRule.CHARSET_RULE) {
           // @import rules must precede all others except @charset
@@ -850,7 +849,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
       }
 
       return imported;
-    }.bind(this));
+    }.bind(this))();
   },
 
   /**

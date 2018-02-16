@@ -9,14 +9,14 @@
 
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
-add_task(function* () {
-  yield addTab(MAIN_DOMAIN + "doc_perf.html");
+add_task(async function () {
+  await addTab(MAIN_DOMAIN + "doc_perf.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
+  let form = await connectDebuggerClient(client);
   let front = PerformanceFront(client, form);
-  yield front.connect();
+  await front.connect();
 
   let lastMemoryDelta = 0;
   let lastTickDelta = 0;
@@ -35,18 +35,18 @@ add_task(function* () {
 
   front.on("timeline-data", handler);
 
-  let rec = yield front.startRecording(
+  let rec = await front.startRecording(
     { withMarkers: true, withMemory: true, withTicks: true });
-  yield Promise.all(Object.keys(deferreds).map(type => deferreds[type].promise));
-  yield front.stopRecording(rec);
+  await Promise.all(Object.keys(deferreds).map(type => deferreds[type].promise));
+  await front.stopRecording(rec);
   front.off("timeline-data", handler);
 
   is(counters.markers.length, 1, "one marker event fired.");
   is(counters.memory.length, 3, "three memory events fired.");
   is(counters.ticks.length, 3, "three ticks events fired.");
 
-  yield front.destroy();
-  yield client.close();
+  await front.destroy();
+  await client.close();
   gBrowser.removeCurrentTab();
 
   function handler(name, data) {

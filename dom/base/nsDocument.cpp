@@ -4813,11 +4813,8 @@ nsDocument::SetScopeObject(nsIGlobalObject* aGlobal)
 static void
 CheckIfContainsEMEContent(nsISupports* aSupports, void* aContainsEME)
 {
-  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aSupports));
-  if (domMediaElem) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(domMediaElem));
-    MOZ_ASSERT(content, "aSupports is not a content");
-    HTMLMediaElement* mediaElem = static_cast<HTMLMediaElement*>(content.get());
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
+  if (auto mediaElem = HTMLMediaElement::FromContentOrNull(content)) {
     bool* contains = static_cast<bool*>(aContainsEME);
     if (mediaElem->GetMediaKeys()) {
       *contains = true;
@@ -4837,11 +4834,8 @@ nsDocument::ContainsEMEContent()
 static void
 CheckIfContainsMSEContent(nsISupports* aSupports, void* aContainsMSE)
 {
-  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aSupports));
-  if (domMediaElem) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(domMediaElem));
-    MOZ_ASSERT(content, "aSupports is not a content");
-    HTMLMediaElement* mediaElem = static_cast<HTMLMediaElement*>(content.get());
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
+  if (auto mediaElem = HTMLMediaElement::FromContentOrNull(content)) {
     bool* contains = static_cast<bool*>(aContainsMSE);
     RefPtr<MediaSource> ms = mediaElem->GetMozMediaSourceObject();
     if (ms) {
@@ -4862,11 +4856,8 @@ nsDocument::ContainsMSEContent()
 static void
 NotifyActivityChanged(nsISupports *aSupports, void *aUnused)
 {
-  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aSupports));
-  if (domMediaElem) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(domMediaElem));
-    MOZ_ASSERT(content, "aSupports is not a content");
-    HTMLMediaElement* mediaElem = static_cast<HTMLMediaElement*>(content.get());
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
+  if (auto mediaElem = HTMLMediaElement::FromContentOrNull(content)) {
     mediaElem->NotifyOwnerDocumentActivityChanged();
   }
   nsCOMPtr<nsIObjectLoadingContent> objectLoadingContent(do_QueryInterface(aSupports));

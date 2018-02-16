@@ -19,14 +19,11 @@ const ACTIVITY_STREAM_PRERENDER_DEBUG_URL = "resource://activity-stream/prerende
 const ACTIVITY_STREAM_URL = "resource://activity-stream/prerendered/en-US/activity-stream.html";
 const ACTIVITY_STREAM_DEBUG_URL = "resource://activity-stream/prerendered/static/activity-stream-debug.html";
 
-const DEFAULT_CHROME_URL = "chrome://browser/content/newtab/newTab.xhtml";
 const DOWNLOADS_URL = "chrome://browser/content/downloads/contentAreaDownloadsView.xul";
-const ACTIVITY_STREAM_PREF = "browser.newtabpage.activity-stream.enabled";
 const ACTIVITY_STREAM_PRERENDER_PREF = "browser.newtabpage.activity-stream.prerender";
 const ACTIVITY_STREAM_DEBUG_PREF = "browser.newtabpage.activity-stream.debug";
 
 function cleanup() {
-  Services.prefs.clearUserPref(ACTIVITY_STREAM_PREF);
   Services.prefs.clearUserPref(ACTIVITY_STREAM_PRERENDER_PREF);
   Services.prefs.clearUserPref(ACTIVITY_STREAM_DEBUG_PREF);
   aboutNewTabService.resetNewTabURL();
@@ -35,7 +32,7 @@ function cleanup() {
 registerCleanupFunction(cleanup);
 
 add_task(async function test_as_and_prerender_initialized() {
-  Assert.equal(aboutNewTabService.activityStreamEnabled, Services.prefs.getBoolPref(ACTIVITY_STREAM_PREF),
+  Assert.ok(aboutNewTabService.activityStreamEnabled,
     ".activityStreamEnabled should be set to the correct initial value");
   Assert.equal(aboutNewTabService.activityStreamPrerender, Services.prefs.getBoolPref(ACTIVITY_STREAM_PRERENDER_PREF),
     ".activityStreamPrerender should be set to the correct initial value");
@@ -49,11 +46,6 @@ add_task(async function test_as_and_prerender_initialized() {
  */
 add_task(async function test_override_activity_stream_disabled() {
   let notificationPromise;
-  Services.prefs.setBoolPref(ACTIVITY_STREAM_PREF, false);
-
-  // tests default is the local newtab resource
-  Assert.equal(aboutNewTabService.defaultURL, DEFAULT_CHROME_URL,
-               `Default newtab URL should be ${DEFAULT_CHROME_URL}`);
 
   // override with some remote URL
   let url = "http://example.com/";
@@ -89,14 +81,14 @@ add_task(async function test_override_activity_stream_enabled() {
   Assert.ok(aboutNewTabService.activityStreamEnabled, "Activity Stream should be enabled");
   Assert.ok(aboutNewTabService.activityStreamPrerender, "Activity Stream should be prerendered");
 
-  // change to local newtab page while activity stream is enabled
-  notificationPromise = nextChangeNotificationPromise(DEFAULT_CHROME_URL);
-  aboutNewTabService.newTabURL = DEFAULT_CHROME_URL;
+  // change to a chrome URL while activity stream is enabled
+  notificationPromise = nextChangeNotificationPromise(DOWNLOADS_URL);
+  aboutNewTabService.newTabURL = DOWNLOADS_URL;
   await notificationPromise;
-  Assert.equal(aboutNewTabService.newTabURL, DEFAULT_CHROME_URL,
+  Assert.equal(aboutNewTabService.newTabURL, DOWNLOADS_URL,
                "Newtab URL set to chrome url");
-  Assert.equal(aboutNewTabService.defaultURL, DEFAULT_CHROME_URL,
-               "Newtab URL defaultURL set to the default chrome URL");
+  Assert.equal(aboutNewTabService.defaultURL, ACTIVITY_STREAM_PRERENDER_URL,
+               "Newtab URL defaultURL still set to the default activity stream prerendered URL");
   Assert.ok(aboutNewTabService.overridden, "Newtab URL should be overridden");
   Assert.ok(!aboutNewTabService.activityStreamEnabled, "Activity Stream should not be enabled");
 
@@ -135,6 +127,11 @@ add_task(async function test_default_url() {
     "Newtab defaultURL set to un-prerendered AS if prerender is false and debug is false");
 
   cleanup();
+});
+
+add_task(function test_locale() {
+  Assert.equal(aboutNewTabService.activityStreamLocale, "en-US",
+    "The locale for testing should be en-US");
 });
 
 /**
@@ -198,15 +195,11 @@ function setBoolPrefAndWaitForChange(pref, value, testMessage) {
 
 
 function setupASPrerendered() {
-  if (Services.prefs.getBoolPref(ACTIVITY_STREAM_PREF) &&
-    Services.prefs.getBoolPref(ACTIVITY_STREAM_PRERENDER_PREF)) {
+  if (Services.prefs.getBoolPref(ACTIVITY_STREAM_PRERENDER_PREF)) {
     return Promise.resolve();
   }
 
-  let notificationPromise;
-  // change newtab page to activity stream
-  notificationPromise = nextChangeNotificationPromise("about:newtab");
-  Services.prefs.setBoolPref(ACTIVITY_STREAM_PREF, true);
+  let notificationPromise = nextChangeNotificationPromise("about:newtab");
   Services.prefs.setBoolPref(ACTIVITY_STREAM_PRERENDER_PREF, true);
   return notificationPromise;
 }

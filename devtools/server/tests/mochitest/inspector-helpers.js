@@ -7,7 +7,6 @@
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const {DebuggerClient} = require("devtools/shared/client/debugger-client");
 const {DebuggerServer} = require("devtools/server/main");
-const { Task } = require("devtools/shared/task");
 
 const Services = require("Services");
 // promise is still used in tests using this helper
@@ -298,7 +297,7 @@ function addTest(test) {
 }
 
 function addAsyncTest(generator) {
-  _tests.push(() => Task.spawn(generator).catch(ok.bind(null, false)));
+  _tests.push(() => (generator)().catch(ok.bind(null, false)));
 }
 
 function runNextTest() {

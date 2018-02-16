@@ -1679,7 +1679,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * In certain cases the event handling of nodes, form controls in practice,
    * may be disabled. Such cases are for example the existence of disabled
-   * attribute or -moz-user-input: none/disabled.
+   * attribute or -moz-user-input: none.
    */
   boolean isNodeDisabledForEvents(in nsIDOMNode aNode);
 

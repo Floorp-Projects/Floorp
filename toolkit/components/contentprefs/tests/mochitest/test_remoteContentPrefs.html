@@ -49,7 +49,7 @@
         };
       Tester.prototype.ok =
         function(b, note) {
-          this.mm.sendAsyncMessage("testRemoteContentPrefs:ok", { test: [b != false, note] });
+          this.mm.sendAsyncMessage("testRemoteContentPrefs:ok", { test: [!!b, note] });
         };
       Tester.prototype.info =
         function(note) {

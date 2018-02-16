@@ -380,6 +380,10 @@ private:
     // The capabailities associated with the most recent transaction
     uint32_t                        mTransactionCaps;
 
+    // If a large keepalive has been requested for any trans,
+    // scale the default by this factor
+    uint32_t                        mDefaultTimeoutFactor;
+
     bool                            mResponseTimeoutEnabled;
 
     // Flag to indicate connection is in inital keepalive period (fast detect).

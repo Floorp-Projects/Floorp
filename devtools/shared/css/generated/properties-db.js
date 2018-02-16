@@ -1388,8 +1388,6 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "auto",
-      "disabled",
-      "enabled",
       "inherit",
       "initial",
       "none",
