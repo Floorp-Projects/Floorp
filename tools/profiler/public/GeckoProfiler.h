@@ -41,6 +41,7 @@
 #define AUTO_PROFILER_LABEL_DYNAMIC_CSTR(label, category, cStr)
 #define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(label, category, nsCStr)
 #define AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(label, category, nsStr)
+#define AUTO_PROFILER_LABEL_FAST(label, category, ctx)
 
 #define PROFILER_ADD_MARKER(markerName)
 
