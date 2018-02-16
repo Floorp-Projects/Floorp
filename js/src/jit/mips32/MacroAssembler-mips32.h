@@ -46,6 +46,25 @@ static const int32_t LOW_32_OFFSET = 4;
 static const int32_t HIGH_32_OFFSET = 0;
 #endif
 
+// See documentation for ScratchTagScope and ScratchTagScopeRelease in
+// MacroAssembler-x64.h.
+
+class ScratchTagScope
+{
+    const ValueOperand& v_;
+  public:
+    ScratchTagScope(MacroAssembler&, const ValueOperand& v) : v_(v) {}
+    operator Register() { return v_.typeReg(); }
+    void release() {}
+    void reacquire() {}
+};
+
+class ScratchTagScopeRelease
+{
+  public:
+    explicit ScratchTagScopeRelease(ScratchTagScope*) {}
+};
+
 class MacroAssemblerMIPS : public MacroAssemblerMIPSShared
 {
   public:
@@ -333,9 +352,8 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         ma_negu(reg, reg);
     }
 
-    // Returns the register containing the type tag.
-    Register splitTagForTest(const ValueOperand& value) {
-        return value.typeReg();
+    void splitTagForTest(const ValueOperand& value, ScratchTagScope& tag) {
+        MOZ_ASSERT(value.typeReg() == tag);
     }
 
     // unboxing code

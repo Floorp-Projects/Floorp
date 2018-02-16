@@ -2015,12 +2015,9 @@ MacroAssemblerCompat::ensureDouble(const ValueOperand& source, FloatRegister des
 {
     Label isDouble, done;
 
-    // TODO: splitTagForTest really should not leak a scratch register.
-    Register tag = splitTagForTest(source);
     {
-        vixl::UseScratchRegisterScope temps(this);
-        temps.Exclude(ARMRegister(tag, 64));
-
+        ScratchTagScope tag(asMasm(), source);
+        splitTagForTest(source, tag);
         asMasm().branchTestDouble(Assembler::Equal, tag, &isDouble);
         asMasm().branchTestInt32(Assembler::NotEqual, tag, failure);
     }

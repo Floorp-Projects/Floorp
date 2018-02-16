@@ -176,6 +176,21 @@ class Operand
     Operand (Register, int32_t ) { MOZ_CRASH(); }
 };
 
+class ScratchTagScope
+{
+  public:
+    ScratchTagScope(MacroAssembler&, const ValueOperand) {}
+    operator Register() { MOZ_CRASH(); }
+    void release() { MOZ_CRASH(); }
+    void reacquire() { MOZ_CRASH(); }
+};
+
+class ScratchTagScopeRelease
+{
+  public:
+    explicit ScratchTagScopeRelease(ScratchTagScope*) {}
+};
+
 class MacroAssemblerNone : public Assembler
 {
   public:
@@ -313,7 +328,7 @@ class MacroAssemblerNone : public Assembler
 
     template <typename T> void computeEffectiveAddress(T, Register) { MOZ_CRASH(); }
 
-    Register splitTagForTest(ValueOperand) { MOZ_CRASH(); }
+    void splitTagForTest(ValueOperand, ScratchTagScope&) { MOZ_CRASH(); }
 
     void boxDouble(FloatRegister, ValueOperand, FloatRegister) { MOZ_CRASH(); }
     void boxNonDouble(JSValueType, Register, ValueOperand) { MOZ_CRASH(); }

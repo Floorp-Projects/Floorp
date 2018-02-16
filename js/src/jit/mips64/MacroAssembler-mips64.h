@@ -44,6 +44,29 @@ static constexpr ValueOperand JSReturnOperand{JSReturnReg};
 static const int defaultShift = 3;
 static_assert(1 << defaultShift == sizeof(JS::Value), "The defaultShift is wrong");
 
+// See documentation for ScratchTagScope and ScratchTagScopeRelease in
+// MacroAssembler-x64.h.
+
+class ScratchTagScope : public SecondScratchRegisterScope
+{
+  public:
+    ScratchTagScope(MacroAssembler& masm, const ValueOperand&)
+      : SecondScratchRegisterScope(masm)
+    {}
+};
+
+class ScratchTagScopeRelease
+{
+    ScratchTagScope* ts_;
+  public:
+    explicit ScratchTagScopeRelease(ScratchTagScope* ts) : ts_(ts) {
+        ts_->release();
+    }
+    ~ScratchTagScopeRelease() {
+        ts_->reacquire();
+    }
+};
+
 class MacroAssemblerMIPS64 : public MacroAssemblerMIPSShared
 {
   public:
@@ -356,10 +379,8 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         splitTag(operand.valueReg(), dest);
     }
 
-    // Returns the register containing the type tag.
-    Register splitTagForTest(const ValueOperand& value) {
-        splitTag(value, SecondScratchReg);
-        return SecondScratchReg;
+    void splitTagForTest(const ValueOperand& value, ScratchTagScope& tag) {
+        splitTag(value, tag);
     }
 
     // unboxing code

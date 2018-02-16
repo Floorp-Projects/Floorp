@@ -23,6 +23,25 @@ static Register CallReg = ip;
 static const int defaultShift = 3;
 JS_STATIC_ASSERT(1 << defaultShift == sizeof(JS::Value));
 
+// See documentation for ScratchTagScope and ScratchTagScopeRelease in
+// MacroAssembler-x64.h.
+
+class ScratchTagScope
+{
+    const ValueOperand& v_;
+  public:
+    ScratchTagScope(MacroAssembler&, const ValueOperand& v) : v_(v) {}
+    operator Register() { return v_.typeReg(); }
+    void release() {}
+    void reacquire() {}
+};
+
+class ScratchTagScopeRelease
+{
+  public:
+    explicit ScratchTagScopeRelease(ScratchTagScope*) {}
+};
+
 // MacroAssemblerARM is inheriting form Assembler defined in
 // Assembler-arm.{h,cpp}
 class MacroAssemblerARM : public Assembler
@@ -700,9 +719,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         test32(lhs, rhs);
     }
 
-    // Returns the register containing the type tag.
-    Register splitTagForTest(const ValueOperand& value) {
-        return value.typeReg();
+    void splitTagForTest(const ValueOperand& value, ScratchTagScope& tag) {
+        MOZ_ASSERT(value.typeReg() == tag);
     }
 
     // Higher level tag testing code.
