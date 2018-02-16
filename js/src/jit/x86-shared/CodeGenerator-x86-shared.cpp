@@ -2538,12 +2538,11 @@ CodeGeneratorX86Shared::visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIn
 
     masm.jump(ool->rejoin());
 
-    if (gen->compilingWasm()) {
-        masm.bindLater(&onConversionError, oldTrap(ool, wasm::Trap::ImpreciseSimdConversion));
-    } else {
-        masm.bind(&onConversionError);
+    masm.bind(&onConversionError);
+    if (gen->compilingWasm())
+        masm.wasmTrap(wasm::Trap::ImpreciseSimdConversion, ool->bytecodeOffset());
+    else
         bailout(ool->ins()->snapshot());
-    }
 }
 
 // Convert Float32x4 to Uint32x4.
@@ -2618,10 +2617,14 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
     masm.vmovmskps(scratch, temp);
     masm.cmp32(temp, Imm32(0));
 
-    if (gen->compilingWasm())
-        masm.j(Assembler::NotEqual, oldTrap(mir, wasm::Trap::ImpreciseSimdConversion));
-    else
+    if (gen->compilingWasm()) {
+        Label ok;
+        masm.j(Assembler::Equal, &ok);
+        masm.wasmTrap(wasm::Trap::ImpreciseSimdConversion, mir->bytecodeOffset());
+        masm.bind(&ok);
+    } else {
         bailoutIf(Assembler::NotEqual, ins->snapshot());
+    }
 }
 
 void
