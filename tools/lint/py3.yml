@@ -44,6 +44,8 @@ py3:
         - xpcom/idl-parser
         - xpcom/typelib
     extensions: ['py']
+    support-files:
+        - 'tools/lint/python/*compat*'
     type: external
     payload: python.compat:lintpy3
     setup: python.compat:setuppy3

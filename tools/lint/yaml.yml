@@ -9,5 +9,8 @@ yamllint:
         - testing/mozharness
         - tools
     extensions: ['yml', 'yaml']
+    support-files:
+        - '**/.yamllint'
+        - 'tools/lint/yamllint_/**'
     type: external
     payload: yamllint_:lint
