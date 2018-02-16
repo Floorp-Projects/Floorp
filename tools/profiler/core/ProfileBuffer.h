@@ -86,9 +86,8 @@ public:
 
   void AddStoredMarker(ProfilerMarker* aStoredMarker);
 
-  // The following two methods are not signal safe! They delete markers.
+  // The following method is not signal safe!
   void DeleteExpiredStoredMarkers();
-  void Reset();
 
   // Access an entry in the buffer.
   ProfileBufferEntry& GetEntry(uint64_t aPosition) const
