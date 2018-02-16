@@ -1729,6 +1729,7 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
           case Trap::IntegerOverflow:
           case Trap::InvalidConversionToInteger:
           case Trap::IntegerDivideByZero:
+          case Trap::ImpreciseSimdConversion:
           case Trap::StackOverflow:
             break;
           // The TODO list of "old" traps to convert to new traps:
@@ -1736,7 +1737,6 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
           case Trap::UnalignedAccess:
           case Trap::IndirectCallToNull:
           case Trap::IndirectCallBadSig:
-          case Trap::ImpreciseSimdConversion:
           case Trap::ThrowReported: {
             CallableOffsets offsets;
             if (!GenerateOldTrapExit(masm, trap, &throwLabel, &offsets))
