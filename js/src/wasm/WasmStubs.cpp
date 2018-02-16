@@ -1731,13 +1731,13 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
           case Trap::IntegerDivideByZero:
           case Trap::ImpreciseSimdConversion:
           case Trap::StackOverflow:
+          case Trap::ThrowReported:
             break;
           // The TODO list of "old" traps to convert to new traps:
           case Trap::OutOfBounds:
           case Trap::UnalignedAccess:
           case Trap::IndirectCallToNull:
-          case Trap::IndirectCallBadSig:
-          case Trap::ThrowReported: {
+          case Trap::IndirectCallBadSig: {
             CallableOffsets offsets;
             if (!GenerateOldTrapExit(masm, trap, &throwLabel, &offsets))
                 return false;
