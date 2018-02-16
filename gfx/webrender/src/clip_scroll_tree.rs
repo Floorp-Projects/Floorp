@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ClipChainId, ClipId, DeviceIntRect, DevicePixelScale, ExternalScrollId, LayerPoint};
-use api::{LayerRect, LayerToWorldTransform, LayerVector2D, LayoutTransform, PipelineId};
-use api::{PropertyBinding, ScrollClamping, ScrollEventPhase, ScrollLocation, ScrollNodeIdType};
+use api::{LayerRect, LayerToWorldTransform, LayerVector2D, PipelineId, ScrollClamping};
+use api::{ScrollEventPhase, ScrollLocation, ScrollNodeIdType};
 use api::{ScrollNodeState, WorldPoint};
 use clip::ClipStore;
 use clip_scroll_node::{ClipScrollNode, NodeType, ScrollFrameInfo, StickyFrameInfo};
@@ -464,40 +464,6 @@ impl ClipScrollTree {
                 node.set_scroll_origin(&offset, clamping);
             }
         }
-    }
-
-    pub fn generate_new_clip_id(&mut self, pipeline_id: PipelineId) -> ClipId {
-        let new_id = ClipId::DynamicallyAddedNode(self.current_new_node_item, pipeline_id);
-        self.current_new_node_item += 1;
-        new_id
-    }
-
-    pub fn add_reference_frame(
-        &mut self,
-        rect: &LayerRect,
-        source_transform: Option<PropertyBinding<LayoutTransform>>,
-        source_perspective: Option<LayoutTransform>,
-        origin_in_parent_reference_frame: LayerVector2D,
-        pipeline_id: PipelineId,
-        parent_id: Option<ClipId>,
-        root_for_pipeline: bool,
-    ) -> ClipId {
-        let reference_frame_id = if root_for_pipeline {
-            ClipId::root_reference_frame(pipeline_id)
-        } else {
-            self.generate_new_clip_id(pipeline_id)
-        };
-
-        let node = ClipScrollNode::new_reference_frame(
-            parent_id,
-            rect,
-            source_transform,
-            source_perspective,
-            origin_in_parent_reference_frame,
-            pipeline_id,
-        );
-        self.add_node(node, reference_frame_id);
-        reference_frame_id
     }
 
     pub fn add_sticky_frame(

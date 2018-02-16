@@ -42,8 +42,7 @@ ChromeUtils.defineModuleGetter(this, "ServiceRequest",
 // This exists so that tests can override the XHR behaviour for downloading
 // the addon update XML file.
 var CreateXHR = function() {
-  return Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-    createInstance(Ci.nsISupports);
+  return new XMLHttpRequest();
 };
 
 var logger = Log.repository.getLogger("addons.productaddons");

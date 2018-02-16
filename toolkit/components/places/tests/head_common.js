@@ -6,7 +6,7 @@
 // It is expected that the test files importing this file define Cu etc.
 /* global Cu, Ci, Cc, Cr */
 
-const CURRENT_SCHEMA_VERSION = 42;
+const CURRENT_SCHEMA_VERSION = 43;
 const FIRST_UPGRADABLE_SCHEMA_VERSION = 30;
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";

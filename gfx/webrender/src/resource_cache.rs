@@ -857,11 +857,6 @@ impl ResourceCache {
                 }
             };
 
-            let filter = match request.rendering {
-                ImageRendering::Pixelated => TextureFilter::Nearest,
-                ImageRendering::Auto | ImageRendering::CrispEdges => TextureFilter::Linear,
-            };
-
             let descriptor = if let Some(tile) = request.tile {
                 let tile_size = image_template.tiling.unwrap();
                 let image_descriptor = &image_template.descriptor;
@@ -895,6 +890,31 @@ impl ResourceCache {
                 }
             } else {
                 image_template.descriptor.clone()
+            };
+
+            let filter = match request.rendering {
+                ImageRendering::Pixelated => {
+                    TextureFilter::Nearest
+                }
+                ImageRendering::Auto | ImageRendering::CrispEdges => {
+                    // If the texture uses linear filtering, enable mipmaps and
+                    // trilinear filtering, for better image quality. We only
+                    // support this for now on textures that are not placed
+                    // into the shared cache. This accounts for any image
+                    // that is > 512 in either dimension, so it should cover
+                    // the most important use cases. We may want to support
+                    // mip-maps on shared cache items in the future.
+                    if descriptor.width > 512 &&
+                       descriptor.height > 512 &&
+                       !self.texture_cache.is_allowed_in_shared_cache(
+                        TextureFilter::Linear,
+                        &descriptor,
+                    ) {
+                        TextureFilter::Trilinear
+                    } else {
+                        TextureFilter::Linear
+                    }
+                }
             };
 
             let entry = self.cached_images.get_mut(&request).as_mut().unwrap();

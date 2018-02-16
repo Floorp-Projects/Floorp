@@ -23,9 +23,9 @@ class nsXBLPrototypeBinding;
 class nsIContent;
 class nsAtom;
 class nsIDocument;
+struct RawServoAuthorStyles;
 
 namespace mozilla {
-class ServoStyleSet;
 namespace dom {
 
 class ShadowRoot;
@@ -135,7 +135,7 @@ public:
   void WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData);
 #endif
 
-  mozilla::ServoStyleSet* GetServoStyleSet() const;
+  const RawServoAuthorStyles* GetServoStyles() const;
 
   static nsresult DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> obj,
                                 const nsString& aClassName,

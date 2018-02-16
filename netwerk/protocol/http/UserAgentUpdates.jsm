@@ -10,6 +10,8 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 ChromeUtils.defineModuleGetter(
   this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
 
@@ -203,8 +205,7 @@ this.UserAgentUpdates = {
   },
 
   _fetchUpdate: function(url, success, error) {
-    let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                    .createInstance(Ci.nsIXMLHttpRequest);
+    let request = new XMLHttpRequest();
     request.mozBackgroundRequest = true;
     request.timeout = this._getPref(PREF_UPDATES_TIMEOUT, 60000);
     request.open("GET", url, true);

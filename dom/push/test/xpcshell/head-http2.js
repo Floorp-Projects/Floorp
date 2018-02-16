@@ -44,8 +44,7 @@ CertOverrideListener.prototype = {
 };
 
 function addCertOverride(host, port, bits) {
-  var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-            .createInstance(Ci.nsIXMLHttpRequest);
+  var req = new XMLHttpRequest();
   try {
     var url;
     if (port && (port > 0) && (port !== 443)) {

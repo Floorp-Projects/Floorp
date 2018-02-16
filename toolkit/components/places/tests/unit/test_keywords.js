@@ -247,10 +247,10 @@ add_task(async function test_addKeywordToURIHavingKeyword() {
   await check_keyword(true, "http://example.com/", "keyword");
   Assert.equal((await foreign_count("http://example.com/")), fc + 1); // +1 keyword
 
-  await PlacesUtils.keywords.insert({ keyword: "keyword2", url: "http://example.com/" });
+  await PlacesUtils.keywords.insert({ keyword: "keyword2", url: "http://example.com/", postData: "test=1" });
 
   await check_keyword(true, "http://example.com/", "keyword");
-  await check_keyword(true, "http://example.com/", "keyword2");
+  await check_keyword(true, "http://example.com/", "keyword2", "test=1");
   Assert.equal((await foreign_count("http://example.com/")), fc + 2); // +1 keyword
   let entries = [];
   let entry = await PlacesUtils.keywords.fetch({ url: "http://example.com/" }, e => entries.push(e));
@@ -384,9 +384,9 @@ add_task(async function test_sameURIDifferentKeyword() {
 
   observer = expectBookmarkNotifications();
   await PlacesUtils.keywords.insert({ keyword: "keyword2", url: "http://example.com/" });
-  await check_keyword(true, "http://example.com/", "keyword");
+  await check_keyword(false, "http://example.com/", "keyword");
   await check_keyword(true, "http://example.com/", "keyword2");
-  Assert.equal((await foreign_count("http://example.com/")), fc + 3); // +1 keyword
+  Assert.equal((await foreign_count("http://example.com/")), fc + 2); // -1 keyword +1 keyword
   observer.check([{ name: "onItemChanged",
                     arguments: [ (await PlacesUtils.promiseItemId(bookmark.guid)),
                                  "keyword", false, "keyword2",
@@ -395,34 +395,11 @@ add_task(async function test_sameURIDifferentKeyword() {
                                  bookmark.guid, bookmark.parentGuid, "",
                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] } ]);
 
-  // Add a third keyword.
-  await PlacesUtils.keywords.insert({ keyword: "keyword3", url: "http://example.com/" });
-  await check_keyword(true, "http://example.com/", "keyword");
-  await check_keyword(true, "http://example.com/", "keyword2");
-  await check_keyword(true, "http://example.com/", "keyword3");
-  Assert.equal((await foreign_count("http://example.com/")), fc + 4); // +1 keyword
-
-  // Remove one of the keywords.
-  observer = expectBookmarkNotifications();
-  await PlacesUtils.keywords.remove("keyword");
-  await check_keyword(false, "http://example.com/", "keyword");
-  await check_keyword(true, "http://example.com/", "keyword2");
-  await check_keyword(true, "http://example.com/", "keyword3");
-  observer.check([{ name: "onItemChanged",
-                    arguments: [ (await PlacesUtils.promiseItemId(bookmark.guid)),
-                                 "keyword", false, "",
-                                 bookmark.lastModified * 1000, bookmark.type,
-                                 (await PlacesUtils.promiseItemId(bookmark.parentGuid)),
-                                 bookmark.guid, bookmark.parentGuid, "",
-                                 Ci.nsINavBookmarksService.SOURCE_DEFAULT ] } ]);
-  Assert.equal((await foreign_count("http://example.com/")), fc + 3); // -1 keyword
-
   // Now remove the bookmark.
   await PlacesUtils.bookmarks.remove(bookmark);
   while ((await foreign_count("http://example.com/")));
   await check_keyword(false, "http://example.com/", "keyword");
   await check_keyword(false, "http://example.com/", "keyword2");
-  await check_keyword(false, "http://example.com/", "keyword3");
 
   await check_no_orphans();
 });
@@ -485,11 +462,11 @@ add_task(async function test_multipleKeywordsSamePostData() {
   await PlacesUtils.keywords.insert({ keyword: "keyword", url: "http://example.com/", postData: "postData1" });
   await check_keyword(true, "http://example.com/", "keyword", "postData1");
   // Add another keyword with same postData, should fail.
-  await Assert.rejects(PlacesUtils.keywords.insert({ keyword: "keyword2", url: "http://example.com/", postData: "postData1" }),
-                       /constraint failed/);
-  await check_keyword(false, "http://example.com/", "keyword2", "postData1");
+  await PlacesUtils.keywords.insert({ keyword: "keyword2", url: "http://example.com/", postData: "postData1" });
+  await check_keyword(false, "http://example.com/", "keyword", "postData1");
+  await check_keyword(true, "http://example.com/", "keyword2", "postData1");
 
-  await PlacesUtils.keywords.remove("keyword");
+  await PlacesUtils.keywords.remove("keyword2");
 
   await check_no_orphans();
 });

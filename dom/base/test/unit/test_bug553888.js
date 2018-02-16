@@ -41,8 +41,7 @@ function run_test() {
   server.registerPathHandler(headerCheckPath, headerCheckHandler);
 
   do_test_pending();
-  var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                .createInstance(Components.interfaces.nsIXMLHttpRequest);
+  var request = new XMLHttpRequest();
   request.open("GET", redirectURL, true);
   request.setRequestHeader("X-Custom-Header", "present");
   request.addEventListener("readystatechange", function() {
