@@ -437,8 +437,8 @@ CodeGeneratorARM64::visitFloat32(LFloat32* ins)
     MOZ_CRASH("visitFloat32");
 }
 
-Register
-CodeGeneratorARM64::splitTagForTest(const ValueOperand& value)
+void
+CodeGeneratorARM64::splitTagForTest(const ValueOperand& value, ScratchTagScope& tag)
 {
     MOZ_CRASH("splitTagForTest");
 }

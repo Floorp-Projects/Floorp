@@ -193,12 +193,10 @@ CodeGeneratorMIPS64::visitUnbox(LUnbox* unbox)
     }
 }
 
-Register
-CodeGeneratorMIPS64::splitTagForTest(const ValueOperand& value)
+void
+CodeGeneratorMIPS64::splitTagForTest(const ValueOperand& value, ScratchTagScope& Tag)
 {
-    MOZ_ASSERT(value.valueReg() != SecondScratchReg);
-    masm.splitTag(value.valueReg(), SecondScratchReg);
-    return SecondScratchReg;
+    masm.splitTag(value.valueReg(), tag);
 }
 
 void

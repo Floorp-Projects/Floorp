@@ -1807,9 +1807,12 @@ MacroAssemblerMIPS64Compat::ensureDouble(const ValueOperand& source, FloatRegist
                                          Label* failure)
 {
     Label isDouble, done;
-    Register tag = splitTagForTest(source);
-    asMasm().branchTestDouble(Assembler::Equal, tag, &isDouble);
-    asMasm().branchTestInt32(Assembler::NotEqual, tag, failure);
+    {
+        ScratchTagScope tag(this, source);
+        splitTagForTest(source, tag);
+        asMasm().branchTestDouble(Assembler::Equal, tag, &isDouble);
+        asMasm().branchTestInt32(Assembler::NotEqual, tag, failure);
+    }
 
     unboxInt32(source, ScratchRegister);
     convertInt32ToDouble(ScratchRegister, dest);
