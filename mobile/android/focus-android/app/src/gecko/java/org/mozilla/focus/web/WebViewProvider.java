@@ -260,7 +260,6 @@ public class WebViewProvider {
             return new GeckoSession.NavigationListener() {
                 public void onLocationChange(GeckoSession session, String url) {
                     currentUrl = url;
-                    System.out.println(currentUrl);
                     if (callback != null) {
                         callback.onURLChanged(url);
                     }
