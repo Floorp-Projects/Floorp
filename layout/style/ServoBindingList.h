@@ -183,6 +183,8 @@ SERVO_BINDING_FUNC(Servo_AuthorStyles_Create, RawServoAuthorStyles*)
 SERVO_BINDING_FUNC(Servo_AuthorStyles_AppendStyleSheet, void,
                    RawServoAuthorStylesBorrowedMut self,
                    const mozilla::ServoStyleSheet* gecko_sheet)
+SERVO_BINDING_FUNC(Servo_AuthorStyles_ForceDirty, void,
+                   RawServoAuthorStylesBorrowedMut self)
 // TODO(emilio): This will need to take an element to implement invalidation for
 // Shadow DOM.
 SERVO_BINDING_FUNC(Servo_AuthorStyles_Flush, void,
