@@ -12,3 +12,17 @@ add_task(async function test_updates_post_policy() {
   is(updateService.canCheckForUpdates, false,
      "Should not be able to check for updates with DisableAppUpdate enabled.");
 });
+
+add_task(async function test_update_preferences_ui() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
+
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+    let updateRadioGroup = content.document.getElementById("updateRadioGroup");
+    is(updateRadioGroup.disabled, true,
+       "Update choices should be diabled when app update is locked by policy");
+    is(updateRadioGroup.value, "manual",
+       "Update choice should be set to \"manual\" when app update is disabled by policy");
+  });
+
+  await BrowserTestUtils.removeTab(tab);
+});
