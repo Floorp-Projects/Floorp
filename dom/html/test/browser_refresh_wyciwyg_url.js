@@ -25,7 +25,7 @@ function test(){
         return BrowserTestUtils.browserLoaded(aBrowser);
     }).then(() => {
         test_btn.click();
-        todo_is(aBrowser.contentDocument.URL, testURL, "Document URL should be identical after reload");
+        is(aBrowser.contentDocument.URL, testURL, "Document URL should be identical after reload");
         gBrowser.removeTab(aTab);
         finish();
     });
