@@ -53,9 +53,8 @@ TimeRanges::ToTimeIntervals() const
 {
   media::TimeIntervals t;
   for (uint32_t i = 0; i < Length(); i++) {
-    ErrorResult rv;
-    t += media::TimeInterval(media::TimeUnit::FromSeconds(Start(i, rv)),
-                             media::TimeUnit::FromSeconds(End(i, rv)));
+    t += media::TimeInterval(media::TimeUnit::FromSeconds(Start(i)),
+                             media::TimeUnit::FromSeconds(End(i)));
   }
   return t;
 }
@@ -72,7 +71,7 @@ TimeRanges::Start(uint32_t aIndex, ErrorResult& aRv) const
     return 0;
   }
 
-  return mRanges[aIndex].mStart;
+  return Start(aIndex);
 }
 
 double
@@ -83,7 +82,7 @@ TimeRanges::End(uint32_t aIndex, ErrorResult& aRv) const
     return 0;
   }
 
-  return mRanges[aIndex].mEnd;
+  return End(aIndex);
 }
 
 void

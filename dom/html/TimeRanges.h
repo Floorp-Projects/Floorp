@@ -69,6 +69,16 @@ public:
 
   double End(uint32_t aIndex, ErrorResult& aRv) const;
 
+  double Start(uint32_t aIndex) const
+  {
+    return mRanges[aIndex].mStart;
+  }
+
+  double End(uint32_t aIndex) const
+  {
+    return mRanges[aIndex].mEnd;
+  }
+
   // Shift all values by aOffset seconds.
   void Shift(double aOffset);
 

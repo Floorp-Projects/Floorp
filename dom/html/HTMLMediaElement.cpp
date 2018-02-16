@@ -2707,12 +2707,12 @@ IsInRanges(TimeRanges& aRanges,
   uint32_t length = aRanges.Length();
 
   for (uint32_t i = 0; i < length; i++) {
-    double start = aRanges.Start(i, IgnoreErrors());
+    double start = aRanges.Start(i);
     if (start > aValue) {
       aIntervalIndex = i - 1;
       return false;
     }
-    double end = aRanges.End(i, IgnoreErrors());
+    double end = aRanges.End(i);
     if (aValue <= end) {
       aIntervalIndex = i;
       return true;
@@ -2801,8 +2801,8 @@ HTMLMediaElement::Seek(double aTime,
       // |range + 1| can't be negative, because the only possible negative value
       // for |range| is -1.
       if (uint32_t(range + 1) < length) {
-        double leftBound = seekable->End(range, IgnoreErrors());
-        double rightBound = seekable->Start(range + 1, IgnoreErrors());
+        double leftBound = seekable->End(range);
+        double rightBound = seekable->Start(range + 1);
         double distanceLeft = Abs(leftBound - aTime);
         double distanceRight = Abs(rightBound - aTime);
         if (distanceLeft == distanceRight) {
@@ -2814,12 +2814,12 @@ HTMLMediaElement::Seek(double aTime,
       } else {
         // Seek target is after the end last range in seekable data.
         // Clamp the seek target to the end of the last seekable range.
-        aTime = seekable->GetEndTime();
+        aTime = seekable->End(length - 1);
       }
     } else {
       // aTime is before the first range in |seekable|, the closest point we can
       // seek to is the start of the first range.
-      aTime = seekable->GetStartTime();
+      aTime = seekable->Start(0);
     }
   }
 
@@ -2883,8 +2883,8 @@ HTMLMediaElement::Played()
     timeRangeCount = mPlayed->Length();
   }
   for (uint32_t i = 0; i < timeRangeCount; i++) {
-    double begin = mPlayed->Start(i, IgnoreErrors());
-    double end = mPlayed->End(i, IgnoreErrors());
+    double begin = mPlayed->Start(i);
+    double end = mPlayed->End(i);
     ranges->Add(begin, end);
   }
 
@@ -4488,9 +4488,8 @@ HTMLMediaElement::ReportTelemetry()
     const double errorMargin = 0.05;
     double t = CurrentTime();
     TimeRanges::index_type index = ranges->Find(t, errorMargin);
-    ErrorResult ignore;
     stalled = index != TimeRanges::NoIndex &&
-              (ranges->End(index, ignore) - t) < errorMargin;
+              (ranges->End(index) - t) < errorMargin;
     stalled |= mDecoder && NextFrameStatus() == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING &&
                mReadyState == HAVE_CURRENT_DATA;
     if (stalled) {
