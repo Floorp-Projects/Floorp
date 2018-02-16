@@ -145,7 +145,7 @@ void main(void) {
     BorderCorners corners = get_border_corners(border, prim.local_rect);
     vec4 color = border.colors[sub_part];
 
-    // TODO(gw): Now that all border styles are supported, the switch
+    // TODO(gw): Now that all border styles are supported, the
     //           statement below can be tidied up quite a bit.
 
     float style;
@@ -215,6 +215,11 @@ void main(void) {
             edge_mask = vec4(0.0, 1.0, 0.0, 1.0);
             break;
         }
+        default:
+            segment_rect.p0 = segment_rect.size = vec2(0.0);
+            style = 0.0;
+            color_flip = false;
+            edge_mask = vec4(0.0);
     }
 
     write_alpha_select(style);

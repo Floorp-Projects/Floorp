@@ -2,14 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use {ColorF, FontInstanceKey, ImageKey, LayerPixel, LayoutPixel, LayoutPoint, LayoutRect,
-     LayoutSize, LayoutTransform};
-use {GlyphOptions, LayoutVector2D, PipelineId, PropertyBinding};
-use euclid::{SideOffsets2D, TypedRect};
-use std::ops::Not;
-
 #[cfg(any(feature = "serialize", feature = "deserialize"))]
 use GlyphInstance;
+use euclid::{SideOffsets2D, TypedRect};
+use std::ops::Not;
+use {ColorF, FontInstanceKey, GlyphOptions, ImageKey, LayerPixel, LayoutPixel, LayoutPoint};
+use {LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D, PipelineId, PropertyBinding};
+
 
 // NOTE: some of these structs have an "IMPLICIT" comment.
 // This indicates that the BuiltDisplayList will have serialized
@@ -213,7 +212,8 @@ pub enum ScrollSensitivity {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ScrollFrameDisplayItem {
-    pub id: ClipId,
+    pub clip_id: ClipId,
+    pub scroll_frame_id: ClipId,
     pub external_id: Option<ExternalScrollId>,
     pub image_mask: Option<ImageMask>,
     pub scroll_sensitivity: ScrollSensitivity,
@@ -455,6 +455,7 @@ pub struct StackingContext {
     pub transform_style: TransformStyle,
     pub perspective: Option<LayoutTransform>,
     pub mix_blend_mode: MixBlendMode,
+    pub reference_frame_id: Option<ClipId>,
 } // IMPLICIT: filters: Vec<FilterOp>
 
 #[repr(u32)]
@@ -509,6 +510,7 @@ pub enum FilterOp {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct IframeDisplayItem {
+    pub clip_id: ClipId,
     pub pipeline_id: PipelineId,
 }
 
@@ -753,29 +755,30 @@ pub struct ClipChainId(pub u64, pub PipelineId);
 pub enum ClipId {
     Clip(u64, PipelineId),
     ClipChain(ClipChainId),
-    DynamicallyAddedNode(u64, PipelineId),
 }
+
+const ROOT_REFERENCE_FRAME_CLIP_ID: u64 = 0;
+const ROOT_SCROLL_NODE_CLIP_ID: u64 = 1;
 
 impl ClipId {
     pub fn root_scroll_node(pipeline_id: PipelineId) -> ClipId {
-        ClipId::Clip(0, pipeline_id)
+        ClipId::Clip(ROOT_SCROLL_NODE_CLIP_ID, pipeline_id)
     }
 
     pub fn root_reference_frame(pipeline_id: PipelineId) -> ClipId {
-        ClipId::DynamicallyAddedNode(0, pipeline_id)
+        ClipId::Clip(ROOT_REFERENCE_FRAME_CLIP_ID, pipeline_id)
     }
 
     pub fn pipeline_id(&self) -> PipelineId {
         match *self {
             ClipId::Clip(_, pipeline_id) |
-            ClipId::ClipChain(ClipChainId(_, pipeline_id)) |
-            ClipId::DynamicallyAddedNode(_, pipeline_id) => pipeline_id,
+            ClipId::ClipChain(ClipChainId(_, pipeline_id)) => pipeline_id,
         }
     }
 
     pub fn is_root_scroll_node(&self) -> bool {
         match *self {
-            ClipId::Clip(0, _) => true,
+            ClipId::Clip(1, _) => true,
             _ => false,
         }
     }
