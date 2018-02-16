@@ -126,6 +126,8 @@ public:
   nsPresContext* mPresContext;
 };
 
+#ifdef MOZ_OLD_STYLE
+
 namespace {
 
 class CharSetChangingRunnable : public Runnable
@@ -151,6 +153,8 @@ private:
 };
 
 } // namespace
+
+#endif
 
 nscolor
 nsPresContext::MakeColorPref(const nsString& aColor)
@@ -1162,9 +1166,16 @@ nsPresContext::UpdateCharSet(NotNull<const Encoding*> aCharSet)
 void
 nsPresContext::DispatchCharSetChange(NotNull<const Encoding*> aEncoding)
 {
-  RefPtr<CharSetChangingRunnable> runnable =
-    new CharSetChangingRunnable(this, aEncoding);
-  Document()->Dispatch(TaskCategory::Other, runnable.forget());
+#ifdef MOZ_OLD_STYLE
+  if (!Document()->IsStyledByServo()) {
+    RefPtr<CharSetChangingRunnable> runnable =
+      new CharSetChangingRunnable(this, aEncoding);
+    Document()->Dispatch(TaskCategory::Other, runnable.forget());
+    return;
+  }
+#endif
+  // In Servo RebuildAllStyleData is async, so no need to do the runnable dance.
+  DoChangeCharSet(aEncoding);
 }
 
 nsPresContext*
