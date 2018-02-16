@@ -96,20 +96,12 @@ public:
     return NS_OK;
   }
 
-  virtual nsIMessageSender* GetProcessMessageManager() const
+  virtual mozilla::dom::ChromeMessageSender* GetProcessMessageManager() const
   {
     return nullptr;
   }
 
-  virtual nsresult DoGetRemoteType(nsAString& aRemoteType) const
-  {
-    aRemoteType.Truncate();
-    nsIMessageSender* parent = GetProcessMessageManager();
-    if (parent) {
-      return parent->GetRemoteType(aRemoteType);
-    }
-    return NS_OK;
-  }
+  virtual nsresult DoGetRemoteType(nsAString& aRemoteType) const;
 
 protected:
   bool BuildClonedMessageDataForParent(nsIContentParent* aParent,
@@ -221,7 +213,7 @@ public:
     DispatchAsyncMessage(aCx, aMessageName, aObj, aObjects, aPrincipal, aTransfers,
                          aError);
   }
-  already_AddRefed<nsIMessageSender>
+  already_AddRefed<mozilla::dom::ChromeMessageSender>
     GetProcessMessageManager(mozilla::ErrorResult& aError);
   void GetRemoteType(nsAString& aRemoteType, mozilla::ErrorResult& aError) const;
 

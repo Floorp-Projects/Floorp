@@ -2883,7 +2883,7 @@ nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
   return NS_ERROR_UNEXPECTED;
 }
 
-already_AddRefed<nsIMessageSender>
+already_AddRefed<MessageSender>
 nsFrameLoader::GetMessageManager()
 {
   EnsureMessageManager();
@@ -3381,7 +3381,7 @@ nsFrameLoader::PopulateUserContextIdFromAttribute(OriginAttributes& aAttr)
   return NS_OK;
 }
 
-nsIMessageSender*
+ChromeMessageSender*
 nsFrameLoader::GetProcessMessageManager() const
 {
   return mRemoteBrowser ? mRemoteBrowser->Manager()->GetMessageManager()

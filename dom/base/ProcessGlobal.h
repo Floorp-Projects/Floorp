@@ -46,6 +46,7 @@ public:
                            bool aEnumerableOnly, ErrorResult& aRv);
 
   using ipc::MessageManagerCallback::GetProcessMessageManager;
+  using MessageManagerGlobal::GetProcessMessageManager;
 
   bool Init();
 
@@ -67,9 +68,6 @@ public:
   using MessageManagerGlobal::RemoveMessageListener;
   using MessageManagerGlobal::AddWeakMessageListener;
   using MessageManagerGlobal::RemoveWeakMessageListener;
-  using MessageManagerGlobal::SendAsyncMessage;
-  using MessageManagerGlobal::GetProcessMessageManager;
-  using MessageManagerGlobal::GetRemoteType;
 
   // ContentProcessMessageManager
   void GetInitialProcessData(JSContext* aCx,
