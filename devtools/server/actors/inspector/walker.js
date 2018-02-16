@@ -24,8 +24,8 @@ loader.lazyRequireGetter(this, "standardTreeWalkerFilter", "devtools/server/acto
 
 loader.lazyRequireGetter(this, "DocumentWalker", "devtools/server/actors/inspector/document-walker", true);
 loader.lazyRequireGetter(this, "SKIP_TO_SIBLING", "devtools/server/actors/inspector/document-walker", true);
-loader.lazyRequireGetter(this, "NodeActor", "devtools/server/actors/inspector/node-actor", true);
-loader.lazyRequireGetter(this, "NodeListActor", "devtools/server/actors/inspector/node-actor", true);
+loader.lazyRequireGetter(this, "NodeActor", "devtools/server/actors/inspector/node", true);
+loader.lazyRequireGetter(this, "NodeListActor", "devtools/server/actors/inspector/node", true);
 loader.lazyRequireGetter(this, "LayoutActor", "devtools/server/actors/layout", true);
 loader.lazyRequireGetter(this, "getLayoutChangesObserver", "devtools/server/actors/reflow", true);
 loader.lazyRequireGetter(this, "releaseLayoutChangesObserver", "devtools/server/actors/reflow", true);

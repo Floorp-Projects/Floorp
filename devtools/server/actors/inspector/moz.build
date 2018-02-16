@@ -6,10 +6,10 @@
 
 DevToolsModules(
   'document-walker.js',
-  'inspector-actor.js',
-  'node-actor.js',
+  'inspector.js',
+  'node.js',
   'utils.js',
-  'walker-actor.js',
+  'walker.js',
 )
 
 with Files('**'):
