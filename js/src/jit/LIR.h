@@ -710,9 +710,13 @@ class LNode
 
     // Hook for opcodes to add extra high level detail about what code will be
     // emitted for the op.
-    virtual const char* extraName() const {
+  private:
+    const char* extraName() const {
         return nullptr;
     }
+
+  public:
+    const char* getExtraName() const;
 
     virtual Opcode op() const = 0;
 
@@ -766,11 +770,11 @@ class LNode
     // output register will be restored to its original value when bailing out.
     inline bool recoversInput() const;
 
-    virtual void dump(GenericPrinter& out);
+    void dump(GenericPrinter& out);
     void dump();
     static void printName(GenericPrinter& out, Opcode op);
-    virtual void printName(GenericPrinter& out);
-    virtual void printOperands(GenericPrinter& out);
+    void printName(GenericPrinter& out);
+    void printOperands(GenericPrinter& out);
 
   public:
     // Opcode testing and casts.
