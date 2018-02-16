@@ -140,7 +140,7 @@ public:
   TRRService *mTRRService;
 
 private:
-  ~TRR() { if (mTimeout) { mTimeout->Cancel(); } };
+  ~TRR() = default;
   nsresult SendHTTPRequest();
   nsresult DohEncode(nsCString &target);
   nsresult DohDecode();
