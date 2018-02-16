@@ -273,7 +273,11 @@ Marks releases as shipped in Ship-It.
 
 release-bouncer-aliases
 ------------------------------
-Update Bouncers (download.mozilla.org) "latest" aliases.
+Update Bouncer's (download.mozilla.org) "latest" aliases.
+
+release-bouncer-check
+------------------------------
+Checks Bouncer (download.mozilla.org) uptake.
 
 release-generate-checksums
 --------------------------
@@ -302,10 +306,6 @@ Verifies the contents and package of release update MARs.
 release-updates-builder
 -----------------------
 Top level Balrog blob submission & patcher/update verify config updates.
-
-release-uptake-monitoring
--------------------------
-Run uptake monitoring for releases.
 
 release-version-bump
 --------------------

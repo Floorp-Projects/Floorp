@@ -918,7 +918,7 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
                 return true;
             }
         } else {
-            gen.trackNotAttached();
+            gen.trackAttached(IRGenerator::NotAttached);
         }
         if (!attached && !isTemporarilyUnoptimizable)
             stub->state().trackNotAttached();
@@ -1584,7 +1584,7 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
                 SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
             }
         } else {
-            gen.trackNotAttached();
+            gen.trackAttached(IRGenerator::NotAttached);
         }
         if (!attached && !isTemporarilyUnoptimizable)
             stub->state().trackNotAttached();

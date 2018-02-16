@@ -7,7 +7,6 @@
 #include "ImageOps.h"
 
 #include "ClippedImage.h"
-#include "DecodePool.h"
 #include "Decoder.h"
 #include "DecoderFactory.h"
 #include "DynamicImage.h"
