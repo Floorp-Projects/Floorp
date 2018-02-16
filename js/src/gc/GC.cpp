@@ -223,9 +223,7 @@
 #include "jit/JitcodeMap.h"
 #include "js/SliceBudget.h"
 #include "proxy/DeadObjectProxy.h"
-#ifdef XP_WIN
-# include "util/Windows.h"
-#endif
+#include "util/Windows.h"
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/JSAtom.h"

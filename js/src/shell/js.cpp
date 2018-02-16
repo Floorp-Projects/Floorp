@@ -89,9 +89,7 @@
 #include "threading/ExclusiveData.h"
 #include "threading/LockGuard.h"
 #include "threading/Thread.h"
-#ifdef XP_WIN
-# include "util/Windows.h"
-#endif
+#include "util/Windows.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"

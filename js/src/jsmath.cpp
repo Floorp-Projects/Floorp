@@ -28,9 +28,7 @@
 
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
-#ifdef XP_WIN
-# include "util/Windows.h"
-#endif
+#include "util/Windows.h"
 #include "vm/JSAtom.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"

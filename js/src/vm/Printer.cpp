@@ -16,9 +16,7 @@
 #include "jsutil.h"
 
 #include "ds/LifoAlloc.h"
-#ifdef XP_WIN32
-# include "util/Windows.h"
-#endif
+#include "util/Windows.h"
 #include "vm/JSContext.h"
 
 using mozilla::PodCopy;
