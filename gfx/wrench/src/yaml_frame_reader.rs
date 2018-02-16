@@ -1025,6 +1025,63 @@ impl YamlFrameReader {
         );
     }
 
+    fn handle_yuv_image(
+        &mut self,
+        dl: &mut DisplayListBuilder,
+        wrench: &mut Wrench,
+        item: &Yaml,
+        info: &mut LayoutPrimitiveInfo,
+    ) {
+        // TODO(gw): Support other YUV color spaces.
+        let color_space = YuvColorSpace::Rec709;
+
+        let yuv_data = match item["format"].as_str().expect("no format supplied") {
+            "planar" => {
+                let y_path = rsrc_path(&item["src-y"], &self.aux_dir);
+                let (y_key, _) = self.add_or_get_image(&y_path, None, wrench);
+
+                let u_path = rsrc_path(&item["src-u"], &self.aux_dir);
+                let (u_key, _) = self.add_or_get_image(&u_path, None, wrench);
+
+                let v_path = rsrc_path(&item["src-v"], &self.aux_dir);
+                let (v_key, _) = self.add_or_get_image(&v_path, None, wrench);
+
+                YuvData::PlanarYCbCr(y_key, u_key, v_key)
+            }
+            "nv12" => {
+                let y_path = rsrc_path(&item["src-y"], &self.aux_dir);
+                let (y_key, _) = self.add_or_get_image(&y_path, None, wrench);
+
+                let uv_path = rsrc_path(&item["src-uv"], &self.aux_dir);
+                let (uv_key, _) = self.add_or_get_image(&uv_path, None, wrench);
+
+                YuvData::NV12(y_key, uv_key)
+            }
+            "interleaved" => {
+                let yuv_path = rsrc_path(&item["src"], &self.aux_dir);
+                let (yuv_key, _) = self.add_or_get_image(&yuv_path, None, wrench);
+
+                YuvData::InterleavedYCbCr(yuv_key)
+            }
+            _ => {
+                panic!("unexpected yuv format");
+            }
+        };
+
+        let bounds = item["bounds"].as_vec_f32().unwrap();
+        info.rect = LayoutRect::new(
+            LayoutPoint::new(bounds[0], bounds[1]),
+            LayoutSize::new(bounds[2], bounds[3]),
+        );
+
+        dl.push_yuv_image(
+            &info,
+            yuv_data,
+            color_space,
+            ImageRendering::Auto,
+        );
+    }
+
     fn handle_image(
         &mut self,
         dl: &mut DisplayListBuilder,
@@ -1263,6 +1320,7 @@ impl YamlFrameReader {
                 "clear-rect" => self.handle_clear_rect(dl, item, &mut info),
                 "line" => self.handle_line(dl, item, &mut info),
                 "image" => self.handle_image(dl, wrench, item, &mut info),
+                "yuv-image" => self.handle_yuv_image(dl, wrench, item, &mut info),
                 "text" | "glyphs" => self.handle_text(dl, wrench, item, &mut info),
                 "scroll-frame" => self.handle_scroll_frame(dl, wrench, item),
                 "sticky-frame" => self.handle_sticky_frame(dl, wrench, item),

@@ -2,40 +2,41 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include shared,prim_shared
+#define VECS_PER_SPECIFIC_BRUSH 5
 
-varying vec3 vUv0;
-varying vec3 vUv1;
+#include shared,prim_shared,brush
+
+varying vec3 vUv;
+varying float vW;
+
+varying vec3 vSrcUv;
+varying vec3 vBackdropUv;
 flat varying int vOp;
 
 #ifdef WR_VERTEX_SHADER
-void main(void) {
-    CompositeInstance ci = fetch_composite_instance();
-    PictureTask dest_task = fetch_picture_task(ci.render_task_index);
-    RenderTaskCommonData backdrop_task = fetch_render_task_common_data(ci.backdrop_task_index);
-    PictureTask src_task = fetch_picture_task(ci.src_task_index);
 
-    vec2 dest_origin = dest_task.common_data.task_rect.p0 -
-                       dest_task.content_origin +
-                       src_task.content_origin;
-
-    vec2 local_pos = mix(dest_origin,
-                         dest_origin + src_task.common_data.task_rect.size,
-                         aPosition.xy);
-
+void brush_vs(
+    VertexInfo vi,
+    int prim_address,
+    RectWithSize local_rect,
+    ivec3 user_data,
+    PictureTask pic_task
+) {
     vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0));
+    vOp = user_data.x;
+    vW = vi.w;
 
-    vec2 st0 = backdrop_task.task_rect.p0 / texture_size;
-    vec2 st1 = (backdrop_task.task_rect.p0 + backdrop_task.task_rect.size) / texture_size;
-    vUv0 = vec3(mix(st0, st1, aPosition.xy), backdrop_task.texture_layer_index);
+    PictureTask src_task = fetch_picture_task(user_data.z);
+    vec2 src_uv = (vi.snapped_device_pos +
+                   src_task.common_data.task_rect.p0 -
+                   src_task.content_origin) * vi.w;
+    vSrcUv = vec3(src_uv / texture_size, src_task.common_data.texture_layer_index);
 
-    st0 = src_task.common_data.task_rect.p0 / texture_size;
-    st1 = (src_task.common_data.task_rect.p0 + src_task.common_data.task_rect.size) / texture_size;
-    vUv1 = vec3(mix(st0, st1, aPosition.xy), src_task.common_data.texture_layer_index);
-
-    vOp = ci.user_data0;
-
-    gl_Position = uTransform * vec4(local_pos, ci.z, 1.0);
+    RenderTaskCommonData backdrop_task = fetch_render_task_common_data(user_data.y);
+    vec2 backdrop_uv = (vi.snapped_device_pos +
+                        backdrop_task.task_rect.p0 -
+                        src_task.content_origin) * vi.w;
+    vBackdropUv = vec3(backdrop_uv / texture_size, backdrop_task.texture_layer_index);
 }
 #endif
 
@@ -203,17 +204,17 @@ const int MixBlendMode_Saturation  = 13;
 const int MixBlendMode_Color       = 14;
 const int MixBlendMode_Luminosity  = 15;
 
-void main(void) {
-    vec4 Cb = texture(sCacheRGBA8, vUv0);
-    vec4 Cs = texture(sCacheRGBA8, vUv1);
+vec4 brush_fs() {
+    vec2 uv = vUv.xy / vW;
+
+    vec4 Cb = texture(sCacheRGBA8, vBackdropUv);
+    vec4 Cs = texture(sCacheRGBA8, vSrcUv);
 
     if (Cb.a == 0.0) {
-        oFragColor = Cs;
-        return;
+        return Cs;
     }
     if (Cs.a == 0.0) {
-        oFragColor = vec4(0.0, 0.0, 0.0, 0.0);
-        return;
+        return vec4(0.0);
     }
 
     // The mix-blend-mode functions assume no premultiplied alpha
@@ -276,6 +277,7 @@ void main(void) {
         case MixBlendMode_Luminosity:
             result.rgb = Luminosity(Cb.rgb, Cs.rgb);
             break;
+        default: break;
     }
 
     result.rgb = (1.0 - Cb.a) * Cs.rgb + Cb.a * result.rgb;
@@ -283,6 +285,6 @@ void main(void) {
 
     result.rgb *= result.a;
 
-    oFragColor = result;
+    return result;
 }
 #endif

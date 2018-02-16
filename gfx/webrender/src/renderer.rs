@@ -83,6 +83,18 @@ const GPU_CACHE_RESIZE_TEST: bool = false;
 /// Number of GPU blocks per UV rectangle provided for an image.
 pub const BLOCKS_PER_UV_RECT: usize = 2;
 
+const GPU_TAG_BRUSH_MIXBLEND: GpuProfileTag = GpuProfileTag {
+    label: "B_MixBlend",
+    color: debug_colors::MAGENTA,
+};
+const GPU_TAG_BRUSH_BLEND: GpuProfileTag = GpuProfileTag {
+    label: "B_Blend",
+    color: debug_colors::LIGHTBLUE,
+};
+const GPU_TAG_BRUSH_IMAGE: GpuProfileTag = GpuProfileTag {
+    label: "B_Image",
+    color: debug_colors::SPRINGGREEN,
+};
 const GPU_TAG_BRUSH_SOLID: GpuProfileTag = GpuProfileTag {
     label: "B_Solid",
     color: debug_colors::RED,
@@ -123,10 +135,6 @@ const GPU_TAG_PRIM_YUV_IMAGE: GpuProfileTag = GpuProfileTag {
     label: "YuvImage",
     color: debug_colors::DARKGREEN,
 };
-const GPU_TAG_PRIM_BLEND: GpuProfileTag = GpuProfileTag {
-    label: "Blend",
-    color: debug_colors::LIGHTBLUE,
-};
 const GPU_TAG_PRIM_HW_COMPOSITE: GpuProfileTag = GpuProfileTag {
     label: "HwComposite",
     color: debug_colors::DODGERBLUE,
@@ -134,10 +142,6 @@ const GPU_TAG_PRIM_HW_COMPOSITE: GpuProfileTag = GpuProfileTag {
 const GPU_TAG_PRIM_SPLIT_COMPOSITE: GpuProfileTag = GpuProfileTag {
     label: "SplitComposite",
     color: debug_colors::DARKBLUE,
-};
-const GPU_TAG_PRIM_COMPOSITE: GpuProfileTag = GpuProfileTag {
-    label: "Composite",
-    color: debug_colors::MAGENTA,
 };
 const GPU_TAG_PRIM_TEXT_RUN: GpuProfileTag = GpuProfileTag {
     label: "TextRun",
@@ -223,15 +227,16 @@ impl BatchKind {
     #[cfg(feature = "debugger")]
     fn debug_name(&self) -> &'static str {
         match *self {
-            BatchKind::Composite { .. } => "Composite",
             BatchKind::HardwareComposite => "HardwareComposite",
             BatchKind::SplitComposite => "SplitComposite",
-            BatchKind::Blend => "Blend",
             BatchKind::Brush(kind) => {
                 match kind {
                     BrushBatchKind::Picture(..) => "Brush (Picture)",
                     BrushBatchKind::Solid => "Brush (Solid)",
                     BrushBatchKind::Line => "Brush (Line)",
+                    BrushBatchKind::Image(..) => "Brush (Image)",
+                    BrushBatchKind::Blend => "Brush (Blend)",
+                    BrushBatchKind::MixBlend { .. } => "Brush (Composite)",
                 }
             }
             BatchKind::Transformable(_, batch_kind) => batch_kind.debug_name(),
@@ -240,15 +245,16 @@ impl BatchKind {
 
     fn gpu_sampler_tag(&self) -> GpuProfileTag {
         match *self {
-            BatchKind::Composite { .. } => GPU_TAG_PRIM_COMPOSITE,
             BatchKind::HardwareComposite => GPU_TAG_PRIM_HW_COMPOSITE,
             BatchKind::SplitComposite => GPU_TAG_PRIM_SPLIT_COMPOSITE,
-            BatchKind::Blend => GPU_TAG_PRIM_BLEND,
             BatchKind::Brush(kind) => {
                 match kind {
                     BrushBatchKind::Picture(..) => GPU_TAG_BRUSH_PICTURE,
                     BrushBatchKind::Solid => GPU_TAG_BRUSH_SOLID,
                     BrushBatchKind::Line => GPU_TAG_BRUSH_LINE,
+                    BrushBatchKind::Image(..) => GPU_TAG_BRUSH_IMAGE,
+                    BrushBatchKind::Blend => GPU_TAG_BRUSH_BLEND,
+                    BrushBatchKind::MixBlend { .. } => GPU_TAG_BRUSH_MIXBLEND,
                 }
             }
             BatchKind::Transformable(_, batch_kind) => batch_kind.gpu_sampler_tag(),
@@ -1596,6 +1602,9 @@ pub struct Renderer {
     brush_picture_a8: BrushShader,
     brush_solid: BrushShader,
     brush_line: BrushShader,
+    brush_image: Vec<Option<BrushShader>>,
+    brush_blend: BrushShader,
+    brush_mix_blend: BrushShader,
 
     /// These are "cache clip shaders". These shaders are used to
     /// draw clip instances into the cached clip mask. The results
@@ -1621,10 +1630,8 @@ pub struct Renderer {
     ps_angle_gradient: PrimitiveShader,
     ps_radial_gradient: PrimitiveShader,
 
-    ps_blend: LazilyCompiledShader,
     ps_hw_composite: LazilyCompiledShader,
     ps_split_composite: LazilyCompiledShader,
-    ps_composite: LazilyCompiledShader,
 
     max_texture_size: u32,
 
@@ -1819,6 +1826,20 @@ impl Renderer {
                              options.precache_shaders)
         };
 
+        let brush_blend = try!{
+            BrushShader::new("brush_blend",
+                             &mut device,
+                             &[],
+                             options.precache_shaders)
+        };
+
+        let brush_mix_blend = try!{
+            BrushShader::new("brush_mix_blend",
+                             &mut device,
+                             &[],
+                             options.precache_shaders)
+        };
+
         let brush_picture_a8 = try!{
             BrushShader::new("brush_picture",
                              &mut device,
@@ -1896,10 +1917,12 @@ impl Renderer {
 
         // All image configuration.
         let mut image_features = Vec::new();
-        let mut ps_image: Vec<Option<PrimitiveShader>> = Vec::new();
+        let mut ps_image = Vec::new();
+        let mut brush_image = Vec::new();
         // PrimitiveShader is not clonable. Use push() to initialize the vec.
         for _ in 0 .. IMAGE_BUFFER_KINDS.len() {
             ps_image.push(None);
+            brush_image.push(None);
         }
         for buffer_kind in 0 .. IMAGE_BUFFER_KINDS.len() {
             if IMAGE_BUFFER_KINDS[buffer_kind].has_platform_support(&gl_type) {
@@ -1914,6 +1937,14 @@ impl Renderer {
                                          options.precache_shaders)
                 };
                 ps_image[buffer_kind] = Some(shader);
+
+                let shader = try!{
+                    BrushShader::new("brush_image",
+                                     &mut device,
+                                     &image_features,
+                                     options.precache_shaders)
+                };
+                brush_image[buffer_kind] = Some(shader);
             }
             image_features.clear();
         }
@@ -2009,22 +2040,6 @@ impl Renderer {
                                     &[]
                                  },
                                  options.precache_shaders)
-        };
-
-        let ps_blend = try!{
-            LazilyCompiledShader::new(ShaderKind::Primitive,
-                                     "ps_blend",
-                                     &[],
-                                     &mut device,
-                                     options.precache_shaders)
-        };
-
-        let ps_composite = try!{
-            LazilyCompiledShader::new(ShaderKind::Primitive,
-                                      "ps_composite",
-                                      &[],
-                                      &mut device,
-                                      options.precache_shaders)
         };
 
         let ps_hw_composite = try!{
@@ -2272,6 +2287,9 @@ impl Renderer {
             brush_picture_a8,
             brush_solid,
             brush_line,
+            brush_image,
+            brush_blend,
+            brush_mix_blend,
             cs_clip_rectangle,
             cs_clip_border,
             cs_clip_image,
@@ -2284,10 +2302,8 @@ impl Renderer {
             ps_gradient,
             ps_angle_gradient,
             ps_radial_gradient,
-            ps_blend,
             ps_hw_composite,
             ps_split_composite,
-            ps_composite,
             debug: debug_renderer,
             debug_flags,
             backend_profile_counters: BackendProfileCounters::new(),
@@ -3165,9 +3181,6 @@ impl Renderer {
         scissor_rect: Option<DeviceIntRect>,
     ) {
         match key.kind {
-            BatchKind::Composite { .. } => {
-                self.ps_composite.bind(&mut self.device, projection, 0, &mut self.renderer_errors);
-            }
             BatchKind::HardwareComposite => {
                 self.ps_hw_composite
                     .bind(&mut self.device, projection, 0, &mut self.renderer_errors);
@@ -3180,9 +3193,6 @@ impl Renderer {
                     &mut self.renderer_errors,
                 );
             }
-            BatchKind::Blend => {
-                self.ps_blend.bind(&mut self.device, projection, 0, &mut self.renderer_errors);
-            }
             BatchKind::Brush(brush_kind) => {
                 match brush_kind {
                     BrushBatchKind::Solid => {
@@ -3193,6 +3203,18 @@ impl Renderer {
                             0,
                             &mut self.renderer_errors,
                         );
+                    }
+                    BrushBatchKind::Image(image_buffer_kind) => {
+                        self.brush_image[image_buffer_kind as usize]
+                            .as_mut()
+                            .expect("Unsupported image shader kind")
+                            .bind(
+                                &mut self.device,
+                                key.blend_mode,
+                                projection,
+                                0,
+                                &mut self.renderer_errors,
+                            );
                     }
                     BrushBatchKind::Picture(target_kind) => {
                         let shader = match target_kind {
@@ -3210,6 +3232,24 @@ impl Renderer {
                     }
                     BrushBatchKind::Line => {
                         self.brush_line.bind(
+                            &mut self.device,
+                            key.blend_mode,
+                            projection,
+                            0,
+                            &mut self.renderer_errors,
+                        );
+                    }
+                    BrushBatchKind::Blend => {
+                        self.brush_blend.bind(
+                            &mut self.device,
+                            key.blend_mode,
+                            projection,
+                            0,
+                            &mut self.renderer_errors,
+                        );
+                    }
+                    BrushBatchKind::MixBlend { .. } => {
+                        self.brush_mix_blend.bind(
                             &mut self.device,
                             key.blend_mode,
                             projection,
@@ -3298,7 +3338,7 @@ impl Renderer {
         };
 
         // Handle special case readback for composites.
-        if let BatchKind::Composite { task_id, source_id, backdrop_id } = key.kind {
+        if let BatchKind::Brush(BrushBatchKind::MixBlend { task_id, source_id, backdrop_id }) = key.kind {
             if scissor_rect.is_some() {
                 self.device.disable_scissor();
             }
@@ -4708,11 +4748,18 @@ impl Renderer {
         self.brush_picture_a8.deinit(&mut self.device);
         self.brush_solid.deinit(&mut self.device);
         self.brush_line.deinit(&mut self.device);
+        self.brush_blend.deinit(&mut self.device);
+        self.brush_mix_blend.deinit(&mut self.device);
         self.cs_clip_rectangle.deinit(&mut self.device);
         self.cs_clip_image.deinit(&mut self.device);
         self.cs_clip_border.deinit(&mut self.device);
         self.ps_text_run.deinit(&mut self.device);
         self.ps_text_run_dual_source.deinit(&mut self.device);
+        for shader in self.brush_image {
+            if let Some(shader) = shader {
+                shader.deinit(&mut self.device);
+            }
+        }
         for shader in self.ps_image {
             if let Some(shader) = shader {
                 shader.deinit(&mut self.device);
@@ -4731,10 +4778,8 @@ impl Renderer {
         self.ps_gradient.deinit(&mut self.device);
         self.ps_angle_gradient.deinit(&mut self.device);
         self.ps_radial_gradient.deinit(&mut self.device);
-        self.ps_blend.deinit(&mut self.device);
         self.ps_hw_composite.deinit(&mut self.device);
         self.ps_split_composite.deinit(&mut self.device);
-        self.ps_composite.deinit(&mut self.device);
         #[cfg(feature = "capture")]
         self.device.delete_fbo(self.read_fbo);
         #[cfg(feature = "replay")]
