@@ -268,42 +268,6 @@ interface nsIMessageListenerManager : nsISupports
 [uuid(bb5d79e4-e73c-45e7-9651-4d718f4b994c)]
 interface nsIMessageSender : nsIMessageListenerManager
 {
-  /**
-   * Send |messageName| and |obj| to the "other side" of this message
-   * manager.  This invokes listeners who registered for
-   * |messageName|.
-   *
-   * See nsIMessageListener::receiveMessage() for the format of the
-   * data delivered to listeners.
-   * @throws NS_ERROR_NOT_INITIALIZED if the sender is not initialized.  For
-   *         example, we will throw NS_ERROR_NOT_INITIALIZED if we try to send
-   *         a message to a cross-process frame but the other process has not
-   *         yet been set up.
-   * @throws NS_ERROR_FAILURE when the message receiver cannot be found.  For
-   *         example, we will throw NS_ERROR_FAILURE if we try to send a message
-   *         to a cross-process frame whose process has crashed.
-   */
-  [implicit_jscontext, optional_argc]
-  void sendAsyncMessage([optional] in AString messageName,
-                        [optional] in jsval obj,
-                        [optional] in jsval objects,
-                        [optional] in nsIPrincipal principal,
-                        [optional] in jsval transfers);
-
- /**
-  * For remote browsers there is always a corresponding process message
-  * manager. The intention of this attribute is to link leaf level frame
-  * message managers on the parent side with the corresponding process
-  * message managers (if there is one). For any other cases this property
-  * is null.
-  */
-  readonly attribute nsIMessageSender processMessageManager;
-
- /**
-  * For remote browsers, this contains the remoteType of the content child.
-  * Otherwise, it is empty.
-  */
-  readonly attribute AString remoteType;
 };
 
 [uuid(694e367c-aa25-4446-8499-2c527c4bd838)]
