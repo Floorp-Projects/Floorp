@@ -1421,9 +1421,11 @@ var gMainPane = {
     if (AppConstants.MOZ_UPDATER) {
       var enabledPref = Preferences.get("app.update.enabled");
       var autoPref = Preferences.get("app.update.auto");
+      let disabledByPolicy = Services.policies &&
+                             !Services.policies.isAllowed("appUpdate");
       var radiogroup = document.getElementById("updateRadioGroup");
 
-      if (!enabledPref.value) // Don't care for autoPref.value in this case.
+      if (!enabledPref.value || disabledByPolicy) // Don't care for autoPref.value in this case.
         radiogroup.value = "manual"; // 3. Never check for updates.
       else if (autoPref.value) // enabledPref.value && autoPref.value
         radiogroup.value = "auto"; // 1. Automatically install updates
@@ -1436,7 +1438,10 @@ var gMainPane = {
       // canCheck is false if the enabledPref is false and locked,
       // or the binary platform or OS version is not known.
       // A locked pref is sufficient to disable the radiogroup.
-      radiogroup.disabled = !canCheck || enabledPref.locked || autoPref.locked;
+      radiogroup.disabled = !canCheck ||
+                            enabledPref.locked ||
+                            autoPref.locked ||
+                            disabledByPolicy;
 
       if (AppConstants.MOZ_MAINTENANCE_SERVICE) {
         // Check to see if the maintenance service is installed.
@@ -1463,7 +1468,9 @@ var gMainPane = {
    * Sets the pref values based on the selected item of the radiogroup.
    */
   updateWritePrefs() {
-    if (AppConstants.MOZ_UPDATER) {
+    let disabledByPolicy = Services.policies &&
+                           !Services.policies.isAllowed("appUpdate");
+    if (AppConstants.MOZ_UPDATER && !disabledByPolicy) {
       var enabledPref = Preferences.get("app.update.enabled");
       var autoPref = Preferences.get("app.update.auto");
       var radiogroup = document.getElementById("updateRadioGroup");
