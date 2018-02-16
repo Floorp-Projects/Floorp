@@ -100,6 +100,13 @@ nsICODecoder::GetFinalStateFromContainedDecoder()
   mInvalidRect.UnionRect(mInvalidRect, mContainedDecoder->TakeInvalidRect());
   mCurrentFrame = mContainedDecoder->GetCurrentFrameRef();
 
+  // Finalize the frame which we deferred to ensure we could modify the final
+  // result (e.g. to apply the BMP mask).
+  MOZ_ASSERT(!mContainedDecoder->GetFinalizeFrames());
+  if (mCurrentFrame) {
+    mCurrentFrame->FinalizeSurface();
+  }
+
   // Propagate errors.
   nsresult rv = HasError() || mContainedDecoder->HasError()
               ? NS_ERROR_FAILURE
@@ -663,13 +670,6 @@ nsICODecoder::FinishResource()
   // This size from the resource should match that from the dir entry.
   MOZ_ASSERT_IF(mContainedDecoder->HasSize(),
                 mContainedDecoder->Size() == mDirEntry->mSize);
-
-  // Finalize the frame which we deferred to ensure we could modify the final
-  // result (e.g. to apply the BMP mask).
-  MOZ_ASSERT(!mContainedDecoder->GetFinalizeFrames());
-  if (mCurrentFrame) {
-    mCurrentFrame->FinalizeSurface();
-  }
 
   return Transition::TerminateSuccess();
 }
