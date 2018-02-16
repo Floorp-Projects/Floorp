@@ -7859,14 +7859,14 @@
     "n_values": 3,
     "description": "Whether the user is in safe mode (No, Yes, Forced)"
   },
-  "SCRIPT_BLOCK_INCORRECT_MIME": {
+  "SCRIPT_BLOCK_INCORRECT_MIME_2": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["ckerschbaumer@mozilla.com"],
-    "bug_numbers": [1288361, 1299267],
-    "expires_in_version": "56",
-    "kind": "enumerated",
-    "n_values": 15,
-    "description": "Whether the script load has a MIME type of ...?  (0=unknown, 1=js, 2=image, 3=audio, 4=video, 5=text/plain, 6=text/csv, 7=text/xml, 8=application/octet-stream, 9=application/xml, 10=text/html, 11=empty)"
+    "bug_numbers": [1288361, 1299267, 1399990],
+    "expires_in_version": "63",
+    "kind": "categorical",
+    "labels": ["unknown","javaScript","image", "audio", "video","text_plain","text_csv","text_xml","app_octet_stream","app_xml","text_html","empty","worker_load","importSript_load","script_load","same_origin","CORS_origin","cross_origin"],
+    "description": "Whether the script load has a MIME type of ...?  (unknown, javaScript, image, audio, video, text_plain, text_csv, text_xml, app_octet_stream, app_xml, text_html, empty). Whether the script load is from ...?  (worker_load, importSript_load, script_load). Whether the script load is of ...?  (same_origin, CORS_origin, cross_origin)"
   },
   "NEWTAB_PAGE_ENABLED": {
     "record_in_processes": ["main", "content"],
