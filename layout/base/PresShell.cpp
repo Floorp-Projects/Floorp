@@ -9717,9 +9717,7 @@ PresShell::CloneStyleSet(nsStyleSet* aSet)
 ServoStyleSet*
 PresShell::CloneStyleSet(ServoStyleSet* aSet)
 {
-  MOZ_ASSERT(aSet->IsMaster());
-
-  ServoStyleSet* clone = new ServoStyleSet(ServoStyleSet::Kind::Master);
+  ServoStyleSet* clone = new ServoStyleSet();
   CopySheetsIntoClone(aSet, clone);
   return clone;
 }
