@@ -13,7 +13,7 @@ from distutils.spawn import find_executable
 
 from mozboot.util import get_state_dir
 from mozterm import Terminal
-from moztest.resolve import TestResolver, TEST_FLAVORS
+from moztest.resolve import TestResolver, get_suite_definition
 
 from .. import preset as pset
 from ..cli import BaseTryParser
@@ -176,9 +176,17 @@ def format_header():
 def filter_by_paths(tasks, paths):
     resolver = TestResolver.from_environment(cwd=here)
     run_suites, run_tests = resolver.resolve_metadata(paths)
-    flavors = set([t['flavor'] for t in run_tests])
-    task_regexes = [TEST_FLAVORS[f]['task_regex']
-                    for f in flavors if 'task_regex' in TEST_FLAVORS[f]]
+    flavors = set([(t['flavor'], t.get('subsuite')) for t in run_tests])
+
+    task_regexes = set()
+    for flavor, subsuite in flavors:
+        suite = get_suite_definition(flavor, subsuite, strict=True)
+        if 'task_regex' not in suite:
+            print("warning: no tasks could be resolved from flavor '{}'{}".format(
+                    flavor, " and subsuite '{}'".format(subsuite) if subsuite else ""))
+            continue
+
+        task_regexes.add(suite['task_regex'])
 
     def match_task(task):
         return any(re.search(pattern, task) for pattern in task_regexes)
@@ -196,7 +204,7 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
 
     if not fzf:
         print(FZF_NOT_FOUND)
-        return
+        return 1
 
     vcs = VCSHelper.create()
     vcs.check_working_directory(push)
@@ -205,6 +213,8 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
 
     if paths:
         all_tasks = filter_by_paths(all_tasks, paths)
+        if not all_tasks:
+            return 1
 
     key_shortcuts = [k + ':' + v for k, v in fzf_shortcuts.iteritems()]
     cmd = [

@@ -8,6 +8,8 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 // //////////////////////////////////////////////////////////////////////////////
 // // Constants
 
@@ -103,7 +105,7 @@ ImageBlockingPolicy.prototype = {
 };
 
 function sendImageSizeTelemetry(imageURL) {
-  let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
+  let xhr = new XMLHttpRequest();
   xhr.open("HEAD", imageURL, true);
   xhr.onreadystatechange = function(e) {
     if (xhr.readyState != 4) {

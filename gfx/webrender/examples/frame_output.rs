@@ -11,9 +11,9 @@ extern crate webrender;
 mod boilerplate;
 
 use boilerplate::{Example, HandyDandyRectBuilder};
+use euclid::TypedScale;
 use gleam::gl;
 use webrender::api::*;
-use euclid::TypedScale;
 
 // This example demonstrates using the frame output feature to copy
 // the output of a WR framebuffer to a custom texture.
@@ -138,7 +138,7 @@ impl Example for App {
         _pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
-        if self.output_document.is_none(){
+        if self.output_document.is_none() {
             let device_pixel_ratio = framebuffer_size.width as f32 /
                 builder.content_size().width;
             self.init_output_document(api, DeviceUintSize::new(200, 200), device_pixel_ratio);

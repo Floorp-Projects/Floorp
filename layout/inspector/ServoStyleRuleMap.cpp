@@ -18,27 +18,29 @@
 
 namespace mozilla {
 
-ServoStyleRuleMap::ServoStyleRuleMap(ServoStyleSet* aStyleSet)
-  : mStyleSet(aStyleSet)
-{
-}
-
-ServoStyleRuleMap::~ServoStyleRuleMap()
-{
-}
-
 void
-ServoStyleRuleMap::EnsureTable()
+ServoStyleRuleMap::EnsureTable(ServoStyleSet& aStyleSet)
 {
   if (!IsEmpty()) {
     return;
   }
-  mStyleSet->EnumerateStyleSheetArrays(
+  aStyleSet.EnumerateStyleSheetArrays(
     [this](const nsTArray<RefPtr<ServoStyleSheet>>& aArray) {
       for (auto& sheet : aArray) {
         FillTableFromStyleSheet(*sheet);
       }
     });
+}
+
+void
+ServoStyleRuleMap::EnsureTable(nsXBLPrototypeResources& aXBLResources)
+{
+  if (!IsEmpty() || !aXBLResources.GetServoStyles()) {
+    return;
+  }
+  for (auto index : IntegerRange(aXBLResources.SheetCount())) {
+    FillTableFromStyleSheet(*aXBLResources.StyleSheetAt(index)->AsServo());
+  }
 }
 
 void

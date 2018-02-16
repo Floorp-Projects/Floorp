@@ -92,9 +92,8 @@ function starttest(){
   // Test the SpecialPowers wrapper.
   //
 
-  // Try some basic stuff with XHR.
-  var xhr2 = SpecialPowers.Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(SpecialPowers.Ci.nsIXMLHttpRequest);
-  is(xhr2.readyState, XMLHttpRequest.UNSENT, "Should be able to get props off privileged objects");
+  let fp = SpecialPowers.Cc["@mozilla.org/filepicker;1"].createInstance(SpecialPowers.Ci.nsIFilePicker);
+  is(fp.mode, SpecialPowers.Ci.nsIFilePicker.modeOpen, "Should be able to get props off privileged objects");
   var testURI = SpecialPowers.Cc['@mozilla.org/network/standard-url-mutator;1']
                              .createInstance(SpecialPowers.Ci.nsIURIMutator)
                              .setSpec("http://www.foobar.org/")

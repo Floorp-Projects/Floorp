@@ -224,7 +224,7 @@ add_task(async function test_sameURIDifferentKeyword() {
   await PlacesTestUtils.promiseAsyncUpdates();
 
   await check_keyword(URI2, "keyword2");
-  Assert.equal((await foreign_count(URI2)), fc + 2); // + 1 bookmark + 1 keyword
+  Assert.equal((await foreign_count(URI2)), fc + 1); // + 1 bookmark - 1 keyword + 1 keyword
 
   await PlacesTestUtils.promiseAsyncUpdates();
   await check_orphans();
@@ -292,7 +292,7 @@ add_task(async function test_unsetKeyword() {
 
   await check_keyword(URI1, null);
   await check_keyword(URI2, null);
-  Assert.equal((await foreign_count(URI2)), fc - 1); // + 1 bookmark - 2 keyword
+  Assert.equal((await foreign_count(URI2)), fc); // + 1 bookmark - 1 keyword
 
   await PlacesTestUtils.promiseAsyncUpdates();
   await check_orphans();

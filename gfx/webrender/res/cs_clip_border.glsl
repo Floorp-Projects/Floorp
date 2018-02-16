@@ -91,6 +91,8 @@ void main(void) {
             case CORNER_BOTTOM_LEFT:
                 sign_modifier = vec2(-1.0, 1.0);
                 break;
+            default:
+                sign_modifier = vec2(0.0);
         };
 
         switch (corner.clip_mode) {
@@ -111,6 +113,10 @@ void main(void) {
                 vAlphaMask = vec2(1.0, 1.0);
                 break;
             }
+            default:
+                vPoint_Tangent0 = vPoint_Tangent1 = vec4(1.0);
+                vDotParams = vec3(0.0);
+                vAlphaMask = vec2(0.0);
         }
     }
 

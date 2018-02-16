@@ -4,6 +4,8 @@
 
 const EXPORTED_SYMBOLS = ["httpRequest", "percentEncode"];
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 // Strictly follow RFC 3986 when encoding URI components.
 // Accepts a unescaped string and returns the URI encoded string for use in
 // an HTTP request.
@@ -30,8 +32,7 @@ function percentEncode(aString) {
  *  [["key1", "value1"], ["key2", "value2"]].
  */
 function httpRequest(aUrl, aOptions) {
-  let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-              .createInstance(Ci.nsIXMLHttpRequest);
+  let xhr = new XMLHttpRequest();
   xhr.mozBackgroundRequest = true; // no error dialogs
   xhr.open(aOptions.method || (aOptions.postData ? "POST" : "GET"), aUrl);
   xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS | // don't send cookies

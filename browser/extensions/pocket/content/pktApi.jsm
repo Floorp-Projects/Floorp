@@ -48,6 +48,7 @@ this.EXPORTED_SYMBOLS = ["pktApi"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 var pktApi = (function() {
 
@@ -251,7 +252,7 @@ var pktApi = (function() {
         data.locale_lang = Services.locale.getAppLocaleAsLangTag();
         data.consumer_key = oAuthConsumerKey;
 
-        var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
+        var request = new XMLHttpRequest();
         request.open("POST", url, true);
         request.onreadystatechange = function(e) {
             if (request.readyState == 4) {
@@ -378,6 +379,22 @@ var pktApi = (function() {
     function deleteItem(itemId, options) {
         var action = {
             action: "delete",
+            item_id: itemId
+        };
+        return sendAction(action, options);
+    }
+
+    /**
+     * Archive an item identified by item id from the users list
+     * @param  {string} itemId  The id from the item we want to archive
+     * @param  {Object | undefined} options Can provide an actionInfo object with
+     *                                      further data to send to the API. Can
+     *                                      have success and error callbacks
+     * @return {Boolean} Returns Boolean whether the api call started sucessfully
+     */
+    function archiveItem(itemId, options) {
+        var action = {
+            action: "archive",
             item_id: itemId
         };
         return sendAction(action, options);
@@ -651,6 +668,7 @@ var pktApi = (function() {
         clearUserData,
         addLink,
         deleteItem,
+        archiveItem,
         addTagsToItem,
         addTagsToURL,
         getTags,

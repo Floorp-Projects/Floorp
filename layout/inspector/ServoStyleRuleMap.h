@@ -12,6 +12,7 @@
 #include "nsDataHashtable.h"
 
 struct RawServoStyleRule;
+class nsXBLPrototypeResources;
 
 namespace mozilla {
 class ServoCSSRuleList;
@@ -23,22 +24,24 @@ class Rule;
 class ServoStyleRuleMap
 {
 public:
-  explicit ServoStyleRuleMap(ServoStyleSet* aStyleSet);
+  ServoStyleRuleMap() = default;
 
-  void EnsureTable();
-  ServoStyleRule* Lookup(const RawServoStyleRule* aRawRule) const {
+  void EnsureTable(ServoStyleSet&);
+  void EnsureTable(nsXBLPrototypeResources&);
+  ServoStyleRule* Lookup(const RawServoStyleRule* aRawRule) const
+  {
     return mTable.Get(aRawRule);
   }
 
-  void SheetAdded(ServoStyleSheet& aStyleSheet);
-  void SheetRemoved(ServoStyleSheet& aStyleSheet);
+  void SheetAdded(ServoStyleSheet&);
+  void SheetRemoved(ServoStyleSheet&);
 
   void RuleAdded(ServoStyleSheet& aStyleSheet, css::Rule&);
-  void RuleRemoved(ServoStyleSheet& aStyleSheet, css::Rule& aStyleRule);
+  void RuleRemoved(ServoStyleSheet& aStyleSheet, css::Rule&);
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
-  ~ServoStyleRuleMap();
+  ~ServoStyleRuleMap() = default;
 
 private:
   // Since we would never have a document which contains no style rule,
@@ -53,7 +56,6 @@ private:
   typedef nsDataHashtable<nsPtrHashKey<const RawServoStyleRule>,
                           WeakPtr<ServoStyleRule>> Hashtable;
   Hashtable mTable;
-  ServoStyleSet* mStyleSet;
 };
 
 } // namespace mozilla

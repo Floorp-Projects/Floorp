@@ -1,11 +1,4 @@
 {
-  "env": {
-    "test": {
-      "plugins": [
-        "./new-console-output/test/node_modules/babel-plugin-transform-object-rest-spread"
-      ]
-    }
-  },
   "plugins": [
     "transform-flow-strip-types",
     "transform-react-jsx",

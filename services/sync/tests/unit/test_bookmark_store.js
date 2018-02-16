@@ -7,6 +7,8 @@ ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
 ChromeUtils.import("resource://services-sync/service.js");
 ChromeUtils.import("resource://services-sync/util.js");
 
+const BookmarksToolbarTitle = "toolbar";
+
 add_task(async function test_ignore_specials() {
   _("Ensure that we can't delete bookmark roots.");
 
@@ -60,7 +62,7 @@ add_task(async function test_bookmark_create() {
     fxrecord.tags          = ["firefox", "awesome", "browser"];
     fxrecord.keyword       = "awesome";
     fxrecord.loadInSidebar = false;
-    fxrecord.parentName    = "Bookmarks Toolbar";
+    fxrecord.parentName    = BookmarksToolbarTitle;
     fxrecord.parentid      = "toolbar";
     await store.applyIncoming(fxrecord);
 
@@ -93,7 +95,7 @@ add_task(async function test_bookmark_create() {
     _("Create a record with some values missing.");
     let tbrecord = new Bookmark("bookmarks", "thunderbird1");
     tbrecord.bmkUri        = "http://getthunderbird.com/";
-    tbrecord.parentName    = "Bookmarks Toolbar";
+    tbrecord.parentName    = BookmarksToolbarTitle;
     tbrecord.parentid      = "toolbar";
     await store.applyIncoming(tbrecord);
 
@@ -195,7 +197,7 @@ add_task(async function test_folder_create() {
   try {
     _("Create a folder.");
     let folder = new BookmarkFolder("bookmarks", "testfolder-1");
-    folder.parentName = "Bookmarks Toolbar";
+    folder.parentName = BookmarksToolbarTitle;
     folder.parentid   = "toolbar";
     folder.title      = "Test Folder";
     await store.applyIncoming(folder);
@@ -251,7 +253,7 @@ add_task(async function test_folder_createRecord() {
     Assert.ok(record instanceof BookmarkFolder);
     Assert.equal(record.title, "Folder1");
     Assert.equal(record.parentid, "toolbar");
-    Assert.equal(record.parentName, "Bookmarks Toolbar");
+    Assert.equal(record.parentName, BookmarksToolbarTitle);
 
     _("Verify the folder's children. Ensures that the bookmarks were given GUIDs.");
     Assert.deepEqual(record.children, [bmk1.guid, bmk2.guid]);
@@ -487,7 +489,7 @@ add_task(async function test_delete_buffering() {
   try {
     _("Create a folder with two bookmarks.");
     let folder = new BookmarkFolder("bookmarks", "testfolder-1");
-    folder.parentName = "Bookmarks Toolbar";
+    folder.parentName = BookmarksToolbarTitle;
     folder.parentid = "toolbar";
     folder.title = "Test Folder";
     await store.applyIncoming(folder);
