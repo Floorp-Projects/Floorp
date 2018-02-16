@@ -829,7 +829,7 @@ function* getDisplayedNodeTextContent(selector, inspector) {
 function* toggleShapesHighlighter(view, highlighters, selector, property, show) {
   info("Toggle shapes highlighter");
   let container = getRuleViewProperty(view, selector, property).valueSpan;
-  let shapesToggle = container.querySelector(".ruleview-shape");
+  let shapesToggle = container.querySelector(".ruleview-shapeswatch");
   if (show) {
     let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
     shapesToggle.click();

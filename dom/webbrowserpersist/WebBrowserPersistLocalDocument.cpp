@@ -31,7 +31,6 @@
 #include "nsIDOMComment.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMHTMLMediaElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMProcessingInstruction.h"
@@ -477,8 +476,7 @@ ResourceReader::OnWalkDOMNode(nsIDOMNode* aNode)
         return OnWalkAttribute(aNode, "href", "http://www.w3.org/1999/xlink");
     }
 
-    nsCOMPtr<nsIDOMHTMLMediaElement> nodeAsMedia = do_QueryInterface(aNode);
-    if (nodeAsMedia) {
+    if (content->IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video)) {
         return OnWalkAttribute(aNode, "src");
     }
 
@@ -997,8 +995,7 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
         return rv;
     }
 
-    nsCOMPtr<nsIDOMHTMLMediaElement> nodeAsMedia = do_QueryInterface(aNodeIn);
-    if (nodeAsMedia) {
+    if (content->IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video)) {
         nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAttribute(*aNodeOut, "src");

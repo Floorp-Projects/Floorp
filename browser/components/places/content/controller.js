@@ -314,7 +314,7 @@ PlacesController.prototype = {
    */
   _canInsert: function PC__canInsert(isPaste) {
     var ip = this._view.insertionPoint;
-    return ip != null && (isPaste || ip.isTag != true);
+    return ip != null && (isPaste || !ip.isTag);
   },
 
   /**

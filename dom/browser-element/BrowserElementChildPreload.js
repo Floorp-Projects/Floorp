@@ -867,7 +867,8 @@ BrowserElementChild.prototype = {
     if (ChromeUtils.getClassName(elem) === "HTMLImageElement") {
       return {uri: elem.src, documentURI: documentURI};
     }
-    if (elem instanceof Ci.nsIDOMHTMLMediaElement) {
+    if (ChromeUtils.getClassName(elem) === "HTMLVideoElement" ||
+        ChromeUtils.getClassName(elem) === "HTMLAudioElement") {
       let hasVideo = !(elem.readyState >= elem.HAVE_METADATA &&
                        (elem.videoWidth == 0 || elem.videoHeight == 0));
       return {uri: elem.currentSrc || elem.src,
@@ -1511,6 +1512,9 @@ BrowserElementChild.prototype = {
             return;
           case Cr.NS_ERROR_CORRUPTED_CONTENT :
             sendAsyncMsg('error', { type: 'corruptedContentErrorv2' });
+            return;
+          case Cr.NS_ERROR_BLOCKED_BY_POLICY :
+            sendAsyncMsg('error', { type: 'blockedByPolicyTemp' });
             return;
 
           default:

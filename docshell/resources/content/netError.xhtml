@@ -178,9 +178,10 @@
           secOverride.remove();
         }
 
-        if (err == "inadequateSecurityError") {
-          // Remove the "Try again" button for HTTP/2 inadequate security as it
-          // is useless.
+        if (err == "inadequateSecurityError" || err == "blockedByPolicyTemp") {
+          // Remove the "Try again" button from pages that don't need it.
+          // For HTTP/2 inadequate security or pages blocked by policy, trying
+          // again won't help.
           document.getElementById("errorTryAgain").style.display = "none";
 
           var container = document.getElementById("errorLongDesc");
@@ -309,6 +310,7 @@
         <h1 id="et_remoteXUL">&remoteXUL.title;</h1>
         <h1 id="et_corruptedContentErrorv2">&corruptedContentErrorv2.title;</h1>
         <h1 id="et_inadequateSecurityError">&inadequateSecurityError.title;</h1>
+        <h1 id="et_blockedByPolicyTemp">&blockedByPolicyTemp.title;</h1>
       </div>
       <div id="errorDescriptionsContainer">
         <div id="ed_generic">&generic.longDesc;</div>
@@ -336,6 +338,7 @@
         <div id="ed_remoteXUL">&remoteXUL.longDesc;</div>
         <div id="ed_corruptedContentErrorv2">&corruptedContentErrorv2.longDesc;</div>
         <div id="ed_inadequateSecurityError">&inadequateSecurityError.longDesc;</div>
+        <div id="ed_blockedByPolicyTemp">&blockedByPolicyTemp.longDesc;</div>
       </div>
     </div>
 

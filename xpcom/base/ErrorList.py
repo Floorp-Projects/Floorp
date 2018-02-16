@@ -1158,6 +1158,10 @@ with modules["GENERAL"]:
     # see nsTextEquivUtils
     errors["NS_OK_NO_NAME_CLAUSE_HANDLED"] = SUCCESS(34)
 
+    # Error code used to indicate that functionality has been blocked by the
+    # Policy Manager
+    errors["NS_ERROR_BLOCKED_BY_POLICY"] = FAILURE(3)
+
 
 # ============================================================================
 # Write out the resulting module declarations to C++ and rust files

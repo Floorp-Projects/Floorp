@@ -28,11 +28,11 @@ window.onload = function () {
   let eventFront1;
   let eventFront2;
 
-  addAsyncTest(function* setup() {
+  addAsyncTest(async function setup() {
     info("Setting up inspector and walker actors.");
     let url = document.getElementById("inspectorContent").href;
 
-    yield new Promise(resolve => {
+    await new Promise(resolve => {
       attachURL(url, function (err, client, tab, doc) {
         inspectee = doc;
         inspector = InspectorFront(client, tab);
@@ -40,29 +40,29 @@ window.onload = function () {
       });
     });
 
-    walker = yield inspector.getWalker();
+    walker = await inspector.getWalker();
     ok(walker, "getWalker() should return an actor.");
 
     runNextTest();
   });
 
-  addAsyncTest(function* setupEventTest() {
+  addAsyncTest(async function setupEventTest() {
     eventNode1 = inspectee.querySelector("#a");
     eventNode2 = inspectee.querySelector("#b");
 
-    eventFront1 = yield walker.querySelector(walker.rootNode, "#a");
-    eventFront2 = yield walker.querySelector(walker.rootNode, "#b");
+    eventFront1 = await walker.querySelector(walker.rootNode, "#a");
+    eventFront2 = await walker.querySelector(walker.rootNode, "#b");
 
     runNextTest();
   });
 
-  addAsyncTest(function* testChangeEventListenerOnSingleNode() {
+  addAsyncTest(async function testChangeEventListenerOnSingleNode() {
     checkNodesHaveNoEventListener();
 
     info("add event listener on a single node");
     eventNode1.addEventListener("click", eventListener1);
 
-    let mutations = yield waitForMutations();
+    let mutations = await waitForMutations();
     is(mutations.length, 1, "one mutation expected");
     is(mutations[0].target, eventFront1, "mutation targets eventFront1");
     is(mutations[0].type, "events", "mutation type is events");
@@ -73,7 +73,7 @@ window.onload = function () {
     info("remove event listener on a single node");
     eventNode1.removeEventListener("click", eventListener1);
 
-    mutations = yield waitForMutations();
+    mutations = await waitForMutations();
     is(mutations.length, 1, "one mutation expected");
     is(mutations[0].target, eventFront1, "mutation targets eventFront1");
     is(mutations[0].type, "events", "mutation type is events");
@@ -88,7 +88,7 @@ window.onload = function () {
     eventNode1.removeEventListener("click", eventListener1);
     eventNode1.removeEventListener("click", eventListener2);
 
-    mutations = yield waitForMutations();
+    mutations = await waitForMutations();
     is(mutations.length, 1, "one mutation expected");
     is(mutations[0].target, eventFront1, "mutation targets eventFront1");
     is(mutations[0].type, "events", "mutation type is events");
@@ -99,14 +99,14 @@ window.onload = function () {
     runNextTest();
   });
 
-  addAsyncTest(function* testChangeEventsOnSeveralNodes() {
+  addAsyncTest(async function testChangeEventsOnSeveralNodes() {
     checkNodesHaveNoEventListener();
 
     info("add event listeners on both nodes");
     eventNode1.addEventListener("click", eventListener1);
     eventNode2.addEventListener("click", eventListener2);
 
-    let mutations = yield waitForMutations();
+    let mutations = await waitForMutations();
     is(mutations.length, 2, "two mutations expected, one for each modified node");
     // first mutation
     is(mutations[0].target, eventFront1, "first mutation targets eventFront1");
@@ -125,7 +125,7 @@ window.onload = function () {
     eventNode1.removeEventListener("click", eventListener1);
     eventNode2.removeEventListener("click", eventListener2);
 
-    mutations = yield waitForMutations();
+    mutations = await waitForMutations();
     is(mutations.length, 2, "one mutation registered for event listener change");
     // first mutation
     is(mutations[0].target, eventFront1, "first mutation targets eventFront1");
@@ -145,7 +145,7 @@ window.onload = function () {
     runNextTest();
   });
 
-  addAsyncTest(function* testRemoveMissingEvent() {
+  addAsyncTest(async function testRemoveMissingEvent() {
     checkNodesHaveNoEventListener();
 
     info("try to remove an event listener not previously added");
@@ -154,7 +154,7 @@ window.onload = function () {
     info("set any attribute on the node to trigger a mutation");
     eventNode1.setAttribute("data-attr", "somevalue");
 
-    let mutations = yield waitForMutations();
+    let mutations = await waitForMutations();
     is(mutations.length, 1, "expect only one mutation");
     isnot(mutations.type, "events", "mutation type should not be events");
 

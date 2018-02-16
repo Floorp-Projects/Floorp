@@ -6,16 +6,16 @@
 
 // Checks for the AccessibleActor events
 
-add_task(function* () {
+add_task(async function () {
   let {client, walker, accessibility} =
-    yield initAccessibilityFrontForUrl(MAIN_DOMAIN + "doc_accessibility.html");
+    await initAccessibilityFrontForUrl(MAIN_DOMAIN + "doc_accessibility.html");
 
-  let a11yWalker = yield accessibility.getWalker(walker);
-  let a11yDoc = yield a11yWalker.getDocument();
-  let buttonNode = yield walker.querySelector(walker.rootNode, "#button");
-  let accessibleFront = yield a11yWalker.getAccessibleFor(buttonNode);
-  let sliderNode = yield walker.querySelector(walker.rootNode, "#slider");
-  let accessibleSliderFront = yield a11yWalker.getAccessibleFor(sliderNode);
+  let a11yWalker = await accessibility.getWalker(walker);
+  let a11yDoc = await a11yWalker.getDocument();
+  let buttonNode = await walker.querySelector(walker.rootNode, "#button");
+  let accessibleFront = await a11yWalker.getAccessibleFor(buttonNode);
+  let sliderNode = await walker.querySelector(walker.rootNode, "#slider");
+  let accessibleSliderFront = await a11yWalker.getAccessibleFor(sliderNode);
   let browser = gBrowser.selectedBrowser;
 
   checkA11yFront(accessibleFront, {
@@ -30,7 +30,7 @@ add_task(function* () {
   });
 
   info("Name change event");
-  yield emitA11yEvent(accessibleFront, "name-change",
+  await emitA11yEvent(accessibleFront, "name-change",
     (name, parent) => {
       checkA11yFront(accessibleFront, { name: "Renamed" });
       checkA11yFront(parent, { }, a11yDoc);
@@ -39,44 +39,44 @@ add_task(function* () {
         "aria-label", "Renamed")));
 
   info("Description change event");
-  yield emitA11yEvent(accessibleFront, "description-change",
+  await emitA11yEvent(accessibleFront, "description-change",
     () => checkA11yFront(accessibleFront, { description: "" }),
     () => ContentTask.spawn(browser, null, () =>
       content.document.getElementById("button").removeAttribute("aria-describedby")));
 
   info("State change event");
-  let states = yield accessibleFront.getState();
+  let states = await accessibleFront.getState();
   let expectedStates = ["unavailable", "selectable text", "opaque"];
   SimpleTest.isDeeply(states, ["focusable", "selectable text", "opaque",
                                "enabled", "sensitive"], "States are correct");
-  yield emitA11yEvent(accessibleFront, "state-change",
+  await emitA11yEvent(accessibleFront, "state-change",
     newStates => SimpleTest.isDeeply(newStates, expectedStates,
                                      "States are updated"),
     () => ContentTask.spawn(browser, null, () =>
       content.document.getElementById("button").setAttribute("disabled", true)));
-  states = yield accessibleFront.getState();
+  states = await accessibleFront.getState();
   SimpleTest.isDeeply(states, expectedStates, "States are updated");
 
   info("Attributes change event");
-  let attrs = yield accessibleFront.getAttributes();
+  let attrs = await accessibleFront.getAttributes();
   ok(!attrs.live, "Attribute is not present");
-  yield emitA11yEvent(accessibleFront, "attributes-change",
+  await emitA11yEvent(accessibleFront, "attributes-change",
     newAttrs => is(newAttrs.live, "polite", "Attributes are updated"),
     () => ContentTask.spawn(browser, null, () =>
       content.document.getElementById("button").setAttribute("aria-live", "polite")));
-  attrs = yield accessibleFront.getAttributes();
+  attrs = await accessibleFront.getAttributes();
   is(attrs.live, "polite", "Attributes are updated");
 
   info("Value change event");
   checkA11yFront(accessibleSliderFront, { value: "5" });
-  yield emitA11yEvent(accessibleSliderFront, "value-change",
+  await emitA11yEvent(accessibleSliderFront, "value-change",
     () => checkA11yFront(accessibleSliderFront, { value: "6" }),
     () => ContentTask.spawn(browser, null, () =>
       content.document.getElementById("slider").setAttribute("aria-valuenow", "6")));
 
   info("Reorder event");
   is(accessibleSliderFront.childCount, 1, "Slider has only 1 child");
-  yield emitA11yEvent(accessibleSliderFront, "reorder",
+  await emitA11yEvent(accessibleSliderFront, "reorder",
     childCount => is(childCount, 2, "Child count is updated"),
     () => ContentTask.spawn(browser, null, () => {
       let button = content.document.createElement("button");
@@ -86,8 +86,8 @@ add_task(function* () {
   is(accessibleSliderFront.childCount, 2, "Child count is updated");
 
   let a11yShutdown = waitForA11yShutdown();
-  yield client.close();
+  await client.close();
   forceCollections();
-  yield a11yShutdown;
+  await a11yShutdown;
   gBrowser.removeCurrentTab();
 });

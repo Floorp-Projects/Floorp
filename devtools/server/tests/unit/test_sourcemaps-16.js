@@ -21,21 +21,20 @@ function run_test() {
   do_test_pending();
 }
 
-const testSourcemap = Task.async(
-  function* (threadResponse, tabClient, threadClient, tabResponse) {
-    evalTestCode();
+const testSourcemap = async function (threadResponse, tabClient, threadClient,
+  tabResponse) {
+  evalTestCode();
 
-    const { sources } = yield getSources(threadClient);
+  const { sources } = await getSources(threadClient);
 
-    for (let form of sources) {
-      let sourceResponse = yield getSourceContent(threadClient.source(form));
-      ok(sourceResponse, "Should be able to get the source response");
-      ok(sourceResponse.source, "Should have the source text as well");
-    }
-
-    finishClient(gClient);
+  for (let form of sources) {
+    let sourceResponse = await getSourceContent(threadClient.source(form));
+    ok(sourceResponse, "Should be able to get the source response");
+    ok(sourceResponse.source, "Should have the source text as well");
   }
-);
+
+  finishClient(gClient);
+};
 
 const TEST_FILE = "babel_and_browserify_script_with_source_map.js";
 

@@ -31,11 +31,11 @@ window.onload = function () {
     return JSON.stringify(array.sort());
   }
 
-  const runCssPropertiesTests = Task.async(function* (url, useActor) {
+  const runCssPropertiesTests = async function (url, useActor) {
     info(`Opening two tabs ${useActor ? "with" : "without"} CssPropertiesActor support.`);
 
-    let attachmentA = yield promiseAttachUrl(url);
-    let attachmentB = yield promiseAttachUrl(url);
+    let attachmentA = await promiseAttachUrl(url);
+    let attachmentB = await promiseAttachUrl(url);
 
     const toolboxMockA = {
       target: {
@@ -55,8 +55,8 @@ window.onload = function () {
       win: window
     };
 
-    yield initCssProperties(toolboxMockA);
-    yield initCssProperties(toolboxMockB);
+    await initCssProperties(toolboxMockA);
+    await initCssProperties(toolboxMockB);
 
     const cssProperties = getCssProperties(toolboxMockA);
     const cssPropertiesA = getCssProperties(toolboxMockA);
@@ -101,12 +101,12 @@ window.onload = function () {
       "Margin and 0px are valid CSS values");
     ok(!cssProperties.isValidOnClient("margin", "foo", window.document),
       "Margin and foo are not valid CSS values");
-  });
+  };
 
-  addAsyncTest(function* setup() {
+  addAsyncTest(async function setup() {
     let url = document.getElementById("cssProperties").href;
-    yield runCssPropertiesTests(url, true);
-    yield runCssPropertiesTests(url, false);
+    await runCssPropertiesTests(url, true);
+    await runCssPropertiesTests(url, false);
 
     runNextTest();
   });

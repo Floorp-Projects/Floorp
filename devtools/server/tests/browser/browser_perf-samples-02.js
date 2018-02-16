@@ -14,20 +14,20 @@ const WAIT_TIME = 1000;
 
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
-add_task(function* () {
-  yield addTab(MAIN_DOMAIN + "doc_perf.html");
+add_task(async function () {
+  await addTab(MAIN_DOMAIN + "doc_perf.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
+  let form = await connectDebuggerClient(client);
   let front = PerformanceFront(client, form);
-  yield front.connect();
+  await front.connect();
 
-  let rec = yield front.startRecording();
+  let rec = await front.startRecording();
   // allow the profiler module to sample some cpu activity
   busyWait(WAIT_TIME);
 
-  yield front.stopRecording(rec);
+  await front.stopRecording(rec);
   let profile = rec.getProfile();
   let sampleCount = 0;
 
@@ -47,8 +47,8 @@ add_task(function* () {
   ok(sampleCount > 0,
     "At least some samples have been iterated over, checking for root nodes.");
 
-  yield front.destroy();
-  yield client.close();
+  await front.destroy();
+  await client.close();
   gBrowser.removeCurrentTab();
 });
 

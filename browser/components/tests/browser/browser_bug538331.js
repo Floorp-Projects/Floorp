@@ -251,7 +251,7 @@ function testDefaultArgs() {
                       getService(Ci.nsIBrowserHandler).defaultArgs;
     is(defaultArgs, overrideArgs, "correct value returned by defaultArgs");
 
-    if (testCase.noMstoneChange === undefined || testCase.noMstoneChange != true) {
+    if (testCase.noMstoneChange === undefined || !testCase.noMstoneChange) {
       let newMstone = Services.prefs.getCharPref(PREF_MSTONE);
       is(originalMstone, newMstone, "preference " + PREF_MSTONE +
          " should have been updated");

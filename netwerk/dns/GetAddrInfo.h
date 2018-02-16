@@ -12,10 +12,8 @@
 
 #if defined(XP_WIN)
 #define DNSQUERY_AVAILABLE 1
-#define TTL_AVAILABLE 1
 #else
-#define DNSQUERY_AVAILABLE 0
-#define TTL_AVAILABLE 0
+#undef DNSQUERY_AVAILABLE
 #endif
 
 namespace mozilla {
@@ -35,8 +33,8 @@ class AddrInfo;
  *     hostname (PR_AI_NOCANONNAME will be ignored if the TTL is retrieved).
  * @param aAddrInfo[out] Will point to the results of the host lookup, or be
  *     null if the lookup failed.
- * @param aGetTtl[in] If true, and TTL_AVAILABLE is truthy, the TTL will be
- *     retrieved if DNS provides the answers..
+ * @param aGetTtl[in] If true, the TTL will be retrieved if DNS provides the
+ *     answers..
  */
 nsresult
 GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,

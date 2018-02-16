@@ -36,36 +36,36 @@ addTest(function setup() {
   });
 });
 
-addAsyncTest(function* testRearrange() {
-  let longlist = yield gWalker.querySelector(gWalker.rootNode, "#longlist");
-  let children = yield gWalker.children(longlist);
+addAsyncTest(async function testRearrange() {
+  let longlist = await gWalker.querySelector(gWalker.rootNode, "#longlist");
+  let children = await gWalker.children(longlist);
   let nodeA = children.nodes[0];
   is(nodeA.id, "a", "Got the expected node.");
 
   // Move nodeA to the end of the list.
-  yield gWalker.insertBefore(nodeA, longlist, null);
+  await gWalker.insertBefore(nodeA, longlist, null);
   ok(!gInspectee.querySelector("#a").nextSibling,
      "a should now be at the end of the list.");
-  children = yield gWalker.children(longlist);
+  children = await gWalker.children(longlist);
   is(nodeA, children.nodes[children.nodes.length - 1],
      "a should now be the last returned child.");
 
   // Now move it to the middle of the list.
   let nextNode = children.nodes[13];
-  yield gWalker.insertBefore(nodeA, longlist, nextNode);
+  await gWalker.insertBefore(nodeA, longlist, nextNode);
   let sibling =
     new DocumentWalker(gInspectee.querySelector("#a"), window).nextSibling();
   is(sibling, nextNode.rawNode(), "Node should match the expected next node.");
-  children = yield gWalker.children(longlist);
+  children = await gWalker.children(longlist);
   is(nodeA, children.nodes[13], "a should be where we expect it.");
   is(nextNode, children.nodes[14], "next node should be where we expect it.");
 
   runNextTest();
 });
 
-addAsyncTest(function* testInsertInvalidInput() {
-  let longlist = yield gWalker.querySelector(gWalker.rootNode, "#longlist");
-  let children = yield gWalker.children(longlist);
+addAsyncTest(async function testInsertInvalidInput() {
+  let longlist = await gWalker.querySelector(gWalker.rootNode, "#longlist");
+  let children = await gWalker.children(longlist);
   let nodeA = children.nodes[0];
   let nextSibling = children.nodes[1];
 
@@ -78,19 +78,19 @@ addAsyncTest(function* testInsertInvalidInput() {
     childList: true,
   });
 
-  yield gWalker.insertBefore(nodeA, longlist, nodeA);
+  await gWalker.insertBefore(nodeA, longlist, nodeA);
   ok(!hasMutated, "hasn't mutated");
   hasMutated = false;
 
-  yield gWalker.insertBefore(nodeA, longlist, nextSibling);
+  await gWalker.insertBefore(nodeA, longlist, nextSibling);
   ok(!hasMutated, "still hasn't mutated after inserting before nextSibling");
   hasMutated = false;
 
-  yield gWalker.insertBefore(nodeA, longlist);
+  await gWalker.insertBefore(nodeA, longlist);
   ok(hasMutated, "has mutated after inserting with null sibling");
   hasMutated = false;
 
-  yield gWalker.insertBefore(nodeA, longlist);
+  await gWalker.insertBefore(nodeA, longlist);
   ok(!hasMutated, "hasn't mutated after inserting with null sibling again");
 
   observer.disconnect();

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <!--
 Bug 965872 - Storage inspector actor with cookies, local storage and session storage.
@@ -26,12 +26,12 @@ localStorage.setItem("ls2", "foobar-2");
 // ... and finally some session storage items too
 sessionStorage.setItem("ss1", "foobar-3");
 
-let idbGenerator = function*() {
+let idbGenerator = async function () {
   let request = indexedDB.open("idb1", 1);
   request.onerror = function() {
     throw new Error("error opening db connection");
   };
-  let db = yield new Promise(done => {
+  let db = await new Promise(done => {
     request.onupgradeneeded = event => {
       let db = event.target.result;
       let store1 = db.createObjectStore("obj1", { keyPath: "id" });
@@ -45,7 +45,7 @@ let idbGenerator = function*() {
   });
 
   // Prevents AbortError
-  yield new Promise(done => {
+  await new Promise(done => {
     request.onsuccess = done;
   });
 
@@ -62,14 +62,14 @@ let idbGenerator = function*() {
     extra: "baz"
   });
   // Prevents AbortError during close()
-  yield new Promise(success => {
+  await new Promise(success => {
     transaction.oncomplete = success;
   });
 
   db.close();
 
   request = indexedDB.open("idb2", 1);
-  let db2 = yield new Promise(done => {
+  let db2 = await new Promise(done => {
     request.onupgradeneeded = event => {
       let db2 = event.target.result;
       let store3 = db2.createObjectStore("obj3", { keyPath: "id3" });
@@ -80,7 +80,7 @@ let idbGenerator = function*() {
     };
   });
   // Prevents AbortError during close()
-  yield new Promise(done => {
+  await new Promise(done => {
     request.onsuccess = done;
   });
   db2.close();
@@ -95,19 +95,19 @@ function deleteDB(dbName) {
   });
 }
 
-window.setup = function*() {
-  yield idbGenerator();
+window.setup = async function () {
+  await idbGenerator();
 };
 
-window.clear = function*() {
+window.clear = async function () {
   document.cookie = "c1=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   document.cookie = "c3=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   document.cookie = "cs2=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 
   localStorage.clear();
 
-  yield deleteDB("idb1");
-  yield deleteDB("idb2");
+  await deleteDB("idb1");
+  await deleteDB("idb2");
 
   dump("removed cookies, localStorage and indexedDB data from " +
        document.location + "\n");

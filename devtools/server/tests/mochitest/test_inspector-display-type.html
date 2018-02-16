@@ -32,36 +32,36 @@ addTest(function setup() {
   });
 });
 
-addAsyncTest(function* testInlineBlockDisplayType() {
+addAsyncTest(async function testInlineBlockDisplayType() {
   info("Test getting the display type of an inline block element.");
-  let node = yield gWalker.querySelector(gWalker.rootNode, "#inline-block");
+  let node = await gWalker.querySelector(gWalker.rootNode, "#inline-block");
   let displayType = node.displayType;
   is(displayType, "inline-block", "The node has a display type of 'inline-block'.");
   runNextTest();
 });
 
-addAsyncTest(function* testInlineTextChildDisplayType() {
+addAsyncTest(async function testInlineTextChildDisplayType() {
   info("Test getting the display type of an inline text child.");
-  let node = yield gWalker.querySelector(gWalker.rootNode, "#inline-block");
-  let children = yield gWalker.children(node);
+  let node = await gWalker.querySelector(gWalker.rootNode, "#inline-block");
+  let children = await gWalker.children(node);
   let inlineTextChild = children.nodes[0];
   let displayType = inlineTextChild.displayType;
   ok(!displayType, "No display type for inline text child.");
   runNextTest();
 });
 
-addAsyncTest(function* testGridDisplayType() {
+addAsyncTest(async function testGridDisplayType() {
   info("Test getting the display type of an grid container.");
-  let node = yield gWalker.querySelector(gWalker.rootNode, "#grid");
+  let node = await gWalker.querySelector(gWalker.rootNode, "#grid");
   let displayType = node.displayType;
   is(displayType, "grid", "The node has a display type of 'grid'.");
   runNextTest();
 });
 
-addAsyncTest(function* testBlockDisplayType() {
+addAsyncTest(async function testBlockDisplayType() {
   info("Test getting the display type of a block element.");
-  let node = yield gWalker.querySelector(gWalker.rootNode, "#block");
-  let displayType = yield node.displayType;
+  let node = await gWalker.querySelector(gWalker.rootNode, "#block");
+  let displayType = await node.displayType;
   is(displayType, "block", "The node has a display type of 'block'.");
   runNextTest();
 });

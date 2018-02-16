@@ -69,7 +69,7 @@ HTMLAudioElement::Audio(const GlobalObject& aGlobal,
   }
 
   if (aSrc.WasPassed()) {
-    aRv = audio->SetSrc(aSrc.Value());
+    audio->SetSrc(aSrc.Value(), aRv);
   }
 
   return audio.forget();

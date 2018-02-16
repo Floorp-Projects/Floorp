@@ -18,23 +18,23 @@ Bug 1192335 - Test getting the byte sizes for allocations.
 window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
-  Task.spawn(function* () {
-    let { memory, client } = yield startServerAndGetSelectedTabMemory();
-    yield memory.attach();
+  (async function () {
+    let { memory, client } = await startServerAndGetSelectedTabMemory();
+    await memory.attach();
 
     let allocs = [];
     function allocator() {
       allocs.push(new Object());
     }
 
-    yield memory.startRecordingAllocations();
+    await memory.startRecordingAllocations();
 
     allocator();
     allocator();
     allocator();
 
-    let response = yield memory.getAllocations();
-    yield memory.stopRecordingAllocations();
+    let response = await memory.getAllocations();
+    await memory.stopRecordingAllocations();
 
     ok(response.allocationSizes, "The response should have bytesizes.");
     is(response.allocationSizes.length, response.allocations.length,
@@ -44,9 +44,9 @@ window.onload = function () {
     ok(response.allocationSizes.every(isPositiveNumber),
        "every bytesize is a positive number");
 
-    yield memory.detach();
+    await memory.detach();
     destroyServerAndFinish(client);
-  });
+  })();
 };
 
 function isPositiveNumber(n) {

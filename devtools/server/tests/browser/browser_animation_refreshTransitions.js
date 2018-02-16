@@ -8,40 +8,40 @@
 // be used, but when it restarts again (transitions back), then a new
 // AnimationPlayerFront should be sent, and the old one should be removed.
 
-add_task(function* () {
+add_task(async function () {
   let {client, walker, animations} =
-    yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
+    await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Retrieve the test node");
-  let node = yield walker.querySelector(walker.rootNode, ".all-transitions");
+  let node = await walker.querySelector(walker.rootNode, ".all-transitions");
 
   info("Retrieve the animation players for the node");
-  let players = yield animations.getAnimationPlayersForNode(node);
+  let players = await animations.getAnimationPlayersForNode(node);
   is(players.length, 0, "The node has no animation players yet");
 
   info("Play a transition by adding the expand class, wait for mutations");
   let onMutations = expectMutationEvents(animations, 2);
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
     let el = content.document.querySelector(".all-transitions");
     el.classList.add("expand");
   });
-  let reportedMutations = yield onMutations;
+  let reportedMutations = await onMutations;
 
   is(reportedMutations.length, 2, "2 mutation events were received");
   is(reportedMutations[0].type, "added", "The first event was 'added'");
   is(reportedMutations[1].type, "added", "The second event was 'added'");
 
   info("Wait for the transitions to be finished");
-  yield waitForEnd(reportedMutations[0].player);
-  yield waitForEnd(reportedMutations[1].player);
+  await waitForEnd(reportedMutations[0].player);
+  await waitForEnd(reportedMutations[1].player);
 
   info("Play the transition back by removing the class, wait for mutations");
   onMutations = expectMutationEvents(animations, 4);
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
     let el = content.document.querySelector(".all-transitions");
     el.classList.remove("expand");
   });
-  reportedMutations = yield onMutations;
+  reportedMutations = await onMutations;
 
   is(reportedMutations.length, 4, "4 new mutation events were received");
   is(reportedMutations.filter(m => m.type === "removed").length, 2,
@@ -49,7 +49,7 @@ add_task(function* () {
   is(reportedMutations.filter(m => m.type === "added").length, 2,
     "2 'added' events were sent (for the new transitions)");
 
-  yield client.close();
+  await client.close();
   gBrowser.removeCurrentTab();
 });
 
@@ -71,10 +71,10 @@ function expectMutationEvents(animationsFront, nbOfEvents) {
   });
 }
 
-function* waitForEnd(animationFront) {
+async function waitForEnd(animationFront) {
   let playState;
   while (playState !== "finished") {
-    let state = yield animationFront.getCurrentState();
+    let state = await animationFront.getCurrentState();
     playState = state.playState;
     info("Wait for transition " + animationFront.state.name +
          " to finish, playState=" + playState);

@@ -7,7 +7,6 @@
 #define mozilla_dom_HTMLMediaElement_h
 
 #include "nsAutoPtr.h"
-#include "nsIDOMHTMLMediaElement.h"
 #include "nsGenericHTMLElement.h"
 #include "MediaEventSource.h"
 #include "SeekTarget.h"
@@ -101,7 +100,6 @@ enum class StreamCaptureBehavior : uint8_t
 };
 
 class HTMLMediaElement : public nsGenericHTMLElement,
-                         public nsIDOMHTMLMediaElement,
                          public MediaDecoderOwner,
                          public PrincipalChangeObserver<DOMMediaStream>,
                          public SupportsWeakPtr<HTMLMediaElement>,
@@ -137,13 +135,13 @@ public:
    */
   nsresult LoadWithChannel(nsIChannel *aChannel, nsIStreamListener **aListener);
 
-  // nsIDOMHTMLMediaElement
-  NS_DECL_NSIDOMHTMLMEDIAELEMENT
-
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLMediaElement,
                                            nsGenericHTMLElement)
+  NS_IMPL_FROMCONTENT_HELPER(HTMLMediaElement,
+                             IsAnyOfHTMLElements(nsGkAtoms::video,
+                                                 nsGkAtoms::audio))
 
   // nsIDOMEventTarget
   virtual nsresult
@@ -442,12 +440,20 @@ public:
 
   MediaError* GetError() const;
 
-  void SetSrc(const nsAString& aSrc, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aRv)
+  void GetSrc(nsAString& aSrc)
   {
-    SetHTMLAttr(nsGkAtoms::src, aSrc, aTriggeringPrincipal, aRv);
+    GetURIAttr(nsGkAtoms::src, nullptr, aSrc);
+  }
+  void SetSrc(const nsAString& aSrc, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::src, aSrc, aError);
+  }
+  void SetSrc(const nsAString& aSrc, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::src, aSrc, aTriggeringPrincipal, aError);
   }
 
-  // XPCOM GetCurrentSrc() is OK
+  void GetCurrentSrc(nsAString& aCurrentSrc);
 
   void GetCrossOrigin(nsAString& aResult)
   {
@@ -475,7 +481,10 @@ public:
   // Notify agent when the MediaElement changes its audible state.
   void NotifyAudioPlaybackChanged(AudibleChangedReasons aReason);
 
-  // XPCOM GetPreload() is OK
+  void GetPreload(nsAString& aValue)
+  {
+    GetEnumAttr(nsGkAtoms::preload, nullptr, aValue);
+  }
   void SetPreload(const nsAString& aValue, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::preload, aValue, aRv);
@@ -483,9 +492,9 @@ public:
 
   already_AddRefed<TimeRanges> Buffered() const;
 
-  // XPCOM Load() is OK
+  void Load();
 
-  // XPCOM CanPlayType() is OK
+  void CanPlayType(const nsAString& aType, nsAString& aResult);
 
   uint16_t ReadyState() const
   {
@@ -497,6 +506,10 @@ public:
   double CurrentTime() const;
 
   void SetCurrentTime(double aCurrentTime, ErrorResult& aRv);
+  void SetCurrentTime(double aCurrentTime)
+  {
+    SetCurrentTime(aCurrentTime, IgnoreErrors());
+  }
 
   void FastSeek(double aTime, ErrorResult& aRv);
 
@@ -507,6 +520,11 @@ public:
   bool HasAudio() const
   {
     return mMediaInfo.HasAudio();
+  }
+
+  virtual bool IsVideo() const
+  {
+    return false;
   }
 
   bool HasVideo() const
@@ -567,6 +585,10 @@ public:
   already_AddRefed<Promise> Play(ErrorResult& aRv);
 
   void Pause(ErrorResult& aRv);
+  void Pause()
+  {
+    Pause(IgnoreErrors());
+  }
 
   bool Controls() const
   {
@@ -589,8 +611,7 @@ public:
   {
     return mMuted & MUTED_BY_CONTENT;
   }
-
-  // XPCOM SetMuted() is OK
+  void SetMuted(bool aMuted);
 
   bool DefaultMuted() const
   {
@@ -662,8 +683,7 @@ public:
   {
     return mPreservesPitch;
   }
-
-  // XPCOM MozPreservesPitch() is OK
+  void SetMozPreservesPitch(bool aPreservesPitch);
 
   MediaKeys* GetMediaKeys() const;
 
@@ -756,6 +776,9 @@ public:
   // dormancy checks to prevent dormant processing for an element
   // that will soon be gone.
   bool IsBeingDestroyed();
+
+  void OnVisibilityChange(Visibility aNewVisibility);
+
 
   // These are used for testing only
   float ComputedVolume() const;
@@ -1185,7 +1208,7 @@ protected:
 
   /**
    * Resets the media element for an error condition as per aErrorCode.
-   * aErrorCode must be one of nsIDOMHTMLMediaError codes.
+   * aErrorCode must be one of WebIDL HTMLMediaElement error codes.
    */
   void Error(uint16_t aErrorCode, const nsACString& aErrorDetails = nsCString());
 
@@ -1226,9 +1249,7 @@ protected:
   // Return true if decoding should be paused
   virtual bool GetPaused() final override
   {
-    bool isPaused = false;
-    GetPaused(&isPaused);
-    return isPaused;
+    return Paused();
   }
 
   /**
@@ -1436,7 +1457,7 @@ protected:
   // Media loading flags. See:
   //   http://www.whatwg.org/specs/web-apps/current-work/#video)
   nsMediaNetworkState mNetworkState;
-  nsMediaReadyState mReadyState = nsIDOMHTMLMediaElement::HAVE_NOTHING;
+  nsMediaReadyState mReadyState;
 
   enum LoadAlgorithmState {
     // No load algorithm instance is waiting for a source to be added to the

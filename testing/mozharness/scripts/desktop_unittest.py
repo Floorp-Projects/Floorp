@@ -576,12 +576,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         c = self.config
 
         extract_dirs = None
-        if c['specific_tests_zip_dirs']:
-            extract_dirs = list(c['minimum_tests_zip_dirs'])
-            for category in c['specific_tests_zip_dirs'].keys():
-                if c['run_all_suites'] or self._query_specified_suites(category) \
-                        or 'run-tests' not in self.actions:
-                    extract_dirs.extend(c['specific_tests_zip_dirs'][category])
 
         if c.get('run_all_suites'):
             target_categories = SUITE_CATEGORIES

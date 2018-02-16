@@ -37,61 +37,10 @@ add_task(async function setup() {
     Services.search.removeEngine(engineOneOff);
     await PlacesUtils.history.clear();
     Services.telemetry.setEventRecordingEnabled("navigation", false);
-    Services.prefs.clearUserPref("browser.newtabpage.activity-stream.aboutHome.enabled");
   });
-});
-
-add_task(async function test_abouthome_simpleQuery() {
-  // Make sure Activity Stream about:home is disabled.
-  Services.prefs.setBoolPref("browser.newtabpage.activity-stream.aboutHome.enabled", false);
-
-  // Let's reset the counts.
-  Services.telemetry.clearScalars();
-  Services.telemetry.clearEvents();
-  let search_hist = getAndClearKeyedHistogram("SEARCH_COUNTS");
-
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-
-  info("Setup waiting for AboutHomeLoadSnippetsCompleted.");
-  let promiseAboutHomeLoaded = BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "AboutHomeLoadSnippetsCompleted", true, null, true);
-
-  info("Load about:home.");
-  tab.linkedBrowser.loadURI("about:home");
-  info("Wait for AboutHomeLoadSnippetsCompleted.");
-  await promiseAboutHomeLoaded;
-
-  info("Wait for ContentSearchUI search provider to initialize.");
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
-    await ContentTaskUtils.waitForCondition(() => content.wrappedJSObject.gContentSearchController.defaultEngine);
-  });
-
-  info("Trigger a simple serch, just test + enter.");
-  let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await typeInSearchField(tab.linkedBrowser, "test query", "searchText");
-  await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, tab.linkedBrowser);
-  await p;
-
-  // Check if the scalars contain the expected values.
-  const scalars = getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true, false);
-  checkKeyedScalar(scalars, SCALAR_ABOUT_HOME, "search_enter", 1);
-  Assert.equal(Object.keys(scalars[SCALAR_ABOUT_HOME]).length, 1,
-               "This search must only increment one entry in the scalar.");
-
-  // Make sure SEARCH_COUNTS contains identical values.
-  checkKeyedHistogram(search_hist, "other-MozSearch.abouthome", 1);
-
-  // Also check events.
-  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
-  checkEvents(events, [["navigation", "search", "about_home", "enter", {engine: "other-MozSearch"}]]);
-
-  await BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_abouthome_activitystream_simpleQuery() {
-  // Make sure Activity Stream about:home is enabled.
-  Services.prefs.setBoolPref("browser.newtabpage.activity-stream.aboutHome.enabled", true);
-
   // Let's reset the counts.
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();

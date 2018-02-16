@@ -16,3 +16,4 @@
 DATA_STORAGE(AlternateServices)
 DATA_STORAGE(SecurityPreloadState)
 DATA_STORAGE(SiteSecurityServiceState)
+DATA_STORAGE(TRRBlacklist)

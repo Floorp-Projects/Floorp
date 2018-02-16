@@ -17,8 +17,8 @@ function run_test() {
     attachTestTabAndResume(
       client, "test-promise-state",
       function (response, tabClient, threadClient) {
-        Task.spawn(function* () {
-          const packet = yield executeOnNextTickAndWaitForPause(
+        (async function () {
+          const packet = await executeOnNextTickAndWaitForPause(
             () => evalCode(debuggee), client);
 
           const grip = packet.frame.environment.bindings.variables.p;
@@ -30,7 +30,7 @@ function run_test() {
                 "to the then function");
 
           finishClient(client);
-        });
+        })();
       });
   });
   do_test_pending();

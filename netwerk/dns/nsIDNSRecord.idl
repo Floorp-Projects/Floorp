@@ -97,4 +97,9 @@ interface nsIDNSRecord : nsISupports
      *        It may be zero if not applicable.
      */
     void reportUnusable(in uint16_t aPort);
+
+    /**
+     * Record retreived with TRR.
+     */
+    bool IsTRR();
 };

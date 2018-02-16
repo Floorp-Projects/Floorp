@@ -36,18 +36,3 @@ add_task(async function checkActivityStreamNotPreloadedLoad() {
 
 // Run a second time from a preloaded browser
 add_task(checkActivityStreamLoads);
-
-// Test with activity stream off
-async function checkNotActivityStreamLoads() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.newtabpage.activity-stream.enabled", false]]});
-  await checkNewtabLoads("body:not(.activity-stream)", "Got <body> Element not for activity-stream");
-}
-
-// Run a first time not from a preloaded browser
-add_task(async function checkNotActivityStreamNotPreloadedLoad() {
-  gBrowser.removePreloadedBrowser();
-  await checkNotActivityStreamLoads();
-});
-
-// Run a second time from a preloaded browser
-add_task(checkNotActivityStreamLoads);

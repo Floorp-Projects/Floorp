@@ -11,7 +11,7 @@ requestLongerTimeout(2);
 
 function frame_script() {
   content.document.body.innerHTML = `
-    <a href="about:home" target="_blank" id="testAnchor">Open a window</a>
+    <a href="http://example.com/" target="_blank" id="testAnchor">Open a window</a>
   `;
 
   let element = content.document.getElementById("testAnchor");
@@ -62,7 +62,7 @@ add_task(async function test_new_tab() {
 
     await promiseTabLoadEvent(newTab);
 
-    // Our framescript opens to about:home which means that the
+    // Our framescript opens to a web page which means that the
     // tab should eventually become remote.
     ok(newTab.linkedBrowser.isRemoteBrowser,
        "The opened browser never became remote.");
@@ -114,7 +114,7 @@ add_task(async function test_new_window() {
 
     await promiseTabLoadEvent(newTab);
 
-    // Our framescript opens to about:home which means that the
+    // Our framescript opens to a web page which means that the
     // tab should eventually become remote.
     ok(newTab.linkedBrowser.isRemoteBrowser,
        "The opened browser never became remote.");

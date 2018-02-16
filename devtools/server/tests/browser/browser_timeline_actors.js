@@ -10,16 +10,16 @@
 
 const {TimelineFront} = require("devtools/shared/fronts/timeline");
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8,mop");
+add_task(async function () {
+  await addTab("data:text/html;charset=utf-8,mop");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
+  let form = await connectDebuggerClient(client);
   let front = TimelineFront(client, form);
 
   info("Start timeline marker recording");
-  yield front.start({ withMemory: true, withTicks: true });
+  await front.start({ withMemory: true, withTicks: true });
 
   let updatedMemory = 0;
   let updatedTicks = 0;
@@ -39,14 +39,14 @@ add_task(function* () {
     updatedTicks++;
   });
 
-  ok((yield waitUntil(() => updatedMemory > 1)),
+  ok((await waitUntil(() => updatedMemory > 1)),
     "Some memory measurements were emitted.");
-  ok((yield waitUntil(() => updatedTicks > 1)),
+  ok((await waitUntil(() => updatedTicks > 1)),
     "Some refresh driver ticks were emitted.");
 
   info("Stop timeline marker recording");
-  yield front.stop();
-  yield client.close();
+  await front.stop();
+  await client.close();
   gBrowser.removeCurrentTab();
 });
 

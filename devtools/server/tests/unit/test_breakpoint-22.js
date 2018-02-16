@@ -33,34 +33,34 @@ function run_test_with_server(server, callback) {
   });
 }
 
-const test = Task.async(function* () {
+const test = async function () {
   // Populate the `ScriptStore` so that we only test that the script
   // is added through `onNewScript`
-  yield getSources(gThreadClient);
+  await getSources(gThreadClient);
 
-  let packet = yield executeOnNextTickAndWaitForPause(evalCode, gClient);
+  let packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
   let source = gThreadClient.source(packet.frame.where.source);
   let location = {
     line: gDebuggee.line0 + 2
   };
 
-  let [res, ] = yield setBreakpoint(source, location);
+  let [res, ] = await setBreakpoint(source, location);
   ok(!res.error);
 
   let location2 = {
     line: gDebuggee.line0 + 7
   };
 
-  yield source.setBreakpoint(location2).then(_ => {
+  await source.setBreakpoint(location2).then(_ => {
     do_throw("no code shall not be found the specified line or below it");
   }, reason => {
     Assert.equal(reason.error, "noCodeAtLineColumn");
     ok(reason.message);
   });
 
-  yield resume(gThreadClient);
+  await resume(gThreadClient);
   finishClient(gClient);
-});
+};
 
 function evalCode() {
   // Start a new script

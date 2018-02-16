@@ -6,43 +6,43 @@
 
 // Check the output of getAnimationPlayersForNode
 
-add_task(function* () {
+add_task(async function () {
   let {client, walker, animations} =
-    yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
+    await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
-  yield theRightNumberOfPlayersIsReturned(walker, animations);
-  yield playersCanBePausedAndResumed(walker, animations);
+  await theRightNumberOfPlayersIsReturned(walker, animations);
+  await playersCanBePausedAndResumed(walker, animations);
 
-  yield client.close();
+  await client.close();
   gBrowser.removeCurrentTab();
 });
 
-function* theRightNumberOfPlayersIsReturned(walker, animations) {
-  let node = yield walker.querySelector(walker.rootNode, ".not-animated");
-  let players = yield animations.getAnimationPlayersForNode(node);
+async function theRightNumberOfPlayersIsReturned(walker, animations) {
+  let node = await walker.querySelector(walker.rootNode, ".not-animated");
+  let players = await animations.getAnimationPlayersForNode(node);
   is(players.length, 0,
      "0 players were returned for the unanimated node");
 
-  node = yield walker.querySelector(walker.rootNode, ".simple-animation");
-  players = yield animations.getAnimationPlayersForNode(node);
+  node = await walker.querySelector(walker.rootNode, ".simple-animation");
+  players = await animations.getAnimationPlayersForNode(node);
   is(players.length, 1,
      "One animation player was returned");
 
-  node = yield walker.querySelector(walker.rootNode, ".multiple-animations");
-  players = yield animations.getAnimationPlayersForNode(node);
+  node = await walker.querySelector(walker.rootNode, ".multiple-animations");
+  players = await animations.getAnimationPlayersForNode(node);
   is(players.length, 2,
      "Two animation players were returned");
 
-  node = yield walker.querySelector(walker.rootNode, ".transition");
-  players = yield animations.getAnimationPlayersForNode(node);
+  node = await walker.querySelector(walker.rootNode, ".transition");
+  players = await animations.getAnimationPlayersForNode(node);
   is(players.length, 1,
      "One animation player was returned for the transitioned node");
 }
 
-function* playersCanBePausedAndResumed(walker, animations) {
-  let node = yield walker.querySelector(walker.rootNode, ".simple-animation");
-  let [player] = yield animations.getAnimationPlayersForNode(node);
-  yield player.ready();
+async function playersCanBePausedAndResumed(walker, animations) {
+  let node = await walker.querySelector(walker.rootNode, ".simple-animation");
+  let [player] = await animations.getAnimationPlayersForNode(node);
+  await player.ready();
 
   ok(player.initialState,
      "The player has an initialState");
@@ -51,13 +51,13 @@ function* playersCanBePausedAndResumed(walker, animations) {
   is(player.initialState.playState, "running",
      "The animation is currently running");
 
-  yield player.pause();
-  let state = yield player.getCurrentState();
+  await player.pause();
+  let state = await player.getCurrentState();
   is(state.playState, "paused",
      "The animation is now paused");
 
-  yield player.play();
-  state = yield player.getCurrentState();
+  await player.play();
+  state = await player.getCurrentState();
   is(state.playState, "running",
      "The animation is now running again");
 }

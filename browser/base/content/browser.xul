@@ -640,7 +640,6 @@
 #endif
 
       <tabs id="tabbrowser-tabs"
-            tabbrowser="content"
             flex="1"
             setfocus="false"
             tooltip="tabbrowser-tab-tooltip"

@@ -90,7 +90,7 @@
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
 #include "mozilla/dom/PeerConnectionImplBinding.h"
-#include "mozilla/dom/DataChannelBinding.h"
+#include "mozilla/dom/RTCDataChannelBinding.h"
 #include "mozilla/dom/PerformanceTiming.h"
 #include "mozilla/dom/PluginCrashedEvent.h"
 #include "MediaStreamTrack.h"

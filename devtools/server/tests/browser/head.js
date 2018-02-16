@@ -35,58 +35,58 @@ waitForExplicitFinish();
  *         directly, since this would be a CPOW in the e10s case,
  *         and Promises cannot be resolved with CPOWs (see bug 1233497).
  */
-var addTab = Task.async(function* (url) {
+var addTab = async function (url) {
   info(`Adding a new tab with URL: ${url}`);
   let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info(`Tab added and URL ${url} loaded`);
 
   return tab.linkedBrowser;
-});
+};
 
-function* initAnimationsFrontForUrl(url) {
+async function initAnimationsFrontForUrl(url) {
   const {AnimationsFront} = require("devtools/shared/fronts/animation");
   const {InspectorFront} = require("devtools/shared/fronts/inspector");
 
-  yield addTab(url);
+  await addTab(url);
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
+  let form = await connectDebuggerClient(client);
   let inspector = InspectorFront(client, form);
-  let walker = yield inspector.getWalker();
+  let walker = await inspector.getWalker();
   let animations = AnimationsFront(client, form);
 
   return {inspector, walker, animations, client};
 }
 
-function* initLayoutFrontForUrl(url) {
+async function initLayoutFrontForUrl(url) {
   const {InspectorFront} = require("devtools/shared/fronts/inspector");
 
-  yield addTab(url);
+  await addTab(url);
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
+  let form = await connectDebuggerClient(client);
   let inspector = InspectorFront(client, form);
-  let walker = yield inspector.getWalker();
-  let layout = yield walker.getLayoutInspector();
+  let walker = await inspector.getWalker();
+  let layout = await walker.getLayoutInspector();
 
   return {inspector, walker, layout, client};
 }
 
-function* initAccessibilityFrontForUrl(url) {
+async function initAccessibilityFrontForUrl(url) {
   const {AccessibilityFront} = require("devtools/shared/fronts/accessibility");
   const {InspectorFront} = require("devtools/shared/fronts/inspector");
 
-  yield addTab(url);
+  await addTab(url);
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
+  let form = await connectDebuggerClient(client);
   let inspector = InspectorFront(client, form);
-  let walker = yield inspector.getWalker();
+  let walker = await inspector.getWalker();
   let accessibility = AccessibilityFront(client, form);
 
   return {inspector, walker, accessibility, client};

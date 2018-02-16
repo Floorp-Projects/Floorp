@@ -9,21 +9,21 @@
 
 const {StyleSheetsFront} = require("devtools/shared/fronts/stylesheets");
 
-add_task(function* () {
-  yield addTab(MAIN_DOMAIN + "stylesheets-nested-iframes.html");
+add_task(async function () {
+  await addTab(MAIN_DOMAIN + "stylesheets-nested-iframes.html");
 
   info("Initialising the debugger server and client.");
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
+  let form = await connectDebuggerClient(client);
 
   info("Attaching to the active tab.");
-  yield client.attachTab(form.actor);
+  await client.attachTab(form.actor);
 
   let front = StyleSheetsFront(client, form);
   ok(front, "The StyleSheetsFront was created.");
 
-  let sheets = yield front.getStyleSheets();
+  let sheets = await front.getStyleSheets();
   ok(sheets, "getStyleSheets() succeeded even with documentless iframes.");
 
   // Bug 285395 limits the number of nested iframes to 10. There's one sheet per
@@ -33,5 +33,5 @@ add_task(function* () {
   // something sensible (if we got this far, the test has served its purpose).
   ok(sheets.length > 2, sheets.length + " sheets found (expected 3 or more).");
 
-  yield client.close();
+  await client.close();
 });

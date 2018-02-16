@@ -420,6 +420,7 @@
           if (handler != "") {
             var fn = new Function("event", handler);
             var returned = fn(event);
+            // eslint-disable-next-line mozilla/no-compare-against-boolean-literals
             if (returned == false)
               noCancel = false;
           }

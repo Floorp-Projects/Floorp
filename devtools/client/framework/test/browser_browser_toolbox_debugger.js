@@ -32,10 +32,17 @@ add_task(function* runTest() {
   });
 
   let s = Cu.Sandbox("http://mozilla.org");
+
+  // Use a unique id for the fake script name in order to be able to run
+  // this test more than once. That's because the Sandbox is not immediately
+  // destroyed and so the debugger would display only one file but not necessarily
+  // connected to the latest sandbox.
+  let id = new Date().getTime();
+
   // Pass a fake URL to evalInSandbox. If we just pass a filename,
   // Debugger is going to fail and only display root folder (`/`) listing.
   // But it won't try to fetch this url and use sandbox content as expected.
-  let testUrl = "http://mozilla.org/browser-toolbox-test.js";
+  let testUrl = `http://mozilla.org/browser-toolbox-test-${id}.js`;
   Cu.evalInSandbox("(" + function () {
     this.plop = function plop() {
       return 1;
@@ -117,7 +124,7 @@ add_task(function* runTest() {
   // toolbox process
   let testScript = (yield fetch(testScriptURL)).content;
   let source =
-    "try {" + testHead + debuggerHead + testScript + "} catch (e) {" +
+    "try { let testUrl = \""+testUrl+"\";" + testHead + debuggerHead + testScript + "} catch (e) {" +
     "  dump('Exception: '+ e + ' at ' + e.fileName + ':' + " +
     "       e.lineNumber + '\\nStack: ' + e.stack + '\\n');" +
     "}";

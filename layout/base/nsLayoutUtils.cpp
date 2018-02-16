@@ -68,6 +68,7 @@
 #include <algorithm>
 #include <limits>
 #include "mozilla/dom/AnonymousContent.h"
+#include "mozilla/dom/HTMLMediaElementBinding.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/DOMRect.h"
@@ -157,6 +158,8 @@ using namespace mozilla::image;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
 using namespace mozilla::gfx;
+using mozilla::dom::HTMLMediaElementBinding::HAVE_NOTHING;
+using mozilla::dom::HTMLMediaElementBinding::HAVE_METADATA;
 
 #define WEBKIT_PREFIXES_ENABLED_PREF_NAME "layout.css.prefixes.webkit"
 #define TEXT_ALIGN_UNSAFE_ENABLED_PREF_NAME "layout.css.text-align-unsafe-value.enabled"
@@ -7876,10 +7879,9 @@ nsLayoutUtils::SurfaceFromElement(HTMLVideoElement* aElement,
     return result;
   }
 
-  uint16_t readyState;
-  if (NS_SUCCEEDED(aElement->GetReadyState(&readyState)) &&
-      (readyState == nsIDOMHTMLMediaElement::HAVE_NOTHING ||
-       readyState == nsIDOMHTMLMediaElement::HAVE_METADATA)) {
+  uint16_t readyState = aElement->ReadyState();
+  if (readyState == HAVE_NOTHING ||
+      readyState == HAVE_METADATA) {
     result.mIsStillLoading = true;
     return result;
   }

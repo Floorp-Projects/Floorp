@@ -38,11 +38,11 @@ window.onload = function () {
     });
   });
 
-  addAsyncTest(function* testActorLifetime() {
+  addAsyncTest(async function testActorLifetime() {
     info("Testing animated node actor");
-    let animatedNodeActor = yield gWalker.querySelector(gWalker.rootNode,
+    let animatedNodeActor = await gWalker.querySelector(gWalker.rootNode,
       ".animated");
-    yield animationsFront.getAnimationPlayersForNode(animatedNodeActor);
+    await animationsFront.getAnimationPlayersForNode(animatedNodeActor);
 
     let animationsActor = DebuggerServer
                           .searchAllConnectionsForActor(animationsFront.actorID);
@@ -51,26 +51,26 @@ window.onload = function () {
       "AnimationActor have 1 AnimationPlayerActors");
 
     info("Testing AnimationPlayerActors release");
-    let stillNodeActor = yield gWalker.querySelector(gWalker.rootNode,
+    let stillNodeActor = await gWalker.querySelector(gWalker.rootNode,
       ".still");
-    yield animationsFront.getAnimationPlayersForNode(stillNodeActor);
+    await animationsFront.getAnimationPlayersForNode(stillNodeActor);
     is(animationsActor.actors.length, 0,
       "AnimationActor does not have any AnimationPlayerActors anymore");
 
     info("Testing multi animated node actor");
-    let multiNodeActor = yield gWalker.querySelector(gWalker.rootNode,
+    let multiNodeActor = await gWalker.querySelector(gWalker.rootNode,
       ".multi");
-    yield animationsFront.getAnimationPlayersForNode(multiNodeActor);
+    await animationsFront.getAnimationPlayersForNode(multiNodeActor);
     is(animationsActor.actors.length, 2,
       "AnimationActor has now 2 AnimationPlayerActors");
 
     info("Testing single animated node actor");
-    yield animationsFront.getAnimationPlayersForNode(animatedNodeActor);
+    await animationsFront.getAnimationPlayersForNode(animatedNodeActor);
     is(animationsActor.actors.length, 1,
       "AnimationActor has only one AnimationPlayerActors");
 
     info("Testing AnimationPlayerActors release again");
-    yield animationsFront.getAnimationPlayersForNode(stillNodeActor);
+    await animationsFront.getAnimationPlayersForNode(stillNodeActor);
     is(animationsActor.actors.length, 0,
       "AnimationActor does not have any AnimationPlayerActors anymore");
 

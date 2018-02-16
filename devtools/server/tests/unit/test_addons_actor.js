@@ -8,11 +8,11 @@ const {AddonsFront} = require("devtools/shared/fronts/addons");
 
 startupAddonsManager();
 
-function* connect() {
-  const client = yield new Promise(resolve => {
+async function connect() {
+  const client = await new Promise(resolve => {
     get_chrome_actors(client => resolve(client));
   });
-  const root = yield listTabs(client);
+  const root = await listTabs(client);
   const addonsActor = root.addonsActor;
   ok(addonsActor, "Got AddonsActor instance");
 
@@ -20,33 +20,33 @@ function* connect() {
   return [client, addons];
 }
 
-add_task(function* testSuccessfulInstall() {
-  const [client, addons] = yield connect();
+add_task(async function testSuccessfulInstall() {
+  const [client, addons] = await connect();
 
   const allowMissing = false;
   const usePlatformSeparator = true;
   const addonPath = getFilePath("addons/web-extension",
                                 allowMissing, usePlatformSeparator);
-  const installedAddon = yield addons.installTemporaryAddon(addonPath);
+  const installedAddon = await addons.installTemporaryAddon(addonPath);
   equal(installedAddon.id, "test-addons-actor@mozilla.org");
   // The returned object is currently not a proper actor.
   equal(installedAddon.actor, false);
 
-  const addonList = yield client.listAddons();
+  const addonList = await client.listAddons();
   ok(addonList && addonList.addons && addonList.addons.map(a => a.name),
      "Received list of add-ons");
   const addon = addonList.addons.filter(a => a.id === installedAddon.id)[0];
   ok(addon, "Test add-on appeared in root install list");
 
-  yield close(client);
+  await close(client);
 });
 
-add_task(function* testNonExistantPath() {
-  const [client, addons] = yield connect();
+add_task(async function testNonExistantPath() {
+  const [client, addons] = await connect();
 
-  yield Assert.rejects(
+  await Assert.rejects(
     addons.installTemporaryAddon("some-non-existant-path"),
     /Could not install add-on.*Component returned failure/);
 
-  yield close(client);
+  await close(client);
 });

@@ -217,6 +217,12 @@ interface nsIHttpChannelInternal : nsISupports
     [must_use] attribute boolean beConservative;
 
     /**
+     * True if channel is used by the internal trusted recursive resolver
+     * This flag places data for the request in a cache segment specific to TRR
+     */
+    [noscript, must_use] attribute boolean trr;
+
+    /**
      * An opaque flags for non-standard behavior of the TLS system.
      * It is unlikely this will need to be set outside of telemetry studies
      * relating to the TLS implementation.

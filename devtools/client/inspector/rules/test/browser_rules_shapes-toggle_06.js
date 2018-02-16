@@ -27,10 +27,10 @@ add_task(function* () {
 
   yield selectNode("#shape1", inspector);
   let clipPathContainer = getRuleViewProperty(view, ".shape", "clip-path").valueSpan;
-  let clipPathShapeToggle = clipPathContainer.querySelector(".ruleview-shape");
+  let clipPathShapeToggle = clipPathContainer.querySelector(".ruleview-shapeswatch");
   let shapeOutsideContainer = getRuleViewProperty(view, ".shape",
     "shape-outside").valueSpan;
-  let shapeOutsideToggle = shapeOutsideContainer.querySelector(".ruleview-shape");
+  let shapeOutsideToggle = shapeOutsideContainer.querySelector(".ruleview-shapeswatch");
 
   info("Toggling ON the CSS shapes highlighter for clip-path from the rule-view.");
   let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
@@ -55,10 +55,10 @@ add_task(function* () {
   info("Selecting the second shapes container.");
   yield selectNode("#shape2", inspector);
   clipPathContainer = getRuleViewProperty(view, ".shape", "clip-path").valueSpan;
-  clipPathShapeToggle = clipPathContainer.querySelector(".ruleview-shape");
+  clipPathShapeToggle = clipPathContainer.querySelector(".ruleview-shapeswatch");
   shapeOutsideContainer = getRuleViewProperty(view, ".shape",
     "shape-outside").valueSpan;
-  shapeOutsideToggle = shapeOutsideContainer.querySelector(".ruleview-shape");
+  shapeOutsideToggle = shapeOutsideContainer.querySelector(".ruleview-shapeswatch");
   ok(!clipPathShapeToggle.classList.contains("active"),
      "clip-path toggle button is not active.");
   ok(!shapeOutsideToggle.classList.contains("active"),
@@ -67,10 +67,10 @@ add_task(function* () {
   info("Selecting the first shapes container.");
   yield selectNode("#shape1", inspector);
   clipPathContainer = getRuleViewProperty(view, ".shape", "clip-path").valueSpan;
-  clipPathShapeToggle = clipPathContainer.querySelector(".ruleview-shape");
+  clipPathShapeToggle = clipPathContainer.querySelector(".ruleview-shapeswatch");
   shapeOutsideContainer = getRuleViewProperty(view, ".shape",
     "shape-outside").valueSpan;
-  shapeOutsideToggle = shapeOutsideContainer.querySelector(".ruleview-shape");
+  shapeOutsideToggle = shapeOutsideContainer.querySelector(".ruleview-shapeswatch");
   ok(!clipPathShapeToggle.classList.contains("active"),
      "clip-path toggle button is not active.");
   ok(shapeOutsideToggle.classList.contains("active"),

@@ -38,9 +38,9 @@ async function attachURL(url) {
   let win = window.open(url, "_blank");
   let client = null;
 
-  let cleanup = function* () {
+  let cleanup = async function () {
     if (client) {
-      yield client.close();
+      await client.close();
       client = null;
     }
     if (win) {

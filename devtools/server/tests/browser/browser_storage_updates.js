@@ -252,7 +252,7 @@ function runTest({action, expected}, front, win, index) {
   });
 }
 
-function* testClearLocalAndSessionStores(front, win) {
+function testClearLocalAndSessionStores(front, win) {
   return new Promise(resolve => {
     // We need to wait until we have received stores-cleared for both local and
     // session storage.
@@ -290,31 +290,31 @@ function storesCleared(data) {
   }
 }
 
-function* finishTests(client) {
-  yield client.close();
+async function finishTests(client) {
+  await client.close();
   DebuggerServer.destroy();
   finish();
 }
 
-add_task(function* () {
-  let browser = yield addTab(MAIN_DOMAIN + "storage-updates.html");
+add_task(async function () {
+  let browser = await addTab(MAIN_DOMAIN + "storage-updates.html");
   // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = browser.contentDocumentAsCPOW;
 
   initDebuggerServer();
 
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
+  let form = await connectDebuggerClient(client);
   let front = StorageFront(client, form);
   let win = doc.defaultView.wrappedJSObject;
 
-  yield front.listStores();
+  await front.listStores();
 
   for (let i = 0; i < TESTS.length; i++) {
     let test = TESTS[i];
-    yield runTest(test, front, win, i);
+    await runTest(test, front, win, i);
   }
 
-  yield testClearLocalAndSessionStores(front, win);
-  yield finishTests(client);
+  await testClearLocalAndSessionStores(front, win);
+  await finishTests(client);
 });

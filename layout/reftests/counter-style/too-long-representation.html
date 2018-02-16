@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="test-common.css">
+<style type="text/css">
+  @counter-style a {
+    /* system: symbolic; */
+    symbols: '*' \2051  \2020  \2021;
+    suffix: '';
+  }
+  @counter-style b {
+    symbols: \10300;
+  }
+  @counter-style c {
+    system: additive;
+    additive-symbols: 6 \2685, 5 \2684, 4 \2683, 3 \2682, 2 \2681, 1 \2680;
+    suffix: "";
+  }
+  @counter-style d {
+    system: additive;
+    additive-symbols: 1 \10300;
+  }
+</style>
+<ol style="list-style-type: a">
+  <li value="1000"><!-- too long -->
+</ol>
+<ol style="list-style-type: b">
+  <li value="100"><!-- too long -->
+</ol>
+<ol style="list-style-type: c">
+  <li value="1000"><!-- too long -->
+</ol>
+<ol style="list-style-type: d">
+  <li value="100"><!-- too long -->
+</ol>

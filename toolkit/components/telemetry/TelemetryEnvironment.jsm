@@ -186,6 +186,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["app.support.baseURL", {what: RECORD_PREF_VALUE}],
   ["accessibility.browsewithcaret", {what: RECORD_PREF_VALUE}],
   ["accessibility.force_disabled", {what:  RECORD_PREF_VALUE}],
+  ["app.shield.optoutstudies.enabled", {what: RECORD_PREF_VALUE}],
   ["app.update.auto", {what: RECORD_PREF_VALUE}],
   ["app.update.enabled", {what: RECORD_PREF_VALUE}],
   ["app.update.interval", {what: RECORD_PREF_VALUE}],

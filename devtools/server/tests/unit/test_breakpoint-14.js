@@ -40,7 +40,7 @@ function test_simple_breakpoint() {
     let source = gThreadClient.source(packet.frame.where.source);
     let location = { line: gDebuggee.line0 + 2 };
 
-    source.setBreakpoint(location, Task.async(function* (response, bpClient) {
+    source.setBreakpoint(location, async function (response, bpClient) {
       const testCallbacks = [
         function (packet) {
           // Check that the stepping worked.
@@ -90,16 +90,16 @@ function test_simple_breakpoint() {
       for (let callback of testCallbacks) {
         let waiter = waitForPause(gThreadClient);
         gThreadClient.stepOver();
-        let packet = yield waiter;
+        let packet = await waiter;
         callback(packet);
       }
 
       // Remove the breakpoint and finish.
       let waiter = waitForPause(gThreadClient);
       gThreadClient.stepOver();
-      yield waiter;
+      await waiter;
       bpClient.remove(() => gThreadClient.resume(() => gClient.close().then(gCallback)));
-    }));
+    });
   });
 
   /* eslint-disable */

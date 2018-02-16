@@ -6,13 +6,13 @@
 
 // Checks for the AccessibleActor
 
-add_task(function* () {
+add_task(async function () {
   let {client, walker, accessibility} =
-    yield initAccessibilityFrontForUrl(MAIN_DOMAIN + "doc_accessibility.html");
+    await initAccessibilityFrontForUrl(MAIN_DOMAIN + "doc_accessibility.html");
 
-  let a11yWalker = yield accessibility.getWalker(walker);
-  let buttonNode = yield walker.querySelector(walker.rootNode, "#button");
-  let accessibleFront = yield a11yWalker.getAccessibleFor(buttonNode);
+  let a11yWalker = await accessibility.getWalker(walker);
+  let buttonNode = await walker.querySelector(walker.rootNode, "#button");
+  let accessibleFront = await a11yWalker.getAccessibleFor(buttonNode);
 
   checkA11yFront(accessibleFront, {
     name: "Accessible Button",
@@ -26,22 +26,22 @@ add_task(function* () {
   });
 
   info("Actions");
-  let actions = yield accessibleFront.getActions();
+  let actions = await accessibleFront.getActions();
   is(actions.length, 1, "Accessible Front has correct number of actions");
   is(actions[0], "Press", "Accessible Front default action is correct");
 
   info("Index in parent");
-  let index = yield accessibleFront.getIndexInParent();
+  let index = await accessibleFront.getIndexInParent();
   is(index, 1, "Accessible Front has correct index in parent");
 
   info("State");
-  let state = yield accessibleFront.getState();
+  let state = await accessibleFront.getState();
   SimpleTest.isDeeply(state,
     ["focusable", "selectable text", "opaque", "enabled", "sensitive"],
     "Accessible Front has correct states");
 
   info("Attributes");
-  let attributes = yield accessibleFront.getAttributes();
+  let attributes = await accessibleFront.getAttributes();
   SimpleTest.isDeeply(attributes, {
     "margin-top": "0px",
     display: "inline-block",
@@ -55,7 +55,7 @@ add_task(function* () {
   }, "Accessible Front has correct attributes");
 
   info("Children");
-  let children = yield accessibleFront.children();
+  let children = await accessibleFront.children();
   is(children.length, 1, "Accessible Front has correct number of children");
   checkA11yFront(children[0], {
     name: "Accessible Button",
@@ -63,12 +63,12 @@ add_task(function* () {
   });
 
   info("DOM Node");
-  let node = yield accessibleFront.getDOMNode(walker);
+  let node = await accessibleFront.getDOMNode(walker);
   is(node, buttonNode, "Accessible Front has correct DOM node");
 
   let a11yShutdown = waitForA11yShutdown();
-  yield client.close();
+  await client.close();
   forceCollections();
-  yield a11yShutdown;
+  await a11yShutdown;
   gBrowser.removeCurrentTab();
 });

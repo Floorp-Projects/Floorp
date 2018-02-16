@@ -226,7 +226,7 @@ const Preferences = window.Preferences = (function() {
         if (aTarget.hasAttribute("on" + aEventName)) {
           const fn = new Function("event", aTarget.getAttribute("on" + aEventName));
           const rv = fn.call(aTarget, event);
-          if (rv == false)
+          if (!rv)
             cancel = true;
         }
         return !cancel;

@@ -271,8 +271,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "CustomEvent", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "DataChannel", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "DataTransfer", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "DataTransferItem", insecureContext: true},
@@ -804,6 +802,8 @@ var interfaceNamesInGlobalScope =
     {name: "RGBColor", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "RTCCertificate", insecureContext: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "RTCDataChannel", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "RTCDataChannelEvent", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!

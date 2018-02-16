@@ -863,6 +863,7 @@ class MochitestDesktop(object):
         self.wsserver = None
         self.websocketProcessBridge = None
         self.sslTunnel = None
+        self.manifest = None
         self.tests_by_manifest = defaultdict(list)
         self.prefs_by_manifest = defaultdict(set)
         self._active_tests = None

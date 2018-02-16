@@ -9,24 +9,24 @@
 
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
-add_task(function* () {
-  yield addTab(MAIN_DOMAIN + "doc_allocations.html");
+add_task(async function () {
+  await addTab(MAIN_DOMAIN + "doc_allocations.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
+  let form = await connectDebuggerClient(client);
   let front = PerformanceFront(client, form);
-  yield front.connect();
+  await front.connect();
 
-  let rec = yield front.startRecording(
+  let rec = await front.startRecording(
     { withMarkers: true, withAllocations: true, withTicks: true });
 
-  yield waitUntil(() => rec.getAllocations().frames.length);
-  yield waitUntil(() => rec.getAllocations().timestamps.length);
-  yield waitUntil(() => rec.getAllocations().sizes.length);
-  yield waitUntil(() => rec.getAllocations().sites.length);
+  await waitUntil(() => rec.getAllocations().frames.length);
+  await waitUntil(() => rec.getAllocations().timestamps.length);
+  await waitUntil(() => rec.getAllocations().sizes.length);
+  await waitUntil(() => rec.getAllocations().sites.length);
 
-  yield front.stopRecording(rec);
+  await front.stopRecording(rec);
 
   let { timestamps, sizes } = rec.getAllocations();
 
@@ -35,7 +35,7 @@ add_task(function* () {
     "all timestamps have numeric values");
   ok(sizes.every(n => n > 0 && typeof n === "number"), "all sizes are positive numbers");
 
-  yield front.destroy();
-  yield client.close();
+  await front.destroy();
+  await client.close();
   gBrowser.removeCurrentTab();
 });

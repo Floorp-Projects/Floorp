@@ -6,8 +6,6 @@
 
 const {Ci, Cu} = require("chrome");
 
-const {Task} = require("devtools/shared/task");
-
 loader.lazyRequireGetter(this, "AsyncUtils", "devtools/shared/async-utils");
 loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");
 loader.lazyRequireGetter(this, "DevToolsUtils", "devtools/shared/DevToolsUtils");
@@ -191,7 +189,7 @@ function ensureImageLoaded(image, timeout) {
  *
  * If something goes wrong, the promise is rejected.
  */
-const imageToImageData = Task.async(function* (node, maxDim) {
+const imageToImageData = async function (node, maxDim) {
   let { HTMLCanvasElement, HTMLImageElement } = node.ownerGlobal;
 
   let isImg = node instanceof HTMLImageElement;
@@ -203,7 +201,7 @@ const imageToImageData = Task.async(function* (node, maxDim) {
 
   if (isImg) {
     // Ensure that the image is ready.
-    yield ensureImageLoaded(node, IMAGE_FETCHING_TIMEOUT);
+    await ensureImageLoaded(node, IMAGE_FETCHING_TIMEOUT);
   }
 
   // Get the image resize ratio if a maxDim was provided
@@ -242,7 +240,7 @@ const imageToImageData = Task.async(function* (node, maxDim) {
       resized: resizeRatio !== 1
     }
   };
-});
+};
 
 module.exports = {
   allAnonymousContentTreeWalkerFilter,

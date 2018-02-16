@@ -39,21 +39,21 @@ function evalCode() {
   });
 }
 
-const testObjectGroup = Task.async(function* () {
-  let packet = yield executeOnNextTickAndWaitForPause(evalCode, gClient);
+const testObjectGroup = async function () {
+  let packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
 
   const ugh = packet.frame.environment.parent.bindings.variables.ugh;
-  const ughClient = yield gThreadClient.pauseGrip(ugh.value);
+  const ughClient = await gThreadClient.pauseGrip(ugh.value);
 
-  packet = yield getPrototypeAndProperties(ughClient);
+  packet = await getPrototypeAndProperties(ughClient);
 
-  packet = yield resumeAndWaitForPause(gClient, gThreadClient);
+  packet = await resumeAndWaitForPause(gClient, gThreadClient);
   const ugh2 = packet.frame.environment.parent.bindings.variables.ugh;
   const ugh2Client = gThreadClient.pauseGrip(ugh2.value);
 
-  packet = yield getPrototypeAndProperties(ugh2Client);
+  packet = await getPrototypeAndProperties(ugh2Client);
   Assert.equal(packet.ownProperties.length.value, 2);
 
-  yield resume(gThreadClient);
+  await resume(gThreadClient);
   finishClient(gClient);
-});
+};

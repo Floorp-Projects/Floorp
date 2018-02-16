@@ -2116,7 +2116,7 @@ var gDiscoverView = {
         notifyInitialized();
     };
 
-    if (Services.prefs.getBoolPref(PREF_GETADDONS_CACHE_ENABLED) == false) {
+    if (!Services.prefs.getBoolPref(PREF_GETADDONS_CACHE_ENABLED)) {
       setURL(url);
       return;
     }

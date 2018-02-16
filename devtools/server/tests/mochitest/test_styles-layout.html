@@ -37,9 +37,9 @@ addTest(function () {
   runNextTest();
 });
 
-addAsyncTest(function* () {
-  let node = yield gWalker.querySelector(gWalker.rootNode, "#layout-element");
-  let layout = yield gStyles.getLayout(node, {});
+addAsyncTest(async function () {
+  let node = await gWalker.querySelector(gWalker.rootNode, "#layout-element");
+  let layout = await gStyles.getLayout(node, {});
 
   let properties = ["width", "height",
                     "margin-top", "margin-right", "margin-bottom",
@@ -55,9 +55,9 @@ addAsyncTest(function* () {
   runNextTest();
 });
 
-addAsyncTest(function* () {
-  let node = yield gWalker.querySelector(gWalker.rootNode, "#layout-element");
-  let layout = yield gStyles.getLayout(node, {});
+addAsyncTest(async function () {
+  let node = await gWalker.querySelector(gWalker.rootNode, "#layout-element");
+  let layout = await gStyles.getLayout(node, {});
 
   let expected = {
     "box-sizing": "border-box",
@@ -79,15 +79,15 @@ addAsyncTest(function* () {
   runNextTest();
 });
 
-addAsyncTest(function* () {
-  let node = yield gWalker.querySelector(gWalker.rootNode,
+addAsyncTest(async function () {
+  let node = await gWalker.querySelector(gWalker.rootNode,
                                          "#layout-auto-margin-element");
 
-  let layout = yield gStyles.getLayout(node, {});
+  let layout = await gStyles.getLayout(node, {});
   ok(!("autoMargins" in layout),
      "By default, getLayout doesn't return auto margins");
 
-  layout = yield gStyles.getLayout(node, {autoMargins: true});
+  layout = await gStyles.getLayout(node, {autoMargins: true});
   ok(("autoMargins" in layout),
      "getLayout does return auto margins when asked to");
   is(layout.autoMargins.left, "auto", "The left margin is auto");

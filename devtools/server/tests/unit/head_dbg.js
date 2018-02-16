@@ -21,7 +21,6 @@ _appInfo.updateAppInfo({
 const { require, loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const { worker } = ChromeUtils.import("resource://devtools/shared/worker/loader.js", {});
 const defer = require("devtools/shared/defer");
-const { Task } = require("devtools/shared/task");
 const { console } = require("resource://gre/modules/Console.jsm");
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 
@@ -92,19 +91,19 @@ function makeMemoryActorTest(testGeneratorFunction) {
           return;
         }
 
-        Task.spawn(function* () {
+        (async function () {
           try {
             const memoryFront = new MemoryFront(client, tabForm, rootForm);
-            yield memoryFront.attach();
-            yield* testGeneratorFunction(client, memoryFront);
-            yield memoryFront.detach();
+            await memoryFront.attach();
+            await testGeneratorFunction(client, memoryFront);
+            await memoryFront.detach();
           } catch (err) {
             DevToolsUtils.reportException("makeMemoryActorTest", err);
             ok(false, "Got an error: " + err);
           }
 
           finishClient(client);
-        });
+        })();
       });
     });
   };
@@ -130,20 +129,20 @@ function makeFullRuntimeMemoryActorTest(testGeneratorFunction) {
           return;
         }
 
-        Task.spawn(function* () {
+        (async function () {
           try {
-            const rootForm = yield listTabs(client);
+            const rootForm = await listTabs(client);
             const memoryFront = new MemoryFront(client, form, rootForm);
-            yield memoryFront.attach();
-            yield* testGeneratorFunction(client, memoryFront);
-            yield memoryFront.detach();
+            await memoryFront.attach();
+            await testGeneratorFunction(client, memoryFront);
+            await memoryFront.detach();
           } catch (err) {
             DevToolsUtils.reportException("makeMemoryActorTest", err);
             ok(false, "Got an error: " + err);
           }
 
           finishClient(client);
-        });
+        })();
       });
     });
   };

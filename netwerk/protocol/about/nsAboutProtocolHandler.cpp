@@ -20,6 +20,7 @@
 #include "nsIWritablePropertyBag2.h"
 #include "nsIChannel.h"
 #include "nsIScriptError.h"
+#include "nsIEnterprisePolicies.h"
 
 namespace mozilla {
 namespace net {
@@ -175,14 +176,29 @@ nsAboutProtocolHandler::NewChannel2(nsIURI* uri,
     nsCOMPtr<nsIAboutModule> aboutMod;
     nsresult rv = NS_GetAboutModule(uri, getter_AddRefs(aboutMod));
 
+    bool aboutPageAllowed = true;
     nsAutoCString path;
     nsresult rv2 = NS_GetAboutModuleName(uri, path);
-    if (NS_SUCCEEDED(rv2) && path.EqualsLiteral("srcdoc")) {
-        // about:srcdoc is meant to be unresolvable, yet is included in the
-        // about lookup tables so that it can pass security checks when used in
-        // a srcdoc iframe.  To ensure that it stays unresolvable, we pretend
-        // that it doesn't exist.
-      rv = NS_ERROR_FACTORY_NOT_REGISTERED;
+    if (NS_SUCCEEDED(rv2)) {
+        if (path.EqualsLiteral("srcdoc")) {
+            // about:srcdoc is meant to be unresolvable, yet is included in the
+            // about lookup tables so that it can pass security checks when used in
+            // a srcdoc iframe.  To ensure that it stays unresolvable, we pretend
+            // that it doesn't exist.
+            rv = NS_ERROR_FACTORY_NOT_REGISTERED;
+        } else {
+            nsCOMPtr<nsIEnterprisePolicies> policyManager =
+                do_GetService("@mozilla.org/browser/enterprisepolicies;1", &rv2);
+            if (NS_SUCCEEDED(rv2)) {
+                nsAutoCString normalizedURL;
+                normalizedURL.AssignLiteral("about:");
+                normalizedURL.Append(path);
+                rv2 = policyManager->IsAllowed(normalizedURL, &aboutPageAllowed);
+                if (NS_FAILED(rv2)) {
+                    aboutPageAllowed = false;
+                }
+            }
+        }
     }
 
     if (NS_SUCCEEDED(rv)) {
@@ -233,6 +249,9 @@ nsAboutProtocolHandler::NewChannel2(nsIURI* uri,
                         SetPropertyAsInterface(NS_LITERAL_STRING("baseURI"),
                                                aboutURI->GetBaseURI());
                 }
+            }
+            if (!aboutPageAllowed) {
+                (*result)->Cancel(NS_ERROR_BLOCKED_BY_POLICY);
             }
         }
         return rv;

@@ -310,6 +310,8 @@ protected:
   // True if this is parser is a fragment parser or an HTML DOMParser.
   // XML DOMParser leaves this to false for now!
   uint8_t mRunsToCompletion : 1;
+  // True if we are blocking load event.
+  bool mIsBlockingOnload : 1;
 
   //
   // -- Can interrupt parsing members --

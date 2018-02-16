@@ -63,7 +63,7 @@ function mergeChanges(collection, localRecords, changes) {
 
   return Object.values(records)
     // Filter out deleted records.
-    .filter((record) => record.deleted != true)
+    .filter((record) => !record.deleted)
     // Sort list by record id.
     .sort((a, b) => {
       if (a.id < b.id) {

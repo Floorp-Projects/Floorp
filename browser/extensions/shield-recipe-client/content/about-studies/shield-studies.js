@@ -5,35 +5,11 @@
 /* global classnames FxButton InfoBox PropTypes r React remoteValues sendPageEvent */
 
 window.ShieldStudies = class ShieldStudies extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      learnMoreHref: null,
-    };
-  }
-
-  componentDidMount() {
-    remoteValues.ShieldLearnMoreHref.subscribe(this);
-  }
-
-  componentWillUnmount() {
-    remoteValues.ShieldLearnMoreHref.unsubscribe(this);
-  }
-
-  receiveRemoteValue(name, value) {
-    this.setState({
-      learnMoreHref: value,
-    });
-  }
 
   render() {
     return (
       r("div", {},
-        r(InfoBox, {},
-          r("span", {}, "What's this? Firefox may install and run studies from time to time."),
-          r("a", {id: "shield-studies-learn-more", href: this.state.learnMoreHref}, "Learn more"),
-          r(UpdatePreferencesButton, {}, "Update Preferences"),
-        ),
+        r(WhatsThisBox),
         r(StudyList),
       )
     );
@@ -65,38 +41,57 @@ class StudyList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      studies: [],
+      studies: null,
     };
   }
 
   componentDidMount() {
-    remoteValues.StudyList.subscribe(this);
+    remoteValues.studyList.subscribe(this);
   }
 
   componentWillUnmount() {
-    remoteValues.StudyList.unsubscribe(this);
+    remoteValues.studyList.unsubscribe(this);
   }
 
   receiveRemoteValue(name, value) {
-    const studies = value.slice();
+    if (value) {
+      const studies = value.slice();
 
-    // Sort by active status, then by start date descending.
-    studies.sort((a, b) => {
-      if (a.active !== b.active) {
-        return a.active ? -1 : 1;
-      }
-      return b.studyStartDate - a.studyStartDate;
-    });
+      // Sort by active status, then by start date descending.
+      studies.sort((a, b) => {
+        if (a.active !== b.active) {
+          return a.active ? -1 : 1;
+        }
+        return b.studyStartDate - a.studyStartDate;
+      });
 
-    this.setState({studies});
+      this.setState({studies});
+    } else {
+      this.setState({studies: value});
+    }
   }
 
   render() {
+    const { studies } = this.state;
+
+    if (studies === null) {
+      // loading
+      return null;
+    }
+
+    let info = null;
+    if (studies.length === 0) {
+      info = r("p", {className: "study-list-info"}, "You have not participated in any studies.");
+    }
+
     return (
-      r("ul", {className: "study-list"},
-        this.state.studies.map(study => (
-          r(StudyListItem, {key: study.name, study})
-        ))
+      r("div", {},
+        info,
+        r("ul", {className: "study-list"},
+          this.state.studies.map(study => (
+            r(StudyListItem, {key: study.name, study})
+          ))
+        ),
       )
     );
   }
@@ -146,3 +141,60 @@ StudyListItem.propTypes = {
     description: PropTypes.string.isRequired,
   }).isRequired,
 };
+
+class WhatsThisBox extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      learnMoreHref: null,
+      studiesEnabled: null,
+    };
+  }
+
+  componentDidMount() {
+    remoteValues.shieldLearnMoreHref.subscribe(this);
+    remoteValues.studiesEnabled.subscribe(this);
+  }
+
+  componentWillUnmount() {
+    remoteValues.shieldLearnMoreHref.unsubscribe(this);
+    remoteValues.studiesEnabled.unsubscribe(this);
+  }
+
+  receiveRemoteValue(name, value) {
+    switch (name) {
+      case "ShieldLearnMoreHref": {
+        this.setState({ learnMoreHref: value });
+        break;
+      }
+      case "StudiesEnabled": {
+        this.setState({ studiesEnabled: value });
+        break;
+      }
+      default: {
+        console.error(`Unknown remote value ${name}`);
+      }
+    }
+  }
+
+  render() {
+    const { learnMoreHref, studiesEnabled } = this.state;
+
+    let message = null;
+
+    // studiesEnabled can be null, in which case do nothing
+    if (studiesEnabled === false) {
+      message = r("span", {}, "This is a list of studies that you have participated in. No new studies will run.");
+    } else if (studiesEnabled === true) {
+      message = r("span", {}, "What's this? Firefox may install and run studies from time to time.");
+    }
+
+    return (
+      r(InfoBox, {},
+        message,
+        r("a", {id: "shield-studies-learn-more", href: learnMoreHref}, "Learn more"),
+        r(UpdatePreferencesButton, {}, "Update Preferences"),
+       )
+    );
+  }
+}

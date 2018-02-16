@@ -7,14 +7,6 @@ ChromeUtils.defineModuleGetter(this, "AppConstants",
 
 ignoreAllUncaughtExceptions();
 
-add_task(async function setup() {
-  // The following prefs would affect tests so make sure to disable them
-  // before any tests start.
-  await SpecialPowers.pushPrefEnv({set: [
-    ["browser.newtabpage.activity-stream.aboutHome.enabled", false],
-  ]});
-});
-
 // The following two tests need to be skipped for the time being, since we're
 // no longer showing the launcher options on about:home. When we remove about:home
 // and all of it's code, we can delete these tests

@@ -29,6 +29,7 @@ const FILTER_SWATCH_CLASS = "ruleview-filterswatch";
 const ANGLE_SWATCH_CLASS = "ruleview-angleswatch";
 const INSET_POINT_TYPES = ["top", "right", "bottom", "left"];
 const FONT_FAMILY_CLASS = "ruleview-font-family";
+const SHAPE_SWATCH_CLASS = "ruleview-shapeswatch";
 
 /*
  * An actionable element is an element which on click triggers a specific action
@@ -380,6 +381,7 @@ TextPropertyEditor.prototype = {
       flexClass: "ruleview-flex",
       gridClass: "ruleview-grid",
       shapeClass: "ruleview-shape",
+      shapeSwatchClass: SHARED_SWATCH_CLASS + " " + SHAPE_SWATCH_CLASS,
       defaultColorType: !propDirty,
       urlClass: "theme-link",
       fontFamilyClass: FONT_FAMILY_CLASS,
@@ -507,7 +509,7 @@ TextPropertyEditor.prototype = {
       }
     }
 
-    let shapeToggle = this.valueSpan.querySelector(".ruleview-shape");
+    let shapeToggle = this.valueSpan.querySelector(".ruleview-shapeswatch");
     if (shapeToggle) {
       let mode = "css" + name.split("-").map(s => {
         return s[0].toUpperCase() + s.slice(1);
@@ -1043,7 +1045,7 @@ TextPropertyEditor.prototype = {
    */
   _onHoverShapePoint: function (event, point) {
     // If there is no shape toggle, or it is not active, return.
-    let shapeToggle = this.valueSpan.querySelector(".ruleview-shape.active");
+    let shapeToggle = this.valueSpan.querySelector(".ruleview-shapeswatch.active");
     if (!shapeToggle) {
       return;
     }

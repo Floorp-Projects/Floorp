@@ -12,7 +12,6 @@ add_task(function* () {
   yield addTab(TEST_URL);
   let {view} = yield openRuleView();
   yield testPressingEscapeRevertsChanges(view);
-  yield testPressingEscapeRevertsChangesAndDisables(view);
 });
 
 function* testPressingEscapeRevertsChanges(view) {
@@ -33,59 +32,6 @@ function* testPressingEscapeRevertsChanges(view) {
     "blur(2px) contrast(2)");
   is(propEditor.valueSpan.textContent, "blur(2px) contrast(2)",
     "Got expected property value.");
-}
-
-function* testPressingEscapeRevertsChangesAndDisables(view) {
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let propEditor = ruleEditor.rule.textProps[0].editor;
-
-  info("Disabling filter property");
-  let onRuleViewChanged = view.once("ruleview-changed");
-  propEditor.enable.click();
-  yield onRuleViewChanged;
-
-  ok(propEditor.element.classList.contains("ruleview-overridden"),
-    "property is overridden.");
-  is(propEditor.enable.style.visibility, "visible",
-    "property enable checkbox is visible.");
-  ok(!propEditor.enable.getAttribute("checked"),
-    "property enable checkbox is not checked.");
-  ok(!propEditor.prop.enabled,
-    "filter property is disabled.");
-  let newValue = yield getRulePropertyValue("filter");
-  is(newValue, "", "filter should have been unset.");
-
-  let swatch = propEditor.valueSpan.querySelector(".ruleview-filterswatch");
-  yield clickOnFilterSwatch(swatch, view);
-
-  ok(!propEditor.element.classList.contains("ruleview-overridden"),
-    "property overridden is not displayed.");
-  is(propEditor.enable.style.visibility, "hidden",
-    "property enable checkbox is hidden.");
-
-  yield setValueInFilterWidget("blur(2px)", view);
-  yield pressEscapeToCloseTooltip(view);
-
-  ok(propEditor.element.classList.contains("ruleview-overridden"),
-    "property is overridden.");
-  is(propEditor.enable.style.visibility, "visible",
-    "property enable checkbox is visible.");
-  ok(!propEditor.enable.getAttribute("checked"),
-    "property enable checkbox is not checked.");
-  ok(!propEditor.prop.enabled, "filter property is disabled.");
-  newValue = yield getRulePropertyValue("filter");
-  is(newValue, "", "filter should have been unset.");
-  is(propEditor.valueSpan.textContent, "blur(2px) contrast(2)",
-    "Got expected property value.");
-}
-
-function* getRulePropertyValue(name) {
-  let propValue = yield executeInContent("Test:GetRulePropertyValue", {
-    styleSheetIndex: 0,
-    ruleIndex: 0,
-    name: name
-  });
-  return propValue;
 }
 
 function* clickOnFilterSwatch(swatch, view) {

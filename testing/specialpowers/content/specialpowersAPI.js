@@ -819,7 +819,7 @@ SpecialPowersAPI.prototype = {
                              : Ci.nsIPermissionManager.DENY_ACTION;
         }
 
-        if (permission.remove == true)
+        if (permission.remove)
           perm = Ci.nsIPermissionManager.UNKNOWN_ACTION;
 
         if (originalValue == perm) {
@@ -838,7 +838,7 @@ SpecialPowersAPI.prototype = {
 
         var cleanupTodo = Object.assign({}, todo);
 
-        if (permission.remove == true)
+        if (permission.remove)
           todo.op = "remove";
 
         pendingPermissions.push(todo);
