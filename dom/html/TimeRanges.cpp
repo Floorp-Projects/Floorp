@@ -18,7 +18,6 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(TimeRanges)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TimeRanges)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TimeRanges)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMTimeRanges)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -65,13 +64,6 @@ TimeRanges::~TimeRanges()
 {
 }
 
-NS_IMETHODIMP
-TimeRanges::GetLength(uint32_t* aLength)
-{
-  *aLength = Length();
-  return NS_OK;
-}
-
 double
 TimeRanges::Start(uint32_t aIndex, ErrorResult& aRv) const
 {
@@ -83,14 +75,6 @@ TimeRanges::Start(uint32_t aIndex, ErrorResult& aRv) const
   return mRanges[aIndex].mStart;
 }
 
-NS_IMETHODIMP
-TimeRanges::Start(uint32_t aIndex, double* aTime)
-{
-  ErrorResult rv;
-  *aTime = Start(aIndex, rv);
-  return rv.StealNSResult();
-}
-
 double
 TimeRanges::End(uint32_t aIndex, ErrorResult& aRv) const
 {
@@ -100,14 +84,6 @@ TimeRanges::End(uint32_t aIndex, ErrorResult& aRv) const
   }
 
   return mRanges[aIndex].mEnd;
-}
-
-NS_IMETHODIMP
-TimeRanges::End(uint32_t aIndex, double* aTime)
-{
-  ErrorResult rv;
-  *aTime = End(aIndex, rv);
-  return rv.StealNSResult();
 }
 
 void
