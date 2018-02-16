@@ -8451,6 +8451,9 @@ nsDocument::DispatchPageTransition(EventTarget* aDispatchTarget,
   init.mCancelable = true;
   init.mPersisted = aPersisted;
 
+  nsDocShell* docShell = mDocumentContainer.get();
+  init.mInFrameSwap = docShell && docShell->InFrameSwap();
+
   RefPtr<PageTransitionEvent> event =
     PageTransitionEvent::Constructor(this, aType, init);
 
