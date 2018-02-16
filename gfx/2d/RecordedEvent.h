@@ -259,6 +259,7 @@ public:
     POPLAYER,
     UNSCALEDFONTCREATION,
     UNSCALEDFONTDESTRUCTION,
+    INTOLUMINANCE,
   };
   static const uint32_t kTotalEventTypes = RecordedEvent::FILTERNODESETINPUT + 1;
 
