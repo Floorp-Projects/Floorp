@@ -31,9 +31,7 @@
 #include "gc/Marking.h"
 #include "jit/InlinableNatives.h"
 #include "js/Conversions.h"
-#ifdef XP_WIN
-# include "util/Windows.h"
-#endif
+#include "util/Windows.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"

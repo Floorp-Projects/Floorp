@@ -37,9 +37,7 @@
 #include "gc/Memory.h"
 #include "js/Conversions.h"
 #include "js/MemoryMetrics.h"
-#ifdef XP_WIN
-# include "util/Windows.h"
-#endif
+#include "util/Windows.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"
