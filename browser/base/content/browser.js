@@ -7947,7 +7947,7 @@ var gIdentityHandler = {
         !hasBlockedPopupIndicator) {
       let permission = {
         id: "popup",
-        state: SitePermissions.UNKNOWN,
+        state: SitePermissions.getDefault("popup"),
         scope: SitePermissions.SCOPE_PERSISTENT,
       };
       let item = this._createPermissionItem(permission);
