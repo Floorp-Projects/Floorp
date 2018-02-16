@@ -254,8 +254,7 @@ amManager.prototype = {
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.amIAddonManager,
                                          Ci.nsITimerCallback,
-                                         Ci.nsIObserver,
-                                         Ci.nsIMessageListener])
+                                         Ci.nsIObserver])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([amManager]);

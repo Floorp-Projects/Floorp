@@ -45,6 +45,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsInProcessTabChildGlobal,
                                                          mozilla::DOMEventTargetHelper)
 
+  void MarkForCC();
+
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override
   {
@@ -64,7 +66,6 @@ public:
   }
   virtual already_AddRefed<nsIEventTarget> GetTabEventTarget() override;
 
-  NS_FORWARD_SAFE_NSIMESSAGELISTENERMANAGER(mMessageManager)
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
   NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
 

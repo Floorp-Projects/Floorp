@@ -119,10 +119,6 @@ void UnpackClonedMessageDataForChild(const ClonedMessageData& aClonedData,
                                      StructuredCloneData& aData);
 
 } // namespace ipc
-
-typedef CallbackObjectHolder<mozilla::dom::MessageListener,
-                             nsIMessageListener> MessageListenerHolder;
-
 } // namespace dom
 } // namespace mozilla
 
@@ -133,22 +129,12 @@ struct nsMessageListenerInfo
     return &aOther == this;
   }
 
-  // If mWeakListener is null then mStrongListener holds either a MessageListener or an
-  // nsIMessageListener. If mWeakListener is non-null then mStrongListener contains null.
-  mozilla::dom::MessageListenerHolder mStrongListener;
+  // If mWeakListener is null then mStrongListener holds a MessageListener.
+  // If mWeakListener is non-null then mStrongListener contains null.
+  RefPtr<mozilla::dom::MessageListener> mStrongListener;
   nsWeakPtr mWeakListener;
   bool mListenWhenClosed;
 };
-
-inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            nsMessageListenerInfo& aField,
-                            const char* aName,
-                            uint32_t aFlags = 0)
-{
-  ImplCycleCollectionTraverse(aCallback, aField.mStrongListener, aName, aFlags);
-  ImplCycleCollectionTraverse(aCallback, aField.mWeakListener, aName, aFlags);
-}
 
 class MOZ_STACK_CLASS SameProcessCpowHolder : public mozilla::jsipc::CpowHolder
 {
@@ -186,6 +172,8 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsFrameMessageManager,
                                                          nsIContentFrameMessageManager)
+
+  void MarkForCC();
 
   // MessageListenerManager
   void AddMessageListener(const nsAString& aMessageName,
@@ -242,18 +230,21 @@ public:
                              JS::MutableHandle<JS::Value> aInitialProcessData,
                              mozilla::ErrorResult& aError);
 
-  NS_DECL_NSIMESSAGELISTENERMANAGER
   NS_DECL_NSIMESSAGESENDER
   NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
 
   static mozilla::dom::ChromeMessageSender*
   NewProcessMessageManager(bool aIsRemote);
 
-  nsresult ReceiveMessage(nsISupports* aTarget, nsFrameLoader* aTargetFrameLoader,
-                          const nsAString& aMessage,
-                          bool aIsSync, StructuredCloneData* aCloneData,
-                          mozilla::jsipc::CpowHolder* aCpows, nsIPrincipal* aPrincipal,
-                          nsTArray<StructuredCloneData>* aRetVal);
+  void ReceiveMessage(nsISupports* aTarget, nsFrameLoader* aTargetFrameLoader,
+                      const nsAString& aMessage, bool aIsSync,
+                      StructuredCloneData* aCloneData, mozilla::jsipc::CpowHolder* aCpows,
+                      nsIPrincipal* aPrincipal, nsTArray<StructuredCloneData>* aRetVal,
+                      mozilla::ErrorResult& aError)
+  {
+    ReceiveMessage(aTarget, aTargetFrameLoader, mClosed, aMessage, aIsSync, aCloneData,
+                   aCpows, aPrincipal, aRetVal, aError);
+  }
 
   void Disconnect(bool aRemoveFromParent = true);
   void Close();
@@ -337,11 +328,11 @@ protected:
                    nsIPrincipal* aPrincipal, bool aIsSync,
                    nsTArray<JS::Value>& aResult, mozilla::ErrorResult& aError);
 
-  nsresult ReceiveMessage(nsISupports* aTarget, nsFrameLoader* aTargetFrameLoader,
-                          bool aTargetClosed, const nsAString& aMessage,
-                          bool aIsSync, StructuredCloneData* aCloneData,
-                          mozilla::jsipc::CpowHolder* aCpows, nsIPrincipal* aPrincipal,
-                          nsTArray<StructuredCloneData>* aRetVal);
+  void ReceiveMessage(nsISupports* aTarget, nsFrameLoader* aTargetFrameLoader,
+                      bool aTargetClosed, const nsAString& aMessage, bool aIsSync,
+                      StructuredCloneData* aCloneData, mozilla::jsipc::CpowHolder* aCpows,
+                      nsIPrincipal* aPrincipal, nsTArray<StructuredCloneData>* aRetVal,
+                      mozilla::ErrorResult& aError);
 
   void LoadScript(const nsAString& aURL, bool aAllowDelayedLoad,
                   bool aRunInGlobalScope, mozilla::ErrorResult& aError);
@@ -386,12 +377,6 @@ public:
   static nsFrameMessageManager* sSameProcessParentManager;
   static nsTArray<nsCOMPtr<nsIRunnable> >* sPendingSameProcessAsyncMessages;
 private:
-  void AddMessageListener(const nsAString& aMessageName,
-                          mozilla::dom::MessageListenerHolder&& aListener,
-                          bool aListenWhenClosed);
-  void RemoveMessageListener(const nsAString& aMessageName,
-                             const mozilla::dom::MessageListenerHolder&  aListener);
-
   static mozilla::dom::ChildProcessMessageManager* sChildProcessManager;
 };
 
