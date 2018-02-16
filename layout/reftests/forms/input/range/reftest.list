@@ -28,7 +28,7 @@ fuzzy-if(skiaContent,1,40) == stepUp-unthemed.html 75pct-unthemed-common-ref.htm
 == direction-unthemed-1.html direction-unthemed-1-ref.html
 
 # ::-moz-range-progress pseudo-element:
-fails-if(Android) == moz-range-progress-1.html moz-range-progress-1-ref.html
+== moz-range-progress-1.html moz-range-progress-1-ref.html
 == moz-range-progress-2.html moz-range-progress-2-ref.html
 == moz-range-progress-3.html moz-range-progress-3-ref.html
 
