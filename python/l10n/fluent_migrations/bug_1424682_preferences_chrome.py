@@ -216,13 +216,6 @@ def migrate(ctx):
                 )
             ),
             FTL.Message(
-                id=FTL.Identifier('revert-no-restart-button'),
-                value=COPY(
-                    'browser/chrome/browser/preferences/preferences.properties',
-                    'revertNoRestartButton',
-                )
-            ),
-            FTL.Message(
                 id=FTL.Identifier('restart-later'),
                 value=COPY(
                     'browser/chrome/browser/preferences/preferences.properties',
