@@ -56,12 +56,6 @@ var gEditItemOverlay = {
       }
       let parent = node.parent;
       isParentReadOnly = !PlacesUtils.nodeIsFolder(parent);
-      if (!isParentReadOnly) {
-        let folderId = PlacesUtils.getConcreteItemId(parent);
-        isParentReadOnly = folderId == PlacesUtils.placesRootId ||
-                           (!("get" in Object.getOwnPropertyDescriptor(PlacesUIUtils, "leftPaneFolderId")) &&
-                            (folderId == PlacesUIUtils.leftPaneFolderId));
-      }
       parentId = parent.itemId;
       parentGuid = parent.bookmarkGuid;
     }
