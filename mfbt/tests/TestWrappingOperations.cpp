@@ -4,10 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Assertions.h"
 #include "mozilla/WrappingOperations.h"
 
 #include <stdint.h>
 
+using mozilla::WrappingMultiply;
 using mozilla::WrapToSigned;
 
 // NOTE: In places below |-FOO_MAX - 1| is used instead of |-FOO_MIN| because
@@ -59,8 +61,188 @@ static_assert(WrapToSigned(uint64_t(9223372036854775808ULL + 9223372036854775807
                 -9223372036854775807LL - 1 + 9223372036854775807LL,
               "works for 64-bit numbers, wraparound high end");
 
+template<typename T>
+inline constexpr bool
+TestEqual(T aX, T aY)
+{
+  return aX == aY;
+}
+
+static void
+TestWrappingMultiply8()
+{
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint8_t(0), uint8_t(128)),
+                               uint8_t(0)),
+                     "zero times anything is zero");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint8_t(128), uint8_t(1)),
+                               uint8_t(128)),
+                     "1 times anything is anything");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint8_t(2), uint8_t(128)),
+                               uint8_t(0)),
+                     "2 times high bit overflows, produces zero");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint8_t(8), uint8_t(16)),
+                               uint8_t(128)),
+                     "multiply that populates the high bit produces that value");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint8_t(127), uint8_t(127)),
+                               uint8_t(1)),
+                     "multiplying signed maxvals overflows all the way to 1");
+
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int8_t(0), int8_t(-128)),
+                               int8_t(0)),
+                     "zero times anything is zero");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int8_t(-128), int8_t(1)),
+                               int8_t(-128)),
+                     "1 times anything is anything");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int8_t(2), int8_t(-128)),
+                               int8_t(0)),
+                     "2 times min overflows, produces zero");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int8_t(16), int8_t(24)),
+                               int8_t(-128)),
+                     "multiply that populates the sign bit produces minval");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int8_t(8), int8_t(16)),
+                               int8_t(-128)),
+                     "multiply that populates the sign bit produces minval");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int8_t(127), int8_t(127)),
+                               int8_t(1)),
+                     "multiplying maxvals overflows all the way to 1");
+}
+
+static void
+TestWrappingMultiply16()
+{
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint16_t(0), uint16_t(32768)),
+                               uint16_t(0)),
+                     "zero times anything is zero");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint16_t(32768), uint16_t(1)),
+                               uint16_t(32768)),
+                     "1 times anything is anything");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint16_t(2), uint16_t(32768)),
+                               uint16_t(0)),
+                     "2 times high bit overflows, produces zero");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint16_t(3), uint16_t(32768)),
+                               uint16_t(-32768)),
+                     "3 * 32768 - 65536 is 32768");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint16_t(64), uint16_t(512)),
+                               uint16_t(32768)),
+                     "multiply that populates the high bit produces that value");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint16_t(32767), uint16_t(32767)),
+                               uint16_t(1)),
+                    "multiplying signed maxvals overflows all the way to 1");
+
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int16_t(0), int16_t(-32768)),
+                               int16_t(0)),
+                     "zero times anything is zero");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int16_t(-32768), int16_t(1)),
+                               int16_t(-32768)),
+                     "1 times anything is anything");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int16_t(-456), int16_t(123)),
+                               int16_t(9448)),
+                     "multiply opposite signs, then add 2**16 for the result");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int16_t(2), int16_t(-32768)),
+                               int16_t(0)),
+                     "2 times min overflows, produces zero");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int16_t(64), int16_t(512)),
+                               int16_t(-32768)),
+                     "multiply that populates the sign bit produces minval");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int16_t(32767), int16_t(32767)),
+                               int16_t(1)),
+                     "multiplying maxvals overflows all the way to 1");
+}
+
+static void
+TestWrappingMultiply32()
+{
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint32_t(0), uint32_t(2147483648)),
+                               uint32_t(0)),
+                    "zero times anything is zero");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint32_t(42), uint32_t(17)),
+                               uint32_t(714)),
+                     "42 * 17 is 714 without wraparound");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint32_t(2147483648), uint32_t(1)),
+                               uint32_t(2147483648)),
+                     "1 times anything is anything");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint32_t(2), uint32_t(2147483648)),
+                               uint32_t(0)),
+                     "2 times high bit overflows, produces zero");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint32_t(8192), uint32_t(262144)),
+                               uint32_t(2147483648)),
+                     "multiply that populates the high bit produces that value");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint32_t(2147483647),
+                                                uint32_t(2147483647)),
+                               uint32_t(1)),
+                     "multiplying signed maxvals overflows all the way to 1");
+
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int32_t(0), int32_t(-2147483647 - 1)),
+                               int32_t(0)),
+                     "zero times anything is zero");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int32_t(-2147483647 - 1), int32_t(1)),
+                               int32_t(-2147483647 - 1)),
+                     "1 times anything is anything");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int32_t(2), int32_t(-2147483647 - 1)),
+                               int32_t(0)),
+                     "2 times min overflows, produces zero");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int32_t(-7), int32_t(-9)),
+                               int32_t(63)),
+                     "-7 * -9 is 63, no wraparound needed");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int32_t(8192), int32_t(262144)),
+                               int32_t(-2147483647 - 1)),
+                     "multiply that populates the sign bit produces minval");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int32_t(2147483647), int32_t(2147483647)),
+                               int32_t(1)),
+                     "multiplying maxvals overflows all the way to 1");
+}
+
+static void
+TestWrappingMultiply64()
+{
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint64_t(0),
+                                                uint64_t(9223372036854775808ULL)),
+                               uint64_t(0)),
+                     "zero times anything is zero");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint64_t(9223372036854775808ULL),
+                                                uint64_t(1)),
+                               uint64_t(9223372036854775808ULL)),
+                     "1 times anything is anything");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint64_t(2),
+                                                uint64_t(9223372036854775808ULL)),
+                               uint64_t(0)),
+                     "2 times high bit overflows, produces zero");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint64_t(131072),
+                                                uint64_t(70368744177664)),
+                               uint64_t(9223372036854775808ULL)),
+                     "multiply that populates the high bit produces that value");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(uint64_t(9223372036854775807),
+                                                uint64_t(9223372036854775807)),
+                               uint64_t(1)),
+                     "multiplying signed maxvals overflows all the way to 1");
+
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int64_t(0), int64_t(-9223372036854775807 - 1)),
+                               int64_t(0)),
+                     "zero times anything is zero");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int64_t(-9223372036854775807 - 1),
+                                                int64_t(1)),
+                               int64_t(-9223372036854775807 - 1)),
+                     "1 times anything is anything");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int64_t(2),
+                                                int64_t(-9223372036854775807 - 1)),
+                               int64_t(0)),
+                     "2 times min overflows, produces zero");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int64_t(131072),
+                                                int64_t(70368744177664)),
+                               int64_t(-9223372036854775807 - 1)),
+                     "multiply that populates the sign bit produces minval");
+  MOZ_RELEASE_ASSERT(TestEqual(WrappingMultiply(int64_t(9223372036854775807),
+                                                int64_t(9223372036854775807)),
+                               int64_t(1)),
+                     "multiplying maxvals overflows all the way to 1");
+}
+
 int
 main()
 {
+  TestWrappingMultiply8();
+  TestWrappingMultiply16();
+  TestWrappingMultiply32();
+  TestWrappingMultiply64();
   return 0;
 }
