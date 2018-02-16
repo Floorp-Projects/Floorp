@@ -18,7 +18,7 @@ window.gActivityStreamPrerenderedState = {
       "migrationExpired": true,
       "showTopSites": true,
       "showSearch": true,
-      "topSitesRows": 2,
+      "topSitesRows": 1,
       "collapseTopSites": false,
       "section.highlights.collapsed": false,
       "section.topstories.collapsed": false,

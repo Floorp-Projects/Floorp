@@ -10,9 +10,6 @@ ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
 const BROWSER_READY_NOTIFICATION = "sessionstore-windows-restored";
-const PREF_CHANGED_TOPIC = "nsPref:changed";
-const REASON_SHUTDOWN_ON_PREF_CHANGE = "PREF_OFF";
-const REASON_STARTUP_ON_PREF_CHANGE = "PREF_ON";
 const RESOURCE_BASE = "resource://activity-stream";
 
 const ACTIVITY_STREAM_OPTIONS = {newTabURL: "about:newtab"};
