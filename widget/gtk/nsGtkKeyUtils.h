@@ -338,6 +338,16 @@ protected:
     static bool IsBasicLatinLetterOrNumeral(uint32_t aCharCode);
 
     /**
+     * IsPrintableASCIICharacter() checks whether the aCharCode is a printable
+     * ASCII character.  I.e., returns false if aCharCode is a control
+     * character even in an ASCII character.
+     */
+    static bool IsPrintableASCIICharacter(uint32_t aCharCode)
+    {
+      return aCharCode >= 0x20 && aCharCode <= 0x7E;
+    }
+
+    /**
      * GetGDKKeyvalWithoutModifier() returns the keyval for aGdkKeyEvent when
      * ignoring the modifier state except NumLock. (NumLock is a key to change
      * some key's meaning.)
