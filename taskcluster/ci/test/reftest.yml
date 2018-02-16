@@ -98,8 +98,8 @@ reftest:
     virtualization: virtual-with-gpu
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-16/debug: 56
-            android.*: 28
+            android-4.3-arm7-api-16/debug: 48
+            android.*: 24
             macosx64.*/opt: 1
             macosx64.*/debug: 2
             windows10-64.*/opt: 1
