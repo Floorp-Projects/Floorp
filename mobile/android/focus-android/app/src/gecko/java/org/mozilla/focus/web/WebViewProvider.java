@@ -58,9 +58,7 @@ public class WebViewProvider {
 
             final GeckoSessionSettings settings = new GeckoSessionSettings();
             settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
-            // Todo we need to use private mode to not save files but currently gv unexpectedly
-            // has tracking protection in private mode
-            //settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true);
+            settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true);
 
             geckoSession = new GeckoSession(settings);
 

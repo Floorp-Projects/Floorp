@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.support.v4.util.ArrayMap
+import android.view.View
 
 import org.mozilla.focus.R
 import org.mozilla.focus.locale.Locales
@@ -16,9 +17,7 @@ import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.gecko.GeckoSession
 
 import java.io.File
-import java.io.FileNotFoundException
-import java.io.FileOutputStream
-import java.io.IOException
+import java.io.PrintWriter
 
 object LocalizedContentGecko {
     // We can't use "about:" because webview silently swallows about: pages, hence we use
@@ -68,12 +67,12 @@ object LocalizedContentGecko {
         val wordmark = HtmlLoader.loadPngAsDataURI(context, R.drawable.wordmark)
         substitutionMap["%wordmark%"] = wordmark
 
-        // putLayoutDirectionIntoMap(substitutionMap, context);
+        putLayoutDirectionIntoMap(substitutionMap, context)
 
         val data = HtmlLoader.loadResourceFile(context, R.raw.about, substitutionMap)
         val path = context.filesDir
         val file = File(path, "about.html")
-        writeDataToFile(file, data.toByteArray())
+        writeDataToFile(file, data)
 
         geckoSession.loadUri(Uri.fromFile(file))
     }
@@ -102,50 +101,30 @@ object LocalizedContentGecko {
         val content5 = resources.getString(R.string.your_rights_content5, appName, gplUrl, trackingProtectionUrl)
         substitutionMap["%your-rights-content5%"] = content5
 
-        val data = HtmlLoader.loadResourceFile(context, R.raw.rights, substitutionMap)
+        putLayoutDirectionIntoMap(substitutionMap, context)
 
+        val data = HtmlLoader.loadResourceFile(context, R.raw.rights, substitutionMap)
         val path = context.filesDir
         val file = File(path, "rights.html")
-        writeDataToFile(file, data.toByteArray())
+
+        writeDataToFile(file, data)
 
         geckoSession.loadUri(Uri.fromFile(file))
     }
 
-    private fun writeDataToFile(file: File, data: ByteArray) {
-        var stream: FileOutputStream? = null
-        try {
-            stream = FileOutputStream(file)
-        } catch (e: FileNotFoundException) {
-            e.printStackTrace()
-        }
-
-        try {
-            stream!!.write(data)
-        } catch (e: IOException) {
-            e.printStackTrace()
-        } finally {
-            try {
-                stream!!.close()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-        }
+    private fun writeDataToFile(file: File, data: String) {
+        PrintWriter(file).use({ out -> out.println(data) })
     }
 
-    //    private static void putLayoutDirectionIntoMap(Map<String, String> substitutionMap, Context context) {
-    //        final int layoutDirection = context.getResources().getConfiguration().getLayoutDirection();
-    //
-    //
-    //        final String direction;
-    //
-    //        if (layoutDirection == View.LAYOUT_DIRECTION_LTR) {
-    //            direction = "ltr";
-    //        } else if (layoutDirection == View.LAYOUT_DIRECTION_RTL) {
-    //            direction = "rtl";
-    //        } else {
-    //            direction = "auto";
-    //        }
-    //
-    //        substitutionMap.put("%dir%", direction);
-    //    }
+    private fun putLayoutDirectionIntoMap(substitutionMap: ArrayMap<String, String>, context: Context) {
+        val layoutDirection = context.resources.configuration.layoutDirection
+
+        val direction = when (layoutDirection) {
+            View.LAYOUT_DIRECTION_LTR -> "ltr"
+            View.LAYOUT_DIRECTION_RTL -> "rtl"
+            else -> "auto"
+        }
+
+        substitutionMap["%dir%"] = direction
+    }
 }

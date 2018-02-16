@@ -3,8 +3,48 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" type="text/css" href="file:///android_asset/style.css">
+<meta name="viewport" charset="utf-8" content="width=device-width, initial-scale=1">
+<style>
+    body, html {
+    background: #221F1F;
+    color: #FFFFFF;
+    font-family: sans-serif;
+    line-height: 24px;
+    font-size: 14px;
+    }
+
+    body{
+    padding-left: 24px;
+    padding-right: 24px;
+    margin-left: 0px;
+    margin-right: 0px;
+    }
+
+    a {
+    color: #0A9AF4;
+    }
+
+    /* Make only about page links ("learn more") white */
+    .about a {
+    color: #FFFFFF;
+    }
+
+    p.subtitle {
+    text-align: center;
+    opacity: .7;
+    margin: 0;
+    }
+
+    img#wordmark {
+    /* We need to set the dp size here, because by default webview assumes the image is not
+    density specific (but since it's an android resource, we get a density specific version). */
+    width: 180px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 24px;
+    }
+</style>
 </head>
 <html>
 <body class="about" dir="%dir%">
