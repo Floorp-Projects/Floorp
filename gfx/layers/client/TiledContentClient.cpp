@@ -559,6 +559,8 @@ TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
           if (CopyFrontToBack(mFrontBufferOnWhite, mBackBufferOnWhite, gfxRectToCopy, aFlags, aCopies, aClients)) {
             mInvalidBack.SetEmpty();
           }
+        } else {
+          mInvalidBack.SetEmpty();
         }
       }
     }

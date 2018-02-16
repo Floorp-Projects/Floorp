@@ -71,9 +71,6 @@
 
 /* globals TESTS, runTest, finishTest */
 
-const { classes: Cc, interfaces: Ci, manager: Cm, results: Cr,
-        utils: Cu } = Components;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
 /* import-globals-from testConstants.js */
@@ -259,7 +256,6 @@ function runTestDefaultWaitForWindowClosed() {
     setupPrefs();
     gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     removeUpdateDirsAndFiles();
-    reloadUpdateManagerData();
     setupTimer(gTestTimeout);
     SimpleTest.executeSoon(setupTestUpdater);
   }

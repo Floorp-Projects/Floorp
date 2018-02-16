@@ -1,0 +1,189 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<?xml-stylesheet type="text/css" href="test_fontFaceRanges.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1435989
+-->
+<window title="Mozilla Bug 1435989"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="RunTest();">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 1435989 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function expectRanges(f, ranges) {
+  var r = f.ranges;
+  is(r.length, ranges.length, "number of ranges");
+  for (var i = 0; i < Math.min(r.length, ranges.length); i++) {
+    is(r[i].toString(), ranges[i], "text of range");
+  }
+}
+
+function RunTest() {
+  var rng = document.createRange();
+  var elem, fonts;
+  var familyNames = new Map();
+
+  // Test element contains Latin & Chinese
+  elem = document.getElementById("test1");
+  rng.selectNode(elem);
+  fonts = InspectorUtils.getUsedFontFaces(rng, 10);
+  is(fonts.length, 4, "number of font faces");
+  for (var i = 0; i < fonts.length; i++) {
+    var f = fonts[i];
+    familyNames.set(f.CSSFamilyName, true);
+    switch (true) {
+    case f.CSSFamilyName == "capitals":
+      expectRanges(f, ["H", "W"]);
+      break;
+    case f.CSSFamilyName == "lowercase":
+      expectRanges(f, ["ello", "orld"]);
+      break;
+    case f.CSSFamilyName == "gentium":
+      expectRanges(f, [" ", " ", " ", "!"]);
+      break;
+    default:
+      // We'll get a platform-dependent font for the Chinese characters,
+      // so we don't attempt to check its name.
+      expectRanges(f, ["\u4F60", "\u597D"]);
+      break;
+    }
+  }
+  is(familyNames.size, 4, "found all expected families");
+
+  // Test element #test1 again, but limit maxRanges to 1 per face
+  elem = document.getElementById("test1");
+  rng.selectNode(elem);
+  fonts = InspectorUtils.getUsedFontFaces(rng, 1);
+  is(fonts.length, 4, "number of font faces");
+  familyNames.clear();
+  for (var i = 0; i < fonts.length; i++) {
+    var f = fonts[i];
+    familyNames.set(f.CSSFamilyName, true);
+    switch (true) {
+    case f.CSSFamilyName == "capitals":
+      expectRanges(f, ["H"]);
+      break;
+    case f.CSSFamilyName == "lowercase":
+      expectRanges(f, ["ello"]);
+      break;
+    case f.CSSFamilyName == "gentium":
+      expectRanges(f, [" "]);
+      break;
+    default:
+      // We'll get a platform-dependent font for the Chinese characters,
+      // so we don't attempt to check its name.
+      expectRanges(f, ["\u4F60"]);
+      break;
+    }
+  }
+  is(familyNames.size, 4, "found all expected families");
+
+  // Test element contains Latin & Arabic (for bidi)
+  elem = document.getElementById("test2");
+  rng.selectNode(elem);
+  fonts = InspectorUtils.getUsedFontFaces(rng, 10);
+  is(fonts.length, 4, "number of font faces");
+  familyNames.clear();
+  for (var i = 0; i < fonts.length; i++) {
+    var f = fonts[i];
+    familyNames.set(f.CSSFamilyName, true);
+    switch (true) {
+    case f.CSSFamilyName == "capitals":
+      expectRanges(f, ["H", "W"]);
+      break;
+    case f.CSSFamilyName == "lowercase":
+      expectRanges(f, ["ello", "orld"]);
+      break;
+    case f.CSSFamilyName == "gentium":
+      expectRanges(f, [" ", " ", "!"]);
+      break;
+    default:
+      // We'll get a platform-dependent font for the Arabic characters,
+      // so we don't attempt to check its name.
+      expectRanges(f, ["العربي"]);
+      break;
+    }
+  }
+  is(familyNames.size, 4, "found all expected families");
+
+  // Test element wrapped across multiple lines, including soft hyphens,
+  // one of which will be used as a line-break.
+  elem = document.getElementById("test3");
+  rng.selectNode(elem);
+  fonts = InspectorUtils.getUsedFontFaces(rng, 10);
+  is(fonts.length, 3, "number of font faces");
+  familyNames.clear();
+  for (var i = 0; i < fonts.length; i++) {
+    var f = fonts[i];
+    familyNames.set(f.CSSFamilyName, true);
+    switch (true) {
+    case f.CSSFamilyName == "capitals":
+      expectRanges(f, ["H", "W"]);
+      break;
+    case f.CSSFamilyName == "lowercase":
+      expectRanges(f, ["ello", "mul\u00ADti\u00ADline", "orld"]);
+      break;
+    case f.CSSFamilyName == "gentium":
+      expectRanges(f, [" ", " ", "!"]);
+      break;
+    default:
+      // There shouldn't be any other font used
+      ok(false, "unexpected font: " + f.CSSFamilyName);
+      break;
+    }
+  }
+  is(familyNames.size, 3, "found all expected families");
+
+  // Test where textrun should continue across inline element boundaries
+  // (but we expect to get separate Range objects).
+  elem = document.getElementById("test4");
+  rng.selectNode(elem);
+  fonts = InspectorUtils.getUsedFontFaces(rng, 10);
+  is(fonts.length, 3, "number of font faces");
+  familyNames.clear();
+  for (var i = 0; i < fonts.length; i++) {
+    var f = fonts[i];
+    familyNames.set(f.CSSFamilyName, true);
+    switch (true) {
+    case f.CSSFamilyName == "capitals":
+      expectRanges(f, ["H"]);
+      break;
+    case f.CSSFamilyName == "lowercase":
+      expectRanges(f, ["ello", "cruel", "world"]);
+      break;
+    case f.CSSFamilyName == "gentium":
+      expectRanges(f, ["!"]);
+      break;
+    default:
+      // There shouldn't be any other font used
+      ok(false, "unexpected font: " + f.CSSFamilyName);
+      break;
+    }
+  }
+  is(familyNames.size, 3, "found all expected families");
+
+  SimpleTest.finish();
+}
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1435989"
+     target="_blank">Mozilla Bug 1435989</a>
+  <!-- We use @font-face with unicode-range to force different font faces to be used
+       for uppercase, lowercase, and non-letter Latin characters; and then the Chinese
+       and Arabic characters will result in font fallback being applied. -->
+  <div class="gentium" id="test1">Hello &#x4F60; <b>World</b> &#x597D;!</div>
+  <div class="gentium" id="test2">Hello العربي World!</div>
+  <div class="gentium" id="test3" style="width:3em">Hello mul&#xAD;ti&#xAD;line World!</div>
+  <div class="gentium" id="test4"><span>Hello</span><span>cruel</span>world!</div>
+  </body>
+
+</window>

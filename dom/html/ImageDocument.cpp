@@ -365,12 +365,20 @@ ImageDocument::ShrinkToFit()
     return;
   }
 
+  uint32_t newWidth = std::max(1, NSToCoordFloor(GetRatio() * mImageWidth));
+  uint32_t newHeight = std::max(1, NSToCoordFloor(GetRatio() * mImageHeight));
+
   // Keep image content alive while changing the attributes.
   RefPtr<HTMLImageElement> image = HTMLImageElement::FromContent(mImageContent);
-  image->SetWidth(std::max(1, NSToCoordFloor(GetRatio() * mImageWidth)),
-                  IgnoreErrors());
-  image->SetHeight(std::max(1, NSToCoordFloor(GetRatio() * mImageHeight)),
-                   IgnoreErrors());
+
+  if (mImageIsResized &&
+      newWidth == image->Width() && newHeight == image->Height()) {
+    // Image has already been resized.
+    return;
+  }
+
+  image->SetWidth(newWidth, IgnoreErrors());
+  image->SetHeight(newHeight, IgnoreErrors());
 
   // The view might have been scrolled when zooming in, scroll back to the
   // origin now that we're showing a shrunk-to-window version.

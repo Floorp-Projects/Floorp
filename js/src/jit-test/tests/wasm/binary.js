@@ -464,11 +464,24 @@ for (let i = 3; i < 0x10; i++)
 for (let i = 0x4f; i < 0x100; i++)
     checkIllegalPrefixed(AtomicPrefix, i);
 
+// Illegal Numeric opcodes
+//
+// Feb 2018 numeric draft:
+//
+//  0x00 .. 0x07 are saturating truncation ops
+
+for (let i = 0x08; i < 256; i++)
+    checkIllegalPrefixed(NumericPrefix, i);
+
+// Illegal SIMD opcodes (all of them, for now)
+for (let i = 0; i < 256; i++)
+    checkIllegalPrefixed(SimdPrefix, i);
+
 // Illegal MozPrefix opcodes (all of them)
 for (let i = 0; i < 256; i++)
     checkIllegalPrefixed(MozPrefix, i);
 
-for (let prefix of [AtomicPrefix, MozPrefix]) {
+for (let prefix of [AtomicPrefix, NumericPrefix, SimdPrefix, MozPrefix]) {
     // Prefix without a subsequent opcode
     let binary = moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[prefix]})])]);
     assertErrorMessage(() => wasmEval(binary), CompileError, /unrecognized opcode/);

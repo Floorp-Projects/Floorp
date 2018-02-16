@@ -3239,7 +3239,6 @@ MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc, const wasm::Cal
     loadWasmGlobalPtr(callee.tableBaseGlobalDataOffset(), scratch);
 
     // Load the callee from the table.
-    wasm::OldTrapDesc nullTrap(trapOffset, wasm::Trap::IndirectCallToNull, framePushed());
     if (callee.wasmTableIsExternal()) {
         static_assert(sizeof(wasm::ExternalTableElem) == 8 || sizeof(wasm::ExternalTableElem) == 16,
                       "elements of external tables are two words");
@@ -3251,14 +3250,22 @@ MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc, const wasm::Cal
         }
 
         loadPtr(Address(scratch, offsetof(wasm::ExternalTableElem, tls)), WasmTlsReg);
-        branchTest32(Assembler::Zero, WasmTlsReg, WasmTlsReg, nullTrap);
+
+        Label nonNull;
+        branchTest32(Assembler::NonZero, WasmTlsReg, WasmTlsReg, &nonNull);
+        wasmTrap(wasm::Trap::IndirectCallToNull, trapOffset);
+        bind(&nonNull);
 
         loadWasmPinnedRegsFromTls();
 
         loadPtr(Address(scratch, offsetof(wasm::ExternalTableElem, code)), scratch);
     } else {
         loadPtr(BaseIndex(scratch, index, ScalePointer), scratch);
-        branchTest32(Assembler::Zero, scratch, scratch, nullTrap);
+
+        Label nonNull;
+        branchTest32(Assembler::NonZero, scratch, scratch, &nonNull);
+        wasmTrap(wasm::Trap::IndirectCallToNull, trapOffset);
+        bind(&nonNull);
     }
 
     call(desc, scratch);

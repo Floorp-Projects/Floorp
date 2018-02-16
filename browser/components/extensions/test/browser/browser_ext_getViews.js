@@ -148,6 +148,8 @@ add_task(async function() {
   await checkViewsWithFilter({tabId: tabId2}, 1);
 
   async function triggerPopup(win, callback) {
+    // Window needs focus to open popups.
+    await focusWindow(win);
     await clickBrowserAction(extension, win);
     await awaitExtensionPanel(extension, win);
 
@@ -157,12 +159,6 @@ add_task(async function() {
 
     closeBrowserAction(extension, win);
   }
-
-  // The popup occasionally closes prematurely if we open it immediately here.
-  // I'm not sure what causes it to close (it's something internal, and seems to
-  // be focus-related, but it's not caused by JS calling hidePopup), but even a
-  // short timeout seems to consistently fix it.
-  await new Promise(resolve => win1.setTimeout(resolve, 10));
 
   await triggerPopup(win1, async function() {
     await checkViews("background", 2, 1, 0);
