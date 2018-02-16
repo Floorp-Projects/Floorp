@@ -33,7 +33,6 @@ template <class ArgSeq, class StoreOutputTo>
 class OutOfLineCallVM;
 
 class OutOfLineTruncateSlow;
-class OutOfLineWasmTruncateCheck;
 
 struct PatchableBackedgeInfo
 {
@@ -350,20 +349,20 @@ class CodeGeneratorShared : public LElementVisitor
     void emitTruncateFloat32(FloatRegister src, Register dest, MTruncateToInt32* mir);
 
     void emitWasmCallBase(MWasmCall* mir, bool needsBoundsCheck);
-    void visitWasmCall(LWasmCall* ins) override {
+    void visitWasmCall(LWasmCall* ins) {
         emitWasmCallBase(ins->mir(), ins->needsBoundsCheck());
     }
-    void visitWasmCallVoid(LWasmCallVoid* ins) override {
+    void visitWasmCallVoid(LWasmCallVoid* ins) {
         emitWasmCallBase(ins->mir(), ins->needsBoundsCheck());
     }
-    void visitWasmCallI64(LWasmCallI64* ins) override {
+    void visitWasmCallI64(LWasmCallI64* ins) {
         emitWasmCallBase(ins->mir(), ins->needsBoundsCheck());
     }
 
-    void visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins) override;
-    void visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins) override;
-    void visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins) override;
-    void visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins) override;
+    void visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins);
+    void visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins);
+    void visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins);
+    void visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins);
 
     void emitPreBarrier(Register base, const LAllocation* index, int32_t offsetAdjustment);
     void emitPreBarrier(Address address);
@@ -529,10 +528,6 @@ class CodeGeneratorShared : public LElementVisitor
     void visitOutOfLineCallVM(OutOfLineCallVM<ArgSeq, StoreOutputTo>* ool);
 
     void visitOutOfLineTruncateSlow(OutOfLineTruncateSlow* ool);
-
-    virtual void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool) {
-        MOZ_CRASH("NYI");
-    }
 
     bool omitOverRecursedCheck() const;
 
@@ -849,7 +844,8 @@ CodeGeneratorShared::visitOutOfLineCallVM(OutOfLineCallVM<ArgSeq, StoreOutputTo>
     masm.jump(ool->rejoin());
 }
 
-class OutOfLineWasmTruncateCheck : public OutOfLineCodeBase<CodeGeneratorShared>
+template <class CodeGen>
+class OutOfLineWasmTruncateCheckBase : public OutOfLineCodeBase<CodeGen>
 {
     MIRType fromType_;
     MIRType toType_;
@@ -860,19 +856,21 @@ class OutOfLineWasmTruncateCheck : public OutOfLineCodeBase<CodeGeneratorShared>
     wasm::BytecodeOffset bytecodeOffset_;
 
   public:
-    OutOfLineWasmTruncateCheck(MWasmTruncateToInt32* mir, FloatRegister input, Register output)
+    OutOfLineWasmTruncateCheckBase(MWasmTruncateToInt32* mir, FloatRegister input,
+                                   Register output)
       : fromType_(mir->input()->type()), toType_(MIRType::Int32), input_(input), output_(output),
         output64_(Register64::Invalid()), flags_(mir->flags()),
         bytecodeOffset_(mir->bytecodeOffset())
     { }
 
-    OutOfLineWasmTruncateCheck(MWasmTruncateToInt64* mir, FloatRegister input, Register64 output)
+    OutOfLineWasmTruncateCheckBase(MWasmTruncateToInt64* mir, FloatRegister input,
+                                   Register64 output)
       : fromType_(mir->input()->type()), toType_(MIRType::Int64), input_(input),
         output_(Register::Invalid()), output64_(output), flags_(mir->flags()),
         bytecodeOffset_(mir->bytecodeOffset())
     { }
 
-    void accept(CodeGeneratorShared* codegen) override {
+    void accept(CodeGen* codegen) override {
         codegen->visitOutOfLineWasmTruncateCheck(this);
     }
 

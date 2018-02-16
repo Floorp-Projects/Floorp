@@ -787,15 +787,9 @@ class LNode
     LIR_OPCODE_LIST(LIROP)
 #   undef LIROP
 
-    virtual void accept(LElementVisitor* visitor) = 0;
-
 #define LIR_HEADER(opcode)                                                  \
     Opcode op() const override {                                            \
         return LInstruction::LOp_##opcode;                                  \
-    }                                                                       \
-    void accept(LElementVisitor* visitor) override {                        \
-        visitor->setElement(this);                                          \
-        visitor->visit##opcode(this);                                       \
     }
 };
 
@@ -914,7 +908,6 @@ class LElementVisitor
         return ins_;
     }
 
-  public:
     void setElement(LNode* ins) {
         ins_ = ins;
         if (ins->mirRaw()) {
@@ -930,8 +923,7 @@ class LElementVisitor
         lastNotInlinedPC_(nullptr)
     {}
 
-  public:
-#define VISIT_INS(op) virtual void visit##op(L##op*) { MOZ_CRASH("NYI: " #op); }
+#define VISIT_INS(op) void visit##op(L##op*) { MOZ_CRASH("NYI: " #op); }
     LIR_OPCODE_LIST(VISIT_INS)
 #undef VISIT_INS
 };
