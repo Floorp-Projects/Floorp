@@ -3726,7 +3726,7 @@ Element::GetTransformToAncestor(Element& aAncestor)
     // then the call to GetTransformToAncestor will return the transform
     // all the way up through the parent chain.
     transform = nsLayoutUtils::GetTransformToAncestor(primaryFrame,
-      ancestorFrame, nsIFrame::IN_CSS_UNITS);
+      ancestorFrame, nsIFrame::IN_CSS_UNITS).GetMatrix();
   }
 
   DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform, IsStyledByServo());
@@ -3743,7 +3743,7 @@ Element::GetTransformToParent()
   if (primaryFrame) {
     nsIFrame* parentFrame = primaryFrame->GetParent();
     transform = nsLayoutUtils::GetTransformToAncestor(primaryFrame,
-      parentFrame, nsIFrame::IN_CSS_UNITS);
+      parentFrame, nsIFrame::IN_CSS_UNITS).GetMatrix();
   }
 
   DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform, IsStyledByServo());
@@ -3758,7 +3758,7 @@ Element::GetTransformToViewport()
   Matrix4x4 transform;
   if (primaryFrame) {
     transform = nsLayoutUtils::GetTransformToAncestor(primaryFrame,
-      nsLayoutUtils::GetDisplayRootFrame(primaryFrame), nsIFrame::IN_CSS_UNITS);
+      nsLayoutUtils::GetDisplayRootFrame(primaryFrame), nsIFrame::IN_CSS_UNITS).GetMatrix();
   }
 
   DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform, IsStyledByServo());
