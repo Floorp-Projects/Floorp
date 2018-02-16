@@ -58,7 +58,7 @@ const defer = require("devtools/shared/defer");
 const {inspectorSpec} = require("devtools/shared/specs/inspector");
 
 loader.lazyRequireGetter(this, "InspectorActorUtils", "devtools/server/actors/inspector/utils");
-loader.lazyRequireGetter(this, "WalkerActor", "devtools/server/actors/inspector/walker-actor", true);
+loader.lazyRequireGetter(this, "WalkerActor", "devtools/server/actors/inspector/walker", true);
 loader.lazyRequireGetter(this, "EyeDropper", "devtools/server/actors/highlighters/eye-dropper", true);
 loader.lazyRequireGetter(this, "PageStyleActor", "devtools/server/actors/styles", true);
 loader.lazyRequireGetter(this, "HighlighterActor", "devtools/server/actors/highlighters", true);
