@@ -29,10 +29,10 @@
  */
 
 "use strict";
+
 /* eslint-disable no-undef */
 
-const { classes: Cc, interfaces: Ci, manager: Cm, results: Cr,
-        utils: Cu } = Components;
+const Cm = Components.manager;
 
 const URL_HTTP_UPDATE_SJS = "http://test_details/";
 

@@ -634,25 +634,11 @@
       <handler event="blur" phase="capturing"><![CDATA[
         if (!this._dontBlur) {
           if (this.forceComplete && this.mController.matchCount >= 1) {
-            // mousemove sets selected index. Don't blindly use that selected
-            // index in this blur handler since if the popup is open you can
-            // easily "select" another match just by moving the mouse over it.
-            let filledVal = this.value.replace(/.+ >> /, "").toLowerCase();
-            let selectedVal = null;
-            if (this.popup.selectedIndex >= 0) {
-              selectedVal = this.mController.getFinalCompleteValueAt(
-                this.popup.selectedIndex);
-            }
-            if (selectedVal && filledVal != selectedVal.toLowerCase()) {
-              for (let i = 0; i < this.mController.matchCount; i++) {
-                let matchVal = this.mController.getFinalCompleteValueAt(i);
-                if (matchVal.toLowerCase() == filledVal) {
-                  this.popup.selectedIndex = i;
-                  break;
-                }
-              }
-            }
-            this.mController.handleEnter(false);
+            // If forceComplete is requested, we need to call the enter processing
+            // on blur so the input will be forced to the closest match.
+            // Thunderbird is the only consumer of forceComplete and this is used
+            // to force an recipient's email to the exact address book entry.
+            this.mController.handleEnter(true);
           }
           if (!this.ignoreBlurWhileSearching)
             this.detachController();

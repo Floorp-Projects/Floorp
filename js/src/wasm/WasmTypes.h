@@ -1394,6 +1394,8 @@ enum class SymbolicAddress
     UModI64,
     TruncateDoubleToInt64,
     TruncateDoubleToUint64,
+    SaturatingTruncateDoubleToInt64,
+    SaturatingTruncateDoubleToUint64,
     Uint64ToFloat32,
     Uint64ToDouble,
     Int64ToFloat32,

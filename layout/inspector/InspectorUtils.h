@@ -222,6 +222,8 @@ public:
 
   static void GetUsedFontFaces(GlobalObject& aGlobal,
                                nsRange& aRange,
+                               uint32_t aMaxRanges, // max number of ranges to
+                                                    // record for each face
                                nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
                                ErrorResult& aRv);
 

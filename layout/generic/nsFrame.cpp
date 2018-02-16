@@ -9717,6 +9717,16 @@ nsFrame::ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
                            aChildFrame->GetPosition());
 }
 
+bool
+nsFrame::ShouldAvoidBreakInside(const ReflowInput& aReflowInput) const
+{
+  const auto* disp = StyleDisplay();
+  return !aReflowInput.mFlags.mIsTopOfPage &&
+    NS_STYLE_PAGE_BREAK_AVOID == disp->mBreakInside &&
+    !(HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) && IsAbsolutelyPositioned(disp)) &&
+    !GetPrevInFlow();
+}
+
 /**
  * This function takes a frame that is part of a block-in-inline split,
  * and _if_ that frame is an anonymous block created by an ib split it

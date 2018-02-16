@@ -64,7 +64,16 @@ namespace InspectorUtils {
       unsigned long long state,
       optional boolean clearActiveDocument = false);
   unsigned long long getContentState(Element element);
-  [NewObject, Throws] sequence<InspectorFontFace> getUsedFontFaces(Range range);
+
+  // Get the font face(s) actually used to render the text in /range/,
+  // as a collection of InspectorFontFace objects (below).
+  // If /maxRanges/ is greater than zero, each InspectorFontFace will record
+  // up to /maxRanges/ fragments of content that used the face, for the caller
+  // to access via its .ranges attribute.
+  [NewObject, Throws] sequence<InspectorFontFace> getUsedFontFaces(
+      Range range,
+      optional unsigned long maxRanges = 0);
+
   sequence<DOMString> getCSSPseudoElementNames();
   void addPseudoClassLock(Element element,
                           DOMString pseudoClass,
@@ -134,6 +143,14 @@ interface InspectorFontFace {
   [NewObject,Throws] sequence<InspectorVariationAxis> getVariationAxes();
   [NewObject,Throws] sequence<InspectorVariationInstance> getVariationInstances();
   [NewObject,Throws] sequence<InspectorFontFeature> getFeatures();
+
+  // A list of Ranges of text rendered with this face.
+  // This will list the first /maxRanges/ ranges found when InspectorUtils.getUsedFontFaces
+  // was called (so it will be empty unless a non-zero maxRanges argument was passed).
+  // Note that this indicates how the document was rendered at the time of calling
+  // getUsedFontFaces; it does not reflect any subsequent modifications, so if styles
+  // have been modified since calling getUsedFontFaces, it may no longer be accurate.
+  [Constant,Cached]  readonly attribute sequence<Range> ranges;
 
   // meaningful only when the font is a user font defined using @font-face
   readonly attribute CSSFontFaceRule? rule; // null if no associated @font-face rule

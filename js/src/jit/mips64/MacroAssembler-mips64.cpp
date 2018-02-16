@@ -1567,7 +1567,7 @@ MacroAssemblerMIPS64Compat::unboxValue(const ValueOperand& src, AnyRegister dest
 void
 MacroAssemblerMIPS64Compat::unboxPrivate(const ValueOperand& src, Register dest)
 {
-    ma_dsrl(dest, src.valueReg(), Imm32(1));
+    ma_dsll(dest, src.valueReg(), Imm32(1));
 }
 
 void
@@ -2438,8 +2438,11 @@ MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value, MIRType value
 
 
 void
-MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry)
+MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output, bool isSaturating,
+                                           Label* oolEntry)
 {
+    MOZ_ASSERT(!isSaturating, "NYI");
+
     as_truncld(ScratchDoubleReg, input);
     moveFromDoubleHi(ScratchDoubleReg, output);
     as_cfc1(ScratchRegister, Assembler::FCSR);
@@ -2452,8 +2455,11 @@ MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output,
 }
 
 void
-MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, Label* oolEntry)
+MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, bool isSaturating,
+                                            Label* oolEntry)
 {
+    MOZ_ASSERT(!isSaturating, "NYI");
+
     as_truncls(ScratchDoubleReg, input);
     moveFromDoubleHi(ScratchDoubleReg, output);
     as_cfc1(ScratchRegister, Assembler::FCSR);

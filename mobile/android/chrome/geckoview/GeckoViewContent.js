@@ -137,7 +137,8 @@ class GeckoViewContent extends GeckoViewContentModule {
         let node = aEvent.target;
         let hrefNode = nearestParentHref(node);
         let isImageNode = (ChromeUtils.getClassName(node) === "HTMLImageElement");
-        let isMediaNode = (ChromeUtils.getClassName(node) === "HTMLMediaElement");
+        let isMediaNode = (ChromeUtils.getClassName(node) === "HTMLVideoElement" ||
+                           ChromeUtils.getClassName(node) === "HTMLAudioElement");
 
         if (hrefNode || isImageNode || isMediaNode) {
           this.eventDispatcher.sendRequest({

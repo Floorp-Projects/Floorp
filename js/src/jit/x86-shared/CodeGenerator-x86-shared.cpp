@@ -449,24 +449,26 @@ CodeGeneratorX86Shared::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
 
     MOZ_ASSERT(inputType == MIRType::Double || inputType == MIRType::Float32);
 
-    auto* ool = new (alloc()) OutOfLineWasmTruncateCheck(mir, input);
+    auto* ool = new (alloc()) OutOfLineWasmTruncateCheck(mir, input, output);
     addOutOfLineCode(ool, mir);
 
     Label* oolEntry = ool->entry();
     if (mir->isUnsigned()) {
         if (inputType == MIRType::Double)
-            masm.wasmTruncateDoubleToUInt32(input, output, oolEntry);
+            masm.wasmTruncateDoubleToUInt32(input, output, mir->isSaturating(), oolEntry);
         else if (inputType == MIRType::Float32)
-            masm.wasmTruncateFloat32ToUInt32(input, output, oolEntry);
+            masm.wasmTruncateFloat32ToUInt32(input, output, mir->isSaturating(), oolEntry);
         else
             MOZ_CRASH("unexpected type");
+        if (mir->isSaturating())
+            masm.bind(ool->rejoin());
         return;
     }
 
     if (inputType == MIRType::Double)
-        masm.wasmTruncateDoubleToInt32(input, output, oolEntry);
+        masm.wasmTruncateDoubleToInt32(input, output, mir->isSaturating(), oolEntry);
     else if (inputType == MIRType::Float32)
-        masm.wasmTruncateFloat32ToInt32(input, output, oolEntry);
+        masm.wasmTruncateFloat32ToInt32(input, output, mir->isSaturating(), oolEntry);
     else
         MOZ_CRASH("unexpected type");
 
@@ -2536,12 +2538,11 @@ CodeGeneratorX86Shared::visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIn
 
     masm.jump(ool->rejoin());
 
-    if (gen->compilingWasm()) {
-        masm.bindLater(&onConversionError, oldTrap(ool, wasm::Trap::ImpreciseSimdConversion));
-    } else {
-        masm.bind(&onConversionError);
+    masm.bind(&onConversionError);
+    if (gen->compilingWasm())
+        masm.wasmTrap(wasm::Trap::ImpreciseSimdConversion, ool->bytecodeOffset());
+    else
         bailout(ool->ins()->snapshot());
-    }
 }
 
 // Convert Float32x4 to Uint32x4.
@@ -2616,10 +2617,14 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
     masm.vmovmskps(scratch, temp);
     masm.cmp32(temp, Imm32(0));
 
-    if (gen->compilingWasm())
-        masm.j(Assembler::NotEqual, oldTrap(mir, wasm::Trap::ImpreciseSimdConversion));
-    else
+    if (gen->compilingWasm()) {
+        Label ok;
+        masm.j(Assembler::Equal, &ok);
+        masm.wasmTrap(wasm::Trap::ImpreciseSimdConversion, mir->bytecodeOffset());
+        masm.bind(&ok);
+    } else {
         bailoutIf(Assembler::NotEqual, ins->snapshot());
+    }
 }
 
 void
@@ -4364,24 +4369,26 @@ void
 CodeGeneratorX86Shared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool)
 {
     FloatRegister input = ool->input();
+    Register output = ool->output();
+    Register64 output64 = ool->output64();
     MIRType fromType = ool->fromType();
     MIRType toType = ool->toType();
     Label* oolRejoin = ool->rejoin();
-    bool isUnsigned = ool->isUnsigned();
+    TruncFlags flags = ool->flags();
     wasm::BytecodeOffset off = ool->bytecodeOffset();
 
     if (fromType == MIRType::Float32) {
         if (toType == MIRType::Int32)
-            masm.oolWasmTruncateCheckF32ToI32(input, isUnsigned, off, oolRejoin);
+            masm.oolWasmTruncateCheckF32ToI32(input, output, flags, off, oolRejoin);
         else if (toType == MIRType::Int64)
-            masm.oolWasmTruncateCheckF32ToI64(input, isUnsigned, off, oolRejoin);
+            masm.oolWasmTruncateCheckF32ToI64(input, output64, flags, off, oolRejoin);
         else
             MOZ_CRASH("unexpected type");
     } else if (fromType == MIRType::Double) {
         if (toType == MIRType::Int32)
-            masm.oolWasmTruncateCheckF64ToI32(input, isUnsigned, off, oolRejoin);
+            masm.oolWasmTruncateCheckF64ToI32(input, output, flags, off, oolRejoin);
         else if (toType == MIRType::Int64)
-            masm.oolWasmTruncateCheckF64ToI64(input, isUnsigned, off, oolRejoin);
+            masm.oolWasmTruncateCheckF64ToI64(input, output64, flags, off, oolRejoin);
         else
             MOZ_CRASH("unexpected type");
     } else {
