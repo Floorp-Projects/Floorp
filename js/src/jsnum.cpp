@@ -11,7 +11,6 @@
 #include "jsnum.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/double-conversion.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/RangedPtr.h"
 
@@ -24,6 +23,7 @@
 #include "jsstr.h"
 #include "jstypes.h"
 
+#include "double-conversion/double-conversion.h"
 #include "js/Conversions.h"
 #include "util/DoubleToString.h"
 #include "vm/GlobalObject.h"
