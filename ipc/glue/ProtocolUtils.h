@@ -312,6 +312,10 @@ public:
               nsIEventTarget* aEventTarget,
               mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 
+    bool OpenWithAsyncPid(mozilla::ipc::Transport* aTransport,
+                          MessageLoop* aThread = nullptr,
+                          mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
+
     void Close();
 
     void SetReplyTimeoutMs(int32_t aTimeoutMs);

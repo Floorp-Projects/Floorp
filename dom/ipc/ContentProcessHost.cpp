@@ -25,5 +25,39 @@ ContentProcessHost::~ContentProcessHost()
   MOZ_COUNT_DTOR(ContentProcessHost);
 }
 
+bool
+ContentProcessHost::Launch(StringVector aExtraOpts)
+{
+  MOZ_ASSERT(!mHasLaunched);
+  MOZ_ASSERT(mContentParent);
+
+  bool res = GeckoChildProcessHost::AsyncLaunch(aExtraOpts);
+  MOZ_RELEASE_ASSERT(res);
+  return true;
+}
+
+void
+ContentProcessHost::OnProcessHandleReady(ProcessHandle aProcessHandle)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  // This will wake up the main thread if it is waiting for the process to
+  // launch.
+  mContentParent->SetOtherProcessId(base::GetProcId(aProcessHandle));
+
+  mHasLaunched = true;
+  GeckoChildProcessHost::OnProcessHandleReady(aProcessHandle);
+}
+
+void
+ContentProcessHost::OnProcessLaunchError()
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  mContentParent->SetOtherProcessId(mozilla::ipc::kInvalidProcessId,
+                                    ContentParent::ProcessIdState::eError);
+  mHasLaunched = true;
+  GeckoChildProcessHost::OnProcessLaunchError();
+}
+
 } // namespace dom
 } // namespace mozilla
