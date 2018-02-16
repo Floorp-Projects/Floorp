@@ -905,7 +905,7 @@ class RecordedIntoLuminanceSource : public RecordedEventDerived<RecordedIntoLumi
 public:
   RecordedIntoLuminanceSource(ReferencePtr aRefPtr, DrawTarget *aDT,
                               LuminanceType aLuminanceType, float aOpacity)
-    : RecordedEventDerived(SNAPSHOT), mRefPtr(aRefPtr), mDT(aDT),
+    : RecordedEventDerived(INTOLUMINANCE), mRefPtr(aRefPtr), mDT(aDT),
       mLuminanceType(aLuminanceType), mOpacity(aOpacity)
   {
   }
@@ -2800,7 +2800,7 @@ RecordedIntoLuminanceSource::Record(S &aStream) const
 
 template<class S>
 RecordedIntoLuminanceSource::RecordedIntoLuminanceSource(S &aStream)
-  : RecordedEventDerived(SNAPSHOT)
+  : RecordedEventDerived(INTOLUMINANCE)
 {
   ReadElement(aStream, mRefPtr);
   ReadElement(aStream, mDT);
@@ -3413,7 +3413,8 @@ RecordedFilterNodeSetInput::OutputSimpleEventInfo(std::stringstream &aStringStre
     f(PUSHLAYER, RecordedPushLayer); \
     f(POPLAYER, RecordedPopLayer); \
     f(UNSCALEDFONTCREATION, RecordedUnscaledFontCreation); \
-    f(UNSCALEDFONTDESTRUCTION, RecordedUnscaledFontDestruction);
+    f(UNSCALEDFONTDESTRUCTION, RecordedUnscaledFontDestruction); \
+    f(INTOLUMINANCE, RecordedIntoLuminanceSource);
 
 template<class S>
 RecordedEvent *
