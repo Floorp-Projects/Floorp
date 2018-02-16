@@ -47,7 +47,8 @@ add_task(function* () {
     testActor.synthesizeKey(args);
     return promise.all([
       inspector.selection.once("new-node-front"),
-      inspector.once("inspector-updated")
+      inspector.once("inspector-updated"),
+      inspector.toolbox.once("picker-stopped")
     ]);
   }
 
