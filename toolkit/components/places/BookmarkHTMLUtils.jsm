@@ -65,6 +65,8 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 ChromeUtils.defineModuleGetter(this, "PlacesBackups",
   "resource://gre/modules/PlacesBackups.jsm");
 
@@ -918,8 +920,12 @@ function BookmarkExporter(aBookmarksTree) {
   // Create a map of the roots.
   let rootsMap = new Map();
   for (let child of aBookmarksTree.children) {
-    if (child.root)
+    if (child.root) {
       rootsMap.set(child.root, child);
+      // Also take the opportunity to get the correctly localised title for the
+      // root.
+      child.title = PlacesUtils.bookmarks.getLocalizedTitle(child);
+    }
   }
 
   // For backwards compatibility reasons the bookmarks menu is the root, while
@@ -1186,8 +1192,7 @@ function insertFaviconsForTree(nodeTree) {
  */
 function fetchData(href) {
   return new Promise((resolve, reject) => {
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                .createInstance(Ci.nsIXMLHttpRequest);
+    let xhr = new XMLHttpRequest();
     xhr.onload = () => {
       resolve(xhr.responseXML);
     };

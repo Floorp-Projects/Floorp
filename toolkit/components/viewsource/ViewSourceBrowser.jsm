@@ -26,10 +26,6 @@ var gKnownBrowsers = new WeakSet();
  * It's companion frame script, viewSource-content.js, needs to be loaded as a
  * frame script into the browser being managed.
  *
- * For a view source window using viewSource.xul, the script viewSource.js in
- * the window extends an instance of this with more window specific functions.
- * The page script takes care of loading the companion frame script.
- *
  * For a view source tab (or some other non-window case), an instance of this is
  * created by viewSourceUtils.js to wrap the <browser>.  The frame script will
  * be loaded by this module at construction time.
@@ -77,13 +73,8 @@ ViewSourceBrowser.prototype = {
       this.mm.addMessageListener(msgName, this);
     });
 
-    // If we have a known <browser> already, load the frame script here.  This
-    // is not true for the window case, as the element does not exist until the
-    // XUL document loads.  For that case, the frame script is loaded by
-    // viewSource.js.
-    if (this._browser) {
-      this.loadFrameScript();
-    }
+    // If we have a known <browser> already, load the frame script here.
+    this.loadFrameScript();
   },
 
   /**
@@ -160,7 +151,6 @@ ViewSourceBrowser.prototype = {
    * Loads the source for a URL while applying some optional features if
    * enabled.
    *
-   * For the viewSource.xul window, this is called by onXULLoaded above.
    * For view source in a specific browser, this is manually called after
    * this object is constructed.
    *

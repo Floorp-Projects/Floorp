@@ -95,7 +95,7 @@ add_task(async function test_livemarks() {
           type: "livemark",
           parentid: "menu",
           hasDupe: false,
-          parentName: "Bookmarks Menu",
+          parentName: BookmarksMenuTitle,
           dateAdded: PlacesUtils.toDate(livemarkD.dateAdded).getTime(),
           title: "D",
           feedUri: site + "/feed/d",
@@ -143,7 +143,7 @@ add_task(async function test_livemarks() {
         guid: PlacesUtils.bookmarks.menuGuid,
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
         index: 0,
-        title: "Bookmarks Menu",
+        title: BookmarksMenuTitle,
         children: [{
           guid: "livemarkAAAA",
           type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -176,7 +176,7 @@ add_task(async function test_livemarks() {
         guid: PlacesUtils.bookmarks.toolbarGuid,
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
         index: 1,
-        title: "Bookmarks Toolbar",
+        title: BookmarksToolbarTitle,
         children: [{
           guid: "livemarkCCCC",
           type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -204,7 +204,7 @@ add_task(async function test_livemarks() {
         guid: PlacesUtils.bookmarks.unfiledGuid,
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
         index: 3,
-        title: "Other Bookmarks",
+        title: UnfiledBookmarksTitle,
         children: [{
           guid: "livemarkEEEE",
           type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -226,7 +226,7 @@ add_task(async function test_livemarks() {
         guid: PlacesUtils.bookmarks.mobileGuid,
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
         index: 4,
-        title: "mobile",
+        title: MobileBookmarksTitle,
       }],
     }, "Should apply and dedupe livemarks");
 

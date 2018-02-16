@@ -1028,13 +1028,15 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   cmdLine.AppendLooseValue(
     UTF8ToWide(CrashReporter::GetChildNotificationPipe()));
 
-  PROsfd h = PR_FileDesc2NativeHandle(crashAnnotationWritePipe);
+  if (!CrashReporter::IsDummy()) {
+    PROsfd h = PR_FileDesc2NativeHandle(crashAnnotationWritePipe);
 # if defined(MOZ_SANDBOX)
-  mSandboxBroker.AddHandleToShare(reinterpret_cast<HANDLE>(h));
+    mSandboxBroker.AddHandleToShare(reinterpret_cast<HANDLE>(h));
 # endif // defined(MOZ_SANDBOX)
-  mLaunchOptions->handles_to_inherit.push_back(reinterpret_cast<HANDLE>(h));
-  std::string hStr = std::to_string(h);
-  cmdLine.AppendLooseValue(UTF8ToWide(hStr));
+    mLaunchOptions->handles_to_inherit.push_back(reinterpret_cast<HANDLE>(h));
+    std::string hStr = std::to_string(h);
+    cmdLine.AppendLooseValue(UTF8ToWide(hStr));
+  }
 
   // Process type
   cmdLine.AppendLooseValue(UTF8ToWide(childProcessType));

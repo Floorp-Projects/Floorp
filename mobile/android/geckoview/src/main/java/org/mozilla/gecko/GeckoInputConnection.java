@@ -67,6 +67,8 @@ import android.view.inputmethod.InputMethodManager;
     private String mIMEActionHint = "";
     private int mIMEFlags;
     private boolean mFocused;
+    private int mLastSelectionStart;
+    private int mLastSelectionEnd;
 
     private String mCurrentInputMethod = "";
 
@@ -339,8 +341,9 @@ import android.view.inputmethod.InputMethodManager;
 
         final Editable editable = getEditable();
         if (editable != null) {
-            notifySelectionChange(Selection.getSelectionStart(editable),
-                                  Selection.getSelectionEnd(editable));
+            mLastSelectionStart = Selection.getSelectionStart(editable);
+            mLastSelectionEnd = Selection.getSelectionEnd(editable);
+            notifySelectionChange(mLastSelectionStart, mLastSelectionEnd);
         }
     }
 
@@ -540,6 +543,12 @@ import android.view.inputmethod.InputMethodManager;
         return getHandler();
     }
 
+    // Android N: @Override // InputConnection
+    @SuppressLint("Override")
+    public void closeConnection() {
+        // Not supported at the moment.
+    }
+
     @Override // TextInputController.Delegate
     public synchronized InputConnection onCreateInputConnection(EditorInfo outAttrs) {
         // Some keyboards require us to fill out outAttrs even if we return null.
@@ -640,9 +649,8 @@ import android.view.inputmethod.InputMethodManager;
             Log.d(LOGTAG, "IME: CurrentInputMethod=" + mCurrentInputMethod);
         }
 
-        Editable editable = getEditable();
-        outAttrs.initialSelStart = Selection.getSelectionStart(editable);
-        outAttrs.initialSelEnd = Selection.getSelectionEnd(editable);
+        outAttrs.initialSelStart = mLastSelectionStart;
+        outAttrs.initialSelEnd = mLastSelectionEnd;
 
         if ((mIMEFlags & IME_FLAG_USER_ACTION) != 0) {
             if ((context instanceof Activity) &&

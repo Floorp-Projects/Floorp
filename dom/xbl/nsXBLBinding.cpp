@@ -838,10 +838,10 @@ nsXBLBinding::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData)
 }
 #endif
 
-ServoStyleSet*
-nsXBLBinding::GetServoStyleSet() const
+const RawServoAuthorStyles*
+nsXBLBinding::GetServoStyles() const
 {
-  return mPrototypeBinding->GetServoStyleSet();
+  return mPrototypeBinding->GetServoStyles();
 }
 
 // Internal helper methods ////////////////////////////////////////////////////////////////

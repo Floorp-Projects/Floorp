@@ -36,7 +36,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Blob)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMBlob)
   NS_INTERFACE_MAP_ENTRY(nsIDOMBlob)
-  NS_INTERFACE_MAP_ENTRY(nsIXHRSendable)
   NS_INTERFACE_MAP_ENTRY(nsIMutable)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
@@ -204,11 +203,14 @@ Blob::GetAllocationSize() const
   return mImpl->GetAllocationSize();
 }
 
-NS_IMETHODIMP
+// contentTypeWithCharset can be set to the contentType or
+// contentType+charset based on what the spec says.
+// See: https://fetch.spec.whatwg.org/#concept-bodyinit-extract
+nsresult
 Blob::GetSendInfo(nsIInputStream** aBody,
                   uint64_t* aContentLength,
                   nsACString& aContentType,
-                  nsACString& aCharset)
+                  nsACString& aCharset) const
 {
   return mImpl->GetSendInfo(aBody, aContentLength, aContentType, aCharset);
 }

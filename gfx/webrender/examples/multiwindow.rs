@@ -8,12 +8,12 @@ extern crate gleam;
 extern crate glutin;
 extern crate webrender;
 
-use std::fs::File;
-use std::io::Read;
-use webrender::api::*;
 use app_units::Au;
 use gleam::gl;
 use glutin::GlContext;
+use std::fs::File;
+use std::io::Read;
+use webrender::api::*;
 
 struct Notifier {
     events_proxy: glutin::EventsLoopProxy,
@@ -189,10 +189,16 @@ impl Window {
             Vec::new(),
         );
 
-        let info = LayoutPrimitiveInfo::new(LayoutRect::new(LayoutPoint::new(100.0, 100.0), LayoutSize::new(100.0, 200.0)));
+        let info = LayoutPrimitiveInfo::new(LayoutRect::new(
+            LayoutPoint::new(100.0, 100.0),
+            LayoutSize::new(100.0, 200.0)
+        ));
         builder.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
 
-        let text_bounds = LayoutRect::new(LayoutPoint::new(100.0, 50.0), LayoutSize::new(700.0, 200.0));
+        let text_bounds = LayoutRect::new(
+            LayoutPoint::new(100.0, 50.0),
+            LayoutSize::new(700.0, 200.0)
+        );
         let glyphs = vec![
             GlyphInstance {
                 index: 48,

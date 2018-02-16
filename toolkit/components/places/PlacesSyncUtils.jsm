@@ -1057,16 +1057,6 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
     let hasMobileBookmarks = mobileChildGuids.length > 0;
 
     Services.prefs.setBoolPref(MOBILE_BOOKMARKS_PREF, hasMobileBookmarks);
-    if (hasMobileBookmarks) {
-      let mobileTitle = PlacesUtils.getString("MobileBookmarksFolderTitle");
-
-      // Make sure the mobile root title matches the query.
-      await PlacesUtils.bookmarks.update({
-        guid: PlacesUtils.bookmarks.mobileGuid,
-        title: mobileTitle,
-        source: SOURCE_SYNC,
-      });
-    }
   },
 
   /**

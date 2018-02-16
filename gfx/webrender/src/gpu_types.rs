@@ -164,22 +164,21 @@ pub struct BrushInstance {
     pub z: i32,
     pub segment_index: i32,
     pub edge_flags: EdgeAaSegmentMask,
-    pub user_data0: i32,
-    pub user_data1: i32,
+    pub user_data: [i32; 3],
 }
 
 impl From<BrushInstance> for PrimitiveInstance {
     fn from(instance: BrushInstance) -> Self {
         PrimitiveInstance {
             data: [
-                instance.picture_address.0 as i32,
+                instance.picture_address.0 as i32 | (instance.clip_task_address.0 as i32) << 16,
                 instance.prim_address.as_int(),
                 ((instance.clip_chain_rect_index.0 as i32) << 16) | instance.scroll_id.0 as i32,
-                instance.clip_task_address.0 as i32,
                 instance.z,
                 instance.segment_index | ((instance.edge_flags.bits() as i32) << 16),
-                instance.user_data0,
-                instance.user_data1,
+                instance.user_data[0],
+                instance.user_data[1],
+                instance.user_data[2],
             ]
         }
     }

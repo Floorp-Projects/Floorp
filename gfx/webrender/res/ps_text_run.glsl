@@ -55,7 +55,13 @@ VertexInfo write_text_vertex(vec2 clamped_local_pos,
 
     gl_Position = uTransform * vec4(final_pos, z, 1.0);
 
-    VertexInfo vi = VertexInfo(clamped_local_pos, device_pos);
+    VertexInfo vi = VertexInfo(
+        clamped_local_pos,
+        device_pos,
+        world_pos.w,
+        final_pos
+    );
+
     return vi;
 }
 
@@ -147,6 +153,9 @@ void main(void) {
             vMaskSwizzle = vec2(-1.0, 1.0);
             vColor = vec4(text.color.a) * text.bg_color;
             break;
+        default:
+            vMaskSwizzle = vec2(0.0);
+            vColor = vec4(1.0);
     }
 
     vec2 texture_size = vec2(textureSize(sColor0, 0));

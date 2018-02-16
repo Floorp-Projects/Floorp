@@ -117,8 +117,6 @@ fuzzy-if(OSX||winWidget,226,960)  css-writing-modes/text-orientation-016.xht
 fuzzy-if(OSX||winWidget,223,720)  css-writing-modes/vertical-alignment-*.xht
 fuzzy-if(OSX||winWidget,153,612)  css-writing-modes/writing-mode-vertical-??-00?.*
 fuzzy(255,960) css-writing-modes/text-combine-upright-value-all-00?.html
-fuzzy(255,960) fails-if(webrender) css-writing-modes/text-combine-upright-value-all-002.html ref:css-writing-modes/reference/vertical-ahem-1x1-ref.html
-fuzzy(255,960) fails-if(webrender) css-writing-modes/text-combine-upright-value-all-003.html ref:css-writing-modes/reference/vertical-ahem-1x1-ref.html
 
 # Bug 1167911
 skip css-writing-modes/abs-pos-non-replaced-icb-vlr-021.xht

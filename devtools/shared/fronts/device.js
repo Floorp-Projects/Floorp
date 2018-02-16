@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Cu} = require("chrome");
 const {deviceSpec} = require("devtools/shared/specs/device");
 const protocol = require("devtools/shared/protocol");
 const defer = require("devtools/shared/defer");
@@ -20,8 +20,7 @@ const DeviceFront = protocol.FrontClassWithSpec(deviceSpec, {
       return longstr.string().then(dataURL => {
         let deferred = defer();
         longstr.release().catch(Cu.reportError);
-        let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-            .createInstance(Ci.nsIXMLHttpRequest);
+        let req = new XMLHttpRequest();
         req.open("GET", dataURL, true);
         req.responseType = "blob";
         req.onload = () => {

@@ -59,6 +59,12 @@ interface nsIParserUtils : nsISupports
   const unsigned long SanitizerDropMedia = (1 << 5);
 
   /**
+   * Flag for sanitizer: Log messages to the console for everything that gets
+   * sanitized
+   */
+  const unsigned long SanitizerLogRemovals = (1 << 6);
+
+  /**
    * Parses a string into an HTML document, sanitizes the document and 
    * returns the result serialized to a string.
    *

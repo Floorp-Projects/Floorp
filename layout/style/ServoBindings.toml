@@ -223,6 +223,7 @@ whitelist-types = [
     "mozilla::SeenPtrs",
     "mozilla::ServoElementSnapshot.*",
     "mozilla::ServoStyleContext",
+    "mozilla::ServoStyleSheet",
     "mozilla::ServoStyleSheetInner",
     "mozilla::ServoStyleSetSizes",
     "mozilla::CSSPseudoClassType",
@@ -470,7 +471,6 @@ structs-types = [
     "mozilla::AnonymousCounterStyle",
     "mozilla::AtomArray",
     "mozilla::MallocSizeOf",
-    "mozilla::ServoStyleSet",
     "mozilla::OriginFlags",
     "mozilla::UniquePtr",
     "ServoRawOffsetArc",
@@ -619,6 +619,7 @@ array-types = [
 ]
 servo-owned-types = [
     { name = "RawServoStyleSet", opaque = true },
+    { name = "RawServoAuthorStyles", opaque = true },
     { name = "RawServoSelectorList", opaque = false },
     { name = "RawServoSourceSizeList", opaque = false },
     { name = "ServoElementSnapshot", opaque = false },

@@ -24,144 +24,138 @@ MOCHITEST_TOTAL_CHUNKS = 5
 
 TEST_SUITES = {
     'cppunittest': {
-        'aliases': ('Cpp', 'cpp'),
+        'aliases': ('cpp',),
         'mach_command': 'cppunittest',
         'kwargs': {'test_file': None},
     },
     'crashtest': {
-        'aliases': ('C', 'Rc', 'RC', 'rc'),
+        'aliases': ('c', 'rc'),
         'mach_command': 'crashtest',
         'kwargs': {'test_file': None},
     },
     'firefox-ui-functional': {
-        'aliases': ('Fxfn',),
+        'aliases': ('fxfn',),
         'mach_command': 'firefox-ui-functional',
         'kwargs': {},
     },
     'firefox-ui-update': {
-        'aliases': ('Fxup',),
+        'aliases': ('fxup',),
         'mach_command': 'firefox-ui-update',
         'kwargs': {},
     },
     'check-spidermonkey': {
-        'aliases': ('Sm', 'sm'),
+        'aliases': ('sm',),
         'mach_command': 'check-spidermonkey',
         'kwargs': {'valgrind': False},
     },
     # TODO(ato): integrate geckodriver tests with moz.build
     'geckodriver': {
-        'mach_command': 'geckodriver-test',
         'aliases': ('testing/geckodriver',),
+        'mach_command': 'geckodriver-test',
         'kwargs': {},
     },
+    'marionette': {
+        'aliases': ('mn',),
+        'mach_command': 'marionette',
+        'kwargs': {'tests': None},
+    },
     'mochitest-a11y': {
+        'aliases': ('a11y', 'ally'),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'a11y', 'test_paths': None},
+        'task_regex': 'mochitest-a11y(?:-1)?$',
     },
     'mochitest-browser': {
-        'aliases': ('bc', 'BC', 'Bc'),
+        'aliases': ('bc', 'browser-chrome'),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'browser-chrome', 'test_paths': None},
+        'task_regex': 'mochitest-browser-chrome(?:-e10s)?(?:-1)?$',
     },
     'mochitest-chrome': {
+        'aliases': ('mc',),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'chrome', 'test_paths': None},
+        'task_regex': 'mochitest-chrome(?:-e10s)?(?:-1)?$',
+    },
+    'mochitest-clipboard': {
+        'aliases': ('cl', 'clipboard',),
+        'mach_command': 'mochitest',
+        'kwargs': {'subsuite': 'clipboard', 'test_paths': None},
+        'task_regex': 'mochitest-clipboard(?:-e10s)?(?:-1)?$',
     },
     'mochitest-devtools': {
-        'aliases': ('dt', 'DT', 'Dt'),
+        'aliases': ('dt', 'devtools-chrome'),
         'mach_command': 'mochitest',
-        'kwargs': {'subsuite': 'devtools', 'test_paths': None},
+        'kwargs': {'flavor': 'browser-chrome', 'subsuite': 'devtools', 'test_paths': None},
+        'task_regex': 'mochitest-devtools-chrome(?:-e10s)?(?:-1)?$',
+    },
+    'mochitest-gpu': {
+        'aliases': ('gpu',),
+        'mach_command': 'mochitest',
+        'kwargs': {'subsuite': 'gpu', 'test_paths': None},
+        'task_regex': 'mochitest-gpu(?:-e10s)?(?:-1)?$',
+    },
+    'mochitest-media': {
+        'aliases': ('mpm', 'plain-media'),
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'plain', 'subsuite': 'media', 'test_paths': None},
+        'task_regex': 'mochitest-media(?:-e10s)?(?:-1)?$',
     },
     'mochitest-plain': {
+        'aliases': ('mp', 'plain',),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'plain', 'test_paths': None},
+        'task_regex': 'mochitest(?:-e10s)?(?:-1)?$',
+    },
+    'mochitest-screenshots': {
+        'aliases': ('ss', 'screenshots-chrome'),
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'browser-chrome', 'subsuite': 'screenshots', 'test_paths': None},
+        'task_regex': 'browser-screenshots(?:-e10s)?(?:-1)?$',
+    },
+    'mochitest-webgl': {
+        'aliases': ('webgl',),
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'plain', 'subsuite': 'webgl', 'test_paths': None},
+        'task_regex': 'mochitest-webgl(?:-e10s)?(?:-1)?$',
     },
     'python': {
         'mach_command': 'python-test',
         'kwargs': {'tests': None},
     },
     'reftest': {
-        'aliases': ('RR', 'rr', 'Rr'),
+        'aliases': ('rr',),
         'mach_command': 'reftest',
         'kwargs': {'tests': None},
+        'task_regex': '(opt|debug)-reftest(?:-no-accel|-gpu|-stylo)?(?:-e10s)?(?:-1)?$',
+    },
+    'robocop': {
+        'mach_command': 'robocop',
+        'kwargs': {'test_paths': None},
+        'task_regex': 'robocop(?:-e10s)?(?:-1)?$',
     },
     'web-platform-tests': {
         'aliases': ('wpt',),
         'mach_command': 'web-platform-tests',
-        'kwargs': {}
+        'kwargs': {'include': []},
+        'task_regex': 'web-platform-tests(?:-reftests|-wdspec)?(?:-e10s)?(?:-1)?$',
     },
     'valgrind': {
-        'aliases': ('V', 'v'),
+        'aliases': ('v',),
         'mach_command': 'valgrind-test',
         'kwargs': {},
     },
     'xpcshell': {
-        'aliases': ('X', 'x'),
+        'aliases': ('x',),
         'mach_command': 'xpcshell-test',
         'kwargs': {'test_file': 'all'},
-    },
-}
-
-# Maps test flavors to metadata on how to run that test.
-TEST_FLAVORS = {
-    'a11y': {
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'a11y', 'test_paths': []},
-        'task_regex': 'mochitest-a11y(?:-1)?$',
-    },
-    'browser-chrome': {
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'browser-chrome', 'test_paths': []},
-        'task_regex': 'mochitest-browser-chrome(?:-e10s)?(?:-1)?$',
-    },
-    'crashtest': {},
-    'chrome': {
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'chrome', 'test_paths': []},
-        'task_regex': 'mochitest-chrome(?:-e10s)?(?:-1)?$',
-    },
-    'firefox-ui-functional': {
-        'mach_command': 'firefox-ui-functional',
-        'kwargs': {'tests': []},
-    },
-    'firefox-ui-update': {
-        'mach_command': 'firefox-ui-update',
-        'kwargs': {'tests': []},
-    },
-    'marionette': {
-        'mach_command': 'marionette-test',
-        'kwargs': {'tests': []},
-    },
-    'mochitest': {
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'mochitest', 'test_paths': []},
-        'task_regex': 'mochitest(?:-e10s)?(?:-1)?$',
-    },
-    'python': {
-        'mach_command': 'python-test',
-        'kwargs': {},
-    },
-    'reftest': {
-        'mach_command': 'reftest',
-        'kwargs': {'tests': []},
-        'task_regex': '(opt|debug)-reftest(?:-no-accel|-gpu|-stylo)?(?:-e10s)?(?:-1)?$',
-    },
-    'steeplechase': {},
-    'web-platform-tests': {
-        'mach_command': 'web-platform-tests',
-        'kwargs': {'include': []},
-        'task_regex': 'web-platform-tests(?:-reftests|-wdspec)?(?:-e10s)?(?:-1)?$',
-    },
-    'xpcshell': {
-        'mach_command': 'xpcshell-test',
-        'kwargs': {'test_paths': []},
         'task_regex': 'xpcshell(?:-1)?$',
     },
 }
 
 for i in range(1, MOCHITEST_TOTAL_CHUNKS + 1):
     TEST_SUITES['mochitest-%d' % i] = {
-        'aliases': ('M%d' % i, 'm%d' % i),
+        'aliases': ('m%d' % i,),
         'mach_command': 'mochitest',
         'kwargs': {
             'flavor': 'mochitest',
@@ -172,6 +166,64 @@ for i in range(1, MOCHITEST_TOTAL_CHUNKS + 1):
             'test_paths': None,
         },
     }
+
+_test_flavors = {
+    'a11y': 'mochitest-a11y',
+    'browser-chrome': 'mochitest-browser',
+    'chrome': 'mochitest-chrome',
+    'crashtest': '',
+    'firefox-ui-functional': 'firefox-ui-functional',
+    'firefox-ui-update': 'firefox-ui-update',
+    'marionette': 'marionette',
+    'mochitest': 'mochitest-plain',
+    'python': 'python',
+    'reftest': 'reftest',
+    'steeplechase': '',
+    'web-platform-tests': 'web-platform-tests',
+    'xpcshell': 'xpcshell',
+}
+
+_test_subsuites = {
+    ('browser-chrome', 'clipboard'): 'mochitest-clipboard',
+    ('browser-chrome', 'devtools'): 'mochitest-devtools',
+    ('browser-chrome', 'gpu'): 'mochitest-gpu',
+    ('browser-chrome', 'screenshots'): 'mochitest-screenshots',
+    ('chrome', 'clipboard'): 'mochitest-clipboard',
+    ('chrome', 'gpu'): 'mochitest-gpu',
+    ('mochitest', 'clipboard'): 'mochitest-clipboard',
+    ('mochitest', 'gpu'): 'mochitest-gpu',
+    ('mochitest', 'media'): 'mochitest-media',
+    ('mochitest', 'robocop'): 'robocop',
+    ('mochitest', 'webgl'): 'mochitest-webgl',
+}
+
+
+def get_suite_definition(flavor, subsuite=None, strict=False):
+    """Return a suite definition given a flavor and optional subsuite.
+
+    If strict is True, a subsuite must have its own entry in TEST_SUITES.
+    Otherwise, the entry for 'flavor' will be returned with the 'subsuite'
+    keyword arg set.
+
+    With or without strict mode, an empty dict will be returned if no
+    matching suite definition was found.
+    """
+    if not subsuite:
+        suite_name = _test_flavors.get(flavor)
+        return TEST_SUITES.get(suite_name, {}).copy()
+
+    suite_name = _test_subsuites.get((flavor, subsuite))
+    if suite_name or strict:
+        return TEST_SUITES.get(suite_name, {}).copy()
+
+    suite_name = _test_flavors.get(flavor)
+    if suite_name not in TEST_SUITES:
+        return {}
+
+    suite = TEST_SUITES[suite_name].copy()
+    suite.setdefault('kwargs', {})
+    suite['kwargs']['subsuite'] = subsuite
+    return suite
 
 
 def rewrite_test_base(test, new_base, honor_install_to_subdir=False):
@@ -455,7 +507,7 @@ class TestResolver(MozbuildObject):
                 continue
             suitefound = False
             for suite, v in TEST_SUITES.items():
-                if entry in v.get('aliases', []):
+                if entry.lower() in v.get('aliases', []):
                     run_suites.add(suite)
                     suitefound = True
             if suitefound:

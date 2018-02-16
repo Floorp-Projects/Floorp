@@ -24,7 +24,7 @@
 #define TEX_SAMPLE(sampler, tex_coord) texture(sampler, tex_coord.xy)
 #else
 // In normal case, we use textureLod(). We haven't used the lod yet. So, we always pass 0.0 now.
-#define TEX_SAMPLE(sampler, tex_coord) textureLod(sampler, tex_coord, 0.0)
+#define TEX_SAMPLE(sampler, tex_coord) texture(sampler, tex_coord)
 #endif
 
 //======================================================================================

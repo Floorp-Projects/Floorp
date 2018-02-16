@@ -15,8 +15,6 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "ViewSourceBrowser",
   "resource://gre/modules/ViewSourceBrowser.jsm");
-ChromeUtils.defineModuleGetter(this, "Deprecated",
-  "resource://gre/modules/Deprecated.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
@@ -31,13 +29,8 @@ var gViewSourceUtils = {
   /**
    * Opens the view source window.
    *
-   * @param aArgsOrURL (required)
-   *        This is either an Object containing parameters, or a string
-   *        URL for the page we want to view the source of. In the latter
-   *        case we will be paying attention to the other parameters, as
-   *        we will be supporting the old API for this method.
-   *        If aArgsOrURL is an Object, the other parameters will be ignored.
-   *        aArgsOrURL as an Object can include the following properties:
+   * @param aArgs (required)
+   *        This Object can include the following properties:
    *
    *        URL (required):
    *          A string URL for the page we'd like to view the source of.
@@ -50,21 +43,34 @@ var gViewSourceUtils = {
    *          load the document source out of the network cache.
    *        lineNumber (optional):
    *          The line number to focus on once the source is loaded.
-   *
-   * @param aPageDescriptor (deprecated, optional)
-   *        Accepted for compatibility reasons, but is otherwise ignored.
-   * @param aDocument (deprecated, optional)
-   *        The content document we would like to view the source of. This
-   *        function will throw if aDocument is a CPOW.
-   * @param aLineNumber (deprecated, optional)
-   *        The line number to focus on once the source is loaded.
    */
-  viewSource(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber) {
+  viewSource(aArgs) {
     if (Services.prefs.getBoolPref("view_source.editor.external")) {
-      this.openInExternalEditor(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber);
-    } else {
-      this._openInInternalViewer(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber);
+      this.openInExternalEditor(aArgs);
+      return;
     }
+    // Try existing browsers first.
+    let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
+    if (browserWin && browserWin.BrowserViewSourceOfDocument) {
+      browserWin.BrowserViewSourceOfDocument(aArgs);
+      return;
+    }
+    // No browser window created yet, try to create one.
+    let utils = this;
+    Services.ww.registerNotification(function onOpen(subj, topic) {
+      if (subj.document.documentURI !== "about:blank" ||
+          topic !== "domwindowopened") {
+        return;
+      }
+      Services.ww.unregisterNotification(onOpen);
+      let win = subj.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                    .getInterface(Components.interfaces.nsIDOMWindow);
+      win.addEventListener("load", () => {
+        aArgs.viewSourceBrowser = win.gBrowser.selectedTab.linkedBrowser;
+        utils.viewSourceInBrowser(aArgs);
+      }, { once: true });
+    });
+    window.top.openUILinkIn("about:blank", "current");
   },
 
   /**
@@ -106,8 +112,7 @@ var gViewSourceUtils = {
    * @param aTarget
    *        Set to the target node for MathML. Null for other types of elements.
    * @param aGetBrowserFn
-   *        If set, a function that will return a browser to open the source in.
-   *        If null, or this function returns null, opens the source in a new window.
+   *        A function that will return a browser to open the source in.
    */
   viewPartialSourceInBrowser(aViewSourceInBrowser, aTarget, aGetBrowserFn) {
     let mm = aViewSourceInBrowser.messageManager;
@@ -117,53 +122,12 @@ var gViewSourceUtils = {
       if (!message.data)
         return;
 
-      let browserToOpenIn = aGetBrowserFn ? aGetBrowserFn() : null;
-      if (browserToOpenIn) {
-        let viewSourceBrowser = new ViewSourceBrowser(browserToOpenIn);
-        viewSourceBrowser.loadViewSourceFromSelection(message.data.uri, message.data.drawSelection,
+      let viewSourceBrowser = new ViewSourceBrowser(aGetBrowserFn());
+      viewSourceBrowser.loadViewSourceFromSelection(message.data.uri, message.data.drawSelection,
                                                       message.data.baseURI);
-      } else {
-        window.openDialog("chrome://global/content/viewPartialSource.xul",
-                          "_blank", "all,dialog=no",
-                          {
-                            URI: message.data.uri,
-                            drawSelection: message.data.drawSelection,
-                            baseURI: message.data.baseURI,
-                            partial: true,
-                          });
-      }
     });
 
     mm.sendAsyncMessage("ViewSource:GetSelection", { }, { target: aTarget });
-  },
-
-  // Opens the interval view source viewer
-  _openInInternalViewer(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber) {
-    // try to open a view-source window while inheriting the charset (if any)
-    var charset = null;
-    var isForcedCharset = false;
-    if (aDocument) {
-      if (Components.utils.isCrossProcessWrapper(aDocument)) {
-        throw new Error("View Source cannot accept a CPOW as a document.");
-      }
-
-      charset = "charset=" + aDocument.characterSet;
-      try {
-        isForcedCharset =
-          aDocument.defaultView
-                   .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                   .getInterface(Components.interfaces.nsIDOMWindowUtils)
-                   .docCharsetIsForced;
-      } catch (ex) {
-      }
-    }
-    Services.telemetry
-            .getHistogramById("VIEW_SOURCE_IN_WINDOW_OPENED_BOOLEAN")
-            .add(true);
-    openDialog("chrome://global/content/viewSource.xul",
-               "_blank",
-               "all,dialog=no",
-               aArgsOrURL, charset, aPageDescriptor, aLineNumber, isForcedCharset);
   },
 
   buildEditorArgs(aPath, aLineNumber) {
@@ -186,13 +150,8 @@ var gViewSourceUtils = {
   /**
    * Opens an external editor with the view source content.
    *
-   * @param aArgsOrURL (required)
-   *        This is either an Object containing parameters, or a string
-   *        URL for the page we want to view the source of. In the latter
-   *        case we will be paying attention to the other parameters, as
-   *        we will be supporting the old API for this method.
-   *        If aArgsOrURL is an Object, the other parameters will be ignored.
-   *        aArgsOrURL as an Object can include the following properties:
+   * @param aArgs (required)
+   *        This Object can include the following properties:
    *
    *        URL (required):
    *          A string URL for the page we'd like to view the source of.
@@ -206,58 +165,28 @@ var gViewSourceUtils = {
    *        lineNumber (optional):
    *          The line number to focus on once the source is loaded.
    *
-   * @param aPageDescriptor (deprecated, optional)
-   *        Accepted for compatibility reasons, but is otherwise ignored.
-   * @param aDocument (deprecated, optional)
-   *        The content document we would like to view the source of. This
-   *        function will throw if aDocument is a CPOW.
-   * @param aLineNumber (deprecated, optional)
-   *        The line number to focus on once the source is loaded.
-   * @param aCallBack
+   * @param aCallBack (required)
    *        A function accepting two arguments:
    *          * result (true = success)
    *          * data object
-   *        The function defaults to opening an internal viewer if external
-   *        viewing fails.
    */
-  openInExternalEditor(aArgsOrURL, aPageDescriptor, aDocument,
-                                 aLineNumber, aCallBack) {
+  openInExternalEditor(aArgs, aCallBack) {
     let data;
-    if (typeof aArgsOrURL == "string") {
-      Deprecated.warning("The arguments you're passing to " +
-                         "openInExternalEditor are using an out-of-date API.",
-                         "https://developer.mozilla.org/en-US/Add-ons/" +
-                         "Code_snippets/View_Source_for_XUL_Applications");
-      if (Components.utils.isCrossProcessWrapper(aDocument)) {
-        throw new Error("View Source cannot accept a CPOW as a document.");
-      }
-      data = {
-        url: aArgsOrURL,
-        pageDescriptor: aPageDescriptor,
-        doc: aDocument,
-        lineNumber: aLineNumber,
-        isPrivate: false,
+    let { URL, browser, lineNumber } = aArgs;
+    data = {
+      url: URL,
+      lineNumber,
+      isPrivate: false,
+    };
+    if (browser) {
+      data.doc = {
+        characterSet: browser.characterSet,
+        contentType: browser.documentContentType,
+        title: browser.contentTitle,
       };
-      if (aDocument) {
-          data.isPrivate =
-            PrivateBrowsingUtils.isWindowPrivate(aDocument.defaultView);
-      }
-    } else {
-      let { URL, browser, lineNumber } = aArgsOrURL;
-      data = {
-        url: URL,
-        lineNumber,
-        isPrivate: false,
-      };
-      if (browser) {
-        data.doc = {
-          characterSet: browser.characterSet,
-          contentType: browser.documentContentType,
-          title: browser.contentTitle,
-        };
-        data.isPrivate = PrivateBrowsingUtils.isBrowserPrivate(browser);
-      }
+      data.isPrivate = PrivateBrowsingUtils.isBrowserPrivate(browser);
     }
+
 
     try {
       var editor = this.getExternalViewSourceEditor();
@@ -332,24 +261,12 @@ var gViewSourceUtils = {
     }
   },
 
-  // Default callback - opens the internal viewer if the external editor failed
-  internalViewerFallback(result, data) {
-    if (!result) {
-      this._openInInternalViewer(data.url, data.pageDescriptor, data.doc, data.lineNumber);
-    }
-  },
-
-  // Calls the callback, keeping in mind undefined or null values.
+  // Calls the callback, and record result in telemetry.
   handleCallBack(aCallBack, result, data) {
     Services.telemetry
             .getHistogramById("VIEW_SOURCE_EXTERNAL_RESULT_BOOLEAN")
             .add(result);
-    // if callback is undefined, default to the internal viewer
-    if (aCallBack === undefined) {
-      this.internalViewerFallback(result, data);
-    } else if (aCallBack) {
-      aCallBack(result, data);
-    }
+    aCallBack(result, data);
   },
 
   // Returns nsIProcess of the external view source editor or null

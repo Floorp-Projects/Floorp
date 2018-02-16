@@ -12,6 +12,8 @@ ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 ChromeUtils.import("resource://services-common/utils.js");
 ChromeUtils.import("resource://gre/modules/Http.jsm");
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 // The maximum amount of net data allowed per request on Bing's API.
 const MAX_REQUEST_DATA = 5000; // Documentation says 10000 but anywhere
                                // close to that is refused by the service.
@@ -138,7 +140,7 @@ this.YandexTranslator.prototype = {
    * @param   aError   [optional] The XHR object of the request that failed.
    */
   _chunkFailed(aError) {
-    if (aError instanceof Ci.nsIXMLHttpRequest) {
+    if (aError instanceof XMLHttpRequest) {
       let body = aError.responseText;
       let json = { code: 0 };
       try {

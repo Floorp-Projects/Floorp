@@ -12,6 +12,12 @@ extern crate bitflags;
 extern crate byteorder;
 #[cfg(feature = "nightly")]
 extern crate core;
+#[cfg(target_os = "macos")]
+extern crate core_foundation;
+#[cfg(target_os = "macos")]
+extern crate core_graphics;
+#[cfg(target_os = "windows")]
+extern crate dwrote;
 extern crate euclid;
 #[cfg(feature = "ipc")]
 extern crate ipc_channel;
@@ -20,23 +26,15 @@ extern crate serde;
 extern crate serde_derive;
 extern crate time;
 
-#[cfg(target_os = "macos")]
-extern crate core_foundation;
 
-#[cfg(target_os = "macos")]
-extern crate core_graphics;
-
-#[cfg(target_os = "windows")]
-extern crate dwrote;
-
-mod units;
 mod api;
-mod color;
 pub mod channel;
+mod color;
 mod display_item;
 mod display_list;
 mod font;
 mod image;
+mod units;
 
 pub use api::*;
 pub use color::*;
