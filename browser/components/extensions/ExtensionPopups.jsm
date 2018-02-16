@@ -78,6 +78,7 @@ class BasePopup {
     });
 
     this.viewNode.addEventListener(this.DESTROY_EVENT, this);
+    this.panel.addEventListener("popuppositioned", this, {once: true, capture: true});
 
     this.browser = null;
     this.browserLoaded = new Promise((resolve, reject) => {
@@ -209,6 +210,18 @@ class BasePopup {
       case this.DESTROY_EVENT:
         if (!this.destroyed) {
           this.destroy();
+        }
+        break;
+      case "popuppositioned":
+        if (!this.destroyed) {
+          this.browserLoaded.then(() => {
+            if (this.destroyed) {
+              return;
+            }
+            this.browser.messageManager.sendAsyncMessage("Extension:GrabFocus", {});
+          }).catch(() => {
+            // If the panel closes too fast an exception is raised here and tests will fail.
+          });
         }
         break;
     }
@@ -438,6 +451,7 @@ class ViewPopup extends BasePopup {
     this.viewNode.addEventListener(this.DESTROY_EVENT, this);
     this.viewNode.setAttribute("closemenu", "none");
 
+    this.panel.addEventListener("popuppositioned", this, {once: true, capture: true});
     if (this.extension.remote) {
       this.panel.setAttribute("remote", "true");
     }

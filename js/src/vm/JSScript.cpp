@@ -3674,23 +3674,6 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
             Rebase<uint32_t>(dst, src, src->yieldAndAwaitOffsets().vector_);
     }
 
-    /*
-     * Function delazification assumes that their script does not have a
-     * non-syntactic global scope.  We ensure that as follows:
-     *
-     * 1) Initial parsing only creates lazy functions if
-     *    !hasNonSyntacticScope.
-     * 2) Cloning a lazy function into a non-global scope will always require
-     *    that its script be cloned.  See comments in
-     *    CloneFunctionObjectUseSameScript.
-     * 3) Cloning a script never sets a lazyScript on the clone, so the function
-     *    cannot be relazified.
-     *
-     * If you decide that lazy functions should be supported with a
-     * non-syntactic global scope, make sure delazification can deal.
-     */
-    MOZ_ASSERT_IF(dst->hasNonSyntacticScope(), !dst->maybeLazyScript());
-    MOZ_ASSERT_IF(dst->hasNonSyntacticScope(), !dst->isRelazifiable());
     return true;
 }
 

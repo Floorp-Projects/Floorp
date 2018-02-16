@@ -12,6 +12,9 @@ interface nsITreeColumn;
 interface nsITreeColumns;
 interface nsIScriptableRegion;
 
+/**
+ * This interface cannot become builtinclass until bug 1438525 is fixed.
+ */
 [scriptable, uuid(f3da0c5e-51f5-45f0-b2cd-6be3ab6847ae)]
 interface nsITreeBoxObject : nsISupports
 {
@@ -21,12 +24,11 @@ interface nsITreeBoxObject : nsISupports
   readonly attribute nsITreeColumns columns;
 
   /**
-   * The view that backs the tree and that supplies it with its data.  This can
-   * be set from script (via the TreeBoxObject.webidl bits), read from C++ from
-   * an nsITreeBoxObject, or set in C++ on a mozilla::dom::TreeBoxObject.  In
-   * general, this attribute, along with this whole interface, should go away.
+   * The view that backs the tree and that supplies it with its data.
+   * It is dynamically settable, either using a view attribute on the
+   * tree tag or by setting this attribute to a new value.
    */
-  readonly attribute nsITreeView view;
+  attribute nsITreeView view;
 
   /**
    * Whether or not we are currently focused.

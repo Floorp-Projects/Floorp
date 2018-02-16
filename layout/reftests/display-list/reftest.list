@@ -21,4 +21,5 @@ needs-focus == 1429027-1.html 1429027-1-ref.html
 == 1432553-1.html 1432553-1-ref.html
 == 1432553-2.html 1432553-2-ref.html
 == 1436189-1.html 1436189-1-ref.html
+skip-if(!asyncPan) == 1437374-1.html 1437374-1-ref.html
 

@@ -18,7 +18,7 @@ const promise = require("resource://gre/modules/Promise.jsm").Promise;
 const jsmScope = require("resource://gre/modules/Services.jsm");
 const { Services } = jsmScope;
 // Steal various globals only available in JSM scope (and not Sandbox one)
-const { PromiseDebugging, ChromeUtils, HeapSnapshot,
+const { ChromeUtils, HeapSnapshot,
         atob, btoa, TextEncoder, TextDecoder } = Cu.getGlobalForObject(jsmScope);
 
 // Create a single Sandbox to access global properties needed in this module.
@@ -178,7 +178,6 @@ exports.modules = {
   // and so are never frozen, even if the browser loader module which
   // pull it is destroyed. See bug 1402779.
   Promise,
-  PromiseDebugging,
   ChromeUtils,
   HeapSnapshot,
   InspectorUtils,

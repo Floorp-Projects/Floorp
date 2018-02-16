@@ -854,18 +854,22 @@ class OutOfLineWasmTruncateCheck : public OutOfLineCodeBase<CodeGeneratorShared>
     MIRType fromType_;
     MIRType toType_;
     FloatRegister input_;
-    bool isUnsigned_;
+    Register output_;
+    Register64 output64_;
+    TruncFlags flags_;
     wasm::BytecodeOffset bytecodeOffset_;
 
   public:
-    OutOfLineWasmTruncateCheck(MWasmTruncateToInt32* mir, FloatRegister input)
-      : fromType_(mir->input()->type()), toType_(MIRType::Int32), input_(input),
-        isUnsigned_(mir->isUnsigned()), bytecodeOffset_(mir->bytecodeOffset())
+    OutOfLineWasmTruncateCheck(MWasmTruncateToInt32* mir, FloatRegister input, Register output)
+      : fromType_(mir->input()->type()), toType_(MIRType::Int32), input_(input), output_(output),
+        output64_(Register64::Invalid()), flags_(mir->flags()),
+        bytecodeOffset_(mir->bytecodeOffset())
     { }
 
-    OutOfLineWasmTruncateCheck(MWasmTruncateToInt64* mir, FloatRegister input)
+    OutOfLineWasmTruncateCheck(MWasmTruncateToInt64* mir, FloatRegister input, Register64 output)
       : fromType_(mir->input()->type()), toType_(MIRType::Int64), input_(input),
-        isUnsigned_(mir->isUnsigned()), bytecodeOffset_(mir->bytecodeOffset())
+        output_(Register::Invalid()), output64_(output), flags_(mir->flags()),
+        bytecodeOffset_(mir->bytecodeOffset())
     { }
 
     void accept(CodeGeneratorShared* codegen) override {
@@ -873,9 +877,13 @@ class OutOfLineWasmTruncateCheck : public OutOfLineCodeBase<CodeGeneratorShared>
     }
 
     FloatRegister input() const { return input_; }
+    Register output() const { return output_; }
+    Register64 output64() const { return output64_; }
     MIRType toType() const { return toType_; }
     MIRType fromType() const { return fromType_; }
-    bool isUnsigned() const { return isUnsigned_; }
+    bool isUnsigned() const { return flags_ & TRUNC_UNSIGNED; }
+    bool isSaturating() const { return flags_ & TRUNC_SATURATING; }
+    TruncFlags flags() const { return flags_; }
     wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
 };
 

@@ -55,7 +55,7 @@ function testSignExtension(resultType, opcode, paramType, op, expect) {
   testConversion0(resultType, `${resultType}.${opcode}`, paramType, op, expect);
 }
 
-function testTrap(resultType, opcode, paramType, op, expect) {
+function testTrap(resultType, opcode, paramType, op) {
     let func = wasmEvalText(`(module
         (func
             (param ${paramType})
@@ -75,6 +75,8 @@ function testTrap(resultType, opcode, paramType, op, expect) {
 
     assertErrorMessage(() => func(jsify(op)), Error, expectedError);
 }
+
+var p = Math.pow;
 
 testConversion('i32', 'wrap', 'i64', '0x100000028', 40);
 testConversion('i32', 'wrap', 'i64', -10, -10);
@@ -103,9 +105,9 @@ testConversion('f32', 'convert_s', 'i64', 0, 0.0);
 testConversion('f32', 'convert_s', 'i64', "0x7fffffffffffffff", 9223372036854775807.0);
 testConversion('f32', 'convert_s', 'i64', "0x8000000000000000", -9223372036854775808.0);
 testConversion('f32', 'convert_s', 'i64', "0x11db9e76a2483", 314159275180032.0);
-testConversion('f32', 'convert_s', 'i64', "0x7fffffff", 2147483648.0); // closesth approx.
+testConversion('f32', 'convert_s', 'i64', "0x7fffffff", 2147483648.0); // closest approx.
 testConversion('f32', 'convert_s', 'i64', "0x80000000", 2147483648.0);
-testConversion('f32', 'convert_s', 'i64', "0x80000001", 2147483648.0); // closesth approx.
+testConversion('f32', 'convert_s', 'i64', "0x80000001", 2147483648.0); // closest approx.
 
 // Interesting values at the boundaries.
 testConversion('f32', 'convert_s', 'i64', "0x358a09a000000002", 3857906751034621952);
@@ -238,6 +240,62 @@ testTrap('i64', 'trunc_u', 'f32', "-infinity");
 testConversion('i64', 'reinterpret', 'f64', 40.09999999999968, "0x40440ccccccccca0");
 testConversion('f64', 'reinterpret', 'i64', "0x40440ccccccccca0", 40.09999999999968);
 
+if (wasmSaturatingTruncationSupported()) {
+    var u64max = '0xffffffffffffffff';
+    var s64max = '0x7fffffffffffffff';
+    var s64min = '-0x8000000000000000';
+    var s32max = 2147483647;
+    var s32min = -2147483648;
+
+    testConversion('i32', 'trunc_s:sat', 'f32', NaN, 0);
+    testConversion('i32', 'trunc_s:sat', 'f32', Infinity, s32max);
+    testConversion('i32', 'trunc_s:sat', 'f32', -Infinity, s32min);
+    testConversion('i32', 'trunc_s:sat', 'f32', p(2, 31), s32max);
+    testConversion('i32', 'trunc_s:sat', 'f32', -p(2, 31) - 256, s32min);
+
+    testConversion('i32', 'trunc_s:sat', 'f64', NaN, 0);
+    testConversion('i32', 'trunc_s:sat', 'f64', Infinity, s32max);
+    testConversion('i32', 'trunc_s:sat', 'f64', -Infinity, s32min);
+    testConversion('i32', 'trunc_s:sat', 'f64', p(2, 31), s32max);
+    testConversion('i32', 'trunc_s:sat', 'f64', -p(2, 31) - 1, s32min);
+
+    testConversion('i32', 'trunc_u:sat', 'f32', NaN, 0);
+    testConversion('i32', 'trunc_u:sat', 'f32', Infinity, -1);
+    testConversion('i32', 'trunc_u:sat', 'f32', -Infinity, 0);
+    testConversion('i32', 'trunc_u:sat', 'f32', -1, 0);
+    testConversion('i32', 'trunc_u:sat', 'f32', p(2, 32), -1);
+
+    testConversion('i32', 'trunc_u:sat', 'f64', NaN, 0);
+    testConversion('i32', 'trunc_u:sat', 'f64', Infinity, -1);
+    testConversion('i32', 'trunc_u:sat', 'f64', -Infinity, 0);
+    testConversion('i32', 'trunc_u:sat', 'f64', -1, 0);
+    testConversion('i32', 'trunc_u:sat', 'f64', p(2, 32), -1);
+
+    testConversion('i64', 'trunc_s:sat', 'f64', 9223372036854776000.0, s64max);
+    testConversion('i64', 'trunc_s:sat', 'f64', -9223372036854778000.0, s64min);
+    testConversion('i64', 'trunc_s:sat', 'f64', 'nan', '0');
+    testConversion('i64', 'trunc_s:sat', 'f64', 'infinity', s64max);
+    testConversion('i64', 'trunc_s:sat', 'f64', '-infinity', s64min);
+
+    testConversion('i64', 'trunc_u:sat', 'f64', -1, '0');
+    testConversion('i64', 'trunc_u:sat', 'f64', 18446744073709551616.0, u64max);
+    testConversion('i64', 'trunc_u:sat', 'f64', 'nan', '0');
+    testConversion('i64', 'trunc_u:sat', 'f64', 'infinity', u64max);
+    testConversion('i64', 'trunc_u:sat', 'f64', '-infinity', '0');
+
+    testConversion('i64', 'trunc_s:sat', 'f32', 9223372036854776000.0, s64max);
+    testConversion('i64', 'trunc_s:sat', 'f32', -9223372586610630000.0, s64min);
+    testConversion('i64', 'trunc_s:sat', 'f32', 'nan', '0');
+    testConversion('i64', 'trunc_s:sat', 'f32', 'infinity', s64max);
+    testConversion('i64', 'trunc_s:sat', 'f32', '-infinity', s64min);
+
+    testConversion('i64', 'trunc_u:sat', 'f32', 18446744073709551616.0, u64max);
+    testConversion('i64', 'trunc_u:sat', 'f32', -1, '0');
+    testConversion('i64', 'trunc_u:sat', 'f32', 'nan', '0');
+    testConversion('i64', 'trunc_u:sat', 'f32', 'infinity', u64max);
+    testConversion('i64', 'trunc_u:sat', 'f32', '-infinity', '0');
+}
+
 if (wasmSignExtensionSupported()) {
     testSignExtension('i32', 'extend8_s', 'i32', 0x7F, 0x7F);
     testSignExtension('i32', 'extend8_s', 'i32', 0x80, -0x80);
@@ -253,7 +311,6 @@ if (wasmSignExtensionSupported()) {
 
 // i32.trunc_s* : all values in ] -2**31 - 1; 2**31 [ are acceptable.
 // f32:
-var p = Math.pow;
 testConversion('i32', 'trunc_s', 'f32', 40.1, 40);
 testConversion('i32', 'trunc_s', 'f32', p(2, 31) - 128, p(2, 31) - 128); // last f32 value exactly representable < 2**31.
 testConversion('i32', 'trunc_s', 'f32', -p(2, 31), -p(2,31)); // last f32 value exactly representable > -2**31 - 1.
@@ -293,11 +350,11 @@ testConversion('i32', 'trunc_u', 'f64', 40.1, 40);
 testConversion('i32', 'trunc_u', 'f64', p(2,32) - 0.001, (p(2,32) - 1)|0); // example value near the top.
 testConversion('i32', 'trunc_u', 'f64', -0.99999, 0); // example value near the bottom.
 
-testTrap('i32', 'trunc_u', 'f32', 'nan');
-testTrap('i32', 'trunc_u', 'f32', 'infinity');
-testTrap('i32', 'trunc_u', 'f32', '-infinity');
-testTrap('i32', 'trunc_u', 'f32', -1);
-testTrap('i32', 'trunc_u', 'f32', p(2,32));
+testTrap('i32', 'trunc_u', 'f64', 'nan');
+testTrap('i32', 'trunc_u', 'f64', 'infinity');
+testTrap('i32', 'trunc_u', 'f64', '-infinity');
+testTrap('i32', 'trunc_u', 'f64', -1);
+testTrap('i32', 'trunc_u', 'f64', p(2,32));
 
 // Other opcodes.
 testConversion('i32', 'reinterpret', 'f32', 40.1, 1109419622);

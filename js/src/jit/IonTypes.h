@@ -927,6 +927,11 @@ enum class RoundingMode {
 // limit has a generous buffer before the real end of the native stack.
 static const uint32_t MAX_UNCHECKED_LEAF_FRAME_SIZE = 64;
 
+// Truncating conversion modifiers.
+typedef uint32_t TruncFlags;
+static const TruncFlags TRUNC_UNSIGNED   = TruncFlags(1) << 0;
+static const TruncFlags TRUNC_SATURATING = TruncFlags(1) << 1;
+
 } // namespace jit
 } // namespace js
 

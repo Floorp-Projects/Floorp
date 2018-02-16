@@ -281,8 +281,12 @@ public:
     return parentNode;
   }
 
+  // aMaxRanges is the maximum number of text ranges to record for each face
+  // (pass 0 to just get the list of faces, without recording exact ranges
+  // where each face was used).
   nsresult GetUsedFontFaces(
-      nsTArray<nsAutoPtr<mozilla::dom::InspectorFontFace>>& aResult);
+      nsTArray<nsAutoPtr<mozilla::dom::InspectorFontFace>>& aResult,
+      uint32_t aMaxRanges);
 
   // nsIMutationObserver methods
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED

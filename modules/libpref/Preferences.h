@@ -230,6 +230,9 @@ public:
   // Whether the pref has a user value or not.
   static bool HasUserValue(const char* aPref);
 
+  // Must the pref be sent to content processes when they start?
+  static bool MustSendToContentProcesses(const char* aPref);
+
   // Adds/Removes the observer for the root pref branch. See nsIPrefBranch.idl
   // for details.
   static nsresult AddStrongObserver(nsIObserver* aObserver, const char* aPref);

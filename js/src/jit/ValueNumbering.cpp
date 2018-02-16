@@ -582,7 +582,7 @@ ValueNumberer::removePredecessorAndCleanUp(MBasicBlock* block, MBasicBlock* pred
             MOZ_ASSERT(nextDef_ == nullptr);
             for (MInstructionIterator iter(block->begin()), end(block->end()); iter != end; ) {
                 MInstruction* ins = *iter++;
-                nextDef_ = *iter;
+                nextDef_ = iter != end ? *iter : nullptr;
                 if (MResumePoint* resume = ins->resumePoint()) {
                     if (!releaseResumePointOperands(resume) || !processDeadDefs())
                         return false;
@@ -958,7 +958,7 @@ ValueNumberer::visitUnreachableBlock(MBasicBlock* block)
         MDefinition* def = *iter++;
         if (def->hasUses())
             continue;
-        nextDef_ = *iter;
+        nextDef_ = iter ? *iter : nullptr;
         if (!discardDefsRecursively(def))
             return false;
     }
@@ -985,7 +985,7 @@ ValueNumberer::visitBlock(MBasicBlock* block, const MBasicBlock* dominatorRoot)
         MDefinition* def = *iter++;
 
         // Remember where our iterator is so that we don't invalidate it.
-        nextDef_ = *iter;
+        nextDef_ = iter ? *iter : nullptr;
 
         // If the definition is dead, discard it.
         if (IsDiscardable(def)) {
