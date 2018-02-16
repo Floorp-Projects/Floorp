@@ -79,6 +79,7 @@ Each ``.yml`` file must have at least one linter defined in it. Here are the sup
 * exclude - A list of glob patterns that must not be matched (optional)
 * extensions - A list of file extensions to be considered (optional)
 * setup - A function that sets up external dependencies (optional)
+* support-files - A list of glob patterns matching configuration files (optional)
 
 In addition to the above, some ``.yml`` files correspond to a single lint rule. For these, the
 following additional keys may be specified:
@@ -168,12 +169,19 @@ Now here is the linter definition that would call it:
             - '**/*.py'
         type: external
         payload: py.flake8:lint
+        support-files:
+            - '**/.flake8'
 
 Notice the payload has two parts, delimited by ':'. The first is the module
 path, which ``mozlint`` will attempt to import. The second is the object path
 within that module (e.g, the name of a function to call). It is up to consumers
 of ``mozlint`` to ensure the module is in ``sys.path``. Structured log linters
 use the same import mechanism.
+
+The ``support-files`` key is used to list configuration files or files related
+to the running of the linter itself. If using ``--outgoing`` or ``--workdir``
+and one of these files was modified, the entire tree will be linted instead of
+just the modified files.
 
 
 Bootstrapping Dependencies

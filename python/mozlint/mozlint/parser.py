@@ -42,7 +42,7 @@ class Parser(object):
         if linter['type'] not in supported_types:
             raise LinterParseError(relpath, "Invalid type '{}'".format(linter['type']))
 
-        for attr in ('include', 'exclude'):
+        for attr in ('include', 'exclude', 'support-files'):
             if attr not in linter:
                 continue
 
@@ -100,5 +100,6 @@ class Parser(object):
             linter['name'] = name
             linter['path'] = path
             self._validate(linter)
+            linter.setdefault('support-files', []).append(path)
             linters.append(linter)
         return linters
