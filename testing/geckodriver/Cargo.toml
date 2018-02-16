@@ -13,7 +13,7 @@ publish = false
 chrono = "^0.2"
 clap = { version = "^2.19", default-features = false, features = ["suggestions", "wrap_help"] }
 hyper = "0.10"
-lazy_static = "0.1"
+lazy_static = "1.0"
 log = { version = "0.4", features = ["std"] }
 mozprofile = { path = "../mozbase/rust/mozprofile" }
 mozrunner = { path = "../mozbase/rust/mozrunner" }
