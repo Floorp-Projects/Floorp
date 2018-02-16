@@ -36,12 +36,25 @@ add_task(async function() {
     }
 
     rects = rects.filter(rect => {
+      let inRange = (val, min, max) => min <= val && val <= max;
       let width = frame.width;
 
       let exceptions = [
-        /**
-         * Nothing here! Please don't add anything new!
-         */
+        {name: "bug 1403648 - urlbar down arrow shouldn't flicker",
+         condition: r => // 5x9px area, sometimes less at the end of the opacity transition
+                         inRange(r.h, 3, 5) && inRange(r.w, 7, 9) &&
+                         inRange(r.y1, 40, 80) && // in the toolbar
+                         // at ~80% of the window width
+                         inRange(r.x1, width * .75, width * .9)
+        },
+
+        {name: "bug 1403648 - urlbar should be focused at first paint",
+         condition: r => inRange(r.y2, 60, 80) && // in the toolbar
+                         // taking 50% to 75% of the window width
+                         inRange(r.w, width * .5, width * .75) &&
+                         // starting at 15 to 25% of the window width
+                         inRange(r.x1, width * .15, width * .25)
+        },
       ];
 
       let rectText = `${rect.toSource()}, window width: ${width}`;
