@@ -323,6 +323,32 @@
 	fun:_ZN5style13media_queries9MediaList8evaluate*
 }
 
+# Several issues triggered by enabling stylo-chrome.
+
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x11F88693: style::properties::LonghandId::parse_value (heap.rs:0)
+#    by 0x1203BBAB: style::properties::UnparsedValue::substitute_variables (parser.rs:594)
+#    by 0x11CFCE33: style::properties::cascade (properties.rs:135672)
+{
+  Bug 1437796 LonghandId::parse_value, January 2018
+  Memcheck:Cond
+  fun:_ZN5style10properties10LonghandId11parse_value*
+  fun:_ZN5style10properties13UnparsedValue20substitute_variables*
+  fun:_ZN5style10properties7cascade*
+}
+
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x11DF7AF6: <smallvec::SmallVec<A>>::grow (raw_vec.rs:0)
+#    by 0x11DF6ED0: Servo_InvalidateStyleForDocStateChanges (lib.rs:475)
+#    by 0x10394B7E: mozilla::ServoStyleSet::InvalidateStyleForDocumentStateChanges(mozilla::EventStates) (ServoStyleSet.cpp:248)
+{
+   Bug 1437796 SmallVec::grow in Servo_InvalidateStyleForDocStateChanges, January 2018
+   Memcheck:Cond
+   fun:_ZN36_$LT$smallvec..SmallVec$LT$A$GT$$GT$4grow*
+   fun:Servo_InvalidateStyleForDocStateChanges
+   fun:_ZN7mozilla13ServoStyleSet38InvalidateStyleForDocumentStateChangesENS_11EventStatesE
+}
+
 ###################################################
 #  For valgrind-mochitest ("tc-M-V [tier 2]") runs on taskcluster.
 #  See bug 1248365.

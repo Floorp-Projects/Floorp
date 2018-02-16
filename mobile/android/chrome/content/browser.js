@@ -2656,7 +2656,8 @@ var NativeWindow = {
     mediaContext: function(aMode) {
       return {
         matches: function(aElt) {
-          if (aElt instanceof Ci.nsIDOMHTMLMediaElement) {
+          if (ChromeUtils.getClassName(aElt) === "HTMLVideoElement" ||
+              ChromeUtils.getClassName(aElt) === "HTMLAudioElement") {
             let hasError = aElt.error != null || aElt.networkState == aElt.NETWORK_NO_SOURCE;
             if (hasError)
               return false;
@@ -2906,7 +2907,8 @@ var NativeWindow = {
           return originalURL;
         }
         return node.currentURI.displaySpec;
-      } else if (node instanceof Ci.nsIDOMHTMLMediaElement) {
+      } else if (ChromeUtils.getClassName(node) === "HTMLVideoElement" ||
+                 ChromeUtils.getClassName(node) === "HTMLAudioElement") {
         let srcUrl = node.currentSrc || node.src;
         // If URL prepended with blob or mediasource, we'll remove it.
         return srcUrl.replace(/^(?:blob|mediasource):/, '');
@@ -6203,7 +6205,9 @@ var ExternalApps = {
   // extend _getLink to pickup html5 media links.
   _getMediaLink: function(aElement) {
     let uri = NativeWindow.contextmenus._getLink(aElement);
-    if (uri == null && aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE && (aElement instanceof Ci.nsIDOMHTMLMediaElement)) {
+    if (uri == null &&
+        (ChromeUtils.getClassName(aElement) === "HTMLVideoElement" ||
+         ChromeUtils.getClassName(aElement) === "HTMLAudioElement")) {
       try {
         let mediaSrc = aElement.currentSrc || aElement.src;
         uri = ContentAreaUtils.makeURI(mediaSrc, null, null);

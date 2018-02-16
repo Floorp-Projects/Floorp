@@ -6,16 +6,16 @@
 
 // Simple checks for the AccessibilityActor and AccessibleWalkerActor
 
-add_task(function* () {
-  let {client, accessibility} = yield initAccessibilityFrontForUrl(
+add_task(async function () {
+  let {client, accessibility} = await initAccessibilityFrontForUrl(
     "data:text/html;charset=utf-8,<title>test</title><div></div>");
 
   ok(accessibility, "The AccessibilityFront was created");
   ok(accessibility.getWalker, "The getWalker method exists");
 
-  let a11yWalker = yield accessibility.getWalker();
+  let a11yWalker = await accessibility.getWalker();
   ok(a11yWalker, "The AccessibleWalkerFront was returned");
 
-  yield client.close();
+  await client.close();
   gBrowser.removeCurrentTab();
 });

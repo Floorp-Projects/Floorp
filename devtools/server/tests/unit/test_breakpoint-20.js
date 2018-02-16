@@ -21,7 +21,7 @@ function run_test() {
   do_test_pending();
 }
 
-const testBreakpoint = Task.async(function* (threadResponse, tabClient,
+const testBreakpoint = async function (threadResponse, tabClient,
                                              threadClient, tabResponse) {
   evalSetupCode();
 
@@ -33,8 +33,8 @@ const testBreakpoint = Task.async(function* (threadResponse, tabClient,
 
   // Set a breakpoint in the test source.
 
-  const source = yield getSource(threadClient, "test.js");
-  const [response, ] = yield setBreakpoint(source, {
+  const source = await getSource(threadClient, "test.js");
+  const [response, ] = await setBreakpoint(source, {
     line: 3
   });
   ok(!response.error, "Shouldn't get an error setting the BP.");
@@ -42,7 +42,7 @@ const testBreakpoint = Task.async(function* (threadResponse, tabClient,
      "Shouldn't get an actualLocation, the location we provided was good.");
   const bpActor = response.actor;
 
-  yield resume(threadClient);
+  await resume(threadClient);
 
   // Load the test source again.
 
@@ -53,34 +53,34 @@ const testBreakpoint = Task.async(function* (threadResponse, tabClient,
   // Should hit our breakpoint in a script defined by the first instance of the
   // test source.
 
-  const bpPause1 = yield executeOnNextTickAndWaitForPause(gDebuggee.functions[0],
+  const bpPause1 = await executeOnNextTickAndWaitForPause(gDebuggee.functions[0],
                                                           gClient);
   equal(bpPause1.why.type, "breakpoint",
         "Should pause because of hitting our breakpoint (not debugger statement).");
   equal(bpPause1.why.actors[0], bpActor,
         "And the breakpoint actor should be correct.");
-  const dbgStmtPause1 = yield executeOnNextTickAndWaitForPause(() => resume(threadClient),
+  const dbgStmtPause1 = await executeOnNextTickAndWaitForPause(() => resume(threadClient),
                                                                gClient);
   equal(dbgStmtPause1.why.type, "debuggerStatement",
         "And we should hit the debugger statement after the pause.");
-  yield resume(threadClient);
+  await resume(threadClient);
 
   // Should also hit our breakpoint in a script defined by the second instance
   // of the test source.
 
-  const bpPause2 = yield executeOnNextTickAndWaitForPause(gDebuggee.functions[1],
+  const bpPause2 = await executeOnNextTickAndWaitForPause(gDebuggee.functions[1],
                                                           gClient);
   equal(bpPause2.why.type, "breakpoint",
         "Should pause because of hitting our breakpoint (not debugger statement).");
   equal(bpPause2.why.actors[0], bpActor,
         "And the breakpoint actor should be correct.");
-  const dbgStmtPause2 = yield executeOnNextTickAndWaitForPause(() => resume(threadClient),
+  const dbgStmtPause2 = await executeOnNextTickAndWaitForPause(() => resume(threadClient),
                                                                gClient);
   equal(dbgStmtPause2.why.type, "debuggerStatement",
         "And we should hit the debugger statement after the pause.");
 
   finishClient(gClient);
-});
+};
 
 function evalSetupCode() {
   Cu.evalInSandbox(

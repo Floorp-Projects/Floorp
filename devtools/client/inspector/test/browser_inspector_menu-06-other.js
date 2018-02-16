@@ -83,7 +83,7 @@ add_task(function* () {
     let allMenuItems = openContextMenuAndGetAllItems(inspector);
     let deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
     ok(deleteNode, "the popup menu has a delete menu item");
-    ok(deleteNode.disabled == false, "the delete menu item is not disabled");
+    ok(!deleteNode.disabled, "the delete menu item is not disabled");
     let updated = inspector.once("inspector-updated");
 
     info("Triggering 'Delete Node' and waiting for inspector to update");

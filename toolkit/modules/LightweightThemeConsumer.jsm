@@ -20,23 +20,16 @@ this.LightweightThemeConsumer =
   this._doc = aDocument;
   this._win = aDocument.defaultView;
 
-  let screen = this._win.screen;
-  this._lastScreenWidth = screen.width;
-  this._lastScreenHeight = screen.height;
-
   Services.obs.addObserver(this, "lightweight-theme-styling-update");
 
   var temp = {};
   ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
   this._update(temp.LightweightThemeManager.currentThemeForDisplay);
-  this._win.addEventListener("resize", this);
-  this._win.addEventListener("unload", this.destroy.bind(this), { once: true });
+  this._win.addEventListener("unload", this, { once: true });
 };
 
 LightweightThemeConsumer.prototype = {
   _lastData: null,
-  _lastScreenWidth: null,
-  _lastScreenHeight: null,
   // Whether the active lightweight theme should be shown on the window.
   _enabled: true,
   // Whether a lightweight theme is enabled.
@@ -76,25 +69,12 @@ LightweightThemeConsumer.prototype = {
   },
 
   handleEvent(aEvent) {
-    let {width, height} = this._win.screen;
-
-    if (this._lastScreenWidth != width || this._lastScreenHeight != height) {
-      this._lastScreenWidth = width;
-      this._lastScreenHeight = height;
-      if (!this._active)
-        return;
-      this._update(this._lastData);
-      Services.obs.notifyObservers(this._win, "lightweight-theme-optimized",
-                                   JSON.stringify(this._lastData));
+    switch (aEvent.type) {
+      case "unload":
+        Services.obs.removeObserver(this, "lightweight-theme-styling-update");
+        this._win = this._doc = null;
+        break;
     }
-  },
-
-  destroy() {
-    Services.obs.removeObserver(this, "lightweight-theme-styling-update");
-
-    this._win.removeEventListener("resize", this);
-
-    this._win = this._doc = null;
   },
 
   _update(aData) {

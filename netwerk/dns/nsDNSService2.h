@@ -18,6 +18,7 @@
 #include "nsHashKeys.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Attributes.h"
+#include "TRRService.h"
 
 class nsAuthSSPI;
 
@@ -47,7 +48,6 @@ protected:
                                    uint32_t flags,
                                    const mozilla::OriginAttributes &aOriginAttributes,
                                    nsIDNSRecord **result);
-
 private:
     ~nsDNSService();
 
@@ -84,6 +84,7 @@ private:
     bool                                      mOfflineLocalhost;
     bool                                      mForceResolveOn;
     nsTHashtable<nsCStringHashKey>            mLocalDomains;
+    RefPtr<mozilla::net::TRRService>          mTrrService;
 };
 
 #endif //nsDNSService2_h__

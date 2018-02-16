@@ -20,7 +20,7 @@
 
 #include "mozilla/Logging.h"
 
-#if DNSQUERY_AVAILABLE
+#ifdef DNSQUERY_AVAILABLE
 // There is a bug in windns.h where the type of parameter ppQueryResultsSet for
 // DnsQuery_A is dependent on UNICODE being set. It should *always* be
 // PDNS_RECORDA, but if UNICODE is set it is PDNS_RECORDW. To get around this
@@ -40,7 +40,7 @@ static LazyLogModule gGetAddrInfoLog("GetAddrInfo");
 #define LOG_WARNING(msg, ...) \
   MOZ_LOG(gGetAddrInfoLog, LogLevel::Warning, ("[DNS]: " msg, ##__VA_ARGS__))
 
-#if DNSQUERY_AVAILABLE
+#ifdef DNSQUERY_AVAILABLE
 ////////////////////////////
 // WINDOWS IMPLEMENTATION //
 ////////////////////////////
@@ -302,7 +302,7 @@ nsresult
 GetAddrInfoInit() {
   LOG("Initializing GetAddrInfo.\n");
 
-#if DNSQUERY_AVAILABLE
+#ifdef DNSQUERY_AVAILABLE
   return _GetAddrInfoInit_Windows();
 #else
   return NS_OK;
@@ -313,7 +313,7 @@ nsresult
 GetAddrInfoShutdown() {
   LOG("Shutting down GetAddrInfo.\n");
 
-#if DNSQUERY_AVAILABLE
+#ifdef DNSQUERY_AVAILABLE
   return _GetAddrInfoShutdown_Windows();
 #else
   return NS_OK;
@@ -328,18 +328,24 @@ GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,
     return NS_ERROR_NULL_POINTER;
   }
 
-#if DNSQUERY_AVAILABLE
+#ifdef DNSQUERY_AVAILABLE
   // The GetTTLData needs the canonical name to function properly
   if (aGetTtl) {
     aFlags |= nsHostResolver::RES_CANON_NAME;
   }
 #endif
 
+  if (gNativeIsLocalhost) {
+    // pretend we use the given host but use IPv4 localhost instead!
+    aHost = "localhost";
+    aAddressFamily = PR_AF_INET;
+  }
+
   *aAddrInfo = nullptr;
   nsresult rv = _GetAddrInfo_Portable(aHost, aAddressFamily, aFlags,
                                       aNetworkInterface, aAddrInfo);
 
-#if DNSQUERY_AVAILABLE
+#ifdef DNSQUERY_AVAILABLE
   if (aGetTtl && NS_SUCCEEDED(rv)) {
     // Figure out the canonical name, or if that fails, just use the host name
     // we have.

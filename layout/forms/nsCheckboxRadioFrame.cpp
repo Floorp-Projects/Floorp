@@ -185,10 +185,8 @@ nsCheckboxRadioFrame::HandleEvent(nsPresContext* aPresContext,
                                   WidgetGUIEvent* aEvent,
                                   nsEventStatus* aEventStatus)
 {
-  // Check for user-input:none style
-  const nsStyleUserInterface* uiStyle = StyleUserInterface();
-  if (uiStyle->mUserInput == StyleUserInput::None ||
-      uiStyle->mUserInput == StyleUserInput::Disabled) {
+  // Check for disabled content so that selection works properly (?).
+  if (IsContentDisabled()) {
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   }
   return NS_OK;

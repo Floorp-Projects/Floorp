@@ -32,6 +32,7 @@
 #include "nsProxyRelease.h"
 #include "nsIObserverService.h"
 #include "nsINetworkLinkService.h"
+#include "TRRService.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -104,6 +105,18 @@ nsDNSRecord::GetCanonicalName(nsACString &result)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDNSRecord::IsTRR(bool *retval)
+{
+    MutexAutoLock lock(mHostRecord->addr_info_lock);
+    if (mHostRecord->addr_info) {
+        *retval =  mHostRecord->addr_info->IsTRR();
+    }
+    else {
+        *retval = false;
+    }
+    return NS_OK;
+}
 NS_IMETHODIMP
 nsDNSRecord::GetNextAddr(uint16_t port, NetAddr *addr)
 {
@@ -486,6 +499,7 @@ nsDNSService::nsDNSService()
     , mNotifyResolution(false)
     , mOfflineLocalhost(false)
     , mForceResolveOn(false)
+    , mTrrService(nullptr)
 {
 }
 
@@ -639,6 +653,11 @@ nsDNSService::Init()
 
     RegisterWeakMemoryReporter(this);
 
+    mTrrService = new TRRService();
+    if (NS_FAILED(mTrrService->Init())) {
+        mTrrService = nullptr;
+    }
+
     return rv;
 }
 
@@ -708,6 +727,11 @@ nsDNSService::PreprocessHostname(bool              aLocalDomain,
 
     if (aLocalDomain) {
         aACE.AssignLiteral("localhost");
+        return NS_OK;
+    }
+
+    if (mTrrService &&
+        mTrrService->MaybeBootstrap(aInput, aACE)) {
         return NS_OK;
     }
 

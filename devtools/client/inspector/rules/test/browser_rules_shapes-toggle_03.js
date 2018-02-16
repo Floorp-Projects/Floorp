@@ -28,7 +28,7 @@ add_task(function* () {
   info("Selecting the first shape container.");
   yield selectNode("#shape1", inspector);
   let container = getRuleViewProperty(view, ".shape", "clip-path").valueSpan;
-  let shapeToggle = container.querySelector(".ruleview-shape");
+  let shapeToggle = container.querySelector(".ruleview-shapeswatch");
 
   info("Checking the state of the CSS shape toggle for the first shape container " +
     "in the rule-view.");
@@ -57,7 +57,7 @@ add_task(function* () {
   yield selectNode("#shape2", inspector);
   let firstShapesHighlighterShown = highlighters.shapesHighlighterShown;
   container = getRuleViewProperty(view, ".shape", "clip-path").valueSpan;
-  shapeToggle = container.querySelector(".ruleview-shape");
+  shapeToggle = container.querySelector(".ruleview-shapeswatch");
 
   info("Checking the state of the CSS shapes toggle for the second shapes container " +
     "in the rule-view.");
@@ -82,7 +82,7 @@ add_task(function* () {
   info("Selecting the first shapes container.");
   yield selectNode("#shape1", inspector);
   container = getRuleViewProperty(view, ".shape", "clip-path").valueSpan;
-  shapeToggle = container.querySelector(".ruleview-shape");
+  shapeToggle = container.querySelector(".ruleview-shapeswatch");
 
   info("Checking the state of the CSS shapes toggle for the first shapes container " +
     "in the rule-view.");

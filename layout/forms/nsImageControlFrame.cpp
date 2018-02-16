@@ -143,16 +143,8 @@ nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  // do we have user-input style?
-  const nsStyleUserInterface* uiStyle = StyleUserInterface();
-  if (uiStyle->mUserInput == StyleUserInput::None ||
-      uiStyle->mUserInput == StyleUserInput::Disabled) {
+  if (IsContentDisabled()) {
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
-  }
-
-  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
-    // XXX cache disabled
-    return NS_OK;
   }
 
   *aEventStatus = nsEventStatus_eIgnore;

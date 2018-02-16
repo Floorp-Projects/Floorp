@@ -14,7 +14,7 @@ add_task(async function check_definition() {
   Assert.equal(Services.appinfo.OS, OS.Constants.Sys.Name);
 
   // check if using DEBUG build
-  if (Components.classes["@mozilla.org/xpcom/debug;1"].getService(Components.interfaces.nsIDebug2).isDebugBuild == true) {
+  if (Components.classes["@mozilla.org/xpcom/debug;1"].getService(Components.interfaces.nsIDebug2).isDebugBuild) {
     Assert.ok(OS.Constants.Sys.DEBUG);
   } else {
     Assert.ok(typeof(OS.Constants.Sys.DEBUG) == "undefined");

@@ -10,45 +10,45 @@
 
 const { PromisesFront } = require("devtools/shared/fronts/promises");
 
-add_task(function* () {
-  let client = yield startTestDebuggerServer("promises-actor-test");
-  let chromeActors = yield getChromeActors(client);
+add_task(async function () {
+  let client = await startTestDebuggerServer("promises-actor-test");
+  let chromeActors = await getChromeActors(client);
 
   // We have to attach the chrome TabActor before playing with the PromiseActor
-  yield attachTab(client, chromeActors);
-  yield testAttach(client, chromeActors);
+  await attachTab(client, chromeActors);
+  await testAttach(client, chromeActors);
 
-  let response = yield listTabs(client);
+  let response = await listTabs(client);
   let targetTab = findTab(response.tabs, "promises-actor-test");
   ok(targetTab, "Found our target tab.");
 
-  let [ tabResponse ] = yield attachTab(client, targetTab);
+  let [ tabResponse ] = await attachTab(client, targetTab);
 
-  yield testAttach(client, tabResponse);
+  await testAttach(client, tabResponse);
 
-  yield close(client);
+  await close(client);
 });
 
-function* testAttach(client, parent) {
+async function testAttach(client, parent) {
   let promises = PromisesFront(client, parent);
 
   try {
-    yield promises.detach();
+    await promises.detach();
     ok(false, "Should not be able to detach when in a detached state.");
   } catch (e) {
     ok(true, "Expected detach to fail when already in a detached state.");
   }
 
-  yield promises.attach();
+  await promises.attach();
   ok(true, "Expected attach to succeed.");
 
   try {
-    yield promises.attach();
+    await promises.attach();
     ok(false, "Should not be able to attach when in an attached state.");
   } catch (e) {
     ok(true, "Expected attach to fail when already in an attached state.");
   }
 
-  yield promises.detach();
+  await promises.detach();
   ok(true, "Expected detach to succeed.");
 }

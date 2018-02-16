@@ -114,7 +114,7 @@ add_task(testWithAPI(async function(browser) {
   }
 
   const PERM = "extensions.webextPermissionPrompts";
-  if (Services.prefs.getBoolPref(PERM, false) == false) {
+  if (!Services.prefs.getBoolPref(PERM, false)) {
     await SpecialPowers.pushPrefEnv({clear: [[PERM]]});
     await check(false, `mozAddonManager.permissionPromptsEnabled is false when ${PERM} is unset`);
   }

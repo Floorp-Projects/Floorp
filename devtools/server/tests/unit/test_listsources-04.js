@@ -21,27 +21,27 @@ function run_test() {
 }
 
 function run_test_with_server(server, cb) {
-  Task.spawn(function* () {
+  (async function () {
     initTestDebuggerServer(server);
     const debuggee = addTestGlobal("test-sources", server);
     const client = new DebuggerClient(server.connectPipe());
-    yield client.connect();
-    const [,, threadClient] = yield attachTestTabAndResume(client, "test-sources");
+    await client.connect();
+    const [,, threadClient] = await attachTestTabAndResume(client, "test-sources");
 
-    yield threadClient.reconfigure({ useSourceMaps: true });
+    await threadClient.reconfigure({ useSourceMaps: true });
     addSources(debuggee);
 
-    threadClient.getSources(Task.async(function* (res) {
+    threadClient.getSources(async function (res) {
       Assert.equal(res.sources.length, 3, "3 sources exist");
 
-      yield threadClient.reconfigure({ useSourceMaps: false });
+      await threadClient.reconfigure({ useSourceMaps: false });
 
       threadClient.getSources(function (res) {
         Assert.equal(res.sources.length, 1, "1 source exist");
         client.close().then(cb);
       });
-    }));
-  });
+    });
+  })();
 }
 
 function addSources(debuggee) {

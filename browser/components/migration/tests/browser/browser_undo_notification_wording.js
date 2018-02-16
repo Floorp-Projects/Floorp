@@ -1,17 +1,6 @@
 "use strict";
 
-let scope = {};
-ChromeUtils.import("resource:///modules/AutoMigrate.jsm", scope);
-let oldCanUndo = scope.AutoMigrate.canUndo;
-registerCleanupFunction(function() {
-  scope.AutoMigrate.canUndo = oldCanUndo;
-});
-
-const kExpectedNotificationId = "automigration-undo";
-
 add_task(async function autoMigrationUndoNotificationShows() {
-  let getNotification = browser =>
-    gBrowser.getNotificationBox(browser).getNotificationWithValue(kExpectedNotificationId);
   let localizedVersionOf = str => {
     if (str == "logins") {
       return "passwords";
@@ -41,13 +30,8 @@ add_task(async function autoMigrationUndoNotificationShows() {
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url, false);
     let browser = tab.linkedBrowser;
 
-    if (!getNotification(browser)) {
-      info(`Notification for ${url} not immediately present, waiting for it.`);
-      await BrowserTestUtils.waitForNotificationBar(gBrowser, browser, kExpectedNotificationId);
-    }
-
+    let notification = await getOrWaitForNotification(browser, url);
     ok(true, `Got notification for ${url}`);
-    let notification = getNotification(browser);
     let notificationText = document.getAnonymousElementByAttribute(notification, "class", "messageText");
     notificationText = notificationText.textContent;
     for (let potentiallyImported of kAllItems) {

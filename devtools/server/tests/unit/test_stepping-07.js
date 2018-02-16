@@ -26,20 +26,20 @@ function run_test_with_server(server, callback) {
   gClient.connect(testSteppingAndReturns);
 }
 
-const testSteppingAndReturns = Task.async(function* () {
-  const [attachResponse,, threadClient] = yield attachTestTabAndResume(gClient,
+const testSteppingAndReturns = async function () {
+  const [attachResponse,, threadClient] = await attachTestTabAndResume(gClient,
                                                                        "test-stepping");
   ok(!attachResponse.error, "Should not get an error attaching");
 
   dumpn("Evaluating test code and waiting for first debugger statement");
-  const dbgStmt1 = yield executeOnNextTickAndWaitForPause(evaluateTestCode, gClient);
+  const dbgStmt1 = await executeOnNextTickAndWaitForPause(evaluateTestCode, gClient);
   equal(dbgStmt1.frame.where.line, 3,
         "Should be at debugger statement on line 3");
 
   dumpn("Testing stepping with implicit return");
-  const step1 = yield stepOver(gClient, threadClient);
+  const step1 = await stepOver(gClient, threadClient);
   equal(step1.frame.where.line, 4, "Should step to line 4");
-  const step2 = yield stepOver(gClient, threadClient);
+  const step2 = await stepOver(gClient, threadClient);
   equal(step2.frame.where.line, 7,
         "Should step to line 7, the implicit return at the last line of the function");
   // This assertion doesn't pass yet. You would need to do *another*
@@ -49,22 +49,22 @@ const testSteppingAndReturns = Task.async(function* () {
   // ok(step2.why.frameFinished, "This should be the implicit function return");
 
   dumpn("Continuing and waiting for second debugger statement");
-  const dbgStmt2 = yield resumeAndWaitForPause(gClient, threadClient);
+  const dbgStmt2 = await resumeAndWaitForPause(gClient, threadClient);
   equal(dbgStmt2.frame.where.line, 12,
         "Should be at debugger statement on line 3");
 
   dumpn("Testing stepping with explicit return");
-  const step3 = yield stepOver(gClient, threadClient);
+  const step3 = await stepOver(gClient, threadClient);
   equal(step3.frame.where.line, 13, "Should step to line 13");
-  const step4 = yield stepOver(gClient, threadClient);
+  const step4 = await stepOver(gClient, threadClient);
   equal(step4.frame.where.line, 15, "Should step out of the function from line 15");
   // This step is a bit funny, see bug 1013219 for details.
-  const step5 = yield stepOver(gClient, threadClient);
+  const step5 = await stepOver(gClient, threadClient);
   equal(step5.frame.where.line, 15, "Should step out of the function from line 15");
   ok(step5.why.frameFinished, "This should be the explicit function return");
 
   finishClient(gClient, gCallback);
-});
+};
 
 function evaluateTestCode() {
   /* eslint-disable */

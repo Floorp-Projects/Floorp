@@ -32,19 +32,19 @@ addTest(function setup() {
   });
 });
 
-addTest(Task.async(function* testDuplicateNode() {
+addTest(async function testDuplicateNode() {
   let className = ".node-to-duplicate";
-  let matches = yield gWalker.querySelectorAll(gWalker.rootNode, className);
+  let matches = await gWalker.querySelectorAll(gWalker.rootNode, className);
   is(matches.length, 1, "There should initially be one node to duplicate.");
 
-  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, className);
-  yield gWalker.duplicateNode(nodeFront);
+  let nodeFront = await gWalker.querySelector(gWalker.rootNode, className);
+  await gWalker.duplicateNode(nodeFront);
 
-  matches = yield gWalker.querySelectorAll(gWalker.rootNode, className);
+  matches = await gWalker.querySelectorAll(gWalker.rootNode, className);
   is(matches.length, 2, "The node should now be duplicated.");
 
   runNextTest();
-}));
+});
 
 addTest(function cleanup() {
   gWalker = null;

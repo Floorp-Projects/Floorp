@@ -520,7 +520,7 @@ this.WinTaskbarJumpList =
   observe: function WTBJL_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "nsPref:changed":
-        if (this._enabled == true && !_prefs.getBoolPref(PREF_TASKBAR_ENABLED))
+        if (this._enabled && !_prefs.getBoolPref(PREF_TASKBAR_ENABLED))
           this._deleteActiveJumpList();
         this._refreshPrefs();
         this._updateTimer();

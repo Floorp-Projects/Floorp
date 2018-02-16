@@ -7,25 +7,25 @@
 // Test that the AnimationsActor emits events about changed animations on a
 // node after getAnimationPlayersForNode was called on that node.
 
-add_task(function* () {
+add_task(async function () {
   let {client, walker, animations} =
-    yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
+    await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Retrieve a non-animated node");
-  let node = yield walker.querySelector(walker.rootNode, ".not-animated");
+  let node = await walker.querySelector(walker.rootNode, ".not-animated");
 
   info("Retrieve the animation player for the node");
-  let players = yield animations.getAnimationPlayersForNode(node);
+  let players = await animations.getAnimationPlayersForNode(node);
   is(players.length, 0, "The node has no animation players");
 
   info("Listen for new animations");
   let onMutations = once(animations, "mutations");
 
   info("Add a couple of animation on the node");
-  yield node.modifyAttributes([
+  await node.modifyAttributes([
     {attributeName: "class", newValue: "multiple-animations"}
   ]);
-  let changes = yield onMutations;
+  let changes = await onMutations;
 
   ok(true, "The mutations event was emitted");
   is(changes.length, 2, "There are 2 changes in the mutation event");
@@ -43,11 +43,11 @@ add_task(function* () {
   onMutations = once(animations, "mutations");
 
   info("Remove the animation css class on the node");
-  yield node.modifyAttributes([
+  await node.modifyAttributes([
     {attributeName: "class", newValue: "not-animated"}
   ]);
 
-  changes = yield onMutations;
+  changes = await onMutations;
 
   ok(true, "The mutations event was emitted");
   is(changes.length, 2, "There are 2 changes in the mutation event");
@@ -57,6 +57,6 @@ add_task(function* () {
   ok(changes[1].player === p1 || changes[1].player === p2,
     "The second removed player was one of the previously added players");
 
-  yield client.close();
+  await client.close();
   gBrowser.removeCurrentTab();
 });

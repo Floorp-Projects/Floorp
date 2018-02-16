@@ -23,7 +23,7 @@ renderLayers, hasLayers, docShellIsActive
 ``<xul:browser>``'s have a number of useful properties exposed on them that the async tab switcher uses:
 
 ``renderLayers``
-  For remote ``<xul:browser>``'s, setting this to ``true`` from ``false`` means to ask the content process to render the layers for that ``<xul:browser>`` and upload them to the compositor. Setting this from ``false`` to ``true`` means to ask the content process to stop rendering the layers and for the compositor to release the layers. Setting this property to ``true`` when it is already ``true`` or ``false`` when it is already ``false`` is a no-op. When this property returns ``true``, this means that layers have been requested for this tab, but there is no guarantee that the layers have been received by the compositor yet. Similarly, when this property returns ``false``, this means that this browser has been asked to stop rendering layers, but there is no guarantee that the layers have been released by the compositor yet.
+  For remote ``<xul:browser>``'s, setting this to ``true`` from ``false`` means to ask the content process to render the layers for that ``<xul:browser>`` and upload them to the compositor. Setting this to ``false`` from ``true`` means to ask the content process to stop rendering the layers and for the compositor to release the layers. Setting this property to ``true`` when it is already ``true`` or ``false`` when it is already ``false`` is a no-op. When this property returns ``true``, this means that layers have been requested for this tab, but there is no guarantee that the layers have been received by the compositor yet. Similarly, when this property returns ``false``, this means that this browser has been asked to stop rendering layers, but there is no guarantee that the layers have been released by the compositor yet.
 
   For non-remote ``<xul:browser>``'s, ``renderLayers`` is an alias for ``docShellIsActive``.
 
@@ -122,7 +122,7 @@ Having a tab render its layers is done by settings its state to ``STATE_LOADING`
 Stepping through a simple tab switch
 ====================================
 
-In our simple scenario, suppose the user has a single browser window with two tabs: a tab at index **0** and a tab at index **1**. Both tabs are completed loaded, and **1** is currently selected and displaying its content.
+In our simple scenario, suppose the user has a single browser window with two tabs: a tab at index **0** and a tab at index **1**. Both tabs are completed loaded, and **0** is currently selected and displaying its content.
 
 The user chooses to switch to tab **1**. An async tab switcher is instantiated, and it immediately attaches a number of event handlers to the window. Among them are handlers for the ``MozLayerTreeReady`` and ``MozLayerTreeCleared`` events.
 

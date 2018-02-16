@@ -11,23 +11,23 @@ const { pmmConsoleMethod, pmmLoadFrameScripts, pmmClearFrameScripts }
   = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 const MARKER_NAME = "TimeStamp";
 
-add_task(function* () {
-  yield addTab(MAIN_DOMAIN + "doc_perf.html");
+add_task(async function () {
+  await addTab(MAIN_DOMAIN + "doc_perf.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
+  let form = await connectDebuggerClient(client);
   let front = PerformanceFront(client, form);
-  yield front.connect();
-  let rec = yield front.startRecording({ withMarkers: true });
+  await front.connect();
+  let rec = await front.startRecording({ withMarkers: true });
 
   pmmLoadFrameScripts(gBrowser);
   pmmConsoleMethod("timeStamp");
   pmmConsoleMethod("timeStamp", "myLabel");
 
-  let markers = yield waitForMarkerType(front, MARKER_NAME, m => m.length >= 2);
+  let markers = await waitForMarkerType(front, MARKER_NAME, m => m.length >= 2);
 
-  yield front.stopRecording(rec);
+  await front.stopRecording(rec);
 
   ok(markers.every(({stack}) => typeof stack === "number"),
     "All markers have stack references.");
@@ -41,6 +41,6 @@ add_task(function* () {
 
   pmmClearFrameScripts();
 
-  yield client.close();
+  await client.close();
   gBrowser.removeCurrentTab();
 });

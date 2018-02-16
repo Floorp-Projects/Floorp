@@ -12,12 +12,36 @@ HOOK=
 AWS_BUCKET_NAME=
 LOCAL_CACHE_DIR=
 
-S3_CACHE_HITS=0
-S3_CACHE_MISSES=0
-
 # Don't cache files smaller than this, as it's slower with S3
 # Bug 1437473
 CACHE_THRESHOLD=500000
+
+
+NAMESPACE='releng.releases.partials'
+if [ -e "${HOME}/.dogrc" ]
+then
+    METRIC_CMD="$(which dog)"
+else
+    METRIC_CMD="echo"
+fi
+METRIC_PARAMS="--type gauge --no_host"
+
+if [ -n "${BRANCH}" ]
+then
+    if [ -n "${TAGS}" ]; then TAGS="${TAGS},"; fi
+    TAGS="${TAGS}branch:${BRANCH}"
+fi
+if [ -n "${PLATFORM}" ]
+then
+    if [ -n "${TAGS}" ]; then TAGS="${TAGS},"; fi
+    TAGS="${TAGS}platform:${PLATFORM}"
+fi
+if [ -n "${TAGS}" ]
+then
+    # We want literal quotes
+    # shellcheck disable=SC2089
+    TAGS="--tags='${TAGS}'"
+fi
 
 getsha512(){
     openssl sha512 "${1}" | awk '{print $2}'
@@ -92,7 +116,8 @@ get_patch(){
     if [ -n "${AWS_BUCKET_NAME}" ]; then
         BUCKET_PATH="s3://${AWS_BUCKET_NAME}${sha_from}/${sha_to}/${s3_filename}"
         if aws s3 ls "${BUCKET_PATH}"; then
-            ((S3_CACHE_HITS++))
+            # shellcheck disable=SC2086,SC2090
+            ${METRIC_CMD} metric post "${NAMESPACE}.s3_cache.hit" "${S3_CACHE_HITS}" ${METRIC_PARAMS} ${TAGS}
             echo "s3 cache hits now ${S3_CACHE_HITS}"
             if aws s3 cp "${BUCKET_PATH}" "${destination_file}"; then
                 echo "Successful retrieved ${destination_file} from s3://${AWS_BUCKET_NAME}"
@@ -103,8 +128,8 @@ get_patch(){
             fi
         # Not found, fall through to default error
         else
-            ((S3_CACHE_MISSES++))
-            echo "s3 cache misses now ${S3_CACHE_MISSES}"
+            # shellcheck disable=SC2086,SC2090
+            ${METRIC_CMD} metric post "${NAMESPACE}.s3_cache.miss" "${S3_CACHE_MISSES}" ${METRIC_PARAMS} ${TAGS}
         fi
     fi
     return 1
@@ -155,35 +180,3 @@ if [ "$HOOK" == "PRE" ]; then
 elif [ "$HOOK" == "POST" ]; then
     upload_patch "$1" "$2" "$3"
 fi
-
-
-NAMESPACE='releng.releases.partials'
-if [ -e "${HOME}/.dogrc" ]
-then
-    METRIC_CMD="$(which dog)"
-else
-    METRIC_CMD="echo"
-fi
-METRIC_PARAMS="--type gauge --no_host"
-
-if [ -n "${BRANCH}" ]
-then
-    if [ -n "${TAGS}" ]; then TAGS="${TAGS},"; fi
-    TAGS="${TAGS}branch:${BRANCH}"
-fi
-if [ -n "${PLATFORM}" ]
-then
-    if [ -n "${TAGS}" ]; then TAGS="${TAGS},"; fi
-    TAGS="${TAGS}platform:${PLATFORM}"
-fi
-if [ -n "${TAGS}" ]
-then
-    # We want literal quotes
-    # shellcheck disable=SC2089
-    TAGS="--tags='${TAGS}'"
-fi
-
-# shellcheck disable=SC2086,SC2090
-${METRIC_CMD} metric post "${NAMESPACE}.s3_cache.miss" "${S3_CACHE_MISSES}" ${METRIC_PARAMS} ${TAGS}
-# shellcheck disable=SC2086,SC2090
-${METRIC_CMD} metric post "${NAMESPACE}.s3_cache.hit" "${S3_CACHE_HITS}" ${METRIC_PARAMS} ${TAGS}

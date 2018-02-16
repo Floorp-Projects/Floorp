@@ -7,6 +7,7 @@
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/DOMPrefs.h"
+#include "mozilla/dom/HTMLMediaElementBinding.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/StructuredCloneTags.h"
@@ -22,6 +23,8 @@
 
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
+using mozilla::dom::HTMLMediaElementBinding::NETWORK_EMPTY;
+using mozilla::dom::HTMLMediaElementBinding::HAVE_METADATA;
 
 namespace mozilla {
 namespace dom {
@@ -902,14 +905,14 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLVideoElement& aVideoEl
   aVideoEl.MarkAsContentSource(mozilla::dom::HTMLVideoElement::CallerAPI::CREATE_IMAGEBITMAP);
 
   // Check network state.
-  if (aVideoEl.NetworkState() == HTMLMediaElement::NETWORK_EMPTY) {
+  if (aVideoEl.NetworkState() == NETWORK_EMPTY) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
   // Check ready state.
   // Cannot be HTMLMediaElement::HAVE_NOTHING or HTMLMediaElement::HAVE_METADATA.
-  if (aVideoEl.ReadyState() <= HTMLMediaElement::HAVE_METADATA) {
+  if (aVideoEl.ReadyState() <= HAVE_METADATA) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }

@@ -11,14 +11,14 @@ const { PromisesFront } = require("devtools/shared/fronts/promises");
 
 var EventEmitter = require("devtools/shared/event-emitter");
 
-add_task(function* () {
-  let client = yield startTestDebuggerServer("test-promises-dependentpromises");
-  let chromeActors = yield getChromeActors(client);
-  yield attachTab(client, chromeActors);
+add_task(async function () {
+  let client = await startTestDebuggerServer("test-promises-dependentpromises");
+  let chromeActors = await getChromeActors(client);
+  await attachTab(client, chromeActors);
 
   ok(Promise.toString().includes("native code"), "Expect native DOM Promise.");
 
-  yield testGetDependentPromises(client, chromeActors, () => {
+  await testGetDependentPromises(client, chromeActors, () => {
     let p = new Promise(() => {});
     p.name = "p";
     let q = p.then();
@@ -29,12 +29,12 @@ add_task(function* () {
     return p;
   });
 
-  let response = yield listTabs(client);
+  let response = await listTabs(client);
   let targetTab = findTab(response.tabs, "test-promises-dependentpromises");
   ok(targetTab, "Found our target tab.");
-  yield attachTab(client, targetTab);
+  await attachTab(client, targetTab);
 
-  yield testGetDependentPromises(client, targetTab, () => {
+  await testGetDependentPromises(client, targetTab, () => {
     const debuggee =
       DebuggerServer.getTestGlobal("test-promises-dependentpromises");
 
@@ -48,14 +48,14 @@ add_task(function* () {
     return p;
   });
 
-  yield close(client);
+  await close(client);
 });
 
-function* testGetDependentPromises(client, form, makePromises) {
+async function testGetDependentPromises(client, form, makePromises) {
   let front = PromisesFront(client, form);
 
-  yield front.attach();
-  yield front.listPromises();
+  await front.attach();
+  await front.listPromises();
 
   // Get the grip for promise p
   let onNewPromise = new Promise(resolve => {
@@ -71,7 +71,7 @@ function* testGetDependentPromises(client, form, makePromises) {
 
   let promise = makePromises();
 
-  let grip = yield onNewPromise;
+  let grip = await onNewPromise;
   ok(grip, "Found our promise p.");
 
   let objectClient = new ObjectClient(client, grip);
@@ -79,7 +79,7 @@ function* testGetDependentPromises(client, form, makePromises) {
 
   // Get the dependent promises for promise p and assert that the list of
   // dependent promises is correct
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     objectClient.getDependentPromises(response => {
       let dependentNames = response.promises.map(p =>
         p.preview.ownProperties.name.value);
@@ -106,7 +106,7 @@ function* testGetDependentPromises(client, form, makePromises) {
     });
   });
 
-  yield front.detach();
+  await front.detach();
   // Appease eslint
   void promise;
 }

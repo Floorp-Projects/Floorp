@@ -14,13 +14,6 @@ var gBrowserThumbnails = {
    */
   PREF_DISK_CACHE_SSL: "browser.cache.disk_cache_ssl",
 
-  /**
-   * Pref that controls whether activity stream is enabled
-   */
-  PREF_ACTIVITY_STREAM_ENABLED: "browser.newtabpage.activity-stream.enabled",
-
-  _activityStreamEnabled: null,
-
   _captureDelayMS: 1000,
 
   /**
@@ -46,12 +39,9 @@ var gBrowserThumbnails = {
   init: function Thumbnails_init() {
     gBrowser.addTabsProgressListener(this);
     Services.prefs.addObserver(this.PREF_DISK_CACHE_SSL, this);
-    Services.prefs.addObserver(this.PREF_ACTIVITY_STREAM_ENABLED, this);
 
     this._sslDiskCacheEnabled =
       Services.prefs.getBoolPref(this.PREF_DISK_CACHE_SSL);
-    this._activityStreamEnabled =
-      Services.prefs.getBoolPref(this.PREF_ACTIVITY_STREAM_ENABLED);
 
     this._tabEvents.forEach(function(aEvent) {
       gBrowser.tabContainer.addEventListener(aEvent, this);
@@ -63,7 +53,6 @@ var gBrowserThumbnails = {
   uninit: function Thumbnails_uninit() {
     gBrowser.removeTabsProgressListener(this);
     Services.prefs.removeObserver(this.PREF_DISK_CACHE_SSL, this);
-    Services.prefs.removeObserver(this.PREF_ACTIVITY_STREAM_ENABLED, this);
 
     if (this._topSiteURLsRefreshTimer) {
       this._topSiteURLsRefreshTimer.cancel();
@@ -97,12 +86,6 @@ var gBrowserThumbnails = {
       case this.PREF_DISK_CACHE_SSL:
         this._sslDiskCacheEnabled =
           Services.prefs.getBoolPref(this.PREF_DISK_CACHE_SSL);
-        break;
-      case this.PREF_ACTIVITY_STREAM_ENABLED:
-        this._activityStreamEnabled =
-          Services.prefs.getBoolPref(this.PREF_ACTIVITY_STREAM_ENABLED);
-        // Get the new top sites
-        this.clearTopSiteURLCache();
         break;
     }
   },
@@ -209,16 +192,12 @@ async function getTopSiteURLs() {
                                                                60 * 1000,
                                                                Ci.nsITimer.TYPE_ONE_SHOT);
   let sites = [];
-  if (gBrowserThumbnails._activityStreamEnabled) {
-    // Get both the top sites returned by the query, and also any pinned sites
-    // that the user might have added manually that also need a screenshot.
-    // Also include top sites that don't have rich icons
-    let topSites = await NewTabUtils.activityStreamLinks.getTopSites();
-    sites.push(...topSites.filter(link => !(link.faviconSize >= 96)));
-    sites.push(...NewTabUtils.pinnedLinks.links);
-  } else {
-    sites = NewTabUtils.links.getLinks();
-  }
+  // Get both the top sites returned by the query, and also any pinned sites
+  // that the user might have added manually that also need a screenshot.
+  // Also include top sites that don't have rich icons
+  let topSites = await NewTabUtils.activityStreamLinks.getTopSites();
+  sites.push(...topSites.filter(link => !(link.faviconSize >= 96)));
+  sites.push(...NewTabUtils.pinnedLinks.links);
   return sites.reduce((urls, link) => {
     if (link) urls.push(link.url);
     return urls;

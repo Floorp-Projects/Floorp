@@ -9,28 +9,28 @@
 
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
-add_task(function* () {
+add_task(async function () {
   // This test runs very slowly on linux32 debug EC2 instances.
   requestLongerTimeout(2);
 
-  yield addTab(MAIN_DOMAIN + "doc_force_cc.html");
+  await addTab(MAIN_DOMAIN + "doc_force_cc.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
+  let form = await connectDebuggerClient(client);
   let front = PerformanceFront(client, form);
-  yield front.connect();
-  let rec = yield front.startRecording({ withMarkers: true });
+  await front.connect();
+  let rec = await front.startRecording({ withMarkers: true });
 
-  let markers = yield waitForMarkerType(front,
+  let markers = await waitForMarkerType(front,
     ["nsCycleCollector::Collect", "nsCycleCollector::ForgetSkippable"]);
-  yield front.stopRecording(rec);
+  await front.stopRecording(rec);
 
   ok(markers.some(m => m.name === "nsCycleCollector::Collect"),
     "got some nsCycleCollector::Collect markers");
   ok(markers.some(m => m.name === "nsCycleCollector::ForgetSkippable"),
     "got some nsCycleCollector::Collect markers");
 
-  yield client.close();
+  await client.close();
   gBrowser.removeCurrentTab();
 });

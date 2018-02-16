@@ -18,8 +18,8 @@ Bug 1067491 - Test forcing a gc.
 window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
-  Task.spawn(function* () {
-    let { memory, client } = yield startServerAndGetSelectedTabMemory();
+  (async function () {
+    let { memory, client } = await startServerAndGetSelectedTabMemory();
 
     let beforeGC, afterGC;
 
@@ -32,17 +32,17 @@ window.onload = function () {
       }
       objects = null;
 
-      yield { total: beforeGC } = memory.measure();
+      beforeGC = (await memory.measure()).total;
 
-      yield memory.forceGarbageCollection();
+      await memory.forceGarbageCollection();
 
-      yield { total: afterGC } = memory.measure();
+      afterGC = (await memory.measure()).total;
     } while (beforeGC < afterGC);
 
     ok(true, "The amount of memory after GC should eventually decrease");
 
     destroyServerAndFinish(client);
-  });
+  })();
 };
 </script>
 </pre>

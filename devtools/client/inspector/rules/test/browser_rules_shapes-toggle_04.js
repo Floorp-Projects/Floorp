@@ -25,7 +25,7 @@ add_task(function* () {
 
   yield selectNode("#shape", inspector);
   let container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
-  let shapeToggle = container.querySelector(".ruleview-shape");
+  let shapeToggle = container.querySelector(".ruleview-shapeswatch");
 
   info("Toggling ON the CSS shape highlighter from the rule-view.");
   let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
@@ -40,7 +40,7 @@ add_task(function* () {
   yield onDone;
 
   info("Check the shape highlighter and shape toggle button are still visible.");
-  shapeToggle = container.querySelector(".ruleview-shape");
+  shapeToggle = container.querySelector(".ruleview-shapeswatch");
   ok(shapeToggle, "Shape highlighter toggle is visible.");
   ok(highlighters.shapesHighlighterShown, "CSS shape highlighter is shown.");
 });

@@ -10,12 +10,6 @@ function pushPrefs(...prefs) {
   return SpecialPowers.pushPrefEnv({set: prefs});
 }
 
-// Activity Stream tests expect it to be enabled, and make sure to clear out any
-// preloaded browsers that might have about:newtab that we don't want to test
-const ACTIVITY_STREAM_PREF = "browser.newtabpage.activity-stream.enabled";
-pushPrefs([ACTIVITY_STREAM_PREF, true]);
-gBrowser.removePreloadedBrowser();
-
 async function clearHistoryAndBookmarks() { // eslint-disable-line no-unused-vars
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();

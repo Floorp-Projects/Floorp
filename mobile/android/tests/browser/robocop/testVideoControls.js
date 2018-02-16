@@ -89,7 +89,7 @@ function testLoad() {
 function testPlay(aEvent) {
   video.removeEventListener("play", testPlay);
   let playButton = getButtonByAttribute("class", "playButton");
-  ok(playButton.hasAttribute("paused") == false, "Play button is not paused");
+  ok(!playButton.hasAttribute("paused"), "Play button is not paused");
 
   // Let the video play for 2 seconds, then pause it
   chromeWin.setTimeout(function() {

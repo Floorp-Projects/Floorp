@@ -18,9 +18,9 @@ Bug 1068144 - Test getting the timestamps for allocations.
 window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
-  Task.spawn(function* () {
-    let { memory, client } = yield startServerAndGetSelectedTabMemory();
-    yield memory.attach();
+  (async function () {
+    let { memory, client } = await startServerAndGetSelectedTabMemory();
+    await memory.attach();
 
     let allocs = [];
     function allocator() {
@@ -36,7 +36,7 @@ window.onload = function () {
       while (window.performance.now() - start < 1.000);
     }
 
-    yield memory.startRecordingAllocations();
+    await memory.startRecordingAllocations();
 
     allocator();
     actuallyWaitOneWholeMillisecond();
@@ -44,8 +44,8 @@ window.onload = function () {
     actuallyWaitOneWholeMillisecond();
     allocator();
 
-    let response = yield memory.getAllocations();
-    yield memory.stopRecordingAllocations();
+    let response = await memory.getAllocations();
+    await memory.stopRecordingAllocations();
 
     ok(response.allocationsTimestamps, "The response should have timestamps.");
     is(response.allocationsTimestamps.length, response.allocations.length,
@@ -83,9 +83,9 @@ window.onload = function () {
       lastTimestamp = timestamp;
     }
 
-    yield memory.detach();
+    await memory.detach();
     destroyServerAndFinish(client);
-  });
+  })();
 };
 </script>
 </pre>

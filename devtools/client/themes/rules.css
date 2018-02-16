@@ -456,8 +456,7 @@
 
 .ruleview-flex,
 .ruleview-grid,
-.ruleview-swatch,
-.ruleview-shape {
+.ruleview-swatch {
   cursor: pointer;
   border-radius: 50%;
   width: 1em;
@@ -481,14 +480,6 @@
 .ruleview-grid {
   background: url("chrome://devtools/skin/images/grid.svg");
   border-radius: 0;
-}
-
-.ruleview-shape {
-  background: url("chrome://devtools/skin/images/tool-shadereditor.svg");
-  -moz-context-properties: fill;
-  fill: var(--rule-shape-toggle-color);
-  border-radius: 0;
-  background-size: 1em;
 }
 
 .ruleview-shape-point.active {
@@ -526,6 +517,15 @@
   background-size: 1em;
 }
 
+.ruleview-shapeswatch {
+  background: url("chrome://devtools/skin/images/tool-shadereditor.svg");
+  -moz-context-properties: fill;
+  fill: var(--rule-shape-toggle-color);
+  border-radius: 0;
+  background-size: 1em;
+  box-shadow: none;
+}
+
 @media (min-resolution: 1.1dppx) {
   .ruleview-bezierswatch {
     background: url("chrome://devtools/skin/images/cubic-bezier-swatch@2x.png");
@@ -535,6 +535,17 @@
 
 .ruleview-overridden {
   text-decoration: line-through;
+}
+
+/**
+ * Hide swatches (tool icons) from properties that are overwritten by higher specificity * rules.
+ * .ruleview-swatch is a base class for many tool swatches (shapes, color, bezier curves)
+ * .ruleview-flex and .ruleview-grid are custom
+ */
+.ruleview-overridden .ruleview-flex,
+.ruleview-overridden .ruleview-grid,
+.ruleview-overridden .ruleview-swatch {
+  display: none;
 }
 
 .theme-light .ruleview-overridden {
@@ -630,7 +641,7 @@
 .ruleview-grid.active,
 .ruleview-selectorhighlighter:active,
 .ruleview-selectorhighlighter.highlighted,
-.ruleview-shape.active {
+.ruleview-shapeswatch.active {
   filter: var(--theme-icon-checked-filter) brightness(0.9);
 }
 

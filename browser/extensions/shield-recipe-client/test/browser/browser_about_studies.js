@@ -1,6 +1,7 @@
 "use strict";
 
 ChromeUtils.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/RecipeRunner.jsm", this);
 ChromeUtils.import("resource://shield-recipe-client-content/AboutPages.jsm", this);
 
 function withAboutStudies(testFunc) {
@@ -153,5 +154,46 @@ decorate_task(
       !updatedStudy1.active,
       "Clicking the remove button marks the study as inactive in storage."
     );
+  }
+);
+
+decorate_task(
+  AddonStudies.withStudies([]),
+  withAboutStudies,
+  async function testStudyListing(studies, browser) {
+    await ContentTask.spawn(browser, null, async () => {
+      const doc = content.document;
+      await ContentTaskUtils.waitForCondition(() => doc.querySelectorAll(".study-list").length);
+      const studyRows = doc.querySelectorAll(".study-list .study");
+      is(studyRows.length, 0, "There should be no studies");
+      is(
+        doc.querySelector(".study-list-info").textContent,
+        "You have not participated in any studies.",
+        "A message is shown when no studies exist",
+      );
+    });
+  }
+);
+
+decorate_task(
+  withAboutStudies,
+  async function testStudyListing(browser) {
+    try {
+      RecipeRunner.disable();
+
+      await ContentTask.spawn(browser, null, async () => {
+        const doc = content.document;
+        await ContentTaskUtils.waitForCondition(() => !!doc.querySelector(".info-box-content > span"));
+
+        is(
+          doc.querySelector(".info-box-content > span").textContent,
+          "This is a list of studies that you have participated in. No new studies will run.",
+          "A message is shown when studies are disabled",
+        );
+      });
+    } finally {
+      // reset RecipeRunner.enabled
+      RecipeRunner.checkPrefs();
+    }
   }
 );

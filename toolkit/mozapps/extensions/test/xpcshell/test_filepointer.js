@@ -84,7 +84,7 @@ function writeRelativePointer(aId, aName) {
 
 function run_test() {
   // pointer files only work with unpacked directories
-  if (Services.prefs.getBoolPref("extensions.alwaysUnpack") == false)
+  if (!Services.prefs.getBoolPref("extensions.alwaysUnpack"))
     return;
 
   do_test_pending();

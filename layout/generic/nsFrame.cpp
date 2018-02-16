@@ -6550,6 +6550,19 @@ nsFrame::Reflow(nsPresContext*          aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
+bool
+nsIFrame::IsContentDisabled() const
+{
+  // FIXME(emilio): Doing this via CSS means callers must ensure the style is up
+  // to date, and they don't!
+  if (StyleUserInterface()->mUserInput == StyleUserInput::None) {
+    return true;
+  }
+
+  auto* element = nsGenericHTMLElement::FromContentOrNull(GetContent());
+  return element && element->IsDisabled();
+}
+
 nsresult
 nsFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
 {

@@ -3,7 +3,7 @@
 var SOURCE_URL = getFileUrl("setBreakpoint-on-line-with-multiple-statements.js");
 
 function run_test() {
-  return Task.spawn(function* () {
+  return (async function () {
     do_test_pending();
 
     DebuggerServer.registerModule("xpcshell-test/testactors");
@@ -13,26 +13,26 @@ function run_test() {
     DebuggerServer.addTestGlobal(global);
 
     let client = new DebuggerClient(DebuggerServer.connectPipe());
-    yield connect(client);
+    await connect(client);
 
-    let { tabs } = yield listTabs(client);
+    let { tabs } = await listTabs(client);
     let tab = findTab(tabs, "test");
-    let [, tabClient] = yield attachTab(client, tab);
+    let [, tabClient] = await attachTab(client, tab);
 
-    let [, threadClient] = yield attachThread(tabClient);
-    yield resume(threadClient);
+    let [, threadClient] = await attachThread(tabClient);
+    await resume(threadClient);
 
     let promise = waitForNewSource(threadClient, SOURCE_URL);
     loadSubScript(SOURCE_URL, global);
-    let { source } = yield promise;
+    let { source } = await promise;
     let sourceClient = threadClient.source(source);
 
     let location = { line: 4 };
-    let [packet, breakpointClient] = yield setBreakpoint(sourceClient, location);
+    let [packet, breakpointClient] = await setBreakpoint(sourceClient, location);
     Assert.ok(!packet.isPending);
     Assert.equal(false, "actualLocation" in packet);
 
-    packet = yield executeOnNextTickAndWaitForPause(function () {
+    packet = await executeOnNextTickAndWaitForPause(function () {
       Cu.evalInSandbox("f()", global);
     }, client);
     Assert.equal(packet.type, "paused");
@@ -49,9 +49,9 @@ function run_test() {
     Assert.equal(variables.b.value.type, "undefined");
     Assert.equal(variables.c.value.type, "undefined");
 
-    yield resume(threadClient);
-    yield close(client);
+    await resume(threadClient);
+    await close(client);
 
     do_test_finished();
-  });
+  })();
 }

@@ -27,7 +27,7 @@ function* highlightFromRuleView(inspector, view, highlighters, testActor) {
   yield selectNode("#polygon", inspector);
   yield toggleShapesHighlighter(view, highlighters, "#polygon", "clip-path", true);
   let container = getRuleViewProperty(view, "#polygon", "clip-path").valueSpan;
-  let shapesToggle = container.querySelector(".ruleview-shape");
+  let shapesToggle = container.querySelector(".ruleview-shapeswatch");
 
   let highlighterFront = highlighters.highlighters[HIGHLIGHTER_TYPE];
   let markerHidden = yield testActor.getHighlighterNodeAttribute(

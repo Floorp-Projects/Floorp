@@ -1074,7 +1074,7 @@ var gPrivacyPane = {
   updateButtons(aButtonID, aPreferenceID) {
     var button = document.getElementById(aButtonID);
     var preference = Preferences.get(aPreferenceID);
-    button.disabled = preference.value != true;
+    button.disabled = !preference.value;
     return undefined;
   },
 
