@@ -1270,22 +1270,40 @@ ServoStyleSet::ComputeAnimationValue(
 bool
 ServoStyleSet::EnsureUniqueInnerOnCSSSheets()
 {
-  AutoTArray<StyleSheet*, 32> queue;
+  using SheetOwner = Variant<ServoStyleSet*, nsXBLPrototypeBinding*>;
+
+  AutoTArray<Pair<StyleSheet*, SheetOwner>, 32> queue;
   for (auto& entryArray : mSheets) {
     for (auto& sheet : entryArray) {
-      queue.AppendElement(sheet);
+      StyleSheet* downcasted = sheet;
+      queue.AppendElement(MakePair(downcasted, SheetOwner { this }));
     }
   }
-  // This is a stub until more of the functionality of nsStyleSet is
-  // replicated for Servo here.
 
-  // Bug 1290276 will replicate the nsStyleSet work of checking
-  // a nsBindingManager
+  mDocument->BindingManager()->EnumerateBoundContentBindings(
+      [&](nsXBLBinding* aBinding) {
+        AutoTArray<StyleSheet*, 3> sheets;
+        aBinding->PrototypeBinding()->AppendStyleSheetsTo(sheets);
+        for (auto* sheet : sheets) {
+          queue.AppendElement(MakePair(sheet, SheetOwner { aBinding->PrototypeBinding() }));
+        }
+        return true;
+      });
 
+  bool anyXBLSheetChanged = false;
   while (!queue.IsEmpty()) {
     uint32_t idx = queue.Length() - 1;
-    StyleSheet* sheet = queue[idx];
+    auto* sheet = queue[idx].first();
+    SheetOwner owner = queue[idx].second();
     queue.RemoveElementAt(idx);
+
+    if (!sheet->HasUniqueInner() && owner.is<nsXBLPrototypeBinding*>()) {
+      if (auto* styles = owner.as<nsXBLPrototypeBinding*>()->GetServoStyles()) {
+        Servo_AuthorStyles_ForceDirty(styles);
+        mNeedsRestyleAfterEnsureUniqueInner = true;
+        anyXBLSheetChanged = true;
+      }
+    }
 
     // Only call EnsureUniqueInner for complete sheets. If we do call it on
     // incomplete sheets, we'll cause problems when the sheet is actually
@@ -1298,7 +1316,15 @@ ServoStyleSet::EnsureUniqueInnerOnCSSSheets()
     }
 
     // Enqueue all the sheet's children.
-    sheet->AppendAllChildSheets(queue);
+    AutoTArray<StyleSheet*, 3> children;
+    sheet->AppendAllChildSheets(children);
+    for (auto* sheet : children) {
+      queue.AppendElement(MakePair(sheet, owner));
+    }
+  }
+
+  if (anyXBLSheetChanged) {
+    SetStylistXBLStyleSheetsDirty();
   }
 
   if (mNeedsRestyleAfterEnsureUniqueInner) {
