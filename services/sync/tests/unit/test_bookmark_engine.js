@@ -33,6 +33,16 @@ async function fetchAllRecordIds() {
   }
   return recordIds;
 }
+
+async function cleanup(engine, server) {
+  await engine._store.wipe();
+  await engine.resetClient();
+  Svc.Prefs.resetBranch("");
+  Service.recordManager.clearCache();
+  await promiseStopServer(server);
+  await engine._tracker.stop();
+}
+
 add_task(async function setup() {
   await generateNewKeys(Service.collectionKeys);
   await Service.engineManager.unregister("bookmarks");
@@ -112,11 +122,7 @@ add_bookmark_test(async function test_delete_invalid_roots_from_server(engine) {
     deepEqual(collection.keys().sort(), ["menu", "mobile", "toolbar", "unfiled", newBmk.id].sort(),
       "Should remove Places root and reading list items from server; upload local roots");
   } finally {
-    await store.wipe();
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
-    await promiseStopServer(server);
-    await engine._tracker.stop();
+    await cleanup(engine, server);
   }
 });
 
@@ -222,12 +228,7 @@ add_bookmark_test(async function test_processIncoming_error_orderChildren(engine
     Assert.deepEqual(localChildIds, [bmk2.guid, bmk1.guid]);
 
   } finally {
-    await store.wipe();
-    await engine.resetClient();
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
-    await PlacesSyncUtils.bookmarks.reset();
-    await promiseStopServer(server);
+    await cleanup(engine, server);
   }
 });
 
@@ -248,7 +249,6 @@ async function test_restoreOrImport(engine, { replace }) {
 
   _(`Ensure that ${verbing} from a backup will reupload all records.`);
 
-  let store  = engine._store;
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
@@ -406,12 +406,7 @@ async function test_restoreOrImport(engine, { replace }) {
     doCheckWBOs(folderWBOs, expectedFolders);
 
   } finally {
-    await store.wipe();
-    await engine.resetClient();
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
-    await PlacesSyncUtils.bookmarks.reset();
-    await promiseStopServer(server);
+    await cleanup(engine, server);
   }
 }
 
@@ -504,12 +499,7 @@ add_task(async function test_mismatched_types() {
                          .itemHasAnnotation(newID, PlacesUtils.LMANNO_FEEDURI));
 
   } finally {
-    await store.wipe();
-    await engine.resetClient();
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
-    await PlacesSyncUtils.bookmarks.reset();
-    await promiseStopServer(server);
+    await cleanup(engine, server);
   }
 });
 
@@ -682,10 +672,7 @@ add_bookmark_test(async function test_misreconciled_root(engine) {
   Assert.equal(parentGUIDBefore, parentGUIDAfter);
   Assert.equal(parentIDBefore, parentIDAfter);
 
-  await store.wipe();
-  await engine.resetClient();
-  await PlacesSyncUtils.bookmarks.reset();
-  await promiseStopServer(server);
+  await cleanup(engine, server);
 });
 
 add_bookmark_test(async function test_sync_dateAdded(engine) {
@@ -829,12 +816,7 @@ add_bookmark_test(async function test_sync_dateAdded(engine) {
 
 
   } finally {
-    await store.wipe();
-    await engine.resetClient();
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
-    await PlacesSyncUtils.bookmarks.reset();
-    await promiseStopServer(server);
+    await cleanup(engine, server);
   }
 });
 
@@ -844,7 +826,6 @@ add_task(async function test_sync_imap_URLs() {
   await PlacesSyncUtils.bookmarks.reset();
   let engine = new BookmarksEngine(Service);
   await engine.initialize();
-  let store  = engine._store;
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
@@ -893,10 +874,6 @@ add_task(async function test_sync_imap_URLs() {
       "TomEdwards.html",
       "Local bookmark B with IMAP URL should exist remotely");
   } finally {
-    await store.wipe();
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
-    await PlacesSyncUtils.bookmarks.reset();
-    await promiseStopServer(server);
+    await cleanup(engine, server);
   }
 });
