@@ -11,6 +11,11 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
+#define PATHSEP_CHAR '\\'
+#define PATHSEP_STRING "\\"
+#else
+#define PATHSEP_CHAR '/'
+#define PATHSEP_STRING "/"
 #endif
 
 // Make sure that all directories on path exist, excluding the final element of
