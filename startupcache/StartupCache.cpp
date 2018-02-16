@@ -310,11 +310,11 @@ StartupCache::PutBuffer(const char* id, UniquePtr<char[]>&& inbuf, uint32_t len)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsCString idStr(id);
+  nsDependentCString idStr(id);
   // Cache it for now, we'll write all together later.
-  CacheEntry* entry;
+  auto entry = mTable.LookupForAdd(idStr);
 
-  if (mTable.Get(idStr)) {
+  if (entry) {
     NS_WARNING("Existing entry in StartupCache.");
     // Double-caching is undesirable but not an error.
     return NS_OK;
@@ -327,8 +327,9 @@ StartupCache::PutBuffer(const char* id, UniquePtr<char[]>&& inbuf, uint32_t len)
   }
 #endif
 
-  entry = new CacheEntry(Move(inbuf), len);
-  mTable.Put(idStr, entry);
+  entry.OrInsert([&inbuf, &len]() {
+      return new CacheEntry(Move(inbuf), len);
+  });
   mPendingWrites.AppendElement(idStr);
   return ResetStartupWriteTimer();
 }
