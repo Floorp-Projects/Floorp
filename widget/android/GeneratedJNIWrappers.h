@@ -6696,10 +6696,11 @@ public:
                 mozilla::jni::ObjectArray::Param,
                 int32_t,
                 int32_t,
+                int32_t,
                 int32_t> Args;
         static constexpr char name[] = "start";
         static constexpr char signature[] =
-                "(Ljava/lang/String;[Ljava/lang/String;III)I";
+                "(Ljava/lang/String;[Ljava/lang/String;IIII)I";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -6709,7 +6710,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    static auto Start(mozilla::jni::String::Param, mozilla::jni::ObjectArray::Param, int32_t, int32_t, int32_t) -> int32_t;
+    static auto Start(mozilla::jni::String::Param, mozilla::jni::ObjectArray::Param, int32_t, int32_t, int32_t, int32_t) -> int32_t;
 
     static const mozilla::jni::CallingThread callingThread =
             mozilla::jni::CallingThread::ANY;
