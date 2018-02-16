@@ -1464,10 +1464,10 @@ CodeGeneratorARM::visitFloat32(LFloat32* ins)
     masm.loadConstantFloat32(ins->getFloat(), ToFloatRegister(out));
 }
 
-Register
-CodeGeneratorARM::splitTagForTest(const ValueOperand& value)
+void
+CodeGeneratorARM::splitTagForTest(const ValueOperand& value, ScratchTagScope& tag)
 {
-    return value.typeReg();
+    MOZ_ASSERT(value.typeReg() == tag);
 }
 
 void
