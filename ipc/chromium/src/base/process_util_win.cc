@@ -354,6 +354,10 @@ bool LaunchApp(const std::wstring& cmdline,
   LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList = NULL;
   std::vector<HANDLE> handlesToInherit;
   for (HANDLE h : options.handles_to_inherit) {
+    if (SetHandleInformation(h, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT) == 0) {
+      MOZ_DIAGNOSTIC_ASSERT(false, "SetHandleInformation failed");
+      return false;
+    }
     handlesToInherit.push_back(h);
   }
 
