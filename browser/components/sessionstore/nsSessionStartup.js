@@ -310,21 +310,20 @@ SessionStartup.prototype = {
   },
 
   /**
-   * Returns a boolean or a promise that resolves to a boolean, indicating
-   * whether we will restore a session that ends up replacing the homepage.
-   * True guarantees that we'll restore a session; false means that we
-   * /probably/ won't do so.
+   * Returns a promise that resolves to a boolean, indicating whether we will
+   * restore a session that ends up replacing the homepage. True guarantees
+   * that we'll restore a session; false means that we /probably/ won't do so.
    * The browser uses this to avoid unnecessarily loading the homepage when
    * restoring a session.
    */
-  get willOverrideHomepage() {
+  get willOverrideHomepagePromise() {
     // If the session file hasn't been read yet and resuming the session isn't
     // enabled via prefs, go ahead and load the homepage. We may still replace
     // it when recovering from a crash, which we'll only know after reading the
     // session file, but waiting for that would delay loading the homepage in
     // the non-crash case.
     if (!this._initialState && !this._resumeSessionEnabled) {
-      return false;
+      return Promise.resolve(false);
     }
 
     return new Promise(resolve => {
