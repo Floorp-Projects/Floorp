@@ -855,6 +855,12 @@
     await pc2.setLocalDescription(answer);
     pc1.removeTrack(pc1.getSenders()[0]);
 
+    hasProps(pc1.getSenders(),
+      [
+        {track: null},
+        {track: video}
+      ]);
+
     hasProps(pc1.getTransceivers(),
       [
         {
@@ -870,6 +876,12 @@
     await negotiationNeeded(pc1);
 
     pc1.removeTrack(pc1.getSenders()[1]);
+
+    hasProps(pc1.getSenders(),
+      [
+        {track: null},
+        {track: null}
+      ]);
 
     hasProps(pc1.getTransceivers(),
       [
