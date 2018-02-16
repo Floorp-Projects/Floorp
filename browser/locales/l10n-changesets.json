@@ -1262,7 +1262,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "72b1207753d2"
+        "revision": "225018d0be12"
     }, 
     "sv-SE": {
         "platforms": [
@@ -1292,7 +1292,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "7b3ed9e60f99"
+        "revision": "90ac6dbfdae8"
     }, 
     "te": {
         "platforms": [
