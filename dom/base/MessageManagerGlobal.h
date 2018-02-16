@@ -132,9 +132,11 @@ public:
   void Atob(const nsAString& aAsciiString, nsAString& aBase64Data, ErrorResult& aError);
   void Btoa(const nsAString& aBase64Data, nsAString& aAsciiString, ErrorResult& aError);
 
-  bool MarkForCC()
+  void MarkForCC()
   {
-    return mMessageManager && mMessageManager->MarkForCC();
+    if (mMessageManager) {
+      mMessageManager->MarkForCC();
+    }
   }
 
 protected:

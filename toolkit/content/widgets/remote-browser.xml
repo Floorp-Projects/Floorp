@@ -11,7 +11,7 @@
   <binding id="remote-browser" extends="chrome://global/content/bindings/browser.xml#browser">
 
     <implementation type="application/javascript"
-                    implements="nsIObserver, nsIDOMEventListener, nsIMessageListener, nsIRemoteBrowser">
+                    implements="nsIObserver, nsIDOMEventListener, nsIRemoteBrowser">
 
       <field name="_securityUI">null</field>
 

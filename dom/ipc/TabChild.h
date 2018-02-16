@@ -91,6 +91,8 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TabChildGlobal, DOMEventTargetHelper)
 
+  void MarkForCC();
+
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override
   {
@@ -104,7 +106,6 @@ public:
   virtual already_AddRefed<nsIDocShell> GetDocShell(ErrorResult& aError) override;
   virtual already_AddRefed<nsIEventTarget> GetTabEventTarget() override;
 
-  NS_FORWARD_SAFE_NSIMESSAGELISTENERMANAGER(mMessageManager)
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
   NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
 
@@ -278,7 +279,7 @@ public:
 
   FORWARD_SHMEM_ALLOCATOR_TO(PBrowserChild)
 
-  nsIContentFrameMessageManager* GetMessageManager()
+  TabChildGlobal* GetMessageManager()
   {
     return mTabChildGlobal;
   }
