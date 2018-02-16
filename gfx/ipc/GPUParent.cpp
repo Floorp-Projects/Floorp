@@ -462,7 +462,9 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
   dom::VideoDecoderManagerParent::ShutdownVideoBridge();
   CompositorThreadHolder::Shutdown();
   VRListenerThreadHolder::Shutdown();
-  if (gfxVars::UseWebRender()) {
+  // There is a case that RenderThread exists when gfxVars::UseWebRender() is false.
+  // This could happen when WebRender was fallbacked to compositor.
+  if (wr::RenderThread::Get()) {
     wr::RenderThread::ShutDown();
 
     wr::WebRenderAPI::ShutdownExternalLogHandler();

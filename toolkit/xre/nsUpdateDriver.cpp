@@ -382,11 +382,18 @@ AppendToLibPath(const char *pathToAppend)
     // Leak the string because that is required by PR_SetEnv.
     char *s = Smprintf("%s=%s", LD_LIBRARY_PATH_ENVVAR_NAME, pathToAppend).release();
     PR_SetEnv(s);
-  } else if (!strstr(pathValue, pathToAppend)) {
-    // Leak the string because that is required by PR_SetEnv.
-    char *s = Smprintf("%s=%s" PATH_SEPARATOR "%s",
-                       LD_LIBRARY_PATH_ENVVAR_NAME, pathToAppend, pathValue).release();
-    PR_SetEnv(s);
+  } else {
+    // Check if pathToAppend is present in pathValue, properly delimited.
+    // For example, if pathValue = "/A/B/C/D" and pathToAppend = "/A/B/C"
+    // then check if ":/A/B/C/D:" contains ":/A/B/C:" (answer: no).
+    char *pathValue_sep = Smprintf(PATH_SEPARATOR "%s" PATH_SEPARATOR, pathValue).get();
+    char *pathToAppend_sep = Smprintf(PATH_SEPARATOR "%s" PATH_SEPARATOR, pathToAppend).get();
+    if (!strstr(pathValue_sep, pathToAppend_sep)) {
+      // Leak the string because that is required by PR_SetEnv.
+      char *s = Smprintf("%s=%s" PATH_SEPARATOR "%s",
+                         LD_LIBRARY_PATH_ENVVAR_NAME, pathToAppend, pathValue).release();
+      PR_SetEnv(s);
+    }
   }
 }
 #endif

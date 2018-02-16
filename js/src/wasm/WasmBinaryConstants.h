@@ -323,6 +323,8 @@ enum class Op
     I64Extend32S                         = 0xc4,
 #endif
 
+    FirstPrefix                          = 0xfc,
+    NumericPrefix                        = 0xfc,
     ThreadPrefix                         = 0xfe,
     MozPrefix                            = 0xff,
 
@@ -332,8 +334,24 @@ enum class Op
 inline bool
 IsPrefixByte(uint8_t b)
 {
-    return b >= uint8_t(Op::ThreadPrefix);
+    return b >= uint8_t(Op::FirstPrefix);
 }
+
+// Opcodes in the "numeric" opcode space.
+enum class NumericOp
+{
+    // Saturating float-to-int conversions
+    I32TruncSSatF32                      = 0x00,
+    I32TruncUSatF32                      = 0x01,
+    I32TruncSSatF64                      = 0x02,
+    I32TruncUSatF64                      = 0x03,
+    I64TruncSSatF32                      = 0x04,
+    I64TruncUSatF32                      = 0x05,
+    I64TruncSSatF64                      = 0x06,
+    I64TruncUSatF64                      = 0x07,
+
+    Limit
+};
 
 // Opcodes from threads proposal as of June 30, 2017
 enum class ThreadOp

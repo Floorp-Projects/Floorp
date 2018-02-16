@@ -104,6 +104,10 @@ this.BrowserTestUtils = {
     let result = await taskFn(tab.linkedBrowser);
     let finalWindow = tab.ownerGlobal;
     if (originalWindow == finalWindow && !tab.closing && tab.linkedBrowser) {
+      // taskFn may resolve within a tick after opening a new tab.
+      // We shouldn't remove the newly opened tab in the same tick.
+      // Wait for the next tick here.
+      await TestUtils.waitForTick();
       await BrowserTestUtils.removeTab(tab);
     } else {
       Services.console.logStringMessage(

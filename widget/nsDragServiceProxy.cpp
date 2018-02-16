@@ -39,7 +39,7 @@ GetPrincipalURIFromNode(nsCOMPtr<nsIDOMNode>& sourceNode,
   nsCOMPtr<nsIPrincipal> principal = node->NodePrincipal();
   nsCOMPtr<nsIURI> principalURI;
   nsresult rv = principal->GetURI(getter_AddRefs(principalURI));
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv) || !principalURI) {
     return;
   }
 

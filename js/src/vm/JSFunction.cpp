@@ -2038,10 +2038,10 @@ js::CanReuseScriptForClone(JSCompartment* compartment, HandleFunction fun,
         return true;
 
     // We need to clone the script if we're not already marked as having a
-    // non-syntactic scope. If we're lazy, go ahead and clone the script; see
-    // the big comment at the end of CopyScriptInternal for the explanation of
-    // what's going on there.
-    return fun->hasScript() && fun->nonLazyScript()->hasNonSyntacticScope();
+    // non-syntactic scope.
+    return fun->hasScript()
+        ? fun->nonLazyScript()->hasNonSyntacticScope()
+        : fun->lazyScript()->enclosingScope()->hasOnChain(ScopeKind::NonSyntactic);
 }
 
 static inline JSFunction*

@@ -167,17 +167,11 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
       nsReflowStatus kidStatus;
       ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowInput, cb,
                           aFlags, kidFrame, kidStatus, aOverflowAreas);
+      MOZ_ASSERT(!kidStatus.IsInlineBreakBefore(),
+                 "ShouldAvoidBreakInside should prevent this from happening");
       nsIFrame* nextFrame = kidFrame->GetNextInFlow();
-      if ((kidStatus.IsInlineBreakBefore() ||
-           !kidStatus.IsFullyComplete()) &&
+      if (!kidStatus.IsFullyComplete() &&
           aDelegatingFrame->IsFrameOfType(nsIFrame::eCanContainOverflowContainers)) {
-        // XXX it's unclear how we should handle 'page-break-inside:avoid' on
-        // abs.pos. boxes -- ignore it for now by setting the status to
-        // Incomplete (which will probably fragment it).
-        if (kidStatus.IsInlineBreakBefore()) {
-          kidStatus.Reset();
-          kidStatus.SetIncomplete();
-        }
         // Need a continuation
         if (!nextFrame) {
           nextFrame =

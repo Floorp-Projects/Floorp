@@ -466,17 +466,6 @@ public:
                      const ScrollableLayerGuid& aGuid,
                      uint64_t aInputBlockId);
 
-  virtual PDocumentRendererParent*
-  AllocPDocumentRendererParent(const nsRect& documentRect,
-                               const gfx::Matrix& transform,
-                               const nsString& bgcolor,
-                               const uint32_t& renderFlags,
-                               const bool& flushLayout,
-                               const nsIntSize& renderSize) override;
-
-  virtual bool
-  DeallocPDocumentRendererParent(PDocumentRendererParent* actor) override;
-
   virtual PFilePickerParent*
   AllocPFilePickerParent(const nsString& aTitle,
                          const int16_t& aMode) override;

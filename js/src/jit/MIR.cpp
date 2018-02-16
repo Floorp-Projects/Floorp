@@ -4402,10 +4402,10 @@ MWasmTruncateToInt32::foldsTo(TempAllocator& alloc)
         if (IsNaN(d))
             return this;
 
-        if (!isUnsigned_ && d <= double(INT32_MAX) && d >= double(INT32_MIN))
+        if (!isUnsigned() && d <= double(INT32_MAX) && d >= double(INT32_MIN))
             return MConstant::New(alloc, Int32Value(ToInt32(d)));
 
-        if (isUnsigned_ && d <= double(UINT32_MAX) && d >= 0)
+        if (isUnsigned() && d <= double(UINT32_MAX) && d >= 0)
             return MConstant::New(alloc, Int32Value(ToInt32(d)));
     }
 
@@ -4414,10 +4414,10 @@ MWasmTruncateToInt32::foldsTo(TempAllocator& alloc)
         if (IsNaN(f))
             return this;
 
-        if (!isUnsigned_ && f <= double(INT32_MAX) && f >= double(INT32_MIN))
+        if (!isUnsigned() && f <= double(INT32_MAX) && f >= double(INT32_MIN))
             return MConstant::New(alloc, Int32Value(ToInt32(f)));
 
-        if (isUnsigned_ && f <= double(UINT32_MAX) && f >= 0)
+        if (isUnsigned() && f <= double(UINT32_MAX) && f >= 0)
             return MConstant::New(alloc, Int32Value(ToInt32(f)));
     }
 

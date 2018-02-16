@@ -53,7 +53,7 @@ class PseudoStack;
 //
 // When the thread is suspended, the values in pseudoStack->stackPointer and in
 // the entry range pseudoStack->entries[0..pseudoStack->stackPointer] need to
-// be in a consistent state, so that thread A does not read partially-
+// be in a consistent state, so that thread S does not read partially-
 // constructed profile entries. More specifically, we have two requirements:
 //  (1) When adding a new entry at the top of the stack, its ProfileEntry data
 //      needs to be put in place *before* the stackPointer is incremented, and

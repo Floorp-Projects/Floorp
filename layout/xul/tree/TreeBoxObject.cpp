@@ -165,6 +165,14 @@ TreeBoxObject::GetView(CallerType /* unused */)
   return view.forget();
 }
 
+NS_IMETHODIMP
+TreeBoxObject::SetView(nsITreeView* aView)
+{
+  ErrorResult rv;
+  SetView(aView, CallerType::System, rv);
+  return rv.StealNSResult();
+}
+
 void
 TreeBoxObject::SetView(nsITreeView* aView, CallerType aCallerType,
                        ErrorResult& aRv)

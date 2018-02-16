@@ -2562,10 +2562,20 @@ CodeGeneratorARM::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
     MWasmTruncateToInt32* mir = lir->mir();
     MIRType fromType = mir->input()->type();
 
-    auto* ool = new(alloc()) OutOfLineWasmTruncateCheck(mir, input);
-    addOutOfLineCode(ool, mir);
-    masm.wasmTruncateToInt32(input, output, fromType, mir->isUnsigned(), ool->entry());
-    masm.bind(ool->rejoin());
+    OutOfLineWasmTruncateCheck* ool = nullptr;
+    Label* oolEntry = nullptr;
+    if (!lir->mir()->isSaturating()) {
+        ool = new(alloc()) OutOfLineWasmTruncateCheck(mir, input, Register::Invalid());
+        addOutOfLineCode(ool, mir);
+        oolEntry = ool->entry();
+    }
+
+    masm.wasmTruncateToInt32(input, output, fromType, mir->isUnsigned(), mir->isSaturating(),
+                             oolEntry);
+
+    if (!lir->mir()->isSaturating()) {
+        masm.bind(ool->rejoin());
+    }
 }
 
 void
@@ -2578,8 +2588,11 @@ CodeGeneratorARM::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
     MWasmTruncateToInt64* mir = lir->mir();
     MIRType fromType = mir->input()->type();
 
-    auto* ool = new(alloc()) OutOfLineWasmTruncateCheck(mir, input);
-    addOutOfLineCode(ool, mir);
+    OutOfLineWasmTruncateCheck* ool = nullptr;
+    if (!lir->mir()->isSaturating()) {
+        ool = new(alloc()) OutOfLineWasmTruncateCheck(mir, input, Register64::Invalid());
+        addOutOfLineCode(ool, mir);
+    }
 
     ScratchDoubleScope scratchScope(masm);
     if (fromType == MIRType::Float32) {
@@ -2592,19 +2605,32 @@ CodeGeneratorARM::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
     masm.setupWasmABICall();
     masm.passABIArg(inputDouble, MoveOp::DOUBLE);
 
-    if (lir->mir()->isUnsigned())
-        masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::TruncateDoubleToUint64);
-    else
-        masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::TruncateDoubleToInt64);
+    if (lir->mir()->isSaturating()) {
+        if (lir->mir()->isUnsigned())
+            masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::SaturatingTruncateDoubleToUint64);
+        else
+            masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::SaturatingTruncateDoubleToInt64);
+    } else {
+        if (lir->mir()->isUnsigned())
+            masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::TruncateDoubleToUint64);
+        else
+            masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::TruncateDoubleToInt64);
+    }
 
     masm.Pop(input);
 
-    ScratchRegisterScope scratch(masm);
-    masm.ma_cmp(output.high, Imm32(0x80000000), scratch);
-    masm.as_cmp(output.low, Imm8(0x00000000), Assembler::Equal);
-    masm.ma_b(ool->entry(), Assembler::Equal);
+    // TruncateDoubleTo{UI,I}nt64 returns 0x8000000000000000 to indicate
+    // exceptional results, so check for that and produce the appropriate
+    // traps. The Saturating form always returns a normal value and never
+    // needs traps.
+    if (!lir->mir()->isSaturating()) {
+        ScratchRegisterScope scratch(masm);
+        masm.ma_cmp(output.high, Imm32(0x80000000), scratch);
+        masm.as_cmp(output.low, Imm8(0x00000000), Assembler::Equal);
+        masm.ma_b(ool->entry(), Assembler::Equal);
 
-    masm.bind(ool->rejoin());
+        masm.bind(ool->rejoin());
+    }
 
     MOZ_ASSERT(ReturnReg64 == output);
 }
@@ -2612,6 +2638,11 @@ CodeGeneratorARM::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
 void
 CodeGeneratorARM::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool)
 {
+    // On ARM, saturating truncation codegen handles saturating itself rather than
+    // relying on out-of-line fixup code.
+    if (ool->isSaturating())
+        return;
+
     masm.outOfLineWasmTruncateToIntCheck(ool->input(), ool->fromType(), ool->toType(),
                                          ool->isUnsigned(), ool->rejoin(),
                                          ool->bytecodeOffset());

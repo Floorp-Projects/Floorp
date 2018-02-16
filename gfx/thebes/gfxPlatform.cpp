@@ -1052,7 +1052,9 @@ gfxPlatform::ShutdownLayersIPC()
         // This has to happen after shutting down the child protocols.
         layers::CompositorThreadHolder::Shutdown();
         gfx::VRListenerThreadHolder::Shutdown();
-        if (gfxVars::UseWebRender()) {
+        // There is a case that RenderThread exists when gfxVars::UseWebRender() is false.
+        // This could happen when WebRender was fallbacked to compositor.
+        if (wr::RenderThread::Get()) {
           wr::RenderThread::ShutDown();
 
           Preferences::UnregisterCallback(WebRenderDebugPrefChangeCallback, WR_DEBUG_PREF);
