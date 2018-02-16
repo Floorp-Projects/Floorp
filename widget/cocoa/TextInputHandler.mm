@@ -1410,25 +1410,34 @@ TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
     return keyCode;
   }
 
-  // If this is ASCII capable, give up to compute it.
-  if (IsASCIICapable()) {
-    return 0;
+  if (!IsASCIICapable()) {
+    // Retry with ASCII capable keyboard layout.
+    TISInputSourceWrapper currentKeyboardLayout;
+    currentKeyboardLayout.InitByCurrentASCIICapableKeyboardLayout();
+    NS_ENSURE_TRUE(mInputSource != currentKeyboardLayout.mInputSource, 0);
+    keyCode = currentKeyboardLayout.ComputeGeckoKeyCode(aNativeKeyCode, aKbType,
+                                                        aCmdIsPressed);
+    // We've returned 0 for long time if keyCode isn't for an alphabet keys or
+    // a numeric key even in alternative ASCII capable keyboard layout because
+    // we decided that we should avoid setting same keyCode value to 2 or
+    // more keys since active keyboard layout may have a key to input the
+    // punctuation with different key.  However, setting keyCode to 0 makes
+    // some web applications which are aware of neither KeyboardEvent.key nor
+    // KeyboardEvent.code not work with Firefox when user selects non-ASCII
+    // capable keyboard layout such as Russian and Thai.  So, if alternative
+    // ASCII capable keyboard layout has keyCode value for the key, we should
+    // use it.  In other words, this behavior does that non-ASCII capable
+    // keyboard layout overrides some keys' keyCode value only if the key
+    // produces ASCII character by itself or with Shift key.
+    if (keyCode) {
+      return keyCode;
+    }
   }
 
-  // Retry with ASCII capable keyboard layout.
-  TISInputSourceWrapper currentKeyboardLayout;
-  currentKeyboardLayout.InitByCurrentASCIICapableKeyboardLayout();
-  NS_ENSURE_TRUE(mInputSource != currentKeyboardLayout.mInputSource, 0);
-  keyCode = currentKeyboardLayout.ComputeGeckoKeyCode(aNativeKeyCode, aKbType,
-                                                      aCmdIsPressed);
-
-  // However, if keyCode isn't for an alphabet keys or a numeric key, we should
-  // ignore it.  For example, comma key of Thai layout is same as close-square-
-  // bracket key of US layout and an unicode character key of Thai layout is
-  // same as comma key of US layout.  If we return NS_VK_COMMA for latter key,
-  // web application developers cannot distinguish with the former key.
-  return ((keyCode >= NS_VK_A && keyCode <= NS_VK_Z) ||
-          (keyCode >= NS_VK_0 && keyCode <= NS_VK_9)) ? keyCode : 0;
+  // Otherwise, let's decide keyCode value from the native virtual keycode
+  // value on major keyboard layout.
+  CodeNameIndex code = ComputeGeckoCodeNameIndex(aNativeKeyCode, aKbType);
+  return WidgetKeyboardEvent::GetFallbackKeyCodeOfPunctuationKey(code);
 }
 
 // static
