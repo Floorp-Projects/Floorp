@@ -73,6 +73,7 @@ public:
   bool IsFullHandshake() const { return mIsFullHandshake; }
 
   bool GetJoined() { return mJoined; }
+  bool GetDenyClientCert() { return mDenyClientCert; }
   void SetSentClientCert() { mSentClientCert = true; }
 
   uint32_t GetProviderFlags() const { return mProviderFlags; }
@@ -185,6 +186,7 @@ private:
   nsCString mNegotiatedNPN;
   bool      mNPNCompleted;
   bool      mEarlyDataAccepted;
+  bool      mDenyClientCert;
   bool      mFalseStartCallbackCalled;
   bool      mFalseStarted;
   bool      mIsFullHandshake;
