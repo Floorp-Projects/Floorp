@@ -284,7 +284,7 @@ addTest(function testFrameTraversal() {
 
 addTest(function testLongValue() {
   const testSummaryLength = 10;
-  const WalkerActor = require("devtools/server/actors/inspector/walker-actor");
+  const WalkerActor = require("devtools/server/actors/inspector/walker");
 
   WalkerActor.setValueSummaryLength(testSummaryLength);
   SimpleTest.registerCleanupFunction(function () {

@@ -824,10 +824,6 @@ TRR::ReturnData()
     return NS_ERROR_FAILURE;
   }
   (void)mHostResolver->CompleteLookup(mRec, NS_OK, ai.forget(), mPB);
-  if (mTimeout) {
-    mTimeout->Cancel();
-    mTimeout = nullptr;
-  }
   mHostResolver = nullptr;
   mRec = nullptr;
   return NS_OK;
@@ -844,10 +840,6 @@ TRR::FailData()
   AddrInfo *ai = new AddrInfo(mHost.get(), mType);
 
   (void)mHostResolver->CompleteLookup(mRec, NS_ERROR_FAILURE, ai, mPB);
-  if (mTimeout) {
-    mTimeout->Cancel();
-    mTimeout = nullptr;
-  }
   mHostResolver = nullptr;
   mRec = nullptr;
   return NS_OK;
@@ -1032,10 +1024,6 @@ TRR::Cancel()
   if (mChannel) {
     LOG(("TRR: %p canceling Channel %p %s %d\n", this,
          mChannel.get(), mHost.get(), mType));
-    if (mTimeout) {
-      mTimeout->Cancel();
-      mTimeout = nullptr;
-    }
     mChannel->Cancel(NS_ERROR_ABORT);
   }
 }

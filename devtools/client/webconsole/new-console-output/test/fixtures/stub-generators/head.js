@@ -94,15 +94,18 @@ function getCleanedPacket(key, packet) {
 
           let newArgument = Object.assign({}, argument);
           let existingArgument = existingPacket.message.arguments[i];
-          // Clean actor ids on each message.arguments item.
-          if (newArgument.actor) {
-            newArgument.actor = existingArgument.actor;
-          }
 
-          // `window`'s properties count can vary from OS to OS, so we
-          // clean the `ownPropertyLength` property from the grip.
-          if (newArgument.class === "Window") {
-            newArgument.ownPropertyLength = existingArgument.ownPropertyLength;
+          if (existingArgument) {
+            // Clean actor ids on each message.arguments item.
+            if (newArgument.actor) {
+              newArgument.actor = existingArgument.actor;
+            }
+
+            // `window`'s properties count can vary from OS to OS, so we
+            // clean the `ownPropertyLength` property from the grip.
+            if (newArgument.class === "Window") {
+              newArgument.ownPropertyLength = existingArgument.ownPropertyLength;
+            }
           }
           return newArgument;
         });

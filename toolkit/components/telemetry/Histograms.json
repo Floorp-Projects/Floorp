@@ -13924,36 +13924,6 @@
     "description": "Amount of time in milliseconds the main thread spends waiting for the paint thread to complete, if the time was greater than 200us.",
     "bug_numbers": [1386968]
   },
-  "STYLO_PARALLEL_RESTYLE_FRACTION": {
-    "record_in_processes": ["content"],
-    "alert_emails": ["manish@mozilla.com"],
-    "expires_in_version": "60",
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 50,
-    "description": "Percentage of restyles on a single page that were parallel",
-    "bug_numbers": [1421195]
-  },
-  "STYLO_PARALLEL_RESTYLE_FRACTION_WEIGHTED_TRAVERSED": {
-    "record_in_processes": ["content"],
-    "alert_emails": ["manish@mozilla.com"],
-    "expires_in_version": "60",
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 50,
-    "description": "Percentage of restyles on a single page that were parallel, weighted by elements traversed",
-    "bug_numbers": [1421195]
-  },
-  "STYLO_PARALLEL_RESTYLE_FRACTION_WEIGHTED_STYLED": {
-    "record_in_processes": ["content"],
-    "alert_emails": ["manish@mozilla.com"],
-    "expires_in_version": "60",
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 50,
-    "description": "Percentage of restyles on a single page that were parallel, weighted by elements styled",
-    "bug_numbers": [1421195]
-  },
   "PREFERENCES_FILE_LOAD_TIME_US": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "62",

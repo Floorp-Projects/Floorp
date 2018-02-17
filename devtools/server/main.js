@@ -59,9 +59,7 @@ const CONTENT_PROCESS_DBG_SERVER_SCRIPT =
 
 function loadSubScript(url) {
   try {
-    let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-                   .getService(Ci.mozIJSSubScriptLoader);
-    loader.loadSubScript(url, this);
+    Services.scriptloader.loadSubScript(url, this);
   } catch (e) {
     let errorStr = "Error loading: " + url + ":\n" +
                    (e.fileName ? "at " + e.fileName + " : " + e.lineNumber + "\n" : "") +
@@ -449,7 +447,7 @@ var DebuggerServer = {
       constructor: "WebConsoleActor",
       type: { tab: true }
     });
-    this.registerModule("devtools/server/actors/inspector/inspector-actor", {
+    this.registerModule("devtools/server/actors/inspector/inspector", {
       prefix: "inspector",
       constructor: "InspectorActor",
       type: { tab: true }
