@@ -903,7 +903,17 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
     const OptionsType& aOptions,
     ErrorResult& aRv)
 {
-  nsIDocument* doc = AnimationUtils::GetCurrentRealmDocument(aGlobal.Context());
+  // We should get the document from `aGlobal` instead of the current Realm
+  // to make this works in Xray case.
+  //
+  // In all non-Xray cases, `aGlobal` matches the current Realm, so this
+  // matches the spec behavior.
+  //
+  // In Xray case, the new objects should be created using the document of
+  // the target global, but KeyframeEffect and KeyframeEffectReadOnly
+  // constructors are called in the caller's compartment to access
+  // `aKeyframes` object.
+  nsIDocument* doc = AnimationUtils::GetDocumentFromGlobal(aGlobal.Get());
   if (!doc) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;

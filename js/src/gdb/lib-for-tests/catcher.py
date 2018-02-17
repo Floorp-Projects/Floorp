@@ -12,10 +12,16 @@
 import os
 import sys
 import traceback
+
+def execfile(filename, globs, locs):
+    with open(filename) as f:
+        code = compile(f.read(), filename, 'exec')
+        exec(code, globs, locs)
+
 try:
     # testlibdir is set on the GDB command line, via:
     # --eval-command python testlibdir=...
-    exec(open(os.path.join(testlibdir, 'prologue.py')).read())
+    execfile(os.path.join(testlibdir, 'prologue.py'), globals(), locals())
 except Exception as err:
     sys.stderr.write('Error running GDB prologue:\n')
     traceback.print_exc()

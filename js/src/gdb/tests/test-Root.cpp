@@ -10,7 +10,7 @@ FRAGMENT(Root, null) {
 
   breakpoint();
 
-  (void) null;
+  use(null);
 }
 
 void callee(JS::Handle<JSObject*> obj, JS::MutableHandle<JSObject*> mutableObj)
@@ -24,7 +24,7 @@ void callee(JS::Handle<JSObject*> obj, JS::MutableHandle<JSObject*> mutableObj)
 FRAGMENT(Root, handle) {
   JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
   callee(global, &global);
-  (void) global;
+  use(global);
 }
 
 FRAGMENT(Root, HeapSlot) {
@@ -33,8 +33,8 @@ FRAGMENT(Root, HeapSlot) {
 
   breakpoint();
 
-  (void) plinth;
-  (void) array;
+  use(plinth);
+  use(array);
 }
 
 FRAGMENT(Root, barriers) {
@@ -50,12 +50,12 @@ FRAGMENT(Root, barriers) {
 
   breakpoint();
 
-  (void) prebarriered;
-  (void) heapptr;
-  (void) relocatable;
-  (void) val;
-  (void) prebarrieredValue;
-  (void) heapValue;
-  (void) relocatableValue;
+  use(prebarriered);
+  use(heapptr);
+  use(relocatable);
+  use(val);
+  use(prebarrieredValue);
+  use(heapValue);
+  use(relocatableValue);
 }
 

@@ -55,14 +55,14 @@ class jsjitExecutableAllocator(object):
         def __iter__(self):
             return self;
 
-        def next(self):
+        def __next__(self):
             cur = self.index
             if cur >= self.max:
                 raise StopIteration()
             self.index = self.index + 1
             if self.table[cur]['keyHash'] > 1: # table[i]->isLive()
                 return self.table[cur]['mem']['u']['mDummy'].cast(self.entryType)
-            return self.next()
+            return self.__next__()
 
 @ptr_pretty_printer("js::jit::ExecutablePool")
 class jsjitExecutablePool(mozilla.prettyprinters.Pointer):
