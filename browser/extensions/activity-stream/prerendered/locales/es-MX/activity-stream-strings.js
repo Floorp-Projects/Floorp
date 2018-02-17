@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Ya estás al día. Vuelve luego y busca más historias de {provider}. ¿No puedes esperar? Selecciona un tema popular y encontrarás más historias interesantes por toda la web.",
   "manual_migration_explanation2": "Prueba Firefox con los marcadores, historial y contraseñas de otro navegador.",
   "manual_migration_cancel_button": "No, gracias",
-  "manual_migration_import_button": "Importar ahora"
+  "manual_migration_import_button": "Importar ahora",
+  "context_menu_button_sr": "Abrir menú contextual para {title}",
+  "edit_topsites_add_button_tooltip": "Agregar sitio popular"
 };

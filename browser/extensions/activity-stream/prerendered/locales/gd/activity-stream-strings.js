@@ -38,9 +38,9 @@ window.gActivityStreamStrings = {
   "section_info_option": "Fiosrachadh",
   "section_info_send_feedback": "Cuir thugainn do bheachdan",
   "section_info_privacy_notice": "Sanas prìobhaideachd",
-  "section_disclaimer_topstories": "The most interesting stories on the web, selected based on what you read. From Pocket, now part of Mozilla.",
-  "section_disclaimer_topstories_linktext": "Learn how it works.",
-  "section_disclaimer_topstories_buttontext": "Okay, got it",
+  "section_disclaimer_topstories": "Na sgeulachdan as inntinniche air an lìon, air a thaghadh a-rèir na bhios tu a’ leughadh. O Phocket, a tha ’na phàirt de Mhozilla a-nis.",
+  "section_disclaimer_topstories_linktext": "Seo mar a dh’obraicheas e.",
+  "section_disclaimer_topstories_buttontext": "Ceart, tha mi agaibh",
   "welcome_title": "Fàilte gun taba ùr",
   "welcome_body": "Seallaidh Firefox na comharran-lìn, artaigealan, videothan is duilleagan as iomchaidhe dhut, an fheadhainn air an do thadhail thu o chionn goirid, ach an ruig thu iad gu luath.",
   "welcome_label": "Ag aithneachadh nan highlights agad",
@@ -67,7 +67,7 @@ window.gActivityStreamStrings = {
   "settings_pane_snippets_header": "Snippets",
   "settings_pane_snippets_body": "Leugh naidheachdan goirid tlachdmhor o Mozilla mu Firefox, cultar an lìn ’s mìm no dhà.",
   "settings_pane_done_button": "Deiseil",
-  "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
+  "settings_pane_topstories_options_sponsored": "Seall sgeulachdan sponsairichte",
   "edit_topsites_button_text": "Deasaich",
   "edit_topsites_button_label": "Gnàthaich earrann brod nan làrach agad",
   "edit_topsites_showmore_button": "Seall barrachd",
@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Sin na naidheachdan uile o {provider} an-dràsta ach bidh barrachd ann a dh’aithghearr. No thoir sùil air cuspair air a bheil fèill mhòr is leugh na tha a’ dol mun cuairt air an lìon an-dràsta.",
   "manual_migration_explanation2": "Feuch Firefox leis na comharran-lìn, an eachdraidh ’s na faclan-faire o bhrabhsair eile.",
   "manual_migration_cancel_button": "Chan eil, tapadh leibh",
-  "manual_migration_import_button": "Ion-phortaich an-dràsta"
+  "manual_migration_import_button": "Ion-phortaich an-dràsta",
+  "context_menu_button_sr": "Fosgail an clàr-taice co-theacsail aig {title}",
+  "edit_topsites_add_button_tooltip": "Cuir ris brod làraich"
 };

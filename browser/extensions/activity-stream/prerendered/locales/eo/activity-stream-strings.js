@@ -79,7 +79,7 @@ window.gActivityStreamStrings = {
   "edit_topsites_dismiss_button": "Ignori ĉi tiun retejon",
   "edit_topsites_add_button": "Aldoni",
   "topsites_form_add_header": "Nova ofta retejo",
-  "topsites_form_edit_header": "Redakti ofta retejo",
+  "topsites_form_edit_header": "Redakti oftan retejon",
   "topsites_form_title_placeholder": "Tajpu titolon",
   "topsites_form_url_placeholder": "Tajpu aŭ alguu retadreson",
   "topsites_form_add_button": "Aldoni",
@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Vi legis ĉion. Kontrolu denove poste ĉu estas pli da novaĵon de {provider}. Ĉu vi ne povas atendi? Elektu popularan temon por trovi pli da interesaj artikoloj en la tuta teksaĵo.",
   "manual_migration_explanation2": "Provu Firefox kun la legosignoj, historio kaj pasvortoj de alia retumilo.",
   "manual_migration_cancel_button": "Ne, dankon",
-  "manual_migration_import_button": "Importi nun"
+  "manual_migration_import_button": "Importi nun",
+  "context_menu_button_sr": "Malfermi kuntekstan menu por {title}",
+  "edit_topsites_add_button_tooltip": "Aldoni oftan retejon"
 };

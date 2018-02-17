@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Már felzárkózott. Nézzen vissza később a legújabb {provider} hírekért. Nem tud várni? Válasszon egy népszerű témát, hogy még több sztorit találjon a weben.",
   "manual_migration_explanation2": "Próbálja ki a Firefoxot másik böngészőből származó könyvjelzőkkel, előzményekkel és jelszavakkal.",
   "manual_migration_cancel_button": "Köszönöm, nem",
-  "manual_migration_import_button": "Importálás most"
+  "manual_migration_import_button": "Importálás most",
+  "context_menu_button_sr": "Környezeti menü megnyitása ehhez: {title}",
+  "edit_topsites_add_button_tooltip": "Népszerű oldal hozzáadása"
 };

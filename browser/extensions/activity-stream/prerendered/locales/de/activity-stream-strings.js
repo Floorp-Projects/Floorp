@@ -53,14 +53,14 @@ window.gActivityStreamStrings = {
   "settings_pane_body2": "Wählen Sie aus, was auf dieser Seite angezeigt wird.",
   "settings_pane_search_header": "Suche",
   "settings_pane_search_body": "Suchen Sie aus einem neuen Tab im Internet.",
-  "settings_pane_topsites_header": "Meistbesuchte Seiten",
+  "settings_pane_topsites_header": "Wichtige Seiten",
   "settings_pane_topsites_body": "Schneller Zugriff auf Ihre meistbesuchten Websites.",
   "settings_pane_topsites_options_showmore": "Zwei Reihen anzeigen",
   "settings_pane_bookmarks_header": "Neue Lesezeichen",
   "settings_pane_bookmarks_body": "Ihre neu erstellten Lesezeichen ganz bequem an einem Ort.",
   "settings_pane_visit_again_header": "Erneut besuchen",
   "settings_pane_visit_again_body": "Firefox zeigt Ihnen Teile Ihrer Surf-Chronik, die Sie sich vielleicht merken oder erneut besuchen möchten.",
-  "settings_pane_highlights_header": "Wichtigste Seiten",
+  "settings_pane_highlights_header": "Überblick",
   "settings_pane_highlights_body2": "Finden Sie schnell wieder zu den wichtigen Seiten zurück, die Sie kürzlich besucht oder als Lesezeichen gespeichert haben.",
   "settings_pane_highlights_options_bookmarks": "Lesezeichen",
   "settings_pane_highlights_options_visited": "Besuchte Websites",
@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Jetzt kennen Sie die Neuigkeiten. Schauen Sie später wieder vorbei, um neue Informationen von {provider} zu erhalten. Können Sie nicht warten? Wählen Sie ein beliebtes Thema und lesen Sie weitere interessante Geschichten aus dem Internet.",
   "manual_migration_explanation2": "Probieren Sie Firefox aus und importieren Sie die Lesezeichen, Chronik und Passwörter eines anderen Browsers.",
   "manual_migration_cancel_button": "Nein, danke",
-  "manual_migration_import_button": "Jetzt importieren"
+  "manual_migration_import_button": "Jetzt importieren",
+  "context_menu_button_sr": "Kontextmenü für {title} öffnen",
+  "edit_topsites_add_button_tooltip": "Wichtige Seite hinzufügen"
 };

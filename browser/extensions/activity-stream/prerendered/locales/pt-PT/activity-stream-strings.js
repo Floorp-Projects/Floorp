@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Já apanhou tudo. Verifique mais tarde para mais histórias principais de {provider}. Não pode esperar? Selecione um tópico popular para encontrar mais boas histórias de toda a web.",
   "manual_migration_explanation2": "Experimente o Firefox com marcadores, histórico e palavras-passe de outro navegador.",
   "manual_migration_cancel_button": "Não, obrigado",
-  "manual_migration_import_button": "Importar agora"
+  "manual_migration_import_button": "Importar agora",
+  "context_menu_button_sr": "Abrir menu de contexto para {title}",
+  "edit_topsites_add_button_tooltip": "Adicionar site mais visitado"
 };

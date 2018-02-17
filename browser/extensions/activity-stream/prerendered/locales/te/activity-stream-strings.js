@@ -61,7 +61,7 @@ window.gActivityStreamStrings = {
   "settings_pane_visit_again_header": "మళ్లీ సందర్శించండి",
   "settings_pane_visit_again_body": "మీరు బ్రౌజింగ్ చరిత్రలో గుర్తుంచుకోవాల్సిన  లేదా తిరిగి పొందవలసిన భాగాలను చూపిస్తుంది.",
   "settings_pane_highlights_header": "విశేషాలు",
-  "settings_pane_highlights_body2": "Find your way back to interesting things you’ve recently visited or bookmarked.",
+  "settings_pane_highlights_body2": "ఇటీవలే మీరు చూసిన లేదా ఇష్టపడిన ఆసక్తికరమైన విషయాలు మళ్ళీ మీ ముందుకొస్తాయి.",
   "settings_pane_highlights_options_bookmarks": "ఇష్టాంశాలు",
   "settings_pane_highlights_options_visited": "చూసిన సైట్లు",
   "settings_pane_snippets_header": "సంగతులు",
@@ -89,10 +89,12 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "ప్రముఖ అంశాలు:",
   "pocket_read_even_more": "మరిన్ని కథలను వీక్షించండి",
   "pocket_feedback_header": "వెబ్లో అత్యుత్తమమైనది, 25 మిలియన్లకు పైగా ప్రజలు పర్యవేక్షించినవి.",
-  "pocket_description": "Discover high-quality content you might otherwise miss, with help from Pocket, now part of Mozilla.",
-  "highlights_empty_state": "Start browsing, and we’ll show some of the great articles, videos, and other pages you’ve recently visited or bookmarked here.",
+  "pocket_description": "తప్పక చూడాల్సిన మిక్కిలి-నాణ్యమైన విషయం పాకెట్ సహాయంతో. పాకెట్ ఇప్పుడు మొజిల్లాలో భాగం.",
+  "highlights_empty_state": "విహారించడం మొదలుపెట్టండి, మీరు ఈమధ్య చూసిన లేదా ఇష్టపడిన గొప్ప వ్యాసాలను, వీడియోలను, ఇతర పేజీలను ఇక్కడ చూపిస్తాం.",
   "topstories_empty_state": "మీరు పట్టుబడ్డారు. {provider} నుండి మరింత అగ్ర కథనాల కోసం తరువాత తనిఖీ చేయండి. వేచి ఉండలేరా? జాలములోని అంతటి నుండి మరింత గొప్ప కథనాలను కనుగొనడానికి ప్రసిద్ధ అంశం ఎంచుకోండి.",
   "manual_migration_explanation2": "మరొక విహారిణి లోని ఇష్టాంశాలు, చరిత్ర, సంకేతపదాలతో Firefoxను ప్రయత్నించండి.",
   "manual_migration_cancel_button": "అడిగినందుకు ధన్యవాదాలు, వద్దు",
-  "manual_migration_import_button": "ఇప్పుడే దిగుమతి చేయండి"
+  "manual_migration_import_button": "ఇప్పుడే దిగుమతి చేయండి",
+  "context_menu_button_sr": "{title} కోసం సందర్భోచిత మెనుని తెరవండి",
+  "edit_topsites_add_button_tooltip": "అగ్రస్థాన సైటుని జోడించండి"
 };
