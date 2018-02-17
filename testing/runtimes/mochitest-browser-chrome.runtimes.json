@@ -171,7 +171,6 @@
     "browser/base/content/test/plugins/browser_blocking.js": 6301,
     "browser/base/content/test/plugins/browser_clearplugindata.js": 1970,
     "browser/base/content/test/plugins/browser_iterate_hidden_plugins.js": 2260,
-    "browser/base/content/test/plugins/browser_pageInfo_plugins.js": 2521,
     "browser/base/content/test/plugins/browser_pluginCrashCommentAndURL.js": 3550,
     "browser/base/content/test/plugins/browser_pluginCrashReportNonDeterminism.js": 3141,
     "browser/base/content/test/plugins/browser_pluginnotification.js": 8135,
