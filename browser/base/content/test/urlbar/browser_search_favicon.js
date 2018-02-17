@@ -22,7 +22,7 @@ add_task(async function() {
   gOriginalEngine = Services.search.currentEngine;
   Services.search.currentEngine = gEngine;
 
-  let uri = NetUtil.newURI("http://s.example.com/search?q=foo&client=1");
+  let uri = NetUtil.newURI("http://s.example.com/search?q=foobar&client=1");
   await PlacesTestUtils.addVisits({ uri, title: "Foo - SearchEngine Search" });
 
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");

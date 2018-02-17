@@ -13,7 +13,7 @@ add_task(async function test_remove_history() {
   let promiseVisitRemoved = PlacesTestUtils.waitForNotification(
     "onDeleteURI", uri => uri.spec == TEST_URL, "history");
 
-  await promiseAutocompleteResultPopup("remove.me/from_urlbar");
+  await promiseAutocompleteResultPopup("from_urlbar");
   let result = await waitForAutocompleteResultAt(1);
   Assert.equal(result.getAttribute("ac-value"), TEST_URL, "Found the expected result");
 
