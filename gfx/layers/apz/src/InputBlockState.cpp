@@ -23,10 +23,10 @@ namespace layers {
 static uint64_t sBlockCounter = InputBlockState::NO_BLOCK_ID + 1;
 
 InputBlockState::InputBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                                 bool aTargetConfirmed)
+                                 TargetConfirmationFlags aFlags)
   : mTargetApzc(aTargetApzc)
-  , mTargetConfirmed(aTargetConfirmed ? TargetConfirmationState::eConfirmed
-                                      : TargetConfirmationState::eUnconfirmed)
+  , mTargetConfirmed(aFlags.mTargetConfirmed ? TargetConfirmationState::eConfirmed
+                                             : TargetConfirmationState::eUnconfirmed)
   , mBlockId(sBlockCounter++)
   , mTransformToApzc(aTargetApzc->GetTransformToThis())
 {
@@ -159,8 +159,8 @@ InputBlockState::DispatchEvent(const InputData& aEvent) const
 }
 
 CancelableBlockState::CancelableBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                                           bool aTargetConfirmed)
-  : InputBlockState(aTargetApzc, aTargetConfirmed)
+                                           TargetConfirmationFlags aFlags)
+  : InputBlockState(aTargetApzc, aFlags)
   , mPreventDefault(false)
   , mContentResponded(false)
   , mContentResponseTimerExpired(false)
@@ -251,9 +251,9 @@ CancelableBlockState::RecordContentResponseTime()
 }
 
 DragBlockState::DragBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                               bool aTargetConfirmed,
+                               TargetConfirmationFlags aFlags,
                                const MouseInput& aInitialEvent)
-  : CancelableBlockState(aTargetApzc, aTargetConfirmed)
+  : CancelableBlockState(aTargetApzc, aFlags)
   , mReceivedMouseUp(false)
 {
 }
@@ -308,15 +308,15 @@ DragBlockState::Type()
 static uint64_t sLastWheelBlockId = InputBlockState::NO_BLOCK_ID;
 
 WheelBlockState::WheelBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                                 bool aTargetConfirmed,
+                                 TargetConfirmationFlags aFlags,
                                  const ScrollWheelInput& aInitialEvent)
-  : CancelableBlockState(aTargetApzc, aTargetConfirmed)
+  : CancelableBlockState(aTargetApzc, aFlags)
   , mScrollSeriesCounter(0)
   , mTransactionEnded(false)
 {
   sLastWheelBlockId = GetBlockId();
 
-  if (aTargetConfirmed) {
+  if (aFlags.mTargetConfirmed) {
     // Find the nearest APZC in the overscroll handoff chain that is scrollable.
     // If we get a content confirmation later that the apzc is different, then
     // content should have found a scrollable apzc, so we don't need to handle
@@ -543,13 +543,13 @@ WheelBlockState::EndTransaction()
 }
 
 PanGestureBlockState::PanGestureBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                                           bool aTargetConfirmed,
+                                           TargetConfirmationFlags aFlags,
                                            const PanGestureInput& aInitialEvent)
-  : CancelableBlockState(aTargetApzc, aTargetConfirmed)
+  : CancelableBlockState(aTargetApzc, aFlags)
   , mInterrupted(false)
   , mWaitingForContentResponse(false)
 {
-  if (aTargetConfirmed) {
+  if (aFlags.mTargetConfirmed) {
     // Find the nearest APZC in the overscroll handoff chain that is scrollable.
     // If we get a content confirmation later that the apzc is different, then
     // content should have found a scrollable apzc, so we don't need to handle
@@ -643,8 +643,9 @@ PanGestureBlockState::SetNeedsToWaitForContentResponse(bool aWaitForContentRespo
 }
 
 TouchBlockState::TouchBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                                 bool aTargetConfirmed, TouchCounter& aCounter)
-  : CancelableBlockState(aTargetApzc, aTargetConfirmed)
+                                 TargetConfirmationFlags aFlags,
+                                 TouchCounter& aCounter)
+  : CancelableBlockState(aTargetApzc, aFlags)
   , mAllowedTouchBehaviorSet(false)
   , mDuringFastFling(false)
   , mSingleTapOccurred(false)
@@ -874,7 +875,7 @@ TouchBlockState::GetActiveTouchCount() const
 }
 
 KeyboardBlockState::KeyboardBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc)
-  : InputBlockState(aTargetApzc, true)
+  : InputBlockState(aTargetApzc, TargetConfirmationFlags{true})
 {
 }
 

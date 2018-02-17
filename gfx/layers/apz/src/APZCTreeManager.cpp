@@ -1139,18 +1139,16 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
             });
         }
 
-        bool targetConfirmed = (hitResult != CompositorHitTestInfo::eInvisibleToHitTest)
-                            && !(hitResult & CompositorHitTestInfo::eDispatchToContent);
+        TargetConfirmationFlags confFlags{hitResult};
         bool apzDragEnabled = gfxPrefs::APZDragEnabled();
         if (apzDragEnabled && hitScrollbar) {
           // If scrollbar dragging is enabled and we hit a scrollbar, wait
           // for the main-thread confirmation because it contains drag metrics
           // that we need.
-          targetConfirmed = false;
+          confFlags.mTargetConfirmed = false;
         }
         result = mInputQueue->ReceiveInputEvent(
-          apzc, targetConfirmed,
-          mouseInput, aOutInputBlockId);
+          apzc, confFlags, mouseInput, aOutInputBlockId);
 
         // If we're starting an async scrollbar drag
         if (apzDragEnabled && startsDrag && hitScrollbarNode &&
@@ -1223,7 +1221,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
         result = mInputQueue->ReceiveInputEvent(
           apzc,
-          /* aTargetConfirmed = */ !(hitResult & CompositorHitTestInfo::eDispatchToContent),
+          TargetConfirmationFlags{hitResult},
           wheelInput, aOutInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
@@ -1275,7 +1273,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
         result = mInputQueue->ReceiveInputEvent(
             apzc,
-            /* aTargetConfirmed = */ !(hitResult & CompositorHitTestInfo::eDispatchToContent),
+            TargetConfirmationFlags{hitResult},
             panInput, aOutInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
@@ -1305,7 +1303,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
         result = mInputQueue->ReceiveInputEvent(
             apzc,
-            /* aTargetConfirmed = */ !(hitResult & CompositorHitTestInfo::eDispatchToContent),
+            TargetConfirmationFlags{hitResult},
             pinchInput, aOutInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
@@ -1331,7 +1329,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
         result = mInputQueue->ReceiveInputEvent(
             apzc,
-            /* aTargetConfirmed = */ !(hitResult & CompositorHitTestInfo::eDispatchToContent),
+            TargetConfirmationFlags{hitResult},
             tapInput, aOutInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
@@ -1415,7 +1413,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       // Dispatch the event to the input queue.
       result = mInputQueue->ReceiveInputEvent(
           targetApzc,
-          /* aTargetConfirmed = */ true,
+          TargetConfirmationFlags{true},
           keyInput, aOutInputBlockId);
 
       // Any keyboard event that is dispatched to the input queue at this point
@@ -1589,7 +1587,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
       mApzcForInputBlock->GetGuid(aOutTargetGuid);
       uint64_t inputBlockId = 0;
       result = mInputQueue->ReceiveInputEvent(mApzcForInputBlock,
-          /* aTargetConfirmed = */ !(mHitResultForInputBlock & CompositorHitTestInfo::eDispatchToContent),
+          TargetConfirmationFlags{mHitResultForInputBlock},
           aInput, &inputBlockId);
       if (aOutInputBlockId) {
         *aOutInputBlockId = inputBlockId;
@@ -1674,7 +1672,7 @@ APZCTreeManager::ProcessTouchInputForScrollbarDrag(MultiTouchInput& aTouchInput,
   // only matters for the first event, which creates the drag block. For
   // that event, the correct value is false, since the drag block will, at the
   // earliest, be confirmed in the subsequent SetupScrollbarDrag() call.
-  bool targetConfirmed = false;
+  TargetConfirmationFlags targetConfirmed{false};
 
   nsEventStatus result = mInputQueue->ReceiveInputEvent(mApzcForInputBlock,
       targetConfirmed, mouseInput, aOutInputBlockId);
