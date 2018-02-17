@@ -7806,7 +7806,10 @@ class CGPerSignatureCall(CGThing):
 
         needsUnwrap = False
         argsPost = []
-        if isConstructor:
+        runConstructorInCallerCompartment = \
+            descriptor.interface.getExtendedAttribute(
+                'RunConstructorInCallerCompartment')
+        if isConstructor and not runConstructorInCallerCompartment:
             needsUnwrap = True
             needsUnwrappedVar = False
             unwrappedVar = "obj"
