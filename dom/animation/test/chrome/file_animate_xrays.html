@@ -6,10 +6,9 @@
 Element.prototype.animate = function() {
   throw 'Called animate() as defined in content document';
 }
-// Bug 1211783: Use KeyframeEffect (not KeyframeEffectReadOnly) here
-for (var obj of [KeyframeEffectReadOnly, Animation]) {
-  obj = function() {
-    throw 'Called overridden ' + String(obj) + ' constructor';
+for (let name of ["KeyframeEffect", "KeyframeEffectReadOnly", "Animation"]) {
+  this[name] = function() {
+    throw `Called overridden ${name} constructor`;
   };
 }
 </script>
