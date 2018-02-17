@@ -527,6 +527,23 @@ DrawTargetRecording::PushLayer(bool aOpaque, Float aOpacity,
 }
 
 void
+DrawTargetRecording::PushLayerWithBlend(bool aOpaque, Float aOpacity,
+                                        SourceSurface* aMask,
+                                        const Matrix& aMaskTransform,
+                                        const IntRect& aBounds,
+                                        bool aCopyBackground,
+                                        CompositionOp aCompositionOp)
+{
+  if (aMask) {
+    EnsureSurfaceStoredRecording(mRecorder, aMask, "PushLayer");
+  }
+
+  mRecorder->RecordEvent(RecordedPushLayerWithBlend(this, aOpaque, aOpacity, aMask,
+                                           aMaskTransform, aBounds,
+                                           aCopyBackground, aCompositionOp));
+}
+
+void
 DrawTargetRecording::PopLayer()
 {
   mRecorder->RecordEvent(RecordedPopLayer(static_cast<DrawTarget*>(this)));

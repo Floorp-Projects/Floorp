@@ -109,6 +109,12 @@ public:
                          const Matrix& aMaskTransform,
                          const IntRect& aBounds = IntRect(),
                          bool aCopyBackground = false) override;
+  virtual void PushLayerWithBlend(bool aOpaque, Float aOpacity,
+                                  SourceSurface* aMask,
+                                  const Matrix& aMaskTransform,
+                                  const IntRect& aBounds = IntRect(),
+                                  bool aCopyBackground = false,
+                                  CompositionOp aCompositionOp = CompositionOp::OP_OVER) override;
   virtual void PopLayer() override;
   virtual void Blur(const AlphaBoxBlur& aBlur) override;
   virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
@@ -178,12 +184,14 @@ private:
     PushedLayer(bool aOldPermitSubpixelAA,
                 bool aOpaque,
                 Float aOpacity,
+                CompositionOp aCompositionOp,
                 SourceSurface* aMask,
                 const Matrix& aMaskTransform,
                 SkBaseDevice* aPreviousDevice)
       : mOldPermitSubpixelAA(aOldPermitSubpixelAA),
         mOpaque(aOpaque),
         mOpacity(aOpacity),
+        mCompositionOp(aCompositionOp),
         mMask(aMask),
         mMaskTransform(aMaskTransform),
         mPreviousDevice(aPreviousDevice)
@@ -191,6 +199,7 @@ private:
     bool mOldPermitSubpixelAA;
     bool mOpaque;
     Float mOpacity;
+    CompositionOp mCompositionOp;
     RefPtr<SourceSurface> mMask;
     Matrix mMaskTransform;
     SkBaseDevice* mPreviousDevice;
