@@ -16,9 +16,11 @@ function DummyEngine() {}
 DummyEngine.prototype.name = "dummy";
 DummyEngine.prototype.finalize = async function() {};
 
-function ActualEngine() {}
-ActualEngine.prototype = {__proto__: Engine.prototype,
-                          name: "actual"};
+class ActualEngine extends SyncEngine {
+  constructor(service) {
+    super("Actual", service);
+  }
+}
 
 add_task(async function test_basics() {
   _("We start out with a clean slate");
@@ -103,7 +105,7 @@ add_task(async function test_basics() {
   await manager.register(ActualEngine);
   let actual = await manager.get("actual");
   Assert.ok(actual instanceof ActualEngine);
-  Assert.ok(actual instanceof Engine);
+  Assert.ok(actual instanceof SyncEngine);
 
   await manager.unregister(actual);
   Assert.equal((await manager.get("actual")), undefined);

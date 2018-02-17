@@ -36,11 +36,11 @@ SteamTracker.prototype = {
 };
 
 function SteamEngine(service) {
-  Engine.call(this, "steam", service);
+  SyncEngine.call(this, "steam", service);
 }
 
 SteamEngine.prototype = {
-  __proto__: Engine.prototype,
+  __proto__: SyncEngine.prototype,
   _storeObj: SteamStore,
   _trackerObj: SteamTracker,
   _errToThrow: null,
@@ -52,7 +52,7 @@ SteamEngine.prototype = {
 };
 
 function BogusEngine(service) {
-  Engine.call(this, "bogus", service);
+  SyncEngine.call(this, "bogus", service);
 }
 
 BogusEngine.prototype = Object.create(SteamEngine.prototype);
