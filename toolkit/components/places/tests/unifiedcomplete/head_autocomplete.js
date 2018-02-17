@@ -120,7 +120,7 @@ async function _check_autocomplete_matches(match, result) {
   else
     style = ["favicon"];
 
-  info(`Checking against expected "${uri.spec}", "${title}"`);
+  info(`Checking against expected "${uri.spec}", comment: "${title}", style: "${style}"`);
   // Got a match on both uri and title?
   if (stripPrefix(uri.spec) != stripPrefix(result.value) || title != result.comment) {
     return false;
