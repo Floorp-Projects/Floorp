@@ -66,6 +66,8 @@ public:
   {
     mResponsiveness.reset();
     mLastSample = mozilla::Nothing();
+    MOZ_ASSERT(!mBufferPositionWhenReceivedJSContext,
+               "JSContext should have been cleared before the thread was unregistered");
     mUnregisterTime = TimeStamp::Now();
     mBufferPositionWhenUnregistered = mozilla::Some(aBufferPosition);
   }
@@ -78,12 +80,6 @@ public:
                   const mozilla::TimeStamp& aProcessStartTime,
                   double aSinceTime);
 
-  // Call this method when the JS entries inside the buffer are about to
-  // become invalid, i.e., just before JS shutdown.
-  void FlushSamplesAndMarkers(JSContext* aCx,
-                              const mozilla::TimeStamp& aProcessStartTime,
-                              ProfileBuffer& aBuffer);
-
   // Returns nullptr if this is not the main thread or if this thread is not
   // being profiled.
   ThreadResponsiveness* GetThreadResponsiveness()
@@ -93,6 +89,17 @@ public:
   }
 
   const RefPtr<ThreadInfo> Info() const { return mThreadInfo; }
+
+  void NotifyReceivedJSContext(uint64_t aCurrentBufferPosition)
+  {
+    mBufferPositionWhenReceivedJSContext = mozilla::Some(aCurrentBufferPosition);
+  }
+
+  // Call this method when the JS entries inside the buffer are about to
+  // become invalid, i.e., just before JS shutdown.
+  void NotifyAboutToLoseJSContext(JSContext* aCx,
+                                  const TimeStamp& aProcessStartTime,
+                                  ProfileBuffer& aBuffer);
 
 private:
   // Group A:
@@ -120,6 +127,9 @@ private:
   // recent sample for this thread, or Nothing() if there is no sample for this
   // thread in the buffer.
   mozilla::Maybe<uint64_t> mLastSample;
+
+  // Only non-Nothing() if the thread currently has a JSContext.
+  mozilla::Maybe<uint64_t> mBufferPositionWhenReceivedJSContext;
 
   // Group C:
   // The following fields are only used once this thread has been unregistered.
