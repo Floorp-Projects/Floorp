@@ -261,7 +261,7 @@ static uint32_t quorem2(Bigint* b, int32_t k)
     int32_t w;
     int32_t n = k >> 5;
     k &= 0x1F;
-    mask = (1<<k) - 1;
+    mask = (ULong(1)<<k) - 1;
 
     w = b->wds - n;
     if (w <= 0)
