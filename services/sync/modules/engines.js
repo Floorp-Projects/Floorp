@@ -246,6 +246,7 @@ Tracker.prototype = {
   async finalize() {
     // Persist all pending tracked changes to disk, and wait for the final write
     // to finish.
+    await this.stop();
     this._saveChangedIDs();
     await this._storage.finalize();
   },
