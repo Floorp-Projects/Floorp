@@ -6,12 +6,8 @@
 const protocol = require("devtools/shared/protocol");
 const { ActorClassWithSpec, Actor } = protocol;
 const { perfSpec } = require("devtools/shared/specs/perf");
-const { Cc, Ci } = require("chrome");
+const { Ci } = require("chrome");
 const Services = require("Services");
-
-loader.lazyGetter(this, "geckoProfiler", () => {
-  return Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
-});
 
 loader.lazyImporter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
@@ -65,7 +61,7 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
 
     try {
       // This can throw an error if the profiler is in the wrong state.
-      geckoProfiler.StartProfiler(
+      Services.profiler.StartProfiler(
         settings.entries,
         settings.interval,
         settings.features,
@@ -85,7 +81,7 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
     if (!IS_SUPPORTED_PLATFORM) {
       return;
     }
-    geckoProfiler.StopProfiler();
+    Services.profiler.StopProfiler();
   },
 
   async getProfileAndStopProfiler() {
@@ -95,10 +91,10 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
     let profile;
     try {
       // Attempt to pull out the data.
-      profile = await geckoProfiler.getProfileDataAsync();
+      profile = await Services.profiler.getProfileDataAsync();
 
       // Stop and discard the buffers.
-      geckoProfiler.StopProfiler();
+      Services.profiler.StopProfiler();
     } catch (e) {
       // If there was any kind of error, bailout with no profile.
       return null;
@@ -116,7 +112,7 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
     if (!IS_SUPPORTED_PLATFORM) {
       return false;
     }
-    return geckoProfiler.IsActive();
+    return Services.profiler.IsActive();
   },
 
   isSupportedPlatform() {
@@ -127,7 +123,7 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
     if (!IS_SUPPORTED_PLATFORM) {
       return false;
     }
-    return !geckoProfiler.CanProfile();
+    return !Services.profiler.CanProfile();
   },
 
   /**

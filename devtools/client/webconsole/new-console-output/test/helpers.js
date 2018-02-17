@@ -3,12 +3,6 @@
 
 "use strict";
 
-let ReactDOM = require("devtools/client/shared/vendor/react-dom");
-let React = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { createElement } = React;
-const TestUtils = require("devtools/client/shared/vendor/react-dom-test-utils");
-
 const reduxActions = require("devtools/client/webconsole/new-console-output/actions/index");
 const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
 const { IdGenerator } = require("devtools/client/webconsole/new-console-output/utils/id-generator");
@@ -62,23 +56,6 @@ function setupStore(input = [], {
   return store;
 }
 
-function renderComponent(component, props) {
-  const el = createElement(component, props, {});
-  // By default, renderIntoDocument() won't work for stateless components, but
-  // it will work if the stateless component is wrapped in a stateful one.
-  // See https://github.com/facebook/react/issues/4839
-  const wrappedEl = dom.span({}, [el]);
-  const renderedComponent = TestUtils.renderIntoDocument(wrappedEl);
-  return ReactDOM.findDOMNode(renderedComponent).children[0];
-}
-
-function shallowRenderComponent(component, props) {
-  const el = createElement(component, props);
-  const renderer = TestUtils.createRenderer();
-  renderer.render(el, {});
-  return renderer.getRenderOutput();
-}
-
 /**
  * Create deep copy of given packet object.
  */
@@ -124,8 +101,6 @@ module.exports = {
   getMessageAt,
   getFirstMessage,
   getLastMessage,
-  renderComponent,
   setupActions,
   setupStore,
-  shallowRenderComponent,
 };

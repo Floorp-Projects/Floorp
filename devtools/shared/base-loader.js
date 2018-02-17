@@ -12,10 +12,8 @@ this.EXPORTED_SYMBOLS = ["Loader", "resolveURI", "Module", "Require", "unload"];
 const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu,
         results: Cr, manager: Cm } = Components;
 const systemPrincipal = CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")();
-const { loadSubScript } = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Ci.mozIJSSubScriptLoader);
-const { notifyObservers } = Cc["@mozilla.org/observer-service;1"]
-  .getService(Ci.nsIObserverService);
+
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const { normalize, dirname } = ChromeUtils.import("resource://gre/modules/osfile/ospath_unix.jsm", {});
 
@@ -230,7 +228,7 @@ function load(loader, module) {
 
   let originalExports = module.exports;
   try {
-    loadSubScript(module.uri, sandbox, "UTF-8");
+    Services.scriptloader.loadSubScript(module.uri, sandbox, "UTF-8");
   } catch (error) {
     let { message, fileName, lineNumber } = error;
     let stack = error.stack || Error().stack;
@@ -574,7 +572,7 @@ function unload(loader, reason) {
   // some modules may do cleanup in subsequent turns of event loop. Destroying
   // cache may cause module identity problems in such cases.
   let subject = { wrappedJSObject: loader.destructor };
-  notifyObservers(subject, "sdk:loader:destroy", reason);
+  Services.obs.notifyObservers(subject, "sdk:loader:destroy", reason);
 }
 
 // Function makes new loader that can be used to load CommonJS modules.

@@ -7,7 +7,7 @@
 "use strict";
 
 const Services = require("Services");
-const { Cc, Ci, Cr } = require("chrome");
+const { Cr } = require("chrome");
 const { ActorPool, GeneratedLocation } = require("devtools/server/actors/common");
 const { createValueGrip, longStringGrip } = require("devtools/server/actors/object");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
@@ -626,9 +626,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         (events == "*" ||
         (Array.isArray(events) && events.length))) {
       this._pauseOnDOMEvents = events;
-      let els = Cc["@mozilla.org/eventlistenerservice;1"]
-                .getService(Ci.nsIEventListenerService);
-      els.addListenerForAllEvents(this.global, this._allEventsListener, true);
+      Services.els.addListenerForAllEvents(this.global, this._allEventsListener, true);
     }
   },
 
@@ -777,14 +775,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    * @returns Array
    */
   _getAllEventListeners: function (eventTarget) {
-    let els = Cc["@mozilla.org/eventlistenerservice;1"]
-                .getService(Ci.nsIEventListenerService);
-
-    let targets = els.getEventTargetChainFor(eventTarget, true);
+    let targets = Services.els.getEventTargetChainFor(eventTarget, true);
     let listeners = [];
 
     for (let target of targets) {
-      let handlers = els.getListenerInfoFor(target);
+      let handlers = Services.els.getListenerInfoFor(target);
       for (let handler of handlers) {
         // Null is returned for all-events handlers, and native event listeners
         // don't provide any listenerObject, which makes them not that useful to
@@ -1081,15 +1076,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       };
     }
 
-    let els = Cc["@mozilla.org/eventlistenerservice;1"]
-                .getService(Ci.nsIEventListenerService);
-
     let nodes = this.global.document.getElementsByTagName("*");
     nodes = [this.global].concat([].slice.call(nodes));
     let listeners = [];
 
     for (let node of nodes) {
-      let handlers = els.getListenerInfoFor(node);
+      let handlers = Services.els.getListenerInfoFor(node);
 
       for (let handler of handlers) {
         // Create a form object for serializing the listener via the protocol.
@@ -1190,9 +1182,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // XPCShell tests don't use actual DOM windows for globals and cause
     // removeListenerForAllEvents to throw.
     if (!isWorker && this.global && !this.global.toString().includes("Sandbox")) {
-      let els = Cc["@mozilla.org/eventlistenerservice;1"]
-                .getService(Ci.nsIEventListenerService);
-      els.removeListenerForAllEvents(this.global, this._allEventsListener, true);
+      Services.els.removeListenerForAllEvents(this.global, this._allEventsListener, true);
       for (let [, bp] of this._hiddenBreakpoints) {
         bp.delete();
       }

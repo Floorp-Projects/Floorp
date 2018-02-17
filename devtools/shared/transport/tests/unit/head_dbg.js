@@ -86,9 +86,7 @@ var listener = {
   }
 };
 
-var consoleService = Cc["@mozilla.org/consoleservice;1"]
-                     .getService(Ci.nsIConsoleService);
-consoleService.registerListener(listener);
+Services.console.registerListener(listener);
 
 /**
  * Initialize the testing debugger server.

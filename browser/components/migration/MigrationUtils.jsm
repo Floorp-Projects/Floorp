@@ -42,6 +42,7 @@ var gProfileStartup = null;
 var gMigrationBundle = null;
 var gPreviousDefaultBrowserKey = "";
 
+let gForceExitSpinResolve = false;
 let gKeepUndoData = false;
 let gUndoData = null;
 
@@ -652,6 +653,10 @@ this.MigrationUtils = Object.freeze({
     return gMigrators;
   },
 
+  forceExitSpinResolve: function MU_forceExitSpinResolve() {
+    gForceExitSpinResolve = true;
+  },
+
   spinResolve: function MU_spinResolve(promise) {
     if (!(promise instanceof Promise)) {
       return promise;
@@ -659,6 +664,7 @@ this.MigrationUtils = Object.freeze({
     let done = false;
     let result = null;
     let error = null;
+    gForceExitSpinResolve = false;
     promise.catch(e => {
       error = e;
     }).then(r => {
@@ -666,8 +672,10 @@ this.MigrationUtils = Object.freeze({
       done = true;
     });
 
-    Services.tm.spinEventLoopUntil(() => done);
-    if (error) {
+    Services.tm.spinEventLoopUntil(() => done || gForceExitSpinResolve);
+    if (!done) {
+      throw new Error("Forcefully exited event loop.");
+    } else if (error) {
       throw error;
     } else {
       return result;

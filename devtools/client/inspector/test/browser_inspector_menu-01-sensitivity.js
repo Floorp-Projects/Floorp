@@ -302,8 +302,6 @@ function setupClipboard(data, type) {
  * The code below is a simplified version of the sdk/clipboard helper set() method.
  */
 function copyImageToClipboard(data) {
-  let clipboardService = Cc["@mozilla.org/widget/clipboard;1"]
-                              .getService(Ci.nsIClipboard);
   let imageTools = Cc["@mozilla.org/image/tools;1"]
                      .getService(Ci.imgITools);
 
@@ -320,5 +318,5 @@ function copyImageToClipboard(data) {
   xferable.addDataFlavor("image/png");
   xferable.setTransferData("image/png", imgPtr, -1);
 
-  clipboardService.setData(xferable, null, clipboardService.kGlobalClipboard);
+  Services.clipboard.setData(xferable, null, Services.clipboard.kGlobalClipboard);
 }

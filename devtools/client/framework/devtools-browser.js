@@ -491,7 +491,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   setSlowScriptDebugHandler() {
     let debugService = Cc["@mozilla.org/dom/slow-script-debug;1"]
                          .getService(Ci.nsISlowScriptDebug);
-    let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
 
     function slowScriptDebugHandler(tab, callback) {
       let target = TargetFactory.forTab(tab);
@@ -550,7 +549,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowUtils);
       utils.enterModalState();
-      tm.spinEventLoopUntil(() => {
+      Services.tm.spinEventLoopUntil(() => {
         return setupFinished;
       });
       utils.leaveModalState();

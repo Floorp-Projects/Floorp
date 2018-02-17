@@ -70,25 +70,7 @@ nsDefaultURIFixup::CreateExposableURI(nsIURI* aURI, nsIURI** aReturn)
   // Rats, we have to massage the URI
   nsCOMPtr<nsIURI> uri;
   if (isWyciwyg) {
-    nsAutoCString path;
-    nsresult rv = aURI->GetPathQueryRef(path);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    uint32_t pathLength = path.Length();
-    if (pathLength <= 2) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // Path is of the form "//123/http://foo/bar", with a variable number of
-    // digits. To figure out where the "real" URL starts, search path for a '/',
-    // starting at the third character.
-    int32_t slashIndex = path.FindChar('/', 2);
-    if (slashIndex == kNotFound) {
-      return NS_ERROR_FAILURE;
-    }
-
-    rv = NS_NewURI(getter_AddRefs(uri),
-                   Substring(path, slashIndex + 1, pathLength - slashIndex - 1));
+    nsresult rv = nsContentUtils::RemoveWyciwygScheme(aURI, getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // clone the URI so zapping user:pass doesn't change the original

@@ -8,10 +8,9 @@ const { Cc, Ci } = require("chrome");
 const l10n = require("gcli/l10n");
 const Services = require("Services");
 
-const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"]
-                           .getService(Ci.nsIStringBundleService)
-                           .createBundle("chrome://branding/locale/brand.properties")
-                           .GetStringFromName("brandShortName");
+const BRAND_SHORT_NAME =
+  Services.strings.createBundle("chrome://branding/locale/brand.properties")
+                  .GetStringFromName("brandShortName");
 
 /**
  * Restart command
@@ -60,15 +59,12 @@ exports.items = [
         Services.appinfo.invalidateCachesOnRestart();
       }
 
-      const appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
-                           .getService(Ci.nsIAppStartup);
-
       if (args.safemode) {
         // restart in safemode
-        appStartup.restartInSafeMode(Ci.nsIAppStartup.eAttemptQuit);
+        Services.startup.restartInSafeMode(Ci.nsIAppStartup.eAttemptQuit);
       } else {
         // restart normally
-        appStartup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
+        Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
       }
 
       return l10n.lookupFormat("restartBrowserRestarting", [ BRAND_SHORT_NAME ]);

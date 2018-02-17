@@ -397,9 +397,7 @@ function saveToClipboard(context, reply) {
             trans.addDataFlavor(channel.contentType);
             trans.setTransferData(channel.contentType, wrapped, -1);
 
-            const clip = Cc["@mozilla.org/widget/clipboard;1"]
-                            .getService(Ci.nsIClipboard);
-            clip.setData(trans, null, Ci.nsIClipboard.kGlobalClipboard);
+            Services.clipboard.setData(trans, null, Ci.nsIClipboard.kGlobalClipboard);
 
             reply.destinations.push(l10n.lookup("screenshotCopied"));
           } catch (ex) {

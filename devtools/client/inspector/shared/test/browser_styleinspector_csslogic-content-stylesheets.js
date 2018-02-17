@@ -13,12 +13,8 @@
 const TEST_URI_HTML = TEST_URL_ROOT + "doc_content_stylesheet.html";
 const TEST_URI_AUTHOR = TEST_URL_ROOT + "doc_author-sheet.html";
 const TEST_URI_XUL = TEST_URL_ROOT + "doc_content_stylesheet.xul";
-const XUL_URI = Cc["@mozilla.org/network/io-service;1"]
-                .getService(Ci.nsIIOService)
-                .newURI(TEST_URI_XUL);
-var ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                            .getService(Ci.nsIScriptSecurityManager);
-const XUL_PRINCIPAL = ssm.createCodebasePrincipal(XUL_URI, {});
+const XUL_URI = Services.io.newURI(TEST_URI_XUL);
+const XUL_PRINCIPAL = Services.scriptSecurityManager.createCodebasePrincipal(XUL_URI, {});
 
 add_task(function* () {
   requestLongerTimeout(2);
@@ -53,15 +49,13 @@ add_task(function* () {
 });
 
 function allowXUL() {
-  Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager)
-    .addFromPrincipal(XUL_PRINCIPAL, "allowXULXBL",
-      Ci.nsIPermissionManager.ALLOW_ACTION);
+  Services.perms.addFromPrincipal(XUL_PRINCIPAL, "allowXULXBL",
+    Ci.nsIPermissionManager.ALLOW_ACTION);
 }
 
 function disallowXUL() {
-  Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager)
-    .addFromPrincipal(XUL_PRINCIPAL, "allowXULXBL",
-      Ci.nsIPermissionManager.DENY_ACTION);
+  Services.perms.addFromPrincipal(XUL_PRINCIPAL, "allowXULXBL",
+    Ci.nsIPermissionManager.DENY_ACTION);
 }
 
 function* checkSheets(targetSelector, testActor) {

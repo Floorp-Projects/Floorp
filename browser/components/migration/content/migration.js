@@ -66,19 +66,17 @@ var MigrationWizard = { /* exported MigrationWizard */
   spinResolve(promise) {
     let canAdvance = this._wiz.canAdvance;
     let canRewind = this._wiz.canRewind;
-    let canCancel = this._canCancel;
     this._wiz.canAdvance = false;
     this._wiz.canRewind = false;
-    this._canCancel = false;
     let result = MigrationUtils.spinResolve(promise);
     this._wiz.canAdvance = canAdvance;
     this._wiz.canRewind = canRewind;
-    this._canCancel = canCancel;
     return result;
   },
 
   onWizardCancel() {
-    return this._canCancel;
+    MigrationUtils.forceExitSpinResolve();
+    return true;
   },
 
   // 1 - Import Source

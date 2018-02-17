@@ -15,7 +15,8 @@
         onunload="MigrationWizard.uninit()"
         style="width: 40em;"
         buttons="accept,cancel"
-        branded="true">
+        branded="true"
+        onwizardcancel="return MigrationWizard.onWizardCancel();">
 
   <script type="application/javascript" src="chrome://browser/content/migration/migration.js"/>
 

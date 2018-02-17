@@ -200,6 +200,50 @@ describe("Top Stories Feed", () => {
       assert.calledOnce(instance.cache.set);
       assert.calledWith(instance.cache.set, "stories", Object.assign({}, response, {_timestamp: 0}));
     });
+    it("should use domain as hostname, if present", async () => {
+      let fetchStub = globals.sandbox.stub();
+      globals.set("fetch", fetchStub);
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+
+      const response = {
+        "recommendations": [{
+          "id": "1",
+          "title": "title",
+          "excerpt": "description",
+          "image_src": "image-url",
+          "url": "rec-url",
+          "domain": "domain",
+          "published_timestamp": "123",
+          "context": "trending",
+          "icon": "icon"
+        }]
+      };
+      const stories = [{
+        "guid": "1",
+        "type": "now",
+        "title": "title",
+        "context": "trending",
+        "icon": "icon",
+        "description": "description",
+        "image": "image-url",
+        "referrer": "referrer",
+        "url": "rec-url",
+        "hostname": "domain",
+        "min_score": 0,
+        "score": 1,
+        "spoc_meta": {}
+      }];
+
+      instance.stories_endpoint = "stories-endpoint";
+      instance.stories_referrer = "referrer";
+      instance.cache.set = sinon.spy();
+      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
+      await instance.fetchStories();
+
+      assert.calledOnce(fetchStub);
+      assert.notCalled(shortURLStub);
+      assert.calledWith(sectionsManagerStub.updateSection, SECTION_ID, {rows: stories});
+    });
     it("should call SectionsManager.updateSection", () => {
       instance.dispatchUpdateEvent(123, {});
       assert.calledOnce(sectionsManagerStub.updateSection);

@@ -480,6 +480,7 @@ var {
 
     let rpc = undefined;
 
+    // eslint-disable-next-line mozilla/use-services
     let subScriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                  .getService(Ci.mozIJSSubScriptLoader);
 

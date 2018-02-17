@@ -5,12 +5,9 @@
 /* eslint-env browser */
 /* global addMessageListener, sendAsyncMessage, content */
 "use strict";
-const {require, loader} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const { Task } = require("devtools/shared/task");
-
-loader.lazyGetter(this, "nsIProfilerModule", () => {
-  return Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
-});
+const Services = require("Services");
 
 addMessageListener("devtools:test:history", function ({ data }) {
   content.history[data.direction]();
@@ -118,7 +115,7 @@ addMessageListener("devtools:test:xhr", Task.async(function* ({ data }) {
 
 addMessageListener("devtools:test:profiler", function ({ data }) {
   let { method, args, id } = data;
-  let result = nsIProfilerModule[method](...args);
+  let result = Services.profiler[method](...args);
   sendAsyncMessage("devtools:test:profiler:response", {
     data: result,
     id: id

@@ -241,7 +241,12 @@ PathBuildingStep::Check(Input potentialIssuerDER,
                                      validityDuration, stapledOCSPResponse,
                                      subject.GetAuthorityInfoAccess());
     if (rv != Success) {
-      return RecordResult(rv, keepGoing);
+      // Since this is actually a problem with the current subject certificate
+      // (rather than the issuer), it doesn't make sense to keep going; all
+      // paths through this certificate will fail.
+      Result savedRv = RecordResult(rv, keepGoing);
+      keepGoing = false;
+      return savedRv;
     }
 
     if (subject.endEntityOrCA == EndEntityOrCA::MustBeEndEntity) {
@@ -251,7 +256,11 @@ PathBuildingStep::Check(Input potentialIssuerDER,
         rv = ExtractSignedCertificateTimestampListFromExtension(*sctExtension,
                                                                 sctList);
         if (rv != Success) {
-          return RecordResult(rv, keepGoing);
+          // Again, the problem is with this certificate, and all paths through
+          // it will fail.
+          Result savedRv = RecordResult(rv, keepGoing);
+          keepGoing = false;
+          return savedRv;
         }
         trustDomain.NoteAuxiliaryExtension(AuxiliaryExtension::EmbeddedSCTList,
                                            sctList);

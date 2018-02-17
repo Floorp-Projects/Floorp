@@ -178,6 +178,8 @@ SERVO_BINDING_FUNC(Servo_UACache_AddSizeOf, void,
 
 // AuthorStyles
 SERVO_BINDING_FUNC(Servo_AuthorStyles_Create, RawServoAuthorStyles*)
+SERVO_BINDING_FUNC(Servo_AuthorStyles_Drop, void,
+                   RawServoAuthorStylesOwned self)
 // TODO(emilio): This will need to take an optional master style set to
 // implement invalidation for Shadow DOM.
 SERVO_BINDING_FUNC(Servo_AuthorStyles_AppendStyleSheet, void,

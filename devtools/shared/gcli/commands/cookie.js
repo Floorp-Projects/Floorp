@@ -20,13 +20,9 @@
  * This way, they'll always run in the parent process.
  */
 
-const { Ci, Cc } = require("chrome");
+const { Ci } = require("chrome");
+const Services = require("Services");
 const l10n = require("gcli/l10n");
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "cookieMgr", function () {
-  return Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
-});
 
 /**
  * Check host value and remove port part as it is not used
@@ -95,7 +91,7 @@ exports.items = [
       let contentWindow = context.environment.window;
       host = sanitizeHost(host);
       let { originAttributes } = contentWindow.document.nodePrincipal;
-      let enm = cookieMgr.getCookiesFromHost(host, originAttributes);
+      let enm = Services.cookies.getCookiesFromHost(host, originAttributes);
 
       let cookies = [];
       while (enm.hasMoreElements()) {
@@ -139,14 +135,14 @@ exports.items = [
       let contentWindow = context.environment.window;
       host = sanitizeHost(host);
       let { originAttributes } = contentWindow.document.nodePrincipal;
-      let enm = cookieMgr.getCookiesFromHost(host, originAttributes);
+      let enm = Services.cookies.getCookiesFromHost(host, originAttributes);
 
       while (enm.hasMoreElements()) {
         let cookie = enm.getNext().QueryInterface(Ci.nsICookie);
         if (isCookieAtHost(cookie, host)) {
           if (cookie.name == args.name) {
-            cookieMgr.remove(cookie.host, cookie.name, cookie.path,
-                             false, cookie.originAttributes);
+            Services.cookies.remove(cookie.host, cookie.name, cookie.path,
+                                    false, cookie.originAttributes);
           }
         }
       }
@@ -282,15 +278,15 @@ exports.items = [
       host = sanitizeHost(host);
       let time = Date.parse(args.expires) / 1000;
       let contentWindow = context.environment.window;
-      cookieMgr.add(args.domain ? "." + args.domain : host,
-                    args.path ? args.path : "/",
-                    args.name,
-                    args.value,
-                    args.secure,
-                    args.httpOnly,
-                    args.session,
-                    time,
-                    contentWindow.document.nodePrincipal.originAttributes);
+      Services.cookies.add(args.domain ? "." + args.domain : host,
+                           args.path ? args.path : "/",
+                           args.name,
+                           args.value,
+                           args.secure,
+                           args.httpOnly,
+                           args.session,
+                           time,
+                           contentWindow.document.nodePrincipal.originAttributes);
     }
   }
 ];

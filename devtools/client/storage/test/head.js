@@ -939,12 +939,8 @@ function getCookieId(name, domain, path) {
 function setPermission(url, permission) {
   const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
 
-  let uri = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(Components.interfaces.nsIIOService)
-                      .newURI(url);
-  let ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                      .getService(Ci.nsIScriptSecurityManager);
-  let principal = ssm.createCodebasePrincipal(uri, {});
+  let uri = Services.io.newURI(url);
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
 
   Components.classes["@mozilla.org/permissionmanager;1"]
             .getService(nsIPermissionManager)

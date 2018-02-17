@@ -9,16 +9,12 @@
  * a principal dedicated to DevTools.
  */
 
-const { Cc, Ci } = require("chrome");
+const Services = require("Services");
 
 const PSEUDOURI = "indexeddb://fx-devtools";
-const principaluri = Cc["@mozilla.org/network/io-service;1"]
-                     .getService(Ci.nsIIOService).newURI(PSEUDOURI);
-
-const ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-            .getService(Ci.nsIScriptSecurityManager);
-
-const principal = ssm.createCodebasePrincipal(principaluri, {});
+const principaluri = Services.io.newURI(PSEUDOURI);
+const principal =
+  Services.scriptSecurityManager.createCodebasePrincipal(principaluri, {});
 
 /**
  * Create the DevTools dedicated DB, by relying on the real indexedDB object passed as a

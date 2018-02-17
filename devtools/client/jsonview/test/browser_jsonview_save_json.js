@@ -13,10 +13,9 @@ let { MockFilePicker } = SpecialPowers;
 MockFilePicker.init(window);
 MockFilePicker.returnValue = MockFilePicker.returnOK;
 
-Cc["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Ci.mozIJSSubScriptLoader)
-  .loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
-                 this);
+Services.scriptloader
+        .loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
+                       this);
 
 function click(selector) {
   return BrowserTestUtils.synthesizeMouseAtCenter(selector, {}, gBrowser.selectedBrowser);
@@ -65,9 +64,7 @@ function getFileContents(file) {
 }
 
 function createTemporarySaveDirectory() {
-  let saveDir = Cc["@mozilla.org/file/directory_service;1"]
-                  .getService(Ci.nsIProperties)
-                  .get("TmpD", Ci.nsIFile);
+  let saveDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
   saveDir.append("jsonview-testsavedir");
   if (!saveDir.exists()) {
     info("Creating temporary save directory.");

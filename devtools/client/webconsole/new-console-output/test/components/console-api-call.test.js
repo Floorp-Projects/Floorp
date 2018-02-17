@@ -62,6 +62,7 @@ describe("ConsoleAPICall component:", () => {
       const secondElementStyle = elements.eq(1).prop("style");
       // Allowed styles are applied accordingly on the second element.
       expect(secondElementStyle.color).toBe(`red`);
+      expect(secondElementStyle["line-height"]).toBe("1.5");
       // Forbidden styles are not applied.
       expect(secondElementStyle.background).toBe(undefined);
     });

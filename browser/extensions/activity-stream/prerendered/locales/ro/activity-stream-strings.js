@@ -28,7 +28,7 @@ window.gActivityStreamStrings = {
   "menu_action_delete": "Șterge din istoric",
   "menu_action_pin": "Fixează",
   "menu_action_unpin": "Anulează fixarea",
-  "confirm_history_delete_p1": "Sigur dorești să ştergi fiecare instanţă a acestei pagini din istoric?",
+  "confirm_history_delete_p1": "Sigur vrei să ştergi fiecare instanţă a acestei pagini din istoric?",
   "confirm_history_delete_notice_p2": "Această acțiune este ireversibilă.",
   "menu_action_save_to_pocket": "Salvează în Pocket",
   "search_for_something_with": "Caută {search_term} cu: ",
