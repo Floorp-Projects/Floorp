@@ -612,7 +612,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "7d6271828b12"
+        "revision": "81ab5ce8f4ef"
     }, 
     "hi-IN": {
         "platforms": [
@@ -1037,7 +1037,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "5b9d6399a249"
+        "revision": "ecdaab417418"
     }, 
     "nn-NO": {
         "platforms": [
