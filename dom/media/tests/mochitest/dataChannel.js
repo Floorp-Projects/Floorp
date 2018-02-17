@@ -25,7 +25,6 @@ var commandsCreateDataChannel = [
   function PC_LOCAL_CREATE_DATA_CHANNEL(test) {
     var channel = test.pcLocal.createDataChannel({});
     is(channel.binaryType, "blob", channel + " is of binary type 'blob'");
-    is(channel.readyState, "connecting", channel + " is in state: 'connecting'");
 
     is(test.pcLocal.signalingState, STABLE,
        "Create datachannel does not change signaling state");
@@ -68,13 +67,8 @@ var commandsCheckDataChannel = [
   },
 
   function CREATE_SECOND_DATA_CHANNEL(test) {
-    return test.createDataChannel({ }).then(result => {
-      var sourceChannel = result.local;
-      var targetChannel = result.remote;
-      is(sourceChannel.readyState, "open", sourceChannel + " is in state: 'open'");
-      is(targetChannel.readyState, "open", targetChannel + " is in state: 'open'");
-
-      is(targetChannel.binaryType, "blob", targetChannel + " is of binary type 'blob'");
+    return test.createDataChannel({}).then(result => {
+      is(result.remote.binaryType, "blob", "remote data channel is of binary type 'blob'");
     });
   },
 
@@ -130,8 +124,6 @@ var commandsCheckDataChannel = [
     return test.createDataChannel(options).then(result => {
       var sourceChannel2 = result.local;
       var targetChannel2 = result.remote;
-      is(sourceChannel2.readyState, "open", sourceChannel2 + " is in state: 'open'");
-      is(targetChannel2.readyState, "open", targetChannel2 + " is in state: 'open'");
 
       is(targetChannel2.binaryType, "blob", targetChannel2 + " is of binary type 'blob'");
 
@@ -179,12 +171,7 @@ var commandsCheckDataChannel = [
       maxPacketLifeTime: 10
     };
     return test.createDataChannel(options).then(result => {
-      var sourceChannel3 = result.local;
-      var targetChannel3 = result.remote;
-      is(sourceChannel3.readyState, "open", sourceChannel3 + " is in state: 'open'");
-      is(targetChannel3.readyState, "open", targetChannel3 + " is in state: 'open'");
-
-      is(targetChannel3.binaryType, "blob", targetChannel3 + " is of binary type 'blob'");
+      is(result.remote.binaryType, "blob", "remote data channel is of binary type 'blob'");
 
     });
   },
