@@ -273,7 +273,7 @@ private:
   void StreamStack(const StackKey& aStack);
 
 public:
-  UniqueJSONStrings mUniqueStrings;
+  mozilla::UniquePtr<UniqueJSONStrings> mUniqueStrings;
 
 private:
   // To avoid incurring JitcodeGlobalTable lookup costs for every JIT frame,
