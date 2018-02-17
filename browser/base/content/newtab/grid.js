@@ -179,18 +179,37 @@ var gGrid = {
     site.classList.add("newtab-site");
     site.setAttribute("draggable", "true");
 
-    // Create the site's inner HTML code.
-    site.innerHTML =
-      '<a class="newtab-link">' +
-      '  <span class="newtab-thumbnail placeholder"/>' +
-      '  <img src="" alt="" class="newtab-thumbnail thumbnail"/>' +
-      '  <img src="" alt="" class="newtab-thumbnail enhanced-content"/>' +
-      '  <span class="newtab-title"/>' +
-      '</a>' +
-      '<input type="button" title="' + newTabString("pin") + '"' +
-      '       class="newtab-control newtab-control-pin"/>' +
-      '<input type="button" title="' + newTabString("block") + '"' +
-      '       class="newtab-control newtab-control-block"/>';
+    let link = document.createElement("a");
+    link.className = "newtab-link";
+    site.appendChild(link);
+
+    let thumbnailPlaceHolder = document.createElement("span");
+    thumbnailPlaceHolder.className = "newtab-thumbnail placeholder";
+    link.appendChild(thumbnailPlaceHolder);
+
+    let thumbnail = document.createElement("img");
+    thumbnail.className = "newtab-thumbnail thumbnail";
+    link.appendChild(thumbnail);
+
+    let enhancedContent = document.createElement("img");
+    enhancedContent.className = "newtab-thumbnail enhanced-content";
+    link.appendChild(enhancedContent);
+
+    let title = document.createElement("span");
+    title.className = "newtab-title";
+    link.appendChild(title);
+
+    let pinButton = document.createElement("input");
+    pinButton.type = "button";
+    pinButton.title = newTabString("pin");
+    pinButton.className = "newtab-control newtab-control-pin";
+    site.appendChild(pinButton);
+
+    let removeButton = document.createElement("input");
+    removeButton.type = "button";
+    removeButton.title = newTabString("block");
+    removeButton.className = "newtab-control newtab-control-block";
+    site.appendChild(removeButton);
 
     this._siteFragment = document.createDocumentFragment();
     this._siteFragment.appendChild(site);
