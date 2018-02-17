@@ -10,7 +10,7 @@ FRAGMENT(ExecutableAllocator, empty) {
 
     breakpoint();
 
-    (void) execAlloc;
+    use(execAlloc);
 }
 
 FRAGMENT(ExecutableAllocator, onepool) {
@@ -21,8 +21,8 @@ FRAGMENT(ExecutableAllocator, onepool) {
 
     breakpoint();
 
-    (void) pool;
-    (void) execAlloc;
+    use(pool);
+    use(execAlloc);
 }
 
 FRAGMENT(ExecutableAllocator, twopools) {
@@ -39,5 +39,5 @@ FRAGMENT(ExecutableAllocator, twopools) {
 
     breakpoint();
 
-    (void) execAlloc;
+    use(execAlloc);
 }

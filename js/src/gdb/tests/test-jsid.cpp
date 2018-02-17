@@ -17,13 +17,13 @@ FRAGMENT(jsid, simple) {
 
   breakpoint();
 
-  (void) string_id;
-  (void) int_id;
-  (void) unique_symbol_id;
-  (void) registry_symbol_id;
-  (void) well_known_symbol_id;
-  (void) void_id;
-  (void) empty_id;
+  use(string_id);
+  use(int_id);
+  use(unique_symbol_id);
+  use(registry_symbol_id);
+  use(well_known_symbol_id);
+  use(void_id);
+  use(empty_id);
 }
 
 void

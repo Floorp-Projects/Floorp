@@ -422,10 +422,6 @@ const PanelUI = {
         await oldMultiView.showMainView();
       }
 
-      let viewShown = false;
-      let listener = () => viewShown = true;
-      viewNode.addEventListener("ViewShown", listener, {once: true});
-
       let multiView = document.createElement("panelmultiview");
       multiView.setAttribute("id", "customizationui-widget-multiview");
       multiView.setAttribute("viewCacheId", "appMenu-viewCache");
@@ -435,6 +431,7 @@ const PanelUI = {
       tempPanel.appendChild(multiView);
       viewNode.classList.add("cui-widget-panelview");
 
+      let viewShown = false;
       let panelRemover = () => {
         viewNode.classList.remove("cui-widget-panelview");
         if (viewShown) {
@@ -449,18 +446,6 @@ const PanelUI = {
         tempPanel.remove();
       };
 
-      // Wait until all the tasks needed to show a view are done.
-      await multiView.currentShowPromise;
-
-      if (!viewShown) {
-        viewNode.removeEventListener("ViewShown", listener);
-        panelRemover();
-        return;
-      }
-
-      CustomizableUI.addPanelCloseListeners(tempPanel);
-      tempPanel.addEventListener("popuphidden", panelRemover);
-
       if (aAnchor.parentNode.id == "PersonalToolbar") {
         tempPanel.classList.add("bookmarks-toolbar");
       }
@@ -471,10 +456,21 @@ const PanelUI = {
         anchor.setAttribute("consumeanchor", aAnchor.id);
       }
 
-      PanelMultiView.openPopup(tempPanel, anchor, {
-        position: "bottomcenter topright",
-        triggerEvent: domEvent,
-      }).catch(Cu.reportError);
+      try {
+        viewShown = await PanelMultiView.openPopup(tempPanel, anchor, {
+          position: "bottomcenter topright",
+          triggerEvent: domEvent,
+        });
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
+
+      if (viewShown) {
+        CustomizableUI.addPanelCloseListeners(tempPanel);
+        tempPanel.addEventListener("popuphidden", panelRemover);
+      } else {
+        panelRemover();
+      }
     }
   },
 
