@@ -245,6 +245,25 @@ MakeForEachTrackedOptimizationAttemptsLambdaOp(LambdaT&& aLambda)
   return ForEachTrackedOptimizationAttemptsLambdaOp<LambdaT>(Move(aLambda));
 }
 
+UniqueJSONStrings::UniqueJSONStrings()
+{
+  mStringTableWriter.StartBareList();
+}
+
+UniqueJSONStrings::UniqueJSONStrings(const UniqueJSONStrings& aOther)
+{
+  mStringTableWriter.StartBareList();
+  if (aOther.mStringToIndexMap.Count() > 0) {
+    for (auto iter = aOther.mStringToIndexMap.ConstIter();
+         !iter.Done(); iter.Next()) {
+      mStringToIndexMap.Put(iter.Key(), iter.Data());
+    }
+    UniquePtr<char[]> stringTableJSON =
+      aOther.mStringTableWriter.WriteFunc()->CopyData();
+    mStringTableWriter.Splice(stringTableJSON.get());
+  }
+}
+
 uint32_t
 UniqueJSONStrings::GetOrAddIndex(const char* aStr)
 {

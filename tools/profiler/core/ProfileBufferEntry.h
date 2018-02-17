@@ -120,9 +120,8 @@ static_assert(sizeof(ProfileBufferEntry) == 9, "bad ProfileBufferEntry size");
 class UniqueJSONStrings
 {
 public:
-  UniqueJSONStrings() {
-    mStringTableWriter.StartBareList();
-  }
+  UniqueJSONStrings();
+  explicit UniqueJSONStrings(const UniqueJSONStrings& aOther);
 
   void SpliceStringTableElements(SpliceableJSONWriter& aWriter) {
     aWriter.TakeAndSplice(mStringTableWriter.WriteFunc());
