@@ -2,6 +2,8 @@
 #include "jsapi.h"
 
 FRAGMENT(JSObject, simple) {
+  AutoSuppressHazardsForTest noanalysis;
+
   JS::Rooted<JSObject*> glob(cx, JS::CurrentGlobalOrNull(cx));
   JS::Rooted<JSObject*> plain(cx, JS_NewPlainObject(cx));
   JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
