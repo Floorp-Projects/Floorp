@@ -27,6 +27,7 @@ InputBlockState::InputBlockState(const RefPtr<AsyncPanZoomController>& aTargetAp
   : mTargetApzc(aTargetApzc)
   , mTargetConfirmed(aFlags.mTargetConfirmed ? TargetConfirmationState::eConfirmed
                                              : TargetConfirmationState::eUnconfirmed)
+  , mRequiresTargetConfirmation(aFlags.mRequiresTargetConfirmation)
   , mBlockId(sBlockCounter++)
   , mTransformToApzc(aTargetApzc->GetTransformToThis())
 {
@@ -111,7 +112,7 @@ InputBlockState::HasReceivedRealConfirmedTarget() const
 bool
 InputBlockState::ShouldDropEvents() const
 {
-  return false;
+  return mRequiresTargetConfirmation && (mTargetConfirmed != TargetConfirmationState::eConfirmed);
 }
 
 bool

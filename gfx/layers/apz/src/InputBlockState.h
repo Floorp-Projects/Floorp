@@ -112,6 +112,7 @@ private:
 private:
   RefPtr<AsyncPanZoomController> mTargetApzc;
   TargetConfirmationState mTargetConfirmed;
+  bool mRequiresTargetConfirmation;
   const uint64_t mBlockId;
 
   // The APZC that was actually scrolled by events in this input block.
