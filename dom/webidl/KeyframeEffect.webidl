@@ -20,7 +20,10 @@ dictionary KeyframeEffectOptions : AnimationEffectTimingProperties {
   CompositeOperation          composite = "replace";
 };
 
+// KeyframeEffectReadOnly should run in the caller's compartment to do custom
+// processing on the `keyframes` object.
 [Func="nsDocument::IsWebAnimationsEnabled",
+ RunConstructorInCallerCompartment,
  Constructor ((Element or CSSPseudoElement)? target,
               object? keyframes,
               optional (unrestricted double or KeyframeEffectOptions) options),
@@ -54,7 +57,10 @@ partial interface KeyframeEffectReadOnly {
   [ChromeOnly, Throws] sequence<AnimationPropertyDetails> getProperties();
 };
 
+// KeyframeEffect should run in the caller's compartment to do custom
+// processing on the `keyframes` object.
 [Func="nsDocument::IsWebAnimationsEnabled",
+ RunConstructorInCallerCompartment,
  Constructor ((Element or CSSPseudoElement)? target,
               object? keyframes,
               optional (unrestricted double or KeyframeEffectOptions) options),
