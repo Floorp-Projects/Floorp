@@ -192,9 +192,9 @@ StreamSamplesAndMarkers(const char* aName,
 }
 
 void
-ProfiledThreadData::FlushSamplesAndMarkers(JSContext* aCx,
-                                           const TimeStamp& aProcessStartTime,
-                                           ProfileBuffer& aBuffer)
+ProfiledThreadData::NotifyAboutToLoseJSContext(JSContext* aCx,
+                                               const TimeStamp& aProcessStartTime,
+                                               ProfileBuffer& aBuffer)
 {
   // This function is used to serialize the current buffer just before
   // JSContext destruction.
@@ -278,6 +278,8 @@ ProfiledThreadData::FlushSamplesAndMarkers(JSContext* aCx,
 
   mPartialProfile = MakeUnique<PartialThreadProfile>(
     Move(samplesJSON), Move(markersJSON), Move(uniqueStacks));
+
+  mBufferPositionWhenReceivedJSContext = Nothing();
 
   // Reset the buffer. Attempting to symbolicate JS samples after mContext has
   // gone away will crash.
