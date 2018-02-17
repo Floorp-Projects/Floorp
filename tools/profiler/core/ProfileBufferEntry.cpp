@@ -20,13 +20,7 @@
 // Self
 #include "ProfileBufferEntry.h"
 
-using mozilla::JSONWriter;
-using mozilla::MakeUnique;
-using mozilla::Maybe;
-using mozilla::Nothing;
-using mozilla::Some;
-using mozilla::TimeStamp;
-using mozilla::UniquePtr;
+using namespace mozilla;
 
 ////////////////////////////////////////////////////////////////////////
 // BEGIN ProfileBufferEntry
@@ -301,18 +295,18 @@ uint32_t UniqueStacks::FrameKey::Hash() const
 {
   uint32_t hash = 0;
   if (!mLocation.IsEmpty()) {
-    hash = mozilla::HashString(mLocation.get());
+    hash = HashString(mLocation.get());
   }
   if (mLine.isSome()) {
-    hash = mozilla::AddToHash(hash, *mLine);
+    hash = AddToHash(hash, *mLine);
   }
   if (mCategory.isSome()) {
-    hash = mozilla::AddToHash(hash, *mCategory);
+    hash = AddToHash(hash, *mCategory);
   }
   if (mJITAddress.isSome()) {
-    hash = mozilla::AddToHash(hash, mJITAddress->Hash());
+    hash = AddToHash(hash, mJITAddress->Hash());
     if (mJITDepth.isSome()) {
-      hash = mozilla::AddToHash(hash, *mJITDepth);
+      hash = AddToHash(hash, *mJITDepth);
     }
   }
   return hash;
@@ -523,7 +517,7 @@ StreamJITFrameOptimizations(SpliceableJSONWriter& aWriter,
 
     if (JSAtom* name = js::GetPropertyNameFromPC(script, pc)) {
       char buf[512];
-      JS_PutEscapedFlatString(buf, mozilla::ArrayLength(buf), js::AtomToFlatString(name), 0);
+      JS_PutEscapedFlatString(buf, ArrayLength(buf), js::AtomToFlatString(name), 0);
       aUniqueStrings.WriteProperty(aWriter, "propertyName", buf);
     }
 
