@@ -2696,20 +2696,20 @@ HTMLMediaElement::SetCurrentTime(double aCurrentTime, ErrorResult& aRv)
  * Check if aValue is inside a range of aRanges, and if so returns true
  * and puts the range index in aIntervalIndex. If aValue is not
  * inside a range, returns false, and aIntervalIndex
- * is set to the index of the range which ends immediately before aValue
- * (and can be -1 if aValue is before aRanges.Start(0)).
+ * is set to the index of the range which starts immediately after aValue
+ * (and can be aRanges.Length() if aValue is after the last range).
  */
 static bool
 IsInRanges(TimeRanges& aRanges,
            double aValue,
-           int32_t& aIntervalIndex)
+           uint32_t& aIntervalIndex)
 {
   uint32_t length = aRanges.Length();
 
   for (uint32_t i = 0; i < length; i++) {
     double start = aRanges.Start(i);
     if (start > aValue) {
-      aIntervalIndex = i - 1;
+      aIntervalIndex = i;
       return false;
     }
     double end = aRanges.End(i);
@@ -2718,7 +2718,7 @@ IsInRanges(TimeRanges& aRanges,
       return true;
     }
   }
-  aIntervalIndex = length - 1;
+  aIntervalIndex = length;
   return false;
 }
 
@@ -2794,32 +2794,28 @@ HTMLMediaElement::Seek(double aTime,
   // are equally close, we seek to the closest position from the currentTime.
   // See seeking spec, point 7 :
   // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#seeking
-  int32_t range = 0;
+  uint32_t range = 0;
   bool isInRange = IsInRanges(*seekable, aTime, range);
   if (!isInRange) {
-    if (range != -1) {
-      // |range + 1| can't be negative, because the only possible negative value
-      // for |range| is -1.
-      if (uint32_t(range + 1) < length) {
-        double leftBound = seekable->End(range);
-        double rightBound = seekable->Start(range + 1);
-        double distanceLeft = Abs(leftBound - aTime);
-        double distanceRight = Abs(rightBound - aTime);
-        if (distanceLeft == distanceRight) {
-          double currentTime = CurrentTime();
-          distanceLeft = Abs(leftBound - currentTime);
-          distanceRight = Abs(rightBound - currentTime);
-        }
-        aTime = (distanceLeft < distanceRight) ? leftBound : rightBound;
-      } else {
-        // Seek target is after the end last range in seekable data.
-        // Clamp the seek target to the end of the last seekable range.
-        aTime = seekable->End(length - 1);
-      }
-    } else {
+    if (range == 0) {
       // aTime is before the first range in |seekable|, the closest point we can
       // seek to is the start of the first range.
       aTime = seekable->Start(0);
+    } else if (range == length) {
+      // Seek target is after the end last range in seekable data.
+      // Clamp the seek target to the end of the last seekable range.
+      aTime = seekable->End(length - 1);
+    } else {
+      double leftBound = seekable->End(range - 1);
+      double rightBound = seekable->Start(range);
+      double distanceLeft = Abs(leftBound - aTime);
+      double distanceRight = Abs(rightBound - aTime);
+      if (distanceLeft == distanceRight) {
+        double currentTime = CurrentTime();
+        distanceLeft = Abs(leftBound - currentTime);
+        distanceRight = Abs(rightBound - currentTime);
+      }
+      aTime = (distanceLeft < distanceRight) ? leftBound : rightBound;
     }
   }
 
