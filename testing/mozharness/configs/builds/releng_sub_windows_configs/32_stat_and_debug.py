@@ -11,7 +11,6 @@ config = {
     'enable_signing': False,
     'tooltool_manifest_src': "browser/config/tooltool-manifests/win32/\
 releng.manifest",
-    'platform_supports_post_upload_to_latest': False,
     'perfherder_extra_options': ['static-analysis'],
     #### 32 bit build specific #####
     'env': {

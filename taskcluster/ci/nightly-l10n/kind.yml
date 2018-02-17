@@ -150,70 +150,60 @@ job-template:
       config:
          by-build-platform:
             linux-nightly:
-               - single_locale/production.py
                - single_locale/{project}.py
                - single_locale/linux32.py
                - single_locale/tc_common.py
                - single_locale/tc_linux32.py
                - taskcluster_nightly.py
             linux64-nightly:
-               - single_locale/production.py
                - single_locale/{project}.py
                - single_locale/linux64.py
                - single_locale/tc_common.py
                - single_locale/tc_linux64.py
                - taskcluster_nightly.py
             macosx64-nightly:
-               - single_locale/production.py
                - single_locale/{project}.py
                - single_locale/macosx64.py
                - single_locale/tc_common.py
                - single_locale/tc_macosx64.py
                - taskcluster_nightly.py
             win32-nightly:
-               - single_locale/production.py
                - single_locale/{project}.py
                - single_locale/win32.py
                - single_locale/tc_common.py
                - single_locale/tc_win32.py
                - taskcluster_nightly.py
             win64-nightly:
-               - single_locale/production.py
                - single_locale/{project}.py
                - single_locale/win64.py
                - single_locale/tc_common.py
                - single_locale/tc_win64.py
                - taskcluster_nightly.py
             linux-devedition-nightly:
-               - single_locale/production.py
                - single_locale/{project}.py
                - single_locale/linux_devedition.py
                - single_locale/tc_common.py
                - single_locale/tc_linux32.py
                - taskcluster_nightly.py
             linux64-devedition-nightly:
-               - single_locale/production.py
                - single_locale/{project}.py
                - single_locale/linux64_devedition.py
                - single_locale/tc_common.py
                - single_locale/tc_linux64.py
                - taskcluster_nightly.py
             macosx64-devedition-nightly:
-               - single_locale/production.py
                - single_locale/{project}.py
                - single_locale/macosx64_devedition.py
                - single_locale/tc_common.py
                - single_locale/tc_macosx64.py
                - taskcluster_nightly.py
             win32-devedition-nightly:
-               - single_locale/production.py
                - single_locale/{project}.py
                - single_locale/win32_devedition.py
                - single_locale/tc_common.py
                - single_locale/tc_win32.py
                - taskcluster_nightly.py
             win64-devedition-nightly:
-               - single_locale/production.py
                - single_locale/{project}.py
                - single_locale/win64_devedition.py
                - single_locale/tc_common.py

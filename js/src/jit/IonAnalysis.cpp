@@ -19,9 +19,8 @@
 #include "vm/RegExpObject.h"
 #include "vm/SelfHosting.h"
 
-#include "jsopcodeinlines.h"
-
 #include "jit/shared/Lowering-shared-inl.h"
+#include "vm/BytecodeUtil-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 

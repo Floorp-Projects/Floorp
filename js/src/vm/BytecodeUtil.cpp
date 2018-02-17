@@ -8,7 +8,7 @@
  * JS bytecode descriptors, disassemblers, and (expression) decompilers.
  */
 
-#include "jsopcodeinlines.h"
+#include "vm/BytecodeUtil-inl.h"
 
 #define __STDC_FORMAT_MACROS
 
@@ -47,7 +47,7 @@
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
-#include "gc/GCIteration-inl.h"
+#include "gc/PrivateIterators-inl.h"
 #include "vm/JSCompartment-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"

@@ -11,7 +11,6 @@ config = {
     'build_type': 'st-an-debug',
     'tooltool_manifest_src': "browser/config/tooltool-manifests/macosx64/\
 clang.manifest",
-    'platform_supports_post_upload_to_latest': False,
     'enable_signing': False,
     'perfherder_extra_options': ['static-analysis'],
     #### 64 bit build specific #####

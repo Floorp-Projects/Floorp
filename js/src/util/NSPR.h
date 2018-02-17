@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsnspr_h
-#define jsnspr_h
+#ifndef util_NSPR_h
+#define util_NSPR_h
 
 #ifdef JS_POSIX_NSPR
 
@@ -19,4 +19,4 @@
 
 #endif /* JS_POSIX_NSPR */
 
-#endif /* jsnspr_h */
+#endif /* util_NSPR_h */

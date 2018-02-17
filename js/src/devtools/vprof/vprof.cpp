@@ -9,11 +9,11 @@
 // in the same process.
 
 #ifdef WIN32
-#include "jswin.h"
+# include "util/Windows.h"
 #else
-#define __cdecl
-#include <stdarg.h>
-#include <string.h>
+# define __cdecl
+# include <stdarg.h>
+# include <string.h>
 #endif
 
 #include "vprof.h"

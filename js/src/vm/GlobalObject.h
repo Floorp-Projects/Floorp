@@ -764,7 +764,7 @@ class GlobalObject : public NativeObject
     // Infallibly test whether the given value is the eval function for this global.
     bool valueIsEval(const Value& val);
 
-    // Implemented in jsiter.cpp.
+    // Implemented in vm/Iteration.cpp.
     static bool initIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initArrayIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initStringIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
@@ -780,8 +780,10 @@ class GlobalObject : public NativeObject
     static bool initMapIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initSetIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
 
-    // Implemented in Intl.cpp.
+    // Implemented in builtin/intl/IntlObject.cpp.
     static bool initIntlObject(JSContext* cx, Handle<GlobalObject*> global);
+
+    // Implemented in builtin/intl/RelativeTimeFormat.cpp.
     static bool addRelativeTimeFormatConstructor(JSContext* cx, HandleObject intl);
 
     // Implemented in builtin/ModuleObject.cpp
@@ -903,7 +905,7 @@ JSObject*
 GenericCreateConstructor(JSContext* cx, JSProtoKey key)
 {
     // Note - We duplicate the trick from ClassName() so that we don't need to
-    // include jsatominlines.h here.
+    // include vm/JSAtom-inl.h here.
     PropertyName* name = (&cx->names().Null)[key];
     return GlobalObject::createConstructor(cx, ctor, name, length, kind, jitInfo);
 }

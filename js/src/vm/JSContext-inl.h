@@ -9,13 +9,12 @@
 
 #include "vm/JSContext.h"
 
-#include "jsiter.h"
-
 #include "builtin/Object.h"
 #include "jit/JitFrames.h"
 #include "proxy/Proxy.h"
 #include "vm/HelperThreads.h"
 #include "vm/Interpreter.h"
+#include "vm/Iteration.h"
 #include "vm/JSCompartment.h"
 #include "vm/Symbol.h"
 

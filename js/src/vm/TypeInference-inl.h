@@ -15,9 +15,8 @@
 #include "mozilla/Casting.h"
 #include "mozilla/PodOperations.h"
 
-#include "jsgc.h"
-
 #include "builtin/SymbolObject.h"
+#include "gc/GC.h"
 #include "jit/BaselineJIT.h"
 #include "vm/ArrayObject.h"
 #include "vm/BooleanObject.h"

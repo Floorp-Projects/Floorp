@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jswin_h
-#define jswin_h
+#ifndef util_Windows_h
+#define util_Windows_h
 
 /*
  * This file is a wrapper around <windows.h> to prevent the mangling of
@@ -25,4 +25,4 @@
 # undef PASSTHROUGH
 #endif
 
-#endif /* jswin_h */
+#endif /* util_Windows_h */

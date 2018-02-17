@@ -12,10 +12,8 @@
 interface DocumentOrShadowRoot {
   // Not implemented yet: bug 1430308.
   // Selection? getSelection();
-  // Not implemented yet: bug 1430301.
-  // Element? elementFromPoint (float x, float y);
-  // Not implemented yet: bug 1430301.
-  // sequence<Element> elementsFromPoint (float x, float y);
+  Element? elementFromPoint (float x, float y);
+  sequence<Element> elementsFromPoint (float x, float y);
   // Not implemented yet: bug 1430307.
   // CaretPosition? caretPositionFromPoint (float x, float y);
 

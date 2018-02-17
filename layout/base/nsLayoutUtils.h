@@ -159,6 +159,7 @@ class nsLayoutUtils
   typedef mozilla::gfx::RectDouble RectDouble;
   typedef mozilla::gfx::Size Size;
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
+  typedef mozilla::gfx::Matrix4x4Flagged Matrix4x4Flagged;
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
   typedef mozilla::gfx::StrokeOptions StrokeOptions;
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
@@ -857,7 +858,7 @@ public:
                                              const nsRect& aRect,
                                              const nsIFrame* aAncestor,
                                              bool* aPreservesAxisAlignedRectangles = nullptr,
-                                             mozilla::Maybe<Matrix4x4>* aMatrixCache = nullptr,
+                                             mozilla::Maybe<Matrix4x4Flagged>* aMatrixCache = nullptr,
                                              bool aStopAtStackingContextAndDisplayPort = false,
                                              nsIFrame** aOutAncestor = nullptr);
 
@@ -867,7 +868,7 @@ public:
    * aAncestor to go up to the root frame. aInCSSUnits set to true will
    * return CSS units, set to false (the default) will return App units.
    */
-  static Matrix4x4 GetTransformToAncestor(nsIFrame *aFrame,
+  static Matrix4x4Flagged GetTransformToAncestor(nsIFrame *aFrame,
                                           const nsIFrame *aAncestor,
                                           uint32_t aFlags = 0,
                                           nsIFrame** aOutAncestor = nullptr);
@@ -960,7 +961,7 @@ public:
    * transaction were opened at the time this helper is called.
    */
   static bool GetLayerTransformForFrame(nsIFrame* aFrame,
-                                        Matrix4x4* aTransform);
+                                        Matrix4x4Flagged* aTransform);
 
   /**
    * Given a point in the global coordinate space, returns that point expressed
@@ -996,6 +997,8 @@ public:
    */
   static nsRect MatrixTransformRect(const nsRect &aBounds,
                                     const Matrix4x4 &aMatrix, float aFactor);
+  static nsRect MatrixTransformRect(const nsRect &aBounds,
+                                    const Matrix4x4Flagged &aMatrix, float aFactor);
 
   /**
    * Helper function that, given a point and a matrix, returns the image
@@ -2729,7 +2732,7 @@ public:
     const nsIFrame* aAncestorFrame,
     nsRegion* aPreciseTargetDest,
     nsRegion* aImpreciseTargetDest,
-    mozilla::Maybe<Matrix4x4>* aMatrixCache,
+    mozilla::Maybe<Matrix4x4Flagged>* aMatrixCache,
     const mozilla::DisplayItemClip* aClip);
 
   /**

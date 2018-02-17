@@ -494,7 +494,7 @@ class FullParseHandler
     }
 
     ParseNode* newEmptyStatement(const TokenPos& pos) {
-        return new_<UnaryNode>(ParseNodeKind::Semi, pos, nullptr);
+        return new_<NullaryNode>(ParseNodeKind::EmptyStatement, pos);
     }
 
     ParseNode* newImportDeclaration(ParseNode* importSpecSet,
@@ -541,7 +541,8 @@ class FullParseHandler
 
     ParseNode* newExprStatement(ParseNode* expr, uint32_t end) {
         MOZ_ASSERT(expr->pn_pos.end <= end);
-        return new_<UnaryNode>(ParseNodeKind::Semi, TokenPos(expr->pn_pos.begin, end), expr);
+        return new_<UnaryNode>(ParseNodeKind::ExpressionStatement,
+                               TokenPos(expr->pn_pos.begin, end), expr);
     }
 
     ParseNode* newIfStatement(uint32_t begin, ParseNode* cond, ParseNode* thenBranch,
@@ -777,7 +778,7 @@ class FullParseHandler
                kind == ParseNodeKind::Var ||
                kind == ParseNodeKind::Break ||
                kind == ParseNodeKind::Throw ||
-               (kind == ParseNodeKind::Semi && !node->pn_kid);
+               kind == ParseNodeKind::EmptyStatement;
     }
 
     bool isSuperBase(ParseNode* node) {

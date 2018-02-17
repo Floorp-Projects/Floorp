@@ -1,10 +1,8 @@
 config = {
     "platform": "linux64",
-    "stage_product": "firefox",
     "app_name": "browser",
     "mozconfig_platform": "linux64",
     "mozconfig_variant": "l10n-mozconfig",
-    "ssh_key_dir": "/home/mock_mozilla/.ssh",
     "objdir": "obj-firefox",
     "vcs_share_base": "/builds/hg-shared",
 

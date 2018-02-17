@@ -1851,6 +1851,416 @@ public:
   };
 };
 
+/* This Matrix class will carry one additional type field in order to
+ * track what type of 4x4 matrix we're dealing with, it can then execute
+ * simplified versions of certain operations when applicable.
+ * This does not allow access to the parent class directly, as a caller
+ * could then mutate the parent class without updating the type.
+ */
+template <typename SourceUnits, typename TargetUnits>
+class Matrix4x4TypedFlagged : protected Matrix4x4Typed<SourceUnits, TargetUnits>
+{
+public:
+  using Parent = Matrix4x4Typed<SourceUnits, TargetUnits>;
+  using TargetPoint = PointTyped<TargetUnits>;
+  using Parent::_11; using Parent::_12; using Parent::_13; using Parent::_14;
+  using Parent::_21; using Parent::_22; using Parent::_23; using Parent::_24;
+  using Parent::_31; using Parent::_32; using Parent::_33; using Parent::_34;
+  using Parent::_41; using Parent::_42; using Parent::_43; using Parent::_44;
+
+  Matrix4x4TypedFlagged()
+    : mType(MatrixType::Identity)
+  {}
+
+  Matrix4x4TypedFlagged(Float a11, Float a12, Float a13, Float a14,
+                        Float a21, Float a22, Float a23, Float a24,
+                        Float a31, Float a32, Float a33, Float a34,
+                        Float a41, Float a42, Float a43, Float a44)
+    : Parent(a11, a12, a13, a14, a21, a22, a23, a24,
+             a31, a32, a33, a34, a41, a42, a43, a44)
+  {
+    Analyze();
+  }
+
+  MOZ_IMPLICIT Matrix4x4TypedFlagged(const Parent& aOther)
+    : Parent(aOther)
+  {
+    Analyze();
+  }
+
+  template<class F>
+  PointTyped<TargetUnits, F> TransformPoint(const PointTyped<SourceUnits, F> &aPoint) const
+  {
+    if (mType == MatrixType::Identity) {
+      return aPoint;
+    }
+
+    if (mType == MatrixType::Simple) {
+      return TransformPointSimple(aPoint);
+    }
+
+    return Parent::TransformPoint(aPoint);
+  }
+
+  template<class F>
+  RectTyped<TargetUnits, F> TransformAndClipBounds(const RectTyped<SourceUnits, F>& aRect,
+                                                   const RectTyped<TargetUnits, F>& aClip) const
+  {
+    if (mType == MatrixType::Identity) {
+      return aRect;
+    }
+
+    if (mType == MatrixType::Simple) {
+      PointTyped<UnknownUnits, F> p1 = TransformPointSimple(aRect.TopLeft());
+      PointTyped<UnknownUnits, F> p2 = TransformPointSimple(aRect.TopRight());
+      PointTyped<UnknownUnits, F> p3 = TransformPointSimple(aRect.BottomLeft());
+      PointTyped<UnknownUnits, F> p4 = TransformPointSimple(aRect.BottomRight());
+
+      F min_x = std::min(std::min(std::min(p1.x, p2.x), p3.x), p4.x);
+      F max_x = std::max(std::max(std::max(p1.x, p2.x), p3.x), p4.x);
+      F min_y = std::min(std::min(std::min(p1.y, p2.y), p3.y), p4.y);
+      F max_y = std::max(std::max(std::max(p1.y, p2.y), p3.y), p4.y);
+
+      TargetPoint topLeft(std::max(min_x, aClip.x), std::max(min_y, aClip.y));
+      F xMost = std::min(max_x, aClip.XMost()) - topLeft.x;
+      F yMost = std::min(max_y, aClip.YMost()) - topLeft.y;
+
+      return RectTyped<TargetUnits, F>(topLeft.x, topLeft.y, xMost, yMost);
+    }
+    return Parent::TransformAndClipBounds(aRect, aClip);
+  }
+
+  bool FuzzyEqual(const Parent& o) const
+  {
+    return Parent::FuzzyEqual(o);
+  }
+
+  bool FuzzyEqual(const Matrix4x4TypedFlagged& o) const
+  {
+    if (mType == MatrixType::Identity && o.mType == MatrixType::Identity) {
+      return true;
+    }
+    return Parent::FuzzyEqual(o);
+  }
+
+  Matrix4x4TypedFlagged &PreTranslate(Float aX, Float aY, Float aZ)
+  {
+    if (mType == MatrixType::Identity) {
+      _41 = aX;
+      _42 = aY;
+      _43 = aZ;
+
+      if (!aZ) {
+        mType = MatrixType::Simple;
+        return *this;
+      }
+      mType = MatrixType::Full;
+      return *this;
+    }
+
+    Parent::PreTranslate(aX, aY, aZ);
+
+    if (aZ != 0) {
+      mType = MatrixType::Full;
+    }
+
+    return *this;
+  }
+
+  Matrix4x4TypedFlagged &PostTranslate(Float aX, Float aY, Float aZ)
+  {
+    if (mType == MatrixType::Identity) {
+      _41 = aX;
+      _42 = aY;
+      _43 = aZ;
+
+      if (!aZ) {
+        mType = MatrixType::Simple;
+        return *this;
+      }
+      mType = MatrixType::Full;
+      return *this;
+    }
+
+    Parent::PostTranslate(aX, aY, aZ);
+
+    if (aZ != 0) {
+      mType = MatrixType::Full;
+    }
+
+    return *this;
+  }
+
+  Matrix4x4TypedFlagged &ChangeBasis(Float aX, Float aY, Float aZ)
+  {
+    // Translate to the origin before applying this matrix
+    PreTranslate(-aX, -aY, -aZ);
+
+    // Translate back into position after applying this matrix
+    PostTranslate(aX, aY, aZ);
+
+    return *this;
+  }
+
+  bool IsIdentity() const
+  {
+    return mType == MatrixType::Identity;
+  }
+
+  template<class F>
+  Point4DTyped<TargetUnits, F>
+  ProjectPoint(const PointTyped<SourceUnits, F>& aPoint) const {
+    if (mType == MatrixType::Identity) {
+      return Point4DTyped<TargetUnits, F>(aPoint.x, aPoint.y, 0, 1);
+    }
+
+    if (mType == MatrixType::Simple) {
+      TargetPoint point = TransformPointSimple(aPoint);
+      return Point4DTyped<TargetUnits, F>(point.x, point.y, 0, 1);
+    }
+
+    return Parent::ProjectPoint(aPoint);
+  }
+
+  Matrix4x4TypedFlagged& ProjectTo2D() {
+    if (mType == MatrixType::Full) {
+      Parent::ProjectTo2D();
+    }
+    return *this;
+  }
+
+  bool IsSingular() const
+  {
+    if (mType == MatrixType::Identity) {
+      return false;
+    }
+    return Parent::Determinant() == 0.0;
+  }
+
+  bool Invert()
+  {
+    if (mType == MatrixType::Identity) {
+      return true;
+    }
+
+    return Parent::Invert();
+  }
+
+  Matrix4x4TypedFlagged<TargetUnits, SourceUnits> Inverse() const
+  {
+    typedef Matrix4x4TypedFlagged<TargetUnits, SourceUnits> InvertedMatrix;
+    InvertedMatrix clone = InvertedMatrix::FromUnknownMatrix(ToUnknownMatrix());
+    if (mType == MatrixType::Identity) {
+      return clone;
+    }
+    DebugOnly<bool> inverted = clone.Invert();
+    MOZ_ASSERT(inverted, "Attempted to get the inverse of a non-invertible matrix");
+
+    // Inverting a 2D Matrix should result in a 2D matrix, ergo mType doesn't change.
+    return clone;
+  }
+
+  template <typename NewTargetUnits>
+  Matrix4x4TypedFlagged<SourceUnits, NewTargetUnits> operator*(const Matrix4x4Typed<TargetUnits, NewTargetUnits> &aMatrix) const
+  {
+    if (mType == MatrixType::Identity) {
+      return aMatrix;
+    }
+
+    if (mType == MatrixType::Simple) {
+      Matrix4x4TypedFlagged<SourceUnits, NewTargetUnits> matrix;
+      matrix._11 = _11 * aMatrix._11 + _12 * aMatrix._21;
+      matrix._21 = _21 * aMatrix._11 + _22 * aMatrix._21;
+      matrix._31 = aMatrix._31;
+      matrix._41 = _41 * aMatrix._11 + _42 * aMatrix._21;
+      matrix._12 = _11 * aMatrix._12 + _12 * aMatrix._22;
+      matrix._22 = _21 * aMatrix._12 + _22 * aMatrix._22;
+      matrix._32 = aMatrix._32;
+      matrix._42 = _41 * aMatrix._12 + _42 * aMatrix._22;
+      matrix._13 = _11 * aMatrix._13 + _12 * aMatrix._23;
+      matrix._23 = _21 * aMatrix._13 + _22 * aMatrix._23;
+      matrix._33 = aMatrix._33;
+      matrix._43 = _41 * aMatrix._13 + _42 * aMatrix._23;
+      matrix._14 = _11 * aMatrix._14 + _12 * aMatrix._24;
+      matrix._24 = _21 * aMatrix._14 + _22 * aMatrix._24;
+      matrix._34 = aMatrix._34;
+      matrix._44 = _41 * aMatrix._14 + _42 * aMatrix._24;
+      matrix.Analyze();
+      return matrix;
+    }
+
+    return Parent::operator*(aMatrix);
+  }
+
+  template <typename NewTargetUnits>
+  Matrix4x4TypedFlagged<SourceUnits, NewTargetUnits> operator*(const Matrix4x4TypedFlagged<TargetUnits, NewTargetUnits> &aMatrix) const
+  {
+    if (mType == MatrixType::Identity) {
+      return aMatrix;
+    }
+
+    if (aMatrix.mType == MatrixType::Identity) {
+      return Matrix4x4TypedFlagged<SourceUnits, NewTargetUnits>::FromUnknownMatrix(this->ToUnknownMatrix());
+    }
+
+    if (mType == MatrixType::Simple && aMatrix.mType == MatrixType::Simple) {
+      Matrix4x4TypedFlagged<SourceUnits, NewTargetUnits> matrix;
+      matrix._11 = _11 * aMatrix._11 + _12 * aMatrix._21;
+      matrix._21 = _21 * aMatrix._11 + _22 * aMatrix._21;
+      matrix._41 = _41 * aMatrix._11 + _42 * aMatrix._21 + aMatrix._41;
+      matrix._12 = _11 * aMatrix._12 + _12 * aMatrix._22;
+      matrix._22 = _21 * aMatrix._12 + _22 * aMatrix._22;
+      matrix._42 = _41 * aMatrix._12 + _42 * aMatrix._22 + aMatrix._42;
+      matrix.mType = MatrixType::Simple;
+      return matrix;
+    } else if (mType == MatrixType::Simple) {
+      Matrix4x4TypedFlagged<SourceUnits, NewTargetUnits> matrix;
+      matrix._11 = _11 * aMatrix._11 + _12 * aMatrix._21;
+      matrix._21 = _21 * aMatrix._11 + _22 * aMatrix._21;
+      matrix._31 = aMatrix._31;
+      matrix._41 = _41 * aMatrix._11 + _42 * aMatrix._21 + aMatrix._41;
+      matrix._12 = _11 * aMatrix._12 + _12 * aMatrix._22;
+      matrix._22 = _21 * aMatrix._12 + _22 * aMatrix._22;
+      matrix._32 = aMatrix._32;
+      matrix._42 = _41 * aMatrix._12 + _42 * aMatrix._22 + aMatrix._42;
+      matrix._13 = _11 * aMatrix._13 + _12 * aMatrix._23;
+      matrix._23 = _21 * aMatrix._13 + _22 * aMatrix._23;
+      matrix._33 = aMatrix._33;
+      matrix._43 = _41 * aMatrix._13 + _42 * aMatrix._23 + aMatrix._43;
+      matrix._14 = _11 * aMatrix._14 + _12 * aMatrix._24;
+      matrix._24 = _21 * aMatrix._14 + _22 * aMatrix._24;
+      matrix._34 = aMatrix._34;
+      matrix._44 = _41 * aMatrix._14 + _42 * aMatrix._24 + aMatrix._44;
+      matrix.mType = MatrixType::Full;
+      return matrix;
+    } else if (aMatrix.mType == MatrixType::Simple) {
+      Matrix4x4TypedFlagged<SourceUnits, NewTargetUnits> matrix;
+      matrix._11 = _11 * aMatrix._11 + _12 * aMatrix._21 + _14 * aMatrix._41;
+      matrix._21 = _21 * aMatrix._11 + _22 * aMatrix._21 + _24 * aMatrix._41;
+      matrix._31 = _31 * aMatrix._11 + _32 * aMatrix._21 + _34 * aMatrix._41;
+      matrix._41 = _41 * aMatrix._11 + _42 * aMatrix._21 + _44 * aMatrix._41;
+      matrix._12 = _11 * aMatrix._12 + _12 * aMatrix._22 + _14 * aMatrix._42;
+      matrix._22 = _21 * aMatrix._12 + _22 * aMatrix._22 + _24 * aMatrix._42;
+      matrix._32 = _31 * aMatrix._12 + _32 * aMatrix._22 + _34 * aMatrix._42;
+      matrix._42 = _41 * aMatrix._12 + _42 * aMatrix._22 + _44 * aMatrix._42;
+      matrix._13 = _13;
+      matrix._23 = _23;
+      matrix._33 = _33;
+      matrix._43 = _43;
+      matrix._14 = _14;
+      matrix._24 = _24;
+      matrix._34 = _34;
+      matrix._44 = _44;
+      matrix.mType = MatrixType::Full;
+      return matrix;
+    }
+
+    return Parent::operator*(aMatrix);
+  }
+
+  bool Is2D() const
+  {
+    return mType != MatrixType::Full;
+  }
+
+  bool CanDraw2D(Matrix* aMatrix = nullptr) const
+  {
+    if (mType != MatrixType::Full) {
+      if (aMatrix) {
+        aMatrix->_11 = _11;
+        aMatrix->_12 = _12;
+        aMatrix->_21 = _21;
+        aMatrix->_22 = _22;
+        aMatrix->_31 = _41;
+        aMatrix->_32 = _42;
+      }
+      return true;
+    }
+    return Parent::CanDraw2D(aMatrix);
+  }
+
+  bool Is2D(Matrix* aMatrix) const {
+    if (!Is2D()) {
+      return false;
+    }
+    if (aMatrix) {
+      aMatrix->_11 = _11;
+      aMatrix->_12 = _12;
+      aMatrix->_21 = _21;
+      aMatrix->_22 = _22;
+      aMatrix->_31 = _41;
+      aMatrix->_32 = _42;
+    }
+    return true;
+  }
+
+  template<class F>
+  RectTyped<TargetUnits, F>
+    ProjectRectBounds(const RectTyped<SourceUnits, F>& aRect, const RectTyped<TargetUnits, F>& aClip) const
+  {
+    return Parent::ProjectRectBounds(aRect, aClip);
+  }
+
+  const Parent &GetMatrix() const { return *this; }
+private:
+  enum class MatrixType : uint8_t
+  {
+    Identity,
+    Simple, // 2x3 Matrix
+    Full // 4x4 Matrix
+  };
+
+  Matrix4x4TypedFlagged(Float a11, Float a12, Float a13, Float a14,
+                        Float a21, Float a22, Float a23, Float a24,
+                        Float a31, Float a32, Float a33, Float a34,
+                        Float a41, Float a42, Float a43, Float a44,
+                        typename Matrix4x4TypedFlagged::MatrixType aType)
+    : Parent(a11, a12, a13, a14, a21, a22, a23, a24,
+             a31, a32, a33, a34, a41, a42, a43, a44)
+  {
+    mType = aType;
+  }
+  static Matrix4x4TypedFlagged FromUnknownMatrix(const Matrix4x4Flagged& aUnknown) {
+    return Matrix4x4TypedFlagged{ aUnknown._11, aUnknown._12, aUnknown._13, aUnknown._14,
+      aUnknown._21, aUnknown._22, aUnknown._23, aUnknown._24,
+      aUnknown._31, aUnknown._32, aUnknown._33, aUnknown._34,
+      aUnknown._41, aUnknown._42, aUnknown._43, aUnknown._44, aUnknown.mType };
+  }
+  Matrix4x4Flagged ToUnknownMatrix() const {
+    return Matrix4x4Flagged{ _11, _12, _13, _14,
+      _21, _22, _23, _24,
+      _31, _32, _33, _34,
+      _41, _42, _43, _44, mType };
+  }
+
+  template<class F>
+  PointTyped<TargetUnits, F> TransformPointSimple(const PointTyped<SourceUnits, F> &aPoint) const
+  {
+    PointTyped<SourceUnits, F> temp;
+    temp.x = aPoint.x * _11 + aPoint.y * +_21 + _41;
+    temp.y = aPoint.x * _12 + aPoint.y * +_22 + _42;
+    return temp;
+  }
+
+  void Analyze() {
+    if (Parent::IsIdentity()) {
+      mType = MatrixType::Identity;
+      return;
+    }
+
+    if (Parent::Is2D()) {
+      mType = MatrixType::Simple;
+      return;
+    }
+
+    mType = MatrixType::Full;
+  }
+
+  MatrixType mType;
+};
+
+using Matrix4x4Flagged = Matrix4x4TypedFlagged<UnknownUnits, UnknownUnits>;
+
 } // namespace gfx
 } // namespace mozilla
 

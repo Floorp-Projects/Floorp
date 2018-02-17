@@ -12,7 +12,7 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/Runtime.h"
 
-#include "jsgcinlines.h"
+#include "gc/GC-inl.h"
 
 using namespace js;
 using namespace js::gc;

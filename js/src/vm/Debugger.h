@@ -14,12 +14,12 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Vector.h"
 
-#include "jsweakmap.h"
 #include "jswrapper.h"
 
 #include "builtin/Promise.h"
 #include "ds/TraceableFifo.h"
 #include "gc/Barrier.h"
+#include "gc/WeakMap.h"
 #include "js/Debug.h"
 #include "js/GCVariant.h"
 #include "js/HashTable.h"

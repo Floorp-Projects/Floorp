@@ -115,6 +115,30 @@ public:
 
   Element* GetPointerLockElement();
   Element* GetFullscreenElement();
+
+  Element* ElementFromPoint(float aX, float aY);
+  void ElementsFromPoint(float aX, float aY,
+                         nsTArray<RefPtr<mozilla::dom::Element>>& aElements);
+
+  /**
+   * Helper for nsIDOMDocument::elementFromPoint implementation that allows
+   * ignoring the scroll frame and/or avoiding layout flushes.
+   *
+   * @see nsIDOMWindowUtils::elementFromPoint
+   */
+  Element* ElementFromPointHelper(float aX, float aY,
+                                  bool aIgnoreRootScrollFrame,
+                                  bool aFlushLayout);
+  enum ElementsFromPointFlags
+  {
+    IGNORE_ROOT_SCROLL_FRAME = 1,
+    FLUSH_LAYOUT = 2,
+    IS_ELEMENT_FROM_POINT = 4
+  };
+
+  void ElementsFromPointHelper(float aX, float aY, uint32_t aFlags,
+                               nsTArray<RefPtr<mozilla::dom::Element>>& aElements);
+
 protected:
   nsIContent* Retarget(nsIContent* aContent) const;
 
