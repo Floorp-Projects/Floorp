@@ -3683,6 +3683,17 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       if (aBuilder->BuildCompositorHitTestInfo()) {
         CompositorHitTestInfo info = CompositorHitTestInfo::eVisibleToHitTest
                                    | CompositorHitTestInfo::eDispatchToContent;
+        // If the scroll frame has non-default overscroll-behavior, instruct
+        // APZ to require a target confirmation before processing events that
+        // hit this scroll frame (that is, to drop the events if a confirmation
+        // does not arrive within the timeout period). Otherwise, APZ's
+        // fallback behaviour of scrolling the enclosing scroll frame would
+        // violate the specified overscroll-behavior.
+        ScrollbarStyles scrollbarStyles = GetScrollbarStylesFromFrame();
+        if (scrollbarStyles.mOverscrollBehaviorX != StyleOverscrollBehavior::Auto ||
+            scrollbarStyles.mOverscrollBehaviorY != StyleOverscrollBehavior::Auto) {
+          info |= CompositorHitTestInfo::eRequiresTargetConfirmation;
+        }
         nsDisplayCompositorHitTestInfo* hitInfo =
             MakeDisplayItem<nsDisplayCompositorHitTestInfo>(aBuilder, mScrolledFrame, info, 1,
                 Some(mScrollPort + aBuilder->ToReferenceFrame(mOuter)));

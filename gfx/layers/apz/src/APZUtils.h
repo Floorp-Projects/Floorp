@@ -80,14 +80,17 @@ CompleteAsyncTransform(const AsyncTransformComponentMatrix& aMatrix)
 struct TargetConfirmationFlags {
   explicit TargetConfirmationFlags(bool aTargetConfirmed)
     : mTargetConfirmed(aTargetConfirmed)
+    , mRequiresTargetConfirmation(false)
   {}
 
   explicit TargetConfirmationFlags(gfx::CompositorHitTestInfo aHitTestInfo)
     : mTargetConfirmed(aHitTestInfo != gfx::CompositorHitTestInfo::eInvisibleToHitTest &&
                        !(aHitTestInfo & gfx::CompositorHitTestInfo::eDispatchToContent))
+    , mRequiresTargetConfirmation(aHitTestInfo & gfx::CompositorHitTestInfo::eRequiresTargetConfirmation)
   {}
 
   bool mTargetConfirmed : 1;
+  bool mRequiresTargetConfirmation : 1;
 };
 
 } // namespace layers
