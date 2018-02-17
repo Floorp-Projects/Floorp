@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Ya te pusiste al día. Volvé más tarde para más historias de {provider}. ¿No podés esperar? Seleccioná un tema popular para encontrar más historias de todo el mundo.",
   "manual_migration_explanation2": "Probá Firefox con los marcadores, historial y contraseñas de otro navegador.",
   "manual_migration_cancel_button": "No gracias",
-  "manual_migration_import_button": "Importar ahora"
+  "manual_migration_import_button": "Importar ahora",
+  "context_menu_button_sr": "Abrir el menú para {title}",
+  "edit_topsites_add_button_tooltip": "Agregar Sitio más visitado"
 };

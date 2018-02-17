@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Provjerite kasnije za više najpopularnijih priča od {provider}. Ne možete čekati? Odaberite popularne teme kako biste pronašli više kvalitetnih priča s cijelog weba.",
   "manual_migration_explanation2": "Probajte Firefox s zabilješkama, historijom i lozinkama iz drugog pretraživača.",
   "manual_migration_cancel_button": "Ne, hvala",
-  "manual_migration_import_button": "Uvezi sada"
+  "manual_migration_import_button": "Uvezi sada",
+  "context_menu_button_sr": "Otvorite kontekstni meni za {title}",
+  "edit_topsites_add_button_tooltip": "Dodajte top stranicu"
 };

@@ -2,7 +2,7 @@
 window.gActivityStreamStrings = {
   "newtab_page_title": "Нов раздел",
   "default_label_loading": "Зареждане…",
-  "header_top_sites": "Най-посещавани",
+  "header_top_sites": "Често посещавани",
   "header_stories": "Популярни",
   "header_highlights": "Акценти",
   "header_visit_again": "Посещаване",
@@ -53,8 +53,8 @@ window.gActivityStreamStrings = {
   "settings_pane_body2": "Изберете какво да виждате на тази страница.",
   "settings_pane_search_header": "Търсене",
   "settings_pane_search_body": "Търсете в мрежата от нов раздел.",
-  "settings_pane_topsites_header": "Най-посещавани",
-  "settings_pane_topsites_body": "Достъп до сайтовете, които посещавате най-често.",
+  "settings_pane_topsites_header": "Често посещавани",
+  "settings_pane_topsites_body": "Достъп до страниците, които посещавате най-често.",
   "settings_pane_topsites_options_showmore": "Показване на два реда",
   "settings_pane_bookmarks_header": "Последни отметки",
   "settings_pane_bookmarks_body": "Всички нови отметки на едно място.",
@@ -69,7 +69,7 @@ window.gActivityStreamStrings = {
   "settings_pane_done_button": "Готово",
   "settings_pane_topstories_options_sponsored": "Показване на платени статии",
   "edit_topsites_button_text": "Редактиране",
-  "edit_topsites_button_label": "Настройки на най-посещаваните",
+  "edit_topsites_button_label": "Настройки на често посещаваните",
   "edit_topsites_showmore_button": "Повече",
   "edit_topsites_showless_button": "По-малко",
   "edit_topsites_done_button": "Готово",
@@ -78,8 +78,8 @@ window.gActivityStreamStrings = {
   "edit_topsites_edit_button": "Редактиране",
   "edit_topsites_dismiss_button": "Изтриване",
   "edit_topsites_add_button": "Добавяне",
-  "topsites_form_add_header": "Нов най-посещаван сайт",
-  "topsites_form_edit_header": "Редактиране на най-посещаван сайт",
+  "topsites_form_add_header": "Нов често посещавана страница",
+  "topsites_form_edit_header": "Редактиране на често посещавана страница",
   "topsites_form_title_placeholder": "Заглавие",
   "topsites_form_url_placeholder": "Адрес",
   "topsites_form_add_button": "Добавяне",
@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Разгледахте всичко. Проверете по-късно за повече истории от {provider}. Нямате търпение? Изберете популярна тема, за да откриете повече истории из цялата Мрежа.",
   "manual_migration_explanation2": "Опитайте Firefox с отметките, историята и паролите от друг четец.",
   "manual_migration_cancel_button": "Не, благодаря",
-  "manual_migration_import_button": "Внасяне"
+  "manual_migration_import_button": "Внасяне",
+  "context_menu_button_sr": "Отваряне на контекстуалното меню на {title}",
+  "edit_topsites_add_button_tooltip": "Добавяне към често посещаваните страници"
 };

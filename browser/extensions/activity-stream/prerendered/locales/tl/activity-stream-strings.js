@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Nakahabol ka na. Bumalik sa ibang pagkakataon para sa higit pang mga nangungunang kuwento mula sa {provider}. Hindi makapaghintay? Pumili ng isang tanyag na paksa upang makahanap ng higit pang mahusay na mga kuwento mula sa buong web.",
   "manual_migration_explanation2": "Subukan ang Firefox gamit ang mga bookmark, kasaysayan at mga password mula sa isa pang browser.",
   "manual_migration_cancel_button": "Salamat na lang",
-  "manual_migration_import_button": "Angkatin Ngayon"
+  "manual_migration_import_button": "Angkatin Ngayon",
+  "context_menu_button_sr": "Buksan ang menu ng konteksto para sa {title}",
+  "edit_topsites_add_button_tooltip": "Magdagdag ng Nangungunang Site"
 };

@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "すべて既読です。また後で戻って {provider} からのおすすめ記事をチェックしてください。もし待ちきれないなら、人気のトピックを選択すれば、他にもウェブ上の優れた記事を見つけられます。",
   "manual_migration_explanation2": "他のブラウザーからブックマークや履歴、パスワードを取り込んで Firefox を使ってみましょう。",
   "manual_migration_cancel_button": "今はしない",
-  "manual_migration_import_button": "今すぐインポート"
+  "manual_migration_import_button": "今すぐインポート",
+  "context_menu_button_sr": "{title} のコンテキストメニューを開く",
+  "edit_topsites_add_button_tooltip": "トップサイトを追加"
 };

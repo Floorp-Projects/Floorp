@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Egunean zaude jada. Etorri berriro geroago {provider} hornitzailearen istorio ezagun gehiagorako. Ezin duzu itxaron? Hautatu gai ezagun bat webeko istorio gehiago aurkitzeko.",
   "manual_migration_explanation2": "Probatu Firefox beste nabigatzaile batetik ekarritako laster-marka, historia eta pasahitzekin.",
   "manual_migration_cancel_button": "Ez, eskerrik asko",
-  "manual_migration_import_button": "Inportatu orain"
+  "manual_migration_import_button": "Inportatu orain",
+  "context_menu_button_sr": "Ikusi {title} gunerako testuinguru-menua",
+  "edit_topsites_add_button_tooltip": "Gehitu maiz erabilitako gunea"
 };

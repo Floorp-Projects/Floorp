@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Vaata hiljem uuesti, et näha parimaid postitusi teenusepakkujalt {provider}. Ei suuda oodata? Vali populaarne teema, et leida veel suurepärast sisu internetist.",
   "manual_migration_explanation2": "Proovi Firefoxi teisest brauserist pärinevate järjehoidjate, ajaloo ja paroolidega.",
   "manual_migration_cancel_button": "Ei soovi",
-  "manual_migration_import_button": "Impordi kohe"
+  "manual_migration_import_button": "Impordi kohe",
+  "context_menu_button_sr": "Ava {title} kontekstimenüü",
+  "edit_topsites_add_button_tooltip": "Top saidi lisamine"
 };
