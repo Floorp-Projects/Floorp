@@ -43,7 +43,6 @@ config = {
     'base_name': 'Linux_%(branch)s',
     'platform': 'linux',
     'stage_platform': 'linux',
-    'publish_nightly_en_US_routes': True,
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'DISPLAY': ':2',
@@ -59,13 +58,6 @@ config = {
 /bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/tools/git/bin:\
 /tools/python27/bin:/tools/python27-mercurial/bin:/home/cltbld/bin',
         'LD_LIBRARY_PATH': "/tools/gcc-4.3.3/installed/lib",
-    },
-    'upload_env': {
-        # stage_server is dictated from build_pool_specifics.py
-        'UPLOAD_HOST': '%(stage_server)s',
-        'UPLOAD_USER': '%(stage_username)s',
-        'UPLOAD_SSH_KEY': '/home/mock_mozilla/.ssh/%(stage_ssh_key)s',
-        'UPLOAD_TO_TEMP': '1',
     },
     "check_test_env": {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/linux/minidump_stackwalk',

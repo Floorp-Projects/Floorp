@@ -185,7 +185,7 @@
  * this bitmap is managed.
  */
 
-#include "jsgcinlines.h"
+#include "gc/GC-inl.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
@@ -204,15 +204,12 @@
 # include <sys/mman.h>
 # include <unistd.h>
 #endif
+
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jsprf.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jsweakmap.h"
-#ifdef XP_WIN
-# include "jswin.h"
-#endif
 
 #include "gc/FindSCCs.h"
 #include "gc/FreeOp.h"
@@ -220,11 +217,13 @@
 #include "gc/GCTrace.h"
 #include "gc/Memory.h"
 #include "gc/Policy.h"
+#include "gc/WeakMap.h"
 #include "jit/BaselineJIT.h"
 #include "jit/IonCode.h"
 #include "jit/JitcodeMap.h"
 #include "js/SliceBudget.h"
 #include "proxy/DeadObjectProxy.h"
+#include "util/Windows.h"
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/JSAtom.h"
@@ -241,10 +240,10 @@
 #include "vm/TraceLogging.h"
 #include "vm/WrapperObject.h"
 
-#include "gc/GCIteration-inl.h"
 #include "gc/Heap-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
+#include "gc/PrivateIterators-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"

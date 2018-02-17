@@ -178,7 +178,7 @@ struct Zone : public JS::shadow::Zone,
                                 size_t* atomsMarkBitmaps);
 
     // Iterate over all cells in the zone. See the definition of ZoneCellIter
-    // in jsgcinlines.h for the possible arguments and documentation.
+    // in gc/GC-inl.h for the possible arguments and documentation.
     template <typename T, typename... Args>
     js::gc::ZoneCellIter<T> cellIter(Args&&... args) {
         return js::gc::ZoneCellIter<T>(const_cast<Zone*>(this), mozilla::Forward<Args>(args)...);

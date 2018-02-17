@@ -685,7 +685,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     /* Gets current default locale. String remains owned by context. */
     const char* getDefaultLocale();
 
-    /* Garbage collector state, used by jsgc.c. */
+    /* Garbage collector state. */
     js::gc::GCRuntime   gc;
 
     /* Garbage collector state has been successfully initialized. */

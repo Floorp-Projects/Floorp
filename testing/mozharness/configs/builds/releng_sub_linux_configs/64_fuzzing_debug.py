@@ -7,9 +7,7 @@ config = {
         'check-test',
     ],
     'stage_platform': 'linux64-fuzzing-debug',
-    'publish_nightly_en_US_routes': False,
     'debug_build': True,
-    'platform_supports_post_upload_to_latest': False,
     'enable_signing': False,
     #### 64 bit build specific #####
     'env': {

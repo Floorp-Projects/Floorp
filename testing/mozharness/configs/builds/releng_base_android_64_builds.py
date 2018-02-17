@@ -60,11 +60,7 @@ config = {
     'base_name': 'Android 2.3 %(branch)s',
     'platform': 'android',
     'stage_platform': 'android',
-    'stage_product': 'mobile',
-    'publish_nightly_en_US_routes': True,
-    'post_upload_include_platform': True,
     'enable_max_vsize': False,
-    'use_package_as_marfile': True,
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'DISPLAY': ':2',
@@ -76,13 +72,6 @@ config = {
         'LC_ALL': 'C',
         'PATH': '/usr/local/bin:/bin:/usr/bin',
         'SHIP_LICENSED_FONTS': '1',
-    },
-    'upload_env': {
-        # stage_server is dictated from build_pool_specifics.py
-        'UPLOAD_HOST': '%(stage_server)s',
-        'UPLOAD_USER': '%(stage_username)s',
-        'UPLOAD_SSH_KEY': '/home/mock_mozilla/.ssh/%(stage_ssh_key)s',
-        'UPLOAD_TO_TEMP': '1',
     },
     "check_test_env": {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/linux/minidump_stackwalk',

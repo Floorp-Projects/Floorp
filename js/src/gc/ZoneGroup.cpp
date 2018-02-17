@@ -6,7 +6,7 @@
 
 #include "gc/ZoneGroup.h"
 
-#include "gc/Iteration.h"
+#include "gc/PublicIterators.h"
 #include "jit/IonBuilder.h"
 #include "jit/JitCompartment.h"
 #include "vm/JSContext.h"

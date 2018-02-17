@@ -15,6 +15,8 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ScopeExit.h"
 
+#include <type_traits>
+
 #include "jslibmath.h"
 #include "jsmath.h"
 #include "jsnum.h"
@@ -173,11 +175,15 @@ typedef bool (*IonInICFn)(JSContext*, HandleScript, IonInIC*, HandleValue, Handl
 static const VMFunction IonInICInfo =
     FunctionInfo<IonInICFn>(IonInIC::update, "IonInIC::update");
 
-
 typedef bool (*IonInstanceOfICFn)(JSContext*, HandleScript, IonInstanceOfIC*,
                          HandleValue lhs, HandleObject rhs, bool* res);
 static const VMFunction IonInstanceOfInfo =
     FunctionInfo<IonInstanceOfICFn>(IonInstanceOfIC::update, "IonInstanceOfIC::update");
+
+typedef bool (*IonUnaryArithICFn)(JSContext* cx, HandleScript outerScript, IonUnaryArithIC* stub,
+                                    HandleValue val, MutableHandleValue res);
+static const VMFunction IonUnaryArithICInfo =
+    FunctionInfo<IonUnaryArithICFn>(IonUnaryArithIC::update, "IonUnaryArithIC::update");
 
 void
 CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
@@ -351,6 +357,22 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
 
         StoreRegisterTo(hasInstanceOfIC->output()).generate(this);
         restoreLiveIgnore(lir, StoreRegisterTo(hasInstanceOfIC->output()).clobbered());
+
+        masm.jump(ool->rejoin());
+        return;
+      }
+      case CacheKind::UnaryArith: {
+        IonUnaryArithIC* unaryArithIC = ic->asUnaryArithIC();
+
+        saveLive(lir);
+
+        pushArg(unaryArithIC->input());
+        icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
+        pushArg(ImmGCPtr(gen->info().script()));
+        callVM(IonUnaryArithICInfo, lir);
+
+        StoreValueTo(unaryArithIC->output()).generate(this);
+        restoreLiveIgnore(lir, StoreValueTo(unaryArithIC->output()).clobbered());
 
         masm.jump(ool->rejoin());
         return;
@@ -2735,22 +2757,14 @@ CodeGenerator::visitBinarySharedStub(LBinarySharedStub* lir)
 }
 
 void
-CodeGenerator::visitUnarySharedStub(LUnarySharedStub* lir)
+CodeGenerator::visitUnaryCache(LUnaryCache* lir)
 {
-    JSOp jsop = JSOp(*lir->mir()->resumePoint()->pc());
-    switch (jsop) {
-      case JSOP_BITNOT:
-      case JSOP_NEG:
-        emitSharedStub(ICStub::Kind::UnaryArith_Fallback, lir);
-        break;
-      case JSOP_CALLPROP:
-      case JSOP_GETPROP:
-      case JSOP_LENGTH:
-        emitSharedStub(ICStub::Kind::GetProp_Fallback, lir);
-        break;
-      default:
-        MOZ_CRASH("Unsupported jsop in shared stubs.");
-    }
+    LiveRegisterSet liveRegs = lir->safepoint()->liveRegs();
+    TypedOrValueRegister input = TypedOrValueRegister(ToValue(lir, LUnaryCache::Input));
+    ValueOperand output = GetValueOutput(lir);
+
+    IonUnaryArithIC ic(liveRegs, input, output);
+    addIC(lir, allocateIC(ic));
 }
 
 void
@@ -5346,7 +5360,7 @@ struct ScriptCountBlockState
     {
         // Prefix stream of assembly instructions with their LIR instruction
         // name and any associated high level info.
-        if (const char* extra = ins->extraName())
+        if (const char* extra = ins->getExtraName())
             printer.printf("[%s:%s]\n", ins->opName(), extra);
         else
             printer.printf("[%s]\n", ins->opName());
@@ -5681,7 +5695,7 @@ CodeGenerator::generateBody()
 
 #ifdef JS_JITSPEW
             JitSpewStart(JitSpew_Codegen, "instruction %s", iter->opName());
-            if (const char* extra = iter->extraName())
+            if (const char* extra = iter->getExtraName())
                 JitSpewCont(JitSpew_Codegen, ":%s", extra);
             JitSpewFin(JitSpew_Codegen);
 #endif
@@ -5713,12 +5727,20 @@ CodeGenerator::generateBody()
                 }
             }
 
-#ifdef DEBUG
             setElement(*iter); // needed to encode correct snapshot location.
+
+#ifdef DEBUG
             emitDebugForceBailing(*iter);
 #endif
 
-            iter->accept(this);
+            switch (iter->op()) {
+#define LIROP(op) case LNode::LOp_##op: visit##op(iter->to##op()); break;
+    LIR_OPCODE_LIST(LIROP)
+#undef LIROP
+              case LNode::LOp_Invalid:
+              default:
+                MOZ_CRASH("Invalid LIR op");
+            }
 
             // Track the end native offset of optimizations.
             if (iter->mirRaw() && iter->mirRaw()->trackedOptimizations())
@@ -9935,11 +9957,6 @@ CodeGenerator::linkSharedStubs(JSContext* cx)
             stub = stubCompiler.getStub(&stubSpace_);
             break;
           }
-          case ICStub::Kind::UnaryArith_Fallback: {
-            ICUnaryArith_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonSharedIC);
-            stub = stubCompiler.getStub(&stubSpace_);
-            break;
-          }
           case ICStub::Kind::Compare_Fallback: {
             ICCompare_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonSharedIC);
             stub = stubCompiler.getStub(&stubSpace_);
@@ -13233,6 +13250,9 @@ CodeGenerator::visitGetPrototypeOf(LGetPrototypeOf* lir)
 
     masm.bind(ool->rejoin());
 }
+
+static_assert(!std::is_polymorphic<CodeGenerator>::value,
+              "CodeGenerator should not have any virtual methods");
 
 } // namespace jit
 } // namespace js

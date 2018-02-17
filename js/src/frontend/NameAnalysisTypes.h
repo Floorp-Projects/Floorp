@@ -4,11 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef frontend_NameAnalysis_h
-#define frontend_NameAnalysis_h
+#ifndef frontend_NameAnalysisTypes_h
+#define frontend_NameAnalysisTypes_h
 
-#include "jsopcode.h"
-
+#include "vm/BytecodeUtil.h"
 #include "vm/Scope.h"
 
 namespace js {
@@ -377,4 +376,4 @@ struct IsPod<js::frontend::NameLocation> : TrueType {};
 
 } // namespace mozilla
 
-#endif // frontend_NameAnalysis_h
+#endif // frontend_NameAnalysisTypes_h

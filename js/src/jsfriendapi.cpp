@@ -11,13 +11,13 @@
 #include <stdint.h>
 
 #include "jsprf.h"
-#include "jsweakmap.h"
 #include "jswrapper.h"
 
 #include "builtin/Promise.h"
 #include "builtin/TestingFunctions.h"
 #include "gc/GCInternals.h"
-#include "gc/Iteration.h"
+#include "gc/PublicIterators.h"
+#include "gc/WeakMap.h"
 #include "js/Proxy.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/ArgumentsObject.h"
