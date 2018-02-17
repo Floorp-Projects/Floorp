@@ -120,6 +120,7 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags,
     mPreliminaryHandshakeDone(false),
     mNPNCompleted(false),
     mEarlyDataAccepted(false),
+    mDenyClientCert(false),
     mFalseStartCallbackCalled(false),
     mFalseStarted(false),
     mIsFullHandshake(false),
@@ -393,6 +394,20 @@ void
 nsNSSSocketInfo::SetEarlyDataAccepted(bool aAccepted)
 {
   mEarlyDataAccepted = aAccepted;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetDenyClientCert(bool* aDenyClientCert)
+{
+  *aDenyClientCert = mDenyClientCert;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::SetDenyClientCert(bool aDenyClientCert)
+{
+  mDenyClientCert = aDenyClientCert;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2144,6 +2159,14 @@ nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
       "Missing server cert should have been detected during server cert auth.");
     PR_SetError(SSL_ERROR_NO_CERTIFICATE, 0);
     return SECFailure;
+  }
+
+  if (info->GetDenyClientCert()) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+           ("[%p] Not returning client cert due to denyClientCert attribute\n", socket));
+    *pRetCert = nullptr;
+    *pRetKey = nullptr;
+    return SECSuccess;
   }
 
   if (info->GetJoined()) {

@@ -131,6 +131,12 @@ interface nsISSLSocketControl : nsISupports {
     [infallible] readonly attribute short MACAlgorithmUsed;
 
     /**
+     * If set to true before the server requests a client cert
+     * no cert will be sent.
+     */
+    [noscript] attribute boolean denyClientCert;
+
+    /**
      * If set before the server requests a client cert (assuming it does so at
      * all), then this cert will be presented to the server, instead of asking
      * the user or searching the set of rememebered user cert decisions.
