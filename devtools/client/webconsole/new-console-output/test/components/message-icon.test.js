@@ -5,20 +5,17 @@
 const {
   MESSAGE_LEVEL,
 } = require("devtools/client/webconsole/new-console-output/constants");
-const MessageIcon = require("devtools/client/webconsole/new-console-output/components/MessageIcon");
 
 const expect = require("expect");
-
-const {
-  renderComponent
-} = require("devtools/client/webconsole/new-console-output/test/helpers");
+const { render } = require("enzyme");
+const { createFactory } = require("devtools/client/shared/vendor/react");
+const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/MessageIcon"));
 
 describe("MessageIcon component:", () => {
   it("renders icon based on level", () => {
-    const rendered = renderComponent(MessageIcon, { level: MESSAGE_LEVEL.ERROR });
-
-    expect(rendered.classList.contains("icon")).toBe(true);
-    expect(rendered.getAttribute("aria-live")).toBe("off");
-    expect(rendered.getAttribute("title")).toBe("Error");
+    const rendered = render(MessageIcon({ level: MESSAGE_LEVEL.ERROR }));
+    expect(rendered.hasClass("icon")).toBe(true);
+    expect(rendered.attr("title")).toBe("Error");
+    expect(rendered.attr("aria-live")).toBe("off");
   });
 });

@@ -16,6 +16,8 @@ body {
 
 button,
 input {
+  background-color: inherit;
+  color: inherit;
   font-family: inherit;
   font-size: inherit; }
 
@@ -437,7 +439,7 @@ main {
     .top-sites-list .top-site-outer.dragged .tile {
       background: #EDEDF0;
       box-shadow: none; }
-      .top-sites-list .top-site-outer.dragged .tile * {
+      .top-sites-list .top-site-outer.dragged .tile *, .top-sites-list .top-site-outer.dragged .tile::before {
         display: none; }
     .top-sites-list .top-site-outer.dragged .title {
       visibility: hidden; }
@@ -689,7 +691,6 @@ main {
     border: 0;
     border-radius: 3px;
     box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.15);
-    color: inherit;
     font-size: 15px;
     padding: 0;
     padding-inline-end: 36px;
@@ -1274,16 +1275,12 @@ main {
   margin-bottom: 16px;
   position: relative; }
   .collapsible-section .section-disclaimer .section-disclaimer-text {
-    display: inline-block; }
-    @media (min-width: 432px) {
+    display: inline-block;
+    min-height: 26px;
+    width: calc(100% - 130px); }
+    @media (max-width: 560px) {
       .collapsible-section .section-disclaimer .section-disclaimer-text {
         width: 224px; } }
-    @media (min-width: 560px) {
-      .collapsible-section .section-disclaimer .section-disclaimer-text {
-        width: 340px; } }
-    @media (min-width: 816px) {
-      .collapsible-section .section-disclaimer .section-disclaimer-text {
-        width: 610px; } }
   .collapsible-section .section-disclaimer a {
     color: #008EA4;
     padding-left: 3px; }

@@ -10,6 +10,22 @@
       "enum": [true]
     },
 
+    "BlockAboutProfiles": {
+      "description": "Blocks access to the about:profiles page.",
+      "first_available": "60.0",
+
+      "type": "boolean",
+      "enum": [true]
+    },
+
+    "BlockAboutSupport": {
+      "description": "Blocks access to the about:support page.",
+      "first_available": "60.0",
+
+      "type": "boolean",
+      "enum": [true]
+    },
+
     "DisableAppUpdate": {
       "description": "Prevent the browser from updating.",
       "first_available": "60.0",
