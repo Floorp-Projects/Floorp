@@ -177,7 +177,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "e8b1de51b7ba"
+        "revision": "32768a868972"
     }, 
     "bs": {
         "platforms": [
@@ -612,7 +612,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "81ab5ce8f4ef"
+        "revision": "f1b4eae0d7a3"
     }, 
     "hi-IN": {
         "platforms": [
@@ -627,7 +627,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "3c48c674ea7f"
+        "revision": "e7e81aaa351c"
     }, 
     "hr": {
         "platforms": [
