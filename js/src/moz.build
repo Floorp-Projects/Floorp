@@ -89,7 +89,6 @@ EXPORTS += [
     'jsalloc.h',
     'jsapi.h',
     'jsbytecode.h',
-    'jscpucfg.h',
     'jsfriendapi.h',
     'jsprf.h',
     'jsprototypes.h',

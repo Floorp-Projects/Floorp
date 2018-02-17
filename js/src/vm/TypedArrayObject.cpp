@@ -19,7 +19,6 @@
 
 #include "jsapi.h"
 #include "jsarray.h"
-#include "jscpucfg.h"
 #include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
