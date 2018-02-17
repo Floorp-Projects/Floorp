@@ -1,15 +1,3 @@
-== remove-split-inline-1.html remove-split-inline-1-ref.html
-== remove-from-split-inline-1.html remove-from-split-inline-1-ref.html
-== remove-from-split-inline-1-ref.html remove-from-split-inline-1-noib-ref.html
-== remove-from-split-inline-2.html remove-from-split-inline-2-ref.html
-== remove-from-split-inline-3.html remove-from-split-inline-3-ref.html
-== remove-from-split-inline-3-ref.html remove-from-split-inline-3-noib-ref.html
-== remove-from-split-inline-4.html remove-from-split-inline-4-ref.html
-== remove-from-split-inline-4-ref.html remove-from-split-inline-4-noib-ref.html
-== remove-from-split-inline-5.html remove-from-split-inline-5-ref.html
-== remove-from-split-inline-5-ref.html remove-from-split-inline-5-noib-ref.html
-== remove-from-split-inline-6.html remove-from-split-inline-6-ref.html
-== remove-from-split-inline-6-ref.html remove-from-split-inline-6-noib-ref.html
 == insert-into-split-inline-1a.html insert-into-split-inline-1-ref.html
 == insert-into-split-inline-1b.html insert-into-split-inline-1-ref.html
 == insert-into-split-inline-1c.html insert-into-split-inline-1-ref.html
