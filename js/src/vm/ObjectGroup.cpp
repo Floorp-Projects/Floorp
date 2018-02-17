@@ -7,10 +7,10 @@
 #include "vm/ObjectGroup.h"
 
 #include "jsexn.h"
-#include "jshashutil.h"
 
 #include "builtin/DataViewObject.h"
 #include "gc/FreeOp.h"
+#include "gc/HashUtil.h"
 #include "gc/Policy.h"
 #include "gc/StoreBuffer.h"
 #include "gc/Zone.h"

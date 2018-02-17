@@ -11,9 +11,9 @@
  * JS interpreter interface.
  */
 
-#include "jsiter.h"
 #include "jspubtd.h"
 
+#include "vm/Iteration.h"
 #include "vm/Stack.h"
 
 namespace js {

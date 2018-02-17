@@ -1,10 +1,8 @@
 config = {
     "platform": "win32",
-    "stage_product": "firefox",
     "app_name": "browser",
     "mozconfig_platform": "win32",
     "mozconfig_variant": "l10n-mozconfig",
-    "ssh_key_dir": "~/.ssh",
     "log_name": "single_locale",
     "objdir": "obj-firefox",
     "vcs_share_base": "c:/builds/hg-shared",

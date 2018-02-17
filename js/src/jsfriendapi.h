@@ -642,7 +642,7 @@ struct String
 } /* namespace shadow */
 
 // This is equal to |&JSObject::class_|.  Use it in places where you don't want
-// to #include jsobj.h.
+// to #include vm/JSObject.h.
 extern JS_FRIEND_DATA(const js::Class* const) ObjectClassPtr;
 
 inline const js::Class*
@@ -1390,12 +1390,6 @@ DateGetMsecSinceEpoch(JSContext* cx, JS::HandleObject obj, double* msecSinceEpoc
 
 } /* namespace js */
 
-/* Implemented in jscntxt.cpp. */
-
-/**
- * Report an exception, which is currently realized as a printf-style format
- * string and its arguments.
- */
 typedef enum JSErrNum {
 #define MSG_DEF(name, count, exception, format) \
     name,
@@ -1405,6 +1399,8 @@ typedef enum JSErrNum {
 } JSErrNum;
 
 namespace js {
+
+/* Implemented in vm/JSContext.cpp. */
 
 extern JS_FRIEND_API(const JSErrorFormatString*)
 GetErrorMessage(void* userRef, const unsigned errorNumber);
@@ -2612,7 +2608,7 @@ FunctionObjectToShadowFunction(JSObject* fun)
     return reinterpret_cast<shadow::Function*>(fun);
 }
 
-/* Statically asserted in jsfun.h. */
+/* Statically asserted in JSFunction.h. */
 static const unsigned JS_FUNCTION_INTERPRETED_BITS = 0x0201;
 
 // Return whether the given function object is native.

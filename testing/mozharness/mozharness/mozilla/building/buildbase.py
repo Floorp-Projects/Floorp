@@ -19,8 +19,6 @@ import time
 import uuid
 import copy
 import glob
-import shlex
-from itertools import chain
 
 # import the power of mozharness ;)
 import sys
@@ -47,7 +45,6 @@ from mozharness.mozilla.signing import SigningMixin
 from mozharness.mozilla.testing.errors import TinderBoxPrintRe
 from mozharness.mozilla.testing.unittest import tbox_print_summary
 from mozharness.mozilla.updates.balrog import BalrogMixin
-from mozharness.mozilla.taskcluster_helper import Taskcluster
 from mozharness.base.python import (
     PerfherderResourceOptionsMixin,
     VirtualenvMixin,
@@ -697,9 +694,7 @@ class BuildScript(BuildbotMixin, PurgeMixin, BalrogMixin,
             self.fatal("Please add missing items to your config")
         self.repo_path = None
         self.buildid = None
-        self.builduid = None
         self.query_buildid()  # sets self.buildid
-        self.query_builduid()  # sets self.builduid
         self.generated_build_props = False
         self.client_id = None
         self.access_token = None
@@ -831,30 +826,6 @@ or run without that action (ie: --no-{action})"
                 cwd=dirs['abs_obj_dir'], env=env)
         else:
             return None
-
-    def query_builduid(self):
-        c = self.config
-        if self.builduid:
-            return self.builduid
-
-        builduid = None
-        if c.get("is_automation"):
-            if self.buildbot_config['properties'].get('builduid'):
-                self.info("Determining builduid from buildbot properties")
-                builduid = self.buildbot_config['properties']['builduid'].encode(
-                    'ascii', 'replace'
-                )
-
-        if not builduid:
-            self.info("Creating builduid through uuid hex")
-            builduid = generate_build_UID()
-
-        if c.get('is_automation'):
-            self.set_buildbot_property('builduid',
-                                       builduid,
-                                       write_to_file=True)
-        self.builduid = builduid
-        return self.builduid
 
     def query_buildid(self):
         c = self.config
@@ -991,18 +962,6 @@ or run without that action (ie: --no-{action})"
         mach_env = {}
         if c.get('upload_env'):
             mach_env.update(c['upload_env'])
-            if 'UPLOAD_HOST' in mach_env and 'stage_server' in c:
-                mach_env['UPLOAD_HOST'] = mach_env['UPLOAD_HOST'] % {
-                    'stage_server': c['stage_server']
-                }
-            if 'UPLOAD_USER' in mach_env and 'stage_username' in c:
-                mach_env['UPLOAD_USER'] = mach_env['UPLOAD_USER'] % {
-                    'stage_username': c['stage_username']
-                }
-            if 'UPLOAD_SSH_KEY' in mach_env and 'stage_ssh_key' in c:
-                mach_env['UPLOAD_SSH_KEY'] = mach_env['UPLOAD_SSH_KEY'] % {
-                    'stage_ssh_key': c['stage_ssh_key']
-                }
 
         # this prevents taskcluster from overwriting the target files with
         # the multilocale files. Put everything from the en-US build in a
@@ -1011,13 +970,6 @@ or run without that action (ie: --no-{action})"
             if 'UPLOAD_PATH' in mach_env:
                 mach_env['UPLOAD_PATH'] = os.path.join(mach_env['UPLOAD_PATH'],
                                                        'en-US')
-
-        # _query_post_upload_cmd returns a list (a cmd list), for env sake here
-        # let's make it a string
-        if c.get('is_automation'):
-            pst_up_cmd = ' '.join([str(i) for i in self._query_post_upload_cmd(multiLocale)])
-            mach_env['POST_UPLOAD_CMD'] = pst_up_cmd
-
         return mach_env
 
     def _compile_against_pgo(self):
@@ -1044,65 +996,6 @@ or run without that action (ie: --no-{action})"
             for env_var, env_value in c['check_test_env'].iteritems():
                 check_test_env[env_var] = env_value % dirs
         return check_test_env
-
-    def _query_post_upload_cmd(self, multiLocale):
-        c = self.config
-        post_upload_cmd = ["post_upload.py"]
-        buildid = self.query_buildid()
-        revision = self.query_revision()
-        platform = self.stage_platform
-        who = self.query_who()
-        if c.get('pgo_build'):
-            platform += '-pgo'
-
-        if c.get('tinderbox_build_dir'):
-            # TODO find out if we should fail here like we are
-            if not who and not revision:
-                self.fatal("post upload failed. --tinderbox-builds-dir could "
-                           "not be determined. 'who' and/or 'revision' unknown")
-            # branches like try will use 'tinderbox_build_dir
-            tinderbox_build_dir = c['tinderbox_build_dir'] % {
-                'who': who,
-                'got_revision': revision
-            }
-        else:
-            # the default
-            tinderbox_build_dir = "%s-%s" % (self.branch, platform)
-
-        if who and self.branch == 'try':
-            post_upload_cmd.extend(["--who", who])
-        if c.get('include_post_upload_builddir'):
-            post_upload_cmd.extend(
-                ["--builddir", "%s-%s" % (self.branch, platform)]
-            )
-        elif multiLocale:
-            # Android builds with multilocale enabled upload the en-US builds
-            # to an en-US subdirectory, and the multilocale builds to the
-            # top-level directory.
-            post_upload_cmd.extend(
-                ["--builddir", "en-US"]
-            )
-
-        post_upload_cmd.extend(["--tinderbox-builds-dir", tinderbox_build_dir])
-        post_upload_cmd.extend(["-p", c['stage_product']])
-        post_upload_cmd.extend(['-i', buildid])
-        if revision:
-            post_upload_cmd.extend(['--revision', revision])
-        if c.get('to_tinderbox_dated'):
-            post_upload_cmd.append('--release-to-tinderbox-dated-builds')
-        if c.get('release_to_try_builds'):
-            post_upload_cmd.append('--release-to-try-builds')
-        if self.query_is_nightly():
-            if c.get('post_upload_include_platform'):
-                post_upload_cmd.extend(['-b', '%s-%s' % (self.branch, platform)])
-            else:
-                post_upload_cmd.extend(['-b', self.branch])
-            post_upload_cmd.append('--release-to-dated')
-            if c['platform_supports_post_upload_to_latest']:
-                post_upload_cmd.append('--release-to-latest')
-        post_upload_cmd.extend(c.get('post_upload_extra', []))
-
-        return post_upload_cmd
 
     def _rm_old_package(self):
         """rm the old package."""
@@ -1255,18 +1148,6 @@ or run without that action (ie: --no-{action})"
         self.get_output_from_command(cmd, cwd=dirs['abs_src_dir'],
                                      throw_exception=True)
 
-    def _generate_properties_file(self, path):
-        # TODO it would be better to grab all the properties that were
-        # persisted to file rather than use whats in the buildbot_properties
-        # live object so we become less action dependant.
-        all_current_props = dict(
-            chain(self.buildbot_config['properties'].items(),
-                  self.buildbot_properties.items())
-        )
-        # graph_server_post.py expects a file with 'properties' key
-        graph_props = dict(properties=all_current_props)
-        self.dump_config(path, graph_props)
-
     def _query_props_set_by_mach(self, console_output=True, error_level=FATAL):
         mach_properties_path = os.path.join(
             self.query_abs_dirs()['abs_obj_dir'], 'dist', 'mach_build_properties.json'
@@ -1368,229 +1249,6 @@ or run without that action (ie: --no-{action})"
 
         self.generated_build_props = True
 
-    def _initialize_taskcluster(self):
-        if self.client_id and self.access_token:
-            # Already initialized
-            return
-
-        dirs = self.query_abs_dirs()
-        auth = os.path.join(os.getcwd(), self.config['taskcluster_credentials_file'])
-        credentials = {}
-        execfile(auth, credentials)
-        self.client_id = credentials.get('taskcluster_clientId')
-        self.access_token = credentials.get('taskcluster_accessToken')
-
-        # We need to create & activate the virtualenv so that we can import
-        # taskcluster (and its dependent modules, like requests and hawk).
-        # Normally we could create the virtualenv as an action, but due to some
-        # odd dependencies with query_build_env() being called from build(),
-        # which is necessary before the virtualenv can be created.
-        self.create_virtualenv()
-        self.activate_virtualenv()
-
-        routes_file = os.path.join(dirs['abs_src_dir'],
-                                   'testing',
-                                   'mozharness',
-                                   'configs',
-                                   'routes.json')
-        with open(routes_file) as f:
-            self.routes_json = json.load(f)
-
-    def _taskcluster_upload(self, files, templates, locale='en-US',
-                            property_conditions=[]):
-        if not self.client_id or not self.access_token:
-            self.warning('Skipping S3 file upload: No taskcluster credentials.')
-            return
-
-        dirs = self.query_abs_dirs()
-        repo = self._query_repo()
-        revision = self.query_revision()
-        pushinfo = self.vcs_query_pushinfo(repo, revision)
-        pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
-
-        index = self.config.get('taskcluster_index', 'index.garbage.staging')
-        fmt = {
-            'index': index,
-            'project': self.buildbot_config['properties']['branch'],
-            'head_rev': revision,
-            'pushdate': pushdate,
-            'pushid': pushinfo.pushid,
-            'year': pushdate[0:4],
-            'month': pushdate[4:6],
-            'day': pushdate[6:8],
-            'build_product': self.config['stage_product'],
-            'build_name': self.query_build_name(),
-            'build_type': self.query_build_type(),
-            'locale': locale,
-        }
-        fmt.update(self.buildid_to_dict(self.query_buildid()))
-        routes = []
-        for template in templates:
-            routes.append(template.format(**fmt))
-        self.info("Using routes: %s" % routes)
-
-        taskid = self.buildbot_config['properties'].get('upload_to_task_id')
-        tc = Taskcluster(
-            branch=self.branch,
-            rank=pushinfo.pushdate, # Use pushdate as the rank
-            client_id=self.client_id,
-            access_token=self.access_token,
-            log_obj=self.log_obj,
-            # `upload_to_task_id` is used by mozci to have access to where the artifacts
-            # will be uploaded
-            task_id=taskid,
-        )
-
-        if taskid:
-            task = tc.get_task(taskid)
-        else:
-            task = tc.create_task(routes)
-        tc.claim_task(task)
-
-        # Only those files uploaded with valid extensions are processed.
-        # This ensures that we get the correct packageUrl from the list.
-        valid_extensions = (
-            '.apk',
-            '.dmg',
-            '.mar',
-            '.rpm',
-            '.tar.bz2',
-            '.tar.gz',
-            '.zip',
-            '.json',
-        )
-
-        for upload_file in files:
-            # Create an S3 artifact for each file that gets uploaded. We also
-            # check the uploaded file against the property conditions so that we
-            # can set the buildbot config with the correct URLs for package
-            # locations.
-            tc.create_artifact(task, upload_file)
-            if upload_file.endswith(valid_extensions):
-                for prop, condition in property_conditions:
-                    if condition(upload_file):
-                        self.set_buildbot_property(prop, tc.get_taskcluster_url(upload_file))
-                        break
-
-        # Upload a file with all Buildbot properties
-        # This is necessary for Buildbot Bridge test jobs work properly
-        # until we can migrate to TaskCluster
-        properties_path = os.path.join(
-            dirs['base_work_dir'],
-            'buildbot_properties.json'
-        )
-        self._generate_properties_file(properties_path)
-        tc.create_artifact(task, properties_path)
-
-        tc.report_completed(task)
-
-    def upload_files(self):
-        self._initialize_taskcluster()
-        dirs = self.query_abs_dirs()
-
-        if self.query_is_nightly():
-            templates = self.routes_json['nightly']
-
-            # Nightly builds with l10n counterparts also publish to the
-            # 'en-US' locale.
-            if self.config.get('publish_nightly_en_US_routes'):
-                templates.extend(self.routes_json['l10n'])
-        else:
-            templates = self.routes_json['routes']
-
-        # Some trees may not be setting uploadFiles, so default to []. Normally
-        # we'd only expect to get here if the build completes successfully,
-        # which means we should have uploadFiles.
-        files = self.query_buildbot_property('uploadFiles') or []
-        if not files:
-            self.warning('No files from the build system to upload to S3: uploadFiles property is missing or empty.')
-
-        packageName = self.query_buildbot_property('packageFilename')
-        self.info('packageFilename is: %s' % packageName)
-
-        if self.config.get('use_package_as_marfile'):
-            self.info('Using packageUrl for the MAR file')
-            self.set_buildbot_property('completeMarUrl',
-                                       self.query_buildbot_property('packageUrl'),
-                                       write_to_file=True)
-
-            # Find the full path to the package in uploadFiles so we can
-            # get the size/hash of the mar
-            for upload_file in files:
-                if upload_file.endswith(packageName):
-                    self.set_buildbot_property('completeMarSize',
-                                               self.query_filesize(upload_file),
-                                               write_to_file=True)
-                    self.set_buildbot_property('completeMarHash',
-                                               self.query_sha512sum(upload_file),
-                                               write_to_file=True)
-                    break
-
-        property_conditions = [
-            # key: property name, value: condition
-            ('symbolsUrl', lambda m: m.endswith('crashreporter-symbols.zip') or
-                           m.endswith('crashreporter-symbols-full.zip')),
-            ('testsUrl', lambda m: m.endswith(('tests.tar.bz2', 'tests.zip'))),
-            ('robocopApkUrl', lambda m: m.endswith('apk') and 'robocop' in m),
-            ('jsshellUrl', lambda m: 'jsshell-' in m and m.endswith('.zip')),
-            # Temporarily use "TC" in MarUrl parameters. We don't want to
-            # override these to point to taskcluster just yet, and still
-            # need to use FTP. However, they can't be removed outright since
-            # that can affect packageUrl. See bug 1144985.
-            ('completeMarUrlTC', lambda m: m.endswith('.complete.mar')),
-            ('partialMarUrlTC', lambda m: m.endswith('.mar') and '.partial.' in m),
-            ('codeCoverageURL', lambda m: m.endswith('code-coverage-gcno.zip')),
-            ('sdkUrl', lambda m: m.endswith(('sdk.tar.bz2', 'sdk.zip'))),
-            ('testPackagesUrl', lambda m: m.endswith('test_packages.json')),
-            ('packageUrl', lambda m: m.endswith(packageName)),
-        ]
-
-        # Also upload our mozharness log files
-        files.extend([os.path.join(self.log_obj.abs_log_dir, x) for x in self.log_obj.log_files.values()])
-
-        # Also upload our buildprops.json file.
-        files.extend([os.path.join(dirs['base_work_dir'], 'buildprops.json')])
-
-        self._taskcluster_upload(files, templates,
-                                 property_conditions=property_conditions)
-
-    def _set_file_properties(self, file_name, find_dir, prop_type,
-                             error_level=ERROR):
-        c = self.config
-        dirs = self.query_abs_dirs()
-
-        # windows fix. even bash -c loses two single slashes.
-        find_dir = find_dir.replace('\\', '\\\\\\\\')
-
-        error_msg = "Not setting props: %s{Filename, Size, Hash}" % prop_type
-        cmd = ["bash", "-c",
-               "find %s -maxdepth 1 -type f -name %s" % (find_dir, file_name)]
-        file_path = self.get_output_from_command(cmd, dirs['abs_work_dir'])
-        if not file_path:
-            self.error(error_msg)
-            self.error("Can't determine filepath with cmd: %s" % (str(cmd),))
-            return
-
-        cmd = [
-            self.query_exe('openssl'), 'dgst',
-            '-%s' % (c.get("hash_type", "sha512"),), file_path
-        ]
-        hash_prop = self.get_output_from_command(cmd, dirs['abs_work_dir'])
-        if not hash_prop:
-            self.log("undetermined hash_prop with cmd: %s" % (str(cmd),),
-                     level=error_level)
-            self.log(error_msg, level=error_level)
-            return
-        self.set_buildbot_property(prop_type + 'Filename',
-                                   os.path.split(file_path)[1],
-                                   write_to_file=True)
-        self.set_buildbot_property(prop_type + 'Size',
-                                   os.path.getsize(file_path),
-                                   write_to_file=True)
-        self.set_buildbot_property(prop_type + 'Hash',
-                                   hash_prop.strip().split(' ', 2)[1],
-                                   write_to_file=True)
-
     def _create_mozbuild_dir(self, mozbuild_path=None):
         if not mozbuild_path:
             env = self.query_build_env()
@@ -1666,7 +1324,6 @@ or run without that action (ie: --no-{action})"
         if not self.query_is_nightly():
             self.info("Not a nightly build, skipping multi l10n.")
             return
-        self._initialize_taskcluster()
 
         dirs = self.query_abs_dirs()
         base_work_dir = dirs['base_work_dir']
@@ -1749,10 +1406,6 @@ or run without that action (ie: --no-{action})"
             upload_files_cmd,
             cwd=objdir,
         )
-        files = shlex.split(output)
-        abs_files = [os.path.abspath(os.path.join(objdir, f)) for f in files]
-        self._taskcluster_upload(abs_files, self.routes_json['l10n'],
-                                 locale='multi')
 
     def postflight_build(self):
         """grabs properties from post build and calls ccache -s"""
@@ -1918,20 +1571,15 @@ or run without that action (ie: --no-{action})"
         import zipfile
 
         dirs = self.query_abs_dirs()
-        packageName = self.query_buildbot_property('packageFilename')
 
-        # if packageName is not set because we are not running in Buildbot,
-        # then assume we are using MOZ_SIMPLE_PACKAGE_NAME, which means the
-        # package is named one of target.{tar.bz2,zip,dmg}.
-        if not packageName:
-            dist_dir = os.path.join(dirs['abs_obj_dir'], 'dist')
-            for ext in ['apk', 'dmg', 'tar.bz2', 'zip']:
-                name = 'target.' + ext
-                if os.path.exists(os.path.join(dist_dir, name)):
-                    packageName = name
-                    break
-            else:
-                self.fatal("could not determine packageName")
+        dist_dir = os.path.join(dirs['abs_obj_dir'], 'dist')
+        for ext in ['apk', 'dmg', 'tar.bz2', 'zip']:
+            name = 'target.' + ext
+            if os.path.exists(os.path.join(dist_dir, name)):
+                packageName = name
+                break
+        else:
+            self.fatal("could not determine packageName")
 
         interests = ['libxul.so', 'classes.dex', 'omni.ja']
         installer = os.path.join(dirs['abs_obj_dir'], 'dist', packageName)

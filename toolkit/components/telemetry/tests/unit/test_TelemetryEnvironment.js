@@ -1062,6 +1062,22 @@ add_task(async function test_prefDefaultState() {
   Assert.strictEqual(TelemetryEnvironment.currentEnvironment.settings.userPrefs[PREF_TEST], "<set>");
 });
 
+add_task(async function test_prefInvalid() {
+  const PREF_TEST_1 = "toolkit.telemetry.test.invalid1";
+  const PREF_TEST_2 = "toolkit.telemetry.test.invalid2";
+
+  const PREFS_TO_WATCH = new Map([
+    [PREF_TEST_1, {what: TelemetryEnvironment.RECORD_DEFAULTPREF_VALUE}],
+    [PREF_TEST_2, {what: TelemetryEnvironment.RECORD_DEFAULTPREF_STATE}],
+  ]);
+
+  TelemetryEnvironment.testWatchPreferences(PREFS_TO_WATCH);
+
+  Assert.strictEqual(TelemetryEnvironment.currentEnvironment.settings.userPrefs[PREF_TEST_1], undefined);
+  Assert.strictEqual(TelemetryEnvironment.currentEnvironment.settings.userPrefs[PREF_TEST_2], undefined);
+
+});
+
 add_task(async function test_addonsWatch_InterestingChange() {
   const ADDON_INSTALL_URL = gDataRoot + "restartless.xpi";
   const ADDON_ID = "tel-restartless-webext@tests.mozilla.org";

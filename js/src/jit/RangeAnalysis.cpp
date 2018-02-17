@@ -18,7 +18,7 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/TypedArrayObject.h"
 
-#include "jsopcodeinlines.h"
+#include "vm/BytecodeUtil-inl.h"
 
 using namespace js;
 using namespace js::jit;

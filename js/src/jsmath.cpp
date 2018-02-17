@@ -25,12 +25,10 @@
 #include "jsapi.h"
 #include "jslibmath.h"
 #include "jstypes.h"
-#ifdef XP_WIN
-# include "jswin.h"
-#endif
 
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
+#include "util/Windows.h"
 #include "vm/JSAtom.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"

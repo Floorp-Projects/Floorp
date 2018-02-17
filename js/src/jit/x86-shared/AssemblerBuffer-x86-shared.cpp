@@ -8,7 +8,7 @@
 
 #include "mozilla/Sprintf.h"
 
-#include "jsopcode.h"
+#include "vm/BytecodeUtil.h"
 
 using namespace js;
 using namespace jit;

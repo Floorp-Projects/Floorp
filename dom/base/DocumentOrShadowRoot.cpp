@@ -9,6 +9,8 @@
 #include "mozilla/dom/StyleSheetList.h"
 #include "nsDocument.h"
 #include "nsFocusManager.h"
+#include "nsLayoutUtils.h"
+#include "nsSVGUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -164,6 +166,121 @@ DocumentOrShadowRoot::GetFullscreenElement()
   }
 
   return nullptr;
+}
+
+Element*
+DocumentOrShadowRoot::ElementFromPoint(float aX, float aY)
+{
+  return ElementFromPointHelper(aX, aY, false, true);
+}
+
+void
+DocumentOrShadowRoot::ElementsFromPoint(float aX, float aY,
+                                        nsTArray<RefPtr<Element>>& aElements)
+{
+  ElementsFromPointHelper(aX, aY, nsIDocument::FLUSH_LAYOUT, aElements);
+}
+
+Element*
+DocumentOrShadowRoot::ElementFromPointHelper(float aX, float aY,
+                                             bool aIgnoreRootScrollFrame,
+                                             bool aFlushLayout)
+{
+  AutoTArray<RefPtr<Element>, 1> elementArray;
+  ElementsFromPointHelper(aX, aY,
+                          ((aIgnoreRootScrollFrame ? nsIDocument::IGNORE_ROOT_SCROLL_FRAME : 0) |
+                           (aFlushLayout ? nsIDocument::FLUSH_LAYOUT : 0) |
+                           nsIDocument::IS_ELEMENT_FROM_POINT),
+                          elementArray);
+  if (elementArray.IsEmpty()) {
+    return nullptr;
+  }
+  return elementArray[0];
+}
+
+void
+DocumentOrShadowRoot::ElementsFromPointHelper(float aX, float aY,
+                                              uint32_t aFlags,
+                                              nsTArray<RefPtr<mozilla::dom::Element>>& aElements)
+{
+  // As per the the spec, we return null if either coord is negative
+  if (!(aFlags & nsIDocument::IGNORE_ROOT_SCROLL_FRAME) && (aX < 0 || aY < 0)) {
+    return;
+  }
+
+  nscoord x = nsPresContext::CSSPixelsToAppUnits(aX);
+  nscoord y = nsPresContext::CSSPixelsToAppUnits(aY);
+  nsPoint pt(x, y);
+
+  nsCOMPtr<nsIDocument> doc = AsNode().OwnerDoc();
+
+  // Make sure the layout information we get is up-to-date, and
+  // ensure we get a root frame (for everything but XUL)
+  if (aFlags & nsIDocument::FLUSH_LAYOUT) {
+    doc->FlushPendingNotifications(FlushType::Layout);
+  }
+
+  nsIPresShell* ps = doc->GetShell();
+  if (!ps) {
+    return;
+  }
+  nsIFrame* rootFrame = ps->GetRootFrame();
+
+  // XUL docs, unlike HTML, have no frame tree until everything's done loading
+  if (!rootFrame) {
+    return; // return null to premature XUL callers as a reminder to wait
+  }
+
+  nsTArray<nsIFrame*> outFrames;
+  // Emulate what GetFrameAtPoint does, since we want all the frames under our
+  // point.
+  nsLayoutUtils::GetFramesForArea(rootFrame, nsRect(pt, nsSize(1, 1)), outFrames,
+    nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC |
+    ((aFlags & nsIDocument::IGNORE_ROOT_SCROLL_FRAME) ? nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME : 0));
+
+  // Dunno when this would ever happen, as we should at least have a root frame under us?
+  if (outFrames.IsEmpty()) {
+    return;
+  }
+
+  // Used to filter out repeated elements in sequence.
+  nsIContent* lastAdded = nullptr;
+
+  for (uint32_t i = 0; i < outFrames.Length(); i++) {
+    nsIContent* node = doc->GetContentInThisDocument(outFrames[i]);
+
+    if (!node || !node->IsElement()) {
+      // If this helper is called via ElementsFromPoint, we need to make sure
+      // our frame is an element. Otherwise return whatever the top frame is
+      // even if it isn't the top-painted element.
+      // SVG 'text' element's SVGTextFrame doesn't respond to hit-testing, so
+      // if 'node' is a child of such an element then we need to manually defer
+      // to the parent here.
+      if (!(aFlags & nsIDocument::IS_ELEMENT_FROM_POINT) &&
+          !nsSVGUtils::IsInSVGTextSubtree(outFrames[i])) {
+        continue;
+      }
+      node = node->GetParent();
+      if (ShadowRoot* shadow = ShadowRoot::FromNodeOrNull(node)) {
+        node = shadow->Host();
+      }
+    }
+
+    //XXXsmaug There is plenty of unspec'ed behavior here
+    //         https://github.com/w3c/webcomponents/issues/735
+    //         https://github.com/w3c/webcomponents/issues/736
+    node = Retarget(node);
+
+    if (node && node != lastAdded) {
+      aElements.AppendElement(node->AsElement());
+      lastAdded = node;
+      // If this helper is called via ElementFromPoint, just return the first
+      // element we find.
+      if (aFlags & nsIDocument::IS_ELEMENT_FROM_POINT) {
+        return;
+      }
+    }
+  }
 }
 
 }

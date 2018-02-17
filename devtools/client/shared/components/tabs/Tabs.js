@@ -303,6 +303,7 @@ define(function (require, exports, module) {
               dom.a({
                 id: id ? id + "-tab" : "tab-" + index,
                 tabIndex: isTabSelected ? 0 : -1,
+                title,
                 "aria-controls": id ? id + "-panel" : "panel-" + index,
                 "aria-selected": isTabSelected,
                 role: "tab",

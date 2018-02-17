@@ -8,7 +8,7 @@
  * Portable double to alphanumeric string and back converters.
  */
 
-#include "jsdtoa.h"
+#include "util/DoubleToString.h"
 
 #include "jsprf.h"
 #include "jstypes.h"

@@ -32,7 +32,6 @@ android-api-16/debug:
         config:
             - builds/releng_base_android_64_builds.py
             - disable_signing.py
-            - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: api-16-debug
@@ -85,7 +84,6 @@ android-x86/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - disable_signing.py
-            - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: x86
@@ -143,7 +141,6 @@ android-x86-nightly/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - disable_signing.py
-            - platform_supports_post_upload_to_latest.py
             - taskcluster_nightly.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
@@ -192,7 +189,6 @@ android-api-16/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - disable_signing.py
-            - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: api-16
@@ -241,7 +237,6 @@ android-api-16-without-google-play-services/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - disable_signing.py
-            - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: api-16-without-google-play-services
@@ -295,7 +290,6 @@ android-api-16-nightly/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - disable_signing.py
-            - platform_supports_post_upload_to_latest.py
             - taskcluster_nightly.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
@@ -349,7 +343,6 @@ android-x86-old-id/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - disable_signing.py
-            - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: x86-old-id
@@ -406,7 +399,6 @@ android-x86-old-id-nightly/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - disable_signing.py
-            - platform_supports_post_upload_to_latest.py
             - taskcluster_nightly.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
@@ -456,7 +448,6 @@ android-api-16-old-id/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - disable_signing.py
-            - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: api-16-old-id
@@ -508,7 +499,6 @@ android-api-16-old-id-nightly/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - disable_signing.py
-            - platform_supports_post_upload_to_latest.py
             - taskcluster_nightly.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
@@ -558,7 +548,6 @@ android-api-16-gradle/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - disable_signing.py
-            - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: api-16-gradle
@@ -605,7 +594,6 @@ android-aarch64/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - disable_signing.py
-            - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: aarch64
@@ -658,7 +646,6 @@ android-aarch64-nightly/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - disable_signing.py
-            - platform_supports_post_upload_to_latest.py
             - taskcluster_nightly.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true

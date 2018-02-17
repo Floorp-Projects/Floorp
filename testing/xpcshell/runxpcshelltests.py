@@ -1368,7 +1368,6 @@ class XPCShellTests(object):
 
             status = self.runTestList(tests_queue, sequential_tests, testClass,
                                       mobileArgs, **kwargs)
-            self.shutdownNode()
         else:
             #
             # Test verification: Run each test many times, in various configurations,
@@ -1438,7 +1437,8 @@ class XPCShellTests(object):
                 self.log.info(':::')
                 self.log.info('::: Test verification %s' % finalResult)
                 self.log.info(':::')
-                self.shutdownNode()
+
+        self.shutdownNode()
 
         return status
 

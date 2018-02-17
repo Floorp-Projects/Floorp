@@ -2662,6 +2662,25 @@ nsLayoutUtils::MatrixTransformRect(const nsRect &aBounds,
   return RoundGfxRectToAppRect(ThebesRect(image), aFactor);
 }
 
+nsRect
+nsLayoutUtils::MatrixTransformRect(const nsRect &aBounds,
+                                   const Matrix4x4Flagged &aMatrix, float aFactor)
+{
+  RectDouble image = RectDouble(NSAppUnitsToDoublePixels(aBounds.x, aFactor),
+                                NSAppUnitsToDoublePixels(aBounds.y, aFactor),
+                                NSAppUnitsToDoublePixels(aBounds.width, aFactor),
+                                NSAppUnitsToDoublePixels(aBounds.height, aFactor));
+
+  RectDouble maxBounds = RectDouble(double(nscoord_MIN) / aFactor * 0.5,
+                                    double(nscoord_MIN) / aFactor * 0.5,
+                                    double(nscoord_MAX) / aFactor,
+                                    double(nscoord_MAX) / aFactor);
+
+  image = aMatrix.TransformAndClipBounds(image, maxBounds);
+
+  return RoundGfxRectToAppRect(ThebesRect(image), aFactor);
+}
+
 nsPoint
 nsLayoutUtils::MatrixTransformPoint(const nsPoint &aPoint,
                                     const Matrix4x4 &aMatrix, float aFactor)
@@ -2705,14 +2724,14 @@ nsLayoutUtils::FrameHasDisplayPort(nsIFrame* aFrame, nsIFrame* aScrolledFrame)
   return false;
 }
 
-Matrix4x4
+Matrix4x4Flagged
 nsLayoutUtils::GetTransformToAncestor(nsIFrame *aFrame,
                                       const nsIFrame *aAncestor,
                                       uint32_t aFlags,
                                       nsIFrame** aOutAncestor)
 {
   nsIFrame* parent;
-  Matrix4x4 ctm;
+  Matrix4x4Flagged ctm;
   if (aFrame == aAncestor) {
     return ctm;
   }
@@ -2736,7 +2755,7 @@ nsLayoutUtils::GetTransformToAncestor(nsIFrame *aFrame,
 gfxSize
 nsLayoutUtils::GetTransformToAncestorScale(nsIFrame* aFrame)
 {
-  Matrix4x4 transform = GetTransformToAncestor(aFrame,
+  Matrix4x4Flagged transform = GetTransformToAncestor(aFrame,
       nsLayoutUtils::GetDisplayRootFrame(aFrame));
   Matrix transform2D;
   if (transform.Is2D(&transform2D)) {
@@ -2745,12 +2764,12 @@ nsLayoutUtils::GetTransformToAncestorScale(nsIFrame* aFrame)
   return gfxSize(1, 1);
 }
 
-static Matrix4x4
+static Matrix4x4Flagged
 GetTransformToAncestorExcludingAnimated(nsIFrame* aFrame,
                                         const nsIFrame* aAncestor)
 {
   nsIFrame* parent;
-  Matrix4x4 ctm;
+  Matrix4x4Flagged ctm;
   if (aFrame == aAncestor) {
     return ctm;
   }
@@ -2760,7 +2779,7 @@ GetTransformToAncestorExcludingAnimated(nsIFrame* aFrame,
   ctm = aFrame->GetTransformMatrix(aAncestor, &parent);
   while (parent && parent != aAncestor) {
     if (ActiveLayerTracker::IsScaleSubjectToAnimation(parent)) {
-      return Matrix4x4();
+      return Matrix4x4Flagged();
     }
     if (!parent->Extend3DContext()) {
       ctm.ProjectTo2D();
@@ -2773,7 +2792,7 @@ GetTransformToAncestorExcludingAnimated(nsIFrame* aFrame,
 gfxSize
 nsLayoutUtils::GetTransformToAncestorScaleExcludingAnimated(nsIFrame* aFrame)
 {
-  Matrix4x4 transform = GetTransformToAncestorExcludingAnimated(aFrame,
+  Matrix4x4Flagged transform = GetTransformToAncestorExcludingAnimated(aFrame,
       nsLayoutUtils::GetDisplayRootFrame(aFrame));
   Matrix transform2D;
   if (transform.Is2D(&transform2D)) {
@@ -2818,12 +2837,12 @@ nsLayoutUtils::TransformPoints(nsIFrame* aFromFrame, nsIFrame* aToFrame,
   if (!nearestCommonAncestor) {
     return NO_COMMON_ANCESTOR;
   }
-  Matrix4x4 downToDest = GetTransformToAncestor(aToFrame, nearestCommonAncestor);
+  Matrix4x4Flagged downToDest = GetTransformToAncestor(aToFrame, nearestCommonAncestor);
   if (downToDest.IsSingular()) {
     return NONINVERTIBLE_TRANSFORM;
   }
   downToDest.Invert();
-  Matrix4x4 upToAncestor = GetTransformToAncestor(aFromFrame, nearestCommonAncestor);
+  Matrix4x4Flagged upToAncestor = GetTransformToAncestor(aFromFrame, nearestCommonAncestor);
   CSSToLayoutDeviceScale devPixelsPerCSSPixelFromFrame =
       aFromFrame->PresContext()->CSSToDevPixelScale();
   CSSToLayoutDeviceScale devPixelsPerCSSPixelToFrame =
@@ -2850,12 +2869,12 @@ nsLayoutUtils::TransformPoint(nsIFrame* aFromFrame, nsIFrame* aToFrame,
   if (!nearestCommonAncestor) {
     return NO_COMMON_ANCESTOR;
   }
-  Matrix4x4 downToDest = GetTransformToAncestor(aToFrame, nearestCommonAncestor);
+  Matrix4x4Flagged downToDest = GetTransformToAncestor(aToFrame, nearestCommonAncestor);
   if (downToDest.IsSingular()) {
     return NONINVERTIBLE_TRANSFORM;
   }
   downToDest.Invert();
-  Matrix4x4 upToAncestor = GetTransformToAncestor(aFromFrame, nearestCommonAncestor);
+  Matrix4x4Flagged upToAncestor = GetTransformToAncestor(aFromFrame, nearestCommonAncestor);
 
   float devPixelsPerAppUnitFromFrame =
     1.0f / aFromFrame->PresContext()->AppUnitsPerDevPixel();
@@ -2882,12 +2901,12 @@ nsLayoutUtils::TransformRect(nsIFrame* aFromFrame, nsIFrame* aToFrame,
   if (!nearestCommonAncestor) {
     return NO_COMMON_ANCESTOR;
   }
-  Matrix4x4 downToDest = GetTransformToAncestor(aToFrame, nearestCommonAncestor);
+  Matrix4x4Flagged downToDest = GetTransformToAncestor(aToFrame, nearestCommonAncestor);
   if (downToDest.IsSingular()) {
     return NONINVERTIBLE_TRANSFORM;
   }
   downToDest.Invert();
-  Matrix4x4 upToAncestor = GetTransformToAncestor(aFromFrame, nearestCommonAncestor);
+  Matrix4x4Flagged upToAncestor = GetTransformToAncestor(aFromFrame, nearestCommonAncestor);
 
   float devPixelsPerAppUnitFromFrame =
     1.0f / aFromFrame->PresContext()->AppUnitsPerDevPixel();
@@ -2976,7 +2995,7 @@ nsLayoutUtils::ClampRectToScrollFrames(nsIFrame* aFrame, const nsRect& aRect)
 
 bool
 nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
-                                         Matrix4x4* aTransform)
+                                         Matrix4x4Flagged* aTransform)
 {
   // FIXME/bug 796690: we can sometimes compute a transform in these
   // cases, it just increases complexity considerably.  Punt for now.
@@ -3018,7 +3037,7 @@ TransformGfxPointFromAncestor(nsIFrame *aFrame,
                               nsIFrame *aAncestor,
                               Point* aOut)
 {
-  Matrix4x4 ctm = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor);
+  Matrix4x4Flagged ctm = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor);
   ctm.Invert();
   Point4D point = ctm.ProjectPoint(aPoint);
   if (!point.HasPositiveWCoord()) {
@@ -3033,11 +3052,11 @@ TransformGfxRectToAncestor(nsIFrame *aFrame,
                            const Rect &aRect,
                            const nsIFrame *aAncestor,
                            bool* aPreservesAxisAlignedRectangles = nullptr,
-                           Maybe<Matrix4x4>* aMatrixCache = nullptr,
+                           Maybe<Matrix4x4Flagged>* aMatrixCache = nullptr,
                            bool aStopAtStackingContextAndDisplayPort = false,
                            nsIFrame** aOutAncestor = nullptr)
 {
-  Matrix4x4 ctm;
+  Matrix4x4Flagged ctm;
   if (aMatrixCache && *aMatrixCache) {
     // We are given a matrix to use, so use it
     ctm = aMatrixCache->value();
@@ -3110,7 +3129,7 @@ nsLayoutUtils::TransformFrameRectToAncestor(nsIFrame* aFrame,
                                             const nsRect& aRect,
                                             const nsIFrame* aAncestor,
                                             bool* aPreservesAxisAlignedRectangles /* = nullptr */,
-                                            Maybe<Matrix4x4>* aMatrixCache /* = nullptr */,
+                                            Maybe<Matrix4x4Flagged>* aMatrixCache /* = nullptr */,
                                             bool aStopAtStackingContextAndDisplayPort /* = false */,
                                             nsIFrame** aOutAncestor /* = nullptr */)
 {
@@ -9618,7 +9637,7 @@ nsLayoutUtils::TransformToAncestorAndCombineRegions(
   const nsIFrame* aAncestorFrame,
   nsRegion* aPreciseTargetDest,
   nsRegion* aImpreciseTargetDest,
-  Maybe<Matrix4x4>* aMatrixCache,
+  Maybe<Matrix4x4Flagged>* aMatrixCache,
   const DisplayItemClip* aClip)
 {
   if (aRegion.IsEmpty()) {

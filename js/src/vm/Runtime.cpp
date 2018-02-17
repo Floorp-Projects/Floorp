@@ -23,15 +23,13 @@
 #ifdef JS_CAN_CHECK_THREADSAFE_ACCESSES
 # include <sys/mman.h>
 #endif
-
 #include "jsmath.h"
-#include "jswin.h"
 #include "jswrapper.h"
 
 #include "builtin/Promise.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
-#include "gc/Iteration.h"
+#include "gc/PublicIterators.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/arm64/vixl/Simulator-vixl.h"
 #include "jit/JitCompartment.h"
@@ -40,6 +38,7 @@
 #include "js/Date.h"
 #include "js/MemoryMetrics.h"
 #include "js/SliceBudget.h"
+#include "util/Windows.h"
 #include "vm/Debugger.h"
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"
@@ -48,8 +47,7 @@
 #include "vm/TraceLoggingGraph.h"
 #include "wasm/WasmSignalHandlers.h"
 
-#include "jsgcinlines.h"
-
+#include "gc/GC-inl.h"
 #include "vm/JSContext-inl.h"
 
 using namespace js;

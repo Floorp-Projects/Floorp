@@ -22,11 +22,10 @@
 #include "vm/TraceLogging.h"
 #include "wasm/WasmInstance.h"
 
-#include "jsopcodeinlines.h"
-
-#include "gc/GCIteration-inl.h"
+#include "gc/PrivateIterators-inl.h"
 #include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"
+#include "vm/BytecodeUtil-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/Stack-inl.h"

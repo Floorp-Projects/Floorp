@@ -71,14 +71,14 @@ GetTransformIn3DContext(Layer* aLayer) {
  * @return local transform for layers not participating 3D rendering
  * context, or the accmulated transform in the context for else.
  */
-static Matrix4x4
+static Matrix4x4Flagged
 GetTransformForInvalidation(Layer* aLayer) {
   return (!aLayer->Is3DContextLeaf() && !aLayer->Extend3DContext() ?
           aLayer->GetLocalTransform() : GetTransformIn3DContext(aLayer));
 }
 
 static IntRect
-TransformRect(const IntRect& aRect, const Matrix4x4& aTransform)
+TransformRect(const IntRect& aRect, const Matrix4x4Flagged& aTransform)
 {
   if (aRect.IsEmpty()) {
     return IntRect();
@@ -97,7 +97,7 @@ TransformRect(const IntRect& aRect, const Matrix4x4& aTransform)
 }
 
 static void
-AddTransformedRegion(nsIntRegion& aDest, const nsIntRegion& aSource, const Matrix4x4& aTransform)
+AddTransformedRegion(nsIntRegion& aDest, const nsIntRegion& aSource, const Matrix4x4Flagged& aTransform)
 {
   for (auto iter = aSource.RectIter(); !iter.Done(); iter.Next()) {
     aDest.Or(aDest, TransformRect(iter.Get(), aTransform));
@@ -328,7 +328,7 @@ public:
   UniquePtr<LayerPropertiesBase> mMaskLayer;
   nsTArray<UniquePtr<LayerPropertiesBase>> mAncestorMaskLayers;
   nsIntRegion mVisibleRegion;
-  Matrix4x4 mTransform;
+  Matrix4x4Flagged mTransform;
   float mPostXScale;
   float mPostYScale;
   float mOpacity;
@@ -507,7 +507,7 @@ public:
 
     if (!mLayer->Extend3DContext()) {
       // |result| contains invalid regions only of children.
-      result.Transform(GetTransformForInvalidation(mLayer));
+      result.Transform(GetTransformForInvalidation(mLayer).GetMatrix());
     }
     // else, effective transforms have applied on children.
 

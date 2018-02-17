@@ -11,14 +11,13 @@
 
 #include "mozilla/Attributes.h"
 
-#include "jsiter.h"
-#include "jsopcode.h"
-
 #include "ds/InlineTable.h"
 #include "frontend/EitherParser.h"
 #include "frontend/SharedContext.h"
 #include "frontend/SourceNotes.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/Interpreter.h"
+#include "vm/Iteration.h"
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
 
@@ -767,7 +766,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rhs);
 
     MOZ_MUST_USE bool emitReturn(ParseNode* pn);
-    MOZ_MUST_USE bool emitStatement(ParseNode* pn);
+    MOZ_MUST_USE bool emitExpressionStatement(ParseNode* pn);
     MOZ_MUST_USE bool emitStatementList(ParseNode* pn);
 
     MOZ_MUST_USE bool emitDeleteName(ParseNode* pn);

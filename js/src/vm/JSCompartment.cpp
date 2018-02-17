@@ -12,11 +12,10 @@
 #include <stddef.h>
 
 #include "jsfriendapi.h"
-#include "jsiter.h"
 #include "jswrapper.h"
 
-#include "gc/Iteration.h"
 #include "gc/Policy.h"
+#include "gc/PublicIterators.h"
 #include "jit/JitCompartment.h"
 #include "jit/JitOptions.h"
 #include "js/Date.h"
@@ -24,11 +23,11 @@
 #include "js/RootingAPI.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/Debugger.h"
+#include "vm/Iteration.h"
 #include "vm/JSContext.h"
 #include "vm/WrapperObject.h"
 
-#include "jsgcinlines.h"
-
+#include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSFunction-inl.h"

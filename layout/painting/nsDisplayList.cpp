@@ -1920,7 +1920,7 @@ nsDisplayListBuilder::AdjustWindowDraggingRegion(nsIFrame* aFrame)
     // RTL mode - it should be able to exclude itself from the draggable region.
     referenceFrameToRootReferenceFrame =
       ViewAs<LayoutDeviceToLayoutDeviceMatrix4x4>(
-          nsLayoutUtils::GetTransformToAncestor(referenceFrame, mReferenceFrame));
+          nsLayoutUtils::GetTransformToAncestor(referenceFrame, mReferenceFrame).GetMatrix());
     Matrix referenceFrameToRootReferenceFrame2d;
     if (!referenceFrameToRootReferenceFrame.Is2D(&referenceFrameToRootReferenceFrame2d) ||
         !referenceFrameToRootReferenceFrame2d.IsRectilinear()) {
@@ -8495,7 +8495,7 @@ static bool IsFrameVisible(nsIFrame* aFrame, const Matrix4x4& aMatrix)
   return true;
 }
 
-const Matrix4x4&
+const Matrix4x4Flagged&
 nsDisplayTransform::GetTransform() const
 {
   if (mTransform.IsIdentity()) {
@@ -8533,7 +8533,7 @@ nsDisplayTransform::GetTransformForRendering(LayoutDevicePoint* aOutOrigin)
       *aOutOrigin = LayoutDevicePoint::FromAppUnits(ToReferenceFrame(), scale);
       return GetResultingTransformMatrix(mFrame, nsPoint(0, 0), scale, INCLUDE_PERSPECTIVE);
     }
-    return GetTransform();
+    return GetTransform().GetMatrix();
   }
   MOZ_ASSERT(!mTransformGetter);
 
@@ -8551,7 +8551,7 @@ nsDisplayTransform::GetAccumulatedPreserved3DTransform(nsDisplayListBuilder* aBu
   if (!mTransformPreserves3DInited) {
     mTransformPreserves3DInited = true;
     if (!IsLeafOf3DContext()) {
-      mTransformPreserves3D = GetTransform();
+      mTransformPreserves3D = GetTransform().GetMatrix();
       return mTransformPreserves3D;
     }
 
@@ -8662,7 +8662,7 @@ nsDisplayTransform::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData
                                      mozilla::layers::WebRenderLayerScrollData* aLayerData)
 {
   if (aLayerData) {
-    aLayerData->SetTransform(GetTransform());
+    aLayerData->SetTransform(GetTransform().GetMatrix());
     aLayerData->SetTransformIsPerspective(mFrame->HasPerspective());
   }
   return true;
@@ -8955,7 +8955,7 @@ nsDisplayTransform::ComputeBounds(nsDisplayListBuilder* aBuilder)
    */
   nsDisplayListBuilder::AutoAccumulateTransform accTransform(aBuilder);
 
-  accTransform.Accumulate(GetTransform());
+  accTransform.Accumulate(GetTransform().GetMatrix());
 
   if (!IsLeafOf3DContext()) {
     // Do not dive into another 3D context.
@@ -9004,7 +9004,7 @@ nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
       return nsRegion();
   }
 
-  const Matrix4x4& matrix = GetTransform();
+  const Matrix4x4Flagged& matrix = GetTransform();
 
   nsRegion result;
   Matrix matrix2d;
@@ -9028,7 +9028,7 @@ nsDisplayTransform::IsUniform(nsDisplayListBuilder *aBuilder) const
   if (!UntransformVisibleRect(aBuilder, &untransformedVisible)) {
     return Nothing();
   }
-  const Matrix4x4& matrix = GetTransform();
+  const Matrix4x4Flagged& matrix = GetTransform();
 
   Matrix matrix2d;
   if (matrix.Is2D(&matrix2d) &&
@@ -9103,7 +9103,7 @@ bool nsDisplayTransform::UntransformRect(const nsRect &aTransformedBounds,
 bool nsDisplayTransform::UntransformVisibleRect(nsDisplayListBuilder* aBuilder,
                                                 nsRect *aOutRect) const
 {
-  const Matrix4x4& matrix = GetTransform();
+  const Matrix4x4Flagged& matrix = GetTransform();
   if (matrix.IsSingular())
     return false;
 
@@ -9132,7 +9132,7 @@ bool nsDisplayTransform::UntransformVisibleRect(nsDisplayListBuilder* aBuilder,
 void
 nsDisplayTransform::WriteDebugInfo(std::stringstream& aStream)
 {
-  AppendToString(aStream, GetTransform());
+  AppendToString(aStream, GetTransform().GetMatrix());
   if (IsTransformSeparator()) {
     aStream << " transform-separator";
   }

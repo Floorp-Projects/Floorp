@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsgcinlines_h
-#define jsgcinlines_h
+#ifndef gc_GC_inl_h
+#define gc_GC_inl_h
 
-#include "jsgc.h"
+#include "gc/GC.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
@@ -348,4 +348,4 @@ class ZoneCellIter : public ZoneCellIter<TenuredCell> {
 } /* namespace gc */
 } /* namespace js */
 
-#endif /* jsgcinlines_h */
+#endif /* gc_GC_inl_h */

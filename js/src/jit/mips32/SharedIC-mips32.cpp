@@ -4,13 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsiter.h"
-
 #include "jit/BaselineCompiler.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Linker.h"
 #include "jit/SharedICHelpers.h"
+#include "vm/Iteration.h"
 
 #include "jsboolinlines.h"
 
@@ -143,35 +142,6 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
 
     return true;
 }
-
-bool
-ICUnaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    Label failure;
-    masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
-
-    switch (op) {
-      case JSOP_BITNOT:
-        masm.not32(R0.payloadReg());
-        break;
-      case JSOP_NEG:
-        // Guard against 0 and MIN_INT, both result in a double.
-        masm.branchTest32(Assembler::Zero, R0.payloadReg(), Imm32(INT32_MAX), &failure);
-
-        masm.neg32(R0.payloadReg());
-        break;
-      default:
-        MOZ_CRASH("Unexpected op");
-        return false;
-    }
-
-    EmitReturnFromIC(masm);
-
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
 
 } // namespace jit
 } // namespace js
