@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Hamısını oxudunuz. Yeni {provider} məqalələri üçün daha sonra təkrar yoxlayın. Gözləyə bilmirsiz? Məşhur mövzu seçərək internetdən daha çox gözəl məqalələr tapın.",
   "manual_migration_explanation2": "Firefox səyyahını digər səyyahlardan olan əlfəcin, tarixçə və parollar ilə yoxlayın.",
   "manual_migration_cancel_button": "Xeyr, Təşəkkürlər",
-  "manual_migration_import_button": "İndi idxal et"
+  "manual_migration_import_button": "İndi idxal et",
+  "context_menu_button_sr": "{title} üçün kontekst menyusunu aç",
+  "edit_topsites_add_button_tooltip": "Qabaqcıl sayt əlavə et"
 };

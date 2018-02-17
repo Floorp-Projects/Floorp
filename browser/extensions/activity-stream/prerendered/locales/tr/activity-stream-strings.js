@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Hepsini bitirdiniz. Yeni {provider} haberleri için daha fazla yine gelin. Beklemek istemiyor musunuz? İlginç yazılara ulaşmak için popüler konulardan birini seçebilirsiniz.",
   "manual_migration_explanation2": "Öteki tarayıcılarınızdaki yer imlerinizi, geçmişinizi ve parolalarınızı Firefox’a aktarabilirsiniz.",
   "manual_migration_cancel_button": "Gerek yok",
-  "manual_migration_import_button": "Olur, aktaralım"
+  "manual_migration_import_button": "Olur, aktaralım",
+  "context_menu_button_sr": "{title} sağ tıklama menüsünü aç",
+  "edit_topsites_add_button_tooltip": "Sık kullanılan site ekle"
 };

@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Ityeko weng. Rot doki lacen pi lok madito mapol ki bot {provider}. Pe itwero kuro? Yer lok macuke lamal me nongo lok mabeco mapol ki i but kakube.",
   "manual_migration_explanation2": "Tem Firefox ki alamabuk, gin mukato ki mung me donyo ki ii layeny mukene.",
   "manual_migration_cancel_button": "Pe Apwoyo",
-  "manual_migration_import_button": "Kel kombedi"
+  "manual_migration_import_button": "Kel kombedi",
+  "context_menu_button_sr": "Yab jami ayera pi {title}",
+  "edit_topsites_add_button_tooltip": "Med Kakube maloyo"
 };

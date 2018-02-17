@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Ei enempää suosituksia juuri nyt. Katso myöhemmin uudestaan lisää ykkösjuttuja lähteestä {provider}. Etkö malta odottaa? Valitse suosittu aihe ja löydä lisää hyviä juttuja ympäri verkkoa.",
   "manual_migration_explanation2": "Kokeile Firefoxia toisesta selaimesta tuotujen kirjanmerkkien, historian ja salasanojen kanssa.",
   "manual_migration_cancel_button": "Ei kiitos",
-  "manual_migration_import_button": "Tuo nyt"
+  "manual_migration_import_button": "Tuo nyt",
+  "context_menu_button_sr": "Avaa pikavalikko sivustolle {title}",
+  "edit_topsites_add_button_tooltip": "Lisää ykkössivusto"
 };

@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Tu ja es in die con toto. Reveni plus tarde pro plus historias popular de {provider}. Non vole attender? Selectiona un subjecto popular pro trovar plus altere historias interessante del web.",
   "manual_migration_explanation2": "Essaya Firefox con le marcapaginas, le chronologia e le contrasignos de un altere navigator.",
   "manual_migration_cancel_button": "No, gratias",
-  "manual_migration_import_button": "Importar ora"
+  "manual_migration_import_button": "Importar ora",
+  "context_menu_button_sr": "Aperir le menu contextual pro {title}",
+  "edit_topsites_add_button_tooltip": "Adder un sito popular"
 };

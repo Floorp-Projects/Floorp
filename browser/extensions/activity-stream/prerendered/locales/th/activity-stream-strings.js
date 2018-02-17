@@ -94,5 +94,6 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "คุณได้อ่านเรื่องราวครบทั้งหมดแล้ว คุณสามารถกลับมาตรวจดูเรื่องราวเด่นจาก {provider} ได้ภายหลัง อดใจรอไม่ได้งั้นหรือ? เลือกหัวข้อยอดนิยมเพื่อค้นหาเรื่องราวที่ยอดเยี่ยมจากเว็บต่าง ๆ",
   "manual_migration_explanation2": "ลอง Firefox ด้วยที่คั่นหน้า, ประวัติ และรหัสผ่านจากเบราว์เซอร์อื่น",
   "manual_migration_cancel_button": "ไม่ ขอบคุณ",
-  "manual_migration_import_button": "นำเข้าตอนนี้"
+  "manual_migration_import_button": "นำเข้าตอนนี้",
+  "edit_topsites_add_button_tooltip": "เพิ่มไซต์เด่น"
 };

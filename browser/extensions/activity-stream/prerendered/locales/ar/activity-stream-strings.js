@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "لا جديد. تحقق لاحقًا للحصول على مزيد من أهم الأخبار من {provider}. لا يمكنك الانتظار؟ اختر موضوعًا شائعًا للعثور على المزيد من القصص الرائعة من جميع أنحاء الوِب.",
   "manual_migration_explanation2": "جرب فَيَرفُكس مع العلامات، و التأريخ، و كلمات السر من متصفح آخر.",
   "manual_migration_cancel_button": "لا شكرًا",
-  "manual_migration_import_button": "استورد الآن"
+  "manual_migration_import_button": "استورد الآن",
+  "context_menu_button_sr": "افتح قائمة {title} السياقية",
+  "edit_topsites_add_button_tooltip": "أضف موقعًا شائعًا"
 };

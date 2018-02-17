@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Jo binne by. Kom letter werom foar mear ferhalen fan {provider}. Kin jo net wachtsje? Selektearje in populêr ûnderwerp om mear ferhalen fan it ynternet te finen.",
   "manual_migration_explanation2": "Probearje Firefox en ymportearje de blêdwizers, skiednis en wachtwurden fan oare browsers.",
   "manual_migration_cancel_button": "Nee tankewol",
-  "manual_migration_import_button": "No ymportearje"
+  "manual_migration_import_button": "No ymportearje",
+  "context_menu_button_sr": "Kontekstmenu foar {title} iepenje",
+  "edit_topsites_add_button_tooltip": "Topwebsite tafoegje"
 };

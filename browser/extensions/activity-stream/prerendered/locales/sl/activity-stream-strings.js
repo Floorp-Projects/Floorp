@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Zdaj ste seznanjeni z novicami. Vrnite se pozneje in si oglejte nove prispevke iz {provider}. Komaj čakate? Izberite priljubljeno temo in odkrijte več velikih zgodb na spletu.",
   "manual_migration_explanation2": "Preskusite Firefox z zaznamki, zgodovino in gesli iz drugega brskalnika.",
   "manual_migration_cancel_button": "Ne, hvala",
-  "manual_migration_import_button": "Uvozi zdaj"
+  "manual_migration_import_button": "Uvozi zdaj",
+  "context_menu_button_sr": "Odpri priročni meni za {title}",
+  "edit_topsites_add_button_tooltip": "Dodaj glavno stran"
 };

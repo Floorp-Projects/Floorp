@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "Gjithë ç’kish, e dini. Rikontrolloni më vonë për më tepër histori nga {provider}. S’pritni dot? Përzgjidhni një temë popullore që të gjenden në internet më tepër histori të goditura.",
   "manual_migration_explanation2": "Provojeni Firefox-in me faqerojtës, historik dhe fjalëkalime nga një tjetër shfletues.",
   "manual_migration_cancel_button": "Jo, Faleminderit",
-  "manual_migration_import_button": "Importoje Tani"
+  "manual_migration_import_button": "Importoje Tani",
+  "context_menu_button_sr": "Hapni menu konteksti për {title}",
+  "edit_topsites_add_button_tooltip": "Shtoni Sajt Kryesues"
 };

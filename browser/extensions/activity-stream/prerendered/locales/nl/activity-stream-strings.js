@@ -94,5 +94,7 @@ window.gActivityStreamStrings = {
   "topstories_empty_state": "U bent weer bij. Kijk later nog eens voor meer topverhalen van {provider}. Kunt u niet wachten? Selecteer een populair onderwerp voor meer geweldige verhalen van het hele web.",
   "manual_migration_explanation2": "Probeer Firefox met de bladwijzers, geschiedenis en wachtwoorden van een andere browser.",
   "manual_migration_cancel_button": "Nee bedankt",
-  "manual_migration_import_button": "Nu importeren"
+  "manual_migration_import_button": "Nu importeren",
+  "context_menu_button_sr": "Contextmenu openen voor {title}",
+  "edit_topsites_add_button_tooltip": "Topwebsite toevoegen"
 };
