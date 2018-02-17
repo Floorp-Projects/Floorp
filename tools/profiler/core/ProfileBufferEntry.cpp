@@ -340,6 +340,7 @@ UniqueStacks::FrameKey::Hash() const
 }
 
 UniqueStacks::UniqueStacks()
+  : mUniqueStrings(MakeUnique<UniqueJSONStrings>())
 {
   mFrameTableWriter.StartBareList();
   mStackTableWriter.StartBareList();
@@ -434,7 +435,7 @@ void UniqueStacks::StreamStack(const StackKey& aStack)
     FRAME = 1
   };
 
-  AutoArraySchemaWriter writer(mStackTableWriter, mUniqueStrings);
+  AutoArraySchemaWriter writer(mStackTableWriter, *mUniqueStrings);
   if (aStack.mPrefixStackIndex.isSome()) {
     writer.IntElement(PREFIX, *aStack.mPrefixStackIndex);
   }
@@ -454,7 +455,7 @@ UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame)
     CATEGORY = 4
   };
 
-  AutoArraySchemaWriter writer(mFrameTableWriter, mUniqueStrings);
+  AutoArraySchemaWriter writer(mFrameTableWriter, *mUniqueStrings);
 
   const NormalFrameData& data = aFrame.mData.as<NormalFrameData>();
   writer.StringElement(LOCATION, data.mLocation.get());
@@ -571,7 +572,7 @@ UniqueStacks::StreamJITFrame(JSContext* aContext,
     CATEGORY = 4
   };
 
-  AutoArraySchemaWriter writer(mFrameTableWriter, mUniqueStrings);
+  AutoArraySchemaWriter writer(mFrameTableWriter, *mUniqueStrings);
 
   writer.StringElement(LOCATION, aJITFrame.label());
 
@@ -959,7 +960,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
       e.Next();
     }
 
-    WriteSample(aWriter, aUniqueStacks.mUniqueStrings, sample);
+    WriteSample(aWriter, *aUniqueStacks.mUniqueStrings, sample);
     haveSamples = true;
   }
 
