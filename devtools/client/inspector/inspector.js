@@ -708,10 +708,14 @@ Inspector.prototype = {
 
     await this.addRuleView(defaultTab);
 
-    this.sidebar.addExistingTab(
-      "computedview",
-      INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
-      defaultTab == "computedview");
+    // If the 3 Pane Inspector feature is disabled, use the old order:
+    // Rules, Computed, Layout, etc.
+    if (!Services.prefs.getBoolPref("devtools.inspector.split-sidebar-toggle")) {
+      this.sidebar.addExistingTab(
+        "computedview",
+        INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
+        defaultTab == "computedview");
+    }
 
     // Inject a lazy loaded react tab by exposing a fake React object
     // with a lazy defined Tab thanks to `panel` being a function
@@ -736,6 +740,15 @@ Inspector.prototype = {
         }
       },
       defaultTab == layoutId);
+
+    // If the 3 Pane Inspector feature is enabled, use the new order:
+    // Rules, Layout, Computed, etc.
+    if (Services.prefs.getBoolPref("devtools.inspector.split-sidebar-toggle")) {
+      this.sidebar.addExistingTab(
+        "computedview",
+        INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
+        defaultTab == "computedview");
+    }
 
     if (Services.prefs.getBoolPref("devtools.changesview.enabled")) {
       // Inject a lazy loaded react tab by exposing a fake React object
