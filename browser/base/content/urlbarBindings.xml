@@ -1825,8 +1825,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             return;
           }
           // Otherwise "call super" -- do what autocomplete-base-popup does.
-          let controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
-          controller.handleEnter(true, aEvent);
+          this.input.controller.handleEnter(true, aEvent);
         ]]></body>
       </method>
 
@@ -2048,7 +2047,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // _invalidate).
           this.mInput = aInput;
           aInput.controller.setInitiallySelectedIndex(this._isFirstResultHeuristic ? 0 : -1);
-          this.view = aInput.controller.QueryInterface(Components.interfaces.nsITreeView);
           this._invalidate();
 
           try {
