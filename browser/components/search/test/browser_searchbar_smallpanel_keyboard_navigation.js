@@ -83,7 +83,7 @@ info("textbox.mController.searchString = " + textbox.mController.searchString);
   is(searchPopup.getAttribute("showonlysettings"), "true", "Should show the small popup");
   // Having suggestions populated (but hidden) is important, because if there
   // are none we can't ensure the keyboard events don't reach them.
-  is(searchPopup.view.rowCount, kValues.length, "There should be 3 suggestions");
+  is(searchPopup.matchCount, kValues.length, "There should be 3 suggestions");
   is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
 
   // The tests will be less meaningful if the first, second, last, and
