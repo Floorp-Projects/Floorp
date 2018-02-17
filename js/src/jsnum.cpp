@@ -21,11 +21,11 @@
 #include <math.h>
 #include <string.h>
 
-#include "jsdtoa.h"
 #include "jsstr.h"
 #include "jstypes.h"
 
 #include "js/Conversions.h"
+#include "util/DoubleToString.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"

@@ -23,8 +23,8 @@
 #include "vm/JSContext.h"
 #include "vm/JSONParser.h"
 
-#include "gc/GCIteration-inl.h"
 #include "gc/Nursery-inl.h"
+#include "gc/PrivateIterators-inl.h"
 #include "vm/JSObject-inl.h"
 
 using namespace js;

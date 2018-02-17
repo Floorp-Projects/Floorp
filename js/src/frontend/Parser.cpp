@@ -24,7 +24,6 @@
 #include "mozilla/TypeTraits.h"
 
 #include "jsapi.h"
-#include "jsopcode.h"
 #include "jstypes.h"
 
 #include "builtin/ModuleObject.h"
@@ -33,6 +32,7 @@
 #include "frontend/FoldConstants.h"
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpParser.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"

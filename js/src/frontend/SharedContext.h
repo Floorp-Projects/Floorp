@@ -7,7 +7,6 @@
 #ifndef frontend_SharedContext_h
 #define frontend_SharedContext_h
 
-#include "jsopcode.h"
 #include "jspubtd.h"
 #include "jstypes.h"
 
@@ -15,6 +14,7 @@
 #include "ds/InlineTable.h"
 #include "frontend/ParseNode.h"
 #include "frontend/TokenStream.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/JSAtom.h"
 #include "vm/JSScript.h"

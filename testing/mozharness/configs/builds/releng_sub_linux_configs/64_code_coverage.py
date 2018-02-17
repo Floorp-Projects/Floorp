@@ -8,7 +8,6 @@ config = {
         'update',  # decided by query_is_nightly()
     ],
     'stage_platform': 'linux64-ccov',
-    'platform_supports_post_upload_to_latest': False,
     'enable_signing': False,
     'enable_count_ctors': False,
     #### 64 bit build specific #####

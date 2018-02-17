@@ -43,8 +43,8 @@ class FunctionBox;
 class ObjectBox;
 
 #define FOR_EACH_PARSE_NODE_KIND(F) \
-    F(Nop) \
-    F(Semi) \
+    F(EmptyStatement) \
+    F(ExpressionStatement) \
     F(Comma) \
     F(Conditional) \
     F(Colon) \
@@ -305,10 +305,11 @@ IsTypeofKind(ParseNodeKind kind)
  *                                              pn_lexdef (NOT pn_expr) set
  *                                     pn_right: initializer
  * Return   unary       pn_kid: return expr or null
- * Semi     unary       pn_kid: expr or null statement
- *                          pn_prologue: true if Directive Prologue member
- *                              in original source, not introduced via
- *                              constant folding or other tree rewriting
+ * ExpressionStatement unary    pn_kid: expr
+ *                              pn_prologue: true if Directive Prologue member
+ *                                  in original source, not introduced via
+ *                                  constant folding or other tree rewriting
+ * EmptyStatement nullary      (no fields)
  * Label    name        pn_atom: label, pn_expr: labeled statement
  * Import   binary      pn_left: ImportSpecList import specifiers
  *                          pn_right: String module specifier
@@ -683,10 +684,10 @@ class ParseNode
      * nodes; we use it to determine the extent of the prologue.
      */
     JSAtom* isStringExprStatement() const {
-        if (getKind() == ParseNodeKind::Semi) {
+        if (getKind() == ParseNodeKind::ExpressionStatement) {
             MOZ_ASSERT(pn_arity == PN_UNARY);
             ParseNode* kid = pn_kid;
-            if (kid && kid->getKind() == ParseNodeKind::String && !kid->pn_parens)
+            if (kid->getKind() == ParseNodeKind::String && !kid->pn_parens)
                 return kid->pn_atom;
         }
         return nullptr;

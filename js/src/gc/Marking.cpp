@@ -33,10 +33,9 @@
 #include "vm/UnboxedObject.h"
 #include "wasm/WasmJS.h"
 
-#include "jsgcinlines.h"
-
-#include "gc/GCIteration-inl.h"
+#include "gc/GC-inl.h"
 #include "gc/Nursery-inl.h"
+#include "gc/PrivateIterators-inl.h"
 #include "vm/JSCompartment-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/String-inl.h"
@@ -3398,7 +3397,7 @@ IsAboutToBeFinalizedInternal(T** thingp)
 }
 
 template <typename S>
-struct IsAboutToBeFinalizedFunctor : public IdentityDefaultAdaptor<S> {
+struct IsAboutToBeFinalizedInternalFunctor : public IdentityDefaultAdaptor<S> {
     template <typename T> S operator()(T* t, bool* rv) {
         *rv = IsAboutToBeFinalizedInternal(&t);
         return js::gc::RewrapTaggedPointer<S, T>::wrap(t);
@@ -3410,7 +3409,7 @@ static bool
 IsAboutToBeFinalizedInternal(T* thingp)
 {
     bool rv = false;
-    *thingp = DispatchTyped(IsAboutToBeFinalizedFunctor<T>(), *thingp, &rv);
+    *thingp = DispatchTyped(IsAboutToBeFinalizedInternalFunctor<T>(), *thingp, &rv);
     return rv;
 }
 

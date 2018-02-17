@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsnativestack.h"
+#include "util/NativeStack.h"
 
 #ifdef XP_WIN
-# include "jswin.h"
+# include "util/Windows.h"
 
 #elif defined(XP_DARWIN) || defined(DARWIN) || defined(XP_UNIX)
 # include <pthread.h>
