@@ -14,8 +14,6 @@
 #include "nsIAutoCompleteSearch.h"
 #include "nsINamed.h"
 #include "nsString.h"
-#include "nsITreeView.h"
-#include "nsITreeSelection.h"
 #include "nsITimer.h"
 #include "nsTArray.h"
 #include "nsCOMArray.h"
@@ -24,7 +22,6 @@
 class nsAutoCompleteController final : public nsIAutoCompleteController,
                                        public nsIAutoCompleteObserver,
                                        public nsITimerCallback,
-                                       public nsITreeView,
                                        public nsINamed
 {
 public:
@@ -33,7 +30,6 @@ public:
                                            nsIAutoCompleteController)
   NS_DECL_NSIAUTOCOMPLETECONTROLLER
   NS_DECL_NSIAUTOCOMPLETEOBSERVER
-  NS_DECL_NSITREEVIEW
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSINAMED
 
@@ -68,8 +64,6 @@ protected:
   nsresult ClearSearchTimer();
   void MaybeCompletePlaceholder();
 
-  void HandleSearchResult(nsIAutoCompleteSearch *aSearch,
-                          nsIAutoCompleteResult *aResult);
   nsresult ProcessResult(int32_t aSearchIndex, nsIAutoCompleteResult *aResult);
   nsresult PostSearchCleanup();
 
@@ -81,14 +75,13 @@ protected:
   nsresult CompleteValue(nsString &aValue);
 
   nsresult GetResultAt(int32_t aIndex, nsIAutoCompleteResult** aResult,
-                       int32_t* aRowIndex);
+                       int32_t* aMatchIndex);
   nsresult GetResultValueAt(int32_t aIndex, bool aGetFinalValue,
                             nsAString & _retval);
   nsresult GetResultLabelAt(int32_t aIndex, nsAString & _retval);
 private:
   nsresult GetResultValueLabelAt(int32_t aIndex, bool aGetFinalValue,
                                  bool aGetValue, nsAString & _retval);
-protected:
 
   /**
    * Gets and validates the defaultComplete result and the relative
@@ -134,8 +127,8 @@ protected:
 
   nsresult ClearResults(bool aIsSearching = false);
 
-  nsresult RowIndexToSearch(int32_t aRowIndex,
-                            int32_t *aSearchIndex, int32_t *aItemIndex);
+  nsresult MatchIndexToSearch(int32_t aMatchIndex,
+                              int32_t *aSearchIndex, int32_t *aItemIndex);
 
   // members //////////////////////////////////////////
 
@@ -150,8 +143,6 @@ protected:
   nsCOMArray<nsIAutoCompleteResult> mResultCache;
 
   nsCOMPtr<nsITimer> mTimer;
-  nsCOMPtr<nsITreeSelection> mSelection;
-  nsCOMPtr<nsITreeBoxObject> mTree;
 
   // mSearchString stores value which is the original value of the input or
   // typed by the user.  When user is choosing an item from the popup, this
@@ -187,10 +178,9 @@ protected:
   };
   CompositionState mCompositionState;
   uint16_t mSearchStatus;
-  uint32_t mRowCount;
+  uint32_t mMatchCount;
   uint32_t mSearchesOngoing;
   uint32_t mSearchesFailed;
-  int32_t mDelayedRowCountDelta;
   uint32_t mImmediateSearchesCount;
   // The index of the match on the popup that was selected using the keyboard,
   // if the completeselectedindex attribute is set.
