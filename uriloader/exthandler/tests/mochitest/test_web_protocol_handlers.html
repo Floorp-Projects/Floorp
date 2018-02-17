@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for disabled registerProtocolHandler</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<iframe id="test"></iframe>
+<script type="text/javascript">
+
+add_task(async function() {
+  let result = "registerProtocolHandler" in navigator;
+  ok(!result, "Insecure registerProtocolHandler is undefined");
+});
+</script>
+</body>
+</html>

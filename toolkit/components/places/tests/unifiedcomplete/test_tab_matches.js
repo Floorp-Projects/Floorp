@@ -26,8 +26,7 @@ add_task(async function test_tab_matches() {
   await check_autocomplete({
     search: "abc.com",
     searchParam: "enable-actions",
-    matches: [ makeVisitMatch("abc.com", "http://abc.com/", { heuristic: true }),
-               makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
+    matches: [ makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
                makeSearchMatch("abc.com", { heuristic: false }) ]
   });
 
