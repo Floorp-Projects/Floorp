@@ -667,7 +667,8 @@ SessionStore.prototype = {
     log("onTabRemove() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id +
         ", aNoNotification = " + aNoNotification);
     if (!aNoNotification) {
-      this.saveStateDelayed();
+      let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(aBrowser);
+      this.saveStateDelayed(isPrivate);
     }
   },
 
