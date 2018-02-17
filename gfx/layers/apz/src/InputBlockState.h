@@ -83,6 +83,8 @@ public:
   bool IsTargetConfirmed() const;
   bool HasReceivedRealConfirmedTarget() const;
 
+  virtual bool ShouldDropEvents() const;
+
   void SetScrolledApzc(AsyncPanZoomController* aApzc);
   AsyncPanZoomController* GetScrolledApzc() const;
   bool IsDownchainOfScrolledApzc(AsyncPanZoomController* aApzc) const;
@@ -204,6 +206,7 @@ public:
    */
   virtual const char* Type() = 0;
 
+  bool ShouldDropEvents() const override;
 private:
   TimeStamp mContentResponseTimer;
   bool mPreventDefault;

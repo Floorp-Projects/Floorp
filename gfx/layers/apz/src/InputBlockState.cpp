@@ -109,6 +109,12 @@ InputBlockState::HasReceivedRealConfirmedTarget() const
 }
 
 bool
+InputBlockState::ShouldDropEvents() const
+{
+  return false;
+}
+
+bool
 InputBlockState::IsDownchainOf(AsyncPanZoomController* aA, AsyncPanZoomController* aB) const
 {
   if (aA == aB) {
@@ -228,6 +234,12 @@ CancelableBlockState::IsReadyForHandling() const
     return false;
   }
   return mContentResponded || mContentResponseTimerExpired;
+}
+
+bool
+CancelableBlockState::ShouldDropEvents() const
+{
+  return InputBlockState::ShouldDropEvents() || IsDefaultPrevented();
 }
 
 void
