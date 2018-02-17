@@ -69,14 +69,19 @@ add_task(async function test_menu() {
   // check the button's functionality
   CustomizableUI.addWidgetToArea("sync-button", "nav-bar");
 
+  let remoteTabsView = document.getElementById("PanelUI-remotetabs");
+  let viewShown = BrowserTestUtils.waitForEvent(remoteTabsView, "ViewShown");
   let syncButton = document.getElementById("sync-button");
   syncButton.click();
+  await viewShown;
 
   await tabsUpdated;
   // Get our 1 tab and click on it.
+  let viewHidden = BrowserTestUtils.waitForEvent(remoteTabsView, "ViewHiding");
   let tabList = document.getElementById("PanelUI-remotetabs-tabslist");
   let tabEntry = tabList.firstChild.nextSibling;
   tabEntry.click();
+  await viewHidden;
 
   let counts = BUIT._countableEvents[BUIT.currentBucket];
   Assert.deepEqual(counts, {

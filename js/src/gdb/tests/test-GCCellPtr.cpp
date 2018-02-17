@@ -16,8 +16,8 @@ FRAGMENT(GCCellPtr, simple) {
 
   breakpoint();
 
-  (void) nulll;
-  (void) object;
-  (void) string;
-  (void) symbol;
+  use(nulll);
+  use(object);
+  use(string);
+  use(symbol);
 }

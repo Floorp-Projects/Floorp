@@ -49,6 +49,16 @@ AnimationUtils::GetCurrentRealmDocument(JSContext* aCx)
   return win->GetDoc();
 }
 
+/* static */ nsIDocument*
+AnimationUtils::GetDocumentFromGlobal(JSObject* aGlobalObject)
+{
+  nsGlobalWindowInner* win = xpc::WindowOrNull(aGlobalObject);
+  if (!win) {
+    return nullptr;
+  }
+  return win->GetDoc();
+}
+
 /* static */ bool
 AnimationUtils::IsOffscreenThrottlingEnabled()
 {

@@ -7,11 +7,13 @@ import traceback
 # testlibdir is set on the GDB command line, via --eval-command python testlibdir=...
 sys.path[0:0] = [testlibdir]
 
+active_fragment = None
+
 # Run the C++ fragment named |fragment|, stopping on entry to |function|
 # ('breakpoint', by default) and then select the calling frame.
 def run_fragment(fragment, function='breakpoint'):
     # Arrange to stop at a reasonable place in the test program.
-    bp = gdb.Breakpoint(function);
+    bp = gdb.Breakpoint(function)
     try:
         gdb.execute("run %s" % (fragment,))
         # Check that we did indeed stop by hitting the breakpoint we set.
@@ -19,6 +21,9 @@ def run_fragment(fragment, function='breakpoint'):
     finally:
         bp.delete()
     gdb.execute('frame 1')
+
+    global active_fragment
+    active_fragment = fragment
 
 # Assert that |actual| is equal to |expected|; if not, complain in a helpful way.
 def assert_eq(actual, expected):
@@ -79,12 +84,14 @@ gdb.execute('set width 0')
 try:
     # testscript is set on the GDB command line, via:
     # --eval-command python testscript=...
-    exec(open(testscript).read())
+    execfile(testscript, globals(), locals())
 except AssertionError as err:
-    sys.stderr.write('\nAssertion traceback:\n')
+    header = '\nAssertion traceback'
+    if active_fragment:
+        header += ' for ' + active_fragment
+    sys.stderr.write(header + ':\n')
     (t, v, tb) = sys.exc_info()
     traceback.print_tb(tb)
     sys.stderr.write('\nTest assertion failed:\n')
     sys.stderr.write(str(err))
     sys.exit(1)
-

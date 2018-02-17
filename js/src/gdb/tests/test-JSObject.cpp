@@ -2,6 +2,8 @@
 #include "jsapi.h"
 
 FRAGMENT(JSObject, simple) {
+  AutoSuppressHazardsForTest noanalysis;
+
   JS::Rooted<JSObject*> glob(cx, JS::CurrentGlobalOrNull(cx));
   JS::Rooted<JSObject*> plain(cx, JS_NewPlainObject(cx));
   JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
@@ -16,20 +18,24 @@ FRAGMENT(JSObject, simple) {
   JSObject* plainRaw = plain;
   JSObject* funcRaw = func;
 
-  static const JSClass cls = { "\xc7X" };
+  // JS_NewObject will now assert if you feed it a bad class name, so mangle
+  // the name after construction.
+  char namebuf[20] = "goodname";
+  static JSClass cls { namebuf };
   JS::RootedObject badClassName(cx, JS_NewObject(cx, &cls));
+  strcpy(namebuf, "\xc7X");
 
   breakpoint();
 
-  (void) glob;
-  (void) plain;
-  (void) func;
-  (void) anon;
-  (void) funcPtr;
-  (void) &plainRef;
-  (void) &funcRef;
-  (void) plainRaw;
-  (void) funcRaw;
+  use(glob);
+  use(plain);
+  use(func);
+  use(anon);
+  use(funcPtr);
+  use(&plainRef);
+  use(&funcRef);
+  use(plainRaw);
+  use(funcRaw);
 }
 
 FRAGMENT(JSObject, null) {
@@ -38,6 +44,6 @@ FRAGMENT(JSObject, null) {
 
   breakpoint();
 
-  (void) null;
-  (void) nullRaw;
+  use(null);
+  use(nullRaw);
 }
