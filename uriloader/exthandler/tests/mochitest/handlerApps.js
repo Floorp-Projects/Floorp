@@ -14,7 +14,7 @@ function test() {
     createInstance(SpecialPowers.Ci.nsIWebHandlerApp);
   webHandler.name = "Test Web Handler App";
   webHandler.uriTemplate =
-      "http://mochi.test:8888/tests/uriloader/exthandler/tests/mochitest/" + 
+      "https://example.com/tests/uriloader/exthandler/tests/mochitest/" + 
       "handlerApp.xhtml?uri=%s";
   
   // set up the uri to test with
