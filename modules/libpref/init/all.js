@@ -1413,6 +1413,12 @@ pref("privacy.firstparty.isolate",                        false);
 pref("privacy.firstparty.isolate.restrict_opener_access", true);
 // Anti-fingerprinting, disabled by default
 pref("privacy.resistFingerprinting", false);
+// We automatically decline canvas permission requests if they are not initiated
+// from user input. Just in case that breaks something, we allow the user to revert
+// this behaior with this obscure pref. We do not intend to support this long term.
+// If you do set it, to work around some broken website, please file a bug with
+// information so we can understand why it is needed.
+pref("privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts", true);
 // A subset of Resist Fingerprinting protections focused specifically on timers for testing
 // This affects the Animation API, the performance APIs, Date.getTime, Event.timestamp,
 //   File.lastModified, audioContext.currentTime, canvas.captureStream.currentTime
