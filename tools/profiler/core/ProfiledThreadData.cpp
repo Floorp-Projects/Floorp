@@ -98,7 +98,7 @@ ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer, JSContext* aCx,
 
     aWriter.StartArrayProperty("stringTable");
     {
-      uniqueStacks->mUniqueStrings.SpliceStringTableElements(aWriter);
+      uniqueStacks->mUniqueStrings->SpliceStringTableElements(aWriter);
     }
     aWriter.EndArray();
   }
