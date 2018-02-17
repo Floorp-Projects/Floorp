@@ -29,12 +29,12 @@ SteamTracker.prototype = {
 };
 
 function SteamEngine(name, service) {
-  Engine.call(this, name, service);
+  SyncEngine.call(this, name, service);
   this.wasReset = false;
   this.wasSynced = false;
 }
 SteamEngine.prototype = {
-  __proto__: Engine.prototype,
+  __proto__: SyncEngine.prototype,
   _storeObj: SteamStore,
   _trackerObj: SteamTracker,
 
