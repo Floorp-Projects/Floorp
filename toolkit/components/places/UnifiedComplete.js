@@ -713,40 +713,18 @@ function stripHttpAndTrim(spec, trimSlash = true) {
  * and return a key based on the wrapped URL.
  */
 function makeKeyForURL(match) {
-  let actionUrl = match.value;
-
+  let url = match.value;
+  let action = PlacesUtils.parseActionUrl(url);
   // At this stage we only consider moz-action URLs.
-  if (!actionUrl.startsWith("moz-action:")) {
+  if (!action || !("url" in action.params)) {
     // For autofill entries, we need to have a key based on the comment rather
     // than the value field, because the latter may have been trimmed.
     if (match.hasOwnProperty("style") && match.style.includes("autofill")) {
-      return stripHttpAndTrim(match.comment);
+      url = match.comment;
     }
-    return stripHttpAndTrim(actionUrl);
+    return [stripHttpAndTrim(url), null];
   }
-  let [, type, params] = actionUrl.match(/^moz-action:([^,]+),(.*)$/);
-  try {
-    params = JSON.parse(params);
-  } catch (ex) {
-    // This is unexpected in this context, so just return the input.
-    return stripHttpAndTrim(actionUrl);
-  }
-  // For now we only handle these 2 action types and treat them as the same.
-  switch (type) {
-    case "remotetab":
-    case "switchtab":
-      if (params.url) {
-        return "moz-action:tab:" + stripHttpAndTrim(params.url);
-      }
-      break;
-      // TODO (bug 1222435) - "switchtab" should be handled as an "autofill"
-      // entry.
-    default:
-      // do nothing.
-      // TODO (bug 1222436) - extend this method so it can be used instead of
-      // the |placeId| that's also used to remove duplicate entries.
-  }
-  return stripHttpAndTrim(actionUrl);
+  return [stripHttpAndTrim(action.params.url), action];
 }
 
 /**
@@ -868,7 +846,7 @@ function Search(searchString, searchParam, autocompleteListener,
   this._currentMatchCount = 0;
 
   // These are used to avoid adding duplicate entries to the results.
-  this._usedURLs = new Set();
+  this._usedURLs = [];
   this._usedPlaceIds = new Set();
 
   // Counters for the number of matches per MATCHTYPE.
@@ -1060,8 +1038,7 @@ Search.prototype = {
     // are not enabled).
 
     // Get the final query, based on the tokens found in the search string.
-    let queries = [ this._adaptiveQuery ];
-
+    let queries = [];
     // "openpage" behavior is supported by the default query.
     // _switchToTabQuery instead returns only pages not supported by history.
     if (this.hasBehavior("openpage")) {
@@ -1132,14 +1109,22 @@ Search.prototype = {
       this._cleanUpNonCurrentMatches(MATCHTYPE.SUGGESTION);
     });
 
-    for (let [query, params] of queries) {
-      await conn.executeCached(query, params, this._onResultRow.bind(this));
+    // Run the adaptive query first.
+    await conn.executeCached(this._adaptiveQuery[0], this._adaptiveQuery[1],
+                             this._onResultRow.bind(this));
+    if (!this.pending)
+      return;
+
+    // Then fetch remote tabs.
+    if (this._enableActions && this.hasBehavior("openpage")) {
+      await this._matchRemoteTabs();
       if (!this.pending)
         return;
     }
 
-    if (this._enableActions && this.hasBehavior("openpage")) {
-      await this._matchRemoteTabs();
+    // Finally run all the other queries.
+    for (let [query, params] of queries) {
+      await conn.executeCached(query, params, this._onResultRow.bind(this));
       if (!this.pending)
         return;
     }
@@ -1859,23 +1844,6 @@ Search.prototype = {
                                        !this._searchString.includes("/"));
     }
 
-    // Must check both id and url, cause keywords dynamically modify the url.
-    let urlMapKey = makeKeyForURL(match);
-    if ((match.placeId && this._usedPlaceIds.has(match.placeId)) ||
-        this._usedURLs.has(urlMapKey)) {
-      return;
-    }
-
-    // Add this to our internal tracker to ensure duplicates do not end up in
-    // the result.
-    // Not all entries have a place id, thus we fallback to the url for them.
-    // We cannot use only the url since keywords entries are modified to
-    // include the search string, and would be returned multiple times.  Ids
-    // are faster too.
-    if (match.placeId)
-      this._usedPlaceIds.add(match.placeId);
-    this._usedURLs.add(urlMapKey);
-
     match.style = match.style || "favicon";
 
     // Restyle past searches, unless they are bookmarks or special results.
@@ -1891,6 +1859,8 @@ Search.prototype = {
     match.finalCompleteValue = match.finalCompleteValue || "";
 
     let {index, replace} = this._getInsertIndexForMatch(match);
+    if (index == -1)
+      return;
     if (replace) { // Replacing an existing match from the previous search.
       this._result.removeMatchAt(index);
     }
@@ -1911,6 +1881,43 @@ Search.prototype = {
   },
 
   _getInsertIndexForMatch(match) {
+    // Check for duplicates and either discard (by returning -1) the duplicate
+    // or suggest to replace the original match, in case the new one is more
+    // specific (for example a Remote Tab wins over History, and a Switch to Tab
+    // wins over a Remote Tab).
+    // Must check both id and url, cause keywords dynamically modify the url.
+    // Note: this partially fixes Bug 1222435,  but not if the urls differ more
+    // than just by "http://". We should still evaluate www and other schemes
+    // equivalences.
+    let [urlMapKey, action] = makeKeyForURL(match);
+    if ((match.placeId && this._usedPlaceIds.has(match.placeId)) ||
+        this._usedURLs.map(e => e.key).includes(urlMapKey)) {
+      // it's a duplicate.
+      if (action && ["switchtab", "remotetab"].includes(action.type)) {
+        // Look for the duplicate among current matches.
+        for (let i = 0; i < this._usedURLs.length; ++i) {
+          let {key: matchKey, action: matchAction} = this._usedURLs[i];
+          if (matchKey == urlMapKey) {
+            if (!matchAction || action.type == "switchtab") {
+              this._usedURLs[i] = {key: urlMapKey, action};
+              return { index:  i, replace: true };
+            }
+            break; // Found the duplicate, no reason to continue.
+          }
+        }
+      }
+      return { index: -1, replace: false };
+    }
+
+    // Add this to our internal tracker to ensure duplicates do not end up in
+    // the result.
+    // Not all entries have a place id, thus we fallback to the url for them.
+    // We cannot use only the url since keywords entries are modified to
+    // include the search string, and would be returned multiple times.  Ids
+    // are faster too.
+    if (match.placeId)
+      this._usedPlaceIds.add(match.placeId);
+
     let index = 0;
     // The buckets change depending on the context, that is currently decided by
     // the first added match (the heuristic one).
@@ -1947,7 +1954,7 @@ Search.prototype = {
       }
     }
 
-    let replace = false;
+    let replace = 0;
     for (let bucket of this._buckets) {
       // Move to the next bucket if the match type is incompatible, or if there
       // is no available space or if the frecency is below the threshold.
@@ -1966,6 +1973,7 @@ Search.prototype = {
       bucket.insertIndex++;
       break;
     }
+    this._usedURLs[index] = {key: urlMapKey, action};
     return { index, replace };
   },
 

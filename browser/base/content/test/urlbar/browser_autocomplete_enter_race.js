@@ -47,13 +47,14 @@ add_task(async function test_sametext() {
 add_task(async function test_after_empty_search() {
   await promiseAutocompleteResultPopup("");
   gURLBar.focus();
-  gURLBar.value = "e";
+  // Add www. to avoid a switch-to-tab.
+  gURLBar.value = "www.e";
   EventUtils.synthesizeKey("x", {});
   EventUtils.synthesizeKey("VK_RETURN", {});
 
   info("wait for the page to load");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedTab.linkedBrowser,
-                                       false, "http://example.com/");
+                                       false, "http://www.example.com/");
 });
 
 add_task(async function test_disabled_ac() {
