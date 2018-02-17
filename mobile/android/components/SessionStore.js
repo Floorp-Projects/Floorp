@@ -49,6 +49,7 @@ const PREFS_MAX_CRASH_RESUMES = "browser.sessionstore.max_resumed_crashes";
 const PREFS_MAX_TABS_UNDO = "browser.sessionstore.max_tabs_undo";
 
 const MINIMUM_SAVE_DELAY = 2000;
+const SAVE_INTERVAL_PRIVATE_TABS = 500;
 
 function SessionStore() { }
 
@@ -62,6 +63,7 @@ SessionStore.prototype = {
 
   _windows: {},
   _lastSaveTime: 0,
+  _lastQueuedSaveTime: 0,
   _lastBackupTime: 0,
   _interval: 10000,
   _backupInterval: 120000, // 2 minutes
@@ -979,18 +981,27 @@ SessionStore.prototype = {
     }
     log("incrementing _pendingWrite to " + this._pendingWritePrivateOnly +
         "/" + this._pendingWrite);
+
     if (!this._saveTimer) {
       // Interval until the next disk operation is allowed
       let currentDelay = this._lastSaveTime + this._interval - Date.now();
 
       // If we have to wait, set a timer, otherwise saveState directly
-      let delay = Math.max(currentDelay, MINIMUM_SAVE_DELAY);
+      let delay = aPrivateTabsOnly
+                    ? SAVE_INTERVAL_PRIVATE_TABS
+                    : Math.max(currentDelay, MINIMUM_SAVE_DELAY);
       if (delay > 0) {
         this._createTimer(delay);
       } else {
         log("saveStateDelayed() no delay");
         this.saveState();
       }
+    } else if (aPrivateTabsOnly &&
+               // How long until the current timer would fire?
+               this._saveTimer.delay - (Date.now() - this._lastQueuedSaveTime)
+                 > SAVE_INTERVAL_PRIVATE_TABS) {
+      this._killTimer();
+      this._createTimer(SAVE_INTERVAL_PRIVATE_TABS);
     } else {
       log("saveStateDelayed() timer already running, taking no action");
     }
@@ -1021,6 +1032,7 @@ SessionStore.prototype = {
   },
 
   _createTimer: function ss_createTimer(aDelay) {
+    this._lastQueuedSaveTime = Date.now();
     this._saveTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     this._saveTimer.init(this, aDelay, Ci.nsITimer.TYPE_ONE_SHOT);
     log("saveTimer delay = " + aDelay);
