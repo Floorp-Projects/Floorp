@@ -599,6 +599,11 @@ CUBEB_EXPORT int cubeb_stream_device_destroy(cubeb_stream * stream,
 CUBEB_EXPORT int cubeb_stream_register_device_changed_callback(cubeb_stream * stream,
                                                                cubeb_device_changed_callback device_changed_callback);
 
+/** Return the user data pointer registered with the stream with cubeb_stream_init.
+    @param stream the stream for which to retrieve user data pointer.
+    @retval user data pointer */
+CUBEB_EXPORT void * cubeb_stream_user_ptr(cubeb_stream * stream);
+
 /** Returns enumerated devices.
     @param context
     @param devtype device type to include

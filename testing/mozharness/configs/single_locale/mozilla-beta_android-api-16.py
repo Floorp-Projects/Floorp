@@ -8,7 +8,6 @@ HG_SHARE_BASE_DIR = "/builds/hg-shared"
 
 config = {
     "branch": BRANCH,
-    "stage_product": "mobile",
     "log_name": "single_locale",
     "objdir": OBJDIR,
     "is_automation": True,
@@ -51,7 +50,6 @@ config = {
         "MOZ_UPDATE_CHANNEL": MOZ_UPDATE_CHANNEL,
     },
     "upload_branch": "%s-android-api-16" % BRANCH,
-    "ssh_key_dir": "~/.ssh",
     "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
     "key_alias": "release",
     # Mock

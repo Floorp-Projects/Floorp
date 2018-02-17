@@ -51,7 +51,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 # nightly stuff
                 "nightly_build": False,
                 'balrog_credentials_file': 'oauth.txt',
-                'taskcluster_credentials_file': 'oauth.txt',
                 'periodic_clobber': 168,
                 # hg tool stuff
                 "tools_repo": "https://hg.mozilla.org/build/tools",
@@ -69,26 +68,16 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                     "%(objdir)s/dist/thunderbird*",
                     "%(objdir)s/dist/install/sea/*.exe"
                 ],
-                'stage_product': 'firefox',
-                'platform_supports_post_upload_to_latest': True,
                 'build_resources_path': '%(abs_obj_dir)s/.mozbuild/build_resources.json',
                 'nightly_promotion_branches': ['mozilla-central', 'mozilla-aurora'],
 
                 # try will overwrite these
                 'clone_with_purge': False,
                 'clone_by_revision': False,
-                'tinderbox_build_dir': None,
-                'to_tinderbox_dated': True,
-                'release_to_try_builds': False,
-                'include_post_upload_builddir': False,
                 'use_clobberer': True,
 
-                'stage_username': 'ffxbld',
-                'stage_ssh_key': 'ffxbld_rsa',
                 'virtualenv_modules': [
                     'requests==2.8.1',
-                    'PyHawk-with-a-single-extra-commit==0.1.5',
-                    'taskcluster==0.0.26',
                 ],
                 'virtualenv_path': 'venv',
                 #

@@ -139,7 +139,10 @@ static struct cubeb_ops const cbjack_ops = {
 };
 
 struct cubeb_stream {
+  /* Note: Must match cubeb_stream layout in cubeb.c. */
   cubeb * context;
+  void * user_ptr;
+  /**/
 
   /**< Mutex for each stream */
   pthread_mutex_t mutex;
@@ -149,7 +152,6 @@ struct cubeb_stream {
 
   cubeb_data_callback data_callback;
   cubeb_state_callback state_callback;
-  void * user_ptr;
   cubeb_stream_params in_params;
   cubeb_stream_params out_params;
 

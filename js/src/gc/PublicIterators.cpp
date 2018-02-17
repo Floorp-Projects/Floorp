@@ -11,7 +11,7 @@
 #include "vm/JSCompartment.h"
 #include "vm/Runtime.h"
 
-#include "gc/GCIteration-inl.h"
+#include "gc/PrivateIterators-inl.h"
 #include "vm/JSContext-inl.h"
 
 using namespace js;

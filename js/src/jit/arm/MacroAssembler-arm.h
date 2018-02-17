@@ -9,11 +9,10 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "jsopcode.h"
-
 #include "jit/arm/Assembler-arm.h"
 #include "jit/JitFrames.h"
 #include "jit/MoveResolver.h"
+#include "vm/BytecodeUtil.h"
 
 using mozilla::DebugOnly;
 

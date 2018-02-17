@@ -14,24 +14,24 @@
 
 #if defined(XP_WIN)
 
-#include "mozilla/Sprintf.h"
-#include "jswin.h"
-#include <psapi.h>
+# include "mozilla/Sprintf.h"
+# include "util/Windows.h"
+# include <psapi.h>
 
 #elif defined(SOLARIS)
 
-#include <sys/mman.h>
-#include <unistd.h>
+# include <sys/mman.h>
+# include <unistd.h>
 
 #elif defined(XP_UNIX)
 
-#include <algorithm>
-#include <errno.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
+# include <algorithm>
+# include <errno.h>
+# include <sys/mman.h>
+# include <sys/resource.h>
+# include <sys/stat.h>
+# include <sys/types.h>
+# include <unistd.h>
 
 #endif
 

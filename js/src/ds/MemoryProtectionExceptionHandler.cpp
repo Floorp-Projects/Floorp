@@ -10,7 +10,7 @@
 #include "mozilla/Atomics.h"
 
 #if defined(XP_WIN)
-# include "jswin.h"
+# include "util/Windows.h"
 #elif defined(XP_UNIX) && !defined(XP_DARWIN)
 # include <signal.h>
 # include <sys/types.h>

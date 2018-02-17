@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsiter_h
-#define jsiter_h
+#ifndef vm_Iteration_h
+#define vm_Iteration_h
 
 /*
  * JavaScript iterators.
@@ -200,4 +200,4 @@ enum class IteratorKind { Sync, Async };
 
 } /* namespace js */
 
-#endif /* jsiter_h */
+#endif /* vm_Iteration_h */

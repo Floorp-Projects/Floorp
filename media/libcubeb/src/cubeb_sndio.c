@@ -29,7 +29,10 @@ struct cubeb {
 };
 
 struct cubeb_stream {
+  /* Note: Must match cubeb_stream layout in cubeb.c. */
   cubeb * context;
+  void * arg;                     /* user arg to {data,state}_cb */
+  /**/
   pthread_t th;                   /* to run real-time audio i/o */
   pthread_mutex_t mtx;            /* protects hdl and pos */
   struct sio_hdl *hdl;            /* link us to sndio */
@@ -48,7 +51,6 @@ struct cubeb_stream {
   uint64_t swpos;                 /* number of frames produced/consumed */
   cubeb_data_callback data_cb;    /* cb to preapare data */
   cubeb_state_callback state_cb;  /* cb to notify about state changes */
-  void *arg;                      /* user arg to {data,state}_cb */
 };
 
 static void

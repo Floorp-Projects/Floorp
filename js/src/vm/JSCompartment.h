@@ -1382,8 +1382,9 @@ struct WrapperValue
     /*
      * We use unsafeGet() in the constructors to avoid invoking a read barrier
      * on the wrapper, which may be dead (see the comment about bug 803376 in
-     * jsgc.cpp regarding this). If there is an incremental GC while the wrapper
-     * is in use, the AutoWrapper rooter will ensure the wrapper gets marked.
+     * gc/GC.cpp regarding this). If there is an incremental GC while the
+     * wrapper is in use, the AutoWrapper rooter will ensure the wrapper gets
+     * marked.
      */
     explicit WrapperValue(const WrapperMap::Ptr& ptr)
       : value(*ptr->value().unsafeGet())
