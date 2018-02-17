@@ -26,6 +26,13 @@ static const JSClass global_class = {
     &global_classOps
 };
 
+static volatile int dontOptimizeMeAway = 0;
+
+void
+usePointer(const void* ptr) {
+    dontOptimizeMeAway++;
+}
+
 template<typename T>
 static inline T*
 checkPtr(T* ptr)

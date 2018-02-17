@@ -33,6 +33,6 @@ FRAGMENT(asmjs, segfault) {
 
     breakpoint();
 
-    (void) ok;
-    (void) rval;
+    use(ok);
+    use(rval);
 }

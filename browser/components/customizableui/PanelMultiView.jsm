@@ -59,6 +59,12 @@ ChromeUtils.defineModuleGetter(this, "BrowserUtils",
 ChromeUtils.defineModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
 
+/**
+ * Safety timeout after which asynchronous events will be canceled if any of the
+ * registered blockers does not return.
+ */
+const BLOCKERS_TIMEOUT_MS = 10000;
+
 const TRANSITION_PHASES = Object.freeze({
   START: 1,
   PREPARE: 2,
@@ -81,6 +87,12 @@ this.AssociatedToNode = class {
      * Node associated to this object.
      */
     this.node = node;
+
+    /**
+     * This promise is resolved when the current set of blockers set by event
+     * handlers have all been processed.
+     */
+    this._blockersPromise = Promise.resolve();
   }
 
   /**
@@ -132,6 +144,63 @@ this.AssociatedToNode = class {
     });
     this.node.dispatchEvent(event);
     return event.defaultPrevented;
+  }
+
+  /**
+   * Dispatches a custom event on this element and waits for any blocking
+   * promises registered using the "addBlocker" function on the details object.
+   * If this function is called again, the event is only dispatched after all
+   * the previously registered blockers have returned.
+   *
+   * The event can be canceled either by resolving any blocking promise to the
+   * boolean value "false" or by calling preventDefault on the event. Rejections
+   * and exceptions will be reported and will cancel the event.
+   *
+   * Blocking should be used sporadically because it slows down the interface.
+   * Also, non-reentrancy is not strictly guaranteed because a safety timeout of
+   * BLOCKERS_TIMEOUT_MS is implemented, after which the event will be canceled.
+   * This helps to prevent deadlocks if any of the event handlers does not
+   * resolve a blocker promise.
+   *
+   * @note Since there is no use case for dispatching different asynchronous
+   *       events in parallel for the same element, this function will also wait
+   *       for previous blockers when the event name is different.
+   *
+   * @param eventName
+   *        Name of the custom event to dispatch.
+   *
+   * @resolves True if the event was canceled by a handler, false otherwise.
+   */
+  async dispatchAsyncEvent(eventName) {
+    // Wait for all the previous blockers before dispatching the event.
+    let blockersPromise = this._blockersPromise.catch(() => {});
+    return this._blockersPromise = blockersPromise.then(async () => {
+      let blockers = new Set();
+      let cancel = this.dispatchCustomEvent(eventName, {
+        addBlocker(promise) {
+          // Any exception in the blocker will cancel the operation.
+          blockers.add(promise.catch(ex => {
+            Cu.reportError(ex);
+            return true;
+          }));
+        },
+      }, true);
+      if (blockers.size) {
+        let timeoutPromise = new Promise((resolve, reject) => {
+          this.window.setTimeout(reject, BLOCKERS_TIMEOUT_MS);
+        });
+        try {
+          let results = await Promise.race([Promise.all(blockers),
+                                            timeoutPromise]);
+          cancel = cancel || results.some(result => result === false);
+        } catch (ex) {
+          Cu.reportError(new Error(
+            `One of the blockers for ${eventName} timed out.`));
+          return true;
+        }
+      }
+      return cancel;
+    });
   }
 };
 
@@ -226,13 +295,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     let panelView = this.openViews[this.openViews.length - 1];
     return (panelView && panelView.node) || this._mainView;
   }
-  /**
-   * @return {Promise} showSubView() returns a promise, which is kept here for
-   *                   random access.
-   */
-  get currentShowPromise() {
-    return this._currentShowPromise || Promise.resolve();
-  }
 
   constructor(node) {
     super(node);
@@ -271,7 +333,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     // Set CSS-determined attributes now to prevent a layout flush when we do
     // it when transitioning between panels.
     this._dir = cs.direction;
-    this.showMainView();
 
     // Proxy these public properties and methods, as used elsewhere by various
     // parts of the browser, to this instance.
@@ -281,7 +342,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         value: (...args) => this[method](...args)
       });
     });
-    ["current", "currentShowPromise", "showingSubView"].forEach(property => {
+    ["current", "showingSubView"].forEach(property => {
       Object.defineProperty(this.node, property, {
         enumerable: true,
         get: () => this[property]
@@ -405,7 +466,10 @@ this.PanelMultiView = class extends this.AssociatedToNode {
                             " its display turned off by the hidden attribute.");
           }
         }
-        // (The rest of the asynchronous preparation goes here.)
+        // Allow any of the ViewShowing handlers to prevent showing the main view.
+        if (!(await this.showMainView())) {
+          cancelCallback();
+        }
       } catch (ex) {
         cancelCallback();
         throw ex;
@@ -488,9 +552,9 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     this.showSubView(current, null, previous);
   }
 
-  showMainView() {
+  async showMainView() {
     if (!this.node || !this._mainViewId)
-      return Promise.resolve();
+      return false;
 
     return this.showSubView(this._mainView);
   }
@@ -522,8 +586,8 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     this.showingSubView = nextPanelView.node.id != this._mainViewId;
   }
 
-  showSubView(aViewId, aAnchor, aPreviousView) {
-    this._currentShowPromise = (async () => {
+  async showSubView(aViewId, aAnchor, aPreviousView) {
+    try {
       // Support passing in the node directly.
       let viewNode = typeof aViewId == "string" ? this.node.querySelector("#" + aViewId) : aViewId;
       if (!viewNode) {
@@ -575,26 +639,9 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         // Emit the ViewShowing event so that the widget definition has a chance
         // to lazily populate the subview with things or perhaps even cancel this
         // whole operation.
-        let detail = {
-          blockers: new Set(),
-          addBlocker(promise) {
-            this.blockers.add(promise);
-          }
-        };
-        let cancel = nextPanelView.dispatchCustomEvent("ViewShowing", detail, true);
-        if (detail.blockers.size) {
-          try {
-            let results = await Promise.all(detail.blockers);
-            cancel = cancel || results.some(val => val === false);
-          } catch (e) {
-            Cu.reportError(e);
-            cancel = true;
-          }
-        }
-
-        if (cancel) {
+        if (await nextPanelView.dispatchAsyncEvent("ViewShowing")) {
           this._viewShowing = null;
-          return;
+          return false;
         }
       }
 
@@ -607,8 +654,12 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       } else {
         this.hideAllViewsExcept(nextPanelView);
       }
-    })().catch(e => Cu.reportError(e));
-    return this._currentShowPromise;
+
+      return true;
+    } catch (ex) {
+      Cu.reportError(ex);
+      return false;
+    }
   }
 
   /**
@@ -934,7 +985,9 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         this._viewShowing = null;
         this._transitioning = false;
         this.node.removeAttribute("panelopen");
-        this.showMainView();
+        // Raise the ViewHiding event for the current view.
+        this._cleanupTransitionPhase();
+        this.hideAllViewsExcept(null);
         this.window.removeEventListener("keydown", this);
         this._panel.removeEventListener("mousemove", this);
         this.openViews.forEach(panelView => panelView.clearNavigation());
