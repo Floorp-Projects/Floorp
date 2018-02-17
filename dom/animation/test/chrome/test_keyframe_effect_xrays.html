@@ -19,22 +19,27 @@ var win = document.getElementById('iframe').contentWindow;
 async_test(function(t) {
   window.addEventListener('load', t.step_func(function() {
     var target = win.document.getElementById('target');
-    var anim = target.animate({opacity: [ 1, 0 ]}, 100 * MS_PER_SEC);
+    var effect = new win.KeyframeEffect(target, [
+      {opacity: 1, offset: 0},
+      {opacity: 0, offset: 1},
+    ], {duration: 100 * MS_PER_SEC, fill: "forwards"});
     // The frames object should be accessible via x-ray.
-    var frames = anim.effect.getKeyframes();
+    var frames = effect.getKeyframes();
     assert_equals(frames.length, 2,
-                  "frames for Element.animate should be non-zero");
+                  "frames for KeyframeEffect ctor should be non-zero");
     assert_equals(frames[0].opacity, "1",
-                  "first frame opacity for Element.animate should be specified value");
+                  "first frame opacity for KeyframeEffect ctor should be specified value");
     assert_equals(frames[0].computedOffset, 0,
-                  "first frame offset for Element.animate should be 0");
+                  "first frame offset for KeyframeEffect ctor should be 0");
     assert_equals(frames[1].opacity, "0",
-                  "last frame opacity for Element.animate should be specified value");
+                  "last frame opacity for KeyframeEffect ctor should be specified value");
     assert_equals(frames[1].computedOffset, 1,
-                  "last frame offset for Element.animate should be 1");
+                  "last frame offset for KeyframeEffect ctor should be 1");
+    var animation = new win.Animation(effect, document.timeline);
+    animation.play();
     t.done();
   }));
-}, 'Calling animate() across x-rays');
+}, 'Calling KeyframeEffect() ctor across x-rays');
 
 </script>
 </body>
