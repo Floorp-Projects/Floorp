@@ -4495,7 +4495,7 @@ PresShell::ContentInserted(nsIDocument* aDocument,
 }
 
 void
-PresShell::ContentRemoved(nsIDocument *aDocument,
+PresShell::ContentRemoved(nsIDocument* aDocument,
                           nsIContent* aMaybeContainer,
                           nsIContent* aChild,
                           nsIContent* aPreviousSibling)
@@ -4521,8 +4521,14 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   // not cases when the frame constructor calls its own methods to force
   // frame reconstruction.
   nsIContent* oldNextSibling = nullptr;
-  oldNextSibling = aPreviousSibling ?
-    aPreviousSibling->GetNextSibling() : container->GetFirstChild();
+
+  // Editor calls into here with NAC via HTMLEditor::DeleteRefToAnonymousNode.
+  // This could be asserted if that caller is fixed.
+  if (MOZ_LIKELY(!aChild->IsRootOfAnonymousSubtree())) {
+    oldNextSibling = aPreviousSibling
+      ? aPreviousSibling->GetNextSibling()
+      : container->GetFirstChild();
+  }
 
   mPresContext->RestyleManager()->ContentRemoved(container, aChild, oldNextSibling);
 
