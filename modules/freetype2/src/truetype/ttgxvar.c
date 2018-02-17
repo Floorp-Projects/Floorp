@@ -2762,8 +2762,9 @@
       }
     }
 
-    /* return value -1 indicates `no change' */
-    if ( !have_diff )
+    /* return value -1 indicates `no change';                      */
+    /* we can exit early if `normalizedcoords' is already computed */
+    if ( blend->normalizedcoords && !have_diff )
       return -1;
 
     if ( FT_NEW_ARRAY( normalized, mmvar->num_axis ) )
