@@ -14,9 +14,8 @@
 #include <processthreadsapi.h>
 #endif // defined(XP_WIN)
 
-#include "jswin.h"
-
-#include "gc/Iteration.h"
+#include "gc/PublicIterators.h"
+#include "util/Windows.h"
 #include "vm/JSCompartment.h"
 #include "vm/Runtime.h"
 

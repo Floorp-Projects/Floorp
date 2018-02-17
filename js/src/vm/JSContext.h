@@ -460,7 +460,7 @@ struct JSContext : public JS::RootingContext,
     js::jit::AutoFlushICache* autoFlushICache() const;
     void setAutoFlushICache(js::jit::AutoFlushICache* afc);
 
-    /* State used by jsdtoa.cpp. */
+    // State used by util/DoubleToString.cpp.
     js::ThreadLocalData<DtoaState*> dtoaState;
 
     // Any GC activity occurring on this thread.
@@ -1016,6 +1016,10 @@ enum ErrorArgumentsType {
 JSFunction*
 SelfHostedFunction(JSContext* cx, HandlePropertyName propName);
 
+/**
+ * Report an exception, using printf-style APIs to generate the error
+ * message.
+ */
 #ifdef va_start
 extern bool
 ReportErrorVA(JSContext* cx, unsigned flags, const char* format,

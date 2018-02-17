@@ -584,13 +584,13 @@ ComparisonRight(ParseNode* pn)
 static inline bool
 IsExpressionStatement(ParseNode* pn)
 {
-    return pn->isKind(ParseNodeKind::Semi);
+    return pn->isKind(ParseNodeKind::ExpressionStatement);
 }
 
 static inline ParseNode*
 ExpressionStatementExpr(ParseNode* pn)
 {
-    MOZ_ASSERT(pn->isKind(ParseNodeKind::Semi));
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::ExpressionStatement));
     return UnaryKid(pn);
 }
 
@@ -730,8 +730,7 @@ IsIgnoredDirectiveName(JSContext* cx, JSAtom* atom)
 static inline bool
 IsIgnoredDirective(JSContext* cx, ParseNode* pn)
 {
-    return pn->isKind(ParseNodeKind::Semi) &&
-           UnaryKid(pn) &&
+    return pn->isKind(ParseNodeKind::ExpressionStatement) &&
            UnaryKid(pn)->isKind(ParseNodeKind::String) &&
            IsIgnoredDirectiveName(cx, UnaryKid(pn)->pn_atom);
 }
@@ -739,7 +738,7 @@ IsIgnoredDirective(JSContext* cx, ParseNode* pn)
 static inline bool
 IsEmptyStatement(ParseNode* pn)
 {
-    return pn->isKind(ParseNodeKind::Semi) && !UnaryKid(pn);
+    return pn->isKind(ParseNodeKind::EmptyStatement);
 }
 
 static inline ParseNode*
@@ -3890,7 +3889,7 @@ CheckArgumentType(FunctionValidator& f, ParseNode* stmt, PropertyName* name, Typ
         return ArgFail(f, name, stmt ? stmt : f.fn());
 
     ParseNode* initNode = ExpressionStatementExpr(stmt);
-    if (!initNode || !initNode->isKind(ParseNodeKind::Assign))
+    if (!initNode->isKind(ParseNodeKind::Assign))
         return ArgFail(f, name, stmt);
 
     ParseNode* argNode = BinaryLeft(initNode);
@@ -6567,11 +6566,8 @@ CheckAsExprStatement(FunctionValidator& f, ParseNode* expr)
 static bool
 CheckExprStatement(FunctionValidator& f, ParseNode* exprStmt)
 {
-    MOZ_ASSERT(exprStmt->isKind(ParseNodeKind::Semi));
-    ParseNode* expr = UnaryKid(exprStmt);
-    if (!expr)
-        return true;
-    return CheckAsExprStatement(f, expr);
+    MOZ_ASSERT(exprStmt->isKind(ParseNodeKind::ExpressionStatement));
+    return CheckAsExprStatement(f, UnaryKid(exprStmt));
 }
 
 static bool
@@ -7152,18 +7148,19 @@ CheckStatement(FunctionValidator& f, ParseNode* stmt)
         return f.m().failOverRecursed();
 
     switch (stmt->getKind()) {
-      case ParseNodeKind::Semi:          return CheckExprStatement(f, stmt);
-      case ParseNodeKind::While:         return CheckWhile(f, stmt);
-      case ParseNodeKind::For:           return CheckFor(f, stmt);
-      case ParseNodeKind::DoWhile:       return CheckDoWhile(f, stmt);
-      case ParseNodeKind::Label:         return CheckLabel(f, stmt);
-      case ParseNodeKind::If:            return CheckIf(f, stmt);
-      case ParseNodeKind::Switch:        return CheckSwitch(f, stmt);
-      case ParseNodeKind::Return:        return CheckReturn(f, stmt);
-      case ParseNodeKind::StatementList: return CheckStatementList(f, stmt);
-      case ParseNodeKind::Break:         return CheckBreakOrContinue(f, true, stmt);
-      case ParseNodeKind::Continue:      return CheckBreakOrContinue(f, false, stmt);
-      case ParseNodeKind::LexicalScope:  return CheckLexicalScope(f, stmt);
+      case ParseNodeKind::EmptyStatement:       return true;
+      case ParseNodeKind::ExpressionStatement:  return CheckExprStatement(f, stmt);
+      case ParseNodeKind::While:                return CheckWhile(f, stmt);
+      case ParseNodeKind::For:                  return CheckFor(f, stmt);
+      case ParseNodeKind::DoWhile:              return CheckDoWhile(f, stmt);
+      case ParseNodeKind::Label:                return CheckLabel(f, stmt);
+      case ParseNodeKind::If:                   return CheckIf(f, stmt);
+      case ParseNodeKind::Switch:               return CheckSwitch(f, stmt);
+      case ParseNodeKind::Return:               return CheckReturn(f, stmt);
+      case ParseNodeKind::StatementList:        return CheckStatementList(f, stmt);
+      case ParseNodeKind::Break:                return CheckBreakOrContinue(f, true, stmt);
+      case ParseNodeKind::Continue:             return CheckBreakOrContinue(f, false, stmt);
+      case ParseNodeKind::LexicalScope:         return CheckLexicalScope(f, stmt);
       default:;
     }
 

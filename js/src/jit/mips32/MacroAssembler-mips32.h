@@ -7,11 +7,10 @@
 #ifndef jit_mips32_MacroAssembler_mips32_h
 #define jit_mips32_MacroAssembler_mips32_h
 
-#include "jsopcode.h"
-
 #include "jit/JitFrames.h"
 #include "jit/mips-shared/MacroAssembler-mips-shared.h"
 #include "jit/MoveResolver.h"
+#include "vm/BytecodeUtil.h"
 
 namespace js {
 namespace jit {

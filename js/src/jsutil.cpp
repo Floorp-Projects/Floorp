@@ -18,13 +18,9 @@
 
 #include "jstypes.h"
 
-#include "vm/HelperThreads.h"
-
-#ifdef WIN32
-#    include "jswin.h"
-#endif
-
 #include "js/Utility.h"
+#include "util/Windows.h"
+#include "vm/HelperThreads.h"
 
 using namespace js;
 

@@ -8,8 +8,8 @@
  * JS engine garbage collector API.
  */
 
-#ifndef jsgc_h
-#define jsgc_h
+#ifndef gc_GC_h
+#define gc_GC_h
 
 #include "jsapi.h"
 
@@ -144,7 +144,7 @@ enum VerifierType {
 
 extern const char* ZealModeHelpText;
 
-/* Check that write barriers have been used correctly. See jsgc.cpp. */
+/* Check that write barriers have been used correctly. See gc/Verifier.cpp. */
 void
 VerifyBarriers(JSRuntime* rt, VerifierType type);
 
@@ -214,4 +214,4 @@ UninlinedIsInsideNursery(const gc::Cell* cell);
 
 } /* namespace js */
 
-#endif /* jsgc_h */
+#endif /* gc_GC_h */

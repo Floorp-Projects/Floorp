@@ -24,7 +24,6 @@
 #include "jsarray.h"
 #include "jsbool.h"
 #include "jsnum.h"
-#include "jsopcode.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
@@ -35,9 +34,10 @@
 #include "js/Conversions.h"
 #include "js/UniquePtr.h"
 #if ENABLE_INTL_API
-#include "unicode/uchar.h"
-#include "unicode/unorm2.h"
+# include "unicode/uchar.h"
+# include "unicode/unorm2.h"
 #endif
+#include "vm/BytecodeUtil.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSAtom.h"

@@ -908,16 +908,35 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
         }
       }
     } else {
+      // Compute columnToOffsetMaps for each script so that we can
+      // find matching entrypoints for the column breakpoint.
+      const columnToOffsetMaps = scripts.map(script =>
+        [
+          script,
+          script.getAllColumnOffsets()
+            .filter(({ lineNumber }) => lineNumber === generatedLine)
+        ]
+      );
+
       // This is a column breakpoint, so we are interested in all column
       // offsets that correspond to the given line *and* column number.
-      for (let script of scripts) {
-        let columnToOffsetMap = script.getAllColumnOffsets()
-                                      .filter(({ lineNumber }) => {
-                                        return lineNumber === generatedLine;
-                                      });
+      for (let [script, columnToOffsetMap] of columnToOffsetMaps) {
         for (let { columnNumber: column, offset } of columnToOffsetMap) {
           if (column >= generatedColumn && column <= generatedLastColumn) {
             entryPoints.push({ script, offsets: [offset] });
+          }
+        }
+      }
+
+      // If we don't find any matching entrypoints, then
+      // we should check to see if the breakpoint is to the left of the first offset.
+      if (entryPoints.length === 0) {
+        for (let [script, columnToOffsetMap] of columnToOffsetMaps) {
+          if (columnToOffsetMap.length > 0) {
+            let { columnNumber: column, offset } = columnToOffsetMap[0];
+            if (generatedColumn < column) {
+              entryPoints.push({ script, offsets: [offset] });
+            }
           }
         }
       }
@@ -926,6 +945,7 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
     if (entryPoints.length === 0) {
       return false;
     }
+
     setBreakpointAtEntryPoints(actor, entryPoints);
     return true;
   }

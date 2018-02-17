@@ -12,7 +12,6 @@ config = {
     'enable_count_ctors': False,
     'max_build_output_timeout': 60 * 80,
 
-    'publish_nightly_en_US_routes': True,
     'env': {
         'HG_SHARE_BASE_DIR': os.path.join('y:', os.sep, 'hg-shared'),
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),

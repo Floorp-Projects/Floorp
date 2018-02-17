@@ -710,9 +710,13 @@ class LNode
 
     // Hook for opcodes to add extra high level detail about what code will be
     // emitted for the op.
-    virtual const char* extraName() const {
+  private:
+    const char* extraName() const {
         return nullptr;
     }
+
+  public:
+    const char* getExtraName() const;
 
     virtual Opcode op() const = 0;
 
@@ -766,11 +770,11 @@ class LNode
     // output register will be restored to its original value when bailing out.
     inline bool recoversInput() const;
 
-    virtual void dump(GenericPrinter& out);
+    void dump(GenericPrinter& out);
     void dump();
     static void printName(GenericPrinter& out, Opcode op);
-    virtual void printName(GenericPrinter& out);
-    virtual void printOperands(GenericPrinter& out);
+    void printName(GenericPrinter& out);
+    void printOperands(GenericPrinter& out);
 
   public:
     // Opcode testing and casts.
@@ -783,15 +787,9 @@ class LNode
     LIR_OPCODE_LIST(LIROP)
 #   undef LIROP
 
-    virtual void accept(LElementVisitor* visitor) = 0;
-
 #define LIR_HEADER(opcode)                                                  \
     Opcode op() const override {                                            \
         return LInstruction::LOp_##opcode;                                  \
-    }                                                                       \
-    void accept(LElementVisitor* visitor) override {                        \
-        visitor->setElement(this);                                          \
-        visitor->visit##opcode(this);                                       \
     }
 };
 
@@ -910,7 +908,6 @@ class LElementVisitor
         return ins_;
     }
 
-  public:
     void setElement(LNode* ins) {
         ins_ = ins;
         if (ins->mirRaw()) {
@@ -926,8 +923,7 @@ class LElementVisitor
         lastNotInlinedPC_(nullptr)
     {}
 
-  public:
-#define VISIT_INS(op) virtual void visit##op(L##op*) { MOZ_CRASH("NYI: " #op); }
+#define VISIT_INS(op) void visit##op(L##op*) { MOZ_CRASH("NYI: " #op); }
     LIR_OPCODE_LIST(VISIT_INS)
 #undef VISIT_INS
 };

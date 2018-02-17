@@ -88,10 +88,10 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
 
   RefPtr<DrawTarget> maskDT;
   if (maskType == NS_STYLE_MASK_TYPE_LUMINANCE) {
-    maskDT = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
+    maskDT = context->GetDrawTarget()->CreateSimilarDrawTarget(
                maskSurfaceSize, SurfaceFormat::B8G8R8A8);
   } else {
-    maskDT = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
+    maskDT = context->GetDrawTarget()->CreateSimilarDrawTarget(
                maskSurfaceSize, SurfaceFormat::A8);
   }
 

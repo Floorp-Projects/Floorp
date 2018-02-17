@@ -22,7 +22,6 @@ config = {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/" + MOZILLA_DIR,
     },
-    "update_gecko_source_to_enUS": False,
     "nightly_build": True,
     "repos": [{
         "vcs": "hg",
@@ -51,9 +50,7 @@ config = {
         "MOZ_UPDATE_CHANNEL": "try", # XXX Invalid
     },
     "upload_branch": "%s-android-api-16" % BRANCH,
-    "ssh_key_dir": "~/.ssh",
     "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
-    "stage_product": "mobile",
     "platform": "android", # XXX Validate
     "build_type": "api-16-opt", # XXX Validate
 

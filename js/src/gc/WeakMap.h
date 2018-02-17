@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsweakmap_h
-#define jsweakmap_h
+#ifndef gc_WeakMap_h
+#define gc_WeakMap_h
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/Move.h"
@@ -414,4 +414,4 @@ struct DeletePolicy<js::ObjectValueMap> : public js::GCManagedDeletePolicy<js::O
 
 } /* namespace JS */
 
-#endif /* jsweakmap_h */
+#endif /* gc_WeakMap_h */

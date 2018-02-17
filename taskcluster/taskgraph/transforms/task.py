@@ -11,7 +11,6 @@ complexities of worker implementations, scopes, and treeherder annotations.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import hashlib
-import json
 import os
 import re
 import time
@@ -1710,41 +1709,3 @@ def check_run_task_caches(config, tasks):
                             'cache name so it is sparse aware' % task['label'])
 
         yield task
-
-
-# Check that the v2 route templates match those used by Mozharness.  This can
-# go away once Mozharness builds are no longer performed in Buildbot, and the
-# Mozharness code referencing routes.json is deleted.
-def check_v2_routes():
-    with open(os.path.join(GECKO, "testing/mozharness/configs/routes.json"), "rb") as f:
-        routes_json = json.load(f)
-
-    for key in ('routes', 'nightly', 'l10n', 'nightly-l10n'):
-        if key == 'routes':
-            tc_template = V2_ROUTE_TEMPLATES
-        elif key == 'nightly':
-            tc_template = V2_NIGHTLY_TEMPLATES
-        elif key == 'l10n':
-            tc_template = V2_L10N_TEMPLATES
-        elif key == 'nightly-l10n':
-            tc_template = V2_NIGHTLY_L10N_TEMPLATES + V2_L10N_TEMPLATES
-
-        routes = routes_json[key]
-
-        # we use different variables than mozharness
-        for mh, tg in [
-                ('{index}', 'index'),
-                ('gecko', '{trust-domain}'),
-                ('{build_product}', '{product}'),
-                ('{build_name}-{build_type}', '{job-name}'),
-                ('{year}.{month}.{day}.{pushdate}', '{build_date_long}'),
-                ('{pushid}', '{pushlog_id}'),
-                ('{year}.{month}.{day}', '{build_date}')]:
-            routes = [r.replace(mh, tg) for r in routes]
-
-        if sorted(routes) != sorted(tc_template):
-            raise Exception("V2 TEMPLATES do not match Mozharness's routes.json: "
-                            "(tc):%s vs (mh):%s" % (tc_template, routes))
-
-
-check_v2_routes()

@@ -25,27 +25,26 @@
 # include <string>
 #endif // ANDROID
 #ifdef XP_WIN
-#include <processthreadsapi.h>
+# include <processthreadsapi.h>
 #endif // XP_WIN
-
-#include "jsdtoa.h"
 #include "jsexn.h"
-#include "jsiter.h"
-#include "jsnativestack.h"
-#include "jsopcode.h"
 #include "jsprf.h"
 #include "jspubtd.h"
 #include "jsstr.h"
 #include "jstypes.h"
-#include "jswin.h"
 
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "jit/Ion.h"
 #include "jit/PcScriptCache.h"
 #include "js/CharacterEncoding.h"
+#include "util/DoubleToString.h"
+#include "util/NativeStack.h"
+#include "util/Windows.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/ErrorReporting.h"
 #include "vm/HelperThreads.h"
+#include "vm/Iteration.h"
 #include "vm/JSAtom.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSFunction.h"

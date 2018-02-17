@@ -10,12 +10,12 @@
 #include "jsexn.h"
 #include "jsfriendapi.h"
 #include "jsmath.h"
-#include "json.h"
 #include "jsprototypes.h"
 
 #include "builtin/AtomicsObject.h"
 #include "builtin/DataViewObject.h"
 #include "builtin/Eval.h"
+#include "builtin/JSON.h"
 #include "builtin/MapObject.h"
 #include "builtin/ModuleObject.h"
 #include "builtin/Object.h"

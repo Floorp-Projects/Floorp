@@ -13,8 +13,11 @@
 namespace js {
 namespace jit {
 
+class CodeGeneratorARM;
 class OutOfLineBailout;
 class OutOfLineTableSwitch;
+
+using OutOfLineWasmTruncateCheck = OutOfLineWasmTruncateCheckBase<CodeGeneratorARM>;
 
 class CodeGeneratorARM : public CodeGeneratorShared
 {
@@ -107,89 +110,89 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
   public:
     // Instruction visitors.
-    virtual void visitMinMaxD(LMinMaxD* ins) override;
-    virtual void visitMinMaxF(LMinMaxF* ins) override;
-    virtual void visitAbsD(LAbsD* ins) override;
-    virtual void visitAbsF(LAbsF* ins) override;
-    virtual void visitSqrtD(LSqrtD* ins) override;
-    virtual void visitSqrtF(LSqrtF* ins) override;
-    virtual void visitAddI(LAddI* ins) override;
-    virtual void visitSubI(LSubI* ins) override;
-    virtual void visitBitNotI(LBitNotI* ins) override;
-    virtual void visitBitOpI(LBitOpI* ins) override;
+    void visitMinMaxD(LMinMaxD* ins);
+    void visitMinMaxF(LMinMaxF* ins);
+    void visitAbsD(LAbsD* ins);
+    void visitAbsF(LAbsF* ins);
+    void visitSqrtD(LSqrtD* ins);
+    void visitSqrtF(LSqrtF* ins);
+    void visitAddI(LAddI* ins);
+    void visitSubI(LSubI* ins);
+    void visitBitNotI(LBitNotI* ins);
+    void visitBitOpI(LBitOpI* ins);
 
-    virtual void visitMulI(LMulI* ins) override;
+    void visitMulI(LMulI* ins);
 
-    virtual void visitDivI(LDivI* ins) override;
-    virtual void visitSoftDivI(LSoftDivI* ins) override;
-    virtual void visitDivPowTwoI(LDivPowTwoI* ins) override;
-    virtual void visitModI(LModI* ins) override;
-    virtual void visitSoftModI(LSoftModI* ins) override;
-    virtual void visitModPowTwoI(LModPowTwoI* ins) override;
-    virtual void visitModMaskI(LModMaskI* ins) override;
-    virtual void visitPowHalfD(LPowHalfD* ins) override;
-    virtual void visitShiftI(LShiftI* ins) override;
-    virtual void visitShiftI64(LShiftI64* ins) override;
-    virtual void visitUrshD(LUrshD* ins) override;
+    void visitDivI(LDivI* ins);
+    void visitSoftDivI(LSoftDivI* ins);
+    void visitDivPowTwoI(LDivPowTwoI* ins);
+    void visitModI(LModI* ins);
+    void visitSoftModI(LSoftModI* ins);
+    void visitModPowTwoI(LModPowTwoI* ins);
+    void visitModMaskI(LModMaskI* ins);
+    void visitPowHalfD(LPowHalfD* ins);
+    void visitShiftI(LShiftI* ins);
+    void visitShiftI64(LShiftI64* ins);
+    void visitUrshD(LUrshD* ins);
 
-    virtual void visitClzI(LClzI* ins) override;
-    virtual void visitCtzI(LCtzI* ins) override;
-    virtual void visitPopcntI(LPopcntI* ins) override;
+    void visitClzI(LClzI* ins);
+    void visitCtzI(LCtzI* ins);
+    void visitPopcntI(LPopcntI* ins);
 
-    virtual void visitTestIAndBranch(LTestIAndBranch* test) override;
-    virtual void visitCompare(LCompare* comp) override;
-    virtual void visitCompareAndBranch(LCompareAndBranch* comp) override;
-    virtual void visitTestDAndBranch(LTestDAndBranch* test) override;
-    virtual void visitTestFAndBranch(LTestFAndBranch* test) override;
-    virtual void visitCompareD(LCompareD* comp) override;
-    virtual void visitCompareF(LCompareF* comp) override;
-    virtual void visitCompareDAndBranch(LCompareDAndBranch* comp) override;
-    virtual void visitCompareFAndBranch(LCompareFAndBranch* comp) override;
-    virtual void visitCompareB(LCompareB* lir) override;
-    virtual void visitCompareBAndBranch(LCompareBAndBranch* lir) override;
-    virtual void visitCompareBitwise(LCompareBitwise* lir) override;
-    virtual void visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir) override;
-    virtual void visitBitAndAndBranch(LBitAndAndBranch* baab) override;
-    virtual void visitWasmUint32ToDouble(LWasmUint32ToDouble* lir) override;
-    virtual void visitWasmUint32ToFloat32(LWasmUint32ToFloat32* lir) override;
-    virtual void visitNotI(LNotI* ins) override;
-    virtual void visitNotD(LNotD* ins) override;
-    virtual void visitNotF(LNotF* ins) override;
+    void visitTestIAndBranch(LTestIAndBranch* test);
+    void visitCompare(LCompare* comp);
+    void visitCompareAndBranch(LCompareAndBranch* comp);
+    void visitTestDAndBranch(LTestDAndBranch* test);
+    void visitTestFAndBranch(LTestFAndBranch* test);
+    void visitCompareD(LCompareD* comp);
+    void visitCompareF(LCompareF* comp);
+    void visitCompareDAndBranch(LCompareDAndBranch* comp);
+    void visitCompareFAndBranch(LCompareFAndBranch* comp);
+    void visitCompareB(LCompareB* lir);
+    void visitCompareBAndBranch(LCompareBAndBranch* lir);
+    void visitCompareBitwise(LCompareBitwise* lir);
+    void visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir);
+    void visitBitAndAndBranch(LBitAndAndBranch* baab);
+    void visitWasmUint32ToDouble(LWasmUint32ToDouble* lir);
+    void visitWasmUint32ToFloat32(LWasmUint32ToFloat32* lir);
+    void visitNotI(LNotI* ins);
+    void visitNotD(LNotD* ins);
+    void visitNotF(LNotF* ins);
 
-    virtual void visitMathD(LMathD* math) override;
-    virtual void visitMathF(LMathF* math) override;
-    virtual void visitFloor(LFloor* lir) override;
-    virtual void visitFloorF(LFloorF* lir) override;
-    virtual void visitCeil(LCeil* lir) override;
-    virtual void visitCeilF(LCeilF* lir) override;
-    virtual void visitRound(LRound* lir) override;
-    virtual void visitRoundF(LRoundF* lir) override;
-    virtual void visitTruncateDToInt32(LTruncateDToInt32* ins) override;
-    virtual void visitTruncateFToInt32(LTruncateFToInt32* ins) override;
+    void visitMathD(LMathD* math);
+    void visitMathF(LMathF* math);
+    void visitFloor(LFloor* lir);
+    void visitFloorF(LFloorF* lir);
+    void visitCeil(LCeil* lir);
+    void visitCeilF(LCeilF* lir);
+    void visitRound(LRound* lir);
+    void visitRoundF(LRoundF* lir);
+    void visitTruncateDToInt32(LTruncateDToInt32* ins);
+    void visitTruncateFToInt32(LTruncateFToInt32* ins);
 
-    virtual void visitWrapInt64ToInt32(LWrapInt64ToInt32* lir) override;
-    virtual void visitExtendInt32ToInt64(LExtendInt32ToInt64* lir) override;
-    virtual void visitSignExtendInt64(LSignExtendInt64* ins) override;
-    virtual void visitAddI64(LAddI64* lir) override;
-    virtual void visitSubI64(LSubI64* lir) override;
-    virtual void visitMulI64(LMulI64* lir) override;
-    virtual void visitDivOrModI64(LDivOrModI64* lir) override;
-    virtual void visitUDivOrModI64(LUDivOrModI64* lir) override;
-    virtual void visitCompareI64(LCompareI64* lir) override;
-    virtual void visitCompareI64AndBranch(LCompareI64AndBranch* lir) override;
-    virtual void visitBitOpI64(LBitOpI64* lir) override;
-    virtual void visitRotateI64(LRotateI64* lir) override;
-    virtual void visitWasmStackArgI64(LWasmStackArgI64* lir) override;
-    virtual void visitWasmSelectI64(LWasmSelectI64* lir) override;
-    virtual void visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir) override;
-    virtual void visitWasmReinterpretToI64(LWasmReinterpretToI64* lir) override;
-    virtual void visitPopcntI64(LPopcntI64* ins) override;
-    virtual void visitClzI64(LClzI64* ins) override;
-    virtual void visitCtzI64(LCtzI64* ins) override;
-    virtual void visitNotI64(LNotI64* ins) override;
-    virtual void visitWasmTruncateToInt64(LWasmTruncateToInt64* ins) override;
-    virtual void visitInt64ToFloatingPointCall(LInt64ToFloatingPointCall* lir) override;
-    virtual void visitTestI64AndBranch(LTestI64AndBranch* lir) override;
+    void visitWrapInt64ToInt32(LWrapInt64ToInt32* lir);
+    void visitExtendInt32ToInt64(LExtendInt32ToInt64* lir);
+    void visitSignExtendInt64(LSignExtendInt64* ins);
+    void visitAddI64(LAddI64* lir);
+    void visitSubI64(LSubI64* lir);
+    void visitMulI64(LMulI64* lir);
+    void visitDivOrModI64(LDivOrModI64* lir);
+    void visitUDivOrModI64(LUDivOrModI64* lir);
+    void visitCompareI64(LCompareI64* lir);
+    void visitCompareI64AndBranch(LCompareI64AndBranch* lir);
+    void visitBitOpI64(LBitOpI64* lir);
+    void visitRotateI64(LRotateI64* lir);
+    void visitWasmStackArgI64(LWasmStackArgI64* lir);
+    void visitWasmSelectI64(LWasmSelectI64* lir);
+    void visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir);
+    void visitWasmReinterpretToI64(LWasmReinterpretToI64* lir);
+    void visitPopcntI64(LPopcntI64* ins);
+    void visitClzI64(LClzI64* ins);
+    void visitCtzI64(LCtzI64* ins);
+    void visitNotI64(LNotI64* ins);
+    void visitWasmTruncateToInt64(LWasmTruncateToInt64* ins);
+    void visitInt64ToFloatingPointCall(LInt64ToFloatingPointCall* lir);
+    void visitTestI64AndBranch(LTestI64AndBranch* lir);
 
     // Out of line visitors.
     void visitOutOfLineBailout(OutOfLineBailout* ool);
@@ -214,50 +217,50 @@ class CodeGeneratorARM : public CodeGeneratorShared
     CodeGeneratorARM(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm);
 
   public:
-    void visitBox(LBox* box) override;
-    void visitBoxFloatingPoint(LBoxFloatingPoint* box) override;
-    void visitUnbox(LUnbox* unbox) override;
-    void visitValue(LValue* value) override;
-    void visitDouble(LDouble* ins) override;
-    void visitFloat32(LFloat32* ins) override;
+    void visitBox(LBox* box);
+    void visitBoxFloatingPoint(LBoxFloatingPoint* box);
+    void visitUnbox(LUnbox* unbox);
+    void visitValue(LValue* value);
+    void visitDouble(LDouble* ins);
+    void visitFloat32(LFloat32* ins);
 
-    void visitGuardShape(LGuardShape* guard) override;
-    void visitGuardObjectGroup(LGuardObjectGroup* guard) override;
-    void visitGuardClass(LGuardClass* guard) override;
+    void visitGuardShape(LGuardShape* guard);
+    void visitGuardObjectGroup(LGuardObjectGroup* guard);
+    void visitGuardClass(LGuardClass* guard);
 
-    void visitNegI(LNegI* lir) override;
-    void visitNegD(LNegD* lir) override;
-    void visitNegF(LNegF* lir) override;
-    void visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins) override;
-    void visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins) override;
-    void visitAtomicTypedArrayElementBinop(LAtomicTypedArrayElementBinop* lir) override;
-    void visitAtomicTypedArrayElementBinopForEffect(LAtomicTypedArrayElementBinopForEffect* lir) override;
-    void visitCompareExchangeTypedArrayElement(LCompareExchangeTypedArrayElement* lir) override;
-    void visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArrayElement* lir) override;
-    void visitWasmSelect(LWasmSelect* ins) override;
-    void visitWasmReinterpret(LWasmReinterpret* ins) override;
-    void visitWasmLoad(LWasmLoad* ins) override;
-    void visitWasmLoadI64(LWasmLoadI64* ins) override;
-    void visitWasmUnalignedLoad(LWasmUnalignedLoad* ins) override;
-    void visitWasmUnalignedLoadI64(LWasmUnalignedLoadI64* ins) override;
-    void visitWasmAddOffset(LWasmAddOffset* ins) override;
-    void visitWasmStore(LWasmStore* ins) override;
-    void visitWasmStoreI64(LWasmStoreI64* ins) override;
-    void visitWasmUnalignedStore(LWasmUnalignedStore* ins) override;
-    void visitWasmUnalignedStoreI64(LWasmUnalignedStoreI64* ins) override;
-    void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins) override;
-    void visitAsmJSStoreHeap(LAsmJSStoreHeap* ins) override;
-    void visitWasmCompareExchangeHeap(LWasmCompareExchangeHeap* ins) override;
-    void visitWasmAtomicExchangeHeap(LWasmAtomicExchangeHeap* ins) override;
-    void visitWasmAtomicBinopHeap(LWasmAtomicBinopHeap* ins) override;
-    void visitWasmAtomicBinopHeapForEffect(LWasmAtomicBinopHeapForEffect* ins) override;
-    void visitWasmStackArg(LWasmStackArg* ins) override;
-    void visitWasmTruncateToInt32(LWasmTruncateToInt32* ins) override;
-    void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool) override;
-    void visitCopySignD(LCopySignD* ins) override;
-    void visitCopySignF(LCopySignF* ins) override;
+    void visitNegI(LNegI* lir);
+    void visitNegD(LNegD* lir);
+    void visitNegF(LNegF* lir);
+    void visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins);
+    void visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins);
+    void visitAtomicTypedArrayElementBinop(LAtomicTypedArrayElementBinop* lir);
+    void visitAtomicTypedArrayElementBinopForEffect(LAtomicTypedArrayElementBinopForEffect* lir);
+    void visitCompareExchangeTypedArrayElement(LCompareExchangeTypedArrayElement* lir);
+    void visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArrayElement* lir);
+    void visitWasmSelect(LWasmSelect* ins);
+    void visitWasmReinterpret(LWasmReinterpret* ins);
+    void visitWasmLoad(LWasmLoad* ins);
+    void visitWasmLoadI64(LWasmLoadI64* ins);
+    void visitWasmUnalignedLoad(LWasmUnalignedLoad* ins);
+    void visitWasmUnalignedLoadI64(LWasmUnalignedLoadI64* ins);
+    void visitWasmAddOffset(LWasmAddOffset* ins);
+    void visitWasmStore(LWasmStore* ins);
+    void visitWasmStoreI64(LWasmStoreI64* ins);
+    void visitWasmUnalignedStore(LWasmUnalignedStore* ins);
+    void visitWasmUnalignedStoreI64(LWasmUnalignedStoreI64* ins);
+    void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);
+    void visitAsmJSStoreHeap(LAsmJSStoreHeap* ins);
+    void visitWasmCompareExchangeHeap(LWasmCompareExchangeHeap* ins);
+    void visitWasmAtomicExchangeHeap(LWasmAtomicExchangeHeap* ins);
+    void visitWasmAtomicBinopHeap(LWasmAtomicBinopHeap* ins);
+    void visitWasmAtomicBinopHeapForEffect(LWasmAtomicBinopHeapForEffect* ins);
+    void visitWasmStackArg(LWasmStackArg* ins);
+    void visitWasmTruncateToInt32(LWasmTruncateToInt32* ins);
+    void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool);
+    void visitCopySignD(LCopySignD* ins);
+    void visitCopySignF(LCopySignF* ins);
 
-    void visitMemoryBarrier(LMemoryBarrier* ins) override;
+    void visitMemoryBarrier(LMemoryBarrier* ins);
 
     void generateInvalidateEpilogue();
 
@@ -274,35 +277,35 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value,
                                     const T& mem, Register flagTemp);
 
-    void visitWasmAtomicLoadI64(LWasmAtomicLoadI64* lir) override;
-    void visitWasmAtomicStoreI64(LWasmAtomicStoreI64* lir) override;
-    void visitWasmCompareExchangeI64(LWasmCompareExchangeI64* lir) override;
-    void visitWasmAtomicBinopI64(LWasmAtomicBinopI64* lir) override;
-    void visitWasmAtomicExchangeI64(LWasmAtomicExchangeI64* lir) override;
+    void visitWasmAtomicLoadI64(LWasmAtomicLoadI64* lir);
+    void visitWasmAtomicStoreI64(LWasmAtomicStoreI64* lir);
+    void visitWasmCompareExchangeI64(LWasmCompareExchangeI64* lir);
+    void visitWasmAtomicBinopI64(LWasmAtomicBinopI64* lir);
+    void visitWasmAtomicExchangeI64(LWasmAtomicExchangeI64* lir);
 
   protected:
-    void visitEffectiveAddress(LEffectiveAddress* ins) override;
-    void visitUDiv(LUDiv* ins) override;
-    void visitUMod(LUMod* ins) override;
-    void visitSoftUDivOrMod(LSoftUDivOrMod* ins) override;
+    void visitEffectiveAddress(LEffectiveAddress* ins);
+    void visitUDiv(LUDiv* ins);
+    void visitUMod(LUMod* ins);
+    void visitSoftUDivOrMod(LSoftUDivOrMod* ins);
 
   public:
     // Unimplemented SIMD instructions
-    void visitSimdSplatX4(LSimdSplatX4* lir) override { MOZ_CRASH("NYI"); }
-    void visitSimd128Int(LSimd128Int* ins) override { MOZ_CRASH("NYI"); }
-    void visitSimd128Float(LSimd128Float* ins) override { MOZ_CRASH("NYI"); }
-    void visitSimdReinterpretCast(LSimdReinterpretCast* ins) override { MOZ_CRASH("NYI"); }
-    void visitSimdExtractElementI(LSimdExtractElementI* ins) override { MOZ_CRASH("NYI"); }
-    void visitSimdExtractElementF(LSimdExtractElementF* ins) override { MOZ_CRASH("NYI"); }
-    void visitSimdGeneralShuffleI(LSimdGeneralShuffleI* lir) override { MOZ_CRASH("NYI"); }
-    void visitSimdGeneralShuffleF(LSimdGeneralShuffleF* lir) override { MOZ_CRASH("NYI"); }
-    void visitSimdSwizzleI(LSimdSwizzleI* lir) override { MOZ_CRASH("NYI"); }
-    void visitSimdSwizzleF(LSimdSwizzleF* lir) override { MOZ_CRASH("NYI"); }
-    void visitSimdBinaryCompIx4(LSimdBinaryCompIx4* lir) override { MOZ_CRASH("NYI"); }
-    void visitSimdBinaryCompFx4(LSimdBinaryCompFx4* lir) override { MOZ_CRASH("NYI"); }
-    void visitSimdBinaryArithIx4(LSimdBinaryArithIx4* lir) override { MOZ_CRASH("NYI"); }
-    void visitSimdBinaryArithFx4(LSimdBinaryArithFx4* lir) override { MOZ_CRASH("NYI"); }
-    void visitSimdBinaryBitwise(LSimdBinaryBitwise* lir) override { MOZ_CRASH("NYI"); }
+    void visitSimdSplatX4(LSimdSplatX4* lir) { MOZ_CRASH("NYI"); }
+    void visitSimd128Int(LSimd128Int* ins) { MOZ_CRASH("NYI"); }
+    void visitSimd128Float(LSimd128Float* ins) { MOZ_CRASH("NYI"); }
+    void visitSimdReinterpretCast(LSimdReinterpretCast* ins) { MOZ_CRASH("NYI"); }
+    void visitSimdExtractElementI(LSimdExtractElementI* ins) { MOZ_CRASH("NYI"); }
+    void visitSimdExtractElementF(LSimdExtractElementF* ins) { MOZ_CRASH("NYI"); }
+    void visitSimdGeneralShuffleI(LSimdGeneralShuffleI* lir) { MOZ_CRASH("NYI"); }
+    void visitSimdGeneralShuffleF(LSimdGeneralShuffleF* lir) { MOZ_CRASH("NYI"); }
+    void visitSimdSwizzleI(LSimdSwizzleI* lir) { MOZ_CRASH("NYI"); }
+    void visitSimdSwizzleF(LSimdSwizzleF* lir) { MOZ_CRASH("NYI"); }
+    void visitSimdBinaryCompIx4(LSimdBinaryCompIx4* lir) { MOZ_CRASH("NYI"); }
+    void visitSimdBinaryCompFx4(LSimdBinaryCompFx4* lir) { MOZ_CRASH("NYI"); }
+    void visitSimdBinaryArithIx4(LSimdBinaryArithIx4* lir) { MOZ_CRASH("NYI"); }
+    void visitSimdBinaryArithFx4(LSimdBinaryArithFx4* lir) { MOZ_CRASH("NYI"); }
+    void visitSimdBinaryBitwise(LSimdBinaryBitwise* lir) { MOZ_CRASH("NYI"); }
 };
 
 typedef CodeGeneratorARM CodeGeneratorSpecific;

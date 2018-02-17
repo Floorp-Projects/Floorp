@@ -23,14 +23,4 @@ config = {
     # purge options
     'purge_minsize': 12,
     'is_automation': True,
-    'default_actions': [
-        "clobber",
-        "pull",
-        "clone-locales",
-        "list-locales",
-        "setup",
-        "repack",
-        "taskcluster-upload",
-        "summary",
-    ],
 }

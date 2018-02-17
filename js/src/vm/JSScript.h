@@ -15,7 +15,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Variant.h"
 
-#include "jsopcode.h"
 #include "jstypes.h"
 
 #include "frontend/NameAnalysisTypes.h"
@@ -24,6 +23,7 @@
 #include "jit/IonCode.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/JSAtom.h"
 #include "vm/NativeObject.h"
 #include "vm/Scope.h"
@@ -234,10 +234,10 @@ class ScriptCounts
 };
 
 // Note: The key of this hash map is a weak reference to a JSScript.  We do not
-// use the WeakMap implementation provided in jsweakmap.h because it would be
+// use the WeakMap implementation provided in gc/WeakMap.h because it would be
 // collected at the beginning of the sweeping of the compartment, thus before
-// the calls to the JSScript::finalize function which are used to aggregate code
-// coverage results on the compartment.
+// the calls to the JSScript::finalize function which are used to aggregate
+// code coverage results on the compartment.
 typedef HashMap<JSScript*,
                 ScriptCounts*,
                 DefaultHasher<JSScript*>,
@@ -1987,7 +1987,7 @@ class JSScript : public js::gc::TenuredCell
     bool hasBreakpointsAt(jsbytecode* pc);
     bool hasAnyBreakpointsOrStepMode() { return hasDebugScript_; }
 
-    // See comment above 'debugMode' in jscompartment.h for explanation of
+    // See comment above 'debugMode' in JSCompartment.h for explanation of
     // invariants of debuggee compartments, scripts, and frames.
     inline bool isDebuggee() const;
 

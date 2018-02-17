@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsopcodeinlines_h
-#define jsopcodeinlines_h
+#ifndef vm_BytecodeUtil_inl_h
+#define vm_BytecodeUtil_inl_h
 
-#include "jsopcode.h"
+#include "vm/BytecodeUtil.h"
 
 #include "vm/JSScript.h"
 
@@ -113,4 +113,4 @@ class BytecodeRange {
 
 } // namespace js
 
-#endif /* jsopcodeinlines_h */
+#endif /* vm_BytecodeUtil_inl_h */

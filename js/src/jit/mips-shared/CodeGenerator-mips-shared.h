@@ -126,65 +126,65 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
 
   public:
     // Instruction visitors.
-    virtual void visitMinMaxD(LMinMaxD* ins);
-    virtual void visitMinMaxF(LMinMaxF* ins);
-    virtual void visitAbsD(LAbsD* ins);
-    virtual void visitAbsF(LAbsF* ins);
-    virtual void visitSqrtD(LSqrtD* ins);
-    virtual void visitSqrtF(LSqrtF* ins);
-    virtual void visitAddI(LAddI* ins);
-    virtual void visitAddI64(LAddI64* ins);
-    virtual void visitSubI(LSubI* ins);
-    virtual void visitSubI64(LSubI64* ins);
-    virtual void visitBitNotI(LBitNotI* ins);
-    virtual void visitBitOpI(LBitOpI* ins);
-    virtual void visitBitOpI64(LBitOpI64* ins);
+    void visitMinMaxD(LMinMaxD* ins);
+    void visitMinMaxF(LMinMaxF* ins);
+    void visitAbsD(LAbsD* ins);
+    void visitAbsF(LAbsF* ins);
+    void visitSqrtD(LSqrtD* ins);
+    void visitSqrtF(LSqrtF* ins);
+    void visitAddI(LAddI* ins);
+    void visitAddI64(LAddI64* ins);
+    void visitSubI(LSubI* ins);
+    void visitSubI64(LSubI64* ins);
+    void visitBitNotI(LBitNotI* ins);
+    void visitBitOpI(LBitOpI* ins);
+    void visitBitOpI64(LBitOpI64* ins);
 
-    virtual void visitMulI(LMulI* ins);
-    virtual void visitMulI64(LMulI64* ins);
+    void visitMulI(LMulI* ins);
+    void visitMulI64(LMulI64* ins);
 
-    virtual void visitDivI(LDivI* ins);
-    virtual void visitDivPowTwoI(LDivPowTwoI* ins);
-    virtual void visitModI(LModI* ins);
-    virtual void visitModPowTwoI(LModPowTwoI* ins);
-    virtual void visitModMaskI(LModMaskI* ins);
-    virtual void visitPowHalfD(LPowHalfD* ins);
-    virtual void visitShiftI(LShiftI* ins);
-    virtual void visitShiftI64(LShiftI64* ins);
-    virtual void visitRotateI64(LRotateI64* lir);
-    virtual void visitUrshD(LUrshD* ins);
+    void visitDivI(LDivI* ins);
+    void visitDivPowTwoI(LDivPowTwoI* ins);
+    void visitModI(LModI* ins);
+    void visitModPowTwoI(LModPowTwoI* ins);
+    void visitModMaskI(LModMaskI* ins);
+    void visitPowHalfD(LPowHalfD* ins);
+    void visitShiftI(LShiftI* ins);
+    void visitShiftI64(LShiftI64* ins);
+    void visitRotateI64(LRotateI64* lir);
+    void visitUrshD(LUrshD* ins);
 
-    virtual void visitClzI(LClzI* ins);
-    virtual void visitCtzI(LCtzI* ins);
-    virtual void visitPopcntI(LPopcntI* ins);
-    virtual void visitPopcntI64(LPopcntI64* lir);
+    void visitClzI(LClzI* ins);
+    void visitCtzI(LCtzI* ins);
+    void visitPopcntI(LPopcntI* ins);
+    void visitPopcntI64(LPopcntI64* lir);
 
-    virtual void visitTestIAndBranch(LTestIAndBranch* test);
-    virtual void visitCompare(LCompare* comp);
-    virtual void visitCompareAndBranch(LCompareAndBranch* comp);
-    virtual void visitTestDAndBranch(LTestDAndBranch* test);
-    virtual void visitTestFAndBranch(LTestFAndBranch* test);
-    virtual void visitCompareD(LCompareD* comp);
-    virtual void visitCompareF(LCompareF* comp);
-    virtual void visitCompareDAndBranch(LCompareDAndBranch* comp);
-    virtual void visitCompareFAndBranch(LCompareFAndBranch* comp);
-    virtual void visitBitAndAndBranch(LBitAndAndBranch* lir);
-    virtual void visitWasmUint32ToDouble(LWasmUint32ToDouble* lir);
-    virtual void visitWasmUint32ToFloat32(LWasmUint32ToFloat32* lir);
-    virtual void visitNotI(LNotI* ins);
-    virtual void visitNotD(LNotD* ins);
-    virtual void visitNotF(LNotF* ins);
+    void visitTestIAndBranch(LTestIAndBranch* test);
+    void visitCompare(LCompare* comp);
+    void visitCompareAndBranch(LCompareAndBranch* comp);
+    void visitTestDAndBranch(LTestDAndBranch* test);
+    void visitTestFAndBranch(LTestFAndBranch* test);
+    void visitCompareD(LCompareD* comp);
+    void visitCompareF(LCompareF* comp);
+    void visitCompareDAndBranch(LCompareDAndBranch* comp);
+    void visitCompareFAndBranch(LCompareFAndBranch* comp);
+    void visitBitAndAndBranch(LBitAndAndBranch* lir);
+    void visitWasmUint32ToDouble(LWasmUint32ToDouble* lir);
+    void visitWasmUint32ToFloat32(LWasmUint32ToFloat32* lir);
+    void visitNotI(LNotI* ins);
+    void visitNotD(LNotD* ins);
+    void visitNotF(LNotF* ins);
 
-    virtual void visitMathD(LMathD* math);
-    virtual void visitMathF(LMathF* math);
-    virtual void visitFloor(LFloor* lir);
-    virtual void visitFloorF(LFloorF* lir);
-    virtual void visitCeil(LCeil* lir);
-    virtual void visitCeilF(LCeilF* lir);
-    virtual void visitRound(LRound* lir);
-    virtual void visitRoundF(LRoundF* lir);
-    virtual void visitTruncateDToInt32(LTruncateDToInt32* ins);
-    virtual void visitTruncateFToInt32(LTruncateFToInt32* ins);
+    void visitMathD(LMathD* math);
+    void visitMathF(LMathF* math);
+    void visitFloor(LFloor* lir);
+    void visitFloorF(LFloorF* lir);
+    void visitCeil(LCeil* lir);
+    void visitCeilF(LCeilF* lir);
+    void visitRound(LRound* lir);
+    void visitRoundF(LRoundF* lir);
+    void visitTruncateDToInt32(LTruncateDToInt32* ins);
+    void visitTruncateFToInt32(LTruncateFToInt32* ins);
 
     void visitWasmTruncateToInt32(LWasmTruncateToInt32* lir);
 
@@ -288,7 +288,7 @@ class OutOfLineBailout : public OutOfLineCodeBase<CodeGeneratorMIPSShared>
         frameSize_(frameSize)
     { }
 
-    void accept(CodeGeneratorMIPSShared* codegen);
+    void accept(CodeGeneratorMIPSShared* codegen) override;
 
     LSnapshot* snapshot() const {
         return snapshot_;

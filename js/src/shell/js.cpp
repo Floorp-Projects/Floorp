@@ -55,9 +55,6 @@
 #include "jsprf.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#ifdef XP_WIN
-# include "jswin.h"
-#endif
 #include "jswrapper.h"
 #ifndef JS_POSIX_NSPR
 # include "prerror.h"
@@ -72,7 +69,7 @@
 # include "frontend/BinSource.h"
 #endif // defined(JS_BUILD_BINAST)
 #include "frontend/Parser.h"
-#include "gc/Iteration.h"
+#include "gc/PublicIterators.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
@@ -92,6 +89,7 @@
 #include "threading/ExclusiveData.h"
 #include "threading/LockGuard.h"
 #include "threading/Thread.h"
+#include "util/Windows.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"

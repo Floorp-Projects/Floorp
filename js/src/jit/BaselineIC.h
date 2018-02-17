@@ -9,8 +9,6 @@
 
 #include "mozilla/Assertions.h"
 
-#include "jsopcode.h"
-
 #include "builtin/TypedObject.h"
 #include "gc/Barrier.h"
 #include "jit/BaselineICList.h"
@@ -19,6 +17,7 @@
 #include "jit/SharedICRegisters.h"
 #include "js/GCVector.h"
 #include "vm/ArrayObject.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 #include "vm/UnboxedObject.h"
@@ -1456,6 +1455,44 @@ class ICRetSub_Resume : public ICStub
 
         ICStub* getStub(ICStubSpace* space) override {
             return newStub<ICRetSub_Resume>(space, getStubCode(), pcOffset_, addr_);
+        }
+    };
+};
+
+// UnaryArith
+//     JSOP_BITNOT
+//     JSOP_NEG
+
+class ICUnaryArith_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    explicit ICUnaryArith_Fallback(JitCode* stubCode)
+      : ICFallbackStub(UnaryArith_Fallback, stubCode)
+    {
+        extra_ = 0;
+    }
+
+  public:
+    bool sawDoubleResult() {
+        return extra_;
+    }
+    void setSawDoubleResult() {
+        extra_ = 1;
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
+
+      public:
+        explicit Compiler(JSContext* cx)
+          : ICStubCompiler(cx, ICStub::UnaryArith_Fallback, Engine::Baseline)
+        {}
+
+        ICStub* getStub(ICStubSpace* space) override {
+            return newStub<ICUnaryArith_Fallback>(space, getStubCode());
         }
     };
 };

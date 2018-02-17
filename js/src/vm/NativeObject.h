@@ -1610,7 +1610,7 @@ AddPropertyTypesAfterProtoChange(JSContext* cx, NativeObject* obj, ObjectGroup* 
 } // namespace js
 
 
-/*** Inline functions declared in jsobj.h that use the native declarations above *****************/
+/*** Inline functions declared in JSObject.h that use the native declarations above **************/
 
 inline bool
 js::HasProperty(JSContext* cx, HandleObject obj, HandleId id, bool* foundp)

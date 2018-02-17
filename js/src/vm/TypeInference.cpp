@@ -13,10 +13,10 @@
 #include "mozilla/Sprintf.h"
 
 #include "jsapi.h"
-#include "jshashutil.h"
 #include "jsprf.h"
 #include "jsstr.h"
 
+#include "gc/HashUtil.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CompileInfo.h"
 #include "jit/Ion.h"
@@ -34,8 +34,8 @@
 #include "vm/Time.h"
 #include "vm/UnboxedObject.h"
 
-#include "gc/GCIteration-inl.h"
 #include "gc/Marking-inl.h"
+#include "gc/PrivateIterators-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"

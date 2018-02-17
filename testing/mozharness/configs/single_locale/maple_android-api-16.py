@@ -47,9 +47,7 @@ config = {
         "MOZ_UPDATE_CHANNEL": "nightly-maple",
     },
     "upload_branch": "%s-android-api-16" % BRANCH,
-    "ssh_key_dir": "~/.ssh",
     "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
-    "stage_product": "mobile",
     "platform": "android",
     "build_type": "api-16-opt",
 

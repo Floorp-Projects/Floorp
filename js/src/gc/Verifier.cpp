@@ -15,13 +15,12 @@
 #include "jsprf.h"
 
 #include "gc/GCInternals.h"
-#include "gc/Iteration.h"
+#include "gc/PublicIterators.h"
 #include "gc/Zone.h"
 #include "js/HashTable.h"
 #include "vm/JSContext.h"
 
-#include "jsgcinlines.h"
-
+#include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
 #include "vm/JSContext-inl.h"
 

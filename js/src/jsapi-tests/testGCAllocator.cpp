@@ -12,20 +12,20 @@
 #include "jsapi-tests/tests.h"
 
 #if defined(XP_WIN)
-#include "jswin.h"
-#include <psapi.h>
+# include "util/Windows.h"
+# include <psapi.h>
 #elif defined(SOLARIS)
 // This test doesn't apply to Solaris.
 #elif defined(XP_UNIX)
-#include <algorithm>
-#include <errno.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
+# include <algorithm>
+# include <errno.h>
+# include <sys/mman.h>
+# include <sys/resource.h>
+# include <sys/stat.h>
+# include <sys/types.h>
+# include <unistd.h>
 #else
-#error "Memory mapping functions are not defined for your OS."
+# error "Memory mapping functions are not defined for your OS."
 #endif
 
 BEGIN_TEST(testGCAllocator)

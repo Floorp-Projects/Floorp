@@ -15,8 +15,6 @@ import os
 import re
 import subprocess
 import sys
-import time
-import shlex
 
 try:
     import simplejson as json
@@ -27,7 +25,7 @@ except ImportError:
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
-from mozharness.base.errors import BaseErrorList, MakefileErrorList
+from mozharness.base.errors import MakefileErrorList
 from mozharness.base.log import OutputParser
 from mozharness.base.transfer import TransferMixin
 from mozharness.mozilla.buildbot import BuildbotMixin
@@ -41,7 +39,6 @@ from mozharness.mozilla.mock import MockMixin
 from mozharness.mozilla.secrets import SecretsMixin
 from mozharness.mozilla.updates.balrog import BalrogMixin
 from mozharness.base.python import VirtualenvMixin
-from mozharness.mozilla.taskcluster_helper import Taskcluster
 
 
 # MobileSingleLocale {{{1
@@ -144,16 +141,12 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
                 "validate-repacks-signed",
                 "upload-repacks",
                 "create-virtualenv",
-                "taskcluster-upload",
                 "submit-to-balrog",
                 "summary",
             ],
             'config': {
-                'taskcluster_credentials_file': 'oauth.txt',
                 'virtualenv_modules': [
                     'requests==2.8.1',
-                    'PyHawk-with-a-single-extra-commit==0.1.5',
-                    'taskcluster==0.0.26',
                 ],
                 'virtualenv_path': 'venv',
             },
@@ -169,7 +162,6 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         self.buildid = None
         self.make_ident_output = None
         self.repack_env = None
-        self.enUS_revision = None
         self.revision = None
         self.upload_env = None
         self.version = None
@@ -232,7 +224,6 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         # So we override the branch with something that contains the platform
         # name.
         replace_dict['branch'] = c['upload_branch']
-        replace_dict['post_upload_extra'] = ' '.join(c.get('post_upload_extra', []))
 
         upload_env = self.query_env(partial_env=c.get("upload_env"),
                                     replace_dict=replace_dict)
@@ -301,27 +292,11 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
             revision = self.buildbot_config['sourcestamp']['revision']
         elif self.buildbot_config and self.buildbot_config.get('revision'):
             revision = self.buildbot_config['revision']
-        elif config.get("update_gecko_source_to_enUS", True):
-            revision = self._query_enUS_revision()
 
         if not revision:
             self.fatal("Can't determine revision!")
         self.revision = str(revision)
         return self.revision
-
-    def _query_enUS_revision(self):
-        """Get revision from the objdir.
-        Only valid after setup is run.
-       """
-        if self.enUS_revision:
-            return self.enUS_revision
-        r = re.compile(r"^gecko_revision ([0-9a-f]+\+?)$")
-        output = self._query_make_ident_output()
-        for line in output.splitlines():
-            match = r.match(line)
-            if match:
-                self.enUS_revision = match.groups()[0]
-        return self.enUS_revision
 
     def _query_make_variable(self, variable, make_args=None):
         make = self.query_exe('make')
@@ -505,24 +480,6 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
                            error_list=MakefileErrorList,
                            halt_on_failure=True)
 
-        # on try we want the source we already have, otherwise update to the
-        # same as the en-US binary
-        if self.config.get("update_gecko_source_to_enUS", True):
-            revision = self._query_enUS_revision()
-            if not revision:
-                self.fatal("Can't determine revision!")
-            hg = self.query_exe("hg")
-            # TODO do this through VCSMixin instead of hardcoding hg
-            self.run_command_m([hg, "update", "-r", revision],
-                               cwd=dirs["abs_mozilla_dir"],
-                               env=env,
-                               error_list=BaseErrorList,
-                               halt_on_failure=True)
-            self.set_buildbot_property('revision', revision, write_to_file=True)
-            # Configure again since the hg update may have invalidated it.
-            buildid = self.query_buildid()
-            self._setup_configure(buildid=buildid)
-
     def repack(self):
         # TODO per-locale logs and reporting.
         dirs = self.query_abs_dirs()
@@ -575,96 +532,18 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
                                      message="Validated signatures on %d of %d "
                                              "binaries successfully.")
 
-    def taskcluster_upload(self):
-        auth = os.path.join(os.getcwd(), self.config['taskcluster_credentials_file'])
-        credentials = {}
-        execfile(auth, credentials)
-        client_id = credentials.get('taskcluster_clientId')
-        access_token = credentials.get('taskcluster_accessToken')
-        if not client_id or not access_token:
-            self.warning('Skipping S3 file upload: No taskcluster credentials.')
-            return
-
-        self.activate_virtualenv()
-
-        dirs = self.query_abs_dirs()
-        locales = self.query_locales()
-        make = self.query_exe("make")
-        upload_env = self.query_upload_env()
-        cwd = dirs['abs_locales_dir']
-        branch = self.config['branch']
-        revision = self.query_revision()
-        repo = self.query_l10n_repo()
-        pushinfo = self.vcs_query_pushinfo(repo, revision, vcs='hg')
-        pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
-        routes_json = os.path.join(self.query_abs_dirs()['abs_mozilla_dir'],
-                                   'testing/mozharness/configs/routes.json')
-        with open(routes_json) as routes_file:
-            contents = json.load(routes_file)
-            templates = contents['l10n']
-
-        for locale in locales:
-            output = self.get_output_from_command_m(
-                "%s echo-variable-UPLOAD_FILES AB_CD=%s" % (make, locale),
-                cwd=cwd,
-                env=upload_env,
-            )
-            files = shlex.split(output)
-            abs_files = [os.path.abspath(os.path.join(cwd, f)) for f in files]
-
-            routes = []
-            fmt = {
-                'index': self.config.get('taskcluster_index', 'index.garbage.staging'),
-                'project': branch,
-                'head_rev': revision,
-                'pushdate': pushdate,
-                'year': pushdate[0:4],
-                'month': pushdate[4:6],
-                'day': pushdate[6:8],
-                'build_product': self.config['stage_product'],
-                'build_name': self.query_build_name(),
-                'build_type': self.query_build_type(),
-                'locale': locale,
-            }
-            for template in templates:
-                routes.append(template.format(**fmt))
-
-            self.info('Using routes: %s' % routes)
-            tc = Taskcluster(branch,
-                             pushinfo.pushdate,  # Use pushdate as the rank
-                             client_id,
-                             access_token,
-                             self.log_obj,
-                             )
-            task = tc.create_task(routes)
-            tc.claim_task(task)
-
-            for upload_file in abs_files:
-                tc.create_artifact(task, upload_file)
-            tc.report_completed(task)
-
     def upload_repacks(self):
-        c = self.config
         dirs = self.query_abs_dirs()
         locales = self.query_locales()
         make = self.query_exe("make")
         base_package_name = self.query_base_package_name()
-        version = self.query_version()
         upload_env = self.query_upload_env()
         success_count = total_count = 0
-        buildnum = None
-        if c.get('release_config_file'):
-            rc = self.query_release_config()
-            buildnum = rc['buildnum']
         for locale in locales:
             if self.query_failure(locale):
                 self.warning("Skipping previously failed locale %s." % locale)
                 continue
             total_count += 1
-            if c.get('base_post_upload_cmd'):
-                upload_env['POST_UPLOAD_CMD'] = c['base_post_upload_cmd'] % \
-                    {'version': version, 'locale': locale, 'buildnum': str(buildnum),
-                        'post_upload_extra': ' '.join(c.get('post_upload_extra', []))}
             output = self.get_output_from_command_m(
                 # Ugly hack to avoid |make upload| stderr from showing up
                 # as get_output_from_command errors
@@ -739,14 +618,12 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         return bool(self.config.get("is_release_or_beta"))
 
     def submit_to_balrog(self):
-
         if not self.query_is_nightly() and not self.query_is_release_or_beta():
             self.info("Not a nightly or release build, skipping balrog submission.")
             return
 
         self.checkout_tools()
 
-        dirs = self.query_abs_dirs()
         locales = self.query_locales()
         if not self.config.get('taskcluster_nightly'):
             balrogReady = True
@@ -788,29 +665,14 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
             self.set_buildbot_property("appVersion", self.query_version())
 
             self.set_buildbot_property("appName", "Fennec")
-            # TODO: don't hardcode
-            self.set_buildbot_property("hashType", "sha512")
             self.set_buildbot_property("completeMarSize", self.query_filesize(apkfile))
             self.set_buildbot_property("completeMarHash", self.query_sha512sum(apkfile))
             self.set_buildbot_property("isOSUpdate", False)
             self.set_buildbot_property("buildid", self.query_buildid())
 
-            if self.config.get('taskcluster_nightly'):
-                props_path = os.path.join(env["UPLOAD_PATH"], locale,
-                                          'balrog_props.json')
-                self.generate_balrog_props(props_path)
-            else:
-                if not self.config.get("balrog_servers"):
-                    self.info("balrog_servers not set; skipping balrog submission.")
-                    return
-
-                if self.query_is_nightly():
-                    self.submit_balrog_updates(release_type="nightly")
-                else:
-                    self.submit_balrog_updates(release_type="release")
-
-                if not self.query_is_nightly():
-                    self.submit_balrog_release_pusher(dirs)
+            props_path = os.path.join(env["UPLOAD_PATH"], locale,
+                                      'balrog_props.json')
+            self.generate_balrog_props(props_path)
 
 
 # main {{{1
