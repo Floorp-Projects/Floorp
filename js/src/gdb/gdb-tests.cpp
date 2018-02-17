@@ -26,9 +26,11 @@ static const JSClass global_class = {
     &global_classOps
 };
 
+static volatile int dontOptimizeMeAway = 0;
+
 void
 usePointer(const void* ptr) {
-    asm("");
+    dontOptimizeMeAway++;
 }
 
 template<typename T>
