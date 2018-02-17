@@ -302,7 +302,7 @@ class Channel
   int GetRemoteSSRC(unsigned int& ssrc);
   int SetSendAudioLevelIndicationStatus(bool enable, unsigned char id);
   int SetSendMIDStatus(bool enable, unsigned char id);
-  int SetReceiveAudioLevelIndicationStatus(bool enable, unsigned char id);
+  int SetReceiveAudioLevelIndicationStatus(bool enable, unsigned char id, bool isLevelSsrc);
   int SetSendAbsoluteSenderTimeStatus(bool enable, unsigned char id);
   int SetReceiveAbsoluteSenderTimeStatus(bool enable, unsigned char id);
   void EnableSendTransportSequenceNumber(int id);

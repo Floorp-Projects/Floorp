@@ -542,7 +542,8 @@ public:
   virtual MediaConduitErrorCode
   EnableAudioLevelExtension(bool aEnabled,
                             uint8_t aId,
-                            bool aDirectionIsSend) = 0;
+                            bool aDirectionIsSend,
+                            bool aLevelIsSsrc = true) = 0;
   virtual MediaConduitErrorCode
   EnableMIDExtension(bool enabled, uint8_t id) = 0;
 
