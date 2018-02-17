@@ -42,7 +42,7 @@ public:
 
   static const uint64_t NO_BLOCK_ID = 0;
 
-  enum class TargetConfirmationState {
+  enum class TargetConfirmationState : uint8_t {
     eUnconfirmed,
     eTimedOut,
     eTimedOutAndMainThreadResponded,
