@@ -8231,18 +8231,18 @@ class MBinarySharedStub
     TRIVIAL_NEW_WRAPPERS
 };
 
-class MUnaryCache
+class MUnarySharedStub
   : public MUnaryInstruction,
     public BoxPolicy<0>::Data
 {
-    explicit MUnaryCache(MDefinition* input)
+    explicit MUnarySharedStub(MDefinition* input)
       : MUnaryInstruction(classOpcode, input)
     {
         setResultType(MIRType::Value);
     }
 
   public:
-    INSTRUCTION_HEADER(UnaryCache)
+    INSTRUCTION_HEADER(UnarySharedStub)
     TRIVIAL_NEW_WRAPPERS
 };
 
