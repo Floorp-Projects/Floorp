@@ -129,9 +129,6 @@ StreamSamplesAndMarkers(const char* aName, int aThreadId,
                         const TimeStamp& aRegisterTime,
                         const TimeStamp& aUnregisterTime,
                         double aSinceTime,
-                        JSContext* aContext,
-                        UniquePtr<char[]>&& aPartialSamplesJSON,
-                        UniquePtr<char[]>&& aPartialMarkersJSON,
                         UniqueStacks& aUniqueStacks);
 
 #endif  // ProfiledThreadData_h

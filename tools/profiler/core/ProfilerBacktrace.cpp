@@ -37,8 +37,5 @@ ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
                           /* aRegisterTime */ TimeStamp(),
                           /* aUnregisterTime */ TimeStamp(),
                           /* aSinceTime */ 0,
-                          /* aContext */ nullptr,
-                          /* aSavedStreamedSamples */ nullptr,
-                          /* aSavedStreamedMarkers */ nullptr,
                           aUniqueStacks);
 }
