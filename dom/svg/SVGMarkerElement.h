@@ -16,6 +16,7 @@
 #include "nsSVGElement.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGAnimatedEnumeration.h"
+#include "mozilla/dom/SVGMarkerElementBinding.h"
 
 class nsSVGMarkerFrame;
 struct nsSVGMark;
@@ -26,23 +27,15 @@ nsresult NS_NewSVGMarkerElement(nsIContent **aResult,
 namespace mozilla {
 namespace dom {
 
-// Marker Unit Types
-static const unsigned short SVG_MARKERUNITS_UNKNOWN         = 0;
-static const unsigned short SVG_MARKERUNITS_USERSPACEONUSE = 1;
-static const unsigned short SVG_MARKERUNITS_STROKEWIDTH    = 2;
-
-// Marker Orientation Types
-static const unsigned short SVG_MARKER_ORIENT_UNKNOWN            = 0;
-static const unsigned short SVG_MARKER_ORIENT_AUTO               = 1;
-static const unsigned short SVG_MARKER_ORIENT_ANGLE              = 2;
-static const unsigned short SVG_MARKER_ORIENT_AUTO_START_REVERSE = 3;
+// Non-Exposed Marker Orientation Types
+static const uint16_t SVG_MARKER_ORIENT_AUTO_START_REVERSE = 3;
 
 class nsSVGOrientType
 {
 public:
   nsSVGOrientType()
-   : mAnimVal(SVG_MARKER_ORIENT_ANGLE),
-     mBaseVal(SVG_MARKER_ORIENT_ANGLE) {}
+   : mAnimVal(SVGMarkerElementBinding::SVG_MARKER_ORIENT_ANGLE),
+     mBaseVal(SVGMarkerElementBinding::SVG_MARKER_ORIENT_ANGLE) {}
 
   nsresult SetBaseValue(uint16_t aValue,
                         nsSVGElement *aSVGElement);
@@ -59,10 +52,10 @@ public:
   // Web content
   uint16_t GetBaseValue() const
     { return mAnimVal == SVG_MARKER_ORIENT_AUTO_START_REVERSE ?
-               SVG_MARKER_ORIENT_UNKNOWN : mBaseVal; }
+               SVGMarkerElementBinding::SVG_MARKER_ORIENT_UNKNOWN : mBaseVal; }
   uint16_t GetAnimValue() const
     { return mAnimVal == SVG_MARKER_ORIENT_AUTO_START_REVERSE ?
-               SVG_MARKER_ORIENT_UNKNOWN : mAnimVal; }
+               SVGMarkerElementBinding::SVG_MARKER_ORIENT_UNKNOWN : mAnimVal; }
   uint16_t GetAnimValueInternal() const
     { return mAnimVal; }
 

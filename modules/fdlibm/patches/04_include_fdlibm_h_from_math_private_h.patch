@@ -235,9 +235,9 @@ diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
 @@ -52,17 +52,16 @@
   *
   * Constants :
-  * The hexadecimal values are the intended ones for the following 
-  * constants. The decimal values may be used, provided that the 
-  * compiler will convert from decimal to binary accurately enough 
+  * The hexadecimal values are the intended ones for the following
+  * constants. The decimal values may be used, provided that the
+  * compiler will convert from decimal to binary accurately enough
   * to produce the hexadecimal values shown.
   */
  
@@ -295,7 +295,7 @@ diff --git a/modules/fdlibm/src/e_sqrt.cpp b/modules/fdlibm/src/e_sqrt.cpp
 diff --git a/modules/fdlibm/src/k_exp.cpp b/modules/fdlibm/src/k_exp.cpp
 --- a/modules/fdlibm/src/k_exp.cpp
 +++ b/modules/fdlibm/src/k_exp.cpp
-@@ -24,17 +24,16 @@
+@@ -26,17 +26,16 @@
   * SUCH DAMAGE.
   */
  
@@ -485,10 +485,10 @@ diff --git a/modules/fdlibm/src/s_expm1.cpp b/modules/fdlibm/src/s_expm1.cpp
 diff --git a/modules/fdlibm/src/s_fabs.cpp b/modules/fdlibm/src/s_fabs.cpp
 --- a/modules/fdlibm/src/s_fabs.cpp
 +++ b/modules/fdlibm/src/s_fabs.cpp
-@@ -13,17 +13,16 @@
- #ifndef lint
- static char rcsid[] = "$FreeBSD$";
- #endif
+@@ -12,17 +12,16 @@
+ 
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
  
  /*
   * fabs(x) returns the absolute value of x.
@@ -569,7 +569,7 @@ diff --git a/modules/fdlibm/src/s_log1p.cpp b/modules/fdlibm/src/s_log1p.cpp
 diff --git a/modules/fdlibm/src/s_nearbyint.cpp b/modules/fdlibm/src/s_nearbyint.cpp
 --- a/modules/fdlibm/src/s_nearbyint.cpp
 +++ b/modules/fdlibm/src/s_nearbyint.cpp
-@@ -23,17 +23,17 @@
+@@ -25,17 +25,17 @@
   * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
   * SUCH DAMAGE.
   */
@@ -633,13 +633,13 @@ diff --git a/modules/fdlibm/src/s_rintf.cpp b/modules/fdlibm/src/s_rintf.cpp
 diff --git a/modules/fdlibm/src/s_scalbn.cpp b/modules/fdlibm/src/s_scalbn.cpp
 --- a/modules/fdlibm/src/s_scalbn.cpp
 +++ b/modules/fdlibm/src/s_scalbn.cpp
-@@ -19,17 +19,16 @@ static char rcsid[] = "$FreeBSD$";
+@@ -17,17 +17,16 @@
+  * scalbn (double x, int n)
   * scalbn(x,n) returns x* 2**n  computed by  exponent
   * manipulation rather than by actually performing an
   * exponentiation or a multiplication.
   */
  
- #include <sys/cdefs.h>
  #include <float.h>
  
 -#include "math.h"

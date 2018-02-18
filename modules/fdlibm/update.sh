@@ -28,6 +28,7 @@ if [ ${BEFORE_COMMIT} != ${COMMIT} ]; then
     exit 1
 fi
 for FILE in $(ls patches/*.patch | sort); do
+    echo "Applying ${FILE} ..."
     patch -p3 < ${FILE}
 done
 hg add src

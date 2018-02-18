@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/SVGTextPathElement.h"
 #include "mozilla/dom/SVGLengthBinding.h"
+#include "mozilla/dom/SVGTextContentElementBinding.h"
 #include "mozilla/dom/SVGTextPathElementBinding.h"
 #include "nsSVGElement.h"
 #include "nsGkAtoms.h"
@@ -15,6 +16,9 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(TextPath)
 
 namespace mozilla {
 namespace dom {
+
+using namespace SVGTextContentElementBinding;
+using namespace SVGTextPathElementBinding;
 
 class SVGAnimatedLength;
 
@@ -49,7 +53,7 @@ nsSVGElement::EnumInfo SVGTextPathElement::sEnumInfo[3] =
   // from SVGTextContentElement:
   { &nsGkAtoms::lengthAdjust,
     sLengthAdjustMap,
-    SVG_LENGTHADJUST_SPACING
+    LENGTHADJUST_SPACING
   },
   // from SVGTextPathElement:
   { &nsGkAtoms::method,
