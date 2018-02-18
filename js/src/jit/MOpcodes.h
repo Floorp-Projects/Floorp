@@ -54,7 +54,7 @@ namespace jit {
     _(OsrArgumentsObject)                                                   \
     _(ReturnFromCtor)                                                       \
     _(BinarySharedStub)                                                     \
-    _(UnaryCache)                                                           \
+    _(UnarySharedStub)                                                      \
     _(NullarySharedStub)                                                    \
     _(CheckOverRecursed)                                                    \
     _(DefVar)                                                               \

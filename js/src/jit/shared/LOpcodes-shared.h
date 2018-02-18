@@ -244,7 +244,7 @@
     _(StringReplace)                \
     _(Substr)                       \
     _(BinarySharedStub)             \
-    _(UnaryCache)                   \
+    _(UnarySharedStub)              \
     _(NullarySharedStub)            \
     _(ClassConstructor)             \
     _(Lambda)                       \
