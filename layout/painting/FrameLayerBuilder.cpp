@@ -4852,26 +4852,21 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
   nsIntRect intClip;
   bool hasClip = false;
   if (aLayerState != LAYER_NONE) {
-    DisplayItemData *data = GetDisplayItemDataForManager(aItem, layer->Manager());
-    if (data) {
-      tempManager = data->mInactiveManager;
+    if (aData) {
+      tempManager = aData->mInactiveManager;
+
+      // We need to grab these before calling AddLayerDisplayItem because it will overwrite them.
+      nsRegion clip;
+      if (aClip.ComputeRegionInClips(&aData->GetClip(),
+                                     aTopLeft - paintedData->mLastAnimatedGeometryRootOrigin,
+                                     &clip)) {
+        intClip = clip.GetBounds().ScaleToOutsidePixels(paintedData->mXScale,
+                                                        paintedData->mYScale,
+                                                        paintedData->mAppUnitsPerDevPixel);
+      }
     }
     if (!tempManager) {
       tempManager = new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
-    }
-
-    // We need to grab these before calling AddLayerDisplayItem because it will overwrite them.
-    nsRegion clip;
-    DisplayItemClip* oldClip = nullptr;
-    GetOldLayerFor(aItem, nullptr, &oldClip);
-    hasClip = aClip.ComputeRegionInClips(oldClip,
-                                         aTopLeft - paintedData->mLastAnimatedGeometryRootOrigin,
-                                         &clip);
-
-    if (hasClip) {
-      intClip = clip.GetBounds().ScaleToOutsidePixels(paintedData->mXScale,
-                                                      paintedData->mYScale,
-                                                      paintedData->mAppUnitsPerDevPixel);
     }
   }
 
