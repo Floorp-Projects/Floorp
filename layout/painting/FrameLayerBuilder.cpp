@@ -4167,6 +4167,13 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         static_cast<nsDisplayLayerEventRegions*>(item);
       itemContent = eventRegions->GetHitRegionBounds(mBuilder, &snap);
     }
+
+    if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+      nsDisplayCompositorHitTestInfo* eventRegions =
+        static_cast<nsDisplayCompositorHitTestInfo*>(item);
+      itemContent = eventRegions->Area();
+    }
+
     nsIntRect itemDrawRect = ScaleToOutsidePixels(itemContent, snap);
     bool prerenderedTransform = itemType == DisplayItemType::TYPE_TRANSFORM &&
         static_cast<nsDisplayTransform*>(item)->MayBeAnimated(mBuilder);
@@ -4182,13 +4189,12 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     }
 #ifdef DEBUG
     nsRect bounds = itemContent;
-    bool dummy;
-    if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
-      bounds = item->GetBounds(mBuilder, &dummy);
-      if (itemClip.HasClip()) {
-        bounds.IntersectRect(bounds, itemClip.GetClipRect());
-      }
+
+    if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS ||
+        itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+      bounds.SetEmpty();
     }
+
     if (!bounds.IsEmpty()) {
       if (itemASR != mContainerASR) {
         if (Maybe<nsRect> clip = item->GetClipWithRespectToASR(mBuilder, mContainerASR)) {
