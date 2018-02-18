@@ -3,7 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-window.top.gUIDensity.update();
+
+let uidensity = window.top.document.documentElement.getAttribute("uidensity");
+if (uidensity) {
+  document.documentElement.setAttribute("uidensity", uidensity);
+}
 
 var SidebarUtils = {
   handleTreeClick: function SU_handleTreeClick(aTree, aEvent, aGutterSelect) {
