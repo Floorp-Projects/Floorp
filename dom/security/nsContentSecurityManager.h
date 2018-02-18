@@ -34,6 +34,7 @@ public:
                                          nsCOMPtr<nsIStreamListener>& aInAndOutListener);
 
   static bool AllowTopLevelNavigationToDataURI(nsIChannel* aChannel);
+  static bool AllowInsecureRedirectToDataURI(nsIChannel* aNewChannel);
 
 private:
   static nsresult CheckChannel(nsIChannel* aChannel);
