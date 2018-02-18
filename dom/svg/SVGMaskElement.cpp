@@ -11,11 +11,14 @@
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGMaskElement.h"
 #include "mozilla/dom/SVGMaskElementBinding.h"
+#include "mozilla/dom/SVGUnitTypesBinding.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Mask)
 
 namespace mozilla {
 namespace dom {
+
+using namespace SVGUnitTypesBinding;
 
 JSObject*
 SVGMaskElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)

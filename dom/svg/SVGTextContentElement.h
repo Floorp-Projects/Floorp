@@ -12,10 +12,6 @@
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
 
-static const unsigned short SVG_LENGTHADJUST_UNKNOWN          = 0;
-static const unsigned short SVG_LENGTHADJUST_SPACING          = 1;
-static const unsigned short SVG_LENGTHADJUST_SPACINGANDGLYPHS = 2;
-
 class SVGTextFrame;
 
 namespace mozilla {
