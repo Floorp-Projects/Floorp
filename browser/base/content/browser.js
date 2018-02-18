@@ -5610,10 +5610,11 @@ var gUIDensity = {
       mode = this.getCurrentDensity().mode;
     }
 
-    let docs = [
-      document.documentElement,
-      SidebarUI.browser.contentDocument.documentElement,
-    ];
+    let docs = [document.documentElement];
+    let shouldUpdateSidebar = SidebarUI.initialized && SidebarUI.isOpen;
+    if (shouldUpdateSidebar) {
+      docs.push(SidebarUI.browser.contentDocument.documentElement);
+    }
     for (let doc of docs) {
       switch (mode) {
       case this.MODE_COMPACT:
@@ -5627,12 +5628,14 @@ var gUIDensity = {
         break;
       }
     }
-    let tree = SidebarUI.browser.contentDocument.querySelector(".sidebar-placesTree");
-    if (tree) {
-      // Tree items don't update their styles without changing some property on the
-      // parent tree element, like background-color or border. See bug 1407399.
-      tree.style.border = "1px";
-      tree.style.border = "";
+    if (shouldUpdateSidebar) {
+      let tree = SidebarUI.browser.contentDocument.querySelector(".sidebar-placesTree");
+      if (tree) {
+        // Tree items don't update their styles without changing some property on the
+        // parent tree element, like background-color or border. See bug 1407399.
+        tree.style.border = "1px";
+        tree.style.border = "";
+      }
     }
 
     TabsInTitlebar.updateAppearance(true);

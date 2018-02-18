@@ -48,6 +48,11 @@ var SidebarUI = {
   _switcherPanel: null,
   _switcherTarget: null,
   _switcherArrow: null,
+  _inited: false,
+
+  get initialized() {
+    return this._inited;
+  },
 
   init() {
     this._box = document.getElementById("sidebar-box");
@@ -61,6 +66,8 @@ var SidebarUI = {
     this._switcherTarget.addEventListener("command", () => {
       this.toggleSwitcherPanel();
     });
+
+    this._inited = true;
   },
 
   uninit() {
