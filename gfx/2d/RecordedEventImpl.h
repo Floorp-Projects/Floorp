@@ -530,6 +530,42 @@ private:
   bool mCopyBackground;
 };
 
+class RecordedPushLayerWithBlend : public RecordedDrawingEvent<RecordedPushLayerWithBlend> {
+public:
+  RecordedPushLayerWithBlend(DrawTarget* aDT, bool aOpaque, Float aOpacity,
+                    SourceSurface* aMask, const Matrix& aMaskTransform,
+                    const IntRect& aBounds, bool aCopyBackground,
+                    CompositionOp aCompositionOp)
+    : RecordedDrawingEvent(PUSHLAYERWITHBLEND, aDT), mOpaque(aOpaque)
+    , mOpacity(aOpacity), mMask(aMask), mMaskTransform(aMaskTransform)
+    , mBounds(aBounds), mCopyBackground(aCopyBackground)
+    , mCompositionOp(aCompositionOp)
+  {
+  }
+
+  virtual bool PlayEvent(Translator *aTranslator) const override;
+
+  template<class S> void Record(S &aStream) const;
+  virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
+
+  virtual std::string GetName() const override { return "PushLayerWithBlend"; }
+
+private:
+  friend class RecordedEvent;
+
+  template<class S>
+  MOZ_IMPLICIT RecordedPushLayerWithBlend(S &aStream);
+
+  bool mOpaque;
+  Float mOpacity;
+  ReferencePtr mMask;
+  Matrix mMaskTransform;
+  IntRect mBounds;
+  bool mCopyBackground;
+  CompositionOp mCompositionOp;
+};
+
+
 class RecordedPopLayer : public RecordedDrawingEvent<RecordedPopLayer> {
 public:
   MOZ_IMPLICIT RecordedPopLayer(DrawTarget* aDT)
@@ -2268,6 +2304,51 @@ RecordedPushLayer::OutputSimpleEventInfo(std::stringstream &aStringStream) const
 }
 
 inline bool
+RecordedPushLayerWithBlend::PlayEvent(Translator *aTranslator) const
+{
+  SourceSurface* mask = mMask ? aTranslator->LookupSourceSurface(mMask)
+                              : nullptr;
+  aTranslator->LookupDrawTarget(mDT)->
+    PushLayerWithBlend(mOpaque, mOpacity, mask, mMaskTransform, mBounds, mCopyBackground, mCompositionOp);
+  return true;
+}
+
+template<class S>
+void
+RecordedPushLayerWithBlend::Record(S &aStream) const
+{
+  RecordedDrawingEvent::Record(aStream);
+  WriteElement(aStream, mOpaque);
+  WriteElement(aStream, mOpacity);
+  WriteElement(aStream, mMask);
+  WriteElement(aStream, mMaskTransform);
+  WriteElement(aStream, mBounds);
+  WriteElement(aStream, mCopyBackground);
+  WriteElement(aStream, mCompositionOp);
+}
+
+template<class S>
+RecordedPushLayerWithBlend::RecordedPushLayerWithBlend(S &aStream)
+  : RecordedDrawingEvent(PUSHLAYERWITHBLEND, aStream)
+{
+  ReadElement(aStream, mOpaque);
+  ReadElement(aStream, mOpacity);
+  ReadElement(aStream, mMask);
+  ReadElement(aStream, mMaskTransform);
+  ReadElement(aStream, mBounds);
+  ReadElement(aStream, mCopyBackground);
+  ReadElement(aStream, mCompositionOp);
+}
+
+inline void
+RecordedPushLayerWithBlend::OutputSimpleEventInfo(std::stringstream &aStringStream) const
+{
+  aStringStream << "[" << mDT << "] PushLayerWithBlend (Opaque=" << mOpaque <<
+    ", Opacity=" << mOpacity << ", Mask Ref=" << mMask << ") ";
+}
+
+
+inline bool
 RecordedPopLayer::PlayEvent(Translator *aTranslator) const
 {
   aTranslator->LookupDrawTarget(mDT)->PopLayer();
@@ -3411,6 +3492,7 @@ RecordedFilterNodeSetInput::OutputSimpleEventInfo(std::stringstream &aStringStre
     f(FONTDATA, RecordedFontData); \
     f(FONTDESC, RecordedFontDescriptor); \
     f(PUSHLAYER, RecordedPushLayer); \
+    f(PUSHLAYERWITHBLEND, RecordedPushLayerWithBlend); \
     f(POPLAYER, RecordedPopLayer); \
     f(UNSCALEDFONTCREATION, RecordedUnscaledFontCreation); \
     f(UNSCALEDFONTDESTRUCTION, RecordedUnscaledFontDestruction); \

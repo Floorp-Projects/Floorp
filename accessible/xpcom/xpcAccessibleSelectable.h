@@ -25,17 +25,17 @@ class xpcAccessibleSelectable : public nsIAccessibleSelectable
 {
 public:
   // nsIAccessibleSelectable
-  NS_IMETHOD GetSelectedItems(nsIArray** aSelectedItems) final override;
+  NS_IMETHOD GetSelectedItems(nsIArray** aSelectedItems) final;
   NS_IMETHOD GetSelectedItemCount(uint32_t* aSelectedItemCount)
-    final override;
+    final;
   NS_IMETHOD GetSelectedItemAt(uint32_t aIndex, nsIAccessible** aItem)
-    final override;
+    final;
   NS_IMETHOD IsItemSelected(uint32_t aIndex, bool* aIsSelected)
-    final override;
-  NS_IMETHOD AddItemToSelection(uint32_t aIndex) final override;
-  NS_IMETHOD RemoveItemFromSelection(uint32_t aIndex) final override;
-  NS_IMETHOD SelectAll(bool* aIsMultiSelect) final override;
-  NS_IMETHOD UnselectAll() final override;
+    final;
+  NS_IMETHOD AddItemToSelection(uint32_t aIndex) final;
+  NS_IMETHOD RemoveItemFromSelection(uint32_t aIndex) final;
+  NS_IMETHOD SelectAll(bool* aIsMultiSelect) final;
+  NS_IMETHOD UnselectAll() final;
 
 protected:
   xpcAccessibleSelectable() { }

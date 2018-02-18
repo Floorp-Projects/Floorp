@@ -27,7 +27,7 @@ public:
 
   RemotePrintJobChild();
 
-  void ActorDestroy(ActorDestroyReason aWhy) final override;
+  void ActorDestroy(ActorDestroyReason aWhy) final;
 
   nsresult InitializePrint(const nsString& aDocumentTitle,
                            const nsString& aPrintToFile,
@@ -36,13 +36,13 @@ public:
 
   mozilla::ipc::IPCResult RecvPrintInitializationResult(
     const nsresult& aRv,
-    const FileDescriptor& aFd) final override;
+    const FileDescriptor& aFd) final;
 
   void ProcessPage();
 
-  mozilla::ipc::IPCResult RecvPageProcessed(const FileDescriptor& aFd) final override;
+  mozilla::ipc::IPCResult RecvPageProcessed(const FileDescriptor& aFd) final;
 
-  mozilla::ipc::IPCResult RecvAbortPrint(const nsresult& aRv) final override;
+  mozilla::ipc::IPCResult RecvAbortPrint(const nsresult& aRv) final;
 
   void SetPagePrintTimer(nsPagePrintTimer* aPagePrintTimer);
 

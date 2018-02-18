@@ -207,7 +207,7 @@ protected:
   virtual void OnLineRead(int aFd, nsDependentCSubstring& aMessage) = 0;
   virtual void OnFileCanWriteWithoutBlocking(int /* aFd */) override {}
 private:
-  virtual void OnFileCanReadWithoutBlocking(int aFd) final override;
+  void OnFileCanReadWithoutBlocking(int aFd) final;
 
   mozilla::UniquePtr<char[]> mReceiveBuffer;
   int mReceivedIndex;

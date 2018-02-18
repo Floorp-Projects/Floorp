@@ -42,7 +42,7 @@ public:
     mAuthenticode = aAuthenticode;
   }
 
-  virtual UniquePtr<wchar_t[]> GetBinaryOrgName(const wchar_t* aFilePath) override final
+  UniquePtr<wchar_t[]> GetBinaryOrgName(const wchar_t* aFilePath) final
   {
     if (!mAuthenticode) {
       return nullptr;
@@ -85,7 +85,7 @@ private:
 class DllServices : public detail::DllServicesBase
 {
 public:
-  virtual void DispatchDllLoadNotification(PCUNICODE_STRING aDllName) override final
+  void DispatchDllLoadNotification(PCUNICODE_STRING aDllName) final
   {
     nsDependentSubstring strDllName(aDllName->Buffer,
                                     aDllName->Length / sizeof(wchar_t));

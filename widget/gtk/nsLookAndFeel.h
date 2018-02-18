@@ -20,7 +20,7 @@ public:
     nsLookAndFeel();
     virtual ~nsLookAndFeel();
 
-    virtual void NativeInit() final override;
+    void NativeInit() final;
     virtual void RefreshImpl() override;
     virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult) override;
     virtual nsresult GetIntImpl(IntID aID, int32_t &aResult) override;

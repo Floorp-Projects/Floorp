@@ -37,7 +37,7 @@ public:
   already_AddRefed<UnscaledFont>
     CreateUnscaledFont(uint32_t aIndex,
                        const uint8_t* aInstanceData,
-                       uint32_t aInstanceDataLength) final override;
+                       uint32_t aInstanceDataLength) final;
 
 private:
   explicit NativeFontResourceGDI(HANDLE aFontResourceHandle)

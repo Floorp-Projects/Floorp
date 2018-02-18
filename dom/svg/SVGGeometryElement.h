@@ -61,7 +61,7 @@ public:
    * Causes this element to discard any Path object that GetOrBuildPath may
    * have cached.
    */
-  virtual void ClearAnyCachedPath() override final {
+  void ClearAnyCachedPath() final {
     mCachedPath = nullptr;
   }
 

@@ -250,11 +250,11 @@ public:
   bool UseH2Deps() { return mUseH2Deps; }
 
   // overload of nsAHttpTransaction
-  MOZ_MUST_USE nsresult ReadSegmentsAgain(nsAHttpSegmentReader *, uint32_t, uint32_t *, bool *) override final;
-  MOZ_MUST_USE nsresult WriteSegmentsAgain(nsAHttpSegmentWriter *, uint32_t , uint32_t *, bool *) override final;
-  MOZ_MUST_USE bool Do0RTT() override final { return true; }
-  MOZ_MUST_USE nsresult Finish0RTT(bool aRestart, bool aAlpnChanged) override final;
-  void SetFastOpenStatus(uint8_t aStatus) override final;
+  MOZ_MUST_USE nsresult ReadSegmentsAgain(nsAHttpSegmentReader *, uint32_t, uint32_t *, bool *) final;
+  MOZ_MUST_USE nsresult WriteSegmentsAgain(nsAHttpSegmentWriter *, uint32_t , uint32_t *, bool *) final;
+  MOZ_MUST_USE bool Do0RTT() final { return true; }
+  MOZ_MUST_USE nsresult Finish0RTT(bool aRestart, bool aAlpnChanged) final;
+  void SetFastOpenStatus(uint8_t aStatus) final;
 
   // For use by an HTTP2Stream
   void Received421(nsHttpConnectionInfo *ci);

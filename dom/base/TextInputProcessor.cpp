@@ -60,14 +60,14 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetType(nsACString& aType) override final
+  NS_IMETHOD GetType(nsACString& aType) final
   {
     aType = mType;
     return NS_OK;
   }
 
   // "notify-text-change" and "notify-selection-change"
-  NS_IMETHOD GetOffset(uint32_t* aOffset) override final
+  NS_IMETHOD GetOffset(uint32_t* aOffset) final
   {
     if (NS_WARN_IF(!aOffset)) {
       return NS_ERROR_INVALID_ARG;
@@ -84,7 +84,7 @@ public:
   }
 
   // "notify-selection-change"
-  NS_IMETHOD GetText(nsAString& aText) override final
+  NS_IMETHOD GetText(nsAString& aText) final
   {
     if (IsSelectionChange()) {
       aText = mSelectionChangeData.String();
@@ -93,7 +93,7 @@ public:
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  NS_IMETHOD GetCollapsed(bool* aCollapsed) override final
+  NS_IMETHOD GetCollapsed(bool* aCollapsed) final
   {
     if (NS_WARN_IF(!aCollapsed)) {
       return NS_ERROR_INVALID_ARG;
@@ -105,7 +105,7 @@ public:
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  NS_IMETHOD GetLength(uint32_t* aLength) override final
+  NS_IMETHOD GetLength(uint32_t* aLength) final
   {
     if (NS_WARN_IF(!aLength)) {
       return NS_ERROR_INVALID_ARG;
@@ -117,7 +117,7 @@ public:
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  NS_IMETHOD GetReversed(bool* aReversed) override final
+  NS_IMETHOD GetReversed(bool* aReversed) final
   {
     if (NS_WARN_IF(!aReversed)) {
       return NS_ERROR_INVALID_ARG;
@@ -129,7 +129,7 @@ public:
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  NS_IMETHOD GetWritingMode(nsACString& aWritingMode) override final
+  NS_IMETHOD GetWritingMode(nsACString& aWritingMode) final
   {
     if (IsSelectionChange()) {
       WritingMode writingMode = mSelectionChangeData.GetWritingMode();
@@ -145,7 +145,7 @@ public:
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  NS_IMETHOD GetCausedByComposition(bool* aCausedByComposition) override final
+  NS_IMETHOD GetCausedByComposition(bool* aCausedByComposition) final
   {
     if (NS_WARN_IF(!aCausedByComposition)) {
       return NS_ERROR_INVALID_ARG;
@@ -158,7 +158,7 @@ public:
   }
 
   NS_IMETHOD GetCausedBySelectionEvent(
-               bool* aCausedBySelectionEvent) override final
+               bool* aCausedBySelectionEvent) final
   {
     if (NS_WARN_IF(!aCausedBySelectionEvent)) {
       return NS_ERROR_INVALID_ARG;
@@ -171,7 +171,7 @@ public:
   }
 
   NS_IMETHOD GetOccurredDuringComposition(
-               bool* aOccurredDuringComposition) override final
+               bool* aOccurredDuringComposition) final
   {
     if (NS_WARN_IF(!aOccurredDuringComposition)) {
       return NS_ERROR_INVALID_ARG;
@@ -185,7 +185,7 @@ public:
   }
 
   // "notify-text-change"
-  NS_IMETHOD GetRemovedLength(uint32_t* aLength) override final
+  NS_IMETHOD GetRemovedLength(uint32_t* aLength) final
   {
     if (NS_WARN_IF(!aLength)) {
       return NS_ERROR_INVALID_ARG;
@@ -197,7 +197,7 @@ public:
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  NS_IMETHOD GetAddedLength(uint32_t* aLength) override final
+  NS_IMETHOD GetAddedLength(uint32_t* aLength) final
   {
     if (NS_WARN_IF(!aLength)) {
       return NS_ERROR_INVALID_ARG;
@@ -210,7 +210,7 @@ public:
   }
 
   NS_IMETHOD GetCausedOnlyByComposition(
-               bool* aCausedOnlyByComposition) override final
+               bool* aCausedOnlyByComposition) final
   {
     if (NS_WARN_IF(!aCausedOnlyByComposition)) {
       return NS_ERROR_INVALID_ARG;
@@ -223,7 +223,7 @@ public:
   }
 
   NS_IMETHOD GetIncludingChangesDuringComposition(
-               bool* aIncludingChangesDuringComposition) override final
+               bool* aIncludingChangesDuringComposition) final
   {
     if (NS_WARN_IF(!aIncludingChangesDuringComposition)) {
       return NS_ERROR_INVALID_ARG;
@@ -237,7 +237,7 @@ public:
   }
 
   NS_IMETHOD GetIncludingChangesWithoutComposition(
-               bool* aIncludingChangesWithoutComposition) override final
+               bool* aIncludingChangesWithoutComposition) final
   {
     if (NS_WARN_IF(!aIncludingChangesWithoutComposition)) {
       return NS_ERROR_INVALID_ARG;

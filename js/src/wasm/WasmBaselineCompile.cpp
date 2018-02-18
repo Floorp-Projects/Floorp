@@ -2175,7 +2175,7 @@ class BaseCompiler final : public BaseCompilerInterface
     //    register on demand to free up one we need, thus avoiding the
     //    sync.  That type of fix would go into needI32().
 
-    void sync() final override {
+    void sync() final {
         size_t start = 0;
         size_t lim = stk_.length();
 

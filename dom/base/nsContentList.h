@@ -172,7 +172,7 @@ public:
     nsWrapperCache::PreserveWrapper(aScriptObjectHolder);
   }
 
-  virtual uint32_t Length() override final
+  uint32_t Length() final
   {
     return 0;
   }
@@ -346,7 +346,7 @@ public:
     return mRootNode;
   }
 
-  virtual uint32_t Length() override final
+  uint32_t Length() final
   {
     return Length(true);
   }

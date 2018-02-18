@@ -29,17 +29,17 @@ class ServoStyleRuleDeclaration final : public nsDOMCSSDeclaration
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  css::Rule* GetParentRule() final override;
-  nsINode* GetParentObject() final override;
+  css::Rule* GetParentRule() final;
+  nsINode* GetParentObject() final;
 
 protected:
-  DeclarationBlock* GetCSSDeclaration(Operation aOperation) final override;
-  nsresult SetCSSDeclaration(DeclarationBlock* aDecl) final override;
-  nsIDocument* DocToUpdate() final override;
+  DeclarationBlock* GetCSSDeclaration(Operation aOperation) final;
+  nsresult SetCSSDeclaration(DeclarationBlock* aDecl) final;
+  nsIDocument* DocToUpdate() final;
   void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
-                                nsIPrincipal* aSubjectPrincipal) final override;
+                                nsIPrincipal* aSubjectPrincipal) final;
   ServoCSSParsingEnvironment
-  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final override;
+  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
 
 private:
   // For accessing the constructor.
@@ -65,7 +65,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ServoStyleRule,
                                                          css::Rule)
-  bool IsCCLeaf() const final override MOZ_MUST_OVERRIDE;
+  bool IsCCLeaf() const final MOZ_MUST_OVERRIDE;
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ServoStyleRule)
 
@@ -81,20 +81,20 @@ public:
   NotNull<DeclarationBlock*> GetDeclarationBlock() const override;
 
   // WebIDL interface
-  uint16_t Type() const final override;
-  void GetCssText(nsAString& aCssText) const final override;
-  void GetSelectorText(nsAString& aSelectorText) final override;
-  void SetSelectorText(const nsAString& aSelectorText) final override;
-  nsICSSDeclaration* Style() final override;
+  uint16_t Type() const final;
+  void GetCssText(nsAString& aCssText) const final;
+  void GetSelectorText(nsAString& aSelectorText) final;
+  void SetSelectorText(const nsAString& aSelectorText) final;
+  nsICSSDeclaration* Style() final;
 
   RawServoStyleRule* Raw() const { return mRawRule; }
 
   // Methods of mozilla::css::Rule
-  int32_t GetType() const final override { return css::Rule::STYLE_RULE; }
-  already_AddRefed<Rule> Clone() const final override;
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final override;
+  int32_t GetType() const final { return css::Rule::STYLE_RULE; }
+  already_AddRefed<Rule> Clone() const final;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
 #ifdef DEBUG
-  void List(FILE* out = stdout, int32_t aIndent = 0) const final override;
+  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
 
 private:
