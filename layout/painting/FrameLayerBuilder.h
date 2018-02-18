@@ -69,6 +69,7 @@ public:
   uint32_t GetDisplayItemKey() { return mDisplayItemKey; }
   layers::Layer* GetLayer() const { return mLayer; }
   nsDisplayItemGeometry* GetGeometry() const { return mGeometry.get(); }
+  const DisplayItemClip& GetClip() const { return mClip; }
   void Invalidate() { mIsInvalid = true; }
   void ClearAnimationCompositorState();
 
