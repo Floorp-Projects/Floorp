@@ -20,10 +20,10 @@ protected:
   virtual ~CSSKeyframesRule() {}
 
 public:
-  int32_t GetType() const final override { return Rule::KEYFRAMES_RULE; }
+  int32_t GetType() const final { return Rule::KEYFRAMES_RULE; }
 
   // WebIDL interface
-  uint16_t Type() const final override { return CSSRuleBinding::KEYFRAMES_RULE; }
+  uint16_t Type() const final { return CSSRuleBinding::KEYFRAMES_RULE; }
   virtual void GetName(nsAString& aName) const = 0;
   virtual void SetName(const nsAString& aName) = 0;
   virtual CSSRuleList* CssRules() = 0;
@@ -33,12 +33,12 @@ public:
 
 #ifdef MOZ_OLD_STYLE
   bool UseForPresentation(nsPresContext* aPresContext,
-                          nsMediaQueryResultCacheKey& aKey) final override;
+                          nsMediaQueryResultCacheKey& aKey) final;
 #endif
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override = 0;
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final override;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 };
 
 } // namespace dom

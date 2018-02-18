@@ -24,17 +24,17 @@ public:
                PMPrintSettings aPrintSettings,
                const IntSize& aSize);
 
-  virtual nsresult BeginPrinting(const nsAString& aTitle,
-                                 const nsAString& aPrintToFileName,
-                                 int32_t aStartPage,
-                                 int32_t aEndPage) final override;
-  virtual nsresult EndPrinting() final override;
-  virtual nsresult AbortPrinting() final override;
-  virtual nsresult BeginPage() final override;
-  virtual nsresult EndPage() final override;
+  nsresult BeginPrinting(const nsAString& aTitle,
+                         const nsAString& aPrintToFileName,
+                         int32_t aStartPage,
+                         int32_t aEndPage) final;
+  nsresult EndPrinting() final;
+  nsresult AbortPrinting() final;
+  nsresult BeginPage() final;
+  nsresult EndPage() final;
 
   virtual already_AddRefed<DrawTarget>
-  GetReferenceDrawTarget() final override;
+  GetReferenceDrawTarget() final;
 
 private:
   PrintTargetCG(PMPrintSession aPrintSession,

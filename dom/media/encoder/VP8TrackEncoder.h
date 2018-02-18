@@ -32,13 +32,13 @@ public:
   VP8TrackEncoder(TrackRate aTrackRate, FrameDroppingMode aFrameDroppingMode);
   virtual ~VP8TrackEncoder();
 
-  already_AddRefed<TrackMetadataBase> GetMetadata() final override;
+  already_AddRefed<TrackMetadataBase> GetMetadata() final;
 
-  nsresult GetEncodedTrack(EncodedFrameContainer& aData) final override;
+  nsresult GetEncodedTrack(EncodedFrameContainer& aData) final;
 
 protected:
   nsresult Init(int32_t aWidth, int32_t aHeight,
-                int32_t aDisplayWidth, int32_t aDisplayHeight) final override;
+                int32_t aDisplayWidth, int32_t aDisplayHeight) final;
 
 private:
   // Get the EncodeOperation for next target frame.

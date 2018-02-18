@@ -179,13 +179,13 @@ protected:
 
   void FailWithError(nsresult aRv);
 
-  virtual nsresult CalculateResult() final;
+  nsresult CalculateResult();
 
-  virtual void CallCallback(nsresult rv) final;
+  void CallCallback(nsresult rv);
 
 private:
-  NS_IMETHOD Run() override final;
-  nsresult Cancel() override final;
+  NS_IMETHOD Run() final;
+  nsresult Cancel() final;
 
   class InternalWorkerHolder;
 

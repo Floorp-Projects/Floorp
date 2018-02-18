@@ -22,26 +22,26 @@ public:
   ServoMediaList(const nsAString& aMedia, dom::CallerType);
   ServoMediaList();
 
-  already_AddRefed<dom::MediaList> Clone() final override;
+  already_AddRefed<dom::MediaList> Clone() final;
 
-  void GetText(nsAString& aMediaText) final override;
-  void SetText(const nsAString& aMediaText) final override;
+  void GetText(nsAString& aMediaText) final;
+  void SetText(const nsAString& aMediaText) final;
 
-  uint32_t Length() final override;
+  uint32_t Length() final;
   void IndexedGetter(uint32_t aIndex, bool& aFound,
-                     nsAString& aReturn) final override;
+                     nsAString& aReturn) final;
 
-  bool Matches(nsPresContext*) const final override;
+  bool Matches(nsPresContext*) const final;
 
 #ifdef DEBUG
-  bool IsServo() const final override { return true; }
+  bool IsServo() const final { return true; }
 #endif
 
   RawServoMediaList& RawList() { return *mRawList; }
 
 protected:
-  nsresult Delete(const nsAString& aOldMedium) final override;
-  nsresult Append(const nsAString& aNewMedium) final override;
+  nsresult Delete(const nsAString& aOldMedium) final;
+  nsresult Append(const nsAString& aNewMedium) final;
   void SetTextInternal(const nsAString& aMediaText, dom::CallerType);
 
   ~ServoMediaList() {}

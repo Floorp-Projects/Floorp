@@ -38,6 +38,19 @@ codespell:
             - '**/*.properties'
             - '**/*.rst'
 
+cpp-virtual-final:
+    description: lint C++ virtual function declarations
+    platform: lint/opt
+    treeherder:
+        symbol: Cvf
+    run:
+        mach: lint -l cpp-virtual-final -f treeherder
+    when:
+        files-changed:
+            - '**/*.cpp'
+            - '**/*.h'
+            - '**/*.mm'
+
 eslint:
     description: JS lint check
     platform: lint/opt

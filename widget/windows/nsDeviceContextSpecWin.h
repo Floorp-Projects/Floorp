@@ -24,7 +24,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual already_AddRefed<PrintTarget> MakePrintTarget() final override;
+  already_AddRefed<PrintTarget> MakePrintTarget() final;
   NS_IMETHOD BeginDocument(const nsAString& aTitle,
                            const nsAString& aPrintToFileName,
                            int32_t          aStartPage,
@@ -35,9 +35,9 @@ public:
 
   NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS, bool aIsPrintPreview) override;
 
-  float GetDPI() final override;
+  float GetDPI() final;
 
-  float GetPrintingScale() final override;
+  float GetPrintingScale() final;
 
   void GetDriverName(nsAString& aDriverName) const { aDriverName = mDriverName; }
   void GetDeviceName(nsAString& aDeviceName) const { aDeviceName = mDeviceName; }

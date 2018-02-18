@@ -257,10 +257,10 @@ public:
                                              uint16_t aDuration,
                                              nsISupports* aData,
                                              nsIRunnable* aCallback) override;
-    virtual nsresult MakeFullScreen(
-      bool aFullScreen, nsIScreen* aTargetScreen = nullptr) override final;
-    virtual nsresult MakeFullScreenWithNativeTransition(
-      bool aFullScreen, nsIScreen* aTargetScreen = nullptr) override final;
+    nsresult MakeFullScreen(
+      bool aFullScreen, nsIScreen* aTargetScreen = nullptr) final;
+    nsresult MakeFullScreenWithNativeTransition(
+      bool aFullScreen, nsIScreen* aTargetScreen = nullptr) final;
     NSAnimation* FullscreenTransitionAnimation() const { return mFullscreenTransitionAnimation; }
     void ReleaseFullscreenTransitionAnimation()
     {
@@ -286,7 +286,7 @@ public:
     virtual double          GetDefaultScaleInternal() override;
     virtual int32_t         RoundsWidgetCoordinatesTo() override;
 
-    mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() final override {
+    mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() final {
       return mozilla::DesktopToLayoutDeviceScale(BackingScaleFactor());
     }
 

@@ -61,7 +61,7 @@ public:
   // usage values between now and the last time it was called.
   Result<Ok, CPUUsageWatcherError> CollectCPUUsage();
 
-  void AnnotateHang(HangMonitor::HangAnnotations& aAnnotations) final override;
+  void AnnotateHang(HangMonitor::HangAnnotations& aAnnotations) final;
 private:
 #ifdef CPU_USAGE_WATCHER_ACTIVE
   bool mInitialized;

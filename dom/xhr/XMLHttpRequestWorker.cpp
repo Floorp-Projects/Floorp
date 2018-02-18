@@ -534,11 +534,8 @@ private:
   ~EventRunnable()
   { }
 
-  virtual bool
-  PreDispatch(WorkerPrivate* /* unused */) override final;
-
-  virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
+  bool PreDispatch(WorkerPrivate* /* unused */) final;
+  bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
 };
 
 class SyncTeardownRunnable final : public WorkerThreadProxySyncRunnable

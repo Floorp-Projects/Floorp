@@ -200,12 +200,12 @@ public:
 
   MOZ_MUST_USE nsresult ReadSegments(nsAHttpSegmentReader *reader,
                                      uint32_t count,
-                                     uint32_t *countRead) override final;
+                                     uint32_t *countRead) final;
   MOZ_MUST_USE nsresult WriteSegments(nsAHttpSegmentWriter *writer,
                                       uint32_t count,
-                                      uint32_t *countWritten) override final;
-  nsHttpRequestHead *RequestHead() override final;
-  void Close(nsresult reason) override final;
+                                      uint32_t *countWritten) final;
+  nsHttpRequestHead *RequestHead() final;
+  void Close(nsresult reason) final;
 
   // ConnectedReadyForInput() tests whether the spdy connect transaction is attached to
   // an nsHttpConnection that can properly deal with flow control, etc..

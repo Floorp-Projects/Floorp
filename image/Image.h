@@ -248,8 +248,7 @@ public:
     return progressTracker.forget();
   }
 
-  void SetProgressTracker(
-                       ProgressTracker* aProgressTracker) override final
+  void SetProgressTracker(ProgressTracker* aProgressTracker) final
   {
     MOZ_ASSERT(aProgressTracker);
     MOZ_ASSERT(!mProgressTracker);

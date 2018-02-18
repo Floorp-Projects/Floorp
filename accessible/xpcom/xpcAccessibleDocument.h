@@ -34,20 +34,20 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessibleDocument
-  NS_IMETHOD GetURL(nsAString& aURL) final override;
-  NS_IMETHOD GetTitle(nsAString& aTitle) final override;
-  NS_IMETHOD GetMimeType(nsAString& aType) final override;
-  NS_IMETHOD GetDocType(nsAString& aType) final override;
-  NS_IMETHOD GetDOMDocument(nsIDOMDocument** aDOMDocument) final override;
-  NS_IMETHOD GetWindow(mozIDOMWindowProxy** aDOMWindow) final override;
+  NS_IMETHOD GetURL(nsAString& aURL) final;
+  NS_IMETHOD GetTitle(nsAString& aTitle) final;
+  NS_IMETHOD GetMimeType(nsAString& aType) final;
+  NS_IMETHOD GetDocType(nsAString& aType) final;
+  NS_IMETHOD GetDOMDocument(nsIDOMDocument** aDOMDocument) final;
+  NS_IMETHOD GetWindow(mozIDOMWindowProxy** aDOMWindow) final;
   NS_IMETHOD GetParentDocument(nsIAccessibleDocument** aDocument)
-    final override;
-  NS_IMETHOD GetChildDocumentCount(uint32_t* aCount) final override;
+    final;
+  NS_IMETHOD GetChildDocumentCount(uint32_t* aCount) final;
   NS_IMETHOD GetChildDocumentAt(uint32_t aIndex,
                                 nsIAccessibleDocument** aDocument)
-    final override;
+    final;
   NS_IMETHOD GetVirtualCursor(nsIAccessiblePivot** aVirtualCursor)
-    final override;
+    final;
 
   /**
    * Return XPCOM wrapper for the internal accessible.

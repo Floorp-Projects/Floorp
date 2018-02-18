@@ -1163,10 +1163,10 @@ class LInstructionHelper : public details::LInstructionFixedDefsTempsHelper<Defs
     {}
 
   public:
-    LAllocation* getOperand(size_t index) final override {
+    LAllocation* getOperand(size_t index) final {
         return &operands_[index];
     }
-    void setOperand(size_t index, const LAllocation& a) final override {
+    void setOperand(size_t index, const LAllocation& a) final {
         operands_[index] = a;
     }
     void setBoxOperand(size_t index, const LBoxAllocation& alloc) {
@@ -1209,10 +1209,10 @@ class LVariadicInstruction : public details::LInstructionFixedDefsTempsHelper<De
     MOZ_MUST_USE bool init(TempAllocator& alloc) {
         return operands_.init(alloc, this->nonPhiNumOperands_);
     }
-    LAllocation* getOperand(size_t index) final override {
+    LAllocation* getOperand(size_t index) final {
         return &operands_[index];
     }
-    void setOperand(size_t index, const LAllocation& a) final override {
+    void setOperand(size_t index, const LAllocation& a) final {
         operands_[index] = a;
     }
     void setBoxOperand(size_t index, const LBoxAllocation& a) {

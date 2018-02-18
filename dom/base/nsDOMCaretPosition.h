@@ -87,8 +87,7 @@ public:
     return GetOffsetNode();
   }
 
-  virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-    override final;
+  JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) final;
 
 protected:
   virtual ~nsDOMCaretPosition();
@@ -98,4 +97,3 @@ protected:
   nsCOMPtr<nsINode> mAnonymousContentNode;
 };
 #endif
-

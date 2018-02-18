@@ -26,7 +26,7 @@ public:
 
   void DestroyMediaStream() override;
 
-  uint16_t NumberOfInputs() const final override
+  uint16_t NumberOfInputs() const final
   {
     return 0;
   }
