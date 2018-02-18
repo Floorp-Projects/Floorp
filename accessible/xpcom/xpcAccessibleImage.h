@@ -27,8 +27,8 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD GetImagePosition(uint32_t aCoordType,
-                              int32_t* aX, int32_t* aY) final override;
-  NS_IMETHOD GetImageSize(int32_t* aWidth, int32_t* aHeight) final override;
+                              int32_t* aX, int32_t* aY) final;
+  NS_IMETHOD GetImageSize(int32_t* aWidth, int32_t* aHeight) final;
 
 protected:
   virtual ~xpcAccessibleImage() {}

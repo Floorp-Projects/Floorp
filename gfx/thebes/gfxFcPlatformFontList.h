@@ -229,7 +229,7 @@ public:
                          bool aIgnoreSizeTolerance) override;
 
     bool FilterForFontList(nsAtom* aLangGroup,
-                           const nsACString& aGeneric) const final override {
+                           const nsACString& aGeneric) const final {
         return SupportsLangGroup(aLangGroup);
     }
 

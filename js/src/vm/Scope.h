@@ -1577,7 +1577,7 @@ class Concrete<js::Scope> : TracerConcrete<js::Scope>
         new (storage) Concrete(ptr);
     }
 
-    CoarseType coarseType() const final override { return CoarseType::Script; }
+    CoarseType coarseType() const final { return CoarseType::Script; }
 
     Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
 

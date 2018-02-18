@@ -18,7 +18,7 @@ public:
     nsDeviceContextSpecX();
 
     NS_IMETHOD Init(nsIWidget *aWidget, nsIPrintSettings* aPS, bool aIsPrintPreview) override;
-    virtual already_AddRefed<PrintTarget> MakePrintTarget() final override;
+    already_AddRefed<PrintTarget> MakePrintTarget() final;
     NS_IMETHOD BeginDocument(const nsAString& aTitle,
                              const nsAString& aPrintToFileName,
                              int32_t          aStartPage,

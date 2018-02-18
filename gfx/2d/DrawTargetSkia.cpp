@@ -2067,7 +2067,15 @@ DrawTargetSkia::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
                           const Matrix& aMaskTransform, const IntRect& aBounds,
                           bool aCopyBackground)
 {
-  PushedLayer layer(GetPermitSubpixelAA(), aOpaque, aOpacity, aMask, aMaskTransform,
+  PushLayerWithBlend(aOpaque, aOpacity, aMask, aMaskTransform, aBounds, aCopyBackground, CompositionOp::OP_OVER);
+}
+
+void
+DrawTargetSkia::PushLayerWithBlend(bool aOpaque, Float aOpacity, SourceSurface* aMask,
+                                   const Matrix& aMaskTransform, const IntRect& aBounds,
+                                   bool aCopyBackground, CompositionOp aCompositionOp)
+{
+  PushedLayer layer(GetPermitSubpixelAA(), aOpaque, aOpacity, aCompositionOp, aMask, aMaskTransform,
                     mCanvas->getTopDevice());
   mPushedLayers.push_back(layer);
 
@@ -2076,6 +2084,9 @@ DrawTargetSkia::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
   // If we have a mask, set the opacity to 0 so that SkCanvas::restore skips
   // implicitly drawing the layer so that we can properly mask it in PopLayer.
   paint.setAlpha(aMask ? 0 : ColorFloatToByte(aOpacity));
+  if (!aMask) {
+    paint.setBlendMode(GfxOpToSkiaOp(layer.mCompositionOp));
+  }
 
   // aBounds is supplied in device space, but SaveLayerRec wants local space.
   SkRect bounds = IntRectToSkRect(aBounds);
@@ -2142,6 +2153,7 @@ DrawTargetSkia::PopLayer()
 
     SkPaint paint;
     paint.setAlpha(ColorFloatToByte(layer.mOpacity));
+    paint.setBlendMode(GfxOpToSkiaOp(layer.mCompositionOp));
 
     SkMatrix maskMat, layerMat;
     // Get the total transform affecting the mask, considering its pattern

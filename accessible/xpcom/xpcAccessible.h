@@ -25,68 +25,68 @@ class xpcAccessible : public nsIAccessible
 {
 public:
   // nsIAccessible
-  NS_IMETHOD GetParent(nsIAccessible** aParent) final override;
-  NS_IMETHOD GetNextSibling(nsIAccessible** aNextSibling) final override;
+  NS_IMETHOD GetParent(nsIAccessible** aParent) final;
+  NS_IMETHOD GetNextSibling(nsIAccessible** aNextSibling) final;
   NS_IMETHOD GetPreviousSibling(nsIAccessible** aPreviousSibling)
-    final override;
-  NS_IMETHOD GetFirstChild(nsIAccessible** aFirstChild) final override;
-  NS_IMETHOD GetLastChild(nsIAccessible** aLastChild) final override;
-  NS_IMETHOD GetChildCount(int32_t* aChildCount) final override;
+    final;
+  NS_IMETHOD GetFirstChild(nsIAccessible** aFirstChild) final;
+  NS_IMETHOD GetLastChild(nsIAccessible** aLastChild) final;
+  NS_IMETHOD GetChildCount(int32_t* aChildCount) final;
   NS_IMETHOD GetChildAt(int32_t aChildIndex, nsIAccessible** aChild)
-    final override;
-  NS_IMETHOD GetChildren(nsIArray** aChildren) final override;
-  NS_IMETHOD GetIndexInParent(int32_t* aIndexInParent) final override;
+    final;
+  NS_IMETHOD GetChildren(nsIArray** aChildren) final;
+  NS_IMETHOD GetIndexInParent(int32_t* aIndexInParent) final;
 
-  NS_IMETHOD GetDOMNode(nsIDOMNode** aDOMNode) final override;
-  NS_IMETHOD GetId(nsAString& aID) final override;
-  NS_IMETHOD GetDocument(nsIAccessibleDocument** aDocument) final override;
+  NS_IMETHOD GetDOMNode(nsIDOMNode** aDOMNode) final;
+  NS_IMETHOD GetId(nsAString& aID) final;
+  NS_IMETHOD GetDocument(nsIAccessibleDocument** aDocument) final;
   NS_IMETHOD GetRootDocument(nsIAccessibleDocument** aRootDocument)
-    final override;
+    final;
 
-  NS_IMETHOD GetRole(uint32_t* aRole) final override;
+  NS_IMETHOD GetRole(uint32_t* aRole) final;
   NS_IMETHOD GetState(uint32_t* aState, uint32_t* aExtraState)
-    final override;
+    final;
 
-  NS_IMETHOD GetDescription(nsAString& aDescription) final override;
-  NS_IMETHOD GetName(nsAString& aName) final override;
-  NS_IMETHOD GetLanguage(nsAString& aLanguage) final override;
-  NS_IMETHOD GetValue(nsAString& aValue) final override;
-  NS_IMETHOD GetHelp(nsAString& aHelp) final override;
+  NS_IMETHOD GetDescription(nsAString& aDescription) final;
+  NS_IMETHOD GetName(nsAString& aName) final;
+  NS_IMETHOD GetLanguage(nsAString& aLanguage) final;
+  NS_IMETHOD GetValue(nsAString& aValue) final;
+  NS_IMETHOD GetHelp(nsAString& aHelp) final;
 
-  NS_IMETHOD GetAccessKey(nsAString& aAccessKey) final override;
-  NS_IMETHOD GetKeyboardShortcut(nsAString& aKeyBinding) final override;
+  NS_IMETHOD GetAccessKey(nsAString& aAccessKey) final;
+  NS_IMETHOD GetKeyboardShortcut(nsAString& aKeyBinding) final;
 
   NS_IMETHOD GetAttributes(nsIPersistentProperties** aAttributes)
-    final override;
+    final;
   NS_IMETHOD GetBounds(int32_t* aX, int32_t* aY,
-                       int32_t* aWidth, int32_t* aHeight) final override;
+                       int32_t* aWidth, int32_t* aHeight) final;
   NS_IMETHOD GroupPosition(int32_t* aGroupLevel, int32_t* aSimilarItemsInGroup,
-                           int32_t* aPositionInGroup) final override;
+                           int32_t* aPositionInGroup) final;
   NS_IMETHOD GetRelationByType(uint32_t aType,
                                nsIAccessibleRelation** aRelation)
-    final override;
-  NS_IMETHOD GetRelations(nsIArray** aRelations) final override;
+    final;
+  NS_IMETHOD GetRelations(nsIArray** aRelations) final;
 
-  NS_IMETHOD GetFocusedChild(nsIAccessible** aChild) final override;
+  NS_IMETHOD GetFocusedChild(nsIAccessible** aChild) final;
   NS_IMETHOD GetChildAtPoint(int32_t aX, int32_t aY,
-                             nsIAccessible** aAccessible) final override;
+                             nsIAccessible** aAccessible) final;
   NS_IMETHOD GetDeepestChildAtPoint(int32_t aX, int32_t aY,
                                     nsIAccessible** aAccessible)
-    final override;
+    final;
 
-  NS_IMETHOD SetSelected(bool aSelect) final override;
-  NS_IMETHOD TakeSelection() final override;
-  NS_IMETHOD TakeFocus() final override;
+  NS_IMETHOD SetSelected(bool aSelect) final;
+  NS_IMETHOD TakeSelection() final;
+  NS_IMETHOD TakeFocus() final;
 
-  NS_IMETHOD GetActionCount(uint8_t* aActionCount) final override;
-  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName) final override;
+  NS_IMETHOD GetActionCount(uint8_t* aActionCount) final;
+  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName) final;
   NS_IMETHOD GetActionDescription(uint8_t aIndex, nsAString& aDescription)
-    final override;
-  NS_IMETHOD DoAction(uint8_t aIndex) final override;
+    final;
+  NS_IMETHOD DoAction(uint8_t aIndex) final;
 
-  NS_IMETHOD ScrollTo(uint32_t aHow) final override;
+  NS_IMETHOD ScrollTo(uint32_t aHow) final;
   NS_IMETHOD ScrollToPoint(uint32_t aCoordinateType,
-                           int32_t aX, int32_t aY) final override;
+                           int32_t aX, int32_t aY) final;
 
 protected:
   xpcAccessible() { }
