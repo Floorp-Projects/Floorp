@@ -1,7 +1,7 @@
 diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
 --- a/modules/fdlibm/src/fdlibm.h
 +++ b/modules/fdlibm/src/fdlibm.h
-@@ -12,496 +12,50 @@
+@@ -12,499 +12,50 @@
  /*
   * from: @(#)fdlibm.h 5.1 93/09/24
   * $FreeBSD$
@@ -245,12 +245,12 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
  double	sqrt(double);
 +double	fabs(double);
  
-+double	floor(double);
-+double	trunc(double);
- double	ceil(double);
+-double	ceil(double);
 -double	fabs(double) __pure2;
--double	floor(double);
+ double	floor(double);
 -double	fmod(double, double);
++double	trunc(double);
++double	ceil(double);
  
 -/*
 - * These functions are not in C90.
@@ -368,13 +368,13 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
  float	floorf(float);
 -float	fmodf(float, float);
 -float	roundf(float);
- 
+-
 -float	erff(float);
 -float	erfcf(float);
 -float	hypotf(float, float);
 -float	lgammaf(float);
 -float	tgammaf(float);
--
+ 
 -float	acoshf(float);
 -float	asinhf(float);
 -float	atanhf(float);
@@ -497,6 +497,9 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
 -
 -#if __BSD_VISIBLE
 -long double	lgammal_r(long double, int *);
+-void		sincos(double, double *, double *);
+-void		sincosf(float, float *, float *);
+-void		sincosl(long double, long double *, long double *);
 -#endif
 -
 -__END_DECLS
