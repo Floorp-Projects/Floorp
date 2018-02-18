@@ -1,7 +1,7 @@
 diff --git a/modules/fdlibm/src/k_exp.cpp b/modules/fdlibm/src/k_exp.cpp
 --- a/modules/fdlibm/src/k_exp.cpp
 +++ b/modules/fdlibm/src/k_exp.cpp
-@@ -22,18 +22,16 @@
+@@ -24,18 +24,16 @@
   * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
   * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
   * SUCH DAMAGE.
@@ -20,7 +20,7 @@ diff --git a/modules/fdlibm/src/k_exp.cpp b/modules/fdlibm/src/k_exp.cpp
  /*
   * Compute exp(x), scaled to avoid spurious overflow.  An exponent is
   * returned separately in 'expt'.
-@@ -76,32 +74,8 @@ double
+@@ -78,32 +76,8 @@ double
  	double exp_x, scale;
  	int ex_expt;
  
