@@ -65,7 +65,6 @@ class IonGetIteratorIC;
 class IonHasOwnIC;
 class IonInIC;
 class IonInstanceOfIC;
-class IonUnaryArithIC;
 
 class IonIC
 {
@@ -172,10 +171,6 @@ class IonIC
     IonInstanceOfIC* asInstanceOfIC() {
         MOZ_ASSERT(kind_ == CacheKind::InstanceOf);
         return (IonInstanceOfIC*)this;
-    }
-    IonUnaryArithIC* asUnaryArithIC() {
-        MOZ_ASSERT(kind_ == CacheKind::UnaryArith);
-        return (IonUnaryArithIC*)this;
     }
 
     void updateBaseAddress(JitCode* code, MacroAssembler& masm);
@@ -478,30 +473,6 @@ class IonInstanceOfIC : public IonIC
     // This signature mimics that of TryAttachInstanceOfStub in baseline
     static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript, IonInstanceOfIC* ic,
                                     HandleValue lhs, HandleObject rhs, bool* attached);
-};
-
-class IonUnaryArithIC : public IonIC
-{
-    LiveRegisterSet liveRegs_;
-
-    TypedOrValueRegister input_;
-    ValueOperand output_;
-
-    public:
-
-    IonUnaryArithIC(LiveRegisterSet liveRegs, TypedOrValueRegister input,  ValueOperand output)
-      : IonIC(CacheKind::UnaryArith),
-        liveRegs_(liveRegs),
-        input_(input),
-        output_(output)
-    { }
-
-    LiveRegisterSet liveRegs() const { return liveRegs_; }
-    TypedOrValueRegister input() const { return input_; }
-    ValueOperand output() const { return output_; }
-
-    static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript, IonUnaryArithIC* stub,
-                                    HandleValue val, MutableHandleValue res);
 };
 
 } // namespace jit
