@@ -65,7 +65,13 @@ public:
              nsXBLPrototypeBinding* aProtoBinding);
 
   // Shadow DOM v1
-  Element* Host();
+  Element* Host() const
+  {
+    MOZ_ASSERT(GetHost(), "ShadowRoot always has a host, how did we create "
+                          "this ShadowRoot?");
+    return GetHost();
+  }
+
   ShadowRootMode Mode() const
   {
     return mMode;
