@@ -34,8 +34,6 @@ namespace jit {
                                                  \
     _(ToNumber_Fallback)                         \
                                                  \
-    _(UnaryArith_Fallback)                       \
-                                                 \
     _(Call_Fallback)                             \
     _(Call_Scripted)                             \
     _(Call_AnyScripted)                          \

@@ -136,7 +136,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitStringReplace(LStringReplace* lir);
     void emitSharedStub(ICStub::Kind kind, LInstruction* lir);
     void visitBinarySharedStub(LBinarySharedStub* lir);
-    void visitUnaryCache(LUnaryCache* lir);
+    void visitUnarySharedStub(LUnarySharedStub* lir);
     void visitNullarySharedStub(LNullarySharedStub* lir);
     void visitClassConstructor(LClassConstructor* lir);
     void visitLambda(LLambda* lir);
