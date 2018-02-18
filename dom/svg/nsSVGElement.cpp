@@ -13,6 +13,7 @@
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/SVGTests.h"
+#include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "nsContentUtils.h"
 #include "nsICSSDeclaration.h"
 #include "nsIContentInlines.h"
@@ -64,6 +65,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::dom::SVGUnitTypesBinding;
 
 // This is needed to ensure correct handling of calls to the
 // vararg-list methods in this file:
