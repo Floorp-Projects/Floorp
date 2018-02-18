@@ -8,19 +8,11 @@
 #define MOZILLA_SVGTRANSFORM_H__
 
 #include "gfxMatrix.h"
+#include "mozilla/dom/SVGTransformBinding.h"
 #include "mozilla/gfx/Matrix.h"
 #include "nsDebug.h"
 
 namespace mozilla {
-
-// Transform Types
-static const unsigned short SVG_TRANSFORM_UNKNOWN = 0;
-static const unsigned short SVG_TRANSFORM_MATRIX = 1;
-static const unsigned short SVG_TRANSFORM_TRANSLATE = 2;
-static const unsigned short SVG_TRANSFORM_SCALE = 3;
-static const unsigned short SVG_TRANSFORM_ROTATE = 4;
-static const unsigned short SVG_TRANSFORM_SKEWX = 5;
-static const unsigned short SVG_TRANSFORM_SKEWY = 6;
 
 /*
  * The DOM wrapper class for this class is DOMSVGTransformMatrix.
@@ -34,7 +26,7 @@ public:
     , mAngle(0.f)
     , mOriginX(0.f)
     , mOriginY(0.f)
-    , mType(SVG_TRANSFORM_MATRIX)
+    , mType(dom::SVGTransformBinding::SVG_TRANSFORM_MATRIX)
   { }
 
   explicit nsSVGTransform(const gfxMatrix& aMatrix)
@@ -42,7 +34,7 @@ public:
     , mAngle(0.f)
     , mOriginX(0.f)
     , mOriginY(0.f)
-    , mType(SVG_TRANSFORM_MATRIX)
+    , mType(dom::SVGTransformBinding::SVG_TRANSFORM_MATRIX)
   { }
 
   bool operator==(const nsSVGTransform& rhs) const {
@@ -127,7 +119,8 @@ public:
   explicit SVGTransformSMILData(uint16_t aType)
   : mTransformType(aType)
   {
-    MOZ_ASSERT(aType >= SVG_TRANSFORM_MATRIX && aType <= SVG_TRANSFORM_SKEWY,
+    MOZ_ASSERT(aType >=dom::SVGTransformBinding:: SVG_TRANSFORM_MATRIX &&
+               aType <= dom::SVGTransformBinding::SVG_TRANSFORM_SKEWY,
                "Unexpected transform type");
     for (uint32_t i = 0; i < NUM_STORED_PARAMS; ++i) {
       mParams[i] = 0.f;
@@ -137,7 +130,8 @@ public:
   SVGTransformSMILData(uint16_t aType, float (&aParams)[NUM_SIMPLE_PARAMS])
   : mTransformType(aType)
   {
-    MOZ_ASSERT(aType >= SVG_TRANSFORM_TRANSLATE && aType <= SVG_TRANSFORM_SKEWY,
+    MOZ_ASSERT(aType >= dom::SVGTransformBinding::SVG_TRANSFORM_TRANSLATE &&
+               aType <= dom::SVGTransformBinding::SVG_TRANSFORM_SKEWY,
                "Expected 'simple' transform type");
     for (uint32_t i = 0; i < NUM_SIMPLE_PARAMS; ++i) {
       mParams[i] = aParams[i];

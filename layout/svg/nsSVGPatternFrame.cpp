@@ -22,12 +22,14 @@
 #include "SVGObserverUtils.h"
 #include "SVGGeometryFrame.h"
 #include "mozilla/dom/SVGPatternElement.h"
+#include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "nsSVGUtils.h"
 #include "nsSVGAnimatedTransformList.h"
 #include "SVGContentUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::dom::SVGUnitTypesBinding;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
