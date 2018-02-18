@@ -28,28 +28,28 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPrintSettings,
-                 bool aIsPrintPreview) final override;
+                 bool aIsPrintPreview) final;
 
-  virtual already_AddRefed<PrintTarget> MakePrintTarget() final override;
+  already_AddRefed<PrintTarget> MakePrintTarget() final;
 
-  NS_IMETHOD GetDrawEventRecorder(mozilla::gfx::DrawEventRecorder** aDrawEventRecorder) final override;
+  NS_IMETHOD GetDrawEventRecorder(mozilla::gfx::DrawEventRecorder** aDrawEventRecorder) final;
 
-  float GetDPI() final override;
+  float GetDPI() final;
 
-  float GetPrintingScale() final override;
+  float GetPrintingScale() final;
 
 
   NS_IMETHOD BeginDocument(const nsAString& aTitle,
                            const nsAString& aPrintToFileName,
-                           int32_t aStartPage, int32_t aEndPage) final override;
+                           int32_t aStartPage, int32_t aEndPage) final;
 
-  NS_IMETHOD EndDocument() final override;
+  NS_IMETHOD EndDocument() final;
 
-  NS_IMETHOD AbortDocument() final override;
+  NS_IMETHOD AbortDocument() final;
 
-  NS_IMETHOD BeginPage() final override;
+  NS_IMETHOD BeginPage() final;
 
-  NS_IMETHOD EndPage() final override;
+  NS_IMETHOD EndPage() final;
 
 private:
   ~nsDeviceContextSpecProxy() {}

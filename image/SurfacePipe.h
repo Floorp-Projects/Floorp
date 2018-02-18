@@ -657,11 +657,11 @@ public:
     , mFlipVertically(false)
   { }
 
-  Maybe<SurfaceInvalidRect> TakeInvalidRect() override final;
+  Maybe<SurfaceInvalidRect> TakeInvalidRect() final;
 
 protected:
-  uint8_t* DoResetToFirstRow() override final;
-  uint8_t* DoAdvanceRow() override final;
+  uint8_t* DoResetToFirstRow() final;
+  uint8_t* DoAdvanceRow() final;
   virtual uint8_t* GetRowPointer() const = 0;
 
   gfx::IntRect mInvalidRect;  /// The region of the surface that has been written

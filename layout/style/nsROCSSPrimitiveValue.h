@@ -32,9 +32,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsROCSSPrimitiveValue)
 
   // CSSValue
-  virtual void GetCssText(nsString& aText, mozilla::ErrorResult& aRv) override final;
-  virtual void SetCssText(const nsAString& aText, mozilla::ErrorResult& aRv) override final;
-  virtual uint16_t CssValueType() const override final;
+  void GetCssText(nsString& aText, mozilla::ErrorResult& aRv) final;
+  void SetCssText(const nsAString& aText, mozilla::ErrorResult& aRv) final;
+  uint16_t CssValueType() const final;
 
   // CSSPrimitiveValue
   uint16_t PrimitiveType();

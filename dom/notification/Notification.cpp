@@ -92,7 +92,7 @@ public:
                     const nsAString& aIcon,
                     const nsAString& aData,
                     const nsAString& aBehavior,
-                    const nsAString& aServiceWorkerRegistrationScope) final override
+                    const nsAString& aServiceWorkerRegistrationScope) final
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(!aID.IsEmpty());
@@ -145,7 +145,7 @@ public:
     MOZ_ASSERT(aPromise);
   }
 
-  NS_IMETHOD Done() final override
+  NS_IMETHOD Done() final
   {
     ErrorResult result;
     AutoTArray<RefPtr<Notification>, 5> notifications;
@@ -2087,7 +2087,7 @@ public:
     MOZ_ASSERT(aProxy);
   }
 
-  NS_IMETHOD Done() final override
+  NS_IMETHOD Done() final
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(mPromiseProxy, "Was Done() called twice?");

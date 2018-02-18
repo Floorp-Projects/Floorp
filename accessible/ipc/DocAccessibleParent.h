@@ -77,15 +77,15 @@ public:
     override;
   virtual mozilla::ipc::IPCResult RecvHideEvent(const uint64_t& aRootID, const bool& aFromUser)
     override;
-  virtual mozilla::ipc::IPCResult RecvStateChangeEvent(const uint64_t& aID,
-                                                       const uint64_t& aState,
-                                                       const bool& aEnabled) override final;
+  mozilla::ipc::IPCResult RecvStateChangeEvent(const uint64_t& aID,
+                                               const uint64_t& aState,
+                                               const bool& aEnabled) final;
 
-  virtual mozilla::ipc::IPCResult RecvCaretMoveEvent(const uint64_t& aID,
+  mozilla::ipc::IPCResult RecvCaretMoveEvent(const uint64_t& aID,
 #if defined(XP_WIN)
-                                                     const LayoutDeviceIntRect& aCaretRect,
+                                             const LayoutDeviceIntRect& aCaretRect,
 #endif
-                                                     const int32_t& aOffset) override final;
+                                             const int32_t& aOffset) final;
 
   virtual mozilla::ipc::IPCResult RecvTextChangeEvent(const uint64_t& aID, const nsString& aStr,
                                                       const int32_t& aStart, const uint32_t& aLen,
@@ -106,7 +106,7 @@ public:
                                                      const uint64_t& aWidgetID,
                                                      const uint32_t& aType) override;
 
-  virtual mozilla::ipc::IPCResult RecvRoleChangedEvent(const uint32_t& aRole) override final;
+  mozilla::ipc::IPCResult RecvRoleChangedEvent(const uint32_t& aRole) final;
 
   virtual mozilla::ipc::IPCResult RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uint64_t& aID) override;
 

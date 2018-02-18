@@ -39,12 +39,11 @@ public:
   virtual nsresult BeginPage() override;
   virtual nsresult EndPage() override;
 
-  virtual already_AddRefed<DrawTarget>
+  already_AddRefed<DrawTarget>
   MakeDrawTarget(const IntSize& aSize,
-                 DrawEventRecorder* aRecorder = nullptr) final override;
+                 DrawEventRecorder* aRecorder = nullptr) final;
 
-  virtual already_AddRefed<DrawTarget>
-  GetReferenceDrawTarget() override final;
+  already_AddRefed<DrawTarget> GetReferenceDrawTarget() final;
 
 private:
   PrintTargetSkPDF(const IntSize& aSize,

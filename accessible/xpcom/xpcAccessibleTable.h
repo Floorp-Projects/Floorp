@@ -29,55 +29,55 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessibleTable
-  NS_IMETHOD GetCaption(nsIAccessible** aCaption) final override;
-  NS_IMETHOD GetSummary(nsAString& aSummary) final override;
-  NS_IMETHOD GetColumnCount(int32_t* aColumnCount) final override;
-  NS_IMETHOD GetRowCount(int32_t* aRowCount) final override;
+  NS_IMETHOD GetCaption(nsIAccessible** aCaption) final;
+  NS_IMETHOD GetSummary(nsAString& aSummary) final;
+  NS_IMETHOD GetColumnCount(int32_t* aColumnCount) final;
+  NS_IMETHOD GetRowCount(int32_t* aRowCount) final;
   NS_IMETHOD GetCellAt(int32_t aRowIndex, int32_t aColumnIndex,
-                       nsIAccessible** aCell) final override;
+                       nsIAccessible** aCell) final;
   NS_IMETHOD GetCellIndexAt(int32_t aRowIndex, int32_t aColumnIndex,
-                            int32_t* aCellIndex) final override;
+                            int32_t* aCellIndex) final;
   NS_IMETHOD GetColumnIndexAt(int32_t aCellIndex, int32_t* aColumnIndex)
-    final override;
+    final;
   NS_IMETHOD GetRowIndexAt(int32_t aCellIndex, int32_t* aRowIndex)
-    final override;
+    final;
   NS_IMETHOD GetRowAndColumnIndicesAt(int32_t aCellIndex, int32_t* aRowIndex,
                                       int32_t* aColumnIndex)
-    final override;
+    final;
   NS_IMETHOD GetColumnExtentAt(int32_t row, int32_t column,
-                               int32_t* aColumnExtent) final override;
+                               int32_t* aColumnExtent) final;
   NS_IMETHOD GetRowExtentAt(int32_t row, int32_t column,
-                            int32_t* aRowExtent) final override;
+                            int32_t* aRowExtent) final;
   NS_IMETHOD GetColumnDescription(int32_t aColIdx, nsAString& aDescription)
-    final override;
+    final;
   NS_IMETHOD GetRowDescription(int32_t aRowIdx, nsAString& aDescription)
-    final override;
+    final;
   NS_IMETHOD IsColumnSelected(int32_t aColIdx, bool* _retval)
-    final override;
+    final;
   NS_IMETHOD IsRowSelected(int32_t aRowIdx, bool* _retval)
-    final override;
+    final;
   NS_IMETHOD IsCellSelected(int32_t aRowIdx, int32_t aColIdx, bool* _retval)
-    final override;
+    final;
   NS_IMETHOD GetSelectedCellCount(uint32_t* aSelectedCellCount)
-    final override;
+    final;
   NS_IMETHOD GetSelectedColumnCount(uint32_t* aSelectedColumnCount)
-    final override;
+    final;
   NS_IMETHOD GetSelectedRowCount(uint32_t* aSelectedRowCount)
-    final override;
-  NS_IMETHOD GetSelectedCells(nsIArray** aSelectedCell) final override;
+    final;
+  NS_IMETHOD GetSelectedCells(nsIArray** aSelectedCell) final;
   NS_IMETHOD GetSelectedCellIndices(uint32_t* aCellsArraySize,
                                     int32_t** aCellsArray)
-    final override;
+    final;
   NS_IMETHOD GetSelectedColumnIndices(uint32_t* aColsArraySize,
                                       int32_t** aColsArray)
-    final override;
+    final;
   NS_IMETHOD GetSelectedRowIndices(uint32_t* aRowsArraySize,
-                                   int32_t** aRowsArray) final override;
-  NS_IMETHOD SelectColumn(int32_t aColIdx) final override;
-  NS_IMETHOD SelectRow(int32_t aRowIdx) final override;
-  NS_IMETHOD UnselectColumn(int32_t aColIdx) final override;
-  NS_IMETHOD UnselectRow(int32_t aRowIdx) final override;
-  NS_IMETHOD IsProbablyForLayout(bool* aIsForLayout) final override;
+                                   int32_t** aRowsArray) final;
+  NS_IMETHOD SelectColumn(int32_t aColIdx) final;
+  NS_IMETHOD SelectRow(int32_t aRowIdx) final;
+  NS_IMETHOD UnselectColumn(int32_t aColIdx) final;
+  NS_IMETHOD UnselectRow(int32_t aRowIdx) final;
+  NS_IMETHOD IsProbablyForLayout(bool* aIsForLayout) final;
 
 protected:
   virtual ~xpcAccessibleTable() {}
