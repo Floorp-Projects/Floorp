@@ -64,14 +64,6 @@ function getId(tab) {
   return getId(tab);
 }
 
-async function historyPushState(tab, url) {
-  let locationChanged = BrowserTestUtils.waitForLocationChange(gBrowser, url);
-  await ContentTask.spawn(tab.linkedBrowser, url, (url) => {
-    content.history.pushState(null, null, url);
-  });
-  await locationChanged;
-}
-
 async function check(extension, tab, expected, msg) {
   let widgetId = makeWidgetId(extension.id);
   let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(widgetId);
@@ -137,7 +129,7 @@ add_task(async function test_pageAction_default_show_install() {
 });
 
 add_task(async function test_pageAction_history() {
-  info("Check match patterns are reevaluated when using history.pushState");
+  info("Check match patterns are reevaluated when using history.pushState or navigating");
   let url1 = "http://example.com/";
   let url2 = url1 + "path/";
   let extension = getExtension({
@@ -160,7 +152,16 @@ add_task(async function test_pageAction_history() {
   await historyPushState(tab, url1);
   await check(extension, tab, false, "hide() has more precedence than pattern matching");
 
+  info("Select another tab");
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, url1, true, true);
+
+  info("Perform navigation in the old tab");
+  await navigateTab(tab, url1);
+  await sendMessage(extension, "isShown", {tabId: getId(tab)}, true,
+                    "Navigating undoes hide(), even when the tab is not selected.");
+
   await BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab2);
   await extension.unload();
 });
 
