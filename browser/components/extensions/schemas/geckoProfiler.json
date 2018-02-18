@@ -32,7 +32,8 @@
           "restyle",
           "stackwalk",
           "tasktracer",
-          "threads"
+          "threads",
+          "trackopts"
         ]
       }
     ],

@@ -15,6 +15,7 @@ RegisteredThread::RegisteredThread(ThreadInfo* aInfo, nsIEventTarget* aThread,
   , mThread(aThread)
   , mContext(nullptr)
   , mJSSampling(INACTIVE)
+  , mJSTrackOptimizations(false)
 {
   MOZ_COUNT_CTOR(RegisteredThread);
 
