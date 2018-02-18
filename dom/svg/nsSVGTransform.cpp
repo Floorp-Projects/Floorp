@@ -15,6 +15,8 @@ namespace {
 
 namespace mozilla {
 
+using namespace dom::SVGTransformBinding;
+
 void
 nsSVGTransform::GetValueAsString(nsAString& aValue) const
 {

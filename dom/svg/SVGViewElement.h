@@ -13,10 +13,6 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGStringList.h"
 
-static const unsigned short SVG_ZOOMANDPAN_UNKNOWN = 0;
-static const unsigned short SVG_ZOOMANDPAN_DISABLE = 1;
-static const unsigned short SVG_ZOOMANDPAN_MAGNIFY = 2;
-
 typedef nsSVGElement SVGViewElementBase;
 
 class nsSVGOuterSVGFrame;

@@ -12,6 +12,7 @@
 #include <math.h>
 
 using namespace mozilla;
+using namespace dom::SVGTransformBinding;
 
 typedef FallibleTArray<SVGTransformSMILData> TransformArray;
 

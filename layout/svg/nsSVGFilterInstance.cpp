@@ -14,6 +14,7 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/IDTracker.h"
 #include "mozilla/dom/SVGLengthBinding.h"
+#include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "mozilla/dom/SVGFilterElement.h"
 #include "SVGObserverUtils.h"
 #include "nsSVGFilterFrame.h"
@@ -24,6 +25,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::dom::SVGUnitTypesBinding;
 using namespace mozilla::gfx;
 
 nsSVGFilterInstance::nsSVGFilterInstance(const nsStyleFilter& aFilter,

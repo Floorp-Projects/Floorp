@@ -13,6 +13,9 @@
 
 namespace mozilla {
 
+using namespace dom::SVGAngleBinding;
+using namespace dom::SVGMarkerElementBinding;
+
 /*static*/ SVGOrientSMILType SVGOrientSMILType::sSingleton;
 
 void
@@ -22,7 +25,7 @@ SVGOrientSMILType::Init(nsSMILValue& aValue) const
 
   aValue.mU.mOrient.mAngle = 0.0f;
   aValue.mU.mOrient.mUnit = SVG_ANGLETYPE_UNSPECIFIED;
-  aValue.mU.mOrient.mOrientType = dom::SVG_MARKER_ORIENT_ANGLE;
+  aValue.mU.mOrient.mOrientType = SVG_MARKER_ORIENT_ANGLE;
   aValue.mType = this;
 }
 
@@ -67,8 +70,8 @@ SVGOrientSMILType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                   "Trying to add invalid types");
   NS_PRECONDITION(aValueToAdd.mType == this, "Unexpected source type");
 
-  if (aDest.mU.mOrient.mOrientType != dom::SVG_MARKER_ORIENT_ANGLE ||
-      aValueToAdd.mU.mOrient.mOrientType != dom::SVG_MARKER_ORIENT_ANGLE) {
+  if (aDest.mU.mOrient.mOrientType != SVG_MARKER_ORIENT_ANGLE ||
+      aValueToAdd.mU.mOrient.mOrientType != SVG_MARKER_ORIENT_ANGLE) {
     // TODO: it would be nice to be able to add to auto angles
     return NS_ERROR_FAILURE;
   }
@@ -98,8 +101,8 @@ SVGOrientSMILType::ComputeDistance(const nsSMILValue& aFrom,
   NS_PRECONDITION(aFrom.mType == aTo.mType,"Trying to compare different types");
   NS_PRECONDITION(aFrom.mType == this, "Unexpected source type");
 
-  if (aFrom.mU.mOrient.mOrientType != dom::SVG_MARKER_ORIENT_ANGLE ||
-      aTo.mU.mOrient.mOrientType != dom::SVG_MARKER_ORIENT_ANGLE) {
+  if (aFrom.mU.mOrient.mOrientType != SVG_MARKER_ORIENT_ANGLE ||
+      aTo.mU.mOrient.mOrientType != SVG_MARKER_ORIENT_ANGLE) {
     // TODO: it would be nice to be able to compute distance with auto angles
     return NS_ERROR_FAILURE;
   }
@@ -127,8 +130,8 @@ SVGOrientSMILType::Interpolate(const nsSMILValue& aStartVal,
                   "Unexpected types for interpolation.");
   NS_PRECONDITION(aResult.mType   == this, "Unexpected result type.");
 
-  if (aStartVal.mU.mOrient.mOrientType != dom::SVG_MARKER_ORIENT_ANGLE ||
-      aEndVal.mU.mOrient.mOrientType != dom::SVG_MARKER_ORIENT_ANGLE) {
+  if (aStartVal.mU.mOrient.mOrientType != SVG_MARKER_ORIENT_ANGLE ||
+      aEndVal.mU.mOrient.mOrientType != SVG_MARKER_ORIENT_ANGLE) {
     // TODO: it would be nice to be able to handle auto angles too.
     return NS_ERROR_FAILURE;
   }
