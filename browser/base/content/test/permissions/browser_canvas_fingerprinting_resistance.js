@@ -28,6 +28,14 @@ function initTab() {
     context.fillStyle = fillStyle;
     context.fillRect(0, 0, width, height);
 
+    if (id) {
+      let button = contentDocument.createElement("button");
+      button.addEventListener("click", function() { canvas.toDataURL(); });
+      button.setAttribute("id", "clickme");
+      button.innerHTML = "Click Me!";
+      contentDocument.body.appendChild(button);
+    }
+
     return canvas;
   };
 
@@ -38,10 +46,11 @@ function initTab() {
       "privacy.resistFingerprinting = false, canvas data != placeholder data");
 }
 
-function enableResistFingerprinting() {
+function enableResistFingerprinting(autoDeclineNoInput) {
   return SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.resistFingerprinting", true]
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts", autoDeclineNoInput]
     ]
   });
 }
@@ -88,9 +97,9 @@ function testPermission() {
   return Services.perms.testPermissionFromPrincipal(kPrincipal, kPermission);
 }
 
-async function withNewTab(grantPermission, browser) {
+async function withNewTabNoInput(grantPermission, browser) {
   await ContentTask.spawn(browser, null, initTab);
-  await enableResistFingerprinting();
+  await enableResistFingerprinting(false);
   let popupShown = promisePopupShown();
   await ContentTask.spawn(browser, null, extractCanvasData);
   await popupShown;
@@ -108,13 +117,70 @@ async function withNewTab(grantPermission, browser) {
   await SpecialPowers.popPrefEnv();
 }
 
-async function doTest(grantPermission) {
+async function doTestNoInput(grantPermission) {
   Services.perms.removeFromPrincipal(kPrincipal, kPermission);
-  await BrowserTestUtils.withNewTab(kUrl, withNewTab.bind(null, grantPermission));
+  await BrowserTestUtils.withNewTab(kUrl, withNewTabNoInput.bind(null, grantPermission));
 }
 
+// With auto-declining disabled (not the default)
 // Tests clicking "Don't Allow" button of the permission prompt.
-add_task(doTest.bind(null, false));
+add_task(doTestNoInput.bind(null, false));
 
 // Tests clicking "Allow" button of the permission prompt.
-add_task(doTest.bind(null, true));
+add_task(doTestNoInput.bind(null, true));
+
+// I don't know how to write a test for "Make sure a prompt is not shown"...
+// But ideally we would have one of those...
+
+function extractCanvasDataUserInput(grantPermission) {
+  let contentWindow = content.wrappedJSObject;
+  let canvas = contentWindow.document.getElementById("canvas-id-canvas");
+  let canvasData = canvas.toDataURL();
+  if (grantPermission) {
+    isnot(canvasData, contentWindow.kPlaceholderData,
+        "privacy.resistFingerprinting = true, permission granted, canvas data != placeholderdata");
+  } else if (grantPermission === false) {
+    is(canvasData, contentWindow.kPlaceholderData,
+        "privacy.resistFingerprinting = true, permission denied, canvas data == placeholderdata");
+  } else {
+    is(canvasData, contentWindow.kPlaceholderData,
+        "privacy.resistFingerprinting = true, requesting permission, canvas data == placeholderdata");
+  }
+}
+
+async function withNewTabInput(grantPermission, browser) {
+  await ContentTask.spawn(browser, null, initTab);
+  await enableResistFingerprinting(true);
+  let popupShown = promisePopupShown();
+  await ContentTask.spawn(browser, null, function(host) {
+    E10SUtils.wrapHandlingUserInput(content, true, function() {
+      var button = content.document.getElementById("clickme");
+      button.click();
+    });
+  });
+  await popupShown;
+  let popupHidden = promisePopupHidden();
+  if (grantPermission) {
+    triggerMainCommand();
+    await popupHidden;
+    is(testPermission(), Services.perms.ALLOW_ACTION, "permission granted");
+  } else {
+    triggerSecondaryCommand();
+    await popupHidden;
+    is(testPermission(), Services.perms.DENY_ACTION, "permission denied");
+  }
+  await ContentTask.spawn(browser, grantPermission, extractCanvasDataUserInput);
+  await SpecialPowers.popPrefEnv();
+}
+
+async function doTestInput(grantPermission, autoDeclineNoInput) {
+  Services.perms.removeFromPrincipal(kPrincipal, kPermission);
+  await BrowserTestUtils.withNewTab(kUrl, withNewTabInput.bind(null, grantPermission));
+}
+
+// With auto-declining enabled (the default)
+// Tests clicking "Don't Allow" button of the permission prompt.
+add_task(doTestInput.bind(null, false));
+
+// Tests clicking "Allow" button of the permission prompt.
+add_task(doTestInput.bind(null, true));
