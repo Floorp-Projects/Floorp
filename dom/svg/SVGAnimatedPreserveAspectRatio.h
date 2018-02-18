@@ -27,8 +27,10 @@ class SVGAnimatedPreserveAspectRatio final
 {
 public:
   void Init() {
-    mBaseVal.mAlign = SVG_PRESERVEASPECTRATIO_XMIDYMID;
-    mBaseVal.mMeetOrSlice = SVG_MEETORSLICE_MEET;
+    mBaseVal.mAlign =
+      dom::SVGPreserveAspectRatioBinding::SVG_PRESERVEASPECTRATIO_XMIDYMID;
+    mBaseVal.mMeetOrSlice =
+      dom::SVGPreserveAspectRatioBinding::SVG_MEETORSLICE_MEET;
     mAnimVal = mBaseVal;
     mIsAnimated = false;
     mIsBaseSet = false;
@@ -45,8 +47,7 @@ public:
     if (aAlign < SVG_ALIGN_MIN_VALID || aAlign > SVG_ALIGN_MAX_VALID) {
       return NS_ERROR_FAILURE;
     }
-    SetBaseValue(SVGPreserveAspectRatio(
-                   static_cast<SVGAlign>(aAlign), mBaseVal.GetMeetOrSlice()),
+    SetBaseValue(SVGPreserveAspectRatio(aAlign, mBaseVal.GetMeetOrSlice()),
                  aSVGElement);
     return NS_OK;
   }
@@ -55,8 +56,7 @@ public:
         aMeetOrSlice > SVG_MEETORSLICE_MAX_VALID) {
       return NS_ERROR_FAILURE;
     }
-    SetBaseValue(SVGPreserveAspectRatio(
-                   mBaseVal.GetAlign(), static_cast<SVGMeetOrSlice>(aMeetOrSlice)),
+    SetBaseValue(SVGPreserveAspectRatio(mBaseVal.GetAlign(), aMeetOrSlice),
                  aSVGElement);
     return NS_OK;
   }

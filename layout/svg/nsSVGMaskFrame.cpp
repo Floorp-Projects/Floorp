@@ -15,9 +15,11 @@
 #include "mozilla/RefPtr.h"
 #include "SVGObserverUtils.h"
 #include "mozilla/dom/SVGMaskElement.h"
+#include "mozilla/dom/SVGUnitTypesBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::dom::SVGUnitTypesBinding;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 

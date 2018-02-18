@@ -22,6 +22,8 @@ namespace {
 namespace mozilla {
 namespace dom {
 
+using namespace SVGTransformBinding;
+
 static nsSVGAttrTearoffTable<SVGTransform, SVGMatrix>&
 SVGMatrixTearoffTable()
 {

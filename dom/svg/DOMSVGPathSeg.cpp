@@ -14,6 +14,8 @@
 
 namespace mozilla {
 
+using namespace dom::SVGPathSegBinding;
+
 // We could use NS_IMPL_CYCLE_COLLECTION(, except that in Unlink() we need to
 // clear our list's weak ref to us to be safe. (The other option would be to
 // not unlink and rely on the breaking of the other edges in the cycle, as

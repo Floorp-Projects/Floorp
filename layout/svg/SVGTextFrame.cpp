@@ -31,6 +31,7 @@
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGPaintServerFrame.h"
 #include "mozilla/dom/SVGRect.h"
+#include "mozilla/dom/SVGTextContentElementBinding.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
 #include "nsTArray.h"
@@ -52,6 +53,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::dom::SVGTextContentElementBinding;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
@@ -5302,7 +5304,7 @@ SVGTextFrame::DoGlyphPositioning()
     RefPtr<SVGAnimatedEnumeration> lengthAdjustEnum = element->LengthAdjust();
     uint16_t lengthAdjust = lengthAdjustEnum->AnimVal();
     switch (lengthAdjust) {
-      case SVG_LENGTHADJUST_SPACINGANDGLYPHS:
+      case LENGTHADJUST_SPACINGANDGLYPHS:
         // Scale the glyphs and their positions.
         if (actualTextLength > 0) {
           mLengthAdjustScaleFactor = expectedTextLength / actualTextLength;
@@ -5310,7 +5312,7 @@ SVGTextFrame::DoGlyphPositioning()
         break;
 
       default:
-        MOZ_ASSERT(lengthAdjust == SVG_LENGTHADJUST_SPACING);
+        MOZ_ASSERT(lengthAdjust == LENGTHADJUST_SPACING);
         // Just add space between each glyph.
         int32_t adjustableSpaces = 0;
         for (uint32_t i = 1; i < mPositions.Length(); i++) {

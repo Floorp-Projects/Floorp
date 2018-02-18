@@ -13,6 +13,8 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(View)
 namespace mozilla {
 namespace dom {
 
+using namespace SVGViewElementBinding;
+
 JSObject*
 SVGViewElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {

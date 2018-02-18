@@ -35,6 +35,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::dom::SVGPreserveAspectRatioBinding;
 using namespace mozilla::gfx;
 
 SVGSVGElement*
@@ -552,8 +553,8 @@ SVGContentUtils::GetViewBoxTransform(float aViewportWidth, float aViewportHeight
   NS_ASSERTION(aViewboxWidth  > 0, "viewBox width must be greater than zero!");
   NS_ASSERTION(aViewboxHeight > 0, "viewBox height must be greater than zero!");
 
-  SVGAlign align = aPreserveAspectRatio.GetAlign();
-  SVGMeetOrSlice meetOrSlice = aPreserveAspectRatio.GetMeetOrSlice();
+  uint16_t align = aPreserveAspectRatio.GetAlign();
+  uint16_t meetOrSlice = aPreserveAspectRatio.GetMeetOrSlice();
 
   // default to the defaults
   if (align == SVG_PRESERVEASPECTRATIO_UNKNOWN)

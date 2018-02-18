@@ -18,6 +18,7 @@
 #include "SVGMotionSMILPathUtils.h"
 
 using namespace mozilla::dom;
+using namespace mozilla::dom::SVGAngleBinding;
 using namespace mozilla::gfx;
 
 namespace mozilla {
