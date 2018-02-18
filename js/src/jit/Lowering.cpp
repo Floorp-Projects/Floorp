@@ -2531,13 +2531,13 @@ LIRGenerator::visitBinarySharedStub(MBinarySharedStub* ins)
 }
 
 void
-LIRGenerator::visitUnaryCache(MUnaryCache* ins)
+LIRGenerator::visitUnarySharedStub(MUnarySharedStub* ins)
 {
     MDefinition* input = ins->getOperand(0);
     MOZ_ASSERT(ins->type() == MIRType::Value);
 
-    LUnaryCache* lir = new(alloc()) LUnaryCache(useBox(input));
-    defineBox(lir, ins);
+    LUnarySharedStub* lir = new(alloc()) LUnarySharedStub(useBoxFixedAtStart(input, R0));
+    defineSharedStubReturn(lir, ins);
     assignSafepoint(lir, ins);
 }
 

@@ -4136,7 +4136,7 @@ public:
 
   virtual nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
-  NS_DISPLAY_DECL_NAME("TableThemedBackground", TYPE_TABLE_BACKGROUND_IMAGE)
+  NS_DISPLAY_DECL_NAME("TableThemedBackground", TYPE_TABLE_THEMED_BACKGROUND_IMAGE)
 protected:
   virtual nsIFrame* StyleFrame() const override { return mAncestorFrame; }
   nsIFrame* mAncestorFrame;
@@ -5259,7 +5259,7 @@ public:
            nsDisplayItem::GetPerFrameKey();
   }
 
-  NS_DISPLAY_DECL_NAME("BlendMode", TYPE_BLEND_MODE)
+  NS_DISPLAY_DECL_NAME("TableBlendMode", TYPE_TABLE_BLEND_MODE)
 
 protected:
   nsIFrame* mAncestorFrame;
@@ -5354,7 +5354,7 @@ public:
            nsDisplayItem::GetPerFrameKey();
   }
 
-  NS_DISPLAY_DECL_NAME("BlendContainer", TYPE_BLEND_CONTAINER)
+  NS_DISPLAY_DECL_NAME("TableBlendContainer", TYPE_TABLE_BLEND_CONTAINER)
 
 protected:
   nsDisplayTableBlendContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
@@ -6680,7 +6680,8 @@ public:
 
   static nsCharClipDisplayItem* CheckCast(nsDisplayItem* aItem) {
     DisplayItemType t = aItem->GetType();
-    return (t == DisplayItemType::TYPE_TEXT)
+    return (t == DisplayItemType::TYPE_TEXT ||
+            t == DisplayItemType::TYPE_SVG_CHAR_CLIP)
       ? static_cast<nsCharClipDisplayItem*>(aItem) : nullptr;
   }
 

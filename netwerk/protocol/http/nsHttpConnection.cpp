@@ -249,6 +249,9 @@ void
 nsHttpConnection::Start0RTTSpdy(uint8_t spdyVersion)
 {
     LOG(("nsHttpConnection::Start0RTTSpdy [this=%p]", this));
+
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
     mDid0RTTSpdy = true;
     mUsingSpdyVersion = spdyVersion;
     mSpdySession = ASpdySession::NewSpdySession(spdyVersion, mSocketTransport,
@@ -277,6 +280,7 @@ nsHttpConnection::StartSpdy(uint8_t spdyVersion)
 {
     LOG(("nsHttpConnection::StartSpdy [this=%p, mDid0RTTSpdy=%d]\n", this, mDid0RTTSpdy));
 
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     MOZ_ASSERT(!mSpdySession || mDid0RTTSpdy);
 
     mUsingSpdyVersion = spdyVersion;
@@ -2444,6 +2448,7 @@ nsAHttpTransaction *
 nsHttpConnection::CloseConnectionFastOpenTakesTooLongOrError(bool aCloseSocketTransport)
 {
     MOZ_ASSERT(!mCurrentBytesRead);
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     mFastOpenStatus = TFO_FAILED;
     RefPtr<nsAHttpTransaction> trans;

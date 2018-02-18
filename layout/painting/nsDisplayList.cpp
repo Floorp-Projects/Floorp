@@ -1572,8 +1572,8 @@ nsDisplayListBuilder::Allocate(size_t aSize, DisplayItemType aType)
   size_t roundedUpSize = RoundUpPow2(aSize);
   uint_fast8_t type = FloorLog2Size(roundedUpSize);
 
-  MOZ_ASSERT(gDisplayItemSizes[static_cast<uint32_t>(aType)] == type ||
-             gDisplayItemSizes[static_cast<uint32_t>(aType)] == 0);
+  MOZ_RELEASE_ASSERT(gDisplayItemSizes[static_cast<uint32_t>(aType)] == type ||
+                     gDisplayItemSizes[static_cast<uint32_t>(aType)] == 0);
   gDisplayItemSizes[static_cast<uint32_t>(aType)] = type;
   return mPool.AllocateByCustomID(type, roundedUpSize);
 }
@@ -6368,7 +6368,9 @@ RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
     }
 
     LayerState state = i->GetLayerState(aBuilder, aManager, aParameters);
-    if (state == LAYER_ACTIVE && i->GetType() == DisplayItemType::TYPE_BLEND_MODE) {
+    if (state == LAYER_ACTIVE &&
+        (i->GetType() == DisplayItemType::TYPE_BLEND_MODE ||
+         i->GetType() == DisplayItemType::TYPE_TABLE_BLEND_MODE)) {
       // nsDisplayBlendMode always returns LAYER_ACTIVE to ensure that the
       // blending operation happens in the intermediate surface of its parent
       // display item (usually an nsDisplayBlendContainer). But this does not
