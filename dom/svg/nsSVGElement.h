@@ -46,10 +46,6 @@ namespace dom {
 class SVGSVGElement;
 class SVGViewportElement;
 
-static const unsigned short SVG_UNIT_TYPE_UNKNOWN           = 0;
-static const unsigned short SVG_UNIT_TYPE_USERSPACEONUSE    = 1;
-static const unsigned short SVG_UNIT_TYPE_OBJECTBOUNDINGBOX = 2;
-
 } // namespace dom
 
 class SVGAnimatedNumberList;

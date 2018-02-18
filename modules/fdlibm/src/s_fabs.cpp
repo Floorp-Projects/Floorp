@@ -1,4 +1,4 @@
- /* @(#)s_fabs.c 5.1 93/09/24 */
+/* @(#)s_fabs.c 5.1 93/09/24 */
 /*
  * ====================================================
  * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
@@ -10,9 +10,8 @@
  * ====================================================
  */
 
-#ifndef lint
- //static char rcsid[] = "$FreeBSD$";
-#endif
+//#include <sys/cdefs.h>
+//__FBSDID("$FreeBSD$");
 
 /*
  * fabs(x) returns the absolute value of x.

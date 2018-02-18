@@ -47,6 +47,7 @@
 #include "nsSVGOuterSVGFrame.h"
 #include "mozilla/dom/SVGClipPathElement.h"
 #include "mozilla/dom/SVGPathElement.h"
+#include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "SVGGeometryElement.h"
 #include "SVGGeometryFrame.h"
 #include "nsSVGPaintServerFrame.h"
@@ -58,6 +59,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::dom::SVGUnitTypesBinding;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 

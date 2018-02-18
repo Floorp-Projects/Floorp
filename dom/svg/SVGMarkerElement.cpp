@@ -20,11 +20,14 @@
 #include "SVGContentUtils.h"
 
 using namespace mozilla::gfx;
+using namespace mozilla::dom::SVGMarkerElementBinding;
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Marker)
 
 namespace mozilla {
 namespace dom {
+
+using namespace SVGAngleBinding;
 
 JSObject*
 SVGMarkerElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
