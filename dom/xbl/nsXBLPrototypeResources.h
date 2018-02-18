@@ -83,6 +83,8 @@ public:
     return mServoStyles.get();
   }
 
+  void SyncServoStyles();
+
   mozilla::ServoStyleRuleMap* GetServoStyleRuleMap();
 
   // Updates the ServoStyleSet object that holds the result of cascading the

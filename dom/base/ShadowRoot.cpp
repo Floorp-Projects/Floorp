@@ -208,12 +208,18 @@ ShadowRoot::RemoveSlot(HTMLSlotElement* aSlot)
 void
 ShadowRoot::StyleSheetChanged()
 {
-  mProtoBinding->FlushSkinSheets();
+  nsIDocument* doc = OwnerDoc();
 
-  if (nsIPresShell* shell = OwnerDoc()->GetShell()) {
-    OwnerDoc()->BeginUpdate(UPDATE_STYLE);
-    shell->RecordShadowStyleChange(this);
-    OwnerDoc()->EndUpdate(UPDATE_STYLE);
+  if (doc->IsStyledByServo()) {
+    mProtoBinding->SyncServoStyles();
+  } else {
+    mProtoBinding->FlushSkinSheets();
+  }
+
+  if (nsIPresShell* shell = doc->GetShell()) {
+    doc->BeginUpdate(UPDATE_STYLE);
+    shell->RecordShadowStyleChange(*this);
+    doc->EndUpdate(UPDATE_STYLE);
   }
 }
 

@@ -6310,7 +6310,7 @@ private:
 };
 
 void
-PresShell::RecordShadowStyleChange(ShadowRoot* aShadowRoot)
+nsIPresShell::RecordShadowStyleChange(ShadowRoot& aShadowRoot)
 {
   mStyleSet->RecordShadowStyleChange(aShadowRoot);
 }
