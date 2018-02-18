@@ -65,11 +65,11 @@ public:
   // might encounter in the buffer, before this method is called. In other
   // words, you need to have called AddJITInfoForRange for every range that
   // might contain JIT frame information before calling this method.
-  bool StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
-                           double aSinceTime, JSContext* cx,
+  void StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
+                           double aSinceTime,
                            UniqueStacks& aUniqueStacks) const;
 
-  bool StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
+  void StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                            const mozilla::TimeStamp& aProcessStartTime,
                            double aSinceTime,
                            UniqueStacks& aUniqueStacks) const;

@@ -885,12 +885,9 @@ private:
 //     DynamicStringFragment("a800.bun")
 //     DynamicStringFragment("dle.js:2")
 //     DynamicStringFragment("5)")
-//
-// This method returns true if it wrote anything to the writer.
-bool
+void
 ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                                    double aSinceTime,
-                                   JSContext* aContext,
                                    UniqueStacks& aUniqueStacks) const
 {
   UniquePtr<char[]> strbuf = MakeUnique<char[]>(kMaxFrameKeyLength);
@@ -906,7 +903,6 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
     }
 
   EntryGetter e(*this);
-  bool haveSamples = false;
 
   for (;;) {
     // This block skips entries until we find the start of the next sample.
@@ -1079,10 +1075,8 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
     }
 
     WriteSample(aWriter, *aUniqueStacks.mUniqueStrings, sample);
-    haveSamples = true;
   }
 
-  return haveSamples;
   #undef ERROR_AND_CONTINUE
 }
 
@@ -1129,8 +1123,7 @@ ProfileBuffer::AddJITInfoForRange(uint64_t aRangeStart,
     });
 }
 
-// This method returns true if it wrote anything to the writer.
-bool
+void
 ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
                                    int aThreadId,
                                    const TimeStamp& aProcessStartTime,
@@ -1138,7 +1131,6 @@ ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
                                    UniqueStacks& aUniqueStacks) const
 {
   EntryGetter e(*this);
-  bool haveMarkers = false;
 
   // Stream all markers whose threadId matches aThreadId. We skip other entries,
   // because we process them in StreamSamplesToJSON().
@@ -1152,13 +1144,10 @@ ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
       if (marker->GetTime() >= aSinceTime &&
           marker->GetThreadId() == aThreadId) {
         marker->StreamJSON(aWriter, aProcessStartTime, aUniqueStacks);
-        haveMarkers = true;
       }
     }
     e.Next();
   }
-
-  return haveMarkers;
 }
 
 static void
