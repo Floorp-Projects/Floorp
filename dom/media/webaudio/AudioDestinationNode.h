@@ -37,7 +37,7 @@ public:
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  uint16_t NumberOfOutputs() const final override
+  uint16_t NumberOfOutputs() const final
   {
     return 0;
   }

@@ -375,7 +375,7 @@ public:
         TimeDuration mVsyncDuration;
     };
 
-    Display& GetGlobalDisplay() final override { return GetDisplayInstance(); }
+    Display& GetGlobalDisplay() final { return GetDisplayInstance(); }
 
 private:
    virtual ~AndroidVsyncSource() {}

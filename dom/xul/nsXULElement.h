@@ -381,7 +381,7 @@ public:
                                   bool aIsTrustedEvent) override;
     void ClickWithInputSource(uint16_t aInputSource, bool aIsTrustedEvent);
 
-    nsIContent* GetBindingParent() const final override
+    nsIContent* GetBindingParent() const final
     {
       return mBindingParent;
     }

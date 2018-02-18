@@ -24,7 +24,7 @@ public:
   virtual ~HeadlessLookAndFeel();
 
   virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult) override;
-  virtual void NativeInit() final override {};
+  void NativeInit() final {};
   virtual nsresult GetIntImpl(IntID aID, int32_t &aResult) override;
   virtual nsresult GetFloatImpl(FloatID aID, float &aResult) override;
   virtual bool GetFontImpl(FontID aID,

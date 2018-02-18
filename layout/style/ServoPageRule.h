@@ -28,17 +28,17 @@ class ServoPageRuleDeclaration final : public nsDOMCSSDeclaration
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  css::Rule* GetParentRule() final override;
-  nsINode* GetParentObject() final override;
+  css::Rule* GetParentRule() final;
+  nsINode* GetParentObject() final;
 
 protected:
-  DeclarationBlock* GetCSSDeclaration(Operation aOperation) final override;
-  nsresult SetCSSDeclaration(DeclarationBlock* aDecl) final override;
-  nsIDocument* DocToUpdate() final override;
+  DeclarationBlock* GetCSSDeclaration(Operation aOperation) final;
+  nsresult SetCSSDeclaration(DeclarationBlock* aDecl) final;
+  nsIDocument* DocToUpdate() final;
   void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
-                                nsIPrincipal* aSubjectPrincipal) final override;
+                                nsIPrincipal* aSubjectPrincipal) final;
   nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final override;
+  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
 
 private:
   // For accessing the constructor.
@@ -64,21 +64,21 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
     ServoPageRule, dom::CSSPageRule
   )
-  bool IsCCLeaf() const final override;
+  bool IsCCLeaf() const final;
 
   RawServoPageRule* Raw() const { return mRawRule; }
 
   // WebIDL interface
-  void GetCssText(nsAString& aCssText) const final override;
-  nsICSSDeclaration* Style() final override;
+  void GetCssText(nsAString& aCssText) const final;
+  nsICSSDeclaration* Style() final;
 
   // Methods of mozilla::css::Rule
-  already_AddRefed<css::Rule> Clone() const final override;
+  already_AddRefed<css::Rule> Clone() const final;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-    const final override;
+    const final;
 
 #ifdef DEBUG
-  void List(FILE* out = stdout, int32_t aIndent = 0) const final override;
+  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
 
 private:

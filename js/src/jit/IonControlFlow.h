@@ -192,13 +192,13 @@ class CFGAryControlInstruction : public CFGControlInstruction
     mozilla::Array<CFGBlock*, Successors> successors_;
 
   public:
-    size_t numSuccessors() const final override {
+    size_t numSuccessors() const final {
         return Successors;
     }
-    CFGBlock* getSuccessor(size_t i) const final override {
+    CFGBlock* getSuccessor(size_t i) const final {
         return successors_[i];
     }
-    void replaceSuccessor(size_t i, CFGBlock* succ) final override {
+    void replaceSuccessor(size_t i, CFGBlock* succ) final {
         successors_[i] = succ;
     }
 };
@@ -225,14 +225,14 @@ class CFGTry : public CFGControlInstruction
         return new(alloc) CFGTry(tryBlock, old->catchStartPc(), merge);
     }
 
-    size_t numSuccessors() const final override {
+    size_t numSuccessors() const final {
         return 2;
     }
-    CFGBlock* getSuccessor(size_t i) const final override {
+    CFGBlock* getSuccessor(size_t i) const final {
         MOZ_ASSERT(i < numSuccessors());
         return (i == 0) ? tryBlock_ : mergePoint_;
     }
-    void replaceSuccessor(size_t i, CFGBlock* succ) final override {
+    void replaceSuccessor(size_t i, CFGBlock* succ) final {
         MOZ_ASSERT(i < numSuccessors());
         if (i == 0)
             tryBlock_ = succ;
@@ -272,14 +272,14 @@ class CFGTableSwitch : public CFGControlInstruction
         return new(alloc) CFGTableSwitch(alloc, low, high);
     }
 
-    size_t numSuccessors() const final override {
+    size_t numSuccessors() const final {
         return successors_.length();
     }
-    CFGBlock* getSuccessor(size_t i) const final override {
+    CFGBlock* getSuccessor(size_t i) const final {
         MOZ_ASSERT(i < numSuccessors());
         return successors_[i];
     }
-    void replaceSuccessor(size_t i, CFGBlock* succ) final override {
+    void replaceSuccessor(size_t i, CFGBlock* succ) final {
         MOZ_ASSERT(i < numSuccessors());
         successors_[i] = succ;
     }

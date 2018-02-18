@@ -311,14 +311,14 @@ public:
   ScalarUnsigned() : mStorage(0) {};
   ~ScalarUnsigned() override = default;
 
-  ScalarResult SetValue(nsIVariant* aValue) final override;
-  void SetValue(uint32_t aValue) final override;
-  ScalarResult AddValue(nsIVariant* aValue) final override;
-  void AddValue(uint32_t aValue) final override;
-  ScalarResult SetMaximum(nsIVariant* aValue) final override;
-  void SetMaximum(uint32_t aValue) final override;
-  nsresult GetValue(nsCOMPtr<nsIVariant>& aResult) const final override;
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final override;
+  ScalarResult SetValue(nsIVariant* aValue) final;
+  void SetValue(uint32_t aValue) final;
+  ScalarResult AddValue(nsIVariant* aValue) final;
+  void AddValue(uint32_t aValue) final;
+  ScalarResult SetMaximum(nsIVariant* aValue) final;
+  void SetMaximum(uint32_t aValue) final;
+  nsresult GetValue(nsCOMPtr<nsIVariant>& aResult) const final;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
 private:
   uint32_t mStorage;
@@ -451,10 +451,10 @@ public:
   ScalarString() : mStorage(EmptyString()) {};
   ~ScalarString() override = default;
 
-  ScalarResult SetValue(nsIVariant* aValue) final override;
-  ScalarResult SetValue(const nsAString& aValue) final override;
-  nsresult GetValue(nsCOMPtr<nsIVariant>& aResult) const final override;
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final override;
+  ScalarResult SetValue(nsIVariant* aValue) final;
+  ScalarResult SetValue(const nsAString& aValue) final;
+  nsresult GetValue(nsCOMPtr<nsIVariant>& aResult) const final;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
 private:
   nsString mStorage;
@@ -532,10 +532,10 @@ public:
   ScalarBoolean() : mStorage(false) {};
   ~ScalarBoolean() override = default;
 
-  ScalarResult SetValue(nsIVariant* aValue) final override;
-  void SetValue(bool aValue) final override;
-  nsresult GetValue(nsCOMPtr<nsIVariant>& aResult) const final override;
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final override;
+  ScalarResult SetValue(nsIVariant* aValue) final;
+  void SetValue(bool aValue) final;
+  nsresult GetValue(nsCOMPtr<nsIVariant>& aResult) const final;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
 private:
   bool mStorage;
