@@ -8,6 +8,9 @@
 </head>
 <body>
 <p id="display"></p>
+<p><input type="text" id="input"></p>
+<p><input type="text" id="input_readonly" readonly></p>
+<p><textarea id="textarea"></textarea></p>
 <div id="content" style="display: none">
   
 </div>
@@ -377,10 +380,163 @@ function testSynthesizedKeyLocation()
   window.removeEventListener("keyup", handler, true);
 }
 
+// We're using TextEventDispatcher to decide if we should keypress event
+// on content in the default event group.  So, we can test if keypress
+// event is NOT fired unexpectedly with synthesizeKey().
+function testEnterKeyPressEvent()
+{
+  let keydownFired, keypressFired, beforeinputFired;
+  function onEvent(aEvent) {
+    switch (aEvent.type) {
+      case "keydown":
+        keydownFired = true;
+        return;
+      case "keypress":
+        keypressFired = true;
+        return;
+      case "beforeinput":
+        beforeinputFired = true;
+        return;
+    }
+  }
+
+  for (let targetId of ["input", "textarea", "input_readonly"]) {
+    let target = document.getElementById(targetId);
+
+    function reset() {
+      keydownFired = keypressFired = beforeinputFired = false;
+      target.value = "";
+    }
+
+    target.addEventListener("keydown", onEvent);
+    target.addEventListener("keypress", onEvent);
+    target.addEventListener("beforeinput", onEvent);
+
+    const kDescription = "<" + targetId.replace("_", " ") + ">: ";
+    let isEditable = kDescription.includes("readonly");
+    let isTextarea = kDescription.includes("textarea");
+
+    target.focus();
+
+    reset();
+    synthesizeKey("KEY_Enter", {});
+    is(keydownFired, true,
+       kDescription + "keydown event should be fired when Enter key is pressed");
+    is(keypressFired, true,
+       kDescription + "keypress event should be fired when Enter key is pressed");
+    if (isEditable) {
+      todo_is(beforeinputFired, true,
+              kDescription + "beforeinput event should be fired when Enter key is pressed");
+    } else {
+      is(beforeinputFired, false,
+         kDescription + "beforeinput event shouldn't be fired when Enter key is pressed");
+    }
+    if (isTextarea) {
+      is(target.value, "\n",
+         kDescription + "Enter key should cause inputting a line break in <textarea>");
+    } else {
+      is(target.value, "",
+         kDescription + "Enter key should not cause inputting a line break");
+    }
+
+    reset();
+    synthesizeKey("KEY_Enter", {shiftKey: true});
+    is(keydownFired, true,
+       kDescription + "keydown event should be fired when Shift + Enter key is pressed");
+    is(keypressFired, true,
+       kDescription + "keypress event should be fired when Shift + Enter key is pressed");
+    if (isEditable) {
+      todo_is(beforeinputFired, true,
+              kDescription + "beforeinput event should be fired when Shift + Enter key is pressed");
+    } else {
+      is(beforeinputFired, false,
+         kDescription + "beforeinput event shouldn't be fired when Shift + Enter key is pressed");
+    }
+    if (isTextarea) {
+      is(target.value, "\n",
+         kDescription + "Shift + Enter key should cause inputting a line break in <textarea>");
+    } else {
+      is(target.value, "",
+         kDescription + "Shift + Enter key should not cause inputting a line break");
+    }
+
+    reset();
+    synthesizeKey("KEY_Enter", {ctrlKey: true});
+    is(keydownFired, true,
+       kDescription + "keydown event should be fired when Ctrl + Enter key is pressed");
+    is(keypressFired, true,
+       kDescription + "keypress event should be fired when Ctrl + Enter key is pressed");
+    is(beforeinputFired, false,
+       kDescription + "beforeinput event shouldn't be fired when Ctrl + Enter key is pressed");
+    is(target.value, "",
+       kDescription + "Ctrl + Enter key should not cause inputting a line break");
+
+    reset();
+    synthesizeKey("KEY_Enter", {altKey: true});
+    is(keydownFired, true,
+       kDescription + "keydown event should be fired when Alt + Enter key is pressed");
+    is(keypressFired, !kStrictKeyPressEvents,
+       kDescription + "keypress event shouldn't be fired when Alt + Enter key is pressed in strict keypress dispatching mode");
+    is(beforeinputFired, false,
+       kDescription + "beforeinput event shouldn't be fired when Alt + Enter key is pressed");
+    is(target.value, "",
+       kDescription + "Alt + Enter key should not cause inputting a line break");
+
+    reset();
+    synthesizeKey("KEY_Enter", {metaKey: true});
+    is(keydownFired, true,
+       kDescription + "keydown event should be fired when Meta + Enter key is pressed");
+    is(keypressFired, !kStrictKeyPressEvents,
+       kDescription + "keypress event shouldn't be fired when Meta + Enter key is pressed in strict keypress dispatching mode");
+    is(beforeinputFired, false,
+       kDescription + "beforeinput event shouldn't be fired when Meta + Enter key is pressed");
+    is(target.value, "",
+       kDescription + "Meta + Enter key should not cause inputting a line break");
+
+    reset();
+    synthesizeKey("KEY_Enter", {shiftKey: true, ctrlKey: true});
+    is(keydownFired, true,
+       kDescription + "keydown event should be fired when Ctrl + Shift + Enter key is pressed");
+    is(keypressFired, !kStrictKeyPressEvents,
+       kDescription + "keypress event shouldn't be fired when Ctrl + Shift + Enter key is pressed in strict keypress dispatching mode");
+    is(beforeinputFired, false,
+       kDescription + "beforeinput event shouldn't be fired when Ctrl + Shift + Enter key is pressed");
+    is(target.value, "",
+       kDescription + "Ctrl + Shift + Enter key should not cause inputting a line break");
+
+    reset();
+    synthesizeKey("KEY_Enter", {shiftKey: true, altKey: true});
+    is(keydownFired, true,
+       kDescription + "keydown event should be fired when Alt + Shift + Enter key is pressed");
+    is(keypressFired, !kStrictKeyPressEvents,
+       kDescription + "keypress event shouldn't be fired when Alt + Shift + Enter key is pressed in strict keypress dispatching mode");
+    is(beforeinputFired, false,
+       kDescription + "beforeinput event shouldn't be fired when Alt + Shift + Enter key is pressed");
+    is(target.value, "",
+       kDescription + "Alt + Shift + Enter key should not cause inputting a line break");
+
+    reset();
+    synthesizeKey("KEY_Enter", {shiftKey: true, metaKey: true});
+    is(keydownFired, true,
+       kDescription + "keydown event should be fired when Meta + Shift + Enter key is pressed");
+    is(keypressFired, !kStrictKeyPressEvents,
+       kDescription + "keypress event shouldn't be fired when Meta + Shift + Enter key is pressed in strict keypress dispatching mode");
+    is(beforeinputFired, false,
+       kDescription + "beforeinput event shouldn't be fired when Meta + Shift + Enter key is pressed");
+    is(target.value, "",
+       kDescription + "Meta + Shift + Enter key should not cause inputting a line break");
+
+    target.removeEventListener("keydown", onEvent);
+    target.removeEventListener("keypress", onEvent);
+    target.removeEventListener("beforeinput", onEvent);
+  }
+}
+
 function runTests()
 {
   testInitializingUntrustedEvent();
   testSynthesizedKeyLocation();
+  testEnterKeyPressEvent();
   SimpleTest.finish();
 }
 
