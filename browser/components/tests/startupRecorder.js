@@ -49,7 +49,8 @@ function startupRecorder() {
       "image-drawing": new Set(),
       "image-loading": new Set(),
     },
-    code: {}
+    code: {},
+    prefStats: {},
   };
   this.done = new Promise(resolve => { this._resolve = resolve; });
 }
@@ -138,6 +139,8 @@ startupRecorder.prototype = {
         win.removeEventListener("MozAfterPaint", afterPaintListener);
         win = null;
         this.data.frames = paints;
+        this.data.prefStats = {};
+        Services.prefs.readStats((key, value) => this.data.prefStats[key] = value);
         paints = null;
         this._resolve();
         this._resolve = null;
