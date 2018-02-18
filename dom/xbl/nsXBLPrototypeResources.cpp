@@ -187,13 +187,19 @@ nsXBLPrototypeResources::GatherRuleProcessor()
 #endif
 
 void
-nsXBLPrototypeResources::ComputeServoStyles(const ServoStyleSet& aMasterStyleSet)
+nsXBLPrototypeResources::SyncServoStyles()
 {
   mStyleRuleMap.reset(nullptr);
   mServoStyles.reset(Servo_AuthorStyles_Create());
   for (auto& sheet : mStyleSheetList) {
     Servo_AuthorStyles_AppendStyleSheet(mServoStyles.get(), sheet->AsServo());
   }
+}
+
+void
+nsXBLPrototypeResources::ComputeServoStyles(const ServoStyleSet& aMasterStyleSet)
+{
+  SyncServoStyles();
   Servo_AuthorStyles_Flush(mServoStyles.get(), aMasterStyleSet.RawSet());
 }
 

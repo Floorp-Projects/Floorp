@@ -120,11 +120,7 @@ public:
   // Runs style invalidation due to document state changes.
   void InvalidateStyleForDocumentStateChanges(EventStates aStatesChanged);
 
-  void RecordShadowStyleChange(dom::ShadowRoot* aShadowRoot) {
-    // FIXME(emilio): When we properly support shadow dom we'll need to do
-    // better.
-    MarkOriginsDirty(OriginFlags::All);
-  }
+  void RecordShadowStyleChange(dom::ShadowRoot&);
 
   bool StyleSheetsHaveChanged() const
   {

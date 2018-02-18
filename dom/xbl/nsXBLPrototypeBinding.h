@@ -136,10 +136,18 @@ public:
 #ifdef MOZ_OLD_STYLE
   nsIStyleRuleProcessor* GetRuleProcessor();
 #endif
+
   const RawServoAuthorStyles* GetServoStyles() const
   {
     return mResources ? mResources->GetServoStyles() : nullptr;
   }
+
+  void SyncServoStyles()
+  {
+    MOZ_ASSERT(mResources);
+    mResources->SyncServoStyles();
+  }
+
   RawServoAuthorStyles* GetServoStyles()
   {
     return mResources

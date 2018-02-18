@@ -2367,13 +2367,13 @@ nsStyleSet::SheetChanged(CSSStyleSheet& aStyleSheet)
 }
 
 void
-nsStyleSet::RecordShadowStyleChange(ShadowRoot* aShadowRoot)
+nsStyleSet::RecordShadowStyleChange(ShadowRoot& aShadowRoot)
 {
   if (mStylesHaveChanged) {
     return;
   }
 
-  mChangedScopeStyleRoots.AppendElement(aShadowRoot->GetHost()->AsElement());
+  mChangedScopeStyleRoots.AppendElement(aShadowRoot.Host());
 }
 
 void
