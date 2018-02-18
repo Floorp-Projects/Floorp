@@ -1,7 +1,7 @@
 diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
 --- a/modules/fdlibm/src/math_private.h
 +++ b/modules/fdlibm/src/math_private.h
-@@ -271,17 +271,17 @@ do {								\
+@@ -273,17 +273,17 @@ do {								\
  /* The above works on non-i386 too, but we use this to check v. */
  #define	LD80C(m, ex, v)	{ .e = (v), }
  #endif
@@ -20,4 +20,3 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
  	if (sizeof(type) >= sizeof(long double))	\
  		(lval) = (rval);		\
  	else {					\
-
