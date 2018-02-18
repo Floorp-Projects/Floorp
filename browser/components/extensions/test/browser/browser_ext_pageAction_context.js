@@ -205,44 +205,36 @@ add_task(async function testNavigationClearsData() {
   let tab_title = "Tab title";
 
   let {Management: {global: {tabTracker}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
-  let extension, tab, tabId, tabs = [];
+  let extension, tabs = [];
   async function addTab(...args) {
-    tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, ...args);
-    tabId = tabTracker.getId(tab);
+    let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, ...args);
     tabs.push(tab);
-  }
-  async function locationChange(url, task) {
-    let locationChanged = BrowserTestUtils.waitForLocationChange(gBrowser, url);
-    await ContentTask.spawn(tab.linkedBrowser, url, task);
-    await locationChanged;
-  }
-  function setUrl(url) {
-    return locationChange(url, (url) => { content.location.href = url; });
-  }
-  function historyPushState(url) {
-    return locationChange(url, (url) => { content.history.pushState(null, null, url); });
+    return tab;
   }
   async function sendMessage(method, param, expect, msg) {
     extension.sendMessage({method, param, expect, msg});
     await extension.awaitMessage("done");
   }
-  async function expectTabSpecificData(msg) {
+  async function expectTabSpecificData(tab, msg) {
+    let tabId = tabTracker.getId(tab);
     await sendMessage("isShown", {tabId}, true, msg);
     await sendMessage("getTitle", {tabId}, tab_title, msg);
   }
-  async function expectDefaultData(msg) {
+  async function expectDefaultData(tab, msg) {
+    let tabId = tabTracker.getId(tab);
     await sendMessage("isShown", {tabId}, false, msg);
     await sendMessage("getTitle", {tabId}, default_title, msg);
   }
-  async function setTabSpecificData() {
-    await expectDefaultData("Expect default data before setting tab-specific data.");
+  async function setTabSpecificData(tab) {
+    let tabId = tabTracker.getId(tab);
+    await expectDefaultData(tab, "Expect default data before setting tab-specific data.");
     await sendMessage("show", tabId);
     await sendMessage("setTitle", {tabId, title: tab_title});
-    await expectTabSpecificData("Expect tab-specific data after setting it.");
+    await expectTabSpecificData(tab, "Expect tab-specific data after setting it.");
   }
 
   info("Load a tab before installing the extension");
-  await addTab(url, true, true);
+  let tab1 = await addTab(url, true, true);
 
   extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -261,30 +253,35 @@ add_task(async function testNavigationClearsData() {
   await extension.startup();
 
   info("Set tab-specific data to the existing tab.");
-  await setTabSpecificData();
+  await setTabSpecificData(tab1);
 
   info("Add a hash. Does not cause navigation.");
-  await setUrl(url + "#hash");
-  await expectTabSpecificData("Adding a hash does not clear tab-specific data");
+  await navigateTab(tab1, url + "#hash");
+  await expectTabSpecificData(tab1, "Adding a hash does not clear tab-specific data");
 
   info("Remove the hash. Causes navigation.");
-  await setUrl(url);
-  await expectDefaultData("Removing hash clears tab-specific data");
+  await navigateTab(tab1, url);
+  await expectDefaultData(tab1, "Removing hash clears tab-specific data");
 
   info("Open a new tab, set tab-specific data to it.");
-  await addTab("about:newtab", false, false);
-  await setTabSpecificData();
+  let tab2 = await addTab("about:newtab", false, false);
+  await setTabSpecificData(tab2);
 
   info("Load a page in that tab.");
-  await setUrl(url);
-  await expectDefaultData("Loading a page clears tab-specific data.");
+  await navigateTab(tab2, url);
+  await expectDefaultData(tab2, "Loading a page clears tab-specific data.");
 
   info("Set tab-specific data.");
-  await setTabSpecificData();
+  await setTabSpecificData(tab2);
 
   info("Push history state. Does not cause navigation.");
-  await historyPushState(url + "/path");
-  await expectTabSpecificData("history.pushState() does not clear tab-specific data");
+  await historyPushState(tab2, url + "/path");
+  await expectTabSpecificData(tab2, "history.pushState() does not clear tab-specific data");
+
+  info("Navigate when the tab is not selected");
+  gBrowser.selectedTab = tab1;
+  await navigateTab(tab2, url);
+  await expectDefaultData(tab2, "Navigating clears tab-specific data, even when not selected.");
 
   for (let tab of tabs) {
     await BrowserTestUtils.removeTab(tab);
