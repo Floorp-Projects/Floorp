@@ -55,7 +55,7 @@ protected:
   virtual void CallCallback(nsresult rv) = 0;
 
 private:
-  NS_IMETHOD Run() override final;
+  NS_IMETHOD Run() final;
 
   nsresult mRv;
   nsCOMPtr<nsIThread> mThread;

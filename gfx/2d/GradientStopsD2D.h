@@ -26,7 +26,7 @@ public:
 
   virtual BackendType GetBackendType() const { return BackendType::DIRECT2D; }
 
-  virtual bool IsValid() const final{ return mDevice == Factory::GetDirect3D11Device(); }
+  bool IsValid() const final { return mDevice == Factory::GetDirect3D11Device(); }
 
 private:
   friend class DrawTargetD2D;

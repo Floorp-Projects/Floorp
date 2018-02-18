@@ -514,8 +514,8 @@ class nsExpirationTracker : protected ::detail::SingleThreadedExpirationTracker<
    * we mark them as final with the hope that the compiler can optimize the
    * method calls out entirely.
    */
-  void NotifyHandlerEndLocked(const AutoLock&) final override { }
-  void NotifyHandlerEnd() final override { }
+  void NotifyHandlerEndLocked(const AutoLock&) final { }
+  void NotifyHandlerEnd() final { }
 
 protected:
   virtual void NotifyExpired(T* aObj) = 0;

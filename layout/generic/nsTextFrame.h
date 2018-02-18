@@ -81,11 +81,11 @@ public:
 
   nsresult GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor) override;
 
-  nsresult CharacterDataChanged(CharacterDataChangeInfo* aInfo) final override;
+  nsresult CharacterDataChanged(CharacterDataChangeInfo* aInfo) final;
 
   nsTextFrame* GetPrevContinuation() const override { return nullptr; }
-  nsTextFrame* GetNextContinuation() const final override { return mNextContinuation; }
-  void SetNextContinuation(nsIFrame* aNextContinuation) final override
+  nsTextFrame* GetNextContinuation() const final { return mNextContinuation; }
+  void SetNextContinuation(nsIFrame* aNextContinuation) final
   {
     NS_ASSERTION(!aNextContinuation || Type() == aNextContinuation->Type(),
                  "setting a next continuation with incorrect type!");
@@ -111,7 +111,7 @@ public:
              ? mNextContinuation
              : nullptr;
   }
-  void SetNextInFlow(nsIFrame* aNextInFlow) final override
+  void SetNextInFlow(nsIFrame* aNextInFlow) final
   {
     NS_ASSERTION(!aNextInFlow || Type() == aNextInFlow->Type(),
                  "setting a next in flow with incorrect type!");
@@ -132,15 +132,15 @@ public:
       aNextInFlow->AddStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
     }
   }
-  nsTextFrame* LastInFlow() const final override;
-  nsTextFrame* LastContinuation() const final override;
+  nsTextFrame* LastInFlow() const final;
+  nsTextFrame* LastContinuation() const final;
 
-  nsSplittableType GetSplittableType() const final override
+  nsSplittableType GetSplittableType() const final
   {
     return NS_FRAME_SPLITTABLE;
   }
 
-  bool IsFrameOfType(uint32_t aFlags) const final override
+  bool IsFrameOfType(uint32_t aFlags) const final
   {
     // Set the frame state bit for text frames to mark them as replaced.
     // XXX kipp: temporary
@@ -238,7 +238,7 @@ public:
 
   bool IsEmpty() override;
   bool IsSelfEmpty() override { return IsEmpty(); }
-  nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const final override;
+  nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const final;
 
   bool HasSignificantTerminalNewline() const override;
 

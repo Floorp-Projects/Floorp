@@ -2489,9 +2489,9 @@ class Concrete<js::LazyScript> : TracerConcrete<js::LazyScript> {
   public:
     static void construct(void *storage, js::LazyScript *ptr) { new (storage) Concrete(ptr); }
 
-    CoarseType coarseType() const final override { return CoarseType::Script; }
+    CoarseType coarseType() const final { return CoarseType::Script; }
     Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
-    const char* scriptFilename() const final override;
+    const char* scriptFilename() const final;
 
     const char16_t* typeName() const override { return concreteTypeName; }
     static const char16_t concreteTypeName[];

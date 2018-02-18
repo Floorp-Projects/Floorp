@@ -32,32 +32,32 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(xpcAccessibleTextRange)
 
-  NS_IMETHOD GetStartContainer(nsIAccessibleText** aAnchor) final override;
-  NS_IMETHOD GetStartOffset(int32_t* aOffset) final override;
-  NS_IMETHOD GetEndContainer(nsIAccessibleText** aAnchor) final override;
-  NS_IMETHOD GetEndOffset(int32_t* aOffset) final override;
-  NS_IMETHOD GetContainer(nsIAccessible** aContainer) final override;
-  NS_IMETHOD GetEmbeddedChildren(nsIArray** aList) final override;
-  NS_IMETHOD Compare(nsIAccessibleTextRange* aOtherRange, bool* aResult) final override;
+  NS_IMETHOD GetStartContainer(nsIAccessibleText** aAnchor) final;
+  NS_IMETHOD GetStartOffset(int32_t* aOffset) final;
+  NS_IMETHOD GetEndContainer(nsIAccessibleText** aAnchor) final;
+  NS_IMETHOD GetEndOffset(int32_t* aOffset) final;
+  NS_IMETHOD GetContainer(nsIAccessible** aContainer) final;
+  NS_IMETHOD GetEmbeddedChildren(nsIArray** aList) final;
+  NS_IMETHOD Compare(nsIAccessibleTextRange* aOtherRange, bool* aResult) final;
   NS_IMETHOD CompareEndPoints(uint32_t aEndPoint,
                               nsIAccessibleTextRange* aOtherRange,
                               uint32_t aOtherRangeEndPoint,
-                              int32_t* aResult) final override;
-  NS_IMETHOD GetText(nsAString& aText) final override;
-  NS_IMETHOD GetBounds(nsIArray** aRectList) final override;
-  NS_IMETHOD Move(uint32_t aUnit, int32_t aCount) final override;
-  NS_IMETHOD MoveStart(uint32_t aUnit, int32_t aCount) final override;
-  NS_IMETHOD MoveEnd(uint32_t aUnit, int32_t aCount) final override;
-  NS_IMETHOD Normalize(uint32_t aUnit) final override;
-  NS_IMETHOD Crop(nsIAccessible* aContainer, bool* aSuccess) final override;
+                              int32_t* aResult) final;
+  NS_IMETHOD GetText(nsAString& aText) final;
+  NS_IMETHOD GetBounds(nsIArray** aRectList) final;
+  NS_IMETHOD Move(uint32_t aUnit, int32_t aCount) final;
+  NS_IMETHOD MoveStart(uint32_t aUnit, int32_t aCount) final;
+  NS_IMETHOD MoveEnd(uint32_t aUnit, int32_t aCount) final;
+  NS_IMETHOD Normalize(uint32_t aUnit) final;
+  NS_IMETHOD Crop(nsIAccessible* aContainer, bool* aSuccess) final;
   NS_IMETHOD FindText(const nsAString& aText, bool aIsBackward, bool aIsIgnoreCase,
-                      nsIAccessibleTextRange** aRange) final override;
+                      nsIAccessibleTextRange** aRange) final;
   NS_IMETHOD FindAttr(uint32_t aAttr, nsIVariant* aVal, bool aIsBackward,
-                      nsIAccessibleTextRange** aRange) final override;
-  NS_IMETHOD AddToSelection() final override;
-  NS_IMETHOD RemoveFromSelection() final override;
-  NS_IMETHOD Select() final override;
-  NS_IMETHOD ScrollIntoView(uint32_t aHow) final override;
+                      nsIAccessibleTextRange** aRange) final;
+  NS_IMETHOD AddToSelection() final;
+  NS_IMETHOD RemoveFromSelection() final;
+  NS_IMETHOD Select() final;
+  NS_IMETHOD ScrollIntoView(uint32_t aHow) final;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCESSIBLETEXTRANGE_IMPL_IID)
 

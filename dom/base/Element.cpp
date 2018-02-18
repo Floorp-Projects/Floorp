@@ -3804,23 +3804,22 @@ Element::Animate(const Nullable<ElementOrCSSPseudoElement>& aTarget,
   GlobalObject global(aContext, ownerGlobal->GetGlobalJSObject());
   MOZ_ASSERT(!global.Failed());
 
-  // KeyframeEffect constructor doesn't follow the standard Xray calling
-  // convention and needs to be called in caller's compartment.
-  // This should match to RunConstructorInCallerCompartment attribute in
-  // KeyframeEffect.webidl.
-  RefPtr<KeyframeEffect> effect =
-    KeyframeEffect::Constructor(global, aTarget, aKeyframes, aOptions,
-                                aError);
-  if (aError.Failed()) {
-    return nullptr;
-  }
-
-  // Animation constructor follows the standard Xray calling convention and
-  // needs to be called in the target element's compartment.
+  // Wrap the aKeyframes object for the cross-compartment case.
+  JS::Rooted<JSObject*> keyframes(aContext);
+  keyframes = aKeyframes;
   Maybe<JSAutoCompartment> ac;
   if (js::GetContextCompartment(aContext) !=
       js::GetObjectCompartment(ownerGlobal->GetGlobalJSObject())) {
     ac.emplace(aContext, ownerGlobal->GetGlobalJSObject());
+    if (!JS_WrapObject(aContext, &keyframes)) {
+      return nullptr;
+    }
+  }
+
+  RefPtr<KeyframeEffect> effect =
+    KeyframeEffect::Constructor(global, aTarget, keyframes, aOptions, aError);
+  if (aError.Failed()) {
+    return nullptr;
   }
 
   AnimationTimeline* timeline = referenceElement->OwnerDoc()->Timeline();

@@ -25,7 +25,7 @@ public:
 
   already_AddRefed<UnscaledFont>
     CreateUnscaledFont(uint32_t aIndex,
-                       const uint8_t* aInstanceData, uint32_t aInstanceDataLength) final override;
+                       const uint8_t* aInstanceData, uint32_t aInstanceDataLength) final;
 
   ~NativeFontResourceFontconfig();
 

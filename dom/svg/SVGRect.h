@@ -27,42 +27,42 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SVGRect)
 
   // WebIDL
-  virtual float X() const override final
+  float X() const final
   {
     return mX;
   }
 
-  virtual void SetX(float aX, ErrorResult& aRv) final override
+  void SetX(float aX, ErrorResult& aRv) final
   {
     mX = aX;
   }
 
-  virtual float Y() const override final
+  float Y() const final
   {
     return mY;
   }
 
-  virtual void SetY(float aY, ErrorResult& aRv) final override
+  void SetY(float aY, ErrorResult& aRv) final
   {
     mY = aY;
   }
 
-  virtual float Width() const override final
+  float Width() const final
   {
     return mWidth;
   }
 
-  virtual void SetWidth(float aWidth, ErrorResult& aRv) final override
+  void SetWidth(float aWidth, ErrorResult& aRv) final
   {
     mWidth = aWidth;
   }
 
-  virtual float Height() const override final
+  float Height() const final
   {
     return mHeight;
   }
 
-  virtual void SetHeight(float aHeight, ErrorResult& aRv) final override
+  void SetHeight(float aHeight, ErrorResult& aRv) final
   {
     mHeight = aHeight;
   }

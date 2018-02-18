@@ -43,10 +43,10 @@ public:
   void Unclaim();
 
   // Overload of nsAHttpTransaction methods
-  bool IsNullTransaction() override final { return true; }
-  NullHttpTransaction *QueryNullTransaction() override final { return this; }
-  bool ResponseTimeoutEnabled() const override final {return true; }
-  PRIntervalTime ResponseTimeout() override final
+  bool IsNullTransaction() final { return true; }
+  NullHttpTransaction *QueryNullTransaction() final { return this; }
+  bool ResponseTimeoutEnabled() const final {return true; }
+  PRIntervalTime ResponseTimeout() final
   {
     return PR_SecondsToInterval(15);
   }

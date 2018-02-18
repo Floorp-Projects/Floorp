@@ -35,8 +35,8 @@ public:
   // Accessible
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild) override;
-  virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild) override final;
-  virtual bool RemoveChild(Accessible* aChild) override final;
+  bool InsertChildAt(uint32_t aIndex, Accessible* aChild) final;
+  bool RemoveChild(Accessible* aChild) final;
 
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
 
@@ -116,11 +116,11 @@ public:
   explicit DummyAccessible(DocAccessible* aDocument = nullptr) :
     AccessibleWrap(nullptr, aDocument) { }
 
-  virtual uint64_t NativeState() override final;
-  virtual uint64_t NativeInteractiveState() const override final;
-  virtual uint64_t NativeLinkState() const override final;
-  virtual bool NativelyUnavailable() const override final;
-  virtual void ApplyARIAState(uint64_t* aState) const override final;
+  uint64_t NativeState() final;
+  uint64_t NativeInteractiveState() const final;
+  uint64_t NativeLinkState() const final;
+  bool NativelyUnavailable() const final;
+  void ApplyARIAState(uint64_t* aState) const final;
 
 protected:
   virtual ~DummyAccessible() { }

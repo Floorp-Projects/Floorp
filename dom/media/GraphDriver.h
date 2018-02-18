@@ -587,7 +587,7 @@ protected:
   virtual ~AsyncCubebTask();
 
 private:
-  NS_IMETHOD Run() override final;
+  NS_IMETHOD Run() final;
 
   RefPtr<AudioCallbackDriver> mDriver;
   AsyncCubebOperation mOperation;

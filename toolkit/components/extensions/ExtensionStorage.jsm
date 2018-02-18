@@ -49,7 +49,7 @@ class SerializeableMap extends Map {
     let result = {};
     for (let [key, value] of this) {
       try {
-        void JSON.serialize(value);
+        void JSON.stringify(value);
 
         result[key] = value;
       } catch (e) {
