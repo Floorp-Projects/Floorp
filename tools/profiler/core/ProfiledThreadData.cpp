@@ -58,10 +58,7 @@ ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer, JSContext* aCx,
                             aBuffer, aWriter,
                             aProcessStartTime,
                             mThreadInfo->RegisterTime(), mUnregisterTime,
-                            aSinceTime, aCx,
-                            nullptr,
-                            nullptr,
-                            uniqueStacks);
+                            aSinceTime, uniqueStacks);
 
     aWriter.StartObjectProperty("stackTable");
     {
@@ -117,9 +114,6 @@ StreamSamplesAndMarkers(const char* aName,
                         const TimeStamp& aRegisterTime,
                         const TimeStamp& aUnregisterTime,
                         double aSinceTime,
-                        JSContext* aContext,
-                        UniquePtr<char[]>&& aPartialSamplesJSON,
-                        UniquePtr<char[]>&& aPartialMarkersJSON,
                         UniqueStacks& aUniqueStacks)
 {
   aWriter.StringProperty("processType",
@@ -156,15 +150,8 @@ StreamSamplesAndMarkers(const char* aName,
 
     aWriter.StartArrayProperty("data");
     {
-      if (aPartialSamplesJSON) {
-        // We would only have saved streamed samples during shutdown
-        // streaming, which cares about dumping the entire buffer, and thus
-        // should have passed in 0 for aSinceTime.
-        MOZ_ASSERT(aSinceTime == 0);
-        aWriter.Splice(aPartialSamplesJSON.get());
-      }
       aBuffer.StreamSamplesToJSON(aWriter, aThreadId, aSinceTime,
-                                  aContext, aUniqueStacks);
+                                  aUniqueStacks);
     }
     aWriter.EndArray();
   }
@@ -181,10 +168,6 @@ StreamSamplesAndMarkers(const char* aName,
 
     aWriter.StartArrayProperty("data");
     {
-      if (aPartialMarkersJSON) {
-        MOZ_ASSERT(aSinceTime == 0);
-        aWriter.Splice(aPartialMarkersJSON.get());
-      }
       aBuffer.StreamMarkersToJSON(aWriter, aThreadId, aProcessStartTime,
                                   aSinceTime, aUniqueStacks);
     }
