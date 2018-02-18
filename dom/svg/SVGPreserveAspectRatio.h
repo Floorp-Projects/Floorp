@@ -7,6 +7,7 @@
 #ifndef MOZILLA_CONTENT_SVGPRESERVEASPECTRATIO_H_
 #define MOZILLA_CONTENT_SVGPRESERVEASPECTRATIO_H_
 
+#include "mozilla/dom/SVGPreserveAspectRatioBinding.h"
 #include "mozilla/HashFunctions.h"  // for HashGeneric
 
 #include "nsWrapperCache.h"
@@ -15,37 +16,20 @@
 #include "nsSVGElement.h"
 
 namespace mozilla {
-// Alignment Types
-enum SVGAlign : uint8_t {
-  SVG_PRESERVEASPECTRATIO_UNKNOWN = 0,
-  SVG_PRESERVEASPECTRATIO_NONE = 1,
-  SVG_PRESERVEASPECTRATIO_XMINYMIN = 2,
-  SVG_PRESERVEASPECTRATIO_XMIDYMIN = 3,
-  SVG_PRESERVEASPECTRATIO_XMAXYMIN = 4,
-  SVG_PRESERVEASPECTRATIO_XMINYMID = 5,
-  SVG_PRESERVEASPECTRATIO_XMIDYMID = 6,
-  SVG_PRESERVEASPECTRATIO_XMAXYMID = 7,
-  SVG_PRESERVEASPECTRATIO_XMINYMAX = 8,
-  SVG_PRESERVEASPECTRATIO_XMIDYMAX = 9,
-  SVG_PRESERVEASPECTRATIO_XMAXYMAX = 10
-};
 
 // These constants represent the range of valid enum values for the <align>
 // parameter. They exclude the sentinel _UNKNOWN value.
-const uint16_t SVG_ALIGN_MIN_VALID = SVG_PRESERVEASPECTRATIO_NONE;
-const uint16_t SVG_ALIGN_MAX_VALID = SVG_PRESERVEASPECTRATIO_XMAXYMAX;
-
-// Meet-or-slice Types
-enum SVGMeetOrSlice : uint8_t {
-  SVG_MEETORSLICE_UNKNOWN = 0,
-  SVG_MEETORSLICE_MEET = 1,
-  SVG_MEETORSLICE_SLICE = 2
-};
+const uint16_t SVG_ALIGN_MIN_VALID =
+  dom::SVGPreserveAspectRatioBinding::SVG_PRESERVEASPECTRATIO_NONE;
+const uint16_t SVG_ALIGN_MAX_VALID =
+  dom::SVGPreserveAspectRatioBinding::SVG_PRESERVEASPECTRATIO_XMAXYMAX;
 
 // These constants represent the range of valid enum values for the
 // <meetOrSlice> parameter. They exclude the sentinel _UNKNOWN value.
-const uint16_t SVG_MEETORSLICE_MIN_VALID = SVG_MEETORSLICE_MEET;
-const uint16_t SVG_MEETORSLICE_MAX_VALID = SVG_MEETORSLICE_SLICE;
+const uint16_t SVG_MEETORSLICE_MIN_VALID =
+  dom::SVGPreserveAspectRatioBinding::SVG_MEETORSLICE_MEET;
+const uint16_t SVG_MEETORSLICE_MAX_VALID =
+  dom::SVGPreserveAspectRatioBinding::SVG_MEETORSLICE_SLICE;
 
 class SVGAnimatedPreserveAspectRatio;
 
@@ -54,11 +38,11 @@ class SVGPreserveAspectRatio final
   friend class SVGAnimatedPreserveAspectRatio;
 public:
   explicit SVGPreserveAspectRatio()
-    : mAlign(SVG_PRESERVEASPECTRATIO_UNKNOWN)
-    , mMeetOrSlice(SVG_MEETORSLICE_UNKNOWN)
+    : mAlign(dom::SVGPreserveAspectRatioBinding::SVG_PRESERVEASPECTRATIO_UNKNOWN)
+    , mMeetOrSlice(dom::SVGPreserveAspectRatioBinding::SVG_MEETORSLICE_UNKNOWN)
   {}
 
-  SVGPreserveAspectRatio(SVGAlign aAlign, SVGMeetOrSlice aMeetOrSlice)
+  SVGPreserveAspectRatio(uint16_t aAlign, uint16_t aMeetOrSlice)
     : mAlign(aAlign)
     , mMeetOrSlice(aMeetOrSlice)
   {}
@@ -76,8 +60,8 @@ public:
     return NS_OK;
   }
 
-  SVGAlign GetAlign() const {
-    return static_cast<SVGAlign>(mAlign);
+  uint16_t GetAlign() const {
+    return mAlign;
   }
 
   nsresult SetMeetOrSlice(uint16_t aMeetOrSlice) {
@@ -88,8 +72,8 @@ public:
     return NS_OK;
   }
 
-  SVGMeetOrSlice GetMeetOrSlice() const {
-    return static_cast<SVGMeetOrSlice>(mMeetOrSlice);
+  uint16_t GetMeetOrSlice() const {
+    return mMeetOrSlice;
   }
 
   PLDHashNumber Hash() const {

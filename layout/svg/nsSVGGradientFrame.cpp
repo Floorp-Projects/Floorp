@@ -12,7 +12,9 @@
 #include "AutoReferenceChainGuard.h"
 #include "gfxPattern.h"
 #include "mozilla/dom/SVGGradientElement.h"
+#include "mozilla/dom/SVGGradientElementBinding.h"
 #include "mozilla/dom/SVGStopElement.h"
+#include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "nsContentUtils.h"
 #include "SVGObserverUtils.h"
 #include "nsSVGAnimatedTransformList.h"
@@ -21,6 +23,8 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::dom::SVGGradientElementBinding;
+using namespace mozilla::dom::SVGUnitTypesBinding;
 using namespace mozilla::gfx;
 
 //----------------------------------------------------------------------

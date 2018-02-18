@@ -8,9 +8,11 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/SVGAnimatedTransformList.h"
+#include "mozilla/dom/SVGGradientElementBinding.h"
 #include "mozilla/dom/SVGRadialGradientElementBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGLinearGradientElementBinding.h"
+#include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
 #include "nsSVGElement.h"
@@ -20,6 +22,9 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(RadialGradient)
 
 namespace mozilla {
 namespace dom {
+
+using namespace SVGGradientElementBinding;
+using namespace SVGUnitTypesBinding;
 
 //--------------------- Gradients------------------------
 

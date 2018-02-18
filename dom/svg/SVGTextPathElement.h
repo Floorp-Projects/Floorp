@@ -21,15 +21,6 @@ nsresult NS_NewSVGTextPathElement(nsIContent **aResult,
 namespace mozilla {
 namespace dom {
 
-// textPath Method Types
-static const unsigned short TEXTPATH_METHODTYPE_UNKNOWN  = 0;
-static const unsigned short TEXTPATH_METHODTYPE_ALIGN    = 1;
-static const unsigned short TEXTPATH_METHODTYPE_STRETCH  = 2;
-// textPath Spacing Types
-static const unsigned short TEXTPATH_SPACINGTYPE_UNKNOWN = 0;
-static const unsigned short TEXTPATH_SPACINGTYPE_AUTO    = 1;
-static const unsigned short TEXTPATH_SPACINGTYPE_EXACT   = 2;
-
 typedef SVGTextContentElement SVGTextPathElementBase;
 
 class SVGTextPathElement final : public SVGTextPathElementBase
