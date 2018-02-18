@@ -7260,6 +7260,9 @@ JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t v
         }
         jit::JitOptions.jumpThreshold = value;
         break;
+      case JSJITCOMPILER_TRACK_OPTIMIZATIONS:
+        jit::JitOptions.disableOptimizationTracking = !value;
+        break;
       case JSJITCOMPILER_SPECTRE_INDEX_MASKING:
         jit::JitOptions.spectreIndexMasking = !!value;
         break;
