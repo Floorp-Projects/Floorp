@@ -8,36 +8,15 @@
 #define MOZILLA_SVGPATHSEGUTILS_H__
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/dom/SVGPathSegBinding.h"
 #include "mozilla/gfx/Point.h"
 #include "nsDebug.h"
 
 namespace mozilla {
 
-// Path Segment Types
-static const unsigned short PATHSEG_UNKNOWN                      = 0;
-static const unsigned short PATHSEG_CLOSEPATH                    = 1;
-static const unsigned short PATHSEG_MOVETO_ABS                   = 2;
-static const unsigned short PATHSEG_MOVETO_REL                   = 3;
-static const unsigned short PATHSEG_LINETO_ABS                   = 4;
-static const unsigned short PATHSEG_LINETO_REL                   = 5;
-static const unsigned short PATHSEG_CURVETO_CUBIC_ABS            = 6;
-static const unsigned short PATHSEG_CURVETO_CUBIC_REL            = 7;
-static const unsigned short PATHSEG_CURVETO_QUADRATIC_ABS        = 8;
-static const unsigned short PATHSEG_CURVETO_QUADRATIC_REL        = 9;
-static const unsigned short PATHSEG_ARC_ABS                      = 10;
-static const unsigned short PATHSEG_ARC_REL                      = 11;
-static const unsigned short PATHSEG_LINETO_HORIZONTAL_ABS        = 12;
-static const unsigned short PATHSEG_LINETO_HORIZONTAL_REL        = 13;
-static const unsigned short PATHSEG_LINETO_VERTICAL_ABS          = 14;
-static const unsigned short PATHSEG_LINETO_VERTICAL_REL          = 15;
-static const unsigned short PATHSEG_CURVETO_CUBIC_SMOOTH_ABS     = 16;
-static const unsigned short PATHSEG_CURVETO_CUBIC_SMOOTH_REL     = 17;
-static const unsigned short PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS = 18;
-static const unsigned short PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL = 19;
-
 #define NS_SVG_PATH_SEG_MAX_ARGS         7
-#define NS_SVG_PATH_SEG_FIRST_VALID_TYPE mozilla::PATHSEG_CLOSEPATH
-#define NS_SVG_PATH_SEG_LAST_VALID_TYPE  mozilla::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL
+#define NS_SVG_PATH_SEG_FIRST_VALID_TYPE dom::SVGPathSegBinding::PATHSEG_CLOSEPATH
+#define NS_SVG_PATH_SEG_LAST_VALID_TYPE  dom::SVGPathSegBinding::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL
 #define NS_SVG_PATH_SEG_TYPE_COUNT       (NS_SVG_PATH_SEG_LAST_VALID_TYPE + 1)
 
 /**
@@ -201,22 +180,22 @@ public:
   }
 
   static bool IsCubicType(uint32_t aType) {
-    return aType == PATHSEG_CURVETO_CUBIC_REL ||
-           aType == PATHSEG_CURVETO_CUBIC_ABS ||
-           aType == PATHSEG_CURVETO_CUBIC_SMOOTH_REL ||
-           aType == PATHSEG_CURVETO_CUBIC_SMOOTH_ABS;
+    return aType == dom::SVGPathSegBinding::PATHSEG_CURVETO_CUBIC_REL ||
+           aType == dom::SVGPathSegBinding::PATHSEG_CURVETO_CUBIC_ABS ||
+           aType == dom::SVGPathSegBinding::PATHSEG_CURVETO_CUBIC_SMOOTH_REL ||
+           aType == dom::SVGPathSegBinding::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS;
   }
 
   static bool IsQuadraticType(uint32_t aType) {
-    return aType == PATHSEG_CURVETO_QUADRATIC_REL ||
-           aType == PATHSEG_CURVETO_QUADRATIC_ABS ||
-           aType == PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL ||
-           aType == PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS;
+    return aType == dom::SVGPathSegBinding::PATHSEG_CURVETO_QUADRATIC_REL ||
+           aType == dom::SVGPathSegBinding::PATHSEG_CURVETO_QUADRATIC_ABS ||
+           aType == dom::SVGPathSegBinding::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL ||
+           aType == dom::SVGPathSegBinding::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS;
   }
 
   static bool IsArcType(uint32_t aType) {
-    return aType == PATHSEG_ARC_ABS ||
-           aType == PATHSEG_ARC_REL;
+    return aType == dom::SVGPathSegBinding::PATHSEG_ARC_ABS ||
+           aType == dom::SVGPathSegBinding::PATHSEG_ARC_REL;
   }
 
   static bool IsRelativeOrAbsoluteType(uint32_t aType) {
@@ -224,10 +203,11 @@ public:
 
     // When adding a new path segment type, ensure that the returned condition
     // below is still correct.
-    static_assert(NS_SVG_PATH_SEG_LAST_VALID_TYPE == PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL,
+    static_assert(NS_SVG_PATH_SEG_LAST_VALID_TYPE ==
+                    dom::SVGPathSegBinding::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL,
                   "Unexpected type");
 
-    return aType >= PATHSEG_MOVETO_ABS;
+    return aType >= dom::SVGPathSegBinding::PATHSEG_MOVETO_ABS;
   }
 
   static bool IsRelativeType(uint32_t aType) {
@@ -237,7 +217,8 @@ public:
 
     // When adding a new path segment type, ensure that the returned condition
     // below is still correct.
-    static_assert(NS_SVG_PATH_SEG_LAST_VALID_TYPE == PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL,
+    static_assert(NS_SVG_PATH_SEG_LAST_VALID_TYPE ==
+                    dom::SVGPathSegBinding::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL,
                   "Unexpected type");
 
     return aType & 1;
@@ -250,7 +231,8 @@ public:
 
     // When adding a new path segment type, ensure that the returned condition
     // below is still correct.
-    static_assert(NS_SVG_PATH_SEG_LAST_VALID_TYPE == PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL,
+    static_assert(NS_SVG_PATH_SEG_LAST_VALID_TYPE ==
+                   dom::SVGPathSegBinding::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL,
                   "Unexpected type");
 
     return aType | 1;

@@ -53,7 +53,7 @@ diff --git a/modules/fdlibm/src/e_asin.cpp b/modules/fdlibm/src/e_asin.cpp
   *
   * Developed at SunSoft, a Sun Microsystems, Inc. business.
   * Permission to use, copy, modify, and distribute this
-  * software is freely granted, provided that this notice 
+  * software is freely granted, provided that this notice
   * is preserved.
   * ====================================================
   */
@@ -284,7 +284,7 @@ diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
   * Copyright (C) 2004 by Sun Microsystems, Inc. All rights reserved.
   *
   * Permission to use, copy, modify, and distribute this
-  * software is freely granted, provided that this notice 
+  * software is freely granted, provided that this notice
   * is preserved.
   * ====================================================
   */
@@ -352,7 +352,7 @@ diff --git a/modules/fdlibm/src/e_sqrt.cpp b/modules/fdlibm/src/e_sqrt.cpp
 diff --git a/modules/fdlibm/src/k_exp.cpp b/modules/fdlibm/src/k_exp.cpp
 --- a/modules/fdlibm/src/k_exp.cpp
 +++ b/modules/fdlibm/src/k_exp.cpp
-@@ -19,22 +19,22 @@
+@@ -21,22 +21,22 @@
   * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
   * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
   * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
@@ -573,12 +573,7 @@ diff --git a/modules/fdlibm/src/s_expm1.cpp b/modules/fdlibm/src/s_expm1.cpp
 diff --git a/modules/fdlibm/src/s_fabs.cpp b/modules/fdlibm/src/s_fabs.cpp
 --- a/modules/fdlibm/src/s_fabs.cpp
 +++ b/modules/fdlibm/src/s_fabs.cpp
-@@ -1,22 +1,22 @@
--/* @(#)s_fabs.c 5.1 93/09/24 */
-+ /* @(#)s_fabs.c 5.1 93/09/24 */
- /*
-  * ====================================================
-  * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+@@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
   * Permission to use, copy, modify, and distribute this
@@ -587,10 +582,10 @@ diff --git a/modules/fdlibm/src/s_fabs.cpp b/modules/fdlibm/src/s_fabs.cpp
   * ====================================================
   */
  
- #ifndef lint
--static char rcsid[] = "$FreeBSD$";
-+ //static char rcsid[] = "$FreeBSD$";
- #endif
+-#include <sys/cdefs.h>
+-__FBSDID("$FreeBSD$");
++//#include <sys/cdefs.h>
++//__FBSDID("$FreeBSD$");
  
  /*
   * fabs(x) returns the absolute value of x.
@@ -598,6 +593,7 @@ diff --git a/modules/fdlibm/src/s_fabs.cpp b/modules/fdlibm/src/s_fabs.cpp
  
  #include "math_private.h"
  
+ double
 diff --git a/modules/fdlibm/src/s_floor.cpp b/modules/fdlibm/src/s_floor.cpp
 --- a/modules/fdlibm/src/s_floor.cpp
 +++ b/modules/fdlibm/src/s_floor.cpp
@@ -673,7 +669,7 @@ diff --git a/modules/fdlibm/src/s_log1p.cpp b/modules/fdlibm/src/s_log1p.cpp
 diff --git a/modules/fdlibm/src/s_nearbyint.cpp b/modules/fdlibm/src/s_nearbyint.cpp
 --- a/modules/fdlibm/src/s_nearbyint.cpp
 +++ b/modules/fdlibm/src/s_nearbyint.cpp
-@@ -19,18 +19,18 @@
+@@ -21,18 +21,18 @@
   * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
   * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
   * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
@@ -745,7 +741,8 @@ diff --git a/modules/fdlibm/src/s_rintf.cpp b/modules/fdlibm/src/s_rintf.cpp
 diff --git a/modules/fdlibm/src/s_scalbn.cpp b/modules/fdlibm/src/s_scalbn.cpp
 --- a/modules/fdlibm/src/s_scalbn.cpp
 +++ b/modules/fdlibm/src/s_scalbn.cpp
-@@ -6,27 +6,27 @@
+@@ -5,18 +5,18 @@
+  *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
   * Permission to use, copy, modify, and distribute this
   * software is freely granted, provided that this notice
@@ -753,10 +750,10 @@ diff --git a/modules/fdlibm/src/s_scalbn.cpp b/modules/fdlibm/src/s_scalbn.cpp
   * ====================================================
   */
  
- #ifndef lint
--static char rcsid[] = "$FreeBSD$";
-+//static char rcsid[] = "$FreeBSD$";
- #endif
+-#include <sys/cdefs.h>
+-__FBSDID("$FreeBSD$");
++//#include <sys/cdefs.h>
++//__FBSDID("$FreeBSD$");
  
  /*
   * scalbn (double x, int n)
@@ -765,16 +762,6 @@ diff --git a/modules/fdlibm/src/s_scalbn.cpp b/modules/fdlibm/src/s_scalbn.cpp
   * exponentiation or a multiplication.
   */
  
--#include <sys/cdefs.h>
-+//#include <sys/cdefs.h>
- #include <float.h>
- 
- #include "math_private.h"
- 
- static const double
- two54   =  1.80143985094819840000e+16, /* 0x43500000, 0x00000000 */
- twom54  =  5.55111512312578270212e-17, /* 0x3C900000, 0x00000000 */
- huge   = 1.0e+300,
 diff --git a/modules/fdlibm/src/s_tanh.cpp b/modules/fdlibm/src/s_tanh.cpp
 --- a/modules/fdlibm/src/s_tanh.cpp
 +++ b/modules/fdlibm/src/s_tanh.cpp

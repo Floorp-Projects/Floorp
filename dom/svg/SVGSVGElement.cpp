@@ -32,6 +32,9 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace dom {
 
+using namespace SVGPreserveAspectRatioBinding;
+using namespace SVGSVGElementBinding;
+
 nsSVGEnumMapping SVGSVGElement::sZoomAndPanMap[] = {
   {&nsGkAtoms::disable, SVG_ZOOMANDPAN_DISABLE},
   {&nsGkAtoms::magnify, SVG_ZOOMANDPAN_MAGNIFY},
