@@ -696,7 +696,7 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
 
   if (sDispatchKeyPressEventsOnlySystemGroupInContent &&
       keyEvent.mMessage == eKeyPress &&
-      !keyEvent.IsInputtingText() && !keyEvent.IsInputtingLineBreak()) {
+      !keyEvent.ShouldKeyPressEventBeFiredOnContent()) {
     keyEvent.mFlags.mOnlySystemGroupDispatchInContent = true;
   }
 
