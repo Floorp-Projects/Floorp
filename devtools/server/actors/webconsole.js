@@ -86,7 +86,6 @@ function WebConsoleActor(connection, parentActor) {
   }
 
   this.traits = {
-    customNetworkRequest: !this._parentIsContentActor,
     evaluateJSAsync: true,
     transferredResponseSize: true,
     selectedObjectActor: true, // 44+
@@ -162,16 +161,6 @@ WebConsoleActor.prototype =
    * @type object
    */
   traits: null,
-
-  /**
-   * Boolean getter that tells if the parent actor is a ContentActor.
-   *
-   * @private
-   * @type boolean
-   */
-  get _parentIsContentActor() {
-    return this.parentActor.constructor.name == "ContentActor";
-  },
 
   /**
    * The window or sandbox we work with.
@@ -587,7 +576,16 @@ WebConsoleActor.prototype =
     let window = !this.parentActor.isRootActor ? this.window : null;
     let messageManager = null;
 
-    if (this._parentIsContentActor) {
+    // Check if the actor is running in a child process (but only if
+    // Services.appinfo exists, to prevent onStartListeners to fail
+    // when the target is a Worker).
+    let processBoundary = Services.appinfo && (
+      Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
+    );
+
+    // Retrieve a message manager from the parent actor if this actor is
+    // not currently running in the main process.
+    if (processBoundary) {
       messageManager = this.parentActor.messageManager;
     }
 
@@ -629,8 +627,6 @@ WebConsoleActor.prototype =
             this.stackTraceCollector = new StackTraceCollector({ window });
             this.stackTraceCollector.init();
 
-            let processBoundary = Services.appinfo.processType !=
-                                  Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
             if (messageManager && processBoundary) {
               // Start a network monitor in the parent process to listen to
               // most requests than happen in parent
