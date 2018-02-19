@@ -936,7 +936,8 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
 
   mSelectionWasCollapsed = collapsed;
 
-  if (!weakFrame.IsAlive() || !nsContentUtils::IsFocusedContent(mFrame->GetContent()))
+  if (!weakFrame.IsAlive() || !mFrame ||
+      !nsContentUtils::IsFocusedContent(mFrame->GetContent()))
     return NS_OK;
 
   return UpdateTextInputCommands(NS_LITERAL_STRING("select"), aSel, aReason);
@@ -1792,8 +1793,9 @@ nsTextEditorState::SetSelectionRange(uint32_t aStart, uint32_t aEnd,
     props.SetEnd(aEnd);
     props.SetDirection(aDirection);
   } else {
+    WeakPtr<nsTextEditorState> self(this);
     aRv = mBoundFrame->SetSelectionRange(aStart, aEnd, aDirection);
-    if (aRv.Failed()) {
+    if (aRv.Failed() || !self.get()) {
       return;
     }
     rv = mBoundFrame->ScrollSelectionIntoView();
