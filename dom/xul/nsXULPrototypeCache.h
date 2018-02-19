@@ -19,6 +19,7 @@
 
 #include "mozilla/scache/StartupCache.h"
 
+class nsIHandleReportCallback;
 namespace mozilla {
 class StyleSheet;
 } // namespace mozilla
@@ -111,6 +112,10 @@ public:
     void MarkInCCGeneration(uint32_t aGeneration);
     void MarkInGC(JSTracer* aTrc);
     void FlushScripts();
+
+    static void CollectMemoryReports(nsIHandleReportCallback* aHandleReport,
+                                     nsISupports* aData);
+
 protected:
     friend nsresult
     NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult);

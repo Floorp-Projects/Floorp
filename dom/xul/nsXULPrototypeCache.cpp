@@ -12,6 +12,7 @@
 #include "nsIURI.h"
 
 #include "nsIFile.h"
+#include "nsIMemoryReporter.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIObserverService.h"
@@ -631,4 +632,88 @@ nsXULPrototypeCache::MarkInGC(JSTracer* aTrc)
         JS::Heap<JSScript*>& script = iter.Data();
         JS::TraceEdge(aTrc, &script, "nsXULPrototypeCache script");
     }
+}
+
+MOZ_DEFINE_MALLOC_SIZE_OF(CacheMallocSizeOf)
+
+static void
+ReportSize(const nsCString& aPath, size_t aAmount,
+           const nsCString& aDescription,
+           nsIHandleReportCallback* aHandleReport, nsISupports* aData)
+{
+  nsAutoCString path("explicit/xul-prototype-cache/");
+  path += aPath;
+  aHandleReport->Callback(EmptyCString(), path,
+                          nsIMemoryReporter::KIND_HEAP,
+                          nsIMemoryReporter::UNITS_BYTES,
+                          aAmount, aDescription, aData);
+}
+
+static void
+AppendURIForMemoryReport(nsIURI* aUri, nsACString& aOutput)
+{
+  nsCString spec = aUri->GetSpecOrDefault();
+  // A hack: replace forward slashes with '\\' so they aren't
+  // treated as path separators.  Users of the reporters
+  // (such as about:memory) have to undo this change.
+  spec.ReplaceChar('/', '\\');
+  aOutput += spec;
+}
+
+/* static */ void
+nsXULPrototypeCache::CollectMemoryReports(
+  nsIHandleReportCallback* aHandleReport, nsISupports* aData)
+{
+  if (!sInstance) {
+    return;
+  }
+
+  MallocSizeOf mallocSizeOf = CacheMallocSizeOf;
+  size_t other = mallocSizeOf(sInstance);
+
+#define REPORT_SIZE(_path, _amount, _desc) \
+  ReportSize(_path, _amount, NS_LITERAL_CSTRING(_desc), aHandleReport, aData)
+
+  other += sInstance->
+    mPrototypeTable.ShallowSizeOfExcludingThis(mallocSizeOf);
+  // TODO Report content in mPrototypeTable?
+
+  other += sInstance->
+    mGeckoStyleSheetTable.ShallowSizeOfExcludingThis(mallocSizeOf);
+  // TODO Report content inside mGeckoStyleSheetTable?
+  other += sInstance->
+    mServoStyleSheetTable.ShallowSizeOfExcludingThis(mallocSizeOf);
+  // TODO Report content inside mServoStyleSheetTable?
+
+  other += sInstance->
+    mScriptTable.ShallowSizeOfExcludingThis(mallocSizeOf);
+  // TODO Report content inside mScriptTable?
+
+  auto reportXBLDocTable =
+    [&](const nsACString& prefix, const XBLDocTable& table) {
+      other += table.ShallowSizeOfExcludingThis(mallocSizeOf);
+      for (auto iter = table.ConstIter(); !iter.Done(); iter.Next()) {
+        nsAutoCString path(prefix);
+        path += "-xbl-docs/(";
+        AppendURIForMemoryReport(iter.Key(), path);
+        path += ")";
+        size_t size = iter.UserData()->SizeOfIncludingThis(mallocSizeOf);
+        REPORT_SIZE(path, size, "Memory used by this XBL document.");
+      }
+    };
+  reportXBLDocTable(NS_LITERAL_CSTRING("gecko"), sInstance->mGeckoXBLDocTable);
+  reportXBLDocTable(NS_LITERAL_CSTRING("servo"), sInstance->mServoXBLDocTable);
+
+  other += sInstance->
+    mStartupCacheURITable.ShallowSizeOfExcludingThis(mallocSizeOf);
+
+  other += sInstance->
+    mOutputStreamTable.ShallowSizeOfExcludingThis(mallocSizeOf);
+  other += sInstance->
+    mInputStreamTable.ShallowSizeOfExcludingThis(mallocSizeOf);
+
+  REPORT_SIZE(NS_LITERAL_CSTRING("other"), other, "Memory used by "
+              "the instance and tables of the XUL prototype cache.");
+
+#undef REPORT_SIZE
 }
