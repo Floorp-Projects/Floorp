@@ -29,7 +29,6 @@ using namespace js::wasm;
 
 using mozilla::DebugOnly;
 using mozilla::Maybe;
-using mozilla::Swap;
 
 /*****************************************************************************/
 // WasmFrameIter implementation

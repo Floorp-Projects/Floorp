@@ -6,8 +6,6 @@
 
 #include "vm/Stack-inl.h"
 
-#include "mozilla/PodOperations.h"
-
 #include "gc/Marking.h"
 #include "jit/BaselineFrame.h"
 #include "jit/JitcodeMap.h"
@@ -26,7 +24,6 @@ using namespace js;
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
-using mozilla::PodCopy;
 
 /*****************************************************************************/
 

@@ -7,7 +7,6 @@
 #include "jit/SharedIC.h"
 
 #include "mozilla/Casting.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
 
@@ -32,7 +31,6 @@
 #include "vm/Interpreter-inl.h"
 
 using mozilla::BitwiseCast;
-using mozilla::DebugOnly;
 
 namespace js {
 namespace jit {

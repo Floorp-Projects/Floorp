@@ -55,7 +55,6 @@
 
 using JS::ToInt32;
 
-using mozilla::DebugOnly;
 using mozilla::CheckedInt;
 using mozilla::Some;
 using mozilla::Maybe;

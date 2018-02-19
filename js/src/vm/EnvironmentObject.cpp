@@ -6,9 +6,6 @@
 
 #include "vm/EnvironmentObject-inl.h"
 
-#include "mozilla/PodOperations.h"
-#include "mozilla/ScopeExit.h"
-
 #include "builtin/ModuleObject.h"
 #include "gc/Policy.h"
 #include "vm/ArgumentsObject.h"
@@ -30,12 +27,6 @@
 
 using namespace js;
 using namespace js::gc;
-
-using mozilla::PodZero;
-using mozilla::Maybe;
-using mozilla::Some;
-using mozilla::Nothing;
-using mozilla::MakeScopeExit;
 
 typedef Rooted<ArgumentsObject*> RootedArgumentsObject;
 typedef MutableHandle<ArgumentsObject*> MutableHandleArgumentsObject;

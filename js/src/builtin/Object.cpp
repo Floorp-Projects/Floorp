@@ -6,7 +6,6 @@
 
 #include "builtin/Object.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/MaybeOneOf.h"
 
 #include "jsstr.h"
@@ -33,7 +32,6 @@
 using namespace js;
 
 using js::frontend::IsIdentifier;
-using mozilla::ArrayLength;
 
 bool
 js::obj_construct(JSContext* cx, unsigned argc, Value* vp)

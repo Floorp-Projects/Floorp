@@ -32,13 +32,8 @@
 
 using namespace js;
 
-using JS::ubi::BreadthFirst;
-using JS::ubi::Edge;
-using JS::ubi::Node;
-
 using mozilla::Forward;
 using mozilla::Maybe;
-using mozilla::Move;
 using mozilla::Nothing;
 
 /* static */ DebuggerMemory*

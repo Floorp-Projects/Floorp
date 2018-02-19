@@ -23,12 +23,10 @@
 
 using namespace js;
 
-using mozilla::ArrayLength;
 using mozilla::IsNaN;
 using mozilla::NumberEqualsInt32;
 
 using JS::DoubleNaNValue;
-using JS::ForOfIterator;
 
 
 /*** HashableValue *******************************************************************************/

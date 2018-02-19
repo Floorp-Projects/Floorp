@@ -11,7 +11,6 @@
 #include "vm/JSScript-inl.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
@@ -65,10 +64,8 @@ using namespace js;
 using namespace js::gc;
 using namespace js::frontend;
 
-using mozilla::AsVariant;
 using mozilla::PodCopy;
 using mozilla::PodZero;
-using mozilla::RotateLeft;
 
 
 // Check that JSScript::data hasn't experienced obvious memory corruption.

@@ -72,7 +72,6 @@ using namespace js::selfhosted;
 using JS::AutoCheckCannotGC;
 using mozilla::IsInRange;
 using mozilla::Maybe;
-using mozilla::PodMove;
 
 static void
 selfHosting_WarningReporter(JSContext* cx, JSErrorReport* report)
