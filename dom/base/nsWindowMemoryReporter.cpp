@@ -20,6 +20,9 @@
 #include "js/MemoryMetrics.h"
 #include "nsQueryObject.h"
 #include "nsServiceManagerUtils.h"
+#ifdef MOZ_XUL
+#include "nsXULPrototypeCache.h"
+#endif
 
 using namespace mozilla;
 
@@ -629,6 +632,10 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
   // reporter needs to be passed |windowPaths|.
   xpc::JSReporter::CollectReports(&windowPaths, &topWindowPaths,
                                   aHandleReport, aData, aAnonymize);
+
+#ifdef MOZ_XUL
+  nsXULPrototypeCache::CollectMemoryReports(aHandleReport, aData);
+#endif
 
 #define REPORT(_path, _amount, _desc) \
   aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
