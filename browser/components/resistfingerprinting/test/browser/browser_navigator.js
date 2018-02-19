@@ -119,7 +119,7 @@ add_task(async function setup() {
   });
 
   let appVersion = parseInt(Services.appinfo.version);
-  let spoofedVersion = appVersion - ((appVersion - 3) % 7);
+  let spoofedVersion = appVersion - ((appVersion - 4) % 7);
   spoofedUserAgent = `Mozilla/5.0 (${SPOOFED_UA_OS[AppConstants.platform]}; rv:${spoofedVersion}.0) Gecko/20100101 Firefox/${spoofedVersion}.0`;
 });
 
