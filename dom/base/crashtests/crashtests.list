@@ -193,7 +193,6 @@ load 942979.html
 load 973401.html
 load 978646.html
 pref(dom.webcomponents.shadowdom.enabled,true) load 1024428-1.html
-load 1026714.html
 pref(dom.webcomponents.shadowdom.enabled,true) load 1027461-1.html
 pref(dom.webcomponents.shadowdom.enabled,true) load 1029710.html
 load 1154598.xhtml
