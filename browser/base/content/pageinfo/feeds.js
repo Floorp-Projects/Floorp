@@ -5,28 +5,56 @@
 
 // Via pageInfo.xul -> utilityOverlay.js
 /* import-globals-from ../utilityOverlay.js */
+/* import-globals-from ./pageInfo.js */
 
 function initFeedTab(feeds) {
-  for (let feed of feeds) {
-    let [name, type, url] = feed;
+  for (const [name, type, url] of feeds) {
     addRow(name, type, url);
   }
 
-  var feedListbox = document.getElementById("feedListbox");
+  const feedListbox = document.getElementById("feedListbox");
   document.getElementById("feedTab").hidden = feedListbox.getRowCount() == 0;
 }
 
-function onSubscribeFeed() {
-  var listbox = document.getElementById("feedListbox");
-  openUILinkIn(listbox.selectedItem.getAttribute("feedURL"), "current",
-               { ignoreAlt: true });
-}
-
 function addRow(name, type, url) {
-  var item = document.createElement("richlistitem");
-  item.setAttribute("feed", "true");
-  item.setAttribute("name", name);
-  item.setAttribute("type", type);
-  item.setAttribute("feedURL", url);
+  const item = document.createElement("richlistitem");
+
+  const top = document.createElement("hbox");
+  top.setAttribute("flex", "1");
+  item.appendChild(top);
+
+  const bottom = document.createElement("hbox");
+  bottom.setAttribute("flex", "1");
+  item.appendChild(bottom);
+
+  const nameLabel = document.createElement("label");
+  nameLabel.className = "feedTitle";
+  nameLabel.textContent = name;
+  nameLabel.setAttribute("flex", "1");
+  top.appendChild(nameLabel);
+
+  const typeLabel = document.createElement("label");
+  typeLabel.textContent = type;
+  top.appendChild(typeLabel);
+
+  const urlContainer = document.createElement("hbox");
+  urlContainer.setAttribute("flex", "1");
+  bottom.appendChild(urlContainer);
+
+  const urlLabel = document.createElement("label");
+  urlLabel.className = "text-link";
+  urlLabel.textContent = url;
+  urlLabel.setAttribute("tooltiptext", url);
+  urlLabel.addEventListener("click", ev => openUILink(this.value, ev));
+  urlContainer.appendChild(urlLabel);
+
+  const subscribeButton = document.createElement("button");
+  subscribeButton.className = "feed-subscribe";
+  subscribeButton.addEventListener("click",
+    () => openUILinkIn(url, "current", { ignoreAlt: true }));
+  subscribeButton.setAttribute("label", gBundle.getString("feedSubscribe"));
+  subscribeButton.setAttribute("accesskey", gBundle.getString("feedSubscribe.accesskey"));
+  bottom.appendChild(subscribeButton);
+
   document.getElementById("feedListbox").appendChild(item);
 }
