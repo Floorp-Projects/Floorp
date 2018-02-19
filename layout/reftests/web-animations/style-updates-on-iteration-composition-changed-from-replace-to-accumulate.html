@@ -22,9 +22,7 @@ accumulate</title>
   waitForIterationChange(anim).then(() => {
     // Changing iterationComposite updates the element style.
     anim.effect.iterationComposite = "accumulate";
-    requestAnimationFrame(() => {
-      // Now margin-left of the element should be 200px.
-      document.documentElement.classList.remove("reftest-wait");
-    });
+    // Now margin-left of the element should be 200px.
+    document.documentElement.classList.remove("reftest-wait");
   });
 </script>
