@@ -6,6 +6,8 @@
 
 #include "frontend/ParseNode-inl.h"
 
+#include "mozilla/FloatingPoint.h"
+
 #include "frontend/Parser.h"
 
 #include "vm/JSContext-inl.h"
@@ -13,7 +15,6 @@
 using namespace js;
 using namespace js::frontend;
 
-using mozilla::ArrayLength;
 using mozilla::IsFinite;
 
 #ifdef DEBUG

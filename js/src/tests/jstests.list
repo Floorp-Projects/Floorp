@@ -459,3 +459,11 @@ skip script test262/harness/detachArrayBuffer.js
 ####################################################
 # Tests disabled due to invalid test expectations  #
 ####################################################
+
+# https://github.com/tc39/test262/pull/972
+skip script test262/language/expressions/tagged-template/cache-identical-source-new-function.js
+skip script test262/language/expressions/tagged-template/cache-differing-expressions-new-function.js
+skip script test262/language/expressions/tagged-template/cache-differing-expressions.js
+skip script test262/language/expressions/tagged-template/cache-identical-source.js
+skip script test262/language/expressions/tagged-template/cache-differing-expressions-eval.js
+skip script test262/language/expressions/tagged-template/cache-identical-source-eval.js

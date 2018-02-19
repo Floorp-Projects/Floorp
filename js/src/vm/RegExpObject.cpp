@@ -38,7 +38,6 @@ using namespace js;
 
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
-using mozilla::Maybe;
 using mozilla::PodCopy;
 using js::frontend::TokenStream;
 

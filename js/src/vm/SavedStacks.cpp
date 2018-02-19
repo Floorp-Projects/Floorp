@@ -42,7 +42,6 @@
 
 using mozilla::AddToHash;
 using mozilla::DebugOnly;
-using mozilla::HashString;
 using mozilla::Maybe;
 using mozilla::Move;
 using mozilla::Nothing;

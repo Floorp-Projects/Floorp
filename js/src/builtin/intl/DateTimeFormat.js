@@ -53,8 +53,9 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
 
     var internalProps = std_Object_create(null);
 
-    // Compute effective locale.
     var DateTimeFormat = dateTimeFormatInternalProperties;
+
+    // Compute effective locale.
 
     // Step 10.
     var localeData = DateTimeFormat.localeData;
@@ -81,7 +82,7 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
     // Step 21.
     var formatOpt = lazyDateTimeFormatData.formatOpt;
 
-    // Step 16.
+    // Step 14.
     // Copy the hourCycle setting, if present, to the format options. But
     // only do this if no hour12 option is present, because the latter takes
     // precedence over hourCycle.
@@ -117,8 +118,6 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
 
     // Step 31.
     internalProps.pattern = pattern;
-
-    internalProps.boundFormat = undefined;
 
     // The caller is responsible for associating |internalProps| with the right
     // object using |setInternalProperties|.
@@ -187,20 +186,22 @@ function getDateTimeFormatInternals(obj) {
 }
 
 /**
- * UnwrapDateTimeFormat(dtf)
+ * 12.1.10 UnwrapDateTimeFormat( dtf )
  */
 function UnwrapDateTimeFormat(dtf, methodName) {
-    // Step 1.
+    // Step 1 (not applicable in our implementation).
+
+    // Step 2.
     if (IsObject(dtf) && !IsDateTimeFormat(dtf) && dtf instanceof GetDateTimeFormatConstructor())
         dtf = dtf[intlFallbackSymbol()];
 
-    // Step 2.
+    // Step 3.
     if (!IsObject(dtf) || !IsDateTimeFormat(dtf)) {
         ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "DateTimeFormat", methodName,
                        "DateTimeFormat");
     }
 
-    // Step 3.
+    // Step 4.
     return dtf;
 }
 
@@ -303,9 +304,6 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
     assert(IsObject(dateTimeFormat), "InitializeDateTimeFormat called with non-Object");
     assert(IsDateTimeFormat(dateTimeFormat),
            "InitializeDateTimeFormat called with non-DateTimeFormat");
-
-    // Steps 1-2 (These steps are no longer required and should be removed
-    // from the spec; https://github.com/tc39/ecma402/issues/115).
 
     // Lazy DateTimeFormat data has the following structure:
     //
@@ -448,6 +446,8 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
     initializeIntlObject(dateTimeFormat, "DateTimeFormat", lazyDateTimeFormatData);
 
     // 12.2.1, steps 4-5.
+    // TODO: spec issue - The current spec doesn't have the IsObject check,
+    // which means |Intl.DateTimeFormat.call(null)| is supposed to throw here.
     if (dateTimeFormat !== thisValue && IsObject(thisValue) &&
         thisValue instanceof GetDateTimeFormatConstructor())
     {
@@ -660,17 +660,19 @@ function ToDateTimeOptions(options, required, defaults) {
     assert(typeof required === "string", "ToDateTimeOptions");
     assert(typeof defaults === "string", "ToDateTimeOptions");
 
-    // Steps 1-3.
+    // Steps 1-2.
     if (options === undefined)
         options = null;
     else
         options = ToObject(options);
     options = std_Object_create(options);
 
-    // Step 4.
+    // Step 3.
     var needDefaults = true;
 
-    // Step 5.
+    // Step 4.
+    // TODO: spec issue - The spec requires to retrieve all options, so using
+    // the ||-operator with its lazy evaluation semantics is incorrect.
     if ((required === "date" || required === "any") &&
         (options.weekday !== undefined || options.year !== undefined ||
          options.month !== undefined || options.day !== undefined))
@@ -678,7 +680,9 @@ function ToDateTimeOptions(options, required, defaults) {
         needDefaults = false;
     }
 
-    // Step 6.
+    // Step 5.
+    // TODO: spec issue - The spec requires to retrieve all options, so using
+    // the ||-operator with its lazy evaluation semantics is incorrect.
     if ((required === "time" || required === "any") &&
         (options.hour !== undefined || options.minute !== undefined ||
          options.second !== undefined))
@@ -686,7 +690,7 @@ function ToDateTimeOptions(options, required, defaults) {
         needDefaults = false;
     }
 
-    // Step 7.
+    // Step 6.
     if (needDefaults && (defaults === "date" || defaults === "all")) {
         // The specification says to call [[DefineOwnProperty]] with false for
         // the Throw parameter, while Object.defineProperty uses true. For the
@@ -697,7 +701,7 @@ function ToDateTimeOptions(options, required, defaults) {
         _DefineDataProperty(options, "day", "numeric");
     }
 
-    // Step 8.
+    // Step 7.
     if (needDefaults && (defaults === "time" || defaults === "all")) {
         // See comment for step 7.
         _DefineDataProperty(options, "hour", "numeric");
@@ -705,7 +709,7 @@ function ToDateTimeOptions(options, required, defaults) {
         _DefineDataProperty(options, "second", "numeric");
     }
 
-    // Step 9.
+    // Step 8.
     return options;
 }
 
@@ -714,21 +718,26 @@ function ToDateTimeOptions(options, required, defaults) {
  * matching (possibly fallback) locale. Locales appear in the same order in the
  * returned list as in the input list.
  *
- * Spec: ECMAScript Internationalization API Specification, 12.2.2.
+ * Spec: ECMAScript Internationalization API Specification, 12.3.2.
  */
 function Intl_DateTimeFormat_supportedLocalesOf(locales /*, options*/) {
     var options = arguments.length > 1 ? arguments[1] : undefined;
 
+    // Step 1.
     var availableLocales = callFunction(dateTimeFormatInternalProperties.availableLocales,
                                         dateTimeFormatInternalProperties);
+
+    // Step 2.
     var requestedLocales = CanonicalizeLocaleList(locales);
+
+    // Step 3.
     return SupportedLocales(availableLocales, requestedLocales, options);
 }
 
 /**
  * DateTimeFormat internal properties.
  *
- * Spec: ECMAScript Internationalization API Specification, 9.1 and 12.2.3.
+ * Spec: ECMAScript Internationalization API Specification, 9.1 and 12.3.3.
  */
 var dateTimeFormatInternalProperties = {
     localeData: dateTimeFormatLocaleData,
@@ -766,7 +775,7 @@ function dateTimeFormatLocaleData() {
 /**
  * Function to be bound and returned by Intl.DateTimeFormat.prototype.format.
  *
- * Spec: ECMAScript Internationalization API Specification, 12.3.2.
+ * Spec: ECMAScript Internationalization API Specification, 12.1.5.
  */
 function dateTimeFormatFormatToBind(date) {
     // Step 1.
@@ -788,7 +797,7 @@ function dateTimeFormatFormatToBind(date) {
  * representing the result of calling ToNumber(date) according to the
  * effective locale and the formatting options of this DateTimeFormat.
  *
- * Spec: ECMAScript Internationalization API Specification, 12.3.2.
+ * Spec: ECMAScript Internationalization API Specification, 12.4.3.
  */
 function Intl_DateTimeFormat_format_get() {
     // Steps 1-3.
@@ -798,12 +807,11 @@ function Intl_DateTimeFormat_format_get() {
 
     // Step 4.
     if (internals.boundFormat === undefined) {
-        // Step 4.a.
-        var F = dateTimeFormatFormatToBind;
+        // Steps 4.a-b.
+        var F = callFunction(FunctionBind, dateTimeFormatFormatToBind, dtf);
 
-        // Steps 4.b-d.
-        var bf = callFunction(FunctionBind, F, dtf);
-        internals.boundFormat = bf;
+        // Step 4.c.
+        internals.boundFormat = F;
     }
 
     // Step 5.
@@ -813,6 +821,8 @@ _SetCanonicalName(Intl_DateTimeFormat_format_get, "get format");
 
 /**
  * Intl.DateTimeFormat.prototype.formatToParts ( date )
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.4.4.
  */
 function Intl_DateTimeFormat_formatToParts(date) {
     // Step 1.
@@ -837,14 +847,15 @@ function Intl_DateTimeFormat_formatToParts(date) {
 /**
  * Returns the resolved options for a DateTimeFormat object.
  *
- * Spec: ECMAScript Internationalization API Specification, 12.3.3 and 12.4.
+ * Spec: ECMAScript Internationalization API Specification, 12.4.5.
  */
 function Intl_DateTimeFormat_resolvedOptions() {
-    // Invoke |UnwrapDateTimeFormat| per introduction of section 12.3.
+    // Steps 1-3.
     var dtf = UnwrapDateTimeFormat(this, "resolvedOptions");
 
     var internals = getDateTimeFormatInternals(dtf);
 
+    // Steps 4-5.
     var result = {
         locale: internals.locale,
         calendar: internals.calendar,
@@ -862,6 +873,8 @@ function Intl_DateTimeFormat_resolvedOptions() {
     }
 
     resolveICUPattern(internals.pattern, result);
+
+    // Step 6.
     return result;
 }
 

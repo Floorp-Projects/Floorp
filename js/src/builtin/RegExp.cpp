@@ -25,9 +25,7 @@
 using namespace js;
 using namespace js::unicode;
 
-using mozilla::ArrayLength;
 using mozilla::CheckedInt;
-using mozilla::Maybe;
 
 /*
  * ES 2017 draft rev 6a13789aa9e7c6de4e96b7d3e24d9e6eba6584ad 21.2.5.2.2

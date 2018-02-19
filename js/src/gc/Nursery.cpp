@@ -36,7 +36,6 @@
 using namespace js;
 using namespace gc;
 
-using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::PodCopy;
 using mozilla::TimeDuration;
