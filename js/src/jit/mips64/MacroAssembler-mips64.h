@@ -733,6 +733,9 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
 
     void convertUInt64ToDouble(Register src, FloatRegister dest);
 
+    void wasmTruncateToI64(FloatRegister input, Register output, MIRType fromType,
+                           bool isUnsigned, Label* oolEntry, Label* oolRejoin);
+
     void breakpoint();
 
     void checkStackAlignment();
@@ -755,6 +758,11 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
 
   protected:
     bool buildOOLFakeExitFrame(void* fakeReturnAddr);
+
+    void wasmLoadI64Impl(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
+                         Register ptrScratch, Register64 output, Register tmp);
+    void wasmStoreI64Impl(const wasm::MemoryAccessDesc& access, Register64 value, Register memoryBase,
+                          Register ptr, Register ptrScratch, Register tmp);
 
   public:
     CodeOffset labelForPatch() {
