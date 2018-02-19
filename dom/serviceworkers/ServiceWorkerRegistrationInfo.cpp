@@ -509,6 +509,24 @@ ServiceWorkerRegistrationInfo::GetByID(uint64_t aID) const
   return nullptr;
 }
 
+ServiceWorkerInfo*
+ServiceWorkerRegistrationInfo::GetByDescriptor(const ServiceWorkerDescriptor& aDescriptor) const
+{
+  if (mActiveWorker && mActiveWorker->Descriptor().Matches(aDescriptor)) {
+    return mActiveWorker;
+  }
+  if (mWaitingWorker && mWaitingWorker->Descriptor().Matches(aDescriptor)) {
+    return mWaitingWorker;
+  }
+  if (mInstallingWorker && mInstallingWorker->Descriptor().Matches(aDescriptor)) {
+    return mInstallingWorker;
+  }
+  if (mEvaluatingWorker && mEvaluatingWorker->Descriptor().Matches(aDescriptor)) {
+    return mEvaluatingWorker;
+  }
+  return nullptr;
+}
+
 void
 ServiceWorkerRegistrationInfo::SetEvaluating(ServiceWorkerInfo* aServiceWorker)
 {
