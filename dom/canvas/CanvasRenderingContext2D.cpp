@@ -425,7 +425,7 @@ public:
     dt->SetTransform(transform);
 
     if (transform.Invert()) {
-      gfx::Rect dtBounds(0, 0, aRect.Width(), aRect.Height());
+      gfx::Rect dtBounds(0, 0, aRect.width, aRect.height);
       gfx::Rect fillRect = transform.TransformBounds(dtBounds);
       dt->FillRect(fillRect, CanvasGeneralPattern().ForStyle(mCtx, aStyle, dt));
     }
@@ -1487,7 +1487,7 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
 bool
 CanvasRenderingContext2D::CopyBufferProvider(PersistentBufferProvider& aOld,
                                              DrawTarget& aTarget,
-                                             const IntRect& aCopyRect)
+                                             IntRect aCopyRect)
 {
   // Borrowing the snapshot must be done after ReturnTarget.
   RefPtr<SourceSurface> snapshot = aOld.BorrowSnapshot();
@@ -4217,7 +4217,7 @@ CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& aOptions, ErrorRe
 
   // get the bounds of the current path. They are relative to the canvas
   gfx::Rect bounds(path->GetBounds(mTarget->GetTransform()));
-  if (bounds.IsZeroArea() || !bounds.IsFinite()) {
+  if ((bounds.width == 0) || (bounds.height == 0) || !bounds.IsFinite()) {
     // The specified region has no pixels.
     aError.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;
@@ -4281,7 +4281,7 @@ CanvasRenderingContext2D::GetHitRegionRect(Element* aElement, nsRect& aRect)
     RegionInfo& info = mHitRegionsOptions[x];
     if (info.mElement == aElement) {
       gfx::Rect bounds(info.mPath->GetBounds());
-      gfxRect rect(bounds.X(), bounds.Y(), bounds.Width(), bounds.Height());
+      gfxRect rect(bounds.x, bounds.y, bounds.width, bounds.height);
       aRect = nsLayoutUtils::RoundGfxRectToAppRect(rect, AppUnitsPerCSSPixel());
 
       return true;
@@ -4746,7 +4746,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   }
 
   // correct bounding box to get it to be the correct size/position
-  processor.mBoundingBox.SetWidth(totalWidth);
+  processor.mBoundingBox.width = totalWidth;
   processor.mBoundingBox.MoveBy(gfxPoint(processor.mPt.x, processor.mPt.y));
 
   processor.mPt.x *= processor.mAppUnitsPerDevPixel;
@@ -5403,9 +5403,10 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
                           gfx::Rect* aBounds,
                           gfx::Rect aDest,
                           gfx::Rect aSrc,
-                          const gfx::IntSize& aImgSize)
+                          gfx::IntSize aImgSize)
 {
-  MOZ_ASSERT(!aSrc.IsEmpty(), "Need positive source width and height");
+  MOZ_ASSERT(aSrc.width > 0 && aSrc.height > 0,
+             "Need positive source width and height");
 
   AdjustedTarget tempTarget(this, aBounds->IsEmpty() ? nullptr: aBounds);
   if (!tempTarget) {
@@ -5422,7 +5423,7 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
   aDest.Scale(contextScale.width, contextScale.height);
 
   // Scale the image size to the dest rect, and adjust the source rect to match.
-  gfxSize scale(aDest.Width() / aSrc.Width(), aDest.Height() / aSrc.Height());
+  gfxSize scale(aDest.width / aSrc.width, aDest.height / aSrc.height);
   IntSize scaledImageSize = IntSize::Ceil(aImgSize.width * scale.width,
                                           aImgSize.height * scale.height);
   aSrc.Scale(scale.width, scale.height);
@@ -5439,8 +5440,7 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
   context->SetMatrixDouble(contextMatrix.
                            PreScale(1.0 / contextScale.width,
                                     1.0 / contextScale.height).
-                           PreTranslate(aDest.X() - aSrc.X(),
-                                        aDest.Y() - aSrc.Y()));
+                           PreTranslate(aDest.x - aSrc.x, aDest.y - aSrc.y));
 
   // FLAG_CLAMP is added for increased performance, since we never tile here.
   uint32_t modifiedFlags = aImage.mDrawingFlags | imgIContainer::FLAG_CLAMP;
@@ -5450,7 +5450,7 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
 
   auto result = aImage.mImgContainer->
     Draw(context, scaledImageSize,
-         ImageRegion::Create(gfxRect(aSrc.X(), aSrc.Y(), aSrc.Width(), aSrc.Height())),
+         ImageRegion::Create(gfxRect(aSrc.x, aSrc.y, aSrc.width, aSrc.height)),
          aImage.mWhichFrame, SamplingFilter::GOOD, Some(svgContext), modifiedFlags, CurrentState().globalAlpha);
 
   if (result != ImgDrawResult::SUCCESS) {
@@ -5898,7 +5898,7 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
     MOZ_ASSERT(!isShared);        // Should not happen, data was created above
 
     uint32_t srcStride = rawData.mStride;
-    uint8_t* src = rawData.mData + srcReadRect.Y() * srcStride + srcReadRect.X() * 4;
+    uint8_t* src = rawData.mData + srcReadRect.y * srcStride + srcReadRect.x * 4;
 
     // Return all-white, opaque pixel data if no permission.
     if (usePlaceholder) {
@@ -5906,7 +5906,7 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
       break;
     }
 
-    uint8_t* dst = data + dstWriteRect.Y() * (aWidth * 4) + dstWriteRect.X() * 4;
+    uint8_t* dst = data + dstWriteRect.y * (aWidth * 4) + dstWriteRect.x * 4;
 
     if (mOpaque) {
       SwizzleData(src, srcStride, SurfaceFormat::X8R8G8B8_UINT32,
@@ -6066,7 +6066,7 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t aX, int32_t aY, uint32_t
   int32_t dstStride;
   SurfaceFormat dstFormat;
   if (mTarget->LockBits(&lockedBits, &dstSize, &dstStride, &dstFormat)) {
-    dstData = lockedBits + dirtyRect.Y() * dstStride + dirtyRect.X() * 4;
+    dstData = lockedBits + dirtyRect.y * dstStride + dirtyRect.x * 4;
   } else {
     sourceSurface =
       Factory::CreateDataSourceSurface(dirtyRect.Size(),
@@ -6093,7 +6093,7 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t aX, int32_t aY, uint32_t
   }
 
   IntRect srcRect = dirtyRect - IntPoint(aX, aY);
-  uint8_t* srcData = aArray->Data() + srcRect.Y() * (aW * 4) + srcRect.X() * 4;
+  uint8_t* srcData = aArray->Data() + srcRect.y * (aW * 4) + srcRect.x * 4;
 
   PremultiplyData(srcData, aW * 4, SurfaceFormat::R8G8B8A8,
                   dstData, dstStride,
@@ -6107,7 +6107,7 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t aX, int32_t aY, uint32_t
     mTarget->CopySurface(sourceSurface, dirtyRect - dirtyRect.TopLeft(), dirtyRect.TopLeft());
   }
 
-  Redraw(gfx::Rect(dirtyRect.X(), dirtyRect.Y(), dirtyRect.Width(), dirtyRect.Height()));
+  Redraw(gfx::Rect(dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height));
 
   return NS_OK;
 }

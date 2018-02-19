@@ -349,10 +349,14 @@ WebMDemuxer::ReadMetadata()
                                params.height - cropV);
 
       // If the cropping data appears invalid then use the frame data
-      if (pictureRect.IsEmpty() ||
-          pictureRect.X() < 0 ||
-          pictureRect.Y() < 0) {
-        pictureRect.SetRect(0, 0, params.width, params.height);
+      if (pictureRect.width <= 0 ||
+          pictureRect.height <= 0 ||
+          pictureRect.x < 0 ||
+          pictureRect.y < 0) {
+        pictureRect.x = 0;
+        pictureRect.y = 0;
+        pictureRect.width = params.width;
+        pictureRect.height = params.height;
       }
 
       // Validate the container-reported frame and pictureRect sizes. This

@@ -118,10 +118,11 @@ SVGRectElement::GetGeometryBounds(Rect* aBounds,
                                   const Matrix& aToBoundsSpace,
                                   const Matrix* aToNonScalingStrokeSpace)
 {
-  Float x, y, width, height, rx, ry;
-  GetAnimatedLengthValues(&x, &y, &width, &height, &rx, &ry, nullptr);
+  Rect rect;
+  Float rx, ry;
+  GetAnimatedLengthValues(&rect.x, &rect.y, &rect.width,
+                          &rect.height, &rx, &ry, nullptr);
 
-  Rect rect(x, y, width, height);
   if (rect.IsEmpty()) {
     // Rendering of the element disabled
     rect.SetEmpty(); // Make sure width/height are zero and not negative
