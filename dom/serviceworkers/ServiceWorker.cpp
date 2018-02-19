@@ -56,7 +56,7 @@ ServiceWorker::Create(nsIGlobalObject* aOwner,
     return ref.forget();
   }
 
-  RefPtr<ServiceWorkerInfo> info = reg->GetByID(aDescriptor.Id());
+  RefPtr<ServiceWorkerInfo> info = reg->GetByDescriptor(aDescriptor);
   if (!info) {
     return ref.forget();
   }
