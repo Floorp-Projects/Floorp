@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Autoplay policy window</title>
+    <style>
+      video {
+        width: 50%;
+        height: 50%;
+      }
+    </style>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <script type="text/javascript" src="manifest.js"></script>
+    <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+  </head>
+  <body>
+    <pre id="test">
+      <script>
+
+        function testAutoplayInWindow(test_case, parent_window) {
+          log("testAutoplayInWindow: " + test_case.name);
+          playAndPostResult(test_case, parent_window);
+        }
+
+        async function testAutoplayInChildFrame(test_case, parent_window) {
+          log("testAutoplayInChildFrame: " + test_case.name);
+          // Create a child iframe...
+          var frame = document.createElement("iframe");
+          var origin = test_case.same_origin_child
+            ? "http://mochi.test:8888" : "http://example.org";
+          frame.src = origin + "/tests/dom/media/test/file_autoplay_policy_activation_frame.html";
+          // Wait for it to load...
+          document.body.appendChild(frame);
+          await once(frame, "load");
+          // Click the iframe to activate if appropriate.
+          if (test_case.activated_child) {
+            synthesizeMouseAtCenter(frame, {});
+          }
+          // Ask the child iframe to try to play video.
+          frame.contentWindow.postMessage(test_case, "*");
+          // Wait for the iframe to tell us whether it could play video.
+          let result = await nextWindowMessage();
+          // Report whether the iframe could play to the parent.
+          parent_window.postMessage(result.data, "*");
+        }
+
+        nextWindowMessage().then(
+          (event) => {
+            let test_case = event.data;
+            // Click the window to activate if appropriate.
+            if (test_case.activated_parent) {
+              synthesizeMouseAtCenter(document.body, {});
+            }
+            let parent_window = event.source;
+            if (test_case.same_origin_child === undefined) {
+              testAutoplayInWindow(test_case, parent_window);
+            } else {
+              testAutoplayInChildFrame(test_case, parent_window);
+            }
+          });
+
+      </script>
+    </pre>
+  </body>
+</html>
