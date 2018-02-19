@@ -1079,8 +1079,7 @@ Inspector.prototype = {
     // Restore the highlighter states prior to emitting "new-root".
     yield Promise.all([
       this.highlighters.restoreFlexboxState(),
-      this.highlighters.restoreGridState(),
-      this.highlighters.restoreShapeState()
+      this.highlighters.restoreGridState()
     ]);
 
     this.emit("new-root");
@@ -1313,7 +1312,7 @@ Inspector.prototype = {
 
     let markupDestroyer = this._destroyMarkup();
 
-    this.highlighters.destroy();
+    let highlighterDestroyer = this.highlighters.destroy();
     this.prefsObserver.destroy();
     this.reflowTracker.destroy();
     this.search.destroy();
@@ -1333,6 +1332,7 @@ Inspector.prototype = {
     this.target = null;
 
     this._panelDestroyer = promise.all([
+      highlighterDestroyer,
       cssPropertiesDestroyer,
       markupDestroyer,
       sidebarDestroyer,

@@ -843,7 +843,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     }).join(", ");
     polygonDef = `polygon(${polygonDef}) ${this.geometryBox}`.trim();
 
-    this.currentNode.style.setProperty(this.property, polygonDef, "important");
+    this.emit("highlighter-event", { type: "shape-change", value: polygonDef });
   }
 
   /**
@@ -922,7 +922,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
           `inset(${newTop} ${newRight} ${newBottom} ${newLeft})`;
     insetDef += (this.geometryBox) ? this.geometryBox : "";
 
-    this.currentNode.style.setProperty(this.property, insetDef, "important");
+    this.emit("highlighter-event", { type: "shape-change", value: insetDef });
   }
 
   /**
@@ -955,8 +955,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   }
 
   /**
-   * Set the inline style of the polygon, replacing the given point with the given x/y
-   * coords.
+   * Update the dragged polygon point with the given x/y coords and update
+   * the element style.
    * @param {Number} pageX the new x coordinate of the point
    * @param {Number} pageY the new y coordinate of the point
    */
@@ -976,11 +976,11 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     }).join(", ");
     polygonDef = `polygon(${polygonDef}) ${this.geometryBox}`.trim();
 
-    this.currentNode.style.setProperty(this.property, polygonDef, "important");
+    this.emit("highlighter-event", { type: "shape-change", value: polygonDef });
   }
 
   /**
-   * Set the inline style of the polygon, adding a new point.
+   * Add new point to the polygon defintion and update element style.
    * TODO: Bug 1436054 - Do not default to percentage unit when inserting new point.
    * https://bugzilla.mozilla.org/show_bug.cgi?id=1436054
    *
@@ -998,11 +998,11 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
     this.hoveredPoint = after + 1;
     this._emitHoverEvent(this.hoveredPoint);
-    this.currentNode.style.setProperty(this.property, polygonDef, "important");
+    this.emit("highlighter-event", { type: "shape-change", value: polygonDef });
   }
 
   /**
-   * Set the inline style of the polygon, deleting the given point.
+   * Remove point from polygon defintion and update the element style.
    * @param {Number} point the index of the point to delete
    */
   _deletePolygonPoint(point) {
@@ -1016,7 +1016,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
     this.hoveredPoint = null;
     this._emitHoverEvent(this.hoveredPoint);
-    this.currentNode.style.setProperty(this.property, polygonDef, "important");
+    this.emit("highlighter-event", { type: "shape-change", value: polygonDef });
   }
   /**
    * Handle a click when highlighting a circle.
@@ -1060,8 +1060,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   }
 
   /**
-   * Set the inline style of the circle, setting the center/radius according to the
-   * mouse position.
+   * Set the center/radius of the circle according to the mouse position and
+   * update the element style.
    * @param {String} point either "center" or "radius"
    * @param {Number} pageX the x coordinate of the mouse position, in terms of %
    *        relative to the element
@@ -1080,7 +1080,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       // if not defined by the user, geometryBox will be an empty string; trim() cleans up
       let circleDef = `circle(${radius} at ${newCx} ${newCy}) ${this.geometryBox}`.trim();
 
-      this.currentNode.style.setProperty(this.property, circleDef, "important");
+      this.emit("highlighter-event", { type: "shape-change", value: circleDef });
     } else if (point === "radius") {
       let { value, unit, origRadius, ratio } = this[_dragging];
       // convert center point to px, then get distance between center and mouse.
@@ -1093,7 +1093,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
       let circleDef = `circle(${newRadius} at ${cx} ${cy}) ${this.geometryBox}`.trim();
 
-      this.currentNode.style.setProperty(this.property, circleDef, "important");
+      this.emit("highlighter-event", { type: "shape-change", value: circleDef });
     }
   }
 
@@ -1147,8 +1147,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   }
 
   /**
-   * Set the inline style of the ellipse, setting the center/rx/ry according to the
-   * mouse position.
+   * Set center/rx/ry of the ellispe according to the mouse position and update the
+   * element style.
    * @param {String} point "center", "rx", or "ry"
    * @param {Number} pageX the x coordinate of the mouse position, in terms of %
    *        relative to the element
@@ -1168,7 +1168,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       let ellipseDef =
         `ellipse(${rx} ${ry} at ${newCx} ${newCy}) ${this.geometryBox}`.trim();
 
-      this.currentNode.style.setProperty(this.property, ellipseDef, "important");
+      this.emit("highlighter-event", { type: "shape-change", value: ellipseDef });
     } else if (point === "rx") {
       let { value, unit, origRadius, ratio } = this[_dragging];
       let newRadiusPercent = Math.abs(percentX - this.coordinates.cx);
@@ -1179,7 +1179,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       let ellipseDef =
         `ellipse(${newRadius} ${ry} at ${cx} ${cy}) ${this.geometryBox}`.trim();
 
-      this.currentNode.style.setProperty(this.property, ellipseDef, "important");
+      this.emit("highlighter-event", { type: "shape-change", value: ellipseDef });
     } else if (point === "ry") {
       let { value, unit, origRadius, ratio } = this[_dragging];
       let newRadiusPercent = Math.abs(percentY - this.coordinates.cy);
@@ -1190,7 +1190,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       let ellipseDef =
         `ellipse(${rx} ${newRadius} at ${cx} ${cy}) ${this.geometryBox}`.trim();
 
-      this.currentNode.style.setProperty(this.property, ellipseDef, "important");
+      this.emit("highlighter-event", { type: "shape-change", value: ellipseDef });
     }
   }
 
@@ -1220,8 +1220,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   }
 
   /**
-   * Set the inline style of the inset, setting top/left/right/bottom according to the
-   * mouse position.
+   * Set the top/left/right/bottom of the inset shape according to the mouse position
+   * and update the element style.
    * @param {String} point "top", "left", "right", or "bottom"
    * @param {Number} pageX the x coordinate of the mouse position, in terms of %
    *        relative to the element
@@ -1253,7 +1253,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
     insetDef += (this.geometryBox) ? this.geometryBox : "";
 
-    this.currentNode.style.setProperty(this.property, insetDef, "important");
+    this.emit("highlighter-event", { type: "shape-change", value: insetDef });
   }
 
   _handleMouseMoveNotDragging(pageX, pageY) {
