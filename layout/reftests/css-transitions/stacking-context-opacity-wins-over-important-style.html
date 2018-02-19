@@ -35,8 +35,6 @@ window.addEventListener("load", () => {
   target.style.setProperty("opacity", "0", "important");
   getComputedStyle(target).opacity;
 
-  requestAnimationFrame(() => {
-    document.documentElement.classList.remove("reftest-wait");
-  });
+  document.documentElement.classList.remove("reftest-wait");
 });
 </script>
