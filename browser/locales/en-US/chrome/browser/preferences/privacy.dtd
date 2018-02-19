@@ -70,11 +70,8 @@
 
 <!ENTITY  dontrememberDescription.label  "&brandShortName; will use the same settings as private browsing, and will not remember any history as you browse the Web.">
 
-<!-- LOCALIZATION NOTE (dontrememberActions.pre.label): include a trailing space as needed -->
-<!-- LOCALIZATION NOTE (dontrememberActions.post.label): include a starting space as needed -->
-<!ENTITY  dontrememberActions.pre.label          "You may also want to ">
-<!ENTITY  dontrememberActions.clearHistory.label "clear all current history">
-<!ENTITY  dontrememberActions.post.label         ".">
+<!ENTITY  clearHistoryButton.label       "Clear History…">
+<!ENTITY  clearHistoryButton.accesskey   "s">
 
 <!ENTITY  privateBrowsingPermanent2.label "Always use private browsing mode">
 <!ENTITY  privateBrowsingPermanent2.accesskey "p">

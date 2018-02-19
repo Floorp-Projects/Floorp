@@ -75,14 +75,8 @@
     <hbox>
       <menulist id="historyMode">
         <menupopup>
-          <menuitem label="&historyHeader.remember.label;" value="remember" searchkeywords="&rememberDescription.label;
-                                                                                            &dontrememberActions.pre.label;
-                                                                                            &dontrememberActions.clearHistory.label;
-                                                                                            &dontrememberActions.post.label;"/>
-          <menuitem label="&historyHeader.dontremember.label;" value="dontremember" searchkeywords="&dontrememberDescription.label;
-                                                                                                    &dontrememberActions.pre.label;
-                                                                                                    &dontrememberActions.clearHistory.label;
-                                                                                                    &dontrememberActions.post.label;"/>
+          <menuitem label="&historyHeader.remember.label;" value="remember" searchkeywords="&rememberDescription.label;"/>
+          <menuitem label="&historyHeader.dontremember.label;" value="dontremember" searchkeywords="&dontrememberDescription.label;"/>
           <menuitem label="&historyHeader.custom.label;" value="custom" searchkeywords="&privateBrowsingPermanent2.label;
                                                                                         &rememberHistory2.label;
                                                                                         &rememberSearchForm.label;
@@ -102,71 +96,74 @@
     </hbox>
     <label>&historyHeader.post.label;</label>
   </hbox>
-  <deck id="historyPane">
-    <vbox id="historyRememberPane">
-      <hbox align="center" flex="1">
-        <vbox flex="1">
-          <description>&rememberDescription.label;</description>
-          <description>&dontrememberActions.pre.label;<label
-          class="text-link" id="historyRememberClear"
-          >&dontrememberActions.clearHistory.label;</label>&dontrememberActions.post.label;</description>
-        </vbox>
-      </hbox>
-    </vbox>
-    <vbox id="historyDontRememberPane">
-      <hbox align="center" flex="1">
-        <vbox flex="1">
-          <description>&dontrememberDescription.label;</description>
-          <description>&dontrememberActions.pre.label;<label
-          class="text-link" id="historyDontRememberClear"
-          >&dontrememberActions.clearHistory.label;</label>&dontrememberActions.post.label;</description>
-        </vbox>
-      </hbox>
-    </vbox>
-    <vbox id="historyCustomPane">
-      <vbox>
-        <checkbox id="privateBrowsingAutoStart"
-                  label="&privateBrowsingPermanent2.label;"
-                  accesskey="&privateBrowsingPermanent2.accesskey;"
-                  preference="browser.privatebrowsing.autostart"/>
-        <vbox class="indent">
-          <checkbox id="rememberHistory"
-                    label="&rememberHistory2.label;"
-                    accesskey="&rememberHistory2.accesskey;"
-                    preference="places.history.enabled"/>
-          <checkbox id="rememberForms"
-                    label="&rememberSearchForm.label;"
-                    accesskey="&rememberSearchForm.accesskey;"
-                    preference="browser.formfill.enable"/>
-          <hbox id="clearDataBox"
-                align="center">
-            <checkbox id="alwaysClear"
-                      preference="privacy.sanitize.sanitizeOnShutdown"
-                      label="&clearOnClose.label;"
-                      accesskey="&clearOnClose.accesskey;"
-                      flex="1" />
-            <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-            <hbox>
-              <button id="clearDataSettings"
-                      class="accessory-button"
-                      label="&clearOnCloseSettings.label;"
-                      accesskey="&clearOnCloseSettings.accesskey;"
-                      searchkeywords="&clearDataSettings3.label;
-                                      &historySection.label;
-                                      &itemHistoryAndDownloads.label;
-                                      &itemCookies.label;
-                                      &itemActiveLogins.label;
-                                      &itemCache.label;
-                                      &itemFormSearchHistory.label;
-                                      &dataSection.label;
-                                      &itemSitePreferences.label;
-                                      &itemOfflineApps.label;"/>
+  <hbox>
+    <deck id="historyPane" flex="1">
+      <vbox id="historyRememberPane">
+        <hbox align="center" flex="1">
+          <vbox flex="1">
+            <description>&rememberDescription.label;</description>
+          </vbox>
+        </hbox>
+      </vbox>
+      <vbox id="historyDontRememberPane">
+        <hbox align="center" flex="1">
+          <vbox flex="1">
+            <description>&dontrememberDescription.label;</description>
+          </vbox>
+        </hbox>
+      </vbox>
+      <vbox id="historyCustomPane">
+        <vbox>
+          <checkbox id="privateBrowsingAutoStart"
+                    label="&privateBrowsingPermanent2.label;"
+                    accesskey="&privateBrowsingPermanent2.accesskey;"
+                    preference="browser.privatebrowsing.autostart"/>
+          <vbox class="indent">
+            <checkbox id="rememberHistory"
+                      label="&rememberHistory2.label;"
+                      accesskey="&rememberHistory2.accesskey;"
+                      preference="places.history.enabled"/>
+            <checkbox id="rememberForms"
+                      label="&rememberSearchForm.label;"
+                      accesskey="&rememberSearchForm.accesskey;"
+                      preference="browser.formfill.enable"/>
+            <hbox id="clearDataBox"
+                  align="center">
+              <checkbox id="alwaysClear"
+                        preference="privacy.sanitize.sanitizeOnShutdown"
+                        label="&clearOnClose.label;"
+                        accesskey="&clearOnClose.accesskey;"
+                        flex="1" />
+              <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+              <hbox>
+                <button id="clearDataSettings"
+                        class="accessory-button"
+                        label="&clearOnCloseSettings.label;"
+                        accesskey="&clearOnCloseSettings.accesskey;"
+                        searchkeywords="&clearDataSettings3.label;
+                                        &historySection.label;
+                                        &itemHistoryAndDownloads.label;
+                                        &itemCookies.label;
+                                        &itemActiveLogins.label;
+                                        &itemCache.label;
+                                        &itemFormSearchHistory.label;
+                                        &dataSection.label;
+                                        &itemSitePreferences.label;
+                                        &itemOfflineApps.label;"/>
+              </hbox>
             </hbox>
-          </hbox>
+          </vbox>
         </vbox>
       </vbox>
+    </deck>
+    <vbox align="end">
+      <button id="clearHistoryButton"
+              class="accessory-button"
+              icon="clear"
+              label="&clearHistoryButton.label;"
+              accesskey="&clearHistoryButton.accesskey;"/>
     </vbox>
-  </deck>
+  </hbox>
 </groupbox>
 
 <!-- Site Data -->

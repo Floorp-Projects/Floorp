@@ -125,7 +125,7 @@ async function connectionDialog(aBrowser) {
 
 async function clearRecentHistoryDialog(aBrowser) {
   await ContentTask.spawn(aBrowser, null, async function() {
-    content.document.getElementById("historyRememberClear").click();
+    content.document.getElementById("clearHistoryButton").click();
   });
 }
 

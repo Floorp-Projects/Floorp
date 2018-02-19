@@ -268,17 +268,11 @@ var gPrivacyPane = {
       gPrivacyPane.updatePrivacyMicroControls();
       gPrivacyPane.updateAutostart();
     });
-    setEventListener("historyRememberClear", "click", function(event) {
-      if (event.button == 0) {
-        gPrivacyPane.clearPrivateDataNow(false);
-      }
-      return false;
-    });
-    setEventListener("historyDontRememberClear", "click", function(event) {
-      if (event.button == 0) {
-        gPrivacyPane.clearPrivateDataNow(true);
-      }
-      return false;
+    setEventListener("clearHistoryButton", "command", function() {
+      let historyMode = document.getElementById("historyMode");
+      // Select "everything" in the clear history dialog if the
+      // user has set their history mode to never remember history.
+      gPrivacyPane.clearPrivateDataNow(historyMode.value == "dontremember");
     });
     setEventListener("openSearchEnginePreferences", "click", function(event) {
       if (event.button == 0) {
