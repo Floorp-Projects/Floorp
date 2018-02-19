@@ -14,7 +14,7 @@ fn main() {
 // File implements Read
 fn open_hello_world() -> std::io::Result<Vec<u8>> {
     let f = File::open("examples/hello_world.txt")?;
-    let mut z = ZlibEncoder::new(f, Compression::Fast);
+    let mut z = ZlibEncoder::new(f, Compression::fast());
     let mut buffer = [0;50];
     let byte_count = z.read(&mut buffer)?;
     Ok(buffer[0..byte_count].to_vec())
