@@ -24,14 +24,13 @@ add_task(function* () {
   let {inspector, view} = yield openRuleView();
   let highlighters = view.highlighters;
 
+  info("Select a node with a shape value");
+  let onHighlighterArmed = highlighters.once("shapes-highlighter-armed");
   yield selectNode("#shape", inspector);
+  info("Wait for shapes highlighter swatch trigger to be ready");
+  yield onHighlighterArmed;
   let container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
   let shapesToggle = container.querySelector(".ruleview-shapeswatch");
-
-  info("Checking the initial state of the CSS shape toggle in the rule-view.");
-  ok(!highlighters.highlighters[HIGHLIGHTER_TYPE],
-    "No CSS shapes highlighter exists in the rule-view.");
-  ok(!highlighters.shapesHighlighterShown, "No CSS shapes highlighter is shown.");
 
   info("Toggling ON the CSS shapes highlighter with transform mode on.");
   let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
