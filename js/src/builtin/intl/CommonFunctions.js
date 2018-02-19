@@ -864,28 +864,53 @@ function addSpecialMissingLanguageTags(availableLocales) {
  * Spec: ECMAScript Internationalization API Specification, 9.2.1.
  */
 function CanonicalizeLocaleList(locales) {
+    // Step 1.
     if (locales === undefined)
         return [];
+
+    // Step 3 (and the remaining steps).
     if (typeof locales === "string")
         return [ValidateAndCanonicalizeLanguageTag(locales)];
+
+    // Step 2.
     var seen = [];
+
+    // Step 4.
     var O = ToObject(locales);
+
+    // Step 5.
     var len = ToLength(O.length);
+
+    // Step 6.
     var k = 0;
+
+    // Step 7.
     while (k < len) {
-        // Don't call ToString(k) - SpiderMonkey is faster with integers.
-        var kPresent = HasProperty(O, k);
-        if (kPresent) {
+        // Steps 7.a-c.
+        if (k in O) {
+            // Step 7.c.i.
             var kValue = O[k];
+
+            // Step 7.c.ii.
             if (!(typeof kValue === "string" || IsObject(kValue)))
                 ThrowTypeError(JSMSG_INVALID_LOCALES_ELEMENT);
+
+            // Step 7.c.iii.
             var tag = ToString(kValue);
+
+            // Step 7.c.iv.
             tag = ValidateAndCanonicalizeLanguageTag(tag);
+
+            // Step 7.c.v.
             if (callFunction(ArrayIndexOf, seen, tag) === -1)
                 _DefineDataProperty(seen, seen.length, tag);
         }
+
+        // Step 7.d.
         k++;
     }
+
+    // Step 8.
     return seen;
 }
 
@@ -965,28 +990,41 @@ function BestAvailableLocaleIgnoringDefault(availableLocales, locale) {
  * Spec: RFC 4647, section 3.4.
  */
 function LookupMatcher(availableLocales, requestedLocales) {
-    var i = 0;
-    var len = requestedLocales.length;
-    var availableLocale;
-    var locale, noExtensionsLocale;
-    while (i < len && availableLocale === undefined) {
-        locale = requestedLocales[i];
-        noExtensionsLocale = removeUnicodeExtensions(locale);
-        availableLocale = BestAvailableLocale(availableLocales, noExtensionsLocale);
-        i++;
+    // Step 1.
+    var result = new Record();
+
+    // Step 2.
+    for (var i = 0; i < requestedLocales.length; i++) {
+        var locale = requestedLocales[i];
+
+        // Step 2.a.
+        var noExtensionsLocale = removeUnicodeExtensions(locale);
+
+        // Step 2.b.
+        var availableLocale = BestAvailableLocale(availableLocales, noExtensionsLocale);
+
+        // Step 2.c.
+        if (availableLocale !== undefined) {
+            // Step 2.c.i.
+            result.locale = availableLocale;
+
+            // Step 2.c.ii.
+            if (locale !== noExtensionsLocale) {
+                var unicodeLocaleExtensionSequenceRE = getUnicodeLocaleExtensionSequenceRE();
+                var extensionMatch = regexp_exec_no_statics(unicodeLocaleExtensionSequenceRE,
+                                                            locale);
+                result.extension = extensionMatch[0];
+            }
+
+            // Step 2.c.iii.
+            return result;
+        }
     }
 
-    var result = new Record();
-    if (availableLocale !== undefined) {
-        result.locale = availableLocale;
-        if (locale !== noExtensionsLocale) {
-            var unicodeLocaleExtensionSequenceRE = getUnicodeLocaleExtensionSequenceRE();
-            var extensionMatch = regexp_exec_no_statics(unicodeLocaleExtensionSequenceRE, locale);
-            result.extension = extensionMatch[0];
-        }
-    } else {
-        result.locale = DefaultLocale();
-    }
+    // Steps 3-4.
+    result.locale = DefaultLocale();
+
+    // Step 5.
     return result;
 }
 
@@ -1007,7 +1045,7 @@ function BestFitMatcher(availableLocales, requestedLocales) {
 /**
  * Returns the Unicode extension value subtags for the requested key subtag.
  *
- * NOTE: PR to add UnicodeExtensionValue to ECMA-402 isn't yet written.
+ * Spec: ECMAScript Internationalization API Specification, 9.2.5.
  */
 function UnicodeExtensionValue(extension, key) {
     assert(typeof extension === "string", "extension is a string value");
@@ -1017,63 +1055,65 @@ function UnicodeExtensionValue(extension, key) {
         return extensionMatch !== null && extensionMatch[0] === extension;
     }(), "extension is a Unicode extension subtag");
     assert(typeof key === "string", "key is a string value");
-    assert(key.length === 2, "key is a Unicode extension key subtag");
 
     // Step 1.
-    var size = extension.length;
+    assert(key.length === 2, "key is a Unicode extension key subtag");
 
     // Step 2.
-    var searchValue = "-" + key + "-";
+    var size = extension.length;
 
     // Step 3.
-    var pos = callFunction(std_String_indexOf, extension, searchValue);
+    var searchValue = "-" + key + "-";
 
     // Step 4.
+    var pos = callFunction(std_String_indexOf, extension, searchValue);
+
+    // Step 5.
     if (pos !== -1) {
-        // Step 4.a.
+        // Step 5.a.
         var start = pos + 4;
 
-        // Step 4.b.
+        // Step 5.b.
         var end = start;
 
-        // Step 4.c.
+        // Step 5.c.
         var k = start;
 
-        // Steps 4.d-e.
+        // Steps 5.d-e.
         while (true) {
-            // Step 4.e.i.
+            // Step 5.e.i.
             var e = callFunction(std_String_indexOf, extension, "-", k);
 
-            // Step 4.e.ii.
+            // Step 5.e.ii.
             var len = e === -1 ? size - k : e - k;
 
-            // Step 4.e.iii.
+            // Step 5.e.iii.
             if (len === 2)
                 break;
 
-            // Step 4.e.iv.
+            // Step 5.e.iv.
             if (e === -1) {
                 end = size;
                 break;
             }
 
-            // Step 4.e.v.
+            // Step 5.e.v.
             end = e;
             k = e + 1;
         }
 
-        // Step 4.f.
+        // Step 5.f.
         return callFunction(String_substring, extension, start, end);
     }
 
-    // Step 5.
+    // Step 6.
     searchValue = "-" + key;
 
-    // Steps 6-7.
+    // Steps 7-8.
     if (callFunction(std_String_endsWith, extension, searchValue))
         return "";
 
-    // Step 8 (implicit).
+    // Step 9 (implicit).
 }
 
 /**
@@ -1083,11 +1123,9 @@ function UnicodeExtensionValue(extension, key) {
  * caller's relevant extensions and locale data as well as client-provided
  * options into consideration.
  *
- * Spec: ECMAScript Internationalization API Specification, 9.2.5.
+ * Spec: ECMAScript Internationalization API Specification, 9.2.6.
  */
 function ResolveLocale(availableLocales, requestedLocales, options, relevantExtensionKeys, localeData) {
-    /*jshint laxbreak: true */
-
     // Steps 1-3.
     var matcher = options.localeMatcher;
     var r = (matcher === "lookup")
@@ -1096,58 +1134,52 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
 
     // Step 4.
     var foundLocale = r.locale;
-
-    // Step 5 (Not applicable in this implementation).
     var extension = r.extension;
 
-    // Steps 6-7.
+    // Step 5.
     var result = new Record();
+
+    // Step 6.
     result.dataLocale = foundLocale;
 
-    // Step 8.
+    // Step 7.
     var supportedExtension = "-u";
 
     // In this implementation, localeData is a function, not an object.
     var localeDataProvider = localeData();
 
-    // Steps 9-12.
+    // Step 8.
     for (var i = 0; i < relevantExtensionKeys.length; i++) {
-        // Step 12.a.
         var key = relevantExtensionKeys[i];
 
-        // Steps 12.b-d (The locale data is only computed when needed).
+        // Steps 8.a-h (The locale data is only computed when needed).
         var keyLocaleData = undefined;
         var value = undefined;
 
         // Locale tag may override.
 
-        // Step 12.e.
+        // Step 8.g.
         var supportedExtensionAddition = "";
 
-        // Step 12.f.
+        // Step 8.h.
         if (extension !== undefined) {
-            // NB: The step annotations don't yet match the ES2017 Intl draft,
-            // 94045d234762ad107a3d09bb6f7381a65f1a2f9b, because the PR to add
-            // the new UnicodeExtensionValue abstract operation still needs to
-            // be written.
-
-            // Step 12.f.i.
+            // Step 8.h.i.
             var requestedValue = UnicodeExtensionValue(extension, key);
 
-            // Step 12.f.ii.
+            // Step 8.h.ii.
             if (requestedValue !== undefined) {
-                // Steps 12.b-c.
+                // Steps 8.a-d.
                 keyLocaleData = callFunction(localeDataProvider[key], null, foundLocale);
 
-                // Step 12.f.ii.1.
+                // Step 8.h.ii.1.
                 if (requestedValue !== "") {
-                    // Step 12.f.ii.1.a.
+                    // Step 8.h.ii.1.a.
                     if (callFunction(ArrayIndexOf, keyLocaleData, requestedValue) !== -1) {
                         value = requestedValue;
                         supportedExtensionAddition = "-" + key + "-" + value;
                     }
                 } else {
-                    // Step 12.f.ii.2.
+                    // Step 8.h.ii.2.
 
                     // According to the LDML spec, if there's no type value,
                     // and true is an allowed value, it's used.
@@ -1159,15 +1191,22 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
 
         // Options override all.
 
-        // Step 12.g.i.
+        // Step 8.i.i.
         var optionsValue = options[key];
 
-        // Step 12.g, 12.g.ii.
+        // Step 8.i.ii.
+        assert(typeof optionsValue === "string" ||
+               optionsValue === undefined ||
+               optionsValue === null,
+               "unexpected type for options value");
+
+        // Steps 8.i, 8.i.iii.1.
         if (optionsValue !== undefined && optionsValue !== value) {
-            // Steps 12.b-c.
+            // Steps 8.a-d.
             if (keyLocaleData === undefined)
                 keyLocaleData = callFunction(localeDataProvider[key], null, foundLocale);
 
+            // Step 8.i.iii.
             if (callFunction(ArrayIndexOf, keyLocaleData, optionsValue) !== -1) {
                 value = optionsValue;
                 supportedExtensionAddition = "";
@@ -1176,27 +1215,29 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
 
         // Locale data provides default value.
         if (value === undefined) {
-            // Steps 12.b-d.
+            // Steps 8.a-f.
             value = keyLocaleData === undefined
                     ? callFunction(localeDataProvider.default[key], null, foundLocale)
                     : keyLocaleData[0];
         }
 
-        // Steps 12.h-j.
+        // Step 8.j.
         assert(typeof value === "string" || value === null, "unexpected locale data value");
         result[key] = value;
+
+        // Step 8.k.
         supportedExtension += supportedExtensionAddition;
     }
 
-    // Step 13.
+    // Step 9.
     if (supportedExtension.length > 2) {
         assert(!callFunction(std_String_startsWith, foundLocale, "x-"),
                "unexpected privateuse-only locale returned from ICU");
 
-        // Step 13.a.
+        // Step 9.a.
         var privateIndex = callFunction(std_String_indexOf, foundLocale, "-x-");
 
-        // Steps 13.b-c.
+        // Steps 9.b-c.
         if (privateIndex === -1) {
             foundLocale += supportedExtension;
         } else {
@@ -1205,18 +1246,18 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
             foundLocale = preExtension + supportedExtension + postExtension;
         }
 
-        // Step 13.d.
+        // Step 9.d.
         assert(IsStructurallyValidLanguageTag(foundLocale), "invalid locale after concatenation");
 
-        // Step 13.e (Not required in this implementation, because we don't
+        // Step 9.e (Not required in this implementation, because we don't
         // canonicalize Unicode extension subtags).
         assert(foundLocale === CanonicalizeLanguageTag(foundLocale), "same locale with extension");
     }
 
-    // Step 14.
+    // Step 10.
     result.locale = foundLocale;
 
-    // Step 15.
+    // Step 11.
     return result;
 }
 
@@ -1225,30 +1266,28 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
  * matching (possibly fallback) locale. Locales appear in the same order in the
  * returned list as in the input list.
  *
- * Spec: ECMAScript Internationalization API Specification, 9.2.6.
+ * Spec: ECMAScript Internationalization API Specification, 9.2.7.
  */
 function LookupSupportedLocales(availableLocales, requestedLocales) {
-    // Steps 1-2.
-    var len = requestedLocales.length;
+    // Step 1.
     var subset = [];
 
-    // Steps 3-4.
-    var k = 0;
-    while (k < len) {
-        // Steps 4.a-b.
-        var locale = requestedLocales[k];
+    // Step 2.
+    for (var i = 0; i < requestedLocales.length; i++) {
+        var locale = requestedLocales[i];
+
+        // Step 2.a.
         var noExtensionsLocale = removeUnicodeExtensions(locale);
 
-        // Step 4.c-d.
+        // Step 2.b.
         var availableLocale = BestAvailableLocale(availableLocales, noExtensionsLocale);
+
+        // Step 2.c.
         if (availableLocale !== undefined)
             _DefineDataProperty(subset, subset.length, locale);
-
-        // Step 4.e.
-        k++;
     }
 
-    // Steps 5-6.
+    // Step 3.
     return subset;
 }
 
@@ -1257,7 +1296,7 @@ function LookupSupportedLocales(availableLocales, requestedLocales) {
  * matching (possibly fallback) locale. Locales appear in the same order in the
  * returned list as in the input list.
  *
- * Spec: ECMAScript Internationalization API Specification, 9.2.7.
+ * Spec: ECMAScript Internationalization API Specification, 9.2.8.
  */
 function BestFitSupportedLocales(availableLocales, requestedLocales) {
     // don't have anything better
@@ -1269,19 +1308,17 @@ function BestFitSupportedLocales(availableLocales, requestedLocales) {
  * matching (possibly fallback) locale. Locales appear in the same order in the
  * returned list as in the input list.
  *
- * Spec: ECMAScript Internationalization API Specification, 9.2.8.
+ * Spec: ECMAScript Internationalization API Specification, 9.2.9.
  */
 function SupportedLocales(availableLocales, requestedLocales, options) {
-    /*jshint laxbreak: true */
-
     // Step 1.
     var matcher;
     if (options !== undefined) {
-        // Steps 1.a-b.
+        // Step 1.a.
         options = ToObject(options);
-        matcher = options.localeMatcher;
 
-        // Step 1.c.
+        // Step 1.b
+        matcher = options.localeMatcher;
         if (matcher !== undefined) {
             matcher = ToString(matcher);
             if (matcher !== "lookup" && matcher !== "best fit")
@@ -1289,12 +1326,12 @@ function SupportedLocales(availableLocales, requestedLocales, options) {
         }
     }
 
-    // Steps 2-3.
+    // Steps 2-5.
     var subset = (matcher === undefined || matcher === "best fit")
                  ? BestFitSupportedLocales(availableLocales, requestedLocales)
                  : LookupSupportedLocales(availableLocales, requestedLocales);
 
-    // Step 4.
+    // Steps 6-7.
     for (var i = 0; i < subset.length; i++) {
         _DefineDataProperty(subset, i, subset[i],
                             ATTR_ENUMERABLE | ATTR_NONCONFIGURABLE | ATTR_NONWRITABLE);
@@ -1302,7 +1339,7 @@ function SupportedLocales(availableLocales, requestedLocales, options) {
     _DefineDataProperty(subset, "length", subset.length,
                         ATTR_NONENUMERABLE | ATTR_NONCONFIGURABLE | ATTR_NONWRITABLE);
 
-    // Step 5.
+    // Step 8.
     return subset;
 }
 
@@ -1311,7 +1348,7 @@ function SupportedLocales(availableLocales, requestedLocales, options) {
  * the required type, checks whether it is one of a list of allowed values,
  * and fills in a fallback value if necessary.
  *
- * Spec: ECMAScript Internationalization API Specification, 9.2.9.
+ * Spec: ECMAScript Internationalization API Specification, 9.2.10.
  */
 function GetOption(options, property, type, values, fallback) {
     // Step 1.
@@ -1375,7 +1412,7 @@ function DefaultNumberOption(value, minimum, maximum, fallback) {
  * Spec: ECMAScript Internationalization API Specification, 9.2.12.
  */
 function GetNumberOption(options, property, minimum, maximum, fallback) {
-    // Steps 1-3.
+    // Steps 1-2.
     return DefaultNumberOption(options[property], minimum, maximum, fallback);
 }
 

@@ -39,8 +39,6 @@ using js::intl::CallICU;
 using js::intl::DateTimeFormatOptions;
 using js::intl::GetAvailableLocales;
 using js::intl::IcuLocale;
-using js::intl::INITIAL_CHAR_BUFFER_SIZE;
-using js::intl::StringsAreEqual;
 
 const ClassOps NumberFormatObject::classOps_ = {
     nullptr, /* addProperty */

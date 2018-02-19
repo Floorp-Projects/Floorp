@@ -254,8 +254,6 @@ using namespace js;
 using namespace js::gc;
 
 using mozilla::ArrayLength;
-using mozilla::Get;
-using mozilla::HashCodeScrambler;
 using mozilla::Maybe;
 using mozilla::Move;
 using mozilla::Swap;
@@ -2484,7 +2482,6 @@ GCRuntime::sweepZoneAfterCompacting(Zone* zone)
         c->objectGroups.sweep(fop);
         c->sweepRegExps();
         c->sweepSavedStacks();
-        c->sweepTemplateLiteralMap();
         c->sweepVarNames();
         c->sweepGlobalObject();
         c->sweepSelfHostingScriptSource();
@@ -5362,7 +5359,6 @@ SweepMisc(JSRuntime* runtime)
         c->sweepGlobalObject();
         c->sweepTemplateObjects();
         c->sweepSavedStacks();
-        c->sweepTemplateLiteralMap();
         c->sweepSelfHostingScriptSource();
         c->sweepNativeIterators();
     }

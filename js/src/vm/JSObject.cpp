@@ -73,9 +73,6 @@
 using namespace js;
 using namespace js::gc;
 
-using mozilla::DebugOnly;
-using mozilla::Maybe;
-
 void
 js::ReportNotObject(JSContext* cx, const Value& v)
 {

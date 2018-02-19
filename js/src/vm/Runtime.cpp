@@ -57,9 +57,7 @@ using mozilla::Atomic;
 using mozilla::DebugOnly;
 using mozilla::NegativeInfinity;
 using mozilla::PodZero;
-using mozilla::PodArrayZero;
 using mozilla::PositiveInfinity;
-using JS::GenericNaN;
 using JS::DoubleNaNValue;
 
 /* static */ MOZ_THREAD_LOCAL(JSContext*) js::TlsContext;

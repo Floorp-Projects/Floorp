@@ -57,8 +57,6 @@
 using namespace js;
 
 using mozilla::BitwiseCast;
-using mozilla::IsNaN;
-using mozilla::LittleEndian;
 using mozilla::NativeEndian;
 using mozilla::NumbersAreIdentical;
 using JS::CanonicalizeNaN;

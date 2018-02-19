@@ -10,8 +10,6 @@
 
 #include "jsexn.h"
 
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/PodOperations.h"
 #include "mozilla/Sprintf.h"
 
 #include <string.h>
@@ -42,9 +40,6 @@
 
 using namespace js;
 using namespace js::gc;
-
-using mozilla::ArrayLength;
-using mozilla::PodArrayZero;
 
 static void
 exn_finalize(FreeOp* fop, JSObject* obj);

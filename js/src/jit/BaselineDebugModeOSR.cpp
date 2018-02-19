@@ -6,8 +6,6 @@
 
 #include "jit/BaselineDebugModeOSR.h"
 
-#include "mozilla/DebugOnly.h"
-
 #include "jit/BaselineIC.h"
 #include "jit/JitcodeMap.h"
 #include "jit/Linker.h"
@@ -20,8 +18,6 @@
 
 using namespace js;
 using namespace js::jit;
-
-using mozilla::DebugOnly;
 
 struct DebugModeOSREntry
 {

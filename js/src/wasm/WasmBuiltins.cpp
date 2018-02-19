@@ -19,7 +19,6 @@
 #include "wasm/WasmBuiltins.h"
 
 #include "mozilla/Atomics.h"
-#include "mozilla/BinarySearch.h"
 
 #include "fdlibm.h"
 #include "jslibmath.h"
@@ -38,7 +37,6 @@ using namespace js;
 using namespace jit;
 using namespace wasm;
 
-using mozilla::BinarySearchIf;
 using mozilla::HashGeneric;
 using mozilla::IsNaN;
 using mozilla::MakeEnumeratedRange;
