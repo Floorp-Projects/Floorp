@@ -3846,7 +3846,7 @@ SourceListener::Activate(SourceMediaStream* aStream,
       MakeUnique<DeviceState>(
           aAudioDevice,
           aAudioDevice->GetMediaSource() == dom::MediaSourceEnum::Microphone &&
-          Preferences::GetBool("media.getusermedia.microphone.off_while_disabled.enabled", false));
+          Preferences::GetBool("media.getusermedia.microphone.off_while_disabled.enabled", true));
   }
 
   if (aVideoDevice) {
