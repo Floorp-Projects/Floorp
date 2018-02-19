@@ -287,7 +287,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
    *                     dispatched.
    */
   get current() {
-    return this.node && (this._viewShowing || this._currentSubView);
+    return this.node && this._currentSubView;
   }
   get _currentSubView() {
     // Peek the top of the stack, but fall back to the main view if the list of
@@ -597,8 +597,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       panelView.current = false;
     }
 
-    this._viewShowing = null;
-
     if (!this.node || !nextPanelView)
       return;
 
@@ -622,14 +620,19 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         this._viewStack.appendChild(viewNode);
       }
 
+      // Emit the ViewShowing event so that the widget definition has a chance
+      // to lazily populate the subview with things or perhaps even cancel this
+      // whole operation.
+      if (await nextPanelView.dispatchAsyncEvent("ViewShowing")) {
+        return false;
+      }
+
       // If the panelview to show is the same as the previous one, the 'ViewShowing'
       // event has already been dispatched. Don't do it twice.
       let showingSameView = viewNode == previousViewNode;
 
       let prevPanelView = PanelView.forNode(previousViewNode);
       prevPanelView.captureKnownSize();
-
-      this._viewShowing = viewNode;
 
       let reverse = !!previousView;
       if (!reverse) {
@@ -648,16 +651,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
       if (anchor) {
         viewNode.classList.add("PanelUI-subView");
-      }
-
-      if (!showingSameView || !viewNode.hasAttribute("current")) {
-        // Emit the ViewShowing event so that the widget definition has a chance
-        // to lazily populate the subview with things or perhaps even cancel this
-        // whole operation.
-        if (await nextPanelView.dispatchAsyncEvent("ViewShowing")) {
-          this._viewShowing = null;
-          return false;
-        }
       }
 
       // Now we have to transition the panel. If we've got an older transition
@@ -997,7 +990,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       case "popuphidden": {
         // WebExtensions consumers can hide the popup from viewshowing, or
         // mid-transition, which disrupts our state:
-        this._viewShowing = null;
         this._transitioning = false;
         this.node.removeAttribute("panelopen");
         // Raise the ViewHiding event for the current view.
