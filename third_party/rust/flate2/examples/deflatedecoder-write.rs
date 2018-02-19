@@ -8,7 +8,7 @@ use flate2::write::DeflateDecoder;
 
 // Compress a sample string and print it after transformation.
 fn main() {
-    let mut e = DeflateEncoder::new(Vec::new(), Compression::Default);
+    let mut e = DeflateEncoder::new(Vec::new(), Compression::default());
     e.write(b"Hello World").unwrap();
     let bytes = e.finish().unwrap();
     println!("{}", decode_reader(bytes).unwrap());
