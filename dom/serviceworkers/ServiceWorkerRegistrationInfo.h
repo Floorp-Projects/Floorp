@@ -152,9 +152,6 @@ public:
   GetActive() const;
 
   ServiceWorkerInfo*
-  GetByID(uint64_t aID) const;
-
-  ServiceWorkerInfo*
   GetByDescriptor(const ServiceWorkerDescriptor& aDescriptor) const;
 
   // Set the given worker as the evaluating service worker.  The worker
