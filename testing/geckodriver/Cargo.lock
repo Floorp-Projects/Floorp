@@ -276,7 +276,7 @@ dependencies = [
 name = "mozrunner"
 version = "0.5.0"
 dependencies = [
- "log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "mozprofile 0.3.0",
  "winreg 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
