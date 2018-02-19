@@ -39,7 +39,7 @@
 #include "TrustOverrideUtils.h"
 #include "TrustOverride-SymantecData.inc"
 #include "TrustOverride-AppleGoogleData.inc"
-
+#include "TrustOverride-TestImminentDistrustData.inc"
 
 using namespace mozilla;
 using namespace mozilla::pkix;
@@ -1255,29 +1255,24 @@ IsCertificateDistrustImminent(nsIX509CertList* aCertList,
     return rv;
   }
 
-  // We need to verify the age of the end entity
-  nsCOMPtr<nsIX509CertValidity> validity;
-  rv = eeCert->GetValidity(getter_AddRefs(validity));
-  if (NS_FAILED(rv)) {
-    return rv;
+  // Check the test certificate condition first; this is a special certificate
+  // that gets the 'imminent distrust' treatment; this is so that the distrust
+  // UX code does not become stale, as it will need regular use. See Bug 1409257
+  // for context. Please do not remove this when adjusting the rest of the
+  // method.
+  UniqueCERTCertificate nssEECert(eeCert->GetCert());
+  if (!nssEECert) {
+    return NS_ERROR_FAILURE;
   }
-
-  PRTime notBefore;
-  rv = validity->GetNotBefore(&notBefore);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // PRTime is microseconds since the epoch, whereas JS time is milliseconds.
-  // (new Date("2016-06-01T00:00:00Z")).getTime() * 1000
-  static const PRTime JUNE_1_2016 = 1464739200000000;
-
-  // If the end entity's notBefore date is after 2016-06-01, this algorithm
-  // doesn't apply, so exit false before we do any iterating
-  if (notBefore >= JUNE_1_2016) {
-    aResult = false;
+  aResult = CertDNIsInList(nssEECert.get(), TestImminentDistrustEndEntityDNs);
+  if (aResult) {
+    // Exit early
     return NS_OK;
   }
+
+  // Proceed with the Symantec imminent distrust algorithm. This algorithm is
+  // to be removed in Firefox 63, when the validity period check will also be
+  // removed from the code in NSSCertDBTrustDomain.
 
   // We need an owning handle when calling nsIX509Cert::GetCert().
   UniqueCERTCertificate nssRootCert(rootCert->GetCert());
