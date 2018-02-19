@@ -1743,8 +1743,8 @@ nsDOMWindowUtils::GetRootBounds(nsIDOMClientRect** aResult)
 
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   RefPtr<DOMRect> rect = new DOMRect(window);
-  rect->SetRect(nsPresContext::AppUnitsToFloatCSSPixels(bounds.X()),
-                nsPresContext::AppUnitsToFloatCSSPixels(bounds.Y()),
+  rect->SetRect(nsPresContext::AppUnitsToFloatCSSPixels(bounds.x),
+                nsPresContext::AppUnitsToFloatCSSPixels(bounds.y),
                 nsPresContext::AppUnitsToFloatCSSPixels(bounds.Width()),
                 nsPresContext::AppUnitsToFloatCSSPixels(bounds.Height()));
   rect.forget(aResult);

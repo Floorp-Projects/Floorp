@@ -2903,7 +2903,7 @@ EventStateManager::DecideGestureEvent(WidgetGestureNotifyEvent* aEvent,
         displayPanFeedback = true;
 
         nsRect scrollRange = scrollableFrame->GetScrollRange();
-        bool canScrollHorizontally = scrollRange.Width() > 0;
+        bool canScrollHorizontally = scrollRange.width > 0;
 
         if (targetFrame->IsMenuFrame()) {
           // menu frames report horizontal scroll when they have submenus
@@ -2914,7 +2914,7 @@ EventStateManager::DecideGestureEvent(WidgetGestureNotifyEvent* aEvent,
 
         // Vertical panning has priority over horizontal panning, so
         // when vertical movement is possible we can just finish the loop.
-        if (scrollRange.Height() > 0) {
+        if (scrollRange.height > 0) {
           panDirection = WidgetGestureNotifyEvent::ePanVertical;
           break;
         }
@@ -4388,8 +4388,8 @@ GetWindowClientRectCenter(nsIWidget* aWidget)
   NS_ENSURE_TRUE(aWidget, LayoutDeviceIntPoint(0, 0));
 
   LayoutDeviceIntRect rect = aWidget->GetClientBounds();
-  LayoutDeviceIntPoint point(rect.X() + rect.Width() / 2,
-                             rect.Y() + rect.Height() / 2);
+  LayoutDeviceIntPoint point(rect.x + rect.width / 2,
+                             rect.y + rect.height / 2);
   int32_t round = aWidget->RoundsWidgetCoordinatesTo();
   point.x = point.x / round * round;
   point.y = point.y / round * round;

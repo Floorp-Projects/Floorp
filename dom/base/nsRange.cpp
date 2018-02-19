@@ -3218,7 +3218,8 @@ static void ExtractRectFromOffset(nsIFrame* aFrame,
   aFrame->GetPointFromOffset(aOffset, &point);
 
   if (!aClampToEdge && !aR->Contains(point)) {
-    aR->SetRectX(point.x, 0);
+    aR->SetWidth(0);
+    aR->x = point.x;
     return;
   }
 
@@ -3227,9 +3228,10 @@ static void ExtractRectFromOffset(nsIFrame* aFrame,
   }
 
   if (aKeepLeft) {
-    aR->SetRightEdge(point.x);
+    aR->SetWidth(point.x - aR->x);
   } else {
-    aR->SetLeftEdge(point.x);
+    aR->SetWidth(aR->XMost() - point.x);
+    aR->x = point.x;
   }
 }
 

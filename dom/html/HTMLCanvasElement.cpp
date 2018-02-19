@@ -617,8 +617,8 @@ nsresult HTMLCanvasElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
       nsPoint ptInRoot = nsLayoutUtils::GetEventCoordinatesRelativeTo(evt, frame);
       nsRect paddingRect = frame->GetContentRectRelativeToSelf();
       Point hitpoint;
-      hitpoint.x = (ptInRoot.x - paddingRect.X()) / AppUnitsPerCSSPixel();
-      hitpoint.y = (ptInRoot.y - paddingRect.Y()) / AppUnitsPerCSSPixel();
+      hitpoint.x = (ptInRoot.x - paddingRect.x) / AppUnitsPerCSSPixel();
+      hitpoint.y = (ptInRoot.y - paddingRect.y) / AppUnitsPerCSSPixel();
 
       evt->region = mCurrentContext->GetHitRegion(hitpoint);
       aVisitor.mCanHandle = true;

@@ -250,10 +250,10 @@ SVGImageElement::GetGeometryBounds(Rect* aBounds,
                                    const Matrix& aToBoundsSpace,
                                    const Matrix* aToNonScalingStrokeSpace)
 {
-  float x, y, width, height;
-  GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
+  Rect rect;
+  GetAnimatedLengthValues(&rect.x, &rect.y, &rect.width,
+                          &rect.height, nullptr);
 
-  Rect rect(x, y, width, height);
   if (rect.IsEmpty()) {
     // Rendering of the element disabled
     rect.SetEmpty(); // Make sure width/height are zero and not negative

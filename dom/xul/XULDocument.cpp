@@ -1578,7 +1578,7 @@ XULDocument::StartLayout(void)
 
         nsresult rv = NS_OK;
         nsRect r = cx->GetVisibleArea();
-        rv = shell->Initialize(r.Width(), r.Height());
+        rv = shell->Initialize(r.width, r.height);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
