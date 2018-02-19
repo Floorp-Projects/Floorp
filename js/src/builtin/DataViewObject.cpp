@@ -38,7 +38,6 @@ using namespace js::gc;
 using mozilla::AssertedCast;
 using JS::CanonicalizeNaN;
 using JS::ToInt32;
-using JS::ToUint32;
 
 static NewObjectKind
 DataViewNewObjectKind(JSContext* cx)

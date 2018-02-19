@@ -6,8 +6,6 @@
 
 #include "js/MemoryMetrics.h"
 
-#include "mozilla/DebugOnly.h"
-
 #include "gc/GC.h"
 #include "gc/Heap.h"
 #include "gc/Nursery.h"
@@ -27,11 +25,9 @@
 #include "wasm/WasmJS.h"
 #include "wasm/WasmModule.h"
 
-using mozilla::DebugOnly;
 using mozilla::MallocSizeOf;
 using mozilla::Move;
 using mozilla::PodCopy;
-using mozilla::PodEqual;
 
 using namespace js;
 

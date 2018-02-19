@@ -13,7 +13,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
 
 #include <string.h>
@@ -62,8 +61,6 @@ using namespace js::frontend;
 
 using mozilla::ArrayLength;
 using mozilla::Maybe;
-using mozilla::PodCopy;
-using mozilla::RangedPtr;
 using mozilla::Some;
 
 static bool

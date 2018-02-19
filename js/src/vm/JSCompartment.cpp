@@ -6,7 +6,6 @@
 
 #include "vm/JSCompartment-inl.h"
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
 #include <stddef.h>
@@ -40,7 +39,6 @@ using namespace js;
 using namespace js::gc;
 using namespace js::jit;
 
-using mozilla::DebugOnly;
 using mozilla::PodArrayZero;
 
 JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options = JS::CompartmentOptions())

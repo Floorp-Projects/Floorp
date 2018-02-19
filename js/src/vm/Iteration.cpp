@@ -8,7 +8,6 @@
 
 #include "vm/Iteration.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
@@ -42,9 +41,7 @@
 
 using namespace js;
 using namespace js::gc;
-using JS::ForOfIterator;
 
-using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::PodCopy;

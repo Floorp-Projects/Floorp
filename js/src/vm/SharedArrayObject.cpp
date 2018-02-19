@@ -23,7 +23,6 @@
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
-using mozilla::Some;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::CheckedInt;

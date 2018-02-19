@@ -8,7 +8,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/IntegerRange.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
@@ -33,8 +32,6 @@ using namespace js::gcstats;
 
 using mozilla::DebugOnly;
 using mozilla::EnumeratedArray;
-using mozilla::IntegerRange;
-using mozilla::PodArrayZero;
 using mozilla::PodZero;
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;

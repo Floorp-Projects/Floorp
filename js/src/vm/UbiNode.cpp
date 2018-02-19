@@ -37,7 +37,6 @@
 
 using namespace js;
 
-using mozilla::Some;
 using mozilla::RangedPtr;
 using JS::DispatchTyped;
 using JS::HandleValue;

@@ -45,7 +45,6 @@ using mozilla::FloatingPoint;
 using mozilla::IsPowerOfTwo;
 using mozilla::Maybe;
 using mozilla::PositiveInfinity;
-using mozilla::SpecificNaN;
 
 /*****************************************************************************/
 // wasm text token stream

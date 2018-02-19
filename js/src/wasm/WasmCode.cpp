@@ -38,7 +38,6 @@ using namespace js::wasm;
 using mozilla::BinarySearch;
 using mozilla::MakeEnumeratedRange;
 using mozilla::PodAssign;
-using JS::GenericNaN;
 
 bool
 CodeSegment::registerInProcessMap()
