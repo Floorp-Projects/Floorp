@@ -6933,6 +6933,16 @@ nsWindow::GetCSDSupportLevel() {
         sCSDSupportLevel = CSD_SUPPORT_FLAT;
     }
 
+    // GTK_CSD forces CSD mode - use also CSD because window manager
+    // decorations does not work with CSD.
+    // We check GTK_CSD as well as gtk_window_should_use_csd() does.
+    if (sCSDSupportLevel == CSD_SUPPORT_FULL) {
+        const char* csdOverride = getenv("GTK_CSD");
+        if (csdOverride && g_strcmp0(csdOverride, "1") == 0) {
+            sCSDSupportLevel = CSD_SUPPORT_FLAT;
+        }
+    }
+
     // Allow MOZ_GTK_TITLEBAR_DECORATION to override our heuristics
     const char* decorationOverride = getenv("MOZ_GTK_TITLEBAR_DECORATION");
     if (decorationOverride) {
