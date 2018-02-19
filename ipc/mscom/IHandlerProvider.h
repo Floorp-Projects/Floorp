@@ -23,6 +23,7 @@ struct HandlerProvider
   virtual STDMETHODIMP GetHandlerPayloadSize(NotNull<IInterceptor*> aInterceptor, NotNull<DWORD*> aOutPayloadSize) = 0;
   virtual STDMETHODIMP WriteHandlerPayload(NotNull<IInterceptor*> aInterceptor, NotNull<IStream*> aStream) = 0;
   virtual STDMETHODIMP_(REFIID) MarshalAs(REFIID aIid) = 0;
+  virtual STDMETHODIMP DisconnectHandlerRemotes() = 0;
 };
 
 struct IHandlerProvider : public IUnknown
