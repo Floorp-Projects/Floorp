@@ -252,6 +252,12 @@ RestyleManager::ContentRemoved(nsINode* aContainer,
                                nsIContent* aOldChild,
                                nsIContent* aFollowingSibling)
 {
+  // Computed style data isn't useful for detached nodes, and we'll need to
+  // recompute it anyway if we ever insert the nodes back into a document.
+  if (IsServo() && aOldChild->IsElement()) {
+    ServoRestyleManager::ClearServoDataFromSubtree(aOldChild->AsElement());
+  }
+
   // The container might be a document or a ShadowRoot.
   if (!aContainer->IsElement()) {
     return;
