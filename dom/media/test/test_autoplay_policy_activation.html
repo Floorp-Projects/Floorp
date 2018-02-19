@@ -1,0 +1,158 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Autoplay policy test</title>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="manifest.js"></script>
+    <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+  </head>
+  <body>
+    <pre id="test">
+      <script>
+
+        // Tests that videos can only play audibly in windows/frames
+        // which have been activated by same-origin user gesture.
+
+        gTestPrefs.push(["media.autoplay.enabled", false],
+                        ["media.autoplay.enabled.user-gestures-needed", true]);
+
+        SpecialPowers.pushPrefEnv({'set': gTestPrefs}, () => {
+          runTest();
+        });
+
+        let test_cases = [
+          {
+            name: "inaudible playback in unactivated same-origin iframe in activated parent allowed",
+            muted: true,
+            same_origin_child: true,
+            activated_child: false,
+            activated_parent: true,
+            should_play: true,
+          },
+
+          {
+            name: "inaudible playback in unactivated same-origin iframe in unactivated parent allowed",
+            muted: true,
+            same_origin_child: true,
+            activated_child: false,
+            activated_parent: false,
+            should_play: true,
+          },
+
+          {
+            name: "audible playback in unactivated same-origin iframe in activated parent allowed",
+            muted: false,
+            same_origin_child: true,
+            activated_child: false,
+            activated_parent: true,
+            should_play: true,
+          },
+
+          {
+            name: "audible playback in unactivated same-origin iframe in unactivated parent blocked",
+            muted: false,
+            same_origin_child: true,
+            activated_child: false,
+            activated_parent: false,
+            should_play: false,
+          },
+
+          {
+            name: "inaudible playback in unactivated cross-origin iframe in activated parent allowed",
+            muted: true,
+            same_origin_child: false,
+            activated_child: false,
+            activated_parent: true,
+            should_play: true,
+          },
+
+          {
+            name: "inaudible playback in unactivated cross-origin iframe in unactivated parent allowed",
+            muted: true,
+            same_origin_child: false,
+            activated_child: false,
+            activated_parent: false,
+            should_play: true,
+          },
+
+          // TODO: This case fails, Firefox's behaviour needs to be fixed.
+          // {
+          //   name: "audible playback in unactivated cross-origin iframe in activated parent blocked",
+          //   muted: false,
+          //   same_origin_child: false,
+          //   activated_child: false,
+          //   activated_parent: true,
+          //   should_play: false,
+          // },
+
+          {
+            name: "audible playback in unactivated cross-origin iframe in unactivated parent blocked",
+            muted: false,
+            same_origin_child: false,
+            activated_child: false,
+            activated_parent: false,
+            should_play: false,
+          },
+
+          {
+            name: "audible playback in activated cross-origin iframe allowed",
+            muted: false,
+            same_origin_child: false,
+            activated_child: true,
+            activated_parent: false,
+            should_play: true,
+          },
+
+          {
+            name: "audible playback in activated document allowed",
+            muted: false,
+            activated_parent: true,
+            should_play: true,
+          },
+
+          {
+            name: "audible playback in unactivated document blocked",
+            muted: false,
+            activated_parent: false,
+            should_play: false,
+          },
+
+          {
+            name: "inaudible playback in activated document allowed",
+            muted: true,
+            activated_parent: true,
+            should_play: true,
+          },
+
+          {
+            name: "inaudible playback in unactivated document allowed",
+            muted: true,
+            activated_parent: false,
+            should_play: true,
+          },
+
+        ];
+
+        let child_url = "file_autoplay_policy_activation_window.html";
+
+        async function runTest() {
+          for (test_case of test_cases) {
+            // Run each test in a new window, to ensure its user gesture
+            // activation state isn't tainted by preceeding tests.
+            let child = window.open(child_url, "", "width=500,height=500");
+            await once(child, "load");
+            child.postMessage(test_case, window.origin);
+            let result = await nextWindowMessage();
+            SimpleTest.is(result.data.played, test_case.should_play, test_case.name);
+            child.close();
+          }
+          SimpleTest.finish();
+        }
+
+        SimpleTest.waitForExplicitFinish();
+
+      </script>
+    </pre>
+  </body>
+</html>
