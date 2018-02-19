@@ -1493,13 +1493,19 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
     // or deleted on early return.
     nsAutoPtr<AddrInfo> newRRSet(aNewRRSet);
 
+    bool trrResult = newRRSet && newRRSet->IsTRR();
+
+    if (rec->mResolveAgain && (status != NS_ERROR_ABORT) && !trrResult) {
+        LOG(("nsHostResolver record %p resolve again due to flushcache\n", rec));
+        rec->mResolveAgain = false;
+        return LOOKUP_RESOLVEAGAIN;
+    }
+
     MOZ_ASSERT(rec->mResolving);
     rec->mResolving--;
     LOG(("nsHostResolver::CompleteLookup %s %p %X trr=%d stillResolving=%d\n",
          rec->host.get(), aNewRRSet, (unsigned int)status,
          aNewRRSet ? aNewRRSet->IsTRR() : 0, rec->mResolving));
-
-    bool trrResult = newRRSet && newRRSet->IsTRR();
 
     if (trrResult) {
         LOG(("TRR lookup Complete (%d) %s %s\n",
@@ -1582,12 +1588,6 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
         if (rec->mNativeSuccess) {
             rec->mNativeDuration = TimeStamp::Now() - rec->mNativeStart;
         }
-    }
-
-    if (rec->mResolveAgain && (status != NS_ERROR_ABORT)) {
-        LOG(("nsHostResolver record %p resolve again due to flushcache\n", rec));
-        rec->mResolveAgain = false;
-        return LOOKUP_RESOLVEAGAIN;
     }
 
     // update record fields.  We might have a rec->addr_info already if a
