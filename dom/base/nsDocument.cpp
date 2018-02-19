@@ -3985,6 +3985,23 @@ nsIDocument::ShouldThrottleFrameRequests()
   return false;
 }
 
+static inline void
+AssertNoStaleServoDataIn(const nsINode& aSubtreeRoot)
+{
+#ifdef DEBUG
+  for (const nsINode* node = aSubtreeRoot.GetFirstChild();
+       node;
+       node = node->GetNextNode()) {
+    if (node->IsElement()) {
+      MOZ_ASSERT(!node->AsElement()->HasServoData());
+      if (auto* shadow = node->AsElement()->GetShadowRoot()) {
+        AssertNoStaleServoDataIn(*shadow);
+      }
+    }
+  }
+#endif
+}
+
 void
 nsDocument::DeleteShell()
 {
@@ -4011,15 +4028,7 @@ nsDocument::DeleteShell()
 
   if (IsStyledByServo()) {
     ClearStaleServoData();
-#ifdef DEBUG
-    for (nsINode* node = static_cast<nsINode*>(this)->GetFirstChild();
-         node;
-         node = node->GetNextNode(this)) {
-      if (node->IsElement()) {
-        MOZ_ASSERT(!node->AsElement()->HasServoData());
-      }
-    }
-#endif
+    AssertNoStaleServoDataIn(static_cast<nsINode&>(*this));
   }
 }
 
