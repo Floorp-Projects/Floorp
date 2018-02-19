@@ -814,7 +814,7 @@ public:
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
         static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
+                mozilla::jni::CallingThread::GECKO;
         static const mozilla::jni::DispatchTarget dispatchTarget =
                 mozilla::jni::DispatchTarget::CURRENT;
     };
@@ -833,7 +833,7 @@ public:
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
         static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
+                mozilla::jni::CallingThread::GECKO;
         static const mozilla::jni::DispatchTarget dispatchTarget =
                 mozilla::jni::DispatchTarget::CURRENT;
     };
