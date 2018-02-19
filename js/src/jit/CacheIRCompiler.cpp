@@ -17,8 +17,6 @@
 using namespace js;
 using namespace js::jit;
 
-using mozilla::Maybe;
-
 ValueOperand
 CacheRegisterAllocator::useValueRegister(MacroAssembler& masm, ValOperandId op)
 {

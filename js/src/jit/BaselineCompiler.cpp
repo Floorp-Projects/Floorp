@@ -1693,11 +1693,11 @@ bool
 BaselineCompiler::emit_JSOP_CALLSITEOBJ()
 {
     RootedObject cso(cx, script->getObject(pc));
-    RootedArrayObject raw(cx, &script->getObject(GET_UINT32_INDEX(pc) + 1)->as<ArrayObject>());
+    RootedObject raw(cx, script->getObject(GET_UINT32_INDEX(pc) + 1));
     if (!cso || !raw)
         return false;
 
-    if (!cx->compartment()->getTemplateLiteralObject(cx, raw, &cso))
+    if (!ProcessCallSiteObjOperation(cx, cso, raw))
         return false;
 
     frame.push(ObjectValue(*cso));

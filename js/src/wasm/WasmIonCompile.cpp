@@ -32,7 +32,6 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
-using mozilla::DebugOnly;
 using mozilla::IsPowerOfTwo;
 using mozilla::Maybe;
 using mozilla::Nothing;

@@ -35,11 +35,8 @@
 
 using mozilla::ArrayLength;
 using mozilla::MakeScopeExit;
-using mozilla::Maybe;
 using mozilla::PodArrayZero;
-using mozilla::PodAssign;
 using mozilla::PodCopy;
-using mozilla::PodZero;
 
 struct ReservedWordInfo
 {

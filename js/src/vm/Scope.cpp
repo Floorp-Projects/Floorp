@@ -6,8 +6,6 @@
 
 #include "vm/Scope.h"
 
-#include "mozilla/ScopeExit.h"
-
 #include "builtin/ModuleObject.h"
 #include "gc/Allocator.h"
 #include "gc/FreeOp.h"
@@ -22,10 +20,7 @@
 using namespace js;
 
 using mozilla::Maybe;
-using mozilla::MakeScopeExit;
 using mozilla::Move;
-using mozilla::Nothing;
-using mozilla::Some;
 
 const char*
 js::BindingKindString(BindingKind kind)

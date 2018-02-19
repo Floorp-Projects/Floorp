@@ -46,10 +46,7 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
-using mozilla::BitwiseCast;
 using mozilla::CheckedInt;
-using mozilla::IsNaN;
-using mozilla::IsSame;
 using mozilla::Nothing;
 using mozilla::RangedPtr;
 

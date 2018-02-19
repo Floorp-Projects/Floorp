@@ -29,7 +29,6 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::DebugOnly;
-using mozilla::NativeEndian;
 
 TraceLoggerThreadState* traceLoggerState = nullptr;
 
