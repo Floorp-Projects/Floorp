@@ -83,12 +83,6 @@ public:
     return &DocumentOrShadowRoot::EnsureDOMStyleSheets();
   }
 
-  /**
-   * Distributes all the explicit children of the pool host to the content
-   * insertion points in this ShadowRoot.
-   */
-  void DistributeAllNodes();
-
 private:
 
   /**
@@ -113,18 +107,9 @@ private:
   const HTMLSlotElement* UnassignSlotFor(nsIContent* aContent,
                                          const nsAString& aSlotName);
 
-  /**
-   * Called when we redistribute content after insertion points have changed.
-   */
-  void DistributionChanged();
-
-  bool IsPooledNode(nsIContent* aChild) const;
-
 public:
   void AddSlot(HTMLSlotElement* aSlot);
   void RemoveSlot(HTMLSlotElement* aSlot);
-
-  void SetInsertionPointChanged() { mInsertionPointChanged = true; }
 
   void SetAssociatedBinding(nsXBLBinding* aBinding) { mAssociatedBinding = aBinding; }
 
@@ -141,7 +126,11 @@ public:
   void SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError);
   void StyleSheetChanged();
 
-  bool IsComposedDocParticipant() { return mIsComposedDocParticipant; }
+  bool IsComposedDocParticipant() const
+  {
+    return mIsComposedDocParticipant;
+  }
+
   void SetIsComposedDocParticipant(bool aIsComposedDocParticipant)
   {
     mIsComposedDocParticipant = aIsComposedDocParticipant;
@@ -164,12 +153,6 @@ protected:
   // because the binding holds a reference on the nsXBLDocumentInfo that
   // owns |mProtoBinding|.
   RefPtr<nsXBLBinding> mAssociatedBinding;
-
-  // A boolean that indicates that an insertion point was added or removed
-  // from this ShadowRoot and that the nodes need to be redistributed into
-  // the insertion points. After this flag is set, nodes will be distributed
-  // on the next mutation event.
-  bool mInsertionPointChanged;
 
   // Flag to indicate whether the descendants of this shadow root are part of the
   // composed document. Ideally, we would use a node flag on nodes to
