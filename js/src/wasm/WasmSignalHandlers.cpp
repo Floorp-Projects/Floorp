@@ -1039,10 +1039,12 @@ HandleFault(PEXCEPTION_POINTERS exception)
         if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode))
             return false;
 
-        activation->startWasmTrap(trap, bytecode.offset, pc, ContextToFP(context));
+        activation->startWasmTrap(trap, bytecode.offset, ToRegisterState(context));
         *ppc = moduleSegment->trapCode();
         return true;
     }
+
+    MOZ_RELEASE_ASSERT(&instance->code() == &moduleSegment->code());
 
     if (record->NumberParameters < 2)
         return false;
@@ -1170,9 +1172,11 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
         if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode))
             return false;
 
-        activation->startWasmTrap(trap, bytecode.offset, pc, ContextToFP(&context));
+        activation->startWasmTrap(trap, bytecode.offset, ToRegisterState(&context));
         *ppc = moduleSegment->trapCode();
     } else {
+        MOZ_RELEASE_ASSERT(&instance->code() == &moduleSegment->code());
+
         MOZ_ASSERT(request.body.exception == EXC_BAD_ACCESS);
         if (request.body.codeCnt != 2)
             return false;
@@ -1394,10 +1398,12 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
         if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode))
             return false;
 
-        activation->startWasmTrap(trap, bytecode.offset, pc, ContextToFP(context));
+        activation->startWasmTrap(trap, bytecode.offset, ToRegisterState(context));
         *ppc = moduleSegment->trapCode();
         return true;
     }
+
+    MOZ_RELEASE_ASSERT(&instance->code() == &moduleSegment->code());
 
     uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(info->si_addr);
 
