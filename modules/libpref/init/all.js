@@ -497,10 +497,13 @@ pref("media.getusermedia.browser.enabled", false);
 pref("media.getusermedia.channels", 0);
 #if defined(ANDROID)
 pref("media.getusermedia.camera.off_while_disabled.enabled", false);
+pref("media.getusermedia.microphone.off_while_disabled.enabled", false);
 #else
 pref("media.getusermedia.camera.off_while_disabled.enabled", true);
+pref("media.getusermedia.microphone.off_while_disabled.enabled", true);
 #endif
 pref("media.getusermedia.camera.off_while_disabled.delay_ms", 3000);
+pref("media.getusermedia.microphone.off_while_disabled.delay_ms", 3000);
 // Desktop is typically VGA capture or more; and qm_select will not drop resolution
 // below 1/2 in each dimension (or so), so QVGA (320x200) is the lowest here usually.
 pref("media.peerconnection.video.min_bitrate", 0);
