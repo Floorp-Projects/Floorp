@@ -325,3 +325,17 @@ AssertInCompilationScope()
   MOZ_ASSERT(xpc::CompilationScope() == JS::CurrentGlobalOrNull(cx));
 }
 #endif
+
+size_t
+nsXBLDocumentInfo::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  if (mBindingTable) {
+    n += mBindingTable->ShallowSizeOfIncludingThis(aMallocSizeOf);
+    for (auto iter = mBindingTable->Iter(); !iter.Done(); iter.Next()) {
+      nsXBLPrototypeBinding* binding = iter.UserData();
+      n += binding->SizeOfIncludingThis(aMallocSizeOf);
+    }
+  }
+  return n;
+}

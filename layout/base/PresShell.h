@@ -392,9 +392,6 @@ public:
 
   bool AssumeAllFramesVisible() override;
 
-
-  virtual void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot) override;
-
   virtual bool CanDispatchEvent(
       const mozilla::WidgetGUIEvent* aEvent = nullptr) const override;
 

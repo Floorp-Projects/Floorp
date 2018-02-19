@@ -1,7 +1,7 @@
 use std::io::prelude::*;
 use std::io;
 
-use super::{Builder, Header};
+use super::{GzBuilder, GzHeader};
 use Compression;
 use bufreader::BufReader;
 use super::bufread;
@@ -27,7 +27,7 @@ use super::bufread;
 /// fn gzencode_hello_world() -> io::Result<Vec<u8>> {
 ///     let mut ret_vec = [0;100];
 ///     let bytestring = b"hello world";
-///     let mut gz = GzEncoder::new(&bytestring[..], Compression::Fast);
+///     let mut gz = GzEncoder::new(&bytestring[..], Compression::fast());
 ///     let count = gz.read(&mut ret_vec)?;
 ///     Ok(ret_vec[0..count].to_vec())
 /// }
@@ -47,12 +47,12 @@ impl<R: Read> GzEncoder<R> {
     /// Creates a new encoder which will use the given compression level.
     ///
     /// The encoder is not configured specially for the emitted header. For
-    /// header configuration, see the `Builder` type.
+    /// header configuration, see the `GzBuilder` type.
     ///
     /// The data read from the stream `r` will be compressed and available
     /// through the returned reader.
     pub fn new(r: R, level: Compression) -> GzEncoder<R> {
-        Builder::new().read(r, level)
+        GzBuilder::new().read(r, level)
     }
 }
 
@@ -110,7 +110,7 @@ impl<R: Read + Write> Write for GzEncoder<R> {
 /// use flate2::read::GzDecoder;
 ///
 /// # fn main() {
-/// #    let mut e = GzEncoder::new(Vec::new(), Compression::Default);
+/// #    let mut e = GzEncoder::new(Vec::new(), Compression::default());
 /// #    e.write(b"Hello World").unwrap();
 /// #    let bytes = e.finish().unwrap();
 /// #    println!("{}", decode_reader(bytes).unwrap());
@@ -120,7 +120,7 @@ impl<R: Read + Write> Write for GzEncoder<R> {
 /// // Here &[u8] implements Read
 ///
 /// fn decode_reader(bytes: Vec<u8>) -> io::Result<String> {
-///    let mut gz = GzDecoder::new(&bytes[..])?;
+///    let mut gz = GzDecoder::new(&bytes[..]);
 ///    let mut s = String::new();
 ///    gz.read_to_string(&mut s)?;
 ///    Ok(s)
@@ -134,19 +134,16 @@ pub struct GzDecoder<R> {
 impl<R: Read> GzDecoder<R> {
     /// Creates a new decoder from the given reader, immediately parsing the
     /// gzip header.
-    ///
-    /// # Errors
-    ///
-    /// If an error is encountered when parsing the gzip header, an error is
-    /// returned.
-    pub fn new(r: R) -> io::Result<GzDecoder<R>> {
-        bufread::GzDecoder::new(BufReader::new(r)).map(|r| GzDecoder { inner: r })
+    pub fn new(r: R) -> GzDecoder<R> {
+        GzDecoder {
+            inner: bufread::GzDecoder::new(BufReader::new(r)),
+        }
     }
 }
 
 impl<R> GzDecoder<R> {
-    /// Returns the header associated with this stream.
-    pub fn header(&self) -> &Header {
+    /// Returns the header associated with this stream, if it was valid.
+    pub fn header(&self) -> Option<&GzHeader> {
         self.inner.header()
     }
 
@@ -209,7 +206,7 @@ impl<R: Read + Write> Write for GzDecoder<R> {
 /// use flate2::read::MultiGzDecoder;
 ///
 /// # fn main() {
-/// #    let mut e = GzEncoder::new(Vec::new(), Compression::Default);
+/// #    let mut e = GzEncoder::new(Vec::new(), Compression::default());
 /// #    e.write(b"Hello World").unwrap();
 /// #    let bytes = e.finish().unwrap();
 /// #    println!("{}", decode_reader(bytes).unwrap());
@@ -219,7 +216,7 @@ impl<R: Read + Write> Write for GzDecoder<R> {
 /// // Here &[u8] implements Read
 ///
 /// fn decode_reader(bytes: Vec<u8>) -> io::Result<String> {
-///    let mut gz = MultiGzDecoder::new(&bytes[..])?;
+///    let mut gz = MultiGzDecoder::new(&bytes[..]);
 ///    let mut s = String::new();
 ///    gz.read_to_string(&mut s)?;
 ///    Ok(s)
@@ -234,19 +231,16 @@ impl<R: Read> MultiGzDecoder<R> {
     /// Creates a new decoder from the given reader, immediately parsing the
     /// (first) gzip header. If the gzip stream contains multiple members all will
     /// be decoded.
-    ///
-    /// # Errors
-    ///
-    /// If an error is encountered when parsing the gzip header, an error is
-    /// returned.
-    pub fn new(r: R) -> io::Result<MultiGzDecoder<R>> {
-        bufread::MultiGzDecoder::new(BufReader::new(r)).map(|r| MultiGzDecoder { inner: r })
+    pub fn new(r: R) -> MultiGzDecoder<R> {
+        MultiGzDecoder {
+            inner: bufread::MultiGzDecoder::new(BufReader::new(r)),
+        }
     }
 }
 
 impl<R> MultiGzDecoder<R> {
-    /// Returns the current header associated with this stream.
-    pub fn header(&self) -> &Header {
+    /// Returns the current header associated with this stream, if it's valid.
+    pub fn header(&self) -> Option<&GzHeader> {
         self.inner.header()
     }
 

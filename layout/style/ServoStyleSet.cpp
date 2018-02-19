@@ -161,6 +161,16 @@ ServoStyleSet::Init(nsPresContext* aPresContext)
   // We added prefilled stylesheets into mRawSet, so the stylist is dirty.
   // The Stylist should be updated later when necessary.
   SetStylistStyleSheetsDirty();
+
+  // We may have Shadow DOM style changes that we weren't notified about because
+  // the document didn't have a shell, if the ShadowRoot was created in a
+  // display: none iframe.
+  //
+  // Now that we got a shell, we may need to get them up-to-date.
+  //
+  // TODO(emilio, bug 1418159): This wouldn't be needed if the StyleSet was
+  // owned by the document.
+  SetStylistXBLStyleSheetsDirty();
 }
 
 void
@@ -179,6 +189,20 @@ ServoStyleSet::InvalidateStyleForCSSRuleChanges()
   MOZ_ASSERT(StylistNeedsUpdate());
   if (nsPresContext* pc = GetPresContext()) {
     pc->RestyleManager()->AsServo()->PostRestyleEventForCSSRuleChanges();
+  }
+}
+
+void
+ServoStyleSet::RecordShadowStyleChange(ShadowRoot& aShadowRoot)
+{
+  // TODO(emilio): We could keep track of the actual shadow roots that need
+  // their styles recomputed.
+  SetStylistXBLStyleSheetsDirty();
+
+  // FIXME(emilio): This should be done using stylesheet invalidation instead.
+  if (nsPresContext* pc = GetPresContext()) {
+    pc->RestyleManager()->PostRestyleEvent(
+      aShadowRoot.Host(), eRestyle_Subtree, nsChangeHint(0));
   }
 }
 

@@ -18,14 +18,15 @@ function test() {
   function handlePageInfo() {
     ok(pageInfo.document.getElementById("feedTab"), "Feed tab");
     let feedListbox = pageInfo.document.getElementById("feedListbox");
-    ok(feedListbox, "Feed list");
+    ok(feedListbox, "Feed list should exist.");
 
     var feedRowsNum = feedListbox.getRowCount();
-    is(feedRowsNum, 3, "Number of feeds listed");
+    is(feedRowsNum, 3, "Number of feeds listed should be correct.");
 
     for (var i = 0; i < feedRowsNum; i++) {
       let feedItem = feedListbox.getItemAtIndex(i);
-      is(feedItem.getAttribute("name"), i + 1, "Feed name");
+      let feedTitle = feedItem.querySelector(".feedTitle");
+      is(feedTitle.textContent, i + 1, "Feed name should be correct.");
     }
 
     pageInfo.close();

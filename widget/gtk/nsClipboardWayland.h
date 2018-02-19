@@ -13,6 +13,8 @@
 #include <gdk/gdkwayland.h>
 #include <nsTArray.h>
 
+struct FastTrackClipboard;
+
 class nsRetrievalContextWayland : public nsRetrievalContext
 {
 public:
@@ -30,6 +32,8 @@ public:
     void AddMIMEType(const char *aMimeType);
     void ResetMIMETypeList(void);
     void ConfigureKeyboard(wl_seat_capability caps);
+    void TransferFastTrackClipboard(int aClipboardRequestNumber,
+                                    GtkSelectionData *aSelectionData);
 
     void InitDataDeviceManager(wl_registry *registry, uint32_t id, uint32_t version);
     void InitSeat(wl_registry *registry, uint32_t id, uint32_t version, void *data);
@@ -44,6 +48,10 @@ private:
     wl_keyboard                *mKeyboard;
     nsTArray<GdkAtom>           mTargetMIMETypes;
     gchar                      *mTextPlainLocale;
+
+    int                         mClipboardRequestNumber;
+    char*                       mClipboardData;
+    uint32_t                    mClipboardDataLength;
 };
 
 #endif /* __nsClipboardWayland_h_ */

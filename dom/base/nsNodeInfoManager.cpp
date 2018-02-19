@@ -29,6 +29,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsNameSpaceManager.h"
 #include "nsDocument.h"
+#include "nsWindowSizes.h"
 #include "NullPrincipal.h"
 
 using namespace mozilla;
@@ -503,4 +504,19 @@ nsNodeInfoManager::InternalMathMLEnabled()
                      nsContentUtils::IsSystemPrincipal(mPrincipal));
   mMathMLEnabled = conclusion ? eTriTrue : eTriFalse;
   return conclusion;
+}
+
+void
+nsNodeInfoManager::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
+{
+  aSizes.mDOMOtherSize += aSizes.mState.mMallocSizeOf(this);
+
+  if (mBindingManager) {
+    aSizes.mBindingsSize +=
+      mBindingManager->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
+  }
+
+  // Measurement of the following members may be added later if DMD finds it
+  // is worthwhile:
+  // - mNodeInfoHash
 }

@@ -1114,3 +1114,27 @@ nsBindingManager::FindNestedSingleInsertionPoint(nsIContent* aContainer,
 
   return parent;
 }
+
+size_t
+nsBindingManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+
+#define SHALLOW_SIZE_INCLUDING(field_) \
+  n += field_ ? field_->ShallowSizeOfIncludingThis(aMallocSizeOf) : 0;
+  SHALLOW_SIZE_INCLUDING(mBoundContentSet);
+  SHALLOW_SIZE_INCLUDING(mWrapperTable);
+  SHALLOW_SIZE_INCLUDING(mLoadingDocTable);
+#undef SHALLOW_SIZE_INCLUDING
+  n += mAttachedStack.ShallowSizeOfExcludingThis(aMallocSizeOf);
+
+  if (mDocumentTable) {
+    n += mDocumentTable->ShallowSizeOfIncludingThis(aMallocSizeOf);
+    for (auto iter = mDocumentTable->Iter(); !iter.Done(); iter.Next()) {
+      nsXBLDocumentInfo* docInfo = iter.UserData();
+      n += docInfo->SizeOfIncludingThis(aMallocSizeOf);
+    }
+  }
+
+  return n;
+}

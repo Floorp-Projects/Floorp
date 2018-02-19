@@ -17,7 +17,7 @@ fn main() {
 fn open_hello_world() -> io::Result<Vec<u8>> {
     let f = File::open("examples/hello_world.txt")?;
     let b = BufReader::new(f);
-    let mut deflater = DeflateEncoder::new(b, Compression::Fast);
+    let mut deflater = DeflateEncoder::new(b, Compression::fast());
     let mut buffer = Vec::new();
     deflater.read_to_end(&mut buffer)?;
     Ok(buffer)

@@ -540,10 +540,10 @@ public:
   void RestyleForAnimation(mozilla::dom::Element* aElement,
                            nsRestyleHint aHint);
 
-  // ShadowRoot has APIs that can change styles so we only
-  // want to restyle elements in the ShadowRoot and not the whole
-  // document.
-  virtual void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot) = 0;
+  // ShadowRoot has APIs that can change styles. This notifies the shell that
+  // stlyes applicable in the shadow tree have potentially changed.
+  void RecordShadowStyleChange(mozilla::dom::ShadowRoot& aShadowRoot);
+
 
   /**
    * Determine if it is safe to flush all pending notifications.

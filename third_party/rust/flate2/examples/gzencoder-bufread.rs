@@ -17,7 +17,7 @@ fn main() {
 fn open_hello_world() -> io::Result<Vec<u8>> {
     let f = File::open("examples/hello_world.txt")?;
     let b = BufReader::new(f);
-    let mut gz = GzEncoder::new(b, Compression::Fast);
+    let mut gz = GzEncoder::new(b, Compression::fast());
     let mut buffer = Vec::new();
     gz.read_to_end(&mut buffer)?;
     Ok(buffer)

@@ -431,6 +431,9 @@ CollectWindowReports(nsGlobalWindowInner *aWindow,
   REPORT_SIZE("/property-tables", mPropertyTablesSize,
               "Memory used for the property tables within a window.");
 
+  REPORT_SIZE("/bindings", mBindingsSize,
+              "Memory used by bindings within a window.");
+
   REPORT_COUNT("/dom/event-targets", mDOMEventTargetsCount,
                "Number of non-node event targets in the event targets table "
                "in a window's DOM, such as XHRs.");

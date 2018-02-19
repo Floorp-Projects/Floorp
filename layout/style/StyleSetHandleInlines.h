@@ -306,7 +306,7 @@ StyleSetHandle::Ptr::RecordStyleSheetChange(StyleSheet* aSheet,
 }
 
 void
-StyleSetHandle::Ptr::RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot)
+StyleSetHandle::Ptr::RecordShadowStyleChange(mozilla::dom::ShadowRoot& aShadowRoot)
 {
   FORWARD(RecordShadowStyleChange, (aShadowRoot));
 }

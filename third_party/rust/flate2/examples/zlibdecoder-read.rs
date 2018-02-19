@@ -8,7 +8,7 @@ use flate2::read::ZlibDecoder;
 
 // Compress a sample string and print it after transformation.
 fn main() {
-    let mut e = ZlibEncoder::new(Vec::new(), Compression::Default);
+    let mut e = ZlibEncoder::new(Vec::new(), Compression::default());
     e.write(b"Hello World").unwrap();
     let bytes = e.finish().unwrap();
     println!("{}", decode_reader(bytes).unwrap());
