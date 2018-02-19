@@ -30,6 +30,9 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
 #if defined(NIGHTLY_BUILD) || defined(DEBUG)
   "browser.startup.record",
 #endif
+#if defined(ANDROID)
+  "consoleservice.logcat",
+#endif
   "content.cors.disable",
   "content.cors.no_private_data",
   "content.notify.backoffcount",
