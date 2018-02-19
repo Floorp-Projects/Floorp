@@ -40,6 +40,20 @@ for (i = 1; i <= n; i++) {
   repeat += div + " " + i + " </div>\n";
 }
 
+// Prepare CSS rules to add to the document <style>.
+let CSS_RULES_COUNT = 200;
+let manyCssRules = "";
+for (i = 0; i < CSS_RULES_COUNT; i++) {
+  manyCssRules += `
+  .many-css-rules {
+    font-size: ${i}px;
+    margin: 10px;
+    padding: 10px;
+    font-family: Arial;
+    margin: 20px;
+  }`;
+}
+
 console.log(`
 <!DOCTYPE html>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
@@ -55,6 +69,9 @@ console.log(`
   div {
     margin-left: 0.5em;
   }
+  /* Styles for custom.inspector.manyrules tests */`);
+console.log(manyCssRules);
+console.log(`
   </style>
 </head>
 <body>
@@ -67,6 +84,9 @@ console.log(`
 `);
 console.log(repeat);
 console.log(`
+<!-- Elements for custom.inspector.manyrules tests -->
+<div class="no-css-rules"></div>
+<div class="many-css-rules"></div>
 </body>
 </html>`);
 

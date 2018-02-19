@@ -747,9 +747,47 @@ async _consoleOpenWithCachedMessagesTest() {
     let url = CUSTOM_URL.replace(/\$TOOL/, "inspector");
     await this.testSetup(url);
     let toolbox = await this.openToolboxAndLog("custom.inspector", "inspector");
+
     await this.reloadInspectorAndLog("custom", toolbox);
+    await this.selectNodeWithManyRulesAndLog(toolbox);
     await this.closeToolboxAndLog("custom.inspector", toolbox);
     await this.testTeardown();
+  },
+
+  /**
+   * Measure the time necessary to select a node and display the rule view when many rules
+   * match the element.
+   */
+  async selectNodeWithManyRulesAndLog(toolbox) {
+    let inspector = toolbox.getPanel("inspector");
+
+    // Local helper to select a node front and wait for the ruleview to be refreshed.
+    let selectNodeFront = (nodeFront) => {
+      let onRuleViewRefreshed = inspector.once("rule-view-refreshed");
+      inspector.selection.setNodeFront(nodeFront);
+      return onRuleViewRefreshed;
+    };
+
+    let initialNodeFront = inspector.selection.nodeFront;
+
+    // Retrieve the node front for the test node.
+    let root = await inspector.walker.getRootNode();
+    let referenceNodeFront = await inspector.walker.querySelector(root, ".no-css-rules");
+    let testNodeFront = await inspector.walker.querySelector(root, ".many-css-rules");
+
+    // Select test node and measure the time to display the rule view with many rules.
+    dump("Selecting .many-css-rules test node front\n");
+    let test = this.runTest("custom.inspector.manyrules.selectnode");
+    await selectNodeFront(testNodeFront);
+    test.done();
+
+    // Select reference node and measure the time to empty the rule view.
+    dump("Move the selection to a node with no rules\n");
+    test = this.runTest("custom.inspector.manyrules.deselectnode");
+    await selectNodeFront(referenceNodeFront);
+    test.done();
+
+    await selectNodeFront(initialNodeFront);
   },
 
   async openDebuggerAndLog(label, expectedSources, selectedFile, expectedText) {
