@@ -72,10 +72,10 @@ WheelHandlingUtils::CanScrollOn(nsIScrollableFrame* aScrollFrame,
   uint32_t directions = aScrollFrame->GetPerceivedScrollingDirections();
 
   return (aDirectionX && (directions & nsIScrollableFrame::HORIZONTAL) &&
-          CanScrollInRange(scrollRange.X(), scrollPt.x,
+          CanScrollInRange(scrollRange.x, scrollPt.x,
                            scrollRange.XMost(), aDirectionX)) ||
          (aDirectionY && (directions & nsIScrollableFrame::VERTICAL) &&
-          CanScrollInRange(scrollRange.Y(), scrollPt.y,
+          CanScrollInRange(scrollRange.y, scrollPt.y,
                            scrollRange.YMost(), aDirectionY));
 }
 

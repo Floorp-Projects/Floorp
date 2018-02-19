@@ -255,8 +255,8 @@ CheckSimilarOrigin(nsINode* aNode1, nsINode* aNode2)
 static Maybe<nsRect>
 EdgeInclusiveIntersection(const nsRect& aRect, const nsRect& aOtherRect)
 {
-  nscoord left = std::max(aRect.X(), aOtherRect.X());
-  nscoord top = std::max(aRect.Y(), aOtherRect.Y());
+  nscoord left = std::max(aRect.x, aOtherRect.x);
+  nscoord top = std::max(aRect.y, aOtherRect.y);
   nscoord right = std::min(aRect.XMost(), aOtherRect.XMost());
   nscoord bottom = std::min(aRect.YMost(), aOtherRect.YMost());
   if (left > right || top > bottom) {

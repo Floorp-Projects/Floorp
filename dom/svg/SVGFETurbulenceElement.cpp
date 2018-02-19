@@ -156,8 +156,8 @@ SVGFETurbulenceElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                  fX == 0 ? 1 : (1 / fX),
                                  fY == 0 ? 1 : (1 / fY));
   gfxRect firstPeriodInFilterSpace = aInstance->UserSpaceToFilterSpace(firstPeriodInUserSpace);
-  Size frequencyInFilterSpace(fX == 0 ? 0 : (1 / firstPeriodInFilterSpace.Width()),
-                              fY == 0 ? 0 : (1 / firstPeriodInFilterSpace.Height()));
+  Size frequencyInFilterSpace(fX == 0 ? 0 : (1 / firstPeriodInFilterSpace.width),
+                              fY == 0 ? 0 : (1 / firstPeriodInFilterSpace.height));
   gfxPoint offset = firstPeriodInFilterSpace.TopLeft();
 
   FilterPrimitiveDescription descr(PrimitiveType::Turbulence);

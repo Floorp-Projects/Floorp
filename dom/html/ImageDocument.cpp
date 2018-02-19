@@ -435,8 +435,8 @@ ImageDocument::ScrollImageTo(int32_t aX, int32_t aY, bool restoreImage)
     return;
   }
   nsRect portRect = sf->GetScrollPortRect();
-  sf->ScrollTo(nsPoint(nsPresContext::CSSPixelsToAppUnits(aX/ratio) - portRect.Width()/2,
-                       nsPresContext::CSSPixelsToAppUnits(aY/ratio) - portRect.Height()/2),
+  sf->ScrollTo(nsPoint(nsPresContext::CSSPixelsToAppUnits(aX/ratio) - portRect.width/2,
+                       nsPresContext::CSSPixelsToAppUnits(aY/ratio) - portRect.height/2),
                nsIScrollableFrame::INSTANT);
 }
 
@@ -738,8 +738,8 @@ ImageDocument::CheckOverflowing(bool changeState)
     nsPresContext *context = shell->GetPresContext();
     nsRect visibleArea = context->GetVisibleArea();
 
-    mVisibleWidth = nsPresContext::AppUnitsToFloatCSSPixels(visibleArea.Width());
-    mVisibleHeight = nsPresContext::AppUnitsToFloatCSSPixels(visibleArea.Height());
+    mVisibleWidth = nsPresContext::AppUnitsToFloatCSSPixels(visibleArea.width);
+    mVisibleHeight = nsPresContext::AppUnitsToFloatCSSPixels(visibleArea.height);
   }
 
   bool imageWasOverflowing = ImageIsOverflowing();
