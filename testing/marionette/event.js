@@ -1017,24 +1017,6 @@ event.synthesizeKeyExpectEvent = function(
 };
 
 /**
- * Synthesize a composition event.
- *
- * @param {DOMEvent} ev
- *     The composition event information.  This must have |type|
- *     member.  The value must be "compositionstart", "compositionend" or
- *     "compositionupdate".  And also this may have |data| and |locale|
- *     which would be used for the value of each property of the
- *     composition event.  Note that the data would be ignored if the
- *     event type were "compositionstart".
- * @param {Window=} window
- *     Window object.  Defaults to the current window.
- */
-event.synthesizeComposition = function(ev, window = undefined) {
-  let domutils = getDOMWindowUtils(window);
-  domutils.sendCompositionEvent(ev.type, ev.data || "", ev.locale || "");
-};
-
-/**
  * Synthesize a query selected text event.
  *
  * @param {Window=}
