@@ -33,8 +33,7 @@ window.addEventListener("load", () => {
   // CSS animation wins over transitions, so transition won't be visible during
   // the CSS animation.
   target.style.opacity = 0;
-  requestAnimationFrame(() => {
-    document.documentElement.classList.remove("reftest-wait");
-  });
+  getComputedStyle(target).opacity;
+  document.documentElement.classList.remove("reftest-wait");
 });
 </script>

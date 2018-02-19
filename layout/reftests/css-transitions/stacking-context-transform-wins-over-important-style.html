@@ -35,8 +35,6 @@ window.addEventListener("load", () => {
   target.style.setProperty("transform", "translateX(200px)", "important");
   getComputedStyle(target).transform;
 
-  requestAnimationFrame(() => {
-    document.documentElement.classList.remove("reftest-wait");
-  });
+  document.documentElement.classList.remove("reftest-wait");
 });
 </script>

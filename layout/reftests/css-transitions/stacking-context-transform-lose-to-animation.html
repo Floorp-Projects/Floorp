@@ -38,8 +38,7 @@ window.addEventListener("load", () => {
   // specified by the important rule, but we should create a stacking
   // context for it because there are animations.
 
-  requestAnimationFrame(() => {
-    document.documentElement.classList.remove("reftest-wait");
-  });
+  getComputedStyle(target).transform;
+  document.documentElement.classList.remove("reftest-wait");
 });
 </script>
