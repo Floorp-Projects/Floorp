@@ -31,10 +31,7 @@
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
-using mozilla::BinarySearch;
 using mozilla::BitwiseCast;
-using mozilla::IsNaN;
-using mozilla::Swap;
 
 class SigIdSet
 {

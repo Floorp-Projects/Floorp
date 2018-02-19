@@ -8,7 +8,6 @@
 
 #include "vm/Shape-inl.h"
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
 
@@ -31,9 +30,7 @@ using namespace js;
 using namespace js::gc;
 
 using mozilla::CeilingLog2Size;
-using mozilla::DebugOnly;
 using mozilla::PodZero;
-using mozilla::RotateLeft;
 
 using JS::AutoCheckCannotGC;
 

@@ -20,8 +20,6 @@
 using namespace js;
 using namespace js::jit;
 
-using mozilla::Array;
-
 namespace js {
 namespace jit {
 

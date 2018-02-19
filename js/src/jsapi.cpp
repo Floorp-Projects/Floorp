@@ -107,13 +107,7 @@ using namespace js::gc;
 
 using mozilla::Maybe;
 using mozilla::PodCopy;
-using mozilla::PodZero;
 using mozilla::Some;
-
-using JS::AutoGCRooter;
-using JS::ToInt32;
-using JS::ToInteger;
-using JS::ToUint32;
 
 #ifdef HAVE_VA_LIST_AS_ARRAY
 #define JS_ADDRESSOF_VA_LIST(ap) ((va_list*)(ap))

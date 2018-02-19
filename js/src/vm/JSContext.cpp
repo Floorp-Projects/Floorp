@@ -62,7 +62,6 @@ using namespace js::gc;
 
 using mozilla::DebugOnly;
 using mozilla::PodArrayZero;
-using mozilla::PointerRangeSize;
 
 bool
 js::AutoCycleDetector::init()

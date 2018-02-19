@@ -6,7 +6,6 @@
 
 /* JS reflection package. */
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Move.h"
 
@@ -30,7 +29,6 @@ using namespace js;
 using namespace js::frontend;
 
 using JS::AutoValueArray;
-using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::Forward;
 

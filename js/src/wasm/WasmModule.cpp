@@ -37,8 +37,6 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
-using mozilla::IsNaN;
-
 size_t
 LinkDataTier::SymbolicLinkArray::serializedSize() const
 {

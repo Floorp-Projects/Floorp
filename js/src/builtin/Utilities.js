@@ -77,12 +77,6 @@ MakeConstructible(Record, {});
 /********** Abstract operations defined in ECMAScript Language Specification **********/
 
 
-/* Spec: ECMAScript Language Specification, 5.1 edition, 8.12.6 and 11.8.7 */
-function HasProperty(o, p) {
-    return p in o;
-}
-
-
 /* Spec: ECMAScript Language Specification, 5.1 edition, 9.2 and 11.4.9 */
 function ToBoolean(v) {
     return !!v;

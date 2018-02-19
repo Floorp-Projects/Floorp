@@ -46,7 +46,6 @@ using namespace js::gc;
 
 using JS::MapTypeToTraceKind;
 
-using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::IntegerRange;
 using mozilla::IsBaseOf;

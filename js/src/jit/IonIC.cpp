@@ -6,8 +6,6 @@
 
 #include "jit/IonIC.h"
 
-#include "mozilla/Maybe.h"
-
 #include "jit/CacheIRCompiler.h"
 #include "jit/Linker.h"
 
@@ -16,8 +14,6 @@
 
 using namespace js;
 using namespace js::jit;
-
-using mozilla::Maybe;
 
 void
 IonIC::updateBaseAddress(JitCode* code, MacroAssembler& masm)
