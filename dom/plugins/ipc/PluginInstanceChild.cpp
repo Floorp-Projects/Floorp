@@ -2088,10 +2088,10 @@ PluginInstanceChild::ImmSetCandidateWindowProc(HIMC aIMC, LPCANDIDATEFORM aForm)
     position.mPoint.y = aForm->ptCurrentPos.y;
     position.mExcludeRect = !!(aForm->dwStyle & CFS_EXCLUDE);
     if (position.mExcludeRect) {
-      position.mRect.x = aForm->rcArea.left;
-      position.mRect.y = aForm->rcArea.top;
-      position.mRect.width = aForm->rcArea.right - aForm->rcArea.left;
-      position.mRect.height = aForm->rcArea.bottom - aForm->rcArea.top;
+      position.mRect.SetRect(aForm->rcArea.left,
+                             aForm->rcArea.top,
+                             aForm->rcArea.right - aForm->rcArea.left,
+                             aForm->rcArea.bottom - aForm->rcArea.top);
     }
 
     sCurrentPluginInstance->SendSetCandidateWindow(position);
@@ -3352,10 +3352,10 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
         exposeEvent.type = GraphicsExpose;
         exposeEvent.display = mWsInfo.display;
         exposeEvent.drawable = static_cast<gfxXlibSurface*>(aSurface)->XDrawable();
-        exposeEvent.x = aRect.x;
-        exposeEvent.y = aRect.y;
-        exposeEvent.width = aRect.width;
-        exposeEvent.height = aRect.height;
+        exposeEvent.x = aRect.X();
+        exposeEvent.y = aRect.Y();
+        exposeEvent.width = aRect.Width();
+        exposeEvent.height = aRect.Height();
         exposeEvent.count = 0;
         // information not set:
         exposeEvent.serial = 0;
@@ -3371,8 +3371,8 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
     // This rect is in the window coordinate space. aRect is in the plugin
     // coordinate space.
     RECT rect = {
-        mWindow.x + aRect.x,
-        mWindow.y + aRect.y,
+        mWindow.x + aRect.X(),
+        mWindow.y + aRect.Y(),
         mWindow.x + aRect.XMost(),
         mWindow.y + aRect.YMost()
     };
@@ -3415,8 +3415,8 @@ PluginInstanceChild::PaintRectToSurface(const nsIntRect& aRect,
 
     if (mIsTransparent && !CanPaintOnBackground()) {
         RefPtr<DrawTarget> dt = CreateDrawTargetForSurface(renderSurface);
-        gfx::Rect rect(plPaintRect.x, plPaintRect.y,
-                       plPaintRect.width, plPaintRect.height);
+        gfx::Rect rect(plPaintRect.X(), plPaintRect.Y(),
+                       plPaintRect.Width(), plPaintRect.Height());
         // Moz2D treats OP_SOURCE operations as unbounded, so we need to
         // clip to the rect that we want to fill:
         dt->PushClipRect(rect);
@@ -3488,8 +3488,8 @@ PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
 
     RefPtr<gfxImageSurface> whiteImage;
     RefPtr<gfxImageSurface> blackImage;
-    gfxRect targetRect(rect.x, rect.y, rect.width, rect.height);
-    IntSize targetSize(rect.width, rect.height);
+    gfxRect targetRect(rect.X(), rect.Y(), rect.Width(), rect.Height());
+    IntSize targetSize(rect.Width(), rect.Height());
     gfxPoint deviceOffset = -targetRect.TopLeft();
 
     // We always use a temporary "white image"
@@ -3557,7 +3557,7 @@ PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
         RefPtr<SourceSurface> surface =
             gfxPlatform::GetSourceSurfaceForSurface(dt, blackImage);
         dt->CopySurface(surface,
-                        IntRect(0, 0, rect.width, rect.height),
+                        IntRect(0, 0, rect.Width(), rect.Height()),
                         rect.TopLeft());
     }
 }
@@ -3687,7 +3687,7 @@ PluginInstanceChild::ShowPluginFrame()
     PLUGIN_LOG_DEBUG(
         ("[InstanceChild][%p] Painting%s <x=%d,y=%d, w=%d,h=%d> on surface <w=%d,h=%d>",
          this, haveTransparentPixels ? " with alpha" : "",
-         rect.x, rect.y, rect.width, rect.height,
+         rect.X(), rect.Y(), rect.Width(), rect.Height(),
          mCurrentSurface->GetSize().width, mCurrentSurface->GetSize().height));
 
     if (CanPaintOnBackground()) {
@@ -3745,7 +3745,7 @@ PluginInstanceChild::ShowPluginFrame()
         return true;
     }
 
-    NPRect r = { (uint16_t)rect.y, (uint16_t)rect.x,
+    NPRect r = { (uint16_t)rect.Y(), (uint16_t)rect.X(),
                  (uint16_t)rect.YMost(), (uint16_t)rect.XMost() };
     SurfaceDescriptor currSurf;
 #ifdef MOZ_X11
@@ -3818,8 +3818,8 @@ PluginInstanceChild::ReadbackDifferenceRect(const nsIntRect& rect)
 
     PLUGIN_LOG_DEBUG(
         ("[InstanceChild][%p] Reading back part of <x=%d,y=%d, w=%d,h=%d>",
-         this, mSurfaceDifferenceRect.x, mSurfaceDifferenceRect.y,
-         mSurfaceDifferenceRect.width, mSurfaceDifferenceRect.height));
+         this, mSurfaceDifferenceRect.X(), mSurfaceDifferenceRect.Y(),
+         mSurfaceDifferenceRect.Width(), mSurfaceDifferenceRect.Height()));
 
     // Read back previous content
     RefPtr<DrawTarget> dt = CreateDrawTargetForSurface(mCurrentSurface);

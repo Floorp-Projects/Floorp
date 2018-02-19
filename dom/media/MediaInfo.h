@@ -297,11 +297,9 @@ public:
     if (!w || !h) {
       return imageRect;
     }
-
-    imageRect.x = (imageRect.x * aWidth) / mImage.width;
-    imageRect.y = (imageRect.y * aHeight) / mImage.height;
-    imageRect.SetWidth(w);
-    imageRect.SetHeight(h);
+    imageRect.SetRect(imageRect.X() * aWidth / mImage.width,
+                      imageRect.X() * aHeight / mImage.height,
+                      w, h);
     return imageRect;
   }
 

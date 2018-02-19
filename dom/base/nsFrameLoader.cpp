@@ -2474,8 +2474,10 @@ nsFrameLoader::GetWindowDimensions(nsIntRect& aRect)
   }
 
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_GetInterface(parentOwner));
-  treeOwnerAsWin->GetPosition(&aRect.x, &aRect.y);
-  treeOwnerAsWin->GetSize(&aRect.width, &aRect.height);
+  int32_t x, y, width, height;
+  treeOwnerAsWin->GetPosition(&x, &y);
+  treeOwnerAsWin->GetSize(&width, &height);
+  aRect.SetRect(x, y, width, height);
   return NS_OK;
 }
 

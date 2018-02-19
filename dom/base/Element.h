@@ -1346,11 +1346,11 @@ public:
   MOZ_CAN_RUN_SCRIPT void MozScrollSnap();
   MOZ_CAN_RUN_SCRIPT int32_t ClientTop()
   {
-    return nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().y);
+    return nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().Y());
   }
   MOZ_CAN_RUN_SCRIPT int32_t ClientLeft()
   {
-    return nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().x);
+    return nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().X());
   }
   MOZ_CAN_RUN_SCRIPT int32_t ClientWidth()
   {
@@ -1364,7 +1364,7 @@ public:
   {
     nsIScrollableFrame* sf = GetScrollFrame();
     return sf ?
-           nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollRange().y) : 0;
+           nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollRange().Y()) : 0;
   }
   MOZ_CAN_RUN_SCRIPT int32_t ScrollTopMax()
   {
@@ -1377,7 +1377,7 @@ public:
   {
     nsIScrollableFrame* sf = GetScrollFrame();
     return sf ?
-           nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollRange().x) : 0;
+           nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollRange().X()) : 0;
   }
   MOZ_CAN_RUN_SCRIPT int32_t ScrollLeftMax()
   {

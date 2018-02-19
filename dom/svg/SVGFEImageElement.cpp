@@ -248,11 +248,11 @@ SVGFEImageElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   imageContainer->GetHeight(&nativeSize.height);
 
   Matrix viewBoxTM =
-    SVGContentUtils::GetViewBoxTransform(aFilterSubregion.width, aFilterSubregion.height,
+    SVGContentUtils::GetViewBoxTransform(aFilterSubregion.Width(), aFilterSubregion.Height(),
                                          0, 0, nativeSize.width, nativeSize.height,
                                          mPreserveAspectRatio);
   Matrix TM = viewBoxTM;
-  TM.PostTranslate(aFilterSubregion.x, aFilterSubregion.y);
+  TM.PostTranslate(aFilterSubregion.X(), aFilterSubregion.Y());
 
   SamplingFilter samplingFilter = nsLayoutUtils::GetSamplingFilterForFrame(frame);
 

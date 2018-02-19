@@ -161,28 +161,26 @@ FixUpNegativeDimension(const IntRect& aRect, ErrorResult& aRv)
   gfx::IntRect rect = aRect;
 
   // fix up negative dimensions
-  if (rect.width < 0) {
-    CheckedInt32 checkedX = CheckedInt32(rect.x) + rect.width;
+  if (rect.Width() < 0) {
+    CheckedInt32 checkedX = CheckedInt32(rect.X()) + rect.Width();
 
     if (!checkedX.isValid()) {
       aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
       return rect;
     }
 
-    rect.x = checkedX.value();
-    rect.width = -(rect.width);
+    rect.SetRectX(checkedX.value(), -rect.Width());
   }
 
-  if (rect.height < 0) {
-    CheckedInt32 checkedY = CheckedInt32(rect.y) + rect.height;
+  if (rect.Height() < 0) {
+    CheckedInt32 checkedY = CheckedInt32(rect.Y()) + rect.Height();
 
     if (!checkedY.isValid()) {
       aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
       return rect;
     }
 
-    rect.y = checkedY.value();
-    rect.height = -(rect.height);
+    rect.SetRectY(checkedY.value(), -rect.Height());
   }
 
   return rect;
@@ -220,8 +218,8 @@ CropAndCopyDataSourceSurface(DataSourceSurface* aSurface, const IntRect& aCropRe
   // So, instead, we force the output format to be SurfaceFormat::B8G8R8A8.
   const SurfaceFormat format = SurfaceFormat::B8G8R8A8;
   const int bytesPerPixel = BytesPerPixel(format);
-  const IntSize dstSize = IntSize(positiveCropRect.width,
-                                  positiveCropRect.height);
+  const IntSize dstSize = IntSize(positiveCropRect.Width(),
+                                  positiveCropRect.Height());
   const uint32_t dstStride = dstSize.width * bytesPerPixel;
 
   // Create a new SourceSurface.
@@ -248,17 +246,18 @@ CropAndCopyDataSourceSurface(DataSourceSurface* aSurface, const IntRect& aCropRe
       return nullptr;
     }
 
-    uint8_t* srcBufferPtr = srcMap.GetData() + surfPortion.y * srcMap.GetStride()
-                                             + surfPortion.x * bytesPerPixel;
+    uint8_t* srcBufferPtr = srcMap.GetData() + surfPortion.Y() * srcMap.GetStride()
+                                             + surfPortion.X() * bytesPerPixel;
     uint8_t* dstBufferPtr = dstMap.GetData() + dest.y * dstMap.GetStride()
                                              + dest.x * bytesPerPixel;
     CheckedInt<uint32_t> copiedBytesPerRaw =
-      CheckedInt<uint32_t>(surfPortion.width) * bytesPerPixel;
+      CheckedInt<uint32_t>(surfPortion.Width()) * bytesPerPixel;
     if (!copiedBytesPerRaw.isValid()) {
       return nullptr;
     }
 
-    for (int i = 0; i < surfPortion.height; ++i) {
+    auto surfPortionHeight = surfPortion.Height();
+    for (int i = 0; i < surfPortionHeight; ++i) {
       memcpy(dstBufferPtr, srcBufferPtr, copiedBytesPerRaw.value());
       srcBufferPtr += srcMap.GetStride();
       dstBufferPtr += dstMap.GetStride();
@@ -1530,10 +1529,10 @@ ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
   MOZ_ASSERT(aWriter);
   MOZ_ASSERT(aImageBitmap);
 
-  const uint32_t picRectX = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.x);
-  const uint32_t picRectY = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.y);
-  const uint32_t picRectWidth = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.width);
-  const uint32_t picRectHeight = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.height);
+  const uint32_t picRectX = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.X());
+  const uint32_t picRectY = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.Y());
+  const uint32_t picRectWidth = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.Width());
+  const uint32_t picRectHeight = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.Height());
   const uint32_t alphaType = BitwiseCast<uint32_t>(aImageBitmap->mAlphaType);
   const uint32_t isCroppingAreaOutSideOfSourceImage = aImageBitmap->mIsCroppingAreaOutSideOfSourceImage ? 1 : 0;
 
@@ -1831,7 +1830,7 @@ ImageBitmap::MapDataInto(JSContext* aCx,
       aFormat == ImageBitmapFormat::YUV420P ||
       aFormat == ImageBitmapFormat::YUV420SP_NV12 ||
       aFormat == ImageBitmapFormat::YUV420SP_NV21) {
-    if ((mPictureRect.x & 1) || (mPictureRect.y & 1)) {
+    if ((mPictureRect.X() & 1) || (mPictureRect.Y() & 1)) {
       aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
       return promise.forget();
     }

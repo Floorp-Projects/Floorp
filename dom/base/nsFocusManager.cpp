@@ -2635,8 +2635,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
               caretRect.MoveBy(caretWidgetOffset);
               nsPoint newCaretOffset;
               nsIWidget *newCaretWidget = newCaretFrame->GetNearestWidget(newCaretOffset);
-              if (widget == newCaretWidget && caretRect.y == newCaretOffset.y &&
-                  caretRect.x == newCaretOffset.x) {
+              if (widget == newCaretWidget && caretRect.IsEqualXY(newCaretOffset.x, newCaretOffset.y)) {
                 // The caret is at the start of the new element.
                 startFrame = newCaretFrame;
                 startContent = newCaretContent;

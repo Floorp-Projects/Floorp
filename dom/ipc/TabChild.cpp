@@ -904,16 +904,16 @@ TabChild::GetDimensions(uint32_t aFlags, int32_t* aX,
 {
   ScreenIntRect rect = GetOuterRect();
   if (aX) {
-    *aX = rect.x;
+    *aX = rect.X();
   }
   if (aY) {
-    *aY = rect.y;
+    *aY = rect.Y();
   }
   if (aCx) {
-    *aCx = rect.width;
+    *aCx = rect.Width();
   }
   if (aCy) {
-    *aCy = rect.height;
+    *aCy = rect.Height();
   }
 
   return NS_OK;
@@ -1315,8 +1315,8 @@ TabChild::RecvUpdateDimensions(const DimensionInfo& aDimensionInfo)
     baseWin->SetPositionAndSize(0, 0, screenSize.width, screenSize.height,
                                 nsIBaseWindow::eRepaint);
 
-    mPuppetWidget->Resize(screenRect.x + mClientOffset.x + mChromeOffset.x,
-                          screenRect.y + mClientOffset.y + mChromeOffset.y,
+    mPuppetWidget->Resize(screenRect.X() + mClientOffset.x + mChromeOffset.x,
+                          screenRect.Y() + mClientOffset.y + mChromeOffset.y,
                           screenSize.width, screenSize.height, true);
 
     return IPC_OK();
@@ -3287,8 +3287,8 @@ TabChild::RecvUIResolutionChanged(const float& aDpi,
   ScreenIntSize screenSize = GetInnerSize();
   if (mHasValidInnerSize && oldScreenSize != screenSize) {
     ScreenIntRect screenRect = GetOuterRect();
-    mPuppetWidget->Resize(screenRect.x + mClientOffset.x + mChromeOffset.x,
-                          screenRect.y + mClientOffset.y + mChromeOffset.y,
+    mPuppetWidget->Resize(screenRect.X() + mClientOffset.x + mChromeOffset.x,
+                          screenRect.Y() + mClientOffset.y + mChromeOffset.y,
                           screenSize.width, screenSize.height, true);
 
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(WebNavigation());
