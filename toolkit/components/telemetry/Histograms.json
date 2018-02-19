@@ -229,10 +229,11 @@
   },
   "BLOCKLIST_SYNC_FILE_LOAD": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["rvitillo@mozilla.com"],
-    "expires_in_version": "35",
+    "bug_numbers": [1439405],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "64",
     "kind": "boolean",
-    "description": "blocklist.xml has been loaded synchronously *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
+    "description": "Whether blocklist.xml was loaded synchronously. True means it was loaded synchronously, false means it was preloaded asynchronously."
   },
   "CHECKERBOARD_DURATION": {
     "record_in_processes": ["main", "content", "gpu"],
