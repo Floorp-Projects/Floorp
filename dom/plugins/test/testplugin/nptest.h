@@ -141,7 +141,6 @@ typedef struct InstanceData {
   bool wantsAllStreams;
   int32_t mouseUpEventCount;
   int32_t bugMode;
-  std::string javaCodebase;
   AsyncDrawing asyncDrawing;
   NPAsyncSurface *frontBuffer;
   NPAsyncSurface *backBuffer;
