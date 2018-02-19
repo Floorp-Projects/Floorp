@@ -2255,10 +2255,6 @@ this.PlacesPanelview = class extends PlacesViewBase {
     }
   }
 
-  _isPopupOpen() {
-    return this.panel.state == "open" && this.panelMultiView.current == this._viewElt;
-  }
-
   _onPopupHidden(event) {
     let panelview = event.originalTarget;
     let placesNode = panelview._placesNode;
