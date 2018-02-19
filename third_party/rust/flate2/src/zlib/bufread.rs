@@ -31,7 +31,7 @@ use {Compress, Decompress};
 /// # fn open_hello_world() -> std::io::Result<Vec<u8>> {
 /// let f = File::open("examples/hello_world.txt")?;
 /// let b = BufReader::new(f);
-/// let mut z = ZlibEncoder::new(b, Compression::Fast);
+/// let mut z = ZlibEncoder::new(b, Compression::fast());
 /// let mut buffer = Vec::new();
 /// z.read_to_end(&mut buffer)?;
 /// # Ok(buffer)
@@ -150,7 +150,7 @@ impl<R: AsyncWrite + BufRead> AsyncWrite for ZlibEncoder<R> {
 /// use flate2::bufread::ZlibDecoder;
 ///
 /// # fn main() {
-/// # let mut e = ZlibEncoder::new(Vec::new(), Compression::Default);
+/// # let mut e = ZlibEncoder::new(Vec::new(), Compression::default());
 /// # e.write(b"Hello World").unwrap();
 /// # let bytes = e.finish().unwrap();
 /// # println!("{}", decode_bufreader(bytes).unwrap());

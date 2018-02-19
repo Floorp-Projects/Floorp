@@ -45,7 +45,7 @@ fn tcp_stream_echo_pattern() {
             assert_eq!(b.read(&mut buf).unwrap(), 0);
         });
 
-        let mut a = write::ZlibEncoder::new(a, Compression::Default);
+        let mut a = write::ZlibEncoder::new(a, Compression::default());
         for i in 0..N {
             let buf = [i; M];
             a.write_all(&buf).unwrap();
@@ -61,7 +61,7 @@ fn tcp_stream_echo_pattern() {
     let copy = stream.and_then(|s| {
         let (a, b) = s.split();
         let a = read::ZlibDecoder::new(a);
-        let b = write::DeflateEncoder::new(b, Compression::Default);
+        let b = write::DeflateEncoder::new(b, Compression::default());
         copy(a, b)
     }).then(|result| {
         let (amt, _a, b) = result.unwrap();
@@ -99,7 +99,7 @@ fn echo_random() {
             assert_eq!(b.read(&mut buf).unwrap(), 0);
         });
 
-        let mut a = write::ZlibEncoder::new(a, Compression::Default);
+        let mut a = write::ZlibEncoder::new(a, Compression::default());
         a.write_all(&v2).unwrap();
         a.finish().unwrap()
          .shutdown(Shutdown::Write).unwrap();
@@ -112,7 +112,7 @@ fn echo_random() {
     let copy = stream.and_then(|s| {
         let (a, b) = s.split();
         let a = read::ZlibDecoder::new(a);
-        let b = write::DeflateEncoder::new(b, Compression::Default);
+        let b = write::DeflateEncoder::new(b, Compression::default());
         copy(a, b)
     }).then(|result| {
         let (amt, _a, b) = result.unwrap();

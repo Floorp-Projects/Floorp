@@ -8,6 +8,7 @@
 #define nsXBLDocumentInfo_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/MemoryReporting.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsWeakReference.h"
@@ -48,6 +49,8 @@ public:
 
   static nsresult ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocInfo,
                                         nsIDocument* aBoundDocument);
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsXBLDocumentInfo)
 

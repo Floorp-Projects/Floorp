@@ -32,7 +32,7 @@ use super::bufread;
 /// fn deflateencoder_read_hello_world() -> io::Result<Vec<u8>> {
 ///    let mut ret_vec = [0;100];
 ///    let c = b"hello world";
-///    let mut deflater = DeflateEncoder::new(&c[..], Compression::Fast);
+///    let mut deflater = DeflateEncoder::new(&c[..], Compression::fast());
 ///    let count = deflater.read(&mut ret_vec)?;
 ///    Ok(ret_vec[0..count].to_vec())
 /// }
@@ -150,7 +150,7 @@ impl<R: AsyncRead + AsyncWrite> AsyncWrite for DeflateEncoder<R> {
 /// use flate2::read::DeflateDecoder;
 ///
 /// # fn main() {
-/// #    let mut e = DeflateEncoder::new(Vec::new(), Compression::Default);
+/// #    let mut e = DeflateEncoder::new(Vec::new(), Compression::default());
 /// #    e.write(b"Hello World").unwrap();
 /// #    let bytes = e.finish().unwrap();
 /// #    println!("{}", decode_reader(bytes).unwrap());

@@ -931,7 +931,7 @@ protected:
   bool ParseListStyleType(nsCSSValue& aValue);
   bool ParseMargin();
   bool ParseClipPath(nsCSSValue& aValue);
-  bool ParseTransform(bool aIsPrefixed, nsCSSPropertyID aProperty,
+  bool ParseTransform(nsCSSPropertyID aProperty,
                       bool aDisallowRelativeValues = false);
   bool ParseObjectPosition();
   bool ParseOutline();
@@ -1250,7 +1250,7 @@ protected:
 
 
   /* Functions for transform Parsing */
-  bool ParseSingleTransform(bool aIsPrefixed, bool aDisallowRelativeValues,
+  bool ParseSingleTransform(bool aDisallowRelativeValues,
                             nsCSSValue& aValue);
   bool ParseFunction(nsCSSKeyword aFunction, const uint32_t aAllowedTypes[],
                      uint32_t aVariantMaskAll, uint16_t aMinElems,
@@ -1827,7 +1827,7 @@ CSSParserImpl::ParseTransformProperty(const nsAString& aPropValue,
   css::ErrorReporter reporter(scanner, mSheet, mChildLoader, nullptr);
   InitScanner(scanner, reporter, nullptr, nullptr, nullptr);
 
-  bool parsedOK = ParseTransform(false, eCSSProperty_transform,
+  bool parsedOK = ParseTransform(eCSSProperty_transform,
                                  aDisallowRelativeValues);
   // We should now be at EOF
   if (parsedOK && GetToken(true)) {
@@ -11786,9 +11786,7 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSPropertyID aPropID)
     return ParseWillChange();
   case eCSSProperty_transform:
   case eCSSProperty__moz_window_transform:
-    return ParseTransform(false, aPropID);
-  case eCSSProperty__moz_transform:
-    return ParseTransform(true, eCSSProperty_transform);
+    return ParseTransform(aPropID);
   case eCSSProperty_transform_origin:
   case eCSSProperty_perspective_origin:
   case eCSSProperty__moz_window_transform_origin:
@@ -15861,8 +15859,6 @@ CSSParserImpl::ParseFunction(nsCSSKeyword aFunction,
  * returns an error.
  *
  * @param aToken The token identifying the function.
- * @param aIsPrefixed If true, parse matrices using the matrix syntax
- *   for -moz-transform.
  * @param aDisallowRelativeValues If true, only allow variants that are
  *   numbers or have non-relative dimensions.
  * @param aMinElems [out] The minimum number of elements to read.
@@ -15871,7 +15867,6 @@ CSSParserImpl::ParseFunction(nsCSSKeyword aFunction,
  * @return Whether the information was loaded successfully.
  */
 static bool GetFunctionParseInformation(nsCSSKeyword aToken,
-                                        bool aIsPrefixed,
                                         bool aDisallowRelativeValues,
                                         uint16_t &aMinElems,
                                         uint16_t &aMaxElems,
@@ -15897,9 +15892,7 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
          eThreeNumbers,
          eThreeNumbersOneAngle,
          eMatrix,
-         eMatrixPrefixed,
          eMatrix3d,
-         eMatrix3dPrefixed,
          eNumVariantMasks };
   static const int32_t kMaxElemsPerFunction = 16;
   static const uint32_t kVariantMasks[eNumVariantMasks][kMaxElemsPerFunction] = {
@@ -15921,15 +15914,9 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
     {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
      VARIANT_NUMBER, VARIANT_NUMBER},
     {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
-     VARIANT_LPNCALC, VARIANT_LPNCALC},
-    {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
      VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
      VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
-     VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER},
-    {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
-     VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
-     VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
-     VARIANT_LPNCALC, VARIANT_LPNCALC, VARIANT_LNCALC, VARIANT_NUMBER}};
+     VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER}};
   // Map from a mask to a congruent mask that excludes relative variants.
   static const int32_t kNonRelativeVariantMap[eNumVariantMasks] = {
     eAbsoluteLengthCalc,
@@ -15948,13 +15935,11 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
     eThreeNumbers,
     eThreeNumbersOneAngle,
     eMatrix,
-    eMatrix,
-    eMatrix3d,
     eMatrix3d };
 
 #ifdef DEBUG
   static const uint8_t kVariantMaskLengths[eNumVariantMasks] =
-    {1, 1, 1, 2, 2, 3, 3, 1, 2, 1, 1, 1, 2, 3, 4, 6, 6, 16, 16};
+    {1, 1, 1, 2, 2, 3, 3, 1, 2, 1, 1, 1, 2, 3, 4, 6, 16};
 #endif
 
   int32_t variantIndex = eNumVariantMasks;
@@ -16039,13 +16024,13 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
     break;
   case eCSSKeyword_matrix:
     /* Six values, all numbers. */
-    variantIndex = aIsPrefixed ? eMatrixPrefixed : eMatrix;
+    variantIndex = eMatrix;
     aMinElems = 6U;
     aMaxElems = 6U;
     break;
   case eCSSKeyword_matrix3d:
     /* 16 matrix values, all numbers */
-    variantIndex = aIsPrefixed ? eMatrix3dPrefixed : eMatrix3d;
+    variantIndex = eMatrix3d;
     aMinElems = 16U;
     aMaxElems = 16U;
     break;
@@ -16135,8 +16120,7 @@ bool CSSParserImpl::ParseWillChange()
  * error if something goes wrong.
  */
 bool
-CSSParserImpl::ParseSingleTransform(bool aIsPrefixed,
-                                    bool aDisallowRelativeValues,
+CSSParserImpl::ParseSingleTransform(bool aDisallowRelativeValues,
                                     nsCSSValue& aValue)
 {
   if (!GetToken(true))
@@ -16151,7 +16135,7 @@ CSSParserImpl::ParseSingleTransform(bool aIsPrefixed,
   uint16_t minElems, maxElems;
   nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
 
-  if (!GetFunctionParseInformation(keyword, aIsPrefixed,
+  if (!GetFunctionParseInformation(keyword,
                                    aDisallowRelativeValues,
                                    minElems, maxElems,
                                    variantMask))
@@ -16169,7 +16153,7 @@ CSSParserImpl::ParseSingleTransform(bool aIsPrefixed,
  * identity transform very late in the pipeline.
  */
 bool
-CSSParserImpl::ParseTransform(bool aIsPrefixed, nsCSSPropertyID aProperty,
+CSSParserImpl::ParseTransform(nsCSSPropertyID aProperty,
                               bool aDisallowRelativeValues)
 {
   nsCSSValue value;
@@ -16181,7 +16165,7 @@ CSSParserImpl::ParseTransform(bool aIsPrefixed, nsCSSPropertyID aProperty,
     list->mHead = new nsCSSValueList;
     nsCSSValueList* cur = list->mHead;
     for (;;) {
-      if (!ParseSingleTransform(aIsPrefixed, aDisallowRelativeValues,
+      if (!ParseSingleTransform(aDisallowRelativeValues,
                                 cur->mValue)) {
         return false;
       }

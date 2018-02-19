@@ -195,6 +195,7 @@ class nsWindowSizes
   macro(Style, mLayoutComputedValuesNonDom) \
   macro(Style, mLayoutComputedValuesVisited) \
   macro(Other, mPropertyTablesSize) \
+  macro(Other, mBindingsSize) \
 
 public:
   explicit nsWindowSizes(mozilla::SizeOfState& aState)

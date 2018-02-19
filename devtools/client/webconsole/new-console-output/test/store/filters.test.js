@@ -10,11 +10,10 @@ const { messagesAdd } = require("devtools/client/webconsole/new-console-output/a
 const { ConsoleCommand } = require("devtools/client/webconsole/new-console-output/types");
 const { getVisibleMessages } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");
-const { setupStore } = require("devtools/client/webconsole/new-console-output/test/helpers");
+const { setupStore, getFiltersPrefs } = require("devtools/client/webconsole/new-console-output/test/helpers");
 const { FILTERS, PREFS } = require("devtools/client/webconsole/new-console-output/constants");
 const { stubPackets } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
-const ServicesMock = require("Services");
 
 describe("Filtering", () => {
   let store;
@@ -226,7 +225,7 @@ describe("Clear filters", () => {
       [FILTERS.NETXHR]: true,
       [FILTERS.TEXT]: "foobar",
     });
-    expect(ServicesMock.prefs.testHelpers.getFiltersPrefs()).toEqual({
+    expect(getFiltersPrefs()).toEqual({
       [PREFS.FILTER.WARN]: true,
       [PREFS.FILTER.LOG]: true,
       [PREFS.FILTER.INFO]: true,
@@ -251,7 +250,7 @@ describe("Clear filters", () => {
       [FILTERS.TEXT]: "",
     });
 
-    expect(ServicesMock.prefs.testHelpers.getFiltersPrefs()).toEqual({
+    expect(getFiltersPrefs()).toEqual({
       [PREFS.FILTER.CSS]: false,
       [PREFS.FILTER.DEBUG]: true,
       [PREFS.FILTER.ERROR]: true,
@@ -290,7 +289,7 @@ describe("Resets filters", () => {
       [FILTERS.TEXT]: "foobar",
     });
 
-    expect(ServicesMock.prefs.testHelpers.getFiltersPrefs()).toEqual({
+    expect(getFiltersPrefs()).toEqual({
       [PREFS.FILTER.WARN]: true,
       [PREFS.FILTER.INFO]: true,
       [PREFS.FILTER.DEBUG]: true,
@@ -317,7 +316,7 @@ describe("Resets filters", () => {
       [FILTERS.NETXHR]: true,
     });
 
-    expect(ServicesMock.prefs.testHelpers.getFiltersPrefs()).toEqual({
+    expect(getFiltersPrefs()).toEqual({
       [PREFS.FILTER.ERROR]: true,
       [PREFS.FILTER.WARN]: true,
       [PREFS.FILTER.LOG]: true,

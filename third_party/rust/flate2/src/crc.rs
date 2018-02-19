@@ -36,7 +36,7 @@ impl Crc {
     }
 
     /// The number of bytes that have been used to calculate the CRC.
-    /// This value is only accurate if the amount is lower than 2^32.
+    /// This value is only accurate if the amount is lower than 2<sup>32</sup>.
     pub fn amount(&self) -> u32 {
         self.amt
     }

@@ -12,16 +12,15 @@
   display: none;
 }
 
-
-richlistitem[feed] {
-  -moz-binding: url("chrome://browser/content/pageinfo/feeds.xml#feed");
+#feedListbox richlistitem {
+  -moz-box-orient: vertical;
 }
 
-richlistitem[feed]:not([selected="true"]) .feed-subscribe {
+#feedListbox richlistitem:not([selected="true"]) .feed-subscribe {
   display: none;
 }
 
-groupbox[closed="true"] > .groupbox-body { 
+groupbox[closed="true"] > .groupbox-body {
   visibility: collapse;
 }
 

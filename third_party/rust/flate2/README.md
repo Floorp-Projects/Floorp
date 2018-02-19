@@ -6,8 +6,12 @@
 [![Documentation](https://docs.rs/flate2/badge.svg)](https://docs.rs/flate2)
 
 A streaming compression/decompression library for Rust. The underlying
-implementation by default uses [`miniz`](https://code.google.com/p/miniz/) but
+implementation by default uses [`miniz`](https://github.com/richgel999/miniz) but
 can optionally be configured to use the system zlib, if available.
+
+There is also an experimental rust backend that uses the
+[`miniz_oxide`](https://crates.io/crates/miniz_oxide) crate. This avoids the need
+to build C code, but hasn't gone through as much testing as the other backends.
 
 Supported formats:
 
@@ -28,6 +32,13 @@ Using zlib instead of miniz:
 flate2 = { version = "0.2", features = ["zlib"], default-features = false }
 ```
 
+Using the rust back-end:
+
+```toml
+[dependencies]
+flate2 = { version = "0.2", features = ["rust_backend"], default-features = false }
+```
+
 ## Compression
 
 ```rust
@@ -38,7 +49,7 @@ use flate2::Compression;
 use flate2::write::ZlibEncoder;
 
 fn main() {
-    let mut e = ZlibEncoder::new(Vec::new(), Compression::Default);
+    let mut e = ZlibEncoder::new(Vec::new(), Compression::default());
     e.write(b"foo");
     e.write(b"bar");
     let compressed_bytes = e.finish();
@@ -54,7 +65,7 @@ use std::io::prelude::*;
 use flate2::read::GzDecoder;
 
 fn main() {
-    let mut d = GzDecoder::new("...".as_bytes()).unwrap();
+    let mut d = GzDecoder::new("...".as_bytes());
     let mut s = String::new();
     d.read_to_string(&mut s).unwrap();
     println!("{}", s);
@@ -63,8 +74,17 @@ fn main() {
 
 # License
 
-`flate2-rs` is primarily distributed under the terms of both the MIT license and
-the Apache License (Version 2.0), with portions covered by various BSD-like
-licenses.
+This project is licensed under either of
 
-See LICENSE-APACHE, and LICENSE-MIT for details.
+ * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
+   http://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license ([LICENSE-MIT](LICENSE-MIT) or
+   http://opensource.org/licenses/MIT)
+
+at your option.
+
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in this project by you, as defined in the Apache-2.0 license,
+shall be dual licensed as above, without any additional terms or conditions.

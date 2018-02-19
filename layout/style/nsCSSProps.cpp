@@ -2991,13 +2991,6 @@ static const nsCSSPropertyID gPlaceSelfSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-// Subproperty tables for shorthands that are just aliases with
-// different parsing rules.
-static const nsCSSPropertyID gMozTransformSubpropTable[] = {
-  eCSSProperty_transform,
-  eCSSProperty_UNKNOWN
-};
-
 static const nsCSSPropertyID gOverscrollBehaviorSubpropTable[] = {
   eCSSProperty_overscroll_behavior_x,
   eCSSProperty_overscroll_behavior_y,

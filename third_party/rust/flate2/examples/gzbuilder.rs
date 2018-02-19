@@ -17,7 +17,7 @@ fn sample_builder() -> Result<(), io::Error> {
     let mut gz = GzBuilder::new()
                  .filename("hello_world.txt")
                  .comment("test file, please delete")
-                 .write(f, Compression::Default);
+                 .write(f, Compression::default());
     gz.write(b"hello world")?;
     gz.finish()?;
     Ok(())

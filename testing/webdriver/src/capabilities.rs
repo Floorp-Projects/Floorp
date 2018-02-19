@@ -87,13 +87,13 @@ impl SpecNewSessionParameters {
             match &**key {
                 "acceptInsecureCerts" => if !value.is_boolean() {
                         return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                       "acceptInsecureCerts is not a boolean"))
+                                                       format!("acceptInsecureCerts is not boolean: {}", value)))
                     },
                 x @ "browserName" |
                 x @ "browserVersion" |
                 x @ "platformName" => if !value.is_string() {
                         return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                       format!("{} is not a string", x)))
+                                                       format!("{} is not a string: {}", x, value)))
                     },
                 "pageLoadStrategy" => {
                     try!(SpecNewSessionParameters::validate_page_load_strategy(value))
@@ -110,7 +110,7 @@ impl SpecNewSessionParameters {
                 x => {
                     if !x.contains(":") {
                         return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                       format!("{} is not the name of a known capability or a valid extension capability", x)))
+                                                       format!("{} is not the name of a known capability or extension capability", x)))
                     } else {
                         try!(browser_capabilities.validate_custom(x, value));
                     }
@@ -130,7 +130,7 @@ impl SpecNewSessionParameters {
                     x => {
                         return Err(WebDriverError::new(
                             ErrorStatus::InvalidArgument,
-                            format!("\"{}\" is not a valid page load strategy", x)))
+                            format!("Invalid page load strategy: {}", x)))
                     }
                 }
             }
@@ -144,6 +144,7 @@ impl SpecNewSessionParameters {
         let obj = try_opt!(proxy_value.as_object(),
                            ErrorStatus::InvalidArgument,
                            "proxy is not an object");
+
         for (key, value) in obj.iter() {
             match &**key {
                 "proxyType" => match value.as_string() {
@@ -154,36 +155,42 @@ impl SpecNewSessionParameters {
                     Some("manual") => {},
                     Some(x) => return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
-                        format!("{} is not a valid proxyType value", x))),
+                        format!("Invalid proxyType value: {}", x))),
                     None => return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
-                        "proxyType value is not a string")),
+                        format!("proxyType is not a string: {}", value))),
                 },
+
                 "proxyAutoconfigUrl" => match value.as_string() {
                     Some(x) => {
-                        try!(Url::parse(x).or(Err(WebDriverError::new(
+                        Url::parse(x).or(Err(WebDriverError::new(
                             ErrorStatus::InvalidArgument,
-                            "proxyAutoconfigUrl is not a valid url"))));
+                            format!("proxyAutoconfigUrl is not a valid URL: {}", x))))?;
                     },
                     None => return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
                         "proxyAutoconfigUrl is not a string"
                     ))
                 },
-                "ftpProxy" => try!(SpecNewSessionParameters::validate_host(value)),
-                "httpProxy" => try!(SpecNewSessionParameters::validate_host(value)),
-                "noProxy" => try!(SpecNewSessionParameters::validate_no_proxy(value)),
-                "sslProxy" => try!(SpecNewSessionParameters::validate_host(value)),
-                "socksProxy" => try!(SpecNewSessionParameters::validate_host(value)),
+
+                "ftpProxy" => SpecNewSessionParameters::validate_host(value, "ftpProxy")?,
+                "httpProxy" => SpecNewSessionParameters::validate_host(value, "httpProxy")?,
+                "noProxy" => SpecNewSessionParameters::validate_no_proxy(value)?,
+                "sslProxy" => SpecNewSessionParameters::validate_host(value, "sslProxy")?,
+                "socksProxy" => SpecNewSessionParameters::validate_host(value, "socksProxy")?,
                 "socksVersion" => if !value.is_number() {
-                    return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                   "socksVersion is not a number"))
+                    return Err(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        format!("socksVersion is not a number: {}", value)
+                    ))
                 },
+
                 x => return Err(WebDriverError::new(
                     ErrorStatus::InvalidArgument,
-                    format!("{} is not a valid proxy configuration capability", x)))
+                    format!("Invalid proxy configuration entry: {}", x)))
             }
         }
+
         Ok(())
     }
 
@@ -195,14 +202,14 @@ impl SpecNewSessionParameters {
                         Some(_) => {},
                         None => return Err(WebDriverError::new(
                             ErrorStatus::InvalidArgument,
-                            format!("{} is not a string", host)
+                            format!("noProxy item is not a string: {}", host)
                         ))
                     }
                 }
             },
             None => return Err(WebDriverError::new(
                 ErrorStatus::InvalidArgument,
-                format!("{} is not an array", value)
+                format!("noProxy is not an array: {}", value)
             ))
         }
 
@@ -211,20 +218,20 @@ impl SpecNewSessionParameters {
 
     /// Validate whether a named capability is JSON value is a string containing a host
     /// and possible port
-    fn validate_host(value: &Json) -> WebDriverResult<()> {
+    fn validate_host(value: &Json, entry: &str) -> WebDriverResult<()> {
         match value.as_string() {
             Some(host) => {
                 if host.contains("://") {
                     return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
-                        format!("{} contains a scheme", host)));
+                        format!("{} must not contain a scheme: {}", entry, host)));
                 }
 
                 // Temporarily add a scheme so the host can be parsed as URL
                 let s = String::from(format!("http://{}", host));
-                let url = try!(Url::parse(s.as_str()).or(Err(WebDriverError::new(
+                let url = Url::parse(s.as_str()).or(Err(WebDriverError::new(
                     ErrorStatus::InvalidArgument,
-                    format!("{} is not a valid host", host)))));
+                    format!("{} is not a valid URL: {}", entry, host))))?;
 
                 if url.username() != "" ||
                     url.password() != None ||
@@ -233,90 +240,122 @@ impl SpecNewSessionParameters {
                     url.fragment() != None {
                         return Err(WebDriverError::new(
                             ErrorStatus::InvalidArgument,
-                            format!("{} is not of the form host[:port]", host)));
+                            format!("{} is not of the form host[:port]: {}", entry, host)));
                     }
             },
+
             None => return Err(WebDriverError::new(
                 ErrorStatus::InvalidArgument,
-                format!("{} is not a string", value)
+                format!("{} is not a string: {}", entry, value)
             ))
         }
+
         Ok(())
     }
 
     fn validate_timeouts(value: &Json) -> WebDriverResult<()> {
-        let obj = try_opt!(value.as_object(),
-                           ErrorStatus::InvalidArgument,
-                           "timeouts capability is not an object");
+        let obj = try_opt!(
+            value.as_object(),
+            ErrorStatus::InvalidArgument,
+            "timeouts capability is not an object"
+        );
+
         for (key, value) in obj.iter() {
             match &**key {
-                x @ "script" |
-                x @ "pageLoad" |
-                x @ "implicit" => {
-                    let timeout = try_opt!(value.as_i64(),
-                                           ErrorStatus::InvalidArgument,
-                                           format!("{} timeouts value is not an integer", x));
+                x @ "script" | x @ "pageLoad" | x @ "implicit" => {
+                    let timeout = try_opt!(
+                        value.as_i64(),
+                        ErrorStatus::InvalidArgument,
+                        format!("{} timeouts value is not an integer: {}", x, value)
+                    );
                     if timeout < 0 {
-                        return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                       format!("{} timeouts value is negative", x)))
+                        return Err(WebDriverError::new(
+                            ErrorStatus::InvalidArgument,
+                            format!("{} timeouts value is negative: {}", x, timeout),
+                        ));
                     }
-                },
-                x => return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                    format!("{} is not a valid timeouts capability", x)))
+                }
+
+                x => {
+                    return Err(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        format!("Invalid timeouts capability entry: {}", x),
+                    ))
+                }
             }
         }
+
         Ok(())
     }
 
     fn validate_unhandled_prompt_behaviour(value: &Json) -> WebDriverResult<()> {
-        let behaviour = try_opt!(value.as_string(),
-                                 ErrorStatus::InvalidArgument,
-                                 "unhandledPromptBehavior capability is not a string");
+        let behaviour = try_opt!(
+            value.as_string(),
+            ErrorStatus::InvalidArgument,
+            format!("unhandledPromptBehavior is not a string: {}", value)
+        );
+
         match behaviour {
-            "dismiss" |
-            "accept" => {},
-            x => return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                format!("{} is not a valid unhandledPromptBehavior value", x)))        }
+            "dismiss" | "accept" => {}
+            x => {
+                return Err(WebDriverError::new(
+                    ErrorStatus::InvalidArgument,
+                    format!("Invalid unhandledPromptBehavior value: {}", x),
+                ))
+            }
+        }
+
         Ok(())
     }
 }
 
 impl Parameters for SpecNewSessionParameters {
     fn from_json(body: &Json) -> WebDriverResult<SpecNewSessionParameters> {
-        let data = try_opt!(body.as_object(),
-                            ErrorStatus::UnknownError,
-                            "Message body is not an object");
+        let data = try_opt!(
+            body.as_object(),
+            ErrorStatus::UnknownError,
+            format!("Malformed capabilities, message body is not an object: {}", body)
+        );
 
         let capabilities = try_opt!(
-            try_opt!(data.get("capabilities"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'capabilities' parameter").as_object(),
+            try_opt!(
+                data.get("capabilities"),
+                ErrorStatus::InvalidArgument,
+                "Malformed capabilities, missing \"capabilities\" field"
+            ).as_object(),
             ErrorStatus::InvalidArgument,
-                     "'capabilities' parameter is not an object");
+            "Malformed capabilities, \"capabilities\" field is not an object}"
+        );
 
         let default_always_match = Json::Object(Capabilities::new());
-        let always_match = try_opt!(capabilities.get("alwaysMatch")
-                                   .unwrap_or(&default_always_match)
-                                   .as_object(),
-                                   ErrorStatus::InvalidArgument,
-                                   "'alwaysMatch' parameter is not an object");
+        let always_match = try_opt!(
+            capabilities
+                .get("alwaysMatch")
+                .unwrap_or(&default_always_match)
+                .as_object(),
+            ErrorStatus::InvalidArgument,
+            "Malformed capabilities, alwaysMatch field is not an object"
+        );
         let default_first_matches = Json::Array(vec![]);
-        let first_matches = try!(
-            try_opt!(capabilities.get("firstMatch")
-                     .unwrap_or(&default_first_matches)
-                     .as_array(),
-                     ErrorStatus::InvalidArgument,
-                     "'firstMatch' parameter is not an array")
-                .iter()
-                .map(|x| x.as_object()
-                     .map(|x| x.clone())
-                     .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                "'firstMatch' entry is not an object")))
-                .collect::<WebDriverResult<Vec<Capabilities>>>());
+        let first_matches = try_opt!(
+            capabilities
+                .get("firstMatch")
+                .unwrap_or(&default_first_matches)
+                .as_array(),
+            ErrorStatus::InvalidArgument,
+            "Malformed capabilities, firstMatch field is not an array"
+        ).iter()
+            .map(|x| {
+                x.as_object().map(|x| x.clone()).ok_or(WebDriverError::new(
+                    ErrorStatus::InvalidArgument,
+                    "Malformed capabilities, firstMatch entry is not an object",
+                ))
+            })
+            .collect::<WebDriverResult<Vec<Capabilities>>>()?;
 
         return Ok(SpecNewSessionParameters {
             alwaysMatch: always_match.clone(),
-            firstMatch: first_matches
+            firstMatch: first_matches,
         });
     }
 }
@@ -347,13 +386,10 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
         let merged_capabilities = capabilities_list
             .iter()
             .map(|first_match_entry| {
-                if first_match_entry.keys().any(
-                    |k| self.alwaysMatch.contains_key(k),
-                )
-                {
+                if first_match_entry.keys().any(|k| self.alwaysMatch.contains_key(k)) {
                     return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
-                        "'firstMatch' key shadowed a value in 'alwaysMatch'",
+                        "firstMatch key shadowed a value in alwaysMatch",
                     ));
                 }
                 let mut merged = self.alwaysMatch.clone();
@@ -482,32 +518,33 @@ impl CapabilitiesMatching for LegacyNewSessionParameters {
 
 impl Parameters for LegacyNewSessionParameters {
     fn from_json(body: &Json) -> WebDriverResult<LegacyNewSessionParameters> {
-        let data = try_opt!(body.as_object(),
-                            ErrorStatus::UnknownError,
-                            "Message body is not an object");
+        let data = try_opt!(
+            body.as_object(),
+            ErrorStatus::UnknownError,
+            format!("Malformed legacy capabilities, message body is not an object: {}", body)
+        );
 
-        let desired_capabilities =
-            if let Some(capabilities) = data.get("desiredCapabilities") {
-                try_opt!(capabilities.as_object(),
-                         ErrorStatus::InvalidArgument,
-                         "'desiredCapabilities' parameter is not an object").clone()
-            } else {
-                BTreeMap::new()
-            };
+        let desired = if let Some(capabilities) = data.get("desiredCapabilities") {
+            try_opt!(
+                capabilities.as_object(),
+                ErrorStatus::InvalidArgument,
+                "Malformed legacy capabilities, desiredCapabilities field is not an object"
+            ).clone()
+        } else {
+            BTreeMap::new()
+        };
 
-        let required_capabilities =
-            if let Some(capabilities) = data.get("requiredCapabilities") {
-                try_opt!(capabilities.as_object(),
-                         ErrorStatus::InvalidArgument,
-                         "'requiredCapabilities' parameter is not an object").clone()
-            } else {
-                BTreeMap::new()
-            };
+        let required = if let Some(capabilities) = data.get("requiredCapabilities") {
+            try_opt!(
+                capabilities.as_object(),
+                ErrorStatus::InvalidArgument,
+                "Malformed legacy capabilities, requiredCapabilities field is not an object"
+            ).clone()
+        } else {
+            BTreeMap::new()
+        };
 
-        Ok(LegacyNewSessionParameters {
-            desired: desired_capabilities,
-            required: required_capabilities
-        })
+        Ok(LegacyNewSessionParameters { desired, required })
     }
 }
 
@@ -523,7 +560,7 @@ impl ToJson for LegacyNewSessionParameters {
 #[cfg(test)]
 mod tests {
     use rustc_serialize::json::Json;
-    use super::{WebDriverResult, SpecNewSessionParameters};
+    use super::{SpecNewSessionParameters, WebDriverResult};
 
     fn validate_proxy(value: &str) -> WebDriverResult<()> {
         let data = Json::from_str(value).unwrap();

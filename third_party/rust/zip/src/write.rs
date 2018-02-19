@@ -9,23 +9,27 @@ use std::default::Default;
 use std::io;
 use std::io::prelude::*;
 use std::mem;
-use std::ascii::AsciiExt;
 use time;
-use flate2;
-use flate2::FlateWriteExt;
-use flate2::write::DeflateEncoder;
 use podio::{WritePodExt, LittleEndian};
 use msdos_time::TmMsDosExt;
+
+#[cfg(feature = "deflate")]
+use flate2;
+#[cfg(feature = "deflate")]
+use flate2::write::DeflateEncoder;
 
 #[cfg(feature = "bzip2")]
 use bzip2;
 #[cfg(feature = "bzip2")]
 use bzip2::write::BzEncoder;
+#[allow(unused_imports)] // Rust <1.23 compat
+use std::ascii::AsciiExt;
 
 enum GenericZipWriter<W: Write + io::Seek>
 {
     Closed,
     Storer(W),
+    #[cfg(feature = "deflate")]
     Deflater(DeflateEncoder<W>),
     #[cfg(feature = "bzip2")]
     Bzip2(BzEncoder<W>),
@@ -43,7 +47,8 @@ enum GenericZipWriter<W: Write + io::Seek>
 ///     let mut w = std::io::Cursor::new(buf);
 ///     let mut zip = zip::ZipWriter::new(w);
 ///
-///     try!(zip.start_file("hello_world.txt", zip::CompressionMethod::Stored));
+///     let options = zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Stored);
+///     try!(zip.start_file("hello_world.txt", options));
 ///     try!(zip.write(b"Hello, World!"));
 ///
 ///     // Optionally finish the zip. (this is also done on drop)
@@ -52,7 +57,7 @@ enum GenericZipWriter<W: Write + io::Seek>
 ///     Ok(())
 /// }
 ///
-/// println!("Result: {:?}", doit());
+/// println!("Result: {:?}", doit().unwrap());
 /// ```
 pub struct ZipWriter<W: Write + io::Seek>
 {
@@ -67,6 +72,64 @@ struct ZipWriterStats
     crc32: u32,
     start: u64,
     bytes_written: u64,
+}
+
+/// Metadata for a file to be written
+#[derive(Copy, Clone)]
+pub struct FileOptions {
+    compression_method: CompressionMethod,
+    last_modified_time: time::Tm,
+    permissions: Option<u32>,
+}
+
+impl FileOptions {
+    #[cfg(feature = "deflate")]
+    /// Construct a new FileOptions object
+    pub fn default() -> FileOptions {
+        FileOptions {
+            compression_method: CompressionMethod::Deflated,
+            last_modified_time: time::now(),
+            permissions: None,
+        }
+    }
+
+    #[cfg(not(feature = "deflate"))]
+    /// Construct a new FileOptions object
+    pub fn default() -> FileOptions {
+        FileOptions {
+            compression_method: CompressionMethod::Stored,
+            last_modified_time: time::now(),
+            permissions: None,
+        }
+    }
+
+    /// Set the compression method for the new file
+    ///
+    /// The default is `CompressionMethod::Deflated`. If the deflate compression feature is
+    /// disabled, `CompressionMethod::Stored` becomes the default.
+    /// otherwise.
+    pub fn compression_method(mut self, method: CompressionMethod) -> FileOptions {
+        self.compression_method = method;
+        self
+    }
+
+    /// Set the last modified time
+    ///
+    /// The default is the current timestamp
+    pub fn last_modified_time(mut self, mod_time: time::Tm) -> FileOptions {
+        self.last_modified_time = mod_time;
+        self
+    }
+
+    /// Set the permissions for the new file.
+    ///
+    /// The format is represented with unix-style permissions.
+    /// The default is `0o644`, which represents `rw-r--r--` for files,
+    /// and `0o755`, which represents `rwxr-xr-x` for directories
+    pub fn unix_permissions(mut self, mode: u32) -> FileOptions {
+        self.permissions = Some(mode & 0o777);
+        self
+    }
 }
 
 impl<W: Write+io::Seek> Write for ZipWriter<W>
@@ -122,8 +185,8 @@ impl<W: Write+io::Seek> ZipWriter<W>
         }
     }
 
-    /// Start a new file for with the requested compression method.
-    pub fn start_file<S>(&mut self, name: S, compression: CompressionMethod) -> ZipResult<()>
+    /// Start a new file for with the requested options.
+    fn start_entry<S>(&mut self, name: S, options: FileOptions) -> ZipResult<()>
         where S: Into<String>
     {
         try!(self.finish_file());
@@ -132,21 +195,25 @@ impl<W: Write+io::Seek> ZipWriter<W>
             let writer = self.inner.get_plain();
             let header_start = try!(writer.seek(io::SeekFrom::Current(0)));
 
+            let permissions = options.permissions.unwrap_or(0o100644);
+            let file_name = name.into();
+            let file_name_raw = file_name.clone().into_bytes();
             let mut file = ZipFileData
             {
-                system: System::Dos,
+                system: System::Unix,
                 version_made_by: DEFAULT_VERSION,
                 encrypted: false,
-                compression_method: compression,
-                last_modified_time: time::now(),
+                compression_method: options.compression_method,
+                last_modified_time: options.last_modified_time,
                 crc32: 0,
                 compressed_size: 0,
                 uncompressed_size: 0,
-                file_name: name.into(),
+                file_name: file_name,
+                file_name_raw: file_name_raw,
                 file_comment: String::new(),
                 header_start: header_start,
                 data_start: 0,
-                external_attributes: 0,
+                external_attributes: permissions << 16,
             };
             try!(write_local_file_header(writer, &file));
 
@@ -160,7 +227,7 @@ impl<W: Write+io::Seek> ZipWriter<W>
             self.files.push(file);
         }
 
-        try!(self.inner.switch_to(compression));
+        try!(self.inner.switch_to(options.compression_method));
 
         Ok(())
     }
@@ -177,16 +244,45 @@ impl<W: Write+io::Seek> ZipWriter<W>
         };
         file.crc32 = self.stats.crc32;
         file.uncompressed_size = self.stats.bytes_written;
-        file.compressed_size = try!(writer.seek(io::SeekFrom::Current(0))) - self.stats.start;
+
+        let file_end = try!(writer.seek(io::SeekFrom::Current(0)));
+        file.compressed_size = file_end - self.stats.start;
 
         try!(update_local_file_header(writer, file));
-        try!(writer.seek(io::SeekFrom::End(0)));
+        try!(writer.seek(io::SeekFrom::Start(file_end)));
+        Ok(())
+    }
+
+    /// Starts a file.
+    pub fn start_file<S>(&mut self, name: S, mut options: FileOptions) -> ZipResult<()>
+        where S: Into<String>
+    {
+        if options.permissions.is_none() {
+            options.permissions = Some(0o644);
+        }
+        *options.permissions.as_mut().unwrap() |= 0o100000;
+        try!(self.start_entry(name, options));
+        Ok(())
+    }
+
+    /// Add a directory entry.
+    ///
+    /// You should not write data to the file afterwards.
+    pub fn add_directory<S>(&mut self, name: S, mut options: FileOptions) -> ZipResult<()>
+        where S: Into<String>
+    {
+        if options.permissions.is_none() {
+            options.permissions = Some(0o755);
+        }
+        *options.permissions.as_mut().unwrap() |= 0o40000;
+        options.compression_method = CompressionMethod::Stored;
+        try!(self.start_entry(name, options));
         Ok(())
     }
 
     /// Finish the last file and write all other zip-structures
     ///
-    /// This will return the writer, but one should normally not append any data to the end of the file.  
+    /// This will return the writer, but one should normally not append any data to the end of the file.
     /// Note that the zipfile will also be finished on drop.
     pub fn finish(&mut self) -> ZipResult<W>
     {
@@ -253,6 +349,7 @@ impl<W: Write+io::Seek> GenericZipWriter<W>
         let bare = match mem::replace(self, GenericZipWriter::Closed)
         {
             GenericZipWriter::Storer(w) => w,
+            #[cfg(feature = "deflate")]
             GenericZipWriter::Deflater(w) => try!(w.finish()),
             #[cfg(feature = "bzip2")]
             GenericZipWriter::Bzip2(w) => try!(w.finish()),
@@ -262,7 +359,8 @@ impl<W: Write+io::Seek> GenericZipWriter<W>
         *self = match compression
         {
             CompressionMethod::Stored => GenericZipWriter::Storer(bare),
-            CompressionMethod::Deflated => GenericZipWriter::Deflater(bare.deflate_encode(flate2::Compression::Default)),
+            #[cfg(feature = "deflate")]
+            CompressionMethod::Deflated => GenericZipWriter::Deflater(DeflateEncoder::new(bare, flate2::Compression::default())),
             #[cfg(feature = "bzip2")]
             CompressionMethod::Bzip2 => GenericZipWriter::Bzip2(BzEncoder::new(bare, bzip2::Compression::Default)),
             CompressionMethod::Unsupported(..) => return Err(ZipError::UnsupportedArchive("Unsupported compression")),
@@ -274,6 +372,7 @@ impl<W: Write+io::Seek> GenericZipWriter<W>
     fn ref_mut(&mut self) -> Option<&mut Write> {
         match *self {
             GenericZipWriter::Storer(ref mut w) => Some(w as &mut Write),
+            #[cfg(feature = "deflate")]
             GenericZipWriter::Deflater(ref mut w) => Some(w as &mut Write),
             #[cfg(feature = "bzip2")]
             GenericZipWriter::Bzip2(ref mut w) => Some(w as &mut Write),
@@ -302,6 +401,7 @@ impl<W: Write+io::Seek> GenericZipWriter<W>
     fn current_compression(&self) -> Option<CompressionMethod> {
         match *self {
             GenericZipWriter::Storer(..) => Some(CompressionMethod::Stored),
+            #[cfg(feature = "deflate")]
             GenericZipWriter::Deflater(..) => Some(CompressionMethod::Deflated),
             #[cfg(feature = "bzip2")]
             GenericZipWriter::Bzip2(..) => Some(CompressionMethod::Bzip2),
@@ -321,22 +421,34 @@ impl<W: Write+io::Seek> GenericZipWriter<W>
 
 fn write_local_file_header<T: Write>(writer: &mut T, file: &ZipFileData) -> ZipResult<()>
 {
+    // local file header signature
     try!(writer.write_u32::<LittleEndian>(spec::LOCAL_FILE_HEADER_SIGNATURE));
+    // version needed to extract
     let version_made_by = (file.system as u16) << 8 | (file.version_made_by as u16);
     try!(writer.write_u16::<LittleEndian>(version_made_by));
+    // general purpose bit flag
     let flag = if !file.file_name.is_ascii() { 1u16 << 11 } else { 0 };
     try!(writer.write_u16::<LittleEndian>(flag));
+    // Compression method
     try!(writer.write_u16::<LittleEndian>(file.compression_method.to_u16()));
+    // last mod file time and last mod file date
     let msdos_datetime = try!(file.last_modified_time.to_msdos());
     try!(writer.write_u16::<LittleEndian>(msdos_datetime.timepart));
     try!(writer.write_u16::<LittleEndian>(msdos_datetime.datepart));
+    // crc-32
     try!(writer.write_u32::<LittleEndian>(file.crc32));
+    // compressed size
     try!(writer.write_u32::<LittleEndian>(file.compressed_size as u32));
+    // uncompressed size
     try!(writer.write_u32::<LittleEndian>(file.uncompressed_size as u32));
+    // file name length
     try!(writer.write_u16::<LittleEndian>(file.file_name.as_bytes().len() as u16));
+    // extra field length
     let extra_field = try!(build_extra_field(file));
     try!(writer.write_u16::<LittleEndian>(extra_field.len() as u16));
+    // file name
     try!(writer.write_all(file.file_name.as_bytes()));
+    // extra field
     try!(writer.write_all(&extra_field));
 
     Ok(())
@@ -344,7 +456,7 @@ fn write_local_file_header<T: Write>(writer: &mut T, file: &ZipFileData) -> ZipR
 
 fn update_local_file_header<T: Write+io::Seek>(writer: &mut T, file: &ZipFileData) -> ZipResult<()>
 {
-    static CRC32_OFFSET : u64 = 14;
+    const CRC32_OFFSET : u64 = 14;
     try!(writer.seek(io::SeekFrom::Start(file.header_start + CRC32_OFFSET)));
     try!(writer.write_u32::<LittleEndian>(file.crc32));
     try!(writer.write_u32::<LittleEndian>(file.compressed_size as u32));
@@ -354,28 +466,49 @@ fn update_local_file_header<T: Write+io::Seek>(writer: &mut T, file: &ZipFileDat
 
 fn write_central_directory_header<T: Write>(writer: &mut T, file: &ZipFileData) -> ZipResult<()>
 {
+    // central file header signature
     try!(writer.write_u32::<LittleEndian>(spec::CENTRAL_DIRECTORY_HEADER_SIGNATURE));
-    try!(writer.write_u16::<LittleEndian>(0x14FF));
+    // version made by
+    let version_made_by = (file.system as u16) << 8 | (file.version_made_by as u16);
+    try!(writer.write_u16::<LittleEndian>(version_made_by));
+    // version needed to extract
     try!(writer.write_u16::<LittleEndian>(20));
+    // general puprose bit flag
     let flag = if !file.file_name.is_ascii() { 1u16 << 11 } else { 0 };
     try!(writer.write_u16::<LittleEndian>(flag));
+    // compression method
     try!(writer.write_u16::<LittleEndian>(file.compression_method.to_u16()));
+    // last mod file time + date
     let msdos_datetime = try!(file.last_modified_time.to_msdos());
     try!(writer.write_u16::<LittleEndian>(msdos_datetime.timepart));
     try!(writer.write_u16::<LittleEndian>(msdos_datetime.datepart));
+    // crc-32
     try!(writer.write_u32::<LittleEndian>(file.crc32));
+    // compressed size
     try!(writer.write_u32::<LittleEndian>(file.compressed_size as u32));
+    // uncompressed size
     try!(writer.write_u32::<LittleEndian>(file.uncompressed_size as u32));
+    // file name length
     try!(writer.write_u16::<LittleEndian>(file.file_name.as_bytes().len() as u16));
+    // extra field length
     let extra_field = try!(build_extra_field(file));
     try!(writer.write_u16::<LittleEndian>(extra_field.len() as u16));
+    // file comment length
     try!(writer.write_u16::<LittleEndian>(0));
+    // disk number start
     try!(writer.write_u16::<LittleEndian>(0));
+    // internal file attribytes
     try!(writer.write_u16::<LittleEndian>(0));
-    try!(writer.write_u32::<LittleEndian>(0));
+    // external file attributes
+    try!(writer.write_u32::<LittleEndian>(file.external_attributes));
+    // relative offset of local header
     try!(writer.write_u32::<LittleEndian>(file.header_start as u32));
+    // file name
     try!(writer.write_all(file.file_name.as_bytes()));
+    // extra field
     try!(writer.write_all(&extra_field));
+    // file comment
+    // <none>
 
     Ok(())
 }
@@ -385,4 +518,42 @@ fn build_extra_field(_file: &ZipFileData) -> ZipResult<Vec<u8>>
     let writer = Vec::new();
     // Future work
     Ok(writer)
+}
+
+#[cfg(test)]
+mod test {
+    use std::io;
+    use std::io::Write;
+    use time;
+    use super::{FileOptions, ZipWriter};
+    use compression::CompressionMethod;
+
+    #[test]
+    fn write_empty_zip() {
+        let mut writer = ZipWriter::new(io::Cursor::new(Vec::new()));
+        let result = writer.finish().unwrap();
+        assert_eq!(result.get_ref().len(), 28);
+        let v: Vec<u8> = vec![80, 75, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 122, 105, 112, 45, 114, 115];
+        assert_eq!(result.get_ref(), &v);
+    }
+
+    #[test]
+    fn write_mimetype_zip() {
+        let mut writer = ZipWriter::new(io::Cursor::new(Vec::new()));
+        let mut mtime = time::empty_tm();
+        mtime.tm_year = 80;
+        mtime.tm_mday = 1;
+        let options = FileOptions {
+            compression_method: CompressionMethod::Stored,
+            last_modified_time: mtime,
+            permissions: Some(33188),
+        };
+        writer.start_file("mimetype", options).unwrap();
+        writer.write(b"application/vnd.oasis.opendocument.text").unwrap();
+        let result = writer.finish().unwrap();
+        assert_eq!(result.get_ref().len(), 159);
+        let mut v = Vec::new();
+        v.extend_from_slice(include_bytes!("../tests/data/mimetype.zip"));
+        assert_eq!(result.get_ref(), &v);
+    }
 }

@@ -6,7 +6,7 @@ use flate2::write::GzEncoder;
 
 // Vec<u8> implements Write to print the compressed bytes of sample string
 fn main() {
-    let mut e = GzEncoder::new(Vec::new(), Compression::Default);
+    let mut e = GzEncoder::new(Vec::new(), Compression::default());
     e.write(b"Hello World").unwrap();
     println!("{:?}", e.finish().unwrap());
 }

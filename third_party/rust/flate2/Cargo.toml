@@ -12,7 +12,7 @@
 
 [package]
 name = "flate2"
-version = "0.2.20"
+version = "1.0.1"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 description = "Bindings to miniz.c for DEFLATE compression and decompression exposed as\nReader/Writer streams. Contains bindings for zlib, deflate, and gzip-based\nstreams.\n"
 homepage = "https://github.com/alexcrichton/flate2-rs"
@@ -22,6 +22,10 @@ keywords = ["gzip", "flate", "zlib", "encoding"]
 categories = ["compression", "api-bindings"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/alexcrichton/flate2-rs"
+[dependencies.futures]
+version = "0.1"
+optional = true
+
 [dependencies.libc]
 version = "0.2"
 
@@ -33,29 +37,30 @@ optional = true
 version = "0.1.7"
 optional = true
 
-[dependencies.futures]
+[dependencies.miniz_oxide_c_api]
 version = "0.1"
 optional = true
 
 [dependencies.tokio-io]
 version = "0.1"
 optional = true
-[dev-dependencies.rand]
-version = "0.3"
-
 [dev-dependencies.quickcheck]
 version = "0.4"
 default-features = false
+
+[dev-dependencies.rand]
+version = "0.3"
 
 [dev-dependencies.tokio-core]
 version = "0.1"
 
 [features]
 default = ["miniz-sys"]
-zlib = ["libz-sys"]
+rust_backend = ["miniz_oxide_c_api"]
 tokio = ["tokio-io", "futures"]
-[badges.travis-ci]
+zlib = ["libz-sys"]
+[badges.appveyor]
 repository = "alexcrichton/flate2-rs"
 
-[badges.appveyor]
+[badges.travis-ci]
 repository = "alexcrichton/flate2-rs"

@@ -20,9 +20,11 @@ Supported compression formats:
 
 Currently unsupported zip extensions:
 
-* ZIP64
+* Most of ZIP64, although there is some support for archives with more than 65535 files
 * Encryption
 * Multi-disk
+
+We aim to support rust versions 1.20+.
 
 Usage
 -----
@@ -31,12 +33,21 @@ With all default features:
 
 ```toml
 [dependencies]
-zip = "0.1"
+zip = "0.3"
 ```
 
 Without the default features:
 
 ```toml
 [dependencies]
-zip = { version = "0.1", default-features = false }
+zip = { version = "0.3", default-features = false }
 ```
+
+Examples
+--------
+
+See the [examples directory](examples) for:
+   * How to write a file to a zip.
+   * how to write a directory of files to a zip (using [walkdir](/BurntSushi/walkdir)).
+   * How to extract a zip file.
+   * How to extract a single file from a zip.

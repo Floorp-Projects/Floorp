@@ -69,13 +69,23 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   ~MediaEngineRemoteVideoSource() = default;
 
   struct CapabilityCandidate {
-    explicit CapabilityCandidate(uint8_t index, uint32_t distance = 0)
-    : mIndex(index), mDistance(distance) {}
+    explicit CapabilityCandidate(webrtc::CaptureCapability&& aCapability,
+                                 uint32_t aDistance = 0)
+    : mCapability(Forward<webrtc::CaptureCapability>(aCapability))
+    , mDistance(aDistance) {}
 
-    size_t mIndex;
+    const webrtc::CaptureCapability mCapability;
     uint32_t mDistance;
   };
-  typedef nsTArray<CapabilityCandidate> CapabilitySet;
+
+  class CapabilityComparator {
+  public:
+    bool Equals(const CapabilityCandidate& aCandidate,
+                const webrtc::CaptureCapability& aCapability) const
+    {
+      return aCandidate.mCapability == aCapability;
+    }
+  };
 
   bool ChooseCapability(const NormalizedConstraints& aConstraints,
                         const MediaEnginePrefs& aPrefs,
@@ -96,7 +106,7 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
                               const NormalizedConstraintSet &aConstraints,
                               const nsString& aDeviceId) const;
 
-  static void TrimLessFitCandidates(CapabilitySet& set);
+  static void TrimLessFitCandidates(nsTArray<CapabilityCandidate>& aSet);
 
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
@@ -168,12 +178,11 @@ private:
   size_t NumCapabilities() const;
 
   /**
-   * Fills `aOut` with the capability properties of the device capability with
-   * index `aIndex`.
+   * Returns the capability with index `aIndex` for our assigned device.
    *
    * It is an error to call this with `aIndex >= NumCapabilities()`.
    */
-  void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut) const;
+  webrtc::CaptureCapability GetCapability(size_t aIndex) const;
 
   int mCaptureIndex;
   const dom::MediaSourceEnum mMediaSource; // source of media (camera | application | screen)

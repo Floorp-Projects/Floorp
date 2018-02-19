@@ -26,7 +26,7 @@ use {Compress, Decompress};
 /// // Vec<u8> implements Write to print the compressed bytes of sample string
 /// # fn main() {
 ///
-/// let mut e = DeflateEncoder::new(Vec::new(), Compression::Default);
+/// let mut e = DeflateEncoder::new(Vec::new(), Compression::default());
 /// e.write(b"Hello World").unwrap();
 /// println!("{:?}", e.finish().unwrap());
 /// # }
@@ -200,7 +200,7 @@ impl<W: AsyncRead + AsyncWrite> AsyncRead for DeflateEncoder<W> {}
 /// use flate2::write::DeflateDecoder;
 ///
 /// # fn main() {
-/// #    let mut e = DeflateEncoder::new(Vec::new(), Compression::Default);
+/// #    let mut e = DeflateEncoder::new(Vec::new(), Compression::default());
 /// #    e.write(b"Hello World").unwrap();
 /// #    let bytes = e.finish().unwrap();
 /// #    println!("{}", decode_writer(bytes).unwrap());

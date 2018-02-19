@@ -1454,15 +1454,6 @@ Declaration::GetPropertyValueInternal(
       }
       break;
     }
-    case eCSSProperty__moz_transform: {
-      // shorthands that are just aliases with different parsing rules
-      const nsCSSPropertyID* subprops =
-        nsCSSProps::SubpropertyEntryFor(aProperty);
-      MOZ_ASSERT(subprops[1] == eCSSProperty_UNKNOWN,
-                 "must have exactly one subproperty");
-      AppendValueToString(subprops[0], aValue);
-      break;
-    }
     case eCSSProperty_overscroll_behavior: {
       const nsCSSValue& xValue =
         *data->ValueFor(eCSSProperty_overscroll_behavior_x);

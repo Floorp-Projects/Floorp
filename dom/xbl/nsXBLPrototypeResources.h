@@ -7,6 +7,7 @@
 #ifndef nsXBLPrototypeResources_h__
 #define nsXBLPrototypeResources_h__
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/ServoStyleRuleMap.h"
 #include "nsICSSLoaderObserver.h"
@@ -82,12 +83,16 @@ public:
     return mServoStyles.get();
   }
 
+  void SyncServoStyles();
+
   mozilla::ServoStyleRuleMap* GetServoStyleRuleMap();
 
   // Updates the ServoStyleSet object that holds the result of cascading the
   // sheets in mStyleSheetList. Equivalent to GatherRuleProcessor(), but for
   // the Servo style backend.
   void ComputeServoStyles(const mozilla::ServoStyleSet& aMasterStyleSet);
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
   // A loader object. Exists only long enough to load resources, and then it dies.

@@ -7,7 +7,7 @@
 		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/lodash"), require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react")) : factory(root["devtools/client/shared/vendor/react-dom-factories"], root["devtools/client/shared/vendor/lodash"], root["devtools/client/shared/vendor/react-prop-types"], root["devtools/client/shared/vendor/react"]);
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(this, function(__WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_56__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_7__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_56__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_8__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "/assets/build";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 19);
+/******/ 	return __webpack_require__(__webpack_require__.s = 20);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -460,6 +460,12 @@ function isURL(token) {
   }
 }
 
+const ellipsisElement = span({
+  key: "more",
+  className: "more-ellipsis",
+  title: `more${ELLIPSIS}`
+}, ELLIPSIS);
+
 module.exports = {
   isGrip,
   isURL,
@@ -478,6 +484,7 @@ module.exports = {
   getGripPreviewItems,
   getGripType,
   tokenSplitRegex,
+  ellipsisElement,
   ELLIPSIS
 };
 
@@ -523,15 +530,14 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-__webpack_require__(20);
+__webpack_require__(21);
 
 // Load all existing rep templates
-const Undefined = __webpack_require__(21);
-const Null = __webpack_require__(22);
-const StringRep = __webpack_require__(6);
-const LongStringRep = __webpack_require__(23);
+const Undefined = __webpack_require__(22);
+const Null = __webpack_require__(23);
+const StringRep = __webpack_require__(7);
 const Number = __webpack_require__(24);
-const ArrayRep = __webpack_require__(10);
+const ArrayRep = __webpack_require__(5);
 const Obj = __webpack_require__(25);
 const SymbolRep = __webpack_require__(26);
 const InfinityRep = __webpack_require__(27);
@@ -555,14 +561,14 @@ const Window = __webpack_require__(45);
 const ObjectWithText = __webpack_require__(46);
 const ObjectWithURL = __webpack_require__(47);
 const GripArray = __webpack_require__(13);
-const GripMap = __webpack_require__(14);
-const GripMapEntry = __webpack_require__(15);
-const Grip = __webpack_require__(8);
+const GripMap = __webpack_require__(15);
+const GripMapEntry = __webpack_require__(16);
+const Grip = __webpack_require__(9);
 
 // List of all registered template.
 // XXX there should be a way for extensions to register a new
 // or modify an existing rep.
-let reps = [RegExp, StyleSheet, Event, DateTime, CommentNode, ElementNode, TextNode, Attribute, LongStringRep, Func, PromiseRep, ArrayRep, Document, Window, ObjectWithText, ObjectWithURL, ErrorRep, GripArray, GripMap, GripMapEntry, Grip, Undefined, Null, StringRep, Number, SymbolRep, InfinityRep, NaNRep, Accessor];
+let reps = [RegExp, StyleSheet, Event, DateTime, CommentNode, ElementNode, TextNode, Attribute, Func, PromiseRep, ArrayRep, Document, Window, ObjectWithText, ObjectWithURL, ErrorRep, GripArray, GripMap, GripMapEntry, Grip, Undefined, Null, StringRep, Number, SymbolRep, InfinityRep, NaNRep, Accessor];
 
 /**
  * Generic rep that is using for rendering native JS types or an object.
@@ -630,7 +636,6 @@ module.exports = {
     GripMap,
     GripMapEntry,
     InfinityRep,
-    LongStringRep,
     NaNRep,
     Null,
     Number,
@@ -653,6 +658,153 @@ module.exports = {
 
 /***/ }),
 /* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Dependencies
+const dom = __webpack_require__(1);
+const PropTypes = __webpack_require__(2);
+const {
+  wrapRender
+} = __webpack_require__(0);
+const { MODE } = __webpack_require__(3);
+const { span } = dom;
+
+const ModePropType = PropTypes.oneOf(
+// @TODO Change this to Object.values once it's supported in Node's version of V8
+Object.keys(MODE).map(key => MODE[key]));
+
+/**
+ * Renders an array. The array is enclosed by left and right bracket
+ * and the max number of rendered items depends on the current mode.
+ */
+ArrayRep.propTypes = {
+  mode: ModePropType,
+  object: PropTypes.array.isRequired
+};
+
+function ArrayRep(props) {
+  let {
+    object,
+    mode = MODE.SHORT
+  } = props;
+
+  let items;
+  let brackets;
+  let needSpace = function (space) {
+    return space ? { left: "[ ", right: " ]" } : { left: "[", right: "]" };
+  };
+
+  if (mode === MODE.TINY) {
+    let isEmpty = object.length === 0;
+    if (isEmpty) {
+      items = [];
+    } else {
+      items = [span({
+        className: "more-ellipsis",
+        title: "more…"
+      }, "…")];
+    }
+    brackets = needSpace(false);
+  } else {
+    items = arrayIterator(props, object, maxLengthMap.get(mode));
+    brackets = needSpace(items.length > 0);
+  }
+
+  return span({
+    className: "objectBox objectBox-array" }, span({
+    className: "arrayLeftBracket"
+  }, brackets.left), ...items, span({
+    className: "arrayRightBracket"
+  }, brackets.right), span({
+    className: "arrayProperties",
+    role: "group" }));
+}
+
+function arrayIterator(props, array, max) {
+  let items = [];
+
+  for (let i = 0; i < array.length && i < max; i++) {
+    let config = {
+      mode: MODE.TINY,
+      delim: i == array.length - 1 ? "" : ", "
+    };
+    let item;
+
+    try {
+      item = ItemRep(Object.assign({}, props, config, {
+        object: array[i]
+      }));
+    } catch (exc) {
+      item = ItemRep(Object.assign({}, props, config, {
+        object: exc
+      }));
+    }
+    items.push(item);
+  }
+
+  if (array.length > max) {
+    items.push(span({
+      className: "more-ellipsis",
+      title: "more…"
+    }, "…"));
+  }
+
+  return items;
+}
+
+/**
+ * Renders array item. Individual values are separated by a comma.
+ */
+ItemRep.propTypes = {
+  object: PropTypes.any.isRequired,
+  delim: PropTypes.string.isRequired,
+  mode: ModePropType
+};
+
+function ItemRep(props) {
+  const { Rep } = __webpack_require__(4);
+
+  let {
+    object,
+    delim,
+    mode
+  } = props;
+  return span({}, Rep(Object.assign({}, props, {
+    object: object,
+    mode: mode
+  })), delim);
+}
+
+function getLength(object) {
+  return object.length;
+}
+
+function supportsObject(object) {
+  return Array.isArray(object) || Object.prototype.toString.call(object) === "[object Arguments]";
+}
+
+const maxLengthMap = new Map();
+maxLengthMap.set(MODE.SHORT, 3);
+maxLengthMap.set(MODE.LONG, 10);
+
+// Exports from this module
+module.exports = {
+  rep: wrapRender(ArrayRep),
+  supportsObject,
+  maxLengthMap,
+  getLength,
+  ModePropType
+};
+
+/***/ }),
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -702,7 +854,7 @@ PropRep.propTypes = {
  * @return {Array} Array of React elements.
  */
 function PropRep(props) {
-  const Grip = __webpack_require__(8);
+  const Grip = __webpack_require__(9);
   const { Rep } = __webpack_require__(4);
 
   let {
@@ -738,7 +890,7 @@ function PropRep(props) {
 module.exports = wrapRender(PropRep);
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -759,6 +911,7 @@ const {
   rawCropString,
   sanitizeString,
   wrapRender,
+  isGrip,
   tokenSplitRegex,
   ELLIPSIS
 } = __webpack_require__(0);
@@ -773,9 +926,9 @@ StringRep.propTypes = {
   useQuotes: PropTypes.bool,
   escapeWhitespace: PropTypes.bool,
   style: PropTypes.object,
-  object: PropTypes.string.isRequired,
-  member: PropTypes.any,
-  cropLimit: PropTypes.number,
+  cropLimit: PropTypes.number.isRequired,
+  member: PropTypes.string,
+  object: PropTypes.object.isRequired,
   openLink: PropTypes.func,
   className: PropTypes.string,
   omitLinkHref: PropTypes.bool
@@ -784,40 +937,118 @@ StringRep.propTypes = {
 function StringRep(props) {
   let {
     className,
-    cropLimit,
-    object: text,
-    member,
     style,
+    cropLimit,
+    object,
     useQuotes = true,
     escapeWhitespace = true,
+    member,
     openLink,
     omitLinkHref = true
   } = props;
+
+  let text = object;
+
+  const isLong = isLongString(object);
+  const shouldCrop = (!member || !member.open) && cropLimit && text.length > cropLimit;
+
+  if (isLong) {
+    text = maybeCropLongString({
+      shouldCrop,
+      cropLimit
+    }, text);
+  }
+
+  text = formatText({
+    useQuotes,
+    escapeWhitespace
+  }, text);
+
+  const config = getElementConfig({
+    className,
+    style,
+    actor: object.actor
+  });
+
+  if (!isLong) {
+    if (containsURL(text)) {
+      return span(config, ...getLinkifiedElements(text, shouldCrop && cropLimit, omitLinkHref, openLink));
+    }
+
+    // Cropping of longString has been handled before formatting.
+    text = maybeCropString({
+      isLong,
+      shouldCrop,
+      cropLimit
+    }, text);
+  }
+
+  return span(config, text);
+}
+
+function maybeCropLongString(opts, text) {
+  const {
+    shouldCrop,
+    cropLimit
+  } = opts;
+
+  const {
+    fullText,
+    initial,
+    length
+  } = text;
+
+  text = shouldCrop ? initial.substring(0, cropLimit) : fullText || initial;
+
+  if (text.length < length) {
+    text += ELLIPSIS;
+  }
+
+  return text;
+}
+
+function formatText(opts, text) {
+  let {
+    useQuotes,
+    escapeWhitespace
+  } = opts;
+
+  return useQuotes ? escapeString(text, escapeWhitespace) : sanitizeString(text);
+}
+
+function getElementConfig(opts) {
+  const {
+    className,
+    style,
+    actor
+  } = opts;
+
+  const config = {};
+
+  if (actor) {
+    config["data-link-actor-id"] = actor;
+  }
 
   const classNames = ["objectBox", "objectBox-string"];
   if (className) {
     classNames.push(className);
   }
-  let config = { className: classNames.join(" ") };
+  config.className = classNames.join(" ");
+
   if (style) {
     config.style = style;
   }
 
-  if (useQuotes) {
-    text = escapeString(text, escapeWhitespace);
-  } else {
-    text = sanitizeString(text);
-  }
+  return config;
+}
 
-  const shouldCrop = (!member || !member.open) && cropLimit && text.length > cropLimit;
-  if (!containsURL(text)) {
-    if (shouldCrop) {
-      text = rawCropString(text, cropLimit);
-    }
-    return span(config, text);
-  }
+function maybeCropString(opts, text) {
+  const {
+    shouldCrop,
+    cropLimit
+  } = opts;
 
-  return span(config, ...getLinkifiedElements(text, shouldCrop && cropLimit, omitLinkHref, openLink));
+  return shouldCrop ? rawCropString(text, cropLimit) : text;
 }
 
 /**
@@ -926,7 +1157,15 @@ function getCroppedString(text, offset = 0, startCropIndex, endCropIndex) {
   return text;
 }
 
+function isLongString(object) {
+  return object && object.type === "longString";
+}
+
 function supportsObject(object, noGrip = false) {
+  if (noGrip === false && isGrip(object)) {
+    return isLongString(object);
+  }
+
   return getGripType(object, noGrip) == "string";
 }
 
@@ -938,13 +1177,13 @@ module.exports = {
 };
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports) {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_7__;
+module.exports = __WEBPACK_EXTERNAL_MODULE_8__;
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -962,7 +1201,7 @@ const {
   isGrip,
   wrapRender
 } = __webpack_require__(0);
-const PropRep = __webpack_require__(5);
+const PropRep = __webpack_require__(6);
 const { MODE } = __webpack_require__(3);
 
 const dom = __webpack_require__(1);
@@ -1244,6 +1483,10 @@ function supportsObject(object, noGrip = false) {
     return false;
   }
 
+  if (object.class === "DeadObject") {
+    return true;
+  }
+
   return object.preview ? typeof object.preview.ownProperties !== "undefined" : typeof object.ownPropertyLength !== "undefined";
 }
 
@@ -1262,7 +1505,7 @@ let Grip = {
 module.exports = Grip;
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1278,7 +1521,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const React = __webpack_require__(7);
+const React = __webpack_require__(8);
 const PropTypes = __webpack_require__(2);
 
 
@@ -1309,152 +1552,6 @@ function Svg(name, props) {
 module.exports = Svg;
 
 /***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-// Dependencies
-const dom = __webpack_require__(1);
-const PropTypes = __webpack_require__(2);
-const {
-  wrapRender
-} = __webpack_require__(0);
-const { MODE } = __webpack_require__(3);
-const { span } = dom;
-
-const ModePropType = PropTypes.oneOf(
-// @TODO Change this to Object.values once it's supported in Node's version of V8
-Object.keys(MODE).map(key => MODE[key]));
-
-/**
- * Renders an array. The array is enclosed by left and right bracket
- * and the max number of rendered items depends on the current mode.
- */
-ArrayRep.propTypes = {
-  mode: ModePropType,
-  object: PropTypes.array.isRequired
-};
-
-function ArrayRep(props) {
-  let {
-    object,
-    mode = MODE.SHORT
-  } = props;
-
-  let items;
-  let brackets;
-  let needSpace = function (space) {
-    return space ? { left: "[ ", right: " ]" } : { left: "[", right: "]" };
-  };
-
-  if (mode === MODE.TINY) {
-    let isEmpty = object.length === 0;
-    if (isEmpty) {
-      items = [];
-    } else {
-      items = [span({
-        className: "more-ellipsis",
-        title: "more…"
-      }, "…")];
-    }
-    brackets = needSpace(false);
-  } else {
-    items = arrayIterator(props, object, maxLengthMap.get(mode));
-    brackets = needSpace(items.length > 0);
-  }
-
-  return span({
-    className: "objectBox objectBox-array" }, span({
-    className: "arrayLeftBracket"
-  }, brackets.left), ...items, span({
-    className: "arrayRightBracket"
-  }, brackets.right), span({
-    className: "arrayProperties",
-    role: "group" }));
-}
-
-function arrayIterator(props, array, max) {
-  let items = [];
-
-  for (let i = 0; i < array.length && i < max; i++) {
-    let config = {
-      mode: MODE.TINY,
-      delim: i == array.length - 1 ? "" : ", "
-    };
-    let item;
-
-    try {
-      item = ItemRep(Object.assign({}, props, config, {
-        object: array[i]
-      }));
-    } catch (exc) {
-      item = ItemRep(Object.assign({}, props, config, {
-        object: exc
-      }));
-    }
-    items.push(item);
-  }
-
-  if (array.length > max) {
-    items.push(span({
-      className: "more-ellipsis",
-      title: "more…"
-    }, "…"));
-  }
-
-  return items;
-}
-
-/**
- * Renders array item. Individual values are separated by a comma.
- */
-ItemRep.propTypes = {
-  object: PropTypes.any.isRequired,
-  delim: PropTypes.string.isRequired,
-  mode: ModePropType
-};
-
-function ItemRep(props) {
-  const { Rep } = __webpack_require__(4);
-
-  let {
-    object,
-    delim,
-    mode
-  } = props;
-  return span({}, Rep(Object.assign({}, props, {
-    object: object,
-    mode: mode
-  })), delim);
-}
-
-function getLength(object) {
-  return object.length;
-}
-
-function supportsObject(object) {
-  return Array.isArray(object) || Object.prototype.toString.call(object) === "[object Arguments]";
-}
-
-const maxLengthMap = new Map();
-maxLengthMap.set(MODE.SHORT, 3);
-maxLengthMap.set(MODE.LONG, 10);
-
-// Exports from this module
-module.exports = {
-  rep: wrapRender(ArrayRep),
-  supportsObject,
-  maxLengthMap,
-  getLength
-};
-
-/***/ }),
 /* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1469,7 +1566,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _react = __webpack_require__(7);
+var _react = __webpack_require__(8);
 
 var _react2 = _interopRequireDefault(_react);
 
@@ -1479,7 +1576,7 @@ var _util = __webpack_require__(35);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.includes(i)) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -1599,15 +1696,19 @@ module.exports = {
 
 // Dependencies
 const PropTypes = __webpack_require__(2);
+
+const { lengthBubble } = __webpack_require__(14);
 const {
   getGripType,
   isGrip,
-  wrapRender
+  wrapRender,
+  ellipsisElement
 } = __webpack_require__(0);
 const { MODE } = __webpack_require__(3);
 
 const dom = __webpack_require__(1);
 const { span } = dom;
+const { ModePropType } = __webpack_require__(5);
 
 /**
  * Renders an array. The array is enclosed by left and right bracket
@@ -1616,7 +1717,7 @@ const { span } = dom;
 GripArray.propTypes = {
   object: PropTypes.object.isRequired,
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  mode: ModePropType,
   provider: PropTypes.object,
   onDOMNodeMouseOver: PropTypes.func,
   onDOMNodeMouseOut: PropTypes.func,
@@ -1635,35 +1736,32 @@ function GripArray(props) {
     return space ? { left: "[ ", right: " ]" } : { left: "[", right: "]" };
   };
 
+  const config = {
+    "data-link-actor-id": object.actor,
+    className: "objectBox objectBox-array"
+  };
+
+  const title = getTitle(props, object);
+
   if (mode === MODE.TINY) {
-    let objectLength = getLength(object);
-    let isEmpty = objectLength === 0;
-    let ellipsis;
-    if (!isEmpty) {
-      ellipsis = span({
-        className: "more-ellipsis",
-        title: "more…"
-      }, "…");
+    const isEmpty = getLength(object) === 0;
+
+    // Omit bracketed ellipsis for non-empty non-Array arraylikes (f.e: Sets).
+    if (!isEmpty && object.class !== "Array") {
+      return span(config, title);
     }
 
-    let title;
-    if (object.class != "Array") {
-      title = object.class + " ";
-    }
     brackets = needSpace(false);
-    return span({
-      "data-link-actor-id": object.actor,
-      className: "objectBox objectBox-array" }, title, span({
+    return span(config, title, span({
       className: "arrayLeftBracket"
-    }, brackets.left), ellipsis, span({
+    }, brackets.left), isEmpty ? null : ellipsisElement, span({
       className: "arrayRightBracket"
     }, brackets.right));
   }
+
   let max = maxLengthMap.get(mode);
   items = arrayIterator(props, object, max);
   brackets = needSpace(items.length > 0);
-
-  let title = getTitle(props, object);
 
   return span({
     "data-link-actor-id": object.actor,
@@ -1694,14 +1792,36 @@ function getLength(grip) {
 }
 
 function getTitle(props, object) {
-  if (props.mode === MODE.TINY) {
-    return "";
-  }
+  let objectLength = getLength(object);
+  let isEmpty = objectLength === 0;
 
   let title = props.title || object.class || "Array";
+
+  const length = lengthBubble({
+    object,
+    mode: props.mode,
+    maxLengthMap,
+    getLength
+  });
+
+  if (props.mode === MODE.TINY) {
+    if (isEmpty) {
+      return object.class === "Array" ? "" : span({
+        className: "objectTitle" }, title, " ");
+    }
+
+    let trailingSpace;
+    if (object.class === "Array") {
+      title = "";
+      trailingSpace = " ";
+    }
+
+    return span({
+      className: "objectTitle" }, title, length, trailingSpace);
+  }
+
   return span({
-    className: "objectTitle"
-  }, title + " ");
+    className: "objectTitle" }, title, length, " ");
 }
 
 function getPreviewItems(grip) {
@@ -1770,10 +1890,7 @@ function arrayIterator(props, grip, max) {
 
   const itemsShown = items.length + foldedEmptySlots;
   if (gripLength > itemsShown) {
-    items.push(span({
-      className: "more-ellipsis",
-      title: "more…"
-    }, "…"));
+    items.push(ellipsisElement);
   }
 
   return items;
@@ -1811,18 +1928,72 @@ module.exports = {
 "use strict";
 
 
+const PropTypes = __webpack_require__(2);
+
+const { wrapRender } = __webpack_require__(0);
+const { MODE } = __webpack_require__(3);
+const { ModePropType } = __webpack_require__(5);
+
+const dom = __webpack_require__(1);
+const { span } = dom;
+
+GripLengthBubble.propTypes = {
+  object: PropTypes.object.isRequired,
+  maxLengthMap: PropTypes.instanceOf(Map).isRequired,
+  getLength: PropTypes.func.isRequired,
+  mode: ModePropType,
+  visibilityThreshold: PropTypes.number
+};
+
+function GripLengthBubble(props) {
+  const {
+    object,
+    mode = MODE.SHORT,
+    visibilityThreshold = 2,
+    maxLengthMap,
+    getLength,
+    showZeroLength = false
+  } = props;
+
+  const length = getLength(object);
+  const isEmpty = length === 0;
+  const isObvious = [MODE.SHORT, MODE.LONG].includes(mode) && length > 0 && length <= maxLengthMap.get(mode) && length <= visibilityThreshold;
+  if (isEmpty && !showZeroLength || isObvious) {
+    return "";
+  }
+
+  return span({
+    className: "objectLengthBubble"
+  }, `(${length})`);
+}
+
+module.exports = {
+  lengthBubble: wrapRender(GripLengthBubble)
+};
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
+
+const { lengthBubble } = __webpack_require__(14);
 const PropTypes = __webpack_require__(2);
 const {
   isGrip,
-  wrapRender
+  wrapRender,
+  ellipsisElement
 } = __webpack_require__(0);
-const PropRep = __webpack_require__(5);
+const PropRep = __webpack_require__(6);
 const { MODE } = __webpack_require__(3);
+const { ModePropType } = __webpack_require__(5);
 
 const dom = __webpack_require__(1);
 const { span } = dom;
@@ -1834,7 +2005,7 @@ const { span } = dom;
 GripMap.propTypes = {
   object: PropTypes.object,
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  mode: ModePropType,
   isInterestingEntry: PropTypes.func,
   onDOMNodeMouseOver: PropTypes.func,
   onDOMNodeMouseOut: PropTypes.func,
@@ -1853,13 +2024,16 @@ function GripMap(props) {
     className: "objectBox objectBox-object"
   };
 
-  if (mode === MODE.TINY) {
-    return span(config, getTitle(props, object));
+  const title = getTitle(props, object);
+  const isEmpty = getLength(object) === 0;
+
+  if (isEmpty || mode === MODE.TINY) {
+    return span(config, title);
   }
 
-  let propsArray = safeEntriesIterator(props, object, maxLengthMap.get(mode));
+  const propsArray = safeEntriesIterator(props, object, maxLengthMap.get(mode));
 
-  return span(config, getTitle(props, object), span({
+  return span(config, title, span({
     className: "objectLeftBrace"
   }, " { "), ...propsArray, span({
     className: "objectRightBrace"
@@ -1867,10 +2041,15 @@ function GripMap(props) {
 }
 
 function getTitle(props, object) {
-  let title = props.title || (object && object.class ? object.class : "Map");
+  const title = props.title || (object && object.class ? object.class : "Map");
   return span({
-    className: "objectTitle"
-  }, title);
+    className: "objectTitle" }, title, lengthBubble({
+    object,
+    mode: props.mode,
+    maxLengthMap,
+    getLength,
+    showZeroLength: true
+  }));
 }
 
 function safeEntriesIterator(props, object, max) {
@@ -1902,11 +2081,7 @@ function entriesIterator(props, object, max) {
   let entries = getEntries(props, mapEntries, indexes);
   if (entries.length < getLength(object)) {
     // There are some undisplayed entries. Then display "…".
-    entries.push(span({
-      key: "more",
-      className: "more-ellipsis",
-      title: "more…"
-    }, "…"));
+    entries.push(ellipsisElement);
   }
 
   return unfoldEntries(entries);
@@ -2013,7 +2188,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2031,7 +2206,7 @@ const { span } = dom;
 const {
   wrapRender
 } = __webpack_require__(0);
-const PropRep = __webpack_require__(5);
+const PropRep = __webpack_require__(6);
 const { MODE } = __webpack_require__(3);
 /**
  * Renders an map entry. A map entry is represented by its key, a column and its value.
@@ -2091,7 +2266,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2101,9 +2276,9 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const client = __webpack_require__(17);
+const client = __webpack_require__(18);
 const loadProperties = __webpack_require__(55);
-const node = __webpack_require__(18);
+const node = __webpack_require__(19);
 
 module.exports = {
   client,
@@ -2112,7 +2287,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2187,7 +2362,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2199,10 +2374,10 @@ module.exports = {
 
 const { get, has } = __webpack_require__(56);
 const { maybeEscapePropertyName } = __webpack_require__(0);
-const ArrayRep = __webpack_require__(10);
+const ArrayRep = __webpack_require__(5);
 const GripArrayRep = __webpack_require__(13);
-const GripMap = __webpack_require__(14);
-const GripMapEntryRep = __webpack_require__(15);
+const GripMap = __webpack_require__(15);
+const GripMapEntryRep = __webpack_require__(16);
 
 const MAX_NUMERICAL_PROPERTIES = 100;
 
@@ -2285,6 +2460,27 @@ function nodeIsFunction(item) {
 function nodeIsOptimizedOut(item) {
   const value = getValue(item);
   return !nodeHasChildren(item) && value && value.optimizedOut;
+}
+
+function nodeIsUninitializedBinding(item) {
+  const value = getValue(item);
+  return value && value.uninitialized;
+}
+
+// Used to check if an item represents a binding that exists in a sourcemap's
+// original file content, but does not match up with a binding found in the
+// generated code.
+function nodeIsUnmappedBinding(item) {
+  const value = getValue(item);
+  return value && value.unmapped;
+}
+
+// Used to check if an item represents a binding that exists in the debugger's
+// parser result, but does not match up with a binding returned by the
+// debugger server.
+function nodeIsUnscopedBinding(item) {
+  const value = getValue(item);
+  return value && value.unscoped;
 }
 
 function nodeIsMissingArguments(item) {
@@ -2811,6 +3007,9 @@ module.exports = {
   nodeIsPrototype,
   nodeIsProxy,
   nodeIsSetter,
+  nodeIsUninitializedBinding,
+  nodeIsUnmappedBinding,
+  nodeIsUnscopedBinding,
   nodeIsWindow,
   nodeNeedsNumericalBuckets,
   nodeSupportsNumericalBucketing,
@@ -2822,7 +3021,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2835,7 +3034,7 @@ module.exports = {
 const { MODE } = __webpack_require__(3);
 const { REPS, getRep } = __webpack_require__(4);
 const ObjectInspector = __webpack_require__(48);
-const ObjectInspectorUtils = __webpack_require__(16);
+const ObjectInspectorUtils = __webpack_require__(17);
 
 const {
   parseURLEncodedText,
@@ -2857,13 +3056,13 @@ module.exports = {
 };
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2905,7 +3104,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2943,83 +3142,6 @@ function supportsObject(object, noGrip = false) {
 
 module.exports = {
   rep: wrapRender(Null),
-  supportsObject
-};
-
-/***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-// Dependencies
-const PropTypes = __webpack_require__(2);
-const {
-  escapeString,
-  sanitizeString,
-  isGrip,
-  wrapRender
-} = __webpack_require__(0);
-
-const dom = __webpack_require__(1);
-const { span } = dom;
-
-/**
- * Renders a long string grip.
- */
-LongStringRep.propTypes = {
-  useQuotes: PropTypes.bool,
-  escapeWhitespace: PropTypes.bool,
-  style: PropTypes.object,
-  cropLimit: PropTypes.number.isRequired,
-  member: PropTypes.string,
-  object: PropTypes.object.isRequired
-};
-
-function LongStringRep(props) {
-  let {
-    cropLimit,
-    member,
-    object,
-    style,
-    useQuotes = true,
-    escapeWhitespace = true
-  } = props;
-  let { fullText, initial, length } = object;
-
-  let config = {
-    "data-link-actor-id": object.actor,
-    className: "objectBox objectBox-string"
-  };
-
-  if (style) {
-    config.style = style;
-  }
-
-  let string = member && member.open ? fullText || initial : initial.substring(0, cropLimit);
-
-  if (string.length < length) {
-    string += "\u2026";
-  }
-  let formattedString = useQuotes ? escapeString(string, escapeWhitespace) : sanitizeString(string);
-  return span(config, formattedString);
-}
-
-function supportsObject(object, noGrip = false) {
-  if (noGrip === true || !isGrip(object)) {
-    return false;
-  }
-  return object.type === "longString";
-}
-
-// Exports from this module
-module.exports = {
-  rep: wrapRender(LongStringRep),
   supportsObject
 };
 
@@ -3089,9 +3211,10 @@ module.exports = {
 // Dependencies
 const PropTypes = __webpack_require__(2);
 const {
-  wrapRender
+  wrapRender,
+  ellipsisElement
 } = __webpack_require__(0);
-const PropRep = __webpack_require__(5);
+const PropRep = __webpack_require__(6);
 const { MODE } = __webpack_require__(3);
 
 const dom = __webpack_require__(1);
@@ -3121,11 +3244,7 @@ function ObjectRep(props) {
     } else {
       tinyModeItems.push(span({
         className: "objectLeftBrace"
-      }, "{"), propsArray.length > 0 ? span({
-        key: "more",
-        className: "more-ellipsis",
-        title: "more…"
-      }, "…") : null, span({
+      }, "{"), propsArray.length > 0 ? ellipsisElement : null, span({
         className: "objectRightBrace"
       }, "}"));
     }
@@ -3145,7 +3264,7 @@ function getTitleElement(props, object) {
 }
 
 function getTitle(props, object) {
-  return props.title || object.class || DEFAULT_TITLE;
+  return props.title || DEFAULT_TITLE;
 }
 
 function safePropIterator(props, object, max) {
@@ -3228,11 +3347,7 @@ function propIterator(props, object, max) {
   }
 
   if (propertiesNumber < propertiesNames.length) {
-    elements.push(span({
-      key: "more",
-      className: "more-ellipsis",
-      title: ", more…"
-    }, "…"));
+    elements.push(ellipsisElement);
   }
 
   return elements;
@@ -3482,7 +3597,7 @@ const {
   isGrip,
   wrapRender
 } = __webpack_require__(0);
-const { rep: StringRep } = __webpack_require__(6);
+const { rep: StringRep } = __webpack_require__(7);
 
 /**
  * Renders DOM attribute
@@ -3646,7 +3761,8 @@ function supportsObject(object, noGrip = false) {
     return false;
   }
 
-  return object.preview && getGripType(object, noGrip) == "HTMLDocument";
+  const type = getGripType(object, noGrip);
+  return object.preview && (type === "HTMLDocument" || type === "XULDocument");
 }
 
 // Exports from this module
@@ -3676,7 +3792,7 @@ const {
 } = __webpack_require__(0);
 
 const { MODE } = __webpack_require__(3);
-const { rep } = __webpack_require__(8);
+const { rep } = __webpack_require__(9);
 
 /**
  * Renders DOM event objects.
@@ -3784,7 +3900,7 @@ const {
   wrapRender
 } = __webpack_require__(0);
 const { MODE } = __webpack_require__(3);
-const Svg = __webpack_require__(9);
+const Svg = __webpack_require__(10);
 
 const dom = __webpack_require__(1);
 const { span } = dom;
@@ -4010,7 +4126,7 @@ const {
   wrapRender
 } = __webpack_require__(0);
 
-const PropRep = __webpack_require__(5);
+const PropRep = __webpack_require__(6);
 const { MODE } = __webpack_require__(3);
 
 const dom = __webpack_require__(1);
@@ -4312,10 +4428,10 @@ const {
   isGrip,
   wrapRender
 } = __webpack_require__(0);
-const { rep: StringRep } = __webpack_require__(6);
+const { rep: StringRep } = __webpack_require__(7);
 const { MODE } = __webpack_require__(3);
 const nodeConstants = __webpack_require__(12);
-const Svg = __webpack_require__(9);
+const Svg = __webpack_require__(10);
 
 const dom = __webpack_require__(1);
 const { span } = dom;
@@ -4446,7 +4562,7 @@ const {
   wrapRender
 } = __webpack_require__(0);
 const { MODE } = __webpack_require__(3);
-const Svg = __webpack_require__(9);
+const Svg = __webpack_require__(10);
 
 const dom = __webpack_require__(1);
 const { span } = dom;
@@ -4716,7 +4832,7 @@ const {
   wrapRender
 } = __webpack_require__(0);
 
-const String = __webpack_require__(6).rep;
+const String = __webpack_require__(7).rep;
 
 const dom = __webpack_require__(1);
 const { span } = dom;
@@ -4844,7 +4960,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Component, createFactory } = __webpack_require__(7);
+const { Component, createFactory } = __webpack_require__(8);
 const PropTypes = __webpack_require__(2);
 const dom = __webpack_require__(1);
 
@@ -4863,7 +4979,7 @@ const {
   MODE
 } = __webpack_require__(3);
 
-const Utils = __webpack_require__(16);
+const Utils = __webpack_require__(17);
 
 const {
   getChildren,
@@ -4881,6 +4997,9 @@ const {
   nodeIsPrimitive,
   nodeIsPrototype,
   nodeIsSetter,
+  nodeIsUninitializedBinding,
+  nodeIsUnmappedBinding,
+  nodeIsUnscopedBinding,
   nodeIsWindow
 } = Utils.node;
 
@@ -5073,7 +5192,13 @@ class ObjectInspector extends Component {
 
     const unavailable = isPrimitive && itemValue && itemValue.hasOwnProperty && itemValue.hasOwnProperty("unavailable");
 
-    if (nodeIsOptimizedOut(item)) {
+    if (nodeIsUninitializedBinding(item)) {
+      objectValue = dom.span({ className: "unavailable" }, "(uninitialized)");
+    } else if (nodeIsUnmappedBinding(item)) {
+      objectValue = dom.span({ className: "unavailable" }, "(unmapped)");
+    } else if (nodeIsUnscopedBinding(item)) {
+      objectValue = dom.span({ className: "unavailable" }, "(unscoped)");
+    } else if (nodeIsOptimizedOut(item)) {
       objectValue = dom.span({ className: "unavailable" }, "(optimized away)");
     } else if (nodeIsMissingArguments(item) || unavailable) {
       objectValue = dom.span({ className: "unavailable" }, "(unavailable)");
@@ -5247,7 +5372,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _react = __webpack_require__(7);
+var _react = __webpack_require__(8);
 
 var _react2 = _interopRequireDefault(_react);
 
@@ -6120,7 +6245,7 @@ const {
   enumNonIndexedProperties,
   getPrototype,
   enumSymbols
-} = __webpack_require__(17);
+} = __webpack_require__(18);
 
 const {
   getClosestGripNode,
@@ -6136,7 +6261,7 @@ const {
   nodeIsPrimitive,
   nodeIsProxy,
   nodeNeedsNumericalBuckets
-} = __webpack_require__(18);
+} = __webpack_require__(19);
 
 function loadItemProperties(item, createObjectClient, loadedProperties) {
   const [start, end] = item.meta ? [item.meta.startIndex, item.meta.endIndex] : [];

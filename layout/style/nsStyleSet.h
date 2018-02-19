@@ -367,7 +367,7 @@ class nsStyleSet final
   void SheetChanged(mozilla::CSSStyleSheet&);
 
   // Notes that style sheets have changed in a shadow root.
-  void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot);
+  void RecordShadowStyleChange(mozilla::dom::ShadowRoot& aShadowRoot);
 
   bool StyleSheetsHaveChanged() const
   {

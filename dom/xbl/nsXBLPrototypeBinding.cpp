@@ -82,7 +82,10 @@ public:
   Element* GetElement() { return mElement; }
 
   nsXBLAttributeEntry* GetNext() { return mNext; }
+  const nsXBLAttributeEntry* GetNext() const { return mNext; }
   void SetNext(nsXBLAttributeEntry* aEntry) { mNext = aEntry; }
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
 protected:
   Element* mElement;
@@ -92,6 +95,17 @@ protected:
   int32_t mDstNameSpace;
   nsXBLAttributeEntry* mNext;
 };
+
+size_t
+nsXBLAttributeEntry::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = 0;
+  for (const nsXBLAttributeEntry* entry = this;
+       entry; entry = entry->GetNext()) {
+    n += aMallocSizeOf(entry);
+  }
+  return n;
+}
 
 // =============================================================================
 
@@ -1697,4 +1711,35 @@ nsXBLPrototypeBinding::AppendStyleSheetsTo(
   if (mResources) {
     mResources->AppendStyleSheetsTo(aResult);
   }
+}
+
+size_t
+nsXBLPrototypeBinding::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mResources ? mResources->SizeOfIncludingThis(aMallocSizeOf) : 0;
+
+  if (mAttributeTable) {
+    n += mAttributeTable->ShallowSizeOfIncludingThis(aMallocSizeOf);
+    for (auto iter = mAttributeTable->Iter(); !iter.Done(); iter.Next()) {
+      InnerAttributeTable* table = iter.UserData();
+      n += table->ShallowSizeOfIncludingThis(aMallocSizeOf);
+      for (auto iter2 = table->Iter(); !iter2.Done(); iter2.Next()) {
+        n += iter2.UserData()->SizeOfIncludingThis(aMallocSizeOf);
+      }
+    }
+  }
+
+  n += mInterfaceTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  n += mKeyHandlers.ShallowSizeOfExcludingThis(aMallocSizeOf);
+
+  // Measurement of the following members may be added later if DMD finds it
+  // is worthwhile:
+  // - mBindingURI
+  // - mAlternateBindingURI
+  // - mPrototypeHandler
+  // - mBaseBindingURI
+  // - mImplementation
+
+  return n;
 }

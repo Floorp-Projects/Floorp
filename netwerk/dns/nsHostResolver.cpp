@@ -476,6 +476,7 @@ nsHostRecord::RemoveOrRefresh()
 {
     // no need to flush TRRed names, they're not resolved "locally"
     Cancel();
+    MutexAutoLock lock(addr_info_lock);
     if (addr_info && addr_info->IsTRR()) {
         return false;
     }

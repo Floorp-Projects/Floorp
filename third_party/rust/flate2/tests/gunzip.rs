@@ -45,7 +45,7 @@ fn test_extract_success_multi() {
 fn extract_file(path_compressed: &Path) -> io::Result<Vec<u8>>{
     let mut v = Vec::new();
     let f = try!(File::open(path_compressed));
-    try!(try!(GzDecoder::new(f)).read_to_end(&mut v));
+    try!(GzDecoder::new(f).read_to_end(&mut v));
     Ok(v)
 }
 
@@ -54,6 +54,6 @@ fn extract_file(path_compressed: &Path) -> io::Result<Vec<u8>>{
 fn extract_file_multi(path_compressed: &Path) -> io::Result<Vec<u8>>{
     let mut v = Vec::new();
     let f = try!(File::open(path_compressed));
-    try!(try!(MultiGzDecoder::new(f)).read_to_end(&mut v));
+    try!(MultiGzDecoder::new(f).read_to_end(&mut v));
     Ok(v)
 }

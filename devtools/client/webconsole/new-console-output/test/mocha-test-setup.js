@@ -5,6 +5,24 @@
 const mcRoot = `${__dirname}/../../../../../`;
 const getModule = mcPath => `module.exports = require("${mcRoot}${mcPath}");`;
 
+const { Services: { pref } } = require("devtools-modules");
+pref("devtools.debugger.remote-timeout", 10000);
+pref("devtools.hud.loglimit", 10000);
+pref("devtools.webconsole.filter.error", true);
+pref("devtools.webconsole.filter.warn", true);
+pref("devtools.webconsole.filter.info", true);
+pref("devtools.webconsole.filter.log", true);
+pref("devtools.webconsole.filter.debug", true);
+pref("devtools.webconsole.filter.css", false);
+pref("devtools.webconsole.filter.net", false);
+pref("devtools.webconsole.filter.netxhr", false);
+pref("devtools.webconsole.ui.filterbar", false);
+pref("devtools.webconsole.inputHistoryCount", 50);
+pref("devtools.webconsole.persistlog", false);
+pref("devtools.webconsole.timestampMessages", false);
+pref("devtools.webconsole.autoMultiline", true);
+pref("devtools.webconsole.sidebarToggle", true);
+
 // Point to vendored-in files and mocks when needed.
 const requireHacker = require("require-hacker");
 requireHacker.global_hook("default", (path, module) => {
@@ -35,8 +53,7 @@ requireHacker.global_hook("default", (path, module) => {
         "devtools/client/webconsole/new-console-output/test/fixtures/PluralForm");
     case "Services":
     case "Services.default":
-      return getModule(
-        "devtools/client/webconsole/new-console-output/test/fixtures/Services");
+      return `module.exports = require("devtools-modules/src/Services")`;
     case "devtools/shared/client/object-client":
       return `() => {}`;
     case "devtools/client/netmonitor/src/components/TabboxPanel":

@@ -353,7 +353,7 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                                             "Body was not a JSON Object"))
                 }
                 Err(json::ParserError::SyntaxError(_, line, col)) => {
-                    let msg = format!("Failed to decode request as JSON: {}", body);
+                    let msg = format!("Failed to decode request as JSON: \"{}\"", body);
                     let stack = format!("Syntax error at :{}:{}", line, col);
                     Err(WebDriverError::new_with_stack(ErrorStatus::InvalidArgument, msg, stack))
                 }

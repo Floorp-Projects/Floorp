@@ -11,12 +11,12 @@ mod tests {
     use rand::{thread_rng, Rng};
 
     use zlib::{read, write};
-    use Compression::Default;
+    use Compression;
 
     #[test]
     fn roundtrip() {
         let mut real = Vec::new();
-        let mut w = write::ZlibEncoder::new(Vec::new(), Default);
+        let mut w = write::ZlibEncoder::new(Vec::new(), Compression::default());
         let v = thread_rng().gen_iter::<u8>().take(1024).collect::<Vec<_>>();
         for _ in 0..200 {
             let to_write = &v[..thread_rng().gen_range(0, v.len())];
@@ -33,7 +33,7 @@ mod tests {
     #[test]
     fn drop_writes() {
         let mut data = Vec::new();
-        write::ZlibEncoder::new(&mut data, Default)
+        write::ZlibEncoder::new(&mut data, Compression::default())
             .write_all(b"foo")
             .unwrap();
         let mut r = read::ZlibDecoder::new(&data[..]);
@@ -45,7 +45,7 @@ mod tests {
     #[test]
     fn total_in() {
         let mut real = Vec::new();
-        let mut w = write::ZlibEncoder::new(Vec::new(), Default);
+        let mut w = write::ZlibEncoder::new(Vec::new(), Compression::default());
         let v = thread_rng().gen_iter::<u8>().take(1024).collect::<Vec<_>>();
         for _ in 0..200 {
             let to_write = &v[..thread_rng().gen_range(0, v.len())];
@@ -73,7 +73,7 @@ mod tests {
             .gen_iter::<u8>()
             .take(1024 * 1024)
             .collect::<Vec<_>>();
-        let mut r = read::ZlibDecoder::new(read::ZlibEncoder::new(&v[..], Default));
+        let mut r = read::ZlibDecoder::new(read::ZlibEncoder::new(&v[..], Compression::default()));
         let mut ret = Vec::new();
         r.read_to_end(&mut ret).unwrap();
         assert_eq!(ret, v);
@@ -85,7 +85,7 @@ mod tests {
             .gen_iter::<u8>()
             .take(1024 * 1024)
             .collect::<Vec<_>>();
-        let mut w = write::ZlibEncoder::new(write::ZlibDecoder::new(Vec::new()), Default);
+        let mut w = write::ZlibEncoder::new(write::ZlibDecoder::new(Vec::new()), Compression::default());
         w.write_all(&v).unwrap();
         let w = w.finish().unwrap().finish().unwrap();
         assert!(w == v);
@@ -97,7 +97,7 @@ mod tests {
             .gen_iter::<u8>()
             .take(1024 * 1024)
             .collect::<Vec<_>>();
-        let mut w = write::ZlibEncoder::new(Vec::new(), Default);
+        let mut w = write::ZlibEncoder::new(Vec::new(), Compression::default());
         w.write_all(&v).unwrap();
         let data = w.finish().unwrap();
 
@@ -144,7 +144,7 @@ mod tests {
         ::quickcheck::quickcheck(test as fn(_) -> _);
 
         fn test(v: Vec<u8>) -> bool {
-            let mut r = read::ZlibDecoder::new(read::ZlibEncoder::new(&v[..], Default));
+            let mut r = read::ZlibDecoder::new(read::ZlibEncoder::new(&v[..], Compression::default()));
             let mut v2 = Vec::new();
             r.read_to_end(&mut v2).unwrap();
             v == v2
@@ -156,7 +156,7 @@ mod tests {
         ::quickcheck::quickcheck(test as fn(_) -> _);
 
         fn test(v: Vec<u8>) -> bool {
-            let mut w = write::ZlibEncoder::new(write::ZlibDecoder::new(Vec::new()), Default);
+            let mut w = write::ZlibEncoder::new(write::ZlibDecoder::new(Vec::new()), Compression::default());
             w.write_all(&v).unwrap();
             v == w.finish().unwrap().finish().unwrap()
         }
