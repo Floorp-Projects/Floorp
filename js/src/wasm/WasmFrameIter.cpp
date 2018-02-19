@@ -459,26 +459,18 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, uint32_t framePushed, IsLea
     masm.flushBuffer();
     masm.haltingAlign(CodeAlignment);
 
-    // The table entry falls through into the normal entry after it has checked
-    // the signature.
-    Label normalEntry;
-
-    // Generate table entry. The BytecodeOffset of the trap is fixed up to be
-    // the bytecode offset of the callsite by JitActivation::startWasmTrap.
+    // Generate table entry:
     offsets->begin = masm.currentOffset();
+    OldTrapDesc trap(trapOffset, Trap::IndirectCallBadSig, 0);
     switch (sigId.kind()) {
       case SigIdDesc::Kind::Global: {
         Register scratch = WasmTableCallScratchReg;
         masm.loadWasmGlobalPtr(sigId.globalDataOffset(), scratch);
-        masm.branchPtr(Assembler::Condition::Equal, WasmTableCallSigReg, scratch,
-                       &normalEntry);
-        masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
+        masm.branchPtr(Assembler::Condition::NotEqual, WasmTableCallSigReg, scratch, trap);
         break;
       }
       case SigIdDesc::Kind::Immediate: {
-        masm.branch32(Assembler::Condition::Equal, WasmTableCallSigReg, Imm32(sigId.immediate()),
-                      &normalEntry);
-        masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
+        masm.branch32(Assembler::Condition::NotEqual, WasmTableCallSigReg, Imm32(sigId.immediate()), trap);
         break;
       }
       case SigIdDesc::Kind::None:
@@ -491,7 +483,6 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, uint32_t framePushed, IsLea
 
     // Generate normal entry:
     masm.nopAlign(CodeAlignment);
-    masm.bind(&normalEntry);
     GenerateCallablePrologue(masm, &offsets->normalEntry);
 
     // Tiering works as follows.  The Code owns a jumpTable, which has one
@@ -1281,21 +1272,20 @@ wasm::LookupFaultingInstance(const ModuleSegment& codeSegment, void* pc, void* f
         return nullptr;
 
     size_t offsetInModule = ((uint8_t*)pc) - codeSegment.base();
-    if ((offsetInModule >= codeRange->funcNormalEntry() &&
-         offsetInModule < codeRange->funcNormalEntry() + SetFP) ||
-        (offsetInModule >= codeRange->ret() - PoppedFP &&
-         offsetInModule <= codeRange->ret()))
-    {
+    if (offsetInModule < codeRange->funcNormalEntry() + SetFP)
         return nullptr;
-    }
+    if (offsetInModule >= codeRange->ret() - PoppedFP && offsetInModule <= codeRange->ret())
+        return nullptr;
 
     Instance* instance = reinterpret_cast<Frame*>(fp)->tls->instance;
 
-    // TODO: In the special case of a cross-instance indirect call bad-signature
-    // fault, fp can point to the caller frame which is in a different
-    // instance/module than pc. This special case should go away when old-style
-    // traps go away and signal handling is reworked.
+    // TODO: when Trap::IndirectCallBadSig is converted away from being an
+    // OldTrap, this could become a release assert again. The reason for the
+    // check is the out-of-line trap stub for the table entry's signature check,
+    // which executes before fp has been updated.
     //MOZ_RELEASE_ASSERT(&instance->code() == &codeSegment.code());
+    if (&instance->code() != &codeSegment.code())
+        return nullptr;
 
     return instance;
 }

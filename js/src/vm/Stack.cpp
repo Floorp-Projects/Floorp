@@ -1823,27 +1823,13 @@ jit::JitActivation::wasmInterruptResumePC() const
 }
 
 void
-jit::JitActivation::startWasmTrap(wasm::Trap trap, uint32_t bytecodeOffset,
-                                  const wasm::RegisterState& state)
+jit::JitActivation::startWasmTrap(wasm::Trap trap, uint32_t bytecodeOffset, void* pc, void* fp)
 {
-    bool unwound;
-    wasm::UnwindState unwindState;
-    MOZ_ALWAYS_TRUE(wasm::StartUnwinding(state, &unwindState, &unwound));
-    MOZ_ASSERT(unwound == (trap == wasm::Trap::IndirectCallBadSig));
-
-    void* pc = unwindState.pc;
-    wasm::Frame* fp = unwindState.fp;
-
-    const wasm::Code& code = fp->tls->instance->code();
-    MOZ_RELEASE_ASSERT(&code == wasm::LookupCode(pc));
-
-    // If the frame was unwound, the bytecodeOffset must be recovered from the
-    // callsite so that it is accurate.
-    if (unwound)
-        bytecodeOffset = code.lookupCallSite(pc)->lineOrBytecode();
+    MOZ_ASSERT(pc);
+    MOZ_ASSERT(fp);
 
     cx_->runtime()->wasmUnwindData.ref().construct<wasm::TrapData>(pc, trap, bytecodeOffset);
-    setWasmExitFP(fp);
+    setWasmExitFP((wasm::Frame*)fp);
 }
 
 void
