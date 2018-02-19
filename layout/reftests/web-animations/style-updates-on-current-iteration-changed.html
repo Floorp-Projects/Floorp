@@ -20,8 +20,6 @@
 
   waitForIterationChange(anim).then(() => {
     // Wait for painting the result of the second iteration.
-    requestAnimationFrame(() => {
-      document.documentElement.classList.remove("reftest-wait");
-    });
+    document.documentElement.classList.remove("reftest-wait");
   });
 </script>

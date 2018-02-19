@@ -31,8 +31,6 @@ span {
              { delay: 100000, duration: 100000 });
   anim.ready.then(function() {
     anim.effect.target = document.getElementById("second");
-    requestAnimationFrame(function() {
-      document.documentElement.classList.remove("reftest-wait");
-    });
+    document.documentElement.classList.remove("reftest-wait");
   });
 </script>
