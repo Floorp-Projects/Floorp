@@ -32,11 +32,7 @@
 
 using namespace js;
 
-using mozilla::ArrayLength;
-using mozilla::IsFinite;
 using mozilla::IsNaN;
-using mozilla::FloorLog2;
-using mozilla::NumberIsInt32;
 using mozilla::EnableIf;
 using mozilla::IsIntegral;
 using mozilla::IsFloatingPoint;

@@ -17,7 +17,6 @@
 #include "vm/Shape-inl.h"
 
 using mozilla::ArrayLength;
-using mozilla::DebugOnly;
 using mozilla::PodCopy;
 
 using namespace js;

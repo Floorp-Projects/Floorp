@@ -42,8 +42,6 @@ using mozilla::AssertedCast;
 
 using JS::DoubleNaNValue;
 using JS::TrackedOutcome;
-using JS::TrackedStrategy;
-using JS::TrackedTypeSite;
 
 namespace js {
 namespace jit {

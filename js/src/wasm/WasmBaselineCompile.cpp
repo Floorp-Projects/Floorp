@@ -135,17 +135,14 @@
 #include "jit/MacroAssembler-inl.h"
 
 using mozilla::DebugOnly;
-using mozilla::FloatingPoint;
 using mozilla::FloorLog2;
 using mozilla::IsPowerOfTwo;
 using mozilla::Maybe;
-using mozilla::SpecificNaN;
 
 namespace js {
 namespace wasm {
 
 using namespace js::jit;
-using JS::GenericNaN;
 
 typedef bool HandleNaNSpecially;
 typedef bool InvertBranch;
