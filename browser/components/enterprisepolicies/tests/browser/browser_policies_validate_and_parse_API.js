@@ -294,3 +294,34 @@ add_task(async function test_missing_arrays_inside_objects() {
   is(parsed.block, undefined, "Block array is undefined, as expected.");
 });
 
+add_task(async function test_required_vs_nonrequired_properties() {
+  let schema = {
+    type: "object",
+    properties: {
+      "non-required-property": {
+        type: "number"
+      },
+
+      "required-property": {
+        type: "number"
+      }
+    },
+    required: ["required-property"]
+  };
+
+  let valid, parsed;
+  [valid, parsed] = PoliciesValidator.validateAndParseParameters({
+    "required-property": 5
+  }, schema);
+
+  ok(valid, "Object is valid since required property is present");
+  is(parsed["required-property"], 5, "required property is correct");
+  is(parsed["non-required-property"], undefined, "non-required property is undefined, as expected");
+
+  [valid, parsed] = PoliciesValidator.validateAndParseParameters({
+    "non-required-property": 5
+  }, schema);
+
+  ok(!valid, "Object is not valid since the required property is missing");
+  is(parsed, null, "Nothing was returned as parsed");
+});
