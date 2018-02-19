@@ -868,7 +868,7 @@ TextInputListener::OnSelectionChange(Selection& aSelection,
 
   mSelectionWasCollapsed = collapsed;
 
-  if (!weakFrame.IsAlive() ||
+  if (!weakFrame.IsAlive() || !mFrame ||
       !nsContentUtils::IsFocusedContent(mFrame->GetContent())) {
     return;
   }
@@ -1712,8 +1712,9 @@ nsTextEditorState::SetSelectionRange(uint32_t aStart, uint32_t aEnd,
     props.SetEnd(aEnd);
     props.SetDirection(aDirection);
   } else {
+    WeakPtr<nsTextEditorState> self(this);
     aRv = mBoundFrame->SetSelectionRange(aStart, aEnd, aDirection);
-    if (aRv.Failed()) {
+    if (aRv.Failed() || !self.get()) {
       return;
     }
     rv = mBoundFrame->ScrollSelectionIntoView();
