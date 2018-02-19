@@ -3,15 +3,11 @@ extern crate zip;
 use std::io;
 use std::fs;
 
-#[cfg(unix)]
-use std::os::unix::fs::PermissionsExt;
-
 fn main() {
     std::process::exit(real_main());
 }
 
-fn real_main() -> i32
-{
+fn real_main() -> i32 {
     let args: Vec<_> = std::env::args().collect();
     if args.len() < 2 {
         println!("Usage: {} <filename>", args[0]);
@@ -22,66 +18,45 @@ fn real_main() -> i32
 
     let mut archive = zip::ZipArchive::new(file).unwrap();
 
-    for i in 0..archive.len()
-    {
+    for i in 0..archive.len() {
         let mut file = archive.by_index(i).unwrap();
         let outpath = sanitize_filename(file.name());
-        println!("{}", outpath.display());
 
         {
             let comment = file.comment();
-            if comment.len() > 0 { println!("  File comment: {}", comment); }
+            if !comment.is_empty() {
+                println!("File {} comment: {}", i, comment);
+            }
         }
 
-        create_directory(outpath.parent().unwrap_or(std::path::Path::new("")), None);
-
-        let perms = convert_permissions(file.unix_mode());
-
-        if (&*file.name()).ends_with("/") {
-            create_directory(&outpath, perms);
-            
+        if (&*file.name()).ends_with('/') {
+            println!("File {} extracted to \"{}\"", i, outpath.as_path().display());
+            fs::create_dir_all(&outpath).unwrap();
+        } else {
+            println!("File {} extracted to \"{}\" ({} bytes)", i, outpath.as_path().display(), file.size());
+            if let Some(p) = outpath.parent() {
+                if !p.exists() {
+                    fs::create_dir_all(&p).unwrap();
+                }
+            }
+            let mut outfile = fs::File::create(&outpath).unwrap();
+            io::copy(&mut file, &mut outfile).unwrap();
         }
-        else {
-            write_file(&mut file, &outpath, perms);
+
+        // Get and Set permissions
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+
+            if let Some(mode) = file.unix_mode() {
+                fs::set_permissions(&outpath, fs::Permissions::from_mode(mode)).unwrap();
+            }
         }
     }
-
     return 0;
 }
 
-#[cfg(unix)]
-fn convert_permissions(mode: Option<u32>) -> Option<fs::Permissions>
-{
-    match mode {
-        Some(mode) => Some(fs::Permissions::from_mode(mode)),
-        None => None,
-    }
-}
-#[cfg(not(unix))]
-fn convert_permissions(_mode: Option<u32>) -> Option<fs::Permissions>
-{
-    None
-}
-
-fn write_file(file: &mut zip::read::ZipFile, outpath: &std::path::Path, perms: Option<fs::Permissions>)
-{
-    let mut outfile = fs::File::create(&outpath).unwrap();
-    io::copy(file, &mut outfile).unwrap();
-    if let Some(perms) = perms {
-        fs::set_permissions(outpath, perms).unwrap();
-    }
-}
-
-fn create_directory(outpath: &std::path::Path, perms: Option<fs::Permissions>)
-{
-    fs::create_dir_all(&outpath).unwrap();
-    if let Some(perms) = perms {
-        fs::set_permissions(outpath, perms).unwrap();
-    }
-}
-
-fn sanitize_filename(filename: &str) -> std::path::PathBuf
-{
+fn sanitize_filename(filename: &str) -> std::path::PathBuf {
     let no_null_filename = match filename.find('\0') {
         Some(index) => &filename[0..index],
         None => filename,
@@ -89,7 +64,10 @@ fn sanitize_filename(filename: &str) -> std::path::PathBuf
 
     std::path::Path::new(no_null_filename)
         .components()
-        .filter(|component| *component != std::path::Component::ParentDir)
+        .filter(|component| match *component {
+            std::path::Component::Normal(..) => true,
+            _ => false,
+        })
         .fold(std::path::PathBuf::new(), |mut path, ref cur| {
             path.push(cur.as_os_str());
             path

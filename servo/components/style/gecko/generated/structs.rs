@@ -3086,6 +3086,13 @@ pub mod root {
             pub const DocumentOrShadowRoot_Kind_ShadowRoot:
                 root::mozilla::dom::DocumentOrShadowRoot_Kind = 1;
             pub type DocumentOrShadowRoot_Kind = i32;
+            pub const DocumentOrShadowRoot_ElementsFromPointFlags_IGNORE_ROOT_SCROLL_FRAME:
+                root::mozilla::dom::DocumentOrShadowRoot_ElementsFromPointFlags = 1;
+            pub const DocumentOrShadowRoot_ElementsFromPointFlags_FLUSH_LAYOUT:
+                root::mozilla::dom::DocumentOrShadowRoot_ElementsFromPointFlags = 2;
+            pub const DocumentOrShadowRoot_ElementsFromPointFlags_IS_ELEMENT_FROM_POINT:
+                root::mozilla::dom::DocumentOrShadowRoot_ElementsFromPointFlags = 4;
+            pub type DocumentOrShadowRoot_ElementsFromPointFlags = u32;
             #[test]
             fn bindgen_test_layout_DocumentOrShadowRoot() {
                 assert_eq!(
@@ -6545,7 +6552,9 @@ pub mod root {
             83;
         pub const UseCounter_eUseCounter_XMLBaseAttribute: root::mozilla::UseCounter = 84;
         pub const UseCounter_eUseCounter_WindowContentUntrusted: root::mozilla::UseCounter = 85;
-        pub const UseCounter_eUseCounter_Count: root::mozilla::UseCounter = 86;
+        pub const UseCounter_eUseCounter_RegisterProtocolHandlerInsecure:
+            root::mozilla::UseCounter = 86;
+        pub const UseCounter_eUseCounter_Count: root::mozilla::UseCounter = 87;
         pub type UseCounter = i16;
         pub const LogLevel_Disabled: root::mozilla::LogLevel = 0;
         pub const LogLevel_Error: root::mozilla::LogLevel = 1;
@@ -8262,7 +8271,6 @@ pub mod root {
         pub const SERVO_PREF_ENABLED__moz_top_layer: bool = false;
         pub const SERVO_PREF_ENABLED_touch_action: bool = true;
         pub const SERVO_PREF_ENABLED_transform: bool = false;
-        pub const SERVO_PREF_ENABLED__moz_transform: bool = true;
         pub const SERVO_PREF_ENABLED_transform_box: bool = true;
         pub const SERVO_PREF_ENABLED_transform_origin: bool = false;
         pub const SERVO_PREF_ENABLED_transform_style: bool = false;
@@ -8294,6 +8302,7 @@ pub mod root {
         pub const SERVO_PREF_ENABLED_writing_mode: bool = false;
         pub const SERVO_PREF_ENABLED_z_index: bool = false;
         pub const SERVO_PREF_ENABLED_word_wrap: bool = false;
+        pub const SERVO_PREF_ENABLED__moz_transform: bool = true;
         pub const SERVO_PREF_ENABLED__moz_transform_origin: bool = true;
         pub const SERVO_PREF_ENABLED__moz_perspective_origin: bool = true;
         pub const SERVO_PREF_ENABLED__moz_perspective: bool = true;
@@ -21517,9 +21526,9 @@ pub mod root {
         eCSSProperty_text_decoration = 371,
         eCSSProperty_text_emphasis = 372,
         eCSSProperty__webkit_text_stroke = 373,
-        eCSSProperty__moz_transform = 374,
-        eCSSProperty_transition = 375,
-        eCSSPropertyAlias_WordWrap = 376,
+        eCSSProperty_transition = 374,
+        eCSSPropertyAlias_WordWrap = 375,
+        eCSSPropertyAlias_MozTransform = 376,
         eCSSPropertyAlias_MozTransformOrigin = 377,
         eCSSPropertyAlias_MozPerspectiveOrigin = 378,
         eCSSPropertyAlias_MozPerspective = 379,
@@ -22183,13 +22192,6 @@ pub mod root {
     /// The callback function must not mutate any state for the given document.
     pub type nsIDocument_nsDocTestFunc =
         ::std::option::Option<unsafe extern "C" fn(aDocument: *const root::nsIDocument) -> bool>;
-    pub const nsIDocument_ElementsFromPointFlags_IGNORE_ROOT_SCROLL_FRAME:
-        root::nsIDocument_ElementsFromPointFlags = 1;
-    pub const nsIDocument_ElementsFromPointFlags_FLUSH_LAYOUT:
-        root::nsIDocument_ElementsFromPointFlags = 2;
-    pub const nsIDocument_ElementsFromPointFlags_IS_ELEMENT_FROM_POINT:
-        root::nsIDocument_ElementsFromPointFlags = 4;
-    pub type nsIDocument_ElementsFromPointFlags = u32;
     /// A class that represents an external resource load that has begun but
     /// doesn't have a document yet.  Observers can be registered on this object,
     /// and will be notified after the document is created.  Observers registered
@@ -22309,8 +22311,10 @@ pub mod root {
         root::nsIDocument_DeprecatedOperations = 29;
     pub const nsIDocument_DeprecatedOperations_eWindowContentUntrusted:
         root::nsIDocument_DeprecatedOperations = 30;
-    pub const nsIDocument_DeprecatedOperations_eDeprecatedOperationCount:
+    pub const nsIDocument_DeprecatedOperations_eRegisterProtocolHandlerInsecure:
         root::nsIDocument_DeprecatedOperations = 31;
+    pub const nsIDocument_DeprecatedOperations_eDeprecatedOperationCount:
+        root::nsIDocument_DeprecatedOperations = 32;
     pub type nsIDocument_DeprecatedOperations = u32;
     pub const nsIDocument_DocumentWarnings_eIgnoringWillChangeOverBudget:
         root::nsIDocument_DocumentWarnings = 0;
@@ -26159,7 +26163,7 @@ pub mod root {
     }
     extern "C" {
         #[link_name = "\u{1}_ZN10nsCSSProps11kFlagsTableE"]
-        pub static mut nsCSSProps_kFlagsTable: [u32; 376usize];
+        pub static mut nsCSSProps_kFlagsTable: [u32; 375usize];
     }
     extern "C" {
         #[link_name = "\u{1}_ZN10nsCSSProps19kParserVariantTableE"]
@@ -26167,7 +26171,7 @@ pub mod root {
     }
     extern "C" {
         #[link_name = "\u{1}_ZN10nsCSSProps17kSubpropertyTableE"]
-        pub static mut nsCSSProps_kSubpropertyTable: [*const root::nsCSSPropertyID; 50usize];
+        pub static mut nsCSSProps_kSubpropertyTable: [*const root::nsCSSPropertyID; 49usize];
     }
     extern "C" {
         #[link_name = "\u{1}_ZN10nsCSSProps26gShorthandsContainingTableE"]
@@ -26196,11 +26200,11 @@ pub mod root {
     }
     extern "C" {
         #[link_name = "\u{1}_ZN10nsCSSProps13kIDLNameTableE"]
-        pub static mut nsCSSProps_kIDLNameTable: [*const ::std::os::raw::c_char; 376usize];
+        pub static mut nsCSSProps_kIDLNameTable: [*const ::std::os::raw::c_char; 375usize];
     }
     extern "C" {
         #[link_name = "\u{1}_ZN10nsCSSProps25kIDLNameSortPositionTableE"]
-        pub static mut nsCSSProps_kIDLNameSortPositionTable: [i32; 376usize];
+        pub static mut nsCSSProps_kIDLNameSortPositionTable: [i32; 375usize];
     }
     extern "C" {
         #[link_name = "\u{1}_ZN10nsCSSProps19gPropertyUseCounterE"]

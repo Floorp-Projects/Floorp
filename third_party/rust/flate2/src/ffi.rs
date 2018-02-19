@@ -98,14 +98,43 @@ mod imp {
     }
 }
 
-#[cfg(not(feature = "zlib"))]
+#[cfg(all(not(feature = "zlib"), feature = "rust_backend"))]
+mod imp {
+    extern crate miniz_oxide_c_api;
+    use std::ops::{Deref, DerefMut};
+
+    pub use ffi::crc_imp::*;
+    pub use self::miniz_oxide_c_api::*;
+    pub use self::miniz_oxide_c_api::lib_oxide::*;
+
+    #[derive(Debug, Default)]
+    pub struct StreamWrapper {
+        inner: mz_stream,
+    }
+
+    impl Deref for StreamWrapper {
+        type Target = mz_stream;
+
+        fn deref(&self) -> &Self::Target {
+            &self.inner
+        }
+    }
+
+    impl DerefMut for StreamWrapper {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.inner
+        }
+    }
+}
+
+#[cfg(all(not(feature = "zlib"), not(feature = "rust_backend")))]
 mod imp {
     extern crate miniz_sys;
     use std::mem;
     use std::ops::{Deref, DerefMut};
 
-    use libc::{c_ulong, off_t};
     pub use self::miniz_sys::*;
+    pub use ffi::crc_imp::*;
 
     pub struct StreamWrapper {
         inner: mz_stream,
@@ -138,7 +167,11 @@ mod imp {
             &mut self.inner
         }
     }
+}
 
+#[cfg(not(feature = "zlib"))]
+mod crc_imp {
+    use libc::{c_ulong, off_t};
     pub unsafe extern fn mz_crc32_combine(crc1: c_ulong,
                                           crc2: c_ulong,
                                           len2: off_t) -> c_ulong {

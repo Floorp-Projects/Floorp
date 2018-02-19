@@ -157,10 +157,46 @@ When using C++ library compilation switch, the `CXX` and `CXXFLAGS` env
 variables are used instead of `CC` and `CFLAGS` and the C++ standard library is
 linked to the crate target.
 
+## CUDA C++ support
+
+`cc-rs` also supports compiling CUDA C++ libraries by using the `cuda` method
+on `Build` (currently for GNU/Clang toolchains only):
+
+```rust,no_run
+extern crate cc;
+
+fn main() {
+    cc::Build::new()
+        // Switch to CUDA C++ library compilation using NVCC.
+        .cuda(true)
+        // Generate code for Maxwell (GTX 970, 980, 980 Ti, Titan X).
+        .flag("-gencode").flag("arch=compute_52,code=sm_52")
+        // Generate code for Maxwell (Jetson TX1).
+        .flag("-gencode").flag("arch=compute_53,code=sm_53")
+        // Generate code for Pascal (GTX 1070, 1080, 1080 Ti, Titan Xp).
+        .flag("-gencode").flag("arch=compute_61,code=sm_61")
+        // Generate code for Pascal (Tesla P100).
+        .flag("-gencode").flag("arch=compute_60,code=sm_60")
+        // Generate code for Pascal (Jetson TX2).
+        .flag("-gencode").flag("arch=compute_62,code=sm_62")
+        .file("bar.cu")
+        .compile("libbar.a");
+}
+```
+
 ## License
 
-`cc-rs` is primarily distributed under the terms of both the MIT license and
-the Apache License (Version 2.0), with portions covered by various BSD-like
-licenses.
+This project is licensed under either of
 
-See LICENSE-APACHE, and LICENSE-MIT for details.
+ * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
+   http://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license ([LICENSE-MIT](LICENSE-MIT) or
+   http://opensource.org/licenses/MIT)
+
+at your option.
+
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in Serde by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.

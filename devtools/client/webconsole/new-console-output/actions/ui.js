@@ -8,7 +8,6 @@
 
 const { getAllUi } = require("devtools/client/webconsole/new-console-output/selectors/ui");
 const { getMessage } = require("devtools/client/webconsole/new-console-output/selectors/messages");
-const Services = require("Services");
 
 const {
   FILTER_BAR_TOGGLE,
@@ -22,22 +21,22 @@ const {
 } = require("devtools/client/webconsole/new-console-output/constants");
 
 function filterBarToggle(show) {
-  return (dispatch, getState) => {
+  return (dispatch, getState, {prefsService}) => {
     dispatch({
       type: FILTER_BAR_TOGGLE,
     });
-    const uiState = getAllUi(getState());
-    Services.prefs.setBoolPref(PREFS.UI.FILTER_BAR, uiState.filterBarVisible);
+    const {filterBarVisible} = getAllUi(getState());
+    prefsService.setBoolPref(PREFS.UI.FILTER_BAR, filterBarVisible);
   };
 }
 
 function persistToggle(show) {
-  return (dispatch, getState) => {
+  return (dispatch, getState, {prefsService}) => {
     dispatch({
       type: PERSIST_TOGGLE,
     });
     const uiState = getAllUi(getState());
-    Services.prefs.setBoolPref(PREFS.UI.PERSIST, uiState.persistLogs);
+    prefsService.setBoolPref(PREFS.UI.PERSIST, uiState.persistLogs);
   };
 }
 

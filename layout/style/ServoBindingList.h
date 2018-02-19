@@ -192,6 +192,10 @@ SERVO_BINDING_FUNC(Servo_AuthorStyles_ForceDirty, void,
 SERVO_BINDING_FUNC(Servo_AuthorStyles_Flush, void,
                    RawServoAuthorStylesBorrowedMut self,
                    RawServoStyleSetBorrowed document_styles)
+SERVO_BINDING_FUNC(Servo_AuthorStyles_SizeOfIncludingThis, size_t,
+                   mozilla::MallocSizeOf malloc_size_of,
+                   mozilla::MallocSizeOf malloc_enclosing_size_of,
+                   RawServoAuthorStylesBorrowed self)
 
 SERVO_BINDING_FUNC(Servo_StyleContext_AddRef, void, ServoStyleContextBorrowed ctx);
 SERVO_BINDING_FUNC(Servo_StyleContext_Release, void, ServoStyleContextBorrowed ctx);
