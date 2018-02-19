@@ -182,14 +182,14 @@ IsValidVideoRegion(const gfx::IntSize& aFrame,
     aFrame.height <= PlanarYCbCrImage::MAX_DIMENSION &&
     aFrame.width * aFrame.height <= MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&
     aFrame.width * aFrame.height != 0 &&
-    aPicture.width <= PlanarYCbCrImage::MAX_DIMENSION &&
-    aPicture.x < PlanarYCbCrImage::MAX_DIMENSION &&
-    aPicture.x + aPicture.width < PlanarYCbCrImage::MAX_DIMENSION &&
-    aPicture.height <= PlanarYCbCrImage::MAX_DIMENSION &&
-    aPicture.y < PlanarYCbCrImage::MAX_DIMENSION &&
-    aPicture.y + aPicture.height < PlanarYCbCrImage::MAX_DIMENSION &&
-    aPicture.width * aPicture.height <= MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&
-    aPicture.width * aPicture.height != 0 &&
+    aPicture.Width() <= PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.X() < PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.XMost() < PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.Height() <= PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.Y() < PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.YMost() < PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.Width() * aPicture.Height() <= MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&
+    !aPicture.IsZeroArea()&&
     aDisplay.width <= PlanarYCbCrImage::MAX_DIMENSION &&
     aDisplay.height <= PlanarYCbCrImage::MAX_DIMENSION &&
     aDisplay.width * aDisplay.height <= MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&

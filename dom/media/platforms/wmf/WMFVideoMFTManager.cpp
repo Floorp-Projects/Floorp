@@ -651,8 +651,8 @@ WMFVideoMFTManager::InitInternal()
 
   mUseHwAccel = false; // default value; changed if D3D setup succeeds.
   bool useDxva = (mStreamType != H264 ||
-                  (mVideoInfo.ImageRect().width > MIN_H264_HW_WIDTH &&
-                   mVideoInfo.ImageRect().height > MIN_H264_HW_HEIGHT)) &&
+                  (mVideoInfo.ImageRect().Width() > MIN_H264_HW_WIDTH &&
+                   mVideoInfo.ImageRect().Height() > MIN_H264_HW_HEIGHT)) &&
                  InitializeDXVA();
 
   RefPtr<MFTDecoder> decoder;
@@ -745,23 +745,23 @@ WMFVideoMFTManager::InitInternal()
       (mUseHwAccel ? "Yes" : "No"));
 
   if (mDXVA2Manager) {
-    hr = mDXVA2Manager->ConfigureForSize(mVideoInfo.ImageRect().width,
-                                         mVideoInfo.ImageRect().height);
+    hr = mDXVA2Manager->ConfigureForSize(mVideoInfo.ImageRect().Width(),
+                                         mVideoInfo.ImageRect().Height());
     NS_ENSURE_TRUE(SUCCEEDED(hr),
                    MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                RESULT_DETAIL("Fail to configure image size for "
                                              "DXVA2Manager.")));
   } else {
     mYUVColorSpace = GetYUVColorSpace(outputType);
-    GetDefaultStride(outputType, mVideoInfo.ImageRect().width, &mVideoStride);
+    GetDefaultStride(outputType, mVideoInfo.ImageRect().Width(), &mVideoStride);
   }
   LOG("WMFVideoMFTManager frame geometry stride=%u picture=(%d, %d, %d, %d) "
       "display=(%d,%d)",
       mVideoStride,
-      mVideoInfo.ImageRect().x,
-      mVideoInfo.ImageRect().y,
-      mVideoInfo.ImageRect().width,
-      mVideoInfo.ImageRect().height,
+      mVideoInfo.ImageRect().X(),
+      mVideoInfo.ImageRect().Y(),
+      mVideoInfo.ImageRect().Width(),
+      mVideoInfo.ImageRect().Height(),
       mVideoInfo.mDisplay.width,
       mVideoInfo.mDisplay.height);
 
@@ -807,8 +807,8 @@ WMFVideoMFTManager::SetDecoderMediaTypes()
 
   hr = MFSetAttributeSize(inputType,
                           MF_MT_FRAME_SIZE,
-                          mVideoInfo.ImageRect().width,
-                          mVideoInfo.ImageRect().height);
+                          mVideoInfo.ImageRect().Width(),
+                          mVideoInfo.ImageRect().Height());
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   RefPtr<IMFMediaType> outputType;
@@ -820,8 +820,8 @@ WMFVideoMFTManager::SetDecoderMediaTypes()
 
   hr = MFSetAttributeSize(outputType,
                           MF_MT_FRAME_SIZE,
-                          mVideoInfo.ImageRect().width,
-                          mVideoInfo.ImageRect().height);
+                          mVideoInfo.ImageRect().Width(),
+                          mVideoInfo.ImageRect().Height());
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   GUID outputSubType = mUseHwAccel ? MFVideoFormat_NV12 : MFVideoFormat_YV12;
@@ -1136,7 +1136,7 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
         hr = mDecoder->GetOutputMediaType(outputType);
         NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
         mYUVColorSpace = GetYUVColorSpace(outputType);
-        hr = GetDefaultStride(outputType, mVideoInfo.ImageRect().width,
+        hr = GetDefaultStride(outputType, mVideoInfo.ImageRect().Width(),
                               &mVideoStride);
         NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
       }

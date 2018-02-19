@@ -123,7 +123,7 @@ static bool ValidateBufferAndPicture(const VideoData::YCbCrBuffer& aBuffer,
   }
 
   // The following situations could be triggered by invalid input
-  if (aPicture.width <= 0 || aPicture.height <= 0) {
+  if (aPicture.Width() <= 0 || aPicture.Height() <= 0) {
     // In debug mode, makes the error more noticeable
     MOZ_ASSERT(false, "Empty picture rect");
     return false;
@@ -137,8 +137,8 @@ static bool ValidateBufferAndPicture(const VideoData::YCbCrBuffer& aBuffer,
 
   // Ensure the picture size specified in the headers can be extracted out of
   // the frame we've been supplied without indexing out of bounds.
-  CheckedUint32 xLimit = aPicture.x + CheckedUint32(aPicture.width);
-  CheckedUint32 yLimit = aPicture.y + CheckedUint32(aPicture.height);
+  CheckedUint32 xLimit = aPicture.X() + CheckedUint32(aPicture.Width());
+  CheckedUint32 yLimit = aPicture.Y() + CheckedUint32(aPicture.Height());
   if (!xLimit.isValid() || xLimit.value() > aBuffer.mPlanes[0].mStride ||
       !yLimit.isValid() || yLimit.value() > aBuffer.mPlanes[0].mHeight) {
     // The specified picture dimensions can't be contained inside the video
@@ -249,8 +249,8 @@ ConstructPlanarYCbCrData(const VideoInfo& aInfo,
   data.mCbCrStride = Cb.mStride;
   data.mCbSkip = Cb.mSkip;
   data.mCrSkip = Cr.mSkip;
-  data.mPicX = aPicture.x;
-  data.mPicY = aPicture.y;
+  data.mPicX = aPicture.X();
+  data.mPicY = aPicture.Y();
   data.mPicSize = aPicture.Size();
   data.mStereoMode = aInfo.mStereoMode;
   data.mYUVColorSpace = aBuffer.mYUVColorSpace;

@@ -3462,10 +3462,10 @@ nsGlobalWindowOuter::GetScreenXY(CallerType aCallerType, ErrorResult& aError)
   DesktopRect screenRectDesk = screenRectDev / scale;
 
   CSSPoint cssPt =
-    LayoutDevicePoint(x - screenRectDev.x, y - screenRectDev.y) /
+    LayoutDevicePoint(x - screenRectDev.X(), y - screenRectDev.Y()) /
     presContext->CSSToDevPixelScale();
-  cssPt.x += screenRectDesk.x;
-  cssPt.y += screenRectDesk.y;
+  cssPt.x += screenRectDesk.X();
+  cssPt.y += screenRectDesk.Y();
 
   return CSSIntPoint(NSToIntRound(cssPt.x), NSToIntRound(cssPt.y));
 }
@@ -3510,7 +3510,7 @@ nsGlobalWindowOuter::GetMozInnerScreenXOuter(CallerType aCallerType)
   }
 
   nsRect r = GetInnerScreenRect();
-  return nsPresContext::AppUnitsToFloatCSSPixels(r.x);
+  return nsPresContext::AppUnitsToFloatCSSPixels(r.X());
 }
 
 float
@@ -3522,7 +3522,7 @@ nsGlobalWindowOuter::GetMozInnerScreenYOuter(CallerType aCallerType)
   }
 
   nsRect r = GetInnerScreenRect();
-  return nsPresContext::AppUnitsToFloatCSSPixels(r.y);
+  return nsPresContext::AppUnitsToFloatCSSPixels(r.Y());
 }
 
 double
