@@ -123,7 +123,7 @@ nsQueryContentEventResult::GetLeft(int32_t *aLeft)
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(IsRectRelatedPropertyAvailable(mEventMessage),
                  NS_ERROR_NOT_AVAILABLE);
-  *aLeft = mRect.x;
+  *aLeft = mRect.X();
   return NS_OK;
 }
 
@@ -143,7 +143,7 @@ nsQueryContentEventResult::GetTop(int32_t *aTop)
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(IsRectRelatedPropertyAvailable(mEventMessage),
                  NS_ERROR_NOT_AVAILABLE);
-  *aTop = mRect.y;
+  *aTop = mRect.Y();
   return NS_OK;
 }
 
@@ -214,8 +214,8 @@ nsQueryContentEventResult::GetCharacterRect(int32_t aOffset,
     return NS_ERROR_FAILURE;
   }
 
-  *aLeft = mRectArray[aOffset].x;
-  *aTop = mRectArray[aOffset].y;
+  *aLeft = mRectArray[aOffset].X();
+  *aTop = mRectArray[aOffset].Y();
   *aWidth = mRectArray[aOffset].Width();
   *aHeight = mRectArray[aOffset].Height();
 

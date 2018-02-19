@@ -783,7 +783,7 @@ PluginInstanceParent::SetCurrentImage(Image* aImage)
 
     // Invalidate our area in the page so the image gets flushed.
     gfx::IntRect rect = aImage->GetPictureRect();
-    NPRect nprect = {uint16_t(rect.x), uint16_t(rect.y), uint16_t(rect.width), uint16_t(rect.height)};
+    NPRect nprect = {uint16_t(rect.X()), uint16_t(rect.Y()), uint16_t(rect.Width()), uint16_t(rect.Height())};
     RecvNPN_InvalidateRect(nprect);
 
     RecordDrawingModel();
@@ -1111,7 +1111,7 @@ PluginInstanceParent::BeginUpdateBackground(const nsIntRect& aRect,
 {
     PLUGIN_LOG_DEBUG(
         ("[InstanceParent][%p] BeginUpdateBackground for <x=%d,y=%d, w=%d,h=%d>",
-         this, aRect.x, aRect.y, aRect.width, aRect.height));
+         this, aRect.X(), aRect.Y(), aRect.Width(), aRect.Height()));
 
     if (!mBackground) {
         // XXX if we failed to create a background surface on one
@@ -1144,7 +1144,7 @@ PluginInstanceParent::EndUpdateBackground(const nsIntRect& aRect)
 {
     PLUGIN_LOG_DEBUG(
         ("[InstanceParent][%p] EndUpdateBackground for <x=%d,y=%d, w=%d,h=%d>",
-         this, aRect.x, aRect.y, aRect.width, aRect.height));
+         this, aRect.X(), aRect.Y(), aRect.Width(), aRect.Height()));
 
 #ifdef MOZ_X11
     // Have to XSync here to avoid the plugin trying to draw with this

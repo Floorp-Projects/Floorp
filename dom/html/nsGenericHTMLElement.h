@@ -214,14 +214,14 @@ public:
     mozilla::CSSIntRect rcFrame;
     GetOffsetRect(rcFrame);
 
-    return rcFrame.y;
+    return rcFrame.Y();
   }
   int32_t OffsetLeft()
   {
     mozilla::CSSIntRect rcFrame;
     GetOffsetRect(rcFrame);
 
-    return rcFrame.x;
+    return rcFrame.X();
   }
   int32_t OffsetWidth()
   {

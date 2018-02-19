@@ -1570,15 +1570,15 @@ ContentEventHandler::EnsureNonEmptyRect(nsRect& aRect) const
 {
   // See the comment in ContentEventHandler.h why this doesn't set them to
   // one device pixel.
-  aRect.height = std::max(1, aRect.height);
-  aRect.width = std::max(1, aRect.width);
+  aRect.SetHeight(std::max(1, aRect.Height()));
+  aRect.SetWidth(std::max(1, aRect.Width()));
 }
 
 void
 ContentEventHandler::EnsureNonEmptyRect(LayoutDeviceIntRect& aRect) const
 {
-  aRect.height = std::max(1, aRect.height);
-  aRect.width = std::max(1, aRect.width);
+  aRect.SetHeight(std::max(1, aRect.Height()));
+  aRect.SetWidth(std::max(1, aRect.Width()));
 }
 
 ContentEventHandler::NodePosition
@@ -1828,14 +1828,14 @@ ContentEventHandler::GetLineBreakerRectBefore(nsIFrame* aFrame)
   nscoord baseline = aFrame->GetCaretBaseline();
   if (kWritingMode.IsVertical()) {
     if (kWritingMode.IsLineInverted()) {
-      result.mRect.x = baseline - fontMetrics->MaxDescent();
+      result.mRect.MoveToX(baseline - fontMetrics->MaxDescent());
     } else {
-      result.mRect.x = baseline - fontMetrics->MaxAscent();
+      result.mRect.MoveToX(baseline - fontMetrics->MaxAscent());
     }
-    result.mRect.width = fontMetrics->MaxHeight();
+    result.mRect.SetWidth(fontMetrics->MaxHeight());
   } else {
-    result.mRect.y = baseline - fontMetrics->MaxAscent();
-    result.mRect.height = fontMetrics->MaxHeight();
+    result.mRect.SetRectY(baseline - fontMetrics->MaxAscent(),
+                          fontMetrics->MaxHeight());
   }
 
   // If aFrame isn't a <br> frame, caret should be at outside of it because
@@ -1856,16 +1856,15 @@ ContentEventHandler::GetLineBreakerRectBefore(nsIFrame* aFrame)
     if (kWritingMode.IsVertical()) {
       if (kWritingMode.IsLineInverted()) {
         // above of top-left corner of aFrame.
-        result.mRect.x = 0;
+        result.mRect.MoveToX(0);
       } else {
         // above of top-right corner of aFrame.
-        result.mRect.x = aFrame->GetRect().XMost() - result.mRect.width;
+        result.mRect.MoveToX(aFrame->GetRect().XMost() - result.mRect.Width());
       }
       result.mRect.y = -aFrame->PresContext()->AppUnitsPerDevPixel();
     } else {
       // left of top-left corner of aFrame.
-      result.mRect.x = -aFrame->PresContext()->AppUnitsPerDevPixel();
-      result.mRect.y = 0;
+      result.mRect.MoveTo(-aFrame->PresContext()->AppUnitsPerDevPixel(), 0);
     }
   }
   return result;
@@ -1894,12 +1893,12 @@ ContentEventHandler::GuessLineBreakerRectAfter(nsIContent* aTextContent)
   const nsRect kLastTextFrameRect = lastTextFrame->GetRect();
   if (lastTextFrame->GetWritingMode().IsVertical()) {
     // Below of the last text frame.
-    result.mRect.SetRect(0, kLastTextFrameRect.height,
-                         kLastTextFrameRect.width, 0);
+    result.mRect.SetRect(0, kLastTextFrameRect.Height(),
+                         kLastTextFrameRect.Width(), 0);
   } else {
     // Right of the last text frame (not bidi-aware).
-    result.mRect.SetRect(kLastTextFrameRect.width, 0,
-                         0, kLastTextFrameRect.height);
+    result.mRect.SetRect(kLastTextFrameRect.Width(), 0,
+                         0, kLastTextFrameRect.Height());
   }
   result.mBaseFrame = lastTextFrame;
   return result;
@@ -1922,29 +1921,29 @@ ContentEventHandler::GuessFirstCaretRectIn(nsIFrame* aFrame)
 
   nsRect caretRect;
   const nsRect kContentRect = aFrame->GetContentRect() - aFrame->GetPosition();
-  caretRect.y = kContentRect.y;
+  caretRect.MoveToY(kContentRect.Y());
   if (!kWritingMode.IsVertical()) {
     if (kWritingMode.IsBidiLTR()) {
-      caretRect.x = kContentRect.x;
+      caretRect.MoveToX(kContentRect.X());
     } else {
       // Move 1px left for the space of caret itself.
       const nscoord kOnePixel = presContext->AppUnitsPerDevPixel();
-      caretRect.x = kContentRect.XMost() - kOnePixel;
+      caretRect.MoveToX(kContentRect.XMost() - kOnePixel);
     }
-    caretRect.height = kMaxHeight;
+    caretRect.SetHeight(kMaxHeight);
     // However, don't add kOnePixel here because it may cause 2px width at
     // aligning the edge to device pixels.
-    caretRect.width = 1;
+    caretRect.SetWidth(1);
   } else {
     if (kWritingMode.IsVerticalLR()) {
-      caretRect.x = kContentRect.x;
+      caretRect.MoveToX(kContentRect.X());
     } else {
-      caretRect.x = kContentRect.XMost() - kMaxHeight;
+      caretRect.MoveToX(kContentRect.XMost() - kMaxHeight);
     }
-    caretRect.width = kMaxHeight;
+    caretRect.SetWidth(kMaxHeight);
     // Don't add app units for a device pixel because it may cause 2px height
     // at aligning the edge to device pixels.
-    caretRect.height = 1;
+    caretRect.SetHeight(1);
   }
   return FrameRelativeRect(caretRect, aFrame);
 }
@@ -2099,12 +2098,10 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
         if (!wasLineBreaker) {
           if (isVertical) {
             // Right of the last character.
-            brRect.y = brRect.YMost() + 1;
-            brRect.height = 1;
+            brRect.SetRectY(brRect.YMost() + 1, 1);
           } else {
             // Under the last character.
-            brRect.x = brRect.XMost() + 1;
-            brRect.width = 1;
+            brRect.SetRectX(brRect.XMost() + 1, 1);
           }
         }
       }
@@ -2231,13 +2228,11 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
     if (!aEvent->mReply.mRectArray.IsEmpty() && !wasLineBreaker) {
       rect = aEvent->mReply.mRectArray.LastElement();
       if (isVertical) {
-        rect.y = rect.YMost() + 1;
-        rect.height = 1;
-        MOZ_ASSERT(rect.width);
+        rect.SetRectY(rect.YMost() + 1, 1);
+        MOZ_ASSERT(rect.Width());
       } else {
-        rect.x = rect.XMost() + 1;
-        rect.width = 1;
-        MOZ_ASSERT(rect.height);
+        rect.SetRectX(rect.XMost() + 1, 1);
+        MOZ_ASSERT(rect.Height());
       }
       aEvent->mReply.mRectArray.AppendElement(rect);
     } else {
@@ -2257,9 +2252,9 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
       }
       MOZ_ASSERT(!queryTextRect.mReply.mRect.IsEmpty());
       if (queryTextRect.mReply.mWritingMode.IsVertical()) {
-        queryTextRect.mReply.mRect.height = 1;
+        queryTextRect.mReply.mRect.SetHeight(1);
       } else {
-        queryTextRect.mReply.mRect.width = 1;
+        queryTextRect.mReply.mRect.SetWidth(1);
       }
       aEvent->mReply.mRectArray.AppendElement(queryTextRect.mReply.mRect);
     }
@@ -2403,11 +2398,9 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
     // Exclude the rect before start point of the queried range.
     firstFrame->GetPointFromOffset(firstFrame.mOffsetInNode, &ptOffset);
     if (firstFrame->GetWritingMode().IsVertical()) {
-      rect.y += ptOffset.y;
-      rect.height -= ptOffset.y;
+      rect.SetTopEdge(rect.Y() + ptOffset.y);
     } else {
-      rect.x += ptOffset.x;
-      rect.width -= ptOffset.x;
+      rect.SetLeftEdge(rect.X() + ptOffset.x);
     }
   }
   // If first frame causes a line breaker but it's not a <br> frame, we cannot
@@ -2547,9 +2540,9 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
   if (lastFrame->IsTextFrame()) {
     lastFrame->GetPointFromOffset(lastFrame.mOffsetInNode, &ptOffset);
     if (lastFrame->GetWritingMode().IsVertical()) {
-      frameRect.height -= lastFrame->GetRect().height - ptOffset.y;
+      frameRect.SetHeight(frameRect.Height() - lastFrame->GetRect().Height() + ptOffset.y);
     } else {
-      frameRect.width -= lastFrame->GetRect().width - ptOffset.x;
+      frameRect.SetWidth(frameRect.Width() - lastFrame->GetRect().Width() + ptOffset.x);
     }
     // UnionRect() requires non-empty rect.  So, let's make sure to get
     // non-empty rect from the last frame.
@@ -2634,9 +2627,9 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
   queryTextRectEvent.mReply.mString.Truncate();
   aEvent->mReply = queryTextRectEvent.mReply;
   if (aEvent->GetWritingMode().IsVertical()) {
-    aEvent->mReply.mRect.height = 1;
+    aEvent->mReply.mRect.SetHeight(1);
   } else {
-    aEvent->mReply.mRect.width = 1;
+    aEvent->mReply.mRect.SetWidth(1);
   }
   // Returning empty rect may cause native IME confused, let's make sure to
   // return non-empty rect.
@@ -2813,8 +2806,9 @@ ContentEventHandler::OnQueryDOMWidgetHittest(WidgetQueryContentEvent* aEvent)
     aEvent->mRefPoint + aEvent->mWidget->WidgetToScreenOffset();
   CSSIntRect docFrameRect = docFrame->GetScreenRect();
   CSSIntPoint eventLocCSS(
-    docFrame->PresContext()->DevPixelsToIntCSSPixels(eventLoc.x) - docFrameRect.x,
-    docFrame->PresContext()->DevPixelsToIntCSSPixels(eventLoc.y) - docFrameRect.y);
+    docFrame->PresContext()->DevPixelsToIntCSSPixels(eventLoc.x) - docFrameRect.X(),
+    docFrame->PresContext()->DevPixelsToIntCSSPixels(eventLoc.y) - docFrameRect.Y()
+    );
 
   Element* contentUnderMouse =
     mDocument->ElementFromPointHelper(eventLocCSS.x, eventLocCSS.y, false, false);

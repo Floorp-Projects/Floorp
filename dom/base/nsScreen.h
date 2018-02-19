@@ -40,14 +40,14 @@ public:
   {
     nsRect rect;
     aRv = GetRect(rect);
-    return rect.y;
+    return rect.Y();
   }
 
   int32_t GetLeft(ErrorResult& aRv)
   {
     nsRect rect;
     aRv = GetRect(rect);
-    return rect.x;
+    return rect.X();
   }
 
   int32_t GetWidth(ErrorResult& aRv)
@@ -90,14 +90,14 @@ public:
   {
     nsRect rect;
     aRv = GetAvailRect(rect);
-    return rect.y;
+    return rect.Y();
   }
 
   int32_t GetAvailLeft(ErrorResult& aRv)
   {
     nsRect rect;
     aRv = GetAvailRect(rect);
-    return rect.x;
+    return rect.X();
   }
 
   int32_t GetAvailWidth(ErrorResult& aRv)

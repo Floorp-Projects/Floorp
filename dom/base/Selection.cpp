@@ -2205,11 +2205,11 @@ Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint)
                             rootmostFrame->GetScreenRectInAppUnits().TopLeft();
       nscoord onePx = nsPresContext::AppUnitsPerCSSPixel();
       nscoord scrollAmount = 10 * onePx;
-      if (std::abs(screen.x - screenPoint.x) <= onePx) {
+      if (std::abs(screen.X() - screenPoint.x) <= onePx) {
         aPoint.x -= scrollAmount;
       } else if (std::abs(screen.XMost() - screenPoint.x) <= onePx) {
         aPoint.x += scrollAmount;
-      } else if (std::abs(screen.y - screenPoint.y) <= onePx) {
+      } else if (std::abs(screen.Y() - screenPoint.y) <= onePx) {
         aPoint.y -= scrollAmount;
       } else if (std::abs(screen.YMost() - screenPoint.y) <= onePx) {
         aPoint.y += scrollAmount;
@@ -3521,10 +3521,10 @@ Selection::GetSelectionEndPointGeometry(SelectionRegion aRegion, nsRect* aRect)
 
   // Return the rect relative to the frame, with zero width.
   if (isText) {
-    aRect->x = pt.x;
+    aRect->MoveToX(pt.x);
   } else if (mFrameSelection->GetHint() == CARET_ASSOCIATE_BEFORE) {
     // It's the frame's right edge we're interested in.
-    aRect->x = frame->GetRect().Width();
+    aRect->MoveToX(frame->GetRect().Width());
   }
   aRect->SetHeight(frame->GetRect().Height());
 

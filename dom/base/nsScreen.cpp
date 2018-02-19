@@ -133,12 +133,10 @@ nsScreen::GetRect(nsRect& aRect)
   DesktopPoint screenTopLeftDesk =
     screenTopLeftDev / context->GetDesktopToDeviceScale();
 
-  aRect.x = NSToIntRound(screenTopLeftDesk.x);
-  aRect.y = NSToIntRound(screenTopLeftDesk.y);
-
-  aRect.SetHeight(nsPresContext::AppUnitsToIntCSSPixels(aRect.Height()));
-  aRect.SetWidth(nsPresContext::AppUnitsToIntCSSPixels(aRect.Width()));
-
+  aRect.SetRect(NSToIntRound(screenTopLeftDesk.x),
+                NSToIntRound(screenTopLeftDesk.y),
+                nsPresContext::AppUnitsToIntCSSPixels(aRect.Height()),
+                nsPresContext::AppUnitsToIntCSSPixels(aRect.Width()));
   return NS_OK;
 }
 
@@ -166,14 +164,12 @@ nsScreen::GetAvailRect(nsRect& aRect)
 
   context->GetClientRect(aRect);
 
-  aRect.x = NSToIntRound(screenTopLeftDesk.x) +
-            nsPresContext::AppUnitsToIntCSSPixels(aRect.x - r.x);
-  aRect.y = NSToIntRound(screenTopLeftDesk.y) +
-            nsPresContext::AppUnitsToIntCSSPixels(aRect.y - r.y);
-
-  aRect.SetHeight(nsPresContext::AppUnitsToIntCSSPixels(aRect.Height()));
-  aRect.SetWidth(nsPresContext::AppUnitsToIntCSSPixels(aRect.Width()));
-
+  aRect.SetRect(NSToIntRound(screenTopLeftDesk.x) +
+                  nsPresContext::AppUnitsToIntCSSPixels(aRect.X() - r.X()),
+                NSToIntRound(screenTopLeftDesk.y) +
+                  nsPresContext::AppUnitsToIntCSSPixels(aRect.Y() - r.Y()),
+                nsPresContext::AppUnitsToIntCSSPixels(aRect.Height()),
+                nsPresContext::AppUnitsToIntCSSPixels(aRect.Width()));
   return NS_OK;
 }
 
@@ -323,15 +319,18 @@ nsScreen::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 nsresult
 nsScreen::GetWindowInnerRect(nsRect& aRect)
 {
-  aRect.x = 0;
-  aRect.y = 0;
+  aRect.MoveTo(0, 0);
   nsCOMPtr<nsPIDOMWindowInner> win = GetOwner();
   if (!win) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = win->GetInnerWidth(&aRect.width);
+  nscoord width, height;
+  nsresult rv = win->GetInnerWidth(&width);
+  aRect.SetWidth(width);
   NS_ENSURE_SUCCESS(rv, rv);
-  return win->GetInnerHeight(&aRect.height);
+  rv = win->GetInnerHeight(&height);
+  aRect.SetHeight(height);
+  return rv;
 }
 
 bool nsScreen::ShouldResistFingerprinting() const
