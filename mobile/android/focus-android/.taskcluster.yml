@@ -52,18 +52,25 @@ tasks:
 #
 # Triggered whenever something is pushed/merged to the master branch.
 #
-# - Build the app (all flavors)
-# - Run unit tests
-# - Run code quality tools (findbugs, lint, checkstyle etc.)
+# Creates the following task pipeline:
+#
+# Build -+--> Unit tests ----+- UI tests --> Preview release
+#         \-> Code quality -/
+#
 ###############################################################################
   - provisionerId: '{{ taskcluster.docker.provisionerId }}'
     workerType: '{{ taskcluster.docker.workerType }}'
     extra:
       github:
+        env: true
         events:
           - push
         branches:
           - master
+    scopes:
+      - "queue:create-task:aws-provisioner-v1/github-worker"
+      - "queue:scheduler-id:taskcluster-github"
+      - "secrets:get:project/focus/preview-key-store"
     payload:
       maxRunTime: 3600
       deadline: "{{ '2 hours' | $fromNow }}"
@@ -76,16 +83,12 @@ tasks:
           git fetch origin
           && git config advice.detachedHead false
           && git checkout {{event.head.sha}}
-          && echo "--" > .adjust_token
-          && ./gradlew clean assemble detektCheck ktlint lint pmd checkstyle findbugs test
-      artifacts:
-        'public':
-          type: 'directory'
-          path: '/opt/focus-android/app/build/reports'
-          expires: "{{ '1 week' | $fromNow }}"
+          && python tools/taskcluster/schedule-master-build.py
+      features:
+        taskclusterProxy: true
     metadata:
-      name: Focus for Android - Build - Master
-      description: Building Focus for Android (via Gradle) - Master
+      name: (Focus for Android) Schedule tasks
+      description: Scheduling tasks for master push
       owner: '{{ event.head.user.email }}'
       source: '{{ event.head.repo.url }}'
 ###############################################################################
