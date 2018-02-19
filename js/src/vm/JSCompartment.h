@@ -25,7 +25,6 @@
 #include "vm/ReceiverGuard.h"
 #include "vm/RegExpShared.h"
 #include "vm/SavedStacks.h"
-#include "vm/TemplateRegistry.h"
 #include "vm/Time.h"
 #include "wasm/WasmCompartment.h"
 
@@ -779,7 +778,6 @@ struct JSCompartment
                                 size_t* savedStacksSet,
                                 size_t* varNamesSet,
                                 size_t* nonSyntacticLexicalScopes,
-                                size_t* templateLiteralMap,
                                 size_t* jitCompartment,
                                 size_t* privateData,
                                 size_t* scriptCountsMapArg);
@@ -821,12 +819,6 @@ struct JSCompartment
     // a map because when loading scripts into a non-syntactic environment, we need
     // to use the same lexical environment to persist lexical bindings.
     js::ObjectWeakMap* nonSyntacticLexicalEnvironments_;
-
-    // The realm's [[TemplateMap]], used for mapping template literals to
-    // unique template objects used in evaluation of tagged template literals.
-    //
-    // See ES 12.2.9.3.
-    js::TemplateRegistry templateLiteralMap_;
 
   public:
     /*
@@ -955,7 +947,6 @@ struct JSCompartment
 
     void sweepCrossCompartmentWrappers();
     void sweepSavedStacks();
-    void sweepTemplateLiteralMap();
     void sweepGlobalObject();
     void sweepSelfHostingScriptSource();
     void sweepJitCompartment(js::FreeOp* fop);
@@ -1000,16 +991,6 @@ struct JSCompartment
     bool isInVarNames(JS::Handle<JSAtom*> name) {
         return varNames_.has(name);
     }
-
-    // Get a unique template object given a JS array of raw template strings
-    // and a template object. If a template object is found in template
-    // registry, that object is returned. Otherwise, the passed-in templateObj
-    // is added to the registry.
-    bool getTemplateLiteralObject(JSContext* cx, js::HandleArrayObject rawStrings,
-                                  js::MutableHandleObject templateObj);
-
-    // Per above, but an entry must already exist in the template registry.
-    JSObject* getExistingTemplateLiteralObject(js::ArrayObject* rawStrings);
 
     void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
 

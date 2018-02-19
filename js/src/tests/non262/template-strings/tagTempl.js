@@ -203,7 +203,7 @@ for (var i = 1; i < 3; i++)
 // Same call site object behavior
 assertEq(callSiteObj[1], callSiteObj[2]);
 // Template objects are canonicalized
-assertEq(callSiteObj[0], callSiteObj[1]);
+assertEq(callSiteObj[0] !== callSiteObj[1], true);
 assertEq("raw" in callSiteObj[0], true);
 
 // Array length
@@ -227,7 +227,7 @@ function test() {
         a[i] = eval("x``");
 }
 test();
-assertEq(a[0], a[1]);
+assertEq(a[0] !== a[1], true);
 
 // Test that |obj.method`template`| works
 var newObj = {
