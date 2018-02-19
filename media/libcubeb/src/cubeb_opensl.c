@@ -1582,24 +1582,6 @@ opensl_stream_get_position(cubeb_stream * stm, uint64_t * position)
 }
 
 int
-opensl_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
-{
-  int r;
-  uint32_t mixer_latency; // The latency returned by AudioFlinger is in ms.
-
-  /* audio_stream_type_t is an int, so this is okay. */
-  r = stm->context->get_output_latency(&mixer_latency, AUDIO_STREAM_TYPE_MUSIC);
-  if (r) {
-    return CUBEB_ERROR;
-  }
-
-  *latency = stm->latency_frames + // OpenSL latency
-    mixer_latency * stm->inputrate / 1000; // AudioFlinger latency
-
-  return CUBEB_OK;
-}
-
-int
 opensl_stream_set_volume(cubeb_stream * stm, float volume)
 {
   SLresult res;
@@ -1646,7 +1628,7 @@ static struct cubeb_ops const opensl_ops = {
   .stream_stop = opensl_stream_stop,
   .stream_reset_default_device = NULL,
   .stream_get_position = opensl_stream_get_position,
-  .stream_get_latency = opensl_stream_get_latency,
+  .stream_get_latency = NULL,
   .stream_set_volume = opensl_stream_set_volume,
   .stream_set_panning = NULL,
   .stream_get_current_device = NULL,
