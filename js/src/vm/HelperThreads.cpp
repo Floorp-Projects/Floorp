@@ -6,7 +6,6 @@
 
 #include "vm/HelperThreads.h"
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Unused.h"
 
@@ -33,8 +32,6 @@
 
 using namespace js;
 
-using mozilla::ArrayLength;
-using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::Unused;
 using mozilla::TimeDuration;

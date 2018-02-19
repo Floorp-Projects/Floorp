@@ -254,8 +254,6 @@ using namespace js;
 using namespace js::gc;
 
 using mozilla::ArrayLength;
-using mozilla::Get;
-using mozilla::HashCodeScrambler;
 using mozilla::Maybe;
 using mozilla::Move;
 using mozilla::Swap;

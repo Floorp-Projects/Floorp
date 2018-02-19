@@ -24,7 +24,6 @@
 using namespace js;
 
 using JS::AutoCheckCannotGC;
-using JS::GenericNaN;
 using mozilla::ArrayLength;
 using mozilla::CheckedInt;
 using mozilla::DebugOnly;
