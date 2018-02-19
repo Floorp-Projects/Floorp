@@ -26,8 +26,6 @@ span {
   anim.ready.then(function() {
     anim.effect.setKeyframes(
       { transform: ['translate(0px)', 'translate(0px)'] });
-    requestAnimationFrame(function() {
-      document.documentElement.classList.remove("reftest-wait");
-    });
+    document.documentElement.classList.remove("reftest-wait");
   });
 </script>

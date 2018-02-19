@@ -21,8 +21,6 @@
     // Add a class name to cause selector matching in a subsequent restyle.
     target.classList.add("changed");
 
-    requestAnimationFrame(() => {
-      document.documentElement.classList.remove("reftest-wait");
-    });
+    document.documentElement.classList.remove("reftest-wait");
   });
 </script>

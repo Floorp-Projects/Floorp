@@ -24,8 +24,6 @@ div {
     .animate({ transform: ['none', 'none'] }, { duration: 100000 });
   anim.ready.then(function() {
     anim.effect.target.style.display = 'block';
-    requestAnimationFrame(function() {
-      document.documentElement.classList.remove("reftest-wait");
-    });
+    document.documentElement.classList.remove("reftest-wait");
   });
 </script>
