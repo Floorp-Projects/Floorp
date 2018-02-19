@@ -69,6 +69,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/ServoRestyleManager.h"
 #include "mozilla/SizeOfState.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
@@ -1925,6 +1926,15 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
     // Fully exit full-screen.
     nsIDocument::ExitFullscreenInDocTree(OwnerDoc());
   }
+
+  if (HasServoData()) {
+    MOZ_ASSERT(IsInAnonymousSubtree());
+    MOZ_ASSERT(document && document->IsStyledByServo());
+    ClearServoData(document);
+  } else if (document && document->GetServoRestyleRoot() == this) {
+    document->ClearServoRestyleRoot();
+  }
+
   if (aNullParent) {
     if (GetParent() && GetParent()->IsInUncomposedDoc()) {
       // Update the editable descendant count in the ancestors before we
@@ -1990,19 +2000,6 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
         presContext->EffectCompositor()->ClearRestyleRequestsFor(this);
       }
     }
-  }
-
-  // Computed style data isn't useful for detached nodes, and we'll need to
-  // recompute it anyway if we ever insert the nodes back into a document.
-  if (IsStyledByServo()) {
-    if (document) {
-      ClearServoData(document);
-    } else {
-      MOZ_ASSERT(!HasServoData());
-      MOZ_ASSERT(!HasAnyOfFlags(kAllServoDescendantBits | NODE_NEEDS_FRAME));
-    }
-  } else {
-    MOZ_ASSERT(!HasServoData());
   }
 
   // Editable descendant count only counts descendants that
@@ -2108,24 +2105,8 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
     shadowRoot->SetIsComposedDocParticipant(false);
   }
 
-  // Unbinding of children is the only point in time where we don't enforce the
-  // "child has style data implies parent has it too" invariant.
-  //
-  // As such, the restyle root tracking may incorrectly end up setting dirty
-  // bits on the parent chain when moving from a not yet unbound root with
-  // already unbound parents to a root higher up in the tree, so we clear those
-  // (again, since they're also cleared in ClearServoData) here.
-  //
-  // This can happen when the element changes the state of some ancestor up in
-  // the tree, for example.
-  //
-  // Note that clearing the data itself here would have its own set of problems,
-  // since the invariant we'd be breaking in that case is "HasServoData()
-  // implies InComposedDoc()", which we rely on in various places.
-  UnsetFlags(kAllServoDescendantBits);
-  if (document && document->GetServoRestyleRoot() == this) {
-    document->ClearServoRestyleRoot();
-  }
+  MOZ_ASSERT_IF(IsStyledByServo(), !HasAnyOfFlags(kAllServoDescendantBits));
+  MOZ_ASSERT(!document || document->GetServoRestyleRoot() != this);
 }
 
 nsDOMCSSAttributeDeclaration*
@@ -4516,7 +4497,6 @@ BitsArePropagated(const Element* aElement, uint32_t aBits, nsINode* aRestyleRoot
     nsINode* parentNode = curr->GetParentNode();
     curr = curr->GetFlattenedTreeParentElementForStyle();
     MOZ_ASSERT_IF(!curr,
-                  !parentNode || // can only happen mid-unbind.
                   parentNode == aElement->OwnerDoc() ||
                   parentNode == parentNode->OwnerDoc()->GetRootElement());
   }
@@ -4530,24 +4510,6 @@ AssertNoBitsPropagatedFrom(nsINode* aRoot)
 #ifdef DEBUG
   if (!aRoot || !aRoot->IsElement()) {
     return;
-  }
-
-  // If we are in the middle of unbinding a subtree, then the bits on elements
-  // in that subtree (and which we haven't yet unbound) could be dirty.
-  // Just skip asserting the absence of bits on those element that are in
-  // the unbinding subtree.  (The incorrect bits will only cause us to
-  // incorrectly choose a new restyle root if the newly dirty element is
-  // also within the unbinding subtree, so it is OK to leave them there.)
-  for (nsINode* n = aRoot; n; n = n->GetFlattenedTreeParentElementForStyle()) {
-    if (!n->IsInComposedDoc()) {
-      // Find the top-most element that is marked as no longer in the document,
-      // so we can start checking bits from its parent.
-      do {
-        aRoot = n;
-        n = n->GetFlattenedTreeParentElementForStyle();
-      } while (n && !n->IsInComposedDoc());
-      break;
-    }
   }
 
   auto* element = aRoot->GetFlattenedTreeParentElementForStyle();

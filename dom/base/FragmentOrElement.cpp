@@ -1193,37 +1193,20 @@ void
 nsIContent::SetAssignedSlot(HTMLSlotElement* aSlot)
 {
   MOZ_ASSERT(aSlot || GetExistingExtendedContentSlots());
-  nsExtendedContentSlots* slots = ExtendedContentSlots();
-
-  RefPtr<HTMLSlotElement> oldSlot = slots->mAssignedSlot.forget();
-  slots->mAssignedSlot = aSlot;
-
-  if (oldSlot != aSlot && IsElement() && AsElement()->HasServoData()) {
-    ServoRestyleManager::ClearServoDataFromSubtree(AsElement());
-  }
+  ExtendedContentSlots()->mAssignedSlot = aSlot;
 }
 
 void
 nsIContent::SetXBLInsertionPoint(nsIContent* aContent)
 {
-  nsCOMPtr<nsIContent> oldInsertionPoint = nullptr;
   if (aContent) {
     nsExtendedContentSlots* slots = ExtendedContentSlots();
     SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
-    oldInsertionPoint = slots->mXBLInsertionPoint.forget();
     slots->mXBLInsertionPoint = aContent;
   } else {
     if (nsExtendedContentSlots* slots = GetExistingExtendedContentSlots()) {
-      oldInsertionPoint = slots->mXBLInsertionPoint.forget();
       slots->mXBLInsertionPoint = nullptr;
     }
-  }
-
-  // We just changed the flattened tree, so any Servo style data is now invalid.
-  // We rely on nsXBLService::LoadBindings to re-traverse the subtree afterwards.
-  if (oldInsertionPoint != aContent && IsElement() &&
-      AsElement()->HasServoData()) {
-    ServoRestyleManager::ClearServoDataFromSubtree(AsElement());
   }
 }
 
