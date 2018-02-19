@@ -26,7 +26,7 @@ use {Compress, Decompress};
 /// // Vec<u8> implements Write, assigning the compressed bytes of sample string
 ///
 /// # fn zlib_encoding() -> std::io::Result<()> {
-/// let mut e = ZlibEncoder::new(Vec::new(), Compression::Default);
+/// let mut e = ZlibEncoder::new(Vec::new(), Compression::default());
 /// e.write(b"Hello World")?;
 /// let compressed = e.finish()?;
 /// # Ok(())
@@ -202,7 +202,7 @@ impl<W: AsyncRead + AsyncWrite> AsyncRead for ZlibEncoder<W> {}
 /// use flate2::write::ZlibDecoder;
 ///
 /// # fn main() {
-/// #    let mut e = ZlibEncoder::new(Vec::new(), Compression::Default);
+/// #    let mut e = ZlibEncoder::new(Vec::new(), Compression::default());
 /// #    e.write(b"Hello World").unwrap();
 /// #    let bytes = e.finish().unwrap();
 /// #    println!("{}", decode_reader(bytes).unwrap());

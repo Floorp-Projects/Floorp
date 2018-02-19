@@ -1,4 +1,5 @@
 use std::io::prelude::*;
+use zip::write::FileOptions;
 
 extern crate zip;
 
@@ -32,12 +33,13 @@ fn doit(filename: &str) -> zip::result::ZipResult<()>
 
     let mut zip = zip::ZipWriter::new(file);
 
-    try!(zip.start_file("test/", zip::CompressionMethod::Stored));
+    try!(zip.add_directory("test/", FileOptions::default()));
 
-    try!(zip.start_file("test/☃.txt", zip::CompressionMethod::Stored));
+    let options = FileOptions::default().compression_method(zip::CompressionMethod::Stored).unix_permissions(0o755);
+    try!(zip.start_file("test/☃.txt", options));
     try!(zip.write_all(b"Hello, World!\n"));
 
-    try!(zip.start_file("test/lorem_ipsum.txt", zip::CompressionMethod::Deflated));
+    try!(zip.start_file("test/lorem_ipsum.txt", FileOptions::default()));
     try!(zip.write_all(LOREM_IPSUM));
 
     try!(zip.finish());
