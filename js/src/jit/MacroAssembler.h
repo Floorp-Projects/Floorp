@@ -1512,50 +1512,52 @@ class MacroAssembler : public MacroAssemblerSpecific
     // `ptr` will be updated if access.offset() != 0 or access.type() == Scalar::Int64.
     void wasmLoad(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
                   Register ptrScratch, AnyRegister output)
-        DEFINED_ON(arm);
+        DEFINED_ON(arm, mips_shared);
     void wasmLoadI64(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
                      Register ptrScratch, Register64 output)
-        DEFINED_ON(arm);
+        DEFINED_ON(arm, mips32, mips64);
     void wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister value, Register memoryBase,
                    Register ptr, Register ptrScratch)
-        DEFINED_ON(arm);
+        DEFINED_ON(arm, mips_shared);
     void wasmStoreI64(const wasm::MemoryAccessDesc& access, Register64 value, Register memoryBase,
                       Register ptr, Register ptrScratch)
-        DEFINED_ON(arm);
+        DEFINED_ON(arm, mips32, mips64);
 
     // `ptr` will always be updated.
     void wasmUnalignedLoad(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
                            Register ptrScratch, Register output, Register tmp)
-        DEFINED_ON(arm);
+        DEFINED_ON(arm, mips32, mips64);
 
-    // `ptr` will always be updated and `tmp1` is always needed.  `tmp2` is
+    // ARM: `ptr` will always be updated and `tmp1` is always needed.  `tmp2` is
     // needed for Float32; `tmp2` and `tmp3` are needed for Float64.  Temps must
     // be Invalid when they are not needed.
+    // MIPS: `ptr` will always be updated.
     void wasmUnalignedLoadFP(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
                              Register ptrScratch, FloatRegister output, Register tmp1, Register tmp2,
                              Register tmp3)
-        DEFINED_ON(arm);
+        DEFINED_ON(arm, mips32, mips64);
 
     // `ptr` will always be updated.
     void wasmUnalignedLoadI64(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
                               Register ptrScratch, Register64 output, Register tmp)
-        DEFINED_ON(arm);
+        DEFINED_ON(arm, mips32, mips64);
 
-    // `ptr` and `value` will always be updated.
+    // ARM: `ptr` and `value` will always be updated.  'tmp' must be Invalid.
+    // MIPS: `ptr` will always be updated.
     void wasmUnalignedStore(const wasm::MemoryAccessDesc& access, Register value, Register memoryBase,
-                            Register ptr, Register ptrScratch)
-        DEFINED_ON(arm);
+                            Register ptr, Register ptrScratch, Register tmp)
+        DEFINED_ON(arm, mips32, mips64);
 
     // `ptr` will always be updated.
     void wasmUnalignedStoreFP(const wasm::MemoryAccessDesc& access, FloatRegister floatValue,
                               Register memoryBase, Register ptr, Register ptrScratch, Register tmp)
-        DEFINED_ON(arm);
+        DEFINED_ON(arm, mips32, mips64);
 
     // `ptr` will always be updated.
     void wasmUnalignedStoreI64(const wasm::MemoryAccessDesc& access, Register64 value,
                                Register memoryBase, Register ptr, Register ptrScratch,
                                Register tmp)
-        DEFINED_ON(arm);
+        DEFINED_ON(arm, mips32, mips64);
 
     // wasm specific methods, used in both the wasm baseline compiler and ion.
 
@@ -1567,7 +1569,7 @@ class MacroAssembler : public MacroAssemblerSpecific
                                    Label* oolEntry) PER_SHARED_ARCH;
     void oolWasmTruncateCheckF64ToI32(FloatRegister input, Register output, TruncFlags flags,
                                       wasm::BytecodeOffset off, Label* rejoin)
-        DEFINED_ON(arm, arm64, x86_shared);
+        DEFINED_ON(arm, arm64, x86_shared, mips_shared);
 
     void wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, bool isSaturating,
                                      Label* oolEntry) PER_ARCH;
@@ -1575,29 +1577,29 @@ class MacroAssembler : public MacroAssemblerSpecific
                                     Label* oolEntry) PER_SHARED_ARCH;
     void oolWasmTruncateCheckF32ToI32(FloatRegister input, Register output, TruncFlags flags,
                                       wasm::BytecodeOffset off, Label* rejoin)
-        DEFINED_ON(arm, arm64, x86_shared);
+        DEFINED_ON(arm, arm64, x86_shared, mips_shared);
 
     // The truncate-to-int64 methods will always bind the `oolRejoin` label
     // after the last emitted instruction.
     void wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, bool isSaturating,
                                    Label* oolEntry, Label* oolRejoin, FloatRegister tempDouble)
-        DEFINED_ON(arm64, x86, x64);
+        DEFINED_ON(arm64, x86, x64, mips64);
     void wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, bool isSaturating,
                                     Label* oolEntry, Label* oolRejoin, FloatRegister tempDouble)
-        DEFINED_ON(arm64, x86, x64);
+        DEFINED_ON(arm64, x86, x64, mips64);
     void oolWasmTruncateCheckF64ToI64(FloatRegister input, Register64 output, TruncFlags flags,
                                       wasm::BytecodeOffset off, Label* rejoin)
-        DEFINED_ON(arm, arm64, x86_shared);
+        DEFINED_ON(arm, arm64, x86_shared, mips_shared);
 
     void wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, bool isSaturating,
                                     Label* oolEntry, Label* oolRejoin, FloatRegister tempDouble)
-        DEFINED_ON(arm64, x86, x64);
+        DEFINED_ON(arm64, x86, x64, mips64);
     void wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, bool isSaturating,
                                      Label* oolEntry, Label* oolRejoin, FloatRegister tempDouble)
-        DEFINED_ON(arm64, x86, x64);
+        DEFINED_ON(arm64, x86, x64, mips64);
     void oolWasmTruncateCheckF32ToI64(FloatRegister input, Register64 output, TruncFlags flags,
                                       wasm::BytecodeOffset off, Label* rejoin)
-        DEFINED_ON(arm, arm64, x86_shared);
+        DEFINED_ON(arm, arm64, x86_shared, mips_shared);
 
     // This function takes care of loading the callee's TLS and pinned regs but
     // it is the caller's responsibility to save/restore TLS or pinned regs.
