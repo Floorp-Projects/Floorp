@@ -154,7 +154,7 @@ RemotePrintJobChild::OnStatusChange(nsIWebProgress* aProgress,
                                     nsIRequest* aRequest, nsresult aStatus,
                                     const char16_t* aMessage)
 {
-  if (!mDestroyed) {
+  if (NS_SUCCEEDED(mInitializationResult) && !mDestroyed) {
     Unused << SendStatusChange(aStatus);
   }
 
