@@ -156,7 +156,6 @@ JSCompartment::init(JSContext* maybecx)
 
     if (!savedStacks_.init() ||
         !varNames_.init() ||
-        !templateLiteralMap_.init() ||
         !iteratorCache.init())
     {
         if (maybecx)
@@ -620,70 +619,6 @@ JSCompartment::addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name)
     return false;
 }
 
-/* static */ HashNumber
-TemplateRegistryHashPolicy::hash(const Lookup& lookup)
-{
-    size_t length = lookup->as<NativeObject>().getDenseInitializedLength();
-    HashNumber hash = 0;
-    for (uint32_t i = 0; i < length; i++) {
-        JSAtom& lookupAtom = lookup->as<NativeObject>().getDenseElement(i).toString()->asAtom();
-        hash = mozilla::AddToHash(hash, lookupAtom.hash());
-    }
-    return hash;
-}
-
-/* static */ bool
-TemplateRegistryHashPolicy::match(const Key& key, const Lookup& lookup)
-{
-    size_t length = lookup->as<NativeObject>().getDenseInitializedLength();
-    if (key->as<NativeObject>().getDenseInitializedLength() != length)
-        return false;
-
-    for (uint32_t i = 0; i < length; i++) {
-        JSAtom* a = &key->as<NativeObject>().getDenseElement(i).toString()->asAtom();
-        JSAtom* b = &lookup->as<NativeObject>().getDenseElement(i).toString()->asAtom();
-        if (a != b)
-            return false;
-    }
-
-    return true;
-}
-
-bool
-JSCompartment::getTemplateLiteralObject(JSContext* cx, HandleArrayObject rawStrings,
-                                        MutableHandleObject templateObj)
-{
-    if (TemplateRegistry::AddPtr p = templateLiteralMap_.lookupForAdd(rawStrings)) {
-        templateObj.set(p->value());
-
-        // The template object must have been frozen when it was added to the
-        // registry.
-        MOZ_ASSERT(!templateObj->nonProxyIsExtensible());
-    } else {
-        MOZ_ASSERT(templateObj->nonProxyIsExtensible());
-        RootedValue rawValue(cx, ObjectValue(*rawStrings));
-        if (!DefineDataProperty(cx, templateObj, cx->names().raw, rawValue, 0))
-            return false;
-        if (!FreezeObject(cx, rawStrings))
-            return false;
-        if (!FreezeObject(cx, templateObj))
-            return false;
-
-        if (!templateLiteralMap_.relookupOrAdd(p, rawStrings, templateObj))
-            return false;
-    }
-
-    return true;
-}
-
-JSObject*
-JSCompartment::getExistingTemplateLiteralObject(ArrayObject* rawStrings)
-{
-    TemplateRegistry::Ptr p = templateLiteralMap_.lookup(rawStrings);
-    MOZ_ASSERT(p);
-    return p->value();
-}
-
 void
 JSCompartment::traceOutgoingCrossCompartmentWrappers(JSTracer* trc)
 {
@@ -724,10 +659,6 @@ JSCompartment::traceGlobal(JSTracer* trc)
     // not.
 
     savedStacks_.trace(trc);
-
-    // The template registry strongly holds everything in it by design and
-    // spec.
-    templateLiteralMap_.trace(trc);
 
     // Atoms are always tenured.
     if (!JS::CurrentThreadIsHeapMinorCollecting())
@@ -834,12 +765,6 @@ void
 JSCompartment::sweepSavedStacks()
 {
     savedStacks_.sweep();
-}
-
-void
-JSCompartment::sweepTemplateLiteralMap()
-{
-    templateLiteralMap_.sweep();
 }
 
 void
@@ -1098,7 +1023,6 @@ JSCompartment::clearTables()
     MOZ_ASSERT(!jitCompartment_);
     MOZ_ASSERT(!debugEnvs);
     MOZ_ASSERT(enumerators->next() == enumerators);
-    MOZ_ASSERT(templateLiteralMap_.empty());
 
     objectGroups.clearTables();
     if (savedStacks_.initialized())
@@ -1381,7 +1305,6 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                       size_t* savedStacksSet,
                                       size_t* varNamesSet,
                                       size_t* nonSyntacticLexicalEnvironmentsArg,
-                                      size_t* templateLiteralMap,
                                       size_t* jitCompartment,
                                       size_t* privateData,
                                       size_t* scriptCountsMapArg)
@@ -1403,7 +1326,6 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     if (nonSyntacticLexicalEnvironments_)
         *nonSyntacticLexicalEnvironmentsArg +=
             nonSyntacticLexicalEnvironments_->sizeOfIncludingThis(mallocSizeOf);
-    *templateLiteralMap += templateLiteralMap_.sizeOfExcludingThis(mallocSizeOf);
     if (jitCompartment_)
         *jitCompartment += jitCompartment_->sizeOfIncludingThis(mallocSizeOf);
 

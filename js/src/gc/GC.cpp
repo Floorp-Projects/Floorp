@@ -2484,7 +2484,6 @@ GCRuntime::sweepZoneAfterCompacting(Zone* zone)
         c->objectGroups.sweep(fop);
         c->sweepRegExps();
         c->sweepSavedStacks();
-        c->sweepTemplateLiteralMap();
         c->sweepVarNames();
         c->sweepGlobalObject();
         c->sweepSelfHostingScriptSource();
@@ -5362,7 +5361,6 @@ SweepMisc(JSRuntime* runtime)
         c->sweepGlobalObject();
         c->sweepTemplateObjects();
         c->sweepSavedStacks();
-        c->sweepTemplateLiteralMap();
         c->sweepSelfHostingScriptSource();
         c->sweepNativeIterators();
     }
