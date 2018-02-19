@@ -492,24 +492,6 @@ ServiceWorkerRegistrationInfo::GetActive() const
 }
 
 ServiceWorkerInfo*
-ServiceWorkerRegistrationInfo::GetByID(uint64_t aID) const
-{
-  if (mActiveWorker && mActiveWorker->ID() == aID) {
-    return mActiveWorker;
-  }
-  if (mWaitingWorker && mWaitingWorker->ID() == aID) {
-    return mWaitingWorker;
-  }
-  if (mInstallingWorker && mInstallingWorker->ID() == aID) {
-    return mInstallingWorker;
-  }
-  if (mEvaluatingWorker && mEvaluatingWorker->ID() == aID) {
-    return mEvaluatingWorker;
-  }
-  return nullptr;
-}
-
-ServiceWorkerInfo*
 ServiceWorkerRegistrationInfo::GetByDescriptor(const ServiceWorkerDescriptor& aDescriptor) const
 {
   if (mActiveWorker && mActiveWorker->Descriptor().Matches(aDescriptor)) {
