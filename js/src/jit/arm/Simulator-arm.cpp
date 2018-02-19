@@ -1646,12 +1646,7 @@ Simulator::handleWasmSegFault(int32_t addr, unsigned numBytes)
     const wasm::ModuleSegment* moduleSegment = segment->asModule();
 
     wasm::Instance* instance = wasm::LookupFaultingInstance(*moduleSegment, pc, fp);
-    if (!instance)
-        return false;
-
-    MOZ_RELEASE_ASSERT(&instance->code() == &codeSegment.code());
-
-    if (!instance->memoryAccessInGuardRegion((uint8_t*)addr, numBytes))
+    if (!instance || !instance->memoryAccessInGuardRegion((uint8_t*)addr, numBytes))
         return false;
 
     const wasm::MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);

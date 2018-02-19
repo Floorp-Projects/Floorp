@@ -1667,13 +1667,13 @@ class JitActivation : public Activation
     // when the interrupt is handled.
 
     // Returns true iff we've entered interrupted state.
-    bool startWasmInterrupt(const wasm::RegisterState& state);
+    bool startWasmInterrupt(const JS::ProfilingFrameIterator::RegisterState& state);
     void finishWasmInterrupt();
     bool isWasmInterrupted() const;
     void* wasmInterruptUnwindPC() const;
     void* wasmInterruptResumePC() const;
 
-    void startWasmTrap(wasm::Trap trap, uint32_t bytecodeOffset, const wasm::RegisterState& state);
+    void startWasmTrap(wasm::Trap trap, uint32_t bytecodeOffset, void* pc, void* fp);
     void finishWasmTrap();
     bool isWasmTrapping() const;
     void* wasmTrapPC() const;
