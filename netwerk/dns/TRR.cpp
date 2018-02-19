@@ -122,8 +122,7 @@ NS_IMETHODIMP
 TRR::Run()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mTRRService);
-  if (NS_FAILED(SendHTTPRequest())) {
+  if ((gTRRService == nullptr) || NS_FAILED(SendHTTPRequest())) {
     FailData();
     // The dtor will now be run
   }
@@ -146,7 +145,7 @@ TRR::SendHTTPRequest()
   nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool useGet = mTRRService->UseGET();
+  bool useGet = gTRRService->UseGET();
   nsAutoCString body;
   nsCOMPtr<nsIURI> dnsURI;
 
@@ -164,7 +163,7 @@ TRR::SendHTTPRequest()
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoCString uri;
-    mTRRService->GetURI(uri);
+    gTRRService->GetURI(uri);
     uri.Append(NS_LITERAL_CSTRING("?ct&dns="));
     uri.Append(body);
     rv = NS_NewURI(getter_AddRefs(dnsURI), uri);
@@ -173,7 +172,7 @@ TRR::SendHTTPRequest()
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoCString uri;
-    mTRRService->GetURI(uri);
+    gTRRService->GetURI(uri);
     rv = NS_NewURI(getter_AddRefs(dnsURI), uri);
   }
   if (NS_FAILED(rv)) {
@@ -206,7 +205,7 @@ TRR::SendHTTPRequest()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString cred;
-  mTRRService->GetCredentials(cred);
+  gTRRService->GetCredentials(cred);
   if (!cred.IsEmpty()){
     rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Authorization"), cred, false);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -223,6 +222,8 @@ TRR::SendHTTPRequest()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = internalChannel->SetTrr(true);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mAllowRFC1918 = gTRRService->AllowRFC1918();
 
   if (useGet) {
     rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("GET"));
@@ -252,7 +253,7 @@ TRR::SendHTTPRequest()
   }
   if (NS_SUCCEEDED(httpChannel->AsyncOpen2(this))) {
     NS_NewTimerWithCallback(getter_AddRefs(mTimeout),
-                            this, mTRRService->GetRequestTimeout(),
+                            this, gTRRService->GetRequestTimeout(),
                             nsITimer::TYPE_ONE_SHOT);
     return NS_OK;
   }
@@ -597,7 +598,7 @@ TRR::DohDecode()
         return NS_ERROR_UNEXPECTED;
       }
       rv = mDNS.Add(TTL, mResponse, index, RDLENGTH,
-                    mTRRService->AllowRFC1918());
+                    mAllowRFC1918);
       if (NS_FAILED(rv)) {
         LOG(("TRR:DohDecode failed: local IP addresses or unknown IP family\n"));
         return rv;
@@ -609,7 +610,7 @@ TRR::DohDecode()
         return NS_ERROR_UNEXPECTED;
       }
       rv = mDNS.Add(TTL, mResponse, index, RDLENGTH,
-                    mTRRService->AllowRFC1918());
+                    mAllowRFC1918);
       if (NS_FAILED(rv)) {
         LOG(("TRR got unique/local IPv6 address!\n"));
         return rv;

@@ -73,11 +73,11 @@ public:
     : mozilla::Runnable("TRR")
     , mRec(aRec)
     , mHostResolver(aResolver)
-    , mTRRService(gTRRService)
     , mType(aType)
     , mBodySize(0)
     , mFailed(false)
     , mCnameLoop(kCnameChaseMax)
+    , mAllowRFC1918(false)
   {
     mHost = aRec->host;
     mPB = aRec->pb;
@@ -94,12 +94,12 @@ public:
     , mHost(aHost)
     , mRec(aRec)
     , mHostResolver(aResolver)
-    , mTRRService(gTRRService)
     , mType(aType)
     , mBodySize(0)
     , mFailed(false)
     , mPB(aPB)
     , mCnameLoop(aLoopCount)
+    , mAllowRFC1918(false)
   {
 
   }
@@ -108,11 +108,11 @@ public:
   explicit TRR(AHostResolver *aResolver, bool aPB)
     : mozilla::Runnable("TRR")
     , mHostResolver(aResolver)
-    , mTRRService(gTRRService)
     , mBodySize(0)
     , mFailed(false)
     , mPB(aPB)
     , mCnameLoop(kCnameChaseMax)
+    , mAllowRFC1918(false)
   { }
 
   // to verify a domain
@@ -123,12 +123,12 @@ public:
     : mozilla::Runnable("TRR")
     , mHost(aHost)
     , mHostResolver(aResolver)
-    , mTRRService(gTRRService)
     , mType(aType)
     , mBodySize(0)
     , mFailed(false)
     , mPB(aPB)
     , mCnameLoop(kCnameChaseMax)
+    , mAllowRFC1918(false)
   { }
 
   NS_IMETHOD Run() override;
@@ -137,7 +137,6 @@ public:
   nsCString mHost;
   RefPtr<nsHostRecord> mRec;
   RefPtr<AHostResolver> mHostResolver;
-  TRRService *mTRRService;
 
 private:
   ~TRR() = default;
@@ -162,6 +161,7 @@ private:
   nsCOMPtr<nsITimer> mTimeout;
   nsCString mCname;
   uint32_t mCnameLoop; // loop detection counter
+  bool mAllowRFC1918;
 };
 
 } // namespace net
