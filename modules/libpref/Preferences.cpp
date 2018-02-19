@@ -1106,10 +1106,12 @@ private:
       do_GetService("@mozilla.org/consoleservice;1", &rv);
     if (NS_SUCCEEDED(rv)) {
       console->LogStringMessage(NS_ConvertUTF8toUTF16(aMsg).get());
-    } else {
-      printf_stderr("%s\n", aMsg);
     }
-    NS_WARNING(aMsg);
+#ifdef DEBUG
+    NS_ERROR(aMsg);
+#else
+    printf_stderr("%s\n", aMsg);
+#endif
   }
 
   // This is static so that HandlePref() can increment it easily. This is ok
