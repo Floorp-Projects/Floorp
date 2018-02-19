@@ -11,7 +11,6 @@ config = {
     "buildbot_json_path": "buildprops.json",
     "installer_path": "installer.exe",
     "virtualenv_path": VENV_PATH,
-    "virtualenv_python_dll": PYTHON_DLL,
     "pip_index": False,
     "find_links": [
         "http://pypi.pvt.build.mozilla.org/pub",
