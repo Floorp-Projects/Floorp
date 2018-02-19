@@ -19,8 +19,8 @@ div {
   var div = document.createElement("div")
   var anim = div.animate({ transform: ['none', 'none'] },
                          { duration: 100000 });
-  document.body.appendChild(div);
-  anim.ready.then(function() {
+  anim.ready.then(() => {
+    document.body.appendChild(div);
     document.documentElement.classList.remove("reftest-wait");
   });
 </script>
