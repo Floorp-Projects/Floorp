@@ -11,143 +11,40 @@
 #include <stdlib.h>
 #include <sys/resource.h>
 #include <sys/types.h>
-#include <signal.h>
 #include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <net/if.h>
+#include <ifaddrs.h>
 
-#ifdef PSUTIL_SUNOS10
-    #include "arch/solaris/v10/ifaddrs.h"
-#elif PSUTIL_AIX
-    #include "arch/aix/ifaddrs.h"
-#else
-    #include <ifaddrs.h>
+#ifdef __linux
+#include <netdb.h>
+#include <linux/if_packet.h>
+#endif  // end linux
+
+#if defined(__FreeBSD__) || defined(__APPLE__)
+#include <netdb.h>
+#include <netinet/in.h>
+#include <net/if_dl.h>
 #endif
 
-#if defined(PSUTIL_LINUX)
-    #include <netdb.h>
-    #include <linux/types.h>
-    #include <linux/if_packet.h>
-#elif defined(PSUTIL_BSD) || defined(PSUTIL_OSX)
-    #include <netdb.h>
-    #include <netinet/in.h>
-    #include <net/if_dl.h>
-    #include <sys/sockio.h>
-    #include <net/if_media.h>
-    #include <net/if.h>
-#elif defined(PSUTIL_SUNOS)
-    #include <netdb.h>
-    #include <sys/sockio.h>
-#elif defined(PSUTIL_AIX)
-    #include <netdb.h>
+#if defined(__sun)
+#include <netdb.h>
 #endif
 
-#include "_psutil_common.h"
-
-/*
- * Check if PID exists. Return values:
- * 1: exists
- * 0: does not exist
- * -1: error (Python exception is set)
- */
-int
-psutil_pid_exists(long pid) {
-    int ret;
-
-    // No negative PID exists, plus -1 is an alias for sending signal
-    // too all processes except system ones. Not what we want.
-    if (pid < 0)
-        return 0;
-
-    // As per "man 2 kill" PID 0 is an alias for sending the signal to
-    // every process in the process group of the calling process.
-    // Not what we want. Some platforms have PID 0, some do not.
-    // We decide that at runtime.
-    if (pid == 0) {
-#if defined(PSUTIL_LINUX) || defined(PSUTIL_FREEBSD)
-        return 0;
-#else
-        return 1;
-#endif
-    }
-
-#if defined(PSUTIL_OSX)
-    ret = kill((pid_t)pid , 0);
-#else
-    ret = kill(pid , 0);
-#endif
-
-    if (ret == 0)
-        return 1;
-    else {
-        if (errno == ESRCH) {
-            // ESRCH == No such process
-            return 0;
-        }
-        else if (errno == EPERM) {
-            // EPERM clearly indicates there's a process to deny
-            // access to.
-            return 1;
-        }
-        else {
-            // According to "man 2 kill" possible error values are
-            // (EINVAL, EPERM, ESRCH) therefore we should never get
-            // here. If we do let's be explicit in considering this
-            // an error.
-            PyErr_SetFromErrno(PyExc_OSError);
-            return -1;
-        }
-    }
-}
-
-
-/*
- * Utility used for those syscalls which do not return a meaningful
- * error that we can translate into an exception which makes sense.
- * As such, we'll have to guess.
- * On UNIX, if errno is set, we return that one (OSError).
- * Else, if PID does not exist we assume the syscall failed because
- * of that so we raise NoSuchProcess.
- * If none of this is true we giveup and raise RuntimeError(msg).
- * This will always set a Python exception and return NULL.
- */
-int
-psutil_raise_for_pid(long pid, char *syscall_name) {
-    // Set exception to AccessDenied if pid exists else NoSuchProcess.
-    if (errno != 0) {
-        // Unlikely we get here.
-        PyErr_SetFromErrno(PyExc_OSError);
-        return 0;
-    }
-    else if (psutil_pid_exists(pid) == 0) {
-        psutil_debug("%s syscall failed and PID %i no longer exists; "
-                     "assume NoSuchProcess", syscall_name, pid);
-        NoSuchProcess("");
-    }
-    else {
-        PyErr_Format(PyExc_RuntimeError, "%s syscall failed", syscall_name);
-    }
-    return 0;
-}
+#include "_psutil_posix.h"
 
 
 /*
  * Given a PID return process priority as a Python integer.
  */
 static PyObject *
-psutil_posix_getpriority(PyObject *self, PyObject *args) {
+psutil_posix_getpriority(PyObject *self, PyObject *args)
+{
     long pid;
     int priority;
     errno = 0;
 
     if (! PyArg_ParseTuple(args, "l", &pid))
         return NULL;
-
-#ifdef PSUTIL_OSX
-    priority = getpriority(PRIO_PROCESS, (id_t)pid);
-#else
     priority = getpriority(PRIO_PROCESS, pid);
-#endif
     if (errno != 0)
         return PyErr_SetFromErrno(PyExc_OSError);
     return Py_BuildValue("i", priority);
@@ -158,19 +55,15 @@ psutil_posix_getpriority(PyObject *self, PyObject *args) {
  * Given a PID and a value change process priority.
  */
 static PyObject *
-psutil_posix_setpriority(PyObject *self, PyObject *args) {
+psutil_posix_setpriority(PyObject *self, PyObject *args)
+{
     long pid;
     int priority;
     int retval;
 
     if (! PyArg_ParseTuple(args, "li", &pid, &priority))
         return NULL;
-
-#ifdef PSUTIL_OSX
-    retval = setpriority(PRIO_PROCESS, (id_t)pid, priority);
-#else
     retval = setpriority(PRIO_PROCESS, pid, priority);
-#endif
     if (retval == -1)
         return PyErr_SetFromErrno(PyExc_OSError);
     Py_RETURN_NONE;
@@ -182,11 +75,12 @@ psutil_posix_setpriority(PyObject *self, PyObject *args) {
  * Return None if address family is not AF_INET* or AF_PACKET.
  */
 static PyObject *
-psutil_convert_ipaddr(struct sockaddr *addr, int family) {
+psutil_convert_ipaddr(struct sockaddr *addr, int family)
+{
     char buf[NI_MAXHOST];
     int err;
     int addrlen;
-    size_t n;
+    int n;
     size_t len;
     const char *data;
     char *ptr;
@@ -215,13 +109,14 @@ psutil_convert_ipaddr(struct sockaddr *addr, int family) {
             return Py_BuildValue("s", buf);
         }
     }
-#ifdef PSUTIL_LINUX
+#ifdef __linux
     else if (family == AF_PACKET) {
         struct sockaddr_ll *lladdr = (struct sockaddr_ll *)addr;
         len = lladdr->sll_halen;
         data = (const char *)lladdr->sll_addr;
     }
-#elif defined(PSUTIL_BSD) || defined(PSUTIL_OSX)
+#endif
+#if defined(__FreeBSD__) || defined(__APPLE__)
     else if (addr->sa_family == AF_LINK) {
         // Note: prior to Python 3.4 socket module does not expose
         // AF_LINK so we'll do.
@@ -258,7 +153,8 @@ psutil_convert_ipaddr(struct sockaddr *addr, int family) {
  * TODO: on Solaris we won't get any MAC address.
  */
 static PyObject*
-psutil_net_if_addrs(PyObject* self, PyObject* args) {
+psutil_net_if_addrs(PyObject* self, PyObject* args)
+{
     struct ifaddrs *ifaddr, *ifa;
     int family;
 
@@ -267,7 +163,6 @@ psutil_net_if_addrs(PyObject* self, PyObject* args) {
     PyObject *py_address = NULL;
     PyObject *py_netmask = NULL;
     PyObject *py_broadcast = NULL;
-    PyObject *py_ptp = NULL;
 
     if (py_retlist == NULL)
         return NULL;
@@ -290,34 +185,20 @@ psutil_net_if_addrs(PyObject* self, PyObject* args) {
         py_netmask = psutil_convert_ipaddr(ifa->ifa_netmask, family);
         if (py_netmask == NULL)
             goto error;
-
-        if (ifa->ifa_flags & IFF_BROADCAST) {
-            py_broadcast = psutil_convert_ipaddr(ifa->ifa_broadaddr, family);
-            Py_INCREF(Py_None);
-            py_ptp = Py_None;
-        }
-        else if (ifa->ifa_flags & IFF_POINTOPOINT) {
-            py_ptp = psutil_convert_ipaddr(ifa->ifa_dstaddr, family);
-            Py_INCREF(Py_None);
-            py_broadcast = Py_None;
-        }
-        else {
-            Py_INCREF(Py_None);
-            Py_INCREF(Py_None);
-            py_broadcast = Py_None;
-            py_ptp = Py_None;
-        }
-
-        if ((py_broadcast == NULL) || (py_ptp == NULL))
+#ifdef __linux
+        py_broadcast = psutil_convert_ipaddr(ifa->ifa_ifu.ifu_broadaddr, family);
+#else
+        py_broadcast = psutil_convert_ipaddr(ifa->ifa_broadaddr, family);
+#endif
+        if (py_broadcast == NULL)
             goto error;
         py_tuple = Py_BuildValue(
-            "(siOOOO)",
+            "(siOOO)",
             ifa->ifa_name,
             family,
             py_address,
             py_netmask,
-            py_broadcast,
-            py_ptp
+            py_broadcast
         );
 
         if (! py_tuple)
@@ -328,7 +209,6 @@ psutil_net_if_addrs(PyObject* self, PyObject* args) {
         Py_DECREF(py_address);
         Py_DECREF(py_netmask);
         Py_DECREF(py_broadcast);
-        Py_DECREF(py_ptp);
     }
 
     freeifaddrs(ifaddr);
@@ -342,98 +222,19 @@ error:
     Py_XDECREF(py_address);
     Py_XDECREF(py_netmask);
     Py_XDECREF(py_broadcast);
-    Py_XDECREF(py_ptp);
     return NULL;
 }
 
 
 /*
- * Return NIC MTU. References:
- * http://www.i-scream.org/libstatgrab/
+ * net_if_stats() implementation. This is here because it is common
+ * to both OSX and FreeBSD and I didn't know where else to put it.
  */
-static PyObject *
-psutil_net_if_mtu(PyObject *self, PyObject *args) {
-    char *nic_name;
-    int sock = 0;
-    int ret;
-#ifdef PSUTIL_SUNOS10
-    struct lifreq lifr;
-#else
-    struct ifreq ifr;
-#endif
+#if defined(__FreeBSD__) || defined(__APPLE__)
 
-    if (! PyArg_ParseTuple(args, "s", &nic_name))
-        return NULL;
-
-    sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sock == -1)
-        goto error;
-
-#ifdef PSUTIL_SUNOS10
-    strncpy(lifr.lifr_name, nic_name, sizeof(lifr.lifr_name));
-    ret = ioctl(sock, SIOCGIFMTU, &lifr);
-#else
-    strncpy(ifr.ifr_name, nic_name, sizeof(ifr.ifr_name));
-    ret = ioctl(sock, SIOCGIFMTU, &ifr);
-#endif
-    if (ret == -1)
-        goto error;
-    close(sock);
-
-#ifdef PSUTIL_SUNOS10
-    return Py_BuildValue("i", lifr.lifr_mtu);
-#else
-    return Py_BuildValue("i", ifr.ifr_mtu);
-#endif
-
-error:
-    if (sock != 0)
-        close(sock);
-    return PyErr_SetFromErrno(PyExc_OSError);
-}
-
-
-/*
- * Inspect NIC flags, returns a bool indicating whether the NIC is
- * running. References:
- * http://www.i-scream.org/libstatgrab/
- */
-static PyObject *
-psutil_net_if_flags(PyObject *self, PyObject *args) {
-    char *nic_name;
-    int sock = 0;
-    int ret;
-    struct ifreq ifr;
-
-    if (! PyArg_ParseTuple(args, "s", &nic_name))
-        return NULL;
-
-    sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sock == -1)
-        goto error;
-
-    strncpy(ifr.ifr_name, nic_name, sizeof(ifr.ifr_name));
-    ret = ioctl(sock, SIOCGIFFLAGS, &ifr);
-    if (ret == -1)
-        goto error;
-
-    close(sock);
-    if ((ifr.ifr_flags & IFF_UP) != 0)
-        return Py_BuildValue("O", Py_True);
-    else
-        return Py_BuildValue("O", Py_False);
-
-error:
-    if (sock != 0)
-        close(sock);
-    return PyErr_SetFromErrno(PyExc_OSError);
-}
-
-
-/*
- * net_if_stats() OSX/BSD implementation.
- */
-#if defined(PSUTIL_BSD) || defined(PSUTIL_OSX)
+#include <sys/sockio.h>
+#include <net/if_media.h>
+#include <net/if.h>
 
 int psutil_get_nic_speed(int ifm_active) {
     // Determine NIC speed. Taken from:
@@ -466,8 +267,8 @@ int psutil_get_nic_speed(int ifm_active) {
                 case(IFM_1000_SX):  // 1000BaseSX - multi-mode fiber
                 case(IFM_1000_LX):  // 1000baseLX - single-mode fiber
                 case(IFM_1000_CX):  // 1000baseCX - 150ohm STP
-#if defined(IFM_1000_TX) && !defined(PSUTIL_OPENBSD)
-                // FreeBSD 4 and others (but NOT OpenBSD) -> #define IFM_1000_T in net/if_media.h
+#if defined(IFM_1000_TX) && !defined(OPENBSD)
+                // FreeBSD 4 and others (but NOT OpenBSD)?
                 case(IFM_1000_TX):
 #endif
 #ifdef IFM_1000_FX
@@ -577,14 +378,18 @@ int psutil_get_nic_speed(int ifm_active) {
  * http://www.i-scream.org/libstatgrab/
  */
 static PyObject *
-psutil_net_if_duplex_speed(PyObject *self, PyObject *args) {
+psutil_net_if_stats(PyObject *self, PyObject *args)
+{
     char *nic_name;
     int sock = 0;
     int ret;
     int duplex;
     int speed;
+    int mtu;
     struct ifreq ifr;
     struct ifmediareq ifmed;
+
+    PyObject *py_is_up = NULL;
 
     if (! PyArg_ParseTuple(args, "s", &nic_name))
         return NULL;
@@ -593,6 +398,22 @@ psutil_net_if_duplex_speed(PyObject *self, PyObject *args) {
     if (sock == -1)
         goto error;
     strncpy(ifr.ifr_name, nic_name, sizeof(ifr.ifr_name));
+
+    // is up?
+    ret = ioctl(sock, SIOCGIFFLAGS, &ifr);
+    if (ret == -1)
+        goto error;
+    if ((ifr.ifr_flags & IFF_UP) != 0)
+        py_is_up = Py_True;
+    else
+        py_is_up = Py_False;
+    Py_INCREF(py_is_up);
+
+    // MTU
+    ret = ioctl(sock, SIOCGIFMTU, &ifr);
+    if (ret == -1)
+        goto error;
+    mtu = ifr.ifr_mtu;
 
     // speed / duplex
     memset(&ifmed, 0, sizeof(struct ifmediareq));
@@ -613,33 +434,34 @@ psutil_net_if_duplex_speed(PyObject *self, PyObject *args) {
     }
 
     close(sock);
-    return Py_BuildValue("[ii]", duplex, speed);
+    Py_DECREF(py_is_up);
+
+    return Py_BuildValue("[Oiii]", py_is_up, duplex, speed, mtu);
 
 error:
+    Py_XDECREF(py_is_up);
     if (sock != 0)
         close(sock);
-    return PyErr_SetFromErrno(PyExc_OSError);
+    PyErr_SetFromErrno(PyExc_OSError);
+    return NULL;
 }
-#endif  // net_if_stats() OSX/BSD implementation
+#endif  // net_if_stats() implementation
 
 
 /*
  * define the psutil C module methods and initialize the module.
  */
 static PyMethodDef
-PsutilMethods[] = {
+PsutilMethods[] =
+{
     {"getpriority", psutil_posix_getpriority, METH_VARARGS,
      "Return process priority"},
     {"setpriority", psutil_posix_setpriority, METH_VARARGS,
      "Set process priority"},
     {"net_if_addrs", psutil_net_if_addrs, METH_VARARGS,
      "Retrieve NICs information"},
-    {"net_if_mtu", psutil_net_if_mtu, METH_VARARGS,
-     "Retrieve NIC MTU"},
-    {"net_if_flags", psutil_net_if_flags, METH_VARARGS,
-     "Retrieve NIC flags"},
-#if defined(PSUTIL_BSD) || defined(PSUTIL_OSX)
-    {"net_if_duplex_speed", psutil_net_if_duplex_speed, METH_VARARGS,
+#if defined(__FreeBSD__) || defined(__APPLE__)
+    {"net_if_stats", psutil_net_if_stats, METH_VARARGS,
      "Return NIC stats."},
 #endif
     {NULL, NULL, 0, NULL}
@@ -662,7 +484,6 @@ psutil_posix_traverse(PyObject *m, visitproc visit, void *arg) {
     Py_VISIT(GETSTATE(m)->error);
     return 0;
 }
-
 
 static int
 psutil_posix_clear(PyObject *m) {
@@ -698,7 +519,7 @@ void init_psutil_posix(void)
     PyObject *module = Py_InitModule("_psutil_posix", PsutilMethods);
 #endif
 
-#if defined(PSUTIL_BSD) || defined(PSUTIL_OSX) || defined(PSUTIL_SUNOS) || defined(PSUTIL_AIX)
+#if defined(__FreeBSD__) || defined(__APPLE__) || defined(__sun)
     PyModule_AddIntConstant(module, "AF_LINK", AF_LINK);
 #endif
 
