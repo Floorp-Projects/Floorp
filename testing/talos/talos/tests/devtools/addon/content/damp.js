@@ -597,13 +597,10 @@ async _consoleOpenWithCachedMessagesTest() {
       ) + ")()", false);
     });
 
-    // Open the toolbox and record the time.
-    let start = performance.now();
+    // Record the time needed to open the toolbox.
+    let test = this.runTest("inspector.layout.open");
     await this.openToolbox("inspector");
-    this._results.push({
-      name: "inspector.layout.open",
-      value: performance.now() - start
-    });
+    test.done();
 
     await this.closeToolbox();
 
