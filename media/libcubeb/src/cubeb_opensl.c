@@ -61,6 +61,7 @@
 #endif
 
 #define DEFAULT_SAMPLE_RATE 48000
+#define DEFAULT_NUM_OF_FRAMES 480
 
 static struct cubeb_ops const opensl_ops;
 
@@ -843,64 +844,6 @@ opensl_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
   return CUBEB_OK;
 }
 
-static int
-opensl_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_frames)
-{
-  /* https://android.googlesource.com/platform/ndk.git/+/master/docs/opensles/index.html
-   * We don't want to deal with JNI here (and we don't have Java on b2g anyways),
-   * so we just dlopen the library and get the two symbols we need. */
-
-  int r;
-  void * libmedia;
-  size_t (*get_primary_output_frame_count)(void);
-  int (*get_output_frame_count)(size_t * frameCount, int streamType);
-  uint32_t primary_sampling_rate;
-  size_t primary_buffer_size;
-
-  r = opensl_get_preferred_sample_rate(ctx, &primary_sampling_rate);
-
-  if (r) {
-    return CUBEB_ERROR;
-  }
-
-  libmedia = dlopen("libmedia.so", RTLD_LAZY);
-  if (!libmedia) {
-    return CUBEB_ERROR;
-  }
-
-  /* JB variant */
-  /* size_t AudioSystem::getPrimaryOutputFrameCount(void) */
-  get_primary_output_frame_count =
-    dlsym(libmedia, "_ZN7android11AudioSystem26getPrimaryOutputFrameCountEv");
-  if (!get_primary_output_frame_count) {
-    /* ICS variant */
-    /* status_t AudioSystem::getOutputFrameCount(int* frameCount, int streamType) */
-    get_output_frame_count =
-      dlsym(libmedia, "_ZN7android11AudioSystem19getOutputFrameCountEPii");
-    if (!get_output_frame_count) {
-      dlclose(libmedia);
-      return CUBEB_ERROR;
-    }
-  }
-
-  if (get_primary_output_frame_count) {
-    primary_buffer_size = get_primary_output_frame_count();
-  } else {
-    if (get_output_frame_count(&primary_buffer_size, AUDIO_STREAM_TYPE_MUSIC) != 0) {
-      return CUBEB_ERROR;
-    }
-  }
-
-  /* To get a fast track in Android's mixer, we need to be at the native
-   * samplerate, which is device dependant. Some devices might be able to
-   * resample when playing a fast track, but it's pretty rare. */
-  *latency_frames = primary_buffer_size;
-
-  dlclose(libmedia);
-
-  return CUBEB_OK;
-}
-
 static void
 opensl_destroy(cubeb * ctx)
 {
@@ -1150,20 +1093,7 @@ opensl_configure_playback(cubeb_stream * stm, cubeb_stream_params * params) {
 #endif
   assert(NELEMS(ids) == NELEMS(req));
 
-  unsigned int latency_frames = stm->latency_frames;
   uint32_t preferred_sampling_rate = stm->inputrate;
-#if defined(__ANDROID__)
-  if (get_android_version() >= ANDROID_VERSION_MARSHMALLOW) {
-    // Reset preferred samping rate to trigger fallback to native sampling rate.
-    preferred_sampling_rate = 0;
-    if (opensl_get_min_latency(stm->context, *params, &latency_frames) != CUBEB_OK) {
-      // Default to AudioFlinger's advertised fast track latency of 10ms.
-      latency_frames = 440;
-    }
-    stm->latency_frames = latency_frames;
-  }
-#endif
-
   SLresult res = SL_RESULT_CONTENT_UNSUPPORTED;
   if (preferred_sampling_rate) {
     res = (*stm->context->eng)->CreateAudioPlayer(stm->context->eng,
@@ -1199,7 +1129,7 @@ opensl_configure_playback(cubeb_stream * stm, cubeb_stream_params * params) {
 
   stm->output_configured_rate = preferred_sampling_rate;
   stm->bytespersec = stm->output_configured_rate * stm->framesize;
-  stm->queuebuf_len = stm->framesize * latency_frames;
+  stm->queuebuf_len = stm->framesize * stm->latency_frames;
 
   // Calculate the capacity of input array
   stm->queuebuf_capacity = NBUFS;
@@ -1336,7 +1266,7 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
   stm->data_callback = data_callback;
   stm->state_callback = state_callback;
   stm->user_ptr = user_ptr;
-  stm->latency_frames = latency_frames;
+  stm->latency_frames = latency_frames ? latency_frames : DEFAULT_NUM_OF_FRAMES;
   stm->input_enabled = (input_stream_params) ? 1 : 0;
   stm->output_enabled = (output_stream_params) ? 1 : 0;
   stm->shutdown = 1;
@@ -1704,7 +1634,7 @@ static struct cubeb_ops const opensl_ops = {
   .init = opensl_init,
   .get_backend_id = opensl_get_backend_id,
   .get_max_channel_count = opensl_get_max_channel_count,
-  .get_min_latency = opensl_get_min_latency,
+  .get_min_latency = NULL,
   .get_preferred_sample_rate = opensl_get_preferred_sample_rate,
   .get_preferred_channel_layout = NULL,
   .enumerate_devices = NULL,
