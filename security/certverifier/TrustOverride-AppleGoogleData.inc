@@ -1,5 +1,5 @@
-// Script from security/manager/tools/crtshToDNStruct/crtshToDNStruct.py
-// Invocation: crtshToDNStruct.py 142951186 23635000 5250464 12716200 19602712 19602724 21760447 19602706 19602741
+// Script from security/manager/tools/crtshToIdentifyingStruct/crtshToIdentifyingStruct.py
+// Invocation: crtshToIdentifyingStruct.py -dn -listname RootAppleAndGoogleDNs 142951186 23635000 5250464 12716200 19602712 19602724 21760447 19602706 19602741
 
 // /C=US/O=Google Inc/CN=Google Internet Authority G2
 // SHA256 Fingerprint: 9B:75:9D:41:E3:DE:30:F9:D2:F9:02:02:7D:79:2B:65
@@ -127,20 +127,12 @@ static const uint8_t CAAppleISTCA6G1DN[100] = {
 };
 
 static const DataAndLength RootAppleAndGoogleDNs[]= {
-  { CAGoogleInternetAuthorityG2DN,
-    sizeof(CAGoogleInternetAuthorityG2DN) },
-  { CAAppleISTCA2G1DN,
-    sizeof(CAAppleISTCA2G1DN) },
-  { CAAppleISTCA5G1DN,
-    sizeof(CAAppleISTCA5G1DN) },
-  { CAAppleISTCA4G1DN,
-    sizeof(CAAppleISTCA4G1DN) },
-  { CAAppleISTCA7G1DN,
-    sizeof(CAAppleISTCA7G1DN) },
-  { CAAppleISTCA8G1DN,
-    sizeof(CAAppleISTCA8G1DN) },
-  { CAAppleISTCA3G1DN,
-    sizeof(CAAppleISTCA3G1DN) },
-  { CAAppleISTCA6G1DN,
-    sizeof(CAAppleISTCA6G1DN) },
+  { CAGoogleInternetAuthorityG2DN, sizeof(CAGoogleInternetAuthorityG2DN) },
+  { CAAppleISTCA2G1DN, sizeof(CAAppleISTCA2G1DN) },
+  { CAAppleISTCA5G1DN, sizeof(CAAppleISTCA5G1DN) },
+  { CAAppleISTCA4G1DN, sizeof(CAAppleISTCA4G1DN) },
+  { CAAppleISTCA7G1DN, sizeof(CAAppleISTCA7G1DN) },
+  { CAAppleISTCA8G1DN, sizeof(CAAppleISTCA8G1DN) },
+  { CAAppleISTCA3G1DN, sizeof(CAAppleISTCA3G1DN) },
+  { CAAppleISTCA6G1DN, sizeof(CAAppleISTCA6G1DN) },
 };
