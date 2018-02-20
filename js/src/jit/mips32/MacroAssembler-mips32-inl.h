@@ -793,107 +793,54 @@ MacroAssembler::branch64(Condition cond, const Address& lhs, const Address& rhs,
 void
 MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val, Label* success, Label* fail)
 {
-    bool fallthrough = false;
-    Label fallthroughLabel;
-
-    if (!fail) {
-        fail = &fallthroughLabel;
-        fallthrough = true;
+    if (val.value == 0) {
+        switch(cond){
+          case Assembler::Equal:
+          case Assembler::BelowOrEqual:
+          case Assembler::NotEqual:
+          case Assembler::Above:
+            as_or(ScratchRegister, lhs.high, lhs.low);
+            ma_b(ScratchRegister, ScratchRegister, success,
+                (cond == Assembler::Equal ||
+                 cond == Assembler::BelowOrEqual) ? Assembler::Zero : Assembler::NonZero);
+            break;
+          case Assembler::LessThan:
+          case Assembler::GreaterThanOrEqual:
+            ma_b(lhs.high, Imm32(0), success, cond);
+            break;
+          case Assembler::LessThanOrEqual:
+          case Assembler::GreaterThan:
+            as_or(SecondScratchReg, lhs.high, lhs.low);
+            as_sra(ScratchRegister, lhs.high, 31);
+            as_sltu(ScratchRegister, ScratchRegister, SecondScratchReg);
+            ma_b(ScratchRegister, ScratchRegister, success,
+                (cond == Assembler::LessThanOrEqual) ? Assembler::Zero : Assembler::NonZero);
+            break;
+          case Assembler::Below:
+            // This condition is always false. No branch required.
+            break;
+          case Assembler::AboveOrEqual:
+            ma_b(success);
+            break;
+          default:
+            MOZ_CRASH("Condition code not supported");
+        }
+        return;
     }
 
-    switch(cond) {
-      case Assembler::Equal:
-        branch32(Assembler::NotEqual, lhs.low, val.low(), fail);
-        branch32(Assembler::Equal, lhs.high, val.hi(), success);
-        if (!fallthrough)
-            jump(fail);
-        break;
-      case Assembler::NotEqual:
-        branch32(Assembler::NotEqual, lhs.low, val.low(), success);
-        branch32(Assembler::NotEqual, lhs.high, val.hi(), success);
-        if (!fallthrough)
-            jump(fail);
-        break;
-      case Assembler::LessThan:
-      case Assembler::LessThanOrEqual:
-      case Assembler::GreaterThan:
-      case Assembler::GreaterThanOrEqual:
-      case Assembler::Below:
-      case Assembler::BelowOrEqual:
-      case Assembler::Above:
-      case Assembler::AboveOrEqual: {
-        Assembler::Condition invert_cond = Assembler::InvertCondition(cond);
-        Assembler::Condition cond1 = Assembler::ConditionWithoutEqual(cond);
-        Assembler::Condition cond2 = Assembler::ConditionWithoutEqual(invert_cond);
-        Assembler::Condition cond3 = Assembler::UnsignedCondition(cond);
-
-        ma_b(lhs.high, val.hi(), success, cond1);
-        ma_b(lhs.high, val.hi(), fail, cond2);
-        ma_b(lhs.low, val.low(), success, cond3);
-        if (!fallthrough)
-            jump(fail);
-        break;
-      }
-      default:
-        MOZ_CRASH("Condition code not supported");
-        break;
-    }
-
-    if (fallthrough)
-        bind(fail);
+    Condition c = ma_cmp64(cond, lhs, val, SecondScratchReg);
+    ma_b(SecondScratchReg, SecondScratchReg, success, c);
+    if (fail)
+        jump(fail);
 }
 
 void
 MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* success, Label* fail)
 {
-    bool fallthrough = false;
-    Label fallthroughLabel;
-
-    if (!fail) {
-        fail = &fallthroughLabel;
-        fallthrough = true;
-    }
-
-    switch(cond) {
-      case Assembler::Equal:
-        branch32(Assembler::NotEqual, lhs.low, rhs.low, fail);
-        branch32(Assembler::Equal, lhs.high, rhs.high, success);
-        if (!fallthrough)
-            jump(fail);
-        break;
-      case Assembler::NotEqual:
-        branch32(Assembler::NotEqual, lhs.low, rhs.low, success);
-        branch32(Assembler::NotEqual, lhs.high, rhs.high, success);
-        if (!fallthrough)
-            jump(fail);
-        break;
-      case Assembler::LessThan:
-      case Assembler::LessThanOrEqual:
-      case Assembler::GreaterThan:
-      case Assembler::GreaterThanOrEqual:
-      case Assembler::Below:
-      case Assembler::BelowOrEqual:
-      case Assembler::Above:
-      case Assembler::AboveOrEqual: {
-        Assembler::Condition invert_cond = Assembler::InvertCondition(cond);
-        Assembler::Condition cond1 = Assembler::ConditionWithoutEqual(cond);
-        Assembler::Condition cond2 = Assembler::ConditionWithoutEqual(invert_cond);
-        Assembler::Condition cond3 = Assembler::UnsignedCondition(cond);
-
-        ma_b(lhs.high, rhs.high, success, cond1);
-        ma_b(lhs.high, rhs.high, fail, cond2);
-        ma_b(lhs.low, rhs.low, success, cond3);
-        if (!fallthrough)
-            jump(fail);
-        break;
-      }
-      default:
-        MOZ_CRASH("Condition code not supported");
-        break;
-    }
-
-    if (fallthrough)
-        bind(fail);
+    Condition c = ma_cmp64(cond, lhs, rhs, SecondScratchReg);
+    ma_b(SecondScratchReg, SecondScratchReg, success, c);
+    if (fail)
+        jump(fail);
 }
 
 void
@@ -907,11 +854,11 @@ void
 MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp,
                              L label)
 {
-    if (cond == Assembler::Zero) {
+    if (cond == Assembler::Zero || cond == Assembler::NonZero) {
         MOZ_ASSERT(lhs.low == rhs.low);
         MOZ_ASSERT(lhs.high == rhs.high);
         as_or(ScratchRegister, lhs.low, lhs.high);
-        branchTestPtr(cond, ScratchRegister, ScratchRegister, label);
+        ma_b(ScratchRegister, ScratchRegister, label, cond);
     } else {
         MOZ_CRASH("Unsupported condition");
     }

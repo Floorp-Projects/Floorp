@@ -603,7 +603,7 @@ CodeGeneratorMIPSShared::visitDivI(LDivI* ins)
         masm.move32(Imm32(-1), temp);
         if (mir->trapOnError()) {
             Label ok;
-            masm.ma_b(rhs, temp, &ok, Assembler::NoEqual);
+            masm.ma_b(rhs, temp, &ok, Assembler::NotEqual);
             masm.wasmTrap(wasm::Trap::IntegerOverflow, mir->bytecodeOffset());
             masm.bind(&ok);
         } else if (mir->canTruncateOverflow()) {
@@ -2235,7 +2235,7 @@ CodeGeneratorMIPSShared::visitUDivOrMod(LUDivOrMod* ins)
                 Label nonZero;
                 masm.ma_b(rhs, rhs, &nonZero, Assembler::NonZero);
                 masm.wasmTrap(wasm::Trap::IntegerDivideByZero, ins->bytecodeOffset());
-                masm.bind(&nonZero)
+                masm.bind(&nonZero);
             } else {
                 // Infinity|0 == 0
                 Label notzero;
