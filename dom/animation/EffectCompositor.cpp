@@ -366,6 +366,34 @@ EffectCompositor::PostRestyleForThrottledAnimations()
   }
 }
 
+void
+EffectCompositor::ClearRestyleRequestsFor(Element* aElement)
+{
+  MOZ_ASSERT(aElement);
+
+  auto& elementsToRestyle = mElementsToRestyle[CascadeLevel::Animations];
+
+  CSSPseudoElementType pseudoType = aElement->GetPseudoElementType();
+  if (pseudoType == CSSPseudoElementType::NotPseudo) {
+    PseudoElementHashEntry::KeyType notPseudoKey =
+      { aElement, CSSPseudoElementType::NotPseudo };
+    PseudoElementHashEntry::KeyType beforePseudoKey =
+      { aElement, CSSPseudoElementType::before };
+    PseudoElementHashEntry::KeyType afterPseudoKey =
+      { aElement, CSSPseudoElementType::after };
+
+    elementsToRestyle.Remove(notPseudoKey);
+    elementsToRestyle.Remove(beforePseudoKey);
+    elementsToRestyle.Remove(afterPseudoKey);
+  } else if (pseudoType == CSSPseudoElementType::before ||
+             pseudoType == CSSPseudoElementType::after) {
+    Element* parentElement = aElement->GetParentElement();
+    MOZ_ASSERT(parentElement);
+    PseudoElementHashEntry::KeyType key = { parentElement, pseudoType };
+    elementsToRestyle.Remove(key);
+  }
+}
+
 template<typename StyleType>
 void
 EffectCompositor::UpdateEffectProperties(StyleType* aStyleType,
