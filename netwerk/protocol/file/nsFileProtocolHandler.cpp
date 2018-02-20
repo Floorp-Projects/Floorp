@@ -178,10 +178,11 @@ nsFileProtocolHandler::NewURI(const nsACString &spec,
 #endif
 
     return NS_MutateURI(url)
-      .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                              nsIStandardURL::URLTYPE_NO_AUTHORITY,
-                              -1, buf, charset, baseURI, nullptr))
-      .Finalize(result);
+             .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
+                                           nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
+                                           buf, charset, baseURI,
+                                           nullptr)
+             .Finalize(result);
 }
 
 NS_IMETHODIMP

@@ -900,8 +900,8 @@ nsHostObjectProtocolHandler::NewURI(const nsACString& aSpec,
   nsCOMPtr<nsIURI> uri;
   rv = NS_MutateURI(new nsHostObjectURI::Mutator())
          .SetSpec(aSpec)
-         .Apply(NS_MutatorMethod(&nsIBlobURIMutator::SetBlobImpl, blob))
-         .Apply(NS_MutatorMethod(&nsIPrincipalURIMutator::SetPrincipal, principal))
+         .Apply<nsIBlobURIMutator>(&nsIBlobURIMutator::SetBlobImpl, blob)
+         .Apply<nsIPrincipalURIMutator>(&nsIPrincipalURIMutator::SetPrincipal, principal)
          .Finalize(uri);
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -647,11 +647,11 @@ URLWorker::Init(const nsAString& aURL, const Optional<nsAString>& aBase,
     }
     nsCOMPtr<nsIURI> uri;
     rv = NS_MutateURI(new nsStandardURL::Mutator())
-           .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                                   nsIStandardURL::URLTYPE_STANDARD,
-                                   -1, NS_ConvertUTF16toUTF8(aURL),
-                                   nullptr, baseURL, nullptr))
-           .Finalize(uri);
+            .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
+                                          nsIStandardURL::URLTYPE_STANDARD, -1,
+                                          NS_ConvertUTF16toUTF8(aURL),
+                                          nullptr, baseURL, nullptr)
+            .Finalize(uri);
     aRv = rv;
     if (NS_SUCCEEDED(rv)) {
       mStdURL = static_cast<nsStandardURL*>(uri.get());
