@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1439001",
+    title: "Test audio unidirectional getSynchronizationSources"
+  });
+
+  var waitForSyncSources = async (test) => {
+    let receiver = test.pcRemote.getReceivers()[0];
+    ok(receiver, "Remote has a receiver");
+    // Wait for remote sync source
+    while (receiver.getSynchronizationSources().length == 0) {
+      await wait(250);
+    }
+    is(receiver.getSynchronizationSources().length, 1,
+       "Remote receiver has a synchronization source");
+    // Make sure local has no sync source
+    is(test.pcLocal.getReceivers()[0].getSynchronizationSources().length, 0,
+       "Local receiver has no synchronization source");
+  };
+  /*
+   * Test to make sure that in unidirectional calls, the receiving end has
+   * synchronization sources with audio levels, and the sending end has none.
+   */
+  var testGetSynchronizationSourcesUnidirectional = async (test) => {
+    await waitForSyncSources(test);
+    let receiver = test.pcRemote.getReceivers()[0];
+    let syncSources = receiver.getSynchronizationSources();
+    ok(syncSources.length > 0,
+       "Receiver has Synchronization sources " + JSON.stringify(syncSources));
+    is(syncSources.length, 1, "Receiver has only a single sync source");
+    let syncSource = syncSources[0];
+    ok(syncSource.audioLevel !== undefined, "SynchronizationSource has audioLevel");
+  };
+
+  var test;
+  runNetworkTest(function(options) {
+    test = new PeerConnectionTest(options);
+    test.chain.insertAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW",
+      [testGetSynchronizationSourcesUnidirectional]);
+    test.setMediaConstraints([{audio: true}], []);
+    test.pcLocal.audioElementsOnly = true;
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>
