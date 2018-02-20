@@ -258,6 +258,9 @@ class GlobalHelperThreadState
     }
 
     bool canStartWasmCompile(const AutoLockHelperThreadState& lock, wasm::CompileMode mode);
+
+    bool canStartWasmTier1Compile(const AutoLockHelperThreadState& lock);
+    bool canStartWasmTier2Compile(const AutoLockHelperThreadState& lock);
     bool canStartWasmTier2Generator(const AutoLockHelperThreadState& lock);
     bool canStartPromiseHelperTask(const AutoLockHelperThreadState& lock);
     bool canStartIonCompile(const AutoLockHelperThreadState& lock);
@@ -406,6 +409,20 @@ struct HelperThread
     void threadLoop();
 
   private:
+    struct TaskSpec
+    {
+        using Selector = bool(GlobalHelperThreadState::*)(const AutoLockHelperThreadState&);
+        using Handler = void(HelperThread::*)(AutoLockHelperThreadState&);
+
+        js::ThreadType type;
+        Selector canStart;
+        Handler handleWorkload;
+    };
+
+    static const TaskSpec taskSpecs[];
+
+    const TaskSpec* findHighestPriorityTask(const AutoLockHelperThreadState& locked);
+
     template <typename T>
     T maybeCurrentTaskAs() {
         if (currentTask.isSome() && currentTask->is<T>())
@@ -415,6 +432,9 @@ struct HelperThread
     }
 
     void handleWasmWorkload(AutoLockHelperThreadState& locked, wasm::CompileMode mode);
+
+    void handleWasmTier1Workload(AutoLockHelperThreadState& locked);
+    void handleWasmTier2Workload(AutoLockHelperThreadState& locked);
     void handleWasmTier2GeneratorWorkload(AutoLockHelperThreadState& locked);
     void handlePromiseHelperTaskWorkload(AutoLockHelperThreadState& locked);
     void handleIonWorkload(AutoLockHelperThreadState& locked);
