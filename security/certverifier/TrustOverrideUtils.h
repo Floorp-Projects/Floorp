@@ -27,9 +27,27 @@ CertDNIsInList(const CERTCertificate* aCert, const DataAndLength (&aDnList)[T])
     return false;
   }
 
-  for (auto &dn: aDnList) {
+  for (auto& dn: aDnList) {
     if (aCert->derSubject.len == dn.len &&
         mozilla::PodEqual(aCert->derSubject.data, dn.data, dn.len)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+template<size_t T>
+static bool
+CertSPKIIsInList(const CERTCertificate* aCert, const DataAndLength (&aSpkiList)[T])
+{
+  MOZ_ASSERT(aCert);
+  if (!aCert) {
+    return false;
+  }
+
+  for (auto& spki: aSpkiList) {
+    if (aCert->derPublicKey.len == spki.len &&
+        mozilla::PodEqual(aCert->derPublicKey.data, spki.data, spki.len)) {
       return true;
     }
   }
