@@ -181,6 +181,9 @@ moz_gtk_refresh()
     sCheckboxMetrics.initialized = false;
     sRadioMetrics.initialized = false;
     sToolbarMetrics.initialized = false;
+
+    /* This will destroy all of our widgets */
+    ResetWidgetCache();
 }
 
 gint
