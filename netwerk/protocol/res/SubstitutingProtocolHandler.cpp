@@ -235,11 +235,10 @@ SubstitutingProtocolHandler::NewURI(const nsACString &aSpec,
     spec.Append(last, src-last);
 
   return NS_MutateURI(new SubstitutingURL::Mutator())
-           .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
-                                         nsIStandardURL::URLTYPE_STANDARD, -1,
-                                         spec, aCharset, aBaseURI,
-                                         nullptr)
-           .Finalize(result);
+    .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                            nsIStandardURL::URLTYPE_STANDARD,
+                            -1, spec, aCharset, aBaseURI, nullptr))
+    .Finalize(result);
 }
 
 nsresult
