@@ -3860,6 +3860,23 @@ nsDocument::TryChannelCharset(nsIChannel *aChannel,
   }
 }
 
+static inline void
+AssertNoStaleServoDataIn(const nsINode& aSubtreeRoot)
+{
+#ifdef DEBUG
+  for (const nsINode* node = aSubtreeRoot.GetFirstChild();
+       node;
+       node = node->GetNextNode()) {
+    if (node->IsElement()) {
+      MOZ_ASSERT(!node->AsElement()->HasServoData());
+      if (auto* shadow = node->AsElement()->GetShadowRoot()) {
+        AssertNoStaleServoDataIn(*shadow);
+      }
+    }
+  }
+#endif
+}
+
 already_AddRefed<nsIPresShell>
 nsDocument::CreateShell(nsPresContext* aContext, nsViewManager* aViewManager,
                         StyleSetHandle aStyleSet)
@@ -3869,18 +3886,7 @@ nsDocument::CreateShell(nsPresContext* aContext, nsViewManager* aViewManager,
   NS_ENSURE_FALSE(GetBFCacheEntry(), nullptr);
 
   FillStyleSet(aStyleSet);
-
-  {
-#ifdef DEBUG
-    for (nsINode* node = static_cast<nsINode*>(this)->GetFirstChild();
-         node;
-         node = node->GetNextNode(this)) {
-      if (node->IsElement()) {
-        MOZ_ASSERT(!node->AsElement()->HasServoData());
-      }
-    }
-#endif
-  }
+  AssertNoStaleServoDataIn(static_cast<nsINode&>(*this));
 
   RefPtr<PresShell> shell = new PresShell;
   // Note: we don't hold a ref to the shell (it holds a ref to us)
@@ -3983,23 +3989,6 @@ nsIDocument::ShouldThrottleFrameRequests()
 
   // We got painted during the last paint, so run at full speed.
   return false;
-}
-
-static inline void
-AssertNoStaleServoDataIn(const nsINode& aSubtreeRoot)
-{
-#ifdef DEBUG
-  for (const nsINode* node = aSubtreeRoot.GetFirstChild();
-       node;
-       node = node->GetNextNode()) {
-    if (node->IsElement()) {
-      MOZ_ASSERT(!node->AsElement()->HasServoData());
-      if (auto* shadow = node->AsElement()->GetShadowRoot()) {
-        AssertNoStaleServoDataIn(*shadow);
-      }
-    }
-  }
-#endif
 }
 
 void
