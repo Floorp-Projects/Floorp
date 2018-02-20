@@ -552,7 +552,8 @@ mozInlineSpellChecker::mozInlineSpellChecker() :
     mNumPendingUpdateCurrentDictionary(0),
     mDisabledAsyncToken(0),
     mNeedsCheckAfterNavigation(false),
-    mFullSpellCheckScheduled(false)
+    mFullSpellCheckScheduled(false),
+    mIsListeningToEditActions(false)
 {
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs)
