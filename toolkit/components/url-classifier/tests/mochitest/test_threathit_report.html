@@ -201,13 +201,7 @@ function testOnWindow(aTestData) {
       let wp = win.gBrowser.contentDocument.docShell.QueryInterface(Ci.nsIWebProgress);
       let progressListener = {
         onSecurityChange(aWebProgress, aRequest, aState) {
-          let utils = Cc["@mozilla.org/url-classifier/utils;1"].
-            getService(Ci.nsIUrlClassifierUtils);
-          expected = aTestData.reportUrl + "&$req=" +
-            utils.makeThreatHitReport(aRequest,
-                                      aTestData.list,
-                                      btoa(hash(aTestData.url)));
-
+          expected = aTestData.reportUrl;
         },
         QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"])
       };
