@@ -9,6 +9,7 @@
 #include "xpt_xdr.h"
 #include "xpt_struct.h"
 #include <string.h>
+#include <stdint.h>
 #include <stdio.h>
 
 using mozilla::WrapNotNull;
@@ -187,7 +188,7 @@ InterfaceDescriptorAddTypes(XPTArena *arena, XPTInterfaceDescriptor *id,
     }
     id->additional_types = new_;
 
-    if (num + uint16_t(id->num_additional_types) > 256)
+    if (num + uint16_t(id->num_additional_types) > UINT8_MAX)
         return false;
 
     id->num_additional_types += num;
