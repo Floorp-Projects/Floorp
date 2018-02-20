@@ -13,7 +13,7 @@ linux64-clang-3.9:
         platform: toolchains/opt
         symbol: TL(clang3.9)
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
     worker:
         max-run-time: 7200
     run:
@@ -34,7 +34,7 @@ linux64-clang-4:
         platform: toolchains/opt
         symbol: TL(clang4)
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
     worker:
         max-run-time: 7200
     run:
@@ -55,7 +55,7 @@ linux64-clang-5:
         platform: toolchains/opt
         symbol: TL(clang5)
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-xlarge
     worker:
         max-run-time: 7200
     run:
@@ -77,7 +77,7 @@ linux64-clang-6-pre:
         platform: toolchains/opt
         symbol: TL(clang6p)
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-xlarge
     worker:
         max-run-time: 7200
     run:
@@ -127,7 +127,7 @@ linux64-clang-tidy:
         platform: toolchains/opt
         symbol: TL(clang-tidy)
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
     worker:
         max-run-time: 36000
     run:
