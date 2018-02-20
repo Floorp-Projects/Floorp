@@ -9,7 +9,7 @@ this.EXPORTED_SYMBOLS = [ "BingTranslator" ];
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.import("resource://services-common/utils.js");
+ChromeUtils.import("resource://services-common/async.js");
 ChromeUtils.import("resource://gre/modules/Http.jsm");
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
@@ -69,7 +69,7 @@ this.BingTranslator.prototype = {
         // let's take the opportunity of the chunkification process to
         // allow for the event loop to attend other pending events
         // before we continue.
-        await CommonUtils.laterTickResolvingPromise();
+        await Async.promiseYield();
 
         // Determine the data for the next request.
         let request = this._generateNextTranslationRequest(currentIndex);

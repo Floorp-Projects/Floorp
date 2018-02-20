@@ -1,5 +1,5 @@
 /* exported ACCENT_COLOR, BACKGROUND, ENCODED_IMAGE_DATA, FRAME_COLOR, TAB_TEXT_COLOR,
-   TEXT_COLOR, BACKGROUND_TAB_TEXT_COLOR, imageBufferFromDataURI, hexToCSS, hexToRGB */
+   TEXT_COLOR, BACKGROUND_TAB_TEXT_COLOR, imageBufferFromDataURI, hexToCSS, hexToRGB, testBorderColor */
 
 "use strict";
 
@@ -52,4 +52,20 @@ function hexToCSS(hex) {
 function imageBufferFromDataURI(encodedImageData) {
   let decodedImageData = atob(encodedImageData);
   return Uint8Array.from(decodedImageData, byte => byte.charCodeAt(0)).buffer;
+}
+
+function testBorderColor(element, expected) {
+  let computedStyle = window.getComputedStyle(element);
+  Assert.equal(computedStyle.borderLeftColor,
+               hexToCSS(expected),
+               "Element left border color should be set.");
+  Assert.equal(computedStyle.borderRightColor,
+               hexToCSS(expected),
+               "Element right border color should be set.");
+  Assert.equal(computedStyle.borderTopColor,
+               hexToCSS(expected),
+               "Element top border color should be set.");
+  Assert.equal(computedStyle.borderBottomColor,
+               hexToCSS(expected),
+               "Element bottom border color should be set.");
 }

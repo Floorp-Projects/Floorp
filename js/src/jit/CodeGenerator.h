@@ -63,7 +63,7 @@ class OutOfLineNaNToZero;
 
 class CodeGenerator final : public CodeGeneratorSpecific
 {
-    void generateArgumentsChecks(bool bailout = true);
+    void generateArgumentsChecks(bool assert = false);
     MOZ_MUST_USE bool generateBody();
 
     ConstantOrRegister toConstantOrRegister(LInstruction* lir, size_t n, MIRType type);
@@ -455,8 +455,11 @@ class CodeGenerator final : public CodeGeneratorSpecific
 
     void visitAssertResultV(LAssertResultV* ins);
     void visitAssertResultT(LAssertResultT* ins);
+
+#ifdef DEBUG
     void emitAssertResultV(const ValueOperand output, const TemporaryTypeSet* typeset);
     void emitAssertObjectOrStringResult(Register input, MIRType type, const TemporaryTypeSet* typeset);
+#endif
 
     void visitInterruptCheck(LInterruptCheck* lir);
     void visitOutOfLineInterruptCheckImplicit(OutOfLineInterruptCheckImplicit* ins);
