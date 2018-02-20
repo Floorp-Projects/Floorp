@@ -221,22 +221,74 @@ MediaEngineWebRTCMicrophoneSource::Pull(
 }
 
 void
-MediaEngineWebRTCMicrophoneSource::UpdateAECSettingsIfNeeded(
+MediaEngineWebRTCMicrophoneSource::UpdateAECSettings(
   bool aEnable,
-  webrtc::EcModes aMode)
+  bool aUseAecMobile,
+  EchoCancellation::SuppressionLevel aLevel)
 {
   AssertIsOnOwningThread();
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
   NS_DispatchToMainThread(media::NewRunnableFrom(
-    [that, graph = std::move(gripGraph), aEnable, aMode]() mutable {
+    [ that, graph = std::move(gripGraph), aEnable, aUseAecMobile,
+      aLevel ]() mutable {
       class Message : public ControlMessage
       {
       public:
         Message(AudioInputProcessing* aInputProcessing,
                 bool aEnable,
-                webrtc::EcModes aMode)
+                bool aUseAecMobile,
+                EchoCancellation::SuppressionLevel aLevel)
+          : ControlMessage(nullptr)
+          , mInputProcessing(aInputProcessing)
+          , mEnable(aEnable)
+          , mUseAecMobile(aUseAecMobile)
+          , mLevel(aLevel)
+        {
+        }
+
+        void Run() override
+        {
+          mInputProcessing->UpdateAECSettings(mEnable,
+                                              mUseAecMobile,
+                                              mLevel);
+        }
+
+      protected:
+        RefPtr<AudioInputProcessing> mInputProcessing;
+        bool mEnable;
+        bool mUseAecMobile;
+        EchoCancellation::SuppressionLevel mLevel;
+      };
+
+      if (graph) {
+        graph->AppendMessage(
+          MakeUnique<Message>(that->mInputProcessing, aEnable,
+                              aUseAecMobile, aLevel));
+      }
+
+      return NS_OK;
+    }));
+}
+
+void
+MediaEngineWebRTCMicrophoneSource::UpdateAGCSettings(
+  bool aEnable,
+  GainControl::Mode aMode)
+{
+  AssertIsOnOwningThread();
+
+  RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
+  RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
+  NS_DispatchToMainThread(media::NewRunnableFrom(
+    [ that, graph = std::move(gripGraph), aEnable, aMode ]() mutable {
+      class Message : public ControlMessage
+      {
+      public:
+        Message(AudioInputProcessing* aInputProcessing,
+                bool aEnable,
+                GainControl::Mode aMode)
           : ControlMessage(nullptr)
           , mInputProcessing(aInputProcessing)
           , mEnable(aEnable)
@@ -246,13 +298,13 @@ MediaEngineWebRTCMicrophoneSource::UpdateAECSettingsIfNeeded(
 
         void Run() override
         {
-          mInputProcessing->UpdateAECSettingsIfNeeded(mEnable, mMode);
+          mInputProcessing->UpdateAGCSettings(mEnable, mMode);
         }
 
       protected:
         RefPtr<AudioInputProcessing> mInputProcessing;
         bool mEnable;
-        webrtc::EcModes mMode;
+        GainControl::Mode mMode;
       };
 
       if (graph) {
@@ -265,87 +317,43 @@ MediaEngineWebRTCMicrophoneSource::UpdateAECSettingsIfNeeded(
 }
 
 void
-MediaEngineWebRTCMicrophoneSource::UpdateAGCSettingsIfNeeded(
+MediaEngineWebRTCMicrophoneSource::UpdateNSSettings(
   bool aEnable,
-  webrtc::AgcModes aMode)
+  webrtc::NoiseSuppression::Level aLevel)
 {
   AssertIsOnOwningThread();
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
   NS_DispatchToMainThread(media::NewRunnableFrom(
-    [that, graph = std::move(gripGraph), aEnable, aMode]() mutable {
+    [ that, graph = std::move(gripGraph), aEnable, aLevel ]() mutable {
       class Message : public ControlMessage
       {
       public:
         Message(AudioInputProcessing* aInputProcessing,
                 bool aEnable,
-                webrtc::AgcModes aMode)
+                webrtc::NoiseSuppression::Level aLevel)
           : ControlMessage(nullptr)
           , mInputProcessing(aInputProcessing)
           , mEnable(aEnable)
-          , mMode(aMode)
+          , mLevel(aLevel)
         {
         }
 
         void Run() override
         {
-          mInputProcessing->UpdateAGCSettingsIfNeeded(mEnable, mMode);
+          mInputProcessing->UpdateNSSettings(mEnable, mLevel);
         }
 
       protected:
         RefPtr<AudioInputProcessing> mInputProcessing;
         bool mEnable;
-        webrtc::AgcModes mMode;
+        webrtc::NoiseSuppression::Level mLevel;
       };
 
       if (graph) {
         graph->AppendMessage(
-          MakeUnique<Message>(that->mInputProcessing, aEnable, aMode));
-      }
-
-      return NS_OK;
-    }));
-}
-
-void
-MediaEngineWebRTCMicrophoneSource::UpdateNSSettingsIfNeeded(
-  bool aEnable,
-  webrtc::NsModes aMode)
-{
-  AssertIsOnOwningThread();
-
-  RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
-  NS_DispatchToMainThread(media::NewRunnableFrom(
-    [that, graph = std::move(gripGraph), aEnable, aMode]() mutable {
-      class Message : public ControlMessage
-      {
-      public:
-        Message(AudioInputProcessing* aInputProcessing,
-                bool aEnable,
-                webrtc::NsModes aMode)
-          : ControlMessage(nullptr)
-          , mInputProcessing(aInputProcessing)
-          , mEnable(aEnable)
-          , mMode(aMode)
-        {
-        }
-
-        void Run() override
-        {
-          mInputProcessing->UpdateNSSettingsIfNeeded(mEnable, mMode);
-        }
-
-      protected:
-        RefPtr<AudioInputProcessing> mInputProcessing;
-        bool mEnable;
-        webrtc::NsModes mMode;
-      };
-
-      if (graph) {
-        graph->AppendMessage(
-          MakeUnique<Message>(that->mInputProcessing, aEnable, aMode));
+          MakeUnique<Message>(that->mInputProcessing, aEnable, aLevel));
       }
 
       return NS_OK;
@@ -408,11 +416,12 @@ MediaEngineWebRTCMicrophoneSource::ApplySettings(const MediaEnginePrefs& aPrefs)
     "ApplySetting is to be called only after SetTrack has been called");
 
   if (mStream) {
-    UpdateAGCSettingsIfNeeded(aPrefs.mAgcOn,
-                              static_cast<AgcModes>(aPrefs.mAgc));
-    UpdateNSSettingsIfNeeded(aPrefs.mNoiseOn,
-                             static_cast<NsModes>(aPrefs.mNoise));
-    UpdateAECSettingsIfNeeded(aPrefs.mAecOn, static_cast<EcModes>(aPrefs.mAec));
+    UpdateAGCSettings(aPrefs.mAgcOn,
+                      static_cast<webrtc::GainControl::Mode>(aPrefs.mAgc));
+    UpdateNSSettings(aPrefs.mNoiseOn,
+                     static_cast<webrtc::NoiseSuppression::Level>(aPrefs.mNoise));
+    UpdateAECSettings(aPrefs.mAecOn, aPrefs.mUseAecMobile,
+                      static_cast<webrtc::EchoCancellation::SuppressionLevel>(aPrefs.mAec));
 
     UpdateAPMExtraOptions(mExtendedFilter, mDelayAgnostic);
   }
@@ -806,126 +815,79 @@ AudioInputProcessing::SetRequestedInputChannelCount(
   } while (0);
 
 void
-AudioInputProcessing::UpdateAECSettingsIfNeeded(bool aEnable, EcModes aMode)
+AudioInputProcessing::UpdateAECSettings(bool aEnable,
+                                        bool aUseAecMobile,
+                                        EchoCancellation::SuppressionLevel aLevel)
 {
-  using webrtc::EcModes;
-
-  EchoCancellation::SuppressionLevel level;
-
-  switch (aMode) {
-    case EcModes::kEcUnchanged:
-      level = mAudioProcessing->echo_cancellation()->suppression_level();
-      break;
-    case EcModes::kEcConference:
-      level = EchoCancellation::kHighSuppression;
-      break;
-    case EcModes::kEcDefault:
-      level = EchoCancellation::kModerateSuppression;
-      break;
-    case EcModes::kEcAec:
-      level = EchoCancellation::kModerateSuppression;
-      break;
-    case EcModes::kEcAecm:
-      // No suppression level to set for the mobile echo canceller
-      break;
-    default:
-      MOZ_LOG(GetMediaManagerLog(), LogLevel::Error, ("Bad EcMode value"));
-      MOZ_ASSERT_UNREACHABLE("Bad pref set in all.js or in about:config"
-                             " for the echo cancelation mode.");
-      // fall back to something sensible in release
-      level = EchoCancellation::kModerateSuppression;
-      break;
-  }
-
-  // AECm and AEC are mutually exclusive.
-  if (aMode == EcModes::kEcAecm) {
-    HANDLE_APM_ERROR(mAudioProcessing->echo_cancellation()->Enable(false));
+  if (aUseAecMobile) {
     HANDLE_APM_ERROR(mAudioProcessing->echo_control_mobile()->Enable(aEnable));
+    HANDLE_APM_ERROR(mAudioProcessing->echo_cancellation()->Enable(false));
   } else {
+    if (aLevel != EchoCancellation::SuppressionLevel::kLowSuppression &&
+        aLevel != EchoCancellation::SuppressionLevel::kModerateSuppression &&
+        aLevel != EchoCancellation::SuppressionLevel::kHighSuppression) {
+
+      MOZ_LOG(GetMediaManagerLog(),
+              LogLevel::Error,
+              ("Attempt to set invalid AEC suppression level %d",
+               static_cast<int>(aLevel)));
+
+      aLevel = EchoCancellation::SuppressionLevel::kModerateSuppression;
+    }
+
     HANDLE_APM_ERROR(mAudioProcessing->echo_control_mobile()->Enable(false));
     HANDLE_APM_ERROR(mAudioProcessing->echo_cancellation()->Enable(aEnable));
-    HANDLE_APM_ERROR(
-      mAudioProcessing->echo_cancellation()->set_suppression_level(level));
+    HANDLE_APM_ERROR(mAudioProcessing->echo_cancellation()->set_suppression_level(aLevel));
   }
 }
 
 void
-AudioInputProcessing::UpdateAGCSettingsIfNeeded(bool aEnable, AgcModes aMode)
+AudioInputProcessing::UpdateAGCSettings(bool aEnable,
+                                        GainControl::Mode aMode)
 {
+  if (aMode != GainControl::Mode::kAdaptiveAnalog &&
+      aMode != GainControl::Mode::kAdaptiveDigital &&
+      aMode != GainControl::Mode::kFixedDigital) {
+
+    MOZ_LOG(GetMediaManagerLog(),
+            LogLevel::Error,
+            ("Attempt to set invalid AGC mode %d", static_cast<int>(aMode)));
+
+    aMode = GainControl::Mode::kAdaptiveDigital;
+  }
+
 #if defined(WEBRTC_IOS) || defined(ATA) || defined(WEBRTC_ANDROID)
-  if (aMode == kAgcAdaptiveAnalog) {
+  if (aMode == GainControl::Mode::kAdaptiveAnalog) {
     MOZ_LOG(GetMediaManagerLog(),
             LogLevel::Error,
             ("Invalid AGC mode kAgcAdaptiveAnalog on mobile"));
     MOZ_ASSERT_UNREACHABLE("Bad pref set in all.js or in about:config"
                            " for the auto gain, on mobile.");
-    aMode = kAgcDefault;
+    aMode = GainControl::Mode::kDefaultAgcMode;
   }
 #endif
-  GainControl::Mode mode = kDefaultAgcMode;
-
-  switch (aMode) {
-    case AgcModes::kAgcDefault:
-      mode = kDefaultAgcMode;
-      break;
-    case AgcModes::kAgcUnchanged:
-      mode = mAudioProcessing->gain_control()->mode();
-      break;
-    case AgcModes::kAgcFixedDigital:
-      mode = GainControl::Mode::kFixedDigital;
-      break;
-    case AgcModes::kAgcAdaptiveAnalog:
-      mode = GainControl::Mode::kAdaptiveAnalog;
-      break;
-    case AgcModes::kAgcAdaptiveDigital:
-      mode = GainControl::Mode::kAdaptiveDigital;
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Bad pref set in all.js or in about:config"
-                             " for the auto gain.");
-      // This is a good fallback, it works regardless of the platform.
-      mode = GainControl::Mode::kAdaptiveDigital;
-      break;
-  }
-
-  HANDLE_APM_ERROR(mAudioProcessing->gain_control()->set_mode(mode));
+  HANDLE_APM_ERROR(mAudioProcessing->gain_control()->set_mode(aMode));
   HANDLE_APM_ERROR(mAudioProcessing->gain_control()->Enable(aEnable));
 }
 
 void
-AudioInputProcessing::UpdateNSSettingsIfNeeded(bool aEnable, NsModes aMode)
+AudioInputProcessing::UpdateNSSettings(bool aEnable,
+                                       webrtc::NoiseSuppression::Level aLevel)
 {
-  NoiseSuppression::Level nsLevel;
+  if (aLevel != NoiseSuppression::Level::kLow &&
+      aLevel != NoiseSuppression::Level::kModerate &&
+      aLevel != NoiseSuppression::Level::kHigh &&
+      aLevel != NoiseSuppression::Level::kVeryHigh) {
 
-  switch (aMode) {
-    case NsModes::kNsDefault:
-      nsLevel = kDefaultNsMode;
-      break;
-    case NsModes::kNsUnchanged:
-      nsLevel = mAudioProcessing->noise_suppression()->level();
-      break;
-    case NsModes::kNsConference:
-      nsLevel = NoiseSuppression::kHigh;
-      break;
-    case NsModes::kNsLowSuppression:
-      nsLevel = NoiseSuppression::kLow;
-      break;
-    case NsModes::kNsModerateSuppression:
-      nsLevel = NoiseSuppression::kModerate;
-      break;
-    case NsModes::kNsHighSuppression:
-      nsLevel = NoiseSuppression::kHigh;
-      break;
-    case NsModes::kNsVeryHighSuppression:
-      nsLevel = NoiseSuppression::kVeryHigh;
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Bad pref set in all.js or in about:config"
-                             " for the noise suppression.");
-      // Pick something sensible as a faillback in release.
-      nsLevel = NoiseSuppression::kModerate;
+    MOZ_LOG(GetMediaManagerLog(),
+            LogLevel::Error,
+            ("Attempt to set invalid noise suppression level %d",
+             static_cast<int>(aLevel)));
+
+      aLevel = NoiseSuppression::Level::kModerate;
   }
-  HANDLE_APM_ERROR(mAudioProcessing->noise_suppression()->set_level(nsLevel));
+
+  HANDLE_APM_ERROR(mAudioProcessing->noise_suppression()->set_level(aLevel));
   HANDLE_APM_ERROR(mAudioProcessing->noise_suppression()->Enable(aEnable));
 }
 
