@@ -41,6 +41,11 @@
 //! A '\0' char is interpreted as the end of the file. The use of this character
 //! in a prefs file is not recommended. Within string literals \x00 or \u0000
 //! can be used instead.
+//!
+//! The parser performs error recovery. On a syntax error, it will scan forward
+//! to the next ';' token and then continue parsing. If the syntax error occurs
+//! in the middle of a token, it will first finish obtaining the current token
+//! in an appropriate fashion.
 
 // This parser uses several important optimizations.
 //
@@ -117,6 +122,10 @@ type ErrorFn = unsafe extern "C" fn(msg: *const c_char);
 /// `buf` is a null-terminated string. `len` is its length, excluding the
 /// null terminator.
 ///
+/// `pref_fn` is called once for each successfully parsed pref.
+///
+/// `error_fn` is called once for each parse error detected.
+///
 /// Keep this in sync with the prefs_parser_parse() declaration in
 /// Preferences.cpp.
 #[no_mangle]
@@ -162,6 +171,13 @@ enum Token {
 
     // Malformed token.
     Error(&'static str),
+
+    // Malformed token at a particular line number. For use when
+    // Parser::line_num might not be the right line number when the error is
+    // reported. E.g. if a multi-line string has a bad escape sequence on the
+    // first line, we don't report the error until the string's end has been
+    // reached.
+    ErrorAtLine(&'static str, u32),
 }
 
 // We categorize every char by what action should be taken when it appears at
@@ -272,6 +288,7 @@ struct Parser<'t> {
     line_num: u32,      // Current line number within the text.
     pref_fn: PrefFn,    // Callback for processing each pref.
     error_fn: ErrorFn,  // Callback for parse errors.
+    has_errors: bool,   // Have we encountered errors?
 }
 
 // As described above, we use 0 to represent EOF.
@@ -290,6 +307,7 @@ impl<'t> Parser<'t> {
             line_num: 1,
             pref_fn: pref_fn,
             error_fn: error_fn,
+            has_errors: false,
         }
     }
 
@@ -299,55 +317,49 @@ impl<'t> Parser<'t> {
         let mut value_str = Vec::with_capacity(512); // For string pref values.
         let mut none_str  = Vec::with_capacity(0);   // For tokens that shouldn't be strings.
 
+        let mut token = self.get_token(&mut none_str);
+
+        // At the top of the loop we already have a token. In a valid input
+        // this will be either the first token of a new pref, or EOF.
         loop {
-            // Note: if you add error recovery here, be aware that the
-            // erroneous char may have been the text-ending EOF, in which case
-            // self.i will point one past the end of the text. You should check
-            // for that possibility before getting more chars.
-
-            // EOF?
-            let token = self.get_token(&mut none_str);
-            if token == Token::SingleChar(EOF) {
-                break;
-            }
-
             // <pref-spec>
             let (pref_value_kind, is_sticky) = match token {
-                Token::Pref => {
-                    (PrefValueKind::Default, false)
+                Token::Pref => (PrefValueKind::Default, false),
+                Token::StickyPref => (PrefValueKind::Default, true),
+                Token::UserPref => (PrefValueKind::User, false),
+                Token::SingleChar(EOF) => return !self.has_errors,
+                _ => {
+                    token = self.error_and_recover(
+                        token, "expected pref specifier at start of pref definition");
+                    continue;
                 }
-                Token::StickyPref => {
-                    (PrefValueKind::Default, true)
-                }
-                Token::UserPref => {
-                    (PrefValueKind::User, false)
-                }
-                _ => return self.error(token,
-                                       "expected pref specifier at start of pref definition")
             };
 
             // "("
-            let token = self.get_token(&mut none_str);
+            token = self.get_token(&mut none_str);
             if token != Token::SingleChar(b'(') {
-                return self.error(token, "expected '(' after pref specifier");
+                token = self.error_and_recover(token, "expected '(' after pref specifier");
+                continue;
             }
 
             // <pref-name>
-            let token = self.get_token(&mut name_str);
+            token = self.get_token(&mut name_str);
             let pref_name = if token == Token::String {
                 &name_str
             } else {
-                return self.error(token, "expected pref name after '('");
+                token = self.error_and_recover(token, "expected pref name after '('");
+                continue;
             };
 
             // ","
-            let token = self.get_token(&mut none_str);
+            token = self.get_token(&mut none_str);
             if token != Token::SingleChar(b',') {
-                return self.error(token, "expected ',' after pref name");
+                token = self.error_and_recover(token, "expected ',' after pref name");
+                continue;
             }
 
             // <pref-value>
-            let token = self.get_token(&mut value_str);
+            token = self.get_token(&mut value_str);
             let (pref_type, pref_value) = match token {
                 Token::True => {
                     (PrefType::Bool, PrefValue { bool_val: true })
@@ -365,12 +377,13 @@ impl<'t> Parser<'t> {
                     if u <= std::i32::MAX as u32 {
                         (PrefType::Int, PrefValue { int_val: u as i32 })
                     } else {
-                        return self.error(Token::Error("integer literal overflowed"), "");
+                        token = self.error_and_recover(
+                            Token::Error("integer literal overflowed"), "");
+                        continue;
                     }
-
                 }
                 Token::SingleChar(b'-') => {
-                    let token = self.get_token(&mut none_str);
+                    token = self.get_token(&mut none_str);
                     if let Token::Int(u) = token {
                         // Accept u <= 2147483648; anything larger will overflow i32 once negated.
                         if u <= std::i32::MAX as u32 {
@@ -378,63 +391,96 @@ impl<'t> Parser<'t> {
                         } else if u == std::i32::MAX as u32 + 1 {
                             (PrefType::Int, PrefValue { int_val: std::i32::MIN })
                         } else {
-                            return self.error(Token::Error("integer literal overflowed"), "");
+                            token = self.error_and_recover(
+                                Token::Error("integer literal overflowed"), "");
+                            continue;
                         }
                     } else {
-                        return self.error(token, "expected integer literal after '-'");
+                        token = self.error_and_recover(
+                            token, "expected integer literal after '-'");
+                        continue;
                     }
 
                 }
                 Token::SingleChar(b'+') => {
-                    let token = self.get_token(&mut none_str);
+                    token = self.get_token(&mut none_str);
                     if let Token::Int(u) = token {
                         // Accept u <= 2147483647; anything larger will overflow i32.
                         if u <= std::i32::MAX as u32 {
                             (PrefType::Int, PrefValue { int_val: u as i32 })
                         } else {
-                            return self.error(Token::Error("integer literal overflowed"), "");
+                            token = self.error_and_recover(
+                                Token::Error("integer literal overflowed"), "");
+                            continue;
                         }
                     } else {
-                        return self.error(token, "expected integer literal after '+'");
+                        token = self.error_and_recover(token, "expected integer literal after '+'");
+                        continue;
                     }
 
                 }
-                _ => return self.error(token, "expected pref value after ','")
+                _ => {
+                    token = self.error_and_recover(token, "expected pref value after ','");
+                    continue;
+                }
             };
 
             // ")"
-            let token = self.get_token(&mut none_str);
+            token = self.get_token(&mut none_str);
             if token != Token::SingleChar(b')') {
-                return self.error(token, "expected ')' after pref value");
+                token = self.error_and_recover(token, "expected ')' after pref value");
+                continue;
             }
 
             // ";"
-            let token = self.get_token(&mut none_str);
+            token = self.get_token(&mut none_str);
             if token != Token::SingleChar(b';') {
-                return self.error(token, "expected ';' after ')'");
+                token = self.error_and_recover(token, "expected ';' after ')'");
+                continue;
             }
 
             unsafe { (self.pref_fn)(pref_name.as_ptr() as *const c_char, pref_type, pref_value_kind,
                                     pref_value, is_sticky) };
-        }
 
-        true
+            token = self.get_token(&mut none_str);
+        }
     }
 
-    fn error(&self, token: Token, msg: &str) -> bool {
-        // If `token` is a Token::Error, it's a lexing error and the error
-        // message is within `token`. Otherwise, it's a parsing error and the
-        // error message is in `msg`.
-        let msg = if let Token::Error(token_msg) = token {
-            token_msg
-        } else {
-            msg
+    fn error_and_recover(&mut self, token: Token, msg: &str) -> Token {
+        self.has_errors = true;
+
+        // If `token` is a Token::{Error,ErrorAtLine}, it's a lexing error and
+        // the error message is within `token`. Otherwise, it's a parsing error
+        // and the error message is in `msg`.
+        let (msg, line_num) = match token {
+            Token::Error(token_msg) => (token_msg, self.line_num),
+            Token::ErrorAtLine(token_msg, line_num) => (token_msg, line_num),
+            _ => (msg, self.line_num),
         };
-        let msg = format!("{}:{}: prefs parse error: {}", self.path, self.line_num, msg);
+        let msg = format!("{}:{}: prefs parse error: {}", self.path, line_num, msg);
         let msg = std::ffi::CString::new(msg).unwrap();
         unsafe { (self.error_fn)(msg.as_ptr() as *const c_char) };
 
-        false
+        // "Panic-mode" recovery: consume tokens until one of the following
+        // occurs.
+        // - We hit a semicolon, whereupon we return the following token.
+        // - We hit EOF, whereupon we return EOF.
+        //
+        // For this to work, if the lexing functions hit EOF in an error case
+        // they must unget it so we can safely reget it here.
+        //
+        // If the starting token (passed in above) is EOF we must not get
+        // another token otherwise we will read past the end of `self.buf`.
+        let mut dummy_str = Vec::with_capacity(128);
+        let mut token = token;
+        loop {
+            match token {
+                Token::SingleChar(b';') => return self.get_token(&mut dummy_str),
+                Token::SingleChar(EOF) => return token,
+                _ => {}
+            }
+            token = self.get_token(&mut dummy_str);
+        }
     }
 
     #[inline(always)]
@@ -444,10 +490,11 @@ impl<'t> Parser<'t> {
         c
     }
 
-    // This function skips the bounds check. Using it at the hottest two call
-    // sites gives a ~15% parsing speed boost.
+    // This function skips the bounds check in non-optimized builds. Using it
+    // at the hottest two call sites gives a ~15% parsing speed boost.
     #[inline(always)]
     unsafe fn get_char_unchecked(&mut self) -> u8 {
+        debug_assert!(self.i < self.buf.len());
         let c = *self.buf.get_unchecked(self.i);
         self.i += 1;
         c
@@ -491,9 +538,7 @@ impl<'t> Parser<'t> {
                     break;
                 }
                 EOF => {
-                    // We must unget the EOF otherwise we'll read past it the
-                    // next time around the main loop in get_token(), violating
-                    // self.buf's bounds.
+                    // Unget EOF so subsequent calls to get_char() are safe.
                     self.unget_char();
                     break;
                 }
@@ -520,6 +565,8 @@ impl<'t> Parser<'t> {
                     self.match_char(b'\n');
                 }
                 EOF => {
+                    // Unget EOF so subsequent calls to get_char() are safe.
+                    self.unget_char();
                     return false
                 }
                 _ => continue
@@ -536,7 +583,11 @@ impl<'t> Parser<'t> {
                 c @ b'0'... b'9' => value += (c - b'0') as u16,
                 c @ b'A'...b'F' => value += (c - b'A') as u16 + 10,
                 c @ b'a'...b'f' => value += (c - b'a') as u16 + 10,
-                _ => return None
+                _ => {
+                    // Unget in case the char was a closing quote or EOF.
+                    self.unget_char();
+                    return None;
+                }
             }
         }
         Some(value)
@@ -620,24 +671,21 @@ impl<'t> Parser<'t> {
                     continue;
                 }
                 CharKind::Digit => {
-                    let mut value = (c - b'0') as u32;
+                    let mut value = Some((c - b'0') as u32);
                     loop {
                         let c = self.get_char();
                         match Parser::char_kind(c) {
                             CharKind::Digit => {
-                                fn add_digit(v: u32, c: u8) -> Option<u32> {
-                                    v.checked_mul(10)?.checked_add((c - b'0') as u32)
+                                fn add_digit(value: Option<u32>, c: u8) -> Option<u32> {
+                                    value?.checked_mul(10)?.checked_add((c - b'0') as u32)
                                 }
-                                if let Some(v) = add_digit(value, c) {
-                                    value = v;
-                                } else {
-                                    return Token::Error("integer literal overflowed");
-                                }
+                                value = add_digit(value, c);
                             }
                             CharKind::Keyword => {
-                                // Reject things like "123foo".
-                                return Token::Error(
-                                    "unexpected character in integer literal");
+                                // Reject things like "123foo". Error recovery
+                                // will retokenize from "foo" onward.
+                                self.unget_char();
+                                return Token::Error("unexpected character in integer literal");
                             }
                             _ => {
                                 self.unget_char();
@@ -645,7 +693,10 @@ impl<'t> Parser<'t> {
                             }
                         }
                     }
-                    return Token::Int(value);
+                    return match value {
+                        Some(v) => Token::Int(v),
+                        None => Token::Error("integer literal overflowed"),
+                    };
                 }
                 CharKind::Hash => {
                     self.match_single_line_comment();
@@ -656,8 +707,16 @@ impl<'t> Parser<'t> {
                     self.line_num += 1;
                     continue;
                 }
+                // Error recovery will retokenize from the next character.
                 _ => return Token::Error("unexpected character")
             }
+        }
+    }
+
+    fn string_error_token(&self, token: &mut Token, msg: &'static str) {
+        // We only want to capture the first tokenization error within a string.
+        if *token == Token::String {
+            *token = Token::ErrorAtLine(msg, self.line_num);
         }
     }
 
@@ -690,7 +749,12 @@ impl<'t> Parser<'t> {
 
         // There were special chars. Re-scan the string, filling in str_buf one
         // char at a time.
+        //
+        // On error, we change `token` to an error token and then keep going to
+        // the end of the string literal. `str_buf` won't be used in that case.
         self.i = start;
+        let mut token = Token::String;
+
         loop {
             let c = self.get_char();
             let c2 = if !Parser::is_special_string_char(c) {
@@ -712,10 +776,12 @@ impl<'t> Parser<'t> {
                             if value != 0 {
                                 value as u8
                             } else {
-                                return Token::Error("\\x00 is not allowed");
+                                self.string_error_token(&mut token, "\\x00 is not allowed");
+                                continue;
                             }
                         } else {
-                            return Token::Error("malformed \\x escape sequence");
+                            self.string_error_token(&mut token, "malformed \\x escape sequence");
+                            continue;
                         }
                     }
                     b'u' => {
@@ -729,28 +795,39 @@ impl<'t> Parser<'t> {
                                             // Found a valid low surrogate.
                                             utf16.push(lo);
                                         } else {
-                                            return Token::Error(
+                                            self.string_error_token(
+                                                &mut token,
                                                 "invalid low surrogate value after high surrogate");
+                                            continue;
                                         }
                                     }
                                 }
                                 if utf16.len() != 2 {
-                                    return Token::Error(
-                                        "expected low surrogate after high surrogate");
+                                    self.string_error_token(
+                                        &mut token, "expected low surrogate after high surrogate");
+                                    continue;
                                 }
                             } else if value == 0 {
-                                return Token::Error("\\u0000 is not allowed");
+                                self.string_error_token(&mut token, "\\u0000 is not allowed");
+                                continue;
                             }
 
                             // Insert the UTF-16 sequence as UTF-8.
                             let utf8 = String::from_utf16(&utf16).unwrap();
                             str_buf.extend(utf8.as_bytes());
                         } else {
-                            return Token::Error("malformed \\u escape sequence");
+                            self.string_error_token(&mut token, "malformed \\u escape sequence");
+                            continue;
                         }
                         continue; // We don't want to str_buf.push(c2) below.
                     }
-                    _ => return Token::Error("unexpected escape sequence character after '\\'")
+                    _ => {
+                        // Unget in case the char is an EOF.
+                        self.unget_char();
+                        self.string_error_token(
+                            &mut token, "unexpected escape sequence character after '\\'");
+                        continue;
+                    }
                 }
 
             } else if c == b'\n' {
@@ -767,7 +844,10 @@ impl<'t> Parser<'t> {
                 }
 
             } else if c == EOF {
-                return Token::Error("unterminated string literal");
+                // Unget EOF so subsequent calls to get_char() are safe.
+                self.unget_char();
+                self.string_error_token(&mut token, "unterminated string literal");
+                break;
 
             } else {
                 // This case is only hit for the non-closing quote char.
@@ -777,6 +857,7 @@ impl<'t> Parser<'t> {
             str_buf.push(c2);
         }
         str_buf.push(b'\0');
-        return Token::String;
+
+        token
     }
 }
