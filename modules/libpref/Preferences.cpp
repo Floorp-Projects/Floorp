@@ -1132,13 +1132,13 @@ TestParseErrorHandlePref(const char* aPrefName,
 {
 }
 
-static char* gTestParseErrorMsg;
+static nsCString gTestParseErrorMsgs;
 
 static void
 TestParseErrorHandleError(const char* aMsg)
 {
-  // aMsg's lifetime is shorter than we need, so duplicate it.
-  gTestParseErrorMsg = moz_xstrdup(aMsg);
+  gTestParseErrorMsgs.Append(aMsg);
+  gTestParseErrorMsgs.Append('\n');
 }
 
 // Keep this in sync with the declaration in test/gtest/Parser.cpp.
@@ -1151,10 +1151,10 @@ TestParseError(const char* aText, nsCString& aErrorMsg)
                      TestParseErrorHandlePref,
                      TestParseErrorHandleError);
 
-  // Copy the duplicated error message into the outparam, then free it.
-  aErrorMsg.Assign(gTestParseErrorMsg);
-  free(gTestParseErrorMsg);
-  gTestParseErrorMsg = nullptr;
+  // Copy the error messages into the outparam, then clear them from
+  // gTestParseErrorMsgs.
+  aErrorMsg.Assign(gTestParseErrorMsgs);
+  gTestParseErrorMsgs.Truncate();
 }
 
 void
