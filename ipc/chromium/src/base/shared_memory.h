@@ -60,24 +60,9 @@ class SharedMemory {
   // Return invalid handle (see comment above for exact definition).
   static SharedMemoryHandle NULLHandle();
 
-  // Creates or opens a shared memory segment based on a name.
-  // If read_only is true, opens the memory as read-only.
-  // If open_existing is true, and the shared memory already exists,
-  // opens the existing shared memory and ignores the size parameter.
-  // If name is the empty string, use a unique name.
+  // Creates a shared memory segment.
   // Returns true on success, false on failure.
-  bool Create(const std::string& name, bool read_only, bool open_existing,
-              size_t size);
-
-  // Deletes resources associated with a shared memory segment based on name.
-  // Not all platforms require this call.
-  bool Delete(const std::wstring& name);
-
-  // Opens a shared memory segment based on a name.
-  // If read_only is true, opens for read-only access.
-  // If name is the empty string, use a unique name.
-  // Returns true on success, false on failure.
-  bool Open(const std::wstring& name, bool read_only);
+  bool Create(size_t size);
 
   // Maps the shared memory into the caller's address space.
   // Returns true on success, false otherwise.  The memory address
@@ -140,17 +125,11 @@ class SharedMemory {
   }
 
  private:
-#if defined(OS_POSIX)
-  bool CreateOrOpen(const std::wstring &name, int posix_flags, size_t size);
-  bool FilenameForMemoryName(const std::wstring &memname,
-                             std::wstring *filename);
-#endif
   bool ShareToProcessCommon(ProcessId target_pid,
                             SharedMemoryHandle* new_handle,
                             bool close_self);
 
 #if defined(OS_WIN)
-  std::wstring       name_;
   HANDLE             mapped_file_;
 #elif defined(OS_POSIX)
   int                mapped_file_;

@@ -42,45 +42,16 @@ SharedMemoryHandle SharedMemory::NULLHandle() {
   return NULL;
 }
 
-bool SharedMemory::Create(const std::string &cname, bool read_only,
-                          bool open_existing, size_t size) {
+bool SharedMemory::Create(size_t size) {
   DCHECK(mapped_file_ == NULL);
-  std::wstring name = UTF8ToWide(cname);
-  name_ = name;
-  read_only_ = read_only;
+  read_only_ = false;
   mapped_file_ = CreateFileMapping(INVALID_HANDLE_VALUE, NULL,
-      read_only_ ? PAGE_READONLY : PAGE_READWRITE, 0, static_cast<DWORD>(size),
-      name.empty() ? NULL : name.c_str());
+      PAGE_READWRITE, 0, static_cast<DWORD>(size), NULL);
   if (!mapped_file_)
     return false;
 
-  // Check if the shared memory pre-exists.
-  if (GetLastError() == ERROR_ALREADY_EXISTS && !open_existing) {
-    Close();
-    return false;
-  }
   max_size_ = size;
   return true;
-}
-
-bool SharedMemory::Delete(const std::wstring& name) {
-  // intentionally empty -- there is nothing for us to do on Windows.
-  return true;
-}
-
-bool SharedMemory::Open(const std::wstring &name, bool read_only) {
-  DCHECK(mapped_file_ == NULL);
-
-  name_ = name;
-  read_only_ = read_only;
-  mapped_file_ = OpenFileMapping(
-      read_only_ ? FILE_MAP_READ : FILE_MAP_ALL_ACCESS, false,
-      name.empty() ? NULL : name.c_str());
-  if (mapped_file_ != NULL) {
-    // Note: size_ is not set in this case.
-    return true;
-  }
-  return false;
 }
 
 bool SharedMemory::Map(size_t bytes) {

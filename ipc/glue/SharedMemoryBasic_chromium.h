@@ -37,7 +37,7 @@ public:
 
   virtual bool Create(size_t aNbytes) override
   {
-    bool ok = mSharedMemory.Create("", false, false, aNbytes);
+    bool ok = mSharedMemory.Create(aNbytes);
     if (ok) {
       Created(aNbytes);
     }
