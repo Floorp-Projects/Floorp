@@ -5077,9 +5077,6 @@ CodeGenerator::visitCallDirectEval(LCallDirectEval* lir)
 void
 CodeGenerator::generateArgumentsChecks(bool bailout)
 {
-    // Registers safe for use before generatePrologue().
-    static const uint32_t EntryTempMask = Registers::TempMask & ~(1 << OsrFrameReg.code());
-
     // This function can be used the normal way to check the argument types,
     // before entering the function and bailout when arguments don't match.
     // For debug purpose, this is can also be used to force/check that the
@@ -5089,7 +5086,7 @@ CodeGenerator::generateArgumentsChecks(bool bailout)
     MResumePoint* rp = mir.entryResumePoint();
 
     // No registers are allocated yet, so it's safe to grab anything.
-    Register temp = AllocatableGeneralRegisterSet(EntryTempMask).getAny();
+    Register temp = AllocatableGeneralRegisterSet(GeneralRegisterSet::All()).getAny();
 
     const CompileInfo& info = gen->info();
 
