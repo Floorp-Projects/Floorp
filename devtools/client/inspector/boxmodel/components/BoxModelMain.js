@@ -307,34 +307,27 @@ class BoxModelMain extends PureComponent {
     switch (keyCode) {
       case KeyCodes.DOM_VK_RETURN:
         if (!isEditable) {
-          this.setState({ focusable: true }, () => {
-            let editableBox = this.layouts[level].get(keyCode);
-            if (editableBox) {
-              editableBox.boxModelEditable.focus();
-            }
-          });
+          this.setState({ focusable: true });
+          let editableBox = this.layouts[level].get(keyCode);
+          if (editableBox) {
+            editableBox.boxModelEditable.focus();
+          }
         }
         break;
       case KeyCodes.DOM_VK_DOWN:
       case KeyCodes.DOM_VK_UP:
         if (!editingMode) {
           event.preventDefault();
-          event.stopPropagation();
-          this.setState({ focusable: false }, () => {
-            let nextLayout = this.layouts[level].get(keyCode);
+          this.setState({ focusable: false });
 
-            if (!nextLayout) {
-              return;
-            }
+          let nextLayout = this.layouts[level].get(keyCode);
+          this.setAriaActive(nextLayout);
 
-            this.setAriaActive(nextLayout);
+          if (target && target._editable) {
+            target.blur();
+          }
 
-            if (target && target._editable) {
-              target.blur();
-            }
-
-            this.props.boxModelContainer.focus();
-          });
+          this.props.boxModelContainer.focus();
         }
         break;
       case KeyCodes.DOM_VK_TAB:
@@ -347,9 +340,8 @@ class BoxModelMain extends PureComponent {
         if (target._editable) {
           event.preventDefault();
           event.stopPropagation();
-          this.setState({ focusable: false }, () => {
-            this.props.boxModelContainer.focus();
-          });
+          this.setState({ focusable: false });
+          this.props.boxModelContainer.focus();
         }
         break;
       default:
