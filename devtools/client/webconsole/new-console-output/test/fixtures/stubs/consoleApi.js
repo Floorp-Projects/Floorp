@@ -1122,6 +1122,38 @@ stubPreparedMessages.set(`console.log(%cfoobar)`, new ConsoleMessage({
   "indent": 0
 }));
 
+stubPreparedMessages.set(`console.log("%cHello%c|%cWorld")`, new ConsoleMessage({
+  "id": "1",
+  "allowRepeating": true,
+  "source": "console-api",
+  "timeStamp": 1518681614352,
+  "type": "log",
+  "helperType": null,
+  "level": "log",
+  "messageText": null,
+  "parameters": [
+    "Hello",
+    "|",
+    "World"
+  ],
+  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html\",\"line\":2,\"column\":3},\"groupId\":null,\"indent\":0,\"level\":\"log\",\"messageText\":null,\"parameters\":[\"Hello\",\"|\",\"World\"],\"source\":\"console-api\",\"type\":\"log\",\"userProvidedStyles\":[\"color:red\",\"\",\"color: blue\"]}",
+  "stacktrace": null,
+  "frame": {
+    "source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
+    "line": 2,
+    "column": 3
+  },
+  "groupId": null,
+  "exceptionDocURL": null,
+  "userProvidedStyles": [
+    "color:red",
+    "",
+    "color: blue"
+  ],
+  "notes": null,
+  "indent": 0
+}));
+
 stubPreparedMessages.set(`console.group(%cfoo%cbar)`, new ConsoleMessage({
   "id": "1",
   "allowRepeating": true,
@@ -2582,6 +2614,37 @@ stubPackets.set(`console.log(%cfoobar)`, {
       "color:red; line-height: 1.5; background:url('http://example.com/test')"
     ],
     "timeStamp": 1502884924883,
+    "timer": null,
+    "workerType": "none",
+    "category": "webdev"
+  }
+});
+
+stubPackets.set(`console.log("%cHello%c|%cWorld")`, {
+  "from": "server1.conn0.child1/consoleActor2",
+  "type": "consoleAPICall",
+  "message": {
+    "addonId": "",
+    "arguments": [
+      "Hello",
+      "|",
+      "World"
+    ],
+    "columnNumber": 3,
+    "counter": null,
+    "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
+    "functionName": "triggerPacket",
+    "groupName": "",
+    "level": "log",
+    "lineNumber": 2,
+    "prefix": "",
+    "private": false,
+    "styles": [
+      "color:red",
+      "",
+      "color: blue"
+    ],
+    "timeStamp": 1518681614352,
     "timer": null,
     "workerType": "none",
     "category": "webdev"

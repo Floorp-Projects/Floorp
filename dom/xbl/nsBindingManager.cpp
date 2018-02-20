@@ -32,6 +32,9 @@
 #include "nsXBLPrototypeBinding.h"
 #include "nsXBLDocumentInfo.h"
 #include "mozilla/dom/XBLChildrenElement.h"
+#ifdef MOZ_XUL
+#include "nsXULPrototypeCache.h"
+#endif
 
 #ifdef MOZ_OLD_STYLE
 #include "nsIStyleRuleProcessor.h"
@@ -1130,8 +1133,21 @@ nsBindingManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 
   if (mDocumentTable) {
     n += mDocumentTable->ShallowSizeOfIncludingThis(aMallocSizeOf);
+#ifdef MOZ_XUL
+    nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
+    StyleBackendType backendType = mDocument->GetStyleBackendType();
+#endif
     for (auto iter = mDocumentTable->Iter(); !iter.Done(); iter.Next()) {
       nsXBLDocumentInfo* docInfo = iter.UserData();
+#ifdef MOZ_XUL
+      nsXBLDocumentInfo* cachedInfo =
+        cache->GetXBLDocumentInfo(iter.Key(), backendType);
+      if (cachedInfo == docInfo) {
+        // If this binding has been cached, skip it since it can be
+        // reused by other documents.
+        continue;
+      }
+#endif
       n += docInfo->SizeOfIncludingThis(aMallocSizeOf);
     }
   }

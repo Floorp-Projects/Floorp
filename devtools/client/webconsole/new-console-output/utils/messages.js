@@ -182,13 +182,17 @@ function transformNavigationMessagePacket(packet) {
 }
 
 function transformLogMessagePacket(packet) {
-  let { message } = packet;
+  let {
+    message,
+    timeStamp,
+  } = packet;
+
   return new ConsoleMessage({
     source: MESSAGE_SOURCE.CONSOLE_API,
     type: MESSAGE_TYPE.LOG,
     level: MESSAGE_LEVEL.LOG,
-    messageText: message.message,
-    timeStamp: message.timeStamp
+    messageText: message,
+    timeStamp,
   });
 }
 
@@ -318,8 +322,10 @@ function convertCachedPacket(packet) {
     convertPacket.networkEvent = packet;
     convertPacket.type = "networkEvent";
   } else if (packet._type === "LogMessage") {
-    convertPacket.message = packet;
-    convertPacket.type = "logMessage";
+    convertPacket = {
+      ...packet,
+      type: "logMessage"
+    };
   } else {
     throw new Error("Unexpected packet type: " + packet._type);
   }

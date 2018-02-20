@@ -152,11 +152,14 @@ function formatReps(options = {}) {
       .reduce((arr, v, i) => {
         // We need to interleave a space if we are not on the last element AND
         // if we are not between 2 messages with user provided style.
-        const needSpace = i + 1 < parameters.length &&
-          (!userProvidedStyles || !userProvidedStyles[i] || !userProvidedStyles[i + 1]);
+        const needSpace = i + 1 < parameters.length && (
+          !userProvidedStyles
+          || userProvidedStyles[i] === undefined
+          || userProvidedStyles[i + 1] === undefined
+        );
 
         return needSpace
-          ? arr.concat(v, dom.span({}, " "))
+          ? arr.concat(v, " ")
           : arr.concat(v);
       }, [])
   );
