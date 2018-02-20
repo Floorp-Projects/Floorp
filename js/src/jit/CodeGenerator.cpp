@@ -4305,6 +4305,14 @@ CodeGenerator::visitCallNative(LCallNative* call)
     // Load the outparam vp[0] into output register(s).
     masm.loadValue(Address(masm.getStackPointer(), NativeExitFrameLayout::offsetOfResult()), JSReturnOperand);
 
+    // Until C++ code is instrumented against Spectre, prevent speculative
+    // execution from returning any private data.
+    if (JitOptions.spectreJitToCxxCalls && !call->mir()->ignoresReturnValue() &&
+        call->mir()->hasLiveDefUses())
+    {
+        masm.speculationBarrier();
+    }
+
     // The next instruction is removing the footer of the exit frame, so there
     // is no need for leaveFakeExitFrame.
 
@@ -4442,6 +4450,11 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative* call)
         masm.loadValue(Address(masm.getStackPointer(), IonDOMMethodExitFrameLayout::offsetOfResult()),
                        JSReturnOperand);
     }
+
+    // Until C++ code is instrumented against Spectre, prevent speculative
+    // execution from returning any private data.
+    if (JitOptions.spectreJitToCxxCalls && call->mir()->hasLiveDefUses())
+        masm.speculationBarrier();
 
     // The next instruction is removing the footer of the exit frame, so there
     // is no need for leaveFakeExitFrame.
@@ -11993,6 +12006,12 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty* ins)
         masm.loadValue(Address(masm.getStackPointer(), IonDOMExitFrameLayout::offsetOfResult()),
                        JSReturnOperand);
     }
+
+    // Until C++ code is instrumented against Spectre, prevent speculative
+    // execution from returning any private data.
+    if (JitOptions.spectreJitToCxxCalls && ins->mir()->hasLiveDefUses())
+        masm.speculationBarrier();
+
     masm.adjustStack(IonDOMExitFrameLayout::Size());
 
     masm.bind(&haveValue);

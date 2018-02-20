@@ -409,6 +409,11 @@ void Assembler::nop(Instruction* at) {
 }
 
 
+void Assembler::csdb(Instruction* at) {
+  hint(at, CSDB);
+}
+
+
 BufferOffset Assembler::Logical(const Register& rd, const Register& rn,
                                 const Operand operand, LogicalOp op)
 {
