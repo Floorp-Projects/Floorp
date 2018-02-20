@@ -1054,10 +1054,6 @@ html .arrow.expanded svg {
   vertical-align: sub;
 }
 
-.theme-dark .webpack {
-  opacity: 0.5;
-}
-
 .function svg {
   height: 10px;
   width: 15px;
@@ -1075,12 +1071,18 @@ html .arrow.expanded svg {
   vertical-align: sub;
 }
 
-.source-icon svg {
-  fill: var(--theme-body-color);
+.angular,
+.webpack {
+  opacity: 0.8;
 }
 
-.theme-dark .angular {
+.theme-dark .angular,
+.theme-dark .webpack {
   opacity: 0.5;
+}
+
+.source-icon svg {
+  fill: var(--theme-comment);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1440,8 +1442,10 @@ html[dir="rtl"] .arrow svg,
 .project-text-search .no-result-msg {
   color: var(--theme-body-color-inactive);
   font-size: 24px;
-  padding: 4px;
-  word-break: break-all;
+  padding: 4px 15px;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .project-text-search .file-result {
@@ -1637,7 +1641,7 @@ html[dir="rtl"] .arrow svg,
 }
 
 .theme-dark .sources-list .managed-tree .tree .node:not(.focused) img.blackBox {
-  background-color: var(--theme-content-color3);
+  background-color: var(--theme-comment);
 }
 
 .theme-dark .sources-list .managed-tree .tree .node img.blackBox {
@@ -2448,7 +2452,7 @@ html .toggle-button.end.vertical svg {
 }
 
 .theme-dark .popover .preview-popup .arrow svg {
-  fill: var(--theme-content-color3);
+  fill: var(--theme-comment);
 }
 
 .tooltip {
@@ -2504,7 +2508,7 @@ html .toggle-button.end.vertical svg {
 
 .add-to-expression-bar .expression-to-save-button {
   font-size: 14px;
-  color: var(--theme-content-color3);
+  color: var(--theme-comment);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2575,7 +2579,6 @@ html .toggle-button.end.vertical svg {
   background: var(--theme-toolbar-background);
   border-top: 1px solid var(--theme-splitter-color);
   border-bottom: 1px solid var(--theme-splitter-color);
-  padding-right: 16px;
 }
 
 .conditional-breakpoint-panel .prompt {
@@ -2622,10 +2625,10 @@ html .toggle-button.end.vertical svg {
 
 .editor-wrapper .CodeMirror-linewidget {
   margin-right: -7px;
-  overflow: visible;
+  overflow: hidden;
 }
 
-.editor-wrapper .CodeMirror-sizer {
+.editor-wrapper {
   min-width: 0 !important;
 }
 
@@ -2759,7 +2762,7 @@ html[dir="rtl"] .editor-mount {
 }
 
 .theme-dark .editor-wrapper .CodeMirror-line .cm-comment {
-  color: var(--theme-content-color3);
+  color: var(--theme-comment);
 }
 
 .debug-expression {
@@ -2811,7 +2814,7 @@ debug-expression-error {
 
 @keyframes fade-highlight-out-dark {
   0% {
-    background-color: var(--theme-content-color3);
+    background-color: var(--theme-comment);
   }
   100% {
     background-color: transparent;
@@ -2901,7 +2904,7 @@ html .breakpoints-list .breakpoint.paused {
 }
 
 .breakpoints-list .breakpoint.disabled .breakpoint-label {
-  color: var(--theme-content-color3);
+  color: var(--theme-comment);
   transition: color 0.5s linear;
 }
 
@@ -3233,12 +3236,18 @@ html .breakpoints-list .breakpoint.paused {
   color: white;
 }
 
+.show-more-container {
+  display: flex;
+}
+
 .show-more {
   text-align: center;
   padding: 8px 0px;
   margin: 7px 10px 7px 7px;
   border: 1px solid var(--theme-splitter-color);
   background-color: var(--theme-tab-toolbar-background);
+  width: 100%;
+  font-size: inherit;
 }
 
 .show-more:hover {
@@ -3585,7 +3594,7 @@ html[dir="rtl"] .dropdown {
 }
 
 .dropdown-button {
-  color: var(--theme-content-color3);
+  color: var(--theme-comment);
   background: none;
   border: none;
   padding: 0;
@@ -3702,6 +3711,14 @@ img.ignore-exceptions {
   opacity: 0.6;
 }
 
+.object-node {
+  padding-left: 4px;
+}
+
+html[dir="rtl"] .object-node {
+  padding-right: 4px;
+}
+
 .object-label {
   color: var(--theme-highlight-blue);
 }
@@ -3723,10 +3740,6 @@ img.ignore-exceptions {
 
 .scopes-pane {
   overflow: auto;
-}
-
-.scopes-list {
-  padding-inline-start: 4px;
 }
 
 .scopes-list .tree:focus {
@@ -3891,7 +3904,7 @@ html .welcomebox .toggle-button-end.collapsed {
   padding: 4px;
   margin-top: 4px;
   margin-left: 2px;
-  fill: var(--theme-content-color3);
+  fill: var(--theme-comment);
   transition: 0.1s ease;
   align-self: center;
 }

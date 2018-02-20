@@ -108,7 +108,7 @@ function getDOMWindow(aChannel) {
   var requestor = aChannel.notificationCallbacks ?
                   aChannel.notificationCallbacks :
                   aChannel.loadGroup.notificationCallbacks;
-  var win = requestor.getInterface(Components.interfaces.nsIDOMWindow);
+  var win = requestor.getInterface(Ci.nsIDOMWindow);
   return win;
 }
 

@@ -962,7 +962,10 @@ def build_generic_worker_payload(config, task, task_def):
         'osGroups': worker.get('os-groups', []),
     }
 
-    # needs-sccache is handled in mozharness_on_windows
+    if task.get('needs-sccache'):
+        worker['env']['USE_SCCACHE'] = '1'
+    else:
+        worker['env']['SCCACHE_DISABLE'] = '1'
 
     # currently only support one feature (chain of trust) but this will likely grow
     features = {}
