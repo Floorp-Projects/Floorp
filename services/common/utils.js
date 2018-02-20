@@ -134,19 +134,6 @@ this.CommonUtils = {
   },
 
   /**
-   * Return a promise resolving on some later tick.
-   *
-   * This a wrapper around Promise.resolve() that prevents stack
-   * accumulation and prevents callers from accidentally relying on
-   * same-tick promise resolution.
-   */
-  laterTickResolvingPromise(value) {
-    return new Promise(resolve => {
-      this.nextTick(() => resolve(value));
-    });
-  },
-
-  /**
    * Return a timer that is scheduled to call the callback after waiting the
    * provided time or as soon as possible. The timer will be set as a property
    * of the provided object with the given timer name.
