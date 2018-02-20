@@ -1115,12 +1115,12 @@ public:
 
     Item<Iterator> end() { return Item<Iterator>(this, nullptr); }
 
-    arena_t* Next()
+    Tree::TreeNode* Next()
     {
-      arena_t* result = Tree::Iterator::Next();
+      Tree::TreeNode* result = Tree::Iterator::Next();
       if (!result && mNextTree) {
         new (this) Iterator(mNextTree, nullptr);
-        result = *Tree::Iterator::begin();
+        result = reinterpret_cast<Tree::TreeNode*>(*Tree::Iterator::begin());
       }
       return result;
     }
