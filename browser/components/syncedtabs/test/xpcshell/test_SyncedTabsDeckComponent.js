@@ -165,7 +165,7 @@ add_task(async function testPanelStatus() {
 
   SyncedTabsMock.loginFailed = true;
   result = await component.getPanelStatus();
-  Assert.equal(result, component.PANELS.NOT_AUTHED_INFO);
+  Assert.equal(result, component.PANELS.LOGIN_FAILED);
   SyncedTabsMock.loginFailed = false;
 
   SyncedTabsMock.isConfiguredToSyncTabs = false;

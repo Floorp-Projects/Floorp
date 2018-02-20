@@ -111,6 +111,17 @@ console.log(
 );
 `});
 
+consoleApi.set('console.log("%cHello%c|%cWorld")', {
+  keys: ['console.log("%cHello%c|%cWorld")'],
+  code: `
+  console.log(
+    "%cHello%c|%cWorld",
+    "color:red",
+    "",
+    "color: blue"
+  );
+`});
+
 consoleApi.set("console.group(%cfoo%cbar)", {
   keys: ["console.group(%cfoo%cbar)", "console.groupEnd(%cfoo%cbar)"],
   code: `
