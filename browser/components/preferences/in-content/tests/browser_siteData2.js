@@ -112,7 +112,7 @@ add_task(async function() {
   await openSiteDataSettingsDialog();
   assertAllSitesNotListed(win);
 
-  mockSiteDataManager.unregister();
+  await mockSiteDataManager.unregister();
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   function removeAllSitesOneByOne() {
@@ -224,7 +224,7 @@ add_task(async function() {
   await openSiteDataSettingsDialog();
   assertSitesListed(doc, fakeHosts.slice(2));
 
-  mockSiteDataManager.unregister();
+  await mockSiteDataManager.unregister();
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   function removeSelectedSite(hosts) {
@@ -300,7 +300,7 @@ add_task(async function() {
   await openSiteDataSettingsDialog();
   assertSitesListed(doc, fakeHosts.filter(host => !host.includes("xyz")));
 
-  mockSiteDataManager.unregister();
+  await mockSiteDataManager.unregister();
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -358,6 +358,6 @@ add_task(async function() {
   await openSiteDataSettingsDialog();
   assertAllSitesNotListed(win);
 
-  mockSiteDataManager.unregister();
+  await mockSiteDataManager.unregister();
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
