@@ -190,13 +190,17 @@ UiaHookProc(int aCode, WPARAM aWParam, LPARAM aLParam)
       Maybe<bool> shouldCallNextHook =
         a11y::Compatibility::OnUIAMessage(cwp->wParam, cwp->lParam);
       if (shouldCallNextHook.isSome()) {
-        // We've got an instantiator, disconnect this hook.
-        if (::UnhookWindowsHookEx(gUiaHook)) {
-          gUiaHook = nullptr;
+        // We've got an instantiator.
+        if (!shouldCallNextHook.value()) {
+          // We're blocking this instantiation. We need to keep this hook set
+          // so that we can catch any future instantiation attempts.
+          return 0;
         }
 
-        if (!shouldCallNextHook.value()) {
-          return 0;
+        // We're allowing the instantiator to proceed, so this hook is no longer
+        // needed.
+        if (::UnhookWindowsHookEx(gUiaHook)) {
+          gUiaHook = nullptr;
         }
       } else {
         // Our hook might be firing after UIA; let's try reinstalling ourselves.
