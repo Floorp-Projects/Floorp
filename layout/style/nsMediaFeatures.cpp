@@ -87,22 +87,11 @@ const OperatingSystemVersionInfo kOsVersionStrings[] = {
 };
 #endif
 
-static nsPresContext*
-GetPresContext(nsIDocument* aDocument)
-{
-  nsIPresShell* presShell = aDocument->GetShell();
-  if (!presShell) {
-    return nullptr;
-  }
-
-  return presShell->GetPresContext();
-}
-
 // A helper for four features below
 static nsSize
 GetSize(nsIDocument* aDocument)
 {
-  nsPresContext* pc = GetPresContext(aDocument);
+  nsPresContext* pc = aDocument->GetPresContext();
 
   // Per spec, return a 0x0 viewport if we're not being rendered. See:
   //
@@ -158,7 +147,7 @@ GetDeviceSize(nsIDocument* aDocument)
     return GetSize(aDocument);
   }
 
-  nsPresContext* pc = GetPresContext(aDocument);
+  nsPresContext* pc = aDocument->GetPresContext();
   // NOTE(emilio): We should probably figure out how to return an appropriate
   // device size here, though in a multi-screen world that makes no sense
   // really.
@@ -252,7 +241,7 @@ GetDeviceAspectRatio(nsIDocument* aDocument, const nsMediaFeature*,
 static nsDeviceContext*
 GetDeviceContextFor(nsIDocument* aDocument)
 {
-  nsPresContext* pc = GetPresContext(aDocument);
+  nsPresContext* pc = aDocument->GetPresContext();
   if (!pc) {
     return nullptr;
   }

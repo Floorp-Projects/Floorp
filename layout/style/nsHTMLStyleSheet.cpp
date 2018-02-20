@@ -510,8 +510,7 @@ nsHTMLStyleSheet::ImplLinkColorSetter(
     return NS_OK;
   }
 
-  RestyleManager* restyle =
-    mDocument->GetShell()->GetPresContext()->RestyleManager();
+  RestyleManager* restyle = mDocument->GetPresContext()->RestyleManager();
 
   if (restyle->IsServo()) {
     MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal());

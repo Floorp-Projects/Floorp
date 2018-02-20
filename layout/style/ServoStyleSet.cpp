@@ -124,12 +124,7 @@ ServoStyleSet::GetPresContext()
     return nullptr;
   }
 
-  auto* shell = mDocument->GetShell();
-  if (!shell) {
-    return nullptr;
-  }
-
-  return shell->GetPresContext();
+  return mDocument->GetPresContext();
 }
 
 void

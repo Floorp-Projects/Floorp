@@ -907,10 +907,9 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
   mAnimationManager = new nsAnimationManager(this);
 
   if (mDocument->GetDisplayDocument()) {
-    NS_ASSERTION(mDocument->GetDisplayDocument()->GetShell() &&
-                 mDocument->GetDisplayDocument()->GetShell()->GetPresContext(),
+    NS_ASSERTION(mDocument->GetDisplayDocument()->GetPresContext(),
                  "Why are we being initialized?");
-    mRefreshDriver = mDocument->GetDisplayDocument()->GetShell()->
+    mRefreshDriver = mDocument->GetDisplayDocument()->
       GetPresContext()->RefreshDriver();
   } else {
     nsIDocument* parent = mDocument->GetParentDocument();
@@ -921,10 +920,7 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
     NS_ASSERTION(!parent || mDocument->IsStaticDocument() || parent->GetShell(),
                  "How did we end up with a presshell if our parent doesn't "
                  "have one?");
-    if (parent && parent->GetShell()) {
-      NS_ASSERTION(parent->GetShell()->GetPresContext(),
-                   "How did we get a presshell?");
-
+    if (parent && parent->GetPresContext()) {
       // We don't have our container set yet at this point
       nsCOMPtr<nsIDocShellTreeItem> ourItem = mDocument->GetDocShell();
       if (ourItem) {
@@ -937,7 +933,7 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
               !containingElement->
                 HasAttr(kNameSpaceID_None,
                         nsGkAtoms::forceOwnRefreshDriver)) {
-            mRefreshDriver = parent->GetShell()->GetPresContext()->RefreshDriver();
+            mRefreshDriver = parent->GetPresContext()->RefreshDriver();
           }
         }
       }
@@ -1961,17 +1957,14 @@ nsPresContext::UIResolutionChangedSync()
 nsPresContext::UIResolutionChangedSubdocumentCallback(nsIDocument* aDocument,
                                                       void* aData)
 {
-  nsIPresShell* shell = aDocument->GetShell();
-  if (shell) {
-    nsPresContext* pc = shell->GetPresContext();
-    if (pc) {
-      // For subdocuments, we want to apply the parent's scale, because there
-      // are cases where the subdoc's device context is connected to a widget
-      // that has an out-of-date resolution (it's on a different screen, but
-      // currently hidden, and will not be updated until shown): bug 1249279.
-      double scale = *static_cast<double*>(aData);
-      pc->UIResolutionChangedInternalScale(scale);
-    }
+  nsPresContext* pc = aDocument->GetPresContext();
+  if (pc) {
+    // For subdocuments, we want to apply the parent's scale, because there
+    // are cases where the subdoc's device context is connected to a widget
+    // that has an out-of-date resolution (it's on a different screen, but
+    // currently hidden, and will not be updated until shown): bug 1249279.
+    double scale = *static_cast<double*>(aData);
+    pc->UIResolutionChangedInternalScale(scale);
   }
   return true;
 }
@@ -2122,10 +2115,8 @@ static bool
 MediaFeatureValuesChangedAllDocumentsCallback(nsIDocument* aDocument, void* aChange)
 {
   auto* change = static_cast<const MediaFeatureChange*>(aChange);
-  if (nsIPresShell* shell = aDocument->GetShell()) {
-    if (nsPresContext* pc = shell->GetPresContext()) {
-      pc->MediaFeatureValuesChangedAllDocuments(*change);
-    }
+  if (nsPresContext* pc = aDocument->GetPresContext()) {
+    pc->MediaFeatureValuesChangedAllDocuments(*change);
   }
   return true;
 }
@@ -2494,16 +2485,13 @@ static bool
 MayHavePaintEventListenerSubdocumentCallback(nsIDocument* aDocument, void* aData)
 {
   bool *result = static_cast<bool*>(aData);
-  nsIPresShell* shell = aDocument->GetShell();
-  if (shell) {
-    nsPresContext* pc = shell->GetPresContext();
-    if (pc) {
-      *result = pc->MayHavePaintEventListenerInSubDocument();
+  nsPresContext* pc = aDocument->GetPresContext();
+  if (pc) {
+    *result = pc->MayHavePaintEventListenerInSubDocument();
 
-      // If we found a paint event listener, then we can stop enumerating
-      // sub documents.
-      return !*result;
-    }
+    // If we found a paint event listener, then we can stop enumerating
+    // sub documents.
+    return !*result;
   }
   return true;
 }
@@ -2690,13 +2678,10 @@ nsPresContext::NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument, void* a
 {
   NotifyDidPaintSubdocumentCallbackClosure* closure =
     static_cast<NotifyDidPaintSubdocumentCallbackClosure*>(aData);
-  nsIPresShell* shell = aDocument->GetShell();
-  if (shell) {
-    nsPresContext* pc = shell->GetPresContext();
-    if (pc) {
-      pc->NotifyDidPaintForSubtree(closure->mTransactionId,
-                                   closure->mTimeStamp);
-    }
+  nsPresContext* pc = aDocument->GetPresContext();
+  if (pc) {
+    pc->NotifyDidPaintForSubtree(closure->mTransactionId,
+                                 closure->mTimeStamp);
   }
   return true;
 }

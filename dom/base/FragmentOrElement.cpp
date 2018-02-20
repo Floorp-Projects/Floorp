@@ -236,11 +236,7 @@ nsIContent::GetDesiredIMEState()
   if (!doc) {
     return IMEState(IMEState::DISABLED);
   }
-  nsIPresShell* ps = doc->GetShell();
-  if (!ps) {
-    return IMEState(IMEState::DISABLED);
-  }
-  nsPresContext* pc = ps->GetPresContext();
+  nsPresContext* pc = doc->GetPresContext();
   if (!pc) {
     return IMEState(IMEState::DISABLED);
   }

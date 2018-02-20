@@ -185,11 +185,7 @@ nsCoreUtils::GetAccessKeyFor(nsIContent* aContent)
       !aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::accesskey))
     return 0;
 
-  nsIPresShell* presShell = aContent->OwnerDoc()->GetShell();
-  if (!presShell)
-    return 0;
-
-  nsPresContext *presContext = presShell->GetPresContext();
+  nsPresContext* presContext = aContent->OwnerDoc()->GetPresContext();
   if (!presContext)
     return 0;
 

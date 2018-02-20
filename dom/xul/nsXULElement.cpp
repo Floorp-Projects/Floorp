@@ -1621,10 +1621,9 @@ nsXULElement::ClickWithInputSource(uint16_t aInputSource, bool aIsTrustedEvent)
 
     nsCOMPtr<nsIDocument> doc = GetComposedDoc(); // Strong just in case
     if (doc) {
-        nsCOMPtr<nsIPresShell> shell = doc->GetShell();
-        if (shell) {
+        RefPtr<nsPresContext> context = doc->GetPresContext();
+        if (context) {
             // strong ref to PresContext so events don't destroy it
-            RefPtr<nsPresContext> context = shell->GetPresContext();
 
             WidgetMouseEvent eventDown(aIsTrustedEvent, eMouseDown,
                                        nullptr, WidgetMouseEvent::eReal);
@@ -1776,14 +1775,12 @@ nsXULElement::HideWindowChrome(bool aShouldHide)
     if (!doc->IsRootDisplayDocument())
       return NS_OK;
 
-    nsIPresShell *shell = doc->GetShell();
+    nsPresContext* presContext = doc->GetPresContext();
 
-    if (shell) {
+    if (presContext && presContext->IsChrome()) {
         nsIFrame* frame = GetPrimaryFrame();
 
-        nsPresContext *presContext = shell->GetPresContext();
-
-        if (frame && presContext && presContext->IsChrome()) {
+        if (frame) {
             nsView* view = frame->GetClosestView();
 
             if (view) {

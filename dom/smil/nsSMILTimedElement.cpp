@@ -106,10 +106,7 @@ namespace
       nsPresContext* context = nullptr;
       nsIDocument* doc = mTarget->GetUncomposedDoc();
       if (doc) {
-        nsCOMPtr<nsIPresShell> shell = doc->GetShell();
-        if (shell) {
-          context = shell->GetPresContext();
-        }
+        context = doc->GetPresContext();
       }
 
       return EventDispatcher::Dispatch(mTarget, context, &event);
