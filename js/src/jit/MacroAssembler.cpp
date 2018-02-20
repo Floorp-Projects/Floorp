@@ -120,9 +120,12 @@ MacroAssembler::guardTypeSet(const Source& address, const TypeSet* types, Barrie
     bind(&matched);
 }
 
-template <typename TypeSet>
+#ifdef DEBUG
+// guardTypeSetMightBeIncomplete is only used in DEBUG builds. If this ever
+// changes, we need to make sure it's Spectre-safe.
 void
-MacroAssembler::guardTypeSetMightBeIncomplete(TypeSet* types, Register obj, Register scratch, Label* label)
+MacroAssembler::guardTypeSetMightBeIncomplete(const TypeSet* types, Register obj,
+                                              Register scratch, Label* label)
 {
     // Type set guards might miss when an object's group changes. In this case
     // either its old group's properties will become unknown, or it will change
@@ -153,6 +156,7 @@ MacroAssembler::guardTypeSetMightBeIncomplete(TypeSet* types, Register obj, Regi
                      Imm32(OBJECT_FLAG_UNKNOWN_PROPERTIES), label);
     }
 }
+#endif
 
 void
 MacroAssembler::guardObjectType(Register obj, const TypeSet* types,
@@ -233,10 +237,6 @@ template void MacroAssembler::guardTypeSet(const ValueOperand& value, const Type
                                            BarrierKind kind, Register scratch, Label* miss);
 template void MacroAssembler::guardTypeSet(const TypedOrValueRegister& value, const TypeSet* types,
                                            BarrierKind kind, Register scratch, Label* miss);
-
-template void MacroAssembler::guardTypeSetMightBeIncomplete(const TemporaryTypeSet* types,
-                                                            Register obj, Register scratch,
-                                                            Label* label);
 
 template<typename S, typename T>
 static void
