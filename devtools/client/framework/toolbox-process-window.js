@@ -16,7 +16,6 @@ var { Toolbox } = require("devtools/client/framework/toolbox");
 var Services = require("Services");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 var { PrefsHelper } = require("devtools/client/shared/prefs");
-var { Task } = require("devtools/shared/task");
 
 /**
  * Shortcuts for accessing various debugger preferences.
@@ -28,7 +27,7 @@ var Prefs = new PrefsHelper("devtools.debugger", {
 
 var gToolbox, gClient;
 
-var connect = Task.async(function* () {
+var connect = async function () {
   window.removeEventListener("load", connect);
 
   // Initiate the connection
@@ -44,24 +43,24 @@ var connect = Task.async(function* () {
     throw new Error("Must pass a port in an env variable with MOZ_BROWSER_TOOLBOX_PORT");
   }
 
-  let transport = yield DebuggerClient.socketConnect({
+  let transport = await DebuggerClient.socketConnect({
     host: Prefs.chromeDebuggingHost,
     port,
     webSocket: Prefs.chromeDebuggingWebSocket,
   });
   gClient = new DebuggerClient(transport);
-  yield gClient.connect();
+  await gClient.connect();
 
   if (addonID) {
-    let { addons } = yield gClient.listAddons();
+    let { addons } = await gClient.listAddons();
     let addonActor = addons.filter(addon => addon.id === addonID).pop();
     let isTabActor = addonActor.isWebExtension;
     openToolbox({form: addonActor, chrome: true, isTabActor});
   } else {
-    let response = yield gClient.getProcess();
+    let response = await gClient.getProcess();
     openToolbox({form: response.form, chrome: true});
   }
-});
+};
 
 // Certain options should be toggled since we can assume chrome debugging here
 function setPrefDefaults() {
@@ -78,47 +77,50 @@ function setPrefDefaults() {
   Services.prefs.setBoolPref("devtools.preference.new-panel-enabled", false);
   Services.prefs.setBoolPref("layout.css.emulate-moz-box-with-flex", false);
 }
-window.addEventListener("load", function () {
+window.addEventListener("load", async function () {
   let cmdClose = document.getElementById("toolbox-cmd-close");
   cmdClose.addEventListener("command", onCloseCommand);
   setPrefDefaults();
-  connect().catch(e => {
+  try {
+    await connect();
+  } catch (e) {
     let errorMessageContainer = document.getElementById("error-message-container");
     let errorMessage = document.getElementById("error-message");
     errorMessage.value = e.message || e;
     errorMessageContainer.hidden = false;
     console.error(e);
-  });
+  }
 });
 
 function onCloseCommand(event) {
   window.close();
 }
 
-function openToolbox({ form, chrome, isTabActor }) {
+async function openToolbox({ form, chrome, isTabActor }) {
   let options = {
     form: form,
     client: gClient,
     chrome: chrome,
     isTabActor: isTabActor
   };
-  TargetFactory.forRemoteTab(options).then(target => {
-    let frame = document.getElementById("toolbox-iframe");
+  let target = await TargetFactory.forRemoteTab(options);
+  let frame = document.getElementById("toolbox-iframe");
 
-    // Remember the last panel that was used inside of this profile.
-    // But if we are testing, then it should always open the debugger panel.
-    let selectedTool =
-      Services.prefs.getCharPref("devtools.browsertoolbox.panel",
-        Services.prefs.getCharPref("devtools.toolbox.selectedTool",
-                                   "jsdebugger"));
+  // Remember the last panel that was used inside of this profile.
+  // But if we are testing, then it should always open the debugger panel.
+  let selectedTool =
+    Services.prefs.getCharPref("devtools.browsertoolbox.panel",
+      Services.prefs.getCharPref("devtools.toolbox.selectedTool",
+                                  "jsdebugger"));
 
-    options = { customIframe: frame };
-    gDevTools.showToolbox(target,
-                          selectedTool,
-                          Toolbox.HostType.CUSTOM,
-                          options)
-             .then(onNewToolbox);
-  });
+  options = { customIframe: frame };
+  let toolbox = await gDevTools.showToolbox(
+    target,
+    selectedTool,
+    Toolbox.HostType.CUSTOM,
+    options
+  );
+  onNewToolbox(toolbox);
 }
 
 function onNewToolbox(toolbox) {
@@ -147,7 +149,7 @@ function evaluateTestScript(script, toolbox) {
   Cu.evalInSandbox(script, sandbox);
 }
 
-function bindToolboxHandlers() {
+async function bindToolboxHandlers() {
   gToolbox.once("destroyed", quitApp);
   window.addEventListener("unload", onUnload);
 
@@ -157,9 +159,8 @@ function bindToolboxHandlers() {
     updateBadgeText(false);
 
     // Once the debugger panel opens listen for thread pause / resume.
-    gToolbox.getPanelWhenReady("jsdebugger").then(panel => {
-      setupThreadListeners(panel);
-    });
+    let panel = await gToolbox.getPanelWhenReady("jsdebugger");
+    setupThreadListeners(panel);
   }
 }
 
