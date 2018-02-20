@@ -25,11 +25,11 @@ EventStateManager*
 inLayoutUtils::GetEventStateManagerFor(Element& aElement)
 {
   nsIDocument* doc = aElement.OwnerDoc();
-  nsIPresShell* shell = doc->GetShell();
-  if (!shell)
+  nsPresContext* presContext = doc->GetPresContext();
+  if (!presContext)
     return nullptr;
 
-  return shell->GetPresContext()->EventStateManager();
+  return presContext->EventStateManager();
 }
 
 nsIDOMDocument*

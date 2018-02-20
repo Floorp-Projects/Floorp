@@ -1338,12 +1338,7 @@ HTMLCanvasElement::RegisterFrameCaptureListener(FrameCaptureListener* aListener,
       doc = doc->GetParentDocument();
     }
 
-    nsIPresShell* shell = doc->GetShell();
-    if (!shell) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsPresContext* context = shell->GetPresContext();
+    nsPresContext* context = doc->GetPresContext();
     if (!context) {
       return NS_ERROR_FAILURE;
     }
