@@ -19,6 +19,7 @@
 #include "wasm/WasmJS.h"
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RangedPtr.h"
 
