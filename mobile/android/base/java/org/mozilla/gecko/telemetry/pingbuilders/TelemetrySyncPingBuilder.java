@@ -89,16 +89,6 @@ public class TelemetrySyncPingBuilder extends TelemetryLocalPingBuilder {
         return this;
     }
 
-    public TelemetrySyncPingBuilder setUID(@NonNull String uid) {
-        payload.put("uid", uid);
-        return this;
-    }
-
-    public TelemetrySyncPingBuilder setDeviceID(@NonNull String deviceID) {
-        payload.put("deviceID", deviceID);
-        return this;
-    }
-
     @Nullable
     private static JSONArray buildOutgoing(List<StoreBatchTracker.Batch> batches) {
         if (batches == null || batches.size() == 0) {
