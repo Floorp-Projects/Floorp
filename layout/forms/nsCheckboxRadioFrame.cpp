@@ -8,7 +8,7 @@
 
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
-#include "nsIDOMHTMLInputElement.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/LookAndFeel.h"
 #include "nsDeviceContext.h"
@@ -16,6 +16,7 @@
 #include "nsThemeConstants.h"
 
 using namespace mozilla;
+using mozilla::dom::HTMLInputElement;
 
 //#define FCF_NOISY
 
@@ -195,9 +196,9 @@ nsCheckboxRadioFrame::HandleEvent(nsPresContext* aPresContext,
 void
 nsCheckboxRadioFrame::GetCurrentCheckState(bool* aState)
 {
-  nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(mContent);
+  HTMLInputElement* inputElement = HTMLInputElement::FromContent(mContent);
   if (inputElement) {
-    inputElement->GetChecked(aState);
+    *aState = inputElement->Checked();
   }
 }
 

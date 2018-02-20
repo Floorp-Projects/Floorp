@@ -19,7 +19,6 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsTextControlFrame.h"
 #include "nsIControllers.h"
-#include "nsIDOMHTMLInputElement.h"
 #include "nsITransactionManager.h"
 #include "nsIControllerContext.h"
 #include "nsAttrValue.h"
@@ -884,7 +883,7 @@ DoCommandCallback(Command aCommand, void* aData)
   nsIContent *content = frame->GetContent();
 
   nsCOMPtr<nsIControllers> controllers;
-  nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(content);
+  HTMLInputElement* input = HTMLInputElement::FromContent(content);
   if (input) {
     input->GetControllers(getter_AddRefs(controllers));
   } else {
@@ -1414,12 +1413,12 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
 
   if (!SuppressEventHandlers(presContext)) {
     nsCOMPtr<nsIControllers> controllers;
-    nsCOMPtr<nsIDOMHTMLInputElement> inputElement =
-      do_QueryInterface(mTextCtrlElement);
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
+    HTMLInputElement* inputElement =
+      HTMLInputElement::FromContentOrNull(content);
     if (inputElement) {
       rv = inputElement->GetControllers(getter_AddRefs(controllers));
     } else {
-      nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
       HTMLTextAreaElement* textAreaElement =
         HTMLTextAreaElement::FromContentOrNull(content);
 
@@ -2073,13 +2072,13 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   if (!SuppressEventHandlers(mBoundFrame->PresContext()))
   {
     nsCOMPtr<nsIControllers> controllers;
-    nsCOMPtr<nsIDOMHTMLInputElement> inputElement =
-      do_QueryInterface(mTextCtrlElement);
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
+    HTMLInputElement* inputElement =
+      HTMLInputElement::FromContentOrNull(content);
     if (inputElement)
       inputElement->GetControllers(getter_AddRefs(controllers));
     else
     {
-      nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
       HTMLTextAreaElement* textAreaElement =
         HTMLTextAreaElement::FromContentOrNull(content);
       if (textAreaElement) {
