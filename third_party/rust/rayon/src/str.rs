@@ -1,8 +1,7 @@
-//! This module contains extension methods for `String` that expose
-//! parallel iterators, such as `par_split_whitespace()`. You will
-//! rarely need to interact with it directly, since if you add `use
-//! rayon::prelude::*` to your file, that will include the helper
-//! traits defined in this module.
+//! Parallel iterator types for [strings][std::str]
+//!
+//! You will rarely need to interact with this module directly unless you need
+//! to name one of the iterator types.
 //!
 //! Note: [`ParallelString::par_split()`] and [`par_split_terminator()`]
 //! reference a `Pattern` trait which is not visible outside this crate.
@@ -11,9 +10,11 @@
 //!
 //! [`ParallelString::par_split()`]: trait.ParallelString.html#method.par_split
 //! [`par_split_terminator()`]: trait.ParallelString.html#method.par_split_terminator
+//!
+//! [std::str]: https://doc.rust-lang.org/stable/std/str/
 
 use iter::*;
-use iter::internal::*;
+use iter::plumbing::*;
 use split_producer::*;
 
 
@@ -50,6 +51,14 @@ pub trait ParallelString {
     fn as_parallel_string(&self) -> &str;
 
     /// Returns a parallel iterator over the characters of a string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rayon::prelude::*;
+    /// let max = "hello".par_chars().max_by_key(|c| *c as i32);
+    /// assert_eq!(Some('o'), max);
+    /// ```
     fn par_chars(&self) -> Chars {
         Chars { chars: self.as_parallel_string() }
     }
@@ -59,6 +68,17 @@ pub trait ParallelString {
     ///
     /// Note: the `Pattern` trait is private, for use only by Rayon itself.
     /// It is implemented for `char` and any `F: Fn(char) -> bool + Sync + Send`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rayon::prelude::*;
+    /// let total = "1, 2, buckle, 3, 4, door"
+    ///    .par_split(',')
+    ///    .filter_map(|s| s.trim().parse::<i32>().ok())
+    ///    .sum();
+    /// assert_eq!(10, total);
+    /// ```
     fn par_split<P: Pattern>(&self, separator: P) -> Split<P> {
         Split::new(self.as_parallel_string(), separator)
     }
@@ -70,6 +90,16 @@ pub trait ParallelString {
     ///
     /// Note: the `Pattern` trait is private, for use only by Rayon itself.
     /// It is implemented for `char` and any `F: Fn(char) -> bool + Sync + Send`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rayon::prelude::*;
+    /// let parts: Vec<_> = "((1 + 3) * 2)"
+    ///     .par_split_terminator(|c| c == '(' || c == ')')
+    ///     .collect();
+    /// assert_eq!(vec!["", "", "1 + 3", " * 2"], parts);
+    /// ```
     fn par_split_terminator<P: Pattern>(&self, terminator: P) -> SplitTerminator<P> {
         SplitTerminator::new(self.as_parallel_string(), terminator)
     }
@@ -78,6 +108,17 @@ pub trait ParallelString {
     /// optional carriage return and with a newline (`\r\n` or just `\n`).
     /// The final line ending is optional, and line endings are not included in
     /// the output strings.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rayon::prelude::*;
+    /// let lengths: Vec<_> = "hello world\nfizbuzz"
+    ///     .par_lines()
+    ///     .map(|l| l.len())
+    ///     .collect();
+    /// assert_eq!(vec![11, 7], lengths);
+    /// ```
     fn par_lines(&self) -> Lines {
         Lines(self.as_parallel_string())
     }
@@ -87,6 +128,16 @@ pub trait ParallelString {
     ///
     /// As with `str::split_whitespace`, 'whitespace' is defined according to
     /// the terms of the Unicode Derived Core Property `White_Space`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rayon::prelude::*;
+    /// let longest = "which is the longest word?"
+    ///     .par_split_whitespace()
+    ///     .max_by_key(|word| word.len());
+    /// assert_eq!(Some("longest"), longest);
+    /// ```
     fn par_split_whitespace(&self) -> SplitWhitespace {
         SplitWhitespace(self.as_parallel_string())
     }
@@ -107,7 +158,7 @@ impl ParallelString for str {
 /// would be nicer to have its basic existence and implementors public while
 /// keeping all of the methods private.
 mod private {
-    use iter::internal::Folder;
+    use iter::plumbing::Folder;
 
     /// Pattern-matching trait for `ParallelString`, somewhat like a mix of
     /// `std::str::pattern::{Pattern, Searcher}`.
@@ -183,6 +234,7 @@ impl<FN: Sync + Send + Fn(char) -> bool> Pattern for FN {
 // /////////////////////////////////////////////////////////////////////////
 
 /// Parallel iterator over the characters of a string
+#[derive(Debug, Clone)]
 pub struct Chars<'ch> {
     chars: &'ch str,
 }
@@ -226,6 +278,7 @@ impl<'ch> UnindexedProducer for CharsProducer<'ch> {
 // /////////////////////////////////////////////////////////////////////////
 
 /// Parallel iterator over substrings separated by a pattern
+#[derive(Debug, Clone)]
 pub struct Split<'ch, P: Pattern> {
     chars: &'ch str,
     separator: P,
@@ -288,6 +341,7 @@ impl<'ch, P: Pattern> Fissile<P> for &'ch str {
 // /////////////////////////////////////////////////////////////////////////
 
 /// Parallel iterator over substrings separated by a terminator pattern
+#[derive(Debug, Clone)]
 pub struct SplitTerminator<'ch, P: Pattern> {
     chars: &'ch str,
     terminator: P,
@@ -355,6 +409,7 @@ impl<'ch, 'sep, P: Pattern + 'sep> UnindexedProducer for SplitTerminatorProducer
 // /////////////////////////////////////////////////////////////////////////
 
 /// Parallel iterator over lines in a string
+#[derive(Debug, Clone)]
 pub struct Lines<'ch>(&'ch str);
 
 impl<'ch> ParallelIterator for Lines<'ch> {
@@ -378,6 +433,7 @@ impl<'ch> ParallelIterator for Lines<'ch> {
 // /////////////////////////////////////////////////////////////////////////
 
 /// Parallel iterator over substrings separated by whitespace
+#[derive(Debug, Clone)]
 pub struct SplitWhitespace<'ch>(&'ch str);
 
 impl<'ch> ParallelIterator for SplitWhitespace<'ch> {

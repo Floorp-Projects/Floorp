@@ -1,5 +1,5 @@
 //!
-//! [Under construction](https://github.com/nikomatsakis/rayon/issues/231)
+//! [Under construction](https://github.com/rayon-rs/rayon/issues/231)
 //!
 //! ## Restricting multiple versions
 //!
@@ -19,27 +19,22 @@
 //! conflicting requirements will need to be resolved before the build will
 //! succeed.
 
-#![allow(non_camel_case_types)] // I prefer to use ALL_CAPS for type parameters
+#![doc(html_root_url = "https://docs.rs/rayon-core/1.4")]
+#![deny(missing_debug_implementations)]
+#![deny(missing_docs)]
 #![cfg_attr(test, feature(conservative_impl_trait))]
 
-// If you're not compiling the unstable code, it often happens that
-// there is stuff that is considered "dead code" and so forth. So
-// disable warnings in that scenario.
-#![cfg_attr(not(feature = "unstable"), allow(warnings))]
-
-#[allow(unused_imports)]
-use log::Event::*;
 use std::any::Any;
 use std::env;
+use std::io;
 use std::error::Error;
+use std::marker::PhantomData;
 use std::str::FromStr;
 use std::fmt;
 
-extern crate coco;
+extern crate crossbeam_deque;
 #[macro_use]
 extern crate lazy_static;
-#[cfg(rayon_unstable)]
-extern crate futures;
 extern crate libc;
 extern crate num_cpus;
 extern crate rand;
@@ -51,8 +46,6 @@ mod latch;
 mod join;
 mod job;
 mod registry;
-#[cfg(rayon_unstable)]
-mod future;
 mod scope;
 mod sleep;
 mod spawn;
@@ -61,16 +54,14 @@ mod thread_pool;
 mod unwind;
 mod util;
 
+#[cfg(rayon_unstable)]
+pub mod internal;
 pub use thread_pool::ThreadPool;
 pub use thread_pool::current_thread_index;
 pub use thread_pool::current_thread_has_pending_tasks;
-pub use join::join;
+pub use join::{join, join_context};
 pub use scope::{scope, Scope};
 pub use spawn::spawn;
-#[cfg(rayon_unstable)]
-pub use spawn::spawn_future;
-#[cfg(rayon_unstable)]
-pub use future::RayonFuture;
 
 /// Returns the number of threads in the current registry. If this
 /// code is executing within a Rayon thread-pool, then this will be
@@ -82,21 +73,50 @@ pub use future::RayonFuture;
 /// parallel work (the parallel iterator traits use this value
 /// internally for this purpose).
 ///
-/// ### Future compatibility note
+/// # Future compatibility note
 ///
 /// Note that unless this thread-pool was created with a
-/// configuration that specifies the number of threads, then this
+/// builder that specifies the number of threads, then this
 /// number may vary over time in future versions (see [the
 /// `num_threads()` method for details][snt]).
 ///
-/// [snt]: struct.Configuration.html#method.num_threads
+/// [snt]: struct.ThreadPoolBuilder.html#method.num_threads
 pub fn current_num_threads() -> usize {
     ::registry::Registry::current_num_threads()
 }
 
-/// Contains the rayon thread pool configuration.
+/// Error when initializing a thread pool.
+#[derive(Debug)]
+pub struct ThreadPoolBuildError {
+    kind: ErrorKind,
+}
+
+#[derive(Debug)]
+enum ErrorKind {
+    GlobalPoolAlreadyInitialized,
+    IOError(io::Error),
+}
+
+/// Used to create a new [`ThreadPool`] or to configure the global rayon thread pool.
+/// ## Creating a ThreadPool
+/// The following creates a thread pool with 22 threads.
+///
+/// ```rust
+/// # use rayon_core as rayon;
+/// let pool = rayon::ThreadPoolBuilder::new().num_threads(22).build().unwrap();
+/// ```
+///
+/// To instead configure the global thread pool, use [`build_global()`]:
+///
+/// ```rust
+/// # use rayon_core as rayon;
+/// rayon::ThreadPoolBuilder::new().num_threads(22).build_global().unwrap();
+/// ```
+///
+/// [`ThreadPool`]: struct.ThreadPool.html
+/// [`build_global()`]: struct.ThreadPoolBuilder.html#method.build_global
 #[derive(Default)]
-pub struct Configuration {
+pub struct ThreadPoolBuilder {
     /// The number of threads in the rayon thread pool.
     /// If zero will use the RAYON_NUM_THREADS environment variable.
     /// If RAYON_NUM_THREADS is invalid or zero will use the default.
@@ -124,6 +144,15 @@ pub struct Configuration {
     breadth_first: bool,
 }
 
+/// Contains the rayon thread pool configuration. Use [`ThreadPoolBuilder`] instead.
+///
+/// [`ThreadPoolBuilder`]: struct.ThreadPoolBuilder.html
+#[deprecated(note = "Use `ThreadPoolBuilder`")]
+#[derive(Default)]
+pub struct Configuration {
+    builder: ThreadPoolBuilder,
+}
+
 /// The type for a panic handling closure. Note that this same closure
 /// may be invoked multiple times in parallel.
 type PanicHandler = Fn(Box<Any + Send>) + Send + Sync;
@@ -138,10 +167,38 @@ type StartHandler = Fn(usize) + Send + Sync;
 /// Note that this same closure may be invoked multiple times in parallel.
 type ExitHandler = Fn(usize) + Send + Sync;
 
-impl Configuration {
-    /// Creates and return a valid rayon thread pool configuration, but does not initialize it.
-    pub fn new() -> Configuration {
-        Configuration::default()
+impl ThreadPoolBuilder {
+    /// Creates and returns a valid rayon thread pool builder, but does not initialize it.
+    pub fn new() -> ThreadPoolBuilder {
+        ThreadPoolBuilder::default()
+    }
+
+    /// Create a new `ThreadPool` initialized using this configuration.
+    pub fn build(self) -> Result<ThreadPool, ThreadPoolBuildError> {
+        thread_pool::build(self)
+    }
+
+    /// Initializes the global thread pool. This initialization is
+    /// **optional**.  If you do not call this function, the thread pool
+    /// will be automatically initialized with the default
+    /// configuration. Calling `build_global` is not recommended, except
+    /// in two scenarios:
+    ///
+    /// - You wish to change the default configuration.
+    /// - You are running a benchmark, in which case initializing may
+    ///   yield slightly more consistent results, since the worker threads
+    ///   will already be ready to go even in the first iteration.  But
+    ///   this cost is minimal.
+    ///
+    /// Initialization of the global thread pool happens exactly
+    /// once. Once started, the configuration cannot be
+    /// changed. Therefore, if you call `build_global` a second time, it
+    /// will return an error. An `Ok` result indicates that this
+    /// is the first initialization of the thread pool.
+    pub fn build_global(self) -> Result<(), ThreadPoolBuildError> {
+        let registry = try!(registry::init_global_registry(self));
+        registry.wait_until_primed();
+        Ok(())
     }
 
     /// Get the number of threads that will be used for the thread
@@ -186,8 +243,8 @@ impl Configuration {
     /// If `num_threads` is 0, or you do not call this function, then
     /// the Rayon runtime will select the number of threads
     /// automatically. At present, this is based on the
-    /// `RAYON_NUM_THREADS` environment variable (if set), 
-    /// or the number of logical CPUs (otherwise). 
+    /// `RAYON_NUM_THREADS` environment variable (if set),
+    /// or the number of logical CPUs (otherwise).
     /// In the future, however, the default behavior may
     /// change to dynamically add or remove threads as needed.
     ///
@@ -203,7 +260,7 @@ impl Configuration {
     /// replacement of the now deprecated `RAYON_RS_NUM_CPUS` environment
     /// variable. If both variables are specified, `RAYON_NUM_THREADS` will
     /// be prefered.
-    pub fn num_threads(mut self, num_threads: usize) -> Configuration {
+    pub fn num_threads(mut self, num_threads: usize) -> ThreadPoolBuilder {
         self.num_threads = num_threads;
         self
     }
@@ -227,7 +284,7 @@ impl Configuration {
     /// If the panic handler itself panics, this will abort the
     /// process. To prevent this, wrap the body of your panic handler
     /// in a call to `std::panic::catch_unwind()`.
-    pub fn panic_handler<H>(mut self, panic_handler: H) -> Configuration
+    pub fn panic_handler<H>(mut self, panic_handler: H) -> ThreadPoolBuilder
         where H: Fn(Box<Any + Send>) + Send + Sync + 'static
     {
         self.panic_handler = Some(Box::new(panic_handler));
@@ -285,7 +342,7 @@ impl Configuration {
     /// Note that this same closure may be invoked multiple times in parallel.
     /// If this closure panics, the panic will be passed to the panic handler.
     /// If that handler returns, then startup will continue normally.
-    pub fn start_handler<H>(mut self, start_handler: H) -> Configuration
+    pub fn start_handler<H>(mut self, start_handler: H) -> ThreadPoolBuilder
         where H: Fn(usize) + Send + Sync + 'static
     {
         self.start_handler = Some(Box::new(start_handler));
@@ -303,7 +360,7 @@ impl Configuration {
     /// Note that this same closure may be invoked multiple times in parallel.
     /// If this closure panics, the panic will be passed to the panic handler.
     /// If that handler returns, then the thread will exit normally.
-    pub fn exit_handler<H>(mut self, exit_handler: H) -> Configuration
+    pub fn exit_handler<H>(mut self, exit_handler: H) -> ThreadPoolBuilder
         where H: Fn(usize) + Send + Sync + 'static
     {
         self.exit_handler = Some(Box::new(exit_handler));
@@ -311,47 +368,125 @@ impl Configuration {
     }
 }
 
-/// Initializes the global thread pool. This initialization is
-/// **optional**.  If you do not call this function, the thread pool
-/// will be automatically initialized with the default
-/// configuration. In fact, calling `initialize` is not recommended,
-/// except for in two scenarios:
-///
-/// - You wish to change the default configuration.
-/// - You are running a benchmark, in which case initializing may
-///   yield slightly more consistent results, since the worker threads
-///   will already be ready to go even in the first iteration.  But
-///   this cost is minimal.
-///
-/// Initialization of the global thread pool happens exactly
-/// once. Once started, the configuration cannot be
-/// changed. Therefore, if you call `initialize` a second time, it
-/// will return an error. An `Ok` result indicates that this
-/// is the first initialization of the thread pool.
-pub fn initialize(config: Configuration) -> Result<(), Box<Error>> {
-    let registry = try!(registry::init_global_registry(config));
-    registry.wait_until_primed();
-    Ok(())
+#[allow(deprecated)]
+impl Configuration {
+    /// Creates and return a valid rayon thread pool configuration, but does not initialize it.
+    pub fn new() -> Configuration {
+        Configuration { builder: ThreadPoolBuilder::new() }
+    }
+
+    /// Deprecated in favor of `ThreadPoolBuilder::build`.
+    pub fn build(self) -> Result<ThreadPool, Box<Error + 'static>> {
+        self.builder.build().map_err(|e| e.into())
+    }
+
+    /// Deprecated in favor of `ThreadPoolBuilder::thread_name`.
+    pub fn thread_name<F>(mut self, closure: F) -> Self
+    where F: FnMut(usize) -> String + 'static {
+        self.builder = self.builder.thread_name(closure);
+        self 
+    }
+
+    /// Deprecated in favor of `ThreadPoolBuilder::num_threads`.
+    pub fn num_threads(mut self, num_threads: usize) -> Configuration {
+        self.builder = self.builder.num_threads(num_threads);
+        self
+    }
+
+    /// Deprecated in favor of `ThreadPoolBuilder::panic_handler`.
+    pub fn panic_handler<H>(mut self, panic_handler: H) -> Configuration
+        where H: Fn(Box<Any + Send>) + Send + Sync + 'static
+    {
+        self.builder = self.builder.panic_handler(panic_handler);
+        self
+    }
+
+    /// Deprecated in favor of `ThreadPoolBuilder::stack_size`.
+    pub fn stack_size(mut self, stack_size: usize) -> Self {
+        self.builder = self.builder.stack_size(stack_size);
+        self
+    }
+
+    /// Deprecated in favor of `ThreadPoolBuilder::breadth_first`.
+    pub fn breadth_first(mut self) -> Self {
+        self.builder = self.builder.breadth_first();
+        self
+    }
+
+    /// Deprecated in favor of `ThreadPoolBuilder::start_handler`.
+    pub fn start_handler<H>(mut self, start_handler: H) -> Configuration
+        where H: Fn(usize) + Send + Sync + 'static
+    {
+        self.builder = self.builder.start_handler(start_handler);
+        self
+    }
+
+    /// Deprecated in favor of `ThreadPoolBuilder::exit_handler`.
+    pub fn exit_handler<H>(mut self, exit_handler: H) -> Configuration
+        where H: Fn(usize) + Send + Sync + 'static
+    {
+        self.builder = self.builder.exit_handler(exit_handler);
+        self
+    }
+
+    /// Returns a ThreadPoolBuilder with identical parameters.
+    fn into_builder(self) -> ThreadPoolBuilder {
+        self.builder
+    }
 }
 
-impl fmt::Debug for Configuration {
+impl ThreadPoolBuildError {
+    fn new(kind: ErrorKind) -> ThreadPoolBuildError {
+        ThreadPoolBuildError { kind: kind }
+    }
+}
+
+impl Error for ThreadPoolBuildError {
+    fn description(&self) -> &str {
+        match self.kind {
+            ErrorKind::GlobalPoolAlreadyInitialized => "The global thread pool has already been initialized.",
+            ErrorKind::IOError(ref e) => e.description(),
+        }
+    }
+}
+
+impl fmt::Display for ThreadPoolBuildError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let Configuration { ref num_threads, ref get_thread_name,
-                            ref panic_handler, ref stack_size,
-                            ref start_handler, ref exit_handler,
-                            ref breadth_first } = *self;
+        match self.kind {
+            ErrorKind::IOError(ref e) => e.fmt(f),
+            _ => self.description().fmt(f),
+        }
+    }
+}
 
-        // Just print `Some("<closure>")` or `None` to the debug
+/// Deprecated in favor of `ThreadPoolBuilder::build_global`.
+#[deprecated(note = "use `ThreadPoolBuilder::build_global`")]
+#[allow(deprecated)]
+pub fn initialize(config: Configuration) -> Result<(), Box<Error>> {
+    config.into_builder().build_global().map_err(|e| e.into())
+}
+
+impl fmt::Debug for ThreadPoolBuilder {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let ThreadPoolBuilder { ref num_threads, ref get_thread_name,
+                                ref panic_handler, ref stack_size,
+                                ref start_handler, ref exit_handler,
+                                ref breadth_first } = *self;
+
+        // Just print `Some(<closure>)` or `None` to the debug
         // output.
-        let get_thread_name = get_thread_name.as_ref().map(|_| "<closure>");
+        struct ClosurePlaceholder;
+        impl fmt::Debug for ClosurePlaceholder {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                f.write_str("<closure>")
+            }
+        }
+        let get_thread_name = get_thread_name.as_ref().map(|_| ClosurePlaceholder);
+        let panic_handler = panic_handler.as_ref().map(|_| ClosurePlaceholder);
+        let start_handler = start_handler.as_ref().map(|_| ClosurePlaceholder);
+        let exit_handler = exit_handler.as_ref().map(|_| ClosurePlaceholder);
 
-        // Just print `Some("<closure>")` or `None` to the debug
-        // output.
-        let panic_handler = panic_handler.as_ref().map(|_| "<closure>");
-        let start_handler = start_handler.as_ref().map(|_| "<closure>");
-        let exit_handler = exit_handler.as_ref().map(|_| "<closure>");
-
-        f.debug_struct("Configuration")
+        f.debug_struct("ThreadPoolBuilder")
          .field("num_threads", num_threads)
          .field("get_thread_name", &get_thread_name)
          .field("panic_handler", &panic_handler)
@@ -360,5 +495,40 @@ impl fmt::Debug for Configuration {
          .field("exit_handler", &exit_handler)
          .field("breadth_first", &breadth_first)
          .finish()
+    }
+}
+
+#[allow(deprecated)]
+impl fmt::Debug for Configuration {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.builder.fmt(f)
+    }
+}
+
+/// Provides the calling context to a closure called by `join_context`.
+#[derive(Debug)]
+pub struct FnContext {
+    migrated: bool,
+
+    /// disable `Send` and `Sync`, just for a little future-proofing.
+    _marker: PhantomData<*mut ()>,
+}
+
+impl FnContext {
+    #[inline]
+    fn new(migrated: bool) -> Self {
+        FnContext {
+            migrated: migrated,
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl FnContext {
+    /// Returns `true` if the closure was called from a different thread
+    /// than it was provided from.
+    #[inline]
+    pub fn migrated(&self) -> bool {
+        self.migrated
     }
 }

@@ -1,6 +1,7 @@
-use super::internal::*;
+use super::plumbing::*;
 use super::*;
 
+use std::fmt::{self, Debug};
 use std::iter;
 
 
@@ -11,9 +12,18 @@ use std::iter;
 /// [`map()`]: trait.ParallelIterator.html#method.map
 /// [`ParallelIterator`]: trait.ParallelIterator.html
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+#[derive(Clone)]
 pub struct Map<I: ParallelIterator, F> {
     base: I,
     map_op: F,
+}
+
+impl<I: ParallelIterator + Debug, F> Debug for Map<I, F> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Map")
+            .field("base", &self.base)
+            .finish()
+    }
 }
 
 /// Create a new `Map` iterator.
@@ -42,7 +52,7 @@ impl<I, F, R> ParallelIterator for Map<I, F>
         self.base.drive_unindexed(consumer1)
     }
 
-    fn opt_len(&mut self) -> Option<usize> {
+    fn opt_len(&self) -> Option<usize> {
         self.base.opt_len()
     }
 }
@@ -59,7 +69,7 @@ impl<I, F, R> IndexedParallelIterator for Map<I, F>
         self.base.drive(consumer1)
     }
 
-    fn len(&mut self) -> usize {
+    fn len(&self) -> usize {
         self.base.len()
     }
 
@@ -132,6 +142,13 @@ impl<'f, P, F, R> Producer for MapProducer<'f, P, F>
              base: right,
              map_op: self.map_op,
          })
+    }
+
+    fn fold_with<G>(self, folder: G) -> G
+        where G: Folder<Self::Item>
+    {
+        let folder1 = MapFolder { base: folder, map_op: self.map_op };
+        self.base.fold_with(folder1).base
     }
 }
 

@@ -1,4 +1,4 @@
-use super::internal::*;
+use super::plumbing::*;
 use super::*;
 
 use std::iter;
@@ -10,6 +10,7 @@ use std::iter;
 /// [`cloned()`]: trait.ParallelIterator.html#method.cloned
 /// [`ParallelIterator`]: trait.ParallelIterator.html
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+#[derive(Debug, Clone)]
 pub struct Cloned<I: ParallelIterator> {
     base: I,
 }
@@ -36,7 +37,7 @@ impl<'a, T, I> ParallelIterator for Cloned<I>
         self.base.drive_unindexed(consumer1)
     }
 
-    fn opt_len(&mut self) -> Option<usize> {
+    fn opt_len(&self) -> Option<usize> {
         self.base.opt_len()
     }
 }
@@ -52,7 +53,7 @@ impl<'a, T, I> IndexedParallelIterator for Cloned<I>
         self.base.drive(consumer1)
     }
 
-    fn len(&mut self) -> usize {
+    fn len(&self) -> usize {
         self.base.len()
     }
 
@@ -109,6 +110,12 @@ impl<'a, T, P> Producer for ClonedProducer<P>
     fn split_at(self, index: usize) -> (Self, Self) {
         let (left, right) = self.base.split_at(index);
         (ClonedProducer { base: left }, ClonedProducer { base: right })
+    }
+
+    fn fold_with<F>(self, folder: F) -> F
+        where F: Folder<Self::Item>
+    {
+        self.base.fold_with(ClonedFolder { base: folder }).base
     }
 }
 
