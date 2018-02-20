@@ -100,9 +100,6 @@ EXPORTS += [
     'perf/jsperf.h',
 ]
 
-# If you add a header here, add it to js/src/jsapi-tests/testIntTypesABI.cpp so
-# that we ensure we don't over-expose our internal integer typedefs.  Note that
-# LegacyIntTypes.h below is deliberately exempted from this requirement.
 EXPORTS.js += [
     '../public/CallArgs.h',
     '../public/CallNonGenericMethod.h',
@@ -121,7 +118,6 @@ EXPORTS.js += [
     '../public/HeapAPI.h',
     '../public/Id.h',
     '../public/Initialization.h',
-    '../public/LegacyIntTypes.h',
     '../public/MemoryMetrics.h',
     '../public/Principals.h',
     '../public/ProfilingFrameIterator.h',
