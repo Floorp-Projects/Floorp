@@ -186,8 +186,14 @@ EngineSynchronizer.prototype = {
 
       // If there were no sync engine failures
       if (this.service.status.service != SYNC_FAILED_PARTIAL) {
-        Svc.Prefs.set("lastSync", new Date().toString());
         this.service.status.sync = SYNC_SUCCEEDED;
+      }
+
+      // Even if there were engine failures, bump lastSync even on partial since
+      // it's reflected in the UI (bug 1439777).
+      if (this.service.status.service == SYNC_FAILED_PARTIAL ||
+          this.service.status.service == STATUS_OK) {
+        Svc.Prefs.set("lastSync", new Date().toString());
       }
     } finally {
       Svc.Prefs.reset("firstSync");
