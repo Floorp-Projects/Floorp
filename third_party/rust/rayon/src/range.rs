@@ -1,13 +1,47 @@
-//! This module contains the parallel iterator types for ranges
-//! (`Range<T>`); this is the type for values created by a `a..b`
-//! expression. You will rarely need to interact with it directly
-//! unless you have need to name one of the iterator types.
+//! Parallel iterator types for [ranges][std::range],
+//! the type for values created by `a..b` expressions
+//!
+//! You will rarely need to interact with this module directly unless you have
+//! need to name one of the iterator types.
+//! 
+//! ```
+//! use rayon::prelude::*;
+//! 
+//! let r = (0..100u64).into_par_iter()
+//!                    .sum();
+//! 
+//! // compare result with sequential calculation
+//! assert_eq!((0..100).sum::<u64>(), r);
+//! ```
+//!
+//! [std::range]: https://doc.rust-lang.org/core/ops/struct.Range.html
 
 use iter::*;
-use iter::internal::*;
+use iter::plumbing::*;
 use std::ops::Range;
 
-/// Parallel iterator over a range
+/// Parallel iterator over a range, implemented for all integer types.
+///
+/// **Note:** The `zip` operation requires `IndexedParallelIterator`
+/// which is not implemented for `u64` or `i64`.
+///
+/// ```
+/// use rayon::prelude::*;
+///
+/// let p = (0..25usize).into_par_iter()
+///                   .zip(0..25usize)
+///                   .filter(|&(x, y)| x % 5 == 0 || y % 5 == 0)
+///                   .map(|(x, y)| x * y)
+///                   .sum::<usize>();
+///
+/// let s = (0..25usize).zip(0..25)
+///                   .filter(|&(x, y)| x % 5 == 0 || y % 5 == 0)
+///                   .map(|(x, y)| x * y)
+///                   .sum();
+///
+/// assert_eq!(p, s);
+/// ```
+#[derive(Debug, Clone)]
 pub struct Iter<T> {
     range: Range<T>,
 }
@@ -49,7 +83,7 @@ macro_rules! indexed_range_impl {
                 bridge(self, consumer)
             }
 
-            fn opt_len(&mut self) -> Option<usize> {
+            fn opt_len(&self) -> Option<usize> {
                 Some(self.len())
             }
         }
@@ -61,7 +95,7 @@ macro_rules! indexed_range_impl {
                 bridge(self, consumer)
             }
 
-            fn len(&mut self) -> usize {
+            fn len(&self) -> usize {
                 self.range.len()
             }
 

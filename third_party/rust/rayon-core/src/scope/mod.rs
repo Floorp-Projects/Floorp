@@ -1,25 +1,37 @@
-#[cfg(rayon_unstable)]
-use future::{self, Future, RayonFuture};
+//! Methods for custom fork-join scopes, created by the [`scope()`]
+//! function. These are a more flexible alternative to [`join()`].
+//!
+//! [`scope()`]: fn.scope.html
+//! [`join()`]: ../join/join.fn.html
+
 use latch::{Latch, CountLatch};
 use log::Event::*;
 use job::HeapJob;
 use std::any::Any;
+use std::fmt;
 use std::marker::PhantomData;
 use std::mem;
 use std::ptr;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicPtr, Ordering};
-use registry::{in_worker, Registry, WorkerThread};
+use registry::{in_worker, WorkerThread, Registry};
 use unwind;
 
 #[cfg(test)]
 mod test;
+mod internal;
 
+///Represents a fork-join scope which can be used to spawn any number of tasks. See [`scope()`] for more information.
+///
+///[`scope()`]: fn.scope.html
 pub struct Scope<'scope> {
     /// thread where `scope()` was executed (note that individual jobs
     /// may be executing on different worker threads, though they
     /// should always be within the same pool of threads)
-    owner_thread: *const WorkerThread,
+    owner_thread_index: usize,
+
+    /// thread registry where `scope()` was executed.
+    registry: Arc<Registry>,
 
     /// if some job panicked, the error is stored here; it will be
     /// propagated to the one who created the scope
@@ -28,9 +40,11 @@ pub struct Scope<'scope> {
     /// latch to set when the counter drops to zero (and hence this scope is complete)
     job_completed_latch: CountLatch,
 
-    /// you can think of a scope as containing a list of closures to
-    /// execute, all of which outlive `'scope`
-    marker: PhantomData<Box<FnOnce(&Scope<'scope>) + 'scope>>,
+    /// You can think of a scope as containing a list of closures to execute,
+    /// all of which outlive `'scope`.  They're not actually required to be
+    /// `Sync`, but it's still safe to let the `Scope` implement `Sync` because
+    /// the closures are only *moved* across threads to be executed.
+    marker: PhantomData<Box<FnOnce(&Scope<'scope>) + Send + Sync + 'scope>>,
 }
 
 /// Create a "fork-join" scope `s` and invokes the closure with a
@@ -47,7 +61,7 @@ pub struct Scope<'scope> {
 /// whereas `join()` can make exclusive use of the stack. **Prefer
 /// `join()` (or, even better, parallel iterators) where possible.**
 ///
-/// ### Example
+/// # Example
 ///
 /// The Rayon `join()` function launches two closures and waits for them
 /// to stop. One could implement `join()` using a scope like so, although
@@ -71,14 +85,14 @@ pub struct Scope<'scope> {
 /// }
 /// ```
 ///
-/// ### A note on threading
+/// # A note on threading
 ///
 /// The closure given to `scope()` executes in the Rayon thread-pool,
 /// as do those given to `spawn()`. This means that you can't access
 /// thread-local variables (well, you can, but they may have
 /// unexpected values).
 ///
-/// ### Task execution
+/// # Task execution
 ///
 /// Task execution potentially starts as soon as `spawn()` is called.
 /// The task will end sometime before `scope()` returns. Note that the
@@ -142,7 +156,7 @@ pub struct Scope<'scope> {
 /// will be joined before that scope returns, which in turn occurs
 /// before the creating task (task `s.1.1` in this case) finishes.
 ///
-/// ### Accessing stack data
+/// # Accessing stack data
 ///
 /// In general, spawned tasks may access stack data in place that
 /// outlives the scope itself. Other data must be fully owned by the
@@ -232,7 +246,7 @@ pub struct Scope<'scope> {
 /// });
 /// ```
 ///
-/// ### Panics
+/// # Panics
 ///
 /// If a panic occurs, either in the closure given to `scope()` or in
 /// any of the spawned jobs, that panic will be propagated and the
@@ -245,16 +259,17 @@ pub struct Scope<'scope> {
 pub fn scope<'scope, OP, R>(op: OP) -> R
     where OP: for<'s> FnOnce(&'s Scope<'scope>) -> R + 'scope + Send, R: Send,
 {
-    in_worker(|owner_thread| {
+    in_worker(|owner_thread, _| {
         unsafe {
             let scope: Scope<'scope> = Scope {
-                owner_thread: owner_thread as *const WorkerThread as *mut WorkerThread,
+                owner_thread_index: owner_thread.index(),
+                registry: owner_thread.registry().clone(),
                 panic: AtomicPtr::new(ptr::null_mut()),
                 job_completed_latch: CountLatch::new(),
                 marker: PhantomData,
             };
             let result = scope.execute_job_closure(op);
-            scope.steal_till_jobs_complete();
+            scope.steal_till_jobs_complete(owner_thread);
             result.unwrap() // only None if `op` panicked, and that would have been propagated
         }
     })
@@ -264,72 +279,67 @@ impl<'scope> Scope<'scope> {
     /// Spawns a job into the fork-join scope `self`. This job will
     /// execute sometime before the fork-join scope completes.  The
     /// job is specified as a closure, and this closure receives its
-    /// own reference to `self` as argument. This can be used to
-    /// inject new jobs into `self`.
+    /// own reference to the scope `self` as argument. This can be
+    /// used to inject new jobs into `self`.
+    ///
+    /// # Returns
+    ///
+    /// Nothing. The spawned closures cannot pass back values to the
+    /// caller directly, though they can write to local variables on
+    /// the stack (if those variables outlive the scope) or
+    /// communicate through shared channels.
+    ///
+    /// (The intention is to eventualy integrate with Rust futures to
+    /// support spawns of functions that compute a value.)
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use rayon_core as rayon;
+    /// let mut value_a = None;
+    /// let mut value_b = None;
+    /// let mut value_c = None;
+    /// rayon::scope(|s| {
+    ///     s.spawn(|s1| {
+    ///           // ^ this is the same scope as `s`; this handle `s1`
+    ///           //   is intended for use by the spawned task,
+    ///           //   since scope handles cannot cross thread boundaries.
+    ///
+    ///         value_a = Some(22);
+    ///
+    ///         // the scope `s` will not end until all these tasks are done
+    ///         s1.spawn(|_| {
+    ///             value_b = Some(44);
+    ///         });
+    ///     });
+    ///
+    ///     s.spawn(|_| {
+    ///         value_c = Some(66);
+    ///     });
+    /// });
+    /// assert_eq!(value_a, Some(22));
+    /// assert_eq!(value_b, Some(44));
+    /// assert_eq!(value_c, Some(66));
+    /// ```
+    ///
+    /// # See also
+    ///
+    /// The [`scope` function] has more extensive documentation about
+    /// task spawning.
+    ///
+    /// [`scope` function]: fn.scope.html
     pub fn spawn<BODY>(&self, body: BODY)
-        where BODY: FnOnce(&Scope<'scope>) + 'scope
+        where BODY: FnOnce(&Scope<'scope>) + Send + 'scope
     {
         unsafe {
             self.job_completed_latch.increment();
             let job_ref = Box::new(HeapJob::new(move || self.execute_job(body)))
                 .as_job_ref();
-            let worker_thread = WorkerThread::current();
 
-            // the `Scope` is not send or sync, and we only give out
-            // pointers to it from within a worker thread
-            debug_assert!(!WorkerThread::current().is_null());
-
-            let worker_thread = &*worker_thread;
-            worker_thread.push(job_ref);
-        }
-    }
-
-    #[cfg(rayon_unstable)]
-    pub fn spawn_future<F>(&self, future: F) -> RayonFuture<F::Item, F::Error>
-        where F: Future + Send + 'scope
-    {
-        // We assert that the scope is allocated in a stable location
-        // (an enclosing stack frame, to be exact) which will remain
-        // valid until the scope ends.
-        let future_scope = unsafe { ScopeFutureScope::new(self) };
-
-        return future::new_rayon_future(future, future_scope);
-
-        struct ScopeFutureScope<'scope> {
-            scope: *const Scope<'scope>
-        }
-
-        impl<'scope> ScopeFutureScope<'scope> {
-            /// Caller guarantees that `*scope` will remain valid
-            /// until the scope completes. Since we acquire a ref,
-            /// that means it will remain valid until we release it.
-            unsafe fn new(scope: &Scope<'scope>) -> Self {
-                scope.job_completed_latch.increment();
-                ScopeFutureScope { scope: scope }
-            }
-        }
-
-        /// We assert that the `Self` type remains valid until a
-        /// method is called, and that `'scope` will not end until
-        /// that point.
-        unsafe impl<'scope> future::FutureScope<'scope> for ScopeFutureScope<'scope> {
-            fn registry(&self) -> Arc<Registry> {
-                unsafe {
-                    (*(*self.scope).owner_thread).registry().clone()
-                }
-            }
-
-            fn future_completed(self) {
-                unsafe {
-                    (*self.scope).job_completed_ok();
-                }
-            }
-
-            fn future_panicked(self, err: Box<Any + Send>) {
-                unsafe {
-                    (*self.scope).job_panicked(err);
-                }
-            }
+            // Since `Scope` implements `Sync`, we can't be sure
+            // that we're still in a thread of this pool, so we
+            // can't just push to the local worker thread.
+            self.registry.inject_or_push(job_ref);
         }
     }
 
@@ -362,10 +372,10 @@ impl<'scope> Scope<'scope> {
         let nil = ptr::null_mut();
         let mut err = Box::new(err); // box up the fat ptr
         if self.panic.compare_exchange(nil, &mut *err, Ordering::Release, Ordering::Relaxed).is_ok() {
-            log!(JobPanickedErrorStored { owner_thread: (*self.owner_thread).index() });
+            log!(JobPanickedErrorStored { owner_thread: self.owner_thread_index });
             mem::forget(err); // ownership now transferred into self.panic
         } else {
-            log!(JobPanickedErrorNotStored { owner_thread: (*self.owner_thread).index() });
+            log!(JobPanickedErrorNotStored { owner_thread: self.owner_thread_index });
         }
 
 
@@ -373,24 +383,35 @@ impl<'scope> Scope<'scope> {
     }
 
     unsafe fn job_completed_ok(&self) {
-        log!(JobCompletedOk { owner_thread: (*self.owner_thread).index() });
+        log!(JobCompletedOk { owner_thread: self.owner_thread_index });
         self.job_completed_latch.set();
     }
 
-    unsafe fn steal_till_jobs_complete(&self) {
+    unsafe fn steal_till_jobs_complete(&self, owner_thread: &WorkerThread) {
         // wait for job counter to reach 0:
-        (*self.owner_thread).wait_until(&self.job_completed_latch);
+        owner_thread.wait_until(&self.job_completed_latch);
 
         // propagate panic, if any occurred; at this point, all
         // outstanding jobs have completed, so we can use a relaxed
         // ordering:
         let panic = self.panic.swap(ptr::null_mut(), Ordering::Relaxed);
         if !panic.is_null() {
-            log!(ScopeCompletePanicked { owner_thread: (*self.owner_thread).index() });
+            log!(ScopeCompletePanicked { owner_thread: owner_thread.index() });
             let value: Box<Box<Any + Send + 'static>> = mem::transmute(panic);
             unwind::resume_unwinding(*value);
         } else {
-            log!(ScopeCompleteNoPanic { owner_thread: (*self.owner_thread).index() });
+            log!(ScopeCompleteNoPanic { owner_thread: owner_thread.index() });
         }
+    }
+}
+
+impl<'scope> fmt::Debug for Scope<'scope> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("Scope")
+            .field("pool_id", &self.registry.id())
+            .field("owner_thread_index", &self.owner_thread_index)
+            .field("panic", &self.panic)
+            .field("job_completed_latch", &self.job_completed_latch)
+            .finish()
     }
 }
