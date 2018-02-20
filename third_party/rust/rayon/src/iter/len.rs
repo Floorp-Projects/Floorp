@@ -1,4 +1,4 @@
-use super::internal::*;
+use super::plumbing::*;
 use super::*;
 use std::cmp;
 
@@ -8,6 +8,7 @@ use std::cmp;
 /// [`min_len()`]: trait.IndexedParallelIterator.html#method.min_len
 /// [`IndexedParallelIterator`]: trait.IndexedParallelIterator.html
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+#[derive(Debug, Clone)]
 pub struct MinLen<I: IndexedParallelIterator> {
     base: I,
     min: usize,
@@ -36,7 +37,7 @@ impl<I> ParallelIterator for MinLen<I>
         bridge(self, consumer)
     }
 
-    fn opt_len(&mut self) -> Option<usize> {
+    fn opt_len(&self) -> Option<usize> {
         Some(self.len())
     }
 }
@@ -48,7 +49,7 @@ impl<I> IndexedParallelIterator for MinLen<I>
         bridge(self, consumer)
     }
 
-    fn len(&mut self) -> usize {
+    fn len(&self) -> usize {
         self.base.len()
     }
 
@@ -119,6 +120,12 @@ impl<P> Producer for MinLenProducer<P>
              min: self.min,
          })
     }
+
+    fn fold_with<F>(self, folder: F) -> F
+        where F: Folder<Self::Item>
+    {
+        self.base.fold_with(folder)
+    }
 }
 
 
@@ -128,6 +135,7 @@ impl<P> Producer for MinLenProducer<P>
 /// [`max_len()`]: trait.IndexedParallelIterator.html#method.max_len
 /// [`IndexedParallelIterator`]: trait.IndexedParallelIterator.html
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+#[derive(Debug, Clone)]
 pub struct MaxLen<I: IndexedParallelIterator> {
     base: I,
     max: usize,
@@ -156,7 +164,7 @@ impl<I> ParallelIterator for MaxLen<I>
         bridge(self, consumer)
     }
 
-    fn opt_len(&mut self) -> Option<usize> {
+    fn opt_len(&self) -> Option<usize> {
         Some(self.len())
     }
 }
@@ -168,7 +176,7 @@ impl<I> IndexedParallelIterator for MaxLen<I>
         bridge(self, consumer)
     }
 
-    fn len(&mut self) -> usize {
+    fn len(&self) -> usize {
         self.base.len()
     }
 
@@ -238,5 +246,11 @@ impl<P> Producer for MaxLenProducer<P>
              base: right,
              max: self.max,
          })
+    }
+
+    fn fold_with<F>(self, folder: F) -> F
+        where F: Folder<Self::Item>
+    {
+        self.base.fold_with(folder)
     }
 }
