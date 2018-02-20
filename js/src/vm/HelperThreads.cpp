@@ -389,35 +389,10 @@ static const JSClass parseTaskGlobalClass = {
     &parseTaskGlobalClassOps
 };
 
-ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx, const char16_t* chars, size_t length,
+ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx,
                      JS::OffThreadCompileCallback callback, void* callbackData)
-  : kind(kind), options(cx), data(AsVariant(TwoByteChars(chars, length))),
-    alloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    parseGlobal(nullptr),
-    callback(callback), callbackData(callbackData),
-    scripts(cx), sourceObjects(cx),
-    overRecursed(false), outOfMemory(false)
-{
-    MOZ_ALWAYS_TRUE(scripts.reserve(scripts.capacity()));
-    MOZ_ALWAYS_TRUE(sourceObjects.reserve(sourceObjects.capacity()));
-}
-
-ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx, const JS::TranscodeRange& range,
-                     JS::OffThreadCompileCallback callback, void* callbackData)
-  : kind(kind), options(cx), data(AsVariant(range)),
-    alloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    parseGlobal(nullptr),
-    callback(callback), callbackData(callbackData),
-    scripts(cx), sourceObjects(cx),
-    overRecursed(false), outOfMemory(false)
-{
-    MOZ_ALWAYS_TRUE(scripts.reserve(scripts.capacity()));
-    MOZ_ALWAYS_TRUE(sourceObjects.reserve(sourceObjects.capacity()));
-}
-
-ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx, JS::TranscodeSources& sources,
-                     JS::OffThreadCompileCallback callback, void* callbackData)
-  : kind(kind), options(cx), data(AsVariant(&sources)),
+  : kind(kind),
+    options(cx),
     alloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     parseGlobal(nullptr),
     callback(callback), callbackData(callbackData),
@@ -483,14 +458,14 @@ ParseTask::trace(JSTracer* trc)
 
 ScriptParseTask::ScriptParseTask(JSContext* cx, const char16_t* chars, size_t length,
                                  JS::OffThreadCompileCallback callback, void* callbackData)
-  : ParseTask(ParseTaskKind::Script, cx, chars, length, callback, callbackData)
+  : ParseTask(ParseTaskKind::Script, cx, callback, callbackData),
+    data(TwoByteChars(chars, length))
 {}
 
 void
 ScriptParseTask::parse(JSContext* cx)
 {
-    auto& range = data.as<TwoByteChars>();
-    SourceBufferHolder srcBuf(range.begin().get(), range.length(), SourceBufferHolder::NoOwnership);
+    SourceBufferHolder srcBuf(data.begin().get(), data.length(), SourceBufferHolder::NoOwnership);
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
     ScopeKind scopeKind = options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
@@ -506,14 +481,14 @@ ScriptParseTask::parse(JSContext* cx)
 
 ModuleParseTask::ModuleParseTask(JSContext* cx, const char16_t* chars, size_t length,
                                  JS::OffThreadCompileCallback callback, void* callbackData)
-  : ParseTask(ParseTaskKind::Module, cx, chars, length, callback, callbackData)
+  : ParseTask(ParseTaskKind::Module, cx, callback, callbackData),
+    data(TwoByteChars(chars, length))
 {}
 
 void
 ModuleParseTask::parse(JSContext* cx)
 {
-    auto& range = data.as<TwoByteChars>();
-    SourceBufferHolder srcBuf(range.begin().get(), range.length(), SourceBufferHolder::NoOwnership);
+    SourceBufferHolder srcBuf(data.begin().get(), data.length(), SourceBufferHolder::NoOwnership);
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
     ModuleObject* module = frontend::CompileModule(cx, options, srcBuf, alloc, &sourceObject.get());
@@ -526,7 +501,8 @@ ModuleParseTask::parse(JSContext* cx)
 
 ScriptDecodeTask::ScriptDecodeTask(JSContext* cx, const JS::TranscodeRange& range,
                                    JS::OffThreadCompileCallback callback, void* callbackData)
-  : ParseTask(ParseTaskKind::ScriptDecode, cx, range, callback, callbackData)
+  : ParseTask(ParseTaskKind::ScriptDecode, cx, callback, callbackData),
+    range(range)
 {}
 
 void
@@ -536,7 +512,7 @@ ScriptDecodeTask::parse(JSContext* cx)
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
     XDROffThreadDecoder decoder(cx, alloc, &options, /* sourceObjectOut = */ &sourceObject.get(),
-                                data.as<const JS::TranscodeRange>());
+                                range);
     decoder.codeScript(&resultScript);
     MOZ_ASSERT(bool(resultScript) == (decoder.resultCode() == JS::TranscodeResult_Ok));
     if (decoder.resultCode() == JS::TranscodeResult_Ok) {
@@ -547,15 +523,15 @@ ScriptDecodeTask::parse(JSContext* cx)
 }
 
 MultiScriptsDecodeTask::MultiScriptsDecodeTask(JSContext* cx, JS::TranscodeSources& sources,
-                                     JS::OffThreadCompileCallback callback, void* callbackData)
-  : ParseTask(ParseTaskKind::MultiScriptsDecode, cx, sources, callback, callbackData)
+                                               JS::OffThreadCompileCallback callback,
+                                               void* callbackData)
+  : ParseTask(ParseTaskKind::MultiScriptsDecode, cx, callback, callbackData),
+    sources(&sources)
 {}
 
 void
 MultiScriptsDecodeTask::parse(JSContext* cx)
 {
-    auto sources = data.as<JS::TranscodeSources*>();
-
     if (!scripts.reserve(sources->length()) ||
         !sourceObjects.reserve(sources->length()))
     {
@@ -1614,12 +1590,15 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind, void
     size_t expectedLength = 0;
 
     bool ok = finishParseTask(cx, kind, token, [&scripts, &expectedLength] (ParseTask* parseTask) {
-        expectedLength = parseTask->data.as<JS::TranscodeSources*>()->length();
+        MOZ_ASSERT(parseTask->kind == ParseTaskKind::MultiScriptsDecode);
+        auto task = static_cast<MultiScriptsDecodeTask*>(parseTask);
 
-        if (!scripts.reserve(parseTask->scripts.length()))
+        expectedLength = task->sources->length();
+
+        if (!scripts.reserve(task->scripts.length()))
             return false;
 
-        for (auto& script : parseTask->scripts)
+        for (auto& script : task->scripts)
             scripts.infallibleAppend(script);
         return true;
     });
