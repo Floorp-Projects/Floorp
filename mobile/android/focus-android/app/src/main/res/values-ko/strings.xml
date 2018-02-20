@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">검색 엔진 추가</string>
   <string name="search_add_confirmation">새 검색 엔진이 추가되었습니다.</string>
   <string name="search_add_error_empty_name">검색 엔진 이름을 입력하세요</string>
+  <string name="search_add_error_duplicate_name">설치된 검색 엔진이 이미 해당 이름을 사용하고 있습니다.</string>
   <string name="search_add_error_empty_search">검색어를 입력하세요</string>
   <string name="search_add_error_format">검색어가 예시 형식과 일치하는 지 확인하세요</string>
   <string name="content_description_clear_input">입력 값 초기화</string>

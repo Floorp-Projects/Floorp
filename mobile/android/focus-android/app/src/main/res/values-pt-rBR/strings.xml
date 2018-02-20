@@ -26,12 +26,12 @@
   <string name="text_selection_search_action">Pesquisa privativa</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s coloca voc&#234; no controle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Use-o como o seu navegador privativo:\n  "<ul>"\n    "<li>Pesquise e navegue direto no aplicativo</li>"\n    "<li>Bloqueie rastreadores (ou atualize as configura&#231;&#245;es para permiti-los)</li>"\n    "<li>Apague para excluir cookies assim como o hist&#243;rico de pesquisa e navega&#231;&#227;o</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#233; produzido pela Mozilla. Nossa miss&#227;o &#233; promover uma Internet saud&#225;vel e aberta.<br/>\n<a href="%2$s">Saiba mais</a></p>]]></string>
   <string name="preference_category_search">Pesquisar</string>
-  <string name="preference_search_engine_default">Predefinido</string>
+  <string name="preference_search_engine_default">Padrão</string>
   <string name="preference_state_on">Ativado</string>
   <string name="preference_state_off">Desativado</string>
   <string name="preference_subitem_autocomplete">Preenchimento automático de URL</string>
   <string name="preference_switch_autocomplete">Preenchimento automático</string>
-  <string name="preference_category_autocomplete_preinstalled">Lista de URL predefinida</string>
+  <string name="preference_category_autocomplete_preinstalled">Lista de URL padrão</string>
   <string name="preference_autocomplete_preinstalled_summary">Habilite o %1$s para ter preenchimento automático de mais de 450 URLs populares na barra de endereços.</string>
   <string name="preference_category_autocomplete_custom">URL personalizada</string>
   <string name="preference_autocomplete_subitem_customlist">URLs personalizadas</string>
@@ -50,7 +50,7 @@
   <string name="preference_autocomplete_add_error">Verifique novamente o URL digitado.</string>
   <string name="preference_language">Idioma</string>
   <string name="preference_language_systemdefault">Padrão do sistema</string>
-  <string name="preference_dialog_title_search_engine">Pesquisa predefinida</string>
+  <string name="preference_dialog_title_search_engine">Pesquisa padrão</string>
   <string name="preference_category_privacy">Privacidade</string>
   <string name="preference_privacy_block_ads">Bloquear rastreadores de anúncio</string>
   <string name="preference_privacy_block_ads_summary">Algumas propagandas rastreiam os sites visitados, mesmo se você não clicar na propaganda</string>
@@ -66,7 +66,7 @@
   <string name="preference_performance_block_webfonts">Bloquear fontes Web</string>
   <string name="preference_performance_block_webfonts_summary">Pode resultar em falta de ícones ou imagens</string>
   <string name="preference_performance_block_images">Bloquear imagens</string>
-  <string name="preference_default_browser2">Definir o %1$s como navegador predefinido</string>
+  <string name="preference_default_browser2">Definir o %1$s como navegador padrão</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Enviar dados de utilização</string>
   <string name="preference_mozilla_telemetry_summary">Saiba mais</string>
@@ -74,7 +74,7 @@
   <string name="preference_privacy_notice">Política de Privacidade</string>
   <string name="preference_about">Sobre o %1$s</string>
   <string name="preference_search_installed_search_engines">Mecanismos de pesquisa instalados</string>
-  <string name="preference_search_restore">Restaurar mecanismos de pesquisa predefinido</string>
+  <string name="preference_search_restore">Restaurar os mecanismos de pesquisa padrões</string>
   <string name="preference_search_add2">Adicionar outro mecanismo de pesquisa</string>
   <string name="preference_search_remove_title">Remover mecanismos de pesquisa</string>
   <string name="preference_search_remove">Remover</string>
@@ -159,11 +159,11 @@
   <string name="firstrun_defaultbrowser_title">Potencialize sua privacidade</string>
   <string name="firstrun_defaultbrowser_text2">Leve a navegação privativa ao próximo nível. Bloqueie propagandas e outros conteúdos que podem rastrear você entre os sites diminuir o tempo de carregamento das páginas.</string>
   <string name="firstrun_search_title">Pesquise à sua maneira</string>
-  <string name="firstrun_search_text">Procurando algo diferente? Escolha outro mecanismo de pesquisa predefinido em Configurações.</string>
+  <string name="firstrun_search_text">Procurando algo diferente? Escolha outro mecanismo de pesquisa padrão em Configurações.</string>
   <string name="firstrun_shortcut_title">Adicione atalhos na sua tela principal</string>
   <string name="firstrun_shortcut_text">Volte ao seus sites favoritos no %1$s rapidamente. Apenas selecione \"Adicionar à Tela principal\" pelo menu do %1$s.</string>
   <string name="firstrun_privacy_title">Faça da privacidade um hábito</string>
-  <string name="firstrun_privacy_text">Defina o %1$s como seu navegador predefinido e obtenha os benefícios da navegação privativa quando abrir páginas de outros aplicativos.</string>
+  <string name="firstrun_privacy_text">Defina o %1$s como seu navegador padrão e obtenha os benefícios da navegação privativa quando abrir páginas de outros aplicativos.</string>
   <string name="firstrun_close_button">Ok, entendi!</string>
   <string name="firstrun_skip_button">Pular</string>
   <string name="firstrun_next_button">Próximo</string>

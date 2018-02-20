@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Cancel·la</string>
   <string name="action_ok">D\'acord</string>
+  <string name="action_save">Desa</string>
   <string name="urlbar_hint">Escriviu una cerca o adreça</string>
   <string name="teaser">Navegació privada automàtica.\nNavegueu. Esborreu. Torneu-hi.</string>
   <string name="feedback_erase">S\'ha esborrat l\'historial de navegació.</string>
@@ -10,6 +11,7 @@
   <string name="menu_open_with_default_browser">Obre amb el %1$s</string>
   <string name="menu_open_with_a_browser">Obre amb…</string>
   <string name="menu_add_to_home_screen">Afegeix a la pantalla d\'inici</string>
+  <string name="menu_whats_new">Novetats</string>
   <string name="menu_settings">Paràmetres</string>
   <string name="menu_about">Quant a</string>
   <string name="menu_help">Ajuda</string>
@@ -25,14 +27,39 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">El %1$s us d&#243;na el control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Com a navegador privat, us permet:\n  "<ul>"\n    "<li>Cercar i navegar directament des de l\'aplicaci&#243;</li>"\n    "<li>Blocar els elements de seguiment (o canviar els par&#224;metres per permetre\'ls)</li>"\n    "<li>Esborrar les galetes i l\'historial de cerques i de navegaci&#243;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">El %1$s est&#224; creat per Mozilla. La nostra missi&#243; &#233;s fomentar un Internet obert i saludable.<br/>\n<a href="%2$s">M&#233;s informaci&#243;</a></p>]]></string>
   <string name="preference_category_search">Cerca</string>
   <string name="preference_search_engine_default">Per defecte</string>
+  <string name="preference_state_on">Activat</string>
+  <string name="preference_state_off">Desactivat</string>
+  <string name="preference_subitem_autocomplete">URL Autocompletar</string>
+  <string name="preference_switch_autocomplete">Emplenament automàtic</string>
+  <string name="preference_category_autocomplete_preinstalled">Llista d\'URL per defecte</string>
+  <string name="preference_autocomplete_preinstalled_summary">Activeu-lo per fer permetre que el %1$s empleni automàticament més de 450 URL populars a la barra d\'adreces.</string>
+  <string name="preference_category_autocomplete_custom">URL personalitzat</string>
+  <string name="preference_autocomplete_subitem_customlist">URL personalitzats</string>
+  <string name="preference_autocomplete_action_add">+ Afegeix URL personalitzat</string>
+  <string name="preference_autocomplete_title_add">Afegeix URL personalitzat</string>
+  <string name="preference_autocomplete_title_remove">Elimina URL personalitzats</string>
+  <string name="preference_autocomplete_learn_more">Més informació</string>
+  <string name="preference_autocomplete_custom_summary">Afegiu i gestioneu els URL d\'emplenament automàtic personalitzats.</string>
+  <string name="preference_autocomplete_add_title">URL per afegir</string>
+  <string name="preference_autocomplete_add_hint">Enganxeu o escriviu un URL</string>
+  <string name="preference_autocomplete_add_example">Exemple: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">S\'ha afegit un URL personalitzat nou.</string>
+  <string name="preference_autocomplete_menu_remove">Elimina</string>
+  <string name="preference_autocomplete_action_remove_content_description">Elimina</string>
+  <string name="preference_autocomplete_add_error">Reviseu l\'URL que heu introduït.</string>
   <string name="preference_language">Llengua</string>
   <string name="preference_language_systemdefault">Valor per defecte del sistema</string>
   <string name="preference_dialog_title_search_engine">Cercador per defecte</string>
   <string name="preference_category_privacy">Privadesa</string>
   <string name="preference_privacy_block_ads">Bloca els elements de seguiment de publicitat</string>
+  <string name="preference_privacy_block_ads_summary">Alguns anuncis fan el seguiment de les visites als llocs, fins i tot si no feu clic als anuncis</string>
   <string name="preference_privacy_block_analytics">Bloca els elements de seguiment d\'anàlisi</string>
+  <string name="preference_privacy_block_analytics_summary">S\'utilitzen per recollir, analitzar i mesurar activitats com ara els tocs i el desplaçament</string>
   <string name="preference_privacy_block_social">Bloca els elements de seguiment social</string>
+  <string name="preference_privacy_block_social_summary">Està incrustat en els llocs per fer el seguiment de les vostres visites i per mostrar alguns elements com els botons de compartició</string>
   <string name="preference_privacy_block_content">Bloca altres elements de seguiment de contingut</string>
+  <string name="preference_privacy_block_content_summary2">Si s\'activa, algunes pàgines podrien comportar-se de forma inesperada</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
   <string name="preference_privacy_stealth_summary">Amaga les pàgines web en canviar d\'aplicacions</string>
   <string name="preference_category_performance">Rendiment</string>
@@ -46,6 +73,25 @@
   <string name="preference_mozilla_telemetry_summary2">Mozilla s\'esforça per recollir només les dades necessàries per oferir i millorar el %1$s per a tothom.</string>
   <string name="preference_privacy_notice">Avís de privadesa</string>
   <string name="preference_about">Quant al %1$s</string>
+  <string name="preference_search_installed_search_engines">Motors de cerca instal·lats</string>
+  <string name="preference_search_restore">Restaura els motors de cerca per defecte</string>
+  <string name="preference_search_add2">+ Afegeix un altre motor de cerca</string>
+  <string name="preference_search_remove_title">Elimina motors de cerca</string>
+  <string name="preference_search_remove">Elimina</string>
+  <string name="tutorial_search_manually_add">Afegeix manualment</string>
+  <string name="tutorial_search_title">Afegeix un motor de cerca</string>
+  <string name="action_option_add_search_engine">Afegeix un motor de cerca</string>
+  <string name="tutorial_search_finish">PRIMERS PASSOS</string>
+  <string name="search_add_manually_name">Nom per mostrar</string>
+  <string name="search_add_manually_name_hint">Nom del motor de cerca</string>
+  <string name="search_add_manually_string">Cadena de cerca que s\'utilitzarà</string>
+  <string name="search_add_manually_save">Desa</string>
+  <string name="search_add_manually_string_hint">Enganxeu o escriviu una cadena de cerca. Si és necessari, substituïu el terme de cerca per «%s».</string>
+  <string name="search_add_manually_example">Exemple: example.com/search/?q=%s</string>
+  <string name="accessibility_announcement_search">Afegeix un motor de cerca</string>
+  <string name="search_add_confirmation">S\'ha afegit un motor de cerca nou.</string>
+  <string name="search_add_error_empty_name">Escriviu el nom del motor de cerca</string>
+  <string name="search_add_error_empty_search">Escriviu una cadena de cerca</string>
   <string name="content_description_clear_input">Esborra l\'entrada</string>
   <string name="content_description_dismiss_input">Descarta</string>
   <string name="content_description_erase">Esborra l\'historial de navegació</string>
@@ -101,13 +147,13 @@
   <string name="contextmenu_open_in_new_tab">Obre l\'enllaç en una pestanya nova</string>
   <string name="contextmenu_image_warning"><![CDATA["Les imatges que deseu i compartiu "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no s\'eliminaran</b>" quan esborreu l\'historial del %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Potencieu la privadesa</string>
-  <string name="firstrun_defaultbrowser_text2">Porteu la navegació privada al nivell superior. Bloqueu anuncis i altre contingut que us fan el seguiment i alenteixen la càrrega de les pàgines.</string>
+  <string name="firstrun_defaultbrowser_text2">Porteu la navegació privada a un altre nivell. Bloqueu anuncis i altre contingut que us fan el seguiment i alenteixen la càrrega de les pàgines.</string>
   <string name="firstrun_search_title">Cerqueu com vulgueu</string>
   <string name="firstrun_search_text">Busqueu una altra cosa? Trieu un altre motor de cerca per defecte als Paràmetres.</string>
   <string name="firstrun_shortcut_title">Afegiu dreceres a la pantalla d\'inici</string>
   <string name="firstrun_shortcut_text">Retorneu ràpidament als vostres llocs preferits amb el %1$s. Trieu «Afegeix a la pantalla d\'inici» en el menú del %1$s.</string>
   <string name="firstrun_privacy_title">Feu de la privadesa un hàbit</string>
-  <string name="firstrun_privacy_text">Definiu el %1$s com a navegador per defecte i gaudiu d\'una navegació privada quan obriu pàgines web des d\'altres aplicacions.</string>
+  <string name="firstrun_privacy_text">Definiu el %1$s com a navegador per defecte i gaudiu de navegació privada en obrir pàgines web des d\'altres aplicacions.</string>
   <string name="firstrun_close_button">Entesos</string>
   <string name="firstrun_skip_button">Omet</string>
   <string name="firstrun_next_button">Següent</string>
@@ -122,4 +168,7 @@
   <string name="notification_browsing_session_channel_description">Les notificacions permeten esborrar la sessió del %1$s amb un sol toc. No cal ni obrir l\'aplicació ni mostrar el contingut del navegador.</string>
   <string name="tabs_tray_action_erase">Esborra l\'historial de navegació</string>
   <string name="download_firefox">Baixa el Firefox</string>
+  <string name="your_rights_content1">El %1$s és programari lliure i de codi obert creat per Mozilla i altres col·laboradors.</string>
+  <string name="your_rights_content2"><![CDATA["El %1$s és a la vostra disposició sota els termes de la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License (Llic&#232;ncia P&#250;blica de Mozilla)</a>" i altres llicències lliures."]]></string>
+  <string name="your_rights_content3"><![CDATA["No se us atorga cap dret ni llicència sobre les marques registrades de la Fundació Mozilla, o de cap altra part, inclosos els noms o els logotips de Mozilla, Firefox o %1$s. Podeu trobar més informació "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aqu&#237;</a>.]]></string>
 </resources>

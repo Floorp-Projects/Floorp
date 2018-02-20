@@ -27,8 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1073;&#1072;&#1089;&#1179;&#1072;&#1088;&#1091;&#1076;&#1099; &#1179;&#1086;&#1083;&#1099;&#1187;&#1099;&#1079;&#1171;&#1072; &#1073;&#1077;&#1088;&#1077;&#1076;&#1110;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1054;&#1085;&#1099; &#1078;&#1077;&#1082;&#1077;&#1083;&#1110;&#1082; &#1073;&#1088;&#1072;&#1091;&#1079;&#1077;&#1088;&#1110; &#1088;&#1077;&#1090;&#1110;&#1085;&#1076;&#1077; &#1179;&#1086;&#1083;&#1076;&#1072;&#1085;&#1099;&#1187;&#1099;&#1079;:\n  "<ul>"\n    "<li>&#1178;&#1086;&#1083;&#1076;&#1072;&#1085;&#1073;&#1072; &#1110;&#1096;&#1110;&#1085;&#1077;&#1085; &#1090;&#1110;&#1082;&#1077;&#1083;&#1077;&#1081; &#1110;&#1079;&#1076;&#1077;&#1091; &#1078;&#1241;&#1085;&#1077; &#1096;&#1086;&#1083;&#1091;</li>"\n    "<li>&#1058;&#1088;&#1077;&#1082;&#1077;&#1088;&#1083;&#1077;&#1088;&#1076;&#1110; &#1073;&#1083;&#1086;&#1082;&#1090;&#1072;&#1187;&#1099;&#1079; (&#1085;&#1077;&#1084;&#1077;&#1089;&#1077;, &#1086;&#1083;&#1072;&#1088;&#1076;&#1099; &#1088;&#1201;&#1179;&#1089;&#1072;&#1090; &#1077;&#1090;&#1091; &#1199;&#1096;&#1110;&#1085;, &#1073;&#1072;&#1087;&#1090;&#1072;&#1091;&#1083;&#1072;&#1088;&#1076;&#1099; &#1078;&#1072;&#1187;&#1072;&#1088;&#1090;&#1099;&#1187;&#1099;&#1079;)</li>"\n    "<li>Cookies &#1078;&#1241;&#1085;&#1077; &#1110;&#1079;&#1076;&#1077;&#1091; &#1084;&#1077;&#1085; &#1096;&#1086;&#1083;&#1091; &#1090;&#1072;&#1088;&#1080;&#1093;&#1099;&#1085; &#1082;&#1077;&#1090;&#1110;&#1088;&#1091; &#1199;&#1096;&#1110;&#1085; &#1257;&#1096;&#1110;&#1088;&#1110;&#1187;&#1110;&#1079;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1078;&#1072;&#1089;&#1072;&#1171;&#1072;&#1085; Mozilla. &#1052;&#1072;&#1179;&#1089;&#1072;&#1090;&#1099;&#1084;&#1099;&#1079; - &#1080;&#1085;&#1090;&#1077;&#1088;&#1085;&#1077;&#1090; &#1076;&#1077;&#1085;&#1089;&#1072;&#1091;&#1083;&#1099;&#1171;&#1099;&#1085; &#1078;&#1241;&#1085;&#1077; &#1072;&#1096;&#1099;&#1179;&#1090;&#1099;&#1171;&#1099;&#1085; &#1089;&#1072;&#1179;&#1090;&#1072;&#1091;.<br/>\n<a href="%2$s">&#1050;&#1257;&#1073;&#1110;&#1088;&#1077;&#1082; &#1073;&#1110;&#1083;&#1091;</a></p>]]></string>
   <string name="preference_category_search">Іздеу</string>
   <string name="preference_search_engine_default">Негізгі</string>
+  <string name="preference_state_on">Іске қосулған</string>
+  <string name="preference_state_off">Сөндірілген</string>
+  <string name="preference_subitem_autocomplete">URL автотолықтыру</string>
+  <string name="preference_switch_autocomplete">Автотолықтыру</string>
+  <string name="preference_category_autocomplete_preinstalled">Бастапқы URL тізімі</string>
+  <string name="preference_autocomplete_preinstalled_summary">%1$s адрестік жолақта 450-ден астам әйгілі URL-ді автотолықтыру үшін іске қосыңыз.</string>
+  <string name="preference_category_autocomplete_custom">Таңдауыңызша URL</string>
+  <string name="preference_autocomplete_subitem_customlist">Таңдауыңызша URL-дер</string>
+  <string name="preference_autocomplete_action_add">+ Таңдауыңызша URL қосу</string>
+  <string name="preference_autocomplete_title_add">Таңдауыңызша URL қосу</string>
+  <string name="preference_autocomplete_title_remove">Таңдауыңызша URL-дер өшіру</string>
+  <string name="preference_autocomplete_learn_more">Көбірек білу</string>
+  <string name="preference_autocomplete_custom_summary">Таңдауыңызша автотолықтыру URL-ді қосыңыз немесе басқарыңыз.</string>
+  <string name="preference_autocomplete_add_title">Қосылатын URL</string>
+  <string name="preference_autocomplete_add_hint">URL кірістіріңіз немесе енгізіңіз</string>
+  <string name="preference_autocomplete_add_example">Мысалы: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Жаңа таңдауыңызша URL қосылды.</string>
   <string name="preference_autocomplete_menu_remove">Өшіру</string>
   <string name="preference_autocomplete_action_remove_content_description">Өшіру</string>
+  <string name="preference_autocomplete_add_error">Енгізілген URL тексеріңіз.</string>
   <string name="preference_language">Тіл</string>
   <string name="preference_language_systemdefault">Жүйелік</string>
   <string name="preference_dialog_title_search_engine">Негізгі іздеу жүйесі</string>
@@ -72,13 +91,17 @@
   <string name="tutorial_search_finish">БАСТАУ</string>
   <string name="search_add_hint">Бұл іздеу жүйесін қосу үшін, пернетақта үстіндегі ұлғайтқыш таңбашасына шертіңіз.</string>
   <string name="search_add_manually_name">Көрсетілетін аты</string>
-  <string name="search_add_manually_name_hint">Іздеу жүйесі атын іздеу</string>
+  <string name="search_add_manually_name_hint">Іздеу жүйесінің аты</string>
   <string name="search_add_manually_string">Қолданылатын іздеу жолы</string>
   <string name="search_add_manually_save">Сақтау</string>
   <string name="search_add_manually_string_hint">Іздеу жолын кірістіріңіз немесе енгізіңіз. Керек болса, іздеу ұғымын келесімен алмастырыңыз: %s.</string>
   <string name="search_add_manually_example">Мысалы: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Іздеу жүйесін қосу</string>
   <string name="search_add_confirmation">Жаңа іздеу жүйесі қосылды.</string>
+  <string name="search_add_error_empty_name">Іздеу жүйесі атын енгізіңіз</string>
+  <string name="search_add_error_duplicate_name">Орнатылған іздеу жүйесі бұл атын қолданып тұр.</string>
+  <string name="search_add_error_empty_search">Іздеу жолын енгізіңіз</string>
+  <string name="search_add_error_format">Іздеу жолы мысал пішіміне сай келетінін тексеріңіз</string>
   <string name="content_description_clear_input">Енгізуді тазарту</string>
   <string name="content_description_dismiss_input">Тайдыру</string>
   <string name="content_description_erase">Шолу тарихын өшіру</string>

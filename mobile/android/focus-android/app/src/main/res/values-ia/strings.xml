@@ -29,12 +29,25 @@
   <string name="preference_search_engine_default">Predefinite</string>
   <string name="preference_state_on">Activar</string>
   <string name="preference_state_off">Disactivar</string>
+  <string name="preference_subitem_autocomplete">Auto-completamento del URL</string>
   <string name="preference_switch_autocomplete">Auto-completar</string>
+  <string name="preference_category_autocomplete_preinstalled">Lista de URL predefinite</string>
+  <string name="preference_autocomplete_preinstalled_summary">Activa %1$s sur 450 URLs popular a ser auto-completate in le barra del adresses.</string>
+  <string name="preference_category_autocomplete_custom">URL personalisate</string>
+  <string name="preference_autocomplete_subitem_customlist">URLs personalisate</string>
+  <string name="preference_autocomplete_action_add">+ Adder URL personalisate</string>
+  <string name="preference_autocomplete_title_add">Adder URL personalisate</string>
+  <string name="preference_autocomplete_title_remove">Remover URLs personalisate</string>
   <string name="preference_autocomplete_learn_more">Apprender plus</string>
+  <string name="preference_autocomplete_custom_summary">Adde e gere le complementamento personalisate del URLs.</string>
   <string name="preference_autocomplete_add_title">URL a adder</string>
+  <string name="preference_autocomplete_add_hint">Colla o insere le URL</string>
+  <string name="preference_autocomplete_add_example">Exemplo: example.com</string>
   <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Nove URL personalisate addite.</string>
   <string name="preference_autocomplete_menu_remove">Remover</string>
   <string name="preference_autocomplete_action_remove_content_description">Remover</string>
+  <string name="preference_autocomplete_add_error">Clicca duple le URL que tu insereva.</string>
   <string name="preference_language">Lingua</string>
   <string name="preference_language_systemdefault">Valor predefinite per le systema</string>
   <string name="preference_dialog_title_search_engine">Motor de recerca predefinite</string>
@@ -85,6 +98,10 @@
   <string name="search_add_manually_example">Exemplo: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Adder un motor de recerca</string>
   <string name="search_add_confirmation">Nove motor de recerca addite.</string>
+  <string name="search_add_error_empty_name">Insere le omine del fila de recerca</string>
+  <string name="search_add_error_duplicate_name">Un motor de recerca installate usa jam ille nomine.</string>
+  <string name="search_add_error_empty_search">Insere un fila de characteres pro le recerca</string>
+  <string name="search_add_error_format">Verifica que le fila de recerca concorda con le formato de exemplo</string>
   <string name="content_description_clear_input">Vacuar le texto inserite</string>
   <string name="content_description_dismiss_input">Dimitter</string>
   <string name="content_description_erase">Elimina le chronologia de navigation</string>

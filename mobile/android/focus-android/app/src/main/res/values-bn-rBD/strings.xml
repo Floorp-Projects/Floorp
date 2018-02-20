@@ -29,6 +29,8 @@
   <string name="preference_search_engine_default">পূর্বনির্ধারিত</string>
   <string name="preference_state_on">চালু</string>
   <string name="preference_state_off">বন্ধ</string>
+  <string name="preference_subitem_autocomplete">URL অটোকমপ্লিট</string>
+  <string name="preference_switch_autocomplete">অটোকমপ্লিট</string>
   <string name="preference_category_autocomplete_preinstalled">ডিফল্ট URL লিস্ট</string>
   <string name="preference_category_autocomplete_custom">কাস্টোম URL</string>
   <string name="preference_autocomplete_subitem_customlist">কাস্টোম URLs</string>
@@ -36,11 +38,14 @@
   <string name="preference_autocomplete_title_add">কাস্টোম URL যোগ করুন</string>
   <string name="preference_autocomplete_title_remove">কাস্টোম URL মুছে দিন</string>
   <string name="preference_autocomplete_learn_more">আরও জানুন</string>
+  <string name="preference_autocomplete_add_title">URL যোগ করতে</string>
+  <string name="preference_autocomplete_add_hint">URL পেস্ট অথবা প্রবেশ করান</string>
   <string name="preference_autocomplete_add_example">উদাহরণ: example.com</string>
   <string name="preference_autocomplete_handle_content_description">-</string>
   <string name="preference_autocomplete_add_confirmation">নতুন কাস্টোম URL যোগ করা হয়েছে।</string>
   <string name="preference_autocomplete_menu_remove">অপসারণ</string>
   <string name="preference_autocomplete_action_remove_content_description">অপসারণ</string>
+  <string name="preference_autocomplete_add_error">যে URL টি আপনি দিলেন তা ডবল চেক করুন।</string>
   <string name="preference_language">ভাষা</string>
   <string name="preference_language_systemdefault">সিস্টেম ডিফল্ট</string>
   <string name="preference_dialog_title_search_engine">ডিফল্ট অনুসন্ধান</string>
@@ -74,6 +79,7 @@
   <string name="tutorial_search_title">অনুসন্ধান ইঞ্জিন যোগ</string>
   <string name="tutorial_search_step1">1. অনুসন্ধান ইঞ্জিন নীড়পাতায় যান।</string>
   <string name="action_option_add_search_engine">অনুসন্ধান ইঞ্জিন যোগ</string>
+  <string name="tutorial_search_step3_alternative">3. ট্যাপ %1$s</string>
   <string name="search_add_manually_name">যে নাম দেখাবে</string>
   <string name="search_add_manually_name_hint">অনুসন্ধান ইঞ্জিন নাম</string>
   <string name="search_add_manually_string">ব্যবহারের জন্য অনুসন্ধান বাক্য</string>

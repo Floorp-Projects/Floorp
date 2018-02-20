@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Ακύρωση</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Αποθήκευση</string>
   <string name="urlbar_hint">Αναζήτηση ή πληκτρολόγηση διεύθυνσης</string>
   <string name="teaser">Αυτόματη ιδιωτική περιήγηση.\nΠεριήγηση. Διαγραφή. Επανάληψη.</string>
   <string name="feedback_erase">Το ιστορικό περιήγησής έχει εκκαθαριστεί.</string>
@@ -10,6 +11,7 @@
   <string name="menu_open_with_default_browser">Άνοιγμα με %1$s</string>
   <string name="menu_open_with_a_browser">Άνοιγμα με…</string>
   <string name="menu_add_to_home_screen">Προσθήκη στην Αρχική οθόνη</string>
+  <string name="menu_whats_new">Τι νέο υπάρχει</string>
   <string name="menu_settings">Ρυθμίσεις</string>
   <string name="menu_about">Πληροφορίες</string>
   <string name="menu_help">Βοήθεια</string>
@@ -25,6 +27,14 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#932;&#959; %1$s &#963;&#940;&#962; &#948;&#943;&#957;&#949;&#953; &#964;&#959;&#957; &#941;&#955;&#949;&#947;&#967;&#959;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#935;&#961;&#951;&#963;&#953;&#956;&#959;&#960;&#959;&#953;&#942;&#963;&#964;&#949; &#964;&#959; &#969;&#962; &#960;&#961;&#972;&#947;&#961;&#945;&#956;&#956;&#945; &#953;&#948;&#953;&#969;&#964;&#953;&#954;&#942;&#962; &#960;&#949;&#961;&#953;&#942;&#947;&#951;&#963;&#951;&#962;:\n  "<ul>"\n    "<li>&#913;&#957;&#945;&#950;&#951;&#964;&#942;&#963;&#964;&#949; &#954;&#945;&#953; &#960;&#949;&#961;&#953;&#951;&#947;&#951;&#952;&#949;&#943;&#964;&#949; &#949;&#957;&#964;&#972;&#962; &#964;&#951;&#962; &#949;&#966;&#945;&#961;&#956;&#959;&#947;&#942;&#962;</li>"\n    "<li>&#913;&#960;&#959;&#954;&#955;&#949;&#943;&#963;&#964;&#949; trackers (&#942; &#949;&#957;&#951;&#956;&#949;&#961;&#974;&#963;&#964;&#949; &#964;&#953;&#962; &#961;&#965;&#952;&#956;&#943;&#963;&#949;&#953;&#962; &#963;&#945;&#962; &#974;&#963;&#964;&#949; &#957;&#945; &#949;&#960;&#953;&#964;&#961;&#941;&#960;&#959;&#957;&#964;&#945;&#953;)</li>"\n    "<li>&#916;&#953;&#945;&#947;&#961;&#940;&#968;&#964;&#949; &#964;&#945; cookies, &#954;&#945;&#952;&#974;&#962; &#954;&#945;&#953; &#964;&#959; &#953;&#963;&#964;&#959;&#961;&#953;&#954;&#972; &#945;&#957;&#945;&#950;&#951;&#964;&#942;&#963;&#949;&#969;&#957; &#954;&#945;&#953; &#960;&#949;&#961;&#953;&#942;&#947;&#951;&#963;&#951;&#962;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#932;&#959; %1$s &#948;&#951;&#956;&#953;&#959;&#965;&#961;&#947;&#942;&#952;&#951;&#954;&#949; &#945;&#960;&#972; &#964;&#951; Mozilla. &#919; &#945;&#960;&#959;&#963;&#964;&#959;&#955;&#942; &#956;&#945;&#962; &#949;&#943;&#957;&#945;&#953; &#957;&#945; &#960;&#961;&#959;&#945;&#947;&#940;&#947;&#959;&#965;&#956;&#949; &#941;&#957;&#945; &#965;&#947;&#953;&#941;&#962;, &#945;&#957;&#959;&#953;&#967;&#964;&#972; &#948;&#953;&#945;&#948;&#943;&#954;&#964;&#965;&#959;.<br/>\n<a href="%2$s">&#924;&#940;&#952;&#949;&#964;&#949; &#960;&#949;&#961;&#953;&#963;&#963;&#972;&#964;&#949;&#961;&#945;</a></p>]]></string>
   <string name="preference_category_search">Αναζήτηση</string>
   <string name="preference_search_engine_default">Προεπιλογή</string>
+  <string name="preference_state_on">Ενεργό</string>
+  <string name="preference_state_off">Ανενεργό</string>
+  <string name="preference_subitem_autocomplete">Αυτόματη συμπλήρωση URL</string>
+  <string name="preference_switch_autocomplete">Αυτόματη συμπλήρωση</string>
+  <string name="preference_category_autocomplete_custom">Προσαρμοσμένο URL</string>
+  <string name="preference_autocomplete_subitem_customlist">Προσαρμοσμένα URLs</string>
+  <string name="preference_autocomplete_learn_more">Μάθετε περισσότερα</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
   <string name="preference_language">Γλώσσα</string>
   <string name="preference_language_systemdefault">Προεπιλογή συστήματος</string>
   <string name="preference_dialog_title_search_engine">Προεπιλεγμένη αναζήτηση</string>

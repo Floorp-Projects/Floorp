@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Přidat vyhledávací modul</string>
   <string name="search_add_confirmation">Nový vyhledávací modul byl přidán.</string>
   <string name="search_add_error_empty_name">Zadejte název vyhledávače</string>
+  <string name="search_add_error_duplicate_name">Tento název už je používán nainstalovaným vyhledávacím modulem.</string>
   <string name="search_add_error_empty_search">Zadejte hledaný řetězec</string>
   <string name="search_add_error_format">Zkontrolujte, zda vyhledávací řetězec odpovídá formátu příkladu</string>
   <string name="content_description_clear_input">Vymazat pole</string>
@@ -127,7 +128,7 @@
   <string name="external_multiple_apps_matched_exit">Opustit režim anonymního prohlížení?</string>
   <string name="download_snackbar_finished">Soubor %1$s byl stažen</string>
   <string name="download_snackbar_open">Otevřít</string>
-  <string name="download_dialog_warning"><![CDATA["Stažené soubory "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebudou odstran&#283;ny</b>" při vymazání historie prohlížení aplikace %1$s."]]></string>
+  <string name="download_dialog_warning"><![CDATA["Stažené soubory "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebudou smaz&#225;ny</b>" při vymazání historie prohlížení aplikace %1$s."]]></string>
   <string name="download_dialog_title">Stáhnout soubor</string>
   <string name="download_dialog_action_cancel">Zrušit</string>
   <string name="download_dialog_action_download">Stáhnout</string>

@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">रद्द करें</string>
   <string name="action_ok">ठीक है</string>
+  <string name="action_save">सहेजें</string>
   <string name="urlbar_hint">खोजें या पता दर्ज करें</string>
   <string name="teaser">स्वचालित निजी ब्राउज़िंग. ब्राउज़ करें. मिटाएँ. दोहराएँ.</string>
   <string name="feedback_erase">आपका ब्राउज़िंग इतिहास मिटा दिया गया है.</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2310;&#2346;&#2325;&#2379; &#2344;&#2367;&#2351;&#2306;&#2340;&#2381;&#2352;&#2339; &#2350;&#2375;&#2306; &#2352;&#2326;&#2340;&#2366; &#2361;&#2376;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#2311;&#2360;&#2375; &#2319;&#2325; &#2344;&#2367;&#2332;&#2368; &#2348;&#2381;&#2352;&#2366;&#2313;&#2332;&#2364;&#2352; &#2325;&#2375; &#2352;&#2370;&#2346; &#2350;&#2375;&#2306; &#2346;&#2381;&#2352;&#2351;&#2379;&#2327; &#2325;&#2352;&#2375;&#2306;:\n  "<ul>"\n    "<li>&#2320;&#2346; &#2350;&#2375;&#2306; &#2342;&#2366;&#2361;&#2367;&#2344;&#2368; &#2323;&#2352; &#2326;&#2379;&#2332;&#2375;&#2306; &#2324;&#2352; &#2348;&#2381;&#2352;&#2366;&#2313;&#2332; &#2325;&#2352;&#2375;&#2306;</li>"\n    "<li>&#2335;&#2381;&#2352;&#2376;&#2325;&#2352;&#2381;&#2360; &#2309;&#2357;&#2352;&#2369;&#2342;&#2381;&#2343; &#2325;&#2352;&#2375;&#2306; (&#2351;&#2366; &#2335;&#2381;&#2352;&#2376;&#2325;&#2352;&#2381;&#2360; &#2325;&#2379; &#2309;&#2344;&#2369;&#2350;&#2340;&#2367; &#2342;&#2375;&#2344;&#2375; &#2325;&#2375; &#2354;&#2367;&#2319; &#2360;&#2375;&#2335;&#2367;&#2306;&#2327;&#2381;&#2360; &#2309;&#2346;&#2337;&#2375;&#2335; &#2325;&#2352;&#2375;&#2306;)</li>"\n    "<li>&#2325;&#2369;&#2325;&#2368;&#2332;&#2364; &#2325;&#2375; &#2360;&#2366;&#2341; &#2326;&#2379;&#2332; &#2324;&#2352; &#2348;&#2381;&#2352;&#2366;&#2313;&#2332;&#2364;&#2367;&#2306;&#2327; &#2311;&#2340;&#2367;&#2361;&#2366;&#2360; &#2361;&#2335;&#2366;&#2344;&#2375; &#2325;&#2375; &#2354;&#2367;&#2319; &#2350;&#2367;&#2335;&#2366;&#2319;&#2305;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2350;&#2379;&#2332;&#2364;&#2367;&#2354;&#2366; &#2342;&#2381;&#2357;&#2366;&#2352;&#2366; &#2344;&#2367;&#2352;&#2381;&#2350;&#2367;&#2340; &#2361;&#2376;. &#2361;&#2350;&#2366;&#2352;&#2366; &#2350;&#2367;&#2358;&#2344; &#2319;&#2325; &#2360;&#2381;&#2357;&#2360;&#2381;&#2341;, &#2313;&#2344;&#2381;&#2350;&#2369;&#2325;&#2381;&#2340; &#2311;&#2306;&#2335;&#2352;&#2344;&#2375;&#2335; &#2325;&#2379; &#2348;&#2338;&#2364;&#2366;&#2357;&#2366; &#2342;&#2375;&#2344;&#2366; &#2361;&#2376;.<br/>\n<a href="%2$s">&#2324;&#2352; &#2332;&#2366;&#2344;&#2375;&#2306;</a></p>]]></string>
   <string name="preference_category_search">खोजें</string>
   <string name="preference_search_engine_default">मूलभूत</string>
+  <string name="preference_state_on">चालू</string>
+  <string name="preference_state_off">बंद</string>
+  <string name="preference_subitem_autocomplete">URL स्वत: पूर्ण</string>
+  <string name="preference_switch_autocomplete">स्‍वत: पूर्ण</string>
+  <string name="preference_category_autocomplete_preinstalled">मूलभूत URL सूची</string>
+  <string name="preference_autocomplete_preinstalled_summary">पता पट्ट में 450 लोकप्रिय URLs पर %1$s स्वत: पूर्णता के लिए सक्षम करें.</string>
+  <string name="preference_category_autocomplete_custom">उपभोक्ता संशोधित URL</string>
+  <string name="preference_autocomplete_subitem_customlist">उपभोक्ता संशोधित URLs</string>
+  <string name="preference_autocomplete_action_add">+ अपनी संशोधित URL जोड़ें</string>
+  <string name="preference_autocomplete_title_add">अपनी संशोधित URL जोड़ें</string>
+  <string name="preference_autocomplete_title_remove">उपभोक्ता संशोधित URL हटाएँ</string>
+  <string name="preference_autocomplete_learn_more">और जानें</string>
+  <string name="preference_autocomplete_custom_summary">उपभोक्ता संशोधित स्वत: पूर्ण URLs जोड़ें और प्रबंधित करें.</string>
+  <string name="preference_autocomplete_add_title">जोड़ने के लिए URL</string>
+  <string name="preference_autocomplete_add_hint">URL पेस्ट करें या दर्ज करें</string>
+  <string name="preference_autocomplete_add_example">उदाहरण: example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">नया उपभोक्ता संशोधित URL जोड़ा गया.</string>
+  <string name="preference_autocomplete_menu_remove">हटाएँ</string>
+  <string name="preference_autocomplete_action_remove_content_description">हटाएँ</string>
+  <string name="preference_autocomplete_add_error">आपके द्वारा दर्ज URL की दोहरी जाँच करें.</string>
   <string name="preference_language">भाषा</string>
   <string name="preference_language_systemdefault">प्रणाली तयशुदा</string>
   <string name="preference_dialog_title_search_engine">तयशुदा खोज़</string>
@@ -76,6 +98,10 @@
   <string name="search_add_manually_example">उदाहरण: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">खोज इंजन जोड़ें</string>
   <string name="search_add_confirmation">नया खोज इंजन संकलित.</string>
+  <string name="search_add_error_empty_name">खोज इंजन का नाम दर्ज करें</string>
+  <string name="search_add_error_duplicate_name">एक मौजूदा खोज इंजन पहले से उस नाम का उपयोग कर रहा है.</string>
+  <string name="search_add_error_empty_search">खोज स्ट्रिंग दर्ज करें</string>
+  <string name="search_add_error_format">जाँचें कि खोज स्ट्रिंग उदाहरण संरूप से मेल खाती है</string>
   <string name="content_description_clear_input">इनपुट मिटाएँ</string>
   <string name="content_description_dismiss_input">निरस्त करें</string>
   <string name="content_description_erase">ब्राउज़िंग इतिहास मिटाएँ</string>

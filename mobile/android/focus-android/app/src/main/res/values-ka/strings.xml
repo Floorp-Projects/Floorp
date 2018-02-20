@@ -119,7 +119,7 @@
   <string name="content_description_stop">საიტის ჩატვირთვის შეჩერება</string>
   <string name="content_description_customtab_exit">წინა პროგრამაზე დაბრუნება</string>
   <string name="content_description_blocking_switch">მეთვალყურე ელემენტების შეზღუდვა</string>
-  <string name="context_menu_paste_go">ჩასმა &amp; გადასვლა</string>
+  <string name="context_menu_paste_go">ჩასმა და გადასვლა</string>
   <string name="your_rights">თქვენი უფლებები</string>
   <string name="external_app_prompt_title">ბმულის სხვა პროგრამით გახსნა</string>
   <string name="external_app_prompt">შეგიძლიათ დატოვოთ %1$s ბმულის %2$s-ში გასახსნელად.</string>
