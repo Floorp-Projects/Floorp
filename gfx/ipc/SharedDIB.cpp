@@ -25,7 +25,7 @@ SharedDIB::Create(uint32_t aSize)
   Close();
 
   mShMem = new base::SharedMemory();
-  if (!mShMem || !mShMem->Create("", false, false, aSize))
+  if (!mShMem || !mShMem->Create(aSize))
     return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
