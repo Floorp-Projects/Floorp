@@ -1,13 +1,14 @@
-use super::internal::*;
+use super::plumbing::*;
 use super::*;
 use std::cmp::min;
 
 /// `Take` is an iterator that iterates over the first `n` elements.
-/// This struct is created by the [`take()`] method on [`ParallelIterator`]
+/// This struct is created by the [`take()`] method on [`IndexedParallelIterator`]
 ///
-/// [`take()`]: trait.ParallelIterator.html#method.take
-/// [`ParallelIterator`]: trait.ParallelIterator.html
+/// [`take()`]: trait.IndexedParallelIterator.html#method.take
+/// [`IndexedParallelIterator`]: trait.IndexedParallelIterator.html
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+#[derive(Debug, Clone)]
 pub struct Take<I> {
     base: I,
     n: usize,
@@ -16,7 +17,7 @@ pub struct Take<I> {
 /// Create a new `Take` iterator.
 ///
 /// NB: a free fn because it is NOT part of the end-user API.
-pub fn new<I>(mut base: I, n: usize) -> Take<I>
+pub fn new<I>(base: I, n: usize) -> Take<I>
     where I: IndexedParallelIterator
 {
     let n = min(base.len(), n);
@@ -34,7 +35,7 @@ impl<I> ParallelIterator for Take<I>
         bridge(self, consumer)
     }
 
-    fn opt_len(&mut self) -> Option<usize> {
+    fn opt_len(&self) -> Option<usize> {
         Some(self.len())
     }
 }
@@ -42,7 +43,7 @@ impl<I> ParallelIterator for Take<I>
 impl<I> IndexedParallelIterator for Take<I>
     where I: IndexedParallelIterator
 {
-    fn len(&mut self) -> usize {
+    fn len(&self) -> usize {
         self.n
     }
 

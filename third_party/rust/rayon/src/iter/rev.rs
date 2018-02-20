@@ -1,8 +1,14 @@
-use super::internal::*;
+use super::plumbing::*;
 use super::*;
 use std::iter;
 
+/// `Rev` is an iterator that produces elements in reverse order. This struct
+/// is created by the [`rev()`] method on [`IndexedParallelIterator`]
+///
+/// [`rev()`]: trait.IndexedParallelIterator.html#method.rev
+/// [`IndexedParallelIterator`]: trait.IndexedParallelIterator.html
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+#[derive(Debug, Clone)]
 pub struct Rev<I: IndexedParallelIterator> {
     base: I,
 }
@@ -27,7 +33,7 @@ impl<I> ParallelIterator for Rev<I>
         bridge(self, consumer)
     }
 
-    fn opt_len(&mut self) -> Option<usize> {
+    fn opt_len(&self) -> Option<usize> {
         Some(self.len())
     }
 }
@@ -39,11 +45,11 @@ impl<I> IndexedParallelIterator for Rev<I>
         bridge(self, consumer)
     }
 
-    fn len(&mut self) -> usize {
+    fn len(&self) -> usize {
         self.base.len()
     }
 
-    fn with_producer<CB>(mut self, callback: CB) -> CB::Output
+    fn with_producer<CB>(self, callback: CB) -> CB::Output
         where CB: ProducerCallback<Self::Item>
     {
         let len = self.base.len();

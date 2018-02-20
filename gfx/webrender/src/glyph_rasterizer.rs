@@ -628,16 +628,17 @@ fn rasterize_200_glyphs() {
     // This test loads a font from disc, the renders 4 requests containing
     // 50 glyphs each, deletes the font and waits for the result.
 
-    use rayon::Configuration;
+    use rayon::ThreadPoolBuilder;
     use std::fs::File;
     use std::io::Read;
 
-    let worker_config = Configuration::new()
+    let worker = ThreadPoolBuilder::new()
         .thread_name(|idx|{ format!("WRWorker#{}", idx) })
         .start_handler(move |idx| {
             register_thread_with_profiler(format!("WRWorker#{}", idx));
-        });
-    let workers = Arc::new(ThreadPool::new(worker_config).unwrap());
+        })
+        .build();
+    let workers = Arc::new(worker.unwrap());
     let mut glyph_rasterizer = GlyphRasterizer::new(workers).unwrap();
     let mut glyph_cache = GlyphCache::new();
     let mut gpu_cache = GpuCache::new();

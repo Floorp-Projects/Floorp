@@ -1,5 +1,5 @@
 use std::sync::atomic::{AtomicBool, Ordering};
-use super::internal::*;
+use super::plumbing::*;
 use super::*;
 
 /// `WhileSome` is an iterator that yields the `Some` elements of an iterator,
@@ -10,6 +10,7 @@ use super::*;
 /// [`while_some()`]: trait.ParallelIterator.html#method.while_some
 /// [`ParallelIterator`]: trait.ParallelIterator.html
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+#[derive(Debug, Clone)]
 pub struct WhileSome<I: ParallelIterator> {
     base: I,
 }

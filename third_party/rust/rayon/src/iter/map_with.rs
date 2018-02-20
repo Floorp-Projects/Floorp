@@ -1,5 +1,7 @@
-use super::internal::*;
+use super::plumbing::*;
 use super::*;
+
+use std::fmt::{self, Debug};
 
 
 /// `MapWith` is an iterator that transforms the elements of an underlying iterator.
@@ -9,10 +11,20 @@ use super::*;
 /// [`map_with()`]: trait.ParallelIterator.html#method.map_with
 /// [`ParallelIterator`]: trait.ParallelIterator.html
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+#[derive(Clone)]
 pub struct MapWith<I: ParallelIterator, T, F> {
     base: I,
     item: T,
     map_op: F,
+}
+
+impl<I: ParallelIterator + Debug, T: Debug, F> Debug for MapWith<I, T, F> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("MapWith")
+            .field("base", &self.base)
+            .field("item", &self.item)
+            .finish()
+    }
 }
 
 /// Create a new `MapWith` iterator.
@@ -43,7 +55,7 @@ impl<I, T, F, R> ParallelIterator for MapWith<I, T, F>
         self.base.drive_unindexed(consumer1)
     }
 
-    fn opt_len(&mut self) -> Option<usize> {
+    fn opt_len(&self) -> Option<usize> {
         self.base.opt_len()
     }
 }
@@ -61,7 +73,7 @@ impl<I, T, F, R> IndexedParallelIterator for MapWith<I, T, F>
         self.base.drive(consumer1)
     }
 
-    fn len(&mut self) -> usize {
+    fn len(&self) -> usize {
         self.base.len()
     }
 
@@ -146,6 +158,17 @@ impl<'f, P, U, F, R> Producer for MapWithProducer<'f, P, U, F>
              item: self.item,
              map_op: self.map_op,
          })
+    }
+
+    fn fold_with<G>(self, folder: G) -> G
+        where G: Folder<Self::Item>
+    {
+        let folder1 = MapWithFolder {
+            base: folder,
+            item: self.item,
+            map_op: self.map_op,
+        };
+        self.base.fold_with(folder1).base
     }
 }
 

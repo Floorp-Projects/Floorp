@@ -672,7 +672,7 @@ pub struct WrThreadPool(Arc<rayon::ThreadPool>);
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_thread_pool_new() -> *mut WrThreadPool {
-    let worker_config = rayon::Configuration::new()
+    let worker = rayon::ThreadPoolBuilder::new()
         .thread_name(|idx|{ format!("WRWorker#{}", idx) })
         .start_handler(|idx| {
             let name = format!("WRWorker#{}", idx);
@@ -681,9 +681,10 @@ pub unsafe extern "C" fn wr_thread_pool_new() -> *mut WrThreadPool {
         })
         .exit_handler(|_idx| {
             gecko_profiler_unregister_thread();
-        });
+        })
+        .build();
 
-    let workers = Arc::new(rayon::ThreadPool::new(worker_config).unwrap());
+    let workers = Arc::new(worker.unwrap());
 
     Box::into_raw(Box::new(WrThreadPool(workers)))
 }
@@ -1007,7 +1008,7 @@ pub extern "C" fn wr_transaction_scroll_layer(
     new_scroll_origin: LayoutPoint
 ) {
     assert!(unsafe { is_in_compositor_thread() });
-    let scroll_id = ScrollNodeIdType::from(ExternalScrollId(scroll_id, pipeline_id));
+    let scroll_id = ExternalScrollId(scroll_id, pipeline_id);
     txn.scroll_node_with_id(new_scroll_origin, scroll_id, ScrollClamping::NoClamping);
 }
 
