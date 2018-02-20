@@ -236,7 +236,6 @@ static void
 play_callback(SLPlayItf caller, void * user_ptr, SLuint32 event)
 {
   cubeb_stream * stm = user_ptr;
-  int draining;
   assert(stm);
   switch (event) {
     case SL_PLAYEVENT_HEADATMARKER:
