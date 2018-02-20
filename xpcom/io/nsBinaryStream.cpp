@@ -197,15 +197,15 @@ nsBinaryOutputStream::Write64(uint64_t aNum)
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteFloat(float aFloat)
 {
-  NS_ASSERTION(sizeof(float) == sizeof(uint32_t),
-               "False assumption about sizeof(float)");
+  static_assert(sizeof(float) == sizeof(uint32_t),
+                "False assumption about sizeof(float)");
   return Write32(*reinterpret_cast<uint32_t*>(&aFloat));
 }
 
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteDouble(double aDouble)
 {
-  NS_ASSERTION(sizeof(double) == sizeof(uint64_t),
+  static_assert(sizeof(double) == sizeof(uint64_t),
                "False assumption about sizeof(double)");
   return Write64(*reinterpret_cast<uint64_t*>(&aDouble));
 }
@@ -623,15 +623,15 @@ nsBinaryInputStream::Read64(uint64_t* aNum)
 NS_IMETHODIMP
 nsBinaryInputStream::ReadFloat(float* aFloat)
 {
-  NS_ASSERTION(sizeof(float) == sizeof(uint32_t),
-               "False assumption about sizeof(float)");
+  static_assert(sizeof(float) == sizeof(uint32_t),
+                "False assumption about sizeof(float)");
   return Read32(reinterpret_cast<uint32_t*>(aFloat));
 }
 
 NS_IMETHODIMP
 nsBinaryInputStream::ReadDouble(double* aDouble)
 {
-  NS_ASSERTION(sizeof(double) == sizeof(uint64_t),
+  static_assert(sizeof(double) == sizeof(uint64_t),
                "False assumption about sizeof(double)");
   return Read64(reinterpret_cast<uint64_t*>(aDouble));
 }
@@ -712,7 +712,7 @@ WriteSegmentToString(nsIInputStream* aStream,
                      uint32_t* aWriteCount)
 {
   NS_PRECONDITION(aCount > 0, "Why are we being told to write 0 bytes?");
-  NS_PRECONDITION(sizeof(char16_t) == 2, "We can't handle other sizes!");
+  static_assert(sizeof(char16_t) == 2, "We can't handle other sizes!");
 
   WriteStringClosure* closure = static_cast<WriteStringClosure*>(aClosure);
   char16_t* cursor = closure->mWriteCursor;
