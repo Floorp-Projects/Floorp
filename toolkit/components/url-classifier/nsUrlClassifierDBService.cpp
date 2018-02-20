@@ -2108,20 +2108,20 @@ nsUrlClassifierDBService::SendThreatHitReport(nsIChannel *aChannel,
   nsAutoCString reportBody;
   rv = utilsService->MakeThreatHitReport(aChannel, aList, aFullHash, reportBody);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoCString reportUriStr = NS_ConvertUTF16toUTF8(urlStr);
-  reportUriStr.Append("&$req=");
-  reportUriStr.Append(reportBody);
+  nsCOMPtr<nsIStringInputStream> sis(do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID));
+  rv = sis->SetData(reportBody.get(), reportBody.Length());
+  NS_ENSURE_SUCCESS(rv, rv);
 
   LOG(("Sending the following ThreatHit report to %s about %s: %s",
        PromiseFlatCString(aProvider).get(), PromiseFlatCString(aList).get(),
        reportBody.get()));
 
   nsCOMPtr<nsIURI> reportURI;
-  rv = NS_NewURI(getter_AddRefs(reportURI), reportUriStr);
+  rv = NS_NewURI(getter_AddRefs(reportURI), urlStr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  uint32_t loadFlags = nsIChannel::INHIBIT_CACHING |
+  uint32_t loadFlags = nsIRequest::LOAD_ANONYMOUS | // no cookies
+                       nsIChannel::INHIBIT_CACHING |
                        nsIChannel::LOAD_BYPASS_CACHE;
 
   nsCOMPtr<nsIChannel> reportChannel;
@@ -2136,7 +2136,6 @@ nsUrlClassifierDBService::SendThreatHitReport(nsIChannel *aChannel,
                      loadFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Safe Browsing has a separate cookie jar
   nsCOMPtr<nsILoadInfo> loadInfo = reportChannel->GetLoadInfo();
   mozilla::OriginAttributes attrs;
   attrs.mFirstPartyDomain.AssignLiteral(NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN);
@@ -2144,9 +2143,13 @@ nsUrlClassifierDBService::SendThreatHitReport(nsIChannel *aChannel,
     loadInfo->SetOriginAttributes(attrs);
   }
 
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(reportChannel));
-  NS_ENSURE_TRUE(httpChannel, rv);
+  nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(reportChannel));
+  NS_ENSURE_TRUE(uploadChannel, NS_ERROR_FAILURE);
+  rv = uploadChannel->SetUploadStream(sis, NS_LITERAL_CSTRING("application/x-protobuf"), -1);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(reportChannel));
+  NS_ENSURE_TRUE(httpChannel, NS_ERROR_FAILURE);
   rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
   NS_ENSURE_SUCCESS(rv, rv);
   // Disable keepalive.
