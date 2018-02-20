@@ -4658,18 +4658,30 @@ LIRGenerator::visitWasmStackArg(MWasmStackArg* ins)
     }
 }
 
-void
-LIRGenerator::visitWasmCall(MWasmCall* ins)
+template <typename LClass>
+LInstruction*
+LIRGenerator::lowerWasmCall(MWasmCall* ins, bool needsBoundsCheck)
 {
-    LAllocation* args = gen->allocate<LAllocation>(ins->numOperands());
-    if (!args) {
+    auto* lir = new(alloc()) LClass(ins->numOperands(), needsBoundsCheck);
+    if (!lir->init(alloc())) {
         abort(AbortReason::Alloc, "Couldn't allocate for MWasmCall");
-        return;
+        return nullptr;
     }
 
     for (unsigned i = 0; i < ins->numArgs(); i++)
-        args[i] = useFixedAtStart(ins->getOperand(i), ins->registerForArg(i));
+        lir->setOperand(i, useFixedAtStart(ins->getOperand(i), ins->registerForArg(i)));
 
+    if (ins->callee().isTable()) {
+        MDefinition* index = ins->getOperand(ins->numArgs());
+        lir->setOperand(ins->numArgs(), useFixedAtStart(index, WasmTableCallIndexReg));
+    }
+
+    return lir;
+}
+
+void
+LIRGenerator::visitWasmCall(MWasmCall* ins)
+{
     bool needsBoundsCheck = true;
     if (ins->callee().isTable()) {
         MDefinition* index = ins->getOperand(ins->numArgs());
@@ -4678,17 +4690,17 @@ LIRGenerator::visitWasmCall(MWasmCall* ins)
             if (uint32_t(index->toConstant()->toInt32()) < ins->callee().wasmTableMinLength())
                 needsBoundsCheck = false;
         }
-
-        args[ins->numArgs()] = useFixedAtStart(index, WasmTableCallIndexReg);
     }
 
     LInstruction* lir;
     if (ins->type() == MIRType::Int64)
-        lir = new(alloc()) LWasmCallI64(args, ins->numOperands(), needsBoundsCheck);
+        lir = lowerWasmCall<LWasmCallI64>(ins, needsBoundsCheck);
     else if (ins->type() == MIRType::None)
-        lir = new(alloc()) LWasmCallVoid(args, ins->numOperands(), needsBoundsCheck);
+        lir = lowerWasmCall<LWasmCallVoid>(ins, needsBoundsCheck);
     else
-        lir = new(alloc()) LWasmCall(args, ins->numOperands(), needsBoundsCheck);
+        lir = lowerWasmCall<LWasmCall>(ins, needsBoundsCheck);
+    if (!lir)
+        return;
 
     if (ins->type() == MIRType::None)
         add(lir, ins);

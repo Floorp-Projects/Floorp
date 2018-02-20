@@ -63,6 +63,9 @@ class LIRGenerator : public LIRGeneratorSpecific
 
     MOZ_MUST_USE bool lowerCallArguments(MCall* call);
 
+    template <typename LClass>
+    LInstruction* lowerWasmCall(MWasmCall* ins, bool needsBoundsCheck);
+
   public:
     MOZ_MUST_USE bool visitInstruction(MInstruction* ins);
     MOZ_MUST_USE bool visitBlock(MBasicBlock* block);

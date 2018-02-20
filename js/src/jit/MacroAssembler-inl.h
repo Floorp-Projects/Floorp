@@ -548,27 +548,6 @@ MacroAssembler::branchTestProxyHandlerFamily(Condition cond, Register proxy, Reg
     branchPtr(cond, familyAddr, ImmPtr(handlerp), label);
 }
 
-template <typename Value>
-void
-MacroAssembler::branchTestMIRType(Condition cond, const Value& val, MIRType type, Label* label)
-{
-    switch (type) {
-      case MIRType::Null:      return branchTestNull(cond, val, label);
-      case MIRType::Undefined: return branchTestUndefined(cond, val, label);
-      case MIRType::Boolean:   return branchTestBoolean(cond, val, label);
-      case MIRType::Int32:     return branchTestInt32(cond, val, label);
-      case MIRType::String:    return branchTestString(cond, val, label);
-      case MIRType::Symbol:    return branchTestSymbol(cond, val, label);
-      case MIRType::Object:    return branchTestObject(cond, val, label);
-      case MIRType::Double:    return branchTestDouble(cond, val, label);
-      case MIRType::MagicOptimizedArguments: // Fall through.
-      case MIRType::MagicIsConstructing:
-      case MIRType::MagicHole: return branchTestMagic(cond, val, label);
-      default:
-        MOZ_CRASH("Bad MIRType");
-    }
-}
-
 void
 MacroAssembler::branchTestNeedsIncrementalBarrier(Condition cond, Label* label)
 {

@@ -319,13 +319,7 @@ module.exports = isObjectLike;
 
 
 /***/ }),
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(168);
-
-
-/***/ }),
+/* 15 */,
 /* 16 */,
 /* 17 */,
 /* 18 */,
@@ -387,8 +381,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_22__;
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ActionTypes; });
 /* harmony export (immutable) */ __webpack_exports__["b"] = createStore;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_es_isPlainObject__ = __webpack_require__(33);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_symbol_observable__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable__ = __webpack_require__(2287);
 
 
 
@@ -620,7 +613,7 @@ var ActionTypes = {
         var unsubscribe = outerSubscribe(observeState);
         return { unsubscribe: unsubscribe };
       }
-    }, _ref[__WEBPACK_IMPORTED_MODULE_1_symbol_observable___default.a] = function () {
+    }, _ref[__WEBPACK_IMPORTED_MODULE_1_symbol_observable__["a" /* default */]] = function () {
       return this;
     }, _ref;
   }
@@ -635,7 +628,7 @@ var ActionTypes = {
     subscribe: subscribe,
     getState: getState,
     replaceReducer: replaceReducer
-  }, _ref2[__WEBPACK_IMPORTED_MODULE_1_symbol_observable___default.a] = observable, _ref2;
+  }, _ref2[__WEBPACK_IMPORTED_MODULE_1_symbol_observable__["a" /* default */]] = observable, _ref2;
 }
 
 /***/ }),
@@ -1047,8 +1040,7 @@ module.exports = isSymbol;
 var memoizeCapped = __webpack_require__(74);
 
 /** Used to match property names within property paths. */
-var reLeadingDot = /^\./,
-    rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|$))/g;
+var rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|$))/g;
 
 /** Used to match backslashes in property paths. */
 var reEscapeChar = /\\(\\)?/g;
@@ -1062,11 +1054,11 @@ var reEscapeChar = /\\(\\)?/g;
  */
 var stringToPath = memoizeCapped(function(string) {
   var result = [];
-  if (reLeadingDot.test(string)) {
+  if (string.charCodeAt(0) === 46 /* . */) {
     result.push('');
   }
-  string.replace(rePropName, function(match, number, quote, string) {
-    result.push(quote ? string.replace(reEscapeChar, '$1') : (number || match));
+  string.replace(rePropName, function(match, number, quote, subString) {
+    result.push(quote ? subString.replace(reEscapeChar, '$1') : (number || match));
   });
   return result;
 });
@@ -2410,10 +2402,13 @@ var reIsUint = /^(?:0|[1-9]\d*)$/;
  * @returns {boolean} Returns `true` if `value` is a valid index, else `false`.
  */
 function isIndex(value, length) {
+  var type = typeof value;
   length = length == null ? MAX_SAFE_INTEGER : length;
+
   return !!length &&
-    (typeof value == 'number' || reIsUint.test(value)) &&
-    (value > -1 && value % 1 == 0 && value < length);
+    (type == 'number' ||
+      (type != 'symbol' && reIsUint.test(value))) &&
+        (value > -1 && value % 1 == 0 && value < length);
 }
 
 module.exports = isIndex;
@@ -9483,71 +9478,8 @@ module.exports = invariant;
 
 /***/ }),
 /* 167 */,
-/* 168 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(global, module) {
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _ponyfill = __webpack_require__(169);
-
-var _ponyfill2 = _interopRequireDefault(_ponyfill);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var root; /* global window */
-
-
-if (typeof self !== 'undefined') {
-  root = self;
-} else if (typeof window !== 'undefined') {
-  root = window;
-} else if (typeof global !== 'undefined') {
-  root = global;
-} else if (true) {
-  root = module;
-} else {
-  root = Function('return this')();
-}
-
-var result = (0, _ponyfill2['default'])(root);
-exports['default'] = result;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(792), __webpack_require__(793)(module)))
-
-/***/ }),
-/* 169 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-exports['default'] = symbolObservablePonyfill;
-function symbolObservablePonyfill(root) {
-	var result;
-	var _Symbol = root.Symbol;
-
-	if (typeof _Symbol === 'function') {
-		if (_Symbol.observable) {
-			result = _Symbol.observable;
-		} else {
-			result = _Symbol('observable');
-			_Symbol.observable = result;
-		}
-	} else {
-		result = '@@observable';
-	}
-
-	return result;
-};
-
-/***/ }),
+/* 168 */,
+/* 169 */,
 /* 170 */,
 /* 171 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
@@ -13927,7 +13859,7 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 /* 960 */
 /***/ (function(module, exports) {
 
-module.exports = "# This Source Code Form is subject to the terms of the Mozilla Public\n# License, v. 2.0. If a copy of the MPL was not distributed with this\n# file, You can obtain one at http://mozilla.org/MPL/2.0/.\n\n# LOCALIZATION NOTE These strings are used inside the Debugger\n# which is available from the Web Developer sub-menu -> 'Debugger'.\n# The correct localization of this file might be to keep it in\n# English, or another language commonly spoken among web developers.\n# You want to make that choice consistent across the developer tools.\n# A good criteria is the language in which you'd find the best\n# documentation on web development on the web.\n\n# LOCALIZATION NOTE (collapsePanes): This is the tooltip for the button\n# that collapses the left and right panes in the debugger UI.\ncollapsePanes=Collapse panes\n\n# LOCALIZATION NOTE (copySource): This is the text that appears in the\n# context menu to copy the selected source of file open.\ncopySource=Copy\ncopySource.accesskey=y\n\n# LOCALIZATION NOTE (copySourceUri2): This is the text that appears in the\n# context menu to copy the source URI of file open.\ncopySourceUri2=Copy source URI\ncopySourceUri2.accesskey=u\n\n# LOCALIZATION NOTE (setDirectoryRoot.label): This is the text that appears in the\n# context menu to set a directory as root directory\nsetDirectoryRoot.label=Set directory root\nsetDirectoryRoot.accesskey=r\n\n# LOCALIZATION NOTE (removeDirectoryRoot.label): This is the text that appears in the\n# context menu to remove a directory as root directory\nremoveDirectoryRoot.label=Remove directory root\nremoveDirectoryRoot.accesskey=d\n\n# LOCALIZATION NOTE (copyFunction.label): This is the text that appears in the\n# context menu to copy the function the user selected\ncopyFunction.label=Copy function\ncopyFunction.accesskey=F\n\n# LOCALIZATION NOTE (copyStackTrace): This is the text that appears in the\n# context menu to copy the stack trace methods, file names and row number.\ncopyStackTrace=Copy stack trace\ncopyStackTrace.accesskey=c\n\n# LOCALIZATION NOTE (expandPanes): This is the tooltip for the button\n# that expands the left and right panes in the debugger UI.\nexpandPanes=Expand panes\n\n# LOCALIZATION NOTE (pauseButtonTooltip): The tooltip that is displayed for the pause\n# button when the debugger is in a running state.\npauseButtonTooltip=Pause %S\n\n# LOCALIZATION NOTE (pausePendingButtonTooltip): The tooltip that is displayed for\n# the pause button after it's been clicked but before the next JavaScript to run.\npausePendingButtonTooltip=Waiting for next execution\n\n# LOCALIZATION NOTE (resumeButtonTooltip): The label that is displayed on the pause\n# button when the debugger is in a paused state.\nresumeButtonTooltip=Resume %S\n\n# LOCALIZATION NOTE (stepOverTooltip): The label that is displayed on the\n# button that steps over a function call.\nstepOverTooltip=Step over %S\n\n# LOCALIZATION NOTE (stepInTooltip): The label that is displayed on the\n# button that steps into a function call.\nstepInTooltip=Step in %S\n\n# LOCALIZATION NOTE (stepOutTooltip): The label that is displayed on the\n# button that steps out of a function call.\nstepOutTooltip=Step out %S\n\n# LOCALIZATION NOTE (pauseButtonItem): The label that is displayed for the dropdown pause\n# list item when the debugger is in a running state.\npauseButtonItem=Pause on Next Statement\n\n# LOCALIZATION NOTE (ignoreExceptionsItem): The pause on exceptions button description\n# when the debugger will not pause on exceptions.\nignoreExceptionsItem=Ignore exceptions\n\n# LOCALIZATION NOTE (pauseOnUncaughtExceptionsItem): The pause on exceptions dropdown\n# item shown when a user is adding a new breakpoint.\npauseOnUncaughtExceptionsItem=Pause on uncaught exceptions\n\n# LOCALIZATION NOTE (pauseOnExceptionsItem): The pause on exceptions button description\n# when the debugger will pause on all exceptions.\npauseOnExceptionsItem=Pause on all exceptions\n\n# LOCALIZATION NOTE (workersHeader): The text to display in the events\n# header.\nworkersHeader=Workers\n\n# LOCALIZATION NOTE (noWorkersText): The text to display in the workers list\n# when there are no workers.\nnoWorkersText=This page has no workers.\n\n# LOCALIZATION NOTE (noSourcesText): The text to display in the sources list\n# when there are no sources.\nnoSourcesText=This page has no sources.\n\n# LOCALIZATION NOTE (noEventListenersText): The text to display in the events tab\n# when there are no events.\nnoEventListenersText=No event listeners to display.\n\n# LOCALIZATION NOTE (eventListenersHeader): The text to display in the events\n# header.\neventListenersHeader=Event listeners\n\n# LOCALIZATION NOTE (noStackFramesText): The text to display in the call stack tab\n# when there are no stack frames.\nnoStackFramesText=No stack frames to display\n\n# LOCALIZATION NOTE (eventCheckboxTooltip): The tooltip text to display when\n# the user hovers over the checkbox used to toggle an event breakpoint.\neventCheckboxTooltip=Toggle breaking on this event\n\n# LOCALIZATION NOTE (eventOnSelector): The text to display in the events tab\n# for every event item, between the event type and event selector.\neventOnSelector=on\n\n# LOCALIZATION NOTE (eventInSource): The text to display in the events tab\n# for every event item, between the event selector and listener's owner source.\neventInSource=in\n\n# LOCALIZATION NOTE (eventNodes): The text to display in the events tab when\n# an event is listened on more than one target node.\neventNodes=%S nodes\n\n# LOCALIZATION NOTE (eventNative): The text to display in the events tab when\n# a listener is added from plugins, thus getting translated to native code.\neventNative=[native code]\n\n# LOCALIZATION NOTE (*Events): The text to display in the events tab for\n# each group of sub-level event entries.\nanimationEvents=Animation\naudioEvents=Audio\nbatteryEvents=Battery\nclipboardEvents=Clipboard\ncompositionEvents=Composition\ndeviceEvents=Device\ndisplayEvents=Display\ndragAndDropEvents=Drag and Drop\ngamepadEvents=Gamepad\nindexedDBEvents=IndexedDB\ninteractionEvents=Interaction\nkeyboardEvents=Keyboard\nmediaEvents=HTML5 Media\nmouseEvents=Mouse\nmutationEvents=Mutation\nnavigationEvents=Navigation\npointerLockEvents=Pointer Lock\nsensorEvents=Sensor\nstorageEvents=Storage\ntimeEvents=Time\ntouchEvents=Touch\notherEvents=Other\n\n# LOCALIZATION NOTE (blackboxCheckboxTooltip2): The tooltip text to display when\n# the user hovers over the checkbox used to toggle blackboxing its associated\n# source.\nblackboxCheckboxTooltip2=Toggle blackboxing\n\n# LOCALIZATION NOTE (sources.search.key2): Key shortcut to open the search for\n# searching all the source files the debugger has seen.\n# Do not localize \"CmdOrCtrl+P\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\nsources.search.key2=CmdOrCtrl+P\n\n# LOCALIZATION NOTE (sources.search.alt.key): A second key shortcut to open the\n# search for searching all the source files the debugger has seen.\n# Do not localize \"CmdOrCtrl+O\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\nsources.search.alt.key=CmdOrCtrl+O\n\n# LOCALIZATION NOTE (projectTextSearch.key): A key shortcut to open the\n# full project text search for searching all the files the debugger has seen.\n# Do not localize \"CmdOrCtrl+Shift+F\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\nprojectTextSearch.key=CmdOrCtrl+Shift+F\n\n# LOCALIZATION NOTE (functionSearch.key): A key shortcut to open the\n# modal for searching functions in a file.\n# Do not localize \"CmdOrCtrl+Shift+O\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\nfunctionSearch.key=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE (toggleBreakpoint.key): A key shortcut to toggle\n# breakpoints.\n# Do not localize \"CmdOrCtrl+B\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\ntoggleBreakpoint.key=CmdOrCtrl+B\n\n# LOCALIZATION NOTE (toggleCondPanel.key): A key shortcut to toggle\n# the conditional breakpoint panel.\n# Do not localize \"CmdOrCtrl+Shift+B\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\ntoggleCondPanel.key=CmdOrCtrl+Shift+B\n\n# LOCALIZATION NOTE (stepOut.key): A key shortcut to\n# step out.\nstepOut.key=Shift+F11\n\n# LOCALIZATION NOTE (shortcuts.header.editor): Sections header in\n# the shortcuts modal for keyboard shortcuts related to editing.\nshortcuts.header.editor=Editor\n\n# LOCALIZATION NOTE (shortcuts.header.stepping): Sections header in\n# the shortcuts modal for keyboard shortcuts related to stepping.\nshortcuts.header.stepping=Stepping\n\n# LOCALIZATION NOTE (shortcuts.header.search): Sections header in\n# the shortcuts modal for keyboard shortcuts related to search.\nshortcuts.header.search=Search\n\n# LOCALIZATION NOTE (projectTextSearch.placeholder): A placeholder shown\n# when searching across all of the files in a project.\nprojectTextSearch.placeholder=Find in files…\n\n# LOCALIZATION NOTE (projectTextSearch.noResults): The center pane Text Search\n# message when the query did not match any text of all files in a project.\nprojectTextSearch.noResults=No results found\n\n# LOCALIZATION NOTE (sources.noSourcesAvailable): Text shown when the debugger\n# does not have any sources.\nsources.noSourcesAvailable=This page has no sources\n\n# LOCALIZATION NOTE (sourceSearch.search.key2): Key shortcut to open the search\n# for searching within a the currently opened files in the editor\n# Do not localize \"CmdOrCtrl+F\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\nsourceSearch.search.key2=CmdOrCtrl+F\n\n# LOCALIZATION NOTE (sourceSearch.search.placeholder): placeholder text in\n# the source search input bar\nsourceSearch.search.placeholder=Search in file…\n\n# LOCALIZATION NOTE (sourceSearch.search.again.key2): Key shortcut to highlight\n# the next occurrence of the last search triggered from a source search\n# Do not localize \"CmdOrCtrl+G\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\nsourceSearch.search.again.key2=CmdOrCtrl+G\n\n# LOCALIZATION NOTE (sourceSearch.search.againPrev.key2): Key shortcut to highlight\n# the previous occurrence of the last search triggered from a source search\n# Do not localize \"CmdOrCtrl+Shift+G\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\nsourceSearch.search.againPrev.key2=CmdOrCtrl+Shift+G\n\n# LOCALIZATION NOTE (sourceSearch.resultsSummary1): Shows a summary of\n# the number of matches for autocomplete\nsourceSearch.resultsSummary1=%d results\n\n# LOCALIZATION NOTE (noMatchingStringsText): The text to display in the\n# global search results when there are no matching strings after filtering.\nnoMatchingStringsText=No matches found\n\n# LOCALIZATION NOTE (emptySearchText): This is the text that appears in the\n# filter text box when it is empty and the scripts container is selected.\nemptySearchText=Search scripts (%S)\n\n# LOCALIZATION NOTE (emptyVariablesFilterText): This is the text that\n# appears in the filter text box for the variables view container.\nemptyVariablesFilterText=Filter variables\n\n# LOCALIZATION NOTE (emptyPropertiesFilterText): This is the text that\n# appears in the filter text box for the editor's variables view bubble.\nemptyPropertiesFilterText=Filter properties\n\n# LOCALIZATION NOTE (searchPanelFilter): This is the text that appears in the\n# filter panel popup for the filter scripts operation.\nsearchPanelFilter=Filter scripts (%S)\n\n# LOCALIZATION NOTE (searchPanelGlobal): This is the text that appears in the\n# filter panel popup for the global search operation.\nsearchPanelGlobal=Search in all files (%S)\n\n# LOCALIZATION NOTE (searchPanelFunction): This is the text that appears in the\n# filter panel popup for the function search operation.\nsearchPanelFunction=Search for function definition (%S)\n\n# LOCALIZATION NOTE (searchPanelToken): This is the text that appears in the\n# filter panel popup for the token search operation.\nsearchPanelToken=Find in this file (%S)\n\n# LOCALIZATION NOTE (searchPanelGoToLine): This is the text that appears in the\n# filter panel popup for the line search operation.\nsearchPanelGoToLine=Go to line (%S)\n\n# LOCALIZATION NOTE (searchPanelVariable): This is the text that appears in the\n# filter panel popup for the variables search operation.\nsearchPanelVariable=Filter variables (%S)\n\n# LOCALIZATION NOTE (breakpointMenuItem): The text for all the elements that\n# are displayed in the breakpoints menu item popup.\nbreakpointMenuItem.setConditional=Configure conditional breakpoint\nbreakpointMenuItem.enableSelf2.label=Enable\nbreakpointMenuItem.enableSelf2.accesskey=E\nbreakpointMenuItem.disableSelf2.label=Disable\nbreakpointMenuItem.disableSelf2.accesskey=D\nbreakpointMenuItem.deleteSelf2.label=Remove\nbreakpointMenuItem.deleteSelf2.accesskey=R\nbreakpointMenuItem.enableOthers2.label=Enable others\nbreakpointMenuItem.enableOthers2.accesskey=o\nbreakpointMenuItem.disableOthers2.label=Disable others\nbreakpointMenuItem.disableOthers2.accesskey=s\nbreakpointMenuItem.deleteOthers2.label=Remove others\nbreakpointMenuItem.deleteOthers2.accesskey=h\nbreakpointMenuItem.enableAll2.label=Enable all\nbreakpointMenuItem.enableAll2.accesskey=b\nbreakpointMenuItem.disableAll2.label=Disable all\nbreakpointMenuItem.disableAll2.accesskey=k\nbreakpointMenuItem.deleteAll2.label=Remove all\nbreakpointMenuItem.deleteAll2.accesskey=a\nbreakpointMenuItem.removeCondition2.label=Remove condition\nbreakpointMenuItem.removeCondition2.accesskey=c\nbreakpointMenuItem.addCondition2.label=Add condition\nbreakpointMenuItem.addCondition2.accesskey=A\nbreakpointMenuItem.editCondition2.label=Edit condition\nbreakpointMenuItem.editCondition2.accesskey=n\nbreakpointMenuItem.enableSelf=Enable breakpoint\nbreakpointMenuItem.enableSelf.accesskey=E\nbreakpointMenuItem.disableSelf=Disable breakpoint\nbreakpointMenuItem.disableSelf.accesskey=D\nbreakpointMenuItem.deleteSelf=Remove breakpoint\nbreakpointMenuItem.deleteSelf.accesskey=R\nbreakpointMenuItem.enableOthers=Enable others\nbreakpointMenuItem.enableOthers.accesskey=o\nbreakpointMenuItem.disableOthers=Disable others\nbreakpointMenuItem.disableOthers.accesskey=s\nbreakpointMenuItem.deleteOthers=Remove others\nbreakpointMenuItem.deleteOthers.accesskey=h\nbreakpointMenuItem.enableAll=Enable all breakpoints\nbreakpointMenuItem.enableAll.accesskey=b\nbreakpointMenuItem.disableAll=Disable all breakpoints\nbreakpointMenuItem.disableAll.accesskey=k\nbreakpointMenuItem.deleteAll=Remove all breakpoints\nbreakpointMenuItem.deleteAll.accesskey=a\nbreakpointMenuItem.removeCondition.label=Remove breakpoint condition\nbreakpointMenuItem.removeCondition.accesskey=c\nbreakpointMenuItem.editCondition.label=Edit breakpoint condition\nbreakpointMenuItem.editCondition.accesskey=n\n\n# LOCALIZATION NOTE (breakpoints.header): Breakpoints right sidebar pane header.\nbreakpoints.header=Breakpoints\n\n# LOCALIZATION NOTE (breakpoints.none): The text that appears when there are\n# no breakpoints present\nbreakpoints.none=No breakpoints\n\n# LOCALIZATION NOTE (breakpoints.enable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.enable=Enable breakpoints\n\n# LOCALIZATION NOTE (breakpoints.disable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.disable=Disable breakpoints\n\n# LOCALIZATION NOTE (breakpoints.removeBreakpointTooltip): The tooltip that is displayed\n# for remove breakpoint button in right sidebar\nbreakpoints.removeBreakpointTooltip=Remove breakpoint\n\n# LOCALIZATION NOTE (callStack.header): Call Stack right sidebar pane header.\ncallStack.header=Call stack\n\n# LOCALIZATION NOTE (callStack.notPaused): Call Stack right sidebar pane\n# message when not paused.\ncallStack.notPaused=Not paused\n\n# LOCALIZATION NOTE (callStack.collapse): Call Stack right sidebar pane\n# message to hide some of the frames that are shown.\ncallStack.collapse=Collapse rows\n\n# LOCALIZATION NOTE (callStack.expand): Call Stack right sidebar pane\n# message to show more of the frames.\ncallStack.expand=Expand rows\n\n# LOCALIZATION NOTE (editor.searchResults): Editor Search bar message\n# for the summarizing the selected search result. e.g. 5 of 10 results.\neditor.searchResults=%d of %d results\n\n# LOCALIZATION NOTE (editor.singleResult): Copy shown when there is one result.\neditor.singleResult=1 result\n\n# LOCALIZATION NOTE (editor.noResults): Editor Search bar message\n# for when no results found.\neditor.noResults=No results\n\n# LOCALIZATION NOTE (editor.searchResults.nextResult): Editor Search bar\n# tooltip for traversing to the Next Result\neditor.searchResults.nextResult=Next result\n\n# LOCALIZATION NOTE (editor.searchResults.prevResult): Editor Search bar\n# tooltip for traversing to the Previous Result\neditor.searchResults.prevResult=Previous result\n\n# LOCALIZATION NOTE (editor.searchTypeToggleTitle): Search bar title for\n# toggling search type buttons(function search, variable search)\neditor.searchTypeToggleTitle=Search for:\n\n# LOCALIZATION NOTE (editor.continueToHere.label): Editor gutter context\n# menu item for jumping to a new paused location\neditor.continueToHere.label=Continue to here\neditor.continueToHere.accesskey=H\n\n# LOCALIZATION NOTE (editor.addBreakpoint): Editor gutter context menu item\n# for adding a breakpoint on a line.\neditor.addBreakpoint=Add breakpoint\n\n# LOCALIZATION NOTE (editor.disableBreakpoint): Editor gutter context menu item\n# for disabling a breakpoint on a line.\neditor.disableBreakpoint=Disable breakpoint\neditor.disableBreakpoint.accesskey=D\n\n# LOCALIZATION NOTE (editor.enableBreakpoint): Editor gutter context menu item\n# for enabling a breakpoint on a line.\neditor.enableBreakpoint=Enable breakpoint\n\n# LOCALIZATION NOTE (editor.removeBreakpoint): Editor gutter context menu item\n# for removing a breakpoint on a line.\neditor.removeBreakpoint=Remove breakpoint\n\n# LOCALIZATION NOTE (editor.editBreakpoint): Editor gutter context menu item\n# for setting a breakpoint condition on a line.\neditor.editBreakpoint=Edit breakpoint\n\n# LOCALIZATION NOTE (editor.addConditionalBreakpoint): Editor gutter context\n# menu item for adding a breakpoint condition on a line.\neditor.addConditionalBreakpoint=Add conditional breakpoint\neditor.addConditionalBreakpoint.accesskey=c\n\n# LOCALIZATION NOTE (editor.conditionalPanel.placeholder): Placeholder text for\n# input element inside ConditionalPanel component\neditor.conditionalPanel.placeholder=This breakpoint will pause when the expression is true\n\n# LOCALIZATION NOTE (editor.conditionalPanel.close): Tooltip text for\n# close button inside ConditionalPanel component\neditor.conditionalPanel.close=Cancel edit breakpoint and close\n\n# LOCALIZATION NOTE (editor.jumpToMappedLocation1): Context menu item\n# for navigating to a source mapped location\neditor.jumpToMappedLocation1=Jump to %S location\neditor.jumpToMappedLocation1.accesskey=m\n\n# LOCALIZATION NOTE (framework.disableGrouping): This is the text that appears in the\n# context menu to disable framework grouping.\nframework.disableGrouping=Disable framework grouping\nframework.disableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (framework.enableGrouping): This is the text that appears in the\n# context menu to enable framework grouping.\nframework.enableGrouping=Enable framework grouping\nframework.enableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (generated): Source Map term for a server source location\ngenerated=generated\n\n# LOCALIZATION NOTE (original): Source Map term for a debugger UI source location\noriginal=original\n\n# LOCALIZATION NOTE (expressions.placeholder): Placeholder text for expression\n# input element\nexpressions.placeholder=Add watch expression\n# LOCALIZATION NOTE (expressions.errorMsg): Error text for expression\n# input element\nexpressions.errorMsg=Invalid expression…\nexpressions.label=Add watch expression\nexpressions.accesskey=e\n\n# LOCALIZATION NOTE (sourceTabs.closeTab): Editor source tab context menu item\n# for closing the selected tab below the mouse.\nsourceTabs.closeTab=Close tab\nsourceTabs.closeTab.accesskey=c\n\n# LOCALIZATION NOTE (sourceTabs.closeOtherTabs): Editor source tab context menu item\n# for closing the other tabs.\nsourceTabs.closeOtherTabs=Close other tabs\nsourceTabs.closeOtherTabs.accesskey=o\n\n# LOCALIZATION NOTE (sourceTabs.closeTabsToEnd): Editor source tab context menu item\n# for closing the tabs to the end (the right for LTR languages) of the selected tab.\nsourceTabs.closeTabsToEnd=Close tabs to the right\nsourceTabs.closeTabsToEnd.accesskey=e\n\n# LOCALIZATION NOTE (sourceTabs.closeAllTabs): Editor source tab context menu item\n# for closing all tabs.\nsourceTabs.closeAllTabs=Close all tabs\nsourceTabs.closeAllTabs.accesskey=a\n\n# LOCALIZATION NOTE (sourceTabs.revealInTree): Editor source tab context menu item\n# for revealing source in tree.\nsourceTabs.revealInTree=Reveal in tree\nsourceTabs.revealInTree.accesskey=r\n\n# LOCALIZATION NOTE (sourceTabs.prettyPrint): Editor source tab context menu item\n# for pretty printing the source.\nsourceTabs.prettyPrint=Pretty print source\nsourceTabs.prettyPrint.accesskey=p\n\n# LOCALIZATION NOTE (sourceFooter.blackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.blackbox=Blackbox source\nsourceFooter.blackbox.accesskey=B\n\n# LOCALIZATION NOTE (sourceFooter.unblackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.unblackbox=Unblackbox source\nsourceFooter.unblackbox.accesskey=b\n\n# LOCALIZATION NOTE (sourceFooter.blackboxed): Text associated\n# with a blackboxed source\nsourceFooter.blackboxed=Blackboxed source\n\n# LOCALIZATION NOTE (sourceFooter.mappedSource): Text associated\n# with a mapped source. %S is replaced by the source map origin.\nsourceFooter.mappedSource=(From %S)\n\n# LOCALIZATION NOTE (sourceFooter.mappedSourceTooltip): Tooltip text associated\n# with a mapped source. %S is replaced by the source map origin.\nsourceFooter.mappedSourceTooltip=(Source mapped from %S)\n\n# LOCALIZATION NOTE (sourceFooter.codeCoverage): Text associated\n# with a code coverage button\nsourceFooter.codeCoverage=Code coverage\n\n# LOCALIZATION NOTE (sourceTabs.closeTabButtonTooltip): The tooltip that is displayed\n# for close tab button in source tabs.\nsourceTabs.closeTabButtonTooltip=Close tab\n\n# LOCALIZATION NOTE (scopes.header): Scopes right sidebar pane header.\nscopes.header=Scopes\n\n# LOCALIZATION NOTE (scopes.notAvailable): Scopes right sidebar pane message\n# for when the debugger is paused, but there isn't pause data.\nscopes.notAvailable=Scopes unavailable\n\n# LOCALIZATION NOTE (scopes.notPaused): Scopes right sidebar pane message\n# for when the debugger is not paused.\nscopes.notPaused=Not paused\n\n# LOCALIZATION NOTE (scopes.block): Refers to a block of code in\n# the scopes pane when the debugger is paused.\nscopes.block=Block\n\n# LOCALIZATION NOTE (sources.header): Sources left sidebar header\nsources.header=Sources\n\n# LOCALIZATION NOTE (outline.header): Outline left sidebar header\noutline.header=Outline\n\n# LOCALIZATION NOTE (outline.noFunctions): Outline text when there are no functions to display\noutline.noFunctions=No functions\n\n# LOCALIZATION NOTE (sources.search): Sources left sidebar prompt\n# e.g. Cmd+P to search. On a mac, we use the command unicode character.\n# On windows, it's ctrl.\nsources.search=%S to search\n\n# LOCALIZATION NOTE (watchExpressions.header): Watch Expressions right sidebar\n# pane header.\nwatchExpressions.header=Watch expressions\n\n# LOCALIZATION NOTE (watchExpressions.refreshButton): Watch Expressions header\n# button for refreshing the expressions.\nwatchExpressions.refreshButton=Refresh\n\n# LOCALIZATION NOTE (welcome.search): The center pane welcome panel's\n# search prompt. e.g. cmd+p to search for files. On windows, it's ctrl, on\n# a mac we use the unicode character.\nwelcome.search=%S to search for sources\n\n# LOCALIZATION NOTE (welcome.findInFiles): The center pane welcome panel's\n# search prompt. e.g. cmd+f to search for files. On windows, it's ctrl+shift+f, on\n# a mac we use the unicode character.\nwelcome.findInFiles=%S to find in files\n\n# LOCALIZATION NOTE (welcome.searchFunction): Label displayed in the welcome\n# panel. %S is replaced by the keyboard shortcut to search for functions.\nwelcome.searchFunction=%S to search for functions in file\n\n# LOCALIZATION NOTE (sourceSearch.search): The center pane Source Search\n# prompt for searching for files.\nsourceSearch.search=Search sources…\n\n# LOCALIZATION NOTE (sourceSearch.noResults2): The center pane Source Search\n# message when the query did not match any of the sources.\nsourceSearch.noResults2=No results found\n\n# LOCALIZATION NOTE (ignoreExceptions): The pause on exceptions button tooltip\n# when the debugger will not pause on exceptions.\nignoreExceptions=Ignore exceptions. Click to pause on uncaught exceptions\n\n# LOCALIZATION NOTE (pauseOnUncaughtExceptions): The pause on exceptions button\n# tooltip when the debugger will pause on uncaught exceptions.\npauseOnUncaughtExceptions=Pause on uncaught exceptions. Click to pause on all exceptions\n\n# LOCALIZATION NOTE (pauseOnExceptions): The pause on exceptions button tooltip\n# when the debugger will pause on all exceptions.\npauseOnExceptions=Pause on all exceptions. Click to ignore exceptions\n\n# LOCALIZATION NOTE (replayPrevious): The replay previous button tooltip\n# when the debugger will go back in stepping history.\nreplayPrevious=Go back one step in history\n\n# LOCALIZATION NOTE (replayNext): The replay next button tooltip\n# when the debugger will go forward in stepping history.\nreplayNext=Go forward one step in history\n\n# LOCALIZATION NOTE (loadingText): The text that is displayed in the script\n# editor when the loading process has started but there is no file to display\n# yet.\nloadingText=Loading\\u2026\n\n# LOCALIZATION NOTE (wasmIsNotAvailable): The text that is displayed in the\n# script editor when the WebAssembly source is not available.\nwasmIsNotAvailable=Please refresh to debug this module\n\n# LOCALIZATION NOTE (errorLoadingText3): The text that is displayed in the debugger\n# viewer when there is an error loading a file\nerrorLoadingText3=Error loading this URI: %S\n\n# LOCALIZATION NOTE (addWatchExpressionText): The text that is displayed in the\n# watch expressions list to add a new item.\naddWatchExpressionText=Add watch expression\n\n# LOCALIZATION NOTE (addWatchExpressionButton): The button that is displayed in the\n# variables view popup.\naddWatchExpressionButton=Watch\n\n# LOCALIZATION NOTE (emptyVariablesText): The text that is displayed in the\n# variables pane when there are no variables to display.\nemptyVariablesText=No variables to display\n\n# LOCALIZATION NOTE (scopeLabel): The text that is displayed in the variables\n# pane as a header for each variable scope (e.g. \"Global scope, \"With scope\",\n# etc.).\nscopeLabel=%S scope\n\n# LOCALIZATION NOTE (watchExpressionsScopeLabel): The name of the watch\n# expressions scope. This text is displayed in the variables pane as a header for\n# the watch expressions scope.\nwatchExpressionsScopeLabel=Watch expressions\n\n# LOCALIZATION NOTE (globalScopeLabel): The name of the global scope. This text\n# is added to scopeLabel and displayed in the variables pane as a header for\n# the global scope.\nglobalScopeLabel=Global\n\n# LOCALIZATION NOTE (variablesViewErrorStacktrace): This is the text that is\n# shown before the stack trace in an error.\nvariablesViewErrorStacktrace=Stack trace:\n\n# LOCALIZATION NOTE (variablesViewMoreObjects): the text that is displayed\n# when you have an object preview that does not show all of the elements. At the end of the list\n# you see \"N more...\" in the web console output.\n# This is a semi-colon list of plural forms.\n# See: http://developer.mozilla.org/en/docs/Localization_and_Plurals\n# #1 number of remaining items in the object\n# example: 3 more…\nvariablesViewMoreObjects=#1 more…;#1 more…\n\n# LOCALIZATION NOTE (variablesEditableNameTooltip): The text that is displayed\n# in the variables list on an item with an editable name.\nvariablesEditableNameTooltip=Double click to edit\n\n# LOCALIZATION NOTE (variablesEditableValueTooltip): The text that is displayed\n# in the variables list on an item with an editable value.\nvariablesEditableValueTooltip=Click to change value\n\n# LOCALIZATION NOTE (variablesCloseButtonTooltip): The text that is displayed\n# in the variables list on an item which can be removed.\nvariablesCloseButtonTooltip=Click to remove\n\n# LOCALIZATION NOTE (variablesEditButtonTooltip): The text that is displayed\n# in the variables list on a getter or setter which can be edited.\nvariablesEditButtonTooltip=Click to set value\n\n# LOCALIZATION NOTE (variablesDomNodeValueTooltip): The text that is displayed\n# in a tooltip on the \"open in inspector\" button in the the variables list for a\n# DOMNode item.\nvariablesDomNodeValueTooltip=Click to select the node in the inspector\n\n# LOCALIZATION NOTE (configurable|...|Tooltip): The text that is displayed\n# in the variables list on certain variables or properties as tooltips.\n# Expanations of what these represent can be found at the following links:\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isExtensible\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isFrozen\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isSealed\n# It's probably best to keep these in English.\nconfigurableTooltip=configurable\nenumerableTooltip=enumerable\nwritableTooltip=writable\nfrozenTooltip=frozen\nsealedTooltip=sealed\nextensibleTooltip=extensible\noverriddenTooltip=overridden\nWebIDLTooltip=WebIDL\n\n# LOCALIZATION NOTE (variablesSeparatorLabel): The text that is displayed\n# in the variables list as a separator between the name and value.\nvariablesSeparatorLabel=:\n\n# LOCALIZATION NOTE (watchExpressionsSeparatorLabel2): The text that is displayed\n# in the watch expressions list as a separator between the code and evaluation.\nwatchExpressionsSeparatorLabel2=\\u0020→\n\n# LOCALIZATION NOTE (functionSearchSeparatorLabel): The text that is displayed\n# in the functions search panel as a separator between function's inferred name\n# and its real name (if available).\nfunctionSearchSeparatorLabel=←\n\n# LOCALIZATION NOTE(gotoLineModal.placeholder): The placeholder\n# text displayed when the user searches for specific lines in a file\ngotoLineModal.placeholder=Go to line…\n\n# LOCALIZATION NOTE(gotoLineModal.title): The message shown to users\n# to open the go to line modal\ngotoLineModal.title=Go to a line number in a file\n\n# LOCALIZATION NOTE(gotoLineModal.key2): The shortcut for opening the\n# go to line modal\n# Do not localize \"CmdOrCtrl+;\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\ngotoLineModal.key2=CmdOrCtrl+;\n\n# LOCALIZATION NOTE(symbolSearch.search.functionsPlaceholder): The placeholder\n# text displayed when the user searches for functions in a file\nsymbolSearch.search.functionsPlaceholder=Search functions…\nsymbolSearch.search.functionsPlaceholder.title=Search for a function in a file\n\n# LOCALIZATION NOTE(symbolSearch.search.variablesPlaceholder): The placeholder\n# text displayed when the user searches for variables in a file\nsymbolSearch.search.variablesPlaceholder=Search variables…\nsymbolSearch.search.variablesPlaceholder.title=Search for a variable in a file\n\n# LOCALIZATION NOTE(symbolSearch.search.key2): The Key Shortcut for\n# searching for a function or variable\n# Do not localize \"CmdOrCtrl+Shift+O\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\nsymbolSearch.search.key2=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.modifiersLabel): A label\n# preceding the group of modifiers\nsymbolSearch.searchModifier.modifiersLabel=Modifiers:\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.regex): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.regex=Regex\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.caseSensitive): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.caseSensitive=Case sensitive\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.wholeWord): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.wholeWord=Whole word\n\n# LOCALIZATION NOTE (resumptionOrderPanelTitle): This is the text that appears\n# as a description in the notification panel popup, when multiple debuggers are\n# open in separate tabs and the user tries to resume them in the wrong order.\n# The substitution parameter is the URL of the last paused window that must be\n# resumed first.\nresumptionOrderPanelTitle=There are one or more paused debuggers. Please resume the most-recently paused debugger first at: %S\n\nvariablesViewOptimizedOut=(optimized away)\nvariablesViewUninitialized=(uninitialized)\nvariablesViewMissingArgs=(unavailable)\n\nanonymousSourcesLabel=Anonymous sources\n\nexperimental=This is an experimental feature\n\n# LOCALIZATION NOTE (whyPaused.debuggerStatement): The text that is displayed\n# in a info block explaining how the debugger is currently paused due to a `debugger`\n# statement in the code\nwhyPaused.debuggerStatement=Paused on debugger statement\n\n# LOCALIZATION NOTE (whyPaused.breakpoint): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a breakpoint\nwhyPaused.breakpoint=Paused on breakpoint\n\n# LOCALIZATION NOTE (whyPaused.exception): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an exception\nwhyPaused.exception=Paused on exception\n\n# LOCALIZATION NOTE (whyPaused.resumeLimit): The text that is displayed\n# in a info block explaining how the debugger is currently paused while stepping\n# in or out of the stack\nwhyPaused.resumeLimit=Paused while stepping\n\n# LOCALIZATION NOTE (whyPaused.pauseOnDOMEvents): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# dom event\nwhyPaused.pauseOnDOMEvents=Paused on event listener\n\n# LOCALIZATION NOTE (whyPaused.breakpointConditionThrown): The text that is displayed\n# in an info block when evaluating a conditional breakpoint throws an error\nwhyPaused.breakpointConditionThrown=Error with conditional breakpoint\n\n# LOCALIZATION NOTE (whyPaused.xhr): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# xml http request\nwhyPaused.xhr=Paused on XMLHttpRequest\n\n# LOCALIZATION NOTE (whyPaused.promiseRejection): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# promise rejection\nwhyPaused.promiseRejection=Paused on promise rejection\n\n# LOCALIZATION NOTE (whyPaused.assert): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# assert\nwhyPaused.assert=Paused on assertion\n\n# LOCALIZATION NOTE (whyPaused.debugCommand): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# debugger statement\nwhyPaused.debugCommand=Paused on debugged function\n\n# LOCALIZATION NOTE (whyPaused.other): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an event\n# listener breakpoint set\nwhyPaused.other=Debugger paused\n\n# LOCALIZATION NOTE (ctrl): The text that is used for documenting\n# keyboard shortcuts that use the control key\nctrl=Ctrl\n\n# LOCALIZATION NOTE (anonymous): The text that is displayed when the\n# display name is null.\nanonymous=(anonymous)\n\n# LOCALIZATION NOTE (shortcuts.toggleBreakpoint): text describing\n# keyboard shortcut action for toggling breakpoint\nshortcuts.toggleBreakpoint=Toggle Breakpoint\nshortcuts.toggleBreakpoint.accesskey=B\n\n# LOCALIZATION NOTE (shortcuts.toggleCondPanel): text describing\n# keyboard shortcut action for toggling conditional panel keyboard\nshortcuts.toggleCondPanel=Toggle Conditional Panel\n\n# LOCALIZATION NOTE (shortcuts.pauseOrResume): text describing\n# keyboard shortcut action for pause of resume\nshortcuts.pauseOrResume=Pause/Resume\n\n# LOCALIZATION NOTE (shortcuts.stepOver): text describing\n# keyboard shortcut action for stepping over\nshortcuts.stepOver=Step Over\n\n# LOCALIZATION NOTE (shortcuts.stepIn): text describing\n# keyboard shortcut action for stepping in\nshortcuts.stepIn=Step In\n\n# LOCALIZATION NOTE (shortcuts.stepOut): text describing\n# keyboard shortcut action for stepping out\nshortcuts.stepOut=Step Out\n\n# LOCALIZATION NOTE (shortcuts.fileSearch): text describing\n# keyboard shortcut action for source file search\nshortcuts.fileSearch=Source File Search\n\n# LOCALIZATION NOTE (shortcuts.gotoLine): text describing\n# keyboard shortcut for jumping to a specific line\nshortcuts.gotoLine=Go to line\n\n# LOCALIZATION NOTE (shortcuts.searchAgain): text describing\n# keyboard shortcut action for searching again\nshortcuts.searchAgain=Search Again\n\n# LOCALIZATION NOTE (shortcuts.projectSearch): text describing\n# keyboard shortcut action for full project search\nshortcuts.projectSearch=Full Project Search\n\n# LOCALIZATION NOTE (shortcuts.functionSearch): text describing\n# keyboard shortcut action for function search\nshortcuts.functionSearch=Function Search\n\n# LOCALIZATION NOTE (shortcuts.buttonName): text describing\n# keyboard shortcut button text\nshortcuts.buttonName=Keyboard shortcuts\n"
+module.exports = "# This Source Code Form is subject to the terms of the Mozilla Public\n# License, v. 2.0. If a copy of the MPL was not distributed with this\n# file, You can obtain one at http://mozilla.org/MPL/2.0/.\n\n# LOCALIZATION NOTE These strings are used inside the Debugger\n# which is available from the Web Developer sub-menu -> 'Debugger'.\n# The correct localization of this file might be to keep it in\n# English, or another language commonly spoken among web developers.\n# You want to make that choice consistent across the developer tools.\n# A good criteria is the language in which you'd find the best\n# documentation on web development on the web.\n\n# LOCALIZATION NOTE (collapsePanes): This is the tooltip for the button\n# that collapses the left and right panes in the debugger UI.\ncollapsePanes=Collapse panes\n\n# LOCALIZATION NOTE (copySource): This is the text that appears in the\n# context menu to copy the selected source of file open.\ncopySource=Copy\ncopySource.accesskey=y\n\n# LOCALIZATION NOTE (copySourceUri2): This is the text that appears in the\n# context menu to copy the source URI of file open.\ncopySourceUri2=Copy source URI\ncopySourceUri2.accesskey=u\n\n# LOCALIZATION NOTE (setDirectoryRoot.label): This is the text that appears in the\n# context menu to set a directory as root directory\nsetDirectoryRoot.label=Set directory root\nsetDirectoryRoot.accesskey=r\n\n# LOCALIZATION NOTE (removeDirectoryRoot.label): This is the text that appears in the\n# context menu to remove a directory as root directory\nremoveDirectoryRoot.label=Remove directory root\nremoveDirectoryRoot.accesskey=d\n\n# LOCALIZATION NOTE (copyFunction.label): This is the text that appears in the\n# context menu to copy the function the user selected\ncopyFunction.label=Copy function\ncopyFunction.accesskey=F\n\n# LOCALIZATION NOTE (copyStackTrace): This is the text that appears in the\n# context menu to copy the stack trace methods, file names and row number.\ncopyStackTrace=Copy stack trace\ncopyStackTrace.accesskey=c\n\n# LOCALIZATION NOTE (expandPanes): This is the tooltip for the button\n# that expands the left and right panes in the debugger UI.\nexpandPanes=Expand panes\n\n# LOCALIZATION NOTE (evaluateInConsole.label): Editor right-click menu item\n# to execute selected text in browser console.\nevaluateInConsole.label=Evaluate in console\n\n# LOCALIZATION NOTE (pauseButtonTooltip): The tooltip that is displayed for the pause\n# button when the debugger is in a running state.\npauseButtonTooltip=Pause %S\n\n# LOCALIZATION NOTE (pausePendingButtonTooltip): The tooltip that is displayed for\n# the pause button after it's been clicked but before the next JavaScript to run.\npausePendingButtonTooltip=Waiting for next execution\n\n# LOCALIZATION NOTE (resumeButtonTooltip): The label that is displayed on the pause\n# button when the debugger is in a paused state.\nresumeButtonTooltip=Resume %S\n\n# LOCALIZATION NOTE (stepOverTooltip): The label that is displayed on the\n# button that steps over a function call.\nstepOverTooltip=Step over %S\n\n# LOCALIZATION NOTE (stepInTooltip): The label that is displayed on the\n# button that steps into a function call.\nstepInTooltip=Step in %S\n\n# LOCALIZATION NOTE (stepOutTooltip): The label that is displayed on the\n# button that steps out of a function call.\nstepOutTooltip=Step out %S\n\n# LOCALIZATION NOTE (pauseButtonItem): The label that is displayed for the dropdown pause\n# list item when the debugger is in a running state.\npauseButtonItem=Pause on Next Statement\n\n# LOCALIZATION NOTE (ignoreExceptionsItem): The pause on exceptions button description\n# when the debugger will not pause on exceptions.\nignoreExceptionsItem=Ignore exceptions\n\n# LOCALIZATION NOTE (pauseOnUncaughtExceptionsItem): The pause on exceptions dropdown\n# item shown when a user is adding a new breakpoint.\npauseOnUncaughtExceptionsItem=Pause on uncaught exceptions\n\n# LOCALIZATION NOTE (pauseOnExceptionsItem): The pause on exceptions button description\n# when the debugger will pause on all exceptions.\npauseOnExceptionsItem=Pause on all exceptions\n\n# LOCALIZATION NOTE (workersHeader): The text to display in the events\n# header.\nworkersHeader=Workers\n\n# LOCALIZATION NOTE (noWorkersText): The text to display in the workers list\n# when there are no workers.\nnoWorkersText=This page has no workers.\n\n# LOCALIZATION NOTE (noSourcesText): The text to display in the sources list\n# when there are no sources.\nnoSourcesText=This page has no sources.\n\n# LOCALIZATION NOTE (noEventListenersText): The text to display in the events tab\n# when there are no events.\nnoEventListenersText=No event listeners to display.\n\n# LOCALIZATION NOTE (eventListenersHeader): The text to display in the events\n# header.\neventListenersHeader=Event listeners\n\n# LOCALIZATION NOTE (noStackFramesText): The text to display in the call stack tab\n# when there are no stack frames.\nnoStackFramesText=No stack frames to display\n\n# LOCALIZATION NOTE (eventCheckboxTooltip): The tooltip text to display when\n# the user hovers over the checkbox used to toggle an event breakpoint.\neventCheckboxTooltip=Toggle breaking on this event\n\n# LOCALIZATION NOTE (eventOnSelector): The text to display in the events tab\n# for every event item, between the event type and event selector.\neventOnSelector=on\n\n# LOCALIZATION NOTE (eventInSource): The text to display in the events tab\n# for every event item, between the event selector and listener's owner source.\neventInSource=in\n\n# LOCALIZATION NOTE (eventNodes): The text to display in the events tab when\n# an event is listened on more than one target node.\neventNodes=%S nodes\n\n# LOCALIZATION NOTE (eventNative): The text to display in the events tab when\n# a listener is added from plugins, thus getting translated to native code.\neventNative=[native code]\n\n# LOCALIZATION NOTE (*Events): The text to display in the events tab for\n# each group of sub-level event entries.\nanimationEvents=Animation\naudioEvents=Audio\nbatteryEvents=Battery\nclipboardEvents=Clipboard\ncompositionEvents=Composition\ndeviceEvents=Device\ndisplayEvents=Display\ndragAndDropEvents=Drag and Drop\ngamepadEvents=Gamepad\nindexedDBEvents=IndexedDB\ninteractionEvents=Interaction\nkeyboardEvents=Keyboard\nmediaEvents=HTML5 Media\nmouseEvents=Mouse\nmutationEvents=Mutation\nnavigationEvents=Navigation\npointerLockEvents=Pointer Lock\nsensorEvents=Sensor\nstorageEvents=Storage\ntimeEvents=Time\ntouchEvents=Touch\notherEvents=Other\n\n# LOCALIZATION NOTE (blackboxCheckboxTooltip2): The tooltip text to display when\n# the user hovers over the checkbox used to toggle blackboxing its associated\n# source.\nblackboxCheckboxTooltip2=Toggle blackboxing\n\n# LOCALIZATION NOTE (sources.search.key2): Key shortcut to open the search for\n# searching all the source files the debugger has seen.\n# Do not localize \"CmdOrCtrl+P\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\nsources.search.key2=CmdOrCtrl+P\n\n# LOCALIZATION NOTE (sources.search.alt.key): A second key shortcut to open the\n# search for searching all the source files the debugger has seen.\n# Do not localize \"CmdOrCtrl+O\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\nsources.search.alt.key=CmdOrCtrl+O\n\n# LOCALIZATION NOTE (projectTextSearch.key): A key shortcut to open the\n# full project text search for searching all the files the debugger has seen.\n# Do not localize \"CmdOrCtrl+Shift+F\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\nprojectTextSearch.key=CmdOrCtrl+Shift+F\n\n# LOCALIZATION NOTE (functionSearch.key): A key shortcut to open the\n# modal for searching functions in a file.\n# Do not localize \"CmdOrCtrl+Shift+O\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\nfunctionSearch.key=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE (toggleBreakpoint.key): A key shortcut to toggle\n# breakpoints.\n# Do not localize \"CmdOrCtrl+B\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\ntoggleBreakpoint.key=CmdOrCtrl+B\n\n# LOCALIZATION NOTE (toggleCondPanel.key): A key shortcut to toggle\n# the conditional breakpoint panel.\n# Do not localize \"CmdOrCtrl+Shift+B\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\ntoggleCondPanel.key=CmdOrCtrl+Shift+B\n\n# LOCALIZATION NOTE (stepOut.key): A key shortcut to\n# step out.\nstepOut.key=Shift+F11\n\n# LOCALIZATION NOTE (shortcuts.header.editor): Sections header in\n# the shortcuts modal for keyboard shortcuts related to editing.\nshortcuts.header.editor=Editor\n\n# LOCALIZATION NOTE (shortcuts.header.stepping): Sections header in\n# the shortcuts modal for keyboard shortcuts related to stepping.\nshortcuts.header.stepping=Stepping\n\n# LOCALIZATION NOTE (shortcuts.header.search): Sections header in\n# the shortcuts modal for keyboard shortcuts related to search.\nshortcuts.header.search=Search\n\n# LOCALIZATION NOTE (projectTextSearch.placeholder): A placeholder shown\n# when searching across all of the files in a project.\nprojectTextSearch.placeholder=Find in files…\n\n# LOCALIZATION NOTE (projectTextSearch.noResults): The center pane Text Search\n# message when the query did not match any text of all files in a project.\nprojectTextSearch.noResults=No results found\n\n# LOCALIZATION NOTE (sources.noSourcesAvailable): Text shown when the debugger\n# does not have any sources.\nsources.noSourcesAvailable=This page has no sources\n\n# LOCALIZATION NOTE (sourceSearch.search.key2): Key shortcut to open the search\n# for searching within a the currently opened files in the editor\n# Do not localize \"CmdOrCtrl+F\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\nsourceSearch.search.key2=CmdOrCtrl+F\n\n# LOCALIZATION NOTE (sourceSearch.search.placeholder): placeholder text in\n# the source search input bar\nsourceSearch.search.placeholder=Search in file…\n\n# LOCALIZATION NOTE (sourceSearch.search.again.key2): Key shortcut to highlight\n# the next occurrence of the last search triggered from a source search\n# Do not localize \"CmdOrCtrl+G\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\nsourceSearch.search.again.key2=CmdOrCtrl+G\n\n# LOCALIZATION NOTE (sourceSearch.search.againPrev.key2): Key shortcut to highlight\n# the previous occurrence of the last search triggered from a source search\n# Do not localize \"CmdOrCtrl+Shift+G\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\nsourceSearch.search.againPrev.key2=CmdOrCtrl+Shift+G\n\n# LOCALIZATION NOTE (sourceSearch.resultsSummary1): Shows a summary of\n# the number of matches for autocomplete\nsourceSearch.resultsSummary1=%d results\n\n# LOCALIZATION NOTE (noMatchingStringsText): The text to display in the\n# global search results when there are no matching strings after filtering.\nnoMatchingStringsText=No matches found\n\n# LOCALIZATION NOTE (emptySearchText): This is the text that appears in the\n# filter text box when it is empty and the scripts container is selected.\nemptySearchText=Search scripts (%S)\n\n# LOCALIZATION NOTE (emptyVariablesFilterText): This is the text that\n# appears in the filter text box for the variables view container.\nemptyVariablesFilterText=Filter variables\n\n# LOCALIZATION NOTE (emptyPropertiesFilterText): This is the text that\n# appears in the filter text box for the editor's variables view bubble.\nemptyPropertiesFilterText=Filter properties\n\n# LOCALIZATION NOTE (searchPanelFilter): This is the text that appears in the\n# filter panel popup for the filter scripts operation.\nsearchPanelFilter=Filter scripts (%S)\n\n# LOCALIZATION NOTE (searchPanelGlobal): This is the text that appears in the\n# filter panel popup for the global search operation.\nsearchPanelGlobal=Search in all files (%S)\n\n# LOCALIZATION NOTE (searchPanelFunction): This is the text that appears in the\n# filter panel popup for the function search operation.\nsearchPanelFunction=Search for function definition (%S)\n\n# LOCALIZATION NOTE (searchPanelToken): This is the text that appears in the\n# filter panel popup for the token search operation.\nsearchPanelToken=Find in this file (%S)\n\n# LOCALIZATION NOTE (searchPanelGoToLine): This is the text that appears in the\n# filter panel popup for the line search operation.\nsearchPanelGoToLine=Go to line (%S)\n\n# LOCALIZATION NOTE (searchPanelVariable): This is the text that appears in the\n# filter panel popup for the variables search operation.\nsearchPanelVariable=Filter variables (%S)\n\n# LOCALIZATION NOTE (breakpointMenuItem): The text for all the elements that\n# are displayed in the breakpoints menu item popup.\nbreakpointMenuItem.setConditional=Configure conditional breakpoint\nbreakpointMenuItem.enableSelf2.label=Enable\nbreakpointMenuItem.enableSelf2.accesskey=E\nbreakpointMenuItem.disableSelf2.label=Disable\nbreakpointMenuItem.disableSelf2.accesskey=D\nbreakpointMenuItem.deleteSelf2.label=Remove\nbreakpointMenuItem.deleteSelf2.accesskey=R\nbreakpointMenuItem.enableOthers2.label=Enable others\nbreakpointMenuItem.enableOthers2.accesskey=o\nbreakpointMenuItem.disableOthers2.label=Disable others\nbreakpointMenuItem.disableOthers2.accesskey=s\nbreakpointMenuItem.deleteOthers2.label=Remove others\nbreakpointMenuItem.deleteOthers2.accesskey=h\nbreakpointMenuItem.enableAll2.label=Enable all\nbreakpointMenuItem.enableAll2.accesskey=b\nbreakpointMenuItem.disableAll2.label=Disable all\nbreakpointMenuItem.disableAll2.accesskey=k\nbreakpointMenuItem.deleteAll2.label=Remove all\nbreakpointMenuItem.deleteAll2.accesskey=a\nbreakpointMenuItem.removeCondition2.label=Remove condition\nbreakpointMenuItem.removeCondition2.accesskey=c\nbreakpointMenuItem.addCondition2.label=Add condition\nbreakpointMenuItem.addCondition2.accesskey=A\nbreakpointMenuItem.editCondition2.label=Edit condition\nbreakpointMenuItem.editCondition2.accesskey=n\nbreakpointMenuItem.enableSelf=Enable breakpoint\nbreakpointMenuItem.enableSelf.accesskey=E\nbreakpointMenuItem.disableSelf=Disable breakpoint\nbreakpointMenuItem.disableSelf.accesskey=D\nbreakpointMenuItem.deleteSelf=Remove breakpoint\nbreakpointMenuItem.deleteSelf.accesskey=R\nbreakpointMenuItem.enableOthers=Enable others\nbreakpointMenuItem.enableOthers.accesskey=o\nbreakpointMenuItem.disableOthers=Disable others\nbreakpointMenuItem.disableOthers.accesskey=s\nbreakpointMenuItem.deleteOthers=Remove others\nbreakpointMenuItem.deleteOthers.accesskey=h\nbreakpointMenuItem.enableAll=Enable all breakpoints\nbreakpointMenuItem.enableAll.accesskey=b\nbreakpointMenuItem.disableAll=Disable all breakpoints\nbreakpointMenuItem.disableAll.accesskey=k\nbreakpointMenuItem.deleteAll=Remove all breakpoints\nbreakpointMenuItem.deleteAll.accesskey=a\nbreakpointMenuItem.removeCondition.label=Remove breakpoint condition\nbreakpointMenuItem.removeCondition.accesskey=c\nbreakpointMenuItem.editCondition.label=Edit breakpoint condition\nbreakpointMenuItem.editCondition.accesskey=n\n\n# LOCALIZATION NOTE (breakpoints.header): Breakpoints right sidebar pane header.\nbreakpoints.header=Breakpoints\n\n# LOCALIZATION NOTE (breakpoints.none): The text that appears when there are\n# no breakpoints present\nbreakpoints.none=No breakpoints\n\n# LOCALIZATION NOTE (breakpoints.enable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.enable=Enable breakpoints\n\n# LOCALIZATION NOTE (breakpoints.disable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.disable=Disable breakpoints\n\n# LOCALIZATION NOTE (breakpoints.removeBreakpointTooltip): The tooltip that is displayed\n# for remove breakpoint button in right sidebar\nbreakpoints.removeBreakpointTooltip=Remove breakpoint\n\n# LOCALIZATION NOTE (callStack.header): Call Stack right sidebar pane header.\ncallStack.header=Call stack\n\n# LOCALIZATION NOTE (callStack.notPaused): Call Stack right sidebar pane\n# message when not paused.\ncallStack.notPaused=Not paused\n\n# LOCALIZATION NOTE (callStack.collapse): Call Stack right sidebar pane\n# message to hide some of the frames that are shown.\ncallStack.collapse=Collapse rows\n\n# LOCALIZATION NOTE (callStack.expand): Call Stack right sidebar pane\n# message to show more of the frames.\ncallStack.expand=Expand rows\n\n# LOCALIZATION NOTE (editor.searchResults): Editor Search bar message\n# for the summarizing the selected search result. e.g. 5 of 10 results.\neditor.searchResults=%d of %d results\n\n# LOCALIZATION NOTE (editor.singleResult): Copy shown when there is one result.\neditor.singleResult=1 result\n\n# LOCALIZATION NOTE (editor.noResults): Editor Search bar message\n# for when no results found.\neditor.noResults=No results\n\n# LOCALIZATION NOTE (editor.searchResults.nextResult): Editor Search bar\n# tooltip for traversing to the Next Result\neditor.searchResults.nextResult=Next result\n\n# LOCALIZATION NOTE (editor.searchResults.prevResult): Editor Search bar\n# tooltip for traversing to the Previous Result\neditor.searchResults.prevResult=Previous result\n\n# LOCALIZATION NOTE (editor.searchTypeToggleTitle): Search bar title for\n# toggling search type buttons(function search, variable search)\neditor.searchTypeToggleTitle=Search for:\n\n# LOCALIZATION NOTE (editor.continueToHere.label): Editor gutter context\n# menu item for jumping to a new paused location\neditor.continueToHere.label=Continue to here\neditor.continueToHere.accesskey=H\n\n# LOCALIZATION NOTE (editor.addBreakpoint): Editor gutter context menu item\n# for adding a breakpoint on a line.\neditor.addBreakpoint=Add breakpoint\n\n# LOCALIZATION NOTE (editor.disableBreakpoint): Editor gutter context menu item\n# for disabling a breakpoint on a line.\neditor.disableBreakpoint=Disable breakpoint\neditor.disableBreakpoint.accesskey=D\n\n# LOCALIZATION NOTE (editor.enableBreakpoint): Editor gutter context menu item\n# for enabling a breakpoint on a line.\neditor.enableBreakpoint=Enable breakpoint\n\n# LOCALIZATION NOTE (editor.removeBreakpoint): Editor gutter context menu item\n# for removing a breakpoint on a line.\neditor.removeBreakpoint=Remove breakpoint\n\n# LOCALIZATION NOTE (editor.editBreakpoint): Editor gutter context menu item\n# for setting a breakpoint condition on a line.\neditor.editBreakpoint=Edit breakpoint\n\n# LOCALIZATION NOTE (editor.addConditionalBreakpoint): Editor gutter context\n# menu item for adding a breakpoint condition on a line.\neditor.addConditionalBreakpoint=Add conditional breakpoint\neditor.addConditionalBreakpoint.accesskey=c\n\n# LOCALIZATION NOTE (editor.conditionalPanel.placeholder): Placeholder text for\n# input element inside ConditionalPanel component\neditor.conditionalPanel.placeholder=This breakpoint will pause when the expression is true\n\n# LOCALIZATION NOTE (editor.conditionalPanel.close): Tooltip text for\n# close button inside ConditionalPanel component\neditor.conditionalPanel.close=Cancel edit breakpoint and close\n\n# LOCALIZATION NOTE (editor.jumpToMappedLocation1): Context menu item\n# for navigating to a source mapped location\neditor.jumpToMappedLocation1=Jump to %S location\neditor.jumpToMappedLocation1.accesskey=m\n\n# LOCALIZATION NOTE (framework.disableGrouping): This is the text that appears in the\n# context menu to disable framework grouping.\nframework.disableGrouping=Disable framework grouping\nframework.disableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (framework.enableGrouping): This is the text that appears in the\n# context menu to enable framework grouping.\nframework.enableGrouping=Enable framework grouping\nframework.enableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (generated): Source Map term for a server source location\ngenerated=generated\n\n# LOCALIZATION NOTE (original): Source Map term for a debugger UI source location\noriginal=original\n\n# LOCALIZATION NOTE (expressions.placeholder): Placeholder text for expression\n# input element\nexpressions.placeholder=Add watch expression\n# LOCALIZATION NOTE (expressions.errorMsg): Error text for expression\n# input element\nexpressions.errorMsg=Invalid expression…\nexpressions.label=Add watch expression\nexpressions.accesskey=e\n\n# LOCALIZATION NOTE (sourceTabs.closeTab): Editor source tab context menu item\n# for closing the selected tab below the mouse.\nsourceTabs.closeTab=Close tab\nsourceTabs.closeTab.accesskey=c\n\n# LOCALIZATION NOTE (sourceTabs.closeOtherTabs): Editor source tab context menu item\n# for closing the other tabs.\nsourceTabs.closeOtherTabs=Close other tabs\nsourceTabs.closeOtherTabs.accesskey=o\n\n# LOCALIZATION NOTE (sourceTabs.closeTabsToEnd): Editor source tab context menu item\n# for closing the tabs to the end (the right for LTR languages) of the selected tab.\nsourceTabs.closeTabsToEnd=Close tabs to the right\nsourceTabs.closeTabsToEnd.accesskey=e\n\n# LOCALIZATION NOTE (sourceTabs.closeAllTabs): Editor source tab context menu item\n# for closing all tabs.\nsourceTabs.closeAllTabs=Close all tabs\nsourceTabs.closeAllTabs.accesskey=a\n\n# LOCALIZATION NOTE (sourceTabs.revealInTree): Editor source tab context menu item\n# for revealing source in tree.\nsourceTabs.revealInTree=Reveal in tree\nsourceTabs.revealInTree.accesskey=r\n\n# LOCALIZATION NOTE (sourceTabs.prettyPrint): Editor source tab context menu item\n# for pretty printing the source.\nsourceTabs.prettyPrint=Pretty print source\nsourceTabs.prettyPrint.accesskey=p\n\n# LOCALIZATION NOTE (sourceFooter.blackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.blackbox=Blackbox source\nsourceFooter.blackbox.accesskey=B\n\n# LOCALIZATION NOTE (sourceFooter.unblackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.unblackbox=Unblackbox source\nsourceFooter.unblackbox.accesskey=b\n\n# LOCALIZATION NOTE (sourceFooter.blackboxed): Text associated\n# with a blackboxed source\nsourceFooter.blackboxed=Blackboxed source\n\n# LOCALIZATION NOTE (sourceFooter.mappedSource): Text associated\n# with a mapped source. %S is replaced by the source map origin.\nsourceFooter.mappedSource=(From %S)\n\n# LOCALIZATION NOTE (sourceFooter.mappedSourceTooltip): Tooltip text associated\n# with a mapped source. %S is replaced by the source map origin.\nsourceFooter.mappedSourceTooltip=(Source mapped from %S)\n\n# LOCALIZATION NOTE (sourceFooter.codeCoverage): Text associated\n# with a code coverage button\nsourceFooter.codeCoverage=Code coverage\n\n# LOCALIZATION NOTE (sourceTabs.closeTabButtonTooltip): The tooltip that is displayed\n# for close tab button in source tabs.\nsourceTabs.closeTabButtonTooltip=Close tab\n\n# LOCALIZATION NOTE (scopes.header): Scopes right sidebar pane header.\nscopes.header=Scopes\n\n# LOCALIZATION NOTE (scopes.notAvailable): Scopes right sidebar pane message\n# for when the debugger is paused, but there isn't pause data.\nscopes.notAvailable=Scopes unavailable\n\n# LOCALIZATION NOTE (scopes.notPaused): Scopes right sidebar pane message\n# for when the debugger is not paused.\nscopes.notPaused=Not paused\n\n# LOCALIZATION NOTE (scopes.block): Refers to a block of code in\n# the scopes pane when the debugger is paused.\nscopes.block=Block\n\n# LOCALIZATION NOTE (sources.header): Sources left sidebar header\nsources.header=Sources\n\n# LOCALIZATION NOTE (outline.header): Outline left sidebar header\noutline.header=Outline\n\n# LOCALIZATION NOTE (outline.noFunctions): Outline text when there are no functions to display\noutline.noFunctions=No functions\n\n# LOCALIZATION NOTE (sources.search): Sources left sidebar prompt\n# e.g. Cmd+P to search. On a mac, we use the command unicode character.\n# On windows, it's ctrl.\nsources.search=%S to search\n\n# LOCALIZATION NOTE (watchExpressions.header): Watch Expressions right sidebar\n# pane header.\nwatchExpressions.header=Watch expressions\n\n# LOCALIZATION NOTE (watchExpressions.refreshButton): Watch Expressions header\n# button for refreshing the expressions.\nwatchExpressions.refreshButton=Refresh\n\n# LOCALIZATION NOTE (welcome.search): The center pane welcome panel's\n# search prompt. e.g. cmd+p to search for files. On windows, it's ctrl, on\n# a mac we use the unicode character.\nwelcome.search=%S to search for sources\n\n# LOCALIZATION NOTE (welcome.findInFiles): The center pane welcome panel's\n# search prompt. e.g. cmd+f to search for files. On windows, it's ctrl+shift+f, on\n# a mac we use the unicode character.\nwelcome.findInFiles=%S to find in files\n\n# LOCALIZATION NOTE (welcome.searchFunction): Label displayed in the welcome\n# panel. %S is replaced by the keyboard shortcut to search for functions.\nwelcome.searchFunction=%S to search for functions in file\n\n# LOCALIZATION NOTE (sourceSearch.search): The center pane Source Search\n# prompt for searching for files.\nsourceSearch.search=Search sources…\n\n# LOCALIZATION NOTE (sourceSearch.noResults2): The center pane Source Search\n# message when the query did not match any of the sources.\nsourceSearch.noResults2=No results found\n\n# LOCALIZATION NOTE (ignoreExceptions): The pause on exceptions button tooltip\n# when the debugger will not pause on exceptions.\nignoreExceptions=Ignore exceptions. Click to pause on uncaught exceptions\n\n# LOCALIZATION NOTE (pauseOnUncaughtExceptions): The pause on exceptions button\n# tooltip when the debugger will pause on uncaught exceptions.\npauseOnUncaughtExceptions=Pause on uncaught exceptions. Click to pause on all exceptions\n\n# LOCALIZATION NOTE (pauseOnExceptions): The pause on exceptions button tooltip\n# when the debugger will pause on all exceptions.\npauseOnExceptions=Pause on all exceptions. Click to ignore exceptions\n\n# LOCALIZATION NOTE (replayPrevious): The replay previous button tooltip\n# when the debugger will go back in stepping history.\nreplayPrevious=Go back one step in history\n\n# LOCALIZATION NOTE (replayNext): The replay next button tooltip\n# when the debugger will go forward in stepping history.\nreplayNext=Go forward one step in history\n\n# LOCALIZATION NOTE (loadingText): The text that is displayed in the script\n# editor when the loading process has started but there is no file to display\n# yet.\nloadingText=Loading\\u2026\n\n# LOCALIZATION NOTE (wasmIsNotAvailable): The text that is displayed in the\n# script editor when the WebAssembly source is not available.\nwasmIsNotAvailable=Please refresh to debug this module\n\n# LOCALIZATION NOTE (errorLoadingText3): The text that is displayed in the debugger\n# viewer when there is an error loading a file\nerrorLoadingText3=Error loading this URI: %S\n\n# LOCALIZATION NOTE (addWatchExpressionText): The text that is displayed in the\n# watch expressions list to add a new item.\naddWatchExpressionText=Add watch expression\n\n# LOCALIZATION NOTE (addWatchExpressionButton): The button that is displayed in the\n# variables view popup.\naddWatchExpressionButton=Watch\n\n# LOCALIZATION NOTE (emptyVariablesText): The text that is displayed in the\n# variables pane when there are no variables to display.\nemptyVariablesText=No variables to display\n\n# LOCALIZATION NOTE (scopeLabel): The text that is displayed in the variables\n# pane as a header for each variable scope (e.g. \"Global scope, \"With scope\",\n# etc.).\nscopeLabel=%S scope\n\n# LOCALIZATION NOTE (watchExpressionsScopeLabel): The name of the watch\n# expressions scope. This text is displayed in the variables pane as a header for\n# the watch expressions scope.\nwatchExpressionsScopeLabel=Watch expressions\n\n# LOCALIZATION NOTE (globalScopeLabel): The name of the global scope. This text\n# is added to scopeLabel and displayed in the variables pane as a header for\n# the global scope.\nglobalScopeLabel=Global\n\n# LOCALIZATION NOTE (variablesViewErrorStacktrace): This is the text that is\n# shown before the stack trace in an error.\nvariablesViewErrorStacktrace=Stack trace:\n\n# LOCALIZATION NOTE (variablesViewMoreObjects): the text that is displayed\n# when you have an object preview that does not show all of the elements. At the end of the list\n# you see \"N more...\" in the web console output.\n# This is a semi-colon list of plural forms.\n# See: http://developer.mozilla.org/en/docs/Localization_and_Plurals\n# #1 number of remaining items in the object\n# example: 3 more…\nvariablesViewMoreObjects=#1 more…;#1 more…\n\n# LOCALIZATION NOTE (variablesEditableNameTooltip): The text that is displayed\n# in the variables list on an item with an editable name.\nvariablesEditableNameTooltip=Double click to edit\n\n# LOCALIZATION NOTE (variablesEditableValueTooltip): The text that is displayed\n# in the variables list on an item with an editable value.\nvariablesEditableValueTooltip=Click to change value\n\n# LOCALIZATION NOTE (variablesCloseButtonTooltip): The text that is displayed\n# in the variables list on an item which can be removed.\nvariablesCloseButtonTooltip=Click to remove\n\n# LOCALIZATION NOTE (variablesEditButtonTooltip): The text that is displayed\n# in the variables list on a getter or setter which can be edited.\nvariablesEditButtonTooltip=Click to set value\n\n# LOCALIZATION NOTE (variablesDomNodeValueTooltip): The text that is displayed\n# in a tooltip on the \"open in inspector\" button in the the variables list for a\n# DOMNode item.\nvariablesDomNodeValueTooltip=Click to select the node in the inspector\n\n# LOCALIZATION NOTE (configurable|...|Tooltip): The text that is displayed\n# in the variables list on certain variables or properties as tooltips.\n# Expanations of what these represent can be found at the following links:\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isExtensible\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isFrozen\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isSealed\n# It's probably best to keep these in English.\nconfigurableTooltip=configurable\nenumerableTooltip=enumerable\nwritableTooltip=writable\nfrozenTooltip=frozen\nsealedTooltip=sealed\nextensibleTooltip=extensible\noverriddenTooltip=overridden\nWebIDLTooltip=WebIDL\n\n# LOCALIZATION NOTE (variablesSeparatorLabel): The text that is displayed\n# in the variables list as a separator between the name and value.\nvariablesSeparatorLabel=:\n\n# LOCALIZATION NOTE (watchExpressionsSeparatorLabel2): The text that is displayed\n# in the watch expressions list as a separator between the code and evaluation.\nwatchExpressionsSeparatorLabel2=\\u0020→\n\n# LOCALIZATION NOTE (functionSearchSeparatorLabel): The text that is displayed\n# in the functions search panel as a separator between function's inferred name\n# and its real name (if available).\nfunctionSearchSeparatorLabel=←\n\n# LOCALIZATION NOTE(gotoLineModal.placeholder): The placeholder\n# text displayed when the user searches for specific lines in a file\ngotoLineModal.placeholder=Go to line…\n\n# LOCALIZATION NOTE(gotoLineModal.title): The message shown to users\n# to open the go to line modal\ngotoLineModal.title=Go to a line number in a file\n\n# LOCALIZATION NOTE(gotoLineModal.key2): The shortcut for opening the\n# go to line modal\n# Do not localize \"CmdOrCtrl+;\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\ngotoLineModal.key2=CmdOrCtrl+;\n\n# LOCALIZATION NOTE(symbolSearch.search.functionsPlaceholder): The placeholder\n# text displayed when the user searches for functions in a file\nsymbolSearch.search.functionsPlaceholder=Search functions…\nsymbolSearch.search.functionsPlaceholder.title=Search for a function in a file\n\n# LOCALIZATION NOTE(symbolSearch.search.variablesPlaceholder): The placeholder\n# text displayed when the user searches for variables in a file\nsymbolSearch.search.variablesPlaceholder=Search variables…\nsymbolSearch.search.variablesPlaceholder.title=Search for a variable in a file\n\n# LOCALIZATION NOTE(symbolSearch.search.key2): The Key Shortcut for\n# searching for a function or variable\n# Do not localize \"CmdOrCtrl+Shift+O\", or change the format of the string. These are\n# key identifiers, not messages displayed to the user.\nsymbolSearch.search.key2=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.modifiersLabel): A label\n# preceding the group of modifiers\nsymbolSearch.searchModifier.modifiersLabel=Modifiers:\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.regex): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.regex=Regex\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.caseSensitive): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.caseSensitive=Case sensitive\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.wholeWord): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.wholeWord=Whole word\n\n# LOCALIZATION NOTE (resumptionOrderPanelTitle): This is the text that appears\n# as a description in the notification panel popup, when multiple debuggers are\n# open in separate tabs and the user tries to resume them in the wrong order.\n# The substitution parameter is the URL of the last paused window that must be\n# resumed first.\nresumptionOrderPanelTitle=There are one or more paused debuggers. Please resume the most-recently paused debugger first at: %S\n\nvariablesViewOptimizedOut=(optimized away)\nvariablesViewUninitialized=(uninitialized)\nvariablesViewMissingArgs=(unavailable)\n\nanonymousSourcesLabel=Anonymous sources\n\nexperimental=This is an experimental feature\n\n# LOCALIZATION NOTE (whyPaused.debuggerStatement): The text that is displayed\n# in a info block explaining how the debugger is currently paused due to a `debugger`\n# statement in the code\nwhyPaused.debuggerStatement=Paused on debugger statement\n\n# LOCALIZATION NOTE (whyPaused.breakpoint): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a breakpoint\nwhyPaused.breakpoint=Paused on breakpoint\n\n# LOCALIZATION NOTE (whyPaused.exception): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an exception\nwhyPaused.exception=Paused on exception\n\n# LOCALIZATION NOTE (whyPaused.resumeLimit): The text that is displayed\n# in a info block explaining how the debugger is currently paused while stepping\n# in or out of the stack\nwhyPaused.resumeLimit=Paused while stepping\n\n# LOCALIZATION NOTE (whyPaused.pauseOnDOMEvents): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# dom event\nwhyPaused.pauseOnDOMEvents=Paused on event listener\n\n# LOCALIZATION NOTE (whyPaused.breakpointConditionThrown): The text that is displayed\n# in an info block when evaluating a conditional breakpoint throws an error\nwhyPaused.breakpointConditionThrown=Error with conditional breakpoint\n\n# LOCALIZATION NOTE (whyPaused.xhr): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# xml http request\nwhyPaused.xhr=Paused on XMLHttpRequest\n\n# LOCALIZATION NOTE (whyPaused.promiseRejection): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# promise rejection\nwhyPaused.promiseRejection=Paused on promise rejection\n\n# LOCALIZATION NOTE (whyPaused.assert): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# assert\nwhyPaused.assert=Paused on assertion\n\n# LOCALIZATION NOTE (whyPaused.debugCommand): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# debugger statement\nwhyPaused.debugCommand=Paused on debugged function\n\n# LOCALIZATION NOTE (whyPaused.other): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an event\n# listener breakpoint set\nwhyPaused.other=Debugger paused\n\n# LOCALIZATION NOTE (ctrl): The text that is used for documenting\n# keyboard shortcuts that use the control key\nctrl=Ctrl\n\n# LOCALIZATION NOTE (anonymous): The text that is displayed when the\n# display name is null.\nanonymous=(anonymous)\n\n# LOCALIZATION NOTE (shortcuts.toggleBreakpoint): text describing\n# keyboard shortcut action for toggling breakpoint\nshortcuts.toggleBreakpoint=Toggle Breakpoint\nshortcuts.toggleBreakpoint.accesskey=B\n\n# LOCALIZATION NOTE (shortcuts.toggleCondPanel): text describing\n# keyboard shortcut action for toggling conditional panel keyboard\nshortcuts.toggleCondPanel=Toggle Conditional Panel\n\n# LOCALIZATION NOTE (shortcuts.pauseOrResume): text describing\n# keyboard shortcut action for pause of resume\nshortcuts.pauseOrResume=Pause/Resume\n\n# LOCALIZATION NOTE (shortcuts.stepOver): text describing\n# keyboard shortcut action for stepping over\nshortcuts.stepOver=Step Over\n\n# LOCALIZATION NOTE (shortcuts.stepIn): text describing\n# keyboard shortcut action for stepping in\nshortcuts.stepIn=Step In\n\n# LOCALIZATION NOTE (shortcuts.stepOut): text describing\n# keyboard shortcut action for stepping out\nshortcuts.stepOut=Step Out\n\n# LOCALIZATION NOTE (shortcuts.fileSearch): text describing\n# keyboard shortcut action for source file search\nshortcuts.fileSearch=Source File Search\n\n# LOCALIZATION NOTE (shortcuts.gotoLine): text describing\n# keyboard shortcut for jumping to a specific line\nshortcuts.gotoLine=Go to line\n\n# LOCALIZATION NOTE (shortcuts.searchAgain): text describing\n# keyboard shortcut action for searching again\nshortcuts.searchAgain=Search Again\n\n# LOCALIZATION NOTE (shortcuts.projectSearch): text describing\n# keyboard shortcut action for full project search\nshortcuts.projectSearch=Full Project Search\n\n# LOCALIZATION NOTE (shortcuts.functionSearch): text describing\n# keyboard shortcut action for function search\nshortcuts.functionSearch=Function Search\n\n# LOCALIZATION NOTE (shortcuts.buttonName): text describing\n# keyboard shortcut button text\nshortcuts.buttonName=Keyboard shortcuts\n"
 
 /***/ }),
 /* 961 */,
@@ -19211,11 +19143,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const arrowBtn = (onClick, type, className, tooltip) => {
   const props = {
-    onClick,
-    type,
     className,
+    key: type,
+    onClick,
     title: tooltip,
-    key: type
+    type
   };
 
   return _react2.default.createElement(
@@ -19228,31 +19160,25 @@ const arrowBtn = (onClick, type, className, tooltip) => {
     * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class SearchInput extends _react.Component {
-  constructor(...args) {
-    var _temp;
-
-    return _temp = super(...args), this.shouldShowErrorEmoji = () => {
-      const { count, query, showErrorEmoji } = this.props;
-      return showErrorEmoji && count === 0 && query.trim() !== "";
-    }, _temp;
-  }
 
   componentDidMount() {
     if (this.$input) {
       const input = this.$input;
       input.focus();
-      if (input.value != "") {
-        input.select();
+
+      if (!input.value) {
+        return;
       }
+
+      // omit prefix @:# from being selected
+      const selectStartPos = this.props.hasPrefix ? 1 : 0;
+      input.setSelectionRange(selectStartPos, input.value.length + 1);
     }
   }
 
   renderSvg() {
-    if (this.shouldShowErrorEmoji()) {
-      return _react2.default.createElement(_Svg2.default, { name: "sad-face" });
-    }
-
-    return _react2.default.createElement(_Svg2.default, { name: "magnifying-glass" });
+    const svgName = this.props.showErrorEmoji ? "sad-face" : "magnifying-glass";
+    return _react2.default.createElement(_Svg2.default, { name: svgName });
   }
 
   renderArrowButtons() {
@@ -19276,23 +19202,23 @@ class SearchInput extends _react.Component {
 
   render() {
     const {
-      query,
-      placeholder,
-      summaryMsg,
+      expanded,
+      handleClose,
+      onBlur,
       onChange,
+      onFocus,
       onKeyDown,
       onKeyUp,
-      onFocus,
-      onBlur,
-      handleClose,
-      size,
-      expanded,
-      selectedItemId
+      placeholder,
+      query,
+      selectedItemId,
+      showErrorEmoji,
+      size
     } = this.props;
 
     const inputProps = {
       className: (0, _classnames2.default)({
-        empty: this.shouldShowErrorEmoji()
+        empty: showErrorEmoji
       }),
       onChange,
       onKeyDown,
@@ -19319,11 +19245,6 @@ class SearchInput extends _react.Component {
       },
       this.renderSvg(),
       _react2.default.createElement("input", inputProps),
-      _react2.default.createElement(
-        "div",
-        { className: "summary" },
-        summaryMsg || ""
-      ),
       this.renderNav(),
       _react2.default.createElement(_Close2.default, { handleClick: handleClose, buttonClass: size })
     );
@@ -19331,10 +19252,10 @@ class SearchInput extends _react.Component {
 }
 
 SearchInput.defaultProps = {
-  size: "",
-  showErrorEmoji: true,
   expanded: false,
-  selectedItemId: ""
+  hasPrefix: false,
+  selectedItemId: "",
+  size: ""
 };
 exports.default = SearchInput;
 
@@ -19832,6 +19753,7 @@ exports.getOutOfScopeLocations = getOutOfScopeLocations;
 exports.getPreview = getPreview;
 exports.getSourceMetaData = getSourceMetaData;
 exports.getInScopeLines = getInScopeLines;
+exports.isLineInScope = isLineInScope;
 
 var _immutable = __webpack_require__(146);
 
@@ -19972,6 +19894,11 @@ function getSourceMetaData(state, sourceId) {
 
 function getInScopeLines(state) {
   return state.ast.get("inScopeLines");
+}
+
+function isLineInScope(state, line) {
+  const linesInScope = state.ast.get("inScopeLines");
+  return linesInScope && linesInScope.includes(line);
 }
 
 exports.default = update;
@@ -20413,6 +20340,7 @@ exports.getShouldIgnoreCaughtExceptions = getShouldIgnoreCaughtExceptions;
 exports.getCanRewind = getCanRewind;
 exports.getFrames = getFrames;
 exports.getGeneratedFrameScope = getGeneratedFrameScope;
+exports.getFrameScopes = getFrameScopes;
 exports.getFrameScope = getFrameScope;
 exports.getSelectedScope = getSelectedScope;
 exports.getSelectedFrameId = getSelectedFrameId;
@@ -20638,7 +20566,11 @@ function getGeneratedFrameScope(state, frameId) {
     return null;
   }
 
-  return state.pause.frameScopes.generated[frameId];
+  return getFrameScopes(state).generated[frameId];
+}
+
+function getFrameScopes(state) {
+  return state.pause.frameScopes;
 }
 
 function getFrameScope(state, sourceId, frameId) {
@@ -20647,13 +20579,13 @@ function getFrameScope(state, sourceId, frameId) {
   }
 
   const isGenerated = (0, _devtoolsSourceMap.isGeneratedId)(sourceId);
-  const original = state.pause.frameScopes.original[frameId];
+  const original = getFrameScopes(state).original[frameId];
 
   if (!isGenerated && original && (original.pending || original.scope)) {
     return original;
   }
 
-  return state.pause.frameScopes.generated[frameId];
+  return getFrameScopes(state).generated[frameId];
 }
 
 function getSelectedScope(state) {
@@ -30715,7 +30647,7 @@ class App extends _react.Component {
     this.onLayoutChange = this.onLayoutChange.bind(this);
     this.toggleQuickOpenModal = this.toggleQuickOpenModal.bind(this);
     this.renderEditorPane = this.renderEditorPane.bind(this);
-    this.renderVerticalLayout = this.renderVerticalLayout.bind(this);
+    this.renderLayout = this.renderLayout.bind(this);
     this.onEscape = this.onEscape.bind(this);
     this.onCommandSlash = this.onCommandSlash.bind(this);
   }
@@ -30848,61 +30780,32 @@ class App extends _react.Component {
     });
   }
 
-  renderHorizontalLayout() {
+  renderLayout() {
     const { startPanelCollapsed, endPanelCollapsed } = this.props;
     const horizontal = this.isHorizontal();
 
-    const overflowX = endPanelCollapsed ? "hidden" : "auto";
+    const maxSize = horizontal ? "70%" : "95%";
+    const primaryInitialSize = horizontal ? "250px" : "150px";
 
     return _react2.default.createElement(_devtoolsSplitter2.default, {
       style: { width: "100vw" },
-      initialSize: "250px",
-      minSize: 10,
-      maxSize: "50%",
-      splitterSize: 1,
-      onResizeEnd: size => this.setState({ startPanelSize: size }),
-      startPanel: _react2.default.createElement(_PrimaryPanes2.default, { horizontal: horizontal }),
-      startPanelCollapsed: startPanelCollapsed,
-      endPanel: _react2.default.createElement(_devtoolsSplitter2.default, {
-        style: { overflowX },
-        initialSize: "300px",
-        minSize: 10,
-        maxSize: "80%",
-        splitterSize: 1,
-        onResizeEnd: size => this.setState({ endPanelSize: size }),
-        endPanelControl: true,
-        startPanel: this.renderEditorPane(),
-        endPanel: _react2.default.createElement(_SecondaryPanes2.default, {
-          horizontal: horizontal,
-          toggleShortcutsModal: () => this.toggleShortcutsModal()
-        }),
-        endPanelCollapsed: endPanelCollapsed,
-        vert: horizontal
-      })
-    });
-  }
-
-  renderVerticalLayout() {
-    const { startPanelCollapsed, endPanelCollapsed } = this.props;
-    const horizontal = this.isHorizontal();
-
-    return _react2.default.createElement(_devtoolsSplitter2.default, {
-      style: { width: "100vw" },
-      initialSize: "300px",
+      initialHeight: 400,
+      initialWidth: 300,
       minSize: 30,
-      maxSize: "99%",
+      maxSize: maxSize,
       splitterSize: 1,
       vert: horizontal,
       startPanel: _react2.default.createElement(_devtoolsSplitter2.default, {
         style: { width: "100vw" },
-        initialSize: "250px",
-        minSize: 10,
-        maxSize: "40%",
+        initialSize: primaryInitialSize,
+        minSize: 30,
+        maxSize: "85%",
         splitterSize: 1,
         startPanelCollapsed: startPanelCollapsed,
         startPanel: _react2.default.createElement(_PrimaryPanes2.default, { horizontal: horizontal }),
         endPanel: this.renderEditorPane()
       }),
+      endPanelControl: true,
       endPanel: _react2.default.createElement(_SecondaryPanes2.default, {
         horizontal: horizontal,
         toggleShortcutsModal: () => this.toggleShortcutsModal()
@@ -30930,7 +30833,7 @@ class App extends _react.Component {
     return _react2.default.createElement(
       "div",
       { className: "debugger" },
-      this.isHorizontal() ? this.renderHorizontalLayout() : this.renderVerticalLayout(),
+      this.renderLayout(),
       quickOpenEnabled === true && _react2.default.createElement(_QuickOpenModal2.default, {
         shortcutsModalEnabled: this.state.shortcutsModalEnabled,
         toggleShortcutsModal: () => this.toggleShortcutsModal()
@@ -31930,11 +31833,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.openLink = openLink;
 exports.openWorkerToolbox = openWorkerToolbox;
+exports.evaluateInConsole = evaluateInConsole;
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const { isDevelopment } = __webpack_require__(1355);
+const { getSelectedFrameId } = __webpack_require__(1352);
 
 /**
  * @memberof actions/toolbox
@@ -31961,6 +31866,13 @@ function openWorkerToolbox(worker) {
     } else {
       openWorkerToolboxCommand(worker);
     }
+  };
+}
+
+function evaluateInConsole(inputString) {
+  return async ({ client, getState }) => {
+    const frameId = getSelectedFrameId(getState());
+    client.evaluate(`console.log("${inputString}"); console.log(${inputString})`, { frameId });
   };
 }
 
@@ -33780,19 +33692,6 @@ class PrimaryPanes extends _react.Component {
     }
   }
 
-  renderOutline() {
-    const { selectLocation } = this.props;
-
-    const outlineComp = _prefs.features.outline ? _react2.default.createElement(_Outline2.default, { selectLocation: selectLocation }) : null;
-
-    return outlineComp;
-  }
-
-  renderSources() {
-    const { sources, selectLocation } = this.props;
-    return _react2.default.createElement(_SourcesTree2.default, { sources: sources, selectLocation: selectLocation });
-  }
-
   render() {
     const { selectedTab } = this.props;
 
@@ -34268,11 +34167,7 @@ var _initialiseProps = function () {
     const arrow = (0, _sourcesTree.nodeHasChildren)(item) ? _react2.default.createElement("img", {
       className: (0, _classnames2.default)("arrow", {
         expanded: expanded
-      }),
-      onClick: e => {
-        e.stopPropagation();
-        setExpanded(item, !expanded, e.altKey);
-      }
+      })
     }) : _react2.default.createElement("i", { className: "no-arrow" });
     const { sources } = this.props;
     const icon = this.getIcon(sources, item, depth);
@@ -34283,11 +34178,10 @@ var _initialiseProps = function () {
         className: (0, _classnames2.default)("node", { focused }),
         key: item.path,
         onClick: e => {
-          e.stopPropagation();
           this.focusItem(item);
 
           if ((0, _sourcesTree.isDirectory)(item)) {
-            setExpanded(item, !expanded, e.altKey);
+            setExpanded(item, !!expanded, e.altKey);
           } else {
             this.selectItem(item);
           }
@@ -35419,13 +35313,17 @@ class SearchBar extends _react.Component {
     return L10N.getFormatStr("editor.searchResults", matchIndex + 1, count);
   }
 
+  shouldShowErrorEmoji() {
+    const { query, searchResults: { count } } = this.props;
+    return !!query && !count;
+  }
+
   render() {
     const { searchResults: { count }, searchOn } = this.props;
 
     if (!searchOn) {
       return _react2.default.createElement("div", null);
     }
-
     return _react2.default.createElement(
       "div",
       { className: "search-bar" },
@@ -35435,6 +35333,7 @@ class SearchBar extends _react.Component {
         placeholder: L10N.getStr("sourceSearch.search.placeholder"),
         summaryMsg: this.buildSummaryMsg(),
         onChange: this.onChange,
+        showErrorEmoji: this.shouldShowErrorEmoji(),
         onKeyDown: this.onKeyDown,
         handleNext: e => this.traverseResults(e, false),
         handlePrev: e => this.traverseResults(e, true),
@@ -39711,6 +39610,7 @@ function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in ob
 function getMenuItems(event, {
   addExpression,
   editor,
+  evaluateInConsole,
   flashLineRange,
   getFunctionLocation,
   getFunctionText,
@@ -39734,7 +39634,7 @@ function getMenuItems(event, {
   });
   const selectionText = editor.codeMirror.getSelection().trim();
   const sourceLocation = (0, _editor.getSourceLocationFromMouseEvent)(editor, selectedLocation, event);
-  const textSelected = editor.codeMirror.somethingSelected();
+  const isTextSelected = editor.codeMirror.somethingSelected();
 
   // localizations
   const blackboxKey = L10N.getStr("sourceFooter.blackbox.accesskey");
@@ -39747,6 +39647,7 @@ function getMenuItems(event, {
   const copySourceLabel = L10N.getStr("copySource");
   const copySourceUri2Key = L10N.getStr("copySourceUri2.accesskey");
   const copySourceUri2Label = L10N.getStr("copySourceUri2");
+  const evaluateInConsoleLabel = L10N.getStr("evaluateInConsole.label");
   const jumpToMappedLocKey = L10N.getStr("editor.jumpToMappedLocation1.accesskey");
   const jumpToMappedLocLabel = L10N.getFormatStr("editor.jumpToMappedLocation1", isOriginal ? L10N.getStr("generated") : L10N.getStr("original"));
   const revealInTreeKey = L10N.getStr("sourceTabs.revealInTree.accesskey");
@@ -39768,7 +39669,7 @@ function getMenuItems(event, {
     label: copySourceUri2Label,
     accesskey: copySourceUri2Key,
     disabled: false,
-    click: () => (0, _clipboard.copyToTheClipboard)(selectedSource.get("url"))
+    click: () => (0, _clipboard.copyToTheClipboard)((0, _source.getRawSourceURL)(selectedSource.get("url")))
   };
 
   const sourceId = selectedSource.get("id");
@@ -39822,13 +39723,19 @@ function getMenuItems(event, {
     click: () => addExpression(editor.codeMirror.getSelection())
   };
 
+  const evaluateInConsoleItem = {
+    id: "node-menu-evaluate-in-console",
+    label: evaluateInConsoleLabel,
+    click: () => evaluateInConsole(selectionText)
+  };
+
   // construct menu
   const menuItems = [copySourceItem, copySourceUri2Item, copyFunctionItem, { type: "separator" }, jumpToMappedLocationItem, showSourceMenuItem, blackBoxMenuItem];
 
   // conditionally added items
   // TODO: Find a new way to only add this for mapped sources?
-  if (textSelected) {
-    menuItems.push(watchExpressionItem);
+  if (isTextSelected) {
+    menuItems.push(watchExpressionItem, evaluateInConsoleItem);
   }
 
   return menuItems;
@@ -39864,6 +39771,7 @@ class EditorMenu extends _react.PureComponent {
 
 const {
   addExpression,
+  evaluateInConsole,
   flashLineRange,
   jumpToMappedLocation,
   setContextMenu,
@@ -39886,6 +39794,7 @@ exports.default = (0, _reactRedux.connect)(state => {
   };
 }, {
   addExpression,
+  evaluateInConsole,
   flashLineRange,
   jumpToMappedLocation,
   setContextMenu,
@@ -39952,10 +39861,6 @@ var _reactDom2 = _interopRequireDefault(_reactDom);
 
 var _reactRedux = __webpack_require__(1189);
 
-var _Close = __webpack_require__(1374);
-
-var _Close2 = _interopRequireDefault(_Close);
-
 __webpack_require__(1331);
 
 var _editor = __webpack_require__(1358);
@@ -39967,10 +39872,6 @@ var _actions2 = _interopRequireDefault(_actions);
 var _selectors = __webpack_require__(1352);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class ConditionalPanel extends _react.PureComponent {
 
@@ -40096,11 +39997,6 @@ class ConditionalPanel extends _react.PureComponent {
         placeholder: L10N.getStr("editor.conditionalPanel.placeholder"),
         onKeyDown: this.onKey,
         ref: input => this.input = input
-      }),
-      _react2.default.createElement(_Close2.default, {
-        handleClick: this.props.closeConditionalPanel,
-        buttonClass: "big",
-        tooltip: L10N.getStr("editor.conditionalPanel.close")
       })
     ), panel);
     return panel;
@@ -40111,7 +40007,10 @@ class ConditionalPanel extends _react.PureComponent {
   }
 }
 
-exports.ConditionalPanel = ConditionalPanel;
+exports.ConditionalPanel = ConditionalPanel; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                              * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                              * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 const {
   setBreakpointCondition,
   openConditionalPanel,
@@ -41069,8 +40968,12 @@ class Frames extends _react.Component {
 
     return _react2.default.createElement(
       "div",
-      { className: "show-more", onClick: this.toggleFramesDisplay },
-      buttonMessage
+      { className: "show-more-container" },
+      _react2.default.createElement(
+        "button",
+        { className: "show-more", onClick: this.toggleFramesDisplay },
+        buttonMessage
+      )
     );
   }
 
@@ -42799,6 +42702,9 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
                                                                                                                                                                                                                                                                    * License, v. 2.0. If a copy of the MPL was not distributed with this
                                                                                                                                                                                                                                                                    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// eslint-disable-next-line max-len
+
+
 exports.mapScopes = mapScopes;
 
 var _selectors = __webpack_require__(1352);
@@ -42809,7 +42715,13 @@ var _parser = __webpack_require__(1365);
 
 var _promise = __webpack_require__(1653);
 
+var _locColumn = __webpack_require__(2349);
+
+var _findGeneratedBindingFromPosition = __webpack_require__(2358);
+
 var _prefs = __webpack_require__(226);
+
+var _log = __webpack_require__(2359);
 
 var _devtoolsSourceMap = __webpack_require__(1360);
 
@@ -42834,8 +42746,9 @@ function mapScopes(scopes, frame) {
         await dispatch((0, _loadSourceText.loadSourceText)(sourceRecord));
 
         try {
-          return await buildMappedScopes(sourceRecord.toJS(), frame, (await scopes), sourceMaps);
+          return await buildMappedScopes(sourceRecord.toJS(), frame, (await scopes), sourceMaps, client);
         } catch (e) {
+          (0, _log.log)(e);
           return null;
         }
       }()
@@ -42843,7 +42756,7 @@ function mapScopes(scopes, frame) {
   };
 }
 
-async function buildMappedScopes(source, frame, scopes, sourceMaps) {
+async function buildMappedScopes(source, frame, scopes, sourceMaps, client) {
   const originalAstScopes = await (0, _parser.getScopes)(frame.location);
   const generatedAstScopes = await (0, _parser.getScopes)(frame.generatedLocation);
 
@@ -42859,7 +42772,7 @@ async function buildMappedScopes(source, frame, scopes, sourceMaps) {
     await Promise.all(Object.keys(item.bindings).map(async name => {
       const binding = item.bindings[name];
 
-      const result = await findGeneratedBinding(sourceMaps, source, name, binding, generatedAstBindings);
+      const result = await findGeneratedBinding(sourceMaps, client, source, name, binding, generatedAstBindings);
 
       if (result) {
         generatedBindings[name] = result;
@@ -42931,7 +42844,7 @@ function generateClientScope(scopes, originalScopes) {
   return result;
 }
 
-async function findGeneratedBinding(sourceMaps, source, name, originalBinding, generatedAstBindings) {
+async function findGeneratedBinding(sourceMaps, client, source, name, originalBinding, generatedAstBindings) {
   // If there are no references to the implicits, then we have no way to
   // even attempt to map it back to the original since there is no location
   // data to use. Bail out instead of just showing it as unmapped.
@@ -42947,31 +42860,7 @@ async function findGeneratedBinding(sourceMaps, source, name, originalBinding, g
       return result;
     }
 
-    const gen = await sourceMaps.getGeneratedLocation(pos.start, source);
-    const genEnd = await sourceMaps.getGeneratedLocation(pos.end, source);
-
-    // Since the map takes the closest location, sometimes mapping a
-    // binding's location can point at the start of a binding listed after
-    // it, so we need to make sure it maps to a location that actually has
-    // a size in order to avoid picking up the wrong descriptor.
-    if (gen.line === genEnd.line && gen.column === genEnd.column) {
-      return null;
-    }
-
-    return generatedAstBindings.find(val => {
-      if (val.loc.start.line !== gen.line) {
-        return false;
-      }
-
-      // Allow the mapping to point anywhere within the generated binding
-      // location to allow for less than perfect sourcemaps. Since you also
-      // need at least one character between identifiers, we also give one
-      // characters of space at the front the generated binding in order
-      // to increase the probability of finding the right mapping.
-      const start = val.loc.start.column - 1;
-      const end = val.loc.end.column;
-      return gen.column >= start && gen.column <= end;
-    });
+    return await (0, _findGeneratedBindingFromPosition.findGeneratedBindingFromPosition)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
   }, null);
 
   if (genContent && genContent.desc) {
@@ -43071,13 +42960,7 @@ function buildGeneratedBindingList(scopes, generatedAstScopes, thisBinding) {
     const bStart = a.loc.start;
 
     if (aStart.line === bStart.line) {
-      if (typeof aStart.column !== "number" || typeof bStart.column !== "number") {
-        // This shouldn't really happen with locations from the AST, but
-        // the datatype we are using allows null/undefined column.
-        return 0;
-      }
-
-      return aStart.column - bStart.column;
+      return (0, _locColumn.locColumn)(aStart) - (0, _locColumn.locColumn)(bStart);
     }
     return aStart.line - bStart.line;
   });
@@ -44255,9 +44138,7 @@ class QuickOpenModal extends _react.Component {
       if (newQuery === "") {
         return results;
       }
-      if (Object.keys(_quickOpen.MODIFIERS).includes(query[0])) {
-        newQuery = query.slice(1, query.length);
-      }
+      newQuery = query.replace(/[@:#?]/gi, " ");
 
       return results.map(result => {
         return _extends({}, result, {
@@ -44267,6 +44148,8 @@ class QuickOpenModal extends _react.Component {
         } : null);
       });
     };
+
+    this.hasPrefix = () => /^[:#@]/.test(this.props.query);
 
     this.state = { results: null, selectedIndex: 0 };
   }
@@ -44300,6 +44183,14 @@ class QuickOpenModal extends _react.Component {
   /* eslint-disable react/no-danger */
 
 
+  shouldShowErrorEmoji() {
+    const { query } = this.props;
+    if (this.isGotoQuery()) {
+      return !/^:\d*$/.test(query);
+    }
+    return !this.getResultCount() && !!query;
+  }
+
   render() {
     const { enabled, query } = this.props;
     const { selectedIndex, results } = this.state;
@@ -44320,9 +44211,11 @@ class QuickOpenModal extends _react.Component {
         count: this.getResultCount(),
         placeholder: L10N.getStr("sourceSearch.search")
       }, showSummary === true ? { summaryMsg } : {}, {
+        showErrorEmoji: this.shouldShowErrorEmoji(),
         onChange: this.onChange,
         onKeyDown: this.onKeyDown,
         handleClose: this.closeModal,
+        hasPrefix: this.hasPrefix(),
         expanded: expanded,
         selectedItemId: expanded ? items[selectedIndex].id : ""
       })),
@@ -47630,6 +47523,8 @@ var _devtoolsSourceMap = __webpack_require__(1360);
 
 var _promise = __webpack_require__(1653);
 
+var _getExpression = __webpack_require__(2360);
+
 var _selectors = __webpack_require__(1352);
 
 var _expressions = __webpack_require__(1398);
@@ -47668,16 +47563,37 @@ async function getExtraProps(expression, result, evaluate) {
   return props;
 }
 
+function isInvalidTarget(target) {
+  if (!target || !target.innerText) {
+    return true;
+  }
+
+  const tokenText = target.innerText.trim();
+  const cursorPos = target.getBoundingClientRect();
+
+  // exclude literal tokens where it does not make sense to show a preview
+  const invaildType = ["cm-string", "cm-number", "cm-atom"].includes(target.className);
+
+  // exclude syntax where the expression would be a syntax error
+  const invalidToken = tokenText === "" || tokenText.match(/[(){}\|&%,.;=<>\+-/\*\s]/);
+
+  // exclude codemirror elements that are not tokens
+  const invalidTarget = target.parentElement && !target.parentElement.closest(".CodeMirror-line") || cursorPos.top == 0;
+
+  return invalidTarget || invalidToken || invaildType;
+}
+
 function updatePreview(target, editor) {
   return ({ dispatch, getState, client, sourceMaps }) => {
-    const location = (0, _editor.getTokenLocation)(editor.codeMirror, target);
     const tokenText = target.innerText ? target.innerText.trim() : "";
+    const tokenPos = (0, _editor.getTokenLocation)(editor.codeMirror, target);
     const cursorPos = target.getBoundingClientRect();
     const preview = (0, _selectors.getPreview)(getState());
 
     if (preview) {
-      // We are mousing over the same token as before
-      if ((0, _lodash.isEqual)(preview.tokenPos, location)) {
+      // Return early if we are currently showing another preview or
+      // if we are mousing over the same token as before
+      if (preview.updating || (0, _lodash.isEqual)(preview.tokenPos, tokenPos)) {
         return;
       }
 
@@ -47687,55 +47603,39 @@ function updatePreview(target, editor) {
       }
     }
 
+    if (isInvalidTarget(target)) {
+      return;
+    }
+
+    if (!(0, _selectors.isLineInScope)(getState(), tokenPos.line)) {
+      return;
+    }
+
     const source = (0, _selectors.getSelectedSource)(getState());
-
     const symbols = (0, _selectors.getSymbols)(getState(), source.toJS());
-    if (symbols.functions.length == 0) {
+
+    let match;
+    if (!symbols || symbols.identifiers) {
+      match = (0, _ast.findBestMatchExpression)(symbols, tokenPos, tokenText);
+    } else {
+      match = (0, _getExpression.getExpressionFromCoords)(editor.codeMirror, tokenPos);
+    }
+
+    if (!match || !match.expression) {
       return;
     }
 
-    const invalidToken = tokenText === "" || tokenText.match(/[(){}\|&%,.;=<>\+-/\*\s]/);
-
-    const invalidTarget = target.parentElement && !target.parentElement.closest(".CodeMirror-line") || cursorPos.top == 0;
-
-    const isUpdating = preview && preview.updating;
-
-    const linesInScope = (0, _selectors.getInScopeLines)(getState());
-    const inScope = linesInScope && linesInScope.includes(location.line);
-
-    const invaildType = target.className === "cm-string" || target.className === "cm-number" || target.className === "cm-atom";
-
-    if (invalidTarget || !inScope || isUpdating || invalidToken || invaildType) {
-      return;
-    }
-
-    dispatch(setPreview(tokenText, location, cursorPos));
+    const { expression, location } = match;
+    dispatch(setPreview(expression, location, tokenPos, cursorPos));
   };
 }
 
-function setPreview(token, tokenPos, cursorPos) {
+function setPreview(expression, location, tokenPos, cursorPos) {
   return async ({ dispatch, getState, client, sourceMaps }) => {
-    const currentSelection = (0, _selectors.getPreview)(getState());
-    if (currentSelection && currentSelection.updating) {
-      return;
-    }
-
     await dispatch({
       type: "SET_PREVIEW",
       [_promise.PROMISE]: async function () {
         const source = (0, _selectors.getSelectedSource)(getState());
-        const symbols = (0, _selectors.getSymbols)(getState(), source.toJS());
-        const found = (0, _ast.findBestMatchExpression)(symbols, tokenPos, token);
-
-        if (!found) {
-          return;
-        }
-
-        let { expression, location } = found;
-
-        if (!expression) {
-          return;
-        }
 
         const sourceId = source.get("id");
         if (location && !(0, _devtoolsSourceMap.isGeneratedId)(sourceId)) {
@@ -50523,6 +50423,9 @@ class ProjectSearch extends _react.Component {
     this.renderResults = () => {
       const results = this.getResults();
       const { status } = this.props;
+      if (!this.props.query) {
+        return;
+      }
       if (results.length && status === _projectTextSearch.statusType.done) {
         return _react2.default.createElement(_ManagedTree2.default, {
           getRoots: () => results,
@@ -50535,16 +50438,17 @@ class ProjectSearch extends _react.Component {
           renderItem: this.renderItem
         });
       }
-      if (status === _projectTextSearch.statusType.fetching || this.props.query && !results.length) {
-        return _react2.default.createElement(
-          "div",
-          { className: "no-result-msg absolute-center" },
-          L10N.getStr("projectTextSearch.noResults")
-        );
-      }
+      const msg = status === _projectTextSearch.statusType.fetching ? L10N.getStr("loadingText") : L10N.getStr("projectTextSearch.noResults");
+      return _react2.default.createElement(
+        "div",
+        { className: "no-result-msg absolute-center" },
+        msg
+      );
     };
 
-    this.renderSummary = () => this.props.query !== "" ? L10N.getFormatStr("sourceSearch.resultsSummary1", this.getResultCount()) : "";
+    this.renderSummary = () => {
+      return this.props.query !== "" ? L10N.getFormatStr("sourceSearch.resultsSummary1", this.getResultCount()) : "";
+    };
 
     this.state = {
       inputValue: this.props.query || "",
@@ -50565,13 +50469,17 @@ class ProjectSearch extends _react.Component {
     shortcuts.off("Enter", this.onEnterPress);
   }
 
+  shouldShowErrorEmoji() {
+    return !this.getResultCount() && this.props.status === _projectTextSearch.statusType.done;
+  }
+
   renderInput() {
     return _react2.default.createElement(_SearchInput2.default, {
       query: this.state.inputValue,
       count: this.getResultCount(),
       placeholder: L10N.getStr("projectTextSearch.placeholder"),
       size: "big",
-      showErrorEmoji: this.props.status === _projectTextSearch.statusType.done,
+      showErrorEmoji: this.shouldShowErrorEmoji(),
       summaryMsg: this.renderSummary(),
       onChange: this.inputOnChange,
       onFocus: () => this.setState({ inputFocused: true }),
@@ -50914,7 +50822,7 @@ class Tab extends _react.PureComponent {
       item: _extends({}, tabMenuItems.closeAllTabs, { click: () => closeTabs(tabURLs) })
     }, { item: { type: "separator" } }, {
       item: _extends({}, tabMenuItems.copySourceUri2, {
-        click: () => (0, _clipboard.copyToTheClipboard)(sourceTab.get("url"))
+        click: () => (0, _clipboard.copyToTheClipboard)((0, _source.getRawSourceURL)(sourceTab.get("url")))
       })
     }];
 
@@ -50956,9 +50864,21 @@ class Tab extends _react.PureComponent {
     const isPrettyCode = (0, _source.isPretty)(source);
     const sourceAnnotation = (0, _tabs.getSourceAnnotation)(source, sourceMetaData);
 
-    function onClickClose(ev) {
-      ev.stopPropagation();
+    function onClickClose(e) {
+      e.stopPropagation();
       closeTab(source.get("url"));
+    }
+
+    function handleTabClick(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Accommodate middle click to close tab
+      if (e.button === 1) {
+        return closeTab(source.get("url"));
+      }
+
+      return selectSource(sourceId);
     }
 
     const className = (0, _classnames2.default)("source-tab", {
@@ -50971,7 +50891,7 @@ class Tab extends _react.PureComponent {
       {
         className: className,
         key: sourceId,
-        onClick: () => selectSource(sourceId),
+        onMouseUp: handleTabClick,
         onContextMenu: e => this.onTabContextMenu(e, sourceId),
         title: (0, _source.getFileURL)(src)
       },
@@ -51504,9 +51424,89 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 /* 2284 */,
 /* 2285 */,
 /* 2286 */,
-/* 2287 */,
-/* 2288 */,
-/* 2289 */,
+/* 2287 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(global, module) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ponyfill_js__ = __webpack_require__(2289);
+/* global window */
+
+
+var root;
+
+if (typeof self !== 'undefined') {
+  root = self;
+} else if (typeof window !== 'undefined') {
+  root = window;
+} else if (typeof global !== 'undefined') {
+  root = global;
+} else if (true) {
+  root = module;
+} else {
+  root = Function('return this')();
+}
+
+var result = Object(__WEBPACK_IMPORTED_MODULE_0__ponyfill_js__["a" /* default */])(root);
+/* harmony default export */ __webpack_exports__["a"] = (result);
+
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(792), __webpack_require__(2288)(module)))
+
+/***/ }),
+/* 2288 */
+/***/ (function(module, exports) {
+
+module.exports = function(originalModule) {
+	if(!originalModule.webpackPolyfill) {
+		var module = Object.create(originalModule);
+		// module.parent = undefined by default
+		if(!module.children) module.children = [];
+		Object.defineProperty(module, "loaded", {
+			enumerable: true,
+			get: function() {
+				return module.l;
+			}
+		});
+		Object.defineProperty(module, "id", {
+			enumerable: true,
+			get: function() {
+				return module.i;
+			}
+		});
+		Object.defineProperty(module, "exports", {
+			enumerable: true,
+		});
+		module.webpackPolyfill = 1;
+	}
+	return module;
+};
+
+
+/***/ }),
+/* 2289 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = symbolObservablePonyfill;
+function symbolObservablePonyfill(root) {
+	var result;
+	var Symbol = root.Symbol;
+
+	if (typeof Symbol === 'function') {
+		if (Symbol.observable) {
+			result = Symbol.observable;
+		} else {
+			result = Symbol('observable');
+			Symbol.observable = result;
+		}
+	} else {
+		result = '@@observable';
+	}
+
+	return result;
+};
+
+
+/***/ }),
 /* 2290 */,
 /* 2291 */,
 /* 2292 */,
@@ -51775,6 +51775,280 @@ function clearHistory() {
       type: "CLEAR_HISTORY"
     });
   };
+}
+
+/***/ }),
+/* 2344 */,
+/* 2345 */,
+/* 2346 */,
+/* 2347 */,
+/* 2348 */,
+/* 2349 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.locColumn = locColumn;
+function locColumn(loc) {
+  if (typeof loc.column !== "number") {
+    // This shouldn't really happen with locations from the AST, but
+    // the datatype we are using allows null/undefined column.
+    return 0;
+  }
+
+  return loc.column;
+}
+
+/***/ }),
+/* 2350 */,
+/* 2351 */,
+/* 2352 */,
+/* 2353 */,
+/* 2354 */,
+/* 2355 */,
+/* 2356 */,
+/* 2357 */,
+/* 2358 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.findGeneratedBindingFromPosition = findGeneratedBindingFromPosition;
+
+__webpack_require__(1365);
+
+var _locColumn = __webpack_require__(2349);
+
+var _firefox = __webpack_require__(1500);
+
+async function findGeneratedBindingFromPosition(sourceMaps, client, source, pos, name, type, generatedAstBindings) {
+  const gen = await sourceMaps.getGeneratedLocation(pos.start, source);
+  const genEnd = await sourceMaps.getGeneratedLocation(pos.end, source);
+
+  // Since the map takes the closest location, sometimes mapping a
+  // binding's location can point at the start of a binding listed after
+  // it, so we need to make sure it maps to a location that actually has
+  // a size in order to avoid picking up the wrong descriptor.
+  if (gen.line === genEnd.line && gen.column === genEnd.column) {
+    return null;
+  }
+
+  return generatedAstBindings.reduce(async (acc, val) => {
+    const accVal = await acc;
+    if (accVal) {
+      return accVal;
+    }
+
+    if (type === "import") {
+      const desc = await mapImportBindingToDescriptor(val, {
+        start: gen,
+        end: genEnd
+      });
+
+      if (desc) {
+        return {
+          name: val.name,
+          desc
+        };
+      }
+      return null;
+    }
+
+    // Allow the mapping to point anywhere within the generated binding
+    // location to allow for less than perfect sourcemaps. Since you also
+    // need at least one character between identifiers, we also give one
+    // characters of space at the front the generated binding in order
+    // to increase the probability of finding the right mapping.
+    if (gen.line === val.loc.start.line && (0, _locColumn.locColumn)(gen) >= (0, _locColumn.locColumn)(val.loc.start) - 1 && (0, _locColumn.locColumn)(gen) <= (0, _locColumn.locColumn)(val.loc.end)) {
+      return {
+        name: val.name,
+        desc: val.desc
+      };
+    }
+
+    return null;
+  }, null);
+}
+
+/**
+ * Given an generated binding, and a range over the generated code, statically
+ * evaluate accessed properties within the mapped range to resolve the actual
+ * imported value.
+ */
+
+// eslint-disable-next-line max-len
+
+
+async function mapImportBindingToDescriptor(binding, mapped) {
+  // Expression matches require broader searching because sourcemaps usage
+  // varies in how they map certain things. For instance given
+  //
+  //   import { bar } from "mod";
+  //   bar();
+  //
+  // The "bar()" expression is generally expanded into one of two possibly
+  // forms, both of which map the "bar" identifier in different ways. See
+  // the "^^" markers below for the ranges.
+  //
+  //   (0, foo.bar)()    // Babel
+  //       ^^^^^^^       // mapping
+  //       ^^^           // binding
+  // vs
+  //
+  //   Object(foo.bar)() // Webpack
+  //   ^^^^^^^^^^^^^^^   // mapping
+  //          ^^^        // binding
+  //
+  // Unfortunately, Webpack also has a tendancy to over-map past the call
+  // expression to the start of the next line, at least when there isn't
+  // anything else on that line that is mapped, e.g.
+  //
+  //   Object(foo.bar)()
+  //   ^^^^^^^^^^^^^^^^^
+  //   ^                 // wrapped to column 0 of next line
+
+  if (!mappingContains(mapped, binding.loc)) {
+    return null;
+  }
+
+  const { meta } = binding.loc;
+
+  let desc = binding.desc;
+
+  // Limit to 2 simple property or inherits operartions, since it would
+  // just be more work to search more and it is very unlikely that
+  // bindings would be mapped to more than a single member + inherits
+  // wrapper.
+  for (let op = meta, index = 0; op && mappingContains(mapped, op) && desc && index < 2; index++, op = op && op.parent) {
+    // Calling could potentially trigger side-effects, which would not
+    // be ideal for this case.
+    if (op.type === "call") {
+      return null;
+    }
+
+    if (op.type === "inherit") {
+      continue;
+    }
+
+    const objectClient = (0, _firefox.createObjectClient)(desc.value);
+    desc = (await objectClient.getProperty(op.property)).descriptor;
+  }
+
+  return desc;
+}
+
+function mappingContains(mapped, item) {
+  return (item.start.line > mapped.start.line || item.start.line === mapped.start.line && (0, _locColumn.locColumn)(item.start) >= (0, _locColumn.locColumn)(mapped.start)) && (item.end.line < mapped.end.line || item.end.line === mapped.end.line && (0, _locColumn.locColumn)(item.end) <= (0, _locColumn.locColumn)(mapped.end));
+}
+
+/***/ }),
+/* 2359 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.log = log;
+
+var _devtoolsConfig = __webpack_require__(1355);
+
+/**
+ * Produces a formatted console log line by imploding args, prefixed by [log]
+ *
+ * function input: log(["hello", "world"])
+ * console output: [log] hello world
+ *
+ * @memberof utils/log
+ * @static
+ */
+function log(...args) {
+  if (!(0, _devtoolsConfig.isDevelopment)()) {
+    return;
+  }
+
+  console.log.apply(console, ["[log]", ...args]);
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/**
+ *
+ * Utils for logging to the console
+ * Suppresses logging in non-development environment
+ *
+ * @module utils/log
+ */
+
+/***/ }),
+/* 2360 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.tokenAtTextPosition = tokenAtTextPosition;
+exports.getExpressionFromCoords = getExpressionFromCoords;
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function tokenAtTextPosition(cm, { line, column }) {
+  if (line < 0 || line >= cm.lineCount()) {
+    return null;
+  }
+
+  const token = cm.getTokenAt({ line: line - 1, ch: column });
+  if (!token) {
+    return null;
+  }
+
+  return { startColumn: token.start, endColumn: token.end, type: token.type };
+}
+
+// The strategy of querying codeMirror tokens was borrowed
+// from Chrome's inital implementation in JavaScriptSourceFrame.js#L414
+function getExpressionFromCoords(cm, coord) {
+  const token = tokenAtTextPosition(cm, coord);
+  if (!token) {
+    return;
+  }
+
+  let startHighlight = token.startColumn;
+  const endHighlight = token.endColumn;
+  const lineNumber = coord.line;
+  const line = cm.doc.getLine(coord.line - 1);
+  while (startHighlight > 1 && line.charAt(startHighlight - 1) === ".") {
+    const tokenBefore = tokenAtTextPosition(cm, {
+      line: coord.line,
+      column: startHighlight - 2
+    });
+
+    if (!tokenBefore || !tokenBefore.type) {
+      return null;
+    }
+
+    startHighlight = tokenBefore.startColumn;
+  }
+  const expression = line.substring(startHighlight, endHighlight);
+  const location = {
+    start: { line: lineNumber, column: startHighlight },
+    end: { line: lineNumber, column: endHighlight }
+  };
+  return { expression, location };
 }
 
 /***/ })

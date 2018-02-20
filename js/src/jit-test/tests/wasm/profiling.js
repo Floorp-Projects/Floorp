@@ -151,10 +151,7 @@ for (let type of ['f32', 'f64']) {
         (export "" $foo)
     )`,
     WebAssembly.RuntimeError,
-    // Technically we have this one *one-instruction* interval where
-    // the caller is lost (the stack with "1,>"). It's annoying to fix and shouldn't
-    // mess up profiles in practice so we ignore it.
-    ["", ">", "0,>", "1,0,>", "1,>", "trap handling,0,>", "", ">", ""]);
+    ["", ">", "0,>", "1,0,>", ">", "", ">", ""]);
 })();
 
 (function() {

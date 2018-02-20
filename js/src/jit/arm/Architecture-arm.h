@@ -151,9 +151,6 @@ class Registers
         (1 << Registers::lr) |
         (1 << Registers::pc);
 
-    // Registers that can be allocated without being saved, generally.
-    static const SetType TempMask = VolatileMask & ~NonAllocatableMask;
-
     // Registers returned from a JS -> JS call.
     static const SetType JSCallMask =
         (1 << Registers::r2) |
@@ -361,9 +358,6 @@ class FloatRegisters
     static const SetType NonAllocatableMask = ((1ULL << d15)) |
                                                (1ULL << s30) |
                                                (1ULL << s31);
-
-    // Registers that can be allocated without being saved, generally.
-    static const SetType TempMask = VolatileMask & ~NonAllocatableMask;
 
     static const SetType AllocatableMask = AllMask & ~NonAllocatableMask;
 };

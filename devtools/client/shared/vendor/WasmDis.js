@@ -201,7 +201,7 @@ function getOperatorName(code) {
     }
     return operatorCodeNamesCache[code];
 }
-var DefaultNameResolver = (function () {
+var DefaultNameResolver = /** @class */ (function () {
     function DefaultNameResolver() {
     }
     DefaultNameResolver.prototype.getTypeName = function (index, isRef) {
@@ -229,7 +229,7 @@ var DefaultNameResolver = (function () {
     return DefaultNameResolver;
 }());
 exports.DefaultNameResolver = DefaultNameResolver;
-var NumericNameResolver = (function () {
+var NumericNameResolver = /** @class */ (function () {
     function NumericNameResolver() {
     }
     NumericNameResolver.prototype.getTypeName = function (index, isRef) {
@@ -256,7 +256,7 @@ var NumericNameResolver = (function () {
     return NumericNameResolver;
 }());
 exports.NumericNameResolver = NumericNameResolver;
-var LineBuffer = (function () {
+var LineBuffer = /** @class */ (function () {
     function LineBuffer() {
         this._firstPart = '';
         this._secondPart = '';
@@ -325,7 +325,7 @@ var LabelMode;
     LabelMode[LabelMode["WhenUsed"] = 1] = "WhenUsed";
     LabelMode[LabelMode["Always"] = 2] = "Always";
 })(LabelMode = exports.LabelMode || (exports.LabelMode = {}));
-var WasmDisassembler = (function () {
+var WasmDisassembler = /** @class */ (function () {
     function WasmDisassembler() {
         this._lines = [];
         this._offsets = [];
@@ -421,7 +421,7 @@ var WasmDisassembler = (function () {
         for (var i = 0; i < b.length; i++) {
             var byte = b[i];
             if (byte < 0x20 || byte >= 0x7F ||
-                byte == 0x22 || byte == 0x5c) {
+                byte == /* " */ 0x22 || byte == /* \ */ 0x5c) {
                 this.appendBuffer('\\' + (byte >> 4).toString(16) + (byte & 15).toString(16));
             }
             else {
@@ -450,7 +450,7 @@ var WasmDisassembler = (function () {
         return backrefLabel.label || '' + depth;
     };
     WasmDisassembler.prototype.printOperator = function (operator) {
-        var code = operator.code | 0;
+        var code = operator.code;
         this.appendBuffer(getOperatorName(code));
         switch (code) {
             case 2 /* block */:

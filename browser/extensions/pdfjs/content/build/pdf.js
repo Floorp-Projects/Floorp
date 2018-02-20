@@ -92,7 +92,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__w_pdfjs_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __w_pdfjs_require__(__w_pdfjs_require__.s = 8);
+/******/ 	return __w_pdfjs_require__(__w_pdfjs_require__.s = 9);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -105,11 +105,11 @@ return /******/ (function(modules) { // webpackBootstrap
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.loadJpegStream = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isSpace = exports.isString = exports.isNum = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.info = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.createBlob = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PasswordResponses = exports.PasswordException = exports.PageViewport = exports.NotImplementedException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.MessageHandler = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VERBOSITY_LEVELS = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
+exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isSpace = exports.isString = exports.isNum = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.info = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.createBlob = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PasswordResponses = exports.PasswordException = exports.PageViewport = exports.NotImplementedException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.MessageHandler = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
 
-__w_pdfjs_require__(9);
+__w_pdfjs_require__(10);
 
-var _streams_polyfill = __w_pdfjs_require__(10);
+var _streams_polyfill = __w_pdfjs_require__(11);
 
 var FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
 const NativeImageDecoding = {
@@ -227,10 +227,10 @@ var FontType = {
   TYPE0: 9,
   MMTYPE1: 10
 };
-var VERBOSITY_LEVELS = {
-  errors: 0,
-  warnings: 1,
-  infos: 5
+const VerbosityLevel = {
+  ERRORS: 0,
+  WARNINGS: 1,
+  INFOS: 5
 };
 var CMapCompressionType = {
   NONE: 0,
@@ -330,20 +330,22 @@ var OPS = {
   paintSolidColorImageMask: 90,
   constructPath: 91
 };
-var verbosity = VERBOSITY_LEVELS.warnings;
+let verbosity = VerbosityLevel.WARNINGS;
 function setVerbosityLevel(level) {
-  verbosity = level;
+  if (Number.isInteger(level)) {
+    verbosity = level;
+  }
 }
 function getVerbosityLevel() {
   return verbosity;
 }
 function info(msg) {
-  if (verbosity >= VERBOSITY_LEVELS.infos) {
+  if (verbosity >= VerbosityLevel.INFOS) {
     console.log('Info: ' + msg);
   }
 }
 function warn(msg) {
-  if (verbosity >= VERBOSITY_LEVELS.warnings) {
+  if (verbosity >= VerbosityLevel.WARNINGS) {
     console.log('Warning: ' + msg);
   }
 }
@@ -1310,21 +1312,10 @@ MessageHandler.prototype = {
     this.comObj.removeEventListener('message', this._onComObjOnMessage);
   }
 };
-function loadJpegStream(id, imageUrl, objs) {
-  var img = new Image();
-  img.onload = function loadJpegStream_onloadClosure() {
-    objs.resolve(id, img);
-  };
-  img.onerror = function loadJpegStream_onerrorClosure() {
-    objs.resolve(id, null);
-    warn('Error during JPEG image loading');
-  };
-  img.src = imageUrl;
-}
 exports.FONT_IDENTITY_MATRIX = FONT_IDENTITY_MATRIX;
 exports.IDENTITY_MATRIX = IDENTITY_MATRIX;
 exports.OPS = OPS;
-exports.VERBOSITY_LEVELS = VERBOSITY_LEVELS;
+exports.VerbosityLevel = VerbosityLevel;
 exports.UNSUPPORTED_FEATURES = UNSUPPORTED_FEATURES;
 exports.AnnotationBorderStyleType = AnnotationBorderStyleType;
 exports.AnnotationFieldFlag = AnnotationFieldFlag;
@@ -1371,7 +1362,6 @@ exports.isSameOrigin = isSameOrigin;
 exports.createValidAbsoluteUrl = createValidAbsoluteUrl;
 exports.isLittleEndian = isLittleEndian;
 exports.isEvalSupported = isEvalSupported;
-exports.loadJpegStream = loadJpegStream;
 exports.log2 = log2;
 exports.readInt8 = readInt8;
 exports.readUint16 = readUint16;
@@ -1398,7 +1388,7 @@ exports.unreachable = unreachable;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.DummyStatTimer = exports.StatTimer = exports.SimpleXMLParser = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.getDefaultSetting = exports.LinkTarget = exports.getFilenameFromUrl = exports.isExternalLinkTargetSet = exports.addLinkAttributes = exports.RenderingCancelledException = undefined;
+exports.DummyStatTimer = exports.StatTimer = exports.SimpleXMLParser = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.getDefaultSetting = exports.LinkTarget = exports.getFilenameFromUrl = exports.addLinkAttributes = exports.RenderingCancelledException = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
@@ -1615,28 +1605,21 @@ var RenderingCancelledException = function RenderingCancelledException() {
   RenderingCancelledException.constructor = RenderingCancelledException;
   return RenderingCancelledException;
 }();
-var LinkTarget = {
+const LinkTarget = {
   NONE: 0,
   SELF: 1,
   BLANK: 2,
   PARENT: 3,
   TOP: 4
 };
-var LinkTargetStringMap = ['', '_self', '_blank', '_parent', '_top'];
-function addLinkAttributes(link, params) {
-  var url = params && params.url;
+const LinkTargetStringMap = ['', '_self', '_blank', '_parent', '_top'];
+function addLinkAttributes(link, { url, target, rel } = {}) {
   link.href = link.title = url ? (0, _util.removeNullCharacters)(url) : '';
   if (url) {
-    var target = params.target;
-    if (typeof target === 'undefined') {
-      target = getDefaultSetting('externalLinkTarget');
-    }
-    link.target = LinkTargetStringMap[target];
-    var rel = params.rel;
-    if (typeof rel === 'undefined') {
-      rel = getDefaultSetting('externalLinkRel');
-    }
-    link.rel = rel;
+    const LinkTargetValues = Object.values(LinkTarget);
+    let targetIndex = LinkTargetValues.includes(target) ? target : LinkTarget.NONE;
+    link.target = LinkTargetStringMap[targetIndex];
+    link.rel = typeof rel === 'string' ? rel : DEFAULT_LINK_REL;
   }
 }
 function getFilenameFromUrl(url) {
@@ -1660,57 +1643,16 @@ function getDefaultSetting(id) {
       return globalSettings ? globalSettings.disableFontFace : false;
     case 'disableCreateObjectURL':
       return globalSettings ? globalSettings.disableCreateObjectURL : false;
-    case 'disableWebGL':
-      return globalSettings ? globalSettings.disableWebGL : true;
     case 'cMapUrl':
       return globalSettings ? globalSettings.cMapUrl : null;
     case 'cMapPacked':
       return globalSettings ? globalSettings.cMapPacked : false;
-    case 'postMessageTransfers':
-      return globalSettings ? globalSettings.postMessageTransfers : true;
-    case 'workerPort':
-      return globalSettings ? globalSettings.workerPort : null;
-    case 'workerSrc':
-      return globalSettings ? globalSettings.workerSrc : null;
     case 'maxImageSize':
       return globalSettings ? globalSettings.maxImageSize : -1;
-    case 'imageResourcesPath':
-      return globalSettings ? globalSettings.imageResourcesPath : '';
     case 'isEvalSupported':
       return globalSettings ? globalSettings.isEvalSupported : true;
-    case 'externalLinkTarget':
-      if (!globalSettings) {
-        return LinkTarget.NONE;
-      }
-      switch (globalSettings.externalLinkTarget) {
-        case LinkTarget.NONE:
-        case LinkTarget.SELF:
-        case LinkTarget.BLANK:
-        case LinkTarget.PARENT:
-        case LinkTarget.TOP:
-          return globalSettings.externalLinkTarget;
-      }
-      (0, _util.warn)('PDFJS.externalLinkTarget is invalid: ' + globalSettings.externalLinkTarget);
-      globalSettings.externalLinkTarget = LinkTarget.NONE;
-      return LinkTarget.NONE;
-    case 'externalLinkRel':
-      return globalSettings ? globalSettings.externalLinkRel : DEFAULT_LINK_REL;
-    case 'enableStats':
-      return !!(globalSettings && globalSettings.enableStats);
     default:
       throw new Error('Unknown default setting: ' + id);
-  }
-}
-function isExternalLinkTargetSet() {
-  var externalLinkTarget = getDefaultSetting('externalLinkTarget');
-  switch (externalLinkTarget) {
-    case LinkTarget.NONE:
-      return false;
-    case LinkTarget.SELF:
-    case LinkTarget.BLANK:
-    case LinkTarget.PARENT:
-    case LinkTarget.TOP:
-      return true;
   }
 }
 class StatTimer {
@@ -1772,7 +1714,6 @@ class DummyStatTimer {
 }
 exports.RenderingCancelledException = RenderingCancelledException;
 exports.addLinkAttributes = addLinkAttributes;
-exports.isExternalLinkTargetSet = isExternalLinkTargetSet;
 exports.getFilenameFromUrl = getFilenameFromUrl;
 exports.LinkTarget = LinkTarget;
 exports.getDefaultSetting = getDefaultSetting;
@@ -1803,33 +1744,49 @@ module.exports = typeof window !== 'undefined' && window.Math === Math ? window 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+const GlobalWorkerOptions = Object.create(null);
+GlobalWorkerOptions.workerPort = GlobalWorkerOptions.workerPort === undefined ? null : GlobalWorkerOptions.workerPort;
+GlobalWorkerOptions.workerSrc = GlobalWorkerOptions.workerSrc === undefined ? '' : GlobalWorkerOptions.workerSrc;
+exports.GlobalWorkerOptions = GlobalWorkerOptions;
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.build = exports.version = exports.setPDFNetworkStreamFactory = exports.PDFPageProxy = exports.PDFDocumentProxy = exports.PDFWorker = exports.PDFDataRangeTransport = exports.LoopbackPort = exports.getDocument = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
 var _dom_utils = __w_pdfjs_require__(1);
 
-var _font_loader = __w_pdfjs_require__(13);
+var _font_loader = __w_pdfjs_require__(14);
 
-var _canvas = __w_pdfjs_require__(14);
+var _canvas = __w_pdfjs_require__(15);
 
 var _global_scope = __w_pdfjs_require__(2);
 
 var _global_scope2 = _interopRequireDefault(_global_scope);
 
-var _metadata = __w_pdfjs_require__(4);
+var _worker_options = __w_pdfjs_require__(3);
 
-var _transport_stream = __w_pdfjs_require__(16);
+var _metadata = __w_pdfjs_require__(5);
 
-var _webgl = __w_pdfjs_require__(17);
+var _transport_stream = __w_pdfjs_require__(17);
+
+var _webgl = __w_pdfjs_require__(18);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var DEFAULT_RANGE_CHUNK_SIZE = 65536;
-var isWorkerDisabled = false;
-var workerSrc;
-var isPostMessageTransfersDisabled = false;
-var pdfjsFilePath = null;
+let isWorkerDisabled = false;
+let workerSrc;
+const pdfjsFilePath = null;
 var fakeWorkerFilesLoader = null;
 var useRequireEnsure = false;
 ;
@@ -1857,7 +1814,7 @@ function getDocument(src) {
   }
   var params = {};
   var rangeTransport = null;
-  var worker = null;
+  let worker = null;
   var CMapReaderFactory = _dom_utils.DOMCMapReaderFactory;
   for (var key in source) {
     if (key === 'url' && typeof window !== 'undefined') {
@@ -1893,9 +1850,19 @@ function getDocument(src) {
   if (params.nativeImageDecoderSupport === undefined || !nativeImageDecoderValues.includes(params.nativeImageDecoderSupport)) {
     params.nativeImageDecoderSupport = _util.NativeImageDecoding.DECODE;
   }
+  (0, _util.setVerbosityLevel)(params.verbosity);
   if (!worker) {
-    var workerPort = (0, _dom_utils.getDefaultSetting)('workerPort');
-    worker = workerPort ? PDFWorker.fromPort(workerPort) : new PDFWorker();
+    const workerParams = {
+      postMessageTransfers: params.postMessageTransfers,
+      verbosity: params.verbosity
+    };
+    let workerPort = _worker_options.GlobalWorkerOptions.workerPort;
+    if (workerPort) {
+      workerParams.port = workerPort;
+      worker = PDFWorker.fromPort(workerParams);
+    } else {
+      worker = new PDFWorker(workerParams);
+    }
     task._worker = worker;
   }
   var docId = task.docId;
@@ -1926,7 +1893,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   if (worker.destroyed) {
     return Promise.reject(new Error('Worker was destroyed'));
   }
-  let apiVersion = '2.0.332';
+  let apiVersion = '2.0.385';
   source.disableRange = (0, _dom_utils.getDefaultSetting)('disableRange');
   source.disableAutoFetch = (0, _dom_utils.getDefaultSetting)('disableAutoFetch');
   source.disableStream = (0, _dom_utils.getDefaultSetting)('disableStream');
@@ -1948,7 +1915,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
     maxImageSize: (0, _dom_utils.getDefaultSetting)('maxImageSize'),
     disableFontFace: (0, _dom_utils.getDefaultSetting)('disableFontFace'),
     disableCreateObjectURL: (0, _dom_utils.getDefaultSetting)('disableCreateObjectURL'),
-    postMessageTransfers: (0, _dom_utils.getDefaultSetting)('postMessageTransfers') && !isPostMessageTransfersDisabled,
+    postMessageTransfers: worker.postMessageTransfers,
     docBaseUrl: source.docBaseUrl,
     nativeImageDecoderSupport: source.nativeImageDecoderSupport,
     ignoreErrors: source.ignoreErrors,
@@ -2110,7 +2077,7 @@ var PDFPageProxy = function PDFPageProxyClosure() {
     this.pageIndex = pageIndex;
     this.pageInfo = pageInfo;
     this.transport = transport;
-    this._stats = (0, _dom_utils.getDefaultSetting)('enableStats') ? new _dom_utils.StatTimer() : _dom_utils.DummyStatTimer;
+    this._stats = (0, _dom_utils.getDefaultSetting)('pdfBug') ? new _dom_utils.StatTimer() : _dom_utils.DummyStatTimer;
     this.commonObjs = transport.commonObjs;
     this.objs = new PDFObjects();
     this.cleanupAfterRender = false;
@@ -2151,7 +2118,7 @@ var PDFPageProxy = function PDFPageProxyClosure() {
       this.pendingCleanup = false;
       var renderingIntent = params.intent === 'print' ? 'print' : 'display';
       var canvasFactory = params.canvasFactory || new _dom_utils.DOMCanvasFactory();
-      let webGLContext = new _webgl.WebGLContext({ enable: !(0, _dom_utils.getDefaultSetting)('disableWebGL') });
+      let webGLContext = new _webgl.WebGLContext({ enable: params.enableWebGL });
       if (!this.intentStates[renderingIntent]) {
         this.intentStates[renderingIntent] = Object.create(null);
       }
@@ -2417,13 +2384,13 @@ class LoopbackPort {
 var PDFWorker = function PDFWorkerClosure() {
   let nextFakeWorkerId = 0;
   function getWorkerSrc() {
+    if (_worker_options.GlobalWorkerOptions.workerSrc) {
+      return _worker_options.GlobalWorkerOptions.workerSrc;
+    }
     if (typeof workerSrc !== 'undefined') {
       return workerSrc;
     }
-    if ((0, _dom_utils.getDefaultSetting)('workerSrc')) {
-      return (0, _dom_utils.getDefaultSetting)('workerSrc');
-    }
-    throw new Error('No PDFJS.workerSrc specified');
+    throw new Error('No "GlobalWorkerOptions.workerSrc" specified.');
   }
   function getMainThreadWorkerMessageHandler() {
     if (typeof window === 'undefined') {
@@ -2455,13 +2422,14 @@ var PDFWorker = function PDFWorkerClosure() {
     return URL.createObjectURL(new Blob([wrapper]));
   }
   let pdfWorkerPorts = new WeakMap();
-  function PDFWorker(name, port) {
+  function PDFWorker({ name = null, port = null, postMessageTransfers = true, verbosity = null } = {}) {
     if (port && pdfWorkerPorts.has(port)) {
       throw new Error('Cannot use more than one PDFWorker per port');
     }
     this.name = name;
     this.destroyed = false;
-    this.postMessageTransfers = true;
+    this.postMessageTransfers = postMessageTransfers !== false;
+    this.verbosity = (0, _util.isNum)(verbosity) ? verbosity : (0, _util.getVerbosityLevel)();
     this._readyCapability = (0, _util.createPromiseCapability)();
     this._port = null;
     this._webWorker = null;
@@ -2524,10 +2492,9 @@ var PDFWorker = function PDFWorkerClosure() {
               this._webWorker = worker;
               if (!data.supportTransfers) {
                 this.postMessageTransfers = false;
-                isPostMessageTransfersDisabled = true;
               }
               this._readyCapability.resolve();
-              messageHandler.send('configure', { verbosity: (0, _util.getVerbosityLevel)() });
+              messageHandler.send('configure', { verbosity: this.verbosity });
             } else {
               this._setupFakeWorker();
               messageHandler.destroy();
@@ -2546,9 +2513,8 @@ var PDFWorker = function PDFWorkerClosure() {
               this._setupFakeWorker();
             }
           });
-          var sendTest = function () {
-            var postMessageTransfers = (0, _dom_utils.getDefaultSetting)('postMessageTransfers') && !isPostMessageTransfersDisabled;
-            var testObj = new Uint8Array([postMessageTransfers ? 255 : 0]);
+          const sendTest = () => {
+            let testObj = new Uint8Array([this.postMessageTransfers ? 255 : 0]);
             try {
               messageHandler.send('test', testObj, [testObj.buffer]);
             } catch (ex) {
@@ -2600,11 +2566,11 @@ var PDFWorker = function PDFWorkerClosure() {
       }
     }
   };
-  PDFWorker.fromPort = function (port) {
-    if (pdfWorkerPorts.has(port)) {
-      return pdfWorkerPorts.get(port);
+  PDFWorker.fromPort = function (params) {
+    if (pdfWorkerPorts.has(params.port)) {
+      return pdfWorkerPorts.get(params.port);
     }
-    return new PDFWorker(null, port);
+    return new PDFWorker(params);
   };
   PDFWorker.getWorkerSrc = function () {
     return getWorkerSrc();
@@ -2852,8 +2818,18 @@ var WorkerTransport = function WorkerTransportClosure() {
         switch (type) {
           case 'JpegStream':
             imageData = data[3];
-            (0, _util.loadJpegStream)(id, imageData, pageProxy.objs);
-            break;
+            return new Promise((resolve, reject) => {
+              const img = new Image();
+              img.onload = function () {
+                resolve(img);
+              };
+              img.onerror = function () {
+                reject(new Error('Error during JPEG image loading'));
+              };
+              img.src = imageData;
+            }).then(img => {
+              pageProxy.objs.resolve(id, img);
+            });
           case 'Image':
             imageData = data[3];
             pageProxy.objs.resolve(id, imageData);
@@ -3234,8 +3210,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.332';
-  exports.build = build = '6b7e2cbc';
+  exports.version = version = '2.0.385';
+  exports.build = build = '99060e24';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -3248,7 +3224,7 @@ exports.version = version;
 exports.build = build;
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -3343,7 +3319,7 @@ class Metadata {
 exports.Metadata = Metadata;
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -3511,16 +3487,18 @@ class LinkAnnotationElement extends AnnotationElement {
   }
   render() {
     this.container.className = 'linkAnnotation';
+    let { data, linkService } = this;
     let link = document.createElement('a');
     (0, _dom_utils.addLinkAttributes)(link, {
-      url: this.data.url,
-      target: this.data.newWindow ? _dom_utils.LinkTarget.BLANK : undefined
+      url: data.url,
+      target: data.newWindow ? _dom_utils.LinkTarget.BLANK : linkService.externalLinkTarget,
+      rel: linkService.externalLinkRel
     });
-    if (!this.data.url) {
-      if (this.data.action) {
-        this._bindNamedAction(link, this.data.action);
+    if (!data.url) {
+      if (data.action) {
+        this._bindNamedAction(link, data.action);
       } else {
-        this._bindLink(link, this.data.dest);
+        this._bindLink(link, data.dest);
       }
     }
     this.container.appendChild(link);
@@ -4033,7 +4011,7 @@ class AnnotationLayer {
         viewport: parameters.viewport,
         linkService: parameters.linkService,
         downloadManager: parameters.downloadManager,
-        imageResourcesPath: parameters.imageResourcesPath || (0, _dom_utils.getDefaultSetting)('imageResourcesPath'),
+        imageResourcesPath: parameters.imageResourcesPath || '',
         renderInteractiveForms: parameters.renderInteractiveForms || false,
         svgFactory: new _dom_utils.DOMSVGFactory()
       });
@@ -4056,7 +4034,7 @@ class AnnotationLayer {
 exports.AnnotationLayer = AnnotationLayer;
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -4594,7 +4572,7 @@ var renderTextLayer = function renderTextLayerClosure() {
 exports.renderTextLayer = renderTextLayer;
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -4609,7 +4587,7 @@ var _util = __w_pdfjs_require__(0);
 
 var _dom_utils = __w_pdfjs_require__(1);
 
-var _is_node = __w_pdfjs_require__(18);
+var _is_node = __w_pdfjs_require__(19);
 
 var _is_node2 = _interopRequireDefault(_is_node);
 
@@ -4622,21 +4600,22 @@ var SVGGraphics = function () {
 exports.SVGGraphics = SVGGraphics;
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
 
 
-var pdfjsVersion = '2.0.332';
-var pdfjsBuild = '6b7e2cbc';
+var pdfjsVersion = '2.0.385';
+var pdfjsBuild = '99060e24';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
-var pdfjsDisplayGlobal = __w_pdfjs_require__(12);
-var pdfjsDisplayAPI = __w_pdfjs_require__(3);
-var pdfjsDisplayTextLayer = __w_pdfjs_require__(6);
-var pdfjsDisplayAnnotationLayer = __w_pdfjs_require__(5);
+var pdfjsDisplayGlobal = __w_pdfjs_require__(13);
+var pdfjsDisplayAPI = __w_pdfjs_require__(4);
+var pdfjsDisplayTextLayer = __w_pdfjs_require__(7);
+var pdfjsDisplayAnnotationLayer = __w_pdfjs_require__(6);
 var pdfjsDisplayDOMUtils = __w_pdfjs_require__(1);
-var pdfjsDisplaySVG = __w_pdfjs_require__(7);
+var pdfjsDisplaySVG = __w_pdfjs_require__(8);
+let pdfjsDisplayWorkerOptions = __w_pdfjs_require__(3);
 ;
 exports.PDFJS = pdfjsDisplayGlobal.PDFJS;
 exports.build = pdfjsDisplayAPI.build;
@@ -4655,6 +4634,7 @@ exports.SVGGraphics = pdfjsDisplaySVG.SVGGraphics;
 exports.NativeImageDecoding = pdfjsSharedUtil.NativeImageDecoding;
 exports.UnexpectedResponseException = pdfjsSharedUtil.UnexpectedResponseException;
 exports.OPS = pdfjsSharedUtil.OPS;
+exports.VerbosityLevel = pdfjsSharedUtil.VerbosityLevel;
 exports.UNSUPPORTED_FEATURES = pdfjsSharedUtil.UNSUPPORTED_FEATURES;
 exports.createValidAbsoluteUrl = pdfjsSharedUtil.createValidAbsoluteUrl;
 exports.createObjectURL = pdfjsSharedUtil.createObjectURL;
@@ -4663,10 +4643,12 @@ exports.shadow = pdfjsSharedUtil.shadow;
 exports.createBlob = pdfjsSharedUtil.createBlob;
 exports.RenderingCancelledException = pdfjsDisplayDOMUtils.RenderingCancelledException;
 exports.getFilenameFromUrl = pdfjsDisplayDOMUtils.getFilenameFromUrl;
+exports.LinkTarget = pdfjsDisplayDOMUtils.LinkTarget;
 exports.addLinkAttributes = pdfjsDisplayDOMUtils.addLinkAttributes;
+exports.GlobalWorkerOptions = pdfjsDisplayWorkerOptions.GlobalWorkerOptions;
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -4675,7 +4657,7 @@ exports.addLinkAttributes = pdfjsDisplayDOMUtils.addLinkAttributes;
 ;
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -4695,11 +4677,11 @@ if (typeof ReadableStream !== 'undefined') {
 if (isReadableStreamSupported) {
   exports.ReadableStream = ReadableStream;
 } else {
-  exports.ReadableStream = __w_pdfjs_require__(11).ReadableStream;
+  exports.ReadableStream = __w_pdfjs_require__(12).ReadableStream;
 }
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -7715,7 +7697,7 @@ if (isReadableStreamSupported) {
 }]));
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -7726,23 +7708,25 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.PDFJS = exports.globalScope = undefined;
 
-var _dom_utils = __w_pdfjs_require__(1);
-
 var _util = __w_pdfjs_require__(0);
 
-var _api = __w_pdfjs_require__(3);
+var _dom_utils = __w_pdfjs_require__(1);
 
-var _annotation_layer = __w_pdfjs_require__(5);
+var _api = __w_pdfjs_require__(4);
+
+var _annotation_layer = __w_pdfjs_require__(6);
 
 var _global_scope = __w_pdfjs_require__(2);
 
 var _global_scope2 = _interopRequireDefault(_global_scope);
 
-var _metadata = __w_pdfjs_require__(4);
+var _worker_options = __w_pdfjs_require__(3);
 
-var _text_layer = __w_pdfjs_require__(6);
+var _metadata = __w_pdfjs_require__(5);
 
-var _svg = __w_pdfjs_require__(7);
+var _text_layer = __w_pdfjs_require__(7);
+
+var _svg = __w_pdfjs_require__(8);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -7750,29 +7734,9 @@ if (!_global_scope2.default.PDFJS) {
   _global_scope2.default.PDFJS = {};
 }
 var PDFJS = _global_scope2.default.PDFJS;
-{
-  PDFJS.version = '2.0.332';
-  PDFJS.build = '6b7e2cbc';
-}
 PDFJS.pdfBug = false;
-if (PDFJS.verbosity !== undefined) {
-  (0, _util.setVerbosityLevel)(PDFJS.verbosity);
-}
-delete PDFJS.verbosity;
-Object.defineProperty(PDFJS, 'verbosity', {
-  get() {
-    return (0, _util.getVerbosityLevel)();
-  },
-  set(level) {
-    (0, _util.setVerbosityLevel)(level);
-  },
-  enumerable: true,
-  configurable: true
-});
-PDFJS.VERBOSITY_LEVELS = _util.VERBOSITY_LEVELS;
 PDFJS.OPS = _util.OPS;
 PDFJS.UNSUPPORTED_FEATURES = _util.UNSUPPORTED_FEATURES;
-PDFJS.isValidUrl = _dom_utils.isValidUrl;
 PDFJS.shadow = _util.shadow;
 PDFJS.createBlob = _util.createBlob;
 PDFJS.createObjectURL = function PDFJS_createObjectURL(data, contentType) {
@@ -7798,16 +7762,11 @@ PDFJS.maxImageSize = PDFJS.maxImageSize === undefined ? -1 : PDFJS.maxImageSize;
 PDFJS.cMapUrl = PDFJS.cMapUrl === undefined ? null : PDFJS.cMapUrl;
 PDFJS.cMapPacked = PDFJS.cMapPacked === undefined ? false : PDFJS.cMapPacked;
 PDFJS.disableFontFace = PDFJS.disableFontFace === undefined ? false : PDFJS.disableFontFace;
-PDFJS.imageResourcesPath = PDFJS.imageResourcesPath === undefined ? '' : PDFJS.imageResourcesPath;
-PDFJS.workerSrc = PDFJS.workerSrc === undefined ? null : PDFJS.workerSrc;
-PDFJS.workerPort = PDFJS.workerPort === undefined ? null : PDFJS.workerPort;
 PDFJS.disableRange = PDFJS.disableRange === undefined ? false : PDFJS.disableRange;
 PDFJS.disableStream = PDFJS.disableStream === undefined ? false : PDFJS.disableStream;
 PDFJS.disableAutoFetch = PDFJS.disableAutoFetch === undefined ? false : PDFJS.disableAutoFetch;
 PDFJS.pdfBug = PDFJS.pdfBug === undefined ? false : PDFJS.pdfBug;
-PDFJS.postMessageTransfers = PDFJS.postMessageTransfers === undefined ? true : PDFJS.postMessageTransfers;
 PDFJS.disableCreateObjectURL = PDFJS.disableCreateObjectURL === undefined ? false : PDFJS.disableCreateObjectURL;
-PDFJS.disableWebGL = PDFJS.disableWebGL === undefined ? true : PDFJS.disableWebGL;
 PDFJS.externalLinkTarget = PDFJS.externalLinkTarget === undefined ? _dom_utils.LinkTarget.NONE : PDFJS.externalLinkTarget;
 PDFJS.externalLinkRel = PDFJS.externalLinkRel === undefined ? _dom_utils.DEFAULT_LINK_REL : PDFJS.externalLinkRel;
 PDFJS.isEvalSupported = PDFJS.isEvalSupported === undefined ? true : PDFJS.isEvalSupported;
@@ -7815,10 +7774,8 @@ PDFJS.getDocument = _api.getDocument;
 PDFJS.LoopbackPort = _api.LoopbackPort;
 PDFJS.PDFDataRangeTransport = _api.PDFDataRangeTransport;
 PDFJS.PDFWorker = _api.PDFWorker;
-PDFJS.LinkTarget = _dom_utils.LinkTarget;
-PDFJS.addLinkAttributes = _dom_utils.addLinkAttributes;
+PDFJS.GlobalWorkerOptions = _worker_options.GlobalWorkerOptions;
 PDFJS.getFilenameFromUrl = _dom_utils.getFilenameFromUrl;
-PDFJS.isExternalLinkTargetSet = _dom_utils.isExternalLinkTargetSet;
 PDFJS.AnnotationLayer = _annotation_layer.AnnotationLayer;
 PDFJS.renderTextLayer = _text_layer.renderTextLayer;
 PDFJS.Metadata = _metadata.Metadata;
@@ -7827,7 +7784,7 @@ exports.globalScope = _global_scope2.default;
 exports.PDFJS = PDFJS;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -7952,7 +7909,7 @@ exports.FontFaceObject = FontFaceObject;
 exports.FontLoader = FontLoader;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -7965,7 +7922,7 @@ exports.CanvasGraphics = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
-var _pattern_helper = __w_pdfjs_require__(15);
+var _pattern_helper = __w_pdfjs_require__(16);
 
 var MIN_FONT_SIZE = 16;
 var MAX_FONT_SIZE = 100;
@@ -9693,7 +9650,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
 exports.CanvasGraphics = CanvasGraphics;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -10075,7 +10032,7 @@ exports.getShadingPatternFromIR = getShadingPatternFromIR;
 exports.TilingPattern = TilingPattern;
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -10098,8 +10055,8 @@ var PDFDataTransportStream = function PDFDataTransportStreamClosure() {
       this._queuedChunks.push(buffer);
     }
     this._pdfDataRangeTransport = pdfDataRangeTransport;
-    this._isRangeSupported = !params.disableRange;
     this._isStreamingSupported = !params.disableStream;
+    this._isRangeSupported = !params.disableRange;
     this._contentLength = params.length;
     this._fullRequestReader = null;
     this._rangeReaders = [];
@@ -10315,7 +10272,7 @@ var PDFDataTransportStream = function PDFDataTransportStreamClosure() {
 exports.PDFDataTransportStream = PDFDataTransportStream;
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -10698,7 +10655,7 @@ var WebGLUtils = function WebGLUtilsClosure() {
 exports.WebGLContext = WebGLContext;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";

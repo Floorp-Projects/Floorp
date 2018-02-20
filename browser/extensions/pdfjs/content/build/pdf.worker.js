@@ -105,7 +105,7 @@ return /******/ (function(modules) { // webpackBootstrap
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.loadJpegStream = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isSpace = exports.isString = exports.isNum = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.info = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.createBlob = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PasswordResponses = exports.PasswordException = exports.PageViewport = exports.NotImplementedException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.MessageHandler = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VERBOSITY_LEVELS = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
+exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isSpace = exports.isString = exports.isNum = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.info = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.createBlob = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PasswordResponses = exports.PasswordException = exports.PageViewport = exports.NotImplementedException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.MessageHandler = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
 
 __w_pdfjs_require__(21);
 
@@ -227,10 +227,10 @@ var FontType = {
   TYPE0: 9,
   MMTYPE1: 10
 };
-var VERBOSITY_LEVELS = {
-  errors: 0,
-  warnings: 1,
-  infos: 5
+const VerbosityLevel = {
+  ERRORS: 0,
+  WARNINGS: 1,
+  INFOS: 5
 };
 var CMapCompressionType = {
   NONE: 0,
@@ -330,20 +330,22 @@ var OPS = {
   paintSolidColorImageMask: 90,
   constructPath: 91
 };
-var verbosity = VERBOSITY_LEVELS.warnings;
+let verbosity = VerbosityLevel.WARNINGS;
 function setVerbosityLevel(level) {
-  verbosity = level;
+  if (Number.isInteger(level)) {
+    verbosity = level;
+  }
 }
 function getVerbosityLevel() {
   return verbosity;
 }
 function info(msg) {
-  if (verbosity >= VERBOSITY_LEVELS.infos) {
+  if (verbosity >= VerbosityLevel.INFOS) {
     console.log('Info: ' + msg);
   }
 }
 function warn(msg) {
-  if (verbosity >= VERBOSITY_LEVELS.warnings) {
+  if (verbosity >= VerbosityLevel.WARNINGS) {
     console.log('Warning: ' + msg);
   }
 }
@@ -1310,21 +1312,10 @@ MessageHandler.prototype = {
     this.comObj.removeEventListener('message', this._onComObjOnMessage);
   }
 };
-function loadJpegStream(id, imageUrl, objs) {
-  var img = new Image();
-  img.onload = function loadJpegStream_onloadClosure() {
-    objs.resolve(id, img);
-  };
-  img.onerror = function loadJpegStream_onerrorClosure() {
-    objs.resolve(id, null);
-    warn('Error during JPEG image loading');
-  };
-  img.src = imageUrl;
-}
 exports.FONT_IDENTITY_MATRIX = FONT_IDENTITY_MATRIX;
 exports.IDENTITY_MATRIX = IDENTITY_MATRIX;
 exports.OPS = OPS;
-exports.VERBOSITY_LEVELS = VERBOSITY_LEVELS;
+exports.VerbosityLevel = VerbosityLevel;
 exports.UNSUPPORTED_FEATURES = UNSUPPORTED_FEATURES;
 exports.AnnotationBorderStyleType = AnnotationBorderStyleType;
 exports.AnnotationFieldFlag = AnnotationFieldFlag;
@@ -1371,7 +1362,6 @@ exports.isSameOrigin = isSameOrigin;
 exports.createValidAbsoluteUrl = createValidAbsoluteUrl;
 exports.isLittleEndian = isLittleEndian;
 exports.isEvalSupported = isEvalSupported;
-exports.loadJpegStream = loadJpegStream;
 exports.log2 = log2;
 exports.readInt8 = readInt8;
 exports.readUint16 = readUint16;
@@ -3624,7 +3614,21 @@ var _jpeg_stream = __w_pdfjs_require__(6);
 
 var _jpx_stream = __w_pdfjs_require__(30);
 
-var MAX_LENGTH_TO_CACHE = 1000;
+const MAX_LENGTH_TO_CACHE = 1000;
+const MAX_ADLER32_LENGTH = 5552;
+function computeAdler32(bytes) {
+  let bytesLength = bytes.length;
+  if (bytesLength >= MAX_ADLER32_LENGTH) {
+    throw new Error('computeAdler32: The input is too large.');
+  }
+  let a = 1,
+      b = 0;
+  for (let i = 0; i < bytesLength; ++i) {
+    a += bytes[i] & 0xFF;
+    b += a;
+  }
+  return b % 65521 << 16 | a % 65521;
+}
 var Parser = function ParserClosure() {
   function Parser(lexer, allowStreams, xref, recoveryMode) {
     this.lexer = lexer;
@@ -3913,7 +3917,8 @@ var Parser = function ParserClosure() {
     makeInlineImage: function Parser_makeInlineImage(cipherTransform) {
       var lexer = this.lexer;
       var stream = lexer.stream;
-      var dict = new _primitives.Dict(this.xref);
+      let dict = new _primitives.Dict(this.xref),
+          dictLength;
       while (!(0, _primitives.isCmd)(this.buf1, 'ID') && !(0, _primitives.isEOF)(this.buf1)) {
         if (!(0, _primitives.isName)(this.buf1)) {
           throw new _util.FormatError('Dictionary key must be a name object');
@@ -3925,6 +3930,9 @@ var Parser = function ParserClosure() {
         }
         dict.set(key, this.getObj(cipherTransform));
       }
+      if (lexer.beginInlineImagePos !== -1) {
+        dictLength = stream.pos - lexer.beginInlineImagePos;
+      }
       var filter = dict.get('Filter', 'F'),
           filterName;
       if ((0, _primitives.isName)(filter)) {
@@ -3935,10 +3943,8 @@ var Parser = function ParserClosure() {
           filterName = filterZero.name;
         }
       }
-      var startPos = stream.pos,
-          length,
-          i,
-          ii;
+      let startPos = stream.pos,
+          length;
       if (filterName === 'DCTDecode' || filterName === 'DCT') {
         length = this.findDCTDecodeInlineStreamEnd(stream);
       } else if (filterName === 'ASCII85Decode' || filterName === 'A85') {
@@ -3949,18 +3955,16 @@ var Parser = function ParserClosure() {
         length = this.findDefaultInlineStreamEnd(stream);
       }
       var imageStream = stream.makeSubStream(startPos, length, dict);
-      var adler32;
-      if (length < MAX_LENGTH_TO_CACHE) {
+      let cacheKey;
+      if (length < MAX_LENGTH_TO_CACHE && dictLength < MAX_ADLER32_LENGTH) {
         var imageBytes = imageStream.getBytes();
         imageStream.reset();
-        var a = 1;
-        var b = 0;
-        for (i = 0, ii = imageBytes.length; i < ii; ++i) {
-          a += imageBytes[i] & 0xff;
-          b += a;
-        }
-        adler32 = b % 65521 << 16 | a % 65521;
-        let cacheEntry = this.imageCache[adler32];
+        const initialStreamPos = stream.pos;
+        stream.pos = lexer.beginInlineImagePos;
+        let dictBytes = stream.getBytes(dictLength);
+        stream.pos = initialStreamPos;
+        cacheKey = computeAdler32(imageBytes) + '_' + computeAdler32(dictBytes);
+        let cacheEntry = this.imageCache[cacheKey];
         if (cacheEntry !== undefined) {
           this.buf2 = _primitives.Cmd.get('EI');
           this.shift();
@@ -3973,9 +3977,9 @@ var Parser = function ParserClosure() {
       }
       imageStream = this.filter(imageStream, dict, length);
       imageStream.dict = dict;
-      if (adler32 !== undefined) {
-        imageStream.cacheKey = 'inline_' + length + '_' + adler32;
-        this.imageCache[adler32] = imageStream;
+      if (cacheKey !== undefined) {
+        imageStream.cacheKey = 'inline_' + length + '_' + cacheKey;
+        this.imageCache[cacheKey] = imageStream;
       }
       this.buf2 = _primitives.Cmd.get('EI');
       this.shift();
@@ -4148,6 +4152,7 @@ var Lexer = function LexerClosure() {
     this.nextChar();
     this.strBuf = [];
     this.knownCommands = knownCommands;
+    this.beginInlineImagePos = -1;
   }
   var specialChars = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 0, 0, 2, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   function toHexDigit(ch) {
@@ -4501,6 +4506,9 @@ var Lexer = function LexerClosure() {
       }
       if (str === 'null') {
         return null;
+      }
+      if (str === 'BI') {
+        this.beginInlineImagePos = this.stream.pos;
       }
       return _primitives.Cmd.get(str);
     },
@@ -21065,8 +21073,8 @@ exports.PostScriptCompiler = PostScriptCompiler;
 "use strict";
 
 
-var pdfjsVersion = '2.0.332';
-var pdfjsBuild = '6b7e2cbc';
+var pdfjsVersion = '2.0.385';
+var pdfjsBuild = '99060e24';
 var pdfjsCoreWorker = __w_pdfjs_require__(20);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -21267,7 +21275,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.332';
+    let workerVersion = '2.0.385';
     if (apiVersion !== null && apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -27326,6 +27334,16 @@ let JpegError = function JpegErrorClosure() {
   JpegError.constructor = JpegError;
   return JpegError;
 }();
+let DNLMarkerError = function DNLMarkerErrorClosure() {
+  function DNLMarkerError(message, scanLines) {
+    this.message = message;
+    this.scanLines = scanLines;
+  }
+  DNLMarkerError.prototype = new Error();
+  DNLMarkerError.prototype.name = 'DNLMarkerError';
+  DNLMarkerError.constructor = DNLMarkerError;
+  return DNLMarkerError;
+}();
 var JpegImage = function JpegImageClosure() {
   var dctZigZag = new Uint8Array([0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5, 12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21, 28, 35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63]);
   var dctCos1 = 4017;
@@ -27388,7 +27406,7 @@ var JpegImage = function JpegImageClosure() {
   function getBlockBufferOffset(component, row, col) {
     return 64 * ((component.blocksPerLine + 1) * row + col);
   }
-  function decodeScan(data, offset, frame, components, resetInterval, spectralStart, spectralEnd, successivePrev, successive) {
+  function decodeScan(data, offset, frame, components, resetInterval, spectralStart, spectralEnd, successivePrev, successive, parseDNLMarker = false) {
     var mcusPerLine = frame.mcusPerLine;
     var progressive = frame.progressive;
     var startOffset = offset,
@@ -27403,6 +27421,13 @@ var JpegImage = function JpegImageClosure() {
       if (bitsData === 0xFF) {
         var nextByte = data[offset++];
         if (nextByte) {
+          if (nextByte === 0xDC && parseDNLMarker) {
+            offset += 2;
+            const scanLines = data[offset++] << 8 | data[offset++];
+            if (scanLines > 0 && scanLines !== frame.scanLines) {
+              throw new DNLMarkerError('Found DNL marker (0xFFDC) while parsing scan data', scanLines);
+            }
+          }
           throw new JpegError(`unexpected marker ${(bitsData << 8 | nextByte).toString(16)}`);
         }
       }
@@ -27838,7 +27863,9 @@ var JpegImage = function JpegImageClosure() {
     };
   }
   JpegImage.prototype = {
-    parse: function parse(data) {
+    parse(data, {
+      dnlScanLines = null
+    } = {}) {
       function readUint16() {
         var value = data[offset] << 8 | data[offset + 1];
         offset += 2;
@@ -27877,6 +27904,7 @@ var JpegImage = function JpegImageClosure() {
       var jfif = null;
       var adobe = null;
       var frame, resetInterval;
+      let numSOSMarkers = 0;
       var quantizationTables = [];
       var huffmanTablesAC = [],
           huffmanTablesDC = [];
@@ -27967,7 +27995,8 @@ var JpegImage = function JpegImageClosure() {
             frame.extended = fileMarker === 0xFFC1;
             frame.progressive = fileMarker === 0xFFC2;
             frame.precision = data[offset++];
-            frame.scanLines = readUint16();
+            const sofScanLines = readUint16();
+            frame.scanLines = dnlScanLines || sofScanLines;
             frame.samplesPerLine = readUint16();
             frame.components = [];
             frame.componentIds = {};
@@ -28021,6 +28050,7 @@ var JpegImage = function JpegImageClosure() {
             resetInterval = readUint16();
             break;
           case 0xFFDA:
+            const parseDNLMarker = ++numSOSMarkers === 1 && !dnlScanLines;
             readUint16();
             var selectorsCount = data[offset++];
             var components = [],
@@ -28036,8 +28066,19 @@ var JpegImage = function JpegImageClosure() {
             var spectralStart = data[offset++];
             var spectralEnd = data[offset++];
             var successiveApproximation = data[offset++];
-            var processed = decodeScan(data, offset, frame, components, resetInterval, spectralStart, spectralEnd, successiveApproximation >> 4, successiveApproximation & 15);
-            offset += processed;
+            try {
+              var processed = decodeScan(data, offset, frame, components, resetInterval, spectralStart, spectralEnd, successiveApproximation >> 4, successiveApproximation & 15, parseDNLMarker);
+              offset += processed;
+            } catch (ex) {
+              if (ex instanceof DNLMarkerError) {
+                (0, _util.warn)('Attempting to re-parse JPEG image using "scanLines" ' + 'parameter found in DNL marker (0xFFDC) segment.');
+                return this.parse(data, { dnlScanLines: ex.scanLines });
+              }
+              throw ex;
+            }
+            break;
+          case 0xFFDC:
+            offset += 4;
             break;
           case 0xFFFF:
             if (data[offset] !== 0xFF) {
@@ -28162,7 +28203,7 @@ var JpegImage = function JpegImageClosure() {
         data[offset++] = 107.268039397724 + Cb * (2.19927104525741e-5 * Cb - 0.000640992018297945 * Cr + 0.000659397001245577 * Y + 0.000426105652938837 * k - 0.176491792462875) + Cr * (-0.000778269941513683 * Cr + 0.00130872261408275 * Y + 0.000770482631801132 * k - 0.151051492775562) + Y * (0.00126935368114843 * Y - 0.00265090189010898 * k + 0.25802910206845) + k * (-0.000318913117588328 * k - 0.213742400323665);
         data[offset++] = -20.810012546947 + Cb * (-0.000570115196973677 * Cb - 2.63409051004589e-5 * Cr + 0.0020741088115012 * Y - 0.00288260236853442 * k + 0.814272968359295) + Cr * (-1.53496057440975e-5 * Cr - 0.000132689043961446 * Y + 0.000560833691242812 * k - 0.195152027534049) + Y * (0.00174418132927582 * Y - 0.00255243321439347 * k + 0.116935020465145) + k * (-0.000343531996510555 * k + 0.24165260232407);
       }
-      return data;
+      return data.subarray(0, offset);
     },
     _convertYcckToCmyk: function convertYcckToCmyk(data) {
       var Y, Cb, Cr;
@@ -28189,7 +28230,7 @@ var JpegImage = function JpegImageClosure() {
         data[offset++] = 255 + c * (8.841041422036149 * c + 60.118027045597366 * m + 6.871425592049007 * y + 31.159100130055922 * k - 79.2970844816548) + m * (-15.310361306967817 * m + 17.575251261109482 * y + 131.35250912493976 * k - 190.9453302588951) + y * (4.444339102852739 * y + 9.8632861493405 * k - 24.86741582555878) - k * (20.737325471181034 * k + 187.80453709719578);
         data[offset++] = 255 + c * (0.8842522430003296 * c + 8.078677503112928 * m + 30.89978309703729 * y - 0.23883238689178934 * k - 14.183576799673286) + m * (10.49593273432072 * m + 63.02378494754052 * y + 50.606957656360734 * k - 112.23884253719248) + y * (0.03296041114873217 * y + 115.60384449646641 * k - 193.58209356861505) - k * (22.33816807309886 * k + 180.12613974708367);
       }
-      return data;
+      return data.subarray(0, offset);
     },
     getData: function getData(width, height, forceRGBoutput) {
       if (this.numComponents > 4) {
@@ -29045,10 +29086,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       var dict = image.dict;
       var colorSpace = dict.get('ColorSpace', 'CS');
       colorSpace = _colorspace.ColorSpace.parse(colorSpace, this.xref, this.resources, this.pdfFunctionFactory);
-      var numComps = colorSpace.numComps;
-      var decodePromise = this.handler.sendWithPromise('JpegDecode', [image.getIR(this.forceDataSchema), numComps]);
-      return decodePromise.then(function (message) {
-        var data = message.data;
+      return this.handler.sendWithPromise('JpegDecode', [image.getIR(this.forceDataSchema), colorSpace.numComps]).then(function ({ data, width, height }) {
         return new _stream.Stream(data, 0, data.length, image.dict);
       });
     }
@@ -29262,18 +29300,18 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         }
       });
     },
-    buildPaintImageXObject: function PartialEvaluator_buildPaintImageXObject(resources, image, inline, operatorList, cacheKey, imageCache) {
+    buildPaintImageXObject({ resources, image, isInline = false, operatorList, cacheKey, imageCache, forceDisableNativeImageDecoder = false }) {
       var dict = image.dict;
       var w = dict.get('Width', 'W');
       var h = dict.get('Height', 'H');
       if (!(w && (0, _util.isNum)(w)) || !(h && (0, _util.isNum)(h))) {
         (0, _util.warn)('Image dimensions are missing, or not numbers.');
-        return;
+        return Promise.resolve();
       }
       var maxImageSize = this.options.maxImageSize;
       if (maxImageSize !== -1 && w * h > maxImageSize) {
         (0, _util.warn)('Image exceeded maximum allowed size and was removed.');
-        return;
+        return Promise.resolve();
       }
       var imageMask = dict.get('ImageMask', 'IM') || false;
       var imgData, args;
@@ -29299,37 +29337,48 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
             args
           };
         }
-        return;
+        return Promise.resolve();
       }
       var softMask = dict.get('SMask', 'SM') || false;
       var mask = dict.get('Mask') || false;
       var SMALL_IMAGE_DIMENSIONS = 200;
-      if (inline && !softMask && !mask && !(image instanceof _jpeg_stream.JpegStream) && w + h < SMALL_IMAGE_DIMENSIONS) {
+      if (isInline && !softMask && !mask && !(image instanceof _jpeg_stream.JpegStream) && w + h < SMALL_IMAGE_DIMENSIONS) {
         let imageObj = new _image.PDFImage({
           xref: this.xref,
           res: resources,
           image,
-          isInline: inline,
+          isInline,
           pdfFunctionFactory: this.pdfFunctionFactory
         });
         imgData = imageObj.createImageData(true);
         operatorList.addOp(_util.OPS.paintInlineImageXObject, [imgData]);
-        return;
+        return Promise.resolve();
       }
-      var nativeImageDecoderSupport = this.options.nativeImageDecoderSupport;
+      const nativeImageDecoderSupport = forceDisableNativeImageDecoder ? _util.NativeImageDecoding.NONE : this.options.nativeImageDecoderSupport;
       var objId = 'img_' + this.idFactory.createObjId();
-      operatorList.addDependency(objId);
-      args = [objId, w, h];
       if (nativeImageDecoderSupport !== _util.NativeImageDecoding.NONE && !softMask && !mask && image instanceof _jpeg_stream.JpegStream && NativeImageDecoder.isSupported(image, this.xref, resources, this.pdfFunctionFactory)) {
-        operatorList.addOp(_util.OPS.paintJpegXObject, args);
-        this.handler.send('obj', [objId, this.pageIndex, 'JpegStream', image.getIR(this.options.forceDataSchema)]);
-        if (cacheKey) {
-          imageCache[cacheKey] = {
-            fn: _util.OPS.paintJpegXObject,
-            args
-          };
-        }
-        return;
+        return this.handler.sendWithPromise('obj', [objId, this.pageIndex, 'JpegStream', image.getIR(this.options.forceDataSchema)]).then(function () {
+          operatorList.addDependency(objId);
+          args = [objId, w, h];
+          operatorList.addOp(_util.OPS.paintJpegXObject, args);
+          if (cacheKey) {
+            imageCache[cacheKey] = {
+              fn: _util.OPS.paintJpegXObject,
+              args
+            };
+          }
+        }, reason => {
+          (0, _util.warn)('Native JPEG decoding failed -- trying to recover: ' + (reason && reason.message));
+          return this.buildPaintImageXObject({
+            resources,
+            image,
+            isInline,
+            operatorList,
+            cacheKey,
+            imageCache,
+            forceDisableNativeImageDecoder: true
+          });
+        });
       }
       var nativeImageDecoder = null;
       if (nativeImageDecoderSupport === _util.NativeImageDecoding.DECODE && (image instanceof _jpeg_stream.JpegStream || mask instanceof _jpeg_stream.JpegStream || softMask instanceof _jpeg_stream.JpegStream)) {
@@ -29341,12 +29390,14 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           pdfFunctionFactory: this.pdfFunctionFactory
         });
       }
+      operatorList.addDependency(objId);
+      args = [objId, w, h];
       _image.PDFImage.buildImage({
         handler: this.handler,
         xref: this.xref,
         res: resources,
         image,
-        isInline: inline,
+        isInline,
         nativeDecoder: nativeImageDecoder,
         pdfFunctionFactory: this.pdfFunctionFactory
       }).then(imageObj => {
@@ -29363,6 +29414,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           args
         };
       }
+      return Promise.resolve();
     },
     handleSMask: function PartialEvaluator_handleSmask(smask, resources, operatorList, task, stateManager) {
       var smaskContent = smask.get('G');
@@ -29736,7 +29788,14 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
                   }, rejectXObject);
                   return;
                 } else if (type.name === 'Image') {
-                  self.buildPaintImageXObject(resources, xobj, false, operatorList, name, imageCache);
+                  self.buildPaintImageXObject({
+                    resources,
+                    image: xobj,
+                    operatorList,
+                    cacheKey: name,
+                    imageCache
+                  }).then(resolveXObject, rejectXObject);
+                  return;
                 } else if (type.name === 'PS') {
                   (0, _util.info)('Ignored XObject subtype PS');
                 } else {
@@ -29769,9 +29828,15 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
                   continue;
                 }
               }
-              self.buildPaintImageXObject(resources, args[0], true, operatorList, cacheKey, imageCache);
-              args = null;
-              continue;
+              next(self.buildPaintImageXObject({
+                resources,
+                image: args[0],
+                isInline: true,
+                operatorList,
+                cacheKey,
+                imageCache
+              }));
+              return;
             case _util.OPS.showText:
               args[0] = self.handleText(args[0], stateManager.state);
               break;
@@ -34108,7 +34173,7 @@ var Font = function FontClosure() {
         }
         font.pos += 4;
         maxFunctionDefs = font.getUint16();
-        font.pos += 6;
+        font.pos += 4;
         maxSizeOfInstructions = font.getUint16();
       }
       var dupFirstEntry = false;
@@ -40561,7 +40626,10 @@ var _jpx = __w_pdfjs_require__(13);
 var PDFImage = function PDFImageClosure() {
   function handleImageData(image, nativeDecoder) {
     if (nativeDecoder && nativeDecoder.canDecode(image)) {
-      return nativeDecoder.decode(image);
+      return nativeDecoder.decode(image).catch(reason => {
+        (0, _util.warn)('Native image decoding failed -- trying to recover: ' + (reason && reason.message));
+        return image;
+      });
     }
     return Promise.resolve(image);
   }
