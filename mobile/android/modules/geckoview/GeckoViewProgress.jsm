@@ -10,8 +10,11 @@ ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "EventDispatcher",
-  "resource://gre/modules/Messaging.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "OverrideService",
+  "@mozilla.org/security/certoverride;1", "nsICertOverrideService");
+
+XPCOMUtils.defineLazyServiceGetter(this, "IDNService",
+  "@mozilla.org/network/idn-service;1", "nsIIDNService");
 
 XPCOMUtils.defineLazyGetter(this, "dump", () =>
     ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
@@ -126,56 +129,46 @@ var IdentityHandler = {
    * (if available). Return the data needed to update the UI.
    */
   checkIdentity: function checkIdentity(aState, aBrowser) {
-    let lastStatus = aBrowser.securityUI.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
-
-    // Don't pass in the actual location object, since it can cause us to
-    // hold on to the window object too long.  Just pass in the fields we
-    // care about. (bug 424829)
-    let lastLocation = {};
-    try {
-      let location = aBrowser.contentWindow.location;
-      lastLocation.host = location.host;
-      lastLocation.hostname = location.hostname;
-      lastLocation.port = location.port;
-      lastLocation.origin = location.origin;
-    } catch (ex) {
-      // Can sometimes throw if the URL being visited has no host/hostname,
-      // e.g. about:blank. The _state for these pages means we won't need these
-      // properties anyways, though.
-    }
-
-    let uri = aBrowser.currentURI;
-    try {
-      uri = Services.uriFixup.createExposableURI(uri);
-    } catch (e) {}
-
     let identityMode = this.getIdentityMode(aState);
     let mixedDisplay = this.getMixedDisplayMode(aState);
     let mixedActive = this.getMixedActiveMode(aState);
     let trackingMode = this.getTrackingMode(aState);
     let result = {
-      origin: lastLocation.origin,
       mode: {
         identity: identityMode,
         mixed_display: mixedDisplay,
         mixed_active: mixedActive,
-        tracking: trackingMode
+        tracking: trackingMode,
       }
     };
+
+    if (aBrowser.contentPrincipal) {
+      result.origin = aBrowser.contentPrincipal.originNoSuffix;
+    }
 
     // Don't show identity data for pages with an unknown identity or if any
     // mixed content is loaded (mixed display content is loaded by default).
     if (identityMode === this.IDENTITY_MODE_UNKNOWN ||
-        aState & Ci.nsIWebProgressListener.STATE_IS_BROKEN) {
+        (aState & Ci.nsIWebProgressListener.STATE_IS_BROKEN)) {
       result.secure = false;
       return result;
     }
 
     result.secure = true;
 
-    result.host = this.getEffectiveHost(lastLocation, uri);
+    let uri = aBrowser.currentURI || {};
+    try {
+      uri = Services.uriFixup.createExposableURI(uri);
+    } catch (e) {}
 
-    let status = lastStatus.QueryInterface(Ci.nsISSLStatus);
+    try {
+      result.host = IDNService.convertToDisplayIDN(uri.host, {});
+    } catch (e) {
+      result.host = uri.host;
+    }
+
+    let status = aBrowser.securityUI.QueryInterface(Ci.nsISSLStatusProvider)
+                         .SSLStatus.QueryInterface(Ci.nsISSLStatus);
     let cert = status.serverCert;
 
     result.organization = cert.organization;
@@ -183,44 +176,14 @@ var IdentityHandler = {
     result.issuerOrganization = cert.issuerOrganization;
     result.issuerCommonName = cert.issuerCommonName;
 
-    // Cache the override service the first time we need to check it
-    if (!this._overrideService) {
-      this._overrideService = Cc["@mozilla.org/security/certoverride;1"].getService(Ci.nsICertOverrideService);
+    try {
+      result.securityException = OverrideService.hasMatchingOverride(
+          uri.host, uri.port, cert, {}, {});
+    } catch (e) {
     }
 
-    // Check whether this site is a security exception. XPConnect does the right
-    // thing here in terms of converting lastLocation.port from string to int, but
-    // the overrideService doesn't like undefined ports, so make sure we have
-    // something in the default case (bug 432241).
-    // .hostname can return an empty string in some exceptional cases -
-    // hasMatchingOverride does not handle that, so avoid calling it.
-    // Updating the tooltip value in those cases isn't critical.
-    // FIXME: Fixing bug 646690 would probably makes this check unnecessary
-    if (lastLocation.hostname &&
-        this._overrideService.hasMatchingOverride(lastLocation.hostname,
-                                                  (lastLocation.port || 443),
-                                                  cert, {}, {})) {
-      result.securityException = true;
-    }
     return result;
   },
-
-  /**
-   * Attempt to provide proper IDN treatment for host names
-   */
-  getEffectiveHost: function getEffectiveHost(aLastLocation, aUri) {
-    if (!this._IDNService) {
-      this._IDNService = Cc["@mozilla.org/network/idn-service;1"]
-                         .getService(Ci.nsIIDNService);
-    }
-    try {
-      return this._IDNService.convertToDisplayIDN(aUri.host, {});
-    } catch (e) {
-      // If something goes wrong (e.g. hostname is an IP address) just fail back
-      // to the full domain.
-      return aLastLocation.hostname;
-    }
-  }
 };
 
 class GeckoViewProgress extends GeckoViewModule {
