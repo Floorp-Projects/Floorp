@@ -6979,6 +6979,8 @@ GetUsageOp::TraverseRepository(QuotaManager* aQuotaManager,
       originUsage->persisted() = persisted;
     }
 
+    originUsage->lastAccessed() = timestamp;
+
     UsageInfo usageInfo;
     rv = GetUsageForOrigin(aQuotaManager,
                            aPersistenceType,

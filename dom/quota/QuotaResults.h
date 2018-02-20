@@ -19,11 +19,13 @@ class UsageResult
   nsCString mOrigin;
   uint64_t mUsage;
   bool mPersisted;
+  uint64_t mLastAccessed;
 
 public:
   UsageResult(const nsACString& aOrigin,
               bool aPersisted,
-              uint64_t aUsage);
+              uint64_t aUsage,
+              uint64_t aLastAccessed);
 
 private:
   virtual ~UsageResult()
