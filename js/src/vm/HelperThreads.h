@@ -657,16 +657,14 @@ struct ParseTask
     bool overRecursed;
     bool outOfMemory;
 
-    ParseTask(ParseTaskKind kind, JSContext* cx, JSObject* parseGlobal,
-              const char16_t* chars, size_t length,
+    ParseTask(ParseTaskKind kind, JSContext* cx, const char16_t* chars, size_t length,
               JS::OffThreadCompileCallback callback, void* callbackData);
-    ParseTask(ParseTaskKind kind, JSContext* cx, JSObject* parseGlobal,
-              const JS::TranscodeRange& range,
+    ParseTask(ParseTaskKind kind, JSContext* cx, const JS::TranscodeRange& range,
               JS::OffThreadCompileCallback callback, void* callbackData);
-    ParseTask(ParseTaskKind kind, JSContext* cx, JSObject* parseGlobal,
-              JS::TranscodeSources& sources,
+    ParseTask(ParseTaskKind kind, JSContext* cx, JS::TranscodeSources& sources,
               JS::OffThreadCompileCallback callback, void* callbackData);
-    bool init(JSContext* cx, const ReadOnlyCompileOptions& options);
+
+    bool init(JSContext* cx, const ReadOnlyCompileOptions& options, JSObject* global);
 
     void activate(JSRuntime* rt);
     virtual void parse(JSContext* cx) = 0;
@@ -683,32 +681,28 @@ struct ParseTask
 
 struct ScriptParseTask : public ParseTask
 {
-    ScriptParseTask(JSContext* cx, JSObject* parseGlobal,
-                    const char16_t* chars, size_t length,
+    ScriptParseTask(JSContext* cx, const char16_t* chars, size_t length,
                     JS::OffThreadCompileCallback callback, void* callbackData);
     void parse(JSContext* cx) override;
 };
 
 struct ModuleParseTask : public ParseTask
 {
-    ModuleParseTask(JSContext* cx, JSObject* parseGlobal,
-                    const char16_t* chars, size_t length,
+    ModuleParseTask(JSContext* cx, const char16_t* chars, size_t length,
                     JS::OffThreadCompileCallback callback, void* callbackData);
     void parse(JSContext* cx) override;
 };
 
 struct ScriptDecodeTask : public ParseTask
 {
-    ScriptDecodeTask(JSContext* cx, JSObject* parseGlobal,
-                     const JS::TranscodeRange& range,
+    ScriptDecodeTask(JSContext* cx, const JS::TranscodeRange& range,
                      JS::OffThreadCompileCallback callback, void* callbackData);
     void parse(JSContext* cx) override;
 };
 
 struct MultiScriptsDecodeTask : public ParseTask
 {
-    MultiScriptsDecodeTask(JSContext* cx, JSObject* parseGlobal,
-                           JS::TranscodeSources& sources,
+    MultiScriptsDecodeTask(JSContext* cx, JS::TranscodeSources& sources,
                            JS::OffThreadCompileCallback callback, void* callbackData);
     void parse(JSContext* cx) override;
 };
