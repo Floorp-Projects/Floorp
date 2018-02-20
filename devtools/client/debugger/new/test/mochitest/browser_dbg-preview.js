@@ -28,7 +28,7 @@ async function assertTooltip(dbg, { result, expression }) {
   is(preview.expression, expression, "Preview.expression");
 }
 
-async function assertPopup(dbg, { field, value, expression }) {
+async function assertPreviewPopup(dbg, { field, value, expression }) {
   const previewEl = await waitForElement(dbg, "popup");
   const preview = dbg.selectors.getPreview(dbg.getState());
 
@@ -61,6 +61,14 @@ add_task(async function() {
   const popupPreviewed = waitForDispatch(dbg, "SET_PREVIEW");
   hoverAtPos(dbg, { line: 2, ch: 10 });
   await popupPreviewed;
-  await assertPopup(dbg, { field: "foo", value: "1", expression: "obj" });
-  await assertPopup(dbg, { field: "bar", value: "2", expression: "obj" });
+  await assertPreviewPopup(dbg, {
+    field: "foo",
+    value: "1",
+    expression: "obj"
+  });
+  await assertPreviewPopup(dbg, {
+    field: "bar",
+    value: "2",
+    expression: "obj"
+  });
 });
