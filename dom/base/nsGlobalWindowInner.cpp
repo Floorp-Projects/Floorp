@@ -6394,7 +6394,7 @@ nsGlobalWindowInner::GetOrCreateServiceWorker(const ServiceWorkerDescriptor& aDe
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<ServiceWorker> ref;
   for (auto sw : mServiceWorkerList) {
-    if (sw->MatchesDescriptor(aDescriptor)) {
+    if (sw->Descriptor().Matches(aDescriptor)) {
       ref = sw;
       return ref.forget();
     }

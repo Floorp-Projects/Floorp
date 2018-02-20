@@ -981,7 +981,7 @@ public:
     , mType(aUnscaledFont->GetType())
     , mData(nullptr)
   {
-    mGetFontFileDataSucceeded = aUnscaledFont->GetFontFileData(&FontDataProc, this);
+    mGetFontFileDataSucceeded = aUnscaledFont->GetFontFileData(&FontDataProc, this) && mData;
   }
 
   ~RecordedFontData();
@@ -2685,11 +2685,12 @@ RecordedSourceSurfaceCreation::RecordedSourceSurfaceCreation(S &aStream)
   ReadElement(aStream, mRefPtr);
   ReadElement(aStream, mSize);
   ReadElement(aStream, mFormat);
-  mData = (uint8_t*)new (fallible) char[mSize.width * mSize.height * BytesPerPixel(mFormat)];
+  size_t size = mSize.width * mSize.height * BytesPerPixel(mFormat);
+  mData = new (fallible) uint8_t[size];
   if (!mData) {
-    gfxWarning() << "RecordedSourceSurfaceCreation failed to allocate data";
+    gfxCriticalNote << "RecordedSourceSurfaceCreation failed to allocate data of size " << size;
   } else {
-    aStream.read((char*)mData, mSize.width * mSize.height * BytesPerPixel(mFormat));
+    aStream.read((char*)mData, size);
   }
 }
 
@@ -2934,6 +2935,10 @@ RecordedFontData::~RecordedFontData()
 inline bool
 RecordedFontData::PlayEvent(Translator *aTranslator) const
 {
+  if (!mData) {
+    return false;
+  }
+
   RefPtr<NativeFontResource> fontResource =
     Factory::CreateNativeFontResource(mData, mFontDetails.size,
                                       aTranslator->GetReferenceDrawTarget()->GetBackendType(),
@@ -2967,8 +2972,12 @@ RecordedFontData::OutputSimpleEventInfo(std::stringstream &aStringStream) const
 inline void
 RecordedFontData::SetFontData(const uint8_t *aData, uint32_t aSize, uint32_t aIndex)
 {
-  mData = new uint8_t[aSize];
-  memcpy(mData, aData, aSize);
+  mData = new (fallible) uint8_t[aSize];
+  if (!mData) {
+    gfxCriticalNote << "RecordedFontData failed to allocate data for recording of size " << aSize;
+  } else {
+    memcpy(mData, aData, aSize);
+  }
   mFontDetails.fontDataKey =
     SFNTData::GetUniqueKey(aData, aSize, 0, nullptr);
   mFontDetails.size = aSize;
@@ -2997,8 +3006,12 @@ RecordedFontData::RecordedFontData(S &aStream)
   ReadElement(aStream, mType);
   ReadElement(aStream, mFontDetails.fontDataKey);
   ReadElement(aStream, mFontDetails.size);
-  mData = new uint8_t[mFontDetails.size];
-  aStream.read((char*)mData, mFontDetails.size);
+  mData = new (fallible) uint8_t[mFontDetails.size];
+  if (!mData) {
+    gfxCriticalNote << "RecordedFontData failed to allocate data for playback of size " << mFontDetails.size;
+  } else {
+    aStream.read((char*)mData, mFontDetails.size);
+  }
 }
 
 inline
