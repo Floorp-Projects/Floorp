@@ -54,7 +54,7 @@ this.SideMenuWidget = function SideMenuWidget(aNode, aOptions = {}) {
   this._list.setAttribute("with-group-checkboxes", this._showGroupCheckboxes);
   this._list.setAttribute("tabindex", "0");
   this._list.addEventListener("contextmenu", e => this._showContextMenu(e));
-  this._list.addEventListener("keypress", e => this.emit("keyPress", e));
+  this._list.addEventListener("keydown", e => this.emit("keyDown", e));
   this._list.addEventListener("mousedown", e => this.emit("mousePress", e));
   this._parent.appendChild(this._list);
 

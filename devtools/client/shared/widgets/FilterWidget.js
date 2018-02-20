@@ -341,7 +341,7 @@ CSSFilterEditorWidget.prototype = {
     // Filters that have units are number-type filters. For them,
     // the value can be incremented/decremented simply.
     // For other types of filters (e.g. drop-shadow) we need to check
-    // if the keypress happened close to a number first.
+    // if the keydown happened close to a number first.
     if (filter.unit) {
       let startValue = parseFloat(e.target.value);
       let value = startValue + direction * multiplier;

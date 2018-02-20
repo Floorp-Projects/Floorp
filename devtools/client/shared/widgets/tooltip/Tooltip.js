@@ -85,7 +85,7 @@ const POPUP_EVENTS = ["shown", "hidden", "showing", "hiding"];
  * - shown : when the tooltip is shown
  * - hiding : just before the tooltip closes
  * - hidden : when the tooltip gets hidden
- * - keypress : when any key gets pressed, with keyCode
+ * - keydown : when any key gets pressed, with keyCode
  */
 
 class Tooltip {
@@ -131,21 +131,21 @@ class Tooltip {
         this["_onPopup" + eventName]);
     }
 
-  // Listen to keypress events to close the tooltip if configured to do so
+  // Listen to keydown events to close the tooltip if configured to do so
     let win = this.doc.querySelector("window");
-    this._onKeyPress = event => {
+    this._onKeyDown = event => {
       if (this.panel.hidden) {
         return;
       }
 
-      this.emit("keypress", event.keyCode);
+      this.emit("keydown", event.keyCode);
       if (this.closeOnKeys.includes(event.keyCode) &&
           this.isShown()) {
         event.stopPropagation();
         this.hide();
       }
     };
-    win.addEventListener("keypress", this._onKeyPress);
+    win.addEventListener("keydown", this._onKeyDown);
 
   // Listen to custom emitters' events to close the tooltip
     this.hide = this.hide.bind(this);
@@ -234,7 +234,7 @@ class Tooltip {
     }
 
     let win = this.doc.querySelector("window");
-    win.removeEventListener("keypress", this._onKeyPress);
+    win.removeEventListener("keydown", this._onKeyDown);
 
     for (let {emitter, event, useCapture} of this.closeOnEvents) {
       for (let remove of ["removeEventListener", "off"]) {

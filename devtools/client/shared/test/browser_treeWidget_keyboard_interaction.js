@@ -11,9 +11,6 @@ const TEST_URI = "data:text/html;charset=utf-8,<head>" +
   "ets.css'></head><body><div></div><span></span></body>";
 const {TreeWidget} = require("devtools/client/shared/widgets/TreeWidget");
 
-const kStrictKeyPressEvents = SpecialPowers.getBoolPref(
-  "dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
-
 add_task(async function () {
   await addTab("about:blank");
   let [host, win, doc] = await createHost("bottom", TEST_URI);
@@ -146,8 +143,7 @@ async function testKeyboardInteraction(tree, win) {
 
   // pressing left to check expand collapse feature.
   // This does not emit any event, so listening for keypress
-  const eventToListen = kStrictKeyPressEvents ? "keydown" : "keypress";
-  tree.root.children.addEventListener(eventToListen, () => {
+  tree.root.children.addEventListener("keydown", () => {
     // executeSoon so that other listeners on the same method are executed first
     executeSoon(() => event.resolve(null));
   }, {once: true});
@@ -189,7 +185,7 @@ async function testKeyboardInteraction(tree, win) {
 
   // collapsing the item to check expand feature.
 
-  tree.root.children.addEventListener(eventToListen, () => {
+  tree.root.children.addEventListener("keydown", () => {
     executeSoon(() => event.resolve(null));
   }, {once: true});
   info("Pressing left key to collapse the item");
@@ -202,7 +198,7 @@ async function testKeyboardInteraction(tree, win) {
 
   // pressing right should expand this now.
 
-  tree.root.children.addEventListener(eventToListen, () => {
+  tree.root.children.addEventListener("keydown", () => {
     executeSoon(() => event.resolve(null));
   }, {once: true});
   info("Pressing right key to expend the collapsed item");
@@ -219,7 +215,7 @@ async function testKeyboardInteraction(tree, win) {
   node = tree._selectedLabel;
   // pressing down again should not change selection
   event = defer();
-  tree.root.children.addEventListener(eventToListen, () => {
+  tree.root.children.addEventListener("keydown", () => {
     executeSoon(() => event.resolve(null));
   }, {once: true});
   info("Pressing down key on last item of the tree");
