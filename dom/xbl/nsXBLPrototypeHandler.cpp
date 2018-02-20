@@ -1135,3 +1135,18 @@ nsXBLPrototypeHandler::Write(nsIObjectOutputStream* aStream)
   NS_ENSURE_SUCCESS(rv, rv);
   return aStream->WriteWStringZ(mHandlerText ? mHandlerText : u"");
 }
+
+size_t
+nsXBLPrototypeHandler::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = 0;
+  for (const nsXBLPrototypeHandler* handler = this;
+       handler; handler = handler->mNextHandler) {
+    n += aMallocSizeOf(handler);
+    if (!(mType & NS_HANDLER_TYPE_XUL)) {
+      n += aMallocSizeOf(handler->mHandlerText);
+    }
+    n += mHandler ? aMallocSizeOf(handler->mHandler) : 0;
+  }
+  return n;
+}
