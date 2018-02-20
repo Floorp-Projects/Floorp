@@ -307,11 +307,11 @@ BaseWebSocketChannel::NewURI(const nsACString & aSpec, const char *aOriginCharse
     return rv;
 
   return NS_MutateURI(new nsStandardURL::Mutator())
-    .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                            nsIStandardURL::URLTYPE_AUTHORITY,
-                            port, nsCString(aSpec), aOriginCharset,
-                            aBaseURI, nullptr))
-    .Finalize(_retval);
+           .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
+                                         nsIStandardURL::URLTYPE_AUTHORITY, port,
+                                         nsCString(aSpec), aOriginCharset, aBaseURI,
+                                         nullptr)
+           .Finalize(_retval);
 }
 
 NS_IMETHODIMP

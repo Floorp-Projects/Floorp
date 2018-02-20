@@ -1033,10 +1033,11 @@ nsGIOProtocolHandler::NewURI(const nsACString &aSpec,
   }
 
   return NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-    .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                            nsIStandardURL::URLTYPE_STANDARD,
-                            -1, flatSpec, aOriginCharset, aBaseURI, nullptr))
-    .Finalize(aResult);
+           .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
+                                         nsIStandardURL::URLTYPE_STANDARD, -1,
+                                         flatSpec, aOriginCharset, aBaseURI,
+                                         nullptr)
+           .Finalize(aResult);
 }
 
 NS_IMETHODIMP
