@@ -142,11 +142,11 @@ nsAndroidProtocolHandler::NewURI(const nsACString &aSpec,
                                  nsIURI **result)
 {
     return NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-        .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                                nsIStandardURL::URLTYPE_STANDARD,
-                                -1, nsCString(aSpec), aCharset,
-                                aBaseURI, nullptr))
-        .Finalize(result);
+             .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
+                                           nsIStandardURL::URLTYPE_STANDARD, -1,
+                                           nsCString(aSpec), aCharset, aBaseURI,
+                                           nullptr)
+             .Finalize(result);
 }
 
 NS_IMETHODIMP
