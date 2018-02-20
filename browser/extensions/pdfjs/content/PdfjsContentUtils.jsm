@@ -17,7 +17,6 @@
 
 var EXPORTED_SYMBOLS = ["PdfjsContentUtils"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var PdfjsContentUtils = {
