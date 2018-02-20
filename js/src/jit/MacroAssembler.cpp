@@ -38,6 +38,46 @@ using JS::ToInt32;
 
 using mozilla::CheckedUint32;
 
+template <typename T>
+static void
+EmitTypeCheck(MacroAssembler& masm, Assembler::Condition cond, const T& src, TypeSet::Type type,
+              Label* label)
+{
+    if (type.isAnyObject()) {
+        masm.branchTestObject(cond, src, label);
+        return;
+    }
+    switch (type.primitive()) {
+      case JSVAL_TYPE_DOUBLE:
+        // TI double type includes int32.
+        masm.branchTestNumber(cond, src, label);
+        break;
+      case JSVAL_TYPE_INT32:
+        masm.branchTestInt32(cond, src, label);
+        break;
+      case JSVAL_TYPE_BOOLEAN:
+        masm.branchTestBoolean(cond, src, label);
+        break;
+      case JSVAL_TYPE_STRING:
+        masm.branchTestString(cond, src, label);
+        break;
+      case JSVAL_TYPE_SYMBOL:
+        masm.branchTestSymbol(cond, src, label);
+        break;
+      case JSVAL_TYPE_NULL:
+        masm.branchTestNull(cond, src, label);
+        break;
+      case JSVAL_TYPE_UNDEFINED:
+        masm.branchTestUndefined(cond, src, label);
+        break;
+      case JSVAL_TYPE_MAGIC:
+        masm.branchTestMagic(cond, src, label);
+        break;
+      default:
+        MOZ_CRASH("Unexpected type");
+    }
+}
+
 template <typename Source> void
 MacroAssembler::guardTypeSet(const Source& address, const TypeSet* types, BarrierKind kind,
                              Register scratch, Label* miss)
@@ -64,40 +104,47 @@ MacroAssembler::guardTypeSet(const Source& address, const TypeSet* types, Barrie
         tests[0] = TypeSet::DoubleType();
     }
 
+    unsigned numBranches = 0;
+    for (size_t i = 0; i < mozilla::ArrayLength(tests); i++) {
+        if (types->hasType(tests[i]))
+            numBranches++;
+    }
+
+    if (!types->unknownObject() && types->getObjectCount() > 0)
+        numBranches++;
+
+    if (numBranches == 0) {
+        MOZ_ASSERT(types->empty());
+        jump(miss);
+        return;
+    }
+
     Register tag = extractTag(address, scratch);
 
     // Emit all typed tests.
-    BranchType lastBranch;
     for (size_t i = 0; i < mozilla::ArrayLength(tests); i++) {
         if (!types->hasType(tests[i]))
             continue;
 
-        if (lastBranch.isInitialized())
-            lastBranch.emit(*this);
-        lastBranch = BranchType(Equal, tag, tests[i], &matched);
+        if (--numBranches > 0)
+            EmitTypeCheck(*this, Equal, tag, tests[i], &matched);
+        else
+            EmitTypeCheck(*this, NotEqual, tag, tests[i], miss);
     }
 
-    // If this is the last check, invert the last branch.
-    if (types->hasType(TypeSet::AnyObjectType()) || !types->getObjectCount()) {
-        if (!lastBranch.isInitialized()) {
-            jump(miss);
-            return;
-        }
-
-        lastBranch.invertCondition();
-        lastBranch.relink(miss);
-        lastBranch.emit(*this);
-
+    // If we don't have specific objects to check for, we're done.
+    if (numBranches == 0) {
+        MOZ_ASSERT(types->unknownObject() || types->getObjectCount() == 0);
         bind(&matched);
         return;
     }
 
-    if (lastBranch.isInitialized())
-        lastBranch.emit(*this);
-
     // Test specific objects.
     MOZ_ASSERT(scratch != InvalidReg);
+
+    MOZ_ASSERT(numBranches == 1);
     branchTestObject(NotEqual, tag, miss);
+
     if (kind != BarrierKind::TypeTagOnly) {
         Register obj = extractObject(address, scratch);
         guardObjectType(obj, types, scratch, miss);
@@ -120,9 +167,12 @@ MacroAssembler::guardTypeSet(const Source& address, const TypeSet* types, Barrie
     bind(&matched);
 }
 
-template <typename TypeSet>
+#ifdef DEBUG
+// guardTypeSetMightBeIncomplete is only used in DEBUG builds. If this ever
+// changes, we need to make sure it's Spectre-safe.
 void
-MacroAssembler::guardTypeSetMightBeIncomplete(TypeSet* types, Register obj, Register scratch, Label* label)
+MacroAssembler::guardTypeSetMightBeIncomplete(const TypeSet* types, Register obj,
+                                              Register scratch, Label* label)
 {
     // Type set guards might miss when an object's group changes. In this case
     // either its old group's properties will become unknown, or it will change
@@ -153,6 +203,7 @@ MacroAssembler::guardTypeSetMightBeIncomplete(TypeSet* types, Register obj, Regi
                      Imm32(OBJECT_FLAG_UNKNOWN_PROPERTIES), label);
     }
 }
+#endif
 
 void
 MacroAssembler::guardObjectType(Register obj, const TypeSet* types,
@@ -170,59 +221,59 @@ MacroAssembler::guardObjectType(Register obj, const TypeSet* types,
     // to trigger the barrier on the contents of type sets passed in here.
     Label matched;
 
-    BranchGCPtr lastBranch;
-    MOZ_ASSERT(!lastBranch.isInitialized());
+    bool hasSingletons = false;
     bool hasObjectGroups = false;
+    unsigned numBranches = 0;
+
     unsigned count = types->getObjectCount();
     for (unsigned i = 0; i < count; i++) {
-        if (!types->getSingletonNoBarrier(i)) {
-            hasObjectGroups = hasObjectGroups || types->getGroupNoBarrier(i);
-            continue;
+        if (types->getGroupNoBarrier(i)) {
+            hasObjectGroups = true;
+            numBranches++;
+        } else if (types->getSingletonNoBarrier(i)) {
+            hasSingletons = true;
+            numBranches++;
         }
+    }
 
-        if (lastBranch.isInitialized()) {
-            comment("emit GC pointer checks");
-            lastBranch.emit(*this);
+    if (numBranches == 0) {
+        jump(miss);
+        return;
+    }
+
+    if (hasSingletons) {
+        for (unsigned i = 0; i < count; i++) {
+            JSObject* singleton = types->getSingletonNoBarrier(i);
+            if (!singleton)
+                continue;
+
+            if (--numBranches > 0)
+                branchPtr(Equal, obj, ImmGCPtr(singleton), &matched);
+            else
+                branchPtr(NotEqual, obj, ImmGCPtr(singleton), miss);
         }
-
-        JSObject* object = types->getSingletonNoBarrier(i);
-        lastBranch = BranchGCPtr(Equal, obj, ImmGCPtr(object), &matched);
     }
 
     if (hasObjectGroups) {
         comment("has object groups");
-        // We are possibly going to overwrite the obj register. So already
-        // emit the branch, since branch depends on previous value of obj
-        // register and there is definitely a branch following. So no need
-        // to invert the condition.
-        if (lastBranch.isInitialized())
-            lastBranch.emit(*this);
-        lastBranch = BranchGCPtr();
 
         // Note: Some platforms give the same register for obj and scratch.
         // Make sure when writing to scratch, the obj register isn't used anymore!
         loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
 
         for (unsigned i = 0; i < count; i++) {
-            if (!types->getGroupNoBarrier(i))
+            ObjectGroup* group = types->getGroupNoBarrier(i);
+            if (!group)
                 continue;
 
-            if (lastBranch.isInitialized())
-                lastBranch.emit(*this);
-
-            ObjectGroup* group = types->getGroupNoBarrier(i);
-            lastBranch = BranchGCPtr(Equal, scratch, ImmGCPtr(group), &matched);
+            if (--numBranches > 0)
+                branchPtr(Equal, scratch, ImmGCPtr(group), &matched);
+            else
+                branchPtr(NotEqual, scratch, ImmGCPtr(group), miss);
         }
     }
 
-    if (!lastBranch.isInitialized()) {
-        jump(miss);
-        return;
-    }
-
-    lastBranch.invertCondition();
-    lastBranch.relink(miss);
-    lastBranch.emit(*this);
+    MOZ_ASSERT(numBranches == 0);
 
     bind(&matched);
 }
@@ -233,10 +284,6 @@ template void MacroAssembler::guardTypeSet(const ValueOperand& value, const Type
                                            BarrierKind kind, Register scratch, Label* miss);
 template void MacroAssembler::guardTypeSet(const TypedOrValueRegister& value, const TypeSet* types,
                                            BarrierKind kind, Register scratch, Label* miss);
-
-template void MacroAssembler::guardTypeSetMightBeIncomplete(const TemporaryTypeSet* types,
-                                                            Register obj, Register scratch,
-                                                            Label* label);
 
 template<typename S, typename T>
 static void
@@ -3292,47 +3339,34 @@ MacroAssembler::wasmEmitOldTrapOutOfLineCode()
           }
         }
 
-        if (site.trap == wasm::Trap::IndirectCallBadSig) {
-            // The indirect call bad-signature trap is a special case for two
-            // reasons:
-            //  - the check happens in the very first instructions of the
-            //    prologue, before the stack frame has been set up which messes
-            //    up everything (stack depth computations, unwinding)
-            //  - the check happens in the callee while the trap should be
-            //    reported at the caller's call_indirect
-            // To solve both problems at once, the out-of-line path (far) jumps
-            // directly to the trap exit stub. This takes advantage of the fact
-            // that there is already a CallSite for call_indirect and the
-            // current pre-prologue stack/register state.
-            append(wasm::OldTrapFarJump(site.trap, farJumpWithPatch()));
-        } else {
-            // Inherit the frame depth of the trap site. This value is captured
-            // by the wasm::CallSite to allow unwinding this frame.
-            setFramePushed(site.framePushed);
+        MOZ_ASSERT(site.trap != wasm::Trap::IndirectCallBadSig);
 
-            // Align the stack for a nullary call.
-            size_t alreadyPushed = sizeof(wasm::Frame) + framePushed();
-            size_t toPush = ABIArgGenerator().stackBytesConsumedSoFar();
-            if (size_t dec = StackDecrementForCall(ABIStackAlignment, alreadyPushed, toPush))
-                reserveStack(dec);
+        // Inherit the frame depth of the trap site. This value is captured
+        // by the wasm::CallSite to allow unwinding this frame.
+        setFramePushed(site.framePushed);
 
-            // To call the trap handler function, we must have the WasmTlsReg
-            // filled since this is the normal calling ABI. To avoid requiring
-            // every trapping operation to have the TLS register filled for the
-            // rare case that it takes a trap, we restore it from the frame on
-            // the out-of-line path. However, there are millions of out-of-line
-            // paths (viz. for loads/stores), so the load is factored out into
-            // the shared FarJumpIsland generated by patchCallSites.
+        // Align the stack for a nullary call.
+        size_t alreadyPushed = sizeof(wasm::Frame) + framePushed();
+        size_t toPush = ABIArgGenerator().stackBytesConsumedSoFar();
+        if (size_t dec = StackDecrementForCall(ABIStackAlignment, alreadyPushed, toPush))
+            reserveStack(dec);
 
-            // Call the trap's exit, using the bytecode offset of the trap site.
-            // Note that this code is inside the same CodeRange::Function as the
-            // trap site so it's as if the trapping instruction called the
-            // trap-handling function. The frame iterator knows to skip the trap
-            // exit's frame so that unwinding begins at the frame and offset of
-            // the trapping instruction.
-            wasm::CallSiteDesc desc(site.offset, wasm::CallSiteDesc::OldTrapExit);
-            call(desc, site.trap);
-        }
+        // To call the trap handler function, we must have the WasmTlsReg
+        // filled since this is the normal calling ABI. To avoid requiring
+        // every trapping operation to have the TLS register filled for the
+        // rare case that it takes a trap, we restore it from the frame on
+        // the out-of-line path. However, there are millions of out-of-line
+        // paths (viz. for loads/stores), so the load is factored out into
+        // the shared FarJumpIsland generated by patchCallSites.
+
+        // Call the trap's exit, using the bytecode offset of the trap site.
+        // Note that this code is inside the same CodeRange::Function as the
+        // trap site so it's as if the trapping instruction called the
+        // trap-handling function. The frame iterator knows to skip the trap
+        // exit's frame so that unwinding begins at the frame and offset of
+        // the trapping instruction.
+        wasm::CallSiteDesc desc(site.offset, wasm::CallSiteDesc::OldTrapExit);
+        call(desc, site.trap);
 
 #ifdef DEBUG
         // Traps do not return, so no need to freeStack().
@@ -3480,29 +3514,6 @@ void
 MacroAssembler::loadWasmTlsRegFromFrame(Register dest)
 {
     loadPtr(Address(getStackPointer(), framePushed() + offsetof(wasm::Frame, tls)), dest);
-}
-
-void
-MacroAssembler::BranchType::emit(MacroAssembler& masm)
-{
-    MOZ_ASSERT(isInitialized());
-    MIRType mirType = MIRType::None;
-
-    if (type_.isPrimitive()) {
-        if (type_.isMagicArguments())
-            mirType = MIRType::MagicOptimizedArguments;
-        else
-            mirType = MIRTypeFromValueType(type_.primitive());
-    } else if (type_.isAnyObject()) {
-        mirType = MIRType::Object;
-    } else {
-        MOZ_CRASH("Unknown conversion to mirtype");
-    }
-
-    if (mirType == MIRType::Double)
-        masm.branchTestNumber(cond(), reg(), jump());
-    else
-        masm.branchTestMIRType(cond(), reg(), mirType, jump());
 }
 
 void

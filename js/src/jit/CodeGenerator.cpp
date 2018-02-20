@@ -5075,11 +5075,8 @@ CodeGenerator::visitCallDirectEval(LCallDirectEval* lir)
 }
 
 void
-CodeGenerator::generateArgumentsChecks(bool bailout)
+CodeGenerator::generateArgumentsChecks(bool assert)
 {
-    // Registers safe for use before generatePrologue().
-    static const uint32_t EntryTempMask = Registers::TempMask & ~(1 << OsrFrameReg.code());
-
     // This function can be used the normal way to check the argument types,
     // before entering the function and bailout when arguments don't match.
     // For debug purpose, this is can also be used to force/check that the
@@ -5089,7 +5086,7 @@ CodeGenerator::generateArgumentsChecks(bool bailout)
     MResumePoint* rp = mir.entryResumePoint();
 
     // No registers are allocated yet, so it's safe to grab anything.
-    Register temp = AllocatableGeneralRegisterSet(EntryTempMask).getAny();
+    Register temp = AllocatableGeneralRegisterSet(GeneralRegisterSet::All()).getAny();
 
     const CompileInfo& info = gen->info();
 
@@ -5110,9 +5107,8 @@ CodeGenerator::generateArgumentsChecks(bool bailout)
     }
 
     if (miss.used()) {
-        if (bailout) {
-            bailoutFrom(&miss, graph.entrySnapshot());
-        } else {
+        if (assert) {
+#ifdef DEBUG
             Label success;
             masm.jump(&success);
             masm.bind(&miss);
@@ -5135,6 +5131,11 @@ CodeGenerator::generateArgumentsChecks(bool bailout)
 
             masm.assumeUnreachable("Argument check fail.");
             masm.bind(&success);
+#else
+            MOZ_CRASH("Shouldn't get here in opt builds");
+#endif
+        } else {
+            bailoutFrom(&miss, graph.entrySnapshot());
         }
     }
 }
@@ -5376,6 +5377,7 @@ CodeGenerator::branchIfInvalidated(Register temp, Label* invalidated)
                   invalidated);
 }
 
+#ifdef DEBUG
 void
 CodeGenerator::emitAssertObjectOrStringResult(Register input, MIRType type, const TemporaryTypeSet* typeset)
 {
@@ -5506,7 +5508,6 @@ CodeGenerator::emitAssertResultV(const ValueOperand input, const TemporaryTypeSe
     masm.pop(temp1);
 }
 
-#ifdef DEBUG
 void
 CodeGenerator::emitObjectOrStringResultChecks(LInstruction* lir, MDefinition* mir)
 {
@@ -9891,7 +9892,7 @@ CodeGenerator::generate()
 
 #ifdef DEBUG
     // Assert that the argument types are correct.
-    generateArgumentsChecks(/* bailout = */ false);
+    generateArgumentsChecks(/* assert = */ true);
 #endif
 
     // Reset native => bytecode map table with top-level script and startPc.
@@ -12558,17 +12559,24 @@ CodeGenerator::emitAssertRangeD(const Range* r, FloatRegister input, FloatRegist
 void
 CodeGenerator::visitAssertResultV(LAssertResultV* ins)
 {
+#ifdef DEBUG
     const ValueOperand value = ToValue(ins, LAssertResultV::Input);
     emitAssertResultV(value, ins->mirRaw()->resultTypeSet());
+#else
+    MOZ_CRASH("LAssertResultV is debug only");
+#endif
 }
 
 void
 CodeGenerator::visitAssertResultT(LAssertResultT* ins)
 {
+#ifdef DEBUG
     Register input = ToRegister(ins->input());
     MDefinition* mir = ins->mirRaw();
-
     emitAssertObjectOrStringResult(input, mir->type(), mir->resultTypeSet());
+#else
+    MOZ_CRASH("LAssertResultT is debug only");
+#endif
 }
 
 void

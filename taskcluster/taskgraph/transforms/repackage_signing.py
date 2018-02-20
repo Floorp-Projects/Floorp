@@ -11,6 +11,7 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import validate_schema, Schema
 from taskgraph.util.scriptworker import (
+    add_scope_prefix,
     get_signing_cert_scope_per_platform,
     get_worker_type_for_scope,
 )
@@ -89,7 +90,7 @@ def make_repackage_signing_description(config, jobs):
         signing_cert_scope = get_signing_cert_scope_per_platform(
             build_platform, is_nightly, config
         )
-        scopes = [signing_cert_scope, 'project:releng:signing:format:mar_sha384']
+        scopes = [signing_cert_scope, add_scope_prefix(config, 'signing:format:mar_sha384')]
 
         upstream_artifacts = [{
             "taskId": {"task-reference": "<repackage>"},
@@ -108,7 +109,7 @@ def make_repackage_signing_description(config, jobs):
                 ],
                 "formats": ["sha2signcode"]
             })
-            scopes.append("project:releng:signing:format:sha2signcode")
+            scopes.append(add_scope_prefix(config, "signing:format:sha2signcode"))
 
             # Stub installer is only generated on win32
             if '32' in build_platform:
@@ -120,7 +121,7 @@ def make_repackage_signing_description(config, jobs):
                     ],
                     "formats": ["sha2signcodestub"]
                 })
-                scopes.append("project:releng:signing:format:sha2signcodestub")
+                scopes.append(add_scope_prefix(config, "signing:format:sha2signcodestub"))
 
         task = {
             'label': label,

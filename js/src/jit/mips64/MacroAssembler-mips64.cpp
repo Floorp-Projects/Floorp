@@ -2470,6 +2470,236 @@ MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output
 
 }
 
+void
+MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
+                            Register ptrScratch, Register64 output)
+{
+    wasmLoadI64Impl(access, memoryBase, ptr, ptrScratch, output, InvalidReg);
+}
+
+void
+MacroAssembler::wasmUnalignedLoadI64(const wasm::MemoryAccessDesc& access, Register memoryBase,
+                                     Register ptr, Register ptrScratch, Register64 output,
+                                     Register tmp)
+{
+    wasmLoadI64Impl(access, memoryBase, ptr, ptrScratch, output, tmp);
+}
+
+void
+MacroAssembler::wasmStoreI64(const wasm::MemoryAccessDesc& access, Register64 value,
+                             Register memoryBase, Register ptr, Register ptrScratch)
+{
+    wasmStoreI64Impl(access, value, memoryBase, ptr, ptrScratch, InvalidReg);
+}
+
+void
+MacroAssembler::wasmUnalignedStoreI64(const wasm::MemoryAccessDesc& access, Register64 value,
+                                      Register memoryBase, Register ptr, Register ptrScratch,
+                                      Register tmp)
+{
+    wasmStoreI64Impl(access, value, memoryBase, ptr, ptrScratch, tmp);
+}
+
+void
+MacroAssembler::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, bool,
+                                          Label* oolEntry, Label* oolRejoin,
+                                          FloatRegister tempDouble)
+{
+    MOZ_ASSERT(tempDouble.isInvalid());
+    wasmTruncateToI64(input, output.reg, MIRType::Double, false, oolEntry, oolRejoin);
+}
+
+void
+MacroAssembler::wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, bool,
+                                           Label* oolEntry, Label* oolRejoin,
+                                           FloatRegister tempDouble)
+{
+    MOZ_ASSERT(tempDouble.isInvalid());
+    wasmTruncateToI64(input, output.reg, MIRType::Double, true, oolEntry, oolRejoin);
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, bool,
+                                           Label* oolEntry, Label* oolRejoin,
+                                           FloatRegister tempFloat)
+{
+    MOZ_ASSERT(tempFloat.isInvalid());
+    wasmTruncateToI64(input, output.reg, MIRType::Float32, false, oolEntry, oolRejoin);
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, bool,
+                                            Label* oolEntry, Label* oolRejoin,
+                                            FloatRegister tempFloat)
+{
+    MOZ_ASSERT(tempFloat.isInvalid());
+    wasmTruncateToI64(input, output.reg, MIRType::Float32, true, oolEntry, oolRejoin);
+}
+
+void
+MacroAssemblerMIPS64Compat::wasmTruncateToI64(FloatRegister input, Register output, MIRType fromType,
+                                              bool isUnsigned, Label* oolEntry, Label* oolRejoin)
+{
+    if (isUnsigned) {
+        Label isLarge, done;
+
+        if (fromType == MIRType::Double) {
+            asMasm().loadConstantDouble(double(INT64_MAX), ScratchDoubleReg);
+            asMasm().ma_bc1d(ScratchDoubleReg, input, &isLarge,
+                             Assembler::DoubleLessThanOrEqual, ShortJump);
+
+            asMasm().as_truncld(ScratchDoubleReg, input);
+        } else {
+            asMasm().loadConstantFloat32(float(INT64_MAX), ScratchFloat32Reg);
+            asMasm().ma_bc1s(ScratchFloat32Reg, input, &isLarge,
+                             Assembler::DoubleLessThanOrEqual, ShortJump);
+
+            asMasm().as_truncls(ScratchDoubleReg, input);
+        }
+
+        // Check that the result is in the uint64_t range.
+        asMasm().moveFromDouble(ScratchDoubleReg, output);
+        asMasm().as_cfc1(ScratchRegister, Assembler::FCSR);
+        // extract invalid operation flag (bit 6) from FCSR
+        asMasm().ma_ext(ScratchRegister, ScratchRegister, 16, 1);
+        asMasm().ma_dsrl(SecondScratchReg, output, Imm32(63));
+        asMasm().ma_or(SecondScratchReg, ScratchRegister);
+        asMasm().ma_b(SecondScratchReg, Imm32(0), oolEntry, Assembler::NotEqual);
+
+        asMasm().ma_b(&done, ShortJump);
+
+        // The input is greater than double(INT64_MAX).
+        asMasm().bind(&isLarge);
+        if (fromType == MIRType::Double) {
+            asMasm().as_subd(ScratchDoubleReg, input, ScratchDoubleReg);
+            asMasm().as_truncld(ScratchDoubleReg, ScratchDoubleReg);
+        } else {
+            asMasm().as_subs(ScratchDoubleReg, input, ScratchDoubleReg);
+            asMasm().as_truncls(ScratchDoubleReg, ScratchDoubleReg);
+        }
+
+        // Check that the result is in the uint64_t range.
+        asMasm().moveFromDouble(ScratchDoubleReg, output);
+        asMasm().as_cfc1(ScratchRegister, Assembler::FCSR);
+        asMasm().ma_ext(ScratchRegister, ScratchRegister, 16, 1);
+        asMasm().ma_dsrl(SecondScratchReg, output, Imm32(63));
+        asMasm().ma_or(SecondScratchReg, ScratchRegister);
+        asMasm().ma_b(SecondScratchReg, Imm32(0), oolEntry, Assembler::NotEqual);
+
+        asMasm().ma_li(ScratchRegister, Imm32(1));
+        asMasm().ma_dins(output, ScratchRegister, Imm32(63), Imm32(1));
+
+        asMasm().bind(&done);
+        asMasm().bind(oolRejoin);
+        return;
+    }
+
+    // When the input value is Infinity, NaN, or rounds to an integer outside the
+    // range [INT64_MIN; INT64_MAX + 1[, the Invalid Operation flag is set in the FCSR.
+    if (fromType == MIRType::Double)
+        asMasm().as_truncld(ScratchDoubleReg, input);
+    else
+        asMasm().as_truncls(ScratchDoubleReg, input);
+
+    // Check that the result is in the int64_t range.
+    asMasm().as_cfc1(output, Assembler::FCSR);
+    asMasm().ma_ext(output, output, 16, 1);
+    asMasm().ma_b(output, Imm32(0), oolEntry, Assembler::NotEqual);
+
+    asMasm().bind(oolRejoin);
+    asMasm().moveFromDouble(ScratchDoubleReg, output);
+}
+
+void
+MacroAssemblerMIPS64Compat::wasmLoadI64Impl(const wasm::MemoryAccessDesc& access,
+                                            Register memoryBase, Register ptr, Register ptrScratch,
+                                            Register64 output, Register tmp)
+{
+    uint32_t offset = access.offset();
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
+    MOZ_ASSERT_IF(offset, ptrScratch != InvalidReg);
+
+    // Maybe add the offset.
+    if (offset) {
+        asMasm().addPtr(Imm32(offset), ptrScratch);
+        ptr = ptrScratch;
+    }
+
+    unsigned byteSize = access.byteSize();
+    bool isSigned;
+
+    switch (access.type()) {
+      case Scalar::Int8:   isSigned = true; break;
+      case Scalar::Uint8:  isSigned = false; break;
+      case Scalar::Int16:  isSigned = true; break;
+      case Scalar::Uint16: isSigned = false; break;
+      case Scalar::Int32:  isSigned = true; break;
+      case Scalar::Uint32: isSigned = false; break;
+      case Scalar::Int64:  isSigned = true; break;
+      default: MOZ_CRASH("unexpected array type");
+    }
+
+    BaseIndex address(memoryBase, ptr, TimesOne);
+    if (IsUnaligned(access)) {
+        MOZ_ASSERT(tmp != InvalidReg);
+        asMasm().ma_load_unaligned(access, output.reg, address, tmp,
+                                   static_cast<LoadStoreSize>(8 * byteSize),
+                                   isSigned ? SignExtend : ZeroExtend);
+        return;
+    }
+
+    asMasm().memoryBarrierBefore(access.sync());
+    asMasm().ma_load(output.reg, address, static_cast<LoadStoreSize>(8 * byteSize),
+                     isSigned ? SignExtend : ZeroExtend);
+    asMasm().append(access, asMasm().size() - 4, asMasm().framePushed());
+    asMasm().memoryBarrierAfter(access.sync());
+}
+
+void
+MacroAssemblerMIPS64Compat::wasmStoreI64Impl(const wasm::MemoryAccessDesc& access, Register64 value,
+                                             Register memoryBase, Register ptr, Register ptrScratch,
+                                             Register tmp)
+{
+    uint32_t offset = access.offset();
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
+    MOZ_ASSERT_IF(offset, ptrScratch != InvalidReg);
+
+    // Maybe add the offset.
+    if (offset) {
+        asMasm().addPtr(Imm32(offset), ptrScratch);
+        ptr = ptrScratch;
+    }
+
+    unsigned byteSize = access.byteSize();
+    bool isSigned;
+    switch (access.type()) {
+      case Scalar::Int8:   isSigned = true; break;
+      case Scalar::Uint8:  isSigned = false; break;
+      case Scalar::Int16:  isSigned = true; break;
+      case Scalar::Uint16: isSigned = false; break;
+      case Scalar::Int32:  isSigned = true; break;
+      case Scalar::Uint32: isSigned = false; break;
+      case Scalar::Int64:  isSigned = true; break;
+      default: MOZ_CRASH("unexpected array type");
+    }
+
+    BaseIndex address(memoryBase, ptr, TimesOne);
+
+    if (IsUnaligned(access)) {
+        MOZ_ASSERT(tmp != InvalidReg);
+        asMasm().ma_store_unaligned(access, value.reg, address, tmp,
+                                    static_cast<LoadStoreSize>(8 * byteSize),
+                                    isSigned ? SignExtend : ZeroExtend);
+        return;
+    }
+
+    asMasm().memoryBarrierBefore(access.sync());
+    asMasm().ma_store(value.reg, address, static_cast<LoadStoreSize>(8 * byteSize),
+                      isSigned ? SignExtend : ZeroExtend);
+    asMasm().append(access, asMasm().size() - 4, asMasm().framePushed());
+    asMasm().memoryBarrierAfter(access.sync());
+}
+
 template <typename T>
 static void
 CompareExchange64(MacroAssembler& masm, const Synchronization& sync, const T& mem,

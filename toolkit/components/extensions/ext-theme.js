@@ -159,6 +159,9 @@ class Theme {
         case "toolbar_vertical_separator":
         case "button_background_hover":
         case "button_background_active":
+        case "popup":
+        case "popup_text":
+        case "popup_border":
           this.lwtStyles[color] = cssColor;
           break;
       }

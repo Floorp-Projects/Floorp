@@ -84,7 +84,6 @@ var alsoModuleScoped = 2;
 
 function thirdModuleScoped() {}
 
-;
 module.exports = exports["default"];
 
 /***/ })
