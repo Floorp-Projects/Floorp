@@ -38,29 +38,36 @@ fs.writeFileSync(
   )
 );
 
-module.exports = tests.map(({ name, dirname, input, output }) => ({
-  context: __dirname,
-  entry: input,
-  output: {
-    path: __dirname,
-    filename: output,
+module.exports = tests.map(({ name, dirname, input, output }) => {
+  const babelEnv = name !== "webpackModulesEs6";
+  const babelModules = name !== "webpackModules";
 
-    libraryTarget: "var",
-    library: name
-  },
-  devtool: "sourcemap",
-  module: {
-    loaders: [
-      {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        loader: "babel-loader",
-        options: {
-          babelrc: false,
-          presets: ["env"],
-          plugins: ["add-module-exports"]
+  return {
+    context: __dirname,
+    entry: input,
+    output: {
+      path: __dirname,
+      filename: output,
+
+      libraryTarget: "var",
+      library: name
+    },
+    devtool: "sourcemap",
+    module: {
+      loaders: [
+        {
+          test: /\.js$/,
+          exclude: /node_modules/,
+          loader: "babel-loader",
+          options: {
+            babelrc: false,
+            presets: babelEnv
+              ? [["env", { modules: babelModules ? "commonjs" : false }]]
+              : [],
+            plugins: babelEnv && babelModules ? ["add-module-exports"] : []
+          }
         }
-      }
-    ]
-  }
-}));
+      ]
+    }
+  };
+});

@@ -1145,7 +1145,7 @@ Module::instantiate(JSContext* cx,
                 return false;
 
             JumpTables jumpTables;
-            if (!jumpTables.init(CompileMode::Once, moduleSegment(tier), metadata(tier).codeRanges))
+            if (!jumpTables.init(CompileMode::Once, codeTier->segment(), metadata(tier).codeRanges))
                 return false;
 
             code = js_new<Code>(Move(codeTier), metadata(), Move(jumpTables));
