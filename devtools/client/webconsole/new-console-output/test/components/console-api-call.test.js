@@ -67,6 +67,26 @@ describe("ConsoleAPICall component:", () => {
       expect(secondElementStyle.background).toBe(undefined);
     });
 
+    it("renders custom styled logs with empty style as expected", () => {
+      const message = stubPreparedMessages.get('console.log("%cHello%c|%cWorld")');
+      const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+
+      const elements = wrapper.find(".objectBox-string");
+      expect(elements.text()).toBe("Hello|World");
+      expect(elements.length).toBe(3);
+
+      const firstElementStyle = elements.eq(0).prop("style");
+      // Allowed styles are applied accordingly on the first element.
+      expect(firstElementStyle.color).toBe("red");
+
+      const secondElementStyle = elements.eq(1).prop("style");
+      expect(secondElementStyle.color).toBe(undefined);
+
+      const thirdElementStyle = elements.eq(2).prop("style");
+      // Allowed styles are applied accordingly on the third element.
+      expect(thirdElementStyle.color).toBe("blue");
+    });
+
     it("renders repeat node", () => {
       const message = stubPreparedMessages.get("console.log('foobar', 'test')");
       const wrapper = render(ConsoleApiCall({
