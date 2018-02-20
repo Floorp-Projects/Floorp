@@ -20,7 +20,6 @@
 #include "mozilla/net/ReferrerPolicy.h"
 
 class nsINode;
-class nsIDOMNode;
 class nsIURI;
 class txStylesheet;
 class txResultRecycler;
@@ -60,8 +59,7 @@ public:
     // nsIDocumentTransformer interface
     NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver) override;
     NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsIDocument* aLoaderDocument) override;
-    NS_IMETHOD SetSourceContentModel(nsIDocument* aDocument,
-                                     const nsTArray<nsCOMPtr<nsIContent>>& aSource) override;
+    NS_IMETHOD SetSourceContentModel(nsINode* aSource) override;
     NS_IMETHOD CancelLoads() override {return NS_OK;}
     NS_IMETHOD AddXSLTParamNamespace(const nsString& aPrefix,
                                      const nsString& aNamespace) override;
@@ -69,7 +67,7 @@ public:
                             const nsString& aNamespace,
                             const nsString& aSelect,
                             const nsString& aValue,
-                            nsIDOMNode* aContext) override;
+                            nsINode* aContext) override;
 
     // nsIMutationObserver interface
     NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
