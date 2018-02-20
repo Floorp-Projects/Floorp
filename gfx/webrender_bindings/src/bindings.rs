@@ -1008,7 +1008,7 @@ pub extern "C" fn wr_transaction_scroll_layer(
     new_scroll_origin: LayoutPoint
 ) {
     assert!(unsafe { is_in_compositor_thread() });
-    let scroll_id = ScrollNodeIdType::from(ExternalScrollId(scroll_id, pipeline_id));
+    let scroll_id = ExternalScrollId(scroll_id, pipeline_id);
     txn.scroll_node_with_id(new_scroll_origin, scroll_id, ScrollClamping::NoClamping);
 }
 
