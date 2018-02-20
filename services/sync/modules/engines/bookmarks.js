@@ -1076,6 +1076,9 @@ BufferedBookmarksStore.prototype = {
   __proto__: BaseBookmarksStore.prototype,
   _openMirrorPromise: null,
 
+  // For tests.
+  _batchChunkSize: 500,
+
   ensureOpenMirror() {
     if (!this._openMirrorPromise) {
       this._openMirrorPromise = this._openMirror().catch(err => {
@@ -1103,6 +1106,15 @@ BufferedBookmarksStore.prototype = {
                                                  extra);
       },
     });
+  },
+
+  async applyIncomingBatch(records) {
+    let buf = await this.ensureOpenMirror();
+    for (let chunk of PlacesSyncUtils.chunkArray(records, this._batchChunkSize)) {
+      await buf.store(chunk);
+    }
+    // Array of failed records.
+    return [];
   },
 
   async applyIncoming(record) {
