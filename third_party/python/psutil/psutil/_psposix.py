@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -10,15 +12,12 @@ import os
 import sys
 import time
 
-from ._common import memoize
-from ._common import sdiskusage
-from ._common import usage_percent
-from ._compat import PY3
-from ._compat import unicode
-from ._exceptions import TimeoutExpired
+from ._common import sdiskusage, usage_percent, memoize
+from ._compat import PY3, unicode
 
 
-__all__ = ['pid_exists', 'wait_pid', 'disk_usage', 'get_terminal_map']
+class TimeoutExpired(Exception):
+    pass
 
 
 def pid_exists(pid):
@@ -49,7 +48,7 @@ def pid_exists(pid):
         return True
 
 
-def wait_pid(pid, timeout=None, proc_name=None):
+def wait_pid(pid, timeout=None):
     """Wait for process with pid 'pid' to terminate and return its
     exit status code as an integer.
 
@@ -63,7 +62,7 @@ def wait_pid(pid, timeout=None, proc_name=None):
     def check_timeout(delay):
         if timeout is not None:
             if timer() >= stop_at:
-                raise TimeoutExpired(timeout, pid=pid, name=proc_name)
+                raise TimeoutExpired()
         time.sleep(delay)
         return min(delay * 2, 0.04)
 
@@ -106,74 +105,49 @@ def wait_pid(pid, timeout=None, proc_name=None):
             # process exited due to a signal; return the integer of
             # that signal
             if os.WIFSIGNALED(status):
-                return -os.WTERMSIG(status)
+                return os.WTERMSIG(status)
             # process exited using exit(2) system call; return the
             # integer exit(2) system call has been called with
             elif os.WIFEXITED(status):
                 return os.WEXITSTATUS(status)
             else:
                 # should never happen
-                raise ValueError("unknown process exit status %r" % status)
+                raise RuntimeError("unknown process exit status")
 
 
 def disk_usage(path):
-    """Return disk usage associated with path.
-    Note: UNIX usually reserves 5% disk space which is not accessible
-    by user. In this function "total" and "used" values reflect the
-    total and used disk space whereas "free" and "percent" represent
-    the "free" and "used percent" user disk space.
-    """
-    if PY3:
+    """Return disk usage associated with path."""
+    try:
         st = os.statvfs(path)
-    else:
-        # os.statvfs() does not support unicode on Python 2:
-        # - https://github.com/giampaolo/psutil/issues/416
-        # - http://bugs.python.org/issue18695
-        try:
+    except UnicodeEncodeError:
+        if not PY3 and isinstance(path, unicode):
+            # this is a bug with os.statvfs() and unicode on
+            # Python 2, see:
+            # - https://github.com/giampaolo/psutil/issues/416
+            # - http://bugs.python.org/issue18695
+            try:
+                path = path.encode(sys.getfilesystemencoding())
+            except UnicodeEncodeError:
+                pass
             st = os.statvfs(path)
-        except UnicodeEncodeError:
-            if isinstance(path, unicode):
-                try:
-                    path = path.encode(sys.getfilesystemencoding())
-                except UnicodeEncodeError:
-                    pass
-                st = os.statvfs(path)
-            else:
-                raise
-
-    # Total space which is only available to root (unless changed
-    # at system level).
+        else:
+            raise
+    free = (st.f_bavail * st.f_frsize)
     total = (st.f_blocks * st.f_frsize)
-    # Remaining free space usable by root.
-    avail_to_root = (st.f_bfree * st.f_frsize)
-    # Remaining free space usable by user.
-    avail_to_user = (st.f_bavail * st.f_frsize)
-    # Total space being used in general.
-    used = (total - avail_to_root)
-    # Total space which is available to user (same as 'total' but
-    # for the user).
-    total_user = used + avail_to_user
-    # User usage percent compared to the total amount of space
-    # the user can use. This number would be higher if compared
-    # to root's because the user has less space (usually -5%).
-    usage_percent_user = usage_percent(used, total_user, _round=1)
-
+    used = (st.f_blocks - st.f_bfree) * st.f_frsize
+    percent = usage_percent(used, total, _round=1)
     # NB: the percentage is -5% than what shown by df due to
     # reserved blocks that we are currently not considering:
-    # https://github.com/giampaolo/psutil/issues/829#issuecomment-223750462
-    return sdiskusage(
-        total=total, used=used, free=avail_to_user, percent=usage_percent_user)
+    # http://goo.gl/sWGbH
+    return sdiskusage(total, used, free, percent)
 
 
 @memoize
-def get_terminal_map():
-    """Get a map of device-id -> path as a dict.
-    Used by Process.terminal()
-    """
+def _get_terminal_map():
     ret = {}
     ls = glob.glob('/dev/tty*') + glob.glob('/dev/pts/*')
     for name in ls:
-        assert name not in ret, name
+        assert name not in ret
         try:
             ret[os.stat(name).st_rdev] = name
         except OSError as err:
