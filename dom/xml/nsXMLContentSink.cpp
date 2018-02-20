@@ -221,7 +221,7 @@ nsXMLContentSink::MaybePrettyPrint()
 static void
 CheckXSLTParamPI(nsIDOMProcessingInstruction* aPi,
                  nsIDocumentTransformer* aProcessor,
-                 nsIDocument* aDocument)
+                 nsINode* aSource)
 {
   nsAutoString target, data;
   aPi->GetTarget(target);
@@ -254,8 +254,7 @@ CheckXSLTParamPI(nsIDOMProcessingInstruction* aPi,
       value.SetIsVoid(true);
     }
     if (!name.IsEmpty()) {
-      nsCOMPtr<nsIDOMNode> doc = do_QueryInterface(aDocument);
-      aProcessor->AddXSLTParam(name, namespaceAttr, select, value, doc);
+      aProcessor->AddXSLTParam(name, namespaceAttr, select, value, aSource);
     }
   }
 }
@@ -279,13 +278,23 @@ nsXMLContentSink::DidBuildModel(bool aTerminated)
     mDocument->RemoveObserver(this);
     mIsDocumentObserver = false;
 
+    ErrorResult rv;
+    RefPtr<DocumentFragment> source = mDocument->CreateDocumentFragment();
+    for (nsIContent* child : mDocumentChildren) {
+        // XPath data model doesn't have DocumentType nodes.
+        if (child->NodeType() != nsINode::DOCUMENT_TYPE_NODE) {
+            source->AppendChild(*child, rv);
+            if (rv.Failed()) {
+                return rv.StealNSResult();
+            }
+        }
+    }
+
     // Check for xslt-param and xslt-param-namespace PIs
-    for (nsIContent* child = mDocument->GetFirstChild();
-         child;
-         child = child->GetNextSibling()) {
+    for (nsIContent* child : mDocumentChildren) {
       if (child->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
         nsCOMPtr<nsIDOMProcessingInstruction> pi = do_QueryInterface(child);
-        CheckXSLTParamPI(pi, mXSLTProcessor, mDocument);
+        CheckXSLTParamPI(pi, mXSLTProcessor, source);
       }
       else if (child->IsElement()) {
         // Only honor PIs in the prolog
@@ -293,7 +302,7 @@ nsXMLContentSink::DidBuildModel(bool aTerminated)
       }
     }
 
-    mXSLTProcessor->SetSourceContentModel(mDocument, mDocumentChildren);
+    mXSLTProcessor->SetSourceContentModel(source);
     // Since the processor now holds a reference to us we drop our reference
     // to it to avoid owning cycles
     mXSLTProcessor = nullptr;

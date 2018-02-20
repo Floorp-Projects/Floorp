@@ -11,7 +11,7 @@
 template<class> class nsCOMPtr;
 class nsIContent;
 class nsIDocument;
-class nsIDOMNode;
+class nsINode;
 class nsIURI;
 template<class> class nsTArray;
 
@@ -46,8 +46,7 @@ public:
 
   NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver) = 0;
   NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsIDocument* aLoaderDocument) = 0;
-  NS_IMETHOD SetSourceContentModel(nsIDocument* aDocument,
-                                   const nsTArray<nsCOMPtr<nsIContent>>& aSource) = 0;
+  NS_IMETHOD SetSourceContentModel(nsINode* aSource) = 0;
   NS_IMETHOD CancelLoads() = 0;
 
   NS_IMETHOD AddXSLTParamNamespace(const nsString& aPrefix,
@@ -56,7 +55,7 @@ public:
                           const nsString& aNamespace,
                           const nsString& aValue,
                           const nsString& aSelect,
-                          nsIDOMNode* aContextNode) = 0;
+                          nsINode* aContextNode) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentTransformer,
