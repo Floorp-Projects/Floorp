@@ -2300,32 +2300,34 @@ void
 MacroAssembler::branchValueIsNurseryCell(Condition cond, const Address& address, Register temp,
                                          Label* label)
 {
-    branchValueIsNurseryCellImpl(cond, address, temp, label);
+    MOZ_ASSERT(temp != InvalidReg);
+    loadValue(address, ValueOperand(temp));
+    branchValueIsNurseryCell(cond, ValueOperand(temp), InvalidReg, label);
 }
 
 void
-MacroAssembler::branchValueIsNurseryCell(Condition cond, ValueOperand value,
-                                         Register temp, Label* label)
-{
-    branchValueIsNurseryCellImpl(cond, value, temp, label);
-}
-
-template <typename T>
-void
-MacroAssembler::branchValueIsNurseryCellImpl(Condition cond, const T& value, Register temp,
-                                             Label* label)
+MacroAssembler::branchValueIsNurseryCell(Condition cond, ValueOperand value, Register temp,
+                                         Label* label)
 {
     MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
 
-    Label done, checkAddress;
-    branchTestObject(Assembler::Equal, value, &checkAddress);
-    branchTestString(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
+    Label done, checkAddress, checkObjectAddress;
+    SecondScratchRegisterScope scratch2(*this);
+
+    splitTag(value, scratch2);
+    branchTestObject(Assembler::Equal, scratch2, &checkObjectAddress);
+    branchTestString(Assembler::NotEqual, scratch2, cond == Assembler::Equal ? &done : label);
+
+    unboxString(value, scratch2);
+    jump(&checkAddress);
+
+    bind(&checkObjectAddress);
+    unboxObject(value, scratch2);
 
     bind(&checkAddress);
-    extractCell(value, SecondScratchReg);
-    orPtr(Imm32(gc::ChunkMask), SecondScratchReg);
-    branch32(cond, Address(SecondScratchReg, gc::ChunkLocationOffsetFromLastByte),
-             Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
+    orPtr(Imm32(gc::ChunkMask), scratch2);
+    load32(Address(scratch2, gc::ChunkLocationOffsetFromLastByte), scratch2);
+    branch32(cond, scratch2, Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
 
     bind(&done);
 }
