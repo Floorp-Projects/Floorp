@@ -28,11 +28,14 @@ EXPORTS.mozilla += [
 if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS += ['nsWindowsDllInterceptor.h']
     EXPORTS.mozilla += ['perfprobe.h']
-    SOURCES += [
-        'perfprobe.cpp',
-        'PoisonIOInterposerBase.cpp',
-        'PoisonIOInterposerWin.cpp',
-    ]
+    SOURCES += ['perfprobe.cpp']
+    if CONFIG['CC_TYPE'] != 'gcc':
+        SOURCES += [
+            'PoisonIOInterposerBase.cpp',
+            'PoisonIOInterposerWin.cpp',
+        ]
+    else:
+        SOURCES += ['PoisonIOInterposerStub.cpp']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
         'PoisonIOInterposerBase.cpp',
