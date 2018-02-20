@@ -568,6 +568,8 @@ CreateHeaderBar(WidgetNodeType aWidgetType)
   return headerbar;
 }
 
+#define ICON_SCALE_VARIANTS 2
+
 static void
 LoadWidgetIconPixbuf(GtkWidget* aWidgetIcon)
 {
@@ -580,38 +582,55 @@ LoadWidgetIconPixbuf(GtkWidget* aWidgetIcon)
   gint iconWidth, iconHeight;
   gtk_icon_size_lookup(gtkIconSize, &iconWidth, &iconHeight);
 
-  /* This is available since Gtk+ 3.10 as well as GtkHeaderBar */
+  /* Those are available since Gtk+ 3.10 as well as GtkHeaderBar */
   static auto sGtkIconThemeLookupIconForScalePtr =
     (GtkIconInfo* (*)(GtkIconTheme *, const gchar *, gint, gint, GtkIconLookupFlags))
     dlsym(RTLD_DEFAULT, "gtk_icon_theme_lookup_icon_for_scale");
+  static auto sGdkCairoSurfaceCreateFromPixbufPtr =
+    (cairo_surface_t * (*)(const GdkPixbuf *, int, GdkWindow *))
+    dlsym(RTLD_DEFAULT, "gdk_cairo_surface_create_from_pixbuf");
 
-  GtkIconInfo *gtkIconInfo =
-    sGtkIconThemeLookupIconForScalePtr(gtk_icon_theme_get_default(),
-                                       iconName,
-                                       iconWidth,
-                                       1, /* TODO: scale for HiDPI */
-                                       (GtkIconLookupFlags)0);
+  for (int scale = 1; scale < ICON_SCALE_VARIANTS+1; scale++) {
+    GtkIconInfo *gtkIconInfo =
+      sGtkIconThemeLookupIconForScalePtr(gtk_icon_theme_get_default(),
+                                         iconName,
+                                         iconWidth,
+                                         scale,
+                                         (GtkIconLookupFlags)0);
 
-  if (!gtkIconInfo) {
-    // We miss the icon, nothing to do here.
-    return;
+    if (!gtkIconInfo) {
+      // We miss the icon, nothing to do here.
+      return;
+    }
+
+    gboolean unused;
+    GdkPixbuf *iconPixbuf =
+      gtk_icon_info_load_symbolic_for_context(gtkIconInfo, style,
+                                              &unused, nullptr);
+    g_object_unref(G_OBJECT(gtkIconInfo));
+
+    cairo_surface_t* iconSurface =
+      sGdkCairoSurfaceCreateFromPixbufPtr(iconPixbuf, scale, nullptr);
+    g_object_unref(iconPixbuf);
+
+    nsAutoCString surfaceName;
+    surfaceName = nsPrintfCString("MozillaIconSurface%d", scale);
+    g_object_set_data_full(G_OBJECT(aWidgetIcon), surfaceName.get(),
+                          iconSurface,
+                          (GDestroyNotify)cairo_surface_destroy);
   }
-
-  gboolean unused;
-  GdkPixbuf *iconPixbuf =
-    gtk_icon_info_load_symbolic_for_context(gtkIconInfo, style,
-                                            &unused, nullptr);
-  g_object_unref(G_OBJECT(gtkIconInfo));
-
-  g_object_set_data_full(G_OBJECT(aWidgetIcon), "MozillaIconPixbuf", iconPixbuf,
-                        (GDestroyNotify)g_object_unref);
 }
 
-GdkPixbuf*
-GetWidgetIconPixbuf(GtkWidget* aWidgetIcon)
+cairo_surface_t*
+GetWidgetIconSurface(GtkWidget* aWidgetIcon, int aScale)
 {
-  return (GdkPixbuf*)g_object_get_data(G_OBJECT(aWidgetIcon),
-                                       "MozillaIconPixbuf");
+  if (aScale > ICON_SCALE_VARIANTS)
+    aScale = ICON_SCALE_VARIANTS;
+
+  nsAutoCString surfaceName;
+  surfaceName = nsPrintfCString("MozillaIconSurface%d", aScale);
+  return (cairo_surface_t*)
+    g_object_get_data(G_OBJECT(aWidgetIcon), surfaceName.get());
 }
 
 // TODO - Also return style for buttons located at Maximized toolbar.
