@@ -35,7 +35,7 @@ typedef Vector<char,     64, SystemAllocPolicy> AutoCString;
 // Convenience functions to append, insert, and compare Strings.
 template <class T, size_t N, class AP, size_t ArrayLength>
 void
-AppendString(mozilla::Vector<T, N, AP>& v, const char (&array)[ArrayLength])
+AppendString(JSContext* cx, mozilla::Vector<T, N, AP>& v, const char (&array)[ArrayLength])
 {
   // Don't include the trailing '\0'.
   size_t alen = ArrayLength - 1;
@@ -75,7 +75,7 @@ AppendUInt(mozilla::Vector<T, N, AP>& v, unsigned n)
 
 template <class T, size_t N, size_t M, class AP>
 void
-AppendString(mozilla::Vector<T, N, AP>& v, mozilla::Vector<T, M, AP>& w)
+AppendString(JSContext* cx, mozilla::Vector<T, N, AP>& v, mozilla::Vector<T, M, AP>& w)
 {
   if (!v.append(w.begin(), w.length()))
     return;
@@ -83,10 +83,10 @@ AppendString(mozilla::Vector<T, N, AP>& v, mozilla::Vector<T, M, AP>& w)
 
 template <size_t N, class AP>
 void
-AppendString(mozilla::Vector<char16_t, N, AP>& v, JSString* str)
+AppendString(JSContext* cx, mozilla::Vector<char16_t, N, AP>& v, JSString* str)
 {
   MOZ_ASSERT(str);
-  JSLinearString* linear = str->ensureLinear(nullptr);
+  JSLinearString* linear = str->ensureLinear(cx);
   if (!linear)
     return;
   JS::AutoCheckCannotGC nogc;
@@ -101,7 +101,7 @@ AppendString(mozilla::Vector<char16_t, N, AP>& v, JSString* str)
 
 template <size_t N, class AP>
 void
-AppendString(mozilla::Vector<char, N, AP>& v, JSString* str)
+AppendString(JSContext* cx, mozilla::Vector<char, N, AP>& v, JSString* str)
 {
   MOZ_ASSERT(str);
   size_t vlen = v.length();
@@ -109,7 +109,7 @@ AppendString(mozilla::Vector<char, N, AP>& v, JSString* str)
   if (!v.resize(vlen + alen))
     return;
 
-  JSLinearString* linear = str->ensureLinear(nullptr);
+  JSLinearString* linear = str->ensureLinear(cx);
   if (!linear)
     return;
 
@@ -127,7 +127,7 @@ AppendString(mozilla::Vector<char, N, AP>& v, JSString* str)
 
 template <class T, size_t N, class AP, size_t ArrayLength>
 void
-PrependString(mozilla::Vector<T, N, AP>& v, const char (&array)[ArrayLength])
+PrependString(JSContext* cx, mozilla::Vector<T, N, AP>& v, const char (&array)[ArrayLength])
 {
   // Don't include the trailing '\0'.
   size_t alen = ArrayLength - 1;
@@ -145,7 +145,7 @@ PrependString(mozilla::Vector<T, N, AP>& v, const char (&array)[ArrayLength])
 
 template <size_t N, class AP>
 void
-PrependString(mozilla::Vector<char16_t, N, AP>& v, JSString* str)
+PrependString(JSContext* cx, mozilla::Vector<char16_t, N, AP>& v, JSString* str)
 {
   MOZ_ASSERT(str);
   size_t vlen = v.length();
@@ -153,7 +153,7 @@ PrependString(mozilla::Vector<char16_t, N, AP>& v, JSString* str)
   if (!v.resize(vlen + alen))
     return;
 
-  JSLinearString* linear = str->ensureLinear(nullptr);
+  JSLinearString* linear = str->ensureLinear(cx);
   if (!linear)
     return;
 
@@ -502,7 +502,7 @@ namespace FunctionType {
     JSObject* refObj, PRFuncPtr fnptr, JSObject* result);
 
   FunctionInfo* GetFunctionInfo(JSObject* obj);
-  void BuildSymbolName(JSString* name, JSObject* typeObj,
+  void BuildSymbolName(JSContext* cx, JSString* name, JSObject* typeObj,
     AutoCString& result);
 } // namespace FunctionType
 

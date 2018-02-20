@@ -240,6 +240,7 @@ JSString::equals(const char* s)
 {
     JSLinearString* linear = ensureLinear(nullptr);
     if (!linear) {
+        // This is DEBUG-only code.
         fprintf(stderr, "OOM in JSString::equals!\n");
         return false;
     }
