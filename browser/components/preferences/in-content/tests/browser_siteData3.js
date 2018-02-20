@@ -42,7 +42,7 @@ add_task(async function() {
   await openSiteDataSettingsDialog();
   assertSitesListed(doc, fakeHosts.filter(host => host != "shopping.xyz.com"));
 
-  mockSiteDataManager.unregister();
+  await mockSiteDataManager.unregister();
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -104,7 +104,7 @@ add_task(async function() {
     DownloadUtils.convertByteUnits(quotaUsage * mockSiteDataManager.fakeSites.length));
   is(columns[3].value, expected, "Should sum up usages across scheme, port and origin attributes");
 
-  mockSiteDataManager.unregister();
+  await mockSiteDataManager.unregister();
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -116,19 +116,19 @@ add_task(async function() {
       usage: 1024,
       origin: "https://account.xyz.com",
       cookies: 6,
-      persisted: true
+      persisted: true,
     },
     {
       usage: 1024 * 2,
       origin: "https://books.foo.com",
       cookies: 0,
-      persisted: false
+      persisted: false,
     },
     {
       usage: 1024 * 3,
       origin: "http://cinema.bar.com",
       cookies: 3,
-      persisted: true
+      persisted: true,
     },
   ]);
 
@@ -174,7 +174,7 @@ add_task(async function() {
   statusCol.click();
   assertSortByStatus("descending");
 
-  mockSiteDataManager.unregister();
+  await mockSiteDataManager.unregister();
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   function assertSortByBaseDomain(order) {
@@ -242,6 +242,72 @@ add_task(async function() {
         Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by number of cookies");
       } else {
         Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by number of cookies");
+      }
+    }
+  }
+
+  function findSiteByHost(host) {
+    return mockSiteDataManager.fakeSites.find(site => site.principal.URI.host == host);
+  }
+});
+
+// Test sorting based on access date (separate from cookies for simplicity,
+// since cookies access date affects this as well, but we don't mock our cookies)
+add_task(async function() {
+  mockSiteDataManager.register(SiteDataManager, [
+    {
+      usage: 1024,
+      origin: "https://account.xyz.com",
+      persisted: true,
+      lastAccessed: (Date.now() - 120 * 1000) * 1000,
+    },
+    {
+      usage: 1024 * 2,
+      origin: "https://books.foo.com",
+      persisted: false,
+      lastAccessed: (Date.now() - 240 * 1000) * 1000,
+    },
+    {
+      usage: 1024 * 3,
+      origin: "http://cinema.bar.com",
+      persisted: true,
+      lastAccessed: Date.now() * 1000,
+    },
+  ]);
+
+  let updatePromise = promiseSiteDataManagerSitesUpdated();
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await updatePromise;
+  await openSiteDataSettingsDialog();
+
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
+  let dialog = content.gSubDialog._topDialog;
+  let dialogFrame = dialog._frame;
+  let frameDoc = dialogFrame.contentDocument;
+  let lastAccessedCol = frameDoc.getElementById("lastAccessedCol");
+  let sitesList = frameDoc.getElementById("sitesList");
+
+  // Test sorting on the date column
+  lastAccessedCol.click();
+  assertSortByDate("ascending");
+  lastAccessedCol.click();
+  assertSortByDate("descending");
+
+  await mockSiteDataManager.unregister();
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  function assertSortByDate(order) {
+    let siteItems = sitesList.getElementsByTagName("richlistitem");
+    for (let i = 0; i < siteItems.length - 1; ++i) {
+      let aHost = siteItems[i].getAttribute("host");
+      let bHost = siteItems[i + 1].getAttribute("host");
+      let a = findSiteByHost(aHost);
+      let b = findSiteByHost(bHost);
+      let result = a.lastAccessed - b.lastAccessed;
+      if (order == "ascending") {
+        Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by date");
+      } else {
+        Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order date");
       }
     }
   }
