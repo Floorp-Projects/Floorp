@@ -130,6 +130,7 @@ ShmSegmentsWriter::Flush(nsTArray<RefCountedShmem>& aSmallAllocs, nsTArray<ipc::
   MOZ_ASSERT(aLargeAllocs.IsEmpty());
   mSmallAllocs.SwapElements(aSmallAllocs);
   mLargeAllocs.SwapElements(aLargeAllocs);
+  mCursor = 0;
 }
 
 void
