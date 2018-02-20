@@ -111,6 +111,14 @@ this.Policies = {
     }
   },
 
+  "CreateMasterPassword": {
+    onBeforeUIStartup(manager, param) {
+      if (!param) {
+        manager.disallowFeature("createMasterPassword");
+      }
+    }
+  },
+
   "DisableFirefoxScreenshots": {
     onBeforeAddons(manager, param) {
       if (param) {
