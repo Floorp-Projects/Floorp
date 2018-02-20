@@ -6079,13 +6079,6 @@ JS_PutEscapedString(JSContext* cx, char* buffer, size_t size, JSString* str, cha
     return PutEscapedString(buffer, size, linearStr, quote);
 }
 
-JS_PUBLIC_API(bool)
-JS_FileEscapedString(FILE* fp, JSString* str, char quote)
-{
-    JSLinearString* linearStr = str->ensureLinear(nullptr);
-    return linearStr && FileEscapedString(fp, linearStr, quote);
-}
-
 JS_PUBLIC_API(JSString*)
 JS_NewDependentString(JSContext* cx, HandleString str, size_t start, size_t length)
 {

@@ -4717,9 +4717,6 @@ JS_StringEqualsAscii(JSContext* cx, JSString* str, const char* asciiBytes, bool*
 extern JS_PUBLIC_API(size_t)
 JS_PutEscapedString(JSContext* cx, char* buffer, size_t size, JSString* str, char quote);
 
-extern JS_PUBLIC_API(bool)
-JS_FileEscapedString(FILE* fp, JSString* str, char quote);
-
 /*
  * Extracting string characters and length.
  *

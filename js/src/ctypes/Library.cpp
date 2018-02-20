@@ -72,9 +72,9 @@ Library::Name(JSContext* cx, unsigned argc, Value* vp)
   }
 
   AutoString resultString;
-  AppendString(resultString, DLL_PREFIX);
-  AppendString(resultString, str);
-  AppendString(resultString, DLL_SUFFIX);
+  AppendString(cx, resultString, DLL_PREFIX);
+  AppendString(cx, resultString, str);
+  AppendString(cx, resultString, DLL_SUFFIX);
 
   JSString* result = JS_NewUCStringCopyN(cx, resultString.begin(),
                                          resultString.length());
@@ -339,8 +339,8 @@ Library::Declare(JSContext* cx, unsigned argc, Value* vp)
   AutoCString symbol;
   if (isFunction) {
     // Build the symbol, with mangling if necessary.
-    FunctionType::BuildSymbolName(nameStr, fnObj, symbol);
-    AppendString(symbol, "\0");
+    FunctionType::BuildSymbolName(cx, nameStr, fnObj, symbol);
+    AppendString(cx, symbol, "\0");
 
     // Look up the function symbol.
     fnptr = PR_FindFunctionSymbol(library, symbol.begin());
@@ -352,8 +352,8 @@ Library::Declare(JSContext* cx, unsigned argc, Value* vp)
 
   } else {
     // 'typeObj' is another data type. Look up the data symbol.
-    AppendString(symbol, nameStr);
-    AppendString(symbol, "\0");
+    AppendString(cx, symbol, nameStr);
+    AppendString(cx, symbol, "\0");
 
     data = PR_FindSymbol(library, symbol.begin());
     if (!data) {
