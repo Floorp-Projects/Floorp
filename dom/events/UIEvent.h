@@ -83,7 +83,7 @@ public:
   int32_t PageX() const;
   int32_t PageY() const;
 
-  virtual uint32_t Which()
+  virtual uint32_t Which(CallerType aCallerType = CallerType::System)
   {
     MOZ_ASSERT(mEvent->mClass != eKeyboardEventClass,
                "Key events should override Which()");
