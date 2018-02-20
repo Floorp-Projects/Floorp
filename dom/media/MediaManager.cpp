@@ -4225,7 +4225,7 @@ SourceListener::CapturingAudio() const
 {
   MOZ_ASSERT(NS_IsMainThread());
   return Activated() && mAudioDeviceState && !mAudioDeviceState->mStopped &&
-         (mAudioDeviceState->mDevice->mSource->IsFake() ||
+         (!mAudioDeviceState->mDevice->mSource->IsFake() ||
           Preferences::GetBool("media.navigator.permission.fake"));
 }
 
