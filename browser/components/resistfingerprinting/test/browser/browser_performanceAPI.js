@@ -37,15 +37,10 @@ let isRounded = (x, expectedPrecision) => {
     return true;
 
   // When we're diving by non-whole numbers, we may not get perfect
-  // multiplication/division because of floating points.
-  // When dealing with ms since epoch, a double's precision is on the order
-  // of 1/5 of a microsecond, so we use a value a little higher than that as
-  // our epsilon.
-  // To be clear, this error is introduced in our re-calculation of 'rounded'
-  // above in JavaScript.
-  if (Math.abs(rounded - x + expectedPrecision) < .0005) {
+  // multiplication/division because of floating points
+  if (Math.abs(rounded - x + expectedPrecision) < .0000001) {
     return true;
-  } else if (Math.abs(rounded - x) < .0005) {
+  } else if (Math.abs(rounded - x) < .0000001) {
     return true;
   }
 

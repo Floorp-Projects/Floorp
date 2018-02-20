@@ -50,18 +50,13 @@ https://trac.torproject.org/projects/tor/ticket/1517
     if (rounded === x || x === 0)
       return true;
 
-  // When we're diving by non-whole numbers, we may not get perfect
-  // multiplication/division because of floating points.
-  // When dealing with ms since epoch, a double's precision is on the order
-  // of 1/5 of a microsecond, so we use a value a little higher than that as
-  // our epsilon.
-  // To be clear, this error is introduced in our re-calculation of 'rounded'
-  // above in JavaScript.
-  if (Math.abs(rounded - x + expectedPrecision) < .0005) {
-    return true;
-  } else if (Math.abs(rounded - x) < .0005) {
-    return true;
-  }
+    // When we're diving by non-whole numbers, we may not get perfect
+    // multiplication/division because of floating points
+    if (Math.abs(rounded - x + expectedPrecision) < .0000001) {
+      return true;
+    } else if (Math.abs(rounded - x) < .0000001) {
+      return true;
+    }
 
     // Then we handle the case where you're sub-millisecond and the timer is not
     // We check that the timer is not sub-millisecond by assuming it is not if it
