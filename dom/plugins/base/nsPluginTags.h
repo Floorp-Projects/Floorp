@@ -10,6 +10,7 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
+#include "nsIBlocklistService.h"
 #include "nsIPluginTag.h"
 #include "nsITimer.h"
 #include "nsString.h"
@@ -108,7 +109,8 @@ public:
 
   nsPluginTag(nsPluginInfo* aPluginInfo,
               int64_t aLastModifiedTime,
-              bool fromExtension);
+              bool fromExtension,
+              uint32_t aBlocklistState);
   nsPluginTag(const char* aName,
               const char* aDescription,
               const char* aFileName,
@@ -120,6 +122,7 @@ public:
               int32_t aVariants,
               int64_t aLastModifiedTime,
               bool fromExtension,
+              uint32_t aBlocklistState,
               bool aArgsAreUTF8 = false);
   nsPluginTag(uint32_t aId,
               const char* aName,
@@ -135,7 +138,7 @@ public:
               int64_t aLastModifiedTime,
               bool aFromExtension,
               int32_t aSandboxLevel,
-              uint16_t aBlocklistState);
+              uint32_t aBlocklistState);
 
   void TryUnloadPlugin(bool inShutdown);
 
@@ -146,10 +149,11 @@ public:
   void SetEnabled(bool enabled);
   bool IsClicktoplay();
   bool IsBlocklisted();
+  uint32_t BlocklistState();
 
   PluginState GetPluginState();
   void SetPluginState(PluginState state);
-  void SetBlocklistState(uint16_t aBlocklistState);
+  void SetBlocklistState(uint32_t aBlocklistState);
 
   bool HasSameNameAndMimes(const nsPluginTag *aPluginTag) const;
   const nsCString& GetNiceFileName() override;
@@ -175,15 +179,12 @@ public:
   int32_t       mSandboxLevel;
   bool          mIsSandboxLoggingEnabled;
 
-  void          InvalidateBlocklistState();
-
 private:
   virtual ~nsPluginTag();
 
   nsCString     mNiceFileName; // UTF-8
-  uint16_t      mCachedBlocklistState;
-  bool          mCachedBlocklistStateValid;
   bool          mIsFromExtension;
+  uint32_t      mBlocklistState;
 
   void InitMime(const char* const* aMimeTypes,
                 const char* const* aMimeDescriptions,
