@@ -193,7 +193,7 @@ pub struct YamlFrameReader {
 
     /// A HashMap of offsets which specify what scroll offsets particular
     /// scroll layers should be initialized with.
-    scroll_offsets: HashMap<ClipId, LayerPoint>,
+    scroll_offsets: HashMap<ExternalScrollId, LayerPoint>,
 
     image_map: HashMap<(PathBuf, Option<i64>), (ImageKey, LayoutSize)>,
 
@@ -1273,7 +1273,12 @@ impl YamlFrameReader {
         wrench: &mut Wrench,
         yaml: &Yaml,
     ) {
-        let full_clip = LayoutRect::new(LayoutPoint::zero(), wrench.window_size_f32());
+        // A very large number (but safely far away from finite limits of f32)
+        let big_number = 1.0e30;
+        // A rect that should in practical terms serve as a no-op for clipping
+        let full_clip = LayoutRect::new(
+            LayoutPoint::new(-big_number / 2.0, -big_number / 2.0),
+            LayoutSize::new(big_number, big_number));
 
         for item in yaml.as_vec().unwrap() {
             // an explicit type can be skipped with some shorthand
@@ -1362,7 +1367,12 @@ impl YamlFrameReader {
         let complex_clips = self.to_complex_clip_regions(&yaml["complex"]);
         let image_mask = self.to_image_mask(&yaml["image-mask"], wrench);
 
-        let external_id = numeric_id.map(|id| ExternalScrollId(id as u64, dl.pipeline_id));
+        let external_id =  yaml["scroll-offset"].as_point().map(|size| {
+            let id = ExternalScrollId((self.scroll_offsets.len() + 1) as u64, dl.pipeline_id);
+            self.scroll_offsets.insert(id, LayerPoint::new(size.x, size.y));
+            id
+        });
+
         let real_id = dl.define_scroll_frame(
             external_id,
             content_rect,
@@ -1373,10 +1383,6 @@ impl YamlFrameReader {
         );
         if let Some(numeric_id) = numeric_id {
             self.clip_id_map.insert(numeric_id, real_id);
-        }
-
-        if let Some(size) = yaml["scroll-offset"].as_point() {
-            self.scroll_offsets.insert(real_id, LayerPoint::new(size.x, size.y));
         }
 
         if !yaml["items"].is_badvalue() {
@@ -1542,9 +1548,8 @@ impl YamlFrameReader {
 
         if is_root {
             if let Some(size) = yaml["scroll-offset"].as_point() {
-                let id = ClipId::root_scroll_node(dl.pipeline_id);
-                self.scroll_offsets
-                    .insert(id, LayerPoint::new(size.x, size.y));
+                let external_id = ExternalScrollId(0, dl.pipeline_id);
+                self.scroll_offsets.insert(external_id, LayerPoint::new(size.x, size.y));
             }
         }
 

@@ -2,15 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, ClipAndScrollInfo, FilterOp, MixBlendMode};
-use api::{DeviceIntPoint, DeviceIntRect, LayerToWorldScale, PipelineId};
-use api::{BoxShadowClipMode, LayerPoint, LayerRect, LayerVector2D, Shadow};
-use api::{ClipId, PremultipliedColorF};
+use api::{BoxShadowClipMode, ClipId, ColorF, DeviceIntPoint, DeviceIntRect, FilterOp, LayerPoint};
+use api::{LayerRect, LayerToWorldScale, LayerVector2D, MixBlendMode, PipelineId};
+use api::{PremultipliedColorF, Shadow};
 use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowCacheKey};
 use frame_builder::{FrameContext, FrameState, PictureState};
 use gpu_cache::GpuDataRequest;
 use gpu_types::{BrushImageKind, PictureType};
 use prim_store::{BrushKind, BrushPrimitive, PrimitiveIndex, PrimitiveRun, PrimitiveRunLocalRect};
+use prim_store::ScrollNodeAndClipChain;
 use render_task::{ClearMode, RenderTask, RenderTaskCacheKey};
 use render_task::{RenderTaskCacheKeyKind, RenderTaskId, RenderTaskLocation};
 use resource_cache::CacheItem;
@@ -230,7 +230,7 @@ impl PicturePrimitive {
     pub fn add_primitive(
         &mut self,
         prim_index: PrimitiveIndex,
-        clip_and_scroll: ClipAndScrollInfo
+        clip_and_scroll: ScrollNodeAndClipChain
     ) {
         if let Some(ref mut run) = self.runs.last_mut() {
             if run.clip_and_scroll == clip_and_scroll &&
@@ -368,7 +368,7 @@ impl PicturePrimitive {
                     }
                     Some(PictureCompositeMode::Filter(FilterOp::DropShadow(offset, blur_radius, color))) => {
                         let rect = (prim_local_rect.translate(&-offset) * content_scale).round().to_i32();
-                        let picture_task = RenderTask::new_picture(
+                        let mut picture_task = RenderTask::new_picture(
                             RenderTaskLocation::Dynamic(None, rect.size),
                             prim_index,
                             RenderTargetKind::Color,
@@ -378,6 +378,7 @@ impl PicturePrimitive {
                             pic_state_for_children.tasks,
                             PictureType::Image,
                         );
+                        picture_task.mark_for_saving();
 
                         let blur_std_deviation = blur_radius * frame_context.device_pixel_scale.0;
                         let picture_task_id = frame_state.render_tasks.add(picture_task);
@@ -601,7 +602,7 @@ impl PicturePrimitive {
                 match composite_mode {
                     Some(PictureCompositeMode::Filter(FilterOp::ColorMatrix(m))) => {
                         for i in 0..5 {
-                            request.push([m[i], m[i+5], m[i+10], m[i+15]]);
+                            request.push([m[i*4], m[i*4+1], m[i*4+2], m[i*4+3]]);
                         }
                     }
                     Some(PictureCompositeMode::Filter(filter)) => {

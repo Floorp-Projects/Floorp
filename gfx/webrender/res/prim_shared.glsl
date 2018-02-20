@@ -315,27 +315,6 @@ Gradient fetch_gradient(int address) {
     return Gradient(data[0], data[1], data[2]);
 }
 
-struct GradientStop {
-    vec4 color;
-    vec4 offset;
-};
-
-GradientStop fetch_gradient_stop(int address) {
-    vec4 data[2] = fetch_from_resource_cache_2(address);
-    return GradientStop(data[0], data[1]);
-}
-
-struct RadialGradient {
-    vec4 start_end_center;
-    vec4 start_end_radius_ratio_xy_extend_mode;
-    vec4 tile_size_repeat;
-};
-
-RadialGradient fetch_radial_gradient(int address) {
-    vec4 data[3] = fetch_from_resource_cache_3(address);
-    return RadialGradient(data[0], data[1], data[2]);
-}
-
 struct Glyph {
     vec2 offset;
 };
@@ -624,7 +603,8 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
                                   vec4 clip_edge_mask,
                                   float z,
                                   ClipScrollNode scroll_node,
-                                  PictureTask task) {
+                                  PictureTask task,
+                                  bool do_perspective_interpolation) {
     // Calculate a clip rect from local_rect + local clip
     RectWithEndpoint clip_rect = to_rect_with_endpoint(local_clip_rect);
     RectWithEndpoint segment_rect = to_rect_with_endpoint(local_segment_rect);
@@ -661,13 +641,16 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
     vec2 device_pos = world_pos.xy / world_pos.w * uDevicePixelRatio;
     vec2 task_offset = task.common_data.task_rect.p0 - task.content_origin;
 
+    // Force w = 1, if we don't want perspective interpolation (for
+    // example, drawing a screen-space quad on an element with a
+    // perspective transform).
+    world_pos.w = mix(1.0, world_pos.w, do_perspective_interpolation);
+
     // We want the world space coords to be perspective divided by W.
     // We also want that to apply to any interpolators. However, we
     // want a constant Z across the primitive, since we're using it
     // for draw ordering - so scale by the W coord to ensure this.
-    vec4 final_pos = vec4((device_pos + task_offset) * world_pos.w,
-                          z * world_pos.w,
-                          world_pos.w);
+    vec4 final_pos = vec4(device_pos + task_offset, z, 1.0) * world_pos.w;
     gl_Position = uTransform * final_pos;
 
     vLocalBounds = mix(
@@ -694,7 +677,8 @@ VertexInfo write_transform_vertex_primitive(Primitive prim) {
         vec4(1.0),
         prim.z,
         prim.scroll_node,
-        prim.task
+        prim.task,
+        true
     );
 }
 

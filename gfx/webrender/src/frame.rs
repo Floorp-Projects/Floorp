@@ -3,21 +3,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BuiltDisplayListIter, ClipAndScrollInfo, ClipId, ColorF, ComplexClipRegion};
-use api::{DevicePixelScale, DeviceUintRect, DeviceUintSize, DisplayItemRef, DocumentLayer, Epoch};
-use api::{ExternalScrollId, FilterOp, IframeDisplayItem, ImageDisplayItem, ItemRange, LayerPoint};
+use api::{BuiltDisplayListIter, ClipId, ColorF, ComplexClipRegion, DevicePixelScale};
+use api::{DeviceUintRect, DeviceUintSize, DisplayItemRef, DocumentLayer, Epoch, ExternalScrollId};
+use api::{FilterOp, IframeDisplayItem, ImageDisplayItem, ItemRange, LayerPoint};
 use api::{LayerPrimitiveInfo, LayerRect, LayerSize, LayerVector2D, LayoutSize, PipelineId};
 use api::{ScrollClamping, ScrollEventPhase, ScrollFrameDisplayItem, ScrollLocation};
-use api::{ScrollNodeIdType, ScrollNodeState, ScrollPolicy, ScrollSensitivity, SpecificDisplayItem};
-use api::{StackingContext, TileOffset, TransformStyle, WorldPoint};
+use api::{ScrollNodeState, ScrollPolicy, ScrollSensitivity, SpecificDisplayItem, StackingContext};
+use api::{TileOffset, TransformStyle, WorldPoint};
 use clip::ClipRegion;
 use clip_scroll_node::StickyFrameInfo;
-use clip_scroll_tree::{ClipScrollTree, ScrollStates};
+use clip_scroll_tree::{ClipChainIndex, ClipScrollTree, ScrollStates};
 use euclid::rect;
 use frame_builder::{FrameBuilder, FrameBuilderConfig, ScrollbarInfo};
 use gpu_cache::GpuCache;
 use hit_test::HitTester;
 use internal_types::{FastHashMap, FastHashSet, RenderedDocument};
+use prim_store::ScrollNodeAndClipChain;
 use profiler::{GpuCacheProfileCounters, TextureCacheProfileCounters};
 use resource_cache::{FontInstanceMap,ResourceCache, TiledImageMap};
 use scene::{Scene, StackingContextHelpers, ScenePipeline, SceneProperties};
@@ -36,6 +37,53 @@ static DEFAULT_SCROLLBAR_COLOR: ColorF = ColorF {
     a: 0.6,
 };
 
+/// A data structure that keeps track of mapping between API clip ids and the indices
+/// used internally in the ClipScrollTree to avoid having to do HashMap lookups. This
+/// also includes a small LRU cache. Currently the cache is small (1 entry), but in the
+/// future we could use uluru here to do something more involved.
+pub struct ClipIdToIndexMapper {
+    map: FastHashMap<ClipId, ClipChainIndex>,
+    cached_index: Option<(ClipId, ClipChainIndex)>,
+}
+
+impl ClipIdToIndexMapper {
+    fn new() -> ClipIdToIndexMapper {
+        ClipIdToIndexMapper {
+            map: FastHashMap::default(),
+            cached_index: None,
+        }
+    }
+
+    pub fn add(&mut self, id: ClipId, index: ClipChainIndex) {
+        debug_assert!(!self.map.contains_key(&id));
+        self.map.insert(id, index);
+    }
+
+    pub fn map_to_parent_clip_chain(&mut self, id: ClipId, parent_id: &ClipId) {
+        let parent_chain_index = self.map_clip_id(parent_id);
+        self.add(id, parent_chain_index);
+    }
+
+    pub fn map_clip_id(&mut self, id: &ClipId) -> ClipChainIndex {
+        match self.cached_index {
+            Some((cached_id, cached_index)) if cached_id == *id => return cached_index,
+            _ => {}
+        }
+
+        self.map[id]
+    }
+
+    pub fn map_clip_id_and_cache_result(&mut self, id: &ClipId) -> ClipChainIndex {
+        let index = self.map_clip_id(id);
+        self.cached_index = Some((*id, index));
+        index
+    }
+
+    pub fn simple_scroll_and_clip_chain(&mut self, id: &ClipId) -> ScrollNodeAndClipChain {
+        ScrollNodeAndClipChain::new(*id, self.map_clip_id(&id))
+    }
+}
+
 struct FlattenContext<'a> {
     scene: &'a Scene,
     builder: FrameBuilder,
@@ -45,6 +93,7 @@ struct FlattenContext<'a> {
     pipeline_epochs: Vec<(PipelineId, Epoch)>,
     replacements: Vec<(ClipId, ClipId)>,
     output_pipelines: &'a FastHashSet<PipelineId>,
+    id_to_index_mapper: ClipIdToIndexMapper,
 }
 
 impl<'a> FlattenContext<'a> {
@@ -104,13 +153,23 @@ impl<'a> FlattenContext<'a> {
         let root_reference_frame_id = ClipId::root_reference_frame(pipeline_id);
         let root_scroll_frame_id = ClipId::root_scroll_node(pipeline_id);
 
+        let root_clip_chain_index =
+            self.id_to_index_mapper.map_clip_id_and_cache_result(&root_reference_frame_id);
+        let root_reference_frame_clip_and_scroll = ScrollNodeAndClipChain::new(
+            root_reference_frame_id,
+            root_clip_chain_index,
+        );
+
         self.builder.push_stacking_context(
             pipeline_id,
             CompositeOps::default(),
             TransformStyle::Flat,
             true,
             true,
-            ClipAndScrollInfo::simple(root_scroll_frame_id),
+            ScrollNodeAndClipChain::new(
+                ClipId::root_scroll_node(pipeline_id),
+                root_clip_chain_index,
+            ),
             self.output_pipelines,
         );
 
@@ -122,7 +181,7 @@ impl<'a> FlattenContext<'a> {
                     let root_bounds = LayerRect::new(LayerPoint::zero(), *frame_size);
                     let info = LayerPrimitiveInfo::new(root_bounds);
                     self.builder.add_solid_rectangle(
-                        ClipAndScrollInfo::simple(root_reference_frame_id),
+                        root_reference_frame_clip_and_scroll,
                         &info,
                         bg_color,
                         None,
@@ -142,7 +201,7 @@ impl<'a> FlattenContext<'a> {
             let scrollbar_rect = LayerRect::new(LayerPoint::zero(), LayerSize::new(10.0, 70.0));
             let container_rect = LayerRect::new(LayerPoint::zero(), *frame_size);
             self.builder.add_scroll_bar(
-                ClipAndScrollInfo::simple(root_reference_frame_id),
+                root_reference_frame_clip_and_scroll,
                 &LayerPrimitiveInfo::new(scrollbar_rect),
                 DEFAULT_SCROLLBAR_COLOR,
                 ScrollbarInfo(root_scroll_frame_id, container_rect),
@@ -184,19 +243,13 @@ impl<'a> FlattenContext<'a> {
         }
     }
 
-    fn flatten_clip(
-        &mut self,
-        pipeline_id: PipelineId,
-        parent_id: &ClipId,
-        new_clip_id: &ClipId,
-        clip_region: ClipRegion,
-    ) {
+    fn flatten_clip(&mut self, parent_id: &ClipId, new_clip_id: &ClipId, clip_region: ClipRegion) {
         self.builder.add_clip_node(
             *new_clip_id,
             *parent_id,
-            pipeline_id,
             clip_region,
             self.clip_scroll_tree,
+            &mut self.id_to_index_mapper,
         );
     }
 
@@ -205,7 +258,7 @@ impl<'a> FlattenContext<'a> {
         item: &DisplayItemRef,
         info: &ScrollFrameDisplayItem,
         pipeline_id: PipelineId,
-        clip_and_scroll: &ClipAndScrollInfo,
+        clip_and_scroll: &ScrollNodeAndClipChain,
         reference_frame_relative_offset: &LayerVector2D,
     ) {
         let complex_clips = self.get_complex_clips(pipeline_id, item.complex_clip().0);
@@ -229,9 +282,9 @@ impl<'a> FlattenContext<'a> {
         self.builder.add_clip_node(
             info.clip_id,
             clip_and_scroll.scroll_node_id,
-            pipeline_id,
             clip_region,
             self.clip_scroll_tree,
+            &mut self.id_to_index_mapper,
         );
 
         self.builder.add_scroll_frame(
@@ -243,6 +296,7 @@ impl<'a> FlattenContext<'a> {
             &content_rect.size,
             info.scroll_sensitivity,
             self.clip_scroll_tree,
+            &mut self.id_to_index_mapper,
         );
     }
 
@@ -250,7 +304,8 @@ impl<'a> FlattenContext<'a> {
         &mut self,
         traversal: &mut BuiltDisplayListIter<'a>,
         pipeline_id: PipelineId,
-        context_scroll_node_id: ClipId,
+        unreplaced_scroll_id: ClipId,
+        clip_and_scroll: ScrollNodeAndClipChain,
         mut reference_frame_relative_offset: LayerVector2D,
         bounds: &LayerRect,
         stacking_context: &StackingContext,
@@ -279,7 +334,7 @@ impl<'a> FlattenContext<'a> {
 
         if stacking_context.scroll_policy == ScrollPolicy::Fixed {
             self.replacements.push((
-                context_scroll_node_id,
+                unreplaced_scroll_id,
                 self.builder.current_reference_frame_id(),
             ));
         }
@@ -296,30 +351,33 @@ impl<'a> FlattenContext<'a> {
             );
 
             let reference_frame_bounds = LayerRect::new(LayerPoint::zero(), bounds.size);
-            let mut parent_id = self.apply_scroll_frame_id_replacement(context_scroll_node_id);
             self.builder.push_reference_frame(
                 reference_frame_id,
-                Some(parent_id),
+                Some(clip_and_scroll.scroll_node_id),
                 pipeline_id,
                 &reference_frame_bounds,
                 stacking_context.transform,
                 stacking_context.perspective,
                 reference_frame_relative_offset,
                 self.clip_scroll_tree,
+                &mut self.id_to_index_mapper,
             );
-            self.replacements.push((context_scroll_node_id, reference_frame_id));
+            self.replacements.push((unreplaced_scroll_id, reference_frame_id));
             reference_frame_relative_offset = LayerVector2D::zero();
         }
 
-        let sc_scroll_node_id = self.apply_scroll_frame_id_replacement(context_scroll_node_id);
-
+        // We apply the replacements one more time in case we need to set it to a replacement
+        // that we just pushed above.
+        let new_scroll_node = self.apply_scroll_frame_id_replacement(unreplaced_scroll_id);
+        let stacking_context_clip_and_scroll =
+            self.id_to_index_mapper.simple_scroll_and_clip_chain(&new_scroll_node);
         self.builder.push_stacking_context(
             pipeline_id,
             composition_operations,
             stacking_context.transform_style,
             is_backface_visible,
             false,
-            ClipAndScrollInfo::simple(sc_scroll_node_id),
+            stacking_context_clip_and_scroll,
             self.output_pipelines,
         );
 
@@ -345,8 +403,7 @@ impl<'a> FlattenContext<'a> {
         &mut self,
         item: &DisplayItemRef,
         info: &IframeDisplayItem,
-        parent_pipeline_id: PipelineId,
-        clip_and_scroll: &ClipAndScrollInfo,
+        clip_and_scroll: &ScrollNodeAndClipChain,
         reference_frame_relative_offset: &LayerVector2D,
     ) {
         let iframe_pipeline_id = info.pipeline_id;
@@ -358,12 +415,12 @@ impl<'a> FlattenContext<'a> {
         self.builder.add_clip_node(
             info.clip_id,
             clip_and_scroll.scroll_node_id,
-            parent_pipeline_id,
             ClipRegion::create_for_clip_node_with_local_clip(
                 &item.local_clip(),
                 &reference_frame_relative_offset
             ),
             self.clip_scroll_tree,
+            &mut self.id_to_index_mapper,
         );
 
         self.pipeline_epochs.push((iframe_pipeline_id, pipeline.epoch));
@@ -380,6 +437,7 @@ impl<'a> FlattenContext<'a> {
             None,
             origin,
             self.clip_scroll_tree,
+            &mut self.id_to_index_mapper,
         );
 
         self.builder.add_scroll_frame(
@@ -391,6 +449,7 @@ impl<'a> FlattenContext<'a> {
             &pipeline.content_size,
             ScrollSensitivity::ScriptAndInputEvents,
             self.clip_scroll_tree,
+            &mut self.id_to_index_mapper,
         );
 
         self.flatten_root(&mut pipeline.display_list.iter(), iframe_pipeline_id, &iframe_rect.size);
@@ -404,7 +463,11 @@ impl<'a> FlattenContext<'a> {
         pipeline_id: PipelineId,
         reference_frame_relative_offset: LayerVector2D,
     ) -> Option<BuiltDisplayListIter<'a>> {
-        let mut clip_and_scroll = item.clip_and_scroll();
+        let clip_and_scroll = item.clip_and_scroll();
+        let mut clip_and_scroll = ScrollNodeAndClipChain::new(
+            clip_and_scroll.scroll_node_id,
+            self.id_to_index_mapper.map_clip_id_and_cache_result(&clip_and_scroll.clip_node_id()),
+        );
 
         let unreplaced_scroll_id = clip_and_scroll.scroll_node_id;
         clip_and_scroll.scroll_node_id =
@@ -557,6 +620,7 @@ impl<'a> FlattenContext<'a> {
                     &mut subtraversal,
                     pipeline_id,
                     unreplaced_scroll_id,
+                    clip_and_scroll,
                     reference_frame_relative_offset,
                     &item.rect(),
                     &info.stacking_context,
@@ -569,7 +633,6 @@ impl<'a> FlattenContext<'a> {
                 self.flatten_iframe(
                     &item,
                     info,
-                    pipeline_id,
                     &clip_and_scroll,
                     &reference_frame_relative_offset
                 );
@@ -582,16 +645,16 @@ impl<'a> FlattenContext<'a> {
                     info.image_mask,
                     &reference_frame_relative_offset,
                 );
-                self.flatten_clip(
-                    pipeline_id,
-                    &clip_and_scroll.scroll_node_id,
-                    &info.id,
-                    clip_region,
-                );
+                self.flatten_clip(&clip_and_scroll.scroll_node_id, &info.id, clip_region);
             }
             SpecificDisplayItem::ClipChain(ref info) => {
                 let items = self.get_clip_chain_items(pipeline_id, item.clip_chain_items());
-                self.clip_scroll_tree.add_clip_chain_descriptor(info.id, info.parent, items);
+                let parent = info.parent.map(|id|
+                     self.id_to_index_mapper.map_clip_id(&ClipId::ClipChain(id))
+                );
+                let clip_chain_index =
+                    self.clip_scroll_tree.add_clip_chain_descriptor(parent, items);
+                self.id_to_index_mapper.add(ClipId::ClipChain(info.id), clip_chain_index);
             },
             SpecificDisplayItem::ScrollFrame(ref info) => {
                 self.flatten_scroll_frame(
@@ -610,12 +673,14 @@ impl<'a> FlattenContext<'a> {
                     info.horizontal_offset_bounds,
                     info.previously_applied_offset,
                 );
+                let parent_id = clip_and_scroll.scroll_node_id;
                 self.clip_scroll_tree.add_sticky_frame(
                     info.id,
-                    clip_and_scroll.scroll_node_id, /* parent id */
+                    parent_id,
                     frame_rect,
                     sticky_frame_info
                 );
+                self.id_to_index_mapper.map_to_parent_clip_chain(info.id, &parent_id);
             }
 
             // Do nothing; these are dummy items for the display list parser
@@ -650,7 +715,7 @@ impl<'a> FlattenContext<'a> {
     /// takes care of the decomposition required by the internal tiling of the image.
     fn decompose_image(
         &mut self,
-        clip_and_scroll: ClipAndScrollInfo,
+        clip_and_scroll: ScrollNodeAndClipChain,
         prim_info: &LayerPrimitiveInfo,
         info: &ImageDisplayItem,
         image_size: DeviceUintSize,
@@ -696,7 +761,7 @@ impl<'a> FlattenContext<'a> {
 
     fn decompose_image_row(
         &mut self,
-        clip_and_scroll: ClipAndScrollInfo,
+        clip_and_scroll: ScrollNodeAndClipChain,
         prim_info: &LayerPrimitiveInfo,
         info: &ImageDisplayItem,
         image_size: DeviceUintSize,
@@ -742,7 +807,7 @@ impl<'a> FlattenContext<'a> {
 
     fn decompose_tiled_image(
         &mut self,
-        clip_and_scroll: ClipAndScrollInfo,
+        clip_and_scroll: ScrollNodeAndClipChain,
         prim_info: &LayerPrimitiveInfo,
         info: &ImageDisplayItem,
         image_size: DeviceUintSize,
@@ -878,7 +943,7 @@ impl<'a> FlattenContext<'a> {
 
     fn add_tile_primitive(
         &mut self,
-        clip_and_scroll: ClipAndScrollInfo,
+        clip_and_scroll: ScrollNodeAndClipChain,
         prim_info: &LayerPrimitiveInfo,
         info: &ImageDisplayItem,
         tile_offset: TileOffset,
@@ -983,7 +1048,7 @@ impl FrameContext {
     pub fn scroll_node(
         &mut self,
         origin: LayerPoint,
-        id: ScrollNodeIdType,
+        id: ExternalScrollId,
         clamp: ScrollClamping
     ) -> bool {
         self.clip_scroll_tree.scroll_node(origin, id, clamp)
@@ -1056,6 +1121,7 @@ impl FrameContext {
                 pipeline_epochs: Vec::new(),
                 replacements: Vec::new(),
                 output_pipelines,
+                id_to_index_mapper: ClipIdToIndexMapper::new(),
             };
 
             roller.builder.push_root(
@@ -1063,6 +1129,7 @@ impl FrameContext {
                 &root_pipeline.viewport_size,
                 &root_pipeline.content_size,
                 roller.clip_scroll_tree,
+                &mut roller.id_to_index_mapper,
             );
 
             roller.builder.setup_viewport_offset(

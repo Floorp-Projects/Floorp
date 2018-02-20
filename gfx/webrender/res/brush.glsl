@@ -15,6 +15,8 @@ void brush_vs(
 #define VECS_PER_BRUSH_PRIM                 2
 #define VECS_PER_SEGMENT                    2
 
+#define BRUSH_FLAG_PERSPECTIVE_INTERPOLATION    1
+
 struct BrushInstance {
     int picture_address;
     int prim_address;
@@ -24,6 +26,7 @@ struct BrushInstance {
     int z;
     int segment_index;
     int edge_mask;
+    int flags;
     ivec3 user_data;
 };
 
@@ -37,7 +40,8 @@ BrushInstance load_brush() {
     bi.scroll_node_id = aData0.z & 0xffff;
     bi.z = aData0.w;
     bi.segment_index = aData1.x & 0xffff;
-    bi.edge_mask = aData1.x >> 16;
+    bi.edge_mask = (aData1.x >> 16) & 0xff;
+    bi.flags = (aData1.x >> 24);
     bi.user_data = aData1.yzw;
 
     return bi;
@@ -135,6 +139,8 @@ void main(void) {
 #endif
         } else {
             bvec4 edge_mask = notEqual(brush.edge_mask & ivec4(1, 2, 4, 8), ivec4(0));
+            bool do_perspective_interpolation = (brush.flags & BRUSH_FLAG_PERSPECTIVE_INTERPOLATION) != 0;
+
             vi = write_transform_vertex(
                 local_segment_rect,
                 brush_prim.local_rect,
@@ -142,7 +148,8 @@ void main(void) {
                 mix(vec4(0.0), vec4(1.0), edge_mask),
                 float(brush.z),
                 scroll_node,
-                pic_task
+                pic_task,
+                do_perspective_interpolation
             );
         }
 

@@ -25,7 +25,7 @@ lazy_static = "1"
 log = "0.4"
 num-traits = "0.1.32"
 time = "0.1"
-rayon = "0.8"
+rayon = "1"
 webrender_api = {path = "../webrender_api"}
 bitflags = "1.0"
 thread_profiler = "0.1.1"

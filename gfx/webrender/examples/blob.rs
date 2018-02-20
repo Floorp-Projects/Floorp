@@ -11,7 +11,7 @@ extern crate webrender;
 mod boilerplate;
 
 use boilerplate::{Example, HandyDandyRectBuilder};
-use rayon::{Configuration as ThreadPoolConfig, ThreadPool};
+use rayon::{ThreadPool, ThreadPoolBuilder};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
@@ -282,10 +282,11 @@ impl Example for App {
 }
 
 fn main() {
-    let worker_config =
-        ThreadPoolConfig::new().thread_name(|idx| format!("WebRender:Worker#{}", idx));
+    let workers =
+        ThreadPoolBuilder::new().thread_name(|idx| format!("WebRender:Worker#{}", idx))
+                                .build();
 
-    let workers = Arc::new(ThreadPool::new(worker_config).unwrap());
+    let workers = Arc::new(workers.unwrap());
 
     let opts = webrender::RendererOptions {
         workers: Some(Arc::clone(&workers)),

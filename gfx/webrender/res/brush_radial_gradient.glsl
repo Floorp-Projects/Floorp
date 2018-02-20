@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include shared,prim_shared
+#define VECS_PER_SPECIFIC_BRUSH 2
+
+#include shared,prim_shared,brush
 
 flat varying int vGradientAddress;
 flat varying float vGradientRepeat;
@@ -12,24 +14,34 @@ flat varying vec2 vEndCenter;
 flat varying float vStartRadius;
 flat varying float vEndRadius;
 
-flat varying vec2 vTileSize;
-flat varying vec2 vTileRepeat;
-
 varying vec2 vPos;
 
+#ifdef WR_FEATURE_ALPHA_PASS
+varying vec2 vLocalPos;
+#endif
+
 #ifdef WR_VERTEX_SHADER
-void main(void) {
-    Primitive prim = load_primitive();
-    RadialGradient gradient = fetch_radial_gradient(prim.specific_prim_address);
 
-    VertexInfo vi = write_vertex(prim.local_rect,
-                                 prim.local_clip_rect,
-                                 prim.z,
-                                 prim.scroll_node,
-                                 prim.task,
-                                 prim.local_rect);
+struct RadialGradient {
+    vec4 start_end_center;
+    vec4 start_end_radius_ratio_xy_extend_mode;
+};
 
-    vPos = vi.local_pos - prim.local_rect.p0;
+RadialGradient fetch_radial_gradient(int address) {
+    vec4 data[2] = fetch_from_resource_cache_2(address);
+    return RadialGradient(data[0], data[1]);
+}
+
+void brush_vs(
+    VertexInfo vi,
+    int prim_address,
+    RectWithSize local_rect,
+    ivec3 user_data,
+    PictureTask pic_task
+) {
+    RadialGradient gradient = fetch_radial_gradient(prim_address);
+
+    vPos = vi.local_pos - local_rect.p0;
 
     vStartCenter = gradient.start_end_center.xy;
     vEndCenter = gradient.start_end_center.zw;
@@ -37,38 +49,28 @@ void main(void) {
     vStartRadius = gradient.start_end_radius_ratio_xy_extend_mode.x;
     vEndRadius = gradient.start_end_radius_ratio_xy_extend_mode.y;
 
-    vTileSize = gradient.tile_size_repeat.xy;
-    vTileRepeat = gradient.tile_size_repeat.zw;
-
     // Transform all coordinates by the y scale so the
     // fragment shader can work with circles
     float ratio_xy = gradient.start_end_radius_ratio_xy_extend_mode.z;
     vPos.y *= ratio_xy;
     vStartCenter.y *= ratio_xy;
     vEndCenter.y *= ratio_xy;
-    vTileSize.y *= ratio_xy;
-    vTileRepeat.y *= ratio_xy;
 
-    vGradientAddress = prim.specific_prim_address + VECS_PER_GRADIENT;
+    vGradientAddress = user_data.x;
 
     // Whether to repeat the gradient instead of clamping.
     vGradientRepeat = float(int(gradient.start_end_radius_ratio_xy_extend_mode.w) != EXTEND_MODE_CLAMP);
 
-    write_clip(vi.screen_pos, prim.clip_area);
+#ifdef WR_FEATURE_ALPHA_PASS
+    vLocalPos = vi.local_pos;
+#endif
 }
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-void main(void) {
-    vec2 pos = mod(vPos, vTileRepeat);
-
-    if (pos.x >= vTileSize.x ||
-        pos.y >= vTileSize.y) {
-        discard;
-    }
-
+vec4 brush_fs() {
     vec2 cd = vEndCenter - vStartCenter;
-    vec2 pd = pos - vStartCenter;
+    vec2 pd = vPos - vStartCenter;
     float rd = vEndRadius - vStartRadius;
 
     // Solve for t in length(t * cd - pd) = vStartRadius + t * rd
@@ -110,6 +112,10 @@ void main(void) {
                                  offset,
                                  vGradientRepeat);
 
-    oFragColor = color * do_clip();
+#ifdef WR_FEATURE_ALPHA_PASS
+    color *= init_transform_fs(vLocalPos);
+#endif
+
+    return color;
 }
 #endif
