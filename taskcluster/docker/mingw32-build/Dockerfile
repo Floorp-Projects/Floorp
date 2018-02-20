@@ -25,6 +25,7 @@ RUN apt-get update && \
       g++-multilib \
       gnupg \
       libucl-dev \
+      patch \
       p7zip-full \
       scons \
       tar \
