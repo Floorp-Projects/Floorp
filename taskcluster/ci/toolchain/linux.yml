@@ -482,6 +482,28 @@ linux64-gn:
     toolchains:
         - linux64-gcc-4.9
 
+linux64-tup:
+    description: "tup toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(tup)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 3600
+    run:
+        using: toolchain-script
+        script: build-tup-linux.sh
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/tup.tar.xz
+    run-on-projects:
+        - trunk
+        - try
+    toolchains:
+        - linux64-gcc-4.9
+
 linux64-upx:
     description: "UPX build for MinGW32 Cross Compile"
     treeherder:
