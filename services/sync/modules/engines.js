@@ -4,7 +4,6 @@
 
 this.EXPORTED_SYMBOLS = [
   "EngineManager",
-  "Engine",
   "SyncEngine",
   "Tracker",
   "Store",
@@ -314,7 +313,7 @@ Store.prototype = {
       try {
         await this.applyIncoming(record);
       } catch (ex) {
-        if (ex.code == Engine.prototype.eEngineAbortApplyIncoming) {
+        if (ex.code == SyncEngine.prototype.eEngineAbortApplyIncoming) {
           // This kind of exception should have a 'cause' attribute, which is an
           // originating exception.
           // ex.cause will carry its stack with it when rethrown.
@@ -610,7 +609,7 @@ EngineManager.prototype = {
 
   async unregister(val) {
     let name = val;
-    if (val instanceof Engine) {
+    if (val instanceof SyncEngine) {
       name = val.name;
     }
     if (name in this._engines) {
@@ -629,9 +628,9 @@ EngineManager.prototype = {
   },
 };
 
-this.Engine = function Engine(name, service) {
+this.SyncEngine = function SyncEngine(name, service) {
   if (!service) {
-    throw new Error("Engine must be associated with a Service instance.");
+    throw new Error("SyncEngine must be associated with a Service instance.");
   }
 
   this.Name = name || "Unnamed";
@@ -646,124 +645,6 @@ this.Engine = function Engine(name, service) {
   this._tracker; // initialize tracker to load previously changed IDs
   this._log.debug("Engine constructed");
 
-  XPCOMUtils.defineLazyPreferenceGetter(this, "_enabled",
-    `services.sync.engine.${this.prefName}`, false,
-    (data, previous, latest) =>
-      // We do not await on the promise onEngineEnabledChanged returns.
-      this._tracker.onEngineEnabledChanged(latest));
-};
-Engine.prototype = {
-  // _storeObj, and _trackerObj should to be overridden in subclasses
-  _storeObj: Store,
-  _trackerObj: Tracker,
-
-  // Override this method to return a new changeset type.
-  emptyChangeset() {
-    return new Changeset();
-  },
-
-  // Local 'constant'.
-  // Signal to the engine that processing further records is pointless.
-  eEngineAbortApplyIncoming: "error.engine.abort.applyincoming",
-
-  // Should we keep syncing if we find a record that cannot be uploaded (ever)?
-  // If this is false, we'll throw, otherwise, we'll ignore the record and
-  // continue. This currently can only happen due to the record being larger
-  // than the record upload limit.
-  allowSkippedRecord: true,
-
-  get prefName() {
-    return this.name;
-  },
-
-  get enabled() {
-    return this._enabled;
-  },
-
-  set enabled(val) {
-    if (!!val != this._enabled) {
-      Svc.Prefs.set("engine." + this.prefName, !!val);
-    }
-  },
-
-  get score() {
-    return this._tracker.score;
-  },
-
-  get _store() {
-    let store = new this._storeObj(this.Name, this);
-    this.__defineGetter__("_store", () => store);
-    return store;
-  },
-
-  get _tracker() {
-    let tracker = new this._trackerObj(this.Name, this);
-    this.__defineGetter__("_tracker", () => tracker);
-    return tracker;
-  },
-
-  startTracking() {
-    this._tracker.start();
-  },
-
-  // Returns a promise
-  stopTracking() {
-    return this._tracker.stop();
-  },
-
-  async sync() {
-    if (!this.enabled) {
-      return false;
-    }
-
-    if (!this._sync) {
-      throw new Error("engine does not implement _sync method");
-    }
-
-    return this._notify("sync", this.name, this._sync)();
-  },
-
-  /**
-   * Get rid of any local meta-data.
-   */
-  async resetClient() {
-    if (!this._resetClient) {
-      throw new Error("engine does not implement _resetClient method");
-    }
-
-    return this._notify("reset-client", this.name, this._resetClient)();
-  },
-
-  async _wipeClient() {
-    await this.resetClient();
-    this._log.debug("Deleting all local data");
-    this._tracker.ignoreAll = true;
-    await this._store.wipe();
-    this._tracker.ignoreAll = false;
-    await this._tracker.clearChangedIDs();
-  },
-
-  async wipeClient() {
-    return this._notify("wipe-client", this.name, this._wipeClient)();
-  },
-
-  /**
-   * If one exists, initialize and return a validator for this engine (which
-   * must have a `validate(engine)` method that returns a promise to an object
-   * with a getSummary method). Otherwise return null.
-   */
-  getValidator() {
-    return null;
-  },
-
-  async finalize() {
-    await this._tracker.finalize();
-  },
-};
-
-this.SyncEngine = function SyncEngine(name, service) {
-  Engine.call(this, name || "SyncEngine", service);
-
   this._toFetchStorage = new JSONFile({
     path: Utils.jsonFilePath("toFetch/" + this.name),
     dataPostProcessor: json => this._metadataPostProcessor(json),
@@ -777,6 +658,11 @@ this.SyncEngine = function SyncEngine(name, service) {
   });
   Utils.defineLazyIDProperty(this, "syncID", `services.sync.${this.name}.syncID`);
 
+  XPCOMUtils.defineLazyPreferenceGetter(this, "_enabled",
+    `services.sync.engine.${this.prefName}`, false,
+    (data, previous, latest) =>
+      // We do not await on the promise onEngineEnabledChanged returns.
+      this._tracker.onEngineEnabledChanged(latest));
   XPCOMUtils.defineLazyPreferenceGetter(this, "_lastSync",
                                         `services.sync.${this.name}.lastSync`,
                                         "0", null,
@@ -825,9 +711,21 @@ SyncEngine.kRecoveryStrategy = {
 };
 
 SyncEngine.prototype = {
-  __proto__: Engine.prototype,
   _recordObj: CryptoWrapper,
+  // _storeObj, and _trackerObj should to be overridden in subclasses
+  _storeObj: Store,
+  _trackerObj: Tracker,
   version: 1,
+
+  // Local 'constant'.
+  // Signal to the engine that processing further records is pointless.
+  eEngineAbortApplyIncoming: "error.engine.abort.applyincoming",
+
+  // Should we keep syncing if we find a record that cannot be uploaded (ever)?
+  // If this is false, we'll throw, otherwise, we'll ignore the record and
+  // continue. This currently can only happen due to the record being larger
+  // than the record upload limit.
+  allowSkippedRecord: true,
 
   // Which sortindex to use when retrieving records for this engine.
   _defaultSort: undefined,
@@ -875,6 +773,36 @@ SyncEngine.prototype = {
     this._log.debug("SyncEngine initialized", this.name);
   },
 
+  get prefName() {
+    return this.name;
+  },
+
+  get enabled() {
+    return this._enabled;
+  },
+
+  set enabled(val) {
+    if (!!val != this._enabled) {
+      Svc.Prefs.set("engine." + this.prefName, !!val);
+    }
+  },
+
+  get score() {
+    return this._tracker.score;
+  },
+
+  get _store() {
+    let store = new this._storeObj(this.Name, this);
+    this.__defineGetter__("_store", () => store);
+    return store;
+  },
+
+  get _tracker() {
+    let tracker = new this._trackerObj(this.Name, this);
+    this.__defineGetter__("_tracker", () => tracker);
+    return tracker;
+  },
+
   get storageURL() {
     return this.service.storageURL;
   },
@@ -889,6 +817,32 @@ SyncEngine.prototype = {
 
   get metaURL() {
     return this.storageURL + "meta/global";
+  },
+
+  startTracking() {
+    this._tracker.start();
+  },
+
+  // Returns a promise
+  stopTracking() {
+    return this._tracker.stop();
+  },
+
+  async sync() {
+    if (!this.enabled) {
+      return false;
+    }
+
+    if (!this._sync) {
+      throw new Error("engine does not implement _sync method");
+    }
+
+    return this._notify("sync", this.name, this._sync)();
+  },
+
+  // Override this method to return a new changeset type.
+  emptyChangeset() {
+    return new Changeset();
   },
 
   /*
@@ -1343,7 +1297,7 @@ SyncEngine.prototype = {
     try {
       shouldApply = await this._reconcile(item);
     } catch (ex) {
-      if (ex.code == Engine.prototype.eEngineAbortApplyIncoming) {
+      if (ex.code == SyncEngine.prototype.eEngineAbortApplyIncoming) {
         this._log.warn("Reconciliation failed: aborting incoming processing.");
         throw ex.cause;
       } else if (!Async.isShutdownException(ex)) {
@@ -1922,8 +1876,41 @@ SyncEngine.prototype = {
     }
   },
 
+  /**
+   * Get rid of any local meta-data.
+   */
+  async resetClient() {
+    if (!this._resetClient) {
+      throw new Error("engine does not implement _resetClient method");
+    }
+
+    return this._notify("reset-client", this.name, this._resetClient)();
+  },
+
+  async wipeClient() {
+    return this._notify("wipe-client", this.name, this._wipeClient)();
+  },
+
+  async _wipeClient() {
+    await this.resetClient();
+    this._log.debug("Deleting all local data");
+    this._tracker.ignoreAll = true;
+    await this._store.wipe();
+    this._tracker.ignoreAll = false;
+    await this._tracker.clearChangedIDs();
+  },
+
+  /**
+   * If one exists, initialize and return a validator for this engine (which
+   * must have a `validate(engine)` method that returns a promise to an object
+   * with a getSummary method). Otherwise return null.
+   */
+  getValidator() {
+    return null;
+  },
+
   async finalize() {
-    await super.finalize();
+    await this._tracker.finalize();
     await this._toFetchStorage.finalize();
     await this._previousFailedStorage.finalize();
   },

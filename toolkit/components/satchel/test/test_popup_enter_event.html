@@ -58,7 +58,7 @@ function popupShownListener(evt) {
 }
 
 function runTest() {
-  input.addEventListener("keypress", handleEnter, true);
+  SpecialPowers.addSystemEventListener(input, "keypress", handleEnter, true);
   form.addEventListener("submit", function submitCallback(evt) {
     is(input.value, expectedValue, "Check input value in the submit handler");
     evt.preventDefault();

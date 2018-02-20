@@ -19,7 +19,7 @@ fn is_indexed<T: IndexedParallelIterator>(_: T) {}
 pub fn execute() {
     let a: Vec<i32> = (0..1024).collect();
     let mut b = vec![];
-    a.par_iter().map(|&i| i + 1).collect_into(&mut b);
+    a.par_iter().map(|&i| i + 1).collect_into_vec(&mut b);
     let c: Vec<i32> = (0..1024).map(|i| i + 1).collect();
     assert_eq!(b, c);
 }
@@ -28,7 +28,7 @@ pub fn execute() {
 pub fn execute_cloned() {
     let a: Vec<i32> = (0..1024).collect();
     let mut b: Vec<i32> = vec![];
-    a.par_iter().cloned().collect_into(&mut b);
+    a.par_iter().cloned().collect_into_vec(&mut b);
     let c: Vec<i32> = (0..1024).collect();
     assert_eq!(b, c);
 }
@@ -37,7 +37,7 @@ pub fn execute_cloned() {
 pub fn execute_range() {
     let a = 0i32..1024;
     let mut b = vec![];
-    a.into_par_iter().map(|i| i + 1).collect_into(&mut b);
+    a.into_par_iter().map(|i| i + 1).collect_into_vec(&mut b);
     let c: Vec<i32> = (0..1024).map(|i| i + 1).collect();
     assert_eq!(b, c);
 }
@@ -204,7 +204,20 @@ pub fn check_enumerate() {
     a.par_iter()
         .enumerate()
         .map(|(i, &x)| i + x)
-        .collect_into(&mut b);
+        .collect_into_vec(&mut b);
+    assert!(b.iter().all(|&x| x == a.len() - 1));
+}
+
+#[test]
+pub fn check_enumerate_rev() {
+    let a: Vec<usize> = (0..1024).rev().collect();
+
+    let mut b = vec![];
+    a.par_iter()
+        .enumerate()
+        .rev()
+        .map(|(i, &x)| i + x)
+        .collect_into_vec(&mut b);
     assert!(b.iter().all(|&x| x == a.len() - 1));
 }
 
@@ -246,17 +259,17 @@ pub fn check_skip() {
     let a: Vec<usize> = (0..1024).collect();
 
     let mut v1 = Vec::new();
-    a.par_iter().skip(16).collect_into(&mut v1);
+    a.par_iter().skip(16).collect_into_vec(&mut v1);
     let v2 = a.iter().skip(16).collect::<Vec<_>>();
     assert_eq!(v1, v2);
 
     let mut v1 = Vec::new();
-    a.par_iter().skip(2048).collect_into(&mut v1);
+    a.par_iter().skip(2048).collect_into_vec(&mut v1);
     let v2 = a.iter().skip(2048).collect::<Vec<_>>();
     assert_eq!(v1, v2);
 
     let mut v1 = Vec::new();
-    a.par_iter().skip(0).collect_into(&mut v1);
+    a.par_iter().skip(0).collect_into_vec(&mut v1);
     let v2 = a.iter().skip(0).collect::<Vec<_>>();
     assert_eq!(v1, v2);
 
@@ -275,17 +288,17 @@ pub fn check_take() {
     let a: Vec<usize> = (0..1024).collect();
 
     let mut v1 = Vec::new();
-    a.par_iter().take(16).collect_into(&mut v1);
+    a.par_iter().take(16).collect_into_vec(&mut v1);
     let v2 = a.iter().take(16).collect::<Vec<_>>();
     assert_eq!(v1, v2);
 
     let mut v1 = Vec::new();
-    a.par_iter().take(2048).collect_into(&mut v1);
+    a.par_iter().take(2048).collect_into_vec(&mut v1);
     let v2 = a.iter().take(2048).collect::<Vec<_>>();
     assert_eq!(v1, v2);
 
     let mut v1 = Vec::new();
-    a.par_iter().take(0).collect_into(&mut v1);
+    a.par_iter().take(0).collect_into_vec(&mut v1);
     let v2 = a.iter().take(0).collect::<Vec<_>>();
     assert_eq!(v1, v2);
 }
@@ -307,7 +320,7 @@ pub fn check_move() {
     let ptr = a[0].as_ptr();
 
     let mut b = vec![];
-    a.into_par_iter().collect_into(&mut b);
+    a.into_par_iter().collect_into_vec(&mut b);
 
     // a simple move means the inner vec will be completely unchanged
     assert_eq!(ptr, b[0].as_ptr());
@@ -321,7 +334,7 @@ pub fn check_drops() {
     let a = vec![DropCounter(&c); 10];
 
     let mut b = vec![];
-    a.clone().into_par_iter().collect_into(&mut b);
+    a.clone().into_par_iter().collect_into_vec(&mut b);
     assert_eq!(c.load(Ordering::Relaxed), 0);
 
     b.into_par_iter();
@@ -761,6 +774,47 @@ pub fn check_zip_range() {
 }
 
 #[test]
+pub fn check_zip_eq() {
+    let mut a: Vec<usize> = (0..1024).rev().collect();
+    let b: Vec<usize> = (0..1024).collect();
+
+    a.par_iter_mut().zip_eq(&b[..]).for_each(|(a, &b)| *a += b);
+
+    assert!(a.iter().all(|&x| x == a.len() - 1));
+}
+
+#[test]
+pub fn check_zip_eq_into_par_iter() {
+    let mut a: Vec<usize> = (0..1024).rev().collect();
+    let b: Vec<usize> = (0..1024).collect();
+
+    a.par_iter_mut()
+     .zip_eq(&b) // here we rely on &b iterating over &usize
+     .for_each(|(a, &b)| *a += b);
+
+    assert!(a.iter().all(|&x| x == a.len() - 1));
+}
+
+#[test]
+pub fn check_zip_eq_into_mut_par_iter() {
+    let a: Vec<usize> = (0..1024).rev().collect();
+    let mut b: Vec<usize> = (0..1024).collect();
+
+    a.par_iter().zip_eq(&mut b).for_each(|(&a, b)| *b += a);
+
+    assert!(b.iter().all(|&x| x == b.len() - 1));
+}
+
+#[test]
+pub fn check_zip_eq_range() {
+    let mut a: Vec<usize> = (0..1024).rev().collect();
+
+    a.par_iter_mut().zip_eq(0usize..1024).for_each(|(a, b)| *a += b);
+
+    assert!(a.iter().all(|&x| x == a.len() - 1));
+}
+
+#[test]
 pub fn check_sum_filtered_ints() {
     let a: Vec<i32> = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     let par_sum_evens: i32 = a.par_iter().filter(|&x| (x & 1) == 0).sum();
@@ -812,6 +866,29 @@ pub fn check_empty_flat_map_sum() {
     // empty on the outside
     let c: i32 = empty.par_iter().flat_map(|_| a.par_iter()).sum();
     assert_eq!(c, 0);
+}
+
+#[test]
+pub fn check_flatten_vec() {
+
+    let a: Vec<i32> = (0..1024).collect();
+    let b: Vec<Vec<i32>> = vec![a.clone(), a.clone(), a.clone(), a.clone()];
+    let c: Vec<i32> = b.par_iter().flatten().cloned().collect();
+    let mut d = a.clone();
+    d.extend(&a);
+    d.extend(&a);
+    d.extend(&a);
+
+    assert_eq!(d, c);
+}
+
+#[test]
+pub fn check_flatten_vec_empty() {
+
+    let a: Vec<Vec<i32>> = vec![vec![]];
+    let b: Vec<i32> = a.par_iter().flatten().cloned().collect();
+
+    assert_eq!(vec![] as Vec<i32>, b);
 }
 
 #[test]
@@ -1059,7 +1136,7 @@ pub fn check_chain() {
         .enumerate()
         .map(|(a, (b, c))| (a, b, c))
         .chain(None)
-        .collect_into(&mut res);
+        .collect_into_vec(&mut res);
 
     assert_eq!(res,
                vec![(0, 'a', 0),
@@ -1586,14 +1663,14 @@ fn check_extend_pairs() {
 }
 
 #[test]
-fn check_unzip_into() {
+fn check_unzip_into_vecs() {
     let mut a = vec![];
     let mut b = vec![];
     (0..1024)
         .into_par_iter()
         .map(|i| i * i)
         .enumerate()
-        .unzip_into(&mut a, &mut b);
+        .unzip_into_vecs(&mut a, &mut b);
 
     let (c, d): (Vec<_>, Vec<_>) = (0..1024).map(|i| i * i).enumerate().unzip();
     assert_eq!(a, c);
@@ -1661,4 +1738,239 @@ fn check_partition_map() {
                        });
     assert_eq!(a, vec![1, 2, 3]);
     assert_eq!(b, "abcxyz");
+}
+
+#[test]
+fn check_either() {
+    type I = ::vec::IntoIter<i32>;
+    type E = Either<I, I>;
+
+    let v: Vec<i32> = (0..1024).collect();
+
+    // try iterating the left side
+    let left: E = Either::Left(v.clone().into_par_iter());
+    assert!(left.eq(v.clone()));
+
+    // try iterating the right side
+    let right: E = Either::Right(v.clone().into_par_iter());
+    assert!(right.eq(v.clone()));
+
+    // try an indexed iterator
+    let left: E = Either::Left(v.clone().into_par_iter());
+    assert!(left.enumerate().eq(v.clone().into_par_iter().enumerate()));
+}
+
+#[test]
+fn check_either_extend() {
+    type E = Either<Vec<i32>, HashSet<i32>>;
+
+    let v: Vec<i32> = (0..1024).collect();
+
+    // try extending the left side
+    let mut left: E = Either::Left(vec![]);
+    left.par_extend(v.clone());
+    assert_eq!(left.as_ref(), Either::Left(&v));
+
+    // try extending the right side
+    let mut right: E = Either::Right(HashSet::default());
+    right.par_extend(v.clone());
+    assert_eq!(right, Either::Right(v.iter().cloned().collect()));
+}
+
+#[test]
+fn check_interleave_eq() {
+    let xs: Vec<usize> = (0..10).collect();
+    let ys: Vec<usize> = (10..20).collect();
+
+    let mut actual = vec![];
+    xs.par_iter().interleave(&ys).map(|&i| i).collect_into_vec(&mut actual);
+
+    let expected: Vec<usize> = (0..10).zip(10..20).flat_map(|(i, j)| vec![i, j].into_iter()).collect();
+    assert_eq!(expected, actual);
+}
+
+#[test]
+fn check_interleave_uneven() {
+    let cases: Vec<(Vec<usize>, Vec<usize>, Vec<usize>)> = vec![
+        ((0..9).collect(), vec![10], vec![0, 10, 1, 2, 3, 4, 5, 6, 7, 8]),
+        (vec![10], (0..9).collect(), vec![10, 0, 1, 2, 3, 4, 5, 6, 7, 8]),
+        ((0..5).collect(), (5..10).collect(), (0..5).zip(5..10).flat_map(|(i, j)| vec![i, j].into_iter()).collect()),
+        (vec![], (0..9).collect(), (0..9).collect()),
+        ((0..9).collect(), vec![], (0..9).collect()),
+        ((0..50).collect(), (50..100).collect(), (0..50).zip(50..100).flat_map(|(i, j)| vec![i, j].into_iter()).collect()),
+    ];
+
+    for (i, (xs, ys, expected)) in cases.into_iter().enumerate() {
+        let mut res = vec![];
+        xs.par_iter().interleave(&ys).map(|&i| i).collect_into_vec(&mut res);
+        assert_eq!(expected, res, "Case {} failed", i);
+
+        res.truncate(0);
+        xs.par_iter().interleave(&ys).rev().map(|&i| i).collect_into_vec(&mut res);
+        assert_eq!(expected.into_iter().rev().collect::<Vec<usize>>(), res, "Case {} reversed failed", i);
+    }
+}
+
+
+#[test]
+fn check_interleave_shortest() {
+    let cases: Vec<(Vec<usize>, Vec<usize>, Vec<usize>)> = vec![
+        ((0..9).collect(), vec![10], vec![0, 10, 1]),
+        (vec![10], (0..9).collect(), vec![10, 0]),
+        ((0..5).collect(), (5..10).collect(), (0..5).zip(5..10).flat_map(|(i, j)| vec![i, j].into_iter()).collect()),
+        (vec![], (0..9).collect(), vec![]),
+        ((0..9).collect(), vec![], vec![0]),
+        ((0..50).collect(), (50..100).collect(), (0..50).zip(50..100).flat_map(|(i, j)| vec![i, j].into_iter()).collect()),
+    ];
+
+    for (i, (xs, ys, expected)) in cases.into_iter().enumerate() {
+        let mut res = vec![];
+        xs.par_iter().interleave_shortest(&ys).map(|&i| i).collect_into_vec(&mut res);
+        assert_eq!(expected, res, "Case {} failed", i);
+
+        res.truncate(0);
+        xs.par_iter().interleave_shortest(&ys).rev().map(|&i| i).collect_into_vec(&mut res);
+        assert_eq!(expected.into_iter().rev().collect::<Vec<usize>>(), res, "Case {} reversed failed", i);
+    }
+}
+
+#[test]
+#[should_panic(expected = "chunk_size must not be zero")]
+fn check_chunks_zero_size() {
+    let _: Vec<Vec<i32>> = vec![1,2,3].into_par_iter().chunks(0).collect();
+}
+
+#[test]
+fn check_chunks_even_size() {
+    assert_eq!(vec![vec![1,2,3], vec![4,5,6], vec![7,8,9]], (1..10).into_par_iter().chunks(3).collect::<Vec<Vec<i32>>>());
+}
+
+#[test]
+fn check_chunks_empty() {
+    let v: Vec<i32> = vec![];
+    let expected: Vec<Vec<i32>> = vec![];
+    assert_eq!(expected, v.into_par_iter().chunks(2).collect::<Vec<Vec<i32>>>());
+}
+
+#[test]
+fn check_chunks_len() {
+    assert_eq!(4, (0..8).into_par_iter().chunks(2).len());
+    assert_eq!(3, (0..9).into_par_iter().chunks(3).len());
+    assert_eq!(3, (0..8).into_par_iter().chunks(3).len());
+    assert_eq!(1, (&[1]).par_iter().chunks(3).len());
+    assert_eq!(0, (0..0).into_par_iter().chunks(3).len());
+}
+
+#[test]
+fn check_chunks_uneven() {
+    let cases: Vec<(Vec<u32>, usize, Vec<Vec<u32>>)> = vec![
+        ((0..5).collect(), 3, vec![vec![0,1, 2], vec![3, 4]]),
+        (vec![1], 5, vec![vec![1]]),
+        ((0..4).collect(), 3, vec![vec![0,1, 2], vec![3]]),
+    ];
+
+    for (i, (v, n, expected)) in cases.into_iter().enumerate() {
+        let mut res: Vec<Vec<u32>> = vec![];
+        v.par_iter().chunks(n).map(|v| v.into_iter().cloned().collect()).collect_into_vec(&mut res);
+        assert_eq!(expected, res, "Case {} failed", i);
+
+        res.truncate(0);
+        v.into_par_iter().chunks(n).rev().collect_into_vec(&mut res);
+        assert_eq!(expected.into_iter().rev().collect::<Vec<Vec<u32>>>(), res, "Case {} reversed failed", i);
+    }
+}
+
+#[test]
+#[ignore] // it's quick enough on optimized 32-bit platforms, but otherwise... ... ...
+#[should_panic(expected = "overflow")]
+#[cfg(debug_assertions)]
+fn check_repeat_unbounded() {
+    // use just one thread, so we don't get infinite adaptive splitting
+    // (forever stealing and re-splitting jobs that will panic on overflow)
+    let pool = ThreadPoolBuilder::new().num_threads(1).build().unwrap();
+    pool.install(|| {
+        println!("counted {} repeats", repeat(()).count());
+    });
+}
+
+#[test]
+fn check_repeat_find_any() {
+    let even = repeat(4).find_any(|&x| x % 2 == 0);
+    assert_eq!(even, Some(4));
+}
+
+#[test]
+fn check_repeat_take() {
+    let v: Vec<_> = repeat(4).take(4).collect();
+    assert_eq!(v, [4, 4, 4, 4]);
+}
+
+#[test]
+fn check_repeat_zip() {
+    let v = vec!(4,4,4,4);
+    let mut fours: Vec<_> = repeat(4).zip(v).collect();
+    assert_eq!(fours.len(), 4);
+    while let Some(item) = fours.pop() {
+        assert_eq!(item, (4, 4));
+    }
+}
+
+#[test]
+fn check_repeatn_zip_left() {
+    let v = vec!(4,4,4,4);
+    let mut fours: Vec<_> = repeatn(4, usize::MAX).zip(v).collect();
+    assert_eq!(fours.len(), 4);
+    while let Some(item) = fours.pop() {
+        assert_eq!(item, (4, 4));
+    }
+}
+
+#[test]
+fn check_repeatn_zip_right() {
+    let v = vec!(4,4,4,4);
+    let mut fours: Vec<_> = v.into_par_iter().zip(repeatn(4, usize::MAX)).collect();
+    assert_eq!(fours.len(), 4);
+    while let Some(item) = fours.pop() {
+        assert_eq!(item, (4, 4));
+    }
+}
+
+#[test]
+fn check_empty() {
+    // drive_unindexed
+    let mut v: Vec<i32> = empty().filter(|_| unreachable!()).collect();
+    assert!(v.is_empty());
+
+    // drive (indexed)
+    empty().collect_into_vec(&mut v);
+    assert!(v.is_empty());
+
+    // with_producer
+    let v: Vec<(i32, i32)> = empty().zip(1..10).collect();
+    assert!(v.is_empty());
+}
+
+#[test]
+fn check_once() {
+    // drive_unindexed
+    let mut v: Vec<i32> = once(42).filter(|_| true).collect();
+    assert_eq!(v, &[42]);
+
+    // drive (indexed)
+    once(42).collect_into_vec(&mut v);
+    assert_eq!(v, &[42]);
+
+    // with_producer
+    let v: Vec<(i32, i32)> = once(42).zip(1..10).collect();
+    assert_eq!(v, &[(42, 1)]);
+}
+
+#[test]
+fn check_update() {
+    let mut v: Vec<Vec<_>> = vec![vec![1], vec![3, 2, 1]];
+    v.par_iter_mut()
+        .update(|v| v.push(0))
+        .for_each(|_|());
+
+    assert_eq!(v, vec![vec![1, 0], vec![3, 2, 1, 0]]);
 }

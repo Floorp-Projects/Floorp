@@ -11,8 +11,8 @@ mod test;
 
 /// Collects the results of the exact iterator into the specified vector.
 ///
-/// This is not directly public, but called by `IndexedParallelIterator::collect_into`.
-pub fn collect_into<I, T>(mut pi: I, v: &mut Vec<T>)
+/// This is not directly public, but called by `IndexedParallelIterator::collect_into_vec`.
+pub fn collect_into_vec<I, T>(pi: I, v: &mut Vec<T>)
     where I: IndexedParallelIterator<Item = T>,
           T: Send
 {
@@ -44,8 +44,8 @@ fn special_extend<I, T>(pi: I, len: usize, v: &mut Vec<T>)
 
 /// Unzips the results of the exact iterator into the specified vectors.
 ///
-/// This is not directly public, but called by `IndexedParallelIterator::unzip_into`.
-pub fn unzip_into<I, A, B>(mut pi: I, left: &mut Vec<A>, right: &mut Vec<B>)
+/// This is not directly public, but called by `IndexedParallelIterator::unzip_into_vecs`.
+pub fn unzip_into_vecs<I, A, B>(pi: I, left: &mut Vec<A>, right: &mut Vec<B>)
     where I: IndexedParallelIterator<Item = (A, B)>,
           A: Send,
           B: Send
@@ -94,7 +94,7 @@ impl<'c, T: Send + 'c> Collect<'c, T> {
     }
 
     /// Update the final vector length.
-    fn complete(mut self) {
+    fn complete(self) {
         unsafe {
             // Here, we assert that `v` is fully initialized. This is
             // checked by the following assert, which counts how many
@@ -123,7 +123,7 @@ impl<T> ParallelExtend<T> for Vec<T>
         where I: IntoParallelIterator<Item = T>
     {
         // See the vec_collect benchmarks in rayon-demo for different strategies.
-        let mut par_iter = par_iter.into_par_iter();
+        let par_iter = par_iter.into_par_iter();
         match par_iter.opt_len() {
             Some(len) => {
                 // When Rust gets specialization, we can get here for indexed iterators
@@ -138,7 +138,15 @@ impl<T> ParallelExtend<T> for Vec<T>
                         vec.push(elem);
                         vec
                     })
-                    .collect();
+                    .map(|vec| {
+                        let mut list = LinkedList::new();
+                        list.push_back(vec);
+                        list
+                    })
+                    .reduce(LinkedList::new, |mut list1, mut list2| {
+                        list1.append(&mut list2);
+                        list1
+                    });
 
                 self.reserve(list.iter().map(Vec::len).sum());
                 for mut vec in list {

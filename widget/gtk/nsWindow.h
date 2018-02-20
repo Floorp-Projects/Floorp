@@ -356,6 +356,7 @@ public:
 
     virtual nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
     void SetDrawsInTitlebar(bool aState) override;
+    virtual void UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion) override;
 
     // HiDPI scale conversion
     gint GdkScaleFactor();
@@ -376,9 +377,9 @@ public:
 
     bool DoDrawTitlebar() const;
 
-    typedef enum { CSD_SUPPORT_FULL,    // CSD including shadows
-                   CSD_SUPPORT_FLAT,    // CSD without shadows
-                   CSD_SUPPORT_NONE,    // WM does not support CSD at all
+    typedef enum { CSD_SUPPORT_SYSTEM,    // CSD including shadows
+                   CSD_SUPPORT_CLIENT,    // CSD without shadows
+                   CSD_SUPPORT_NONE,      // WM does not support CSD at all
                    CSD_SUPPORT_UNKNOWN
     } CSDSupportLevel;
     /**
@@ -494,6 +495,8 @@ private:
     bool               mIsCSDAvailable;
     // If true, draw our own window titlebar.
     bool               mIsCSDEnabled;
+    // Draggable titlebar region maintained by UpdateWindowDraggingRegion
+    LayoutDeviceIntRegion mDraggableRegion;
 
 #ifdef ACCESSIBILITY
     RefPtr<mozilla::a11y::Accessible> mRootAccessible;

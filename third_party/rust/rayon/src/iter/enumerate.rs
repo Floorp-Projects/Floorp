@@ -1,15 +1,16 @@
-use super::internal::*;
+use super::plumbing::*;
 use super::*;
 use std::iter;
 use std::ops::Range;
 use std::usize;
 
 /// `Enumerate` is an iterator that returns the current count along with the element.
-/// This struct is created by the [`enumerate()`] method on [`ParallelIterator`]
+/// This struct is created by the [`enumerate()`] method on [`IndexedParallelIterator`]
 ///
-/// [`enumerate()`]: trait.ParallelIterator.html#method.enumerate
-/// [`ParallelIterator`]: trait.ParallelIterator.html
+/// [`enumerate()`]: trait.IndexedParallelIterator.html#method.enumerate
+/// [`IndexedParallelIterator`]: trait.IndexedParallelIterator.html
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+#[derive(Debug, Clone)]
 pub struct Enumerate<I: IndexedParallelIterator> {
     base: I,
 }
@@ -34,7 +35,7 @@ impl<I> ParallelIterator for Enumerate<I>
         bridge(self, consumer)
     }
 
-    fn opt_len(&mut self) -> Option<usize> {
+    fn opt_len(&self) -> Option<usize> {
         Some(self.len())
     }
 }
@@ -46,7 +47,7 @@ impl<I> IndexedParallelIterator for Enumerate<I>
         bridge(self, consumer)
     }
 
-    fn len(&mut self) -> usize {
+    fn len(&self) -> usize {
         self.base.len()
     }
 
@@ -94,8 +95,14 @@ impl<P> Producer for EnumerateProducer<P>
         // Enumerate only works for IndexedParallelIterators. Since those
         // have a max length of usize::MAX, their max index is
         // usize::MAX - 1, so the range 0..usize::MAX includes all
-        // possible indices
-        (self.offset..usize::MAX).zip(self.base.into_iter())
+        // possible indices.
+        //
+        // However, we should to use a precise end to the range, otherwise
+        // reversing the iterator may have to walk back a long ways before
+        // `Zip::next_back` can produce anything.
+        let base = self.base.into_iter();
+        let end = self.offset + base.len();
+        (self.offset..end).zip(base)
     }
 
     fn min_len(&self) -> usize {

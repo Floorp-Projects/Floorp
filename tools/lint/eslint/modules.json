@@ -51,7 +51,7 @@
   "DOMRequestHelper.jsm": ["DOMRequestIpcHelper"],
   "DownloadCore.jsm": ["Download", "DownloadSource", "DownloadTarget", "DownloadError", "DownloadSaver", "DownloadCopySaver", "DownloadLegacySaver", "DownloadPDFSaver"],
   "DownloadList.jsm": ["DownloadList", "DownloadCombinedList", "DownloadSummary"],
-  "engines.js": ["EngineManager", "Engine", "SyncEngine", "Tracker", "Store", "Changeset"],
+  "engines.js": ["EngineManager", "SyncEngine", "Tracker", "Store", "Changeset"],
   "enginesync.js": ["EngineSynchronizer"],
   "evaluate.js": ["evaluate", "sandbox", "Sandboxes"],
   "event-emitter.js": ["EventEmitter"],

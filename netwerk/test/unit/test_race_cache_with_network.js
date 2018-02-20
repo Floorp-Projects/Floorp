@@ -117,7 +117,7 @@ function *testSteps() {
   let startTime = Date.now();
   channel.asyncOpen2(new ChannelListener(checkContent, null));
   yield undefined;
-  greater(Date.now() - startTime, 200, "Check that timer works properly");
+  greaterOrEqual(Date.now() - startTime, 200, "Check that timer works properly");
   equal(gResponseCounter, 3);
   equal(g200Counter, 1, "check number of 200 responses");
   equal(g304Counter, 2, "check number of 304 responses");

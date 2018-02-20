@@ -1,6 +1,7 @@
-use super::internal::*;
+use super::plumbing::*;
 use super::*;
 
+use std::fmt::{self, Debug};
 use std::iter;
 
 
@@ -12,9 +13,18 @@ use std::iter;
 /// [`inspect()`]: trait.ParallelIterator.html#method.inspect
 /// [`ParallelIterator`]: trait.ParallelIterator.html
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+#[derive(Clone)]
 pub struct Inspect<I: ParallelIterator, F> {
     base: I,
     inspect_op: F,
+}
+
+impl<I: ParallelIterator + Debug, F> Debug for Inspect<I, F> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Inspect")
+            .field("base", &self.base)
+            .finish()
+    }
 }
 
 /// Create a new `Inspect` iterator.
@@ -42,7 +52,7 @@ impl<I, F> ParallelIterator for Inspect<I, F>
         self.base.drive_unindexed(consumer1)
     }
 
-    fn opt_len(&mut self) -> Option<usize> {
+    fn opt_len(&self) -> Option<usize> {
         self.base.opt_len()
     }
 }
@@ -58,7 +68,7 @@ impl<I, F> IndexedParallelIterator for Inspect<I, F>
         self.base.drive(consumer1)
     }
 
-    fn len(&mut self) -> usize {
+    fn len(&self) -> usize {
         self.base.len()
     }
 
@@ -131,6 +141,13 @@ impl<'f, P, F> Producer for InspectProducer<'f, P, F>
              base: right,
              inspect_op: self.inspect_op,
          })
+    }
+
+    fn fold_with<G>(self, folder: G) -> G
+        where G: Folder<Self::Item>
+    {
+        let folder1 = InspectFolder { base: folder, inspect_op: self.inspect_op };
+        self.base.fold_with(folder1).base
     }
 }
 

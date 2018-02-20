@@ -1,12 +1,16 @@
-//! This module contains the parallel iterator types for vectors
-//! (`Vec<T>`). You will rarely need to interact with it directly
-//! unless you have need to name one of those types.
+//! Parallel iterator types for [vectors][std::vec] (`Vec<T>`)
+//!
+//! You will rarely need to interact with this module directly unless you need
+//! to name one of the iterator types.
+//!
+//! [std::vec]: https://doc.rust-lang.org/stable/std/vec/
 
 use iter::*;
-use iter::internal::*;
+use iter::plumbing::*;
 use std;
 
 /// Parallel iterator that moves out of a vector.
+#[derive(Debug, Clone)]
 pub struct IntoIter<T: Send> {
     vec: Vec<T>,
 }
@@ -29,7 +33,7 @@ impl<T: Send> ParallelIterator for IntoIter<T> {
         bridge(self, consumer)
     }
 
-    fn opt_len(&mut self) -> Option<usize> {
+    fn opt_len(&self) -> Option<usize> {
         Some(self.len())
     }
 }
@@ -41,7 +45,7 @@ impl<T: Send> IndexedParallelIterator for IntoIter<T> {
         bridge(self, consumer)
     }
 
-    fn len(&mut self) -> usize {
+    fn len(&self) -> usize {
         self.vec.len()
     }
 
@@ -106,6 +110,11 @@ impl<'data, T: 'data> Iterator for SliceDrain<'data, T> {
 
     fn next(&mut self) -> Option<T> {
         self.iter.next().map(|ptr| unsafe { std::ptr::read(ptr) })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.len();
+        (len, Some(len))
     }
 }
 

@@ -30,7 +30,7 @@ add_task(async function test_processIncoming_abort() {
                                           syncID: engine.syncID}};
   _("Fake applyIncoming to abort.");
   engine._store.applyIncoming = async function(record) {
-    let ex = {code: Engine.prototype.eEngineAbortApplyIncoming,
+    let ex = {code: SyncEngine.prototype.eEngineAbortApplyIncoming,
               cause: "Nooo"};
     _("Throwing: " + JSON.stringify(ex));
     throw ex;

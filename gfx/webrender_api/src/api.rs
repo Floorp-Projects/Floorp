@@ -9,7 +9,7 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::path::PathBuf;
 use std::u32;
-use {BuiltDisplayList, BuiltDisplayListDescriptor, ClipId, ColorF, DeviceIntPoint, DeviceUintRect};
+use {BuiltDisplayList, BuiltDisplayListDescriptor, ColorF, DeviceIntPoint, DeviceUintRect};
 use {DeviceUintSize, ExternalScrollId, FontInstanceKey, FontInstanceOptions};
 use {FontInstancePlatformOptions, FontKey, FontVariation, GlyphDimensions, GlyphKey, ImageData};
 use {ImageDescriptor, ImageKey, ItemTag, LayoutPoint, LayoutSize, LayoutTransform, LayoutVector2D};
@@ -254,7 +254,7 @@ impl Transaction {
     pub fn scroll_node_with_id(
         &mut self,
         origin: LayoutPoint,
-        id: ScrollNodeIdType,
+        id: ExternalScrollId,
         clamp: ScrollClamping,
     ) {
         self.ops.push(DocumentMsg::ScrollNodeWithId(origin, id, clamp));
@@ -384,35 +384,11 @@ pub enum DocumentMsg {
         device_pixel_ratio: f32,
     },
     Scroll(ScrollLocation, WorldPoint, ScrollEventPhase),
-    ScrollNodeWithId(LayoutPoint, ScrollNodeIdType, ScrollClamping),
+    ScrollNodeWithId(LayoutPoint, ExternalScrollId, ScrollClamping),
     TickScrollingBounce,
     GetScrollNodeState(MsgSender<Vec<ScrollNodeState>>),
     GenerateFrame,
     UpdateDynamicProperties(DynamicProperties),
-}
-
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub enum ScrollNodeIdType {
-    ExternalScrollId(ExternalScrollId),
-    ClipId(ClipId),
-}
-
-impl From<ExternalScrollId> for ScrollNodeIdType {
-    fn from(id: ExternalScrollId) -> Self {
-        ScrollNodeIdType::ExternalScrollId(id)
-    }
-}
-
-impl From<ClipId> for ScrollNodeIdType {
-    fn from(id: ClipId) -> Self {
-        ScrollNodeIdType::ClipId(id)
-    }
-}
-
-impl<'a> From<&'a ClipId> for ScrollNodeIdType {
-    fn from(id: &'a ClipId) -> Self {
-        ScrollNodeIdType::ClipId(*id)
-    }
 }
 
 impl fmt::Debug for DocumentMsg {

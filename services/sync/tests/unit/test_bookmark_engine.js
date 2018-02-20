@@ -542,7 +542,7 @@ add_task(async function test_bookmark_guidMap_fail() {
   } catch (ex) {
     err = ex;
   }
-  Assert.equal(err.code, Engine.prototype.eEngineAbortApplyIncoming);
+  Assert.equal(err.code, SyncEngine.prototype.eEngineAbortApplyIncoming);
   Assert.equal(err.cause, "Nooo");
 
   _("We get an error and abort during processIncoming.");

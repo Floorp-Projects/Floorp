@@ -79,7 +79,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=998893
         resolve();
       }
 
-      field.addEventListener("keypress", handleEnter, true);
+      SpecialPowers.addSystemEventListener(field, "keypress", handleEnter, true);
     });
 
     field.focus();
