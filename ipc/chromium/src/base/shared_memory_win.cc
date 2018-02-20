@@ -17,14 +17,11 @@ SharedMemory::SharedMemory()
     : mapped_file_(NULL),
       memory_(NULL),
       read_only_(false),
-      max_size_(0),
-      lock_(NULL) {
+      max_size_(0) {
 }
 
 SharedMemory::~SharedMemory() {
   Close();
-  if (lock_ != NULL)
-    CloseHandle(lock_);
 }
 
 bool SharedMemory::SetHandle(SharedMemoryHandle handle, bool read_only) {
@@ -148,25 +145,6 @@ void SharedMemory::Close(bool unmap_view) {
     CloseHandle(mapped_file_);
     mapped_file_ = NULL;
   }
-}
-
-void SharedMemory::Lock() {
-  if (lock_ == NULL) {
-    std::wstring name = name_;
-    name.append(L"lock");
-    lock_ = CreateMutex(NULL, FALSE, name.c_str());
-    DCHECK(lock_ != NULL);
-    if (lock_ == NULL) {
-      DLOG(ERROR) << "Could not create mutex" << GetLastError();
-      return;  // there is nothing good we can do here.
-    }
-  }
-  WaitForSingleObject(lock_, INFINITE);
-}
-
-void SharedMemory::Unlock() {
-  DCHECK(lock_ != NULL);
-  ReleaseMutex(lock_);
 }
 
 SharedMemoryHandle SharedMemory::handle() const {
