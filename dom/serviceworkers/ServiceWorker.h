@@ -83,8 +83,8 @@ public:
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
               const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
 
-  bool
-  MatchesDescriptor(const ServiceWorkerDescriptor& aDescriptor) const;
+  const ServiceWorkerDescriptor&
+  Descriptor() const;
 
   void
   DisconnectFromOwner() override;
