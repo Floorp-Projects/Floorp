@@ -105,6 +105,8 @@ public class TelemetrySyncPingBundleBuilderTest {
     public void testGeneralShape() throws Exception {
         builder.setSyncStore(syncPings);
         builder.setSyncEventStore(eventPings);
+        builder.setDeviceID("device-id-1");
+        builder.setUID("uid-1");
 
         TelemetryOutgoingPing outgoingPing = builder.build();
 
@@ -128,13 +130,16 @@ public class TelemetrySyncPingBundleBuilderTest {
 
 
         // Test general shape of payload. Expecting {"syncs":[],"why":"schedule", "version": 1,
-        // "os": {"name": "Android", "version": "<version>", "locale": "<locale>"}}.
+        // "os": {"name": "Android", "version": "<version>", "locale": "<locale>"},
+        // "deviceID": <Hashed Device ID>, "uid": <Hashed UID>}.
         // NB that even though we set an empty sync event store, it's not in the json string.
         // That's because sync events are not yet instrumented.
         ExtendedJSONObject payload = outgoingPing.getPayload().getObject("payload");
-        assertEquals(4, payload.keySet().size());
+        assertEquals(6, payload.keySet().size());
         assertEquals("schedule", payload.getString("why"));
         assertEquals(Integer.valueOf(1), payload.getIntegerSafely("version"));
+        assertEquals(payload.getString("uid"), "uid-1");
+        assertEquals(payload.getString("deviceID"), "device-id-1");
         assertEquals(0, payload.getArray("syncs").size());
         // Test os key.
         ExtendedJSONObject os = payload.getObject("os");
@@ -151,10 +156,8 @@ public class TelemetrySyncPingBundleBuilderTest {
     public void testBundlingOfMultiplePings() throws Exception {
         // Try just one ping first.
         syncPings.storePing(new TelemetrySyncPingBuilder()
-                .setDeviceID("test-device-id")
                 .setRestarted(true)
                 .setTook(123L)
-                .setUID("test-uid")
                 .build()
         );
         builder.setSyncStore(syncPings);
@@ -166,14 +169,12 @@ public class TelemetrySyncPingBundleBuilderTest {
         assertEquals("schedule", payload.getString("why"));
         JSONArray syncs = payload.getArray("syncs");
         assertEquals(1, syncs.size());
-        assertSync((ExtendedJSONObject) syncs.get(0), "test-uid", 123L, "test-device-id", true);
+        assertSync((ExtendedJSONObject) syncs.get(0), 123L, true);
 
         // Add another ping.
         syncPings.storePing(new TelemetrySyncPingBuilder()
-                .setDeviceID("test-device-id")
                 .setRestarted(false)
                 .setTook(321L)
-                .setUID("test-uid")
                 .build()
         );
         builder.setSyncStore(syncPings);
@@ -184,14 +185,12 @@ public class TelemetrySyncPingBundleBuilderTest {
                 .getObject("payload")
                 .getArray("syncs");
         assertEquals(2, syncs.size());
-        assertSync((ExtendedJSONObject) syncs.get(0), "test-uid", 123L, "test-device-id", true);
-        assertSync((ExtendedJSONObject) syncs.get(1), "test-uid", 321L, "test-device-id", false);
+        assertSync((ExtendedJSONObject) syncs.get(0), 123L, true);
+        assertSync((ExtendedJSONObject) syncs.get(1), 321L, false);
     }
 
-    private void assertSync(ExtendedJSONObject sync, String uid, long took, String deviceID, boolean restarted) throws JSONException {
-        assertEquals(uid, sync.getString("uid"));
+    private void assertSync(ExtendedJSONObject sync, long took, boolean restarted) throws JSONException {
         assertEquals(Long.valueOf(took), sync.getLong("took"));
-        assertEquals(deviceID, sync.getString("deviceID"));
 
         // Test that 'when' timestamp looks generally sane.
         final long now = System.currentTimeMillis();
