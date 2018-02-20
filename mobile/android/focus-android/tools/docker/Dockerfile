@@ -5,7 +5,7 @@
 # Inspired by:
 # https://hub.docker.com/r/runmymind/docker-android-sdk/~/dockerfile/
 
-FROM ubuntu:17.04
+FROM ubuntu:17.10
 
 MAINTAINER Sebastian Kaspari "skaspari@mozilla.com"
 
@@ -38,7 +38,7 @@ RUN cd /opt && rm -f android-sdk.tgz
 
 ENV ANDROID_SDK_HOME /opt/android-sdk-linux
 ENV ANDROID_HOME /opt/android-sdk-linux
-ENV PATH ${PATH}:${ANDROID_SDK_HOME}/tools:${ANDROID_SDK_HOME}/platform-tools:/opt/tools
+ENV PATH ${PATH}:${ANDROID_SDK_HOME}/tools:${ANDROID_SDK_HOME}/platform-tools:/opt/tools:${ANDROID_SDK_HOME}/build-tools/26.0.1
 
 # Platform tools
 RUN echo y | android update sdk --no-ui --all --filter platform-tools | grep 'package installed'
