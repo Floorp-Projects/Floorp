@@ -1283,7 +1283,7 @@ IsCertificateDistrustImminent(nsIX509CertList* aCertList,
     static const PRTime NULL_TIME = 0;
 
     rv = CheckForSymantecDistrust(intCerts, eeCert, NULL_TIME,
-                                  RootAppleAndGoogleDNs, isDistrusted);
+                                  RootAppleAndGoogleSPKIs, isDistrusted);
     if (NS_FAILED(rv)) {
       return rv;
     }
