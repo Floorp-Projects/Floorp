@@ -1175,6 +1175,18 @@ GlobalHelperThreadState::maxGCParallelThreads() const
 }
 
 bool
+GlobalHelperThreadState::canStartWasmTier1Compile(const AutoLockHelperThreadState& lock)
+{
+    return canStartWasmCompile(lock, wasm::CompileMode::Tier1);
+}
+
+bool
+GlobalHelperThreadState::canStartWasmTier2Compile(const AutoLockHelperThreadState& lock)
+{
+    return canStartWasmCompile(lock, wasm::CompileMode::Tier2);
+}
+
+bool
 GlobalHelperThreadState::canStartWasmCompile(const AutoLockHelperThreadState& lock,
                                              wasm::CompileMode mode)
 {
@@ -1715,6 +1727,18 @@ HelperThread::ThreadMain(void* arg)
 }
 
 void
+HelperThread::handleWasmTier1Workload(AutoLockHelperThreadState& locked)
+{
+    handleWasmWorkload(locked, wasm::CompileMode::Tier1);
+}
+
+void
+HelperThread::handleWasmTier2Workload(AutoLockHelperThreadState& locked)
+{
+    handleWasmWorkload(locked, wasm::CompileMode::Tier2);
+}
+
+void
 HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked, wasm::CompileMode mode)
 {
     MOZ_ASSERT(HelperThreadState().canStartWasmCompile(locked, mode));
@@ -2128,6 +2152,62 @@ JSContext::setHelperThread(HelperThread* thread)
         nurserySuppressions_++;
 }
 
+// Definition of helper thread tasks.
+//
+// Priority is determined by the order they're listed here.
+const HelperThread::TaskSpec HelperThread::taskSpecs[] = {
+    {
+        THREAD_TYPE_GCPARALLEL,
+        &GlobalHelperThreadState::canStartGCParallelTask,
+        &HelperThread::handleGCParallelWorkload
+    },
+    {
+        THREAD_TYPE_GCHELPER,
+        &GlobalHelperThreadState::canStartGCHelperTask,
+        &HelperThread::handleGCHelperWorkload
+    },
+    {
+        THREAD_TYPE_ION,
+        &GlobalHelperThreadState::canStartIonCompile,
+        &HelperThread::handleIonWorkload
+    },
+    {
+        THREAD_TYPE_WASM,
+        &GlobalHelperThreadState::canStartWasmTier1Compile,
+        &HelperThread::handleWasmTier1Workload
+    },
+    {
+        THREAD_TYPE_PROMISE_TASK,
+        &GlobalHelperThreadState::canStartPromiseHelperTask,
+        &HelperThread::handlePromiseHelperTaskWorkload
+    },
+    {
+        THREAD_TYPE_PARSE,
+        &GlobalHelperThreadState::canStartParseTask,
+        &HelperThread::handleParseWorkload
+    },
+    {
+        THREAD_TYPE_COMPRESS,
+        &GlobalHelperThreadState::canStartCompressionTask,
+        &HelperThread::handleCompressionWorkload
+    },
+    {
+        THREAD_TYPE_ION_FREE,
+        &GlobalHelperThreadState::canStartIonFreeTask,
+        &HelperThread::handleIonFreeWorkload
+    },
+    {
+        THREAD_TYPE_WASM,
+        &GlobalHelperThreadState::canStartWasmTier2Compile,
+        &HelperThread::handleWasmTier2Workload
+    },
+    {
+        THREAD_TYPE_WASM_TIER2,
+        &GlobalHelperThreadState::canStartWasmTier2Generator,
+        &HelperThread::handleWasmTier2GeneratorWorkload
+    }
+};
+
 void
 HelperThread::threadLoop()
 {
@@ -2145,88 +2225,36 @@ HelperThread::threadLoop()
     cx.setHelperThread(this);
     JS_SetNativeStackQuota(&cx, HELPER_STACK_QUOTA);
 
-    while (true) {
+    while (!terminate) {
         MOZ_ASSERT(idle());
 
-        wasm::CompileMode tier;
-        js::ThreadType task;
-        while (true) {
-            if (terminate)
-                return;
+        // The selectors may depend on the HelperThreadState not changing
+        // between task selection and task execution, in particular, on new
+        // tasks not being added (because of the lifo structure of the work
+        // lists). Unlocking the HelperThreadState between task selection and
+        // execution is not well-defined.
 
-            // Select the task type to run.  Task priority is determined
-            // exclusively here.
-            //
-            // The selectors may depend on the HelperThreadState not changing
-            // between task selection and task execution, in particular, on new
-            // tasks not being added (because of the lifo structure of the work
-            // lists).  Unlocking the HelperThreadState between task selection
-            // and execution is not well-defined.
-
-            if (HelperThreadState().canStartGCParallelTask(lock)) {
-                task = js::THREAD_TYPE_GCPARALLEL;
-            } else if (HelperThreadState().canStartGCHelperTask(lock)) {
-                task = js::THREAD_TYPE_GCHELPER;
-            } else if (HelperThreadState().canStartIonCompile(lock)) {
-                task = js::THREAD_TYPE_ION;
-            } else if (HelperThreadState().canStartWasmCompile(lock, wasm::CompileMode::Tier1)) {
-                task = js::THREAD_TYPE_WASM;
-                tier = wasm::CompileMode::Tier1;
-            } else if (HelperThreadState().canStartPromiseHelperTask(lock)) {
-                task = js::THREAD_TYPE_PROMISE_TASK;
-            } else if (HelperThreadState().canStartParseTask(lock)) {
-                task = js::THREAD_TYPE_PARSE;
-            } else if (HelperThreadState().canStartCompressionTask(lock)) {
-                task = js::THREAD_TYPE_COMPRESS;
-            } else if (HelperThreadState().canStartIonFreeTask(lock)) {
-                task = js::THREAD_TYPE_ION_FREE;
-            } else if (HelperThreadState().canStartWasmCompile(lock, wasm::CompileMode::Tier2)) {
-                task = js::THREAD_TYPE_WASM;
-                tier = wasm::CompileMode::Tier2;
-            } else if (HelperThreadState().canStartWasmTier2Generator(lock)) {
-                task = js::THREAD_TYPE_WASM_TIER2;
-            } else {
-                task = js::THREAD_TYPE_NONE;
-            }
-
-            if (task != js::THREAD_TYPE_NONE)
-                break;
-
+        const TaskSpec* task = findHighestPriorityTask(lock);
+        if (!task) {
             HelperThreadState().wait(lock, GlobalHelperThreadState::PRODUCER);
+            continue;
         }
 
-        js::oom::SetThreadType(task);
-        switch (task) {
-          case js::THREAD_TYPE_GCPARALLEL:
-            handleGCParallelWorkload(lock);
-            break;
-          case js::THREAD_TYPE_GCHELPER:
-            handleGCHelperWorkload(lock);
-            break;
-          case js::THREAD_TYPE_ION:
-            handleIonWorkload(lock);
-            break;
-          case js::THREAD_TYPE_WASM:
-            handleWasmWorkload(lock, tier);
-            break;
-          case js::THREAD_TYPE_PROMISE_TASK:
-            handlePromiseHelperTaskWorkload(lock);
-            break;
-          case js::THREAD_TYPE_PARSE:
-            handleParseWorkload(lock);
-            break;
-          case js::THREAD_TYPE_COMPRESS:
-            handleCompressionWorkload(lock);
-            break;
-          case js::THREAD_TYPE_ION_FREE:
-            handleIonFreeWorkload(lock);
-            break;
-          case js::THREAD_TYPE_WASM_TIER2:
-            handleWasmTier2GeneratorWorkload(lock);
-            break;
-          default:
-            MOZ_CRASH("No task to perform");
-        }
+        js::oom::SetThreadType(task->type);
+        (this->*(task->handleWorkload))(lock);
         js::oom::SetThreadType(js::THREAD_TYPE_NONE);
     }
+}
+
+const HelperThread::TaskSpec*
+HelperThread::findHighestPriorityTask(const AutoLockHelperThreadState& locked)
+{
+    // Return the highest priority task that is ready to start, or nullptr.
+
+    for (const auto& task : taskSpecs) {
+        if ((HelperThreadState().*(task.canStart))(locked))
+            return &task;
+    }
+
+    return nullptr;
 }
