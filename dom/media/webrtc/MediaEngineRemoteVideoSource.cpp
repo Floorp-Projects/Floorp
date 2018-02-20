@@ -801,25 +801,6 @@ LogCapability(const char* aHeader,
               const webrtc::CaptureCapability &aCapability,
               uint32_t aDistance)
 {
-  // RawVideoType and VideoCodecType media/webrtc/trunk/webrtc/common_types.h
-  static const char* const types[] = {
-    "I420",
-    "YV12",
-    "YUY2",
-    "UYVY",
-    "IYUV",
-    "ARGB",
-    "RGB24",
-    "RGB565",
-    "ARGB4444",
-    "ARGB1555",
-    "MJPEG",
-    "NV12",
-    "NV21",
-    "BGRA",
-    "Unknown type"
-  };
-
   static const char* const codec[] = {
     "VP8",
     "VP9",
