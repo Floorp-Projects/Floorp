@@ -6,9 +6,6 @@
 
 #include shared,prim_shared,brush
 
-varying vec3 vUv;
-varying float vW;
-
 varying vec3 vSrcUv;
 varying vec3 vBackdropUv;
 flat varying int vOp;
@@ -24,18 +21,17 @@ void brush_vs(
 ) {
     vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0));
     vOp = user_data.x;
-    vW = vi.w;
 
     PictureTask src_task = fetch_picture_task(user_data.z);
-    vec2 src_uv = (vi.snapped_device_pos +
-                   src_task.common_data.task_rect.p0 -
-                   src_task.content_origin) * vi.w;
+    vec2 src_uv = vi.snapped_device_pos +
+                  src_task.common_data.task_rect.p0 -
+                  src_task.content_origin;
     vSrcUv = vec3(src_uv / texture_size, src_task.common_data.texture_layer_index);
 
     RenderTaskCommonData backdrop_task = fetch_render_task_common_data(user_data.y);
-    vec2 backdrop_uv = (vi.snapped_device_pos +
-                        backdrop_task.task_rect.p0 -
-                        src_task.content_origin) * vi.w;
+    vec2 backdrop_uv = vi.snapped_device_pos +
+                       backdrop_task.task_rect.p0 -
+                       src_task.content_origin;
     vBackdropUv = vec3(backdrop_uv / texture_size, backdrop_task.texture_layer_index);
 }
 #endif
@@ -205,10 +201,8 @@ const int MixBlendMode_Color       = 14;
 const int MixBlendMode_Luminosity  = 15;
 
 vec4 brush_fs() {
-    vec2 uv = vUv.xy / vW;
-
-    vec4 Cb = texture(sCacheRGBA8, vBackdropUv);
-    vec4 Cs = texture(sCacheRGBA8, vSrcUv);
+    vec4 Cb = textureLod(sCacheRGBA8, vBackdropUv, 0.0);
+    vec4 Cs = textureLod(sCacheRGBA8, vSrcUv, 0.0);
 
     if (Cb.a == 0.0) {
         return Cs;

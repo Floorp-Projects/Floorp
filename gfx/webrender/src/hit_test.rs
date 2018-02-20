@@ -2,13 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ClipAndScrollInfo, ClipId, ClipMode, HitTestFlags, HitTestItem};
-use api::{HitTestResult, ItemTag, LayerPoint, LayerPrimitiveInfo, LayerRect};
-use api::{LayerToWorldTransform, LocalClip, PipelineId, WorldPoint};
+use api::{BorderRadius, ClipId, ClipMode, HitTestFlags, HitTestItem, HitTestResult, ItemTag};
+use api::{LayerPoint, LayerPrimitiveInfo, LayerRect, LayerToWorldTransform, LocalClip, PipelineId};
+use api::WorldPoint;
 use clip::{ClipSource, ClipStore, Contains, rounded_rectangle_contains_point};
 use clip_scroll_node::{ClipScrollNode, NodeType};
-use clip_scroll_tree::ClipScrollTree;
+use clip_scroll_tree::{ClipChainIndex, ClipScrollTree};
 use internal_types::FastHashMap;
+use prim_store::ScrollNodeAndClipChain;
 
 /// A copy of important clip scroll node data to use during hit testing. This a copy of
 /// data from the ClipScrollTree that will persist as a new frame is under construction,
@@ -33,9 +34,19 @@ pub struct HitTestClipScrollNode {
 /// handled the same way during hit testing. Once we represent all ClipChains
 /// using ClipChainDescriptors, we can get rid of this and just use the
 /// ClipChainDescriptor here.
+#[derive(Clone)]
 struct HitTestClipChainDescriptor {
-    parent: Option<ClipId>,
+    parent: Option<ClipChainIndex>,
     clips: Vec<ClipId>,
+}
+
+impl HitTestClipChainDescriptor {
+    fn empty() -> HitTestClipChainDescriptor {
+        HitTestClipChainDescriptor {
+            parent: None,
+            clips: Vec::new(),
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -56,7 +67,7 @@ impl HitTestingItem {
 }
 
 #[derive(Clone)]
-pub struct HitTestingRun(pub Vec<HitTestingItem>, pub ClipAndScrollInfo);
+pub struct HitTestingRun(pub Vec<HitTestingItem>, pub ScrollNodeAndClipChain);
 
 enum HitTestRegion {
     Rectangle(LayerRect),
@@ -78,7 +89,7 @@ impl HitTestRegion {
 pub struct HitTester {
     runs: Vec<HitTestingRun>,
     nodes: FastHashMap<ClipId, HitTestClipScrollNode>,
-    clip_chains: FastHashMap<ClipId, HitTestClipChainDescriptor>,
+    clip_chains: Vec<HitTestClipChainDescriptor>,
 }
 
 impl HitTester {
@@ -90,7 +101,7 @@ impl HitTester {
         let mut hit_tester = HitTester {
             runs: runs.clone(),
             nodes: FastHashMap::default(),
-            clip_chains: FastHashMap::default(),
+            clip_chains: Vec::new(),
         };
         hit_tester.read_clip_scroll_tree(clip_scroll_tree, clip_store);
         hit_tester
@@ -102,6 +113,11 @@ impl HitTester {
         clip_store: &ClipStore
     ) {
         self.nodes.clear();
+        self.clip_chains.clear();
+        self.clip_chains.resize(
+            clip_scroll_tree.clip_chains.len(),
+            HitTestClipChainDescriptor::empty()
+        );
 
         for (id, node) in &clip_scroll_tree.nodes {
             self.nodes.insert(*id, HitTestClipScrollNode {
@@ -111,52 +127,50 @@ impl HitTester {
                 node_origin: node.local_viewport_rect.origin,
             });
 
-            self.clip_chains.insert(*id, HitTestClipChainDescriptor {
-                parent: node.parent,
-                clips: vec![*id],
-            });
+            if let NodeType::Clip { clip_chain_index, .. } = node.node_type {
+              let clip_chain = self.clip_chains.get_mut(clip_chain_index.0).unwrap();
+              clip_chain.parent =
+                  clip_scroll_tree.get_clip_chain(clip_chain_index).parent_index;
+              clip_chain.clips = vec![*id];
+            }
         }
 
         for descriptor in &clip_scroll_tree.clip_chains_descriptors {
-            self.clip_chains.insert(
-                ClipId::ClipChain(descriptor.id),
-                HitTestClipChainDescriptor {
-                    parent: descriptor.parent.map(|id| ClipId::ClipChain(id)),
-                    clips: descriptor.clips.clone(),
-                }
-            );
+            let clip_chain = self.clip_chains.get_mut(descriptor.index.0).unwrap();
+            clip_chain.parent = clip_scroll_tree.get_clip_chain(descriptor.index).parent_index;
+            clip_chain.clips = descriptor.clips.clone();
         }
     }
 
     fn is_point_clipped_in_for_clip_chain(
         &self,
         point: WorldPoint,
-        chain_id: &ClipId,
+        clip_chain_index: ClipChainIndex,
         test: &mut HitTest
     ) -> bool {
-        if let Some(result) = test.clip_chain_cache.get(&chain_id) {
-            return *result;
+        if let Some(result) = test.get_from_clip_chain_cache(clip_chain_index) {
+            return result;
         }
 
-        let descriptor = &self.clip_chains[&chain_id];
+        let descriptor = &self.clip_chains[clip_chain_index.0];
         let parent_clipped_in = match descriptor.parent {
             None => true,
-            Some(ref parent) => self.is_point_clipped_in_for_clip_chain(point, parent, test),
+            Some(parent) => self.is_point_clipped_in_for_clip_chain(point, parent, test),
         };
 
         if !parent_clipped_in {
-            test.clip_chain_cache.insert(*chain_id, false);
+            test.set_in_clip_chain_cache(clip_chain_index, false);
             return false;
         }
 
         for clip_node in &descriptor.clips {
             if !self.is_point_clipped_in_for_node(point, clip_node, test) {
-                test.clip_chain_cache.insert(*chain_id, false);
+                test.set_in_clip_chain_cache(clip_chain_index, false);
                 return false;
             }
         }
 
-        test.clip_chain_cache.insert(*chain_id, true);
+        test.set_in_clip_chain_cache(clip_chain_index, true);
         true
     }
 
@@ -197,7 +211,9 @@ impl HitTester {
 
         let mut result = HitTestResult::default();
         for &HitTestingRun(ref items, ref clip_and_scroll) in self.runs.iter().rev() {
-            let scroll_node = &self.nodes[&clip_and_scroll.scroll_node_id];
+            let scroll_node_id = clip_and_scroll.scroll_node_id;
+            let scroll_node = &self.nodes[&scroll_node_id];
+            let pipeline_id = scroll_node_id.pipeline_id();
             match (test.pipeline_id, clip_and_scroll.scroll_node_id.pipeline_id()) {
                 (Some(id), node_id) if node_id != id => continue,
                 _ => {},
@@ -215,12 +231,11 @@ impl HitTester {
                     continue;
                 }
 
-                let clip_id = &clip_and_scroll.clip_node_id();
+                let clip_chain_index = clip_and_scroll.clip_chain_index;
+                clipped_in |=
+                    self.is_point_clipped_in_for_clip_chain(point, clip_chain_index, &mut test);
                 if !clipped_in {
-                    clipped_in = self.is_point_clipped_in_for_clip_chain(point, clip_id, &mut test);
-                    if !clipped_in {
-                        break;
-                    }
+                    break;
                 }
 
                 // We need to trigger a lookup against the root reference frame here, because
@@ -228,7 +243,7 @@ impl HitTester {
                 // hierarchy. If we don't have a valid point for this test, we are likely
                 // in a situation where the reference frame has an univertible transform, but the
                 // item's clip does not.
-                let root_reference_frame = ClipId::root_reference_frame(clip_id.pipeline_id());
+                let root_reference_frame = ClipId::root_reference_frame(pipeline_id);
                 if !self.is_point_clipped_in_for_node(point, &root_reference_frame, &mut test) {
                     continue;
                 }
@@ -238,7 +253,7 @@ impl HitTester {
                 };
 
                 result.items.push(HitTestItem {
-                    pipeline: clip_and_scroll.clip_node_id().pipeline_id(),
+                    pipeline: pipeline_id,
                     tag: item.tag,
                     point_in_viewport,
                     point_relative_to_item: point_in_layer - item.rect.origin.to_vector(),
@@ -259,7 +274,7 @@ fn get_regions_for_clip_scroll_node(
     clip_store: &ClipStore
 ) -> Vec<HitTestRegion> {
     let clips = match node.node_type {
-        NodeType::Clip(ref handle) => clip_store.get(handle).clips(),
+        NodeType::Clip{ ref handle, .. } => clip_store.get(handle).clips(),
         _ => return Vec::new(),
     };
 
@@ -280,7 +295,7 @@ pub struct HitTest {
     point: WorldPoint,
     flags: HitTestFlags,
     node_cache: FastHashMap<ClipId, Option<LayerPoint>>,
-    clip_chain_cache: FastHashMap<ClipId, bool>,
+    clip_chain_cache: Vec<Option<bool>>,
 }
 
 impl HitTest {
@@ -294,8 +309,23 @@ impl HitTest {
             point,
             flags,
             node_cache: FastHashMap::default(),
-            clip_chain_cache: FastHashMap::default(),
+            clip_chain_cache: Vec::new(),
         }
+    }
+
+    pub fn get_from_clip_chain_cache(&mut self, index: ClipChainIndex) -> Option<bool> {
+        if index.0 >= self.clip_chain_cache.len() {
+            None
+        } else {
+            self.clip_chain_cache[index.0]
+        }
+    }
+
+    pub fn set_in_clip_chain_cache(&mut self, index: ClipChainIndex, value: bool) {
+        if index.0 >= self.clip_chain_cache.len() {
+            self.clip_chain_cache.resize(index.0 + 1, None);
+        }
+        self.clip_chain_cache[index.0] = Some(value);
     }
 
     pub fn get_absolute_point(&self, hit_tester: &HitTester) -> WorldPoint {

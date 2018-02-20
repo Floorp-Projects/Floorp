@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #define VECS_PER_SPECIFIC_BRUSH 5
+#define FORCE_NO_PERSPECTIVE
 
 #include shared,prim_shared,brush
 
 varying vec3 vUv;
-varying float vW;
 
 flat varying float vAmount;
 flat varying int vOp;
@@ -25,10 +25,9 @@ void brush_vs(
 ) {
     PictureTask src_task = fetch_picture_task(user_data.x);
     vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
-    vec2 uv = (vi.snapped_device_pos +
-               src_task.common_data.task_rect.p0 -
-               src_task.content_origin) * vi.w;
-    vW = vi.w;
+    vec2 uv = vi.snapped_device_pos +
+              src_task.common_data.task_rect.p0 -
+              src_task.content_origin;
     vUv = vec3(uv / texture_size, src_task.common_data.texture_layer_index);
 
     vOp = user_data.y;
@@ -115,8 +114,7 @@ vec4 Opacity(vec4 Cs, float amount) {
 }
 
 vec4 brush_fs() {
-    vec2 uv = vUv.xy / vW;
-    vec4 Cs = texture(sColor0, vec3(uv, vUv.z));
+    vec4 Cs = texture(sColor0, vUv);
 
     // Un-premultiply the input.
     Cs.rgb /= Cs.a;
