@@ -11,6 +11,7 @@ interface nsIURIMutator;
 %{C++
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include <functional>
 
 #undef SetPort  // XXX Windows!
 
@@ -271,6 +272,45 @@ interface nsIURIMutator : nsIURISetters
 
 %{C++
 
+// This templated struct is used to extract the class type of the method
+// passed to NS_MutatorMethod.
+template <typename Method>
+struct nsMethodTypeTraits;
+
+template <class C, typename R, typename... As>
+struct nsMethodTypeTraits<R(C::*)(As...)>
+{
+  typedef C class_type;
+};
+
+#ifdef NS_HAVE_STDCALL
+template <class C, typename R, typename... As>
+struct nsMethodTypeTraits<R(__stdcall C::*)(As...)>
+{
+  typedef C class_type;
+};
+#endif
+
+// This helper returns a std::function that will be applied on the
+// nsIURIMutator. The type of `Interface` will be deduced from the method type.
+// aMethod will be called on the target object if it successfully QIs to
+// `Interface`, and the arguments will be passed to the call.
+template <typename Method, typename... Args>
+std::function<nsresult(nsIURIMutator*)>
+NS_MutatorMethod(Method aMethod, Args ...aArgs)
+{
+  // Capture arguments by value, otherwise we crash.
+  return [=](nsIURIMutator* aMutator) {
+    typedef typename nsMethodTypeTraits<Method>::class_type Interface;
+    nsresult rv;
+    nsCOMPtr<Interface> target = do_QueryInterface(aMutator, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = (target->*aMethod)(aArgs...);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+  };
+}
+
 // This class provides a useful helper that allows chaining of setter operations
 class MOZ_STACK_CLASS NS_MutateURI
 {
@@ -377,7 +417,7 @@ public:
    * nsCOMPtr<nsIURI> uri;
    * nsresult rv = NS_MutateURI(new URIClass::Mutator())
    *                 .SetSpec(aSpec)
-   *                 .Apply<SomeInterface>(&SomeInterface::Method, arg1, arg2)
+   *                 .Apply(NS_MutatorMethod(&SomeInterface::Method, arg1, arg2))
    *                 .Finalize(uri);
    *
    * If mMutator does not implement SomeInterface, do_QueryInterface will fail
@@ -385,13 +425,11 @@ public:
    * If aMethod does not exist, or if there is a mismatch between argument
    * types, or the number of arguments, then there will be a compile error.
    */
-  template <typename Interface, typename Method, typename... Args>
-  NS_MutateURI& Apply(Method aMethod, Args ...aArgs)
+  NS_MutateURI& Apply(std::function<nsresult(nsIURIMutator*)> aFunction)
   {
     NS_ENSURE_SUCCESS(mStatus, *this);
-    nsCOMPtr<Interface> target = do_QueryInterface(mMutator, &mStatus);
+    mStatus = aFunction(mMutator);
     NS_ENSURE_SUCCESS(mStatus, *this);
-    mStatus = (target->*aMethod)(aArgs...);
     return *this;
   }
 

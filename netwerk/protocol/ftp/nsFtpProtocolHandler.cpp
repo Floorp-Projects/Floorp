@@ -185,11 +185,10 @@ nsFtpProtocolHandler::NewURI(const nsACString &aSpec,
 
     nsCOMPtr<nsIURI> url;
     return NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-             .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
-                                           nsIStandardURL::URLTYPE_AUTHORITY, 21,
-                                           nsCString(aSpec), aCharset, aBaseURI,
-                                           nullptr)
-             .Finalize(result);
+      .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                              nsIStandardURL::URLTYPE_AUTHORITY,
+                              21, nsCString(aSpec), aCharset, aBaseURI, nullptr))
+      .Finalize(result);
 }
 
 NS_IMETHODIMP

@@ -656,9 +656,8 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
     mimeInfo->GetPrimaryExtension(primaryExtension);
 
     rv = NS_MutateURI(imgUri)
-           .Apply<nsIURLMutator>(&nsIURLMutator::SetFileExtension,
-                                 primaryExtension,
-                                 nullptr)
+           .Apply(NS_MutatorMethod(&nsIURLMutator::SetFileExtension,
+                                   primaryExtension, nullptr))
            .Finalize(imgUrl);
     NS_ENSURE_SUCCESS(rv, rv);
   }
