@@ -242,7 +242,8 @@ async function openContextMenu(hud, element) {
   let onConsoleMenuOpened = hud.ui.newConsoleOutput.once("menu-open");
   synthesizeContextMenuEvent(element);
   await onConsoleMenuOpened;
-  return hud.ui.newConsoleOutput.toolbox.doc.getElementById("webconsole-menu");
+  const doc = hud.ui.newConsoleOutput.owner.chromeWindow.document;
+  return doc.getElementById("webconsole-menu");
 }
 
 /**
@@ -254,7 +255,8 @@ async function openContextMenu(hud, element) {
  * @return promise
  */
 function hideContextMenu(hud) {
-  let popup = hud.ui.newConsoleOutput.toolbox.doc.getElementById("webconsole-menu");
+  const doc = hud.ui.newConsoleOutput.owner.chromeWindow.document;
+  let popup = doc.getElementById("webconsole-menu");
   if (!popup) {
     return Promise.resolve();
   }
