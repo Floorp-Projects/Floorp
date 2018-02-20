@@ -303,30 +303,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         void relink(Label* jump) {
             jump_ = jump;
         }
-
-        virtual void emit(MacroAssembler& masm) = 0;
-    };
-
-    /*
-     * Creates a branch based on a specific TypeSet::Type.
-     * Note: emits number test (int/double) for TypeSet::DoubleType()
-     */
-    class BranchType : public Branch
-    {
-        TypeSet::Type type_;
-
-      public:
-        BranchType()
-          : Branch(),
-            type_(TypeSet::UnknownType())
-        { }
-
-        BranchType(Condition cond, Register reg, TypeSet::Type type, Label* jump)
-          : Branch(cond, reg, jump),
-            type_(type)
-        { }
-
-        void emit(MacroAssembler& masm) override;
     };
 
     /*
@@ -347,7 +323,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             ptr_(ptr)
         { }
 
-        void emit(MacroAssembler& masm) override;
+        void emit(MacroAssembler& masm);
     };
 
     mozilla::Maybe<AutoRooter> autoRooter_;
@@ -1207,9 +1183,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void branchTestProxyHandlerFamily(Condition cond, Register proxy, Register scratch,
                                              const void* handlerp, Label* label);
-
-    template <typename Value>
-    inline void branchTestMIRType(Condition cond, const Value& val, MIRType type, Label* label);
 
     // Emit type case branch on tag matching if the type tag in the definition
     // might actually be that type.
