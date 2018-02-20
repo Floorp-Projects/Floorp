@@ -237,12 +237,16 @@ var paymentDialogWrapper = {
   },
 
   onAutofillStorageChange() {
+    this.sendMessageToContent("updateState", {
+      savedAddresses: this.fetchSavedAddresses(),
+      savedBasicCards: this.fetchSavedPaymentCards(),
+    });
+  },
+
+  sendMessageToContent(messageType, data = {}) {
     this.mm.sendAsyncMessage("paymentChromeToContent", {
-      messageType: "updateState",
-      data: {
-        savedAddresses: this.fetchSavedAddresses(),
-        savedBasicCards: this.fetchSavedPaymentCards(),
-      },
+      data,
+      messageType,
     });
   },
 
@@ -325,14 +329,10 @@ var paymentDialogWrapper = {
 
   initializeFrame() {
     let requestSerialized = this._serializeRequest(this.request);
-
-    this.mm.sendAsyncMessage("paymentChromeToContent", {
-      messageType: "showPaymentRequest",
-      data: {
-        request: requestSerialized,
-        savedAddresses: this.fetchSavedAddresses(),
-        savedBasicCards: this.fetchSavedPaymentCards(),
-      },
+    this.sendMessageToContent("showPaymentRequest", {
+      request: requestSerialized,
+      savedAddresses: this.fetchSavedAddresses(),
+      savedBasicCards: this.fetchSavedPaymentCards(),
     });
 
     Services.obs.addObserver(this, "formautofill-storage-changed", true);
