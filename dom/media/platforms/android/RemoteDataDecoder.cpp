@@ -19,12 +19,6 @@
 
 #include <jni.h>
 
-#ifdef NIGHTLY_BUILD
-#define DEBUG_SHUTDOWN(fmt, ...) printf_stderr("[DEBUG SHUTDOWN] %s: " fmt "\n", __func__, ##__VA_ARGS__)
-#else
-#define DEBUG_SHUTDOWN(...) do { } while (0)
-#endif
-
 #undef LOG
 #define LOG(arg, ...)                                                          \
   MOZ_LOG(sAndroidDecoderModuleLog,                                            \
@@ -542,7 +536,6 @@ RemoteDataDecoder::ProcessShutdown()
 
   mFormat = nullptr;
 
-  DEBUG_SHUTDOWN("decoder=%p mime=%s", this, mMimeType.get());
   return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
