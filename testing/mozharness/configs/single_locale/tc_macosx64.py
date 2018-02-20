@@ -12,7 +12,6 @@ config = {
         "MOZ_UPDATE_CHANNEL": "%(update_channel)s",
         "DIST": "%(abs_objdir)s",
         "L10NBASEDIR": "../../l10n",
-        "MOZ_MAKE_COMPLETE_MAR": "1",
         'TOOLTOOL_CACHE': os.environ.get('TOOLTOOL_CACHE'),
     },
     "upload_env": {
