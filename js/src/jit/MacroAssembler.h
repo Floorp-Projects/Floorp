@@ -1957,8 +1957,10 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void guardObjectType(Register obj, const TypeSet* types, Register scratch, Label* miss);
 
-    template <typename TypeSet>
-    void guardTypeSetMightBeIncomplete(TypeSet* types, Register obj, Register scratch, Label* label);
+#ifdef DEBUG
+    void guardTypeSetMightBeIncomplete(const TypeSet* types, Register obj, Register scratch,
+                                       Label* label);
+#endif
 
     void loadObjShape(Register objReg, Register dest) {
         loadPtr(Address(objReg, ShapedObject::offsetOfShape()), dest);
