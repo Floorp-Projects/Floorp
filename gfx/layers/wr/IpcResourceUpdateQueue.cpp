@@ -51,11 +51,15 @@ ShmSegmentsWriter::Write(Range<uint8_t> aBytes)
   while (remainingBytesToCopy > 0) {
     if (dstCursor >= mSmallAllocs.Length() * mChunkSize) {
       if (!AllocChunk()) {
+        // Allocation failed, so roll back to the state at the start of this
+        // Write() call and abort.
         for (size_t i = mSmallAllocs.Length() ; currAllocLen < i ; i--) {
-          RefCountedShmem& shm = mSmallAllocs.ElementAt(i);
+          MOZ_ASSERT(i > 0);
+          RefCountedShmem& shm = mSmallAllocs.ElementAt(i - 1);
           RefCountedShm::Dealloc(mShmAllocator, shm);
-          mSmallAllocs.RemoveElementAt(i);
+          mSmallAllocs.RemoveElementAt(i - 1);
         }
+        MOZ_ASSERT(mSmallAllocs.Length() == currAllocLen);
         return layers::OffsetRange(0, start, 0);
       }
       continue;
