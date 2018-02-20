@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// Tests handling of certificates issued by Symantec. If such
-// certificates have a notBefore before 1 June 2016, and are not
-// issued by an Apple or Google intermediate, they should emit a
-// warning to the console.
+// Tests handling of certificates issued by Symantec. If such certificates were
+// issued by an Apple or Google intermediate, they are whitelisted. Otherwise,
+// If they have a notBefore before 1 June 2016, they should be distrusted, while
+// those from that date or later emit a warning to the console.
 
 function shouldBeImminentlyDistrusted(aTransportSecurityInfo) {
   let isDistrust = aTransportSecurityInfo.securityState &
@@ -37,4 +37,4 @@ add_connection_test("symantec-not-whitelisted-after-cutoff.example.com",
 
 // Not whitelisted certs before the cutoff are to be distrusted
 add_connection_test("symantec-not-whitelisted-before-cutoff.example.com",
-                    PRErrorCodeSuccess, null, shouldBeImminentlyDistrusted);
+                    SEC_ERROR_UNKNOWN_ISSUER, null, null);

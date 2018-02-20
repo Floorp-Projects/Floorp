@@ -1240,7 +1240,7 @@ DetermineEVAndCTStatusAndSetNewCert(RefPtr<nsSSLStatus> sslStatus,
 
 static nsresult
 IsCertificateDistrustImminent(nsIX509CertList* aCertList,
-                              /* out */ bool& aResult) {
+                              /* out */ bool& isDistrusted) {
   if (!aCertList) {
     return NS_ERROR_INVALID_POINTER;
   }
@@ -1264,42 +1264,30 @@ IsCertificateDistrustImminent(nsIX509CertList* aCertList,
   if (!nssEECert) {
     return NS_ERROR_FAILURE;
   }
-  aResult = CertDNIsInList(nssEECert.get(), TestImminentDistrustEndEntityDNs);
-  if (aResult) {
+  isDistrusted = CertDNIsInList(nssEECert.get(),
+                                TestImminentDistrustEndEntityDNs);
+  if (isDistrusted) {
     // Exit early
     return NS_OK;
+  }
+
+  UniqueCERTCertificate nssRootCert(rootCert->GetCert());
+  if (!nssRootCert) {
+    return NS_ERROR_FAILURE;
   }
 
   // Proceed with the Symantec imminent distrust algorithm. This algorithm is
   // to be removed in Firefox 63, when the validity period check will also be
   // removed from the code in NSSCertDBTrustDomain.
+  if (CertDNIsInList(nssRootCert.get(), RootSymantecDNs)) {
+    static const PRTime NULL_TIME = 0;
 
-  // We need an owning handle when calling nsIX509Cert::GetCert().
-  UniqueCERTCertificate nssRootCert(rootCert->GetCert());
-  // If the root is not one of the Symantec roots, exit false
-  if (!CertDNIsInList(nssRootCert.get(), RootSymantecDNs)) {
-    aResult = false;
-    return NS_OK;
+    rv = CheckForSymantecDistrust(intCerts, eeCert, NULL_TIME,
+                                  RootAppleAndGoogleDNs, isDistrusted);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
-
-  // Look for one of the intermediates to be in the whitelist
-  bool foundInWhitelist = false;
-  RefPtr<nsNSSCertList> intCertList = intCerts->GetCertList();
-
-  intCertList->ForEachCertificateInChain(
-    [&foundInWhitelist] (nsCOMPtr<nsIX509Cert> aCert, bool aHasMore,
-                         /* out */ bool& aContinue) {
-      // We need an owning handle when calling nsIX509Cert::GetCert().
-      UniqueCERTCertificate nssCert(aCert->GetCert());
-      if (CertDNIsInList(nssCert.get(), RootAppleAndGoogleDNs)) {
-        foundInWhitelist = true;
-        aContinue = false;
-      }
-      return NS_OK;
-  });
-
-  // If this chain did not match the whitelist, exit true
-  aResult = !foundInWhitelist;
   return NS_OK;
 }
 
