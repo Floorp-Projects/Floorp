@@ -87,8 +87,9 @@ function getMessage(error, prefix = "") {
   }
   let message = prefix;
   if (error.operator) {
-    message += (prefix ? " - " : "") + truncate(actual) + " " + error.operator +
-               " " + truncate(expected);
+    let truncateLength = error.truncate ? kTruncateLength : Infinity;
+    message += (prefix ? " - " : "") + truncate(actual, truncateLength) + " " +
+               error.operator + " " + truncate(expected, truncateLength);
   }
   return message;
 }
@@ -101,7 +102,8 @@ function getMessage(error, prefix = "") {
  *   message: message,
  *   actual: actual,
  *   expected: expected,
- *   operator: operator
+ *   operator: operator,
+ *   truncate: truncate
  * });
  *
  * At present only the four keys mentioned above are used and
@@ -114,7 +116,7 @@ Assert.AssertionError = function(options) {
   this.actual = options.actual;
   this.expected = options.expected;
   this.operator = options.operator;
-  this.message = getMessage(this, options.message);
+  this.message = getMessage(this, options.message, options.truncate);
   // The part of the stack that comes from this module is not interesting.
   let stack = Components.stack;
   do {
@@ -188,13 +190,16 @@ proto.setReporter = function(reporterFunc) {
  *        (string) Short explanation of the expected result
  * @param operator (optional)
  *        (string) Operation qualifier used by the assertion method (ex: '==')
+ * @param truncate (optional) [true]
+ *        (boolean) Whether or not `actual` and `expected` should be truncated when printing
  */
-proto.report = function(failed, actual, expected, message, operator) {
+proto.report = function(failed, actual, expected, message, operator, truncate = true) {
   let err = new Assert.AssertionError({
     message,
     actual,
     expected,
-    operator
+    operator,
+    truncate
   });
   if (!this._reporter) {
     // If no custom reporter is set, throw the error.
@@ -269,7 +274,7 @@ proto.notEqual = function notEqual(actual, expected, message) {
  *        (string) Short explanation of the expected result
  */
 proto.deepEqual = function deepEqual(actual, expected, message) {
-  this.report(!ObjectUtils.deepEqual(actual, expected), actual, expected, message, "deepEqual");
+  this.report(!ObjectUtils.deepEqual(actual, expected), actual, expected, message, "deepEqual", false);
 };
 
 /**
@@ -284,7 +289,7 @@ proto.deepEqual = function deepEqual(actual, expected, message) {
  *        (string) Short explanation of the expected result
  */
 proto.notDeepEqual = function notDeepEqual(actual, expected, message) {
-  this.report(ObjectUtils.deepEqual(actual, expected), actual, expected, message, "notDeepEqual");
+  this.report(ObjectUtils.deepEqual(actual, expected), actual, expected, message, "notDeepEqual", false);
 };
 
 /**
