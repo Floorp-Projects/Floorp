@@ -69,6 +69,16 @@ public class TelemetrySyncPingBundleBuilder extends TelemetryPingBuilder {
         return this;
     }
 
+    public TelemetrySyncPingBundleBuilder setUID(@NonNull String uid) {
+        pingData.put("uid", uid);
+        return this;
+    }
+
+    public TelemetrySyncPingBundleBuilder setDeviceID(@NonNull String deviceID) {
+        pingData.put("deviceID", deviceID);
+        return this;
+    }
+
     @Override
     public TelemetryOutgoingPing build() {
         final DateFormat pingCreationDateFormat = new SimpleDateFormat(
