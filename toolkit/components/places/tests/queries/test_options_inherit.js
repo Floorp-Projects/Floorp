@@ -36,7 +36,7 @@ add_task(async function() {
     ]
   });
 
-  await test_query({}, 3, 3, 3);
+  await test_query({}, 3, 3, 2);
   await test_query({ expandQueries: false }, 3, 3, 0);
   await test_query({ excludeItems: true }, 1, 1, 0);
   await test_query({ excludeItems: true, expandQueries: false }, 1, 1, 0);

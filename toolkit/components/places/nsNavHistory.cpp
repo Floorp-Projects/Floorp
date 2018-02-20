@@ -1604,6 +1604,8 @@ PlacesSQLQueryBuilder::SelectAsURI()
                 "WHERE id = b.parent AND parent = ") +
                   nsPrintfCString("%" PRId64, history->GetTagsFolder()) +
               NS_LITERAL_CSTRING(") "
+              "AND NOT h.url_hash BETWEEN hash('place', 'prefix_lo') AND "
+                                         "hash('place', 'prefix_hi') "
             "{ADDITIONAL_CONDITIONS}");
       }
       break;
