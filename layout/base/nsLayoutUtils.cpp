@@ -8166,6 +8166,10 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
     return;
   }
 
+  if (!aFrame->StyleVisibility()->IsVisible()) {
+    return;
+  }
+
   nsTextFrame* curr = static_cast<nsTextFrame*>(aFrame);
   do {
     int32_t fstart = std::max(curr->GetContentOffset(), aStartOffset);
