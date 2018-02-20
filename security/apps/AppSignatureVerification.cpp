@@ -2021,10 +2021,6 @@ private:
                                  getter_AddRefs(mSignerCert));
   }
 
-  // This class doesn't directly hold NSS resources so there's nothing that
-  // needs to be released
-  virtual void ReleaseNSSResources() override { }
-
   virtual void CallCallback(nsresult rv) override
   {
     (void) mCallback->VerifySignedDirectoryFinished(rv, mSignerCert);
