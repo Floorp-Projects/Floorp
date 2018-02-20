@@ -197,7 +197,7 @@ const ViewHelpers = exports.ViewHelpers = {
    * Check if the enter key or space was pressed
    *
    * @param event event
-   *        The event triggered by a keypress on an element
+   *        The event triggered by a keydown or keypress on an element
    */
   isSpaceOrReturn: function (event) {
     return event.keyCode === KeyCodes.DOM_VK_SPACE ||
@@ -507,7 +507,7 @@ Item.prototype = {
  *
  * For automagical keyboard and mouse accessibility, the widget should be an
  * event emitter with the following events:
- *   - "keyPress" -> (aName:string, aEvent:KeyboardEvent)
+ *   - "keyDown" -> (aName:string, aEvent:KeyboardEvent)
  *   - "mousePress" -> (aName:string, aEvent:MouseEvent)
  */
 const WidgetMethods = exports.WidgetMethods = {
@@ -526,7 +526,7 @@ const WidgetMethods = exports.WidgetMethods = {
 
     // Handle internal events emitted by the widget if necessary.
     if (ViewHelpers.isEventEmitter(widget)) {
-      widget.on("keyPress", this._onWidgetKeyPress.bind(this));
+      widget.on("keyDown", this._onWidgetKeyDown.bind(this));
       widget.on("mousePress", this._onWidgetMousePress.bind(this));
     }
   },
@@ -1489,11 +1489,11 @@ const WidgetMethods = exports.WidgetMethods = {
   },
 
   /**
-   * The keyPress event listener for this container.
+   * The keyDown event listener for this container.
    * @param string name
    * @param KeyboardEvent event
    */
-  _onWidgetKeyPress: function (name, event) {
+  _onWidgetKeyDown: function (name, event) {
     // Prevent scrolling when pressing navigation keys.
     ViewHelpers.preventScrolling(event);
 
