@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -6,12 +6,13 @@
 
 """
 This utility takes a series of https://crt.sh/ identifiers and writes to
-stdout all of those certs' distinguished name fields in hex, with an array
-of all those named "RootDNs". You'll need to post-process this list to rename
-"RootDNs" and handle any duplicates.
+stdout all of those certs' distinguished name or SPKI fields in hex, with an
+array of all those. You'll need to post-process this list to handle any
+duplicates.
 
 Requires Python 3.
 """
+import argparse
 import re
 import requests
 import sys
@@ -48,15 +49,23 @@ def nameOIDtoString(oid):
         return "OU"
     raise Exception("Unknown OID: {}".format(oid))
 
-def print_block(pemData, crtshId):
+def print_block(pemData, identifierType="DN", crtshId=None):
     substrate = pem.readPemFromFile(io.StringIO(pemData.decode("utf-8")))
     cert, rest = decoder.decode(substrate, asn1Spec=rfc5280.Certificate())
-    der_subject = encoder.encode(cert['tbsCertificate']['subject'])
-    octets = hex_string_for_struct(der_subject)
+    octets = None
+
+    if identifierType == "DN":
+        der_subject = encoder.encode(cert['tbsCertificate']['subject'])
+        octets = hex_string_for_struct(der_subject)
+    elif identifierType == "SPKI":
+        der_spki = encoder.encode(cert['tbsCertificate']['subjectPublicKeyInfo'])
+        octets = hex_string_for_struct(der_spki)
+    else:
+        raise Exception("Unknown identifier type: " + identifierType)
 
     cert = x509.load_pem_x509_certificate(pemData, default_backend())
     common_name = cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0]
-    block_name = "CA{}DN".format(re.sub(r'[-:=_. ]', '', common_name.value))
+    block_name = "CA{}{}".format(re.sub(r'[-:=_. ]', '', common_name.value), identifierType)
 
     fingerprint = hex_string_human_readable(cert.fingerprint(hashes.SHA256()))
 
@@ -83,24 +92,49 @@ def print_block(pemData, crtshId):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-spki", action="store_true",
+                        help="Create a list of subject public key info fields")
+    parser.add_argument("-dn", action="store_true",
+                        help="Create a list of subject distinguished name fields")
+    parser.add_argument("-listname",
+                        help="Name of the final DataAndLength block")
+    parser.add_argument("certId", nargs="+",
+                        help="A list of PEM files on disk or crt.sh IDs")
+    args = parser.parse_args()
+
+    if not args.dn and not args.spki:
+        parser.print_help()
+        raise Exception("You must select either DN or SPKI matching")
+
     blocks = []
 
-    certshIds = sys.argv[1:]
-    print("// Script from security/manager/tools/crtshToDNStruct/crtshToDNStruct.py")
-    print("// Invocation: {} {}".format(sys.argv[0], " ".join(certshIds)))
+    print("// Script from security/manager/tools/crtshToIdentifyingStruct/" +
+          "crtshToIdentifyingStruct.py")
+    print("// Invocation: {}".format(" ".join(sys.argv)))
     print()
-    for crtshId in certshIds:
+
+    identifierType = None
+    if args.dn:
+        identifierType = "DN"
+    else:
+        identifierType = "SPKI"
+
+    for certId in args.certId:
         # Try a local file first, then crt.sh
         try:
-            with open(crtshId, "rb") as pemFile:
-                blocks.append(print_block(pemFile.read(), None))
-        except FileNotFoundError:
-            r = requests.get('https://crt.sh/?d={}'.format(crtshId))
+            with open(certId, "rb") as pemFile:
+                blocks.append(print_block(pemFile.read(), identifierType=identifierType))
+        except OSError:
+            r = requests.get('https://crt.sh/?d={}'.format(certId))
             r.raise_for_status()
-            blocks.append(print_block(r.content, crtshId))
+            blocks.append(print_block(r.content, crtshId=certId, identifierType=identifierType))
 
-    print("static const DataAndLength RootDNs[]= {")
+    print("static const DataAndLength " + args.listname + "[]= {")
     for structName in blocks:
-        print("  { " + "{},".format(structName))
-        print("    sizeof({})".format(structName) + " },")
+        if len(structName) < 33:
+            print("  { " + "{name}, sizeof({name}) ".format(name=structName) + "},")
+        else:
+            print("  { " + "{},".format(structName))
+            print("    sizeof({})".format(structName) + " },")
     print("};")

@@ -1,5 +1,5 @@
-// Script from security/manager/tools/crtshToDNStruct/crtshToDNStruct.py
-// Invocation: security/manager/tools/crtshToDNStruct/crtshToDNStruct.py security/manager/ssl/tests/unit/bad_certs/ee-imminently-distrusted.pem
+// Script from security/manager/tools/crtshToIdentifyingStruct/crtshToIdentifyingStruct.py
+// Invocation: crtshToIdentifyingStruct.py -dn -listname TestImminentDistrustEndEntityDNs ../../ssl/tests/unit/bad_certs/ee-imminently-distrusted.pem
 
 // This file is used by test_imminent_distrust.js and by
 // browser_console_certificate_imminent_distrust.js to ensure that the UI for
