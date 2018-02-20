@@ -133,6 +133,33 @@ FindNamedObject(const ComparatorFnT& aComparator)
   return false;
 }
 
+static const char* gBlockedUiaClients[] = {
+  "osk.exe"
+};
+
+static bool
+ShouldBlockUIAClient(nsIFile* aClientExe)
+{
+  if (PR_GetEnv("MOZ_DISABLE_ACCESSIBLE_BLOCKLIST")) {
+    return false;
+  }
+
+  nsAutoString leafName;
+  nsresult rv = aClientExe->GetLeafName(leafName);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  for (size_t index = 0, len = ArrayLength(gBlockedUiaClients); index < len;
+       ++index) {
+    if (leafName.EqualsIgnoreCase(gBlockedUiaClients[index])) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 namespace mozilla {
 namespace a11y {
 
@@ -307,13 +334,12 @@ Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
 
   a11y::SetInstantiator(remotePid.value());
 
-  /* This is where we could block UIA stuff
+  // Block if necessary
   nsCOMPtr<nsIFile> instantiator;
   if (a11y::GetInstantiator(getter_AddRefs(instantiator)) &&
       ShouldBlockUIAClient(instantiator)) {
     return Some(false);
   }
-  */
 
   return Some(true);
 }

@@ -233,7 +233,7 @@ LazyInstantiator::ShouldInstantiate(const DWORD aClientTid)
   if (!a11y::GetInstantiator(getter_AddRefs(clientExe))) {
     return true;
   }
-  
+
   nsresult rv;
   if (!PR_GetEnv("MOZ_DISABLE_ACCESSIBLE_BLOCKLIST")) {
     // Debugging option is not present, so check blocklist.
