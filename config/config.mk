@@ -338,6 +338,9 @@ sysinstall_cmd = install_cmd
 # MOZ_UI_LOCALE directly, but use an intermediate variable that can be
 # overridden by the command line. (Besides, AB_CD is prettier).
 AB_CD = $(MOZ_UI_LOCALE)
+
+include $(topsrcdir)/config/AB_rCD.mk
+
 # Many locales directories want this definition.
 ACDEFINES += -DAB_CD=$(AB_CD)
 
