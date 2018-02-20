@@ -228,8 +228,8 @@ function TabActor(connection) {
     // Do not require to send reconfigure request to reset the document state
     // to what it was before using the TabActor
     noTabReconfigureOnClose: true,
-    // Supports the logErrorInPage request.
-    logErrorInPage: true,
+    // Supports the logInPage request.
+    logInPage: true,
   };
 
   this._workerActorList = null;
@@ -656,11 +656,11 @@ TabActor.prototype = {
     });
   },
 
-  onLogErrorInPage(request) {
-    let {text, category} = request;
+  onLogInPage(request) {
+    let {text, category, flags} = request;
     let scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
     let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
-    scriptError.initWithWindowID(text, null, null, 0, 0, 1,
+    scriptError.initWithWindowID(text, null, null, 0, 0, flags,
                                  category, getInnerId(this.window));
     Services.console.logMessage(scriptError);
     return {};
@@ -1433,7 +1433,7 @@ TabActor.prototype.requestTypes = {
   "switchToFrame": TabActor.prototype.onSwitchToFrame,
   "listFrames": TabActor.prototype.onListFrames,
   "listWorkers": TabActor.prototype.onListWorkers,
-  "logErrorInPage": TabActor.prototype.onLogErrorInPage,
+  "logInPage": TabActor.prototype.onLogInPage,
 };
 
 exports.TabActor = TabActor;
