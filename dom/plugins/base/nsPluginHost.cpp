@@ -134,7 +134,7 @@ static const char *kPrefDisableFullPage = "plugin.disable_full_page_plugin_for_t
 static const char *kPrefUnloadPluginTimeoutSecs = "dom.ipc.plugins.unloadTimeoutSecs";
 static const uint32_t kDefaultPluginUnloadingTimeout = 30;
 
-static const char *kPluginRegistryVersion = "0.18";
+static const char *kPluginRegistryVersion = "0.19";
 
 static const char kDirectoryServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
@@ -266,7 +266,10 @@ nsPluginHost::nsPluginHost()
     mozilla::services::GetObserverService();
   if (obsService) {
     obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-    obsService->AddObserver(this, "blocklist-updated", false);
+    if (XRE_IsParentProcess()) {
+      obsService->AddObserver(this, "blocklist-updated", false);
+      obsService->AddObserver(this, "blocklist-loaded", false);
+    }
   }
 
 #ifdef PLUGIN_LOGGING
@@ -1999,6 +2002,13 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
   nsCOMArray<nsIFile> extensionDirs;
   GetExtensionDirectories(extensionDirs);
 
+  nsCOMPtr<nsIBlocklistService> blocklist =
+    do_GetService("@mozilla.org/extensions/blocklist;1");
+
+  bool isBlocklistLoaded = false;
+  if (blocklist && NS_FAILED(blocklist->GetIsLoaded(&isBlocklistLoaded))) {
+    isBlocklistLoaded = false;
+  }
   for (int32_t i = (pluginFiles.Length() - 1); i >= 0; i--) {
     nsCOMPtr<nsIFile>& localfile = pluginFiles[i];
 
@@ -2090,12 +2100,17 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
         continue;
       }
 
-      pluginTag = new nsPluginTag(&info, fileModTime, fromExtension);
-      pluginFile.FreePluginInfo(info);
+      uint32_t state = nsIBlocklistService::STATE_NOT_BLOCKED;
+      pluginTag = new nsPluginTag(&info, fileModTime, fromExtension, state);
       pluginTag->mLibrary = library;
-      uint32_t state;
-      rv = pluginTag->GetBlocklistState(&state);
-      NS_ENSURE_SUCCESS(rv, rv);
+      // If the blocklist is loaded, get the blocklist state now.
+      // If it isn't loaded yet, we'll update it once it loads.
+      if (isBlocklistLoaded &&
+          NS_SUCCEEDED(blocklist->GetPluginBlocklistState(pluginTag, EmptyString(),
+                                                          EmptyString(), &state))) {
+        pluginTag->SetBlocklistState(state);
+      }
+      pluginFile.FreePluginInfo(info);
 
       // If the blocklist says it is risky and we have never seen this
       // plugin before, then disable it.
@@ -2744,8 +2759,8 @@ nsPluginHost::WritePluginInfo()
       PLUGIN_REGISTRY_FIELD_DELIMITER,
       PLUGIN_REGISTRY_END_OF_LINE_MARKER);
 
-    // lastModifiedTimeStamp|canUnload|tag->mFlags|fromExtension
-    PR_fprintf(fd, "%lld%c%d%c%lu%c%d%c%c\n",
+    // lastModifiedTimeStamp|canUnload|tag->mFlags|fromExtension|blocklistState
+    PR_fprintf(fd, "%lld%c%d%c%lu%c%d%c%d%c%c\n",
       tag->mLastModifiedTime,
       PLUGIN_REGISTRY_FIELD_DELIMITER,
       false, // did store whether or not to unload in-process plugins
@@ -2753,6 +2768,8 @@ nsPluginHost::WritePluginInfo()
       0, // legacy field for flags
       PLUGIN_REGISTRY_FIELD_DELIMITER,
       tag->IsFromExtension(),
+      PLUGIN_REGISTRY_FIELD_DELIMITER,
+      tag->BlocklistState(),
       PLUGIN_REGISTRY_FIELD_DELIMITER,
       PLUGIN_REGISTRY_END_OF_LINE_MARKER);
 
@@ -2974,12 +2991,13 @@ nsPluginHost::ReadPluginInfo()
     if (!reader.NextLine())
       return rv;
 
-    // lastModifiedTimeStamp|canUnload|tag.mFlag|fromExtension
-    if (4 != reader.ParseLine(values, 4))
+    // lastModifiedTimeStamp|canUnload|tag.mFlag|fromExtension|blocklistState
+    if (5 != reader.ParseLine(values, 5))
       return rv;
 
     int64_t lastmod = nsCRT::atoll(values[0]);
     bool fromExtension = atoi(values[3]);
+    uint16_t blocklistState = atoi(values[4]);
     if (!reader.NextLine())
       return rv;
 
@@ -3040,7 +3058,7 @@ nsPluginHost::ReadPluginInfo()
       (const char* const*)mimetypes,
       (const char* const*)mimedescriptions,
       (const char* const*)extensions,
-      mimetypecount, lastmod, fromExtension, true);
+      mimetypecount, lastmod, fromExtension, blocklistState, true);
 
     delete [] heapalloced;
 
@@ -3389,15 +3407,32 @@ NS_IMETHODIMP nsPluginHost::Observe(nsISupports *aSubject,
       LoadPlugins();
     }
   }
-  if (!strcmp("blocklist-updated", aTopic)) {
+  if (XRE_IsParentProcess() &&
+      (!strcmp("blocklist-updated", aTopic) || !strcmp("blocklist-loaded", aTopic))) {
+    nsCOMPtr<nsIBlocklistService> blocklist =
+      do_GetService("@mozilla.org/extensions/blocklist;1");
+    if (!blocklist) {
+      return NS_OK;
+    }
     nsPluginTag* plugin = mPlugins;
+    bool blocklistAlteredPlugins = false;
     while (plugin) {
-      plugin->InvalidateBlocklistState();
+      uint32_t blocklistState = nsIBlocklistService::STATE_NOT_BLOCKED;
+      nsresult rv = blocklist->GetPluginBlocklistState(plugin, EmptyString(),
+                                                       EmptyString(), &blocklistState);
+      NS_ENSURE_SUCCESS(rv, rv);
+      uint32_t oldBlocklistState;
+      plugin->GetBlocklistState(&oldBlocklistState);
+      plugin->SetBlocklistState(blocklistState);
+      blocklistAlteredPlugins |= (oldBlocklistState != blocklistState);
       plugin = plugin->mNext;
     }
-    // We update blocklists asynchronously by just sending a new plugin list to
-    // content.
-    if (XRE_IsParentProcess()) {
+    if (blocklistAlteredPlugins) {
+      // Write the changed list to disk:
+      WritePluginInfo();
+
+      // We update blocklists asynchronously by just sending a new plugin list to
+      // content.
       // We'll need to repack our tags and send them to content again.
       IncrementChromeEpoch();
       SendPluginsToContent();
