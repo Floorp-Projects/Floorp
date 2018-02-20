@@ -60,7 +60,6 @@ class Registers
     static const SetType NonVolatileMask = 0;
     static const SetType NonAllocatableMask = 0;
     static const SetType AllocatableMask = 0;
-    static const SetType TempMask = 0;
     static const SetType JSCallMask = 0;
     static const SetType CallMask = 0;
 };

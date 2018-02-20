@@ -171,9 +171,6 @@ class Registers {
         (1 << Registers::lr) |
         (1 << Registers::sp);
 
-    // Registers that can be allocated without being saved, generally.
-    static const SetType TempMask = VolatileMask & ~NonAllocatableMask;
-
     static const SetType WrapperMask = VolatileMask;
 
     // Registers returned from a JS -> JS call.
@@ -282,9 +279,6 @@ class FloatRegisters
 
     // d31 is the ScratchFloatReg.
     static const SetType NonAllocatableMask = (SetType(1) << FloatRegisters::d31) * SpreadCoefficient;
-
-    // Registers that can be allocated without being saved, generally.
-    static const SetType TempMask = VolatileMask & ~NonAllocatableMask;
 
     static const SetType AllocatableMask = AllMask & ~NonAllocatableMask;
     union RegisterContent {
