@@ -126,7 +126,7 @@ CheckForSymantecDistrust(const nsCOMPtr<nsIX509CertList>& intCerts,
                                    /* out */ bool& aContinue) {
         // We need an owning handle when calling nsIX509Cert::GetCert().
         UniqueCERTCertificate nssCert(aCert->GetCert());
-        if (CertDNIsInList(nssCert.get(), whitelist)) {
+        if (CertSPKIIsInList(nssCert.get(), whitelist)) {
           // In the whitelist
           isDistrusted = false;
           aContinue = false;
