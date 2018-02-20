@@ -37,8 +37,11 @@ ShmSegmentsWriter::Write(Range<uint8_t> aBytes)
 
   if (length >= mChunkSize * 4) {
     auto range = AllocLargeChunk(length);
-    uint8_t* dstPtr = mLargeAllocs.LastElement().get<uint8_t>();
-    memcpy(dstPtr, aBytes.begin().get(), length);
+    if (range.length()) {
+      // Allocation was successful
+      uint8_t* dstPtr = mLargeAllocs.LastElement().get<uint8_t>();
+      memcpy(dstPtr, aBytes.begin().get(), length);
+    }
     return range;
   }
 
