@@ -22,7 +22,6 @@ namespace base {
 
 SharedMemory::SharedMemory()
     : mapped_file_(-1),
-      inode_(0),
       memory_(NULL),
       read_only_(false),
       max_size_(0) {
@@ -35,13 +34,7 @@ SharedMemory::~SharedMemory() {
 bool SharedMemory::SetHandle(SharedMemoryHandle handle, bool read_only) {
   DCHECK(mapped_file_ == -1);
 
-  struct stat st;
-  if (fstat(handle.fd, &st) < 0) {
-    return false;
-  }
-
   mapped_file_ = handle.fd;
-  inode_ = st.st_ino;
   read_only_ = read_only;
   return true;
 }
@@ -108,11 +101,6 @@ bool SharedMemory::Create(size_t size) {
 
   mapped_file_ = dup(fileno(fp));
   DCHECK(mapped_file_ >= 0);
-
-  struct stat st;
-  if (fstat(mapped_file_, &st))
-    NOTREACHED();
-  inode_ = st.st_ino;
 
   max_size_ = size;
   return true;

@@ -26,10 +26,7 @@ namespace base {
 #if defined(OS_WIN)
 typedef HANDLE SharedMemoryHandle;
 #elif defined(OS_POSIX)
-// A SharedMemoryId is sufficient to identify a given shared memory segment on a
-// system, but insufficient to map it.
 typedef FileDescriptor SharedMemoryHandle;
-typedef ino_t SharedMemoryId;
 #endif
 
 // Platform abstraction for shared memory.  Provides a C++ wrapper
@@ -90,14 +87,6 @@ class SharedMemory {
   // identifier is not portable.
   SharedMemoryHandle handle() const;
 
-#if defined(OS_POSIX)
-  // Return a unique identifier for this shared memory segment. Inode numbers
-  // are technically only unique to a single filesystem. However, we always
-  // allocate shared memory backing files from the same directory, so will end
-  // up on the same filesystem.
-  SharedMemoryId id() const { return inode_; }
-#endif
-
   // Closes the open shared memory segment.
   // It is safe to call Close repeatedly.
   void Close(bool unmap_view = true);
@@ -133,7 +122,6 @@ class SharedMemory {
   HANDLE             mapped_file_;
 #elif defined(OS_POSIX)
   int                mapped_file_;
-  ino_t              inode_;
 #endif
   void*              memory_;
   bool               read_only_;
