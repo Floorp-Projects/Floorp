@@ -1,4 +1,7 @@
-FROM ubuntu:16.04
+# Ideally we'd use LTS here, but 16.04 doesn't have a new enough
+# p7zip-full for us. We should change this to the next LTS
+# (18.04), once available
+FROM ubuntu:17.10
 
 MAINTAINER release@mozilla.com
 
