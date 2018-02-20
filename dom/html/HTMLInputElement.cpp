@@ -18,7 +18,6 @@
 #include "nsAttrValueInlines.h"
 #include "nsCRTGlue.h"
 
-#include "nsIDOMHTMLInputElement.h"
 #include "nsITextControlElement.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIRadioVisitor.h"
@@ -258,13 +257,13 @@ public:
   {
     nsresult rv = NS_OK;
     rv = nsContentUtils::DispatchTrustedEvent(mInputElement->OwnerDoc(),
-                                              static_cast<nsIDOMHTMLInputElement*>(mInputElement.get()),
+                                              static_cast<Element*>(mInputElement.get()),
                                               NS_LITERAL_STRING("input"), true,
                                               false);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DispatchTrustedEvent failed");
 
     rv = nsContentUtils::DispatchTrustedEvent(mInputElement->OwnerDoc(),
-                                              static_cast<nsIDOMHTMLInputElement*>(mInputElement.get()),
+                                              static_cast<Element*>(mInputElement.get()),
                                               NS_LITERAL_STRING("change"), true,
                                               false);
 
@@ -760,7 +759,7 @@ nsColorPickerShownCallback::UpdateInternal(const nsAString& aColor,
   if (valueChanged) {
     mValueChanged = true;
     return nsContentUtils::DispatchTrustedEvent(mInput->OwnerDoc(),
-                                                static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
+                                                static_cast<Element*>(mInput.get()),
                                                 NS_LITERAL_STRING("input"), true,
                                                 false);
   }
@@ -794,7 +793,7 @@ nsColorPickerShownCallback::Done(const nsAString& aColor)
 
   if (mValueChanged) {
     rv = nsContentUtils::DispatchTrustedEvent(mInput->OwnerDoc(),
-                                              static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
+                                              static_cast<Element*>(mInput.get()),
                                               NS_LITERAL_STRING("change"), true,
                                               false);
   }
@@ -1086,7 +1085,7 @@ UploadLastDir::Observe(nsISupports* aSubject, char const* aTopic, char16_t const
 
 #ifdef ACCESSIBILITY
 //Helper method
-static nsresult FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
+static nsresult FireEventForAccessibility(HTMLInputElement* aTarget,
                                           nsPresContext* aPresContext,
                                           EventMessage aEventMessage);
 #endif
@@ -2387,7 +2386,7 @@ HTMLInputElement::OpenDateTimePicker(const DateTimeValue& aInitialValue)
 
   mDateTimeInputBoxValue = new DateTimeValue(aInitialValue);
   nsContentUtils::DispatchChromeEvent(OwnerDoc(),
-                                      static_cast<nsIDOMHTMLInputElement*>(this),
+                                      static_cast<Element*>(this),
                                       NS_LITERAL_STRING("MozOpenDateTimePicker"),
                                       true, true);
 }
@@ -2401,7 +2400,7 @@ HTMLInputElement::UpdateDateTimePicker(const DateTimeValue& aValue)
 
   mDateTimeInputBoxValue = new DateTimeValue(aValue);
   nsContentUtils::DispatchChromeEvent(OwnerDoc(),
-                                      static_cast<nsIDOMHTMLInputElement*>(this),
+                                      static_cast<Element*>(this),
                                       NS_LITERAL_STRING("MozUpdateDateTimePicker"),
                                       true, true);
 }
@@ -2414,7 +2413,7 @@ HTMLInputElement::CloseDateTimePicker()
   }
 
   nsContentUtils::DispatchChromeEvent(OwnerDoc(),
-                                      static_cast<nsIDOMHTMLInputElement*>(this),
+                                      static_cast<Element*>(this),
                                       NS_LITERAL_STRING("MozCloseDateTimePicker"),
                                       true, true);
 }
@@ -2508,7 +2507,7 @@ HTMLInputElement::SetUserInput(const nsAString& aValue)
   }
 
   nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
-                                       static_cast<nsIDOMHTMLInputElement*>(this),
+                                       static_cast<Element*>(this),
                                        NS_LITERAL_STRING("input"), true,
                                        true);
 
@@ -3176,14 +3175,13 @@ void
 HTMLInputElement::RadioSetChecked(bool aNotify)
 {
   // Find the selected radio button so we can deselect it
-  nsCOMPtr<nsIDOMHTMLInputElement> currentlySelected = GetSelectedRadioButton();
+  HTMLInputElement* currentlySelected = GetSelectedRadioButton();
 
   // Deselect the currently selected radio button
   if (currentlySelected) {
     // Pass true for the aNotify parameter since the currently selected
     // button is already in the document.
-    static_cast<HTMLInputElement*>(currentlySelected.get())
-      ->SetCheckedInternal(false, true);
+    currentlySelected->SetCheckedInternal(false, true);
   }
 
   // Let the group know that we are now the One True Radio Button
@@ -3220,7 +3218,7 @@ HTMLInputElement::GetRadioGroupContainer() const
   return static_cast<nsDocument*>(GetUncomposedDoc());
 }
 
-already_AddRefed<nsIDOMHTMLInputElement>
+HTMLInputElement*
 HTMLInputElement::GetSelectedRadioButton() const
 {
   nsIRadioGroupContainer* container = GetRadioGroupContainer();
@@ -3231,8 +3229,8 @@ HTMLInputElement::GetSelectedRadioButton() const
   nsAutoString name;
   GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
 
-  nsCOMPtr<nsIDOMHTMLInputElement> selected = container->GetCurrentRadioButton(name);
-  return selected.forget();
+  HTMLInputElement* selected = container->GetCurrentRadioButton(name);
+  return selected;
 }
 
 nsresult
@@ -3607,8 +3605,8 @@ HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 
       case NS_FORM_INPUT_RADIO:
         {
-          nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton = GetSelectedRadioButton();
-          aVisitor.mItemData = selectedRadioButton;
+          HTMLInputElement* selectedRadioButton = GetSelectedRadioButton();
+          aVisitor.mItemData = static_cast<Element*>(selectedRadioButton);
 
           originalCheckedValue = mChecked;
           if (!originalCheckedValue) {
@@ -3953,7 +3951,7 @@ HTMLInputElement::SetValueOfRangeForUserEvent(Decimal aValue)
 
   if (GetValueAsDecimal() != oldValue) {
     nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
-                                         static_cast<nsIDOMHTMLInputElement*>(this),
+                                         static_cast<Element*>(this),
                                          NS_LITERAL_STRING("input"), true,
                                          false);
   }
@@ -4051,7 +4049,7 @@ HTMLInputElement::StepNumberControlForUserEvent(int32_t aDirection)
                            nsTextEditorState::eSetValue_Notify);
 
   nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
-                                       static_cast<nsIDOMHTMLInputElement*>(this),
+                                       static_cast<Element*>(this),
                                        NS_LITERAL_STRING("input"), true,
                                        false);
 }
@@ -4263,11 +4261,11 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
     } else {
       // Fire input event and then change event.
       nsContentUtils::DispatchTrustedEvent<InternalEditorInputEvent>
-        (OwnerDoc(), static_cast<nsIDOMHTMLInputElement*>(this),
+        (OwnerDoc(), static_cast<Element*>(this),
          eEditorInput, true, false);
 
       nsContentUtils::DispatchTrustedEvent<WidgetEvent>
-        (OwnerDoc(), static_cast<nsIDOMHTMLInputElement*>(this),
+        (OwnerDoc(), static_cast<Element*>(this),
          eFormChange, true, false);
 #ifdef ACCESSIBILITY
       // Fire an event to notify accessibility
@@ -6189,13 +6187,13 @@ HTMLInputElement::SetSelectionDirection(const nsAString& aDirection, ErrorResult
 
 #ifdef ACCESSIBILITY
 /*static*/ nsresult
-FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
+FireEventForAccessibility(HTMLInputElement* aTarget,
                           nsPresContext* aPresContext,
                           EventMessage aEventMessage)
 {
-  nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(aTarget);
+  Element* element = static_cast<Element*>(aTarget);
   return nsContentUtils::DispatchTrustedEvent<WidgetEvent>
-    (element->OwnerDoc(), aTarget, aEventMessage, true, true);
+    (element->OwnerDoc(), element, aEventMessage, true, true);
 }
 #endif
 
@@ -6499,7 +6497,7 @@ HTMLInputElement::IntrinsicState() const
     }
 
     if (mType == NS_FORM_INPUT_RADIO) {
-      nsCOMPtr<nsIDOMHTMLInputElement> selected = GetSelectedRadioButton();
+      HTMLInputElement* selected = GetSelectedRadioButton();
       bool indeterminate = !selected && !mChecked;
 
       if (indeterminate) {
@@ -7208,7 +7206,7 @@ HTMLInputElement::UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf)
              "This should be called only for radio input types");
 
   bool notify = mDoneCreating;
-  nsCOMPtr<nsIDOMHTMLInputElement> selection = GetSelectedRadioButton();
+  HTMLInputElement* selection = GetSelectedRadioButton();
 
   aIgnoreSelf = aIgnoreSelf || !IsMutable();
 
