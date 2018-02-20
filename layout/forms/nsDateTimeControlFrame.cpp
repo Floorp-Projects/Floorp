@@ -21,7 +21,6 @@
 #include "nsNodeInfoManager.h"
 #include "nsIDateTimeInputArea.h"
 #include "nsIObserverService.h"
-#include "nsIDOMHTMLInputElement.h"
 #include "jsapi.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"

@@ -1548,23 +1548,11 @@ HTMLInputElement::AfterClearForm(bool aUnbindOrDelete)
   }
 }
 
-// nsIDOMHTMLInputElement
-
-NS_IMETHODIMP
-HTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
-{
-  return nsGenericHTMLFormElementWithState::GetForm(aForm);
-}
-
-NS_IMPL_ACTION_ATTR(HTMLInputElement, FormAction, formaction)
-NS_IMPL_STRING_ATTR(HTMLInputElement, Name, name)
-NS_IMPL_BOOL_ATTR(HTMLInputElement, ReadOnly, readonly)
-
-NS_IMETHODIMP
+void
 HTMLInputElement::GetAutocomplete(nsAString& aValue)
 {
   if (!DoesAutocompleteApply()) {
-    return NS_OK;
+    return;
   }
 
   aValue.Truncate();
@@ -1573,7 +1561,6 @@ HTMLInputElement::GetAutocomplete(nsAString& aValue)
   mAutocompleteAttrState =
     nsContentUtils::SerializeAutocompleteAttribute(attributeVal, aValue,
                                                    mAutocompleteAttrState);
-  return NS_OK;
 }
 
 void
@@ -1630,13 +1617,6 @@ HTMLInputElement::Height()
   return GetWidthHeightForImage(mCurrentRequest).height;
 }
 
-NS_IMETHODIMP
-HTMLInputElement::GetIndeterminate(bool* aValue)
-{
-  *aValue = Indeterminate();
-  return NS_OK;
-}
-
 void
 HTMLInputElement::SetIndeterminateInternal(bool aValue,
                                            bool aShouldInvalidate)
@@ -1653,11 +1633,10 @@ HTMLInputElement::SetIndeterminateInternal(bool aValue,
   UpdateState(true);
 }
 
-NS_IMETHODIMP
+void
 HTMLInputElement::SetIndeterminate(bool aValue)
 {
   SetIndeterminateInternal(aValue, true);
-  return NS_OK;
 }
 
 uint32_t
@@ -3110,13 +3089,6 @@ HTMLInputElement::SetValueChanged(bool aValueChanged)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLInputElement::GetChecked(bool* aChecked)
-{
-  *aChecked = Checked();
-  return NS_OK;
-}
-
 void
 HTMLInputElement::SetCheckedChanged(bool aCheckedChanged)
 {
@@ -3152,11 +3124,10 @@ HTMLInputElement::SetCheckedChangedInternal(bool aCheckedChanged)
   }
 }
 
-NS_IMETHODIMP
+void
 HTMLInputElement::SetChecked(bool aChecked)
 {
   DoSetChecked(aChecked, true, true);
-  return NS_OK;
 }
 
 void
@@ -3628,7 +3599,7 @@ HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
             aVisitor.mItemFlags |= NS_ORIGINAL_INDETERMINATE_VALUE;
           }
 
-          GetChecked(&originalCheckedValue);
+          originalCheckedValue = Checked();
           DoSetChecked(!originalCheckedValue, true, true);
           mCheckedIsToggled = true;
         }
@@ -4271,8 +4242,9 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
       // selected btn to TRUE. if it is a checkbox then set it to its
       // original value
       if (oldType == NS_FORM_INPUT_RADIO) {
-        nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton =
-          do_QueryInterface(aVisitor.mItemData);
+        nsCOMPtr<nsIContent> content = do_QueryInterface(aVisitor.mItemData);
+        HTMLInputElement* selectedRadioButton =
+          HTMLInputElement::FromContentOrNull(content);
         if (selectedRadioButton) {
           selectedRadioButton->SetChecked(true);
         }
@@ -4306,8 +4278,9 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
         FireEventForAccessibility(this, aVisitor.mPresContext,
                                   eFormRadioStateChange);
         // Fire event for the previous selected radio.
-        nsCOMPtr<nsIDOMHTMLInputElement> previous =
-          do_QueryInterface(aVisitor.mItemData);
+        nsCOMPtr<nsIContent> content = do_QueryInterface(aVisitor.mItemData);
+        HTMLInputElement* previous =
+          HTMLInputElement::FromContentOrNull(content);
         if (previous) {
           FireEventForAccessibility(previous, aVisitor.mPresContext,
                                     eFormRadioStateChange);
@@ -6022,7 +5995,7 @@ HTMLInputElement::GetControllers(ErrorResult& aRv)
   return mControllers;
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLInputElement::GetControllers(nsIControllers** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);

@@ -30,7 +30,6 @@
 #include "nsIContent.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMProcessingInstruction.h"
@@ -564,7 +563,7 @@ ResourceReader::OnWalkDOMNode(nsIDOMNode* aNode)
         return OnWalkSubframe(aNode);
     }
 
-    nsCOMPtr<nsIDOMHTMLInputElement> nodeAsInput = do_QueryInterface(aNode);
+    auto nodeAsInput = dom::HTMLInputElement::FromContent(content);
     if (nodeAsInput) {
         return OnWalkAttribute(aNode, "src");
     }
