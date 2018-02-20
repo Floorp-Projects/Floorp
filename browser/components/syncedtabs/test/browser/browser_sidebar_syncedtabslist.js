@@ -203,6 +203,7 @@ add_task(async function testSyncedTabsSidebarStatus() {
 
   originalSyncedTabsInternal = SyncedTabs._internal;
   SyncedTabs._internal = {
+    loginFailed: false,
     isConfiguredToSyncTabs: false,
     hasSyncedThisSession: false,
     getTabClients() {},
@@ -233,6 +234,14 @@ add_task(async function testSyncedTabsSidebarStatus() {
   selectedPanel = syncedTabsDeckComponent.container.querySelector(".sync-state.selected");
   Assert.ok(selectedPanel.classList.contains("unverified"),
     "unverified panel is selected");
+
+  SyncedTabs._internal.loginFailed = true;
+  account = {verified: true};
+  await syncedTabsDeckComponent.updatePanel();
+  selectedPanel = syncedTabsDeckComponent.container.querySelector(".sync-state.selected");
+  Assert.ok(selectedPanel.classList.contains("reauth"),
+    "reauth panel is selected");
+  SyncedTabs._internal.loginFailed = false;
 
   account = {verified: true};
   await syncedTabsDeckComponent.updatePanel();

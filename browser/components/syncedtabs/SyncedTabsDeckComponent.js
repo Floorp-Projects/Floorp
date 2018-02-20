@@ -58,6 +58,7 @@ SyncedTabsDeckComponent.prototype = {
   PANELS: {
     TABS_CONTAINER: "tabs-container",
     TABS_FETCHING: "tabs-fetching",
+    LOGIN_FAILED: "reauth",
     NOT_AUTHED_INFO: "notAuthedInfo",
     SINGLE_DEVICE_INFO: "singleDeviceInfo",
     TABS_DISABLED: "tabs-disabled",
@@ -129,8 +130,11 @@ SyncedTabsDeckComponent.prototype = {
 
   getPanelStatus() {
     return this._getSignedInUser().then(user => {
-      if (!user || this._SyncedTabs.loginFailed) {
+      if (!user) {
         return this.PANELS.NOT_AUTHED_INFO;
+      }
+      if (this._SyncedTabs.loginFailed) {
+        return this.PANELS.LOGIN_FAILED;
       }
       if (!user.verified) {
         return this.PANELS.UNVERIFIED;
