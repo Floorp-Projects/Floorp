@@ -171,13 +171,12 @@ DoInterfaceDirectoryEntry(XPTArena *arena, NotNull<XPTCursor*> cursor,
 }
 
 static bool
-InterfaceDescriptorAddTypes(XPTArena *arena, XPTInterfaceDescriptor *id,
-                            uint16_t num)
+InterfaceDescriptorAddType(XPTArena *arena, XPTInterfaceDescriptor *id)
 {
     XPTTypeDescriptor *old = id->additional_types;
     XPTTypeDescriptor *new_;
     size_t old_size = id->num_additional_types * sizeof(XPTTypeDescriptor);
-    size_t new_size = (num * sizeof(XPTTypeDescriptor)) + old_size;
+    size_t new_size = old_size + sizeof(XPTTypeDescriptor);
 
     /* XXX should grow in chunks to minimize alloc overhead */
     new_ = static_cast<XPTTypeDescriptor*>(XPT_CALLOC8(arena, new_size));
@@ -188,10 +187,10 @@ InterfaceDescriptorAddTypes(XPTArena *arena, XPTInterfaceDescriptor *id,
     }
     id->additional_types = new_;
 
-    if (num + uint16_t(id->num_additional_types) > UINT8_MAX)
+    if (id->num_additional_types == UINT8_MAX)
         return false;
 
-    id->num_additional_types += num;
+    id->num_additional_types += 1;
     return true;
 }
 
@@ -388,7 +387,7 @@ DoTypeDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
             !XPT_Do8(cursor, &argnum2))
             return false;
 
-        if (!InterfaceDescriptorAddTypes(arena, id, 1))
+        if (!InterfaceDescriptorAddType(arena, id))
             return false;
         td->u.array.additional_type = id->num_additional_types - 1;
 
