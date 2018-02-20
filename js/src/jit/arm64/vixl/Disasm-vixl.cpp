@@ -1321,6 +1321,11 @@ void Disassembler::VisitSystem(const Instruction* instr) {
         form = NULL;
         break;
       }
+      case CSDB: {
+        mnemonic = "csdb";
+        form = NULL;
+        break;
+      }
     }
   } else if (instr->Mask(MemBarrierFMask) == MemBarrierFixed) {
     switch (instr->Mask(MemBarrierMask)) {

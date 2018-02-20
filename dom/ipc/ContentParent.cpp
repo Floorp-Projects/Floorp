@@ -2007,8 +2007,8 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
 
   for (unsigned int i = 0; i < prefsLen; i++) {
     const char* prefName = ContentPrefs::GetEarlyPref(i);
-    MOZ_ASSERT_IF(i > 0,
-                  strcmp(prefName, ContentPrefs::GetEarlyPref(i - 1)) > 0);
+    MOZ_ASSERT(i == 0 || strcmp(prefName, ContentPrefs::GetEarlyPref(i - 1)) > 0,
+               "Content process preferences should be sorted alphabetically.");
 
     if (!Preferences::MustSendToContentProcesses(prefName)) {
       continue;

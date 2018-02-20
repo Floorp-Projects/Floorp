@@ -282,6 +282,9 @@ class SimInstruction {
     // Test for a nop instruction, which falls under type 1.
     inline bool isNopType1() const { return bits(24, 0) == 0x0120F000; }
 
+    // Test for a nop instruction, which falls under type 1.
+    inline bool isCsdbType1() const { return bits(24, 0) == 0x0120F014; }
+
     // Test for a stop instruction.
     inline bool isStop() const {
         return typeValue() == 7 && bit(24) == 1 && svcValue() >= kStopCode;
@@ -3387,6 +3390,8 @@ Simulator::decodeType01(SimInstruction* instr)
         }
     } else if ((type == 1) && instr->isNopType1()) {
         // NOP.
+    } else if ((type == 1) && instr->isCsdbType1()) {
+        // Speculation barrier. (No-op for the simulator)
     } else {
         int rd = instr->rdValue();
         int rn = instr->rnValue();
