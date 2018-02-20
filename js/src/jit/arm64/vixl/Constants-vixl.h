@@ -321,7 +321,10 @@ enum SystemHint {
   WFE   = 2,
   WFI   = 3,
   SEV   = 4,
-  SEVL  = 5
+  SEVL  = 5,
+  // No-op on architectures where this instruction is not defined.
+  // https://developer.arm.com/-/media/developer/pdf/Cache_Speculation_Side-channels_22Feb18.pdf
+  CSDB  = 0x14
 };
 
 enum BarrierDomain {

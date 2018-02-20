@@ -1123,6 +1123,10 @@ class MacroAssembler : public js::jit::Assembler {
     SingleEmissionCheckScope guard(this);
     nop();
   }
+  void Csdb() {
+    SingleEmissionCheckScope guard(this);
+    csdb();
+  }
   void Rbit(const Register& rd, const Register& rn) {
     VIXL_ASSERT(!rd.IsZero());
     VIXL_ASSERT(!rn.IsZero());

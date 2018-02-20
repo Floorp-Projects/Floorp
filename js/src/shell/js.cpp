@@ -8601,11 +8601,13 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
             jit::JitOptions.spectreObjectMitigationsBarriers = true;
             jit::JitOptions.spectreStringMitigations = true;
             jit::JitOptions.spectreValueMasking = true;
+            jit::JitOptions.spectreJitToCxxCalls = true;
         } else if (strcmp(str, "off") == 0) {
             jit::JitOptions.spectreIndexMasking = false;
             jit::JitOptions.spectreObjectMitigationsBarriers = false;
             jit::JitOptions.spectreStringMitigations = false;
             jit::JitOptions.spectreValueMasking = false;
+            jit::JitOptions.spectreJitToCxxCalls = false;
         } else {
             return OptionFailure("spectre-mitigations", str);
         }

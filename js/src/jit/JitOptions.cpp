@@ -238,6 +238,7 @@ DefaultJitOptions::DefaultJitOptions()
     SET_DEFAULT(spectreObjectMitigationsBarriers, true);
     SET_DEFAULT(spectreStringMitigations, true);
     SET_DEFAULT(spectreValueMasking, true);
+    SET_DEFAULT(spectreJitToCxxCalls, true);
 
     // Toggles whether unboxed plain objects can be created by the VM.
     SET_DEFAULT(disableUnboxedObjects, false);
