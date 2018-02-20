@@ -66,6 +66,9 @@ VideoEngine::CreateVideoCapture(int32_t& id, const char* deviceUniqueIdUTF8) {
   if (mCaptureDevInfo.type == webrtc::CaptureDeviceType::Camera) {
     entry = CaptureEntry(id,
 		         webrtc::VideoCaptureFactory::Create(deviceUniqueIdUTF8));
+    if (entry.VideoCapture()) {
+      entry.VideoCapture()->SetApplyRotation(true);
+    }
   } else {
 #ifndef WEBRTC_ANDROID
 #ifdef MOZ_X11
