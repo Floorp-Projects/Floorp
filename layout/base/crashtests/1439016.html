@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<div id="host">
+  <div slot="slot1">content</div>
+</div>
+<script>
+// NOTE(emilio): the failure mode for this crashtest is asserting whenever the
+// shell goes away.
+let shadowRoot = document.querySelector('#host').attachShadow({ mode: 'open' });
+shadowRoot.innerHTML = `
+  <div id="slot1-container">
+    <slot id="slot1" name="slot1"></slot>
+    <button id="button1">Click here</button>
+  </div>
+`;
+
+document.body.offsetTop;
+shadowRoot.querySelector('#slot1-container').remove();
+</script>

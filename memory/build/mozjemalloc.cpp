@@ -2303,7 +2303,8 @@ arena_run_reg_dalloc(arena_run_t* run, arena_bin_t* bin, void* ptr, size_t size)
     run->mRegionsMinElement = elm;
   }
   bit = regind - (elm << (LOG2(sizeof(int)) + 3));
-  MOZ_DIAGNOSTIC_ASSERT((run->mRegionsMask[elm] & (1U << bit)) == 0);
+  MOZ_RELEASE_ASSERT((run->mRegionsMask[elm] & (1U << bit)) == 0,
+                     "Double-free?");
   run->mRegionsMask[elm] |= (1U << bit);
 #undef SIZE_INV
 #undef SIZE_INV_SHIFT
@@ -3497,7 +3498,7 @@ arena_dalloc(void* aPtr, size_t aOffset, arena_t* aArena)
   MutexAutoLock lock(arena->mLock);
   size_t pageind = aOffset >> gPageSize2Pow;
   arena_chunk_map_t* mapelm = &chunk->map[pageind];
-  MOZ_DIAGNOSTIC_ASSERT((mapelm->bits & CHUNK_MAP_ALLOCATED) != 0);
+  MOZ_RELEASE_ASSERT((mapelm->bits & CHUNK_MAP_ALLOCATED) != 0, "Double-free?");
   if ((mapelm->bits & CHUNK_MAP_LARGE) == 0) {
     // Small allocation.
     arena->DallocSmall(chunk, aPtr, mapelm);
@@ -3896,7 +3897,7 @@ huge_dalloc(void* aPtr, arena_t* aArena)
     // Extract from tree of huge allocations.
     key.mAddr = aPtr;
     node = huge.Search(&key);
-    MOZ_ASSERT(node);
+    MOZ_RELEASE_ASSERT(node, "Double-free?");
     MOZ_ASSERT(node->mAddr == aPtr);
     MOZ_RELEASE_ASSERT(!aArena || node->mArena == aArena);
     huge.Remove(node);

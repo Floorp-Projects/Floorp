@@ -11,10 +11,10 @@ use clip::{ClipStore};
 use clip_scroll_tree::{ClipScrollTree};
 use device::{FrameId, Texture};
 use gpu_cache::{GpuCache};
-use gpu_types::{BlurDirection, BlurInstance, BrushInstance, ClipChainRectIndex};
+use gpu_types::{BlurDirection, BlurInstance, BrushFlags, BrushInstance, ClipChainRectIndex};
 use gpu_types::{ClipScrollNodeData, ClipScrollNodeIndex};
 use gpu_types::{PrimitiveInstance};
-use internal_types::{FastHashMap, RenderPassIndex, SourceTexture};
+use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 use picture::{PictureKind};
 use prim_store::{PrimitiveIndex, PrimitiveKind, PrimitiveStore};
 use prim_store::{BrushMaskKind, BrushKind, DeferredResolve, EdgeAaSegmentMask};
@@ -137,8 +137,8 @@ pub struct RenderTargetList<T> {
     pub format: ImageFormat,
     pub max_size: DeviceUintSize,
     pub targets: Vec<T>,
-    #[cfg_attr(feature = "serde", serde(skip))]
-    pub texture: Option<Texture>,
+    pub saved_index: Option<SavedTargetIndex>,
+    pub is_shared: bool,
 }
 
 impl<T: RenderTarget> RenderTargetList<T> {
@@ -151,7 +151,8 @@ impl<T: RenderTarget> RenderTargetList<T> {
             format,
             max_size: DeviceUintSize::new(MIN_TARGET_SIZE, MIN_TARGET_SIZE),
             targets: Vec::new(),
-            texture: None,
+            saved_index: None,
+            is_shared: false,
         }
     }
 
@@ -161,7 +162,11 @@ impl<T: RenderTarget> RenderTargetList<T> {
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
         deferred_resolves: &mut Vec<DeferredResolve>,
+        saved_index: Option<SavedTargetIndex>,
     ) {
+        debug_assert_eq!(None, self.saved_index);
+        self.saved_index = saved_index;
+
         for target in &mut self.targets {
             target.build(ctx, gpu_cache, render_tasks, deferred_resolves);
         }
@@ -214,20 +219,13 @@ impl<T: RenderTarget> RenderTargetList<T> {
         self.targets.iter().any(|target| target.needs_depth())
     }
 
-    pub fn check_ready(&self) {
-        match self.texture {
-            Some(ref t) => {
-                assert_eq!(t.get_dimensions(), self.max_size);
-                assert_eq!(t.get_format(), self.format);
-                assert_eq!(t.get_render_target_layer_count(), self.targets.len());
-                assert_eq!(t.get_layer_count() as usize, self.targets.len());
-                assert_eq!(t.has_depth(), t.get_rt_info().unwrap().has_depth);
-                assert_eq!(t.has_depth(), self.needs_depth());
-            }
-            None => {
-                assert!(self.targets.is_empty())
-            }
-        }
+    pub fn check_ready(&self, t: &Texture) {
+        assert_eq!(t.get_dimensions(), self.max_size);
+        assert_eq!(t.get_format(), self.format);
+        assert_eq!(t.get_render_target_layer_count(), self.targets.len());
+        assert_eq!(t.get_layer_count() as usize, self.targets.len());
+        assert_eq!(t.has_depth(), t.get_rt_info().unwrap().has_depth);
+        assert_eq!(t.has_depth(), self.needs_depth());
     }
 }
 
@@ -589,6 +587,7 @@ impl RenderTarget for AlphaRenderTarget {
                                             clip_task_address: RenderTaskAddress(0),
                                             z: 0,
                                             segment_index: 0,
+                                            brush_flags: BrushFlags::PERSPECTIVE_INTERPOLATION,
                                             edge_flags: EdgeAaSegmentMask::empty(),
                                             user_data: [0; 3],
                                         };
@@ -598,6 +597,8 @@ impl RenderTarget for AlphaRenderTarget {
                                             BrushKind::Clear |
                                             BrushKind::Picture |
                                             BrushKind::Line { .. } |
+                                            BrushKind::YuvImage { .. } |
+                                            BrushKind::RadialGradient { .. } |
                                             BrushKind::Image { .. } => {
                                                 unreachable!("bug: unexpected brush here");
                                             }
@@ -784,7 +785,6 @@ impl RenderPass {
         render_tasks: &mut RenderTaskTree,
         deferred_resolves: &mut Vec<DeferredResolve>,
         clip_store: &ClipStore,
-        pass_index: RenderPassIndex,
     ) {
         profile_scope!("RenderPass::build");
 
@@ -792,7 +792,6 @@ impl RenderPass {
             RenderPassKind::MainFramebuffer(ref mut target) => {
                 for &task_id in &self.tasks {
                     assert_eq!(render_tasks[task_id].target_kind(), RenderTargetKind::Color);
-                    render_tasks[task_id].pass_index = Some(pass_index);
                     target.add_task(
                         task_id,
                         ctx,
@@ -805,16 +804,38 @@ impl RenderPass {
                 target.build(ctx, gpu_cache, render_tasks, deferred_resolves);
             }
             RenderPassKind::OffScreen { ref mut color, ref mut alpha, ref mut texture_cache } => {
+                let is_shared_alpha = self.tasks.iter().any(|&task_id| {
+                    match render_tasks[task_id].kind {
+                        RenderTaskKind::CacheMask(..) => true,
+                        _ => false,
+                    }
+                });
+                let saved_color = if self.tasks.iter().any(|&task_id| {
+                    let t = &render_tasks[task_id];
+                    t.target_kind() == RenderTargetKind::Color && t.saved_index.is_some()
+                }) {
+                    Some(render_tasks.save_target())
+                } else {
+                    None
+                };
+                let saved_alpha = if self.tasks.iter().any(|&task_id| {
+                    let t = &render_tasks[task_id];
+                    t.target_kind() == RenderTargetKind::Alpha && t.saved_index.is_some()
+                }) {
+                    Some(render_tasks.save_target())
+                } else {
+                    None
+                };
+
                 // Step through each task, adding to batches as appropriate.
                 for &task_id in &self.tasks {
                     let (target_kind, texture_target) = {
                         let task = &mut render_tasks[task_id];
-                        task.pass_index = Some(pass_index);
                         let target_kind = task.target_kind();
 
                         // Find a target to assign this task to, or create a new
                         // one if required.
-                        match task.location {
+                        let (target_kind, texture_target) = match task.location {
                             RenderTaskLocation::TextureCache(texture_id, layer, _) => {
                                 // TODO(gw): When we support caching color items, we will
                                 //           need to calculate that here to get the
@@ -834,7 +855,18 @@ impl RenderPass {
 
                                 (target_kind, None)
                             }
+                        };
+
+                        // Replace the pending saved index with a real one
+                        if let Some(index) = task.saved_index {
+                            assert_eq!(index, SavedTargetIndex::PENDING);
+                            task.saved_index = match target_kind {
+                                RenderTargetKind::Color => saved_color,
+                                RenderTargetKind::Alpha => saved_alpha,
+                            };
                         }
+
+                        (target_kind, texture_target)
                     };
 
                     match texture_target {
@@ -869,8 +901,9 @@ impl RenderPass {
                     }
                 }
 
-                color.build(ctx, gpu_cache, render_tasks, deferred_resolves);
-                alpha.build(ctx, gpu_cache, render_tasks, deferred_resolves);
+                color.build(ctx, gpu_cache, render_tasks, deferred_resolves, saved_color);
+                alpha.build(ctx, gpu_cache, render_tasks, deferred_resolves, saved_alpha);
+                alpha.is_shared = is_shared_alpha;
             }
         }
     }

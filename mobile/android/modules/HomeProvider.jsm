@@ -9,7 +9,6 @@ this.EXPORTED_SYMBOLS = [ "HomeProvider" ];
 
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/Promise.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
 ChromeUtils.import("resource://gre/modules/Task.jsm");

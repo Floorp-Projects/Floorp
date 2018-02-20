@@ -6,10 +6,8 @@
 
 this.EXPORTED_SYMBOLS = ["Accounts"];
 
-ChromeUtils.import("resource://gre/modules/Deprecated.jsm"); /* global Deprecated */
-ChromeUtils.import("resource://gre/modules/Messaging.jsm"); /* global Messaging */
-ChromeUtils.import("resource://gre/modules/Promise.jsm"); /* global Promise */
-ChromeUtils.import("resource://gre/modules/Services.jsm"); /* global Services */
+ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * A promise-based API for querying the existence of Sync accounts,
@@ -40,13 +38,6 @@ var Accounts = Object.freeze({
 
   firefoxAccountsExist: function() {
     return this._accountsExist("fxa");
-  },
-
-  syncAccountsExist: function() {
-    Deprecated.warning("The legacy Sync account type has been removed from Firefox for Android. " +
-                       "Please use `firefoxAccountsExist` instead.",
-                       "https://developer.mozilla.org/en-US/Add-ons/Firefox_for_Android/API/Accounts.jsm");
-    return Promise.resolve(false);
   },
 
   anySyncAccountsExist: function() {

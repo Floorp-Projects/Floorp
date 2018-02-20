@@ -1,5 +1,5 @@
 use super::ParallelIterator;
-use super::internal::*;
+use super::plumbing::*;
 use super::noop::*;
 
 pub fn for_each<I, F, T>(pi: I, op: &F)
@@ -42,6 +42,11 @@ impl<'f, F, T> Folder<T> for ForEachConsumer<'f, F>
 
     fn consume(self, item: T) -> Self {
         (self.op)(item);
+        self
+    }
+
+    fn consume_iter<I>(self, iter: I) -> Self where I: IntoIterator<Item=T> {
+        iter.into_iter().fold((), |_, item| (self.op)(item));
         self
     }
 

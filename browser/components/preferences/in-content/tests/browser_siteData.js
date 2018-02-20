@@ -24,6 +24,7 @@ function getPersistentStoragePermStatus(origin) {
 }
 
 // Test listing site using quota usage or site using appcache
+// This is currently disabled because of bug 1414751.
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
 
@@ -64,7 +65,7 @@ add_task(async function() {
     request.callback = resolve;
   });
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-});
+}).skip(); // Bug 1414751
 
 // Test buttons are disabled and loading message shown while updating sites
 add_task(async function() {

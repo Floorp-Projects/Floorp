@@ -1,5 +1,7 @@
-use super::internal::*;
+use super::plumbing::*;
 use super::*;
+
+use std::fmt::{self, Debug};
 
 /// The `split` function takes arbitrary data and a closure that knows how to
 /// split it, and turns this into a `ParallelIterator`.
@@ -17,9 +19,18 @@ pub fn split<D, S>(data: D, splitter: S) -> Split<D, S>
 /// This struct is created by the [`split()`] function.
 ///
 /// [`split()`]: fn.split.html
+#[derive(Clone)]
 pub struct Split<D, S> {
     data: D,
     splitter: S,
+}
+
+impl<D: Debug, S> Debug for Split<D, S> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Split")
+            .field("data", &self.data)
+            .finish()
+    }
 }
 
 impl<D, S> ParallelIterator for Split<D, S>

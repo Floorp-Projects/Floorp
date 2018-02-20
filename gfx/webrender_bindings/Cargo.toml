@@ -5,7 +5,7 @@ authors = ["The Mozilla Project Developers"]
 license = "MPL-2.0"
 
 [dependencies]
-rayon = "0.8"
+rayon = "1"
 thread_profiler = "0.1.1"
 euclid = "0.16"
 app_units = "0.6"

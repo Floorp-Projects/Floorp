@@ -1,38 +1,41 @@
+//! Contains support for user-managed thread pools, represented by the
+//! the [`ThreadPool`] type (see that struct for details).
+//!
+//! [`ThreadPool`]: struct.ThreadPool.html
+
+#[allow(deprecated)]
 use Configuration;
-#[cfg(rayon_unstable)]
-use future::{Future, RayonFuture};
-use latch::LockLatch;
-#[allow(unused_imports)]
-use log::Event::*;
-use job::StackJob;
+use {ThreadPoolBuilder, ThreadPoolBuildError};
 use join;
 use {scope, Scope};
 use spawn;
 use std::sync::Arc;
 use std::error::Error;
+use std::fmt;
 use registry::{Registry, WorkerThread};
 
+mod internal;
 mod test;
-/// # ThreadPool
+
+/// Represents a user created [thread-pool].
 ///
-/// The [`ThreadPool`] struct represents a user created [thread-pool]. [`ThreadPool::new()`]
-/// takes a [`Configuration`] struct that you can use to specify the number and/or
-/// names of threads in the pool. You can then execute functions explicitly within
-/// this [`ThreadPool`] using [`ThreadPool::install()`]. By contrast, top level
-/// rayon functions (like `join()`)  will execute implicitly within the current thread-pool.
-/// 
+/// Use a [`ThreadPoolBuilder`] to specify the number and/or names of threads
+/// in the pool. After calling [`ThreadPoolBuilder::build()`], you can then
+/// execute functions explicitly within this [`ThreadPool`] using
+/// [`ThreadPool::install()`]. By contrast, top level rayon functions
+/// (like `join()`) will execute implicitly within the current thread-pool.
+///
 ///
 /// ## Creating a ThreadPool
 ///
 /// ```rust
-///    # use rayon_core as rayon;
-///
-///    let pool = rayon::ThreadPool::new(rayon::Configuration::new().num_threads(8)).unwrap();
+/// # use rayon_core as rayon;
+/// let pool = rayon::ThreadPoolBuilder::new().num_threads(8).build().unwrap();
 /// ```
 ///
-/// [`install()`] executes a closure in one of the `ThreadPool`'s threads. In addition, 
-/// any other rayon operations called inside of `install()` will also execute in the
-/// context of the `ThreadPool`.
+/// [`install()`][`ThreadPool::install()`] executes a closure in one of the `ThreadPool`'s
+/// threads. In addition, any other rayon operations called inside of `install()` will also
+/// execute in the context of the `ThreadPool`.
 ///
 /// When the `ThreadPool` is dropped, that's a signal for the threads it manages to terminate,
 /// they will complete executing any remaining work that you have spawned, and automatically
@@ -42,19 +45,24 @@ mod test;
 /// [thread-pool]: https://en.wikipedia.org/wiki/Thread_pool
 /// [`ThreadPool`]: struct.ThreadPool.html
 /// [`ThreadPool::new()`]: struct.ThreadPool.html#method.new
-/// [`Configuration`]: struct.Configuration.html
+/// [`ThreadPoolBuilder`]: struct.ThreadPoolBuilder.html
+/// [`ThreadPoolBuilder::build()`]: struct.ThreadPoolBuilder.html#method.build
 /// [`ThreadPool::install()`]: struct.ThreadPool.html#method.install
 pub struct ThreadPool {
     registry: Arc<Registry>,
 }
 
+pub fn build(builder: ThreadPoolBuilder) -> Result<ThreadPool, ThreadPoolBuildError> {
+    let registry = try!(Registry::new(builder));
+    Ok(ThreadPool { registry: registry })
+}
+
 impl ThreadPool {
-    /// Constructs a new thread pool with the given configuration. If
-    /// the configuration is not valid, returns a suitable `Err`
-    /// result.  See `InitError` for more details.
+    #[deprecated(note = "Use `ThreadPoolBuilder::build`")]
+    #[allow(deprecated)]
+    /// Deprecated in favor of `ThreadPoolBuilder::build`.
     pub fn new(configuration: Configuration) -> Result<ThreadPool, Box<Error>> {
-        let registry = try!(Registry::new(configuration));
-        Ok(ThreadPool { registry: registry })
+        build(configuration.into_builder()).map_err(|e| e.into())
     }
 
     /// Returns a handle to the global thread pool. This is the pool
@@ -92,12 +100,12 @@ impl ThreadPool {
     /// If `op` should panic, that panic will be propagated.
     ///
     /// ## Using `install()`
-    ///  
+    ///
     /// ```rust
     ///    # use rayon_core as rayon;
     ///    fn main() {
-    ///         let pool = rayon::ThreadPool::new(rayon::Configuration::new().num_threads(8)).unwrap();
-    ///         let n = pool.install(|| fib(20)); 
+    ///         let pool = rayon::ThreadPoolBuilder::new().num_threads(8).build().unwrap();
+    ///         let n = pool.install(|| fib(20));
     ///         println!("{}", n);
     ///    }
     ///
@@ -110,26 +118,23 @@ impl ThreadPool {
     ///     }
     /// ```
     pub fn install<OP, R>(&self, op: OP) -> R
-        where OP: FnOnce() -> R + Send
+        where OP: FnOnce() -> R + Send,
+              R: Send
     {
-        unsafe {
-            let job_a = StackJob::new(op, LockLatch::new());
-            self.registry.inject(&[job_a.as_job_ref()]);
-            job_a.latch.wait();
-            job_a.into_result()
-        }
+        self.registry.in_worker(|_, _| op())
     }
 
     /// Returns the (current) number of threads in the thread pool.
     ///
-    /// ### Future compatibility note
+    /// # Future compatibility note
     ///
     /// Note that unless this thread-pool was created with a
-    /// configuration that specifies the number of threads, then this
-    /// number may vary over time in future versions (see [the
+    /// [`ThreadPoolBuilder`] that specifies the number of threads,
+    /// then this number may vary over time in future versions (see [the
     /// `num_threads()` method for details][snt]).
     ///
-    /// [snt]: struct.Configuration.html#method.num_threads
+    /// [snt]: struct.ThreadPoolBuilder.html#method.num_threads
+    /// [`ThreadPoolBuilder`]: struct.ThreadPoolBuilder.html
     #[inline]
     pub fn current_num_threads(&self) -> usize {
         self.registry.num_threads()
@@ -144,7 +149,7 @@ impl ThreadPool {
     /// lifetime. However, multiple threads may share the same index if
     /// they are in distinct thread-pools.
     ///
-    /// ### Future compatibility note
+    /// # Future compatibility note
     ///
     /// Currently, every thread-pool (including the global
     /// thread-pool) has a fixed number of threads, but this may
@@ -154,7 +159,7 @@ impl ThreadPool {
     /// indices may wind up being reused if threads are terminated and
     /// restarted.
     ///
-    /// [snt]: struct.Configuration.html#method.num_threads
+    /// [snt]: struct.ThreadPoolBuilder.html#method.num_threads
     #[inline]
     pub fn current_thread_index(&self) -> Option<usize> {
         unsafe {
@@ -242,50 +247,20 @@ impl ThreadPool {
         // We assert that `self.registry` has not terminated.
         unsafe { spawn::spawn_in(op, &self.registry) }
     }
-
-    /// Spawns an asynchronous future in the thread pool. `spawn_future()` will inject 
-    /// jobs into the threadpool that are not tied to your current stack frame. This means 
-    /// `ThreadPool`'s `spawn` methods are not scoped. As a result, it cannot access data
-    /// owned by the stack.
-    ///
-    /// `spawn_future()` returns a `RayonFuture<F::Item, F::Error>`, allowing you to chain
-    /// multiple jobs togther.
-    ///
-    /// ## Using `spawn_future()`
-    ///
-    /// ```rust
-    ///    # extern crate rayon_core as rayon;
-    ///    extern crate futures;
-    ///    use futures::{future, Future};
-    ///    # fn main() {
-    ///
-    ///    let pool = rayon::ThreadPool::new(rayon::Configuration::new().num_threads(8)).unwrap();
-    ///
-    ///    let a = pool.spawn_future(future::lazy(move || Ok::<_, ()>(format!("Hello, "))));
-    ///    let b = pool.spawn_future(a.map(|mut data| {
-    ///                                        data.push_str("world");
-    ///                                        data
-    ///                                    }));
-    ///    let result = b.wait().unwrap(); // `Err` is impossible, so use `unwrap()` here
-    ///    println!("{:?}", result); // prints: "Hello, world!"
-    ///    # }
-    /// ```
-    ///
-    /// See also: [the `spawn_future()` function defined on scopes][spawn_future].
-    ///
-    /// [spawn_future]: struct.Scope.html#method.spawn_future
-    #[cfg(rayon_unstable)]
-    pub fn spawn_future<F>(&self, future: F) -> RayonFuture<F::Item, F::Error>
-        where F: Future + Send + 'static
-    {
-        // We assert that `self.registry` has not yet terminated.
-        unsafe { spawn::spawn_future_in(future, self.registry.clone()) }
-    }
 }
 
 impl Drop for ThreadPool {
     fn drop(&mut self) {
         self.registry.terminate();
+    }
+}
+
+impl fmt::Debug for ThreadPool {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("ThreadPool")
+            .field("num_threads", &self.current_num_threads())
+            .field("id", &self.registry.id())
+            .finish()
     }
 }
 
@@ -301,7 +276,7 @@ impl Drop for ThreadPool {
 ///
 /// [m]: struct.ThreadPool.html#method.current_thread_index
 ///
-/// ### Future compatibility note
+/// # Future compatibility note
 ///
 /// Currently, every thread-pool (including the global
 /// thread-pool) has a fixed number of threads, but this may
@@ -311,7 +286,7 @@ impl Drop for ThreadPool {
 /// indices may wind up being reused if threads are terminated and
 /// restarted.
 ///
-/// [snt]: struct.Configuration.html#method.num_threads
+/// [snt]: struct.ThreadPoolBuilder.html#method.num_threads
 #[inline]
 pub fn current_thread_index() -> Option<usize> {
     unsafe {

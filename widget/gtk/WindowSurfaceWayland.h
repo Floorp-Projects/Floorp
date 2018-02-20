@@ -113,6 +113,7 @@ public:
 
 private:
   WindowBackBuffer*         GetBufferToDraw(int aWidth, int aHeight);
+  void                      UpdateScaleFactor();
 
   // TODO: Do we need to hold a reference to nsWindow object?
   nsWindow*                 mWindow;

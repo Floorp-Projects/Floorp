@@ -3846,7 +3846,7 @@ SourceListener::Activate(SourceMediaStream* aStream,
       MakeUnique<DeviceState>(
           aAudioDevice,
           aAudioDevice->GetMediaSource() == dom::MediaSourceEnum::Microphone &&
-          Preferences::GetBool("media.getusermedia.microphone.off_while_disabled.enabled", false));
+          Preferences::GetBool("media.getusermedia.microphone.off_while_disabled.enabled", true));
   }
 
   if (aVideoDevice) {
@@ -4225,7 +4225,7 @@ SourceListener::CapturingAudio() const
 {
   MOZ_ASSERT(NS_IsMainThread());
   return Activated() && mAudioDeviceState && !mAudioDeviceState->mStopped &&
-         (mAudioDeviceState->mDevice->mSource->IsFake() ||
+         (!mAudioDeviceState->mDevice->mSource->IsFake() ||
           Preferences::GetBool("media.navigator.permission.fake"));
 }
 

@@ -284,7 +284,7 @@
       <button id="clearSiteDataButton"
           class="accessory-button"
           icon="clear"
-          label="&clearSiteData.label;" accesskey="&clearSiteData.accesskey;"/>
+          label="&clearSiteData1.label;" accesskey="&clearSiteData1.accesskey;"/>
     </vbox>
   </hbox>
 </groupbox>

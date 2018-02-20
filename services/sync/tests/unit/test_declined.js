@@ -17,7 +17,7 @@ function DummyEngine() {}
 DummyEngine.prototype.name = "dummy";
 
 function ActualEngine() {}
-ActualEngine.prototype = {__proto__: Engine.prototype,
+ActualEngine.prototype = {__proto__: SyncEngine.prototype,
                           name: "actual"};
 
 function getEngineManager() {

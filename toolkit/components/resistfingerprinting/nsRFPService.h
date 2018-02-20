@@ -129,15 +129,11 @@ public:
 
   static PLDHashNumber HashKey(KeyTypePointer aKey)
   {
-    nsAutoString temp;
-    temp.AppendInt(aKey->mLang);
-    temp.Append('|');
-    temp.AppendInt(aKey->mRegion);
-    temp.Append('|');
-    temp.AppendInt(aKey->mKeyIdx);
-    temp.Append('|');
-    temp.Append(aKey->mKey);
-    return mozilla::HashString(temp);
+    PLDHashNumber hash = mozilla::HashString(aKey->mKey);
+    return mozilla::AddToHash(hash,
+                              aKey->mRegion,
+                              aKey->mKeyIdx,
+                              aKey->mLang);
   }
 
   enum { ALLOW_MEMMOVE = true };
