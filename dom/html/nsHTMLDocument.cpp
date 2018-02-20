@@ -861,12 +861,9 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
 
   mCompatMode = aMode;
   CSSLoader()->SetCompatibilityMode(mCompatMode);
-  nsCOMPtr<nsIPresShell> shell = GetShell();
-  if (shell) {
-    nsPresContext *pc = shell->GetPresContext();
-    if (pc) {
-      pc->CompatibilityModeChanged();
-    }
+  RefPtr<nsPresContext> pc = GetPresContext();
+  if (pc) {
+    pc->CompatibilityModeChanged();
   }
 }
 

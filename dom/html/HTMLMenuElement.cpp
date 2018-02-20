@@ -70,12 +70,11 @@ HTMLMenuElement::SendShowEvent()
   event.mFlags.mBubbles = false;
   event.mFlags.mCancelable = false;
 
-  nsCOMPtr<nsIPresShell> shell = document->GetShell();
-  if (!shell) {
+  RefPtr<nsPresContext> presContext = document->GetPresContext();
+  if (!presContext) {
     return;
   }
 
-  RefPtr<nsPresContext> presContext = shell->GetPresContext();
   nsEventStatus status = nsEventStatus_eIgnore;
   EventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
                             &event, nullptr, &status);

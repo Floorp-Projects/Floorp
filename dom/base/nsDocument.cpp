@@ -932,19 +932,11 @@ TransferZoomLevels(nsIDocument* aFromDoc,
   MOZ_ASSERT(aFromDoc && aToDoc,
              "transferring zoom levels from/to null doc");
 
-  nsIPresShell* fromShell = aFromDoc->GetShell();
-  if (!fromShell)
-    return;
-
-  nsPresContext* fromCtxt = fromShell->GetPresContext();
+  nsPresContext* fromCtxt = aFromDoc->GetPresContext();
   if (!fromCtxt)
     return;
 
-  nsIPresShell* toShell = aToDoc->GetShell();
-  if (!toShell)
-    return;
-
-  nsPresContext* toCtxt = toShell->GetPresContext();
+  nsPresContext* toCtxt = aToDoc->GetPresContext();
   if (!toCtxt)
     return;
 
@@ -3697,10 +3689,8 @@ nsDocument::SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding)
   if (mCharacterSet != aEncoding) {
     mCharacterSet = aEncoding;
 
-    if (nsIPresShell* shell = GetShell()) {
-      if (nsPresContext* context = shell->GetPresContext()) {
-        context->DispatchCharSetChange(aEncoding);
-      }
+    if (nsPresContext* context = GetPresContext()) {
+      context->DispatchCharSetChange(aEncoding);
     }
   }
 }
@@ -5331,14 +5321,11 @@ nsDocument::DispatchContentLoadedEvents()
         if (innerEvent) {
           nsEventStatus status = nsEventStatus_eIgnore;
 
-          nsIPresShell *shell = parent->GetShell();
-          if (shell) {
-            RefPtr<nsPresContext> context = shell->GetPresContext();
+          RefPtr<nsPresContext> context = parent->GetPresContext();
 
-            if (context) {
-              EventDispatcher::Dispatch(parent, context, innerEvent, event,
-                                        &status);
-            }
+          if (context) {
+            EventDispatcher::Dispatch(parent, context, innerEvent, event,
+                                      &status);
           }
         }
       }
@@ -6745,13 +6732,10 @@ nsDocument::GetAnimationController()
 
   // If there's a presContext then check the animation mode and pause if
   // necessary.
-  nsIPresShell *shell = GetShell();
-  if (mAnimationController && shell) {
-    nsPresContext *context = shell->GetPresContext();
-    if (context &&
-        context->ImageAnimationMode() == imgIContainer::kDontAnimMode) {
-      mAnimationController->Pause(nsSMILTimeContainer::PAUSE_USERPREF);
-    }
+  nsPresContext* context = GetPresContext();
+  if (mAnimationController && context &&
+      context->ImageAnimationMode() == imgIContainer::kDontAnimMode) {
+    mAnimationController->Pause(nsSMILTimeContainer::PAUSE_USERPREF);
   }
 
   // If we're hidden (or being hidden), notify the newly-created animation
@@ -7519,14 +7503,7 @@ already_AddRefed<Event>
 nsIDocument::CreateEvent(const nsAString& aEventType, CallerType aCallerType,
                          ErrorResult& rv) const
 {
-  nsIPresShell *shell = GetShell();
-
-  nsPresContext *presContext = nullptr;
-
-  if (shell) {
-    // Retrieve the context
-    presContext = shell->GetPresContext();
-  }
+  nsPresContext* presContext = GetPresContext();
 
   // Create event even without presContext.
   RefPtr<Event> ev =
@@ -8568,9 +8545,8 @@ DispatchCustomEventWithFlush(nsINode* aTarget, const nsAString& aEventType,
   if (aOnlyChromeDispatch) {
     event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
   }
-  if (nsIPresShell* shell = aTarget->OwnerDoc()->GetShell()) {
-    shell->GetPresContext()->
-      RefreshDriver()->ScheduleEventDispatch(aTarget, event);
+  if (nsPresContext* presContext = aTarget->OwnerDoc()->GetPresContext()) {
+    presContext->RefreshDriver()->ScheduleEventDispatch(aTarget, event);
   }
 }
 
@@ -10862,10 +10838,8 @@ nsIDocument::DispatchFullscreenError(const char* aMessage)
 static void
 UpdateViewportScrollbarOverrideForFullscreen(nsIDocument* aDoc)
 {
-  if (nsIPresShell* presShell = aDoc->GetShell()) {
-    if (nsPresContext* presContext = presShell->GetPresContext()) {
-      presContext->UpdateViewportScrollbarStylesOverride();
-    }
+  if (nsPresContext* presContext = aDoc->GetPresContext()) {
+    presContext->UpdateViewportScrollbarStylesOverride();
   }
 }
 

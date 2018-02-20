@@ -913,6 +913,12 @@ public:
       ? mPresShell : nullptr;
   }
 
+  nsPresContext* GetPresContext() const
+  {
+    nsIPresShell* shell = GetShell();
+    return shell ? shell->GetPresContext() : nullptr;
+  }
+
   bool HasShellOrBFCacheEntry() const
   {
     return mPresShell || mBFCacheEntry;

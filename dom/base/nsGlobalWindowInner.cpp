@@ -4398,12 +4398,7 @@ nsGlobalWindowInner::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
   }
 
   // Obtain a presentation shell
-  nsIPresShell *shell = mDoc->GetShell();
-  RefPtr<nsPresContext> presContext;
-  if (shell) {
-    // Retrieve the context
-    presContext = shell->GetPresContext();
-  }
+  RefPtr<nsPresContext> presContext = mDoc->GetPresContext();
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv = EventDispatcher::DispatchDOMEvent(ToSupports(this), nullptr,

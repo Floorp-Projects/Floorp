@@ -665,8 +665,7 @@ GetPresContextForElement(Element* aElem)
     // See bug 534975.
     return nullptr;
   }
-  nsIPresShell* shell = doc->GetShell();
-  return shell ? shell->GetPresContext() : nullptr;
+  return doc->GetPresContext();
 }
 
 #ifdef MOZ_OLD_STYLE

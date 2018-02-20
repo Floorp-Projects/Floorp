@@ -378,8 +378,7 @@ ResponsiveImageSelector::SelectImage(bool aReselect)
   }
 
   nsIDocument* doc = Document();
-  nsIPresShell* shell = doc->GetShell();
-  nsPresContext* pctx = shell ? shell->GetPresContext() : nullptr;
+  nsPresContext* pctx = doc->GetPresContext();
   nsCOMPtr<nsIURI> baseURI = mOwnerNode->GetBaseURI();
 
   if (!pctx || !baseURI) {

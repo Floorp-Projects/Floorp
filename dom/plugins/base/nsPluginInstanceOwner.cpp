@@ -421,12 +421,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
     return NS_ERROR_FAILURE;
   }
 
-  nsIPresShell *presShell = doc->GetShell();
-  if (!presShell) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsPresContext *presContext = presShell->GetPresContext();
+  nsPresContext* presContext = doc->GetPresContext();
   if (!presContext) {
     return NS_ERROR_FAILURE;
   }
