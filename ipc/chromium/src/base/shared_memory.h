@@ -25,15 +25,11 @@ namespace base {
 // the underlying OS handle to a shared memory segment.
 #if defined(OS_WIN)
 typedef HANDLE SharedMemoryHandle;
-typedef HANDLE SharedMemoryLock;
 #elif defined(OS_POSIX)
 // A SharedMemoryId is sufficient to identify a given shared memory segment on a
 // system, but insufficient to map it.
 typedef FileDescriptor SharedMemoryHandle;
 typedef ino_t SharedMemoryId;
-// On POSIX, the lock is implemented as a lockf() on the mapped file,
-// so no additional member (or definition of SharedMemoryLock) is
-// needed.
 #endif
 
 // Platform abstraction for shared memory.  Provides a C++ wrapper
@@ -143,27 +139,11 @@ class SharedMemory {
     return ShareToProcessCommon(target_pid, new_handle, true);
   }
 
-  // Lock the shared memory.
-  // This is a cross-process lock which may be recursively
-  // locked by the same thread.
-  // TODO(port):
-  // WARNING: on POSIX the lock only works across processes, not
-  // across threads.  2 threads in the same process can both grab the
-  // lock at the same time.  There are several solutions for this
-  // (futex, lockf+anon_semaphore) but none are both clean and common
-  // across Mac and Linux.
-  void Lock();
-
-  // Release the shared memory lock.
-  void Unlock();
-
  private:
 #if defined(OS_POSIX)
   bool CreateOrOpen(const std::wstring &name, int posix_flags, size_t size);
   bool FilenameForMemoryName(const std::wstring &memname,
                              std::wstring *filename);
-  void LockOrUnlockCommon(int function);
-
 #endif
   bool ShareToProcessCommon(ProcessId target_pid,
                             SharedMemoryHandle* new_handle,
@@ -179,29 +159,8 @@ class SharedMemory {
   void*              memory_;
   bool               read_only_;
   size_t             max_size_;
-#if !defined(OS_POSIX)
-  SharedMemoryLock   lock_;
-#endif
 
   DISALLOW_EVIL_CONSTRUCTORS(SharedMemory);
-};
-
-// A helper class that acquires the shared memory lock while
-// the SharedMemoryAutoLock is in scope.
-class SharedMemoryAutoLock {
- public:
-  explicit SharedMemoryAutoLock(SharedMemory* shared_memory)
-      : shared_memory_(shared_memory) {
-    shared_memory_->Lock();
-  }
-
-  ~SharedMemoryAutoLock() {
-    shared_memory_->Unlock();
-  }
-
- private:
-  SharedMemory* shared_memory_;
-  DISALLOW_EVIL_CONSTRUCTORS(SharedMemoryAutoLock);
 };
 
 }  // namespace base
