@@ -20,7 +20,7 @@ for example - use `all_tests.py` instead.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import resolve_keyed_by
+from taskgraph.util.schema import resolve_keyed_by, OptimizationSchema
 from taskgraph.util.treeherder import split_symbol, join_symbol
 from taskgraph.util.platforms import platform_family
 from taskgraph.util.schema import (
@@ -383,6 +383,10 @@ test_description_schema = Schema({
     Exclusive(Optional('when'), 'optimization'): Any({
         Optional('files-changed'): [basestring],
     }),
+
+    # Optimization to perform on this task during the optimization phase.
+    # Optimizations are defined in taskcluster/taskgraph/optimize.py.
+    Exclusive(Optional('optimization'), 'optimization'): OptimizationSchema,
 
     # The SCHEDULES component for this task; this defaults to the suite
     # (not including the flavor) but can be overridden here.
@@ -1018,6 +1022,8 @@ def make_job_description(config, tests):
 
         if test.get('when'):
             jobdesc['when'] = test['when']
+        elif 'optimization' in test:
+            jobdesc['optimization'] = test['optimization']
         elif config.params['project'] != 'try' and suite not in INCLUSIVE_COMPONENTS:
             # for non-try branches and non-inclusive suites, include SETA
             jobdesc['optimization'] = {'skip-unless-schedules-or-seta': schedules}
