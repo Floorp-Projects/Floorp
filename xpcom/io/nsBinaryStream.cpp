@@ -370,11 +370,9 @@ nsBinaryOutputStream::WriteID(const nsIID& aIID)
     return rv;
   }
 
-  for (int i = 0; i < 8; ++i) {
-    rv = Write8(aIID.m3[i]);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+  rv = WriteBytes(reinterpret_cast<const char*>(&aIID.m3[0]), sizeof(aIID.m3));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
-    }
   }
 
   return NS_OK;
@@ -1009,11 +1007,14 @@ nsBinaryInputStream::ReadID(nsID* aResult)
     return rv;
   }
 
-  for (int i = 0; i < 8; ++i) {
-    rv = Read8(&aResult->m3[i]);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  const uint32_t toRead = sizeof(aResult->m3);
+  uint32_t bytesRead = 0;
+  rv = Read(reinterpret_cast<char*>(&aResult->m3[0]), toRead, &bytesRead);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (bytesRead != toRead) {
+    return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
