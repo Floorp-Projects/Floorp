@@ -233,7 +233,8 @@ void main(void) {
                                            edge_mask,
                                            prim.z,
                                            prim.scroll_node,
-                                           prim.task);
+                                           prim.task,
+                                           true);
 #else
     VertexInfo vi = write_vertex(segment_rect,
                                  prim.local_clip_rect,

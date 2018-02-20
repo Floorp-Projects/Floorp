@@ -438,6 +438,7 @@ pub struct Texture {
     render_target: Option<RenderTargetInfo>,
     fbo_ids: Vec<FBOId>,
     depth_rb: Option<RBOId>,
+    last_frame_used: FrameId,
 }
 
 impl Texture {
@@ -471,6 +472,10 @@ impl Texture {
 
     pub fn get_rt_info(&self) -> Option<&RenderTargetInfo> {
         self.render_target.as_ref()
+    }
+
+    pub fn used_in_frame(&self, frame_id: FrameId) -> bool {
+        self.last_frame_used == frame_id
     }
 
     #[cfg(feature = "replay")]
@@ -940,6 +945,7 @@ impl Device {
             render_target: None,
             fbo_ids: vec![],
             depth_rb: None,
+            last_frame_used: self.frame_id,
         }
     }
 
@@ -1019,6 +1025,7 @@ impl Device {
         texture.filter = filter;
         texture.layer_count = layer_count;
         texture.render_target = render_target;
+        texture.last_frame_used = self.frame_id;
 
         self.bind_texture(DEFAULT_TEXTURE, texture);
         self.set_texture_parameters(texture.target, filter);

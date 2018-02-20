@@ -2,16 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, LayerPoint, LayerRect, LayerSize, LayerVector2D};
-use api::{BorderRadius, BoxShadowClipMode, LayoutSize, LayerPrimitiveInfo};
-use api::{ClipMode, ClipAndScrollInfo, ComplexClipRegion, LocalClip};
-use api::{PipelineId};
+use api::{BorderRadius, BoxShadowClipMode, ClipMode, ColorF, ComplexClipRegion, LayerPoint};
+use api::{LayerPrimitiveInfo, LayerRect, LayerSize, LayerVector2D, LayoutSize, LocalClip};
+use api::PipelineId;
 use app_units::Au;
 use clip::ClipSource;
 use frame_builder::FrameBuilder;
 use gpu_types::BrushImageKind;
-use prim_store::{PrimitiveContainer};
-use prim_store::{BrushMaskKind, BrushKind, BrushPrimitive};
+use prim_store::{BrushKind, BrushMaskKind, BrushPrimitive, PrimitiveContainer};
+use prim_store::ScrollNodeAndClipChain;
 use picture::PicturePrimitive;
 use util::RectHelpers;
 use render_task::MAX_BLUR_STD_DEVIATION;
@@ -53,7 +52,7 @@ impl FrameBuilder {
     pub fn add_box_shadow(
         &mut self,
         pipeline_id: PipelineId,
-        clip_and_scroll: ClipAndScrollInfo,
+        clip_and_scroll: ScrollNodeAndClipChain,
         prim_info: &LayerPrimitiveInfo,
         box_offset: &LayerVector2D,
         color: &ColorF,
@@ -88,7 +87,8 @@ impl FrameBuilder {
             if box_offset.x == 0.0 && box_offset.y == 0.0 && spread_amount == 0.0 {
                 return;
             }
-            let mut clips = Vec::new();
+            let mut clips = Vec::with_capacity(2);
+            clips.push(ClipSource::Rectangle(*prim_info.local_clip.clip_rect()));
 
             let fast_info = match clip_mode {
                 BoxShadowClipMode::Outset => {
@@ -264,8 +264,10 @@ impl FrameBuilder {
                         border_radius,
                         ClipMode::ClipOut,
                     ));
-
-                    let pic_info = LayerPrimitiveInfo::new(pic_rect);
+                    let pic_info = LayerPrimitiveInfo::with_clip_rect(
+                        pic_rect,
+                        *prim_info.local_clip.clip_rect()
+                    );
                     self.add_primitive(
                         clip_and_scroll,
                         &pic_info,
@@ -332,6 +334,12 @@ impl FrameBuilder {
                         clip_and_scroll
                     );
 
+                    let clip_rect = prim_info.local_clip.clip_rect();
+                    let clip_rect = match prim_info.rect.intersection(clip_rect) {
+                        Some(clip_rect) => clip_rect,
+                        None => return,
+                    };
+
                     // Draw the picture one pixel outside the original
                     // rect to account for the inflate above. This
                     // extra edge will be clipped by the local clip
@@ -339,7 +347,7 @@ impl FrameBuilder {
                     let pic_rect = prim_info.rect.inflate(inflate_size + box_offset.x.abs(), inflate_size + box_offset.y.abs());
                     let pic_info = LayerPrimitiveInfo::with_clip_rect(
                         pic_rect,
-                        prim_info.rect
+                        clip_rect
                     );
 
                     // Add a normal clip to ensure nothing gets drawn

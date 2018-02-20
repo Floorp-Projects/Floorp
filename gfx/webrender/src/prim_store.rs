@@ -2,25 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, BorderRadius, BuiltDisplayList, ClipAndScrollInfo, ClipMode};
-use api::{ColorF, DeviceIntRect, DeviceIntSize, DevicePixelScale, Epoch};
-use api::{ComplexClipRegion, ExtendMode, FontRenderMode};
+use api::{AlphaType, BorderRadius, BuiltDisplayList, ClipId, ClipMode, ColorF, ComplexClipRegion};
+use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, Epoch, ExtendMode, FontRenderMode};
 use api::{GlyphInstance, GlyphKey, GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag};
 use api::{LayerPoint, LayerRect, LayerSize, LayerToWorldTransform, LayerVector2D, LineOrientation};
-use api::{LineStyle, PremultipliedColorF};
-use api::{WorldToLayerTransform, YuvColorSpace, YuvFormat};
+use api::{LineStyle, PremultipliedColorF, WorldToLayerTransform, YuvColorSpace, YuvFormat};
 use border::{BorderCornerInstance, BorderEdgeKind};
-use clip_scroll_tree::{CoordinateSystemId};
+use clip_scroll_tree::{ClipChainIndex, CoordinateSystemId};
 use clip_scroll_node::ClipScrollNode;
-use clip::{ClipSource, ClipSourcesHandle};
+use clip::{ClipChain, ClipChainNode, ClipChainNodeIter, ClipChainNodeRef, ClipSource};
+use clip::{ClipSourcesHandle, ClipWorkItem};
 use frame_builder::{FrameContext, FrameState, PictureContext, PictureState, PrimitiveRunContext};
 use glyph_rasterizer::{FontInstance, FontTransform};
 use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest,
                 ToGpuBlocks};
 use gpu_types::{ClipChainRectIndex};
 use picture::{PictureKind, PicturePrimitive};
-use render_task::{BlitSource, ClipChain, ClipChainNode, ClipChainNodeIter, ClipChainNodeRef, ClipWorkItem};
-use render_task::{RenderTask, RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskId};
+use render_task::{BlitSource, RenderTask, RenderTaskCacheKey, RenderTaskCacheKeyKind};
+use render_task::RenderTaskId;
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use resource_cache::{CacheItem, ImageProperties, ImageRequest, ResourceCache};
 use segment::SegmentBuilder;
@@ -32,11 +31,23 @@ use util::recycle_vec;
 
 const MIN_BRUSH_SPLIT_AREA: f32 = 128.0 * 128.0;
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ScrollNodeAndClipChain {
+    pub scroll_node_id: ClipId,
+    pub clip_chain_index: ClipChainIndex,
+}
+
+impl ScrollNodeAndClipChain {
+    pub fn new(scroll_node_id: ClipId, clip_chain_index: ClipChainIndex) -> ScrollNodeAndClipChain {
+        ScrollNodeAndClipChain { scroll_node_id, clip_chain_index }
+    }
+}
+
 #[derive(Debug)]
 pub struct PrimitiveRun {
     pub base_prim_index: PrimitiveIndex,
     pub count: usize,
-    pub clip_and_scroll: ClipAndScrollInfo,
+    pub clip_and_scroll: ScrollNodeAndClipChain,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -112,11 +123,9 @@ pub struct PrimitiveIndex(pub usize);
 pub enum PrimitiveKind {
     TextRun,
     Image,
-    YuvImage,
     Border,
     AlignedGradient,
     AngleGradient,
-    RadialGradient,
     Picture,
     Brush,
 }
@@ -195,6 +204,22 @@ pub enum BrushKind {
         current_epoch: Epoch,
         alpha_type: AlphaType,
     },
+    YuvImage {
+        yuv_key: [ImageKey; 3],
+        format: YuvFormat,
+        color_space: YuvColorSpace,
+        image_rendering: ImageRendering,
+    },
+    RadialGradient {
+        stops_range: ItemRange<GradientStop>,
+        extend_mode: ExtendMode,
+        stops_handle: GpuCacheHandle,
+        start_center: LayerPoint,
+        end_center: LayerPoint,
+        start_radius: f32,
+        end_radius: f32,
+        ratio_xy: f32,
+    }
 }
 
 impl BrushKind {
@@ -202,7 +227,9 @@ impl BrushKind {
         match *self {
             BrushKind::Solid { .. } |
             BrushKind::Picture |
-            BrushKind::Image { .. } => true,
+            BrushKind::Image { .. } |
+            BrushKind::YuvImage { .. } |
+            BrushKind::RadialGradient { .. } => true,
 
             BrushKind::Mask { .. } |
             BrushKind::Clear |
@@ -284,7 +311,8 @@ impl BrushPrimitive {
         // has to match VECS_PER_SPECIFIC_BRUSH
         match self.kind {
             BrushKind::Picture |
-            BrushKind::Image { .. } => {
+            BrushKind::Image { .. } |
+            BrushKind::YuvImage { .. } => {
             }
             BrushKind::Solid { color } => {
                 request.push(color.premultiplied());
@@ -331,6 +359,20 @@ impl BrushPrimitive {
                     0.0,
                 ]);
             }
+            BrushKind::RadialGradient { start_center, end_center, start_radius, end_radius, ratio_xy, extend_mode, .. } => {
+                request.push([
+                    start_center.x,
+                    start_center.y,
+                    end_center.x,
+                    end_center.y,
+                ]);
+                request.push([
+                    start_radius,
+                    end_radius,
+                    ratio_xy,
+                    pack_as_float(extend_mode as u32),
+                ]);
+            }
         }
     }
 }
@@ -374,24 +416,6 @@ impl ToGpuBlocks for ImagePrimitiveCpu {
             self.stretch_size.width, self.stretch_size.height,
             self.tile_spacing.width, self.tile_spacing.height,
         ]);
-    }
-}
-
-#[derive(Debug)]
-pub struct YuvImagePrimitiveCpu {
-    pub yuv_key: [ImageKey; 3],
-    pub format: YuvFormat,
-    pub color_space: YuvColorSpace,
-
-    pub image_rendering: ImageRendering,
-
-    // TODO(gw): Generate on demand
-    pub gpu_block: GpuBlockData,
-}
-
-impl ToGpuBlocks for YuvImagePrimitiveCpu {
-    fn write_gpu_blocks(&self, mut request: GpuDataRequest) {
-        request.push(self.gpu_block);
     }
 }
 
@@ -628,27 +652,6 @@ impl<'a> GradientGpuBlockBuilder<'a> {
             request.push(entry.start_color);
             request.push(entry.end_color);
         }
-    }
-}
-
-#[derive(Debug)]
-pub struct RadialGradientPrimitiveCpu {
-    pub stops_range: ItemRange<GradientStop>,
-    pub extend_mode: ExtendMode,
-    pub gpu_data_count: i32,
-    pub gpu_blocks: [GpuBlockData; 3],
-}
-
-impl RadialGradientPrimitiveCpu {
-    fn build_gpu_blocks_for_angle_radial(
-        &self,
-        display_list: &BuiltDisplayList,
-        mut request: GpuDataRequest,
-    ) {
-        request.extend_from_slice(&self.gpu_blocks);
-
-        let gradient_builder = GradientGpuBlockBuilder::new(self.stops_range, display_list);
-        gradient_builder.build(false, &mut request);
     }
 }
 
@@ -933,11 +936,9 @@ impl ClipData {
 pub enum PrimitiveContainer {
     TextRun(TextRunPrimitiveCpu),
     Image(ImagePrimitiveCpu),
-    YuvImage(YuvImagePrimitiveCpu),
     Border(BorderPrimitiveCpu),
     AlignedGradient(GradientPrimitiveCpu),
     AngleGradient(GradientPrimitiveCpu),
-    RadialGradient(RadialGradientPrimitiveCpu),
     Picture(PicturePrimitive),
     Brush(BrushPrimitive),
 }
@@ -948,9 +949,7 @@ pub struct PrimitiveStore {
     pub cpu_text_runs: Vec<TextRunPrimitiveCpu>,
     pub cpu_pictures: Vec<PicturePrimitive>,
     pub cpu_images: Vec<ImagePrimitiveCpu>,
-    pub cpu_yuv_images: Vec<YuvImagePrimitiveCpu>,
     pub cpu_gradients: Vec<GradientPrimitiveCpu>,
-    pub cpu_radial_gradients: Vec<RadialGradientPrimitiveCpu>,
     pub cpu_metadata: Vec<PrimitiveMetadata>,
     pub cpu_borders: Vec<BorderPrimitiveCpu>,
 }
@@ -963,9 +962,7 @@ impl PrimitiveStore {
             cpu_text_runs: Vec::new(),
             cpu_pictures: Vec::new(),
             cpu_images: Vec::new(),
-            cpu_yuv_images: Vec::new(),
             cpu_gradients: Vec::new(),
-            cpu_radial_gradients: Vec::new(),
             cpu_borders: Vec::new(),
         }
     }
@@ -977,9 +974,7 @@ impl PrimitiveStore {
             cpu_text_runs: recycle_vec(self.cpu_text_runs),
             cpu_pictures: recycle_vec(self.cpu_pictures),
             cpu_images: recycle_vec(self.cpu_images),
-            cpu_yuv_images: recycle_vec(self.cpu_yuv_images),
             cpu_gradients: recycle_vec(self.cpu_gradients),
-            cpu_radial_gradients: recycle_vec(self.cpu_radial_gradients),
             cpu_borders: recycle_vec(self.cpu_borders),
         }
     }
@@ -1018,6 +1013,8 @@ impl PrimitiveStore {
                     BrushKind::Mask { .. } => PrimitiveOpacity::translucent(),
                     BrushKind::Line { .. } => PrimitiveOpacity::translucent(),
                     BrushKind::Image { .. } => PrimitiveOpacity::translucent(),
+                    BrushKind::YuvImage { .. } => PrimitiveOpacity::opaque(),
+                    BrushKind::RadialGradient { .. } => PrimitiveOpacity::translucent(),
                     BrushKind::Picture => {
                         // TODO(gw): This is not currently used. In the future
                         //           we should detect opaque pictures.
@@ -1069,17 +1066,6 @@ impl PrimitiveStore {
                 self.cpu_images.push(image_cpu);
                 metadata
             }
-            PrimitiveContainer::YuvImage(image_cpu) => {
-                let metadata = PrimitiveMetadata {
-                    opacity: PrimitiveOpacity::opaque(),
-                    prim_kind: PrimitiveKind::YuvImage,
-                    cpu_prim_index: SpecificPrimitiveIndex(self.cpu_yuv_images.len()),
-                    ..base_metadata
-                };
-
-                self.cpu_yuv_images.push(image_cpu);
-                metadata
-            }
             PrimitiveContainer::Border(border_cpu) => {
                 let metadata = PrimitiveMetadata {
                     opacity: PrimitiveOpacity::translucent(),
@@ -1112,18 +1098,6 @@ impl PrimitiveStore {
                 };
 
                 self.cpu_gradients.push(gradient_cpu);
-                metadata
-            }
-            PrimitiveContainer::RadialGradient(radial_gradient_cpu) => {
-                let metadata = PrimitiveMetadata {
-                    // TODO: calculate if the gradient is actually opaque
-                    opacity: PrimitiveOpacity::translucent(),
-                    prim_kind: PrimitiveKind::RadialGradient,
-                    cpu_prim_index: SpecificPrimitiveIndex(self.cpu_radial_gradients.len()),
-                    ..base_metadata
-                };
-
-                self.cpu_radial_gradients.push(radial_gradient_cpu);
                 metadata
             }
         };
@@ -1293,22 +1267,6 @@ impl PrimitiveStore {
                     }
                 }
             }
-            PrimitiveKind::YuvImage => {
-                let image_cpu = &mut self.cpu_yuv_images[metadata.cpu_prim_index.0];
-
-                let channel_num = image_cpu.format.get_plane_num();
-                debug_assert!(channel_num <= 3);
-                for channel in 0 .. channel_num {
-                    frame_state.resource_cache.request_image(
-                        ImageRequest {
-                            key: image_cpu.yuv_key[channel],
-                            rendering: image_cpu.image_rendering,
-                            tile: None,
-                        },
-                        frame_state.gpu_cache,
-                    );
-                }
-            }
             PrimitiveKind::Brush => {
                 let brush = &mut self.cpu_brushes[metadata.cpu_prim_index.0];
 
@@ -1332,6 +1290,32 @@ impl PrimitiveStore {
                             frame_state.gpu_cache,
                         );
                     }
+                    BrushKind::YuvImage { format, yuv_key, image_rendering, .. } => {
+                        let channel_num = format.get_plane_num();
+                        debug_assert!(channel_num <= 3);
+                        for channel in 0 .. channel_num {
+                            frame_state.resource_cache.request_image(
+                                ImageRequest {
+                                    key: yuv_key[channel],
+                                    rendering: image_rendering,
+                                    tile: None,
+                                },
+                                frame_state.gpu_cache,
+                            );
+                        }
+                    }
+                    BrushKind::RadialGradient { ref mut stops_handle, stops_range, .. } => {
+                        if let Some(mut request) = frame_state.gpu_cache.request(stops_handle) {
+                            let gradient_builder = GradientGpuBlockBuilder::new(
+                                stops_range,
+                                pic_context.display_list,
+                            );
+                            gradient_builder.build(
+                                false,
+                                &mut request,
+                            );
+                        }
+                    }
                     BrushKind::Mask { .. } |
                     BrushKind::Solid { .. } |
                     BrushKind::Clear |
@@ -1340,8 +1324,7 @@ impl PrimitiveStore {
                 }
             }
             PrimitiveKind::AlignedGradient |
-            PrimitiveKind::AngleGradient |
-            PrimitiveKind::RadialGradient => {}
+            PrimitiveKind::AngleGradient => {}
         }
 
         // Mark this GPU resource as required for this frame.
@@ -1359,10 +1342,6 @@ impl PrimitiveStore {
                     let image = &self.cpu_images[metadata.cpu_prim_index.0];
                     image.write_gpu_blocks(request);
                 }
-                PrimitiveKind::YuvImage => {
-                    let yuv_image = &self.cpu_yuv_images[metadata.cpu_prim_index.0];
-                    yuv_image.write_gpu_blocks(request);
-                }
                 PrimitiveKind::AlignedGradient => {
                     let gradient = &self.cpu_gradients[metadata.cpu_prim_index.0];
                     metadata.opacity = gradient.build_gpu_blocks_for_aligned(
@@ -1372,13 +1351,6 @@ impl PrimitiveStore {
                 }
                 PrimitiveKind::AngleGradient => {
                     let gradient = &self.cpu_gradients[metadata.cpu_prim_index.0];
-                    gradient.build_gpu_blocks_for_angle_radial(
-                        pic_context.display_list,
-                        request,
-                    );
-                }
-                PrimitiveKind::RadialGradient => {
-                    let gradient = &self.cpu_radial_gradients[metadata.cpu_prim_index.0];
                     gradient.build_gpu_blocks_for_angle_radial(
                         pic_context.display_list,
                         request,
@@ -1634,12 +1606,9 @@ impl PrimitiveStore {
             }
         };
 
-        let mut combined_outer_rect = match prim_run_context.clip_chain {
-            Some(ref chain) => prim_screen_rect.intersection(&chain.combined_outer_screen_rect),
-            None => Some(prim_screen_rect),
-        };
-
-        let clip_chain = prim_run_context.clip_chain.map_or(None, |x| x.nodes.clone());
+        let mut combined_outer_rect =
+            prim_screen_rect.intersection(&prim_run_context.clip_chain.combined_outer_screen_rect);
+        let clip_chain = prim_run_context.clip_chain.nodes.clone();
 
         let prim_coordinate_system_id = prim_run_context.scroll_node.coordinate_system_id;
         let transform = &prim_run_context.scroll_node.world_content_transform;
@@ -1860,12 +1829,8 @@ impl PrimitiveStore {
                 frame_context.device_pixel_scale,
             );
 
-            let clip_bounds = match prim_run_context.clip_chain {
-                Some(ref node) => node.combined_outer_screen_rect,
-                None => frame_context.screen_rect,
-            };
             metadata.screen_rect = screen_bounding_rect
-                .intersection(&clip_bounds)
+                .intersection(&prim_run_context.clip_chain.combined_outer_screen_rect)
                 .map(|clipped| {
                     ScreenRect {
                         clipped,
@@ -1935,7 +1900,7 @@ impl PrimitiveStore {
                 .nodes[&run.clip_and_scroll.scroll_node_id];
             let clip_chain = frame_context
                 .clip_scroll_tree
-                .get_clip_chain(&run.clip_and_scroll.clip_node_id());
+                .get_clip_chain(run.clip_and_scroll.clip_chain_index);
 
             if pic_context.perform_culling {
                 if !scroll_node.invertible {
@@ -1943,15 +1908,11 @@ impl PrimitiveStore {
                     continue;
                 }
 
-                match clip_chain {
-                     Some(ref chain) if chain.combined_outer_screen_rect.is_empty() => {
-                        debug!("{:?} {:?}: clipped out", run.base_prim_index, pic_context.pipeline_id);
-                        continue;
-                    }
-                    _ => {},
+                if clip_chain.combined_outer_screen_rect.is_empty() {
+                    debug!("{:?} {:?}: clipped out", run.base_prim_index, pic_context.pipeline_id);
+                    continue;
                 }
             }
-
 
             let parent_relative_transform = pic_context
                 .inv_world_transform
@@ -2082,14 +2043,9 @@ fn convert_clip_chain_to_clip_vector(
 
 fn get_local_clip_rect_for_nodes(
     scroll_node: &ClipScrollNode,
-    clip_chain: Option<&ClipChain>,
+    clip_chain: &ClipChain,
 ) -> Option<LayerRect> {
-    let clip_chain_nodes = match clip_chain {
-        Some(ref clip_chain) => clip_chain.nodes.clone(),
-        None => return None,
-    };
-
-    let local_rect = ClipChainNodeIter { current: clip_chain_nodes }.fold(
+    let local_rect = ClipChainNodeIter { current: clip_chain.nodes.clone() }.fold(
         None,
         |combined_local_clip_rect: Option<LayerRect>, node| {
             if node.work_item.coordinate_system_id != scroll_node.coordinate_system_id {

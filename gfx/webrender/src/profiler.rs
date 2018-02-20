@@ -300,6 +300,9 @@ impl ProfileCounter for AverageTimeProfileCounter {
 pub struct FrameProfileCounters {
     pub total_primitives: IntProfileCounter,
     pub visible_primitives: IntProfileCounter,
+    pub targets_used: IntProfileCounter,
+    pub targets_changed: IntProfileCounter,
+    pub targets_created: IntProfileCounter,
 }
 
 impl FrameProfileCounters {
@@ -307,7 +310,15 @@ impl FrameProfileCounters {
         FrameProfileCounters {
             total_primitives: IntProfileCounter::new("Total Primitives"),
             visible_primitives: IntProfileCounter::new("Visible Primitives"),
+            targets_used: IntProfileCounter::new("Used targets"),
+            targets_changed: IntProfileCounter::new("Changed targets"),
+            targets_created: IntProfileCounter::new("Created targets"),
         }
+    }
+    pub fn reset_targets(&mut self) {
+        self.targets_used.reset();
+        self.targets_changed.reset();
+        self.targets_created.reset();
     }
 }
 
@@ -840,7 +851,7 @@ impl Profiler {
         }
     }
 
-    fn draw_gpu_cache_bar(
+    fn draw_bar(
         &mut self,
         label: &str,
         label_color: ColorU,
@@ -898,9 +909,9 @@ impl Profiler {
             value: counters.allocated_rows.value * MAX_VERTEX_TEXTURE_WIDTH,
         };
 
-        let rect0 = self.draw_gpu_cache_bar(
+        let rect0 = self.draw_bar(
             &format!("GPU cache rows ({}):", counters.allocated_rows.value),
-            ColorU::new(255, 255, 255, 255),
+            ColorU::new(0xFF, 0xFF, 0xFF, 0xFF),
             &[
                 (color_updated, &counters.updated_rows),
                 (color_free, &counters.allocated_rows),
@@ -908,14 +919,53 @@ impl Profiler {
             debug_renderer,
         );
 
-        let rect1 = self.draw_gpu_cache_bar(
+        let rect1 = self.draw_bar(
             "GPU cache blocks",
-            ColorU::new(255, 255, 0, 255),
+            ColorU::new(0xFF, 0xFF, 0, 0xFF),
             &[
                 (color_updated, &counters.updated_blocks),
                 (color_saved, &requested_blocks),
                 (color_free, &counters.allocated_blocks),
-                (ColorU::new(0, 0, 0, 255), &total_blocks),
+                (ColorU::new(0, 0, 0, 0xFF), &total_blocks),
+            ],
+            debug_renderer,
+        );
+
+        let total_rect = rect0.union(&rect1).inflate(10.0, 10.0);
+        debug_renderer.add_quad(
+            total_rect.origin.x,
+            total_rect.origin.y,
+            total_rect.origin.x + total_rect.size.width,
+            total_rect.origin.y + total_rect.size.height,
+            ColorF::new(0.1, 0.1, 0.1, 0.8).into(),
+            ColorF::new(0.2, 0.2, 0.2, 0.8).into(),
+        );
+
+        self.draw_state.y_left = total_rect.origin.y + total_rect.size.height + 30.0;
+    }
+
+    fn draw_frame_bars(
+        &mut self,
+        counters: &FrameProfileCounters,
+        debug_renderer: &mut DebugRenderer,
+    ) {
+        let rect0 = self.draw_bar(
+            &format!("primitives ({}):", counters.total_primitives.value),
+            ColorU::new(0xFF, 0xFF, 0xFF, 0xFF),
+            &[
+                (ColorU::new(0, 0, 0xFF, 0xFF), &counters.visible_primitives),
+                (ColorU::new(0, 0, 0, 0xFF), &counters.total_primitives),
+            ],
+            debug_renderer,
+        );
+
+        let rect1 = self.draw_bar(
+            &format!("GPU targets ({}):", &counters.targets_used.value),
+            ColorU::new(0xFF, 0xFF, 0, 0xFF),
+            &[
+                (ColorU::new(0, 0, 0xFF, 0xFF), &counters.targets_created),
+                (ColorU::new(0xFF, 0, 0, 0xFF), &counters.targets_changed),
+                (ColorU::new(0, 0xFF, 0, 0xFF), &counters.targets_used),
             ],
             debug_renderer,
         );
@@ -1017,15 +1067,7 @@ impl Profiler {
         );
 
         for frame_profile in frame_profiles {
-            Profiler::draw_counters(
-                &[
-                    &frame_profile.total_primitives,
-                    &frame_profile.visible_primitives,
-                ],
-                debug_renderer,
-                true,
-                &mut self.draw_state
-            );
+            self.draw_frame_bars(frame_profile, debug_renderer);
         }
 
         Profiler::draw_counters(

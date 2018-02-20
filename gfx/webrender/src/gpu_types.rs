@@ -147,6 +147,14 @@ impl From<CompositePrimitiveInstance> for PrimitiveInstance {
     }
 }
 
+bitflags! {
+    /// Flags that define how the common brush shader
+    /// code should process this instance.
+    pub struct BrushFlags: u8 {
+        const PERSPECTIVE_INTERPOLATION = 0x1;
+    }
+}
+
 // TODO(gw): While we are comverting things over, we
 //           need to have the instance be the same
 //           size as an old PrimitiveInstance. In the
@@ -164,6 +172,7 @@ pub struct BrushInstance {
     pub z: i32,
     pub segment_index: i32,
     pub edge_flags: EdgeAaSegmentMask,
+    pub brush_flags: BrushFlags,
     pub user_data: [i32; 3],
 }
 
@@ -175,7 +184,9 @@ impl From<BrushInstance> for PrimitiveInstance {
                 instance.prim_address.as_int(),
                 ((instance.clip_chain_rect_index.0 as i32) << 16) | instance.scroll_id.0 as i32,
                 instance.z,
-                instance.segment_index | ((instance.edge_flags.bits() as i32) << 16),
+                instance.segment_index |
+                    ((instance.edge_flags.bits() as i32) << 16) |
+                    ((instance.brush_flags.bits() as i32) << 24),
                 instance.user_data[0],
                 instance.user_data[1],
                 instance.user_data[2],

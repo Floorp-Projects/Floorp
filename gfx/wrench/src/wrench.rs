@@ -502,7 +502,7 @@ impl Wrench {
         &mut self,
         frame_number: u32,
         display_lists: Vec<(PipelineId, LayerSize, BuiltDisplayList)>,
-        scroll_offsets: &HashMap<ClipId, LayerPoint>,
+        scroll_offsets: &HashMap<ExternalScrollId, LayerPoint>,
     ) {
         let root_background_color = Some(ColorF::new(1.0, 1.0, 1.0, 1.0));
 
@@ -523,7 +523,7 @@ impl Wrench {
 
         let mut txn = Transaction::new();
         for (id, offset) in scroll_offsets {
-            txn.scroll_node_with_id(*offset, id.into(), ScrollClamping::NoClamping);
+            txn.scroll_node_with_id(*offset, *id, ScrollClamping::NoClamping);
         }
         // TODO(nical) - Wrench does not notify frames when there was scrolling
         // in the transaction (See RenderNotifier implementations). If we don't
