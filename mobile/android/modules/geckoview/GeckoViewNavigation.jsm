@@ -92,6 +92,9 @@ class GeckoViewNavigation extends GeckoViewModule {
     let handled = undefined;
     this.eventDispatcher.sendRequestForResult(message).then(response => {
       handled = response;
+    }, () => {
+      // There was an error or listener was not registered in GeckoSession, treat as unhandled.
+      handled = false;
     });
     Services.tm.spinEventLoopUntil(() => handled !== undefined);
 
@@ -138,6 +141,8 @@ class GeckoViewNavigation extends GeckoViewModule {
       return this.waitAndSetOpener(sessionId, aOpener);
     }).then(window => {
       browser = (window && window.browser);
+    }, () => {
+      browser = null;
     });
 
     // Wait indefinitely for app to respond with a browser or null
