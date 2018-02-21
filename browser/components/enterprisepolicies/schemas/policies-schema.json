@@ -2,6 +2,14 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
+    "BlockAboutAddons": {
+      "description": "Block access to the Add-ons Mananger (about:addons).",
+      "first_available": "60.0",
+
+      "type": "boolean",
+      "enum": [true]
+    },
+
     "BlockAboutConfig": {
       "description": "Blocks access to the about:config page.",
       "first_available": "60.0",

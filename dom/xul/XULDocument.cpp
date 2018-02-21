@@ -820,14 +820,12 @@ XULDocument::ExecuteOnBroadcastHandlerFor(Element* aBroadcaster,
         // |onbroadcast| event handler
         WidgetEvent event(true, eXULBroadcast);
 
-        nsCOMPtr<nsIPresShell> shell = GetShell();
-        if (shell) {
-            RefPtr<nsPresContext> aPresContext = shell->GetPresContext();
-
-            // Handle the DOM event
-            nsEventStatus status = nsEventStatus_eIgnore;
-            EventDispatcher::Dispatch(child, aPresContext, &event, nullptr,
-                                      &status);
+        RefPtr<nsPresContext> presContext = GetPresContext();
+        if (presContext) {
+          // Handle the DOM event
+          nsEventStatus status = nsEventStatus_eIgnore;
+          EventDispatcher::Dispatch(child, presContext, &event, nullptr,
+                                    &status);
         }
     }
 

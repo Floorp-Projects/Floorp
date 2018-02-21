@@ -23,9 +23,7 @@ const CHILD_LOGGER_SCRIPT = "chrome://specialpowers/content/MozillaLogger.js";
 
 
 // Glue to add in the observer API to this object.  This allows us to share code with chrome tests
-var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-                       .getService(Components.interfaces.mozIJSSubScriptLoader);
-loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserverAPI.js");
+Services.scriptloader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserverAPI.js");
 
 /* XPCOM gunk */
 this.SpecialPowersObserver = function SpecialPowersObserver() {
@@ -108,13 +106,9 @@ SpecialPowersObserver.prototype.init = function() {
   obs.addObserver(this, "chrome-document-global-created");
 
   // Register special testing modules.
-  var testsURI = Cc["@mozilla.org/file/directory_service;1"].
-                   getService(Ci.nsIProperties).
-                   get("ProfD", Ci.nsIFile);
+  var testsURI = Services.dirsvc.get("ProfD", Ci.nsIFile);
   testsURI.append("tests.manifest");
-  var ioSvc = Cc["@mozilla.org/network/io-service;1"].
-                getService(Ci.nsIIOService);
-  var manifestFile = ioSvc.newFileURI(testsURI).
+  var manifestFile = Services.io.newFileURI(testsURI).
                        QueryInterface(Ci.nsIFileURL).file;
 
   Components.manager.QueryInterface(Ci.nsIComponentRegistrar).
@@ -170,11 +164,8 @@ SpecialPowersObserver.prototype._addProcessCrashObservers = function() {
     return;
   }
 
-  var obs = Components.classes["@mozilla.org/observer-service;1"]
-                      .getService(Components.interfaces.nsIObserverService);
-
-  obs.addObserver(this, "plugin-crashed");
-  obs.addObserver(this, "ipc:content-shutdown");
+  Services.obs.addObserver(this, "plugin-crashed");
+  Services.obs.addObserver(this, "ipc:content-shutdown");
   this._processCrashObserversRegistered = true;
 };
 
@@ -183,11 +174,8 @@ SpecialPowersObserver.prototype._removeProcessCrashObservers = function() {
     return;
   }
 
-  var obs = Components.classes["@mozilla.org/observer-service;1"]
-                      .getService(Components.interfaces.nsIObserverService);
-
-  obs.removeObserver(this, "plugin-crashed");
-  obs.removeObserver(this, "ipc:content-shutdown");
+  Services.obs.removeObserver(this, "plugin-crashed");
+  Services.obs.removeObserver(this, "ipc:content-shutdown");
   this._processCrashObserversRegistered = false;
 };
 
@@ -237,8 +225,7 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
       }
       break;
     case "SpecialPowers.Quit":
-      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
-      appStartup.quit(Ci.nsIAppStartup.eForceQuit);
+      Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
       break;
     case "SpecialPowers.Focus":
       aMessage.target.focus();

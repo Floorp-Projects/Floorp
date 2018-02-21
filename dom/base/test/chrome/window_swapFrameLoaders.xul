@@ -121,6 +121,9 @@ Test swapFrameLoaders with different frame types and remoteness
               running: exists && !this.api._shuttingDown,
             });
           });
+          addEventListener("pagehide", function({ inFrameSwap }) {
+            sendAsyncMessage("pagehide", inFrameSwap);
+          });
         }`;
       }
 
@@ -169,8 +172,16 @@ Test swapFrameLoaders with different frame types and remoteness
         let mmA = frameA.frameLoader.messageManager;
         let mmB = frameB.frameLoader.messageManager;
 
+        let pagehideA = once(mmA, "pagehide");
+        let pagehideB = once(mmB, "pagehide");
+
         info("swapFrameLoaders");
         frameA.swapFrameLoaders(frameB);
+
+        let [ { data: inFrameSwapA } ] = await pagehideA;
+        ok(inFrameSwapA, "Frame A got pagehide with inFrameSwap: true");
+        let [ { data: inFrameSwapB } ] = await pagehideB;
+        ok(inFrameSwapB, "Frame B got pagehide with inFrameSwap: true");
 
         let inflightA = once(mmA, "pong");
         let inflightB = once(mmB, "pong");

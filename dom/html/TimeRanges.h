@@ -8,7 +8,6 @@
 #define mozilla_dom_TimeRanges_h_
 
 #include "nsCOMPtr.h"
-#include "nsIDOMTimeRanges.h"
 #include "nsISupports.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
@@ -25,13 +24,12 @@ namespace dom {
 
 // Implements media TimeRanges:
 // http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#timeranges
-class TimeRanges final : public nsIDOMTimeRanges,
+class TimeRanges final : public nsISupports,
                          public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TimeRanges)
-  NS_DECL_NSIDOMTIMERANGES
 
   TimeRanges();
   explicit TimeRanges(nsISupports* aParent);
@@ -70,6 +68,16 @@ public:
   double Start(uint32_t aIndex, ErrorResult& aRv) const;
 
   double End(uint32_t aIndex, ErrorResult& aRv) const;
+
+  double Start(uint32_t aIndex) const
+  {
+    return mRanges[aIndex].mStart;
+  }
+
+  double End(uint32_t aIndex) const
+  {
+    return mRanges[aIndex].mEnd;
+  }
 
   // Shift all values by aOffset seconds.
   void Shift(double aOffset);

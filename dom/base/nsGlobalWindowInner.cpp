@@ -4398,12 +4398,7 @@ nsGlobalWindowInner::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
   }
 
   // Obtain a presentation shell
-  nsIPresShell *shell = mDoc->GetShell();
-  RefPtr<nsPresContext> presContext;
-  if (shell) {
-    // Retrieve the context
-    presContext = shell->GetPresContext();
-  }
+  RefPtr<nsPresContext> presContext = mDoc->GetPresContext();
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv = EventDispatcher::DispatchDOMEvent(ToSupports(this), nullptr,
@@ -4793,12 +4788,6 @@ nsGlobalWindowInner::FireHashchange(const nsAString &aOldURL,
   // Get a presentation shell for use in creating the hashchange event.
   NS_ENSURE_STATE(IsCurrentInnerWindow());
 
-  nsIPresShell *shell = mDoc->GetShell();
-  RefPtr<nsPresContext> presContext;
-  if (shell) {
-    presContext = shell->GetPresContext();
-  }
-
   HashChangeEventInit init;
   init.mBubbles = true;
   init.mCancelable = false;
@@ -4834,13 +4823,6 @@ nsGlobalWindowInner::DispatchSyncPopState()
   nsCOMPtr<nsIVariant> stateObj;
   rv = mDoc->GetStateObject(getter_AddRefs(stateObj));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Obtain a presentation shell for use in creating a popstate event.
-  nsIPresShell *shell = mDoc->GetShell();
-  RefPtr<nsPresContext> presContext;
-  if (shell) {
-    presContext = shell->GetPresContext();
-  }
 
   bool result = true;
   AutoJSAPI jsapi;

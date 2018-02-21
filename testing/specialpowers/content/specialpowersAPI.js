@@ -46,8 +46,6 @@ function SpecialPowersAPI() {
   this._pendingPermissions = [];
   this._applyingPermissions = false;
   this._observingPermissions = false;
-  this._fm = null;
-  this._cb = null;
 }
 
 function bindDOMWindowUtils(aWindow) {
@@ -1620,9 +1618,7 @@ SpecialPowersAPI.prototype = {
 
   isMainProcess() {
     try {
-      return Cc["@mozilla.org/xre/app-info;1"].
-               getService(Ci.nsIXULRuntime).
-               processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+      return Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
     } catch (e) { }
     return true;
   },
@@ -1633,9 +1629,7 @@ SpecialPowersAPI.prototype = {
     if (this._xpcomabi != null)
       return this._xpcomabi;
 
-    var xulRuntime = Cc["@mozilla.org/xre/app-info;1"]
-                        .getService(Components.interfaces.nsIXULAppInfo)
-                        .QueryInterface(Components.interfaces.nsIXULRuntime);
+    var xulRuntime = Services.appinfo.QueryInterface(Components.interfaces.nsIXULRuntime);
 
     this._xpcomabi = xulRuntime.XPCOMABI;
     return this._xpcomabi;
@@ -1659,23 +1653,15 @@ SpecialPowersAPI.prototype = {
     if (this._os != null)
       return this._os;
 
-    var xulRuntime = Cc["@mozilla.org/xre/app-info;1"]
-                        .getService(Components.interfaces.nsIXULAppInfo)
-                        .QueryInterface(Components.interfaces.nsIXULRuntime);
-
-    this._os = xulRuntime.OS;
+    this._os = Services.appinfo.OS;
     return this._os;
   },
 
   addSystemEventListener(target, type, listener, useCapture) {
-    Cc["@mozilla.org/eventlistenerservice;1"].
-      getService(Ci.nsIEventListenerService).
-      addSystemEventListener(target, type, listener, useCapture);
+    Services.els.addSystemEventListener(target, type, listener, useCapture);
   },
   removeSystemEventListener(target, type, listener, useCapture) {
-    Cc["@mozilla.org/eventlistenerservice;1"].
-      getService(Ci.nsIEventListenerService).
-      removeSystemEventListener(target, type, listener, useCapture);
+    Services.els.removeSystemEventListener(target, type, listener, useCapture);
   },
 
   // helper method to check if the event is consumed by either default group's
@@ -1746,28 +1732,22 @@ SpecialPowersAPI.prototype = {
     return obj;
   },
 
-  get focusManager() {
-    if (this._fm != null)
-      return this._fm;
-
-    this._fm = Components.classes["@mozilla.org/focus-manager;1"].
-                        getService(Components.interfaces.nsIFocusManager);
-
-    return this._fm;
-  },
-
   getFocusedElementForWindow(targetWindow, aDeep) {
     var outParam = {};
-    this.focusManager.getFocusedElementForWindow(targetWindow, aDeep, outParam);
+    Services.focus.getFocusedElementForWindow(targetWindow, aDeep, outParam);
     return outParam.value;
   },
 
+  get focusManager() {
+    return Services.focus;
+  },
+
   activeWindow() {
-    return this.focusManager.activeWindow;
+    return Services.focus.activeWindow;
   },
 
   focusedWindow() {
-    return this.focusManager.focusedWindow;
+    return Services.focus.focusedWindow;
   },
 
   focus(aWindow) {
@@ -1791,11 +1771,8 @@ SpecialPowersAPI.prototype = {
   },
 
   getClipboardData(flavor, whichClipboard) {
-    if (this._cb == null)
-      this._cb = Components.classes["@mozilla.org/widget/clipboard;1"].
-                            getService(Components.interfaces.nsIClipboard);
     if (whichClipboard === undefined)
-      whichClipboard = this._cb.kGlobalClipboard;
+      whichClipboard = Services.clipboard.kGlobalClipboard;
 
     var xferable = Components.classes["@mozilla.org/widget/transferable;1"].
                    createInstance(Components.interfaces.nsITransferable);
@@ -1805,7 +1782,7 @@ SpecialPowersAPI.prototype = {
     xferable.init(this._getDocShell(typeof(window) == "undefined" ? content.window : window)
                       .QueryInterface(Components.interfaces.nsILoadContext));
     xferable.addDataFlavor(flavor);
-    this._cb.getData(xferable, whichClipboard);
+    Services.clipboard.getData(xferable, whichClipboard);
     var data = {};
     try {
       xferable.getTransferData(flavor, data, {});
@@ -1824,11 +1801,7 @@ SpecialPowersAPI.prototype = {
   },
 
   supportsSelectionClipboard() {
-    if (this._cb == null) {
-      this._cb = Components.classes["@mozilla.org/widget/clipboard;1"].
-                            getService(Components.interfaces.nsIClipboard);
-    }
-    return this._cb.supportsSelectionClipboard();
+    return Services.clipboard.supportsSelectionClipboard();
   },
 
   swapFactoryRegistration(cid, contractID, newFactory, oldFactory) {

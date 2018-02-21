@@ -262,12 +262,7 @@ DocumentTimeline::ToTimeStamp(const TimeDuration& aTimeDuration) const
 nsRefreshDriver*
 DocumentTimeline::GetRefreshDriver() const
 {
-  nsIPresShell* presShell = mDocument->GetShell();
-  if (MOZ_UNLIKELY(!presShell)) {
-    return nullptr;
-  }
-
-  nsPresContext* presContext = presShell->GetPresContext();
+  nsPresContext* presContext = mDocument->GetPresContext();
   if (MOZ_UNLIKELY(!presContext)) {
     return nullptr;
   }

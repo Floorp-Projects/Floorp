@@ -41,8 +41,10 @@ function dumpConsoleAndQuit() {
 
   try {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
-    consoleService.getMessageArray(messages, {});
+    // ChromeUtils is not available in this scope.
+    // eslint-disable-next-line mozilla/use-chromeutils-import
+    Cu.import("resource://gre/modules/Services.jsm");
+    Services.console.getMessageArray(messages, {});
   } catch (ex) {
     dumpLog(ex + "\n");
   }

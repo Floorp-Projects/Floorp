@@ -541,7 +541,6 @@ add_task(async function test_repair_server_deleted() {
     validationPromise = promiseValidationDone([
       {"name": "serverDeleted", "count": 1},
       {"name": "deletedChildren", "count": 1},
-      {"name": "orphans", "count": 1}
     ]);
     await Service.sync();
     await validationPromise;

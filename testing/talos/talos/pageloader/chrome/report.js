@@ -67,6 +67,10 @@ Report.prototype.getReport = function() {
   report += "|i|pagename|runs|\n";
 
   for (var i = 0; i < pages.length; i++) {
+    // don't report any measurements that were reported for about:blank
+    // some tests (like about-preferences) use it as a dummy test page
+    if (pages[i] == "about:blank")
+      continue;
     report += "|" +
       i + ";" +
       pages[i].substr(prefixLen) + ";" +

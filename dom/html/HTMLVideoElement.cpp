@@ -352,14 +352,11 @@ HTMLVideoElement::TotalPlayTime() const
   double total = 0.0;
 
   if (mPlayed) {
-    uint32_t timeRangeCount = 0;
-    mPlayed->GetLength(&timeRangeCount);
+    uint32_t timeRangeCount = mPlayed->Length();
 
     for (uint32_t i = 0; i < timeRangeCount; i++) {
-      double begin;
-      double end;
-      mPlayed->Start(i, &begin);
-      mPlayed->End(i, &end);
+      double begin = mPlayed->Start(i);
+      double end = mPlayed->End(i);
       total += end - begin;
     }
 
