@@ -6,7 +6,7 @@
 
 #include "nsExceptionHandlerUtils.h"
 
-#include "double-conversion/double-conversion.h"
+#include "mozilla/double-conversion.h"
 
 // Format a non-negative double to a string, without using C-library functions,
 // which need to be avoided (.e.g. bug 1240160, comment 10).  Return false if
