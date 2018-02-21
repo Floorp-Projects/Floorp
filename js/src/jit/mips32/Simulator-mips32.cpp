@@ -392,6 +392,8 @@ SimInstruction::instructionType() const
       case op_special2:
         switch (functionFieldRaw()) {
           case ff_mul:
+          case ff_madd:
+          case ff_maddu:
           case ff_clz:
             return kRegisterType;
           default:
@@ -2651,6 +2653,18 @@ Simulator::configureTypeRegister(SimInstruction* instr,
           case ff_mul:
             alu_out = rs_u * rt_u;  // Only the lower 32 bits are kept.
             break;
+          case ff_mult:
+            i64hilo = static_cast<int64_t>(rs) * static_cast<int64_t>(rt);
+            break;
+          case ff_multu:
+            u64hilo = static_cast<uint64_t>(rs_u) * static_cast<uint64_t>(rt_u);
+            break;
+          case ff_madd:
+            i64hilo += static_cast<int64_t>(rs) * static_cast<int64_t>(rt);
+            break;
+          case ff_maddu:
+            u64hilo += static_cast<uint64_t>(rs_u) * static_cast<uint64_t>(rt_u);
+            break;
           case ff_clz:
             alu_out = rs_u ? __builtin_clz(rs_u) : 32;
             break;
@@ -3204,6 +3218,14 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
             setRegister(LO, Unpredictable);
             setRegister(HI, Unpredictable);
             break;
+          case ff_madd:
+            setRegister(LO, getRegister(LO) + static_cast<int32_t>(i64hilo & 0xffffffff));
+            setRegister(HI, getRegister(HI) + static_cast<int32_t>(i64hilo >> 32));
+            break;
+          case ff_maddu:
+            setRegister(LO, getRegister(LO) + static_cast<int32_t>(u64hilo & 0xffffffff));
+            setRegister(HI, getRegister(HI) + static_cast<int32_t>(u64hilo >> 32));
+            break;
           default:  // For other special2 opcodes we do the default operation.
             setRegister(rd_reg, alu_out);
         }
@@ -3617,7 +3639,7 @@ Simulator::instructionDecode(SimInstruction* instr)
         UNSUPPORTED();
     }
     if (!pc_modified_)
-        setRegister(pc, reinterpret_cast<int32_t>(instr) + SimInstruction::kInstrSize);
+    setRegister(pc, reinterpret_cast<int32_t>(instr) + SimInstruction::kInstrSize);
 }
 
 void

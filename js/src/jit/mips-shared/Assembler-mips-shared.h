@@ -397,6 +397,8 @@ enum FunctionField {
     ff_dsra32      = 63,
 
     // special2 encoding of function field.
+    ff_madd        = 0,
+    ff_maddu       = 1,
     ff_mul         = 2,
     ff_clz         = 32,
     ff_clo         = 33,
@@ -1019,6 +1021,8 @@ class AssemblerMIPSShared : public AssemblerShared
     BufferOffset as_div(Register rs, Register rt);
     BufferOffset as_divu(Register rs, Register rt);
     BufferOffset as_mul(Register rd, Register rs, Register rt);
+    BufferOffset as_madd(Register rs, Register rt);
+    BufferOffset as_maddu(Register rs, Register rt);
     BufferOffset as_ddiv(Register rs, Register rt);
     BufferOffset as_ddivu(Register rs, Register rt);
 
