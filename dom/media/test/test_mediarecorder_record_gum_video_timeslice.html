@@ -4,6 +4,7 @@
   <title>Test MediaRecorder Record gUM video with Timeslice</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="gUM_support.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -11,10 +12,12 @@
 </div>
 <script class="testbody" type="text/javascript">
 
-function startTest() {
-  navigator.mozGetUserMedia({audio: true, video: true, fake: true}, function(stream) {
-    var dataAvailableCount = 0;
-    var onDataAvailableFirst = false;
+async function startTest() {
+  try {
+    await setupGetUserMediaTestPrefs();
+    let stream = await navigator.mediaDevices.getUserMedia({audio: true, video: true});
+    let dataAvailableCount = 0;
+    let onDataAvailableFirst = false;
 
     mediaRecorder = new MediaRecorder(stream);
     is(mediaRecorder.stream, stream,
@@ -73,10 +76,10 @@ function startTest() {
 
     mediaRecorder.start(250);
     is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
-  }, function(err) {
+  } catch (err) {
     ok(false, 'Unexpected error fired with: ' + err);
     SimpleTest.finish();
-  });
+  }
 }
 
 SimpleTest.waitForExplicitFinish();
