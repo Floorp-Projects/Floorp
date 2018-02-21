@@ -44,6 +44,11 @@
                 readonly="true"
                 onget="return this._controller"/>
 
+      <property name="disableUserActions"
+                onget="return this.getAttribute('disableUserActions') == 'true';"
+                onset="if (val) this.setAttribute('disableUserActions', 'true');
+                       else this.removeAttribute('disableUserActions'); return val;"/>
+
       <!-- overriding -->
       <property name="view">
         <getter><![CDATA[
@@ -110,6 +115,7 @@
 
           if (!this._controller) {
             this._controller = new PlacesController(this);
+            this._controller.disableUserActions = this.disableUserActions;
             this.controllers.appendController(this._controller);
           }
 
@@ -736,6 +742,12 @@
       <handler event="dragstart"><![CDATA[
         if (event.target.localName != "treechildren")
           return;
+
+        if (this.disableUserActions) {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
 
         let nodes = this.selectedNodes;
         for (let i = 0; i < nodes.length; i++) {
