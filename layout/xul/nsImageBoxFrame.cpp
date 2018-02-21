@@ -540,26 +540,6 @@ void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
 }
 
-LayerState
-nsDisplayXULImage::GetLayerState(nsDisplayListBuilder* aBuilder,
-                                 LayerManager* aManager,
-                                 const ContainerLayerParameters& aParameters)
-{
-  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowImageLayers) &&
-      CanOptimizeToImageLayer(aManager, aBuilder)) {
-    return LAYER_ACTIVE;
-  }
-  return LAYER_NONE;
-}
-
-already_AddRefed<Layer>
-nsDisplayXULImage::BuildLayer(nsDisplayListBuilder* aBuilder,
-                           LayerManager* aManager,
-                           const ContainerLayerParameters& aContainerParameters)
-{
-  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
-}
-
 bool
 nsDisplayXULImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                            mozilla::wr::IpcResourceUpdateQueue& aResources,
