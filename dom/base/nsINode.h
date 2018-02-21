@@ -83,8 +83,10 @@ class DOMQuad;
 class DOMRectReadOnly;
 class Element;
 class EventHandlerNonNull;
+class L10nCallback;
 template<typename T> class Optional;
 class OwningNodeOrString;
+class Promise;
 template<typename> class Sequence;
 class Text;
 class TextOrElementOrDocument;
@@ -1877,6 +1879,9 @@ public:
 
   void GetBoundMutationObservers(nsTArray<RefPtr<nsDOMMutationObserver> >& aResult);
   void GenerateXPath(nsAString& aResult);
+
+  already_AddRefed<mozilla::dom::Promise>
+  Localize(JSContext* aCx, mozilla::dom::L10nCallback& aCallback, mozilla::ErrorResult& aRv);
 
   already_AddRefed<mozilla::dom::AccessibleNode> GetAccessibleNode();
 
