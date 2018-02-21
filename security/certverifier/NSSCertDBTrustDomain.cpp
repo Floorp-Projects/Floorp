@@ -904,7 +904,7 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
 
     bool isDistrusted = false;
     nsrv = CheckForSymantecDistrust(intCerts, eeCert, JUNE_1_2016,
-                                    RootAppleAndGoogleDNs, isDistrusted);
+                                    RootAppleAndGoogleSPKIs, isDistrusted);
     if (NS_FAILED(nsrv)) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }
