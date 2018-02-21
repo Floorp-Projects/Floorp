@@ -7,7 +7,6 @@
 
 #include "mozilla/Attributes.h"
 #include <vector>
-#include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "mozilla/RefPtr.h"
 #include "nsColor.h"

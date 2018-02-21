@@ -11,7 +11,6 @@ with Files("nsIDOMWebGLRenderingContext.idl"):
     BUG_COMPONENT = ("Core", "Canvas: WebGL")
 
 XPIDL_SOURCES += [
-    'nsIDOMCanvasRenderingContext2D.idl',
     'nsIDOMWebGLRenderingContext.idl',
 ]
 

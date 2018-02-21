@@ -9,7 +9,6 @@
 #include "nsIServiceManager.h"
 
 #include "nsIConsoleService.h"
-#include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsIHTMLCollection.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
