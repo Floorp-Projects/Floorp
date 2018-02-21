@@ -290,6 +290,7 @@ bool nsContentUtils::sIsFullScreenApiEnabled = false;
 bool nsContentUtils::sIsUnprefixedFullscreenApiEnabled = false;
 bool nsContentUtils::sTrustedFullScreenOnly = true;
 bool nsContentUtils::sIsCutCopyAllowed = true;
+bool nsContentUtils::sIsUpgradableDisplayContentPrefEnabled = false;
 bool nsContentUtils::sIsFrameTimingPrefEnabled = false;
 bool nsContentUtils::sIsPerformanceTimingEnabled = false;
 bool nsContentUtils::sIsResourceTimingEnabled = false;
@@ -648,6 +649,9 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sIsPerformanceNavigationTimingEnabled,
                                "dom.enable_performance_navigation_timing", true);
+
+  Preferences::AddBoolVarCache(&sIsUpgradableDisplayContentPrefEnabled,
+                               "security.mixed_content.upgrade_display_content", false);
 
   Preferences::AddBoolVarCache(&sIsFrameTimingPrefEnabled,
                                "dom.enable_frame_timing", false);
@@ -8818,6 +8822,16 @@ nsContentUtils::IsPreloadType(nsContentPolicyType aType)
   return (aType == nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD ||
           aType == nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD ||
           aType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD);
+}
+
+/* static */
+bool
+nsContentUtils::IsUpgradableDisplayType(nsContentPolicyType aType)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return sIsUpgradableDisplayContentPrefEnabled &&
+         (aType == nsIContentPolicy::TYPE_IMAGE ||
+          aType == nsIContentPolicy::TYPE_MEDIA);
 }
 
 nsresult

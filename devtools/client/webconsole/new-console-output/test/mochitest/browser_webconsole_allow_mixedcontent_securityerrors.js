@@ -22,6 +22,7 @@ add_task(async function () {
   await Promise.all([
     pushPref("security.mixed_content.block_active_content", false),
     pushPref("security.mixed_content.block_display_content", false),
+    pushPref("security.mixed_content.upgrade_display_content", false),
   ]);
 
   const hud = await openNewTabAndConsole(TEST_URI);

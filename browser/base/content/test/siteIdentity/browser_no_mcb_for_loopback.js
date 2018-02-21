@@ -21,16 +21,19 @@ const TEST_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/conten
 const LOOPBACK_PNG_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://127.0.0.1:8888") + "moz.png";
 
 const PREF_BLOCK_DISPLAY = "security.mixed_content.block_display_content";
+const PREF_UPGRADE_DISPLAY = "security.mixed_content.upgrade_display_content";
 const PREF_BLOCK_ACTIVE = "security.mixed_content.block_active_content";
 
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref(PREF_BLOCK_DISPLAY);
+  Services.prefs.clearUserPref(PREF_UPGRADE_DISPLAY);
   Services.prefs.clearUserPref(PREF_BLOCK_ACTIVE);
   gBrowser.removeCurrentTab();
 });
 
 add_task(async function allowLoopbackMixedContent() {
   Services.prefs.setBoolPref(PREF_BLOCK_DISPLAY, true);
+  Services.prefs.setBoolPref(PREF_UPGRADE_DISPLAY, false);
   Services.prefs.setBoolPref(PREF_BLOCK_ACTIVE, true);
 
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
