@@ -30,6 +30,10 @@ WebGL2Context::FenceSync(GLenum condition, GLbitfield flags)
     }
 
     RefPtr<WebGLSync> globj = new WebGLSync(this, condition, flags);
+
+    const auto& availRunnable = EnsureAvailabilityRunnable();
+    availRunnable->mSyncs.push_back(globj);
+
     return globj.forget();
 }
 
@@ -69,6 +73,17 @@ WebGL2Context::ClientWaitSync(const WebGLSync& sync, GLbitfield flags, GLuint64 
     if (timeout > kMaxClientWaitSyncTimeoutNS) {
         ErrorInvalidOperation("%s: `timeout` must not exceed %s nanoseconds.", funcName,
                               "MAX_CLIENT_WAIT_TIMEOUT_WEBGL");
+        return LOCAL_GL_WAIT_FAILED;
+    }
+
+    const bool canBeAvailable = (sync.mCanBeAvailable ||
+                                 gfxPrefs::WebGLImmediateQueries());
+    if (!canBeAvailable) {
+        if (timeout) {
+            GenerateWarning("%s: Sync object not yet queryable. Please wait for the event"
+                            " loop.",
+                            funcName);
+        }
         return LOCAL_GL_WAIT_FAILED;
     }
 
@@ -119,6 +134,13 @@ WebGL2Context::GetSyncParameter(JSContext*, const WebGLSync& sync, GLenum pname,
         return;
 
     ////
+
+    const bool canBeAvailable = (sync.mCanBeAvailable ||
+                                 gfxPrefs::WebGLImmediateQueries());
+    if (!canBeAvailable && pname == LOCAL_GL_SYNC_STATUS) {
+        retval.set(JS::Int32Value(LOCAL_GL_UNSIGNALED));
+        return;
+    }
 
     GLint result = 0;
     switch (pname) {
