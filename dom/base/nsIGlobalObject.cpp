@@ -192,18 +192,6 @@ nsIGlobalObject::GetOrCreateServiceWorker(const ServiceWorkerDescriptor& aDescri
   return nullptr;
 }
 
-void
-nsIGlobalObject::AddServiceWorker(ServiceWorker* aServiceWorker)
-{
-  MOZ_DIAGNOSTIC_ASSERT(false, "this global should not have any service workers");
-}
-
-void
-nsIGlobalObject::RemoveServiceWorker(ServiceWorker* aServiceWorker)
-{
-  MOZ_DIAGNOSTIC_ASSERT(false, "this global should not have any service workers");
-}
-
 size_t
 nsIGlobalObject::ShallowSizeOfExcludingThis(MallocSizeOf aSizeOf) const
 {
