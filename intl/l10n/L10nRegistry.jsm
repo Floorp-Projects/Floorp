@@ -220,6 +220,9 @@ async function* generateContextsForLocale(locale, sourcesOrder, resourceIds, res
 }
 
 const  MSG_CONTEXT_OPTIONS = {
+  // Temporarily disable bidi isolation due to Microsoft not supporting FSI/PDI.
+  // See bug 1439018 for details.
+  useIsolating: Services.prefs.getBoolPref("intl.l10n.enable-bidi-marks", false),
   functions: {
     /**
      * PLATFORM is a built-in allowing localizers to differentiate message

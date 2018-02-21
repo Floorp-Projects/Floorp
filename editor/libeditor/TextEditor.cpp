@@ -802,7 +802,7 @@ TextEditor::InsertLineBreak()
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 TextEditor::SetText(const nsAString& aString)
 {
   if (NS_WARN_IF(!mRules)) {
@@ -1015,25 +1015,6 @@ TextEditor::GetTextLength(int32_t* aCount)
   }
 
   *aCount = totalLength;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TextEditor::SetMaxTextLength(int32_t aMaxTextLength)
-{
-  mMaxTextLength = aMaxTextLength;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TextEditor::GetMaxTextLength(int32_t* aMaxTextLength)
-{
-  // NOTE: If you need to override this method, you need to make
-  //       MaxTextLength() virtual.
-  if (NS_WARN_IF(!aMaxTextLength)) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  *aMaxTextLength = MaxTextLength();
   return NS_OK;
 }
 

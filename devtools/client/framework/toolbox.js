@@ -609,7 +609,7 @@ Toolbox.prototype = {
                   let message = L10N.getFormatStr("toolbox.sourceMapFailure",
                                                   text, urlInfo.url,
                                                   urlInfo.sourceMapURL);
-                  this.target.logErrorInPage(message, "source map");
+                  this.target.logWarningInPage(message, "source map");
                   // It's ok to swallow errors here, because a null
                   // result just means that no source map was found.
                   return null;
@@ -622,7 +622,7 @@ Toolbox.prototype = {
                 .catch(text => {
                   let message = L10N.getFormatStr("toolbox.sourceMapSourceFailure",
                                                   text, originalSource.url);
-                  this.target.logErrorInPage(message, "source map");
+                  this.target.logWarningInPage(message, "source map");
                   // Also replace the result with the error text.
                   // Note that this result has to have the same form
                   // as whatever the upstream getOriginalSourceText
@@ -3082,7 +3082,7 @@ Toolbox.prototype = {
     // once in order to receive `onRequestFinished` events.
     let message = "The Network panel needs to be selected at least" +
       " once in order to receive 'onRequestFinished' events.";
-    this.target.logErrorInPage(message, "har");
+    this.target.logWarningInPage(message, "har");
 
     // Add the listener into internal list.
     this._requestFinishedListeners.add(listener);
