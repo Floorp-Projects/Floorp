@@ -6,13 +6,11 @@
 
 #include "jit/OptimizationTracking.h"
 
-
-#include "jsprf.h"
-
 #include "ds/Sort.h"
 #include "jit/IonBuilder.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitSpewer.h"
+#include "js/Printf.h"
 #include "js/TrackedOptimizationInfo.h"
 
 #include "vm/ObjectGroup-inl.h"

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsprf_h
-#define jsprf_h
+#ifndef js_Printf_h
+#define js_Printf_h
 
 #include "mozilla/Printf.h"
 
@@ -30,4 +30,4 @@ extern JS_PUBLIC_API(JS::UniqueChars) JS_vsprintf_append(JS::UniqueChars&& last,
                                                          const char* fmt, va_list ap)
     MOZ_FORMAT_PRINTF(2, 0);
 
-#endif /* jsprf_h */
+#endif /* js_Printf_h */

@@ -15,7 +15,6 @@
 #include "jsdate.h"
 #include "jsfriendapi.h"
 #include "jsstr.h"
-#include "jswrapper.h"
 #include "selfhosted.out.h"
 
 #include "builtin/intl/Collator.h"
@@ -42,6 +41,7 @@
 #include "jit/InlinableNatives.h"
 #include "js/CharacterEncoding.h"
 #include "js/Date.h"
+#include "js/Wrapper.h"
 #include "vm/Compression.h"
 #include "vm/GeneratorObject.h"
 #include "vm/Interpreter.h"

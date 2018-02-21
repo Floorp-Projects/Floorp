@@ -23,12 +23,11 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/RangedPtr.h"
 
-#include "jsprf.h"
-
 #include "builtin/Promise.h"
 #include "gc/FreeOp.h"
 #include "jit/AtomicOperations.h"
 #include "jit/JitOptions.h"
+#include "js/Printf.h"
 #include "vm/Interpreter.h"
 #include "vm/String.h"
 #include "vm/StringBuffer.h"

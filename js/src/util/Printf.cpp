@@ -10,11 +10,11 @@
  * Author: Kipp E.B. Hickman
  */
 
-#include "jsprf.h"
+#include "js/Printf.h"
 
 #include "mozilla/Printf.h"
 
-#include "jsalloc.h"
+#include "js/AllocPolicy.h"
 
 using namespace js;
 

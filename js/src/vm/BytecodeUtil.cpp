@@ -25,7 +25,6 @@
 
 #include "jsapi.h"
 #include "jsnum.h"
-#include "jsprf.h"
 #include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
@@ -35,6 +34,7 @@
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
 #include "js/CharacterEncoding.h"
+#include "js/Printf.h"
 #include "vm/CodeCoverage.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/JSAtom.h"

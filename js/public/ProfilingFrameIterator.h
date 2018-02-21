@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 
-#include "jsbytecode.h"
 #include "js/GCAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"

@@ -21,7 +21,6 @@
 #include "jsarray.h"
 #include "jsstr.h"
 #include "jstypes.h"
-#include "jswrapper.h"
 
 #include "builtin/Eval.h"
 #include "builtin/Object.h"
@@ -34,6 +33,7 @@
 #include "jit/Ion.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/Proxy.h"
+#include "js/Wrapper.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/Debugger.h"

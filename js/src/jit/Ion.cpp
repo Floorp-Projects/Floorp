@@ -10,8 +10,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ThreadLocal.h"
 
-#include "jsprf.h"
-
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "jit/AliasAnalysis.h"
@@ -48,6 +46,7 @@
 #include "jit/StupidAllocator.h"
 #include "jit/ValueNumbering.h"
 #include "jit/WasmBCE.h"
+#include "js/Printf.h"
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
 #include "vm/JSCompartment.h"

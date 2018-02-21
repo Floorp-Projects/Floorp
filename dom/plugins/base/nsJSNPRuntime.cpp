@@ -7,7 +7,6 @@
 #include "base/basictypes.h"
 
 #include "jsfriendapi.h"
-#include "jswrapper.h"
 
 #include "nsAutoPtr.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -28,6 +27,7 @@
 #include "nsWrapperCacheInlines.h"
 #include "js/GCHashTable.h"
 #include "js/TracingAPI.h"
+#include "js/Wrapper.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/dom/ScriptSettings.h"
 

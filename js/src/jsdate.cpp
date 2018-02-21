@@ -28,14 +28,14 @@
 
 #include "jsapi.h"
 #include "jsnum.h"
-#include "jsprf.h"
 #include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jswrapper.h"
 
 #include "js/Conversions.h"
 #include "js/Date.h"
+#include "js/Printf.h"
+#include "js/Wrapper.h"
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"

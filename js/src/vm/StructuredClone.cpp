@@ -37,12 +37,12 @@
 
 #include "jsapi.h"
 #include "jsdate.h"
-#include "jswrapper.h"
 
 #include "builtin/DataViewObject.h"
 #include "builtin/MapObject.h"
 #include "js/Date.h"
 #include "js/GCHashTable.h"
+#include "js/Wrapper.h"
 #include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
 #include "vm/SavedFrame.h"

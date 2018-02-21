@@ -22,10 +22,8 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jsprf.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jswrapper.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
@@ -35,7 +33,9 @@
 #include "jit/Ion.h"
 #include "jit/IonCode.h"
 #include "js/MemoryMetrics.h"
+#include "js/Printf.h"
 #include "js/Utility.h"
+#include "js/Wrapper.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/Compression.h"

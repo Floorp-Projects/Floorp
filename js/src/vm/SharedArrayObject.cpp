@@ -10,11 +10,11 @@
 #include "mozilla/CheckedInt.h"
 
 #include "jsfriendapi.h"
-#include "jsprf.h"
-#include "jswrapper.h"
 
 #include "gc/FreeOp.h"
 #include "jit/AtomicOperations.h"
+#include "js/Printf.h"
+#include "js/Wrapper.h"
 #include "vm/SharedMem.h"
 #include "wasm/AsmJS.h"
 #include "wasm/WasmSignalHandlers.h"

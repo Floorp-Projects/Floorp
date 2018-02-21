@@ -23,9 +23,9 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "jsalloc.h"
 #include "jspubtd.h"
 
+#include "js/AllocPolicy.h"
 #include "js/CallArgs.h"
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"

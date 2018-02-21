@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jswrapper_h
-#define jswrapper_h
+#ifndef js_Wrapper_h
+#define js_Wrapper_h
 
 #include "mozilla/Attributes.h"
 
@@ -399,4 +399,4 @@ RecomputeWrappers(JSContext* cx, const CompartmentFilter& sourceFilter,
 
 } /* namespace js */
 
-#endif /* jswrapper_h */
+#endif /* js_Wrapper_h */
