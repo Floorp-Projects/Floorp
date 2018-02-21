@@ -385,12 +385,8 @@ module.exports = {
       loc: true,
       comment: true,
       attachComment: true,
-      ecmaVersion: 8,
-      sourceType: "script",
-      ecmaFeatures: {
-        experimentalObjectRestSpread: true,
-        globalReturn: true
-      }
+      ecmaVersion: 9,
+      sourceType: "script"
     };
   },
 

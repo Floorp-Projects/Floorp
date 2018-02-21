@@ -6346,7 +6346,7 @@
       <method name="_canScrollToElement">
         <parameter name="tab"/>
         <body><![CDATA[
-          return !tab.pinned && !tab.hidden;
+          return !tab._pinnedUnscrollable && !tab.hidden;
         ]]></body>
       </method>
     </implementation>
@@ -6874,6 +6874,7 @@
         <body><![CDATA[
           var numPinned = this.tabbrowser._numPinnedTabs;
           var doPosition = this.getAttribute("overflow") == "true" &&
+                           this.tabbrowser.visibleTabs.length > numPinned &&
                            numPinned > 0;
 
           if (doPosition) {
@@ -6896,6 +6897,7 @@
               let tab = this.childNodes[i];
               width += layoutData.pinnedTabWidth;
               tab.style.marginInlineStart = -(width + layoutData.scrollButtonWidth) + "px";
+              tab._pinnedUnscrollable = true;
             }
             this.style.paddingInlineStart = width + "px";
           } else {
@@ -6904,6 +6906,7 @@
             for (let i = 0; i < numPinned; i++) {
               let tab = this.childNodes[i];
               tab.style.marginInlineStart = "";
+              tab._pinnedUnscrollable = false;
             }
 
             this.style.paddingInlineStart = "";

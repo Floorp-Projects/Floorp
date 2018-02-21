@@ -107,6 +107,14 @@ nsPK11Token::GetTokenLabel(/*out*/ nsACString& tokenLabel)
 }
 
 NS_IMETHODIMP
+nsPK11Token::GetIsInternalKeyToken(/*out*/ bool* _retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = PK11_IsInternalKeySlot(mSlot.get());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPK11Token::GetTokenManID(/*out*/ nsACString& tokenManufacturerID)
 {
   return GetAttributeHelper(mTokenManufacturerID, tokenManufacturerID);

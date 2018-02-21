@@ -162,6 +162,12 @@ function enableButtons() {
           }
         }
       }
+
+      if (!Services.policies.isAllowed("createMasterPassword") &&
+          selected_token.isInternalKeyToken &&
+          !selected_token.hasPassword) {
+        pw_toggle = "true";
+      }
     }
     showSlotInfo();
   }

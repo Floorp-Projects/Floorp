@@ -1124,6 +1124,7 @@ var gPrivacyPane = {
 
     var checkbox = document.getElementById("useMasterPassword");
     checkbox.checked = !noMP;
+    checkbox.disabled = noMP && !Services.policies.isAllowed("createMasterPassword");
   },
 
   /**

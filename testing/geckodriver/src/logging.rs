@@ -188,10 +188,15 @@ fn format_ts(ts: chrono::DateTime<chrono::Local>) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{Level, format_ts, init, init_with_level, max_level, set_max_level};
+    use super::{format_ts, init_with_level, max_level, set_max_level, Level};
     use chrono;
     use log;
     use std::str::FromStr;
+    use std::sync::Mutex;
+
+    lazy_static! {
+        static ref LEVEL_MUTEX: Mutex<()> = Mutex::new(());
+    }
 
     #[test]
     fn test_level_repr() {
@@ -263,12 +268,14 @@ mod tests {
 
     #[test]
     fn test_max_level() {
+        let _guard = LEVEL_MUTEX.lock();
         set_max_level(Level::Info);
         assert_eq!(max_level(), Level::Info);
     }
 
     #[test]
     fn test_set_max_level() {
+        let _guard = LEVEL_MUTEX.lock();
         set_max_level(Level::Error);
         assert_eq!(max_level(), Level::Error);
         set_max_level(Level::Fatal);
@@ -277,6 +284,7 @@ mod tests {
 
     #[test]
     fn test_init_with_level() {
+        let _guard = LEVEL_MUTEX.lock();
         init_with_level(Level::Debug).unwrap();
         assert_eq!(max_level(), Level::Debug);
         assert!(init_with_level(Level::Warn).is_err());

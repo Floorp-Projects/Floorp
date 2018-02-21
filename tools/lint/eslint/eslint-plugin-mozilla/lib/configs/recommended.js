@@ -84,10 +84,7 @@ module.exports = {
   }],
 
   "parserOptions": {
-    "ecmaFeatures": {
-      "experimentalObjectRestSpread": true
-    },
-    "ecmaVersion": 8
+    "ecmaVersion": 9
   },
 
   // When adding items to this file please check for effects on sub-directories.

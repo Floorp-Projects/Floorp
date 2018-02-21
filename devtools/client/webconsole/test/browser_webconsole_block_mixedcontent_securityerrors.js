@@ -61,6 +61,7 @@ function pushPrefEnv() {
     "set": [
       ["security.mixed_content.block_active_content", true],
       ["security.mixed_content.block_display_content", true],
+      ["security.mixed_content.upgrade_display_content", false],
     ]
   };
   SpecialPowers.pushPrefEnv(options, deferred.resolve);
