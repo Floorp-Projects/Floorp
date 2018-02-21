@@ -597,6 +597,13 @@ task_description_schema = Schema({
     }, {
         Required('implementation'): 'shipit',
         Required('release-name'): basestring,
+    }, {
+        Required('implementation'): 'treescript',
+        Required('tag'): bool,
+        Required('bump'): bool,
+        Optional('bump-files'): [basestring],
+        Required('force-dry-run', default=True): bool,
+        Required('push', default=False): bool
     }),
 })
 
@@ -1131,6 +1138,45 @@ def build_ship_it_payload(config, task, task_def):
     task_def['payload'] = {
         'release_name': worker['release-name']
     }
+
+
+@payload_builder('treescript')
+def build_treescript_payload(config, task, task_def):
+    worker = task['worker']
+    release_config = get_release_config(config)
+
+    task_def['payload'] = {}
+    task_def.setdefault('scopes', [])
+    if worker['tag']:
+        product = task['shipping-product'].upper()
+        version = release_config['version'].replace('.', '_')
+        buildnum = release_config['build_number']
+        tag_names = [
+            "{}_{}_BUILD{}".format(product, version, buildnum),
+            "{}_{}_RELEASE".format(product, version)
+        ]
+        tag_info = {
+            'tags': tag_names,
+            'revision': config.params['head_rev']
+        }
+        task_def['payload']['tag_info'] = tag_info
+        task_def['scopes'].append('project:releng:treescript:action:tagging')
+
+    if worker['bump']:
+        if not worker['bump-files']:
+            raise Exception("Version Bump requested without bump-files")
+
+        bump_info = {}
+        bump_info['next_version'] = release_config['next_version']
+        bump_info['files'] = worker['bump-files']
+        task_def['payload']['version_bump_info'] = bump_info
+        task_def['scopes'].append('project:releng:treescript:action:version_bump')
+
+    if worker['push']:
+        task_def['scopes'].append('project:releng:treescript:action:push')
+
+    if worker.get('force-dry-run'):
+        task_def['payload']['dry_run'] = True
 
 
 @payload_builder('invalid')
