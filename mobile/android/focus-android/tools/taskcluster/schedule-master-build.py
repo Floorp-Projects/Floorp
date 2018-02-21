@@ -59,7 +59,10 @@ def generate_release_task(uiTestTaskId):
 			       ' && ./gradlew clean assembleBeta'
 			       ' && python tools/taskcluster/sign-preview-builds.py'),
 		dependencies = [ uiTestTaskId ],
-		scopes = [ "secrets:get:project/focus/preview-key-store" ],
+		scopes = [
+			"secrets:get:project/focus/preview-key-store"
+			"queue:route:index.project.focus.android.preview-builds"],
+		routes = [ "index.project.focus.android.preview-builds" ],
 		artifacts = {
 			"public": {
 				"type": "directory",
@@ -69,7 +72,7 @@ def generate_release_task(uiTestTaskId):
 		})
 
 
-def generate_task(name, description, command, dependencies = [], artifacts = {}, scopes = []):
+def generate_task(name, description, command, dependencies = [], artifacts = {}, scopes = [], routes = []):
 	created = datetime.datetime.now()
 	expires = taskcluster.fromNow('1 week')
 	deadline = taskcluster.fromNow('1 day')
@@ -85,7 +88,7 @@ def generate_task(name, description, command, dependencies = [], artifacts = {},
 	    "schedulerId": "taskcluster-github",
 	    "deadline": taskcluster.stringDate(deadline),
 	    "dependencies": [ TASK_ID ] + dependencies,
-	    "routes": [],
+	    "routes": routes,
 	    "scopes": scopes,
 	    "requires": "all-completed",
 	    "payload": {
