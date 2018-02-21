@@ -31,9 +31,9 @@ add_connection_test("symantec-whitelist-after-cutoff.example.com",
 add_connection_test("symantec-whitelist-before-cutoff.example.com",
                     PRErrorCodeSuccess, null, shouldNotBeImminentlyDistrusted);
 
-// Not-whitelisted certs after the cutoff aren't distrusted
+// Not-whitelisted certs after the cutoff are to be distrusted
 add_connection_test("symantec-not-whitelisted-after-cutoff.example.com",
-                    PRErrorCodeSuccess, null, shouldNotBeImminentlyDistrusted);
+                    PRErrorCodeSuccess, null, shouldBeImminentlyDistrusted);
 
 // Not whitelisted certs before the cutoff are to be distrusted
 add_connection_test("symantec-not-whitelisted-before-cutoff.example.com",

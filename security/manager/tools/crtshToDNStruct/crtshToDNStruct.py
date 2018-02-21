@@ -48,7 +48,7 @@ def nameOIDtoString(oid):
         return "OU"
     raise Exception("Unknown OID: {}".format(oid))
 
-def print_block(pemData):
+def print_block(pemData, crtshId):
     substrate = pem.readPemFromFile(io.StringIO(pemData.decode("utf-8")))
     cert, rest = decoder.decode(substrate, asn1Spec=rfc5280.Certificate())
     der_subject = encoder.encode(cert['tbsCertificate']['subject'])
@@ -67,8 +67,9 @@ def print_block(pemData):
     print("// {dn}".format(dn=distinguished_name))
     print("// SHA256 Fingerprint: " + ":".join(fingerprint[:16]))
     print("//                     " + ":".join(fingerprint[16:]))
-    print("// https://crt.sh/?id={crtsh} (crt.sh ID={crtsh})"
-          .format(crtsh=crtshId))
+    if crtshId:
+        print("// https://crt.sh/?id={crtsh} (crt.sh ID={crtsh})"
+              .format(crtsh=crtshId))
     print("static const uint8_t {}[{}] = ".format(block_name, len(octets)) + "{")
 
     while len(octets) > 0:
@@ -89,11 +90,14 @@ if __name__ == "__main__":
     print("// Invocation: {} {}".format(sys.argv[0], " ".join(certshIds)))
     print()
     for crtshId in certshIds:
-        r = requests.get('https://crt.sh/?d={}'.format(crtshId))
-        r.raise_for_status()
-
-        pemData = r.content
-        blocks.append(print_block(pemData))
+        # Try a local file first, then crt.sh
+        try:
+            with open(crtshId, "rb") as pemFile:
+                blocks.append(print_block(pemFile.read(), None))
+        except FileNotFoundError:
+            r = requests.get('https://crt.sh/?d={}'.format(crtshId))
+            r.raise_for_status()
+            blocks.append(print_block(r.content, crtshId))
 
     print("static const DataAndLength RootDNs[]= {")
     for structName in blocks:
