@@ -1988,8 +1988,8 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
   // purposes. Normally, users will set the background on the container frame.
   // paint the selection background -- beware MathML frames overlap a lot
   if (aSelectedRect && !aSelectedRect->IsEmpty()) {
-    aLists.BorderBackground()->AppendToTop(new (aBuilder)
-      nsDisplayMathMLSelectionRect(aBuilder, aForFrame, *aSelectedRect));
+    aLists.BorderBackground()->AppendToTop(
+      MakeDisplayItem<nsDisplayMathMLSelectionRect>(aBuilder, aForFrame, *aSelectedRect));
   }
   else if (mRect.width && mRect.height) {
     if (styleContext != parentContext &&
@@ -2004,15 +2004,15 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
 
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
     // for visual debug
-    aLists.BorderBackground()->AppendToTop(new (aBuilder)
-      nsDisplayMathMLCharDebug(aBuilder, aForFrame, mRect));
+    aLists.BorderBackground()->AppendToTop(
+      MakeDisplayItem<nsDisplayMathMLCharDebug>(aBuilder, aForFrame, mRect));
 #endif
   }
-  aLists.Content()->AppendToTop(new (aBuilder)
-    nsDisplayMathMLCharForeground(aBuilder, aForFrame, this,
-                                  aIndex,
-                                  aSelectedRect &&
-                                  !aSelectedRect->IsEmpty()));
+  aLists.Content()->AppendToTop(
+    MakeDisplayItem<nsDisplayMathMLCharForeground>(aBuilder, aForFrame, this,
+                                                   aIndex,
+                                                   aSelectedRect &&
+                                                   !aSelectedRect->IsEmpty()));
 }
 
 void

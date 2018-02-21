@@ -186,6 +186,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import static org.mozilla.gecko.mma.MmaDelegate.NEW_TAB;
@@ -235,6 +236,11 @@ public class BrowserApp extends GeckoApp
     @RobocopTarget
     public static final String EXTRA_SKIP_STARTPANE = "skipstartpane";
     private static final String EOL_NOTIFIED = "eol_notified";
+
+    /**
+     * Be aware of {@link org.mozilla.gecko.fxa.EnvironmentUtils.GECKO_PREFS_FIRSTRUN_UUID}.
+     */
+    private static final String FIRSTRUN_UUID = "firstrun_uuid";
 
     private BrowserSearch mBrowserSearch;
     private View mBrowserSearchContainer;
@@ -1140,8 +1146,13 @@ public class BrowserApp extends GeckoApp
                     }
                 }
 
-                // Don't bother trying again to show the v1 minimal first run.
-                prefs.edit().putBoolean(FirstrunAnimationContainer.PREF_FIRSTRUN_ENABLED, false).apply();
+                prefs.edit()
+                        // Don't bother trying again to show the v1 minimal first run.
+                        .putBoolean(FirstrunAnimationContainer.PREF_FIRSTRUN_ENABLED, false)
+                        // Generate a unique identify for the current first run.
+                        // See Bug 1429735 for why we care to do this.
+                        .putString(FIRSTRUN_UUID, UUID.randomUUID().toString())
+                        .apply();
 
                 // We have no intention of stopping this session. The FIRSTRUN session
                 // ends when the browsing session/activity has ended. All events

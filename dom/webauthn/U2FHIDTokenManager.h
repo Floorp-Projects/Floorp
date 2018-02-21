@@ -93,14 +93,14 @@ class U2FHIDTokenManager final : public U2FTokenTransport
 public:
   explicit U2FHIDTokenManager();
 
-  virtual RefPtr<U2FRegisterPromise>
+  RefPtr<U2FRegisterPromise>
   Register(const nsTArray<WebAuthnScopedCredential>& aCredentials,
            const WebAuthnAuthenticatorSelection &aAuthenticatorSelection,
            const nsTArray<uint8_t>& aApplication,
            const nsTArray<uint8_t>& aChallenge,
            uint32_t aTimeoutMS) override;
 
-  virtual RefPtr<U2FSignPromise>
+  RefPtr<U2FSignPromise>
   Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials,
        const nsTArray<uint8_t>& aApplication,
        const nsTArray<uint8_t>& aChallenge,
@@ -108,12 +108,13 @@ public:
        uint32_t aTimeoutMS) override;
 
   void Cancel() override;
+  void Drop() override;
 
   void HandleRegisterResult(UniquePtr<U2FResult>&& aResult);
   void HandleSignResult(UniquePtr<U2FResult>&& aResult);
 
 private:
-  ~U2FHIDTokenManager();
+  ~U2FHIDTokenManager() { }
 
   void ClearPromises() {
     mRegisterPromise.RejectIfExists(NS_ERROR_DOM_UNKNOWN_ERR, __func__);

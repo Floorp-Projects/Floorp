@@ -613,6 +613,8 @@ public:
   bool GetShadowTransformSetByAnimation() { return mShadowTransformSetByAnimation; }
   bool GetShadowOpacitySetByAnimation() { return mShadowOpacitySetByAnimation; }
 
+  void RecomputeShadowVisibleRegionFromChildren();
+
 protected:
   HostLayerManager* mCompositorManager;
 
