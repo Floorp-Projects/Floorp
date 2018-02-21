@@ -18654,7 +18654,6 @@ __webpack_require__(1324);
 const Undefined = __webpack_require__(1560);
 const Null = __webpack_require__(1561);
 const StringRep = __webpack_require__(1447);
-const LongStringRep = __webpack_require__(1562);
 const Number = __webpack_require__(1563);
 const ArrayRep = __webpack_require__(1448);
 const Obj = __webpack_require__(1564);
@@ -18687,7 +18686,7 @@ const Grip = __webpack_require__(1409);
 // List of all registered template.
 // XXX there should be a way for extensions to register a new
 // or modify an existing rep.
-let reps = [RegExp, StyleSheet, Event, DateTime, CommentNode, ElementNode, TextNode, Attribute, LongStringRep, Func, PromiseRep, ArrayRep, Document, Window, ObjectWithText, ObjectWithURL, ErrorRep, GripArray, GripMap, GripMapEntry, Grip, Undefined, Null, StringRep, Number, SymbolRep, InfinityRep, NaNRep, Accessor];
+let reps = [RegExp, StyleSheet, Event, DateTime, CommentNode, ElementNode, TextNode, Attribute, Func, PromiseRep, ArrayRep, Document, Window, ObjectWithText, ObjectWithURL, ErrorRep, GripArray, GripMap, GripMapEntry, Grip, Undefined, Null, StringRep, Number, SymbolRep, InfinityRep, NaNRep, Accessor];
 
 /**
  * Generic rep that is using for rendering native JS types or an object.
@@ -18755,7 +18754,6 @@ module.exports = {
     GripMap,
     GripMapEntry,
     InfinityRep,
-    LongStringRep,
     NaNRep,
     Null,
     Number,
@@ -22423,6 +22421,10 @@ function supportsObject(object, noGrip = false) {
     return false;
   }
 
+  if (object.class === "DeadObject") {
+    return true;
+  }
+
   return object.preview ? typeof object.preview.ownProperties !== "undefined" : typeof object.ownPropertyLength !== "undefined";
 }
 
@@ -25210,6 +25212,7 @@ const {
   rawCropString,
   sanitizeString,
   wrapRender,
+  isGrip,
   tokenSplitRegex,
   ELLIPSIS
 } = __webpack_require__(1353);
@@ -25224,9 +25227,9 @@ StringRep.propTypes = {
   useQuotes: PropTypes.bool,
   escapeWhitespace: PropTypes.bool,
   style: PropTypes.object,
-  object: PropTypes.string.isRequired,
-  member: PropTypes.any,
-  cropLimit: PropTypes.number,
+  cropLimit: PropTypes.number.isRequired,
+  member: PropTypes.string,
+  object: PropTypes.object.isRequired,
   openLink: PropTypes.func,
   className: PropTypes.string,
   omitLinkHref: PropTypes.bool
@@ -25235,40 +25238,118 @@ StringRep.propTypes = {
 function StringRep(props) {
   let {
     className,
-    cropLimit,
-    object: text,
-    member,
     style,
+    cropLimit,
+    object,
     useQuotes = true,
     escapeWhitespace = true,
+    member,
     openLink,
     omitLinkHref = true
   } = props;
+
+  let text = object;
+
+  const isLong = isLongString(object);
+  const shouldCrop = (!member || !member.open) && cropLimit && text.length > cropLimit;
+
+  if (isLong) {
+    text = maybeCropLongString({
+      shouldCrop,
+      cropLimit
+    }, text);
+  }
+
+  text = formatText({
+    useQuotes,
+    escapeWhitespace
+  }, text);
+
+  const config = getElementConfig({
+    className,
+    style,
+    actor: object.actor
+  });
+
+  if (!isLong) {
+    if (containsURL(text)) {
+      return span(config, ...getLinkifiedElements(text, shouldCrop && cropLimit, omitLinkHref, openLink));
+    }
+
+    // Cropping of longString has been handled before formatting.
+    text = maybeCropString({
+      isLong,
+      shouldCrop,
+      cropLimit
+    }, text);
+  }
+
+  return span(config, text);
+}
+
+function maybeCropLongString(opts, text) {
+  const {
+    shouldCrop,
+    cropLimit
+  } = opts;
+
+  const {
+    fullText,
+    initial,
+    length
+  } = text;
+
+  text = shouldCrop ? initial.substring(0, cropLimit) : fullText || initial;
+
+  if (text.length < length) {
+    text += ELLIPSIS;
+  }
+
+  return text;
+}
+
+function formatText(opts, text) {
+  let {
+    useQuotes,
+    escapeWhitespace
+  } = opts;
+
+  return useQuotes ? escapeString(text, escapeWhitespace) : sanitizeString(text);
+}
+
+function getElementConfig(opts) {
+  const {
+    className,
+    style,
+    actor
+  } = opts;
+
+  const config = {};
+
+  if (actor) {
+    config["data-link-actor-id"] = actor;
+  }
 
   const classNames = ["objectBox", "objectBox-string"];
   if (className) {
     classNames.push(className);
   }
-  let config = { className: classNames.join(" ") };
+  config.className = classNames.join(" ");
+
   if (style) {
     config.style = style;
   }
 
-  if (useQuotes) {
-    text = escapeString(text, escapeWhitespace);
-  } else {
-    text = sanitizeString(text);
-  }
+  return config;
+}
 
-  const shouldCrop = (!member || !member.open) && cropLimit && text.length > cropLimit;
-  if (!containsURL(text)) {
-    if (shouldCrop) {
-      text = rawCropString(text, cropLimit);
-    }
-    return span(config, text);
-  }
+function maybeCropString(opts, text) {
+  const {
+    shouldCrop,
+    cropLimit
+  } = opts;
 
-  return span(config, ...getLinkifiedElements(text, shouldCrop && cropLimit, omitLinkHref, openLink));
+  return shouldCrop ? rawCropString(text, cropLimit) : text;
 }
 
 /**
@@ -25377,7 +25458,15 @@ function getCroppedString(text, offset = 0, startCropIndex, endCropIndex) {
   return text;
 }
 
+function isLongString(object) {
+  return object && object.type === "longString";
+}
+
 function supportsObject(object, noGrip = false) {
+  if (noGrip === false && isGrip(object)) {
+    return isLongString(object);
+  }
+
   return getGripType(object, noGrip) == "string";
 }
 
@@ -29620,7 +29709,7 @@ function evaluateInFrame(frameId, script) {
 
 function evaluate(script, { frameId } = {}) {
   const params = frameId ? { frameActor: frameId } : {};
-  if (!tabTarget || !tabTarget.activeConsole) {
+  if (!tabTarget || !tabTarget.activeConsole || !script) {
     return Promise.resolve();
   }
 
@@ -35998,83 +36087,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 1562 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-// Dependencies
-const PropTypes = __webpack_require__(20);
-const {
-  escapeString,
-  sanitizeString,
-  isGrip,
-  wrapRender
-} = __webpack_require__(1353);
-
-const dom = __webpack_require__(1758);
-const { span } = dom;
-
-/**
- * Renders a long string grip.
- */
-LongStringRep.propTypes = {
-  useQuotes: PropTypes.bool,
-  escapeWhitespace: PropTypes.bool,
-  style: PropTypes.object,
-  cropLimit: PropTypes.number.isRequired,
-  member: PropTypes.string,
-  object: PropTypes.object.isRequired
-};
-
-function LongStringRep(props) {
-  let {
-    cropLimit,
-    member,
-    object,
-    style,
-    useQuotes = true,
-    escapeWhitespace = true
-  } = props;
-  let { fullText, initial, length } = object;
-
-  let config = {
-    "data-link-actor-id": object.actor,
-    className: "objectBox objectBox-string"
-  };
-
-  if (style) {
-    config.style = style;
-  }
-
-  let string = member && member.open ? fullText || initial : initial.substring(0, cropLimit);
-
-  if (string.length < length) {
-    string += "\u2026";
-  }
-  let formattedString = useQuotes ? escapeString(string, escapeWhitespace) : sanitizeString(string);
-  return span(config, formattedString);
-}
-
-function supportsObject(object, noGrip = false) {
-  if (noGrip === true || !isGrip(object)) {
-    return false;
-  }
-  return object.type === "longString";
-}
-
-// Exports from this module
-module.exports = {
-  rep: wrapRender(LongStringRep),
-  supportsObject
-};
-
-/***/ }),
+/* 1562 */,
 /* 1563 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -36193,7 +36206,7 @@ function getTitleElement(props, object) {
 }
 
 function getTitle(props, object) {
-  return props.title || object.class || DEFAULT_TITLE;
+  return props.title || DEFAULT_TITLE;
 }
 
 function safePropIterator(props, object, max) {
@@ -36690,7 +36703,8 @@ function supportsObject(object, noGrip = false) {
     return false;
   }
 
-  return object.preview && getGripType(object, noGrip) == "HTMLDocument";
+  const type = getGripType(object, noGrip);
+  return object.preview && (type === "HTMLDocument" || type === "XULDocument");
 }
 
 // Exports from this module
@@ -38074,6 +38088,9 @@ const {
   nodeIsPrimitive,
   nodeIsPrototype,
   nodeIsSetter,
+  nodeIsUninitializedBinding,
+  nodeIsUnmappedBinding,
+  nodeIsUnscopedBinding,
   nodeIsWindow
 } = Utils.node;
 
@@ -38266,7 +38283,13 @@ class ObjectInspector extends Component {
 
     const unavailable = isPrimitive && itemValue && itemValue.hasOwnProperty && itemValue.hasOwnProperty("unavailable");
 
-    if (nodeIsOptimizedOut(item)) {
+    if (nodeIsUninitializedBinding(item)) {
+      objectValue = dom.span({ className: "unavailable" }, "(uninitialized)");
+    } else if (nodeIsUnmappedBinding(item)) {
+      objectValue = dom.span({ className: "unavailable" }, "(unmapped)");
+    } else if (nodeIsUnscopedBinding(item)) {
+      objectValue = dom.span({ className: "unavailable" }, "(unscoped)");
+    } else if (nodeIsOptimizedOut(item)) {
       objectValue = dom.span({ className: "unavailable" }, "(optimized away)");
     } else if (nodeIsMissingArguments(item) || unavailable) {
       objectValue = dom.span({ className: "unavailable" }, "(unavailable)");
@@ -39948,6 +39971,13 @@ class ConditionalPanel extends _react.PureComponent {
   }
 
   renderToWidget(props) {
+    if (this.cbPanel) {
+      if (this.props.line && this.props.line == props.line) {
+        return props.closeConditionalPanel();
+      }
+      this.clearConditionalPanel();
+    }
+
     const { selectedLocation, line, editor } = props;
     const sourceId = selectedLocation ? selectedLocation.sourceId : "";
 
@@ -49471,6 +49501,27 @@ function nodeIsOptimizedOut(item) {
   return !nodeHasChildren(item) && value && value.optimizedOut;
 }
 
+function nodeIsUninitializedBinding(item) {
+  const value = getValue(item);
+  return value && value.uninitialized;
+}
+
+// Used to check if an item represents a binding that exists in a sourcemap's
+// original file content, but does not match up with a binding found in the
+// generated code.
+function nodeIsUnmappedBinding(item) {
+  const value = getValue(item);
+  return value && value.unmapped;
+}
+
+// Used to check if an item represents a binding that exists in the debugger's
+// parser result, but does not match up with a binding returned by the
+// debugger server.
+function nodeIsUnscopedBinding(item) {
+  const value = getValue(item);
+  return value && value.unscoped;
+}
+
 function nodeIsMissingArguments(item) {
   const value = getValue(item);
   return !nodeHasChildren(item) && value && value.missingArguments;
@@ -49995,6 +50046,9 @@ module.exports = {
   nodeIsPrototype,
   nodeIsProxy,
   nodeIsSetter,
+  nodeIsUninitializedBinding,
+  nodeIsUnmappedBinding,
+  nodeIsUnscopedBinding,
   nodeIsWindow,
   nodeNeedsNumericalBuckets,
   nodeSupportsNumericalBucketing,
@@ -52024,7 +52078,7 @@ function tokenAtTextPosition(cm, { line, column }) {
 function getExpressionFromCoords(cm, coord) {
   const token = tokenAtTextPosition(cm, coord);
   if (!token) {
-    return;
+    return null;
   }
 
   let startHighlight = token.startColumn;
@@ -52044,6 +52098,11 @@ function getExpressionFromCoords(cm, coord) {
     startHighlight = tokenBefore.startColumn;
   }
   const expression = line.substring(startHighlight, endHighlight);
+
+  if (!expression) {
+    return null;
+  }
+
   const location = {
     start: { line: lineNumber, column: startHighlight },
     end: { line: lineNumber, column: endHighlight }
