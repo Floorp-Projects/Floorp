@@ -78,7 +78,6 @@ const BadCertHost sBadCertHosts[] =
   { "emptyissuername.example.com", "emptyIssuerName" },
   { "ev-test.example.com", "ev-test" },
   { "ee-from-missing-intermediate.example.com", "ee-from-missing-intermediate" },
-  { "imminently-distrusted.example.com", "ee-imminently-distrusted" },
   { "localhost", "unknownissuer" },
   { nullptr, nullptr }
 };
