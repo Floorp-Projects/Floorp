@@ -10,6 +10,7 @@ class TestMixedContentPage(PuppeteerMixin, MarionetteTestCase):
     def setUp(self):
         super(TestMixedContentPage, self).setUp()
 
+        self.marionette.set_pref('security.mixed_content.upgrade_display_content', False)
         self.locationbar = self.browser.navbar.locationbar
         self.identity_popup = self.locationbar.identity_popup
 

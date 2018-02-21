@@ -111,6 +111,14 @@ this.Policies = {
     }
   },
 
+  "CreateMasterPassword": {
+    onBeforeUIStartup(manager, param) {
+      if (!param) {
+        manager.disallowFeature("createMasterPassword");
+      }
+    }
+  },
+
   "DisableFirefoxScreenshots": {
     onBeforeAddons(manager, param) {
       if (param) {
@@ -150,6 +158,12 @@ this.Policies = {
   "popups": {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("popup", param.allow, param.block);
+    }
+  },
+
+  "RememberPasswords": {
+    onBeforeUIStartup(manager, param) {
+      setAndLockPref("signon.rememberSignons", param);
     }
   },
 

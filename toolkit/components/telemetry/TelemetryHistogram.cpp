@@ -595,7 +595,7 @@ internal_CreateHistogramInstance(const HistogramInfo& passedInfo, int bucketsOff
 nsresult
 internal_HistogramAdd(Histogram& histogram,
                       const HistogramID id,
-                      int32_t value,
+                      uint32_t value,
                       ProcessID aProcessType)
 {
   // Check if we are allowed to record the data.
@@ -607,6 +607,16 @@ internal_HistogramAdd(Histogram& histogram,
   if (!canRecordDataset ||
     (aProcessType == ProcessID::Parent && !internal_IsRecordingEnabled(id))) {
     return NS_OK;
+  }
+
+  // The internal representation of a base::Histogram's buckets uses `int`.
+  // Clamp large values of `value` to be INT_MAX so they continue to be treated
+  // as large values (instead of negative ones).
+  if (value > INT_MAX) {
+    TelemetryScalar::Add(
+      mozilla::Telemetry::ScalarID::TELEMETRY_ACCUMULATE_CLAMPED_VALUES,
+      NS_ConvertASCIItoUTF16(gHistogramInfos[id].name()), 1);
+    value = INT_MAX;
   }
 
   // It is safe to add to the histogram now: the subsession histogram was already
@@ -815,6 +825,16 @@ KeyedHistogram::Add(const nsCString& key, uint32_t sample,
     return NS_ERROR_FAILURE;
   }
 #endif
+
+  // The internal representation of a base::Histogram's buckets uses `int`.
+  // Clamp large values of `sample` to be INT_MAX so they continue to be treated
+  // as large values (instead of negative ones).
+  if (sample > INT_MAX) {
+    TelemetryScalar::Add(
+      mozilla::Telemetry::ScalarID::TELEMETRY_ACCUMULATE_CLAMPED_VALUES,
+      NS_ConvertASCIItoUTF16(mHistogramInfo.name()), 1);
+    sample = INT_MAX;
+  }
 
   histogram->Add(sample);
 #if !defined(MOZ_WIDGET_ANDROID)
@@ -1180,7 +1200,14 @@ internal_JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
       return true;
     }
 
-    if (!JS::ToUint32(cx, args[0], &value)) {
+    if (args[0].isNumber() && args[0].toNumber() > UINT32_MAX) {
+      // Clamp large numerical arguments to value's acceptable values.
+      // JS::ToUint32 will take arg[0] modulo 2^32 before returning it, which
+      // may result in a smaller final value.
+      value = UINT32_MAX;
+      LogToBrowserConsole(nsIScriptError::errorFlag,
+        NS_LITERAL_STRING("Clamped larged numeric value."));
+    } else if (!JS::ToUint32(cx, args[0], &value)) {
       LogToBrowserConsole(nsIScriptError::errorFlag, NS_LITERAL_STRING("Failed to convert argument"));
       return true;
     }
