@@ -118,6 +118,7 @@ linux64-qr/opt:
     test-sets:
         - linux-qr-tests
         - linux-qr-talos
+        - awsy
 linux64-qr/debug:
     build-platform: linux64/debug
     test-sets:
