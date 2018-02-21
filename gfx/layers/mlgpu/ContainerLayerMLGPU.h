@@ -35,6 +35,8 @@ public:
   void SetInvalidCompositeRect(const gfx::IntRect* aRect) override;
   void ClearCachedResources() override;
 
+  const LayerIntRegion& GetShadowVisibleRegion() override;
+
   RefPtr<MLGRenderTarget> UpdateRenderTarget(
     MLGDevice* aDevice,
     MLGRenderTargetFlags aFlags);

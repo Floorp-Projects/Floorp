@@ -730,58 +730,11 @@ ContainerLayerComposite::CleanupResources()
   }
 }
 
-static LayerIntRect
-TransformRect(const LayerIntRect& aRect, const Matrix4x4& aTransform)
-{
-  if (aRect.IsEmpty()) {
-    return LayerIntRect();
-  }
-
-  Rect rect(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
-  rect = aTransform.TransformAndClipBounds(rect, Rect::MaxIntRect());
-  rect.RoundOut();
-
-  IntRect intRect;
-  if (!gfxUtils::GfxRectToIntRect(ThebesRect(rect), &intRect)) {
-    return LayerIntRect();
-  }
-
-  return ViewAs<LayerPixel>(intRect);
-}
-
-static void
-AddTransformedRegion(LayerIntRegion& aDest, const LayerIntRegion& aSource, const Matrix4x4& aTransform)
-{
-  for (auto iter = aSource.RectIter(); !iter.Done(); iter.Next()) {
-    aDest.Or(aDest, TransformRect(iter.Get(), aTransform));
-  }
-  aDest.SimplifyOutward(20);
-}
-
-// Async animations can move child layers without updating our visible region.
-// PostProcessLayers will recompute visible regions for layers with an intermediate
-// surface, but otherwise we need to do it now.
-void
-ComputeVisibleRegionForChildren(ContainerLayer* aContainer, LayerIntRegion& aResult)
-{
-  for (Layer* l = aContainer->GetFirstChild(); l; l = l->GetNextSibling()) {
-    if (l->Extend3DContext()) {
-      MOZ_ASSERT(l->AsContainerLayer());
-      ComputeVisibleRegionForChildren(l->AsContainerLayer(), aResult);
-    } else {
-      AddTransformedRegion(aResult,
-                           l->GetLocalVisibleRegion(),
-                           l->ComputeTransformToPreserve3DRoot());
-    }
-  }
-}
-
 const LayerIntRegion&
 ContainerLayerComposite::GetShadowVisibleRegion()
 {
   if (!UseIntermediateSurface()) {
-    mShadowVisibleRegion.SetEmpty();
-    ComputeVisibleRegionForChildren(this, mShadowVisibleRegion);
+    RecomputeShadowVisibleRegionFromChildren();
   }
 
   return mShadowVisibleRegion;
@@ -791,8 +744,7 @@ const LayerIntRegion&
 RefLayerComposite::GetShadowVisibleRegion()
 {
   if (!UseIntermediateSurface()) {
-    mShadowVisibleRegion.SetEmpty();
-    ComputeVisibleRegionForChildren(this, mShadowVisibleRegion);
+    RecomputeShadowVisibleRegionFromChildren();
   }
 
   return mShadowVisibleRegion;
