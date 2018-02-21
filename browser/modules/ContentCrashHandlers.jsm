@@ -874,7 +874,7 @@ var UnsubmittedCrashHandler = {
     {
       label: gNavigatorBundle.GetStringFromName("pendingCrashReports.viewAll"),
       callback() {
-        chromeWin.openUILinkIn("about:crashes", "tab");
+        chromeWin.openTrustedLinkIn("about:crashes", "tab");
         return true;
       },
     }];

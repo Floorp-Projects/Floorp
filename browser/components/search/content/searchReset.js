@@ -52,7 +52,10 @@ function doSearch() {
                   .rootTreeItem
                   .QueryInterface(Ci.nsIInterfaceRequestor)
                   .getInterface(Ci.nsIDOMWindow);
-  win.openUILinkIn(submission.uri.spec, "current", false, submission.postData);
+  win.openTrustedLinkIn(submission.uri.spec, "current", {
+    allowThirdPartyFixup: false,
+    postData: submission.postData,
+  });
 }
 
 function openingSettings() {

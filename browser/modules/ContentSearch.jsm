@@ -247,7 +247,7 @@ var ContentSearch = {
         postData: submission.postData,
         inBackground: Services.prefs.getBoolPref("browser.tabs.loadInBackground"),
       };
-      win.openUILinkIn(submission.uri.spec, where, params);
+      win.openTrustedLinkIn(submission.uri.spec, where, params);
     }
     win.BrowserSearch.recordSearchInTelemetry(engine, data.healthReportKey,
                                               { selection: data.selection });

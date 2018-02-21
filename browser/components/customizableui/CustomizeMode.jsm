@@ -219,7 +219,7 @@ CustomizeMode.prototype = {
         w.gCustomizeMode.enter();
       };
       Services.obs.addObserver(obs, "browser-delayed-startup-finished");
-      this.window.openUILinkIn("about:newtab", "window");
+      this.window.openTrustedLinkIn("about:newtab", "window");
       return;
     }
     this._wantToBeInCustomizeMode = true;
@@ -1244,7 +1244,7 @@ CustomizeMode.prototype = {
   getMoreThemes(aEvent) {
     aEvent.target.parentNode.parentNode.hidePopup();
     let getMoreURL = Services.urlFormatter.formatURLPref("lightweightThemes.getMoreURL");
-    this.window.openUILinkIn(getMoreURL, "tab");
+    this.window.openTrustedLinkIn(getMoreURL, "tab");
   },
 
   updateUIDensity(mode) {

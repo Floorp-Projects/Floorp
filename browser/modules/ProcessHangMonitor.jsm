@@ -463,7 +463,7 @@ var ProcessHangMonitor = {
       let link = doc.createElement("label");
       link.setAttribute("class", "text-link");
       link.setAttribute("role", "link");
-      link.setAttribute("onclick", `openUILinkIn(${JSON.stringify(linkURL)}, "tab")`);
+      link.setAttribute("onclick", `openTrustedLinkIn(${JSON.stringify(linkURL)}, "tab")`);
       link.setAttribute("value", linkText);
 
       message = doc.createDocumentFragment();

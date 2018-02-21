@@ -95,7 +95,7 @@ var ExtensionsUI = {
       // be removed.  See bug 1331521.
       let win = RecentWindow.getMostRecentBrowserWindow();
       for (let addon of sideloaded) {
-        win.openUILinkIn(`about:newaddon?id=${addon.id}`, "tab");
+        win.openTrustedLinkIn(`about:newaddon?id=${addon.id}`, "tab");
       }
     }
   },

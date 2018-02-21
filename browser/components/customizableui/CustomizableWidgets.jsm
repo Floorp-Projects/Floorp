@@ -744,7 +744,7 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
       // We need to use "click" instead of "command" here so openUILink
       // respects different buttons (eg, to open in a new tab).
       item.addEventListener("click", e => {
-        doc.defaultView.openUILink(tabInfo.url, e);
+        doc.defaultView.openWebLinkIn(tabInfo.url, e);
         if (doc.defaultView.whereToOpenLink(e) != "current") {
           e.preventDefault();
           e.stopPropagation();
