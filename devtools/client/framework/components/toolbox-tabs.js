@@ -94,6 +94,7 @@ class ToolboxTabs extends Component {
     } = this.props;
 
     let tabs = panelDefinitions.map(panelDefinition => ToolboxTab({
+      key: panelDefinition.id,
       currentToolId,
       focusButton,
       focusedButton,
