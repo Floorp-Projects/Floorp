@@ -17,6 +17,8 @@ var Services = require("Services");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 var { PrefsHelper } = require("devtools/client/shared/prefs");
 
+const STATUS_REVEAL_TIME = 5000;
+
 /**
  * Shortcuts for accessing various debugger preferences.
  */
@@ -27,9 +29,20 @@ var Prefs = new PrefsHelper("devtools.debugger", {
 
 var gToolbox, gClient;
 
-var connect = async function () {
-  window.removeEventListener("load", connect);
+function appendStatusMessage(msg) {
+  let statusMessage = document.getElementById("status-message");
+  statusMessage.value += msg + "\n";
+  if (msg.stack) {
+    statusMessage.value += msg.stack + "\n";
+  }
+}
 
+function revealStatusMessage() {
+  let statusMessageContainer = document.getElementById("status-message-container");
+  statusMessageContainer.hidden = false;
+}
+
+var connect = async function () {
   // Initiate the connection
   let env = Components.classes["@mozilla.org/process/environment;1"]
     .getService(Components.interfaces.nsIEnvironment);
@@ -43,22 +56,27 @@ var connect = async function () {
     throw new Error("Must pass a port in an env variable with MOZ_BROWSER_TOOLBOX_PORT");
   }
 
+  let host = Prefs.chromeDebuggingHost;
+  let webSocket = Prefs.chromeDebuggingWebSocket;
+  appendStatusMessage(`Connecting to ${host}:${port}, ws: ${webSocket}`);
   let transport = await DebuggerClient.socketConnect({
-    host: Prefs.chromeDebuggingHost,
+    host,
     port,
-    webSocket: Prefs.chromeDebuggingWebSocket,
+    webSocket,
   });
   gClient = new DebuggerClient(transport);
+  appendStatusMessage("Start protocol client for connection");
   await gClient.connect();
 
+  appendStatusMessage("Get root form for toolbox");
   if (addonID) {
     let { addons } = await gClient.listAddons();
     let addonActor = addons.filter(addon => addon.id === addonID).pop();
     let isTabActor = addonActor.isWebExtension;
-    openToolbox({form: addonActor, chrome: true, isTabActor});
+    await openToolbox({form: addonActor, chrome: true, isTabActor});
   } else {
     let response = await gClient.getProcess();
-    openToolbox({form: response.form, chrome: true});
+    await openToolbox({form: response.form, chrome: true});
   }
 };
 
@@ -81,16 +99,19 @@ window.addEventListener("load", async function () {
   let cmdClose = document.getElementById("toolbox-cmd-close");
   cmdClose.addEventListener("command", onCloseCommand);
   setPrefDefaults();
+  // Reveal status message if connecting is slow or if an error occurs
+  let delayedStatusReveal = setTimeout(() => {
+    revealStatusMessage();
+  }, STATUS_REVEAL_TIME);
   try {
     await connect();
+    clearTimeout(delayedStatusReveal);
   } catch (e) {
-    let errorMessageContainer = document.getElementById("error-message-container");
-    let errorMessage = document.getElementById("error-message");
-    errorMessage.value = e.message || e;
-    errorMessageContainer.hidden = false;
+    appendStatusMessage(e);
+    revealStatusMessage();
     console.error(e);
   }
-});
+}, { once: true });
 
 function onCloseCommand(event) {
   window.close();
@@ -103,6 +124,7 @@ async function openToolbox({ form, chrome, isTabActor }) {
     chrome: chrome,
     isTabActor: isTabActor
   };
+  appendStatusMessage(`Create toolbox target: ${JSON.stringify(arguments, null, 2)}`);
   let target = await TargetFactory.forRemoteTab(options);
   let frame = document.getElementById("toolbox-iframe");
 
@@ -114,6 +136,7 @@ async function openToolbox({ form, chrome, isTabActor }) {
                                   "jsdebugger"));
 
   options = { customIframe: frame };
+  appendStatusMessage(`Show toolbox with ${selectedTool} selected`);
   let toolbox = await gDevTools.showToolbox(
     target,
     selectedTool,
