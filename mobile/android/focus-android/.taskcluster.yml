@@ -71,6 +71,9 @@ tasks:
       - "queue:create-task:aws-provisioner-v1/github-worker"
       - "queue:scheduler-id:taskcluster-github"
       - "secrets:get:project/focus/preview-key-store"
+      - "queue:route:index.project.focus.android.preview-builds"
+    routes:
+      - "index.project.focus.android.preview-builds"
     payload:
       maxRunTime: 3600
       deadline: "{{ '2 hours' | $fromNow }}"
