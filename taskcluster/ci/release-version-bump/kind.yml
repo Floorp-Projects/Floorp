@@ -5,41 +5,52 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
-   - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.job:transforms
-   - taskgraph.transforms.release_notifications:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.release_version_bump:transforms
+    - taskgraph.transforms.release_notifications:transforms
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - beetmover-cdns
+    - beetmover-cdns
 
 job-defaults:
-   description: Release Promotion version bump
-   worker-type: buildbot-bridge/buildbot-bridge
-   run-on-projects: []
-   shipping-phase: ship
-   run:
-      using: buildbot
-      release-promotion: true
+    description: Release Promotion version bump/tag
+    run-on-projects: []
+    shipping-phase: ship
+    worker-type: scriptworker-prov-v1/treescript-v1
+    worker:
+        implementation: treescript
+        tag: true
+        bump: true
+        bump-files:
+            by-project:
+                default: ["browser/config/version_display.txt"]
+                mozilla-release:
+                    - "browser/config/version.txt"
+                    - "browser/config/version_display.txt"
+                    - "config/milestone.txt"
+                mozilla-esr52:
+                    - "browser/config/version.txt"
+                    - "browser/config/version_display.txt"
+                    - "config/milestone.txt"
+        push:
+            by-project:
+                mozilla-beta: true
+                mozilla-release: true
+                mozilla-esr52: true
+                maple: true
+                birch: true
+                default: false
 
 jobs:
-   fennec:
-      name: fennec-version-bump
-      shipping-product: fennec
-      run:
-         product: fennec
-         buildername: release-{branch}-fennec_version_bump
+    fennec:
+        name: fennec-version-bump
+        shipping-product: fennec
 
-   firefox:
-      name: firefox-version-bump
-      shipping-product: firefox
-      run:
-         product: firefox
-         buildername: release-{branch}-firefox_version_bump
+    firefox:
+        name: firefox-version-bump
+        shipping-product: firefox
 
-   devedition:
-      name: devedition-version-bump
-      shipping-product: devedition
-      run:
-         product: devedition
-         buildername: release-{branch}-devedition_version_bump
+    devedition:
+        name: devedition-version-bump
+        shipping-product: devedition
