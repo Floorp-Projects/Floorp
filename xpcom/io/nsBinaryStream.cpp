@@ -197,15 +197,15 @@ nsBinaryOutputStream::Write64(uint64_t aNum)
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteFloat(float aFloat)
 {
-  NS_ASSERTION(sizeof(float) == sizeof(uint32_t),
-               "False assumption about sizeof(float)");
+  static_assert(sizeof(float) == sizeof(uint32_t),
+                "False assumption about sizeof(float)");
   return Write32(*reinterpret_cast<uint32_t*>(&aFloat));
 }
 
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteDouble(double aDouble)
 {
-  NS_ASSERTION(sizeof(double) == sizeof(uint64_t),
+  static_assert(sizeof(double) == sizeof(uint64_t),
                "False assumption about sizeof(double)");
   return Write64(*reinterpret_cast<uint64_t*>(&aDouble));
 }
@@ -370,11 +370,9 @@ nsBinaryOutputStream::WriteID(const nsIID& aIID)
     return rv;
   }
 
-  for (int i = 0; i < 8; ++i) {
-    rv = Write8(aIID.m3[i]);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+  rv = WriteBytes(reinterpret_cast<const char*>(&aIID.m3[0]), sizeof(aIID.m3));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
-    }
   }
 
   return NS_OK;
@@ -625,15 +623,15 @@ nsBinaryInputStream::Read64(uint64_t* aNum)
 NS_IMETHODIMP
 nsBinaryInputStream::ReadFloat(float* aFloat)
 {
-  NS_ASSERTION(sizeof(float) == sizeof(uint32_t),
-               "False assumption about sizeof(float)");
+  static_assert(sizeof(float) == sizeof(uint32_t),
+                "False assumption about sizeof(float)");
   return Read32(reinterpret_cast<uint32_t*>(aFloat));
 }
 
 NS_IMETHODIMP
 nsBinaryInputStream::ReadDouble(double* aDouble)
 {
-  NS_ASSERTION(sizeof(double) == sizeof(uint64_t),
+  static_assert(sizeof(double) == sizeof(uint64_t),
                "False assumption about sizeof(double)");
   return Read64(reinterpret_cast<uint64_t*>(aDouble));
 }
@@ -714,7 +712,7 @@ WriteSegmentToString(nsIInputStream* aStream,
                      uint32_t* aWriteCount)
 {
   NS_PRECONDITION(aCount > 0, "Why are we being told to write 0 bytes?");
-  NS_PRECONDITION(sizeof(char16_t) == 2, "We can't handle other sizes!");
+  static_assert(sizeof(char16_t) == 2, "We can't handle other sizes!");
 
   WriteStringClosure* closure = static_cast<WriteStringClosure*>(aClosure);
   char16_t* cursor = closure->mWriteCursor;
@@ -1009,11 +1007,14 @@ nsBinaryInputStream::ReadID(nsID* aResult)
     return rv;
   }
 
-  for (int i = 0; i < 8; ++i) {
-    rv = Read8(&aResult->m3[i]);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  const uint32_t toRead = sizeof(aResult->m3);
+  uint32_t bytesRead = 0;
+  rv = Read(reinterpret_cast<char*>(&aResult->m3[0]), toRead, &bytesRead);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (bytesRead != toRead) {
+    return NS_ERROR_FAILURE;
   }
 
   return NS_OK;

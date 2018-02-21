@@ -103,7 +103,17 @@ class ObjectGroup : public gc::TenuredCell
 
     void setClasp(const Class* clasp) {
         MOZ_ASSERT(JS::StringIsASCII(clasp->name));
+        MOZ_ASSERT(hasUncacheableClass());
         clasp_ = clasp;
+    }
+
+    // Certain optimizations may mutate the class of an ObjectGroup - and thus
+    // all objects in it - after it is created. If true, the JIT must not
+    // assume objects of a previously seen group have the same class as before.
+    //
+    // See: TryConvertToUnboxedLayout
+    bool hasUncacheableClass() const {
+        return clasp_->isNative();
     }
 
     bool hasDynamicPrototype() const {
@@ -120,6 +130,14 @@ class ObjectGroup : public gc::TenuredCell
 
     void setProto(TaggedProto proto);
     void setProtoUnchecked(TaggedProto proto);
+
+    bool hasUncacheableProto() const {
+        // We allow singletons to mutate their prototype after the group has
+        // been created. If true, the JIT must re-check prototype even if group
+        // has been seen before.
+        MOZ_ASSERT(!hasDynamicPrototype());
+        return singleton();
+    }
 
     bool singleton() const {
         return flagsDontCheckGeneration() & OBJECT_FLAG_SINGLETON;

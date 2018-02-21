@@ -951,18 +951,6 @@ panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
 /* Unset the min-height constraint, because that works better for a text-only button. */
 #appMenu-zoomReset-button {
   min-height: unset;
-  border: 1px solid var(--panel-separator-color);
-  border-radius: 10000px;
-  padding: 1px 8px;
-  background-color: var(--arrowpanel-dimmed);
-}
-
-#appMenu-zoomReset-button@buttonStateHover@ {
-  background-color: var(--arrowpanel-dimmed-further);
-}
-
-#appMenu-zoomReset-button@buttonStateActive@ {
-  background-color: var(--arrowpanel-dimmed-even-further);
 }
 
 #appMenu-zoomReset-button > .toolbarbutton-text {
@@ -978,6 +966,14 @@ panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
 .PanelUI-subView .toolbaritem-combined-buttons > .subviewbutton-iconic > .toolbarbutton-text,
 .PanelUI-subView .toolbaritem-combined-buttons > .subviewbutton:not(.subviewbutton-iconic) > .toolbarbutton-icon {
   display: none;
+}
+
+/* Using this selector, because this way the hover and active selectors will apply properly. */
+.PanelUI-subView .toolbaritem-combined-buttons > .subviewbutton:not(.subviewbutton-iconic) {
+  background-color: #f9f9f9;
+  border: 1px solid #e1e1e1;
+  border-radius: 10000px;
+  padding: 1px 8px;
 }
 
 .toolbaritem-combined-buttons > .subviewbutton:not(.subviewbutton-iconic) > .toolbarbutton-text {
