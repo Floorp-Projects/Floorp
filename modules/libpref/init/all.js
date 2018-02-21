@@ -5981,24 +5981,6 @@ pref("layers.mlgpu.enabled", true);
 pref("layers.mlgpu.enable-on-windows7", true);
 #endif
 
-// Set advanced layers preferences here to have them show up in about:config or
-// to be overridable in reftest.list files. They should pretty much all be set
-// to a value of 2, and the conditional-pref code in gfxPrefs.h will convert
-// it to a boolean as appropriate. In particular, do NOT add ifdefs here to
-// turn these on and off, instead use the conditional-pref code in gfxPrefs.h
-// to do that.
-pref("layers.advanced.background-color", false);
-pref("layers.advanced.background-image", 2);
-pref("layers.advanced.border-layers", 2);
-pref("layers.advanced.bullet-layers", 2);
-pref("layers.advanced.canvas-background-color", 2);
-pref("layers.advanced.caret-layers", false);
-pref("layers.advanced.columnRule-layers", 2);
-pref("layers.advanced.image-layers", 2);
-pref("layers.advanced.outline-layers", 2);
-pref("layers.advanced.solid-color", false);
-pref("layers.advanced.table", false);
-
 // Enable lowercased response header name
 pref("dom.xhr.lowercase_header.enabled", false);
 

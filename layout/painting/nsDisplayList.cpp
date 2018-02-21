@@ -3243,12 +3243,9 @@ nsDisplayItem::ShouldUseAdvancedLayer(LayerManager* aManager, PrefFunc aFunc) co
 bool
 nsDisplayItem::CanUseAdvancedLayer(LayerManager* aManager) const
 {
-  if (!gfxPrefs::LayersAdvancedBasicLayerEnabled() &&
-      aManager && aManager->GetBackendType() != layers::LayersBackend::LAYERS_WR) {
-    return false;
-  }
-
-  return true;
+  return gfxPrefs::LayersAdvancedBasicLayerEnabled() ||
+    !aManager ||
+    aManager->GetBackendType() == layers::LayersBackend::LAYERS_WR;
 }
 
 static const DisplayItemClipChain*
@@ -3307,29 +3304,6 @@ nsDisplayItem::GetClippedBounds(nsDisplayListBuilder* aBuilder) const
   return GetClip().ApplyNonRoundedIntersection(r);
 }
 
-already_AddRefed<Layer>
-nsDisplayItem::BuildDisplayItemLayer(nsDisplayListBuilder* aBuilder,
-                                     LayerManager* aManager,
-                                     const ContainerLayerParameters& aContainerParameters)
-{
-  RefPtr<Layer> oldLayer = aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this);
-  RefPtr<DisplayItemLayer> layer = oldLayer ? oldLayer->AsDisplayItemLayer() : nullptr;
-
-  if (!layer) {
-    layer = aManager->CreateDisplayItemLayer();
-
-    if (!layer) {
-      return nullptr;
-    }
-  }
-
-  aManager->TrackDisplayItemLayer(layer);
-  layer->SetDisplayItem(this, aBuilder);
-  layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
-                                                      aContainerParameters.mOffset.y, 0));
-  return layer.forget();
-}
-
 nsRect
 nsDisplaySolidColor::GetBounds(nsDisplayListBuilder* aBuilder,
                                bool* aSnap) const
@@ -3343,7 +3317,7 @@ nsDisplaySolidColor::GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters)
 {
-  if (ForceActiveLayers() || ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowSolidColorLayers)) {
+  if (ForceActiveLayers()) {
     return LAYER_ACTIVE;
   }
   return LAYER_NONE;
@@ -4051,11 +4025,6 @@ nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
   mImageFlags = aBuilder->GetBackgroundPaintFlags();
   CheckForBorderItem(this, mImageFlags);
 
-  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowBackgroundImage) &&
-      CanBuildWebRenderDisplayItems(aManager)) {
-    return LAYER_ACTIVE;
-  }
-
   ImageLayerization shouldLayerize = ShouldCreateOwnLayer(aBuilder, aManager);
   if (shouldLayerize == NO_LAYER_NEEDED) {
     // We can skip the call to CanOptimizeToImageLayer if we don't want a
@@ -4103,10 +4072,6 @@ nsDisplayBackgroundImage::BuildLayer(nsDisplayListBuilder* aBuilder,
                                      LayerManager* aManager,
                                      const ContainerLayerParameters& aParameters)
 {
-  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowBackgroundImage)) {
-    return BuildDisplayItemLayer(aBuilder, aManager, aParameters);
-  }
-
   RefPtr<ImageLayer> layer = static_cast<ImageLayer*>
     (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
   if (!layer) {
@@ -4139,7 +4104,7 @@ nsDisplayBackgroundImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilde
                                                   nsDisplayListBuilder* aDisplayListBuilder)
 {
   ContainerLayerParameters parameter;
-  if (GetLayerState(aDisplayListBuilder, aManager, parameter) != LAYER_ACTIVE) {
+  if (!CanBuildWebRenderDisplayItems(aManager)) {
     return false;
   }
 
@@ -4739,8 +4704,7 @@ nsDisplayBackgroundColor::GetLayerState(nsDisplayListBuilder* aBuilder,
                                         const ContainerLayerParameters& aParameters)
 {
   StyleGeometryBox clip = mBackgroundStyle->mImage.mLayers[0].mClip;
-  if ((ForceActiveLayers() || ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowBackgroundColorLayers)) &&
-      clip != StyleGeometryBox::Text) {
+  if (ForceActiveLayers() && clip != StyleGeometryBox::Text) {
     return LAYER_ACTIVE;
   }
   return LAYER_NONE;
@@ -4964,49 +4928,6 @@ nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder,
                                mFrame->StyleContext());
 }
 
-LayerState
-nsDisplayOutline::GetLayerState(nsDisplayListBuilder* aBuilder,
-                                LayerManager* aManager,
-                                const ContainerLayerParameters& aParameters)
-{
-  if (!ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowOutlineLayers)) {
-    return LAYER_NONE;
-  }
-
-  uint8_t outlineStyle = mFrame->StyleContext()->StyleOutline()->mOutlineStyle;
-  if (outlineStyle == NS_STYLE_BORDER_STYLE_AUTO && nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
-      nsITheme* theme = mFrame->PresContext()->GetTheme();
-      if (theme && theme->ThemeSupportsWidget(mFrame->PresContext(), mFrame,
-                                              NS_THEME_FOCUS_OUTLINE)) {
-        return LAYER_NONE;
-      }
-  }
-
-  nsPoint offset = ToReferenceFrame();
-  Maybe<nsCSSBorderRenderer> br =
-    nsCSSRendering::CreateBorderRendererForOutline(mFrame->PresContext(),
-                                                   nullptr, mFrame,
-                                                   mVisibleRect,
-                                                   nsRect(offset, mFrame->GetSize()),
-                                                   mFrame->StyleContext());
-
-  if (!br) {
-    return LAYER_NONE;
-  }
-
-  mBorderRenderer = br;
-
-  return LAYER_ACTIVE;
-}
-
-already_AddRefed<Layer>
-nsDisplayOutline::BuildLayer(nsDisplayListBuilder* aBuilder,
-                             LayerManager* aManager,
-                             const ContainerLayerParameters& aContainerParameters)
-{
-  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
-}
-
 bool
 nsDisplayOutline::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                           mozilla::wr::IpcResourceUpdateQueue& aResources,
@@ -5015,11 +4936,30 @@ nsDisplayOutline::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
                                           nsDisplayListBuilder* aDisplayListBuilder)
 {
   ContainerLayerParameters parameter;
-  if (GetLayerState(aDisplayListBuilder, aManager, parameter) != LAYER_ACTIVE) {
+
+  uint8_t outlineStyle = mFrame->StyleContext()->StyleOutline()->mOutlineStyle;
+  if (outlineStyle == NS_STYLE_BORDER_STYLE_AUTO && nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
+      nsITheme* theme = mFrame->PresContext()->GetTheme();
+      if (theme && theme->ThemeSupportsWidget(mFrame->PresContext(), mFrame,
+                                              NS_THEME_FOCUS_OUTLINE)) {
+        return false;
+      }
+  }
+
+  nsPoint offset = ToReferenceFrame();
+
+  mozilla::Maybe<nsCSSBorderRenderer> borderRenderer =
+    nsCSSRendering::CreateBorderRendererForOutline(mFrame->PresContext(),
+                                                   nullptr, mFrame,
+                                                   mVisibleRect,
+                                                   nsRect(offset, mFrame->GetSize()),
+                                                   mFrame->StyleContext());
+
+  if (!borderRenderer) {
     return false;
   }
 
-  mBorderRenderer->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
+  borderRenderer->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
   return true;
 }
 
@@ -5436,26 +5376,6 @@ nsDisplayCaret::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilde
   return true;
 }
 
-LayerState
-nsDisplayCaret::GetLayerState(nsDisplayListBuilder* aBuilder,
-                              LayerManager* aManager,
-                              const ContainerLayerParameters& aParameters)
-{
-  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowCaretLayers)) {
-    return LAYER_ACTIVE;
-  }
-
-  return LAYER_NONE;
-}
-
-already_AddRefed<Layer>
-nsDisplayCaret::BuildLayer(nsDisplayListBuilder* aBuilder,
-                           LayerManager* aManager,
-                           const ContainerLayerParameters& aContainerParameters)
-{
-  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
-}
-
 nsDisplayBorder::nsDisplayBorder(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
   : nsDisplayItem(aBuilder, aFrame)
   , mBorderIsEmpty(false)
@@ -5586,25 +5506,21 @@ nsDisplayBorder::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
 
-  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowBorderLayers)) {
-    return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
-  } else {
-    RefPtr<BorderLayer> layer = static_cast<BorderLayer*>
-      (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
-    if (!layer) {
-      layer = aManager->CreateBorderLayer();
-      if (!layer)
-        return nullptr;
-    }
-    layer->SetRect(mRect);
-    layer->SetCornerRadii(mCorners);
-    layer->SetColors(mColors);
-    layer->SetWidths(mWidths);
-    layer->SetStyles(mBorderStyles);
-    layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
-                                                        aContainerParameters.mOffset.y, 0));
-    return layer.forget();
+  RefPtr<BorderLayer> layer = static_cast<BorderLayer*>
+    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
+  if (!layer) {
+    layer = aManager->CreateBorderLayer();
+    if (!layer)
+      return nullptr;
   }
+  layer->SetRect(mRect);
+  layer->SetCornerRadii(mCorners);
+  layer->SetColors(mColors);
+  layer->SetWidths(mWidths);
+  layer->SetStyles(mBorderStyles);
+  layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
+                                                      aContainerParameters.mOffset.y, 0));
+  return layer.forget();
 }
 
 bool
@@ -5867,14 +5783,6 @@ nsDisplayBoxShadowOuter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   return true;
 }
 
-already_AddRefed<Layer>
-nsDisplayBoxShadowOuter::BuildLayer(nsDisplayListBuilder* aBuilder,
-                                    LayerManager* aManager,
-                                    const ContainerLayerParameters& aContainerParameters)
-{
-  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
-}
-
 bool
 nsDisplayBoxShadowOuter::CanBuildWebRenderDisplayItems()
 {
@@ -6066,14 +5974,6 @@ nsDisplayBoxShadowInner::CanCreateWebRenderCommands(nsDisplayListBuilder* aBuild
   }
 
   return true;
-}
-
-already_AddRefed<Layer>
-nsDisplayBoxShadowInner::BuildLayer(nsDisplayListBuilder* aBuilder,
-                                    LayerManager* aManager,
-                                    const ContainerLayerParameters& aContainerParameters)
-{
-  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
 }
 
 /* static */ void
