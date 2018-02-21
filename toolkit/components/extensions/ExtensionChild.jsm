@@ -669,6 +669,7 @@ class BrowserExtensionContent extends EventEmitter {
     if (isContentProcess) {
       MessageChannel.abortResponses({extensionId: this.id});
     }
+    this.emit("shutdown");
   }
 
   getContext(window) {
