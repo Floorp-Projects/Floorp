@@ -64,12 +64,6 @@ interface nsIPlaintextEditor : nsISupports
     */
   readonly attribute long textLength;
 
-  /**
-    * The maximum number of characters allowed.
-    *   default: -1 (unlimited).
-    */
-  attribute long maxTextLength;
-
   /** Get and set the body wrap width.
     *
     * Special values:
@@ -101,14 +95,6 @@ interface nsIPlaintextEditor : nsISupports
    * @param aString   the string to be inserted
    */
    void insertText(in DOMString aStringToInsert);
-
-  /**
-   * Replace existed string with a string.
-   * This is fast path to replace all string when using single line control.
-   *
-   * @ param aString   the string to be set
-   */
-  [noscript] void setText(in DOMString aString);
 
   /**
    * Insert a line break into the content model.
