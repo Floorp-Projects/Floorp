@@ -1385,7 +1385,7 @@ static RefPtr<Node> DepthFirstSearchPostOrderForwardRecursive(RefPtr<Node> aNode
 template <typename Node>
 static RefPtr<Node> BreadthFirstSearchForwardQueue(RefPtr<Node> aNode)
 {
-  queue<RefPtr<Node>> nodes;
+  std::queue<RefPtr<Node>> nodes;
   nodes.push(aNode);
   while(!nodes.empty()) {
     RefPtr<Node> node = nodes.front();
@@ -1464,7 +1464,7 @@ static RefPtr<Node> DepthFirstSearchPostOrderReverseRecursive(RefPtr<Node> aNode
 template <typename Node>
 static RefPtr<Node> BreadthFirstSearchReverseQueue(RefPtr<Node> aNode)
 {
-  queue<RefPtr<Node>> nodes;
+  std::queue<RefPtr<Node>> nodes;
   nodes.push(aNode);
   while(!nodes.empty()) {
     RefPtr<Node> node = nodes.front();
