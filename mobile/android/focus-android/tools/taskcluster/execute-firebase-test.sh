@@ -7,47 +7,41 @@
 # and collects test artifacts into the test_artifacts folder
 
 # If a command fails then do not proceed and fail this script too.
-set -e
+set -ex
 
-# set
-chmod +x ./tools/taskcluster/install-google-cloud.sh
-chmod +x ./tools/taskcluster/google-firebase-testlab-login.sh
 ./tools/taskcluster/install-google-cloud.sh
 ./tools/taskcluster/google-firebase-testlab-login.sh
 
-# Compile test builds
-./gradlew assembleFocusWebviewDebug assembleFocusWebviewDebugAndroidTest
+# Temporarily disabled exiting on error. If the tests fail we want to continue
+# and download the artifacts. We will exit with the actual error code later.
+set +e
 
-# Execute test set, this is the configuration that is currently set in BuddyBuild
-testresult=`./google-cloud-sdk/bin/gcloud --format="json" firebase test android run --app="app/build/outputs/apk/app-focus-webview-debug.apk" \
+# Execute test set
+./google-cloud-sdk/bin/gcloud --format="json" firebase test android run \
+--type=instrumentation \
+--app="app/build/outputs/apk/app-focus-webview-debug.apk" \
 --test="app/build/outputs/apk/app-focus-webview-debug-androidTest.apk" \
---results-bucket="focus_android_test_artifacts" --timeout="30m" --no-auto-google-login \
+--results-bucket="focus_android_test_artifacts" \
+--timeout="30m" \
+--no-auto-google-login \
 --test-runner-class="android.support.test.runner.AndroidJUnitRunner" \
---device="model=Nexus5X,version=23" --device="model=Nexus9,version=25"\
---device="model=sailfish,version=25" --device="model=sailfish,version=26" `
+--device="model=sailfish,version=26" \
+--device="model=Nexus5X,version=23" \
+--device="model=Nexus9,version=25" \
+--device="model=sailfish,version=25"
+
+exitcode=$?
+
+# Now continue to exit the script on any error that occurs.
+set -ex
 
 # Pull the artifacts from TestCloud to taskcluster
 # Google storage folder name can be modified from the Google Cloud menu
 echo "Download Artifacts"
+
 rm -rf test_artifacts
 mkdir test_artifacts
 ./google-cloud-sdk/bin/gsutil ls gs://focus_android_test_artifacts | tail -1 | ./google-cloud-sdk/bin/gsutil -m cp -r -I ./test_artifacts
 
-# Test passed when:
-# There is at least one passed test run, and no failures
-echo "Test Execution Result"
-shopt -s nocasematch
-echo $testresult
-if [[ "$testresult" =~ "Passed" ]]; then
-    if [[ "$testresult" =~ "Failed" ]]; then
-    	  # At least one test case failed
-        echo "Test Failed: Failed Test Present"
-        exit 1
-    else
-        echo "Test Passed"
-    fi
-else
-	  # All tests failed, or no output given
-    echo "Test Failed: No Tests Passed"
-    exit 2
-fi
+# Now exit the script with the exit code from the test run. (Only 0 if all test executions passed)
+exit $exitcode

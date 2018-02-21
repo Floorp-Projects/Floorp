@@ -24,7 +24,10 @@ def generate_build_task():
 	return taskcluster.slugId(), generate_task(
 		name = "(Focus for Android) Build",
 		description = "Build Focus/Klar for Android from source code.",
-		command = 'echo "--" > .adjust_token && ./gradlew clean assemble')
+		command = ('echo "--" > .adjust_token'
+				   ' && python tools/l10n/check_translations.py'
+				   ' && ./gradlew clean assemble'
+				   ' && python tools/metrics/apk_size.py'))
 
 
 def generate_unit_test_task(buildTaskId):
@@ -47,8 +50,18 @@ def generate_ui_test_task(dependencies):
 	return taskcluster.slugId(), generate_task(
 		name = "(Focus for Android) UI tests",
 		description = "Run UI tests for Focus/Klar for Android.",
-		command = 'echo "--" > .adjust_token && ./gradlew clean',
-		dependencies = dependencies)
+		command = ('echo "--" > .adjust_token'
+			' && ./gradlew clean assembleFocusWebviewDebug assembleFocusWebviewDebugAndroidTest'
+			' && tools/taskcluster/execute-firebase-test.sh'),
+		dependencies = dependencies,
+		scopes = [ 'secrets:get:project/focus/firebase' ],
+		artifacts = {
+			"public": {
+				"type": "directory",
+				"path": "/opt/focus-android/test_artifacts",
+				"expires": taskcluster.stringDate(taskcluster.fromNow('1 week'))
+			}
+		})
 
 
 def generate_release_task(uiTestTaskId):

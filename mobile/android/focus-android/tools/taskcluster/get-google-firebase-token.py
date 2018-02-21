@@ -8,11 +8,7 @@ Google Firebase service account token and write it to the .firebase_token
 file in the root directory.
 """
 
-# This script needs following things done:
-# Create secrets folder in taskcluster, and have access rights
-# copy the json key file into the taskcluster secret
-# set the correct path for secrets.get() call
-
+import base64
 import os
 import taskcluster
 
@@ -20,8 +16,7 @@ import taskcluster
 secrets = taskcluster.Secrets({'baseUrl': 'http://taskcluster/secrets/v1'})
 data = secrets.get('project/focus/firebase')
 
-token_file_path = os.path.join(os.path.dirname(__file__), '../../.firebase_token.json')
-with open(token_file_path, 'w') as token_file:
-    token_file.write(data['secret'])
+with open(os.path.join(os.path.dirname(__file__), '../../.firebase_token.json'), 'w') as file:
+	file.write(base64.b64decode(data['secret']['keyFile']))
 
 print("Imported google firebase token from secrets service")

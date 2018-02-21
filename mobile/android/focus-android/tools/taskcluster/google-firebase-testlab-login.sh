@@ -7,11 +7,11 @@
 # it to the bot's repository and creates a pull request.
 
 # If a command fails then do not proceed and fail this script too.
-set -e
+set -ex
 
 # download the login JSON token info from taskcluster
 # (Commented out since secrets need to be added into TC in the right place)
-# python tools/taskcluster/get-google-firebase-token.py
+python tools/taskcluster/get-google-firebase-token.py
 
 # Login to gcloud, set the project
 ./google-cloud-sdk/bin/gcloud --quiet components update
