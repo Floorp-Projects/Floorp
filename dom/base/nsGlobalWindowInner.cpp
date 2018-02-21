@@ -1102,29 +1102,6 @@ nsGlobalWindowInner::~nsGlobalWindowInner()
   nsLayoutStatics::Release();
 }
 
-void
-nsGlobalWindowInner::AddEventTargetObject(DOMEventTargetHelper* aObject)
-{
-  mEventTargetObjects.PutEntry(aObject);
-}
-
-void
-nsGlobalWindowInner::RemoveEventTargetObject(DOMEventTargetHelper* aObject)
-{
-  mEventTargetObjects.RemoveEntry(aObject);
-}
-
-void
-nsGlobalWindowInner::DisconnectEventTargetObjects()
-{
-  for (auto iter = mEventTargetObjects.ConstIter(); !iter.Done();
-       iter.Next()) {
-    RefPtr<DOMEventTargetHelper> target = iter.Get()->GetKey();
-    target->DisconnectFromOwner();
-  }
-  mEventTargetObjects.Clear();
-}
-
 // static
 void
 nsGlobalWindowInner::ShutDown()
@@ -6907,6 +6884,8 @@ void
 nsGlobalWindowInner::AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const
 {
   aWindowSizes.mDOMOtherSize += aWindowSizes.mState.mMallocSizeOf(this);
+  aWindowSizes.mDOMOtherSize +=
+    nsIGlobalObject::ShallowSizeOfExcludingThis(aWindowSizes.mState.mMallocSizeOf);
 
   EventListenerManager* elm = GetExistingListenerManager();
   if (elm) {
@@ -6929,12 +6908,7 @@ nsGlobalWindowInner::AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const
       mNavigator->SizeOfIncludingThis(aWindowSizes.mState.mMallocSizeOf);
   }
 
-  aWindowSizes.mDOMEventTargetsSize +=
-    mEventTargetObjects.ShallowSizeOfExcludingThis(
-      aWindowSizes.mState.mMallocSizeOf);
-
-  for (auto iter = mEventTargetObjects.ConstIter(); !iter.Done(); iter.Next()) {
-    DOMEventTargetHelper* et = iter.Get()->GetKey();
+  ForEachEventTargetObject([&] (DOMEventTargetHelper* et) {
     if (nsCOMPtr<nsISizeOfEventTarget> iSizeOf = do_QueryObject(et)) {
       aWindowSizes.mDOMEventTargetsSize +=
         iSizeOf->SizeOfEventTargetIncludingThis(
@@ -6944,7 +6918,7 @@ nsGlobalWindowInner::AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const
       aWindowSizes.mDOMEventListenersCount += elm->ListenerCount();
     }
     ++aWindowSizes.mDOMEventTargetsCount;
-  }
+  });
 
   if (mPerformance) {
     aWindowSizes.mDOMPerformanceUserEntries =
