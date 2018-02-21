@@ -47,7 +47,6 @@ const Class PluralRulesObject::class_ = {
     &PluralRulesObject::classOps_
 };
 
-#if JS_HAS_TOSOURCE
 static bool
 pluralRules_toSource(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -55,7 +54,6 @@ pluralRules_toSource(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setString(cx->names().PluralRules);
     return true;
 }
-#endif
 
 static const JSFunctionSpec pluralRules_static_methods[] = {
     JS_SELF_HOSTED_FN("supportedLocalesOf", "Intl_PluralRules_supportedLocalesOf", 1, 0),
@@ -65,9 +63,7 @@ static const JSFunctionSpec pluralRules_static_methods[] = {
 static const JSFunctionSpec pluralRules_methods[] = {
     JS_SELF_HOSTED_FN("resolvedOptions", "Intl_PluralRules_resolvedOptions", 0, 0),
     JS_SELF_HOSTED_FN("select", "Intl_PluralRules_select", 1, 0),
-#if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, pluralRules_toSource, 0, 0),
-#endif
     JS_FS_END
 };
 

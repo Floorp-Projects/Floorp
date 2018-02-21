@@ -2906,7 +2906,6 @@ date_toDateString(JSContext* cx, unsigned argc, Value* vp)
     return CallNonGenericMethod<IsDate, date_toDateString_impl>(cx, args);
 }
 
-#if JS_HAS_TOSOURCE
 MOZ_ALWAYS_INLINE bool
 date_toSource_impl(JSContext* cx, const CallArgs& args)
 {
@@ -2931,7 +2930,6 @@ date_toSource(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsDate, date_toSource_impl>(cx, args);
 }
-#endif
 
 // ES6 20.3.4.41.
 MOZ_ALWAYS_INLINE bool
@@ -3045,9 +3043,7 @@ static const JSFunctionSpec date_methods[] = {
     JS_FN("toTimeString",        date_toTimeString,       0,0),
     JS_FN("toISOString",         date_toISOString,        0,0),
     JS_FN(js_toJSON_str,         date_toJSON,             1,0),
-#if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,       date_toSource,           0,0),
-#endif
     JS_FN(js_toString_str,       date_toString,           0,0),
     JS_FN(js_valueOf_str,        date_valueOf,            0,0),
     JS_SYM_FN(toPrimitive,       date_toPrimitive,        1,JSPROP_READONLY),
