@@ -41,7 +41,9 @@ add_task(async function test_request_shipping_present() {
     ok(frame, "Got payment frame");
 
     let isShippingOptionsVisible =
-      await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.isElementVisible, "shipping-option-picker");
+      await spawnPaymentDialogTask(frame,
+                                   PTU.DialogContentTasks.isElementVisible,
+                                   "shipping-option-picker");
     ok(isShippingOptionsVisible, "shipping-option-picker should be visible");
     let isShippingAddressVisible =
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.isElementVisible,
@@ -78,7 +80,9 @@ add_task(async function test_request_shipping_not_present() {
     ok(frame, "Got payment frame");
 
     let isShippingOptionsVisible =
-      await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.isElementVisible, "shipping-option-picker");
+      await spawnPaymentDialogTask(frame,
+                                   PTU.DialogContentTasks.isElementVisible,
+                                   "shipping-option-picker");
     ok(!isShippingOptionsVisible, "shipping-option-picker should not be visible");
     let isShippingAddressVisible =
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.isElementVisible,
