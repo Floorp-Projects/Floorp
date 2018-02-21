@@ -35,6 +35,7 @@ function run_test() {
   notEqual(testToken, null, "getToken() should succeed");
   equal(testToken.tokenLabel, "Test PKCS11 Tokeñ 2 Label",
         "Spot check: the actual and expected test token labels should be equal");
+  ok(!testToken.isInternalKeyToken, "This token is not the internal key token");
 
   testSlot = testModule.findSlotByName("Empty PKCS11 Slot");
   equal(testSlot.tokenName, null, "Empty slot is empty");

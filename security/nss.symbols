@@ -399,6 +399,7 @@ PK11_IsFIPS
 PK11_IsFriendly
 PK11_IsHW
 PK11_IsInternal
+PK11_IsInternalKeySlot
 PK11_IsLoggedIn
 PK11_IsPresent
 PK11_IsReadOnly

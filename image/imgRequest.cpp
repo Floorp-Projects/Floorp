@@ -1350,7 +1350,9 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
     // the network. Do not pollute mHadInsecureRedirect in case of such an internal
     // redirect.
     nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-    bool upgradeInsecureRequests = loadInfo ? loadInfo->GetUpgradeInsecureRequests()
+    bool upgradeInsecureRequests = loadInfo ?
+                                   loadInfo->GetUpgradeInsecureRequests() ||
+                                   loadInfo->GetBrowserUpgradeInsecureRequests()
                                             : false;
     if (!upgradeInsecureRequests) {
       mHadInsecureRedirect = true;
