@@ -39,10 +39,6 @@ PlacesCategoriesStarter.prototype = {
       case TOPIC_GATHER_TELEMETRY:
         PlacesDBUtils.telemetry();
         break;
-      case PlacesUtils.TOPIC_INIT_COMPLETE:
-        // Init keywords so it starts listening to bookmarks notifications.
-        PlacesUtils.keywords;
-        break;
       case "idle-daily":
         // Once a week run places.sqlite maintenance tasks.
         let lastMaintenance =

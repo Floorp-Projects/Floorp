@@ -899,14 +899,6 @@ add_task(async function test_update_keyword() {
       keyword: "test5",
     });
     equal(updatedItem2.keyword, "test5", "New update succeeds");
-    await PlacesSyncUtils.bookmarks.update({
-      recordId: item2.recordId,
-      url: item.url.href,
-    });
-    updatedItem2 = await PlacesSyncUtils.bookmarks.fetch(item2.recordId);
-    equal(updatedItem2.keyword, "test4", "Item keyword has been updated");
-    updatedItem = await PlacesSyncUtils.bookmarks.fetch(item.recordId);
-    equal(updatedItem.keyword, "test4", "Initial item still has keyword");
   }
 
 

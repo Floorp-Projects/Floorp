@@ -774,38 +774,6 @@ add_task(async function test_async_onItemTagged() {
   }
 });
 
-add_task(async function test_onItemKeywordChanged() {
-  _("Keyword changes via the synchronous API should be tracked");
-
-  try {
-    await tracker.stop();
-    let folder = PlacesUtils.bookmarks.createFolder(
-      PlacesUtils.bookmarks.bookmarksMenuFolder, "Parent",
-      PlacesUtils.bookmarks.DEFAULT_INDEX);
-    _("Track changes to keywords");
-    let uri = CommonUtils.makeURI("http://getfirefox.com");
-    let b = PlacesUtils.bookmarks.insertBookmark(
-      folder, uri,
-      PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
-    let bGUID = await PlacesUtils.promiseItemGuid(b);
-    _("New item is " + b);
-    _("GUID: " + bGUID);
-
-    await startTracking();
-
-    _("Give the item a keyword");
-    PlacesUtils.bookmarks.setKeywordForBookmark(b, "the_keyword");
-
-    // bookmark should be tracked, folder should not be.
-    await verifyTrackedItems([bGUID]);
-    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
-
-  } finally {
-    _("Clean up.");
-    await cleanup();
-  }
-});
-
 add_task(async function test_async_onItemKeywordChanged() {
   _("Keyword changes via the asynchronous API should be tracked");
 
