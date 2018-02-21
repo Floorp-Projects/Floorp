@@ -1264,8 +1264,8 @@ mozJSComponentLoader::Import(JSContext* aCx, const nsACString& aLocation,
         if (!newEntry)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        rv = info.EnsureResolvedURI();
-        NS_ENSURE_SUCCESS(rv, rv);
+        // Note: This implies EnsureURI().
+        MOZ_TRY(info.EnsureResolvedURI());
 
         // get the JAR if there is one
         nsCOMPtr<nsIJARURI> jarURI;
@@ -1297,16 +1297,18 @@ mozJSComponentLoader::Import(JSContext* aCx, const nsACString& aLocation,
         }
 
         mLocations.Put(newEntry->resolvedURL, new nsCString(info.Key()));
-        mInProgressImports.Put(info.Key(), newEntry);
 
-        rv = info.EnsureURI();
-        NS_ENSURE_SUCCESS(rv, rv);
         RootedValue exception(aCx);
-        rv = ObjectForLocation(info, sourceFile, &newEntry->obj,
-                               &newEntry->thisObjectKey,
-                               &newEntry->location, true, &exception);
+        {
+            mInProgressImports.Put(info.Key(), newEntry);
+            auto cleanup = MakeScopeExit([&] () {
+                mInProgressImports.Remove(info.Key());
+            });
 
-        mInProgressImports.Remove(info.Key());
+            rv = ObjectForLocation(info, sourceFile, &newEntry->obj,
+                                   &newEntry->thisObjectKey,
+                                   &newEntry->location, true, &exception);
+        }
 
         if (NS_FAILED(rv)) {
             if (!exception.isUndefined()) {
