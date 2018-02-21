@@ -50,12 +50,8 @@ public:
   // empty or an element with |mContent != aContent| is found.
   void PopChangesForContent(nsIContent* aContent)
   {
-    while (Length() > 0) {
-      if (LastElement().mContent == aContent) {
-        RemoveElementAt(Length() - 1);
-      } else {
-        break;
-      }
+    while (!IsEmpty() && LastElement().mContent == aContent) {
+      RemoveElementAt(Length() - 1);
     }
   }
 
