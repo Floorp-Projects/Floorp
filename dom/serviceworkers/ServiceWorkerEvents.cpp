@@ -418,6 +418,7 @@ class RespondWithHandler final : public PromiseNativeHandler
 #endif
   const nsCString mScriptSpec;
   const nsString mRequestURL;
+  const nsCString mRequestFragment;
   const nsCString mRespondWithScriptSpec;
   const uint32_t mRespondWithLineNumber;
   const uint32_t mRespondWithColumnNumber;
@@ -431,6 +432,7 @@ public:
                      RequestRedirect aRedirectMode,
                      const nsACString& aScriptSpec,
                      const nsAString& aRequestURL,
+                     const nsACString& aRequestFragment,
                      const nsACString& aRespondWithScriptSpec,
                      uint32_t aRespondWithLineNumber,
                      uint32_t aRespondWithColumnNumber)
@@ -443,6 +445,7 @@ public:
 #endif
     , mScriptSpec(aScriptSpec)
     , mRequestURL(aRequestURL)
+    , mRequestFragment(aRequestFragment)
     , mRespondWithScriptSpec(aRespondWithScriptSpec)
     , mRespondWithLineNumber(aRespondWithLineNumber)
     , mRespondWithColumnNumber(aRespondWithColumnNumber)
@@ -716,6 +719,18 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   nsCString responseURL;
   if (mRequestMode != RequestMode::Navigate) {
     responseURL = ir->GetUnfilteredURL();
+
+    // Similar to how we apply the request fragment to redirects automatically
+    // we also want to apply it automatically when propagating the response
+    // URL from a service worker interception.  Currently response.url strips
+    // the fragment, so this will never conflict with an existing fragment
+    // on the response.  In the future we will have to check for a response
+    // fragment and avoid overriding in that case.
+    if (!mRequestFragment.IsEmpty()) {
+      MOZ_ASSERT(!responseURL.Contains('#'));
+      responseURL.Append(NS_LITERAL_CSTRING("#"));
+      responseURL.Append(mRequestFragment);
+    }
   }
 
   UniquePtr<RespondWithClosure> closure(new RespondWithClosure(mInterceptedChannel,
@@ -816,7 +831,7 @@ FetchEvent::RespondWith(JSContext* aCx, Promise& aArg, ErrorResult& aRv)
     new RespondWithHandler(mChannel, mRegistration, mRequest->Mode(),
                            ir->IsClientRequest(), mRequest->Redirect(),
                            mScriptSpec, NS_ConvertUTF8toUTF16(requestURL),
-                           spec, line, column);
+                           ir->GetFragment(), spec, line, column);
   aArg.AppendNativeHandler(handler);
 
   if (!WaitOnPromise(aArg)) {
