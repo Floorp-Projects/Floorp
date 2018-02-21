@@ -1399,8 +1399,7 @@ ServoStyleSet::ResolveStyleLazilyInternal(Element* aElement,
                              pseudoTypeForStyleResolution,
                              aRuleInclusion,
                              &Snapshots(),
-                             mRawSet.get(),
-                             /* aIgnoreExistingStyles = */ false).Consume();
+                             mRawSet.get()).Consume();
 
   if (GetPresContext()->EffectCompositor()->PreTraverse(aElement, aPseudoType)) {
     computedValues =
@@ -1408,8 +1407,7 @@ ServoStyleSet::ResolveStyleLazilyInternal(Element* aElement,
                                pseudoTypeForStyleResolution,
                                aRuleInclusion,
                                &Snapshots(),
-                               mRawSet.get(),
-                               /* aIgnoreExistingStyles = */ false).Consume();
+                               mRawSet.get()).Consume();
   }
 
   MOZ_DIAGNOSTIC_ASSERT(computedValues->PresContext() == GetPresContext() ||

@@ -1150,6 +1150,10 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext,
                            widgetRect.width/scaleFactor,
                            widgetRect.height/scaleFactor};
 
+  // Save actual widget scale to GtkWidgetState as we don't provide
+  // nsFrame to gtk3drawing routines.
+  state.scale = scaleFactor;
+
   // translate everything so (0,0) is the top left of the drawingRect
   gfxPoint origin = rect.TopLeft() + drawingRect.TopLeft();
 

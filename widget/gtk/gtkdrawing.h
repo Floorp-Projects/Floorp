@@ -32,6 +32,7 @@ typedef struct {
   guint8 depressed;
   gint32 curpos; /* curpos and maxpos are used for scrollbars */
   gint32 maxpos;
+  gint32 scale;  /* actual widget scale */
 } GtkWidgetState;
 
 /**

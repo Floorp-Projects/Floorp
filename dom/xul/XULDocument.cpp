@@ -1574,9 +1574,7 @@ XULDocument::StartLayout(void)
         if (! docShell)
             return NS_ERROR_UNEXPECTED;
 
-        nsresult rv = NS_OK;
-        nsRect r = cx->GetVisibleArea();
-        rv = shell->Initialize(r.width, r.height);
+        nsresult rv = shell->Initialize();
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
