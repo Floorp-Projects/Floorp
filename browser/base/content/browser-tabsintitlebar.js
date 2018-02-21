@@ -145,6 +145,7 @@ var TabsInTitlebar = {
 
     let titlebar = $("titlebar");
     let titlebarContent = $("titlebar-content");
+    let titlebarButtons = $("titlebar-buttonbox");
     let menubar = $("toolbar-menubar");
 
     if (allowed) {
@@ -155,10 +156,13 @@ var TabsInTitlebar = {
 
       // Reset the custom titlebar height if the menubar is shown,
       // because we will want to calculate its original height.
-      if (AppConstants.isPlatformAndVersionAtLeast("win", "10.0") &&
+      let buttonsShouldMatchTabHeight =
+        AppConstants.isPlatformAndVersionAtLeast("win", "10.0") ||
+        AppConstants.platform == "linux";
+      if (buttonsShouldMatchTabHeight &&
           (menubar.getAttribute("inactive") != "true" ||
-          menubar.getAttribute("autohide") != "true")) {
-        $("titlebar-buttonbox").style.removeProperty("height");
+           menubar.getAttribute("autohide") != "true")) {
+        titlebarButtons.style.removeProperty("height");
       }
 
       // Try to avoid reflows in this code by calculating dimensions first and
@@ -168,7 +172,7 @@ var TabsInTitlebar = {
       let fullTabsHeight = rect($("TabsToolbar")).height;
 
       // Buttons first:
-      let captionButtonsBoxWidth = rect($("titlebar-buttonbox")).width;
+      let captionButtonsBoxWidth = rect(titlebarButtons).width;
 
       let secondaryButtonsWidth, menuHeight, fullMenuHeight, menuStyles;
       if (AppConstants.platform == "macosx") {
@@ -188,12 +192,11 @@ var TabsInTitlebar = {
 
       // Begin setting CSS properties which will cause a reflow
 
-      // On Windows 10, adjust the window controls to span the entire
+      // Adjust the window controls to span the entire
       // tab strip height if we're not showing a menu bar.
-      if (AppConstants.isPlatformAndVersionAtLeast("win", "10.0") &&
-          !menuHeight) {
+      if (buttonsShouldMatchTabHeight && !menuHeight) {
         titlebarContentHeight = fullTabsHeight;
-        $("titlebar-buttonbox").style.height = titlebarContentHeight + "px";
+        titlebarButtons.style.height = titlebarContentHeight + "px";
       }
 
       // If the menubar is around (menuHeight is non-zero), try to adjust
@@ -260,9 +263,7 @@ var TabsInTitlebar = {
         this._sizePlaceholder("fullscreen-button", secondaryButtonsWidth);
       }
 
-      // Reset the margins and padding that might have been modified:
-      titlebarContent.style.marginTop = "";
-      titlebarContent.style.marginBottom = "";
+      // Reset styles that might have been modified:
       titlebar.style.marginBottom = "";
       menubar.style.paddingBottom = "";
     }
