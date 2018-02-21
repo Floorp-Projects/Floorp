@@ -42,7 +42,7 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
              (aHint & nsChangeHint_NeedReflow),
              "Reflow hint bits set without actually asking for a reflow");
 
-  if (aContent && (aHint & nsChangeHint_ReconstructFrame)) {
+  if (aHint & nsChangeHint_ReconstructFrame) {
     // If Servo fires reconstruct at a node, it is the only change hint fired at
     // that node.
     if (IsServo()) {
@@ -51,6 +51,7 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
       // will not find bugs where we add a non-reconstruct hint for an element after
       // adding a reconstruct. This is ok though, since ProcessRestyledFrames will
       // handle that case via mDestroyedFrames.
+#ifdef DEBUG
       for (size_t i = 0; i < Length(); ++i) {
         MOZ_ASSERT(aContent != (*this)[i].mContent ||
                    !((*this)[i].mHint & nsChangeHint_ReconstructFrame),
@@ -58,6 +59,7 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
                    appending a ReconstructFrame hint for the same \
                    content.");
       }
+#endif
     } else {
       // Filter out all other changes for same content for Gecko (Servo asserts against this
       // case above).
