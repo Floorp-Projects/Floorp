@@ -1193,8 +1193,16 @@ GeckoChildProcessHost::LaunchAndroidService(const char* type,
   int32_t ipcFd = it->first;
   it++;
   // If the Crash Reporter is disabled, there will not be a second file descriptor.
-  int32_t crashFd = (it != fds_to_remap.end()) ? it->first : -1;
-  int32_t crashAnnotationFd = (it != fds_to_remap.end()) ? it->first : -1;
+  int32_t crashFd = -1
+  int32_t crashAnnotationFd = -1;
+  if (it != fds_to_remap.end()) {
+    crashFd = it->first;
+    it++;
+  }
+  if (it != fds_to_remap.end()) {
+    crashAnnotationFd = it->first;
+    it++;
+  }
   int32_t handle = java::GeckoProcessManager::Start(type, jargs, crashFd, ipcFd, crashAnnotationFd);
 
   if (process_handle) {
