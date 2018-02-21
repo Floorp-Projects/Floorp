@@ -313,10 +313,9 @@ TRRService::MaybeBootstrap(const nsACString &aPossible, nsACString &aResult)
 
   nsCOMPtr<nsIURI> url;
   nsresult rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-    .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
-                                  nsIStandardURL::URLTYPE_STANDARD, 443,
-                                  mPrivateURI, nullptr, nullptr,
-                                  nullptr)
+    .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                            nsIStandardURL::URLTYPE_STANDARD, 443,
+                            mPrivateURI, nullptr, nullptr, nullptr))
     .Finalize(url);
   if (NS_FAILED(rv)) {
     LOG(("TRRService::MaybeBootstrap failed to create URI!\n"));

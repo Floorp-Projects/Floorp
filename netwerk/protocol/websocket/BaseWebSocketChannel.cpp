@@ -306,12 +306,13 @@ BaseWebSocketChannel::NewURI(const nsACString & aSpec, const char *aOriginCharse
   if (NS_FAILED(rv))
     return rv;
 
+  nsCOMPtr<nsIURI> base(aBaseURI);
   return NS_MutateURI(new nsStandardURL::Mutator())
-           .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
-                                         nsIStandardURL::URLTYPE_AUTHORITY, port,
-                                         nsCString(aSpec), aOriginCharset, aBaseURI,
-                                         nullptr)
-           .Finalize(_retval);
+    .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                            nsIStandardURL::URLTYPE_AUTHORITY,
+                            port, nsCString(aSpec), aOriginCharset,
+                            base, nullptr))
+    .Finalize(_retval);
 }
 
 NS_IMETHODIMP
