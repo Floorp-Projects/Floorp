@@ -706,6 +706,7 @@ if CONFIG['JS_BUILD_BINAST']:
     SOURCES += ['frontend/BinTokenReaderTester.cpp']
     # These parts of BinAST should eventually move to release.
     SOURCES += [
+        'frontend/BinSource-auto.cpp',
         'frontend/BinSource.cpp',
         'frontend/BinToken.cpp'
     ]
