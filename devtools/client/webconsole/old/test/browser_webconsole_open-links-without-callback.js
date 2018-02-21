@@ -37,8 +37,8 @@ function test() {
     let urlNode = messageNode.querySelector("a:not(.cm-variable)");
 
     let linkOpened = false;
-    let oldOpenUILinkIn = window.openUILinkIn;
-    window.openUILinkIn = function (aLink) {
+    let oldOpenWebLinkIn = window.openWebLinkIn;
+    window.openWebLinkIn = function (aLink) {
       if (aLink == TEST_PAGE_URI) {
         linkOpened = true;
       }
@@ -47,7 +47,7 @@ function test() {
     EventUtils.synthesizeMouseAtCenter(urlNode, {}, hud.iframeWindow);
 
     ok(linkOpened, "Clicking the URL opens the desired page");
-    window.openUILinkIn = oldOpenUILinkIn;
+    window.openWebLinkIn = oldOpenWebLinkIn;
   }
 
   Task.spawn(runner).then(finishTest);
