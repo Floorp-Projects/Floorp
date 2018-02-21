@@ -34,7 +34,6 @@
 
 #include "js/Conversions.h"
 #include "js/Date.h"
-#include "js/Printf.h"
 #include "js/Wrapper.h"
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"

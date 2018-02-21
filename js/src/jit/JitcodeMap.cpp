@@ -15,7 +15,6 @@
 #include "gc/Statistics.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JitSpewer.h"
-#include "js/Printf.h"
 #include "js/Vector.h"
 #include "vm/GeckoProfiler.h"
 

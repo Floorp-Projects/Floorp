@@ -20,7 +20,6 @@
 
 #include "jsnum.h"
 
-#include "js/Printf.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/StringBuffer.h"
 #include "wasm/WasmAST.h"

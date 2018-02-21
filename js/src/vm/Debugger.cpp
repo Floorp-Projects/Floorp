@@ -24,7 +24,6 @@
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineJIT.h"
 #include "js/Date.h"
-#include "js/Printf.h"
 #include "js/UbiNodeBreadthFirst.h"
 #include "js/Vector.h"
 #include "js/Wrapper.h"

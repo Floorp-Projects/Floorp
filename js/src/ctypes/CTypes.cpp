@@ -36,7 +36,6 @@
 #include "gc/Policy.h"
 #include "gc/Zone.h"
 #include "jit/AtomicOperations.h"
-#include "js/Printf.h"
 #include "js/Vector.h"
 #include "util/Windows.h"
 #include "vm/JSContext.h"

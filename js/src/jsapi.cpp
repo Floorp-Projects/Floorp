@@ -61,7 +61,6 @@
 #include "js/Conversions.h"
 #include "js/Date.h"
 #include "js/Initialization.h"
-#include "js/Printf.h"
 #include "js/Proxy.h"
 #include "js/SliceBudget.h"
 #include "js/StructuredClone.h"

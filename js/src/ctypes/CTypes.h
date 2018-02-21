@@ -15,7 +15,6 @@
 #include "ctypes/typedefs.h"
 #include "js/AllocPolicy.h"
 #include "js/GCHashTable.h"
-#include "js/Printf.h"
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
 #include "vm/String.h"

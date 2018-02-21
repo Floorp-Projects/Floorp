@@ -13,7 +13,6 @@
 
 #include "gc/FreeOp.h"
 #include "jit/AtomicOperations.h"
-#include "js/Printf.h"
 #include "js/Wrapper.h"
 #include "vm/SharedMem.h"
 #include "wasm/AsmJS.h"
