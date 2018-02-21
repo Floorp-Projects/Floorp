@@ -21,7 +21,6 @@ class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTMLElement) {
     this.securityCodeInput = document.createElement("input");
     this.securityCodeInput.autocomplete = "off";
     this.securityCodeInput.size = 3;
-    this.securityCodeInput.placeholder = "CVC";
     this.securityCodeInput.addEventListener("change", this);
   }
 

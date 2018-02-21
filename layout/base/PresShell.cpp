@@ -8048,12 +8048,10 @@ PresShell::DispatchTouchEventToDOM(WidgetEvent* aEvent,
       }
     }
 
-    nsIPresShell *presShell = doc->GetShell();
-    if (!presShell) {
+    nsPresContext *context = doc->GetPresContext();
+    if (!context) {
       continue;
     }
-
-    nsPresContext *context = presShell->GetPresContext();
 
     tmpStatus = nsEventStatus_eIgnore;
     EventDispatcher::Dispatch(targetPtr, context,
@@ -10503,9 +10501,9 @@ void PresShell::QueryIsActive()
       MOZ_ASSERT(!container,
                  "external resource doc shouldn't have its own container");
 
-      nsIPresShell* displayPresShell = displayDoc->GetShell();
-      if (displayPresShell) {
-        container = displayPresShell->GetPresContext()->GetContainerWeak();
+      nsPresContext* displayPresContext = displayDoc->GetPresContext();
+      if (displayPresContext) {
+        container = displayPresContext->GetContainerWeak();
       }
     }
   }

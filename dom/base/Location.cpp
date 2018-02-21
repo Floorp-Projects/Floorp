@@ -848,9 +848,8 @@ Location::Reload(bool aForceget)
 
     nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
 
-    nsIPresShell *shell;
-    nsPresContext *pcx;
-    if (doc && (shell = doc->GetShell()) && (pcx = shell->GetPresContext())) {
+    nsPresContext* pcx;
+    if (doc && (pcx = doc->GetPresContext())) {
       pcx->RebuildAllStyleData(NS_STYLE_HINT_REFLOW, eRestyle_Subtree);
     }
 

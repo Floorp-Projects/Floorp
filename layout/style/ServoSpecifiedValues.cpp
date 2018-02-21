@@ -34,10 +34,8 @@ ServoSpecifiedValues::SetIdentAtomValue(nsCSSPropertyID aId, nsAtom* aValue)
     // FIXME(emilio): Can we move mapped attribute declarations across
     // documents? Isn't this wrong in that case? This is pretty out of place
     // anyway.
-    if (nsIPresShell* shell = mDocument->GetShell()) {
-      if (nsPresContext* pc = shell->GetPresContext()) {
-        pc->ForceCacheLang(aValue);
-      }
+    if (nsPresContext* pc = mDocument->GetPresContext()) {
+      pc->ForceCacheLang(aValue);
     }
   }
 }

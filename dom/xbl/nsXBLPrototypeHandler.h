@@ -8,6 +8,7 @@
 #define nsXBLPrototypeHandler_h__
 
 #include "mozilla/EventForwards.h"
+#include "mozilla/MemoryReporting.h"
 #include "nsAtom.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -171,6 +172,8 @@ public:
 
   nsresult Read(nsIObjectInputStream* aStream);
   nsresult Write(nsIObjectOutputStream* aStream);
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 public:
   static uint32_t gRefCnt;

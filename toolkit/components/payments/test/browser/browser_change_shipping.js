@@ -89,16 +89,20 @@ add_task(async function test_show_completePayment() {
     is(shippingOptions.optionCount, 2, "there should be two shipping options");
     is(shippingOptions.selectedOptionValue, "1", "selected should be '1'");
 
-    await ContentTask.spawn(browser,
-                            {
-                              details: PTU.Details.twoShippingOptionsEUR,
-                            },
-                            PTU.ContentTasks.addShippingChangeHandler);
+    ContentTask.spawn(browser, {
+      eventName: "shippingaddresschange",
+    }, PTU.ContentTasks.promisePaymentRequestEvent);
     info("added shipping change handler");
+
     await spawnPaymentDialogTask(frame,
                                  PTU.DialogContentTasks.selectShippingAddressByCountry,
                                  "DE");
     info("changed shipping address to DE country");
+
+    await ContentTask.spawn(browser, {
+      eventName: "shippingaddresschange",
+    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+    info("got shippingaddresschange event");
 
     shippingOptions =
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingOptions);

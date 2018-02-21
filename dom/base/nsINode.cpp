@@ -1263,11 +1263,7 @@ nsINode::DispatchEvent(nsIDOMEvent *aEvent, bool* aRetVal)
   }
 
   // Obtain a presentation shell
-  nsIPresShell *shell = document->GetShell();
-  RefPtr<nsPresContext> context;
-  if (shell) {
-    context = shell->GetPresContext();
-  }
+  RefPtr<nsPresContext> context = document->GetPresContext();
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =

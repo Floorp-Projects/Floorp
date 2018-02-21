@@ -491,7 +491,7 @@ function* runKeyEventTests()
                   "a", "KeyA", KeyboardEvent.DOM_VK_A, "a", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_GERMAN, keyCode:MAC_VK_ANSI_LeftBracket,
                    modifiers: {}, chars:"\u00fc", unmodifiedChars:"\u00fc"},
-                  "\u00fc", "BracketLeft", 0, "\u00fc", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "\u00fc", "BracketLeft", KeyboardEvent.DOM_VK_OPEN_BRACKET, "\u00fc", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_GERMAN, keyCode:MAC_VK_ANSI_Minus,
                    modifiers: {}, chars:"\u00df", unmodifiedChars:"\u00df"},
                   "\u00df", "Minus", KeyboardEvent.DOM_VK_QUESTION_MARK, "\u00df", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
@@ -2734,10 +2734,11 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_THAI, keyCode:MAC_VK_ANSI_Quote,
                    modifiers:{}, chars:"\u0E07", unmodifiedChars:"\u0E07"},
                   "\u0E07", "Quote", KeyboardEvent.DOM_VK_PERIOD, "\u0E07", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
-    // keycode should be zero if the character of the key on the latest ASCII capable keyboard layout isn't for alphabet
+    // keycode should be same as ANSI keyboard layout's key which causes the native virtual keycode
+    // if the character of the key on the latest ASCII capable keyboard layout isn't for alphabet
     yield testKey({layout:KEYBOARD_LAYOUT_THAI, keyCode:MAC_VK_ANSI_Period,
                    modifiers:{}, chars:"\u0E43", unmodifiedChars:"\u0E43"},
-                  "\u0E43", "Period", 0, "\u0E43", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "\u0E43", "Period", KeyboardEvent.DOM_VK_PERIOD, "\u0E43", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     // keycode should be DOM_VK_[0-9] if the key on the latest ASCII capable keyboard layout is for numeric
     yield testKey({layout:KEYBOARD_LAYOUT_THAI, keyCode:MAC_VK_ANSI_1,
                    modifiers:{}, chars:"\u0E45", unmodifiedChars:"\u0E45"},
@@ -4126,12 +4127,14 @@ function* runKeyEventTests()
                   "\u00E7", "Digit9", KeyboardEvent.DOM_VK_9, "\u00E7", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     // OEM keys
+    // If the key doesn't cause ASCII character even with or without Shift key, keyCode value should be same as
+    // the key which causes the virtual keycode on ANSI keyboard layout.
     yield testKey({layout:KEYBOARD_LAYOUT_FRENCH, keyCode:WIN_VK_OEM_7,
                    modifiers:{}, chars:"\u00B2"},
-                  "\u00B2", "Backquote", 0, "\u00B2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "\u00B2", "Backquote", KeyboardEvent.DOM_VK_QUOTE, "\u00B2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_FRENCH, keyCode:WIN_VK_OEM_7,
                    modifiers:{shiftKey:1}, chars:""},
-                  "", "Backquote", 0, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "", "Backquote", KeyboardEvent.DOM_VK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_FRENCH, keyCode:WIN_VK_OEM_4,
                    modifiers:{}, chars:")"},
                   ")", "Minus", KeyboardEvent.DOM_VK_CLOSE_PAREN, ")", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
@@ -4202,10 +4205,10 @@ function* runKeyEventTests()
     // OEM keys with ShiftLock
     yield testKey({layout:KEYBOARD_LAYOUT_FRENCH, keyCode:WIN_VK_OEM_7,
                    modifiers:{capsLockKey:1}, chars:"\u00B2"},
-                  "\u00B2", "Backquote", 0, "\u00B2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "\u00B2", "Backquote", KeyboardEvent.DOM_VK_QUOTE, "\u00B2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_FRENCH, keyCode:WIN_VK_OEM_7,
                    modifiers:{capsLockKey:1, shiftKey:1}, chars:""},
-                  "", "Backquote", 0, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "", "Backquote", KeyboardEvent.DOM_VK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_FRENCH, keyCode:WIN_VK_OEM_4,
                    modifiers:{capsLockKey:1}, chars:"\u00B0"},
                   "\u00B0", "Minus", KeyboardEvent.DOM_VK_CLOSE_PAREN, "\u00B0", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
@@ -4220,10 +4223,10 @@ function* runKeyEventTests()
                   "=", "Equal", KeyboardEvent.DOM_VK_EQUALS, "=", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     //yield testKey({layout:KEYBOARD_LAYOUT_FRENCH, keyCode:WIN_VK_OEM_6,
     //               modifiers:{capsLockKey:1}, chars:""},
-    //              "Dead", "BracketLeft", 0, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // Dead-key
+    //              "Dead", "BracketLeft", KeyboardLayout.DOM_VK_CLOSE_BRACKET, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // Dead-key
     //yield testKey({layout:KEYBOARD_LAYOUT_FRENCH, keyCode:WIN_VK_OEM_6,
     //               modifiers:{capsLockKey:1, shiftKey:1}, chars:""},
-    //              ["\u00A8\u00A8", "\u00A8", "\u00A8", "\u00A8"], "BracketLeft", 0, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // Dead-key
+    //              ["\u00A8\u00A8", "\u00A8", "\u00A8", "\u00A8"], "BracketLeft", KeyboardLayout.DOM_VK_CLOSE_BRACKET, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // Dead-key
     yield testKey({layout:KEYBOARD_LAYOUT_FRENCH, keyCode:WIN_VK_OEM_1,
                    modifiers:{capsLockKey:1}, chars:"\u00A3"},
                   "\u00A3", "BracketRight", KeyboardEvent.DOM_VK_DOLLAR, "\u00A3", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
@@ -4493,56 +4496,56 @@ function* runKeyEventTests()
 
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_7,
                    modifiers:{}, chars:""},
-                  "Dead", "Quote", 0, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "Dead", "Quote", KeyboardEvent.DOM_VK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_7,
                    modifiers:{}, chars:"\u00B4\u00B4"},
-                  ["\u00B4\u00B4", "\u00B4", "\u00B4", "\u00B4"], "Quote", 0, "\u00B4\u00B4", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  ["\u00B4\u00B4", "\u00B4", "\u00B4", "\u00B4"], "Quote", KeyboardEvent.DOM_VK_QUOTE, "\u00B4\u00B4", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_7,
                    modifiers:{}, chars:""},
-                  "Dead", "Quote", 0, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "Dead", "Quote", KeyboardEvent.DOM_VK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_A,
                    modifiers:{}, chars:"\u00E1"},
                   ["\u00E1", "\u00E1", "a"], "KeyA", KeyboardEvent.DOM_VK_A, "\u00E1", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_7,
                    modifiers:{}, chars:""},
-                  "Dead", "Quote", 0, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "Dead", "Quote", KeyboardEvent.DOM_VK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_A,
                    modifiers:{shiftKey:1}, chars:"\u00C1"},
                   ["\u00C1", "\u00C1", "A"], "KeyA", KeyboardEvent.DOM_VK_A, "\u00C1", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_7,
                    modifiers:{}, chars:""},
-                  "Dead", "Quote", 0, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "Dead", "Quote", KeyboardEvent.DOM_VK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_Q,
                    modifiers:{}, chars:"\u00B4q"},
                   ["\u00B4q", "\u00B4", "q", "q"], "KeyQ", KeyboardEvent.DOM_VK_Q, "\u00B4q", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_7,
                    modifiers:{shiftKey:1}, chars:""},
-                  "Dead", "Quote", 0, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "Dead", "Quote", KeyboardEvent.DOM_VK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_7,
                    modifiers:{shiftKey:1}, chars:"\u00A8\u00A8"},
-                  ["\u00A8\u00A8", "\u00A8", "\u00A8", "\u00A8"], "Quote", 0, "\u00A8\u00A8", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  ["\u00A8\u00A8", "\u00A8", "\u00A8", "\u00A8"], "Quote", KeyboardEvent.DOM_VK_QUOTE, "\u00A8\u00A8", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_7,
                    modifiers:{shiftKey:1}, chars:""},
-                  "Dead", "Quote", 0, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "Dead", "Quote", KeyboardEvent.DOM_VK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_A,
                    modifiers:{shiftKey:1}, chars:"\u00C4"},
                   ["\u00C4", "\u00C4", "A"], "KeyA", KeyboardEvent.DOM_VK_A, "\u00C4", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_7,
                    modifiers:{shiftKey:1}, chars:""},
-                  "Dead", "Quote", 0, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "Dead", "Quote", KeyboardEvent.DOM_VK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_A,
                    modifiers:{}, chars:"\u00E4"},
                   ["\u00E4", "\u00E4", "a"], "KeyA", KeyboardEvent.DOM_VK_A, "\u00E4", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_OEM_7,
                    modifiers:{shiftKey:1}, chars:""},
-                  "Dead", "Quote", 0, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "Dead", "Quote", KeyboardEvent.DOM_VK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_SPANISH, keyCode:WIN_VK_Q,
                    modifiers:{shiftKey:1}, chars:"\u00A8Q"},
                   ["\u00A8Q", "\u00A8", "Q", "Q"], "KeyQ", KeyboardEvent.DOM_VK_Q, "\u00A8Q", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);

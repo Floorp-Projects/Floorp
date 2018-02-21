@@ -1183,6 +1183,42 @@ WidgetKeyboardEvent::GetCodeNameIndex(const nsAString& aCodeValue)
   return result;
 }
 
+/* static */ uint32_t
+WidgetKeyboardEvent::GetFallbackKeyCodeOfPunctuationKey(
+                       CodeNameIndex aCodeNameIndex)
+{
+  switch (aCodeNameIndex) {
+    case CODE_NAME_INDEX_Semicolon:     // VK_OEM_1 on Windows
+      return dom::KeyboardEventBinding::DOM_VK_SEMICOLON;
+    case CODE_NAME_INDEX_Equal:         // VK_OEM_PLUS on Windows
+      return dom::KeyboardEventBinding::DOM_VK_EQUALS;
+    case CODE_NAME_INDEX_Comma:         // VK_OEM_COMMA on Windows
+      return dom::KeyboardEventBinding::DOM_VK_COMMA;
+    case CODE_NAME_INDEX_Minus:         // VK_OEM_MINUS on Windows
+      return dom::KeyboardEventBinding::DOM_VK_HYPHEN_MINUS;
+    case CODE_NAME_INDEX_Period:        // VK_OEM_PERIOD on Windows
+      return dom::KeyboardEventBinding::DOM_VK_PERIOD;
+    case CODE_NAME_INDEX_Slash:         // VK_OEM_2 on Windows
+      return dom::KeyboardEventBinding::DOM_VK_SLASH;
+    case CODE_NAME_INDEX_Backquote:     // VK_OEM_3 on Windows
+      return dom::KeyboardEventBinding::DOM_VK_BACK_QUOTE;
+    case CODE_NAME_INDEX_BracketLeft:   // VK_OEM_4 on Windows
+      return dom::KeyboardEventBinding::DOM_VK_OPEN_BRACKET;
+    case CODE_NAME_INDEX_Backslash:     // VK_OEM_5 on Windows
+      return dom::KeyboardEventBinding::DOM_VK_BACK_SLASH;
+    case CODE_NAME_INDEX_BracketRight:  // VK_OEM_6 on Windows
+      return dom::KeyboardEventBinding::DOM_VK_CLOSE_BRACKET;
+    case CODE_NAME_INDEX_Quote:         // VK_OEM_7 on Windows
+      return dom::KeyboardEventBinding::DOM_VK_QUOTE;
+    case CODE_NAME_INDEX_IntlBackslash: // VK_OEM_5 on Windows (ABNT, etc)
+    case CODE_NAME_INDEX_IntlYen:       // VK_OEM_5 on Windows (JIS)
+    case CODE_NAME_INDEX_IntlRo:        // VK_OEM_102 on Windows
+      return dom::KeyboardEventBinding::DOM_VK_BACK_SLASH;
+    default:
+      return 0;
+  }
+}
+
 /* static */ const char*
 WidgetKeyboardEvent::GetCommandStr(Command aCommand)
 {

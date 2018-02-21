@@ -29,6 +29,14 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 this.EXPORTED_SYMBOLS = ["Policies"];
 
 this.Policies = {
+  "BlockAboutAddons": {
+    onBeforeUIStartup(manager, param) {
+      if (param) {
+        manager.disallowFeature("about:addons", true);
+      }
+    }
+  },
+
   "BlockAboutConfig": {
     onBeforeUIStartup(manager, param) {
       if (param) {

@@ -45,6 +45,7 @@ var Profiler;
 
   /* eslint-disable mozilla/use-chromeutils-import */
   try {
+    // eslint-disable-next-line mozilla/use-services
     _profiler = Components.classes["@mozilla.org/tools/profiler;1"].getService(Components.interfaces.nsIProfiler);
   } catch (ex) { (typeof(dumpLog) == "undefined" ? dump : dumpLog)(ex + "\n"); }
 

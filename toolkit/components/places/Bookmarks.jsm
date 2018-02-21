@@ -968,6 +968,10 @@ var Bookmarks = Object.freeze({
    *      retrieves the most recent bookmark having the given URL.
    *      To retrieve ALL of the bookmarks for that URL, you must pass in an
    *      onResult callback, that will be invoked once for each found bookmark.
+   *  - guidPrefix
+   *      retrieves the most recent item with the specified guid prefix.
+   *      To retrieve ALL of the bookmarks for that guid prefix, you must pass
+   *      in an onResult callback, that will be invoked once for each bookmark.
    *
    * @param guidOrInfo
    *        The globally unique identifier of the item to fetch, or an
@@ -1003,14 +1007,15 @@ var Bookmarks = Object.freeze({
       info = { guid: guidOrInfo };
     } else if (Object.keys(info).length == 1) {
       // Just a faster code path.
-      if (!["url", "guid", "parentGuid", "index"].includes(Object.keys(info)[0]))
+      if (!["url", "guid", "parentGuid", "index", "guidPrefix"].includes(Object.keys(info)[0]))
         throw new Error(`Unexpected number of conditions provided: 0`);
     } else {
       // Only one condition at a time can be provided.
       let conditionsCount = [
         v => v.hasOwnProperty("guid"),
         v => v.hasOwnProperty("parentGuid") && v.hasOwnProperty("index"),
-        v => v.hasOwnProperty("url")
+        v => v.hasOwnProperty("url"),
+        v => v.hasOwnProperty("guidPrefix")
       ].reduce((old, fn) => old + fn(info) | 0, 0);
       if (conditionsCount != 1)
         throw new Error(`Unexpected number of conditions provided: ${conditionsCount}`);
@@ -1039,6 +1044,8 @@ var Bookmarks = Object.freeze({
         results = await fetchBookmark(fetchInfo, options && options.concurrent);
       else if (fetchInfo.hasOwnProperty("parentGuid") && fetchInfo.hasOwnProperty("index"))
         results = await fetchBookmarkByPosition(fetchInfo, options && options.concurrent);
+      else if (fetchInfo.hasOwnProperty("guidPrefix"))
+        results = await fetchBookmarksByGUIDPrefix(fetchInfo, options && options.concurrent);
 
       if (!results)
         return null;
@@ -1778,6 +1785,32 @@ async function fetchBookmarkByPosition(info, concurrent) {
     return query(db);
   }
   return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmarkByPosition",
+                                           query);
+}
+
+async function fetchBookmarksByGUIDPrefix(info, concurrent) {
+  let query = async function(db) {
+    let rows = await db.executeCached(
+      `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
+              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, "") AS title,
+              h.url AS url, b.id AS _id, b.parent AS _parentId,
+              NULL AS _childCount,
+              p.parent AS _grandParentId, b.syncStatus AS _syncStatus
+       FROM moz_bookmarks b
+       LEFT JOIN moz_bookmarks p ON p.id = b.parent
+       LEFT JOIN moz_places h ON h.id = b.fk
+       WHERE b.guid LIKE :guidPrefix
+       ORDER BY b.lastModified DESC
+      `, { guidPrefix: info.guidPrefix + "%" });
+
+    return rows.length ? rowsToItemsArray(rows) : null;
+  };
+
+  if (concurrent) {
+    let db = await PlacesUtils.promiseDBConnection();
+    return query(db);
+  }
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmarksByGUIDPrefix",
                                            query);
 }
 

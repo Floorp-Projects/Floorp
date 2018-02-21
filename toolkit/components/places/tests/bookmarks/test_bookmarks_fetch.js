@@ -45,6 +45,17 @@ add_task(async function invalid_input_throws() {
   Assert.throws(() => PlacesUtils.bookmarks.fetch({ guid: 123 }),
                 /Invalid value for property 'guid'/);
 
+  Assert.throws(() => PlacesUtils.bookmarks.fetch({ guidPrefix: "" }),
+                /Invalid value for property 'guidPrefix'/);
+  Assert.throws(() => PlacesUtils.bookmarks.fetch({ guidPrefix: null }),
+                /Invalid value for property 'guidPrefix'/);
+  Assert.throws(() => PlacesUtils.bookmarks.fetch({ guidPrefix: 123 }),
+                /Invalid value for property 'guidPrefix'/);
+  Assert.throws(() => PlacesUtils.bookmarks.fetch({ guidPrefix: "123456789012" }),
+                /Invalid value for property 'guidPrefix'/);
+  Assert.throws(() => PlacesUtils.bookmarks.fetch({ guidPrefix: "@" }),
+                /Invalid value for property 'guidPrefix'/);
+
   Assert.throws(() => PlacesUtils.bookmarks.fetch({ parentGuid: "test",
                                                     index: 0 }),
                 /Invalid value for property 'parentGuid'/);
@@ -180,6 +191,57 @@ add_task(async function fetch_separator() {
   Assert.strictEqual(bm2.title, "");
 
   await PlacesUtils.bookmarks.remove(bm1.guid);
+});
+
+add_task(async function fetch_byguid_prefix() {
+  function generateGuidWithPrefix(prefix) {
+    return prefix + PlacesUtils.history.makeGuid().substring(prefix.length);
+  }
+
+  const PREFIX = "PREFIX-";
+
+  let bm1 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                 guid: generateGuidWithPrefix(PREFIX),
+                                                 url: "http://bm1.example.com/",
+                                                 title: "bookmark 1" });
+  checkBookmarkObject(bm1);
+  Assert.ok(bm1.guid.startsWith(PREFIX));
+
+  let bm2 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                 guid: generateGuidWithPrefix(PREFIX),
+                                                 url: "http://bm2.example.com/",
+                                                 title: "bookmark 2" });
+  checkBookmarkObject(bm2);
+  Assert.ok(bm2.guid.startsWith(PREFIX));
+
+  let bm3 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                 type: PlacesUtils.bookmarks.TYPE_FOLDER,
+                                                 guid: generateGuidWithPrefix(PREFIX),
+                                                 title: "a folder" });
+  checkBookmarkObject(bm3);
+  Assert.ok(bm3.guid.startsWith(PREFIX));
+
+  // Bookmark 4 doesn't have the same guid prefix, so it shouldn't be returned in the results.
+  let bm4 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                 url: "http://bm3.example.com/",
+                                                 title: "bookmark 4" });
+  checkBookmarkObject(bm4);
+  Assert.ok(!bm4.guid.startsWith(PREFIX));
+
+  await PlacesUtils.bookmarks.fetch({ guidPrefix: PREFIX }, gAccumulator.callback);
+
+  Assert.equal(gAccumulator.results.length, 3);
+
+  // The results are returned by most recent first, so the first bookmark
+  // inserted is the last one in the returned array.
+  Assert.deepEqual(bm1, gAccumulator.results[2]);
+  Assert.deepEqual(bm2, gAccumulator.results[1]);
+  Assert.deepEqual(bm3, gAccumulator.results[0]);
+
+  await PlacesUtils.bookmarks.remove(bm1);
+  await PlacesUtils.bookmarks.remove(bm2);
+  await PlacesUtils.bookmarks.remove(bm3);
+  await PlacesUtils.bookmarks.remove(bm4);
 });
 
 add_task(async function fetch_byposition_nonexisting_parentGuid() {

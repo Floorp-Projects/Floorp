@@ -155,13 +155,7 @@ MediaQueryList::RecomputeMatches()
     }
   }
 
-  nsIPresShell* shell = mDocument->GetShell();
-  if (!shell) {
-    // XXXbz What's the right behavior here?  Spec doesn't say.
-    return;
-  }
-
-  nsPresContext* presContext = shell->GetPresContext();
+  nsPresContext* presContext = mDocument->GetPresContext();
   if (!presContext) {
     // XXXbz What's the right behavior here?  Spec doesn't say.
     return;

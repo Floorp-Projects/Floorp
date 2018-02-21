@@ -735,12 +735,7 @@ nsSMILAnimationController::PreTraverseInSubtree(Element* aRoot)
     return false;
   }
 
-  nsIPresShell* shell = mDocument->GetShell();
-  if (!shell) {
-    return false;
-  }
-
-  nsPresContext* context = shell->GetPresContext();
+  nsPresContext* context = mDocument->GetPresContext();
   if (!context) {
     return false;
   }
@@ -818,12 +813,7 @@ nsSMILAnimationController::GetRefreshDriver()
     return nullptr;
   }
 
-  nsIPresShell* shell = mDocument->GetShell();
-  if (!shell) {
-    return nullptr;
-  }
-
-  nsPresContext* context = shell->GetPresContext();
+  nsPresContext* context = mDocument->GetPresContext();
   return context ? context->RefreshDriver() : nullptr;
 }
 

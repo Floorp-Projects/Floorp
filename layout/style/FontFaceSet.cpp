@@ -1889,8 +1889,7 @@ FontFaceSet::GetPresContext()
     return nullptr;
   }
 
-  nsIPresShell* shell = mDocument->GetShell();
-  return shell ? shell->GetPresContext() : nullptr;
+  return mDocument->GetPresContext();
 }
 
 void

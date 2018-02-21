@@ -571,10 +571,10 @@ Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
   MOZ_ASSERT(aElement);
 
   nsIDocument* doc = aElement->GetComposedDoc();
-  if (!doc || !doc->GetShell()) {
+  if (!doc) {
     return false;
   }
-  nsPresContext* presContext = doc->GetShell()->GetPresContext();
+  nsPresContext* presContext = doc->GetPresContext();
   if (!presContext || !presContext->IsDynamic()) {
     // For print or print preview, ignore animations.
     return false;

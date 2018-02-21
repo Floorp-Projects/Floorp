@@ -2791,13 +2791,10 @@ nsXULPopupHidingEvent::Run()
 
   nsIDocument *document = mPopup->GetUncomposedDoc();
   if (pm && document) {
-    nsIPresShell* presShell = document->GetShell();
-    if (presShell) {
-      nsPresContext* context = presShell->GetPresContext();
-      if (context) {
-        pm->FirePopupHidingEvent(mPopup, mNextPopup, mLastPopup,
-                                 context, mPopupType, mDeselectMenu, mIsRollup);
-      }
+    nsPresContext* context = document->GetPresContext();
+    if (context) {
+      pm->FirePopupHidingEvent(mPopup, mNextPopup, mLastPopup,
+                               context, mPopupType, mDeselectMenu, mIsRollup);
     }
   }
 

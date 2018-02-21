@@ -223,13 +223,12 @@ nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode, bool aIsTo
   nsCOMPtr<nsIDocument> doc = content->OwnerDoc();
 
   // Get nsIDOMElement for targetNode
-  nsIPresShell *shell = doc->GetShell();
-  if (!shell)
-    return NS_ERROR_FAILURE;
-
   // strong reference to keep this from going away between events
   // XXXbz between what events?  We don't use this local at all!
-  RefPtr<nsPresContext> context = shell->GetPresContext();
+  RefPtr<nsPresContext> context = doc->GetPresContext();
+  if (!context) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsIFrame* targetFrame = content->GetPrimaryFrame();
   if (!targetFrame) return NS_ERROR_FAILURE;

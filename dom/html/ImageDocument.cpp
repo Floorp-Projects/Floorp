@@ -730,12 +730,11 @@ ImageDocument::CheckOverflowing(bool changeState)
    * presentation through style resolution is potentially dangerous.
    */
   {
-    nsIPresShell *shell = GetShell();
-    if (!shell) {
+    nsPresContext* context = GetPresContext();
+    if (!context) {
       return NS_OK;
     }
 
-    nsPresContext *context = shell->GetPresContext();
     nsRect visibleArea = context->GetVisibleArea();
 
     mVisibleWidth = nsPresContext::AppUnitsToFloatCSSPixels(visibleArea.width);
