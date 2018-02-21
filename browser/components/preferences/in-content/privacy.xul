@@ -576,8 +576,8 @@
       <checkbox id="automaticallySubmitCrashesBox"
                 class="tail-with-learn-more"
                 preference="browser.crashReports.unsubmittedCheck.autoSubmit2"
-                label="&alwaysSubmitCrashReports1.label;"
-                accesskey="&alwaysSubmitCrashReports1.accesskey;"/>
+                label="&sendBackloggedCrashReports.label;"
+                accesskey="&sendBackloggedCrashReports.accesskey;"/>
       <label id="crashReporterLearnMore"
              class="learnMore text-link">&crashReporterLearnMore.label;</label>
     </hbox>
