@@ -108,6 +108,9 @@ var paymentDialogWrapper = {
     if (!requestId || typeof(requestId) != "string") {
       throw new Error("Invalid PaymentRequest ID");
     }
+
+    // The Request object returned by the Payment Service is live and
+    // will automatically get updated if event.updateWith is used.
     this.request = paymentSrv.getPaymentRequestById(requestId);
 
     if (!this.request) {
@@ -247,6 +250,19 @@ var paymentDialogWrapper = {
     this.mm.sendAsyncMessage("paymentChromeToContent", {
       data,
       messageType,
+    });
+  },
+
+  updateRequest() {
+    // There is no need to update this.request since the object is live
+    // and will automatically get updated if event.updateWith is used.
+    let requestSerialized = this._serializeRequest(this.request);
+
+    this.mm.sendAsyncMessage("paymentChromeToContent", {
+      messageType: "updateState",
+      data: {
+        request: requestSerialized,
+      },
     });
   },
 
