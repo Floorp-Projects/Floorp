@@ -22,6 +22,9 @@ ChromeUtils.defineModuleGetter(this, "BinarySearch",
 ChromeUtils.defineModuleGetter(this, "pktApi",
   "chrome://pocket/content/pktApi.jsm");
 
+ChromeUtils.defineModuleGetter(this, "Pocket",
+  "chrome://pocket/content/Pocket.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "gCryptoHash", function() {
   return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
 });
@@ -61,6 +64,7 @@ const ACTIVITY_STREAM_DEFAULT_LIMIT = 12;
 // Some default seconds ago for Activity Stream recent requests
 const ACTIVITY_STREAM_DEFAULT_RECENT = 5 * 24 * 60 * 60;
 
+const POCKET_UPDATE_TIME = 60 * 60 * 1000; // 1 hour
 /**
  * Calculate the MD5 hash for a string.
  * @param aValue
@@ -1037,13 +1041,6 @@ var ActivityStreamProvider = {
                     pocket_id: item.item_id
                   }));
 
-    // Add bookmark guid for Pocket items that are also bookmarks
-    for (let item of items) {
-      const bookmarkData = await this.getBookmark({url: item.url});
-      if (bookmarkData) {
-        item.bookmarkGuid = bookmarkData.bookmarkGuid;
-      }
-    }
     return this._processHighlights(items, aOptions, "pocket");
   },
 
@@ -1305,7 +1302,10 @@ var ActivityStreamProvider = {
  * A set of actions which influence what sites shown on the Activity Stream page
  */
 var ActivityStreamLinks = {
-  /**
+  _savedPocketStories: null,
+  _pocketLastUpdated: 0,
+
+ /**
    * Block a url
    *
    * @param {Object} aLink
@@ -1368,7 +1368,7 @@ var ActivityStreamLinks = {
 
   /**
    * Helper function which makes the call to the Pocket API to delete an item from
-   * a user's saved to Pocket feed.
+   * a user's saved to Pocket feed. Also, invalidate the Pocket stories cache
    *
    * @param {Integer} aItemID
    *           The unique pocket ID used to find the item to be deleted
@@ -1376,12 +1376,13 @@ var ActivityStreamLinks = {
    *@returns {Promise} Returns a promise at completion
    */
   deletePocketEntry(aItemID) {
+    this._savedPocketStories = null;
     return new Promise((success, error) => pktApi.deleteItem(aItemID, {success, error}));
   },
 
   /**
    * Helper function which makes the call to the Pocket API to archive an item from
-   * a user's saved to Pocket feed.
+   * a user's saved to Pocket feed. Also, invalidate the Pocket stories cache
    *
    * @param {Integer} aItemID
    *           The unique pocket ID used to find the item to be archived
@@ -1389,7 +1390,41 @@ var ActivityStreamLinks = {
    *@returns {Promise} Returns a promise at completion
    */
   archivePocketEntry(aItemID) {
+    this._savedPocketStories = null;
     return new Promise((success, error) => pktApi.archiveItem(aItemID, {success, error}));
+  },
+
+  /**
+   * Helper function which makes the call to the Pocket API to save an item to
+   * a user's saved to Pocket feed if they are logged in. Also, invalidate the
+   * Pocket stories cache
+   *
+   * @param {String} aUrl
+   *           The URL belonging to the story being saved
+   * @param {String} aTitle
+   *           The title belonging to the story being saved
+   * @param {Browser} aBrowser
+   *           The target browser to show the doorhanger in
+   *
+   *@returns {Promise} Returns a promise at completion
+   */
+  addPocketEntry(aUrl, aTitle, aBrowser) {
+    // If the user is not logged in, show the panel to prompt them to log in
+    if (!pktApi.isUserLoggedIn()) {
+      Pocket.savePage(aBrowser, aUrl, aTitle);
+      return Promise.resolve(null);
+    }
+
+    // If the user is logged in, just save the link to Pocket and Activity Stream
+    // will update the page
+    this._savedPocketStories = null;
+    return new Promise((success, error) => {
+      pktApi.addLink(aUrl, {
+        title: aTitle,
+        success,
+        error
+      });
+    });
   },
 
   /**
@@ -1415,7 +1450,14 @@ var ActivityStreamLinks = {
 
     // Add the Pocket items if we need more and want them
     if (aOptions.numItems - results.length > 0 && !aOptions.excludePocket) {
-      results.push(...await ActivityStreamProvider.getRecentlyPocketed(aOptions));
+      // If we do not have saved to Pocket stories already cached, or it has been
+      // more than 1 hour since we last got Pocket stories, invalidate the cache,
+      // get new stories, and update the timestamp
+      if (!this._savedPocketStories || (Date.now() - this._pocketLastUpdated > POCKET_UPDATE_TIME)) {
+        this._savedPocketStories = await ActivityStreamProvider.getRecentlyPocketed(aOptions);
+        this._pocketLastUpdated = Date.now();
+      }
+      results.push(...this._savedPocketStories);
     }
 
     // Add in history if we need more and want them
