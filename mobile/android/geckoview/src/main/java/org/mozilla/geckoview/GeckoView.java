@@ -4,11 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.geckoview;
 
+import org.mozilla.gecko.AndroidGamepadManager;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.NativePanZoomController;
 import org.mozilla.gecko.gfx.GeckoDisplay;
+import org.mozilla.gecko.InputMethods;
 
 import android.content.Context;
 import android.graphics.Canvas;
