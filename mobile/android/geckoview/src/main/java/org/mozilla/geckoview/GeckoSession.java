@@ -4,15 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.geckoview;
 
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.gfx.LayerSession;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEditableChild;
+import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.mozglue.JNIObject;
+import org.mozilla.gecko.NativeQueue;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -30,8 +36,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
-import android.util.AttributeSet;
-import android.util.DisplayMetrics;
 import android.util.Log;
 
 public class GeckoSession extends LayerSession

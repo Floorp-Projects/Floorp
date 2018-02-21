@@ -9,6 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.geckoview.GeckoView;
 
 import android.annotation.TargetApi;
 import android.content.Context;

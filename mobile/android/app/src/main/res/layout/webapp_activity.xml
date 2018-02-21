@@ -13,7 +13,7 @@
     android:layout_height="match_parent">
 
 
-    <org.mozilla.gecko.GeckoView
+    <org.mozilla.geckoview.GeckoView
         android:id="@+id/pwa_gecko_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

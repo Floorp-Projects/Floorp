@@ -5,9 +5,9 @@
 package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
+import org.mozilla.geckoview.GeckoView;
 
 import com.robotium.solo.Solo;
 

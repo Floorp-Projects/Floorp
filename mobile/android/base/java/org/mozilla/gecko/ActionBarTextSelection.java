@@ -11,6 +11,7 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.ActionModePresenter;
+import org.mozilla.geckoview.GeckoView;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
