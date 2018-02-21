@@ -184,7 +184,7 @@ add_task(async function test_prefs_change_during_sync() {
     await sync_engine_and_validate_telem(engine, true);
     strictEqual(Service.scheduler.globalScore, 0,
       "Should not bump global score for prefs added during first sync");
-    let payloads = collection.payloads();
+    let payloads = collection.cleartextPayloads();
     equal(payloads.length, 1,
       "Should not upload multiple prefs records after first sync");
     equal(payloads[0].value[TEST_PREF], "world",
@@ -193,7 +193,7 @@ add_task(async function test_prefs_change_during_sync() {
     await sync_engine_and_validate_telem(engine, true);
     strictEqual(Service.scheduler.globalScore, 0,
       "Should not bump global score during second prefs sync");
-    payloads = collection.payloads();
+    payloads = collection.cleartextPayloads();
     equal(payloads.length, 1,
       "Should not upload multiple prefs records after second sync");
     equal(payloads[0].value[TEST_PREF], "hello",
