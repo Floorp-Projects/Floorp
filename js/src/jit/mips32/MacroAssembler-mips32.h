@@ -713,6 +713,9 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     // convert it to double. Else, branch to failure.
     void ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure);
 
+    void cmp64Set(Condition cond, Register64 lhs, Register64 rhs, Register dest);
+    void cmp64Set(Condition cond, Register64 lhs, Imm64 val, Register dest);
+
   protected:
     bool buildOOLFakeExitFrame(void* fakeReturnAddr);
 
@@ -722,6 +725,8 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
                          Register ptrScratch, Register64 output, Register tmp);
     void wasmStoreI64Impl(const wasm::MemoryAccessDesc& access, Register64 value, Register memoryBase,
                           Register ptr, Register ptrScratch, Register tmp);
+    Condition ma_cmp64(Condition cond, Register64 lhs, Register64 rhs, Register dest);
+    Condition ma_cmp64(Condition cond, Register64 lhs, Imm64 val, Register dest);
 
   public:
     CodeOffset labelForPatch() {
