@@ -1275,11 +1275,6 @@ waitForAllPaints(() => {
 
     div.remove();
 
-    // It's possible that the animation begins at this moment.  If this is the
-    // case, an additional superfluous restyle request that we will check later
-    // can't be observed.
-    const superfluousRestyle = startsRightNow(animation) ? 0 : 1;
-
     var markers = await observeStyling(5);
     is(markers.length, 0,
        'Animation on orphaned element should not cause restyles');
@@ -1293,25 +1288,14 @@ waitForAllPaints(() => {
       // re-attaching which leads to invoking a SequentialTask for
       // CascadeResults which ends up calling RequestRestyle(Standard). As a
       // result, the animation is restyled during a second animation restyle in
-      // the first frame. If we fix the behavior when we attach an orphaned
-      // element with script animations to a document so that it requests a
-      // layer restyle (bug 1388557) before fixing important_rules_change in
-      // compute_style() so that it no longer dispatches a needless standard
-      // restyle (bug 1388560), we should add a test case that fails if we
-      // continue to unnecessarily request a standard restyle.
-      //
-      // Bug 1417354: There will be an additional superfluous restyle request
-      // which results when we detach an element from the document between
-      // the Animation tick and styling, and then re-attach it.
-      is(markers.length, 1 + superfluousRestyle,
+      // the first frame.
+      todo_is(markers.length, 1,
+              'Bug 1388560 We should observe one restyle in the first frame ' +
+              'right after re-attaching to the document');
+    } else {
+      is(markers.length, 1,
          'We should observe one restyle in the first frame right after ' +
          're-attaching to the document');
-    } else {
-      // Bug 1388557: We should call RequestRestyle(Layer) when an element which
-      // has running script animations is attached to a document.
-      todo_is(markers.length, 1,
-              'Bug 1388557 We should observe one restyle in the first frame ' +
-              'right after re-attaching to the document');
     }
     markers = await observeStyling(5);
     is(markers.length, 5,

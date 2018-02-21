@@ -118,9 +118,6 @@ this.ShieldPreferences = {
       // because it appears it's enabled with no way to disable it.
       checkbox.setAttribute("preference", OPT_OUT_STUDIES_ENABLED_PREF);
     }
-    checkbox.setAttribute("disabled", Services.prefs.prefIsLocked(FHR_UPLOAD_ENABLED_PREF) ||
-                                      !AppConstants.MOZ_TELEMETRY_REPORTING ||
-                                      !allowedByPolicy);
     hContainer.appendChild(checkbox);
 
     const viewStudies = doc.createElementNS(XUL_NS, "label");
@@ -136,10 +133,21 @@ this.ShieldPreferences = {
 
     // Weirdly, FHR doesn't have a Preference instance on the page, so we create it.
     const fhrPref = doc.defaultView.Preferences.add({ id: FHR_UPLOAD_ENABLED_PREF, type: "bool" });
-    function onChangeFHRPref(event) {
-      checkbox.disabled = !Services.prefs.getBoolPref(FHR_UPLOAD_ENABLED_PREF) || !allowedByPolicy;
+    function onChangeFHRPref() {
+      let isDisabled = Services.prefs.prefIsLocked(FHR_UPLOAD_ENABLED_PREF) ||
+                       !AppConstants.MOZ_TELEMETRY_REPORTING ||
+                       !Services.prefs.getBoolPref(FHR_UPLOAD_ENABLED_PREF) ||
+                       !allowedByPolicy;
+      // We can't use checkbox.disabled here because the XBL binding may not be present,
+      // in which case setting the property won't work properly.
+      if (isDisabled) {
+        checkbox.setAttribute("disabled", "true");
+      } else {
+        checkbox.removeAttribute("disabled");
+      }
     }
     fhrPref.on("change", onChangeFHRPref);
+    onChangeFHRPref();
     doc.defaultView.addEventListener("unload", () => fhrPref.off("change", onChangeFHRPref), { once: true });
 
     // Actually inject the elements we've created.

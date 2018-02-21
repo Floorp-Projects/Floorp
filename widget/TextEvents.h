@@ -459,6 +459,17 @@ public:
     GetDOMCodeName(mCodeNameIndex, aCodeName);
   }
 
+  /**
+   * GetFallbackKeyCodeOfPunctuationKey() returns a DOM keyCode value for
+   * aCodeNameIndex.  This is keyCode value of the key when active keyboard
+   * layout is ANSI (US), JIS or ABNT keyboard layout (the latter 2 layouts
+   * are used only when ANSI doesn't have the key).  The result is useful
+   * if the key doesn't produce ASCII character with active keyboard layout
+   * nor with alternative ASCII capable keyboard layout.
+   */
+  static uint32_t
+  GetFallbackKeyCodeOfPunctuationKey(CodeNameIndex aCodeNameIndex);
+
   bool IsModifierKeyEvent() const
   {
     return GetModifierForKeyName(mKeyNameIndex) != MODIFIER_NONE;

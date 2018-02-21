@@ -989,11 +989,7 @@ nsGenericHTMLElement::GetPresContext(PresContextFor aFor)
   nsIDocument* doc = (aFor == eForComposedDoc) ?
     GetComposedDoc() : GetUncomposedDoc();
   if (doc) {
-    // Get presentation shell.
-    nsIPresShell *presShell = doc->GetShell();
-    if (presShell) {
-      return presShell->GetPresContext();
-    }
+    return doc->GetPresContext();
   }
 
   return nullptr;
@@ -2460,13 +2456,9 @@ nsGenericHTMLElement::Click(CallerType aCallerType)
   // Strong in case the event kills it
   nsCOMPtr<nsIDocument> doc = GetComposedDoc();
 
-  nsCOMPtr<nsIPresShell> shell;
   RefPtr<nsPresContext> context;
   if (doc) {
-    shell = doc->GetShell();
-    if (shell) {
-      context = shell->GetPresContext();
-    }
+    context = doc->GetPresContext();
   }
 
   SetHandlingClick();

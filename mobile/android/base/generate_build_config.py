@@ -43,6 +43,7 @@ def _defines():
                 'MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE',
                 'MOZ_ANDROID_EXCLUDE_FONTS',
                 'MOZ_ANDROID_GCM',
+                'MOZ_ANDROID_GOOGLE_PLAY_SERVICES',
                 'MOZ_ANDROID_MLS_STUMBLER',
                 'MOZ_ANDROID_MMA',
                 'MOZ_ANDROID_MOZILLA_ONLINE',

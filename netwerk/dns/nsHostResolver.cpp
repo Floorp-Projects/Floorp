@@ -87,20 +87,6 @@ LazyLogModule gHostResolverLog("nsHostResolver");
 
 //----------------------------------------------------------------------------
 
-static inline void
-MoveCList(PRCList &from, PRCList &to)
-{
-    if (!PR_CLIST_IS_EMPTY(&from)) {
-        to.next = from.next;
-        to.prev = from.prev;
-        to.next->prev = &to;
-        to.prev->next = &to;
-        PR_INIT_CLIST(&from);
-    }
-}
-
-//----------------------------------------------------------------------------
-
 #if defined(RES_RETRY_ON_FAILURE)
 
 // this class represents the resolver state for a given thread.  if we
@@ -220,7 +206,6 @@ nsHostRecord::nsHostRecord(const nsHostKey& key)
     , mBlacklistedCount(0)
     , mResolveAgain(false)
 {
-    PR_INIT_CLIST(this);
 }
 
 void
@@ -535,10 +520,6 @@ nsHostResolver::nsHostResolver(uint32_t maxCacheEntries,
     , mPendingCount(0)
 {
     mCreationTime = PR_Now();
-    PR_INIT_CLIST(&mHighQ);
-    PR_INIT_CLIST(&mMediumQ);
-    PR_INIT_CLIST(&mLowQ);
-    PR_INIT_CLIST(&mEvictionQ);
 
     mLongIdleTimeout  = PR_SecondsToInterval(LongIdleTimeoutSeconds);
     mShortIdleTimeout = PR_SecondsToInterval(ShortIdleTimeoutSeconds);
@@ -590,15 +571,12 @@ nsHostResolver::Init()
 }
 
 void
-nsHostResolver::ClearPendingQueue(PRCList *aPendingQ)
+nsHostResolver::ClearPendingQueue(LinkedList<RefPtr<nsHostRecord>>& aPendingQ)
 {
     // loop through pending queue, erroring out pending lookups.
-    if (!PR_CLIST_IS_EMPTY(aPendingQ)) {
-        PRCList *node = aPendingQ->next;
-        while (node != aPendingQ) {
-            RefPtr<nsHostRecord> rec = dont_AddRef(static_cast<nsHostRecord *>(node));
+    if (!aPendingQ.isEmpty()) {
+        for (RefPtr<nsHostRecord> rec : aPendingQ) {
             rec->Cancel();
-            node = node->next;
             CompleteLookup(rec, NS_ERROR_ABORT, nullptr, rec->pb);
         }
     }
@@ -622,16 +600,12 @@ nsHostResolver::FlushCache()
 
     // Clear the evictionQ and remove all its corresponding entries from
     // the cache first
-    if (!PR_CLIST_IS_EMPTY(&mEvictionQ)) {
-        PRCList *node = mEvictionQ.next;
-        while (node != &mEvictionQ) {
-            nsHostRecord *rec = static_cast<nsHostRecord *>(node);
+    if (!mEvictionQ.isEmpty()) {
+        for (RefPtr<nsHostRecord> rec : mEvictionQ) {
             rec->Cancel();
-            node = node->next;
-            PR_REMOVE_AND_INIT_LINK(rec);
             mRecordDB.Remove(*static_cast<nsHostKey *>(rec));
-            NS_RELEASE(rec);
         }
+        mEvictionQ.clear();
     }
 
     // Refresh the cache entries that are resolving RIGHT now, remove the rest.
@@ -639,7 +613,9 @@ nsHostResolver::FlushCache()
         nsHostRecord* record = iter.UserData();
         // Try to remove the record, or mark it for refresh.
         if (record->RemoveOrRefresh()) {
-            PR_REMOVE_LINK(record);
+            if (record->isInList()) {
+                record->remove();
+            }
             iter.Remove();
         }
     }
@@ -657,21 +633,19 @@ nsHostResolver::Shutdown()
                              "Could not unregister DNS TTL pref callback.");
     }
 
-    PRCList pendingQHigh, pendingQMed, pendingQLow, evictionQ;
-    PR_INIT_CLIST(&pendingQHigh);
-    PR_INIT_CLIST(&pendingQMed);
-    PR_INIT_CLIST(&pendingQLow);
-    PR_INIT_CLIST(&evictionQ);
+    LinkedList<RefPtr<nsHostRecord>> pendingQHigh, pendingQMed, pendingQLow, evictionQ;
 
     {
         MutexAutoLock lock(mLock);
 
         mShutdown = true;
 
-        MoveCList(mHighQ, pendingQHigh);
-        MoveCList(mMediumQ, pendingQMed);
-        MoveCList(mLowQ, pendingQLow);
-        MoveCList(mEvictionQ, evictionQ);
+        // Move queues to temporary lists.
+        pendingQHigh = mozilla::Move(mHighQ);
+        pendingQMed = mozilla::Move(mMediumQ);
+        pendingQLow = mozilla::Move(mLowQ);
+        evictionQ = mozilla::Move(mEvictionQ);
+
         mEvictionQSize = 0;
         mPendingCount = 0;
 
@@ -682,19 +656,20 @@ nsHostResolver::Shutdown()
         mRecordDB.Clear();
     }
 
-    ClearPendingQueue(&pendingQHigh);
-    ClearPendingQueue(&pendingQMed);
-    ClearPendingQueue(&pendingQLow);
+    ClearPendingQueue(pendingQHigh);
+    ClearPendingQueue(pendingQMed);
+    ClearPendingQueue(pendingQLow);
 
-    if (!PR_CLIST_IS_EMPTY(&evictionQ)) {
-        PRCList *node = evictionQ.next;
-        while (node != &evictionQ) {
-            nsHostRecord *rec = static_cast<nsHostRecord *>(node);
+    if (!evictionQ.isEmpty()) {
+        for (RefPtr<nsHostRecord> rec : evictionQ) {
             rec->Cancel();
-            node = node->next;
-            NS_RELEASE(rec);
         }
     }
+
+    pendingQHigh.clear();
+    pendingQMed.clear();
+    pendingQLow.clear();
+    evictionQ.clear();
 
     for (auto iter = mRecordDB.Iter(); !iter.Done(); iter.Next()) {
         iter.UserData()->Cancel();
@@ -719,15 +694,6 @@ nsHostResolver::Shutdown()
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "Failed to shutdown GetAddrInfo");
     }
-}
-
-void
-nsHostResolver::MoveQueue(nsHostRecord *aRec, PRCList &aDestQ)
-{
-    NS_ASSERTION(aRec->onQueue, "Moving Host Record Not Currently Queued");
-
-    PR_REMOVE_LINK(aRec);
-    PR_APPEND_LINK(aRec, &aDestQ);
 }
 
 nsresult
@@ -983,13 +949,17 @@ nsHostResolver::ResolveHost(const char             *host,
                     if (IsHighPriority(flags) &&
                         !IsHighPriority(rec->flags)) {
                         // Move from (low|med) to high.
-                        MoveQueue(rec, mHighQ);
+                        NS_ASSERTION(rec->onQueue, "Moving Host Record Not Currently Queued");
+                        rec->remove();
+                        mHighQ.insertBack(rec);
                         rec->flags = flags;
                         ConditionallyCreateThread(rec);
                     } else if (IsMediumPriority(flags) &&
                                IsLowPriority(rec->flags)) {
                         // Move from low to med.
-                        MoveQueue(rec, mMediumQ);
+                        NS_ASSERTION(rec->onQueue, "Moving Host Record Not Currently Queued");
+                        rec->remove();
+                        mMediumQ.insertBack(rec);
                         rec->flags = flags;
                         mIdleThreadCV.Notify();
                     }
@@ -1097,8 +1067,9 @@ nsHostResolver::TrrLookup_unlocked(nsHostRecord *rec, TRR *pushedTRR)
 // returns error if no TRR resolve is issued
 // it is impt this is not called while a native lookup is going on
 nsresult
-nsHostResolver::TrrLookup(nsHostRecord *rec, TRR *pushedTRR)
+nsHostResolver::TrrLookup(nsHostRecord *aRec, TRR *pushedTRR)
 {
+    RefPtr<nsHostRecord> rec(aRec);
     mLock.AssertCurrentThreadOwns();
     MOZ_ASSERT(!TRROutstanding());
     MOZ_ASSERT(!rec->mResolving);
@@ -1108,13 +1079,13 @@ nsHostResolver::TrrLookup(nsHostRecord *rec, TRR *pushedTRR)
         return NS_ERROR_UNKNOWN_HOST;
     }
 
-    if (rec->next != rec) {
+    if (rec->isInList()) {
         // we're already on the eviction queue. This is a renewal
         MOZ_ASSERT(mEvictionQSize);
-        AssertOnQ(rec, &mEvictionQ);
-        PR_REMOVE_AND_INIT_LINK(rec);
+        AssertOnQ(rec, mEvictionQ);
+
+        rec->remove();
         mEvictionQSize--;
-        rec->Release();
     }
 
     rec->mTRRSuccess = 0; // bump for each successful TRR response
@@ -1172,48 +1143,47 @@ nsHostResolver::TrrLookup(nsHostRecord *rec, TRR *pushedTRR)
 }
 
 void
-nsHostResolver::AssertOnQ(nsHostRecord *rec, PRCList *q)
+nsHostResolver::AssertOnQ(nsHostRecord *rec, LinkedList<RefPtr<nsHostRecord>>& q)
 {
 #ifdef DEBUG
-    MOZ_ASSERT(!PR_CLIST_IS_EMPTY(q));
-    nsHostRecord *i = static_cast<nsHostRecord *>(PR_LIST_HEAD(q));
-    while (i != rec) {
-        MOZ_ASSERT(i->next != q);
-        i = static_cast<nsHostRecord *>(i->next);
+    MOZ_ASSERT(!q.isEmpty());
+    MOZ_ASSERT(rec->isInList());
+    for (RefPtr<nsHostRecord> r: q) {
+        if (rec == r) {
+            return;
+        }
     }
+    MOZ_ASSERT(false, "Did not find element");
 #endif
 }
 
 nsresult
-nsHostResolver::NativeLookup(nsHostRecord *rec)
+nsHostResolver::NativeLookup(nsHostRecord *aRec)
 {
     mLock.AssertCurrentThreadOwns();
+    RefPtr<nsHostRecord> rec(aRec);
 
     rec->mNativeStart = TimeStamp::Now();
 
     // Add rec to one of the pending queues, possibly removing it from mEvictionQ.
-    // If rec is on mEvictionQ, then we can just move the owning
-    // reference over to the new active queue.
-    if (rec->next == rec) { // not on a pending queue
-        NS_ADDREF(rec);
-    } else {
+    if (rec->isInList()) {
         MOZ_ASSERT(mEvictionQSize);
-        AssertOnQ(rec, &mEvictionQ);
-        PR_REMOVE_AND_INIT_LINK(rec); // was on the eviction queue
+        AssertOnQ(rec, mEvictionQ);
+        rec->remove(); // was on the eviction queue
         mEvictionQSize--;
     }
 
     switch (nsHostRecord::GetPriority(rec->flags)) {
         case nsHostRecord::DNS_PRIORITY_HIGH:
-            PR_APPEND_LINK(rec, &mHighQ);
+            mHighQ.insertBack(rec);
             break;
 
         case nsHostRecord::DNS_PRIORITY_MEDIUM:
-            PR_APPEND_LINK(rec, &mMediumQ);
+            mMediumQ.insertBack(rec);
             break;
 
         case nsHostRecord::DNS_PRIORITY_LOW:
-            PR_APPEND_LINK(rec, &mLowQ);
+            mLowQ.insertBack(rec);
             break;
     }
     mPendingCount++;
@@ -1305,11 +1275,11 @@ nsHostResolver::ConditionallyRefreshRecord(nsHostRecord *rec, const char *host)
 }
 
 void
-nsHostResolver::DeQueue(PRCList &aQ, nsHostRecord **aResult)
+nsHostResolver::DeQueue(LinkedList<RefPtr<nsHostRecord>>& aQ, nsHostRecord **aResult)
 {
-    *aResult = static_cast<nsHostRecord *>(aQ.next);
-    PR_REMOVE_AND_INIT_LINK(*aResult);
+    RefPtr<nsHostRecord> rec = aQ.popFirst();
     mPendingCount--;
+    rec.forget(aResult);
     (*aResult)->onQueue = false;
 }
 
@@ -1329,14 +1299,14 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
 
 #define SET_GET_TTL(var, val) (var)->mGetTtl = sGetTtlEnabled && (val)
 
-        if (!PR_CLIST_IS_EMPTY(&mHighQ)) {
+        if (!mHighQ.isEmpty()) {
             DeQueue (mHighQ, result);
             SET_GET_TTL(*result, false);
             return true;
         }
 
         if (mActiveAnyThreadCount < HighThreadThreshold) {
-            if (!PR_CLIST_IS_EMPTY(&mMediumQ)) {
+            if (!mMediumQ.isEmpty()) {
                 DeQueue (mMediumQ, result);
                 mActiveAnyThreadCount++;
                 (*result)->usingAnyThread = true;
@@ -1344,7 +1314,7 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
                 return true;
             }
 
-            if (!PR_CLIST_IS_EMPTY(&mLowQ)) {
+            if (!mLowQ.isEmpty()) {
                 DeQueue (mLowQ, result);
                 mActiveAnyThreadCount++;
                 (*result)->usingAnyThread = true;
@@ -1660,17 +1630,14 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
         rec->ResolveComplete();
 
         // add to mEvictionQ
-        MOZ_ASSERT(rec->next == rec && rec->prev == rec); // not on a queue
-        PR_APPEND_LINK(rec, &mEvictionQ);
-        rec->AddRef();
+        MOZ_ASSERT(!rec->isInList());
+        mEvictionQ.insertBack(rec);
         if (mEvictionQSize < mMaxCacheEntries) {
             mEvictionQSize++;
         } else {
             // remove first element on mEvictionQ
-            nsHostRecord *head =
-                static_cast<nsHostRecord *>(PR_LIST_HEAD(&mEvictionQ));
-            PR_REMOVE_AND_INIT_LINK(head);
-            mRecordDB.Remove(*static_cast<nsHostKey *>(head));
+            RefPtr<nsHostRecord> head = mEvictionQ.popFirst();
+            mRecordDB.Remove(*static_cast<nsHostKey *>(head.get()));
 
             if (!head->negative) {
                 // record the age of the entry upon eviction.
@@ -1678,7 +1645,6 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
                 Telemetry::Accumulate(Telemetry::DNS_CLEANUP_AGE,
                                       static_cast<uint32_t>(age.ToSeconds() / 60));
             }
-            head->Release(); // release reference owned by mEvictionQ
         }
     }
 
@@ -1745,9 +1711,8 @@ nsHostResolver::CancelAsyncRequest(const char             *host,
         if (recPtr && recPtr->mCallbacks.isEmpty()) {
             mRecordDB.Remove(*static_cast<nsHostKey *>(recPtr));
             // If record is on a Queue, remove it and then deref it
-            if (recPtr->next != recPtr) {
-                PR_REMOVE_AND_INIT_LINK(recPtr);
-                NS_RELEASE(recPtr);
+            if (recPtr->isInList()) {
+                recPtr->remove();
             }
         }
     }

@@ -2,7 +2,17 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<!DOCTYPE html>
+<!DOCTYPE html [
+  <!ENTITY viewAllItems               "View All Items">
+  <!ENTITY paymentSummaryTitle        "Your Payment">
+  <!ENTITY shippingAddressLabel       "Shipping Address">
+  <!ENTITY shippingOptionsLabel       "Shipping Options">
+  <!ENTITY paymentMethodsLabel        "Payment Method">
+  <!ENTITY cancelPaymentButtonLabel   "Cancel">
+  <!ENTITY approvePaymentButtonLabel  "Pay">
+  <!ENTITY orderDetailsLabel          "Order Details">
+  <!ENTITY orderTotalLabel            "Total">
+]>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'"/>
@@ -45,30 +55,30 @@
         <div id="host-name"></div>
       </div>
       <div id="top-buttons" >
-        <button id="view-all" class="closed">View All Items</button>
+        <button id="view-all" class="closed">&viewAllItems;</button>
       </div>
     </header>
 
     <div id="main-container">
       <section id="payment-summary">
-        <h1>Your Payment</h1>
+        <h1>&paymentSummaryTitle;</h1>
 
         <section>
-          <div><label>Shipping Address</label></div>
+          <div><label>&shippingAddressLabel;</label></div>
           <address-picker selected-state-key="selectedShippingAddress"></address-picker>
-          <div><label>Shipping Options</label></div>
+          <div><label>&shippingOptionsLabel;</label></div>
           <shipping-option-picker></shipping-option-picker>
-          <div><label>Payment Method</label></div>
+          <div><label>&paymentMethodsLabel;</label></div>
           <payment-method-picker selected-state-key="selectedPaymentCard"></payment-method-picker>
         </section>
 
         <footer id="controls-container">
-          <button id="cancel">Cancel</button>
-          <button id="pay">Pay</button>
+          <button id="cancel">&cancelPaymentButtonLabel;</button>
+          <button id="pay">&approvePaymentButtonLabel;</button>
         </footer>
       </section>
       <section id="order-details-overlay" hidden="hidden">
-        <h1>Order Details</h1>
+        <h1>&orderDetailsLabel;</h1>
         <order-details></order-details>
       </section>
     </div>
@@ -79,7 +89,7 @@
     <ul class="footer-items-list"></ul>
 
     <div class="details-total">
-      <h2 class="label">Total</h2>
+      <h2 class="label">&orderTotalLabel;</h2>
       <currency-amount></currency-amount>
     </div>
   </template>

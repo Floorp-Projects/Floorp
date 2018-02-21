@@ -404,6 +404,14 @@ var paymentDialogWrapper = {
     paymentSrv.changeShippingAddress(this.request.requestId, address);
   },
 
+  onChangeShippingOption({optionID}) {
+    // Note, failing here on browser_host_name.js because the test closes
+    // the dialog before the onChangeShippingOption is called, thus
+    // deleting the request and making the requestId invalid. Unclear
+    // why we aren't seeing the same issue with onChangeShippingAddress.
+    paymentSrv.changeShippingOption(this.request.requestId, optionID);
+  },
+
   /**
    * @implements {nsIObserver}
    * @param {nsISupports} subject
@@ -436,6 +444,10 @@ var paymentDialogWrapper = {
       }
       case "changeShippingAddress": {
         this.onChangeShippingAddress(data);
+        break;
+      }
+      case "changeShippingOption": {
+        this.onChangeShippingOption(data);
         break;
       }
       case "paymentCancel": {

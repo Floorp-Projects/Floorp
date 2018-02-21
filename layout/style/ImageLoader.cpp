@@ -306,12 +306,7 @@ ImageLoader::GetPresContext()
     return nullptr;
   }
 
-  nsIPresShell* shell = mDocument->GetShell();
-  if (!shell) {
-    return nullptr;
-  }
-
-  return shell->GetPresContext();
+  return mDocument->GetPresContext();
 }
 
 static bool

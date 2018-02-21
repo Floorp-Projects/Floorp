@@ -1330,12 +1330,9 @@ TabChild::RecvSizeModeChanged(const nsSizeMode& aSizeMode)
     return IPC_OK();
   }
   nsCOMPtr<nsIDocument> document(GetDocument());
-  nsCOMPtr<nsIPresShell> presShell = document->GetShell();
-  if (presShell) {
-    nsPresContext* presContext = presShell->GetPresContext();
-    if (presContext) {
-      presContext->SizeModeChanged(aSizeMode);
-    }
+  nsPresContext* presContext = document->GetPresContext();
+  if (presContext) {
+    presContext->SizeModeChanged(aSizeMode);
   }
   return IPC_OK();
 }
@@ -2380,19 +2377,16 @@ TabChild::RecvHandleAccessKey(const WidgetKeyboardEvent& aEvent,
                               nsTArray<uint32_t>&& aCharCodes)
 {
   nsCOMPtr<nsIDocument> document(GetDocument());
-  nsCOMPtr<nsIPresShell> presShell = document->GetShell();
-  if (presShell) {
-    nsPresContext* pc = presShell->GetPresContext();
-    if (pc) {
-      if (!pc->EventStateManager()->
-                 HandleAccessKey(&(const_cast<WidgetKeyboardEvent&>(aEvent)),
-                                 pc, aCharCodes)) {
-        // If no accesskey was found, inform the parent so that accesskeys on
-        // menus can be handled.
-        WidgetKeyboardEvent localEvent(aEvent);
-        localEvent.mWidget = mPuppetWidget;
-        SendAccessKeyNotHandled(localEvent);
-      }
+  RefPtr<nsPresContext> pc = document->GetPresContext();
+  if (pc) {
+    if (!pc->EventStateManager()->
+               HandleAccessKey(&(const_cast<WidgetKeyboardEvent&>(aEvent)),
+                               pc, aCharCodes)) {
+      // If no accesskey was found, inform the parent so that accesskeys on
+      // menus can be handled.
+      WidgetKeyboardEvent localEvent(aEvent);
+      localEvent.mWidget = mPuppetWidget;
+      SendAccessKeyNotHandled(localEvent);
     }
   }
 
@@ -3276,12 +3270,9 @@ TabChild::RecvUIResolutionChanged(const float& aDpi,
     mPuppetWidget->UpdateBackingScaleCache(aDpi, aRounding, aScale);
   }
   nsCOMPtr<nsIDocument> document(GetDocument());
-  nsCOMPtr<nsIPresShell> presShell = document->GetShell();
-  if (presShell) {
-    RefPtr<nsPresContext> presContext = presShell->GetPresContext();
-    if (presContext) {
-      presContext->UIResolutionChangedSync();
-    }
+  RefPtr<nsPresContext> presContext = document->GetPresContext();
+  if (presContext) {
+    presContext->UIResolutionChangedSync();
   }
 
   ScreenIntSize screenSize = GetInnerSize();
@@ -3304,12 +3295,9 @@ TabChild::RecvThemeChanged(nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache)
 {
   LookAndFeel::SetIntCache(aLookAndFeelIntCache);
   nsCOMPtr<nsIDocument> document(GetDocument());
-  nsCOMPtr<nsIPresShell> presShell = document->GetShell();
-  if (presShell) {
-    RefPtr<nsPresContext> presContext = presShell->GetPresContext();
-    if (presContext) {
-      presContext->ThemeChanged();
-    }
+  RefPtr<nsPresContext> presContext = document->GetPresContext();
+  if (presContext) {
+    presContext->ThemeChanged();
   }
   return IPC_OK();
 }

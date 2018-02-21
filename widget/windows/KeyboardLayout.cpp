@@ -4721,7 +4721,75 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
         uniChars = GetUniCharsAndModifiers(aNativeKeyCode, modKeyState);
         if (uniChars.Length() != 1 ||
             uniChars.CharAt(0) < ' ' || uniChars.CharAt(0) > 0x7F) {
-          return 0;
+          // In this case, we've returned 0 in this case for long time because
+          // we decided that we should avoid setting same keyCode value to 2 or
+          // more keys since active keyboard layout may have a key to input the
+          // punctuation with different key.  However, setting keyCode to 0
+          // makes some web applications which are aware of neither
+          // KeyboardEvent.key nor KeyboardEvent.code not work with Firefox
+          // when user selects non-ASCII capable keyboard layout such as
+          // Russian and Thai layout.  So, let's decide keyCode value with
+          // major keyboard layout's key which causes the OEM keycode.
+          // Actually, this maps same keyCode value to 2 keys on Russian
+          // keyboard layout.  "Period" key causes VK_OEM_PERIOD but inputs
+          // Yu of Cyrillic and "Slash" key causes VK_OEM_2 (same as US
+          // keyboard layout) but inputs "." (period of ASCII).  Therefore,
+          // we return DOM_VK_PERIOD which is same as VK_OEM_PERIOD for
+          // "Period" key.  On the other hand, we use same keyCode value for
+          // "Slash" key too because it inputs ".".
+          CodeNameIndex code;
+          switch (aNativeKeyCode) {
+            case VK_OEM_1:
+              code = CODE_NAME_INDEX_Semicolon;
+              break;
+            case VK_OEM_PLUS:
+              code = CODE_NAME_INDEX_Equal;
+              break;
+            case VK_OEM_COMMA:
+              code = CODE_NAME_INDEX_Comma;
+              break;
+            case VK_OEM_MINUS:
+              code = CODE_NAME_INDEX_Minus;
+              break;
+            case VK_OEM_PERIOD:
+              code = CODE_NAME_INDEX_Period;
+              break;
+            case VK_OEM_2:
+              code = CODE_NAME_INDEX_Slash;
+              break;
+            case VK_OEM_3:
+              code = CODE_NAME_INDEX_Backquote;
+              break;
+            case VK_OEM_4:
+              code = CODE_NAME_INDEX_BracketLeft;
+              break;
+            case VK_OEM_5:
+              code = CODE_NAME_INDEX_Backslash;
+              break;
+            case VK_OEM_6:
+              code = CODE_NAME_INDEX_BracketRight;
+              break;
+            case VK_OEM_7:
+              code = CODE_NAME_INDEX_Quote;
+              break;
+            case VK_OEM_8:
+              // Use keyCode value for "Backquote" key on UK keyboard layout.
+              code = CODE_NAME_INDEX_Backquote;
+              break;
+            case VK_OEM_102:
+              // Use keyCode value for "IntlBackslash" key.
+              code = CODE_NAME_INDEX_IntlBackslash;
+              break;
+            case VK_ABNT_C1: // "/" of ABNT.
+              // Use keyCode value for "IntlBackslash" key on ABNT keyboard
+              // layout.
+              code = CODE_NAME_INDEX_IntlBackslash;
+              break;
+            default:
+              MOZ_ASSERT_UNREACHABLE("Handle all OEM keycode values");
+              return 0;
+          }
+          return WidgetKeyboardEvent::GetFallbackKeyCodeOfPunctuationKey(code);
         }
       }
       return WidgetUtils::ComputeKeyCodeFromChar(uniChars.CharAt(0));

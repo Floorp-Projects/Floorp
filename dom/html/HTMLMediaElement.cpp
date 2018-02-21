@@ -2693,41 +2693,33 @@ HTMLMediaElement::SetCurrentTime(double aCurrentTime, ErrorResult& aRv)
 }
 
 /**
- * Check if aValue is inside a range of aRanges, and if so sets aIsInRanges
- * to true and put the range index in aIntervalIndex. If aValue is not
- * inside a range, aIsInRanges is set to false, and aIntervalIndex
- * is set to the index of the range which ends immediately before aValue
- * (and can be -1 if aValue is before aRanges.Start(0)). Returns NS_OK
- * on success, and NS_ERROR_FAILURE on failure.
+ * Check if aValue is inside a range of aRanges, and if so returns true
+ * and puts the range index in aIntervalIndex. If aValue is not
+ * inside a range, returns false, and aIntervalIndex
+ * is set to the index of the range which starts immediately after aValue
+ * (and can be aRanges.Length() if aValue is after the last range).
  */
-static nsresult
+static bool
 IsInRanges(TimeRanges& aRanges,
            double aValue,
-           bool& aIsInRanges,
-           int32_t& aIntervalIndex)
+           uint32_t& aIntervalIndex)
 {
-  aIsInRanges = false;
-  uint32_t length;
-  nsresult rv = aRanges.GetLength(&length);
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t length = aRanges.Length();
+
   for (uint32_t i = 0; i < length; i++) {
-    double start, end;
-    rv = aRanges.Start(i, &start);
-    NS_ENSURE_SUCCESS(rv, rv);
+    double start = aRanges.Start(i);
     if (start > aValue) {
-      aIntervalIndex = i - 1;
-      return NS_OK;
+      aIntervalIndex = i;
+      return false;
     }
-    rv = aRanges.End(i, &end);
-    NS_ENSURE_SUCCESS(rv, rv);
+    double end = aRanges.End(i);
     if (aValue <= end) {
       aIntervalIndex = i;
-      aIsInRanges = true;
-      return NS_OK;
+      return true;
     }
   }
-  aIntervalIndex = length - 1;
-  return NS_OK;
+  aIntervalIndex = length;
+  return false;
 }
 
 already_AddRefed<Promise>
@@ -2791,9 +2783,8 @@ HTMLMediaElement::Seek(double aTime,
   }
   RefPtr<TimeRanges> seekable =
     new TimeRanges(ToSupports(OwnerDoc()), seekableIntervals);
-  uint32_t length = 0;
-  seekable->GetLength(&length);
-  if (!length) {
+  uint32_t length = seekable->Length();
+  if (length == 0) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
@@ -2803,46 +2794,28 @@ HTMLMediaElement::Seek(double aTime,
   // are equally close, we seek to the closest position from the currentTime.
   // See seeking spec, point 7 :
   // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#seeking
-  int32_t range = 0;
-  bool isInRange = false;
-  if (NS_FAILED(IsInRanges(*seekable, aTime, isInRange, range))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR); // This will reject the promise.
-    return promise.forget();
-  }
+  uint32_t range = 0;
+  bool isInRange = IsInRanges(*seekable, aTime, range);
   if (!isInRange) {
-    if (range != -1) {
-      // |range + 1| can't be negative, because the only possible negative value
-      // for |range| is -1.
-      if (uint32_t(range + 1) < length) {
-        double leftBound, rightBound;
-        if (NS_FAILED(seekable->End(range, &leftBound))) {
-          aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-          return promise.forget();
-        }
-        if (NS_FAILED(seekable->Start(range + 1, &rightBound))) {
-          aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-          return promise.forget();
-        }
-        double distanceLeft = Abs(leftBound - aTime);
-        double distanceRight = Abs(rightBound - aTime);
-        if (distanceLeft == distanceRight) {
-          double currentTime = CurrentTime();
-          distanceLeft = Abs(leftBound - currentTime);
-          distanceRight = Abs(rightBound - currentTime);
-        }
-        aTime = (distanceLeft < distanceRight) ? leftBound : rightBound;
-      } else {
-        // Seek target is after the end last range in seekable data.
-        // Clamp the seek target to the end of the last seekable range.
-        if (NS_FAILED(seekable->End(length - 1, &aTime))) {
-          aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-          return promise.forget();
-        }
-      }
-    } else {
+    if (range == 0) {
       // aTime is before the first range in |seekable|, the closest point we can
       // seek to is the start of the first range.
-      seekable->Start(0, &aTime);
+      aTime = seekable->Start(0);
+    } else if (range == length) {
+      // Seek target is after the end last range in seekable data.
+      // Clamp the seek target to the end of the last seekable range.
+      aTime = seekable->End(length - 1);
+    } else {
+      double leftBound = seekable->End(range - 1);
+      double rightBound = seekable->Start(range);
+      double distanceLeft = Abs(leftBound - aTime);
+      double distanceRight = Abs(rightBound - aTime);
+      if (distanceLeft == distanceRight) {
+        double currentTime = CurrentTime();
+        distanceLeft = Abs(leftBound - currentTime);
+        distanceRight = Abs(rightBound - currentTime);
+      }
+      aTime = (distanceLeft < distanceRight) ? leftBound : rightBound;
     }
   }
 
@@ -2903,13 +2876,11 @@ HTMLMediaElement::Played()
 
   uint32_t timeRangeCount = 0;
   if (mPlayed) {
-    mPlayed->GetLength(&timeRangeCount);
+    timeRangeCount = mPlayed->Length();
   }
   for (uint32_t i = 0; i < timeRangeCount; i++) {
-    double begin;
-    double end;
-    mPlayed->Start(i, &begin);
-    mPlayed->End(i, &end);
+    double begin = mPlayed->Start(i);
+    double end = mPlayed->End(i);
     ranges->Add(begin, end);
   }
 
@@ -4513,9 +4484,8 @@ HTMLMediaElement::ReportTelemetry()
     const double errorMargin = 0.05;
     double t = CurrentTime();
     TimeRanges::index_type index = ranges->Find(t, errorMargin);
-    ErrorResult ignore;
     stalled = index != TimeRanges::NoIndex &&
-              (ranges->End(index, ignore) - t) < errorMargin;
+              (ranges->End(index) - t) < errorMargin;
     stalled |= mDecoder && NextFrameStatus() == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING &&
                mReadyState == HAVE_CURRENT_DATA;
     if (stalled) {

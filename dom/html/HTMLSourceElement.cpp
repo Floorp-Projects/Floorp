@@ -43,8 +43,7 @@ bool
 HTMLSourceElement::MatchesCurrentMedia()
 {
   if (mMediaList) {
-    nsIPresShell* presShell = OwnerDoc()->GetShell();
-    nsPresContext* pctx = presShell ? presShell->GetPresContext() : nullptr;
+    nsPresContext* pctx = OwnerDoc()->GetPresContext();
     return pctx && mMediaList->Matches(pctx);
   }
 
@@ -60,8 +59,7 @@ HTMLSourceElement::WouldMatchMediaForDocument(const nsAString& aMedia,
     return true;
   }
 
-  nsIPresShell* presShell = aDocument->GetShell();
-  nsPresContext* pctx = presShell ? presShell->GetPresContext() : nullptr;
+  nsPresContext* pctx = aDocument->GetPresContext();
 
   RefPtr<MediaList> mediaList =
     MediaList::Create(aDocument->GetStyleBackendType(), aMedia);
