@@ -315,12 +315,6 @@ toolbarpaletteitem {
 .titlebar-placeholder[type="fullscreen-button"]:-moz-locale-dir(rtl) {
   -moz-box-ordinal-group: 0;
 }
-
-%else
-/* On non-OSX, these should be start-aligned */
-#titlebar-buttonbox-container {
-  -moz-box-align: start;
-}
 %endif
 
 %ifdef XP_WIN
