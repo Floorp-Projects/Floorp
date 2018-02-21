@@ -12,13 +12,13 @@
   const { MessageContext } =
     ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
 
-  async function * mockGenerateMessages(locales, resourceIds) {
+  async function* mockGenerateMessages(locales, resourceIds) {
     const mc = new MessageContext(locales);
-    mc.addMessages('title = Visit <a>Mozilla</a> or <a>Firefox</a> website!');
+    mc.addMessages("title = Visit <a>Mozilla</a> or <a>Firefox</a> website!");
     yield mc;
   }
 
-  window.onload = async function () {
+  window.onload = async function() {
     SimpleTest.waitForExplicitFinish();
 
     const domLoc = new DOMLocalization(
@@ -29,14 +29,14 @@
 
     await domLoc.translateFragment(document.body);
 
-    const p1 = document.querySelectorAll('p')[0];
-    const linkList = p1.querySelectorAll('a');
+    const p1 = document.querySelectorAll("p")[0];
+    const linkList = p1.querySelectorAll("a");
 
 
-    is(linkList[0].getAttribute('href'), 'http://www.mozilla.org');
-    is(linkList[0].textContent, 'Mozilla');
-    is(linkList[1].getAttribute('href'), 'http://www.firefox.com');
-    is(linkList[1].textContent, 'Firefox');
+    is(linkList[0].getAttribute("href"), "http://www.mozilla.org");
+    is(linkList[0].textContent, "Mozilla");
+    is(linkList[1].getAttribute("href"), "http://www.firefox.com");
+    is(linkList[1].textContent, "Firefox");
 
     SimpleTest.finish();
   };

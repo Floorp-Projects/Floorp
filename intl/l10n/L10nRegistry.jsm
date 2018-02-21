@@ -1,7 +1,7 @@
 const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
-const { Services } = ChromeUtils.import('resource://gre/modules/Services.jsm', {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 const { MessageContext } = ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
-Components.utils.importGlobalProperties(["fetch"]); /* globals fetch */
+Cu.importGlobalProperties(["fetch"]);
 
 /**
  * L10nRegistry is a localization resource management system for Gecko.
@@ -89,7 +89,7 @@ const L10nRegistry = {
    * @param {Array} resourceIds
    * @returns {AsyncIterator<MessageContext>}
    */
-  async * generateContexts(requestedLangs, resourceIds) {
+  async* generateContexts(requestedLangs, resourceIds) {
     if (this.bootstrap !== null) {
       await this.bootstrap;
     }
@@ -167,8 +167,8 @@ const L10nRegistry = {
  * @returns {String}
  */
 function generateContextID(locale, sourcesOrder, resourceIds) {
-  const sources = sourcesOrder.join(',');
-  const ids = resourceIds.join(',');
+  const sources = sourcesOrder.join(",");
+  const ids = resourceIds.join(",");
   return `${locale}|${sources}|${ids}`;
 }
 
@@ -219,7 +219,7 @@ async function* generateContextsForLocale(locale, sourcesOrder, resourceIds, res
   }
 }
 
-const  MSG_CONTEXT_OPTIONS = {
+const MSG_CONTEXT_OPTIONS = {
   // Temporarily disable bidi isolation due to Microsoft not supporting FSI/PDI.
   // See bug 1439018 for details.
   useIsolating: Services.prefs.getBoolPref("intl.l10n.enable-bidi-marks", false),
@@ -242,7 +242,7 @@ const  MSG_CONTEXT_OPTIONS = {
       }
     }
   }
-}
+};
 
 /**
  * Generates a single MessageContext by loading all resources
@@ -360,11 +360,9 @@ class FileSource {
       if (this.cache[fullPath].then) {
         return this.cache[fullPath];
       }
-    } else {
-      if (this.indexed) {
+    } else if (this.indexed) {
         return Promise.reject(`The source has no resources for path "${fullPath}"`);
       }
-    }
     return this.cache[fullPath] = L10nRegistry.load(fullPath).then(
       data => {
         return this.cache[fullPath] = data;
@@ -417,7 +415,7 @@ L10nRegistry.load = function(url) {
     if (!response.ok) {
       return Promise.reject(response.statusText);
     }
-    return response.text()
+    return response.text();
   });
 };
 
@@ -425,4 +423,4 @@ this.L10nRegistry = L10nRegistry;
 this.FileSource = FileSource;
 this.IndexedFileSource = IndexedFileSource;
 
-this.EXPORTED_SYMBOLS = ['L10nRegistry', 'FileSource', 'IndexedFileSource'];
+this.EXPORTED_SYMBOLS = ["L10nRegistry", "FileSource", "IndexedFileSource"];

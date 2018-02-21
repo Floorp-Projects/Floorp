@@ -12,14 +12,14 @@
   const { MessageContext } =
     ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
 
-  async function * mockGenerateMessages(locales, resourceIds) {
+  async function* mockGenerateMessages(locales, resourceIds) {
     const mc = new MessageContext(locales);
-    mc.addMessages('title = Hello World');
-    mc.addMessages('title2 = Hello Another World');
+    mc.addMessages("title = Hello World");
+    mc.addMessages("title2 = Hello Another World");
     yield mc;
   }
 
-  window.onload = async function () {
+  window.onload = async function() {
     SimpleTest.waitForExplicitFinish();
 
     const domLoc = new DOMLocalization(
@@ -28,10 +28,10 @@
       mockGenerateMessages
     );
 
-    const frag1 = document.querySelectorAll('div')[0];
-    const frag2 = document.querySelectorAll('div')[1];
-    const h1 = document.querySelectorAll('h1')[0];
-    const h2 = document.querySelectorAll('h2')[0];
+    const frag1 = document.querySelectorAll("div")[0];
+    const frag2 = document.querySelectorAll("div")[1];
+    const h1 = document.querySelectorAll("h1")[0];
+    const h2 = document.querySelectorAll("h2")[0];
 
     domLoc.connectRoot(frag1);
     domLoc.connectRoot(frag2);

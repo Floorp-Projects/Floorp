@@ -16,7 +16,7 @@
  */
 
 
-/* fluent@0.6.0 */
+/* fluent@0.6.3 */
 
 const { Localization } =
   ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
@@ -31,36 +31,36 @@ const reOverlay = /<|&#?\w+;/;
  * Source: https://www.w3.org/TR/html5/text-level-semantics.html
  */
 const LOCALIZABLE_ELEMENTS = {
-  'http://www.w3.org/1999/xhtml': [
-    'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data',
-    'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u',
-    'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'
+  "http://www.w3.org/1999/xhtml": [
+    "a", "em", "strong", "small", "s", "cite", "q", "dfn", "abbr", "data",
+    "time", "code", "var", "samp", "kbd", "sub", "sup", "i", "b", "u",
+    "mark", "ruby", "rt", "rp", "bdi", "bdo", "span", "br", "wbr"
   ],
 };
 
 const LOCALIZABLE_ATTRIBUTES = {
-  'http://www.w3.org/1999/xhtml': {
-    global: ['title', 'aria-label', 'aria-valuetext', 'aria-moz-hint'],
-    a: ['download'],
-    area: ['download', 'alt'],
+  "http://www.w3.org/1999/xhtml": {
+    global: ["title", "aria-label", "aria-valuetext", "aria-moz-hint"],
+    a: ["download"],
+    area: ["download", "alt"],
     // value is special-cased in isAttrNameLocalizable
-    input: ['alt', 'placeholder'],
-    menuitem: ['label'],
-    menu: ['label'],
-    optgroup: ['label'],
-    option: ['label'],
-    track: ['label'],
-    img: ['alt'],
-    textarea: ['placeholder'],
-    th: ['abbr']
+    input: ["alt", "placeholder"],
+    menuitem: ["label"],
+    menu: ["label"],
+    optgroup: ["label"],
+    option: ["label"],
+    track: ["label"],
+    img: ["alt"],
+    textarea: ["placeholder"],
+    th: ["abbr"]
   },
-  'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul': {
+  "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul": {
     global: [
-      'accesskey', 'aria-label', 'aria-valuetext', 'aria-moz-hint', 'label'
+      "accesskey", "aria-label", "aria-valuetext", "aria-moz-hint", "label"
     ],
-    key: ['key', 'keycode'],
-    textbox: ['placeholder'],
-    toolbarbutton: ['tooltiptext'],
+    key: ["key", "keycode"],
+    textbox: ["placeholder"],
+    toolbarbutton: ["tooltiptext"],
   }
 };
 
@@ -75,7 +75,7 @@ const LOCALIZABLE_ATTRIBUTES = {
 function overlayElement(targetElement, translation) {
   const value = translation.value;
 
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     if (!reOverlay.test(value)) {
       // If the translation doesn't contain any markup skip the overlay logic.
       targetElement.textContent = value;
@@ -83,7 +83,8 @@ function overlayElement(targetElement, translation) {
       // Else parse the translation's HTML using an inert template element,
       // sanitize it and replace the targetElement's content.
       const templateElement = targetElement.ownerDocument.createElementNS(
-        'http://www.w3.org/1999/xhtml', 'template');
+        "http://www.w3.org/1999/xhtml", "template");
+      // eslint-disable-next-line no-unsanitized/property
       templateElement.innerHTML = value;
       targetElement.appendChild(
         // The targetElement will be cleared at the end of sanitization.
@@ -92,9 +93,9 @@ function overlayElement(targetElement, translation) {
     }
   }
 
-  const explicitlyAllowed = targetElement.hasAttribute('data-l10n-attrs')
-    ? targetElement.getAttribute('data-l10n-attrs')
-      .split(',').map(i => i.trim())
+  const explicitlyAllowed = targetElement.hasAttribute("data-l10n-attrs")
+    ? targetElement.getAttribute("data-l10n-attrs")
+      .split(",").map(i => i.trim())
     : null;
 
   // Remove localizable attributes which may have been set by a previous
@@ -182,7 +183,7 @@ function sanitizeUsing(translationFragment, sourceElement) {
 
   // SourceElement might have been already modified by shiftNamedElement.
   // Let's clear it to make sure other code doesn't rely on random leftovers.
-  sourceElement.textContent = '';
+  sourceElement.textContent = "";
 
   return translationFragment;
 }
@@ -274,10 +275,10 @@ function isAttrNameLocalizable(name, element, explicitlyAllowed = null) {
   }
 
   // Special case for value on HTML inputs with type button, reset, submit
-  if (element.namespaceURI === 'http://www.w3.org/1999/xhtml' &&
-      elemName === 'input' && attrName === 'value') {
+  if (element.namespaceURI === "http://www.w3.org/1999/xhtml" &&
+      elemName === "input" && attrName === "value") {
     const type = element.type.toLowerCase();
-    if (type === 'submit' || type === 'button' || type === 'reset') {
+    if (type === "submit" || type === "button" || type === "reset") {
       return true;
     }
   }
@@ -303,8 +304,8 @@ function shiftNamedElement(element, localName) {
   return null;
 }
 
-const L10NID_ATTR_NAME = 'data-l10n-id';
-const L10NARGS_ATTR_NAME = 'data-l10n-args';
+const L10NID_ATTR_NAME = "data-l10n-id";
+const L10NARGS_ATTR_NAME = "data-l10n-args";
 
 const L10N_ELEMENT_QUERY = `[${L10NID_ATTR_NAME}]`;
 
@@ -430,7 +431,7 @@ class DOMLocalization extends Localization {
       if (root === newRoot ||
           root.contains(newRoot) ||
           newRoot.contains(root)) {
-        throw new Error('Cannot add a root that overlaps with existing root.');
+        throw new Error("Cannot add a root that overlaps with existing root.");
       }
     }
 
@@ -500,10 +501,10 @@ class DOMLocalization extends Localization {
   translateMutations(mutations) {
     for (const mutation of mutations) {
       switch (mutation.type) {
-        case 'attributes':
+        case "attributes":
           this.pendingElements.add(mutation.target);
           break;
-        case 'childList':
+        case "childList":
           for (const addedNode of mutation.addedNodes) {
             if (addedNode.nodeType === addedNode.ELEMENT_NODE) {
               if (addedNode.childElementCount) {
@@ -600,7 +601,7 @@ class DOMLocalization extends Localization {
   getTranslatables(element) {
     const nodes = Array.from(element.querySelectorAll(L10N_ELEMENT_QUERY));
 
-    if (typeof element.hasAttribute === 'function' &&
+    if (typeof element.hasAttribute === "function" &&
         element.hasAttribute(L10NID_ATTR_NAME)) {
       nodes.push(element);
     }
@@ -625,4 +626,4 @@ class DOMLocalization extends Localization {
 }
 
 this.DOMLocalization = DOMLocalization;
-this.EXPORTED_SYMBOLS = ['DOMLocalization'];
+this.EXPORTED_SYMBOLS = ["DOMLocalization"];

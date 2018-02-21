@@ -1,6 +1,6 @@
 {
   const { DOMLocalization } =
-    ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm");
+    ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm", {});
 
   /**
    * Polyfill for document.ready polyfill.
@@ -14,11 +14,11 @@
    * @returns {Promise}
    */
   function documentReady(callback) {
-    if (document.contentType === 'application/vnd.mozilla.xul+xml') {
+    if (document.contentType === "application/vnd.mozilla.xul+xml") {
       // XUL
       return new Promise(
         resolve => document.addEventListener(
-          'MozBeforeInitialXULLayout', () => {
+          "MozBeforeInitialXULLayout", () => {
             resolve(callback());
           }, { once: true }
         )
@@ -27,12 +27,12 @@
 
     // HTML
     const rs = document.readyState;
-    if (rs === 'interactive' || rs === 'completed') {
-      return Promise.resolve(callback());
+    if (rs === "interactive" || rs === "completed") {
+      return Promise.resolve(callback);
     }
     return new Promise(
       resolve => document.addEventListener(
-        'readystatechange', () => {
+        "readystatechange", () => {
           resolve(callback());
         }, { once: true }
       )
@@ -47,7 +47,7 @@
    */
   function getResourceLinks(elem) {
     return Array.from(elem.querySelectorAll('link[rel="localization"]')).map(
-      el => el.getAttribute('href')
+      el => el.getAttribute("href")
     );
   }
 
@@ -60,7 +60,7 @@
 
   document.l10n.ready = documentReady(() => {
     document.l10n.registerObservers();
-    window.addEventListener('unload', () => {
+    window.addEventListener("unload", () => {
       document.l10n.unregisterObservers();
     });
     document.l10n.connectRoot(document.documentElement);
