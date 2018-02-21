@@ -8096,39 +8096,63 @@ nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
 
 static void
 AddFontsFromTextRun(gfxTextRun* aTextRun,
-                    nsIContent* aContent,
+                    nsTextFrame* aFrame,
                     gfxSkipCharsIterator& aSkipIter,
-                    uint32_t aOffset,
-                    uint32_t aLength,
+                    const gfxTextRun::Range& aRange,
                     nsLayoutUtils::UsedFontFaceTable& aFontFaces,
                     uint32_t aMaxRanges)
 {
-  gfxTextRun::Range range(aOffset, aOffset + aLength);
-  gfxTextRun::GlyphRunIterator iter(aTextRun, range);
-  while (iter.NextRun()) {
-    gfxFontEntry *fe = iter.GetGlyphRun()->mFont->GetFontEntry();
+  gfxTextRun::GlyphRunIterator glyphRuns(aTextRun, aRange);
+  nsIContent* content = aFrame->GetContent();
+  int32_t contentLimit = aFrame->GetContentOffset() +
+                         aFrame->GetInFlowContentLength();
+  while (glyphRuns.NextRun()) {
+    gfxFontEntry *fe = glyphRuns.GetGlyphRun()->mFont->GetFontEntry();
     // if we have already listed this face, just make sure the match type is
     // recorded
     InspectorFontFace* fontFace = aFontFaces.Get(fe);
     if (fontFace) {
-      fontFace->AddMatchType(iter.GetGlyphRun()->mMatchType);
+      fontFace->AddMatchType(glyphRuns.GetGlyphRun()->mMatchType);
     } else {
       // A new font entry we haven't seen before
       fontFace = new InspectorFontFace(fe, aTextRun->GetFontGroup(),
-                                       iter.GetGlyphRun()->mMatchType);
+                                       glyphRuns.GetGlyphRun()->mMatchType);
       aFontFaces.Put(fe, fontFace);
     }
+
+    // Add this glyph run to the fontFace's list of ranges, unless we have
+    // already collected as many as wanted.
     if (fontFace->RangeCount() < aMaxRanges) {
-      uint32_t start = aSkipIter.ConvertSkippedToOriginal(iter.GetStringStart());
-      uint32_t end = aSkipIter.ConvertSkippedToOriginal(iter.GetStringEnd());
-      RefPtr<nsRange> range;
-      nsRange::CreateRange(aContent, start, aContent, end, getter_AddRefs(range));
-      fontFace->AddRange(range);
+      int32_t start =
+        aSkipIter.ConvertSkippedToOriginal(glyphRuns.GetStringStart());
+      int32_t end =
+        aSkipIter.ConvertSkippedToOriginal(glyphRuns.GetStringEnd());
+
+      // Mapping back from textrun offsets ("skipped" offsets that reflect the
+      // text after whitespace collapsing, etc) to DOM content offsets in the
+      // original text is ambiguous, because many original characters can
+      // map to a single skipped offset. aSkipIter.ConvertSkippedToOriginal()
+      // will return an "original" offset that corresponds to the *end* of
+      // a collapsed run of characters in this case; but that might extend
+      // beyond the current content node if the textrun mapped multiple nodes.
+      // So we clamp the end offset to keep it valid for the content node
+      // that corresponds to the current textframe.
+      end = std::min(end, contentLimit);
+
+      if (end > start) {
+        RefPtr<nsRange> range;
+        if (NS_FAILED(nsRange::CreateRange(content, start, content, end,
+                                           getter_AddRefs(range)))) {
+          NS_WARNING("failed to create range");
+        } else {
+          fontFace->AddRange(range);
+        }
+      }
     }
   }
 }
 
-/* static */ nsresult
+/* static */ void
 nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
                                    int32_t aStartOffset,
                                    int32_t aEndOffset,
@@ -8139,7 +8163,11 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
   if (!aFrame->IsTextFrame()) {
-    return NS_OK;
+    return;
+  }
+
+  if (!aFrame->StyleVisibility()->IsVisible()) {
+    return;
   }
 
   nsTextFrame* curr = static_cast<nsTextFrame*>(aFrame);
@@ -8154,7 +8182,10 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
     // curr is overlapping with the offset we want
     gfxSkipCharsIterator iter = curr->EnsureTextRun(nsTextFrame::eInflated);
     gfxTextRun* textRun = curr->GetTextRun(nsTextFrame::eInflated);
-    NS_ENSURE_TRUE(textRun, NS_ERROR_OUT_OF_MEMORY);
+    if (!textRun) {
+      NS_WARNING("failed to get textRun, low memory?");
+      return;
+    }
 
     // include continuations in the range that share the same textrun
     nsTextFrame* next = nullptr;
@@ -8167,14 +8198,12 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
       }
     }
 
-    uint32_t skipStart = iter.ConvertOriginalToSkipped(fstart);
-    uint32_t skipEnd = iter.ConvertOriginalToSkipped(fend);
-    AddFontsFromTextRun(textRun, aFrame->GetContent(), iter,
-                        skipStart, skipEnd - skipStart, aFontFaces, aMaxRanges);
+    gfxTextRun::Range range(iter.ConvertOriginalToSkipped(fstart),
+                            iter.ConvertOriginalToSkipped(fend));
+    AddFontsFromTextRun(textRun, curr, iter, range, aFontFaces, aMaxRanges);
+
     curr = next;
   } while (aFollowContinuations && curr);
-
-  return NS_OK;
 }
 
 /* static */

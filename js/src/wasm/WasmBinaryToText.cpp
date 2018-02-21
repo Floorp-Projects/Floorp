@@ -1354,12 +1354,10 @@ RenderExpr(WasmRenderContext& c, AstExpr& expr, bool newLine /* = true */)
         if (!RenderConversionOperator(c, expr.as<AstConversionOperator>()))
             return false;
         break;
-#ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
       case AstExprKind::ExtraConversionOperator:
         if (!RenderExtraConversionOperator(c, expr.as<AstExtraConversionOperator>()))
             return false;
         break;
-#endif
       case AstExprKind::Load:
         if (!RenderLoad(c, expr.as<AstLoad>()))
             return false;

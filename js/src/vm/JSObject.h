@@ -179,15 +179,9 @@ class JSObject : public js::gc::Cell
                          GenerateShape generateShape = GENERATE_NONE);
     inline bool hasAllFlags(js::BaseShape::Flag flags) const;
 
-    /*
-     * An object is a delegate if it is on another object's prototype or scope
-     * chain, and therefore the delegate might be asked implicitly to get or
-     * set a property on behalf of another object. Delegates may be accessed
-     * directly too, as may any object, but only those objects linked after the
-     * head of any prototype or scope chain are flagged as delegates. This
-     * definition helps to optimize shape-based property cache invalidation
-     * (see Purge{Scope,Proto}Chain in JSObject.cpp).
-     */
+    // An object is a delegate if it is on another object's prototype or
+    // environment chain. Optimization heuristics will make use of this flag.
+    // See: ReshapeForProtoMutation, ReshapeForShadowedProp
     inline bool isDelegate() const;
     static bool setDelegate(JSContext* cx, JS::HandleObject obj) {
         return setFlags(cx, obj, js::BaseShape::DELEGATE, GENERATE_SHAPE);
