@@ -1541,6 +1541,12 @@ DebuggerProgressListener.prototype = {
       return;
     }
 
+    // If we're in a frame swap (which occurs when toggling RDM, for example), then we can
+    // ignore this event, as the window never really went anywhere for our purposes.
+    if (evt.inFrameSwap) {
+      return;
+    }
+
     let window = evt.target.defaultView;
     let innerID = getWindowID(window);
 
@@ -1562,6 +1568,12 @@ DebuggerProgressListener.prototype = {
 
   onWindowHidden: DevToolsUtils.makeInfallible(function (evt) {
     if (!this._tabActor.attached) {
+      return;
+    }
+
+    // If we're in a frame swap (which occurs when toggling RDM, for example), then we can
+    // ignore this event, as the window isn't really going anywhere for our purposes.
+    if (evt.inFrameSwap) {
       return;
     }
 

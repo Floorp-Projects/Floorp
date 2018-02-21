@@ -356,14 +356,12 @@ Http2Stream::MakeOriginURL(const nsACString &scheme, const nsACString &origin,
                            nsCOMPtr<nsIURI> &url)
 {
   return NS_MutateURI(new nsStandardURL::Mutator())
-           .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
-                                         nsIStandardURL::URLTYPE_AUTHORITY,
-                                         scheme.EqualsLiteral("http") ?
-                                             NS_HTTP_DEFAULT_PORT :
-                                             NS_HTTPS_DEFAULT_PORT,
-                                         nsCString(origin), nullptr, nullptr,
-                                         nullptr)
-           .Finalize(url);
+    .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                            nsIStandardURL::URLTYPE_AUTHORITY,
+                            scheme.EqualsLiteral("http") ? NS_HTTP_DEFAULT_PORT
+                                                         : NS_HTTPS_DEFAULT_PORT,
+                            nsCString(origin), nullptr, nullptr, nullptr))
+    .Finalize(url);
 }
 
 void
