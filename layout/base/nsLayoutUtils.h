@@ -2294,12 +2294,12 @@ public:
    * entire text is to be considered.
    * aMaxRanges: maximum number of text ranges to record for each face.
    */
-  static nsresult GetFontFacesForText(nsIFrame* aFrame,
-                                      int32_t aStartOffset,
-                                      int32_t aEndOffset,
-                                      bool aFollowContinuations,
-                                      UsedFontFaceTable& aResult,
-                                      uint32_t aMaxRanges);
+  static void GetFontFacesForText(nsIFrame* aFrame,
+                                  int32_t aStartOffset,
+                                  int32_t aEndOffset,
+                                  bool aFollowContinuations,
+                                  UsedFontFaceTable& aResult,
+                                  uint32_t aMaxRanges);
 
   /**
    * Walks the frame tree starting at aFrame looking for textRuns.

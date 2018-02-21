@@ -1353,7 +1353,7 @@ PurgeProtoChain(JSContext* cx, JSObject* objArg, HandleId id)
 
         shape = obj->as<NativeObject>().lookup(cx, id);
         if (shape)
-            return NativeObject::shadowingShapeChange(cx, obj.as<NativeObject>(), *shape);
+            return NativeObject::reshapeForShadowedProp(cx, obj.as<NativeObject>());
 
         obj = obj->staticPrototype();
     }
@@ -1395,18 +1395,30 @@ PurgeEnvironmentChainHelper(JSContext* cx, HandleObject objArg, HandleId id)
 }
 
 /*
- * PurgeEnvironmentChain does nothing if obj is not itself a prototype or
+ * ReshapeForShadowedProp does nothing if obj is not itself a prototype or
  * parent environment, else it reshapes the scope and prototype chains it
  * links. It calls PurgeEnvironmentChainHelper, which asserts that obj is
  * flagged as a delegate (i.e., obj has ever been on a prototype or parent
  * chain).
  */
 static MOZ_ALWAYS_INLINE bool
-PurgeEnvironmentChain(JSContext* cx, HandleObject obj, HandleId id)
+ReshapeForShadowedProp(JSContext* cx, HandleObject obj, HandleId id)
 {
     if (obj->isDelegate() && obj->isNative())
         return PurgeEnvironmentChainHelper(cx, obj, id);
     return true;
+}
+
+/* static */ bool
+NativeObject::reshapeForShadowedProp(JSContext* cx, HandleNativeObject obj)
+{
+    return generateOwnShape(cx, obj);
+}
+
+/* static */ bool
+NativeObject::reshapeForProtoMutation(JSContext* cx, HandleNativeObject obj)
+{
+    return generateOwnShape(cx, obj);
 }
 
 enum class IsAddOrChange { Add, AddOrChange };
@@ -1418,7 +1430,7 @@ AddOrChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
 {
     desc.assertComplete();
 
-    if (!PurgeEnvironmentChain(cx, obj, id))
+    if (!ReshapeForShadowedProp(cx, obj, id))
         return false;
 
     // Use dense storage for new indexed properties where possible.
@@ -1494,7 +1506,7 @@ AddDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id, HandleValue 
 {
     MOZ_ASSERT(!JSID_IS_INT(id));
 
-    if (!PurgeEnvironmentChain(cx, obj, id))
+    if (!ReshapeForShadowedProp(cx, obj, id))
         return false;
 
     Shape* shape = NativeObject::addEnumerableDataProperty(cx, obj, id);
@@ -2567,7 +2579,7 @@ js::SetPropertyByDefining(JSContext* cx, HandleId id, HandleValue v, HandleValue
     }
 
     // Purge the property cache of now-shadowed id in receiver's environment chain.
-    if (!PurgeEnvironmentChain(cx, receiver, id))
+    if (!ReshapeForShadowedProp(cx, receiver, id))
         return false;
 
     // Steps 5.e.iii-iv. and 5.f.i. Define the new data property.
@@ -2631,7 +2643,7 @@ SetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id, Handl
 
         if (DefinePropertyOp op = obj->getOpsDefineProperty()) {
             // Purge the property cache of now-shadowed id in receiver's environment chain.
-            if (!PurgeEnvironmentChain(cx, obj, id))
+            if (!ReshapeForShadowedProp(cx, obj, id))
                 return false;
 
             Rooted<PropertyDescriptor> desc(cx);

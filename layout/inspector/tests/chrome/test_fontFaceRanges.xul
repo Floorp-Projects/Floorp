@@ -168,6 +168,62 @@ function RunTest() {
   }
   is(familyNames.size, 3, "found all expected families");
 
+  // Testcase involving collapsed whitespace, to test mapping from textrun
+  // offsets back to DOM content offsets.
+  elem = document.getElementById("test5");
+  rng.selectNode(elem);
+  fonts = InspectorUtils.getUsedFontFaces(rng, 10);
+  is(fonts.length, 3, "number of font faces");
+  familyNames.clear();
+  for (var i = 0; i < fonts.length; i++) {
+    var f = fonts[i];
+    familyNames.set(f.CSSFamilyName, true);
+    switch (true) {
+    case f.CSSFamilyName == "capitals":
+      expectRanges(f, ["H"]);
+      break;
+    case f.CSSFamilyName == "lowercase":
+      expectRanges(f, ["ello", "linked", "world"]);
+      break;
+    case f.CSSFamilyName == "gentium":
+      expectRanges(f, ["\n      ", "\n          ", "\n          ", "!\n  "]);
+      break;
+    default:
+      // There shouldn't be any other font used
+      ok(false, "unexpected font: " + f.CSSFamilyName);
+      break;
+    }
+  }
+  is(familyNames.size, 3, "found all expected families");
+
+  // Test that fonts used in non-visible elements are not reported,
+  // nor non-visible ranges for fonts that are also used in visible content.
+  elem = document.getElementById("test6");
+  rng.selectNode(elem);
+  fonts = InspectorUtils.getUsedFontFaces(rng, 10);
+  is(fonts.length, 2, "number of font faces");
+  familyNames.clear();
+  for (var i = 0; i < fonts.length; i++) {
+    var f = fonts[i];
+    familyNames.set(f.CSSFamilyName, true);
+    switch (true) {
+    case f.CSSFamilyName == "capitals":
+      ok(false, "font used in hidden element should not be reported");
+      break;
+    case f.CSSFamilyName == "lowercase":
+      expectRanges(f, ["hello", "visible", "world"]);
+      break;
+    case f.CSSFamilyName == "gentium":
+      expectRanges(f, ["\n      ", "\n      ", "\n      ", "!"]);
+      break;
+    default:
+      // There shouldn't be any other font used
+      ok(false, "unexpected font: " + f.CSSFamilyName);
+      break;
+    }
+  }
+  is(familyNames.size, 2, "found all expected families");
+
   SimpleTest.finish();
 }
 
@@ -184,6 +240,18 @@ function RunTest() {
   <div class="gentium" id="test2">Hello العربي World!</div>
   <div class="gentium" id="test3" style="width:3em">Hello mul&#xAD;ti&#xAD;line World!</div>
   <div class="gentium" id="test4"><span>Hello</span><span>cruel</span>world!</div>
+  <div class="gentium" id="test5">
+      Hello
+          <!-- comment -->
+          <a href="#foo">linked</a>
+          <!-- comment -->
+      world!
+  </div>
+  <div class="gentium" id="test6">
+      hello
+      <a href="#foo" style="visibility:hidden">Non-Visible
+        <span style="visibility:visible">visible</span></a>
+      world!</div>
   </body>
 
 </window>
