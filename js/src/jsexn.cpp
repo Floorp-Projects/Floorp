@@ -74,9 +74,7 @@ ErrorObject::protoClasses[JSEXN_ERROR_LIMIT] = {
 };
 
 static const JSFunctionSpec error_methods[] = {
-#if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, exn_toSource, 0, 0),
-#endif
     JS_SELF_HOSTED_FN(js_toString_str, "ErrorToString", 0,0),
     JS_FS_END
 };
@@ -497,7 +495,6 @@ Error(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-#if JS_HAS_TOSOURCE
 /*
  * Return a string that may eval to something similar to the original object.
  */
@@ -576,7 +573,6 @@ exn_toSource(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setString(str);
     return true;
 }
-#endif
 
 /* static */ JSObject*
 ErrorObject::createProto(JSContext* cx, JSProtoKey key)

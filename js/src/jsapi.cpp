@@ -1057,9 +1057,7 @@ static const JSStdName builtin_property_names[] = {
     { EAGER_ATOM(encodeURI), JSProto_String },
     { EAGER_ATOM(decodeURIComponent), JSProto_String },
     { EAGER_ATOM(encodeURIComponent), JSProto_String },
-#if JS_HAS_UNEVAL
     { EAGER_ATOM(uneval), JSProto_String },
-#endif
 
     { 0, JSProto_LIMIT }
 };

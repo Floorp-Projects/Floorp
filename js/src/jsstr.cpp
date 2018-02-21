@@ -484,7 +484,6 @@ str_unescape(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-#if JS_HAS_UNEVAL
 static bool
 str_uneval(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -496,14 +495,11 @@ str_uneval(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setString(str);
     return true;
 }
-#endif
 
 static const JSFunctionSpec string_functions[] = {
     JS_FN(js_escape_str,             str_escape,                1, JSPROP_RESOLVING),
     JS_FN(js_unescape_str,           str_unescape,              1, JSPROP_RESOLVING),
-#if JS_HAS_UNEVAL
     JS_FN(js_uneval_str,             str_uneval,                1, JSPROP_RESOLVING),
-#endif
     JS_FN(js_decodeURI_str,          str_decodeURI,             1, JSPROP_RESOLVING),
     JS_FN(js_encodeURI_str,          str_encodeURI,             1, JSPROP_RESOLVING),
     JS_FN(js_decodeURIComponent_str, str_decodeURI_Component,   1, JSPROP_RESOLVING),
@@ -620,8 +616,6 @@ IsString(HandleValue v)
     return v.isString() || (v.isObject() && v.toObject().is<StringObject>());
 }
 
-#if JS_HAS_TOSOURCE
-
 MOZ_ALWAYS_INLINE bool
 str_toSource_impl(JSContext* cx, const CallArgs& args)
 {
@@ -652,8 +646,6 @@ str_toSource(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsString, str_toSource_impl>(cx, args);
 }
-
-#endif /* JS_HAS_TOSOURCE */
 
 MOZ_ALWAYS_INLINE bool
 str_toString_impl(JSContext* cx, const CallArgs& args)
@@ -3297,9 +3289,7 @@ js::str_concat(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static const JSFunctionSpec string_methods[] = {
-#if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,     str_toSource,          0,0),
-#endif
 
     /* Java-like methods. */
     JS_FN(js_toString_str,     str_toString,          0,0),
