@@ -183,7 +183,7 @@ def fill_template(config, tasks):
         }
         # Retry for 'funsize-update-generator' if exit status code is -1
         if image_name in ['funsize-update-generator']:
-            taskdesc['worker']['retry-exit-status'] = -1
+            taskdesc['worker']['retry-exit-status'] = [-1]
 
         worker = taskdesc['worker']
 
