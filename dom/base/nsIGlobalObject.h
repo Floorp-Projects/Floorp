@@ -119,16 +119,6 @@ public:
   virtual RefPtr<mozilla::dom::ServiceWorker>
   GetOrCreateServiceWorker(const mozilla::dom::ServiceWorkerDescriptor& aDescriptor);
 
-  // These methods allow the ServiceWorker instances to note their existence
-  // so that the global can use weak references to them.  The global should
-  // not hold a strong reference to the ServiceWorker.
-  virtual void
-  AddServiceWorker(mozilla::dom::ServiceWorker* aServiceWorker);
-
-  // This method must be called by the ServiceWorker before it is destroyed.
-  virtual void
-  RemoveServiceWorker(mozilla::dom::ServiceWorker* aServiceWorker);
-
 protected:
   virtual ~nsIGlobalObject();
 

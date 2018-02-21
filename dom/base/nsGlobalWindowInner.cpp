@@ -6352,32 +6352,24 @@ nsGlobalWindowInner::GetOrCreateServiceWorker(const ServiceWorkerDescriptor& aDe
 {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<ServiceWorker> ref;
-  for (auto sw : mServiceWorkerList) {
-    if (sw->Descriptor().Matches(aDescriptor)) {
-      ref = sw;
-      return ref.forget();
+  ForEachEventTargetObject([&] (DOMEventTargetHelper* aTarget) {
+    // TODO: allow short-cuts
+    if (ref) {
+      return;
     }
+
+    RefPtr<ServiceWorker> sw = do_QueryObject(aTarget);
+    if (!sw || !sw->Descriptor().Matches(aDescriptor)) {
+      return;
+    }
+    ref = sw.forget();
+  });
+
+  if (!ref) {
+    ref = ServiceWorker::Create(this, aDescriptor);
   }
-  ref = ServiceWorker::Create(this, aDescriptor);
+
   return ref.forget();
-}
-
-void
-nsGlobalWindowInner::AddServiceWorker(ServiceWorker* aServiceWorker)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(aServiceWorker);
-  MOZ_ASSERT(!mServiceWorkerList.Contains(aServiceWorker));
-  mServiceWorkerList.AppendElement(aServiceWorker);
-}
-
-void
-nsGlobalWindowInner::RemoveServiceWorker(ServiceWorker* aServiceWorker)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(aServiceWorker);
-  MOZ_ASSERT(mServiceWorkerList.Contains(aServiceWorker));
-  mServiceWorkerList.RemoveElement(aServiceWorker);
 }
 
 nsresult
