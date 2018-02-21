@@ -8,20 +8,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1041393
   <title>ImageCapture tests</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="gUM_support.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1041393">ImageCapture tests</a>
 <script type="application/javascript">
 
-var repeat = 100;
-var count;
+let repeat = 100;
+let count;
 
 // Check if the callback returns even no JS reference on it.
 function gcTest(track) {
   return new Promise(function(resolve, reject) {
     count = 0;
-    var i;
-    var imageCapture;
+    let i;
+    let imageCapture;
     for(i = 0; i < repeat; i++) {
       imageCapture = new ImageCapture(track);
       imageCapture.onphoto = function(blob) {
@@ -46,7 +47,7 @@ function gcTest(track) {
 // Continue calling takePhoto() in rapid succession.
 function rapidTest(track) {
   return new Promise(function(resolve, reject) {
-    var imageCapture = new ImageCapture(track);
+    let imageCapture = new ImageCapture(track);
     imageCapture.onphoto = function(blob) {
       count++;
       if (count == repeat) {
@@ -60,7 +61,7 @@ function rapidTest(track) {
     };
 
     count = 0;
-    var i;
+    let i;
     for(i = 0; i < repeat; i++) {
       imageCapture.takePhoto();
     }
@@ -70,17 +71,17 @@ function rapidTest(track) {
 // Check if the blob is decodable.
 function blobTest(track) {
   return new Promise(function(resolve, reject) {
-    var imageCapture = new ImageCapture(track);
+    let imageCapture = new ImageCapture(track);
     imageCapture.onphoto = function(blob) {
-      var img = new Image();
+      let img = new Image();
       img.onerror = function() {
         ok(false, "fail to decode blob");
         reject();
-      }
+      };
       img.onload = function() {
         ok(true, "decode blob success");
         resolve(track);
-      }
+      };
       img.src = URL.createObjectURL(blob.data);
     };
     imageCapture.onerror = function(error) {
@@ -94,7 +95,7 @@ function blobTest(track) {
 // It should return an error event after disabling video track.
 function trackTest(track) {
   return new Promise(function(resolve, reject) {
-    var imageCapture = new ImageCapture(track);
+    let imageCapture = new ImageCapture(track);
     imageCapture.onphoto = function(blob) {
       ok(false, "expect error when video track is disable");
       reject();
@@ -106,42 +107,33 @@ function trackTest(track) {
     };
 
     track.enabled = false;
-    imageCapture.takePhoto()
+    imageCapture.takePhoto();
   });
 }
 
-function init() {
-  return new Promise(function(resolve, reject) {
-    // use fake camera, MediaStreamGraph will be the backend of ImageCapture.
-    var constraints = {video: true, fake: true}
-
-    window.navigator.mozGetUserMedia(
-      constraints,
-      function(stream) {
-        var track = stream.getVideoTracks()[0];
-        resolve(track);
-      },
-      function(err) {
-        reject(err);
-      }
-    );
-  });
+async function init() {
+  // use loopback camera if available, otherwise fake, MediaStreamGraph will be the backend of ImageCapture.
+  await setupGetUserMediaTestPrefs();
+  let stream = await navigator.mediaDevices.getUserMedia({video: true});
+  return stream.getVideoTracks()[0];
 }
 
-function start() {
-  init().then(function(track) {
+async function start() {
+  try {
+    let track = await init();
     info("ImageCapture track disable test.");
-    return trackTest(track);
-  }).then(function(track) {
+    track = await trackTest(track);
     info("ImageCapture blob test.");
-    return blobTest(track);
-  }).then(function(track) {
+    track = await blobTest(track);
     info("ImageCapture rapid takePhoto() test.");
-    return rapidTest(track);
-  }).then(function(track) {
+    track = await rapidTest(track);
     info("ImageCapture multiple instances test.");
-    return gcTest(track);
-  }).then(SimpleTest.finish);
+    await gcTest(track);
+  } catch (e) {
+    ok(false, "Unexpected error during test: " + e);
+  } finally {
+    SimpleTest.finish();
+  }
 }
 
 SimpleTest.requestCompleteLog();
