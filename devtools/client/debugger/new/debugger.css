@@ -1652,7 +1652,7 @@ html[dir="rtl"] .arrow svg,
   background-color: white;
 }
 
-.tree-node[data-expandable="false"] .tree-indent:last-of-type {
+.tree:not(.object-inspector) .tree-node[data-expandable="false"] .tree-indent:last-of-type {
   margin-inline-end: 4px;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -2109,6 +2109,12 @@ html .toggle-button.end.vertical svg {
 
 .objectBox-string a, .objectBox-string a:visited {
   color: currentColor;
+  text-decoration: none;
+  font-style: italic;
+}
+
+.objectBox-string a:hover {
+  text-decoration: underline;
 }
 
 .objectBox-function,
@@ -3711,14 +3717,6 @@ img.ignore-exceptions {
   opacity: 0.6;
 }
 
-.object-node {
-  padding-left: 4px;
-}
-
-html[dir="rtl"] .object-node {
-  padding-right: 4px;
-}
-
 .object-label {
   color: var(--theme-highlight-blue);
 }
@@ -3740,6 +3738,10 @@ html[dir="rtl"] .object-node {
 
 .scopes-pane {
   overflow: auto;
+}
+
+.scopes-list {
+  padding-inline-start: 4px;
 }
 
 .scopes-list .tree:focus {
