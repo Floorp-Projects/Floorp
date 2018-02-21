@@ -12,7 +12,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "26dfb36ad9ab"
+        "revision": "56fd9ee5caef"
     }, 
     "af": {
         "platforms": [
@@ -42,7 +42,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "d74c342034c0"
+        "revision": "78a12453e28e"
     }, 
     "ar": {
         "platforms": [
@@ -57,7 +57,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "043f81a2bd23"
+        "revision": "0d3c371d1534"
     }, 
     "as": {
         "platforms": [
@@ -87,7 +87,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "ae3be4661210"
+        "revision": "6dd599fd7084"
     }, 
     "az": {
         "platforms": [
@@ -147,7 +147,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "4d509a83f083"
+        "revision": "ebc10eed174a"
     }, 
     "bn-IN": {
         "platforms": [
@@ -222,7 +222,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "315f89d29403"
+        "revision": "0b556ac55063"
     }, 
     "cs": {
         "platforms": [
@@ -282,7 +282,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "02c659825899"
+        "revision": "f4422ab9c36d"
     }, 
     "dsb": {
         "platforms": [
@@ -297,7 +297,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "a1866233b84a"
+        "revision": "90672ff43813"
     }, 
     "el": {
         "platforms": [
@@ -417,7 +417,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "33bf54389189"
+        "revision": "15523e5ccde9"
     }, 
     "et": {
         "platforms": [
@@ -507,7 +507,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "2d891af90a76"
+        "revision": "d6abe328756d"
     }, 
     "fy-NL": {
         "platforms": [
@@ -522,7 +522,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "155eaba57cf7"
+        "revision": "c5f51a1e7105"
     }, 
     "ga-IE": {
         "platforms": [
@@ -582,7 +582,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "9ae97cb3cd94"
+        "revision": "52179878bc1c"
     }, 
     "gu-IN": {
         "platforms": [
