@@ -1180,7 +1180,9 @@ function openURL(aURL) {
   } else {
     var recentWindow = Services.wm.getMostRecentWindow("navigator:browser");
     if (recentWindow) {
-      recentWindow.openUILinkIn(uri.spec, "tab");
+      recentWindow.openWebLinkIn(uri.spec, "tab", {
+        triggeringPrincipal: recentWindow.document.contentPrincipal
+      });
       return;
     }
 

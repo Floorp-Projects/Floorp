@@ -90,7 +90,9 @@ function createContextMenu(jsterm, parentNode, {
         return;
       }
       let mainWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
-      mainWindow.openUILinkIn(request.url, "tab");
+      mainWindow.openWebLinkIn(request.url, "tab", {
+        triggeringPrincipal: mainWindow.document.nodePrincipal,
+      });
     },
   }));
 

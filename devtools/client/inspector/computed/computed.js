@@ -682,7 +682,7 @@ CssComputedView.prototype = {
       event.stopPropagation();
       event.preventDefault();
       let browserWin = this.inspector.target.tab.ownerDocument.defaultView;
-      browserWin.openUILinkIn(target.href, "tab");
+      browserWin.openWebLinkIn(target.href, "tab");
     }
   },
 
@@ -1167,7 +1167,7 @@ PropertyView.prototype = {
 
     if (inspector.target.tab) {
       let browserWin = inspector.target.tab.ownerDocument.defaultView;
-      browserWin.openUILinkIn(this.link, "tab");
+      browserWin.openWebLinkIn(this.link, "tab");
     }
   },
 

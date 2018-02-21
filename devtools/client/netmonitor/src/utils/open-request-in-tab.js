@@ -13,7 +13,7 @@ const { gDevTools } = require("devtools/client/framework/devtools");
 function openRequestInTab(url, requestPostData) {
   let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
   if (!requestPostData) {
-    win.openUILinkIn(url, "tab", {relatedToCurrent: true});
+    win.openWebLinkIn(url, "tab", {relatedToCurrent: true});
   } else {
     openPostRequestInTabHelper({
       url,

@@ -2337,7 +2337,7 @@ Inspector.prototype = {
         link, this.selection.nodeFront).then(url => {
           if (type === "uri") {
             let browserWin = this.target.tab.ownerDocument.defaultView;
-            browserWin.openUILinkIn(url, "tab");
+            browserWin.openWebLinkIn(url, "tab");
           } else if (type === "cssresource") {
             return this.toolbox.viewSourceInStyleEditor(url);
           } else if (type === "jsresource") {
