@@ -118,8 +118,7 @@ add_task(async function setup() {
     [["privacy.resistFingerprinting", true]]
   });
 
-  let appVersion = parseInt(Services.appinfo.version);
-  let spoofedVersion = appVersion - ((appVersion - 3) % 7);
+  let spoofedVersion = 52;
   spoofedUserAgent = `Mozilla/5.0 (${SPOOFED_UA_OS[AppConstants.platform]}; rv:${spoofedVersion}.0) Gecko/20100101 Firefox/${spoofedVersion}.0`;
 });
 
