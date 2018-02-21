@@ -9122,7 +9122,7 @@ main(int argc, char** argv, char** envp)
         || !op.addBoolOption('\0', "non-writable-jitcode", "(NOP for fuzzers) Allocate JIT code as non-writable memory.")
         || !op.addBoolOption('\0', "no-sse3", "Pretend CPU does not support SSE3 instructions and above "
                              "to test JIT codegen (no-op on platforms other than x86 and x64).")
-        || !op.addBoolOption('\0', "no-sse4", "Pretend CPU does not support SSE4 instructions"
+        || !op.addBoolOption('\0', "no-sse4", "Pretend CPU does not support SSE4 instructions "
                              "to test JIT codegen (no-op on platforms other than x86 and x64).")
         || !op.addBoolOption('\0', "enable-avx", "AVX is disabled by default. Enable AVX. "
                              "(no-op on platforms other than x86 and x64).")
@@ -9139,6 +9139,7 @@ main(int argc, char** argv, char** envp)
         || !op.addBoolOption('\0', "no-ggc", "Disable Generational GC")
         || !op.addBoolOption('\0', "no-cgc", "Disable Compacting GC")
         || !op.addBoolOption('\0', "no-incremental-gc", "Disable Incremental GC")
+        || !op.addBoolOption('\0', "nursery-strings", "Allocate strings in the nursery")
         || !op.addIntOption('\0', "available-memory", "SIZE",
                             "Select GC settings based on available memory (MB)", 0)
         || !op.addStringOption('\0', "arm-hwcap", "[features]",
@@ -9285,6 +9286,9 @@ main(int argc, char** argv, char** envp)
     JS::dbg::SetDebuggerMallocSizeOf(cx, moz_malloc_size_of);
 
     js::UseInternalJobQueues(cx);
+
+    if (op.getBoolOption("nursery-strings"))
+        cx->runtime()->gc.nursery().enableStrings();
 
     if (!JS::InitSelfHostedCode(cx))
         return 1;
