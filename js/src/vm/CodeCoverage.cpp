@@ -18,7 +18,6 @@
 # include <unistd.h>
 #endif
 
-#include "js/Printf.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSScript.h"

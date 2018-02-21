@@ -17,7 +17,6 @@
 
 #include "jit/BaselineJIT.h"
 #include "jit/CompileWrappers.h"
-#include "js/Printf.h"
 #include "threading/LockGuard.h"
 #include "vm/JSScript.h"
 #include "vm/Runtime.h"

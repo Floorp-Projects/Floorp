@@ -15,7 +15,6 @@
 #include "gc/Marking.h"
 #include "gc/PublicIterators.h"
 #include "gc/Zone.h"
-#include "js/Printf.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 #include "vm/Shape.h"
