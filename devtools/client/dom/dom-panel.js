@@ -182,7 +182,7 @@ DomPanel.prototype = {
     let parentDoc = this._toolbox.doc;
     let iframe = parentDoc.getElementById("this._toolbox");
     let top = iframe.ownerDocument.defaultView.top;
-    top.openUILinkIn(url, "tab");
+    top.openWebLinkIn(url, "tab");
   },
 
   getRootGrip: function() {

@@ -299,7 +299,7 @@ TextPropertyEditor.prototype = {
           event.stopPropagation();
           event.preventDefault();
           let browserWin = this.ruleView.inspector.target.tab.ownerDocument.defaultView;
-          browserWin.openUILinkIn(target.href, "tab");
+          browserWin.openTrustedLinkIn(target.href, "tab");
         }
       });
 
