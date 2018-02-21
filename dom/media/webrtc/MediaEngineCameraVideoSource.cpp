@@ -47,12 +47,11 @@ MediaEngineCameraVideoSource::NumCapabilities() const
   return mHardcodedCapabilities.Length();
 }
 
-void
-MediaEngineCameraVideoSource::GetCapability(size_t aIndex,
-                                            webrtc::CaptureCapability& aOut) const
+webrtc::CaptureCapability
+MediaEngineCameraVideoSource::GetCapability(size_t aIndex) const
 {
   MOZ_ASSERT(aIndex < mHardcodedCapabilities.Length());
-  aOut = mHardcodedCapabilities.SafeElementAt(aIndex, webrtc::CaptureCapability());
+  return mHardcodedCapabilities.SafeElementAt(aIndex, webrtc::CaptureCapability());
 }
 
 uint32_t
@@ -113,21 +112,21 @@ MediaEngineCameraVideoSource::GetFeasibilityDistance(
 // Find best capability by removing inferiors. May leave >1 of equal distance
 
 /* static */ void
-MediaEngineCameraVideoSource::TrimLessFitCandidates(CapabilitySet& set) {
+MediaEngineCameraVideoSource::TrimLessFitCandidates(nsTArray<CapabilityCandidate>& aSet) {
   uint32_t best = UINT32_MAX;
-  for (auto& candidate : set) {
+  for (auto& candidate : aSet) {
     if (best > candidate.mDistance) {
       best = candidate.mDistance;
     }
   }
-  for (size_t i = 0; i < set.Length();) {
-    if (set[i].mDistance > best) {
-      set.RemoveElementAt(i);
+  for (size_t i = 0; i < aSet.Length();) {
+    if (aSet[i].mDistance > best) {
+      aSet.RemoveElementAt(i);
     } else {
       ++i;
     }
   }
-  MOZ_ASSERT(set.Length());
+  MOZ_ASSERT(aSet.Length());
 }
 
 // GetBestFitnessDistance returns the best distance the capture device can offer
@@ -144,19 +143,17 @@ MediaEngineCameraVideoSource::GetBestFitnessDistance(
     const nsString& aDeviceId) const
 {
   size_t num = NumCapabilities();
-
-  CapabilitySet candidateSet;
+  nsTArray<CapabilityCandidate> candidateSet;
   for (size_t i = 0; i < num; i++) {
-    candidateSet.AppendElement(i);
+    candidateSet.AppendElement(CapabilityCandidate(GetCapability(i)));
   }
 
   bool first = true;
   for (const NormalizedConstraintSet* ns : aConstraintSets) {
     for (size_t i = 0; i < candidateSet.Length();  ) {
       auto& candidate = candidateSet[i];
-      webrtc::CaptureCapability cap;
-      GetCapability(candidate.mIndex, cap);
-      uint32_t distance = GetFitnessDistance(cap, *ns, aDeviceId);
+      uint32_t distance =
+        GetFitnessDistance(candidate.mCapability, *ns, aDeviceId);
       if (distance == UINT32_MAX) {
         candidateSet.RemoveElementAt(i);
       } else {
@@ -270,21 +267,19 @@ MediaEngineCameraVideoSource::ChooseCapability(
     }
   }
 
+  nsTArray<CapabilityCandidate> candidateSet;
   size_t num = NumCapabilities();
-
-  CapabilitySet candidateSet;
   for (size_t i = 0; i < num; i++) {
-    candidateSet.AppendElement(i);
+    candidateSet.AppendElement(CapabilityCandidate(GetCapability(i)));
   }
 
   // First, filter capabilities by required constraints (min, max, exact).
 
   for (size_t i = 0; i < candidateSet.Length();) {
     auto& candidate = candidateSet[i];
-    webrtc::CaptureCapability cap;
-    GetCapability(candidate.mIndex, cap);
-    candidate.mDistance = GetDistance(cap, aConstraints, aDeviceId, aCalculate);
-    LogCapability("Capability", cap, candidate.mDistance);
+    candidate.mDistance =
+      GetDistance(candidate.mCapability, aConstraints, aDeviceId, aCalculate);
+    LogCapability("Capability", candidate.mCapability, candidate.mDistance);
     if (candidate.mDistance == UINT32_MAX) {
       candidateSet.RemoveElementAt(i);
     } else {
@@ -292,21 +287,19 @@ MediaEngineCameraVideoSource::ChooseCapability(
     }
   }
 
-  if (!candidateSet.Length()) {
-    LOG(("failed to find capability match from %zu choices",num));
+  if (candidateSet.IsEmpty()) {
+    LOG(("failed to find capability match from %zu choices", candidateSet.Length()));
     return false;
   }
 
   // Filter further with all advanced constraints (that don't overconstrain).
 
   for (const auto &cs : aConstraints.mAdvanced) {
-    CapabilitySet rejects;
+    nsTArray<CapabilityCandidate> rejects;
     for (size_t i = 0; i < candidateSet.Length();) {
-      auto& candidate = candidateSet[i];
-      webrtc::CaptureCapability cap;
-      GetCapability(candidate.mIndex, cap);
-      if (GetDistance(cap, cs, aDeviceId, aCalculate) == UINT32_MAX) {
-        rejects.AppendElement(candidate);
+      if (GetDistance(candidateSet[i].mCapability,
+                      cs, aDeviceId, aCalculate) == UINT32_MAX) {
+        rejects.AppendElement(candidateSet[i]);
         candidateSet.RemoveElementAt(i);
       } else {
         ++i;
@@ -334,9 +327,8 @@ MediaEngineCameraVideoSource::ChooseCapability(
     NormalizedConstraintSet normPrefs(prefs, false);
 
     for (auto& candidate : candidateSet) {
-      webrtc::CaptureCapability cap;
-      GetCapability(candidate.mIndex, cap);
-      candidate.mDistance = GetDistance(cap, normPrefs, aDeviceId, aCalculate);
+      candidate.mDistance =
+        GetDistance(candidate.mCapability, normPrefs, aDeviceId, aCalculate);
     }
     TrimLessFitCandidates(candidateSet);
   }
@@ -347,8 +339,7 @@ MediaEngineCameraVideoSource::ChooseCapability(
 
   bool found = false;
   for (auto& candidate : candidateSet) {
-    webrtc::CaptureCapability cap;
-    GetCapability(candidate.mIndex, cap);
+    const webrtc::CaptureCapability& cap = candidate.mCapability;
     if (cap.rawType == webrtc::RawVideoType::kVideoI420 ||
         cap.rawType == webrtc::RawVideoType::kVideoYUY2 ||
         cap.rawType == webrtc::RawVideoType::kVideoYV12) {
@@ -358,7 +349,7 @@ MediaEngineCameraVideoSource::ChooseCapability(
     }
   }
   if (!found) {
-    GetCapability(candidateSet[0].mIndex, aCapability);
+    aCapability = candidateSet[0].mCapability;
   }
 
   LogCapability("Chosen capability", aCapability, sameDistance);

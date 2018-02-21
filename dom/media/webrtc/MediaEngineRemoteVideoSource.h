@@ -104,7 +104,7 @@ private:
   // Initialize the needed Video engine interfaces.
   void Init();
   size_t NumCapabilities() const override;
-  void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut) const override;
+  webrtc::CaptureCapability GetCapability(size_t aIndex) const override;
   void SetLastCapability(const webrtc::CaptureCapability& aCapability);
 
   nsresult
