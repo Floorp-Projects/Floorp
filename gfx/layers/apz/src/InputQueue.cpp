@@ -35,6 +35,8 @@ InputQueue::ReceiveInputEvent(const RefPtr<AsyncPanZoomController>& aTarget,
                               uint64_t* aOutInputBlockId) {
   APZThreadUtils::AssertOnControllerThread();
 
+  AutoRunImmediateTimeout timeoutRunner{this};
+
   switch (aEvent.mInputType) {
     case MULTITOUCH_INPUT: {
       const MultiTouchInput& event = aEvent.AsMultiTouchInput();
@@ -445,6 +447,7 @@ InputQueue::MaybeRequestContentResponse(const RefPtr<AsyncPanZoomController>& aT
 uint64_t
 InputQueue::InjectNewTouchBlock(AsyncPanZoomController* aTarget)
 {
+  AutoRunImmediateTimeout timeoutRunner{this};
   TouchBlockState* block = StartNewTouchBlock(aTarget,
     TargetConfirmationFlags{true},
     /* aCopyPropertiesFromCurrent = */ true);
@@ -567,12 +570,26 @@ InputQueue::ScheduleMainThreadTimeout(const RefPtr<AsyncPanZoomController>& aTar
                                       CancelableBlockState* aBlock) {
   INPQ_LOG("scheduling main thread timeout for target %p\n", aTarget.get());
   aBlock->StartContentResponseTimer();
-  aTarget->PostDelayedTask(
-    NewRunnableMethod<uint64_t>("layers::InputQueue::MainThreadTimeout",
-                                this,
-                                &InputQueue::MainThreadTimeout,
-                                aBlock->GetBlockId()),
-    gfxPrefs::APZContentResponseTimeout());
+  RefPtr<Runnable> timeoutTask = NewRunnableMethod<uint64_t>("layers::InputQueue::MainThreadTimeout",
+      this,
+      &InputQueue::MainThreadTimeout,
+      aBlock->GetBlockId());
+  int32_t timeout = gfxPrefs::APZContentResponseTimeout();
+  if (timeout == 0) {
+    // If the timeout is zero, treat it as a request to ignore any main
+    // thread confirmation and unconditionally use fallback behaviour for
+    // when a timeout is reached. This codepath is used by tests that
+    // want to exercise the fallback behaviour.
+    // To ensure the fallback behaviour is used unconditionally, the timeout
+    // is run right away instead of using PostDelayedTask(). However,
+    // we can't run it right here, because MainThreadTimeout() expects that
+    // the input block has at least one input event in mQueuedInputs, and
+    // the event that triggered this call may not have been added to
+    // mQueuedInputs yet.
+    mImmediateTimeout = timeoutTask.forget();
+  } else {
+    aTarget->PostDelayedTask(timeoutTask.forget(), timeout);
+  }
 }
 
 InputBlockState*
@@ -805,6 +822,20 @@ InputQueue::Clear()
   mActivePanGestureBlock = nullptr;
   mActiveKeyboardBlock = nullptr;
   mLastActiveApzc = nullptr;
+}
+
+InputQueue::AutoRunImmediateTimeout::AutoRunImmediateTimeout(InputQueue* aQueue)
+  : mQueue(aQueue)
+{
+  MOZ_ASSERT(!mQueue->mImmediateTimeout);
+}
+
+InputQueue::AutoRunImmediateTimeout::~AutoRunImmediateTimeout()
+{
+  if (mQueue->mImmediateTimeout) {
+    mQueue->mImmediateTimeout->Run();
+    mQueue->mImmediateTimeout = nullptr;
+  }
 }
 
 } // namespace layers

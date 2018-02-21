@@ -139,6 +139,16 @@ public:
 private:
   ~InputQueue();
 
+  // RAII class for automatically running a timeout task that may
+  // need to be run immediately after an event has been queued.
+  class AutoRunImmediateTimeout {
+  public:
+    explicit AutoRunImmediateTimeout(InputQueue* aQueue);
+    ~AutoRunImmediateTimeout();
+  private:
+    InputQueue* mQueue;
+  };
+
   TouchBlockState* StartNewTouchBlock(const RefPtr<AsyncPanZoomController>& aTarget,
                                       TargetConfirmationFlags aFlags,
                                       bool aCopyPropertiesFromCurrent);
@@ -218,6 +228,10 @@ private:
 
   // Track mouse inputs so we know if we're in a drag or not
   DragTracker mDragTracker;
+
+  // Temporarily stores a timeout task that needs to be run as soon as
+  // as the event that triggered it has been queued.
+  RefPtr<Runnable> mImmediateTimeout;
 };
 
 } // namespace layers
