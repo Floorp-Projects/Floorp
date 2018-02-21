@@ -77,10 +77,10 @@ public class ManualAddSearchEnginePreference extends Preference {
     }
 
     private void updateState() {
-        if (savedSearchEngineName != null) {
+        if (engineNameEditText != null) {
             engineNameEditText.setText(savedSearchEngineName);
         }
-        if (savedSearchQuery != null) {
+        if (searchQueryEditText != null) {
             searchQueryEditText.setText(savedSearchQuery);
         }
     }
