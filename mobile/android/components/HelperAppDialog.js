@@ -151,7 +151,6 @@ HelperAppLauncherDialog.prototype = {
 
     let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
-    let defaultHandler = new Object();
     let apps = HelperApps.getAppsForUri(aLauncher.source, {
       mimeType: aLauncher.MIMEInfo.MIMEType,
     });

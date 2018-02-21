@@ -192,7 +192,6 @@ Prompt.prototype = {
   },
 
   _setListItems: function(aItems) {
-    let hasSelected = false;
     this.msg.listitems = [];
 
     aItems.forEach(function(item) {

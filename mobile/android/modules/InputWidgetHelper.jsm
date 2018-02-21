@@ -40,7 +40,7 @@ var InputWidgetHelper = {
 
   show: function(aElement) {
     let type = aElement.getAttribute("type");
-    let p = new Prompt({
+    new Prompt({
       window: aElement.ownerGlobal,
       title: this.strings().GetStringFromName("inputWidgetHelper." + aElement.getAttribute("type")),
       buttons: [

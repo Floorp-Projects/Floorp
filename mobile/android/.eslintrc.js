@@ -17,7 +17,6 @@ module.exports = {
     "no-redeclare": "off",
     "no-useless-call": "off",
     "no-useless-concat": "off",
-    "no-unused-vars": "off",
     "object-shorthand": "off",
   },
 
@@ -33,6 +32,7 @@ module.exports = {
       "tests/browser/robocop/**",
     ],
     rules: {
+      "no-unused-vars": "off",
       "no-undef": "off",
     }
   }],

@@ -165,8 +165,6 @@ LoginManagerPrompter.prototype = {
     let brandShortName = this._strBundle.brand.GetStringFromName("brandShortName");
     let notificationText  = this._getLocalizedString("saveLogin", [brandShortName]);
 
-    let username = aLogin.username ? this._sanitizeUsername(aLogin.username) : "";
-
     // The callbacks in |buttons| have a closure to access the variables
     // in scope here; set one to |Services.logins| so we can get back to pwmgr
     // without a getService() call.
@@ -268,8 +266,6 @@ LoginManagerPrompter.prototype = {
    * Note; XPCOM stupidity: |count| is just |logins.length|.
    */
   promptToChangePasswordWithUsernames: function(logins, count, aNewLogin) {
-    const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
-
     var usernames = logins.map(l => l.username);
     var dialogText  = this._getLocalizedString("userSelectText2");
     var dialogTitle = this._getLocalizedString("passwordChangeTitle");
