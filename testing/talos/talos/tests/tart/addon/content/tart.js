@@ -683,8 +683,7 @@ Tart.prototype = {
     };
     this._config = config;
 
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-    this._win = wm.getMostRecentWindow("navigator:browser");
+    this._win = Services.wm.getMostRecentWindow("navigator:browser");
     this._tartTab = this._win.gBrowser.selectedTab;
     this._win.gBrowser.selectedBrowser.focus(); // Unfocus the URL bar to avoid caret blink
 

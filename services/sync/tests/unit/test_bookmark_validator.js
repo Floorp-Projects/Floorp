@@ -72,7 +72,7 @@ add_task(async function test_isr_orphansMultiParents2() {
 add_task(async function test_isr_deletedParents() {
   let c = (await inspectServerRecords([
     { id: "A", type: "bookmark", parentid: "B" },
-    { id: "B", type: "folder", parentid: "places", children: ["A"]},
+    { id: "C", type: "folder", parentid: "places", children: ["A"]},
     { id: "B", type: "item", deleted: true},
   ])).problemData;
   deepEqual(c.deletedParents, ["A"]);

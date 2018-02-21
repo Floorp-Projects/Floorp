@@ -1,7 +1,7 @@
 "use strict";
 
 const methodData = [PTU.MethodData.basicCard];
-const details = PTU.Details.total60USD;
+const details = PTU.Details.twoShippingOptions;
 
 add_task(async function test_show_abort_dialog() {
   await BrowserTestUtils.withNewTab({
@@ -127,6 +127,52 @@ add_task(async function test_show_completePayment() {
     is(methodDetails.expiryMonth, "01", "Check expiryMonth");
     is(methodDetails.expiryYear, "9999", "Check expiryYear");
     is(methodDetails.cardSecurityCode, "999", "Check cardSecurityCode");
+
+    todo(result.response.shippingOption, "2",
+         "DOM is not sending the shipping option when it hasn't been explicitly changed.");
+
+    await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
+  });
+});
+
+add_task(async function test_show_completePayment() {
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: BLANK_PAGE_URL,
+  }, async browser => {
+    let dialogReadyPromise = waitForWidgetReady();
+    // start by creating a PaymentRequest, and show it
+    await ContentTask.spawn(browser, {methodData, details}, PTU.ContentTasks.createAndShowRequest);
+
+    // get a reference to the UI dialog and the requestId
+    let [win] = await Promise.all([getPaymentWidget(), dialogReadyPromise]);
+    ok(win, "Got payment widget");
+    let requestId = paymentUISrv.requestIdForWindow(win);
+    ok(requestId, "requestId should be defined");
+    is(win.closed, false, "dialog should not be closed");
+
+    let frame = await getPaymentFrame(win);
+
+    ContentTask.spawn(browser, {
+      eventName: "shippingoptionchange",
+    }, PTU.ContentTasks.promisePaymentRequestEvent);
+
+    info("changing shipping option to '1' from default selected option of '2'");
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.selectShippingOptionById, "1");
+
+    await ContentTask.spawn(browser, {
+      eventName: "shippingoptionchange",
+    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+    info("got shippingoptionchange event");
+
+    info("clicking pay");
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
+
+    // Add a handler to complete the payment above.
+    info("acknowledging the completion from the merchant page");
+    let result = await ContentTask.spawn(browser, {}, PTU.ContentTasks.addCompletionHandler);
+
+    is(result.response.shippingOption, "1", "Check shipping option");
 
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });

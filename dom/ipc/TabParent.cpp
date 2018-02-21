@@ -1162,8 +1162,7 @@ TabParent::GetLayoutDeviceToCSSScale()
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
   nsIDocument* doc = (content ? content->OwnerDoc() : nullptr);
-  nsIPresShell* shell = (doc ? doc->GetShell() : nullptr);
-  nsPresContext* ctx = (shell ? shell->GetPresContext() : nullptr);
+  nsPresContext* ctx = (doc ? doc->GetPresContext() : nullptr);
   return LayoutDeviceToCSSScale(ctx
     ? (float)ctx->AppUnitsPerDevPixel() / nsPresContext::AppUnitsPerCSSPixel()
     : 0.0f);
@@ -2158,9 +2157,7 @@ TabParent::RecvReplyKeyEvent(const WidgetKeyboardEvent& aEvent)
   // Here we convert the WidgetEvent that we received to an nsIDOMEvent
   // to be able to dispatch it to the <browser> element as the target element.
   nsIDocument* doc = mFrameElement->OwnerDoc();
-  nsIPresShell* presShell = doc->GetShell();
-  NS_ENSURE_TRUE(presShell, IPC_OK());
-  nsPresContext* presContext = presShell->GetPresContext();
+  nsPresContext* presContext = doc->GetPresContext();
   NS_ENSURE_TRUE(presContext, IPC_OK());
 
   AutoHandlingUserInputStatePusher userInpStatePusher(localEvent.IsTrusted(),

@@ -197,8 +197,8 @@ const DB_DESCRIPTION_LENGTH_MAX = 256;
  */
 const BOOKMARK_VALIDATORS = Object.freeze({
   guid: simpleValidateFunc(v => PlacesUtils.isValidGuid(v)),
-  parentGuid: simpleValidateFunc(v => typeof(v) == "string" &&
-                                      /^[a-zA-Z0-9\-_]{12}$/.test(v)),
+  parentGuid: simpleValidateFunc(v => PlacesUtils.isValidGuid(v)),
+  guidPrefix: simpleValidateFunc(v => PlacesUtils.isValidGuidPrefix(v)),
   index: simpleValidateFunc(v => Number.isInteger(v) &&
                                  v >= PlacesUtils.bookmarks.DEFAULT_INDEX),
   dateAdded: simpleValidateFunc(v => v.constructor.name == "Date"),
@@ -339,6 +339,17 @@ this.PlacesUtils = {
     return typeof guid == "string" && guid &&
            (/^[a-zA-Z0-9\-_]{12}$/.test(guid));
   },
+
+  /**
+   * Is a string a valid GUID prefix?
+   *
+   * @param guidPrefix: (String)
+   * @return (Boolean)
+   */
+   isValidGuidPrefix(guidPrefix) {
+     return typeof guidPrefix == "string" && guidPrefix &&
+            (/^[a-zA-Z0-9\-_]{1,11}$/.test(guidPrefix));
+   },
 
   /**
    * Converts a string or n URL object to an nsIURI.
@@ -2414,7 +2425,7 @@ var GuidHelper = {
   updateCache(aItemId, aGuid) {
     if (typeof(aItemId) != "number" || aItemId <= 0)
       throw new Error("Trying to update the GUIDs cache with an invalid itemId");
-    if (typeof(aGuid) != "string" || !/^[a-zA-Z0-9\-_]{12}$/.test(aGuid))
+    if (!PlacesUtils.isValidGuid(aGuid))
       throw new Error("Trying to update the GUIDs cache with an invalid GUID");
     this.ensureObservingRemovedItems();
     this.guidsForIds.set(aItemId, aGuid);
