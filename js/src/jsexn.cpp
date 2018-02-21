@@ -16,14 +16,14 @@
 
 #include "jsapi.h"
 #include "jsnum.h"
-#include "jsprf.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jswrapper.h"
 
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "js/CharacterEncoding.h"
+#include "js/Printf.h"
+#include "js/Wrapper.h"
 #include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"

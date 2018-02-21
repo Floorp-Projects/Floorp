@@ -9,7 +9,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jsnum.h"
-#include "jsprf.h"
 
 #include "gc/PublicIterators.h"
 #include "jit/BaselineFrame.h"
@@ -17,6 +16,7 @@
 #include "jit/JitcodeMap.h"
 #include "jit/JitFrames.h"
 #include "jit/JSJitFrameIter.h"
+#include "js/Printf.h"
 #include "vm/JSScript.h"
 #include "vm/StringBuffer.h"
 

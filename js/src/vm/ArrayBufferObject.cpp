@@ -28,7 +28,6 @@
 #include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jswrapper.h"
 
 #include "builtin/DataViewObject.h"
 #include "gc/Barrier.h"
@@ -36,6 +35,7 @@
 #include "gc/Memory.h"
 #include "js/Conversions.h"
 #include "js/MemoryMetrics.h"
+#include "js/Wrapper.h"
 #include "util/Windows.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"

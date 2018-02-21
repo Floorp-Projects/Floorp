@@ -9,10 +9,10 @@
 
 #include "mozilla/Assertions.h" // MOZ_ASSERT
 
-#include "jsalloc.h" // SystemAllocPolicy
 #include "jsapi.h" // JSFreeOp
 
 #include "jit/ExecutableAllocator.h" // jit::JitPoisonRangeVector
+#include "js/AllocPolicy.h" // SystemAllocPolicy
 #include "js/Utility.h" // AutoEnterOOMUnsafeRegion, js_free
 #include "js/Vector.h" // js::Vector
 

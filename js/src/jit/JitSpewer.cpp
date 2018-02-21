@@ -16,16 +16,12 @@
 #else
 #include <unistd.h>
 #endif
-
-#include "jsprf.h"
-
 #include "jit/Ion.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
-
+#include "js/Printf.h"
 #include "threading/LockGuard.h"
-
 #include "vm/HelperThreads.h"
 #include "vm/MutexIDs.h"
 

@@ -7,7 +7,7 @@
 /* Sharable code and data for wrapper around JSObjects. */
 
 #include "xpcprivate.h"
-#include "jsprf.h"
+#include "js/Printf.h"
 #include "nsArrayEnumerator.h"
 #include "nsINamed.h"
 #include "nsIScriptError.h"

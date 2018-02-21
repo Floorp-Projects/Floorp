@@ -22,7 +22,6 @@
 #include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jswrapper.h"
 
 #include "builtin/DataViewObject.h"
 #include "builtin/TypedObjectConstants.h"
@@ -30,6 +29,7 @@
 #include "gc/Marking.h"
 #include "jit/InlinableNatives.h"
 #include "js/Conversions.h"
+#include "js/Wrapper.h"
 #include "util/Windows.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/GlobalObject.h"

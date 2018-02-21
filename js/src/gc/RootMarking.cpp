@@ -8,7 +8,6 @@
 # include <valgrind/memcheck.h>
 #endif
 
-#include "jsprf.h"
 #include "jstypes.h"
 
 #include "builtin/MapObject.h"
@@ -17,6 +16,7 @@
 #include "gc/Marking.h"
 #include "jit/MacroAssembler.h"
 #include "js/HashTable.h"
+#include "js/Printf.h"
 #include "vm/Debugger.h"
 #include "vm/JSContext.h"
 #include "vm/JSONParser.h"

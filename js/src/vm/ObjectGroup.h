@@ -7,13 +7,13 @@
 #ifndef vm_ObjectGroup_h
 #define vm_ObjectGroup_h
 
-#include "jsbytecode.h"
 #include "jsfriendapi.h"
 
 #include "ds/IdValuePair.h"
 #include "gc/Barrier.h"
 #include "js/CharacterEncoding.h"
 #include "js/GCHashTable.h"
+#include "js/TypeDecls.h"
 #include "vm/TaggedProto.h"
 #include "vm/TypeInference.h"
 

@@ -11,8 +11,8 @@
 
 #include "WrapperFactory.h"
 
-#include "jswrapper.h"
 #include "js/Proxy.h"
+#include "js/Wrapper.h"
 
 // Slot where Xray functions for Web IDL methods store a pointer to
 // the Xray wrapper they're associated with.

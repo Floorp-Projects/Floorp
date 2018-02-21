@@ -12,9 +12,10 @@
 
 #include "mozilla/EndianUtils.h"
 
-#include "jsprf.h"
 #include "jstypes.h"
 #include "jsutil.h"
+
+#include "js/Printf.h"
 
 using namespace js;
 

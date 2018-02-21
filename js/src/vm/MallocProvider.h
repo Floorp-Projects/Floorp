@@ -16,7 +16,7 @@
  *
  *   - AllocPolicy: An interface for the js allocators, for use with templates.
  *     These allocators are for system memory whose lifetime is not associated
- *     with a GC thing. See js/src/jsalloc.h.
+ *     with a GC thing. See js/public/AllocPolicy.h.
  *
  *       - SystemAllocPolicy: No extra functionality over bare allocators.
  *

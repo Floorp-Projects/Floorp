@@ -8,8 +8,7 @@
 
 #include <stdio.h>
 
-#include "jsalloc.h"
-
+#include "js/AllocPolicy.h"
 #include "js/Initialization.h"
 #include "js/RootingAPI.h"
 #include "vm/JSContext.h"
