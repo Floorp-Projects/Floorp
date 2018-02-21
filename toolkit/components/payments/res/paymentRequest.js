@@ -113,6 +113,10 @@ var paymentRequest = {
     this.sendMessageToChrome("changeShippingAddress", data);
   },
 
+  changeShippingOption(data) {
+    this.sendMessageToChrome("changeShippingOption", data);
+  },
+
   onPaymentRequestUnload() {
     // remove listeners that may be used multiple times here
     window.removeEventListener("paymentChromeToContent", this);

@@ -97,11 +97,10 @@ nsJARURI::CreateEntryURL(const nsACString& entryFilename,
     // Flatten the concatenation, just in case.  See bug 128288
     nsAutoCString spec(NS_BOGUS_ENTRY_SCHEME + entryFilename);
     return NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-             .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
-                                           nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
-                                           spec, charset, nullptr,
-                                           nullptr)
-             .Finalize(url);
+        .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                                nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
+                                spec, charset, nullptr, nullptr))
+        .Finalize(url);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -334,11 +333,10 @@ nsJARURI::SetSpecWithBase(const nsACString &aSpec, nsIURI* aBaseURL)
         nsCOMPtr<nsIURI> entry;
 
         rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-               .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
-                                             nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
-                                             nsCString(aSpec), mCharsetHint.get(),
-                                             otherJAR->mJAREntry,
-                                             nullptr)
+               .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                                       nsIStandardURL::URLTYPE_NO_AUTHORITY,
+                                       -1, nsCString(aSpec), mCharsetHint.get(),
+                                       otherJAR->mJAREntry, nullptr))
                .Finalize(entry);
         if (NS_FAILED(rv)) {
             return rv;
@@ -716,10 +714,9 @@ nsresult
 nsJARURI::SetFileNameInternal(const nsACString& fileName)
 {
     return NS_MutateURI(mJAREntry)
-             .Apply<nsIURLMutator>(&nsIURLMutator::SetFileName,
-                                   nsCString(fileName),
-                                   nullptr)
-             .Finalize(mJAREntry);
+        .Apply(NS_MutatorMethod(&nsIURLMutator::SetFileName,
+                                nsCString(fileName), nullptr))
+        .Finalize(mJAREntry);
 }
 
 NS_IMETHODIMP
@@ -732,10 +729,9 @@ nsresult
 nsJARURI::SetFileBaseNameInternal(const nsACString& fileBaseName)
 {
     return NS_MutateURI(mJAREntry)
-             .Apply<nsIURLMutator>(&nsIURLMutator::SetFileBaseName,
-                                   nsCString(fileBaseName),
-                                   nullptr)
-             .Finalize(mJAREntry);
+        .Apply(NS_MutatorMethod(&nsIURLMutator::SetFileBaseName,
+                                nsCString(fileBaseName), nullptr))
+        .Finalize(mJAREntry);
 }
 
 NS_IMETHODIMP
@@ -748,10 +744,9 @@ nsresult
 nsJARURI::SetFileExtensionInternal(const nsACString& fileExtension)
 {
     return NS_MutateURI(mJAREntry)
-             .Apply<nsIURLMutator>(&nsIURLMutator::SetFileExtension,
-                                   nsCString(fileExtension),
-                                   nullptr)
-             .Finalize(mJAREntry);
+        .Apply(NS_MutatorMethod(&nsIURLMutator::SetFileExtension,
+                                nsCString(fileExtension), nullptr))
+        .Finalize(mJAREntry);
 }
 
 NS_IMETHODIMP

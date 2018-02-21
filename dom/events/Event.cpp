@@ -344,9 +344,9 @@ Event::Init(mozilla::dom::EventTarget* aGlobal)
     nsCOMPtr<nsIDocument> d = w->GetExtantDoc();
     if (d) {
       trusted = nsContentUtils::IsChromeDoc(d);
-      nsIPresShell* s = d->GetShell();
-      if (s) {
-        InitPresContextData(s->GetPresContext());
+      nsPresContext* presContext = d->GetPresContext();
+      if (presContext) {
+        InitPresContextData(presContext);
       }
     }
   }

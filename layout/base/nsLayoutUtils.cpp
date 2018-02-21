@@ -8447,9 +8447,9 @@ nsLayoutUtils::PostRestyleEvent(Element* aElement,
 {
   nsIDocument* doc = aElement->GetComposedDoc();
   if (doc) {
-    nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
-    if (presShell) {
-      presShell->GetPresContext()->RestyleManager()->PostRestyleEvent(
+    RefPtr<nsPresContext> presContext = doc->GetPresContext();
+    if (presContext) {
+      presContext->RestyleManager()->PostRestyleEvent(
         aElement, aRestyleHint, aMinChangeHint);
     }
   }

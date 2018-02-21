@@ -2120,11 +2120,10 @@ nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI, nsCOMPtr<nsIURI>& aOu
         }
         else
         {
-            return NS_MutateURI(url)
-                     .Apply<nsIURLMutator>(&nsIURLMutator::SetFileName,
-                                           filename,
-                                           nullptr)
-                     .Finalize(aOutURI);
+          return NS_MutateURI(url)
+                   .Apply(NS_MutatorMethod(&nsIURLMutator::SetFileName,
+                                           filename, nullptr))
+                   .Finalize(aOutURI);
         }
     }
 
@@ -2298,11 +2297,10 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI,
                 }
                 else
                 {
-                    return NS_MutateURI(url)
-                             .Apply<nsIURLMutator>(&nsIURLMutator::SetFileName,
-                                                   newFileName,
-                                                   nullptr)
-                             .Finalize(aOutURI);
+                  return NS_MutateURI(url)
+                           .Apply(NS_MutatorMethod(&nsIURLMutator::SetFileName,
+                                                   newFileName, nullptr))
+                           .Finalize(aOutURI);
                 }
             }
 

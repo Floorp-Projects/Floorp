@@ -243,7 +243,16 @@ function ConfirmDelete() {
       deleteFiles = true;
   }
 
-  selectedProfile.remove(deleteFiles);
+  try {
+    selectedProfile.remove(deleteFiles);
+  } catch (e) {
+    let title = gProfileManagerBundle.getString("profileDeletionFailedTitle");
+    let msg = gProfileManagerBundle.getString("profileDeletionFailed");
+    Services.prompt.alert(window, title, msg);
+
+    return true;
+  }
+
   profileList.removeChild(selectedItem);
   if (profileList.firstChild != undefined) {
     profileList.selectItem(profileList.firstChild);

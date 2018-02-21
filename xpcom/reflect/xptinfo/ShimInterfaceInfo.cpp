@@ -48,7 +48,6 @@
 #include "nsIDOMScrollAreaEvent.h"
 #include "nsIDOMSerializer.h"
 #include "nsIDOMText.h"
-#include "nsIDOMTimeRanges.h"
 #include "nsIDOMUIEvent.h"
 #include "nsIDOMWheelEvent.h"
 #include "nsIDOMXMLDocument.h"
@@ -121,7 +120,6 @@
 #include "mozilla/dom/SVGElementBinding.h"
 #include "mozilla/dom/TextBinding.h"
 #include "mozilla/dom/TimeEventBinding.h"
-#include "mozilla/dom/TimeRangesBinding.h"
 #include "mozilla/dom/TreeBoxObjectBinding.h"
 #include "mozilla/dom/UIEventBinding.h"
 #include "mozilla/dom/WheelEventBinding.h"
@@ -229,7 +227,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(ScrollAreaEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMSerializer, XMLSerializer),
   DEFINE_SHIM(Text),
-  DEFINE_SHIM(TimeRanges),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsITreeBoxObject, TreeBoxObject),
   DEFINE_SHIM(UIEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIWebBrowserPersistable, FrameLoader),

@@ -36,10 +36,15 @@
         return true;
 
       // When we're diving by non-whole numbers, we may not get perfect
-      // multiplication/division because of floating points
-      if (Math.abs(rounded - x + expectedPrecision) < .0000001) {
+      // multiplication/division because of floating points.
+      // When dealing with ms since epoch, a double's precision is on the order
+      // of 1/5 of a microsecond, so we use a value a little higher than that as
+      // our epsilon.
+      // To be clear, this error is introduced in our re-calculation of 'rounded'
+      // above in JavaScript.
+      if (Math.abs(rounded - x + expectedPrecision) < .0005) {
         return true;
-      } else if (Math.abs(rounded - x) < .0000001) {
+      } else if (Math.abs(rounded - x) < .0005) {
         return true;
       }
 
@@ -69,22 +74,22 @@
         () => {
 
           // We have disabled Time Precision Reduction for CSS Animations, so we expect those tests to fail.
-          // If we are testing that preference, turn failures into successes and successes into failures
-          var maybeInvert = function(value) {
+          // If we are testing that preference, we accept either rounded or not rounded values as A-OK.
+          var maybeAcceptEverything = function(value) {
             if (opener.prefName.includes("privacy.reduceTimerPrecision") &&
                 !opener.prefName.includes("privacy.resistFingerprinting"))
-              return !value;
+              return true;
             return value;
           };
 
-          opener.ok(maybeInvert(isRounded(animation.startTime)),
+          opener.ok(maybeAcceptEverything(isRounded(animation.startTime)),
              "pref: " + opener.prefName + " - animation.startTime with precision " + expectedPrecision + " is not rounded: " + animation.startTime);
-          opener.ok(maybeInvert(isRounded(animation.currentTime)),
+          opener.ok(maybeAcceptEverything(isRounded(animation.currentTime)),
              "pref: " + opener.prefName + " - animation.currentTime with precision " + expectedPrecision + " is not rounded: " + animation.currentTime);
-          opener.ok(maybeInvert(isRounded(animation.timeline.currentTime)),
+          opener.ok(maybeAcceptEverything(isRounded(animation.timeline.currentTime)),
              "pref: " + opener.prefName + " - animation.timeline.currentTime with precision " + expectedPrecision + " is not rounded: " + animation.timeline.currentTime);
           if (document.timeline) {
-            opener.ok(maybeInvert(isRounded(document.timeline.currentTime)),
+            opener.ok(maybeAcceptEverything(isRounded(document.timeline.currentTime)),
                "pref: " + opener.prefName + " - document.timeline.currentTime with precision " + expectedPrecision + " is not rounded: " + document.timeline.currentTime);
           }
           opener.done();

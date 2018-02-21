@@ -395,24 +395,10 @@ BookmarksEngine.prototype = {
     let guidMap = {};
     let tree = await PlacesUtils.promiseBookmarksTree("");
 
-    function* walkBookmarksTree(tree, parent = null) {
-      if (tree) {
-        // Skip root node
-        if (parent) {
-          yield [tree, parent];
-        }
-        if (tree.children) {
-          for (let child of tree.children) {
-            yield* walkBookmarksTree(child, tree);
-          }
-        }
-      }
-    }
-
     function* walkBookmarksRoots(tree) {
       for (let child of tree.children) {
         if (isSyncedRootNode(child)) {
-          yield* walkBookmarksTree(child, tree);
+          yield* Utils.walkTree(child, tree);
         }
       }
     }

@@ -45,7 +45,6 @@ module.exports = {
     "files": [
       "extensions/pref/**",
       "mobile/android/**",
-      "testing/**",
     ],
     "rules": {
       "mozilla/use-services": "off",

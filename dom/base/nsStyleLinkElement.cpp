@@ -227,12 +227,7 @@ nsStyleLinkElement::CheckPreloadAttrs(const nsAttrValue& aAs,
   if (!aMedia.IsEmpty()) {
     RefPtr<MediaList> mediaList = MediaList::Create(aDocument->GetStyleBackendType(),
                                                     aMedia);
-    nsIPresShell* shell = aDocument->GetShell();
-    if (!shell) {
-      return false;
-    }
-
-    nsPresContext* presContext = shell->GetPresContext();
+    nsPresContext* presContext = aDocument->GetPresContext();
     if (!presContext) {
       return false;
     }

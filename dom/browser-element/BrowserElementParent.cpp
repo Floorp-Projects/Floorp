@@ -81,11 +81,8 @@ DispatchCustomDOMEvent(Element* aFrameElement, const nsAString& aEventName,
                        nsEventStatus *aStatus)
 {
   NS_ENSURE_TRUE(aFrameElement, false);
-  nsIPresShell *shell = aFrameElement->OwnerDoc()->GetShell();
-  RefPtr<nsPresContext> presContext;
-  if (shell) {
-    presContext = shell->GetPresContext();
-  }
+  RefPtr<nsPresContext> presContext =
+    aFrameElement->OwnerDoc()->GetPresContext();
 
   RefPtr<CustomEvent> event =
     NS_NewDOMCustomEvent(aFrameElement, presContext, nullptr);

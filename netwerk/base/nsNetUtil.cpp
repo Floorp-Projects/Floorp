@@ -3063,7 +3063,7 @@ NS_GetSecureUpgradedURI(nsIURI* aURI, nsIURI** aUpgradedURI)
   // Change the default port to 443:
   nsCOMPtr<nsIStandardURL> stdURL = do_QueryInterface(aURI);
   if (stdURL) {
-    mutator.Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::SetDefaultPort, 443, nullptr);
+    mutator.Apply(NS_MutatorMethod(&nsIStandardURLMutator::SetDefaultPort, 443, nullptr));
   } else {
     // If we don't have a nsStandardURL, fall back to using GetPort/SetPort.
     // XXXdholbert Is this function even called with a non-nsStandardURL arg,

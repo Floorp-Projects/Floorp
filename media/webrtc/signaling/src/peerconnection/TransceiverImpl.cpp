@@ -734,7 +734,7 @@ TransceiverImpl::UpdateAudioConduit()
       MOZ_MTLOG(ML_DEBUG, "Calling EnableAudioLevelExtension");
       error = conduit->EnableAudioLevelExtension(true,
                                                  audioLevelExt->entry,
-                                                 true);
+                                                 false);
 
       if (error) {
         MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
@@ -781,7 +781,7 @@ TransceiverImpl::UpdateAudioConduit()
       MOZ_MTLOG(ML_DEBUG, "Calling EnableAudioLevelExtension");
       error = conduit->EnableAudioLevelExtension(true,
                                                  audioLevelExt->entry,
-                                                 false);
+                                                 true);
 
       if (error) {
         MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<

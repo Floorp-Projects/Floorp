@@ -50,11 +50,12 @@ class ShippingOptionPicker extends PaymentStateSubscriberMixin(HTMLElement) {
     let selectedShippingOption = state.selectedShippingOption;
     let selectedOptionEl =
       this.dropdown.getOptionByValue(selectedShippingOption);
+    this.dropdown.selectedOption = selectedOptionEl;
+
     if (selectedShippingOption && !selectedOptionEl) {
       throw new Error(`Selected shipping option ${selectedShippingOption} ` +
                       `does not exist in option elements`);
     }
-    this.dropdown.selectedOption = selectedOptionEl;
   }
 
   handleEvent(event) {

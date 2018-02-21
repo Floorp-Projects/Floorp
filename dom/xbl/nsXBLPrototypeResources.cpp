@@ -251,6 +251,9 @@ nsXBLPrototypeResources::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
   n += mStyleSheetList.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (const auto& sheet : mStyleSheetList) {
+    n += sheet->SizeOfIncludingThis(aMallocSizeOf);
+  }
 #ifdef MOZ_OLD_STYLE
   n += mRuleProcessor ? mRuleProcessor->SizeOfIncludingThis(aMallocSizeOf) : 0;
 #endif
