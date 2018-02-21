@@ -14,22 +14,12 @@ function shouldBeImminentlyDistrusted(aTransportSecurityInfo) {
   Assert.ok(isDistrust, "This host should be imminently distrusted");
 }
 
-function shouldNotBeImminentlyDistrusted(aTransportSecurityInfo) {
-  let isDistrust = aTransportSecurityInfo.securityState &
-                     Ci.nsIWebProgressListener.STATE_CERT_DISTRUST_IMMINENT;
-  Assert.ok(!isDistrust, "This host should not be imminently distrusted");
-}
-
 do_get_profile();
 
+const certDB = Cc["@mozilla.org/security/x509certdb;1"]
+                 .getService(Ci.nsIX509CertDB);
+
 add_tls_server_setup("SymantecSanctionsServer", "test_symantec_apple_google");
-
-// Whitelisted certs aren't to be distrusted
-add_connection_test("symantec-whitelist-after-cutoff.example.com",
-                    PRErrorCodeSuccess, null, shouldNotBeImminentlyDistrusted);
-
-add_connection_test("symantec-whitelist-before-cutoff.example.com",
-                    PRErrorCodeSuccess, null, shouldNotBeImminentlyDistrusted);
 
 // Not-whitelisted certs after the cutoff are to be distrusted
 add_connection_test("symantec-not-whitelisted-after-cutoff.example.com",
@@ -38,3 +28,23 @@ add_connection_test("symantec-not-whitelisted-after-cutoff.example.com",
 // Not whitelisted certs before the cutoff are to be distrusted
 add_connection_test("symantec-not-whitelisted-before-cutoff.example.com",
                     SEC_ERROR_UNKNOWN_ISSUER, null, null);
+
+
+// Load the wildcard *.google.com cert and its intermediate, then verify
+// it at a reasonable time and make sure the whitelists work
+function run_test() {
+  addCertFromFile(certDB, "test_symantec_apple_google/real-google-g2-intermediate.pem", ",,");
+  let whitelistedCert = constructCertFromFile("test_symantec_apple_google/real-googlecom.pem");
+
+  // Since we don't want to actually try to fetch OCSP for this certificate,
+  // (as an external fetch is bad in the tests), disable OCSP first.
+  Services.prefs.setIntPref("security.OCSP.enabled", 0);
+
+  // (new Date("2018-02-16")).getTime() / 1000
+  const VALIDATION_TIME = 1518739200;
+
+  checkCertErrorGenericAtTime(certDB, whitelistedCert, PRErrorCodeSuccess,
+                              certificateUsageSSLServer, VALIDATION_TIME);
+
+  run_next_test();
+}
