@@ -182,7 +182,7 @@ var UI = {
     // Open a URL in a Firefox window
     let mainWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
     if (mainWindow) {
-      mainWindow.openUILinkIn(url, "tab");
+      mainWindow.openWebLinkIn(url, "tab");
       mainWindow.focus()
     } else {
       window.open(url);
