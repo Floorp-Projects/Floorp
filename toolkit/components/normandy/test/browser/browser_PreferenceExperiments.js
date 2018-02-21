@@ -9,7 +9,7 @@ ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
 // Save ourselves some typing
 const {withMockExperiments} = PreferenceExperiments;
 const DefaultPreferences = new Preferences({defaultBranch: true});
-const startupPrefs = "extensions.shield-recipe-client.startupExperimentPrefs";
+const startupPrefs = "app.normandy.startupExperimentPrefs";
 
 function experimentFactory(attrs) {
   return Object.assign({
