@@ -668,7 +668,7 @@ function EditCellInSelectedRow(columnName) {
 function LaunchSiteUrl() {
   let row = signonsTree.currentIndex;
   let url = signonsTreeView.getCellText(row, {id: "siteCol"});
-  window.openUILinkIn(url, "tab");
+  window.openWebLinkIn(url, "tab");
 }
 
 function UpdateContextMenu() {
@@ -689,7 +689,7 @@ function UpdateContextMenu() {
   let selectedRow = signonsTree.currentIndex;
 
   // Don't display "Launch Site URL" if we're not a browser.
-  if (window.openUILinkIn) {
+  if (window.openWebLinkIn) {
     menuItems.get("context-launchsiteurl").removeAttribute("disabled");
   } else {
     menuItems.get("context-launchsiteurl").setAttribute("disabled", "true");
