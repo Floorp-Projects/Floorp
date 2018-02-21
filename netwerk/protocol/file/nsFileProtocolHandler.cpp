@@ -164,7 +164,7 @@ nsFileProtocolHandler::GetProtocolFlags(uint32_t *result)
 NS_IMETHODIMP
 nsFileProtocolHandler::NewURI(const nsACString &spec,
                               const char *charset,
-                              nsIURI *baseURI,
+                              nsIURI *aBaseURI,
                               nsIURI **result)
 {
     nsCOMPtr<nsIURI> url = new nsStandardURL(true);
@@ -177,12 +177,12 @@ nsFileProtocolHandler::NewURI(const nsACString &spec,
     }
 #endif
 
+    nsCOMPtr<nsIURI> base(aBaseURI);
     return NS_MutateURI(url)
-             .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
-                                           nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
-                                           buf, charset, baseURI,
-                                           nullptr)
-             .Finalize(result);
+      .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                              nsIStandardURL::URLTYPE_NO_AUTHORITY,
+                              -1, buf, charset, base, nullptr))
+      .Finalize(result);
 }
 
 NS_IMETHODIMP
