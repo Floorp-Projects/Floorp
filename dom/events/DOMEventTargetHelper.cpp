@@ -130,26 +130,12 @@ DOMEventTargetHelper::BindToOwner(nsIGlobalObject* aOwner)
 void
 DOMEventTargetHelper::BindToOwner(DOMEventTargetHelper* aOther)
 {
-  if (mParentObject) {
-    mParentObject->RemoveEventTargetObject(this);
+  if (!aOther) {
+    BindToOwner(static_cast<nsIGlobalObject*>(nullptr));
+    return;
   }
-  if (mOwnerWindow) {
-    mOwnerWindow = nullptr;
-    mParentObject = nullptr;
-    mHasOrHasHadOwnerWindow = false;
-  }
-  if (aOther) {
-    mHasOrHasHadOwnerWindow = aOther->HasOrHasHadOwner();
-    mParentObject = aOther->GetParentObject();
-    if (mParentObject) {
-      mParentObject->AddEventTargetObject(this);
-      // Let's cache the result of this QI for fast access and off main thread usage
-      mOwnerWindow = nsCOMPtr<nsPIDOMWindowInner>(do_QueryInterface(mParentObject)).get();
-      if (mOwnerWindow) {
-        mHasOrHasHadOwnerWindow = true;
-      }
-    }
-  }
+  BindToOwner(aOther->GetParentObject());
+  mHasOrHasHadOwnerWindow = aOther->HasOrHasHadOwner();
 }
 
 void
