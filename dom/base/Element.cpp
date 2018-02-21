@@ -1849,6 +1849,19 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       }
       MOZ_ASSERT(parent);
     }
+
+    if (MayHaveAnimations() &&
+        (pseudoType == CSSPseudoElementType::NotPseudo ||
+         pseudoType == CSSPseudoElementType::before ||
+         pseudoType == CSSPseudoElementType::after) &&
+        EffectSet::GetEffectSet(this, pseudoType)) {
+      if (nsPresContext* presContext = aDocument->GetPresContext()) {
+        presContext->EffectCompositor()->
+          RequestRestyle(this, pseudoType,
+                         EffectCompositor::RestyleType::Standard,
+                         EffectCompositor::CascadeLevel::Animations);
+      }
+    }
   }
 
   // XXXbz script execution during binding can trigger some of these
