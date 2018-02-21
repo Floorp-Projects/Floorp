@@ -145,7 +145,7 @@ public:
 
   static bool IsEnabled(Type aType, EnabledState aEnabledState)
   {
-    if (!PseudoElementHasFlags(
+    if (!PseudoElementHasAnyFlag(
       aType, CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME)) {
       return true;
     }
@@ -181,6 +181,12 @@ private:
   {
     MOZ_ASSERT(aType < Type::Count);
     return (kPseudoElementFlags[size_t(aType)] & aFlags) == aFlags;
+  }
+
+  static bool PseudoElementHasAnyFlag(const Type aType, uint32_t aFlags)
+  {
+    MOZ_ASSERT(aType < Type::Count);
+    return (kPseudoElementFlags[size_t(aType)] & aFlags) != 0;
   }
 
   static const uint32_t kPseudoElementFlags[size_t(Type::Count)];
