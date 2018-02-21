@@ -22,6 +22,8 @@ import org.mozilla.gecko.AppConstants.Versions;
 
 import org.mozilla.gecko.annotation.BuildFlag;
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.geckoview.GeckoSession;
+import org.mozilla.geckoview.GeckoView;
 
 /**
  * A MediaPlayerManager with API 17+ Presentation support.

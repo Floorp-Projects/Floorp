@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.geckoview.TextInputController;
 
 import android.graphics.RectF;
 import android.os.IBinder;
@@ -21,7 +22,7 @@ import android.view.KeyEvent;
  * process has an instance of GeckoEditableChild, which communicates with the
  * GeckoEditableParent instance in the main process.
  */
-final class GeckoEditableChild extends JNIObject implements IGeckoEditableChild {
+public final class GeckoEditableChild extends JNIObject implements IGeckoEditableChild {
 
     private static final boolean DEBUG = false;
     private static final String LOGTAG = "GeckoEditableChild";
@@ -74,7 +75,7 @@ final class GeckoEditableChild extends JNIObject implements IGeckoEditableChild 
     private int mCurrentTextLength; // Used by Gecko thread
 
     @WrapForJNI(calledFrom = "gecko")
-    /* package */ GeckoEditableChild(final IGeckoEditableParent editableParent) {
+    public GeckoEditableChild(final IGeckoEditableParent editableParent) {
         mEditableParent = editableParent;
 
         final IBinder binder = editableParent.asBinder();

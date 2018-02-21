@@ -29,13 +29,13 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.mozilla.gecko.GeckoView;
-import org.mozilla.gecko.GeckoSession.ProgressListener.SecurityInformation;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SiteIdentity;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.toolbar.SecurityModeUtil;
 import org.mozilla.gecko.util.ColorUtil;
+import org.mozilla.geckoview.GeckoSession.ProgressListener.SecurityInformation;
+import org.mozilla.geckoview.GeckoView;
 
 /**
  * This class is used to maintain appearance of ActionBar of CustomTabsActivity, includes background
