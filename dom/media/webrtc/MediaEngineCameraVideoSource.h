@@ -96,6 +96,15 @@ protected:
     uint32_t mDistance;
   };
 
+  class CapabilityComparator {
+  public:
+    bool Equals(const CapabilityCandidate& aCandidate,
+                const webrtc::CaptureCapability& aCapability) const
+    {
+      return aCandidate.mCapability == aCapability;
+    }
+  };
+
   ~MediaEngineCameraVideoSource() {}
 
   // guts for appending data to the MSG track

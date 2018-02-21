@@ -273,6 +273,55 @@ MediaEngineCameraVideoSource::ChooseCapability(
     candidateSet.AppendElement(CapabilityCandidate(GetCapability(i)));
   }
 
+  if (!mHardcodedCapabilities.IsEmpty() &&
+      GetMediaSource() == MediaSourceEnum::Camera) {
+    // We have a hardcoded capability, which means this camera didn't report
+    // discrete capabilities. It might still allow a ranged capability, so we
+    // add a couple of default candidates based on prefs and constraints.
+    // The chosen candidate will be propagated to StartCapture() which will fail
+    // for an invalid candidate.
+    MOZ_DIAGNOSTIC_ASSERT(mHardcodedCapabilities.Length() == 1);
+    MOZ_DIAGNOSTIC_ASSERT(candidateSet.Length() == 1);
+    candidateSet.Clear();
+
+    FlattenedConstraints c(aConstraints);
+    // Reuse the code across both the low-definition (`false`) pref and
+    // the high-definition (`true`) pref.
+    // If there are constraints we try to satisfy them but we default to prefs.
+    // Note that since constraints are from content and can literally be
+    // anything we put (rather generous) caps on them.
+    for (bool isHd : {false, true}) {
+      webrtc::CaptureCapability cap;
+      int32_t prefWidth = aPrefs.GetWidth(isHd);
+      int32_t prefHeight = aPrefs.GetHeight(isHd);
+
+      cap.width = c.mWidth.Get(prefWidth);
+      cap.width = std::max(0, std::min(cap.width, 7680));
+
+      cap.height = c.mHeight.Get(prefHeight);
+      cap.height = std::max(0, std::min(cap.height, 4320));
+
+      cap.maxFPS = c.mFrameRate.Get(aPrefs.mFPS);
+      cap.maxFPS = std::max(0, std::min(cap.maxFPS, 480));
+
+      if (cap.width != prefWidth) {
+        // Width was affected by constraints.
+        // We'll adjust the height too so the aspect ratio is retained.
+        cap.height = cap.width * prefHeight / prefWidth;
+      } else if (cap.height != prefHeight) {
+        // Height was affected by constraints but not width.
+        // We'll adjust the width too so the aspect ratio is retained.
+        cap.width = cap.height * prefWidth / prefHeight;
+      }
+
+      if (candidateSet.Contains(cap, CapabilityComparator())) {
+        continue;
+      }
+      LogCapability("Hardcoded capability", cap, 0);
+      candidateSet.AppendElement(CapabilityCandidate(Move(cap)));
+    }
+  }
+
   // First, filter capabilities by required constraints (min, max, exact).
 
   for (size_t i = 0; i < candidateSet.Length();) {
