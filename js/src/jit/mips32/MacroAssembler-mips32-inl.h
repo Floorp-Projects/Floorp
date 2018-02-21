@@ -192,10 +192,13 @@ MacroAssembler::addPtr(ImmWord imm, Register dest)
 void
 MacroAssembler::add64(Register64 src, Register64 dest)
 {
-    MOZ_ASSERT(dest.low != src.low);
-
-    as_addu(dest.low, dest.low, src.low);
-    as_sltu(ScratchRegister, dest.low, src.low);
+    if (dest.low == src.low) {
+        as_sltu(ScratchRegister, src.low, zero);
+        as_addu(dest.low, dest.low, src.low);
+    } else {
+        as_addu(dest.low, dest.low, src.low);
+        as_sltu(ScratchRegister, dest.low, src.low);
+    }
     as_addu(dest.high, dest.high, src.high);
     as_addu(dest.high, dest.high, ScratchRegister);
 }
@@ -203,9 +206,14 @@ MacroAssembler::add64(Register64 src, Register64 dest)
 void
 MacroAssembler::add64(Imm32 imm, Register64 dest)
 {
-    ma_li(ScratchRegister, imm);
-    as_addu(dest.low, dest.low, ScratchRegister);
-    as_sltu(ScratchRegister, dest.low, ScratchRegister);
+    if (Imm16::IsInSignedRange(imm.value)) {
+        as_addiu(dest.low, dest.low, imm.value);
+        as_sltiu(ScratchRegister, dest.low, imm.value);
+    } else {
+        ma_li(ScratchRegister, imm);
+        as_addu(dest.low, dest.low, ScratchRegister);
+        as_sltu(ScratchRegister, dest.low, ScratchRegister);
+    }
     as_addu(dest.high, dest.high, ScratchRegister);
 }
 
@@ -263,10 +271,16 @@ MacroAssembler::sub64(Register64 src, Register64 dest)
 void
 MacroAssembler::sub64(Imm64 imm, Register64 dest)
 {
-    ma_li(ScratchRegister, imm.low());
-    as_sltu(ScratchRegister, dest.low, ScratchRegister);
-    as_subu(dest.high, dest.high, ScratchRegister);
-    ma_subu(dest.low, dest.low, imm.low());
+    if (Imm16::IsInSignedRange(imm.low().value) && Imm16::IsInSignedRange(-imm.value)) {
+        as_sltiu(ScratchRegister, dest.low, imm.low().value);
+        as_subu(dest.high, dest.high, ScratchRegister);
+        as_addiu(dest.low, dest.low, -imm.value);
+    } else {
+        ma_li(SecondScratchReg, imm.low());
+        as_sltu(ScratchRegister, dest.low, SecondScratchReg);
+        as_subu(dest.high, dest.high, ScratchRegister);
+        as_subu(dest.low, dest.low, SecondScratchReg);
+    }
     ma_subu(dest.high, dest.high, imm.hi());
 }
 
@@ -278,40 +292,31 @@ MacroAssembler::mul64(Imm64 imm, const Register64& dest)
     //        + LOW(LOW(dest) * HIGH(imm)) [multiply dest into upper bits]
     //        + HIGH(LOW(dest) * LOW(imm)) [carry]
 
-    // HIGH(dest) = LOW(HIGH(dest) * LOW(imm));
-    ma_li(ScratchRegister, Imm32(imm.value & LOW_32_MASK));
-    as_multu(dest.high, ScratchRegister);
-    as_mflo(dest.high);
-
-    // mfhi:mflo = LOW(dest) * LOW(imm);
-    as_multu(dest.low, ScratchRegister);
-
-    // HIGH(dest) += mfhi;
-    as_mfhi(ScratchRegister);
-    as_addu(dest.high, dest.high, ScratchRegister);
-
-    if (((imm.value >> 32) & LOW_32_MASK) == 5) {
+    if (imm.low().value == 5) {
         // Optimized case for Math.random().
-
-        // HIGH(dest) += LOW(LOW(dest) * HIGH(imm));
         as_sll(ScratchRegister, dest.low, 2);
-        as_addu(ScratchRegister, ScratchRegister, dest.low);
-        as_addu(dest.high, dest.high, ScratchRegister);
-
-        // LOW(dest) = mflo;
-        as_mflo(dest.low);
+        as_srl(SecondScratchReg, dest.low, 32-2);
+        as_addu(dest.low, ScratchRegister, dest.low);
+        as_sltu(ScratchRegister, dest.low, ScratchRegister);
+        as_addu(ScratchRegister, ScratchRegister, SecondScratchReg);
+        as_sll(SecondScratchReg, dest.high, 2);
+        as_addu(SecondScratchReg, SecondScratchReg, dest.high);
+        as_addu(dest.high, ScratchRegister, SecondScratchReg);
     } else {
-        // tmp = mflo
-        as_mflo(SecondScratchReg);
-
-        // HIGH(dest) += LOW(LOW(dest) * HIGH(imm));
-        ma_li(ScratchRegister, Imm32((imm.value >> 32) & LOW_32_MASK));
+        // HIGH32 = LOW(HIGH(dest) * LOW(imm)) [multiply imm into upper bits]
+        //        + LOW(LOW(dest) * HIGH(imm)) [multiply dest into upper bits]
+        ma_li(ScratchRegister, imm.low());
+        as_mult(dest.high, ScratchRegister);
+        ma_li(ScratchRegister, imm.hi());
+        as_madd(dest.low, ScratchRegister);
+        as_mflo(dest.high);
+        //        + HIGH(LOW(dest) * LOW(imm)) [carry]
+        // LOW32  = LOW(LOW(dest) * LOW(imm));
+        ma_li(ScratchRegister, imm.low());
         as_multu(dest.low, ScratchRegister);
-        as_mflo(ScratchRegister);
+        as_mfhi(ScratchRegister);
+        as_mflo(dest.low);
         as_addu(dest.high, dest.high, ScratchRegister);
-
-        // LOW(dest) = tmp;
-        ma_move(dest.low, SecondScratchReg);
     }
 }
 
@@ -323,23 +328,21 @@ MacroAssembler::mul64(Imm64 imm, const Register64& dest, const Register temp)
     //        + LOW(LOW(dest) * HIGH(imm)) [multiply dest into upper bits]
     //        + HIGH(LOW(dest) * LOW(imm)) [carry]
 
-    // HIGH(dest) = LOW(HIGH(dest) * LOW(imm));
     MOZ_ASSERT(temp != dest.high && temp != dest.low);
 
-    ma_li(ScratchRegister, imm.firstHalf());
-    as_multu(dest.high, ScratchRegister);
+    // HIGH32 = LOW(HIGH(dest) * LOW(imm)) [multiply imm into upper bits]
+    //        + LOW(LOW(dest) * HIGH(imm)) [multiply dest into upper bits]
+    ma_li(ScratchRegister, imm.low());
+    as_mult(dest.high, ScratchRegister);
+    ma_li(temp, imm.hi());
+    as_madd(dest.low, temp);
     as_mflo(dest.high);
-
-    ma_li(ScratchRegister, imm.secondHalf());
+    //        + HIGH(LOW(dest) * LOW(imm)) [carry]
+    // LOW32  = LOW(LOW(dest) * LOW(imm));
     as_multu(dest.low, ScratchRegister);
-    as_mflo(temp);
-    as_addu(temp, dest.high, temp);
-
-    ma_li(ScratchRegister, imm.firstHalf());
-    as_multu(dest.low, ScratchRegister);
-    as_mfhi(dest.high);
+    as_mfhi(ScratchRegister);
     as_mflo(dest.low);
-    as_addu(dest.high, dest.high, temp);
+    as_addu(dest.high, dest.high, ScratchRegister);
 }
 
 void
@@ -350,29 +353,29 @@ MacroAssembler::mul64(const Register64& src, const Register64& dest, const Regis
     //        + LOW(LOW(dest) * HIGH(imm)) [multiply dest into upper bits]
     //        + HIGH(LOW(dest) * LOW(imm)) [carry]
 
-    // HIGH(dest) = LOW(HIGH(dest) * LOW(imm));
     MOZ_ASSERT(dest != src);
     MOZ_ASSERT(dest.low != src.high && dest.high != src.low);
 
-    as_multu(dest.high, src.low); // (2)
+    // HIGH32 = LOW(HIGH(dest) * LOW(src)) [multiply src into upper bits]
+    //        + LOW(LOW(dest) * HIGH(src)) [multiply dest into upper bits]
+    as_mult(dest.high, src.low);
+    as_madd(dest.low, src.high);
     as_mflo(dest.high);
-    as_multu(dest.low, src.high); // (3)
-    as_mflo(temp);
-    as_addu(temp, dest.high, temp);
-    as_multu(dest.low, src.low);  // (4) + (1)
-    as_mfhi(dest.high);
+    //        + HIGH(LOW(dest) * LOW(src)) [carry]
+    // LOW32  = LOW(LOW(dest) * LOW(src));
+    as_multu(dest.low, src.low);
+    as_mfhi(ScratchRegister);
     as_mflo(dest.low);
-    as_addu(dest.high, dest.high, temp);
+    as_addu(dest.high, dest.high, ScratchRegister);
 }
 
 void
 MacroAssembler::neg64(Register64 reg)
 {
-    ma_li(ScratchRegister, Imm32(1));
-    as_movz(ScratchRegister, zero, reg.low);
-    ma_negu(reg.low, reg.low);
-    as_addu(reg.high, reg.high, ScratchRegister);
-    ma_negu(reg.high, reg.high);
+    as_subu(ScratchRegister, zero, reg.low);
+    as_sltu(ScratchRegister, reg.low, ScratchRegister);
+    as_subu(reg.high, zero, reg.high);
+    as_subu(reg.high, reg.high, ScratchRegister);
 }
 
 void
@@ -433,27 +436,24 @@ MacroAssembler::lshift64(Imm32 imm, Register64 dest)
 void
 MacroAssembler::lshift64(Register unmaskedShift, Register64 dest)
 {
-    Label done, less;
+    Label done;
     ScratchRegisterScope shift(*this);
 
     ma_and(shift, unmaskedShift, Imm32(0x3f));
     ma_b(shift, Imm32(0), &done, Equal);
 
-    ma_sll(dest.high, dest.high, shift);
-    ma_subu(shift, shift, Imm32(32));
-    ma_b(shift, Imm32(0), &less, LessThan);
-
-    ma_sll(dest.high, dest.low, shift);
-    move32(Imm32(0), dest.low);
-    ma_b(&done);
-
-    bind(&less);
-    ma_li(SecondScratchReg, Imm32(0));
-    as_subu(shift, SecondScratchReg, shift);
-    ma_srl(SecondScratchReg, dest.low, shift);
-    as_or(dest.high, dest.high, SecondScratchReg);
-    ma_and(shift, unmaskedShift, Imm32(0x3f));
+    mov(dest.low, SecondScratchReg);
     ma_sll(dest.low, dest.low, shift);
+    as_nor(shift, zero, shift);
+    as_srl(SecondScratchReg, SecondScratchReg, 1);
+    ma_srl(SecondScratchReg, SecondScratchReg, shift);
+    ma_and(shift, unmaskedShift, Imm32(0x3f));
+    ma_sll(dest.high, dest.high, shift);
+    as_or(dest.high, dest.high, SecondScratchReg);
+
+    ma_and(SecondScratchReg, shift, Imm32(0x20));
+    as_movn(dest.high, dest.low, SecondScratchReg);
+    as_movn(dest.low, zero, SecondScratchReg);
 
     bind(&done);
 }
@@ -478,7 +478,9 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
     MOZ_ASSERT(0 <= imm.value && imm.value < 64);
     ScratchRegisterScope scratch(*this);
 
-    if (imm.value < 32) {
+    if (imm.value == 0) {
+        return;
+    } else if (imm.value < 32) {
         as_srl(dest.low, dest.low, imm.value);
         as_sll(scratch, dest.high, (32 - imm.value)%32);
         as_or(dest.low, dest.low, scratch);
@@ -495,27 +497,23 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 void
 MacroAssembler::rshift64(Register unmaskedShift, Register64 dest)
 {
-    Label done, less;
+    Label done;
     ScratchRegisterScope shift(*this);
 
     ma_and(shift, unmaskedShift, Imm32(0x3f));
     ma_b(shift, Imm32(0), &done, Equal);
 
-    ma_srl(dest.low, dest.low, shift);
-    ma_subu(shift, shift, Imm32(32));
-    ma_b(shift, Imm32(0), &less, LessThan);
-
-    ma_srl(dest.low, dest.high, shift);
-    move32(Imm32(0), dest.high);
-    ma_b(&done);
-
-    bind(&less);
-    ma_li(SecondScratchReg, Imm32(0));
-    as_subu(shift, SecondScratchReg, shift);
-    ma_sll(SecondScratchReg, dest.high, shift);
-    as_or(dest.low, dest.low, SecondScratchReg);
-    ma_and(shift, unmaskedShift, Imm32(0x3f));
+    mov(dest.high, SecondScratchReg);
     ma_srl(dest.high, dest.high, shift);
+    as_nor(shift, zero, shift);
+    as_sll(SecondScratchReg, SecondScratchReg, 1);
+    ma_sll(SecondScratchReg, SecondScratchReg, shift);
+    ma_and(shift, unmaskedShift, Imm32(0x3f));
+    ma_srl(dest.low, dest.low, shift);
+    as_or(dest.low, dest.low, SecondScratchReg);
+    ma_and(SecondScratchReg, shift, Imm32(0x20));
+    as_movn(dest.low, dest.high, SecondScratchReg);
+    as_movn(dest.high, zero, SecondScratchReg);
 
     bind(&done);
 }
@@ -526,7 +524,9 @@ MacroAssembler::rshift64Arithmetic(Imm32 imm, Register64 dest)
     MOZ_ASSERT(0 <= imm.value && imm.value < 64);
     ScratchRegisterScope scratch(*this);
 
-    if (imm.value < 32) {
+    if (imm.value == 0) {
+        return;
+    } else if (imm.value < 32) {
         as_srl(dest.low, dest.low, imm.value);
         as_sll(scratch, dest.high, (32 - imm.value)%32);
         as_or(dest.low, dest.low, scratch);
@@ -543,27 +543,24 @@ MacroAssembler::rshift64Arithmetic(Imm32 imm, Register64 dest)
 void
 MacroAssembler::rshift64Arithmetic(Register unmaskedShift, Register64 dest)
 {
-    Label done, less;
+    Label done;
 
     ScratchRegisterScope shift(*this);
     ma_and(shift, unmaskedShift, Imm32(0x3f));
     ma_b(shift, Imm32(0), &done, Equal);
 
-    ma_srl(dest.low, dest.low, shift);
-    ma_subu(shift, shift, Imm32(32));
-    ma_b(shift, Imm32(0), &less, LessThan);
-
-    ma_sra(dest.low, dest.high, shift);
-    as_sra(dest.high, dest.high, 31);
-    ma_b(&done);
-
-    bind(&less);
-    ma_li(SecondScratchReg, Imm32(0));
-    as_subu(shift, SecondScratchReg, shift);
-    ma_sll(SecondScratchReg, dest.high, shift);
-    as_or(dest.low, dest.low, SecondScratchReg);
-    ma_and(shift, unmaskedShift, Imm32(0x3f));
+    mov(dest.high, SecondScratchReg);
     ma_sra(dest.high, dest.high, shift);
+    as_nor(shift, zero, shift);
+    as_sll(SecondScratchReg, SecondScratchReg, 1);
+    ma_sll(SecondScratchReg, SecondScratchReg, shift);
+    ma_and(shift, unmaskedShift, Imm32(0x3f));
+    ma_srl(dest.low, dest.low, shift);
+    as_or(dest.low, dest.low, SecondScratchReg);
+    ma_and(SecondScratchReg, shift, Imm32(0x20));
+    as_sra(shift, dest.high, 31);
+    as_movn(dest.low, dest.high, SecondScratchReg);
+    as_movn(dest.high, shift, SecondScratchReg);
 
     bind(&done);
 }
@@ -610,57 +607,26 @@ MacroAssembler::rotateLeft64(Register shift, Register64 src, Register64 dest, Re
     MOZ_ASSERT(shift != src.low && shift != src.high);
     MOZ_ASSERT(temp != InvalidReg);
 
-    ScratchRegisterScope shift_value(*this);
-    Label high, swap, done, zero;
-    ma_and(shift, shift, Imm32(0x3f));
-    ma_b(shift, Imm32(32), &swap, Equal);
-    ma_b(shift, Imm32(32), &high, GreaterThan);
+    ScratchRegisterScope scratch(*this);
 
-    // high = high << shift | low >> 32 - shift
-    // low = low << shift | high >> 32 - shift
-    ma_move(temp, src.high);
-    ma_sll(dest.high, src.high, shift);
-    ma_b(shift, Imm32(0), &zero, Equal);
-    ma_li(SecondScratchReg, Imm32(32));
-    as_subu(shift_value, SecondScratchReg, shift);
-
-    ma_srl(SecondScratchReg, src.low, shift_value);
-    as_or(dest.high, dest.high, SecondScratchReg);
-
-    ma_sll(dest.low, src.low, shift);
-    ma_srl(SecondScratchReg, temp, shift_value);
-    as_or(dest.low, dest.low, SecondScratchReg);
-    ma_b(&done);
-
-    bind(&zero);
-    ma_move(dest.low, src.low);
-    ma_move(dest.high, src.high);
-    ma_b(&done);
-
-    bind(&swap);
-    ma_move(SecondScratchReg, src.low);
-    ma_move(dest.low, src.high);
-    ma_move(dest.high, SecondScratchReg);
-    ma_b(&done);
-    // A 32 - 64 shift is a 0 - 32 shift in the other direction.
-    bind(&high);
-    ma_li(SecondScratchReg, Imm32(64));
-    as_subu(shift_value, SecondScratchReg, shift);
-
-    ma_move(temp, src.high);
-    ma_srl(dest.high, src.high, shift_value);
-    ma_li(SecondScratchReg, Imm32(32));
-    as_subu(shift_value, SecondScratchReg, shift_value);
-    ma_sll(SecondScratchReg, src.low, shift_value);
-    as_or(dest.high, dest.high, SecondScratchReg);
-
-    ma_sll(temp, temp, shift_value);
-    ma_li(SecondScratchReg, Imm32(64));
-    as_subu(shift_value, SecondScratchReg, shift);
-    ma_srl(dest.low, src.low, shift_value);
+    ma_and(scratch, shift, Imm32(0x3f));
+    as_nor(SecondScratchReg, zero, scratch);
+    ma_sll(temp, src.low, scratch);
+    ma_move(scratch, src.low);
+    as_srl(dest.low, src.high, 1);
+    ma_srl(dest.low, dest.low, SecondScratchReg);
     as_or(dest.low, dest.low, temp);
-
-    bind(&done);
+    ma_move(SecondScratchReg, src.high);
+    as_srl(dest.high, scratch, 1);
+    ma_and(scratch, shift, Imm32(0x3f));
+    ma_sll(temp, SecondScratchReg, scratch);
+    as_nor(SecondScratchReg, zero, scratch);
+    ma_srl(dest.high, dest.high, SecondScratchReg);
+    as_or(dest.high, dest.high, temp);
+    ma_and(temp, scratch, Imm32(32));
+    as_movn(SecondScratchReg, dest.high, temp);
+    as_movn(dest.high, dest.low, temp);
+    as_movn(dest.low, SecondScratchReg, temp);
 }
 
 void
@@ -701,62 +667,26 @@ MacroAssembler::rotateRight64(Register shift, Register64 src, Register64 dest, R
     MOZ_ASSERT(shift != src.low && shift != src.high);
     MOZ_ASSERT(temp != InvalidReg);
 
-    ScratchRegisterScope shift_value(*this);
-    Label high, swap, done, zero;
+    ScratchRegisterScope scratch(*this);
 
-    ma_and(shift, shift, Imm32(0x3f));
-    ma_b(shift, Imm32(32), &swap, Equal);
-    ma_b(shift, Imm32(32), &high, GreaterThan);
-
-    // high = high >> shift | low << 32 - shift
-    // low = low >> shift | high << 32 - shift
-    ma_move(temp, src.high);
-    ma_srl(dest.high, src.high, shift);
-    ma_b(shift, Imm32(0), &zero, Equal);
-    ma_li(SecondScratchReg, Imm32(32));
-    as_subu(shift_value, SecondScratchReg, shift);
-
-    ma_sll(SecondScratchReg, src.low, shift_value);
-    as_or(dest.high, dest.high, SecondScratchReg);
-
-    ma_srl(dest.low, src.low, shift);
-
-    //ma_li(SecondScratchReg, Imm32(32));
-    //as_subu(shift_value, SecondScratchReg, shift_value);
-    ma_sll(SecondScratchReg, temp, shift_value);
-    as_or(dest.low, dest.low, SecondScratchReg);
-
-    ma_b(&done);
-
-    bind(&zero);
-    ma_move(dest.low, src.low);
-    ma_move(dest.high, src.high);
-    ma_b(&done);
-
-    bind(&swap);
-    ma_move(SecondScratchReg, src.low);
-    ma_move(dest.low, src.high);
-    ma_move(dest.high, SecondScratchReg);
-    ma_b(&done);
-    // A 32 - 64 shift is a 0 - 32 shift in the other direction.
-    bind(&high);
-    ma_li(SecondScratchReg, Imm32(64));
-    as_subu(shift_value, SecondScratchReg, shift);
-
-    ma_move(temp, src.high);
-    ma_sll(dest.high, src.high, shift_value);
-    ma_li(SecondScratchReg, Imm32(32));
-    as_subu(shift_value, SecondScratchReg, shift_value);
-    ma_srl(SecondScratchReg, src.low, shift_value);
-    as_or(dest.high, dest.high, SecondScratchReg);
-
-    ma_srl(temp, temp, shift_value);
-    ma_li(SecondScratchReg, Imm32(64));
-    as_subu(shift_value, SecondScratchReg, shift);
-    ma_sll(dest.low, src.low, shift_value);
+    ma_and(scratch, shift, Imm32(0x3f));
+    as_nor(SecondScratchReg, zero, scratch);
+    ma_srl(temp, src.low, scratch);
+    ma_move(scratch, src.low);
+    as_sll(dest.low, src.high, 1);
+    ma_sll(dest.low, dest.low, SecondScratchReg);
     as_or(dest.low, dest.low, temp);
-
-    bind(&done);
+    ma_move(SecondScratchReg, src.high);
+    as_sll(dest.high, scratch, 1);
+    ma_and(scratch, shift, Imm32(0x3f));
+    ma_srl(temp, SecondScratchReg, scratch);
+    as_nor(SecondScratchReg, zero, scratch);
+    ma_sll(dest.high, dest.high, SecondScratchReg);
+    as_or(dest.high, dest.high, temp);
+    ma_and(temp, scratch, Imm32(32));
+    as_movn(SecondScratchReg, dest.high, temp);
+    as_movn(dest.high, dest.low, temp);
+    as_movn(dest.low, SecondScratchReg, temp);
 }
 
 template <typename T1, typename T2>
@@ -779,34 +709,22 @@ MacroAssembler::cmp32Set(Condition cond, T1 lhs, T2 rhs, Register dest)
 void
 MacroAssembler::clz64(Register64 src, Register dest)
 {
-    Label done, low;
-
-    ma_b(src.high, Imm32(0), &low, Equal);
-    as_clz(dest, src.high);
-    ma_b(&done);
-
-    bind(&low);
-    as_clz(dest, src.low);
-    ma_addu(dest, Imm32(32));
-
-    bind(&done);
+    as_clz(ScratchRegister, src.high);
+    as_clz(SecondScratchReg, src.low);
+    as_movn(SecondScratchReg, zero, src.high);
+    as_addu(dest, ScratchRegister, SecondScratchReg);
 }
 
 void
 MacroAssembler::ctz64(Register64 src, Register dest)
 {
-    Label done, high;
+    as_movz(SecondScratchReg, src.high, src.low);
+    as_movn(SecondScratchReg, src.low, src.low);
+    ma_ctz(SecondScratchReg, SecondScratchReg);
+    ma_li(ScratchRegister, Imm32(0x20));
+    as_movn(ScratchRegister, zero, src.low);
+    as_addu(dest, SecondScratchReg, ScratchRegister);
 
-    ma_b(src.low, Imm32(0), &high, Equal);
-
-    ma_ctz(dest, src.low);
-    ma_b(&done);
-
-    bind(&high);
-    ma_ctz(dest, src.high);
-    ma_addu(dest, Imm32(32));
-
-    bind(&done);
 }
 
 void
@@ -816,17 +734,31 @@ MacroAssembler::popcnt64(Register64 src, Register64 dest, Register tmp)
     MOZ_ASSERT(dest.high != tmp);
     MOZ_ASSERT(dest.low != dest.high);
 
-    if (dest.low != src.high) {
-        popcnt32(src.low, dest.low, tmp);
-        popcnt32(src.high, dest.high, tmp);
-    } else {
-        MOZ_ASSERT(dest.high != src.high);
-        popcnt32(src.low, dest.high, tmp);
-        popcnt32(src.high, dest.low, tmp);
-    }
-
-    ma_addu(dest.low, dest.high);
-    move32(Imm32(0), dest.high);
+    as_srl(tmp, src.low, 1);
+    as_srl(SecondScratchReg, src.high, 1);
+    ma_li(ScratchRegister, Imm32(0x55555555));
+    as_and(tmp, tmp, ScratchRegister);
+    as_subu(tmp, src.low, tmp);
+    as_and(SecondScratchReg, SecondScratchReg, ScratchRegister);
+    as_subu(SecondScratchReg, src.high, SecondScratchReg);
+    ma_li(ScratchRegister, Imm32(0x33333333));
+    as_and(dest.low, tmp, ScratchRegister);
+    as_srl(tmp, tmp, 2);
+    as_and(tmp, tmp, ScratchRegister);
+    as_addu(tmp, dest.low, tmp);
+    as_and(dest.high, SecondScratchReg, ScratchRegister);
+    as_srl(SecondScratchReg, SecondScratchReg, 2);
+    as_and(SecondScratchReg, SecondScratchReg, ScratchRegister);
+    as_addu(SecondScratchReg, dest.high, SecondScratchReg);
+    ma_li(ScratchRegister, Imm32(0x0F0F0F0F));
+    as_addu(tmp, SecondScratchReg, tmp);
+    as_srl(dest.low, tmp, 4);
+    as_and(dest.low, dest.low, ScratchRegister);
+    as_and(tmp, tmp, ScratchRegister);
+    as_addu(dest.low, dest.low, tmp);
+    ma_mul(dest.low, dest.low, Imm32(0x01010101));
+    as_srl(dest.low, dest.low, 24);
+    ma_move(dest.high, zero);
 }
 
 // ===============================================================
@@ -1105,7 +1037,7 @@ MacroAssembler::branchToComputedAddress(const BaseIndex& addr)
     int32_t shift = Imm32::ShiftOf(addr.scale).value;
     if (shift) {
         // 4 instructions : lui ori jr nop
-        ma_mul(ScratchRegister, addr.index, Imm32(4 * 4));
+        as_sll(ScratchRegister, addr.index, 4);
         as_addu(ScratchRegister, addr.base, ScratchRegister);
     } else {
         as_addu(ScratchRegister, addr.base, addr.index);

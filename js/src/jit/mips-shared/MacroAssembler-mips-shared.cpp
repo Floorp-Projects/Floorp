@@ -290,12 +290,12 @@ MacroAssemblerMIPSShared::ma_xor(Register rd, Register rs, Imm32 imm)
 void
 MacroAssemblerMIPSShared::ma_ctz(Register rd, Register rs)
 {
-    ma_negu(ScratchRegister, rs);
-    as_and(rd, ScratchRegister, rs);
+    as_addiu(ScratchRegister, rs, -1);
+    as_xor(rd, ScratchRegister, rs);
+    as_and(rd, rd, ScratchRegister);
     as_clz(rd, rd);
-    ma_negu(SecondScratchReg, rd);
-    ma_addu(SecondScratchReg, Imm32(0x1f));
-    as_movn(rd, SecondScratchReg, ScratchRegister);
+    ma_li(ScratchRegister, Imm32(0x20));
+    as_subu(rd, ScratchRegister, rd);
 }
 
 // Arithmetic-based ops.
