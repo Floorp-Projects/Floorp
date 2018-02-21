@@ -5,8 +5,8 @@
 // On debug test slave, it takes about 50s to run the test.
 requestLongerTimeout(4);
 
-add_task(function* runTest() {
-  yield new Promise(done => {
+add_task(async function() {
+  await new Promise(done => {
     let options = {"set": [
       ["devtools.debugger.prompt-connection", false],
       ["devtools.debugger.remote-enabled", true],
@@ -48,18 +48,22 @@ add_task(function* runTest() {
   });
 
   let { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
+  is(BrowserToolboxProcess.getBrowserToolboxSessionState(), false, "No session state initially");
+
   let closePromise;
-  yield new Promise(onRun => {
+  await new Promise(onRun => {
     closePromise = new Promise(onClose => {
       info("Opening the browser toolbox\n");
       BrowserToolboxProcess.init(onClose, onRun);
     });
   });
   ok(true, "Browser toolbox started\n");
+  is(BrowserToolboxProcess.getBrowserToolboxSessionState(), true, "Has session state");
 
-  yield onCustomMessage;
+  await onCustomMessage;
   ok(true, "Received the custom message");
 
-  yield closePromise;
+  await closePromise;
   ok(true, "Browser toolbox process just closed");
+  is(BrowserToolboxProcess.getBrowserToolboxSessionState(), false, "No session state after closing");
 });

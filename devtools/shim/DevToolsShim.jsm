@@ -152,8 +152,9 @@ this.DevToolsShim = {
       return;
     }
 
-    let {scratchpads, browserConsole} = session;
-    let hasDevToolsData = browserConsole || (scratchpads && scratchpads.length);
+    let {scratchpads, browserConsole, browserToolbox} = session;
+    let hasDevToolsData = browserConsole || browserToolbox ||
+                          (scratchpads && scratchpads.length);
     if (!hasDevToolsData) {
       // Do not initialize DevTools unless there is DevTools specific data in the session.
       return;
