@@ -126,8 +126,8 @@ nsTreeColFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
 
   WrapListsInRedirector(aBuilder, set, aLists);
 
-  aLists.Content()->AppendToTop(new (aBuilder)
-    nsDisplayXULTreeColSplitterTarget(aBuilder, this));
+  aLists.Content()->AppendToTop(
+    MakeDisplayItem<nsDisplayXULTreeColSplitterTarget>(aBuilder, this));
 }
 
 nsresult

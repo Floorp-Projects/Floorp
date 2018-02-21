@@ -118,6 +118,7 @@ private:
            bool aEnforceSRI,
            bool aAllowDocumentToBeAgnosticToCSP,
            bool aForceAllowDataURI,
+           bool aAllowInsecureRedirectToDataURI,
            bool aForceInheritPrincipalDropped,
            uint64_t aInnerWindowID,
            uint64_t aOuterWindowID,
@@ -183,6 +184,7 @@ private:
   bool                             mEnforceSRI;
   bool                             mAllowDocumentToBeAgnosticToCSP;
   bool                             mForceAllowDataURI;
+  bool                             mAllowInsecureRedirectToDataURI;
   bool                             mOriginalFrameSrcLoad;
   bool                             mForceInheritPrincipalDropped;
   uint64_t                         mInnerWindowID;

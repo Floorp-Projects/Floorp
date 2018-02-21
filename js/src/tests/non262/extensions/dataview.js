@@ -1643,6 +1643,11 @@ function test(sharedMem) {
     dv = 1;
     gc();
 
+    // Bug 1438569.
+    dv = new DataView(new ArrayBuffer(20 * 1024 * 1024));
+    dv.setInt8(dv.byteLength - 10, 99);
+    assertEq(dv.getInt8(dv.byteLength - 10), 99);
+
     reportCompare(0, 0, 'done.');
 }
 

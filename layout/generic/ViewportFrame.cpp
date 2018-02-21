@@ -72,7 +72,7 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // Wrap the whole top layer in a single item with maximum z-index,
     // and append it at the very end, so that it stays at the topmost.
     nsDisplayWrapList* wrapList =
-      new (aBuilder) nsDisplayWrapList(aBuilder, this, &topLayerList);
+      MakeDisplayItem<nsDisplayWrapList>(aBuilder, this, &topLayerList);
     wrapList->SetOverrideZIndex(
       std::numeric_limits<decltype(wrapList->ZIndex())>::max());
     aLists.PositionedDescendants()->AppendToTop(wrapList);
