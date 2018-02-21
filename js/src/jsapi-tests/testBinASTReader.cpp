@@ -9,7 +9,9 @@
 #if defined(XP_UNIX)
 
 #include <dirent.h>
+#include <fcntl.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #elif defined(XP_WIN)
 
@@ -51,35 +53,35 @@ readFull(JSContext* cx, const char* path, js::Vector<char16_t>& buf)
         MOZ_CRASH("Couldn't read data");
 }
 
-BEGIN_TEST(testBinASTReaderECMAScript2)
+// Invariant: `path` must end with directory separator.
+void
+runTestFromPath(JSContext* cx, const char* path)
 {
     const char BIN_SUFFIX[] = ".binjs";
     const char TXT_SUFFIX[] = ".js";
-
-    CompileOptions options(cx);
-    options.setIntroductionType("unit test parse")
-           .setFileAndLine("<string>", 1);
+    fprintf(stderr, "runTestFromPath: entering directory '%s'\n", path);
+    const size_t pathlen = strlen(path);
 
 #if defined(XP_UNIX)
-
-    const char PATH[] = "jsapi-tests/binast/parser/tester/";
+    MOZ_ASSERT(path[pathlen - 1] == '/');
 
     // Read the list of files in the directory.
     enterJsDirectory();
-    DIR* dir = opendir(PATH);
+    DIR* dir = opendir(path);
     exitJsDirectory();
     if (!dir)
         MOZ_CRASH("Couldn't open directory");
 
 
     while (auto entry = readdir(dir)) {
-        // Find files whose name ends with ".binjs".
         const char* d_name = entry->d_name;
+        const bool isDirectory = entry->d_type == DT_DIR;
+
 
 #elif defined(XP_WIN)
+    MOZ_ASSERT(path[pathlen - 1] == '\\');
 
-    const char PATTERN[] = "jsapi-tests\\binast\\parser\\tester\\*.binjs";
-    const char PATH[] = "jsapi-tests\\binast\\parser\\tester\\";
+    const char PATTERN[] = "*";
 
     WIN32_FIND_DATA FindFileData;
     enterJsDirectory();
@@ -90,38 +92,83 @@ BEGIN_TEST(testBinASTReaderECMAScript2)
             found = FindNextFile(hFind, &FindFileData))
     {
         const char* d_name = FindFileData.cFileName;
+        const bool isDirectory = FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 
 #endif // defined(XP_UNIX) || defined(XP_WIN)
 
         const size_t namlen = strlen(d_name);
+
+        // Recurse through subdirectories.
+        if (isDirectory) {
+            if (strcmp(d_name, ".") == 0)
+                continue;
+            if (strcmp(d_name, "..") == 0)
+                continue;
+
+            Vector<char> subPath(cx);
+            // Start with `path` (including directory separator).
+            if (!subPath.append(path, pathlen))
+                MOZ_CRASH();
+            if (!subPath.append(d_name, namlen))
+                MOZ_CRASH();
+            // Append same directory separator.
+            if (!subPath.append(path[pathlen - 1]))
+                MOZ_CRASH();
+            if (!subPath.append(0))
+                MOZ_CRASH();
+            runTestFromPath(cx, subPath.begin());
+            continue;
+        }
+
+        {
+            // Make sure that we run GC between two tests. Otherwise, since we're running
+            // everything from the same cx and without returning to JS, there is nothing
+            // to deallocate the ASTs.
+            JS::PrepareForFullGC(cx);
+            cx->runtime()->gc.gc(GC_NORMAL, JS::gcreason::NO_REASON);
+        }
+        LifoAllocScope allocScope(&cx->tempLifoAlloc());
+
+        // Find files whose name ends with ".binjs".
+        fprintf(stderr, "Considering %s\n", d_name);
         if (namlen < sizeof(BIN_SUFFIX))
             continue;
-        if (strncmp(d_name + namlen - (sizeof(BIN_SUFFIX) - 1), BIN_SUFFIX, sizeof(BIN_SUFFIX)) != 0)
+        if (strncmp(d_name + namlen - (sizeof(BIN_SUFFIX) - 1),
+                    BIN_SUFFIX,
+                    sizeof(BIN_SUFFIX)
+            ) != 0)
             continue;
 
         // Find text file.
-        UniqueChars txtPath(static_cast<char*>(js_malloc(namlen + sizeof(PATH) + 1)));
-        strncpy(txtPath.get(), PATH, sizeof(PATH));
-        strncpy(txtPath.get() + sizeof(PATH) - 1, d_name, namlen);
-        strncpy(txtPath.get() + sizeof(PATH) + namlen - sizeof(BIN_SUFFIX), TXT_SUFFIX, sizeof(TXT_SUFFIX));
-        txtPath[sizeof(PATH) + namlen - sizeof(BIN_SUFFIX) + sizeof(TXT_SUFFIX) - 1] = 0;
-        fprintf(stderr, "Testing %s\n", txtPath.get());
+        Vector<char> txtPath(cx);
+        if (!txtPath.append(path, pathlen))
+            MOZ_CRASH();
+        if (!txtPath.append(d_name, namlen))
+            MOZ_CRASH();
+        txtPath.shrinkBy(sizeof(BIN_SUFFIX) - 1);
+        if (!txtPath.append(TXT_SUFFIX, sizeof(TXT_SUFFIX)))
+            MOZ_CRASH();
+        fprintf(stderr, "Testing %s\n", txtPath.begin());
 
         // Read text file.
         js::Vector<char16_t> txtSource(cx);
-        readFull(cx, txtPath.get(), txtSource);
+        readFull(cx, txtPath.begin(), txtSource);
 
         // Parse text file.
+        CompileOptions txtOptions(cx);
+        txtOptions.setFileAndLine(txtPath.begin(), 0);
+
         UsedNameTracker txtUsedNames(cx);
         if (!txtUsedNames.init())
             MOZ_CRASH("Couldn't initialize used names");
-        js::frontend::Parser<js::frontend::FullParseHandler, char16_t> parser(cx, cx->tempLifoAlloc(), options, txtSource.begin(), txtSource.length(),
-                                                  /* foldConstants = */ false, txtUsedNames, nullptr,
-                                                  nullptr);
-        if (!parser.checkOptions())
+        js::frontend::Parser<js::frontend::FullParseHandler, char16_t> txtParser(
+            cx, allocScope.alloc(), txtOptions, txtSource.begin(), txtSource.length(),
+            /* foldConstants = */ false, txtUsedNames, nullptr,
+            nullptr);
+        if (!txtParser.checkOptions())
             MOZ_CRASH("Bad options");
 
-        auto txtParsed = parser.parse(); // Will be deallocated once `parser` goes out of scope.
+        auto txtParsed = txtParser.parse(); // Will be deallocated once `parser` goes out of scope.
         RootedValue txtExn(cx);
         if (!txtParsed) {
             // Save exception for more detailed error message, if necessary.
@@ -130,22 +177,28 @@ BEGIN_TEST(testBinASTReaderECMAScript2)
         }
 
         // Read binary file.
-        UniqueChars binPath(static_cast<char*>(js_malloc(namlen + sizeof(PATH) + 1)));
-        strncpy(binPath.get(), PATH, sizeof(PATH));
-        strncpy(binPath.get() + sizeof(PATH) - 1, d_name, namlen);
-        binPath[namlen + sizeof(PATH) - 1] = 0;
+        Vector<char> binPath(cx);
+        if (!binPath.append(path, pathlen))
+            MOZ_CRASH();
+        if (!binPath.append(d_name, namlen))
+            MOZ_CRASH();
+        if (!binPath.append(0))
+            MOZ_CRASH();
 
         js::Vector<uint8_t> binSource(cx);
-        readFull(binPath.get(), binSource);
+        readFull(binPath.begin(), binSource);
 
         // Parse binary file.
+        CompileOptions binOptions(cx);
+        binOptions.setFileAndLine(binPath.begin(), 0);
+
         js::frontend::UsedNameTracker binUsedNames(cx);
         if (!binUsedNames.init())
             MOZ_CRASH("Couldn't initialized binUsedNames");
 
-        js::frontend::BinASTParser reader(cx, cx->tempLifoAlloc(), binUsedNames, options);
+        js::frontend::BinASTParser binParser(cx, allocScope.alloc(), binUsedNames, binOptions);
 
-        auto binParsed = reader.parse(binSource); // Will be deallocated once `reader` goes out of scope.
+        auto binParsed = binParser.parse(binSource); // Will be deallocated once `reader` goes out of scope.
         RootedValue binExn(cx);
         if (binParsed.isErr()) {
             // Save exception for more detailed error message, if necessary.
@@ -177,7 +230,7 @@ BEGIN_TEST(testBinASTReaderECMAScript2)
         }
 
         if (binParsed.isErr()) {
-            fprintf(stderr, "Binary parser and text parser agree that %s is invalid\n", txtPath.get());
+            fprintf(stderr, "Binary parser and text parser agree that %s is invalid\n", txtPath.begin());
             continue;
         }
 
@@ -194,11 +247,37 @@ BEGIN_TEST(testBinASTReaderECMAScript2)
         DumpParseTree(txtParsed, txtPrinter);
 
         if (strcmp(binPrinter.string(), txtPrinter.string()) != 0) {
-            fprintf(stderr, "Got distinct ASTs when parsing %s:\n\tBINARY\n%s\n\n\tTEXT\n%s\n", txtPath.get(), binPrinter.string(), txtPrinter.string());
+            fprintf(stderr, "Got distinct ASTs when parsing %s (%lu/%lu):\n\tBINARY\n%s\n\n\tTEXT\n%s\n",
+                txtPath.begin(),
+                binPrinter.getOffset(), txtPrinter.getOffset(),
+                binPrinter.string(), txtPrinter.string());
+#if 0 // Not for release, but useful for debugging.
+      // In case of error, this dumps files to /tmp, so they may
+      // easily be diffed.
+            auto fd = open("/tmp/bin.ast", O_CREAT | O_TRUNC | O_WRONLY, 0666);
+            if (!fd)
+                MOZ_CRASH("Could not open bin.ast");
+            auto result = write(fd, binPrinter.string(), binPrinter.stringEnd() - binPrinter.string());
+            if (result <= 0)
+                MOZ_CRASH("Could not write to bin.ast");
+            result = close(fd);
+            if (result != 0)
+                MOZ_CRASH("Could not close bin.ast");
+
+            fd = open("/tmp/txt.ast", O_CREAT | O_TRUNC | O_WRONLY, 0666);
+            if (!fd)
+                MOZ_CRASH("Could not open txt.ast");
+            result = write(fd, txtPrinter.string(), txtPrinter.stringEnd() - txtPrinter.string());
+            if (result <= 0)
+                MOZ_CRASH("Could not write to txt.ast");
+            result = close(fd);
+            if (result != 0)
+                MOZ_CRASH("Could not close txt.ast");
+#endif // 0
             MOZ_CRASH("Got distinct ASTs");
         }
-        fprintf(stderr, "Got the same AST when parsing %s\n", txtPath.get());
 
+        fprintf(stderr, "Got the same AST when parsing %s\n%s\n", txtPath.begin(), binPrinter.string());
 #endif // defined(DEBUG)
     }
 
@@ -209,6 +288,11 @@ BEGIN_TEST(testBinASTReaderECMAScript2)
     if (closedir(dir) != 0)
         MOZ_CRASH("Could not close dir");
 #endif // defined(XP_WIN)
+}
+
+BEGIN_TEST(testBinASTReaderECMAScript2)
+{
+    runTestFromPath(cx, "jsapi-tests/binast/parser/tester/");
 
     return true;
 }
