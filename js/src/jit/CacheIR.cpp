@@ -1463,12 +1463,11 @@ GetTypedThingLayout(const Class* clasp)
 bool
 GetPropIRGenerator::tryAttachTypedObject(HandleObject obj, ObjOperandId objId, HandleId id)
 {
-    if (!obj->is<TypedObject>() ||
-        !cx_->runtime()->jitSupportsFloatingPoint ||
-        cx_->compartment()->detachedTypedObjects)
-    {
+    if (!obj->is<TypedObject>())
         return false;
-    }
+
+    if (!cx_->runtime()->jitSupportsFloatingPoint || cx_->compartment()->detachedTypedObjects)
+        return false;
 
     TypedObject* typedObj = &obj->as<TypedObject>();
     if (!typedObj->typeDescr().is<StructTypeDescr>())
@@ -1483,15 +1482,14 @@ GetPropIRGenerator::tryAttachTypedObject(HandleObject obj, ObjOperandId objId, H
     if (!fieldDescr->is<SimpleTypeDescr>())
         return false;
 
-    Shape* shape = typedObj->maybeShape();
-    TypedThingLayout layout = GetTypedThingLayout(shape->getObjectClass());
+    TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
 
     uint32_t fieldOffset = structDescr->fieldOffset(fieldIndex);
     uint32_t typeDescr = SimpleTypeDescrKey(&fieldDescr->as<SimpleTypeDescr>());
 
     maybeEmitIdGuard(id);
     writer.guardNoDetachedTypedObjects();
-    writer.guardShape(objId, shape);
+    writer.guardGroupForLayout(objId, obj->group());
     writer.loadTypedObjectResult(objId, fieldOffset, layout, typeDescr);
 
     // Only monitor the result if the type produced by this stub might vary.
@@ -1938,10 +1936,13 @@ GetPropIRGenerator::tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
         return false;
 
     TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
-    if (layout != Layout_TypedArray)
-        writer.guardNoDetachedTypedObjects();
 
-    writer.guardShape(objId, obj->as<ShapedObject>().shape());
+    if (IsPrimitiveArrayTypedObject(obj)) {
+        writer.guardNoDetachedTypedObjects();
+        writer.guardGroupForLayout(objId, obj->group());
+    } else {
+        writer.guardShape(objId, obj->as<TypedArrayObject>().shape());
+    }
 
     writer.loadTypedElementResult(objId, indexId, layout, TypedThingElementType(obj));
 
@@ -2644,13 +2645,12 @@ HasPropIRGenerator::tryAttachTypedArray(HandleObject obj, ObjOperandId objId,
     if (!obj->is<TypedArrayObject>() && !IsPrimitiveArrayTypedObject(obj))
         return false;
 
-    // Don't attach typed object stubs if the underlying storage could be
-    // detached, as the stub will always bail out.
-    if (IsPrimitiveArrayTypedObject(obj) && cx_->compartment()->detachedTypedObjects)
-        return false;
-
     TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
-    writer.guardShape(objId, obj->as<ShapedObject>().shape());
+
+    if (IsPrimitiveArrayTypedObject(obj))
+        writer.guardGroupForLayout(objId, obj->group());
+    else
+        writer.guardShape(objId, obj->as<TypedArrayObject>().shape());
 
     writer.loadTypedElementExistsResult(objId, indexId, layout);
 
@@ -3083,7 +3083,10 @@ bool
 SetPropIRGenerator::tryAttachUnboxedProperty(HandleObject obj, ObjOperandId objId, HandleId id,
                                              ValOperandId rhsId)
 {
-    if (!obj->is<UnboxedPlainObject>() || !cx_->runtime()->jitSupportsFloatingPoint)
+    if (!obj->is<UnboxedPlainObject>())
+        return false;
+
+    if (!cx_->runtime()->jitSupportsFloatingPoint)
         return false;
 
     const UnboxedLayout::Property* property = obj->as<UnboxedPlainObject>().layout().lookup(id);
@@ -3109,10 +3112,10 @@ bool
 SetPropIRGenerator::tryAttachTypedObjectProperty(HandleObject obj, ObjOperandId objId, HandleId id,
                                                  ValOperandId rhsId)
 {
-    if (!obj->is<TypedObject>() || !cx_->runtime()->jitSupportsFloatingPoint)
+    if (!obj->is<TypedObject>())
         return false;
 
-    if (cx_->compartment()->detachedTypedObjects)
+    if (!cx_->runtime()->jitSupportsFloatingPoint || cx_->compartment()->detachedTypedObjects)
         return false;
 
     if (!obj->as<TypedObject>().typeDescr().is<StructTypeDescr>())
@@ -3132,7 +3135,6 @@ SetPropIRGenerator::tryAttachTypedObjectProperty(HandleObject obj, ObjOperandId 
 
     maybeEmitIdGuard(id);
     writer.guardNoDetachedTypedObjects();
-    writer.guardShape(objId, obj->as<TypedObject>().shape());
     writer.guardGroupForLayout(objId, obj->group());
 
     typeCheckInfo_.set(obj->group(), id);
@@ -3523,10 +3525,13 @@ SetPropIRGenerator::tryAttachSetTypedElement(HandleObject obj, ObjOperandId objI
     Scalar::Type elementType = TypedThingElementType(obj);
     TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
 
-    if (!obj->is<TypedArrayObject>())
+    if (IsPrimitiveArrayTypedObject(obj)) {
         writer.guardNoDetachedTypedObjects();
+        writer.guardGroupForLayout(objId, obj->group());
+    } else {
+        writer.guardShape(objId, obj->as<TypedArrayObject>().shape());
+    }
 
-    writer.guardShape(objId, obj->as<ShapedObject>().shape());
     writer.storeTypedElement(objId, indexId, rhsId, layout, elementType, handleOutOfBounds);
     writer.returnFromIC();
 
