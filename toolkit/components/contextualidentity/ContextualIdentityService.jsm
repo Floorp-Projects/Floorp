@@ -100,7 +100,19 @@ _ContextualIdentityService.prototype = {
       icon: "",
       color: "",
       name: "userContextIdInternal.thumbnail",
-      accessKey: "" },
+      accessKey: "",
+    },
+    // This userContextId is used by ExtensionStorageIDB.jsm to create an IndexedDB database
+    // opened with the extension principal but not directly accessible to the extension code
+    // (do not change the userContextId assigned here, otherwise the installed extensions will
+    // not be able to access the data previously stored with the browser.storage.local API).
+    { userContextId: -10,
+      public: false,
+      icon: "",
+      color: "",
+      name: "userContextIdInternal.webextStorageLocal",
+      accessKey: "",
+    },
   ],
 
   _identities: null,
@@ -148,10 +160,13 @@ _ContextualIdentityService.prototype = {
 
   resetDefault() {
     this._identities = [];
+
+    this._lastUserContextId = this._defaultIdentities.map(
+      identity => identity.userContextId).sort().pop();
+
     // Clone the array
-    this._lastUserContextId = this._defaultIdentities.length;
-    for (let i = 0; i < this._lastUserContextId; i++) {
-      this._identities.push(Object.assign({}, this._defaultIdentities[i]));
+    for (let identity of this._defaultIdentities) {
+      this._identities.push(Object.assign({}, identity));
     }
     this._openedIdentities = new Set();
 
@@ -296,7 +311,12 @@ _ContextualIdentityService.prototype = {
       saveNeeded = true;
     }
 
-    if (data.version != 3) {
+    if (data.version == 3) {
+      data = this.migrate3to4(data);
+      saveNeeded = true;
+    }
+
+    if (data.version != 4) {
       dump("ERROR - ContextualIdentityService - Unknown version found in " + this._path + "\n");
       this.loadError(null);
       return;
@@ -343,6 +363,13 @@ _ContextualIdentityService.prototype = {
   getPrivateIdentity(name) {
     this.ensureDataReady();
     return Cu.cloneInto(this._identities.find(info => !info.public && info.name == name), {});
+  },
+
+  // getDefaultPrivateIdentity is similar to getPrivateIdentity but it only looks in the
+  // default identities (e.g. it is used in the data migration methods to retrieve a new default
+  // private identity and add it to the containers data stored on file).
+  getDefaultPrivateIdentity(name) {
+    return Cu.cloneInto(this._defaultIdentities.find(info => !info.public && info.name == name), {});
   },
 
   getPublicIdentityFromId(userContextId) {
@@ -408,6 +435,11 @@ _ContextualIdentityService.prototype = {
 
   notifyAllContainersCleared() {
     for (let identity of this._identities) {
+      // Don't clear the data related to private identities (e.g. the one used internally
+      // for the thumbnails and the one used for the storage.local IndexedDB backend).
+      if (!identity.public) {
+        continue;
+      }
       Services.obs.notifyObservers(null, "clear-origin-attributes-data",
                                    JSON.stringify({ userContextId: identity.userContextId }));
     }
@@ -460,8 +492,11 @@ _ContextualIdentityService.prototype = {
   },
 
   deleteContainerData() {
+    // Compute the range of userContextId to clear (and exclude 0 which is reserved
+    // to the default firefox identity).
     let minUserContextId = 1;
     let maxUserContextId = minUserContextId;
+
     const enumerator = Services.cookies.enumerator;
     while (enumerator.hasMoreElements()) {
       const cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
@@ -470,9 +505,18 @@ _ContextualIdentityService.prototype = {
       }
     }
 
+    // Collect the userContextId related to the identities that should not be cleared
+    // (the ones marked as `public = false`).
+    const keepDataContextIds = this._identities
+      .filter(identity => !identity.public)
+      .map(identity => identity.userContextId);
+
     for (let i = minUserContextId; i <= maxUserContextId; ++i) {
-      Services.obs.notifyObservers(null, "clear-origin-attributes-data",
-                                   JSON.stringify({ userContextId: i }));
+      // Skip any userContextIds that should not be cleared.
+      if (!keepDataContextIds.includes(i)) {
+        Services.obs.notifyObservers(null, "clear-origin-attributes-data",
+                                     JSON.stringify({ userContextId: i }));
+      }
     }
   },
 
@@ -480,6 +524,23 @@ _ContextualIdentityService.prototype = {
     // migrating from 2 to 3 is basically just increasing the version id.
     // This migration was needed for bug 1419591. See bug 1419591 to know more.
     data.version = 3;
+
+    return data;
+  },
+
+  migrate3to4(data) {
+    // Migrating from 3 to 4 is:
+    // - adding the reserver userContextId used by the webextension storage.local API
+    // - add the keepData property to all the existent identities
+    // - increasing the version id.
+    //
+    // This migration was needed for Bug 1406181. See bug 1406181 for rationale.
+    const webextStorageLocalIdentity = this.getDefaultPrivateIdentity(
+      "userContextIdInternal.webextStorageLocal");
+
+    data.identities.push(webextStorageLocalIdentity);
+
+    data.version = 4;
 
     return data;
   },
