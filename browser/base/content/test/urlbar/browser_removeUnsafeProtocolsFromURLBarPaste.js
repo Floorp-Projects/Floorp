@@ -13,6 +13,8 @@ var pairs = [
   ["http://\nexample.com", "http://example.com"],
   ["http://\nexample.com\n", "http://example.com"],
   ["data:text/html,<body>hi</body>", "data:text/html,<body>hi</body>"],
+  ["javaScript:foopy", "foopy"],
+  ["javaScript:javaScript:alert('hi')", "alert('hi')"],
   // Nested things get confusing because some things don't parse as URIs:
   ["javascript:javascript:alert('hi!')", "alert('hi!')"],
   ["data:data:text/html,<body>hi</body>", "data:data:text/html,<body>hi</body>"],
