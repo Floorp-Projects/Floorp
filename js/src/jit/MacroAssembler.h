@@ -388,6 +388,12 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
     }
 
+#ifdef DEBUG
+    bool isRooted() const {
+        return autoRooter_.isSome();
+    }
+#endif
+
     void constructRoot(JSContext* cx) {
         autoRooter_.emplace(cx, this);
     }

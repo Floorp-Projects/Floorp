@@ -76,7 +76,7 @@ linkAndAllocate(JSContext* cx, js::jit::MacroAssembler* masm)
     using namespace js::jit;
     AutoFlushICache afc("test");
     Linker l(*masm);
-    return l.newCode<CanGC>(cx, CodeKind::Ion);
+    return l.newCode(cx, CodeKind::Ion);
 }
 
 #define TRY(x) if (!(x)) return false;
