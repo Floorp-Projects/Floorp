@@ -247,9 +247,9 @@ runTestFromPath(JSContext* cx, const char* path)
         DumpParseTree(txtParsed, txtPrinter);
 
         if (strcmp(binPrinter.string(), txtPrinter.string()) != 0) {
-            fprintf(stderr, "Got distinct ASTs when parsing %s (%lu/%lu):\n\tBINARY\n%s\n\n\tTEXT\n%s\n",
+            fprintf(stderr, "Got distinct ASTs when parsing %s (%p/%p):\n\tBINARY\n%s\n\n\tTEXT\n%s\n",
                 txtPath.begin(),
-                binPrinter.getOffset(), txtPrinter.getOffset(),
+                (void*)binPrinter.getOffset(), (void*)txtPrinter.getOffset(),
                 binPrinter.string(), txtPrinter.string());
 #if 0 // Not for release, but useful for debugging.
       // In case of error, this dumps files to /tmp, so they may
@@ -292,8 +292,11 @@ runTestFromPath(JSContext* cx, const char* path)
 
 BEGIN_TEST(testBinASTReaderECMAScript2)
 {
+#if defined(XP_WIN)
+    runTestFromPath(cx, "jsapi-tests\\binast\\parser\\tester\\");
+#else
     runTestFromPath(cx, "jsapi-tests/binast/parser/tester/");
-
+#endif // defined(XP_XIN)
     return true;
 }
 END_TEST(testBinASTReaderECMAScript2)
