@@ -1752,6 +1752,14 @@ PresShell::Initialize()
   RecomputeFontSizeInflationEnabled();
   MOZ_DIAGNOSTIC_ASSERT(!mIsDestroying);
 
+  // Ensure the pres context doesn't think it has changed, since we haven't even
+  // started layout. This avoids spurious restyles / reflows afterwards.
+  //
+  // Note that this is very intentionally before setting mDidInitialize so it
+  // doesn't notify the document, or run media query change events.
+  mPresContext->FlushPendingMediaFeatureValuesChanged();
+  MOZ_DIAGNOSTIC_ASSERT(!mIsDestroying);
+
   mDidInitialize = true;
 
 #ifdef DEBUG
