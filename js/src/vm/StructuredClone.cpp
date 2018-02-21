@@ -5,26 +5,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * This file implements the structured clone algorithm of
- * http://www.whatwg.org/specs/web-apps/current-work/multipage/common-dom-interfaces.html#safe-passing-of-structured-data
+ * This file implements the structured data algorithms of
+ * https://html.spec.whatwg.org/multipage/structured-data.html
  *
- * The implementation differs slightly in that it uses an explicit stack, and
- * the "memory" maps source objects to sequential integer indexes rather than
- * directly pointing to destination objects. As a result, the order in which
- * things are added to the memory must exactly match the order in which they
- * are placed into 'allObjs', an analogous array of back-referenceable
- * destination objects constructed while reading.
+ * The spec is in two parts:
  *
- * For the most part, this is easy: simply add objects to the memory when first
- * encountering them. But reading in a typed array requires an ArrayBuffer for
- * construction, so objects cannot just be added to 'allObjs' in the order they
- * are created. If they were, ArrayBuffers would come before typed arrays when
- * in fact the typed array was added to 'memory' first.
+ * -   StructuredSerialize examines a JS value and produces a graph of Records.
+ * -   StructuredDeserialize walks the Records and produces a new JS value.
  *
- * So during writing, we add objects to the memory when first encountering
- * them. When reading a typed array, a placeholder is pushed onto allObjs until
- * the ArrayBuffer has been read, then it is updated with the actual typed
- * array object.
+ * The differences between our implementation and the spec are minor:
+ *
+ * -   We call the two phases "write" and "read".
+ * -   Our algorithms use an explicit work stack, rather than recursion.
+ * -   Serialized data is a flat array of bytes, not a (possibly cyclic) graph
+ *     of "Records".
+ * -   As a consequence, we handle non-treelike object graphs differently.
+ *     We serialize objects that appear in multiple places in the input as
+ *     backreferences, using sequential integer indexes.
+ *     See `JSStructuredCloneReader::allObjs`, our take on the "memory" map
+ *     in the spec's StructuredDeserialize.
  */
 
 #include "js/StructuredClone.h"
@@ -71,7 +70,7 @@ using JS::CanonicalizeNaN;
 // sizing data structures.
 
 enum StructuredDataType : uint32_t {
-    /* Structured data types provided by the engine */
+    // Structured data types provided by the engine
     SCTAG_FLOAT_MAX = 0xFFF00000,
     SCTAG_HEADER = 0xFFF10000,
     SCTAG_NULL = 0xFFFF0000,
@@ -119,11 +118,9 @@ enum StructuredDataType : uint32_t {
     SCTAG_TYPED_ARRAY_V1_UINT8_CLAMPED = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Uint8Clamped,
     SCTAG_TYPED_ARRAY_V1_MAX = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::MaxTypedArrayViewType - 1,
 
-    /*
-     * Define a separate range of numbers for Transferable-only tags, since
-     * they are not used for persistent clone buffers and therefore do not
-     * require bumping JS_STRUCTURED_CLONE_VERSION.
-     */
+    // Define a separate range of numbers for Transferable-only tags, since
+    // they are not used for persistent clone buffers and therefore do not
+    // require bumping JS_STRUCTURED_CLONE_VERSION.
     SCTAG_TRANSFER_MAP_HEADER = 0xFFFF0200,
     SCTAG_TRANSFER_MAP_PENDING_ENTRY,
     SCTAG_TRANSFER_MAP_ARRAY_BUFFER,
@@ -380,7 +377,7 @@ class SCInput {
     BufferIterator point;
 };
 
-} /* namespace js */
+} // namespace js
 
 struct JSStructuredCloneReader {
   public:
@@ -432,7 +429,17 @@ struct JSStructuredCloneReader {
     // Stack of objects with properties remaining to be read.
     AutoValueVector objs;
 
-    // Stack of all objects read during this deserialization
+    // Array of all objects read during this deserialization, for resolving
+    // backreferences.
+    //
+    // For backreferences to work correctly, objects must be added to this
+    // array in exactly the order expected by the version of the Writer that
+    // created the serialized data, even across years and format versions. This
+    // is usually no problem, since both algorithms do a single linear pass
+    // over the serialized data. There is one hitch; see readTypedArray.
+    //
+    // The values in this vector are objects, except it can temporarily have
+    // one `undefined` placeholder value (the readTypedArray hack).
     AutoValueVector allObjs;
 
     // The user defined callbacks that will be used for cloning.
@@ -736,7 +743,7 @@ bool
 SCInput::read(uint64_t* p)
 {
     if (!point.canPeek()) {
-        *p = 0;  /* initialize to shut GCC up */
+        *p = 0;  // initialize to shut GCC up
         return reportTruncated();
     }
     *p = NativeEndian::swapFromLittleEndian(point.peek());
@@ -748,7 +755,7 @@ bool
 SCInput::readNativeEndian(uint64_t* p)
 {
     if (!point.canPeek()) {
-        *p = 0;  /* initialize to shut GCC up */
+        *p = 0;  // initialize to shut GCC up
         return reportTruncated();
     }
     *p = point.peek();
@@ -844,9 +851,7 @@ SCInput::readArray(T* p, size_t nelems)
 
     JS_STATIC_ASSERT(sizeof(uint64_t) % sizeof(T) == 0);
 
-    /*
-     * Fail if nelems is so huge that computing the full size will overflow.
-     */
+    // Fail if nelems is so huge that computing the full size will overflow.
     mozilla::CheckedInt<size_t> size = mozilla::CheckedInt<size_t>(nelems) * sizeof(T);
     if (!size.isValid())
         return reportTruncated();
@@ -915,15 +920,13 @@ SCOutput::write(uint64_t u)
 bool
 SCOutput::writePair(uint32_t tag, uint32_t data)
 {
-    /*
-     * As it happens, the tag word appears after the data word in the output.
-     * This is because exponents occupy the last 2 bytes of doubles on the
-     * little-endian platforms we care most about.
-     *
-     * For example, TrueValue() is written using writePair(SCTAG_BOOLEAN, 1).
-     * PairToUInt64 produces the number 0xFFFF000200000001.
-     * That is written out as the bytes 01 00 00 00 02 00 FF FF.
-     */
+    // As it happens, the tag word appears after the data word in the output.
+    // This is because exponents occupy the last 2 bytes of doubles on the
+    // little-endian platforms we care most about.
+    //
+    // For example, TrueValue() is written using writePair(SCTAG_BOOLEAN, 1).
+    // PairToUInt64 produces the number 0xFFFF000200000001.
+    // That is written out as the bytes 01 00 00 00 02 00 FF FF.
     return write(PairToUInt64(tag, data));
 }
 
@@ -1031,7 +1034,7 @@ SCOutput::discardTransferables(const JSStructuredCloneCallbacks* cb, void* cbClo
     DiscardTransferables(buf, cb, cbClosure);
 }
 
-} /* namespace js */
+} // namespace js
 
 JSStructuredCloneData::~JSStructuredCloneData()
 {
@@ -1152,7 +1155,7 @@ inline void
 JSStructuredCloneWriter::checkStack()
 {
 #ifdef DEBUG
-    /* To avoid making serialization O(n^2), limit stack-checking at 10. */
+    // To avoid making serialization O(n^2), limit stack-checking at 10.
     const size_t MAX = 10;
 
     size_t limit = Min(counts.length(), MAX);
@@ -1296,7 +1299,7 @@ JSStructuredCloneWriter::writeSharedWasmMemory(HandleObject obj)
 bool
 JSStructuredCloneWriter::startObject(HandleObject obj, bool* backref)
 {
-    /* Handle cycles in the object graph. */
+    // Handle cycles in the object graph.
     CloneMemory::AddPtr p = memory.lookupForAdd(obj);
     if ((*backref = p.found()))
         return out.writePair(SCTAG_BACK_REFERENCE_OBJECT, p->value());
@@ -1317,10 +1320,8 @@ JSStructuredCloneWriter::startObject(HandleObject obj, bool* backref)
 bool
 JSStructuredCloneWriter::traverseObject(HandleObject obj)
 {
-    /*
-     * Get enumerable property ids and put them in reverse order so that they
-     * will come off the stack in forward order.
-     */
+    // Get enumerable property ids and put them in reverse order so that they
+    // will come off the stack in forward order.
     AutoIdVector properties(context());
     if (!GetPropertyKeys(context(), obj, JSITER_OWNONLY, &properties))
         return false;
@@ -1332,13 +1333,13 @@ JSStructuredCloneWriter::traverseObject(HandleObject obj)
             return false;
     }
 
-    /* Push obj and count to the stack. */
+    // Push obj and count to the stack.
     if (!objs.append(ObjectValue(*obj)) || !counts.append(properties.length()))
         return false;
 
     checkStack();
 
-    /* Write the header for obj. */
+    // Write the header for obj.
     ESClass cls;
     if (!GetBuiltinClass(context(), obj, &cls))
         return false;
@@ -1365,13 +1366,13 @@ JSStructuredCloneWriter::traverseMap(HandleObject obj)
             return false;
     }
 
-    /* Push obj and count to the stack. */
+    // Push obj and count to the stack.
     if (!objs.append(ObjectValue(*obj)) || !counts.append(newEntries.length()))
         return false;
 
     checkStack();
 
-    /* Write the header for obj. */
+    // Write the header for obj.
     return out.writePair(SCTAG_MAP_OBJECT, 0);
 }
 
@@ -1395,13 +1396,13 @@ JSStructuredCloneWriter::traverseSet(HandleObject obj)
             return false;
     }
 
-    /* Push obj and count to the stack. */
+    // Push obj and count to the stack.
     if (!objs.append(ObjectValue(*obj)) || !counts.append(keys.length()))
         return false;
 
     checkStack();
 
-    /* Write the header for obj. */
+    // Write the header for obj.
     return out.writePair(SCTAG_SET_OBJECT, 0);
 }
 
@@ -1587,7 +1588,7 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
 
         if (callbacks && callbacks->write)
             return callbacks->write(context(), this, obj, closure);
-        /* else fall through */
+        // else fall through
     }
 
     return reportDataCloneError(JS_SCERR_UNSUPPORTED_TYPE);
@@ -1786,11 +1787,9 @@ JSStructuredCloneWriter::write(HandleValue v)
                   return false;
                 MOZ_ASSERT(JSID_IS_STRING(id) || JSID_IS_INT(id));
 
-                /*
-                 * If obj still has an own property named id, write it out.
-                 * The cost of re-checking could be avoided by using
-                 * NativeIterators.
-                 */
+                // If obj still has an own property named id, write it out.
+                // The cost of re-checking could be avoided by using
+                // NativeIterators.
                 bool found;
                 if (!HasOwnProperty(context(), obj, id, &found))
                     return false;
@@ -1852,7 +1851,7 @@ class Chars {
     void forget() { p = nullptr; }
 };
 
-} /* anonymous namespace */
+} // anonymous namespace
 
 template <typename CharT>
 JSString*
@@ -1897,7 +1896,7 @@ JSStructuredCloneReader::readTypedArray(uint32_t arrayType, uint32_t nelems, Mut
         return false;
     }
 
-    // Push a placeholder onto the allObjs list to stand in for the typed array
+    // Push a placeholder onto the allObjs list to stand in for the typed array.
     uint32_t placeholderIndex = allObjs.length();
     Value dummy = UndefinedValue();
     if (!allObjs.append(dummy))
