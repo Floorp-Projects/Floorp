@@ -211,25 +211,17 @@ BEGIN_TEST(testBinTokenReaderTesterSimpleTaggedTuple)
         Tokenizer::AutoTaggedTuple guard(tokenizer);
         CHECK(tokenizer.enterTaggedTuple(tag, fields, guard));
 
-        CHECK(tag == js::frontend::BinKind::Pattern);
+        CHECK(tag == js::frontend::BinKind::BindingIdentifier);
 
         Maybe<Chars> found_id;
         const double EXPECTED_value = 3.1415;
         Maybe<double> found_value;
 
-        // Order of fields is not deterministic in the encoder (we could make
-        // it deterministic for the test, though, since we already know the binary).
-        if (fields[0] == js::frontend::BinField::Id) {
-            CHECK(fields[1] == js::frontend::BinField::Value);
-            CHECK(tokenizer.readMaybeChars(found_id));
-            CHECK(tokenizer.readMaybeDouble(found_value));
-        } else if (fields[0] == js::frontend::BinField::Value) {
-            CHECK(fields[1] == js::frontend::BinField::Id);
-            CHECK(tokenizer.readMaybeDouble(found_value));
-            CHECK(tokenizer.readMaybeChars(found_id));
-        } else {
-            CHECK(false);
-        }
+        // Order of fields is deterministic.
+        CHECK(fields[0] == js::frontend::BinField::Label);
+        CHECK(fields[1] == js::frontend::BinField::Value);
+        CHECK(tokenizer.readMaybeChars(found_id));
+        CHECK(tokenizer.readMaybeDouble(found_value));
 
         CHECK(EXPECTED_value == *found_value); // Apparently, CHECK_EQUAL doesn't work on `double`.
         CHECK(Tokenizer::equals(*found_id, "foo"));
