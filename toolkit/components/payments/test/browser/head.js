@@ -132,6 +132,23 @@ function spawnTaskInNewDialog(requestId, contentTaskFn, args = null) {
   });
 }
 
+async function addSampleAddressesAndBasicCard() {
+  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
+                                          (subject, data) => data == "add");
+  profileStorage.addresses.add(PTU.Addresses.TimBL);
+  await onChanged;
+
+  onChanged = TestUtils.topicObserved("formautofill-storage-changed",
+                                      (subject, data) => data == "add");
+  profileStorage.addresses.add(PTU.Addresses.TimBL2);
+  await onChanged;
+
+  onChanged = TestUtils.topicObserved("formautofill-storage-changed",
+                                      (subject, data) => data == "add");
+  profileStorage.creditCards.add(PTU.BasicCards.JohnDoe);
+  await onChanged;
+}
+
 /**
  * Open a merchant tab with the given merchantTaskFn to create a PaymentRequest
  * and then open the associated PaymentRequest dialog in a new tab and run the

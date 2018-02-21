@@ -36,6 +36,25 @@ this.PaymentTestUtils = {
       return true;
     },
 
+    updateWith: async ({eventName, details}) => {
+      /* globals ok */
+      if (details.error &&
+          (!details.shippingOptions || details.shippingOptions.length)) {
+        ok(false, "Need to clear the shipping options to show error text");
+      }
+      if (!details.total) {
+        ok(false, "`total: { label, amount: { value, currency } }` is required for updateWith");
+      }
+
+      content[eventName + "Promise"] =
+        new Promise(resolve => {
+          content.rq.addEventListener(eventName, event => {
+            event.updateWith(details);
+            resolve();
+          }, {once: true});
+        });
+    },
+
     /**
      * Create a new payment request and cache it as `rq`.
      *
@@ -67,7 +86,7 @@ this.PaymentTestUtils = {
   DialogContentTasks: {
     isElementVisible: selector => {
       let element = content.document.querySelector(selector);
-      return !element.hidden;
+      return element.getBoundingClientRect().height > 0;
     },
 
     getShippingOptions: () => {
@@ -84,6 +103,14 @@ this.PaymentTestUtils = {
         selectedOptionLabel: selectedOption.getAttribute("label"),
         selectedOptionCurrency: currencyAmount.getAttribute("currency"),
         selectedOptionAmount: currencyAmount.getAttribute("amount"),
+      };
+    },
+
+    getErrorDetails: () => {
+      let doc = content.document;
+      let errorText = doc.querySelector("#error-text");
+      return {
+        text: errorText.textContent,
       };
     },
 
@@ -266,6 +293,44 @@ this.PaymentTestUtils = {
   Options: {
     requestShippingOption: {
       requestShipping: true,
+    },
+  },
+
+  Addresses: {
+    TimBL: {
+      "given-name": "Timothy",
+      "additional-name": "John",
+      "family-name": "Berners-Lee",
+      organization: "World Wide Web Consortium",
+      "street-address": "32 Vassar Street\nMIT Room 32-G524",
+      "address-level2": "Cambridge",
+      "address-level1": "MA",
+      "postal-code": "02139",
+      country: "US",
+      tel: "+16172535702",
+      email: "timbl@example.org",
+    },
+    TimBL2: {
+      "given-name": "Timothy",
+      "additional-name": "John",
+      "family-name": "Berners-Lee",
+      organization: "World Wide Web Consortium",
+      "street-address": "1 Pommes Frittes Place",
+      "address-level2": "Berlin",
+      "address-level1": "BE",
+      "postal-code": "02138",
+      country: "DE",
+      tel: "+16172535702",
+      email: "timbl@example.org",
+    },
+  },
+
+  BasicCards: {
+    JohnDoe: {
+      "cc-exp-month": 1,
+      "cc-exp-year": 9999,
+      "cc-name": "John Doe",
+      "cc-number": "999999999999",
     },
   },
 };

@@ -153,7 +153,7 @@ add_task(async function test_show_completePayment() {
 
     let frame = await getPaymentFrame(win);
 
-    ContentTask.spawn(browser, {
+    await ContentTask.spawn(browser, {
       eventName: "shippingoptionchange",
     }, PTU.ContentTasks.promisePaymentRequestEvent);
 
