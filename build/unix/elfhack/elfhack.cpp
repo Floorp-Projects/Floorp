@@ -390,6 +390,7 @@ private:
 #define REL(machine, type) (EM_ ## machine | (R_ ## machine ## _ ## type << 8))
             switch (elf->getMachine() | (ELF32_R_TYPE(r->r_info) << 8)) {
             case REL(X86_64, PC32):
+            case REL(X86_64, PLT32):
             case REL(386, PC32):
             case REL(386, GOTPC):
             case REL(ARM, GOTPC):
