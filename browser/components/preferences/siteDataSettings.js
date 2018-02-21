@@ -18,7 +18,6 @@ let gSiteDataSettings = {
   // - uri: uri of site; instance of nsIURI
   // - baseDomain: base domain of the site
   // - cookies: array of cookies of that site
-  // - status: persistent-storage permission status
   // - usage: disk usage which site uses
   // - userAction: "remove" or "update-permission"; the action user wants to take.
   _sites: null,
@@ -50,21 +49,17 @@ let gSiteDataSettings = {
     // Add "Host" column.
     addColumnItem(site.host, "4");
 
-    // Add "Status" column
-    addColumnItem(site.persisted ?
-      this._prefStrBundle.getString("persistent") : null, "2");
-
     // Add "Cookies" column.
     addColumnItem(site.cookies.length, "1");
 
     // Add "Storage" column
-    if (site.usage > 0) {
+    if (site.usage > 0 || site.persisted) {
       let size = DownloadUtils.convertByteUnits(site.usage);
-      let str = this._prefStrBundle.getFormattedString("siteUsage", size);
-      addColumnItem(str, "1");
+      let strName = site.persisted ? "siteUsagePersistent" : "siteUsage";
+      addColumnItem(this._prefStrBundle.getFormattedString(strName, size), "2");
     } else {
       // Pass null to avoid showing "0KB" when there is no site data stored.
-      addColumnItem(null, "1");
+      addColumnItem(null, "2");
     }
 
     // Add "Last Used" column.
@@ -105,7 +100,6 @@ let gSiteDataSettings = {
     setEventListener("usageCol", "click", this.onClickTreeCol);
     setEventListener("lastAccessedCol", "click", this.onClickTreeCol);
     setEventListener("cookiesCol", "click", this.onClickTreeCol);
-    setEventListener("statusCol", "click", this.onClickTreeCol);
     setEventListener("cancel", "command", this.close);
     setEventListener("save", "command", this.saveChanges);
     setEventListener("searchBox", "command", this.onCommandSearch);
@@ -149,17 +143,6 @@ let gSiteDataSettings = {
           let aHost = a.baseDomain.toLowerCase();
           let bHost = b.baseDomain.toLowerCase();
           return aHost.localeCompare(bHost);
-        };
-        break;
-
-      case "statusCol":
-        sortFunc = (a, b) => {
-          if (a.persisted && !b.persisted) {
-            return 1;
-          } else if (!a.persisted && b.persisted) {
-            return -1;
-          }
-          return 0;
         };
         break;
 
