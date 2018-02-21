@@ -87,13 +87,14 @@ public:
 
 protected:
   struct CapabilityCandidate {
-    explicit CapabilityCandidate(uint8_t index, uint32_t distance = 0)
-    : mIndex(index), mDistance(distance) {}
+    explicit CapabilityCandidate(webrtc::CaptureCapability&& aCapability,
+                                 uint32_t aDistance = 0)
+    : mCapability(Forward<webrtc::CaptureCapability>(aCapability))
+    , mDistance(aDistance) {}
 
-    size_t mIndex;
+    const webrtc::CaptureCapability mCapability;
     uint32_t mDistance;
   };
-  typedef nsTArray<CapabilityCandidate> CapabilitySet;
 
   ~MediaEngineCameraVideoSource() {}
 
@@ -113,13 +114,13 @@ protected:
   uint32_t GetFeasibilityDistance(const webrtc::CaptureCapability& aCandidate,
                               const NormalizedConstraintSet &aConstraints,
                               const nsString& aDeviceId) const;
-  static void TrimLessFitCandidates(CapabilitySet& set);
+  static void TrimLessFitCandidates(nsTArray<CapabilityCandidate>& aSet);
   static void LogConstraints(const NormalizedConstraintSet& aConstraints);
   static void LogCapability(const char* aHeader,
                             const webrtc::CaptureCapability &aCapability,
                             uint32_t aDistance);
   virtual size_t NumCapabilities() const;
-  virtual void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut) const;
+  virtual webrtc::CaptureCapability GetCapability(size_t aIndex) const;
   virtual bool ChooseCapability(
     const NormalizedConstraints &aConstraints,
     const MediaEnginePrefs &aPrefs,

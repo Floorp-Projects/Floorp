@@ -663,19 +663,20 @@ MediaEngineRemoteVideoSource::ChooseCapability(
 
 }
 
-void
-MediaEngineRemoteVideoSource::GetCapability(size_t aIndex,
-                                            webrtc::CaptureCapability& aOut) const
+webrtc::CaptureCapability
+MediaEngineRemoteVideoSource::GetCapability(size_t aIndex) const
 {
+  webrtc::CaptureCapability result;
   if (!mHardcodedCapabilities.IsEmpty()) {
-    MediaEngineCameraVideoSource::GetCapability(aIndex, aOut);
+    result = MediaEngineCameraVideoSource::GetCapability(aIndex);
   }
   mozilla::camera::GetChildAndCall(
     &mozilla::camera::CamerasChild::GetCaptureCapability,
     mCapEngine,
     GetUUID().get(),
     aIndex,
-    aOut);
+    result);
+  return result;
 }
 
 void MediaEngineRemoteVideoSource::Refresh(int aIndex) {
