@@ -7,7 +7,6 @@
 #include "jit/shared/Disassembler-shared.h"
 
 #include "jit/JitSpewer.h"
-#include "js/Printf.h"
 
 using namespace js::jit;
 

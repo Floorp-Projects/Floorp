@@ -33,7 +33,6 @@
 #include "gc/Policy.h"
 #include "jit/BaselineJIT.h"
 #include "js/MemoryMetrics.h"
-#include "js/Printf.h"
 #include "js/Proxy.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"

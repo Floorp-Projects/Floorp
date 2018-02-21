@@ -16,7 +16,6 @@
 #include "gc/PublicIterators.h"
 #include "gc/Zone.h"
 #include "js/HashTable.h"
-#include "js/Printf.h"
 #include "vm/JSContext.h"
 
 #include "gc/GC-inl.h"

@@ -22,7 +22,6 @@
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "js/CharacterEncoding.h"
-#include "js/Printf.h"
 #include "js/Wrapper.h"
 #include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"

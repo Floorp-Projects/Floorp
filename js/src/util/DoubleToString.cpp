@@ -15,8 +15,6 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "js/Printf.h"
-
 using namespace js;
 
 #if MOZ_LITTLE_ENDIAN

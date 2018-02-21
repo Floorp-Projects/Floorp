@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <type_traits>
 
-#include "js/Printf.h"
 #include "vm/JSContext.h"
 
 using namespace js;
