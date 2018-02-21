@@ -3646,7 +3646,6 @@ pub extern "C" fn Servo_ResolveStyleLazily(
     rule_inclusion: StyleRuleInclusion,
     snapshots: *const ServoElementSnapshotTable,
     raw_data: RawServoStyleSetBorrowed,
-    ignore_existing_styles: bool,
 ) -> ServoStyleContextStrong {
     debug_assert!(!snapshots.is_null());
     let global_style_data = &*GLOBAL_STYLE_DATA;
@@ -3678,14 +3677,12 @@ pub extern "C" fn Servo_ResolveStyleLazily(
     let is_before_or_after = pseudo.as_ref().map_or(false, |p| p.is_before_or_after());
 
     // In the common case we already have the style. Check that before setting
-    // up all the computation machinery. (Don't use it when we're getting
-    // default styles or in a bfcached document (as indicated by
-    // ignore_existing_styles), though.)
+    // up all the computation machinery.
     //
     // Also, only probe in the ::before or ::after case, since their styles may
     // not be in the `ElementData`, given they may exist but not be applicable
     // to generate an actual pseudo-element (like, having a `content: none`).
-    if rule_inclusion == RuleInclusion::All && !ignore_existing_styles {
+    if rule_inclusion == RuleInclusion::All {
         let styles = element.mutate_data().and_then(|d| {
             if d.has_styles() {
                 finish(&d.styles, is_before_or_after)
@@ -3714,7 +3711,6 @@ pub extern "C" fn Servo_ResolveStyleLazily(
         &mut context,
         element,
         rule_inclusion,
-        ignore_existing_styles,
         pseudo.as_ref()
     );
 
@@ -3797,24 +3793,23 @@ struct PropertyAndIndex {
 }
 
 struct PrioritizedPropertyIter<'a> {
-    properties: &'a nsTArray<PropertyValuePair>,
+    properties: &'a [PropertyValuePair],
     sorted_property_indices: Vec<PropertyAndIndex>,
     curr: usize,
 }
 
 impl<'a> PrioritizedPropertyIter<'a> {
-    pub fn new(properties: &'a nsTArray<PropertyValuePair>) -> PrioritizedPropertyIter {
-        // If we fail to convert a nsCSSPropertyID into a PropertyId we shouldn't fail outright
-        // but instead by treating that property as the 'all' property we make it sort last.
-        let all = PropertyId::Shorthand(ShorthandId::All);
-
+    fn new(properties: &'a [PropertyValuePair]) -> PrioritizedPropertyIter {
+        // If we fail to convert a nsCSSPropertyID into a PropertyId we
+        // shouldn't fail outright but instead by treating that property as the
+        // 'all' property we make it sort last.
         let mut sorted_property_indices: Vec<PropertyAndIndex> =
             properties.iter().enumerate().map(|(index, pair)| {
-                PropertyAndIndex {
-                    property: PropertyId::from_nscsspropertyid(pair.mProperty)
-                              .unwrap_or(all.clone()),
-                    index,
-                }
+                let property =
+                    PropertyId::from_nscsspropertyid(pair.mProperty)
+                        .unwrap_or(PropertyId::Shorthand(ShorthandId::All));
+
+                PropertyAndIndex { property, index }
             }).collect();
         sorted_property_indices.sort_by(|a, b| compare_property_priority(&a.property, &b.property));
 

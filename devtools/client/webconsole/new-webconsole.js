@@ -132,7 +132,7 @@ NewWebConsoleFrame.prototype = {
   },
 
   logWarningAboutReplacedAPI() {
-    this.owner.target.logErrorInPage(l10n.getStr("ConsoleAPIDisabled"),
+    this.owner.target.logWarningInPage(l10n.getStr("ConsoleAPIDisabled"),
       "ConsoleAPIDisabled");
   },
 

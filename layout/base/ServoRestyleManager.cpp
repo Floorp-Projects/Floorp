@@ -656,6 +656,11 @@ UpdateOneAdditionalStyleContext(nsIFrame* aFrame,
   }
 
   if (childHint) {
+    if (childHint & nsChangeHint_ReconstructFrame) {
+      // If we generate a reconstruct here, remove any non-reconstruct hints we
+      // may have already generated for this content.
+      aRestyleState.ChangeList().PopChangesForContent(aFrame->GetContent());
+    }
     aRestyleState.ChangeList().AppendChange(
         aFrame, aFrame->GetContent(), childHint);
   }

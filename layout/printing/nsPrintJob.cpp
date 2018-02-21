@@ -2388,6 +2388,7 @@ nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO)
   aPO->mPresShell->BeginObservingDocument();
 
   aPO->mPresContext->SetPageSize(adjSize);
+  aPO->mPresContext->SetVisibleArea(nsRect(0, 0, adjSize.width, adjSize.height));
   aPO->mPresContext->SetIsRootPaginatedDocument(documentIsTopLevel);
   aPO->mPresContext->SetPageScale(aPO->mZoomRatio);
   // Calculate scale factor from printer to screen
@@ -2401,7 +2402,7 @@ nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO)
                                                  aPO->mPresShell);
   }
 
-  rv = aPO->mPresShell->Initialize(adjSize.width, adjSize.height);
+  rv = aPO->mPresShell->Initialize();
 
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(aPO->mPresShell, "Presshell should still be here");

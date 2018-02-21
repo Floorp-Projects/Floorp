@@ -173,7 +173,20 @@ public:
   static void GetDefaultEditorPrefs(int32_t& aNewLineHandling,
                                     int32_t& aCaretStyle);
 
+  /**
+    * The maximum number of characters allowed.
+    *   default: -1 (unlimited).
+    */
   int32_t MaxTextLength() const { return mMaxTextLength; }
+  void SetMaxTextLength(int32_t aLength) { mMaxTextLength = aLength; }
+
+  /**
+   * Replace existed string with a string.
+   * This is fast path to replace all string when using single line control.
+   *
+   * @ param aString   the string to be set
+   */
+  nsresult SetText(const nsAString& aString);
 
 protected:
   virtual ~TextEditor();

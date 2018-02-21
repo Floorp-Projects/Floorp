@@ -107,7 +107,7 @@ protected:
 
   nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
                  bool aPreallocateChildren) const override;
-  nsCOMPtr<Element> mHost;
+  RefPtr<Element> mHost;
 };
 
 } // namespace dom

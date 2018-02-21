@@ -1373,8 +1373,7 @@ nsGlobalWindowOuter::SetInitialPrincipalToSubject()
   if (shell && !shell->DidInitialize()) {
     // Ensure that if someone plays with this document they will get
     // layout happening.
-    nsRect r = shell->GetPresContext()->GetVisibleArea();
-    shell->Initialize(r.Width(), r.Height());
+    shell->Initialize();
   }
 }
 
