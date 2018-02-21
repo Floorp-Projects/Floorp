@@ -2076,7 +2076,7 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
 
     Linker linker(masm);
     AutoFlushICache afc("RegExpMatcherStub");
-    JitCode* code = linker.newCode<CanGC>(cx, CodeKind::Other);
+    JitCode* code = linker.newCode(cx, CodeKind::Other);
     if (!code)
         return nullptr;
 
@@ -2233,7 +2233,7 @@ JitCompartment::generateRegExpSearcherStub(JSContext* cx)
 
     Linker linker(masm);
     AutoFlushICache afc("RegExpSearcherStub");
-    JitCode* code = linker.newCode<CanGC>(cx, CodeKind::Other);
+    JitCode* code = linker.newCode(cx, CodeKind::Other);
     if (!code)
         return nullptr;
 
@@ -2381,7 +2381,7 @@ JitCompartment::generateRegExpTesterStub(JSContext* cx)
 
     Linker linker(masm);
     AutoFlushICache afc("RegExpTesterStub");
-    JitCode* code = linker.newCode<CanGC>(cx, CodeKind::Other);
+    JitCode* code = linker.newCode(cx, CodeKind::Other);
     if (!code)
         return nullptr;
 
@@ -8259,7 +8259,7 @@ JitCompartment::generateStringConcatStub(JSContext* cx)
 
     Linker linker(masm);
     AutoFlushICache afc("StringConcatStub");
-    JitCode* code = linker.newCode<CanGC>(cx, CodeKind::Other);
+    JitCode* code = linker.newCode(cx, CodeKind::Other);
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "StringConcatStub");
@@ -10075,9 +10075,9 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
     // Also, note that creating the code here during an incremental GC will
     // trace the code and mark all GC things it refers to. This captures any
     // read barriers which were skipped while compiling the script off thread.
-    Linker linker(masm);
+    Linker linker(masm, nogc);
     AutoFlushICache afc("IonLink");
-    JitCode* code = linker.newCode<NoGC>(cx, CodeKind::Ion, !patchableBackedges_.empty());
+    JitCode* code = linker.newCode(cx, CodeKind::Ion, !patchableBackedges_.empty());
     if (!code)
         return false;
 

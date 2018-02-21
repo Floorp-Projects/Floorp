@@ -517,7 +517,7 @@ ICStubCompiler::getStubCode()
         return nullptr;
     Linker linker(masm);
     AutoFlushICache afc("getStubCode");
-    Rooted<JitCode*> newStubCode(cx, linker.newCode<CanGC>(cx, CodeKind::Baseline));
+    Rooted<JitCode*> newStubCode(cx, linker.newCode(cx, CodeKind::Baseline));
     if (!newStubCode)
         return nullptr;
 
@@ -2779,7 +2779,7 @@ GenerateNewObjectWithTemplateCode(JSContext* cx, JSObject* templateObject)
 
     Linker linker(masm);
     AutoFlushICache afc("GenerateNewObjectWithTemplateCode");
-    return linker.newCode<CanGC>(cx, CodeKind::Baseline);
+    return linker.newCode(cx, CodeKind::Baseline);
 }
 
 static bool
