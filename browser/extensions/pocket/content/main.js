@@ -149,7 +149,8 @@ var pktUI = (function() {
         // AB test: Direct logged-out users to tab vs panel
         if (pktApi.getSignupPanelTabTestVariant() == "v2") {
             let site = Services.prefs.getCharPref("extensions.pocket.site");
-            openTabWithUrl("https://" + site + "/firefox_learnmore?s=ffi&t=autoredirect&tv=page_learnmore&src=ff_ext", true);
+            openTabWithUrl("https://" + site + "/firefox_learnmore?s=ffi&t=autoredirect&tv=page_learnmore&src=ff_ext",
+                           Services.scriptSecurityManager.getSystemPrincipal());
 
             // force the panel closed before it opens
             getPanel().hidePopup();
@@ -377,23 +378,11 @@ var pktUI = (function() {
             pktUIMessaging.sendMessageToPanel(panelId, _showMessageId);
         });
 
-        // Open a new tab with a given url and activate if
+        // Open a new tab with a given url
         var _openTabWithUrlMessageId = "openTabWithUrl";
         pktUIMessaging.addMessageListener(iframe, _openTabWithUrlMessageId, function(panelId, data, contentPrincipal) {
-            try {
-              urlSecurityCheck(data.url, contentPrincipal, Services.scriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
-            } catch (ex) {
-              return;
-            }
-
-            // Check if the tab should become active after opening
-            var activate = true;
-            if (typeof data.activate !== "undefined") {
-                activate = data.activate;
-            }
-
             var url = data.url;
-            openTabWithUrl(url, activate);
+            openTabWithUrl(url, contentPrincipal);
             pktUIMessaging.sendResponseMessageToPanel(panelId, _openTabWithUrlMessageId, url);
         });
 
@@ -514,7 +503,7 @@ var pktUI = (function() {
      * Open a new tab with a given url and notify the iframe panel that it was opened
      */
 
-    function openTabWithUrl(url) {
+    function openTabWithUrl(url, aTriggeringPrincipal) {
         let recentWindow = Services.wm.getMostRecentWindow("navigator:browser");
         if (!recentWindow) {
           Cu.reportError("Pocket: No open browser windows to openTabWithUrl");
@@ -526,7 +515,9 @@ var pktUI = (function() {
         // windows.
         if (!PrivateBrowsingUtils.isWindowPrivate(recentWindow) ||
             PrivateBrowsingUtils.permanentPrivateBrowsing) {
-          recentWindow.openUILinkIn(url, "tab");
+          recentWindow.openWebLinkIn(url, "tab", {
+            triggeringPrincipal: aTriggeringPrincipal
+          });
           return;
         }
 
@@ -534,13 +525,17 @@ var pktUI = (function() {
         while (windows.hasMoreElements()) {
           let win = windows.getNext();
           if (!PrivateBrowsingUtils.isWindowPrivate(win)) {
-            win.openUILinkIn(url, "tab");
+            win.openWebLinkIn(url, "tab", {
+              triggeringPrincipal: aTriggeringPrincipal
+            });
             return;
           }
         }
 
         // If there were no non-private windows opened already.
-        recentWindow.openUILinkIn(url, "window");
+        recentWindow.openWebLinkIn(url, "window", {
+          triggeringPrincipal: aTriggeringPrincipal
+        });
     }
 
 
