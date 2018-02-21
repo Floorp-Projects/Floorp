@@ -86,6 +86,7 @@ user_pref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
 // Ensure that telemetry is disabled, so we don't connect to the telemetry
 // server in the middle of the tests.
 user_pref("toolkit.telemetry.enabled", false);
+user_pref("toolkit.telemetry.server", "https://%(server)s/telemetry-dummy/");
 user_pref("datareporting.healthreport.uploadEnabled", false);
 user_pref("experiments.enabled", false);
 // Likewise for safebrowsing.

@@ -341,6 +341,7 @@ decorate_task(
 decorate_task(
   withPrefEnv({
     set: [
+      ["datareporting.healthreport.uploadEnabled", true],  // telemetry enabled
       ["extensions.shield-recipe-client.dev_mode", true],
       ["extensions.shield-recipe-client.first_run", false],
     ],
@@ -358,6 +359,7 @@ decorate_task(
 decorate_task(
   withPrefEnv({
     set: [
+      ["datareporting.healthreport.uploadEnabled", true],  // telemetry enabled
       ["extensions.shield-recipe-client.dev_mode", false],
       ["extensions.shield-recipe-client.first_run", false],
     ],
@@ -375,6 +377,7 @@ decorate_task(
 decorate_task(
   withPrefEnv({
     set: [
+      ["datareporting.healthreport.uploadEnabled", true],  // telemetry enabled
       ["extensions.shield-recipe-client.dev_mode", false],
       ["extensions.shield-recipe-client.first_run", true],
       ["extensions.shield-recipe-client.api_url", "https://example.com"],
