@@ -11,10 +11,10 @@ ChromeUtils.import("resource://gre/modules/Timer.jsm");
 let fs;
 L10nRegistry.load = async function(url) {
   if (!fs.hasOwnProperty(url)) {
-    return Promise.reject('Resource unavailable');
+    return Promise.reject("Resource unavailable");
   }
   return fs[url];
-}
+};
 
 add_task(function test_methods_presence() {
   equal(typeof L10nRegistry.generateContexts, "function");
@@ -29,17 +29,17 @@ add_task(function test_methods_presence() {
  */
 add_task(async function test_methods_calling() {
   fs = {
-    '/localization/en-US/browser/menu.ftl': 'key = Value',
+    "/localization/en-US/browser/menu.ftl": "key = Value",
   };
 
-  const source = new FileSource('test', ['en-US'], '/localization/{locale}');
+  const source = new FileSource("test", ["en-US"], "/localization/{locale}");
   L10nRegistry.registerSource(source);
 
-  const ctxs = L10nRegistry.generateContexts(['en-US'], ['/browser/menu.ftl']);
+  const ctxs = L10nRegistry.generateContexts(["en-US"], ["/browser/menu.ftl"]);
 
   const ctx = (await ctxs.next()).value;
 
-  equal(ctx.hasMessage('key'), true);
+  equal(ctx.hasMessage("key"), true);
 
   // cleanup
   L10nRegistry.sources.clear();
@@ -51,9 +51,9 @@ add_task(async function test_methods_calling() {
  * for the single source scenario
  */
 add_task(async function test_has_one_source() {
-  let oneSource = new FileSource('app', ['en-US'], './app/data/locales/{locale}/');
+  let oneSource = new FileSource("app", ["en-US"], "./app/data/locales/{locale}/");
   fs = {
-    './app/data/locales/en-US/test.ftl': 'key = value en-US'
+    "./app/data/locales/en-US/test.ftl": "key = value en-US"
   };
   L10nRegistry.registerSource(oneSource);
 
@@ -61,21 +61,21 @@ add_task(async function test_has_one_source() {
   // has one source
 
   equal(L10nRegistry.sources.size, 1);
-  equal(L10nRegistry.sources.has('app'), true);
+  equal(L10nRegistry.sources.has("app"), true);
 
 
   // returns a single context
 
-  let ctxs = L10nRegistry.generateContexts(['en-US'], ['test.ftl']);
+  let ctxs = L10nRegistry.generateContexts(["en-US"], ["test.ftl"]);
   let ctx0 = (await ctxs.next()).value;
-  equal(ctx0.hasMessage('key'), true);
+  equal(ctx0.hasMessage("key"), true);
 
   equal((await ctxs.next()).done, true);
 
 
   // returns no contexts for missing locale
 
-  ctxs = L10nRegistry.generateContexts(['pl'], ['test.ftl']);
+  ctxs = L10nRegistry.generateContexts(["pl"], ["test.ftl"]);
 
   equal((await ctxs.next()).done, true);
 
@@ -89,50 +89,50 @@ add_task(async function test_has_one_source() {
  * for the dual source scenario.
  */
 add_task(async function test_has_two_sources() {
-  let oneSource = new FileSource('platform', ['en-US'], './platform/data/locales/{locale}/');
+  let oneSource = new FileSource("platform", ["en-US"], "./platform/data/locales/{locale}/");
   L10nRegistry.registerSource(oneSource);
 
-  let secondSource = new FileSource('app', ['pl'], './app/data/locales/{locale}/');
+  let secondSource = new FileSource("app", ["pl"], "./app/data/locales/{locale}/");
   L10nRegistry.registerSource(secondSource);
   fs = {
-    './platform/data/locales/en-US/test.ftl': 'key = platform value',
-    './app/data/locales/pl/test.ftl': 'key = app value'
+    "./platform/data/locales/en-US/test.ftl": "key = platform value",
+    "./app/data/locales/pl/test.ftl": "key = app value"
   };
 
 
   // has two sources
 
   equal(L10nRegistry.sources.size, 2);
-  equal(L10nRegistry.sources.has('app'), true);
-  equal(L10nRegistry.sources.has('platform'), true);
+  equal(L10nRegistry.sources.has("app"), true);
+  equal(L10nRegistry.sources.has("platform"), true);
 
 
   // returns correct contexts for en-US
 
-  let ctxs = L10nRegistry.generateContexts(['en-US'], ['test.ftl']);
+  let ctxs = L10nRegistry.generateContexts(["en-US"], ["test.ftl"]);
   let ctx0 = (await ctxs.next()).value;
 
-  equal(ctx0.hasMessage('key'), true);
-  let msg = ctx0.getMessage('key');
-  equal(ctx0.format(msg), 'platform value');
+  equal(ctx0.hasMessage("key"), true);
+  let msg = ctx0.getMessage("key");
+  equal(ctx0.format(msg), "platform value");
 
   equal((await ctxs.next()).done, true);
 
 
   // returns correct contexts for [pl, en-US]
 
-  ctxs = L10nRegistry.generateContexts(['pl', 'en-US'], ['test.ftl']);
+  ctxs = L10nRegistry.generateContexts(["pl", "en-US"], ["test.ftl"]);
   ctx0 = (await ctxs.next()).value;
-  equal(ctx0.locales[0], 'pl');
-  equal(ctx0.hasMessage('key'), true);
-  let msg0 = ctx0.getMessage('key');
-  equal(ctx0.format(msg0), 'app value');
+  equal(ctx0.locales[0], "pl");
+  equal(ctx0.hasMessage("key"), true);
+  let msg0 = ctx0.getMessage("key");
+  equal(ctx0.format(msg0), "app value");
 
   let ctx1 = (await ctxs.next()).value;
-  equal(ctx1.locales[0], 'en-US');
-  equal(ctx1.hasMessage('key'), true);
-  let msg1 = ctx1.getMessage('key');
-  equal(ctx1.format(msg1), 'platform value');
+  equal(ctx1.locales[0], "en-US");
+  equal(ctx1.hasMessage("key"), true);
+  let msg1 = ctx1.getMessage("key");
+  equal(ctx1.format(msg1), "platform value");
 
   equal((await ctxs.next()).done, true);
 
@@ -149,20 +149,20 @@ add_task(async function test_has_two_sources() {
  * missing files as `false` instead of `undefined`.
  */
 add_task(async function test_indexed() {
-  let oneSource = new IndexedFileSource('langpack-pl', ['pl'], '/data/locales/{locale}/', [
-    '/data/locales/pl/test.ftl',
+  let oneSource = new IndexedFileSource("langpack-pl", ["pl"], "/data/locales/{locale}/", [
+    "/data/locales/pl/test.ftl",
   ]);
   L10nRegistry.registerSource(oneSource);
   fs = {
-    '/data/locales/pl/test.ftl': 'key = value'
+    "/data/locales/pl/test.ftl": "key = value"
   };
 
   equal(L10nRegistry.sources.size, 1);
-  equal(L10nRegistry.sources.has('langpack-pl'), true);
+  equal(L10nRegistry.sources.has("langpack-pl"), true);
 
-  equal(oneSource.getPath('pl', 'test.ftl'), '/data/locales/pl/test.ftl');
-  equal(oneSource.hasFile('pl', 'test.ftl'), true);
-  equal(oneSource.hasFile('pl', 'missing.ftl'), false);
+  equal(oneSource.getPath("pl", "test.ftl"), "/data/locales/pl/test.ftl");
+  equal(oneSource.hasFile("pl", "test.ftl"), true);
+  equal(oneSource.hasFile("pl", "missing.ftl"), false);
 
   // cleanup
   L10nRegistry.sources.clear();
@@ -174,34 +174,34 @@ add_task(async function test_indexed() {
  * scenarios where a new file source is added on top of the default one.
  */
 add_task(async function test_override() {
-  let fileSource = new FileSource('app', ['pl'], '/app/data/locales/{locale}/');
+  let fileSource = new FileSource("app", ["pl"], "/app/data/locales/{locale}/");
   L10nRegistry.registerSource(fileSource);
 
-  let oneSource = new IndexedFileSource('langpack-pl', ['pl'], '/data/locales/{locale}/', [
-    '/data/locales/pl/test.ftl'
+  let oneSource = new IndexedFileSource("langpack-pl", ["pl"], "/data/locales/{locale}/", [
+    "/data/locales/pl/test.ftl"
   ]);
   L10nRegistry.registerSource(oneSource);
 
   fs = {
-    '/app/data/locales/pl/test.ftl': 'key = value',
-    '/data/locales/pl/test.ftl': 'key = addon value'
+    "/app/data/locales/pl/test.ftl": "key = value",
+    "/data/locales/pl/test.ftl": "key = addon value"
   };
 
   equal(L10nRegistry.sources.size, 2);
-  equal(L10nRegistry.sources.has('langpack-pl'), true);
+  equal(L10nRegistry.sources.has("langpack-pl"), true);
 
-  let ctxs = L10nRegistry.generateContexts(['pl'], ['test.ftl']);
+  let ctxs = L10nRegistry.generateContexts(["pl"], ["test.ftl"]);
   let ctx0 = (await ctxs.next()).value;
-  equal(ctx0.locales[0], 'pl');
-  equal(ctx0.hasMessage('key'), true);
-  let msg0 = ctx0.getMessage('key');
-  equal(ctx0.format(msg0), 'addon value');
+  equal(ctx0.locales[0], "pl");
+  equal(ctx0.hasMessage("key"), true);
+  let msg0 = ctx0.getMessage("key");
+  equal(ctx0.format(msg0), "addon value");
 
   let ctx1 = (await ctxs.next()).value;
-  equal(ctx1.locales[0], 'pl');
-  equal(ctx1.hasMessage('key'), true);
-  let msg1 = ctx1.getMessage('key');
-  equal(ctx1.format(msg1), 'value');
+  equal(ctx1.locales[0], "pl");
+  equal(ctx1.hasMessage("key"), true);
+  let msg1 = ctx1.getMessage("key");
+  equal(ctx1.format(msg1), "value");
 
   equal((await ctxs.next()).done, true);
 
@@ -215,33 +215,33 @@ add_task(async function test_override() {
  * after source update.
  */
 add_task(async function test_updating() {
-  let oneSource = new IndexedFileSource('langpack-pl', ['pl'], '/data/locales/{locale}/', [
-    '/data/locales/pl/test.ftl',
+  let oneSource = new IndexedFileSource("langpack-pl", ["pl"], "/data/locales/{locale}/", [
+    "/data/locales/pl/test.ftl",
   ]);
   L10nRegistry.registerSource(oneSource);
   fs = {
-    '/data/locales/pl/test.ftl': 'key = value'
+    "/data/locales/pl/test.ftl": "key = value"
   };
 
-  let ctxs = L10nRegistry.generateContexts(['pl'], ['test.ftl']);
+  let ctxs = L10nRegistry.generateContexts(["pl"], ["test.ftl"]);
   let ctx0 = (await ctxs.next()).value;
-  equal(ctx0.locales[0], 'pl');
-  equal(ctx0.hasMessage('key'), true);
-  let msg0 = ctx0.getMessage('key');
-  equal(ctx0.format(msg0), 'value');
+  equal(ctx0.locales[0], "pl");
+  equal(ctx0.hasMessage("key"), true);
+  let msg0 = ctx0.getMessage("key");
+  equal(ctx0.format(msg0), "value");
 
 
-  const newSource = new IndexedFileSource('langpack-pl', ['pl'], '/data/locales/{locale}/', [
-    '/data/locales/pl/test.ftl'
+  const newSource = new IndexedFileSource("langpack-pl", ["pl"], "/data/locales/{locale}/", [
+    "/data/locales/pl/test.ftl"
   ]);
-  fs['/data/locales/pl/test.ftl'] = 'key = new value';
+  fs["/data/locales/pl/test.ftl"] = "key = new value";
   L10nRegistry.updateSource(newSource);
 
   equal(L10nRegistry.sources.size, 1);
-  ctxs = L10nRegistry.generateContexts(['pl'], ['test.ftl']);
+  ctxs = L10nRegistry.generateContexts(["pl"], ["test.ftl"]);
   ctx0 = (await ctxs.next()).value;
-  msg0 = ctx0.getMessage('key');
-  equal(ctx0.format(msg0), 'new value');
+  msg0 = ctx0.getMessage("key");
+  equal(ctx0.format(msg0), "new value");
 
   // cleanup
   L10nRegistry.sources.clear();
@@ -253,60 +253,60 @@ add_task(async function test_updating() {
  * after sources are being removed.
  */
 add_task(async function test_removing() {
-  let fileSource = new FileSource('app', ['pl'], '/app/data/locales/{locale}/');
+  let fileSource = new FileSource("app", ["pl"], "/app/data/locales/{locale}/");
   L10nRegistry.registerSource(fileSource);
 
-  let oneSource = new IndexedFileSource('langpack-pl', ['pl'], '/data/locales/{locale}/', [
-    '/data/locales/pl/test.ftl'
+  let oneSource = new IndexedFileSource("langpack-pl", ["pl"], "/data/locales/{locale}/", [
+    "/data/locales/pl/test.ftl"
   ]);
   L10nRegistry.registerSource(oneSource);
 
   fs = {
-    '/app/data/locales/pl/test.ftl': 'key = value',
-    '/data/locales/pl/test.ftl': 'key = addon value'
+    "/app/data/locales/pl/test.ftl": "key = value",
+    "/data/locales/pl/test.ftl": "key = addon value"
   };
 
   equal(L10nRegistry.sources.size, 2);
-  equal(L10nRegistry.sources.has('langpack-pl'), true);
+  equal(L10nRegistry.sources.has("langpack-pl"), true);
 
-  let ctxs = L10nRegistry.generateContexts(['pl'], ['test.ftl']);
+  let ctxs = L10nRegistry.generateContexts(["pl"], ["test.ftl"]);
   let ctx0 = (await ctxs.next()).value;
-  equal(ctx0.locales[0], 'pl');
-  equal(ctx0.hasMessage('key'), true);
-  let msg0 = ctx0.getMessage('key');
-  equal(ctx0.format(msg0), 'addon value');
+  equal(ctx0.locales[0], "pl");
+  equal(ctx0.hasMessage("key"), true);
+  let msg0 = ctx0.getMessage("key");
+  equal(ctx0.format(msg0), "addon value");
 
   let ctx1 = (await ctxs.next()).value;
-  equal(ctx1.locales[0], 'pl');
-  equal(ctx1.hasMessage('key'), true);
-  let msg1 = ctx1.getMessage('key');
-  equal(ctx1.format(msg1), 'value');
+  equal(ctx1.locales[0], "pl");
+  equal(ctx1.hasMessage("key"), true);
+  let msg1 = ctx1.getMessage("key");
+  equal(ctx1.format(msg1), "value");
 
   equal((await ctxs.next()).done, true);
 
   // Remove langpack
 
-  L10nRegistry.removeSource('langpack-pl');
+  L10nRegistry.removeSource("langpack-pl");
 
   equal(L10nRegistry.sources.size, 1);
-  equal(L10nRegistry.sources.has('langpack-pl'), false);
+  equal(L10nRegistry.sources.has("langpack-pl"), false);
 
-  ctxs = L10nRegistry.generateContexts(['pl'], ['test.ftl']);
+  ctxs = L10nRegistry.generateContexts(["pl"], ["test.ftl"]);
   ctx0 = (await ctxs.next()).value;
-  equal(ctx0.locales[0], 'pl');
-  equal(ctx0.hasMessage('key'), true);
-  msg0 = ctx0.getMessage('key');
-  equal(ctx0.format(msg0), 'value');
+  equal(ctx0.locales[0], "pl");
+  equal(ctx0.hasMessage("key"), true);
+  msg0 = ctx0.getMessage("key");
+  equal(ctx0.format(msg0), "value");
 
   equal((await ctxs.next()).done, true);
 
   // Remove app source
 
-  L10nRegistry.removeSource('app');
+  L10nRegistry.removeSource("app");
 
   equal(L10nRegistry.sources.size, 0);
 
-  ctxs = L10nRegistry.generateContexts(['pl'], ['test.ftl']);
+  ctxs = L10nRegistry.generateContexts(["pl"], ["test.ftl"]);
   equal((await ctxs.next()).done, true);
 
   // cleanup
@@ -319,30 +319,30 @@ add_task(async function test_removing() {
  * file in the FileSource scenario.
  */
 add_task(async function test_missing_file() {
-  let oneSource = new FileSource('app', ['en-US'], './app/data/locales/{locale}/');
+  let oneSource = new FileSource("app", ["en-US"], "./app/data/locales/{locale}/");
   L10nRegistry.registerSource(oneSource);
-  let twoSource = new FileSource('platform', ['en-US'], './platform/data/locales/{locale}/');
+  let twoSource = new FileSource("platform", ["en-US"], "./platform/data/locales/{locale}/");
   L10nRegistry.registerSource(twoSource);
 
   fs = {
-    './app/data/locales/en-US/test.ftl': 'key = value en-US',
-    './platform/data/locales/en-US/test.ftl': 'key = value en-US',
-    './platform/data/locales/en-US/test2.ftl': 'key2 = value2 en-US'
+    "./app/data/locales/en-US/test.ftl": "key = value en-US",
+    "./platform/data/locales/en-US/test.ftl": "key = value en-US",
+    "./platform/data/locales/en-US/test2.ftl": "key2 = value2 en-US"
   };
 
 
   // has two sources
 
   equal(L10nRegistry.sources.size, 2);
-  equal(L10nRegistry.sources.has('app'), true);
-  equal(L10nRegistry.sources.has('platform'), true);
+  equal(L10nRegistry.sources.has("app"), true);
+  equal(L10nRegistry.sources.has("platform"), true);
 
 
   // returns a single context
 
-  let ctxs = L10nRegistry.generateContexts(['en-US'], ['test.ftl', 'test2.ftl']);
-  let ctx0 = (await ctxs.next()).value;
-  let ctx1 = (await ctxs.next()).value;
+  let ctxs = L10nRegistry.generateContexts(["en-US"], ["test.ftl", "test2.ftl"]);
+  (await ctxs.next());
+  (await ctxs.next());
 
   equal((await ctxs.next()).done, true);
 
@@ -368,33 +368,33 @@ add_task(async function test_parallel_io() {
     }
     fetchIndex.set(url, fetchIndex.get(url) + 1);
 
-    if (url === '/en-US/slow-file.ftl') {
+    if (url === "/en-US/slow-file.ftl") {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
           // Despite slow-file being the first on the list,
           // by the time the it finishes loading, the other
           // two files are already fetched.
-          equal(fetchIndex.get('/en-US/test.ftl'), 1);
-          equal(fetchIndex.get('/en-US/test2.ftl'), 1);
+          equal(fetchIndex.get("/en-US/test.ftl"), 1);
+          equal(fetchIndex.get("/en-US/test2.ftl"), 1);
 
-          resolve('');
+          resolve("");
         }, 10);
       });
-    };
-    return Promise.resolve('');
-  }
-  let oneSource = new FileSource('app', ['en-US'], '/{locale}/');
+    }
+    return Promise.resolve("");
+  };
+  let oneSource = new FileSource("app", ["en-US"], "/{locale}/");
   L10nRegistry.registerSource(oneSource);
 
   fs = {
-    '/en-US/test.ftl': 'key = value en-US',
-    '/en-US/test2.ftl': 'key2 = value2 en-US',
-    '/en-US/slow-file.ftl': 'key-slow = value slow en-US',
+    "/en-US/test.ftl": "key = value en-US",
+    "/en-US/test2.ftl": "key2 = value2 en-US",
+    "/en-US/slow-file.ftl": "key-slow = value slow en-US",
   };
 
   // returns a single context
 
-  let ctxs = L10nRegistry.generateContexts(['en-US'], ['slow-file.ftl', 'test.ftl', 'test2.ftl']);
+  let ctxs = L10nRegistry.generateContexts(["en-US"], ["slow-file.ftl", "test.ftl", "test2.ftl"]);
 
   equal(fetchIndex.size, 0);
 
@@ -406,7 +406,7 @@ add_task(async function test_parallel_io() {
 
   // When requested again, the cache should make the load operation not
   // increase the fetchedIndex count
-  let ctxs2= L10nRegistry.generateContexts(['en-US'], ['test.ftl', 'test2.ftl', 'slow-file.ftl']);
+  L10nRegistry.generateContexts(["en-US"], ["test.ftl", "test2.ftl", "slow-file.ftl"]);
 
   // cleanup
   L10nRegistry.sources.clear();
