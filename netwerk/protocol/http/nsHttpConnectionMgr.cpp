@@ -4594,7 +4594,8 @@ nsHalfOpenSocket::SetFastOpenConnected(nsresult aError, bool aWillRetry)
     MOZ_ASSERT((mFastOpenStatus == TFO_NOT_TRIED) || 
                (mFastOpenStatus == TFO_DATA_SENT) ||
                (mFastOpenStatus == TFO_TRIED) ||
-               (mFastOpenStatus == TFO_DATA_COOKIE_NOT_ACCEPTED));
+               (mFastOpenStatus == TFO_DATA_COOKIE_NOT_ACCEPTED) ||
+               (mFastOpenStatus == TFO_DISABLED));
 
     RefPtr<nsHalfOpenSocket> deleteProtector(this);
 
