@@ -834,6 +834,15 @@ HttpObserverManager = {
           try {
             channel.suspended = false;
             channel.redirectTo(Services.io.newURI(result.redirectUrl));
+            // Web Extensions using the WebRequest API are allowed
+            // to redirect a channel to a data: URI, hence we mark
+            // the channel to let the redirect blocker know. Please
+            // note that this markind needs to happen after the
+            // channel.redirectTo is called because the channel's
+            // RedirectTo() implementation explicitly drops the flag
+            // to avoid additional redirects not caused by the
+            // Web Extension.
+            channel.loadInfo.allowInsecureRedirectToDataURI = true;
             return;
           } catch (e) {
             Cu.reportError(e);

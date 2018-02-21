@@ -68,6 +68,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mEnforceSRI(false)
   , mAllowDocumentToBeAgnosticToCSP(false)
   , mForceAllowDataURI(false)
+  , mAllowInsecureRedirectToDataURI(false)
   , mOriginalFrameSrcLoad(false)
   , mForceInheritPrincipalDropped(false)
   , mInnerWindowID(0)
@@ -288,6 +289,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mEnforceSRI(false)
   , mAllowDocumentToBeAgnosticToCSP(false)
   , mForceAllowDataURI(false)
+  , mAllowInsecureRedirectToDataURI(false)
   , mOriginalFrameSrcLoad(false)
   , mForceInheritPrincipalDropped(false)
   , mInnerWindowID(0)
@@ -364,6 +366,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mEnforceSRI(rhs.mEnforceSRI)
   , mAllowDocumentToBeAgnosticToCSP(rhs.mAllowDocumentToBeAgnosticToCSP)
   , mForceAllowDataURI(rhs.mForceAllowDataURI)
+  , mAllowInsecureRedirectToDataURI(rhs.mAllowInsecureRedirectToDataURI)
   , mOriginalFrameSrcLoad(rhs.mOriginalFrameSrcLoad)
   , mForceInheritPrincipalDropped(rhs.mForceInheritPrincipalDropped)
   , mInnerWindowID(rhs.mInnerWindowID)
@@ -407,6 +410,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    bool aEnforceSRI,
                    bool aAllowDocumentToBeAgnosticToCSP,
                    bool aForceAllowDataURI,
+                   bool aAllowInsecureRedirectToDataURI,
                    bool aForceInheritPrincipalDropped,
                    uint64_t aInnerWindowID,
                    uint64_t aOuterWindowID,
@@ -444,6 +448,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mEnforceSRI(aEnforceSRI)
   , mAllowDocumentToBeAgnosticToCSP(aAllowDocumentToBeAgnosticToCSP)
   , mForceAllowDataURI(aForceAllowDataURI)
+  , mAllowInsecureRedirectToDataURI(aAllowInsecureRedirectToDataURI)
   , mOriginalFrameSrcLoad(false)
   , mForceInheritPrincipalDropped(aForceInheritPrincipalDropped)
   , mInnerWindowID(aInnerWindowID)
@@ -847,6 +852,20 @@ NS_IMETHODIMP
 LoadInfo::GetForceAllowDataURI(bool* aForceAllowDataURI)
 {
   *aForceAllowDataURI = mForceAllowDataURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetAllowInsecureRedirectToDataURI(bool aAllowInsecureRedirectToDataURI)
+{
+  mAllowInsecureRedirectToDataURI = aAllowInsecureRedirectToDataURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetAllowInsecureRedirectToDataURI(bool* aAllowInsecureRedirectToDataURI)
+{
+  *aAllowInsecureRedirectToDataURI = mAllowInsecureRedirectToDataURI;
   return NS_OK;
 }
 

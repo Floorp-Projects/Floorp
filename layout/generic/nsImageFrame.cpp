@@ -1849,8 +1849,8 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (!imageOK || !mImage || !SizeIsAvailable(currentRequest)) {
       // No image yet, or image load failed. Draw the alt-text and an icon
       // indicating the status
-      aLists.Content()->AppendToTop(new (aBuilder)
-        nsDisplayAltFeedback(aBuilder, this));
+      aLists.Content()->AppendToTop(
+        MakeDisplayItem<nsDisplayAltFeedback>(aBuilder, this));
 
       // This image is visible (we are being asked to paint it) but it's not
       // decoded yet. And we are not going to ask the image to draw, so this
@@ -1867,8 +1867,8 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         }
       }
     } else {
-      aLists.Content()->AppendToTop(new (aBuilder)
-        nsDisplayImage(aBuilder, this, mImage, mPrevImage));
+      aLists.Content()->AppendToTop(
+        MakeDisplayItem<nsDisplayImage>(aBuilder, this, mImage, mPrevImage));
 
       // If we were previously displaying an icon, we're not anymore
       if (mDisplayingIcon) {
@@ -1878,9 +1878,9 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 #ifdef DEBUG
       if (GetShowFrameBorders() && GetImageMap()) {
-        aLists.Outlines()->AppendToTop(new (aBuilder)
-          nsDisplayGeneric(aBuilder, this, PaintDebugImageMap, "DebugImageMap",
-                           DisplayItemType::TYPE_DEBUG_IMAGE_MAP));
+        aLists.Outlines()->AppendToTop(
+          MakeDisplayItem<nsDisplayGeneric>(aBuilder, this, PaintDebugImageMap, "DebugImageMap",
+                                            DisplayItemType::TYPE_DEBUG_IMAGE_MAP));
       }
 #endif
     }

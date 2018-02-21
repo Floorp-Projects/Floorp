@@ -1905,11 +1905,13 @@ HttpChannelParent::StartRedirect(uint32_t registrarId,
     rv = httpChannel->GetChannelId(&channelId);
     NS_ENSURE_SUCCESS(rv, NS_BINDING_ABORTED);
   }
-
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  mChannel->GetLoadInfo(getter_AddRefs(loadInfo));
   nsHttpResponseHead *responseHead = mChannel->GetResponseHead();
   bool result = false;
   if (!mIPCClosed) {
     result = SendRedirect1Begin(registrarId, uriParams, redirectFlags,
+                                loadInfo->GetAllowInsecureRedirectToDataURI(),
                                 responseHead ? *responseHead
                                              : nsHttpResponseHead(),
                                 secInfoSerialization,

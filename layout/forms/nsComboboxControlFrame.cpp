@@ -1599,7 +1599,7 @@ nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
            !presContext->GetTheme()->ThemeDrawsFocusForWidget(disp->mAppearance)) &&
           mDisplayFrame && IsVisibleForPainting(aBuilder)) {
         aLists.Content()->AppendToTop(
-          new (aBuilder) nsDisplayComboboxFocus(aBuilder, this));
+          MakeDisplayItem<nsDisplayComboboxFocus>(aBuilder, this));
       }
     }
   }

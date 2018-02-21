@@ -71,6 +71,8 @@ public:
   void Invalidate() { mIsInvalid = true; }
   void ClearAnimationCompositorState();
 
+  bool HasMergedFrames() const { return mFrameList.Length() > 1; }
+
   static DisplayItemData* AssertDisplayItemData(DisplayItemData* aData);
 
   void* operator new(size_t sz, nsPresContext* aPresContext)
@@ -103,6 +105,10 @@ public:
     }
     return mRefCnt;
   }
+
+  void Disconnect();
+
+  bool Disconnected() { return mDisconnected; }
 
 private:
   DisplayItemData(LayerManagerData* aParent,
@@ -186,6 +192,7 @@ private:
   bool            mUsed;
   bool            mIsInvalid;
   bool            mReusedItem;
+  bool            mDisconnected;
 };
 
 class RefCountedRegion {
@@ -198,6 +205,31 @@ public:
   nsRegion mRegion;
   bool mIsInfinite;
 };
+
+struct AssignedDisplayItem
+{
+  AssignedDisplayItem(nsDisplayItem* aItem,
+                      const DisplayItemClip& aClip,
+                      LayerState aLayerState)
+    : mItem(aItem)
+    , mClip(aClip)
+    , mLayerState(aLayerState)
+  {}
+
+  ~AssignedDisplayItem();
+
+  nsDisplayItem* mItem;
+  DisplayItemClip mClip;
+  LayerState mLayerState;
+
+  /**
+   * If the display item is being rendered as an inactive
+   * layer, then this stores the layer manager being
+   * used for the inactive transaction.
+   */
+  RefPtr<layers::LayerManager> mInactiveLayerManager;
+};
+
 
 struct ContainerLayerParameters {
   ContainerLayerParameters()
@@ -495,7 +527,8 @@ public:
                             ContainerState& aContainerState,
                             LayerState aLayerState,
                             const nsPoint& aTopLeft,
-                            DisplayItemData* aData);
+                            DisplayItemData* aData,
+                            AssignedDisplayItem& aAssignedDisplayItem);
 
   /**
    * Calls GetOldLayerForFrame on the underlying frame of the display item,
@@ -596,7 +629,7 @@ public:
    * This could be a dedicated layer for the display item, or a PaintedLayer
    * that renders many display items.
    */
-  DisplayItemData* GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey);
+  DisplayItemData* GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey, DisplayItemData* aOldData = nullptr);
 
 protected:
 
@@ -648,21 +681,8 @@ protected:
    * DrawPaintedLayer callback can figure out which items to draw for the
    * PaintedLayer.
    */
-  struct ClippedDisplayItem {
-    explicit ClippedDisplayItem(nsDisplayItem* aItem);
-    ~ClippedDisplayItem();
 
-    nsDisplayItem* mItem;
-
-    /**
-     * If the display item is being rendered as an inactive
-     * layer, then this stores the layer manager being
-     * used for the inactive transaction.
-     */
-    RefPtr<LayerManager> mInactiveLayerManager;
-  };
-
-  static void RecomputeVisibilityForItems(nsTArray<ClippedDisplayItem>& aItems,
+  static void RecomputeVisibilityForItems(nsTArray<AssignedDisplayItem>& aItems,
                                           nsDisplayListBuilder* aBuilder,
                                           const nsIntRegion& aRegionToDraw,
                                           const nsIntPoint& aOffset,
@@ -670,7 +690,7 @@ protected:
                                           float aXScale,
                                           float aYScale);
 
-  void PaintItems(nsTArray<ClippedDisplayItem>& aItems,
+  void PaintItems(nsTArray<AssignedDisplayItem>& aItems,
                   const nsIntRect& aRect,
                   gfxContext* aContext,
                   nsDisplayListBuilder* aBuilder,
@@ -690,7 +710,7 @@ public:
     PaintedLayerItemsEntry(const PaintedLayerItemsEntry&);
     ~PaintedLayerItemsEntry();
 
-    nsTArray<ClippedDisplayItem> mItems;
+    nsTArray<AssignedDisplayItem> mItems;
     nsIFrame* mContainerLayerFrame;
     // The translation set on this PaintedLayer before we started updating the
     // layer tree.
@@ -711,9 +731,9 @@ public:
    * Get the PaintedLayerItemsEntry object associated with aLayer in this
    * FrameLayerBuilder
    */
-  PaintedLayerItemsEntry* GetPaintedLayerItemsEntry(PaintedLayer* aLayer)
+  PaintedLayerItemsEntry* AddPaintedLayerItemsEntry(PaintedLayer* aLayer)
   {
-    return mPaintedLayerItems.GetEntry(aLayer);
+    return mPaintedLayerItems.PutEntry(aLayer);
   }
 
   PaintedLayerData* GetContainingPaintedLayerData()
