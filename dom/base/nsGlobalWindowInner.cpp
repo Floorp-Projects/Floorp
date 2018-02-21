@@ -6352,17 +6352,14 @@ nsGlobalWindowInner::GetOrCreateServiceWorker(const ServiceWorkerDescriptor& aDe
 {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<ServiceWorker> ref;
-  ForEachEventTargetObject([&] (DOMEventTargetHelper* aTarget) {
-    // TODO: allow short-cuts
-    if (ref) {
-      return;
-    }
-
+  ForEachEventTargetObject([&] (DOMEventTargetHelper* aTarget, bool* aDoneOut) {
     RefPtr<ServiceWorker> sw = do_QueryObject(aTarget);
     if (!sw || !sw->Descriptor().Matches(aDescriptor)) {
       return;
     }
+
     ref = sw.forget();
+    *aDoneOut = true;
   });
 
   if (!ref) {
@@ -6900,7 +6897,7 @@ nsGlobalWindowInner::AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const
       mNavigator->SizeOfIncludingThis(aWindowSizes.mState.mMallocSizeOf);
   }
 
-  ForEachEventTargetObject([&] (DOMEventTargetHelper* et) {
+  ForEachEventTargetObject([&] (DOMEventTargetHelper* et, bool* aDoneOut) {
     if (nsCOMPtr<nsISizeOfEventTarget> iSizeOf = do_QueryObject(et)) {
       aWindowSizes.mDOMEventTargetsSize +=
         iSizeOf->SizeOfEventTargetIncludingThis(

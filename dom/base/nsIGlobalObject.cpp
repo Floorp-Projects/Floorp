@@ -141,7 +141,7 @@ nsIGlobalObject::RemoveEventTargetObject(DOMEventTargetHelper* aObject)
 }
 
 void
-nsIGlobalObject::ForEachEventTargetObject(const std::function<void(DOMEventTargetHelper*)>& aFunc) const
+nsIGlobalObject::ForEachEventTargetObject(const std::function<void(DOMEventTargetHelper*, bool* aDoneOut)>& aFunc) const
 {
   // Protect against the function call triggering a mutation of the hash table
   // while we are iterating by copying the DETH references to a temporary
@@ -152,15 +152,19 @@ nsIGlobalObject::ForEachEventTargetObject(const std::function<void(DOMEventTarge
   }
 
   // Iterate the target list and call the function on each one.
+  bool done = false;
   for (auto target : targetList) {
-    aFunc(target);
+    aFunc(target, &done);
+    if (done) {
+      break;
+    }
   }
 }
 
 void
 nsIGlobalObject::DisconnectEventTargetObjects()
 {
-  ForEachEventTargetObject([&] (DOMEventTargetHelper* aTarget) {
+  ForEachEventTargetObject([&] (DOMEventTargetHelper* aTarget, bool* aDoneOut) {
     aTarget->DisconnectFromOwner();
 
     // Calling DisconnectFromOwner() should result in

@@ -104,7 +104,7 @@ public:
   // Iterate the registered DETH objects and call the given function
   // for each one.
   void
-  ForEachEventTargetObject(const std::function<void(mozilla::DOMEventTargetHelper*)>& aFunc) const;
+  ForEachEventTargetObject(const std::function<void(mozilla::DOMEventTargetHelper*, bool* aDoneOut)>& aFunc) const;
 
   virtual bool IsInSyncOperation() { return false; }
 
