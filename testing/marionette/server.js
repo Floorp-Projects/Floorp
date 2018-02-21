@@ -212,7 +212,7 @@ const RECOMMENDED_PREFS = new Map([
   ["extensions.installDistroAddons", false],
 
   // Make sure Shield doesn't hit the network.
-  ["extensions.shield-recipe-client.api_url", ""],
+  ["app.normandy.api_url", ""],
 
   ["extensions.showMismatchUI", false],
 

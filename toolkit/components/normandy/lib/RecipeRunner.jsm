@@ -43,13 +43,13 @@ const PREF_CHANGED_TOPIC = "nsPref:changed";
 
 const TELEMETRY_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
 
-const SHIELD_PREF_PREFIX = "extensions.shield-recipe-client";
-const RUN_INTERVAL_PREF = `${SHIELD_PREF_PREFIX}.run_interval_seconds`;
-const FIRST_RUN_PREF = `${SHIELD_PREF_PREFIX}.first_run`;
-const SHIELD_ENABLED_PREF = `${SHIELD_PREF_PREFIX}.enabled`;
-const DEV_MODE_PREF = `${SHIELD_PREF_PREFIX}.dev_mode`;
-const API_URL_PREF = `${SHIELD_PREF_PREFIX}.api_url`;
-const LAZY_CLASSIFY_PREF = `${SHIELD_PREF_PREFIX}.experiments.lazy_classify`;
+const PREF_PREFIX = "app.normandy";
+const RUN_INTERVAL_PREF = `${PREF_PREFIX}.run_interval_seconds`;
+const FIRST_RUN_PREF = `${PREF_PREFIX}.first_run`;
+const SHIELD_ENABLED_PREF = `${PREF_PREFIX}.enabled`;
+const DEV_MODE_PREF = `${PREF_PREFIX}.dev_mode`;
+const API_URL_PREF = `${PREF_PREFIX}.api_url`;
+const LAZY_CLASSIFY_PREF = `${PREF_PREFIX}.experiments.lazy_classify`;
 
 const PREFS_TO_WATCH = [
   RUN_INTERVAL_PREF,
@@ -65,8 +65,8 @@ var RecipeRunner = {
     this.watchPrefs();
 
     // Run if enabled immediately on first run, or if dev mode is enabled.
-    const firstRun = Services.prefs.getBoolPref(FIRST_RUN_PREF);
-    const devMode = Services.prefs.getBoolPref(DEV_MODE_PREF);
+    const firstRun = Services.prefs.getBoolPref(FIRST_RUN_PREF, true);
+    const devMode = Services.prefs.getBoolPref(DEV_MODE_PREF, false);
 
     if (this.enabled && (devMode || firstRun)) {
       await this.run();
