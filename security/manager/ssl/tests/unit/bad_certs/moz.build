@@ -13,7 +13,6 @@
 #    'ca-used-as-end-entity.pem',
 #    'default-ee.pem',
 #    'ee-from-missing-intermediate.pem',
-#    'ee-imminently-distrusted.pem',
 #    'eeIssuedByNonCA.pem',
 #    'eeIssuedByV1Cert.pem',
 #    'emptyIssuerName.pem',

@@ -13,12 +13,10 @@ SOURCES += [
     'CTSerializationTest.cpp',
     'CTTestUtils.cpp',
     'MultiLogCTVerifierTest.cpp',
-    'TrustOverrideTest.cpp',
 ]
 
 LOCAL_INCLUDES += [
     '/security/certverifier',
-    '/security/manager/ssl',
     '/security/pkix/include',
     '/security/pkix/lib',
 ]

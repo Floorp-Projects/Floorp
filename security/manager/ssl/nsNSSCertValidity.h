@@ -23,7 +23,7 @@ protected:
 private:
   nsresult FormatTime(const PRTime& aTime,
                       PRTimeParamFn aParamFn,
-                      const mozilla::nsTimeFormatSelector aTimeFormatSelector,
+                      const nsTimeFormatSelector aTimeFormatSelector,
                       nsAString& aFormattedTimeDate);
 
   PRTime mNotBefore;
