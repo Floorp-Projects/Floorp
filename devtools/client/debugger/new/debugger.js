@@ -19131,6 +19131,11 @@ function update(state = initialState(), action) {
       {
         return remapBreakpoints(state, action);
       }
+
+    case "NAVIGATE":
+      {
+        return initialState();
+      }
   }
 
   return state;
@@ -19159,12 +19164,16 @@ function addBreakpoint(state, action) {
 
 function syncBreakpoint(state, data) {
   const { breakpoint, previousLocation } = data;
-  const locationId = (0, _breakpoint.makeLocationId)(breakpoint.location);
 
   if (previousLocation) {
-    return state.deleteIn(["breakpoints", (0, _breakpoint.makeLocationId)(previousLocation)]).setIn(["breakpoints", locationId], breakpoint);
+    state = state.deleteIn(["breakpoints", (0, _breakpoint.makeLocationId)(previousLocation)]);
   }
 
+  if (!breakpoint) {
+    return state;
+  }
+
+  const locationId = (0, _breakpoint.makeLocationId)(breakpoint.location);
   return state.setIn(["breakpoints", locationId], breakpoint);
 }
 
@@ -23327,12 +23336,17 @@ function addBreakpoint(state, action) {
 
 function syncBreakpoint(state, action) {
   const { breakpoint, previousLocation } = action;
-  const locationId = (0, _breakpoint.makePendingLocationId)(breakpoint.location);
-  const pendingBreakpoint = (0, _breakpoint.createPendingBreakpoint)(breakpoint);
 
   if (previousLocation) {
-    return state.deleteIn(["pendingBreakpoints", (0, _breakpoint.makePendingLocationId)(previousLocation)]).setIn(["pendingBreakpoints", locationId], pendingBreakpoint);
+    state = state.deleteIn(["pendingBreakpoints", (0, _breakpoint.makePendingLocationId)(previousLocation)]);
   }
+
+  if (!breakpoint) {
+    return state;
+  }
+
+  const locationId = (0, _breakpoint.makePendingLocationId)(breakpoint.location);
+  const pendingBreakpoint = (0, _breakpoint.createPendingBreakpoint)(breakpoint);
 
   return state.setIn(["pendingBreakpoints", locationId], pendingBreakpoint);
 }
@@ -29914,7 +29928,7 @@ function sourceContents(sourceId) {
 }
 
 function getBreakpointByLocation(location) {
-  const id = (0, _breakpoint.makeLocationId)(location);
+  const id = (0, _breakpoint.makePendingLocationId)(location);
   const bpClient = bpClients[id];
 
   if (bpClient) {
@@ -29943,7 +29957,7 @@ function setBreakpoint(location, condition, noSliding) {
     noSliding
   }).then(([{ actualLocation }, bpClient]) => {
     actualLocation = (0, _create.createBreakpointLocation)(location, actualLocation);
-    const id = (0, _breakpoint.makeLocationId)(actualLocation);
+    const id = (0, _breakpoint.makePendingLocationId)(actualLocation);
     bpClients[id] = bpClient;
     bpClient.location.line = actualLocation.line;
     bpClient.location.column = actualLocation.column;
@@ -29955,7 +29969,7 @@ function setBreakpoint(location, condition, noSliding) {
 
 function removeBreakpoint(generatedLocation) {
   try {
-    const id = (0, _breakpoint.makeLocationId)(generatedLocation);
+    const id = (0, _breakpoint.makePendingLocationId)(generatedLocation);
     const bpClient = bpClients[id];
     if (!bpClient) {
       console.warn("No breakpoint to delete on server");
@@ -31370,7 +31384,7 @@ async function makeScopedLocation({ name, offset }, location, source) {
   };
 }
 
-function createSyncData(id, pendingBreakpoint, location, generatedLocation, previousLocation = null) {
+function createSyncData(id, pendingBreakpoint, location, generatedLocation, previousLocation) {
   const overrides = _extends({}, pendingBreakpoint, { generatedLocation, id });
   const breakpoint = (0, _breakpoint.createBreakpoint)(location, overrides);
 
@@ -31419,6 +31433,11 @@ async function syncClientBreakpoint(getState, client, sourceMaps, sourceId, pend
   /** ******* Case 2: Add New Breakpoint ***********/
   // If we are not disabled, set the breakpoint on the server and get
   // that info so we can set it on our breakpoints.
+
+  if (!scopedGeneratedLocation.line) {
+    return { previousLocation, breakpoint: null };
+  }
+
   const { id, actualLocation } = await client.setBreakpoint(scopedGeneratedLocation, pendingBreakpoint.condition, sourceMaps.isOriginalId(sourceId));
 
   // the breakpoint might have slid server side, so we want to get the location
