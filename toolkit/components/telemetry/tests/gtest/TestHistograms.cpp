@@ -308,10 +308,11 @@ TEST_F(TelemetryTestFixture, AccumulateLinearHistogram_MultipleSamples)
 
 TEST_F(TelemetryTestFixture, AccumulateLinearHistogram_DifferentSamples)
 {
-  nsTArray<uint32_t> samples({4, 8, 2147483646});
+  nsTArray<uint32_t> samples({4, 8, 2147483646, uint32_t(INT_MAX) + 1, UINT32_MAX});
 
   AutoJSContextWithGlobal cx(mCleanGlobal);
 
+  mTelemetry->ClearScalars();
   GetAndClearHistogram(cx.GetJSContext(), mTelemetry, NS_LITERAL_CSTRING("TELEMETRY_TEST_LINEAR"),
                         false);
 
@@ -345,9 +346,20 @@ TEST_F(TelemetryTestFixture, AccumulateLinearHistogram_DifferentSamples)
   JS::ToUint32(cx.GetJSContext(), countLast, &uCountLast);
 
   const uint32_t kExpectedCountFirst = 2;
-  const uint32_t kExpectedCountLast = 1;
+  // We expect 2147483646 to be in the last bucket, as well the two samples above 2^31
+  // (prior to bug 1438335, values between INT_MAX and UINT32_MAX would end up as 0s)
+  const uint32_t kExpectedCountLast = 3;
   ASSERT_EQ(uCountFirst, kExpectedCountFirst) << "The first bucket did not accumulate the correct number of values";
   ASSERT_EQ(uCountLast, kExpectedCountLast) << "The last bucket did not accumulate the correct number of values";
+
+  // We accumulated two values that had to be clamped. We expect the count in
+  // 'telemetry.accumulate_clamped_values' to be 4
+  const uint32_t expectedAccumulateClampedCount = 4;
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(true, cx.GetJSContext(),&scalarsSnapshot);
+  CheckKeyedUintScalar("telemetry.accumulate_clamped_values",
+                       "TELEMETRY_TEST_LINEAR", cx.GetJSContext(),
+                       scalarsSnapshot, expectedAccumulateClampedCount);
 }
 
 TEST_F(TelemetryTestFixture, AccumulateKeyedCountHistogram_MultipleSamples)
@@ -390,10 +402,11 @@ TEST_F(TelemetryTestFixture, TestKeyedLinearHistogram_MultipleSamples)
 {
   AutoJSContextWithGlobal cx(mCleanGlobal);
 
+  mTelemetry->ClearScalars();
   GetAndClearHistogram(cx.GetJSContext(), mTelemetry,
                        NS_LITERAL_CSTRING("TELEMETRY_TEST_KEYED_LINEAR"), true);
 
-  const nsTArray<uint32_t> samples({1,5,250000});
+  const nsTArray<uint32_t> samples({1, 5, 250000, UINT_MAX});
   // Test the accumulation on the key 'testkey', using
   // the API that accepts histogram IDs.
   Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_KEYED_LINEAR,
@@ -432,11 +445,20 @@ TEST_F(TelemetryTestFixture, TestKeyedLinearHistogram_MultipleSamples)
   JS::ToUint32(cx.GetJSContext(), countLast, &uCountLast);
 
   const uint32_t kExpectedCountFirst = 2;
-  const uint32_t kExpectedCountLast = 1;
+  const uint32_t kExpectedCountLast = 2;
   ASSERT_EQ(uCountFirst, kExpectedCountFirst)
     << "The first bucket did not accumulate the correct number of values for key 'testkey'";
   ASSERT_EQ(uCountLast, kExpectedCountLast)
     << "The last bucket did not accumulate the correct number of values for key 'testkey'";
+
+  // We accumulated one keyed values that had to be clamped. We expect the
+  // count in 'telemetry.accumulate_clamped_values' to be 1
+  const uint32_t expectedAccumulateClampedCount = 1;
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(true, cx.GetJSContext(),&scalarsSnapshot);
+  CheckKeyedUintScalar("telemetry.accumulate_clamped_values",
+                       "TELEMETRY_TEST_KEYED_LINEAR", cx.GetJSContext(),
+                       scalarsSnapshot, expectedAccumulateClampedCount);
 }
 
 TEST_F(TelemetryTestFixture, TestKeyedKeysHistogram_MultipleSamples)

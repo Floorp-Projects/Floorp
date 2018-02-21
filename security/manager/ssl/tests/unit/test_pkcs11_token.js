@@ -77,6 +77,7 @@ function run_test() {
                   .getService(Ci.nsIPK11TokenDB);
   let token = tokenDB.getInternalKeyToken();
   notEqual(token, null, "The internal token should be present");
+  ok(token.isInternalKeyToken, "The internal token should be represented as such");
 
   checkBasicAttributes(token);
 
