@@ -60,7 +60,7 @@ def generate_release_task(uiTestTaskId):
 			       ' && python tools/taskcluster/sign-preview-builds.py'),
 		dependencies = [ uiTestTaskId ],
 		scopes = [
-			"secrets:get:project/focus/preview-key-store"
+			"secrets:get:project/focus/preview-key-store",
 			"queue:route:index.project.focus.android.preview-builds"],
 		routes = [ "index.project.focus.android.preview-builds" ],
 		artifacts = {
