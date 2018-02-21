@@ -43,6 +43,8 @@ public:
 
   virtual void Cancel() = 0;
 
+  virtual void Drop() { }
+
 protected:
   virtual ~U2FTokenTransport() = default;
 };

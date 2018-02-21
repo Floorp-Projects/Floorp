@@ -39,19 +39,9 @@ using mozilla::AssertedCast;
 using JS::CanonicalizeNaN;
 using JS::ToInt32;
 
-static NewObjectKind
-DataViewNewObjectKind(JSContext* cx)
-{
-    jsbytecode* pc;
-    JSScript* script = cx->currentScript(&pc);
-    if (script && ObjectGroup::useSingletonForAllocationSite(script, pc, &DataViewObject::class_))
-        return SingletonObject;
-    return GenericObject;
-}
-
 DataViewObject*
 DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
-                       Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, JSObject* protoArg)
+                       Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, HandleObject proto)
 {
     if (arrayBuffer->isDetached()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
@@ -62,27 +52,9 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
     MOZ_ASSERT(byteLength <= INT32_MAX);
     MOZ_ASSERT(byteOffset + byteLength < UINT32_MAX);
 
-    RootedObject proto(cx, protoArg);
-    RootedObject obj(cx);
-
-    NewObjectKind newKind = DataViewNewObjectKind(cx);
-    obj = NewObjectWithClassProto(cx, &class_, proto, newKind);
+    DataViewObject* obj = NewObjectWithClassProto<DataViewObject>(cx, proto);
     if (!obj)
         return nullptr;
-
-    if (!proto) {
-        if (byteLength >= TypedArrayObject::SINGLETON_BYTE_LENGTH) {
-            MOZ_ASSERT(obj->isSingleton());
-        } else {
-            jsbytecode* pc;
-            RootedScript script(cx, cx->currentScript(&pc));
-            if (script && !ObjectGroup::setAllocationSiteObjectGroup(cx, script, pc, obj,
-                                                                     newKind == SingletonObject))
-            {
-                return nullptr;
-            }
-        }
-    }
 
     // Caller should have established these preconditions, and no
     // (non-self-hosted) JS code has had an opportunity to run so nothing can
@@ -90,24 +62,22 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
     MOZ_ASSERT(byteOffset <= arrayBuffer->byteLength());
     MOZ_ASSERT(byteOffset + byteLength <= arrayBuffer->byteLength());
 
-    DataViewObject& dvobj = obj->as<DataViewObject>();
-
     // The isSharedMemory property is invariant.  Self-hosting code that sets
     // BUFFER_SLOT or the private slot (if it does) must maintain it by always
     // setting those to reference shared memory.
     bool isSharedMemory = IsSharedArrayBuffer(arrayBuffer.get());
     if (isSharedMemory)
-        dvobj.setIsSharedMemory();
+        obj->setIsSharedMemory();
 
-    dvobj.setFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(byteOffset));
-    dvobj.setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(byteLength));
-    dvobj.setFixedSlot(TypedArrayObject::BUFFER_SLOT, ObjectValue(*arrayBuffer));
+    obj->setFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(byteOffset));
+    obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(byteLength));
+    obj->setFixedSlot(TypedArrayObject::BUFFER_SLOT, ObjectValue(*arrayBuffer));
 
     SharedMem<uint8_t*> ptr = arrayBuffer->dataPointerEither();
     // A pointer to raw shared memory is exposed through the private slot.  This
     // is safe so long as getPrivate() is not used willy-nilly.  It is wrapped in
     // other accessors in TypedArrayObject.h.
-    dvobj.initPrivate(ptr.unwrap(/*safe - see above*/) + byteOffset);
+    obj->initPrivate(ptr.unwrap(/*safe - see above*/) + byteOffset);
 
     // Include a barrier if the data view's data pointer is in the nursery, as
     // is done for typed arrays.
@@ -126,14 +96,14 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
     }
 
     // Verify that the private slot is at the expected place
-    MOZ_ASSERT(dvobj.numFixedSlots() == TypedArrayObject::DATA_SLOT);
+    MOZ_ASSERT(obj->numFixedSlots() == TypedArrayObject::DATA_SLOT);
 
     if (arrayBuffer->is<ArrayBufferObject>()) {
-        if (!arrayBuffer->as<ArrayBufferObject>().addView(cx, &dvobj))
+        if (!arrayBuffer->as<ArrayBufferObject>().addView(cx, obj))
             return nullptr;
     }
 
-    return &dvobj;
+    return obj;
 }
 
 // ES2017 draft rev 931261ecef9b047b14daacf82884134da48dfe0f

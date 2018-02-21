@@ -35,6 +35,7 @@ import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.EnvironmentUtils;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.fxa.login.StateFactory;
@@ -56,7 +57,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -95,6 +95,8 @@ public class AndroidFxAccount {
 
   private static final String ACCOUNT_KEY_TOKEN_SERVER = "tokenServerURI";       // Sync-specific.
   private static final String ACCOUNT_KEY_DESCRIPTOR = "descriptor";
+
+  public static final String ACCOUNT_KEY_FIRST_RUN_SCOPE = "firstRunScope";
 
   private static final int CURRENT_BUNDLE_VERSION = 2;
   private static final String BUNDLE_KEY_BUNDLE_VERSION = "version";
@@ -183,6 +185,11 @@ public class AndroidFxAccount {
       return null;
     }
     return new AndroidFxAccount(context, account);
+  }
+
+  @Nullable
+  public String getUserData(String key) {
+    return accountManager.getUserData(account, key);
   }
 
   public Account getAndroidAccount() {
@@ -570,6 +577,8 @@ public class AndroidFxAccount {
 
     userdata.putString(ACCOUNT_KEY_DESCRIPTOR, bundle.toJSONString());
 
+    optionallyTagWithFirstRunScope(context, userdata);
+
     Account account = new Account(email, FxAccountConstants.ACCOUNT_TYPE);
     AccountManager accountManager = AccountManager.get(context);
     // We don't set an Android password, because we don't want to persist the
@@ -614,6 +623,19 @@ public class AndroidFxAccount {
     fxAccount.setAuthoritiesToSyncAutomaticallyMap(authoritiesToSyncAutomaticallyMap);
 
     return fxAccount;
+  }
+
+  /**
+   * If there's an active First Run session, tag our new account with an appropriate first run scope.
+   * We do this in order to reliably determine if an account was created during the current "first run".
+   *
+   * See {@link FirefoxAccounts#optionallySeparateAccountsDuringFirstRun} for details.
+   */
+  private static void optionallyTagWithFirstRunScope(final Context context, final Bundle userdata) {
+    final String firstRunUUID = EnvironmentUtils.firstRunUUID(context);
+    if (firstRunUUID != null) {
+      userdata.putString(ACCOUNT_KEY_FIRST_RUN_SCOPE, firstRunUUID);
+    }
   }
 
   private void clearSyncPrefs() throws UnsupportedEncodingException, GeneralSecurityException {
@@ -706,7 +728,7 @@ public class AndroidFxAccount {
     // created this object (and thus fetched an account from the accounts system) just moments ago.
     // Other callers maintain this object for a while, and thus might be out-of-sync with the world.
     // See Bug 1407316 for higher-order improvements that will make this unnecessary.
-    account = FirefoxAccounts.getFirefoxAccount(context);
+    refreshAndroidAccount();
 
     String stateLabelString = getBundleData(BUNDLE_KEY_STATE_LABEL);
     String stateString = getBundleData(BUNDLE_KEY_STATE);
@@ -723,6 +745,14 @@ public class AndroidFxAccount {
     } catch (Exception e) {
       throw new IllegalStateException("could not get state", e);
     }
+  }
+
+  private void refreshAndroidAccount() {
+    final Account[] accounts = accountManager.getAccountsByType(FxAccountConstants.ACCOUNT_TYPE);
+    if (accounts.length == 0) {
+      throw new IllegalStateException("Unexpectedly missing any accounts of type " + FxAccountConstants.ACCOUNT_TYPE);
+    }
+    account = accounts[0];
   }
 
   /**

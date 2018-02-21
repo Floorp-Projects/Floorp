@@ -180,7 +180,10 @@ U2FTokenManager::ClearTransaction()
 {
   mTransactionParent = nullptr;
   // Drop managers at the end of all transactions
-  mTokenManagerImpl = nullptr;
+  if (mTokenManagerImpl) {
+    mTokenManagerImpl->Drop();
+    mTokenManagerImpl = nullptr;
+  }
   // Forget promises, if necessary.
   mRegisterPromise.DisconnectIfExists();
   mSignPromise.DisconnectIfExists();
