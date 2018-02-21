@@ -50,7 +50,7 @@
 
 #include "nsIScriptContext.h"
 #include "xpcpublic.h"
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 
 #include "nsThreadUtils.h"
 #include "mozilla/dom/NodeListBinding.h"

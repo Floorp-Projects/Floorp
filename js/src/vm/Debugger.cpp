@@ -13,8 +13,6 @@
 
 #include "jsfriendapi.h"
 #include "jsnum.h"
-#include "jsprf.h"
-#include "jswrapper.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
@@ -26,8 +24,10 @@
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineJIT.h"
 #include "js/Date.h"
+#include "js/Printf.h"
 #include "js/UbiNodeBreadthFirst.h"
 #include "js/Vector.h"
+#include "js/Wrapper.h"
 #include "proxy/ScriptedProxyHandler.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/AsyncFunction.h"

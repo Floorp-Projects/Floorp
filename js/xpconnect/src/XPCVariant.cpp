@@ -11,8 +11,7 @@
 #include "xpcprivate.h"
 
 #include "jsfriendapi.h"
-#include "jsprf.h"
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 
 using namespace JS;
 using namespace mozilla;

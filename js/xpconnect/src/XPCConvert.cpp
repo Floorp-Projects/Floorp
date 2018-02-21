@@ -22,7 +22,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/CharacterEncoding.h"
-#include "jsprf.h"
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"

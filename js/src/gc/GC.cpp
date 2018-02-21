@@ -207,7 +207,6 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsprf.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
@@ -221,6 +220,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/IonCode.h"
 #include "jit/JitcodeMap.h"
+#include "js/Printf.h"
 #include "js/SliceBudget.h"
 #include "proxy/DeadObjectProxy.h"
 #include "util/Windows.h"

@@ -20,7 +20,6 @@
 #include "jslibmath.h"
 #include "jsmath.h"
 #include "jsnum.h"
-#include "jsprf.h"
 #include "jsstr.h"
 
 #include "builtin/Eval.h"
@@ -43,6 +42,7 @@
 #include "jit/RangeAnalysis.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/StackSlotAllocator.h"
+#include "js/Printf.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/MatchPairs.h"

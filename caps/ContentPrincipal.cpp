@@ -25,7 +25,7 @@
 #include "nsError.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsNetCID.h"
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/ScriptSettings.h"

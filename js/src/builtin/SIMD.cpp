@@ -21,11 +21,11 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jsnum.h"
-#include "jsprf.h"
 
 #include "builtin/TypedObject.h"
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
+#include "js/Printf.h"
 #include "js/Value.h"
 
 #include "vm/JSObject-inl.h"

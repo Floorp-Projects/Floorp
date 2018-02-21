@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsprototypes_h
-#define jsprototypes_h
+#ifndef js_ProtoKey_h
+#define js_ProtoKey_h
 
 /* A higher-order macro for enumerating all JSProtoKey values. */
 /*
@@ -131,4 +131,4 @@ IF_SAB(real,imaginary)(Atomics, InitAtomicsClass, OCLASP(Atomics)) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)
 
-#endif /* jsprototypes_h */
+#endif /* js_ProtoKey_h */

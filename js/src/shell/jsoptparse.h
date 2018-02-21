@@ -9,9 +9,9 @@
 
 #include <stdio.h>
 
-#include "jsalloc.h"
 #include "jsutil.h"
 
+#include "js/AllocPolicy.h"
 #include "js/Vector.h"
 
 namespace js {

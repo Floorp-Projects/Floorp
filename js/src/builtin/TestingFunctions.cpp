@@ -18,8 +18,6 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsprf.h"
-#include "jswrapper.h"
 
 #include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"
@@ -32,12 +30,14 @@
 #include "jit/InlinableNatives.h"
 #include "js/Debug.h"
 #include "js/HashTable.h"
+#include "js/Printf.h"
 #include "js/StructuredClone.h"
 #include "js/UbiNode.h"
 #include "js/UbiNodeBreadthFirst.h"
 #include "js/UbiNodeShortestPaths.h"
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
+#include "js/Wrapper.h"
 #include "vm/Debugger.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"

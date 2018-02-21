@@ -11,8 +11,8 @@
  * managed by the GC. See the comment at the top of vm/MallocProvider.h.
  */
 
-#ifndef jsalloc_h
-#define jsalloc_h
+#ifndef js_AllocPolicy_h
+#define js_AllocPolicy_h
 
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
@@ -171,4 +171,4 @@ class ZoneAllocPolicy
 
 } /* namespace js */
 
-#endif /* jsalloc_h */
+#endif /* js_AllocPolicy_h */

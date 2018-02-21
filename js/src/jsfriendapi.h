@@ -14,13 +14,13 @@
 #include "mozilla/UniquePtr.h"
 
 #include "jsapi.h" // For JSAutoByteString.  See bug 1033916.
-#include "jsbytecode.h"
 #include "jspubtd.h"
 
 #include "js/CallArgs.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
 #include "js/HeapAPI.h"
+#include "js/TypeDecls.h"
 #include "js/Utility.h"
 
 #ifndef JS_STACK_GROWTH_DIRECTION

@@ -56,7 +56,7 @@ using Generation = mozilla::Opaque<uint64_t>;
 // HashPolicy requirements:
 //  - see Hash Policy section below
 // AllocPolicy:
-//  - see jsalloc.h
+//  - see AllocPolicy.h
 //
 // Note:
 // - HashMap is not reentrant: Key/Value/HashPolicy/AllocPolicy members
@@ -318,7 +318,7 @@ class HashMap
 // HashPolicy requirements:
 //  - see Hash Policy section below
 // AllocPolicy:
-//  - see jsalloc.h
+//  - see AllocPolicy.h
 //
 // Note:
 // - HashSet is not reentrant: T/HashPolicy/AllocPolicy members called by

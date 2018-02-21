@@ -17,6 +17,7 @@
 #endif
 
 #include "jsapi.h"
+#include "js/Printf.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIComponentManager.h"
@@ -30,7 +31,6 @@
 #include "nsIFileURL.h"
 #include "nsIJARURI.h"
 #include "nsNetUtil.h"
-#include "jsprf.h"
 #include "nsJSPrincipals.h"
 #include "nsJSUtils.h"
 #include "xpcprivate.h"

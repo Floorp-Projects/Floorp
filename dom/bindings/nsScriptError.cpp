@@ -9,7 +9,7 @@
  */
 
 #include "nsScriptError.h"
-#include "jsprf.h"
+#include "js/Printf.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "nsContentUtils.h"
