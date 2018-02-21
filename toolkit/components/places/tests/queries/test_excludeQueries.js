@@ -31,16 +31,38 @@ add_task(async function setup() {
   checkBookmarkObject(folderShortcut);
 });
 
-add_task(async function test_bookmarks_excludeQueries() {
-  // When excluding queries, we exclude actual queries, but not folder shortcuts.
-  let expectedGuids = [bm.guid, folderShortcut.guid];
-
+add_task(async function test_bookmarks_url_query_implicit_exclusions() {
+  // When we run bookmarks url queries, we implicity filter out queries and
+  // folder shortcuts regardless of excludeQueries. They don't make sense to
+  // include in the results.
+  let expectedGuids = [bm.guid];
   let query = PlacesUtils.history.getNewQuery();
   let options = PlacesUtils.history.getNewQueryOptions();
   options.excludeQueries = true;
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
 
   let root = PlacesUtils.history.executeQuery(query, options).root;
+  root.containerOpen = true;
+
+  Assert.equal(root.childCount, expectedGuids.length, "Checking root child count");
+  for (let i = 0; i < expectedGuids.length; i++) {
+    Assert.equal(root.getChild(i).bookmarkGuid, expectedGuids[i],
+      "should have got the expected item");
+  }
+
+  root.containerOpen = false;
+});
+
+
+add_task(async function test_bookmarks_excludeQueries() {
+  // When excluding queries, we exclude actual queries, but not folder shortcuts.
+  let expectedGuids = [bm.guid, folderShortcut.guid];
+  let query = {};
+  let options = {};
+  let queryString = `place:folder=${PlacesUtils.unfiledBookmarksFolderId}&excludeQueries=1`;
+  PlacesUtils.history.queryStringToQueries(queryString, query, {}, options);
+
+  let root = PlacesUtils.history.executeQuery(query.value[0], options.value).root;
   root.containerOpen = true;
 
   Assert.equal(root.childCount, expectedGuids.length, "Checking root child count");

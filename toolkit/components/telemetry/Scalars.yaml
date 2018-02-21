@@ -1002,6 +1002,24 @@ telemetry:
     record_in_processes:
       - all
 
+  accumulate_clamped_values:
+    bug_numbers:
+      - 1438335
+    description: >
+      The count of accumulations that had to be clamped down to not overflow,
+      keyed to the histogram name of the overflowing accumulation.
+      This is doubled for non-keyed desktop Firefox Histograms because of
+      saved-session pings.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+      - chutten@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+
 telemetry.discarded:
   accumulations:
     bug_numbers:

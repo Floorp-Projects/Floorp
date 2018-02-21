@@ -1,19 +1,68 @@
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
+
+function loadContentFromFile(path) {
+  // Load the content to return in the response from file.
+  // Since it's relative to the cwd of the test runner, we start there and
+  // append to get to the actual path of the file.
+  var testContentFile =
+    Components.classes["@mozilla.org/file/directory_service;1"].
+    getService(Components.interfaces.nsIProperties).
+    get("CurWorkD", Components.interfaces.nsIFile);
+  var dirs = path.split("/");
+  for (var i = 0; i < dirs.length; i++) {
+    testContentFile.append(dirs[i]);
+  }
+  var testContentFileStream =
+    Components.classes["@mozilla.org/network/file-input-stream;1"].
+    createInstance(Components.interfaces.nsIFileInputStream);
+  testContentFileStream.init(testContentFile, -1, 0, 0);
+  var testContent = NetUtil.readInputStreamToString(testContentFileStream, testContentFileStream.available());
+  return testContent;
+}
 
 function handleRequest(request, response)
 {
+  const { scheme, host, path } = request;
   // get the Content-Type to serve from the query string
   var contentType = null;
-  request.queryString.split('&').forEach( function (val) {
+  var showLastRequest = false;
+  request.queryString.split('&').forEach(function (val) {
      var [name, value] = val.split('=');
        if (name == "type") {
          contentType = unescape(value);
+       }
+       if (name == "lastRequest") {
+         showLastRequest = true;
        }
   });
 
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
+  if (showLastRequest) {
+    response.setHeader("Content-Type", "text/html", false);
+    response.write(getState("lastRequest"));
+    return;
+  }
+
+  setState("lastRequest", JSON.stringify({
+    scheme,
+    host,
+    path,
+    contentType: contentType || "other"
+  }));
+
   switch (contentType) {
+    case "img":
+      response.setHeader("Content-Type", "image/png", false);
+      response.write(loadContentFromFile("tests/image/test/mochitest/blue.png"));
+      break;
+
+    case "media":
+      response.setHeader("Content-Type", "video/ogg", false);
+      response.write(loadContentFromFile("tests/dom/media/test/320x240.ogv"));
+      break;
+
     case "iframe":
       response.setHeader("Content-Type", "text/html", false);
       response.write("frame content");

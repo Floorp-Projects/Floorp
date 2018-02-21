@@ -2123,15 +2123,15 @@
     "kind": "boolean",
     "description": "Whether a HTTP transaction routed via Alt-Svc was scheme=http"
   },
-  "HTTP_SCHEME_UPGRADE": {
+  "HTTP_SCHEME_UPGRADE_TYPE": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "bug_numbers": [1340021],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "jkt@mozilla.com"],
+    "bug_numbers": [1340021, 1435733],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Was the URL upgraded to HTTPS?  (0=already HTTPS, 1=no reason to upgrade, 2=STS upgrade blocked by pref, 3=upgraded with STS, 4=upgraded with CSP)"
+    "kind": "categorical",
+    "labels": ["AlreadyHTTPS", "NoReasonToUpgrade", "PrefBlockedSTS", "STS", "CSP", "BrowserDisplay"],
+    "description": "Was the URL upgraded to HTTPS?"
   },
   "HTTP_RESPONSE_STATUS_CODE": {
     "record_in_processes": ["main", "content"],

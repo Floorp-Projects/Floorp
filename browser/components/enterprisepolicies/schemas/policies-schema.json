@@ -67,6 +67,14 @@
       "enum": [true]
     },
 
+    "CreateMasterPassword": {
+      "description": "If false, removes access to create a master password.",
+      "first_available": "60.0",
+
+      "type": "boolean",
+      "enum": [false]
+    },
+
     "DisableFirefoxScreenshots": {
       "description": "Prevents usage of the Firefox Screenshots feature.",
       "first_available": "60.0",
@@ -141,6 +149,13 @@
           }
         }
       }
+    },
+
+    "RememberPasswords": {
+      "description": "Enforces the setting to allow Firefox to remember saved logins and passwords. Both true and false values are accepted.",
+      "first_available": "60.0",
+
+      "type": "boolean"
     },
 
     "install_addons": {

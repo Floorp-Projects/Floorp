@@ -93,6 +93,7 @@ public:
 
   void SetIsPreflight();
   void SetUpgradeInsecureRequests();
+  void SetBrowserUpgradeInsecureRequests();
 
 private:
   // private constructor that is only allowed to be called from within
@@ -112,6 +113,7 @@ private:
            nsContentPolicyType aContentPolicyType,
            LoadTainting aTainting,
            bool aUpgradeInsecureRequests,
+           bool aBrowserUpgradeInsecureRequests,
            bool aVerifySignedContent,
            bool aEnforceSRI,
            bool aAllowDocumentToBeAgnosticToCSP,
@@ -177,6 +179,7 @@ private:
   nsContentPolicyType              mInternalContentPolicyType;
   LoadTainting                     mTainting;
   bool                             mUpgradeInsecureRequests;
+  bool                             mBrowserUpgradeInsecureRequests;
   bool                             mVerifySignedContent;
   bool                             mEnforceSRI;
   bool                             mAllowDocumentToBeAgnosticToCSP;

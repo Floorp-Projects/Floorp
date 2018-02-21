@@ -69,17 +69,15 @@ function createContextMenu(jsterm, parentNode, {
   }));
 
   // Open Network message in the Network panel.
-  menu.append(new MenuItem({
-    id: "console-menu-open-in-network-panel",
-    label: l10n.getStr("webconsole.menu.openInNetworkPanel.label"),
-    accesskey: l10n.getStr("webconsole.menu.openInNetworkPanel.accesskey"),
-    visible: source === MESSAGE_SOURCE.NETWORK,
-    click: () => {
-      if (request && serviceContainer.openNetworkPanel) {
-        serviceContainer.openNetworkPanel(message.messageId);
-      }
-    },
-  }));
+  if (serviceContainer.openNetworkPanel && request) {
+    menu.append(new MenuItem({
+      id: "console-menu-open-in-network-panel",
+      label: l10n.getStr("webconsole.menu.openInNetworkPanel.label"),
+      accesskey: l10n.getStr("webconsole.menu.openInNetworkPanel.accesskey"),
+      visible: source === MESSAGE_SOURCE.NETWORK,
+      click: () => serviceContainer.openNetworkPanel(message.messageId)
+    }));
+  }
 
   // Open URL in a new tab for a network request.
   menu.append(new MenuItem({
@@ -175,7 +173,7 @@ function createContextMenu(jsterm, parentNode, {
     menu.append(new MenuItem({
       id: "console-menu-open-sidebar",
       label: l10n.getStr("webconsole.menu.openInSidebar.label"),
-      acesskey: l10n.getStr("webconsole.menu.openInSidebar.accesskey"),
+      accesskey: l10n.getStr("webconsole.menu.openInSidebar.accesskey"),
       disabled: !rootActorId,
       click: () => openSidebar(message.messageId),
     }));

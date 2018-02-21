@@ -743,6 +743,17 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     return NS_OK;
   }
 
+
+  // Allow http: mixed content if we are choosing to upgrade them when the
+  // pref "security.mixed_content.upgrade_display_content" is true.
+  // This behaves like GetUpgradeInsecureRequests above in that the channel will
+  // be upgraded to https before fetching any data from the netwerk.
+  bool isUpgradableDisplayType = nsContentUtils::IsUpgradableDisplayType(aContentType);
+  if (isHttpScheme && isUpgradableDisplayType) {
+    *aDecision = ACCEPT;
+    return NS_OK;
+  }
+
   // The page might have set the CSP directive 'block-all-mixed-content' which
   // should block not only active mixed content loads but in fact all mixed content
   // loads, see https://www.w3.org/TR/mixed-content/#strict-checking
