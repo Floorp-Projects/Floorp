@@ -471,30 +471,6 @@ add_task(async function test_multipleKeywordsSamePostData() {
   await check_no_orphans();
 });
 
-add_task(async function test_oldKeywordsAPI() {
-  let bookmark = await PlacesUtils.bookmarks.insert({ url: "http://example.com/",
-                                                    parentGuid: PlacesUtils.bookmarks.unfiledGuid });
-  await check_keyword(false, "http://example.com/", "keyword");
-  let itemId = await PlacesUtils.promiseItemId(bookmark.guid);
-
-  PlacesUtils.bookmarks.setKeywordForBookmark(itemId, "keyword");
-  await promiseKeyword("keyword", "http://example.com/");
-
-  // Remove the keyword.
-  PlacesUtils.bookmarks.setKeywordForBookmark(itemId, "");
-  await promiseKeyword("keyword", null);
-
-  await PlacesUtils.keywords.insert({ keyword: "keyword", url: "http://example.com" });
-  Assert.equal(PlacesUtils.bookmarks.getKeywordForBookmark(itemId), "keyword");
-
-  let entry = await PlacesUtils.keywords.fetch("keyword");
-  Assert.equal(entry.url, "http://example.com/");
-
-  await PlacesUtils.bookmarks.remove(bookmark);
-
-  await check_no_orphans();
-});
-
 add_task(async function test_bookmarkURLChange() {
   let fc1 = await foreign_count("http://example1.com/");
   let fc2 = await foreign_count("http://example2.com/");
