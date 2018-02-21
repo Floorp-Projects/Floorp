@@ -131,11 +131,13 @@ class EnumerateFontsTask final : public Runnable
 public:
     EnumerateFontsTask(nsAtom* aLangGroupAtom,
                        const nsAutoCString& aGeneric,
-                       UniquePtr<EnumerateFontsPromise> aEnumerateFontsPromise)
+                       UniquePtr<EnumerateFontsPromise> aEnumerateFontsPromise,
+                       nsIEventTarget* aMainThreadTarget)
         : Runnable("EnumerateFontsTask")
         , mLangGroupAtom(aLangGroupAtom)
         , mGeneric(aGeneric)
         , mEnumerateFontsPromise(Move(aEnumerateFontsPromise))
+        , mMainThreadTarget(aMainThreadTarget)
     {
         MOZ_ASSERT(NS_IsMainThread());
     }
@@ -150,7 +152,7 @@ public:
             GetFontList(mLangGroupAtom, mGeneric, fontList);
         nsCOMPtr<nsIRunnable> runnable = new EnumerateFontsResult(
             rv, Move(mEnumerateFontsPromise), Move(fontList));
-        NS_DispatchToMainThread(runnable.forget());
+        mMainThreadTarget->Dispatch(runnable.forget());
 
         return NS_OK;
     }
@@ -159,6 +161,7 @@ private:
     RefPtr<nsAtom> mLangGroupAtom;
     nsAutoCStringN<16> mGeneric;
     UniquePtr<EnumerateFontsPromise> mEnumerateFontsPromise;
+    RefPtr<nsIEventTarget> mMainThreadTarget;
 };
 
 NS_IMETHODIMP
@@ -207,8 +210,9 @@ nsThebesFontEnumerator::EnumerateFontsAsync(const char* aLangGroup,
         generic.SetIsVoid(true);
     }
 
+    nsCOMPtr<nsIEventTarget> target = global->EventTargetFor(mozilla::TaskCategory::Other);
     nsCOMPtr<nsIRunnable> runnable = new EnumerateFontsTask(
-        langGroupAtom, generic, Move(enumerateFontsPromise));
+        langGroupAtom, generic, Move(enumerateFontsPromise), target);
     thread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
 
     if (!ToJSValue(aCx, promise, aRval)) {
