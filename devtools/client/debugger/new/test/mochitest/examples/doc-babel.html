@@ -5,6 +5,7 @@
 <html>
   <head>
     <meta charset="UTF-8">
+    <script src="babel/polyfill-bundle.js"></script>
   </head>
   <body>
     <!-- INJECTED-START -->
@@ -30,6 +31,18 @@
     <button onclick="nonModules()">Run nonModules</button>
     <script src="babel/fixtures/shadowed-vars/output.js"></script>
     <button onclick="shadowedVars()">Run shadowedVars</button>
+    <script src="babel/fixtures/step-over-for-of/output.js"></script>
+    <button onclick="stepOverForOf()">Run stepOverForOf</button>
+    <script src="babel/fixtures/step-over-for-of-array/output.js"></script>
+    <button onclick="stepOverForOfArray()">Run stepOverForOfArray</button>
+    <script src="babel/fixtures/step-over-for-of-array-closure/output.js"></script>
+    <button onclick="stepOverForOfArrayClosure()">Run stepOverForOfArrayClosure</button>
+    <script src="babel/fixtures/step-over-for-of-closure/output.js"></script>
+    <button onclick="stepOverForOfClosure()">Run stepOverForOfClosure</button>
+    <script src="babel/fixtures/step-over-function-params/output.js"></script>
+    <button onclick="stepOverFunctionParams()">Run stepOverFunctionParams</button>
+    <script src="babel/fixtures/step-over-regenerator-await/output.js"></script>
+    <button onclick="stepOverRegeneratorAwait()">Run stepOverRegeneratorAwait</button>
     <script src="babel/fixtures/switches/output.js"></script>
     <button onclick="switches()">Run switches</button>
     <script src="babel/fixtures/this-arguments-bindings/output.js"></script>

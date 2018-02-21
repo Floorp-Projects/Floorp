@@ -82,6 +82,10 @@ class MachCommands(MachCommandBase):
         if 'disable_stylo' in kwargs and kwargs['disable_stylo']:
             os.environ['STYLO_FORCE_DISABLED'] = '1'
 
+        if 'enable_webrender' in kwargs and kwargs['enable_webrender']:
+            os.environ['MOZ_WEBRENDER'] = '1'
+            os.environ['MOZ_ACCELERATED'] = '1'
+
         runtime_testvars = {}
         for arg in ('webRootDir', 'pageManifest', 'resultsDir', 'entities', 'iterations',
                     'perTabPause', 'settleWaitTime', 'maxTabs', 'dmd'):
@@ -220,6 +224,9 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--single-stylo-traversal', group='AWSY', action='store_true',
                      dest='single_stylo_traversal', default=False,
                      help='Set STYLO_THREADS=1.')
+    @CommandArgument('--enable-webrender', group='AWSY', action='store_true',
+                     dest='enable_webrender', default=False,
+                     help='Enable WebRender.')
     @CommandArgument('--dmd', group='AWSY', action='store_true',
                      dest='dmd', default=False,
                      help='Enable DMD during testing. Requires a DMD-enabled build.')

@@ -1650,6 +1650,7 @@ class Redirect1Event : public NeckoTargetChannelEvent<HttpChannelChild>
                  const uint32_t& registrarId,
                  const URIParams& newURI,
                  const uint32_t& redirectFlags,
+                 const bool& allowInsecureRedirectToDataURI,
                  const nsHttpResponseHead& responseHead,
                  const nsACString& securityInfoSerialization,
                  const uint64_t& channelId)
@@ -1657,6 +1658,7 @@ class Redirect1Event : public NeckoTargetChannelEvent<HttpChannelChild>
   , mRegistrarId(registrarId)
   , mNewURI(newURI)
   , mRedirectFlags(redirectFlags)
+  , mAllowInsecureRedirectToDataURI(allowInsecureRedirectToDataURI)
   , mResponseHead(responseHead)
   , mSecurityInfoSerialization(securityInfoSerialization)
   , mChannelId(channelId) {}
@@ -1664,14 +1666,15 @@ class Redirect1Event : public NeckoTargetChannelEvent<HttpChannelChild>
   void Run() override
   {
     mChild->Redirect1Begin(mRegistrarId, mNewURI, mRedirectFlags,
-                           mResponseHead, mSecurityInfoSerialization,
-                           mChannelId);
+                           mAllowInsecureRedirectToDataURI, mResponseHead,
+                           mSecurityInfoSerialization, mChannelId);
   }
 
  private:
   uint32_t            mRegistrarId;
   URIParams           mNewURI;
   uint32_t            mRedirectFlags;
+  bool                mAllowInsecureRedirectToDataURI;
   nsHttpResponseHead  mResponseHead;
   nsCString           mSecurityInfoSerialization;
   uint64_t            mChannelId;
@@ -1681,6 +1684,7 @@ mozilla::ipc::IPCResult
 HttpChannelChild::RecvRedirect1Begin(const uint32_t& registrarId,
                                      const URIParams& newUri,
                                      const uint32_t& redirectFlags,
+                                     const bool& allowInsecureRedirectToDataURI,
                                      const nsHttpResponseHead& responseHead,
                                      const nsCString& securityInfoSerialization,
                                      const uint64_t& channelId,
@@ -1693,8 +1697,8 @@ HttpChannelChild::RecvRedirect1Begin(const uint32_t& registrarId,
   mPeerAddr = oldPeerAddr;
 
   mEventQ->RunOrEnqueue(new Redirect1Event(this, registrarId, newUri,
-                                           redirectFlags, responseHead,
-                                           securityInfoSerialization,
+                                           redirectFlags, allowInsecureRedirectToDataURI,
+                                           responseHead, securityInfoSerialization,
                                            channelId));
   return IPC_OK();
 }
@@ -1766,6 +1770,7 @@ void
 HttpChannelChild::Redirect1Begin(const uint32_t& registrarId,
                                  const URIParams& newOriginalURI,
                                  const uint32_t& redirectFlags,
+                                 const bool& allowInsecureRedirectToDataURI,
                                  const nsHttpResponseHead& responseHead,
                                  const nsACString& securityInfoSerialization,
                                  const uint64_t& channelId)
@@ -1773,6 +1778,8 @@ HttpChannelChild::Redirect1Begin(const uint32_t& registrarId,
   nsresult rv;
 
   LOG(("HttpChannelChild::Redirect1Begin [this=%p]\n", this));
+
+  mLoadInfo->SetAllowInsecureRedirectToDataURI(allowInsecureRedirectToDataURI);
 
   nsCOMPtr<nsIURI> uri = DeserializeURI(newOriginalURI);
 

@@ -43,6 +43,12 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCo
           "dest": "single_stylo_traversal",
           "default": False,
           "help": "Set STYLO_THREADS=1.",
+          }],
+        [["--enable-webrender"],
+         {"action": "store_true",
+          "dest": "enable_webrender",
+          "default": False,
+          "help": "Tries to enable the WebRender compositor.",
           }]
     ] + testing_config_options + copy.deepcopy(blobupload_config_options) \
                                + copy.deepcopy(code_coverage_config_options)
@@ -170,6 +176,10 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCo
 
         # TODO: consider getting rid of this as stylo is enabled by default
         env['STYLO_FORCE_ENABLED'] = '1'
+
+        if self.config['enable_webrender']:
+            env['MOZ_WEBRENDER'] = '1'
+            env['MOZ_ACCELERATED'] = '1'
 
         env['MOZ_UPLOAD_DIR'] = dirs['abs_blob_upload_dir']
         if not os.path.isdir(env['MOZ_UPLOAD_DIR']):

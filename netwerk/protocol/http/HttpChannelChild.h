@@ -151,6 +151,7 @@ protected:
   mozilla::ipc::IPCResult RecvRedirect1Begin(const uint32_t& registrarId,
                                              const URIParams& newURI,
                                              const uint32_t& redirectFlags,
+                                             const bool& allowInsecureRedirectToDataURI,
                                              const nsHttpResponseHead& responseHead,
                                              const nsCString& securityInfoSerialization,
                                              const uint64_t& channelId,
@@ -434,6 +435,7 @@ private:
   void Redirect1Begin(const uint32_t& registrarId,
                       const URIParams& newUri,
                       const uint32_t& redirectFlags,
+                      const bool& allowInsecureRedirectToDataURI,
                       const nsHttpResponseHead& responseHead,
                       const nsACString& securityInfoSerialization,
                       const uint64_t& channelId);
