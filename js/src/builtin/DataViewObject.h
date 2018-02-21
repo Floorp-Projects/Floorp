@@ -56,7 +56,7 @@ class DataViewObject : public NativeObject
 
     static DataViewObject*
     create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
-           Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, JSObject* proto);
+           Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, HandleObject proto);
 
   public:
     static const Class class_;
