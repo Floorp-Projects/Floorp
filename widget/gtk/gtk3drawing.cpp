@@ -2371,6 +2371,7 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
         {
             style = GetStyleContext(widget);
             moz_gtk_add_border_padding(style, left, top, right, bottom);
+            *top = *bottom = 0;
             return MOZ_GTK_SUCCESS;
         }
     /* These widgets have no borders, since they are not containers. */
