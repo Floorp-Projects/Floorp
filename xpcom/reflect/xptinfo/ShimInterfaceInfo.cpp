@@ -7,7 +7,6 @@
 
 #include "ShimInterfaceInfo.h"
 
-#include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMClientRect.h"
 #include "nsIDOMClientRectList.h"
@@ -59,7 +58,6 @@
 #include "nsITreeBoxObject.h"
 #include "nsIWebBrowserPersistable.h"
 
-#include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/CharacterDataBinding.h"
 #include "mozilla/dom/DOMRectBinding.h"
 #include "mozilla/dom/DOMRectListBinding.h"
@@ -184,7 +182,6 @@ struct ComponentsInterfaceShimEntry {
 
 const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
 {
-  DEFINE_SHIM(CanvasRenderingContext2D),
   DEFINE_SHIM(CharacterData),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMClientRect, DOMRectReadOnly),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMClientRectList, DOMRectList),
