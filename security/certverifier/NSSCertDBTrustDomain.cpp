@@ -38,7 +38,7 @@
 #include "TrustOverride-StartComAndWoSignData.inc"
 #include "TrustOverride-GlobalSignData.inc"
 #include "TrustOverride-SymantecData.inc"
-#include "TrustOverride-AppleGoogleData.inc"
+#include "TrustOverride-AppleGoogleDigiCertData.inc"
 
 using namespace mozilla;
 using namespace mozilla::pkix;

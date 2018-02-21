@@ -38,7 +38,7 @@
 
 #include "TrustOverrideUtils.h"
 #include "TrustOverride-SymantecData.inc"
-#include "TrustOverride-AppleGoogleData.inc"
+#include "TrustOverride-AppleGoogleDigiCertData.inc"
 #include "TrustOverride-TestImminentDistrustData.inc"
 
 using namespace mozilla;
