@@ -1,79 +1,34 @@
 "use strict";
 
 ChromeUtils.import("resource://normandy/Normandy.jsm", this);
-ChromeUtils.import("resource://normandy/lib/ShieldRecipeClient.jsm", this);
+ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
 ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm", this);
-
-const initPref1 = "test.initShieldPrefs1";
-const initPref2 = "test.initShieldPrefs2";
-const initPref3 = "test.initShieldPrefs3";
+ChromeUtils.import("resource://normandy/lib/RecipeRunner.jsm", this);
+ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
+ChromeUtils.import("resource://normandy-content/AboutPages.jsm", this);
 
 const experimentPref1 = "test.initExperimentPrefs1";
 const experimentPref2 = "test.initExperimentPrefs2";
 const experimentPref3 = "test.initExperimentPrefs3";
 const experimentPref4 = "test.initExperimentPrefs4";
 
-decorate_task(
-  async function testInitShieldPrefs() {
-    const defaultBranch = Services.prefs.getDefaultBranch("");
-
-    const prefDefaults = {
-      [initPref1]: true,
-      [initPref2]: 2,
-      [initPref3]: "string",
-    };
-
-    for (const pref of Object.keys(prefDefaults)) {
-      is(
-        defaultBranch.getPrefType(pref),
-        defaultBranch.PREF_INVALID,
-        `Pref ${pref} don't exist before being initialized.`,
-      );
-    }
-
-    Normandy.initShieldPrefs(prefDefaults);
-
-    ok(
-      defaultBranch.getBoolPref(initPref1),
-      `Pref ${initPref1} has a default value after being initialized.`,
-    );
-    is(
-      defaultBranch.getIntPref(initPref2),
-      2,
-      `Pref ${initPref2} has a default value after being initialized.`,
-    );
-    is(
-      defaultBranch.getCharPref(initPref3),
-      "string",
-      `Pref ${initPref3} has a default value after being initialized.`,
-    );
-
-    for (const pref of Object.keys(prefDefaults)) {
-      ok(
-        !defaultBranch.prefHasUserValue(pref),
-        `Pref ${pref} doesn't have a user value after being initialized.`,
-      );
-    }
-
-    defaultBranch.deleteBranch("test.");
-  },
-);
-
-decorate_task(
-  async function testInitShieldPrefsError() {
-    Assert.throws(
-      () => Normandy.initShieldPrefs({"test.prefTypeError": new Date()}),
-      "initShieldPrefs throws when given an invalid type for the pref value.",
-    );
-  },
-);
+function withStubInits(testFunction) {
+  return decorate(
+    withStub(AboutPages, "init"),
+    withStub(AddonStudies, "init"),
+    withStub(PreferenceExperiments, "init"),
+    withStub(RecipeRunner, "init"),
+    withStub(TelemetryEvents, "init"),
+    testFunction
+  );
+}
 
 decorate_task(
   withPrefEnv({
     set: [
-      [`extensions.shield-recipe-client.startupExperimentPrefs.${experimentPref1}`, true],
-      [`extensions.shield-recipe-client.startupExperimentPrefs.${experimentPref2}`, 2],
-      [`extensions.shield-recipe-client.startupExperimentPrefs.${experimentPref3}`, "string"],
+      [`app.normandy.startupExperimentPrefs.${experimentPref1}`, true],
+      [`app.normandy.startupExperimentPrefs.${experimentPref2}`, 2],
+      [`app.normandy.startupExperimentPrefs.${experimentPref3}`, "string"],
     ],
     clear: [[experimentPref1], [experimentPref2], [experimentPref3]],
   }),
@@ -116,7 +71,7 @@ decorate_task(
 decorate_task(
   withPrefEnv({
     set: [
-      ["extensions.shield-recipe-client.startupExperimentPrefs.test.existingPref", "experiment"],
+      ["app.normandy.startupExperimentPrefs.test.existingPref", "experiment"],
     ],
   }),
   async function testInitExperimentPrefsExisting() {
@@ -134,7 +89,7 @@ decorate_task(
 decorate_task(
   withPrefEnv({
     set: [
-      ["extensions.shield-recipe-client.startupExperimentPrefs.test.mismatchPref", "experiment"],
+      ["app.normandy.startupExperimentPrefs.test.mismatchPref", "experiment"],
     ],
   }),
   async function testInitExperimentPrefsMismatch() {
@@ -171,17 +126,17 @@ decorate_task(
 decorate_task(
   withPrefEnv({
     set: [
-      [`extensions.shield-recipe-client.startupExperimentPrefs.${experimentPref1}`, true],
-      [`extensions.shield-recipe-client.startupExperimentPrefs.${experimentPref2}`, 2],
-      [`extensions.shield-recipe-client.startupExperimentPrefs.${experimentPref3}`, "string"],
-      [`extensions.shield-recipe-client.startupExperimentPrefs.${experimentPref4}`, "another string"],
+      [`app.normandy.startupExperimentPrefs.${experimentPref1}`, true],
+      [`app.normandy.startupExperimentPrefs.${experimentPref2}`, 2],
+      [`app.normandy.startupExperimentPrefs.${experimentPref3}`, "string"],
+      [`app.normandy.startupExperimentPrefs.${experimentPref4}`, "another string"],
     ],
     clear: [
       [experimentPref1],
       [experimentPref2],
       [experimentPref3],
       [experimentPref4],
-      ["extensions.shield-recipe-client.startupExperimentPrefs.existingPref"],
+      ["app.normandy.startupExperimentPrefs.existingPref"],
     ],
   }),
   withStub(PreferenceExperiments, "recordOriginalValues"),
@@ -213,7 +168,7 @@ decorate_task(
 decorate_task(
   withPrefEnv({
     set: [
-      ["extensions.shield-recipe-client.startupExperimentPrefs.testing.does-not-exist", "foo"],
+      ["app.normandy.startupExperimentPrefs.testing.does-not-exist", "foo"],
       ["testing.does-not-exist", "foo"],
     ],
   }),
@@ -221,5 +176,104 @@ decorate_task(
   async function testInitExperimentPrefsNoDefaultValue() {
     Normandy.initExperimentPrefs();
     ok(true, "initExperimentPrefs should not throw for non-existant prefs");
+  },
+);
+
+decorate_task(
+  withStubInits,
+  async function testStartup() {
+    const initObserved = TestUtils.topicObserved("shield-init-complete");
+    await Normandy.finishInit();
+    ok(AboutPages.init.called, "startup calls AboutPages.init");
+    ok(AddonStudies.init.called, "startup calls AddonStudies.init");
+    ok(PreferenceExperiments.init.called, "startup calls PreferenceExperiments.init");
+    ok(RecipeRunner.init.called, "startup calls RecipeRunner.init");
+    await initObserved;
+  }
+);
+
+decorate_task(
+  withStubInits,
+  async function testStartupPrefInitFail() {
+    PreferenceExperiments.init.returns(Promise.reject(new Error("oh no")));
+
+    await Normandy.finishInit();
+    ok(AboutPages.init.called, "startup calls AboutPages.init");
+    ok(AddonStudies.init.called, "startup calls AddonStudies.init");
+    ok(PreferenceExperiments.init.called, "startup calls PreferenceExperiments.init");
+    ok(RecipeRunner.init.called, "startup calls RecipeRunner.init");
+    ok(TelemetryEvents.init.called, "startup calls TelemetryEvents.init");
+  }
+);
+
+decorate_task(
+  withStubInits,
+  async function testStartupAboutPagesInitFail() {
+    AboutPages.init.returns(Promise.reject(new Error("oh no")));
+
+    await Normandy.finishInit();
+    ok(AboutPages.init.called, "startup calls AboutPages.init");
+    ok(AddonStudies.init.called, "startup calls AddonStudies.init");
+    ok(PreferenceExperiments.init.called, "startup calls PreferenceExperiments.init");
+    ok(RecipeRunner.init.called, "startup calls RecipeRunner.init");
+    ok(TelemetryEvents.init.called, "startup calls TelemetryEvents.init");
+  }
+);
+
+decorate_task(
+  withStubInits,
+  async function testStartupAddonStudiesInitFail() {
+    AddonStudies.init.returns(Promise.reject(new Error("oh no")));
+
+    await Normandy.finishInit();
+    ok(AboutPages.init.called, "startup calls AboutPages.init");
+    ok(AddonStudies.init.called, "startup calls AddonStudies.init");
+    ok(PreferenceExperiments.init.called, "startup calls PreferenceExperiments.init");
+    ok(RecipeRunner.init.called, "startup calls RecipeRunner.init");
+    ok(TelemetryEvents.init.called, "startup calls TelemetryEvents.init");
+  }
+);
+
+decorate_task(
+  withStubInits,
+  async function testStartupTelemetryEventsInitFail() {
+    TelemetryEvents.init.throws();
+
+    await Normandy.finishInit();
+    ok(AboutPages.init.called, "startup calls AboutPages.init");
+    ok(AddonStudies.init.called, "startup calls AddonStudies.init");
+    ok(PreferenceExperiments.init.called, "startup calls PreferenceExperiments.init");
+    ok(RecipeRunner.init.called, "startup calls RecipeRunner.init");
+    ok(TelemetryEvents.init.called, "startup calls TelemetryEvents.init");
+  }
+);
+
+decorate_task(
+  withMockPreferences,
+  async function testPrefMigration(mockPreferences) {
+    const legacyPref = "extensions.shield-recipe-client.test";
+    const migratedPref = "app.normandy.test";
+    mockPreferences.set(legacyPref, 1);
+
+    ok(
+      Services.prefs.prefHasUserValue(legacyPref),
+      "Legacy pref should have a user value before running migration",
+    );
+    ok(
+      !Services.prefs.prefHasUserValue(migratedPref),
+      "Migrated pref should not have a user value before running migration",
+    );
+
+    Normandy.migrateShieldPrefs();
+
+    ok(
+      !Services.prefs.prefHasUserValue(legacyPref),
+      "Legacy pref should not have a user value after running migration",
+    );
+    ok(
+      Services.prefs.prefHasUserValue(migratedPref),
+      "Migrated pref should have a user value after running migration",
+    );
+    is(Services.prefs.getIntPref(migratedPref), 1, "Value should have been migrated");
   },
 );
