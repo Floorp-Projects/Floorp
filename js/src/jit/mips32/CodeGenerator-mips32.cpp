@@ -309,19 +309,14 @@ CodeGeneratorMIPS::visitCompareI64(LCompareI64* lir)
 
     bool isSigned = mir->compareType() == MCompare::Compare_Int64;
     Assembler::Condition condition = JSOpToCondition(lir->jsop(), isSigned);
-    Label done;
 
-    masm.move32(Imm32(1), output);
     if (IsConstant(rhs)) {
         Imm64 imm = Imm64(ToInt64(rhs));
-        masm.branch64(condition, lhsRegs, imm, &done);
+        masm.cmp64Set(condition, lhsRegs, imm, output);
     } else {
         Register64 rhsRegs = ToRegister64(rhs);
-        masm.branch64(condition, lhsRegs, rhsRegs, &done);
+        masm.cmp64Set(condition, lhsRegs, rhsRegs, output);
     }
-
-    masm.move32(Imm32(0), output);
-    masm.bind(&done);
 }
 
 void
@@ -367,22 +362,12 @@ CodeGeneratorMIPS::visitDivOrModI64(LDivOrModI64* lir)
 
     MOZ_ASSERT(output == ReturnReg64);
 
-    // All inputs are useAtStart for a call instruction. As a result we cannot
-    // ask for a non-aliasing temp. Using the following to get such a temp.
-    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-    regs.take(lhs.low);
-    regs.take(lhs.high);
-    if (lhs != rhs) {
-        regs.take(rhs.low);
-        regs.take(rhs.high);
-    }
-    Register temp = regs.takeAny();
     Label done;
 
     // Handle divide by zero.
     if (lir->canBeDivideByZero()) {
         Label nonZero;
-        masm.branchTest64(Assembler::NonZero, rhs, rhs, temp, &nonZero);
+        masm.branchTest64(Assembler::NonZero, rhs, rhs, InvalidReg, &nonZero);
         masm.wasmTrap(wasm::Trap::IntegerDivideByZero, lir->bytecodeOffset());
         masm.bind(&nonZero);
     }
@@ -424,21 +409,10 @@ CodeGeneratorMIPS::visitUDivOrModI64(LUDivOrModI64* lir)
 
     MOZ_ASSERT(ToOutRegister64(lir) == ReturnReg64);
 
-    // All inputs are useAtStart for a call instruction. As a result we cannot
-    // ask for a non-aliasing temp. Using the following to get such a temp.
-    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-    regs.take(lhs.low);
-    regs.take(lhs.high);
-    if (lhs != rhs) {
-        regs.take(rhs.low);
-        regs.take(rhs.high);
-    }
-    Register temp = regs.takeAny();
-
     // Prevent divide by zero.
     if (lir->canBeDivideByZero()) {
         Label nonZero;
-        masm.branchTest64(Assembler::NonZero, rhs, rhs, temp, &nonZero);
+        masm.branchTest64(Assembler::NonZero, rhs, rhs, InvalidReg, &nonZero);
         masm.wasmTrap(wasm::Trap::IntegerDivideByZero, lir->bytecodeOffset());
         masm.bind(&nonZero);
     }

@@ -3807,8 +3807,10 @@ class BaseCompiler final : public BaseCompilerInterface
 #endif // RABALDR_I64_TO_FLOAT_CALLOUT
 
     void cmp64Set(Assembler::Condition cond, RegI64 lhs, RegI64 rhs, RegI32 dest) {
-#ifdef JS_PUNBOX64
+#if defined(JS_PUNBOX64)
         masm.cmpPtrSet(cond, lhs.reg, rhs.reg, dest);
+#elif defined(JS_CODEGEN_MIPS32)
+        masm.cmp64Set(cond, lhs, rhs, dest);
 #else
         // TODO / OPTIMIZE (Bug 1316822): This is pretty branchy, we should be
         // able to do better.

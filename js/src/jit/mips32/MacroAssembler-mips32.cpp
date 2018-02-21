@@ -619,6 +619,199 @@ MacroAssemblerMIPS::ma_cmp_set(Register dst, Address lhs, Register rhs, Conditio
     ma_cmp_set(dst, ScratchRegister, rhs, c);
 }
 
+void
+MacroAssemblerMIPSCompat::cmp64Set(Condition cond, Register64 lhs, Imm64 val, Register dest) {
+
+    if (val.value == 0) {
+        switch(cond){
+          case Assembler::Equal:
+          case Assembler::BelowOrEqual:
+            as_or(dest, lhs.high, lhs.low);
+            as_sltiu(dest, dest, 1);
+            break;
+          case Assembler::NotEqual:
+          case Assembler::Above:
+            as_or(dest, lhs.high, lhs.low);
+            as_sltu(dest, zero, dest);
+            break;
+          case Assembler::LessThan:
+          case Assembler::GreaterThanOrEqual:
+            as_slt(dest, lhs.high, zero);
+            if (cond == Assembler::GreaterThanOrEqual)
+                as_xori(dest, dest, 1);
+            break;
+          case Assembler::GreaterThan:
+          case Assembler::LessThanOrEqual:
+            as_or(SecondScratchReg, lhs.high, lhs.low);
+            as_sra(ScratchRegister, lhs.high, 31);
+            as_sltu(dest, ScratchRegister, SecondScratchReg);
+            if (cond == Assembler::LessThanOrEqual)
+                as_xori(dest, dest, 1);
+            break;
+          case Assembler::Below:
+          case Assembler::AboveOrEqual:
+            as_ori(dest, zero, cond == Assembler::AboveOrEqual ? 1 : 0);
+            break;
+          default:
+            MOZ_CRASH("Condition code not supported");
+            break;
+        }
+        return;
+    }
+
+    Condition c = ma_cmp64(cond, lhs, val, dest);
+
+    switch(cond) {
+      // For Equal/NotEqual cond ma_cmp64 dest holds non boolean result.
+      case Assembler::Equal:
+        as_sltiu(dest, dest, 1);
+        break;
+      case Assembler::NotEqual:
+        as_sltu(dest, zero, dest);
+        break;
+      default:
+        if(c == Assembler::Zero)
+           as_xori(dest, dest, 1);
+       break;
+    }
+}
+
+void
+MacroAssemblerMIPSCompat::cmp64Set(Condition cond, Register64 lhs, Register64 rhs, Register dest) {
+
+    Condition c = ma_cmp64(cond, lhs, rhs, dest);
+
+    switch(cond) {
+      // For Equal/NotEqual cond ma_cmp64 dest holds non boolean result.
+      case Assembler::Equal:
+        as_sltiu(dest, dest, 1);
+        break;
+      case Assembler::NotEqual:
+        as_sltu(dest, zero, dest);
+        break;
+      default:
+        if(c == Assembler::Zero)
+           as_xori(dest, dest, 1);
+       break;
+    }
+}
+
+Assembler::Condition
+MacroAssemblerMIPSCompat::ma_cmp64(Condition cond, Register64 lhs, Register64 rhs, Register dest) {
+
+    switch(cond) {
+      case Assembler::Equal:
+      case Assembler::NotEqual:
+        as_xor(SecondScratchReg, lhs.high, rhs.high);
+        as_xor(ScratchRegister, lhs.low, rhs.low);
+        as_or(dest, SecondScratchReg, ScratchRegister);
+        return (cond == Assembler::Equal) ? Assembler::Zero : Assembler::NonZero;
+        break;
+      case Assembler::LessThan:
+      case Assembler::GreaterThanOrEqual:
+        as_slt(SecondScratchReg, rhs.high, lhs.high);
+        as_sltu(ScratchRegister, lhs.low, rhs.low);
+        as_slt(SecondScratchReg, SecondScratchReg, ScratchRegister);
+        as_slt(ScratchRegister, lhs.high, rhs.high);
+        as_or(dest, ScratchRegister, SecondScratchReg);
+        return (cond == Assembler::GreaterThanOrEqual) ? Assembler::Zero : Assembler::NonZero;
+        break;
+      case Assembler::GreaterThan:
+      case Assembler::LessThanOrEqual:
+        as_slt(SecondScratchReg, lhs.high, rhs.high);
+        as_sltu(ScratchRegister, rhs.low, lhs.low);
+        as_slt(SecondScratchReg, SecondScratchReg, ScratchRegister);
+        as_slt(ScratchRegister, rhs.high, lhs.high);
+        as_or(dest, ScratchRegister, SecondScratchReg);
+        return (cond == Assembler::LessThanOrEqual) ? Assembler::Zero : Assembler::NonZero;
+        break;
+      case Assembler::Below:
+      case Assembler::AboveOrEqual:
+        as_sltu(SecondScratchReg, rhs.high, lhs.high);
+        as_sltu(ScratchRegister, lhs.low, rhs.low);
+        as_slt(SecondScratchReg, SecondScratchReg, ScratchRegister);
+        as_sltu(ScratchRegister, lhs.high, rhs.high);
+        as_or(dest, ScratchRegister, SecondScratchReg);
+        return (cond == Assembler::AboveOrEqual) ? Assembler::Zero : Assembler::NonZero;
+        break;
+      case Assembler::Above:
+      case Assembler::BelowOrEqual:
+        as_sltu(SecondScratchReg, lhs.high, rhs.high);
+        as_sltu(ScratchRegister, rhs.low, lhs.low);
+        as_slt(SecondScratchReg, SecondScratchReg, ScratchRegister);
+        as_sltu(ScratchRegister, rhs.high, lhs.high);
+        as_or(dest, ScratchRegister, SecondScratchReg);
+        return (cond == Assembler::BelowOrEqual) ? Assembler::Zero : Assembler::NonZero;
+        break;
+      default:
+        MOZ_CRASH("Condition code not supported");
+        break;
+    }
+}
+
+Assembler::Condition
+MacroAssemblerMIPSCompat::ma_cmp64(Condition cond, Register64 lhs, Imm64 val, Register dest) {
+
+    MOZ_ASSERT(val.value != 0);
+
+    switch(cond) {
+      case Assembler::Equal:
+      case Assembler::NotEqual:
+        ma_xor(SecondScratchReg, lhs.high, val.hi());
+        ma_xor(ScratchRegister, lhs.low, val.low());
+        as_or(dest, SecondScratchReg, ScratchRegister);
+        return (cond == Assembler::Equal) ? Assembler::Zero : Assembler::NonZero;
+        break;
+      case Assembler::LessThan:
+      case Assembler::GreaterThanOrEqual:
+        ma_li(SecondScratchReg, val.hi());
+        as_slt(ScratchRegister, lhs.high, SecondScratchReg);
+        as_slt(SecondScratchReg, SecondScratchReg, lhs.high);
+        as_subu(SecondScratchReg, SecondScratchReg, ScratchRegister);
+        ma_li(ScratchRegister, val.low());
+        as_sltu(ScratchRegister, lhs.low, ScratchRegister);
+        as_slt(dest, SecondScratchReg, ScratchRegister);
+        return (cond == Assembler::GreaterThanOrEqual) ? Assembler::Zero : Assembler::NonZero;
+        break;
+      case Assembler::GreaterThan:
+      case Assembler::LessThanOrEqual:
+        ma_li(SecondScratchReg, val.hi());
+        as_slt(ScratchRegister, SecondScratchReg, lhs.high);
+        as_slt(SecondScratchReg, lhs.high, SecondScratchReg);
+        as_subu(SecondScratchReg, SecondScratchReg, ScratchRegister);
+        ma_li(ScratchRegister, val.low());
+        as_sltu(ScratchRegister, ScratchRegister, lhs.low);
+        as_slt(dest, SecondScratchReg, ScratchRegister);
+        return (cond == Assembler::LessThanOrEqual) ? Assembler::Zero : Assembler::NonZero;
+        break;
+      case Assembler::Below:
+      case Assembler::AboveOrEqual:
+        ma_li(SecondScratchReg, val.hi());
+        as_sltu(ScratchRegister, lhs.high, SecondScratchReg);
+        as_sltu(SecondScratchReg, SecondScratchReg, lhs.high);
+        as_subu(SecondScratchReg, SecondScratchReg, ScratchRegister);
+        ma_li(ScratchRegister, val.low());
+        as_sltu(ScratchRegister, lhs.low, ScratchRegister);
+        as_slt(dest, SecondScratchReg, ScratchRegister);
+        return (cond == Assembler::AboveOrEqual) ? Assembler::Zero : Assembler::NonZero;
+        break;
+      case Assembler::Above:
+      case Assembler::BelowOrEqual:
+        ma_li(SecondScratchReg, val.hi());
+        as_sltu(ScratchRegister, SecondScratchReg, lhs.high);
+        as_sltu(SecondScratchReg, lhs.high, SecondScratchReg);
+        as_subu(SecondScratchReg, SecondScratchReg, ScratchRegister);
+        ma_li(ScratchRegister, val.low());
+        as_sltu(ScratchRegister, ScratchRegister, lhs.low);
+        as_slt(dest, SecondScratchReg, ScratchRegister);
+        return (cond == Assembler::BelowOrEqual) ? Assembler::Zero : Assembler::NonZero;
+        break;
+      default:
+        MOZ_CRASH("Condition code not supported");
+        break;
+    }
+}
+
 // fp instructions
 void
 MacroAssemblerMIPS::ma_lid(FloatRegister dest, double value)

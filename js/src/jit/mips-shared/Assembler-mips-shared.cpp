@@ -601,6 +601,20 @@ AssemblerMIPSShared::as_mul(Register rd, Register rs, Register rt)
     return writeInst(InstReg(op_special2, rs, rt, rd, ff_mul).encode());
 }
 
+BufferOffset
+AssemblerMIPSShared::as_madd(Register rs, Register rt)
+{
+    spew("madd %3s,%3s", rs.name(), rt.name());
+    return writeInst(InstReg(op_special2, rs, rt, ff_madd).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_maddu(Register rs, Register rt)
+{
+    spew("maddu %3s,%3s", rs.name(), rt.name());
+    return writeInst(InstReg(op_special2, rs, rt, ff_maddu).encode());
+}
+
 // Shift instructions
 BufferOffset
 AssemblerMIPSShared::as_sll(Register rd, Register rt, uint16_t sa)
@@ -1043,7 +1057,7 @@ AssemblerMIPSShared::as_slti(Register rd, Register rs, int32_t j)
 BufferOffset
 AssemblerMIPSShared::as_sltiu(Register rd, Register rs, uint32_t j)
 {
-    MOZ_ASSERT(Imm16::IsInUnsignedRange(j));
+    MOZ_ASSERT(Imm16::IsInSignedRange(int32_t(j)));
     spew("sltiu  %3s,%3s, 0x%x", rd.name(), rs.name(), j);
     return writeInst(InstImm(op_sltiu, rs, rd, Imm16(j)).encode());
 }

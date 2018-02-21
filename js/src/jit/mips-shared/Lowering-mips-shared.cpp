@@ -75,6 +75,7 @@ LIRGeneratorMIPSShared::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* l
 {
     bool needsTemp = false;
     bool cannotAliasRhs = false;
+    bool reuseInput = true;
 
 #ifdef JS_CODEGEN_MIPS32
     needsTemp = true;
@@ -87,6 +88,9 @@ LIRGeneratorMIPSShared::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* l
             needsTemp = false;
         if (int64_t(1) << shift == constant)
             needsTemp = false;
+        if (mozilla::IsPowerOfTwo(static_cast<uint32_t>(constant + 1)) ||
+            mozilla::IsPowerOfTwo(static_cast<uint32_t>(constant - 1)))
+            reuseInput = false;
     }
 #endif
     ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
@@ -95,8 +99,10 @@ LIRGeneratorMIPSShared::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* l
 
     if (needsTemp)
         ins->setTemp(0, temp());
-
-    defineInt64ReuseInput(ins, mir, 0);
+    if(reuseInput)
+        defineInt64ReuseInput(ins, mir, 0);
+    else
+        defineInt64(ins, mir);
 }
 
 template<size_t Temps>

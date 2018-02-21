@@ -198,7 +198,7 @@ BaselineCacheIRCompiler::compile()
 
     Linker linker(masm);
     AutoFlushICache afc("getStubCode");
-    Rooted<JitCode*> newStubCode(cx_, linker.newCode<NoGC>(cx_, CodeKind::Baseline));
+    Rooted<JitCode*> newStubCode(cx_, linker.newCode(cx_, CodeKind::Baseline));
     if (!newStubCode) {
         cx_->recoverFromOutOfMemory();
         return nullptr;

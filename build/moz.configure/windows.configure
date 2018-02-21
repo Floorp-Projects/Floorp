@@ -171,12 +171,12 @@ def valid_ucrt_sdk_dir_result(value):
         return '%s in %s' % (value.version, quote(value.path))
 
 
-@depends(windows_sdk_dir, 'WINDOWSSDKDIR')
+@depends(windows_sdk_dir, 'WINDOWSSDKDIR', c_compiler)
 @checking('for Universal CRT SDK', valid_ucrt_sdk_dir_result)
 @imports('os')
 @imports(_from='__builtin__', _import='sorted')
 @imports(_import='mozpack.path', _as='mozpath')
-def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env):
+def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, c_compiler):
     if windows_sdk_dir_env:
         windows_sdk_dir_env = windows_sdk_dir_env[0]
     sdks = {}
@@ -235,6 +235,15 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env):
                               ' version can be installed using the Visual'
                               ' Studio installer.'
                               % (version, minimum_ucrt_version))
+
+    broken_ucrt_version = Version('10.0.16299.0')
+    if c_compiler.type == 'clang-cl' and version >= broken_ucrt_version:
+        raise FatalCheckError('Found SDK version %s but clang-cl builds'
+                              ' currently don\'t work with SDK version %s'
+                              ' and later. You should use an older SDK,'
+                              ' either by uninstalling the broken one or'
+                              ' setting a custom WINDOWSSDKDIR.'
+                              % (version, broken_ucrt_version))
 
     return namespace(
         path=sdk.path,
