@@ -18,10 +18,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
 });
 
-function dump(a) {
-  Services.console.logStringMessage(a);
-}
-
 this.EXPORTED_SYMBOLS = ["Sanitizer"];
 
 function Sanitizer() {}

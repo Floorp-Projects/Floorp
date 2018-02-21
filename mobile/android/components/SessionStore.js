@@ -182,7 +182,7 @@ SessionStore.prototype = {
   },
 
   _forgetClosedTabs: function ss_forgetClosedTabs() {
-    for (let [ssid, win] of Object.entries(this._windows)) {
+    for (let win of Object.values(this._windows)) {
       win.closedTabs = [];
     }
 
@@ -1259,7 +1259,7 @@ SessionStore.prototype = {
         desktopMode: false,
       };
 
-      let tab = window.BrowserApp.addTab(url, params);
+      window.BrowserApp.addTab(url, params);
     }
   },
 
@@ -1394,7 +1394,6 @@ SessionStore.prototype = {
 
     for (let i = 0; i < tabs.length; i++) {
       let tabData = tabs[i];
-      let entry = tabData.entries[tabData.index - 1];
 
       // Get the stubbed tab
       let tab = window.BrowserApp.getTabForId(tabData.tabId);
