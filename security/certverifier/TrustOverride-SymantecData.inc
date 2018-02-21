@@ -1,5 +1,5 @@
-// Script from security/manager/tools/crtshToIdentifyingStruct/crtshToIdentifyingStruct.py
-// Invocation: crtshToIdentifyingStruct.py -dn -listname RootSymantecDNs 17 3381895 847444 4350 4174851 4175126 12729019 8983600 12726040 8983601 30 3382830 254193 8984570 68409 26682 2771491 93 1039083
+// Script from security/manager/tools/crtshToDNStruct/crtshToDNStruct.py
+// Invocation: crtshToDNStruct.py 17 3381895 847444 4350 4174851 4175126 12729019 8983600 12726040 8983601 30 3382830 254193 8984570 68409 26682 2771491 93 1039083
 
 // /C=US/O=GeoTrust Inc./CN=GeoTrust Global CA
 // SHA256 Fingerprint: FF:85:6A:2D:25:1D:CD:88:D3:66:56:F4:50:12:67:98
@@ -366,15 +366,18 @@ static const uint8_t CAVeriSignUniversalRootCertificationAuthorityDN[192] = {
 };
 
 static const DataAndLength RootSymantecDNs[]= {
-  { CAGeoTrustGlobalCADN, sizeof(CAGeoTrustGlobalCADN) },
+  { CAGeoTrustGlobalCADN,
+    sizeof(CAGeoTrustGlobalCADN) },
   { CAGeoTrustPrimaryCertificationAuthorityG2DN,
     sizeof(CAGeoTrustPrimaryCertificationAuthorityG2DN) },
   { CAGeoTrustPrimaryCertificationAuthorityG3DN,
     sizeof(CAGeoTrustPrimaryCertificationAuthorityG3DN) },
   { CAGeoTrustPrimaryCertificationAuthorityDN,
     sizeof(CAGeoTrustPrimaryCertificationAuthorityDN) },
-  { CAGeoTrustUniversalCADN, sizeof(CAGeoTrustUniversalCADN) },
-  { CAGeoTrustUniversalCA2DN, sizeof(CAGeoTrustUniversalCA2DN) },
+  { CAGeoTrustUniversalCADN,
+    sizeof(CAGeoTrustUniversalCADN) },
+  { CAGeoTrustUniversalCA2DN,
+    sizeof(CAGeoTrustUniversalCA2DN) },
   { CASymantecClass1PublicPrimaryCertificationAuthorityG4DN,
     sizeof(CASymantecClass1PublicPrimaryCertificationAuthorityG4DN) },
   { CASymantecClass1PublicPrimaryCertificationAuthorityG6DN,
@@ -383,9 +386,12 @@ static const DataAndLength RootSymantecDNs[]= {
     sizeof(CASymantecClass2PublicPrimaryCertificationAuthorityG4DN) },
   { CASymantecClass2PublicPrimaryCertificationAuthorityG6DN,
     sizeof(CASymantecClass2PublicPrimaryCertificationAuthorityG6DN) },
-  { CAthawtePrimaryRootCADN, sizeof(CAthawtePrimaryRootCADN) },
-  { CAthawtePrimaryRootCAG2DN, sizeof(CAthawtePrimaryRootCAG2DN) },
-  { CAthawtePrimaryRootCAG3DN, sizeof(CAthawtePrimaryRootCAG3DN) },
+  { CAthawtePrimaryRootCADN,
+    sizeof(CAthawtePrimaryRootCADN) },
+  { CAthawtePrimaryRootCAG2DN,
+    sizeof(CAthawtePrimaryRootCAG2DN) },
+  { CAthawtePrimaryRootCAG3DN,
+    sizeof(CAthawtePrimaryRootCAG3DN) },
   { CAVeriSignClass1PublicPrimaryCertificationAuthorityG3DN,
     sizeof(CAVeriSignClass1PublicPrimaryCertificationAuthorityG3DN) },
   { CAVeriSignClass2PublicPrimaryCertificationAuthorityG3DN,
