@@ -42,11 +42,9 @@ LoginManagerPrompter.prototype = {
   __strBundle: null, // String bundle for L10N
   get _strBundle() {
     if (!this.__strBundle) {
-      let bunService = Cc["@mozilla.org/intl/stringbundle;1"].
-                       getService(Ci.nsIStringBundleService);
       this.__strBundle = {
-        pwmgr: bunService.createBundle("chrome://browser/locale/passwordmgr.properties"),
-        brand: bunService.createBundle("chrome://branding/locale/brand.properties")
+        pwmgr: Services.strings.createBundle("chrome://browser/locale/passwordmgr.properties"),
+        brand: Services.strings.createBundle("chrome://branding/locale/brand.properties")
       };
 
       if (!this.__strBundle)
