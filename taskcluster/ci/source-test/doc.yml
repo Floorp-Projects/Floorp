@@ -5,6 +5,7 @@ generate:
         symbol: Doc
         kind: test
         tier: 1
+    run-on-projects: ['trunk', 'try']
     worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
     worker:
         docker-image: {in-tree: "lint"}
