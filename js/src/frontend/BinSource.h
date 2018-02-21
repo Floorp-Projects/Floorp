@@ -39,9 +39,10 @@ class BinASTParser;
  */
 class BinASTParser : private JS::AutoGCRooter, public ErrorReporter
 {
-    using Names = JS::GCVector<JSString*, 8>;
     using Tokenizer = BinTokenReaderTester;
+    using BinFields = Tokenizer::BinFields;
     using Chars = Tokenizer::Chars;
+    using Names = JS::GCVector<JSString*, 8>;
 
   public:
     BinASTParser(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames, const JS::ReadOnlyCompileOptions& options)
@@ -92,87 +93,63 @@ class BinASTParser : private JS::AutoGCRooter, public ErrorReporter
     //
     // These methods return a (failed) JS::Result for convenience.
 
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidKind(const char* superKind, const BinKind kind);
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidField(const char* kind, const BinField field);
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidEnum(const char* kind, const Chars& value);
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseMissingField(const char* kind, const BinField field);
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseMissingVariableInAssertedScope(JSAtom* name);
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseMissingDirectEvalInAssertedScope();
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidKind(const char* superKind,
+        const BinKind kind);
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidField(const char* kind,
+        const BinField field);
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidNumberOfFields(
+        const BinKind kind, const uint32_t expected, const uint32_t got);
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidEnum(const char* kind,
+        const Chars& value);
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseMissingField(const char* kind,
+        const BinField field);
     MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseEmpty(const char* description);
     MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseOOM();
     MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseError(const char* description);
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseError(BinKind kind, const char* description);
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseError(BinKind kind,
+        const char* description);
+
 
     // Ensure that this parser will never be used again.
     void poison();
 
-    // --- Parse full nodes (methods are sorted by alphabetical order)
-    //
-    // These method may NEVER return `nullptr`. // FIXME: We can probably optimize Result<> based on this.
+    // Auto-generated methods
+#include "frontend/BinSource-auto.h"
 
-    MOZ_MUST_USE JS::Result<ParseNode*> parseBlockStatement();
-    MOZ_MUST_USE JS::Result<ParseNode*> parseCatchClause();
-    MOZ_MUST_USE JS::Result<ParseNode*> parseExpression();
-    MOZ_MUST_USE JS::Result<ParseNode*> parseForInit();
-    MOZ_MUST_USE JS::Result<ParseNode*> parseForInInit();
-    MOZ_MUST_USE JS::Result<ParseNode*> parseIdentifier();
-    MOZ_MUST_USE JS::Result<ParseNode*> parseObjectPropertyName();
-    MOZ_MUST_USE JS::Result<ParseNode*> parseObjectMember();
-    MOZ_MUST_USE JS::Result<ParseNode*> parsePattern(); // Parse a *binding* pattern.
-    MOZ_MUST_USE JS::Result<ParseNode*> parsePropertyName();
-    MOZ_MUST_USE JS::Result<ParseNode*> parseProgram();
-    MOZ_MUST_USE JS::Result<ParseNode*> parseStatement();
-    MOZ_MUST_USE JS::Result<ParseNode*> parseSwitchCase();
-    MOZ_MUST_USE JS::Result<ParseNode*> parseVariableDeclarator();
+    // --- Auxiliary parsing functions
+    template<size_t N>
+    JS::Result<Ok, JS::Error&>
+    checkFields(const BinKind kind, const BinFields& actual, const BinField (&expected)[N]);
+    JS::Result<Ok, JS::Error&>
+    checkFields0(const BinKind kind, const BinFields& actual);
 
+    JS::Result<ParseNode*>
+    buildFunction(const size_t start, const BinKind kind, ParseNode* name, ParseNode* params,
+        ParseNode* body, FunctionBox* funbox);
+    JS::Result<FunctionBox*>
+    buildFunctionBox(GeneratorKind generatorKind, FunctionAsyncKind functionAsyncKind);
 
-    // --- Parse lists of nodes (methods are sorted by alphabetical order)
-
-    MOZ_MUST_USE JS::Result<ParseNode*> parseArgumentList();
-    MOZ_MUST_USE JS::Result<ParseNode*> parseDirectiveList();
-    MOZ_MUST_USE JS::Result<ParseNode*> parseExpressionList(bool acceptElisions);
-
-    // Returns a list of PNK_COLON.
-    MOZ_MUST_USE JS::Result<ParseNode*> parseObjectMemberList();
-
-    MOZ_MUST_USE JS::Result<ParseNode*> parseStatementList();
-    MOZ_MUST_USE JS::Result<ParseNode*> parseSwitchCaseList();
-
-    // --- Parse the contents of a node whose kind has already been determined.
-
-    MOZ_MUST_USE JS::Result<ParseNode*> parseArrayExpressionAux(const BinKind kind, const Tokenizer::BinFields& fields);
-    MOZ_MUST_USE JS::Result<ParseNode*> parseBreakOrContinueStatementAux(const BinKind kind, const Tokenizer::BinFields& fields);
-    MOZ_MUST_USE JS::Result<ParseNode*> parseBlockStatementAux(const BinKind kind, const Tokenizer::BinFields& fields);
-    MOZ_MUST_USE JS::Result<ParseNode*> parseExpressionStatementAux(const BinKind kind, const Tokenizer::BinFields& fields);
-    MOZ_MUST_USE JS::Result<ParseNode*> parseExpressionAux(const BinKind kind, const Tokenizer::BinFields& fields);
-    MOZ_MUST_USE JS::Result<ParseNode*> parseFunctionAux(const BinKind kind, const Tokenizer::BinFields& fields);
-    MOZ_MUST_USE JS::Result<ParseNode*> parseIdentifierAux(const BinKind, const Tokenizer::BinFields& fields, const bool expectObjectPropertyName = false);
-    MOZ_MUST_USE JS::Result<ParseNode*> parseMemberExpressionAux(const BinKind kind, const Tokenizer::BinFields& fields);
-    MOZ_MUST_USE JS::Result<ParseNode*> parseNumericLiteralAux(const BinKind kind, const Tokenizer::BinFields& fields);
-    MOZ_MUST_USE JS::Result<ParseNode*> parseObjectExpressionAux(const BinKind kind, const Tokenizer::BinFields& fields);
-    MOZ_MUST_USE JS::Result<ParseNode*> parsePatternAux(const BinKind kind, const Tokenizer::BinFields& fields);
-    MOZ_MUST_USE JS::Result<ParseNode*> parseStringLiteralAux(const BinKind kind, const Tokenizer::BinFields& fields);
-    MOZ_MUST_USE JS::Result<ParseNode*> parseStatementAux(const BinKind kind, const Tokenizer::BinFields& fields);
-    MOZ_MUST_USE JS::Result<ParseNode*> parseVariableDeclarationAux(const BinKind kind, const Tokenizer::BinFields& fields);
-
-    // --- Auxiliary parsing functions that may have a side-effect on the parser but do not return a node.
-
-    MOZ_MUST_USE JS::Result<Ok> checkEmptyTuple(const BinKind kind, const Tokenizer::BinFields& fields);
-    MOZ_MUST_USE JS::Result<Ok> parseElisionAux(const BinKind kind, const Tokenizer::BinFields& fields);
-
-    // Parse full scope information to the current innermost scope.
-    MOZ_MUST_USE JS::Result<Ok> parseAndUpdateCurrentScope();
     // Parse full scope information to a specific var scope / let scope combination.
-    MOZ_MUST_USE JS::Result<Ok> parseAndUpdateScope(ParseContext::Scope& varScope, ParseContext::Scope& letScope);
+    MOZ_MUST_USE JS::Result<Ok> parseAndUpdateScope(ParseContext::Scope& varScope,
+        ParseContext::Scope& letScope);
     // Parse a list of names and add it to a given scope.
-    MOZ_MUST_USE JS::Result<Ok> parseAndUpdateScopeNames(ParseContext::Scope& scope, DeclarationKind kind);
-    MOZ_MUST_USE JS::Result<Ok> parseStringList(MutableHandle<Maybe<Names>> out);
+    MOZ_MUST_USE JS::Result<Ok> parseAndUpdateScopeNames(ParseContext::Scope& scope,
+        DeclarationKind kind);
+    MOZ_MUST_USE JS::Result<Ok> parseAndUpdateCapturedNames();
+    MOZ_MUST_USE JS::Result<Ok> checkBinding(JSAtom* name);
 
     // --- Utilities.
 
-    MOZ_MUST_USE JS::Result<ParseNode*> appendDirectivesToBody(ParseNode* body, ParseNode* directives);
+    MOZ_MUST_USE JS::Result<ParseNode*> appendDirectivesToBody(ParseNode* body,
+        ParseNode* directives);
 
-    // Read a string as a `Chars`.
-    MOZ_MUST_USE JS::Result<Ok> readString(Maybe<Chars>& out);
+    // Read a string
+    MOZ_MUST_USE JS::Result<Ok> readString(Chars& out);
+    MOZ_MUST_USE JS::Result<Ok> readMaybeString(Maybe<Chars>& out);
     MOZ_MUST_USE JS::Result<Ok> readString(MutableHandleAtom out);
+    MOZ_MUST_USE JS::Result<Ok> readMaybeString(MutableHandleAtom out);
     MOZ_MUST_USE JS::Result<bool> readBool();
     MOZ_MUST_USE JS::Result<double> readNumber();
 
@@ -261,8 +238,10 @@ class BinASTParser : private JS::AutoGCRooter, public ErrorReporter
     UsedNameTracker& usedNames_;
     Maybe<Tokenizer> tokenizer_;
     FullParseHandler factory_;
+    VariableDeclarationKind variableDeclarationKind_;
 
     friend class BinParseContext;
+    friend class AutoVariableDeclarationKind;
 
     // Needs access to AutoGCRooter.
     friend void TraceBinParser(JSTracer* trc, AutoGCRooter* parser);
@@ -271,7 +250,8 @@ class BinASTParser : private JS::AutoGCRooter, public ErrorReporter
 class BinParseContext : public ParseContext
 {
   public:
-    BinParseContext(JSContext* cx, BinASTParser* parser, SharedContext* sc, Directives* newDirectives)
+    BinParseContext(JSContext* cx, BinASTParser* parser, SharedContext* sc,
+        Directives* newDirectives)
         : ParseContext(cx, parser->parseContext_, sc, *parser,
                        parser->usedNames_, newDirectives, /* isFull = */ true)
     { }
