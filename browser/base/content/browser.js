@@ -6076,7 +6076,7 @@ function stripUnsafeProtocolOnPaste(pasteData) {
     try {
       scheme = Services.io.extractScheme(pasteData);
     } catch (ex) { }
-    if (scheme != "javascript") {
+    if (scheme.toLowerCase() != "javascript") {
       break;
     }
 
