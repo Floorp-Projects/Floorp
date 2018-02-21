@@ -9,7 +9,6 @@
 
 #include "nsPIDOMWindow.h"
 
-#include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsRefPtrHashtable.h"
 #include "nsInterfaceHashtable.h"
@@ -92,7 +91,6 @@ class DialogValueHolder;
 
 namespace mozilla {
 class AbstractThread;
-class DOMEventTargetHelper;
 class ThrottledEventQueue;
 namespace dom {
 class BarProp;
@@ -516,10 +514,6 @@ public:
   }
 
   void AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const;
-
-  // Inner windows only.
-  void AddEventTargetObject(mozilla::DOMEventTargetHelper* aObject);
-  void RemoveEventTargetObject(mozilla::DOMEventTargetHelper* aObject);
 
   void NotifyIdleObserver(IdleObserverHolder* aIdleObserverHolder,
                           bool aCallOnidle);
@@ -1259,8 +1253,6 @@ private:
   // Fire the JS engine's onNewGlobalObject hook.  Only used on inner windows.
   void FireOnNewGlobalObject();
 
-  void DisconnectEventTargetObjects();
-
   // nsPIDOMWindow{Inner,Outer} should be able to see these helper methods.
   friend class nsPIDOMWindowInner;
   friend class nsPIDOMWindowOuter;
@@ -1427,8 +1419,6 @@ protected:
   // This flag keeps track of whether dialogs are
   // currently enabled on this window.
   bool                          mAreDialogsEnabled;
-
-  nsTHashtable<nsPtrHashKey<mozilla::DOMEventTargetHelper> > mEventTargetObjects;
 
   nsTArray<uint32_t> mEnabledSensors;
 

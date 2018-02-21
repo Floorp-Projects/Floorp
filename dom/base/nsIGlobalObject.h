@@ -11,9 +11,11 @@
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/DispatcherTrait.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
+#include "nsHashKeys.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
+#include "nsTHashtable.h"
 #include "js/TypeDecls.h"
 
 // Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
@@ -25,6 +27,7 @@ class nsCycleCollectionTraversalCallback;
 class nsIPrincipal;
 
 namespace mozilla {
+class DOMEventTargetHelper;
 namespace dom {
 class ServiceWorker;
 } // namespace dom
@@ -34,6 +37,13 @@ class nsIGlobalObject : public nsISupports,
                         public mozilla::dom::DispatcherTrait
 {
   nsTArray<nsCString> mHostObjectURIs;
+
+  // Raw pointers to bound DETH objects.  These are added by
+  // AddEventTargetObject().  The DETH object must call
+  // RemoveEventTargetObject() before its destroyed to clear
+  // its raw pointer here.
+  nsTHashtable<nsPtrHashKey<mozilla::DOMEventTargetHelper>> mEventTargetObjects;
+
   bool mIsDying;
 
 protected:
@@ -84,6 +94,18 @@ public:
   void UnlinkHostObjectURIs();
   void TraverseHostObjectURIs(nsCycleCollectionTraversalCallback &aCb);
 
+  // DETH objects must register themselves on the global when they
+  // bind to it in order to get the DisconnectFromOwner() method
+  // called correctly.  RemoveEventTargetObject() must be called
+  // before the DETH object is destroyed.
+  void AddEventTargetObject(mozilla::DOMEventTargetHelper* aObject);
+  void RemoveEventTargetObject(mozilla::DOMEventTargetHelper* aObject);
+
+  // Iterate the registered DETH objects and call the given function
+  // for each one.
+  void
+  ForEachEventTargetObject(const std::function<void(mozilla::DOMEventTargetHelper*)>& aFunc) const;
+
   virtual bool IsInSyncOperation() { return false; }
 
   virtual mozilla::Maybe<mozilla::dom::ClientInfo>
@@ -115,6 +137,12 @@ protected:
   {
     mIsDying = true;
   }
+
+  void
+  DisconnectEventTargetObjects();
+
+  size_t
+  ShallowSizeOfExcludingThis(mozilla::MallocSizeOf aSizeOf) const;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIGlobalObject,
