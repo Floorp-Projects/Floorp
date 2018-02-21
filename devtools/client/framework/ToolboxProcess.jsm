@@ -91,7 +91,26 @@ EventEmitter.decorate(BrowserToolboxProcess);
  * @return object
  */
 BrowserToolboxProcess.init = function (onClose, onRun, options) {
+  if (!Services.prefs.getBoolPref("devtools.chrome.enabled") ||
+      !Services.prefs.getBoolPref("devtools.debugger.remote-enabled")) {
+    console.error("Could not start Browser Toolbox, you need to enable it.");
+    return null;
+  }
   return new BrowserToolboxProcess(onClose, onRun, options);
+};
+
+/**
+ * Figure out if there are any open Browser Toolboxes that'll need to be restored.
+ * @return bool
+ */
+BrowserToolboxProcess.getBrowserToolboxSessionState = function () {
+  for (let process of processes.values()) {
+    // Don't worry about addon toolboxes, we only want to restore the Browser Toolbox.
+    if (!process._options || !process._options.addonID) {
+      return true;
+    }
+  }
+  return false;
 };
 
 /**
