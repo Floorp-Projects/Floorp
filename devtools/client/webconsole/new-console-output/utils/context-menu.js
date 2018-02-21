@@ -175,7 +175,7 @@ function createContextMenu(jsterm, parentNode, {
     menu.append(new MenuItem({
       id: "console-menu-open-sidebar",
       label: l10n.getStr("webconsole.menu.openInSidebar.label"),
-      acesskey: l10n.getStr("webconsole.menu.openInSidebar.accesskey"),
+      accesskey: l10n.getStr("webconsole.menu.openInSidebar.accesskey"),
       disabled: !rootActorId,
       click: () => openSidebar(message.messageId),
     }));
