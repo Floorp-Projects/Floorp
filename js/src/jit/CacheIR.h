@@ -557,9 +557,31 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOperandId(protoId);
         addStubField(slot, StubField::Type::RawWord);
     }
+  private:
+    // Use (or create) a specialization below to clarify what constaint the
+    // group guard is implying.
     void guardGroup(ObjOperandId obj, ObjectGroup* group) {
         writeOpWithOperandId(CacheOp::GuardGroup, obj);
         addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
+    }
+  public:
+    void guardGroupForProto(ObjOperandId obj, ObjectGroup* group) {
+        MOZ_ASSERT(!group->hasUncacheableProto());
+        guardGroup(obj, group);
+    }
+    void guardGroupForTypeBarrier(ObjOperandId obj, ObjectGroup* group) {
+        // Typesets will always be a super-set of any typesets previously seen
+        // for this group. If the type/group of a value being stored to a
+        // property in this group is not known, a TypeUpdate IC chain should be
+        // used as well.
+        guardGroup(obj, group);
+    }
+    void guardGroupForLayout(ObjOperandId obj, ObjectGroup* group) {
+        // NOTE: Comment in guardGroupForTypeBarrier also applies.
+        MOZ_ASSERT(!group->hasUncacheableClass());
+        MOZ_ASSERT(IsUnboxedObjectClass(group->clasp()) ||
+                   IsTypedObjectClass(group->clasp()));
+        guardGroup(obj, group);
     }
     void guardProto(ObjOperandId obj, JSObject* proto) {
         writeOpWithOperandId(CacheOp::GuardProto, obj);

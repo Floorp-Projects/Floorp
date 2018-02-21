@@ -1027,7 +1027,7 @@ LexicalEnvironmentObject::clone(JSContext* cx, Handle<LexicalEnvironmentObject*>
         return nullptr;
 
     // We can't assert that the clone has the same shape, because it could
-    // have been reshaped by PurgeEnvironmentChain.
+    // have been reshaped by ReshapeForShadowedProp.
     MOZ_ASSERT(env->slotSpan() == copy->slotSpan());
     for (uint32_t i = JSSLOT_FREE(&class_); i < copy->slotSpan(); i++)
         copy->setSlot(i, env->getSlot(i));

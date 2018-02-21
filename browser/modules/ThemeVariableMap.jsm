@@ -23,7 +23,4 @@ const ThemeVariableMap = [
   ["--lwt-toolbarbutton-icon-fill-attention", "icon_attention_color"],
   ["--lwt-toolbarbutton-hover-background", "button_background_hover"],
   ["--lwt-toolbarbutton-active-background", "button_background_active"],
-  ["--arrowpanel-background", "popup"],
-  ["--arrowpanel-color", "popup_text"],
-  ["--arrowpanel-border-color", "popup_border"],
 ];

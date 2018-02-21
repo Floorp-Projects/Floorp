@@ -670,7 +670,7 @@ nsInputStreamPump::OnStateStop()
     if (!NS_IsMainThread()) {
         // This method can be called on a different thread if nsInputStreamPump
         // is used off the main-thread.
-        nsresult rv = NS_DispatchToMainThread(
+        nsresult rv = mLabeledMainThreadTarget->Dispatch(
           NewRunnableMethod("nsInputStreamPump::CallOnStateStop",
                             this,
                             &nsInputStreamPump::CallOnStateStop));

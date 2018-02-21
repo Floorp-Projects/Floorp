@@ -692,8 +692,8 @@ class NativeObject : public ShapedObject
         return replaceWithNewEquivalentShape(cx, obj, obj->lastProperty(), newShape);
     }
 
-    static MOZ_MUST_USE bool shadowingShapeChange(JSContext* cx, HandleNativeObject obj,
-                                                  const Shape& shape);
+    static MOZ_MUST_USE bool reshapeForShadowedProp(JSContext* cx, HandleNativeObject obj);
+    static MOZ_MUST_USE bool reshapeForProtoMutation(JSContext* cx, HandleNativeObject obj);
     static bool clearFlag(JSContext* cx, HandleNativeObject obj, BaseShape::Flag flag);
 
     // The maximum number of slots in an object.

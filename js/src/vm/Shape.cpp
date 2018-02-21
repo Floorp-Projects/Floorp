@@ -94,7 +94,7 @@ void
 Shape::insertIntoDictionary(GCPtrShape* dictp)
 {
     // Don't assert inDictionaryMode() here because we may be called from
-    // JSObject::toDictionaryMode via JSObject::newDictionaryShape.
+    // NativeObject::toDictionaryMode via Shape::initDictionaryShape.
     MOZ_ASSERT(inDictionary());
     MOZ_ASSERT(!listp);
 
@@ -1314,12 +1314,6 @@ NativeObject::replaceWithNewEquivalentShape(JSContext* cx, HandleNativeObject ob
 }
 
 /* static */ bool
-NativeObject::shadowingShapeChange(JSContext* cx, HandleNativeObject obj, const Shape& shape)
-{
-    return generateOwnShape(cx, obj);
-}
-
-/* static */ bool
 JSObject::setFlags(JSContext* cx, HandleObject obj, BaseShape::Flag flags,
                    GenerateShape generateShape)
 {
@@ -1359,9 +1353,12 @@ JSObject::setFlags(JSContext* cx, HandleObject obj, BaseShape::Flag flags,
 /* static */ bool
 NativeObject::clearFlag(JSContext* cx, HandleNativeObject obj, BaseShape::Flag flag)
 {
-    MOZ_ASSERT(obj->inDictionaryMode());
-
     MOZ_ASSERT(obj->lastProperty()->getObjectFlags() & flag);
+
+    if (!obj->inDictionaryMode()) {
+        if (!toDictionaryMode(cx, obj))
+            return false;
+    }
 
     StackBaseShape base(obj->lastProperty());
     base.flags &= ~flag;
