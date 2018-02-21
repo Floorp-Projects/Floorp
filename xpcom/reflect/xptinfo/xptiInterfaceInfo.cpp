@@ -251,16 +251,6 @@ xptiInterfaceEntry::GetConstant(uint16_t index, JS::MutableHandleValue constant,
     v.setUndefined();
 
     switch (c.type.prefix.flags) {
-      case nsXPTType::T_I8:
-      {
-        v.setInt32(c.value.i8);
-        break;
-      }
-      case nsXPTType::T_U8:
-      {
-        v.setInt32(c.value.ui8);
-        break;
-      }
       case nsXPTType::T_I16:
       {
         v.setInt32(c.value.i16);
@@ -283,9 +273,7 @@ xptiInterfaceEntry::GetConstant(uint16_t index, JS::MutableHandleValue constant,
       }
       default:
       {
-#ifdef DEBUG
-        NS_ERROR("Non-numeric constant found in interface.");
-#endif
+        MOZ_ASSERT(false, "Invalid constant type found in interface");
       }
     }
 
