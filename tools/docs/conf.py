@@ -46,6 +46,7 @@ extensions = [
 # tree-wide (the default) will not work currently.
 js_source_path = [
     'browser/components/extensions',
+    'testing/marionette',
     'toolkit/components/extensions',
     'toolkit/mozapps/extensions',
 ]
