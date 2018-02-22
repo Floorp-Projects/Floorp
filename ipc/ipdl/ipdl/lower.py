@@ -4823,14 +4823,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     def makeMessage(self, md, errfn, fromActor=None):
         msgvar = self.msgvar
         routingId = self.protocol.routingId(fromActor)
-        this = None
+        this = ExprVar.THIS
         if md.decl.type.isDtor():  this = md.actorDecl().var()
 
         stmts = ([ StmtDecl(Decl(Type('IPC::Message', ptr=1), msgvar.name),
                             init=ExprCall(ExprVar(md.pqMsgCtorFunc()),
                                           args=[ routingId ])) ]
                  + [ Whitespace.NL ]
-                 + [ self.checkedWrite(p.ipdltype, p.var(), msgvar, sentinelKey=p.name, this=this)
+                 + [ _ParamTraits.checkedWrite(p.ipdltype, p.var(), msgvar,
+                                               sentinelKey=p.name, actor=this)
                      for p in md.params ]
                  + [ Whitespace.NL ]
                  + self.setMessageFlags(md, msgvar))
@@ -4888,11 +4889,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                 StmtDecl(Decl(Type('IPC::Message', ptr=1), self.replyvar.name),
                                          init=ExprCall(ExprVar(md.pqReplyCtorFunc()),
                                                        args=[ routingId ])) ]
-                            + [ self.checkedWrite(None, resolve, self.replyvar,
-                                                  sentinelKey=resolve.name) ]
-                            + [ self.checkedWrite(r.ipdltype, r.var(), self.replyvar,
-                                                  sentinelKey=r.name)
-                                 for r in md.returns ])
+                            + [ _ParamTraits.checkedWrite(None, resolve, self.replyvar,
+                                                          sentinelKey=resolve.name, actor=selfvar) ]
+                            + [ _ParamTraits.checkedWrite(r.ipdltype, r.var(), self.replyvar,
+                                                          sentinelKey=r.name, actor=selfvar)
+                                for r in md.returns ])
         resolverfn.addstmts(sendmsg)
 
         makeresolver = [ Whitespace.NL,
@@ -4919,7 +4920,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             [ StmtExpr(ExprAssn(
                 replyvar, ExprCall(ExprVar(md.pqReplyCtorFunc()), args=[ routingId ]))),
               Whitespace.NL ]
-            + [ self.checkedWrite(r.ipdltype, r.var(), replyvar, sentinelKey=r.name)
+            + [ _ParamTraits.checkedWrite(r.ipdltype, r.var(), replyvar,
+                                          sentinelKey=r.name, actor=ExprVar.THIS)
                 for r in md.returns ]
             + self.setMessageFlags(md, replyvar)
             + [ self.logMessage(md, replyvar, 'Sending reply ') ])
@@ -4950,12 +4952,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                       for p in params ]
             + [ Whitespace.NL ]
             #  checked Read(&(varCopy), &(msgverify__), &(msgverifyIter__))
-            + [ self.checkedRead(p.ipdltype,
-                                 ExprAddrOf(ExprVar(p.var().name + 'Copy')),
-                                 msgexpr, ExprAddrOf(itervar),
-                                 errfn, p.bareType(side).name,
-                                 sentinelKey=p.name,
-                                 errfnSentinel=errfnSentinel())
+            + [ _ParamTraits.checkedRead(p.ipdltype,
+                                         ExprAddrOf(ExprVar(p.var().name + 'Copy')),
+                                         msgexpr, ExprAddrOf(itervar),
+                                         errfn, p.bareType(side).name,
+                                         sentinelKey=p.name,
+                                         errfnSentinel=errfnSentinel(),
+                                         actor=ExprVar.THIS)
                 for p in params ]
             + [ self.endRead(msgvar, itervar) ]
             # Move the message back to its source before sending.
@@ -4997,10 +5000,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             handlevar = self.handlevar
             handletype = Type('ActorHandle')
             decls = [ StmtDecl(Decl(handletype, handlevar.name)) ]
-            reads = [ self.checkedRead(None, ExprAddrOf(handlevar), msgexpr,
-                                       ExprAddrOf(self.itervar),
-                                       errfn, "'%s'" % handletype.name,
-                                       sentinelKey='actor', errfnSentinel=errfnSent) ]
+            reads = [ _ParamTraits.checkedRead(None, ExprAddrOf(handlevar), msgexpr,
+                                               ExprAddrOf(self.itervar),
+                                               errfn, "'%s'" % handletype.name,
+                                               sentinelKey='actor', errfnSentinel=errfnSent,
+                                               actor=ExprVar.THIS) ]
             start = 1
 
         stmts.extend((
@@ -5009,10 +5013,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + decls + [ StmtDecl(Decl(p.bareType(side), p.var().name))
                       for p in md.params ]
             + [ Whitespace.NL ]
-            + reads + [ self.checkedRead(p.ipdltype, ExprAddrOf(p.var()),
-                                         msgexpr, ExprAddrOf(itervar),
-                                         errfn, "'%s'" % p.bareType(side).name,
-                                         sentinelKey=p.name, errfnSentinel=errfnSent)
+            + reads + [ _ParamTraits.checkedRead(p.ipdltype, ExprAddrOf(p.var()),
+                                                 msgexpr, ExprAddrOf(itervar),
+                                                 errfn, "'%s'" % p.bareType(side).name,
+                                                 sentinelKey=p.name, errfnSentinel=errfnSent,
+                                                 actor=ExprVar.THIS)
                         for p in md.params[start:] ]
             + [ self.endRead(msgvar, itervar) ]))
 
@@ -5026,15 +5031,17 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         resolve = ExprVar('resolve__')
         reason = ExprVar('reason__')
         desresolve = [ StmtDecl(Decl(Type.BOOL, resolve.name)),
-                       self.checkedRead(None, ExprAddrOf(resolve), msgexpr,
-                                        ExprAddrOf(itervar),
-                                        errfn, "'%s'" % resolve.name,
-                                        sentinelKey=resolve.name, errfnSentinel=errfnSent) ]
+                       _ParamTraits.checkedRead(None, ExprAddrOf(resolve), msgexpr,
+                                                ExprAddrOf(itervar),
+                                                errfn, "'%s'" % resolve.name,
+                                                sentinelKey=resolve.name, errfnSentinel=errfnSent,
+                                                actor=ExprVar.THIS) ]
         desrej = [ StmtDecl(Decl(_ResponseRejectReason.Type(), reason.name)),
-                   self.checkedRead(None, ExprAddrOf(reason), msgexpr,
-                                    ExprAddrOf(itervar),
-                                    errfn, "'%s'" % reason.name,
-                                    sentinelKey=reason.name, errfnSentinel=errfnSent),
+                   _ParamTraits.checkedRead(None, ExprAddrOf(reason), msgexpr,
+                                            ExprAddrOf(itervar),
+                                            errfn, "'%s'" % reason.name,
+                                            sentinelKey=reason.name, errfnSentinel=errfnSent,
+                                            actor=ExprVar.THIS),
                    self.endRead(msgvar, itervar) ]
         prologue = ([
             self.logMessage(md, msgexpr, 'Received ',
@@ -5057,20 +5064,22 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             handlevar = self.handlevar
             handletype = Type('ActorHandle')
             decls = [ StmtDecl(Decl(handletype, handlevar.name)) ]
-            reads = [ self.checkedRead(None, ExprAddrOf(handlevar), msgexpr,
-                                       ExprAddrOf(itervar),
-                                       errfn, "'%s'" % handletype.name,
-                                       sentinelKey='actor', errfnSentinel=errfnSent) ]
+            reads = [ _ParamTraits.checkedRead(None, ExprAddrOf(handlevar), msgexpr,
+                                               ExprAddrOf(itervar),
+                                               errfn, "'%s'" % handletype.name,
+                                               sentinelKey='actor', errfnSentinel=errfnSent,
+                                               actor=ExprVar.THIS) ]
             start = 1
 
         stmts = (
             decls + [ StmtDecl(Decl(p.bareType(side), p.var().name))
                       for p in md.returns ]
             + [ Whitespace.NL ]
-            + reads + [ self.checkedRead(p.ipdltype, ExprAddrOf(p.var()),
-                                         msgexpr, ExprAddrOf(itervar),
-                                         errfn, "'%s'" % p.bareType(side).name,
-                                         sentinelKey=p.name, errfnSentinel=errfnSent)
+            + reads + [ _ParamTraits.checkedRead(p.ipdltype, ExprAddrOf(p.var()),
+                                                 msgexpr, ExprAddrOf(itervar),
+                                                 errfn, "'%s'" % p.bareType(side).name,
+                                                 sentinelKey=p.name, errfnSentinel=errfnSent,
+                                                 actor=ExprVar.THIS)
                         for p in md.returns[start:] ]
             + [ self.endRead(msgvar, itervar) ])
 
@@ -5094,11 +5103,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                        initargs= [ self.replyvar ]) ]
             + declstmts
             + [ Whitespace.NL ]
-            + [ self.checkedRead(r.ipdltype, r.var(),
-                                 ExprAddrOf(self.replyvar),
-                                 ExprAddrOf(self.itervar),
-                                 errfn, "'%s'" % r.bareType(side).name,
-                                 sentinelKey=r.name, errfnSentinel=errfnSentinel)
+            + [ _ParamTraits.checkedRead(r.ipdltype, r.var(),
+                                         ExprAddrOf(self.replyvar),
+                                         ExprAddrOf(self.itervar),
+                                         errfn, "'%s'" % r.bareType(side).name,
+                                         sentinelKey=r.name, errfnSentinel=errfnSentinel,
+                                         actor=ExprVar.THIS)
                 for r in md.returns ]
             + [ self.endRead(self.replyvar, itervar) ])
 
