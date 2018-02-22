@@ -143,7 +143,6 @@ add_task(async function test_aggregation() {
   const SCALAR_FULL_NAME = "telemetry.cheattest.dynamic.test_aggregation";
   Services.telemetry.scalarAdd(SCALAR_FULL_NAME, 1);
 
-  let processCreated = TestUtils.topicObserved(CONTENT_CREATED);
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank", forceNewProcess: true },
                                     async function(browser) {
       // Accumulate from the content process into both dynamic scalars.
