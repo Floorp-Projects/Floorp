@@ -470,11 +470,11 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       }
     }
     aLists.BorderBackground()->AppendToTop(
-        MakeDisplayItem<nsDisplayCanvasBackgroundColor>(aBuilder, this));
+        new (aBuilder) nsDisplayCanvasBackgroundColor(aBuilder, this));
 
     if (isThemed) {
       aLists.BorderBackground()->AppendToTop(
-        MakeDisplayItem<nsDisplayCanvasThemedBackground>(aBuilder, this));
+        new (aBuilder) nsDisplayCanvasThemedBackground(aBuilder, this));
       return;
     }
 
@@ -528,14 +528,14 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         {
           DisplayListClipState::AutoSaveRestore bgImageClip(aBuilder);
           bgImageClip.Clear();
-          bgItem = MakeDisplayItem<nsDisplayCanvasBackgroundImage>(aBuilder, bgData);
+          bgItem = new (aBuilder) nsDisplayCanvasBackgroundImage(bgData);
           bgItem->SetDependentFrame(aBuilder, dependentFrame);
         }
         thisItemList.AppendToTop(
           nsDisplayFixedPosition::CreateForFixedBackground(aBuilder, this, bgItem, i));
 
       } else {
-        nsDisplayCanvasBackgroundImage* bgItem = MakeDisplayItem<nsDisplayCanvasBackgroundImage>(aBuilder, bgData);
+        nsDisplayCanvasBackgroundImage* bgItem = new (aBuilder) nsDisplayCanvasBackgroundImage(bgData);
         bgItem->SetDependentFrame(aBuilder, dependentFrame);
         thisItemList.AppendToTop(bgItem);
       }
@@ -543,9 +543,9 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       if (layers.mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
         DisplayListClipState::AutoSaveRestore blendClip(aBuilder);
         thisItemList.AppendToTop(
-          MakeDisplayItem<nsDisplayBlendMode>(aBuilder, this, &thisItemList,
-                                              layers.mLayers[i].mBlendMode,
-                                              thisItemASR, i + 1));
+          new (aBuilder) nsDisplayBlendMode(aBuilder, this, &thisItemList,
+                                            layers.mLayers[i].mBlendMode,
+                                            thisItemASR, i + 1));
       }
       aLists.BorderBackground()->AppendToTop(&thisItemList);
     }
@@ -591,8 +591,8 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!StyleVisibility()->IsVisible())
     return;
 
-  aLists.Outlines()->AppendToTop(
-    MakeDisplayItem<nsDisplayCanvasFocus>(aBuilder, this));
+  aLists.Outlines()->AppendToTop(new (aBuilder)
+    nsDisplayCanvasFocus(aBuilder, this));
 }
 
 void
