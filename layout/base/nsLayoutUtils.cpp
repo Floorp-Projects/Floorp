@@ -115,11 +115,11 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/EventStateManager.h"
 #include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/WheelHandlingHelper.h" // for WheelHandlingUtils
 #include "RegionBuilder.h"
 #include "SVGViewportElement.h"
 #include "DisplayItemClip.h"
@@ -9403,10 +9403,10 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
       LayoutDeviceIntSize::FromAppUnitsRounded(pageScrollAmount, presContext->AppUnitsPerDevPixel());
     metadata.SetPageScrollAmount(pageScrollAmountInDevPixels);
 
-    if (!aScrollFrame->GetParent() ||
-        EventStateManager::CanVerticallyScrollFrameWithWheel(aScrollFrame->GetParent()))
-    {
-      metadata.SetAllowVerticalScrollWithWheel(true);
+    if (aScrollFrame->GetParent()) {
+      metadata.SetDisregardedDirection(
+        WheelHandlingUtils::GetDisregardedWheelScrollDirection(
+          aScrollFrame->GetParent()));
     }
 
     metadata.SetUsesContainerScrolling(scrollableFrame->UsesContainerScrolling());

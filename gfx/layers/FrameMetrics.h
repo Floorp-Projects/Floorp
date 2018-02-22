@@ -7,7 +7,7 @@
 #ifndef GFX_FRAMEMETRICS_H
 #define GFX_FRAMEMETRICS_H
 
-#include <stdint.h>                     // for uint32_t, uint64_t
+#include <stdint.h>                     // for uint8_t, uint32_t, uint64_t
 #include "Units.h"                      // for CSSRect, CSSPixel, etc
 #include "mozilla/DefineEnum.h"         // for MOZ_DEFINE_ENUM
 #include "mozilla/HashFunctions.h"      // for HashGeneric
@@ -16,6 +16,7 @@
 #include "mozilla/gfx/Rect.h"           // for RoundedIn
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
 #include "mozilla/gfx/Logging.h"        // for Log
+#include "mozilla/layers/LayersTypes.h" // for ScrollDirection
 #include "mozilla/StaticPtr.h"          // for StaticAutoPtr
 #include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "nsString.h"
@@ -819,7 +820,6 @@ public:
     , mPageScrollAmount(0, 0)
     , mScrollClip()
     , mHasScrollgrab(false)
-    , mAllowVerticalScrollWithWheel(false)
     , mIsLayersIdRoot(false)
     , mUsesContainerScrolling(false)
     , mForceDisableApz(false)
@@ -837,10 +837,10 @@ public:
            mPageScrollAmount == aOther.mPageScrollAmount &&
            mScrollClip == aOther.mScrollClip &&
            mHasScrollgrab == aOther.mHasScrollgrab &&
-           mAllowVerticalScrollWithWheel == aOther.mAllowVerticalScrollWithWheel &&
            mIsLayersIdRoot == aOther.mIsLayersIdRoot &&
            mUsesContainerScrolling == aOther.mUsesContainerScrolling &&
            mForceDisableApz == aOther.mForceDisableApz &&
+           mDisregardedDirection == aOther.mDisregardedDirection &&
            mOverscrollBehavior == aOther.mOverscrollBehavior;
   }
 
@@ -926,12 +926,6 @@ public:
   bool GetHasScrollgrab() const {
     return mHasScrollgrab;
   }
-  bool AllowVerticalScrollWithWheel() const {
-    return mAllowVerticalScrollWithWheel;
-  }
-  void SetAllowVerticalScrollWithWheel(bool aValue) {
-    mAllowVerticalScrollWithWheel = aValue;
-  }
   void SetIsLayersIdRoot(bool aValue) {
     mIsLayersIdRoot = aValue;
   }
@@ -949,6 +943,16 @@ public:
   }
   bool IsApzForceDisabled() const {
     return mForceDisableApz;
+  }
+
+  // For more details about the concept of a disregarded direction, refer to the
+  // code which defines mDisregardedDirection.
+  Maybe<ScrollDirection> GetDisregardedDirection() const {
+    return mDisregardedDirection;
+  }
+  void
+  SetDisregardedDirection(const Maybe<ScrollDirection>& aValue) {
+    mDisregardedDirection = aValue;
   }
 
   void SetOverscrollBehavior(const OverscrollBehaviorInfo& aOverscrollBehavior) {
@@ -992,9 +996,6 @@ private:
   // Whether or not this frame is for an element marked 'scrollgrab'.
   bool mHasScrollgrab:1;
 
-  // Whether or not the frame can be vertically scrolled with a mouse wheel.
-  bool mAllowVerticalScrollWithWheel:1;
-
   // Whether these framemetrics are for the root scroll frame (root element if
   // we don't have a root scroll frame) for its layers id.
   bool mIsLayersIdRoot:1;
@@ -1007,6 +1008,13 @@ private:
   // scrollframe.
   bool mForceDisableApz:1;
 
+  // The disregarded direction means the direction which is disregarded anyway,
+  // even if the scroll frame overflows in that direction and the direction is
+  // specified as scrollable. This could happen in some scenarios, for instance,
+  // a single-line text control frame should disregard wheel scroll in
+  // its block-flow direction even if it overflows in that direction.
+  Maybe<ScrollDirection> mDisregardedDirection;
+
   // The overscroll behavior for this scroll frame.
   OverscrollBehaviorInfo mOverscrollBehavior;
 
@@ -1014,9 +1022,10 @@ private:
   //
   // When adding new fields to ScrollMetadata, the following places should be
   // updated to include them (as needed):
-  //    ScrollMetadata::operator ==
-  //    AsyncPanZoomController::NotifyLayersUpdated
-  //    The ParamTraits specialization in GfxMessageUtils.h
+  //    1. ScrollMetadata::operator ==
+  //    2. AsyncPanZoomController::NotifyLayersUpdated
+  //    3. The ParamTraits specialization in GfxMessageUtils.h and/or
+  //       LayersMessageUtils.h
   //
   // Please add new fields above this comment.
 };
