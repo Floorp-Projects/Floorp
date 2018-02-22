@@ -629,6 +629,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     }
 
     await this._transitionViews(prevPanelView.node, viewNode, false, anchor);
+    this._viewShown(nextPanelView);
   }
 
   /**
@@ -650,7 +651,9 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     prevPanelView.captureKnownSize();
     await this._transitionViews(prevPanelView.node, nextPanelView.node, true);
 
-    this.openViews.pop();
+    this._closeLatestView();
+
+    this._viewShown(nextPanelView);
   }
 
   /**
@@ -675,6 +678,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     await this._cleanupTransitionPhase();
     this.hideAllViewsExcept(nextPanelView);
 
+    this._viewShown(nextPanelView);
     return true;
   }
 
@@ -727,13 +731,35 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     // Check if the event requested cancellation but the panel is still open.
     if (canceled) {
       // Handlers for ViewShowing can't know if a different handler requested
-      // cancellation, so we dispatch an event to give a chance to clean up.
-      panelView.dispatchCustomEvent("ViewHiding");
-      this.openViews.pop();
+      // cancellation, so this will dispatch a ViewHiding event to give a chance
+      // to clean up.
+      this._closeLatestView();
       return false;
     }
 
     return true;
+  }
+
+  /**
+   * Raises the ViewShown event if the specified view is still open.
+   */
+  _viewShown(panelView) {
+    if (panelView.node.panelMultiView == this.node) {
+      panelView.dispatchCustomEvent("ViewShown");
+    }
+  }
+
+  /**
+   * Closes the most recent PanelView and raises the ViewHiding event.
+   *
+   * @note The ViewHiding event is not cancelable and should probably be renamed
+   *       to ViewHidden or ViewClosed instead, see bug 1438507.
+   */
+  _closeLatestView() {
+    let panelView = this.openViews.pop();
+    panelView.clearNavigation();
+    panelView.dispatchCustomEvent("ViewHiding");
+    panelView.node.panelMultiView = null;
   }
 
   /**
@@ -924,15 +950,12 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       this._transitionDetails = null;
 
     let nextPanelView = PanelView.forNode(viewNode);
-    let prevPanelView = PanelView.forNode(previousViewNode);
 
     // Do the things we _always_ need to do whenever the transition ends or is
     // interrupted.
     this.hideAllViewsExcept(nextPanelView);
     previousViewNode.removeAttribute("in-transition");
     viewNode.removeAttribute("in-transition");
-    if (reverse)
-      prevPanelView.clearNavigation();
 
     if (anchor)
       anchor.removeAttribute("open");
@@ -1067,13 +1090,14 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         // mid-transition, which disrupts our state:
         this._transitioning = false;
         this.node.removeAttribute("panelopen");
-        // Raise the ViewHiding event for the current view.
         this._cleanupTransitionPhase();
         this.hideAllViewsExcept(null);
         this.window.removeEventListener("keydown", this);
         this._panel.removeEventListener("mousemove", this);
-        this.openViews.forEach(panelView => panelView.clearNavigation());
-        this.openViews = [];
+        // Raise ViewHiding events for open views in reverse order.
+        while (this.openViews.length) {
+          this._closeLatestView();
+        }
 
         // Clear the main view size caches. The dimensions could be different
         // when the popup is opened again, e.g. through touch mode sizing.
@@ -1112,10 +1136,8 @@ this.PanelView = class extends this.AssociatedToNode {
       if (!this.node.hasAttribute("current")) {
         this.node.setAttribute("current", true);
         this.descriptionHeightWorkaround();
-        this.dispatchCustomEvent("ViewShown");
       }
-    } else if (this.node.hasAttribute("current")) {
-      this.dispatchCustomEvent("ViewHiding");
+    } else {
       this.node.removeAttribute("current");
     }
   }
