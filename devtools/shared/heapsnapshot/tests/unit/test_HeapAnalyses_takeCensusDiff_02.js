@@ -26,22 +26,22 @@ const BREAKDOWN = {
   },
 };
 
-add_task(function* () {
+add_task(async function () {
   const firstSnapshotFilePath = saveNewHeapSnapshot();
   const secondSnapshotFilePath = saveNewHeapSnapshot();
 
   const client = new HeapAnalysesClient();
-  yield client.readHeapSnapshot(firstSnapshotFilePath);
-  yield client.readHeapSnapshot(secondSnapshotFilePath);
+  await client.readHeapSnapshot(firstSnapshotFilePath);
+  await client.readHeapSnapshot(secondSnapshotFilePath);
 
   ok(true, "Should have read both heap snapshot files");
 
-  const { delta } = yield client.takeCensusDiff(firstSnapshotFilePath,
+  const { delta } = await client.takeCensusDiff(firstSnapshotFilePath,
                                                 secondSnapshotFilePath,
                                                 { breakdown: BREAKDOWN });
 
   const { delta: deltaTreeNode }
-    = yield client.takeCensusDiff(firstSnapshotFilePath,
+    = await client.takeCensusDiff(firstSnapshotFilePath,
                                  secondSnapshotFilePath,
                                  { breakdown: BREAKDOWN },
                                  { asInvertedTreeNode: true });

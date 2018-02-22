@@ -7,9 +7,9 @@ function run_test() {
   initTestDebuggerServer();
   add_test_bulk_actor();
 
-  add_task(function* () {
-    yield test_string_error(socket_transport, json_reply);
-    yield test_string_error(local_transport, json_reply);
+  add_task(async function () {
+    await test_string_error(socket_transport, json_reply);
+    await test_string_error(local_transport, json_reply);
     DebuggerServer.destroy();
   });
 
@@ -44,8 +44,8 @@ function add_test_bulk_actor() {
 
 /** * Tests ***/
 
-var test_string_error = Task.async(function* (transportFactory, onReady) {
-  let transport = yield transportFactory();
+var test_string_error = async function (transportFactory, onReady) {
+  let transport = await transportFactory();
 
   let client = new DebuggerClient(transport);
   return client.connect().then(([app, traits]) => {
@@ -57,7 +57,7 @@ var test_string_error = Task.async(function* (transportFactory, onReady) {
     client.close();
     transport.close();
   });
-});
+};
 
 /** * Reply Types ***/
 

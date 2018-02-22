@@ -4,7 +4,6 @@
 "use strict";
 
 const { memorySpec } = require("devtools/shared/specs/memory");
-const { Task } = require("devtools/shared/task");
 const protocol = require("devtools/shared/protocol");
 
 loader.lazyRequireGetter(this, "FileUtils",
@@ -41,16 +40,16 @@ const MemoryFront = protocol.FrontClassWithSpec(memorySpec, {
    *
    * @returns Promise<String>
    */
-  saveHeapSnapshot: protocol.custom(Task.async(function* (options = {}) {
-    const snapshotId = yield this._saveHeapSnapshotImpl(options.boundaries);
+  saveHeapSnapshot: protocol.custom(async function (options = {}) {
+    const snapshotId = await this._saveHeapSnapshotImpl(options.boundaries);
 
     if (!options.forceCopy &&
-        (yield HeapSnapshotFileUtils.haveHeapSnapshotTempFile(snapshotId))) {
+        (await HeapSnapshotFileUtils.haveHeapSnapshotTempFile(snapshotId))) {
       return HeapSnapshotFileUtils.getHeapSnapshotTempFilePath(snapshotId);
     }
 
-    return yield this.transferHeapSnapshot(snapshotId);
-  }), {
+    return this.transferHeapSnapshot(snapshotId);
+  }, {
     impl: "_saveHeapSnapshotImpl"
   }),
 
@@ -80,11 +79,11 @@ const MemoryFront = protocol.FrontClassWithSpec(memorySpec, {
       const outFile = new FileUtils.File(outFilePath);
 
       const outFileStream = FileUtils.openSafeFileOutputStream(outFile);
-      request.on("bulk-reply", Task.async(function* ({ copyTo }) {
-        yield copyTo(outFileStream);
+      request.on("bulk-reply", async function ({ copyTo }) {
+        await copyTo(outFileStream);
         FileUtils.closeSafeFileOutputStream(outFileStream);
         resolve(outFilePath);
-      }));
+      });
     });
   })
 });

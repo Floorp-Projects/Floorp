@@ -29,22 +29,22 @@ let expectedConsoleAPICalls = [
     },
 ];
 
-window.onload = Task.async(function*() {
-  let {state,response} = yield new Promise(resolve => {
+window.onload = async function () {
+  let {state,response} = await new Promise(resolve => {
     attachConsoleToWorker(["ConsoleAPI"], (state, response) => {
       resolve({state,response})
     });
   });
 
-  yield testCachedMessages(state);
-  yield testConsoleAPI(state);
+  await testCachedMessages(state);
+  await testConsoleAPI(state);
 
   closeDebugger(state, function() {
     SimpleTest.finish();
   });
-});
+};
 
-let testCachedMessages = Task.async(function*(state) {
+let testCachedMessages = async function (state) {
   info("testCachedMessages entered");
   return new Promise(resolve => {
     let onCachedConsoleAPI = (response) => {
@@ -56,9 +56,9 @@ let testCachedMessages = Task.async(function*(state) {
     };
     state.client.getCachedMessages(["ConsoleAPI"], onCachedConsoleAPI);
   })
-});
+};
 
-let testConsoleAPI = Task.async(function*(state) {
+let testConsoleAPI = async function (state) {
   info("testConsoleAPI entered");
   return new Promise(resolve => {
     let onConsoleAPICall = (type, packet) => {
@@ -75,7 +75,7 @@ let testConsoleAPI = Task.async(function*(state) {
     state.client.evaluateJS("console.log('Log was requested from worker')",
       () => { });
   });
-});
+};
 
 </script>
 </body>

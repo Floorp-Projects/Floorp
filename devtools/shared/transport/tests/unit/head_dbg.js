@@ -14,7 +14,6 @@ const { require } =
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
-const { Task } = require("devtools/shared/task");
 
 const Services = require("Services");
 
@@ -130,7 +129,7 @@ function writeTestTempFile(fileName, content) {
 
 /** * Transport Factories ***/
 
-var socket_transport = Task.async(function* () {
+var socket_transport = async function () {
   if (!DebuggerServer.listeningSockets) {
     let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
     let authenticator = new AuthenticatorType.Server();
@@ -140,12 +139,12 @@ var socket_transport = Task.async(function* () {
     let debuggerListener = DebuggerServer.createListener();
     debuggerListener.portOrPath = -1;
     debuggerListener.authenticator = authenticator;
-    yield debuggerListener.open();
+    await debuggerListener.open();
   }
   let port = DebuggerServer._listeners[0].port;
   info("Debugger server port is " + port);
   return DebuggerClient.socketConnect({ host: "127.0.0.1", port });
-});
+};
 
 function local_transport() {
   return promise.resolve(DebuggerServer.connectPipe());

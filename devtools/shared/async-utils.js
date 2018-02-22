@@ -13,8 +13,6 @@
  * See Task documentation at https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Task.jsm.
  */
 
-var {Task} = require("devtools/shared/task");
-
 /**
  * Adds an event listener to the given element, and then removes its event
  * listener once the event is called, returning the event object as a promise.

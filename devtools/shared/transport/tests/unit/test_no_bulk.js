@@ -8,9 +8,9 @@ function run_test() {
   // Allow incoming connections.
   DebuggerServer.init();
 
-  add_task(function* () {
-    yield test_bulk_send_error(socket_transport);
-    yield test_bulk_send_error(local_transport);
+  add_task(async function () {
+    await test_bulk_send_error(socket_transport);
+    await test_bulk_send_error(local_transport);
     DebuggerServer.destroy();
   });
 
@@ -19,8 +19,8 @@ function run_test() {
 
 /** * Tests ***/
 
-var test_bulk_send_error = Task.async(function* (transportFactory) {
-  let transport = yield transportFactory();
+var test_bulk_send_error = async function (transportFactory) {
+  let transport = await transportFactory();
 
   let client = new DebuggerClient(transport);
   return client.connect().then(([app, traits]) => {
@@ -33,4 +33,4 @@ var test_bulk_send_error = Task.async(function* (transportFactory) {
       Assert.ok(true);
     }
   });
-});
+};

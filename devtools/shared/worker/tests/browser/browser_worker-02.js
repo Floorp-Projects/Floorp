@@ -9,7 +9,7 @@ const { DevToolsWorker } = require("devtools/shared/worker/worker");
 const WORKER_URL =
   "resource://devtools/client/shared/widgets/GraphsWorker.js";
 
-add_task(function* () {
+add_task(async function () {
   try {
     new DevToolsWorker("resource://i/dont/exist.js");
     ok(false, "Creating a DevToolsWorker with an invalid URL throws");
@@ -21,7 +21,7 @@ add_task(function* () {
   try {
     // plotTimestampsGraph requires timestamp, interval an duration props on the object
     // passed in so there should be an error thrown in the worker
-    yield worker.performTask("plotTimestampsGraph", {});
+    await worker.performTask("plotTimestampsGraph", {});
     ok(false,
        "DevToolsWorker returns a rejected promise when an error occurs in the worker");
   } catch (e) {
@@ -30,7 +30,7 @@ add_task(function* () {
   }
 
   try {
-    yield worker.performTask("not a real task");
+    await worker.performTask("not a real task");
     ok(false, "DevToolsWorker returns a rejected promise when task does not exist");
   } catch (e) {
     ok(true, "DevToolsWorker returns a rejected promise when task does not exist");
@@ -38,7 +38,7 @@ add_task(function* () {
 
   worker.destroy();
   try {
-    yield worker.performTask("plotTimestampsGraph", {
+    await worker.performTask("plotTimestampsGraph", {
       timestamps: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
       interval: 1,
       duration: 1

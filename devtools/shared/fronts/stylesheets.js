@@ -10,7 +10,6 @@ const {
   styleSheetsSpec
 } = require("devtools/shared/specs/stylesheets");
 const promise = require("promise");
-const { Task } = require("devtools/shared/task");
 
 loader.lazyRequireGetter(this, "getIndentationFromPrefs",
   "devtools/shared/indentation", true);
@@ -130,14 +129,14 @@ const StyleSheetFront = FrontClassWithSpec(styleSheetSpec, {
       return promise.resolve(indentWithTabs ? "\t" : " ".repeat(indentUnit));
     }
 
-    return Task.spawn(function* () {
-      let longStr = yield this.getText();
-      let source = yield longStr.string();
+    return (async function () {
+      let longStr = await this.getText();
+      let source = await longStr.string();
 
       let {indentUnit, indentWithTabs} = getIndentationFromString(source);
 
       return indentWithTabs ? "\t" : " ".repeat(indentUnit);
-    }.bind(this));
+    }.bind(this))();
   }
 });
 
