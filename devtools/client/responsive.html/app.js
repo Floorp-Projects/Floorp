@@ -19,7 +19,6 @@ const {
   updatePreferredDevices,
 } = require("./actions/devices");
 const { changeNetworkThrottling } = require("./actions/network-throttling");
-const { changeReloadCondition } = require("./actions/reload-conditions");
 const { takeScreenshot } = require("./actions/screenshot");
 const { changeTouchSimulation } = require("./actions/touch-simulation");
 const {
@@ -41,7 +40,6 @@ class App extends Component {
       dispatch: PropTypes.func.isRequired,
       displayPixelRatio: Types.pixelRatio.value.isRequired,
       networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
-      reloadConditions: PropTypes.shape(Types.reloadConditions).isRequired,
       screenshot: PropTypes.shape(Types.screenshot).isRequired,
       touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
       viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
@@ -55,7 +53,6 @@ class App extends Component {
     this.onChangeDevice = this.onChangeDevice.bind(this);
     this.onChangeNetworkThrottling = this.onChangeNetworkThrottling.bind(this);
     this.onChangePixelRatio = this.onChangePixelRatio.bind(this);
-    this.onChangeReloadCondition = this.onChangeReloadCondition.bind(this);
     this.onChangeTouchSimulation = this.onChangeTouchSimulation.bind(this);
     this.onContentResize = this.onContentResize.bind(this);
     this.onDeviceListUpdate = this.onDeviceListUpdate.bind(this);
@@ -105,10 +102,6 @@ class App extends Component {
       pixelRatio,
     }, "*");
     this.props.dispatch(changePixelRatio(0, pixelRatio));
-  }
-
-  onChangeReloadCondition(id, value) {
-    this.props.dispatch(changeReloadCondition(id, value));
   }
 
   onChangeTouchSimulation(enabled) {
@@ -172,7 +165,6 @@ class App extends Component {
       devices,
       displayPixelRatio,
       networkThrottling,
-      reloadConditions,
       screenshot,
       touchSimulation,
       viewports,
@@ -184,7 +176,6 @@ class App extends Component {
       onChangeDevice,
       onChangeNetworkThrottling,
       onChangePixelRatio,
-      onChangeReloadCondition,
       onChangeTouchSimulation,
       onContentResize,
       onDeviceListUpdate,
@@ -219,14 +210,12 @@ class App extends Component {
         devices,
         displayPixelRatio,
         networkThrottling,
-        reloadConditions,
         screenshot,
         selectedDevice,
         selectedPixelRatio,
         touchSimulation,
         onChangeNetworkThrottling,
         onChangePixelRatio,
-        onChangeReloadCondition,
         onChangeTouchSimulation,
         onExit,
         onScreenshot,

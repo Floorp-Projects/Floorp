@@ -72,7 +72,7 @@ class DeviceSelector extends PureComponent {
       return a.name.localeCompare(b.name);
     });
 
-    let selectClass = "viewport-device-selector toolbar-dropdown";
+    let selectClass = "viewport-device-selector";
     if (selectedDevice) {
       selectClass += " selected";
     }
@@ -80,7 +80,7 @@ class DeviceSelector extends PureComponent {
     let state = devices.listState;
     let listContent;
 
-    if (state == Types.loadableState.LOADED) {
+    if (state == Types.deviceListState.LOADED) {
       listContent = [
         dom.option({
           value: "",
@@ -100,14 +100,14 @@ class DeviceSelector extends PureComponent {
           value: OPEN_DEVICE_MODAL_VALUE,
           title: "",
         }, getStr("responsive.editDeviceList"))];
-    } else if (state == Types.loadableState.LOADING
-      || state == Types.loadableState.INITIALIZED) {
+    } else if (state == Types.deviceListState.LOADING
+      || state == Types.deviceListState.INITIALIZED) {
       listContent = [dom.option({
         value: "",
         title: "",
         disabled: true,
       }, getStr("responsive.deviceListLoading"))];
-    } else if (state == Types.loadableState.ERROR) {
+    } else if (state == Types.deviceListState.ERROR) {
       listContent = [dom.option({
         value: "",
         title: "",
@@ -121,7 +121,7 @@ class DeviceSelector extends PureComponent {
         value: selectedDevice,
         title: selectedDevice,
         onChange: this.onSelectChange,
-        disabled: (state !== Types.loadableState.LOADED),
+        disabled: (state !== Types.deviceListState.LOADED),
       },
       ...listContent
     );

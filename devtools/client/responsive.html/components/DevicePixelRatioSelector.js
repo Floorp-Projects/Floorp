@@ -92,8 +92,8 @@ class DevicePixelRatioSelector extends PureComponent {
     }
 
     let state = devices.listState;
-    let isDisabled = (state !== Types.loadableState.LOADED) || (selectedDevice !== "");
-    let selectorClass = "toolbar-dropdown";
+    let isDisabled = (state !== Types.deviceListState.LOADED) || (selectedDevice !== "");
+    let selectorClass = "";
     let title;
 
     if (isDisabled) {
@@ -113,7 +113,7 @@ class DevicePixelRatioSelector extends PureComponent {
 
     let listContent = PIXEL_RATIO_PRESET.map(createVisibleOption);
 
-    if (state == Types.loadableState.LOADED) {
+    if (state == Types.deviceListState.LOADED) {
       listContent = listContent.concat(hiddenOptions.map(createHiddenOption));
     }
 
