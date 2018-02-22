@@ -20,7 +20,6 @@ import android.graphics.drawable.TransitionDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
@@ -53,6 +52,7 @@ import org.mozilla.focus.customtabs.CustomTabConfig;
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
 import org.mozilla.focus.menu.browser.BrowserMenu;
 import org.mozilla.focus.menu.context.WebContextMenu;
+import org.mozilla.focus.observer.AverageLoadTimeObserver;
 import org.mozilla.focus.open.OpenWithFragment;
 import org.mozilla.focus.session.NullSession;
 import org.mozilla.focus.session.Session;
@@ -232,6 +232,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
         setBlockingEnabled(session.isBlockingEnabled());
 
+        session.getLoading().observe(this, new AverageLoadTimeObserver());
+
         session.getLoading().observe(this, new NonNullObserver<Boolean>() {
             @Override
             public void onValueChanged(@NonNull Boolean loading) {
@@ -240,10 +242,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                     progressView.setProgress(5);
                     progressView.setVisibility(View.VISIBLE);
-                    TelemetryWrapper.startLoad(SystemClock.elapsedRealtime());
                 } else {
                     if (progressView.getVisibility() == View.VISIBLE) {
-                        TelemetryWrapper.endLoad(SystemClock.elapsedRealtime());
                         // We start a transition only if a page was just loading before
                         // allowing to avoid issue #1179
                         backgroundTransitionGroup.startTransition(ANIMATION_DURATION);
