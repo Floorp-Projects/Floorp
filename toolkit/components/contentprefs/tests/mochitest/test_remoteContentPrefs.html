@@ -220,8 +220,7 @@
 
       for (let test of Object.getOwnPropertyNames(tests)) {
         addMessageListener(`testRemoteContentPrefs:${test}`, function(message) {
-          let mm = message.target.QueryInterface(Ci.nsIMessageSender);
-          testHandler(mm, test);
+          testHandler(message.target, test);
         });
       }
     }

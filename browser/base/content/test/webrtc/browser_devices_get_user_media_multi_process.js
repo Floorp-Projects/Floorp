@@ -42,10 +42,7 @@ var gTests = [
 
     // If we have reached the max process count already, increase it to ensure
     // our new tab can have its own content process.
-    var ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-                 .getService(Ci.nsIMessageBroadcaster);
-    ppmm.QueryInterface(Ci.nsIProcessScriptLoader);
-    let childCount = ppmm.childCount;
+    let childCount = Services.ppmm.childCount;
     let maxContentProcess = Services.prefs.getIntPref("dom.ipc.processCount");
     // The first check is because if we are on a branch where e10s-multi is
     // disabled, we want to keep testing e10s with a single content process.
@@ -146,10 +143,7 @@ var gTests = [
 
     // If we have reached the max process count already, increase it to ensure
     // our new tab can have its own content process.
-    var ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-                 .getService(Ci.nsIMessageBroadcaster);
-    ppmm.QueryInterface(Ci.nsIProcessScriptLoader);
-    let childCount = ppmm.childCount;
+    let childCount = Services.ppmm.childCount;
     let maxContentProcess = Services.prefs.getIntPref("dom.ipc.processCount");
     // The first check is because if we are on a branch where e10s-multi is
     // disabled, we want to keep testing e10s with a single content process.
@@ -255,10 +249,7 @@ var gTests = [
 
     // If we have reached the max process count already, increase it to ensure
     // our new tab can have its own content process.
-    var ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-                 .getService(Ci.nsIMessageBroadcaster);
-    ppmm.QueryInterface(Ci.nsIProcessScriptLoader);
-    let childCount = ppmm.childCount;
+    let childCount = Services.ppmm.childCount;
     let maxContentProcess = Services.prefs.getIntPref("dom.ipc.processCount");
     // The first check is because if we are on a branch where e10s-multi is
     // disabled, we want to keep testing e10s with a single content process.

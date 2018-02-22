@@ -43,9 +43,7 @@ var NotificationTracker = {
   _paths: {},
 
   init() {
-    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-               .getService(Ci.nsIMessageBroadcaster);
-    ppmm.initialProcessData.remoteAddonsNotificationPaths = this._paths;
+    Services.ppmm.initialProcessData.remoteAddonsNotificationPaths = this._paths;
   },
 
   add(path) {
@@ -57,9 +55,7 @@ var NotificationTracker = {
     count++;
     tracked._count = count;
 
-    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-               .getService(Ci.nsIMessageBroadcaster);
-    ppmm.broadcastAsyncMessage("Addons:ChangeNotification", {path, count});
+    Services.ppmm.broadcastAsyncMessage("Addons:ChangeNotification", {path, count});
   },
 
   remove(path) {
@@ -69,9 +65,7 @@ var NotificationTracker = {
     }
     tracked._count--;
 
-    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-               .getService(Ci.nsIMessageBroadcaster);
-    ppmm.broadcastAsyncMessage("Addons:ChangeNotification", {path, count: tracked._count});
+    Services.ppmm.broadcastAsyncMessage("Addons:ChangeNotification", {path, count: tracked._count});
   },
 };
 NotificationTracker.init();
@@ -98,9 +92,7 @@ function Interposition(name, base) {
 // add-on content policies when the child asks it to do so.
 var ContentPolicyParent = {
   init() {
-    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-               .getService(Ci.nsIMessageBroadcaster);
-    ppmm.addMessageListener("Addons:ContentPolicy:Run", this);
+    Services.ppmm.addMessageListener("Addons:ContentPolicy:Run", this);
 
     this._policies = new Map();
   },
@@ -188,10 +180,8 @@ CategoryManagerInterposition.methods.deleteCategoryEntry =
 // use it. This code is pretty specific to Adblock's usage.
 var AboutProtocolParent = {
   init() {
-    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-               .getService(Ci.nsIMessageBroadcaster);
-    ppmm.addMessageListener("Addons:AboutProtocol:GetURIFlags", this);
-    ppmm.addMessageListener("Addons:AboutProtocol:OpenChannel", this);
+    Services.ppmm.addMessageListener("Addons:AboutProtocol:GetURIFlags", this);
+    Services.ppmm.addMessageListener("Addons:AboutProtocol:OpenChannel", this);
     this._protocols = [];
   },
 
@@ -326,9 +316,7 @@ ComponentRegistrarInterposition.methods.unregisterFactory =
 // won't expect to get notified in this case.
 var ObserverParent = {
   init() {
-    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-               .getService(Ci.nsIMessageBroadcaster);
-    ppmm.addMessageListener("Addons:Observer:Run", this);
+    Services.ppmm.addMessageListener("Addons:Observer:Run", this);
   },
 
   addObserver(addon, observer, topic, ownsWeak) {
@@ -406,9 +394,7 @@ var EventTargetParent = {
     // or windows) to a dictionary from event types to listeners.
     this._listeners = new WeakMap();
 
-    let mm = Cc["@mozilla.org/globalmessagemanager;1"].
-      getService(Ci.nsIMessageListenerManager);
-    mm.addMessageListener("Addons:Event:Run", this);
+    Services.mm.addMessageListener("Addons:Event:Run", this);
   },
 
   // If target is not on the path from a <browser> element to the
@@ -1053,8 +1039,7 @@ RemoteWebNavigationInterposition.getters.sessionHistory = function(addon, target
 
 var RemoteAddonsParent = {
   init() {
-    let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
-    mm.addMessageListener("Addons:RegisterGlobal", this);
+    Services.mm.addMessageListener("Addons:RegisterGlobal", this);
 
     Services.ppmm.initialProcessData.remoteAddonsParentInitted = true;
 
