@@ -25,6 +25,9 @@ add_task(async function test_address_autofill_section() {
 });
 
 add_task(async function test_credit_card_autofill_section() {
+  if (!Services.prefs.getBoolPref("extensions.formautofill.creditCards.available")) {
+    return;
+  }
   let prefs = await openPreferencesViaOpenPreferencesAPI("privacy-credit-card-autofill", {leaveOpen: true});
   is(prefs.selectedPane, "panePrivacy", "Privacy pane is selected by default");
   let doc = gBrowser.contentDocument;
