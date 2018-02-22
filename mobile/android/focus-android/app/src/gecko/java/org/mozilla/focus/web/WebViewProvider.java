@@ -15,9 +15,9 @@ import android.view.View;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.session.Session;
-import org.mozilla.gecko.GeckoView;
-import org.mozilla.gecko.GeckoSession;
-import org.mozilla.gecko.GeckoSessionSettings;
+import org.mozilla.geckoview.GeckoView;
+import org.mozilla.geckoview.GeckoSession;
+import org.mozilla.geckoview.GeckoSessionSettings;
 
 /**
  * WebViewProvider implementation for creating a Gecko based implementation of IWebView.

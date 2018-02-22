@@ -40,8 +40,8 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 
 import org.mozilla.focus.R;
-import org.mozilla.gecko.GeckoSession;
-import org.mozilla.gecko.GeckoSession.PermissionDelegate.MediaSource;
+import org.mozilla.geckoview.GeckoSession;
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

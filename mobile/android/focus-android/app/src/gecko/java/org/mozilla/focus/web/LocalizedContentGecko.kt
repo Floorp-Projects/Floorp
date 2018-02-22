@@ -14,7 +14,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.locale.Locales
 import org.mozilla.focus.utils.HtmlLoader
 import org.mozilla.focus.utils.SupportUtils
-import org.mozilla.gecko.GeckoSession
+import org.mozilla.geckoview.GeckoSession
 
 import java.io.File
 import java.io.PrintWriter

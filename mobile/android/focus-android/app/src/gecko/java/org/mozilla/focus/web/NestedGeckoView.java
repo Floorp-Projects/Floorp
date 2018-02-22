@@ -12,7 +12,7 @@ import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
-import org.mozilla.gecko.GeckoView;
+import org.mozilla.geckoview.GeckoView;
 
 public class NestedGeckoView extends GeckoView implements NestedScrollingChild {
     private int mLastY;
