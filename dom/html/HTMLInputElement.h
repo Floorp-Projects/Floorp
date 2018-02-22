@@ -1173,11 +1173,6 @@ protected:
   bool IsMutable() const;
 
   /**
-   * Returns if the readonly attribute applies for the current type.
-   */
-  bool DoesReadOnlyApply() const;
-
-  /**
    * Returns if the min and max attributes apply for the current type.
    */
   bool DoesMinMaxApply() const;
