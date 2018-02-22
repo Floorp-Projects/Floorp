@@ -190,6 +190,7 @@ private:
         INIT, STARTED, OK, FAILED
     } mTrrAUsed, mTrrAAAAUsed;
 
+    Mutex mTrrLock; // lock when accessing the mTrrA[AAA] pointers
     RefPtr<mozilla::net::TRR> mTrrA;
     RefPtr<mozilla::net::TRR> mTrrAAAA;
 
