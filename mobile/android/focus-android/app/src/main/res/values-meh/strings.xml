@@ -151,6 +151,7 @@
   <string name="contextmenu_open_in_new_tab">Síne link nuu iin pestaña jíía</string>
   <string name="contextmenu_image_warning"><![CDATA["Daa tutu nátava "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Nn&#225;</b>" dee náxitá-nu %1$s daa tu´un nnánukunu."]]></string>
   <string name="firstrun_defaultbrowser_title">Sika privacidad noo´o</string>
+  <string name="firstrun_search_title">Nánuku, kua kachi noo´o</string>
   <string name="firstrun_close_button">OK, vatu!</string>
   <string name="firstrun_skip_button">Nava</string>
   <string name="firstrun_next_button">Inka</string>
