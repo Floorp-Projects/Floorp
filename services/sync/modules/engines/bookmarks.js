@@ -693,6 +693,10 @@ BufferedBookmarksEngine.prototype = {
   // non-buffered engine is enabled.
   overrideTelemetryName: "bookmarks-buffered",
 
+  // Needed to ensure we don't miss items when resuming a sync that failed or
+  // aborted early.
+  _defaultSort: "oldest",
+
   async getLastSync() {
     let mirror = await this._store.ensureOpenMirror();
     return mirror.getCollectionHighWaterMark();
