@@ -20,6 +20,46 @@
  * navigation can be done using the goBack method or through a button in the
  * subview headers.
  *
+ * The process of displaying the main view or a new subview requires multiple
+ * steps to be completed, hence at any given time the <panelview> element may
+ * be in different states:
+ *
+ * -- Open or closed
+ *
+ *    All the <panelview> elements start "closed", meaning that they are not
+ *    associated to a <panelmultiview> element and can be located anywhere in
+ *    the document. When the openPopup or showSubView methods are called, the
+ *    relevant view becomes "open" and the <panelview> element may be moved to
+ *    ensure it is a descendant of the <panelmultiview> element.
+ *
+ *    The "ViewShowing" event is fired at this point, when the view is not
+ *    visible yet. The event is allowed to cancel the operation, in which case
+ *    the view is closed immediately.
+ *
+ *    Closing the view does not move the node back to its original position.
+ *
+ * -- Visible or invisible
+ *
+ *    This indicates whether the view is visible in the document from a layout
+ *    perspective, regardless of whether it is currently scrolled into view. In
+ *    fact, all subviews are already visible before they start sliding in.
+ *
+ *    Before scrolling into view, a view may become visible but be placed in a
+ *    special off-screen area of the document where layout and measurements can
+ *    take place asyncronously.
+ *
+ *    When navigating forward, an open view may become invisible but stay open
+ *    after sliding out of view. The last known size of these views is still
+ *    taken into account for determining the overall panel size.
+ *
+ *    When navigating backwards, an open subview will first become invisible and
+ *    then will be closed.
+ *
+ * -- Navigating with the keyboard
+ *
+ *    An open view may keep state related to keyboard navigation, even if it is
+ *    invisible. When a view is closed, keyboard navigation state is cleared.
+ *
  * This diagram shows how <panelview> nodes move during navigation:
  *
  *   In this <panelmultiview>     In other panels    Action
@@ -27,16 +67,18 @@
  *             │(A)│ B │ C │        │ D │ E │          Open panel
  *             └───┴───┴───┘        └───┴───┘
  *         ┌───┬───┬───┐            ┌───┬───┐
- *         │ A │(C)│ B │            │ D │ E │          Show subview C
+ *         │{A}│(C)│ B │            │ D │ E │          Show subview C
  *         └───┴───┴───┘            └───┴───┘
  *     ┌───┬───┬───┬───┐            ┌───┐
- *     │ A │ C │(D)│ B │            │ E │              Show subview D
+ *     │{A}│{C}│(D)│ B │            │ E │              Show subview D
  *     └───┴───┴───┴───┘            └───┘
- *         ┌───┬───┬───┬───┐        ┌───┐
- *         │ A │(C)│ D │ B │        │ E │              Go back
- *         └───┴───┴───┴───┘        └───┘
- *               │
- *               └── Currently visible view
+ *       │ ┌───┬───┬───┬───┐        ┌───┐
+ *       │ │{A}│(C)│ D │ B │        │ E │              Go back
+ *       │ └───┴───┴───┴───┘        └───┘
+ *       │   │   │
+ *       │   │   └── Currently visible view
+ *       │   │   │
+ *       └───┴───┴── Open views
  *
  * If the <panelmultiview> element is "ephemeral", imported subviews will be
  * moved out again to the element specified by the viewCacheId attribute, so
@@ -554,10 +596,17 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     let viewNode = typeof viewIdOrNode == "string" ?
                    this.document.getElementById(viewIdOrNode) : viewIdOrNode;
     if (!viewNode) {
-      throw new Error(`Subview ${viewIdOrNode} doesn't exist.`);
+      Cu.reportError(new Error(`Subview ${viewIdOrNode} doesn't exist.`));
+      return;
     }
 
-    this._showView(viewNode, anchor);
+    let nextPanelView = PanelView.forNode(viewNode);
+    if (this.openViews.includes(nextPanelView)) {
+      Cu.reportError(new Error(`Subview ${viewNode.id} is already open.`));
+      return;
+    }
+
+    this._showView(nextPanelView, anchor);
   }
 
   /**
@@ -570,16 +619,14 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       return;
     }
 
-    let previous = this.openViews.pop().node;
-    let current = this._currentSubView;
-    this._showView(current, null, previous);
+    this._showView(this.openViews[this.openViews.length - 2], null, true);
   }
 
   async showMainView() {
     if (!this.node || !this._mainViewId)
       return false;
 
-    return this._showView(this._mainView);
+    return this._showView(PanelView.forNode(this._mainView));
   }
 
   /**
@@ -600,21 +647,18 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     if (!this.node || !nextPanelView)
       return;
 
-    if (!this.openViews.includes(nextPanelView))
-      this.openViews.push(nextPanelView);
-
     nextPanelView.current = true;
     this.showingSubView = nextPanelView.node.id != this._mainViewId;
   }
 
-  async _showView(viewNode, anchor, previousView) {
+  async _showView(nextPanelView, anchor, reverse) {
     try {
-      let nextPanelView = PanelView.forNode(viewNode);
+      let viewNode = nextPanelView.node;
       this.knownViews.add(nextPanelView);
 
       viewNode.panelMultiView = this.node;
 
-      let previousViewNode = previousView || this._currentSubView;
+      let previousViewNode = this._currentSubView;
 
       if (viewNode.parentNode != this._viewStack) {
         this._viewStack.appendChild(viewNode);
@@ -627,6 +671,10 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         return false;
       }
 
+      if (!reverse) {
+        this.openViews.push(nextPanelView);
+      }
+
       // If the panelview to show is the same as the previous one, the 'ViewShowing'
       // event has already been dispatched. Don't do it twice.
       let showingSameView = viewNode == previousViewNode;
@@ -634,7 +682,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       let prevPanelView = PanelView.forNode(previousViewNode);
       prevPanelView.captureKnownSize();
 
-      let reverse = !!previousView;
       if (!reverse) {
         // We are opening a new view, either because we are navigating forward
         // or because we are showing the main view. Some properties of the view
@@ -661,6 +708,10 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         nextPanelView.focusSelectedElement();
       } else {
         this.hideAllViewsExcept(nextPanelView);
+      }
+
+      if (reverse) {
+        this.openViews.pop();
       }
 
       return true;
