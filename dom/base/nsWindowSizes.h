@@ -194,6 +194,7 @@ class nsWindowSizes
   macro(Style, mLayoutComputedValuesDom) \
   macro(Style, mLayoutComputedValuesNonDom) \
   macro(Style, mLayoutComputedValuesVisited) \
+  macro(Style, mLayoutComputedValuesStale) \
   macro(Other, mPropertyTablesSize) \
   macro(Other, mBindingsSize) \
 

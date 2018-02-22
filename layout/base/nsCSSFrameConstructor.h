@@ -393,6 +393,8 @@ public:
   nsContainerFrame* GetDocElementContainingBlock()
     { return mDocElementContainingBlock; }
 
+  void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
+
 private:
   struct FrameConstructionItem;
   class FrameConstructionItemList;
