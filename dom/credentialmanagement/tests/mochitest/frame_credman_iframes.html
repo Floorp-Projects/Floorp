@@ -42,6 +42,15 @@ function testSameOrigin() {
   .catch(function sameOriginCatch(aResult) {
     local_ok(false, "Should not have failed " + aResult);
   })
+  .then(function sameOriginPreventSilentAccess() {
+    return navigator.credentials.preventSilentAccess();
+  })
+  .then(function sameOriginPreventSilentAccessThen(aResult) {
+    local_ok(aResult == undefined, "PreventSilentAccess worked " + aResult);
+  })
+  .catch(function sameOriginPreventSilentAccessCatch(aResult) {
+    local_ok(false, "Should not have failed " + aResult);
+  })
   .then(function() {
     local_finished();
   });
@@ -57,6 +66,15 @@ function testCrossOrigin() {
   .catch(function crossOriginCatch(aResult) {
     local_ok(aResult.toString().startsWith("NotAllowedError"),
              "Expecting a NotAllowedError, received " + aResult);
+  })
+  .then(function crossOriginPreventSilentAccess() {
+    return navigator.credentials.preventSilentAccess();
+  })
+  .then(function crossOriginPreventSilentAccessThen(aResult) {
+    local_ok(aResult == undefined, "PreventSilentAccess worked " + aResult);
+  })
+  .catch(function crossOriginPreventSilentAccessCatch(aResult) {
+    local_ok(false, "Should not have failed " + aResult);
   })
   .then(function() {
     local_finished();
