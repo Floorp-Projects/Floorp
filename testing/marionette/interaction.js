@@ -577,8 +577,6 @@ async function webdriverSendKeysToElement(el, value, a11y) {
   } else {
     event.sendKeysToElement(value, el, win);
   }
-
-  el.blur();
 }
 
 async function legacySendKeysToElement(el, value, a11y) {
