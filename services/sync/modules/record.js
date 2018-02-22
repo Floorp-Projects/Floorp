@@ -685,6 +685,10 @@ Collection.prototype = {
   // index
   get sort() { return this._sort; },
   set sort(value) {
+    if (value && value != "oldest" && value != "newest" && value != "index") {
+      throw new TypeError(
+        `Illegal value for sort: "${value}" (should be "oldest", "newest", or "index").`);
+    }
     this._sort = value;
     this._rebuildURL();
   },
