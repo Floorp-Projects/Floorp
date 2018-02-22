@@ -20,6 +20,9 @@ testingFunc_assertFloat32(JSContext* cx, unsigned argc, Value* vp);
 MOZ_MUST_USE bool
 testingFunc_assertRecoveredOnBailout(JSContext* cx, unsigned argc, Value* vp);
 
+extern JSScript*
+TestingFunctionArgumentToScript(JSContext* cx, HandleValue v, JSFunction** funp = nullptr);
+
 } /* namespace js */
 
 #endif /* builtin_TestingFunctions_h */
