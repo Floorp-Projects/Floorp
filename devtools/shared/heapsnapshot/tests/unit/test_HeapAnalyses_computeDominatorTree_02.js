@@ -5,12 +5,12 @@
 // Test the HeapAnalyses{Client,Worker} "computeDominatorTree" request with bad
 // file paths.
 
-add_task(function* () {
+add_task(async function () {
   const client = new HeapAnalysesClient();
 
   let threw = false;
   try {
-    yield client.computeDominatorTree("/etc/passwd");
+    await client.computeDominatorTree("/etc/passwd");
   } catch (_) {
     threw = true;
   }

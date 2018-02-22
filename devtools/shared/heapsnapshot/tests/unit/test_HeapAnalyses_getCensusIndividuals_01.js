@@ -21,28 +21,28 @@ const LABEL_BREAKDOWN = {
 
 const MAX_INDIVIDUALS = 10;
 
-add_task(function* () {
+add_task(async function () {
   const client = new HeapAnalysesClient();
 
   const snapshotFilePath = saveNewHeapSnapshot();
-  yield client.readHeapSnapshot(snapshotFilePath);
+  await client.readHeapSnapshot(snapshotFilePath);
   ok(true, "Should have read the heap snapshot");
 
-  const dominatorTreeId = yield client.computeDominatorTree(snapshotFilePath);
+  const dominatorTreeId = await client.computeDominatorTree(snapshotFilePath);
   ok(true, "Should have computed dominator tree");
 
-  const { report } = yield client.takeCensus(snapshotFilePath,
+  const { report } = await client.takeCensus(snapshotFilePath,
                                              { breakdown: CENSUS_BREAKDOWN },
                                              { asTreeNode: true });
   ok(report, "Should get a report");
 
   let nodesWithLeafIndicesFound = 0;
 
-  yield* (function* assertCanGetIndividuals(censusNode) {
+  await (async function assertCanGetIndividuals(censusNode) {
     if (censusNode.reportLeafIndex !== undefined) {
       nodesWithLeafIndicesFound++;
 
-      const response = yield client.getCensusIndividuals({
+      const response = await client.getCensusIndividuals({
         dominatorTreeId,
         indices: DevToolsUtils.isSet(censusNode.reportLeafIndex)
           ? censusNode.reportLeafIndex
@@ -75,7 +75,7 @@ add_task(function* () {
 
     if (censusNode.children) {
       for (let child of censusNode.children) {
-        yield* assertCanGetIndividuals(child);
+        await assertCanGetIndividuals(child);
       }
     }
   }(report));

@@ -12,27 +12,27 @@ const breakdown = {
   other: { by: "count", count: true, bytes: true },
 };
 
-function* createSnapshotAndDominatorTree(client) {
+async function createSnapshotAndDominatorTree(client) {
   let snapshotFilePath = saveNewHeapSnapshot();
-  yield client.readHeapSnapshot(snapshotFilePath);
-  let dominatorTreeId = yield client.computeDominatorTree(snapshotFilePath);
+  await client.readHeapSnapshot(snapshotFilePath);
+  let dominatorTreeId = await client.computeDominatorTree(snapshotFilePath);
   return { dominatorTreeId, snapshotFilePath };
 }
 
-add_task(function* () {
+add_task(async function () {
   const client = new HeapAnalysesClient();
 
   let savedSnapshots = [
-    yield createSnapshotAndDominatorTree(client),
-    yield createSnapshotAndDominatorTree(client),
-    yield createSnapshotAndDominatorTree(client)
+    await createSnapshotAndDominatorTree(client),
+    await createSnapshotAndDominatorTree(client),
+    await createSnapshotAndDominatorTree(client)
   ];
   ok(true, "Create 3 snapshots and dominator trees");
 
-  yield client.deleteHeapSnapshot(savedSnapshots[1].snapshotFilePath);
+  await client.deleteHeapSnapshot(savedSnapshots[1].snapshotFilePath);
   ok(true, "Snapshot deleted");
 
-  let tree = yield client.getDominatorTree({
+  let tree = await client.getDominatorTree({
     dominatorTreeId: savedSnapshots[0].dominatorTreeId,
     breakdown
   });
@@ -40,7 +40,7 @@ add_task(function* () {
 
   let threw = false;
   try {
-    yield client.getDominatorTree({
+    await client.getDominatorTree({
       dominatorTreeId: savedSnapshots[1].dominatorTreeId,
       breakdown
     });
@@ -49,7 +49,7 @@ add_task(function* () {
   }
   ok(threw, "getDominatorTree on a deleted snapshot should throw an error");
 
-  tree = yield client.getDominatorTree({
+  tree = await client.getDominatorTree({
     dominatorTreeId: savedSnapshots[2].dominatorTreeId,
     breakdown
   });

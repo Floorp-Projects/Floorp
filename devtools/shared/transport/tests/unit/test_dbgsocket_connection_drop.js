@@ -44,7 +44,7 @@ function test_socket_conn_drops_after_too_long_header() {
   return test_helper(rawPacket + ":");
 }
 
-var test_helper = Task.async(function* (payload) {
+var test_helper = async function (payload) {
   let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
   let authenticator = new AuthenticatorType.Server();
   authenticator.allowConnection = () => {
@@ -56,7 +56,7 @@ var test_helper = Task.async(function* (payload) {
   listener.authenticator = authenticator;
   listener.open();
 
-  let transport = yield DebuggerClient.socketConnect({
+  let transport = await DebuggerClient.socketConnect({
     host: "127.0.0.1",
     port: listener.port
   });
@@ -79,4 +79,4 @@ var test_helper = Task.async(function* (payload) {
   };
   transport.ready();
   return closedDeferred.promise;
-});
+};

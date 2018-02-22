@@ -16,7 +16,7 @@ function run_test() {
   run_next_test();
 }
 
-function* test_socket_conn() {
+async function test_socket_conn() {
   Assert.equal(DebuggerServer.listeningSockets, 0);
   let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
   let authenticator = new AuthenticatorType.Server();
@@ -40,7 +40,7 @@ function* test_socket_conn() {
 
   info("Starting long and unicode tests at " + new Date().toTimeString());
   let unicodeString = "(╯°□°）╯︵ ┻━┻";
-  let transport = yield DebuggerClient.socketConnect({
+  let transport = await DebuggerClient.socketConnect({
     host: "127.0.0.1",
     port: gPort
   });
@@ -73,7 +73,7 @@ function* test_socket_conn() {
   return closedDeferred.promise;
 }
 
-function* test_socket_shutdown() {
+async function test_socket_shutdown() {
   Assert.equal(DebuggerServer.listeningSockets, 2);
   gExtraListener.close();
   Assert.equal(DebuggerServer.listeningSockets, 1);
@@ -85,7 +85,7 @@ function* test_socket_shutdown() {
 
   info("Connecting to a server socket at " + new Date().toTimeString());
   try {
-    yield DebuggerClient.socketConnect({
+    await DebuggerClient.socketConnect({
       host: "127.0.0.1",
       port: gPort
     });
