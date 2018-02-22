@@ -6857,62 +6857,9 @@ nsWindow::GetCSDSupportLevel() {
     if (sCSDSupportLevel != CSD_SUPPORT_UNKNOWN) {
         return sCSDSupportLevel;
     }
-
-    const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-    if (currentDesktop) {
-        if (strstr(currentDesktop, "GNOME") != nullptr) {
-            sCSDSupportLevel = CSD_SUPPORT_FULL;
-        } else if (strstr(currentDesktop, "XFCE") != nullptr) {
-            sCSDSupportLevel = CSD_SUPPORT_FLAT;
-        } else if (strstr(currentDesktop, "X-Cinnamon") != nullptr) {
-            sCSDSupportLevel = CSD_SUPPORT_FULL;
-        } else if (strstr(currentDesktop, "KDE") != nullptr) {
-            sCSDSupportLevel = CSD_SUPPORT_FLAT;
-        } else if (strstr(currentDesktop, "LXDE") != nullptr) {
-            sCSDSupportLevel = CSD_SUPPORT_FLAT;
-        } else if (strstr(currentDesktop, "openbox") != nullptr) {
-            sCSDSupportLevel = CSD_SUPPORT_FLAT;
-        } else if (strstr(currentDesktop, "i3") != nullptr) {
-            sCSDSupportLevel = CSD_SUPPORT_NONE;
-        } else if (strstr(currentDesktop, "MATE") != nullptr) {
-            sCSDSupportLevel = CSD_SUPPORT_FLAT;
-        } else if (strstr(currentDesktop, "Unity") != nullptr) {
-            sCSDSupportLevel = CSD_SUPPORT_FLAT;
-        } else if (strstr(currentDesktop, "Pantheon") != nullptr) {
-            sCSDSupportLevel = CSD_SUPPORT_FULL;
-        } else if (strstr(currentDesktop, "LXQt") != nullptr) {
-            sCSDSupportLevel = CSD_SUPPORT_FULL;
-        } else {
-// Release or beta builds are not supposed to be broken
-// so disable titlebar rendering on untested/unknown systems.
-#if defined(RELEASE_OR_BETA)
-            sCSDSupportLevel = CSD_SUPPORT_NONE;
-#else
-            sCSDSupportLevel = CSD_SUPPORT_FLAT;
-#endif
-        }
-    } else {
-        sCSDSupportLevel = CSD_SUPPORT_NONE;
-    }
-
-    // We don't support CSD_SUPPORT_FULL on Wayland
-    if (!GDK_IS_X11_DISPLAY(gdk_display_get_default()) &&
-        sCSDSupportLevel == CSD_SUPPORT_FULL) {
-        sCSDSupportLevel = CSD_SUPPORT_FLAT;
-    }
-
-    // Allow MOZ_GTK_TITLEBAR_DECORATION to override our heuristics
-    const char* decorationOverride = getenv("MOZ_GTK_TITLEBAR_DECORATION");
-    if (decorationOverride) {
-        if (strcmp(decorationOverride, "none") == 0) {
-            sCSDSupportLevel = CSD_SUPPORT_NONE;
-        } else if (strcmp(decorationOverride, "client") == 0) {
-            sCSDSupportLevel = CSD_SUPPORT_FLAT;
-        } else if (strcmp(decorationOverride, "system") == 0) {
-            sCSDSupportLevel = CSD_SUPPORT_FULL;
-        }
-    }
-
+            
+    // Disabled due to Bug 1440461
+    sCSDSupportLevel = CSD_SUPPORT_NONE;
     return sCSDSupportLevel;
 }
 
