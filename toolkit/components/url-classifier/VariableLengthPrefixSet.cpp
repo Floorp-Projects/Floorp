@@ -48,7 +48,7 @@ VariableLengthPrefixSet::Init(const nsACString& aName)
 
   RegisterWeakMemoryReporter(this);
 
-  return NS_OK;
+  return mFixedPrefixSet->Init(aName);
 }
 
 VariableLengthPrefixSet::~VariableLengthPrefixSet()
