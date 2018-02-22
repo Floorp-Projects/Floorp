@@ -552,7 +552,8 @@
                 class="tail-with-learn-more"
                 preference="browser.chrome.errorReporter.enabled"
                 label="&collectBrowserErrors.label;"
-                accesskey="&collectBrowserErrors.accesskey;"/>
+                accesskey="&collectBrowserErrors.accesskey;"
+                flex="1"/>
       <label id="collectBrowserErrorsLearnMore"
              class="learnMore text-link">&collectBrowserErrorsLearnMore.label;</label>
     </hbox>
@@ -564,7 +565,8 @@
                 class="tail-with-learn-more"
                 preference="browser.crashReports.unsubmittedCheck.autoSubmit2"
                 label="&sendBackloggedCrashReports.label;"
-                accesskey="&sendBackloggedCrashReports.accesskey;"/>
+                accesskey="&sendBackloggedCrashReports.accesskey;"
+                flex="1"/>
       <label id="crashReporterLearnMore"
              class="learnMore text-link">&crashReporterLearnMore.label;</label>
     </hbox>
