@@ -1313,6 +1313,10 @@ var ActivityStreamLinks = {
    */
   blockURL(aLink) {
     BlockedLinks.block(aLink);
+    // If we're blocking a pocket item, invalidate the cache too
+    if (aLink.pocket_id) {
+      this._savedPocketStories = null;
+    }
   },
 
   onLinkBlocked(aLink) {

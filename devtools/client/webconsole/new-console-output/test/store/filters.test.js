@@ -186,6 +186,37 @@ describe("Filtering", () => {
       expect(messages.length - numUnfilterableMessages).toEqual(1);
     });
 
+    it("matches prefixed log message", () => {
+      const stub = {
+        "level": "debug",
+        "filename": "resource:///modules/CustomizableUI.jsm",
+        "lineNumber": 181,
+        "functionName": "initialize",
+        "timeStamp": 1519311532912,
+        "arguments": [
+          "Initializing"
+        ],
+        "prefix": "MyNicePrefix",
+        "workerType": "none",
+        "styles": [],
+        "category": "webdev",
+        "_type": "ConsoleAPI"
+      };
+      store.dispatch(messagesAdd([stub]));
+
+      store.dispatch(actions.filterTextSet("MyNice"));
+      let messages = getVisibleMessages(store.getState());
+      expect(messages.length - numUnfilterableMessages).toEqual(1);
+
+      store.dispatch(actions.filterTextSet("MyNicePrefix"));
+      messages = getVisibleMessages(store.getState());
+      expect(messages.length - numUnfilterableMessages).toEqual(1);
+
+      store.dispatch(actions.filterTextSet("MyNicePrefix:"));
+      messages = getVisibleMessages(store.getState());
+      expect(messages.length - numUnfilterableMessages).toEqual(1);
+    });
+
     it("restores all messages once text is cleared", () => {
       store.dispatch(actions.filterTextSet("danger"));
       store.dispatch(actions.filterTextSet(""));
