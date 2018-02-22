@@ -37,7 +37,6 @@ class nsAtom;
 class nsIContent;
 class nsIDOMDocument;
 class nsIDOMEvent;
-class nsIDOMEventListener;
 class nsIDOMEventTarget;
 class nsIDOMNode;
 class nsIDocumentStateListener;
@@ -114,6 +113,7 @@ class CreateElementTransaction;
 class DeleteNodeTransaction;
 class DeleteTextTransaction;
 class EditAggregateTransaction;
+class EditorEventListener;
 class EditTransactionBase;
 class ErrorResult;
 class HTMLEditor;
@@ -1449,7 +1449,7 @@ protected:
   nsCOMPtr<Element> mRootElement;
   // The form field as an event receiver.
   nsCOMPtr<dom::EventTarget> mEventTarget;
-  nsCOMPtr<nsIDOMEventListener> mEventListener;
+  RefPtr<EditorEventListener> mEventListener;
   // Strong reference to placeholder for begin/end batch purposes.
   RefPtr<PlaceholderTransaction> mPlaceholderTransaction;
   // Name of placeholder transaction.

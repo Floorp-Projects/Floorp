@@ -168,7 +168,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EditorBase)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditorObservers)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocStateListeners)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEventTarget)
- NS_IMPL_CYCLE_COLLECTION_UNLINK(mEventListener)
+
+ if (tmp->mEventListener) {
+   tmp->mEventListener->Disconnect();
+   tmp->mEventListener = nullptr;
+ }
+
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPlaceholderTransaction)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSavedSel);
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRangeUpdater);
@@ -318,9 +323,7 @@ EditorBase::PostCreate()
     // If the text control gets reframed during focus, Focus() would not be
     // called, so take a chance here to see if we need to spell check the text
     // control.
-    EditorEventListener* listener =
-      reinterpret_cast<EditorEventListener*>(mEventListener.get());
-    listener->SpellCheckIfNeeded();
+    mEventListener->SpellCheckIfNeeded();
 
     IMEState newState;
     rv = GetPreferredIMEState(&newState);
@@ -358,9 +361,7 @@ EditorBase::InstallEventListeners()
   mEventTarget = do_QueryInterface(rootContent->GetParent());
   NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_AVAILABLE);
 
-  EditorEventListener* listener =
-    reinterpret_cast<EditorEventListener*>(mEventListener.get());
-  nsresult rv = listener->Connect(this);
+  nsresult rv = mEventListener->Connect(this);
   if (mComposition) {
     // Restart to handle composition with new editor contents.
     mComposition->StartHandlingComposition(this);
@@ -374,7 +375,7 @@ EditorBase::RemoveEventListeners()
   if (!IsInitialized() || !mEventListener) {
     return;
   }
-  reinterpret_cast<EditorEventListener*>(mEventListener.get())->Disconnect();
+  mEventListener->Disconnect();
   if (mComposition) {
     // Even if this is called, don't release mComposition because this is
     // may be reused after reframing.
