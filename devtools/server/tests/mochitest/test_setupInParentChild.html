@@ -49,8 +49,10 @@ function runTests() {
   let client = new DebuggerClient(transport);
 
   // Wait for a response from setupInChild
+  const ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+                 .getService(Ci.nsIMessageListenerManager);
   let onChild = msg => {
-    Services.ppmm.removeMessageListener("test:setupChild", onChild);
+    ppmm.removeMessageListener("test:setupChild", onChild);
     let args = msg.json;
 
     is(args[0], 1, "Got first numeric argument");
@@ -63,7 +65,7 @@ function runTests() {
       setupChild: "callParent"
     });
   };
-  Services.ppmm.addMessageListener("test:setupChild", onChild);
+  ppmm.addMessageListener("test:setupChild", onChild);
 
   // Wait also for a reponse from setupInParent called from setup-in-child.js
   let onParent = (_, topic, args) => {
