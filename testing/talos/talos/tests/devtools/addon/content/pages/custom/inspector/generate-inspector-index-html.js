@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * nodejs script to generate: testing/talos/talos/tests/devtools/addon/content/pages/custom/inspector.html
+ * nodejs script to generate: testing/talos/talos/tests/devtools/addon/content/pages/custom/inspector/index.html
  *
  * Execute it like this:
- * $ nodejs generate-inspector-html.js > testing/talos/talos/tests/devtools/addon/content/pages/custom/inspector.html
+ * $ nodejs generate-inspector-index-html.js > testing/talos/talos/tests/devtools/addon/content/pages/custom/inspector/index.html
  */
 
 // We first create a deep tree with ${deep} nested children
