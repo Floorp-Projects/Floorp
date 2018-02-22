@@ -37,7 +37,6 @@ opt-level = 1
 rpath = false
 lto = false
 debug-assertions = true
-codegen-units = 4
 panic = "abort"
 
 [profile.release]
