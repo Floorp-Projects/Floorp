@@ -3,15 +3,15 @@
     <body>
         <p id="message"></p>
         <script>
-            const msg = document.getElementById('message');
+            const msg = document.getElementById("message");
             msg.innerText = "Waiting for click...";
-            window.addEventListener('click', function() {
+            window.addEventListener("click", function() {
                 msg.innerText = "Opening window....";
                 try {
-                    const win = window.open('newSession_child.html');
+                    const win = window.open("newSession_child.html");
 
                     msg.innerText = "Opened window: " + win;
-                } catch(e) {
+                } catch (e) {
                     msg.innerText = "Failed to open window: " + e;
                 }
             });
