@@ -237,6 +237,10 @@ MediaEngineDefaultVideoSource::Stop(const RefPtr<const AllocationHandle>& aHandl
 {
   AssertIsOnOwningThread();
 
+  if (mState == kStopped || mState == kAllocated) {
+    return NS_OK;
+  }
+
   MOZ_ASSERT(mState == kStarted);
   MOZ_ASSERT(mTimer);
   MOZ_ASSERT(mStream);
@@ -495,8 +499,11 @@ MediaEngineDefaultAudioSource::Stop(const RefPtr<const AllocationHandle>& aHandl
 {
   AssertIsOnOwningThread();
 
-  MOZ_ASSERT(mState == kStarted);
+  if (mState == kStopped || mState == kAllocated) {
+    return NS_OK;
+  }
 
+  MOZ_ASSERT(mState == kStarted);
 
   MutexAutoLock lock(mMutex);
   mState = kStopped;
