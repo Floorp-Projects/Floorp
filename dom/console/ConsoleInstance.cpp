@@ -67,17 +67,15 @@ WebIDLevelToConsoleUtilsLevel(ConsoleLevel aLevel)
 
 } // anonymous
 
-ConsoleInstance::ConsoleInstance(const ConsoleInstanceOptions& aOptions)
-  : mConsole(new Console(nullptr))
+ConsoleInstance::ConsoleInstance(JSContext* aCx,
+                                 const ConsoleInstanceOptions& aOptions)
+  : mConsole(new Console(aCx, nullptr))
 {
   mConsole->mConsoleID = aOptions.mConsoleID;
   mConsole->mPassedInnerID = aOptions.mInnerID;
 
   if (aOptions.mDump.WasPassed()) {
     mConsole->mDumpFunction = &aOptions.mDump.Value();
-  } else {
-    // For historical reasons, ConsoleInstance prints messages on stdout.
-    mConsole->mDumpToStdout = true;
   }
 
   mConsole->mPrefix = aOptions.mPrefix;

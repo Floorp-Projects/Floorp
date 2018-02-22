@@ -7474,10 +7474,10 @@ nsGlobalWindowInner::Orientation(CallerType aCallerType) const
 #endif
 
 already_AddRefed<Console>
-nsGlobalWindowInner::GetConsole(ErrorResult& aRv)
+nsGlobalWindowInner::GetConsole(JSContext* aCx, ErrorResult& aRv)
 {
   if (!mConsole) {
-    mConsole = Console::Create(this, aRv);
+    mConsole = Console::Create(aCx, this, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
