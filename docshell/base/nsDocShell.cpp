@@ -4840,7 +4840,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
         break;
       case NS_ERROR_BLOCKED_BY_POLICY:
         // Page blocked by policy
-        error = "blockedByPolicyTemp";
+        error = "blockedByPolicy";
         break;
       default:
         break;
