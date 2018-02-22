@@ -29,7 +29,6 @@ robocop:
         by-test-platform:
             # android-4.3-arm7-api-16/debug -- not run
             android-4.3-arm7-api-16/opt: 4
-            android-4.3-arm7-api-16-gradle/opt: 4
     loopback-video: true
     e10s: false
     mozharness:
