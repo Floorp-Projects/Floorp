@@ -2,10 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+XULMAP_TYPE(browser, OuterDocAccessible)
 XULMAP_TYPE(checkbox, XULCheckboxAccessible)
 XULMAP_TYPE(dropMarker, XULDropmarkerAccessible)
+XULMAP_TYPE(editor, OuterDocAccessible)
 XULMAP_TYPE(findbar, XULToolbarAccessible)
 XULMAP_TYPE(groupbox, XULGroupboxAccessible)
+XULMAP_TYPE(iframe, OuterDocAccessible)
 XULMAP_TYPE(listbox, XULListboxAccessibleWrap)
 XULMAP_TYPE(listhead, XULColumAccessible)
 XULMAP_TYPE(listheader, XULColumnItemAccessible)
