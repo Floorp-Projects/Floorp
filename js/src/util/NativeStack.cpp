@@ -8,23 +8,20 @@
 
 #ifdef XP_WIN
 # include "util/Windows.h"
-
 #elif defined(XP_DARWIN) || defined(DARWIN) || defined(XP_UNIX)
 # include <pthread.h>
-
 # if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
 #  include <pthread_np.h>
 # endif
-
 # if defined(ANDROID) && !defined(__aarch64__)
 #  include <sys/types.h>
 #  include <unistd.h>
 # endif
-
 #else
 # error "Unsupported platform"
-
 #endif
+
+#include "jsfriendapi.h"
 
 #if defined(XP_WIN)
 

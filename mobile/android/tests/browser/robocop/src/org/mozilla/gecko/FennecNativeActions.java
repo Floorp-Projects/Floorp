@@ -10,12 +10,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.mozilla.gecko.FennecNativeDriver.LogLevel;
-import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.geckoview.GeckoView;
 
 import android.app.Activity;
 import android.app.Instrumentation;

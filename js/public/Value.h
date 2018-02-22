@@ -11,6 +11,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
 

@@ -9,7 +9,6 @@
 
 #include "nsPIDOMWindow.h"
 
-#include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsRefPtrHashtable.h"
 #include "nsInterfaceHashtable.h"
@@ -92,7 +91,6 @@ class DialogValueHolder;
 
 namespace mozilla {
 class AbstractThread;
-class DOMEventTargetHelper;
 class ThrottledEventQueue;
 namespace dom {
 class BarProp;
@@ -353,12 +351,6 @@ public:
   virtual RefPtr<mozilla::dom::ServiceWorker>
   GetOrCreateServiceWorker(const mozilla::dom::ServiceWorkerDescriptor& aDescriptor) override;
 
-  virtual void
-  AddServiceWorker(mozilla::dom::ServiceWorker* aServiceWorker) override;
-
-  virtual void
-  RemoveServiceWorker(mozilla::dom::ServiceWorker* aServiceWorker) override;
-
   void NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
 
   virtual nsresult FireDelayedDOMEvents() override;
@@ -516,10 +508,6 @@ public:
   }
 
   void AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const;
-
-  // Inner windows only.
-  void AddEventTargetObject(mozilla::DOMEventTargetHelper* aObject);
-  void RemoveEventTargetObject(mozilla::DOMEventTargetHelper* aObject);
 
   void NotifyIdleObserver(IdleObserverHolder* aIdleObserverHolder,
                           bool aCallOnidle);
@@ -691,7 +679,8 @@ public:
   int16_t Orientation(mozilla::dom::CallerType aCallerType) const;
 #endif
 
-  already_AddRefed<mozilla::dom::Console> GetConsole(mozilla::ErrorResult& aRv);
+  already_AddRefed<mozilla::dom::Console>
+  GetConsole(JSContext* aCx, mozilla::ErrorResult& aRv);
 
   // https://w3c.github.io/webappsec-secure-contexts/#dom-window-issecurecontext
   bool IsSecureContext() const;
@@ -1259,8 +1248,6 @@ private:
   // Fire the JS engine's onNewGlobalObject hook.  Only used on inner windows.
   void FireOnNewGlobalObject();
 
-  void DisconnectEventTargetObjects();
-
   // nsPIDOMWindow{Inner,Outer} should be able to see these helper methods.
   friend class nsPIDOMWindowInner;
   friend class nsPIDOMWindowOuter;
@@ -1428,8 +1415,6 @@ protected:
   // currently enabled on this window.
   bool                          mAreDialogsEnabled;
 
-  nsTHashtable<nsPtrHashKey<mozilla::DOMEventTargetHelper> > mEventTargetObjects;
-
   nsTArray<uint32_t> mEnabledSensors;
 
 #if defined(MOZ_WIDGET_ANDROID)
@@ -1453,10 +1438,6 @@ protected:
   RefPtr<mozilla::dom::IntlUtils> mIntlUtils;
 
   mozilla::UniquePtr<mozilla::dom::ClientSource> mClientSource;
-
-  // Weak references added by AddServiceWorker() and cleared by
-  // RemoveServiceWorker() when the ServiceWorker is destroyed.
-  nsTArray<mozilla::dom::ServiceWorker*> mServiceWorkerList;
 
   nsTArray<RefPtr<mozilla::dom::Promise>> mPendingPromises;
 

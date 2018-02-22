@@ -21,12 +21,12 @@ import java.lang.StringBuffer;
 import java.lang.Math;
 
 import org.mozilla.gecko.GeckoThread;
-import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.gfx.CompositorController;
 import org.mozilla.gecko.gfx.PanningPerfAPI;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.geckoview.GeckoView;
 
 import android.app.Activity;
 import android.util.Log;

@@ -6,8 +6,8 @@ package org.mozilla.gecko.text;
 
 import org.mozilla.gecko.ActionBarTextSelection;
 import org.mozilla.gecko.AppConstants.Versions;
-import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.widget.ActionModePresenter;
+import org.mozilla.geckoview.GeckoView;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;

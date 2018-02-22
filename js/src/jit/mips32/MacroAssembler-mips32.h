@@ -7,6 +7,8 @@
 #ifndef jit_mips32_MacroAssembler_mips32_h
 #define jit_mips32_MacroAssembler_mips32_h
 
+#include "mozilla/EndianUtils.h"
+
 #include "jit/JitFrames.h"
 #include "jit/mips-shared/MacroAssembler-mips-shared.h"
 #include "jit/MoveResolver.h"

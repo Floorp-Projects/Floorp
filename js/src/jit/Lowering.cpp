@@ -7,6 +7,7 @@
 #include "jit/Lowering.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EndianUtils.h"
 
 #include "jit/JitSpewer.h"
 #include "jit/LIR.h"

@@ -1,19 +1,18 @@
 {
   "policies": {
-    "block_about_config": true,
-    "dont_check_default_browser": true,
+    "BlockAboutProfiles": true,
+    "DontCheckDefaultBrowser": true,
 
-    "flash_plugin": {
-      "allow": [
+    "FlashPlugin": {
+      "Allow": [
         "https://www.example.com"
       ],
 
-      "block": [
+      "Block": [
         "https://www.example.org"
       ]
     },
 
-    "block_about_profiles": true,
     "CreateMasterPassword": false
   }
 }

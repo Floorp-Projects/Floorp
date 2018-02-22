@@ -138,8 +138,6 @@
 #define JS_HOWMANY(x,y) (((x)+(y)-1)/(y))
 #define JS_ROUNDUP(x,y) (JS_HOWMANY(x,y)*(y))
 
-#include "jscpucfg.h"
-
 /*
  * Define JS_64BIT iff we are building in an environment with 64-bit
  * addresses.

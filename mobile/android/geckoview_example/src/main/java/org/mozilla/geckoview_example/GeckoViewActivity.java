@@ -18,13 +18,13 @@ import android.view.WindowManager;
 
 import java.util.Locale;
 
-import org.mozilla.gecko.GeckoSession;
-import org.mozilla.gecko.GeckoSessionSettings;
 import org.mozilla.gecko.GeckoThread;
-import org.mozilla.gecko.GeckoView;
-import org.mozilla.gecko.GeckoSession.PermissionDelegate.MediaSource;
-import org.mozilla.gecko.GeckoSession.TrackingProtectionDelegate;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.geckoview.GeckoSession;
+import org.mozilla.geckoview.GeckoSessionSettings;
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource;
+import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
+import org.mozilla.geckoview.GeckoView;
 
 public class GeckoViewActivity extends Activity {
     private static final String LOGTAG = "GeckoViewActivity";

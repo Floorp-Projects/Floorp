@@ -11,6 +11,7 @@
 #include "vm/JSAtom-inl.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Unused.h"
 

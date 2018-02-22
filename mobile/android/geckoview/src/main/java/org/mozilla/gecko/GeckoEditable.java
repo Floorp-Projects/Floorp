@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
+import org.mozilla.geckoview.TextInputController;
 
 import android.graphics.RectF;
 import android.os.Handler;
@@ -42,7 +43,7 @@ import android.view.KeyEvent;
  * The field mText contains the actual underlying
  * SpannableStringBuilder/Editable that contains our text.
  */
-/* package */ final class GeckoEditable
+public final class GeckoEditable
     extends IGeckoEditableParent.Stub
     implements InvocationHandler,
                Editable,
@@ -600,7 +601,7 @@ import android.view.KeyEvent;
         }
     }
 
-    /* package */ GeckoEditable() {
+    public GeckoEditable() {
         if (DEBUG) {
             // Called by TextInputController.
             ThreadUtils.assertOnUiThread();
@@ -616,7 +617,7 @@ import android.view.KeyEvent;
         mIcRunHandler = mIcPostHandler = ThreadUtils.getUiHandler();
     }
 
-    /* package */ void setDefaultEditableChild(final IGeckoEditableChild child) {
+    public void setDefaultEditableChild(final IGeckoEditableChild child) {
         if (DEBUG) {
             // Called by TextInputController.
             ThreadUtils.assertOnUiThread();
@@ -625,7 +626,7 @@ import android.view.KeyEvent;
         mDefaultChild = child;
     }
 
-    /* package */ void setListener(final TextInputController.EditableListener newListener) {
+    public void setListener(final TextInputController.EditableListener newListener) {
         if (DEBUG) {
             // Called by TextInputController.
             ThreadUtils.assertOnUiThread();

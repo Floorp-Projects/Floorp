@@ -55,7 +55,7 @@ public:
   }
 
   already_AddRefed<Console>
-  GetConsole(ErrorResult& aRv);
+  GetConsole(JSContext* aCx, ErrorResult& aRv);
 
   void
   Dump(const Optional<nsAString>& aString) const;

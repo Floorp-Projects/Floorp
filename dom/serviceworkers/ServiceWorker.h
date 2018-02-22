@@ -20,6 +20,9 @@ class nsIGlobalObject;
 namespace mozilla {
 namespace dom {
 
+#define NS_DOM_SERVICEWORKER_IID \
+  {0xd42e0611, 0x3647, 0x4319, {0xae, 0x05, 0x19, 0x89, 0x59, 0xba, 0x99, 0x5e}}
+
 bool
 ServiceWorkerVisible(JSContext* aCx, JSObject* aObj);
 
@@ -59,6 +62,7 @@ public:
     NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
   };
 
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_SERVICEWORKER_IID)
   NS_DECL_ISUPPORTS_INHERITED
 
   IMPL_EVENT_HANDLER(statechange)
@@ -100,6 +104,8 @@ private:
   ServiceWorkerDescriptor mDescriptor;
   const RefPtr<Inner> mInner;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(ServiceWorker, NS_DOM_SERVICEWORKER_IID)
 
 } // namespace dom
 } // namespace mozilla

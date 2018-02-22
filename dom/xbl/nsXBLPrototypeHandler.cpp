@@ -1146,7 +1146,7 @@ nsXBLPrototypeHandler::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
     if (!(mType & NS_HANDLER_TYPE_XUL)) {
       n += aMallocSizeOf(handler->mHandlerText);
     }
-    n += mHandler ? aMallocSizeOf(handler->mHandler) : 0;
+    n += aMallocSizeOf(handler->mHandler);
   }
   return n;
 }
