@@ -578,8 +578,10 @@ IProtocol::GetActorEventTargetInternal(IProtocol* aActor)
 
 IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId, Side aSide)
  : IProtocol(aSide),
+   mMonitor("mozilla.ipc.IToplevelProtocol.mMonitor"),
    mProtocolId(aProtoId),
    mOtherPid(mozilla::ipc::kInvalidProcessId),
+   mOtherPidState(ProcessIdState::eUnstarted),
    mLastRouteId(aSide == ParentSide ? kFreedActorId : kNullActorId),
    mLastShmemId(aSide == ParentSide ? kFreedActorId : kNullActorId),
    mEventTargetMutex("ProtocolEventTargetMutex")
@@ -605,13 +607,30 @@ IToplevelProtocol::OtherPid() const
 base::ProcessId
 IToplevelProtocol::OtherPidMaybeInvalid() const
 {
+  MonitorAutoLock lock(mMonitor);
+
+  if (mOtherPidState == ProcessIdState::eUnstarted) {
+    // If you're asking for the pid of a process we haven't even tried to
+    // start, you get an invalid pid back immediately.
+    return kInvalidProcessId;
+  }
+
+  while (mOtherPidState < ProcessIdState::eReady) {
+    lock.Wait();
+  }
+  MOZ_RELEASE_ASSERT(mOtherPidState == ProcessIdState::eReady);
+
   return mOtherPid;
 }
 
 void
-IToplevelProtocol::SetOtherProcessId(base::ProcessId aOtherPid)
+IToplevelProtocol::SetOtherProcessId(base::ProcessId aOtherPid,
+                                     ProcessIdState aState)
 {
+  MonitorAutoLock lock(mMonitor);
   mOtherPid = aOtherPid;
+  mOtherPidState = aState;
+  lock.NotifyAll();
 }
 
 bool

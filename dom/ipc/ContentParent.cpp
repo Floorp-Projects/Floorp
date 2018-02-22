@@ -2056,6 +2056,7 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
     extraArgs.push_back("-safeMode");
   }
 
+  SetOtherProcessId(kInvalidProcessId, ProcessIdState::ePending);
   if (!mSubprocess->LaunchAndWaitForProcessHandle(extraArgs)) {
     NS_ERROR("failed to launch child in the parent");
     MarkAsDead();
