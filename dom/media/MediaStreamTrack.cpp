@@ -294,9 +294,12 @@ MediaStreamTrack::ApplyConstraints(const MediaTrackConstraints& aConstraints,
   typedef media::Pledge<bool, MediaStreamError*> PledgeVoid;
 
   nsPIDOMWindowInner* window = mOwningStream->GetParentObject();
+  nsIGlobalObject* go = window ? window->AsGlobal() : nullptr;
 
-  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(window);
   RefPtr<Promise> promise = Promise::Create(go, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   // Forward constraints to the source.
   //
