@@ -1949,43 +1949,14 @@ static bool HasSourceChildren(nsIContent* aElement)
   return false;
 }
 
-static nsCString
-DocumentOrigin(nsIDocument* aDoc)
-{
-  if (!aDoc) {
-    return NS_LITERAL_CSTRING("null");
-  }
-  nsCOMPtr<nsIPrincipal> principal = aDoc->NodePrincipal();
-  if (!principal) {
-    return NS_LITERAL_CSTRING("null");
-  }
-  nsCString origin;
-  if (NS_FAILED(principal->GetOrigin(origin))) {
-    return NS_LITERAL_CSTRING("null");
-  }
-  return origin;
-}
-
 void
 HTMLMediaElement::Load()
 {
   LOG(LogLevel::Debug,
       ("%p Load() hasSrcAttrStream=%d hasSrcAttr=%d hasSourceChildren=%d "
-       "handlingInput=%d hasAutoplayAttr=%d IsAllowedToPlay=%d "
-       "ownerDoc=%p (%s) ownerDocUserActivated=%d "
-       "muted=%d volume=%f",
-       this,
-       !!mSrcAttrStream,
-       HasAttr(kNameSpaceID_None, nsGkAtoms::src),
-       HasSourceChildren(this),
-       EventStateManager::IsHandlingUserInput(),
-       HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay),
-       IsAllowedToPlay(),
-       OwnerDoc(),
-       DocumentOrigin(OwnerDoc()).get(),
-       OwnerDoc() ? OwnerDoc()->HasBeenUserActivated() : 0,
-       mMuted,
-       mVolume));
+       "handlingInput=%d",
+       this, !!mSrcAttrStream, HasAttr(kNameSpaceID_None, nsGkAtoms::src),
+       HasSourceChildren(this), EventStateManager::IsHandlingUserInput()));
 
   if (mIsRunningLoadMethod) {
     return;
@@ -2686,7 +2657,6 @@ HTMLMediaElement::CurrentTime() const
 void
 HTMLMediaElement::FastSeek(double aTime, ErrorResult& aRv)
 {
-  LOG(LogLevel::Debug, ("%p FastSeek(%f) called by JS", this, aTime));
   LOG(LogLevel::Debug, ("Reporting telemetry VIDEO_FASTSEEK_USED"));
   Telemetry::Accumulate(Telemetry::VIDEO_FASTSEEK_USED, 1);
   RefPtr<Promise> tobeDropped = Seek(aTime, SeekTarget::PrevSyncPoint, aRv);
@@ -2719,8 +2689,6 @@ HTMLMediaElement::SeekToNextFrame(ErrorResult& aRv)
 void
 HTMLMediaElement::SetCurrentTime(double aCurrentTime, ErrorResult& aRv)
 {
-  LOG(LogLevel::Debug,
-      ("%p SetCurrentTime(%f) called by JS", this, aCurrentTime));
   RefPtr<Promise> tobeDropped = Seek(aCurrentTime, SeekTarget::Accurate, aRv);
 }
 
@@ -2930,7 +2898,6 @@ HTMLMediaElement::Played()
 void
 HTMLMediaElement::Pause(ErrorResult& aRv)
 {
-  LOG(LogLevel::Debug, ("%p Pause() called by JS", this));
   if (mNetworkState == NETWORK_EMPTY) {
     LOG(LogLevel::Debug, ("Loading due to Pause()"));
     DoLoad();
@@ -2958,8 +2925,6 @@ HTMLMediaElement::Pause(ErrorResult& aRv)
 void
 HTMLMediaElement::SetVolume(double aVolume, ErrorResult& aRv)
 {
-  LOG(LogLevel::Debug, ("%p SetVolume(%f) called by JS", this, aVolume));
-
   if (aVolume < 0.0 || aVolume > 1.0) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
@@ -3042,7 +3007,6 @@ HTMLMediaElement::SetVolumeInternal()
 void
 HTMLMediaElement::SetMuted(bool aMuted)
 {
-  LOG(LogLevel::Debug, ("%p SetMuted(%d) called by JS", this, aMuted));
   if (aMuted == Muted()) {
     return;
   }
@@ -3988,8 +3952,6 @@ HTMLMediaElement::NotifyXPCOMShutdown()
 already_AddRefed<Promise>
 HTMLMediaElement::Play(ErrorResult& aRv)
 {
-  LOG(LogLevel::Debug, ("%p Play() called by JS", this));
-
   if (mAudioChannelWrapper && mAudioChannelWrapper->IsPlaybackBlocked()) {
     MaybeDoLoad();
 
@@ -4001,8 +3963,6 @@ HTMLMediaElement::Play(ErrorResult& aRv)
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
-
-    LOG(LogLevel::Debug, ("%p Play() call delayed by AudioChannelAgent", this));
 
     mPendingPlayPromises.AppendElement(promise);
     return promise.forget();
@@ -4030,8 +3990,6 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
   if (!IsAllowedToPlay()) {
     // NOTE: for promise-based-play, will return a rejected promise here.
     aRv.Throw(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
-    LOG(LogLevel::Debug,
-        ("%p Play() promise rejected because not allowed to play.", this));
     return nullptr;
   }
 
@@ -4041,8 +3999,6 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
   // rejected with a "NotSupportedError" DOMException and abort these steps.
   if (GetError() && GetError()->Code() == MEDIA_ERR_SRC_NOT_SUPPORTED) {
     aRv.Throw(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
-    LOG(LogLevel::Debug,
-        ("%p Play() promise rejected because source not supported.", this));
     return nullptr;
   }
 
@@ -4094,9 +4050,6 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
         // _mPendingPlayPromises_ and let it be resolved/rejected with the
         // following actions and the promise-resolution won't be observed at all.
         aRv.Throw(rv);
-        LOG(LogLevel::Debug,
-            ("%p Play() promise rejected because failed to play MediaDecoder.",
-             this));
         return nullptr;
       }
     }
@@ -6830,33 +6783,21 @@ HTMLMediaElement::IsAllowedToPlay()
                                          false,
                                          false);
 #endif
-    LOG(LogLevel::Debug,
-        ("%p %s AutoplayPolicy blocked autoplay.", this, __func__));
     return false;
   }
-
-  LOG(LogLevel::Debug,
-      ("%p %s AutoplayPolicy did not block autoplay.", this, __func__));
 
   // Check our custom playback policy.
   if (mAudioChannelWrapper) {
     // Note: SUSPENDED_PAUSE and SUSPENDED_BLOCK will be merged into one single state.
     if (mAudioChannelWrapper->GetSuspendType() == nsISuspendedTypes::SUSPENDED_PAUSE ||
         mAudioChannelWrapper->GetSuspendType() == nsISuspendedTypes::SUSPENDED_BLOCK) {
-      LOG(LogLevel::Debug,
-          ("%p IsAllowedToPlay() returning false due to AudioChannelAgent.",
-           this));
       return false;
     }
 
-    LOG(LogLevel::Debug, ("%p IsAllowedToPlay() returning true.", this));
     return true;
   }
 
   // If the mAudioChannelWrapper doesn't exist that means the CC happened.
-  LOG(LogLevel::Debug,
-      ("%p IsAllowedToPlay() returning false due to null AudioChannelAgent.",
-       this));
   return false;
 }
 
