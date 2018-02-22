@@ -8,7 +8,6 @@ exports.devices = require("./reducers/devices");
 exports.displayPixelRatio = require("./reducers/display-pixel-ratio");
 exports.location = require("./reducers/location");
 exports.networkThrottling = require("./reducers/network-throttling");
-exports.reloadConditions = require("./reducers/reload-conditions");
 exports.screenshot = require("./reducers/screenshot");
 exports.touchSimulation = require("./reducers/touch-simulation");
 exports.viewports = require("./reducers/viewports");

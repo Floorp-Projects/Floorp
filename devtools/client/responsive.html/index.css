@@ -67,13 +67,10 @@ body,
   margin: 0;
   padding: 0;
   border: none;
-  color: var(--viewport-color);
 }
 
 .toolbar-button:empty:hover:not(:disabled),
-.toolbar-button:empty:-moz-any(:hover:active, .checked):not(:disabled),
-.toolbar-button:not(:empty),
-.toolbar-button:hover:not(:empty):not(:disabled):not(.checked) {
+.toolbar-button:empty:-moz-any(:hover:active, .checked):not(:disabled) {
   /* Reset background from .devtools-button */
   background: none;
 }
@@ -82,17 +79,16 @@ body,
   filter: var(--theme-icon-checked-filter);
 }
 
-.toolbar-button.selected {
-  color: var(--viewport-active-color);
-}
-
-.toolbar-button:not(:disabled):hover {
-  color: var(--viewport-hover-color);
-}
-
 select {
   -moz-appearance: none;
+  background-color: var(--theme-toolbar-background);
+  background-image: var(--viewport-selection-arrow);
+  -moz-context-properties: fill;
+  fill: currentColor;
   color: var(--viewport-color);
+  background-position: 100% 50%;
+  background-repeat: no-repeat;
+  background-size: 7px;
   border: none;
   height: 100%;
   padding: 0 8px;
@@ -134,52 +130,6 @@ select > option.divider {
 }
 
 /**
- * Toggle Menu
- */
-
-.devtools-toggle-menu {
-  position: relative;
-}
-
-.devtools-toggle-menu .devtools-menu {
-  display: none;
-  flex-direction: column;
-  align-items: start;
-  position: absolute;
-  left: 0;
-  top: 100%;
-  z-index: 1;
-  padding: 5px;
-  border-radius: 2px;
-  background-color: var(--theme-toolbar-background);
-  box-shadow: var(--rdm-box-shadow);
-}
-
-.devtools-toggle-menu .devtools-menu.opened {
-  display: flex;
-}
-
-.devtools-toggle-menu .devtools-menu-item {
-  display: flex;
-  align-items: center;
-}
-
-/**
- * Common background for dropdowns like select and toggle menu
- */
-.toolbar-dropdown,
-.toolbar-dropdown.devtools-button,
-.toolbar-dropdown.devtools-button:hover:not(:empty):not(:disabled):not(.checked) {
-  background-color: var(--theme-toolbar-background);
-  background-image: var(--viewport-selection-arrow);
-  background-position: 100% 50%;
-  background-repeat: no-repeat;
-  background-size: 7px;
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-/**
  * Global Toolbar
  */
 
@@ -190,7 +140,6 @@ select > option.divider {
   margin: 0 0 15px 0;
   padding: 4px 5px;
   display: inline-flex;
-  align-items: center;
   -moz-user-select: none;
 }
 
@@ -206,13 +155,6 @@ select > option.divider {
 #global-toolbar > .toolbar-button::before {
   width: 12px;
   height: 12px;
-}
-
-#global-toolbar .toolbar-dropdown {
-  background-position-x: right 5px;
-  border-right: 1px solid var(--theme-splitter-color);
-  padding-right: 15px;
-  /* padding-left: 0; */
 }
 
 #global-touch-simulation-button::before {

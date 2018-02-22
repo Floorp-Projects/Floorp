@@ -9,8 +9,6 @@ const TEST_URL = `${URL_ROOT}touch.html`;
 const PREF_DOM_META_VIEWPORT_ENABLED = "dom.meta-viewport.enabled";
 
 addRDMTask(TEST_URL, async function ({ ui }) {
-  reloadOnTouchChange(true);
-
   await injectEventUtilsInContentTask(ui.getViewportBrowser());
 
   await waitBootstrap(ui);
@@ -20,8 +18,6 @@ addRDMTask(TEST_URL, async function ({ ui }) {
   await testWithMetaViewportEnabled(ui);
   await testWithMetaViewportDisabled(ui);
   testTouchButton(ui);
-
-  reloadOnTouchChange(false);
 });
 
 async function testWithNoTouch(ui) {

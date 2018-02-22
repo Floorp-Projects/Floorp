@@ -38,7 +38,7 @@ async function waitStartup(ui) {
 
   // Wait until the viewport has been added and the device list has been loaded
   await waitUntilState(store, state => state.viewports.length == 1
-    && state.devices.listState == Types.loadableState.LOADED);
+    && state.devices.listState == Types.deviceListState.LOADED);
 }
 
 async function testDefaults(ui) {
@@ -56,7 +56,9 @@ async function testDefaults(ui) {
 async function testChangingDevice(ui) {
   info("Test Changing Device");
 
+  let reloaded = waitForViewportLoad(ui);
   await selectDevice(ui, testDevice.name);
+  await reloaded;
   await waitForViewportResizeTo(ui, testDevice.width, testDevice.height);
   let dppx = await waitForDevicePixelRatio(ui, testDevice.pixelRatio);
   is(dppx, testDevice.pixelRatio, "Content has expected devicePixelRatio");
@@ -71,9 +73,10 @@ async function testResetWhenResizingViewport(ui) {
   info("Test reset when resizing the viewport");
 
   let deviceRemoved = once(ui, "device-association-removed");
+  let reloaded = waitForViewportLoad(ui);
   await testViewportResize(ui, ".viewport-vertical-resize-handle",
     [-10, -10], [testDevice.width, testDevice.height - 10], [0, -10], ui);
-  await deviceRemoved;
+  await Promise.all([ deviceRemoved, reloaded ]);
 
   let dppx = await waitForDevicePixelRatio(ui, DEFAULT_DPPX);
   is(dppx, DEFAULT_DPPX, "Content has expected devicePixelRatio");
