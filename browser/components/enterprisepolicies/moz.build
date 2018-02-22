@@ -27,4 +27,9 @@ EXTRA_JS_MODULES.policies += [
     'PoliciesValidator.jsm',
 ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    EXTRA_JS_MODULES.policies += [
+        'WindowsGPOParser.jsm',
+]
+
 FINAL_LIBRARY = 'browsercomps'
