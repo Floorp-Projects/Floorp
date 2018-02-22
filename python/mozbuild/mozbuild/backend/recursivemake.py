@@ -86,8 +86,6 @@ from ..makeutil import Makefile
 from mozbuild.shellutil import quote as shell_quote
 
 MOZBUILD_VARIABLES = [
-    b'ANDROID_APK_NAME',
-    b'ANDROID_APK_PACKAGE',
     b'ANDROID_ASSETS_DIRS',
     b'ANDROID_EXTRA_PACKAGES',
     b'ANDROID_EXTRA_RES_DIRS',
@@ -143,7 +141,6 @@ MOZBUILD_VARIABLES = [
 ]
 
 DEPRECATED_VARIABLES = [
-    b'ANDROID_RESFILES',
     b'EXPORT_LIBRARY',
     b'EXTRA_LIBS',
     b'HOST_LIBS',
