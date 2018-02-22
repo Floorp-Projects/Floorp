@@ -79,7 +79,8 @@ public:
   typedef mozilla::TrueType HasThreadSafeRefCnt;
 
 private:
-  friend class nsAtomFriend;
+  friend class nsAtomTable;
+  friend class nsAtomSubTable;
   friend class nsHtml5AtomEntry;
 
   // Dynamic atom construction is done by |friend|s.
@@ -121,7 +122,7 @@ public:
   }
 
 private:
-  friend class nsAtomFriend;
+  friend class nsAtomTable;
 
   // Construction is done entirely by |friend|s.
   nsStaticAtom(const char16_t* aString, uint32_t aLength, uint32_t aHash)
@@ -153,6 +154,11 @@ already_AddRefed<nsAtom> NS_Atomize(const nsAString& aUTF16String);
 already_AddRefed<nsAtom> NS_AtomizeMainThread(const nsAString& aUTF16String);
 
 // Return a count of the total number of atoms currently alive in the system.
+//
+// Note that the result is imprecise and racy if other threads are currently
+// operating on atoms. It's also slow, since it triggers a GC before counting.
+// Currently this function is only used in tests, which should probably remain
+// the case.
 nsrefcnt NS_GetNumberOfAtoms();
 
 // Return a pointer for a static atom for the string or null if there's no
