@@ -10,6 +10,7 @@
 #include "mozilla/TemplateLib.h"
 
 #include <limits.h>
+#include <string.h>
 
 #include "jstypes.h"
 
