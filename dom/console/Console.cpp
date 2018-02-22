@@ -1091,7 +1091,7 @@ Console::ProfileMethodInternal(JSContext* aCx, MethodName aMethodName,
     return;
   }
 
-  MaybeExecuteDumpFunction(aCx, aAction, aData);
+  MaybeExecuteDumpFunction(aCx, aAction, aData, nullptr);
 
   if (!NS_IsMainThread()) {
     // Here we are in a worker thread.
@@ -1335,15 +1335,15 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
 
   // Before processing this CallData differently, it's time to call the dump
   // function.
-  if (aMethodName == MethodTrace) {
-    MaybeExecuteDumpFunctionForTrace(aCx, stack);
+  if (aMethodName == MethodTrace || aMethodName == MethodAssert) {
+    MaybeExecuteDumpFunction(aCx, aMethodString, aData, stack);
   } else if ((aMethodName == MethodTime ||
               aMethodName == MethodTimeEnd) &&
              !aData.IsEmpty()) {
     MaybeExecuteDumpFunctionForTime(aCx, aMethodName, aMethodString,
                                     monotonicTimer, aData[0]);
   } else {
-    MaybeExecuteDumpFunction(aCx, aMethodString, aData);
+    MaybeExecuteDumpFunction(aCx, aMethodString, aData, nullptr);
   }
 
   if (NS_IsMainThread()) {
@@ -2574,7 +2574,8 @@ Console::CreateInstance(const GlobalObject& aGlobal,
 void
 Console::MaybeExecuteDumpFunction(JSContext* aCx,
                                   const nsAString& aMethodName,
-                                  const Sequence<JS::Value>& aData)
+                                  const Sequence<JS::Value>& aData,
+                                  nsIStackFrame* aStack)
 {
   if (!mDumpFunction && !mDumpToStdout) {
     return;
@@ -2610,6 +2611,36 @@ Console::MaybeExecuteDumpFunction(JSContext* aCx,
   }
 
   message.AppendLiteral("\n");
+
+  // aStack can be null.
+
+  nsCOMPtr<nsIStackFrame> stack(aStack);
+
+  while (stack) {
+    nsAutoString filename;
+    stack->GetFilename(aCx, filename);
+
+    message.Append(filename);
+    message.AppendLiteral(" ");
+
+    message.AppendInt(stack->GetLineNumber(aCx));
+    message.AppendLiteral(" ");
+
+    nsAutoString functionName;
+    stack->GetName(aCx, functionName);
+
+    message.Append(functionName);
+    message.AppendLiteral("\n");
+
+    nsCOMPtr<nsIStackFrame> caller = stack->GetCaller(aCx);
+
+    if (!caller) {
+      caller = stack->GetAsyncCaller(aCx);
+    }
+
+    stack.swap(caller);
+  }
+
   ExecuteDumpFunction(message);
 }
 
@@ -2648,52 +2679,6 @@ Console::MaybeExecuteDumpFunctionForTime(JSContext* aCx,
   message.Append(string);
   message.AppendLiteral(" @ ");
   message.AppendInt(aMonotonicTimer);
-
-  message.AppendLiteral("\n");
-  ExecuteDumpFunction(message);
-}
-
-void
-Console::MaybeExecuteDumpFunctionForTrace(JSContext* aCx, nsIStackFrame* aStack)
-{
-  if (!aStack || (!mDumpFunction && !mDumpToStdout)) {
-    return;
-  }
-
-  nsAutoString message;
-  message.AssignLiteral("console.trace:\n");
-
-  if (!mPrefix.IsEmpty()) {
-    message.Append(mPrefix);
-    message.AppendLiteral(": ");
-  }
-
-  nsCOMPtr<nsIStackFrame> stack(aStack);
-
-  while (stack) {
-    nsAutoString filename;
-    stack->GetFilename(aCx, filename);
-
-    message.Append(filename);
-    message.AppendLiteral(" ");
-
-    message.AppendInt(stack->GetLineNumber(aCx));
-    message.AppendLiteral(" ");
-
-    nsAutoString functionName;
-    stack->GetName(aCx, functionName);
-
-    message.Append(filename);
-    message.AppendLiteral("\n");
-
-    nsCOMPtr<nsIStackFrame> caller = stack->GetCaller(aCx);
-
-    if (!caller) {
-      caller = stack->GetAsyncCaller(aCx);
-    }
-
-    stack.swap(caller);
-  }
 
   message.AppendLiteral("\n");
   ExecuteDumpFunction(message);
