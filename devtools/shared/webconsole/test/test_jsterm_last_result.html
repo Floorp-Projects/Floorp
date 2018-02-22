@@ -38,34 +38,34 @@ function startTest()
   });
 }
 
-let checkUndefinedResult = Task.async(function*() {
+let checkUndefinedResult = async function () {
   info ("$_ returns undefined if nothing has evaluated yet");
-  let response = yield evaluateJS("$_");
+  let response = await evaluateJS("$_");
   basicResultCheck(response, "$_", undefined);
   nextTest();
-});
+};
 
-let checkAdditionResult = Task.async(function*() {
+let checkAdditionResult = async function () {
   info ("$_ returns last value and performs basic arithmetic");
-  let response = yield evaluateJS("2+2");
+  let response = await evaluateJS("2+2");
   basicResultCheck(response, "2+2", 4);
 
-  response = yield evaluateJS("$_");
+  response = await evaluateJS("$_");
   basicResultCheck(response, "$_", 4);
 
-  response = yield evaluateJS("$_ + 2");
+  response = await evaluateJS("$_ + 2");
   basicResultCheck(response, "$_ + 2", 6);
 
-  response = yield evaluateJS("$_ + 4");
+  response = await evaluateJS("$_ + 4");
   basicResultCheck(response, "$_ + 4", 10);
 
   nextTest();
-});
+};
 
-let checkObjectResult = Task.async(function*() {
+let checkObjectResult = async function () {
   info ("$_ has correct references to objects");
 
-  let response = yield evaluateJS("var foo = {bar:1}; foo;");
+  let response = await evaluateJS("var foo = {bar:1}; foo;");
   basicResultCheck(response, "var foo = {bar:1}; foo;", {
     type: "object",
     class: "Object",
@@ -77,7 +77,7 @@ let checkObjectResult = Task.async(function*() {
     }
   });
 
-  response = yield evaluateJS("$_");
+  response = await evaluateJS("$_");
   basicResultCheck(response, "$_", {
     type: "object",
     class: "Object",
@@ -91,7 +91,7 @@ let checkObjectResult = Task.async(function*() {
 
   top.foo.bar = 2;
 
-  response = yield evaluateJS("$_");
+  response = await evaluateJS("$_");
   basicResultCheck(response, "$_", {
     type: "object",
     class: "Object",
@@ -104,7 +104,7 @@ let checkObjectResult = Task.async(function*() {
   });
 
   nextTest();
-});
+};
 
 function basicResultCheck(response, input, output) {
   checkObject(response, {

@@ -20,17 +20,17 @@ const WORKER_DATA = (function () {
 const INTERVAL = 100;
 const DURATION = 1000;
 
-add_task(function* () {
+add_task(async function () {
   // Test both CJS and JSM versions
 
-  yield testWorker("JSM", () => ChromeUtils.import("resource://devtools/shared/worker/worker.js", {}));
-  yield testWorker("CommonJS", () => require("devtools/shared/worker/worker"));
+  await testWorker("JSM", () => ChromeUtils.import("resource://devtools/shared/worker/worker.js", {}));
+  await testWorker("CommonJS", () => require("devtools/shared/worker/worker"));
 });
 
-function* testWorker(context, workerFactory) {
+async function testWorker(context, workerFactory) {
   let { DevToolsWorker, workerify } = workerFactory();
   let worker = new DevToolsWorker(WORKER_URL);
-  let results = yield worker.performTask("plotTimestampsGraph", {
+  let results = await worker.performTask("plotTimestampsGraph", {
     timestamps: WORKER_DATA,
     interval: INTERVAL,
     duration: DURATION
@@ -40,7 +40,7 @@ function* testWorker(context, workerFactory) {
     `worker should have returned an object with array properties in ${context}`);
 
   let fn = workerify(x => x * x);
-  is((yield fn(5)), 25, `workerify works in ${context}`);
+  is((await fn(5)), 25, `workerify works in ${context}`);
   fn.destroy();
 
   worker.destroy();

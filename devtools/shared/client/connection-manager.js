@@ -11,7 +11,6 @@ const EventEmitter = require("devtools/shared/old-event-emitter");
 const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const Services = require("Services");
-const { Task } = require("devtools/shared/task");
 
 const REMOTE_TIMEOUT = "devtools.debugger.remote-timeout";
 
@@ -297,7 +296,7 @@ Connection.prototype = {
     this._setStatus(Connection.Status.DESTROYED);
   },
 
-  _getTransport: Task.async(function* () {
+  async _getTransport() {
     if (this._customTransport) {
       return this._customTransport;
     }
@@ -305,9 +304,9 @@ Connection.prototype = {
       return DebuggerServer.connectPipe();
     }
     let settings = this.socketSettings;
-    let transport = yield DebuggerClient.socketConnect(settings);
+    let transport = await DebuggerClient.socketConnect(settings);
     return transport;
-  }),
+  },
 
   _clientConnect: function () {
     this._getTransport().then(transport => {

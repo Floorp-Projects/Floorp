@@ -24,8 +24,8 @@ function evaluateJS(input) {
   return new Promise((resolve) => gState.client.evaluateJS(input, resolve));
 }
 
-function* evaluateJSAndCheckResult(input, result) {
-  let response = yield evaluateJS(input);
+async function evaluateJSAndCheckResult(input, result) {
+  let response = await evaluateJS(input);
   checkObject(response, {result});
 }
 
@@ -44,7 +44,7 @@ function onAttach(aState, aResponse)
 }
 
 tests = [
-  Task.async(function* registerNewCommand() {
+  async function registerNewCommand() {
     let win;
     WebConsoleCommands.register("setFoo", (owner, value) => {
       owner.window.foo = value;
@@ -55,7 +55,7 @@ tests = [
         "The command should be registered");
 
     let command = "setFoo('bar')";
-    let response = yield evaluateJS(command);
+    let response = await evaluateJS(command);
 
     checkObject(response, {
       from: gState.actor,
@@ -64,9 +64,9 @@ tests = [
     });
     is(top.foo, "bar", "top.foo should equal to 'bar'");
     nextTest();
-  }),
+  },
 
-  Task.async(function* wrapCommand() {
+  async function wrapCommand() {
     let origKeys = WebConsoleCommands.getCommand("keys");
 
     let newKeys = (...args) => {
@@ -83,13 +83,13 @@ tests = [
     is(WebConsoleCommands.getCommand("keys"), newKeys,
         "the keys() command should have been replaced");
 
-    let response = yield evaluateJS("keys('>o_/')");
+    let response = await evaluateJS("keys('>o_/')");
     checkObject(response, {
       from: gState.actor,
       result: "bang!"
     });
 
-    response = yield evaluateJS("keys({foo: 'bar'})");
+    response = await evaluateJS("keys({foo: 'bar'})");
     checkObject(response, {
       from: gState.actor,
       result: {
@@ -104,12 +104,12 @@ tests = [
     is(WebConsoleCommands.getCommand("keys"), origKeys,
       "the keys() command should be restored");
     nextTest();
-  }),
+  },
 
-  Task.async(function* unregisterCommand() {
+  async function unregisterCommand() {
     WebConsoleCommands.unregister("setFoo");
 
-    let response = yield evaluateJS("setFoo");
+    let response = await evaluateJS("setFoo");
 
     checkObject(response, {
       from: gState.actor,
@@ -120,9 +120,9 @@ tests = [
       exceptionMessage: /setFoo is not defined/
     });
     nextTest();
-  }),
+  },
 
-  Task.async(function* registerAccessor() {
+  async function registerAccessor() {
     WebConsoleCommands.register("$foo", {
       get(owner) {
         let foo = owner.window.frames[0].window.document.getElementById("quack");
@@ -130,7 +130,7 @@ tests = [
       }
     });
     let command = "$foo.textContent = '>o_/'";
-    let response = yield evaluateJS(command);
+    let response = await evaluateJS(command);
 
     checkObject(response, {
       from: gState.actor,
@@ -142,12 +142,12 @@ tests = [
     WebConsoleCommands.unregister("$foo");
     ok(!WebConsoleCommands.hasCommand("$foo"), "$foo should be unregistered");
     nextTest();
-  }),
+  },
 
-  Task.async(function* unregisterAfterOverridingTwice() {
+  async function unregisterAfterOverridingTwice() {
     WebConsoleCommands.register("keys", (owner, obj) => "command 1");
     info("checking the value of the first override");
-    yield evaluateJSAndCheckResult("keys('foo');", "command 1");
+    await evaluateJSAndCheckResult("keys('foo');", "command 1");
 
     let orig = WebConsoleCommands.getCommand("keys");
     WebConsoleCommands.register("keys", (owner, obj) => {
@@ -157,20 +157,20 @@ tests = [
     });
 
     info("checking the values after the second override");
-    yield evaluateJSAndCheckResult("keys({});", "command 1");
-    yield evaluateJSAndCheckResult("keys('quack');", "bang!");
+    await evaluateJSAndCheckResult("keys({});", "command 1");
+    await evaluateJSAndCheckResult("keys('quack');", "bang!");
 
     WebConsoleCommands.unregister("keys");
 
     info("checking the value after unregistration (should restore " +
       "the original command)");
-    yield evaluateJSAndCheckResult("keys({});", {
+    await evaluateJSAndCheckResult("keys({});", {
       class: "Array",
       preview: {items: []}
     });
     nextTest();
 
-  })
+  }
 ];
 
 function testEnd()

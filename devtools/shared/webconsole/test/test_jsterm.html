@@ -65,16 +65,14 @@ function onAttach(aState, aResponse)
   let tests = [doSimpleEval, doWindowEval, doEvalWithException,
                doEvalWithHelper, doEvalString, doEvalLongString,
                doEvalWithBinding, doEvalWithBindingFrame,
-               forceLexicalInit].map(t => {
-                 return Task.async(t);
-               });
+               forceLexicalInit];
 
   runTests(tests, testEnd);
 }
 
-function* doSimpleEval() {
+async function doSimpleEval() {
   info("test eval '2+2'");
-  let response = yield evaluateJS("2+2");
+  let response = await evaluateJS("2+2");
   checkObject(response, {
     from: gState.actor,
     input: "2+2",
@@ -87,9 +85,9 @@ function* doSimpleEval() {
   nextTest();
 }
 
-function* doWindowEval() {
+async function doWindowEval() {
   info("test eval 'document'");
-  let response = yield evaluateJS("document");
+  let response = await evaluateJS("document");
   checkObject(response, {
     from: gState.actor,
     input: "document",
@@ -106,9 +104,9 @@ function* doWindowEval() {
   nextTest();
 }
 
-function* doEvalWithException() {
+async function doEvalWithException() {
   info("test eval with exception");
-  let response = yield evaluateJS("window.doTheImpossible()");
+  let response = await evaluateJS("window.doTheImpossible()");
   checkObject(response, {
     from: gState.actor,
     input: "window.doTheImpossible()",
@@ -124,9 +122,9 @@ function* doEvalWithException() {
   nextTest();
 }
 
-function* doEvalWithHelper() {
+async function doEvalWithHelper() {
   info("test eval with helper");
-  let response = yield evaluateJS("clear()");
+  let response = await evaluateJS("clear()");
   checkObject(response, {
     from: gState.actor,
     input: "clear()",
@@ -141,8 +139,8 @@ function* doEvalWithHelper() {
   nextTest();
 }
 
-function* doEvalString() {
-  let response = yield evaluateJS("window.foobarObject.strfoo");
+async function doEvalString() {
+  let response = await evaluateJS("window.foobarObject.strfoo");
   checkObject(response, {
     from: gState.actor,
     input: "window.foobarObject.strfoo",
@@ -152,8 +150,8 @@ function* doEvalString() {
   nextTest();
 }
 
-function* doEvalLongString() {
-  let response = yield evaluateJS("window.foobarObject.omgstr");
+async function doEvalLongString() {
+  let response = await evaluateJS("window.foobarObject.omgstr");
   let str = top.foobarObject.omgstr;
   let initial = str.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH);
 
@@ -170,12 +168,12 @@ function* doEvalLongString() {
   nextTest();
 }
 
-function* doEvalWithBinding() {
-  let response = yield evaluateJS("document;");
+async function doEvalWithBinding() {
+  let response = await evaluateJS("document;");
   let documentActor = response.result.actor;
 
   info("running a command with _self as document using bindObjectActor");
-  let bindObjectSame = yield evaluateJS("_self === document", {
+  let bindObjectSame = await evaluateJS("_self === document", {
     bindObjectActor: documentActor
   });
   checkObject(bindObjectSame, {
@@ -183,7 +181,7 @@ function* doEvalWithBinding() {
   });
 
   info("running a command with _self as document using selectedObjectActor");
-  let selectedObjectSame = yield evaluateJS("_self === document", {
+  let selectedObjectSame = await evaluateJS("_self === document", {
     selectedObjectActor: documentActor
   });
   checkObject(selectedObjectSame, {
@@ -193,17 +191,17 @@ function* doEvalWithBinding() {
   nextTest();
 }
 
-function* doEvalWithBindingFrame() {
+async function doEvalWithBindingFrame() {
   let frameWin = top.document.querySelector("iframe").contentWindow;
   frameWin.fooFrame = { bar: 1 };
 
-  let response = yield evaluateJS(
+  let response = await evaluateJS(
     "document.querySelector('iframe').contentWindow.fooFrame"
   );
   let iframeObjectActor = response.result.actor;
   ok(iframeObjectActor, "There is an actor associated with the response");
 
-  let bindObjectGlobal = yield evaluateJS("this.temp0 = _self;", {
+  let bindObjectGlobal = await evaluateJS("this.temp0 = _self;", {
     bindObjectActor: iframeObjectActor
   });
   ok(!top.temp0,
@@ -211,7 +209,7 @@ function* doEvalWithBindingFrame() {
   ok(frameWin.temp0 && frameWin.temp0.bar === 1,
     "Global matches the object's global with bindObjectActor");
 
-  let selectedObjectGlobal = yield evaluateJS("this.temp1 = _self;", {
+  let selectedObjectGlobal = await evaluateJS("this.temp1 = _self;", {
     selectedObjectActor: iframeObjectActor
   });
   ok(top.temp1 && top.temp1.bar === 1,
@@ -222,7 +220,7 @@ function* doEvalWithBindingFrame() {
   nextTest()
 }
 
-function* forceLexicalInit() {
+async function forceLexicalInit() {
   info("test that failed let/const bindings are initialized to undefined");
 
   const testData = [
@@ -265,7 +263,7 @@ function* forceLexicalInit() {
   ];
 
   for (let data of testData) {
-      let response = yield evaluateJS(data.stmt);
+      let response = await evaluateJS(data.stmt);
       checkObject(response, {
         from: gState.actor,
         input: data.stmt,
@@ -273,7 +271,7 @@ function* forceLexicalInit() {
       });
       ok(response.exception, "expected exception");
       for (let varName of data.vars) {
-          let response2 = yield evaluateJS(varName);
+          let response2 = await evaluateJS(varName);
           checkObject(response2, {
             from: gState.actor,
             input: varName,

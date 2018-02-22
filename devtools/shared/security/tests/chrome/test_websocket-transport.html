@@ -25,7 +25,7 @@ window.onload = function () {
     Services.prefs.clearUserPref("devtools.debugger.prompt-connection");
   });
 
-  add_task(function* () {
+  add_task(async function () {
     DebuggerServer.init();
     DebuggerServer.registerAllActors();
 
@@ -35,10 +35,10 @@ window.onload = function () {
     ok(listener, "Socket listener created");
     listener.portOrPath = -1;
     listener.webSocket = true;
-    yield listener.open();
+    await listener.open();
     is(DebuggerServer.listeningSockets, 1, "1 listening socket");
 
-    let transport = yield DebuggerClient.socketConnect({
+    let transport = await DebuggerClient.socketConnect({
       host: "127.0.0.1",
       port: listener.port,
       webSocket: true
@@ -51,12 +51,12 @@ window.onload = function () {
     };
     client.addListener("closed", onUnexpectedClose);
 
-    yield client.connect();
-    yield client.listTabs();
+    await client.connect();
+    await client.listTabs();
 
     // Send a message the server that will echo back
     let message = "message";
-    let reply = yield client.request({
+    let reply = await client.request({
       to: "root",
       type: "echo",
       message

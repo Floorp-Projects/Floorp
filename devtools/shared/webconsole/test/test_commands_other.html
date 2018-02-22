@@ -35,8 +35,8 @@ function startTest() {
 }
 
 tests = [
-  Task.async(function* keys() {
-    let response = yield evaluateJS("keys({foo: 'bar'})");
+  async function keys() {
+    let response = await evaluateJS("keys({foo: 'bar'})");
     checkObject(response, {
       from: gState.actor,
       result: {
@@ -47,9 +47,9 @@ tests = [
       }
     });
     nextTest();
-  }),
-  Task.async(function* values() {
-    let response = yield evaluateJS("values({foo: 'bar'})");
+  },
+  async function values() {
+    let response = await evaluateJS("values({foo: 'bar'})");
     checkObject(response, {
       from: gState.actor,
       result: {
@@ -60,7 +60,7 @@ tests = [
       }
     });
     nextTest();
-  }),
+  },
 ];
 
 function testEnd() {
@@ -72,10 +72,10 @@ function testEnd() {
   });
 }
 
-let load = Task.async(function*() {
+let load = async function () {
   removeEventListener("load", load);
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     SpecialPowers.pushPrefEnv({"set": [
       ["security.data_uri.unique_opaque_origin", false],
     ]}, resolve);
@@ -85,7 +85,7 @@ let load = Task.async(function*() {
   gWin = window.open("data:text/html,");
   info ("Waiting for content window to load");
   gWin.onload = startTest;
-});
+};
 addEventListener("load", load);
 
 </script>

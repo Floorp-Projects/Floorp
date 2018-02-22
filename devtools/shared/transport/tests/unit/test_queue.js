@@ -13,9 +13,9 @@ var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {
 function run_test() {
   initTestDebuggerServer();
 
-  add_task(function* () {
-    yield test_transport(socket_transport);
-    yield test_transport(local_transport);
+  add_task(async function () {
+    await test_transport(socket_transport);
+    await test_transport(local_transport);
     DebuggerServer.destroy();
   });
 
@@ -24,7 +24,7 @@ function run_test() {
 
 /** * Tests ***/
 
-var test_transport = Task.async(function* (transportFactory) {
+var test_transport = async function (transportFactory) {
   let clientDeferred = defer();
   let serverDeferred = defer();
 
@@ -35,7 +35,7 @@ var test_transport = Task.async(function* (transportFactory) {
 
   Assert.equal(Object.keys(DebuggerServer._connections).length, 0);
 
-  let transport = yield transportFactory();
+  let transport = await transportFactory();
 
   // Sending from client to server
   function write_data({copyFrom}) {
@@ -135,7 +135,7 @@ var test_transport = Task.async(function* (transportFactory) {
   transport.ready();
 
   return promise.all([clientDeferred.promise, serverDeferred.promise]);
-});
+};
 
 /** * Test Utils ***/
 
