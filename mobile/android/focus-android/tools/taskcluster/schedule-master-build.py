@@ -26,8 +26,7 @@ def generate_build_task():
 		description = "Build Focus/Klar for Android from source code.",
 		command = ('echo "--" > .adjust_token'
 				   ' && python tools/l10n/check_translations.py'
-				   ' && ./gradlew clean assemble'
-				   ' && python tools/metrics/apk_size.py'))
+				   ' && ./gradlew clean assemble'))
 
 
 def generate_unit_test_task(buildTaskId):
