@@ -4306,9 +4306,9 @@ SimdTypeToArrayElementType(SimdType type)
 }
 
 bool
-IonBuilder::prepareForSimdLoadStore(CallInfo& callInfo, Scalar::Type simdType, MInstruction** elements,
-                                    MDefinition** index, Scalar::Type* arrayType,
-                                    BoundsCheckKind boundsCheckKind)
+IonBuilder::prepareForSimdLoadStore(CallInfo& callInfo, Scalar::Type simdType,
+                                    MInstruction** elements, MDefinition** index,
+                                    Scalar::Type* arrayType, BoundsCheckKind boundsCheckKind)
 {
     MDefinition* array = callInfo.getArg(0);
     *index = callInfo.getArg(1);
@@ -4320,31 +4320,35 @@ IonBuilder::prepareForSimdLoadStore(CallInfo& callInfo, Scalar::Type simdType, M
     current->add(indexAsInt32);
     *index = indexAsInt32;
 
-    MDefinition* indexForBoundsCheck = *index;
+    MDefinition* indexLoadEnd = *index;
 
-    // Artificially make sure the index is in bounds by adding the difference
-    // number of slots needed (e.g. reading from Float32Array we need to make
-    // sure to be in bounds for 4 slots, so add 3, etc.).
     MOZ_ASSERT(Scalar::byteSize(simdType) % Scalar::byteSize(*arrayType) == 0);
-    int32_t suppSlotsNeeded = Scalar::byteSize(simdType) / Scalar::byteSize(*arrayType) - 1;
-    if (suppSlotsNeeded) {
-        MConstant* suppSlots = constant(Int32Value(suppSlotsNeeded));
-        MAdd* addedIndex = MAdd::New(alloc(), *index, suppSlots);
-        // We're fine even with the add overflows, as long as the generated code
-        // for the bounds check uses an unsigned comparison.
+    int32_t byteLoadSize = Scalar::byteSize(simdType) / Scalar::byteSize(*arrayType);
+    if (byteLoadSize > 1) {
+        // Add the number of supplementary needed slots. Overflows are fine
+        // because the bounds check code uses an unsigned comparison.
+        MAdd* addedIndex = MAdd::New(alloc(), *index, constant(Int32Value(byteLoadSize - 1)));
         addedIndex->setInt32Specialization();
         current->add(addedIndex);
-        indexForBoundsCheck = addedIndex;
+        indexLoadEnd = addedIndex;
     }
 
     MInstruction* length;
     addTypedArrayLengthAndData(array, SkipBoundsCheck, index, &length, elements, boundsCheckKind);
 
-    // It can be that the index is out of bounds, while the added index for the
-    // bounds check is in bounds, so we actually need two bounds checks here.
+    // If the index+size addition overflows, then indexLoadEnd might be
+    // in bounds while the actual index isn't, so we need two bounds checks
+    // here.
+    if (byteLoadSize > 1) {
+        indexLoadEnd = addBoundsCheck(indexLoadEnd, length, BoundsCheckKind::UnusedIndex);
+        auto* sub = MSub::New(alloc(), indexLoadEnd, constant(Int32Value(byteLoadSize - 1)));
+        sub->setInt32Specialization();
+        current->add(sub);
+        *index = sub;
+    }
+
     *index = addBoundsCheck(*index, length, boundsCheckKind);
 
-    addBoundsCheck(indexForBoundsCheck, length, BoundsCheckKind::UnusedIndex);
     return true;
 }
 

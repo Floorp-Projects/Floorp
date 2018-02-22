@@ -14,6 +14,7 @@ extern "C" {
 const uint8_t U2F_RESBUF_ID_REGISTRATION = 0;
 const uint8_t U2F_RESBUF_ID_KEYHANDLE = 1;
 const uint8_t U2F_RESBUF_ID_SIGNATURE = 2;
+const uint8_t U2F_RESBUF_ID_APPID = 3;
 
 const uint64_t U2F_FLAG_REQUIRE_RESIDENT_KEY = 1;
 const uint64_t U2F_FLAG_REQUIRE_USER_VERIFICATION = 2;
@@ -33,6 +34,9 @@ const uint8_t U2F_AUTHENTICATOR_TRANSPORT_BLE = 4;
 
 // The `rust_u2f_mgr` opaque type is equivalent to the rust type `U2FManager`
 struct rust_u2f_manager;
+
+// The `rust_u2f_app_ids` opaque type is equivalent to the rust type `U2FAppIds`
+struct rust_u2f_app_ids;
 
 // The `rust_u2f_key_handles` opaque type is equivalent to the rust type `U2FKeyHandles`
 struct rust_u2f_key_handles;
@@ -65,11 +69,19 @@ uint64_t rust_u2f_mgr_sign(rust_u2f_manager* mgr,
                            rust_u2f_callback,
                            const uint8_t* challenge_ptr,
                            size_t challenge_len,
-                           const uint8_t* application_ptr,
-                           size_t application_len,
+                           const rust_u2f_app_ids* app_ids,
                            const rust_u2f_key_handles* khs);
 
 uint64_t rust_u2f_mgr_cancel(rust_u2f_manager* mgr);
+
+
+/// U2FAppIds functions.
+
+rust_u2f_app_ids* rust_u2f_app_ids_new();
+void rust_u2f_app_ids_add(rust_u2f_app_ids* ids,
+                          const uint8_t* id,
+                          size_t id_len);
+/* unsafe */ void rust_u2f_app_ids_free(rust_u2f_app_ids* ids);
 
 
 /// U2FKeyHandles functions.
