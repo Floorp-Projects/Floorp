@@ -61,6 +61,11 @@
     --toolbarbutton-icon-fill-opacity: 1;
   }
 
+  /* Make the menubar text readable on aero glass (copied from browser-aero.css). */
+  #toolbar-menubar {
+    text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
+  }
+
   #main-menubar:not(:-moz-window-inactive) {
     background-color: rgba(255,255,255,.5);
     color: black;

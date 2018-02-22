@@ -2074,11 +2074,20 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
   bool haveDesiredBSize = false;
   SetHaveReflowedColGroups(false);
 
+  // The tentative width is the width we assumed for the table when the child
+  // frames were positioned (which only matters in vertical-rl mode, because
+  // they're positioned relative to the right-hand edge). Then, after reflowing
+  // the kids, we can check whether the table ends up with a different width
+  // than this tentative value (either because it was unconstrained, so we used
+  // zero, or because it was enlarged by the child frames), we make the
+  // necessary positioning adjustments along the x-axis.
+  nscoord tentativeContainerWidth = 0;
+  bool mayAdjustXForAllChildren = false;
+
   // Reflow the entire table (pass 2 and possibly pass 3). This phase is necessary during a
   // constrained initial reflow and other reflows which require either a strategy init or balance.
   // This isn't done during an unconstrained reflow, because it will occur later when the parent
   // reflows with a constrained isize.
-  bool fixupKidPositions = false;
   if (NS_SUBTREE_DIRTY(this) ||
       aReflowInput.ShouldReflowAllKids() ||
       IsGeometryDirty() ||
@@ -2134,11 +2143,26 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
 
     ReflowTable(aDesiredSize, aReflowInput, availBSize,
                 lastChildReflowed, aStatus);
-    // If ComputedWidth is unconstrained, we may need to fix child positions
-    // later (in vertical-rl mode) due to use of 0 as a dummy
-    // containerSize.width during ReflowChildren.
-    fixupKidPositions = wm.IsVerticalRL() &&
-      aReflowInput.ComputedWidth() == NS_UNCONSTRAINEDSIZE;
+    // When in vertical-rl mode, there may be two kinds of scenarios in which
+    // the positioning of all the children need to be adjusted along the x-axis
+    // because the width we assumed for the table when the child frames were
+    // being positioned(i.e. tentative width) may be different from the final
+    // width for the table:
+    // 1. If the computed width for the table is unconstrained, a dummy zero
+    //    width was assumed as the tentative width to begin with.
+    // 2. If the child frames enlarge the width for the table, the final width
+    //    becomes larger than the tentative one.
+    // Let's record the tentative width here, if later the final width turns out
+    // to be different from this tentative one, it means one of the above
+    // scenarios happens, then we adjust positioning of all the children.
+    // Note that vertical-lr, unlike vertical-rl, doesn't need to take special
+    // care of this situation, because they're positioned relative to the
+    // left-hand edge.
+    if (wm.IsVerticalRL()) {
+      tentativeContainerWidth =
+        aReflowInput.ComputedSizeAsContainerIfConstrained().width;
+      mayAdjustXForAllChildren = true;
+    }
 
     // reevaluate special bsize reflow conditions
     if (HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
@@ -2182,12 +2206,17 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
     ProcessRowInserted(aDesiredSize.BSize(wm));
   }
 
-  if (fixupKidPositions) {
-    // If we didn't already know the containerSize (and so used zero during
-    // ReflowChildren), then we need to update the block-position of our kids.
-    for (nsIFrame* kid : mFrames) {
-      kid->MovePositionBy(nsPoint(aDesiredSize.Width(), 0));
-      RePositionViews(kid);
+  // For more information on the reason for what we should do this, refer to the
+  // code which defines and evaluates the variables xAdjustmentForAllKids and
+  // tentativeContainerWidth in the previous part in this function.
+  if (mayAdjustXForAllChildren) {
+    nscoord xAdjustmentForAllKids =
+      aDesiredSize.Width() - tentativeContainerWidth;
+    if (0 != xAdjustmentForAllKids) {
+      for (nsIFrame* kid : mFrames) {
+        kid->MovePositionBy(nsPoint(xAdjustmentForAllKids, 0));
+        RePositionViews(kid);
+      }
     }
   }
 

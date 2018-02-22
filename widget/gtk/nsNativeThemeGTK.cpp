@@ -80,8 +80,8 @@ GetMonitorScaleFactor(nsIFrame* aFrame)
         return rootWidget->GetDefaultScale().scale / gfxPlatformGtk::GetFontScaleFactor();
     }
   }
-  // We cannot return zero scale because that would lead to divide by zero
-  return (scale < 1) ? 1 : int(round(scale));
+  // Use monitor scaling factor where devPixelsPerPx is set
+  return ScreenHelperGTK::GetGTKMonitorScaleFactor();
 }
 
 nsNativeThemeGTK::nsNativeThemeGTK()
