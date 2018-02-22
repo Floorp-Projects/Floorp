@@ -7,7 +7,6 @@
 pref("services.sync.lastversion", "firstrun");
 pref("services.sync.sendVersionInfo", true);
 
-pref("services.sync.scheduler.eolInterval", 604800); // 1 week
 pref("services.sync.scheduler.idleInterval", 3600);  // 1 hour
 pref("services.sync.scheduler.activeInterval", 600);   // 10 minutes
 pref("services.sync.scheduler.immediateInterval", 90);    // 1.5 minutes
