@@ -23,8 +23,6 @@ const testDevice = {
 addDeviceForTest(testDevice);
 
 addRDMTask(TEST_URL, async function ({ ui, manager }) {
-  reloadOnTouchChange(true);
-
   await waitStartup(ui);
 
   await testDefaults(ui);
@@ -33,8 +31,6 @@ addRDMTask(TEST_URL, async function ({ ui, manager }) {
   await testEnableTouchSimulation(ui);
   await testResizingViewport(ui, false, true);
   await testDisableTouchSimulation(ui);
-
-  reloadOnTouchChange(false);
 });
 
 async function waitStartup(ui) {
@@ -42,7 +38,7 @@ async function waitStartup(ui) {
 
   // Wait until the viewport has been added and the device list has been loaded
   await waitUntilState(store, state => state.viewports.length == 1
-    && state.devices.listState == Types.loadableState.LOADED);
+    && state.devices.listState == Types.deviceListState.LOADED);
 }
 
 async function testDefaults(ui) {

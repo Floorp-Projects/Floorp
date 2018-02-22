@@ -23,7 +23,7 @@ addRDMTask(TEST_URL, async function ({ ui }) {
   // Wait until the viewport has been added and the device list state indicates
   // an error
   await waitUntilState(store, state => state.viewports.length == 1
-    && state.devices.listState == Types.loadableState.ERROR);
+    && state.devices.listState == Types.deviceListState.ERROR);
 
   // The device selector placeholder should be set accordingly
   let placeholder = select.options[select.selectedIndex].innerHTML;

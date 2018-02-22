@@ -34,7 +34,6 @@ Services.scriptloader.loadSubScript(
 const E10S_MULTI_ENABLED = Services.prefs.getIntPref("dom.ipc.processCount") > 1;
 const TEST_URI_ROOT = "http://example.com/browser/devtools/client/responsive.html/test/browser/";
 const OPEN_DEVICE_MODAL_VALUE = "OPEN_DEVICE_MODAL";
-const RELOAD_CONDITION_PREF_PREFIX = "devtools.responsive.reloadConditions.";
 
 const { _loadPreferredDevices } = require("devtools/client/responsive.html/actions/devices");
 const asyncStorage = require("devtools/shared/async-storage");
@@ -49,14 +48,14 @@ SimpleTest.waitForExplicitFinish();
 requestLongerTimeout(2);
 
 flags.testing = true;
-Services.prefs.setCharPref("devtools.devices.url", TEST_URI_ROOT + "devices.json");
+Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
+Services.prefs.setCharPref("devtools.devices.url",
+  TEST_URI_ROOT + "devices.json");
 
 registerCleanupFunction(async () => {
   flags.testing = false;
   Services.prefs.clearUserPref("devtools.devices.url");
   Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
-  Services.prefs.clearUserPref("devtools.responsive.reloadConditions.touchSimulation");
-  Services.prefs.clearUserPref("devtools.responsive.reloadConditions.userAgent");
   await asyncStorage.removeItem("devtools.devices.url_cache");
   await removeLocalDevices();
 });
@@ -419,14 +418,4 @@ function addDeviceInModal(ui, device) {
   );
   Simulate.click(adderSave);
   return saved;
-}
-
-function reloadOnUAChange(enabled) {
-  let pref = RELOAD_CONDITION_PREF_PREFIX + "userAgent";
-  Services.prefs.setBoolPref(pref, enabled);
-}
-
-function reloadOnTouchChange(enabled) {
-  let pref = RELOAD_CONDITION_PREF_PREFIX + "touchSimulation";
-  Services.prefs.setBoolPref(pref, enabled);
 }
