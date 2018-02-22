@@ -65,7 +65,7 @@ public:
   void GetKey(nsAString& aKey) const;
   uint32_t CharCode();
   uint32_t KeyCode(CallerType aCallerType = CallerType::System);
-  virtual uint32_t Which() override;
+  virtual uint32_t Which(CallerType aCallerType = CallerType::System) override;
   uint32_t Location();
 
   void GetCode(nsAString& aCode, CallerType aCallerType = CallerType::System);

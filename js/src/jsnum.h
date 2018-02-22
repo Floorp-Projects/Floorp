@@ -48,18 +48,6 @@ FinishRuntimeNumberState(JSRuntime* rt);
 extern JSObject*
 InitNumberClass(JSContext* cx, HandleObject obj);
 
-} /* namespace js */
-
-/*
- * String constants for global function names, used in jsapi.c and jsnum.c.
- */
-extern const char js_isNaN_str[];
-extern const char js_isFinite_str[];
-extern const char js_parseFloat_str[];
-extern const char js_parseInt_str[];
-
-namespace js {
-
 /*
  * When base == 10, this function implements ToString() as specified by
  * ECMA-262-5 section 9.8.1; but note that it handles integers specially for
