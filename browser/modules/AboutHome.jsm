@@ -178,8 +178,7 @@ var AboutHome = {
       if (target && target.messageManager) {
         target.messageManager.sendAsyncMessage("AboutHome:Update", data);
       } else {
-        let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
-        mm.broadcastAsyncMessage("AboutHome:Update", data);
+        Services.mm.broadcastAsyncMessage("AboutHome:Update", data);
       }
     }).catch(function onError(x) {
       Cu.reportError("Error in AboutHome.sendAboutHomeData: " + x);
