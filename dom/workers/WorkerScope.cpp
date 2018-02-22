@@ -144,7 +144,8 @@ WorkerGlobalScope::GetConsole(ErrorResult& aRv)
   mWorkerPrivate->AssertIsOnWorkerThread();
 
   if (!mConsole) {
-    mConsole = Console::Create(nullptr, aRv);
+    mConsole = Console::Create(mWorkerPrivate->GetJSContext(),
+                               nullptr, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
@@ -1077,7 +1078,8 @@ WorkerDebuggerGlobalScope::GetConsole(ErrorResult& aRv)
 
   // Debugger console has its own console object.
   if (!mConsole) {
-    mConsole = Console::Create(nullptr, aRv);
+    mConsole = Console::Create(mWorkerPrivate->GetJSContext(),
+                               nullptr, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
