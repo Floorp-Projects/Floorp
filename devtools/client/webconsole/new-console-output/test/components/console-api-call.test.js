@@ -19,6 +19,7 @@ const {
   MESSAGE_CLOSE,
 } = require("devtools/client/webconsole/new-console-output/constants");
 const { INDENT_WIDTH } = require("devtools/client/webconsole/new-console-output/components/MessageIndent");
+const {prepareMessage} = require("devtools/client/webconsole/new-console-output/utils/messages");
 
 // Test fakes.
 const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
@@ -85,6 +86,37 @@ describe("ConsoleAPICall component:", () => {
       const thirdElementStyle = elements.eq(2).prop("style");
       // Allowed styles are applied accordingly on the third element.
       expect(thirdElementStyle.color).toBe("blue");
+    });
+
+    it("renders prefixed messages", () => {
+      const stub = {
+        "level": "debug",
+        "filename": "resource:///modules/CustomizableUI.jsm",
+        "lineNumber": 181,
+        "functionName": "initialize",
+        "timeStamp": 1519311532912,
+        "arguments": [
+          "Initializing"
+        ],
+        "prefix": "MyNicePrefix",
+        "workerType": "none",
+        "styles": [],
+        "category": "webdev",
+        "_type": "ConsoleAPI"
+      };
+      const wrapper = render(ConsoleApiCall({
+        message: prepareMessage(stub, {getNextId: () => "p"}),
+        serviceContainer
+      }));
+      const prefix = wrapper.find(".console-message-prefix");
+      expect(prefix.text()).toBe("MyNicePrefix: ");
+
+      expect(wrapper.find(".message-body").text()).toBe("MyNicePrefix: Initializing");
+
+      // There should be the location
+      const locationLink = wrapper.find(`.message-location`);
+      expect(locationLink.length).toBe(1);
+      expect(locationLink.text()).toBe("CustomizableUI.jsm:181");
     });
 
     it("renders repeat node", () => {
