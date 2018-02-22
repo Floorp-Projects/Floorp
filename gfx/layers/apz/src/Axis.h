@@ -83,9 +83,9 @@ public:
    * to prevent the viewport from overscrolling the page rect), and axis locking
    * (which might prevent any displacement from happening). If overscroll
    * ocurred, its amount is written to |aOverscrollAmountOut|.
-   * The |aDisplacementOut| parameter is set to the adjusted
-   * displacement, and the function returns true iff internal overscroll amounts
-   * were changed.
+   * The |aDisplacementOut| parameter is set to the adjusted displacement, and
+   * the function returns true if and only if internal overscroll amounts were
+   * changed.
    */
   bool AdjustDisplacement(ParentLayerCoord aDisplacement,
                           /* ParentLayerCoord */ float& aDisplacementOut,
