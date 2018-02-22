@@ -1505,7 +1505,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             tu.protocol.accept(self)
 
         if tu.filetype == 'header':
-            self.cppIncludeHeaders.append(_ipdlhHeaderName(tu))
+            self.cppIncludeHeaders.append(_ipdlhHeaderName(tu) + '.h')
 
         hf.addthing(Whitespace.NL)
         hf.addthings(_includeGuardEnd(hf))
@@ -1513,7 +1513,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         cf = self.cppfile
         cf.addthings((
             [ _DISCLAIMER, Whitespace.NL ]
-            + [ CppDirective('include','"'+h+'.h"')
+            + [ CppDirective('include','"'+h+'"')
                 for h in self.cppIncludeHeaders ]
             + [ Whitespace.NL ]
         ))
@@ -1532,10 +1532,18 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
     def visitBuiltinCxxInclude(self, inc):
         self.hdrfile.addthing(CppDirective('include', '"'+ inc.file +'"'))
 
+    def visitCxxInclude(self, inc):
+        self.cppIncludeHeaders.append(inc.file)
+
     def visitInclude(self, inc):
         if inc.tu.filetype == 'header':
             self.hdrfile.addthing(CppDirective(
                     'include', '"'+ _ipdlhHeaderName(inc.tu) +'.h"'))
+        else:
+            self.cppIncludeHeaders += [
+                _protocolHeaderName(inc.tu.protocol, 'parent') + '.h',
+                _protocolHeaderName(inc.tu.protocol, 'child') + '.h',
+            ]
 
     def generateStructsAndUnions(self, tu):
         '''Generate the definitions for all structs and unions. This will
@@ -1589,7 +1597,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             gen_struct(d, t)
 
     def visitProtocol(self, p):
-        self.cppIncludeHeaders.append(_protocolHeaderName(self.protocol, ''))
+        self.cppIncludeHeaders.append(_protocolHeaderName(self.protocol, '') + '.h')
 
         # Forward declare our own actors.
         self.hdrfile.addthings([
