@@ -57,7 +57,6 @@ SyncScheduler.prototype = {
     this.idleInterval         = getThrottledIntervalPreference("scheduler.idleInterval");
     this.activeInterval       = getThrottledIntervalPreference("scheduler.activeInterval");
     this.immediateInterval    = getThrottledIntervalPreference("scheduler.immediateInterval");
-    this.eolInterval          = getThrottledIntervalPreference("scheduler.eolInterval");
 
     // A user is non-idle on startup by default.
     this.idle = false;
@@ -406,12 +405,6 @@ SyncScheduler.prototype = {
   },
 
   adjustSyncInterval: function adjustSyncInterval() {
-    if (Status.eol) {
-      this._log.debug("Server status is EOL; using eolInterval.");
-      this.syncInterval = this.eolInterval;
-      return;
-    }
-
     if (this.numClients <= 1) {
       this._log.trace("Adjusting syncInterval to singleDeviceInterval.");
       this.syncInterval = this.singleDeviceInterval;
@@ -661,8 +654,6 @@ function ErrorHandler(service) {
   this.init();
 }
 ErrorHandler.prototype = {
-  MINIMUM_ALERT_INTERVAL_MSEC: 604800000,   // One week.
-
   /**
    * Flag that turns on error reporting for all errors, incl. network errors.
    */
@@ -950,68 +941,6 @@ ErrorHandler.prototype = {
     return result;
   },
 
-  get currentAlertMode() {
-    return Svc.Prefs.get("errorhandler.alert.mode");
-  },
-
-  set currentAlertMode(str) {
-    return Svc.Prefs.set("errorhandler.alert.mode", str);
-  },
-
-  get earliestNextAlert() {
-    return Svc.Prefs.get("errorhandler.alert.earliestNext", 0) * 1000;
-  },
-
-  set earliestNextAlert(msec) {
-    return Svc.Prefs.set("errorhandler.alert.earliestNext", msec / 1000);
-  },
-
-  clearServerAlerts() {
-    // If we have any outstanding alerts, apparently they're no longer relevant.
-    Svc.Prefs.resetBranch("errorhandler.alert");
-  },
-
-  /**
-   * X-Weave-Alert headers can include a JSON object:
-   *
-   *   {
-   *    "code":    // One of "hard-eol", "soft-eol".
-   *    "url":     // For "Learn more" link.
-   *    "message": // Logged in Sync logs.
-   *   }
-   */
-  handleServerAlert(xwa) {
-    if (!xwa.code) {
-      this._log.warn("Got structured X-Weave-Alert, but no alert code.");
-      return;
-    }
-
-    switch (xwa.code) {
-      // Gently and occasionally notify the user that this service will be
-      // shutting down.
-      case "soft-eol":
-        // Fall through.
-
-      // Tell the user that this service has shut down, and drop our syncing
-      // frequency dramatically.
-      case "hard-eol":
-        // Note that both of these alerts should be subservient to future "sign
-        // in with your Firefox Account" storage alerts.
-        if ((this.currentAlertMode != xwa.code) ||
-            (this.earliestNextAlert < Date.now())) {
-          CommonUtils.nextTick(function() {
-            Svc.Obs.notify("weave:eol", xwa);
-          }, this);
-          this._log.error("X-Weave-Alert: " + xwa.code + ": " + xwa.message);
-          this.earliestNextAlert = Date.now() + this.MINIMUM_ALERT_INTERVAL_MSEC;
-          this.currentAlertMode = xwa.code;
-        }
-        break;
-      default:
-        this._log.debug("Got unexpected X-Weave-Alert code: " + xwa.code);
-    }
-  },
-
   /**
    * Handle HTTP response results or exceptions and set the appropriate
    * Status.* bits.
@@ -1021,27 +950,6 @@ ErrorHandler.prototype = {
   checkServerError(resp) {
     // In this case we were passed a resolved value of Resource#_doRequest.
     switch (resp.status) {
-      case 200:
-      case 404:
-      case 513:
-        let xwa = resp.headers["x-weave-alert"];
-
-        // Only process machine-readable alerts.
-        if (!xwa || !xwa.startsWith("{")) {
-          this.clearServerAlerts();
-          return;
-        }
-
-        try {
-          xwa = JSON.parse(xwa);
-        } catch (ex) {
-          this._log.warn("Malformed X-Weave-Alert from server: " + xwa);
-          return;
-        }
-
-        this.handleServerAlert(xwa);
-        break;
-
       case 400:
         if (resp == RESPONSE_OVER_QUOTA) {
           Status.sync = OVER_QUOTA;
