@@ -391,7 +391,8 @@ nsTableCellFrame::ProcessBorders(nsTableFrame* aFrame,
 
   if (!GetContentEmpty() ||
       StyleTableBorder()->mEmptyCells == NS_STYLE_TABLE_EMPTY_CELLS_SHOW) {
-    aLists.BorderBackground()->AppendToTop(MakeDisplayItem<nsDisplayBorder>(aBuilder, this));
+    aLists.BorderBackground()->AppendToTop(new (aBuilder)
+                                              nsDisplayBorder(aBuilder, this));
   }
 
   return NS_OK;
@@ -495,7 +496,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     bool hasBoxShadow = !!StyleEffects()->mBoxShadow;
     if (hasBoxShadow) {
       aLists.BorderBackground()->AppendToTop(
-        MakeDisplayItem<nsDisplayBoxShadowOuter>(aBuilder, this));
+        new (aBuilder) nsDisplayBoxShadowOuter(aBuilder, this));
     }
 
     // display background if we need to.
@@ -511,7 +512,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // display inset box-shadows if we need to.
     if (hasBoxShadow) {
       aLists.BorderBackground()->AppendToTop(
-         MakeDisplayItem<nsDisplayBoxShadowInner>(aBuilder, this));
+        new (aBuilder) nsDisplayBoxShadowInner(aBuilder, this));
     }
 
     // display borders if we need to
@@ -519,8 +520,8 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     // and display the selection border if we need to
     if (IsSelected()) {
-      aLists.BorderBackground()->AppendToTop(
-        MakeDisplayItem<nsDisplayTableCellSelection>(aBuilder, this));
+      aLists.BorderBackground()->AppendToTop(new (aBuilder)
+        nsDisplayTableCellSelection(aBuilder, this));
     }
   }
 

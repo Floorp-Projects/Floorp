@@ -318,7 +318,7 @@ WrapBackgroundColorInOwnLayer(nsDisplayListBuilder* aBuilder,
     if (item->GetType() == DisplayItemType::TYPE_BACKGROUND_COLOR) {
       nsDisplayList tmpList;
       tmpList.AppendToTop(item);
-      item = MakeDisplayItem<nsDisplayOwnLayer>(aBuilder, aFrame, &tmpList, aBuilder->CurrentActiveScrolledRoot());
+      item = new (aBuilder) nsDisplayOwnLayer(aBuilder, aFrame, &tmpList, aBuilder->CurrentActiveScrolledRoot());
     }
     tempItems.AppendToTop(item);
   }
@@ -558,7 +558,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       zoomFlags |= nsDisplayOwnLayerFlags::eGenerateScrollableLayer;
     }
     nsDisplayZoom* zoomItem =
-      MakeDisplayItem<nsDisplayZoom>(aBuilder, subdocRootFrame, &childItems,
+      new (aBuilder) nsDisplayZoom(aBuilder, subdocRootFrame, &childItems,
                                    subdocAPD, parentAPD, zoomFlags);
     childItems.AppendToTop(zoomItem);
     needsOwnLayer = false;
@@ -570,14 +570,14 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
   if (constructResolutionItem) {
     nsDisplayResolution* resolutionItem =
-      MakeDisplayItem<nsDisplayResolution>(aBuilder, subdocRootFrame, &childItems,
-                                           flags);
+      new (aBuilder) nsDisplayResolution(aBuilder, subdocRootFrame, &childItems,
+                                         flags);
     childItems.AppendToTop(resolutionItem);
     needsOwnLayer = false;
   }
 
   // We always want top level content documents to be in their own layer.
-  nsDisplaySubDocument* layerItem = MakeDisplayItem<nsDisplaySubDocument>(
+  nsDisplaySubDocument* layerItem = new (aBuilder) nsDisplaySubDocument(
     aBuilder, subdocRootFrame ? subdocRootFrame : this, this,
     &childItems, flags);
   childItems.AppendToTop(layerItem);
