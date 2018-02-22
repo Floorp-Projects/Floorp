@@ -69,7 +69,7 @@ this.Policies = {
     }
   },
 
-  "display_menu_bar": {
+  "DisplayMenuBar": {
     onBeforeUIStartup(manager, param) {
       if (param) {
         // This policy is meant to change the default behavior, not to force it.
@@ -86,7 +86,7 @@ this.Policies = {
     }
   },
 
-  "display_bookmarks_toolbar": {
+  "DisplayBookmarksToolbar": {
     onBeforeUIStartup(manager, param) {
       if (param) {
         // This policy is meant to change the default behavior, not to force it.
@@ -103,7 +103,7 @@ this.Policies = {
     }
   },
 
-  "block_set_desktop_background": {
+  "BlockSetDesktopBackground": {
     onBeforeUIStartup(manager, param) {
       if (param) {
         manager.disallowFeature("setDesktopBackground", true);
@@ -143,21 +143,21 @@ this.Policies = {
     }
   },
 
-  "dont_check_default_browser": {
+  "DontCheckDefaultBrowser": {
     onBeforeUIStartup(manager, param) {
       setAndLockPref("browser.shell.checkDefaultBrowser", false);
     }
   },
 
-  "flash_plugin": {
+  "FlashPlugin": {
     onBeforeUIStartup(manager, param) {
-      addAllowDenyPermissions("plugin:flash", param.allow, param.block);
+      addAllowDenyPermissions("plugin:flash", param.Allow, param.Block);
     }
   },
 
-  "popups": {
+  "Popups": {
     onBeforeUIStartup(manager, param) {
-      addAllowDenyPermissions("popup", param.allow, param.block);
+      addAllowDenyPermissions("popup", param.Allow, param.Block);
     }
   },
 
@@ -167,15 +167,15 @@ this.Policies = {
     }
   },
 
-  "install_addons": {
+  "InstallAddons": {
     onBeforeUIStartup(manager, param) {
-      addAllowDenyPermissions("install", param.allow, param.block);
+      addAllowDenyPermissions("install", param.Allow, param.Block);
     }
   },
 
-  "cookies": {
+  "Cookies": {
     onBeforeUIStartup(manager, param) {
-      addAllowDenyPermissions("cookie", param.allow, param.block);
+      addAllowDenyPermissions("cookie", param.Allow, param.Block);
     }
   },
 };

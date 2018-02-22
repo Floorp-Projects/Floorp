@@ -1,48 +1,48 @@
 {
   "policies": {
-    "popups": {
-      "allow": [
+    "Popups": {
+      "Allow": [
         "https://www.allow.com",
         "https://www.pre-existing-deny.com"
       ],
 
-      "block": [
+      "Block": [
         "https://www.deny.com",
         "https://www.pre-existing-allow.com"
       ]
     },
 
-    "cookies": {
-      "allow": [
+    "Cookies": {
+      "Allow": [
         "https://www.allow.com",
         "https://www.pre-existing-deny.com"
       ],
 
-      "block": [
+      "Block": [
         "https://www.deny.com",
         "https://www.pre-existing-allow.com"
       ]
     },
 
-    "install_addons": {
-      "allow": [
+    "InstallAddons": {
+      "Allow": [
         "https://www.allow.com",
         "https://www.pre-existing-deny.com"
       ],
 
-      "block": [
+      "Block": [
         "https://www.deny.com",
         "https://www.pre-existing-allow.com"
       ]
     },
 
-    "flash_plugin": {
-      "allow": [
+    "FlashPlugin": {
+      "Allow": [
         "https://www.allow.com",
         "https://www.pre-existing-deny.com"
       ],
 
-      "block": [
+      "Block": [
         "https://www.deny.com",
         "https://www.pre-existing-allow.com"
       ]

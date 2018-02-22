@@ -5,7 +5,7 @@
 add_task(async function setup() {
   await setupPolicyEngineWithJson({
     "policies": {
-      "block_set_desktop_background": true
+      "BlockSetDesktopBackground": true
     }
   });
 });
