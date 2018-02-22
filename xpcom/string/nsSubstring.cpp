@@ -41,7 +41,7 @@
 #define CHECK_STRING_BUFFER_CANARY(c)                                     \
   do {                                                                    \
     if ((c) != CANARY_OK) {                                               \
-      MOZ_CRASH_UNSAFE_PRINTF("Bad canary value %d", c);                  \
+      MOZ_CRASH_UNSAFE_PRINTF("Bad canary value 0x%x", c);                  \
     }                                                                     \
   } while(0)
 #else
@@ -376,7 +376,7 @@ nsStringBuffer::SizeOfIncludingThisEvenIfShared(mozilla::MallocSizeOf aMallocSiz
 void
 nsStringBuffer::FromDataCanaryCheckFailed() const
 {
-  MOZ_CRASH_UNSAFE_PRINTF("Bad canary value %d in FromData", mCanary);
+  MOZ_CRASH_UNSAFE_PRINTF("Bad canary value 0x%x in FromData", mCanary);
 }
 #endif
 
