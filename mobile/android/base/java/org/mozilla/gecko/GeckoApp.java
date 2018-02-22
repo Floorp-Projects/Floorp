@@ -608,7 +608,15 @@ public abstract class GeckoApp extends GeckoActivity
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
+        // Through the GeckoActivityMonitor, this will flush tabs if the whole
+        // application is going into the background.
         super.onSaveInstanceState(outState);
+
+        // If on the other hand we're merely switching to a different activity
+        // within our app, we need to trigger a tabs flush ourselves.
+        if (!isApplicationInBackground()) {
+            EventDispatcher.getInstance().dispatch("Session:FlushTabs", null);
+        }
 
         outState.putBoolean(SAVED_STATE_IN_BACKGROUND, isApplicationInBackground());
         outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
