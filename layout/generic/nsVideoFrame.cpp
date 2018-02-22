@@ -570,7 +570,7 @@ nsVideoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   if (HasVideoElement() && !shouldDisplayPoster) {
     aLists.Content()->AppendToTop(
-      MakeDisplayItem<nsDisplayVideo>(aBuilder, this));
+      new (aBuilder) nsDisplayVideo(aBuilder, this));
   }
 
   // Add child frames to display list. We expect various children,
