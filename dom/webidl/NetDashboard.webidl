@@ -62,6 +62,7 @@ dictionary DnsCacheEntry {
   sequence<DOMString> hostaddr;
   DOMString family = "";
   double expiration = 0;
+  boolean trr = false;
 };
 
 dictionary DNSCacheDict {
