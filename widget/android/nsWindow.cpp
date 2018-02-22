@@ -282,7 +282,8 @@ public:
                      jni::Object::Param aSettings,
                      jni::String::Param aChromeURI,
                      int32_t aScreenId,
-                     bool aPrivateMode);
+                     bool aPrivateMode,
+                     jni::String::Param aId);
 
     // Close and destroy the nsWindow.
     void Close();
@@ -1248,7 +1249,8 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
                                  jni::Object::Param aSettings,
                                  jni::String::Param aChromeURI,
                                  int32_t aScreenId,
-                                 bool aPrivateMode)
+                                 bool aPrivateMode,
+                                 jni::String::Param aId)
 {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -1278,7 +1280,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
         chromeFlags += ",private";
     }
     nsCOMPtr<mozIDOMWindowProxy> domWindow;
-    ww->OpenWindow(nullptr, url.get(), nullptr, chromeFlags.get(),
+    ww->OpenWindow(nullptr, url.get(), aId->ToCString().get(), chromeFlags.get(),
                    androidView, getter_AddRefs(domWindow));
     MOZ_RELEASE_ASSERT(domWindow);
 

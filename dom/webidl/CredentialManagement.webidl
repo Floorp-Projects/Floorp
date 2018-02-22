@@ -21,6 +21,8 @@ interface CredentialsContainer {
   Promise<Credential?> create(optional CredentialCreationOptions options);
   [Throws]
   Promise<Credential> store(Credential credential);
+  [Throws]
+  Promise<void> preventSilentAccess();
 };
 
 dictionary CredentialRequestOptions {

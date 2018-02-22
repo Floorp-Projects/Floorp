@@ -1439,6 +1439,22 @@ EmitCheckPropertyTypes(MacroAssembler& masm, const PropertyTypeCheckInfo* typeCh
     masm.Push(obj);
     Register scratch1 = obj;
 
+    // We may also need a scratch register for guardTypeSet.
+    Register objScratch = InvalidReg;
+    if (propTypes && !propTypes->unknownObject() && propTypes->getObjectCount() > 0) {
+        AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+        if (!val.constant()) {
+            TypedOrValueRegister valReg = val.reg();
+            if (valReg.hasValue())
+                regs.take(valReg.valueReg());
+            else if (!valReg.typedReg().isFloat())
+                regs.take(valReg.typedReg().gpr());
+        }
+        regs.take(scratch1);
+        objScratch = regs.takeAny();
+        masm.Push(objScratch);
+    }
+
     bool checkTypeSet = true;
     Label failedFastPath;
 
@@ -1468,7 +1484,8 @@ EmitCheckPropertyTypes(MacroAssembler& masm, const PropertyTypeCheckInfo* typeCh
         if (propTypes) {
             // guardTypeSet can read from type sets without triggering read barriers.
             TypeSet::readBarrier(propTypes);
-            masm.guardTypeSet(valReg, propTypes, BarrierKind::TypeSet, scratch1, &failedFastPath);
+            masm.guardTypeSet(valReg, propTypes, BarrierKind::TypeSet, scratch1, objScratch,
+                              &failedFastPath);
             masm.jump(&done);
         } else {
             masm.jump(&failedFastPath);
@@ -1511,11 +1528,15 @@ EmitCheckPropertyTypes(MacroAssembler& masm, const PropertyTypeCheckInfo* typeCh
         masm.PopRegsInMaskIgnore(save, ignore);
 
         masm.branchIfTrueBool(scratch1, &done);
+        if (objScratch != InvalidReg)
+            masm.pop(objScratch);
         masm.pop(obj);
         masm.jump(failures);
     }
 
     masm.bind(&done);
+    if (objScratch != InvalidReg)
+        masm.Pop(objScratch);
     masm.Pop(obj);
 }
 

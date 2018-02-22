@@ -13,8 +13,7 @@
 interface PublicKeyCredential : Credential {
     [SameObject] readonly attribute ArrayBuffer              rawId;
     [SameObject] readonly attribute AuthenticatorResponse    response;
-    // Extensions are not supported yet.
-    // [SameObject] readonly attribute AuthenticationExtensions clientExtensionResults; // Add in Bug 1406458
+    AuthenticationExtensionsClientOutputs getClientExtensionResults();
 };
 
 [SecureContext]
@@ -104,10 +103,18 @@ dictionary PublicKeyCredentialRequestOptions {
     AuthenticationExtensionsClientInputs extensions;
 };
 
+// TODO - Use partial dictionaries when bug 1436329 is fixed.
 dictionary AuthenticationExtensionsClientInputs {
+    // FIDO AppID Extension (appid)
+    // <https://w3c.github.io/webauthn/#sctn-appid-extension>
+    USVString appid;
 };
 
+// TODO - Use partial dictionaries when bug 1436329 is fixed.
 dictionary AuthenticationExtensionsClientOutputs {
+    // FIDO AppID Extension (appid)
+    // <https://w3c.github.io/webauthn/#sctn-appid-extension>
+    boolean appid;
 };
 
 typedef record<DOMString, DOMString> AuthenticationExtensionsAuthenticatorInputs;
@@ -144,3 +151,16 @@ typedef sequence<AAGUID>      AuthenticatorSelectionList;
 
 typedef BufferSource      AAGUID;
 
+/*
+// FIDO AppID Extension (appid)
+// <https://w3c.github.io/webauthn/#sctn-appid-extension>
+partial dictionary AuthenticationExtensionsClientInputs {
+    USVString appid;
+};
+
+// FIDO AppID Extension (appid)
+// <https://w3c.github.io/webauthn/#sctn-appid-extension>
+partial dictionary AuthenticationExtensionsClientOutputs {
+  boolean appid;
+};
+*/

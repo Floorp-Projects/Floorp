@@ -693,6 +693,27 @@ U2FSoftTokenManager::Register(const nsTArray<WebAuthnScopedCredential>& aCredent
   return U2FRegisterPromise::CreateAndResolve(Move(result), __func__);
 }
 
+bool
+U2FSoftTokenManager::FindRegisteredKeyHandle(const nsTArray<nsTArray<uint8_t>>& aAppIds,
+                                             const nsTArray<WebAuthnScopedCredential>& aCredentials,
+                                             /*out*/ nsTArray<uint8_t>& aKeyHandle,
+                                             /*out*/ nsTArray<uint8_t>& aAppId)
+{
+  for (const nsTArray<uint8_t>& app_id: aAppIds) {
+    for (const WebAuthnScopedCredential& cred: aCredentials) {
+      bool isRegistered = false;
+      nsresult rv = IsRegistered(cred.id(), app_id, isRegistered);
+      if (NS_SUCCEEDED(rv) && isRegistered) {
+        aKeyHandle.Assign(cred.id());
+        aAppId.Assign(app_id);
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 // A U2F Sign operation creates a signature over the "param" arguments (plus
 // some other stuff) using the private key indicated in the key handle argument.
 //
@@ -713,6 +734,7 @@ RefPtr<U2FSignPromise>
 U2FSoftTokenManager::Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials,
                           const nsTArray<uint8_t>& aApplication,
                           const nsTArray<uint8_t>& aChallenge,
+                          const nsTArray<WebAuthnExtension>& aExtensions,
                           bool aRequireUserVerification,
                           uint32_t aTimeoutMS)
 {
@@ -728,18 +750,21 @@ U2FSoftTokenManager::Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials
     return U2FSignPromise::CreateAndReject(NS_ERROR_DOM_NOT_ALLOWED_ERR, __func__);
   }
 
-  nsTArray<uint8_t> keyHandle;
-  for (auto cred: aCredentials) {
-    bool isRegistered = false;
-    nsresult rv = IsRegistered(cred.id(), aApplication, isRegistered);
-    if (NS_SUCCEEDED(rv) && isRegistered) {
-      keyHandle.Assign(cred.id());
-      break;
+  nsTArray<nsTArray<uint8_t>> appIds;
+  appIds.AppendElement(aApplication);
+
+  // Process extensions.
+  for (const WebAuthnExtension& ext: aExtensions) {
+    if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
+      appIds.AppendElement(ext.get_WebAuthnExtensionAppId().AppId());
     }
   }
 
-  // Fail if we didn't recognize a key id.
-  if (keyHandle.IsEmpty()) {
+  nsTArray<uint8_t> chosenAppId(aApplication);
+  nsTArray<uint8_t> keyHandle;
+
+  // Fail if we can't find a valid key handle.
+  if (!FindRegisteredKeyHandle(appIds, aCredentials, keyHandle, chosenAppId)) {
     return U2FSignPromise::CreateAndReject(NS_ERROR_DOM_NOT_ALLOWED_ERR, __func__);
   }
 
@@ -748,10 +773,10 @@ U2FSoftTokenManager::Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials
   UniquePK11SlotInfo slot(PK11_GetInternalSlot());
   MOZ_ASSERT(slot.get());
 
-  if (NS_WARN_IF((aChallenge.Length() != kParamLen) || (aApplication.Length() != kParamLen))) {
+  if (NS_WARN_IF((aChallenge.Length() != kParamLen) || (chosenAppId.Length() != kParamLen))) {
     MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
             ("Parameter lengths are wrong! challenge=%d app=%d expected=%d",
-             (uint32_t)aChallenge.Length(), (uint32_t)aApplication.Length(), kParamLen));
+             (uint32_t)aChallenge.Length(), (uint32_t)chosenAppId.Length(), kParamLen));
 
     return U2FSignPromise::CreateAndReject(NS_ERROR_ILLEGAL_VALUE, __func__);
   }
@@ -760,8 +785,8 @@ U2FSoftTokenManager::Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials
   UniqueSECKEYPrivateKey privKey = PrivateKeyFromKeyHandle(slot, mWrappingKey,
                                                            const_cast<uint8_t*>(keyHandle.Elements()),
                                                            keyHandle.Length(),
-                                                           const_cast<uint8_t*>(aApplication.Elements()),
-                                                           aApplication.Length());
+                                                           const_cast<uint8_t*>(chosenAppId.Elements()),
+                                                           chosenAppId.Length());
   if (NS_WARN_IF(!privKey.get())) {
     MOZ_LOG(gNSSTokenLog, LogLevel::Warning, ("Couldn't get the priv key!"));
     return U2FSignPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
@@ -790,7 +815,7 @@ U2FSoftTokenManager::Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials
 
   // It's OK to ignore the return values here because we're writing into
   // pre-allocated space
-  signedDataBuf.AppendElements(aApplication.Elements(), aApplication.Length(),
+  signedDataBuf.AppendElements(chosenAppId.Elements(), chosenAppId.Length(),
                                mozilla::fallible);
   signedDataBuf.AppendElement(0x01, mozilla::fallible);
   signedDataBuf.AppendSECItem(counterItem);
@@ -832,7 +857,15 @@ U2FSoftTokenManager::Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials
   signatureBuf.AppendSECItem(counterItem);
   signatureBuf.AppendSECItem(signatureItem);
 
-  WebAuthnGetAssertionResult result(keyHandle, nsTArray<uint8_t>(signatureBuf));
+  nsTArray<uint8_t> signature(signatureBuf);
+  nsTArray<WebAuthnExtensionResult> extensions;
+
+  if (chosenAppId != aApplication) {
+    // Indicate to the RP that we used the FIDO appId.
+    extensions.AppendElement(WebAuthnExtensionResultAppId(true));
+  }
+
+  WebAuthnGetAssertionResult result(chosenAppId, keyHandle, signature, extensions);
   return U2FSignPromise::CreateAndResolve(Move(result), __func__);
 }
 
