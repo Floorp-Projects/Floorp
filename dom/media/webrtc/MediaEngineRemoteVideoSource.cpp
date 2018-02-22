@@ -9,6 +9,7 @@
 #include "CamerasChild.h"
 #include "MediaManager.h"
 #include "MediaTrackConstraints.h"
+#include "mozilla/ErrorNames.h"
 #include "mozilla/RefPtr.h"
 #include "nsIPrefService.h"
 #include "VideoFrameUtils.h"
@@ -333,6 +334,7 @@ MediaEngineRemoteVideoSource::Stop(const RefPtr<const AllocationHandle>& aHandle
   if (camera::GetChildAndCall(&camera::CamerasChild::StopCapture,
                               mCapEngine, mCaptureIndex)) {
     MOZ_DIAGNOSTIC_ASSERT(false, "Stopping a started capture failed");
+    return NS_ERROR_FAILURE;
   }
 
   {
@@ -366,7 +368,7 @@ MediaEngineRemoteVideoSource::Reconfigure(const RefPtr<AllocationHandle>& aHandl
   if (!ChooseCapability(constraints, aPrefs, aDeviceId, newCapability, kFitness)) {
     *aOutBadConstraint =
       MediaConstraintsHelper::FindBadConstraint(constraints, this, aDeviceId);
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
   }
   LOG(("ChooseCapability(kFitness) for mTargetCapability (Reconfigure) --"));
 
@@ -380,7 +382,11 @@ MediaEngineRemoteVideoSource::Reconfigure(const RefPtr<AllocationHandle>& aHandl
     // We can safely pass nullptr below.
     nsresult rv = Stop(nullptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      nsAutoCString name;
+      GetErrorName(rv, name);
+      LOG(("Video source %p for video device %d Reconfigure() failed "
+           "unexpectedly in Stop(). rv=%s", this, mCaptureIndex, name.Data()));
+      return NS_ERROR_UNEXPECTED;
     }
   }
 
@@ -393,7 +399,11 @@ MediaEngineRemoteVideoSource::Reconfigure(const RefPtr<AllocationHandle>& aHandl
   if (started) {
     nsresult rv = Start(nullptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      nsAutoCString name;
+      GetErrorName(rv, name);
+      LOG(("Video source %p for video device %d Reconfigure() failed "
+           "unexpectedly in Start(). rv=%s", this, mCaptureIndex, name.Data()));
+      return NS_ERROR_UNEXPECTED;
     }
   }
 
