@@ -15,6 +15,7 @@ import android.view.View;
 import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,6 +47,7 @@ import static android.support.test.espresso.web.webdriver.DriverAtoms.getText;
 import static org.hamcrest.Matchers.containsString;
 
 @RunWith(AndroidJUnit4.class)
+@Ignore("Pull to refresh is currently disabled in all builds")
 public class PullDownToRefreshTest {
     private static final String COUNTER = "counter";
     private static final String FIRST_TIME = "1";
