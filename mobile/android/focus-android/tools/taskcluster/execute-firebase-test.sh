@@ -11,8 +11,8 @@ set -ex
 
 ./tools/taskcluster/google-firebase-testlab-login.sh
 
-# Temporarily disabled exiting on error. If the tests fail we want to continue
-# and download the artifacts. We will exit with the actual error code later.
+# From now on disable exiting on error. If the tests fail we want to continue
+# and try to download the artifacts. We will exit with the actual error code later.
 set +e
 
 # Execute test set
@@ -31,16 +31,10 @@ set +e
 
 exitcode=$?
 
-# Now continue to exit the script on any error that occurs.
-set -ex
+echo "Downloading artifacts"
 
-# Pull the artifacts from TestCloud to taskcluster
-# Google storage folder name can be modified from the Google Cloud menu
-echo "Download Artifacts"
-
-rm -rf test_artifacts
 mkdir test_artifacts
-/google-cloud-sdk/bin/gsutil ls gs://focus_android_test_artifacts | tail -1 | ./google-cloud-sdk/bin/gsutil -m cp -r -I ./test_artifacts
+/google-cloud-sdk/bin/gsutil ls gs://focus_android_test_artifacts | tail -1 | /google-cloud-sdk/bin/gsutil -m cp -r -I ./test_artifacts
 
 # Now exit the script with the exit code from the test run. (Only 0 if all test executions passed)
 exit $exitcode
