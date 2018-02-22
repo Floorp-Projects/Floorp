@@ -52,7 +52,8 @@ public:
 
   void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                               size_t& aHeapSizeOut,
-                              size_t& aNonHeapSizeOut) const override;
+                              size_t& aNonHeapSizeOut,
+                              size_t& aExtHandlesOut) const override;
 
   bool OnHeap() const override
   {

@@ -950,7 +950,7 @@ void
 imgFrame::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                  size_t& aHeapSizeOut,
                                  size_t& aNonHeapSizeOut,
-                                 size_t& aSharedHandlesOut) const
+                                 size_t& aExtHandlesOut) const
 {
   MonitorAutoLock lock(mMonitor);
 
@@ -966,15 +966,7 @@ imgFrame::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
   if (mRawSurface) {
     aHeapSizeOut += aMallocSizeOf(mRawSurface);
     mRawSurface->AddSizeOfExcludingThis(aMallocSizeOf, aHeapSizeOut,
-                                        aNonHeapSizeOut);
-
-    if (mRawSurface->GetType() == SurfaceType::DATA_SHARED) {
-      auto sharedSurface =
-        static_cast<SourceSurfaceSharedData*>(mRawSurface.get());
-      if (sharedSurface->CanShare()) {
-        ++aSharedHandlesOut;
-      }
-    }
+                                        aNonHeapSizeOut, aExtHandlesOut);
   }
 }
 
