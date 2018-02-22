@@ -2141,7 +2141,7 @@ ContentParent::ContentParent(ContentParent* aOpener,
 
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   bool isFile = mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE);
-  mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content, isFile);
+  mSubprocess = new ContentProcessHost(this, isFile);
 }
 
 ContentParent::~ContentParent()
