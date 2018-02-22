@@ -27,16 +27,17 @@ public final class GeckoSessionSettings implements Parcelable {
     public static final int DISPLAY_MODE_STANDALONE = 2;
     public static final int DISPLAY_MODE_FULLSCREEN = 3;
 
-    private static class Key<T> {
-        public final String name;
-        public final boolean initOnly;
-        public final Collection<T> values;
+    public static class Key<T> {
+        /* package */ final String name;
+        /* package */ final boolean initOnly;
+        /* package */ final Collection<T> values;
 
-        public Key(final String name) {
+        /* package */ Key(final String name) {
             this(name, /* initOnly */ false, /* values */ null);
         }
 
-        public Key(final String name, final boolean initOnly, final Collection<T> values) {
+        /* package */ Key(final String name, final boolean initOnly,
+                          final Collection<T> values) {
             this.name = name;
             this.initOnly = initOnly;
             this.values = values;
