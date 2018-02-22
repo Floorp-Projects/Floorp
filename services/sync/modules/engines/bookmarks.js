@@ -723,15 +723,12 @@ BufferedBookmarksEngine.prototype = {
   },
 
   async _processIncoming(newitems) {
-    try {
-      await super._processIncoming(newitems);
-    } finally {
-      let buf = await this._store.ensureOpenMirror();
-      let recordsToUpload = await buf.apply({
-        remoteTimeSeconds: Resource.serverTime,
-      });
-      this._modified.replace(recordsToUpload);
-    }
+    await super._processIncoming(newitems);
+    let buf = await this._store.ensureOpenMirror();
+    let recordsToUpload = await buf.apply({
+      remoteTimeSeconds: Resource.serverTime,
+    });
+    this._modified.replace(recordsToUpload);
   },
 
   async _reconcile(item) {
