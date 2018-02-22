@@ -44,7 +44,9 @@ module.exports = {
     "no-unused-expressions": "error",
 
     // No declaring variables that are never used
-    "no-unused-vars": ["error", {"args": "none", "varsIgnorePattern": "^(Cc|Ci|Cr|Cu|EXPORTED_SYMBOLS)$"}],
+    "no-unused-vars": ["error", {
+      "args": "none", "vars": "all", "varsIgnorePattern": "^EXPORTED_SYMBOLS$"
+    }],
 
     // No using variables before defined
     "no-use-before-define": "error",
