@@ -5007,15 +5007,15 @@ methodDefns."""
 
     for i, stmt in enumerate(cls.stmts):
         if isinstance(stmt, MethodDefn) and not stmt.decl.force_inline:
-            decl, defn = _splitMethodDefn(stmt, cls.name)
+            decl, defn = _splitMethodDefn(stmt, cls)
             cls.stmts[i] = StmtDecl(decl)
             defns.addstmts([ defn, Whitespace.NL ])
 
     return cls, defns
 
-def _splitMethodDefn(md, clsname):
+def _splitMethodDefn(md, cls):
     saveddecl = deepcopy(md.decl)
-    md.decl.name = (clsname +'::'+ md.decl.name)
+    md.decl.cls = cls
     md.decl.methodspec = MethodSpec.NONE
     md.decl.warn_unused = 0
     md.decl.only_for_definition = True
