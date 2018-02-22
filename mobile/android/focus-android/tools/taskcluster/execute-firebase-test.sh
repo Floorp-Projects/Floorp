@@ -9,7 +9,6 @@
 # If a command fails then do not proceed and fail this script too.
 set -ex
 
-./tools/taskcluster/install-google-cloud.sh
 ./tools/taskcluster/google-firebase-testlab-login.sh
 
 # Temporarily disabled exiting on error. If the tests fail we want to continue
@@ -17,7 +16,7 @@ set -ex
 set +e
 
 # Execute test set
-./google-cloud-sdk/bin/gcloud --format="json" firebase test android run \
+/google-cloud-sdk/bin/gcloud --format="json" firebase test android run \
 --type=instrumentation \
 --app="app/build/outputs/apk/app-focus-webview-debug.apk" \
 --test="app/build/outputs/apk/app-focus-webview-debug-androidTest.apk" \
@@ -41,7 +40,7 @@ echo "Download Artifacts"
 
 rm -rf test_artifacts
 mkdir test_artifacts
-./google-cloud-sdk/bin/gsutil ls gs://focus_android_test_artifacts | tail -1 | ./google-cloud-sdk/bin/gsutil -m cp -r -I ./test_artifacts
+/google-cloud-sdk/bin/gsutil ls gs://focus_android_test_artifacts | tail -1 | ./google-cloud-sdk/bin/gsutil -m cp -r -I ./test_artifacts
 
 # Now exit the script with the exit code from the test run. (Only 0 if all test executions passed)
 exit $exitcode

@@ -99,6 +99,12 @@ RUN pip install -r tools/l10n/android2po/requirements.txt
 # Install taskcluster python library (used by decision tasks)
 RUN pip install taskcluster
 
+# Install Google Cloud SDK for using Firebase Device Lab
+RUN curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-184.0.0-linux-x86_64.tar.gz --output /gcloud.tar.gz
+RUN tar -xvf /gcloud.tar.gz -C /
+RUN /google-cloud-sdk/install.sh --quiet
+RUN /google-cloud-sdk/bin/gcloud --quiet components update
+
 # -- Cleanup ----------------------------------------------------------------------------
 
 RUN apt-get clean
