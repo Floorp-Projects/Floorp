@@ -454,7 +454,9 @@ nsresult FileBlockCache::Read(int64_t aOffset,
     // If the block is not yet written to file, we can just read from
     // the memory buffer, otherwise we need to read from file.
     int32_t bytesRead = 0;
-    RefPtr<BlockChange> change = mBlockChanges[blockIndex];
+    MOZ_ASSERT(!mBlockChanges.IsEmpty());
+    MOZ_ASSERT(blockIndex < mBlockChanges.Length());
+    RefPtr<BlockChange> change = mBlockChanges.SafeElementAt(blockIndex);
     if (change && change->IsWrite()) {
       // Block isn't yet written to file. Read from memory buffer.
       const uint8_t* blockData = change->mData.get();
@@ -468,7 +470,7 @@ nsresult FileBlockCache::Read(int64_t aOffset,
         // is resolved when MoveBlock() is called, and the move's source's
         // block could be have itself been subject to a move (or write)
         // which happened *after* this move was recorded.
-        blockIndex = mBlockChanges[blockIndex]->mSourceBlockIndex;
+        blockIndex = change->mSourceBlockIndex;
       }
       // Block has been written to file, either as the source block of a move,
       // or as a stable (all changes made) block. Read the data directly
