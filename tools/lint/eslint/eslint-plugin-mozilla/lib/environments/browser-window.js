@@ -32,7 +32,7 @@ const EXTRA_SCRIPTS = [
   // This gets loaded into the same scopes as browser.js via browser.xul and
   // placesOverlay.xul.
   "toolkit/content/globalOverlay.js",
-  // Via editMenuOverlay.xul
+  // Via editMenuCommands.inc.xul
   "toolkit/content/editMenuOverlay.js",
   // Via baseMenuOverlay.xul
   "browser/base/content/utilityOverlay.js"

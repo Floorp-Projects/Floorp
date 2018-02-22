@@ -10,11 +10,11 @@
 
 <?xul-overlay href="chrome://browser/content/downloads/allDownloadsViewOverlay.xul"?>
 
-<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
-
 <!DOCTYPE window [
 <!ENTITY % downloadsDTD SYSTEM "chrome://browser/locale/downloads/downloads.dtd">
 %downloadsDTD;
+<!ENTITY % editMenuDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+%editMenuDTD;
 ]>
 
 <window id="contentAreaDownloadsView"
@@ -27,13 +27,14 @@
   <script type="application/javascript"
           src="chrome://browser/content/downloads/contentAreaDownloadsView.js"/>
 
-  <commandset id="editMenuCommands"/>
+#include ../../../../toolkit/content/editMenuCommands.inc.xul
 
-  <keyset id="editMenuKeys">
+#include ../../../../toolkit/content/editMenuKeys.inc.xul
 #ifdef XP_MACOSX
+  <keyset id="editMenuKeysExtra">
     <key id="key_delete2" keycode="VK_BACK" command="cmd_delete"/>
-#endif
   </keyset>
+#endif
 
   <stack flex="1">
     <richlistbox id="downloadsRichListBox"/>
