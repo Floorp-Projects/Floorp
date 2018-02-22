@@ -180,6 +180,10 @@ public:
     double aTime,
     TimerPrecisionType aType = TimerPrecisionType::All);
 
+  // Used by the JS Engine, as it doesn't know about the TimerPrecisionType enum
+  static double ReduceTimePrecisionAsUSecsWrapper(
+    double aTime);
+
   // Public only for testing purposes
   static double ReduceTimePrecisionImpl(
     double aTime,
