@@ -71,8 +71,6 @@ public:
   void Invalidate() { mIsInvalid = true; }
   void ClearAnimationCompositorState();
 
-  bool HasMergedFrames() const { return mFrameList.Length() > 1; }
-
   static DisplayItemData* AssertDisplayItemData(DisplayItemData* aData);
 
   void* operator new(size_t sz, nsPresContext* aPresContext)
@@ -105,10 +103,6 @@ public:
     }
     return mRefCnt;
   }
-
-  void Disconnect();
-
-  bool Disconnected() { return mDisconnected; }
 
 private:
   DisplayItemData(LayerManagerData* aParent,
@@ -192,7 +186,6 @@ private:
   bool            mUsed;
   bool            mIsInvalid;
   bool            mReusedItem;
-  bool            mDisconnected;
 };
 
 class RefCountedRegion {
@@ -629,7 +622,7 @@ public:
    * This could be a dedicated layer for the display item, or a PaintedLayer
    * that renders many display items.
    */
-  DisplayItemData* GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey, DisplayItemData* aOldData = nullptr);
+  DisplayItemData* GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey);
 
 protected:
 
