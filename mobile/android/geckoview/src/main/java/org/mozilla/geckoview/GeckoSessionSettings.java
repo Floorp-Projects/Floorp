@@ -10,6 +10,8 @@ import org.mozilla.gecko.util.GeckoBundle;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.Arrays;
@@ -88,13 +90,23 @@ public final class GeckoSessionSettings implements Parcelable {
     private final GeckoBundle mBundle;
 
     public GeckoSessionSettings() {
-        this(null);
+        this(null, null);
     }
 
-    /* package */ GeckoSessionSettings(final GeckoSession session) {
-        mSession = session;
-        mBundle = new GeckoBundle();
+    public GeckoSessionSettings(final @NonNull GeckoSessionSettings settings) {
+        this(settings, null);
+    }
 
+    /* package */ GeckoSessionSettings(final @Nullable GeckoSessionSettings settings,
+                                       final @Nullable GeckoSession session) {
+        mSession = session;
+
+        if (settings != null) {
+            mBundle = new GeckoBundle(settings.mBundle);
+            return;
+        }
+
+        mBundle = new GeckoBundle();
         mBundle.putString(CHROME_URI.name, null);
         mBundle.putInt(SCREEN_ID.name, 0);
         mBundle.putBoolean(USE_TRACKING_PROTECTION.name, false);
@@ -102,12 +114,6 @@ public final class GeckoSessionSettings implements Parcelable {
         mBundle.putBoolean(USE_MULTIPROCESS.name, true);
         mBundle.putInt(DISPLAY_MODE.name, DISPLAY_MODE_BROWSER);
         mBundle.putBoolean(USE_REMOTE_DEBUGGER.name, false);
-    }
-
-    /* package */ GeckoSessionSettings(final GeckoSessionSettings settings,
-                                       final GeckoSession session) {
-        mSession = session;
-        mBundle = new GeckoBundle(settings.mBundle);
     }
 
     public void setBoolean(final Key<Boolean> key, final boolean value) {
