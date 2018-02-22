@@ -13,7 +13,6 @@
 #include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormDataBinding.h"
-#include "nsIDOMFormData.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 
@@ -23,7 +22,7 @@ namespace dom {
 class HTMLFormElement;
 class GlobalObject;
 
-class FormData final : public nsIDOMFormData,
+class FormData final : public nsISupports,
                        public HTMLFormSubmission,
                        public nsWrapperCache
 {
@@ -59,10 +58,7 @@ public:
   explicit FormData(nsISupports* aOwner = nullptr);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(FormData,
-                                                         nsIDOMFormData)
-
-  NS_DECL_NSIDOMFORMDATA
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FormData)
 
   // nsWrapperCache
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
