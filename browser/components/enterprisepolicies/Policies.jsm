@@ -10,6 +10,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gXulStore",
                                    "@mozilla.org/xul/xulstore;1",
                                    "nsIXULStore");
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  BookmarksPolicies: "resource:///modules/policies/BookmarksPolicies.jsm",
+});
+
 const PREF_LOGLEVEL           = "browser.policies.loglevel";
 const PREF_MENU_ALREADY_DISPLAYED = "browser.policies.menuBarWasDisplayed";
 const BROWSER_DOCUMENT_URL        = "chrome://browser/content/browser.xul";
@@ -66,6 +70,12 @@ this.Policies = {
       if (param) {
         manager.disallowFeature("setDesktopBackground", true);
       }
+    }
+  },
+
+  "Bookmarks": {
+    onBeforeUIStartup(manager, param) {
+      BookmarksPolicies.processBookmarks(param);
     }
   },
 
