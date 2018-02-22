@@ -4627,6 +4627,31 @@ CompareIRGenerator::tryAttachSymbol(ValOperandId lhsId, ValOperandId rhsId)
 }
 
 bool
+CompareIRGenerator::tryAttachStrictDifferentTypes(ValOperandId lhsId, ValOperandId rhsId)
+{
+    MOZ_ASSERT(IsEqualityOp(op_));
+
+    if (op_ != JSOP_STRICTEQ && op_ != JSOP_STRICTNE)
+        return false;
+
+    // Probably can't hit some of these.
+    if (SameType(lhsVal_, rhsVal_) || (lhsVal_.isNumber() && rhsVal_.isNumber()))
+        return false;
+
+    // Compare tags
+    ValueTagOperandId lhsTypeId = writer.loadValueTag(lhsId);
+    ValueTagOperandId rhsTypeId = writer.loadValueTag(rhsId);
+    writer.guardTagNotEqual(lhsTypeId, rhsTypeId);
+
+    // Now that we've passed the guard, we know differing types, so return the bool result.
+    writer.loadBooleanResult(op_ == JSOP_STRICTNE ? true : false);
+    writer.returnFromIC();
+
+    trackAttached("StrictDifferentTypes");
+    return true;
+}
+
+bool
 CompareIRGenerator::tryAttachStub()
 {
     MOZ_ASSERT(cacheKind_ == CacheKind::Compare);
@@ -4645,6 +4670,8 @@ CompareIRGenerator::tryAttachStub()
         if (tryAttachObject(lhsId, rhsId))
             return true;
         if (tryAttachSymbol(lhsId, rhsId))
+            return true;
+        if (tryAttachStrictDifferentTypes(lhsId, rhsId))
             return true;
 
         trackAttached(IRGenerator::NotAttached);
