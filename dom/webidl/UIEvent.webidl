@@ -31,6 +31,7 @@ partial interface UIEvent {
   readonly attribute long          layerY;
   readonly attribute long          pageX;
   readonly attribute long          pageY;
+  [NeedsCallerType]
   readonly attribute unsigned long which;
   readonly attribute Node?         rangeParent;
   readonly attribute long          rangeOffset;

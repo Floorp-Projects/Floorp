@@ -7,6 +7,7 @@
 #include "jit/MIR.h"
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MathAlgorithms.h"

@@ -6,10 +6,10 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.GeckoSession;
-import org.mozilla.gecko.GeckoSessionSettings;
-import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.ScreenManagerHelper;
+import org.mozilla.geckoview.GeckoSession;
+import org.mozilla.geckoview.GeckoSessionSettings;
+import org.mozilla.geckoview.GeckoView;
 
 import com.google.android.gms.cast.CastMediaControlIntent;
 import com.google.android.gms.cast.CastPresentation;

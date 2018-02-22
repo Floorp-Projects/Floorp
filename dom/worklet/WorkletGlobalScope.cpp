@@ -55,10 +55,10 @@ WorkletGlobalScope::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto
 }
 
 already_AddRefed<Console>
-WorkletGlobalScope::GetConsole(ErrorResult& aRv)
+WorkletGlobalScope::GetConsole(JSContext* aCx, ErrorResult& aRv)
 {
   if (!mConsole) {
-    mConsole = Console::Create(mWindow, aRv);
+    mConsole = Console::Create(aCx, mWindow, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
