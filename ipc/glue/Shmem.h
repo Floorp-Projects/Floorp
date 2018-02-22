@@ -17,6 +17,7 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/ipc/SharedMemory.h"
+#include "mozilla/ipc/IPDLParamTraits.h"
 
 /**
  * |Shmem| is one agent in the IPDL shared memory scheme.  The way it
@@ -62,6 +63,7 @@ namespace ipc {
 class Shmem final
 {
   friend struct IPC::ParamTraits<mozilla::ipc::Shmem>;
+  friend struct IPDLParamTraits<mozilla::ipc::Shmem>;
 #ifdef DEBUG
   // For ShadowLayerForwarder::CheckSurfaceDescriptor
   friend class mozilla::layers::ShadowLayerForwarder;
@@ -261,6 +263,19 @@ private:
   id_t mId;
 };
 
+template<>
+struct IPDLParamTraits<Shmem>
+{
+  typedef Shmem paramType;
+
+  static void Write(IPC::Message* aMsg, IProtocol* aActor, paramType& aParam);
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor, paramType* aResult);
+
+  static void Log(const paramType& aParam, std::wstring* aLog)
+  {
+    aLog->append(L"(shmem segment)");
+  }
+};
 
 } // namespace ipc
 } // namespace mozilla
@@ -268,6 +283,9 @@ private:
 
 namespace IPC {
 
+// NOTE: This will be replaced by IPDLParamTraits, but is needed to keep the old
+// serialization logic working until it is removed. It will be removed in a
+// later part.
 template<>
 struct ParamTraits<mozilla::ipc::Shmem>
 {
