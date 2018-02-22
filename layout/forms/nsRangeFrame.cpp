@@ -305,7 +305,7 @@ nsRangeFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   aLists.Content()->AppendToTop(
-    MakeDisplayItem<nsDisplayRangeFocusRing>(aBuilder, this));
+    new (aBuilder) nsDisplayRangeFocusRing(aBuilder, this));
 }
 
 void
