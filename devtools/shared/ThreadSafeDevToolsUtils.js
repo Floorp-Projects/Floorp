@@ -243,6 +243,24 @@ exports.isGenerator = function (fn) {
 };
 
 /**
+ * Return true if `thing` is an async function, false otherwise.
+ */
+exports.isAsyncFunction = function (fn) {
+  if (typeof fn !== "function") {
+    return false;
+  }
+  let proto = Object.getPrototypeOf(fn);
+  if (!proto) {
+    return false;
+  }
+  let ctor = proto.constructor;
+  if (!ctor) {
+    return false;
+  }
+  return ctor.name == "AsyncFunction";
+};
+
+/**
  * Return true if `thing` is a Promise or then-able, false otherwise.
  */
 exports.isPromise = function (p) {
