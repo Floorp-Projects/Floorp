@@ -66,7 +66,8 @@
             "pagesets_name": "tp5n.zip"
         },
         "motionmark-e10s": {
-            "tests": ["motionmark_animometer", "motionmark_htmlsuite", "ARES6"]
+            "tests": ["motionmark_animometer", "motionmark_htmlsuite", "JetStream", "ARES6"],
+            "benchmark_zip": "jetstream.zip"
         },
         "svgr-e10s": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "tsvg_static"]

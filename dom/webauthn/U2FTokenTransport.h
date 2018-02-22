@@ -38,6 +38,7 @@ public:
   Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials,
        const nsTArray<uint8_t>& aApplication,
        const nsTArray<uint8_t>& aChallenge,
+       const nsTArray<WebAuthnExtension>& aExtensions,
        bool aRequireUserVerification,
        uint32_t aTimeoutMS) = 0;
 
