@@ -260,7 +260,7 @@ SVGGeometryFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
   DisplayOutline(aBuilder, aLists);
   aLists.Content()->AppendToTop(
-    MakeDisplayItem<nsDisplaySVGGeometry>(aBuilder, this));
+    new (aBuilder) nsDisplaySVGGeometry(aBuilder, this));
 }
 
 //----------------------------------------------------------------------

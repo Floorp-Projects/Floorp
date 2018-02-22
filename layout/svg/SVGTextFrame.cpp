@@ -3204,7 +3204,7 @@ SVGTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
   DisplayOutline(aBuilder, aLists);
   aLists.Content()->AppendToTop(
-    MakeDisplayItem<nsDisplaySVGText>(aBuilder, this));
+    new (aBuilder) nsDisplaySVGText(aBuilder, this));
 }
 
 nsresult

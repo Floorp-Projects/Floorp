@@ -294,7 +294,7 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   clipState.ClipContentDescendants(bounds);
 
   aLists.Content()->AppendToTop(
-    MakeDisplayItem<nsDisplayRemote>(aBuilder, aFrame, this));
+    new (aBuilder) nsDisplayRemote(aBuilder, aFrame, this));
 }
 
 void
