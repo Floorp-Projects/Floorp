@@ -6,7 +6,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
-Cu.importGlobalProperties(["File", "XMLHttpRequest"]);
+Cu.importGlobalProperties(["File", "FormData", "XMLHttpRequest"]);
 
 ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
@@ -216,8 +216,8 @@ Submitter.prototype = {
     let xhr = new XMLHttpRequest();
     xhr.open("POST", serverURL, true);
 
-    let formData = Cc["@mozilla.org/files/formdata;1"]
-                   .createInstance(Ci.nsIDOMFormData);
+    let formData = new FormData();
+
     // add the data
     for (let [name, value] of Object.entries(this.extraKeyVals)) {
       if (name != "ServerURL" && name != "StackTraces") {
