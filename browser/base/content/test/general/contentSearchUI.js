@@ -168,8 +168,7 @@ function waitForSuggestions(cb) {
 }
 
 function waitForContentSearchEvent(messageType, cb) {
-  let mm = content.SpecialPowers.Cc["@mozilla.org/globalmessagemanager;1"].
-    getService(content.SpecialPowers.Ci.nsIMessageListenerManager);
+  let mm = content.SpecialPowers.Cc["@mozilla.org/globalmessagemanager;1"].getService();
   mm.addMessageListener("ContentSearch", function listener(aMsg) {
     if (aMsg.data.type != messageType) {
       return;

@@ -24,12 +24,10 @@ QuitterObserver.prototype = {
     } else if (!this.isFrameScriptLoaded &&
                aTopic == "chrome-document-global-created") {
 
-      var messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
-                           getService(Ci.nsIMessageBroadcaster);
       // Register for any messages our API needs us to handle
-      messageManager.addMessageListener("Quitter.Quit", this);
+      Services.mm.addMessageListener("Quitter.Quit", this);
 
-      messageManager.loadFrameScript(CHILD_SCRIPT, true);
+      Services.mm.loadFrameScript(CHILD_SCRIPT, true);
       this.isFrameScriptLoaded = true;
     } else if (aTopic == "xpcom-shutdown") {
       this.uninit();
