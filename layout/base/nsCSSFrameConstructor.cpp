@@ -20,6 +20,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/Likely.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ServoBindings.h"
 #include "nsAbsoluteContainingBlock.h"
@@ -13148,4 +13149,23 @@ nsCSSFrameConstructor::FreeFCItem(FrameConstructionItem* aItem)
     item->mNext = mFirstFreeFCItem;
     mFirstFreeFCItem = item;
   }
+}
+
+void
+nsCSSFrameConstructor::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
+{
+  if (nsIFrame* rootFrame = GetRootFrame()) {
+    rootFrame->AddSizeOfExcludingThisForTree(aSizes);
+  }
+
+  // This must be done after measuring from the frame tree, since frame
+  // manager will measure sizes of staled computed values and style
+  // structs, which only make sense after we know what are being used.
+  nsFrameManager::AddSizeOfIncludingThis(aSizes);
+
+  // Measurement of the following members may be added later if DMD finds it
+  // is worthwhile:
+  // - mFCItemPool
+  // - mQuoteList
+  // - mCounterManager
 }
