@@ -47,10 +47,8 @@ jobs:
                         - releases/bouncer_firefox_release.py
                     mozilla-beta:
                         - releases/bouncer_firefox_beta.py
-                    maple:
-                        - releases/dev_bouncer_firefox_beta.py
                     default:
-                        - releases/bouncer_firefox_dev.py
+                        - releases/dev_bouncer_firefox_beta.py
         treeherder:
             platform: linux64/opt
 
@@ -62,13 +60,9 @@ jobs:
         run:
             config:
                 by-project:
-                    mozilla-release:
-                        - releases/bouncer_devedition_release.py
                     mozilla-beta:
-                        - releases/bouncer_devedition_beta.py
-                    maple:
-                        - releases/dev_bouncer_devedition_beta.py
+                        - releases/bouncer_firefox_devedition.py
                     default:
-                        - releases/bouncer_devedition_dev.py
+                        - releases/dev_bouncer_firefox_devedition.py
         treeherder:
             platform: linux64-devedition/opt
