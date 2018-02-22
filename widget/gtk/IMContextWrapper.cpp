@@ -1412,9 +1412,11 @@ IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext)
 
         // If this composition is started by a native keydown event, we need to
         // dispatch our keydown event here (before composition start).
+        // Note that make the preceding eKeyDown event marked as "processed
+        // by IME" for compatibility with Chromium.
         bool isCancelled;
-        mLastFocusedWindow->DispatchKeyDownEvent(mProcessingKeyEvent,
-                                                 &isCancelled);
+        mLastFocusedWindow->DispatchKeyDownOrKeyUpEvent(mProcessingKeyEvent,
+                                                        true, &isCancelled);
         MOZ_LOG(gGtkIMLog, LogLevel::Debug,
             ("0x%p   DispatchCompositionStart(), preceding keydown event is "
              "dispatched",
