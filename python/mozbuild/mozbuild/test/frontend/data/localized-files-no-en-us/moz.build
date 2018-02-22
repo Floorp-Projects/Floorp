@@ -5,4 +5,5 @@
 LOCALIZED_FILES.foo += [
     'en-US/bar.ini',
     'foo.js',
+    'inner/locales/en-US/bar.ini',
 ]
