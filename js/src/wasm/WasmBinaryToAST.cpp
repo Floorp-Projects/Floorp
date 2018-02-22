@@ -398,6 +398,9 @@ AstDecodeBrTable(AstDecodeContext& c)
     if (!c.iter().readBrTable(&depths, &defaultDepth, &type, nullptr, nullptr))
         return false;
 
+    if (c.iter().currentBlockHasPolymorphicBase())
+        return true;
+
     AstRefVector table(c.lifo);
     if (!table.resize(depths.length()))
         return false;
@@ -652,15 +655,19 @@ AstDecodeSelect(AstDecodeContext& c)
     if (!c.iter().readSelect(&type, nullptr, nullptr, nullptr))
         return false;
 
+    if (c.iter().currentBlockHasPolymorphicBase())
+        return true;
+
     AstDecodeStackItem selectFalse = c.popCopy();
     AstDecodeStackItem selectTrue = c.popCopy();
     AstDecodeStackItem cond = c.popCopy();
 
-    AstTernaryOperator* ternary = new(c.lifo) AstTernaryOperator(Op::Select, cond.expr, selectTrue.expr, selectFalse.expr);
-    if (!ternary)
+    auto* select = new(c.lifo) AstTernaryOperator(Op::Select, cond.expr, selectTrue.expr,
+                                                  selectFalse.expr);
+    if (!select)
         return false;
 
-    if (!c.push(AstDecodeStackItem(ternary)))
+    if (!c.push(AstDecodeStackItem(select)))
         return false;
 
     return true;
