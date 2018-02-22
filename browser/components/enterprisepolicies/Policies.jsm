@@ -115,6 +115,14 @@ this.Policies = {
     }
   },
 
+  "DisablePocket": {
+    onBeforeAddons(manager, param) {
+      if (param) {
+        setAndLockPref("extensions.pocket.enabled", false);
+      }
+    }
+  },
+
   "DisplayBookmarksToolbar": {
     onBeforeUIStartup(manager, param) {
       if (param) {
