@@ -41,6 +41,9 @@ public:
   already_AddRefed<Promise>
   Store(const Credential& aCredential, ErrorResult& aRv);
 
+  already_AddRefed<Promise>
+  PreventSilentAccess(ErrorResult& aRv);
+
 private:
   ~CredentialsContainer();
 
