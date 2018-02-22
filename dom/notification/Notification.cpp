@@ -1793,8 +1793,7 @@ Notification::RequestPermission(const GlobalObject& aGlobal,
   }
   nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(window);
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(window->AsGlobal(), aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -1806,7 +1805,7 @@ Notification::RequestPermission(const GlobalObject& aGlobal,
   nsCOMPtr<nsIRunnable> request = new NotificationPermissionRequest(
     principal, isHandlingUserInput, window, promise, permissionCallback);
 
-  global->Dispatch(TaskCategory::Other, request.forget());
+  window->AsGlobal()->Dispatch(TaskCategory::Other, request.forget());
 
   return promise.forget();
 }
@@ -1991,19 +1990,18 @@ Notification::Get(nsPIDOMWindowInner* aWindow,
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aWindow);
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(aWindow->AsGlobal(), aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
   nsCOMPtr<nsINotificationStorageCallback> callback =
-    new NotificationStorageCallback(global, aScope, promise);
+    new NotificationStorageCallback(aWindow->AsGlobal(), aScope, promise);
 
   RefPtr<NotificationGetRunnable> r =
     new NotificationGetRunnable(origin, aFilter.mTag, callback);
 
-  aRv = global->Dispatch(TaskCategory::Other, r.forget());
+  aRv = aWindow->AsGlobal()->Dispatch(TaskCategory::Other, r.forget());
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

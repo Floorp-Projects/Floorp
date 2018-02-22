@@ -113,9 +113,8 @@ GamepadServiceTest::AddGamepad(const nsAString& aID,
                  aNumButtons, aNumAxes, aNumHaptics);
   GamepadChangeEventBody body(a);
   GamepadChangeEvent e(0, GamepadServiceType::Standard, body);
-  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
 
-  RefPtr<Promise> p = Promise::Create(go, aRv);
+  RefPtr<Promise> p = Promise::Create(mWindow->AsGlobal(), aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
