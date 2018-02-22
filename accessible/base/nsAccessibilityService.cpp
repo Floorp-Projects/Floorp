@@ -23,6 +23,7 @@
 #include "nsAccUtils.h"
 #include "nsArrayUtils.h"
 #include "nsAttrName.h"
+#include "nsDOMTokenList.h"
 #include "nsEventShell.h"
 #include "nsIURI.h"
 #include "nsTextFormatter.h"
@@ -1496,17 +1497,11 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
     else
       accessible = new EnumRoleAccessible<roles::PANE>(aContent, aDoc);
 
-  } else if (role.EqualsLiteral("xul:scale")) {
-    accessible = new XULSliderAccessible(aContent, aDoc);
-
   } else if (role.EqualsLiteral("xul:text")) {
     accessible = new XULLabelAccessible(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:textbox")) {
     accessible = new EnumRoleAccessible<roles::SECTION>(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:thumb")) {
-    accessible = new XULThumbAccessible(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:toolbarbutton")) {
     accessible = new XULToolbarButtonAccessible(aContent, aDoc);
