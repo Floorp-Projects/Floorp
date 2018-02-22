@@ -1232,7 +1232,8 @@ nsMathMLmtdFrame::ProcessBorders(nsTableFrame* aFrame,
                                  nsDisplayListBuilder* aBuilder,
                                  const nsDisplayListSet& aLists)
 {
-  aLists.BorderBackground()->AppendToTop(MakeDisplayItem<nsDisplaymtdBorder>(aBuilder, this));
+  aLists.BorderBackground()->AppendToTop(new (aBuilder)
+                                            nsDisplaymtdBorder(aBuilder, this));
   return NS_OK;
 }
 
