@@ -1812,7 +1812,11 @@ nsComputedDOMStyle::DoGetTranslate()
   return ReadIndividualTransformValue(StyleDisplay()->mSpecifiedTranslate,
     [self](const nsCSSValue::Array* aData, nsString& aResult) {
       GeckoStyleContext* contextIfGecko =
+#ifdef MOZ_OLD_STYLE
         self->mStyleContext ? self->mStyleContext->GetAsGecko() : nullptr;
+#else
+        nullptr;
+#endif
       TransformReferenceBox refBox(self->mInnerFrame, nsSize(0, 0));
       RuleNodeCacheConditions dummy;
 
