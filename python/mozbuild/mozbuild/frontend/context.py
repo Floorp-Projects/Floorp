@@ -1216,14 +1216,6 @@ VARIABLES = {
         file.
         """),
 
-    'ANDROID_APK_NAME': (unicode, unicode,
-        """The name of an Android APK file to generate.
-        """),
-
-    'ANDROID_APK_PACKAGE': (unicode, unicode,
-        """The name of the Android package to generate R.java for, like org.mozilla.gecko.
-        """),
-
     'ANDROID_EXTRA_PACKAGES': (StrictOrderingOnAppendList, list,
         """The name of extra Android packages to generate R.java for, like ['org.mozilla.other'].
         """),
