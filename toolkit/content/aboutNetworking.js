@@ -89,6 +89,7 @@ function displayDns(data) {
     let row = document.createElement("tr");
     row.appendChild(col(data.entries[i].hostname));
     row.appendChild(col(data.entries[i].family));
+    row.appendChild(col(data.entries[i].trr));
     let column = document.createElement("td");
 
     for (let j = 0; j < data.entries[i].hostaddr.length; j++) {
