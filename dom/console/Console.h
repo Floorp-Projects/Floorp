@@ -42,7 +42,7 @@ public:
   NS_DECL_NSIOBSERVER
 
   static already_AddRefed<Console>
-  Create(nsPIDOMWindowInner* aWindow, ErrorResult& aRv);
+  Create(JSContext* aCx, nsPIDOMWindowInner* aWindow, ErrorResult& aRv);
 
   // WebIDL methods
   nsPIDOMWindowInner* GetParentObject() const
@@ -129,7 +129,7 @@ public:
   SetConsoleEventHandler(AnyCallback* aHandler);
 
 private:
-  explicit Console(nsPIDOMWindowInner* aWindow);
+  Console(JSContext* aCx, nsPIDOMWindowInner* aWindow);
   ~Console();
 
   void
