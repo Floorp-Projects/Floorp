@@ -3160,7 +3160,9 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
     MOZ_ASSERT(item.mItem->GetType() != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO);
 
     DisplayItemData* oldData =
-      mLayerBuilder->GetOldLayerForFrame(item.mItem->Frame(), item.mItem->GetPerFrameKey());
+      mLayerBuilder->GetOldLayerForFrame(item.mItem->Frame(),
+                                         item.mItem->GetPerFrameKey(),
+                                         item.mItem->HasMergedFrames() ? nullptr : item.mItem->GetDisplayItemData());
     InvalidateForLayerChange(item.mItem, data->mLayer, oldData);
     mLayerBuilder->AddPaintedDisplayItem(data, item.mItem, item.mClip,
                                          *this, item.mLayerState,
