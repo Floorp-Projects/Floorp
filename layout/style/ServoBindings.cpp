@@ -680,6 +680,14 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
                                 EffectCompositor::RestyleType::Standard,
                                 EffectCompositor::CascadeLevel::Animations);
   }
+
+  if (aTasks & UpdateAnimationsTasks::DisplayChangedFromNone) {
+    presContext->EffectCompositor()
+               ->RequestRestyle(const_cast<Element*>(aElement),
+                                pseudoType,
+                                EffectCompositor::RestyleType::Standard,
+                                EffectCompositor::CascadeLevel::Animations);
+  }
 }
 
 bool
