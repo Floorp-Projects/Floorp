@@ -421,7 +421,8 @@ class TupOnly(CommonBackend, PartialBackend):
                     # We're not generating files in these directories yet, so
                     # don't attempt to install files generated from them.
                     if f.context.relobjdir not in ('layout/style/test',
-                                                   'toolkit/library'):
+                                                   'toolkit/library',
+                                                   'js/src/shell'):
                         output = mozpath.join('$(MOZ_OBJ_ROOT)', target, path,
                                               f.target_basename)
                         gen_backend_file = self._get_backend_file(f.context.relobjdir)
