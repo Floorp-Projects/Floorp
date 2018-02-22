@@ -6,7 +6,7 @@
 add_task(async function setup() {
   await setupPolicyEngineWithJson({
     "policies": {
-      "display_bookmarks_toolbar": true
+      "DisplayBookmarksToolbar": true
     }
   });
 });

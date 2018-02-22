@@ -8,6 +8,7 @@
 #include "nsJAR.h"
 #include "nsIFile.h"
 #include "nsIConsoleService.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Unused.h"
 

@@ -14,7 +14,7 @@ add_task(async function test_default_browser_check() {
 
   await setupPolicyEngineWithJson({
     "policies": {
-      "dont_check_default_browser": true
+      "DontCheckDefaultBrowser": true
     }
   });
 

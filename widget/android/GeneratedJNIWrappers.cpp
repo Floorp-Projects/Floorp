@@ -744,43 +744,6 @@ const char GeckoScreenOrientation::name[] =
 constexpr char GeckoScreenOrientation::OnOrientationChange_t::name[];
 constexpr char GeckoScreenOrientation::OnOrientationChange_t::signature[];
 
-const char GeckoSession::name[] =
-        "org/mozilla/gecko/GeckoSession";
-
-const char GeckoSession::Window::name[] =
-        "org/mozilla/gecko/GeckoSession$Window";
-
-constexpr char GeckoSession::Window::AttachEditable_t::name[];
-constexpr char GeckoSession::Window::AttachEditable_t::signature[];
-
-constexpr char GeckoSession::Window::Close_t::name[];
-constexpr char GeckoSession::Window::Close_t::signature[];
-
-constexpr char GeckoSession::Window::DisposeNative_t::name[];
-constexpr char GeckoSession::Window::DisposeNative_t::signature[];
-
-constexpr char GeckoSession::Window::OnReady_t::name[];
-constexpr char GeckoSession::Window::OnReady_t::signature[];
-
-auto GeckoSession::Window::OnReady() const -> void
-{
-    return mozilla::jni::Method<OnReady_t>::Call(Window::mCtx, nullptr);
-}
-
-constexpr char GeckoSession::Window::OnTransfer_t::name[];
-constexpr char GeckoSession::Window::OnTransfer_t::signature[];
-
-auto GeckoSession::Window::OnTransfer(mozilla::jni::Object::Param a0) const -> void
-{
-    return mozilla::jni::Method<OnTransfer_t>::Call(Window::mCtx, nullptr, a0);
-}
-
-constexpr char GeckoSession::Window::Open_t::name[];
-constexpr char GeckoSession::Window::Open_t::signature[];
-
-constexpr char GeckoSession::Window::Transfer_t::name[];
-constexpr char GeckoSession::Window::Transfer_t::signature[];
-
 const char GeckoThread::name[] =
         "org/mozilla/gecko/GeckoThread";
 
@@ -1070,15 +1033,6 @@ constexpr char SurfaceTextureListener::DisposeNative_t::signature[];
 
 constexpr char SurfaceTextureListener::OnFrameAvailable_t::name[];
 constexpr char SurfaceTextureListener::OnFrameAvailable_t::signature[];
-
-const char TextInputController::name[] =
-        "org/mozilla/gecko/TextInputController";
-
-const char TextInputController::EditableClient::name[] =
-        "org/mozilla/gecko/TextInputController$EditableClient";
-
-const char TextInputController::EditableListener::name[] =
-        "org/mozilla/gecko/TextInputController$EditableListener";
 
 const char GeckoSurface::name[] =
         "org/mozilla/gecko/gfx/GeckoSurface";
@@ -2553,6 +2507,52 @@ auto HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType(mozilla::jni:
 {
     return mozilla::jni::Method<FindDecoderCodecInfoForMimeType_t>::Call(HardwareCodecCapabilityUtils::Context(), nullptr, a0);
 }
+
+const char GeckoSession::name[] =
+        "org/mozilla/geckoview/GeckoSession";
+
+const char GeckoSession::Window::name[] =
+        "org/mozilla/geckoview/GeckoSession$Window";
+
+constexpr char GeckoSession::Window::AttachEditable_t::name[];
+constexpr char GeckoSession::Window::AttachEditable_t::signature[];
+
+constexpr char GeckoSession::Window::Close_t::name[];
+constexpr char GeckoSession::Window::Close_t::signature[];
+
+constexpr char GeckoSession::Window::DisposeNative_t::name[];
+constexpr char GeckoSession::Window::DisposeNative_t::signature[];
+
+constexpr char GeckoSession::Window::OnReady_t::name[];
+constexpr char GeckoSession::Window::OnReady_t::signature[];
+
+auto GeckoSession::Window::OnReady() const -> void
+{
+    return mozilla::jni::Method<OnReady_t>::Call(Window::mCtx, nullptr);
+}
+
+constexpr char GeckoSession::Window::OnTransfer_t::name[];
+constexpr char GeckoSession::Window::OnTransfer_t::signature[];
+
+auto GeckoSession::Window::OnTransfer(mozilla::jni::Object::Param a0) const -> void
+{
+    return mozilla::jni::Method<OnTransfer_t>::Call(Window::mCtx, nullptr, a0);
+}
+
+constexpr char GeckoSession::Window::Open_t::name[];
+constexpr char GeckoSession::Window::Open_t::signature[];
+
+constexpr char GeckoSession::Window::Transfer_t::name[];
+constexpr char GeckoSession::Window::Transfer_t::signature[];
+
+const char TextInputController::name[] =
+        "org/mozilla/geckoview/TextInputController";
+
+const char TextInputController::EditableClient::name[] =
+        "org/mozilla/geckoview/TextInputController$EditableClient";
+
+const char TextInputController::EditableListener::name[] =
+        "org/mozilla/geckoview/TextInputController$EditableListener";
 
 } /* java */
 } /* mozilla */

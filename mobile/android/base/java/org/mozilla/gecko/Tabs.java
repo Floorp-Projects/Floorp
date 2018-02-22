@@ -31,6 +31,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.JavaUtil;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.webapps.WebAppManifest;
+import org.mozilla.geckoview.GeckoView;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;

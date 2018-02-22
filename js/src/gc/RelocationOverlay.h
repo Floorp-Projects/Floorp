@@ -12,6 +12,7 @@
 #define gc_RelocationOverlay_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/EndianUtils.h"
 
 #include <stdint.h>
 

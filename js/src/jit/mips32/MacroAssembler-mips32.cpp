@@ -7,6 +7,7 @@
 #include "jit/mips32/MacroAssembler-mips32.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include "jit/Bailouts.h"

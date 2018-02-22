@@ -3,9 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.geckoview;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.GeckoEditable;
+import org.mozilla.gecko.GeckoEditableChild;
+import org.mozilla.gecko.GeckoInputConnection;
+import org.mozilla.gecko.IGeckoEditableParent;
+import org.mozilla.gecko.NativeQueue;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.graphics.RectF;
@@ -27,7 +32,7 @@ import android.view.inputmethod.InputConnection;
 public final class TextInputController {
 
     // Interface to access GeckoInputConnection from TextInputController.
-    /* package */ interface Delegate {
+    public interface Delegate {
         View getView();
         Handler getHandler(Handler defHandler);
         InputConnection onCreateInputConnection(EditorInfo attrs);
@@ -40,7 +45,7 @@ public final class TextInputController {
     }
 
     // Interface to access GeckoEditable from GeckoInputConnection.
-    /* package */ interface EditableClient {
+    public interface EditableClient {
         // The following value is used by requestCursorUpdates
         // ONE_SHOT calls updateCompositionRects() after getting current composing
         // character rects.
@@ -61,7 +66,7 @@ public final class TextInputController {
     }
 
     // Interface to access GeckoInputConnection from GeckoEditable.
-    /* package */ interface EditableListener {
+    public interface EditableListener {
         // IME notification type for notifyIME(), corresponding to NotificationToIME enum.
         @WrapForJNI final int NOTIFY_IME_OF_TOKEN = -3;
         @WrapForJNI final int NOTIFY_IME_OPEN_VKB = -2;
@@ -95,14 +100,14 @@ public final class TextInputController {
     private final GeckoEditableChild mEditableChild = new GeckoEditableChild(mEditable);
     private Delegate mInputConnection;
 
-    /* package */ TextInputController(final @NonNull GeckoSession session,
-                                      final @NonNull NativeQueue queue) {
+    public TextInputController(final @NonNull GeckoSession session,
+                               final @NonNull NativeQueue queue) {
         mSession = session;
         mQueue = queue;
         mEditable.setDefaultEditableChild(mEditableChild);
     }
 
-    /* package */ void onWindowChanged(final GeckoSession.Window window) {
+    public void onWindowChanged(final GeckoSession.Window window) {
         if (mQueue.isReady()) {
             window.attachEditable(mEditable, mEditableChild);
         } else {

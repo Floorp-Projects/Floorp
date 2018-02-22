@@ -27,10 +27,10 @@
                         android:layout_below="@+id/tablet_tab_strip"
                         android:layout_above="@+id/find_in_page">
 
-            <org.mozilla.gecko.GeckoView android:id="@+id/layer_view"
-                                         android:layout_width="match_parent"
-                                         android:layout_height="match_parent"
-                                         android:scrollbars="none"/>
+            <org.mozilla.geckoview.GeckoView android:id="@+id/layer_view"
+                                             android:layout_width="match_parent"
+                                             android:layout_height="match_parent"
+                                             android:scrollbars="none"/>
 
             <org.mozilla.gecko.FormAssistPopup android:id="@+id/form_assist_popup"
                                                android:layout_width="match_parent"

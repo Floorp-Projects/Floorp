@@ -10,6 +10,7 @@
 #include "ConsoleCommon.h"
 
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FunctionBinding.h"
@@ -790,11 +791,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Console)
 NS_INTERFACE_MAP_END
 
 /* static */ already_AddRefed<Console>
-Console::Create(nsPIDOMWindowInner* aWindow, ErrorResult& aRv)
+Console::Create(JSContext* aCx, nsPIDOMWindowInner* aWindow, ErrorResult& aRv)
 {
   MOZ_ASSERT_IF(NS_IsMainThread(), aWindow);
 
-  RefPtr<Console> console = new Console(aWindow);
+  RefPtr<Console> console = new Console(aCx, aWindow);
   console->Initialize(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -803,7 +804,7 @@ Console::Create(nsPIDOMWindowInner* aWindow, ErrorResult& aRv)
   return console.forget();
 }
 
-Console::Console(nsPIDOMWindowInner* aWindow)
+Console::Console(JSContext* aCx, nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
   , mOuterID(0)
   , mInnerID(0)
@@ -823,6 +824,11 @@ Console::Console(nsPIDOMWindowInner* aWindow)
     if (outerWindow) {
       mOuterID = outerWindow->WindowID();
     }
+  }
+
+  // Let's enable the dumping to stdout by default for chrome.
+  if (nsContentUtils::ThreadsafeIsSystemCaller(aCx)) {
+    mDumpToStdout = DOMPrefs::DumpEnabled();
   }
 
   mozilla::HoldJSObjects(this);
@@ -1085,7 +1091,7 @@ Console::ProfileMethodInternal(JSContext* aCx, MethodName aMethodName,
     return;
   }
 
-  MaybeExecuteDumpFunction(aCx, aAction, aData);
+  MaybeExecuteDumpFunction(aCx, aAction, aData, nullptr);
 
   if (!NS_IsMainThread()) {
     // Here we are in a worker thread.
@@ -1329,15 +1335,15 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
 
   // Before processing this CallData differently, it's time to call the dump
   // function.
-  if (aMethodName == MethodTrace) {
-    MaybeExecuteDumpFunctionForTrace(aCx, stack);
+  if (aMethodName == MethodTrace || aMethodName == MethodAssert) {
+    MaybeExecuteDumpFunction(aCx, aMethodString, aData, stack);
   } else if ((aMethodName == MethodTime ||
               aMethodName == MethodTimeEnd) &&
              !aData.IsEmpty()) {
     MaybeExecuteDumpFunctionForTime(aCx, aMethodName, aMethodString,
                                     monotonicTimer, aData[0]);
   } else {
-    MaybeExecuteDumpFunction(aCx, aMethodString, aData);
+    MaybeExecuteDumpFunction(aCx, aMethodString, aData, nullptr);
   }
 
   if (NS_IsMainThread()) {
@@ -2420,7 +2426,7 @@ Console::GetConsoleInternal(const GlobalObject& aGlobal, ErrorResult& aRv)
     nsCOMPtr<WorkletGlobalScope> workletScope =
       do_QueryInterface(aGlobal.GetAsSupports());
     if (workletScope) {
-      return workletScope->GetConsole(aRv);
+      return workletScope->GetConsole(aGlobal.Context(), aRv);
     }
   }
 
@@ -2431,7 +2437,7 @@ Console::GetConsoleInternal(const GlobalObject& aGlobal, ErrorResult& aRv)
 
     // we are probably running a chrome script.
     if (!innerWindow) {
-      RefPtr<Console> console = new Console(nullptr);
+      RefPtr<Console> console = new Console(aGlobal.Context(), nullptr);
       console->Initialize(aRv);
       if (NS_WARN_IF(aRv.Failed())) {
         return nullptr;
@@ -2441,7 +2447,7 @@ Console::GetConsoleInternal(const GlobalObject& aGlobal, ErrorResult& aRv)
     }
 
     nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(innerWindow);
-    return window->GetConsole(aRv);
+    return window->GetConsole(aGlobal.Context(), aRv);
   }
 
   // Workers
@@ -2560,14 +2566,16 @@ Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
 Console::CreateInstance(const GlobalObject& aGlobal,
                         const ConsoleInstanceOptions& aOptions)
 {
-  RefPtr<ConsoleInstance> console = new ConsoleInstance(aOptions);
+  RefPtr<ConsoleInstance> console =
+    new ConsoleInstance(aGlobal.Context(), aOptions);
   return console.forget();
 }
 
 void
 Console::MaybeExecuteDumpFunction(JSContext* aCx,
                                   const nsAString& aMethodName,
-                                  const Sequence<JS::Value>& aData)
+                                  const Sequence<JS::Value>& aData,
+                                  nsIStackFrame* aStack)
 {
   if (!mDumpFunction && !mDumpToStdout) {
     return;
@@ -2603,6 +2611,36 @@ Console::MaybeExecuteDumpFunction(JSContext* aCx,
   }
 
   message.AppendLiteral("\n");
+
+  // aStack can be null.
+
+  nsCOMPtr<nsIStackFrame> stack(aStack);
+
+  while (stack) {
+    nsAutoString filename;
+    stack->GetFilename(aCx, filename);
+
+    message.Append(filename);
+    message.AppendLiteral(" ");
+
+    message.AppendInt(stack->GetLineNumber(aCx));
+    message.AppendLiteral(" ");
+
+    nsAutoString functionName;
+    stack->GetName(aCx, functionName);
+
+    message.Append(functionName);
+    message.AppendLiteral("\n");
+
+    nsCOMPtr<nsIStackFrame> caller = stack->GetCaller(aCx);
+
+    if (!caller) {
+      caller = stack->GetAsyncCaller(aCx);
+    }
+
+    stack.swap(caller);
+  }
+
   ExecuteDumpFunction(message);
 }
 
@@ -2641,52 +2679,6 @@ Console::MaybeExecuteDumpFunctionForTime(JSContext* aCx,
   message.Append(string);
   message.AppendLiteral(" @ ");
   message.AppendInt(aMonotonicTimer);
-
-  message.AppendLiteral("\n");
-  ExecuteDumpFunction(message);
-}
-
-void
-Console::MaybeExecuteDumpFunctionForTrace(JSContext* aCx, nsIStackFrame* aStack)
-{
-  if (!aStack || (!mDumpFunction && !mDumpToStdout)) {
-    return;
-  }
-
-  nsAutoString message;
-  message.AssignLiteral("console.trace:\n");
-
-  if (!mPrefix.IsEmpty()) {
-    message.Append(mPrefix);
-    message.AppendLiteral(": ");
-  }
-
-  nsCOMPtr<nsIStackFrame> stack(aStack);
-
-  while (stack) {
-    nsAutoString filename;
-    stack->GetFilename(aCx, filename);
-
-    message.Append(filename);
-    message.AppendLiteral(" ");
-
-    message.AppendInt(stack->GetLineNumber(aCx));
-    message.AppendLiteral(" ");
-
-    nsAutoString functionName;
-    stack->GetName(aCx, functionName);
-
-    message.Append(filename);
-    message.AppendLiteral("\n");
-
-    nsCOMPtr<nsIStackFrame> caller = stack->GetCaller(aCx);
-
-    if (!caller) {
-      caller = stack->GetAsyncCaller(aCx);
-    }
-
-    stack.swap(caller);
-  }
 
   message.AppendLiteral("\n");
   ExecuteDumpFunction(message);

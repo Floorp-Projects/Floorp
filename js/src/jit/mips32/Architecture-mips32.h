@@ -7,6 +7,7 @@
 #ifndef jit_mips32_Architecture_mips32_h
 #define jit_mips32_Architecture_mips32_h
 
+#include "mozilla/EndianUtils.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include <limits.h>

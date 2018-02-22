@@ -8,6 +8,7 @@
 
 #include "mozilla/Alignment.h"
 #include "mozilla/Casting.h"
+#include "mozilla/EndianUtils.h"
 
 #include <string.h>
 

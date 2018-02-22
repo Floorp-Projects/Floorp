@@ -46,6 +46,13 @@ function logMessage(message) {
   });
 }
 
+// Clears the console of any previous messages. Should be called at the end of
+// each test that logs to the console.
+function resetConsole() {
+  Services.console.logStringMessage("");
+  Services.console.reset();
+}
+
 // Wrapper similar to logMessage, but for logStringMessage.
 function logStringMessage(message) {
   return new Promise(resolve => {
@@ -94,6 +101,7 @@ add_task(async function testInitPrefDisabled() {
     "Reporter does not listen for errors if the enabled pref is false.",
   );
   reporter.uninit();
+  resetConsole();
 });
 
 add_task(async function testInitUninitPrefEnabled() {
@@ -119,6 +127,8 @@ add_task(async function testInitUninitPrefEnabled() {
     !fetchPassedError(fetch, "Logged after uninit"),
     "Reporter does not listen for errors after uninit.",
   );
+
+  resetConsole();
 });
 
 add_task(async function testInitPastMessages() {
@@ -136,6 +146,7 @@ add_task(async function testInitPastMessages() {
     "Reporter collects errors logged before initialization.",
   );
   reporter.uninit();
+  resetConsole();
 });
 
 add_task(async function testEnabledPrefWatcher() {
@@ -167,6 +178,7 @@ add_task(async function testEnabledPrefWatcher() {
   );
 
   reporter.uninit();
+  resetConsole();
 });
 
 add_task(async function testNonErrorLogs() {
@@ -210,6 +222,7 @@ add_task(async function testNonErrorLogs() {
   );
 
   reporter.uninit();
+  resetConsole();
 });
 
 add_task(async function testSampling() {
@@ -244,6 +257,9 @@ add_task(async function testSampling() {
     !fetchPassedError(fetch, "Also shouldn't log"),
     "An invalid sample rate will cause the reporter to never collect errors.",
   );
+
+  reporter.uninit();
+  resetConsole();
 });
 
 add_task(async function testNameMessage() {
@@ -297,6 +313,7 @@ add_task(async function testNameMessage() {
     "Reporter uses error message as the value parameter.",
   );
   reporter.uninit();
+  resetConsole();
 });
 
 add_task(async function testFetchArguments() {
@@ -384,4 +401,7 @@ add_task(async function testFetchArguments() {
       "Reporter builds stack trace from scriptError correctly.",
     );
   });
+
+  reporter.uninit();
+  resetConsole();
 });
