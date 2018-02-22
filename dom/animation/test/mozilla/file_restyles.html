@@ -1126,9 +1126,6 @@ waitForAllPaints(() => {
 
     div.style.display = '';
 
-    // We need to wait a frame to unapply display:none style.
-    await waitForNextFrame();
-
     var markers = await observeStyling(5);
     is(markers.length, 5,
        'Script animations restored from "display: none" state should update ' +
@@ -1163,12 +1160,14 @@ waitForAllPaints(() => {
 
     div.style.display = '';
 
-    // We need to wait a frame to unapply display:none style.
-    await waitForNextFrame();
+    var markers = await observeStyling(1);
+    is(markers.length, 1,
+       'Script animations restored from "display: none" state should update ' +
+       'styles soon');
 
     ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
        'Opacity script animations restored from "display: none" should be ' +
-       'run on the compositor');
+       'run on the compositor in the next frame');
 
     await ensureElementRemoval(div);
   });
