@@ -322,6 +322,7 @@ U2FTokenManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
   mTokenManagerImpl->Sign(aTransactionInfo.AllowList(),
                           aTransactionInfo.RpIdHash(),
                           aTransactionInfo.ClientDataHash(),
+                          aTransactionInfo.Extensions(),
                           aTransactionInfo.RequireUserVerification(),
                           aTransactionInfo.TimeoutMS())
                    ->Then(GetCurrentThreadSerialEventTarget(), __func__,

@@ -75,6 +75,10 @@ pub struct KeyHandle {
     pub transports: AuthenticatorTransports,
 }
 
+pub type AppId = Vec<u8>;
+pub type RegisterResult = Vec<u8>;
+pub type SignResult = (AppId, Vec<u8>, Vec<u8>);
+
 #[cfg(fuzzing)]
 pub use u2fprotocol::*;
 #[cfg(fuzzing)]
