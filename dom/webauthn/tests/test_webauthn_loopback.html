@@ -68,6 +68,10 @@ function() {
     is(clientData.hashAlgorithm, "SHA-256", "Hash algorithm is correct");
     is(clientData.type, "webauthn.create", "Type is correct");
 
+    let extensions = aCredInfo.getClientExtensionResults();
+    is(extensions.appid, undefined, "appid extension wasn't used");
+    is(clientData.clientExtensions.appid, undefined, "appid extension wasn't sent");
+
     return webAuthnDecodeCBORAttestation(aCredInfo.response.attestationObject)
     .then(function(aAttestationObj) {
       // Make sure the RP ID hash matches what we calculate.

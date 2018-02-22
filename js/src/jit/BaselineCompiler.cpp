@@ -4676,7 +4676,7 @@ BaselineCompiler::emit_JSOP_RESUME()
     GeneratorObject::ResumeKind resumeKind = GeneratorObject::getResumeKind(pc);
 
     frame.syncStack(0);
-    masm.checkStackAlignment();
+    masm.assertStackAlignment(sizeof(Value), 0);
 
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
     regs.take(BaselineFrameReg);
@@ -4790,7 +4790,7 @@ BaselineCompiler::emit_JSOP_RESUME()
     masm.push(BaselineFrameReg);
     masm.moveStackPtrTo(BaselineFrameReg);
     masm.subFromStackPtr(Imm32(BaselineFrame::Size()));
-    masm.checkStackAlignment();
+    masm.assertStackAlignment(sizeof(Value), 0);
 
     // Store flags and env chain.
     masm.store32(Imm32(BaselineFrame::HAS_INITIAL_ENV), frame.addressOfFlags());

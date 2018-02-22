@@ -357,6 +357,11 @@ public class WebAppActivity extends AppCompatActivity
     }
 
     @Override // GeckoSession.ContentListener
+    public void onCloseRequest(GeckoSession session) {
+        // Ignore
+    }
+
+    @Override // GeckoSession.ContentListener
     public void onContextMenu(GeckoSession session, int screenX, int screenY,
                               String uri, String elementSrc) {
         final String content = uri != null ? uri : elementSrc != null ? elementSrc : "";
@@ -420,6 +425,13 @@ public class WebAppActivity extends AppCompatActivity
             }
         }
         return true;
+    }
+
+    @Override
+    public void onNewSession(final GeckoSession session, final String uri,
+                             final GeckoSession.Response<GeckoSession> response) {
+        // We should never get here because we abort loads that need a new session in onLoadUri()
+        throw new IllegalStateException("Unexpected new session");
     }
 
     private void updateFullScreen() {

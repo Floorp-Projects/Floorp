@@ -9,6 +9,7 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/dom/WebAuthnTransactionChild.h"
+#include "mozilla/dom/WebAuthnUtil.h"
 #include "nsContentUtils.h"
 #include "nsICryptoHash.h"
 #include "nsIEffectiveTLDService.h"
@@ -126,110 +127,6 @@ RegisteredKeysToScopedCredentialList(const nsAString& aAppId,
     c.id() = keyHandle;
     aList.AppendElement(c);
   }
-}
-
-enum class U2FOperation
-{
-  Register,
-  Sign
-};
-
-static ErrorCode
-EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
-              const U2FOperation& aOp, /* in/out */ nsString& aAppId)
-{
-  // Facet is the specification's way of referring to the web origin.
-  nsAutoCString facetString = NS_ConvertUTF16toUTF8(aOrigin);
-  nsCOMPtr<nsIURI> facetUri;
-  if (NS_FAILED(NS_NewURI(getter_AddRefs(facetUri), facetString))) {
-    return ErrorCode::BAD_REQUEST;
-  }
-
-  // If the facetId (origin) is not HTTPS, reject
-  bool facetIsHttps = false;
-  if (NS_FAILED(facetUri->SchemeIs("https", &facetIsHttps)) || !facetIsHttps) {
-    return ErrorCode::BAD_REQUEST;
-  }
-
-  // If the appId is empty or null, overwrite it with the facetId and accept
-  if (aAppId.IsEmpty() || aAppId.EqualsLiteral("null")) {
-    aAppId.Assign(aOrigin);
-    return ErrorCode::OK;
-  }
-
-  // AppID is user-supplied. It's quite possible for this parse to fail.
-  nsAutoCString appIdString = NS_ConvertUTF16toUTF8(aAppId);
-  nsCOMPtr<nsIURI> appIdUri;
-  if (NS_FAILED(NS_NewURI(getter_AddRefs(appIdUri), appIdString))) {
-    return ErrorCode::BAD_REQUEST;
-  }
-
-  // if the appId URL is not HTTPS, reject.
-  bool appIdIsHttps = false;
-  if (NS_FAILED(appIdUri->SchemeIs("https", &appIdIsHttps)) || !appIdIsHttps) {
-    return ErrorCode::BAD_REQUEST;
-  }
-
-  nsAutoCString appIdHost;
-  if (NS_FAILED(appIdUri->GetAsciiHost(appIdHost))) {
-    return ErrorCode::BAD_REQUEST;
-  }
-
-  // Allow localhost.
-  if (appIdHost.EqualsLiteral("localhost")) {
-    nsAutoCString facetHost;
-    if (NS_FAILED(facetUri->GetAsciiHost(facetHost))) {
-      return ErrorCode::BAD_REQUEST;
-    }
-
-    if (facetHost.EqualsLiteral("localhost")) {
-      return ErrorCode::OK;
-    }
-  }
-
-  // Run the HTML5 algorithm to relax the same-origin policy, copied from W3C
-  // Web Authentication. See Bug 1244959 comment #8 for context on why we are
-  // doing this instead of implementing the external-fetch FacetID logic.
-  nsCOMPtr<nsIDocument> document = aParent->GetDoc();
-  if (!document || !document->IsHTMLDocument()) {
-    return ErrorCode::BAD_REQUEST;
-  }
-  nsHTMLDocument* html = document->AsHTMLDocument();
-  if (NS_WARN_IF(!html)) {
-    return ErrorCode::BAD_REQUEST;
-  }
-
-  // Use the base domain as the facet for evaluation. This lets this algorithm
-  // relax the whole eTLD+1.
-  nsCOMPtr<nsIEffectiveTLDService> tldService =
-    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-  if (!tldService) {
-    return ErrorCode::BAD_REQUEST;
-  }
-
-  nsAutoCString lowestFacetHost;
-  if (NS_FAILED(tldService->GetBaseDomain(facetUri, 0, lowestFacetHost))) {
-    return ErrorCode::BAD_REQUEST;
-  }
-
-  MOZ_LOG(gU2FLog, LogLevel::Debug,
-          ("AppId %s Facet %s", appIdHost.get(), lowestFacetHost.get()));
-
-  if (html->IsRegistrableDomainSuffixOfOrEqualTo(NS_ConvertUTF8toUTF16(lowestFacetHost),
-                                                 appIdHost)) {
-    return ErrorCode::OK;
-  }
-
-  // Bug #1436078 - Permit Google Accounts. Remove in Bug #1436085 in Jan 2023.
-  if (aOp == U2FOperation::Sign && lowestFacetHost.EqualsLiteral("google.com") &&
-      (aAppId.Equals(kGoogleAccountsAppId1) ||
-       aAppId.Equals(kGoogleAccountsAppId2))) {
-    MOZ_LOG(gU2FLog, LogLevel::Debug,
-            ("U2F permitted for Google Accounts via Bug #1436085"));
-    return ErrorCode::OK;
-  }
-
-  return ErrorCode::BAD_REQUEST;
 }
 
 static nsresult
@@ -375,13 +272,10 @@ U2F::Register(const nsAString& aAppId,
   }
 
   // Evaluate the AppID
-  nsString adjustedAppId;
-  adjustedAppId.Assign(aAppId);
-  ErrorCode appIdResult = EvaluateAppID(mParent, mOrigin, U2FOperation::Register,
-                                        adjustedAppId);
-  if (appIdResult != ErrorCode::OK) {
+  nsString adjustedAppId(aAppId);
+  if (!EvaluateAppID(mParent, mOrigin, U2FOperation::Register, adjustedAppId)) {
     RegisterResponse response;
-    response.mErrorCode.Construct(static_cast<uint32_t>(appIdResult));
+    response.mErrorCode.Construct(static_cast<uint32_t>(ErrorCode::BAD_REQUEST));
     ExecuteCallback(response, callback);
     return;
   }
@@ -538,13 +432,10 @@ U2F::Sign(const nsAString& aAppId,
   }
 
   // Evaluate the AppID
-  nsString adjustedAppId;
-  adjustedAppId.Assign(aAppId);
-  ErrorCode appIdResult = EvaluateAppID(mParent, mOrigin, U2FOperation::Sign,
-                                        adjustedAppId);
-  if (appIdResult != ErrorCode::OK) {
+  nsString adjustedAppId(aAppId);
+  if (!EvaluateAppID(mParent, mOrigin, U2FOperation::Sign, adjustedAppId)) {
     SignResponse response;
-    response.mErrorCode.Construct(static_cast<uint32_t>(appIdResult));
+    response.mErrorCode.Construct(static_cast<uint32_t>(ErrorCode::BAD_REQUEST));
     ExecuteCallback(response, callback);
     return;
   }

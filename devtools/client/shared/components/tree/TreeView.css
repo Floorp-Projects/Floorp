@@ -82,7 +82,7 @@
 
 /* Filtering */
 .treeTable .treeRow.hidden {
-  display: none;
+  display: none !important;
 }
 
 .treeTable .treeValueCellDivider {

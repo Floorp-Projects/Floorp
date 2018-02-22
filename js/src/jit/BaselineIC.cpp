@@ -3449,7 +3449,7 @@ ICCall_ClassHook::Compiler::generateStubCode(MacroAssembler& masm)
     pushCallArguments(masm, regs, argcReg, /* isJitCall = */ false, isConstructing_);
     regs.take(scratch);
 
-    masm.checkStackAlignment();
+    masm.assertStackAlignment(sizeof(Value), 0);
 
     // Native functions have the signature:
     //

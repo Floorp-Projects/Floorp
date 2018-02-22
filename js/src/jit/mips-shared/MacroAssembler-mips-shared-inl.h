@@ -611,19 +611,9 @@ MacroAssembler::branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegist
 }
 
 void
-MacroAssembler::branchTruncateFloat32MaybeModUint32(FloatRegister src, Register dest, Label* fail)
-{
-    Label test, success;
-    as_truncws(ScratchFloat32Reg, src);
-    as_mfc1(dest, ScratchFloat32Reg);
-
-    ma_b(dest, Imm32(INT32_MAX), fail, Assembler::Equal);
-}
-
-void
 MacroAssembler::branchTruncateFloat32ToInt32(FloatRegister src, Register dest, Label* fail)
 {
-    convertFloat32ToInt32(src, dest, fail);
+    MOZ_CRASH();
 }
 
 void
@@ -633,25 +623,10 @@ MacroAssembler::branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegis
     ma_bc1d(lhs, rhs, label, cond);
 }
 
-// Convert the floating point value to an integer, if it did not fit, then it
-// was clamped to INT32_MIN/INT32_MAX, and we can test it.
-// NOTE: if the value really was supposed to be INT32_MAX / INT32_MIN then it
-// will be wrong.
-void
-MacroAssembler::branchTruncateDoubleMaybeModUint32(FloatRegister src, Register dest, Label* fail)
-{
-    Label test, success;
-    as_truncwd(ScratchDoubleReg, src);
-    as_mfc1(dest, ScratchDoubleReg);
-
-    ma_b(dest, Imm32(INT32_MAX), fail, Assembler::Equal);
-    ma_b(dest, Imm32(INT32_MIN), fail, Assembler::Equal);
-}
-
 void
 MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src, Register dest, Label* fail)
 {
-    convertDoubleToInt32(src, dest, fail);
+    MOZ_CRASH();
 }
 
 template <typename T, typename L>

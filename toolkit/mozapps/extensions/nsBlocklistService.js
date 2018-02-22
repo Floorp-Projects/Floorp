@@ -69,14 +69,6 @@ var gLoggingEnabled = null;
 var gBlocklistEnabled = true;
 var gBlocklistLevel = DEFAULT_LEVEL;
 
-XPCOMUtils.defineLazyServiceGetter(this, "gConsole",
-                                   "@mozilla.org/consoleservice;1",
-                                   "nsIConsoleService");
-
-XPCOMUtils.defineLazyServiceGetter(this, "gVersionChecker",
-                                   "@mozilla.org/xpcom/version-comparator;1",
-                                   "nsIVersionComparator");
-
 // From appinfo in Services.jsm. It is not possible to use the one in
 // Services.jsm since it will not successfully QueryInterface nsIXULAppInfo in
 // xpcshell tests due to other code calling Services.appinfo before the
@@ -150,7 +142,7 @@ XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {
 function LOG(string) {
   if (gLoggingEnabled) {
     dump("*** " + string + "\n");
-    gConsole.logStringMessage(string);
+    Services.console.logStringMessage(string);
   }
 }
 
@@ -613,15 +605,20 @@ Blocklist.prototype = {
       return;
     }
 
-    if (request.status == 304) {
+    let {status} = request;
+    if (status == 304) {
       LOG("Blocklist::onXMLLoad: up to date.");
       return;
     }
 
-    let responseXML = request.responseXML;
-    if (!responseXML || responseXML.documentElement.namespaceURI == XMLURI_PARSE_ERROR ||
-        (request.status != 200 && request.status != 0)) {
-      LOG("Blocklist::onXMLLoad: there was an error during load");
+    if (status != 200 && status != 0) {
+      LOG("Blocklist::onXMLLoad: there was an error during load, got status: " + status);
+      return;
+    }
+
+    let {responseXML} = request;
+    if (!responseXML || responseXML.documentElement.namespaceURI == XMLURI_PARSE_ERROR) {
+      LOG("Blocklist::onXMLLoad: there was an error during load, we got invalid XML");
       return;
     }
 
@@ -635,7 +632,7 @@ Blocklist.prototype = {
     this._gfxEntries = [];
     this._pluginEntries = [];
 
-    this._loadBlocklistFromString(request.responseText);
+    this._loadBlocklistFromXML(responseXML);
     // We don't inform the users when the graphics blocklist changed at runtime.
     // However addons and plugins blocking status is refreshed.
     this._blocklistUpdated(oldAddonEntries, oldPluginEntries);
@@ -677,17 +674,28 @@ Blocklist.prototype = {
     this._addonEntries = [];
     this._gfxEntries = [];
     this._pluginEntries = [];
+
+    if (this._isBlocklistPreloaded()) {
+      Services.telemetry.getHistogramById("BLOCKLIST_SYNC_FILE_LOAD").add(false);
+      this._loadBlocklistFromString(this._preloadedBlocklistContent);
+      delete this._preloadedBlocklistContent;
+      return;
+    }
+
+    Services.telemetry.getHistogramById("BLOCKLIST_SYNC_FILE_LOAD").add(true);
+
     var profFile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]);
-    if (profFile.exists()) {
+    try {
       this._loadBlocklistFromFile(profFile);
-      return;
+    } catch (ex) {
+      LOG("Blocklist::_loadBlocklist: couldn't load file from profile, trying app dir");
+      try {
+        var appFile = FileUtils.getFile(KEY_APPDIR, [FILE_BLOCKLIST]);
+        this._loadBlocklistFromFile(appFile);
+      } catch (ex) {
+        LOG("Blocklist::_loadBlocklist: no XML File found");
+      }
     }
-    var appFile = FileUtils.getFile(KEY_APPDIR, [FILE_BLOCKLIST]);
-    if (appFile.exists()) {
-      this._loadBlocklistFromFile(appFile);
-      return;
-    }
-    LOG("Blocklist::_loadBlocklist: no XML File found");
   },
 
   /**
@@ -743,16 +751,9 @@ Blocklist.prototype = {
 #          <match name="description" exp="1[.]2[.]3"/>
 #        </pluginItem>
 #      </pluginItems>
-#      <certItems>
-#        <!-- issuerName is the DER issuer name data base64 encoded... -->
-#        <certItem issuerName="MA0xCzAJBgNVBAMMAmNh">
-#          <!-- ... as is the serial number DER data -->
-#          <serialNumber>AkHVNA==</serialNumber>
-#        </certItem>
-#        <!-- subject is the DER subject name data base64 encoded... -->
-#        <certItem subject="MA0xCzAJBgNVBAMMAmNh" pubKeyHash="/xeHA5s+i9/z9d8qy6JEuE1xGoRYIwgJuTE/lmaGJ7M=">
-#        </certItem>
-#      </certItems>
+#      <gfxItems>
+#        <gfxItem ... />
+#      </gfxItems>
 #    </blocklist>
    */
 
@@ -762,31 +763,15 @@ Blocklist.prototype = {
       return;
     }
 
-    let telemetry = Services.telemetry;
-
-    if (this._isBlocklistPreloaded()) {
-      telemetry.getHistogramById("BLOCKLIST_SYNC_FILE_LOAD").add(false);
-      this._loadBlocklistFromString(this._preloadedBlocklistContent);
-      delete this._preloadedBlocklistContent;
-      return;
-    }
-
-    if (!file.exists()) {
-      LOG("Blocklist::_loadBlocklistFromFile: XML File does not exist " + file.path);
-      return;
-    }
-
-    telemetry.getHistogramById("BLOCKLIST_SYNC_FILE_LOAD").add(true);
-
     let text = "";
     let fstream = null;
     let cstream = null;
 
     try {
-      fstream = Components.classes["@mozilla.org/network/file-input-stream;1"]
-                          .createInstance(Components.interfaces.nsIFileInputStream);
-      cstream = Components.classes["@mozilla.org/intl/converter-input-stream;1"]
-                          .createInstance(Components.interfaces.nsIConverterInputStream);
+      fstream = Cc["@mozilla.org/network/file-input-stream;1"]
+                  .createInstance(Ci.nsIFileInputStream);
+      cstream = Cc["@mozilla.org/intl/converter-input-stream;1"]
+                  .createInstance(Ci.nsIConverterInputStream);
 
       fstream.init(file, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
       cstream.init(fstream, "UTF-8", 0, 0);
@@ -798,17 +783,23 @@ Blocklist.prototype = {
         read = cstream.readString(0xffffffff, str); // read as much as we can and put it in str.value
         text += str.value;
       } while (read != 0);
-    } catch (e) {
-      LOG("Blocklist::_loadBlocklistFromFile: Failed to load XML file " + e);
     } finally {
-      if (cstream)
-        cstream.close();
-      if (fstream)
-        fstream.close();
+      // There's no catch block because the callers will catch exceptions,
+      // and may try to read another file if reading this file failed.
+      if (cstream) {
+        try {
+          cstream.close();
+        } catch (ex) {}
+      }
+      if (fstream) {
+        try {
+          fstream.close();
+        } catch (ex) {}
+      }
     }
 
     if (text)
-        this._loadBlocklistFromString(text);
+      this._loadBlocklistFromString(text);
   },
 
   _isBlocklistLoaded() {
@@ -872,12 +863,20 @@ Blocklist.prototype = {
                    createInstance(Ci.nsIDOMParser);
       var doc = parser.parseFromString(text, "text/xml");
       if (doc.documentElement.namespaceURI != XMLURI_BLOCKLIST) {
-        LOG("Blocklist::_loadBlocklistFromFile: aborting due to incorrect " +
+        LOG("Blocklist::_loadBlocklistFromString: aborting due to incorrect " +
             "XML Namespace.\r\nExpected: " + XMLURI_BLOCKLIST + "\r\n" +
             "Received: " + doc.documentElement.namespaceURI);
         return;
       }
+    } catch (e) {
+      LOG("Blocklist::_loadBlocklistFromString: Error constructing blocklist " + e);
+      return;
+    }
+    this._loadBlocklistFromXML(doc);
+  },
 
+  _loadBlocklistFromXML(doc) {
+    try {
       var childNodes = doc.documentElement.childNodes;
       for (let element of childNodes) {
         if (!(element instanceof Ci.nsIDOMElement))
@@ -897,14 +896,14 @@ Blocklist.prototype = {
                                                     this._handleGfxBlacklistNode);
           break;
         default:
-          LOG("Blocklist::_loadBlocklistFromString: ignored entries " + element.localName);
+          LOG("Blocklist::_loadBlocklistFromXML: ignored entries " + element.localName);
         }
       }
       if (this._gfxEntries.length > 0) {
         this._notifyObserversBlocklistGFX();
       }
     } catch (e) {
-      LOG("Blocklist::_loadBlocklistFromFile: Error constructing blocklist " + e);
+      LOG("Blocklist::_loadBlocklistFromXML: Error constructing blocklist " + e);
     }
   },
 
@@ -1524,9 +1523,9 @@ BlocklistItemData.prototype = {
    *          smaller.
    */
   matchesRange(version, minVersion, maxVersion) {
-    if (minVersion && gVersionChecker.compare(version, minVersion) < 0)
+    if (minVersion && Services.vc.compare(version, minVersion) < 0)
       return false;
-    if (maxVersion && gVersionChecker.compare(version, maxVersion) > 0)
+    if (maxVersion && Services.vc.compare(version, maxVersion) > 0)
       return false;
     return true;
   },

@@ -83,6 +83,11 @@ public class GeckoThread extends Thread {
             }
             return false;
         }
+
+        @Override
+        public String toString() {
+            return name();
+        }
     }
 
     private static final NativeQueue sNativeQueue =
@@ -495,13 +500,17 @@ public class GeckoThread extends Thread {
 
     @WrapForJNI(calledFrom = "gecko")
     private static void setState(final State newState) {
-        sNativeQueue.setState(newState);
+        checkAndSetState(null, newState);
     }
 
     @WrapForJNI(calledFrom = "gecko")
     private static boolean checkAndSetState(final State expectedState,
                                             final State newState) {
-        return sNativeQueue.checkAndSetState(expectedState, newState);
+        final boolean result = sNativeQueue.checkAndSetState(expectedState, newState);
+        if (result) {
+            Log.d(LOGTAG, "State changed to " + newState);
+        }
+        return result;
     }
 
     @WrapForJNI(stubName = "SpeculativeConnect")

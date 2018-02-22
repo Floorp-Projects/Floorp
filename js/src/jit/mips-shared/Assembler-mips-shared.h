@@ -833,6 +833,14 @@ class AssemblerMIPSShared : public AssemblerShared
         FCSR = 31
     };
 
+    enum FCSRBit {
+        CauseI = 12,
+        CauseU,
+        CauseO,
+        CauseZ,
+        CauseV
+    };
+
     enum FloatFormat {
         SingleFloat,
         DoubleFloat

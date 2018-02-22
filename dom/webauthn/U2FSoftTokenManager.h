@@ -34,6 +34,7 @@ public:
   Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials,
        const nsTArray<uint8_t>& aApplication,
        const nsTArray<uint8_t>& aChallenge,
+       const nsTArray<WebAuthnExtension>& aExtensions,
        bool aRequireUserVerification,
        uint32_t aTimeoutMS) override;
 
@@ -46,6 +47,12 @@ private:
   nsresult IsRegistered(const nsTArray<uint8_t>& aKeyHandle,
                         const nsTArray<uint8_t>& aAppParam,
                         bool& aResult);
+
+  bool
+  FindRegisteredKeyHandle(const nsTArray<nsTArray<uint8_t>>& aAppIds,
+                          const nsTArray<WebAuthnScopedCredential>& aCredentials,
+                          /*out*/ nsTArray<uint8_t>& aKeyHandle,
+                          /*out*/ nsTArray<uint8_t>& aAppId);
 
   bool mInitialized;
   mozilla::UniquePK11SymKey mWrappingKey;

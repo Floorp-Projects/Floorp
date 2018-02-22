@@ -9,6 +9,7 @@ use std::{ptr, slice};
 
 use U2FManager;
 
+type U2FAppIds = Vec<::AppId>;
 type U2FKeyHandles = Vec<::KeyHandle>;
 type U2FResult = HashMap<u8, Vec<u8>>;
 type U2FCallback = extern "C" fn(u64, *mut U2FResult);
@@ -16,6 +17,7 @@ type U2FCallback = extern "C" fn(u64, *mut U2FResult);
 const RESBUF_ID_REGISTRATION: u8 = 0;
 const RESBUF_ID_KEYHANDLE: u8 = 1;
 const RESBUF_ID_SIGNATURE: u8 = 2;
+const RESBUF_ID_APPID: u8 = 3;
 
 // Generates a new 64-bit transaction id with collision probability 2^-32.
 fn new_tid() -> u64 {
@@ -39,6 +41,27 @@ pub extern "C" fn rust_u2f_mgr_new() -> *mut U2FManager {
 pub unsafe extern "C" fn rust_u2f_mgr_free(mgr: *mut U2FManager) {
     if !mgr.is_null() {
         Box::from_raw(mgr);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn rust_u2f_app_ids_new() -> *mut U2FAppIds {
+    Box::into_raw(Box::new(vec![]))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn rust_u2f_app_ids_add(
+    ids: *mut U2FAppIds,
+    id_ptr: *const u8,
+    id_len: usize
+) {
+    (*ids).push(from_raw(id_ptr, id_len));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn rust_u2f_app_ids_free(ids: *mut U2FAppIds) {
+    if !ids.is_null() {
+        Box::from_raw(ids);
     }
 }
 
@@ -165,8 +188,7 @@ pub unsafe extern "C" fn rust_u2f_mgr_sign(
     callback: U2FCallback,
     challenge_ptr: *const u8,
     challenge_len: usize,
-    application_ptr: *const u8,
-    application_len: usize,
+    app_ids: *const U2FAppIds,
     khs: *const U2FKeyHandles,
 ) -> u64 {
     if mgr.is_null() || khs.is_null() {
@@ -174,13 +196,18 @@ pub unsafe extern "C" fn rust_u2f_mgr_sign(
     }
 
     // Check buffers.
-    if challenge_ptr.is_null() || application_ptr.is_null() {
+    if challenge_ptr.is_null() {
+        return 0;
+    }
+
+    // Need at least one app_id.
+    if (*app_ids).len() < 1 {
         return 0;
     }
 
     let flags = ::SignFlags::from_bits_truncate(flags);
     let challenge = from_raw(challenge_ptr, challenge_len);
-    let application = from_raw(application_ptr, application_len);
+    let app_ids = (*app_ids).clone();
     let key_handles = (*khs).clone();
 
     let tid = new_tid();
@@ -188,13 +215,14 @@ pub unsafe extern "C" fn rust_u2f_mgr_sign(
         flags,
         timeout,
         challenge,
-        application,
+        app_ids,
         key_handles,
         move |rv| {
-            if let Ok((key_handle, signature)) = rv {
+            if let Ok((app_id, key_handle, signature)) = rv {
                 let mut result = U2FResult::new();
                 result.insert(RESBUF_ID_KEYHANDLE, key_handle);
                 result.insert(RESBUF_ID_SIGNATURE, signature);
+                result.insert(RESBUF_ID_APPID, app_id);
                 callback(tid, Box::into_raw(Box::new(result)));
             } else {
                 callback(tid, ptr::null_mut());

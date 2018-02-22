@@ -127,6 +127,7 @@ U2FHIDTokenManager::Register(const nsTArray<WebAuthnScopedCredential>& aCredenti
   }
 
   ClearPromises();
+  mCurrentAppId = aApplication;
   mTransactionId = rust_u2f_mgr_register(mU2FManager,
                                          registerFlags,
                                          (uint64_t)aTimeoutMS,
@@ -164,6 +165,7 @@ RefPtr<U2FSignPromise>
 U2FHIDTokenManager::Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials,
                          const nsTArray<uint8_t>& aApplication,
                          const nsTArray<uint8_t>& aChallenge,
+                         const nsTArray<WebAuthnExtension>& aExtensions,
                          bool aRequireUserVerification,
                          uint32_t aTimeoutMS)
 {
@@ -176,15 +178,25 @@ U2FHIDTokenManager::Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials,
     signFlags |= U2F_FLAG_REQUIRE_USER_VERIFICATION;
   }
 
+  nsTArray<nsTArray<uint8_t>> appIds;
+  appIds.AppendElement(aApplication);
+
+  // Process extensions.
+  for (const WebAuthnExtension& ext: aExtensions) {
+    if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
+      appIds.AppendElement(ext.get_WebAuthnExtensionAppId().AppId());
+    }
+  }
+
   ClearPromises();
+  mCurrentAppId = aApplication;
   mTransactionId = rust_u2f_mgr_sign(mU2FManager,
                                      signFlags,
                                      (uint64_t)aTimeoutMS,
                                      u2f_sign_callback,
                                      aChallenge.Elements(),
                                      aChallenge.Length(),
-                                     aApplication.Elements(),
-                                     aApplication.Length(),
+                                     U2FAppIds(appIds).Get(),
                                      U2FKeyHandles(aCredentials).Get());
   if (mTransactionId == 0) {
     return U2FSignPromise::CreateAndReject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
@@ -234,6 +246,12 @@ U2FHIDTokenManager::HandleSignResult(UniquePtr<U2FResult>&& aResult)
 
   MOZ_ASSERT(!mSignPromise.IsEmpty());
 
+  nsTArray<uint8_t> appId;
+  if (!aResult->CopyAppId(appId)) {
+    mSignPromise.Reject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
+    return;
+  }
+
   nsTArray<uint8_t> keyHandle;
   if (!aResult->CopyKeyHandle(keyHandle)) {
     mSignPromise.Reject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
@@ -246,7 +264,14 @@ U2FHIDTokenManager::HandleSignResult(UniquePtr<U2FResult>&& aResult)
     return;
   }
 
-  WebAuthnGetAssertionResult result(keyHandle, signature);
+  nsTArray<WebAuthnExtensionResult> extensions;
+
+  if (appId != mCurrentAppId) {
+    // Indicate to the RP that we used the FIDO appId.
+    extensions.AppendElement(WebAuthnExtensionResultAppId(true));
+  }
+
+  WebAuthnGetAssertionResult result(appId, keyHandle, signature, extensions);
   mSignPromise.Resolve(Move(result), __func__);
 }
 
