@@ -40,7 +40,7 @@ const EXPECTED_APPMENU_OPEN_REFLOWS = [
       "handleEvent@resource:///modules/PanelMultiView.jsm",
     ],
 
-    times: 6, // This number should only ever go down - never up.
+    maxCount: 6, // This number should only ever go down - never up.
   },
 ];
 
@@ -61,7 +61,7 @@ const EXPECTED_APPMENU_SUBVIEW_REFLOWS = [
       "_transitionViews@resource:///modules/PanelMultiView.jsm",
     ],
 
-    times: 4, // This number should only ever go down - never up.
+    maxCount: 4, // This number should only ever go down - never up.
   },
 
   /**
