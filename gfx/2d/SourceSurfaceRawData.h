@@ -115,6 +115,12 @@ public:
     MOZ_ASSERT(mMapCount == 0);
   }
 
+  bool Init(const IntSize &aSize,
+            SurfaceFormat aFormat,
+            bool aClearMem,
+            uint8_t aClearValue,
+            int32_t aStride = 0);
+
   virtual uint8_t* GetData() override { return mArray; }
   virtual int32_t Stride() override { return mStride; }
 
@@ -141,12 +147,6 @@ public:
 
 private:
   friend class Factory;
-
-  bool Init(const IntSize &aSize,
-            SurfaceFormat aFormat,
-            bool aClearMem,
-            uint8_t aClearValue,
-            int32_t aStride = 0);
 
   AlignedArray<uint8_t> mArray;
   int32_t mStride;
