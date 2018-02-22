@@ -589,7 +589,6 @@ protected:
     // data used as part of the font cmap loading process
     nsTArray<RefPtr<gfxFontFamily> > mFontFamiliesToLoad;
     uint32_t mStartIndex;
-    uint32_t mIncrement;
     uint32_t mNumFamilies;
 
     // xxx - info for diagnosing no default font aborts
