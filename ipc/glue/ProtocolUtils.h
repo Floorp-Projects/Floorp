@@ -270,6 +270,13 @@ protected:
     ~IToplevelProtocol();
 
 public:
+    enum ProcessIdState {
+        eUnstarted,
+        ePending,
+        eReady,
+        eError
+    };
+
     using SchedulerGroupSet = nsILabelableRunnable::SchedulerGroupSet;
 
     void SetTransport(UniquePtr<Transport> aTrans)
@@ -281,8 +288,9 @@ public:
 
     ProtocolId GetProtocolId() const { return mProtocolId; }
 
-    base::ProcessId OtherPid() const override;
-    void SetOtherProcessId(base::ProcessId aOtherPid);
+    base::ProcessId OtherPid() const final;
+    void SetOtherProcessId(base::ProcessId aOtherPid,
+                           ProcessIdState aState = ProcessIdState::eReady);
 
     bool TakeMinidump(nsIFile** aDump, uint32_t* aSequence);
 
@@ -431,12 +439,16 @@ protected:
     virtual already_AddRefed<nsIEventTarget>
     GetActorEventTargetInternal(IProtocol* aActor) override;
 
+    // This monitor protects mOtherPid and mOtherPidState. All other fields
+    // should only be accessed on the worker thread.
+    mutable mozilla::Monitor mMonitor;
   private:
     base::ProcessId OtherPidMaybeInvalid() const;
 
     ProtocolId mProtocolId;
     UniquePtr<Transport> mTrans;
     base::ProcessId mOtherPid;
+    ProcessIdState mOtherPidState;
     IDMap<IProtocol*> mActorMap;
     int32_t mLastRouteId;
     IDMap<Shmem::SharedMemory*> mShmemMap;
