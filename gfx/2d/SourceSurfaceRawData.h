@@ -128,6 +128,11 @@ public:
   virtual IntSize GetSize() const override { return mSize; }
   virtual SurfaceFormat GetFormat() const override { return mFormat; }
 
+  void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                              size_t& aHeapSizeOut,
+                              size_t& aNonHeapSizeOut,
+                              size_t& aExtHandlesOut) const override;
+
   virtual bool Map(MapType, MappedSurface *aMappedSurface) override
   {
     aMappedSurface->mData = GetData();
