@@ -34,6 +34,7 @@
 #include "mozilla/Atomics.h"
 
 #include "jit/IonTypes.h"
+#include "js/ProfilingFrameIterator.h"
 #include "threading/Thread.h"
 #include "vm/MutexIDs.h"
 #include "wasm/WasmCode.h"
@@ -305,7 +306,7 @@ class Simulator {
 
     // Handle a wasm interrupt triggered by an async signal handler.
     void handleWasmInterrupt();
-    void startInterrupt(JitActivation* act);
+    JS::ProfilingFrameIterator::RegisterState registerState();
 
     // Handle any wasm faults, returning true if the fault was handled.
     bool handleWasmFault(int32_t addr, unsigned numBytes);
