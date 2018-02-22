@@ -20,22 +20,24 @@ add_task(async function mainTest() {
     let item = DownloadsView.richListBox.firstChild;
 
     // Open the panel and click the item to show the subview.
+    let viewPromise = promiseViewShown(DownloadsBlockedSubview.subview);
     EventUtils.sendMouseEvent({ type: "click" }, item);
-    await promiseSubviewShown(true);
+    await viewPromise;
 
     // Items are listed in newest-to-oldest order, so e.g. the first item's
     // verdict is the last element in the verdicts array.
     Assert.ok(DownloadsBlockedSubview.subview.getAttribute("verdict"),
               verdicts[verdicts.count - i - 1]);
 
-    // Click the sliver of the main view that's still showing on the left to go
-    // back to it.
-    EventUtils.synthesizeMouse(DownloadsPanel.panel, 10, 10, {}, window);
-    await promiseSubviewShown(false);
+    // Go back to the main view.
+    viewPromise = promiseViewShown(DownloadsBlockedSubview.mainView);
+    DownloadsBlockedSubview.panelMultiView.goBack();
+    await viewPromise;
 
     // Show the subview again.
+    viewPromise = promiseViewShown(DownloadsBlockedSubview.subview);
     EventUtils.sendMouseEvent({ type: "click" }, item);
-    await promiseSubviewShown(true);
+    await viewPromise;
 
     // Click the Open button.  The download should be unblocked and then opened,
     // i.e., unblockAndOpenDownload() should be called on the item.  The panel
@@ -53,19 +55,23 @@ add_task(async function mainTest() {
     // Reopen the panel and show the subview again.
     await openPanel();
 
+    viewPromise = promiseViewShown(DownloadsBlockedSubview.subview);
     EventUtils.sendMouseEvent({ type: "click" }, item);
-    await promiseSubviewShown(true);
+    await viewPromise;
 
     // Click the Remove button.  The panel should close and the item should be
     // removed from it.
+    hidePromise = promisePanelHidden();
     EventUtils.synthesizeMouse(DownloadsBlockedSubview.elements.deleteButton,
                                10, 10, {}, window);
-    await promisePanelHidden();
-    await openPanel();
+    await hidePromise;
 
+    await openPanel();
     Assert.ok(!item.parentNode);
+
+    hidePromise = promisePanelHidden();
     DownloadsPanel.hidePanel();
-    await promisePanelHidden();
+    await hidePromise;
   }
 
   await task_resetState();
@@ -127,15 +133,7 @@ async function openPanel() {
 }
 
 function promisePanelHidden() {
-  return new Promise(resolve => {
-    if (!DownloadsPanel.panel || DownloadsPanel.panel.state == "closed") {
-      resolve();
-      return;
-    }
-    DownloadsPanel.panel.addEventListener("popuphidden", function() {
-      setTimeout(resolve, 0);
-    }, {once: true});
-  });
+  return BrowserTestUtils.waitForEvent(DownloadsPanel.panel, "popuphidden");
 }
 
 function makeDownload(verdict) {
@@ -152,18 +150,8 @@ function makeDownload(verdict) {
   };
 }
 
-function promiseSubviewShown(shown) {
-  // More terribleness, but I'm tired of fighting intermittent timeouts on try.
-  // Just poll for the subview and wait a second before resolving the promise.
-  return new Promise(resolve => {
-    let interval = setInterval(() => {
-      if (shown == DownloadsBlockedSubview.view.showingSubView &&
-          !DownloadsBlockedSubview.view._transitioning) {
-        clearInterval(interval);
-        setTimeout(resolve, 1000);
-      }
-    }, 0);
-  });
+function promiseViewShown(view) {
+  return BrowserTestUtils.waitForEvent(view, "ViewShown");
 }
 
 function promiseUnblockAndOpenDownloadCalled(item) {
