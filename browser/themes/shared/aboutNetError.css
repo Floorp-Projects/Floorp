@@ -16,6 +16,10 @@ body.certerror .title {
   background-image: url("cert-error.svg");
 }
 
+body.blocked .title {
+  background-image: url("chrome://global/skin/icons/blocked.svg");
+}
+
 #errorContainer {
   display: none;
 }

@@ -169,6 +169,9 @@
         if (illustratedErrors.includes(err)) {
           document.body.classList.add("illustrated", err);
         }
+        if (err == "blockedByPolicy") {
+          document.body.classList.add("blocked");
+        }
 
         gIsCertError = (err == "nssBadCert");
         // Only worry about captive portals if this is a cert error.
@@ -308,7 +311,7 @@
         var event = new CustomEvent("AboutNetErrorLoad", {bubbles: true});
         document.dispatchEvent(event);
 
-        if (err == "inadequateSecurityError" || err == "blockedByPolicyTemp") {
+        if (err == "inadequateSecurityError" || err == "blockedByPolicy") {
           // Remove the "Try again" button from pages that don't need it.
           // For HTTP/2 inadequate security or pages blocked by policy, trying
           // again won't help.
@@ -529,6 +532,7 @@
         <span id="ept_captivePortal">&captivePortal.title;</span>
         <span id="ept_dnsNotFound">&dnsNotFound.pageTitle;</span>
         <span id="ept_malformedURI">&malformedURI.pageTitle;</span>
+        <span id="ept_blockedByPolicy">&blockedByPolicy.title;</span>
       </div>
       <div id="errorTitlesContainer">
         <h1 id="et_generic">&generic.title;</h1>
@@ -558,7 +562,7 @@
         <h1 id="et_corruptedContentErrorv2">&corruptedContentErrorv2.title;</h1>
         <h1 id="et_sslv3Used">&sslv3Used.title;</h1>
         <h1 id="et_inadequateSecurityError">&inadequateSecurityError.title;</h1>
-        <h1 id="et_blockedByPolicyTemp">&blockedByPolicyTemp.title;</h1>
+        <h1 id="et_blockedByPolicy">&blockedByPolicy.title;</h1>
       </div>
       <div id="errorDescriptionsContainer">
         <div id="ed_generic">&generic.longDesc;</div>
@@ -588,7 +592,7 @@
         <div id="ed_corruptedContentErrorv2">&corruptedContentErrorv2.longDesc;</div>
         <div id="ed_sslv3Used">&sslv3Used.longDesc2;</div>
         <div id="ed_inadequateSecurityError">&inadequateSecurityError.longDesc;</div>
-        <div id="ed_blockedByPolicyTemp">&blockedByPolicyTemp.longDesc;</div>
+        <div id="ed_blockedByPolicy"></div>
       </div>
     </div>
 
