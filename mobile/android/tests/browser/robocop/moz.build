@@ -13,10 +13,6 @@ for var in ('MOZ_ANDROID_MIN_SDK_VERSION',
     if CONFIG[var]:
         DEFINES[var] = CONFIG[var]
 
-ANDROID_APK_NAME = 'robocop-debug'
-ANDROID_APK_PACKAGE = 'org.mozilla.roboexample.test'
-ANDROID_ASSETS_DIRS += ['assets']
-
 TEST_HARNESS_FILES.testing.mochitest += [
     'robocop.ini',
     'robocop_autophone2.ini',
