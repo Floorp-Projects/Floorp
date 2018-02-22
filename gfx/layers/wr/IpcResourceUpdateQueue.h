@@ -35,6 +35,7 @@ public:
   void Flush(nsTArray<layers::RefCountedShmem>& aSmallAllocs, nsTArray<ipc::Shmem>& aLargeAllocs);
 
   void Clear();
+  bool IsEmpty() const;
 
 protected:
   bool AllocChunk();
@@ -119,6 +120,8 @@ public:
   void Flush(nsTArray<layers::OpUpdateResource>& aUpdates,
              nsTArray<layers::RefCountedShmem>& aSmallAllocs,
              nsTArray<ipc::Shmem>& aLargeAllocs);
+
+  bool IsEmpty() const;
 
   static void ReleaseShmems(ipc::IProtocol*, nsTArray<layers::RefCountedShmem>& aShmems);
   static void ReleaseShmems(ipc::IProtocol*, nsTArray<ipc::Shmem>& aShmems);
