@@ -1132,13 +1132,16 @@ async _consoleOpenWithCachedMessagesTest() {
     tests["custom.debugger"] = this.customDebugger;
     tests["custom.webconsole"] = this.customConsole;
 
-    // Run individual tests covering a very precise tool feature
+    // Run individual tests covering a very precise tool feature.
     tests["console.bulklog"] = this._consoleBulkLoggingTest;
     tests["console.streamlog"] = this._consoleStreamLoggingTest;
     tests["console.objectexpand"] = this._consoleObjectExpansionTest;
     tests["console.openwithcache"] = this._consoleOpenWithCachedMessagesTest;
     tests["inspector.mutations"] = this._inspectorMutationsTest;
     tests["inspector.layout"] = this._inspectorLayoutTest;
+    // ⚠  Adding new individual tests slows down DAMP execution ⚠
+    // ⚠  Consider contributing to custom.${tool} rather than adding isolated tests ⚠
+    // ⚠  See http://docs.firefox-dev.tools/tests/writing-perf-tests.html ⚠
 
     // Filter tests via `./mach --subtests filter` command line argument
     let filter = Services.prefs.getCharPref("talos.subtests", "");
