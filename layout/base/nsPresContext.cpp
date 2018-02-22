@@ -233,6 +233,15 @@ nsPresContext::PrefChangedUpdateTimerCallback(nsITimer *aTimer, void *aClosure)
     presContext->UpdateAfterPreferencesChanged();
 }
 
+void
+nsPresContext::ForceReflowForFontInfoUpdate()
+{
+  // We can trigger reflow by pretending a font.* preference has changed;
+  // this is the same mechanism as gfxPlatform::ForceGlobalReflow() uses
+  // if new fonts are installed during the session, for example.
+  PreferenceChanged("font.internaluseonly.changed");
+}
+
 static bool
 IsVisualCharset(NotNull<const Encoding*> aCharset)
 {
