@@ -51,6 +51,7 @@ nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::Init(const nsACString& aName)
 {
+  mName = aName;
   mMemoryReportPath =
     nsPrintfCString(
       "explicit/storage/prefix-set/%s",
@@ -67,6 +68,15 @@ nsUrlClassifierPrefixSet::~nsUrlClassifierPrefixSet()
   UnregisterWeakMemoryReporter(this);
 }
 
+void
+nsUrlClassifierPrefixSet::Clear()
+{
+  LOG(("[%s] Clearing PrefixSet", mName.get()));
+  mIndexDeltas.Clear();
+  mIndexPrefixes.Clear();
+  mTotalPrefixes = 0;
+}
+
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::SetPrefixes(const uint32_t* aArray, uint32_t aLength)
 {
@@ -76,10 +86,7 @@ nsUrlClassifierPrefixSet::SetPrefixes(const uint32_t* aArray, uint32_t aLength)
 
   if (aLength <= 0) {
     if (mIndexPrefixes.Length() > 0) {
-      LOG(("Clearing PrefixSet"));
-      mIndexDeltas.Clear();
-      mIndexPrefixes.Clear();
-      mTotalPrefixes = 0;
+      Clear();
     }
   } else {
     rv = MakePrefixSet(aArray, aLength);
@@ -103,8 +110,7 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLen
   }
 #endif
 
-  mIndexPrefixes.Clear();
-  mIndexDeltas.Clear();
+  Clear();
   mTotalPrefixes = aLength;
 
   mIndexPrefixes.AppendElement(aPrefixes[0]);
@@ -402,7 +408,7 @@ nsUrlClassifierPrefixSet::StoreToFile(nsIFile* aFile)
   rv = WritePrefixes(out);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  LOG(("Saving PrefixSet successful\n"));
+  LOG(("[%s] Storing PrefixSet successful", mName.get()));
 
   return NS_OK;
 }
@@ -432,7 +438,7 @@ nsUrlClassifierPrefixSet::LoadPrefixes(nsIInputStream* in)
     NS_ENSURE_TRUE(read == sizeof(uint32_t), NS_ERROR_FAILURE);
 
     if (indexSize == 0) {
-      LOG(("stored PrefixSet is empty!"));
+      LOG(("[%s] Stored PrefixSet is empty!", mName.get()));
       return NS_OK;
     }
 
@@ -479,12 +485,12 @@ nsUrlClassifierPrefixSet::LoadPrefixes(nsIInputStream* in)
       }
     }
   } else {
-    LOG(("Version magic mismatch, not loading"));
+    LOG(("[%s] Version magic mismatch, not loading", mName.get()));
     return NS_ERROR_FILE_CORRUPTED;
   }
 
   MOZ_ASSERT(mIndexPrefixes.Length() == mIndexDeltas.Length());
-  LOG(("Loading PrefixSet successful"));
+  LOG(("[%s] Loading PrefixSet successful", mName.get()));
 
   return NS_OK;
 }
@@ -512,7 +518,7 @@ nsUrlClassifierPrefixSet::WritePrefixes(nsIOutputStream* out)
   uint32_t checksum;
   CalculateTArrayChecksum(mIndexDeltas, &checksum);
   if (checksum != mIndexDeltasChecksum) {
-    LOG(("The contents of mIndexDeltas doesn't match the checksum!"));
+    LOG(("[%s] The contents of mIndexDeltas doesn't match the checksum!", mName.get()));
     MOZ_CRASH("Memory corruption detected in mIndexDeltas.");
   }
 
@@ -569,7 +575,7 @@ nsUrlClassifierPrefixSet::WritePrefixes(nsIOutputStream* out)
     }
   }
 
-  LOG(("Saving PrefixSet successful\n"));
+  LOG(("[%s] Writing PrefixSet successful", mName.get()));
 
   return NS_OK;
 }

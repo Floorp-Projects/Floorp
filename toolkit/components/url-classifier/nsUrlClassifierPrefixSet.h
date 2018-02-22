@@ -61,6 +61,7 @@ private:
   static const uint32_t MAX_INDEX_DIFF = (1 << 16);
   static const uint32_t PREFIXSET_VERSION_MAGIC = 1;
 
+  void Clear();
   nsresult MakePrefixSet(const uint32_t* aArray, uint32_t aLength);
   uint32_t BinSearch(uint32_t start, uint32_t end, uint32_t target);
 
@@ -89,6 +90,7 @@ private:
   // how many prefixes we have.
   uint32_t mTotalPrefixes;
 
+  nsCString mName;
   nsCString mMemoryReportPath;
   mozilla::CorruptionCanary mCanary;
 };
