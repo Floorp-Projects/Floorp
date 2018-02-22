@@ -136,6 +136,12 @@ ShmSegmentsWriter::Flush(nsTArray<RefCountedShmem>& aSmallAllocs, nsTArray<ipc::
   mCursor = 0;
 }
 
+bool
+ShmSegmentsWriter::IsEmpty() const
+{
+  return mCursor == 0;
+}
+
 void
 ShmSegmentsWriter::Clear()
 {
@@ -365,6 +371,16 @@ IpcResourceUpdateQueue::Flush(nsTArray<layers::OpUpdateResource>& aUpdates,
   aUpdates.Clear();
   mUpdates.SwapElements(aUpdates);
   mWriter.Flush(aSmallAllocs, aLargeAllocs);
+}
+
+bool
+IpcResourceUpdateQueue::IsEmpty() const
+{
+  if (mUpdates.Length() == 0) {
+    MOZ_ASSERT(mWriter.IsEmpty());
+    return true;
+  }
+  return false;
 }
 
 void
