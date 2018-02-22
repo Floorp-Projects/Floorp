@@ -12,6 +12,8 @@ import java.lang.reflect.Proxy;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.geckoview.GeckoSession;
+import org.mozilla.geckoview.TextInputController;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -44,7 +46,7 @@ import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 
-/* package */ class GeckoInputConnection
+public class GeckoInputConnection
     extends BaseInputConnection
     implements TextInputController.Delegate,
                TextInputController.EditableListener {

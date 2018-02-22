@@ -20,7 +20,7 @@
         android:background="@color/text_and_tabs_tray_grey"
         app:layout_scrollFlags="scroll|enterAlways"/>
 
-    <org.mozilla.gecko.GeckoView
+    <org.mozilla.geckoview.GeckoView
         android:id="@+id/gecko_view"
         android:layout_width="fill_parent"
         android:layout_below="@id/actionbar"
