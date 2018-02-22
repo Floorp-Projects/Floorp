@@ -115,6 +115,19 @@ PublicKeyCredential::IsUserVerifyingPlatformAuthenticatorAvailable(GlobalObject&
   return promise.forget();
 }
 
+void
+PublicKeyCredential::GetClientExtensionResults(AuthenticationExtensionsClientOutputs& aResult)
+{
+  aResult = mClientExtensionOutputs;
+}
+
+void
+PublicKeyCredential::SetClientExtensionResultAppId(bool aResult)
+{
+  mClientExtensionOutputs.mAppid.Construct();
+  mClientExtensionOutputs.mAppid.Value() = aResult;
+}
+
 
 } // namespace dom
 } // namespace mozilla
