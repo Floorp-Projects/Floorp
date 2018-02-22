@@ -229,7 +229,7 @@ function get(instance, name) {
     // code.
 
     if (typeof WebAssembly.Global === "function")
-	return ValueResult(Number(instance.value.exports[name]));
+        return ValueResult(Number(instance.value.exports[name]));
 
     return ValueResult(instance.value.exports[name]);
 }
