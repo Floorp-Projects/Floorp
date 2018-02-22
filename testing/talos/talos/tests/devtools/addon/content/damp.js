@@ -25,7 +25,7 @@ const webserver = Services.prefs.getCharPref("addon.test.damp.webserver");
 
 const SIMPLE_URL = webserver + "/tests/devtools/addon/content/pages/simple.html";
 const COMPLICATED_URL = webserver + "/tests/tp5n/bild.de/www.bild.de/index.html";
-const CUSTOM_URL = webserver + "/tests/devtools/addon/content/pages/custom/$TOOL.html";
+const CUSTOM_URL = webserver + "/tests/devtools/addon/content/pages/custom/$TOOL/index.html";
 
 // Record allocation count in new subtests if DEBUG_DEVTOOLS_ALLOCATIONS is set to
 // "normal". Print allocation sites to stdout if DEBUG_DEVTOOLS_ALLOCATIONS is set to
@@ -817,7 +817,7 @@ async _consoleOpenWithCachedMessagesTest() {
   async customDebugger() {
     const label = "custom";
     const expectedSources = 7;
-    let url = CUSTOM_URL.replace(/\$TOOL/, "debugger/index");
+    let url = CUSTOM_URL.replace(/\$TOOL/, "debugger");
     await this.testSetup(url);
     const selectedFile = "App.js";
     const expectedText = "import React, { Component } from 'react';";
@@ -847,8 +847,8 @@ async _consoleOpenWithCachedMessagesTest() {
   async customConsole() {
     // These numbers controls the number of console api calls we do in the test
     let sync = 250, stream = 250, async = 250;
-    let page = `console.html?sync=${sync}&stream=${stream}&async=${async}`;
-    let url = CUSTOM_URL.replace(/\$TOOL\.html/, page);
+    let params = `?sync=${sync}&stream=${stream}&async=${async}`;
+    let url = CUSTOM_URL.replace(/\$TOOL/, "console") + params;
     await this.testSetup(url);
     let toolbox = await this.openToolboxAndLog("custom.webconsole", "webconsole");
     await this.reloadConsoleAndLog("custom", toolbox, sync + stream + async);
