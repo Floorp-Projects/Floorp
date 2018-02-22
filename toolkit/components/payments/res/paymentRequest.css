@@ -15,6 +15,9 @@ body {
 
 #debugging-console {
   float: right;
+  /* Float above the other overlays */
+  position: relative;
+  z-index: 99;
 }
 
 payment-dialog {
@@ -58,18 +61,37 @@ payment-dialog > footer {
 
 #total {
   flex: 1 1 auto;
+  margin: 5px;
 }
 #view-all {
   flex: 0 1 auto;
 }
 
-#total {
-  border: 1px solid black;
-  margin: 5px;
-  text-align: center;
-}
-
 #total .label {
   font-size: 15px;
   font-weight: bold;
+}
+
+#pay {
+  background-color: #0060df;
+  color: white;
+  border: none;
+}
+
+payment-dialog[changes-prevented][completion-state="processing"] #pay {
+  /* Show the pay button above #disabled-overlay */
+  position: relative;
+  z-index: 1;
+}
+
+#disabled-overlay {
+  background: white;
+  opacity: 0.6;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
