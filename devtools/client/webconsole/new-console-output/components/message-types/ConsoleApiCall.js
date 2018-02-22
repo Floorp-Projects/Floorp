@@ -51,6 +51,7 @@ function ConsoleApiCall(props) {
     timeStamp,
     parameters,
     messageText,
+    prefix,
     userProvidedStyles,
   } = message;
 
@@ -74,6 +75,11 @@ function ConsoleApiCall(props) {
     messageBody = dom.span({className: "cm-variable"}, "console.table()");
   } else if (parameters) {
     messageBody = formatReps(messageBodyConfig);
+    if (prefix) {
+      messageBody.unshift(dom.span({
+        className: "console-message-prefix"
+      }, `${prefix}: `));
+    }
   } else {
     messageBody = messageText;
   }
