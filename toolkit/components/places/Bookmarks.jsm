@@ -765,6 +765,8 @@ var Bookmarks = Object.freeze({
           }
         }
         if (updateInfo.hasOwnProperty("url")) {
+          await PlacesUtils.keywords.reassign(item.url, updatedItem.url,
+                                              updatedItem.source);
           notify(observers, "onItemChanged", [ updatedItem._id, "uri",
                                                false, updatedItem.url.href,
                                                PlacesUtils.toPRTime(updatedItem.lastModified),
@@ -919,6 +921,7 @@ var Bookmarks = Object.freeze({
 
         // We don't wait for the frecency calculation.
         if (urls && urls.length) {
+          await PlacesUtils.keywords.eraseEverything();
           updateFrecency(db, urls, true).catch(Cu.reportError);
         }
       }
@@ -1950,24 +1953,20 @@ function removeBookmarks(items, options) {
         await setAncestorsLastModified(db, guid, new Date(), syncChangeDelta);
       }
 
-      // Write a tombstone for the removed item.
+      // Write tombstones for the removed items.
       await insertTombstones(db, items, syncChangeDelta);
     });
 
-    // Update the frecencies outside of the transaction, so that the updates
-    // can progress in the background.
-    for (let item of items) {
+    // Update the frecencies outside of the transaction, excluding tags, so that
+    // the updates can progress in the background.
+    urls = urls.concat(items.filter(item => {
       let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
-
-      // If not a tag recalculate frecency...
-      if (item.type == Bookmarks.TYPE_BOOKMARK && !isUntagging) {
-        // ...though we don't wait for the calculation.
-        updateFrecency(db, [item.url]).catch(Cu.reportError);
-      }
-    }
+      return !isUntagging && "url" in item;
+    }).map(item => item.url));
 
     if (urls.length) {
-      updateFrecency(db, urls, true).catch(Cu.reportError);
+      await PlacesUtils.keywords.removeFromURLsIfNotBookmarked(urls);
+      updateFrecency(db, urls, urls.length > 1).catch(Cu.reportError);
     }
   });
 }

@@ -29,6 +29,8 @@ const UNEXPECTED_NOTIFICATIONS = [
 
 const FTP_URL = "ftp://localhost/clearHistoryOnShutdown/";
 
+ChromeUtils.import("resource:///modules/Sanitizer.jsm");
+
 // Send the profile-after-change notification to the form history component to ensure
 // that it has been initialized.
 var formHistoryStartup = Cc["@mozilla.org/satchel/form-history-startup;1"].
@@ -46,20 +48,19 @@ add_task(async function test_execute() {
   let glue = Cc["@mozilla.org/browser/browserglue;1"].
              getService(Ci.nsIObserver);
   glue.observe(null, "initial-migration-will-import-default-bookmarks", null);
-  glue.observe(null, "test-initialize-sanitizer", null);
+  Sanitizer.onStartup();
 
+  Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "cache", true);
+  Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "cookies", true);
+  Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "offlineApps", true);
+  Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "history", true);
+  Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "downloads", true);
+  Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "cookies", true);
+  Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "formData", true);
+  Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "sessions", true);
+  Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "siteSettings", true);
 
-  Services.prefs.setBoolPref("privacy.clearOnShutdown.cache", true);
-  Services.prefs.setBoolPref("privacy.clearOnShutdown.cookies", true);
-  Services.prefs.setBoolPref("privacy.clearOnShutdown.offlineApps", true);
-  Services.prefs.setBoolPref("privacy.clearOnShutdown.history", true);
-  Services.prefs.setBoolPref("privacy.clearOnShutdown.downloads", true);
-  Services.prefs.setBoolPref("privacy.clearOnShutdown.cookies", true);
-  Services.prefs.setBoolPref("privacy.clearOnShutdown.formData", true);
-  Services.prefs.setBoolPref("privacy.clearOnShutdown.sessions", true);
-  Services.prefs.setBoolPref("privacy.clearOnShutdown.siteSettings", true);
-
-  Services.prefs.setBoolPref("privacy.sanitize.sanitizeOnShutdown", true);
+  Services.prefs.setBoolPref(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, true);
 
   info("Add visits.");
   for (let aUrl of URIS) {
