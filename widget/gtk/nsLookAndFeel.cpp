@@ -790,7 +790,7 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
   // Scale the font for the current monitor
   double scaleFactor = nsIWidget::DefaultScaleOverride();
   if (scaleFactor > 0) {
-    aFontStyle.size *= aDevPixPerCSSPixel;
+    aFontStyle.size *= mozilla::widget::ScreenHelperGTK::GetGTKMonitorScaleFactor();
   } else {
     // Remove effect of font scale because it has been already applied in
     // GetSystemFontInfo

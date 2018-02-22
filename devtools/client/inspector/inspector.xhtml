@@ -41,13 +41,13 @@
   <script type="application/javascript" src="inspector.js" defer="true"></script>
 </head>
 <body class="theme-body" role="application">
-  <div class="inspector-responsive-container theme-body inspector">
+  <div class="inspector-responsive-container theme-body inspector"
+       data-localization-bundle="devtools/client/locales/inspector.properties">
 
     <!-- Main Panel Content -->
     <div id="inspector-main-content" class="devtools-main-content" style="visibility: hidden;">
       <!-- Toolbar -->
-      <div id="inspector-toolbar" class="devtools-toolbar" nowindowdrag="true"
-           data-localization-bundle="devtools/client/locales/inspector.properties">
+      <div id="inspector-toolbar" class="devtools-toolbar" nowindowdrag="true">
         <button id="inspector-element-add-button" class="devtools-button"
                 data-localization="title=inspectorAddNode.label"></button>
         <div class="devtools-toolbar-spacer"></div>
@@ -66,7 +66,7 @@
       <div id="markup-box"></div>
       <div id="inspector-breadcrumbs-toolbar" class="devtools-toolbar">
         <div id="inspector-breadcrumbs" class="breadcrumbs-widget-container"
-             role="group" data-localization="aria-label=inspector.breadcrumbs.label" tabindex="0"></div>
+             role="toolbar" data-localization="aria-label=inspector.breadcrumbs.label" tabindex="0"></div>
       </div>
     </div>
 
@@ -85,8 +85,7 @@
 
     <!-- Sidebar Panel Definitions -->
     <div id="tabpanels" style="visibility: collapse">
-      <div id="sidebar-panel-ruleview" class="theme-sidebar inspector-tabpanel"
-           data-localization-bundle="devtools/client/locales/inspector.properties">
+      <div id="sidebar-panel-ruleview" class="theme-sidebar inspector-tabpanel">
         <div id="ruleview-toolbar-container" class="devtools-toolbar">
           <div id="ruleview-toolbar">
             <div class="devtools-searchbox has-clear-btn">
@@ -116,8 +115,7 @@
         </div>
       </div>
 
-      <div id="sidebar-panel-computedview" class="theme-sidebar inspector-tabpanel"
-           data-localization-bundle="devtools/client/locales/inspector.properties">
+      <div id="sidebar-panel-computedview" class="theme-sidebar inspector-tabpanel">
         <div id="computed-toolbar" class="devtools-toolbar">
           <div class="devtools-searchbox has-clear-btn">
             <input id="computed-searchbox"

@@ -121,13 +121,14 @@ add_task(async function remove_multiple_bookmarks() {
 
   await Promise.all([frecencyChangedPromise, frecencyChangedPromise1]);
 
-  // This second one checks the frecency is changed when we remove the bookmark.
-  frecencyChangedPromise = promiseFrecencyChanged("http://example.com/", 0);
-  frecencyChangedPromise1 = promiseFrecencyChanged("http://example1.com/", 0);
+  // We should get an onManyFrecenciesChanged notification with the removal of
+  // multiple bookmarks.
+  let manyFrencenciesPromise =
+    PlacesTestUtils.waitForNotification("onManyFrecenciesChanged", () => true, "history");
 
   await PlacesUtils.bookmarks.remove([bm1, bm2]);
 
-  await Promise.all([frecencyChangedPromise, frecencyChangedPromise1]);
+  await manyFrencenciesPromise;
 });
 
 add_task(async function remove_bookmark_orphans() {
@@ -188,15 +189,12 @@ add_task(async function test_contents_removed() {
 
   let skipDescendantsObserver = expectNotifications(true);
   let receiveAllObserver = expectNotifications(false);
-  let manyFrencenciesPromise =
-    PlacesTestUtils.waitForNotification("onManyFrecenciesChanged", () => true, "history");
+  let frecencyChangedPromise = promiseFrecencyChanged("http://example.com/", 0);
   await PlacesUtils.bookmarks.remove(folder1);
   Assert.strictEqual((await PlacesUtils.bookmarks.fetch(folder1.guid)), null);
   Assert.strictEqual((await PlacesUtils.bookmarks.fetch(bm1.guid)), null);
 
-  // We should get an onManyFrecenciesChanged notification with the removal of
-  // a folder with children.
-  await manyFrencenciesPromise;
+  await frecencyChangedPromise;
 
   let expectedNotifications = [{
     name: "onItemRemoved",
@@ -234,16 +232,13 @@ add_task(async function test_nested_contents_removed() {
                                                  url: "http://example.com/",
                                                  title: "" });
 
-  let manyFrencenciesPromise =
-    PlacesTestUtils.waitForNotification("onManyFrecenciesChanged", () => true, "history");
+  let frecencyChangedPromise = promiseFrecencyChanged("http://example.com/", 0);
   await PlacesUtils.bookmarks.remove(folder1);
   Assert.strictEqual((await PlacesUtils.bookmarks.fetch(folder1.guid)), null);
   Assert.strictEqual((await PlacesUtils.bookmarks.fetch(folder2.guid)), null);
   Assert.strictEqual((await PlacesUtils.bookmarks.fetch(bm1.guid)), null);
 
-  // We should get an onManyFrecenciesChanged notification with the removal of
-  // a folder with children.
-  await manyFrencenciesPromise;
+  await frecencyChangedPromise;
 });
 
 add_task(async function remove_folder_empty_title() {

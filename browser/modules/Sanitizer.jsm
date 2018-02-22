@@ -26,6 +26,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "quotaManagerService",
                                    "@mozilla.org/dom/quota-manager-service;1",
                                    "nsIQuotaManagerService");
 
+// Used as unique id for pending sanitizations.
+var gPendingSanitizationSerial = 0;
+
 /**
  * A number of iterations after which to yield time back
  * to the system.
@@ -39,20 +42,18 @@ var Sanitizer = {
   PREF_SANITIZE_ON_SHUTDOWN: "privacy.sanitize.sanitizeOnShutdown",
 
   /**
-   * During a sanitization this is set to a json containing the array of items
-   * being sanitized, then cleared once the sanitization is complete.
-   * This allows to retry a sanitization on startup in case it was interrupted
-   * by a crash.
+   * During a sanitization this is set to a JSON containing an array of the
+   * pending sanitizations. This allows to retry sanitizations on startup in
+   * case they dind't run or were interrupted by a crash.
+   * Use addPendingSanitization and removePendingSanitization to manage it.
    */
-  PREF_SANITIZE_IN_PROGRESS: "privacy.sanitize.sanitizeInProgress",
+  PREF_PENDING_SANITIZATIONS: "privacy.sanitize.pending",
 
   /**
-   * Whether the previous shutdown sanitization completed successfully.
-   * This is used to detect cases where we were supposed to sanitize on shutdown
-   * but due to a crash we were unable to.  In such cases there may not be any
-   * sanitization in progress, cause we didn't have a chance to start it yet.
+   * Pref branches to fetch sanitization options from.
    */
-  PREF_SANITIZE_DID_SHUTDOWN: "privacy.sanitize.didShutdownSanitize",
+  PREF_CPD_BRANCH: "privacy.cpd.",
+  PREF_SHUTDOWN_BRANCH: "privacy.clearOnShutdown.",
 
   /**
    * The fallback timestamp used when no argument is given to
@@ -73,6 +74,14 @@ var Sanitizer = {
   TIMESPAN_24HOURS:    6,
 
   /**
+   * Whether we should sanitize on shutdown.
+   * When this is set, a pending sanitization should also be added and removed
+   * when shutdown sanitization is complete. This allows to retry incomplete
+   * sanitizations on startup.
+   */
+  shouldSanitizeOnShutdown: false,
+
+  /**
    * Shows a sanitization dialog to the user.
    *
    * @param [optional] parentWindow the window to use as
@@ -91,22 +100,27 @@ var Sanitizer = {
 
   /**
    * Performs startup tasks:
-   *  - Checks if sanitization was interrupted during last shutdown.
+   *  - Checks if sanitizations were not completed during the last session.
    *  - Registers sanitize-on-shutdown.
    */
   async onStartup() {
-    // Check if we were interrupted during the last shutdown sanitization.
-    let shutdownSanitizationWasInterrupted =
-      Services.prefs.getBoolPref(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, false) &&
-      Services.prefs.getPrefType(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN) == Ci.nsIPrefBranch.PREF_INVALID;
+    // First, collect pending sanitizations from the last session, before we
+    // add pending sanitizations for this session.
+    let pendingSanitizations = getAndClearPendingSanitizations();
 
-    if (Services.prefs.prefHasUserValue(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN)) {
-      // Reset the pref, so that if we crash before having a chance to
-      // sanitize on shutdown, we will do at the next startup.
-      // Flushing prefs has a cost, so do this only if necessary.
-      Services.prefs.clearUserPref(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN);
-      Services.prefs.savePrefFile(null);
+    // Check if we should sanitize on shutdown.
+    this.shouldSanitizeOnShutdown =
+      Services.prefs.getBoolPref(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, false);
+    Services.prefs.addObserver(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, this, true);
+    // Add a pending shutdown sanitization, if necessary.
+    if (this.shouldSanitizeOnShutdown) {
+      let itemsToClear = getItemsToClearFromPrefBranch(Sanitizer.PREF_SHUTDOWN_BRANCH);
+      addPendingSanitization("shutdown", itemsToClear, {});
     }
+    // Shutdown sanitization is always pending, but the user may change the
+    // sanitize on shutdown prefs during the session. Then the pending
+    // sanitization would become stale and must be updated.
+    Services.prefs.addObserver(Sanitizer.PREF_SHUTDOWN_BRANCH, this, true);
 
     // Make sure that we are triggered during shutdown.
     let shutdownClient = PlacesUtils.history.shutdownClient.jsclient;
@@ -117,23 +131,18 @@ var Sanitizer = {
     // We use the `options` argument to pass the `progress` object to sanitize().
     let progress = { isShutdown: true };
     shutdownClient.addBlocker("sanitize.js: Sanitize on shutdown",
-      () => sanitizeOnShutdown({ progress }),
-      {
-        fetchState: () => ({ progress })
-      }
+      () => sanitizeOnShutdown(progress),
+      {fetchState: () => ({ progress })}
     );
 
-    // Check if Firefox crashed during a sanitization.
-    let lastInterruptedSanitization = Services.prefs.getStringPref(Sanitizer.PREF_SANITIZE_IN_PROGRESS, "");
-    if (lastInterruptedSanitization) {
-      // If the json is invalid this will just throw and reject the Task.
-      let {itemsToClear, options} = JSON.parse(lastInterruptedSanitization);
-      await this.sanitize(itemsToClear, options);
-    } else if (shutdownSanitizationWasInterrupted) {
-      // Otherwise, could be we were supposed to sanitize on shutdown but we
-      // didn't have a chance, due to an earlier crash.
-      // In such a case, just redo a shutdown sanitize now, during startup.
-      await sanitizeOnShutdown();
+    // Finally, run the sanitizations that were left pending, because we crashed
+    // before completing them.
+    for (let {itemsToClear, options} of pendingSanitizations) {
+      try {
+        await this.sanitize(itemsToClear, options);
+      } catch (ex) {
+        Cu.reportError("A previously pending sanitization failed: " + itemsToClear + "\n" + ex);
+      }
     }
   },
 
@@ -206,13 +215,13 @@ var Sanitizer = {
    *           If timespan is not ignored, and range is not set, sanitize() will
    *           use the value of the timespan pref to determine a range.
    *         - range (default: null)
-   *         - prefDomain (default: "privacy.cpd."): indicates the preferences
-   *           branch to collect the list of items to sanitize from.
    *         - privateStateForNewWindow (default: "non-private"): when clearing
    *           open windows, defines the private state for the newly opened window.
    */
   async sanitize(itemsToClear = null, options = {}) {
     let progress = options.progress || {};
+    if (!itemsToClear)
+      itemsToClear = getItemsToClearFromPrefBranch(this.PREF_CPD_BRANCH);
     let promise = sanitizeInternal(this.items, itemsToClear, progress, options);
 
     // Depending on preferences, the sanitizer may perform asynchronous
@@ -239,6 +248,31 @@ var Sanitizer = {
       Services.obs.notifyObservers(null, "sanitizer-sanitization-complete");
     }
   },
+
+  observe(subject, topic, data) {
+    if (topic == "nsPref:changed") {
+      if (data.startsWith(this.PREF_SHUTDOWN_BRANCH) &&
+          this.shouldSanitizeOnShutdown) {
+        // Update the pending shutdown sanitization.
+        removePendingSanitization("shutdown");
+        let itemsToClear = getItemsToClearFromPrefBranch(Sanitizer.PREF_SHUTDOWN_BRANCH);
+        addPendingSanitization("shutdown", itemsToClear, {});
+      } else if (data == this.PREF_SANITIZE_ON_SHUTDOWN) {
+        this.shouldSanitizeOnShutdown =
+          Services.prefs.getBoolPref(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, false);
+        removePendingSanitization("shutdown");
+        if (this.shouldSanitizeOnShutdown) {
+          let itemsToClear = getItemsToClearFromPrefBranch(Sanitizer.PREF_SHUTDOWN_BRANCH);
+          addPendingSanitization("shutdown", itemsToClear, {});
+        }
+      }
+    }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsiObserver,
+    Ci.nsISupportsWeakReference
+  ]),
 
   items: {
     cache: {
@@ -742,28 +776,19 @@ var Sanitizer = {
 };
 
 async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
-  let { prefDomain = "privacy.cpd.", ignoreTimespan = true, range } = options;
+  let { ignoreTimespan = true, range } = options;
   let seenError = false;
-  let itemsToClear;
-  if (Array.isArray(aItemsToClear)) {
-    // Shallow copy the array, as we are going to modify
-    // it in place later.
-    itemsToClear = [...aItemsToClear];
-  } else {
-    let branch = Services.prefs.getBranch(prefDomain);
-    itemsToClear = Object.keys(items).filter(itemName => {
-      try {
-        return branch.getBoolPref(itemName);
-      } catch (ex) {
-        return false;
-      }
-    });
-  }
+  // Shallow copy the array, as we are going to modify it in place later.
+  if (!Array.isArray(aItemsToClear))
+    throw new Error("Must pass an array of items to clear.");
+  let itemsToClear = [...aItemsToClear];
 
   // Store the list of items to clear, in case we are killed before we
   // get a chance to complete.
-  Services.prefs.setStringPref(Sanitizer.PREF_SANITIZE_IN_PROGRESS,
-                               JSON.stringify({itemsToClear, options}));
+  let uid = gPendingSanitizationSerial++;
+  // Shutdown sanitization is managed outside.
+  if (!progress.isShutdown)
+    addPendingSanitization(uid, itemsToClear, options);
 
   // Store the list of items to clear, for debugging/forensics purposes
   for (let k of itemsToClear) {
@@ -826,9 +851,8 @@ async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
 
   // Sanitization is complete.
   TelemetryStopwatch.finish("FX_SANITIZE_TOTAL", refObj);
-  // Reset the inProgress preference since we were not killed during
-  // sanitization.
-  Services.prefs.clearUserPref(Sanitizer.PREF_SANITIZE_IN_PROGRESS);
+  if (!progress.isShutdown)
+    removePendingSanitization(uid);
   progress = {};
   if (seenError) {
     throw new Error("Error sanitizing");
@@ -899,15 +923,68 @@ async function clearPluginData(range) {
   }
 }
 
-async function sanitizeOnShutdown(options = {}) {
-  if (!Services.prefs.getBoolPref(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN)) {
+async function sanitizeOnShutdown(progress) {
+  if (!Sanitizer.shouldSanitizeOnShutdown) {
     return;
   }
   // Need to sanitize upon shutdown
-  options.prefDomain = "privacy.clearOnShutdown.";
-  await Sanitizer.sanitize(null, options);
+  let itemsToClear = getItemsToClearFromPrefBranch(Sanitizer.PREF_SHUTDOWN_BRANCH);
+  await Sanitizer.sanitize(itemsToClear, { progress });
   // We didn't crash during shutdown sanitization, so annotate it to avoid
   // sanitizing again on startup.
-  Services.prefs.setBoolPref(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN, true);
+  removePendingSanitization("shutdown");
   Services.prefs.savePrefFile(null);
+}
+
+/**
+ * Gets an array of items to clear from the given pref branch.
+ * @param branch The pref branch to fetch.
+ * @return Array of items to clear
+ */
+function getItemsToClearFromPrefBranch(branch) {
+  branch = Services.prefs.getBranch(branch);
+  return Object.keys(Sanitizer.items).filter(itemName => {
+    try {
+      return branch.getBoolPref(itemName);
+    } catch (ex) {
+      return false;
+    }
+  });
+}
+
+/**
+ * These functions are used to track pending sanitization on the next startup
+ * in case of a crash before a sanitization could happen.
+ * @param id A unique id identifying the sanitization
+ * @param itemsToClear The items to clear
+ * @param options The Sanitize options
+ */
+function addPendingSanitization(id, itemsToClear, options) {
+  let pendingSanitizations = safeGetPendingSanitizations();
+  pendingSanitizations.push({id, itemsToClear, options});
+  Services.prefs.setStringPref(Sanitizer.PREF_PENDING_SANITIZATIONS,
+                               JSON.stringify(pendingSanitizations));
+}
+function removePendingSanitization(id) {
+  let pendingSanitizations = safeGetPendingSanitizations();
+  let i = pendingSanitizations.findIndex(s => s.id == id);
+  let [s] = pendingSanitizations.splice(i, 1);
+  Services.prefs.setStringPref(Sanitizer.PREF_PENDING_SANITIZATIONS,
+    JSON.stringify(pendingSanitizations));
+  return s;
+}
+function getAndClearPendingSanitizations() {
+  let pendingSanitizations = safeGetPendingSanitizations();
+  if (pendingSanitizations.length)
+    Services.prefs.clearUserPref(Sanitizer.PREF_PENDING_SANITIZATIONS);
+  return pendingSanitizations;
+}
+function safeGetPendingSanitizations() {
+  try {
+    return JSON.parse(
+      Services.prefs.getStringPref(Sanitizer.PREF_PENDING_SANITIZATIONS, "[]"));
+  } catch (ex) {
+    Cu.reportError("Invalid JSON value for pending sanitizations: " + ex);
+    return [];
+  }
 }

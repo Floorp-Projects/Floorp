@@ -204,6 +204,8 @@
 #urlbar[pageproxystate="valid"] > #identity-box.certUserOverridden > #connection-icon {
   list-style-image: url(chrome://browser/skin/connection-mixed-passive-loaded.svg);
   visibility: visible;
+  fill: unset;
+  -moz-context-properties: fill, fill-opacity;
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.notSecure > #connection-icon,

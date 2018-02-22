@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.4.0 */
+/* Generated with cbindgen:0.4.4 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
- *   1. Get the latest cbindgen using `cargo install --force cbindgen`
+ *   1. Get the latest cbindgen using `cargo +nightly install --force cbindgen`
  *      a. Alternatively, you can clone `https://github.com/eqrion/cbindgen` and use a tagged release
  *   2. Run `rustup run nightly cbindgen toolkit/library/rust/ --crate webrender_bindings -o gfx/webrender_bindings/webrender_ffi_generated.h`
  */
@@ -40,26 +40,26 @@ enum class BoxShadowClipMode : uint32_t {
 };
 
 enum class ClipMode {
-  Clip = 0,
-  ClipOut = 1,
+  Clip,
+  ClipOut,
 
   Sentinel /* this must be last for serialization purposes. */
 };
 
 enum class ExtendMode : uint32_t {
-  Clamp = 0,
-  Repeat = 1,
+  Clamp,
+  Repeat,
 
   Sentinel /* this must be last for serialization purposes. */
 };
 
 #if !(defined(XP_MACOSX) || defined(XP_WIN))
 enum class FontHinting : uint8_t {
-  None = 0,
-  Mono = 1,
-  Light = 2,
-  Normal = 3,
-  LCD = 4,
+  None,
+  Mono,
+  Light,
+  Normal,
+  LCD,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -67,10 +67,10 @@ enum class FontHinting : uint8_t {
 
 #if !(defined(XP_MACOSX) || defined(XP_WIN))
 enum class FontLCDFilter : uint8_t {
-  None = 0,
-  Default = 1,
-  Light = 2,
-  Legacy = 3,
+  None,
+  Default,
+  Light,
+  Legacy,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -78,8 +78,8 @@ enum class FontLCDFilter : uint8_t {
 
 enum class FontRenderMode : uint32_t {
   Mono = 0,
-  Alpha = 1,
-  Subpixel = 2,
+  Alpha,
+  Subpixel,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -111,33 +111,33 @@ enum class ImageRendering : uint32_t {
 // [`set_max_level`]: fn.set_max_level.html
 enum class LevelFilter : uintptr_t {
   // A level lower than all log levels.
-  Off = 0,
+  Off,
   // Corresponds to the `Error` log level.
-  Error = 1,
+  Error,
   // Corresponds to the `Warn` log level.
-  Warn = 2,
+  Warn,
   // Corresponds to the `Info` log level.
-  Info = 3,
+  Info,
   // Corresponds to the `Debug` log level.
-  Debug = 4,
+  Debug,
   // Corresponds to the `Trace` log level.
-  Trace = 5,
+  Trace,
 
   Sentinel /* this must be last for serialization purposes. */
 };
 
 enum class LineOrientation : uint8_t {
-  Vertical = 0,
-  Horizontal = 1,
+  Vertical,
+  Horizontal,
 
   Sentinel /* this must be last for serialization purposes. */
 };
 
 enum class LineStyle : uint8_t {
-  Solid = 0,
-  Dotted = 1,
-  Dashed = 2,
-  Wavy = 3,
+  Solid,
+  Dotted,
+  Dashed,
+  Wavy,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -164,18 +164,18 @@ enum class MixBlendMode : uint32_t {
 };
 
 enum class RepeatMode : uint32_t {
-  Stretch = 0,
-  Repeat = 1,
-  Round = 2,
-  Space = 3,
+  Stretch,
+  Repeat,
+  Round,
+  Space,
 
   Sentinel /* this must be last for serialization purposes. */
 };
 
 enum class SubpixelDirection : uint32_t {
   None = 0,
-  Horizontal = 1,
-  Vertical = 2,
+  Horizontal,
+  Vertical,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -205,9 +205,9 @@ enum class WrExternalImageBufferType {
 };
 
 enum class WrExternalImageType : uint32_t {
-  RawData = 0,
-  NativeTexture = 1,
-  Invalid = 2,
+  RawData,
+  NativeTexture,
+  Invalid,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -932,7 +932,7 @@ extern "C" {
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
- *   1. Get the latest cbindgen using `cargo install --force cbindgen`
+ *   1. Get the latest cbindgen using `cargo +nightly install --force cbindgen`
  *      a. Alternatively, you can clone `https://github.com/eqrion/cbindgen` and use a tagged release
  *   2. Run `rustup run nightly cbindgen toolkit/library/rust/ --crate webrender_bindings -o gfx/webrender_bindings/webrender_ffi_generated.h`
  */
@@ -1661,7 +1661,7 @@ WR_FUNC;
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
- *   1. Get the latest cbindgen using `cargo install --force cbindgen`
+ *   1. Get the latest cbindgen using `cargo +nightly install --force cbindgen`
  *      a. Alternatively, you can clone `https://github.com/eqrion/cbindgen` and use a tagged release
  *   2. Run `rustup run nightly cbindgen toolkit/library/rust/ --crate webrender_bindings -o gfx/webrender_bindings/webrender_ffi_generated.h`
  */
