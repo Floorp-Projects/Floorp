@@ -307,6 +307,7 @@ class MochiRemote(MochitestDesktop):
 
         return ret, None
 
+
 def run_test_harness(parser, options):
     parser.validate(options)
 
