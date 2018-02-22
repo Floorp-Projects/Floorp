@@ -34,31 +34,6 @@
       "enum": [true]
     },
 
-    "DisableAppUpdate": {
-      "description": "Prevent the browser from updating.",
-      "first_available": "60.0",
-      "enterprise_only": true,
-
-      "type": "boolean",
-      "enum": [true]
-    },
-
-    "DisplayMenuBar": {
-      "description": "Causes the menu bar to be displayed by default.",
-      "first_available": "60.0",
-
-      "type": "boolean",
-      "enum": [true]
-    },
-
-    "DisplayBookmarksToolbar": {
-      "description": "Causes the bookmarks toolbar to be displayed by default.",
-      "first_available": "60.0",
-
-      "type": "boolean",
-      "enum": [true]
-    },
-
     "BlockSetDesktopBackground": {
       "description": "Prevents usage of the \"Set Image as Desktop Background\" feature.",
       "first_available": "60.0",
@@ -67,12 +42,43 @@
       "enum": [true]
     },
 
+    "Cookies": {
+      "description": "Allow or deny websites to set cookies.",
+      "first_available": "60.0",
+
+      "type": "object",
+      "properties": {
+        "Allow": {
+          "type": "array",
+          "items": {
+            "type": "origin"
+          }
+        },
+
+        "Block": {
+          "type": "array",
+          "items": {
+            "type": "origin"
+          }
+        }
+      }
+    },
+
     "CreateMasterPassword": {
       "description": "If false, removes access to create a master password.",
       "first_available": "60.0",
 
       "type": "boolean",
       "enum": [false]
+    },
+
+    "DisableAppUpdate": {
+      "description": "Prevent the browser from updating.",
+      "first_available": "60.0",
+      "enterprise_only": true,
+
+      "type": "boolean",
+      "enum": [true]
     },
 
     "DisableFirefoxScreenshots": {
@@ -99,6 +105,22 @@
       "enum": [true]
     },
 
+    "DisplayBookmarksToolbar": {
+      "description": "Causes the bookmarks toolbar to be displayed by default.",
+      "first_available": "60.0",
+
+      "type": "boolean",
+      "enum": [true]
+    },
+
+    "DisplayMenuBar": {
+      "description": "Causes the menu bar to be displayed by default.",
+      "first_available": "60.0",
+
+      "type": "boolean",
+      "enum": [true]
+    },
+
     "DontCheckDefaultBrowser": {
       "description": "Don't check for the default browser on startup.",
       "first_available": "60.0",
@@ -109,6 +131,28 @@
 
     "FlashPlugin": {
       "description": "Allow or deny flash plugin usage.",
+      "first_available": "60.0",
+
+      "type": "object",
+      "properties": {
+        "Allow": {
+          "type": "array",
+          "items": {
+            "type": "origin"
+          }
+        },
+
+        "Block": {
+          "type": "array",
+          "items": {
+            "type": "origin"
+          }
+        }
+      }
+    },
+
+    "InstallAddons": {
+      "description": "Allow or deny popup websites to install webextensions.",
       "first_available": "60.0",
 
       "type": "object",
@@ -156,50 +200,6 @@
       "first_available": "60.0",
 
       "type": "boolean"
-    },
-
-    "InstallAddons": {
-      "description": "Allow or deny popup websites to install webextensions.",
-      "first_available": "60.0",
-
-      "type": "object",
-      "properties": {
-        "Allow": {
-          "type": "array",
-          "items": {
-            "type": "origin"
-          }
-        },
-
-        "Block": {
-          "type": "array",
-          "items": {
-            "type": "origin"
-          }
-        }
-      }
-    },
-
-    "Cookies": {
-      "description": "Allow or deny websites to set cookies.",
-      "first_available": "60.0",
-
-      "type": "object",
-      "properties": {
-        "Allow": {
-          "type": "array",
-          "items": {
-            "type": "origin"
-          }
-        },
-
-        "Block": {
-          "type": "array",
-          "items": {
-            "type": "origin"
-          }
-        }
-      }
     }
   }
 }

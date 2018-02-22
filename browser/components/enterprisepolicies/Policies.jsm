@@ -61,48 +61,6 @@ this.Policies = {
     }
   },
 
-  "DisableAppUpdate": {
-    onBeforeAddons(manager, param) {
-      if (param) {
-        manager.disallowFeature("appUpdate");
-      }
-    }
-  },
-
-  "DisplayMenuBar": {
-    onBeforeUIStartup(manager, param) {
-      if (param) {
-        // This policy is meant to change the default behavior, not to force it.
-        // If this policy was alreay applied and the user chose to re-hide the
-        // menu bar, do not show it again.
-        if (!Services.prefs.getBoolPref(PREF_MENU_ALREADY_DISPLAYED, false)) {
-          log.debug("Showing the menu bar");
-          gXulStore.setValue(BROWSER_DOCUMENT_URL, "toolbar-menubar", "autohide", "false");
-          Services.prefs.setBoolPref(PREF_MENU_ALREADY_DISPLAYED, true);
-        } else {
-          log.debug("Not showing the menu bar because it has already been shown.");
-        }
-      }
-    }
-  },
-
-  "DisplayBookmarksToolbar": {
-    onBeforeUIStartup(manager, param) {
-      if (param) {
-        // This policy is meant to change the default behavior, not to force it.
-        // If this policy was alreay applied and the user chose to re-hide the
-        // bookmarks toolbar, do not show it again.
-        if (!Services.prefs.getBoolPref(PREF_BOOKMARKS_ALREADY_DISPLAYED, false)) {
-          log.debug("Showing the bookmarks toolbar");
-          gXulStore.setValue(BROWSER_DOCUMENT_URL, "PersonalToolbar", "collapsed", "false");
-          Services.prefs.setBoolPref(PREF_BOOKMARKS_ALREADY_DISPLAYED, true);
-        } else {
-          log.debug("Not showing the bookmarks toolbar because it has already been shown.");
-        }
-      }
-    }
-  },
-
   "BlockSetDesktopBackground": {
     onBeforeUIStartup(manager, param) {
       if (param) {
@@ -111,10 +69,24 @@ this.Policies = {
     }
   },
 
+  "Cookies": {
+    onBeforeUIStartup(manager, param) {
+      addAllowDenyPermissions("cookie", param.Allow, param.Block);
+    }
+  },
+
   "CreateMasterPassword": {
     onBeforeUIStartup(manager, param) {
       if (!param) {
         manager.disallowFeature("createMasterPassword");
+      }
+    }
+  },
+
+  "DisableAppUpdate": {
+    onBeforeAddons(manager, param) {
+      if (param) {
+        manager.disallowFeature("appUpdate");
       }
     }
   },
@@ -143,6 +115,40 @@ this.Policies = {
     }
   },
 
+  "DisplayBookmarksToolbar": {
+    onBeforeUIStartup(manager, param) {
+      if (param) {
+        // This policy is meant to change the default behavior, not to force it.
+        // If this policy was alreay applied and the user chose to re-hide the
+        // bookmarks toolbar, do not show it again.
+        if (!Services.prefs.getBoolPref(PREF_BOOKMARKS_ALREADY_DISPLAYED, false)) {
+          log.debug("Showing the bookmarks toolbar");
+          gXulStore.setValue(BROWSER_DOCUMENT_URL, "PersonalToolbar", "collapsed", "false");
+          Services.prefs.setBoolPref(PREF_BOOKMARKS_ALREADY_DISPLAYED, true);
+        } else {
+          log.debug("Not showing the bookmarks toolbar because it has already been shown.");
+        }
+      }
+    }
+  },
+
+  "DisplayMenuBar": {
+    onBeforeUIStartup(manager, param) {
+      if (param) {
+        // This policy is meant to change the default behavior, not to force it.
+        // If this policy was alreay applied and the user chose to re-hide the
+        // menu bar, do not show it again.
+        if (!Services.prefs.getBoolPref(PREF_MENU_ALREADY_DISPLAYED, false)) {
+          log.debug("Showing the menu bar");
+          gXulStore.setValue(BROWSER_DOCUMENT_URL, "toolbar-menubar", "autohide", "false");
+          Services.prefs.setBoolPref(PREF_MENU_ALREADY_DISPLAYED, true);
+        } else {
+          log.debug("Not showing the menu bar because it has already been shown.");
+        }
+      }
+    }
+  },
+
   "DontCheckDefaultBrowser": {
     onBeforeUIStartup(manager, param) {
       setAndLockPref("browser.shell.checkDefaultBrowser", false);
@@ -155,6 +161,12 @@ this.Policies = {
     }
   },
 
+  "InstallAddons": {
+    onBeforeUIStartup(manager, param) {
+      addAllowDenyPermissions("install", param.Allow, param.Block);
+    }
+  },
+
   "Popups": {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("popup", param.Allow, param.Block);
@@ -164,18 +176,6 @@ this.Policies = {
   "RememberPasswords": {
     onBeforeUIStartup(manager, param) {
       setAndLockPref("signon.rememberSignons", param);
-    }
-  },
-
-  "InstallAddons": {
-    onBeforeUIStartup(manager, param) {
-      addAllowDenyPermissions("install", param.Allow, param.Block);
-    }
-  },
-
-  "Cookies": {
-    onBeforeUIStartup(manager, param) {
-      addAllowDenyPermissions("cookie", param.Allow, param.Block);
     }
   },
 };
