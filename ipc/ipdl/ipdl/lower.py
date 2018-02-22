@@ -662,9 +662,9 @@ info needed by later passes, along with a basic name for the decl."""
     def var(self):
         return ExprVar(self.name)
 
-    def bareType(self, side):
+    def bareType(self, side, fq=0):
         """Return this decl's unqualified C++ type."""
-        return _cxxBareType(self.ipdltype, side)
+        return _cxxBareType(self.ipdltype, side, fq=fq)
 
     def refType(self, side):
         """Return this decl's C++ type as a 'reference' type, which is not
@@ -726,8 +726,8 @@ class _CompoundTypeComponent(_HybridDecl):
     # @override the following methods to pass |self.side| instead of
     # forcing the caller to remember which side we're declared to
     # represent.
-    def bareType(self, side=None):
-        return _HybridDecl.bareType(self, self.side)
+    def bareType(self, side=None, fq=0):
+        return _HybridDecl.bareType(self, self.side, fq=fq)
     def refType(self, side=None):
         return _HybridDecl.refType(self, self.side)
     def constRefType(self, side=None):
@@ -926,7 +926,7 @@ IPDL union type."""
             t.ref = 1
         return t
 
-    def defaultValue(self):
+    def defaultValue(self, fq=0):
         # Use the default constructor for any class that does not have an
         # implicit copy constructor.
         if not self.bareType().hasimplicitcopyctor:
@@ -935,7 +935,7 @@ IPDL union type."""
         if self.ipdltype.isIPDL() and self.ipdltype.isActor():
             return ExprLiteral.NULL
         # XXX sneaky here, maybe need ExprCtor()?
-        return ExprCall(self.bareType())
+        return ExprCall(self.bareType(fq=fq))
 
     def getConstValue(self):
         v = ExprDeref(self.callGetConstPtr())
