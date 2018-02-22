@@ -453,7 +453,7 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'WakeLockDelegate.java',
 ]]
 
-if CONFIG['MOZ_ANDROID_HLS_SUPPORT'] and CONFIG['MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE']:
+if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:
     gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x for x in [
         'media/GeckoHlsAudioRenderer.java',
         'media/GeckoHlsPlayer.java',
@@ -1422,7 +1422,7 @@ gvjar.sources += ['generated/org/mozilla/gecko/' + x for x in [
     'process/IProcessManager.java',
 ]]
 
-if CONFIG['MOZ_ANDROID_HLS_SUPPORT'] and CONFIG['MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE']:
+if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:
     gvjar.extra_jars += [
         'exoplayer2.jar',
     ]

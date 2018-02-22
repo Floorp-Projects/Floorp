@@ -22,8 +22,6 @@ def with_gradle(value):
     if value:
         return True
 
-set_config('MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE', with_gradle)
-
 
 @depends('--with-gradle', check_build_environment)
 @imports(_from='os.path', _import='isfile')

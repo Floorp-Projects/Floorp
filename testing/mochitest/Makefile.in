@@ -22,11 +22,7 @@ $(_DEST_DIR):
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 include $(topsrcdir)/config/android-common.mk
 
-ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-robocop_apk := $(topobjdir)/mobile/android/tests/browser/robocop/robocop-debug-unsigned-unaligned.apk
-else
 robocop_apk := $(GRADLE_ANDROID_APP_ANDROIDTEST_APK)
-endif
 
 stage-package-android:
 	$(NSINSTALL) -D $(_DEST_DIR)
