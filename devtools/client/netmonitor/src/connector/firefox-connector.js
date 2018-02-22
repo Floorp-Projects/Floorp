@@ -200,8 +200,8 @@ class FirefoxConnector {
             "dom-interactive" : "dom-complete",
       time: marker.unixTime / 1000
     };
-    window.emit(EVENTS.TIMELINE_EVENT, event);
     this.actions.addTimingMarker(event);
+    window.emit(EVENTS.TIMELINE_EVENT, event);
   }
 
   /**
@@ -212,8 +212,8 @@ class FirefoxConnector {
    * @param {object} marker
    */
   onDocEvent(type, event) {
-    window.emit(EVENTS.TIMELINE_EVENT, event);
     this.actions.addTimingMarker(event);
+    window.emit(EVENTS.TIMELINE_EVENT, event);
   }
 
   /**
