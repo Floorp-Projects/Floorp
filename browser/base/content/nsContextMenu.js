@@ -435,7 +435,8 @@ nsContextMenu.prototype = {
                        this.onLink || this.onTextInput);
 
     var showInspect = this.inTabBrowser &&
-                      Services.prefs.getBoolPref("devtools.inspector.enabled", true);
+                      Services.prefs.getBoolPref("devtools.inspector.enabled", true) &&
+                      !Services.prefs.getBoolPref("devtools.policy.disabled", false);
 
     this.showItem("context-viewsource", shouldShow);
     this.showItem("context-viewinfo", shouldShow);
