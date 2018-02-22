@@ -625,7 +625,7 @@ nsMathMLContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       return;
 
     aLists.Content()->AppendToTop(
-      MakeDisplayItem<nsDisplayMathMLError>(aBuilder, this));
+      new (aBuilder) nsDisplayMathMLError(aBuilder, this));
     return;
   }
 

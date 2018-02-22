@@ -190,8 +190,8 @@ public:
 
 class nsDisplayCanvasBackgroundImage : public nsDisplayBackgroundImage {
 public:
-  explicit nsDisplayCanvasBackgroundImage(nsDisplayListBuilder* aBuilder, const InitData& aInitData)
-    : nsDisplayBackgroundImage(aBuilder, aInitData)
+  explicit nsDisplayCanvasBackgroundImage(const InitData& aInitData)
+    : nsDisplayBackgroundImage(aInitData)
   {
   }
 
