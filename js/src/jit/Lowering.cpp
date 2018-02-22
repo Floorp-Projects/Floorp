@@ -2792,7 +2792,6 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier* ins)
     // from inside a type barrier test.
 
     const TemporaryTypeSet* types = ins->resultTypeSet();
-    bool needTemp = !types->unknownObject() && types->getObjectCount() > 0;
 
     MIRType inputType = ins->getOperand(0)->type();
     MOZ_ASSERT(inputType == ins->type());
@@ -2807,10 +2806,13 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier* ins)
         return;
     }
 
+    bool needObjTemp = !types->unknownObject() && types->getObjectCount() > 0;
+
     // Handle typebarrier with Value as input.
     if (inputType == MIRType::Value) {
-        LDefinition tmp = needTemp ? temp() : tempToUnbox();
-        LTypeBarrierV* barrier = new(alloc()) LTypeBarrierV(useBox(ins->input()), tmp);
+        LDefinition objTemp = needObjTemp ? temp() : LDefinition::BogusTemp();
+        LTypeBarrierV* barrier = new(alloc()) LTypeBarrierV(useBox(ins->input()), tempToUnbox(),
+                                                            objTemp);
         assignSnapshot(barrier, Bailout_TypeBarrierV);
         add(barrier, ins);
         redefine(ins, ins->input());
@@ -2829,7 +2831,7 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier* ins)
     }
 
     if (needsObjectBarrier) {
-        LDefinition tmp = needTemp ? temp() : LDefinition::BogusTemp();
+        LDefinition tmp = needObjTemp ? temp() : LDefinition::BogusTemp();
         LTypeBarrierO* barrier = new(alloc()) LTypeBarrierO(useRegister(ins->getOperand(0)), tmp);
         assignSnapshot(barrier, Bailout_TypeBarrierO);
         add(barrier, ins);
@@ -2848,10 +2850,11 @@ LIRGenerator::visitMonitorTypes(MMonitorTypes* ins)
     // from inside a type check.
 
     const TemporaryTypeSet* types = ins->typeSet();
-    bool needTemp = !types->unknownObject() && types->getObjectCount() > 0;
-    LDefinition tmp = needTemp ? temp() : tempToUnbox();
 
-    LMonitorTypes* lir = new(alloc()) LMonitorTypes(useBox(ins->input()), tmp);
+    bool needObjTemp = !types->unknownObject() && types->getObjectCount() > 0;
+    LDefinition objTemp = needObjTemp ? temp() : LDefinition::BogusTemp();
+
+    LMonitorTypes* lir = new(alloc()) LMonitorTypes(useBox(ins->input()), tempToUnbox(), objTemp);
     assignSnapshot(lir, Bailout_MonitorTypes);
     add(lir, ins);
 }

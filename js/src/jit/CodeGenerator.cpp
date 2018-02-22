@@ -3833,10 +3833,12 @@ void
 CodeGenerator::visitTypeBarrierV(LTypeBarrierV* lir)
 {
     ValueOperand operand = ToValue(lir, LTypeBarrierV::Input);
-    Register scratch = ToTempRegisterOrInvalid(lir->temp());
+    Register unboxScratch = ToTempRegisterOrInvalid(lir->unboxTemp());
+    Register objScratch = ToTempRegisterOrInvalid(lir->objTemp());
 
     Label miss;
-    masm.guardTypeSet(operand, lir->mir()->resultTypeSet(), lir->mir()->barrierKind(), scratch, &miss);
+    masm.guardTypeSet(operand, lir->mir()->resultTypeSet(), lir->mir()->barrierKind(),
+                      unboxScratch, objScratch, &miss);
     bailoutFrom(&miss, lir->snapshot());
 }
 
@@ -3869,10 +3871,12 @@ void
 CodeGenerator::visitMonitorTypes(LMonitorTypes* lir)
 {
     ValueOperand operand = ToValue(lir, LMonitorTypes::Input);
-    Register scratch = ToTempUnboxRegister(lir->temp());
+    Register unboxScratch = ToTempRegisterOrInvalid(lir->unboxTemp());
+    Register objScratch = ToTempRegisterOrInvalid(lir->objTemp());
 
     Label matched, miss;
-    masm.guardTypeSet(operand, lir->mir()->typeSet(), lir->mir()->barrierKind(), scratch, &miss);
+    masm.guardTypeSet(operand, lir->mir()->typeSet(), lir->mir()->barrierKind(), unboxScratch,
+                      objScratch, &miss);
     bailoutFrom(&miss, lir->snapshot());
 }
 
@@ -5086,7 +5090,9 @@ CodeGenerator::generateArgumentsChecks(bool assert)
     MResumePoint* rp = mir.entryResumePoint();
 
     // No registers are allocated yet, so it's safe to grab anything.
-    Register temp = AllocatableGeneralRegisterSet(GeneralRegisterSet::All()).getAny();
+    AllocatableGeneralRegisterSet temps(GeneralRegisterSet::All());
+    Register temp1 = temps.takeAny();
+    Register temp2 = temps.takeAny();
 
     const CompileInfo& info = gen->info();
 
@@ -5103,7 +5109,8 @@ CodeGenerator::generateArgumentsChecks(bool assert)
         // ... * sizeof(Value)          - Scale by value size.
         // ArgToStackOffset(...)        - Compute displacement within arg vector.
         int32_t offset = ArgToStackOffset((i - info.startArgSlot()) * sizeof(Value));
-        masm.guardTypeSet(Address(masm.getStackPointer(), offset), types, BarrierKind::TypeSet, temp, &miss);
+        Address argAddr(masm.getStackPointer(), offset);
+        masm.guardTypeSet(argAddr, types, BarrierKind::TypeSet, temp1, temp2, &miss);
     }
 
     if (miss.used()) {
@@ -5124,8 +5131,8 @@ CodeGenerator::generateArgumentsChecks(bool assert)
                 Label skip;
                 Address addr(masm.getStackPointer(), ArgToStackOffset((i - info.startArgSlot()) * sizeof(Value)));
                 masm.branchTestObject(Assembler::NotEqual, addr, &skip);
-                Register obj = masm.extractObject(addr, temp);
-                masm.guardTypeSetMightBeIncomplete(types, obj, temp, &success);
+                Register obj = masm.extractObject(addr, temp1);
+                masm.guardTypeSetMightBeIncomplete(types, obj, temp1, &success);
                 masm.bind(&skip);
             }
 
@@ -5469,7 +5476,7 @@ CodeGenerator::emitAssertResultV(const ValueOperand input, const TemporaryTypeSe
     if (typeset && !typeset->unknown()) {
         // We have a result TypeSet, assert this value is in it.
         Label miss, ok;
-        masm.guardTypeSet(input, typeset, BarrierKind::TypeSet, temp1, &miss);
+        masm.guardTypeSet(input, typeset, BarrierKind::TypeSet, temp1, temp2, &miss);
         masm.jump(&ok);
 
         masm.bind(&miss);
