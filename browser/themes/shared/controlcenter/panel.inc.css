@@ -206,6 +206,7 @@
 
 #identity-popup[connection=secure-cert-user-overridden] .identity-popup-security-content {
   background-image: url(chrome://browser/skin/connection-mixed-passive-loaded.svg);
+  fill: unset;
   -moz-context-properties: fill, fill-opacity;
 }
 
