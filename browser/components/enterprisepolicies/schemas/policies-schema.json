@@ -43,7 +43,7 @@
       "enum": [true]
     },
 
-    "display_menu_bar": {
+    "DisplayMenuBar": {
       "description": "Causes the menu bar to be displayed by default.",
       "first_available": "60.0",
 
@@ -51,7 +51,7 @@
       "enum": [true]
     },
 
-    "display_bookmarks_toolbar": {
+    "DisplayBookmarksToolbar": {
       "description": "Causes the bookmarks toolbar to be displayed by default.",
       "first_available": "60.0",
 
@@ -59,7 +59,7 @@
       "enum": [true]
     },
 
-    "block_set_desktop_background": {
+    "BlockSetDesktopBackground": {
       "description": "Prevents usage of the \"Set Image as Desktop Background\" feature.",
       "first_available": "60.0",
 
@@ -99,7 +99,7 @@
       "enum": [true]
     },
 
-    "dont_check_default_browser": {
+    "DontCheckDefaultBrowser": {
       "description": "Don't check for the default browser on startup.",
       "first_available": "60.0",
 
@@ -107,20 +107,20 @@
       "enum": [true]
     },
 
-    "flash_plugin": {
+    "FlashPlugin": {
       "description": "Allow or deny flash plugin usage.",
       "first_available": "60.0",
 
       "type": "object",
       "properties": {
-        "allow": {
+        "Allow": {
           "type": "array",
           "items": {
             "type": "origin"
           }
         },
 
-        "block": {
+        "Block": {
           "type": "array",
           "items": {
             "type": "origin"
@@ -129,20 +129,20 @@
       }
     },
 
-    "popups": {
+    "Popups": {
       "description": "Allow or deny popup usage.",
       "first_available": "60.0",
 
       "type": "object",
       "properties": {
-        "allow": {
+        "Allow": {
           "type": "array",
           "items": {
             "type": "origin"
           }
         },
 
-        "block": {
+        "Block": {
           "type": "array",
           "items": {
             "type": "origin"
@@ -158,20 +158,20 @@
       "type": "boolean"
     },
 
-    "install_addons": {
+    "InstallAddons": {
       "description": "Allow or deny popup websites to install webextensions.",
       "first_available": "60.0",
 
       "type": "object",
       "properties": {
-        "allow": {
+        "Allow": {
           "type": "array",
           "items": {
             "type": "origin"
           }
         },
 
-        "block": {
+        "Block": {
           "type": "array",
           "items": {
             "type": "origin"
@@ -180,20 +180,20 @@
       }
     },
 
-    "cookies": {
+    "Cookies": {
       "description": "Allow or deny websites to set cookies.",
       "first_available": "60.0",
 
       "type": "object",
       "properties": {
-        "allow": {
+        "Allow": {
           "type": "array",
           "items": {
             "type": "origin"
           }
         },
 
-        "block": {
+        "Block": {
           "type": "array",
           "items": {
             "type": "origin"
