@@ -69,6 +69,13 @@ var paymentRequest = {
     let {messageType} = detail;
 
     switch (messageType) {
+      case "responseSent": {
+        document.querySelector("payment-dialog").requestStore.setState({
+          changesPrevented: true,
+          completionState: "processing",
+        });
+        break;
+      }
       case "showPaymentRequest": {
         this.onShowPaymentRequest(detail);
         break;
