@@ -4,6 +4,8 @@
 
 package org.mozilla.focus.session;
 
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MutableLiveData;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
@@ -23,6 +25,8 @@ public class Session {
     private final NonNullMutableLiveData<String> url;
     private final NonNullMutableLiveData<Integer> progress;
     private final NonNullMutableLiveData<Boolean> secure;
+    private final MutableLiveData<String> securityVerifier;
+    private final MutableLiveData<String> securityOrigin;
     private final NonNullMutableLiveData<Boolean> loading;
     private final NonNullMutableLiveData<Integer> trackersBlocked;
     private CustomTabConfig customTabConfig;
@@ -41,6 +45,9 @@ public class Session {
         this.secure = new NonNullMutableLiveData<>(false);
         this.loading = new NonNullMutableLiveData<>(false);
         this.trackersBlocked = new NonNullMutableLiveData<>(0);
+
+        this.securityOrigin = new MutableLiveData<>();
+        this.securityVerifier = new MutableLiveData<>();
 
         this.isBlockingEnabled = true;
         this.isRecorded = false;
@@ -82,6 +89,22 @@ public class Session {
 
     public NonNullLiveData<Boolean> getSecure() {
         return secure;
+    }
+
+    /* package */ void setSecurityVerifier(String verifier) {
+        this.securityVerifier.setValue(verifier);
+    }
+
+    /* package */ void setSecurityOrigin(String origin) {
+        this.securityOrigin.setValue(origin);
+    }
+
+    public LiveData<String> getSecurityVerifier() {
+        return securityVerifier;
+    }
+
+    public LiveData<String> getSecurityOrigin() {
+        return securityOrigin;
     }
 
     /* package */ void setLoading(boolean loading) {

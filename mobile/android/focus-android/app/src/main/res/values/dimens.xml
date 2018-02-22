@@ -43,4 +43,17 @@
     <dimen name="textinputlayout_spacing">8dp</dimen>
 
     <dimen name="urlinput_height">57dp</dimen>
+
+    <dimen name="doorhanger_width">300dp</dimen>
+    <dimen name="doorhanger_input_width">250dp</dimen>
+    <dimen name="doorhanger_offsetX">12dp</dimen>
+    <dimen name="doorhanger_offsetY">67dp</dimen>
+    <dimen name="doorhanger_drawable_padding">5dp</dimen>
+    <dimen name="doorhanger_subsection_padding">8dp</dimen>
+    <dimen name="doorhanger_section_padding_small">10dp</dimen>
+    <dimen name="doorhanger_section_padding_medium">20dp</dimen>
+    <dimen name="doorhanger_section_padding_large">30dp</dimen>
+    <dimen name="doorhanger_icon_size">60dp</dimen>
+    <dimen name="doorhanger_rounded_corner_radius">4dp</dimen>
+    <dimen name="doorhanger_small_icon">16dp</dimen>
 </resources>

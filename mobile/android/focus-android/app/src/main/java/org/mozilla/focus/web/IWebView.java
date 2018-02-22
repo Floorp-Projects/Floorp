@@ -39,6 +39,9 @@ public interface IWebView {
         void onPageStarted(String url);
 
         void onPageFinished(boolean isSecure);
+
+        void onSecurityChanged(boolean isSecure, String host, String organization);
+
         void onProgress(int progress);
 
         void onURLChanged(final String url);

@@ -34,5 +34,14 @@
     <color name="photonMagenta80">#ff7d004f</color>
     <color name="photonMagenta90">#ff440027</color>
 
+    <!-- Green -->
+    <color name="photonGreen60">#12bc00</color>
+
+    <!-- Red -->
+    <color name="photonRed60">#d70022</color>
+
+    <!-- Yellow -->
+    <color name="photonYellow60">#d7b600</color>
+
 
 </resources>

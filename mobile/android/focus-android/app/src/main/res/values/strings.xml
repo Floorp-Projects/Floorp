@@ -555,4 +555,14 @@ be temporary, and you can try again later.</li>
     <string name="gv_prompt_username_hint">Username</string>
     <string name="gv_prompt_password_hint">Password</string>
     <string name="gv_prompt_clear">Clear</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Secure Connection</string>
+    <string name="security_popup_insecure_connection">Insecure Connection</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Verified by: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Site Security</string>
 </resources>

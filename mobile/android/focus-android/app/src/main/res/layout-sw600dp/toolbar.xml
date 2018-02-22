@@ -51,7 +51,7 @@
         android:src="@drawable/ic_forward" />
 
     <ImageView
-        android:id="@+id/lock"
+        android:id="@+id/security_info"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_gravity="center_vertical"

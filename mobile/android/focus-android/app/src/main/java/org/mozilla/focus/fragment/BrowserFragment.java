@@ -30,15 +30,18 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.CookieManager;
+import android.webkit.URLUtil;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -54,6 +57,7 @@ import org.mozilla.focus.menu.browser.BrowserMenu;
 import org.mozilla.focus.menu.context.WebContextMenu;
 import org.mozilla.focus.observer.AverageLoadTimeObserver;
 import org.mozilla.focus.open.OpenWithFragment;
+import org.mozilla.focus.popup.PopupUtils;
 import org.mozilla.focus.session.NullSession;
 import org.mozilla.focus.session.Session;
 import org.mozilla.focus.session.SessionCallbackProxy;
@@ -108,6 +112,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     private ImageButton menuView;
     private View statusBar;
     private View urlBar;
+    private FrameLayout popupTint;
     private SwipeRefreshLayout swipeRefresh;
     private WeakReference<BrowserMenu> menuWeakReference = new WeakReference<>(null);
 
@@ -213,6 +218,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
         });
 
+        popupTint = view.findViewById(R.id.popup_tint);
+
         urlView = (TextView) view.findViewById(R.id.display_url);
 
         progressView = (AnimatedProgressBar) view.findViewById(R.id.progress);
@@ -292,13 +299,28 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
         blockView = (FrameLayout) view.findViewById(R.id.block);
 
-        lockView = (ImageView) view.findViewById(R.id.lock);
+        lockView = view.findViewById(R.id.security_info);
         session.getSecure().observe(this, new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean secure) {
-                lockView.setVisibility(secure ? View.VISIBLE : View.GONE);
+                if (!session.getLoading().getValue()) {
+                    if (secure) {
+                        lockView.setImageResource(R.drawable.ic_lock);
+                    } else {
+                        if (URLUtil.isHttpUrl(getUrl())) {
+                            // HTTP site
+                            lockView.setImageResource(R.drawable.ic_internet);
+                        } else {
+                            // Certificate is bad
+                            lockView.setImageResource(R.drawable.ic_warning);
+                        }
+                    }
+                } else {
+                    lockView.setImageResource(R.drawable.ic_internet);
+                }
             }
         });
+        lockView.setOnClickListener(this);
 
         session.getProgress().observe(this, new Observer<Integer>() {
             @Override
@@ -449,6 +471,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
             @Override
             public void onPageFinished(boolean isSecure) {}
+
+            @Override
+            public void onSecurityChanged(boolean isSecure, String host, String organization) {}
 
             @Override
             public void onURLChanged(final String url) {}
@@ -960,6 +985,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 final String title = webView.getTitle();
                 showAddToHomescreenDialog(url, title);
                 break;
+            case R.id.security_info:
+                showSecurityPopUp();
+                break;
 
             default:
                 throw new IllegalArgumentException("Unhandled menu item in BrowserFragment");
@@ -1049,6 +1077,25 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             backgroundTransitionGroup = new TransitionDrawableGroup(
                     (TransitionDrawable) statusBar.getBackground()
             );
+        }
+    }
+
+    private void showSecurityPopUp() {
+        final PopupWindow securityPopup = PopupUtils.INSTANCE.createSecurityPopup(getContext(), session);
+        if (securityPopup != null) {
+            securityPopup.setOnDismissListener(new PopupWindow.OnDismissListener() {
+                @Override
+                public void onDismiss() {
+                    popupTint.setVisibility(View.GONE);
+                }
+            });
+            securityPopup.setAnimationStyle(android.R.style.Animation_Dialog);
+            securityPopup.setTouchable(true);
+            securityPopup.setFocusable(true);
+            securityPopup.setElevation(getResources().getDimension(R.dimen.menu_elevation));
+            final int offsetY = getContext().getResources().getDimensionPixelOffset(R.dimen.doorhanger_offsetY);
+            securityPopup.showAtLocation(urlBar, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, offsetY);
+            popupTint.setVisibility(View.VISIBLE);
         }
     }
 

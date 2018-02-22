@@ -63,4 +63,7 @@
     <color name="preference_row_disabled">#B3313131</color>
 
     <color name="scrollbarThumb">#b2b2b2b2</color>
+
+    <color name="doorhanger_link">#FF2AA1FE</color>
+    <color name="placeholder_active_grey">#222222</color>
 </resources>

@@ -81,6 +81,9 @@ public class InfoFragment extends WebFragment {
             }
 
             @Override
+            public void onSecurityChanged(boolean isSecure, String host, String organization) {}
+
+            @Override
             public void onProgress(int progress) {
                 progressView.setProgress(progress);
             }
