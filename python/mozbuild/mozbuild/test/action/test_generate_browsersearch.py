@@ -13,6 +13,9 @@ import mozunit
 
 import mozbuild.action.generate_browsersearch as generate_browsersearch
 
+from mozbuild.util import (
+    FileAvoidWrite,
+)
 from mozfile.mozfile import (
     NamedTemporaryFile,
     TemporaryDirectory,
@@ -35,10 +38,13 @@ class TestGenerateBrowserSearch(unittest.TestCase):
             with NamedTemporaryFile(mode='r+') as temp:
                 srcdir = os.path.join(test_data_path, name)
 
-                generate_browsersearch.main([
-                    '--silent',
-                    '--srcdir', srcdir,
-                    temp.name])
+                with FileAvoidWrite(temp.name) as faw:
+                    generate_browsersearch.main(faw,
+                        '--silent',
+                        '--fallback',
+                        mozpath.join(srcdir, 'region.properties'),
+                        )
+
                 return json.load(temp)
 
     def test_valid_unicode(self):

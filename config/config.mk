@@ -379,8 +379,20 @@ MERGE_FILE = $(firstword \
   $(wildcard $(REAL_LOCALE_MERGEDIR)/$(subst /locales,,$(LOCALE_RELATIVEDIR))/$(1)) \
   $(wildcard $(LOCALE_SRCDIR)/$(1)) \
   $(srcdir)/en-US/$(1) )
+# Like MERGE_FILE, but with the specified relative source directory
+# $(2) replacing $(srcdir).  It's expected that $(2) will include
+# '/locales' but not '/locales/en-US'.
+#
+# MERGE_RELATIVE_FILE and MERGE_FILE could be -- ahem -- merged by
+# making the second argument optional, but that expression makes for
+# difficult to read Make.
+MERGE_RELATIVE_FILE = $(firstword \
+  $(wildcard $(REAL_LOCALE_MERGEDIR)/$(subst /locales,,$(2))/$(1)) \
+  $(wildcard $(call EXPAND_LOCALE_SRCDIR,$(2))/$(1)) \
+  $(topsrcdir)/$(2)/en-US/$(1) )
 else
 MERGE_FILE = $(LOCALE_SRCDIR)/$(1)
+MERGE_RELATIVE_FILE = $(call EXPAND_LOCALE_SRCDIR,$(2))/$(1)
 endif
 
 ifneq (WINNT,$(OS_ARCH))
