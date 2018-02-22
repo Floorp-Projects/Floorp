@@ -272,18 +272,6 @@ add_task(async function test_bookmarks() {
   // test get folder's index
   let tmpFolder = bs.createFolder(testRoot, "tmp", 2);
 
-  // test setKeywordForBookmark
-  let kwTestItemId = bs.insertBookmark(testRoot, uri("http://keywordtest.com"),
-                                       bs.DEFAULT_INDEX, "");
-  bs.setKeywordForBookmark(kwTestItemId, "bar");
-
-  // test getKeywordForBookmark
-  let k = bs.getKeywordForBookmark(kwTestItemId);
-  Assert.equal("bar", k);
-
-  // test PlacesUtils.keywords.fetch()
-  let u = await PlacesUtils.keywords.fetch("bar");
-  Assert.equal("http://keywordtest.com/", u.url);
   // test removeFolderChildren
   // 1) add/remove each child type (bookmark, separator, folder)
   tmpFolder = bs.createFolder(testRoot, "removeFolderChildren",
@@ -402,7 +390,7 @@ add_task(async function test_bookmarks() {
                                   bs.DEFAULT_INDEX, "");
   Assert.equal(bookmarksObserver._itemAddedId, newId13);
   Assert.equal(bookmarksObserver._itemAddedParent, testRoot);
-  Assert.equal(bookmarksObserver._itemAddedIndex, 10);
+  Assert.equal(bookmarksObserver._itemAddedIndex, 9);
 
   // set bookmark title
   bs.setItemTitle(newId13, "ZZZXXXYYY");

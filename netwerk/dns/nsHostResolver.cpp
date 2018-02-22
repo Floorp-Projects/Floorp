@@ -1900,6 +1900,7 @@ nsHostResolver::GetDNSCacheEntries(nsTArray<DNSCacheEntries> *args)
                     addr = &addrElement->mAddress;
                 }
             }
+            info.TRR = rec->addr_info->IsTRR();
         }
 
         args->AppendElement(info);

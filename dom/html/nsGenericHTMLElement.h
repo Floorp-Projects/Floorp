@@ -1100,6 +1100,11 @@ public:
    */
   bool CanBeDisabled() const;
 
+  /**
+   * Returns if the readonly attribute applies.
+   */
+  bool DoesReadOnlyApply() const;
+
   virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                                  int32_t* aTabIndex) override;
 

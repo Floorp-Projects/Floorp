@@ -3081,6 +3081,7 @@ exports.CSS_PROPERTIES = {
       "quotes",
       "resize",
       "right",
+      "rotate",
       "ruby-align",
       "ruby-position",
       "scroll-behavior",
@@ -3129,6 +3130,7 @@ exports.CSS_PROPERTIES = {
       "-moz-text-size-adjust",
       "-webkit-text-stroke-color",
       "-webkit-text-stroke-width",
+      "scale",
       "text-transform",
       "top",
       "-moz-top-layer",
@@ -3141,6 +3143,7 @@ exports.CSS_PROPERTIES = {
       "transition-duration",
       "transition-property",
       "transition-timing-function",
+      "translate",
       "-moz-user-focus",
       "-moz-user-input",
       "-moz-user-modify",
@@ -9428,7 +9431,6 @@ exports.PSEUDO_ELEMENTS = [
   ":-moz-focus-outer",
   ":-moz-list-bullet",
   ":-moz-list-number",
-  ":-moz-math-anonymous",
   ":-moz-progress-bar",
   ":-moz-range-track",
   ":-moz-range-progress",
@@ -9505,8 +9507,8 @@ exports.PREFERENCES = [
     "layout.css.overflow-clip-box.enabled"
   ],
   [
-    "paint-order",
-    "svg.paint-order.enabled"
+    "rotate",
+    "layout.css.individual-transform.enabled"
   ],
   [
     "scroll-behavior",
@@ -9585,16 +9587,24 @@ exports.PREFERENCES = [
     "layout.css.prefixes.webkit"
   ],
   [
+    "scale",
+    "layout.css.individual-transform.enabled"
+  ],
+  [
     "touch-action",
     "layout.css.touch_action.enabled"
   ],
   [
-    "-moz-transform",
-    "layout.css.prefixes.transforms"
-  ],
-  [
     "transform-box",
     "svg.transform-box.enabled"
+  ],
+  [
+    "translate",
+    "layout.css.individual-transform.enabled"
+  ],
+  [
+    "-moz-transform",
+    "layout.css.prefixes.transforms"
   ],
   [
     "-moz-transform-origin",

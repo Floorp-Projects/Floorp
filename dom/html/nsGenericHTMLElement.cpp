@@ -2049,6 +2049,52 @@ nsGenericHTMLFormElement::CanBeDisabled() const
 }
 
 bool
+nsGenericHTMLFormElement::DoesReadOnlyApply() const
+{
+  int32_t type = ControlType();
+  if (!(type & NS_FORM_INPUT_ELEMENT) && type != NS_FORM_TEXTAREA) {
+    return false;
+  }
+
+  switch (type)
+  {
+    case NS_FORM_INPUT_HIDDEN:
+    case NS_FORM_INPUT_BUTTON:
+    case NS_FORM_INPUT_IMAGE:
+    case NS_FORM_INPUT_RESET:
+    case NS_FORM_INPUT_SUBMIT:
+    case NS_FORM_INPUT_RADIO:
+    case NS_FORM_INPUT_FILE:
+    case NS_FORM_INPUT_CHECKBOX:
+    case NS_FORM_INPUT_RANGE:
+    case NS_FORM_INPUT_COLOR:
+      return false;
+#ifdef DEBUG
+    case NS_FORM_TEXTAREA:
+    case NS_FORM_INPUT_TEXT:
+    case NS_FORM_INPUT_PASSWORD:
+    case NS_FORM_INPUT_SEARCH:
+    case NS_FORM_INPUT_TEL:
+    case NS_FORM_INPUT_EMAIL:
+    case NS_FORM_INPUT_URL:
+    case NS_FORM_INPUT_NUMBER:
+    case NS_FORM_INPUT_DATE:
+    case NS_FORM_INPUT_TIME:
+    case NS_FORM_INPUT_MONTH:
+    case NS_FORM_INPUT_WEEK:
+    case NS_FORM_INPUT_DATETIME_LOCAL:
+      return true;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected input type in DoesReadOnlyApply()");
+      return true;
+#else // DEBUG
+    default:
+      return true;
+#endif // DEBUG
+  }
+}
+
+bool
 nsGenericHTMLFormElement::IsHTMLFocusable(bool aWithMouse,
                                           bool* aIsFocusable,
                                           int32_t* aTabIndex)
@@ -2081,10 +2127,8 @@ nsGenericHTMLFormElement::IntrinsicState() const
 
   // Make the text controls read-write
   if (!state.HasState(NS_EVENT_STATE_MOZ_READWRITE) &&
-      IsTextOrNumberControl(/*aExcludePassword*/ false)) {
-    bool roState = GetBoolAttr(nsGkAtoms::readonly);
-
-    if (!roState) {
+      DoesReadOnlyApply()) {
+    if (!GetBoolAttr(nsGkAtoms::readonly)) {
       state |= NS_EVENT_STATE_MOZ_READWRITE;
       state &= ~NS_EVENT_STATE_MOZ_READONLY;
     }

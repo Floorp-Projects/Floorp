@@ -9,6 +9,7 @@ import os
 from collections import defaultdict
 
 import mozunit
+import mozpack.path as mozpath
 import pytest
 
 from mozlint import ResultContainer
@@ -17,6 +18,7 @@ from mozlint import formatters
 NORMALISED_PATHS = {
     'abc': os.path.normpath('a/b/c.txt'),
     'def': os.path.normpath('d/e/f.txt'),
+    'cwd': mozpath.normpath(os.getcwd()),
 }
 
 EXPECTED = {
@@ -59,6 +61,13 @@ TEST-UNEXPECTED-WARNING | d/e/f.txt:4:2 | oh no bar (bar-not-allowed)
 {abc}:1: foo error: oh no foo
 {abc}:4: baz error: oh no baz
 {def}:4:2: bar-not-allowed warning: oh no bar
+""".format(**NORMALISED_PATHS).strip(),
+    },
+    'summary': {
+        'kwargs': {},
+        'format': """
+{cwd}/a: 2
+{cwd}/d: 1
 """.format(**NORMALISED_PATHS).strip(),
     },
 }

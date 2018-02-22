@@ -33,6 +33,7 @@ struct DNSCacheEntries
     uint16_t family;
     int64_t expiration;
     nsCString netInterface;
+    bool TRR;
 };
 
 struct HttpConnInfo
