@@ -1666,6 +1666,18 @@ CacheIRCompiler::emitLoadWrapperTarget()
 }
 
 bool
+CacheIRCompiler::emitLoadValueTag()
+{
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    Register res = allocator.defineRegister(masm, reader.valueTagOperandId());
+
+    Register tag = masm.extractTag(val, res);
+    if (tag != res)
+        masm.mov(tag, res);
+    return true;
+}
+
+bool
 CacheIRCompiler::emitLoadDOMExpandoValue()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
