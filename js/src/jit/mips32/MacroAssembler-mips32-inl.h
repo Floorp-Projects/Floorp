@@ -996,6 +996,26 @@ MacroAssembler::branchToComputedAddress(const BaseIndex& addr)
     as_nop();
 }
 
+void
+MacroAssembler::branchTruncateDoubleMaybeModUint32(FloatRegister src, Register dest, Label* fail)
+{
+    as_truncwd(ScratchFloat32Reg, src);
+    as_cfc1(ScratchRegister, Assembler::FCSR);
+    moveFromFloat32(ScratchFloat32Reg, dest);
+    ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseV, 1);
+    ma_b(ScratchRegister, Imm32(0), fail, Assembler::NotEqual);
+}
+
+void
+MacroAssembler::branchTruncateFloat32MaybeModUint32(FloatRegister src, Register dest, Label* fail)
+{
+    as_truncws(ScratchFloat32Reg, src);
+    as_cfc1(ScratchRegister, Assembler::FCSR);
+    moveFromFloat32(ScratchFloat32Reg, dest);
+    ma_ext(ScratchRegister, ScratchRegister, Assembler::CauseV, 1);
+    ma_b(ScratchRegister, Imm32(0), fail, Assembler::NotEqual);
+}
+
 // ========================================================================
 // Memory access primitives.
 void

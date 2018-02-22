@@ -89,6 +89,8 @@ import android.util.Log;
 
         if (mListener != null) {
             handleMessage(mListener, event, message, callback);
+        } else {
+            callback.sendError("No listener registered");
         }
     }
 

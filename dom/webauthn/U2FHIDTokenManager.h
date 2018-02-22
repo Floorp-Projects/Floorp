@@ -18,13 +18,32 @@
 namespace mozilla {
 namespace dom {
 
+class U2FAppIds {
+public:
+  explicit U2FAppIds(const nsTArray<nsTArray<uint8_t>>& aApplications)
+  {
+    mAppIds = rust_u2f_app_ids_new();
+
+    for (auto& app_id: aApplications) {
+      rust_u2f_app_ids_add(mAppIds, app_id.Elements(), app_id.Length());
+    }
+  }
+
+  rust_u2f_app_ids* Get() { return mAppIds; }
+
+  ~U2FAppIds() { rust_u2f_app_ids_free(mAppIds); }
+
+private:
+  rust_u2f_app_ids* mAppIds;
+};
+
 class U2FKeyHandles {
 public:
   explicit U2FKeyHandles(const nsTArray<WebAuthnScopedCredential>& aCredentials)
   {
     mKeyHandles = rust_u2f_khs_new();
 
-    for (auto cred: aCredentials) {
+    for (auto& cred: aCredentials) {
       rust_u2f_khs_add(mKeyHandles,
                        cred.id().Elements(),
                        cred.id().Length(),
@@ -66,6 +85,11 @@ public:
     return CopyBuffer(U2F_RESBUF_ID_SIGNATURE, aBuffer);
   }
 
+  bool CopyAppId(nsTArray<uint8_t>& aBuffer)
+  {
+    return CopyBuffer(U2F_RESBUF_ID_APPID, aBuffer);
+  }
+
 private:
   bool CopyBuffer(uint8_t aResBufID, nsTArray<uint8_t>& aBuffer) {
     if (!mResult) {
@@ -104,6 +128,7 @@ public:
   Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials,
        const nsTArray<uint8_t>& aApplication,
        const nsTArray<uint8_t>& aChallenge,
+       const nsTArray<WebAuthnExtension>& aExtensions,
        bool aRequireUserVerification,
        uint32_t aTimeoutMS) override;
 
@@ -123,6 +148,7 @@ private:
 
   rust_u2f_manager* mU2FManager;
   uint64_t mTransactionId;
+  nsTArray<uint8_t> mCurrentAppId;
   MozPromiseHolder<U2FRegisterPromise> mRegisterPromise;
   MozPromiseHolder<U2FSignPromise> mSignPromise;
 };

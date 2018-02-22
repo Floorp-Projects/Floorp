@@ -43,10 +43,11 @@ ext.configureVariantWithGeckoBinaries = { variant ->
     def distDir = "${topobjdir}/dist/${omnijar_dir}"
 
     def syncOmnijarFromDistDir = task("syncOmnijarFromDistDirFor${variant.name.capitalize()}", type: Sync) {
-        doFirst {
+        onlyIf {
             if (source.empty) {
-                throw new GradleException("Required omnijar not found in ${source.asPath}.  Have you built and packaged?")
+                throw new StopExecutionException("Required omnijar not found in ${distDir}/{omni.ja,assets/omni.ja}.  Have you built and packaged?")
             }
+            return true
         }
 
         into("${project.buildDir}/moz.build/src/${variant.name}/omnijar")
@@ -58,10 +59,11 @@ ext.configureVariantWithGeckoBinaries = { variant ->
     }
 
     def syncLibsFromDistDir = task("syncLibsFromDistDirFor${variant.name.capitalize()}", type: Sync) {
-        doFirst {
+        onlyIf {
             if (source.empty) {
-                throw new GradleException("Required JNI libraries not found in ${source.asPath}.  Have you built and packaged?")
+                throw new StopExecutionException("Required JNI libraries not found in ${distDir}/lib.  Have you built and packaged?")
             }
+            return true
         }
 
         into("${project.buildDir}/moz.build/src/${variant.name}/jniLibs")
@@ -69,10 +71,11 @@ ext.configureVariantWithGeckoBinaries = { variant ->
     }
 
     def syncAssetsFromDistDir = task("syncAssetsFromDistDirFor${variant.name.capitalize()}", type: Sync) {
-        doFirst {
+        onlyIf {
             if (source.empty) {
-                throw new GradleException("Required assets not found in ${source.asPath}.  Have you built and packaged?")
+                throw new StopExecutionException("Required assets not found in ${distDir}/assets.  Have you built and packaged?")
             }
+            return true
         }
 
         into("${project.buildDir}/moz.build/src/${variant.name}/assets")

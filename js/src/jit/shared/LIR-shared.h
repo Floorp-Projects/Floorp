@@ -7788,14 +7788,16 @@ class LLoadUnboxedExpando : public LInstructionHelper<1, 1, 0>
 };
 
 // Guard that a value is in a TypeSet.
-class LTypeBarrierV : public LInstructionHelper<0, BOX_PIECES, 1>
+class LTypeBarrierV : public LInstructionHelper<0, BOX_PIECES, 2>
 {
   public:
     LIR_HEADER(TypeBarrierV)
 
-    LTypeBarrierV(const LBoxAllocation& input, const LDefinition& temp) {
+    LTypeBarrierV(const LBoxAllocation& input, const LDefinition& unboxTemp,
+                  const LDefinition& objTemp) {
         setBoxOperand(Input, input);
-        setTemp(0, temp);
+        setTemp(0, unboxTemp);
+        setTemp(1, objTemp);
     }
 
     static const size_t Input = 0;
@@ -7803,8 +7805,11 @@ class LTypeBarrierV : public LInstructionHelper<0, BOX_PIECES, 1>
     const MTypeBarrier* mir() const {
         return mir_->toTypeBarrier();
     }
-    const LDefinition* temp() {
+    const LDefinition* unboxTemp() {
         return getTemp(0);
+    }
+    const LDefinition* objTemp() {
+        return getTemp(1);
     }
 };
 
@@ -7830,14 +7835,16 @@ class LTypeBarrierO : public LInstructionHelper<0, 1, 1>
 };
 
 // Guard that a value is in a TypeSet.
-class LMonitorTypes : public LInstructionHelper<0, BOX_PIECES, 1>
+class LMonitorTypes : public LInstructionHelper<0, BOX_PIECES, 2>
 {
   public:
     LIR_HEADER(MonitorTypes)
 
-    LMonitorTypes(const LBoxAllocation& input, const LDefinition& temp) {
+    LMonitorTypes(const LBoxAllocation& input, const LDefinition& unboxTemp,
+                  const LDefinition& objTemp) {
         setBoxOperand(Input, input);
-        setTemp(0, temp);
+        setTemp(0, unboxTemp);
+        setTemp(1, objTemp);
     }
 
     static const size_t Input = 0;
@@ -7845,8 +7852,11 @@ class LMonitorTypes : public LInstructionHelper<0, BOX_PIECES, 1>
     const MMonitorTypes* mir() const {
         return mir_->toMonitorTypes();
     }
-    const LDefinition* temp() {
+    const LDefinition* unboxTemp() {
         return getTemp(0);
+    }
+    const LDefinition* objTemp() {
+        return getTemp(1);
     }
 };
 

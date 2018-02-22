@@ -1573,23 +1573,34 @@ Simulator::setFCSRRoundError(double original, double rounded)
 {
     bool ret = false;
 
+    setFCSRBit(kFCSRInexactCauseBit, false);
+    setFCSRBit(kFCSRUnderflowCauseBit, false);
+    setFCSRBit(kFCSROverflowCauseBit, false);
+    setFCSRBit(kFCSRInvalidOpCauseBit, false);
+
     if (!std::isfinite(original) || !std::isfinite(rounded)) {
         setFCSRBit(kFCSRInvalidOpFlagBit, true);
+        setFCSRBit(kFCSRInvalidOpCauseBit, true);
         ret = true;
     }
 
-    if (original != rounded)
+    if (original != rounded) {
         setFCSRBit(kFCSRInexactFlagBit, true);
+        setFCSRBit(kFCSRInexactCauseBit, true);
+    }
 
     if (rounded < DBL_MIN && rounded > -DBL_MIN && rounded != 0) {
         setFCSRBit(kFCSRUnderflowFlagBit, true);
+        setFCSRBit(kFCSRUnderflowCauseBit, true);
         ret = true;
     }
 
     if (rounded > INT_MAX || rounded < INT_MIN) {
         setFCSRBit(kFCSROverflowFlagBit, true);
+        setFCSRBit(kFCSROverflowCauseBit, true);
         // The reference is not really clear but it seems this is required:
         setFCSRBit(kFCSRInvalidOpFlagBit, true);
+        setFCSRBit(kFCSRInvalidOpCauseBit, true);
         ret = true;
     }
 
@@ -1617,15 +1628,15 @@ Simulator::get_pc() const
     return registers_[pc];
 }
 
-void
-Simulator::startInterrupt(JitActivation* activation)
+JS::ProfilingFrameIterator::RegisterState
+Simulator::registerState()
 {
-    JS::ProfilingFrameIterator::RegisterState state;
+    wasm::RegisterState state;
     state.pc = (void*) get_pc();
     state.fp = (void*) getRegister(fp);
     state.sp = (void*) getRegister(sp);
     state.lr = (void*) getRegister(ra);
-    activation->startWasmInterrupt(state);
+    return state;
 }
 
 // The signal handler only redirects the PC to the interrupt stub when the PC is
@@ -1651,7 +1662,9 @@ Simulator::handleWasmInterrupt()
     if (!fp)
         return;
 
-    startInterrupt(activation);
+    if (!activation->startWasmInterrupt(registerState()))
+         return;
+
     set_pc(int64_t(segment->asModule()->interruptCode()));
 }
 
@@ -1681,14 +1694,19 @@ Simulator::handleWasmFault(uint64_t addr, unsigned numBytes)
     const wasm::ModuleSegment* moduleSegment = segment->asModule();
 
     wasm::Instance* instance = wasm::LookupFaultingInstance(*moduleSegment, pc, fp);
-    if (!instance || !instance->memoryAccessInGuardRegion((uint8_t*)addr, numBytes))
+    if (!instance)
         return false;
+
+    MOZ_RELEASE_ASSERT(&instance->code() == &moduleSegment->code());
+
+    if (!instance->memoryAccessInGuardRegion((uint8_t*)addr, numBytes))
+         return false;
 
     LLBit_ = false;
 
     const wasm::MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);
     if (!memoryAccess) {
-        startInterrupt(act);
+        MOZ_ALWAYS_TRUE(act->startWasmInterrupt(registerState()));
         if (!instance->code().containsCodePC(pc))
             MOZ_CRASH("Cannot map PC to trap handler");
         set_pc(int64_t(moduleSegment->outOfBoundsCode()));
@@ -1712,7 +1730,6 @@ Simulator::handleWasmTrapFault()
     JitActivation* act = cx->activation()->asJit();
 
     void* pc = reinterpret_cast<void*>(get_pc());
-    uint8_t* fp = reinterpret_cast<uint8_t*>(getRegister(Register::fp));
 
     const wasm::CodeSegment* segment = wasm::LookupCodeSegment(pc);
     if (!segment || !segment->isModule())
@@ -1724,7 +1741,7 @@ Simulator::handleWasmTrapFault()
     if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode))
         return false;
 
-    act->startWasmTrap(trap, bytecode.offset, pc, fp);
+    act->startWasmTrap(trap, bytecode.offset, registerState());
     set_pc(int64_t(moduleSegment->trapCode()));
     return true;
 }
@@ -4007,9 +4024,6 @@ Simulator::instructionDecode(SimInstruction* instr)
 void
 Simulator::branchDelayInstructionDecode(SimInstruction* instr)
 {
-    if (single_stepping_)
-        single_step_callback_(single_step_callback_arg_, this, (void*)instr);
-
     if (instr->instructionBits() == NopInst) {
         // Short-cut generic nop instructions. They are always valid and they
         // never change the simulator state.

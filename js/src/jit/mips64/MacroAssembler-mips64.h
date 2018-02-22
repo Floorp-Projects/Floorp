@@ -733,8 +733,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
 
     void convertUInt64ToDouble(Register src, FloatRegister dest);
 
-    void wasmTruncateToI64(FloatRegister input, Register output, MIRType fromType,
-                           bool isUnsigned, Label* oolEntry, Label* oolRejoin);
 
     void breakpoint();
 

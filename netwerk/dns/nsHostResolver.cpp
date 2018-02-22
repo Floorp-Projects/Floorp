@@ -203,6 +203,7 @@ nsHostRecord::nsHostRecord(const nsHostKey& key)
     , mGetTtl(false)
     , mTrrAUsed(INIT)
     , mTrrAAAAUsed(INIT)
+    , mTrrLock("nsHostRecord.mTrrLock")
     , mBlacklistedCount(0)
     , mResolveAgain(false)
 {
@@ -211,11 +212,14 @@ nsHostRecord::nsHostRecord(const nsHostKey& key)
 void
 nsHostRecord::Cancel()
 {
+    MutexAutoLock trrlock(mTrrLock);
     if (mTrrA) {
         mTrrA->Cancel();
+        mTrrA = nullptr;
     }
     if (mTrrAAAA) {
         mTrrAAAA->Cancel();
+        mTrrAAAA = nullptr;
     }
 }
 
@@ -460,7 +464,6 @@ bool
 nsHostRecord::RemoveOrRefresh()
 {
     // no need to flush TRRed names, they're not resolved "locally"
-    Cancel();
     MutexAutoLock lock(addr_info_lock);
     if (addr_info && addr_info->IsTRR()) {
         return false;
@@ -1055,6 +1058,7 @@ nsHostResolver::ConditionallyCreateThread(nsHostRecord *rec)
     return NS_OK;
 }
 
+// make sure the mTrrLock is held when this is used!
 #define TRROutstanding() ((rec->mTrrA || rec->mTrrAAAA))
 
 nsresult
@@ -1071,7 +1075,12 @@ nsHostResolver::TrrLookup(nsHostRecord *aRec, TRR *pushedTRR)
 {
     RefPtr<nsHostRecord> rec(aRec);
     mLock.AssertCurrentThreadOwns();
-    MOZ_ASSERT(!TRROutstanding());
+#ifdef DEBUG
+    {
+        MutexAutoLock trrlock(rec->mTrrLock);
+        MOZ_ASSERT(!TRROutstanding());
+    }
+#endif
     MOZ_ASSERT(!rec->mResolving);
 
     if (!gTRRService || !gTRRService->Enabled()) {
@@ -1116,6 +1125,7 @@ nsHostResolver::TrrLookup(nsHostRecord *aRec, TRR *pushedTRR)
         sendAgain = false;
         LOG(("TRR Resolve %s type %d\n", rec->host.get(), (int)rectype));
         RefPtr<TRR> trr;
+        MutexAutoLock trrlock(rec->mTrrLock);
         trr = pushedTRR ? pushedTRR : new TRR(this, rec, rectype);
         if (pushedTRR || NS_SUCCEEDED(NS_DispatchToMainThread(trr))) {
             rec->mResolving++;
@@ -1478,6 +1488,7 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
          aNewRRSet ? aNewRRSet->IsTRR() : 0, rec->mResolving));
 
     if (trrResult) {
+        MutexAutoLock trrlock(rec->mTrrLock);
         LOG(("TRR lookup Complete (%d) %s %s\n",
              newRRSet->IsTRR(), newRRSet->mHostName,
              NS_SUCCEEDED(status) ? "OK" : "FAILED"));

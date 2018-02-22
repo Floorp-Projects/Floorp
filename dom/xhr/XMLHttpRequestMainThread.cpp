@@ -235,7 +235,10 @@ XMLHttpRequestMainThread::~XMLHttpRequestMainThread()
     Abort();
   }
 
-  mParseEndListener = nullptr;
+  if (mParseEndListener) {
+    mParseEndListener->SetIsStale();
+    mParseEndListener = nullptr;
+  }
 
   MOZ_ASSERT(!mFlagSyncLooping, "we rather crash than hang");
   mFlagSyncLooping = false;

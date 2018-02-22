@@ -143,5 +143,23 @@ CredentialsContainer::Store(const Credential& aCredential, ErrorResult& aRv)
   return mManager->Store(aCredential);
 }
 
+already_AddRefed<Promise>
+CredentialsContainer::PreventSilentAccess(ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
+  if (NS_WARN_IF(!global)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  promise->MaybeResolveWithUndefined();
+  return promise.forget();
+}
+
 } // namespace dom
 } // namespace mozilla

@@ -875,8 +875,13 @@ public:
     mXHR = nullptr;
     return NS_OK;
   }
+
   explicit nsXHRParseEndListener(XMLHttpRequestMainThread* aXHR)
     : mXHR(aXHR) {}
+
+  void SetIsStale() {
+    mXHR = nullptr;
+  }
 private:
   virtual ~nsXHRParseEndListener() {}
 

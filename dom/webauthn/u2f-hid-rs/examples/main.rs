@@ -82,7 +82,7 @@ fn main() {
             flags,
             15_000,
             chall_bytes,
-            app_bytes,
+            vec![app_bytes],
             vec![key_handle],
             move |rv| { tx.send(rv.unwrap()).unwrap(); },
         )
