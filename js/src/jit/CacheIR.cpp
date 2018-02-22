@@ -541,6 +541,70 @@ GuardGroupProto(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId)
         writer.guardGroupForProto(objId, group);
 }
 
+// Guard that a given object has same class and same OwnProperties (excluding
+// dense elements and dynamic properties). Returns an OperandId for the unboxed
+// expando if it exists.
+static void
+TestMatchingReceiver(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId,
+                     Maybe<ObjOperandId>* expandoId)
+{
+    if (obj->is<UnboxedPlainObject>()) {
+        writer.guardGroupForLayout(objId, obj->group());
+
+        if (UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando()) {
+            expandoId->emplace(writer.guardAndLoadUnboxedExpando(objId));
+            writer.guardShapeForOwnProperties(expandoId->ref(), expando->lastProperty());
+        } else {
+            writer.guardNoUnboxedExpando(objId);
+        }
+    } else if (obj->is<TypedObject>()) {
+        writer.guardGroupForLayout(objId, obj->group());
+    } else if (obj->is<ProxyObject>()) {
+        writer.guardShapeForClass(objId, obj->as<ProxyObject>().shape());
+    } else {
+        MOZ_ASSERT(obj->is<NativeObject>());
+        writer.guardShapeForOwnProperties(objId, obj->as<NativeObject>().lastProperty());
+    }
+}
+
+// Similar to |TestMatchingReceiver|, but specialized for NativeObject.
+static void
+TestMatchingNativeReceiver(CacheIRWriter& writer, NativeObject* obj, ObjOperandId objId)
+{
+    writer.guardShapeForOwnProperties(objId, obj->lastProperty());
+}
+
+// Similar to |TestMatchingReceiver|, but specialized for ProxyObject.
+static void
+TestMatchingProxyReceiver(CacheIRWriter& writer, ProxyObject* obj, ObjOperandId objId)
+{
+    writer.guardShapeForClass(objId, obj->shape());
+}
+
+// Adds additional guards if TestMatchingReceiver* does not also imply the
+// prototype.
+static void
+GeneratePrototypeGuardsForReceiver(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId)
+{
+    // If receiver was marked UNCACHEABLE_PROTO, the previous shape guard
+    // doesn't ensure the prototype is unchanged. In this case we must use the
+    // group to check the prototype.
+    if (obj->hasUncacheableProto()) {
+        MOZ_ASSERT(obj->is<NativeObject>());
+        GuardGroupProto(writer, obj, objId);
+    }
+
+#ifdef DEBUG
+    // The following cases already guaranteed the prototype is unchanged.
+    if (obj->is<UnboxedPlainObject>())
+        MOZ_ASSERT(!obj->group()->hasUncacheableProto());
+    else if (obj->is<TypedObject>())
+        MOZ_ASSERT(!obj->group()->hasUncacheableProto());
+    else if (obj->is<ProxyObject>())
+        MOZ_ASSERT(!obj->hasUncacheableProto());
+#endif // DEBUG
+}
+
 static void
 GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder, ObjOperandId objId)
 {
@@ -605,8 +669,9 @@ GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder, 
     // object in the chain if needed and handle it directly.
     JSObject* pobj = obj;
     if (!obj->isDelegate()) {
-        if (obj->hasUncacheableProto())
-            GuardGroupProto(writer, obj, objId);
+        // TestMatchingReceiver does not always ensure the prototype is
+        // unchanged, so generate extra guards as needed.
+        GeneratePrototypeGuardsForReceiver(writer, obj, objId);
 
         pobj = obj->staticPrototype();
     }
@@ -661,28 +726,6 @@ GeneratePrototypeHoleGuards(CacheIRWriter& writer, JSObject* obj, ObjOperandId o
         writer.guardNoDenseElements(protoId);
 
         pobj = pobj->staticPrototype();
-    }
-}
-
-static void
-TestMatchingReceiver(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId,
-                     Maybe<ObjOperandId>* expandoId)
-{
-    if (obj->is<UnboxedPlainObject>()) {
-        writer.guardGroupForLayout(objId, obj->group());
-
-        if (UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando()) {
-            expandoId->emplace(writer.guardAndLoadUnboxedExpando(objId));
-            writer.guardShape(expandoId->ref(), expando->lastProperty());
-        } else {
-            writer.guardNoUnboxedExpando(objId);
-        }
-    } else if (obj->is<TypedObject>()) {
-        writer.guardGroupForLayout(objId, obj->group());
-    } else {
-        Shape* shape = obj->maybeShape();
-        MOZ_ASSERT(shape);
-        writer.guardShape(objId, shape);
     }
 }
 
@@ -1184,7 +1227,7 @@ IRGenerator::guardDOMProxyExpandoObjectAndShape(JSObject* obj, ObjOperandId objI
 {
     MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
-    writer.guardShape(objId, obj->maybeShape());
+    TestMatchingProxyReceiver(writer, &obj->as<ProxyObject>(), objId);
 
     // Shape determines Class, so now it must be a DOM proxy.
     ValOperandId expandoValId;
@@ -1251,15 +1294,11 @@ GetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objI
 bool
 GetPropIRGenerator::tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId, HandleId id)
 {
+    MOZ_ASSERT(!isSuper());
     MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
     maybeEmitIdGuard(id);
-    writer.guardShape(objId, obj->maybeShape());
-
-    // No need for more guards: we know this is a DOM proxy, since the shape
-    // guard enforces a given JSClass, so just go ahead and emit the call to
-    // ProxyGet.
-    MOZ_ASSERT(!isSuper());
+    TestMatchingProxyReceiver(writer, &obj->as<ProxyObject>(), objId);
     writer.callProxyGetResult(objId, id);
     writer.typeMonitorResult();
 
@@ -1318,9 +1357,9 @@ GetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId o
         return false;
 
     maybeEmitIdGuard(id);
-    writer.guardShape(objId, obj->maybeShape());
 
     // Guard that our expando object hasn't started shadowing this property.
+    TestMatchingProxyReceiver(writer, &obj->as<ProxyObject>(), objId);
     CheckDOMProxyExpandoDoesNotShadow(writer, obj, id, objId);
 
     if (holder) {
@@ -1808,10 +1847,11 @@ GetPropIRGenerator::tryAttachDenseElement(HandleObject obj, ObjOperandId objId,
     if (!obj->isNative())
         return false;
 
-    if (!obj->as<NativeObject>().containsDenseElement(index))
+    NativeObject* nobj = &obj->as<NativeObject>();
+    if (!nobj->containsDenseElement(index))
         return false;
 
-    writer.guardShape(objId, obj->as<NativeObject>().lastProperty());
+    TestMatchingNativeReceiver(writer, nobj, objId);
     writer.loadDenseElementResult(objId, indexId);
     writer.typeMonitorResult();
 
@@ -1863,16 +1903,15 @@ GetPropIRGenerator::tryAttachDenseElementHole(HandleObject obj, ObjOperandId obj
     if (!obj->isNative())
         return false;
 
-    if (obj->as<NativeObject>().containsDenseElement(index))
+    NativeObject* nobj = &obj->as<NativeObject>();
+    if (nobj->containsDenseElement(index))
         return false;
-
-    if (!CanAttachDenseElementHole(&obj->as<NativeObject>(), false))
+    if (!CanAttachDenseElementHole(nobj, false))
         return false;
 
     // Guard on the shape, to prevent non-dense elements from appearing.
-    writer.guardShape(objId, obj->as<NativeObject>().lastProperty());
-
-    GeneratePrototypeHoleGuards(writer, obj, objId);
+    TestMatchingNativeReceiver(writer, nobj, objId);
+    GeneratePrototypeHoleGuards(writer, nobj, objId);
     writer.loadDenseElementHoleResult(objId, indexId);
     writer.typeMonitorResult();
 
@@ -1941,7 +1980,7 @@ GetPropIRGenerator::tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
         writer.guardNoDetachedTypedObjects();
         writer.guardGroupForLayout(objId, obj->group());
     } else {
-        writer.guardShape(objId, obj->as<TypedArrayObject>().shape());
+        writer.guardShapeForClass(objId, obj->as<TypedArrayObject>().shape());
     }
 
     writer.loadTypedElementResult(objId, indexId, layout, TypedThingElementType(obj));
@@ -2441,12 +2480,13 @@ HasPropIRGenerator::tryAttachDense(HandleObject obj, ObjOperandId objId,
 {
     if (!obj->isNative())
         return false;
-    if (!obj->as<NativeObject>().containsDenseElement(index))
+
+    NativeObject* nobj = &obj->as<NativeObject>();
+    if (!nobj->containsDenseElement(index))
         return false;
 
     // Guard shape to ensure object class is NativeObject.
-    writer.guardShape(objId, obj->as<NativeObject>().lastProperty());
-
+    TestMatchingNativeReceiver(writer, nobj, objId);
     writer.loadDenseElementExistsResult(objId, indexId);
     writer.returnFromIC();
 
@@ -2462,20 +2502,22 @@ HasPropIRGenerator::tryAttachDenseHole(HandleObject obj, ObjOperandId objId,
 
     if (!obj->isNative())
         return false;
-    if (obj->as<NativeObject>().containsDenseElement(index))
+
+    NativeObject* nobj = &obj->as<NativeObject>();
+    if (nobj->containsDenseElement(index))
         return false;
-    if (!CanAttachDenseElementHole(&obj->as<NativeObject>(), hasOwn))
+    if (!CanAttachDenseElementHole(nobj, hasOwn))
         return false;
 
     // Guard shape to ensure class is NativeObject and to prevent non-dense
     // elements being added. Also ensures prototype doesn't change if dynamic
     // checks aren't emitted.
-    writer.guardShape(objId, obj->as<NativeObject>().lastProperty());
+    TestMatchingNativeReceiver(writer, nobj, objId);
 
     // Generate prototype guards if needed. This includes monitoring that
     // properties were not added in the chain.
     if (!hasOwn)
-        GeneratePrototypeHoleGuards(writer, obj, objId);
+        GeneratePrototypeHoleGuards(writer, nobj, objId);
 
     writer.loadDenseElementHoleExistsResult(objId, indexId);
     writer.returnFromIC();
@@ -2650,7 +2692,7 @@ HasPropIRGenerator::tryAttachTypedArray(HandleObject obj, ObjOperandId objId,
     if (IsPrimitiveArrayTypedObject(obj))
         writer.guardGroupForLayout(objId, obj->group());
     else
-        writer.guardShape(objId, obj->as<TypedArrayObject>().shape());
+        writer.guardShapeForClass(objId, obj->as<TypedArrayObject>().shape());
 
     writer.loadTypedElementExistsResult(objId, indexId, layout);
 
@@ -3025,7 +3067,7 @@ SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId,
     NativeObject* nobj = &obj->as<NativeObject>();
     if (typeCheckInfo_.needsTypeBarrier())
         writer.guardGroupForTypeBarrier(objId, nobj->group());
-    writer.guardShape(objId, nobj->lastProperty());
+    TestMatchingNativeReceiver(writer, nobj, objId);
 
     if (IsPreliminaryObject(obj))
         preliminaryObjectAction_ = PreliminaryObjectAction::NotePreliminary;
@@ -3055,14 +3097,14 @@ SetPropIRGenerator::tryAttachUnboxedExpandoSetSlot(HandleObject obj, ObjOperandI
         return false;
 
     maybeEmitIdGuard(id);
-    writer.guardGroupForLayout(objId, obj->group());
-    ObjOperandId expandoId = writer.guardAndLoadUnboxedExpando(objId);
-    writer.guardShape(expandoId, expando->lastProperty());
+
+    Maybe<ObjOperandId> expandoId;
+    TestMatchingReceiver(writer, obj, objId, &expandoId);
 
     // Property types must be added to the unboxed object's group, not the
     // expando's group (it has unknown properties).
     typeCheckInfo_.set(obj->group(), id);
-    EmitStoreSlotAndReturn(writer, expandoId, expando, propShape, rhsId);
+    EmitStoreSlotAndReturn(writer, expandoId.ref(), expando, propShape, rhsId);
 
     trackAttached("UnboxedExpando");
     return true;
@@ -3359,7 +3401,7 @@ SetPropIRGenerator::tryAttachSetDenseElement(HandleObject obj, ObjOperandId objI
 
     if (typeCheckInfo_.needsTypeBarrier())
         writer.guardGroupForTypeBarrier(objId, nobj->group());
-    writer.guardShape(objId, nobj->shape());
+    TestMatchingNativeReceiver(writer, nobj, objId);
 
     writer.storeDenseElement(objId, indexId, rhsId);
     writer.returnFromIC();
@@ -3475,7 +3517,7 @@ SetPropIRGenerator::tryAttachSetDenseElementHole(HandleObject obj, ObjOperandId 
 
     if (typeCheckInfo_.needsTypeBarrier())
         writer.guardGroupForTypeBarrier(objId, nobj->group());
-    writer.guardShape(objId, nobj->shape());
+    TestMatchingNativeReceiver(writer, nobj, objId);
 
     // Also shape guard the proto chain, unless this is an INITELEM or we know
     // the proto chain has no indexed props.
@@ -3529,7 +3571,7 @@ SetPropIRGenerator::tryAttachSetTypedElement(HandleObject obj, ObjOperandId objI
         writer.guardNoDetachedTypedObjects();
         writer.guardGroupForLayout(objId, obj->group());
     } else {
-        writer.guardShape(objId, obj->as<TypedArrayObject>().shape());
+        writer.guardShapeForClass(objId, obj->as<TypedArrayObject>().shape());
     }
 
     writer.storeTypedElement(objId, indexId, rhsId, layout, elementType, handleOutOfBounds);
@@ -3581,11 +3623,7 @@ SetPropIRGenerator::tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId obj
     MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
     maybeEmitIdGuard(id);
-    writer.guardShape(objId, obj->maybeShape());
-
-    // No need for more guards: we know this is a DOM proxy, since the shape
-    // guard enforces a given JSClass, so just go ahead and emit the call to
-    // ProxySet.
+    TestMatchingProxyReceiver(writer, &obj->as<ProxyObject>(), objId);
     writer.callProxySet(objId, id, rhsId, IsStrictSetPC(pc_));
     writer.returnFromIC();
 
@@ -3609,9 +3647,9 @@ SetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId o
         return false;
 
     maybeEmitIdGuard(id);
-    writer.guardShape(objId, obj->maybeShape());
 
     // Guard that our expando object hasn't started shadowing this property.
+    TestMatchingProxyReceiver(writer, &obj->as<ProxyObject>(), objId);
     CheckDOMProxyExpandoDoesNotShadow(writer, obj, id, objId);
 
     GeneratePrototypeGuards(writer, obj, holder, objId);
@@ -4335,7 +4373,6 @@ CallIRGenerator::tryAttachArrayPush()
     // Guard this is an array object.
     ValOperandId thisValId = writer.loadStackValue(1);
     ObjOperandId thisObjId = writer.guardIsObject(thisValId);
-    writer.guardClass(thisObjId, GuardClassKind::Array);
 
     // This is a soft assert, documenting the fact that we pass 'true'
     // for needsTypeBarrier when constructing typeCheckInfo_ for CallIRGenerator.
@@ -4345,7 +4382,7 @@ CallIRGenerator::tryAttachArrayPush()
     // Guard that the group and shape matches.
     if (typeCheckInfo_.needsTypeBarrier())
         writer.guardGroupForTypeBarrier(thisObjId, thisobj->group());
-    writer.guardShape(thisObjId, thisarray->shape());
+    TestMatchingNativeReceiver(writer, thisarray, thisObjId);
 
     // Guard proto chain shapes.
     ShapeGuardProtoChain(writer, thisobj, thisObjId);
