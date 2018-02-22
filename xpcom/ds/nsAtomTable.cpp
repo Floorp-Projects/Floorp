@@ -267,8 +267,34 @@ public:
   // advantage of |friend| declarations.
   static void AtomTableClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 
-  // XXXbholley: We enable multiple subtables in the next patch.
-  const static size_t kNumSubTables = 1; // Must be power of two.
+  // We achieve measurable reduction in locking contention in parallel CSS
+  // parsing by increasing the number of subtables up to 128. This has been
+  // measured to have neglible impact on the performance of initialization, GC,
+  // and shutdown.
+  //
+  // Another important consideration is memory, since we're adding fixed overhead
+  // per content process, which we try to avoid. Measuring a mostly-empty page [1]
+  // with various numbers of subtables, we get the following deep sizes for the
+  // atom table:
+  //       1 subtable:  278K
+  //       8 subtables: 279K
+  //      16 subtables: 282K
+  //      64 subtables: 286K
+  //     128 subtables: 290K
+  //
+  // So 128 subtables costs us 12K relative to a single table, and 4K relative
+  // to 64 subtables. Conversely, measuring parallel (6 thread) CSS parsing on
+  // tp6-facebook, a single table provides ~150ms of locking overhead per thread,
+  // 64 subtables provides ~2-3ms of overhead, and 128 subtables provides <1ms.
+  // And so while either 64 or 128 subtables would probably be acceptable,
+  // achieving a measurable reduction in contention for 4k of fixed memory
+  // overhead is probably worth it.
+  //
+  // [1] The numbers will look different for content processes with complex
+  // pages loaded, but in those cases the actual atoms will dominate memory
+  // usage and the overhead of extra tables will be negligible. We're mostly
+  // interested in the fixed cost for nearly-empty content processes.
+  const static size_t kNumSubTables = 128; // Must be power of two.
 
 private:
   nsAtomSubTable mSubTables[kNumSubTables];
