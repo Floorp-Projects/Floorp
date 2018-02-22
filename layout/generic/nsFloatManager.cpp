@@ -1071,12 +1071,13 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
       for (int32_t i = 0; i < iSize; ++i) {
         const int32_t col = aWM.IsVertical() ? b : i;
         const int32_t row = aWM.IsVertical() ? i : b;
+        const int32_t index = col + row * aStride;
 
         // Determine if the alpha pixel at this row and column has a value
-        // greater than the threshold. If it does, update our iMin and iMax values
-        // to track the edges of the float area for this row or column.
+        // greater than the threshold. If it does, update our iMin and iMax
+        // values to track the edges of the float area for this row or column.
         // https://drafts.csswg.org/css-shapes-1/#valdef-shape-image-threshold-number
-        const uint8_t alpha = aAlphaPixels[col + row * aStride];
+        const uint8_t alpha = aAlphaPixels[index];
         if (alpha > threshold) {
           if (iMin == -1) {
             iMin = i;
@@ -1101,6 +1102,241 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
       // Because we scan the columns from left to right, we need to reverse
       // the array so that it's sorted (in ascending order) on the block
       // direction.
+      mIntervals.Reverse();
+    }
+  } else {
+    // With a positive aShapeMargin, we have to calculate a distance
+    // field from the opaque pixels, then build intervals based on
+    // them being within aShapeMargin distance to an opaque pixel.
+
+    // Roughly: for each pixel in the margin box, we need to determine the
+    // distance to the nearest opaque image-pixel.  If that distance is less
+    // than aShapeMargin, we consider this margin-box pixel as being part of
+    // the float area.
+
+    // Computing the distance field is a two-pass O(n) operation.
+    // We use a chamfer 5-7-11 5x5 matrix to compute minimum distance
+    // to an opaque pixel. This integer math computation is reasonably
+    // close to the true Euclidean distance. The distances will be
+    // approximately 5x the true distance, quantized in integer units.
+    // The 5x is factored away in the comparison used in the final
+    // pass which builds the intervals.
+
+    // Our distance field has to be able to hold values equal to the
+    // maximum shape-margin value that we care about faithfully rendering,
+    // times 5. A 16-bit unsigned int can represent up to ~ 65K which means
+    // we can handle a margin up to ~ 13K device pixels. That's good enough
+    // for practical usage. Any supplied shape-margin value higher than this
+    // maximum will be clamped.
+    typedef uint16_t dfType;
+    const dfType MAX_CHAMFER_VALUE = 11;
+    const dfType MAX_MARGIN = (std::numeric_limits<dfType>::max() -
+                               MAX_CHAMFER_VALUE) / 5;
+    const dfType MAX_MARGIN_5X = MAX_MARGIN * 5;
+
+    // Convert aShapeMargin to dev pixels, convert that into 5x-dev-pixel
+    // space, then clamp to MAX_MARGIN_5X.
+    float shapeMarginDevPixels =
+      NSAppUnitsToFloatPixels(aShapeMargin, aAppUnitsPerDevPixel);
+    int32_t shapeMarginDevPixelsInt5X =
+      NSToIntRound(5.0f * shapeMarginDevPixels);
+    NS_WARNING_ASSERTION(shapeMarginDevPixelsInt5X <= MAX_MARGIN_5X,
+                         "shape-margin is too large and is being clamped.");
+    dfType usedMargin5X = (dfType)std::min((int32_t)MAX_MARGIN_5X,
+                                           shapeMarginDevPixelsInt5X);
+
+    // Allocate our distance field.  The distance field has to cover
+    // the entire aMarginRect, since aShapeMargin could bleed into it,
+    // beyond the content rect covered by aAlphaPixels. To make this work,
+    // we calculate a dfOffset value which is the top left of the content
+    // rect relative to the margin rect.
+    nsPoint offsetPoint = aContentRect.TopLeft() - aMarginRect.TopLeft();
+    LayoutDeviceIntPoint dfOffset =
+      LayoutDevicePixel::FromAppUnitsRounded(offsetPoint,
+                                             aAppUnitsPerDevPixel);
+
+    // Since our distance field is computed with a 5x5 neighborhood,
+    // we need to expand our distance field by a further 4 pixels in
+    // both axes, 2 on the leading edge and 2 on the trailing edge.
+    // We call this edge area the "expanded region".
+
+    // Since dfOffset will be used in comparisons against expanded region
+    // pixel values, it's convenient to add 2 to dfOffset in both axes, to
+    // simplify comparison math later.
+    dfOffset.x += 2;
+    dfOffset.y += 2;
+
+    // In all these calculations, we purposely ignore aStride, because
+    // we don't have to replicate the packing that we received in
+    // aAlphaPixels. When we need to convert from df coordinates to
+    // alpha coordinates, we do that with math based on row and col.
+    const LayoutDeviceIntSize marginRectDevPixels =
+      LayoutDevicePixel::FromAppUnitsRounded(aMarginRect.Size(),
+                                             aAppUnitsPerDevPixel);
+    const int32_t wEx = marginRectDevPixels.width + 4;
+    const int32_t hEx = marginRectDevPixels.height + 4;
+
+    // Since the margin-box size is CSS controlled, and large values will
+    // generate large wEx and hEx values, we do a falliable allocation for
+    // the distance field. If allocation fails, we early exit and layout will
+    // be wrong, but we'll avoid aborting from OOM.
+    auto df = MakeUniqueFallible<dfType[]>(wEx * hEx);
+    if (!df) {
+      // Without a distance field, we can't reason about the float area.
+      return;
+    }
+
+    const int32_t bSize = aWM.IsVertical() ? wEx : hEx;
+    const int32_t iSize = aWM.IsVertical() ? hEx : wEx;
+
+    // First pass setting distance field, starting at top-left, three cases:
+    // 1) Expanded region pixel: set to MAX_MARGIN_5X.
+    // 2) Image pixel with alpha greater than threshold: set to 0.
+    // 3) Other pixel: set to minimum backward-looking neighborhood
+    //                 distance value, computed with 5-7-11 chamfer.
+
+    // Scan the pixels in a double loop. For horizontal writing modes, we do
+    // this row by row, from top to bottom. For vertical writing modes, we do
+    // column by column, from left to right. We define the two loops
+    // generically, then figure out the rows and cols within the inner loop.
+    for (int32_t b = 0; b < bSize; ++b) {
+      for (int32_t i = 0; i < iSize; ++i) {
+        const int32_t col = aWM.IsVertical() ? b : i;
+        const int32_t row = aWM.IsVertical() ? i : b;
+        const int32_t index = col + row * wEx;
+
+        // Handle our three cases, in order.
+        if (col < 2 ||
+            col >= wEx - 2 ||
+            row < 2 ||
+            row >= hEx - 2) {
+          // Case 1: Expanded pixel.
+          df[index] = MAX_MARGIN_5X;
+        } else if (col >= dfOffset.x &&
+                   col < (dfOffset.x + w) &&
+                   row >= dfOffset.y &&
+                   row < (dfOffset.y + h) &&
+                   aAlphaPixels[col - dfOffset.x +
+                                (row - dfOffset.y) * aStride] > threshold) {
+          // Case 2: Image pixel that is opaque.
+          df[index] = 0;
+        } else {
+          // Case 3: Other pixel.
+
+          // Backward-looking neighborhood distance from target pixel X
+          // with chamfer 5-7-11 looks like:
+          //
+          // +--+--+--+--+--+
+          // |  |11|  |11|  |
+          // +--+--+--+--+--+
+          // |11| 7| 5| 7|11|
+          // +--+--+--+--+--+
+          // |  | 5| X|  |  |
+          // +--+--+--+--+--+
+          //
+          // X should be set to the minimum of MAX_MARGIN_5X and the
+          // values of all of the numbered neighbors summed with the
+          // value in that chamfer cell.
+          df[index] = std::min<dfType>(MAX_MARGIN_5X,
+                      std::min<dfType>(df[index - (wEx * 2) - 1] + 11,
+                      std::min<dfType>(df[index - (wEx * 2) + 1] + 11,
+                      std::min<dfType>(df[index - wEx - 2] + 11,
+                      std::min<dfType>(df[index - wEx - 1] + 7,
+                      std::min<dfType>(df[index - wEx] + 5,
+                      std::min<dfType>(df[index - wEx + 1] + 7,
+                      std::min<dfType>(df[index - wEx + 2] + 11,
+                                       df[index - 1] + 5))))))));
+        }
+      }
+    }
+
+    // Okay, time for the second pass. This pass is in reverse order from
+    // the first pass. All of our opaque pixels have been set to 0, and all
+    // of our expanded region pixels have been set to MAX_MARGIN_5X. Other
+    // pixels have been set to some value between those two (inclusive) but
+    // this hasn't yet taken into account the neighbors that were processed
+    // after them in the first pass. This time we reverse iterate so we can
+    // apply the forward-looking chamfer.
+
+    // This time, we constrain our outer and inner loop to ignore the
+    // expanded region pixels. For each pixel we iterate, we set the df value
+    // to the minimum forward-looking neighborhood distance value, computed
+    // with a 5-7-11 chamfer. We also check each df value against the
+    // usedMargin5X threshold, and use that to set the iMin and iMax values
+    // for the interval we'll create for that block axis value (b).
+
+    // At the end of each row (or column in vertical writing modes),
+    // if any of the other pixels had a value less than usedMargin5X,
+    // we create an interval.
+    for (int32_t b = bSize - 3; b >= 2; --b) {
+      // iMin tracks the first df pixel and iMax the last df pixel whose
+      // df[] value is less than usedMargin5X. Set iMin and iMax in
+      // preparation for this row or column.
+      int32_t iMin = iSize;
+      int32_t iMax = -1;
+
+      for (int32_t i = iSize - 3; i >= 2; --i) {
+        const int32_t col = aWM.IsVertical() ? b : i;
+        const int32_t row = aWM.IsVertical() ? i : b;
+        const int32_t index = col + row * wEx;
+
+        // Only apply the chamfer calculation if the df value is not
+        // already 0, since the chamfer can only reduce the value.
+        if (df[index]) {
+          // Forward-looking neighborhood distance from target pixel X
+          // with chamfer 5-7-11 looks like:
+          //
+          // +--+--+--+--+--+
+          // |  |  | X| 5|  |
+          // +--+--+--+--+--+
+          // |11| 7| 5| 7|11|
+          // +--+--+--+--+--+
+          // |  |11|  |11|  |
+          // +--+--+--+--+--+
+          //
+          // X should be set to the minimum of its current value and
+          // the values of all of the numbered neighbors summed with
+          // the value in that chamfer cell.
+          df[index] = std::min<dfType>(df[index],
+                      std::min<dfType>(df[index + (wEx * 2) + 1] + 11,
+                      std::min<dfType>(df[index + (wEx * 2) - 1] + 11,
+                      std::min<dfType>(df[index + wEx + 2] + 11,
+                      std::min<dfType>(df[index + wEx + 1] + 7,
+                      std::min<dfType>(df[index + wEx] + 5,
+                      std::min<dfType>(df[index + wEx - 1] + 7,
+                      std::min<dfType>(df[index + wEx - 2] + 11,
+                                       df[index + 1] + 5))))))));
+        }
+
+        // Finally, we can check the df value and see if it's less than
+        // or equal to the usedMargin5X value.
+        if (df[index] <= usedMargin5X) {
+          if (iMax == -1) {
+            iMax = i;
+          }
+          MOZ_ASSERT(iMin > i);
+          iMin = i;
+        }
+      }
+
+      if (iMax != -1) {
+        // Our interval values, iMin, iMax, and b are all calculated from
+        // the expanded region, which is based on the margin rect. To create
+        // our interval, we have to subtract 2 from (iMin, iMax, and b) to
+        // account for the expanded region edges.  This produces coords that
+        // are relative to our margin-rect, so we pass in
+        // aMarginRect.TopLeft() to make CreateInterval convert to our
+        // container's coordinate space.
+        CreateInterval(iMin - 2, iMax - 2, b - 2, aAppUnitsPerDevPixel,
+                       aMarginRect.TopLeft(), aWM, aContainerSize);
+      }
+    }
+
+    if (!aWM.IsVerticalRL()) {
+      // Anything other than vertical-rl or sideways-rl.
+      // Because we assembled our intervals on the bottom-up pass,
+      // they are reversed for most writing modes. Reverse them to
+      // keep the array sorted on the block direction.
       mIntervals.Reverse();
     }
   }
