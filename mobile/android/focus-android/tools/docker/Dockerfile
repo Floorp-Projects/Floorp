@@ -105,6 +105,11 @@ RUN tar -xvf /gcloud.tar.gz -C /
 RUN /google-cloud-sdk/install.sh --quiet
 RUN /google-cloud-sdk/bin/gcloud --quiet components update
 
+# Needed for verifying cyclic redundancy check (CRC) headers (Google Cloud SDK)
+RUN apt-get install gcc python-dev python-setuptools
+RUN easy_install -U pip
+RUN pip install -U crcmod
+
 # -- Cleanup ----------------------------------------------------------------------------
 
 RUN apt-get clean
