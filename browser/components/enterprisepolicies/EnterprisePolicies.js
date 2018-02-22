@@ -7,6 +7,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  WindowsGPOParser: "resource:///modules/policies/WindowsGPOParser.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   Policies: "resource:///modules/policies/Policies.jsm",
   PoliciesValidator: "resource:///modules/policies/PoliciesValidator.jsm",
@@ -100,7 +101,12 @@ EnterprisePoliciesManager.prototype = {
   },
 
   _chooseProvider() {
-    // TODO: Bug 1433136 - Add GPO provider with higher precendence here
+    if (AppConstants.platform == "win") {
+      let gpoProvider = new GPOPoliciesProvider();
+      if (gpoProvider.hasPolicies) {
+        return gpoProvider;
+      }
+    }
 
     let jsonProvider = new JSONPoliciesProvider();
     if (jsonProvider.hasPolicies) {
@@ -366,6 +372,46 @@ class JSONPoliciesProvider {
   }
 }
 
+class GPOPoliciesProvider {
+  constructor() {
+    this._policies = null;
+
+    let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
+    // Machine policies override user policies, so we read
+    // user policies first and then replace them if necessary.
+    wrk.open(wrk.ROOT_KEY_CURRENT_USER,
+             "SOFTWARE\\Policies",
+             wrk.ACCESS_READ);
+    if (wrk.hasChild("Mozilla\\Firefox")) {
+      this._readData(wrk);
+    }
+    wrk.close();
+
+    wrk.open(wrk.ROOT_KEY_LOCAL_MACHINE,
+             "SOFTWARE\\Policies",
+             wrk.ACCESS_READ);
+    if (wrk.hasChild("Mozilla\\Firefox")) {
+      this._readData(wrk);
+    }
+    wrk.close();
+  }
+
+  get hasPolicies() {
+    return this._policies !== null;
+  }
+
+  get policies() {
+    return this._policies;
+  }
+
+  get failed() {
+    return this._failed;
+  }
+
+  _readData(wrk) {
+    this._policies = WindowsGPOParser.readPolicies(wrk, this._policies);
+  }
+}
 
 var components = [EnterprisePoliciesManager];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
