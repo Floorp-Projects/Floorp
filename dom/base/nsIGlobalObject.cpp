@@ -11,7 +11,9 @@
 #include "nsThreadUtils.h"
 #include "nsHostObjectProtocolHandler.h"
 
+using mozilla::MallocSizeOf;
 using mozilla::Maybe;
+using mozilla::DOMEventTargetHelper;
 using mozilla::dom::ClientInfo;
 using mozilla::dom::ServiceWorker;
 using mozilla::dom::ServiceWorkerDescriptor;
@@ -19,6 +21,8 @@ using mozilla::dom::ServiceWorkerDescriptor;
 nsIGlobalObject::~nsIGlobalObject()
 {
   UnlinkHostObjectURIs();
+  DisconnectEventTargetObjects();
+  MOZ_DIAGNOSTIC_ASSERT(mEventTargetObjects.IsEmpty());
 }
 
 nsIPrincipal*
@@ -120,6 +124,55 @@ nsIGlobalObject::TraverseHostObjectURIs(nsCycleCollectionTraversalCallback &aCb)
   }
 }
 
+void
+nsIGlobalObject::AddEventTargetObject(DOMEventTargetHelper* aObject)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aObject);
+  MOZ_ASSERT(!mEventTargetObjects.Contains(aObject));
+  mEventTargetObjects.PutEntry(aObject);
+}
+
+void
+nsIGlobalObject::RemoveEventTargetObject(DOMEventTargetHelper* aObject)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aObject);
+  MOZ_ASSERT(mEventTargetObjects.Contains(aObject));
+  mEventTargetObjects.RemoveEntry(aObject);
+}
+
+void
+nsIGlobalObject::ForEachEventTargetObject(const std::function<void(DOMEventTargetHelper*, bool* aDoneOut)>& aFunc) const
+{
+  // Protect against the function call triggering a mutation of the hash table
+  // while we are iterating by copying the DETH references to a temporary
+  // list.
+  AutoTArray<DOMEventTargetHelper*, 64> targetList;
+  for (auto iter = mEventTargetObjects.ConstIter(); !iter.Done(); iter.Next()) {
+    targetList.AppendElement(iter.Get()->GetKey());
+  }
+
+  // Iterate the target list and call the function on each one.
+  bool done = false;
+  for (auto target : targetList) {
+    aFunc(target, &done);
+    if (done) {
+      break;
+    }
+  }
+}
+
+void
+nsIGlobalObject::DisconnectEventTargetObjects()
+{
+  ForEachEventTargetObject([&] (DOMEventTargetHelper* aTarget, bool* aDoneOut) {
+    aTarget->DisconnectFromOwner();
+
+    // Calling DisconnectFromOwner() should result in
+    // RemoveEventTargetObject() being called.
+    MOZ_DIAGNOSTIC_ASSERT(!mEventTargetObjects.Contains(aTarget));
+  });
+}
+
 Maybe<ClientInfo>
 nsIGlobalObject::GetClientInfo() const
 {
@@ -143,14 +196,10 @@ nsIGlobalObject::GetOrCreateServiceWorker(const ServiceWorkerDescriptor& aDescri
   return nullptr;
 }
 
-void
-nsIGlobalObject::AddServiceWorker(ServiceWorker* aServiceWorker)
+size_t
+nsIGlobalObject::ShallowSizeOfExcludingThis(MallocSizeOf aSizeOf) const
 {
-  MOZ_DIAGNOSTIC_ASSERT(false, "this global should not have any service workers");
-}
-
-void
-nsIGlobalObject::RemoveServiceWorker(ServiceWorker* aServiceWorker)
-{
-  MOZ_DIAGNOSTIC_ASSERT(false, "this global should not have any service workers");
+  size_t rtn = mHostObjectURIs.ShallowSizeOfExcludingThis(aSizeOf);
+  rtn += mEventTargetObjects.ShallowSizeOfExcludingThis(aSizeOf);
+  return rtn;
 }

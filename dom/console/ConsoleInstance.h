@@ -20,7 +20,8 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ConsoleInstance)
 
-  explicit ConsoleInstance(const ConsoleInstanceOptions& aOptions);
+  explicit ConsoleInstance(JSContext* aCx,
+                           const ConsoleInstanceOptions& aOptions);
 
   // WebIDL methods
   JSObject*

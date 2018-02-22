@@ -48,8 +48,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-import org.mozilla.gecko.GeckoSession;
-import org.mozilla.gecko.GeckoSession.PermissionDelegate.MediaSource;
+import org.mozilla.geckoview.GeckoSession;
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource;
 
 final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
     protected static final String LOGTAG = "BasicGeckoViewPrompt";

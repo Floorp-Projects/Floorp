@@ -76,8 +76,6 @@ ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
   MOZ_DIAGNOSTIC_ASSERT(aGlobal);
   MOZ_DIAGNOSTIC_ASSERT(mInner);
 
-  aGlobal->AddServiceWorker(this);
-
   // This will update our state too.
   mInner->AddServiceWorker(this);
 }
@@ -86,16 +84,13 @@ ServiceWorker::~ServiceWorker()
 {
   MOZ_ASSERT(NS_IsMainThread());
   mInner->RemoveServiceWorker(this);
-  nsIGlobalObject* global = GetParentObject();
-  if (global) {
-    global->RemoveServiceWorker(this);
-  }
 }
 
 NS_IMPL_ADDREF_INHERITED(ServiceWorker, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(ServiceWorker, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServiceWorker)
+  NS_INTERFACE_MAP_ENTRY(ServiceWorker)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 JSObject*
@@ -151,10 +146,6 @@ ServiceWorker::Descriptor() const
 void
 ServiceWorker::DisconnectFromOwner()
 {
-  nsIGlobalObject* global = GetParentObject();
-  if (global) {
-    global->RemoveServiceWorker(this);
-  }
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 

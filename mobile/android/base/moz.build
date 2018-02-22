@@ -363,6 +363,16 @@ if CONFIG['MOZ_WEBRTC']:
 
 gvjar = add_java_jar('gecko-view')
 
+gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/geckoview/' + x
+                  for x in [
+    'GeckoSession.java',
+    'GeckoSessionHandler.java',
+    'GeckoSessionSettings.java',
+    'GeckoView.java',
+    'TextInputController.java',
+    'TrackingProtection.java',
+]]
+
 gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
                   for x in [
     'AndroidGamepadManager.java',
@@ -379,12 +389,8 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'GeckoProfile.java',
     'GeckoProfileDirectories.java',
     'GeckoScreenOrientation.java',
-    'GeckoSession.java',
-    'GeckoSessionHandler.java',
-    'GeckoSessionSettings.java',
     'GeckoSharedPrefs.java',
     'GeckoThread.java',
-    'GeckoView.java',
     'GeckoVRManager.java',
     'gfx/CompositorController.java',
     'gfx/DynamicToolbarAnimator.java',
@@ -443,9 +449,7 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'sqlite/MatrixBlobCursor.java',
     'sqlite/SQLiteBridge.java',
     'sqlite/SQLiteBridgeException.java',
-    'TextInputController.java',
     'TouchEventInterceptor.java',
-    'TrackingProtection.java',
     'WakeLockDelegate.java',
 ]]
 

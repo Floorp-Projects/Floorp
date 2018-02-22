@@ -205,7 +205,7 @@ KeyboardEvent::KeyCode(CallerType aCallerType)
 }
 
 uint32_t
-KeyboardEvent::Which()
+KeyboardEvent::Which(CallerType aCallerType)
 {
   // If this event is initialized with ctor, which can have independent value.
   if (mInitializedByCtor) {
@@ -217,7 +217,7 @@ KeyboardEvent::Which()
     case eKeyDownOnPlugin:
     case eKeyUp:
     case eKeyUpOnPlugin:
-      return KeyCode();
+      return KeyCode(aCallerType);
     case eKeyPress:
       //Special case for 4xp bug 62878.  Try to make value of which
       //more closely mirror the values that 4.x gave for RETURN and BACKSPACE

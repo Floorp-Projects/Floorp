@@ -38,7 +38,7 @@ public:
   }
 
   // Web IDL binding methods
-  virtual uint32_t Which() override
+  virtual uint32_t Which(CallerType aCallerType) override
   {
     return Button() + 1;
   }

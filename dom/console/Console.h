@@ -42,7 +42,7 @@ public:
   NS_DECL_NSIOBSERVER
 
   static already_AddRefed<Console>
-  Create(nsPIDOMWindowInner* aWindow, ErrorResult& aRv);
+  Create(JSContext* aCx, nsPIDOMWindowInner* aWindow, ErrorResult& aRv);
 
   // WebIDL methods
   nsPIDOMWindowInner* GetParentObject() const
@@ -129,7 +129,7 @@ public:
   SetConsoleEventHandler(AnyCallback* aHandler);
 
 private:
-  explicit Console(nsPIDOMWindowInner* aWindow);
+  Console(JSContext* aCx, nsPIDOMWindowInner* aWindow);
   ~Console();
 
   void
@@ -389,16 +389,14 @@ private:
 
   void
   MaybeExecuteDumpFunction(JSContext* aCx, const nsAString& aMethodName,
-                           const Sequence<JS::Value>& aData);
+                           const Sequence<JS::Value>& aData,
+                           nsIStackFrame* aStack);
 
   void
   MaybeExecuteDumpFunctionForTime(JSContext* aCx, MethodName aMethodName,
                                   const nsAString& aMethodString,
                                   uint64_t aMonotonicTimer,
                                   const JS::Value& aData);
-
-  void
-  MaybeExecuteDumpFunctionForTrace(JSContext* aCx, nsIStackFrame* aStack);
 
   void
   ExecuteDumpFunction(const nsAString& aMessage);

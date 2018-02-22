@@ -146,8 +146,7 @@ public:
   using EventTarget::GetParentObject;
   virtual nsIGlobalObject* GetOwnerGlobal() const override
   {
-    nsCOMPtr<nsIGlobalObject> parentObject = do_QueryReferent(mParentObject);
-    return parentObject;
+    return mParentObject;
   }
   bool HasOrHasHadOwner() { return mHasOrHasHadOwnerWindow; }
 
@@ -195,8 +194,9 @@ protected:
   void IgnoreKeepAliveIfHasListenersFor(nsAtom* aType);
 
 private:
-  // Inner window or sandbox.
-  nsWeakPtr                  mParentObject;
+  // The parent global object.  The global will clear this when
+  // it is destroyed by calling DisconnectFromOwner().
+  nsIGlobalObject* MOZ_NON_OWNING_REF mParentObject;
   // mParentObject pre QI-ed and cached (inner window)
   // (it is needed for off main thread access)
   // It is obtained in BindToOwner and reset in DisconnectFromOwner.

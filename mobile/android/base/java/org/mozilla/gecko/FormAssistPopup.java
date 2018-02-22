@@ -13,6 +13,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.SwipeDismissListViewTouchListener;
 import org.mozilla.gecko.widget.SwipeDismissListViewTouchListener.OnDismissCallback;
+import org.mozilla.geckoview.GeckoView;
 
 import android.content.Context;
 import android.content.res.Resources;
