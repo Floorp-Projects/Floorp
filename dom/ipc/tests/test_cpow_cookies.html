@@ -40,8 +40,7 @@
         test.next(msg.data);
       }
 
-      mm.addMessageListener("testCPOWCookies:test1Finished",
-                            SpecialPowers.wrapCallback(testDone));
+      mm.addMessageListener("testCPOWCookies:test1Finished", testDone);
 
       mm.sendAsyncMessage("testCPOWCookies:test1", {});
       lastResult = yield;
