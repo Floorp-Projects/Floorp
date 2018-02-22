@@ -2199,7 +2199,8 @@ nsStyleImageRequest::~nsStyleImageRequest()
 
 bool
 nsStyleImageRequest::Resolve(
-  nsPresContext* aPresContext, const nsStyleImageRequest* aOldImageRequest)
+  nsPresContext* aPresContext,
+  const nsStyleImageRequest* aOldImageRequest)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!IsResolved(), "already resolved");
@@ -2219,14 +2220,29 @@ nsStyleImageRequest::Resolve(
     }
   }
 
-  mDocGroup = doc->GetDocGroup();
+  // TODO(emilio, bug 1440442): This is a hackaround to avoid flickering due the
+  // lack of non-http image caching in imagelib (bug 1406134), which causes
+  // stuff like bug 1439285. Cleanest fix if that doesn't get fixed is bug
+  // 1440305, but that seems too risky, and a lot of work to do before 60.
+  //
+  // Once that's fixed, the "old style" argument to FinishStyle can go away.
+  if (aPresContext->IsChrome() && aOldImageRequest &&
+      aOldImageRequest->IsResolved() && DefinitelyEquals(*aOldImageRequest)) {
+    MOZ_ASSERT(aOldImageRequest->mDocGroup == doc->GetDocGroup());
+    MOZ_ASSERT(mModeFlags == aOldImageRequest->mModeFlags);
 
-  mImageValue->Initialize(doc);
+    mDocGroup = aOldImageRequest->mDocGroup;
+    mImageValue = aOldImageRequest->mImageValue;
+    mRequestProxy = aOldImageRequest->mRequestProxy;
+  } else {
+    mDocGroup = doc->GetDocGroup();
+    mImageValue->Initialize(doc);
 
-  nsCSSValue value;
-  value.SetImageValue(mImageValue);
-  mRequestProxy = value.GetPossiblyStaticImageValue(aPresContext->Document(),
-                                                    aPresContext);
+    nsCSSValue value;
+    value.SetImageValue(mImageValue);
+    mRequestProxy = value.GetPossiblyStaticImageValue(aPresContext->Document(),
+                                                      aPresContext);
+  }
 
   if (!mRequestProxy) {
     // The URL resolution or image load failed.
@@ -2234,7 +2250,7 @@ nsStyleImageRequest::Resolve(
   }
 
   if (mModeFlags & Mode::Track) {
-    mImageTracker = aPresContext->Document()->ImageTracker();
+    mImageTracker = doc->ImageTracker();
   }
 
   MaybeTrackAndLock();
