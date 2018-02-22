@@ -378,7 +378,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
     // Proxy these public properties and methods, as used elsewhere by various
     // parts of the browser, to this instance.
-    ["goBack", "showMainView", "showSubView"].forEach(method => {
+    ["goBack", "showSubView"].forEach(method => {
       Object.defineProperty(this.node, method, {
         enumerable: true,
         value: (...args) => this[method](...args)
@@ -509,7 +509,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
           }
         }
         // Allow any of the ViewShowing handlers to prevent showing the main view.
-        if (!(await this.showMainView())) {
+        if (!(await this._showMainView())) {
           cancelCallback();
         }
       } catch (ex) {
@@ -547,7 +547,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
    * state of the anchor, and the panel is already invisible.
    */
   hidePopup() {
-    if (!this.node) {
+    if (!this.node || !this.connected) {
       return;
     }
 
@@ -560,6 +560,11 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     } else {
       this._openPopupCancelCallback();
     }
+
+    // We close all the views synchronously, so that they are ready to be opened
+    // in other PanelMultiView instances. The "popuphidden" handler may also
+    // call this function, but the second time openViews will be empty.
+    this.closeAllViews();
   }
 
   /**
@@ -659,12 +664,19 @@ this.PanelMultiView = class extends this.AssociatedToNode {
   /**
    * Prepares the main view before showing the panel.
    */
-  async showMainView() {
+  async _showMainView() {
     if (!this.node || !this._mainViewId) {
       return false;
     }
 
     let nextPanelView = PanelView.forNode(this._mainView);
+
+    // If the view is already open in another panel, close the panel first.
+    let oldPanelMultiViewNode = nextPanelView.node.panelMultiView;
+    if (oldPanelMultiViewNode) {
+      PanelMultiView.forNode(oldPanelMultiViewNode).hidePopup();
+    }
+
     if (!(await this._openView(nextPanelView))) {
       return false;
     }
@@ -760,6 +772,16 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     panelView.clearNavigation();
     panelView.dispatchCustomEvent("ViewHiding");
     panelView.node.panelMultiView = null;
+  }
+
+  /**
+   * Closes all the views that are currently open.
+   */
+  closeAllViews() {
+    // Raise ViewHiding events for open views in reverse order.
+    while (this.openViews.length) {
+      this._closeLatestView();
+    }
   }
 
   /**
@@ -1094,10 +1116,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         this.hideAllViewsExcept(null);
         this.window.removeEventListener("keydown", this);
         this._panel.removeEventListener("mousemove", this);
-        // Raise ViewHiding events for open views in reverse order.
-        while (this.openViews.length) {
-          this._closeLatestView();
-        }
+        this.closeAllViews();
 
         // Clear the main view size caches. The dimensions could be different
         // when the popup is opened again, e.g. through touch mode sizing.
