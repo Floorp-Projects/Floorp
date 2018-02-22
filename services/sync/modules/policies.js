@@ -654,19 +654,7 @@ function ErrorHandler(service) {
   this.init();
 }
 ErrorHandler.prototype = {
-  /**
-   * Flag that turns on error reporting for all errors, incl. network errors.
-   */
-  dontIgnoreErrors: false,
-
-  /**
-   * Flag that indicates if we have already reported a prolonged failure.
-   * Once set, we don't report it again, meaning this error is only reported
-   * one per run.
-   */
-  didReportProlongedError: false,
-
-  init: function init() {
+  init() {
     Svc.Obs.add("weave:engine:sync:applied", this);
     Svc.Obs.add("weave:engine:sync:error", this);
     Svc.Obs.add("weave:service:login:error", this);
@@ -692,7 +680,7 @@ ErrorHandler.prototype = {
     this._logManager = new LogManager(Svc.Prefs, logs, "sync");
   },
 
-  observe: function observe(subject, topic, data) {
+  observe(subject, topic, data) {
     this._log.trace("Handling " + topic);
     switch (topic) {
       case "weave:engine:sync:applied":
@@ -723,14 +711,6 @@ ErrorHandler.prototype = {
       case "weave:service:login:error":
         this._log.error("Sync encountered a login error");
         this.resetFileLog();
-
-        if (this.shouldReportError()) {
-          this.notifyOnNextTick("weave:ui:login:error");
-        } else {
-          this.notifyOnNextTick("weave:ui:clear-error");
-        }
-
-        this.dontIgnoreErrors = false;
         break;
       case "weave:service:sync:error": {
         if (Status.sync == CREDENTIALS_CHANGED) {
@@ -749,14 +729,6 @@ ErrorHandler.prototype = {
         // Not a shutdown related exception...
         this._log.error("Sync encountered an error", exception);
         this.resetFileLog();
-
-        if (this.shouldReportError()) {
-          this.notifyOnNextTick("weave:ui:sync:error");
-        } else {
-          this.notifyOnNextTick("weave:ui:sync:finish");
-        }
-
-        this.dontIgnoreErrors = false;
         break;
       }
       case "weave:service:sync:finish":
@@ -775,45 +747,14 @@ ErrorHandler.prototype = {
 
         if (Status.service == SYNC_FAILED_PARTIAL) {
           this._log.error("Some engines did not sync correctly.");
-          this.resetFileLog();
-
-          if (this.shouldReportError()) {
-            this.dontIgnoreErrors = false;
-            this.notifyOnNextTick("weave:ui:sync:error");
-            break;
-          }
-        } else {
-          this.resetFileLog();
         }
-        this.dontIgnoreErrors = false;
-        this.notifyOnNextTick("weave:ui:sync:finish");
+        this.resetFileLog();
         break;
       case "weave:service:start-over:finish":
         // ensure we capture any logs between the last sync and the reset completing.
         this.resetFileLog();
         break;
     }
-  },
-
-  notifyOnNextTick: function notifyOnNextTick(topic) {
-    CommonUtils.nextTick(function() {
-      this._log.trace("Notifying " + topic +
-                      ". Status.login is " + Status.login +
-                      ". Status.sync is " + Status.sync);
-      Svc.Obs.notify(topic);
-    }, this);
-  },
-
-  /**
-   * Trigger a sync and don't muffle any errors, particularly network errors.
-   */
-  syncAndReportErrors: function syncAndReportErrors() {
-    this._log.debug("Beginning user-triggered sync.");
-
-    this.dontIgnoreErrors = true;
-    CommonUtils.nextTick(() => {
-      this.service.sync({why: "user"});
-    }, this);
   },
 
   async _dumpAddons() {
@@ -837,108 +778,16 @@ ErrorHandler.prototype = {
    * Generate a log file for the sync that just completed
    * and refresh the input & output streams.
    */
-  resetFileLog: function resetFileLog() {
-    let onComplete = logType => {
-      Svc.Obs.notify("weave:service:reset-file-log");
-      this._log.trace("Notified: " + Date.now());
-      if (logType == this._logManager.ERROR_LOG_WRITTEN) {
-        Cu.reportError("Sync encountered an error - see about:sync-log for the log file.");
-      }
-    };
-
+  async resetFileLog() {
     // If we're writing an error log, dump extensions that may be causing problems.
-    let beforeResetLog;
     if (this._logManager.sawError) {
-      beforeResetLog = this._dumpAddons();
-    } else {
-      beforeResetLog = Promise.resolve();
+      await this._dumpAddons();
     }
-    // Note we do not return the promise here - the caller doesn't need to wait
-    // for this to complete.
-    beforeResetLog
-      .then(() => this._logManager.resetFileLog())
-      .then(onComplete, onComplete);
-  },
-
-  /**
-   * Translates server error codes to meaningful strings.
-   *
-   * @param code
-   *        server error code as an integer
-   */
-  errorStr: function errorStr(code) {
-    switch (code.toString()) {
-    case "1":
-      return "illegal-method";
-    case "2":
-      return "invalid-captcha";
-    case "3":
-      return "invalid-username";
-    case "4":
-      return "cannot-overwrite-resource";
-    case "5":
-      return "userid-mismatch";
-    case "6":
-      return "json-parse-failure";
-    case "7":
-      return "invalid-password";
-    case "8":
-      return "invalid-record";
-    case "9":
-      return "weak-password";
-    default:
-      return "generic-server-error";
+    const logType = await this._logManager.resetFileLog();
+    if (logType == this._logManager.ERROR_LOG_WRITTEN) {
+      Cu.reportError("Sync encountered an error - see about:sync-log for the log file.");
     }
-  },
-
-  // A function to indicate if Sync errors should be "reported" - which in this
-  // context really means "should be notify observers of an error" - but note
-  // that since bug 1180587, no one is going to surface an error to the user.
-  shouldReportError: function shouldReportError() {
-    if (Status.login == MASTER_PASSWORD_LOCKED) {
-      this._log.trace("shouldReportError: false (master password locked).");
-      return false;
-    }
-
-    if (this.dontIgnoreErrors) {
-      return true;
-    }
-
-    if (Status.login == LOGIN_FAILED_LOGIN_REJECTED) {
-      // An explicit LOGIN_REJECTED state is always reported (bug 1081158)
-      this._log.trace("shouldReportError: true (login was rejected)");
-      return true;
-    }
-
-    let lastSync = Svc.Prefs.get("lastSync");
-    if (lastSync && ((Date.now() - Date.parse(lastSync)) >
-        Svc.Prefs.get("errorhandler.networkFailureReportTimeout") * 1000)) {
-      Status.sync = PROLONGED_SYNC_FAILURE;
-      if (this.didReportProlongedError) {
-        this._log.trace("shouldReportError: false (prolonged sync failure, but" +
-                        " we've already reported it).");
-        return false;
-      }
-      this._log.trace("shouldReportError: true (first prolonged sync failure).");
-      this.didReportProlongedError = true;
-      return true;
-    }
-
-    // We got a 401 mid-sync. Wait for the next sync before actually handling
-    // an error. This assumes that we'll get a 401 again on a login fetch in
-    // order to report the error.
-    if (!this.service.clusterURL) {
-      this._log.trace("shouldReportError: false (no cluster URL; " +
-                      "possible node reassignment).");
-      return false;
-    }
-
-
-    let result = (![Status.login, Status.sync].includes(SERVER_MAINTENANCE) &&
-                  ![Status.login, Status.sync].includes(LOGIN_FAILED_NETWORK_ERROR));
-    this._log.trace("shouldReportError: ${result} due to login=${login}, sync=${sync}",
-                    {result, login: Status.login, sync: Status.sync});
-    return result;
+    Svc.Obs.notify("weave:service:reset-file-log");
   },
 
   /**
