@@ -8,8 +8,10 @@
 #define mozilla_StyleSetHandleInlines_h
 
 #include "mozilla/StyleSheetInlines.h"
+#include "mozilla/ServoStyleContext.h"
 #include "mozilla/ServoStyleSet.h"
 #ifdef MOZ_OLD_STYLE
+#include "mozilla/GeckoStyleContext.h"
 #include "nsStyleSet.h"
 #endif
 #include "nsStyleContext.h"
