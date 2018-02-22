@@ -1559,10 +1559,12 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             if isinstance(su, StructDecl):
                 which = 'struct'
                 forwarddecls, fulldecltypes, cls = _generateCxxStruct(su)
+                traitsdecl, traitsdefns = _ParamTraits.structPickling(su.decl.type)
             else:
                 assert isinstance(su, UnionDecl)
                 which = 'union'
                 forwarddecls, fulldecltypes, cls = _generateCxxUnion(su)
+                traitsdecl, traitsdefns = _ParamTraits.unionPickling(su.decl.type)
 
             clsdecl, methoddefns = _splitClassDeclDefn(cls)
 
@@ -1578,7 +1580,9 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 //
 """% (which, su.name)),
                     _putInNamespaces(clsdecl, su.namespaces),
-                ])
+                ]
+                + [ Whitespace.NL,
+                    traitsdecl ])
 
             self.structUnionDefns.extend([
                 Whitespace("""
@@ -1587,6 +1591,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 //
 """% (which, su.name)),
                 _putInNamespaces(methoddefns, su.namespaces),
+                Whitespace.NL,
+                traitsdefns,
             ])
 
         # Generate the declarations structs in dependency order.
@@ -1849,6 +1855,336 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
                                       flags ])))
 
     return func
+
+##--------------------------------------------------
+
+class _ParamTraits():
+    var = ExprVar('aVar')
+    msgvar = ExprVar('aMsg')
+    itervar = ExprVar('aIter')
+    actor = ExprVar('aActor')
+
+    @classmethod
+    def ifsideis(cls, side, then, els=None):
+        cxxside = ExprVar('mozilla::ipc::ChildSide')
+        if side == 'parent':
+            cxxside = ExprVar('mozilla::ipc::ParentSide')
+
+        ifstmt = StmtIf(ExprBinary(cxxside, '==',
+                            ExprCall(ExprSelect(cls.actor, '->', 'GetSide'))))
+        ifstmt.addifstmt(then)
+        if els is not None:
+            ifstmt.addelsestmt(els)
+        return ifstmt
+
+    @classmethod
+    def fatalError(cls, reason):
+        return StmtExpr(ExprCall(ExprSelect(cls.actor, '->', 'FatalError'),
+                                 args=[ ExprLiteral.String(reason) ]))
+
+    @classmethod
+    def write(cls, var, msgvar, actor):
+        # WARNING: This doesn't set AutoForActor for you, make sure this is
+        # only called when the actor is already correctly set.
+        return ExprCall(ExprVar('WriteIPDLParam'), args=[ msgvar, actor, var ])
+
+    @classmethod
+    def checkedWrite(cls, ipdltype, var, msgvar, sentinelKey, actor):
+        assert sentinelKey
+        block = Block()
+
+        # Assert we aren't serializing a null non-nullable actor
+        if ipdltype and ipdltype.isIPDL() and ipdltype.isActor() and not ipdltype.nullable:
+            block.addstmt(_abortIfFalse(var, 'NULL actor value passed to non-nullable param'))
+
+        block.addstmts([
+            StmtExpr(cls.write(var, msgvar, actor)),
+            Whitespace('// Sentinel = ' + repr(sentinelKey) + '\n', indent=1),
+            StmtExpr(ExprCall(ExprSelect(msgvar, '->', 'WriteSentinel'),
+                              args=[ ExprLiteral.Int(hashfunc(sentinelKey)) ]))
+        ])
+        return block
+
+    @classmethod
+    def checkedRead(cls, ipdltype, var,
+                    msgvar, itervar, errfn,
+                    paramtype, sentinelKey,
+                    errfnSentinel, actor):
+        block = Block()
+
+        # Read the data
+        ifbad = StmtIf(ExprNot(ExprCall(ExprVar('ReadIPDLParam'),
+                                        args=[ msgvar, itervar, actor, var ])))
+        if not isinstance(paramtype, list):
+            paramtype = ['Error deserializing ' + paramtype]
+        ifbad.addifstmts(errfn(*paramtype))
+        block.addstmt(ifbad)
+
+        # Check if we got a null non-nullable actor
+        if ipdltype and ipdltype.isIPDL() and ipdltype.isActor() and not ipdltype.nullable:
+            ifnull = StmtIf(ExprNot(ExprDeref(var)))
+            ifnull.addifstmts(errfn(*paramtype))
+            block.addstmt(ifnull)
+
+        # Read the sentinel
+        assert sentinelKey
+        block.addstmt(Whitespace('// Sentinel = ' + repr(sentinelKey) + '\n',
+                                 indent=1))
+        read = ExprCall(ExprSelect(msgvar, '->', 'ReadSentinel'),
+                        args=[ itervar, ExprLiteral.Int(hashfunc(sentinelKey)) ])
+        ifsentinel = StmtIf(ExprNot(read))
+        ifsentinel.addifstmts(errfnSentinel(*paramtype))
+        block.addstmt(ifsentinel)
+
+        return block
+
+    # Helper wrapper for checkedRead for use within _ParamTraits
+    @classmethod
+    def _checkedRead(cls, ipdltype, var, sentinelKey, what):
+        def errfn(msg):
+            return [ cls.fatalError(msg), StmtReturn.FALSE ]
+
+        return cls.checkedRead(
+            ipdltype, var, cls.msgvar, cls.itervar,
+            errfn=errfn,
+            paramtype=what,
+            sentinelKey=sentinelKey,
+            errfnSentinel=errfnSentinel(),
+            actor=cls.actor)
+
+    @classmethod
+    def generateDecl(cls, fortype, write, read, constin=1):
+        pt = Class('IPDLParamTraits',
+                   specializes=fortype,
+                   struct=True)
+
+        # typedef T paramType;
+        pt.addstmt(Typedef(fortype, 'paramType'))
+
+        iprotocoltype = Type('mozilla::ipc::IProtocol', ptr=1)
+
+        # static void Write(Message*, const T&);
+        intype = Type('paramType', ref=1, const=constin)
+        writemthd = MethodDefn(
+            MethodDecl('Write',
+                       params=[ Decl(Type('IPC::Message', ptr=1),
+                                     cls.msgvar.name),
+                                Decl(iprotocoltype,
+                                     cls.actor.name),
+                                Decl(intype,
+                                     cls.var.name) ],
+                       methodspec=MethodSpec.STATIC))
+        writemthd.addstmts(write)
+        pt.addstmt(writemthd)
+
+        # static bool Read(const Message*, PickleIterator*, T*);
+        outtype = Type('paramType', ptr=1)
+        readmthd = MethodDefn(
+            MethodDecl('Read',
+                       params=[ Decl(Type('IPC::Message', ptr=1, const=1),
+                                     cls.msgvar.name),
+                                Decl(_iterType(ptr=1),
+                                     cls.itervar.name),
+                                Decl(iprotocoltype,
+                                     cls.actor.name),
+                                Decl(outtype,
+                                     cls.var.name) ],
+                        ret=Type.BOOL,
+                        methodspec=MethodSpec.STATIC))
+        readmthd.addstmts(read)
+        pt.addstmt(readmthd)
+
+        # Split the class into declaration and definition
+        clsdecl, methoddefns = _splitClassDeclDefn(pt)
+
+        namespaces = [ Namespace('mozilla'), Namespace('ipc') ]
+        clsns = _putInNamespaces(clsdecl, namespaces)
+        defns = _putInNamespaces(methoddefns, namespaces)
+        return clsns, defns
+
+    @classmethod
+    def actorPickling(cls, actortype, side):
+        """Generates pickling for IPDL actors. This is a |nullable| deserializer.
+        Write and read callers will perform nullability validation."""
+
+        cxxtype = _cxxBareType(actortype, side, fq=1)
+        idvar = ExprVar('id')
+
+        # void Write(..) impl
+        write = [
+            # id_t id;
+            StmtDecl(Decl(_actorIdType(), idvar.name)),
+        ]
+
+        # if (!var) id = NULL_ID
+        ifnull = StmtIf(ExprNot(cls.var))
+        ifnull.addifstmt(StmtExpr(ExprAssn(idvar, _NULL_ACTOR_ID)))
+
+        # else
+        #   id = var->mId
+        ifnull.addelsestmt(StmtExpr(ExprAssn(idvar, _actorId(cls.var))))
+        #   if (id == FREED_ID)
+        #     abort()
+        iffreed = StmtIf(ExprBinary(_FREED_ACTOR_ID, '==', idvar))
+        iffreed.addifstmt(cls.fatalError("actor has been |delete|d"))
+        ifnull.addelsestmt(iffreed)
+
+        # IPC::WriteParam(..)
+        write += [ ifnull,
+                   StmtExpr(cls.write(idvar, cls.msgvar, cls.actor)) ]
+
+
+        # bool Read(..) impl
+        actorvar = ExprVar('actor')
+        read = [
+            StmtDecl(Decl(Type('mozilla::Maybe', T=Type('mozilla::ipc::IProtocol', ptr=1)), actorvar.name),
+                     init=ExprCall(ExprSelect(cls.actor, '->', 'ReadActor'),
+                                   args=[ cls.msgvar,
+                                          cls.itervar,
+                                          ExprLiteral.TRUE, # XXX(nika): Do we still need this arg?
+                                          ExprLiteral.String(actortype.name()),
+                                          _protocolId(actortype) ])),
+        ]
+
+        # if (actor.isNothing())
+        #   return false
+        ifnothing = StmtIf(ExprCall(ExprSelect(actorvar, '.', 'isNothing')))
+        ifnothing.addifstmts([ StmtReturn.FALSE ])
+        read += [
+            ifnothing,
+            Whitespace.NL,
+            StmtExpr(ExprAssn(ExprDeref(cls.var),
+                              ExprCast(ExprCall(ExprSelect(actorvar, '.', 'value')),
+                                       cxxtype, static=1))),
+            StmtReturn.TRUE,
+        ]
+
+        return cls.generateDecl(cxxtype, write, read)
+
+    @classmethod
+    def structPickling(cls, structtype):
+        sd = structtype._ast
+        # NOTE: Not using _cxxBareType here as we don't have a side
+        cxxtype = Type(structtype.fullname())
+
+        def get(sel, f):
+            return ExprCall(f.getMethod(thisexpr=cls.var, sel=sel))
+
+        write = []
+        read = []
+
+        for f in sd.fields:
+            writefield = cls.checkedWrite(f.ipdltype,
+                                          get('.', f),
+                                          cls.msgvar,
+                                          sentinelKey=f.basename,
+                                          actor=cls.actor)
+            readfield = cls._checkedRead(f.ipdltype,
+                                         ExprAddrOf(get('->', f)), f.basename,
+                                         '\'' + f.getMethod().name + '\' ' +
+                                         '(' + f.ipdltype.name() + ') member of ' +
+                                         '\'' + structtype.name() + '\'')
+
+            # Wrap the read/write in a side check if the field is special.
+            if f.special:
+                writefield = cls.ifsideis(f.side, writefield)
+                readfield = cls.ifsideis(f.side, readfield)
+
+            write.append(writefield)
+            read.append(readfield)
+
+        read.append(StmtReturn.TRUE)
+
+        return cls.generateDecl(cxxtype, write, read)
+
+    @classmethod
+    def unionPickling(cls, uniontype):
+        # NOTE: Not using _cxxBareType here as we don't have a side
+        cxxtype = Type(uniontype.fullname())
+        ud = uniontype._ast
+
+        # Use typedef to set up an alias so it's easier to reference the struct type.
+        alias = 'union__'
+        typevar = ExprVar('type')
+
+        prelude = [
+            Typedef(cxxtype, alias),
+            StmtDecl(Decl(Type.INT, typevar.name)),
+        ]
+
+        writeswitch = StmtSwitch(typevar)
+        write = prelude + [
+            StmtExpr(ExprAssn(typevar, ud.callType(cls.var))),
+            cls.checkedWrite(None,
+                             typevar,
+                             cls.msgvar,
+                             sentinelKey=uniontype.name(),
+                             actor=cls.actor),
+            Whitespace.NL,
+            writeswitch,
+        ]
+
+        readswitch = StmtSwitch(typevar)
+        read = prelude + [
+            cls._checkedRead(None,
+                             ExprAddrOf(typevar),
+                             uniontype.name(),
+                             'type of union ' + uniontype.name()),
+            Whitespace.NL,
+            readswitch,
+        ]
+
+        for c in ud.components:
+            ct = c.ipdltype
+            caselabel = CaseLabel(alias + '::' + c.enum())
+            origenum = c.enum()
+
+            writecase = StmtBlock()
+            wstmt = cls.checkedWrite(c.ipdltype,
+                                     ExprCall(ExprSelect(cls.var, '.',
+                                                         c.getTypeName())),
+                                     cls.msgvar, sentinelKey=c.enum(),
+                                     actor=cls.actor)
+            if c.special:
+                # Report an error if the type is special and the side is wrong
+                wstmt = cls.ifsideis(c.side, wstmt,
+                                     els=cls.fatalError('wrong side!'))
+            writecase.addstmts([ wstmt, StmtReturn() ])
+            writeswitch.addcase(caselabel, writecase)
+
+            readcase = StmtBlock()
+            if c.special:
+                # The type comes across flipped from what the actor will be on
+                # this side; i.e. child->parent messages will have PFooChild
+                # when received on the parent side. Report an error if the sides
+                # match, and handle c.other instead.
+                readcase.addstmt(cls.ifsideis(c.side,
+                                              StmtBlock([ cls.fatalError('wrong side!'),
+                                                          StmtReturn.FALSE ])))
+                c = c.other
+            tmpvar = ExprVar('tmp')
+            ct = c.bareType(fq=1)
+            readcase.addstmts([
+                StmtDecl(Decl(ct, tmpvar.name), init=c.defaultValue(fq=1)),
+                StmtExpr(ExprAssn(ExprDeref(cls.var), tmpvar)),
+                cls._checkedRead(c.ipdltype,
+                                 ExprAddrOf(ExprCall(ExprSelect(cls.var, '->',
+                                                                c.getTypeName()))),
+                                 origenum,
+                                 'variant ' + origenum + ' of union ' + uniontype.name()),
+                StmtReturn.TRUE,
+            ])
+            readswitch.addcase(caselabel, readcase)
+
+        # Add the error default case
+        writeswitch.addcase(DefaultLabel(),
+                            StmtBlock([ cls.fatalError('unknown union type'),
+                                        StmtReturn() ]))
+        readswitch.addcase(DefaultLabel(),
+                           StmtBlock([ cls.fatalError('unknown union type'),
+                                       StmtReturn.FALSE ]))
+
+        return cls.generateDecl(cxxtype, write, read)
 
 ##--------------------------------------------------
 
@@ -2675,8 +3011,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Whitespace.NL
         ])
 
+        actortype = ActorType(tu.protocol.decl.type)
+        traitsdecl, traitsdefn = _ParamTraits.actorPickling(actortype, self.side)
+
         self.hdrfile.addthings(
             ([
+                traitsdecl,
                 Whitespace.NL,
                 CppDirective('if', '0') ])
             + _GenerateSkeletonImpl(
@@ -2716,6 +3056,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Whitespace.NL,
             Whitespace.NL
         ])
+
+        cf.addthing(traitsdefn)
 
     def visitUsingStmt(self, using):
         if using.header is None:
