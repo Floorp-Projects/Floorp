@@ -115,7 +115,6 @@
 #include "nsFocusManager.h"
 
 // for radio group stuff
-#include "nsIDOMHTMLInputElement.h"
 #include "nsIRadioVisitor.h"
 #include "nsIFormControl.h"
 

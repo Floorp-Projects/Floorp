@@ -38,8 +38,8 @@
 
 #include "TrustOverrideUtils.h"
 #include "TrustOverride-SymantecData.inc"
-#include "TrustOverride-AppleGoogleData.inc"
-
+#include "TrustOverride-AppleGoogleDigiCertData.inc"
+#include "TrustOverride-TestImminentDistrustData.inc"
 
 using namespace mozilla;
 using namespace mozilla::pkix;
@@ -1240,7 +1240,7 @@ DetermineEVAndCTStatusAndSetNewCert(RefPtr<nsSSLStatus> sslStatus,
 
 static nsresult
 IsCertificateDistrustImminent(nsIX509CertList* aCertList,
-                              /* out */ bool& aResult) {
+                              /* out */ bool& isDistrusted) {
   if (!aCertList) {
     return NS_ERROR_INVALID_POINTER;
   }
@@ -1255,56 +1255,39 @@ IsCertificateDistrustImminent(nsIX509CertList* aCertList,
     return rv;
   }
 
-  // We need to verify the age of the end entity
-  nsCOMPtr<nsIX509CertValidity> validity;
-  rv = eeCert->GetValidity(getter_AddRefs(validity));
-  if (NS_FAILED(rv)) {
-    return rv;
+  // Check the test certificate condition first; this is a special certificate
+  // that gets the 'imminent distrust' treatment; this is so that the distrust
+  // UX code does not become stale, as it will need regular use. See Bug 1409257
+  // for context. Please do not remove this when adjusting the rest of the
+  // method.
+  UniqueCERTCertificate nssEECert(eeCert->GetCert());
+  if (!nssEECert) {
+    return NS_ERROR_FAILURE;
   }
-
-  PRTime notBefore;
-  rv = validity->GetNotBefore(&notBefore);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // PRTime is microseconds since the epoch, whereas JS time is milliseconds.
-  // (new Date("2016-06-01T00:00:00Z")).getTime() * 1000
-  static const PRTime JUNE_1_2016 = 1464739200000000;
-
-  // If the end entity's notBefore date is after 2016-06-01, this algorithm
-  // doesn't apply, so exit false before we do any iterating
-  if (notBefore >= JUNE_1_2016) {
-    aResult = false;
+  isDistrusted = CertDNIsInList(nssEECert.get(),
+                                TestImminentDistrustEndEntityDNs);
+  if (isDistrusted) {
+    // Exit early
     return NS_OK;
   }
 
-  // We need an owning handle when calling nsIX509Cert::GetCert().
   UniqueCERTCertificate nssRootCert(rootCert->GetCert());
-  // If the root is not one of the Symantec roots, exit false
-  if (!CertDNIsInList(nssRootCert.get(), RootSymantecDNs)) {
-    aResult = false;
-    return NS_OK;
+  if (!nssRootCert) {
+    return NS_ERROR_FAILURE;
   }
 
-  // Look for one of the intermediates to be in the whitelist
-  bool foundInWhitelist = false;
-  RefPtr<nsNSSCertList> intCertList = intCerts->GetCertList();
+  // Proceed with the Symantec imminent distrust algorithm. This algorithm is
+  // to be removed in Firefox 63, when the validity period check will also be
+  // removed from the code in NSSCertDBTrustDomain.
+  if (CertDNIsInList(nssRootCert.get(), RootSymantecDNs)) {
+    static const PRTime NULL_TIME = 0;
 
-  intCertList->ForEachCertificateInChain(
-    [&foundInWhitelist] (nsCOMPtr<nsIX509Cert> aCert, bool aHasMore,
-                         /* out */ bool& aContinue) {
-      // We need an owning handle when calling nsIX509Cert::GetCert().
-      UniqueCERTCertificate nssCert(aCert->GetCert());
-      if (CertDNIsInList(nssCert.get(), RootAppleAndGoogleDNs)) {
-        foundInWhitelist = true;
-        aContinue = false;
-      }
-      return NS_OK;
-  });
-
-  // If this chain did not match the whitelist, exit true
-  aResult = !foundInWhitelist;
+    rv = CheckForSymantecDistrust(intCerts, eeCert, NULL_TIME,
+                                  RootAppleAndGoogleSPKIs, isDistrusted);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
   return NS_OK;
 }
 

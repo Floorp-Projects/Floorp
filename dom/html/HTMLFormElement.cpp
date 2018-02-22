@@ -1637,7 +1637,7 @@ HTMLFormElement::GetActionURL(nsIURI** aActionURL,
                  "The originating element must be a submit form control!");
 #endif // DEBUG
 
-    nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(aOriginatingElement);
+    HTMLInputElement* inputElement = HTMLInputElement::FromContent(aOriginatingElement);
     if (inputElement) {
       inputElement->GetFormAction(action);
     } else {

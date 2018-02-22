@@ -45,16 +45,18 @@ class Font extends PureComponent {
     });
   }
 
-  onFontToggle() {
+  onFontToggle(event) {
     this.setState({
       isFontExpanded: !this.state.isFontExpanded
     });
+    event.stopPropagation();
   }
 
-  onFontFaceRuleToggle() {
+  onFontFaceRuleToggle(event) {
     this.setState({
       isFontFaceRuleExpanded: !this.state.isFontFaceRuleExpanded
     });
+    event.stopPropagation();
   }
 
   renderFontCSS(cssFamilyName) {

@@ -233,13 +233,8 @@ struct XPTTypeDescriptor {
 
 /*
  * A ConstDescriptor is a variable-size record that records the name and
- * value of a scoped interface constant.
- *
- * The types of the method parameter are restricted to the following subset
- * of TypeDescriptors:
- *
- * int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t,
- * int64_t, uint64_t, wchar_t, char
+ * value of a scoped interface constant. This is allowed only for a subset
+ * of types.
  *
  * The type (and thus the size) of the value record is determined by the
  * contents of the associated TypeDescriptor record. For instance, if type
@@ -247,16 +242,10 @@ struct XPTTypeDescriptor {
  * 16-bit signed integer.
  */
 union XPTConstValue {
-    int8_t    i8;
-    uint8_t   ui8;
     int16_t   i16;
     uint16_t  ui16;
     int32_t   i32;
     uint32_t  ui32;
-    int64_t   i64;
-    uint64_t  ui64;
-    char      ch;
-    uint16_t  wch;
 }; /* varies according to type */
 
 struct XPTConstDescriptor {

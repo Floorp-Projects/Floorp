@@ -44,7 +44,8 @@ class VoERTP_RTCPImpl : public VoERTP_RTCP {
   int SetSendMIDStatus(int channel, bool enable, unsigned char id = 1) override;
   int SetReceiveAudioLevelIndicationStatus(int channel,
                                            bool enable,
-                                           unsigned char id) override;
+                                           unsigned char id,
+                                           bool isLevelSsrc = true) override;
 
   // Statistics
   int GetRTPStatistics(int channel,

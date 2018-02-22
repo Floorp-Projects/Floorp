@@ -42,7 +42,7 @@ public:
 
   static const uint64_t NO_BLOCK_ID = 0;
 
-  enum class TargetConfirmationState {
+  enum class TargetConfirmationState : uint8_t {
     eUnconfirmed,
     eTimedOut,
     eTimedOutAndMainThreadResponded,
@@ -50,7 +50,7 @@ public:
   };
 
   explicit InputBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                           bool aTargetConfirmed);
+                           TargetConfirmationFlags aFlags);
   virtual ~InputBlockState()
   {}
 
@@ -83,6 +83,8 @@ public:
   bool IsTargetConfirmed() const;
   bool HasReceivedRealConfirmedTarget() const;
 
+  virtual bool ShouldDropEvents() const;
+
   void SetScrolledApzc(AsyncPanZoomController* aApzc);
   AsyncPanZoomController* GetScrolledApzc() const;
   bool IsDownchainOfScrolledApzc(AsyncPanZoomController* aApzc) const;
@@ -110,6 +112,7 @@ private:
 private:
   RefPtr<AsyncPanZoomController> mTargetApzc;
   TargetConfirmationState mTargetConfirmed;
+  bool mRequiresTargetConfirmation;
   const uint64_t mBlockId;
 
   // The APZC that was actually scrolled by events in this input block.
@@ -143,7 +146,7 @@ class CancelableBlockState : public InputBlockState
 {
 public:
   CancelableBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                       bool aTargetConfirmed);
+                       TargetConfirmationFlags aFlags);
 
   CancelableBlockState* AsCancelableBlock() override {
     return this;
@@ -204,6 +207,7 @@ public:
    */
   virtual const char* Type() = 0;
 
+  bool ShouldDropEvents() const override;
 private:
   TimeStamp mContentResponseTimer;
   bool mPreventDefault;
@@ -218,7 +222,7 @@ class WheelBlockState : public CancelableBlockState
 {
 public:
   WheelBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                  bool aTargetConfirmed,
+                  TargetConfirmationFlags aFlags,
                   const ScrollWheelInput& aEvent);
 
   bool SetContentResponse(bool aPreventDefault) override;
@@ -302,7 +306,7 @@ class DragBlockState : public CancelableBlockState
 {
 public:
   DragBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                 bool aTargetConfirmed,
+                 TargetConfirmationFlags aFlags,
                  const MouseInput& aEvent);
 
   bool MustStayActive() override;
@@ -332,7 +336,7 @@ class PanGestureBlockState : public CancelableBlockState
 {
 public:
   PanGestureBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                       bool aTargetConfirmed,
+                       TargetConfirmationFlags aFlags,
                        const PanGestureInput& aEvent);
 
   bool SetContentResponse(bool aPreventDefault) override;
@@ -392,7 +396,8 @@ class TouchBlockState : public CancelableBlockState
 {
 public:
   explicit TouchBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                           bool aTargetConfirmed, TouchCounter& aTouchCounter);
+                           TargetConfirmationFlags aFlags,
+                           TouchCounter& aTouchCounter);
 
   TouchBlockState *AsTouchBlock() override {
     return this;

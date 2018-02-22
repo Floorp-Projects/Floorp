@@ -73,7 +73,6 @@ class nsIDocumentLoaderFactory;
 class nsIDOMDocument;
 class nsIDOMDocumentFragment;
 class nsIDOMEvent;
-class nsIDOMHTMLInputElement;
 class nsIDOMNode;
 class nsIDragSession;
 class nsIEventTarget;
@@ -135,6 +134,7 @@ struct CustomElementDefinition;
 class DocumentFragment;
 class Element;
 class EventTarget;
+class HTMLInputElement;
 class IPCDataTransfer;
 class IPCDataTransferItem;
 struct LifecycleCallbackArgs;
@@ -2634,7 +2634,7 @@ public:
    * @param aInput the input element to check. NOTE: aInput can't be null.
    * @return whether the input element has autocomplete enabled.
    */
-  static bool IsAutocompleteEnabled(nsIDOMHTMLInputElement* aInput);
+  static bool IsAutocompleteEnabled(mozilla::dom::HTMLInputElement* aInput);
 
   enum AutocompleteAttrState : uint8_t
   {

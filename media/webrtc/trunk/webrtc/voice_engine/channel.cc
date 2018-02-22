@@ -2615,7 +2615,8 @@ int Channel::GetRemoteSSRC(unsigned int& ssrc) {
   return 0;
 }
 
-int Channel::SetSendAudioLevelIndicationStatus(bool enable, unsigned char id) {
+int Channel::SetSendAudioLevelIndicationStatus(bool enable,
+                                               unsigned char id) {
   _includeAudioLevelIndication = enable;
   return SetSendRtpHeaderExtension(enable, kRtpExtensionAudioLevel, id);
 }
@@ -2625,11 +2626,12 @@ int Channel::SetSendMIDStatus(bool enable, unsigned char id) {
 }
 
 int Channel::SetReceiveAudioLevelIndicationStatus(bool enable,
-                                                  unsigned char id) {
-  rtp_header_parser_->DeregisterRtpHeaderExtension(kRtpExtensionAudioLevel);
-  if (enable &&
-      !rtp_header_parser_->RegisterRtpHeaderExtension(kRtpExtensionAudioLevel,
-                                                      id)) {
+                                                  unsigned char id,
+                                                  bool isLevelSsrc) {
+  const webrtc::RTPExtensionType& rtpExt = isLevelSsrc ?
+      kRtpExtensionAudioLevel : kRtpExtensionCsrcAudioLevel;
+  rtp_header_parser_->DeregisterRtpHeaderExtension(rtpExt);
+  if (enable && !rtp_header_parser_->RegisterRtpHeaderExtension(rtpExt, id)) {
     return -1;
   }
   return 0;

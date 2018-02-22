@@ -44,8 +44,9 @@ class FontPreview extends PureComponent {
     this.setState({ isFocused: false });
   }
 
-  onClick() {
+  onClick(event) {
     this.setState({ isFocused: true });
+    event.stopPropagation();
   }
 
   onChange(event) {

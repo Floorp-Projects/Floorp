@@ -614,20 +614,28 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
 MediaConduitErrorCode
 WebrtcAudioConduit::EnableAudioLevelExtension(bool aEnabled,
                                               uint8_t aId,
-                                              bool aDirectionIsSend)
+                                              bool aDirectionIsSend,
+                                              bool aLevelIsSsrc)
 {
   CSFLogDebug(LOGTAG,  "%s %d %d %d", __FUNCTION__, aEnabled, aId,
               aDirectionIsSend);
 
   bool ret;
   if (aDirectionIsSend) {
+    if (!aLevelIsSsrc) {
+      CSFLogError(LOGTAG,
+                  "%s SetSendAudioLevelIndicationStatus Failed"
+                  " can not send CSRC audio levels.", __FUNCTION__);
+      return kMediaConduitMalformedArgument;
+    }
     ret = mPtrVoERTP_RTCP->SetSendAudioLevelIndicationStatus(mChannel,
                                                              aEnabled,
                                                              aId) == -1;
   } else {
     ret = mPtrRTP->SetReceiveAudioLevelIndicationStatus(mChannel,
                                                         aEnabled,
-                                                        aId) == -1;
+                                                        aId,
+                                                        aLevelIsSsrc) == -1;
   }
   if (ret) {
     CSFLogError(LOGTAG, "%s SetSendAudioLevelIndicationStatus Failed", __FUNCTION__);

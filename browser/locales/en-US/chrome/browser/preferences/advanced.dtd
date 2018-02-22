@@ -41,8 +41,8 @@ available. -->
 <!ENTITY collectBrowserErrors.accesskey      "b">
 <!ENTITY collectBrowserErrorsLearnMore.label "Learn more">
 
-<!ENTITY alwaysSubmitCrashReports1.label  "Allow &brandShortName; to send crash reports to Mozilla">
-<!ENTITY alwaysSubmitCrashReports1.accesskey "c">
+<!ENTITY sendBackloggedCrashReports.label  "Allow &brandShortName; to send backlogged crash reports on your behalf">
+<!ENTITY sendBackloggedCrashReports.accesskey "c">
 <!ENTITY crashReporterLearnMore.label    "Learn more">
 
 <!ENTITY networkTab.label                "Network">

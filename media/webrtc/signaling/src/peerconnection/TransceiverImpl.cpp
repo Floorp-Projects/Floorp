@@ -742,6 +742,21 @@ TransceiverImpl::UpdateAudioConduit()
         return NS_ERROR_FAILURE;
       }
     }
+
+    const SdpExtmapAttributeList::Extmap* csrcAudioLevelExt =
+        details.GetExt(webrtc::RtpExtension::kCsrcAudioLevelUri);
+    if (csrcAudioLevelExt) {
+      MOZ_MTLOG(ML_DEBUG, "Calling EnableAudioLevelExtension for CSRCs");
+      error = conduit->EnableAudioLevelExtension(true,
+                                                 csrcAudioLevelExt->entry,
+                                                 false,
+                                                 false);
+      if (error) {
+        MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
+                  " EnableAudioLevelExtension for CSRCs failed: " << error);
+        return NS_ERROR_FAILURE;
+      }
+    }
   }
 
   if (mJsepTransceiver->mSendTrack.GetNegotiatedDetails() &&

@@ -3362,13 +3362,6 @@ nsLocalFile::NativePath()
   return mWorkingPath;
 }
 
-nsresult
-nsIFile::GetNativePath(nsACString& aResult)
-{
-  //NS_WARNING("This API is lossy. Use GetPath !");
-  return NS_CopyUnicodeToNative(NativePath(), aResult);
-}
-
 nsCString
 nsIFile::HumanReadablePath()
 {

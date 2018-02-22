@@ -171,7 +171,8 @@ int VoERTP_RTCPImpl::SetSendMIDStatus(int channel,
 
 int VoERTP_RTCPImpl::SetReceiveAudioLevelIndicationStatus(int channel,
                                                           bool enable,
-                                                          unsigned char id) {
+                                                          unsigned char id,
+                                                          bool isLevelSsrc) {
   WEBRTC_TRACE(
       kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
       "SetReceiveAudioLevelIndicationStatus(channel=%d, enable=%d, id=%u)",
@@ -198,7 +199,8 @@ int VoERTP_RTCPImpl::SetReceiveAudioLevelIndicationStatus(int channel,
         "SetReceiveAudioLevelIndicationStatus() failed to locate channel");
     return -1;
   }
-  return channel_ptr->SetReceiveAudioLevelIndicationStatus(enable, id);
+  return channel_ptr->SetReceiveAudioLevelIndicationStatus(enable, id,
+                                                           isLevelSsrc);
 }
 
 int VoERTP_RTCPImpl::SetRTCPStatus(int channel, bool enable) {
