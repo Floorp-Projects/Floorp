@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Ci, Cu, CC} = require("chrome");
+const {Cc, Ci, Cu, CC} = require("chrome");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {DebuggerServer} = require("devtools/server/main");
@@ -1938,14 +1938,20 @@ StorageActors.createActor({
 
 var indexedDBHelpers = {
   backToChild(...args) {
-    Services.mm.broadcastAsyncMessage("debug:storage-indexedDB-request-child", {
+    let mm = Cc["@mozilla.org/globalmessagemanager;1"]
+               .getService(Ci.nsIMessageListenerManager);
+
+    mm.broadcastAsyncMessage("debug:storage-indexedDB-request-child", {
       method: "backToChild",
       args: args
     });
   },
 
   onItemUpdated(action, host, path) {
-    Services.mm.broadcastAsyncMessage("debug:storage-indexedDB-request-child", {
+    let mm = Cc["@mozilla.org/globalmessagemanager;1"]
+               .getService(Ci.nsIMessageListenerManager);
+
+    mm.broadcastAsyncMessage("debug:storage-indexedDB-request-child", {
       method: "onItemUpdated",
       args: [ action, host, path ]
     });

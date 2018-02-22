@@ -52,10 +52,12 @@ FormHistoryStartup.prototype = {
     Services.ppmm.loadProcessScript("chrome://satchel/content/formSubmitListener.js", true);
     Services.ppmm.addMessageListener("FormHistory:FormSubmitEntries", this);
 
+    let messageManager = Cc["@mozilla.org/globalmessagemanager;1"]
+                         .getService(Ci.nsIMessageListenerManager);
     // For each of these messages, we could receive them from content,
     // or we might receive them from the ppmm if the searchbar is
     // having its history queried.
-    for (let manager of [Services.mm, Services.ppmm]) {
+    for (let manager of [messageManager, Services.ppmm]) {
       manager.addMessageListener("FormHistory:AutoCompleteSearchAsync", this);
       manager.addMessageListener("FormHistory:RemoveEntry", this);
     }
@@ -85,10 +87,7 @@ FormHistoryStartup.prototype = {
 
         let mm;
         let query = null;
-        // MessageListenerManager is a Mozilla-only interface, so disable the eslint error
-        // for it.
-        // eslint-disable-next-line no-undef
-        if (message.target instanceof MessageListenerManager) {
+        if (message.target instanceof Ci.nsIMessageListenerManager) {
           // The target is the PPMM, meaning that the parent process
           // is requesting FormHistory data on the searchbar.
           mm = message.target;

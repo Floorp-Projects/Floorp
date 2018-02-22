@@ -17,6 +17,7 @@
 #include "nsISHistory.h"
 #include "nsISHEntry.h"
 #include "nsISHContainer.h"
+#include "nsITabChild.h"
 #include "nsIWindowWatcher.h"
 #include "mozilla/Services.h"
 #include "nsIXULWindow.h"
@@ -32,7 +33,6 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ProcessGlobal.h"
-#include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TimeoutManager.h"
 #include "xpcpublic.h"
 #include "nsObserverService.h"
@@ -311,9 +311,11 @@ MarkWindowList(nsISimpleEnumerator* aWindowList, bool aCleanupJS,
 
       MarkDocShell(rootDocShell, aCleanupJS, aPrepareForCC);
 
-      RefPtr<TabChild> tabChild = TabChild::GetFrom(rootDocShell);
+      nsCOMPtr<nsITabChild> tabChild =
+        rootDocShell ? rootDocShell->GetTabChild() : nullptr;
       if (tabChild) {
-        nsCOMPtr<nsIContentFrameMessageManager> mm = tabChild->GetMessageManager();
+        nsCOMPtr<nsIContentFrameMessageManager> mm;
+        tabChild->GetMessageManager(getter_AddRefs(mm));
         if (mm) {
           // MarkForCC ends up calling UnmarkGray on message listeners, which
           // TraceBlackJS can't do yet.
@@ -531,7 +533,7 @@ mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC)
           if (ds) {
             nsCOMPtr<nsITabChild> tabChild = ds->GetTabChild();
             if (tabChild) {
-              nsCOMPtr<nsISupports> mm;
+              nsCOMPtr<nsIContentFrameMessageManager> mm;
               tabChild->GetMessageManager(getter_AddRefs(mm));
               nsCOMPtr<EventTarget> et = do_QueryInterface(mm);
               if (et) {

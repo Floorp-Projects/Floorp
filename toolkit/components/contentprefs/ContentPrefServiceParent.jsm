@@ -26,7 +26,8 @@ function contextArg(context) {
 var ContentPrefServiceParent = {
   // Called on all platforms.
   alwaysInit() {
-    let globalMM = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
+    let globalMM = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+                     .getService(Ci.nsIMessageListenerManager);
 
     globalMM.addMessageListener("child-process-shutdown", this);
   },
@@ -34,7 +35,8 @@ var ContentPrefServiceParent = {
   // Only called on Android. Listeners are added in nsBrowserGlue.js on other
   // platforms.
   init() {
-    let globalMM = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
+    let globalMM = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+                     .getService(Ci.nsIMessageListenerManager);
 
     // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN nsBrowserGlue
     globalMM.addMessageListener("ContentPrefs:FunctionCall", this);
