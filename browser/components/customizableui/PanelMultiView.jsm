@@ -337,6 +337,9 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     let panelView = this.openViews[this.openViews.length - 1];
     return (panelView && panelView.node) || this._mainView;
   }
+  get showingSubView() {
+    return this.openViews.length > 1;
+  }
 
   constructor(node) {
     super(node);
@@ -346,12 +349,8 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
   connect() {
     this.connected = true;
-    this.knownViews = new Set(Array.from(
-      this.node.getElementsByTagName("panelview"),
-      node => PanelView.forNode(node)));
     this.openViews = [];
     this.__transitioning = false;
-    this.showingSubView = false;
 
     const {document, window} = this;
 
@@ -398,8 +397,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       return;
 
     this._cleanupTransitionPhase();
-    if (this._ephemeral)
-      this.hideAllViewsExcept(null);
     let mainView = this._mainView;
     if (mainView) {
       if (this._panelViewCache)
@@ -688,32 +685,11 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     nextPanelView.minMaxWidth = 0;
 
     await this._cleanupTransitionPhase();
-    this.hideAllViewsExcept(nextPanelView);
+    nextPanelView.visible = true;
+    nextPanelView.descriptionHeightWorkaround();
 
     this._viewShown(nextPanelView);
     return true;
-  }
-
-  /**
-   * Ensures that all the panelviews, that are currently part of this instance,
-   * are hidden, except one specifically.
-   *
-   * @param {panelview} [nextPanelView]
-   *        The PanelView object to ensure is visible. Optional.
-   */
-  hideAllViewsExcept(nextPanelView = null) {
-    for (let panelView of this.knownViews) {
-      // When the panelview was already reparented, don't interfere any more.
-      if (panelView == nextPanelView || !this.node || panelView.node.panelMultiView != this.node)
-        continue;
-      panelView.current = false;
-    }
-
-    if (!this.node || !nextPanelView)
-      return;
-
-    nextPanelView.current = true;
-    this.showingSubView = nextPanelView.node.id != this._mainViewId;
   }
 
   /**
@@ -727,7 +703,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       this._viewStack.appendChild(panelView.node);
     }
 
-    this.knownViews.add(panelView);
     panelView.node.panelMultiView = this.node;
     this.openViews.push(panelView);
 
@@ -772,6 +747,9 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     panelView.clearNavigation();
     panelView.dispatchCustomEvent("ViewHiding");
     panelView.node.panelMultiView = null;
+    // Views become invisible synchronously when they are closed, and they won't
+    // become visible again until they are opened.
+    panelView.visible = false;
   }
 
   /**
@@ -945,6 +923,13 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
     details.phase = TRANSITION_PHASES.END;
 
+    // Apply the final visibility, unless the view was closed in the meantime.
+    if (nextPanelView.node.panelMultiView == this.node) {
+      prevPanelView.visible = false;
+      nextPanelView.visible = true;
+      nextPanelView.descriptionHeightWorkaround();
+    }
+
     // This will complete the operation by removing any transition properties.
     await this._cleanupTransitionPhase(details);
 
@@ -971,11 +956,8 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     if (details == this._transitionDetails)
       this._transitionDetails = null;
 
-    let nextPanelView = PanelView.forNode(viewNode);
-
     // Do the things we _always_ need to do whenever the transition ends or is
     // interrupted.
-    this.hideAllViewsExcept(nextPanelView);
     previousViewNode.removeAttribute("in-transition");
     viewNode.removeAttribute("in-transition");
 
@@ -1113,7 +1095,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         this._transitioning = false;
         this.node.removeAttribute("panelopen");
         this._cleanupTransitionPhase();
-        this.hideAllViewsExcept(null);
         this.window.removeEventListener("keydown", this);
         this._panel.removeEventListener("mousemove", this);
         this.closeAllViews();
@@ -1150,12 +1131,9 @@ this.PanelView = class extends this.AssociatedToNode {
     }
   }
 
-  set current(value) {
+  set visible(value) {
     if (value) {
-      if (!this.node.hasAttribute("current")) {
-        this.node.setAttribute("current", true);
-        this.descriptionHeightWorkaround();
-      }
+      this.node.setAttribute("current", true);
     } else {
       this.node.removeAttribute("current");
     }
