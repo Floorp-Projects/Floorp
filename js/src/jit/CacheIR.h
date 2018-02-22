@@ -1668,6 +1668,7 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator
     bool tryAttachString(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachObject(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachSymbol(ValOperandId lhsId, ValOperandId rhsId);
+    bool tryAttachStrictDifferentTypes(ValOperandId lhsId, ValOperandId rhsId);
 
     void trackAttached(const char* name);
 
