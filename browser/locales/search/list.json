@@ -312,7 +312,7 @@
     "fr": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "yahoo-france", "bing", "amazon-france", "ddg", "ebay-fr", "cnrtl-tlfi-fr", "wikipedia-fr"
+          "google", "yahoo-france", "bing", "amazon-france", "ddg", "ebay-fr", "cnrtl-tlfi-fr", "qwant", "wikipedia-fr"
         ]
       }
     },
