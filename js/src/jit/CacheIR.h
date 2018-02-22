@@ -81,6 +81,13 @@ class ValOperandId : public OperandId
     explicit ValOperandId(uint16_t id) : OperandId(id) {}
 };
 
+class ValueTagOperandId : public OperandId
+{
+  public:
+    ValueTagOperandId() = default;
+    explicit ValueTagOperandId(uint16_t id) : OperandId(id) {}
+};
+
 class ObjOperandId : public OperandId
 {
   public:
@@ -128,6 +135,9 @@ class TypedOperandId : public OperandId
     {}
     MOZ_IMPLICIT TypedOperandId(Int32OperandId id)
       : OperandId(id.id()), type_(JSVAL_TYPE_INT32)
+    {}
+    MOZ_IMPLICIT TypedOperandId(ValueTagOperandId val)
+      : OperandId(val.id()), type_(JSVAL_TYPE_UNKNOWN)
     {}
     TypedOperandId(ValOperandId val, JSValueType type)
       : OperandId(val.id()), type_(type)
@@ -206,6 +216,7 @@ extern const char* CacheKindNames[];
     _(LoadProto)                          \
     _(LoadEnclosingEnvironment)           \
     _(LoadWrapperTarget)                  \
+    _(LoadValueTag)                       \
                                           \
     _(MegamorphicLoadSlotResult)          \
     _(MegamorphicLoadSlotByValueResult)   \
@@ -749,6 +760,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         return res;
     }
 
+    ValueTagOperandId loadValueTag(ValOperandId val) {
+        ValueTagOperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::LoadValueTag, val);
+        writeOperandId(res);
+        return res;
+    }
+
     ValOperandId loadDOMExpandoValue(ObjOperandId obj) {
         ValOperandId res(nextOperandId_++);
         writeOpWithOperandId(CacheOp::LoadDOMExpandoValue, obj);
@@ -1145,6 +1163,7 @@ class MOZ_RAII CacheIRReader
     void skip() { buffer_.readByte(); }
 
     ValOperandId valOperandId() { return ValOperandId(buffer_.readByte()); }
+    ValueTagOperandId valueTagOperandId() { return ValueTagOperandId(buffer_.readByte()); }
     ObjOperandId objOperandId() { return ObjOperandId(buffer_.readByte()); }
     StringOperandId stringOperandId() { return StringOperandId(buffer_.readByte()); }
     SymbolOperandId symbolOperandId() { return SymbolOperandId(buffer_.readByte()); }
