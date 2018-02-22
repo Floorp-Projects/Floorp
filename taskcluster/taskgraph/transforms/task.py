@@ -559,10 +559,6 @@ task_description_schema = Schema({
             Required('paths'): [basestring],
         }],
     }, {
-        Required('implementation'): 'push-apk-breakpoint',
-        Required('payload'): object,
-
-    }, {
         Required('implementation'): 'invalid',
         # an invalid task is one which should never actually be created; this is used in
         # release automation on branches where the task just doesn't make sense
@@ -1117,11 +1113,6 @@ def build_push_apk_payload(config, task, task_def):
 
     if worker.get('rollout-percentage', None):
         task_def['payload']['rollout_percentage'] = worker['rollout-percentage']
-
-
-@payload_builder('push-apk-breakpoint')
-def build_push_apk_breakpoint_payload(config, task, task_def):
-    task_def['payload'] = task['worker']['payload']
 
 
 @payload_builder('shipit')
