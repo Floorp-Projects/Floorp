@@ -3191,8 +3191,7 @@ LIRGenerator::visitSpectreMaskIndex(MSpectreMaskIndex* ins)
     MOZ_ASSERT(ins->length()->type() == MIRType::Int32);
     MOZ_ASSERT(ins->type() == MIRType::Int32);
 
-    LSpectreMaskIndex* lir =
-        new(alloc()) LSpectreMaskIndex(useRegister(ins->index()), useAny(ins->length()));
+    auto* lir = new(alloc()) LSpectreMaskIndex(useRegister(ins->index()), useAny(ins->length()));
     define(lir, ins);
 }
 
