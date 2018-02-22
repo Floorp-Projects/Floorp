@@ -1452,11 +1452,6 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
   if (role.IsEmpty() || role.EqualsLiteral("none"))
     return nullptr;
 
-  if (role.EqualsLiteral("outerdoc")) {
-    RefPtr<Accessible> accessible = new OuterDocAccessible(aContent, aDoc);
-    return accessible.forget();
-  }
-
   RefPtr<Accessible> accessible;
 #ifdef MOZ_XUL
   // XUL controls
