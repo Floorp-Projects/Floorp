@@ -33,7 +33,8 @@ stubPreparedMessages.set(`Unknown property ‘such-unknown-property’.  Declara
   "groupId": null,
   "userProvidedStyles": null,
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`Error in parsing value for ‘padding-top’.  Declaration dropped.`, new ConsoleMessage({
@@ -56,7 +57,8 @@ stubPreparedMessages.set(`Error in parsing value for ‘padding-top’.  Declara
   "groupId": null,
   "userProvidedStyles": null,
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPackets.set(`Unknown property ‘such-unknown-property’.  Declaration dropped.`, {

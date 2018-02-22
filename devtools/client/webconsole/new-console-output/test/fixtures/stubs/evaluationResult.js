@@ -41,7 +41,8 @@ stubPreparedMessages.set(`new Date(0)`, new ConsoleMessage({
   "groupId": null,
   "userProvidedStyles": null,
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`asdf()`, new ConsoleMessage({
@@ -69,7 +70,8 @@ stubPreparedMessages.set(`asdf()`, new ConsoleMessage({
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
   "userProvidedStyles": null,
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`1 + @`, new ConsoleMessage({
@@ -97,7 +99,8 @@ stubPreparedMessages.set(`1 + @`, new ConsoleMessage({
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Illegal_character?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
   "userProvidedStyles": null,
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`inspect({a: 1})`, new ConsoleMessage({
@@ -140,7 +143,8 @@ stubPreparedMessages.set(`inspect({a: 1})`, new ConsoleMessage({
   "groupId": null,
   "userProvidedStyles": null,
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`cd(document)`, new ConsoleMessage({
@@ -163,7 +167,8 @@ stubPreparedMessages.set(`cd(document)`, new ConsoleMessage({
   "groupId": null,
   "userProvidedStyles": null,
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`undefined`, new ConsoleMessage({
@@ -185,7 +190,8 @@ stubPreparedMessages.set(`undefined`, new ConsoleMessage({
   "groupId": null,
   "userProvidedStyles": null,
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`longString message Error`, new ConsoleMessage({
@@ -213,7 +219,8 @@ stubPreparedMessages.set(`longString message Error`, new ConsoleMessage({
   "groupId": null,
   "userProvidedStyles": null,
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`eval throw ""`, new ConsoleMessage({
@@ -236,7 +243,8 @@ stubPreparedMessages.set(`eval throw ""`, new ConsoleMessage({
   "groupId": null,
   "userProvidedStyles": null,
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`eval throw "tomato"`, new ConsoleMessage({
@@ -259,7 +267,8 @@ stubPreparedMessages.set(`eval throw "tomato"`, new ConsoleMessage({
   "groupId": null,
   "userProvidedStyles": null,
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPackets.set(`new Date(0)`, {
