@@ -593,6 +593,9 @@ this.PanelMultiView = class extends this.AssociatedToNode {
    *        subview when a "title" attribute is not specified.
    */
   showSubView(viewIdOrNode, anchor) {
+    this._showSubView(viewIdOrNode, anchor).catch(Cu.reportError);
+  }
+  async _showSubView(viewIdOrNode, anchor) {
     let viewNode = typeof viewIdOrNode == "string" ?
                    this.document.getElementById(viewIdOrNode) : viewIdOrNode;
     if (!viewNode) {
@@ -600,33 +603,79 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       return;
     }
 
+    let prevPanelView = this.openViews[this.openViews.length - 1];
     let nextPanelView = PanelView.forNode(viewNode);
     if (this.openViews.includes(nextPanelView)) {
       Cu.reportError(new Error(`Subview ${viewNode.id} is already open.`));
       return;
     }
+    if (!(await this._openView(nextPanelView))) {
+      return;
+    }
 
-    this._showView(nextPanelView, anchor);
+    prevPanelView.captureKnownSize();
+
+    // The main view of a panel can be a subview in another one. Make sure to
+    // reset all the properties that may be set on a subview.
+    nextPanelView.mainview = false;
+    // The header may change based on how the subview was opened.
+    nextPanelView.headerText = viewNode.getAttribute("title") ||
+                               (anchor && anchor.getAttribute("label"));
+    // The constrained width of subviews may also vary between panels.
+    nextPanelView.minMaxWidth = prevPanelView.knownWidth;
+
+    if (anchor) {
+      viewNode.classList.add("PanelUI-subView");
+    }
+
+    await this._transitionViews(prevPanelView.node, viewNode, false, anchor);
   }
 
   /**
    * Navigates backwards by sliding out the most recent subview.
    */
   goBack() {
+    this._goBack().catch(Cu.reportError);
+  }
+  async _goBack() {
     if (this.openViews.length < 2) {
       // This may be called by keyboard navigation or external code when only
       // the main view is open.
       return;
     }
 
-    this._showView(this.openViews[this.openViews.length - 2], null, true);
+    let prevPanelView = this.openViews[this.openViews.length - 1];
+    let nextPanelView = this.openViews[this.openViews.length - 2];
+
+    prevPanelView.captureKnownSize();
+    await this._transitionViews(prevPanelView.node, nextPanelView.node, true);
+
+    this.openViews.pop();
   }
 
+  /**
+   * Prepares the main view before showing the panel.
+   */
   async showMainView() {
-    if (!this.node || !this._mainViewId)
+    if (!this.node || !this._mainViewId) {
       return false;
+    }
 
-    return this._showView(PanelView.forNode(this._mainView));
+    let nextPanelView = PanelView.forNode(this._mainView);
+    if (!(await this._openView(nextPanelView))) {
+      return false;
+    }
+
+    // The main view of a panel can be a subview in another one. Make sure to
+    // reset all the properties that may be set on a subview.
+    nextPanelView.mainview = true;
+    nextPanelView.headerText = "";
+    nextPanelView.minMaxWidth = 0;
+
+    await this._cleanupTransitionPhase();
+    this.hideAllViewsExcept(nextPanelView);
+
+    return true;
   }
 
   /**
@@ -651,74 +700,40 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     this.showingSubView = nextPanelView.node.id != this._mainViewId;
   }
 
-  async _showView(nextPanelView, anchor, reverse) {
-    try {
-      let viewNode = nextPanelView.node;
-      this.knownViews.add(nextPanelView);
+  /**
+   * Opens the specified PanelView and dispatches the ViewShowing event, which
+   * can be used to populate the subview or cancel the operation.
+   *
+   * @resolves With true if the view was opened, false otherwise.
+   */
+  async _openView(panelView) {
+    if (panelView.node.parentNode != this._viewStack) {
+      this._viewStack.appendChild(panelView.node);
+    }
 
-      viewNode.panelMultiView = this.node;
+    this.knownViews.add(panelView);
+    panelView.node.panelMultiView = this.node;
+    this.openViews.push(panelView);
 
-      let previousViewNode = this._currentSubView;
+    let canceled = await panelView.dispatchAsyncEvent("ViewShowing");
 
-      if (viewNode.parentNode != this._viewStack) {
-        this._viewStack.appendChild(viewNode);
-      }
-
-      // Emit the ViewShowing event so that the widget definition has a chance
-      // to lazily populate the subview with things or perhaps even cancel this
-      // whole operation.
-      if (await nextPanelView.dispatchAsyncEvent("ViewShowing")) {
-        return false;
-      }
-
-      if (!reverse) {
-        this.openViews.push(nextPanelView);
-      }
-
-      // If the panelview to show is the same as the previous one, the 'ViewShowing'
-      // event has already been dispatched. Don't do it twice.
-      let showingSameView = viewNode == previousViewNode;
-
-      let prevPanelView = PanelView.forNode(previousViewNode);
-      prevPanelView.captureKnownSize();
-
-      if (!reverse) {
-        // We are opening a new view, either because we are navigating forward
-        // or because we are showing the main view. Some properties of the view
-        // may vary between panels, so we make sure to update them every time.
-        // Firstly, make sure that the header matches how the view was opened.
-        nextPanelView.headerText = viewNode.getAttribute("title") ||
-                                   (anchor && anchor.getAttribute("label"));
-        // The main view of a panel can be a subview in another one.
-        let isMainView = viewNode.id == this._mainViewId;
-        nextPanelView.mainview = isMainView;
-        // The constrained width of subviews may also vary between panels.
-        nextPanelView.minMaxWidth = isMainView ? 0 : prevPanelView.knownWidth;
-      }
-
-      if (anchor) {
-        viewNode.classList.add("PanelUI-subView");
-      }
-
-      // Now we have to transition the panel. If we've got an older transition
-      // still running, make sure to clean it up.
-      await this._cleanupTransitionPhase();
-      if (!showingSameView && this._panel.state == "open") {
-        await this._transitionViews(previousViewNode, viewNode, reverse, anchor);
-        nextPanelView.focusSelectedElement();
-      } else {
-        this.hideAllViewsExcept(nextPanelView);
-      }
-
-      if (reverse) {
-        this.openViews.pop();
-      }
-
-      return true;
-    } catch (ex) {
-      Cu.reportError(ex);
+    // The panel can be hidden while we are processing the ViewShowing event.
+    // This results in all the views being closed synchronously, and at this
+    // point the ViewHiding event has already been dispatched for all of them.
+    if (!this.openViews.length) {
       return false;
     }
+
+    // Check if the event requested cancellation but the panel is still open.
+    if (canceled) {
+      // Handlers for ViewShowing can't know if a different handler requested
+      // cancellation, so we dispatch an event to give a chance to clean up.
+      panelView.dispatchCustomEvent("ViewHiding");
+      this.openViews.pop();
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -738,6 +753,9 @@ this.PanelMultiView = class extends this.AssociatedToNode {
    *                                     a new panelview, if any
    */
   async _transitionViews(previousViewNode, viewNode, reverse, anchor) {
+    // Clean up any previous transition that may be active at this point.
+    await this._cleanupTransitionPhase();
+
     // There's absolutely no need to show off our epic animation skillz when
     // the panel's not even open.
     if (this._panel.state != "open") {
@@ -879,7 +897,13 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
     details.phase = TRANSITION_PHASES.END;
 
+    // This will complete the operation by removing any transition properties.
     await this._cleanupTransitionPhase(details);
+
+    // Focus the correct element, unless the view was closed in the meantime.
+    if (nextPanelView.node.panelMultiView == this.node) {
+      nextPanelView.focusSelectedElement();
+    }
   }
 
   /**
