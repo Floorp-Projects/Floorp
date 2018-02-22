@@ -92,10 +92,62 @@ class GeckoViewNavigation extends GeckoViewModule {
     let handled = undefined;
     this.eventDispatcher.sendRequestForResult(message).then(response => {
       handled = response;
+    }, () => {
+      // There was an error or listener was not registered in GeckoSession, treat as unhandled.
+      handled = false;
     });
     Services.tm.spinEventLoopUntil(() => handled !== undefined);
 
     return handled;
+  }
+
+  waitAndSetOpener(aSessionId, aOpener) {
+    if (!aSessionId) {
+      return Promise.resolve(null);
+    }
+
+    return new Promise(resolve => {
+      const handler = {
+        observe(aSubject, aTopic, aData) {
+          if (aTopic === "geckoview-window-created" && aSubject.name === aSessionId) {
+            aSubject.browser.presetOpenerWindow(aOpener);
+            Services.obs.removeObserver(handler, "geckoview-window-created");
+            resolve(aSubject);
+          }
+        }
+      };
+
+      // This event is emitted from createBrowser() in geckoview.js
+      Services.obs.addObserver(handler, "geckoview-window-created");
+    });
+  }
+
+  handleNewSession(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
+    debug("handleNewSession: aUri=" + (aUri && aUri.spec) +
+          " aWhere=" + aWhere +
+          " aFlags=" + aFlags);
+
+    if (!this.isRegistered) {
+      return null;
+    }
+
+    const message = {
+      type: "GeckoView:OnNewSession",
+      uri: aUri ? aUri.displaySpec : ""
+    };
+
+    let browser = undefined;
+    this.eventDispatcher.sendRequestForResult(message).then(sessionId => {
+      return this.waitAndSetOpener(sessionId, aOpener);
+    }).then(window => {
+      browser = (window && window.browser);
+    }, () => {
+      browser = null;
+    });
+
+    // Wait indefinitely for app to respond with a browser or null
+    Services.tm.spinEventLoopUntil(() => browser !== undefined);
+    return browser;
   }
 
   // nsILoadURIDelegate.
@@ -103,8 +155,8 @@ class GeckoViewNavigation extends GeckoViewModule {
     debug("loadURI " + aUri + " " + aWhere + " " + aFlags + " " +
           aTriggeringPrincipal);
 
-    let handled = this.handleLoadUri(aUri, null, aWhere, aFlags,
-                                     aTriggeringPrincipal);
+    const handled = this.handleLoadUri(aUri, null, aWhere, aFlags,
+                                       aTriggeringPrincipal);
     if (!handled) {
       throw Cr.NS_ERROR_ABORT;
     }
@@ -116,15 +168,9 @@ class GeckoViewNavigation extends GeckoViewModule {
           " aWhere=" + aWhere +
           " aFlags=" + aFlags);
 
-    let handled = this.handleLoadUri(aUri, aOpener, aWhere, aFlags,
-                                     aTriggeringPrincipal);
-    if (!handled &&
-        (aWhere === Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW ||
-         aWhere === Ci.nsIBrowserDOMWindow.OPEN_CURRENTWINDOW)) {
-      return this.browser.contentWindow;
-    }
-
-    throw Cr.NS_ERROR_ABORT;
+    const browser = this.handleNewSession(aUri, aOpener, aWhere, aFlags,
+                                          aTriggeringPrincipal);
+    return browser && browser.contentWindow;
   }
 
   // nsIBrowserDOMWindow.
@@ -137,14 +183,12 @@ class GeckoViewNavigation extends GeckoViewModule {
           " aNextTabParentId=" + aNextTabParentId +
           " aName=" + aName);
 
-    let handled = this.handleLoadUri(aUri, null, aWhere, aFlags, null);
-    if (!handled &&
-        (aWhere === Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW ||
-         aWhere === Ci.nsIBrowserDOMWindow.OPEN_CURRENTWINDOW)) {
-      return this.browser;
+    const browser = this.handleNewSession(aUri, null, aWhere, aFlags, null);
+    if (browser) {
+      browser.setAttribute("nextTabParentId", aNextTabParentId);
     }
 
-    throw Cr.NS_ERROR_ABORT;
+    return browser;
   }
 
   // nsIBrowserDOMWindow.
@@ -161,7 +205,6 @@ class GeckoViewNavigation extends GeckoViewModule {
 
   // nsIBrowserDOMWindow.
   isTabContentWindow(aWindow) {
-    debug("isTabContentWindow " + this.browser.contentWindow === aWindow);
     return this.browser.contentWindow === aWindow;
   }
 
