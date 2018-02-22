@@ -24,19 +24,10 @@ public:
   explicit U2FSoftTokenManager(uint32_t aCounter);
 
   RefPtr<U2FRegisterPromise>
-  Register(const nsTArray<WebAuthnScopedCredential>& aCredentials,
-           const WebAuthnAuthenticatorSelection &aAuthenticatorSelection,
-           const nsTArray<uint8_t>& aApplication,
-           const nsTArray<uint8_t>& aChallenge,
-           uint32_t aTimeoutMS) override;
+  Register(const WebAuthnMakeCredentialInfo& aInfo) override;
 
   RefPtr<U2FSignPromise>
-  Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials,
-       const nsTArray<uint8_t>& aApplication,
-       const nsTArray<uint8_t>& aChallenge,
-       const nsTArray<WebAuthnExtension>& aExtensions,
-       bool aRequireUserVerification,
-       uint32_t aTimeoutMS) override;
+  Sign(const WebAuthnGetAssertionInfo& aInfo) override;
 
   void Cancel() override;
 
