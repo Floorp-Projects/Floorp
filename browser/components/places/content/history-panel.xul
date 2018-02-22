@@ -8,12 +8,13 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
 
-<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
 
 <!DOCTYPE page [
 <!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
 %placesDTD;
+<!ENTITY % editMenuDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+%editMenuDTD;
 ]>
 
 <!-- we need to keep id="history-panel" for upgrade and switching
@@ -29,14 +30,16 @@
   <script type="application/javascript"
           src="chrome://browser/content/places/history-panel.js"/>
 
-  <commandset id="editMenuCommands"/>
+#include ../../../../toolkit/content/editMenuCommands.inc.xul
+
   <commandset id="placesCommands"/>
 
-  <keyset id="editMenuKeys">
+#include ../../../../toolkit/content/editMenuKeys.inc.xul
 #ifdef XP_MACOSX
+  <keyset id="editMenuKeysExtra">
     <key id="key_delete2" keycode="VK_BACK" command="cmd_delete"/>
-#endif
   </keyset>
+#endif
 
   <!-- required to overlay the context menu -->
   <menupopup id="placesContext"/>
