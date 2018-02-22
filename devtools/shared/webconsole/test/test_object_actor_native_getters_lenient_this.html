@@ -66,7 +66,11 @@ function onProperties(aState, aResponse)
 
   is(keys.length, 0, "number of properties");
   keys = Object.keys(aResponse.safeGetterValues);
-  is(keys.length, 0, "number of safe getters");
+  // There is one "safe getter" as far as the code in _findSafeGetterValues is
+  // concerned, because it treats any Promise-returning attribute as a "safe
+  // getter".  See bug 1438015.
+  is(keys.length, 1, "number of safe getters");
+  is(keys[0], "documentReadyForIdle", "Unexpected safe getter");
 
   closeDebugger(aState, function() {
     SimpleTest.finish();
