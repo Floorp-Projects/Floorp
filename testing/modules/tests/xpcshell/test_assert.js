@@ -270,6 +270,18 @@ function run_test() {
     assert.equal(e.toString().split("\n")[0], "AssertionError: oh no - 1 == 2");
   }
 
+  // Need to JSON.stringify so that their length is > 128 characters.
+  let longArray0 = Array.from(Array(50), (v, i) => i);
+  let longArray1 = longArray0.concat([51]);
+  try {
+    assert.deepEqual(longArray0, longArray1);
+  } catch (e) {
+    let message = e.toString();
+    // Just check that they're both entirely present in the message
+    assert.ok(message.includes(JSON.stringify(longArray0)));
+    assert.ok(message.includes(JSON.stringify(longArray1)));
+  }
+
   // Test XPCShell-test integration:
   ok(true, "OK, this went well");
   deepEqual(/a/g, /a/g, "deep equal should work on RegExp");

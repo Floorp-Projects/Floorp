@@ -10,9 +10,9 @@
   const { DOMLocalization } =
     ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm", {});
 
-  async function * mockGenerateMessages(locales, resourceIds) {}
+  async function* mockGenerateMessages(locales, resourceIds) {}
 
-  window.onload = function () {
+  window.onload = function() {
     SimpleTest.waitForExplicitFinish();
 
     const domLoc = new DOMLocalization(
@@ -21,9 +21,9 @@
       mockGenerateMessages
     );
 
-    const p1 = document.querySelectorAll('p')[0];
-    const p2 = document.querySelectorAll('p')[1];
-    const p3 = document.querySelectorAll('p')[2];
+    const p1 = document.querySelectorAll("p")[0];
+    const p2 = document.querySelectorAll("p")[1];
+    const p3 = document.querySelectorAll("p")[2];
     const attrs1 = domLoc.getAttributes(p1);
     const attrs2 = domLoc.getAttributes(p2);
     const attrs3 = domLoc.getAttributes(p3);

@@ -99,7 +99,8 @@ public:
   MediaConduitErrorCode
   EnableAudioLevelExtension(bool aEnabled,
                             uint8_t aId,
-                            bool aDirectionIsSend) override;
+                            bool aDirectionIsSend,
+                            bool aLevelIsSsrc = true) override;
 
   virtual MediaConduitErrorCode EnableMIDExtension(bool enabled, uint8_t id) override;
 

@@ -16,6 +16,7 @@
 #include "mozilla/Base64.h"
 #include "RiceDeltaDecoder.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/ErrorNames.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
 // MOZ_LOG=UrlClassifierProtocolParser:5
@@ -783,7 +784,10 @@ ProtocolParserProtobuf::End()
     if (NS_SUCCEEDED(rv)) {
       mUpdateStatus = rv;
     } else {
-      NS_WARNING("Failed to process one response.");
+      nsAutoCString errorName;
+      mozilla::GetErrorName(rv, errorName);
+      NS_WARNING(nsPrintfCString("Failed to process one response: %s",
+                                 errorName.get()).get());
     }
   }
 }
@@ -794,7 +798,7 @@ ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
   // A response must have a threat type.
   if (!aResponse.has_threat_type()) {
     NS_WARNING("Threat type not initialized. This seems to be an invalid response.");
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UC_PARSER_MISSING_PARAM;
   }
 
   // Convert threat type to list name.
@@ -806,7 +810,7 @@ ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
   if (NS_FAILED(rv)) {
     PARSER_LOG(("Threat type to list name conversion error: %d",
                 aResponse.threat_type()));
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UC_PARSER_UNKNOWN_THREAT;
   }
 
   // Match the table name we received with one of the ones we requested.
@@ -834,13 +838,13 @@ ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
       aResponse.response_type() == ListUpdateResponse::FULL_UPDATE;
   } else {
     NS_WARNING("Response type not initialized.");
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UC_PARSER_MISSING_PARAM;
   }
 
   // Warn if there's no new state.
   if (!aResponse.has_new_client_state()) {
     NS_WARNING("New state not initialized.");
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UC_PARSER_MISSING_PARAM;
   }
 
   auto tu = GetTableUpdate(nsCString(listName.get()));
@@ -978,12 +982,12 @@ DoRiceDeltaDecode(const RiceDeltaEncoding& aEncoding,
 {
   if (!aEncoding.has_first_value()) {
     PARSER_LOG(("The encoding info is incomplete."));
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UC_PARSER_MISSING_PARAM;
   }
   if (aEncoding.num_entries() > 0 &&
       (!aEncoding.has_rice_parameter() || !aEncoding.has_encoded_data())) {
     PARSER_LOG(("Rice parameter or encoded data is missing."));
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UC_PARSER_MISSING_PARAM;
   }
 
   PARSER_LOG(("* Encoding info:"));
@@ -1010,7 +1014,7 @@ DoRiceDeltaDecode(const RiceDeltaEncoding& aEncoding,
                            aEncoding.num_entries(), // # of entries (first value not included).
                            &aDecoded[0]);
 
-  NS_ENSURE_TRUE(rv, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(rv, NS_ERROR_UC_PARSER_DECODE_FAILURE);
 
   return NS_OK;
 }

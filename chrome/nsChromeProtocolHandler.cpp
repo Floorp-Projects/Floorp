@@ -173,9 +173,8 @@ nsChromeProtocolHandler::NewChannel2(nsIURI* aURI,
         bool exists = false;
         file->Exists(&exists);
         if (!exists) {
-            nsAutoCString path;
-            file->GetNativePath(path);
-            printf("Chrome file doesn't exist: %s\n", path.get());
+            printf("Chrome file doesn't exist: %s\n",
+                   file->HumanReadablePath().get());
         }
     }
 #endif

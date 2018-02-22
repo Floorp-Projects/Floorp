@@ -193,4 +193,16 @@ nsStyleContext::StartBackgroundImageLoads()
   StyleBackground();
 }
 
+#ifdef MOZ_OLD_STYLE
+/* static */ already_AddRefed<mozilla::GeckoStyleContext>
+mozilla::GeckoStyleContext::TakeRef(
+  already_AddRefed<nsStyleContext> aStyleContext)
+{
+  auto* context = aStyleContext.take();
+  MOZ_ASSERT(context);
+
+  return already_AddRefed<mozilla::GeckoStyleContext>(context->AsGecko());
+}
+#endif
+
 #endif // nsStyleContextInlines_h

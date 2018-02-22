@@ -5562,7 +5562,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow, double aX,
   }
 
   // Flush layout updates
-  if (!(aFlags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH)) {
+  if (!(aFlags & CanvasRenderingContext2DBinding::DRAWWINDOW_DO_NOT_FLUSH)) {
     nsContentUtils::FlushLayoutForTree(aWindow.AsInner()->GetOuterWindow());
   }
 
@@ -5597,20 +5597,20 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow, double aX,
            nsPresContext::CSSPixelsToAppUnits((float)aH));
   uint32_t renderDocFlags = (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
                              nsIPresShell::RENDER_DOCUMENT_RELATIVE);
-  if (aFlags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DRAW_CARET) {
+  if (aFlags & CanvasRenderingContext2DBinding::DRAWWINDOW_DRAW_CARET) {
     renderDocFlags |= nsIPresShell::RENDER_CARET;
   }
-  if (aFlags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DRAW_VIEW) {
+  if (aFlags & CanvasRenderingContext2DBinding::DRAWWINDOW_DRAW_VIEW) {
     renderDocFlags &= ~(nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
                         nsIPresShell::RENDER_DOCUMENT_RELATIVE);
   }
-  if (aFlags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_USE_WIDGET_LAYERS) {
+  if (aFlags & CanvasRenderingContext2DBinding::DRAWWINDOW_USE_WIDGET_LAYERS) {
     renderDocFlags |= nsIPresShell::RENDER_USE_WIDGET_LAYERS;
   }
-  if (aFlags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_ASYNC_DECODE_IMAGES) {
+  if (aFlags & CanvasRenderingContext2DBinding::DRAWWINDOW_ASYNC_DECODE_IMAGES) {
     renderDocFlags |= nsIPresShell::RENDER_ASYNC_DECODE_IMAGES;
   }
-  if (aFlags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH) {
+  if (aFlags & CanvasRenderingContext2DBinding::DRAWWINDOW_DO_NOT_FLUSH) {
     renderDocFlags |= nsIPresShell::RENDER_DRAWWINDOW_NOT_FLUSHING;
   }
 

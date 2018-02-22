@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Autoplay policy frame</title>
+    <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+    <style>
+      video {
+        width: 50%;
+        height: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      nextWindowMessage().then(
+        (event) => {
+          playAndPostResult(event.data, event.source);
+        });
+    </script>
+  </body>
+</html>

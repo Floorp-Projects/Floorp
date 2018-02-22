@@ -20,10 +20,10 @@
 #include "nsTransform2D.h"
 #include "nsMenuFrame.h"
 #include "prlink.h"
-#include "nsIDOMHTMLInputElement.h"
 #include "nsGkAtoms.h"
 #include "nsAttrValueInlines.h"
 
+#include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Services.h"
 
@@ -54,6 +54,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
+using mozilla::dom::HTMLInputElement;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeGTK, nsNativeTheme, nsITheme,
                                                              nsIObserver)
@@ -246,14 +247,10 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
         }
       } else {
         if (aWidgetFlags) {
-          nsCOMPtr<nsIDOMHTMLInputElement> inputElt(do_QueryInterface(aFrame->GetContent()));
           *aWidgetFlags = 0;
-          if (inputElt) {
-            bool isHTMLChecked;
-            inputElt->GetChecked(&isHTMLChecked);
-            if (isHTMLChecked)
-              *aWidgetFlags |= MOZ_GTK_WIDGET_CHECKED;
-          }
+          HTMLInputElement* inputElt = HTMLInputElement::FromContent(aFrame->GetContent());
+          if (inputElt && inputElt->Checked())
+            *aWidgetFlags |= MOZ_GTK_WIDGET_CHECKED;
 
           if (GetIndeterminate(aFrame))
             *aWidgetFlags |= MOZ_GTK_WIDGET_INCONSISTENT;
