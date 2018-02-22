@@ -103,7 +103,7 @@ add_task(async function testWindowCreate() {
         windowState = latestWindow.STATE_FULLSCREEN;
       }
 
-      if (expected.state == "STATE_NORMAL" && AppConstants.platform == "macosx") {
+      if (expected.state == "STATE_NORMAL") {
         ok(windowState == window.STATE_NORMAL || windowState == window.STATE_MAXIMIZED,
            `Expected windowState (currently ${windowState}) to be STATE_NORMAL but will accept STATE_MAXIMIZED`);
       } else {
