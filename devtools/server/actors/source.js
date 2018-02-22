@@ -928,14 +928,20 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
         }
       }
 
-      // If we don't find any matching entrypoints, then
-      // we should check to see if the breakpoint is to the left of the first offset.
+      // If we don't find any matching entrypoints,
+      // then we should see if the breakpoint comes before or after the column offsets.
       if (entryPoints.length === 0) {
         for (let [script, columnToOffsetMap] of columnToOffsetMaps) {
           if (columnToOffsetMap.length > 0) {
-            let { columnNumber: column, offset } = columnToOffsetMap[0];
-            if (generatedColumn < column) {
-              entryPoints.push({ script, offsets: [offset] });
+            const firstColumnOffset = columnToOffsetMap[0];
+            const lastColumnOffset = columnToOffsetMap[columnToOffsetMap.length - 1];
+
+            if (generatedColumn < firstColumnOffset.columnNumber) {
+              entryPoints.push({ script, offsets: [firstColumnOffset.offset] });
+            }
+
+            if (generatedColumn > lastColumnOffset.columnNumber) {
+              entryPoints.push({ script, offsets: [lastColumnOffset.offset] });
             }
           }
         }

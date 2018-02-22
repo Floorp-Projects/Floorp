@@ -4,8 +4,10 @@ var SOURCE_URL = getFileUrl("setBreakpoint-on-column.js");
 
 async function run_test() {
   do_test_pending();
+
   DebuggerServer.registerModule("xpcshell-test/testactors");
   DebuggerServer.init(() => true);
+
   let global = createTestGlobal("test");
   DebuggerServer.addTestGlobal(global);
 
@@ -23,7 +25,7 @@ async function run_test() {
   let { source } = await promise;
   let sourceClient = threadClient.source(source);
 
-  let location = { line: 4, column: 2 };
+  let location = { line: 4, column: 42 };
   let [packet, breakpointClient] = await setBreakpoint(
     sourceClient,
     location
@@ -46,14 +48,15 @@ async function run_test() {
   let where = frame.where;
   Assert.equal(where.source.actor, source.actor);
   Assert.equal(where.line, location.line);
-  Assert.equal(where.column, 6);
+  Assert.equal(where.column, 28);
 
   let variables = frame.environment.bindings.variables;
-  Assert.equal(variables.a.value.type, "undefined");
-  Assert.equal(variables.b.value.type, "undefined");
+  Assert.equal(variables.a.value, 1);
+  Assert.equal(variables.b.value, 2);
   Assert.equal(variables.c.value.type, "undefined");
 
   await resume(threadClient);
   await close(client);
+
   do_test_finished();
 }
