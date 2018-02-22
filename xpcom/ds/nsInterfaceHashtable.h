@@ -55,6 +55,21 @@ public:
   Interface* GetWeak(KeyType aKey, bool* aFound = nullptr) const;
 
   /**
+   * Allows inserting a value into the hashtable, moving its owning reference
+   * count into the hashtable, avoiding an AddRef.
+   */
+  void Put(KeyType aKey, already_AddRefed<Interface>&& aData)
+  {
+    if (!Put(aKey, mozilla::Move(aData), mozilla::fallible)) {
+      NS_ABORT_OOM(this->mTable.EntrySize() * this->mTable.EntryCount());
+    }
+  }
+
+  MOZ_MUST_USE bool Put(KeyType aKey, already_AddRefed<Interface>&& aData,
+                        const mozilla::fallible_t&);
+  using base_type::Put;
+
+  /**
    * Remove the entry associated with aKey (if any), optionally _moving_ its
    * current value into *aData, thereby avoiding calls to AddRef and Release.
    * Return true if found.
@@ -148,6 +163,21 @@ nsInterfaceHashtable<KeyClass, Interface>::GetWeak(KeyType aKey,
     *aFound = false;
   }
   return nullptr;
+}
+
+template<class KeyClass, class Interface>
+bool
+nsInterfaceHashtable<KeyClass, Interface>::Put(KeyType aKey,
+                                               already_AddRefed<Interface>&& aValue,
+                                               const mozilla::fallible_t&)
+{
+  typename base_type::EntryType* ent = this->PutEntry(aKey);
+  if (!ent) {
+    return false;
+  }
+
+  ent->mData = aValue;
+  return true;
 }
 
 template<class KeyClass, class Interface>
