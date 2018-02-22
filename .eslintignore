@@ -24,7 +24,6 @@ gfx/tests/chrome/**
 gfx/tests/mochitest/**
 gfx/tests/unit/**
 image/**
-intl/**
 layout/**
 memory/replace/dmd/test/**
 modules/**
@@ -302,6 +301,12 @@ dom/media/webvtt/**
 # Third-party
 gfx/ots/**
 gfx/skia/**
+
+# intl/ exclusions
+intl/icu/**
+intl/locale/**
+intl/strres/**
+intl/uconv/**
 
 # Exclude everything but self-hosted JS
 js/ductwork/**

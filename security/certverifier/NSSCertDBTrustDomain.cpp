@@ -23,6 +23,7 @@
 #include "mozilla/Unused.h"
 #include "nsCRTGlue.h"
 #include "nsNSSCertificate.h"
+#include "nsNSSCertValidity.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nss.h"
@@ -36,6 +37,8 @@
 #include "TrustOverrideUtils.h"
 #include "TrustOverride-StartComAndWoSignData.inc"
 #include "TrustOverride-GlobalSignData.inc"
+#include "TrustOverride-SymantecData.inc"
+#include "TrustOverride-AppleGoogleDigiCertData.inc"
 
 using namespace mozilla;
 using namespace mozilla::pkix;
@@ -853,7 +856,7 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
 
     bool foundRequiredIntermediate = false;
     RefPtr<nsNSSCertList> intCertList = intCerts->GetCertList();
-    intCertList->ForEachCertificateInChain(
+    nsrv = intCertList->ForEachCertificateInChain(
       [&foundRequiredIntermediate] (nsCOMPtr<nsIX509Cert> aCert, bool aHasMore,
                                     /* out */ bool& aContinue) {
         // We need an owning handle when calling nsIX509Cert::GetCert().
@@ -868,8 +871,45 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
         return NS_OK;
     });
 
+    if (NS_FAILED(nsrv)) {
+      return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    }
+
     if (!foundRequiredIntermediate) {
       return Result::ERROR_POLICY_VALIDATION_FAILED;
+    }
+  }
+
+  // See bug 1434300. If the root is a Symantec root, see if we distrust this
+  // path. Since we already have the root available, we can check that cheaply
+  // here before proceeding with the rest of the algorithm.
+
+  // This algorithm only applies if we are verifying in the context of a TLS
+  // handshake. To determine this, we check mHostname: If it isn't set, this is
+  // not TLS, so don't run the algorithm.
+  if (mHostname && CertDNIsInList(root.get(), RootSymantecDNs)) {
+    rootCert = nullptr; // Clear the state for Segment...
+    nsCOMPtr<nsIX509CertList> intCerts;
+    nsCOMPtr<nsIX509Cert> eeCert;
+
+    nsrv = nssCertList->SegmentCertificateChain(rootCert, intCerts, eeCert);
+    if (NS_FAILED(nsrv)) {
+      // This chain is supposed to be complete, so this is an error.
+      return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    }
+
+    // PRTime is microseconds since the epoch, whereas JS time is milliseconds.
+    // (new Date("2016-06-01T00:00:00Z")).getTime() * 1000
+    static const PRTime JUNE_1_2016 = 1464739200000000;
+
+    bool isDistrusted = false;
+    nsrv = CheckForSymantecDistrust(intCerts, eeCert, JUNE_1_2016,
+                                    RootAppleAndGoogleSPKIs, isDistrusted);
+    if (NS_FAILED(nsrv)) {
+      return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    }
+    if (isDistrusted) {
+      return Result::ERROR_UNKNOWN_ISSUER;
     }
   }
 

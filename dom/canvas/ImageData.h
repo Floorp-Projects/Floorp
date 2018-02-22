@@ -7,8 +7,6 @@
 #ifndef mozilla_dom_ImageData_h
 #define mozilla_dom_ImageData_h
 
-#include "nsIDOMCanvasRenderingContext2D.h"
-
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/TypedArray.h"

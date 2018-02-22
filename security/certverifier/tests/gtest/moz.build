@@ -17,6 +17,7 @@ SOURCES += [
 
 LOCAL_INCLUDES += [
     '/security/certverifier',
+    '/security/manager/ssl',
     '/security/pkix/include',
     '/security/pkix/lib',
 ]

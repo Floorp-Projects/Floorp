@@ -1,0 +1,39 @@
+function playAndPostResult(test_case, parent_window) {
+  log("runTest " + test_case.name);
+
+  let element = document.createElement("video");
+  element.preload = "auto";
+  element.muted = test_case.muted;
+  element.src = "short.mp4";
+  element.id = "video";
+  document.body.appendChild(element);
+
+  element.play().then(
+      () => {
+        parent_window.postMessage({played: true}, "*");
+      },
+      () => {
+        parent_window.postMessage({played: false}, "*");
+      }
+    );
+}
+
+function nextEvent(eventTarget, eventName) {
+  return new Promise(function(resolve, reject) {
+    let f = function(event) {
+      eventTarget.removeEventListener(eventName, f, false);
+      resolve(event);
+    };
+    eventTarget.addEventListener(eventName, f, false);
+  });
+}
+
+function nextWindowMessage() {
+  return nextEvent(window, "message");
+}
+
+function log(msg) {
+  var log_pane = document.body;
+  log_pane.appendChild(document.createTextNode(msg));
+  log_pane.appendChild(document.createElement("br"));
+}

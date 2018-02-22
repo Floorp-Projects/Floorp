@@ -10,10 +10,10 @@
   const { DOMLocalization } =
     ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm", {});
 
-  async function * mockGenerateMessages(locales, resourceIds) {
+  async function* mockGenerateMessages(locales, resourceIds) {
   }
 
-  window.onload = async function () {
+  window.onload = async function() {
     SimpleTest.waitForExplicitFinish();
 
     const domLoc = new DOMLocalization(
@@ -23,7 +23,7 @@
     );
 
 
-    const frag = document.querySelectorAll('div')[0];
+    const frag = document.querySelectorAll("div")[0];
     domLoc.connectRoot(frag);
 
     is(domLoc.roots.has(frag), true);

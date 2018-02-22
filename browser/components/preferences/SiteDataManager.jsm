@@ -80,6 +80,7 @@ this.SiteDataManager = {
         cookies: [],
         persisted: false,
         quotaUsage: 0,
+        lastAccessed: 0,
         principals: [],
         appCacheList: [],
       };
@@ -153,6 +154,9 @@ this.SiteDataManager = {
               if (item.persisted) {
                 site.persisted = true;
               }
+              if (site.lastAccessed < item.lastAccessed) {
+                site.lastAccessed = item.lastAccessed;
+              }
               site.principals.push(principal);
               site.quotaUsage += item.usage;
             }
@@ -174,6 +178,9 @@ this.SiteDataManager = {
       let cookie = cookiesEnum.getNext().QueryInterface(Ci.nsICookie2);
       let site = this._getOrInsertSite(cookie.rawHost);
       site.cookies.push(cookie);
+      if (site.lastAccessed < cookie.lastAccessed) {
+        site.lastAccessed = cookie.lastAccessed;
+      }
     }
   },
 
@@ -228,7 +235,8 @@ this.SiteDataManager = {
           cookies: site.cookies,
           host,
           usage,
-          persisted: site.persisted
+          persisted: site.persisted,
+          lastAccessed: new Date(site.lastAccessed / 1000),
         });
       }
       return list;

@@ -273,20 +273,11 @@ DoConstDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
     }
 
     switch(XPT_TDP_TAG(cd->type.prefix)) {
-      case TD_INT8:
-        ok = XPT_Do8(cursor, (uint8_t*) &cd->value.i8);
-        break;
       case TD_INT16:
         ok = XPT_Do16(cursor, (uint16_t*) &cd->value.i16);
         break;
       case TD_INT32:
         ok = XPT_Do32(cursor, (uint32_t*) &cd->value.i32);
-        break;
-      case TD_INT64:
-        ok = XPT_Do64(cursor, &cd->value.i64);
-        break;
-      case TD_UINT8:
-        ok = XPT_Do8(cursor, &cd->value.ui8);
         break;
       case TD_UINT16:
         ok = XPT_Do16(cursor, &cd->value.ui16);
@@ -294,23 +285,12 @@ DoConstDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
       case TD_UINT32:
         ok = XPT_Do32(cursor, &cd->value.ui32);
         break;
-      case TD_UINT64:
-        ok = XPT_Do64(cursor, (int64_t *)&cd->value.ui64);
-        break;
-      case TD_CHAR:
-        ok = XPT_Do8(cursor, (uint8_t*) &cd->value.ch);
-        break;
-      case TD_WCHAR:
-        ok = XPT_Do16(cursor, &cd->value.wch);
-        break;
-        /* fall-through */
       default:
-        fprintf(stderr, "illegal type!\n");
+        MOZ_ASSERT(false, "illegal type");
         break;
     }
 
     return ok;
-
 }
 
 bool

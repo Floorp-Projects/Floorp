@@ -16,12 +16,12 @@ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
 JAR_MANIFESTS += ['jar.mn']
 
 GENERATED_FILES = [
-    'multilocale.json',
+    'multilocale.txt',
 ]
-multilocale = GENERATED_FILES['multilocale.json']
+multilocale = GENERATED_FILES['multilocale.txt']
 multilocale.script = 'gen_multilocale.py'
 FINAL_TARGET_FILES.res += [
-    '!multilocale.json',
+    '!multilocale.txt',
 ]
 
 if CONFIG['MOZ_CRASHREPORTER']:

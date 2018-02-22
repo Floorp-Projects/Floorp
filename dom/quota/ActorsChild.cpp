@@ -163,7 +163,8 @@ QuotaUsageRequestChild::HandleResponse(const nsTArray<OriginUsage>& aResponse)
 
       RefPtr<UsageResult> usageResult = new UsageResult(originUsage.origin(),
                                                         originUsage.persisted(),
-                                                        originUsage.usage());
+                                                        originUsage.usage(),
+                                                        originUsage.lastAccessed());
 
       usageResults.AppendElement(usageResult.forget());
     }

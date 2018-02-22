@@ -61,7 +61,13 @@ add_task(async function() {
     return extension.awaitMessage("manifest");
   }
 
-  Components.manager.addBootstrappedManifestLocation(do_get_file("data/locales/"));
+  // At the moment extension language negotiation is tied to Firefox language
+  // negotiation result. That means that to test an extension in `fr`, we need
+  // to mock `fr` being available in Firefox and then request it.
+  //
+  // In the future, we should provide some way for tests to decouple their
+  // language selection from that of Firefox.
+  Services.locale.setAvailableLocales(["en-US", "fr", "jp"]);
 
   await extension.startup();
 

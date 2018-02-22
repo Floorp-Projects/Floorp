@@ -20,7 +20,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/intl/LocaleService.h"
-#include "nsNativeCharsetUtils.h"
 
 #include "nsAppRunner.h"
 #include "mozilla/XREAppData.h"
@@ -2477,9 +2476,8 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
     nsCOMPtr<nsIFile> prefsJSFile;
     profile->GetRootDir(getter_AddRefs(prefsJSFile));
     prefsJSFile->AppendNative(NS_LITERAL_CSTRING("prefs.js"));
-    nsAutoCString pathStr;
-    prefsJSFile->GetNativePath(pathStr);
-    PR_fprintf(PR_STDERR, "Success: created profile '%s' at '%s'\n", arg, pathStr.get());
+    PR_fprintf(PR_STDERR, "Success: created profile '%s' at '%s'\n", arg,
+               prefsJSFile->HumanReadablePath().get());
     bool exists;
     prefsJSFile->Exists(&exists);
     if (!exists) {
@@ -2732,8 +2730,12 @@ CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
     return false;
 
   nsCOMPtr<nsIFile> lf;
-  rv = NS_NewNativeLocalFile(buf, false,
+  rv = NS_NewNativeLocalFile(EmptyCString(), false,
                              getter_AddRefs(lf));
+  if (NS_FAILED(rv))
+    return false;
+
+  rv = lf->SetPersistentDescriptor(buf);
   if (NS_FAILED(rv))
     return false;
 
@@ -2747,8 +2749,12 @@ CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
     if (NS_FAILED(rv))
       return false;
 
-    rv = NS_NewNativeLocalFile(buf, false,
+    rv = NS_NewNativeLocalFile(EmptyCString(), false,
                                getter_AddRefs(lf));
+    if (NS_FAILED(rv))
+      return false;
+
+    rv = lf->SetPersistentDescriptor(buf);
     if (NS_FAILED(rv))
       return false;
 
@@ -2791,11 +2797,11 @@ WriteVersion(nsIFile* aProfileDir, const nsCString& aVersion,
   file->AppendNative(FILE_COMPATIBILITY_INFO);
 
   nsAutoCString platformDir;
-  aXULRunnerDir->GetNativePath(platformDir);
+  Unused << aXULRunnerDir->GetPersistentDescriptor(platformDir);
 
   nsAutoCString appDir;
   if (aAppDir)
-    aAppDir->GetNativePath(appDir);
+    Unused << aAppDir->GetPersistentDescriptor(appDir);
 
   PRFileDesc *fd;
   nsresult rv =
@@ -4481,7 +4487,7 @@ XREMain::XRE_mainRun()
     }
   }
 
-  if (NS_IsNativeUTF8()) {
+#ifndef XP_WIN
     nsCOMPtr<nsIFile> profileDir;
     nsAutoCString path;
     rv = mDirProvider.GetProfileStartupDir(getter_AddRefs(profileDir));
@@ -4489,7 +4495,7 @@ XREMain::XRE_mainRun()
       PR_fprintf(PR_STDERR, "Error: The profile path is not valid UTF-8. Unable to continue.\n");
       return NS_ERROR_FAILURE;
     }
-  }
+#endif
 
   // Initialize user preferences before notifying startup observers so they're
   // ready in time for early consumers, such as the component loader.

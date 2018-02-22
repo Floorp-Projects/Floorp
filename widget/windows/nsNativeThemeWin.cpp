@@ -18,7 +18,6 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsNameSpaceManager.h"
-#include "nsIDOMHTMLInputElement.h"
 #include "nsLookAndFeel.h"
 #include "nsMenuFrame.h"
 #include "nsGkAtoms.h"

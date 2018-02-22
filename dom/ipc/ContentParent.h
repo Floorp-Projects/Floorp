@@ -751,9 +751,7 @@ private:
   bool LaunchSubprocess(hal::ProcessPriority aInitialPriority = hal::PROCESS_PRIORITY_FOREGROUND);
 
   // Common initialization after sub process launch or adoption.
-  void InitInternal(ProcessPriority aPriority,
-                    bool aSetupOffMainThreadCompositing,
-                    bool aSendRegisteredChrome);
+  void InitInternal(ProcessPriority aPriority);
 
   virtual ~ContentParent();
 

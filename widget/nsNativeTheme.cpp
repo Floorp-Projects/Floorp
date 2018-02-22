@@ -13,7 +13,6 @@
 #include "nsPresContext.h"
 #include "nsString.h"
 #include "nsNameSpaceManager.h"
-#include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsThemeConstants.h"
 #include "nsIComponentManager.h"
@@ -26,6 +25,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBodyElement.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLProgressElement.h"
 #include "nsIDocumentInlines.h"
 #include <algorithm>
@@ -210,11 +210,9 @@ nsNativeTheme::GetCheckedOrSelected(nsIFrame* aFrame, bool aCheckSelected)
     aFrame = aFrame->GetParent();
   } else {
     // Check for an HTML input element
-    nsCOMPtr<nsIDOMHTMLInputElement> inputElt = do_QueryInterface(content);
+    HTMLInputElement* inputElt = HTMLInputElement::FromContent(content);
     if (inputElt) {
-      bool checked;
-      inputElt->GetChecked(&checked);
-      return checked;
+      return inputElt->Checked();
     }
   }
 
@@ -262,11 +260,9 @@ nsNativeTheme::GetIndeterminate(nsIFrame* aFrame)
   }
 
   // Check for an HTML input element
-  nsCOMPtr<nsIDOMHTMLInputElement> inputElt = do_QueryInterface(content);
+  HTMLInputElement* inputElt = HTMLInputElement::FromContent(content);
   if (inputElt) {
-    bool indeterminate;
-    inputElt->GetIndeterminate(&indeterminate);
-    return indeterminate;
+    return inputElt->Indeterminate();
   }
 
   return false;

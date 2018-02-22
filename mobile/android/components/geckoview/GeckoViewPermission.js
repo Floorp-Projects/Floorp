@@ -182,7 +182,7 @@ GeckoViewPermission.prototype = {
     let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
     let dispatcher = GeckoViewUtils.getDispatcherForWindow(
         aRequest.window ? aRequest.window : aRequest.element.ownerGlobal);
-    let promise = dispatcher.sendRequestForResult({
+    dispatcher.sendRequestForResult({
         type: "GeckoView:ContentPermission",
         uri: aRequest.principal.URI.displaySpec,
         perm: perm.type,

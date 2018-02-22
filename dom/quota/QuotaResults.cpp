@@ -12,10 +12,12 @@ namespace quota {
 
 UsageResult::UsageResult(const nsACString& aOrigin,
                          bool aPersisted,
-                         uint64_t aUsage)
+                         uint64_t aUsage,
+                         uint64_t aLastAccessed)
   : mOrigin(aOrigin)
   , mUsage(aUsage)
   , mPersisted(aPersisted)
+  , mLastAccessed(aLastAccessed)
 {
 }
 
@@ -44,6 +46,15 @@ UsageResult::GetUsage(uint64_t* aUsage)
   MOZ_ASSERT(aUsage);
 
   *aUsage = mUsage;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UsageResult::GetLastAccessed(uint64_t* aLastAccessed)
+{
+  MOZ_ASSERT(aLastAccessed);
+
+  *aLastAccessed = mLastAccessed;
   return NS_OK;
 }
 

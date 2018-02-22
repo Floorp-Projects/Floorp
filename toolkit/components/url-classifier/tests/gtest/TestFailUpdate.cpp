@@ -29,9 +29,7 @@ void CheckFileExist(const char* table, const T (&files)[N], bool expectExists)
     bool exists;
     file->Exists(&exists);
 
-    nsAutoCString path;
-    file->GetNativePath(path);
-    ASSERT_EQ(expectExists, exists) << path.get();
+    ASSERT_EQ(expectExists, exists) << file->HumanReadablePath().get();
   }
 }
 

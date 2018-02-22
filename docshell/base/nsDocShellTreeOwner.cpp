@@ -35,7 +35,6 @@
 #include "nsIDOMFileList.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIFormControl.h"
-#include "nsIDOMHTMLInputElement.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIWebNavigation.h"
 #include "nsIPresShell.h"

@@ -46,9 +46,15 @@ enum class CompositorHitTestInfo : uint16_t {
   // one (if set) or a horizontal one (if not set)
   eScrollbarVertical = 1 << 8,
 
+  // Events targeting this frame should only be processed if a target
+  // confirmation is received from the main thread. If no such confirmation
+  // is received within a timeout period, the event may be dropped.
+  // Only meaningful in combination with eDispatchToContent.
+  eRequiresTargetConfirmation = 1 << 9,
+
   // Used for IPDL serialization. This bitmask should include all the bits
   // that are defined in the enum.
-  ALL_BITS = (1 << 9) - 1,
+  ALL_BITS = (1 << 10) - 1,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CompositorHitTestInfo)

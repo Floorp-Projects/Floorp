@@ -126,11 +126,9 @@ add_test(function test_getRequestedLocale() {
 });
 
 add_test(function test_setRequestedLocales() {
-  localeService.setRequestedLocales([]);
-
   localeService.setRequestedLocales(['de-AT', 'de-DE', 'de-CH']);
 
-  let locales = localeService.getRequestedLocales();;
+  let locales = localeService.getRequestedLocales();
   Assert.ok(locales[0] === 'de-AT');
   Assert.ok(locales[1] === 'de-DE');
   Assert.ok(locales[2] === 'de-CH');
@@ -144,11 +142,31 @@ add_test(function test_isAppLocaleRTL() {
   run_next_test();
 });
 
+add_test(function test_getPackagedLocales() {
+  const locales = localeService.getPackagedLocales();
+  Assert.ok(locales.length !== 0, "Packaged locales are empty");
+  run_next_test();
+});
+
+add_test(function test_setAvailableLocales() {
+  const avLocales = localeService.getAvailableLocales();
+  localeService.setAvailableLocales(["und", "ar-IR"]);
+
+  let locales = localeService.getAvailableLocales();
+  Assert.ok(locales.length == 2);
+  Assert.ok(locales[0] === 'und');
+  Assert.ok(locales[1] === 'ar-IR');
+
+  localeService.setAvailableLocales(avLocales);
+
+  run_next_test();
+});
+
 /**
  * This test verifies that all values coming from the pref are sanitized.
  */
 add_test(function test_getRequestedLocales_sanitize() {
-  Services.prefs.setCharPref(PREF_REQUESTED_LOCALES, "de,2,#$@#,pl,!a2,DE-at,,;");
+  Services.prefs.setCharPref(PREF_REQUESTED_LOCALES, "de,2,#$@#,pl,ąó,!a2,DE-at,,;");
 
   let locales = localeService.getRequestedLocales();
   Assert.equal(locales[0], "de");
@@ -162,6 +180,28 @@ add_test(function test_getRequestedLocales_sanitize() {
 
   run_next_test();
 });
+
+add_test(function test_handle_ja_JP_mac() {
+  const bkpAvLocales = localeService.getAvailableLocales();
+
+  localeService.setAvailableLocales(["ja-JP-mac", "en-US"]);
+
+  localeService.setRequestedLocales(['ja-JP-mac']);
+
+  let reqLocales = localeService.getRequestedLocales();
+  Assert.ok(reqLocales[0] === 'ja-JP-mac');
+
+  let avLocales = localeService.getAvailableLocales();
+  Assert.ok(avLocales[0] === 'ja-JP-mac');
+
+  let appLocales = localeService.getAppLocalesAsLangTags();
+  Assert.ok(appLocales[0] === 'ja-JP-mac');
+
+  localeService.setAvailableLocales(bkpAvLocales);
+
+  run_next_test();
+});
+
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref(PREF_REQUESTED_LOCALES);

@@ -343,15 +343,6 @@ PreviewController.prototype = {
   }
 };
 
-XPCOMUtils.defineLazyGetter(PreviewController.prototype, "canvasPreviewFlags",
-  function() {
- let canvasInterface = Ci.nsIDOMCanvasRenderingContext2D;
-                return canvasInterface.DRAWWINDOW_DRAW_VIEW
-                     | canvasInterface.DRAWWINDOW_DRAW_CARET
-                     | canvasInterface.DRAWWINDOW_ASYNC_DECODE_IMAGES
-                     | canvasInterface.DRAWWINDOW_DO_NOT_FLUSH;
-});
-
 // TabWindow
 
 /*

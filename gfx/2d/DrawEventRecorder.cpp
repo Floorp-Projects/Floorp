@@ -35,7 +35,7 @@ DrawEventRecorderMemory::RecordEvent(const RecordedEvent &aEvent)
   aEvent.RecordToStream(mOutputStream);
 }
 
-DrawEventRecorderFile::DrawEventRecorderFile(const char *aFilename)
+DrawEventRecorderFile::DrawEventRecorderFile(const char_type* aFilename)
   : mOutputStream(aFilename, ofstream::binary)
 {
   WriteHeader(mOutputStream);
@@ -59,7 +59,7 @@ DrawEventRecorderFile::IsOpen()
 }
 
 void
-DrawEventRecorderFile::OpenNew(const char *aFilename)
+DrawEventRecorderFile::OpenNew(const char_type* aFilename)
 {
   MOZ_ASSERT(!mOutputStream.is_open());
 

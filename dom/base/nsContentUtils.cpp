@@ -135,7 +135,6 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMWindowUtils.h"
@@ -1060,7 +1059,7 @@ nsContentUtils::Atob(const nsAString& aAsciiBase64String,
 }
 
 bool
-nsContentUtils::IsAutocompleteEnabled(nsIDOMHTMLInputElement* aInput)
+nsContentUtils::IsAutocompleteEnabled(mozilla::dom::HTMLInputElement* aInput)
 {
   NS_PRECONDITION(aInput, "aInput should not be null!");
 
@@ -1068,8 +1067,7 @@ nsContentUtils::IsAutocompleteEnabled(nsIDOMHTMLInputElement* aInput)
   aInput->GetAutocomplete(autocomplete);
 
   if (autocomplete.IsEmpty()) {
-    nsCOMPtr<nsIDOMHTMLFormElement> form;
-    aInput->GetForm(getter_AddRefs(form));
+    auto* form = aInput->GetForm();
     if (!form) {
       return true;
     }

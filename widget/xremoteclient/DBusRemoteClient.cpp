@@ -133,6 +133,9 @@ DBusRemoteClient::GetRemoteDestinationName(const char *aProgram,
 
     aDestinationName = nsPrintfCString("org.mozilla.%s.%s", aProgram,
                                                             profileName.get());
+    if (aDestinationName.Length() > DBUS_MAXIMUM_NAME_LENGTH)
+      aDestinationName.Truncate(DBUS_MAXIMUM_NAME_LENGTH);
+
     return true;
   }
 }

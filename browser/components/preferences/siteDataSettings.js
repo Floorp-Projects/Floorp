@@ -67,6 +67,10 @@ let gSiteDataSettings = {
       addColumnItem(null, "1");
     }
 
+    // Add "Last Used" column.
+    addColumnItem(site.lastAccessed > 0 ?
+      this._formatter.format(site.lastAccessed) : null, "2");
+
     item.appendChild(container);
     return item;
   },
@@ -76,6 +80,10 @@ let gSiteDataSettings = {
       document.getElementById(id)
               .addEventListener(eventType, callback.bind(gSiteDataSettings));
     }
+
+    this._formatter = new Services.intl.DateTimeFormat(undefined, {
+      dateStyle: "short", timeStyle: "short",
+    });
 
     this._list = document.getElementById("sitesList");
     this._searchBox = document.getElementById("searchBox");
@@ -95,6 +103,7 @@ let gSiteDataSettings = {
     setEventListener("sitesList", "select", this.onSelect);
     setEventListener("hostCol", "click", this.onClickTreeCol);
     setEventListener("usageCol", "click", this.onClickTreeCol);
+    setEventListener("lastAccessedCol", "click", this.onClickTreeCol);
     setEventListener("cookiesCol", "click", this.onClickTreeCol);
     setEventListener("statusCol", "click", this.onClickTreeCol);
     setEventListener("cancel", "command", this.close);
@@ -160,6 +169,10 @@ let gSiteDataSettings = {
 
       case "usageCol":
         sortFunc = (a, b) => a.usage - b.usage;
+        break;
+
+      case "lastAccessedCol":
+        sortFunc = (a, b) => a.lastAccessed - b.lastAccessed;
         break;
     }
     if (sortDirection === "descending") {

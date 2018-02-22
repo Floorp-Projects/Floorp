@@ -92,10 +92,11 @@ enum class StyleRuleInclusion {
 
 // Represents which tasks are performed in a SequentialTask of UpdateAnimations.
 enum class UpdateAnimationsTasks : uint8_t {
-  CSSAnimations    = 1 << 0,
-  CSSTransitions   = 1 << 1,
-  EffectProperties = 1 << 2,
-  CascadeResults   = 1 << 3,
+  CSSAnimations          = 1 << 0,
+  CSSTransitions         = 1 << 1,
+  EffectProperties       = 1 << 2,
+  CascadeResults         = 1 << 3,
+  DisplayChangedFromNone = 1 << 4,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(UpdateAnimationsTasks)

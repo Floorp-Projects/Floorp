@@ -566,7 +566,7 @@ void RecordingPrefChanged(const char *aPrefName, void *aClosure)
     nsAutoString prefFileName;
     nsresult rv = Preferences::GetString("gfx.2d.recordingfile", prefFileName);
     if (NS_SUCCEEDED(rv)) {
-      fileName.Append(NS_ConvertUTF16toUTF8(prefFileName));
+      CopyUTF16toUTF8(prefFileName, fileName);
     } else {
       nsCOMPtr<nsIFile> tmpFile;
       if (NS_FAILED(NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpFile)))) {
@@ -578,12 +578,21 @@ void RecordingPrefChanged(const char *aPrefName, void *aClosure)
       if (NS_FAILED(rv))
         return;
 
+#ifdef XP_WIN
+      rv = tmpFile->GetPath(prefFileName);
+      CopyUTF16toUTF8(prefFileName, fileName);
+#else
       rv = tmpFile->GetNativePath(fileName);
+#endif
       if (NS_FAILED(rv))
         return;
     }
 
+#ifdef XP_WIN
+    gPlatform->mRecorder = Factory::CreateEventRecorderForFile(prefFileName.BeginReading());
+#else
     gPlatform->mRecorder = Factory::CreateEventRecorderForFile(fileName.BeginReading());
+#endif
     printf_stderr("Recording to %s\n", fileName.get());
     Factory::SetGlobalEventRecorder(gPlatform->mRecorder);
   } else {
@@ -675,11 +684,11 @@ gfxPlatform::Init()
       nsCOMPtr<nsIFile> file;
       nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(file));
       if (NS_FAILED(rv)) {
-        gfxVars::SetGREDirectory(nsCString());
+        gfxVars::SetGREDirectory(nsString());
       } else {
-        nsAutoCString nativePath;
-        file->GetNativePath(nativePath);
-        gfxVars::SetGREDirectory(nsCString(nativePath));
+        nsAutoString path;
+        file->GetPath(path);
+        gfxVars::SetGREDirectory(nsString(path));
       }
     }
 

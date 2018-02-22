@@ -64,10 +64,10 @@
         <h1>&paymentSummaryTitle;</h1>
 
         <section>
-          <div><label>&shippingAddressLabel;</label></div>
-          <address-picker selected-state-key="selectedShippingAddress"></address-picker>
-          <div><label>&shippingOptionsLabel;</label></div>
-          <shipping-option-picker></shipping-option-picker>
+          <div class="shippingRequested"><label>&shippingAddressLabel;</label></div>
+          <address-picker class="shippingRequested" selected-state-key="selectedShippingAddress"></address-picker>
+          <div class="shippingRequested"><label>&shippingOptionsLabel;</label></div>
+          <shipping-option-picker class="shippingRequested"></shipping-option-picker>
           <div><label>&paymentMethodsLabel;</label></div>
           <payment-method-picker selected-state-key="selectedPaymentCard"></payment-method-picker>
         </section>

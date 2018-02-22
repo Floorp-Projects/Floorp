@@ -23,16 +23,4 @@ interface nsIDOMHTMLFormElement;
 [uuid(64aeda0b-e9b5-4868-a4f9-e4776e32e733)]
 interface nsIDOMHTMLInputElement : nsISupports
 {
-  readonly attribute DOMString             autocomplete;
-           attribute boolean               checked;
-  readonly attribute nsIDOMHTMLFormElement form;
-           attribute DOMString             formAction;
-
-           attribute boolean               indeterminate;
-
-           attribute DOMString             name;
-
-           attribute boolean               readOnly;
-
-  readonly attribute nsIControllers        controllers;
 };

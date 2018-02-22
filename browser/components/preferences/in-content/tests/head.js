@@ -229,7 +229,8 @@ const mockSiteDataManager = {
     let result = this.fakeSites.map(site => ({
       origin: site.principal.origin,
       usage: site.usage,
-      persisted: site.persisted
+      persisted: site.persisted,
+      lastAccessed: site.lastAccessed,
     }));
     onUsageResult({ result, resultCode: Components.results.NS_OK });
   },
@@ -270,9 +271,9 @@ const mockSiteDataManager = {
     }
   },
 
-  unregister() {
+  async unregister() {
+    await this._SiteDataManager.removeAll();
     this.fakeSites = null;
-    this._SiteDataManager.removeAll();
     this._SiteDataManager._qms = this._originalQMS;
     this._SiteDataManager._removeQuotaUsage = this._originalRemoveQuotaUsage;
   }

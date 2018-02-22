@@ -4,7 +4,6 @@
 
 #include "nsNativeThemeAndroid.h"
 
-#include "nsIDOMHTMLInputElement.h"
 #include "nsIFrame.h"
 #include "nsThemeConstants.h"
 #include "AndroidColors.h"

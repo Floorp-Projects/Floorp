@@ -65,6 +65,11 @@ this.PaymentTestUtils = {
   },
 
   DialogContentTasks: {
+    isElementVisible: selector => {
+      let element = content.document.querySelector(selector);
+      return !element.hidden;
+    },
+
     getShippingOptions: () => {
       let select = content.document.querySelector("shipping-option-picker > rich-select");
       let popupBox = Cu.waiveXrays(select).popupBox;

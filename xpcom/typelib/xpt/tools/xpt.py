@@ -877,13 +877,11 @@ class Method(object):
 class Constant(object):
     """
     A constant value of a specific type defined on an interface.
-    (ConstantDesciptor from the typelib specification.)
+    (ConstantDescriptor from the typelib specification.)
 
     """
     _descriptorstart = struct.Struct(">I")
     # Actual value is restricted to this set of types
-    # XXX: the spec lies, the source allows a bunch more
-    # https://hg.mozilla.org/mozilla-central/annotate/9c85f9aaec8c/xpcom/typelib/xpt/src/xpt_struct.c#l689
     typemap = {Type.Tags.int16: '>h',
                Type.Tags.uint16: '>H',
                Type.Tags.int32: '>i',

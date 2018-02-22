@@ -31,6 +31,7 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
     this._viewAllButton.addEventListener("click", this);
 
     this._orderDetailsOverlay = contents.querySelector("#order-details-overlay");
+    this._shippingRequestedEls = contents.querySelectorAll(".shippingRequested");
 
     this.appendChild(contents);
 
@@ -170,6 +171,9 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
     totalAmountEl.currency = totalItem.amount.currency;
 
     this._orderDetailsOverlay.hidden = !state.orderDetailsShowing;
+    for (let element of this._shippingRequestedEls) {
+      element.hidden = !request.paymentOptions.requestShipping;
+    }
   }
 }
 

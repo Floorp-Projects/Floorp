@@ -52,7 +52,7 @@ public:
    * return values from this function, including |aOutInputBlockId|.
    */
   nsEventStatus ReceiveInputEvent(const RefPtr<AsyncPanZoomController>& aTarget,
-                                  bool aTargetConfirmed,
+                                  TargetConfirmationFlags aFlags,
                                   const InputData& aEvent,
                                   uint64_t* aOutInputBlockId);
   /**
@@ -140,7 +140,7 @@ private:
   ~InputQueue();
 
   TouchBlockState* StartNewTouchBlock(const RefPtr<AsyncPanZoomController>& aTarget,
-                                      bool aTargetConfirmed,
+                                      TargetConfirmationFlags aFlags,
                                       bool aCopyPropertiesFromCurrent);
 
   /**
@@ -157,21 +157,21 @@ private:
                                    CancelableBlockState* aBlock);
 
   nsEventStatus ReceiveTouchInput(const RefPtr<AsyncPanZoomController>& aTarget,
-                                  bool aTargetConfirmed,
+                                  TargetConfirmationFlags aFlags,
                                   const MultiTouchInput& aEvent,
                                   uint64_t* aOutInputBlockId);
   nsEventStatus ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
-                                  bool aTargetConfirmed,
+                                  TargetConfirmationFlags aFlags,
                                   const MouseInput& aEvent,
                                   uint64_t* aOutInputBlockId);
   nsEventStatus ReceiveScrollWheelInput(const RefPtr<AsyncPanZoomController>& aTarget,
-                                        bool aTargetConfirmed,
+                                        TargetConfirmationFlags aFlags,
                                         const ScrollWheelInput& aEvent,
                                         uint64_t* aOutInputBlockId);
   nsEventStatus ReceivePanGestureInput(const RefPtr<AsyncPanZoomController>& aTarget,
-                                        bool aTargetConfirmed,
-                                        const PanGestureInput& aEvent,
-                                        uint64_t* aOutInputBlockId);
+                                       TargetConfirmationFlags aFlags,
+                                       const PanGestureInput& aEvent,
+                                       uint64_t* aOutInputBlockId);
   nsEventStatus ReceiveKeyboardInput(const RefPtr<AsyncPanZoomController>& aTarget,
                                      const KeyboardInput& aEvent,
                                      uint64_t* aOutInputBlockId);

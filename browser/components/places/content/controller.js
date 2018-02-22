@@ -1382,11 +1382,12 @@ var PlacesControllerDragHelper = {
         unwrappedNode.id <= 0 || PlacesUtils.isRootItem(unwrappedNode.id)) {
       return false;
     }
-    let parentId = unwrappedNode.parent;
-    if (parentId <= 0 ||
-        parentId == PlacesUtils.placesRootId ||
-        parentId == PlacesUtils.tagsFolderId ||
-        unwrappedNode.grandParentId == PlacesUtils.tagsFolderId) {
+
+    let parentGuid = unwrappedNode.parentGuid;
+    // If there's no parent Guid, this was likely a virtual query that returns
+    // bookmarks, such as a tags query.
+    if (!parentGuid ||
+        parentGuid == PlacesUtils.bookmarks.rootGuid) {
       return false;
     }
     // leftPaneFolderId and allBookmarksFolderId are lazy getters running
@@ -1394,7 +1395,7 @@ var PlacesControllerDragHelper = {
     // them first, especially because isCommandEnabled may be called way
     // before the left pane folder is even necessary.
     if (typeof Object.getOwnPropertyDescriptor(PlacesUIUtils, "leftPaneFolderId").get != "function" &&
-        (parentId == PlacesUIUtils.leftPaneFolderId)) {
+        (unwrappedNode.parent == PlacesUIUtils.leftPaneFolderId)) {
       return false;
     }
     return true;

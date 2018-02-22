@@ -109,13 +109,13 @@ static PRLibrary* LoadApitraceLibrary()
 static PRLibrary*
 LoadLibraryForEGLOnWindows(const nsAString& filename)
 {
-    nsAutoCString path(gfx::gfxVars::GREDirectory());
+    nsAutoString path(gfx::gfxVars::GREDirectory());
     path.Append(PR_GetDirectorySeparator());
-    path.Append(ToNewUTF8String(filename));
+    path.Append(filename);
 
     PRLibSpec lspec;
-    lspec.type = PR_LibSpec_Pathname;
-    lspec.value.pathname = path.get();
+    lspec.type = PR_LibSpec_PathnameU;
+    lspec.value.pathname_u = path.get();
     return PR_LoadLibraryWithFlags(lspec, PR_LD_LAZY | PR_LD_LOCAL);
 }
 

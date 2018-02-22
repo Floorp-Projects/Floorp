@@ -13,14 +13,8 @@ namespace mozilla {
 
 class GeckoStyleContext final : public nsStyleContext {
 public:
-  static already_AddRefed<GeckoStyleContext>
-  TakeRef(already_AddRefed<nsStyleContext> aStyleContext)
-  {
-    auto* context = aStyleContext.take();
-    MOZ_ASSERT(context);
-
-    return already_AddRefed<GeckoStyleContext>(context->AsGecko());
-  }
+  static inline already_AddRefed<GeckoStyleContext>
+  TakeRef(already_AddRefed<nsStyleContext> aStyleContext);
 
   GeckoStyleContext(GeckoStyleContext* aParent,
                     nsAtom* aPseudoTag,

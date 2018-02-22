@@ -8009,7 +8009,9 @@ var gIdentityHandler = {
     nameLabel.setAttribute("class", "identity-popup-permission-label");
     nameLabel.textContent = SitePermissions.getPermissionLabel(aPermission.id);
 
-    if (aPermission.id == "popup") {
+    let isPolicyPermission = aPermission.scope == SitePermissions.SCOPE_POLICY;
+
+    if (aPermission.id == "popup" && !isPolicyPermission) {
       let menulist = document.createElement("menulist");
       let menupopup = document.createElement("menupopup");
       let block = document.createElement("vbox");
@@ -8063,6 +8065,17 @@ var gIdentityHandler = {
       scope = SitePermissions.SCOPE_REQUEST;
     }
     stateLabel.textContent = SitePermissions.getCurrentStateLabel(state, scope);
+
+    container.appendChild(img);
+    container.appendChild(nameLabel);
+    container.appendChild(stateLabel);
+
+    /* We return the permission item here without a remove button if the permission is a
+       SCOPE_POLICY permission. Policy permissions cannot be removed/changed for the duration
+       of the browser session. */
+    if (isPolicyPermission) {
+      return container;
+    }
 
     let button = document.createElement("button");
     button.setAttribute("class", "identity-popup-permission-remove-button");
@@ -8128,9 +8141,6 @@ var gIdentityHandler = {
       histogram.add(aPermission.id, permissionType);
     });
 
-    container.appendChild(img);
-    container.appendChild(nameLabel);
-    container.appendChild(stateLabel);
     container.appendChild(button);
 
     return container;

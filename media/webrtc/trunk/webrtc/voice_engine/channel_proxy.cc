@@ -56,9 +56,11 @@ void ChannelProxy::SetSendAudioLevelIndicationStatus(bool enable, int id) {
   RTC_DCHECK_EQ(0, error);
 }
 
-void ChannelProxy::SetReceiveAudioLevelIndicationStatus(bool enable, int id) {
+void ChannelProxy::SetReceiveAudioLevelIndicationStatus(bool enable, int id,
+                                                        bool isLevelSsrc) {
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
-  int error = channel()->SetReceiveAudioLevelIndicationStatus(enable, id);
+  int error = channel()->SetReceiveAudioLevelIndicationStatus(enable, id,
+                                                              isLevelSsrc);
   RTC_DCHECK_EQ(0, error);
 }
 
