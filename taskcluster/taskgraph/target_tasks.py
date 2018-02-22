@@ -486,6 +486,11 @@ def target_tasks_promote_fennec(full_task_graph, parameters, graph_config):
         if attr("locale") or attr("chunk_locales"):
             return False
         if task.label in filtered_for_project:
+            # bug 1438023 - old-id should only run on central.
+            # We can remove this hack when shippable builds land and we
+            # are using run-on-projects properly here.
+            if 'old-id' in task.label:
+                return False
             if task.kind not in ('balrog', 'push-apk', 'push-apk-breakpoint'):
                 if task.attributes.get('nightly'):
                     return True

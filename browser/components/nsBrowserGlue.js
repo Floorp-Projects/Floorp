@@ -556,9 +556,6 @@ BrowserGlue.prototype = {
           }
         });
         break;
-      case "test-initialize-sanitizer":
-        Sanitizer.onStartup();
-        break;
       case "sync-ui-state:update":
         this._updateFxaBadges();
         break;

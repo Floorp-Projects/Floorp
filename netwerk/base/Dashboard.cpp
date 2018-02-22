@@ -756,6 +756,7 @@ Dashboard::GetDNSCacheEntries(DnsData *dnsData)
 
         CopyASCIItoUTF16(dnsData->mData[i].hostname, entry.mHostname);
         entry.mExpiration = dnsData->mData[i].expiration;
+        entry.mTrr = dnsData->mData[i].TRR;
 
         for (uint32_t j = 0; j < dnsData->mData[i].hostaddr.Length(); j++) {
             nsString* addr = addrs.AppendElement(fallible);
