@@ -425,7 +425,7 @@ nsSVGMaskProperty::ResolveImage(uint32_t aIndex)
 
   if (!image.IsResolved()) {
     MOZ_ASSERT(image.GetType() == nsStyleImageType::eStyleImageType_Image);
-    image.ResolveImage(mFrame->PresContext());
+    image.ResolveImage(mFrame->PresContext(), nullptr);
 
     mozilla::css::ImageLoader* imageLoader =
       mFrame->PresContext()->Document()->StyleImageLoader();

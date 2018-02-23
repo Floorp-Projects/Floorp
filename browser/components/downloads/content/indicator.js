@@ -40,13 +40,6 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
  */
 const DownloadsButton = {
   /**
-   * Location of the indicator overlay.
-   */
-  get kIndicatorOverlay() {
-    return "chrome://browser/content/downloads/indicatorOverlay.xul";
-  },
-
-  /**
    * Returns a reference to the downloads button position placeholder, or null
    * if not available because it has been removed from the toolbars.
    */
@@ -78,8 +71,7 @@ const DownloadsButton = {
   _getAnchorInternal() {
     let indicator = DownloadsIndicatorView.indicator;
     if (!indicator) {
-      // Exit now if the indicator overlay isn't loaded yet, or if the button
-      // is not in the document.
+      // Exit now if the button is not in the document.
       return null;
     }
 
@@ -104,22 +96,18 @@ const DownloadsButton = {
   /**
    * Ensures that there is an anchor available for the panel.
    *
-   * @param aCallback
-   *        Called when the anchor is available, passing the element where the
-   *        panel should be anchored, or null if an anchor is not available (for
-   *        example because both the tab bar and the navigation bar are hidden).
+   * @return Anchor element where the panel should be anchored, or null if an
+   *         anchor is not available (for example because both the tab bar and
+   *         the navigation bar are hidden).
    */
-  getAnchor(aCallback) {
+  getAnchor() {
     // Do not allow anchoring the panel to the element while customizing.
     if (this._customizing) {
-      aCallback(null);
-      return;
+      return null;
     }
 
-    DownloadsOverlayLoader.ensureOverlayLoaded(this.kIndicatorOverlay, () => {
-      this._anchorRequested = true;
-      aCallback(this._getAnchorInternal());
-    });
+    this._anchorRequested = true;
+    return this._getAnchorInternal();
   },
 
   /**
@@ -300,39 +288,26 @@ const DownloadsIndicatorView = {
 
   /**
    * Ensures that the user interface elements required to display the indicator
-   * are loaded, then invokes the given callback.
+   * are loaded.
    */
-  _ensureOperational(aCallback) {
+  _ensureOperational() {
     if (this._operational) {
-      if (aCallback) {
-        aCallback();
-      }
       return;
     }
 
-    // If we don't have a _placeholder, there's no chance that the overlay
+    // If we don't have a _placeholder, there's no chance that everything
     // will load correctly: bail (and don't set _operational to true!)
     if (!DownloadsButton._placeholder) {
       return;
     }
 
-    DownloadsOverlayLoader.ensureOverlayLoaded(
-      DownloadsButton.kIndicatorOverlay,
-      () => {
-        this._operational = true;
+    this._operational = true;
 
-        // If the view is initialized, we need to update the elements now that
-        // they are finally available in the document.
-        // We need to re-check for the placeholder because it might have
-        // disappeared since then.
-        if (this._initialized && DownloadsButton._placeholder) {
-          DownloadsCommon.getIndicatorData(window).refreshView(this);
-        }
-
-        if (aCallback) {
-          aCallback();
-        }
-      });
+    // If the view is initialized, we need to update the elements now that
+    // they are finally available in the document.
+    if (this._initialized) {
+      DownloadsCommon.getIndicatorData(window).refreshView(this);
+    }
   },
 
   // Direct control functions

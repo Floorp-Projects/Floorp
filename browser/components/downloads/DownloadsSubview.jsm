@@ -196,26 +196,14 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
   // ----- Static methods. -----
 
   /**
-   * Perform all tasks necessary to be able to show a Downloads Subview.
-   *
-   * @param  {DOMWindow} window  Global window object.
-   * @return {Promise}   Will resolve when all tasks are done.
-   */
-  static init(window) {
-    return new Promise(resolve =>
-      window.DownloadsOverlayLoader.ensureOverlayLoaded(window.DownloadsPanel.kDownloadsOverlay, resolve));
-  }
-
-  /**
    * Show the Downloads subview panel and listen for events that will trigger
    * building the dynamic part of the view.
    *
    * @param {DOMNode} anchor The button that was commanded to trigger this function.
    */
-  static async show(anchor) {
+  static show(anchor) {
     let document = anchor.ownerDocument;
     let window = anchor.ownerGlobal;
-    await DownloadsSubview.init(window);
 
     let panelview = document.getElementById("PanelUI-downloads");
     anchor.setAttribute("closemenu", "none");

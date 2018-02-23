@@ -357,3 +357,10 @@ pref("devtools.editor.autocomplete", true);
 // opened developer tool. This allows us to ping telemetry just once per browser
 // version for each user.
 pref("devtools.telemetry.tools.opened.version", "{}");
+
+// Whether to reload when touch simulation is toggled
+pref("devtools.responsive.reloadConditions.touchSimulation", false);
+// Whether to reload when user agent is changed
+pref("devtools.responsive.reloadConditions.userAgent", false);
+// Whether to show the notification about reloading to apply emulation
+pref("devtools.responsive.reloadNotification.enabled", true);
