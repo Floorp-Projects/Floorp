@@ -519,6 +519,7 @@ elif CONFIG['JS_CODEGEN_ARM64']:
         'jit/arm64/Bailouts-arm64.cpp',
         'jit/arm64/BaselineIC-arm64.cpp',
         'jit/arm64/CodeGenerator-arm64.cpp',
+        'jit/arm64/Disassembler-arm64.cpp',
         'jit/arm64/Lowering-arm64.cpp',
         'jit/arm64/MacroAssembler-arm64.cpp',
         'jit/arm64/MoveEmitter-arm64.cpp',
@@ -681,7 +682,7 @@ if CONFIG['JS_BUILD_BINAST']:
 # so that it is easy to use the huge-mapping optimization for other
 # 64-bit platforms in the future.
 
-if CONFIG['JS_CODEGEN_X64']:
+if CONFIG['JS_CODEGEN_X64'] or CONFIG['JS_CODEGEN_ARM64']:
     DEFINES['WASM_HUGE_MEMORY'] = True
 
 if CONFIG['MOZ_DEBUG'] or CONFIG['NIGHTLY_BUILD']:

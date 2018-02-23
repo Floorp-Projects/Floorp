@@ -71,5 +71,11 @@ FloatRegister::getRegisterDumpOffsetInBytes()
     return encoding() * sizeof(double);
 }
 
+uint32_t
+GetARM64Flags()
+{
+    return 0;
+}
+
 } // namespace jit
 } // namespace js
