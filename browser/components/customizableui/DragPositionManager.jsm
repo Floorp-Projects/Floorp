@@ -11,7 +11,7 @@ var gManagers = new WeakMap();
 
 const kPaletteId = "customization-palette";
 
-this.EXPORTED_SYMBOLS = ["DragPositionManager"];
+var EXPORTED_SYMBOLS = ["DragPositionManager"];
 
 function AreaPositionManager(aContainer) {
   // Caching the direction and bounds of the container for quick access later:

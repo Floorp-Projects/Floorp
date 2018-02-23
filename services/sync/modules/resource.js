@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["Resource"];
+var EXPORTED_SYMBOLS = ["Resource"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
@@ -27,12 +27,12 @@ Cu.importGlobalProperties(["fetch"]);
  *   post(data, callback)
  *   delete(callback)
  */
-this.Resource = function Resource(uri) {
+function Resource(uri) {
   this._log = Log.repository.getLogger(this._logName);
   this._log.manageLevelFromPref("services.sync.log.logger.network.resources");
   this.uri = uri;
   this._headers = {};
-};
+}
 // (static) Caches the latest server timestamp (X-Weave-Timestamp header).
 Resource.serverTime = null;
 

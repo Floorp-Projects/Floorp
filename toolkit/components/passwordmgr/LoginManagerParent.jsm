@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return logger.log.bind(logger);
 });
 
-this.EXPORTED_SYMBOLS = [ "LoginManagerParent" ];
+var EXPORTED_SYMBOLS = [ "LoginManagerParent" ];
 
 var LoginManagerParent = {
   /**

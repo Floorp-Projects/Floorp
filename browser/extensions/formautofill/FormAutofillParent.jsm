@@ -29,7 +29,7 @@
 
 // We expose a singleton from this module. Some tests may import the
 // constructor via a backstage pass.
-this.EXPORTED_SYMBOLS = ["formAutofillParent"];
+var EXPORTED_SYMBOLS = ["formAutofillParent"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -46,7 +46,7 @@ ChromeUtils.defineModuleGetter(this, "RecentWindow",
                                "resource:///modules/RecentWindow.jsm");
 
 this.log = null;
-FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
+FormAutofillUtils.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 const {
   ENABLED_AUTOFILL_ADDRESSES_PREF,
@@ -606,4 +606,4 @@ FormAutofillParent.prototype = {
   },
 };
 
-this.formAutofillParent = new FormAutofillParent();
+var formAutofillParent = new FormAutofillParent();

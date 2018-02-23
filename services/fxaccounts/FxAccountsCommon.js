@@ -245,7 +245,7 @@ for (let id in exports) {
 }
 
 // Allow this file to be imported via Components.utils.import().
-this.EXPORTED_SYMBOLS = Object.keys(exports);
+var EXPORTED_SYMBOLS = Object.keys(exports);
 
 // Set these up now that everything has been loaded into |this|.
 exports.SERVER_ERRNO_TO_ERROR[exports.ERRNO_ACCOUNT_ALREADY_EXISTS]         = exports.ERROR_ACCOUNT_ALREADY_EXISTS;

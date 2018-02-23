@@ -8,7 +8,7 @@
 
 /* eslint-disable mozilla/no-task */
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "Task"
 ];
 
@@ -136,7 +136,7 @@ function isGenerator(aValue) {
 /**
  * This object provides the public module functions.
  */
-this.Task = {
+var Task = {
   /**
    * Creates and starts a new task.
    *

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["Service"];
+var EXPORTED_SYMBOLS = ["Service"];
 
 // How long before refreshing the cluster
 const CLUSTER_BACKOFF = 5 * 60 * 1000; // 5 minutes
@@ -1410,7 +1410,7 @@ Sync11Service.prototype = {
   },
 };
 
-this.Service = new Sync11Service();
+var Service = new Sync11Service();
 this.Service.promiseInitialized = new Promise(resolve => {
   this.Service.onStartup().then(resolve);
 });

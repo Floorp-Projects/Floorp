@@ -266,5 +266,4 @@ IdpSandbox.prototype = {
   }
 };
 
-this.EXPORTED_SYMBOLS = ["IdpSandbox"];
-this.IdpSandbox = IdpSandbox;
+var EXPORTED_SYMBOLS = ["IdpSandbox"];

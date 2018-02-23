@@ -8,7 +8,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "FormValidationHandler" ];
+var EXPORTED_SYMBOLS = [ "FormValidationHandler" ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 

@@ -10,7 +10,7 @@ ChromeUtils.import("resource://shield-recipe-client/lib/PreferenceFilters.jsm");
 
 ChromeUtils.defineModuleGetter(this, "mozjexl", "resource://shield-recipe-client-vendor/mozjexl.js");
 
-this.EXPORTED_SYMBOLS = ["FilterExpressions"];
+var EXPORTED_SYMBOLS = ["FilterExpressions"];
 
 XPCOMUtils.defineLazyGetter(this, "jexl", () => {
   const jexl = new mozjexl.Jexl();
@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyGetter(this, "jexl", () => {
   return jexl;
 });
 
-this.FilterExpressions = {
+var FilterExpressions = {
   eval(expr, context = {}) {
     const onelineExpr = expr.replace(/[\t\n\r]/g, " ");
     return jexl.eval(onelineExpr, context);

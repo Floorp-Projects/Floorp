@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "Deprecated" ];
+var EXPORTED_SYMBOLS = [ "Deprecated" ];
 
 const PREF_DEPRECATION_WARNINGS = "devtools.errorconsole.deprecation_warnings";
 
@@ -41,7 +41,7 @@ function stringifyCallstack(aStack) {
   return msg;
 }
 
-this.Deprecated = {
+var Deprecated = {
   /**
    * Log a deprecation warning.
    *

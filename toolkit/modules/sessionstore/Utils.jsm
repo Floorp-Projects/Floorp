@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Utils"];
+var EXPORTED_SYMBOLS = ["Utils"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
@@ -22,7 +22,7 @@ function debug(msg) {
   Services.console.logStringMessage("Utils: " + msg);
 }
 
-this.Utils = Object.freeze({
+var Utils = Object.freeze({
   get SERIALIZED_SYSTEMPRINCIPAL() { return SERIALIZED_SYSTEMPRINCIPAL; },
 
   makeURI(url) {

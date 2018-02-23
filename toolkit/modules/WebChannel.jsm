@@ -7,7 +7,7 @@
  * to create a two-way communication channel between chrome and content code.
  */
 
-this.EXPORTED_SYMBOLS = ["WebChannel", "WebChannelBroker"];
+var EXPORTED_SYMBOLS = ["WebChannel", "WebChannelBroker"];
 
 const ERRNO_MISSING_PRINCIPAL          = 1;
 const ERRNO_NO_SUCH_CHANNEL            = 2;
@@ -161,7 +161,7 @@ var WebChannelBroker = Object.create({
  *        permission manager.
  * @constructor
  */
-this.WebChannel = function(id, originOrPermission) {
+var WebChannel = function(id, originOrPermission) {
   if (!id || !originOrPermission) {
     throw new Error("WebChannel id and originOrPermission are required.");
   }

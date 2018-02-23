@@ -5,7 +5,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "ContentPrefServiceParent" ];
+var EXPORTED_SYMBOLS = [ "ContentPrefServiceParent" ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

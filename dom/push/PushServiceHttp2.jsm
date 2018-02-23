@@ -18,7 +18,7 @@ const {
   concatArray,
 } = ChromeUtils.import("resource://gre/modules/PushCrypto.jsm");
 
-this.EXPORTED_SYMBOLS = ["PushServiceHttp2"];
+var EXPORTED_SYMBOLS = ["PushServiceHttp2"];
 
 XPCOMUtils.defineLazyGetter(this, "console", () => {
   let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
@@ -401,7 +401,7 @@ function linkParser(linkHeader, serverURI) {
 /**
  * The implementation of the WebPush.
  */
-this.PushServiceHttp2 = {
+var PushServiceHttp2 = {
   _mainPushService: null,
   _serverURI: null,
 

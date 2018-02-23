@@ -11,7 +11,7 @@ Cu.importGlobalProperties(["File", "XMLHttpRequest"]);
 ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "CrashSubmit"
 ];
 
@@ -387,7 +387,7 @@ Submitter.prototype = {
 
 // ===================================
 // External API goes here
-this.CrashSubmit = {
+var CrashSubmit = {
   /**
    * Submit the crash report named id.dmp from the "pending" directory.
    *

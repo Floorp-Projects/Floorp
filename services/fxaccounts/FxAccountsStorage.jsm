@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "FxAccountsStorageManagerCanStoreField",
   "FxAccountsStorageManager",
 ];
@@ -23,7 +23,7 @@ function FxAccountsStorageManagerCanStoreField(fieldName) {
 }
 
 // The storage manager object.
-this.FxAccountsStorageManager = function(options = {}) {
+var FxAccountsStorageManager = function(options = {}) {
   this.options = {
     filename: options.filename || DEFAULT_STORAGE_FILENAME,
     baseDir: options.baseDir || OS.Constants.Path.profileDir,

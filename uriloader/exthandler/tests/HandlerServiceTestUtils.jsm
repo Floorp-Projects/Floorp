@@ -7,7 +7,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "HandlerServiceTestUtils",
 ];
 
@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gMIMEService",
                                    "@mozilla.org/mime;1",
                                    "nsIMIMEService");
 
-this.HandlerServiceTestUtils = {
+var HandlerServiceTestUtils = {
   /**
    * This has to be initialized to the nsIHandlerService instance under testing.
    *

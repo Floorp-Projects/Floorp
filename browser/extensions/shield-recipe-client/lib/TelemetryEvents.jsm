@@ -6,7 +6,7 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-this.EXPORTED_SYMBOLS = ["TelemetryEvents"];
+var EXPORTED_SYMBOLS = ["TelemetryEvents"];
 
 const TELEMETRY_CATEGORY = "normandy";
 

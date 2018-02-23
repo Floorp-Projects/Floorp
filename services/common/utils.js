@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["CommonUtils"];
+var EXPORTED_SYMBOLS = ["CommonUtils"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -10,7 +10,7 @@ ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
 
-this.CommonUtils = {
+var CommonUtils = {
   /*
    * Set manipulation methods. These should be lifted into toolkit, or added to
    * `Set` itself.

@@ -12,7 +12,7 @@
 
 /* exported ExtensionTestCommon, MockExtension */
 
-this.EXPORTED_SYMBOLS = ["ExtensionTestCommon", "MockExtension"];
+var EXPORTED_SYMBOLS = ["ExtensionTestCommon", "MockExtension"];
 
 Cu.importGlobalProperties(["TextEncoder"]);
 
@@ -138,7 +138,7 @@ class MockExtension {
   }
 }
 
-this.ExtensionTestCommon = class ExtensionTestCommon {
+var ExtensionTestCommon = class ExtensionTestCommon {
   /**
    * This code is designed to make it easy to test a WebExtension
    * without creating a bunch of files. Everything is contained in a

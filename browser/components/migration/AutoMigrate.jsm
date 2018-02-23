@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["AutoMigrate"];
+var EXPORTED_SYMBOLS = ["AutoMigrate"];
 
 const kAutoMigrateEnabledPref = "browser.migrate.automigrate.enabled";
 const kUndoUIEnabledPref = "browser.migrate.automigrate.ui.enabled";

@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["AsyncPrefs"];
+var EXPORTED_SYMBOLS = ["AsyncPrefs"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 

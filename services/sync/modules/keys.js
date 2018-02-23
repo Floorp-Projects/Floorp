@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "BulkKeyBundle",
 ];
 
@@ -121,13 +121,13 @@ KeyBundle.prototype = {
  *
  * This is just a KeyBundle with a collection attached.
  */
-this.BulkKeyBundle = function BulkKeyBundle(collection) {
+function BulkKeyBundle(collection) {
   let log = Log.repository.getLogger("Sync.BulkKeyBundle");
   log.info("BulkKeyBundle being created for " + collection);
   KeyBundle.call(this);
 
   this._collection = collection;
-};
+}
 BulkKeyBundle.fromHexKey = function(hexKey) {
   let key = CommonUtils.hexToBytes(hexKey);
   let bundle = new BulkKeyBundle();

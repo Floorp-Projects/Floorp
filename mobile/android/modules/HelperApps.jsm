@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyGetter(this, "ContentAreaUtils", function() {
   return ContentAreaUtils;
 });
 
-this.EXPORTED_SYMBOLS = ["App", "HelperApps"];
+var EXPORTED_SYMBOLS = ["App", "HelperApps"];
 
 function App(data) {
   this.name = data.name;

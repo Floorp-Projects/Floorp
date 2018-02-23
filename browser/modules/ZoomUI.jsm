@@ -5,7 +5,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "ZoomUI" ];
+var EXPORTED_SYMBOLS = [ "ZoomUI" ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 

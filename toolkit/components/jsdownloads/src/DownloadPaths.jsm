@@ -8,7 +8,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "DownloadPaths",
 ];
 
@@ -37,7 +37,7 @@ XPCOMUtils.defineLazyGetter(this, "gConvertToSpaceRegExp", () => {
   /* eslint-enable no-control-regex */
 });
 
-this.DownloadPaths = {
+var DownloadPaths = {
   /**
    * Sanitizes an arbitrary string for use as the local file name of a download.
    * The input is often a document title or a manually edited name. The output

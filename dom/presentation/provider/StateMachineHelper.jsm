@@ -7,7 +7,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["State", "CommandType"]; // jshint ignore:line
+var EXPORTED_SYMBOLS = ["State", "CommandType"]; // jshint ignore:line
 
 const State = Object.freeze({
   INIT: 0,

@@ -8,7 +8,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ReceiverStateMachine"]; // jshint ignore:line
+var EXPORTED_SYMBOLS = ["ReceiverStateMachine"]; // jshint ignore:line
 
 /* globals State, CommandType */
 ChromeUtils.import("resource://gre/modules/presentation/StateMachineHelper.jsm");
@@ -233,4 +233,3 @@ ReceiverStateMachine.prototype = {
   },
 };
 
-this.ReceiverStateMachine = ReceiverStateMachine; // jshint ignore:line

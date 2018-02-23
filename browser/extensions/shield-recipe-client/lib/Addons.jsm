@@ -12,7 +12,7 @@ ChromeUtils.defineModuleGetter(
   this, "CleanupManager", "resource://shield-recipe-client/lib/CleanupManager.jsm"
 );
 
-this.EXPORTED_SYMBOLS = ["Addons"];
+var EXPORTED_SYMBOLS = ["Addons"];
 
 /**
  * SafeAddons store info about an add-on. They are single-depth
@@ -30,7 +30,7 @@ this.EXPORTED_SYMBOLS = ["Addons"];
  * @property {string} version
  */
 
-this.Addons = {
+var Addons = {
   /**
    * Get information about an installed add-on by ID.
    *

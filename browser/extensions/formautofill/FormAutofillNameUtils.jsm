@@ -9,7 +9,7 @@
 // Thus, we use |loadSubScript| to load the references instead.
 const NAME_REFERENCES = "chrome://formautofill/content/nameReferences.js";
 
-this.EXPORTED_SYMBOLS = ["FormAutofillNameUtils"];
+var EXPORTED_SYMBOLS = ["FormAutofillNameUtils"];
 
 ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 

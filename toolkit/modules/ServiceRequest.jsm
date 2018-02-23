@@ -12,7 +12,7 @@
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 
-this.EXPORTED_SYMBOLS = [ "ServiceRequest" ];
+var EXPORTED_SYMBOLS = [ "ServiceRequest" ];
 
 const logger = Log.repository.getLogger("ServiceRequest");
 logger.level = Log.Level.Debug;

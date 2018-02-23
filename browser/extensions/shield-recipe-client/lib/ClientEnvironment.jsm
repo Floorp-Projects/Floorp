@@ -23,13 +23,13 @@ ChromeUtils.defineModuleGetter(this, "Addons", "resource://shield-recipe-client/
 
 const {generateUUID} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
-this.EXPORTED_SYMBOLS = ["ClientEnvironment"];
+var EXPORTED_SYMBOLS = ["ClientEnvironment"];
 
 // Cached API request for client attributes that are determined by the Normandy
 // service.
 let _classifyRequest = null;
 
-this.ClientEnvironment = {
+var ClientEnvironment = {
   /**
    * Fetches information about the client that is calculated on the server,
    * like geolocation and the current time.
