@@ -12,6 +12,7 @@ from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from math import ceil
 from multiprocessing import cpu_count
+from multiprocessing.queues import Queue
 from subprocess import CalledProcessError
 
 from mozversioncontrol import get_repository_object, MissingUpstreamRepo, InvalidRepoPath
@@ -21,10 +22,16 @@ from .parser import Parser
 from .pathutils import findobject
 from .types import supported_types
 
+SHUTDOWN = False
+orig_sigint = signal.getsignal(signal.SIGINT)
+
 
 def _run_worker(config, paths, **lintargs):
     results = defaultdict(list)
     failed = []
+
+    if SHUTDOWN:
+        return results, failed
 
     func = supported_types[config['type']]
     try:
@@ -32,6 +39,8 @@ def _run_worker(config, paths, **lintargs):
     except Exception:
         traceback.print_exc()
         res = 1
+    except (KeyboardInterrupt, SystemExit):
+        return results, failed
     finally:
         sys.stdout.flush()
 
@@ -42,6 +51,32 @@ def _run_worker(config, paths, **lintargs):
         for r in res:
             results[r.path].append(r)
     return results, failed
+
+
+class InterruptableQueue(Queue):
+    """A multiprocessing.Queue that catches KeyboardInterrupt when a worker is
+    blocking on it and returns None.
+
+    This is needed to gracefully handle KeyboardInterrupts when a worker is
+    blocking on ProcessPoolExecutor's call queue.
+    """
+
+    def get(self, *args, **kwargs):
+        try:
+            return Queue.get(self, *args, **kwargs)
+        except KeyboardInterrupt:
+            return None
+
+
+def _worker_sigint_handler(signum, frame):
+    """Sigint handler for the worker subprocesses.
+
+    Tells workers not to process the extra jobs on the call queue that couldn't
+    be canceled by the parent process.
+    """
+    global SHUTDOWN
+    SHUTDOWN = True
+    orig_sigint(signum, frame)
 
 
 class LintRoller(object):
@@ -186,17 +221,33 @@ class LintRoller(object):
         # Make sure we never spawn more processes than we have jobs.
         num_procs = min(len(jobs), num_procs)
 
+        signal.signal(signal.SIGINT, _worker_sigint_handler)
         executor = ProcessPoolExecutor(num_procs)
+        executor._call_queue = InterruptableQueue(executor._call_queue._maxsize)
 
         # Submit jobs to the worker pool. The _collect_results method will be
-        # called when a job is finished.
+        # called when a job is finished. We store the futures so that they can
+        # be canceled in the event of a KeyboardInterrupt.
+        futures = []
         for job in jobs:
             future = executor.submit(_run_worker, *job, **self.lintargs)
             future.add_done_callback(self._collect_results)
+            futures.append(future)
 
-        # Ignore SIGINT in parent so we can still get partial results
-        # from child processes. These should shutdown quickly anyway.
-        orig_sigint = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        executor.shutdown()  # blocks until all workers have finished
+        def _parent_sigint_handler(signum, frame):
+            """Sigint handler for the parent process.
+
+            Cancels all jobs that have not yet been placed on the call queue.
+            The parent process won't exit until all workers have terminated.
+            Assuming the linters are implemented properly, this shouldn't take
+            more than a couple seconds.
+            """
+            [f.cancel() for f in futures]
+            executor.shutdown(wait=False)
+            print("\nwarning: not all files were linted")
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+        signal.signal(signal.SIGINT, _parent_sigint_handler)
+        executor.shutdown()
         signal.signal(signal.SIGINT, orig_sigint)
         return self.results
