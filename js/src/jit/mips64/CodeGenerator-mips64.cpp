@@ -110,12 +110,6 @@ CodeGeneratorMIPS64::ToValue(LInstruction* ins, size_t pos)
 }
 
 ValueOperand
-CodeGeneratorMIPS64::ToOutValue(LInstruction* ins)
-{
-    return ValueOperand(ToRegister(ins->getDef(0)));
-}
-
-ValueOperand
 CodeGeneratorMIPS64::ToTempValue(LInstruction* ins, size_t pos)
 {
     return ValueOperand(ToRegister(ins->getTemp(pos)));

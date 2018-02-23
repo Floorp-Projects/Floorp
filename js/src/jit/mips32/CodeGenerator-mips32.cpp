@@ -109,14 +109,6 @@ CodeGeneratorMIPS::ToValue(LInstruction* ins, size_t pos)
 }
 
 ValueOperand
-CodeGeneratorMIPS::ToOutValue(LInstruction* ins)
-{
-    Register typeReg = ToRegister(ins->getDef(TYPE_INDEX));
-    Register payloadReg = ToRegister(ins->getDef(PAYLOAD_INDEX));
-    return ValueOperand(typeReg, payloadReg);
-}
-
-ValueOperand
 CodeGeneratorMIPS::ToTempValue(LInstruction* ins, size_t pos)
 {
     Register typeReg = ToRegister(ins->getTemp(pos + TYPE_INDEX));

@@ -31,12 +31,6 @@ CodeGeneratorX64::ToValue(LInstruction* ins, size_t pos)
 }
 
 ValueOperand
-CodeGeneratorX64::ToOutValue(LInstruction* ins)
-{
-    return ValueOperand(ToRegister(ins->getDef(0)));
-}
-
-ValueOperand
 CodeGeneratorX64::ToTempValue(LInstruction* ins, size_t pos)
 {
     return ValueOperand(ToRegister(ins->getTemp(pos)));
@@ -73,7 +67,7 @@ FrameSizeClass::frameSize() const
 void
 CodeGeneratorX64::visitValue(LValue* value)
 {
-    ValueOperand result = GetValueOutput(value);
+    ValueOperand result = ToOutValue(value);
     masm.moveValue(value->value(), result);
 }
 
@@ -81,7 +75,7 @@ void
 CodeGeneratorX64::visitBox(LBox* box)
 {
     const LAllocation* in = box->getOperand(0);
-    ValueOperand result = GetValueOutput(box);
+    ValueOperand result = ToOutValue(box);
 
     masm.moveValue(TypedOrValueRegister(box->type(), ToAnyRegister(in)), result);
 }

@@ -193,7 +193,7 @@ ToRegisterOrInt32Constant(const LAllocation* a)
 }
 
 static inline ValueOperand
-GetValueOutput(LInstruction* ins)
+ToOutValue(LInstruction* ins)
 {
 #if defined(JS_NUNBOX32)
     return ValueOperand(ToRegister(ins->getDef(TYPE_INDEX)),
