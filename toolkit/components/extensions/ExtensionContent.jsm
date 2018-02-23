@@ -24,10 +24,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
                                    "@mozilla.org/content/style-sheet-service;1",
                                    "nsIStyleSheetService");
 
-// xpcshell doesn't handle idle callbacks well.
-XPCOMUtils.defineLazyGetter(this, "idleTimeout",
-                            () => Services.appinfo.name === "XPCShell" ? 500 : undefined);
-
 const DocumentEncoder = Components.Constructor(
   "@mozilla.org/layout/documentEncoder;1?type=text/plain",
   "nsIDocumentEncoder", "init");
@@ -44,6 +40,7 @@ const {
   defineLazyGetter,
   getInnerWindowID,
   getWinUtils,
+  promiseDocumentIdle,
   promiseDocumentLoaded,
   promiseDocumentReady,
   runSafeSyncWithoutClone,
@@ -372,13 +369,8 @@ class Script {
       if (this.runAt === "document_end") {
         await promiseDocumentReady(window.document);
       } else if (this.runAt === "document_idle") {
-        let readyThenIdle = promiseDocumentReady(window.document).then(() => {
-          return new Promise(resolve =>
-            window.requestIdleCallback(resolve, {timeout: idleTimeout}));
-        });
-
         await Promise.race([
-          readyThenIdle,
+          promiseDocumentIdle(window),
           promiseDocumentLoaded(window.document),
         ]);
       }

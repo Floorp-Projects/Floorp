@@ -207,7 +207,7 @@ public:
         ->AddSizeOfExcludingThis(mMallocSizeOf, heap, nonHeap, handles);
       counter.Values().SetDecodedHeap(heap);
       counter.Values().SetDecodedNonHeap(nonHeap);
-      counter.Values().SetSharedHandles(handles);
+      counter.Values().SetExternalHandles(handles);
 
       mCounters.AppendElement(counter);
     }

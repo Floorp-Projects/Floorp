@@ -1533,7 +1533,7 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
     // Paint the outset box-shadows for the table frames
     if (aFrame->StyleEffects()->mBoxShadow) {
       aLists.BorderBackground()->AppendToTop(
-        new (aBuilder) nsDisplayBoxShadowOuter(aBuilder, aFrame));
+        MakeDisplayItem<nsDisplayBoxShadowOuter>(aBuilder, aFrame));
     }
   }
 
@@ -1601,7 +1601,7 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
     // Paint the inset box-shadows for the table frames
     if (aFrame->StyleEffects()->mBoxShadow) {
       aLists.BorderBackground()->AppendToTop(
-        new (aBuilder) nsDisplayBoxShadowInner(aBuilder, aFrame));
+        MakeDisplayItem<nsDisplayBoxShadowInner>(aBuilder, aFrame));
     }
   }
 
@@ -1616,13 +1616,13 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
       if (table->IsBorderCollapse()) {
         if (table->HasBCBorders()) {
           aLists.BorderBackground()->AppendToTop(
-            new (aBuilder) nsDisplayTableBorderCollapse(aBuilder, table));
+            MakeDisplayItem<nsDisplayTableBorderCollapse>(aBuilder, table));
         }
       } else {
         const nsStyleBorder* borderStyle = aFrame->StyleBorder();
         if (borderStyle->HasBorder()) {
           aLists.BorderBackground()->AppendToTop(
-            new (aBuilder) nsDisplayBorder(aBuilder, table));
+            MakeDisplayItem<nsDisplayBorder>(aBuilder, table));
         }
       }
     }

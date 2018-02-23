@@ -2177,10 +2177,21 @@ gfxPlatform::FlushFontAndWordCaches()
 /* static */ void
 gfxPlatform::ForceGlobalReflow()
 {
-    // modify a preference that will trigger reflow everywhere
-    static const char kPrefName[] = "font.internaluseonly.changed";
-    bool fontInternalChange = Preferences::GetBool(kPrefName, false);
-    Preferences::SetBool(kPrefName, !fontInternalChange);
+    MOZ_ASSERT(NS_IsMainThread());
+    if (XRE_IsParentProcess()) {
+        // Modify a preference that will trigger reflow everywhere (in all
+        // content processes, as well as the parent).
+        static const char kPrefName[] = "font.internaluseonly.changed";
+        bool fontInternalChange = Preferences::GetBool(kPrefName, false);
+        Preferences::SetBool(kPrefName, !fontInternalChange);
+    } else {
+        // Send a notification that will be observed by PresShells in this
+        // process only.
+        nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+        if (obs) {
+            obs->NotifyObservers(nullptr, "font-info-updated", nullptr);
+        }
+    }
 }
 
 void
