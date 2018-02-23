@@ -1329,6 +1329,10 @@ JSObject::setFlags(JSContext* cx, HandleObject obj, BaseShape::Flag flags,
     if (obj->hasAllFlags(flags))
         return true;
 
+    Shape* existingShape = obj->ensureShape(cx);
+    if (!existingShape)
+        return false;
+
     if (obj->isNative() && obj->as<NativeObject>().inDictionaryMode()) {
         if (generateShape == GENERATE_SHAPE) {
             if (!NativeObject::generateOwnShape(cx, obj.as<NativeObject>()))
@@ -1343,10 +1347,6 @@ JSObject::setFlags(JSContext* cx, HandleObject obj, BaseShape::Flag flags,
         obj->as<NativeObject>().lastProperty()->base()->adoptUnowned(nbase);
         return true;
     }
-
-    Shape* existingShape = obj->ensureShape(cx);
-    if (!existingShape)
-        return false;
 
     Shape* newShape = Shape::setObjectFlags(cx, flags, obj->taggedProto(), existingShape);
     if (!newShape)
