@@ -364,6 +364,7 @@ mochitest-webgl:
     run-on-projects:
         by-test-platform:
             windows10-64-ccov/.*: []  # Do not run on Windows ccov, see bug 1419475.
+            .*-qr/.*: ['mozilla-central', 'autoland', 'mozilla-inbound', 'try']  # exclude beta and project branches
             default: built-projects
     virtualization: virtual-with-gpu
     chunks:
