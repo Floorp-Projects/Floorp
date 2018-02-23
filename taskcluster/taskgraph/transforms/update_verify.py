@@ -11,7 +11,7 @@ from copy import deepcopy
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
-from taskgraph.util.scriptworker import get_release_config
+from taskgraph.util.taskcluster import get_taskcluster_artifact_prefix
 
 transforms = TransformSequence()
 
@@ -20,11 +20,6 @@ transforms = TransformSequence()
 def add_command(config, tasks):
     for task in tasks:
         total_chunks = task["extra"]["chunks"]
-        release_config = get_release_config(config)
-        release_tag = "{}_{}_RELEASE_RUNTIME".format(
-            task["shipping-product"].upper(),
-            release_config["version"].replace(".", "_")
-        )
 
         for this_chunk in range(1, total_chunks+1):
             chunked = deepcopy(task)
@@ -37,10 +32,7 @@ def add_command(config, tasks):
             chunked["worker"]["command"] = [
                 "/bin/bash",
                 "-c",
-                "hg clone $BUILD_TOOLS_REPO tools && cd tools && " +
-                "hg up -r {} && cd .. && ".format(
-                    release_tag,
-                ) +
+                "hg clone $BUILD_TOOLS_REPO tools && " +
                 "tools/scripts/release/updates/chunked-verify.sh " +
                 "UNUSED UNUSED {} {}".format(
                     total_chunks,
@@ -50,4 +42,18 @@ def add_command(config, tasks):
             for thing in ("CHANNEL", "VERIFY_CONFIG", "BUILD_TOOLS_REPO"):
                 thing = "worker.env.{}".format(thing)
                 resolve_keyed_by(chunked, thing, thing, **config.params)
+
+            update_verify_config = None
+            for upstream in chunked.get("dependencies", {}).keys():
+                if 'update-verify-config' in upstream:
+                    update_verify_config = "{}update-verify.cfg".format(
+                        get_taskcluster_artifact_prefix("<{}>".format(upstream))
+                    )
+            if not update_verify_config:
+                raise Exception("Couldn't find upate verify config")
+
+            chunked["worker"]["env"]["TASKCLUSTER_VERIFY_CONFIG"] = {
+                "task-reference": update_verify_config
+            }
+
             yield chunked
