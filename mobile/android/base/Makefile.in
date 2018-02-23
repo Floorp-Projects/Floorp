@@ -2,11 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# We call mach -> Make -> gradle -> mach, which races to find and
-# create .mozconfig files and to generate targets.
-ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
+# Developer builds call mach -> Make -> gradle -> mach, which races to
+# find and create .mozconfig files and to generate targets.
 .NOTPARALLEL:
-endif
 
 GARBAGE += \
   classes.dex  \
@@ -27,215 +25,6 @@ GARBAGE_DIRS += classes db jars res sync services generated
 
 gradle_dir := $(topobjdir)/gradle/build/mobile/android
 
-ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-
-# The bootclasspath is functionally identical to the classpath, but allows the
-# classes given to redefine classes in core packages, such as java.lang.
-# android.jar is here as it provides Android's definition of the Java Standard
-# Library. The compatability lib here tweaks a few of the core classes to paint
-# over changes in behaviour between versions.
-JAVA_BOOTCLASSPATH := \
-    $(ANDROID_SDK)/android.jar \
-    $(NULL)
-
-JAVA_BOOTCLASSPATH := $(subst $(NULL) ,:,$(strip $(JAVA_BOOTCLASSPATH)))
-
-JAVA_CLASSPATH += \
-    $(ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB) \
-    $(ANDROID_SUPPORT_V4_AAR_LIB) \
-    $(ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB) \
-    $(ANDROID_APPCOMPAT_V7_AAR_LIB) \
-    $(ANDROID_SUPPORT_VECTOR_DRAWABLE_AAR_LIB) \
-    $(ANDROID_ANIMATED_VECTOR_DRAWABLE_AAR_LIB) \
-    $(ANDROID_CARDVIEW_V7_AAR_LIB) \
-    $(ANDROID_DESIGN_AAR_LIB) \
-    $(ANDROID_RECYCLERVIEW_V7_AAR_LIB) \
-    $(ANDROID_CUSTOMTABS_AAR_LIB) \
-    $(ANDROID_PALETTE_V7_AAR_LIB) \
-    $(NULL)
-
-ifdef MOZ_ANDROID_GOOGLE_PLAY_SERVICES
-    JAVA_CLASSPATH += \
-        $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
-        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
-        $(NULL)
-endif
-
-ifdef MOZ_NATIVE_DEVICES
-    JAVA_CLASSPATH += \
-        $(ANDROID_PLAY_SERVICES_CAST_AAR_LIB) \
-        $(ANDROID_MEDIAROUTER_V7_AAR_LIB) \
-        $(ANDROID_MEDIAROUTER_V7_AAR_INTERNAL_LIB) \
-        $(NULL)
-endif
-
-ifdef MOZ_ANDROID_GCM
-    JAVA_CLASSPATH += \
-        $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
-        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
-        $(ANDROID_PLAY_SERVICES_GCM_AAR_LIB) \
-        $(ANDROID_PLAY_SERVICES_MEASUREMENT_AAR_LIB) \
-        $(NULL)
-endif
-
-ifdef MOZ_INSTALL_TRACKING
-    JAVA_CLASSPATH += \
-        $(ANDROID_PLAY_SERVICES_ADS_AAR_LIB) \
-        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
-        $(NULL)
-endif
-
-# MOZ_ANDROID_MMA requires MOZ_ANDROID_GCM and MOZ_ANDROID_GOOGLE_PLAY_SERVICES,
-# which take care of the Play Services requirements in JAVA_CLASSPATH.
-# Based on the import of
-# `com.google.android.gms.ads.identifier.AdvertisingIdClient` in
-# `com.leanplum.internal.Util` one would assume that
-# `play-services-ads` is required, by in version 8.4.0 (at least) that
-# class is defined in `play-services-basement`.  Therefore, unlike
-# MOZ_INSTALL_TRACKING, we don't need to depend on
-# `play-services-ads`.
-
-JAVA_CLASSPATH := $(subst $(NULL) ,:,$(strip $(JAVA_CLASSPATH)))
-
-# Library jars that we're bundling: these are subject to Proguard before inclusion
-# into classes.dex.
-java_bundled_libs := \
-    $(ANDROID_SUPPORT_V4_AAR_LIB) \
-    $(ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB) \
-    $(ANDROID_APPCOMPAT_V7_AAR_LIB) \
-    $(ANDROID_SUPPORT_VECTOR_DRAWABLE_AAR_LIB) \
-    $(ANDROID_ANIMATED_VECTOR_DRAWABLE_AAR_LIB) \
-    $(ANDROID_CARDVIEW_V7_AAR_LIB) \
-    $(ANDROID_DESIGN_AAR_LIB) \
-    $(ANDROID_RECYCLERVIEW_V7_AAR_LIB) \
-    $(ANDROID_CUSTOMTABS_AAR_LIB) \
-    $(ANDROID_PALETTE_V7_AAR_LIB) \
-    $(NULL)
-
-ifdef MOZ_ANDROID_GOOGLE_PLAY_SERVICES
-    java_bundled_libs += \
-        $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
-        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
-        $(NULL)
-endif
-
-ifdef MOZ_NATIVE_DEVICES
-    java_bundled_libs += \
-        $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
-        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
-        $(ANDROID_PLAY_SERVICES_CAST_AAR_LIB) \
-        $(ANDROID_MEDIAROUTER_V7_AAR_LIB) \
-        $(ANDROID_MEDIAROUTER_V7_AAR_INTERNAL_LIB) \
-        $(NULL)
-endif
-
-ifdef MOZ_ANDROID_GCM
-    java_bundled_libs += \
-        $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
-        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
-        $(ANDROID_PLAY_SERVICES_GCM_AAR_LIB) \
-        $(ANDROID_PLAY_SERVICES_MEASUREMENT_AAR_LIB) \
-        $(NULL)
-endif
-
-ifdef MOZ_INSTALL_TRACKING
-    java_bundled_libs += \
-        $(ANDROID_PLAY_SERVICES_ADS_AAR_LIB) \
-        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
-        $(NULL)
-endif
-
-# MOZ_ANDROID_MMA requires MOZ_ANDROID_GCM and MOZ_ANDROID_GOOGLE_PLAY_SERVICES,
-# which take care of the Play Services requirements in
-# java_bundled_libs.  See the note above.
-
-# uniq purloined from http://stackoverflow.com/a/16151140.
-uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
-
-java_bundled_libs := $(call uniq,$(java_bundled_libs))
-java_bundled_libs := $(subst $(NULL) ,:,$(strip $(java_bundled_libs)))
-
-GECKOVIEW_JARS = \
-  constants.jar \
-  gecko-R.jar \
-  gecko-mozglue.jar \
-  gecko-util.jar \
-  gecko-view.jar \
-  sync-thirdparty.jar \
-  $(NULL)
-
-ifdef MOZ_WEBRTC
-GECKOVIEW_JARS += webrtc.jar
-endif
-
-ifdef MOZ_INSTALL_TRACKING
-GECKOVIEW_JARS += gecko-thirdparty-adjust_sdk.jar
-endif
-
-ifdef MOZ_ANDROID_MMA
-GECKOVIEW_JARS += gecko-thirdparty-leanplum_sdk.jar
-endif
-
-FENNEC_JARS = \
-  gecko-browser.jar \
-  gecko-thirdparty.jar \
-  services.jar \
-  $(NULL)
-
-ifdef MOZ_ANDROID_MLS_STUMBLER
-FENNEC_JARS += ../stumbler/stumbler.jar
-endif
-
-geckoview_jars_classpath := $(subst $(NULL) ,:,$(strip $(GECKOVIEW_JARS)))
-
-# All the jars we're compiling from source. (not to be confused with
-# java_bundled_libs, which holds the jars which we're including as binaries).
-ALL_JARS = \
-  $(GECKOVIEW_JARS) \
-  $(FENNEC_JARS) \
-  $(NULL)
-
-# The list of jars in Java classpath notation (colon-separated).
-all_jars_classpath := $(subst $(NULL) ,:,$(strip $(ALL_JARS)))
-
-include $(topsrcdir)/config/config.mk
-
-library_jars := \
-    $(ANDROID_SDK)/android.jar \
-    $(NULL)
-
-# Android 23 (Marshmallow) deprecated a part of the Android platform, namely the
-# org.apache.http package.  Fennec removed all code that referenced said package
-# in order to easily ship to Android 23 devices (and, by extension, all devices
-# before Android 23).
-#
-# Google did not remove all code that referenced said package in their own
-# com.google.android.gms namespace!  It turns out that the org.apache.http
-# package is not removed, only deprecated and hidden by default.  Google added a
-# a `useLibrary` Gradle directive that allows legacy code to reference the
-# package, which is still (hidden) in the Android 23 platform.
-#
-# Fennec code doesn't need to compile against the deprecated package, since our
-# code doesn't reference the package anymore.  However, we do need to Proguard
-# against the deprecated package.  If we don't, Proguard -- which is a global
-# optimization -- sees Google libraries referencing "non-existent" libraries and
-# complains.  The solution is to mimic the `useLibraries` directive by declaring
-# the legacy package as a provided library jar.
-#
-# See https://bugzilla.mozilla.org/show_bug.cgi?id=1233238#c19 for symptoms and
-# more discussion.
-#
-# MOZ_ANDROID_MMA requires MOZ_INSTALL_TRACKING, so we don't need a
-# separate clause for MMA (Leanplum) support.
-ifdef MOZ_INSTALL_TRACKING
-library_jars += $(ANDROID_SDK)/optional/org.apache.http.legacy.jar
-endif # MOZ_INSTALL_TRACKING
-
-library_jars := $(subst $(NULL) ,:,$(strip $(library_jars)))
-
-endif # MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-
-ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 define gradle_command
 $(1): $(2)
 	@$$(TOUCH) $$@
@@ -250,83 +39,6 @@ GeneratedJNIWrappers.cpp GeneratedJNIWrappers.h GeneratedJNINatives.h : .gradle.
 
 FennecJNIWrappers.cpp FennecJNIWrappers.h FennecJNINatives.h: .gradle.deps
 	$(REPORT_BUILD)
-
-else # !MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-classes.dex: .proguard.deps
-	$(REPORT_BUILD)
-	$(DX) --dex --output=classes.dex --force-jumbo jars-proguarded
-
-ifdef MOZ_DISABLE_PROGUARD
-  PROGUARD_PASSES=0
-else
-  ifdef MOZ_DEBUG
-    PROGUARD_PASSES=1
-  else
-    ifndef MOZILLA_OFFICIAL
-      PROGUARD_PASSES=1
-    else
-      PROGUARD_PASSES=6
-    endif
-  endif
-endif
-
-proguard_config_dir=$(topsrcdir)/mobile/android/config/proguard
-
-# First, we delete debugging information from libraries. Having line-number
-# information for libraries for which we lack the source isn't useful, so this
-# saves us a bit of space. Importantly, Proguard has a bug causing it to
-# sometimes corrupt this information if present (which it does for some of the
-# included libraries). This corruption prevents dex from completing, so we need
-# to get rid of it.  This prevents us from seeing line numbers in stack traces
-# for stack frames inside libraries.
-#
-# This step can occur much earlier than the main Proguard pass: it needs only
-# gecko-R.jar to have been compiled (as that's where the library R.java files
-# end up), but it does block the main Proguard pass.
-.bundled.proguard.deps: gecko-R.jar $(proguard_config_dir)/strip-libs.cfg $(PROGUARD_JAR)
-	$(REPORT_BUILD)
-	@$(TOUCH) $@
-	$(JAVA) \
-		-Xmx512m -Xms128m \
-		-jar $(PROGUARD_JAR) \
-		@$(proguard_config_dir)/strip-libs.cfg \
-		-injars $(subst ::,:,$(java_bundled_libs))\
-		-outjars bundled-jars-nodebug \
-		-libraryjars $(library_jars):gecko-R.jar
-
-# We touch the target file before invoking Proguard so that Proguard's
-# outputs are fresher than the target, preventing a subsequent
-# invocation from thinking Proguard's outputs are stale.  This is safe
-# because Make removes the target file if any recipe command fails.
-.proguard.deps: .bundled.proguard.deps $(ALL_JARS) $(proguard_config_dir)/proguard.cfg $(PROGUARD_JAR)
-	$(REPORT_BUILD)
-	@$(TOUCH) $@
-	$(JAVA) \
-		-Xmx512m -Xms128m \
-		-jar $(PROGUARD_JAR) \
-		@$(proguard_config_dir)/proguard.cfg \
-		-optimizationpasses $(PROGUARD_PASSES) \
-		-injars $(subst ::,:,$(all_jars_classpath)):bundled-jars-nodebug \
-		-outjars jars-proguarded \
-		-libraryjars $(library_jars)
-
-ANNOTATION_PROCESSOR_JAR_FILES := $(abspath $(DEPTH)/build/annotationProcessors/annotationProcessors.jar)
-
-# This annotation processing step also generates
-# GeneratedJNIWrappers.h and GeneratedJNINatives.h
-GeneratedJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES) $(GECKOVIEW_JARS)
-	$(JAVA) -classpath $(geckoview_jars_classpath):$(JAVA_BOOTCLASSPATH):$(JAVA_CLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) \
-		org.mozilla.gecko.annotationProcessors.AnnotationProcessor \
-		Generated $(GECKOVIEW_JARS)
-
-# This annotation processing step also generates
-# FennecJNIWrappers.h and FennecJNINatives.h
-FennecJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES) $(FENNEC_JARS)
-	$(JAVA) -classpath $(all_jars_classpath):$(JAVA_BOOTCLASSPATH):$(JAVA_CLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) \
-		org.mozilla.gecko.annotationProcessors.AnnotationProcessor \
-		Fennec $(FENNEC_JARS)
-
-endif # MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 
 include $(topsrcdir)/config/rules.mk
 
@@ -478,8 +190,6 @@ endef
 # .aapt.deps: $(all_resources)
 $(eval $(call aapt_command,.aapt.deps,$(all_resources),gecko.ap_,generated/,./))
 
-ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-
 # It's not quite "no dependencies": nodeps means that it doesn't
 # depend on the generated resources that incorporate l10n, principally
 # strings.xml.
@@ -490,10 +200,6 @@ $(eval $(call gradle_command,.gradle.nodeps,AndroidManifest.xml $(constants_PP_J
 .aapt.nodeps: .gradle.nodeps FORCE
 	@$(TOUCH) $@
 	cp $(GRADLE_ANDROID_APP_APK) gecko-nodeps.ap_
-else
-# .aapt.nodeps: AndroidManifest.xml FORCE
-$(eval $(call aapt_command,.aapt.nodeps,AndroidManifest.xml FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
-endif
 
 # Override the Java settings with some specific android settings
 include $(topsrcdir)/config/android-common.mk
@@ -604,46 +310,3 @@ libs:: FennecJNIWrappers.cpp
 	  echo '* Repeat the build, and check in any changes.       *' && \
 	  echo '*****************************************************' && \
 	  exit 1)
-
-ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-libs:: classes.dex
-	$(INSTALL) classes.dex $(FINAL_TARGET)
-endif # MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-
-ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-
-# Generate Java binder interfaces from AIDL files.
-GECKOVIEW_AIDLS = \
-  org/mozilla/gecko/IGeckoEditableChild.aidl \
-  org/mozilla/gecko/IGeckoEditableParent.aidl \
-  org/mozilla/gecko/gfx/ISurfaceAllocator.aidl \
-  org/mozilla/gecko/media/ICodec.aidl \
-  org/mozilla/gecko/media/ICodecCallbacks.aidl \
-  org/mozilla/gecko/media/IMediaDrmBridge.aidl \
-  org/mozilla/gecko/media/IMediaDrmBridgeCallbacks.aidl \
-  org/mozilla/gecko/media/IMediaManager.aidl \
-  org/mozilla/gecko/process/IChildProcess.aidl \
-  org/mozilla/gecko/process/IProcessManager.aidl \
-  org/mozilla/gecko/util/GeckoBundle.aidl \
-  $(NULL)
-
-geckoview_aidl_src_path := $(topsrcdir)/mobile/android/geckoview/src/main/aidl
-geckoview_aidl_target_path := generated
-geckoview_aidl_targets := $(addprefix $(geckoview_aidl_target_path)/,$(patsubst %.aidl,%.java,$(GECKOVIEW_AIDLS:.java=)))
-
-$(geckoview_aidl_targets): $(geckoview_aidl_target_path)/%.java: $(geckoview_aidl_src_path)/%.aidl
-	@echo "Processing AIDL: $< => $@"
-	$(AIDL) -p$(ANDROID_SDK)/framework.aidl -I$(geckoview_aidl_src_path) -o$(geckoview_aidl_target_path) $<
-
-FENNEC_AIDLS = \
-  $(NULL)
-
-fennec_aidl_src_path := $(srcdir)/aidl
-fennec_aidl_target_path := generated
-fennec_aidl_targets := $(addprefix $(fennec_aidl_target_path)/,$(patsubst %.aidl,%.java,$(FENNEC_AIDLS:.java=)))
-
-$(fennec_aidl_targets): $(fennec_aidl_target_path)/%.java: $(fennec_aidl_src_path)/%.aidl
-	@echo "Processing AIDL: $< => $@"
-	$(AIDL) -p$(ANDROID_SDK)/framework.aidl -I$(fennec_aidl_src_path) -I$(geckoview_aidl_src_path) -o$(fennec_aidl_target_path) $<
-
-endif # MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
