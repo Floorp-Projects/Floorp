@@ -24,9 +24,6 @@ CRAMTEST_MANIFESTS += [
     'tests/cram/cram.ini',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    DIRS += ['annotationProcessors']
-
 DEFINES['ACCEPTED_MAR_CHANNEL_IDS'] = CONFIG['ACCEPTED_MAR_CHANNEL_IDS']
 
 if CONFIG['MOZ_BUILD_APP'] == 'browser':
