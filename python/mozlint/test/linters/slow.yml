@@ -1,0 +1,8 @@
+---
+SlowLinter:
+    description: A linter that takes awhile to run
+    include:
+        - files
+    type: external
+    extensions: ['.js', '.jsm']
+    payload: external:slow

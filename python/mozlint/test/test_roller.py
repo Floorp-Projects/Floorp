@@ -6,7 +6,10 @@ from __future__ import absolute_import
 
 import os
 import platform
+import signal
+import subprocess
 import sys
+import time
 
 import mozunit
 import pytest
@@ -116,6 +119,23 @@ def test_max_paths_per_job(monkeypatch, lint, linters, files, max_paths, expecte
     lint.read(linters)
     num_jobs = len(lint.roll(files, num_procs=2)['count'])
     assert num_jobs == expected_jobs
+
+
+@pytest.mark.skipif(platform.system() == 'Windows',
+                    reason="signal.CTRL_C_EVENT isn't causing a KeyboardInterrupt on Windows")
+def test_keyboard_interrupt():
+    # We use two linters so we'll have two jobs. One (string.yml) will complete
+    # quickly. The other (slow.yml) will run slowly.  This way the first worker
+    # will be be stuck blocking on the ProcessPoolExecutor._call_queue when the
+    # signal arrives and the other still be doing work.
+    cmd = [sys.executable, 'runcli.py', '-l=string', '-l=slow']
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=here)
+    time.sleep(1)
+    proc.send_signal(signal.SIGINT)
+
+    out = proc.communicate()[0]
+    assert 'warning: not all files were linted' in out
+    assert 'Traceback' not in out
 
 
 linters = ('setup.yml', 'setupfailed.yml', 'setupraised.yml')

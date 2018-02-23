@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function
 
 import os
+import time
 
 from mozlint import result
 from mozlint.errors import LintException
@@ -34,6 +35,11 @@ def external(files, config, **lintargs):
 
 def raises(files, config, **lintargs):
     raise LintException("Oh no something bad happened!")
+
+
+def slow(files, config, **lintargs):
+    time.sleep(2)
+    return []
 
 
 def structured(files, config, logger, **kwargs):
