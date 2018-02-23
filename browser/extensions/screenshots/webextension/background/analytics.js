@@ -3,7 +3,7 @@
 "use strict";
 
 this.analytics = (function() {
-  let exports = {};
+  const exports = {};
 
   let telemetryPrefKnown = false;
   let telemetryEnabled;
@@ -24,17 +24,17 @@ this.analytics = (function() {
       return;
     }
 
-    let eventsUrl = `${main.getBackend()}/event`;
-    let deviceId = auth.getDeviceId();
-    let sendTime = Date.now();
+    const eventsUrl = `${main.getBackend()}/event`;
+    const deviceId = auth.getDeviceId();
+    const sendTime = Date.now();
 
     pendingEvents.forEach(event => {
       event.queueTime = sendTime - event.eventTime
-      log.info(`sendEvent ${event.event}/${event.action}/${event.label || 'none'} ${JSON.stringify(event.options)}`);
+      log.info(`sendEvent ${event.event}/${event.action}/${event.label || "none"} ${JSON.stringify(event.options)}`);
     });
 
-    let body = JSON.stringify({deviceId, events: pendingEvents});
-    let fetchRequest = fetch(eventsUrl, Object.assign({body}, fetchOptions));
+    const body = JSON.stringify({deviceId, events: pendingEvents});
+    const fetchRequest = fetch(eventsUrl, Object.assign({body}, fetchOptions));
     fetchWatcher(fetchRequest);
     pendingEvents = [];
   }
@@ -44,10 +44,10 @@ this.analytics = (function() {
       return;
     }
 
-    let timingsUrl = `${main.getBackend()}/timing`;
-    let deviceId = auth.getDeviceId();
-    let body = JSON.stringify({deviceId, timings: pendingTimings});
-    let fetchRequest = fetch(timingsUrl, Object.assign({body}, fetchOptions));
+    const timingsUrl = `${main.getBackend()}/timing`;
+    const deviceId = auth.getDeviceId();
+    const body = JSON.stringify({deviceId, timings: pendingTimings});
+    const fetchRequest = fetch(timingsUrl, Object.assign({body}, fetchOptions));
     fetchWatcher(fetchRequest);
     pendingTimings.forEach(t => {
       log.info(`sendTiming ${t.timingCategory}/${t.timingLabel}/${t.timingVar}: ${t.timingValue}`);
@@ -58,7 +58,7 @@ this.analytics = (function() {
   function sendTiming(timingLabel, timingVar, timingValue) {
     // sendTiming is only called in response to sendEvent, so no need to check
     // the telemetry pref again here.
-    let timingCategory = "addon";
+    const timingCategory = "addon";
     pendingTimings.push({
       timingCategory,
       timingLabel,
@@ -74,22 +74,22 @@ this.analytics = (function() {
   }
 
   exports.sendEvent = function(action, label, options) {
-    let eventCategory = "addon";
+    const eventCategory = "addon";
     if (!telemetryPrefKnown) {
       log.warn("sendEvent called before we were able to refresh");
       return Promise.resolve();
     }
     if (!telemetryEnabled) {
-      log.info(`Cancelled sendEvent ${eventCategory}/${action}/${label || 'none'} ${JSON.stringify(options)}`);
+      log.info(`Cancelled sendEvent ${eventCategory}/${action}/${label || "none"} ${JSON.stringify(options)}`);
       return Promise.resolve();
     }
     measureTiming(action, label);
     // Internal-only events are used for measuring time between events,
     // but aren't submitted to GA.
-    if (action === 'internal') {
+    if (action === "internal") {
       return Promise.resolve();
     }
-    if (typeof label == "object" && (!options)) {
+    if (typeof label === "object" && (!options)) {
       options = label;
       label = undefined;
     }
@@ -103,11 +103,11 @@ this.analytics = (function() {
     // Don't include in event data.
     delete options.incognito;
 
-    let di = deviceInfo();
+    const di = deviceInfo();
     options.applicationName = di.appName;
     options.applicationVersion = di.addonVersion;
-    let abTests = auth.getAbTests();
-    for (let [gaField, value] of Object.entries(abTests)) {
+    const abTests = auth.getAbTests();
+    for (const [gaField, value] of Object.entries(abTests)) {
       options[gaField] = value;
     }
     pendingEvents.push({
@@ -149,7 +149,7 @@ this.analytics = (function() {
     return telemetryEnabled;
   };
 
-  let timingData = new Map();
+  const timingData = new Map();
 
   // Configuration for filtering the sendEvent stream on start/end events.
   // When start or end events occur, the time is recorded.
@@ -158,71 +158,118 @@ this.analytics = (function() {
   // and cd1 value is the elapsed time in milliseconds.
   // If a cancel event happens between the start and end events, the start time
   // is deleted.
-  let rules = [{
-    name: 'page-action',
-    start: { action: 'start-shot', label: 'toolbar-button' },
-    end: { action: 'internal', label: 'unhide-preselection-frame' },
-    cancel: [{ action: 'cancel-shot' }]
+  const rules = [{
+    name: "page-action",
+    start: { action: "start-shot", label: "toolbar-button" },
+    end: { action: "internal", label: "unhide-preselection-frame" },
+    cancel: [
+      { action: "cancel-shot" },
+      { action: "internal", label: "document-hidden" },
+      { action: "internal", label: "unhide-onboarding-frame" }
+    ]
   }, {
-    name: 'context-menu',
-    start: { action: 'start-shot', label: 'context-menu' },
-    end: { action: 'internal', label: 'unhide-preselection-frame' },
-    cancel: [{ action: 'cancel-shot' }]
+    name: "context-menu",
+    start: { action: "start-shot", label: "context-menu" },
+    end: { action: "internal", label: "unhide-preselection-frame" },
+    cancel: [
+      { action: "cancel-shot" },
+      { action: "internal", label: "document-hidden" },
+      { action: "internal", label: "unhide-onboarding-frame" }
+    ]
   }, {
-    name: 'capture-full-page',
-    start: { action: 'capture-full-page' },
-    end: { action: 'internal', label: 'unhide-preview-frame' },
-    cancel: [{ action: 'cancel-shot' }]
+    name: "page-action-onboarding",
+    start: { action: "start-shot", label: "toolbar-button" },
+    end: { action: "internal", label: "unhide-onboarding-frame" },
+    cancel: [
+      { action: "cancel-shot" },
+      { action: "internal", label: "document-hidden" },
+      { action: "internal", label: "unhide-preselection-frame" }
+    ]
   }, {
-    name: 'capture-visible',
-    start: { action: 'capture-visible' },
-    end: { action: 'internal', label: 'unhide-preview-frame' },
-    cancel: [{ action: 'cancel-shot' }]
+    name: "context-menu-onboarding",
+    start: { action: "start-shot", label: "context-menu" },
+    end: { action: "internal", label: "unhide-onboarding-frame" },
+    cancel: [
+      { action: "cancel-shot" },
+      { action: "internal", label: "document-hidden" },
+      { action: "internal", label: "unhide-preselection-frame" }
+    ]
   }, {
-    name: 'make-selection',
-    start: { action: 'make-selection' },
-    end: { action: 'internal', label: 'unhide-selection-frame' },
-    cancel: [{ action: 'cancel-shot' }]
+    name: "capture-full-page",
+    start: { action: "capture-full-page" },
+    end: { action: "internal", label: "unhide-preview-frame" },
+    cancel: [
+      { action: "cancel-shot" },
+      { action: "internal", label: "document-hidden" }
+    ]
   }, {
-    name: 'save-shot',
-    start: { action: 'save-shot' },
-    end: { action: 'internal', label: 'open-shot-tab' },
-    cancel: [{ action: 'cancel-shot' }, { action: 'upload-failed' }]
+    name: "capture-visible",
+    start: { action: "capture-visible" },
+    end: { action: "internal", label: "unhide-preview-frame" },
+    cancel: [
+      { action: "cancel-shot" },
+      { action: "internal", label: "document-hidden" }
+    ]
   }, {
-    name: 'save-visible',
-    start: { action: 'save-visible' },
-    end: { action: 'internal', label: 'open-shot-tab' },
-    cancel: [{ action: 'cancel-shot' }, { action: 'upload-failed' }]
+    name: "make-selection",
+    start: { action: "make-selection" },
+    end: { action: "internal", label: "unhide-selection-frame" },
+    cancel: [
+      { action: "cancel-shot" },
+      { action: "internal", label: "document-hidden" }
+    ]
   }, {
-    name: 'save-full-page',
-    start: { action: 'save-full-page' },
-    end: { action: 'internal', label: 'open-shot-tab' },
-    cancel: [{ action: 'cancel-shot' }, { action: 'upload-failed' }]
+    name: "save-shot",
+    start: { action: "save-shot" },
+    end: { action: "internal", label: "open-shot-tab" },
+    cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }]
   }, {
-    name: 'save-full-page-truncated',
-    start: { action: 'save-full-page-truncated' },
-    end: { action: 'internal', label: 'open-shot-tab' },
-    cancel: [{ action: 'cancel-shot' }, { action: 'upload-failed' }]
+    name: "save-visible",
+    start: { action: "save-visible" },
+    end: { action: "internal", label: "open-shot-tab" },
+    cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }]
   }, {
-    name: 'download-shot',
-    start: { action: 'download-shot' },
-    end: { action: 'internal', label: 'deactivate' },
-    cancel: [{ action: 'cancel-shot' }]
+    name: "save-full-page",
+    start: { action: "save-full-page" },
+    end: { action: "internal", label: "open-shot-tab" },
+    cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }]
   }, {
-    name: 'download-full-page',
-    start: { action: 'download-full-page' },
-    end: { action: 'internal', label: 'deactivate' },
-    cancel: [{ action: 'cancel-shot' }]
+    name: "save-full-page-truncated",
+    start: { action: "save-full-page-truncated" },
+    end: { action: "internal", label: "open-shot-tab" },
+    cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }]
   }, {
-    name: 'download-full-page-truncated',
-    start: { action: 'download-full-page-truncated' },
-    end: { action: 'internal', label: 'deactivate' },
-    cancel: [{ action: 'cancel-shot' }]
+    name: "download-shot",
+    start: { action: "download-shot" },
+    end: { action: "internal", label: "deactivate" },
+    cancel: [
+      { action: "cancel-shot" },
+      { action: "internal", label: "document-hidden" }
+    ]
   }, {
-    name: 'download-visible',
-    start: { action: 'download-visible' },
-    end: { action: 'internal', label: 'deactivate' },
-    cancel: [{ action: 'cancel-shot' }]
+    name: "download-full-page",
+    start: { action: "download-full-page" },
+    end: { action: "internal", label: "deactivate" },
+    cancel: [
+      { action: "cancel-shot" },
+      { action: "internal", label: "document-hidden" }
+    ]
+  }, {
+    name: "download-full-page-truncated",
+    start: { action: "download-full-page-truncated" },
+    end: { action: "internal", label: "deactivate" },
+    cancel: [
+      { action: "cancel-shot" },
+      { action: "internal", label: "document-hidden" }
+    ]
+  }, {
+    name: "download-visible",
+    start: { action: "download-visible" },
+    end: { action: "internal", label: "deactivate" },
+    cancel: [
+      { action: "cancel-shot" },
+      { action: "internal", label: "document-hidden" }
+    ]
   }];
 
   // Match a filter (action and optional label) against an action and label.
@@ -241,10 +288,10 @@ this.analytics = (function() {
       if (anyMatches(r.cancel, action, label)) {
         delete timingData[r.name];
       } else if (match(r.start, action, label)) {
-        timingData[r.name] = Date.now();
+        timingData[r.name] = Math.round(performance.now());
       } else if (timingData[r.name] && match(r.end, action, label)) {
-        let endTime = Date.now();
-        let elapsed = endTime - timingData[r.name];
+        const endTime = Math.round(performance.now());
+        const elapsed = endTime - timingData[r.name];
         sendTiming("perf-response-time", r.name, elapsed);
         delete timingData[r.name];
       }

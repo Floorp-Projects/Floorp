@@ -4,7 +4,7 @@
 "use strict";
 
 this.auth = (function() {
-  let exports = {};
+  const exports = {};
 
   let registrationInfo;
   let initialized = false;
@@ -12,7 +12,7 @@ this.auth = (function() {
   let sentryPublicDSN = null;
   let abTests = {};
 
-  let registrationInfoFetched = catcher.watchPromise(browser.storage.local.get(["registrationInfo", "abTests"]).then((result) => {
+  const registrationInfoFetched = catcher.watchPromise(browser.storage.local.get(["registrationInfo", "abTests"]).then((result) => {
     if (result.abTests) {
       abTests = result.abTests;
     }
@@ -21,7 +21,7 @@ this.auth = (function() {
     } else {
       registrationInfo = generateRegistrationInfo();
       log.info("Generating new device authentication ID", registrationInfo);
-      return browser.storage.local.set({registrationInfo});
+      browser.storage.local.set({registrationInfo});
     }
   }));
 
@@ -30,7 +30,7 @@ this.auth = (function() {
   };
 
   function generateRegistrationInfo() {
-    let info = {
+    const info = {
       deviceId: `anon${makeUuid()}`,
       secret: makeUuid(),
       registered: false
@@ -40,13 +40,13 @@ this.auth = (function() {
 
   function register() {
     return new Promise((resolve, reject) => {
-      let registerUrl = main.getBackend() + "/api/register";
+      const registerUrl = main.getBackend() + "/api/register";
       // TODO: replace xhr with Fetch #2261
-      let req = new XMLHttpRequest();
+      const req = new XMLHttpRequest();
       req.open("POST", registerUrl);
       req.setRequestHeader("content-type", "application/json");
       req.onload = catcher.watchFunction(() => {
-        if (req.status == 200) {
+        if (req.status === 200) {
           log.info("Registered login");
           initialized = true;
           saveAuthInfo(JSON.parse(req.responseText));
@@ -55,14 +55,14 @@ this.auth = (function() {
         } else {
           analytics.sendEvent("register-failed", `bad-response-${req.status}`);
           log.warn("Error in response:", req.responseText);
-          let exc = new Error("Bad response: " + req.status);
+          const exc = new Error("Bad response: " + req.status);
           exc.popupMessage = "LOGIN_ERROR";
           reject(exc);
         }
       });
       req.onerror = catcher.watchFunction(() => {
         analytics.sendEvent("register-failed", "connection-error");
-        let exc = new Error("Error contacting server");
+        const exc = new Error("Error contacting server");
         exc.popupMessage = "LOGIN_CONNECTION_ERROR";
         reject(exc);
       });
@@ -75,14 +75,14 @@ this.auth = (function() {
   }
 
   function login(options) {
-    let { ownershipCheck, noRegister } = options || {};
+    const { ownershipCheck, noRegister } = options || {};
     return new Promise((resolve, reject) => {
-      let loginUrl = main.getBackend() + "/api/login";
+      const loginUrl = main.getBackend() + "/api/login";
       // TODO: replace xhr with Fetch #2261
-      let req = new XMLHttpRequest();
+      const req = new XMLHttpRequest();
       req.open("POST", loginUrl);
       req.onload = catcher.watchFunction(() => {
-        if (req.status == 404) {
+        if (req.status === 404) {
           if (noRegister) {
             resolve(false);
           } else {
@@ -90,18 +90,18 @@ this.auth = (function() {
           }
         } else if (req.status >= 300) {
           log.warn("Error in response:", req.responseText);
-          let exc = new Error("Could not log in: " + req.status);
+          const exc = new Error("Could not log in: " + req.status);
           exc.popupMessage = "LOGIN_ERROR";
           analytics.sendEvent("login-failed", `bad-response-${req.status}`);
           reject(exc);
         } else if (req.status === 0) {
-          let error = new Error("Could not log in, server unavailable");
+          const error = new Error("Could not log in, server unavailable");
           error.popupMessage = "LOGIN_CONNECTION_ERROR";
           analytics.sendEvent("login-failed", "connection-error");
           reject(error);
         } else {
           initialized = true;
-          let jsonResponse = JSON.parse(req.responseText);
+          const jsonResponse = JSON.parse(req.responseText);
           log.info("Screenshots logged in");
           analytics.sendEvent("login");
           saveAuthInfo(jsonResponse);
@@ -114,7 +114,7 @@ this.auth = (function() {
       });
       req.onerror = catcher.watchFunction(() => {
         analytics.sendEvent("login-failed", "connection-error");
-        let exc = new Error("Connection failed");
+        const exc = new Error("Connection failed");
         exc.url = loginUrl;
         exc.popupMessage = "CONNECTION_ERROR";
         reject(exc);

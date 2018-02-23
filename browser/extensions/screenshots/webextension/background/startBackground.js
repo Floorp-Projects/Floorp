@@ -9,7 +9,7 @@
 const startTime = Date.now();
 
 this.startBackground = (function() {
-  let exports = {startTime};
+  const exports = {startTime};
 
   const backgroundScripts = [
     "log.js",
@@ -66,13 +66,13 @@ this.startBackground = (function() {
     backgroundScripts.forEach((script) => {
       loadedPromise = loadedPromise.then(() => {
         return new Promise((resolve, reject) => {
-          let tag = document.createElement("script");
+          const tag = document.createElement("script");
           tag.src = browser.extension.getURL(script);
           tag.onload = () => {
             resolve();
           };
           tag.onerror = (error) => {
-            let exc = new Error(`Error loading script: ${error.message}`);
+            const exc = new Error(`Error loading script: ${error.message}`);
             exc.scriptName = script;
             reject(exc);
           };

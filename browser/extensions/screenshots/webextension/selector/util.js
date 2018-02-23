@@ -1,7 +1,7 @@
 "use strict";
 
 this.util = (function() { // eslint-disable-line no-unused-vars
-  let exports = {};
+  const exports = {};
 
   /** Removes a node from its document, if it's a node and the node is attached to a parent */
   exports.removeNode = function(el) {
@@ -12,7 +12,7 @@ this.util = (function() { // eslint-disable-line no-unused-vars
 
   /** Truncates the X coordinate to the document size */
   exports.truncateX = function(x) {
-    let max = Math.max(document.documentElement.clientWidth, document.body.clientWidth, document.documentElement.scrollWidth, document.body.scrollWidth);
+    const max = Math.max(document.documentElement.clientWidth, document.body.clientWidth, document.documentElement.scrollWidth, document.body.scrollWidth);
     if (x < 0) {
       return 0;
     } else if (x > max) {
@@ -23,7 +23,7 @@ this.util = (function() { // eslint-disable-line no-unused-vars
 
   /** Truncates the Y coordinate to the document size */
   exports.truncateY = function(y) {
-    let max = Math.max(document.documentElement.clientHeight, document.body.clientHeight, document.documentElement.scrollHeight, document.body.scrollHeight);
+    const max = Math.max(document.documentElement.clientHeight, document.body.clientHeight, document.documentElement.scrollHeight, document.body.scrollHeight);
     if (y < 0) {
       return 0;
     } else if (y > max) {
@@ -33,15 +33,15 @@ this.util = (function() { // eslint-disable-line no-unused-vars
   };
 
   // Pixels of wiggle the captured region gets in captureSelectedText:
-  var CAPTURE_WIGGLE = 10;
+  const CAPTURE_WIGGLE = 10;
   const ELEMENT_NODE = document.ELEMENT_NODE;
 
   exports.captureEnclosedText = function(box) {
-    var scrollX = window.scrollX;
-    var scrollY = window.scrollY;
-    var text = [];
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const text = [];
     function traverse(el) {
-      var elBox = el.getBoundingClientRect();
+      let elBox = el.getBoundingClientRect();
       elBox = {
         top: elBox.top + scrollY,
         bottom: elBox.bottom + scrollY,
@@ -60,9 +60,9 @@ this.util = (function() { // eslint-disable-line no-unused-vars
           elBox.right > box.right + CAPTURE_WIGGLE ||
           elBox.left < box.left - CAPTURE_WIGGLE) {
         // Partially outside the box
-        for (var i = 0; i < el.childNodes.length; i++) {
-          var child = el.childNodes[i];
-          if (child.nodeType == ELEMENT_NODE) {
+        for (let i = 0; i < el.childNodes.length; i++) {
+          const child = el.childNodes[i];
+          if (child.nodeType === ELEMENT_NODE) {
             traverse(child);
           }
         }
@@ -72,9 +72,9 @@ this.util = (function() { // eslint-disable-line no-unused-vars
     }
     function addText(el) {
       let t;
-      if (el.tagName == "IMG") {
+      if (el.tagName === "IMG") {
         t = el.getAttribute("alt") || el.getAttribute("title");
-      } else if (el.tagName == "A") {
+      } else if (el.tagName === "A") {
         t = el.innerText;
         if (el.getAttribute("href") && !el.getAttribute("href").startsWith("#")) {
           t += " (" + el.href + ")";

@@ -3,7 +3,7 @@
 "use strict";
 
 this.deviceInfo = (function() {
-  let manifest = browser.runtime.getManifest();
+  const manifest = browser.runtime.getManifest();
 
   let platformInfo = {};
   catcher.watchPromise(browser.runtime.getPlatformInfo().then((info) => {
@@ -12,10 +12,10 @@ this.deviceInfo = (function() {
 
   return function deviceInfo() {
     let match = navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9.]{1,1000})/);
-    let chromeVersion = match ? match[1] : null;
+    const chromeVersion = match ? match[1] : null;
     match = navigator.userAgent.match(/Firefox\/([0-9.]{1,1000})/);
-    let firefoxVersion = match ? match[1] : null;
-    let appName = chromeVersion ? "chrome" : "firefox";
+    const firefoxVersion = match ? match[1] : null;
+    const appName = chromeVersion ? "chrome" : "firefox";
 
     return {
       addonVersion: manifest.version,

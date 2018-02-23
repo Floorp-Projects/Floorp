@@ -5,12 +5,12 @@
 this.assertIsTrusted = function assertIsTrusted(handlerFunction) {
   return function(event) {
     if (!event) {
-      let exc = new Error("assertIsTrusted did not get an event");
+      const exc = new Error("assertIsTrusted did not get an event");
       exc.noPopup = true;
       throw exc;
     }
     if (!event.isTrusted) {
-      let exc = new Error(`Received untrusted event (type: ${event.type})`);
+      const exc = new Error(`Received untrusted event (type: ${event.type})`);
       exc.noPopup = true;
       throw exc;
     }
