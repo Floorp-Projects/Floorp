@@ -243,6 +243,9 @@ public:
    *                              dispatch a Gecko key event.
    * @param aKeyEvent             The result -- a Gecko key event initialized
    *                              from the native key event.
+   * @param aIsProcessedByIME     true if aNativeKeyEvent has been handled
+   *                              by IME (but except if the composition was
+   *                              started with dead key).
    * @param aInsertString         If caller expects that the event will cause
    *                              a character to be input (say in an editor),
    *                              the caller should set this.  Otherwise,
@@ -251,6 +254,7 @@ public:
    *                              characters of aNativeKeyEvent.
    */
   void InitKeyEvent(NSEvent *aNativeKeyEvent, WidgetKeyboardEvent& aKeyEvent,
+                    bool aIsProcessedByIME,
                     const nsAString *aInsertString = nullptr);
 
   /**
@@ -303,6 +307,15 @@ public:
   static CodeNameIndex ComputeGeckoCodeNameIndex(UInt32 aNativeKeyCode,
                                                  UInt32 aKbType);
 
+  /**
+   * TranslateToChar() checks if aNativeKeyEvent is a dead key.
+   *
+   * @param aNativeKeyEvent       A native key event.
+   * @return                      Returns true if the key event is a dead key
+   *                              event.  Otherwise, false.
+   */
+  bool IsDeadKey(NSEvent* aNativeKeyEvent);
+
 protected:
   /**
    * TranslateToString() computes the inputted text from the native keyCode,
@@ -343,7 +356,7 @@ protected:
    * @param aKbType               A native Keyboard Type value.  Typically,
    *                              this is a result of ::LMGetKbdType().
    * @return                      Returns true if the key with specified
-   *                              modifier state isa dead key.  Otherwise,
+   *                              modifier state is a dead key.  Otherwise,
    *                              false.
    */
   bool IsDeadKey(UInt32 aKeyCode, UInt32 aModifiers, UInt32 aKbType);
@@ -433,6 +446,9 @@ public:
    *                              dispatch a Gecko key event.
    * @param aKeyEvent             The result -- a Gecko key event initialized
    *                              from the native key event.
+   * @param aIsProcessedByIME     true if aNativeKeyEvent has been handled
+   *                              by IME (but except if the composition was
+   *                              started with dead key).
    * @param aInsertString         If caller expects that the event will cause
    *                              a character to be input (say in an editor),
    *                              the caller should set this.  Otherwise,
@@ -441,6 +457,7 @@ public:
    *                              characters of aNativeKeyEvent.
    */
   void InitKeyEvent(NSEvent *aNativeKeyEvent, WidgetKeyboardEvent& aKeyEvent,
+                    bool aIsProcessedByIME,
                     const nsAString *aInsertString = nullptr);
 
   /**
@@ -552,6 +569,8 @@ protected:
     // Unique id associated with a keydown / keypress event. It's ok if this
     // wraps over long periods.
     uint32_t mUniqueId;
+    // Whether keydown event was dispatched for mKeyEvent.
+    bool mKeyDownDispatched;
     // Whether keydown event was consumed by web contents or chrome contents.
     bool mKeyDownHandled;
     // Whether keypress event was dispatched for mKeyEvent.
@@ -604,6 +623,7 @@ protected:
       }
       mInsertString = nullptr;
       mInsertedString.Truncate();
+      mKeyDownDispatched = false;
       mKeyDownHandled = false;
       mKeyPressDispatched = false;
       mKeyPressHandled = false;
@@ -615,6 +635,11 @@ protected:
     {
       return mKeyDownHandled || mKeyPressHandled || mCausedOtherKeyEvents ||
              mCompositionDispatched;
+    }
+
+    bool CanDispatchKeyDownEvent() const
+    {
+      return !mKeyDownDispatched;
     }
 
     bool CanDispatchKeyPressEvent() const
@@ -765,7 +790,8 @@ protected:
     }
 
     void InitKeyEvent(TextInputHandlerBase* aHandler,
-                      WidgetKeyboardEvent& aKeyEvent);
+                      WidgetKeyboardEvent& aKeyEvent,
+                      bool aIsProcessedByIME);
 
     /**
      * GetUnhandledString() returns characters of the event which have not been
@@ -1059,6 +1085,7 @@ public:
   NSRange MarkedRange();
 
   bool IsIMEComposing() { return mIsIMEComposing; }
+  bool IsDeadKeyComposing() { return mIsDeadKeyComposing; }
   bool IsIMEOpened();
   bool IsIMEEnabled() { return mIsIMEEnabled; }
   bool IsASCIICapableOnly() { return mIsASCIICapableOnly; }
@@ -1112,6 +1139,19 @@ protected:
   void InsertTextAsCommittingComposition(NSAttributedString* aAttrString,
                                          NSRange* aReplacementRange);
 
+  /**
+   * MaybeDispatchCurrentKeydownEvent() dispatches eKeyDown event for current
+   * key event.  If eKeyDown for current key event has already been dispatched,
+   * this does nothing.
+   *
+   * @param aIsProcessedByIME   true if current key event is handled by IME.
+   * @return                    true if the caller can continue to handle
+   *                            current key event.  Otherwise, false.  E.g.,
+   *                            focus is moved, the widget has been destroyed
+   *                            or something.
+   */
+  bool MaybeDispatchCurrentKeydownEvent(bool aIsProcessedByIME);
+
 private:
   // If mIsIMEComposing is true, the composition string is stored here.
   NSString* mIMECompositionString;
@@ -1125,6 +1165,9 @@ private:
   mozilla::WritingMode mWritingMode;
 
   bool mIsIMEComposing;
+  // If the composition started with dead key, mIsDeadKeyComposing is set to
+  // true.
+  bool mIsDeadKeyComposing;
   bool mIsIMEEnabled;
   bool mIsASCIICapableOnly;
   bool mIgnoreIMECommit;
