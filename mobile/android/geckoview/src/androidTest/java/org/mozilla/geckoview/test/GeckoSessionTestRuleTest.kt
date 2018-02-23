@@ -3,8 +3,8 @@
 
 package org.mozilla.geckoview.test
 
-import org.mozilla.gecko.GeckoSession
-import org.mozilla.gecko.GeckoSessionSettings
+import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
