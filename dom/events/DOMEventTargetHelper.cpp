@@ -101,8 +101,7 @@ DOMEventTargetHelper::~DOMEventTargetHelper()
 void
 DOMEventTargetHelper::BindToOwner(nsPIDOMWindowInner* aOwner)
 {
-  nsCOMPtr<nsIGlobalObject> glob = do_QueryInterface(aOwner);
-  BindToOwner(glob);
+  BindToOwner(aOwner ? aOwner->AsGlobal() : nullptr);
 }
 
 void

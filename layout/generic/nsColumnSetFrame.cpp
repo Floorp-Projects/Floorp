@@ -1280,7 +1280,7 @@ nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   if (IsVisibleForPainting(aBuilder)) {
     aLists.BorderBackground()->
-      AppendToTop(new (aBuilder) nsDisplayColumnRule(aBuilder, this));
+      AppendToTop(MakeDisplayItem<nsDisplayColumnRule>(aBuilder, this));
   }
 
   // Our children won't have backgrounds so it doesn't matter where we put them.

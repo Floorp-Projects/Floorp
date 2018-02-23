@@ -7,43 +7,31 @@
 this.EXPORTED_SYMBOLS = ["AppMenu"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
 this.AppMenu = {
 
   init(libDir) {},
 
   configurations: {
-    appMenuClosed: {
+    appMenuMainView: {
       selectors: ["#appMenu-popup"],
       async applyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-        browserWindow.PanelUI.hide();
-      },
-    },
-
-    appMenuMainView: {
-      selectors: ["#appMenu-popup"],
-      applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-        let promise = browserWindow.PanelUI.show();
-        browserWindow.PanelUI.showMainView();
-        return promise;
+        await reopenAppMenu(browserWindow);
       },
     },
 
     appMenuHistorySubview: {
       selectors: ["#appMenu-popup"],
       async applyConfig() {
-        // History has a footer
-        if (isCustomizing()) {
-          return "Can't show subviews while customizing";
-        }
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-        await browserWindow.PanelUI.show();
-        browserWindow.PanelUI.showMainView();
-        browserWindow.document.getElementById("history-panelmenu").click();
+        await reopenAppMenu(browserWindow);
 
-        return undefined;
+        let view = browserWindow.document.getElementById("appMenu-libraryView");
+        let promiseViewShown = BrowserTestUtils.waitForEvent(view, "ViewShown");
+        browserWindow.document.getElementById("appMenu-library-button").click();
+        await promiseViewShown;
       },
 
       verifyConfig: verifyConfigHelper,
@@ -52,15 +40,13 @@ this.AppMenu = {
     appMenuHelpSubview: {
       selectors: ["#appMenu-popup"],
       async applyConfig() {
-        if (isCustomizing()) {
-          return "Can't show subviews while customizing";
-        }
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-        await browserWindow.PanelUI.show();
-        browserWindow.PanelUI.showMainView();
-        browserWindow.document.getElementById("PanelUI-help").click();
+        await reopenAppMenu(browserWindow);
 
-        return undefined;
+        let view = browserWindow.document.getElementById("PanelUI-helpView");
+        let promiseViewShown = BrowserTestUtils.waitForEvent(view, "ViewShown");
+        browserWindow.document.getElementById("appMenu-help-button").click();
+        await promiseViewShown;
       },
 
       verifyConfig: verifyConfigHelper,
@@ -68,6 +54,14 @@ this.AppMenu = {
 
   },
 };
+
+async function reopenAppMenu(browserWindow) {
+  browserWindow.PanelUI.hide();
+  let view = browserWindow.document.getElementById("appMenu-mainView");
+  let promiseViewShown = BrowserTestUtils.waitForEvent(view, "ViewShown");
+  await browserWindow.PanelUI.show();
+  await promiseViewShown;
+}
 
 function verifyConfigHelper() {
   if (isCustomizing()) {

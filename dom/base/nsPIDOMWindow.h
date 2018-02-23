@@ -155,6 +155,9 @@ public:
     return this;
   }
 
+  nsIGlobalObject* AsGlobal();
+  const nsIGlobalObject* AsGlobal() const;
+
   nsPIDOMWindowOuter* GetOuterWindow() const {
     return mOuterWindow;
   }

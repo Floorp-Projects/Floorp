@@ -1095,7 +1095,7 @@ var DownloadsViewController = {
     }
     // The currently supported commands depend on whether the blocked subview is
     // showing.  If it is, then take the following path.
-    if (DownloadsBlockedSubview.view.showingSubView) {
+    if (DownloadsView.subViewOpen) {
       let blockedSubviewCmds = [
         "downloadsCmd_unblockAndOpen",
         "cmd_delete",
@@ -1410,13 +1410,6 @@ XPCOMUtils.defineConstant(this, "DownloadsFooter", DownloadsFooter);
  * Manages the blocked subview that slides in when you click a blocked download.
  */
 var DownloadsBlockedSubview = {
-
-  get subview() {
-    let subview = document.getElementById("downloadsPanel-blockedSubview");
-    delete this.subview;
-    return this.subview = subview;
-  },
-
   /**
    * Elements in the subview.
    */
@@ -1434,15 +1427,6 @@ var DownloadsBlockedSubview = {
     }, {});
     delete this.elements;
     return this.elements = elements;
-  },
-
-  /**
-   * The multiview that contains both the main view and the subview.
-   */
-  get view() {
-    let view = document.getElementById("downloadsPanel-multiView");
-    delete this.view;
-    return this.view = view;
   },
 
   /**
@@ -1475,31 +1459,24 @@ var DownloadsBlockedSubview = {
 
     let verdict = element.getAttribute("verdict");
     this.subview.setAttribute("verdict", verdict);
-    this.subview.addEventListener("ViewHiding", this);
 
-    this.view.showSubView(this.subview.id);
+    this.mainView.addEventListener("ViewShown", this);
+    DownloadsPanel.panel.addEventListener("popuphidden", this);
+    this.panelMultiView.showSubView(this.subview);
 
     // Without this, the mainView is more narrow than the panel once all
     // downloads are removed from the panel.
-    document.getElementById("downloadsPanel-mainView").style.minWidth =
-      window.getComputedStyle(this.subview).width;
+    this.mainView.style.minWidth = window.getComputedStyle(this.subview).width;
   },
 
   handleEvent(event) {
-    switch (event.type) {
-      case "ViewHiding":
-        this.subview.removeEventListener(event.type, this);
-        DownloadsView.subViewOpen = false;
-        // If we're going back to the main panel, use showPanel to
-        // focus the proper element.
-        if (this.view.current !== this.subview) {
-          DownloadsPanel.showPanel();
-        }
-        break;
-      default:
-        DownloadsCommon.log("Unhandled DownloadsBlockedSubview event: " +
-                            event.type);
-        break;
+    // This is called when the main view is shown or the panel is hidden.
+    DownloadsView.subViewOpen = false;
+    this.mainView.removeEventListener("ViewShown", this);
+    DownloadsPanel.panel.removeEventListener("popuphidden", this);
+    // Focus the proper element if we're going back to the main panel.
+    if (event.type == "ViewShown") {
+      DownloadsPanel.showPanel();
     }
   },
 
@@ -1511,6 +1488,13 @@ var DownloadsBlockedSubview = {
     DownloadsPanel.hidePanel();
   },
 };
+
+XPCOMUtils.defineLazyGetter(DownloadsBlockedSubview, "panelMultiView",
+  () => document.getElementById("downloadsPanel-multiView"));
+XPCOMUtils.defineLazyGetter(DownloadsBlockedSubview, "mainView",
+  () => document.getElementById("downloadsPanel-mainView"));
+XPCOMUtils.defineLazyGetter(DownloadsBlockedSubview, "subview",
+  () => document.getElementById("downloadsPanel-blockedSubview"));
 
 XPCOMUtils.defineConstant(this, "DownloadsBlockedSubview",
                           DownloadsBlockedSubview);

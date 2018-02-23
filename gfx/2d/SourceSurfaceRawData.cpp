@@ -40,6 +40,7 @@ SourceSurfaceRawData::GuaranteePersistance()
     return;
   }
 
+  MOZ_ASSERT(!mDeallocator);
   uint8_t* oldData = mRawData;
   mRawData = new uint8_t[mStride * mSize.height];
 
@@ -76,6 +77,15 @@ SourceSurfaceAlignedRawData::Init(const IntSize &aSize,
   }
 
   return mArray != nullptr;
+}
+
+void
+SourceSurfaceAlignedRawData::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                                    size_t& aHeapSizeOut,
+                                                    size_t& aNonHeapSizeOut,
+                                                    size_t& aExtHandlesOut) const
+{
+  aHeapSizeOut += mArray.HeapSizeOfExcludingThis(aMallocSizeOf);
 }
 
 } // namespace gfx

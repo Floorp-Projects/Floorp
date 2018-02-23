@@ -196,8 +196,8 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!(GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) &&
       IsVisibleForPainting(aBuilder)) {
     if (StyleEffects()->mBoxShadow) {
-      aLists.BorderBackground()->AppendToTop(new (aBuilder)
-        nsDisplayBoxShadowOuter(aBuilder, this));
+      aLists.BorderBackground()->AppendToTop(
+        MakeDisplayItem<nsDisplayBoxShadowOuter>(aBuilder, this));
     }
 
     nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
@@ -205,8 +205,8 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       aLists.BorderBackground(),
       /* aAllowWillPaintBorderOptimization = */ false);
 
-    aLists.BorderBackground()->AppendToTop(new (aBuilder)
-      nsDisplayFieldSetBorder(aBuilder, this));
+    aLists.BorderBackground()->AppendToTop(
+      MakeDisplayItem<nsDisplayFieldSetBorder>(aBuilder, this));
 
     DisplayOutlineUnconditional(aBuilder, aLists);
 
