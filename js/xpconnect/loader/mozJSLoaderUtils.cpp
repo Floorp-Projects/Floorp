@@ -62,11 +62,8 @@ WriteCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
     size_t size = buffer.length();
     if (size > UINT32_MAX)
         return NS_ERROR_FAILURE;
-
-    // Move the vector buffer into a unique pointer buffer.
-    UniquePtr<char[]> buf(reinterpret_cast<char*>(buffer.extractOrCopyRawBuffer()));
     nsresult rv = cache->PutBuffer(PromiseFlatCString(uri).get(),
-                                   Move(buf),
+                                   reinterpret_cast<char*>(buffer.begin()),
                                    size);
     return rv;
 }

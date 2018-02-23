@@ -96,7 +96,7 @@ TEST_F(TestStartupCache, StartupWriteRead)
   UniquePtr<char[]> outbuf;
   uint32_t len;
 
-  rv = sc->PutBuffer(id, UniquePtr<char[]>(strdup(buf)), strlen(buf) + 1);
+  rv = sc->PutBuffer(id, buf, strlen(buf) + 1);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 
   rv = sc->GetBuffer(id, &outbuf, &len);
@@ -122,7 +122,7 @@ TEST_F(TestStartupCache, WriteInvalidateRead)
   StartupCache* sc = StartupCache::GetSingleton();
   ASSERT_TRUE(sc);
 
-  rv = sc->PutBuffer(id, UniquePtr<char[]>(strdup(buf)), strlen(buf) + 1);
+  rv = sc->PutBuffer(id, buf, strlen(buf) + 1);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 
   sc->InvalidateCache();
@@ -177,7 +177,7 @@ TEST_F(TestStartupCache, WriteObject)
 
   // Since this is a post-startup write, it should be written and
   // available.
-  rv = sc->PutBuffer(id, Move(buf), len);
+  rv = sc->PutBuffer(id, buf.get(), len);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 
   UniquePtr<char[]> buf2;
