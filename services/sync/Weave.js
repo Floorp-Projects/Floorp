@@ -117,13 +117,13 @@ WeaveService.prototype = {
   /**
    * Whether Sync appears to be enabled.
    *
-   * This returns true if we have an associated FxA account and Sync is enabled.
+   * This returns true if we have an associated FxA account
    *
    * It does *not* perform a robust check to see if the client is working.
    * For that, you'll want to check Weave.Status.checkSetup().
    */
   get enabled() {
-    return !!syncUsername && Services.prefs.getBoolPref("identity.fxaccounts.enabled");
+    return !!syncUsername;
   }
 };
 

@@ -1218,11 +1218,8 @@ var gBuiltInActions = [
     onCommand(event, buttonNode) {
       browserPageActions(buttonNode).emailLink.onCommand(event, buttonNode);
     },
-  }
-];
+  },
 
-if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
-  gBuiltInActions.push(
   // send to device
   {
     id: "sendToDevice",
@@ -1250,8 +1247,8 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
           .onShowingSubview(panelViewNode);
       },
     },
-  });
-}
+  }
+];
 
 
 /**

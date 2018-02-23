@@ -1416,10 +1416,6 @@ pref("browser.uiCustomization.debug", false);
 // CustomizableUI state of the browser's user interface
 pref("browser.uiCustomization.state", "");
 
-// If set to false, FxAccounts and Sync will be unavailable.
-// A restart is mandatory after flipping that preference.
-pref("identity.fxaccounts.enabled", true);
-
 // The remote FxA root content URL. Must use HTTPS.
 pref("identity.fxaccounts.remote.root", "https://accounts.firefox.com/");
 
