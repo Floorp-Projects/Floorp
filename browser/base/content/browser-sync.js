@@ -95,8 +95,6 @@ var gSync = {
         });
     XPCOMUtils.defineLazyPreferenceGetter(this, "PRODUCT_INFO_BASE_URL",
         "app.productInfo.baseURL");
-    XPCOMUtils.defineLazyPreferenceGetter(this, "SYNC_ENABLED",
-        "identity.fxaccounts.enabled");
   },
 
   _maybeUpdateUIState() {
@@ -113,11 +111,6 @@ var gSync = {
 
   init() {
     if (this._initialized) {
-      return;
-    }
-
-    if (!this.SYNC_ENABLED) {
-      this.onSyncDisabled();
       return;
     }
 
@@ -477,10 +470,6 @@ var gSync = {
 
   // "Send Tab to Device" menu item
   updateTabContextMenu(aPopupMenu, aTargetTab) {
-    if (!this.SYNC_ENABLED) {
-      // These items are hidden in onSyncDisabled(). No need to do anything.
-      return;
-    }
     const enabled = !this.syncConfiguredAndLoading &&
                     this.isSendableURI(aTargetTab.linkedBrowser.currentURI.spec);
 
@@ -489,10 +478,6 @@ var gSync = {
 
   // "Send Page to Device" and "Send Link to Device" menu items
   updateContentContextMenu(contextMenu) {
-    if (!this.SYNC_ENABLED) {
-      // These items are hidden by default. No need to do anything.
-      return;
-    }
     // showSendLink and showSendPage are mutually exclusive
     const showSendLink = contextMenu.onSaveableLink || contextMenu.onPlainTextLink;
     const showSendPage = !showSendLink
@@ -663,13 +648,6 @@ var gSync = {
       } else {
         broadcaster.setAttribute("devices-status", "single");
       }
-    }
-  },
-
-  onSyncDisabled() {
-    const toHide = [...document.querySelectorAll(".sync-ui-item")];
-    for (const item of toHide) {
-      item.hidden = true;
     }
   },
 
