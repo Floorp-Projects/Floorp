@@ -6,7 +6,3 @@
 
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Enterprise Policies")
-
-EXTRA_JS_MODULES.policies += [
-    'BookmarksPolicies.jsm',
-]
