@@ -1112,6 +1112,12 @@ JSStructuredCloneWriter::parseTransferable()
         if (tObj->is<WasmMemoryObject>() && tObj->as<WasmMemoryObject>().isShared())
             return reportDataCloneError(JS_SCERR_SHMEM_TRANSFERABLE);
 
+        // External array buffers may be able to be transferred in the future,
+        // but that is not currently implemented.
+
+        if (tObj->is<ArrayBufferObject>() && tObj->as<ArrayBufferObject>().isExternal())
+            return reportDataCloneError(JS_SCERR_TRANSFERABLE);
+
         // No duplicates allowed
         auto p = transferableObjects.lookupForAdd(tObj);
         if (p)
