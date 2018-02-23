@@ -302,7 +302,7 @@ StartupCache::GetBuffer(const char* id, UniquePtr<char[]>* outbuf, uint32_t* len
 
 // Makes a copy of the buffer, client retains ownership of inbuf.
 nsresult
-StartupCache::PutBuffer(const char* id, UniquePtr<char[]>&& inbuf, uint32_t len)
+StartupCache::PutBuffer(const char* id, const char* inbuf, uint32_t len)
 {
   NS_ASSERTION(NS_IsMainThread(), "Startup cache only available on main thread");
   WaitOnWriteThread();
@@ -310,11 +310,14 @@ StartupCache::PutBuffer(const char* id, UniquePtr<char[]>&& inbuf, uint32_t len)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsDependentCString idStr(id);
-  // Cache it for now, we'll write all together later.
-  auto entry = mTable.LookupForAdd(idStr);
+  auto data = MakeUnique<char[]>(len);
+  memcpy(data.get(), inbuf, len);
 
-  if (entry) {
+  nsCString idStr(id);
+  // Cache it for now, we'll write all together later.
+  CacheEntry* entry;
+
+  if (mTable.Get(idStr)) {
     NS_WARNING("Existing entry in StartupCache.");
     // Double-caching is undesirable but not an error.
     return NS_OK;
@@ -327,9 +330,8 @@ StartupCache::PutBuffer(const char* id, UniquePtr<char[]>&& inbuf, uint32_t len)
   }
 #endif
 
-  entry.OrInsert([&inbuf, &len]() {
-      return new CacheEntry(Move(inbuf), len);
-  });
+  entry = new CacheEntry(Move(data), len);
+  mTable.Put(idStr, entry);
   mPendingWrites.AppendElement(idStr);
   return ResetStartupWriteTimer();
 }

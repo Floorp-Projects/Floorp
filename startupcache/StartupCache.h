@@ -113,8 +113,8 @@ public:
   // Returns a buffer that was previously stored, caller takes ownership.
   nsresult GetBuffer(const char* id, UniquePtr<char[]>* outbuf, uint32_t* length);
 
-  // Stores a buffer. Caller yields ownership.
-  nsresult PutBuffer(const char* id, UniquePtr<char[]>&& inbuf, uint32_t length);
+  // Stores a buffer. Caller keeps ownership, we make a copy.
+  nsresult PutBuffer(const char* id, const char* inbuf, uint32_t length);
 
   // Removes the cache file.
   void InvalidateCache();

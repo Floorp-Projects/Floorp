@@ -446,7 +446,7 @@ nsXULPrototypeCache::FinishOutputStream(nsIURI* uri)
         rv = PathifyURI(uri, spec);
         if (NS_FAILED(rv))
             return NS_ERROR_NOT_AVAILABLE;
-        rv = sc->PutBuffer(spec.get(), Move(buf), len);
+        rv = sc->PutBuffer(spec.get(), buf.get(), len);
         if (NS_SUCCEEDED(rv)) {
             mOutputStreamTable.Remove(uri);
             mStartupCacheURITable.PutEntry(uri);
@@ -591,7 +591,7 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
             buf = MakeUnique<char[]>(len);
             rv = inputStream->Read(buf.get(), len, &amtRead);
             if (NS_SUCCEEDED(rv) && len == amtRead)
-              rv = startupCache->PutBuffer(kXULCacheInfoKey, Move(buf), len);
+              rv = startupCache->PutBuffer(kXULCacheInfoKey, buf.get(), len);
             else {
                 rv = NS_ERROR_UNEXPECTED;
             }
