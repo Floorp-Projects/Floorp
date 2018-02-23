@@ -346,5 +346,11 @@ public class WebViewProvider {
         public void exitFullscreen() {
             geckoSession.exitFullScreen();
         }
+
+        @Override
+        public void onDetachedFromWindow() {
+            PreferenceManager.getDefaultSharedPreferences(getContext()).unregisterOnSharedPreferenceChangeListener(this);
+            super.onDetachedFromWindow();
+        }
     }
 }
