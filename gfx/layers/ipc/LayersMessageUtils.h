@@ -439,6 +439,7 @@ struct ParamTraits<mozilla::layers::EventRegions>
     WriteParam(aMsg, aParam.mNoActionRegion);
     WriteParam(aMsg, aParam.mHorizontalPanRegion);
     WriteParam(aMsg, aParam.mVerticalPanRegion);
+    WriteParam(aMsg, aParam.mDTCRequiresTargetConfirmation);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
@@ -447,7 +448,8 @@ struct ParamTraits<mozilla::layers::EventRegions>
             ReadParam(aMsg, aIter, &aResult->mDispatchToContentHitRegion) &&
             ReadParam(aMsg, aIter, &aResult->mNoActionRegion) &&
             ReadParam(aMsg, aIter, &aResult->mHorizontalPanRegion) &&
-            ReadParam(aMsg, aIter, &aResult->mVerticalPanRegion));
+            ReadParam(aMsg, aIter, &aResult->mVerticalPanRegion) &&
+            ReadParam(aMsg, aIter, &aResult->mDTCRequiresTargetConfirmation));
   }
 };
 
