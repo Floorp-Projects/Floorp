@@ -112,7 +112,7 @@ class Buffer {
       return OTS_FAILURE();
     }
     std::memcpy(value, buffer_ + offset_, sizeof(uint16_t));
-    *value = ntohs(*value);
+    *value = ots_ntohs(*value);
     offset_ += 2;
     return true;
   }
@@ -137,7 +137,7 @@ class Buffer {
       return OTS_FAILURE();
     }
     std::memcpy(value, buffer_ + offset_, sizeof(uint32_t));
-    *value = ntohl(*value);
+    *value = ots_ntohl(*value);
     offset_ += 4;
     return true;
   }
