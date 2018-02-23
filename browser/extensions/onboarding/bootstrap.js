@@ -98,9 +98,6 @@ let syncTourChecker = {
   },
 
   init() {
-    if (!Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
-      return;
-    }
     // Check if we've already logged in at startup.
     const state = UIState.get();
     if (state.status != UIState.STATUS_NOT_CONFIGURED) {

@@ -479,12 +479,7 @@ class Onboarding {
 
   _getTourIDList() {
     let tours = Services.prefs.getStringPref(`browser.onboarding.${this._tourType}tour`, "");
-    return tours.split(",").filter(tourId => {
-      if (tourId === "sync" && !Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
-        return false;
-      }
-      return tourId !== "";
-    }).map(tourId => tourId.trim());
+    return tours.split(",").filter(tourId => tourId !== "").map(tourId => tourId.trim());
   }
 
   _initPrefObserver() {
