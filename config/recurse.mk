@@ -165,9 +165,6 @@ ifeq (.,$(DEPTH))
 js/xpconnect/src/export: dom/bindings/export xpcom/xpidl/export
 accessible/xpcom/export: xpcom/xpidl/export
 
-# The widget binding generator code is part of the annotationProcessors.
-widget/android/bindings/export: build/annotationProcessors/export
-
 # .xpt generation needs the xpidl lex/yacc files
 xpcom/xpidl/export: xpcom/idl-parser/xpidl/export
 
