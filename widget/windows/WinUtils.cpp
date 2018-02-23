@@ -433,11 +433,6 @@ struct CoTaskMemFreePolicy
 
 SetThreadDpiAwarenessContextProc WinUtils::sSetThreadDpiAwarenessContext = NULL;
 EnableNonClientDpiScalingProc WinUtils::sEnableNonClientDpiScaling = NULL;
-#ifdef ACCESSIBILITY
-typedef NTSTATUS (NTAPI* NtTestAlertPtr)(VOID);
-static NtTestAlertPtr sNtTestAlert = nullptr;
-#endif
-
 
 /* static */
 void
@@ -461,12 +456,6 @@ WinUtils::Initialize()
       }
     }
   }
-
-#ifdef ACCESSIBILITY
-  sNtTestAlert = reinterpret_cast<NtTestAlertPtr>(
-      ::GetProcAddress(::GetModuleHandleW(L"ntdll.dll"), "NtTestAlert"));
-  MOZ_ASSERT(sNtTestAlert);
-#endif
 }
 
 // static
@@ -683,10 +672,6 @@ WinUtils::MonitorFromRect(const gfx::Rect& rect)
 }
 
 #ifdef ACCESSIBILITY
-#ifndef STATUS_SUCCESS
-#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)
-#endif
-
 /* static */
 a11y::Accessible*
 WinUtils::GetRootAccessibleForHWND(HWND aHwnd)

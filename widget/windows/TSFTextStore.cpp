@@ -2416,6 +2416,13 @@ TSFTextStore::FlushPendingActions()
         selectionSet.mLength =
           static_cast<uint32_t>(action.mSelectionLength);
         selectionSet.mReversed = action.mSelectionReversed;
+        DispatchEvent(selectionSet);
+        if (!selectionSet.mSucceeded) {
+          MOZ_LOG(sTextStoreLog, LogLevel::Error,
+            ("0x%p   TSFTextStore::FlushPendingActions() "
+             "FAILED due to eSetSelection failure", this));
+          break;
+        }
         break;
       }
       default:
