@@ -49,6 +49,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 
 mozilla::LazyLogModule nsURILoader::mLog("URILoader");
@@ -59,6 +60,17 @@ mozilla::LazyLogModule nsURILoader::mLog("URILoader");
 
 #define NS_PREF_DISABLE_BACKGROUND_HANDLING \
     "security.exthelperapp.disable_background_handling"
+
+static uint32_t sConvertDataLimit = 20;
+
+static bool InitPreferences()
+{
+  nsresult rv = mozilla::Preferences::AddUintVarCache(
+    &sConvertDataLimit,
+    "general.document_open_conversion_depth_limit",
+    20);
+  return NS_SUCCEEDED(rv);
+}
 
 /**
  * The nsDocumentOpenInfo contains the state required when a single
@@ -157,6 +169,11 @@ protected:
    * nsIURIContentListeners.
    */
   RefPtr<nsURILoader> mURILoader;
+
+  /**
+   * Limit of data conversion depth to prevent infinite conversion loops
+   */
+  uint32_t mDataConversionDepthLimit;
 };
 
 NS_IMPL_ADDREF(nsDocumentOpenInfo)
@@ -179,7 +196,8 @@ nsDocumentOpenInfo::nsDocumentOpenInfo(nsIInterfaceRequestor* aWindowContext,
                                        nsURILoader* aURILoader)
   : m_originalContext(aWindowContext),
     mFlags(aFlags),
-    mURILoader(aURILoader)
+    mURILoader(aURILoader),
+    mDataConversionDepthLimit(sConvertDataLimit)
 {
 }
 
@@ -625,6 +643,12 @@ nsDocumentOpenInfo::ConvertData(nsIRequest *request,
        PromiseFlatCString(aSrcContentType).get(),
        PromiseFlatCString(aOutContentType).get()));
 
+  if (mDataConversionDepthLimit == 0) {
+    LOG(("[0x%p] nsDocumentOpenInfo::ConvertData - reached the recursion limit!", this));
+    // This will fall back to external helper app handling.
+    return NS_ERROR_ABORT;
+  }
+
   NS_PRECONDITION(aSrcContentType != aOutContentType,
                   "ConvertData called when the two types are the same!");
   nsresult rv = NS_OK;
@@ -648,6 +672,9 @@ nsDocumentOpenInfo::ConvertData(nsIRequest *request,
 
   LOG(("  Downstream DocumentOpenInfo would be: 0x%p", nextLink.get()));
   
+  // Decrease the conversion recursion limit by one to prevent infinite loops.
+  nextLink->mDataConversionDepthLimit = mDataConversionDepthLimit - 1;
+
   // Make sure nextLink starts with the contentListener that said it wanted the
   // results of this decode.
   nextLink->m_contentListener = aListener;
@@ -884,6 +911,9 @@ nsresult nsURILoader::OpenChannel(nsIChannel* channel,
       }
     }
   }
+
+  static bool once = InitPreferences();
+  mozilla::Unused << once;
 
   // we need to create a DocumentOpenInfo object which will go ahead and open
   // the url and discover the content type....
