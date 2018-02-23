@@ -671,14 +671,23 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
   }
 
   if (aTasks & UpdateAnimationsTasks::CascadeResults) {
-    // This task will be scheduled if we detected any changes to !important
-    // rules. We post a restyle here so that we can update the cascade
-    // results in the pre-traversal of the next restyle.
-    presContext->EffectCompositor()
-               ->RequestRestyle(const_cast<Element*>(aElement),
-                                pseudoType,
-                                EffectCompositor::RestyleType::Standard,
-                                EffectCompositor::CascadeLevel::Animations);
+    EffectSet* effectSet = EffectSet::GetEffectSet(aElement, pseudoType);
+    // CSS animations/transitions might have been destroyed as part of the above
+    // steps so before updating cascade results, we check if there are still any
+    // animations to update.
+    if (effectSet) {
+      // We call UpdateCascadeResults directly (intead of
+      // MaybeUpdateCascadeResults) since we know for sure that the cascade has
+      // changed, but we were unable to call MarkCascadeUpdated when we noticed
+      // it since we avoid mutating state as part of the Servo parallel
+      // traversal.
+      presContext->EffectCompositor()
+                 ->UpdateCascadeResults(StyleBackendType::Servo,
+                                        *effectSet,
+                                        const_cast<Element*>(aElement),
+                                        pseudoType,
+                                        nullptr);
+    }
   }
 
   if (aTasks & UpdateAnimationsTasks::DisplayChangedFromNone) {
