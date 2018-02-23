@@ -1663,8 +1663,13 @@ RenderResizableMemory(WasmRenderContext& c, const Limits& memory)
     resizedMemory.initial /= PageSize;
 
     if (resizedMemory.maximum) {
-        MOZ_ASSERT(*resizedMemory.maximum % PageSize == 0);
-        *resizedMemory.maximum /= PageSize;
+        if (*resizedMemory.maximum == UINT32_MAX) {
+            // See special casing in DecodeMemoryLimits.
+            *resizedMemory.maximum = MaxMemoryMaximumPages;
+        } else {
+            MOZ_ASSERT(*resizedMemory.maximum % PageSize == 0);
+            *resizedMemory.maximum /= PageSize;
+        }
     }
 
     if (!RenderLimits(c, resizedMemory))

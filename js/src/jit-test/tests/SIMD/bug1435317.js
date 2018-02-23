@@ -1,3 +1,5 @@
+load(libdir + 'simd.js');
+
 var ab = new ArrayBuffer(64 * 1024);
 var arr = new Uint8Array(ab);
 
@@ -21,4 +23,3 @@ function testSimdX4() {
 
 setJitCompilerOption('ion.warmup.trigger', 0);
 testSimdX4();
-

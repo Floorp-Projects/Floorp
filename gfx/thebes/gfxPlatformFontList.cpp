@@ -367,7 +367,14 @@ gfxPlatformFontList::InitOtherFamilyNames(bool aDeferOtherFamilyNamesLoading)
         return;
     }
 
-    if (aDeferOtherFamilyNamesLoading) {
+    // If the font loader delay has been set to zero, we don't defer loading
+    // additional family names (regardless of the aDefer... parameter), as we
+    // take this to mean availability of font info is to be prioritized over
+    // potential startup perf or main-thread jank.
+    // (This is used so we can reliably run reftests that depend on localized
+    // font-family names being available.)
+    if (aDeferOtherFamilyNamesLoading &&
+        Preferences::GetUint(FONT_LOADER_DELAY_PREF) > 0) {
         if (!mPendingOtherFamilyNameTask) {
             RefPtr<mozilla::CancelableRunnable> task = new InitOtherFamilyNamesRunnable();
             mPendingOtherFamilyNameTask = task;
