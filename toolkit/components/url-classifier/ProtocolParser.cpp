@@ -864,6 +864,8 @@ ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
   PARSER_LOG(("* newState: %s\n", aResponse.new_client_state().c_str()));
   PARSER_LOG(("* isFullUpdate: %s\n", (isFullUpdate ? "yes" : "no")));
   PARSER_LOG(("* hasChecksum: %s\n", (aResponse.has_checksum() ? "yes" : "no")));
+  PARSER_LOG(("* additions: %d\n", aResponse.additions().size()));
+  PARSER_LOG(("* removals: %d\n", aResponse.removals().size()));
 
   tuV4->SetFullUpdate(isFullUpdate);
 
