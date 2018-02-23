@@ -4,9 +4,6 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu, manager: Cm} =
-  Components;
-
 var EXPORTED_SYMBOLS = [ "GMP_PLUGIN_IDS",
                          "GMPPrefs",
                          "GMPUtils",
