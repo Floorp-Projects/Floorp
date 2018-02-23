@@ -548,10 +548,7 @@ Navigator::Storage()
   MOZ_ASSERT(mWindow);
 
   if(!mStorageManager) {
-    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
-    MOZ_ASSERT(global);
-
-    mStorageManager = new StorageManager(global);
+    mStorageManager = new StorageManager(mWindow->AsGlobal());
   }
 
   return mStorageManager;
@@ -1317,8 +1314,7 @@ Navigator::GetBattery(ErrorResult& aRv)
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
-  RefPtr<Promise> batteryPromise = Promise::Create(go, aRv);
+  RefPtr<Promise> batteryPromise = Promise::Create(mWindow->AsGlobal(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -1375,8 +1371,7 @@ Navigator::GetVRDisplays(ErrorResult& aRv)
   nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
   win->NotifyVREventListenerAdded();
 
-  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
-  RefPtr<Promise> p = Promise::Create(go, aRv);
+  RefPtr<Promise> p = Promise::Create(mWindow->AsGlobal(), aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -1850,9 +1845,8 @@ Navigator::RequestMediaKeySystemAccess(const nsAString& aKeySystem,
                                     ArrayLength(params));
   }
 
-  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
   RefPtr<DetailedPromise> promise =
-    DetailedPromise::Create(go, aRv,
+    DetailedPromise::Create(mWindow->AsGlobal(), aRv,
       NS_LITERAL_CSTRING("navigator.requestMediaKeySystemAccess"),
       Telemetry::VIDEO_EME_REQUEST_SUCCESS_LATENCY_MS,
       Telemetry::VIDEO_EME_REQUEST_FAILURE_LATENCY_MS);

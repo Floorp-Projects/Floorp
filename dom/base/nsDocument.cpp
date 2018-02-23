@@ -1924,6 +1924,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSecurityInfo)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFontFaceSet)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReadyForIdle)
 
   // Traverse all nsDocument nsCOMPtrs.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParser)
@@ -2065,6 +2066,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildrenCollection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOrientationPendingPromise)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadyForIdle);
 
   tmp->mParentDocument = nullptr;
 
@@ -2735,6 +2737,7 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   }
 
   mMayStartLayout = false;
+  MOZ_ASSERT(!mReadyForIdle, "We should never hit DOMContentLoaded before this point");
 
   if (aReset) {
     Reset(aChannel, aLoadGroup);
@@ -5266,6 +5269,10 @@ nsDocument::DispatchContentLoadedEvents()
                                        NS_LITERAL_STRING("DOMContentLoaded"),
                                        true, false);
 
+  if (MayStartLayout()) {
+    MaybeResolveReadyForIdle();
+  }
+
   RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
   nsIDocShell* docShell = this->GetDocShell();
 
@@ -6590,6 +6597,19 @@ void
 nsDocument::FlushSkinBindings()
 {
   BindingManager()->FlushSkinBindings();
+}
+
+void
+nsIDocument::SetMayStartLayout(bool aMayStartLayout)
+{
+  mMayStartLayout = aMayStartLayout;
+  if (MayStartLayout()) {
+    ReadyState state = GetReadyStateEnum();
+    if (state >= READYSTATE_INTERACTIVE) {
+      // DOMContentLoaded has fired already.
+      MaybeResolveReadyForIdle();
+    }
+  }
 }
 
 nsresult
@@ -10315,6 +10335,35 @@ nsIDocument::GetMozDocumentURIIfNotForErrorPages()
   }
 
   return uri.forget();
+}
+
+Promise*
+nsIDocument::GetDocumentReadyForIdle(ErrorResult& aRv)
+{
+  if (!mReadyForIdle) {
+    nsIGlobalObject* global = GetScopeObject();
+    if (!global) {
+      aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+      return nullptr;
+    }
+
+    mReadyForIdle = Promise::Create(global, aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+  }
+
+  return mReadyForIdle;
+}
+
+void
+nsIDocument::MaybeResolveReadyForIdle()
+{
+  IgnoredErrorResult rv;
+  Promise* readyPromise = GetDocumentReadyForIdle(rv);
+  if (readyPromise) {
+    readyPromise->MaybeResolve(this);
+  }
 }
 
 nsIHTMLCollection*

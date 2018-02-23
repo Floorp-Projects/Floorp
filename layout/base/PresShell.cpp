@@ -1023,6 +1023,7 @@ PresShell::Init(nsIDocument* aDocument,
       if (XRE_IsParentProcess() && !sProcessInteractable) {
         os->AddObserver(this, "sessionstore-one-or-no-tab-restored", false);
       }
+      os->AddObserver(this, "font-info-updated", false);
     }
   }
 
@@ -1260,6 +1261,7 @@ PresShell::Destroy()
       if (XRE_IsParentProcess()) {
         os->RemoveObserver(this, "sessionstore-one-or-no-tab-restored");
       }
+      os->RemoveObserver(this, "font-info-updated");
     }
   }
 
@@ -5217,8 +5219,8 @@ PresShell::AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
                                          nsIFrame*             aFrame,
                                          const nsRect&         aBounds)
 {
-  aList.AppendToBottom(new (&aBuilder)
-    nsDisplaySolidColor(&aBuilder, aFrame, aBounds, NS_RGB(115, 115, 115)));
+  aList.AppendToBottom(
+    MakeDisplayItem<nsDisplaySolidColor>(&aBuilder, aFrame, aBounds, NS_RGB(115, 115, 115)));
 }
 
 static bool
@@ -5308,7 +5310,7 @@ PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
 
   if (!addedScrollingBackgroundColor || forceUnscrolledItem) {
     aList.AppendToBottom(
-      new (&aBuilder) nsDisplaySolidColor(&aBuilder, aFrame, aBounds, bgcolor));
+      MakeDisplayItem<nsDisplaySolidColor>(&aBuilder, aFrame, aBounds, bgcolor));
   }
 }
 
@@ -9323,6 +9325,11 @@ PresShell::Observe(nsISupports* aSubject,
     if (os) {
       os->RemoveObserver(this, "sessionstore-one-or-no-tab-restored");
     }
+    return NS_OK;
+  }
+
+  if (!nsCRT::strcmp(aTopic, "font-info-updated")) {
+    mPresContext->ForceReflowForFontInfoUpdate();
     return NS_OK;
   }
 

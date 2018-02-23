@@ -5237,7 +5237,7 @@ nsTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   aLists.Content()->AppendToTop(
-    new (aBuilder) nsDisplayText(aBuilder, this, isSelected));
+    MakeDisplayItem<nsDisplayText>(aBuilder, this, isSelected));
 }
 
 static nsIFrame*

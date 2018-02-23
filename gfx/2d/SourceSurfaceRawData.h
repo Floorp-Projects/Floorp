@@ -115,12 +115,23 @@ public:
     MOZ_ASSERT(mMapCount == 0);
   }
 
+  bool Init(const IntSize &aSize,
+            SurfaceFormat aFormat,
+            bool aClearMem,
+            uint8_t aClearValue,
+            int32_t aStride = 0);
+
   virtual uint8_t* GetData() override { return mArray; }
   virtual int32_t Stride() override { return mStride; }
 
   virtual SurfaceType GetType() const override { return SurfaceType::DATA; }
   virtual IntSize GetSize() const override { return mSize; }
   virtual SurfaceFormat GetFormat() const override { return mFormat; }
+
+  void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                              size_t& aHeapSizeOut,
+                              size_t& aNonHeapSizeOut,
+                              size_t& aExtHandlesOut) const override;
 
   virtual bool Map(MapType, MappedSurface *aMappedSurface) override
   {
@@ -141,12 +152,6 @@ public:
 
 private:
   friend class Factory;
-
-  bool Init(const IntSize &aSize,
-            SurfaceFormat aFormat,
-            bool aClearMem,
-            uint8_t aClearValue,
-            int32_t aStride = 0);
 
   AlignedArray<uint8_t> mArray;
   int32_t mStride;

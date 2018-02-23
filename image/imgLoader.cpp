@@ -297,9 +297,9 @@ private:
       surfacePathPrefix.AppendLiteral("x");
       surfacePathPrefix.AppendInt(counter.Key().Size().height);
 
-      if (counter.Values().SharedHandles() > 0) {
-        surfacePathPrefix.AppendLiteral(", shared:");
-        surfacePathPrefix.AppendInt(uint32_t(counter.Values().SharedHandles()));
+      if (counter.Values().ExternalHandles() > 0) {
+        surfacePathPrefix.AppendLiteral(", external:");
+        surfacePathPrefix.AppendInt(uint32_t(counter.Values().ExternalHandles()));
       }
 
       if (counter.Type() == SurfaceMemoryCounterType::NORMAL) {
