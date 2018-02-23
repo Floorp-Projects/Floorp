@@ -1,0 +1,5 @@
+UNIFIED_SOURCES += [
+    'test_reduceprecision.cpp',
+]
+
+FINAL_LIBRARY = "xul-gtest"

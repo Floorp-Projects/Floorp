@@ -77,7 +77,15 @@ GetMonitorScaleFactor(nsIFrame* aFrame)
         // updated in nsPuppetWidget.
         // Since we don't want to apply font scale factor for UI elements
         // (because GTK does not do so) we need to remove that from returned value.
-        return rootWidget->GetDefaultScale().scale / gfxPlatformGtk::GetFontScaleFactor();
+        // The computed monitor scale factor needs to be rounded before casting to
+        // integer to avoid rounding errors which would lead to returning 0.
+        int monitorScale = int(round(rootWidget->GetDefaultScale().scale
+              / gfxPlatformGtk::GetFontScaleFactor()));
+        if (monitorScale < 1) {
+          NS_WARNING(nsPrintfCString("Invalid monitor scale: %d", monitorScale).get());
+          return 1;
+        }
+        return monitorScale;
     }
   }
   // Use monitor scaling factor where devPixelsPerPx is set
