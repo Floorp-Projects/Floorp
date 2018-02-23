@@ -4,8 +4,6 @@
 
 "use strict";
 
-const TEXT_NODE = 3;
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
