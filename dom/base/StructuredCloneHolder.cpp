@@ -588,7 +588,9 @@ ReadDirectoryInternal(JSStructuredCloneReader* aReader,
   MOZ_ASSERT(aHolder);
 
   nsAutoString path;
-  path.SetLength(aPathLength);
+  if (NS_WARN_IF(!path.SetLength(aPathLength, fallible))) {
+    return nullptr;
+  }
   size_t charSize = sizeof(nsString::char_type);
   if (!JS_ReadBytes(aReader, (void*) path.BeginWriting(),
                     aPathLength * charSize)) {
@@ -787,7 +789,9 @@ ReadFormData(JSContext* aCx,
         MOZ_ASSERT(tag == 0);
 
         nsAutoString value;
-        value.SetLength(indexOrLengthOfString);
+        if (NS_WARN_IF(!value.SetLength(indexOrLengthOfString, fallible))) {
+          return nullptr;
+        }
         size_t charSize = sizeof(nsString::char_type);
         if (!JS_ReadBytes(aReader, (void*) value.BeginWriting(),
                           indexOrLengthOfString * charSize)) {
