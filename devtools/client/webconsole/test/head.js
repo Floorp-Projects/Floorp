@@ -1249,7 +1249,7 @@ function waitForMessages(options) {
     return rule.matched.size == count;
   }
 
-  function onMessagesAdded(event, newMessages) {
+  function onMessagesAdded(newMessages) {
     for (let msg of newMessages) {
       let elem = msg.node;
       let location = getRenderedSource(elem);
@@ -1332,7 +1332,7 @@ function waitForMessages(options) {
       });
     }
 
-    onMessagesAdded("new-messages", messages);
+    onMessagesAdded(messages);
 
     if (!allRulesMatched()) {
       listenerAdded = true;
@@ -1529,7 +1529,7 @@ function checkOutputForInputs(hud, inputTests) {
     yield promise.resolve(null);
   }
 
-  function onVariablesViewOpen(entry, {resolve, reject}, event, view, options) {
+  function onVariablesViewOpen(entry, {resolve, reject}, {view, options}) {
     info("Variables view opened");
     let label = entry.variablesViewLabel || entry.output;
     if (typeof label == "string" && options.label != label) {
