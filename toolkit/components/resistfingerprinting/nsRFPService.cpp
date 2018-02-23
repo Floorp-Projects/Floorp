@@ -125,42 +125,95 @@ nsRFPService::IsTimerPrecisionReductionEnabled(TimerPrecisionType aType)
   }
 
   return (sPrivacyTimerPrecisionReduction || IsResistFingerprintingEnabled()) &&
-         TimerResolution() != 0;
+         TimerResolution() > 0;
+}
+
+/**
+ * Given a precision value, this function will reduce a given input time to the nearest
+ * multiple of that precision.
+ *
+ * It will check if it is appropriate to clamp the input time according to the values
+ * of the privacy.resistFingerprinting and privacy.reduceTimerPrecision preferences.
+ * Note that while it will check these prefs, it will use whatever precision is given to
+ * it, so if one desires a minimum precision for Resist Fingerprinting, it is the
+ * caller's responsibility to provide the correct value. This means you should pass
+ * TimerPrecision(), which enforces a minimum vale on the precision based on
+ * preferences.
+ *
+ * It ensures the given precision value is greater than zero, if it is not it returns
+ * the input time.
+ *
+ * @param aTime           [in] The input time to be clamped.
+ * @param aTimeScale      [in] The units the input time is in (Seconds, Milliseconds, or Microseconds).
+ * @param aResolutionUSec [in] The precision (in microseconds) to clamp to.
+ * @return                 If clamping is appropriate, the clamped value of the input, otherwise the input.
+ */
+/* static */
+double
+nsRFPService::ReduceTimePrecisionImpl(
+  double aTime,
+  TimeScale aTimeScale,
+  double aResolutionUSec,
+  TimerPrecisionType aType)
+ {
+   if (!IsTimerPrecisionReductionEnabled(aType) || aResolutionUSec <= 0) {
+     return aTime;
+   }
+
+  // Increase the time as needed until it is in microseconds.
+  // Note that a double can hold up to 2**53 with integer precision. This gives us
+  // only until June 5, 2255 in time-since-the-epoch with integer precision.
+  // So we will be losing microseconds precision after that date.
+  // We think this is okay, and we codify it in some tests.
+  double timeScaled = aTime * (1000000 / aTimeScale);
+  // Cut off anything less than a microsecond.
+  long long timeAsInt = timeScaled;
+  // Cast the resolution (in microseconds) to an int.
+  long long resolutionAsInt = aResolutionUSec;
+  // Perform the clamping.
+  // We do a cast back to double to perform the division with doubles, then floor the result
+  // and the rest occurs with integer precision.
+  // This is because it gives consistency above and below zero. Above zero, performing the
+  // division in integers truncates decimals, taking the result closer to zero (a floor).
+  // Below zero, performing the division in integers truncates decimals, taking the result
+  // closer to zero (a ceil).
+  // The impact of this is that comparing two clamped values that should be related by a
+  // constant (e.g. 10s) that are across the zero barrier will no longer work. We need to
+  // round consistently towards positive infinity or negative infinity (we chose negative.)
+  // This can't be done with a truncation, it must be done with floor.
+  long long clamped = floor(double(timeAsInt) / resolutionAsInt) * resolutionAsInt;
+  // Cast it back to a double and reduce it to the correct units.
+  double ret = double(clamped) / (1000000.0 / aTimeScale);
+
+#if defined(DEBUG)
+    MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
+      ("Given: (%.*f, Scaled: %.*f, Converted: %lli), Rounding with (%lli, Originally %.*f), Intermediate: (%lli), Got: (%lli Converted: %.*f)",
+      DBL_DIG-1, aTime, DBL_DIG-1, timeScaled, timeAsInt, resolutionAsInt, DBL_DIG-1, aResolutionUSec,
+      (long long)floor(double(timeAsInt) / resolutionAsInt), clamped, DBL_DIG-1, ret));
+#endif
+
+   return ret;
+ }
+
+/* static */
+double
+nsRFPService::ReduceTimePrecisionAsUSecs(double aTime, TimerPrecisionType aType /* = TimerPrecisionType::All */)
+{
+  return nsRFPService::ReduceTimePrecisionImpl(aTime, MicroSeconds, TimerResolution(), aType);
 }
 
 /* static */
 double
 nsRFPService::ReduceTimePrecisionAsMSecs(double aTime, TimerPrecisionType aType /* = TimerPrecisionType::All */)
 {
-  if (!IsTimerPrecisionReductionEnabled(aType)) {
-    return aTime;
-  }
-  const double resolutionMSec = TimerResolution() / 1000.0;
-  double ret = floor(aTime / resolutionMSec) * resolutionMSec;
-#if defined(DEBUG)
-  MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
-    ("Given: %.*f, Rounding with %.*f, Intermediate: %.*f, Got: %.*f",
-      DBL_DIG-1, aTime, DBL_DIG-1, resolutionMSec, DBL_DIG-1, floor(aTime / resolutionMSec), DBL_DIG-1, ret));
-#endif
-  return ret;
+  return nsRFPService::ReduceTimePrecisionImpl(aTime, MilliSeconds, TimerResolution(), aType);
 }
 
 /* static */
 double
-nsRFPService::ReduceTimePrecisionAsUSecs(double aTime, TimerPrecisionType aType /* = TimerPrecisionType::All */)
+nsRFPService::ReduceTimePrecisionAsSecs(double aTime, TimerPrecisionType aType /* = TimerPrecisionType::All */)
 {
-  if (!IsTimerPrecisionReductionEnabled(aType)) {
-    return aTime;
-  }
-  double resolutionUSec = TimerResolution();
-  double ret = floor(aTime / resolutionUSec) * resolutionUSec;
-#if defined(DEBUG)
-  double tmp_sResolutionUSec = resolutionUSec;
-  MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
-    ("Given: %.*f, Rounding with %.*f, Intermediate: %.*f, Got: %.*f",
-      DBL_DIG-1, aTime, DBL_DIG-1, tmp_sResolutionUSec, DBL_DIG-1, floor(aTime / tmp_sResolutionUSec), DBL_DIG-1, ret));
-#endif
-  return ret;
+  return nsRFPService::ReduceTimePrecisionImpl(aTime, Seconds, TimerResolution(), aType);
 }
 
 /* static */
@@ -168,36 +221,6 @@ uint32_t
 nsRFPService::CalculateTargetVideoResolution(uint32_t aVideoQuality)
 {
   return aVideoQuality * NSToIntCeil(aVideoQuality * 16 / 9.0);
-}
-
-/* static */
-double
-nsRFPService::ReduceTimePrecisionAsSecs(double aTime, TimerPrecisionType aType /* = TimerPrecisionType::All */)
-{
-  if (!IsTimerPrecisionReductionEnabled(aType)) {
-    return aTime;
-  }
-  double resolutionUSec = TimerResolution();
-  if (TimerResolution() < 1000000) {
-    // The resolution is smaller than one sec.  Use the reciprocal to avoid
-    // floating point error.
-    const double resolutionSecReciprocal = 1000000.0 / resolutionUSec;
-    double ret = floor(aTime * resolutionSecReciprocal) / resolutionSecReciprocal;
-#if defined(DEBUG)
-  MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
-    ("Given: %.*f, Reciprocal Rounding with %.*f, Intermediate: %.*f, Got: %.*f",
-      DBL_DIG-1, aTime, DBL_DIG-1, resolutionSecReciprocal, DBL_DIG-1, floor(aTime * resolutionSecReciprocal), DBL_DIG-1, ret));
-#endif
-    return ret;
-  }
-  const double resolutionSec = resolutionUSec / 1000000.0;
-  double ret = floor(aTime / resolutionSec) * resolutionSec;
-#if defined(DEBUG)
-  MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
-    ("Given: %.*f, Rounding with %.*f, Intermediate: %.*f, Got: %.*f",
-      DBL_DIG-1, aTime, DBL_DIG-1, resolutionSec, DBL_DIG-1, floor(aTime / resolutionSec), DBL_DIG-1, ret));
-#endif
-  return ret;
 }
 
 /* static */

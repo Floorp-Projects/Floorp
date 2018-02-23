@@ -313,28 +313,29 @@ function updateIndicators(aSubject, aTopic, aData) {
     }
 
     let tabState = getTabStateForContentWindow(contentWindow);
-    if (tabState.camera == MediaManagerService.STATE_CAPTURE_ENABLED)
+    if (tabState.camera == MediaManagerService.STATE_CAPTURE_ENABLED ||
+        tabState.camera == MediaManagerService.STATE_CAPTURE_DISABLED) {
       state.showCameraIndicator = true;
-    if (tabState.camera == MediaManagerService.STATE_CAPTURE_DISABLED)
-      state.showCameraIndicator = true;
-    if (tabState.microphone == MediaManagerService.STATE_CAPTURE_ENABLED)
+    }
+    if (tabState.microphone == MediaManagerService.STATE_CAPTURE_ENABLED ||
+        tabState.microphone == MediaManagerService.STATE_CAPTURE_DISABLED) {
       state.showMicrophoneIndicator = true;
-    if (tabState.microphone == MediaManagerService.STATE_CAPTURE_DISABLED)
-      state.showMicrophoneIndicator = true;
+    }
     if (tabState.screen) {
-      if (tabState.screen == "Screen") {
+      if (tabState.screen.startsWith("Screen")) {
         state.showScreenSharingIndicator = "Screen";
-      } else if (tabState.screen == "Window") {
+      } else if (tabState.screen.startsWith("Window")) {
         if (state.showScreenSharingIndicator != "Screen")
           state.showScreenSharingIndicator = "Window";
-      } else if (tabState.screen == "Application") {
+      } else if (tabState.screen.startsWith("Application")) {
         if (!state.showScreenSharingIndicator)
           state.showScreenSharingIndicator = "Application";
-      } else if (tabState.screen == "Browser") {
+      } else if (tabState.screen.startsWith("Browser")) {
         if (!state.showScreenSharingIndicator)
           state.showScreenSharingIndicator = "Browser";
       }
     }
+
     let mm = getMessageManagerForWindow(contentWindow);
     mm.sendAsyncMessage("webrtc:UpdateBrowserIndicators", tabState);
   }
@@ -366,14 +367,37 @@ function getTabStateForContentWindow(aContentWindow) {
                                               camera, microphone,
                                               screen, window, app, browser);
   let tabState = {camera: camera.value, microphone: microphone.value};
-  if (screen.value != MediaManagerService.STATE_NOCAPTURE)
+  if (screen.value == MediaManagerService.STATE_CAPTURE_ENABLED)
     tabState.screen = "Screen";
-  else if (window.value != MediaManagerService.STATE_NOCAPTURE)
+  else if (window.value == MediaManagerService.STATE_CAPTURE_ENABLED)
     tabState.screen = "Window";
-  else if (app.value != MediaManagerService.STATE_NOCAPTURE)
+  else if (app.value == MediaManagerService.STATE_CAPTURE_ENABLED)
     tabState.screen = "Application";
-  else if (browser.value != MediaManagerService.STATE_NOCAPTURE)
+  else if (browser.value == MediaManagerService.STATE_CAPTURE_ENABLED)
     tabState.screen = "Browser";
+  else if (screen.value == MediaManagerService.STATE_CAPTURE_DISABLED)
+    tabState.screen = "ScreenPaused";
+  else if (window.value == MediaManagerService.STATE_CAPTURE_DISABLED)
+    tabState.screen = "WindowPaused";
+  else if (app.value == MediaManagerService.STATE_CAPTURE_DISABLED)
+    tabState.screen = "ApplicationPaused";
+  else if (browser.value == MediaManagerService.STATE_CAPTURE_DISABLED)
+    tabState.screen = "BrowserPaused";
+
+  if (tabState.screen) {
+    tabState.sharing = "screen";
+  } else if (tabState.camera) {
+    tabState.sharing = "camera";
+  } else if (tabState.microphone) {
+    tabState.sharing = "microphone";
+  }
+
+  // The stream is considered paused when we're sharing something
+  // but all devices are off or set to disabled.
+  tabState.paused = tabState.sharing &&
+    (!tabState.screen || tabState.screen.includes("Paused")) &&
+    tabState.camera != MediaManagerService.STATE_CAPTURE_ENABLED &&
+    tabState.microphone != MediaManagerService.STATE_CAPTURE_ENABLED;
 
   tabState.windowId = getInnerWindowIDForWindow(aContentWindow);
   tabState.documentURI = aContentWindow.document.documentURI;
