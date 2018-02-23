@@ -8,8 +8,32 @@
 
 # If a command fails then do not proceed and fail this script too.
 set -ex
+#########################
+# The command line help #
+#########################
+display_help() {
+    echo "Usage: $0 Build_Variant Apk_Name Device_Config [Device_Config...]" >&2
+    echo
+    echo "All Build Variants must be of Debug type, so the word 'debug' should be omitted"
+    echo "E.g. KlarGeckoX86Debug should be KlarGeckoX86"
+    echo
+    echo "Do not put .apk prefix in Apk_Name"
+}
 
-./tools/taskcluster/google-firebase-testlab-login.sh
+# Basic parameter check
+if [ $# -lt 3 ]; then
+    echo "Your command line contains $# arguments"
+    display_help
+    exit 1
+fi
+
+# Get test configuration
+config_count=`expr $# - 2`
+config_param="--device $3"
+for ((i=4; i <= $#; i++))
+{
+    config_param+=" --device ${!i}"
+}
 
 # From now on disable exiting on error. If the tests fail we want to continue
 # and try to download the artifacts. We will exit with the actual error code later.
@@ -17,17 +41,13 @@ set +e
 
 # Execute test set
 /google-cloud-sdk/bin/gcloud --format="json" firebase test android run \
---type=instrumentation \
---app="app/build/outputs/apk/focusWebviewUniversal/debug/app-focus-webview-universal-debug.apk" \
---test="app/build/outputs/apk/androidTest/focusWebviewUniversal/debug/app-focus-webview-universal-debug-androidTest.apk" \
---results-bucket="focus_android_test_artifacts" \
---timeout="30m" \
+--type instrumentation \
+--app app/build/outputs/apk/$1/debug/$2.apk \
+--test app/build/outputs/apk/androidTest/$1/debug/$2-androidTest.apk \
+--results-bucket focus_android_test_artifacts \
+--timeout 30m \
 --no-auto-google-login \
---test-runner-class="android.support.test.runner.AndroidJUnitRunner" \
---device="model=sailfish,version=26" \
---device="model=Nexus5X,version=23" \
---device="model=Nexus9,version=25" \
---device="model=sailfish,version=25"
+--test-runner-class android.support.test.runner.AndroidJUnitRunner $config_param
 
 exitcode=$?
 
