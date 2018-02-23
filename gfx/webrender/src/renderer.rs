@@ -83,6 +83,10 @@ const GPU_CACHE_RESIZE_TEST: bool = false;
 /// Number of GPU blocks per UV rectangle provided for an image.
 pub const BLOCKS_PER_UV_RECT: usize = 2;
 
+const GPU_TAG_BRUSH_LINEAR_GRADIENT: GpuProfileTag = GpuProfileTag {
+    label: "B_LinearGradient",
+    color: debug_colors::POWDERBLUE,
+};
 const GPU_TAG_BRUSH_RADIAL_GRADIENT: GpuProfileTag = GpuProfileTag {
     label: "B_RadialGradient",
     color: debug_colors::LIGHTPINK,
@@ -151,14 +155,6 @@ const GPU_TAG_PRIM_TEXT_RUN: GpuProfileTag = GpuProfileTag {
     label: "TextRun",
     color: debug_colors::BLUE,
 };
-const GPU_TAG_PRIM_GRADIENT: GpuProfileTag = GpuProfileTag {
-    label: "Gradient",
-    color: debug_colors::YELLOW,
-};
-const GPU_TAG_PRIM_ANGLE_GRADIENT: GpuProfileTag = GpuProfileTag {
-    label: "AngleGradient",
-    color: debug_colors::POWDERBLUE,
-};
 const GPU_TAG_PRIM_BORDER_CORNER: GpuProfileTag = GpuProfileTag {
     label: "BorderCorner",
     color: debug_colors::DARKSLATEGREY,
@@ -200,8 +196,6 @@ impl TransformBatchKind {
                 ImageBufferKind::TextureExternal => "Image (External)",
                 ImageBufferKind::Texture2DArray => "Image (Array)",
             },
-            TransformBatchKind::AlignedGradient => "AlignedGradient",
-            TransformBatchKind::AngleGradient => "AngleGradient",
             TransformBatchKind::BorderCorner => "BorderCorner",
             TransformBatchKind::BorderEdge => "BorderEdge",
         }
@@ -213,8 +207,6 @@ impl TransformBatchKind {
             TransformBatchKind::Image(..) => GPU_TAG_PRIM_IMAGE,
             TransformBatchKind::BorderCorner => GPU_TAG_PRIM_BORDER_CORNER,
             TransformBatchKind::BorderEdge => GPU_TAG_PRIM_BORDER_EDGE,
-            TransformBatchKind::AlignedGradient => GPU_TAG_PRIM_GRADIENT,
-            TransformBatchKind::AngleGradient => GPU_TAG_PRIM_ANGLE_GRADIENT,
         }
     }
 }
@@ -235,6 +227,7 @@ impl BatchKind {
                     BrushBatchKind::MixBlend { .. } => "Brush (Composite)",
                     BrushBatchKind::YuvImage(..) => "Brush (YuvImage)",
                     BrushBatchKind::RadialGradient => "Brush (RadialGradient)",
+                    BrushBatchKind::LinearGradient => "Brush (LinearGradient)",
                 }
             }
             BatchKind::Transformable(_, batch_kind) => batch_kind.debug_name(),
@@ -255,6 +248,7 @@ impl BatchKind {
                     BrushBatchKind::MixBlend { .. } => GPU_TAG_BRUSH_MIXBLEND,
                     BrushBatchKind::YuvImage(..) => GPU_TAG_BRUSH_YUV_IMAGE,
                     BrushBatchKind::RadialGradient => GPU_TAG_BRUSH_RADIAL_GRADIENT,
+                    BrushBatchKind::LinearGradient => GPU_TAG_BRUSH_LINEAR_GRADIENT,
                 }
             }
             BatchKind::Transformable(_, batch_kind) => batch_kind.gpu_sampler_tag(),
@@ -1618,6 +1612,7 @@ pub struct Renderer {
     brush_mix_blend: BrushShader,
     brush_yuv_image: Vec<Option<BrushShader>>,
     brush_radial_gradient: BrushShader,
+    brush_linear_gradient: BrushShader,
 
     /// These are "cache clip shaders". These shaders are used to
     /// draw clip instances into the cached clip mask. The results
@@ -1638,8 +1633,6 @@ pub struct Renderer {
     ps_image: Vec<Option<PrimitiveShader>>,
     ps_border_corner: PrimitiveShader,
     ps_border_edge: PrimitiveShader,
-    ps_gradient: PrimitiveShader,
-    ps_angle_gradient: PrimitiveShader,
 
     ps_hw_composite: LazilyCompiledShader,
     ps_split_composite: LazilyCompiledShader,
@@ -1884,6 +1877,17 @@ impl Renderer {
                              options.precache_shaders)
         };
 
+        let brush_linear_gradient = try!{
+            BrushShader::new("brush_linear_gradient",
+                             &mut device,
+                             if options.enable_dithering {
+                                &dithering_feature
+                             } else {
+                                &[]
+                             },
+                             options.precache_shaders)
+        };
+
         let cs_blur_a8 = try!{
             LazilyCompiledShader::new(ShaderKind::Cache(VertexArrayKind::Blur),
                                      "cs_blur",
@@ -2027,28 +2031,6 @@ impl Renderer {
             PrimitiveShader::new("ps_border_edge",
                                  &mut device,
                                  &[],
-                                 options.precache_shaders)
-        };
-
-        let ps_gradient = try!{
-            PrimitiveShader::new("ps_gradient",
-                                 &mut device,
-                                 if options.enable_dithering {
-                                    &dithering_feature
-                                 } else {
-                                    &[]
-                                 },
-                                 options.precache_shaders)
-        };
-
-        let ps_angle_gradient = try!{
-            PrimitiveShader::new("ps_angle_gradient",
-                                 &mut device,
-                                 if options.enable_dithering {
-                                    &dithering_feature
-                                 } else {
-                                    &[]
-                                 },
                                  options.precache_shaders)
         };
 
@@ -2303,6 +2285,7 @@ impl Renderer {
             brush_mix_blend,
             brush_yuv_image,
             brush_radial_gradient,
+            brush_linear_gradient,
             cs_clip_rectangle,
             cs_clip_border,
             cs_clip_image,
@@ -2311,8 +2294,6 @@ impl Renderer {
             ps_image,
             ps_border_corner,
             ps_border_edge,
-            ps_gradient,
-            ps_angle_gradient,
             ps_hw_composite,
             ps_split_composite,
             debug: debug_renderer,
@@ -2892,7 +2873,9 @@ impl Renderer {
             for &mut (_, RenderedDocument { ref mut frame, .. }) in &mut active_documents {
                 frame.profile_counters.reset_targets();
                 self.prepare_gpu_cache(frame);
-                assert!(frame.gpu_cache_frame_id <= self.gpu_cache_frame_id);
+                assert!(frame.gpu_cache_frame_id <= self.gpu_cache_frame_id,
+                    "Received frame depends on a later GPU cache epoch ({:?}) than one we received last via `UpdateGpuCache` ({:?})",
+                    frame.gpu_cache_frame_id, self.gpu_cache_frame_id);
 
                 self.draw_tile_frame(
                     frame,
@@ -3272,6 +3255,15 @@ impl Renderer {
                             &mut self.renderer_errors,
                         );
                     }
+                    BrushBatchKind::LinearGradient => {
+                        self.brush_linear_gradient.bind(
+                            &mut self.device,
+                            key.blend_mode,
+                            projection,
+                            0,
+                            &mut self.renderer_errors,
+                        );
+                    }
                     BrushBatchKind::YuvImage(image_buffer_kind, format, color_space) => {
                         let shader_index =
                             Renderer::get_yuv_shader_index(image_buffer_kind, format, color_space);
@@ -3315,24 +3307,6 @@ impl Renderer {
                 }
                 TransformBatchKind::BorderEdge => {
                     self.ps_border_edge.bind(
-                        &mut self.device,
-                        transform_kind,
-                        projection,
-                        0,
-                        &mut self.renderer_errors,
-                    );
-                }
-                TransformBatchKind::AlignedGradient => {
-                    self.ps_gradient.bind(
-                        &mut self.device,
-                        transform_kind,
-                        projection,
-                        0,
-                        &mut self.renderer_errors,
-                    );
-                }
-                TransformBatchKind::AngleGradient => {
-                    self.ps_angle_gradient.bind(
                         &mut self.device,
                         transform_kind,
                         projection,
@@ -4741,6 +4715,7 @@ impl Renderer {
         self.brush_blend.deinit(&mut self.device);
         self.brush_mix_blend.deinit(&mut self.device);
         self.brush_radial_gradient.deinit(&mut self.device);
+        self.brush_linear_gradient.deinit(&mut self.device);
         self.cs_clip_rectangle.deinit(&mut self.device);
         self.cs_clip_image.deinit(&mut self.device);
         self.cs_clip_border.deinit(&mut self.device);
@@ -4766,8 +4741,6 @@ impl Renderer {
         }
         self.ps_border_corner.deinit(&mut self.device);
         self.ps_border_edge.deinit(&mut self.device);
-        self.ps_gradient.deinit(&mut self.device);
-        self.ps_angle_gradient.deinit(&mut self.device);
         self.ps_hw_composite.deinit(&mut self.device);
         self.ps_split_composite.deinit(&mut self.device);
         #[cfg(feature = "capture")]

@@ -3,13 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ClipId, ClipMode, HitTestFlags, HitTestItem, HitTestResult, ItemTag};
-use api::{LayerPoint, LayerPrimitiveInfo, LayerRect, LayerToWorldTransform, LocalClip, PipelineId};
-use api::WorldPoint;
+use api::{LayerPoint, LayerPrimitiveInfo, LayerRect, LocalClip, PipelineId, WorldPoint};
 use clip::{ClipSource, ClipStore, Contains, rounded_rectangle_contains_point};
 use clip_scroll_node::{ClipScrollNode, NodeType};
 use clip_scroll_tree::{ClipChainIndex, ClipScrollTree};
 use internal_types::FastHashMap;
 use prim_store::ScrollNodeAndClipChain;
+use util::LayerToWorldFastTransform;
 
 /// A copy of important clip scroll node data to use during hit testing. This a copy of
 /// data from the ClipScrollTree that will persist as a new frame is under construction,
@@ -20,10 +20,10 @@ pub struct HitTestClipScrollNode {
     regions: Vec<HitTestRegion>,
 
     /// World transform for content transformed by this node.
-    world_content_transform: LayerToWorldTransform,
+    world_content_transform: LayerToWorldFastTransform,
 
     /// World viewport transform for content transformed by this node.
-    world_viewport_transform: LayerToWorldTransform,
+    world_viewport_transform: LayerToWorldFastTransform,
 
     /// Origin of the viewport of the node, used to calculate node-relative positions.
     node_origin: LayerPoint,
