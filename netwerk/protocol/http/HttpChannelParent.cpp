@@ -1542,12 +1542,14 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   // back to the child process so the resulting window/worker can set its
   // navigator.serviceWorker.controller correctly immediately.
   OptionalIPCServiceWorkerDescriptor ipcController = void_t();
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  Unused << chan->GetLoadInfo(getter_AddRefs(loadInfo));
-  if (loadInfo) {
-    const Maybe<ServiceWorkerDescriptor>& controller = loadInfo->GetController();
-    if (controller.isSome()) {
-      ipcController = controller.ref().ToIPC();
+  if (ServiceWorkerParentInterceptEnabled()) {
+    nsCOMPtr<nsILoadInfo> loadInfo;
+    Unused << chan->GetLoadInfo(getter_AddRefs(loadInfo));
+    if (loadInfo) {
+      const Maybe<ServiceWorkerDescriptor>& controller = loadInfo->GetController();
+      if (controller.isSome()) {
+        ipcController = controller.ref().ToIPC();
+      }
     }
   }
 
