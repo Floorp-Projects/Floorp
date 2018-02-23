@@ -29,9 +29,9 @@ module.exports = function(context) {
 
       if (node.id.type == "ObjectPattern") {
         for (let property of node.id.properties) {
-          if (componentsBlacklist.includes(property.key.name)) {
+          if (componentsBlacklist.includes(property.value.name)) {
             context.report(node,
-              `${property.key.name} is now defined in global scope, a separate definition is no longer necessary.`);
+              `${property.value.name} is now defined in global scope, a separate definition is no longer necessary.`);
           }
         }
       }
