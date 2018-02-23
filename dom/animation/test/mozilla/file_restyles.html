@@ -1280,22 +1280,6 @@ waitForAllPaints(() => {
 
     document.body.appendChild(div);
 
-    markers = await observeStyling(1);
-    if (isServo) {
-      // In Servo, we explicitly set important_rules_change flag to the element
-      // in compute_style() during the initial normal traversal right after
-      // re-attaching which leads to invoking a SequentialTask for
-      // CascadeResults which ends up calling RequestRestyle(Standard). As a
-      // result, the animation is restyled during a second animation restyle in
-      // the first frame.
-      todo_is(markers.length, 1,
-              'Bug 1388560 We should observe one restyle in the first frame ' +
-              'right after re-attaching to the document');
-    } else {
-      is(markers.length, 1,
-         'We should observe one restyle in the first frame right after ' +
-         're-attaching to the document');
-    }
     markers = await observeStyling(5);
     is(markers.length, 5,
        'Animation on re-attached to the document begins to update style');

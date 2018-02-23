@@ -6502,7 +6502,15 @@ LRESULT nsWindow::ProcessKeyUpMessage(const MSG &aMsg, bool *aEventDispatched)
 {
   ModifierKeyState modKeyState;
   NativeKey nativeKey(this, aMsg, modKeyState);
-  return static_cast<LRESULT>(nativeKey.HandleKeyUpMessage(aEventDispatched));
+  bool result = nativeKey.HandleKeyUpMessage(aEventDispatched);
+  if (aMsg.wParam == VK_F10) {
+    // Bug 1382199: Windows default behavior will trigger the System menu bar
+    // when F10 is released. Among other things, this causes the System menu bar
+    // to appear when a web page overrides the contextmenu event. We *never*
+    // want this default behavior, so eat this key (never pass it to Windows).
+    return true;
+  }
+  return result;
 }
 
 LRESULT nsWindow::ProcessKeyDownMessage(const MSG &aMsg,
