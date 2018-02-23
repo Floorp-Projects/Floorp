@@ -75,7 +75,6 @@ class CodeGeneratorMIPS64 : public CodeGeneratorMIPSShared
     void visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool);
   protected:
     ValueOperand ToValue(LInstruction* ins, size_t pos);
-    ValueOperand ToOutValue(LInstruction* ins);
     ValueOperand ToTempValue(LInstruction* ins, size_t pos);
 
     // Functions for LTestVAndBranch.

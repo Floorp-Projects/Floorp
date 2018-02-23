@@ -200,7 +200,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
   protected:
     ValueOperand ToValue(LInstruction* ins, size_t pos);
-    ValueOperand ToOutValue(LInstruction* ins);
     ValueOperand ToTempValue(LInstruction* ins, size_t pos);
 
     Register64 ToOperandOrRegister64(const LInt64Allocation input);

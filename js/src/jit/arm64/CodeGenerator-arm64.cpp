@@ -402,13 +402,6 @@ CodeGeneratorARM64::ToValue(LInstruction* ins, size_t pos)
 }
 
 ValueOperand
-CodeGeneratorARM64::ToOutValue(LInstruction* ins)
-{
-    Register payloadReg = ToRegister(ins->getDef(0));
-    return ValueOperand(payloadReg);
-}
-
-ValueOperand
 CodeGeneratorARM64::ToTempValue(LInstruction* ins, size_t pos)
 {
     MOZ_CRASH("CodeGeneratorARM64::ToTempValue");
