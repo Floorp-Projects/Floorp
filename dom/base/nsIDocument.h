@@ -2188,10 +2188,7 @@ public:
     return mMayStartLayout;
   }
 
-  virtual void SetMayStartLayout(bool aMayStartLayout)
-  {
-    mMayStartLayout = aMayStartLayout;
-  }
+  virtual void SetMayStartLayout(bool aMayStartLayout);
 
   already_AddRefed<nsIDocumentEncoder> GetCachedEncoder();
 
@@ -3013,6 +3010,8 @@ public:
 
   already_AddRefed<nsIURI> GetMozDocumentURIIfNotForErrorPages();
 
+  mozilla::dom::Promise* GetDocumentReadyForIdle(mozilla::ErrorResult& aRv);
+
   // ParentNode
   nsIHTMLCollection* Children();
   uint32_t ChildElementCount();
@@ -3296,6 +3295,8 @@ protected:
                                  nsAtom* aAtom, void* aData);
   static void* UseExistingNameString(nsINode* aRootNode, const nsString* aName);
 
+  void MaybeResolveReadyForIdle();
+
   nsCString mReferrer;
   nsString mLastModified;
 
@@ -3376,6 +3377,8 @@ protected:
   mozilla::TimeStamp mLastFocusTime;
 
   mozilla::EventStates mDocumentState;
+
+  RefPtr<mozilla::dom::Promise> mReadyForIdle;
 
   // True if BIDI is enabled.
   bool mBidiEnabled : 1;

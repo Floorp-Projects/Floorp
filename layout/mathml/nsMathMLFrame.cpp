@@ -318,8 +318,8 @@ nsMathMLFrame::DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
   nscoord w = aMetrics.rightBearing - aMetrics.leftBearing;
   nscoord h = aMetrics.ascent + aMetrics.descent;
 
-  aLists.Content()->AppendToTop(new (aBuilder)
-      nsDisplayMathMLBoundingMetrics(aBuilder, aFrame, nsRect(x,y,w,h)));
+  aLists.Content()->AppendToTop(
+      MakeDisplayItem<nsDisplayMathMLBoundingMetrics>(aBuilder, aFrame, nsRect(x,y,w,h)));
 }
 #endif
 
@@ -370,8 +370,8 @@ nsMathMLFrame::DisplayBar(nsDisplayListBuilder* aBuilder,
   if (!aFrame->StyleVisibility()->IsVisible() || aRect.IsEmpty())
     return;
 
-  aLists.Content()->AppendToTop(new (aBuilder)
-    nsDisplayMathMLBar(aBuilder, aFrame, aRect, aIndex));
+  aLists.Content()->AppendToTop(
+    MakeDisplayItem<nsDisplayMathMLBar>(aBuilder, aFrame, aRect, aIndex));
 }
 
 void

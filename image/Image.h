@@ -36,7 +36,7 @@ struct MemoryCounter
     : mSource(0)
     , mDecodedHeap(0)
     , mDecodedNonHeap(0)
-    , mSharedHandles(0)
+    , mExternalHandles(0)
   { }
 
   void SetSource(size_t aCount) { mSource = aCount; }
@@ -45,15 +45,15 @@ struct MemoryCounter
   size_t DecodedHeap() const { return mDecodedHeap; }
   void SetDecodedNonHeap(size_t aCount) { mDecodedNonHeap = aCount; }
   size_t DecodedNonHeap() const { return mDecodedNonHeap; }
-  void SetSharedHandles(size_t aCount) { mSharedHandles = aCount; }
-  size_t SharedHandles() const { return mSharedHandles; }
+  void SetExternalHandles(size_t aCount) { mExternalHandles = aCount; }
+  size_t ExternalHandles() const { return mExternalHandles; }
 
   MemoryCounter& operator+=(const MemoryCounter& aOther)
   {
     mSource += aOther.mSource;
     mDecodedHeap += aOther.mDecodedHeap;
     mDecodedNonHeap += aOther.mDecodedNonHeap;
-    mSharedHandles += aOther.mSharedHandles;
+    mExternalHandles += aOther.mExternalHandles;
     return *this;
   }
 
@@ -61,7 +61,7 @@ private:
   size_t mSource;
   size_t mDecodedHeap;
   size_t mDecodedNonHeap;
-  size_t mSharedHandles;
+  size_t mExternalHandles;
 };
 
 enum class SurfaceMemoryCounterType

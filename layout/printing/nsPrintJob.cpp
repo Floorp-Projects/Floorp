@@ -3370,15 +3370,15 @@ nsPrintJob::TurnScriptingOn(bool aDoTurnOn)
     }
 
     if (nsCOMPtr<nsPIDOMWindowInner> window = doc->GetInnerWindow()) {
-      nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(window);
-      NS_WARNING_ASSERTION(go && go->GetGlobalJSObject(), "Can't get global");
+      nsCOMPtr<nsIGlobalObject> go = window->AsGlobal();
+      NS_WARNING_ASSERTION(go->GetGlobalJSObject(), "Can't get global");
       nsresult propThere = NS_PROPTABLE_PROP_NOT_THERE;
       doc->GetProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview,
                        &propThere);
       if (aDoTurnOn) {
         if (propThere != NS_PROPTABLE_PROP_NOT_THERE) {
           doc->DeleteProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview);
-          if (go && go->GetGlobalJSObject()) {
+          if (go->GetGlobalJSObject()) {
             xpc::Scriptability::Get(go->GetGlobalJSObject()).Unblock();
           }
           window->Resume();

@@ -384,8 +384,8 @@ nsSplitterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (mInner->mDragging && aBuilder->IsForEventDelivery())
   {
     // XXX It's probably better not to check visibility here, right?
-    aLists.Outlines()->AppendToTop(new (aBuilder)
-      nsDisplayEventReceiver(aBuilder, this));
+    aLists.Outlines()->AppendToTop(
+      MakeDisplayItem<nsDisplayEventReceiver>(aBuilder, this));
     return;
   }
 }

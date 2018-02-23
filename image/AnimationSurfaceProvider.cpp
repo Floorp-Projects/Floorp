@@ -114,7 +114,7 @@ void
 AnimationSurfaceProvider::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                                  size_t& aHeapSizeOut,
                                                  size_t& aNonHeapSizeOut,
-                                                 size_t& aSharedHandlesOut)
+                                                 size_t& aExtHandlesOut)
 {
   // Note that the surface cache lock is already held here, and then we acquire
   // mFramesMutex. For this method, this ordering is unavoidable, which means
@@ -123,7 +123,7 @@ AnimationSurfaceProvider::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
 
   for (const RawAccessFrameRef& frame : mFrames) {
     frame->AddSizeOfExcludingThis(aMallocSizeOf, aHeapSizeOut,
-                                  aNonHeapSizeOut, aSharedHandlesOut);
+                                  aNonHeapSizeOut, aExtHandlesOut);
   }
 }
 

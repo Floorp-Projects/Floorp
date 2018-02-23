@@ -8,6 +8,7 @@
 #define MOZILLA_GFX_TOOLS_H_
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/MemoryReporting.h" // for MallocSizeOf
 #include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
 #include "Types.h"
@@ -228,6 +229,12 @@ struct AlignedArray
     mozilla::Swap(mPtr, aOther.mPtr);
     mozilla::Swap(mStorage, aOther.mStorage);
     mozilla::Swap(mCount, aOther.mCount);
+  }
+
+  size_t
+  HeapSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return aMallocSizeOf(mStorage);
   }
 
   MOZ_ALWAYS_INLINE operator T*()

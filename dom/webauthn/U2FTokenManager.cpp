@@ -248,31 +248,28 @@ U2FTokenManager::Register(PWebAuthnTransactionParent* aTransactionParent,
 
   uint64_t tid = mLastTransactionId = aTransactionId;
   mozilla::TimeStamp startTime = mozilla::TimeStamp::Now();
-  mTokenManagerImpl->Register(aTransactionInfo.ExcludeList(),
-                              aTransactionInfo.AuthenticatorSelection(),
-                              aTransactionInfo.RpIdHash(),
-                              aTransactionInfo.ClientDataHash(),
-                              aTransactionInfo.TimeoutMS())
-                   ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-                         [tid, startTime](WebAuthnMakeCredentialResult&& aResult) {
-                           U2FTokenManager* mgr = U2FTokenManager::Get();
-                           mgr->MaybeConfirmRegister(tid, aResult);
-                           Telemetry::ScalarAdd(
-                             Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                             NS_LITERAL_STRING("U2FRegisterFinish"), 1);
-                           Telemetry::AccumulateTimeDelta(
-                             Telemetry::WEBAUTHN_CREATE_CREDENTIAL_MS,
-                             startTime);
-                         },
-                         [tid](nsresult rv) {
-                           MOZ_ASSERT(NS_FAILED(rv));
-                           U2FTokenManager* mgr = U2FTokenManager::Get();
-                           mgr->MaybeAbortRegister(tid, rv);
-                           Telemetry::ScalarAdd(
-                             Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                             NS_LITERAL_STRING("U2FRegisterAbort"), 1);
-                         })
-                   ->Track(mRegisterPromise);
+  mTokenManagerImpl
+    ->Register(aTransactionInfo)
+    ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+          [tid, startTime](WebAuthnMakeCredentialResult&& aResult) {
+            U2FTokenManager* mgr = U2FTokenManager::Get();
+            mgr->MaybeConfirmRegister(tid, aResult);
+            Telemetry::ScalarAdd(
+              Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
+              NS_LITERAL_STRING("U2FRegisterFinish"), 1);
+            Telemetry::AccumulateTimeDelta(
+              Telemetry::WEBAUTHN_CREATE_CREDENTIAL_MS,
+              startTime);
+          },
+          [tid](nsresult rv) {
+            MOZ_ASSERT(NS_FAILED(rv));
+            U2FTokenManager* mgr = U2FTokenManager::Get();
+            mgr->MaybeAbortRegister(tid, rv);
+            Telemetry::ScalarAdd(
+              Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
+              NS_LITERAL_STRING("U2FRegisterAbort"), 1);
+          })
+    ->Track(mRegisterPromise);
 }
 
 void
@@ -319,32 +316,28 @@ U2FTokenManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
 
   uint64_t tid = mLastTransactionId = aTransactionId;
   mozilla::TimeStamp startTime = mozilla::TimeStamp::Now();
-  mTokenManagerImpl->Sign(aTransactionInfo.AllowList(),
-                          aTransactionInfo.RpIdHash(),
-                          aTransactionInfo.ClientDataHash(),
-                          aTransactionInfo.Extensions(),
-                          aTransactionInfo.RequireUserVerification(),
-                          aTransactionInfo.TimeoutMS())
-                   ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-                     [tid, startTime](WebAuthnGetAssertionResult&& aResult) {
-                       U2FTokenManager* mgr = U2FTokenManager::Get();
-                       mgr->MaybeConfirmSign(tid, aResult);
-                       Telemetry::ScalarAdd(
-                         Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                         NS_LITERAL_STRING("U2FSignFinish"), 1);
-                       Telemetry::AccumulateTimeDelta(
-                         Telemetry::WEBAUTHN_GET_ASSERTION_MS,
-                         startTime);
-                     },
-                     [tid](nsresult rv) {
-                       MOZ_ASSERT(NS_FAILED(rv));
-                       U2FTokenManager* mgr = U2FTokenManager::Get();
-                       mgr->MaybeAbortSign(tid, rv);
-                       Telemetry::ScalarAdd(
-                         Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                         NS_LITERAL_STRING("U2FSignAbort"), 1);
-                     })
-                   ->Track(mSignPromise);
+  mTokenManagerImpl
+    ->Sign(aTransactionInfo)
+    ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+      [tid, startTime](WebAuthnGetAssertionResult&& aResult) {
+        U2FTokenManager* mgr = U2FTokenManager::Get();
+        mgr->MaybeConfirmSign(tid, aResult);
+        Telemetry::ScalarAdd(
+          Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
+          NS_LITERAL_STRING("U2FSignFinish"), 1);
+        Telemetry::AccumulateTimeDelta(
+          Telemetry::WEBAUTHN_GET_ASSERTION_MS,
+          startTime);
+      },
+      [tid](nsresult rv) {
+        MOZ_ASSERT(NS_FAILED(rv));
+        U2FTokenManager* mgr = U2FTokenManager::Get();
+        mgr->MaybeAbortSign(tid, rv);
+        Telemetry::ScalarAdd(
+          Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
+          NS_LITERAL_STRING("U2FSignAbort"), 1);
+      })
+    ->Track(mSignPromise);
 }
 
 void

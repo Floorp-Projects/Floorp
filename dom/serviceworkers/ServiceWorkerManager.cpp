@@ -902,9 +902,8 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
     return rv;
   }
 
-  nsCOMPtr<nsIGlobalObject> sgo = do_QueryInterface(window);
   ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(sgo, result);
+  RefPtr<Promise> promise = Promise::Create(window->AsGlobal(), result);
   if (result.Failed()) {
     return result.StealNSResult();
   }
@@ -1073,9 +1072,8 @@ ServiceWorkerManager::GetRegistrations(mozIDOMWindow* aWindow,
   // now.
   MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(window->GetExtantDoc()->NodePrincipal()));
 
-  nsCOMPtr<nsIGlobalObject> sgo = do_QueryInterface(window);
   ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(sgo, result);
+  RefPtr<Promise> promise = Promise::Create(window->AsGlobal(), result);
   if (result.Failed()) {
     return result.StealNSResult();
   }
@@ -1195,9 +1193,8 @@ ServiceWorkerManager::GetRegistration(mozIDOMWindow* aWindow,
   // now.
   MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(window->GetExtantDoc()->NodePrincipal()));
 
-  nsCOMPtr<nsIGlobalObject> sgo = do_QueryInterface(window);
   ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(sgo, result);
+  RefPtr<Promise> promise = Promise::Create(window->AsGlobal(), result);
   if (result.Failed()) {
     return result.StealNSResult();
   }
@@ -1397,9 +1394,8 @@ ServiceWorkerManager::GetReadyPromise(mozIDOMWindow* aWindow,
 
   MOZ_ASSERT(!mPendingReadyPromises.Contains(window));
 
-  nsCOMPtr<nsIGlobalObject> sgo = do_QueryInterface(window);
   ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(sgo, result);
+  RefPtr<Promise> promise = Promise::Create(window->AsGlobal(), result);
   if (result.Failed()) {
     return result.StealNSResult();
   }

@@ -539,7 +539,7 @@ DoCollectSizeOfCompositingSurfaces(const RawAccessFrameRef& aSurface,
   aSurface->AddSizeOfExcludingThis(aMallocSizeOf, heap, nonHeap, handles);
   counter.Values().SetDecodedHeap(heap);
   counter.Values().SetDecodedNonHeap(nonHeap);
-  counter.Values().SetSharedHandles(handles);
+  counter.Values().SetExternalHandles(handles);
 
   // Record it.
   aCounters.AppendElement(counter);

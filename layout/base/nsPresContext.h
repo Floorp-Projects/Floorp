@@ -1250,6 +1250,10 @@ protected:
   static bool NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument, void* aData);
 
 public:
+  // Used by the PresShell to force a reflow when some aspect of font info
+  // has been updated, potentially affecting font selection and layout.
+  void ForceReflowForFontInfoUpdate();
+
   void DoChangeCharSet(NotNull<const Encoding*> aCharSet);
 
   /**

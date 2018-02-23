@@ -861,10 +861,9 @@ Proxy::Init()
     return false;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(ownerWindow);
-
   mXHR = new XMLHttpRequestMainThread();
-  mXHR->Construct(mWorkerPrivate->GetPrincipal(), global,
+  mXHR->Construct(mWorkerPrivate->GetPrincipal(),
+                  ownerWindow ? ownerWindow->AsGlobal() : nullptr,
                   mWorkerPrivate->GetBaseURI(),
                   mWorkerPrivate->GetLoadGroup(),
                   mWorkerPrivate->GetPerformanceStorage());

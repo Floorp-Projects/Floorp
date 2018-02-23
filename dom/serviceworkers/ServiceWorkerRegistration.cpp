@@ -65,12 +65,10 @@ ServiceWorkerRegistration::CreateForMainThread(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIGlobalObject> global(do_QueryInterface(aWindow));
-
   RefPtr<Inner> inner = new ServiceWorkerRegistrationMainThread(aDescriptor);
 
   RefPtr<ServiceWorkerRegistration> registration =
-    new ServiceWorkerRegistration(global, aDescriptor, inner);
+    new ServiceWorkerRegistration(aWindow->AsGlobal(), aDescriptor, inner);
 
   return registration.forget();
 }
