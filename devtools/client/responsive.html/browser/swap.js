@@ -130,6 +130,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       const containerTab = addTabSilently("about:blank", {
         skipAnimation: true,
         forceNotRemote: true,
+        userContextId: tab.userContextId,
       });
       gBrowser.hideTab(containerTab);
       const containerBrowser = containerTab.linkedBrowser;
@@ -241,6 +242,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // 2. Create a temporary, hidden tab to hold the content.
       const contentTab = addTabSilently("about:blank", {
         skipAnimation: true,
+        userContextId: tab.userContextId,
       });
       gBrowser.hideTab(contentTab);
       const contentBrowser = contentTab.linkedBrowser;

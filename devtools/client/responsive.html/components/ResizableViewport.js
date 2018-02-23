@@ -174,6 +174,7 @@ class ResizableViewport extends Component {
         },
         Browser({
           swapAfterMount,
+          userContextId: viewport.userContextId,
           onBrowserMounted,
           onContentResize,
         })
