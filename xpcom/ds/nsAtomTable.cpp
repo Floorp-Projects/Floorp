@@ -246,6 +246,10 @@ struct AtomTableEntry : public PLDHashEntryHdr
   nsAtom* MOZ_NON_OWNING_REF mAtom;
 };
 
+#define RECENTLY_USED_MAIN_THREAD_ATOM_CACHE_SIZE 31
+static nsAtom*
+  sRecentlyUsedMainThreadAtoms[RECENTLY_USED_MAIN_THREAD_ATOM_CACHE_SIZE] = {};
+
 static PLDHashNumber
 AtomTableGetHash(const void* aKey)
 {
@@ -296,11 +300,18 @@ static const PLDHashTableOps AtomTableOps = {
   AtomTableInitEntry
 };
 
-//----------------------------------------------------------------------
-
-#define RECENTLY_USED_MAIN_THREAD_ATOM_CACHE_SIZE 31
-static nsAtom*
-  sRecentlyUsedMainThreadAtoms[RECENTLY_USED_MAIN_THREAD_ATOM_CACHE_SIZE] = {};
+// The atom table very quickly gets 10,000+ entries in it (or even 100,000+).
+// But choosing the best initial length has some subtleties: we add ~2700
+// static atoms to the table at start-up, and then we start adding and removing
+// dynamic atoms. If we make the table too big to start with, when the first
+// dynamic atom gets removed the load factor will be < 25% and so we will
+// shrink it to 4096 entries.
+//
+// By choosing an initial length of 4096, we get an initial capacity of 8192.
+// That's the biggest initial capacity that will let us be > 25% full when the
+// first dynamic atom is removed (when the count is ~2700), thus avoiding any
+// shrinking.
+#define ATOM_HASHTABLE_INITIAL_LENGTH  4096
 
 void
 nsAtomFriend::GCAtomTableLocked(const MutexAutoLock& aProofOfLock, GCKind aKind)
@@ -469,19 +480,6 @@ static StaticAtomTable* gStaticAtomTable = nullptr;
  * Whether it is still OK to add atoms to gStaticAtomTable.
  */
 static bool gStaticAtomTableSealed = false;
-
-// The atom table very quickly gets 10,000+ entries in it (or even 100,000+).
-// But choosing the best initial length has some subtleties: we add ~2700
-// static atoms to the table at start-up, and then we start adding and removing
-// dynamic atoms. If we make the table too big to start with, when the first
-// dynamic atom gets removed the load factor will be < 25% and so we will
-// shrink it to 4096 entries.
-//
-// By choosing an initial length of 4096, we get an initial capacity of 8192.
-// That's the biggest initial capacity that will let us be > 25% full when the
-// first dynamic atom is removed (when the count is ~2700), thus avoiding any
-// shrinking.
-#define ATOM_HASHTABLE_INITIAL_LENGTH  4096
 
 class DefaultAtoms
 {
