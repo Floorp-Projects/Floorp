@@ -31,6 +31,7 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
     this._viewAllButton.addEventListener("click", this);
 
     this._orderDetailsOverlay = contents.querySelector("#order-details-overlay");
+    this._shippingTypeLabel = contents.querySelector("#shipping-type-label");
     this._shippingRequestedEls = contents.querySelectorAll(".shippingRequested");
     this._errorText = contents.querySelector("#error-text");
 
@@ -189,9 +190,13 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
 
     this._orderDetailsOverlay.hidden = !state.orderDetailsShowing;
     this._errorText.textContent = paymentDetails.error;
+    let paymentOptions = request.paymentOptions;
     for (let element of this._shippingRequestedEls) {
-      element.hidden = !request.paymentOptions.requestShipping;
+      element.hidden = !paymentOptions.requestShipping;
     }
+    let shippingType = paymentOptions.shippingType || "shipping";
+    this._shippingTypeLabel.querySelector("label").textContent =
+      this._shippingTypeLabel.dataset[shippingType + "AddressLabel"];
 
     this._renderPayButton(state);
 
