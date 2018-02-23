@@ -14,13 +14,12 @@ import org.mozilla.geckoview.test.util.Callbacks
 import android.support.test.filters.LargeTest
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
-import org.hamcrest.CoreMatchers.both
-import org.hamcrest.Matchers.greaterThan
-import org.hamcrest.Matchers.lessThan
-import org.junit.Assert.*
 
+import org.hamcrest.Matcher
+import org.hamcrest.Matchers.*
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.ErrorCollector
 import org.junit.runner.RunWith
 
 /**
@@ -37,19 +36,30 @@ class GeckoSessionTestRuleTest {
 
     @get:Rule val sessionRule = GeckoSessionTestRule()
 
+    @get:Rule val errors = ErrorCollector()
+    fun <T> assertThat(reason: String, v: T, m: Matcher<T>) = errors.checkThat(reason, v, m)
+
     @Test fun getSession() {
-        assertNotNull("Can get session", sessionRule.session)
-        assertTrue("Session is open", sessionRule.session.isOpen)
+        assertThat("Can get session", sessionRule.session, notNullValue())
+        assertThat("Session is open",
+                   sessionRule.session.isOpen, equalTo(true))
     }
 
     @Setting.List(Setting(key = Setting.Key.USE_PRIVATE_MODE, value = "true"),
                   Setting(key = Setting.Key.DISPLAY_MODE, value = "DISPLAY_MODE_MINIMAL_UI"))
+    @Setting(key = Setting.Key.USE_TRACKING_PROTECTION, value = "true")
     @Test fun settingsApplied() {
-        assertEquals("USE_PRIVATE_MODE should be set", true,
-                     sessionRule.session.settings.getBoolean(GeckoSessionSettings.USE_PRIVATE_MODE))
-        assertEquals("DISPLAY_MODE should be set",
-                     GeckoSessionSettings.DISPLAY_MODE_MINIMAL_UI,
-                     sessionRule.session.settings.getInt(GeckoSessionSettings.DISPLAY_MODE))
+        assertThat("USE_PRIVATE_MODE should be set",
+                   sessionRule.session.settings.getBoolean(
+                           GeckoSessionSettings.USE_PRIVATE_MODE),
+                   equalTo(true))
+        assertThat("DISPLAY_MODE should be set",
+                   sessionRule.session.settings.getInt(GeckoSessionSettings.DISPLAY_MODE),
+                   equalTo(GeckoSessionSettings.DISPLAY_MODE_MINIMAL_UI))
+        assertThat("USE_TRACKING_PROTECTION should be set",
+                   sessionRule.session.settings.getBoolean(
+                           GeckoSessionSettings.USE_TRACKING_PROTECTION),
+                   equalTo(true))
     }
 
     @Test(expected = AssertionError::class)
@@ -58,6 +68,18 @@ class GeckoSessionTestRuleTest {
     fun noPendingCallbacks() {
         // Make sure we don't have unexpected pending callbacks at the start of a test.
         sessionRule.waitUntilCalled(object : Callbacks.All {})
+    }
+
+    @Test fun includesAllCallbacks() {
+        for (ifce in GeckoSession::class.java.classes) {
+            if (!ifce.isInterface || (
+                    !ifce.simpleName.endsWith("Listener") &&
+                    !ifce.simpleName.endsWith("Delegate"))) {
+                continue
+            }
+            assertThat("Callbacks.All should include interface " + ifce.simpleName,
+                       ifce.isInstance(Callbacks.Default), equalTo(true))
+        }
     }
 
     @Test fun waitForPageStop() {
@@ -72,7 +94,7 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        assertEquals("Callback count should be correct", 1, counter)
+        assertThat("Callback count should be correct", counter, equalTo(1))
     }
 
     @Test(expected = AssertionError::class)
@@ -95,12 +117,12 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        assertEquals("Callback count should be correct", 2, counter)
+        assertThat("Callback count should be correct", counter, equalTo(2))
     }
 
     @Test fun waitUntilCalled_anyInterfaceMethod() {
         sessionRule.session.loadUri(HELLO_URI)
-        sessionRule.waitUntilCalled(GeckoSession.ProgressListener::class.java)
+        sessionRule.waitUntilCalled(GeckoSession.ProgressListener::class)
 
         var counter = 0
 
@@ -119,12 +141,12 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        assertEquals("Callback count should be correct", 1, counter)
+        assertThat("Callback count should be correct", counter, equalTo(1))
     }
 
     @Test fun waitUntilCalled_specificInterfaceMethod() {
         sessionRule.session.loadUri(HELLO_URI)
-        sessionRule.waitUntilCalled(GeckoSession.ProgressListener::class.java,
+        sessionRule.waitUntilCalled(GeckoSession.ProgressListener::class,
                                      "onPageStart", "onPageStop")
 
         var counter = 0
@@ -139,13 +161,13 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        assertEquals("Callback count should be correct", 2, counter)
+        assertThat("Callback count should be correct", counter, equalTo(2))
     }
 
     @Test(expected = AssertionError::class)
     fun waitUntilCalled_throwOnNotGeckoSessionInterface() {
         sessionRule.session.loadUri(HELLO_URI)
-        sessionRule.waitUntilCalled(CharSequence::class.java)
+        sessionRule.waitUntilCalled(CharSequence::class)
     }
 
     @Test fun waitUntilCalled_anyObjectMethod() {
@@ -168,7 +190,7 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        assertEquals("Callback count should be correct", 1, counter)
+        assertThat("Callback count should be correct", counter, equalTo(1))
     }
 
     @Test fun waitUntilCalled_specificObjectMethod() {
@@ -188,7 +210,7 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        assertEquals("Callback count should be correct", 2, counter)
+        assertThat("Callback count should be correct", counter, equalTo(2))
     }
 
     @Test fun waitUntilCalled_multipleCount() {
@@ -209,7 +231,7 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        assertEquals("Callback count should be correct", 4, counter)
+        assertThat("Callback count should be correct", counter, equalTo(4))
     }
 
     @Test fun waitUntilCalled_currentCall() {
@@ -222,15 +244,16 @@ class GeckoSessionTestRuleTest {
             @AssertCalled(count = 2, order = intArrayOf(1, 2))
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 val info = sessionRule.currentCall
-                assertNotNull("Method info should be valid", info)
-                assertThat("Counter should be correct", info.counter,
-                        both(greaterThan(0)).and(lessThan(3)))
-                assertEquals("Order should equal counter", info.counter, info.order)
+                assertThat("Method info should be valid", info, notNullValue())
+                assertThat("Counter should be correct",
+                           info.counter, isOneOf(1, 2))
+                assertThat("Order should equal counter",
+                           info.order, equalTo(info.counter))
                 counter++
             }
         })
 
-        assertEquals("Callback count should be correct", 2, counter)
+        assertThat("Callback count should be correct", counter, equalTo(2))
     }
 
     @Test fun forCallbacksDuringWait_anyMethod() {
@@ -245,7 +268,7 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        assertEquals("Callback count should be correct", 1, counter)
+        assertThat("Callback count should be correct", counter, equalTo(1))
     }
 
     @Test(expected = AssertionError::class)
@@ -274,7 +297,7 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        assertEquals("Callback count should be correct", 2, counter)
+        assertThat("Callback count should be correct", counter, equalTo(2))
     }
 
     @Test fun forCallbacksDuringWait_specificMethodMultipleTimes() {
@@ -296,7 +319,7 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        assertEquals("Callback count should be correct", 4, counter)
+        assertThat("Callback count should be correct", counter, equalTo(4))
     }
 
     @Test(expected = AssertionError::class)
@@ -327,7 +350,7 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        assertEquals("Callback count should be correct", 4, counter)
+        assertThat("Callback count should be correct", counter, equalTo(4))
     }
 
     @Test(expected = AssertionError::class)
@@ -458,7 +481,7 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        assertEquals("Callback count should be correct", 2, counter)
+        assertThat("Callback count should be correct", counter, equalTo(2))
     }
 
     @Test fun forCallbacksDuringWait_currentCall() {
@@ -469,9 +492,11 @@ class GeckoSessionTestRuleTest {
             @AssertCalled(count = 1)
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 val info = sessionRule.currentCall
-                assertNotNull("Method info should be valid", info)
-                assertEquals("Counter should be correct", 1, info.counter)
-                assertEquals("Order should equal counter", 0, info.order)
+                assertThat("Method info should be valid", info, notNullValue())
+                assertThat("Counter should be correct",
+                           info.counter, equalTo(1))
+                assertThat("Order should equal counter",
+                           info.order, equalTo(0))
             }
         })
     }
