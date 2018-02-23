@@ -29,6 +29,14 @@ generated_resources := \
   res/values/strings.xml \
   $(NULL)
 
+generated_files := \
+  ../geckoview/generated/preprocessed/org/mozilla/geckoview/BuildConfig.java \
+  AndroidManifest.xml \
+  generated/preprocessed/org/mozilla/gecko/AdjustConstants.java \
+  generated/preprocessed/org/mozilla/gecko/AppConstants.java \
+  generated/preprocessed/org/mozilla/gecko/MmaConstants.java \
+  $(NULL)
+
 gradle_dir := $(topobjdir)/gradle/build/mobile/android
 
 define gradle_command
@@ -37,8 +45,8 @@ $(1): $(2)
 	$$(topsrcdir)/mach android assemble-app
 endef
 
-# .gradle.deps: $(generated_resources) $(constants_PP_JAVAFILES) FORCE
-$(eval $(call gradle_command,.gradle.deps,$(generated_resources) $(constants_PP_JAVAFILES) FORCE))
+# .gradle.deps: $(generated_resources) $(generated_files) FORCE
+$(eval $(call gradle_command,.gradle.deps,$(generated_resources) $(generated_files) FORCE))
 
 GeneratedJNIWrappers.cpp GeneratedJNIWrappers.h GeneratedJNINatives.h : .gradle.deps
 	$(REPORT_BUILD)
@@ -106,7 +114,7 @@ gecko-nodeps/R.txt: .gradle.nodeps ;
 # strings.xml.
 
 # .gradle.nodeps: AndroidManifest.xml generated/preprocessed/org/mozilla/gecko/AppConstants.java ... FORCE
-$(eval $(call gradle_command,.gradle.nodeps,AndroidManifest.xml $(constants_PP_JAVAFILES) FORCE))
+$(eval $(call gradle_command,.gradle.nodeps,AndroidManifest.xml $(generated_files) FORCE))
 
 # Override the Java settings with some specific android settings
 include $(topsrcdir)/config/android-common.mk
@@ -143,7 +151,7 @@ ifndef MOZILLA_OFFICIAL
 # these are built before Gradle is invoked by .gradle.deps and
 # gradle-targets is not made at all.  This is required to avoid
 # building gradle-targets with AB_CD=multi during multi-l10n builds.
-gradle-targets: $(generated_resources) $(constants_PP_JAVAFILES)
+gradle-targets: $(generated_resources) $(generated_files)
 
 # Local developers update omni.ja during their builds.  There's a
 # chicken-and-egg problem here.
