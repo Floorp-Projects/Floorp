@@ -125,7 +125,6 @@
 #include "nsIScriptContext.h"
 #include "nsBindingManager.h"
 #include "nsHTMLDocument.h"
-#include "nsIDOMHTMLFormElement.h"
 #include "nsIRequest.h"
 #include "nsHostObjectProtocolHandler.h"
 
@@ -160,6 +159,7 @@
 #include "nsEscape.h"
 #include "nsObjectLoadingContent.h"
 #include "nsHtml5TreeOpExecutor.h"
+#include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
@@ -8026,12 +8026,11 @@ nsDocument::Sanitize()
   for (uint32_t i = 0; i < length; ++i) {
     NS_ASSERTION(nodes->Item(i), "null item in nodelist");
 
-    nsCOMPtr<nsIDOMHTMLFormElement> form = do_QueryInterface(nodes->Item(i));
+    HTMLFormElement* form = HTMLFormElement::FromContent(nodes->Item(i));
     if (!form)
       continue;
 
-    nodes->Item(i)->AsElement()->GetAttr(kNameSpaceID_None,
-                                         nsGkAtoms::autocomplete, value);
+    form->GetAttr(kNameSpaceID_None, nsGkAtoms::autocomplete, value);
     if (value.LowerCaseEqualsLiteral("off"))
       form->Reset();
   }
