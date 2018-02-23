@@ -729,6 +729,20 @@ GeneratePrototypeHoleGuards(CacheIRWriter& writer, JSObject* obj, ObjOperandId o
     }
 }
 
+// Similar to |TestMatchingReceiver|, but for the holder object (when it
+// differs from the receiver). The holder may also be the expando of the
+// receiver if it exists.
+static void
+TestMatchingHolder(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId)
+{
+    // The GeneratePrototypeGuards + TestMatchingHolder checks only support
+    // prototype chains composed of NativeObject (excluding the receiver
+    // itself).
+    MOZ_ASSERT(obj->is<NativeObject>());
+
+    writer.guardShapeForOwnProperties(objId, obj->as<NativeObject>().lastProperty());
+}
+
 static void
 EmitReadSlotGuard(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
                   ObjOperandId objId, Maybe<ObjOperandId>* holderId)
@@ -743,7 +757,7 @@ EmitReadSlotGuard(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
 
             // Guard on the holder's shape.
             holderId->emplace(writer.loadObject(holder));
-            writer.guardShape(holderId->ref(), holder->as<NativeObject>().lastProperty());
+            TestMatchingHolder(writer, holder, holderId->ref());
         } else {
             // The property does not exist. Guard on everything in the prototype
             // chain. This is guaranteed to see only Native objects because of
@@ -843,7 +857,7 @@ EmitCallGetterResult(CacheIRWriter& writer, JSObject* obj, JSObject* holder, Sha
 
             // Guard on the holder's shape.
             ObjOperandId holderId = writer.loadObject(holder);
-            writer.guardShape(holderId, holder->as<NativeObject>().lastProperty());
+            TestMatchingHolder(writer, holder, holderId);
         }
     } else {
         writer.guardHasGetterSetter(objId, shape);
@@ -1238,7 +1252,7 @@ IRGenerator::guardDOMProxyExpandoObjectAndShape(JSObject* obj, ObjOperandId objI
 
     // Guard the expando is an object and shape guard.
     ObjOperandId expandoObjId = writer.guardIsObject(expandoValId);
-    writer.guardShape(expandoObjId, expandoObj->as<NativeObject>().shape());
+    TestMatchingHolder(writer, expandoObj, expandoObjId);
     return expandoObjId;
 }
 
@@ -1369,7 +1383,7 @@ GetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId o
 
         // Guard on the holder of the property.
         ObjOperandId holderId = writer.loadObject(holder);
-        writer.guardShape(holderId, holder->lastProperty());
+        TestMatchingHolder(writer, holder, holderId);
 
         if (canCache == CanAttachReadSlot) {
             EmitLoadSlotResult(writer, holderId, holder, shape);
@@ -3353,7 +3367,7 @@ SetPropIRGenerator::tryAttachSetter(HandleObject obj, ObjOperandId objId, Handle
 
             // Guard on the holder's shape.
             ObjOperandId holderId = writer.loadObject(holder);
-            writer.guardShape(holderId, holder->as<NativeObject>().lastProperty());
+            TestMatchingHolder(writer, holder, holderId);
         }
     } else {
         writer.guardHasGetterSetter(objId, propShape);
@@ -3656,7 +3670,7 @@ SetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId o
 
     // Guard on the holder of the property.
     ObjOperandId holderId = writer.loadObject(holder);
-    writer.guardShape(holderId, holder->as<NativeObject>().lastProperty());
+    TestMatchingHolder(writer, holder, holderId);
 
     // EmitCallSetterNoGuards expects |obj| to be the object the property is
     // on to do some checks. Since we actually looked at proto, and no extra
