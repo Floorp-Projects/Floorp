@@ -1007,6 +1007,9 @@ impl RenderBackend {
                 }
             };
 
+            let msg_update = ResultMsg::UpdateGpuCache(self.gpu_cache.extract_updates());
+            self.result_tx.send(msg_update).unwrap();
+
             let msg_publish = ResultMsg::PublishDocument(
                 id,
                 render_doc,

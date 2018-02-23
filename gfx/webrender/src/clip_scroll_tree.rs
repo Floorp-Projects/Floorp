@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ClipId, DeviceIntRect, DevicePixelScale, ExternalScrollId, LayerPoint, LayerRect};
-use api::{LayerToWorldTransform, LayerVector2D, PipelineId, ScrollClamping, ScrollEventPhase};
-use api::{ScrollLocation, ScrollNodeState, WorldPoint};
+use api::{LayerVector2D, PipelineId, ScrollClamping, ScrollEventPhase, ScrollLocation};
+use api::{ScrollNodeState, WorldPoint};
 use clip::{ClipChain, ClipSourcesHandle, ClipStore};
 use clip_scroll_node::{ClipScrollNode, NodeType, ScrollFrameInfo, StickyFrameInfo};
 use gpu_cache::GpuCache;
@@ -13,7 +13,7 @@ use internal_types::{FastHashMap, FastHashSet};
 use print_tree::{PrintTree, PrintTreePrinter};
 use resource_cache::ResourceCache;
 use scene::SceneProperties;
-use util::TransformOrOffset;
+use util::{LayerFastTransform, LayerToWorldFastTransform};
 
 pub type ScrollStates = FastHashMap<ExternalScrollId, ScrollFrameInfo>;
 
@@ -88,7 +88,7 @@ pub struct ClipScrollTree {
 
 #[derive(Clone)]
 pub struct TransformUpdateState {
-    pub parent_reference_frame_transform: LayerToWorldTransform,
+    pub parent_reference_frame_transform: LayerToWorldFastTransform,
     pub parent_accumulated_scroll_offset: LayerVector2D,
     pub nearest_scrolling_ancestor_offset: LayerVector2D,
     pub nearest_scrolling_ancestor_viewport: LayerRect,
@@ -103,7 +103,7 @@ pub struct TransformUpdateState {
     pub current_coordinate_system_id: CoordinateSystemId,
 
     /// Transform from the coordinate system that started this compatible coordinate system.
-    pub coordinate_system_relative_transform: TransformOrOffset,
+    pub coordinate_system_relative_transform: LayerFastTransform,
 
     /// True if this node is transformed by an invertible transform.  If not, display items
     /// transformed by this node will not be displayed and display items not transformed by this
@@ -329,17 +329,13 @@ impl ClipScrollTree {
 
         let root_reference_frame_id = self.root_reference_frame_id();
         let mut state = TransformUpdateState {
-            parent_reference_frame_transform: LayerToWorldTransform::create_translation(
-                pan.x,
-                pan.y,
-                0.0,
-            ),
+            parent_reference_frame_transform: LayerVector2D::new(pan.x, pan.y).into(),
             parent_accumulated_scroll_offset: LayerVector2D::zero(),
             nearest_scrolling_ancestor_offset: LayerVector2D::zero(),
             nearest_scrolling_ancestor_viewport: LayerRect::zero(),
             parent_clip_chain_index: ClipChainIndex(0),
             current_coordinate_system_id: CoordinateSystemId::root(),
-            coordinate_system_relative_transform: TransformOrOffset::zero(),
+            coordinate_system_relative_transform: LayerFastTransform::identity(),
             invertible: true,
         };
         let mut next_coordinate_system_id = state.current_coordinate_system_id.next();
