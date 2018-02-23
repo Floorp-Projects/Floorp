@@ -55,7 +55,6 @@ module.exports = {
     "files": [
       "browser/components/**/*.jsm",
       "browser/extensions/**/*.jsm",
-      "services/sync/**/*.jsm",
       "toolkit/**/*.jsm",
     ],
     "rules": {
