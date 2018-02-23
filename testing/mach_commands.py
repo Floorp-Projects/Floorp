@@ -111,6 +111,7 @@ class Test(MachCommandBase):
         both harnesses will be invoked.
         """
         from mozlog.commandline import setup_logging
+        from mozlog.handlers import StreamHandler
         from moztest.resolve import get_suite_definition, TestResolver, TEST_SUITES
 
         resolver = self._spawn(TestResolver)
@@ -125,7 +126,9 @@ class Test(MachCommandBase):
         default_level = self._mach_context.settings['test']['level']
         log = setup_logging('mach-test', log_args, {default_format: sys.stdout},
                             {'level': default_level})
-        log.handlers[0].formatter.inner.summary_on_shutdown = True
+        for handler in log.handlers:
+            if isinstance(handler, StreamHandler):
+                handler.formatter.inner.summary_on_shutdown = True
 
         status = None
         for suite_name in run_suites:
