@@ -392,13 +392,15 @@ AstDecodeGetBlockRef(AstDecodeContext& c, uint32_t depth, AstRef* ref)
 static bool
 AstDecodeBrTable(AstDecodeContext& c)
 {
+    bool unreachable = c.iter().currentBlockHasPolymorphicBase();
+
     Uint32Vector depths;
     uint32_t defaultDepth;
     ExprType type;
     if (!c.iter().readBrTable(&depths, &defaultDepth, &type, nullptr, nullptr))
         return false;
 
-    if (c.iter().currentBlockHasPolymorphicBase())
+    if (unreachable)
         return true;
 
     AstRefVector table(c.lifo);
