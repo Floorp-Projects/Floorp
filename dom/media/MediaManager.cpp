@@ -1271,7 +1271,8 @@ public:
 
                   p->Resolve(false);
                 },
-                [p, weakWindow = nsWeakPtr(do_GetWeakReference(aWindow))]
+                [p, weakWindow = nsWeakPtr(do_GetWeakReference(aWindow)),
+                 listener = mListener, trackID = mTrackID]
                 (Maybe<nsString>&& aBadConstraint)
                 {
                   if (!MediaManager::Exists()) {
@@ -1282,15 +1283,17 @@ public:
                     return;
                   }
 
-                  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(weakWindow);
                   if (aBadConstraint.isNothing()) {
-                    auto error = MakeRefPtr<MediaStreamError>(
-                        window,
-                        NS_LITERAL_STRING("InternalError"));
-                    p->Reject(error);
+                    // Unexpected error during reconfig that left the source
+                    // stopped. We resolve the promise and end the track.
+                    if (listener) {
+                      listener->StopTrack(trackID);
+                    }
+                    p->Resolve(false);
                     return;
                   }
 
+                  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(weakWindow);
                   auto error = MakeRefPtr<MediaStreamError>(
                       window,
                       NS_LITERAL_STRING("OverConstrainedError"),
