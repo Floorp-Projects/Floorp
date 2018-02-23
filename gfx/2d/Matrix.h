@@ -2061,6 +2061,26 @@ public:
   }
 
   template <typename NewTargetUnits>
+  bool operator==(const Matrix4x4TypedFlagged<TargetUnits, NewTargetUnits> &aMatrix) const
+  {
+    if (mType == MatrixType::Identity && aMatrix.mType == MatrixType::Identity) {
+      return true;
+    }
+    // Depending on the usage it may make sense to compare more flags.
+    return Parent::operator==(aMatrix);
+  }
+
+  template <typename NewTargetUnits>
+  bool operator!=(const Matrix4x4TypedFlagged<TargetUnits, NewTargetUnits> &aMatrix) const
+  {
+    if (mType == MatrixType::Identity && aMatrix.mType == MatrixType::Identity) {
+      return false;
+    }
+    // Depending on the usage it may make sense to compare more flags.
+    return Parent::operator!=(aMatrix);
+  }
+
+  template <typename NewTargetUnits>
   Matrix4x4TypedFlagged<SourceUnits, NewTargetUnits> operator*(const Matrix4x4Typed<TargetUnits, NewTargetUnits> &aMatrix) const
   {
     if (mType == MatrixType::Identity) {
