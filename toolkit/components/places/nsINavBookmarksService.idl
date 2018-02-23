@@ -402,28 +402,6 @@ interface nsINavBookmarksService : nsISupports
                          [optional] in unsigned short aSource);
 
   /**
-   * Gets an undo-able transaction for removing a folder from the bookmarks
-   * tree.
-   *  @param aItemId
-   *         The id of the folder to remove.
-   *  @param [optional] aSource
-   *         The change source, forwarded to all bookmark observers. Defaults
-   *         to SOURCE_DEFAULT.
-   *  @return An object implementing nsITransaction that can be used to undo
-   *          or redo the action.
-   *
-   * This method exists because complex delete->undo operations rely on
-   * recreated folders to have the same ID they had before they were deleted,
-   * so that any other items deleted in different transactions can be
-   * re-inserted correctly. This provides a safe encapsulation of this
-   * functionality without exposing the ability to recreate folders with
-   * specific IDs (potentially dangerous if abused by other code!) in the
-   * public API.
-   */
-  nsITransaction getRemoveFolderTransaction(in long long aItemId,
-                                            [optional] in unsigned short aSource);
-
-  /**
    * Convenience function for container services.  Removes
    * all children of the given folder.
    *  @param aItemId
