@@ -17,7 +17,7 @@
 #include "woff2/decode.h"
 
 // The OpenType Font File
-// http://www.microsoft.com/typography/otspec/cmap.htm
+// http://www.microsoft.com/typography/otspec/otff.htm
 
 #include "cff.h"
 #include "cmap.h"
@@ -686,7 +686,7 @@ bool ProcessGeneric(ots::FontFile *header,
     }
   }
 
-  if (font->GetTable(OTS_TAG_CFF)) {
+  if (font->GetTable(OTS_TAG_CFF) || font->GetTable(OTS_TAG('C', 'F', 'F', '2'))) {
     // font with PostScript glyph
     if (font->version != OTS_TAG('O','T','T','O')) {
       return OTS_FAILURE_MSG_HDR("wrong font version for PostScript glyph data");
