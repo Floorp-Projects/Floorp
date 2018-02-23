@@ -3602,12 +3602,18 @@ MediaManager::MediaCaptureWindowState(nsIDOMWindow* aCapturedWindow,
       [&camera, &microphone, &screen, &window, &application, &browser]
       (GetUserMediaWindowListener* aListener)
       {
-        camera = aListener->CapturingSource(MediaSourceEnum::Camera);
-        microphone = aListener->CapturingSource(MediaSourceEnum::Microphone);
-        screen = aListener->CapturingSource(MediaSourceEnum::Screen);
-        window = aListener->CapturingSource(MediaSourceEnum::Window);
-        application = aListener->CapturingSource(MediaSourceEnum::Application);
-        browser = aListener->CapturingSource(MediaSourceEnum::Browser);
+        camera = CombineCaptureState(
+            camera, aListener->CapturingSource(MediaSourceEnum::Camera));
+        microphone = CombineCaptureState(
+            microphone, aListener->CapturingSource(MediaSourceEnum::Microphone));
+        screen = CombineCaptureState(
+            screen, aListener->CapturingSource(MediaSourceEnum::Screen));
+        window = CombineCaptureState(
+            window, aListener->CapturingSource(MediaSourceEnum::Window));
+        application = CombineCaptureState(
+            application, aListener->CapturingSource(MediaSourceEnum::Application));
+        browser = CombineCaptureState(
+            browser, aListener->CapturingSource(MediaSourceEnum::Browser));
       });
   }
 
