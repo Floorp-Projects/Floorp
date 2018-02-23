@@ -51,7 +51,7 @@ let REQUEST_1 = {
     requestPayerName: false,
     requestPayerEmail: false,
     requestPayerPhone: false,
-    requestShipping: false,
+    requestShipping: true,
     shippingType: "shipping",
   },
 };
@@ -63,7 +63,7 @@ let REQUEST_2 = {
   paymentMethods: [],
   paymentDetails: {
     id: "",
-    totalItem: {label: "Demo total", amount: {currency: "CAD", value: "25.75"}, pending: false},
+    totalItem: {label: "", amount: {currency: "CAD", value: "25.75"}, pending: false},
     displayItems: [
       {
         label: "Triangle",
@@ -115,6 +115,28 @@ let REQUEST_2 = {
     requestPayerName: false,
     requestPayerEmail: false,
     requestPayerPhone: false,
+    requestShipping: true,
+    shippingType: "shipping",
+  },
+};
+
+let REQUEST_CONTACT_NO_SHIPPING = {
+  tabId: 10,
+  topLevelPrincipal: {URI: {displayHost: "example.org"}},
+  requestId: "8288347a-ccec-4190-b4b1-673dbc709738",
+  paymentMethods: [],
+  paymentDetails: {
+    id: "",
+    totalItem: {label: "", amount: {currency: "EUR", value: "1234.56"}, pending: false},
+    displayItems: [],
+    shippingOptions: [],
+    modifiers: null,
+    error: "",
+  },
+  paymentOptions: {
+    requestPayerName: true,
+    requestPayerEmail: true,
+    requestPayerPhone: true,
     requestShipping: false,
     shippingType: "shipping",
   },
@@ -226,12 +248,40 @@ let buttonActions = {
     paymentDialog.setStateFromParent({savedBasicCards: BASIC_CARDS_1});
   },
 
+  setChangesAllowed() {
+    requestStore.setState({
+      changesPrevented: false,
+    });
+  },
+
+  setChangesPrevented() {
+    requestStore.setState({
+      changesPrevented: true,
+    });
+  },
+
   setRequest1() {
     requestStore.setState({request: REQUEST_1});
   },
 
   setRequest2() {
     requestStore.setState({request: REQUEST_2});
+  },
+
+  setRequestContactNoShipping() {
+    requestStore.setState({request: REQUEST_CONTACT_NO_SHIPPING});
+  },
+
+  setStateDefault() {
+    requestStore.setState({
+      completionState: "initial",
+    });
+  },
+
+  setStateProcessing() {
+    requestStore.setState({
+      completionState: "processing",
+    });
   },
 };
 
