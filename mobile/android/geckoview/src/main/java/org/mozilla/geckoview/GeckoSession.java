@@ -459,12 +459,7 @@ public class GeckoSession extends LayerSession
     }
 
     public GeckoSession(final GeckoSessionSettings settings) {
-        if (settings == null) {
-            mSettings = new GeckoSessionSettings(this);
-        } else {
-            mSettings = new GeckoSessionSettings(settings, this);
-        }
-
+        mSettings = new GeckoSessionSettings(settings, this);
         mListener.registerListeners();
     }
 
@@ -786,6 +781,10 @@ public class GeckoSession extends LayerSession
     */
     public void setScrollListener(ScrollListener listener) {
         mScrollHandler.setListener(listener, this);
+    }
+
+    public ScrollListener getScrollListener() {
+        return mScrollHandler.getListener();
     }
 
     /**
