@@ -167,12 +167,6 @@ constants_jar.generated_sources = [
     'generated/preprocessed/org/mozilla/gecko/AppConstants.java',
     'generated/preprocessed/org/mozilla/gecko/MmaConstants.java',
 ]
-constants_jar.extra_jars = [
-    CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
-    CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
-    CONFIG['ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB'],
-    CONFIG['ANDROID_APPCOMPAT_V7_AAR_LIB'],
-]
 
 if CONFIG['MOZ_INSTALL_TRACKING']:
     constants_jar.sources += ['java/org/mozilla/gecko/' + x for x in [
@@ -219,7 +213,6 @@ mgjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x for x in 
 ]]
 mgjar.generated_sources = [] # Keep it this way.
 mgjar.extra_jars += [
-    CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
     'constants.jar',
 ]
 mgjar.javac_flags += ['-Xlint:all']
@@ -263,10 +256,6 @@ gujar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x for x in 
     'util/WindowUtils.java',
 ]]
 gujar.extra_jars = [
-    CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
-    CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
-    CONFIG['ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB'],
-    CONFIG['ANDROID_PALETTE_V7_AAR_LIB'],
     'constants.jar',
     'gecko-mozglue.jar',
 ]
@@ -279,10 +268,6 @@ stjar.javac_flags = ['-Xlint:none']
 services_jar = add_java_jar('services')
 services_jar.sources += sync_java_files
 services_jar.extra_jars = [
-    CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
-    CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
-    CONFIG['ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB'],
-    CONFIG['ANDROID_APPCOMPAT_V7_AAR_LIB'],
     'constants.jar',
     'gecko-R.jar',
     'gecko-mozglue.jar',
@@ -427,10 +412,6 @@ if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:
 
 
 gvjar.extra_jars += [
-    CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
-    CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
-    CONFIG['ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB'],
-    CONFIG['ANDROID_PALETTE_V7_AAR_LIB'],
     'constants.jar',
     'gecko-mozglue.jar',
     'gecko-util.jar',
@@ -986,9 +967,6 @@ gbjar.sources += ['../app/src/photon/java/org/mozilla/gecko/' + x for x in [
 android_package_dir = CONFIG['ANDROID_PACKAGE_NAME'].replace('.', '/')
 gbjar.generated_sources = [] # Keep it this way.
 gbjar.extra_jars += [
-    CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
-    CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
-    CONFIG['ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB'],
     'constants.jar',
 ]
 if CONFIG['MOZ_CRASHREPORTER']:
@@ -1035,13 +1013,6 @@ gbjar.extra_jars += [
     'services.jar',
 ]
 
-moz_native_devices_jars = [
-    CONFIG['ANDROID_MEDIAROUTER_V7_AAR_LIB'],
-    CONFIG['ANDROID_MEDIAROUTER_V7_AAR_INTERNAL_LIB'],
-    CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR_LIB'],
-    CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB'],
-    CONFIG['ANDROID_PLAY_SERVICES_CAST_AAR_LIB'],
-]
 moz_native_devices_sources = ['java/org/mozilla/gecko/' + x for x in [
     'ChromeCastDisplay.java',
     'ChromeCastPlayer.java',
@@ -1052,54 +1023,7 @@ moz_native_devices_sources = ['java/org/mozilla/gecko/' + x for x in [
     'RemotePresentationService.java',
 ]]
 if CONFIG['MOZ_NATIVE_DEVICES']:
-    gbjar.extra_jars += moz_native_devices_jars
     gbjar.sources += moz_native_devices_sources
-
-    if CONFIG['ANDROID_MEDIAROUTER_V7_AAR']:
-        resjar.generated_sources += ['generated/android/support/v7/mediarouter/R.java']
-
-    if CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR']:
-        resjar.generated_sources += ['generated/com/google/android/gms/base/R.java']
-
-    if CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR']:
-        resjar.generated_sources += ['generated/com/google/android/gms/R.java']
-
-    if CONFIG['ANDROID_PLAY_SERVICES_CAST_AAR']:
-        resjar.generated_sources += ['generated/com/google/android/gms/cast/R.java']
-
-if CONFIG['MOZ_ANDROID_GCM']:
-    gbjar.extra_jars += [
-        CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR_LIB'],
-        CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB'],
-        CONFIG['ANDROID_PLAY_SERVICES_GCM_AAR_LIB'],
-        CONFIG['ANDROID_PLAY_SERVICES_MEASUREMENT_AAR_LIB'],
-    ]
-
-    if CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR']:
-        resjar.generated_sources += ['generated/com/google/android/gms/R.java']
-
-    if CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR']:
-        resjar.generated_sources += ['generated/com/google/android/gms/R.java']
-
-if CONFIG['MOZ_INSTALL_TRACKING']:
-    gbjar.extra_jars += [
-        CONFIG['ANDROID_PLAY_SERVICES_ADS_AAR_LIB'],
-        CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB'],
-    ]
-
-    if CONFIG['ANDROID_PLAY_SERVICES_ADS_AAR']:
-        resjar.generated_sources += ['generated/com/google/android/gms/ads/R.java']
-
-    if CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR']:
-        resjar.generated_sources += ['generated/com/google/android/gms/R.java']
-
-gbjar.extra_jars += [CONFIG['ANDROID_APPCOMPAT_V7_AAR_LIB']]
-gbjar.extra_jars += [CONFIG['ANDROID_SUPPORT_VECTOR_DRAWABLE_AAR_LIB']]
-gbjar.extra_jars += [CONFIG['ANDROID_ANIMATED_VECTOR_DRAWABLE_AAR_LIB']]
-gbjar.extra_jars += [CONFIG['ANDROID_CARDVIEW_V7_AAR_LIB']]
-gbjar.extra_jars += [CONFIG['ANDROID_DESIGN_AAR_LIB']]
-gbjar.extra_jars += [CONFIG['ANDROID_RECYCLERVIEW_V7_AAR_LIB']]
-gbjar.extra_jars += [CONFIG['ANDROID_CUSTOMTABS_AAR_LIB']]
 
 gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough,-cast', '-J-Xmx512m', '-J-Xms128m']
 
@@ -1145,11 +1069,6 @@ gtjar.sources += [ thirdparty_source_dir + f for f in [
     'com/squareup/picasso/UrlConnectionDownloader.java',
     'com/squareup/picasso/Utils.java'
 ] ]
-gtjar.extra_jars = [
-    CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
-    CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
-    CONFIG['ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB'],
-]
 
 if not CONFIG['MOZILLA_OFFICIAL']:
     gtjar.sources += [ thirdparty_source_dir + f for f in [
@@ -1301,14 +1220,6 @@ if CONFIG['MOZ_ANDROID_MMA']:
         'com/leanplum/views/CloseButton.java',
     ] ]
     lpjar.extra_jars += [
-        CONFIG['ANDROID_APPCOMPAT_V7_AAR_LIB'],
-        CONFIG['ANDROID_PLAY_SERVICES_ADS_AAR_LIB'],
-        CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB'],
-        CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR_LIB'],
-        CONFIG['ANDROID_PLAY_SERVICES_GCM_AAR_LIB'],
-        CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
-        CONFIG['ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB'],
-        CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
         'sync-thirdparty.jar',
     ]
 
@@ -1337,10 +1248,6 @@ if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:
 
     exoplayer2_jar.javac_flags += [
         '-Xlint:all,-serial,-rawtypes,-unchecked,-fallthrough',
-    ]
-
-    exoplayer2_jar.extra_jars += [
-        CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
     ]
 
     exoplayer2_jar.sources += [geckoview_thirdparty_source_dir + 'java/com/google/android/exoplayer2/' + x for x in [
