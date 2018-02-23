@@ -152,7 +152,7 @@ PlacesSyncUtils.history = Object.freeze({
   changeGuid(uri, guid) {
       let canonicalURL = PlacesUtils.SYNC_BOOKMARK_VALIDATORS.url(uri);
       let validatedGuid = PlacesUtils.BOOKMARK_VALIDATORS.guid(guid);
-      return PlacesUtils.withConnectionWrapper("HistorySyncUtils: changeGuid",
+      return PlacesUtils.withConnectionWrapper("PlacesSyncUtils.history: changeGuid",
         async function(db) {
           await db.executeCached(`
             UPDATE moz_places
