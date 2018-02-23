@@ -617,16 +617,6 @@ public:
   inline nsIContent* GetFlattenedTreeParent() const;
 
   /**
-   * Get the flattened tree parent for NAC holding from the document element,
-   * from the point of view of the style system.
-   *
-   * Document-level anonymous content holds from the document element, even
-   * though they should not be treated as such (they should be parented to the
-   * document instead, and shouldn't inherit from the document element).
-   */
-  nsINode* GetFlattenedTreeParentForDocumentElementNAC() const;
-
-  /**
    * API to check if this is a link that's traversed in response to user input
    * (e.g. a click event). Specializations for HTML/SVG/generic XML allow for
    * different types of link in different types of content.
