@@ -467,11 +467,6 @@ var gMainPane = {
       OS.File.stat(ignoreSeparateProfile).then(() => separateProfileModeCheckbox.checked = false,
         () => separateProfileModeCheckbox.checked = true);
 
-      if (!Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
-        document.getElementById("sync-dev-edition-root").hidden = true;
-        return;
-      }
-
       fxAccounts.getSignedInUser().then(data => {
         document.getElementById("getStarted").selectedIndex = data ? 1 : 0;
       })
