@@ -57,7 +57,6 @@
 #include "nsCheapSets.h"
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/UniquePtr.h"
-#include "nsRefreshDriver.h"
 
 class nsIArray;
 class nsIBaseWindow;
@@ -89,8 +88,6 @@ class nsWindowSizes;
 class IdleRequestExecutor;
 
 class DialogValueHolder;
-
-class PromiseDocumentFlushedResolver;
 
 namespace mozilla {
 class AbstractThread;
@@ -214,8 +211,7 @@ class nsGlobalWindowInner : public mozilla::dom::EventTarget,
                             public nsIScriptObjectPrincipal,
                             public nsSupportsWeakReference,
                             public nsIInterfaceRequestor,
-                            public PRCListStr,
-                            public nsAPostRefreshObserver
+                            public PRCListStr
 {
 public:
   typedef mozilla::TimeStamp TimeStamp;
@@ -948,12 +944,6 @@ public:
                        mozilla::dom::Element* aPanel,
                        mozilla::ErrorResult& aError);
 
-  already_AddRefed<mozilla::dom::Promise>
-  PromiseDocumentFlushed(mozilla::dom::PromiseDocumentFlushedCallback& aCallback,
-                         mozilla::ErrorResult& aError);
-
-  void DidRefresh() override;
-
   void GetDialogArgumentsOuter(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval,
                                nsIPrincipal& aSubjectPrincipal,
                                mozilla::ErrorResult& aError);
@@ -1279,9 +1269,6 @@ private:
     mChromeFields.mGroupMessageManagers.Clear();
   }
 
-  void CallDocumentFlushedResolvers();
-  void CancelDocumentFlushedResolvers();
-
 public:
   // Dispatch a runnable related to the global.
   virtual nsresult Dispatch(mozilla::TaskCategory aCategory,
@@ -1428,14 +1415,6 @@ protected:
   // currently enabled on this window.
   bool                          mAreDialogsEnabled;
 
-  // This flag keeps track of whether this window is currently
-  // observing DidRefresh notifications from the refresh driver.
-  bool                          mObservingDidRefresh;
-  // This flag keeps track of whether or not we're going through
-  // promiseDocumentFlushed resolvers. When true, promiseDocumentFlushed
-  // cannot be called.
-  bool                          mIteratingDocumentFlushedResolvers;
-
   nsTArray<uint32_t> mEnabledSensors;
 
 #if defined(MOZ_WIDGET_ANDROID)
@@ -1461,8 +1440,6 @@ protected:
   mozilla::UniquePtr<mozilla::dom::ClientSource> mClientSource;
 
   nsTArray<RefPtr<mozilla::dom::Promise>> mPendingPromises;
-
-  nsTArray<mozilla::UniquePtr<PromiseDocumentFlushedResolver>> mDocumentFlushedResolvers;
 
   static InnerWindowByIdTable* sInnerWindowsById;
 

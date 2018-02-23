@@ -495,8 +495,8 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         // binding for the <panelmultiview> element may still be disconnected.
         // In this case, give the layout code a chance to run.
         if (!this.connected) {
-          await this.window.promiseDocumentFlushed(() => {});
-
+          await BrowserUtils.promiseLayoutFlushed(this.document, "layout",
+                                                  () => {});
           // The XBL binding must be connected at this point. If this is not the
           // case, the calling code should be updated to unhide the panel.
           if (!this.connected) {
@@ -788,7 +788,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       return;
     }
 
-    const { window } = this;
+    const {window, document} = this;
 
     let nextPanelView = PanelView.forNode(viewNode);
     let prevPanelView = PanelView.forNode(previousViewNode);
@@ -847,7 +847,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       // description elements it contains.
       nextPanelView.descriptionHeightWorkaround();
 
-      viewRect = await window.promiseDocumentFlushed(() => {
+      viewRect = await BrowserUtils.promiseLayoutFlushed(this.document, "layout", () => {
         return this._dwu.getBoundsWithoutFlushing(viewNode);
       });
 
@@ -894,7 +894,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     // sliding animation with smaller views.
     viewNode.style.width = viewRect.width + "px";
 
-    await window.promiseDocumentFlushed(() => {});
+    await BrowserUtils.promiseLayoutFlushed(document, "layout", () => {});
 
     // Kick off the transition!
     details.phase = TRANSITION_PHASES.TRANSITION;
@@ -1000,7 +1000,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       // We force 'display: none' on the previous view node to make sure that it
       // doesn't cause an annoying flicker whilst resetting the styles above.
       previousViewNode.style.display = "none";
-      await this.window.promiseDocumentFlushed(() => {});
+      await BrowserUtils.promiseLayoutFlushed(this.document, "layout", () => {});
       previousViewNode.style.removeProperty("display");
     }
   }
