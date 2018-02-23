@@ -12,8 +12,6 @@ ChromeUtils.defineModuleGetter(this, "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Pocket",
-  "chrome://pocket/content/Pocket.jsm");
 
 const LINK_BLOCKED_EVENT = "newtab-linkBlocked";
 
@@ -262,6 +260,21 @@ class PlacesFeed {
     win.openLinkIn(action.data.url, where || win.whereToOpenLink(event), params);
   }
 
+  async saveToPocket(site, browser) {
+    const {url, title} = site;
+    try {
+      let data = await NewTabUtils.activityStreamLinks.addPocketEntry(url, title, browser);
+      if (data) {
+        this.store.dispatch(ac.BroadcastToContent({
+          type: at.PLACES_SAVED_TO_POCKET,
+          data: {url, title, pocket_id: data.item.item_id}
+        }));
+      }
+    } catch (err) {
+      Cu.reportError(err);
+    }
+  }
+
   onAction(action) {
     switch (action.type) {
       case at.INIT:
@@ -271,9 +284,11 @@ class PlacesFeed {
       case at.UNINIT:
         this.removeObservers();
         break;
-      case at.BLOCK_URL:
-        NewTabUtils.activityStreamLinks.blockURL({url: action.data});
+      case at.BLOCK_URL: {
+        const {url, pocket_id} = action.data;
+        NewTabUtils.activityStreamLinks.blockURL({url, pocket_id});
         break;
+      }
       case at.BOOKMARK_URL:
         NewTabUtils.activityStreamLinks.addBookmark(action.data, action._target.browser);
         break;
@@ -281,10 +296,10 @@ class PlacesFeed {
         NewTabUtils.activityStreamLinks.deleteBookmark(action.data);
         break;
       case at.DELETE_HISTORY_URL: {
-        const {url, forceBlock} = action.data;
+        const {url, forceBlock, pocket_id} = action.data;
         NewTabUtils.activityStreamLinks.deleteHistoryEntry(url);
         if (forceBlock) {
-          NewTabUtils.activityStreamLinks.blockURL({url});
+          NewTabUtils.activityStreamLinks.blockURL({url, pocket_id});
         }
         break;
       }
@@ -295,7 +310,7 @@ class PlacesFeed {
         this.openLink(action, "window", true);
         break;
       case at.SAVE_TO_POCKET:
-        Pocket.savePage(action._target.browser, action.data.site.url, action.data.site.title);
+        this.saveToPocket(action.data.site, action._target.browser);
         break;
       case at.OPEN_LINK: {
         this.openLink(action);

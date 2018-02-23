@@ -20,7 +20,7 @@ const BUILT_IN_SECTIONS = {
     id: "topstories",
     pref: {
       titleString: {id: "header_recommended_by", values: {provider: options.provider_name}},
-      descString: {id: options.provider_description || "pocket_feedback_body"},
+      descString: {id: options.provider_description || "pocket_description"},
       nestedPrefs: options.show_spocs ? [{
         name: "showSponsored",
         titleString: {id: "settings_pane_topstories_options_sponsored"},
@@ -40,13 +40,9 @@ const BUILT_IN_SECTIONS = {
       },
       button: {id: options.disclaimer_buttontext || "section_disclaimer_topstories_buttontext"}
     },
+    privacyNoticeURL: options.privacy_notice_link || "https://www.mozilla.org/privacy/firefox/#suggest-relevant-content",
     maxRows: 1,
-    availableContextMenuOptions: ["CheckBookmark", "SaveToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"],
-    infoOption: {
-      header: {id: options.provider_header || "pocket_feedback_header"},
-      body: {id: options.provider_description || "pocket_feedback_body"},
-      link: {href: options.info_link, id: "section_info_privacy_notice"}
-    },
+    availableLinkMenuOptions: ["CheckBookmarkOrArchive", "CheckSavedToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"],
     emptyState: {
       message: {id: "topstories_empty_state", values: {provider: options.provider_name}},
       icon: "check"
@@ -66,11 +62,7 @@ const BUILT_IN_SECTIONS = {
     icon: "highlights",
     title: {id: "header_highlights"},
     maxRows: 3,
-    availableContextMenuOptions: ["CheckBookmark", "SaveToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"],
-    infoOption: {
-      header: {id: "settings_pane_highlights_header"},
-      body: {id: "settings_pane_highlights_body2"}
-    },
+    availableLinkMenuOptions: ["CheckBookmarkOrArchive", "CheckSavedToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "CheckDeleteHistoryOrEmpty"],
     emptyState: {
       message: {id: "highlights_empty_state"},
       icon: "highlights"
@@ -131,7 +123,7 @@ const SectionsManager = {
     this.addSection(section.id, Object.assign(section, {options}));
   },
   addSection(id, options) {
-    this.updateSectionContextMenuOptions(options);
+    this.updateLinkMenuOptions(options);
     this.sections.set(id, options);
     this.emit(this.ADD_SECTION, id, options);
   },
@@ -151,7 +143,7 @@ const SectionsManager = {
     this.sections.forEach((section, id) => this.updateSection(id, section, true));
   },
   updateSection(id, options, shouldBroadcast) {
-    this.updateSectionContextMenuOptions(options);
+    this.updateLinkMenuOptions(options);
     if (this.sections.has(id)) {
       const optionsWithDedupe = Object.assign({}, options, {dedupeConfigurations: this._dedupeConfiguration});
       this.sections.set(id, Object.assign(this.sections.get(id), options));
@@ -196,9 +188,9 @@ const SectionsManager = {
    *
    * @param options section options
    */
-  updateSectionContextMenuOptions(options) {
-    if (options.availableContextMenuOptions) {
-      options.contextMenuOptions = options.availableContextMenuOptions.filter(
+  updateLinkMenuOptions(options) {
+    if (options.availableLinkMenuOptions) {
+      options.contextMenuOptions = options.availableLinkMenuOptions.filter(
         o => !this.CONTEXT_MENU_PREFS[o] || Services.prefs.getBoolPref(this.CONTEXT_MENU_PREFS[o]));
     }
   },

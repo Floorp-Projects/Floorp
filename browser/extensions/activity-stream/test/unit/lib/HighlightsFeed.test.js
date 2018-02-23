@@ -12,6 +12,7 @@ const FAKE_IMAGE = "data123";
 describe("Highlights Feed", () => {
   let HighlightsFeed;
   let SECTION_ID;
+  let MANY_EXTRA_LENGTH;
   let feed;
   let globals;
   let sandbox;
@@ -26,7 +27,13 @@ describe("Highlights Feed", () => {
   beforeEach(() => {
     globals = new GlobalOverrider();
     sandbox = globals.sandbox;
-    fakeNewTabUtils = {activityStreamLinks: {getHighlights: sandbox.spy(() => Promise.resolve(links))}};
+    fakeNewTabUtils = {
+      activityStreamLinks: {
+        getHighlights: sandbox.spy(() => Promise.resolve(links)),
+        deletePocketEntry: sandbox.spy(() => Promise.resolve({})),
+        archivePocketEntry: sandbox.spy(() => Promise.resolve({}))
+      }
+    };
     sectionsManagerStub = {
       onceInitialized: sinon.stub().callsFake(callback => callback()),
       enableSection: sinon.spy(),
@@ -49,7 +56,7 @@ describe("Highlights Feed", () => {
 
     globals.set("NewTabUtils", fakeNewTabUtils);
     globals.set("PageThumbs", fakePageThumbs);
-    ({HighlightsFeed, SECTION_ID} = injector({
+    ({HighlightsFeed, SECTION_ID, MANY_EXTRA_LENGTH} = injector({
       "lib/FilterAdult.jsm": {filterAdult: filterAdultStub},
       "lib/ShortURL.jsm": {shortURL: shortURLStub},
       "lib/SectionsManager.jsm": {SectionsManager: sectionsManagerStub},
@@ -61,7 +68,7 @@ describe("Highlights Feed", () => {
       dispatch: sinon.spy(),
       getState() { return this.state; },
       state: {
-        Prefs: {values: {filterAdult: false}},
+        Prefs: {values: {"filterAdult": false, "section.highlights.includePocket": false}},
         TopSites: {
           initialized: true,
           rows: Array(12).fill(null).map((v, i) => ({url: `http://www.topsite${i}.com`}))
@@ -232,6 +239,31 @@ describe("Highlights Feed", () => {
       assert.equal(highlights[0].url, links[0].url);
       assert.equal(highlights[1].url, links[2].url);
     });
+    it("should take both a bookmark and a pocket of the same hostname", async () => {
+      links = [
+        {url: "https://site.com/bookmark", type: "bookmark"},
+        {url: "https://site.com/pocket", type: "pocket"}
+      ];
+
+      const highlights = await fetchHighlights();
+
+      assert.equal(highlights.length, 2);
+      assert.equal(highlights[0].url, links[0].url);
+      assert.equal(highlights[1].url, links[1].url);
+    });
+    it("should includePocket pocket items when pref is true", async () => {
+      feed.store.state.Prefs.values["section.highlights.includePocket"] = true;
+      sandbox.spy(feed.linksCache, "request");
+      await feed.fetchHighlights();
+
+      assert.calledWith(feed.linksCache.request, {numItems: MANY_EXTRA_LENGTH, excludePocket: false});
+    });
+    it("should not includePocket pocket items when pref is false", async () => {
+      sandbox.spy(feed.linksCache, "request");
+      await feed.fetchHighlights();
+
+      assert.calledWith(feed.linksCache.request, {numItems: MANY_EXTRA_LENGTH, excludePocket: true});
+    });
     it("should set type to bookmark if there is a bookmarkGuid", async () => {
       links = [{url: "https://mozilla.org", type: "history", bookmarkGuid: "1234567890"}];
 
@@ -394,12 +426,76 @@ describe("Highlights Feed", () => {
 
       assert.calledOnce(feed.linksCache.expire);
     });
+    it("should fetch highlights and expire the cache on PLACES_SAVED_TO_POCKET", async () => {
+      await feed.fetchHighlights();
+      feed.fetchHighlights = sinon.spy();
+      sandbox.stub(feed.linksCache, "expire");
+
+      feed.onAction({type: at.PLACES_SAVED_TO_POCKET});
+      assert.calledOnce(feed.fetchHighlights);
+      assert.calledWith(feed.fetchHighlights, {broadcast: false});
+      assert.calledOnce(feed.linksCache.expire);
+    });
     it("should call fetchHighlights with broadcast false on TOP_SITES_UPDATED", () => {
       sandbox.stub(feed, "fetchHighlights");
       feed.onAction({type: at.TOP_SITES_UPDATED});
 
       assert.calledOnce(feed.fetchHighlights);
       assert.calledWithExactly(feed.fetchHighlights, {broadcast: false});
+    });
+    it("should call deleteFromPocket on DELETE_FROM_POCKET", () => {
+      sandbox.stub(feed, "deleteFromPocket");
+      feed.onAction({type: at.DELETE_FROM_POCKET, data: {pocket_id: 12345}});
+
+      assert.calledOnce(feed.deleteFromPocket);
+      assert.calledWithExactly(feed.deleteFromPocket, 12345);
+    });
+    it("should call fetchHighlights when deleting from Pocket", async () => {
+      feed.fetchHighlights = sinon.spy();
+      await feed.deleteFromPocket(12345);
+
+      assert.calledOnce(feed.fetchHighlights);
+      assert.calledWithExactly(feed.fetchHighlights, {broadcast: true});
+    });
+    it("should catch if deletePocketEntry throws", async () => {
+      sandbox.spy(global.Cu, "reportError");
+      fakeNewTabUtils.activityStreamLinks.deletePocketEntry = sandbox.stub().rejects("not ok");
+      await feed.deleteFromPocket(12345);
+
+      assert.calledOnce(global.Cu.reportError);
+    });
+    it("should call NewTabUtils.deletePocketEntry when deleting from Pocket", async () => {
+      await feed.deleteFromPocket(12345);
+
+      assert.calledOnce(global.NewTabUtils.activityStreamLinks.deletePocketEntry);
+      assert.calledWith(global.NewTabUtils.activityStreamLinks.deletePocketEntry, 12345);
+    });
+    it("should call archiveFromPocket on ARCHIVE_FROM_POCKET", () => {
+      sandbox.stub(feed, "archiveFromPocket");
+      feed.onAction({type: at.ARCHIVE_FROM_POCKET, data: {pocket_id: 12345}});
+
+      assert.calledOnce(feed.archiveFromPocket);
+      assert.calledWithExactly(feed.archiveFromPocket, 12345);
+    });
+    it("should call fetchHighlights when archiving from Pocket", async () => {
+      feed.fetchHighlights = sinon.spy();
+      await feed.archiveFromPocket(12345);
+
+      assert.calledOnce(feed.fetchHighlights);
+      assert.calledWithExactly(feed.fetchHighlights, {broadcast: true});
+    });
+    it("should catch if archiveFromPocket throws", async () => {
+      sandbox.spy(global.Cu, "reportError");
+      fakeNewTabUtils.activityStreamLinks.archivePocketEntry = sandbox.stub().rejects("not ok");
+      await feed.archiveFromPocket(12345);
+
+      assert.calledOnce(global.Cu.reportError);
+    });
+    it("should call NewTabUtils.archivePocketEntry when deleting from Pocket", async () => {
+      await feed.archiveFromPocket(12345);
+
+      assert.calledOnce(global.NewTabUtils.activityStreamLinks.archivePocketEntry);
+      assert.calledWith(global.NewTabUtils.activityStreamLinks.archivePocketEntry, 12345);
     });
   });
 });

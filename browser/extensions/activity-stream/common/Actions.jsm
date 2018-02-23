@@ -25,9 +25,11 @@ this.globalImportContext = globalImportContext;
 // }
 const actionTypes = {};
 for (const type of [
+  "ARCHIVE_FROM_POCKET",
   "BLOCK_URL",
   "BOOKMARK_URL",
   "DELETE_BOOKMARK_BY_ID",
+  "DELETE_FROM_POCKET",
   "DELETE_HISTORY_URL",
   "DELETE_HISTORY_URL_CONFIRM",
   "DIALOG_CANCEL",
@@ -53,6 +55,7 @@ for (const type of [
   "PLACES_HISTORY_CLEARED",
   "PLACES_LINKS_DELETED",
   "PLACES_LINK_BLOCKED",
+  "PLACES_SAVED_TO_POCKET",
   "PREFS_INITIAL_VALUES",
   "PREF_CHANGED",
   "RICH_ICON_MISSING",

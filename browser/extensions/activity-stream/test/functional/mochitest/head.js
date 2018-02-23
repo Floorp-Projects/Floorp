@@ -10,10 +10,10 @@ function pushPrefs(...prefs) {
   return SpecialPowers.pushPrefEnv({set: prefs});
 }
 
-async function setDefaultTopSites() {
+async function setDefaultTopSites() { // eslint-disable-line no-unused-vars
   // The pref for TopSites is empty by default.
   await pushPrefs(["browser.newtabpage.activity-stream.default.sites",
-  "https://www.youtube.com/,https://www.facebook.com/,https://www.amazon.com/,https://www.reddit.com/,https://www.wikipedia.org/,https://twitter.com/"]);
+    "https://www.youtube.com/,https://www.facebook.com/,https://www.amazon.com/,https://www.reddit.com/,https://www.wikipedia.org/,https://twitter.com/"]);
   // Toggle the feed off and on as a workaround to read the new prefs.
   await pushPrefs(["browser.newtabpage.activity-stream.feeds.topsites", false]);
   await pushPrefs(["browser.newtabpage.activity-stream.feeds.topsites", true]);
