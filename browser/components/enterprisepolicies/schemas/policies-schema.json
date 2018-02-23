@@ -114,6 +114,13 @@
       "enum": [true]
     },
 
+    "DisableDeveloperTools": {
+      "description": "Prevents access to developer tools.",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
     "DisableFirefoxScreenshots": {
       "description": "Prevents usage of the Firefox Screenshots feature.",
       "first_available": "60.0",
