@@ -10,7 +10,7 @@ const promise = require("promise");
 const defer = require("devtools/shared/defer");
 
 loader.lazyRequireGetter(this, "HUDService", "devtools/client/webconsole/hudservice", true);
-loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/old-event-emitter"));
+loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));
 
 /**
  * A DevToolPanel that controls the Web Console.

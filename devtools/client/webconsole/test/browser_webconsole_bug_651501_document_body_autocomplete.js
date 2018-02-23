@@ -85,7 +85,7 @@ function testPropertyPanel() {
   let jsterm = gHUD.jsterm;
   jsterm.clearOutput();
   jsterm.execute("document", (msg) => {
-    jsterm.once("variablesview-fetched", (evt, view) => {
+    jsterm.once("variablesview-fetched", (view) => {
       deferred.resolve(view);
     });
     let anchor = msg.querySelector(".message-body a");
