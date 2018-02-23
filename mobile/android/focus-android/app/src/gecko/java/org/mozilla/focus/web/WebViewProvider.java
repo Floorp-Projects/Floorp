@@ -222,6 +222,11 @@ public class WebViewProvider {
                 public void onFocusRequest(GeckoSession geckoSession) {
 
                 }
+
+                @Override
+                public void onCloseRequest(GeckoSession geckoSession) {
+                    // TODO: #2150
+                }
             };
         }
 
@@ -288,6 +293,11 @@ public class WebViewProvider {
 
                     // Otherwise allow the load to continue normally
                     return false;
+                }
+
+                @Override
+                public void onNewSession(GeckoSession geckoSession, String s, GeckoSession.Response<GeckoSession> response) {
+                    // TODO: #2151
                 }
             };
         }
