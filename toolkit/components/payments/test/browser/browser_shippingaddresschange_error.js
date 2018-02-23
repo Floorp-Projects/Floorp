@@ -40,8 +40,10 @@ add_task(async function test_show_error_on_addresschange() {
       eventName: "shippingoptionchange",
     }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
 
-    let errors = await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getErrorDetails);
-    is(errors.text, EXPECTED_ERROR_TEXT, "Error text should be present on dialog");
+    let errorText = await spawnPaymentDialogTask(frame,
+                                                 PTU.DialogContentTasks.getElementTextContent,
+                                                 "#error-text");
+    is(errorText, EXPECTED_ERROR_TEXT, "Error text should be present on dialog");
     let errorsVisible =
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.isElementVisible, "#error-text");
     ok(errorsVisible, "Error text should be visible");
@@ -68,8 +70,10 @@ add_task(async function test_show_error_on_addresschange() {
     await ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
     }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
-    errors = await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getErrorDetails);
-    is(errors.text, "", "Error text should not be present on dialog");
+    errorText = await spawnPaymentDialogTask(frame,
+                                             PTU.DialogContentTasks.getElementTextContent,
+                                             "#error-text");
+    is(errorText, "", "Error text should not be present on dialog");
     errorsVisible =
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.isElementVisible, "#error-text");
     ok(!errorsVisible, "Error text should not be visible");

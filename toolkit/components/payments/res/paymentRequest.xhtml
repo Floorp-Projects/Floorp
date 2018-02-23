@@ -6,6 +6,8 @@
   <!ENTITY viewAllItems               "View All Items">
   <!ENTITY paymentSummaryTitle        "Your Payment">
   <!ENTITY shippingAddressLabel       "Shipping Address">
+  <!ENTITY deliveryAddressLabel       "Delivery Address">
+  <!ENTITY pickupAddressLabel         "Pickup Address">
   <!ENTITY shippingOptionsLabel       "Shipping Options">
   <!ENTITY paymentMethodsLabel        "Payment Method">
   <!ENTITY cancelPaymentButton.label   "Cancel">
@@ -65,7 +67,11 @@
         <h1>&paymentSummaryTitle;</h1>
 
         <section>
-          <div class="shippingRequested"><label>&shippingAddressLabel;</label></div>
+          <div class="shippingRequested"
+               id="shipping-type-label"
+               data-shipping-address-label="&shippingAddressLabel;"
+               data-delivery-address-label="&deliveryAddressLabel;"
+               data-pickup-address-label="&pickupAddressLabel;"><label></label></div>
           <address-picker class="shippingRequested" selected-state-key="selectedShippingAddress"></address-picker>
           <div class="shippingRequested"><label>&shippingOptionsLabel;</label></div>
           <shipping-option-picker class="shippingRequested"></shipping-option-picker>
