@@ -505,6 +505,7 @@ Toolbox.prototype = {
       }
 
       this._componentMount.addEventListener("keypress", this._onToolbarArrowKeypress);
+      this._componentMount.setAttribute("aria-label", L10N.getStr("toolbox.label"));
 
       this.webconsolePanel = this.doc.querySelector("#toolbox-panel-webconsole");
       this.webconsolePanel.height = Services.prefs.getIntPref(SPLITCONSOLE_HEIGHT_PREF);
