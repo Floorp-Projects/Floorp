@@ -8749,25 +8749,29 @@ nsLayoutUtils::GetBoxShadowRectForFrame(nsIFrame* aFrame,
     return nsRect();
   }
 
-  bool nativeTheme;
+  nsRect inputRect(nsPoint(0, 0), aFrameSize);
+
+  // According to the CSS spec, box-shadow should be based on the border box.
+  // However, that looks broken when the background extends outside the border
+  // box, as can be the case with native theming.  To fix that we expand the
+  // area that we shadow to include the bounds of any native theme drawing.
   const nsStyleDisplay* styleDisplay = aFrame->StyleDisplay();
   nsITheme::Transparency transparency;
   if (aFrame->IsThemed(styleDisplay, &transparency)) {
     // For opaque (rectangular) theme widgets we can take the generic
     // border-box path with border-radius disabled.
-    nativeTheme = transparency != nsITheme::eOpaque;
-  } else {
-    nativeTheme = false;
+    if (transparency != nsITheme::eOpaque) {
+      nsPresContext *presContext = aFrame->PresContext();
+      presContext->GetTheme()->
+        GetWidgetOverflow(presContext->DeviceContext(), aFrame,
+                          styleDisplay->mAppearance, &inputRect);
+    }
   }
-
-  nsRect frameRect = nativeTheme ?
-    aFrame->GetVisualOverflowRectRelativeToSelf() :
-    nsRect(nsPoint(0, 0), aFrameSize);
 
   nsRect shadows;
   int32_t A2D = aFrame->PresContext()->AppUnitsPerDevPixel();
   for (uint32_t i = 0; i < boxShadows->Length(); ++i) {
-    nsRect tmpRect = frameRect;
+    nsRect tmpRect = inputRect;
     nsCSSShadowItem* shadow = boxShadows->ShadowAt(i);
 
     // inset shadows are never painted outside the frame
