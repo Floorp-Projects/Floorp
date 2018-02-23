@@ -9,8 +9,8 @@
 #include "nsIIPCSerializableInputStream.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/dom/nsIContentChild.h"
-#include "mozilla/dom/PContentParent.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
@@ -623,6 +623,70 @@ AutoIPCStream::TakeOptionalValue()
   mTaken = true;
   AssertValidValueToTake(*mOptionalValue);
   return *mOptionalValue;
+}
+
+void
+IPDLParamTraits<nsCOMPtr<nsIInputStream>>::Write(IPC::Message* aMsg,
+                                                 IProtocol* aActor,
+                                                 const nsCOMPtr<nsIInputStream>& aParam)
+{
+  mozilla::ipc::AutoIPCStream autoStream;
+  bool ok = false;
+  bool found = false;
+
+  // We can only serialize our nsIInputStream if it's going to be sent over one
+  // of the protocols we support, or a protocol which is managed by one of the
+  // protocols we support.
+  IProtocol* actor = aActor;
+  while (!found && actor) {
+    switch (actor->GetProtocolTypeId()) {
+      case PContentMsgStart:
+        if (actor->GetSide() == mozilla::ipc::ParentSide) {
+          ok = autoStream.Serialize(
+            aParam, static_cast<mozilla::dom::ContentParent*>(actor));
+        } else {
+          MOZ_RELEASE_ASSERT(actor->GetSide() == mozilla::ipc::ChildSide);
+          ok = autoStream.Serialize(
+            aParam, static_cast<mozilla::dom::ContentChild*>(actor));
+        }
+        found = true;
+        break;
+      case PBackgroundMsgStart:
+        if (actor->GetSide() == mozilla::ipc::ParentSide) {
+          ok = autoStream.Serialize(
+            aParam, static_cast<mozilla::ipc::PBackgroundParent*>(actor));
+        } else {
+          MOZ_RELEASE_ASSERT(actor->GetSide() == mozilla::ipc::ChildSide);
+          ok = autoStream.Serialize(
+            aParam, static_cast<mozilla::ipc::PBackgroundChild*>(actor));
+        }
+        found = true;
+        break;
+    }
+
+    // Try the actor's manager.
+    actor = actor->Manager();
+  }
+
+  if (!found) {
+    aActor->FatalError("Attempt to send nsIInputStream over an unsupported ipdl protocol");
+  }
+  MOZ_RELEASE_ASSERT(ok, "Failed to serialize nsIInputStream");
+
+  WriteIPDLParam(aMsg, aActor, autoStream.TakeOptionalValue());
+}
+
+bool
+IPDLParamTraits<nsCOMPtr<nsIInputStream>>::Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                                                IProtocol* aActor, nsCOMPtr<nsIInputStream>* aResult)
+{
+  mozilla::ipc::OptionalIPCStream ipcStream;
+  if (!ReadIPDLParam(aMsg, aIter, aActor, &ipcStream)) {
+    return false;
+  }
+
+  *aResult = mozilla::ipc::DeserializeIPCStream(ipcStream);
+  return true;
 }
 
 } // namespace ipc
