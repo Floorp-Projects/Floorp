@@ -6,7 +6,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["AddressResult", "CreditCardResult"];
+var EXPORTED_SYMBOLS = ["AddressResult", "CreditCardResult"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -15,7 +15,7 @@ ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 XPCOMUtils.defineLazyPreferenceGetter(this, "insecureWarningEnabled", "security.insecure_field_warning.contextual.enabled");
 
 this.log = null;
-FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
+FormAutofillUtils.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 class ProfileAutoCompleteResult {
   constructor(searchString, focusedFieldName, allFieldNames, matchingProfiles, {

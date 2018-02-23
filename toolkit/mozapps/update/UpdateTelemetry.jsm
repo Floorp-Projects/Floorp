@@ -4,13 +4,13 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "AUSTLMY"
 ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
-this.AUSTLMY = {
+var AUSTLMY = {
   // Telemetry for the application update background update check occurs when
   // the background update timer fires after the update interval which is
   // determined by the app.update.interval preference and its telemetry

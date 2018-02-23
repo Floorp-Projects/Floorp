@@ -4,12 +4,12 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["AppMenu"];
+var EXPORTED_SYMBOLS = ["AppMenu"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
-this.AppMenu = {
+var AppMenu = {
 
   init(libDir) {},
 

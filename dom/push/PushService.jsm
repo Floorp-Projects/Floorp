@@ -33,7 +33,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gPushNotifier",
                                    "@mozilla.org/push/Notifier;1",
                                    "nsIPushNotifier");
 
-this.EXPORTED_SYMBOLS = ["PushService"];
+var EXPORTED_SYMBOLS = ["PushService"];
 
 XPCOMUtils.defineLazyGetter(this, "console", () => {
   let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
@@ -117,7 +117,7 @@ function hasRootDomain(str, aDomain)
  * (PushServiceWebSocket) to communicate with the server and PushDB (IndexedDB)
  * for persistence.
  */
-this.PushService = {
+var PushService = {
   _service: null,
   _state: PUSH_SERVICE_UNINIT,
   _db: null,

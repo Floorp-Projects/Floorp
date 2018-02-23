@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ExtensionTestUtils"];
+var EXPORTED_SYMBOLS = ["ExtensionTestUtils"];
 
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

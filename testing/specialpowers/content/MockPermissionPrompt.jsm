@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["MockPermissionPrompt"];
+var EXPORTED_SYMBOLS = ["MockPermissionPrompt"];
 
 const Cm = Components.manager;
 
@@ -27,7 +27,7 @@ var newFactory = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
 };
 
-this.MockPermissionPrompt = {
+var MockPermissionPrompt = {
   init() {
     this.reset();
     if (!registrar.isCIDRegistered(newClassID)) {

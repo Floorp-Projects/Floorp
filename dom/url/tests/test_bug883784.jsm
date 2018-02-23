@@ -1,8 +1,8 @@
-this.EXPORTED_SYMBOLS = ["Test"];
+var EXPORTED_SYMBOLS = ["Test"];
 
 Cu.importGlobalProperties(["URL", "XMLHttpRequest"]);
 
-this.Test = {
+var Test = {
   start: function(ok, is, finish) {
     let worker = new ChromeWorker("jsm_url_worker.js");
     worker.onmessage = function(event) {

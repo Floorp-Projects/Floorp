@@ -6,7 +6,7 @@
 
 'use strict';
 
-this.EXPORTED_SYMBOLS = ['DataWriter'];
+var EXPORTED_SYMBOLS = ['DataWriter'];
 
 class DataWriter {
   constructor(data, maxBytes = 512) {

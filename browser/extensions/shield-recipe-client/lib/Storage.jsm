@@ -9,7 +9,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "JSONFile", "resource://gre/modules/JSONFile.jsm");
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
-this.EXPORTED_SYMBOLS = ["Storage"];
+var EXPORTED_SYMBOLS = ["Storage"];
 
 // Lazy-load JSON file that backs Storage instances.
 XPCOMUtils.defineLazyGetter(this, "lazyStore", async function() {
@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyGetter(this, "lazyStore", async function() {
   return store;
 });
 
-this.Storage = class {
+var Storage = class {
   constructor(prefix) {
     this.prefix = prefix;
   }

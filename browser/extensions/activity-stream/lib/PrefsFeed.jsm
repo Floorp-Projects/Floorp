@@ -10,7 +10,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const ONBOARDING_FINISHED_PREF = "browser.onboarding.notification.finished";
 
-this.PrefsFeed = class PrefsFeed {
+var PrefsFeed = class PrefsFeed {
   constructor(prefMap) {
     this._prefMap = prefMap;
     this._prefs = new Prefs();
@@ -93,4 +93,4 @@ this.PrefsFeed = class PrefsFeed {
   }
 };
 
-this.EXPORTED_SYMBOLS = ["PrefsFeed"];
+var EXPORTED_SYMBOLS = ["PrefsFeed"];

@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["TransientPrefs"];
+var EXPORTED_SYMBOLS = ["TransientPrefs"];
 
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
@@ -14,7 +14,7 @@ var prefVisibility = new Map;
    When reset to their default state, they remain visible until restarting the
    application. */
 
-this.TransientPrefs = {
+var TransientPrefs = {
   prefShouldBeVisible(prefName) {
     if (Preferences.isSet(prefName))
       prefVisibility.set(prefName, true);

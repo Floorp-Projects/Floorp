@@ -88,9 +88,9 @@
  */
 
 
-this.EXPORTED_SYMBOLS = [ "XPCOMUtils" ];
+var EXPORTED_SYMBOLS = [ "XPCOMUtils" ];
 
-this.XPCOMUtils = {
+var XPCOMUtils = {
   /**
    * Generate a QueryInterface implementation. The returned function must be
    * assigned to the 'QueryInterface' property of a JS object. When invoked on

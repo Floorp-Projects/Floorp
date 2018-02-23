@@ -6,7 +6,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["PointerRelay", "PointerAdapter"]; // jshint ignore:line
+var EXPORTED_SYMBOLS = ["PointerRelay", "PointerAdapter"]; // jshint ignore:line
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -137,7 +137,7 @@ var PointerRelay = { // jshint ignore:line
   }
 };
 
-this.PointerAdapter = { // jshint ignore:line
+var PointerAdapter = { // jshint ignore:line
   start: function PointerAdapter_start() {
     Logger.debug("PointerAdapter.start");
     GestureTracker.reset();

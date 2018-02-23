@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["PlacesBackups"];
+var EXPORTED_SYMBOLS = ["PlacesBackups"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -92,7 +92,7 @@ async function getTopLevelFolderIds() {
   return guids;
 }
 
-this.PlacesBackups = {
+var PlacesBackups = {
   /**
    * Matches the backup filename:
    *  0: file name

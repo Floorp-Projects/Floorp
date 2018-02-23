@@ -4,11 +4,11 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Toolbars"];
+var EXPORTED_SYMBOLS = ["Toolbars"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-this.Toolbars = {
+var Toolbars = {
   init(libDir) {},
 
   configurations: {

@@ -62,5 +62,4 @@ ValueExtractor.prototype = {
     return color;
   }
 };
-this.ValueExtractor = ValueExtractor; // jshint ignore:line
-this.EXPORTED_SYMBOLS = ['ValueExtractor']; // jshint ignore:line
+var EXPORTED_SYMBOLS = ['ValueExtractor']; // jshint ignore:line

@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["DevTools"];
+var EXPORTED_SYMBOLS = ["DevTools"];
 
 ChromeUtils.import("resource://devtools/client/framework/gDevTools.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -23,7 +23,7 @@ function selectToolbox() {
   return gDevTools.getToolbox(getTargetForSelectedTab()).win.document.querySelector("#toolbox-container");
 }
 
-this.DevTools = {
+var DevTools = {
   init(libDir) {
     let panels = ["options", "webconsole", "jsdebugger", "styleeditor",
                   "performance", "netmonitor"];

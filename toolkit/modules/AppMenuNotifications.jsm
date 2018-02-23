@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["AppMenuNotifications"];
+var EXPORTED_SYMBOLS = ["AppMenuNotifications"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 

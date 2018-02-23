@@ -16,7 +16,7 @@ ChromeUtils.defineModuleGetter(
   this, "CleanupManager", "resource://shield-recipe-client/lib/CleanupManager.jsm"
 );
 
-this.EXPORTED_SYMBOLS = ["ShieldPreferences"];
+var EXPORTED_SYMBOLS = ["ShieldPreferences"];
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed"; // from modules/libpref/nsIPrefBranch.idl
@@ -26,7 +26,7 @@ const OPT_OUT_STUDIES_ENABLED_PREF = "app.shield.optoutstudies.enabled";
 /**
  * Handles Shield-specific preferences, including their UI.
  */
-this.ShieldPreferences = {
+var ShieldPreferences = {
   init() {
     // If the FHR pref was disabled since our last run, disable opt-out as well.
     if (!Services.prefs.getBoolPref(FHR_UPLOAD_ENABLED_PREF)) {

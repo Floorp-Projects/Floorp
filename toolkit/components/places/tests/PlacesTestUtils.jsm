@@ -1,6 +1,6 @@
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "PlacesTestUtils",
 ];
 
@@ -13,7 +13,7 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
 ChromeUtils.defineModuleGetter(this, "TestUtils",
                                "resource://testing-common/TestUtils.jsm");
 
-this.PlacesTestUtils = Object.freeze({
+var PlacesTestUtils = Object.freeze({
   /**
    * Asynchronously adds visits to a page.
    *

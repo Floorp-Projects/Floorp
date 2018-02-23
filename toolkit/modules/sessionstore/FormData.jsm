@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["FormData"];
+var EXPORTED_SYMBOLS = ["FormData"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 /**
@@ -93,7 +93,7 @@ function shouldIgnoreNode(node) {
  * The public API exported by this module that allows to collect
  * and restore form data for a document and its subframes.
  */
-this.FormData = Object.freeze({
+var FormData = Object.freeze({
   collect(frame) {
     return FormDataInternal.collect(frame);
   },

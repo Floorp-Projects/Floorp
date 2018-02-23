@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "ContentWebRTC" ];
+var EXPORTED_SYMBOLS = [ "ContentWebRTC" ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "MediaManagerService",
 
 const kBrowserURL = "chrome://browser/content/browser.xul";
 
-this.ContentWebRTC = {
+var ContentWebRTC = {
   // Called only for 'unload' to remove pending gUM prompts in reloaded frames.
   handleEvent(aEvent) {
     let contentWindow = aEvent.target.defaultView;

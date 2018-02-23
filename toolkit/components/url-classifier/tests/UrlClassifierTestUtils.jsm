@@ -1,6 +1,6 @@
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["UrlClassifierTestUtils"];
+var EXPORTED_SYMBOLS = ["UrlClassifierTestUtils"];
 
 const TRACKING_TABLE_NAME = "mochitest-track-simple";
 const TRACKING_TABLE_PREF = "urlclassifier.trackingTable";
@@ -11,7 +11,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
-this.UrlClassifierTestUtils = {
+var UrlClassifierTestUtils = {
 
   addTestTrackers() {
     // Add some URLs to the tracking databases

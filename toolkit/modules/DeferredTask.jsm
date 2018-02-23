@@ -6,7 +6,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "DeferredTask",
 ];
 
@@ -112,7 +112,7 @@ const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer",
  *        aDelayMs have elapsed. If omitted, waits indefinitely for an idle
  *        callback.
  */
-this.DeferredTask = function(aTaskFn, aDelayMs, aIdleTimeoutMs) {
+var DeferredTask = function(aTaskFn, aDelayMs, aIdleTimeoutMs) {
   this._taskFn = aTaskFn;
   this._delayMs = aDelayMs;
   this._timeoutMs = aIdleTimeoutMs;

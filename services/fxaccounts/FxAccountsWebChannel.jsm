@@ -10,7 +10,7 @@
  * about account state changes.
  */
 
-this.EXPORTED_SYMBOLS = ["EnsureFxAccountsWebChannel"];
+var EXPORTED_SYMBOLS = ["EnsureFxAccountsWebChannel"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
@@ -521,7 +521,7 @@ var singleton;
 // (eg, it uses the observer service to tell interested parties of interesting
 // things) and allowing multiple channels would cause such notifications to be
 // sent multiple times.
-this.EnsureFxAccountsWebChannel = () => {
+var EnsureFxAccountsWebChannel = () => {
   let contentUri = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.root");
   if (singleton && singleton._contentUri !== contentUri) {
     singleton.tearDown();

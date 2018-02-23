@@ -1,4 +1,4 @@
-this.EXPORTED_SYMBOLS = ["ImportTesting"];
+var EXPORTED_SYMBOLS = ["ImportTesting"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

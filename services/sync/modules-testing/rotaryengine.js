@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "RotaryEngine",
   "RotaryRecord",
   "RotaryStore",
@@ -22,18 +22,18 @@ ChromeUtils.import("resource://services-sync/util.js");
  * Complete with record, store, and tracker implementations.
  */
 
-this.RotaryRecord = function RotaryRecord(collection, id) {
+function RotaryRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
-};
+}
 RotaryRecord.prototype = {
   __proto__: CryptoWrapper.prototype
 };
 Utils.deferGetSet(RotaryRecord, "cleartext", ["denomination"]);
 
-this.RotaryStore = function RotaryStore(name, engine) {
+function RotaryStore(name, engine) {
   Store.call(this, name, engine);
   this.items = {};
-};
+}
 RotaryStore.prototype = {
   __proto__: Store.prototype,
 
@@ -86,21 +86,21 @@ RotaryStore.prototype = {
   }
 };
 
-this.RotaryTracker = function RotaryTracker(name, engine) {
+function RotaryTracker(name, engine) {
   Tracker.call(this, name, engine);
-};
+}
 RotaryTracker.prototype = {
   __proto__: Tracker.prototype,
   persistChangedIDs: false,
 };
 
 
-this.RotaryEngine = function RotaryEngine(service) {
+function RotaryEngine(service) {
   SyncEngine.call(this, "Rotary", service);
   // Ensure that the engine starts with a clean slate.
   this.toFetch        = new SerializableSet();
   this.previousFailed = new SerializableSet();
-};
+}
 RotaryEngine.prototype = {
   __proto__: SyncEngine.prototype,
   _storeObj: RotaryStore,

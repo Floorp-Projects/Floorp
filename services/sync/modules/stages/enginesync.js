@@ -6,7 +6,7 @@
  * This file contains code for synchronizing engines.
  */
 
-this.EXPORTED_SYMBOLS = ["EngineSynchronizer"];
+var EXPORTED_SYMBOLS = ["EngineSynchronizer"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
@@ -21,12 +21,12 @@ ChromeUtils.defineModuleGetter(this, "Doctor",
  *
  * This was originally split out of service.js. The API needs lots of love.
  */
-this.EngineSynchronizer = function EngineSynchronizer(service) {
+function EngineSynchronizer(service) {
   this._log = Log.repository.getLogger("Sync.Synchronizer");
   this._log.manageLevelFromPref("services.sync.log.logger.synchronizer");
 
   this.service = service;
-};
+}
 
 EngineSynchronizer.prototype = {
   async sync(engineNamesToSync, why) {

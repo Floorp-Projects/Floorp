@@ -8,7 +8,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "DownloadUIHelper",
 ];
 
@@ -35,7 +35,7 @@ const kStringsRequiringFormatting = {
 /**
  * Provides functions to handle status and messages in the user interface.
  */
-this.DownloadUIHelper = {
+var DownloadUIHelper = {
   /**
    * Returns an object that can be used to display prompts related to downloads.
    *
@@ -88,7 +88,7 @@ XPCOMUtils.defineLazyGetter(DownloadUIHelper, "strings", function() {
  *        The nsIDOMWindow to which prompts should be attached, or null to
  *        attach prompts to the most recently active window.
  */
-this.DownloadPrompter = function(aParent) {
+var DownloadPrompter = function(aParent) {
   this._prompter = Services.ww.getNewPrompter(aParent);
 };
 

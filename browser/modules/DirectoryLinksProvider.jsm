@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["DirectoryLinksProvider"];
+var EXPORTED_SYMBOLS = ["DirectoryLinksProvider"];
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 

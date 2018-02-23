@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["BrowserUITelemetry"];
+var EXPORTED_SYMBOLS = ["BrowserUITelemetry"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -164,7 +164,7 @@ const BUCKET_PREFIX = "bucket_";
 // as primary name and the time step string.
 const BUCKET_SEPARATOR = "|";
 
-this.BrowserUITelemetry = {
+var BrowserUITelemetry = {
   init() {
     UITelemetry.addSimpleMeasureFunction("toolbars",
                                          this.getToolbarMeasures.bind(this));

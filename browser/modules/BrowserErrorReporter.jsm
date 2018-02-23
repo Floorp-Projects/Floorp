@@ -12,7 +12,7 @@ ChromeUtils.defineModuleGetter(this, "UpdateUtils", "resource://gre/modules/Upda
 
 Cu.importGlobalProperties(["fetch", "URL"]);
 
-this.EXPORTED_SYMBOLS = ["BrowserErrorReporter"];
+var EXPORTED_SYMBOLS = ["BrowserErrorReporter"];
 
 const ERROR_PREFIX_RE = /^[^\W]+:/m;
 const PREF_ENABLED = "browser.chrome.errorReporter.enabled";

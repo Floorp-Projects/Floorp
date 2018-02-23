@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["PlacesUtils"];
+var EXPORTED_SYMBOLS = ["PlacesUtils"];
 
 Cu.importGlobalProperties(["URL"]);
 
@@ -290,7 +290,7 @@ const SYNC_CHANGE_RECORD_VALIDATORS = Object.freeze({
   synced: simpleValidateFunc(v => v === true || v === false),
 });
 
-this.PlacesUtils = {
+var PlacesUtils = {
   // Place entries that are containers, e.g. bookmark folders or queries.
   TYPE_X_MOZ_PLACE_CONTAINER: "text/x-moz-place-container",
   // Place entries that are bookmark separators.

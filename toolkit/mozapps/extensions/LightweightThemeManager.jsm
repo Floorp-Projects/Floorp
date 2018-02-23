@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["LightweightThemeManager"];
+var EXPORTED_SYMBOLS = ["LightweightThemeManager"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
@@ -89,7 +89,7 @@ var _fallbackThemeData = null;
   }
 })();
 
-this.LightweightThemeManager = {
+var LightweightThemeManager = {
   get name() {
     return "LightweightThemeManager";
   },

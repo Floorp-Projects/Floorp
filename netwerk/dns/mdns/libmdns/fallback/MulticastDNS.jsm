@@ -6,7 +6,7 @@
 
 'use strict';
 
-this.EXPORTED_SYMBOLS = ['MulticastDNS'];
+var EXPORTED_SYMBOLS = ['MulticastDNS'];
 
 ChromeUtils.import('resource://gre/modules/Services.jsm');
 ChromeUtils.import('resource://gre/modules/Timer.jsm');

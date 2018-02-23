@@ -36,7 +36,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["GestureSettings", "GestureTracker"]; // jshint ignore:line
+var EXPORTED_SYMBOLS = ["GestureSettings", "GestureTracker"]; // jshint ignore:line
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -132,7 +132,7 @@ Point.prototype = {
  * An externally accessible collection of settings used in gesture resolition.
  * @type {Object}
  */
-this.GestureSettings = { // jshint ignore:line
+var GestureSettings = { // jshint ignore:line
   /**
    * Maximum duration of swipe
    * @type {Number}
@@ -179,7 +179,7 @@ this.GestureSettings = { // jshint ignore:line
  * gestures.
  * @type {Object}
  */
-this.GestureTracker = { // jshint ignore:line
+var GestureTracker = { // jshint ignore:line
   /**
    * Reset GestureTracker to its initial state.
    * @return {[type]} [description]

@@ -108,9 +108,9 @@ var Policy = {
   getCachedClientID: () => ClientID.getCachedClientID(),
 };
 
-this.EXPORTED_SYMBOLS = ["TelemetryController"];
+var EXPORTED_SYMBOLS = ["TelemetryController"];
 
-this.TelemetryController = Object.freeze({
+var TelemetryController = Object.freeze({
   /**
    * Used only for testing purposes.
    */

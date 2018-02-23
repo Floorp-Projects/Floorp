@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["WebrtcUI"];
+var EXPORTED_SYMBOLS = ["WebrtcUI"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

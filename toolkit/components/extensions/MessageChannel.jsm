@@ -97,7 +97,7 @@
  *
  */
 
-this.EXPORTED_SYMBOLS = ["MessageChannel"];
+var EXPORTED_SYMBOLS = ["MessageChannel"];
 
 /* globals MessageChannel */
 

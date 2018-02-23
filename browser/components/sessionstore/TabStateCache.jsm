@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["TabStateCache"];
+var EXPORTED_SYMBOLS = ["TabStateCache"];
 
 /**
  * A cache for tabs data.
@@ -16,7 +16,7 @@ this.EXPORTED_SYMBOLS = ["TabStateCache"];
  * - that data is used very seldom by SessionStore;
  * - caching private data in addition to public data is memory consuming.
  */
-this.TabStateCache = Object.freeze({
+var TabStateCache = Object.freeze({
   /**
    * Retrieves cached data for a given |tab| or associated |browser|.
    *

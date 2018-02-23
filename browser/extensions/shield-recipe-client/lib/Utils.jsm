@@ -6,11 +6,11 @@
 
 ChromeUtils.import("resource://shield-recipe-client/lib/LogManager.jsm");
 
-this.EXPORTED_SYMBOLS = ["Utils"];
+var EXPORTED_SYMBOLS = ["Utils"];
 
 const log = LogManager.getLogger("utils");
 
-this.Utils = {
+var Utils = {
   /**
    * Convert an array of objects to an object. Each item is keyed by the value
    * of the given key on the item.

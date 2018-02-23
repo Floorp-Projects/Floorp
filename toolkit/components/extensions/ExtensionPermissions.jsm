@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyGetter(this, "StartupCache", () => ExtensionParent.StartupCache);
 
-this.EXPORTED_SYMBOLS = ["ExtensionPermissions"];
+var EXPORTED_SYMBOLS = ["ExtensionPermissions"];
 
 const FILE_NAME = "extension-preferences.json";
 
@@ -49,7 +49,7 @@ function emptyPermissions() {
   return {permissions: [], origins: []};
 }
 
-this.ExtensionPermissions = {
+var ExtensionPermissions = {
   async _saveSoon(extension) {
     await lazyInit();
 

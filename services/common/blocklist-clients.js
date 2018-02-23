@@ -4,11 +4,11 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["AddonBlocklistClient",
-                         "GfxBlocklistClient",
-                         "OneCRLBlocklistClient",
-                         "PinningBlocklistClient",
-                         "PluginBlocklistClient"];
+var EXPORTED_SYMBOLS = ["AddonBlocklistClient",
+                        "GfxBlocklistClient",
+                        "OneCRLBlocklistClient",
+                        "PinningBlocklistClient",
+                        "PluginBlocklistClient"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -436,7 +436,7 @@ async function updateJSONBlocklist(filename, records) {
   }
 }
 
-this.OneCRLBlocklistClient = new BlocklistClient(
+var OneCRLBlocklistClient = new BlocklistClient(
   Services.prefs.getCharPref(PREF_BLOCKLIST_ONECRL_COLLECTION),
   PREF_BLOCKLIST_ONECRL_CHECKED_SECONDS,
   updateCertBlocklist,
@@ -444,28 +444,28 @@ this.OneCRLBlocklistClient = new BlocklistClient(
   "onecrl.content-signature.mozilla.org"
 );
 
-this.AddonBlocklistClient = new BlocklistClient(
+var AddonBlocklistClient = new BlocklistClient(
   Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS_COLLECTION),
   PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS,
   (records) => updateJSONBlocklist(this.AddonBlocklistClient.filename, records),
   Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET)
 );
 
-this.GfxBlocklistClient = new BlocklistClient(
+var GfxBlocklistClient = new BlocklistClient(
   Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_COLLECTION),
   PREF_BLOCKLIST_GFX_CHECKED_SECONDS,
   (records) => updateJSONBlocklist(this.GfxBlocklistClient.filename, records),
   Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET)
 );
 
-this.PluginBlocklistClient = new BlocklistClient(
+var PluginBlocklistClient = new BlocklistClient(
   Services.prefs.getCharPref(PREF_BLOCKLIST_PLUGINS_COLLECTION),
   PREF_BLOCKLIST_PLUGINS_CHECKED_SECONDS,
   (records) => updateJSONBlocklist(this.PluginBlocklistClient.filename, records),
   Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET)
 );
 
-this.PinningPreloadClient = new BlocklistClient(
+var PinningPreloadClient = new BlocklistClient(
   Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_COLLECTION),
   PREF_BLOCKLIST_PINNING_CHECKED_SECONDS,
   updatePinningList,

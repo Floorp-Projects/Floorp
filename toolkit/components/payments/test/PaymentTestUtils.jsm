@@ -1,8 +1,8 @@
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["PaymentTestUtils"];
+var EXPORTED_SYMBOLS = ["PaymentTestUtils"];
 
-this.PaymentTestUtils = {
+var PaymentTestUtils = {
   /**
    * Common content tasks functions to be used with ContentTask.spawn.
    */

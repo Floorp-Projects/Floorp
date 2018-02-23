@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["WebsiteMetadata"];
+var EXPORTED_SYMBOLS = ["WebsiteMetadata"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

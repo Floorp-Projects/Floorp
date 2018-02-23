@@ -423,4 +423,4 @@ this.L10nRegistry = L10nRegistry;
 this.FileSource = FileSource;
 this.IndexedFileSource = IndexedFileSource;
 
-this.EXPORTED_SYMBOLS = ["L10nRegistry", "FileSource", "IndexedFileSource"];
+var EXPORTED_SYMBOLS = ["L10nRegistry", "FileSource", "IndexedFileSource"];

@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["SchedulePressure"];
+var EXPORTED_SYMBOLS = ["SchedulePressure"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "TIMEOUT_AMOUNT",
  * the behavior of a program based on the idle activity of the
  * host machine.
  */
-this.SchedulePressure = {
+var SchedulePressure = {
   _idleCallbackWeakMap: new WeakMap(),
   _setTimeoutWeakMap: new WeakMap(),
   _telemetryCallbackWeakMap: new WeakMap(),

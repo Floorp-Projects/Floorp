@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["RunState"];
+var EXPORTED_SYMBOLS = ["RunState"];
 
 const STATE_STOPPED = 0;
 const STATE_RUNNING = 1;
@@ -21,7 +21,7 @@ var state = STATE_STOPPED;
  * the initial browser window has loaded we switch to STATE_RUNNING. On the
  * first notice that a browser shutdown was granted we switch to STATE_QUITTING.
  */
-this.RunState = Object.freeze({
+var RunState = Object.freeze({
   // If we're stopped then SessionStore hasn't been initialized yet. As soon
   // as the session is read from disk and the initial browser window has loaded
   // the run state will change to STATE_RUNNING.

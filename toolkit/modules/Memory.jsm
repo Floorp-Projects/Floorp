@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["Memory"];
+var EXPORTED_SYMBOLS = ["Memory"];
 
 // How long we should wait for the Promise to resolve.
 const TIMEOUT_INTERVAL = 2000;
@@ -10,7 +10,7 @@ const TIMEOUT_INTERVAL = 2000;
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-this.Memory = {
+var Memory = {
   /**
    * This function returns a Promise that resolves with an Object that
    * describes basic memory usage for each content process and the parent

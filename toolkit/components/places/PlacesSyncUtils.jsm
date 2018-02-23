@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["PlacesSyncUtils"];
+var EXPORTED_SYMBOLS = ["PlacesSyncUtils"];
 
 Cu.importGlobalProperties(["URL", "URLSearchParams"]);
 

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["TabEngine", "TabSetRecord"];
+var EXPORTED_SYMBOLS = ["TabEngine", "TabSetRecord"];
 
 const TABS_TTL = 1814400; // 21 days.
 const TAB_ENTRIES_LIMIT = 5; // How many URLs to include in tab history.
@@ -20,9 +20,9 @@ ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
 ChromeUtils.defineModuleGetter(this, "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm");
 
-this.TabSetRecord = function TabSetRecord(collection, id) {
+function TabSetRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
-};
+}
 TabSetRecord.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.Tabs",
@@ -32,9 +32,9 @@ TabSetRecord.prototype = {
 Utils.deferGetSet(TabSetRecord, "cleartext", ["clientName", "tabs"]);
 
 
-this.TabEngine = function TabEngine(service) {
+function TabEngine(service) {
   SyncEngine.call(this, "Tabs", service);
-};
+}
 TabEngine.prototype = {
   __proto__: SyncEngine.prototype,
   _storeObj: TabStore,

@@ -7,7 +7,7 @@
 
 /* exported ExtensionPageChild */
 
-this.EXPORTED_SYMBOLS = ["ExtensionPageChild"];
+var EXPORTED_SYMBOLS = ["ExtensionPageChild"];
 
 /**
  * This file handles privileged extension page logic that runs in the

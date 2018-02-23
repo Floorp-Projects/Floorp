@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["convertToRTCStatsReport"];
+var EXPORTED_SYMBOLS = ["convertToRTCStatsReport"];
 
 function convertToRTCStatsReport(dict) {
   function appendStats(stats, report) {
@@ -26,4 +26,3 @@ function convertToRTCStatsReport(dict) {
   return report;
 }
 
-this.convertToRTCStatsReport = convertToRTCStatsReport;

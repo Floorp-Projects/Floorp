@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ShellService"];
+var EXPORTED_SYMBOLS = ["ShellService"];
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -98,7 +98,7 @@ XPCOMUtils.defineLazyServiceGetter(ShellServiceInternal, "shellService",
 /**
  * The external API exported by this module.
  */
-this.ShellService = new Proxy(ShellServiceInternal, {
+var ShellService = new Proxy(ShellServiceInternal, {
   get(target, name) {
     if (name in target) {
       return target[name];

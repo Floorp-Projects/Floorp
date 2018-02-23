@@ -5,12 +5,12 @@
 
 Components.utils.importGlobalProperties(["indexedDB"]);
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "GlobalObjectsModule"
 ];
 
-this.GlobalObjectsModule = function GlobalObjectsModule() {
-};
+function GlobalObjectsModule() {
+}
 
 GlobalObjectsModule.prototype = {
   runTest() {

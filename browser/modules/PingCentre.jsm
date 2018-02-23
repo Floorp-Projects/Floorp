@@ -189,10 +189,10 @@ class PingCentre {
 }
 
 this.PingCentre = PingCentre;
-this.PingCentreConstants = {
+var PingCentreConstants = {
   PRODUCTION_ENDPOINT_PREF,
   FHR_UPLOAD_ENABLED_PREF,
   TELEMETRY_PREF,
   LOGGING_PREF
 };
-this.EXPORTED_SYMBOLS = ["PingCentre", "PingCentreConstants"];
+var EXPORTED_SYMBOLS = ["PingCentre", "PingCentreConstants"];

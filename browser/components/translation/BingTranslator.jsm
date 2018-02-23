@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "BingTranslator" ];
+var EXPORTED_SYMBOLS = [ "BingTranslator" ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
@@ -39,7 +39,7 @@ const MAX_REQUESTS = 15;
  * @returns {Promise}          A promise that will resolve when the translation
  *                             task is finished.
  */
-this.BingTranslator = function(translationDocument, sourceLanguage, targetLanguage) {
+var BingTranslator = function(translationDocument, sourceLanguage, targetLanguage) {
   this.translationDocument = translationDocument;
   this.sourceLanguage = sourceLanguage;
   this.targetLanguage = targetLanguage;
