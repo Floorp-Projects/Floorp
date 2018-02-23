@@ -729,6 +729,24 @@ GeneratePrototypeHoleGuards(CacheIRWriter& writer, JSObject* obj, ObjOperandId o
     }
 }
 
+static void
+ShapeGuardProtoChain(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId)
+{
+    while (true) {
+        // Guard on the proto if the shape does not imply the proto.
+        bool guardProto = obj->hasUncacheableProto();
+
+        obj = obj->staticPrototype();
+        if (!obj)
+            return;
+
+        objId = writer.loadProto(objId);
+        if (guardProto)
+            writer.guardSpecificObject(objId, obj);
+        writer.guardShape(objId, obj->as<NativeObject>().shape());
+    }
+}
+
 // Similar to |TestMatchingReceiver|, but for the holder object (when it
 // differs from the receiver). The holder may also be the expando of the
 // receiver if it exists.
@@ -762,19 +780,7 @@ EmitReadSlotGuard(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
             // The property does not exist. Guard on everything in the prototype
             // chain. This is guaranteed to see only Native objects because of
             // CanAttachNativeGetProp().
-            JSObject* proto = obj->taggedProto().toObjectOrNull();
-            ObjOperandId lastObjId = objId;
-            while (proto) {
-                ObjOperandId protoId = writer.loadProto(lastObjId);
-
-                // If shape doesn't imply proto, additional guards are needed.
-                if (proto->hasUncacheableProto())
-                    GuardGroupProto(writer, proto, lastObjId);
-
-                writer.guardShape(protoId, proto->as<NativeObject>().lastProperty());
-                proto = proto->staticPrototype();
-                lastObjId = protoId;
-            }
+            ShapeGuardProtoChain(writer, obj, objId);
         }
     } else if (obj->is<UnboxedPlainObject>()) {
         holderId->emplace(*expandoId);
@@ -3466,24 +3472,6 @@ CanAttachAddElement(JSObject* obj, bool isInit)
     } while (true);
 
     return true;
-}
-
-static void
-ShapeGuardProtoChain(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId)
-{
-    while (true) {
-        // Guard on the proto if the shape does not imply the proto.
-        bool guardProto = obj->hasUncacheableProto();
-
-        obj = obj->staticPrototype();
-        if (!obj)
-            return;
-
-        objId = writer.loadProto(objId);
-        if (guardProto)
-            writer.guardSpecificObject(objId, obj);
-        writer.guardShape(objId, obj->as<NativeObject>().shape());
-    }
 }
 
 bool
