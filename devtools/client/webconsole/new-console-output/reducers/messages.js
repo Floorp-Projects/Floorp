@@ -703,8 +703,6 @@ function passSearchFilters(message, filters) {
     || isTextInMessageText(text, message.messageText)
     // Look for a match in notes.
     || isTextInNotes(text, message.notes)
-    // Look for a match in prefix.
-    || isTextInPrefix(text, message.prefix)
   );
 }
 
@@ -804,17 +802,6 @@ function isTextInNotes(text, notes) {
       note.messageBody.toLocaleLowerCase().includes(text.toLocaleLowerCase())
     )
   );
-}
-
-/**
-* Returns true if given text is included in prefix.
-*/
-function isTextInPrefix(text, prefix) {
-  if (!prefix) {
-    return false;
-  }
-
-  return `${prefix}: `.toLocaleLowerCase().includes(text.toLocaleLowerCase());
 }
 
 /**
