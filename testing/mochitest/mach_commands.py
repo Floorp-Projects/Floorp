@@ -471,8 +471,11 @@ class RobocopCommands(MachCommandBase):
         from mozrunner.devices.android_device import grant_runtime_permissions, get_adb_path
         from mozrunner.devices.android_device import verify_android_device
         # verify installation
-        verify_android_device(self, install=True, xre=False, app=kwargs['app'])
-        grant_runtime_permissions(self)
+        app = kwargs.get('app')
+        if not app:
+            app = self.substs["ANDROID_PACKAGE_NAME"]
+        verify_android_device(self, install=True, xre=False, app=app)
+        grant_runtime_permissions(self, app)
 
         if not kwargs['adbPath']:
             kwargs['adbPath'] = get_adb_path(self)
