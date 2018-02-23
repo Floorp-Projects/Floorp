@@ -1,4 +1,4 @@
-// Copyright © 2017 Mozilla Foundation
+// Copyright © 2017-2018 Mozilla Foundation
 //
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details.
@@ -8,18 +8,18 @@ use std::os::raw::c_char;
 
 #[derive(Debug)]
 pub struct Intern {
-    vec: Vec<Box<CString>>
+    vec: Vec<Box<CString>>,
 }
 
 impl Intern {
     pub fn new() -> Intern {
-        Intern {
-            vec: Vec::new()
-        }
+        Intern { vec: Vec::new() }
     }
 
     pub fn add(&mut self, string: &CStr) -> *const c_char {
-        fn eq(s1: &CStr, s2: &CStr) -> bool { s1 == s2 }
+        fn eq(s1: &CStr, s2: &CStr) -> bool {
+            s1 == s2
+        }
         for s in &self.vec {
             if eq(s, string) {
                 return s.as_ptr();
@@ -33,8 +33,8 @@ impl Intern {
 
 #[cfg(test)]
 mod tests {
-    use std::ffi::CStr;
     use super::Intern;
+    use std::ffi::CStr;
 
     #[test]
     fn intern() {
