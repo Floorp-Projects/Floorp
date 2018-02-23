@@ -455,18 +455,6 @@ add_task(async function test_onItemAdded() {
     let syncBmkGUID = await PlacesUtils.promiseItemGuid(syncBmkID);
     await verifyTrackedItems([syncFolderGUID, syncBmkGUID]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
-
-    await resetTracker();
-    await startTracking();
-
-    _("Insert a separator using the sync API");
-    let index = (await PlacesUtils.bookmarks.fetch(syncFolderGUID)).index;
-    let syncSepID = PlacesUtils.bookmarks.insertSeparator(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      index);
-    let syncSepGUID = await PlacesUtils.promiseItemGuid(syncSepID);
-    await verifyTrackedItems(["menu", syncSepGUID]);
-    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     await cleanup();
