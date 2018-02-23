@@ -40,7 +40,12 @@ void brush_vs(
     vUv.xy = mix(uv0, uv1, f);
     vUv.xy /= texture_size;
 
-    vUvBounds = vec4(uv0 + vec2(0.5), uv1 - vec2(0.5)) / texture_size.xyxy;
+    // Handle case where the UV coords are inverted (e.g. from an
+    // external image).
+    vUvBounds = vec4(
+        min(uv0, uv1) + vec2(0.5),
+        max(uv0, uv1) - vec2(0.5)
+    ) / texture_size.xyxy;
 
 #ifdef WR_FEATURE_ALPHA_PASS
     vLocalPos = vi.local_pos;
