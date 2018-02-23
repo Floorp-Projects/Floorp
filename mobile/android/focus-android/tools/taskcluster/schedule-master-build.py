@@ -69,7 +69,9 @@ def generate_release_task(uiTestTaskId):
 		description = "Build preview versions for testing Focus/Klar for Android.",
 		command = ('echo "--" > .adjust_token'
 			       ' && ./gradlew clean assembleBeta'
-			       ' && python tools/taskcluster/sign-preview-builds.py'),
+			       ' && python tools/taskcluster/sign-preview-builds.py'
+			       ' && touch /opt/focus-android/builds/`date +"%%Y-%%m-%%d-%%-H-%%M"`'
+			       ' && touch /opt/focus-android/builds/' + COMMIT),
 		dependencies = [ uiTestTaskId ],
 		scopes = [
 			"secrets:get:project/focus/preview-key-store",
