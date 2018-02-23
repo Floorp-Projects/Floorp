@@ -593,6 +593,9 @@ var FeedHandler = {
           LOG(`Invalid reader ${settings.reader}`);
           return;
         }
+
+        Services.telemetry.scalarAdd("browser.feeds.feed_subscribed", 1);
+
         const actionPref = getPrefActionForType(settings.feedType);
         this._setPref(actionPref, settings.action);
         const readerPref = getPrefReaderForType(settings.feedType);

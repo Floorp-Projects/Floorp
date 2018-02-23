@@ -689,6 +689,10 @@ PlacesViewBase.prototype = {
 
         PlacesUtils.livemarks.getLivemark({ id: aPlacesNode.itemId })
           .then(aLivemark => {
+            if (!this.controller) {
+              // We might have been destroyed in the interim...
+              return;
+            }
             let shouldInvalidate =
               !this.controller.hasCachedLivemarkInfo(aPlacesNode);
             this.controller.cacheLivemarkInfo(aPlacesNode, aLivemark);
@@ -932,6 +936,9 @@ PlacesViewBase.prototype = {
     }
 
     if (popup._placesNode && PlacesUIUtils.getViewForNode(popup) == this) {
+      if (this.controller.hasCachedLivemarkInfo(popup._placesNode)) {
+        Services.telemetry.scalarAdd("browser.feeds.livebookmark_opened", 1);
+      }
       if (!popup._placesNode.containerOpen)
         popup._placesNode.containerOpen = true;
       if (!popup._built)

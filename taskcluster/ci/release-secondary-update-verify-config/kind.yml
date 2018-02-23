@@ -1,0 +1,125 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.update_verify_config:transforms
+   - taskgraph.transforms.release_notifications:transforms
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+   name: secondary-update-verify-config
+   run-on-projects: []  # to make sure this never runs as part of CI
+   shipping-product: firefox
+   shipping-phase: promote
+   worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+   worker:
+      docker-image:
+         in-tree: "update-verify"
+      max-run-time: 3600
+      artifacts:
+         - name: public/build/update-verify.cfg
+           path: /builds/worker/checkouts/gecko/update-verify.cfg
+           type: file
+   run:
+      using: run-task
+      sparse-profile: update-verify
+   extra:
+      app-name: browser
+      product: firefox
+      archive-prefix:
+         by-project:
+            birch: "http://ftp.stage.mozaws.net/pub"
+            default: "https://archive.mozilla.org/pub"
+      previous-archive-prefix:
+         by-project:
+            birch: "https://archive.mozilla.org/pub"
+            default: null
+      aus-server:
+         by-project:
+            birch: "https://aus4.stage.mozaws.net"
+            default: "https://aus5.mozilla.org"
+      include-version:
+         by-project:
+            birch: nonbeta
+            mozilla-release: nonbeta
+            default: null
+      last-watershed:
+         by-project:
+            birch: "57.0"
+            mozilla-release: "57.0"
+            default: null
+      mar-channel-id-override:
+         by-project:
+            birch: beta
+            mozilla-release: beta
+            default: null
+      channel:
+         by-project:
+            birch: "beta-localtest"
+            mozilla-release: "beta-localtest"
+            default: "default"
+
+jobs:
+   firefox-secondary-linux:
+      treeherder:
+         symbol: UVCS
+         platform: linux/opt
+         kind: test
+         tier: 1
+      attributes:
+         build_platform: linux
+      extra:
+         platform: linux-i686
+         updater-platform: linux-x86_64
+
+   firefox-secondary-linux64:
+      treeherder:
+         symbol: UVCS
+         platform: linux64/opt
+         kind: test
+         tier: 1
+      attributes:
+         build_platform: linux64
+      extra:
+         platform: linux-x86_64
+         updater-platform: linux-x86_64
+
+   firefox-secondary-macosx64:
+      treeherder:
+         symbol: UVCS
+         platform: macosx64/opt
+         kind: test
+         tier: 1
+      attributes:
+         build_platform: macosx64
+      extra:
+         platform: mac
+         updater-platform: linux-x86_64
+
+   firefox-secondary-win32:
+      treeherder:
+         symbol: UVCS
+         platform: win32/opt
+         kind: test
+         tier: 1
+      attributes:
+         build_platform: win32
+      extra:
+         platform: win32
+         updater-platform: linux-x86_64
+
+   firefox-secondary-win64:
+      treeherder:
+         symbol: UVCS
+         platform: win64/opt
+         kind: test
+         tier: 1
+      attributes:
+         build_platform: win64
+      extra:
+         platform: win64
+         updater-platform: linux-x86_64
