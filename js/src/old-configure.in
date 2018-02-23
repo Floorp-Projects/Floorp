@@ -1113,33 +1113,6 @@ AC_CHECK_LIB(m, sin)
 AC_CHECK_LIB(m, sincos, AC_DEFINE(HAVE_SINCOS))
 AC_CHECK_LIB(m, __sincos, AC_DEFINE(HAVE___SINCOS))
 
-
-dnl check for wcrtomb/mbrtowc
-dnl =======================================================================
-if test -z "$MACOS_DEPLOYMENT_TARGET" || test "$MACOS_DEPLOYMENT_TARGET" -ge "100300"; then
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
-AC_CACHE_CHECK(for wcrtomb,
-    ac_cv_have_wcrtomb,
-    [AC_TRY_LINK([#include <wchar.h>],
-                 [mbstate_t ps={0};wcrtomb(0,'f',&ps);],
-                 ac_cv_have_wcrtomb="yes",
-                 ac_cv_have_wcrtomb="no")])
-if test "$ac_cv_have_wcrtomb" = "yes"; then
-    AC_DEFINE(HAVE_WCRTOMB)
-fi
-AC_CACHE_CHECK(for mbrtowc,
-    ac_cv_have_mbrtowc,
-    [AC_TRY_LINK([#include <wchar.h>],
-                 [mbstate_t ps={0};mbrtowc(0,0,0,&ps);],
-                 ac_cv_have_mbrtowc="yes",
-                 ac_cv_have_mbrtowc="no")])
-if test "$ac_cv_have_mbrtowc" = "yes"; then
-    AC_DEFINE(HAVE_MBRTOWC)
-fi
-AC_LANG_RESTORE
-fi
-
 AC_CACHE_CHECK(
     [for res_ninit()],
     ac_cv_func_res_ninit,
