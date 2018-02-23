@@ -125,6 +125,20 @@ var Policies = {
     }
   },
 
+  "DisableDeveloperTools": {
+    onBeforeAddons(manager, param) {
+      if (param) {
+        setAndLockPref("devtools.policy.disabled", true);
+        setAndLockPref("devtools.chrome.enabled", false);
+
+        manager.disallowFeature("devtools");
+        manager.disallowFeature("about:devtools");
+        manager.disallowFeature("about:debugging");
+        manager.disallowFeature("about:devtools-toolbox");
+      }
+    }
+  },
+
   "DisableFirefoxScreenshots": {
     onBeforeAddons(manager, param) {
       if (param) {
