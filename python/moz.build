@@ -29,6 +29,9 @@ with Files('mozversioncontrol/**'):
 with Files('l10n/**'):
     BUG_COMPONENT = ('Core', 'Localization')
 
+with Files('mozrelease/**'):
+    BUG_COMPONENT = ('Release Engineering', 'Release Automation')
+
 with Files('mach_commands.py'):
     BUG_COMPONENT = ('Testing', 'Python Test')
 

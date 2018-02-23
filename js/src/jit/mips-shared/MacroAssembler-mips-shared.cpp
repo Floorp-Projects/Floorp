@@ -1621,6 +1621,15 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
 }
 
 void
+MacroAssembler::loadStoreBuffer(Register ptr, Register buffer)
+{
+    if (ptr != buffer)
+        movePtr(ptr, buffer);
+    orPtr(Imm32(gc::ChunkMask), buffer);
+    loadPtr(Address(buffer, gc::ChunkStoreBufferOffsetFromLastByte), buffer);
+}
+
+void
 MacroAssembler::branchPtrInNurseryChunk(Condition cond, Register ptr, Register temp,
                                         Label* label)
 {

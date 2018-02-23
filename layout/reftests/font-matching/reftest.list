@@ -1,3 +1,9 @@
+# Run the font loader eagerly: this also ensures we will eagerly load localized
+# family names when looking up a requested font-family. Otherwise, tests here
+# may fail if they're running too soon after browser startup, and localized
+# names have not yet been read. (See bug 1439937.)
+default-preferences pref(gfx.font_loader.delay,0)
+
 == CSS21-t1502-no-inherited-font-family.xhtml CSS21-t1502-no-inherited-font-family-ref.xhtml
 
 # tests for bug 1394311 (case-insensitive lang tag processing)
@@ -145,3 +151,6 @@ skip-if(gtkWidget||/^Windows\x20NT\x206\.1/.test(http.oscpu)) == emoji-fallback-
 # and are not expected to pass on platforms that don't have those same fonts.
 skip-if(!cocoaWidget) == legacy-family-names-1.html legacy-family-names-1-ref.html
 skip-if(!winWidget) == legacy-family-names-2.html legacy-family-names-2-ref.html
+
+# Reset default prefs.
+default-preferences
