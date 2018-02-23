@@ -25,7 +25,8 @@ describe("PlacesFeed", () => {
         addBookmark: sandbox.spy(),
         deleteBookmark: sandbox.spy(),
         deleteHistoryEntry: sandbox.spy(),
-        blockURL: sandbox.spy()
+        blockURL: sandbox.spy(),
+        addPocketEntry: sandbox.spy(() => Promise.resolve())
       }
     });
     globals.set("PlacesUtils", {
@@ -41,7 +42,6 @@ describe("PlacesFeed", () => {
         SOURCES
       }
     });
-    globals.set("Pocket", {savePage: sandbox.spy()});
     global.Cc["@mozilla.org/browser/nav-history-service;1"] = {
       getService() {
         return global.PlacesUtils.history;
@@ -96,8 +96,8 @@ describe("PlacesFeed", () => {
       assert.calledWith(global.Services.obs.removeObserver, feed, BLOCKED_EVENT);
     });
     it("should block a url on BLOCK_URL", () => {
-      feed.onAction({type: at.BLOCK_URL, data: "apple.com"});
-      assert.calledWith(global.NewTabUtils.activityStreamLinks.blockURL, {url: "apple.com"});
+      feed.onAction({type: at.BLOCK_URL, data: {url: "apple.com", pocket_id: 1234}});
+      assert.calledWith(global.NewTabUtils.activityStreamLinks.blockURL, {url: "apple.com", pocket_id: 1234});
     });
     it("should bookmark a url on BOOKMARK_URL", () => {
       const data = {url: "pear.com", title: "A pear"};
@@ -117,7 +117,7 @@ describe("PlacesFeed", () => {
     it("should delete a history entry on DELETE_HISTORY_URL and force a site to be blocked if specified", () => {
       feed.onAction({type: at.DELETE_HISTORY_URL, data: {url: "guava.com", forceBlock: "g123kd"}});
       assert.calledWith(global.NewTabUtils.activityStreamLinks.deleteHistoryEntry, "guava.com");
-      assert.calledWith(global.NewTabUtils.activityStreamLinks.blockURL, {url: "guava.com"});
+      assert.calledWith(global.NewTabUtils.activityStreamLinks.blockURL, {url: "guava.com", pocket_id: undefined});
     });
     it("should call openLinkIn with the correct url and where on OPEN_NEW_WINDOW", () => {
       const openLinkIn = sinon.stub();
@@ -182,9 +182,58 @@ describe("PlacesFeed", () => {
       assert.propertyVal(params, "referrerPolicy", 5);
       assert.propertyVal(params.referrerURI, "spec", "foo.com/ref");
     });
-    it("should save to Pocket on SAVE_TO_POCKET", () => {
-      feed.onAction({type: at.SAVE_TO_POCKET, data: {site: {url: "raspberry.com", title: "raspberry"}}, _target: {browser: {}}});
-      assert.calledWith(global.Pocket.savePage, {}, "raspberry.com", "raspberry");
+    it("should call saveToPocket on SAVE_TO_POCKET", () => {
+      const action = {
+        type: at.SAVE_TO_POCKET,
+        data: {site: {url: "raspberry.com", title: "raspberry"}},
+        _target: {browser: {}}
+      };
+      sinon.stub(feed, "saveToPocket");
+      feed.onAction(action);
+      assert.calledWithExactly(feed.saveToPocket, action.data.site, action._target.browser);
+    });
+    it("should call NewTabUtils.activityStreamLinks.addPocketEntry if we are saving a pocket story", async () => {
+      const action = {
+        data: {site: {url: "raspberry.com", title: "raspberry"}},
+        _target: {browser: {}}
+      };
+      await feed.saveToPocket(action.data.site, action._target.browser);
+      assert.calledOnce(global.NewTabUtils.activityStreamLinks.addPocketEntry);
+      assert.calledWithExactly(global.NewTabUtils.activityStreamLinks.addPocketEntry, action.data.site.url, action.data.site.title, action._target.browser);
+    });
+    it("should reject the promise if NewTabUtils.activityStreamLinks.addPocketEntry rejects", async () => {
+      const e = new Error("Error");
+      const action = {
+        data: {site: {url: "raspberry.com", title: "raspberry"}},
+        _target: {browser: {}}
+      };
+      global.NewTabUtils.activityStreamLinks.addPocketEntry = sandbox.stub().rejects(e);
+      await feed.saveToPocket(action.data.site, action._target.browser);
+      assert.calledWith(global.Cu.reportError, e);
+    });
+    it("should broadcast to content if we successfully added a link to Pocket", async () => {
+      // test in the form that the API returns data based on: https://getpocket.com/developer/docs/v3/add
+      global.NewTabUtils.activityStreamLinks.addPocketEntry = sandbox.stub().resolves({item: {item_id: 1234}});
+      const action = {
+        data: {site: {url: "raspberry.com", title: "raspberry"}},
+        _target: {browser: {}}
+      };
+      await feed.saveToPocket(action.data.site, action._target.browser);
+      assert.equal(feed.store.dispatch.firstCall.args[0].type, at.PLACES_SAVED_TO_POCKET);
+      assert.deepEqual(feed.store.dispatch.firstCall.args[0].data, {
+        url: "raspberry.com",
+        title: "raspberry",
+        pocket_id: 1234
+      });
+    });
+    it("should only broadcast if we got some data back from addPocketEntry", async () => {
+      global.NewTabUtils.activityStreamLinks.addPocketEntry = sandbox.stub().resolves(null);
+      const action = {
+        data: {site: {url: "raspberry.com", title: "raspberry"}},
+        _target: {browser: {}}
+      };
+      await feed.saveToPocket(action.data.site, action._target.browser);
+      assert.notCalled(feed.store.dispatch);
     });
   });
 

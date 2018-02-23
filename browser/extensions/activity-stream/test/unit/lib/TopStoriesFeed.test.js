@@ -466,13 +466,13 @@ describe("Top Stories Feed", () => {
     });
   });
   describe("#spocs", () => {
-    it("should insert spoc at provided interval", async () => {
+    it("should insert spoc with provided probability", async () => {
       let fetchStub = globals.sandbox.stub();
       globals.set("fetch", fetchStub);
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
 
       const response = {
-        "settings": {"spocsPerNewTabs": 2},
+        "settings": {"spocsPerNewTabs": 0.5},
         "recommendations": [{"guid": "rec1"}, {"guid": "rec2"}, {"guid": "rec3"}],
         "spocs": [{"id": "spoc1"}, {"id": "spoc2"}]
       };
@@ -485,6 +485,7 @@ describe("Top Stories Feed", () => {
 
       instance.store.getState = () => ({Sections: [{rows: response.recommendations}], Prefs: {values: {showSponsored: true}}});
 
+      globals.set("Math", {random: () => 0.4});
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.calledOnce(instance.store.dispatch);
       let [action] = instance.store.dispatch.firstCall.args;
@@ -495,10 +496,12 @@ describe("Top Stories Feed", () => {
       assert.equal(action.data.rows[1].guid, "rec2");
       assert.equal(action.data.rows[2].guid, "spoc1");
 
-      // Second new tab shouldn't trigger a section update event (spocsPerNewTab === 2)
+      // Second new tab shouldn't trigger a section update event (spocsPerNewTab === 0.5)
+      globals.set("Math", {random: () => 0.6});
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.calledOnce(instance.store.dispatch);
 
+      globals.set("Math", {random: () => 0.3});
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.calledTwice(instance.store.dispatch);
       [action] = instance.store.dispatch.secondCall.args;
@@ -512,15 +515,17 @@ describe("Top Stories Feed", () => {
       let fetchStub = globals.sandbox.stub();
       globals.set("fetch", fetchStub);
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+      globals.set("Math", {random: () => 0.4});
 
       const response = {
-        "settings": {"spocsPerNewTabs": 2},
+        "settings": {"spocsPerNewTabs": 0.5},
         "recommendations": [{"id": "rec1"}, {"id": "rec2"}, {"id": "rec3"}],
         "spocs": [{"id": "spoc1"}, {"id": "spoc2"}]
       };
 
       instance.personalized = true;
       instance.show_spocs = true;
+      instance.spocsPerNewTabs = 0.5;
       instance.stories_endpoint = "stories-endpoint";
       instance.store.getState = () => ({Sections: [{rows: response.recommendations}], Prefs: {values: {showSponsored: true}}});
       fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
@@ -543,7 +548,7 @@ describe("Top Stories Feed", () => {
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
 
       const response = {
-        "settings": {"spocsPerNewTabs": 2},
+        "settings": {"spocsPerNewTabs": 0.5},
         "spocs": [{"id": "spoc1"}, {"id": "spoc2"}]
       };
 
@@ -562,7 +567,7 @@ describe("Top Stories Feed", () => {
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
 
       const response = {
-        "settings": {"spocsPerNewTabs": 2},
+        "settings": {"spocsPerNewTabs": 0.5},
         "spocs": [{"id": "spoc1"}, {"id": "spoc2"}]
       };
 
@@ -580,12 +585,14 @@ describe("Top Stories Feed", () => {
       let fetchStub = globals.sandbox.stub();
       globals.set("fetch", fetchStub);
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+      globals.set("Math", {random: () => 0.4});
 
       const response = {
-        "settings": {"spocsPerNewTabs": 2},
+        "settings": {"spocsPerNewTabs": 0.5},
         "recommendations": [{"id": "rec1"}, {"id": "rec2"}, {"id": "rec3"}]
       };
 
+      instance.personalized = true;
       instance.show_spocs = true;
       instance.stories_endpoint = "stories-endpoint";
       fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
@@ -598,9 +605,10 @@ describe("Top Stories Feed", () => {
       let fetchStub = globals.sandbox.stub();
       globals.set("fetch", fetchStub);
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+      globals.set("Math", {random: () => 0.4});
 
       const response = {
-        "settings": {"spocsPerNewTabs": 2},
+        "settings": {"spocsPerNewTabs": 0.5},
         "spocs": [{"id": 1, "campaign_id": 5}, {"id": 4, "campaign_id": 6}]
       };
 
@@ -631,7 +639,7 @@ describe("Top Stories Feed", () => {
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
 
       const response = {
-        "settings": {"spocsPerNewTabs": 2},
+        "settings": {"spocsPerNewTabs": 0.5},
         "spocs": [{"id": 1, "campaign_id": 5}, {"id": 4, "campaign_id": 6}]
       };
 
@@ -660,7 +668,7 @@ describe("Top Stories Feed", () => {
       instance.stories_endpoint = "stories-endpoint";
 
       const response = {
-        "settings": {"spocsPerNewTabs": 2},
+        "settings": {"spocsPerNewTabs": 0.5},
         "spocs": [{"id": 1, "campaign_id": 5}, {"id": 4, "campaign_id": 6}]
       };
       fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
@@ -677,7 +685,7 @@ describe("Top Stories Feed", () => {
 
       // remove campaign 5 from response
       const updatedResponse = {
-        "settings": {"spocsPerNewTabs": 2},
+        "settings": {"spocsPerNewTabs": 1},
         "spocs": [{"id": 4, "campaign_id": 6}]
       };
       fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(updatedResponse)});
@@ -706,6 +714,7 @@ describe("Top Stories Feed", () => {
       instance.store.getState = () => ({Sections: [{rows: response.recommendations}], Prefs: {values: {showSponsored: true}}});
       fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
       await instance.fetchStories();
+      instance.spocsPerNewTabs = 1;
 
       clock.tick();
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});

@@ -36,8 +36,8 @@ this.HighlightsFeed = class HighlightsFeed {
   }
 
   _dedupeKey(site) {
-    // Treat bookmarks as un-dedupable, otherwise show one of a url
-    return site && (site.type === "bookmark" ? {} : site.url);
+    // Treat bookmarks and pocket items as un-dedupable, otherwise show one of a url
+    return site && ((site.pocket_id || site.type === "bookmark") ? {} : site.url);
   }
 
   init() {
@@ -86,8 +86,10 @@ this.HighlightsFeed = class HighlightsFeed {
 
     // Request more than the expected length to allow for items being removed by
     // deduping against Top Sites or multiple history from the same domain, etc.
-    // Until bug 1425496 lands, do not include saved Pocket items in highlights
-    const manyPages = await this.linksCache.request({numItems: MANY_EXTRA_LENGTH, excludePocket: true});
+    const manyPages = await this.linksCache.request({
+      numItems: MANY_EXTRA_LENGTH,
+      excludePocket: !this.store.getState().Prefs.values["section.highlights.includePocket"]
+    });
 
     // Remove adult highlights if we need to
     const checkedAdult = this.store.getState().Prefs.values.filterAdult ?
@@ -112,14 +114,20 @@ this.HighlightsFeed = class HighlightsFeed {
         this.fetchImage(page);
       }
 
+      // Adjust the type for 'history' items that are also 'bookmarked'
+      if (page.type === "history" && page.bookmarkGuid) {
+        page.type = "bookmark";
+      }
+
       // We want the page, so update various fields for UI
       Object.assign(page, {
         hasImage: true, // We always have an image - fall back to a screenshot
         hostname,
-        type: page.bookmarkGuid ? "bookmark" : page.type
+        type: page.type,
+        pocket_id: page.pocket_id
       });
 
-      // Add the "bookmark" or not-skipped "history"
+      // Add the "bookmark", "pocket", or not-skipped "history"
       highlights.push(page);
       hosts.add(hostname);
 
@@ -152,6 +160,34 @@ this.HighlightsFeed = class HighlightsFeed {
     });
   }
 
+  /**
+   * Deletes an item from a user's saved to Pocket feed and then refreshes highlights
+   * @param {int} itemID
+   *  The unique ID given by Pocket for that item; used to look the item up when deleting
+   */
+  async deleteFromPocket(itemID) {
+    try {
+      await NewTabUtils.activityStreamLinks.deletePocketEntry(itemID);
+      this.fetchHighlights({broadcast: true});
+    } catch (err) {
+      Cu.reportError(err);
+    }
+  }
+
+  /**
+   * Archives an item from a user's saved to Pocket feed and then refreshes highlights
+   * @param {int} itemID
+   *  The unique ID given by Pocket for that item; used to look the item up when archiving
+   */
+  async archiveFromPocket(itemID) {
+    try {
+      await NewTabUtils.activityStreamLinks.archivePocketEntry(itemID);
+      this.fetchHighlights({broadcast: true});
+    } catch (err) {
+      Cu.reportError(err);
+    }
+  }
+
   onAction(action) {
     switch (action.type) {
       case at.INIT:
@@ -166,8 +202,15 @@ this.HighlightsFeed = class HighlightsFeed {
       case at.PLACES_LINK_BLOCKED:
         this.fetchHighlights({broadcast: true});
         break;
+      case at.DELETE_FROM_POCKET:
+        this.deleteFromPocket(action.data.pocket_id);
+        break;
+      case at.ARCHIVE_FROM_POCKET:
+        this.archiveFromPocket(action.data.pocket_id);
+        break;
       case at.PLACES_BOOKMARK_ADDED:
       case at.PLACES_BOOKMARK_REMOVED:
+      case at.PLACES_SAVED_TO_POCKET:
         this.linksCache.expire();
         this.fetchHighlights({broadcast: false});
         break;
@@ -181,4 +224,4 @@ this.HighlightsFeed = class HighlightsFeed {
   }
 };
 
-this.EXPORTED_SYMBOLS = ["HighlightsFeed", "SECTION_ID"];
+this.EXPORTED_SYMBOLS = ["HighlightsFeed", "SECTION_ID", "MANY_EXTRA_LENGTH"];

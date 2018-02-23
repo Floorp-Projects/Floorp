@@ -29,8 +29,6 @@ const MAX_LIFETIME_CAP = 100; // Guard against misconfiguration on the server
 
 this.TopStoriesFeed = class TopStoriesFeed {
   constructor() {
-    this.spocsPerNewTabs = 0;
-    this.newTabsSinceSpoc = 0;
     this.spocCampaignMap = new Map();
     this.contentUpdateQueue = [];
     this.cache = new PersistentCache(SECTION_ID, true);
@@ -194,7 +192,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
       return;
     }
 
-    this.spocsPerNewTabs = settings.spocsPerNewTabs;
+    this.spocsPerNewTabs = settings.spocsPerNewTabs; // Probability of a new tab getting a spoc [0,1]
     this.timeSegments = settings.timeSegments;
     this.domainAffinityParameterSets = settings.domainAffinityParameterSets;
     this.recsExpireTime = settings.recsExpireTime;
@@ -293,7 +291,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
       return;
     }
 
-    if (this.newTabsSinceSpoc === 0 || this.newTabsSinceSpoc === this.spocsPerNewTabs) {
+    if (Math.random() <= this.spocsPerNewTabs) {
       const updateContent = () => {
         if (!this.spocs || !this.spocs.length) {
           // We have stories but no spocs so there's nothing to do and this update can be
@@ -327,10 +325,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
         // Delay updating tab content until initial data has been fetched
         this.contentUpdateQueue.push(updateContent);
       }
-
-      this.newTabsSinceSpoc = 0;
     }
-    this.newTabsSinceSpoc++;
   }
 
   // Frequency caps are based on campaigns, which may include multiple spocs.

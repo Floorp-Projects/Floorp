@@ -4,7 +4,7 @@
 test_newtab(
   // it should be able to click the topsites add button to reveal the add top site modal and overlay.
   function topsites_edit() {
-    const topsitesAddBtn = content.document.querySelector(".add-topsites-button button");
+    const topsitesAddBtn = content.document.querySelector(".top-sites .context-menu a");
     topsitesAddBtn.click();
 
     let found = content.document.querySelector(".topsite-form");
@@ -23,13 +23,13 @@ test_newtab({
     await ContentTaskUtils.waitForCondition(() => content.document.querySelector(".top-site-icon"),
       "Topsite tippytop icon not found");
     // There are only topsites on the page, the selector with find the first topsite menu button.
-    const topsiteContextBtn = content.document.querySelector(".context-menu-button");
+    const topsiteContextBtn = content.document.querySelector(".top-sites-list .context-menu-button");
     topsiteContextBtn.click();
 
-    const contextMenu = content.document.querySelector(".context-menu");
+    const contextMenu = content.document.querySelector(".top-sites-list .context-menu");
     ok(contextMenu && !contextMenu.hidden, "Should find a visible topsite context menu");
 
-    const pinUnpinTopsiteBtn = contextMenu.querySelector(".context-menu-item a");
+    const pinUnpinTopsiteBtn = contextMenu.querySelector(".top-sites-list .context-menu-item a");
     // Pin the topsite.
     pinUnpinTopsiteBtn.click();
 
