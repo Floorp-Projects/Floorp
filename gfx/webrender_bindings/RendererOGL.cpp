@@ -84,6 +84,12 @@ RendererOGL::GetExternalImageHandler()
 void
 RendererOGL::Update()
 {
+  uint32_t flags = gfx::gfxVars::WebRenderDebugFlags();
+  if (mDebugFlags.mBits != flags) {
+    mDebugFlags.mBits = flags;
+    wr_renderer_set_debug_flags(mRenderer, mDebugFlags);
+  }
+
   if (gl()->MakeCurrent()) {
     wr_renderer_update(mRenderer);
   }
