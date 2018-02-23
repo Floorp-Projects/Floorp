@@ -42,8 +42,8 @@ if CONFIG['ENABLE_INTL_API'] and CONFIG['MOZ_ICU_DATA_ARCHIVE']:
     USE_LIBS += ['icudata']
 
 # Prepare module loader JS code for embedding
-GENERATED_FILES += ['shellmoduleloader.out.h']
-shellmoduleloader = GENERATED_FILES['shellmoduleloader.out.h']
+GENERATED_FILES += [('shellmoduleloader.out.h', 'shellmoduleloader.js')]
+shellmoduleloader = GENERATED_FILES[('shellmoduleloader.out.h', 'shellmoduleloader.js')]
 shellmoduleloader.script = '../builtin/embedjs.py:generate_shellmoduleloader'
 shellmoduleloader.inputs = [
     '../js.msg',
