@@ -283,7 +283,7 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            aTab.ownerGlobal.promiseDocumentFlushed(() => {
+            BrowserUtils.promiseLayoutFlushed(aTab.ownerDocument, "style", () => {
               if (!aTab.parentNode) {
                 return;
               }
