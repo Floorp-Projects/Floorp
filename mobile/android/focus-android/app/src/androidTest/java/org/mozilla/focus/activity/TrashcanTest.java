@@ -27,8 +27,8 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
-import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
+import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
 // This test erases URL and checks for message
 @RunWith(AndroidJUnit4.class)
@@ -69,7 +69,7 @@ public class TrashcanTest {
         TestHelper.inlineAutocompleteEditText.setText("mozilla");
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        assertTrue(TestHelper.webView.waitForExists(waitingTime));
+        TestHelper.waitForWebContent();
 
         // Press erase button, and check for message and return to the main page
         TestHelper.floatingEraseButton.perform(click());
@@ -86,7 +86,7 @@ public class TrashcanTest {
         TestHelper.inlineAutocompleteEditText.setText("mozilla");
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        assertTrue(TestHelper.webView.waitForExists(waitingTime));
+        TestHelper.waitForWebContent();
         TestHelper.menuButton.perform(click());
         TestHelper.blockCounterItem.waitForExists(waitingTime);
 
@@ -105,7 +105,6 @@ public class TrashcanTest {
 
         // Initialize UiDevice instance
         final int LAUNCH_TIMEOUT = 5000;
-        final String FOCUS_DEBUG_APP = "org.mozilla.focus.debug";
 
         // Open a webpage
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
@@ -113,8 +112,7 @@ public class TrashcanTest {
         TestHelper.inlineAutocompleteEditText.setText("mozilla");
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        assertTrue(TestHelper.webView.waitForExists(waitingTime));
-
+        TestHelper.waitForWebContent();
         // Switch out of Focus, pull down system bar and select delete browsing history
         TestHelper.pressHomeKey();
         TestHelper.openNotification();
@@ -128,13 +126,7 @@ public class TrashcanTest {
                 LAUNCH_TIMEOUT);
 
         // Launch the app
-        Context context = InstrumentationRegistry.getInstrumentation()
-                .getTargetContext()
-                .getApplicationContext();
-        final Intent intent = context.getPackageManager()
-                .getLaunchIntentForPackage(FOCUS_DEBUG_APP);
-        context.startActivity(intent);
-
+        mActivityTestRule.launchActivity(new Intent(Intent.ACTION_MAIN));
         // Verify that it's on the main view, not showing the previous browsing session
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         assertTrue(TestHelper.inlineAutocompleteEditText.exists());

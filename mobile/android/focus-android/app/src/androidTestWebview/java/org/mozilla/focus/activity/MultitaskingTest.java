@@ -35,10 +35,10 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
-import static org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset;
 import static org.mozilla.focus.helpers.EspressoHelper.navigateToMockWebServer;
 import static org.mozilla.focus.helpers.EspressoHelper.onFloatingEraseButton;
 import static org.mozilla.focus.helpers.EspressoHelper.onFloatingTabsButton;
+import static org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset;
 import static org.mozilla.focus.helpers.WebViewFakeLongPress.injectHitTarget;
 
 /**
@@ -158,10 +158,10 @@ public class MultitaskingTest {
                 .withElement(findElement(Locator.ID, id))
                 .check(webMatches(getText(), equalTo(label)));
 
-
         simulateLinkLongPress(path);
     }
 
+    // Webview only method
     private void simulateLinkLongPress(String path) {
         onView(withId(R.id.webview))
                 .perform(injectHitTarget(

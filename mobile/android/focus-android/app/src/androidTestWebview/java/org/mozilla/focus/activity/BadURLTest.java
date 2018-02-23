@@ -22,8 +22,8 @@ import org.mozilla.focus.helpers.TestHelper;
 
 import static android.support.test.espresso.action.ViewActions.click;
 import static junit.framework.Assert.assertTrue;
-import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
+import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
 // This test opens enters and invalid URL, and Focus should provide an appropriate error message
 @RunWith(AndroidJUnit4.class)
@@ -61,7 +61,7 @@ public class BadURLTest {
         UiObject openAppalert = TestHelper.mDevice.findObject(new UiSelector()
         .text("Open link in another app"));
 
-        /* provide an invalid URL */
+        // provide an invalid URL
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText("htps://www.mozilla.org");
@@ -69,10 +69,12 @@ public class BadURLTest {
         TestHelper.pressEnterKey();
         TestHelper.tryAgainBtn.waitForExists(waitingTime);
 
-        /* Check for error message */
+        // Check for error message
         assertTrue(TestHelper.notFoundMsg.exists());
         assertTrue(TestHelper.notFounddetailedMsg.exists());
         assertTrue(TestHelper.tryAgainBtn.exists());
+        TestHelper.floatingEraseButton.perform(click());
+
 
         /* provide market URL that is handled by Google Play app */
         TestHelper.floatingEraseButton.perform(click());

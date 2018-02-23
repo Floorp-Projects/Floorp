@@ -22,8 +22,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.MainActivity;
-import org.mozilla.focus.helpers.TestHelper;
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule;
+import org.mozilla.focus.helpers.TestHelper;
 
 import java.io.IOException;
 
@@ -109,7 +109,7 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
                 .perform(click(), replaceText(webServer.url("/").toString()), pressImeActionButton());
 
         device.findObject(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/webview")
+                .resourceId(TestHelper.getAppName() + ":id/webview")
                 .enabled(true))
                 .waitForExists(waitingTime);
 
@@ -128,19 +128,19 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
     private void takeScreenshotsOfOpenWithAndShare() throws Exception {
         /* Open_With View */
         UiObject openWithBtn = device.findObject(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/open_select_browser")
+                .resourceId(TestHelper.getAppName() + ":id/open_select_browser")
                 .enabled(true));
         assertTrue(openWithBtn.waitForExists(waitingTime));
         openWithBtn.click();
         UiObject shareList = device.findObject(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/apps")
+                .resourceId(TestHelper.getAppName() + ":id/apps")
                 .enabled(true));
         assertTrue(shareList.waitForExists(waitingTime));
         Screengrab.screenshot("OpenWith_Dialog");
 
         /* Share View */
         UiObject shareBtn = device.findObject(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/share")
+                .resourceId(TestHelper.getAppName() + ":id/share")
                 .enabled(true));
         device.pressBack();
         TestHelper.menuButton.perform(click());
@@ -171,14 +171,14 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
                 .enabled(true));
 
         UiObject imageMenuTitle = device.findObject(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/topPanel")
+                .resourceId(TestHelper.getAppName() + ":id/topPanel")
                 .enabled(true));
         UiObject openNewTabTitle = device.findObject(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/design_menu_item_text")
+                .resourceId(TestHelper.getAppName() + ":id/design_menu_item_text")
                 .index(0)
                 .enabled(true));
         UiObject multiTabBtn = device.findObject(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/tabs")
+                .resourceId(TestHelper.getAppName() + ":id/tabs")
                 .enabled(true));
         UiObject eraseHistoryBtn = device.findObject(new UiSelector()
                 .text(getString(R.string.tabs_tray_action_erase))
@@ -200,7 +200,7 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
 
         eraseHistoryBtn.click();
 
-        device.wait(Until.findObject(By.res("org.mozilla.focus.debug", "snackbar_text")), waitingTime);
+        device.wait(Until.findObject(By.res(TestHelper.getAppName(), "snackbar_text")), waitingTime);
 
         Screengrab.screenshot("YourBrowsingHistoryHasBeenErased");
     }

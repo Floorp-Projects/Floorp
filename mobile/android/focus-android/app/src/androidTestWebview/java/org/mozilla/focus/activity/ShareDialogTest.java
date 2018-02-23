@@ -22,8 +22,8 @@ import org.mozilla.focus.helpers.TestHelper;
 
 import static android.support.test.espresso.action.ViewActions.click;
 import static junit.framework.Assert.assertTrue;
-import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
+import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
 // This test opens share menu
 @RunWith(AndroidJUnit4.class)
@@ -57,7 +57,7 @@ public class ShareDialogTest {
     public void shareTest() throws InterruptedException, UiObjectNotFoundException {
 
         UiObject shareBtn = TestHelper.mDevice.findObject(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/share")
+                .resourceId(TestHelper.getAppName() + ":id/share")
                 .enabled(true));
 
         /* Go to a webpage */

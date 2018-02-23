@@ -17,8 +17,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.MainActivity;
-import org.mozilla.focus.helpers.TestHelper;
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule;
+import org.mozilla.focus.helpers.TestHelper;
 
 import java.io.IOException;
 

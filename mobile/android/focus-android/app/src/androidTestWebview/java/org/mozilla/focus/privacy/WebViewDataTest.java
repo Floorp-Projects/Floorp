@@ -13,14 +13,16 @@ import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
-
 import android.util.Log;
+
 import junit.framework.Assert;
 
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mozilla.focus.activity.MainActivity;
+import org.mozilla.focus.helpers.TestHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,15 +37,13 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
-import org.mozilla.focus.activity.MainActivity;
-import org.mozilla.focus.helpers.TestHelper;
 
 import static android.support.test.espresso.action.ViewActions.click;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
+import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
 /**
  * This test browses to a test site and makes sure that no traces are left on disk.
@@ -184,10 +184,9 @@ public class WebViewDataTest {
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        assertTrue(TestHelper.webView.waitForExists(waitingTime));
+        Assert.assertTrue(TestHelper.webView.waitForExists(waitingTime));
 
         // Assert website is loaded
-
         final UiObject titleMsg = TestHelper.mDevice.findObject(new UiSelector()
                 .description("focus test page")
                 .enabled(true));

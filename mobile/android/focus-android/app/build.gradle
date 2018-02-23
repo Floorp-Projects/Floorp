@@ -182,6 +182,12 @@ android {
             res.srcDir 'src/klarDebug/res'
         }
 
+        // UI test
+        androidTestWebviewCompile {
+            java.srcDirs += ['src/androidTestWebview/java']
+        }
+
+
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Gecko
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -271,6 +277,11 @@ android {
 
         klarGeckoAarch64Debug {
             res.srcDir 'src/klarDebug/res'
+        }
+
+        // UI tests
+        androidTestGeckoCompile {
+            java.srcDirs += ['src/androidTestGecko/java']
         }
     }
 }

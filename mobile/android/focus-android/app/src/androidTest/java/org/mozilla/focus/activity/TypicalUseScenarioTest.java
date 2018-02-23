@@ -22,8 +22,8 @@ import org.mozilla.focus.helpers.TestHelper;
 
 import static android.support.test.espresso.action.ViewActions.click;
 import static junit.framework.Assert.assertTrue;
-import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
+import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
 @RunWith(AndroidJUnit4.class)
 public class TypicalUseScenarioTest {
@@ -78,7 +78,7 @@ public class TypicalUseScenarioTest {
         TestHelper.hint.waitForExists(waitingTime);
         assertTrue(TestHelper.hint.getText().equals("Search for mozilla focus"));
         TestHelper.hint.click();
-        assertTrue(TestHelper.webView.waitForExists(waitingTime));
+        TestHelper.waitForWebContent();
         assertTrue (TestHelper.browserURLbar.getText().contains("mozilla"));
         assertTrue (TestHelper.browserURLbar.getText().contains("focus"));
 
@@ -95,7 +95,7 @@ public class TypicalUseScenarioTest {
         TestHelper.hint.waitForExists(waitingTime);
         assertTrue(TestHelper.hint.getText().equals("Search for https://www.google.com"));
         TestHelper.pressEnterKey();
-        assertTrue(TestHelper.webView.waitForExists(waitingTime));
+        TestHelper.waitForWebContent();
         assertTrue (TestHelper.browserURLbar.getText().contains("https://www.google"));
 
         // The DOM for lockicon is not detected consistenly, even when it is visible.
@@ -116,7 +116,7 @@ public class TypicalUseScenarioTest {
         TestHelper.hint.waitForExists(waitingTime);
         assertTrue(TestHelper.hint.getText().equals("Search for http://www.example.com"));
         TestHelper.pressEnterKey();
-        assertTrue(TestHelper.webView.waitForExists(waitingTime));
+        TestHelper.waitForWebContent();
         assertTrue (TestHelper.browserURLbar.getText().contains("http://www.example.com"));
         assertTrue (!TestHelper.lockIcon.exists());
 
@@ -136,7 +136,7 @@ public class TypicalUseScenarioTest {
 
         //Back to the webpage
         TestHelper.pressBackKey();
-        assertTrue(TestHelper.webView.waitForExists(waitingTime));
+        TestHelper.waitForWebContent();
         assertTrue (TestHelper.browserURLbar.getText().contains("http://www.example.com"));
         assertTrue (!TestHelper.lockIcon.exists());
     }

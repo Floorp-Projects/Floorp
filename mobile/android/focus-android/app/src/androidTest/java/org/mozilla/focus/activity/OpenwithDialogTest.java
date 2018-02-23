@@ -22,8 +22,8 @@ import org.mozilla.focus.helpers.TestHelper;
 
 import static android.support.test.espresso.action.ViewActions.click;
 import static junit.framework.Assert.assertTrue;
-import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
+import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
 // This test opens a webpage, and selects "Open With" menu
 @RunWith(AndroidJUnit4.class)
@@ -57,14 +57,14 @@ public class OpenwithDialogTest {
     public void OpenTest() throws InterruptedException, UiObjectNotFoundException {
 
         UiObject openWithBtn = TestHelper.mDevice.findObject(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/open_select_browser")
+                .resourceId(TestHelper.getAppName() + ":id/open_select_browser")
                 .enabled(true));
         UiObject openWithTitle = TestHelper.mDevice.findObject(new UiSelector()
                 .className("android.widget.TextView")
                 .text("Open in…")
                 .enabled(true));
         UiObject openWithList = TestHelper.mDevice.findObject(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/apps")
+                .resourceId(TestHelper.getAppName() + ":id/apps")
                 .enabled(true));
 
         /* Go to mozilla page */
@@ -73,7 +73,7 @@ public class OpenwithDialogTest {
         TestHelper.inlineAutocompleteEditText.setText("mozilla");
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        assertTrue(TestHelper.webView.waitForExists(waitingTime));
+        TestHelper.waitForWebContent();
 
         /* Select Open with from menu, check appearance */
         TestHelper.menuButton.perform(click());
