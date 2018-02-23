@@ -51,7 +51,7 @@ class AutocompletePopup extends Component {
 
   computeState({ autocompleteProvider, filter }) {
     let list = autocompleteProvider(filter);
-    let selectedIndex = list.length == 1 ? 0 : -1;
+    let selectedIndex = list.length > 0 ? 0 : -1;
 
     return { list, selectedIndex };
   }
