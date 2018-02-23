@@ -108,7 +108,7 @@ function waitForMessages({ hud, messages }) {
   return new Promise(resolve => {
     const matchedMessages = [];
     hud.ui.on("new-messages",
-      function messagesReceived(e, newMessages) {
+      function messagesReceived(newMessages) {
         for (let message of messages) {
           if (message.matched) {
             continue;
