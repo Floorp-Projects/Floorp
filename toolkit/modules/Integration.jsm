@@ -106,7 +106,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "Integration",
 ];
 
@@ -124,7 +124,7 @@ const gIntegrationPoints = new Map();
  *   Integration.downloads.register(...);
  *   Integration["addon-provided-integration"].register(...);
  */
-this.Integration = new Proxy({}, {
+var Integration = new Proxy({}, {
   get(target, name) {
     let integrationPoint = gIntegrationPoints.get(name);
     if (!integrationPoint) {
@@ -138,7 +138,7 @@ this.Integration = new Proxy({}, {
 /**
  * Individual integration point for which overrides can be registered.
  */
-this.IntegrationPoint = function() {
+var IntegrationPoint = function() {
   this._overrideFns = new Set();
   this._combined = {
     QueryInterface() {

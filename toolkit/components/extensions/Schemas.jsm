@@ -29,7 +29,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "contentPolicyService",
 
 XPCOMUtils.defineLazyGetter(this, "StartupCache", () => ExtensionParent.StartupCache);
 
-this.EXPORTED_SYMBOLS = ["SchemaRoot", "Schemas"];
+var EXPORTED_SYMBOLS = ["SchemaRoot", "Schemas"];
 
 const {DEBUG} = AppConstants;
 

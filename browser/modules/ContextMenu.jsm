@@ -6,7 +6,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ContextMenu"];
+var EXPORTED_SYMBOLS = ["ContextMenu"];
 
 Cu.importGlobalProperties(["URL"]);
 

@@ -13,9 +13,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
-this.EXPORTED_SYMBOLS = [ "PlacesDBUtils" ];
+var EXPORTED_SYMBOLS = [ "PlacesDBUtils" ];
 
-this.PlacesDBUtils = {
+var PlacesDBUtils = {
   _isShuttingDown: false,
   shutdown() {
     PlacesDBUtils._isShuttingDown = true;

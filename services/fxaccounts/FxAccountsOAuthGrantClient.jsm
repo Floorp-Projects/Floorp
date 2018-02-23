@@ -8,7 +8,7 @@
  * IDs support this privilage.
  */
 
-this.EXPORTED_SYMBOLS = ["FxAccountsOAuthGrantClient", "FxAccountsOAuthGrantClientError"];
+var EXPORTED_SYMBOLS = ["FxAccountsOAuthGrantClient", "FxAccountsOAuthGrantClientError"];
 
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
@@ -35,7 +35,7 @@ const ALLOW_HTTP_PREF = "identity.fxaccounts.allowHttp";
  *   Optional authorization endpoint for the OAuth server
  * @constructor
  */
-this.FxAccountsOAuthGrantClient = function(options) {
+var FxAccountsOAuthGrantClient = function(options) {
 
   this._validateOptions(options);
   this.parameters = options;
@@ -213,7 +213,7 @@ this.FxAccountsOAuthGrantClient.prototype = {
  *          Error message
  * @constructor
  */
-this.FxAccountsOAuthGrantClientError = function(details) {
+var FxAccountsOAuthGrantClientError = function(details) {
   details = details || {};
 
   this.name = "FxAccountsOAuthGrantClientError";

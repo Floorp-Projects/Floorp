@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["VoiceSelect"];
+var EXPORTED_SYMBOLS = ["VoiceSelect"];
 
 function VoiceSelect(win, label) {
   this._winRef = Cu.getWeakReference(win);

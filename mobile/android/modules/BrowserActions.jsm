@@ -8,7 +8,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 
-this.EXPORTED_SYMBOLS = ["BrowserActions"];
+var EXPORTED_SYMBOLS = ["BrowserActions"];
 
 var BrowserActions = {
   _browserActions: {},

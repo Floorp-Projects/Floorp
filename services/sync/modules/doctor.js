@@ -9,7 +9,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Doctor"];
+var EXPORTED_SYMBOLS = ["Doctor"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -27,9 +27,9 @@ ChromeUtils.defineModuleGetter(this, "getAllRepairRequestors",
 
 const log = Log.repository.getLogger("Sync.Doctor");
 
-this.REPAIR_ADVANCE_PERIOD = 86400; // 1 day
+var REPAIR_ADVANCE_PERIOD = 86400; // 1 day
 
-this.Doctor = {
+var Doctor = {
   anyClientsRepairing(service, collection, ignoreFlowID = null) {
     if (!service || !service.clientsEngine) {
       log.info("Missing clients engine, assuming we're in test code");

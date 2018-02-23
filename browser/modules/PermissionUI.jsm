@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "PermissionUI",
 ];
 
@@ -78,7 +78,7 @@ XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
                  .createBundle("chrome://browser/locale/browser.properties");
 });
 
-this.PermissionUI = {};
+var PermissionUI = {};
 
 /**
  * PermissionPromptPrototype should be subclassed by callers that
@@ -89,7 +89,7 @@ this.PermissionUI = {};
  * nsIContentPermissionRequest, you'll want to subclass
  * PermissionPromptForRequestPrototype instead.
  */
-this.PermissionPromptPrototype = {
+var PermissionPromptPrototype = {
   /**
    * Returns the associated <xul:browser> for the request. This should
    * work for the e10s and non-e10s case.
@@ -375,7 +375,7 @@ PermissionUI.PermissionPromptPrototype = PermissionPromptPrototype;
  * nsIContentPermissionRequest, this should be subclassed
  * rather than PermissionPromptPrototype.
  */
-this.PermissionPromptForRequestPrototype = {
+var PermissionPromptForRequestPrototype = {
   __proto__: PermissionPromptPrototype,
 
   get browser() {

@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "AboutHomeUtils", "AboutHome" ];
+var EXPORTED_SYMBOLS = [ "AboutHomeUtils", "AboutHome" ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -24,7 +24,7 @@ const SNIPPETS_URL_PREF = "browser.aboutHomeSnippets.updateUrl";
 // Should be bumped up if the snippets content format changes.
 const STARTPAGE_VERSION = 4;
 
-this.AboutHomeUtils = {
+var AboutHomeUtils = {
   get snippetsVersion() {
     return STARTPAGE_VERSION;
   },

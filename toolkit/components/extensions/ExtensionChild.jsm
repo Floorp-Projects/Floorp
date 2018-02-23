@@ -7,7 +7,7 @@
 
 /* exported ExtensionChild */
 
-this.EXPORTED_SYMBOLS = ["ExtensionChild"];
+var EXPORTED_SYMBOLS = ["ExtensionChild"];
 
 /*
  * This file handles addon logic that is independent of the chrome process.

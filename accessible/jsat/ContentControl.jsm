@@ -18,16 +18,16 @@ ChromeUtils.defineModuleGetter(this, "TraversalHelper",
 ChromeUtils.defineModuleGetter(this, "Presentation",
   "resource://gre/modules/accessibility/Presentation.jsm");
 
-this.EXPORTED_SYMBOLS = ["ContentControl"];
+var EXPORTED_SYMBOLS = ["ContentControl"];
 
 const MOVEMENT_GRANULARITY_CHARACTER = 1;
 const MOVEMENT_GRANULARITY_WORD = 2;
 const MOVEMENT_GRANULARITY_PARAGRAPH = 8;
 
-this.ContentControl = function ContentControl(aContentScope) {
+function ContentControl(aContentScope) {
   this._contentScope = Cu.getWeakReference(aContentScope);
   this._childMessageSenders = new WeakMap();
-};
+}
 
 this.ContentControl.prototype = {
   messagesOfInterest: ["AccessFu:MoveCursor",

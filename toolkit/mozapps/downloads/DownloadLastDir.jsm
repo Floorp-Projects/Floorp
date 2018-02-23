@@ -28,7 +28,7 @@ const LAST_DIR_PREF = "browser.download.lastDir";
 const SAVE_PER_SITE_PREF = LAST_DIR_PREF + ".savePerSite";
 const nsIFile = Components.interfaces.nsIFile;
 
-this.EXPORTED_SYMBOLS = [ "DownloadLastDir" ];
+var EXPORTED_SYMBOLS = [ "DownloadLastDir" ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -89,7 +89,7 @@ function isContentPrefEnabled() {
 
 var gDownloadLastDirFile = readLastDirPref();
 
-this.DownloadLastDir = function DownloadLastDir(aWindow) {
+function DownloadLastDir(aWindow) {
   let loadContext = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                            .getInterface(Components.interfaces.nsIWebNavigation)
                            .QueryInterface(Components.interfaces.nsILoadContext);
@@ -99,7 +99,7 @@ this.DownloadLastDir = function DownloadLastDir(aWindow) {
   this.fakeContext = loadContext.usePrivateBrowsing ?
                        privateLoadContext :
                        nonPrivateLoadContext;
-};
+}
 
 DownloadLastDir.prototype = {
   isPrivate: function DownloadLastDir_isPrivate() {

@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "AboutReader" ];
+var EXPORTED_SYMBOLS = [ "AboutReader" ];
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/ReaderMode.jsm");

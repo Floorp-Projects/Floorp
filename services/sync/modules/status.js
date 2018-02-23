@@ -2,14 +2,14 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["Status"];
+var EXPORTED_SYMBOLS = ["Status"];
 
 ChromeUtils.import("resource://services-sync/constants.js");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://services-sync/browserid_identity.js");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-this.Status = {
+var Status = {
   _log: Log.repository.getLogger("Sync.Status"),
   __authManager: null,
   ready: false,

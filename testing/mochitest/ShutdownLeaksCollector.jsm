@@ -5,7 +5,7 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-this.EXPORTED_SYMBOLS = ["ContentCollector"];
+var EXPORTED_SYMBOLS = ["ContentCollector"];
 
 // This listens for the message "browser-test:collect-request". When it gets it,
 // it runs some GCs and CCs, then prints out a message indicating the collections

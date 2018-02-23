@@ -432,4 +432,4 @@ function keysFromContext(method, ctx, keys, translations) {
 }
 
 this.Localization = Localization;
-this.EXPORTED_SYMBOLS = ["Localization"];
+var EXPORTED_SYMBOLS = ["Localization"];

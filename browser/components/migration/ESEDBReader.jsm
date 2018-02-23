@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ESEDBReader"]; /* exported ESEDBReader */
+var EXPORTED_SYMBOLS = ["ESEDBReader"]; /* exported ESEDBReader */
 
 ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

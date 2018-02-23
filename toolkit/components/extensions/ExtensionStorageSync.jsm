@@ -10,7 +10,7 @@
 
 /* exported extensionIdToCollectionId */
 
-this.EXPORTED_SYMBOLS = ["ExtensionStorageSync", "extensionStorageSync"];
+var EXPORTED_SYMBOLS = ["ExtensionStorageSync", "extensionStorageSync"];
 
 const global = this;
 
@@ -107,7 +107,7 @@ function throwIfNoFxA(fxAccounts, action) {
 // Global ExtensionStorageSync instance that extensions and Fx Sync use.
 // On Android, because there's no FXAccounts instance, any syncing
 // operations will fail.
-this.extensionStorageSync = null;
+var extensionStorageSync = null;
 
 /**
  * Utility function to enforce an order of fields when computing an HMAC.
@@ -1236,4 +1236,4 @@ class ExtensionStorageSync {
   }
 }
 this.ExtensionStorageSync = ExtensionStorageSync;
-this.extensionStorageSync = new ExtensionStorageSync(_fxaService, Services.telemetry);
+extensionStorageSync = new ExtensionStorageSync(_fxaService, Services.telemetry);

@@ -52,7 +52,7 @@ ChromeUtils.defineModuleGetter(this, "AddonManager",
 ChromeUtils.defineModuleGetter(this, "AddonRepository",
                                "resource://gre/modules/addons/AddonRepository.jsm");
 
-this.EXPORTED_SYMBOLS = ["AddonsEngine", "AddonValidator"];
+var EXPORTED_SYMBOLS = ["AddonsEngine", "AddonValidator"];
 
 // 7 days in milliseconds.
 const PRUNE_ADDON_CHANGES_THRESHOLD = 60 * 60 * 24 * 7 * 1000;
@@ -109,11 +109,11 @@ Utils.deferGetSet(AddonRecord, "cleartext", ["addonID",
  * The engine instance overrides a handful of functions on the base class. The
  * rationale for each is documented by that function.
  */
-this.AddonsEngine = function AddonsEngine(service) {
+function AddonsEngine(service) {
   SyncEngine.call(this, "Addons", service);
 
   this._reconciler = new AddonsReconciler(this._tracker.asyncObserver);
-};
+}
 AddonsEngine.prototype = {
   __proto__:              SyncEngine.prototype,
   _storeObj:              AddonsStore,

@@ -11,7 +11,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "LoginImport",
 ];
 
@@ -37,7 +37,7 @@ ChromeUtils.defineModuleGetter(this, "NetUtil",
  * @param aPath
  *        String containing the file path of the SQLite login database.
  */
-this.LoginImport = function(aStore, aPath) {
+var LoginImport = function(aStore, aPath) {
   this.store = aStore;
   this.path = aPath;
 };

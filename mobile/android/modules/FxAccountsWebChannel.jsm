@@ -10,7 +10,7 @@
  * Use the WebChannel component to receive messages about account
  * state changes.
  */
-this.EXPORTED_SYMBOLS = ["EnsureFxAccountsWebChannel"];
+var EXPORTED_SYMBOLS = ["EnsureFxAccountsWebChannel"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components; /* global Components */
 
@@ -381,7 +381,7 @@ var singleton;
 // ever created - we require this because the WebChannel is global in scope and
 // allowing multiple channels would cause such notifications to be sent multiple
 // times.
-this.EnsureFxAccountsWebChannel = () => {
+var EnsureFxAccountsWebChannel = () => {
   if (!singleton) {
     let contentUri = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.webchannel.uri");
     // The FxAccountsWebChannel listens for events and updates the Java layer.

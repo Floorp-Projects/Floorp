@@ -13,7 +13,7 @@
 
 /* exported ExtensionParent */
 
-this.EXPORTED_SYMBOLS = ["ExtensionParent"];
+var EXPORTED_SYMBOLS = ["ExtensionParent"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

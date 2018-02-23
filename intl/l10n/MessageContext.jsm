@@ -1847,4 +1847,4 @@ class MessageContext {
 }
 
 this.MessageContext = MessageContext;
-this.EXPORTED_SYMBOLS = ["MessageContext"];
+var EXPORTED_SYMBOLS = ["MessageContext"];

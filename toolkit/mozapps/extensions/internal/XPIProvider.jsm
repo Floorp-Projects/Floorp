@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["XPIProvider", "XPIInternal"];
+var EXPORTED_SYMBOLS = ["XPIProvider", "XPIInternal"];
 
 /* globals WebExtensionPolicy */
 
@@ -1442,7 +1442,7 @@ class XPIStateLocation extends Map {
 /**
  * Keeps track of the state of XPI add-ons on the file system.
  */
-this.XPIStates = {
+var XPIStates = {
   // Map(location name -> Map(add-on ID -> XPIState))
   db: null,
 
@@ -1782,7 +1782,7 @@ this.XPIStates = {
   },
 };
 
-this.XPIProvider = {
+var XPIProvider = {
   get name() {
     return "XPIProvider";
   },
@@ -6973,7 +6973,7 @@ class WinRegInstallLocation extends DirectoryInstallLocation {
   }
 }
 
-this.XPIInternal = {
+var XPIInternal = {
   AddonInternal,
   BOOTSTRAP_REASONS,
   KEY_APP_SYSTEM_ADDONS,

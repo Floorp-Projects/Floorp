@@ -1,6 +1,6 @@
-this.EXPORTED_SYMBOLS = ['checkFromJSM'];
+var EXPORTED_SYMBOLS = ['checkFromJSM'];
 
-this.checkFromJSM = function checkFromJSM(ok, is) {
+function checkFromJSM(ok, is) {
   Components.utils.importGlobalProperties(['URL', 'Blob']);
 
   var url = new URL('http://www.example.com');

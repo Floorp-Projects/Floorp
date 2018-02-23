@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["SessionStore"];
+var EXPORTED_SYMBOLS = ["SessionStore"];
 
 // Current version of the format used by Session Restore.
 const FORMAT_VERSION = 1;
@@ -205,7 +205,7 @@ function debug(aMsg) {
  */
 var gResistFingerprintingEnabled = false;
 
-this.SessionStore = {
+var SessionStore = {
   get promiseInitialized() {
     return SessionStoreInternal.promiseInitialized;
   },

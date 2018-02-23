@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ReaderMode"];
+var EXPORTED_SYMBOLS = ["ReaderMode"];
 
 // Constants for telemetry.
 const DOWNLOAD_SUCCESS = 0;
@@ -50,7 +50,7 @@ XPCOMUtils.defineLazyGetter(this, "Readability", function() {
 
 const gIsFirefoxDesktop = Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 
-this.ReaderMode = {
+var ReaderMode = {
   // Version of the cache schema.
   CACHE_VERSION: 1,
 

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["PasswordEngine", "LoginRec", "PasswordValidator"];
+var EXPORTED_SYMBOLS = ["PasswordEngine", "LoginRec", "PasswordValidator"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://services-sync/record.js");
@@ -43,9 +43,9 @@ function isSyncableChange(oldLogin, newLogin) {
   return false;
 }
 
-this.LoginRec = function LoginRec(collection, id) {
+function LoginRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
-};
+}
 LoginRec.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.Login",
@@ -66,9 +66,9 @@ Utils.deferGetSet(LoginRec, "cleartext", [
     ]);
 
 
-this.PasswordEngine = function PasswordEngine(service) {
+function PasswordEngine(service) {
   SyncEngine.call(this, "Passwords", service);
-};
+}
 PasswordEngine.prototype = {
   __proto__: SyncEngine.prototype,
   _storeObj: PasswordStore,

@@ -486,4 +486,4 @@ function transactionProxy(collection, preloaded) {
 }
 this.FirefoxAdapter = FirefoxAdapter;
 
-this.EXPORTED_SYMBOLS = ["FirefoxAdapter"];
+var EXPORTED_SYMBOLS = ["FirefoxAdapter"];

@@ -6,7 +6,7 @@
 
 'use strict';
 
-this.EXPORTED_SYMBOLS = ['DataReader'];
+var EXPORTED_SYMBOLS = ['DataReader'];
 
 class DataReader {
   // `data` is `Uint8Array`

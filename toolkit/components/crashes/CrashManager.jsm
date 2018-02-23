@@ -15,7 +15,7 @@ ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "CrashManager",
 ];
 
@@ -112,7 +112,7 @@ function parseAndRemoveField(obj, field) {
  *   telemetryStoreSizeKey (string)
  *     Telemetry histogram to report store size under.
  */
-this.CrashManager = function(options) {
+var CrashManager = function(options) {
   for (let k of ["pendingDumpsDir", "submittedDumpsDir", "eventsDirs",
     "storeDir"]) {
     if (!(k in options)) {

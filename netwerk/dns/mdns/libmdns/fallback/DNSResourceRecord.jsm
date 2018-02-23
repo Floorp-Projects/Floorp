@@ -6,7 +6,7 @@
 
 'use strict';
 
-this.EXPORTED_SYMBOLS = ['DNSResourceRecord'];
+var EXPORTED_SYMBOLS = ['DNSResourceRecord'];
 
 ChromeUtils.import('resource://gre/modules/Services.jsm');
 ChromeUtils.import('resource://gre/modules/DataReader.jsm');

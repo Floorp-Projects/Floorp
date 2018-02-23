@@ -6,12 +6,12 @@
 
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 
-this.EXPORTED_SYMBOLS = ["LogManager"];
+var EXPORTED_SYMBOLS = ["LogManager"];
 
 const ROOT_LOGGER_NAME = "extensions.shield-recipe-client";
 let rootLogger = null;
 
-this.LogManager = {
+var LogManager = {
   /**
    * Configure the root logger for the Recipe Client. Must be called at
    * least once before using any loggers created via getLogger.

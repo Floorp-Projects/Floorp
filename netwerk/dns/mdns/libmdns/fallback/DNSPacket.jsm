@@ -6,7 +6,7 @@
 
 'use strict';
 
-this.EXPORTED_SYMBOLS = ['DNSPacket'];
+var EXPORTED_SYMBOLS = ['DNSPacket'];
 
 ChromeUtils.import('resource://gre/modules/Services.jsm');
 

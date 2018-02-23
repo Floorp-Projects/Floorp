@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["TestRunner"];
+var EXPORTED_SYMBOLS = ["TestRunner"];
 
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
 const APPLY_CONFIG_TIMEOUT_MS = 60 * 1000;
@@ -23,7 +23,7 @@ ChromeUtils.defineModuleGetter(this, "BrowserTestUtils",
 // Screenshot.jsm must be imported this way for xpcshell tests to work
 ChromeUtils.defineModuleGetter(this, "Screenshot", "chrome://mozscreenshots/content/Screenshot.jsm");
 
-this.TestRunner = {
+var TestRunner = {
   combos: null,
   completedCombos: 0,
   currentComboIndex: 0,

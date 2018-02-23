@@ -10,7 +10,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AsyncPrefs.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryStopwatch.jsm");
 
-this.EXPORTED_SYMBOLS = ["NarrateControls"];
+var EXPORTED_SYMBOLS = ["NarrateControls"];
 
 var gStrings = Services.strings.createBundle("chrome://global/locale/narrate.properties");
 
