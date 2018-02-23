@@ -3953,6 +3953,15 @@ TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
+// Override the private API _backdropBleedAmount. This determines how much the
+// desktop wallpaper contributes to the vibrancy backdrop.
+// Return 0 in order to match what the system does for sheet windows and
+// _NSPopoverWindows.
+- (CGFloat)_backdropBleedAmount
+{
+  return 0.0;
+}
+
 - (BOOL)isContextMenu
 {
   return mIsContextMenu;
