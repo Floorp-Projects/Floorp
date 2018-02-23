@@ -232,20 +232,8 @@ case "$target" in
     fi
 
     MOZ_PATH_PROG(ZIPALIGN, zipalign, :, [$android_build_tools])
-    MOZ_PATH_PROG(DX, dx, :, [$android_build_tools])
-    MOZ_PATH_PROG(AAPT, aapt, :, [$android_build_tools])
-    MOZ_PATH_PROG(AIDL, aidl, :, [$android_build_tools])
     if test -z "$ZIPALIGN" -o "$ZIPALIGN" = ":"; then
       AC_MSG_ERROR([The program zipalign was not found.  Try |mach bootstrap|.])
-    fi
-    if test -z "$DX" -o "$DX" = ":"; then
-      AC_MSG_ERROR([The program dx was not found.  Try |mach bootstrap|.])
-    fi
-    if test -z "$AAPT" -o "$AAPT" = ":"; then
-      AC_MSG_ERROR([The program aapt was not found.  Try |mach bootstrap|.])
-    fi
-    if test -z "$AIDL" -o "$AIDL" = ":"; then
-      AC_MSG_ERROR([The program aidl was not found.  Try |mach bootstrap|.])
     fi
 
     android_platform_tools="$android_sdk_root"/platform-tools
