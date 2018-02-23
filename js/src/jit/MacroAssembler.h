@@ -1306,7 +1306,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         DEFINED_ON(x86);
     template <typename T>
     void branchValueIsNurseryCellImpl(Condition cond, const T& value, Register temp, Label* label)
-        DEFINED_ON(arm64, mips64, x64);
+        DEFINED_ON(arm64, x64);
 
     template <typename T>
     inline void branchTestUndefinedImpl(Condition cond, const T& t, Label* label)
