@@ -1040,3 +1040,89 @@ add_task(function* test_keyed_keys() {
   Assert.equal(parentScalars[scalarName].TELEMETRY_TEST_KEYED_KEYS, 1,
                "Accumulation to unallowed keys must report the correct value.");
 });
+
+add_task(async function test_count_multiple_samples() {
+  let valid = [1, 1, 3, 0];
+  let invalid = ["1", "0", "", "random"];
+
+  let h = Telemetry.getHistogramById("TELEMETRY_TEST_COUNT");
+  h.clear();
+
+  // If the array contains even a single invalid value, no accumulation should take place
+  // Keep the valid values in front of invalid to check if it is simply accumulating as
+  // it's traversing the array and throwing upon first invalid value. That should not happen.
+  h.add(valid.concat(invalid));
+  let s1 = h.snapshot();
+  Assert.equal(s1.sum, 0);
+  // Ensure that no accumulations of 0-like values took place.
+  // These accumulations won't increase the sum.
+  Assert.equal(s1.counts.reduce((acc, cur) => acc + cur), 0);
+
+  h.add(valid);
+  let s2 = h.snapshot();
+  Assert.equal(uneval(s2.counts), uneval([4, 0, 0]));
+  Assert.equal(s2.sum, 5);
+});
+
+add_task(async function test_categorical_multiple_samples() {
+  let h = Telemetry.getHistogramById("TELEMETRY_TEST_CATEGORICAL");
+  h.clear();
+  let valid = ["CommonLabel", "Label2", "Label3", "Label3", 0, 0, 1];
+  let invalid = ["", "Label4", "1234", "0", "1", 5000];
+
+  // At least one invalid parameter, so no accumulation should happen here
+  // Valid values in front of invalid.
+  h.add(valid.concat(invalid));
+  let s1 = h.snapshot();
+  Assert.equal(s1.sum, 0);
+  Assert.equal(s1.counts.reduce((acc, cur) => acc + cur), 0);
+
+  h.add(valid);
+  let snapshot = h.snapshot();
+  Assert.equal(snapshot.sum, 6);
+  Assert.deepEqual(snapshot.counts.slice(0, 4), [3, 2, 2, 0]);
+});
+
+add_task(async function test_boolean_multiple_samples() {
+  let valid = [true, false, 0, 1, 2];
+  let invalid = ["", "0", "1", ",2", "true", "false", "random"];
+
+  let h = Telemetry.getHistogramById("TELEMETRY_TEST_BOOLEAN");
+  h.clear();
+
+  // At least one invalid parameter, so no accumulation should happen here
+  // Valid values in front of invalid.
+  h.add(valid.concat(invalid));
+  let s1 = h.snapshot();
+  Assert.equal(s1.sum, 0);
+  Assert.equal(s1.counts.reduce((acc, cur) => acc + cur), 0);
+
+  h.add(valid);
+  let s = h.snapshot();
+  Assert.deepEqual(s.counts, [2, 3, 0]);
+  Assert.equal(s.sum, 3);
+});
+
+add_task(async function test_linear_multiple_samples() {
+  // According to telemetry.mozilla.org/histogram-simulator, bucket at
+  // index 1 of TELEMETRY_TEST_LINEAR has max value of 268.44M
+  let valid = [0, 1, 5, 10, 268450000, 268450001, Math.pow(2, 31) + 1];
+  let invalid = ["", "0", "1", "random"];
+
+  let h = Telemetry.getHistogramById("TELEMETRY_TEST_LINEAR");
+  h.clear();
+
+  // At least one invalid paramater, so no accumulations.
+  // Valid values in front of invalid.
+   h.add(valid.concat(invalid));
+   let s1 = h.snapshot();
+   Assert.equal(s1.sum, 0);
+   Assert.equal(s1.counts.reduce((acc, cur) => acc + cur), 0);
+
+  h.add(valid);
+  let s2 = h.snapshot();
+  // Values >= INT32_MAX are accumulated as INT32_MAX - 1
+  Assert.equal(s2.sum, valid.reduce((acc, cur) => acc + cur) - 3);
+  Assert.equal(s2.counts[9], 1);
+  Assert.deepEqual(s2.counts.slice(0, 3), [1, 3, 2]);
+});
