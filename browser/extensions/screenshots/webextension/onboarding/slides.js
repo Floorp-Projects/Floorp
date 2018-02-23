@@ -3,7 +3,7 @@
 "use strict";
 
 this.slides = (function() {
-  let exports = {};
+  const exports = {};
 
   const { watchFunction } = catcher;
 
@@ -31,14 +31,14 @@ this.slides = (function() {
       iframe.style.margin = "0";
       iframe.scrolling = "no";
       updateIframeSize();
-      let html = onboardingHtml.replace('<style></style>', `<style>${onboardingCss}</style>`);
+      let html = onboardingHtml.replace("<style></style>", `<style>${onboardingCss}</style>`);
       html = html.replace(/MOZ_EXTENSION([^"]+)/g, (match, filename) => {
         return browser.extension.getURL(filename);
       });
       iframe.addEventListener("load", catcher.watchFunction(() => {
         doc = iframe.contentDocument;
         assertIsBlankDocument(doc);
-        let parsedDom = (new DOMParser()).parseFromString(
+        const parsedDom = (new DOMParser()).parseFromString(
           html,
           "text/html"
         );
@@ -73,37 +73,37 @@ this.slides = (function() {
 
   function localizeText(doc) {
     let els = doc.querySelectorAll("[data-l10n-id]");
-    for (let el of els) {
-      let id = el.getAttribute("data-l10n-id");
-      let text = browser.i18n.getMessage(id);
+    for (const el of els) {
+      const id = el.getAttribute("data-l10n-id");
+      const text = browser.i18n.getMessage(id);
       el.textContent = text;
     }
     els = doc.querySelectorAll("[data-l10n-label-id]");
-    for (let el of els) {
-      let id = el.getAttribute("data-l10n-label-id");
-      let text = browser.i18n.getMessage(id);
+    for (const el of els) {
+      const id = el.getAttribute("data-l10n-label-id");
+      const text = browser.i18n.getMessage(id);
       el.setAttribute("aria-label", text);
     }
     // termsAndPrivacyNoticeCloudServices is a more complicated substitution:
-    let termsContainer = doc.querySelector(".onboarding-legal-notice");
+    const termsContainer = doc.querySelector(".onboarding-legal-notice");
     termsContainer.innerHTML = "";
-    let termsSentinel = "__TERMS__";
-    let privacySentinel = "__PRIVACY__";
-    let sentinelSplitter = "!!!";
-    let linkTexts = {
+    const termsSentinel = "__TERMS__";
+    const privacySentinel = "__PRIVACY__";
+    const sentinelSplitter = "!!!";
+    const linkTexts = {
       [termsSentinel]: browser.i18n.getMessage("termsAndPrivacyNoticeTermsLink"),
       [privacySentinel]: browser.i18n.getMessage("termsAndPrivacyNoticyPrivacyLink")
     };
-    let linkUrls = {
+    const linkUrls = {
       [termsSentinel]: "https://www.mozilla.org/about/legal/terms/services/",
       [privacySentinel]: "https://www.mozilla.org/privacy/firefox/"
     };
-    let text = browser.i18n.getMessage(
+    const text = browser.i18n.getMessage(
       "termsAndPrivacyNotice2",
       [sentinelSplitter + termsSentinel + sentinelSplitter,
        sentinelSplitter + privacySentinel + sentinelSplitter]);
-    let parts = text.split(sentinelSplitter);
-    for (let part of parts) {
+    const parts = text.split(sentinelSplitter);
+    for (const part of parts) {
       let el;
       if (part === termsSentinel || part === privacySentinel) {
         el = doc.createElement("a");
@@ -128,11 +128,11 @@ this.slides = (function() {
       shooter.sendEvent("navigate-slide", "prev");
       prev();
     })));
-    for (let el of doc.querySelectorAll(".goto-slide")) {
+    for (const el of doc.querySelectorAll(".goto-slide")) {
       el.addEventListener("click", watchFunction(assertIsTrusted((event) => {
         shooter.sendEvent("navigate-slide", "goto");
-        let el = event.target;
-        let index = parseInt(el.getAttribute("data-number"), 10);
+        const el = event.target;
+        const index = parseInt(el.getAttribute("data-number"), 10);
         setSlide(index);
       })));
     }
@@ -145,7 +145,7 @@ this.slides = (function() {
       callbacks.onEnd();
     })));
     doc.querySelector("#slide-overlay").addEventListener("click", watchFunction(assertIsTrusted((event) => {
-      if (event.target == doc.querySelector("#slide-overlay")) {
+      if (event.target === doc.querySelector("#slide-overlay")) {
         shooter.sendEvent("cancel-slides", "background-click");
         callbacks.onEnd();
       }
@@ -198,10 +198,10 @@ this.slides = (function() {
     }
     shooter.sendEvent("visited-slide", `slide-${index}`);
     currentSlide = index;
-    let slideEl = doc.querySelector("#slide-container");
+    const slideEl = doc.querySelector("#slide-container");
     for (let i = 1; i <= numberOfSlides; i++) {
-      let className = `active-slide-${i}`;
-      if (i == currentSlide) {
+      const className = `active-slide-${i}`;
+      if (i === currentSlide) {
         slideEl.classList.add(className);
       } else {
         slideEl.classList.remove(className);

@@ -1,21 +1,22 @@
 "use strict";
 
+// eslint-disable-next-line no-var
 var global = this;
 
 this.catcher = (function() {
-  let exports = {};
+  const exports = {};
 
   let handler;
 
   let queue = [];
 
-  let log = global.log;
+  const log = global.log;
 
   exports.unhandled = function(error, info) {
     if (!error.noReport) {
       log.error("Unhandled error:", error, info);
     }
-    let e = makeError(error, info);
+    const e = makeError(error, info);
     if (!handler) {
       queue.push(e);
     } else {
@@ -35,12 +36,12 @@ this.catcher = (function() {
         message: String(exc),
         stack: exc.stack
       };
-      for (let attr in exc) {
+      for (const attr in exc) {
         result[attr] = exc[attr];
       }
     }
     if (info) {
-      for (let attr of Object.keys(info)) {
+      for (const attr of Object.keys(info)) {
         result[attr] = info[attr];
       }
     }
@@ -85,7 +86,7 @@ this.catcher = (function() {
       return;
     }
     handler = h;
-    for (let error of queue) {
+    for (const error of queue) {
       handler(error);
     }
     queue = [];

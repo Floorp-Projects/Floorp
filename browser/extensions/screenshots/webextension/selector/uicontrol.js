@@ -4,7 +4,7 @@
 "use strict";
 
 this.uicontrol = (function() {
-  let exports = {};
+  const exports = {};
 
   /** ********************************************************
    * selection
@@ -95,6 +95,20 @@ this.uicontrol = (function() {
     };
   }
 
+  function downloadShot() {
+    const previewDataUrl = (captureType === "fullPageTruncated") ? null : dataUrl;
+    // Downloaded shots don't have dimension limits
+    removeDimensionLimitsOnFullPageShot();
+    shooter.downloadShot(selectedPos, previewDataUrl);
+  }
+
+  function copyShot() {
+    const previewDataUrl = (captureType === "fullPageTruncated") ? null : dataUrl;
+    // Copied shots don't have dimension limits
+    removeDimensionLimitsOnFullPageShot();
+    shooter.copyShot(selectedPos, previewDataUrl);
+  }
+
   /** *********************************************
    * State and stateHandlers infrastructure
    */
@@ -133,7 +147,7 @@ this.uicontrol = (function() {
     }
   }
 
-  let standardDisplayCallbacks = {
+  const standardDisplayCallbacks = {
     cancel: () => {
       sendEvent("cancel-shot", "overlay-cancel-button");
       exports.deactivate();
@@ -142,14 +156,14 @@ this.uicontrol = (function() {
       shooter.takeShot("selection", selectedPos);
     }, download: () => {
       sendEvent("download-shot", "overlay-download-button");
-      shooter.downloadShot(selectedPos);
+      downloadShot();
     }, copy: () => {
       sendEvent("copy-shot", "overlay-copy-button");
-      shooter.copyShot(selectedPos);
+      copyShot();
     }
   };
 
-  let standardOverlayCallbacks = {
+  const standardOverlayCallbacks = {
     cancel: () => {
       sendEvent("cancel-shot", "cancel-preview-button");
       exports.deactivate();
@@ -195,27 +209,21 @@ this.uicontrol = (function() {
       setState("previewing");
     },
     onSavePreview: () => {
-      sendEvent(`save-${captureType.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}`, "save-preview-button");
+      sendEvent(`save-${captureType.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase()}`, "save-preview-button");
       shooter.takeShot(captureType, selectedPos, dataUrl);
     },
     onDownloadPreview: () => {
-      sendEvent(`download-${captureType.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}`, "download-preview-button");
-      // Downloaded shots don't have dimension limits
-      let previewDataUrl = (captureType === "fullPageTruncated") ? null : dataUrl;
-      removeDimensionLimitsOnFullPageShot();
-      shooter.downloadShot(selectedPos, previewDataUrl);
+      sendEvent(`download-${captureType.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase()}`, "download-preview-button");
+      downloadShot();
     },
     onCopyPreview: () => {
-      sendEvent(`copy-${captureType.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}`, "copy-preview-button");
-      // Copied shots don't have dimension limits
-      let previewDataUrl = (captureType === "fullPageTruncated") ? null : dataUrl;
-      removeDimensionLimitsOnFullPageShot();
-      shooter.copyShot(selectedPos, previewDataUrl);
+      sendEvent(`copy-${captureType.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase()}`, "copy-preview-button");
+      copyShot();
     }
   };
 
   /** Holds all the objects that handle events for each state: */
-  let stateHandlers = {};
+  const stateHandlers = {};
 
   function getState() {
     return getState.state;
@@ -226,8 +234,8 @@ this.uicontrol = (function() {
     if (!stateHandlers[s]) {
       throw new Error("Unknown state: " + s);
     }
-    let cur = getState.state;
-    let handler = stateHandlers[cur];
+    const cur = getState.state;
+    const handler = stateHandlers[cur];
     if (handler.end) {
       handler.end();
     }
@@ -319,12 +327,12 @@ this.uicontrol = (function() {
     /** Sort x1/x2 and y1/y2 so x1<x2, y1<y2 */
     sortCoords() {
       if (this.x1 > this.x2) {
-        let tmp = this.x2;
+        const tmp = this.x2;
         this.x2 = this.x1;
         this.x1 = tmp;
       }
       if (this.y1 > this.y2) {
-        let tmp = this.y2;
+        const tmp = this.y2;
         this.y2 = this.y1;
         this.y1 = tmp;
       }
@@ -358,7 +366,7 @@ this.uicontrol = (function() {
       // Typically the <html> element or somesuch
       return null;
     }
-    let rect = el.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
     if (!rect) {
       return null;
     }
@@ -394,15 +402,16 @@ this.uicontrol = (function() {
     start() {
       dataUrl = shooter.screenshotPage(selectedPos, captureType);
       ui.iframe.usePreview();
-      ui.Preview.display(dataUrl, captureType == "fullPageTruncated");
+      ui.Preview.display(dataUrl, captureType === "fullPageTruncated");
     }
   };
 
   stateHandlers.onboarding = {
     start() {
-      if (typeof slides == "undefined") {
+      if (typeof slides === "undefined") {
         throw new Error("Attempted to set state to onboarding without loading slides");
       }
+      sendEvent("internal", "unhide-onboarding-frame");
       catcher.watchPromise(slides.display({
         onEnd: this.slidesOnEnd.bind(this)
       }));
@@ -428,12 +437,6 @@ this.uicontrol = (function() {
       watchPromise(ui.iframe.display(installHandlersOnDocument, standardOverlayCallbacks).then(() => {
         ui.iframe.usePreSelection();
         ui.Box.remove();
-        const upHandler = watchFunction(assertIsTrusted(keyupHandler));
-        document.addEventListener("keyup", upHandler);
-        registeredDocumentHandlers.push({name: "keyup", doc: document, upHandler, useCapture: false});
-        const downHandler = watchFunction(assertIsTrusted(keydownHandler));
-        document.addEventListener("keydown", downHandler);
-        registeredDocumentHandlers.push({name: "keydown", doc: document, downHandler, useCapture: false});
       }));
     },
 
@@ -456,12 +459,12 @@ this.uicontrol = (function() {
           event.pageX + window.scrollX - window.pageXOffset,
           event.pageY + window.scrollY - window.pageYOffset
         );
-        let xpos = Math.floor(10 * (event.pageX - window.innerWidth / 2) / window.innerWidth);
-        let ypos = Math.floor(10 * (event.pageY - window.innerHeight / 2) / window.innerHeight)
+        const xpos = Math.floor(10 * (event.pageX - window.innerWidth / 2) / window.innerWidth);
+        const ypos = Math.floor(10 * (event.pageY - window.innerHeight / 2) / window.innerHeight)
 
-        for (var i = 0; i < 2; i++) {
-          let move = `translate(${xpos}px, ${ypos}px)`;
-          event.target.getElementsByClassName('eyeball')[i].style.transform = move;
+        for (let i = 0; i < 2; i++) {
+          const move = `translate(${xpos}px, ${ypos}px)`;
+          event.target.getElementsByClassName("eyeball")[i].style.transform = move;
         }
       } else {
         // The hover is on the element we care about, so we use that
@@ -508,7 +511,7 @@ this.uicontrol = (function() {
         node = node.parentNode;
       }
       if (rect && node) {
-        let evenBetter = this.evenBetterElement(node, rect);
+        const evenBetter = this.evenBetterElement(node, rect);
         if (evenBetter) {
           node = lastNode = evenBetter;
           rect = Selection.getBoundingClientRect(evenBetter);
@@ -523,7 +526,7 @@ this.uicontrol = (function() {
           }
           extendNode = extendNode.nextSibling;
           if (!extendNode) {
-            let parent = lastNode.parentNode;
+            const parent = lastNode.parentNode;
             for (let i = 0; i < parent.childNodes.length; i++) {
               if (parent.childNodes[i] === lastNode) {
                 extendNode = parent.childNodes[i + 1];
@@ -532,8 +535,8 @@ this.uicontrol = (function() {
           }
         }
         if (extendNode) {
-          let extendSelection = Selection.getBoundingClientRect(extendNode);
-          let extendRect = rect.union(extendSelection);
+          const extendSelection = Selection.getBoundingClientRect(extendNode);
+          const extendRect = rect.union(extendSelection);
           if (extendRect.width <= MAX_DETECT_WIDTH && extendRect.height <= MAX_DETECT_HEIGHT) {
             rect = extendRect;
           }
@@ -554,14 +557,14 @@ this.uicontrol = (function() {
     /** When we find an element, maybe there's one that's just a little bit better... */
     evenBetterElement(node, origRect) {
       let el = node.parentNode;
-      let ELEMENT_NODE = document.ELEMENT_NODE;
-      while (el && el.nodeType == ELEMENT_NODE) {
+      const ELEMENT_NODE = document.ELEMENT_NODE;
+      while (el && el.nodeType === ELEMENT_NODE) {
         if (!el.getAttribute) {
           return null;
         }
-        let role = el.getAttribute("role");
-        if (role === "article" || (el.className && typeof el.className == "string" && el.className.search("tweet ") !== -1)) {
-          let rect = Selection.getBoundingClientRect(el);
+        const role = el.getAttribute("role");
+        if (role === "article" || (el.className && typeof el.className === "string" && el.className.search("tweet ") !== -1)) {
+          const rect = Selection.getBoundingClientRect(el);
           if (!rect) {
             return null;
           }
@@ -579,7 +582,7 @@ this.uicontrol = (function() {
       // FIXME: this is happening but we don't know why, we'll track it now
       // but avoid popping up messages:
       if (typeof ui === "undefined") {
-        let exc = new Error("Undefined ui in mousedown");
+        const exc = new Error("Undefined ui in mousedown");
         exc.unloadTime = unloadTime;
         exc.nowTime = Date.now();
         exc.noPopup = true;
@@ -591,7 +594,7 @@ this.uicontrol = (function() {
       // If the pageX is greater than this, then probably it's an attempt to get
       // to the scrollbar, or an actual scroll, and not an attempt to start the
       // selection:
-      let maxX = window.innerWidth - SCROLLBAR_WIDTH;
+      const maxX = window.innerWidth - SCROLLBAR_WIDTH;
       if (event.pageX >= maxX) {
         event.stopPropagation();
         event.preventDefault();
@@ -671,16 +674,16 @@ this.uicontrol = (function() {
       if (!el) {
         return null;
       }
-      let isGoodEl = (el) => {
-        if (el.nodeType != document.ELEMENT_NODE) {
+      const isGoodEl = (el) => {
+        if (el.nodeType !== document.ELEMENT_NODE) {
           return false;
         }
-        if (el.tagName == "IMG") {
-          let rect = el.getBoundingClientRect();
+        if (el.tagName === "IMG") {
+          const rect = el.getBoundingClientRect();
           return rect.width >= this.minAutoImageWidth && rect.height >= this.minAutoImageHeight;
         }
-        let display = window.getComputedStyle(el).display;
-        if (['block', 'inline-block', 'table'].includes(display)) {
+        const display = window.getComputedStyle(el).display;
+        if (["block", "inline-block", "table"].includes(display)) {
           return true;
           // FIXME: not sure if this is useful:
           // let rect = el.getBoundingClientRect();
@@ -744,12 +747,12 @@ this.uicontrol = (function() {
     },
 
     mousedown(event) {
-      let target = event.target;
-      if (target.tagName == "HTML") {
+      const target = event.target;
+      if (target.tagName === "HTML") {
         // This happens when you click on the scrollbar
         return undefined;
       }
-      let direction = ui.Box.draggerDirection(target);
+      const direction = ui.Box.draggerDirection(target);
       if (direction) {
         sendEvent("start-resize-selection", "handle");
         stateHandlers.resizing.startResize(event, direction);
@@ -790,9 +793,9 @@ this.uicontrol = (function() {
       sendEvent("selection-resized");
       ui.Box.display(selectedPos, standardDisplayCallbacks);
       if (resizeHasMoved) {
-        if (resizeDirection == "move") {
-          let startPos = new Pos(resizeStartSelected.left, resizeStartSelected.top);
-          let endPos = new Pos(selectedPos.left, selectedPos.top);
+        if (resizeDirection === "move") {
+          const startPos = new Pos(resizeStartSelected.left, resizeStartSelected.top);
+          const endPos = new Pos(selectedPos.left, selectedPos.top);
           sendEvent(
             "move-selection", "mouseup",
             eventOptionsForMove(startPos, endPos));
@@ -801,7 +804,7 @@ this.uicontrol = (function() {
             "resize-selection", "mouseup",
             eventOptionsForResize(resizeStartSelected, selectedPos));
         }
-      } else if (resizeDirection == "move") {
+      } else if (resizeDirection === "move") {
         sendEvent("keep-resize-selection", "mouseup");
       } else {
         sendEvent("keep-move-selection", "mouseup");
@@ -810,20 +813,20 @@ this.uicontrol = (function() {
     },
 
     _resize(event) {
-      let diffX = event.pageX - resizeStartPos.x;
-      let diffY = event.pageY - resizeStartPos.y;
-      let movement = movements[resizeDirection];
+      const diffX = event.pageX - resizeStartPos.x;
+      const diffY = event.pageY - resizeStartPos.y;
+      const movement = movements[resizeDirection];
       if (movement[0]) {
         let moveX = movement[0];
-        moveX = moveX == "*" ? ["x1", "x2"] : [moveX];
-        for (let moveDir of moveX) {
+        moveX = moveX === "*" ? ["x1", "x2"] : [moveX];
+        for (const moveDir of moveX) {
           selectedPos[moveDir] =  util.truncateX(resizeStartSelected[moveDir] + diffX);
         }
       }
       if (movement[1]) {
         let moveY = movement[1];
-        moveY = moveY == "*" ? ["y1", "y2"] : [moveY];
-        for (let moveDir of moveY) {
+        moveY = moveY === "*" ? ["y1", "y2"] : [moveY];
+        for (const moveDir of moveY) {
           selectedPos[moveDir] = util.truncateY(resizeStartSelected[moveDir] + diffY);
         }
       }
@@ -863,10 +866,10 @@ this.uicontrol = (function() {
   }
 
   function scrollIfByEdge(pageX, pageY) {
-    let top = window.scrollY;
-    let bottom = top + window.innerHeight;
-    let left = window.scrollX;
-    let right = left + window.innerWidth;
+    const top = window.scrollY;
+    const bottom = top + window.innerHeight;
+    const left = window.scrollX;
+    const right = left + window.innerWidth;
     if (pageY + SCROLL_BY_EDGE >= bottom && bottom < getDocumentHeight()) {
       window.scrollBy(0, SCROLL_BY_EDGE);
     } else if (pageY - SCROLL_BY_EDGE <= top) {
@@ -884,12 +887,12 @@ this.uicontrol = (function() {
    */
 
    // If the slides module is loaded then we're supposed to onboard
-  let shouldOnboard = typeof slides !== "undefined";
+  const shouldOnboard = typeof slides !== "undefined";
 
   exports.activate = function() {
     if (!document.body) {
       callBackground("abortStartShot");
-      let tagName = String(document.documentElement.tagName || "").replace(/[^a-z0-9]/ig, "");
+      const tagName = String(document.documentElement.tagName || "").replace(/[^a-z0-9]/ig, "");
       sendEvent("abort-start-shot", `document-is-${tagName}`);
       selectorLoader.unloadModules();
       return;
@@ -909,17 +912,17 @@ this.uicontrol = (function() {
   }
 
   function isFrameset() {
-    return document.body.tagName == "FRAMESET";
+    return document.body.tagName === "FRAMESET";
   }
 
   exports.deactivate = function() {
     try {
       sendEvent("internal", "deactivate");
       setState("cancel");
-      callBackground('closeSelector');
+      callBackground("closeSelector");
       selectorLoader.unloadModules();
     } catch (e) {
-      log.error('Error in deactivate', e)
+      log.error("Error in deactivate", e)
       // Sometimes this fires so late that the document isn't available
       // We don't care about the exception, so we swallow it here
     }
@@ -937,13 +940,13 @@ this.uicontrol = (function() {
    * Event handlers
    */
 
-  let primedDocumentHandlers = new Map();
+  const primedDocumentHandlers = new Map();
   let registeredDocumentHandlers = []
 
   function addHandlers() {
     ["mouseup", "mousedown", "mousemove", "click"].forEach((eventName) => {
-      let fn = watchFunction(assertIsTrusted((function(eventName, event) {
-        if (typeof event.button == "number" && event.button !== 0) {
+      const fn = watchFunction(assertIsTrusted((function(eventName, event) {
+        if (typeof event.button === "number" && event.button !== 0) {
           // Not a left click
           return undefined;
         }
@@ -951,8 +954,8 @@ this.uicontrol = (function() {
           // Modified click of key
           return undefined;
         }
-        let state = getState();
-        let handler = stateHandlers[state];
+        const state = getState();
+        const handler = stateHandlers[state];
         if (handler[eventName]) {
           return handler[eventName](event);
         }
@@ -962,20 +965,21 @@ this.uicontrol = (function() {
     });
     primedDocumentHandlers.set("keyup", watchFunction(assertIsTrusted(keyupHandler)));
     primedDocumentHandlers.set("keydown", watchFunction(assertIsTrusted(keydownHandler)));
-    window.addEventListener('beforeunload', beforeunloadHandler);
+    window.document.addEventListener("visibilitychange", visibilityChangeHandler);
+    window.addEventListener("beforeunload", beforeunloadHandler);
   }
 
   let mousedownSetOnDocument = false;
 
   function installHandlersOnDocument(docObj) {
-    for (let [eventName, handler] of primedDocumentHandlers) {
-      let watchHandler = watchFunction(handler);
-      let useCapture = eventName !== "keyup";
+    for (const [eventName, handler] of primedDocumentHandlers) {
+      const watchHandler = watchFunction(handler);
+      const useCapture = eventName !== "keyup";
       docObj.addEventListener(eventName, watchHandler, useCapture);
       registeredDocumentHandlers.push({name: eventName, doc: docObj, handler: watchHandler, useCapture});
     }
     if (!mousedownSetOnDocument) {
-      let mousedownHandler = primedDocumentHandlers.get("mousedown");
+      const mousedownHandler = primedDocumentHandlers.get("mousedown");
       document.addEventListener("mousedown", mousedownHandler, true);
       registeredDocumentHandlers.push({name: "mousedown", doc: document, handler: mousedownHandler, useCapture: true});
       mousedownSetOnDocument = true;
@@ -989,16 +993,15 @@ this.uicontrol = (function() {
 
   function keydownHandler(event) {
     // In MacOS, the keyup event for 'c' is not fired when performing cmd+c.
-    if (event.code === "KeyC" && (event.ctrlKey || event.metaKey)) {
-      callBackground("getPlatformOs").then(os => {
+    if (event.code === "KeyC" && (event.ctrlKey || event.metaKey)
+        && ["previewing", "selected"].includes(getState.state)) {
+      catcher.watchPromise(callBackground("getPlatformOs").then(os => {
         if ((event.ctrlKey && os !== "mac") ||
             (event.metaKey && os === "mac")) {
           sendEvent("copy-shot", "keyboard-copy");
-          shooter.copyShot(selectedPos);
+          copyShot();
         }
-      }).catch(() => {
-        // handled by catcher.watchPromise
-      });
+      }));
     }
   }
 
@@ -1018,7 +1021,7 @@ this.uicontrol = (function() {
         && ui.iframe.document().activeElement.tagName === "BODY") {
       if (ui.isDownloadOnly()) {
         sendEvent("download-shot", "keyboard-enter");
-        shooter.downloadShot(selectedPos);
+        downloadShot();
       } else {
         sendEvent("save-shot", "keyboard-enter");
         shooter.takeShot("selection", selectedPos);
@@ -1026,9 +1029,17 @@ this.uicontrol = (function() {
     }
   }
 
+  function visibilityChangeHandler(event) {
+    // The document is the event target
+    if (event.target.hidden) {
+      sendEvent("internal", "document-hidden");
+    }
+  }
+
   function removeHandlers() {
     window.removeEventListener("beforeunload", beforeunloadHandler);
-    for (let {name, doc, handler, useCapture} of registeredDocumentHandlers) {
+    window.document.removeEventListener("visibilitychange", visibilityChangeHandler);
+    for (const {name, doc, handler, useCapture} of registeredDocumentHandlers) {
       doc.removeEventListener(name, handler, !!useCapture);
     }
     registeredDocumentHandlers = [];

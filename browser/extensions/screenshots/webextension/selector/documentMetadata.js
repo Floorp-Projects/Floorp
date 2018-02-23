@@ -16,10 +16,10 @@ this.documentMetadata = (function() {
   }
 
   function getOpenGraph() {
-    let openGraph = {};
+    const openGraph = {};
     // If you update this, also update _OPENGRAPH_PROPERTIES in shot.js:
-    let forceSingle = `title type url`.split(" ");
-    let openGraphProperties = `
+    const forceSingle = `title type url`.split(" ");
+    const openGraphProperties = `
     title type url image audio description determiner locale site_name video
     image:secure_url image:type image:width image:height
     video:secure_url video:type video:width image:height
@@ -28,7 +28,7 @@ this.documentMetadata = (function() {
     book:author book:isbn book:release_date book:tag
     profile:first_name profile:last_name profile:username profile:gender
     `.split(/\s+/g);
-    for (let prop of openGraphProperties) {
+    for (const prop of openGraphProperties) {
       let elems = document.querySelectorAll(`meta[property='og:${prop}']`);
       if (forceSingle.includes(prop) && elems.length > 1) {
         elems = [elems[0]];
@@ -36,8 +36,8 @@ this.documentMetadata = (function() {
       let value;
       if (elems.length > 1) {
         value = [];
-        for (let elem of elems) {
-          let v = elem.getAttribute("content");
+        for (const elem of elems) {
+          const v = elem.getAttribute("content");
           if (v) {
             value.push(v);
           }
@@ -56,16 +56,16 @@ this.documentMetadata = (function() {
   }
 
   function getTwitterCard() {
-    let twitterCard = {};
+    const twitterCard = {};
     // If you update this, also update _TWITTERCARD_PROPERTIES in shot.js:
-    let properties = `
+    const properties = `
     card site title description image
     player player:width player:height player:stream player:stream:content_type
     `.split(/\s+/g);
-    for (let prop of properties) {
-      let elem = document.querySelector(`meta[name='twitter:${prop}']`);
+    for (const prop of properties) {
+      const elem = document.querySelector(`meta[name='twitter:${prop}']`);
       if (elem) {
-        let value = elem.getAttribute("content");
+        const value = elem.getAttribute("content");
         if (value) {
           twitterCard[prop] = value;
         }
@@ -75,7 +75,7 @@ this.documentMetadata = (function() {
   }
 
   return function documentMetadata() {
-    let result = {};
+    const result = {};
     result.docTitle = document.title;
     result.siteName = findSiteName();
     result.openGraph = getOpenGraph();

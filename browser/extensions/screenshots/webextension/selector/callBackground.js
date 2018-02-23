@@ -7,18 +7,18 @@ this.callBackground = function callBackground(funcName, ...args) {
     if (result && result.type === "success") {
       return result.value;
     } else if (result && result.type === "error") {
-      let exc = new Error(result.message || "Unknown error");
+      const exc = new Error(result.message || "Unknown error");
       exc.name = "BackgroundError";
-      if ('errorCode' in result) {
+      if ("errorCode" in result) {
         exc.errorCode = result.errorCode;
       }
-      if ('popupMessage' in result) {
+      if ("popupMessage" in result) {
         exc.popupMessage = result.popupMessage;
       }
       throw exc;
     } else {
       log.error("Unexpected background result:", result);
-      let exc = new Error(`Bad response type from background page: ${result && result.type || undefined}`);
+      const exc = new Error(`Bad response type from background page: ${result && result.type || undefined}`);
       exc.resultType = result ? (result.type || "undefined") : "undefined result";
       throw exc;
     }
