@@ -89,6 +89,12 @@ this.PaymentTestUtils = {
       return element.getBoundingClientRect().height > 0;
     },
 
+    getElementTextContent: selector => {
+      let doc = content.document;
+      let element = doc.querySelector(selector);
+      return element.textContent;
+    },
+
     getShippingOptions: () => {
       let select = content.document.querySelector("shipping-option-picker > rich-select");
       let popupBox = Cu.waiveXrays(select).popupBox;
@@ -103,14 +109,6 @@ this.PaymentTestUtils = {
         selectedOptionLabel: selectedOption.getAttribute("label"),
         selectedOptionCurrency: currencyAmount.getAttribute("currency"),
         selectedOptionAmount: currencyAmount.getAttribute("amount"),
-      };
-    },
-
-    getErrorDetails: () => {
-      let doc = content.document;
-      let errorText = doc.querySelector("#error-text");
-      return {
-        text: errorText.textContent,
       };
     },
 
