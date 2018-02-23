@@ -15,6 +15,12 @@ UNIFIED_SOURCES += [
     'src/woff2_out.cc',
 ]
 
+EXPORTS.woff2 += [
+    'include/woff2/decode.h',
+    'include/woff2/encode.h',
+    'include/woff2/output.h',
+]
+
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()
 
