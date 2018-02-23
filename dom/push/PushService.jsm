@@ -215,13 +215,13 @@ var PushService = {
     this._state = aNewState;
   },
 
-  _changeStateOfflineEvent: function(offline, calledFromConnEnabledEvent) {
+  async _changeStateOfflineEvent(offline, calledFromConnEnabledEvent) {
     console.debug("changeStateOfflineEvent()", offline);
 
     if (this._state < PUSH_SERVICE_ACTIVE_OFFLINE &&
         this._state != PUSH_SERVICE_ACTIVATING &&
         !calledFromConnEnabledEvent) {
-      return Promise.resolve();
+      return;
     }
 
     if (offline) {
@@ -229,7 +229,7 @@ var PushService = {
         this._service.disconnect();
       }
       this._setState(PUSH_SERVICE_ACTIVE_OFFLINE);
-      return Promise.resolve();
+      return;
     }
 
     if (this._state == PUSH_SERVICE_RUNNING) {
@@ -238,13 +238,16 @@ var PushService = {
       // Disconnect first.
       this._service.disconnect();
     }
-    return this.getAllUnexpired().then(records => {
-      this._setState(PUSH_SERVICE_RUNNING);
-      if (records.length > 0) {
-        // if there are request waiting
-        this._service.connect(records);
-      }
-    });
+
+    let records = await this.getAllUnexpired();
+
+    this._setState(PUSH_SERVICE_RUNNING);
+
+    if (records.length > 0 || prefs.get("alwaysConnect")) {
+      // Connect if we have existing subscriptions, or if the always-on pref
+      // is set.
+      this._service.connect(records);
+    }
   },
 
   _changeStateConnectionEnabledEvent: function(enabled) {
