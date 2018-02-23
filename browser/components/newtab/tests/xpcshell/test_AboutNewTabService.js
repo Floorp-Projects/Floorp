@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
 
-const IS_RELEASE_OR_BETA = AppConstants.RELEASE_OR_BETA;
+const {IS_RELEASE_OR_BETA, MOZILLA_OFFICIAL} = AppConstants;
 
 const ACTIVITY_STREAM_PRERENDER_URL = "resource://activity-stream/prerendered/en-US/activity-stream-prerendered.html";
 const ACTIVITY_STREAM_PRERENDER_DEBUG_URL = "resource://activity-stream/prerendered/static/activity-stream-prerendered-debug.html";
@@ -134,6 +134,16 @@ add_task(function test_locale() {
     "The locale for testing should be en-US");
 });
 
+add_task(async function test_debug_mode() {
+  if (!IS_RELEASE_OR_BETA && !MOZILLA_OFFICIAL) { // Check if local build
+    Assert.equal(aboutNewTabService.activityStreamDebug, true,
+      "Debug mode is set for builds that are not official");
+  } else {
+    Assert.equal(aboutNewTabService.activityStreamDebug, false,
+      "Debug mode is not set for any other builds");
+  }
+});
+
 /**
  * Tests reponse to updates to prefs
  */
@@ -195,6 +205,9 @@ function setBoolPrefAndWaitForChange(pref, value, testMessage) {
 
 
 function setupASPrerendered() {
+  // Don't run in debug mode regardless of build type
+  Services.prefs.setBoolPref(ACTIVITY_STREAM_DEBUG_PREF, false);
+
   if (Services.prefs.getBoolPref(ACTIVITY_STREAM_PRERENDER_PREF)) {
     return Promise.resolve();
   }
