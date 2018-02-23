@@ -32,11 +32,6 @@ digraph event_hub_states {
   LongTap -> Scroll [label="Scroll start", constraint=false];
 
   Scroll [color="#FF9022"]
-  Scroll -> PostScroll [label="Scroll end"];
+  Scroll -> NoAction [label="Scroll end"];
   Scroll -> NoAction [label="Blur"];
-
-  PostScroll [color="#FF9022"]
-  PostScroll -> Scroll [label="Scroll start"];
-  PostScroll -> NoAction [label="Blur or\nWait 300ms"];
-  PostScroll -> NoAction [label="Press (forward to NoAction)", constraint=false];
 }
