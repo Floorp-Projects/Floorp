@@ -440,14 +440,6 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                           dest="devicePort",
                           help="port of remote device to test")
 
-        self.add_argument("--remote-product-name",
-                          action="store",
-                          type=str,
-                          dest="remoteProductName",
-                          default="fennec",
-                          help="Name of product to test - either fennec or firefox, "
-                               "defaults to fennec")
-
         self.add_argument("--remote-webserver",
                           action="store",
                           type=str,
@@ -503,7 +495,7 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
     def validate_remote(self, options, automation):
         # Ensure our defaults are set properly for everything we can infer
         if not options.remoteTestRoot:
-            options.remoteTestRoot = automation._devicemanager.deviceRoot + \
+            options.remoteTestRoot = automation._dm.deviceRoot + \
                 '/reftest'
         options.remoteProfile = options.remoteTestRoot + "/profile"
 
@@ -568,7 +560,7 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
             options.httpdPath = os.path.join(options.utilityPath, "components")
 
         if not options.ignoreWindowSize:
-            parts = automation._devicemanager.getInfo(
+            parts = automation._dm.getInfo(
                 'screen')['screen'][0].split()
             width = int(parts[0].split(':')[1])
             height = int(parts[1].split(':')[1])
