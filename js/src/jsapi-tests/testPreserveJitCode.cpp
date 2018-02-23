@@ -43,14 +43,10 @@ testPreserveJitCode(bool preserveJitCode, unsigned remainingIonScripts)
     CHECK(global);
     JSAutoCompartment ac(cx, global);
 
-#ifdef JS_CODEGEN_ARM64
-    // The ARM64 Ion JIT is not yet enabled, so this test will fail with
-    // countIonScripts(global) == 0. Once Ion is enabled for ARM64, this test
-    // should be passing again, and this code can be deleted.
-    // Bug 1208526 - ARM64: Reenable jsapi-tests/testPreserveJitCode once Ion is enabled
+    // The Ion JIT may be unavailable due to --disable-ion or lack of support
+    // for this platform.
     if (!js::jit::IsIonEnabled(cx))
         knownFail = true;
-#endif
 
     CHECK_EQUAL(countIonScripts(global), 0u);
 
