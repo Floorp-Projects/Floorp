@@ -39,7 +39,7 @@ fuzzy-if(skiaContent,12,83) fuzzy-if(webrender,19-19,96-96) == corner-4.html cor
 fails == clipping-1.html clipping-1-ref.html # background color should completely fill box; bug 466572
 != clipping-2.html about:blank # background color clipped to inner/outer border, can't get
 # great tests for this due to antialiasing problems described in bug 466572
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,1) fuzzy-if(skiaContent,17,62) fuzzy-if(webrender,41-41,66-66) == clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,1) fuzzy-if(skiaContent,17,62) fuzzy-if(webrender,42-42,66-66) == clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
 
 # Tests for clipping the contents of replaced elements and overflow!=visible
 != clipping-4-ref.html clipping-4-notref.html
