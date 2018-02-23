@@ -820,6 +820,59 @@ add_bookmark_test(async function test_sync_dateAdded(engine) {
   }
 });
 
+add_task(async function test_buffer_hasDupe() {
+  await Service.recordManager.clearCache();
+  await PlacesSyncUtils.bookmarks.reset();
+  let engine = new BufferedBookmarksEngine(Service);
+  await engine.initialize();
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+  let collection = server.user("foo").collection("bookmarks");
+  engine._tracker.start(); // We skip usual startup...
+  try {
+    let guid1 = Utils.makeGUID();
+    let guid2 = Utils.makeGUID();
+    await PlacesUtils.bookmarks.insert({
+      guid: guid1,
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      url: "https://www.example.com",
+      title: "example.com",
+    });
+    await PlacesUtils.bookmarks.insert({
+      guid: guid2,
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      url: "https://www.example.com",
+      title: "example.com",
+    });
+
+    await sync_engine_and_validate_telem(engine, false);
+    // Make sure we set hasDupe on outgoing records
+    Assert.ok(collection.payloads().every(payload => payload.hasDupe));
+
+    await PlacesUtils.bookmarks.remove(guid1);
+
+    // Make sure it works for weakly uploaded records
+    engine.addForWeakUpload(guid2);
+
+    await sync_engine_and_validate_telem(engine, false);
+
+    let tombstone = JSON.parse(JSON.parse(collection.payload(guid1)).ciphertext);
+    // We shouldn't set hasDupe on tombstones.
+    Assert.ok(tombstone.deleted);
+    Assert.ok(!tombstone.hasDupe);
+
+    let record = JSON.parse(JSON.parse(collection.payload(guid2)).ciphertext);
+    // We should set hasDupe on weakly uploaded records.
+    Assert.ok(!record.deleted);
+    Assert.ok(record.hasDupe,
+      "Buffered bookmark engine should set hasDupe for weakly uploaded records.");
+
+    await sync_engine_and_validate_telem(engine, false);
+  } finally {
+    await cleanup(engine, server);
+  }
+});
+
 // Bug 890217.
 add_task(async function test_sync_imap_URLs() {
   await Service.recordManager.clearCache();
