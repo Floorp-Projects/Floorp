@@ -353,7 +353,7 @@ public class GeckoSession extends LayerSession
 
     private final Listener mListener = new Listener();
 
-    protected static final class Window extends JNIObject implements IInterface {
+    /* package */ static final class Window extends JNIObject implements IInterface {
         private NativeQueue mNativeQueue;
         private Binder mBinder;
 
@@ -1402,17 +1402,6 @@ public class GeckoSession extends LayerSession
                     NEW
                 };
                 return sMap[value];
-            }
-        }
-
-        enum LoadUriResult {
-            HANDLED(0),
-            LOAD_IN_FRAME(1);
-
-            private int mValue;
-
-            private LoadUriResult(int value) {
-                mValue = value;
             }
         }
 
