@@ -13,10 +13,6 @@ class OpenTypeGDEF : public Table {
  public:
   explicit OpenTypeGDEF(Font *font, uint32_t tag)
       : Table(font, tag, tag),
-        version_2(false),
-        has_glyph_class_def(false),
-        has_mark_attachment_class_def(false),
-        has_mark_glyph_sets_def(false),
         num_mark_glyph_sets(0),
         m_data(NULL),
         m_length(0),
@@ -26,10 +22,6 @@ class OpenTypeGDEF : public Table {
   bool Parse(const uint8_t *data, size_t length);
   bool Serialize(OTSStream *out);
 
-  bool version_2;
-  bool has_glyph_class_def;
-  bool has_mark_attachment_class_def;
-  bool has_mark_glyph_sets_def;
   uint16_t num_mark_glyph_sets;
 
  private:
