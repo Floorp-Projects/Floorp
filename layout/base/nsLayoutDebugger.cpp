@@ -92,7 +92,9 @@ nsLayoutDebugger::GetShowEventTargetFrameBorder(bool* aResult)
 
 #endif
 
-std::ostream& operator<<(std::ostream& os, const nsPrintfCString& rhs) {
+static std::ostream&
+operator<<(std::ostream& os, const nsPrintfCString& rhs)
+{
   os << rhs.get();
   return os;
 }

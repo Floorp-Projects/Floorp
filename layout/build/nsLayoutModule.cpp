@@ -265,8 +265,7 @@ static bool gInitialized = false;
 
 // Perform our one-time intialization for this module
 
-// static
-nsresult
+static nsresult
 Initialize()
 {
   if (gInitialized) {

@@ -76,7 +76,7 @@ IsTempLayerManager(LayerManager* aManager)
           !static_cast<BasicLayerManager*>(aManager)->IsRetained());
 }
 
-already_AddRefed<LayerManager>
+static already_AddRefed<LayerManager>
 GetLayerManager(nsFrameLoader* aFrameLoader)
 {
   if (nsIContent* content = aFrameLoader->GetOwnerContent()) {

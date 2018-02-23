@@ -176,7 +176,7 @@ ZoomConstraintsClient::ScreenSizeChanged()
   RefreshZoomConstraints();
 }
 
-mozilla::layers::ZoomConstraints
+static mozilla::layers::ZoomConstraints
 ComputeZoomConstraintsFromViewportInfo(const nsViewportInfo& aViewportInfo)
 {
   mozilla::layers::ZoomConstraints constraints;

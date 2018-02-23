@@ -787,7 +787,7 @@ nsCSSRendering::CreateWebRenderCommandsForBorder(nsDisplayItem* aItem,
   return true;
 }
 
-nsCSSBorderRenderer
+static nsCSSBorderRenderer
 ConstructBorderRenderer(nsPresContext* aPresContext,
                         nsStyleContext* aStyleContext,
                         DrawTarget* aDrawTarget,

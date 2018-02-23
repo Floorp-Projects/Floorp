@@ -1927,7 +1927,7 @@ nsBoxFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
 
 // Helper less-than-or-equal function, used in CheckBoxOrder() as a
 // template-parameter for the sorting functions.
-bool
+static bool
 IsBoxOrdinalLEQ(nsIFrame* aFrame1,
                 nsIFrame* aFrame2)
 {

@@ -1047,14 +1047,14 @@ private:
   AsyncDragMetrics mDragMetrics;
 };
 
-bool
+static bool
 UsesSVGEffects(nsIFrame* aFrame)
 {
   return aFrame->StyleEffects()->HasFilters()
       || nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(aFrame);
 }
 
-bool
+static bool
 ScrollFrameWillBuildScrollInfoLayer(nsIFrame* aScrollFrame)
 {
   nsIFrame* current = aScrollFrame;

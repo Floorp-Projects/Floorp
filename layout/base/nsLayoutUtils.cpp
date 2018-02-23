@@ -833,7 +833,7 @@ nsLayoutUtils::FindContentFor(ViewID aId)
   }
 }
 
-nsIFrame*
+static nsIFrame*
 GetScrollFrameFromContent(nsIContent* aContent)
 {
   nsIFrame* frame = aContent->GetPrimaryFrame();
@@ -1316,7 +1316,7 @@ GetDisplayPortImpl(nsIContent* aContent, nsRect* aResult, float aMultiplier,
   return true;
 }
 
-void
+static void
 TranslateFromScrollPortToScrollFrame(nsIContent* aContent, nsRect* aRect)
 {
   MOZ_ASSERT(aRect);

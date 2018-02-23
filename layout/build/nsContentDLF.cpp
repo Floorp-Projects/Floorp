@@ -117,7 +117,7 @@ nsContentDLF::~nsContentDLF()
 NS_IMPL_ISUPPORTS(nsContentDLF,
                   nsIDocumentLoaderFactory)
 
-bool
+static bool
 MayUseXULXBL(nsIChannel* aChannel)
 {
   nsIScriptSecurityManager *securityManager =

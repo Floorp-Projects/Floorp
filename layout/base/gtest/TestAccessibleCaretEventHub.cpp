@@ -91,8 +91,9 @@ public:
 };
 
 // Print the name of the state for debugging.
-::std::ostream& operator<<(::std::ostream& aOstream,
-                           const MockAccessibleCaretEventHub::State* aState)
+static ::std::ostream&
+operator<<(::std::ostream& aOstream,
+           const MockAccessibleCaretEventHub::State* aState)
 {
   return aOstream << aState->Name();
 }
