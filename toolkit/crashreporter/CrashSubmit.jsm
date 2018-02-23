@@ -15,9 +15,6 @@ var EXPORTED_SYMBOLS = [
   "CrashSubmit"
 ];
 
-const STATE_START = Ci.nsIWebProgressListener.STATE_START;
-const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
-
 const SUCCESS = "success";
 const FAILED  = "failed";
 const SUBMITTING = "submitting";
@@ -95,20 +92,6 @@ function getDir(name) {
   return OS.Path.join(uAppDataPath, "Crash Reports", name);
 }
 
-async function isDirAsync(path) {
-  try {
-    let dirInfo = await OS.File.stat(path);
-
-    if (!dirInfo.isDir) {
-      return false;
-    }
-  } catch (ex) {
-    return false;
-  }
-
-  return true;
-}
-
 async function writeFileAsync(dirName, fileName, data) {
   let dirPath = getDir(dirName);
   let filePath = OS.Path.join(dirPath, fileName);
@@ -123,14 +106,6 @@ function getPendingMinidump(id) {
   return [".dmp", ".extra", ".memory.json.gz"].map(suffix => {
     return OS.Path.join(pendingDir, `${id}${suffix}`);
   });
-}
-
-function addFormEntry(doc, form, name, value) {
-  let input = doc.createElement("input");
-  input.type = "hidden";
-  input.name = name;
-  input.value = value;
-  form.appendChild(input);
 }
 
 async function writeSubmittedReportAsync(crashID, viewURL) {
