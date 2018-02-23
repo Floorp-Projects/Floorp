@@ -1,4 +1,4 @@
-/* globals ADDON_DISABLE */
+/* globals ADDON_DISABLE Services CustomizableUI LegacyExtensionsUtils AppConstants PageActions */
 const ADDON_ID = "screenshots@mozilla.org";
 const TELEMETRY_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
 const PREF_BRANCH = "extensions.screenshots.";
@@ -6,6 +6,7 @@ const USER_DISABLE_PREF = "extensions.screenshots.disabled";
 const UPLOAD_DISABLED_PREF = "extensions.screenshots.upload-disabled";
 const HISTORY_ENABLED_PREF = "places.history.enabled";
 
+const { interfaces: Ci, utils: Cu } = Components;
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
@@ -41,7 +42,7 @@ const prefObserver = {
   observe(aSubject, aTopic, aData) {
     // aSubject is the nsIPrefBranch we're observing (after appropriate QI)
     // aData is the name of the pref that's been changed (relative to aSubject)
-    if (aData == USER_DISABLE_PREF) {
+    if (aData === USER_DISABLE_PREF) {
       // eslint-disable-next-line promise/catch-or-return
       appStartupPromise = appStartupPromise.then(handleStartup);
     }
@@ -69,17 +70,16 @@ const LibraryButton = {
 
   init(webExtension) {
     this._initialized = true;
-    let permissionPages = [...webExtension.extension.permissions].filter(p => (/^https?:\/\//i).test(p));
+    const permissionPages = [...webExtension.extension.permissions].filter(p => (/^https?:\/\//i).test(p));
     if (permissionPages.length > 1) {
       Cu.reportError(new Error("Should not have more than 1 permission page, but got: " + JSON.stringify(permissionPages)));
     }
-    this.PAGE_TO_OPEN = permissionPages.length == 1 ? permissionPages[0].replace(/\*$/, "") : "https://screenshots.firefox.com/";
+    this.PAGE_TO_OPEN = permissionPages.length === 1 ? permissionPages[0].replace(/\*$/, "") : "https://screenshots.firefox.com/";
     this.PAGE_TO_OPEN += "shots";
-    this.ICON_URL = webExtension.extension.getURL("icons/icon-16-v2.svg");
-    this.ICON_URL_2X = webExtension.extension.getURL("icons/icon-32-v2.svg");
+    this.ICON_URL = webExtension.extension.getURL("icons/icon-v2.svg");
     this.LABEL = webExtension.extension.localizeMessage("libraryLabel");
     CustomizableUI.addListener(this);
-    for (let win of CustomizableUI.windows) {
+    for (const win of CustomizableUI.windows) {
       this.onWindowOpened(win);
     }
   },
@@ -88,8 +88,8 @@ const LibraryButton = {
     if (!this._initialized) {
       return;
     }
-    for (let win of CustomizableUI.windows) {
-      let item = win.document.getElementById(this.ITEM_ID);
+    for (const win of CustomizableUI.windows) {
+      const item = win.document.getElementById(this.ITEM_ID);
       if (item) {
         item.remove();
       }
@@ -99,19 +99,19 @@ const LibraryButton = {
   },
 
   onWindowOpened(win) {
-    let libraryViewInsertionPoint = win.document.getElementById("appMenu-library-remotetabs-button");
+    const libraryViewInsertionPoint = win.document.getElementById("appMenu-library-remotetabs-button");
     // If the library view doesn't exist (on non-photon builds, for instance),
     // this will be null, and we bail out early.
     if (!libraryViewInsertionPoint) {
       return;
     }
-    let parent = libraryViewInsertionPoint.parentNode;
-    let {nextSibling} = libraryViewInsertionPoint;
-    let item = win.document.createElement("toolbarbutton");
+    const parent = libraryViewInsertionPoint.parentNode;
+    const {nextSibling} = libraryViewInsertionPoint;
+    const item = win.document.createElement("toolbarbutton");
     item.className = "subviewbutton subviewbutton-iconic";
     item.addEventListener("command", () => win.openUILinkIn(this.PAGE_TO_OPEN, "tab"));
     item.id = this.ITEM_ID;
-    let iconURL = win.devicePixelRatio >= 1.1 ? this.ICON_URL_2X : this.ICON_URL;
+    const iconURL = this.ICON_URL;
     item.setAttribute("image", iconURL);
     item.setAttribute("label", this.LABEL);
 
@@ -170,9 +170,9 @@ function handleStartup() {
   });
 
   if (!shouldDisable() && !webExtension.started) {
-    return start(webExtension);
+    start(webExtension);
   } else if (shouldDisable()) {
-    return stop(webExtension, ADDON_DISABLE);
+    stop(webExtension, ADDON_DISABLE);
   }
 }
 
@@ -193,7 +193,7 @@ function start(webExtension) {
 }
 
 function stop(webExtension, reason) {
-  if (reason != APP_SHUTDOWN) {
+  if (reason !== APP_SHUTDOWN) {
     LibraryButton.uninit();
     if (photonPageAction) {
       photonPageAction.remove();
@@ -209,18 +209,18 @@ function handleMessage(msg, sender, sendReply) {
   }
 
   if (msg.funcName === "isTelemetryEnabled") {
-    let telemetryEnabled = getBoolPref(TELEMETRY_ENABLED_PREF);
+    const telemetryEnabled = getBoolPref(TELEMETRY_ENABLED_PREF);
     sendReply({type: "success", value: telemetryEnabled});
   } else if (msg.funcName === "isUploadDisabled") {
-    let isESR = AppConstants.MOZ_UPDATE_CHANNEL === 'esr';
-    let uploadDisabled = getBoolPref(UPLOAD_DISABLED_PREF);
+    const isESR = AppConstants.MOZ_UPDATE_CHANNEL === "esr";
+    const uploadDisabled = getBoolPref(UPLOAD_DISABLED_PREF);
     sendReply({type: "success", value: uploadDisabled || isESR});
   } else if (msg.funcName === "isHistoryEnabled") {
-    let historyEnabled = getBoolPref(HISTORY_ENABLED_PREF);
+    const historyEnabled = getBoolPref(HISTORY_ENABLED_PREF);
     sendReply({type: "success", value: historyEnabled});
   } else if (msg.funcName === "incrementCount") {
-    let allowedScalars = ["download", "upload", "copy"];
-    let scalar = msg.args && msg.args[0] && msg.args[0].scalar;
+    const allowedScalars = ["download", "upload", "copy"];
+    const scalar = msg.args && msg.args[0] && msg.args[0].scalar;
     if (!allowedScalars.includes(scalar)) {
       sendReply({type: "error", name: `incrementCount passed an unrecognized scalar ${scalar}`});
     } else {
@@ -237,21 +237,21 @@ let photonPageAction;
 // Does nothing otherwise.  Ideally, in the future, WebExtension page actions
 // and Photon page actions would be one in the same, but they aren't right now.
 function initPhotonPageAction(api, webExtension) {
-  let id = "screenshots";
+  const id = "screenshots";
   let port = null;
 
-  let {tabManager} = webExtension.extension;
+  const {tabManager} = webExtension.extension;
 
   // Make the page action.
   photonPageAction = PageActions.actionForID(id) || PageActions.addAction(new PageActions.Action({
     id,
     title: "Take a Screenshot",
-    iconURL: webExtension.extension.getURL("icons/icon-32-v2.svg"),
+    iconURL: webExtension.extension.getURL("icons/icon-v2.svg"),
     _insertBeforeActionID: null,
     onCommand(event, buttonNode) {
       if (port) {
-        let browserWin = buttonNode.ownerGlobal;
-        let tab = tabManager.getWrapper(browserWin.gBrowser.selectedTab);
+        const browserWin = buttonNode.ownerGlobal;
+        const tab = tabManager.getWrapper(browserWin.gBrowser.selectedTab);
         port.postMessage({
           type: "click",
           tab: {id: tab.id, url: tab.url}
@@ -262,7 +262,7 @@ function initPhotonPageAction(api, webExtension) {
 
   // Establish a port to the WebExtension side.
   api.browser.runtime.onConnect.addListener((listenerPort) => {
-    if (listenerPort.name != "photonPageActionPort") {
+    if (listenerPort.name !== "photonPageActionPort") {
       return;
     }
     port = listenerPort;

@@ -15,8 +15,8 @@ function promiseScreenshotsEnabled() {
   }
   info("Screenshots is not enabled");
   return new Promise((resolve, reject) => {
-    let interval = setInterval(() => {
-      let action = PageActions.actionForID("screenshots");
+    const interval = setInterval(() => {
+      const action = PageActions.actionForID("screenshots");
       if (action) {
         info("screenshots page action created");
         clearInterval(interval);
@@ -34,8 +34,8 @@ function promiseScreenshotsDisabled() {
     return Promise.resolve(true);
   }
   return new Promise((resolve, reject) => {
-    let interval = setInterval(() => {
-      let action = PageActions.actionForID("screenshots");
+    const interval = setInterval(() => {
+      const action = PageActions.actionForID("screenshots");
       if (!action) {
         info("screenshots page action removed");
         clearInterval(interval);
