@@ -3116,9 +3116,6 @@ MediaManager::OnNavigation(uint64_t aWindowID)
           // Grab a strong ref since RemoveAll() might destroy the listener
           // mid-way when clearing the mActiveWindows reference.
           RefPtr<GetUserMediaWindowListener> listener(aListener);
-          if (!listener) {
-            return;
-          }
 
           listener->Stop();
           listener->RemoveAll();
@@ -3665,10 +3662,6 @@ MediaManager::StopScreensharing(uint64_t aWindowID)
   IterateWindowListeners(window->AsInner(),
     [](GetUserMediaWindowListener* aListener)
     {
-      if (!aListener) {
-        return;
-      }
-
       aListener->StopSharing();
     });
 }
@@ -3684,7 +3677,9 @@ MediaManager::IterateWindowListeners(nsPIDOMWindowInner* aWindow,
     {
       uint64_t windowID = aWindow->WindowID();
       GetUserMediaWindowListener* listener = GetWindowListener(windowID);
-      aCallback(listener);
+      if (listener) {
+        aCallback(listener);
+      }
       // NB: `listener` might have been destroyed.
     }
 
