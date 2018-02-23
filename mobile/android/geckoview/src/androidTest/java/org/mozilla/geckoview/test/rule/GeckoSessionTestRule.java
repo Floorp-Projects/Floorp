@@ -3,8 +3,8 @@
 
 package org.mozilla.geckoview.test.rule;
 
-import org.mozilla.gecko.GeckoSession;
-import org.mozilla.gecko.GeckoSessionSettings;
+import org.mozilla.geckoview.GeckoSession;
+import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.test.util.Callbacks;
 
 import static org.hamcrest.CoreMatchers.is;

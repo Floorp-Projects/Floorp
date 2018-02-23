@@ -3,8 +3,7 @@
 
 package org.mozilla.geckoview.test.util
 
-import org.mozilla.gecko.GeckoSession
-import org.mozilla.gecko.util.GeckoBundle
+import org.mozilla.geckoview.GeckoSession
 
 class Callbacks private constructor() {
     object Default : All {
