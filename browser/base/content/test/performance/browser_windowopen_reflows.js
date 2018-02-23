@@ -27,7 +27,7 @@ if (Services.appinfo.OS == "WINNT") {
         "init@chrome://browser/content/browser-tabsintitlebar.js",
         "handleEvent@chrome://browser/content/tabbrowser.xml",
       ],
-      times: 2, // This number should only ever go down - never up.
+      maxCount: 2, // This number should only ever go down - never up.
     },
   );
 }
@@ -42,7 +42,7 @@ if (Services.appinfo.OS == "WINNT" || Services.appinfo.OS == "Darwin") {
         "handleEvent@chrome://browser/content/tabbrowser.xml",
       ],
       // These numbers should only ever go down - never up.
-      times: Services.appinfo.OS == "WINNT" ? 5 : 4,
+      maxCount: Services.appinfo.OS == "WINNT" ? 5 : 4,
     },
   );
 }

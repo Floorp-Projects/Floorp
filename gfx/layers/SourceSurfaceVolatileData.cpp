@@ -41,11 +41,18 @@ SourceSurfaceVolatileData::GuaranteePersistance()
 void
 SourceSurfaceVolatileData::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                                   size_t& aHeapSizeOut,
-                                                  size_t& aNonHeapSizeOut) const
+                                                  size_t& aNonHeapSizeOut,
+                                                  size_t& aExtHandlesOut) const
 {
   if (mVBuf) {
     aHeapSizeOut += mVBuf->HeapSizeOfExcludingThis(aMallocSizeOf);
     aNonHeapSizeOut += mVBuf->NonHeapSizeOfExcludingThis();
+#ifdef ANDROID
+    if (!mVBuf->OnHeap()) {
+      // Volatile buffers keep a file handle open on Android.
+      ++aExtHandlesOut;
+    }
+#endif
   }
 }
 

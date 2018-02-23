@@ -2117,14 +2117,6 @@ this.PlacesPanelview = class extends PlacesViewBase {
     return this._events = ["click", "command", "dragend", "dragstart", "ViewHiding", "ViewShown"];
   }
 
-  get panel() {
-    return this.panelMultiView.parentNode;
-  }
-
-  get panelMultiView() {
-    return this._viewElt.panelMultiView;
-  }
-
   handleEvent(event) {
     switch (event.type) {
       case "click":
@@ -2196,6 +2188,7 @@ this.PlacesPanelview = class extends PlacesViewBase {
   uninit(event) {
     this._removeEventListeners(this.panelMultiView, this.events);
     this._removeEventListeners(window, ["unload"]);
+    delete this.panelMultiView;
     super.uninit(event);
   }
 
@@ -2255,10 +2248,6 @@ this.PlacesPanelview = class extends PlacesViewBase {
     }
   }
 
-  _isPopupOpen() {
-    return this.panel.state == "open" && this.panelMultiView.current == this._viewElt;
-  }
-
   _onPopupHidden(event) {
     let panelview = event.originalTarget;
     let placesNode = panelview._placesNode;
@@ -2280,6 +2269,7 @@ this.PlacesPanelview = class extends PlacesViewBase {
     // we ever get here.
     if (event.originalTarget == this._rootElt) {
       // Start listening for events from all panels inside the panelmultiview.
+      this.panelMultiView = this._viewElt.panelMultiView;
       this._addEventListeners(this.panelMultiView, this.events);
     }
     super._onPopupShowing(event);

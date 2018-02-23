@@ -40,7 +40,7 @@ const EXPECTED_APPMENU_OPEN_REFLOWS = [
       "handleEvent@resource:///modules/PanelMultiView.jsm",
     ],
 
-    times: 6, // This number should only ever go down - never up.
+    maxCount: 6, // This number should only ever go down - never up.
   },
 ];
 
@@ -58,20 +58,10 @@ const EXPECTED_APPMENU_SUBVIEW_REFLOWS = [
   {
     stack: [
       "descriptionHeightWorkaround@resource:///modules/PanelMultiView.jsm",
-      "set current@resource:///modules/PanelMultiView.jsm",
-      "hideAllViewsExcept@resource:///modules/PanelMultiView.jsm",
-    ],
-
-    times: 1, // This number should only ever go down - never up.
-  },
-
-  {
-    stack: [
-      "descriptionHeightWorkaround@resource:///modules/PanelMultiView.jsm",
       "_transitionViews@resource:///modules/PanelMultiView.jsm",
     ],
 
-    times: 3, // This number should only ever go down - never up.
+    maxCount: 4, // This number should only ever go down - never up.
   },
 
   /**

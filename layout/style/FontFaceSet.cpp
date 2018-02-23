@@ -122,12 +122,10 @@ FontFaceSet::FontFaceSet(nsPIDOMWindowInner* aWindow, nsIDocument* aDocument)
 {
   MOZ_ASSERT(mDocument, "We should get a valid document from the caller!");
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aWindow);
-
   // If the pref is not set, don't create the Promise (which the page wouldn't
   // be able to get to anyway) as it causes the window.FontFaceSet constructor
   // to be created.
-  if (global && PrefEnabled()) {
+  if (aWindow && PrefEnabled()) {
     mResolveLazilyCreatedReadyPromise = true;
   }
 

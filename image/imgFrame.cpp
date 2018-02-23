@@ -19,16 +19,13 @@
 #include "MainThreadUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/gfx/Tools.h"
+#include "mozilla/gfx/SourceSurfaceRawData.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/SourceSurfaceVolatileData.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsMargin.h"
 #include "nsThreadUtils.h"
-
-#ifdef ANDROID
-#define ANIMATED_FRAMES_USE_HEAP
-#endif
 
 namespace mozilla {
 
@@ -80,6 +77,33 @@ CreateLockedSurface(DataSourceSurface *aSurface,
   return nullptr;
 }
 
+static bool
+ShouldUseHeap(const IntSize& aSize,
+              int32_t aStride,
+              bool aIsAnimated)
+{
+  // On some platforms (i.e. Android), a volatile buffer actually keeps a file
+  // handle active. We would like to avoid too many since we could easily
+  // exhaust the pool. However, other platforms we do not have the file handle
+  // problem, and additionally we may avoid a superfluous memset since the
+  // volatile memory starts out as zero-filled. Hence the knobs below.
+
+  // For as long as an animated image is retained, its frames will never be
+  // released to let the OS purge volatile buffers.
+  if (aIsAnimated && gfxPrefs::ImageMemAnimatedUseHeap()) {
+    return true;
+  }
+
+  // Lets us avoid too many small images consuming all of the handles. The
+  // actual allocation checks for overflow.
+  int32_t bufferSize = (aStride * aSize.width) / 1024;
+  if (bufferSize < gfxPrefs::ImageMemVolatileMinThresholdKB()) {
+    return true;
+  }
+
+  return false;
+}
+
 static already_AddRefed<DataSourceSurface>
 AllocateBufferForImage(const IntSize& size,
                        SurfaceFormat format,
@@ -87,19 +111,13 @@ AllocateBufferForImage(const IntSize& size,
 {
   int32_t stride = VolatileSurfaceStride(size, format);
 
-#ifdef ANIMATED_FRAMES_USE_HEAP
-  if (aIsAnimated) {
-    // For as long as an animated image is retained, its frames will never be
-    // released to let the OS purge volatile buffers. On Android, a volatile
-    // buffer actually keeps a file handle active, which we would like to avoid
-    // since many images and frames could easily exhaust the pool. As such, we
-    // use the heap. On the other platforms we do not have the file handle
-    // problem, and additionally we may avoid a superfluous memset since the
-    // volatile memory starts out as zero-filled.
-    return Factory::CreateDataSourceSurfaceWithStride(size, format,
-                                                      stride, false);
+  if (ShouldUseHeap(size, stride, aIsAnimated)) {
+    RefPtr<SourceSurfaceAlignedRawData> newSurf =
+      new SourceSurfaceAlignedRawData();
+    if (newSurf->Init(size, format, false, 0, stride)) {
+      return newSurf.forget();
+    }
   }
-#endif
 
   if (!aIsAnimated && gfxVars::GetUseWebRenderOrDefault()
                    && gfxPrefs::ImageMemShared()) {
@@ -932,7 +950,7 @@ void
 imgFrame::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                  size_t& aHeapSizeOut,
                                  size_t& aNonHeapSizeOut,
-                                 size_t& aSharedHandlesOut) const
+                                 size_t& aExtHandlesOut) const
 {
   MonitorAutoLock lock(mMonitor);
 
@@ -948,15 +966,7 @@ imgFrame::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
   if (mRawSurface) {
     aHeapSizeOut += aMallocSizeOf(mRawSurface);
     mRawSurface->AddSizeOfExcludingThis(aMallocSizeOf, aHeapSizeOut,
-                                        aNonHeapSizeOut);
-
-    if (mRawSurface->GetType() == SurfaceType::DATA_SHARED) {
-      auto sharedSurface =
-        static_cast<SourceSurfaceSharedData*>(mRawSurface.get());
-      if (sharedSurface->CanShare()) {
-        ++aSharedHandlesOut;
-      }
-    }
+                                        aNonHeapSizeOut, aExtHandlesOut);
   }
 }
 

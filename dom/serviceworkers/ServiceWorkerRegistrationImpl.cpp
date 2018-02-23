@@ -517,7 +517,7 @@ already_AddRefed<Promise>
 ServiceWorkerRegistrationMainThread::Update(ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mOuter->GetOwner());
+  nsCOMPtr<nsIGlobalObject> go = mOuter->GetParentObject();
   if (!go) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -542,7 +542,7 @@ already_AddRefed<Promise>
 ServiceWorkerRegistrationMainThread::Unregister(ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mOuter->GetOwner());
+  nsCOMPtr<nsIGlobalObject> go = mOuter->GetParentObject();
   if (!go) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -627,10 +627,9 @@ ServiceWorkerRegistrationMainThread::ShowNotification(JSContext* aCx,
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(window);
   RefPtr<Promise> p =
-    Notification::ShowPersistentNotification(aCx, global, mScope, aTitle,
-                                             aOptions, aRv);
+    Notification::ShowPersistentNotification(aCx, window->AsGlobal(), mScope,
+                                             aTitle, aOptions, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -656,7 +655,7 @@ ServiceWorkerRegistrationMainThread::GetPushManager(JSContext* aCx,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(mOuter->GetOwner());
+  nsCOMPtr<nsIGlobalObject> globalObject = mOuter->GetParentObject();
 
   if (!globalObject) {
     aRv.Throw(NS_ERROR_FAILURE);
