@@ -393,12 +393,13 @@ nsStyleBorder::~nsStyleBorder()
 }
 
 void
-nsStyleBorder::FinishStyle(nsPresContext* aPresContext)
+nsStyleBorder::FinishStyle(nsPresContext* aPresContext, const nsStyleBorder* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
-  mBorderImageSource.ResolveImage(aPresContext);
+  mBorderImageSource.ResolveImage(
+    aPresContext, aOldStyle ? &aOldStyle->mBorderImageSource : nullptr);
 }
 
 nsMargin
@@ -613,13 +614,14 @@ nsStyleList::nsStyleList(const nsStyleList& aSource)
 }
 
 void
-nsStyleList::FinishStyle(nsPresContext* aPresContext)
+nsStyleList::FinishStyle(nsPresContext* aPresContext, const nsStyleList* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
   if (mListStyleImage && !mListStyleImage->IsResolved()) {
-    mListStyleImage->Resolve(aPresContext);
+    mListStyleImage->Resolve(
+      aPresContext, aOldStyle ? aOldStyle->mListStyleImage.get() : nullptr);
   }
   mCounterStyle.Resolve(aPresContext->CounterStyleManager());
 }
@@ -1300,7 +1302,7 @@ nsStyleSVGReset::Destroy(nsPresContext* aContext)
 }
 
 void
-nsStyleSVGReset::FinishStyle(nsPresContext* aPresContext)
+nsStyleSVGReset::FinishStyle(nsPresContext* aPresContext, const nsStyleSVGReset* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
@@ -1313,7 +1315,12 @@ nsStyleSVGReset::FinishStyle(nsPresContext* aPresContext)
       // resolve this style image, since we do not depend on it to get the
       // SVG mask resource.
       if (!image.GetURLValue()->HasRef()) {
-        image.ResolveImage(aPresContext);
+        const nsStyleImage* oldImage =
+          (aOldStyle && aOldStyle->mMask.mLayers.Length() > i)
+          ? &aOldStyle->mMask.mLayers[i].mImage
+          : nullptr;
+
+        image.ResolveImage(aPresContext, oldImage);
       }
     }
   }
@@ -2191,7 +2198,9 @@ nsStyleImageRequest::~nsStyleImageRequest()
 }
 
 bool
-nsStyleImageRequest::Resolve(nsPresContext* aPresContext)
+nsStyleImageRequest::Resolve(
+  nsPresContext* aPresContext,
+  const nsStyleImageRequest* aOldImageRequest)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!IsResolved(), "already resolved");
@@ -2211,14 +2220,29 @@ nsStyleImageRequest::Resolve(nsPresContext* aPresContext)
     }
   }
 
-  mDocGroup = doc->GetDocGroup();
+  // TODO(emilio, bug 1440442): This is a hackaround to avoid flickering due the
+  // lack of non-http image caching in imagelib (bug 1406134), which causes
+  // stuff like bug 1439285. Cleanest fix if that doesn't get fixed is bug
+  // 1440305, but that seems too risky, and a lot of work to do before 60.
+  //
+  // Once that's fixed, the "old style" argument to FinishStyle can go away.
+  if (aPresContext->IsChrome() && aOldImageRequest &&
+      aOldImageRequest->IsResolved() && DefinitelyEquals(*aOldImageRequest)) {
+    MOZ_ASSERT(aOldImageRequest->mDocGroup == doc->GetDocGroup());
+    MOZ_ASSERT(mModeFlags == aOldImageRequest->mModeFlags);
 
-  mImageValue->Initialize(doc);
+    mDocGroup = aOldImageRequest->mDocGroup;
+    mImageValue = aOldImageRequest->mImageValue;
+    mRequestProxy = aOldImageRequest->mRequestProxy;
+  } else {
+    mDocGroup = doc->GetDocGroup();
+    mImageValue->Initialize(doc);
 
-  nsCSSValue value;
-  value.SetImageValue(mImageValue);
-  mRequestProxy = value.GetPossiblyStaticImageValue(aPresContext->Document(),
-                                                    aPresContext);
+    nsCSSValue value;
+    value.SetImageValue(mImageValue);
+    mRequestProxy = value.GetPossiblyStaticImageValue(aPresContext->Document(),
+                                                      aPresContext);
+  }
 
   if (!mRequestProxy) {
     // The URL resolution or image load failed.
@@ -2226,7 +2250,7 @@ nsStyleImageRequest::Resolve(nsPresContext* aPresContext)
   }
 
   if (mModeFlags & Mode::Track) {
-    mImageTracker = aPresContext->Document()->ImageTracker();
+    mImageTracker = doc->ImageTracker();
   }
 
   MaybeTrackAndLock();
@@ -3345,12 +3369,13 @@ nsStyleBackground::Destroy(nsPresContext* aContext)
 }
 
 void
-nsStyleBackground::FinishStyle(nsPresContext* aPresContext)
+nsStyleBackground::FinishStyle(
+  nsPresContext* aPresContext, const nsStyleBackground* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
-  mImage.ResolveImages(aPresContext);
+  mImage.ResolveImages(aPresContext, aOldStyle ? &aOldStyle->mImage : nullptr);
 }
 
 nsChangeHint
@@ -3724,7 +3749,8 @@ nsStyleDisplay::~nsStyleDisplay()
 }
 
 void
-nsStyleDisplay::FinishStyle(nsPresContext* aPresContext)
+nsStyleDisplay::FinishStyle(
+    nsPresContext* aPresContext, const nsStyleDisplay* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
@@ -3739,7 +3765,11 @@ nsStyleDisplay::FinishStyle(nsPresContext* aPresContext)
         shapeImage->GetImageRequest()->GetImageValue()->SetCORSMode(
           CORSMode::CORS_ANONYMOUS);
       }
-      shapeImage->ResolveImage(aPresContext);
+      const nsStyleImage* oldShapeImage =
+        (aOldStyle &&
+         aOldStyle->mShapeOutside.GetType() == StyleShapeSourceType::Image)
+          ?  &*aOldStyle->mShapeOutside.GetShapeImage() : nullptr;
+      shapeImage->ResolveImage(aPresContext, oldShapeImage);
     }
   }
 
@@ -4016,6 +4046,10 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
 void
 nsStyleDisplay::GenerateCombinedTransform()
 {
+  // FIXME(emilio): This should probably be called from somewhere like what we
+  // do for image layers, instead of FinishStyle.
+  //
+  // This does and undoes the work a ton of times in Stylo.
   mCombinedTransform = nullptr;
 
   // Follow the order defined in the spec to append transform functions.
@@ -4208,12 +4242,16 @@ nsStyleContentData::operator==(const nsStyleContentData& aOther) const
 }
 
 void
-nsStyleContentData::Resolve(nsPresContext* aPresContext)
+nsStyleContentData::Resolve(
+  nsPresContext* aPresContext, const nsStyleContentData* aOldStyle)
 {
   switch (mType) {
     case eStyleContentType_Image:
       if (!mContent.mImage->IsResolved()) {
-        mContent.mImage->Resolve(aPresContext);
+        const nsStyleImageRequest* oldRequest =
+          (aOldStyle && aOldStyle->mType == eStyleContentType_Image)
+          ? aOldStyle->mContent.mImage : nullptr;
+        mContent.mImage->Resolve(aPresContext, oldRequest);
       }
       break;
     case eStyleContentType_Counter:
@@ -4250,10 +4288,14 @@ nsStyleContent::Destroy(nsPresContext* aContext)
 }
 
 void
-nsStyleContent::FinishStyle(nsPresContext* aPresContext)
+nsStyleContent::FinishStyle(nsPresContext* aPresContext, const nsStyleContent* aOldStyle)
 {
-  for (nsStyleContentData& data : mContents) {
-    data.Resolve(aPresContext);
+  for (size_t i = 0; i < mContents.Length(); ++i) {
+    const nsStyleContentData* oldData =
+      (aOldStyle && aOldStyle->mContents.Length() > i)
+      ? &aOldStyle->mContents[i]
+      : nullptr;
+    mContents[i].Resolve(aPresContext, oldData);
   }
 }
 
@@ -4631,14 +4673,22 @@ nsStyleUserInterface::~nsStyleUserInterface()
 }
 
 void
-nsStyleUserInterface::FinishStyle(nsPresContext* aPresContext)
+nsStyleUserInterface::FinishStyle(
+  nsPresContext* aPresContext, const nsStyleUserInterface* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
-  for (nsCursorImage& cursor : mCursorImages) {
+  for (size_t i = 0; i < mCursorImages.Length(); ++i) {
+    nsCursorImage& cursor = mCursorImages[i];
+
     if (cursor.mImage && !cursor.mImage->IsResolved()) {
-      cursor.mImage->Resolve(aPresContext);
+      const nsCursorImage* oldCursor =
+        (aOldStyle && aOldStyle->mCursorImages.Length() > i)
+        ? &aOldStyle->mCursorImages[i]
+        : nullptr;
+      cursor.mImage->Resolve(
+        aPresContext, oldCursor ? oldCursor->mImage.get() : nullptr);
     }
   }
 }
