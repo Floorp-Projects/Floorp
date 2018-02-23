@@ -268,23 +268,11 @@ var gPrivacyPane = {
       gPrivacyPane.updatePrivacyMicroControls();
       gPrivacyPane.updateAutostart();
     });
-    setEventListener("historyRememberClear", "click", function(event) {
-      if (event.button == 0) {
-        gPrivacyPane.clearPrivateDataNow(false);
-      }
-      return false;
-    });
-    setEventListener("historyRememberCookies", "click", function(event) {
-      if (event.button == 0) {
-        gPrivacyPane.showCookies();
-      }
-      return false;
-    });
-    setEventListener("historyDontRememberClear", "click", function(event) {
-      if (event.button == 0) {
-        gPrivacyPane.clearPrivateDataNow(true);
-      }
-      return false;
+    setEventListener("clearHistoryButton", "command", function() {
+      let historyMode = document.getElementById("historyMode");
+      // Select "everything" in the clear history dialog if the
+      // user has set their history mode to never remember history.
+      gPrivacyPane.clearPrivateDataNow(historyMode.value == "dontremember");
     });
     setEventListener("openSearchEnginePreferences", "click", function(event) {
       if (event.button == 0) {
@@ -296,8 +284,6 @@ var gPrivacyPane = {
       gPrivacyPane.updateAutostart);
     setEventListener("cookieExceptions", "command",
       gPrivacyPane.showCookieExceptions);
-    setEventListener("showCookiesButton", "command",
-      gPrivacyPane.showCookies);
     setEventListener("clearDataSettings", "command",
       gPrivacyPane.showClearPrivateDataSettings);
     setEventListener("disableTrackingProtectionExtension", "command",
@@ -423,12 +409,6 @@ var gPrivacyPane = {
     ]);
     appendSearchKeywords("cookieExceptions", [
       bundlePrefs.getString("cookiepermissionstext"),
-    ]);
-    appendSearchKeywords("showCookiesButton", [
-      bundlePrefs.getString("cookiesAll"),
-      bundlePrefs.getString("removeAllCookies.label"),
-      bundlePrefs.getString("removeAllShownCookies.label"),
-      bundlePrefs.getString("removeSelectedCookies.label"),
     ]);
     appendSearchKeywords("trackingProtectionExceptions", [
       bundlePrefs.getString("trackingprotectionpermissionstitle"),
@@ -837,22 +817,24 @@ var gPrivacyPane = {
     acceptThirdPartyLabel.disabled = acceptThirdPartyMenu.disabled = !acceptCookies;
     keepUntil.disabled = menu.disabled = this._autoStartPrivateBrowsing || !acceptCookies;
 
-    return acceptCookies;
+    // Our top-level setting is a radiogroup that only sets "enable all"
+    // and "disable all", so convert the pref value accordingly.
+    return acceptCookies ? "0" : "2";
   },
 
   /**
-   * Enables/disables the "keep until" label and menulist in response to the
-   * "accept cookies" checkbox being checked or unchecked.
+   * Updates the "accept third party cookies" menu based on whether the
+   * "accept cookies" or "block cookies" radio buttons are selected.
    */
   writeAcceptCookies() {
     var accept = document.getElementById("acceptCookies");
     var acceptThirdPartyMenu = document.getElementById("acceptThirdPartyMenu");
 
     // if we're enabling cookies, automatically select 'accept third party always'
-    if (accept.checked)
+    if (accept.value == "0")
       acceptThirdPartyMenu.selectedIndex = 0;
 
-    return accept.checked ? 0 : 2;
+    return parseInt(accept.value, 10);
   },
 
   /**
@@ -904,13 +886,6 @@ var gPrivacyPane = {
     };
     gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
       null, params);
-  },
-
-  /**
-   * Displays all the user's cookies in a dialog.
-   */
-  showCookies(aCategory) {
-    gSubDialog.open("chrome://browser/content/preferences/cookies.xul");
   },
 
   // CLEAR PRIVATE DATA

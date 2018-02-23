@@ -8,8 +8,9 @@
   <!ENTITY shippingAddressLabel       "Shipping Address">
   <!ENTITY shippingOptionsLabel       "Shipping Options">
   <!ENTITY paymentMethodsLabel        "Payment Method">
-  <!ENTITY cancelPaymentButtonLabel   "Cancel">
-  <!ENTITY approvePaymentButtonLabel  "Pay">
+  <!ENTITY cancelPaymentButton.label   "Cancel">
+  <!ENTITY approvePaymentButton.label  "Pay">
+  <!ENTITY processingPaymentButton.label "Processing">
   <!ENTITY orderDetailsLabel          "Order Details">
   <!ENTITY orderTotalLabel            "Total">
 ]>
@@ -73,14 +74,20 @@
         </section>
 
         <footer id="controls-container">
-          <button id="cancel">&cancelPaymentButtonLabel;</button>
-          <button id="pay">&approvePaymentButtonLabel;</button>
+          <button id="cancel">&cancelPaymentButton.label;</button>
+          <button id="pay"
+                  data-initial-label="&approvePaymentButton.label;"
+                  data-processing-label="&processingPaymentButton.label;"></button>
         </footer>
       </section>
       <section id="order-details-overlay" hidden="hidden">
         <h1>&orderDetailsLabel;</h1>
         <order-details></order-details>
       </section>
+    </div>
+
+    <div id="disabled-overlay" hidden="hidden">
+      <!-- overlay to prevent changes while waiting for a response from the merchant -->
     </div>
   </template>
 
@@ -97,7 +104,7 @@
 <body>
   <iframe id="debugging-console"
           hidden="hidden"
-          height="300"
+          height="400"
           src="debugging.html"></iframe>
   <payment-dialog></payment-dialog>
 </body>
