@@ -1591,12 +1591,6 @@
         ]]></body>
       </method>
 
-      <!-- TODO: remove after 57, once we know add-ons can no longer use it. -->
-      <method name="setTabTitleLoading">
-        <parameter name="aTab"/>
-        <body/>
-      </method>
-
       <method name="setInitialTabTitle">
         <parameter name="aTab"/>
         <parameter name="aTitle"/>
