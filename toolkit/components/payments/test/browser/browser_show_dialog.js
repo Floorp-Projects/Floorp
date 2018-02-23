@@ -8,14 +8,13 @@ add_task(async function test_show_abort_dialog() {
     gBrowser,
     url: BLANK_PAGE_URL,
   }, async browser => {
-    // start by creating a PaymentRequest, and show it
-    await ContentTask.spawn(browser, {methodData, details}, PTU.ContentTasks.createAndShowRequest);
-
-    // get a reference to the UI dialog and the requestId
-    let win = await getPaymentWidget();
-    let requestId = paymentUISrv.requestIdForWindow(win);
-    ok(requestId, "requestId should be defined");
-    is(win.closed, false, "dialog should not be closed");
+    let {win} =
+      await setupPaymentDialog(browser, {
+        methodData,
+        details,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
 
     // abort the payment request
     ContentTask.spawn(browser, null, async () => content.rq.abort());
@@ -28,20 +27,14 @@ add_task(async function test_show_manualAbort_dialog() {
     gBrowser,
     url: BLANK_PAGE_URL,
   }, async browser => {
-    let dialogReadyPromise = waitForWidgetReady();
-    // start by creating a PaymentRequest, and show it
-    await ContentTask.spawn(browser, {methodData, details}, PTU.ContentTasks.createAndShowRequest);
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData,
+        details,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
 
-    // get a reference to the UI dialog and the requestId
-    let [win] = await Promise.all([getPaymentWidget(), dialogReadyPromise]);
-    ok(win, "Got payment widget");
-    let requestId = paymentUISrv.requestIdForWindow(win);
-    ok(requestId, "requestId should be defined");
-    is(win.closed, false, "dialog should not be closed");
-
-    // abort the payment request manually
-    let frame = await getPaymentFrame(win);
-    ok(frame, "Got payment frame");
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
@@ -82,19 +75,14 @@ add_task(async function test_show_completePayment() {
     gBrowser,
     url: BLANK_PAGE_URL,
   }, async browser => {
-    let dialogReadyPromise = waitForWidgetReady();
-    // start by creating a PaymentRequest, and show it
-    await ContentTask.spawn(browser, {methodData, details}, PTU.ContentTasks.createAndShowRequest);
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData,
+        details,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
 
-    // get a reference to the UI dialog and the requestId
-    let [win] = await Promise.all([getPaymentWidget(), dialogReadyPromise]);
-    ok(win, "Got payment widget");
-    let requestId = paymentUISrv.requestIdForWindow(win);
-    ok(requestId, "requestId should be defined");
-    is(win.closed, false, "dialog should not be closed");
-
-    let frame = await getPaymentFrame(win);
-    ok(frame, "Got payment frame");
     info("entering CSC");
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
       securityCode: "999",
@@ -140,18 +128,13 @@ add_task(async function test_show_completePayment() {
     gBrowser,
     url: BLANK_PAGE_URL,
   }, async browser => {
-    let dialogReadyPromise = waitForWidgetReady();
-    // start by creating a PaymentRequest, and show it
-    await ContentTask.spawn(browser, {methodData, details}, PTU.ContentTasks.createAndShowRequest);
-
-    // get a reference to the UI dialog and the requestId
-    let [win] = await Promise.all([getPaymentWidget(), dialogReadyPromise]);
-    ok(win, "Got payment widget");
-    let requestId = paymentUISrv.requestIdForWindow(win);
-    ok(requestId, "requestId should be defined");
-    is(win.closed, false, "dialog should not be closed");
-
-    let frame = await getPaymentFrame(win);
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData,
+        details,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
 
     await ContentTask.spawn(browser, {
       eventName: "shippingoptionchange",

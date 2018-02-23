@@ -20,25 +20,14 @@ add_task(async function test_request_shipping_present() {
     gBrowser,
     url: BLANK_PAGE_URL,
   }, async browser => {
-    let dialogReadyPromise = waitForWidgetReady();
-    // start by creating a PaymentRequest, and show it
-    await ContentTask.spawn(browser,
-                            {
-                              methodData: [PTU.MethodData.basicCard],
-                              details: PTU.Details.twoShippingOptions,
-                              options: PTU.Options.requestShippingOption,
-                            },
-                            PTU.ContentTasks.createAndShowRequest);
-
-    // get a reference to the UI dialog and the requestId
-    let [win] = await Promise.all([getPaymentWidget(), dialogReadyPromise]);
-    ok(win, "Got payment widget");
-    let requestId = paymentUISrv.requestIdForWindow(win);
-    ok(requestId, "requestId should be defined");
-    is(win.closed, false, "dialog should not be closed");
-
-    let frame = await getPaymentFrame(win);
-    ok(frame, "Got payment frame");
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData: [PTU.MethodData.basicCard],
+        details: PTU.Details.twoShippingOptions,
+        options: PTU.Options.requestShippingOption,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
 
     let isShippingOptionsVisible =
       await spawnPaymentDialogTask(frame,
@@ -60,24 +49,13 @@ add_task(async function test_request_shipping_not_present() {
     gBrowser,
     url: BLANK_PAGE_URL,
   }, async browser => {
-    let dialogReadyPromise = waitForWidgetReady();
-    // start by creating a PaymentRequest, and show it
-    await ContentTask.spawn(browser,
-                            {
-                              methodData: [PTU.MethodData.basicCard],
-                              details: PTU.Details.twoShippingOptions,
-                            },
-                            PTU.ContentTasks.createAndShowRequest);
-
-    // get a reference to the UI dialog and the requestId
-    let [win] = await Promise.all([getPaymentWidget(), dialogReadyPromise]);
-    ok(win, "Got payment widget");
-    let requestId = paymentUISrv.requestIdForWindow(win);
-    ok(requestId, "requestId should be defined");
-    is(win.closed, false, "dialog should not be closed");
-
-    let frame = await getPaymentFrame(win);
-    ok(frame, "Got payment frame");
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData: [PTU.MethodData.basicCard],
+        details: PTU.Details.twoShippingOptions,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
 
     let isShippingOptionsVisible =
       await spawnPaymentDialogTask(frame,

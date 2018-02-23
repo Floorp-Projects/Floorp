@@ -150,6 +150,44 @@ async function addSampleAddressesAndBasicCard() {
 }
 
 /**
+ * Create a PaymentRequest object with the given parameters, then
+ * run the given merchantTaskFn.
+ *
+ * @param {Object} browser
+ * @param {Object} options
+ * @param {Object} options.methodData
+ * @param {Object} options.details
+ * @param {Object} options.options
+ * @param {Function} options.merchantTaskFn
+ * @returns {Object} References to the window, requestId, and frame
+ */
+async function setupPaymentDialog(browser, {methodData, details, options, merchantTaskFn}) {
+  let dialogReadyPromise = waitForWidgetReady();
+  await ContentTask.spawn(browser,
+                          {
+                            methodData,
+                            details,
+                            options,
+                          },
+                          merchantTaskFn);
+
+  // get a reference to the UI dialog and the requestId
+  let [win] = await Promise.all([getPaymentWidget(), dialogReadyPromise]);
+  ok(win, "Got payment widget");
+  let requestId = paymentUISrv.requestIdForWindow(win);
+  ok(requestId, "requestId should be defined");
+  is(win.closed, false, "dialog should not be closed");
+
+  let frame = await getPaymentFrame(win);
+  ok(frame, "Got payment frame");
+
+  await dialogReadyPromise;
+  info("dialog ready");
+
+  return {win, requestId, frame};
+}
+
+/**
  * Open a merchant tab with the given merchantTaskFn to create a PaymentRequest
  * and then open the associated PaymentRequest dialog in a new tab and run the
  * associated dialogTaskFn. The same taskArgs are passed to both functions.
