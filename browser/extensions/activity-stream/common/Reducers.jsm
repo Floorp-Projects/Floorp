@@ -265,6 +265,22 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           return item;
         })
       }));
+    case at.PLACES_SAVED_TO_POCKET:
+      if (!action.data) {
+        return prevState;
+      }
+      return prevState.map(section => Object.assign({}, section, {
+        rows: section.rows.map(item => {
+          if (item.url === action.data.url) {
+            return Object.assign({}, item, {
+              pocket_id: action.data.pocket_id,
+              title: action.data.title,
+              type: "pocket"
+            });
+          }
+          return item;
+        })
+      }));
     case at.PLACES_BOOKMARK_REMOVED:
       if (!action.data) {
         return prevState;
@@ -291,6 +307,10 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
     case at.PLACES_LINK_BLOCKED:
       return prevState.map(section =>
         Object.assign({}, section, {rows: section.rows.filter(site => site.url !== action.data.url)}));
+    case at.DELETE_FROM_POCKET:
+    case at.ARCHIVE_FROM_POCKET:
+      return prevState.map(section =>
+        Object.assign({}, section, {rows: section.rows.filter(site => site.pocket_id !== action.data.pocket_id)}));
     default:
       return prevState;
   }

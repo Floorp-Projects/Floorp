@@ -181,7 +181,7 @@ describe("Reducers", () => {
         id: `foo_bar_${i}`,
         title: `Foo Bar ${i}`,
         initialized: false,
-        rows: [{url: "www.foo.bar"}, {url: "www.other.url"}],
+        rows: [{url: "www.foo.bar", pocket_id: 123}, {url: "www.other.url"}],
         order: i,
         type: "history"
       }));
@@ -353,6 +353,20 @@ describe("Reducers", () => {
         assert.lengthOf(section.rows, 0);
       });
     });
+    it("should remove all removed pocket urls", () => {
+      const removeAction = {type: at.DELETE_FROM_POCKET, data: {pocket_id: 123}};
+      const newBlockState = Sections(oldState, removeAction);
+      newBlockState.forEach(section => {
+        assert.deepEqual(section.rows, [{url: "www.other.url"}]);
+      });
+    });
+    it("should archive all archived pocket urls", () => {
+      const removeAction = {type: at.ARCHIVE_FROM_POCKET, data: {pocket_id: 123}};
+      const newBlockState = Sections(oldState, removeAction);
+      newBlockState.forEach(section => {
+        assert.deepEqual(section.rows, [{url: "www.other.url"}]);
+      });
+    });
     it("should not update state for empty action.data on PLACES_BOOKMARK_ADDED", () => {
       const nextState = Sections(undefined, {type: at.PLACES_BOOKMARK_ADDED});
       assert.equal(nextState, INITIAL_STATE.Sections);
@@ -410,6 +424,32 @@ describe("Reducers", () => {
       assert.isUndefined(newRow.bookmarkGuid);
       assert.isUndefined(newRow.bookmarkTitle);
       assert.isUndefined(newRow.bookmarkDateCreated);
+
+      // old row is unchanged
+      assert.equal(oldRow, oldState[0].rows[1]);
+    });
+    it("should not update state for empty action.data on PLACES_SAVED_TO_POCKET", () => {
+      const nextState = Sections(undefined, {type: at.PLACES_SAVED_TO_POCKET});
+      assert.equal(nextState, INITIAL_STATE.Sections);
+    });
+    it("should add a pocked item on PLACES_SAVED_TO_POCKET", () => {
+      const action = {
+        type: at.PLACES_SAVED_TO_POCKET,
+        data: {
+          url: "www.foo.bar",
+          pocket_id: 1234,
+          title: "Title for bar.com"
+        }
+      };
+      const nextState = Sections(oldState, action);
+      // check a section to ensure the correct url was saved to pocket
+      const [newRow, oldRow] = nextState[0].rows;
+
+      // new row has pocket data
+      assert.equal(newRow.url, action.data.url);
+      assert.equal(newRow.type, "pocket");
+      assert.equal(newRow.pocket_id, action.data.pocket_id);
+      assert.equal(newRow.title, action.data.title);
 
       // old row is unchanged
       assert.equal(oldRow, oldState[0].rows[1]);

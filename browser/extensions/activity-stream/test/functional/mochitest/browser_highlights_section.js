@@ -41,10 +41,10 @@ test_highlights(
 test_highlights(
   1, // Number of highlights cards
   function check_highlights_context_menu() {
-    const menuButton = content.document.querySelector(".section-list .context-menu-button");
+    const menuButton = content.document.querySelector(".card-outer .context-menu-button");
     // Open the menu.
     menuButton.click();
-    const found = content.document.querySelector(".context-menu");
+    const found = content.document.querySelector(".card-outer .context-menu");
     ok(found && !found.hidden, "Should find a visible context menu");
   }
 );

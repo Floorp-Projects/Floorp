@@ -23,7 +23,8 @@ window.gActivityStreamPrerenderedState = {
       "section.highlights.collapsed": false,
       "section.topstories.collapsed": false,
       "feeds.section.topstories": true,
-      "feeds.section.highlights": true
+      "feeds.section.highlights": true,
+      "enableWideLayout": true
     }
   },
   "Dialog": {
