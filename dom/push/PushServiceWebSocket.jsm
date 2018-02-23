@@ -514,10 +514,7 @@ var PushServiceWebSocket = {
 
   connect: function(records) {
     console.debug("connect()");
-    // Check to see if we need to do anything.
-    if (records.length > 0) {
-      this._beginWSSetup();
-    }
+    this._beginWSSetup();
   },
 
   isConnected: function() {
