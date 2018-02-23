@@ -889,60 +889,6 @@ nsNavBookmarks::CreateContainerWithID(int64_t aItemId,
 }
 
 
-NS_IMETHODIMP
-nsNavBookmarks::InsertSeparator(int64_t aParent,
-                                int32_t aIndex,
-                                const nsACString& aGUID,
-                                uint16_t aSource,
-                                int64_t* aNewItemId)
-{
-  NS_ENSURE_ARG_MIN(aParent, 1);
-  NS_ENSURE_ARG_MIN(aIndex, nsINavBookmarksService::DEFAULT_INDEX);
-  NS_ENSURE_ARG_POINTER(aNewItemId);
-
-  if (!aGUID.IsEmpty() && !IsValidGUID(aGUID))
-    return NS_ERROR_INVALID_ARG;
-
-  // Get the correct index for insertion.  This also ensures the parent exists.
-  int32_t index, folderCount;
-  int64_t grandParentId;
-  nsAutoCString folderGuid;
-  nsresult rv = FetchFolderInfo(aParent, &folderCount, folderGuid, &grandParentId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mozStorageTransaction transaction(mDB->MainConn(), false);
-
-  if (aIndex == nsINavBookmarksService::DEFAULT_INDEX ||
-      aIndex >= folderCount) {
-    index = folderCount;
-  }
-  else {
-    index = aIndex;
-    // Create space for the insertion.
-    rv = AdjustIndices(aParent, index, INT32_MAX, 1);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  *aNewItemId = -1;
-  nsAutoCString guid(aGUID);
-  PRTime dateAdded = RoundedPRNow();
-  rv = InsertBookmarkInDB(-1, SEPARATOR, aParent, index, EmptyCString(), dateAdded,
-                          0, folderGuid, grandParentId, nullptr, aSource,
-                          aNewItemId, guid);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers, DontSkip,
-                             OnItemAdded(*aNewItemId, aParent, index, TYPE_SEPARATOR,
-                                         nullptr, EmptyCString(), dateAdded, guid,
-                                         folderGuid, aSource));
-
-  return NS_OK;
-}
-
-
 NS_IMPL_ISUPPORTS(nsNavBookmarks::RemoveFolderTransaction, nsITransaction)
 
 NS_IMETHODIMP

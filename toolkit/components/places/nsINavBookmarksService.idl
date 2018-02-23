@@ -457,27 +457,6 @@ interface nsINavBookmarksService : nsISupports
                 [optional] in unsigned short aSource);
 
   /**
-   * Inserts a bookmark separator into the given folder at the given index.
-   * The separator can be removed using removeChildAt().
-   *  @param aParentId
-   *         The id of the parent folder
-   *  @param aIndex
-   *         The separator's index under folder, or DEFAULT_INDEX to append
-   *  @param [optional] aGuid
-   *         The GUID to be set for the new item.  If not set, a new GUID is
-   *         generated.  Unless you've a very sound reason, such as an undo
-   *         manager implementation, do not pass this argument.
-   *  @param [optional] aSource
-   *         The change source, forwarded to all bookmark observers. Defaults
-   *         to SOURCE_DEFAULT.
-   *  @return The ID of the new separator.
-   *  @throws if aGuid is malformed.
-   */
-  long long insertSeparator(in long long aParentId, in long aIndex,
-                            [optional] in ACString aGuid,
-                            [optional] in unsigned short aSource);
-
-  /**
    * Set the title for an item.
    *  @param aItemId
    *         The id of the item whose title should be updated.

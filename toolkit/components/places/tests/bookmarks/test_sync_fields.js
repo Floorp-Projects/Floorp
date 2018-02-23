@@ -75,12 +75,14 @@ class TestCases {
       await PlacesTestUtils.markBookmarksAsSynced();
     }
 
-    info("Test 3: separators");
-    try {
-      await this.testSeparators();
-    } finally {
-      info("Reset sync fields after test 3");
-      await PlacesTestUtils.markBookmarksAsSynced();
+    if ("insertSeparator" in this) {
+      info("Test 3: separators");
+      try {
+        await this.testSeparators();
+      } finally {
+        info("Reset sync fields after test 3");
+        await PlacesTestUtils.markBookmarksAsSynced();
+      }
     }
   }
 
@@ -262,12 +264,6 @@ class SyncTestCases extends TestCases {
   async insertBookmark(parentGuid, uri, index, title) {
     let parentId = await PlacesUtils.promiseItemId(parentGuid);
     let id = PlacesUtils.bookmarks.insertBookmark(parentId, uri, index, title);
-    return PlacesUtils.promiseItemGuid(id);
-  }
-
-  async insertSeparator(parentGuid, index) {
-    let parentId = await PlacesUtils.promiseItemId(parentGuid);
-    let id = PlacesUtils.bookmarks.insertSeparator(parentId, index);
     return PlacesUtils.promiseItemGuid(id);
   }
 
