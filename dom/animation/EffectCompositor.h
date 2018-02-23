@@ -221,6 +221,29 @@ public:
                             CSSPseudoElementType aPseudoType,
                             nsStyleContext* aStyleContext);
 
+  // Update the mPropertiesWithImportantRules and
+  // mPropertiesForAnimationsLevel members of the given EffectSet, and also
+  // request any restyles required by changes to the cascade result.
+  //
+  // NOTE: This can be expensive so we should only call it if styles that apply
+  // above the animation level of the cascade might have changed. For all
+  // other cases we should call MaybeUpdateCascadeResults.
+  //
+  // This is typically reserved for internal callers but is public here since
+  // when we detect changes to the cascade on the Servo side we can't call
+  // MarkCascadeNeedsUpdate during the traversal so instead we call this as part
+  // of a follow-up sequential task.
+  //
+  // As with MaybeUpdateCascadeResults, |aStyleContext| is only used
+  // when |aBackendType| is StyleBackendType::Gecko. When |aBackendType| is
+  // StyleBackendType::Servo, it is ignored.
+  static void
+  UpdateCascadeResults(StyleBackendType aBackendType,
+                       EffectSet& aEffectSet,
+                       dom::Element* aElement,
+                       CSSPseudoElementType aPseudoType,
+                       nsStyleContext* aStyleContext);
+
   // Helper to fetch the corresponding element and pseudo-type from a frame.
   //
   // For frames corresponding to pseudo-elements, the returned element is the
@@ -292,24 +315,6 @@ private:
                           dom::Element* aElement,
                           CSSPseudoElementType aPseudoType,
                           nsStyleContext* aStyleContext);
-
-  // Update the mPropertiesWithImportantRules and
-  // mPropertiesForAnimationsLevel members of the given EffectSet, and also
-  // request any restyles required by changes to the cascade result.
-  //
-  // This can be expensive so we should only call it if styles that apply
-  // above the animation level of the cascade might have changed. For all
-  // other cases we should call MaybeUpdateCascadeResults.
-  //
-  // As with MaybeUpdateCascadeResults, |aStyleContext| is only used
-  // when |aBackendType| is StyleBackendType::Gecko. When |aBackendType| is
-  // StyleBackendType::Servo, it is ignored.
-  static void
-  UpdateCascadeResults(StyleBackendType aBackendType,
-                       EffectSet& aEffectSet,
-                       dom::Element* aElement,
-                       CSSPseudoElementType aPseudoType,
-                       nsStyleContext* aStyleContext);
 
   static nsPresContext* GetPresContext(dom::Element* aElement);
 

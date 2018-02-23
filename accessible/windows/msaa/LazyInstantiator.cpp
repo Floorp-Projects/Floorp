@@ -165,12 +165,30 @@ LazyInstantiator::GetClientPid(const DWORD aClientTid)
   return ::GetProcessIdOfThread(callingThread);
 }
 
+#define ALL_VERSIONS   ((unsigned long long)-1LL)
+
+struct DllBlockInfo {
+  // The name of the DLL.
+  const wchar_t* mName;
+
+  // If mUntilVersion is ALL_VERSIONS, we'll block all versions of this dll.
+  // Otherwise, we'll block all versions less than the given version, as queried
+  // by GetFileVersionInfo and VS_FIXEDFILEINFO's dwFileVersionMS and
+  // dwFileVersionLS fields.
+  //
+  // Note that the version is usually 4 components, which is A.B.C.D
+  // encoded as 0x AAAA BBBB CCCC DDDD ULL (spaces added for clarity).
+  unsigned long long mUntilVersion;
+};
+
 /**
  * This is the blocklist for known "bad" DLLs that instantiate a11y.
  */
-static const wchar_t* gBlockedInprocDlls[] = {
-  L"dtvhooks.dll",  // RealPlayer, bug 1418535
-  L"dtvhooks64.dll" // RealPlayer, bug 1418535
+static const DllBlockInfo gBlockedInprocDlls[] = {
+  // RealPlayer, bug 1418535, bug 1437417
+  // Versions before 18.1.11.0 cause severe performance problems.
+  {L"dtvhooks.dll", MAKE_FILE_VERSION(18, 1, 11, 0)},
+  {L"dtvhooks64.dll", MAKE_FILE_VERSION(18, 1, 11, 0)}
 };
 
 /**
@@ -201,9 +219,17 @@ LazyInstantiator::IsBlockedInjection()
 
   for (size_t index = 0, len = ArrayLength(gBlockedInprocDlls); index < len;
        ++index) {
-    if (::GetModuleHandleW(gBlockedInprocDlls[index])) {
+    const DllBlockInfo& blockedDll = gBlockedInprocDlls[index];
+    HMODULE module = ::GetModuleHandleW(blockedDll.mName);
+    if (!module) {
+      // This dll isn't loaded.
+      continue;
+    }
+    if (blockedDll.mUntilVersion == ALL_VERSIONS) {
       return true;
     }
+    return Compatibility::IsModuleVersionLessThan(module,
+                                                  blockedDll.mUntilVersion);
   }
 
   return false;
