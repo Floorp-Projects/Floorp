@@ -871,7 +871,7 @@ GetBrowserRoot(nsIContent* aContent)
 // scrollable overflow by determining the scroll position at which the child
 // becomes completely visible within the scrollport rather than using the union
 // of the overflow areas at their current position.
-void
+static void
 GetScrollableOverflowForPerspective(nsIFrame* aScrolledFrame,
                                     nsIFrame* aCurrentFrame,
                                     const nsRect aScrollPort,
@@ -2531,7 +2531,7 @@ bool ScrollFrameHelper::IsAlwaysActive() const
           styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN);
 }
 
-/*static*/ void
+static void
 RemoveDisplayPortCallback(nsITimer* aTimer, void* aClosure)
 {
   ScrollFrameHelper* helper = static_cast<ScrollFrameHelper*>(aClosure);
@@ -6315,7 +6315,7 @@ nsIScrollableFrame::GetPerceivedScrollingDirections() const
  * Collect the scroll-snap-coordinates of frames in the subtree rooted at
  * |aFrame|, relative to |aScrolledFrame|, into |aOutCoords|.
  */
-void
+static void
 CollectScrollSnapCoordinates(nsIFrame* aFrame, nsIFrame* aScrolledFrame,
                              nsTArray<nsPoint>& aOutCoords)
 {
@@ -6356,7 +6356,7 @@ CollectScrollSnapCoordinates(nsIFrame* aFrame, nsIFrame* aScrolledFrame,
   }
 }
 
-layers::ScrollSnapInfo
+static layers::ScrollSnapInfo
 ComputeScrollSnapInfo(const ScrollFrameHelper& aScrollFrame)
 {
   ScrollSnapInfo result;

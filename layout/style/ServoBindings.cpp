@@ -441,7 +441,7 @@ Gecko_UnsetDirtyStyleAttr(RawGeckoElementBorrowed aElement)
   decl->UnsetDirty();
 }
 
-const RawServoDeclarationBlockStrong*
+static const RawServoDeclarationBlockStrong*
 AsRefRawStrong(const RefPtr<RawServoDeclarationBlock>& aDecl)
 {
   static_assert(sizeof(RefPtr<RawServoDeclarationBlock>) ==
