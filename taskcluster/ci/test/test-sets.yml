@@ -146,6 +146,7 @@ linux-talos-profiling:
     - talos-perf-reftest-profiling
     - talos-perf-reftest-singletons-profiling
     - talos-speedometer-profiling
+    - talos-motionmark-profiling
     - talos-svgr-profiling
     - talos-tp5o-profiling
     - talos-tp6-profiling
@@ -269,6 +270,7 @@ macosx64-talos-profiling:
     - talos-perf-reftest-profiling
     - talos-perf-reftest-singletons-profiling
     - talos-speedometer-profiling
+    - talos-motionmark-profiling
     - talos-svgr-profiling
     - talos-tp5o-profiling
     - talos-tp6-profiling
