@@ -80,3 +80,7 @@ DEFINES += -DBINPATH=$(BINPATH)
 ifdef ENABLE_MARIONETTE
 DEFINES += -DENABLE_MARIONETTE=1
 endif
+
+.PHONY: features
+tools features::
+       $(PYTHON) -c 'import os, json; listing = {"system": sorted(os.listdir("$(DIST)/bin/features"))}; print json.dumps(listing)' > $(DIST)/bin/chrome/chrome/content/built_in_addons.json
