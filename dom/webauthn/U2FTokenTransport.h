@@ -28,19 +28,10 @@ public:
   U2FTokenTransport() {}
 
   virtual RefPtr<U2FRegisterPromise>
-  Register(const nsTArray<WebAuthnScopedCredential>& aCredentials,
-           const WebAuthnAuthenticatorSelection &aAuthenticatorSelection,
-           const nsTArray<uint8_t>& aApplication,
-           const nsTArray<uint8_t>& aChallenge,
-           uint32_t aTimeoutMS) = 0;
+  Register(const WebAuthnMakeCredentialInfo& aInfo) = 0;
 
   virtual RefPtr<U2FSignPromise>
-  Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials,
-       const nsTArray<uint8_t>& aApplication,
-       const nsTArray<uint8_t>& aChallenge,
-       const nsTArray<WebAuthnExtension>& aExtensions,
-       bool aRequireUserVerification,
-       uint32_t aTimeoutMS) = 0;
+  Sign(const WebAuthnGetAssertionInfo& aInfo) = 0;
 
   virtual void Cancel() = 0;
 

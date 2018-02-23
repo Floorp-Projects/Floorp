@@ -77,8 +77,7 @@ Permissions::Query(JSContext* aCx,
                    JS::Handle<JSObject*> aPermission,
                    ErrorResult& aRv)
 {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
-  if (!global) {
+  if (!mWindow) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
@@ -91,7 +90,7 @@ Permissions::Query(JSContext* aCx,
   }
 
   MOZ_ASSERT(status);
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(mWindow->AsGlobal(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -118,8 +117,7 @@ Permissions::Revoke(JSContext* aCx,
                     JS::Handle<JSObject*> aPermission,
                     ErrorResult& aRv)
 {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
-  if (!global) {
+  if (!mWindow) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
@@ -131,7 +129,7 @@ Permissions::Revoke(JSContext* aCx,
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(mWindow->AsGlobal(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

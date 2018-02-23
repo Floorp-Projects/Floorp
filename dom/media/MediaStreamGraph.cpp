@@ -3701,8 +3701,7 @@ MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequ
 
     AbstractThread* mainThread;
     if (aWindow) {
-      nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(aWindow);
-      mainThread = parentObject->AbstractMainThreadFor(TaskCategory::Other);
+      mainThread = aWindow->AsGlobal()->AbstractMainThreadFor(TaskCategory::Other);
     } else {
       // Uncommon case, only for some old configuration of webspeech.
       mainThread = AbstractThread::MainThread();
@@ -3727,11 +3726,10 @@ MediaStreamGraph::CreateNonRealtimeInstance(TrackRate aSampleRate,
 {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 
-  nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(aWindow);
   MediaStreamGraphImpl* graph = new MediaStreamGraphImpl(
     OFFLINE_THREAD_DRIVER,
     aSampleRate,
-    parentObject->AbstractMainThreadFor(TaskCategory::Other));
+    aWindow->AsGlobal()->AbstractMainThreadFor(TaskCategory::Other));
 
   LOG(LogLevel::Debug, ("Starting up Offline MediaStreamGraph %p", graph));
 

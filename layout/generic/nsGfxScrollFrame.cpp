@@ -3072,9 +3072,9 @@ AppendToTop(nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists,
       flags |= nsDisplayOwnLayerFlags::eScrollbarContainer;
     }
 
-    newItem = new (aBuilder) nsDisplayOwnLayer(aBuilder, aSourceFrame, aSource, asr, flags, scrollTarget);
+    newItem = MakeDisplayItem<nsDisplayOwnLayer>(aBuilder, aSourceFrame, aSource, asr, flags, scrollTarget);
   } else {
-    newItem = new (aBuilder) nsDisplayWrapList(aBuilder, aSourceFrame, aSource, asr);
+    newItem = MakeDisplayItem<nsDisplayWrapList>(aBuilder, aSourceFrame, aSource, asr);
   }
 
   if (aFlags & APPEND_POSITIONED) {
@@ -3618,9 +3618,9 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
       if (dirtyRectHasBeenOverriden && gfxPrefs::LayoutDisplayListShowArea()) {
         nsDisplaySolidColor* color =
-          new (aBuilder) nsDisplaySolidColor(aBuilder, mOuter,
-                                             dirtyRect + aBuilder->GetCurrentFrameOffsetToReferenceFrame(),
-                                             NS_RGBA(0, 0, 255, 64), false);
+          MakeDisplayItem<nsDisplaySolidColor>(aBuilder, mOuter,
+                                               dirtyRect + aBuilder->GetCurrentFrameOffsetToReferenceFrame(),
+                                               NS_RGBA(0, 0, 255, 64), false);
         color->SetOverrideZIndex(INT32_MAX);
         scrolledContent.PositionedDescendants()->AppendToTop(color);
       }
@@ -3695,13 +3695,13 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
           info |= CompositorHitTestInfo::eRequiresTargetConfirmation;
         }
         nsDisplayCompositorHitTestInfo* hitInfo =
-            new (aBuilder) nsDisplayCompositorHitTestInfo(aBuilder, mScrolledFrame, info, 1,
+            MakeDisplayItem<nsDisplayCompositorHitTestInfo>(aBuilder, mScrolledFrame, info, 1,
                 Some(mScrollPort + aBuilder->ToReferenceFrame(mOuter)));
         AppendInternalItemToTop(scrolledContent, hitInfo, zIndex);
       }
       if (aBuilder->IsBuildingLayerEventRegions()) {
         nsDisplayLayerEventRegions* inactiveRegionItem =
-            new (aBuilder) nsDisplayLayerEventRegions(aBuilder, mScrolledFrame, 1);
+            MakeDisplayItem<nsDisplayLayerEventRegions>(aBuilder, mScrolledFrame, 1);
         inactiveRegionItem->AddInactiveScrollPort(mScrolledFrame, mScrollPort + aBuilder->ToReferenceFrame(mOuter));
         AppendInternalItemToTop(scrolledContent, inactiveRegionItem, zIndex);
       }
@@ -3709,7 +3709,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     if (aBuilder->ShouldBuildScrollInfoItemsForHoisting()) {
       aBuilder->AppendNewScrollInfoItemForHoisting(
-        new (aBuilder) nsDisplayScrollInfoLayer(aBuilder, mScrolledFrame,
+        MakeDisplayItem<nsDisplayScrollInfoLayer>(aBuilder, mScrolledFrame,
                                                 mOuter));
     }
   }

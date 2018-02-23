@@ -95,7 +95,6 @@ const gfxFontEntry::ScriptRange gfxPlatformFontList::sComplexScriptRanges[] = {
 };
 
 // prefs for the font info loader
-#define FONT_LOADER_FAMILIES_PER_SLICE_PREF "gfx.font_loader.families_per_slice"
 #define FONT_LOADER_DELAY_PREF              "gfx.font_loader.delay"
 #define FONT_LOADER_INTERVAL_PREF           "gfx.font_loader.interval"
 
@@ -187,7 +186,7 @@ gfxPlatformFontList::MemoryReporter::CollectReports(
 gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
     : mFontFamiliesMutex("gfxPlatformFontList::mFontFamiliesMutex"), mFontFamilies(64),
       mOtherFamilyNames(16), mBadUnderlineFamilyNames(8), mSharedCmaps(8),
-      mStartIndex(0), mIncrement(1), mNumFamilies(0), mFontlistInitCount(0),
+      mStartIndex(0), mNumFamilies(0), mFontlistInitCount(0),
       mFontFamilyWhitelistActive(false)
 {
     mOtherFamilyNamesInitialized = false;
@@ -1683,9 +1682,6 @@ gfxPlatformFontList::CleanupLoader()
 void
 gfxPlatformFontList::GetPrefsAndStartLoader()
 {
-    mIncrement =
-        std::max(1u, Preferences::GetUint(FONT_LOADER_FAMILIES_PER_SLICE_PREF));
-
     uint32_t delay =
         std::max(1u, Preferences::GetUint(FONT_LOADER_DELAY_PREF));
     uint32_t interval =

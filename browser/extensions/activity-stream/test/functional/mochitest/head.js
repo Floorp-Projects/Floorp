@@ -10,6 +10,15 @@ function pushPrefs(...prefs) {
   return SpecialPowers.pushPrefEnv({set: prefs});
 }
 
+async function setDefaultTopSites() {
+  // The pref for TopSites is empty by default.
+  await pushPrefs(["browser.newtabpage.activity-stream.default.sites",
+  "https://www.youtube.com/,https://www.facebook.com/,https://www.amazon.com/,https://www.reddit.com/,https://www.wikipedia.org/,https://twitter.com/"]);
+  // Toggle the feed off and on as a workaround to read the new prefs.
+  await pushPrefs(["browser.newtabpage.activity-stream.feeds.topsites", false]);
+  await pushPrefs(["browser.newtabpage.activity-stream.feeds.topsites", true]);
+}
+
 async function clearHistoryAndBookmarks() { // eslint-disable-line no-unused-vars
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
@@ -58,6 +67,31 @@ async function addHighlightsBookmarks(count) { // eslint-disable-line no-unused-
 }
 
 /**
+ * Helper to add various helpers to the content process by injecting variables
+ * and functions to the `content` global.
+ */
+function addContentHelpers() {
+  const {document} = content;
+  Object.assign(content, {
+    /**
+     * Click the context menu button for an item and get its options list.
+     *
+     * @param selector {String} Selector to get an item (e.g., top site, card)
+     * @return {Array} The nodes for the options.
+     */
+    openContextMenuAndGetOptions(selector) {
+      const item = document.querySelector(selector);
+      const contextButton = item.querySelector(".context-menu-button");
+      contextButton.click();
+
+      const contextMenu = item.querySelector(".context-menu");
+      const contextMenuList = contextMenu.querySelector(".context-menu-list");
+      return [...contextMenuList.getElementsByClassName("context-menu-item")];
+    }
+  });
+}
+
+/**
  * Helper to run Activity Stream about:newtab test tasks in content.
  *
  * @param testInfo {Function|Object}
@@ -103,6 +137,9 @@ function test_newtab(testInfo) { // eslint-disable-line no-unused-vars
     // Specially wait for potentially preloaded browsers
     let browser = tab.linkedBrowser;
     await waitForPreloaded(browser);
+
+    // Add shared helpers to the content process
+    ContentTask.spawn(browser, {}, addContentHelpers);
 
     // Wait for React to render something
     await BrowserTestUtils.waitForCondition(() => ContentTask.spawn(browser, {},
