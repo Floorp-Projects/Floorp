@@ -18,16 +18,6 @@ const OPEN_H264_ID  = "gmp-gmpopenh264";
 const WIDEVINE_ID   = "gmp-widevinecdm";
 const GMP_PLUGIN_IDS = [ OPEN_H264_ID, WIDEVINE_ID ];
 
-var GMPPluginUnsupportedReason = {
-  NOT_WINDOWS: 1,
-  WINDOWS_VERSION: 2,
-};
-
-var GMPPluginHiddenReason = {
-  UNSUPPORTED: 1,
-  EME_DISABLED: 2,
-};
-
 var GMPUtils = {
   /**
    * Checks whether or not a given plugin is hidden. Hidden plugins are neither

@@ -7,13 +7,6 @@
 // 1 day default
 const DEFAULT_SECONDS_BETWEEN_CHECKS = 60 * 60 * 24;
 
-var GMPInstallFailureReason = {
-  GMP_INVALID: 1,
-  GMP_HIDDEN: 2,
-  GMP_DISABLED: 3,
-  GMP_UPDATE_DISABLED: 4,
-};
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");

@@ -551,9 +551,6 @@ if (SharedAll.Config.DEBUG && Scheduler.launched) {
   Scheduler.post("SET_DEBUG", [true]);
 }
 
-// Observer topics used for monitoring shutdown
-const WEB_WORKERS_SHUTDOWN_TOPIC = "web-workers-shutdown";
-
 // Preference used to configure test shutdown observer.
 const PREF_OSFILE_TEST_SHUTDOWN_OBSERVER =
   "toolkit.osfile.test.shutdown.observer";
