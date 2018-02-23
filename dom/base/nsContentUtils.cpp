@@ -10490,6 +10490,9 @@ nsContentUtils::AppendDocumentLevelNativeAnonymousContentTo(
     nsTArray<nsIContent*>& aElements)
 {
   MOZ_ASSERT(aDocument);
+#ifdef DEBUG
+  size_t oldLength = aElements.Length();
+#endif
 
   if (nsIPresShell* presShell = aDocument->GetShell()) {
     if (nsIFrame* scrollFrame = presShell->GetRootScrollFrame()) {
@@ -10505,6 +10508,14 @@ nsContentUtils::AppendDocumentLevelNativeAnonymousContentTo(
       }
     }
   }
+
+#ifdef DEBUG
+  for (size_t i = oldLength; i < aElements.Length(); i++) {
+    MOZ_ASSERT(
+        aElements[i]->GetProperty(nsGkAtoms::docLevelNativeAnonymousContent),
+        "Someone here has lied, or missed to flag the node");
+  }
+#endif
 }
 
 static void
