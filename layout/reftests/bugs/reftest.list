@@ -1196,9 +1196,9 @@ fuzzy-if(webrender,4,361) == 449519-1.html 449519-1-ref.html
 == 455280-1.xhtml 455280-1-ref.xhtml
 == 455826-1.html 455826-1-ref.html
 fails-if(Android||cocoaWidget) == 456147.xul 456147-ref.html # bug 458047
-fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) == 456219-1a.html 456219-1-ref.html # bug 1128229
-fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) == 456219-1b.html 456219-1-ref.html # bug 1128229
-fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) == 456219-1c.html 456219-1-ref.html # bug 1128229
+fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,15,69) fuzzy-if(skiaContent,42,150) == 456219-1a.html 456219-1-ref.html # bug 1128229
+fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,15,69) fuzzy-if(skiaContent,42,150) == 456219-1b.html 456219-1-ref.html # bug 1128229
+fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,15,69) fuzzy-if(skiaContent,42,150) == 456219-1c.html 456219-1-ref.html # bug 1128229
 fuzzy-if(skiaContent,1,45) == 456219-2.html 456219-2-ref.html
 == 456330-1.gif 456330-1-ref.png
 == 456484-1.html 456484-1-ref.html
@@ -1716,7 +1716,7 @@ fuzzy-if(skiaContent,1,3) needs-focus == 712130-2.html 712130-2-ref.html
 == 714519-1-q.html 714519-1-ref.html
 == 714519-2-as.html 714519-2-ref.html
 == 714519-2-q.html 714519-2-ref.html
-fuzzy-if(true,1,21) fuzzy-if(d2d,71,173) fuzzy-if(cocoaWidget,1,170) == 718521.html 718521-ref.html # bug 773482
+fuzzy-if(true,1,21) fuzzy-if(d2d,77,173) fuzzy-if(cocoaWidget,1,170) == 718521.html 718521-ref.html # bug 773482
 == 720987.html 720987-ref.html
 == 722888-1.html 722888-1-ref.html
 fuzzy(2,40000) == 722923-1.html 722923-1-ref.html
@@ -1831,7 +1831,7 @@ fuzzy-if(skiaContent,1,123) == 978911-1.svg 978911-1-ref.svg
 == 985303-1b.html 985303-1-ref.html
 == 987680-1.html 987680-1-ref.html
 # Fuzzy on WR due to alpha blending
-fuzzy-if(d2d,1,601) fuzzy-if(webrender,1,1473) == 991046-1.html 991046-1-ref.html
+fuzzy-if(d2d,1,623) fuzzy-if(webrender,1,1473) == 991046-1.html 991046-1-ref.html
 pref(layout.css.overflow-clip-box.enabled,true) fuzzy-if(skiaContent,2,845) == 992447.html 992447-ref.html
 == 1003425-1.html 1003425-1-ref.html
 == 1003425-2.html 1003425-2-ref.html
@@ -1872,7 +1872,7 @@ fails-if(webrender) == 1081185-1.html 1081185-1-ref.html
 == 1097437-1.html 1097437-1-ref.html
 == 1103258-1.html 1103258-1-ref.html # assertion crash test with layers culling test
 == 1105137-1.html 1105137-1-ref.html
-fuzzy-if(d2d,36,304) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&d2d,127,701) == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow-ref.html
+fuzzy-if(d2d,36,304) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&d2d,139,701) == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow-ref.html
 == 1111753-1.html about:blank
 == 1114526-1.html 1114526-1-ref.html
 fuzzy-if(skiaContent,1,800000) == 1119117-1a.html 1119117-1-ref.html
@@ -1991,9 +1991,9 @@ fuzzy-if(Android,27,874) fuzzy-if(!Android,14,43) == 1313772.xhtml 1313772-ref.x
 fuzzy(2,320000) == 1315113-1.html 1315113-1-ref.html
 fuzzy(2,20000) == 1315113-2.html 1315113-2-ref.html
 == 1315632-1.html 1315632-1-ref.html
-fuzzy(2,40000) fails-if(webrender) == 1316719-1a.html 1316719-1-ref.html
-fuzzy(2,40000) fails-if(webrender) == 1316719-1b.html 1316719-1-ref.html
-fuzzy(2,40000) == 1316719-1c.html 1316719-1-ref.html
+fuzzy(2,40000) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),13,40000) fails-if(webrender) == 1316719-1a.html 1316719-1-ref.html
+fuzzy(13,40000) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),13,40000) fails-if(webrender) == 1316719-1b.html 1316719-1-ref.html
+fuzzy(13,40000) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),13,40000) == 1316719-1c.html 1316719-1-ref.html
 skip-if(Android) != 1318769-1.html 1318769-1-ref.html
 == 1322512-1.html 1322512-1-ref.html
 skip-if((stylo||styloVsGecko)&&isDebugBuild&&winWidget) == 1330051.svg 1330051-ref.svg
@@ -2061,5 +2061,5 @@ test-pref(font.size.systemFontScale,200) == 1412743.html 1412743-ref.html
 == 1424680.html 1424680-ref.html
 == 1424798-1.html 1424798-ref.html
 fuzzy(74,2234) random-if(webrender) == 1425243-1.html 1425243-1-ref.html
-fuzzy-if(Android,66,574) fuzzy-if(d2d,55,777) fuzzy-if(!Android&&!d2d,1,31219) == 1425243-2.html 1425243-2-ref.html
+fuzzy-if(Android,66,574) fuzzy-if(d2d,89,777) fuzzy-if(!Android&&!d2d,1,31219) == 1425243-2.html 1425243-2-ref.html
 == 1432541.html 1432541-ref.html
