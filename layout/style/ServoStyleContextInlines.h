@@ -22,10 +22,12 @@ ServoStyleContext::ResolveSameStructsAs(const ServoStyleContext* aOther)
   uint64_t otherBits = aOther->mBits & NS_STYLE_INHERIT_MASK;
   uint64_t newBits = otherBits & ~ourBits & NS_STYLE_INHERIT_MASK;
 
-#define STYLE_STRUCT(name_, checkdata_cb)                                           \
-  if (nsStyle##name_::kHasFinishStyle && newBits & NS_STYLE_INHERIT_BIT(name_)) {   \
-    const nsStyle##name_* data = ComputedData()->GetStyle##name_();               \
-    const_cast<nsStyle##name_*>(data)->FinishStyle(mPresContext);                   \
+#define STYLE_STRUCT(name_, checkdata_cb)                                      \
+  if (nsStyle##name_::kHasFinishStyle &&                                       \
+      (newBits & NS_STYLE_INHERIT_BIT(name_))) {                               \
+    const nsStyle##name_* data = ComputedData()->GetStyle##name_();            \
+    const nsStyle##name_* oldData = aOther->ComputedData()->GetStyle##name_(); \
+    const_cast<nsStyle##name_*>(data)->FinishStyle(mPresContext, oldData);     \
   }
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT

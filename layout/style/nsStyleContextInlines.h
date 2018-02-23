@@ -105,28 +105,28 @@ const nsStyle##name_ * nsStyleContext::PeekStyle##name_() {     \
 #endif
 
 // Helper functions for GetStyle* and PeekStyle*
-#define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                \
-template<bool aComputeData>                                         \
-const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
-  if (IsGecko()) {                                                  \
-    DO_GET_STYLE_INHERITED_GECKO(name_, checkdata_cb_)              \
-  }                                                                 \
-  const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));\
-  if (!aComputeData && needToCompute) {                             \
-    return nullptr;                                                 \
-  }                                                                 \
-                                                                    \
-  const nsStyle##name_* data = ComputedData()->GetStyle##name_();   \
-                                                                    \
-  /* perform any remaining main thread work on the struct */        \
-  if (needToCompute) {                                              \
-    MOZ_ASSERT(NS_IsMainThread());                                  \
-    MOZ_ASSERT(!mozilla::ServoStyleSet::IsInServoTraversal());      \
-    const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext());  \
-    /* the ServoStyleContext owns the struct */                     \
-    AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                       \
-  }                                                                 \
-  return data;                                                      \
+#define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                         \
+template<bool aComputeData>                                                  \
+const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {                 \
+  if (IsGecko()) {                                                           \
+    DO_GET_STYLE_INHERITED_GECKO(name_, checkdata_cb_)                       \
+  }                                                                          \
+  const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));         \
+  if (!aComputeData && needToCompute) {                                      \
+    return nullptr;                                                          \
+  }                                                                          \
+                                                                             \
+  const nsStyle##name_* data = ComputedData()->GetStyle##name_();            \
+                                                                             \
+  /* perform any remaining main thread work on the struct */                 \
+  if (needToCompute) {                                                       \
+    MOZ_ASSERT(NS_IsMainThread());                                           \
+    MOZ_ASSERT(!mozilla::ServoStyleSet::IsInServoTraversal());               \
+    const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext(), nullptr);  \
+    /* the ServoStyleContext owns the struct */                              \
+    AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                                \
+  }                                                                          \
+  return data;                                                               \
 }
 
 #ifdef MOZ_OLD_STYLE
@@ -162,7 +162,7 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {                  \
   const nsStyle##name_* data = ComputedData()->GetStyle##name_();             \
   /* perform any remaining main thread work on the struct */                  \
   if (needToCompute) {                                                        \
-    const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext());            \
+    const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext(), nullptr);   \
     /* the ServoStyleContext owns the struct */                               \
     AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                                 \
   }                                                                           \

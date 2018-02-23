@@ -474,6 +474,7 @@ talos-tp6:
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
+            windows.*: []
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 1200
     mozharness:
@@ -504,6 +505,7 @@ talos-tp6-stylo-threads:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
             macosx.*: ['mozilla-beta', 'autoland', 'try']
+            windows.*: []
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     mozharness:
         extra-options:
