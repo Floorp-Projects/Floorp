@@ -134,7 +134,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMWindowUtils.h"

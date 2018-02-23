@@ -9,7 +9,6 @@
 #include "HTMLFormSubmissionConstants.h"
 #include "mozilla/dom/HTMLButtonElementBinding.h"
 #include "mozilla/dom/HTMLFormSubmission.h"
-#include "nsIDOMHTMLFormElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
