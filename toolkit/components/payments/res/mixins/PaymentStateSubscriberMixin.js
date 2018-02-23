@@ -14,6 +14,8 @@
  * State of the payment request dialog.
  */
 let requestStore = new PaymentsStore({
+  changesPrevented: false,
+  completionState: "initial",
   orderDetailsShowing: false,
   request: {
     tabId: null,

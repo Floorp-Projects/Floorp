@@ -397,6 +397,7 @@ var paymentDialogWrapper = {
       methodData,
     });
     paymentSrv.respondPayment(showResponse);
+    this.sendMessageToContent("responseSent");
   },
 
   async onChangeShippingAddress({shippingAddressGUID}) {

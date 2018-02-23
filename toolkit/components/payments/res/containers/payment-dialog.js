@@ -33,6 +33,8 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
     this._orderDetailsOverlay = contents.querySelector("#order-details-overlay");
     this._shippingRequestedEls = contents.querySelectorAll(".shippingRequested");
 
+    this._disabledOverlay = contents.getElementById("disabled-overlay");
+
     this.appendChild(contents);
 
     super.connectedCallback();
@@ -146,6 +148,19 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
     }
   }
 
+  _renderPayButton(state) {
+    this._payButton.disabled = state.changesPrevented;
+    switch (state.completionState) {
+      case "initial":
+      case "processing":
+        break;
+      default:
+        throw new Error("Invalid completionState");
+    }
+
+    this._payButton.textContent = this._payButton.dataset[state.completionState + "Label"];
+  }
+
   stateChangeCallback(state) {
     super.stateChangeCallback(state);
 
@@ -174,6 +189,20 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
     for (let element of this._shippingRequestedEls) {
       element.hidden = !request.paymentOptions.requestShipping;
     }
+
+    this._renderPayButton(state);
+
+    let {
+      changesPrevented,
+      completionState,
+    } = state;
+    if (changesPrevented) {
+      this.setAttribute("changes-prevented", "");
+    } else {
+      this.removeAttribute("changes-prevented");
+    }
+    this.setAttribute("completion-state", completionState);
+    this._disabledOverlay.hidden = !changesPrevented;
   }
 }
 
