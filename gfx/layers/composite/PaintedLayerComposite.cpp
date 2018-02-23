@@ -150,6 +150,15 @@ PaintedLayerComposite::CleanupResources()
   mBuffer = nullptr;
 }
 
+bool
+PaintedLayerComposite::IsOpaque()
+{
+  if (!mBuffer || !mBuffer->IsAttached()) {
+    return false;
+  }
+  return PaintedLayer::IsOpaque();
+}
+
 void
 PaintedLayerComposite::GenEffectChain(EffectChain& aEffect)
 {

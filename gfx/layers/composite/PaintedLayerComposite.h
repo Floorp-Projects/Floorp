@@ -53,6 +53,8 @@ public:
 
   virtual void CleanupResources() override;
 
+  virtual bool IsOpaque() override;
+
   virtual void GenEffectChain(EffectChain& aEffect) override;
 
   virtual bool SetCompositableHost(CompositableHost* aHost) override;
