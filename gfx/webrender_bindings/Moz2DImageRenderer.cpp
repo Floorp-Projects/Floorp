@@ -244,6 +244,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     }
     Range<const uint8_t> blob(aBlob.begin() + offset, aBlob.begin() + end);
     ret = translator.TranslateRecording((char*)blob.begin().get(), blob.length());
+    MOZ_RELEASE_ASSERT(ret);
     offset = extra_end;
   }
 
