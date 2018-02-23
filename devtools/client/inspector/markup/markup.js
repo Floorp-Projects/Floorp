@@ -628,6 +628,12 @@ MarkupView.prototype = {
       "node-inserted"
     ];
 
+    // If the user performed an action with a keyboard, move keyboard focus to
+    // the markup tree container.
+    if (reason && reason.endsWith("-keyboard")) {
+      this.getContainer(this._rootNode).elt.focus();
+    }
+
     if (reasonsToNavigate.includes(reason)) {
       this.getContainer(this._rootNode).elt.focus();
       this.navigate(this.getContainer(nodeFront));
