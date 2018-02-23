@@ -173,6 +173,10 @@ exports.viewport = {
   // The device pixel ratio of the viewport
   pixelRatio: PropTypes.shape(pixelRatio),
 
+  // The user context (container) ID for the viewport
+  // Defaults to 0 meaning the default context
+  userContextId: PropTypes.number,
+
 };
 
 /* ACTIONS IN PROGRESS */
