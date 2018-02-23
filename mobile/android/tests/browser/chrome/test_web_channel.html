@@ -13,14 +13,12 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
-  const { classes: Cc, interfaces: Ci, utils: Cu } = Components; /* global Components */
-
-  ChromeUtils.import("resource://gre/modules/Promise.jsm"); /* global Promise */
-  ChromeUtils.import("resource://gre/modules/Services.jsm"); /* global Services */
-  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm"); /* global XPCOMUtils */
-  ChromeUtils.import("resource://gre/modules/Task.jsm"); /* global Task */
+  ChromeUtils.import("resource://gre/modules/Promise.jsm");
+  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+  ChromeUtils.import("resource://gre/modules/Task.jsm");
   ChromeUtils.defineModuleGetter(this, "WebChannel",
-    "resource://gre/modules/WebChannel.jsm"); /* global WebChannel */
+    "resource://gre/modules/WebChannel.jsm");
 
   const HTTP_PATH = "http://mochi.test:8888";
   const HTTP_ENDPOINT = "/chrome/mobile/android/tests/browser/chrome/web_channel.html";
