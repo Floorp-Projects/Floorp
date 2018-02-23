@@ -7,10 +7,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/downloads/downloads.css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/usercontext/usercontext.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/controlcenter/panel.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/customizableui/panelUI.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/downloads/downloads.css"?>
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
@@ -496,6 +498,7 @@
 
 #include ../../components/customizableui/content/panelUI.inc.xul
 #include ../../components/controlcenter/content/panel.inc.xul
+#include ../../components/downloads/content/downloadsPanel.inc.xul
 
     <hbox id="downloads-animation-container" mousethrough="always">
       <vbox id="downloads-notification-anchor" hidden="true">
@@ -925,7 +928,20 @@
                        overflows="false"
                        cui-areatype="toolbar"
                        hidden="true"
-                       tooltip="dynamic-shortcut-tooltip"/>
+                       tooltip="dynamic-shortcut-tooltip"
+                       indicator="true">
+            <!-- The panel's anchor area is smaller than the outer button, but must
+                 always be visible and must not move or resize when the indicator
+                 state changes, otherwise the panel could change its position or lose
+                 its arrow unexpectedly. -->
+            <stack id="downloads-indicator-anchor"
+                   consumeanchor="downloads-button">
+              <box id="downloads-indicator-icon"/>
+              <stack id="downloads-indicator-progress-outer">
+                <box id="downloads-indicator-progress-inner"/>
+              </stack>
+            </stack>
+          </toolbarbutton>
 
         <toolbarbutton id="library-button" class="toolbarbutton-1 chromeclass-toolbar-additional subviewbutton-nav"
                        removable="true"
