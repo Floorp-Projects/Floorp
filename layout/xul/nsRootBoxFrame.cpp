@@ -12,7 +12,6 @@
 #include "nsStackLayout.h"
 #include "nsIRootBox.h"
 #include "nsIContent.h"
-#include "nsXULTooltipListener.h"
 #include "nsFrameManager.h"
 #include "mozilla/BasicEvents.h"
 
@@ -57,8 +56,6 @@ public:
   virtual void SetPopupSetFrame(nsPopupSetFrame* aPopupSet) override;
   virtual Element* GetDefaultTooltip() override;
   virtual void SetDefaultTooltip(Element* aTooltip) override;
-  virtual nsresult AddTooltipSupport(nsIContent* aNode) override;
-  virtual nsresult RemoveTooltipSupport(nsIContent* aNode) override;
 
   virtual void AppendFrames(ChildListID     aListID,
                             nsFrameList&    aFrameList) override;
@@ -241,28 +238,6 @@ void
 nsRootBoxFrame::SetDefaultTooltip(Element* aTooltip)
 {
   mDefaultTooltip = aTooltip;
-}
-
-nsresult
-nsRootBoxFrame::AddTooltipSupport(nsIContent* aNode)
-{
-  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
-
-  nsXULTooltipListener *listener = nsXULTooltipListener::GetInstance();
-  if (!listener)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return listener->AddTooltipSupport(aNode);
-}
-
-nsresult
-nsRootBoxFrame::RemoveTooltipSupport(nsIContent* aNode)
-{
-  // XXjh yuck, I'll have to implement a way to get at
-  // the tooltip listener for a given node to make
-  // this work.  Not crucial, we aren't removing
-  // tooltips from any nodes in the app just yet.
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_QUERYFRAME_HEAD(nsRootBoxFrame)
