@@ -27,7 +27,7 @@
 #include "js/Conversions.h"
 #include "util/Text.h"
 
-#include "jsboolinlines.h"
+#include "builtin/Boolean-inl.h"
 
 #include "vm/JSAtom-inl.h"
 #include "vm/JSObject-inl.h"
