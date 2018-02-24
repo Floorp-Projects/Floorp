@@ -3,7 +3,7 @@
 #include "vm/JSContext.h"
 // When JSGC_ANALYSIS is #defined, Rooted<JSFlatString*> needs the definition
 // of JSFlatString in order to figure out its ThingRootKind
-#include "vm/String.h"
+#include "vm/StringType.h"
 
 FRAGMENT(JSString, simple) {
   AutoSuppressHazardsForTest noanalysis;

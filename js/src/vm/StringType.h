@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_String_h
-#define vm_String_h
+#ifndef vm_StringType_h
+#define vm_StringType_h
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
@@ -13,8 +13,8 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsstr.h"
 
+#include "builtin/String.h"
 #include "gc/Barrier.h"
 #include "gc/Cell.h"
 #include "gc/Heap.h"
@@ -1711,4 +1711,4 @@ TenuredCell::as<JSString>() {
 }
 }
 
-#endif /* vm_String_h */
+#endif /* vm_StringType_h */

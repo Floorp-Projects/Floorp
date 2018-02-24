@@ -15,7 +15,7 @@
 #include "jstypes.h"
 
 #include "js/Value.h"
-#include "vm/String.h"
+#include "vm/StringType.h"
 
 namespace js {
 namespace jit {

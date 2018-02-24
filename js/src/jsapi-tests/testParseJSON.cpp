@@ -8,7 +8,7 @@
 #include <limits>
 #include <string.h>
 
-#include "jsstr.h"
+#include "builtin/String.h"
 
 #include "js/Printf.h"
 #include "jsapi-tests/tests.h"

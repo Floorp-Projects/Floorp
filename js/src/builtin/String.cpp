@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsstr.h"
+#include "builtin/String.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
@@ -36,6 +36,8 @@
 # include "unicode/uchar.h"
 # include "unicode/unorm2.h"
 #endif
+#include "util/StringBuffer.h"
+#include "util/Unicode.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
@@ -47,12 +49,10 @@
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/SelfHosting.h"
-#include "vm/StringBuffer.h"
-#include "vm/Unicode.h"
 
 #include "vm/Interpreter-inl.h"
-#include "vm/String-inl.h"
 #include "vm/StringObject-inl.h"
+#include "vm/StringType-inl.h"
 #include "vm/TypeInference-inl.h"
 
 using namespace js;

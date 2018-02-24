@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_Symbol_h
-#define vm_Symbol_h
+#ifndef vm_SymbolType_h
+#define vm_SymbolType_h
 
 #include "mozilla/Attributes.h"
 
@@ -21,7 +21,7 @@
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 #include "vm/Printer.h"
-#include "vm/String.h"
+#include "vm/StringType.h"
 
 namespace js {
 class AutoLockForExclusiveAccess;
@@ -147,4 +147,4 @@ SymbolDescriptiveString(JSContext* cx, JS::Symbol* sym, JS::MutableHandleValue r
 
 } /* namespace js */
 
-#endif /* vm_Symbol_h */
+#endif /* vm_SymbolType_h */

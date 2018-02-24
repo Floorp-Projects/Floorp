@@ -15,7 +15,7 @@
 #include "js/HeapAPI.h"
 #include "vm/Printer.h"
 #include "vm/Shape.h"
-#include "vm/String.h"
+#include "vm/StringType.h"
 #include "vm/Xdr.h"
 
 namespace JS {

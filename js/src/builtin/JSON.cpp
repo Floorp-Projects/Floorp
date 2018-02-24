@@ -12,16 +12,16 @@
 
 #include "jsarray.h"
 #include "jsnum.h"
-#include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "builtin/String.h"
+#include "util/StringBuffer.h"
 #include "vm/Interpreter.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/JSONParser.h"
-#include "vm/StringBuffer.h"
 
 #include "jsarrayinlines.h"
 #include "jsboolinlines.h"

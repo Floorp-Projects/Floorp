@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef builtin_SymbolObject_h
-#define builtin_SymbolObject_h
+#ifndef builtin_Symbol_h
+#define builtin_Symbol_h
 
 #include "vm/NativeObject.h"
-#include "vm/Symbol.h"
+#include "vm/SymbolType.h"
 
 namespace js {
 
@@ -65,4 +65,4 @@ InitBareSymbolCtor(JSContext* cx, HandleObject obj);
 
 } /* namespace js */
 
-#endif /* builtin_SymbolObject_h */
+#endif /* builtin_Symbol_h */

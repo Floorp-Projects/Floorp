@@ -9,7 +9,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 
-#include "jsstr.h"
+#include "builtin/String.h"
 #ifdef DEBUG
 #include "jsutil.h"
 #endif
@@ -21,12 +21,12 @@
 #include "irregexp/RegExpBytecode.h"
 #endif
 #include "irregexp/RegExpParser.h"
+#include "util/StringBuffer.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpStatics.h"
-#include "vm/StringBuffer.h"
 #include "vm/TraceLogging.h"
 #ifdef DEBUG
-#include "vm/Unicode.h"
+#include "util/Unicode.h"
 #endif
 #include "vm/Xdr.h"
 

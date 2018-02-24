@@ -17,19 +17,19 @@
 
 #include <string.h>
 
-#include "jsstr.h"
 #include "jstypes.h"
 
+#include "builtin/String.h"
 #include "gc/Marking.h"
 #include "vm/JSContext.h"
-#include "vm/Symbol.h"
+#include "vm/SymbolType.h"
 #include "vm/Xdr.h"
 
 #include "gc/AtomMarking-inl.h"
 #include "vm/JSCompartment-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
-#include "vm/String-inl.h"
+#include "vm/StringType-inl.h"
 
 using namespace js;
 using namespace js::gc;

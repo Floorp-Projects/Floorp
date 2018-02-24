@@ -4,11 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_Unicode_h
-#define vm_Unicode_h
+#ifndef util_Unicode_h
+#define util_Unicode_h
 
 #include "jspubtd.h"
-#include "vm/UnicodeNonBMP.h"
+
+#include "util/UnicodeNonBMP.h"
 
 namespace js {
 namespace unicode {
@@ -601,4 +602,4 @@ UTF16Decode(char16_t lead, char16_t trail)
 } /* namespace unicode */
 } /* namespace js */
 
-#endif /* vm_Unicode_h */
+#endif /* util_Unicode_h */

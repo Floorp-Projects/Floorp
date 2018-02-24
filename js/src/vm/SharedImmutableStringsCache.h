@@ -13,7 +13,7 @@
 #include <cstring>
 #include <new> // for placement new
 
-#include "jsstr.h"
+#include "builtin/String.h"
 
 #include "js/HashTable.h"
 #include "js/Utility.h"

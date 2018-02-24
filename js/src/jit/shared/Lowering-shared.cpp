@@ -9,7 +9,7 @@
 #include "jit/LIR.h"
 #include "jit/MIR.h"
 
-#include "vm/Symbol.h"
+#include "vm/SymbolType.h"
 
 using namespace js;
 using namespace jit;
