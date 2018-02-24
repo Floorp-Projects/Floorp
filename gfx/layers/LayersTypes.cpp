@@ -14,7 +14,8 @@ EventRegions::EventRegions(const nsIntRegion& aHitRegion,
                            const nsIntRegion& aDispatchToContentRegion,
                            const nsIntRegion& aNoActionRegion,
                            const nsIntRegion& aHorizontalPanRegion,
-                           const nsIntRegion& aVerticalPanRegion)
+                           const nsIntRegion& aVerticalPanRegion,
+                           bool aDTCRequiresTargetConfirmation)
 {
   mHitRegion = aHitRegion;
   mNoActionRegion = aNoActionRegion;
@@ -27,6 +28,7 @@ EventRegions::EventRegions(const nsIntRegion& aHitRegion,
   mDispatchToContentHitRegion.Sub(aMaybeHitRegion, mHitRegion);
   mDispatchToContentHitRegion.OrWith(aDispatchToContentRegion);
   mHitRegion.OrWith(aMaybeHitRegion);
+  mDTCRequiresTargetConfirmation = aDTCRequiresTargetConfirmation;
 }
 
 } // namespace layers
