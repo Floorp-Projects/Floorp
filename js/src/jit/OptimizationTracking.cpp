@@ -11,6 +11,7 @@
 #include "jit/JitcodeMap.h"
 #include "jit/JitSpewer.h"
 #include "js/TrackedOptimizationInfo.h"
+#include "util/Text.h"
 
 #include "vm/ObjectGroup-inl.h"
 #include "vm/TypeInference-inl.h"

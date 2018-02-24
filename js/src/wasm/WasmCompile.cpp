@@ -22,6 +22,7 @@
 #include "mozilla/Unused.h"
 
 #include "jit/ProcessExecutableMemory.h"
+#include "util/Text.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmBinaryIterator.h"
 #include "wasm/WasmGenerator.h"

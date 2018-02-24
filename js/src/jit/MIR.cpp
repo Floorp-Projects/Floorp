@@ -25,6 +25,7 @@
 #include "jit/MIRGraph.h"
 #include "jit/RangeAnalysis.h"
 #include "js/Conversions.h"
+#include "util/Text.h"
 
 #include "jsboolinlines.h"
 

@@ -32,6 +32,7 @@
 #include "vm/JSScript.h"
 #include "vm/SavedStacks.h"
 #include "vm/SelfHosting.h"
+#include "vm/StringType.h"
 
 #include "vm/ErrorObject-inl.h"
 #include "vm/JSObject-inl.h"

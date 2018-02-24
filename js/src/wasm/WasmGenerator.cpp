@@ -24,6 +24,7 @@
 
 #include <algorithm>
 
+#include "util/Text.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmIonCompile.h"

@@ -13,6 +13,7 @@
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 #include "js/Conversions.h"
+#include "vm/StringType.h"
 
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"

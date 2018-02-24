@@ -35,6 +35,7 @@
 #include "js/Printf.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
+#include "util/Text.h"
 #include "vm/ErrorReporting.h"
 #include "vm/SelfHosting.h"
 #include "vm/Time.h"
