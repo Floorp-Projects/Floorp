@@ -17,7 +17,7 @@
 #include "js/GCHashTable.h"
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
-#include "vm/String.h"
+#include "vm/StringType.h"
 
 namespace js {
 namespace ctypes {

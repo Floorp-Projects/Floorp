@@ -17,7 +17,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ScopeExit.h"
 
-#include "jsstr.h"
+#include "builtin/String.h"
 
 #include "js/UniquePtr.h"
 #include "threading/LockGuard.h"

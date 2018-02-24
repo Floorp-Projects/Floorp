@@ -22,7 +22,7 @@
 #include "vm/JSObject.h"
 #include "vm/Shape.h"
 #include "vm/ShapedObject.h"
-#include "vm/String.h"
+#include "vm/StringType.h"
 #include "vm/TypeInference.h"
 
 namespace js {

@@ -15,9 +15,9 @@
 #include <ctype.h>
 
 #include "jslibmath.h"
-#include "jsstr.h"
 
 #include "builtin/RegExp.h"
+#include "builtin/String.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineInspector.h"
 #include "jit/IonBuilder.h"

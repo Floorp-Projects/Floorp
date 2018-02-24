@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_String_inl_h
-#define vm_String_inl_h
+#ifndef vm_StringType_inl_h
+#define vm_StringType_inl_h
 
-#include "vm/String.h"
+#include "vm/StringType.h"
 
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
@@ -428,4 +428,4 @@ JSExternalString::finalize(js::FreeOp* fop)
     fin->finalize(fin, const_cast<char16_t*>(rawTwoByteChars()));
 }
 
-#endif /* vm_String_inl_h */
+#endif /* vm_StringType_inl_h */

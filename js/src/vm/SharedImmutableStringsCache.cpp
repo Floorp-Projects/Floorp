@@ -6,7 +6,7 @@
 
 #include "vm/SharedImmutableStringsCache-inl.h"
 
-#include "jsstr.h"
+#include "builtin/String.h"
 
 namespace js {
 

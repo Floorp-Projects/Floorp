@@ -6,7 +6,7 @@
 #include "gc/Marking.h"
 #include "jsapi-tests/tests.h"
 #include "vm/JSAtom.h"
-#include "vm/String.h"
+#include "vm/StringType.h"
 
 using mozilla::ArrayLength;
 

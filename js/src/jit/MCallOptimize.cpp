@@ -7,7 +7,6 @@
 #include "mozilla/Casting.h"
 
 #include "jsmath.h"
-#include "jsstr.h"
 
 #include "builtin/AtomicsObject.h"
 #include "builtin/intl/Collator.h"
@@ -17,6 +16,7 @@
 #include "builtin/intl/RelativeTimeFormat.h"
 #include "builtin/MapObject.h"
 #include "builtin/SIMD.h"
+#include "builtin/String.h"
 #include "builtin/TestingFunctions.h"
 #include "builtin/TypedObject.h"
 #include "jit/BaselineInspector.h"
