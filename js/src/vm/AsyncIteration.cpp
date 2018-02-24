@@ -6,7 +6,7 @@
 
 #include "vm/AsyncIteration.h"
 
-#include "jsarray.h"
+#include "builtin/Array.h"
 
 #include "builtin/Promise.h"
 #include "vm/GeneratorObject.h"
