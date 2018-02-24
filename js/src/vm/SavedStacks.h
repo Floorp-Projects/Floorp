@@ -223,9 +223,8 @@ class SavedStacks {
     MOZ_MUST_USE bool insertFrames(JSContext* cx, FrameIter& iter,
                                    MutableHandleSavedFrame frame,
                                    JS::StackCapture&& capture);
-    MOZ_MUST_USE bool adoptAsyncStack(JSContext* cx, HandleSavedFrame asyncStack,
-                                      HandleString asyncCause,
-                                      MutableHandleSavedFrame adoptedStack,
+    MOZ_MUST_USE bool adoptAsyncStack(JSContext* cx, MutableHandleSavedFrame asyncStack,
+                                      HandleAtom asyncCause,
                                       const Maybe<size_t>& maxFrameCount);
     SavedFrame* getOrCreateSavedFrame(JSContext* cx, SavedFrame::HandleLookup lookup);
     SavedFrame* createFrameFromLookup(JSContext* cx, SavedFrame::HandleLookup lookup);
