@@ -9,10 +9,10 @@ ChromeUtils.import("resource://services-sync/main.js");
 ChromeUtils.defineModuleGetter(this, "BookmarkRepairRequestor",
   "resource://services-sync/bookmark_repair.js");
 
-this.EXPORTED_SYMBOLS = ["getRepairRequestor", "getAllRepairRequestors",
-                         "CollectionRepairRequestor",
-                         "getRepairResponder",
-                         "CollectionRepairResponder"];
+var EXPORTED_SYMBOLS = ["getRepairRequestor", "getAllRepairRequestors",
+                        "CollectionRepairRequestor",
+                        "getRepairResponder",
+                        "CollectionRepairResponder"];
 
 // The individual requestors/responders, lazily loaded.
 const REQUESTORS = {

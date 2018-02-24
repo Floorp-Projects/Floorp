@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["checkVersions", "addTestBlocklistClient"];
+var EXPORTED_SYMBOLS = ["checkVersions", "addTestBlocklistClient"];
 
 const CC = Components.Constructor;
 
@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyGetter(this, "gBlocklistClients", function() {
 });
 
 // Add a blocklist client for testing purposes. Do not use for any other purpose
-this.addTestBlocklistClient = (name, client) => { gBlocklistClients[name] = client; };
+var addTestBlocklistClient = (name, client) => { gBlocklistClients[name] = client; };
 
 
 async function pollChanges(url, lastEtag) {
@@ -91,7 +91,7 @@ async function pollChanges(url, lastEtag) {
 
 // This is called by the ping mechanism.
 // returns a promise that rejects if something goes wrong
-this.checkVersions = async function() {
+var checkVersions = async function() {
   // Check if the server backoff time is elapsed.
   if (Services.prefs.prefHasUserValue(PREF_SETTINGS_SERVER_BACKOFF)) {
     const backoffReleaseTime = Services.prefs.getCharPref(PREF_SETTINGS_SERVER_BACKOFF);

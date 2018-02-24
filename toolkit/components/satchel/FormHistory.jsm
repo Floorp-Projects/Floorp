@@ -84,7 +84,7 @@
  * an error occurred.
  */
 
-this.EXPORTED_SYMBOLS = ["FormHistory"];
+var EXPORTED_SYMBOLS = ["FormHistory"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -331,7 +331,7 @@ function prepareInsertQuery(change, now) {
 // are in the process of being inserted into the database so that we know
 // not to try to insert the same ones on top. Attempts to do so will be
 // ignored.
-this.InProgressInserts = {
+var InProgressInserts = {
   _inProgress: new Map(),
 
   add(fieldname, value) {
@@ -605,7 +605,7 @@ function expireOldEntriesVacuum(aExpireTime, aBeginningCount) {
  * utility functions, but is not exposed to the outside world.
  * @class
  */
-this.DB = {
+var DB = {
   // Once we establish a database connection, we have to hold a reference
   // to it so that it won't get GC'd.
   _instance: null,

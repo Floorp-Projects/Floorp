@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["PrivacyFilter"];
+var EXPORTED_SYMBOLS = ["PrivacyFilter"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
@@ -15,7 +15,7 @@ ChromeUtils.defineModuleGetter(this, "PrivacyLevel",
  * A module that provides methods to filter various kinds of data collected
  * from a tab by the current privacy level as set by the user.
  */
-this.PrivacyFilter = Object.freeze({
+var PrivacyFilter = Object.freeze({
   /**
    * Filters the given (serialized) session storage |data| according to the
    * current privacy level and returns a new object containing only data that

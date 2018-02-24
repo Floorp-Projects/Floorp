@@ -52,6 +52,7 @@ class Draggable extends Component {
 
   render() {
     return dom.div({
+      role: "presentation",
       style: this.props.style,
       className: this.props.className,
       onMouseDown: this.startDragging

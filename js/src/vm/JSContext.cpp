@@ -27,8 +27,8 @@
 #ifdef XP_WIN
 # include <processthreadsapi.h>
 #endif // XP_WIN
+
 #include "jsexn.h"
-#include "jsprf.h"
 #include "jspubtd.h"
 #include "jsstr.h"
 #include "jstypes.h"
@@ -38,6 +38,7 @@
 #include "jit/Ion.h"
 #include "jit/PcScriptCache.h"
 #include "js/CharacterEncoding.h"
+#include "js/Printf.h"
 #include "util/DoubleToString.h"
 #include "util/NativeStack.h"
 #include "util/Windows.h"

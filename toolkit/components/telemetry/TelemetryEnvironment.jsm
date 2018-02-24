@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "TelemetryEnvironment",
 ];
 
@@ -64,7 +64,7 @@ function getGlobal() {
   return gGlobalEnvironment;
 }
 
-this.TelemetryEnvironment = {
+var TelemetryEnvironment = {
   get currentEnvironment() {
     return getGlobal().currentEnvironment;
   },

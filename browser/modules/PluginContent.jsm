@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "PluginContent" ];
+var EXPORTED_SYMBOLS = [ "PluginContent" ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
 ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
 
-this.PluginContent = function(global) {
+var PluginContent = function(global) {
   this.init(global);
 };
 

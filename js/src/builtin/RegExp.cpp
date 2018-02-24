@@ -764,9 +764,7 @@ const JSPropertySpec js::regexp_properties[] = {
 };
 
 const JSFunctionSpec js::regexp_methods[] = {
-#if JS_HAS_TOSOURCE
     JS_SELF_HOSTED_FN(js_toSource_str, "RegExpToString", 0, 0),
-#endif
     JS_SELF_HOSTED_FN(js_toString_str, "RegExpToString", 0, 0),
     JS_FN("compile",        regexp_compile,     2,0),
     JS_SELF_HOSTED_FN("exec", "RegExp_prototype_Exec", 1,0),

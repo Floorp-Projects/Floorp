@@ -12,19 +12,17 @@
 #include "mozilla/Unused.h"
 
 #if defined(XP_DARWIN)
-#include <mach/mach.h>
+# include <mach/mach.h>
 #elif defined(XP_UNIX)
-#include <sys/resource.h>
+# include <sys/resource.h>
 #endif // defined(XP_DARWIN) || defined(XP_UNIX) || defined(XP_WIN)
-
 #include <locale.h>
 #include <string.h>
-
 #ifdef JS_CAN_CHECK_THREADSAFE_ACCESSES
 # include <sys/mman.h>
 #endif
+
 #include "jsmath.h"
-#include "jswrapper.h"
 
 #include "builtin/Promise.h"
 #include "gc/FreeOp.h"
@@ -38,6 +36,7 @@
 #include "js/Date.h"
 #include "js/MemoryMetrics.h"
 #include "js/SliceBudget.h"
+#include "js/Wrapper.h"
 #include "util/Windows.h"
 #include "vm/Debugger.h"
 #include "vm/JSAtom.h"

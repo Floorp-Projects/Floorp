@@ -380,7 +380,7 @@ bool ParsePrivateDictData(
       case 7:  // OtherBlues
       case 8:  // FamilyBlues
       case 9:  // FamilyOtherBlues
-        if (operands.empty() || (operands.size() % 2) != 0) {
+        if ((operands.size() % 2) != 0) {
           return OTS_FAILURE();
         }
         break;

@@ -17,7 +17,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsJSPrincipals.h"
 #include "nsIScriptError.h"
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 
 extern mozilla::LazyLogModule MCD;
 using mozilla::AutoSafeJSContext;

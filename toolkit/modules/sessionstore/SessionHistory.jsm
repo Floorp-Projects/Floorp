@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["SessionHistory"];
+var EXPORTED_SYMBOLS = ["SessionHistory"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -21,7 +21,7 @@ function debug(msg) {
 /**
  * The external API exported by this module.
  */
-this.SessionHistory = Object.freeze({
+var SessionHistory = Object.freeze({
   isEmpty(docShell) {
     return SessionHistoryInternal.isEmpty(docShell);
   },

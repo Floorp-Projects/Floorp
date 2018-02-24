@@ -149,5 +149,4 @@ ImageObjectProcessor.prototype.process = function(
     }
   }
 };
-this.ImageObjectProcessor = ImageObjectProcessor; // jshint ignore:line
-this.EXPORTED_SYMBOLS = ['ImageObjectProcessor']; // jshint ignore:line
+var EXPORTED_SYMBOLS = ['ImageObjectProcessor']; // jshint ignore:line

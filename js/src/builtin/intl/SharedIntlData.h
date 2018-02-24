@@ -11,8 +11,7 @@
 
 #include <stddef.h>
 
-#include "jsalloc.h"
-
+#include "js/AllocPolicy.h"
 #include "js/CharacterEncoding.h"
 #include "js/GCAPI.h"
 #include "js/GCHashTable.h"

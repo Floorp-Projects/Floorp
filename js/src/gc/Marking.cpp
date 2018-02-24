@@ -13,7 +13,6 @@
 #include "mozilla/TypeTraits.h"
 
 #include "jsfriendapi.h"
-#include "jsprf.h"
 
 #include "builtin/ModuleObject.h"
 #include "gc/GCInternals.h"

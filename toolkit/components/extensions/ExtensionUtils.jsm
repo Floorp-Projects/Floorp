@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ExtensionUtils"];
+var EXPORTED_SYMBOLS = ["ExtensionUtils"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -676,7 +676,7 @@ async function stringToCryptoHash(text, algo = "SHA-1") {
   return utf8Decoder.decode(buffer);
 }
 
-this.ExtensionUtils = {
+var ExtensionUtils = {
   checkLoadURL,
   defineLazyGetter,
   flushJarCache,

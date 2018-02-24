@@ -7,8 +7,7 @@
 #ifndef vm_WrapperObject_h
 #define vm_WrapperObject_h
 
-#include "jswrapper.h"
-
+#include "js/Wrapper.h"
 #include "vm/JSObject.h"
 #include "vm/ProxyObject.h"
 

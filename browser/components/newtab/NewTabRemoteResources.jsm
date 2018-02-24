@@ -2,7 +2,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["NewTabRemoteResources"];
+var EXPORTED_SYMBOLS = ["NewTabRemoteResources"];
 
 const NewTabRemoteResources = {
   MODE_CHANNEL_MAP: {

@@ -8,7 +8,6 @@
 # include <valgrind/memcheck.h>
 #endif
 
-#include "jsprf.h"
 #include "jstypes.h"
 
 #include "builtin/MapObject.h"

@@ -6,7 +6,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["TraversalRules", "TraversalHelper"]; // jshint ignore:line
+var EXPORTED_SYMBOLS = ["TraversalRules", "TraversalHelper"]; // jshint ignore:line
 
 ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -180,7 +180,7 @@ var gSimplePreFilter = Prefilters.DEFUNCT |
   Prefilters.ARIA_HIDDEN |
   Prefilters.TRANSPARENT;
 
-this.TraversalRules = { // jshint ignore:line
+var TraversalRules = { // jshint ignore:line
   Simple: new BaseTraversalRule(gSimpleTraversalRoles, gSimpleMatchFunc),
 
   SimpleOnScreen: new BaseTraversalRule(
@@ -361,7 +361,7 @@ this.TraversalRules = { // jshint ignore:line
   }
 };
 
-this.TraversalHelper = {
+var TraversalHelper = {
   _helperPivotCache: null,
 
   get helperPivotCache() {

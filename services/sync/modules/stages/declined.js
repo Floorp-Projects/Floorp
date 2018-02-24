@@ -9,7 +9,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["DeclinedEngines"];
+var EXPORTED_SYMBOLS = ["DeclinedEngines"];
 
 ChromeUtils.import("resource://services-sync/constants.js");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
@@ -19,7 +19,7 @@ ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 
 
-this.DeclinedEngines = function(service) {
+var DeclinedEngines = function(service) {
   this._log = Log.repository.getLogger("Sync.Declined");
   this._log.manageLevelFromPref("services.sync.log.logger.declined");
 

@@ -8,7 +8,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["read"];
+var EXPORTED_SYMBOLS = ["read"];
 
 var SharedAll = ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", {});
 
@@ -35,7 +35,7 @@ XPCOMUtils.defineLazyServiceGetter(this,
  *
  * This implementation does not handle option |compression|.
  */
-this.read = function(path, options = {}) {
+var read = function(path, options = {}) {
   // Sanity check on types of options
   if ("encoding" in options && typeof options.encoding != "string") {
     return Promise.reject(new TypeError("Invalid type for option encoding"));
@@ -71,7 +71,7 @@ this.read = function(path, options = {}) {
  * This should not be called when |buffer| is a view with some non-zero byte offset.
  * Does not handle option |compression|.
  */
-this.writeAtomic = function(path, buffer, options = {}) {
+var writeAtomic = function(path, buffer, options = {}) {
   // Sanity check on types of options - we check only the encoding, since
   // the others are checked inside Internals.writeAtomic.
   if ("encoding" in options && typeof options.encoding !== "string") {

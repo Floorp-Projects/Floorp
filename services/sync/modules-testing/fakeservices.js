@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "FakeCryptoService",
   "FakeFilesystemService",
   "FakeGUIDService",
@@ -15,7 +15,7 @@ ChromeUtils.import("resource://services-sync/main.js");
 ChromeUtils.import("resource://services-sync/record.js");
 ChromeUtils.import("resource://services-sync/util.js");
 
-this.FakeFilesystemService = function FakeFilesystemService(contents) {
+function FakeFilesystemService(contents) {
   this.fakeContents = contents;
   let self = this;
 
@@ -58,17 +58,17 @@ this.FakeFilesystemService = function FakeFilesystemService(contents) {
     delete self.fakeContents["weave/" + filePath + ".json"];
     return Promise.resolve();
   };
-};
+}
 
-this.fakeSHA256HMAC = function fakeSHA256HMAC(message) {
+function fakeSHA256HMAC(message) {
    message = message.substr(0, 64);
    while (message.length < 64) {
      message += " ";
    }
    return message;
-};
+}
 
-this.FakeGUIDService = function FakeGUIDService() {
+function FakeGUIDService() {
   let latestGUID = 0;
 
   Utils.makeGUID = function makeGUID() {
@@ -76,13 +76,13 @@ this.FakeGUIDService = function FakeGUIDService() {
     let nextGUID = "fake-guid-" + String(latestGUID++).padStart(2, "0");
     return nextGUID.slice(nextGUID.length - 12, nextGUID.length);
   };
-};
+}
 
 /*
  * Mock implementation of WeaveCrypto. It does not encrypt or
  * decrypt, merely returning the input verbatim.
  */
-this.FakeCryptoService = function FakeCryptoService() {
+function FakeCryptoService() {
   this.counter = 0;
 
   delete Weave.Crypto; // get rid of the getter first
@@ -91,7 +91,7 @@ this.FakeCryptoService = function FakeCryptoService() {
   CryptoWrapper.prototype.ciphertextHMAC = function ciphertextHMAC(keyBundle) {
     return fakeSHA256HMAC(this.ciphertext);
   };
-};
+}
 FakeCryptoService.prototype = {
 
   async encrypt(clearText, symmetricKey, iv) {

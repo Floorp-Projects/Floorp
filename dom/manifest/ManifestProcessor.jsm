@@ -42,7 +42,7 @@ ChromeUtils.import('resource://gre/modules/ValueExtractor.jsm');
 // ImageObjectProcessor is used to process things like icons and images
 ChromeUtils.import('resource://gre/modules/ImageObjectProcessor.jsm');
 
-this.ManifestProcessor = { // jshint ignore:line
+var ManifestProcessor = { // jshint ignore:line
   get defaultDisplayMode() {
     return 'browser';
   },
@@ -270,4 +270,4 @@ this.ManifestProcessor = { // jshint ignore:line
     }
   }
 };
-this.EXPORTED_SYMBOLS = ['ManifestProcessor']; // jshint ignore:line
+var EXPORTED_SYMBOLS = ['ManifestProcessor']; // jshint ignore:line

@@ -29,10 +29,9 @@
 
 #include "mozilla/Vector.h"
 
-#include "jsalloc.h"
-
 #include "jit/arm64/vixl/Globals-vixl.h"
 #include "jit/arm64/vixl/Instructions-vixl.h"
+#include "js/AllocPolicy.h"
 
 
 // List macro containing all visitors needed by the decoder class.

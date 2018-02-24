@@ -10,7 +10,7 @@
 #include <cfloat>
 #include <stdarg.h>
 
-#include "jsprf.h"
+#include "js/Printf.h"
 
 #include "jsapi-tests/tests.h"
 

@@ -66,7 +66,7 @@
  * @see nsINavHistoryObserver
  */
 
-this.EXPORTED_SYMBOLS = [ "History" ];
+var EXPORTED_SYMBOLS = [ "History" ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
@@ -111,7 +111,7 @@ function notify(observers, notification, args = []) {
   }
 }
 
-this.History = Object.freeze({
+var History = Object.freeze({
   /**
    * Fetch the available information for one page.
    *

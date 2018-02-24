@@ -389,6 +389,17 @@ class MOZ_NON_PARAM alignas(8) Value
 
     void setObject(JSObject& obj) {
         MOZ_ASSERT(js::gc::IsCellPointerValid(&obj));
+
+        // This should not be possible and is undefined behavior, but some
+        // ObjectValue(nullptr) are sneaking in. Try to catch them here, if
+        // indeed they are going through this code. I tested gcc, and it at
+        // least will *not* elide the null check even though it would be
+        // permitted according to the spec. The temporary is necessary to
+        // prevent gcc from helpfully pointing out that this code makes no
+        // sense.
+        JSObject* testObj = &obj;
+        MOZ_DIAGNOSTIC_ASSERT(testObj != nullptr);
+
 #if defined(JS_PUNBOX64)
         // VisualStudio cannot contain parenthesized C++ style cast and shift
         // inside decltype in template parameter:

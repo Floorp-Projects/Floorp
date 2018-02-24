@@ -978,7 +978,23 @@ void _PR_InitThreads(
  * GCC supports the constructor and destructor attributes as of
  * version 2.5.
  */
+#if defined(DARWIN)
+/*
+ * The dynamic linker on OSX doesn't execute __attribute__((destructor))
+ * destructors in the right order wrt non-__attribute((destructor)) destructors
+ * in other libraries. So use atexit() instead, which does.
+ * See https://bugzilla.mozilla.org/show_bug.cgi?id=1399746#c99
+ */
+static void _PR_Fini(void);
+
+__attribute__ ((constructor))
+static void _register_PR_Fini() {
+  atexit(_PR_Fini);
+}
+#else
 static void _PR_Fini(void) __attribute__ ((destructor));
+#endif
+
 #elif defined(__SUNPRO_C)
 /*
  * Sun Studio compiler

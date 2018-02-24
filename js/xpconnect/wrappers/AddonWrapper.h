@@ -11,7 +11,7 @@
 
 #include "nsID.h"
 
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 
 namespace xpc {
 

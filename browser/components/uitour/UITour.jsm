@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["UITour"];
+var EXPORTED_SYMBOLS = ["UITour"];
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -79,7 +79,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return new ConsoleAPI(consoleOptions);
 });
 
-this.UITour = {
+var UITour = {
   url: null,
   seenPageIDs: null,
   // This map is not persisted and is used for

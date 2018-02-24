@@ -8,7 +8,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["FormAutofillPreferences"];
+var EXPORTED_SYMBOLS = ["FormAutofillPreferences"];
 
 // Add addresses enabled flag in telemetry environment for recording the number of
 // users who disable/enable the address autofill feature.
@@ -33,7 +33,7 @@ const {
 // users who disable/enable the credit card autofill feature.
 
 this.log = null;
-FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
+FormAutofillUtils.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 function FormAutofillPreferences() {
   this.bundle = Services.strings.createBundle(BUNDLE_URI);

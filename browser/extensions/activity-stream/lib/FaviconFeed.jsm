@@ -21,7 +21,7 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 const TIPPYTOP_UPDATE_TIME = ONE_DAY;
 const TIPPYTOP_RETRY_DELAY = FIVE_MINUTES;
 
-this.FaviconFeed = class FaviconFeed {
+var FaviconFeed = class FaviconFeed {
   constructor() {
     this.tippyTopNextUpdate = 0;
     this.cache = new PersistentCache("tippytop", true);
@@ -158,4 +158,4 @@ this.FaviconFeed = class FaviconFeed {
   }
 };
 
-this.EXPORTED_SYMBOLS = ["FaviconFeed"];
+var EXPORTED_SYMBOLS = ["FaviconFeed"];

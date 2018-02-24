@@ -114,7 +114,7 @@ oddly_ordered_inclnames = set([
     'frontend/ReservedWordsGenerated.h', # Included in the body of frontend/TokenStream.h
     'gc/StatsPhasesGenerated.h',         # Included in the body of gc/Statistics.h
     'gc/StatsPhasesGenerated.cpp',       # Included in the body of gc/Statistics.cpp
-    'util/Windows.h',           # Must be #included before <psapi.h>
+    'psapi.h',                  # Must be included after "util/Windows.h" on Windows
     'machine/endian.h',         # Must be included after <sys/types.h> on BSD
     'winbase.h',                # Must precede other system headers(?)
     'windef.h'                  # Must precede other system headers(?)

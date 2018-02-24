@@ -5,7 +5,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "BrowserUtils" ];
+var EXPORTED_SYMBOLS = [ "BrowserUtils" ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -56,7 +56,7 @@ const FLUSH_TYPES = {
   "display": Ci.nsIDOMWindowUtils.FLUSH_DISPLAY,
 };
 
-this.BrowserUtils = {
+var BrowserUtils = {
 
   /**
    * Prints arguments separated by a space and appends a new line.

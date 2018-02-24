@@ -32,7 +32,7 @@ fuzzy-if(webrender,64-64,714-714) == clip-path-circle-013.html clip-path-circle-
 fuzzy-if(webrender,90-90,698-698) == clip-path-circle-014.html clip-path-circle-007-ref.html
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-015.html clip-path-circle-008-ref.html
 fuzzy-if(webrender,90-90,702-702) == clip-path-circle-016.html clip-path-circle-009-ref.html
-fuzzy-if(webrender,90-90,698-698) == clip-path-circle-017.html clip-path-circle-007-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),16,9) fuzzy-if(webrender,90-90,698-698) == clip-path-circle-017.html clip-path-circle-007-ref.html
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-018.html clip-path-circle-010-ref.html
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-019.html clip-path-circle-002-ref.html
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-020.html clip-path-circle-002-ref.html

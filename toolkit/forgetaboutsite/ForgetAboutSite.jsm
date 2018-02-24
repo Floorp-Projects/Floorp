@@ -12,7 +12,7 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
 ChromeUtils.defineModuleGetter(this, "Downloads",
                                "resource://gre/modules/Downloads.jsm");
 
-this.EXPORTED_SYMBOLS = ["ForgetAboutSite"];
+var EXPORTED_SYMBOLS = ["ForgetAboutSite"];
 
 /**
  * Returns true if the string passed in is part of the root domain of the
@@ -38,7 +38,7 @@ function hasRootDomain(str, aDomain) {
          (prevChar == "." || prevChar == "/");
 }
 
-this.ForgetAboutSite = {
+var ForgetAboutSite = {
   async removeDataFromDomain(aDomain) {
     PlacesUtils.history.removePagesFromHost(aDomain, true);
 

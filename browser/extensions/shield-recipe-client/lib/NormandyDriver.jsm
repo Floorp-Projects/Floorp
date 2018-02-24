@@ -25,12 +25,12 @@ ChromeUtils.defineModuleGetter(
 
 const {generateUUID} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
-this.EXPORTED_SYMBOLS = ["NormandyDriver"];
+var EXPORTED_SYMBOLS = ["NormandyDriver"];
 
 const log = LogManager.getLogger("normandy-driver");
 const actionLog = LogManager.getLogger("normandy-driver.actions");
 
-this.NormandyDriver = function(sandboxManager) {
+var NormandyDriver = function(sandboxManager) {
   if (!sandboxManager) {
     throw new Error("sandboxManager is required");
   }

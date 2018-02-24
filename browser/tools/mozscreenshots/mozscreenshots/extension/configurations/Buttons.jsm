@@ -4,12 +4,12 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Buttons"];
+var EXPORTED_SYMBOLS = ["Buttons"];
 
 ChromeUtils.import("resource:///modules/CustomizableUI.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-this.Buttons = {
+var Buttons = {
 
   init(libDir) {
     createWidget();

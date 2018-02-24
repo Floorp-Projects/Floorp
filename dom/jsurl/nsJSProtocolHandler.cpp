@@ -6,7 +6,7 @@
 
 #include "nsCOMPtr.h"
 #include "jsapi.h"
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 #include "nsCRT.h"
 #include "nsError.h"
 #include "nsString.h"

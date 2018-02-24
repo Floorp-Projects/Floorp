@@ -125,9 +125,9 @@ public:
   Init(uint8_t *aData, IntSize aSize, int32_t aStride, SurfaceFormat aFormat)
   {
     //XXX: do we need to ensure any alignment here?
-    auto data = MakeUnique<uint8_t[]>(aStride * aSize.height * BytesPerPixel(aFormat));
+    auto data = MakeUnique<uint8_t[]>(aStride * aSize.height);
     if (data) {
-      memcpy(data.get(), aData, aStride * aSize.height * BytesPerPixel(aFormat));
+      memcpy(data.get(), aData, aStride * aSize.height);
       RefPtr<DataSourceSurfaceRecording> surf = new DataSourceSurfaceRecording(Move(data), aSize, aStride, aFormat);
       return surf.forget();
     }

@@ -564,11 +564,11 @@ MenuItem.prototype = {
 
   set id(id) {
     if (this.hasOwnProperty("_id")) {
-      throw new Error("Id of a MenuItem cannot be changed");
+      throw new ExtensionError("ID of a MenuItem cannot be changed");
     }
     let isIdUsed = gMenuMap.get(this.extension).has(id);
     if (isIdUsed) {
-      throw new Error("Id already exists");
+      throw new ExtensionError(`ID already exists: ${id}`);
     }
     this._id = id;
   },
@@ -595,7 +595,7 @@ MenuItem.prototype = {
     }
     let menuMap = gMenuMap.get(this.extension);
     if (!menuMap.has(parentId)) {
-      throw new Error("Could not find any MenuItem with id: " + parentId);
+      throw new ExtensionError(`Could not find any MenuItem with id: ${parentId}`);
     }
     for (let item = menuMap.get(parentId); item; item = item.parent) {
       if (item === this) {

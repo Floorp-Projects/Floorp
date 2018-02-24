@@ -22,10 +22,6 @@ const uint32_t kScriptTableTagDflt = 0x44464c54;
 const uint16_t kNoRequiredFeatureIndexDefined = 0xFFFF;
 // The lookup flag bit which indicates existence of MarkFilteringSet.
 const uint16_t kUseMarkFilteringSetBit = 0x0010;
-// The lookup flags which require GDEF table.
-const uint16_t kGdefRequiredFlags = 0x0002 | 0x0004 | 0x0008;
-// The mask for MarkAttachmentType.
-const uint16_t kMarkAttachmentTypeMask = 0xFF00;
 // The maximum type number of format for device tables.
 const uint16_t kMaxDeltaFormatType = 3;
 // The maximum number of class value.
@@ -194,30 +190,7 @@ bool ParseLookupTable(ots::Font *font, const uint8_t *data,
     return OTS_FAILURE_MSG("Bad lookup type %d", lookup_type);
   }
 
-  ots::OpenTypeGDEF *gdef = static_cast<ots::OpenTypeGDEF*>(
-      font->GetTypedTable(OTS_TAG_GDEF));
-
-  // Check lookup flags.
-  if ((lookup_flag & kGdefRequiredFlags) &&
-      (!gdef || !gdef->has_glyph_class_def)) {
-    return OTS_FAILURE_MSG("Lookup flags require GDEF table, "
-                           "but none was found: %d", lookup_flag);
-  }
-  if ((lookup_flag & kMarkAttachmentTypeMask) &&
-      (!gdef || !gdef->has_mark_attachment_class_def)) {
-    return OTS_FAILURE_MSG("Lookup flags ask for mark attachment, "
-                           "but there is no GDEF table or it has no "
-                           "mark attachment classes: %d", lookup_flag);
-  }
-  bool use_mark_filtering_set = false;
-  if (lookup_flag & kUseMarkFilteringSetBit) {
-    if (!gdef || !gdef->has_mark_glyph_sets_def) {
-      return OTS_FAILURE_MSG("Lookup flags ask for mark filtering, "
-                             "but there is no GDEF table or it has no "
-                             "mark filtering sets: %d", lookup_flag);
-    }
-    use_mark_filtering_set = true;
-  }
+  bool use_mark_filtering_set = lookup_flag & kUseMarkFilteringSetBit;
 
   std::vector<uint16_t> subtables;
   subtables.reserve(subtable_count);
@@ -248,8 +221,12 @@ bool ParseLookupTable(ots::Font *font, const uint8_t *data,
     if (!subtable.ReadU16(&mark_filtering_set)) {
       return OTS_FAILURE_MSG("Failed to read mark filtering set");
     }
-    if (gdef->num_mark_glyph_sets == 0 ||
-        mark_filtering_set >= gdef->num_mark_glyph_sets) {
+
+    ots::OpenTypeGDEF *gdef = static_cast<ots::OpenTypeGDEF*>(
+        font->GetTypedTable(OTS_TAG_GDEF));
+
+    if (gdef && (gdef->num_mark_glyph_sets == 0 ||
+        mark_filtering_set >= gdef->num_mark_glyph_sets)) {
       return OTS_FAILURE_MSG("Bad mark filtering set %d", mark_filtering_set);
     }
   }

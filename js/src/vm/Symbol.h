@@ -11,11 +11,11 @@
 
 #include <stdio.h>
 
-#include "jsalloc.h"
 #include "jsapi.h"
 
 #include "gc/Barrier.h"
 #include "gc/Tracer.h"
+#include "js/AllocPolicy.h"
 #include "js/GCHashTable.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"

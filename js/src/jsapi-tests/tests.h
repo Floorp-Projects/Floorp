@@ -15,9 +15,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "jsalloc.h"
-
 #include "gc/GC.h"
+#include "js/AllocPolicy.h"
 #include "js/Vector.h"
 #include "vm/JSContext.h"
 

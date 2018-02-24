@@ -10,7 +10,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["FormAutofillContent"];
+var EXPORTED_SYMBOLS = ["FormAutofillContent"];
 
 const Cm = Components.manager;
 
@@ -207,8 +207,6 @@ AutofillProfileAutoCompleteSearch.prototype = {
     });
   },
 };
-
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([AutofillProfileAutoCompleteSearch]);
 
 let ProfileAutocomplete = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),

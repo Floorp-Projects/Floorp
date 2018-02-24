@@ -8,9 +8,9 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
 
-this.EXPORTED_SYMBOLS = [ "NarrateTestUtils" ];
+var EXPORTED_SYMBOLS = [ "NarrateTestUtils" ];
 
-this.NarrateTestUtils = {
+var NarrateTestUtils = {
   TOGGLE: ".narrate-toggle",
   POPUP: ".narrate-dropdown .dropdown-popup",
   VOICE_SELECT: ".narrate-voices .select-toggle",

@@ -31,7 +31,9 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
     this._viewAllButton.addEventListener("click", this);
 
     this._orderDetailsOverlay = contents.querySelector("#order-details-overlay");
-    this._shippingRequestedEls = contents.querySelectorAll(".shippingRequested");
+    this._shippingTypeLabel = contents.querySelector("#shipping-type-label");
+    this._shippingRelatedEls = contents.querySelectorAll(".shipping-related");
+    this._errorText = contents.querySelector("#error-text");
 
     this._disabledOverlay = contents.getElementById("disabled-overlay");
 
@@ -178,17 +180,23 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
 
   render(state) {
     let request = state.request;
+    let paymentDetails = request.paymentDetails;
     this._hostNameEl.textContent = request.topLevelPrincipal.URI.displayHost;
 
-    let totalItem = request.paymentDetails.totalItem;
+    let totalItem = paymentDetails.totalItem;
     let totalAmountEl = this.querySelector("#total > currency-amount");
     totalAmountEl.value = totalItem.amount.value;
     totalAmountEl.currency = totalItem.amount.currency;
 
     this._orderDetailsOverlay.hidden = !state.orderDetailsShowing;
-    for (let element of this._shippingRequestedEls) {
-      element.hidden = !request.paymentOptions.requestShipping;
+    this._errorText.textContent = paymentDetails.error;
+    let paymentOptions = request.paymentOptions;
+    for (let element of this._shippingRelatedEls) {
+      element.hidden = !paymentOptions.requestShipping;
     }
+    let shippingType = paymentOptions.shippingType || "shipping";
+    this._shippingTypeLabel.querySelector("label").textContent =
+      this._shippingTypeLabel.dataset[shippingType + "AddressLabel"];
 
     this._renderPayButton(state);
 

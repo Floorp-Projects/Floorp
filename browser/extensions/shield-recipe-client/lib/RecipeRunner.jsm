@@ -35,7 +35,7 @@ ChromeUtils.defineModuleGetter(this, "Uptake",
 
 Cu.importGlobalProperties(["fetch"]);
 
-this.EXPORTED_SYMBOLS = ["RecipeRunner"];
+var EXPORTED_SYMBOLS = ["RecipeRunner"];
 
 const log = LogManager.getLogger("recipe-runner");
 const TIMER_NAME = "recipe-client-addon-run";
@@ -58,7 +58,7 @@ const PREFS_TO_WATCH = [
   API_URL_PREF,
 ];
 
-this.RecipeRunner = {
+var RecipeRunner = {
   async init() {
     this.enabled = null;
     this.checkPrefs(); // sets this.enabled

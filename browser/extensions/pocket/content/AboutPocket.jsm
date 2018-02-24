@@ -90,4 +90,4 @@ XPCOMUtils.defineLazyGetter(AboutPocket, "aboutSignup", () =>
                 Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT)
 );
 
-this.EXPORTED_SYMBOLS = ["AboutPocket"];
+var EXPORTED_SYMBOLS = ["AboutPocket"];

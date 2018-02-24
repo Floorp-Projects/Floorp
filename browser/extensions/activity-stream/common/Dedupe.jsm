@@ -1,4 +1,4 @@
-this.Dedupe = class Dedupe {
+var Dedupe = class Dedupe {
   constructor(createKey) {
     this.createKey = createKey || this.defaultCreateKey;
   }
@@ -31,4 +31,4 @@ this.Dedupe = class Dedupe {
   }
 };
 
-this.EXPORTED_SYMBOLS = ["Dedupe"];
+var EXPORTED_SYMBOLS = ["Dedupe"];

@@ -6,7 +6,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "ContentTask"
 ];
 
@@ -33,7 +33,7 @@ var gMessageID = 1;
 /**
  * This object provides the public module functions.
  */
-this.ContentTask = {
+var ContentTask = {
   /**
    * _testScope saves the current testScope from
    * browser-test.js. This is used to implement SimpleTest functions

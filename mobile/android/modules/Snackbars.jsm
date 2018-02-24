@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Snackbars"];
+var EXPORTED_SYMBOLS = ["Snackbars"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

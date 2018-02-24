@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Screenshot"];
+var EXPORTED_SYMBOLS = ["Screenshot"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return new ConsoleAPI(consoleOptions);
 });
 
-this.Screenshot = {
+var Screenshot = {
   _extensionPath: null,
   _path: null,
   _imagePrefix: "",

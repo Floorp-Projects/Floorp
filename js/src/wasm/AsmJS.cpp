@@ -24,16 +24,16 @@
 #include "mozilla/Unused.h"
 
 #include "jsmath.h"
-#include "jsprf.h"
 #include "jsstr.h"
 #include "jsutil.h"
-#include "jswrapper.h"
 
 #include "builtin/SIMD.h"
 #include "frontend/Parser.h"
 #include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
 #include "js/MemoryMetrics.h"
+#include "js/Printf.h"
+#include "js/Wrapper.h"
 #include "vm/ErrorReporting.h"
 #include "vm/SelfHosting.h"
 #include "vm/StringBuffer.h"

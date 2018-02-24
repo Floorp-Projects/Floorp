@@ -17,7 +17,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["BasePromiseWorker"];
+var EXPORTED_SYMBOLS = ["BasePromiseWorker"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
@@ -103,7 +103,7 @@ const EXCEPTION_CONSTRUCTORS = {
  *
  * @constructor
  */
-this.BasePromiseWorker = function(url) {
+var BasePromiseWorker = function(url) {
   if (typeof url != "string") {
     throw new TypeError("Expecting a string");
   }

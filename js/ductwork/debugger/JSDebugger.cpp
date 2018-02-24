@@ -8,7 +8,7 @@
 #include "nsThreadUtils.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsMemory.h"

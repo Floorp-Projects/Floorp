@@ -17,7 +17,7 @@ ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 
-this.EXPORTED_SYMBOLS = ["PushRecord"];
+var EXPORTED_SYMBOLS = ["PushRecord"];
 
 const prefs = Services.prefs.getBranch("dom.push.");
 

@@ -11,7 +11,7 @@
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "jsfriendapi.h"
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 
 namespace mozilla {
 namespace jsipc {

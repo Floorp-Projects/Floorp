@@ -29,7 +29,6 @@
 
 #include "jsexn.h"
 #include "jsnum.h"
-#include "jsprf.h"
 
 #include "builtin/TypedObject.h"
 #include "ctypes/Library.h"

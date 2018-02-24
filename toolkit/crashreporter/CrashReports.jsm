@@ -4,11 +4,11 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "CrashReports"
 ];
 
-this.CrashReports = {
+var CrashReports = {
   pendingDir: null,
   reportsDir: null,
   submittedDir: null,

@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "UITelemetry",
 ];
 
@@ -16,7 +16,7 @@ ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
  *
  * It implements nsIUITelemetryObserver, defined in nsIAndroidBridge.idl.
  */
-this.UITelemetry = {
+var UITelemetry = {
   _enabled: undefined,
   _activeSessions: {},
   _measurements: [],

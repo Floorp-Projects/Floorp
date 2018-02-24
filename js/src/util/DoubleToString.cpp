@@ -12,7 +12,6 @@
 
 #include "mozilla/EndianUtils.h"
 
-#include "jsprf.h"
 #include "jstypes.h"
 #include "jsutil.h"
 

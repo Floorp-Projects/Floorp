@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Log"];
+var EXPORTED_SYMBOLS = ["Log"];
 
 const ONE_BYTE = 1;
 const ONE_KILOBYTE = 1024 * ONE_BYTE;
@@ -31,7 +31,7 @@ function dumpError(text) {
   Cu.reportError(text);
 }
 
-this.Log = {
+var Log = {
   Level: {
     Fatal:  70,
     Error:  60,

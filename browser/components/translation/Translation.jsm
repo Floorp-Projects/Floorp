@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "Translation",
   "TranslationTelemetry",
 ];
@@ -14,7 +14,7 @@ const TRANSLATION_PREF_DETECT_LANG = "browser.translation.detectLanguage";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-this.Translation = {
+var Translation = {
   STATE_OFFER: 0,
   STATE_TRANSLATING: 1,
   STATE_TRANSLATED: 2,
@@ -290,7 +290,7 @@ TranslationUI.prototype = {
  *
  * NOTE: Metrics are only recorded if the user enabled the telemetry option.
  */
-this.TranslationTelemetry = {
+var TranslationTelemetry = {
 
   init() {
     // Constructing histograms.

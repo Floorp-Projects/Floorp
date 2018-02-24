@@ -10,8 +10,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/Vector.h"
 
-#include "jsalloc.h"
-
+#include "js/AllocPolicy.h"
 #include "jsapi-tests/tests.h"
 #include "threading/Thread.h"
 

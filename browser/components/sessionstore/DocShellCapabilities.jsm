@@ -4,12 +4,12 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["DocShellCapabilities"];
+var EXPORTED_SYMBOLS = ["DocShellCapabilities"];
 
 /**
  * The external API exported by this module.
  */
-this.DocShellCapabilities = Object.freeze({
+var DocShellCapabilities = Object.freeze({
   collect(docShell) {
     return DocShellCapabilitiesInternal.collect(docShell);
   },

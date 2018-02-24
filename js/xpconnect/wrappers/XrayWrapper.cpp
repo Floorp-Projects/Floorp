@@ -17,7 +17,6 @@
 #include "xpcprivate.h"
 
 #include "jsapi.h"
-#include "jsprf.h"
 #include "nsJSUtils.h"
 #include "nsPrintfCString.h"
 
@@ -44,14 +43,14 @@ using namespace XrayUtils;
 
 static_assert(JSProto_URIError - JSProto_Error == 7, "New prototype added in error object range");
 #define AssertErrorObjectKeyInBounds(key) \
-    static_assert(Between(key, JSProto_Error, JSProto_URIError), "We depend on jsprototypes.h ordering here");
+    static_assert(Between(key, JSProto_Error, JSProto_URIError), "We depend on js/ProtoKey.h ordering here");
 MOZ_FOR_EACH(AssertErrorObjectKeyInBounds, (),
              (JSProto_Error, JSProto_InternalError, JSProto_EvalError, JSProto_RangeError,
               JSProto_ReferenceError, JSProto_SyntaxError, JSProto_TypeError, JSProto_URIError));
 
 static_assert(JSProto_Uint8ClampedArray - JSProto_Int8Array == 8, "New prototype added in typed array range");
 #define AssertTypedArrayKeyInBounds(key) \
-    static_assert(Between(key, JSProto_Int8Array, JSProto_Uint8ClampedArray), "We depend on jsprototypes.h ordering here");
+    static_assert(Between(key, JSProto_Int8Array, JSProto_Uint8ClampedArray), "We depend on js/ProtoKey.h ordering here");
 MOZ_FOR_EACH(AssertTypedArrayKeyInBounds, (),
              (JSProto_Int8Array, JSProto_Uint8Array, JSProto_Int16Array, JSProto_Uint16Array,
               JSProto_Int32Array, JSProto_Uint32Array, JSProto_Float32Array, JSProto_Float64Array, JSProto_Uint8ClampedArray));

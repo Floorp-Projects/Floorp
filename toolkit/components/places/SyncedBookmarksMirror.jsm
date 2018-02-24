@@ -49,7 +49,7 @@
  *   issues.
  */
 
-this.EXPORTED_SYMBOLS = ["SyncedBookmarksMirror"];
+var EXPORTED_SYMBOLS = ["SyncedBookmarksMirror"];
 
 Cu.importGlobalProperties(["URL"]);
 

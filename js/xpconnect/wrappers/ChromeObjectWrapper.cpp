@@ -9,7 +9,7 @@
 #include "AccessCheck.h"
 #include "xpcprivate.h"
 #include "jsapi.h"
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 #include "nsXULAppAPI.h"
 
 using namespace JS;

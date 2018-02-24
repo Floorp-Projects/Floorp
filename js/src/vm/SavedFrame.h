@@ -9,10 +9,9 @@
 
 #include "mozilla/Attributes.h"
 
-#include "jswrapper.h"
-
 #include "js/GCHashTable.h"
 #include "js/UbiNode.h"
+#include "js/Wrapper.h"
 
 namespace js {
 

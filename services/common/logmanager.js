@@ -17,7 +17,7 @@ ChromeUtils.defineModuleGetter(this, "CommonUtils",
 
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "LogManager",
 ];
 

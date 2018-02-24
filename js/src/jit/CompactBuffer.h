@@ -7,9 +7,8 @@
 #ifndef jit_Compactbuffer_h
 #define jit_Compactbuffer_h
 
-#include "jsalloc.h"
-
 #include "jit/IonTypes.h"
+#include "js/AllocPolicy.h"
 #include "js/Vector.h"
 
 namespace js {
