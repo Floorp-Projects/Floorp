@@ -37,7 +37,7 @@
 #include "vm/NativeObject-inl.h"
 #include "vm/ReceiverGuard-inl.h"
 #include "vm/Stack-inl.h"
-#include "vm/String-inl.h"
+#include "vm/StringType-inl.h"
 
 using namespace js;
 using namespace js::gc;

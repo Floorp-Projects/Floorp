@@ -18,7 +18,7 @@
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 #include "vm/Shape.h"
-#include "vm/Symbol.h"
+#include "vm/SymbolType.h"
 
 #include "gc/GC-inl.h"
 #include "vm/JSCompartment-inl.h"

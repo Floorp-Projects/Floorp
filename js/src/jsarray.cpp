@@ -24,6 +24,7 @@
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
 #include "js/Conversions.h"
+#include "util/StringBuffer.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Interpreter.h"
 #include "vm/Iteration.h"
@@ -33,7 +34,6 @@
 #include "vm/JSObject.h"
 #include "vm/SelfHosting.h"
 #include "vm/Shape.h"
-#include "vm/StringBuffer.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
 
