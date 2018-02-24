@@ -23,7 +23,6 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#include "jsarray.h"
 #include "jsbool.h"
 #include "jsdate.h"
 #include "jsexn.h"
@@ -33,6 +32,7 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "builtin/Array.h"
 #include "builtin/AtomicsObject.h"
 #include "builtin/Eval.h"
 #include "builtin/JSON.h"
