@@ -14,7 +14,6 @@
 #include "jsarray.h"
 #include "jsdate.h"
 #include "jsfriendapi.h"
-#include "jsstr.h"
 #include "selfhosted.out.h"
 
 #include "builtin/intl/Collator.h"
@@ -32,6 +31,7 @@
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/SIMD.h"
 #include "builtin/Stream.h"
+#include "builtin/String.h"
 #include "builtin/TypedObject.h"
 #include "builtin/WeakMapObject.h"
 #include "gc/HashUtil.h"
@@ -42,6 +42,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/Date.h"
 #include "js/Wrapper.h"
+#include "util/StringBuffer.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Compression.h"
 #include "vm/GeneratorObject.h"
@@ -52,8 +53,7 @@
 #include "vm/JSFunction.h"
 #include "vm/Printer.h"
 #include "vm/RegExpObject.h"
-#include "vm/String.h"
-#include "vm/StringBuffer.h"
+#include "vm/StringType.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
 
