@@ -10,6 +10,7 @@
 #include "mozilla/Move.h"
 
 #include "builtin/String.h"
+#include "util/Text.h"
 
 namespace JS {
 namespace ubi {

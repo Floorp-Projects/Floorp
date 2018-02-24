@@ -22,6 +22,7 @@
 #include "js/UniquePtr.h"
 #include "threading/LockGuard.h"
 #include "threading/Thread.h"
+#include "util/Text.h"
 #include "vm/TraceLogging.h"
 
 #ifndef DEFAULT_TRACE_LOG_DIR
