@@ -11,7 +11,7 @@
 #include "jit/SharedICHelpers.h"
 #include "vm/Iteration.h"
 
-#include "jsboolinlines.h"
+#include "builtin/Boolean-inl.h"
 
 using namespace js;
 using namespace js::jit;
