@@ -32,7 +32,7 @@ for gcfile in ['devtools/rootAnalysis', 'devtools/gc-ubench', 'devtools/gctrace'
     with Files(gcfile):
         BUG_COMPONENT = component_gc
 
-for stlfile in ['jsdate.*', 'jsnum.*']:
+for stlfile in ['jsnum.*']:
     with Files(stlfile):
         BUG_COMPONENT = component_stl
 
@@ -150,6 +150,7 @@ UNIFIED_SOURCES += [
     'builtin/AtomicsObject.cpp',
     'builtin/Boolean.cpp',
     'builtin/DataViewObject.cpp',
+    'builtin/Date.cpp',
     'builtin/Eval.cpp',
     'builtin/intl/Collator.cpp',
     'builtin/intl/CommonFunctions.cpp',
@@ -288,7 +289,6 @@ UNIFIED_SOURCES += [
     'jit/VMFunctions.cpp',
     'jit/WasmBCE.cpp',
     'jsapi.cpp',
-    'jsdate.cpp',
     'jsexn.cpp',
     'jsfriendapi.cpp',
     'jsnum.cpp',

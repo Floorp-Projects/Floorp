@@ -1386,7 +1386,7 @@ SetXrayJitInfo(XrayJitInfo* info);
 XrayJitInfo*
 GetXrayJitInfo();
 
-/* Implemented in jsdate.cpp. */
+/* Implemented in builtin/Date.cpp. */
 
 /** Detect whether the internal date value is NaN. */
 extern JS_FRIEND_API(bool)
