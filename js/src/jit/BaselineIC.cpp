@@ -35,7 +35,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/TypedArrayObject.h"
 
-#include "jsboolinlines.h"
+#include "builtin/Boolean-inl.h"
 
 #include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"
