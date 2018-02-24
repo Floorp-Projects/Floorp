@@ -29,6 +29,7 @@
 #include "js/Wrapper.h"
 #include "shell/jsshell.h"
 #include "util/StringBuffer.h"
+#include "util/Text.h"
 #include "util/Windows.h"
 #include "vm/JSObject.h"
 #include "vm/TypedArrayObject.h"

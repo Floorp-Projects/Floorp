@@ -29,6 +29,7 @@
 #include "jit/JitOptions.h"
 #include "js/Printf.h"
 #include "util/StringBuffer.h"
+#include "util/Text.h"
 #include "vm/Interpreter.h"
 #include "vm/StringType.h"
 #include "wasm/WasmBaselineCompile.h"
