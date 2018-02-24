@@ -52,8 +52,7 @@
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 
-#include "jsboolinlines.h"
-
+#include "builtin/Boolean-inl.h"
 #include "builtin/TypedObject-inl.h"
 #include "gc/Marking-inl.h"
 #include "vm/ArrayObject-inl.h"
