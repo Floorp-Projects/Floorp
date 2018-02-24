@@ -14,16 +14,9 @@
 
 #include base
 
-// The textureLod() doesn't support samplerExternalOES for WR_FEATURE_TEXTURE_EXTERNAL.
-// https://www.khronos.org/registry/OpenGL/extensions/OES/OES_EGL_image_external_essl3.txt
-//
-// The textureLod() doesn't support sampler2DRect for WR_FEATURE_TEXTURE_RECT, too.
-//
-// Use texture() instead.
 #if defined(WR_FEATURE_TEXTURE_EXTERNAL) || defined(WR_FEATURE_TEXTURE_RECT) || defined(WR_FEATURE_TEXTURE_2D)
 #define TEX_SAMPLE(sampler, tex_coord) texture(sampler, tex_coord.xy)
 #else
-// In normal case, we use textureLod(). We haven't used the lod yet. So, we always pass 0.0 now.
 #define TEX_SAMPLE(sampler, tex_coord) texture(sampler, tex_coord)
 #endif
 

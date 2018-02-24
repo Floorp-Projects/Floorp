@@ -994,6 +994,11 @@ a.learn-more-link.webconsole-learn-more-link {
   font-size: 0.8em;
 }
 
+/* Prefix text that can be set by ConsoleAPI option */
+.webconsole-output-wrapper .console-message-prefix {
+  color: var(--theme-comment);
+}
+
 /* Network Messages */
 
 .webconsole-output-wrapper .message.network .method {

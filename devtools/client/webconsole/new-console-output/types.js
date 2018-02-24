@@ -43,6 +43,7 @@ exports.ConsoleMessage = function (props) {
     userProvidedStyles: null,
     notes: null,
     indent: 0,
+    prefix: "",
   }, props);
 };
 

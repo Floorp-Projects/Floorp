@@ -41,6 +41,12 @@ varying vec2 vLocalPos;
     flat varying vec4 vUvBounds_YUV;
 #endif
 
+#ifdef WR_FEATURE_TEXTURE_RECT
+    #define TEX_SIZE(sampler) vec2(1.0)
+#else
+    #define TEX_SIZE(sampler) vec2(textureSize(sampler, 0).xy)
+#endif
+
 #ifdef WR_VERTEX_SHADER
 void write_uv_rect(
     int resource_id,
@@ -78,14 +84,14 @@ void brush_vs(
 #endif
 
 #if defined (WR_FEATURE_YUV_PLANAR)
-    write_uv_rect(user_data.x, f, vec2(textureSize(sColor0, 0).xy), vUv_Y, vUvBounds_Y);
-    write_uv_rect(user_data.y, f, vec2(textureSize(sColor1, 0).xy), vUv_U, vUvBounds_U);
-    write_uv_rect(user_data.z, f, vec2(textureSize(sColor2, 0).xy), vUv_V, vUvBounds_V);
+    write_uv_rect(user_data.x, f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
+    write_uv_rect(user_data.y, f, TEX_SIZE(sColor1), vUv_U, vUvBounds_U);
+    write_uv_rect(user_data.z, f, TEX_SIZE(sColor2), vUv_V, vUvBounds_V);
 #elif defined (WR_FEATURE_YUV_NV12)
-    write_uv_rect(user_data.x, f, vec2(textureSize(sColor0, 0).xy), vUv_Y, vUvBounds_Y);
-    write_uv_rect(user_data.y, f, vec2(textureSize(sColor1, 0).xy), vUv_UV, vUvBounds_UV);
+    write_uv_rect(user_data.x, f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
+    write_uv_rect(user_data.y, f, TEX_SIZE(sColor1), vUv_UV, vUvBounds_UV);
 #elif defined (WR_FEATURE_YUV_INTERLEAVED)
-    write_uv_rect(user_data.x, f, vec2(textureSize(sColor0, 0).xy), vUv_YUV, vUvBounds_YUV);
+    write_uv_rect(user_data.x, f, TEX_SIZE(sColor0), vUv_YUV, vUvBounds_YUV);
 #endif //WR_FEATURE_YUV_*
 }
 #endif
