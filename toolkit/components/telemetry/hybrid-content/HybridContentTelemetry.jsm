@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["HybridContentTelemetry"];
+var EXPORTED_SYMBOLS = ["HybridContentTelemetry"];
 
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

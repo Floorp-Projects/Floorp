@@ -9,8 +9,7 @@
 
 #include <algorithm>
 
-#include "jsalloc.h"
-
+#include "js/AllocPolicy.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
 

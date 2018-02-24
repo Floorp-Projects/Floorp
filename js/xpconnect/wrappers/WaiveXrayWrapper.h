@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 
 namespace xpc {
 

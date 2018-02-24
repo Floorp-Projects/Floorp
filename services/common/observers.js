@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["Observers"];
+var EXPORTED_SYMBOLS = ["Observers"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -13,7 +13,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
  *
  * @version 0.2
  */
-this.Observers = {
+var Observers = {
   /**
    * Register the given callback as an observer of the given topic.
    *

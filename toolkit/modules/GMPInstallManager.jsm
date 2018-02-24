@@ -4,8 +4,6 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [];
-
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu, manager: Cm} =
   Components;
 // 1 day default
@@ -27,8 +25,8 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/GMPUtils.jsm");
 ChromeUtils.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
 
-this.EXPORTED_SYMBOLS = ["GMPInstallManager", "GMPExtractor", "GMPDownloader",
-                         "GMPAddon"];
+var EXPORTED_SYMBOLS = ["GMPInstallManager", "GMPExtractor", "GMPDownloader",
+                        "GMPAddon"];
 
 // Shared code for suppressing bad cert dialogs
 XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {

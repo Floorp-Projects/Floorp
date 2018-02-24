@@ -30,7 +30,7 @@
 // more details.
 const global = this;
 
-this.EXPORTED_SYMBOLS = ["Kinto"];
+var EXPORTED_SYMBOLS = ["Kinto"];
 
 /*
  * Version 11.0.0 - 1dbc5fb

@@ -49,13 +49,12 @@
 # include <sys/wait.h>
 # include <unistd.h>
 #endif
+
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsfriendapi.h"
-#include "jsprf.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jswrapper.h"
 #ifndef JS_POSIX_NSPR
 # include "prerror.h"
 # include "prlink.h"
@@ -78,9 +77,11 @@
 #include "js/Debug.h"
 #include "js/GCVector.h"
 #include "js/Initialization.h"
+#include "js/Printf.h"
 #include "js/StructuredClone.h"
 #include "js/SweepingAPI.h"
 #include "js/TrackedOptimizationInfo.h"
+#include "js/Wrapper.h"
 #include "perf/jsperf.h"
 #include "shell/jsoptparse.h"
 #include "shell/jsshell.h"

@@ -4,9 +4,9 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "TabCrashHandler",
-                          "PluginCrashReporter",
-                          "UnsubmittedCrashHandler" ];
+var EXPORTED_SYMBOLS = [ "TabCrashHandler",
+                         "PluginCrashReporter",
+                         "UnsubmittedCrashHandler" ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -74,7 +74,7 @@ class BrowserWeakMap extends WeakMap {
   }
 }
 
-this.TabCrashHandler = {
+var TabCrashHandler = {
   _crashedTabCount: 0,
   childMap: new Map(),
   browserMap: new BrowserWeakMap(),
@@ -572,7 +572,7 @@ this.TabCrashHandler = {
  * submit those reports automatically without prompting if
  * the user has opted in.
  */
-this.UnsubmittedCrashHandler = {
+var UnsubmittedCrashHandler = {
   get prefs() {
     delete this.prefs;
     return this.prefs =
@@ -931,7 +931,7 @@ this.UnsubmittedCrashHandler = {
   },
 };
 
-this.PluginCrashReporter = {
+var PluginCrashReporter = {
   /**
    * Makes the PluginCrashReporter ready to hear about and
    * submit crash reports.

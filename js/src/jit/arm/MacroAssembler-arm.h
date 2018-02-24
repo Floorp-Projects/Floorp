@@ -119,8 +119,8 @@ class MacroAssemblerARM : public Assembler
                 SBit s = LeaveCC, Condition c = Always);
     void ma_nop();
 
-    void ma_movPatchable(Imm32 imm, Register dest, Assembler::Condition c);
-    void ma_movPatchable(ImmPtr imm, Register dest, Assembler::Condition c);
+    BufferOffset ma_movPatchable(Imm32 imm, Register dest, Assembler::Condition c);
+    BufferOffset ma_movPatchable(ImmPtr imm, Register dest, Assembler::Condition c);
 
     // To be used with Iter := InstructionIterator or BufferInstructionIterator.
     template<class Iter>

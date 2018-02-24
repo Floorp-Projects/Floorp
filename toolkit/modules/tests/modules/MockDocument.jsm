@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["MockDocument"];
+var EXPORTED_SYMBOLS = ["MockDocument"];
 
 Cu.importGlobalProperties(["URL"]);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

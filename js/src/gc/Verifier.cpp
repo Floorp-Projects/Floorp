@@ -4,15 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef MOZ_VALGRIND
-# include <valgrind/memcheck.h>
-#endif
-
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
 
-#include "jsprf.h"
+#ifdef MOZ_VALGRIND
+# include <valgrind/memcheck.h>
+#endif
 
 #include "gc/GCInternals.h"
 #include "gc/PublicIterators.h"

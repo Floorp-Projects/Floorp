@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["LanguageDetector"];
+var EXPORTED_SYMBOLS = ["LanguageDetector"];
 
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -95,7 +95,7 @@ var workerManager = {
   },
 };
 
-this.LanguageDetector = {
+var LanguageDetector = {
   /**
    * Detect the language of a given string.
    *

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = [ "BookmarkJSONUtils" ];
+var EXPORTED_SYMBOLS = [ "BookmarkJSONUtils" ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -35,7 +35,7 @@ function generateHash(aString) {
   return cryptoHash.finish(true).replace(/\//g, "-");
 }
 
-this.BookmarkJSONUtils = Object.freeze({
+var BookmarkJSONUtils = Object.freeze({
   /**
    * Import bookmarks from a url.
    *

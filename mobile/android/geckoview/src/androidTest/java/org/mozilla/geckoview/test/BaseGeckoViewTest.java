@@ -8,8 +8,8 @@ package org.mozilla.geckoview.test;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
-import org.mozilla.gecko.GeckoSession;
-import org.mozilla.gecko.GeckoView;
+import org.mozilla.geckoview.GeckoSession;
+import org.mozilla.geckoview.GeckoView;
 
 import android.net.Uri;
 import android.os.SystemClock;

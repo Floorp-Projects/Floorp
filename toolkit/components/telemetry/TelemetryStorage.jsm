@@ -5,7 +5,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["TelemetryStorage"];
+var EXPORTED_SYMBOLS = ["TelemetryStorage"];
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
 ChromeUtils.import("resource://gre/modules/Log.jsm");
@@ -126,7 +126,7 @@ function internString(str) {
   return Symbol.keyFor(Symbol.for(str));
 }
 
-this.TelemetryStorage = {
+var TelemetryStorage = {
   get pingDirectoryPath() {
     return OS.Path.join(OS.Constants.Path.profileDir, "saved-telemetry-pings");
   },

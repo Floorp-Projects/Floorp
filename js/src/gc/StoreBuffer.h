@@ -13,11 +13,10 @@
 
 #include <algorithm>
 
-#include "jsalloc.h"
-
 #include "ds/BitArray.h"
 #include "ds/LifoAlloc.h"
 #include "gc/Nursery.h"
+#include "js/AllocPolicy.h"
 #include "js/MemoryMetrics.h"
 
 namespace js {

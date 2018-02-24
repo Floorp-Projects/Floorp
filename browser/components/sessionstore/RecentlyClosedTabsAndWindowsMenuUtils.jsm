@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["RecentlyClosedTabsAndWindowsMenuUtils"];
+var EXPORTED_SYMBOLS = ["RecentlyClosedTabsAndWindowsMenuUtils"];
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -17,7 +17,7 @@ ChromeUtils.defineModuleGetter(this, "SessionStore",
 
 var navigatorBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
-this.RecentlyClosedTabsAndWindowsMenuUtils = {
+var RecentlyClosedTabsAndWindowsMenuUtils = {
 
   /**
   * Builds up a document fragment of UI items for the recently closed tabs.

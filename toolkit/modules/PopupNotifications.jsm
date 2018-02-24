@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["PopupNotifications"];
+var EXPORTED_SYMBOLS = ["PopupNotifications"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
@@ -209,7 +209,7 @@ Notification.prototype = {
  *            and when the "anchorVisibilityChange" method is called.
  *        }
  */
-this.PopupNotifications = function PopupNotifications(tabbrowser, panel,
+function PopupNotifications(tabbrowser, panel,
                                                       iconBox, options = {}) {
   if (!(tabbrowser instanceof Ci.nsIDOMXULElement))
     throw "Invalid tabbrowser";
@@ -277,7 +277,7 @@ this.PopupNotifications = function PopupNotifications(tabbrowser, panel,
   this.window.addEventListener("activate", this, true);
   if (this.tabbrowser.tabContainer)
     this.tabbrowser.tabContainer.addEventListener("TabSelect", this, true);
-};
+}
 
 PopupNotifications.prototype = {
 

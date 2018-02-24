@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "TelemetryReportingPolicy"
 ];
 
@@ -92,7 +92,7 @@ NotifyPolicyRequest.prototype = Object.freeze({
   },
 });
 
-this.TelemetryReportingPolicy = {
+var TelemetryReportingPolicy = {
   // The current policy version number. If the version number stored in the prefs
   // is smaller than this, data upload will be disabled until the user is re-notified
   // about the policy changes.

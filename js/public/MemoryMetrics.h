@@ -16,9 +16,9 @@
 
 #include <string.h>
 
-#include "jsalloc.h"
 #include "jspubtd.h"
 
+#include "js/AllocPolicy.h"
 #include "js/HashTable.h"
 #include "js/TracingAPI.h"
 #include "js/Utility.h"

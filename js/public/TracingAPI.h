@@ -7,8 +7,7 @@
 #ifndef js_TracingAPI_h
 #define js_TracingAPI_h
 
-#include "jsalloc.h"
-
+#include "js/AllocPolicy.h"
 #include "js/HashTable.h"
 #include "js/HeapAPI.h"
 #include "js/TraceKind.h"

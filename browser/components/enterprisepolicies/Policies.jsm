@@ -30,9 +30,9 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   });
 });
 
-this.EXPORTED_SYMBOLS = ["Policies"];
+var EXPORTED_SYMBOLS = ["Policies"];
 
-this.Policies = {
+var Policies = {
   "BlockAboutAddons": {
     onBeforeUIStartup(manager, param) {
       if (param) {

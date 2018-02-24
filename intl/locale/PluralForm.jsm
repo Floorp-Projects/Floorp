@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = [ "PluralForm" ];
+var EXPORTED_SYMBOLS = [ "PluralForm" ];
 
 /**
  * This module provides the PluralForm object which contains a method to figure
@@ -77,7 +77,7 @@ var gFunctions = [
   [6, (n) => n==0?0:n==1?1:n==2?2:n==3?3:n==6?4:5],
 ];
 
-this.PluralForm = {
+var PluralForm = {
   /**
    * Get the correct plural form of a word based on the number
    *

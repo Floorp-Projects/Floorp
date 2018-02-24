@@ -17,7 +17,7 @@ ChromeUtils.defineModuleGetter(this, "PreferenceExperiments",
 
 // Act as both a normal bootstrap.js and a JS module so that we can test
 // startup methods without having to install/uninstall the add-on.
-this.EXPORTED_SYMBOLS = ["Bootstrap"];
+var EXPORTED_SYMBOLS = ["Bootstrap"];
 
 const REASON_APP_STARTUP = 1;
 const UI_AVAILABLE_NOTIFICATION = "sessionstore-windows-restored";
@@ -46,7 +46,7 @@ log.level = Services.prefs.getIntPref(PREF_LOGGING_LEVEL, Log.Level.Warn);
 
 let studyPrefsChanged = {};
 
-this.Bootstrap = {
+var Bootstrap = {
   initShieldPrefs(defaultPrefs) {
     const prefBranch = Services.prefs.getDefaultBranch("");
     for (const [name, value] of Object.entries(defaultPrefs)) {

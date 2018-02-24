@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "YandexTranslator" ];
+var EXPORTED_SYMBOLS = [ "YandexTranslator" ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
@@ -57,7 +57,7 @@ const YANDEX_PERMANENT_ERRORS = [
  * @returns {Promise}          A promise that will resolve when the translation
  *                             task is finished.
  */
-this.YandexTranslator = function(translationDocument, sourceLanguage, targetLanguage) {
+var YandexTranslator = function(translationDocument, sourceLanguage, targetLanguage) {
   this.translationDocument = translationDocument;
   this.sourceLanguage = sourceLanguage;
   this.targetLanguage = targetLanguage;

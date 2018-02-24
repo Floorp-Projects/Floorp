@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["AddressesEngine", "CreditCardsEngine"];
+var EXPORTED_SYMBOLS = ["AddressesEngine", "CreditCardsEngine"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

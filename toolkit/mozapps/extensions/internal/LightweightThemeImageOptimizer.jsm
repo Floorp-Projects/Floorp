@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["LightweightThemeImageOptimizer"];
+var EXPORTED_SYMBOLS = ["LightweightThemeImageOptimizer"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -17,7 +17,7 @@ ChromeUtils.defineModuleGetter(this, "FileUtils",
 const ORIGIN_TOP_RIGHT = 1;
 const ORIGIN_BOTTOM_LEFT = 2;
 
-this.LightweightThemeImageOptimizer = {
+var LightweightThemeImageOptimizer = {
   optimize(aThemeData, aScreen) {
     let data = Object.assign({}, aThemeData);
     if (!data.headerURL) {

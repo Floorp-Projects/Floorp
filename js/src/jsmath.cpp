@@ -1434,7 +1434,6 @@ js::math_cbrt(JSContext* cx, unsigned argc, Value* vp)
     return math_function<math_cbrt_impl>(cx, argc, vp);
 }
 
-#if JS_HAS_TOSOURCE
 static bool
 math_toSource(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -1442,12 +1441,9 @@ math_toSource(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setString(cx->names().Math);
     return true;
 }
-#endif
 
 static const JSFunctionSpec math_static_methods[] = {
-#if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,  math_toSource,        0, 0),
-#endif
     JS_INLINABLE_FN("abs",    math_abs,             1, 0, MathAbs),
     JS_INLINABLE_FN("acos",   math_acos,            1, 0, MathACos),
     JS_INLINABLE_FN("asin",   math_asin,            1, 0, MathASin),

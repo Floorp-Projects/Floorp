@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "ErrorHandler",
   "SyncScheduler",
 ];
@@ -34,10 +34,10 @@ function getThrottledIntervalPreference(prefName) {
   return Math.max(Svc.Prefs.get(prefName), 60) * 1000;
 }
 
-this.SyncScheduler = function SyncScheduler(service) {
+function SyncScheduler(service) {
   this.service = service;
   this.init();
-};
+}
 SyncScheduler.prototype = {
   _log: Log.repository.getLogger("Sync.SyncScheduler"),
 
@@ -656,10 +656,10 @@ SyncScheduler.prototype = {
 
 };
 
-this.ErrorHandler = function ErrorHandler(service) {
+function ErrorHandler(service) {
   this.service = service;
   this.init();
-};
+}
 ErrorHandler.prototype = {
   MINIMUM_ALERT_INTERVAL_MSEC: 604800000,   // One week.
 

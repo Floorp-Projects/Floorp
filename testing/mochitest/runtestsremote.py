@@ -118,8 +118,6 @@ class MochiRemote(MochitestDesktop):
         paths = [
             options.xrePath,
             localAutomation.DIST_BIN,
-            self._automation._product,
-            os.path.join('..', self._automation._product)
         ]
         options.xrePath = self.findPath(paths)
         if options.xrePath is None:
@@ -342,11 +340,6 @@ def run_test_harness(parser, options):
         log.error("%s is not installed on this device" % expected)
         return 1
 
-    productPieces = options.remoteProductName.split('.')
-    if (productPieces is not None):
-        auto.setProduct(productPieces[0])
-    else:
-        auto.setProduct(options.remoteProductName)
     auto.setAppName(options.remoteappname)
 
     logParent = os.path.dirname(options.remoteLogFile)

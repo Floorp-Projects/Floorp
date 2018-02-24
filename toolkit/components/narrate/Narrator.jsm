@@ -9,7 +9,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
-this.EXPORTED_SYMBOLS = [ "Narrator" ];
+var EXPORTED_SYMBOLS = [ "Narrator" ];
 
 // Maximum time into paragraph when pressing "skip previous" will go
 // to previous paragraph and not the start of current one.

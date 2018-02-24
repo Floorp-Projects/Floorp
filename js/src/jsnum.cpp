@@ -527,7 +527,6 @@ Extract(const Value& v)
     return v.toObject().as<NumberObject>().unbox();
 }
 
-#if JS_HAS_TOSOURCE
 MOZ_ALWAYS_INLINE bool
 num_toSource_impl(JSContext* cx, const CallArgs& args)
 {
@@ -554,7 +553,6 @@ num_toSource(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsNumber, num_toSource_impl>(cx, args);
 }
-#endif
 
 ToCStringBuf::ToCStringBuf() : dbuf(nullptr)
 {
@@ -1094,9 +1092,7 @@ num_toPrecision(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static const JSFunctionSpec number_methods[] = {
-#if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,       num_toSource,          0, 0),
-#endif
     JS_FN(js_toString_str,       num_toString,          1, 0),
 #if EXPOSE_INTL_API
     JS_SELF_HOSTED_FN(js_toLocaleString_str, "Number_toLocaleString", 0,0),

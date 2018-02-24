@@ -73,7 +73,6 @@
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/PromiseDebugging.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "jsprf.h"
 #include "js/Debug.h"
 #include "js/GCAPI.h"
 #include "nsContentUtils.h"

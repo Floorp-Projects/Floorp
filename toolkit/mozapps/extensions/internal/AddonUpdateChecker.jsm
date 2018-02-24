@@ -9,7 +9,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "AddonUpdateChecker" ];
+var EXPORTED_SYMBOLS = [ "AddonUpdateChecker" ];
 
 const TIMEOUT               = 60 * 1000;
 const PREFIX_NS_RDF         = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
@@ -776,7 +776,7 @@ function matchesVersions(aUpdate, aAppVersion, aPlatformVersion,
   return result;
 }
 
-this.AddonUpdateChecker = {
+var AddonUpdateChecker = {
   /**
    * Retrieves the best matching compatibility update for the application from
    * a list of available update objects.

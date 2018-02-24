@@ -6,7 +6,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["findCssSelector"];
+var EXPORTED_SYMBOLS = ["findCssSelector"];
 
 /**
  * Traverse getBindingParent until arriving upon the bound element

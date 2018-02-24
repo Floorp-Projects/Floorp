@@ -6,7 +6,6 @@
 
 #include "mozilla/ScopeExit.h"
 
-#include "jsprf.h"
 #include "jsutil.h"
 
 #include "jit/arm/Simulator-arm.h"

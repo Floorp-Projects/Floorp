@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["Weave"];
+var EXPORTED_SYMBOLS = ["Weave"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-this.Weave = {};
+var Weave = {};
 ChromeUtils.import("resource://services-sync/constants.js", Weave);
 var lazies = {
   "service.js":           ["Service"],

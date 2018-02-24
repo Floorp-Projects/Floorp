@@ -8,7 +8,7 @@
 
 #include "js/StructuredClone.h"
 #include "js/Utility.h"
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/Maybe.h"

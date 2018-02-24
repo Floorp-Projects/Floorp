@@ -9,8 +9,8 @@
 
 #include "XrayWrapper.h"
 #include "mozilla/Attributes.h"
-#include "jswrapper.h"
 #include "js/CallNonGenericMethod.h"
+#include "js/Wrapper.h"
 
 namespace JS {
 class AutoIdVector;

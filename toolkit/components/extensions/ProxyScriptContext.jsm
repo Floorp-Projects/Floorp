@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ProxyScriptContext"];
+var EXPORTED_SYMBOLS = ["ProxyScriptContext"];
 
 /* exported ProxyScriptContext */
 

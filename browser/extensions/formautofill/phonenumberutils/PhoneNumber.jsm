@@ -7,14 +7,14 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["PhoneNumber"];
+var EXPORTED_SYMBOLS = ["PhoneNumber"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PHONE_NUMBER_META_DATA",
                                "resource://formautofill/phonenumberutils/PhoneNumberMetaData.jsm");
 ChromeUtils.defineModuleGetter(this, "PhoneNumberNormalizer",
                                "resource://formautofill/phonenumberutils/PhoneNumberNormalizer.jsm");
-this.PhoneNumber = (function(dataBase) {
+var PhoneNumber = (function(dataBase) {
   const MAX_PHONE_NUMBER_LENGTH = 50;
   const NON_ALPHA_CHARS = /[^a-zA-Z]/g;
   const NON_DIALABLE_CHARS = /[^,#+\*\d]/g;

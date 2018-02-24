@@ -11,8 +11,8 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jswrapper.h"
 
+#include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/ScriptedProxyHandler.h"
 #include "vm/JSContext.h"

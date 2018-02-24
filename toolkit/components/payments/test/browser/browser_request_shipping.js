@@ -20,38 +20,48 @@ add_task(async function test_request_shipping_present() {
     gBrowser,
     url: BLANK_PAGE_URL,
   }, async browser => {
-    let dialogReadyPromise = waitForWidgetReady();
-    // start by creating a PaymentRequest, and show it
-    await ContentTask.spawn(browser,
-                            {
-                              methodData: [PTU.MethodData.basicCard],
-                              details: PTU.Details.twoShippingOptions,
-                              options: PTU.Options.requestShippingOption,
-                            },
-                            PTU.ContentTasks.createAndShowRequest);
+    for (let [shippingKey, shippingString] of [
+      [null, "Shipping Address"],
+      ["shipping", "Shipping Address"],
+      ["delivery", "Delivery Address"],
+      ["pickup", "Pickup Address"],
+    ]) {
+      let options = {
+        requestShipping: true,
+      };
+      if (shippingKey) {
+        options.shippingType = shippingKey;
+      }
+      let {win, frame} =
+        await setupPaymentDialog(browser, {
+          methodData: [PTU.MethodData.basicCard],
+          details: PTU.Details.twoShippingOptions,
+          options,
+          merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+        }
+      );
 
-    // get a reference to the UI dialog and the requestId
-    let [win] = await Promise.all([getPaymentWidget(), dialogReadyPromise]);
-    ok(win, "Got payment widget");
-    let requestId = paymentUISrv.requestIdForWindow(win);
-    ok(requestId, "requestId should be defined");
-    is(win.closed, false, "dialog should not be closed");
+      let isShippingOptionsVisible =
+        await spawnPaymentDialogTask(frame,
+                                     PTU.DialogContentTasks.isElementVisible,
+                                     "shipping-option-picker");
+      ok(isShippingOptionsVisible, "shipping-option-picker should be visible");
+      let addressSelector = "address-picker[selected-state-key='selectedShippingAddress']";
+      let isShippingAddressVisible =
+        await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.isElementVisible,
+                                     addressSelector);
+      ok(isShippingAddressVisible, "shipping address picker should be visible");
 
-    let frame = await getPaymentFrame(win);
-    ok(frame, "Got payment frame");
+      let shippingOptionText =
+        await spawnPaymentDialogTask(frame,
+                                     PTU.DialogContentTasks.getElementTextContent,
+                                     "#shipping-type-label");
+      is(shippingOptionText, shippingString,
+         "Label should be match shipping type: " + shippingKey);
 
-    let isShippingOptionsVisible =
-      await spawnPaymentDialogTask(frame,
-                                   PTU.DialogContentTasks.isElementVisible,
-                                   "shipping-option-picker");
-    ok(isShippingOptionsVisible, "shipping-option-picker should be visible");
-    let isShippingAddressVisible =
-      await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.isElementVisible,
-                                   "address-picker[selected-state-key='selectedShippingAddress']");
-    ok(isShippingAddressVisible, "shipping address picker should be visible");
-
-    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
-    await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
+      spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
+      await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
+    }
   });
 });
 
@@ -60,24 +70,13 @@ add_task(async function test_request_shipping_not_present() {
     gBrowser,
     url: BLANK_PAGE_URL,
   }, async browser => {
-    let dialogReadyPromise = waitForWidgetReady();
-    // start by creating a PaymentRequest, and show it
-    await ContentTask.spawn(browser,
-                            {
-                              methodData: [PTU.MethodData.basicCard],
-                              details: PTU.Details.twoShippingOptions,
-                            },
-                            PTU.ContentTasks.createAndShowRequest);
-
-    // get a reference to the UI dialog and the requestId
-    let [win] = await Promise.all([getPaymentWidget(), dialogReadyPromise]);
-    ok(win, "Got payment widget");
-    let requestId = paymentUISrv.requestIdForWindow(win);
-    ok(requestId, "requestId should be defined");
-    is(win.closed, false, "dialog should not be closed");
-
-    let frame = await getPaymentFrame(win);
-    ok(frame, "Got payment frame");
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData: [PTU.MethodData.basicCard],
+        details: PTU.Details.twoShippingOptions,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
 
     let isShippingOptionsVisible =
       await spawnPaymentDialogTask(frame,

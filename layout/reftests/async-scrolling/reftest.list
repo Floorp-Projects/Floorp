@@ -5,7 +5,7 @@ skip-if(!asyncPan) == bg-fixed-cover-3.html bg-fixed-cover-3-ref.html
 skip-if(!asyncPan) == bg-fixed-child.html bg-fixed-child-ref.html
 skip-if(!asyncPan) == bg-fixed-child-clip-1.html bg-fixed-child-clip-ref.html
 skip-if(!asyncPan) == bg-fixed-child-clip-2.html bg-fixed-child-clip-ref.html
-fuzzy(1,246) fuzzy-if(skiaContent,2,170) fuzzy-if(browserIsRemote&&d2d,53,187) skip-if(!asyncPan) == bg-fixed-child-mask.html bg-fixed-child-mask-ref.html
+fuzzy(1,246) fuzzy-if(skiaContent,2,170) fuzzy-if(browserIsRemote&&d2d,59,187) skip-if(!asyncPan) == bg-fixed-child-mask.html bg-fixed-child-mask-ref.html
 skip-if(!asyncPan) == bg-fixed-in-opacity.html bg-fixed-in-opacity-ref.html
 # Passing the test below without WebRender would require implementing CSS filters in the Gecko compositor.
 fails-if(!webrender) skip-if(!asyncPan) == bg-fixed-in-css-filter.html bg-fixed-in-css-filter-ref.html
@@ -19,7 +19,7 @@ skip-if(!asyncPan) == nested-1.html nested-1-ref.html
 skip-if(!asyncPan) == nested-2.html nested-2-ref.html
 skip-if(!asyncPan) == position-fixed-1.html position-fixed-1-ref.html
 skip-if(!asyncPan) == position-fixed-2.html position-fixed-2-ref.html
-skip-if(!asyncPan) == position-fixed-body.html position-fixed-body-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,3120) skip-if(!asyncPan) == position-fixed-body.html position-fixed-body-ref.html
 skip-if(!asyncPan) == position-fixed-cover-1.html position-fixed-cover-1-ref.html
 skip-if(!asyncPan) == position-fixed-cover-2.html position-fixed-cover-2-ref.html
 skip-if(!asyncPan) == position-fixed-cover-3.html position-fixed-cover-3-ref.html
@@ -53,7 +53,7 @@ fuzzy-if(Android,7,4) skip-if(!asyncPan) == perspective-scrolling-2.html perspec
 fuzzy-if(Android,7,4) fails-if(webrender) skip-if(!asyncPan) == perspective-scrolling-3.html perspective-scrolling-3-ref.html # bug 1361720 for webrender
 fuzzy-if(Android,7,4) skip-if(!asyncPan) == perspective-scrolling-4.html perspective-scrolling-4-ref.html
 pref(apz.disable_for_scroll_linked_effects,true) skip-if(!asyncPan) == disable-apz-for-sle-pages.html disable-apz-for-sle-pages-ref.html
-fuzzy-if(browserIsRemote&&d2d,1,19) skip-if(!asyncPan) == background-blend-mode-1.html background-blend-mode-1-ref.html
+fuzzy-if(browserIsRemote&&d2d,1,20) skip-if(!asyncPan) == background-blend-mode-1.html background-blend-mode-1-ref.html
 skip-if(Android||!asyncPan) != opaque-fractional-displayport-1.html about:blank
 skip-if(Android||!asyncPan) != opaque-fractional-displayport-2.html about:blank
 fuzzy-if(Android,6,4) skip-if(!asyncPan) == fixed-pos-scrolled-clip-1.html fixed-pos-scrolled-clip-1-ref.html

@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["FormAutofillUtils", "AddressDataLoader"];
+var EXPORTED_SYMBOLS = ["FormAutofillUtils", "AddressDataLoader"];
 
 const ADDRESS_METADATA_PATH = "resource://formautofill/addressmetadata/";
 const ADDRESS_REFERENCES = "addressReferences.js";
@@ -843,7 +843,7 @@ this.FormAutofillUtils = {
 };
 
 this.log = null;
-this.FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
+this.FormAutofillUtils.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 XPCOMUtils.defineLazyGetter(FormAutofillUtils, "stringBundle", function() {
   return Services.strings.createBundle("chrome://formautofill/locale/formautofill.properties");
