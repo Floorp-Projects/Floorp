@@ -25,6 +25,7 @@
 #include "js/Class.h"
 #include "js/Conversions.h"
 #include "util/StringBuffer.h"
+#include "util/Text.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Interpreter.h"
 #include "vm/Iteration.h"

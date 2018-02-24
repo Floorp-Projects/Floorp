@@ -24,6 +24,7 @@
 #include "util/StringBuffer.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpStatics.h"
+#include "vm/StringType.h"
 #include "vm/TraceLogging.h"
 #ifdef DEBUG
 #include "util/Unicode.h"

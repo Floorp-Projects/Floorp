@@ -21,6 +21,7 @@
 
 #include "builtin/String.h"
 #include "gc/Marking.h"
+#include "util/Text.h"
 #include "vm/JSContext.h"
 #include "vm/SymbolType.h"
 #include "vm/Xdr.h"
