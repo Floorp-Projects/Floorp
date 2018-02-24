@@ -18,9 +18,9 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jsarray.h"
 #include "jstypes.h"
 
+#include "builtin/Array.h"
 #include "builtin/Eval.h"
 #include "builtin/Object.h"
 #include "builtin/SelfHostingDefines.h"

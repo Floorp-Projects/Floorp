@@ -14,10 +14,10 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Unused.h"
 
-#include "jsarray.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "builtin/Array.h"
 #include "ds/Sort.h"
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"

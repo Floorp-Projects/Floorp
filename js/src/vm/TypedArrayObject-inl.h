@@ -15,9 +15,9 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
-#include "jsarray.h"
 #include "jsnum.h"
 
+#include "builtin/Array.h"
 #include "gc/Zone.h"
 #include "jit/AtomicOperations.h"
 #include "js/Conversions.h"
