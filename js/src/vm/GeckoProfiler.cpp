@@ -16,8 +16,8 @@
 #include "jit/JitcodeMap.h"
 #include "jit/JitFrames.h"
 #include "jit/JSJitFrameIter.h"
+#include "util/StringBuffer.h"
 #include "vm/JSScript.h"
-#include "vm/StringBuffer.h"
 
 #include "gc/Marking-inl.h"
 

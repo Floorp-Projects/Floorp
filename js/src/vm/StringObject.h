@@ -7,7 +7,7 @@
 #ifndef vm_StringObject_h
 #define vm_StringObject_h
 
-#include "jsstr.h"
+#include "builtin/String.h"
 
 #include "vm/JSObject.h"
 #include "vm/Shape.h"

@@ -32,7 +32,7 @@ for gcfile in ['devtools/rootAnalysis', 'devtools/gc-ubench', 'devtools/gctrace'
     with Files(gcfile):
         BUG_COMPONENT = component_gc
 
-for stlfile in ['jsarray.*', 'jsbool*', 'jsdate.*', 'jsnum.*', 'jsstr.*']:
+for stlfile in ['jsarray.*', 'jsbool*', 'jsdate.*', 'jsnum.*']:
     with Files(stlfile):
         BUG_COMPONENT = component_stl
 
@@ -168,7 +168,8 @@ UNIFIED_SOURCES += [
     'builtin/ReflectParse.cpp',
     'builtin/SIMD.cpp',
     'builtin/Stream.cpp',
-    'builtin/SymbolObject.cpp',
+    'builtin/String.cpp',
+    'builtin/Symbol.cpp',
     'builtin/TestingFunctions.cpp',
     'builtin/TypedObject.cpp',
     'builtin/WeakMapObject.cpp',
@@ -291,7 +292,6 @@ UNIFIED_SOURCES += [
     'jsexn.cpp',
     'jsfriendapi.cpp',
     'jsnum.cpp',
-    'jsstr.cpp',
     'perf/jsperf.cpp',
     'proxy/BaseProxyHandler.cpp',
     'proxy/CrossCompartmentWrapper.cpp',
@@ -306,6 +306,8 @@ UNIFIED_SOURCES += [
     'util/AllocPolicy.cpp',
     'util/NativeStack.cpp',
     'util/Printf.cpp',
+    'util/StringBuffer.cpp',
+    'util/Unicode.cpp',
     'vm/ArgumentsObject.cpp',
     'vm/ArrayBufferObject.cpp',
     'vm/AsyncFunction.cpp',
@@ -357,10 +359,9 @@ UNIFIED_SOURCES += [
     'vm/SharedImmutableStringsCache.cpp',
     'vm/Stack.cpp',
     'vm/Stopwatch.cpp',
-    'vm/String.cpp',
-    'vm/StringBuffer.cpp',
+    'vm/StringType.cpp',
     'vm/StructuredClone.cpp',
-    'vm/Symbol.cpp',
+    'vm/SymbolType.cpp',
     'vm/TaggedProto.cpp',
     'vm/Time.cpp',
     'vm/TypedArrayObject.cpp',
@@ -369,7 +370,6 @@ UNIFIED_SOURCES += [
     'vm/UbiNodeCensus.cpp',
     'vm/UbiNodeShortestPaths.cpp',
     'vm/UnboxedObject.cpp',
-    'vm/Unicode.cpp',
     'vm/Value.cpp',
     'vm/Xdr.cpp',
     'wasm/AsmJS.cpp',

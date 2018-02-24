@@ -13,7 +13,7 @@
 
 #include <algorithm>
 
-#include "jsstr.h"
+#include "builtin/String.h"
 
 #include "jit/IonCode.h"
 #include "js/Debug.h"
@@ -29,8 +29,8 @@
 #include "vm/JSScript.h"
 #include "vm/Scope.h"
 #include "vm/Shape.h"
-#include "vm/String.h"
-#include "vm/Symbol.h"
+#include "vm/StringType.h"
+#include "vm/SymbolType.h"
 
 #include "vm/Debugger-inl.h"
 #include "vm/JSObject-inl.h"

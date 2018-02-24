@@ -30,9 +30,9 @@
 
 #include "jsexn.h"
 #include "jspubtd.h"
-#include "jsstr.h"
 #include "jstypes.h"
 
+#include "builtin/String.h"
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "jit/Ion.h"

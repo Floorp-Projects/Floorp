@@ -26,12 +26,12 @@
 #include "gc/Rooting.h"
 #include "js/CharacterEncoding.h"
 #include "js/Vector.h"
+#include "util/StringBuffer.h"
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSScript.h"
 #include "vm/SavedFrame.h"
-#include "vm/StringBuffer.h"
 #include "vm/Time.h"
 #include "vm/WrapperObject.h"
 

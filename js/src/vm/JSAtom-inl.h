@@ -14,7 +14,7 @@
 #include "jsnum.h"
 
 #include "vm/Runtime.h"
-#include "vm/String.h"
+#include "vm/StringType.h"
 
 namespace js {
 

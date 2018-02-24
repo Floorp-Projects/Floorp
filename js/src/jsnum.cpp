@@ -20,21 +20,21 @@
 #include <math.h>
 #include <string.h>
 
-#include "jsstr.h"
 #include "jstypes.h"
 
+#include "builtin/String.h"
 #include "double-conversion/double-conversion.h"
 #include "js/Conversions.h"
 #include "util/DoubleToString.h"
+#include "util/StringBuffer.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
-#include "vm/StringBuffer.h"
 
 #include "vm/NativeObject-inl.h"
 #include "vm/NumberObject-inl.h"
-#include "vm/String-inl.h"
+#include "vm/StringType-inl.h"
 
 using namespace js;
 
