@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsmath_h
-#define jsmath_h
+#ifndef builtin_Math_h
+#define builtin_Math_h
 
 #include "mozilla/MemoryReporting.h"
 
@@ -432,4 +432,4 @@ math_cbrt_uncached(double x);
 
 } /* namespace js */
 
-#endif /* jsmath_h */
+#endif /* builtin_Math_h */

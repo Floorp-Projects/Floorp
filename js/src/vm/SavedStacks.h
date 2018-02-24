@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/FastBernoulliTrial.h"
 
-#include "jsmath.h"
+#include "builtin/Math.h"
 
 #include "js/HashTable.h"
 #include "js/Wrapper.h"

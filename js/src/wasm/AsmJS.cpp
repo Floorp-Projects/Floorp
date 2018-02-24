@@ -23,9 +23,9 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Unused.h"
 
-#include "jsmath.h"
 #include "jsutil.h"
 
+#include "builtin/Math.h"
 #include "builtin/SIMD.h"
 #include "builtin/String.h"
 #include "frontend/Parser.h"

@@ -19,10 +19,10 @@
 #include <type_traits>
 
 #include "jslibmath.h"
-#include "jsmath.h"
 #include "jsnum.h"
 
 #include "builtin/Eval.h"
+#include "builtin/Math.h"
 #include "builtin/RegExp.h"
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/String.h"

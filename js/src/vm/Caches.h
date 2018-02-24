@@ -7,7 +7,7 @@
 #ifndef vm_Caches_h
 #define vm_Caches_h
 
-#include "jsmath.h"
+#include "builtin/Math.h"
 
 #include "frontend/SourceNotes.h"
 #include "gc/Tracer.h"

@@ -6,8 +6,6 @@
 
 #include "mozilla/Casting.h"
 
-#include "jsmath.h"
-
 #include "builtin/AtomicsObject.h"
 #include "builtin/intl/Collator.h"
 #include "builtin/intl/DateTimeFormat.h"
@@ -15,6 +13,7 @@
 #include "builtin/intl/PluralRules.h"
 #include "builtin/intl/RelativeTimeFormat.h"
 #include "builtin/MapObject.h"
+#include "builtin/Math.h"
 #include "builtin/SIMD.h"
 #include "builtin/String.h"
 #include "builtin/TestingFunctions.h"
