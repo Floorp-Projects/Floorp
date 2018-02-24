@@ -298,7 +298,7 @@ nsXBLDocumentInfo::WritePrototypeBindings()
   rv = NewBufferFromStorageStream(storageStream, &buf, &len);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return startupCache->PutBuffer(spec.get(), buf.get(), len);
+  return startupCache->PutBuffer(spec.get(), Move(buf), len);
 }
 
 void

@@ -47,14 +47,6 @@ class js::jit::OutOfLineTableSwitch : public OutOfLineCodeBase<CodeGeneratorMIPS
 };
 
 void
-CodeGeneratorMIPS64::visitOutOfLineBailout(OutOfLineBailout* ool)
-{
-    masm.push(ImmWord(ool->snapshot()->snapshotOffset()));
-
-    masm.jump(&deoptLabel_);
-}
-
-void
 CodeGeneratorMIPS64::visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool)
 {
     MTableSwitch* mir = ool->mir();
@@ -109,24 +101,6 @@ CodeGeneratorMIPS64::emitTableSwitchDispatch(MTableSwitch* mir, Register index,
     masm.addPtr(index, address);
 
     masm.branch(address);
-}
-
-FrameSizeClass
-FrameSizeClass::FromDepth(uint32_t frameDepth)
-{
-    return FrameSizeClass::None();
-}
-
-FrameSizeClass
-FrameSizeClass::ClassLimit()
-{
-    return FrameSizeClass(0);
-}
-
-uint32_t
-FrameSizeClass::frameSize() const
-{
-    MOZ_CRASH("MIPS64 does not use frame size classes");
 }
 
 ValueOperand
