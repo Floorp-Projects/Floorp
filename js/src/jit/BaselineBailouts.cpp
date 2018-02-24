@@ -1829,8 +1829,9 @@ CopyFromRematerializedFrame(JSContext* cx, JitActivation* act, uint8_t* fp, size
 
     frame->setReturnValue(rematFrame->returnValue());
 
-    if (rematFrame->hasCachedSavedFrame())
-        frame->setHasCachedSavedFrame();
+    // Don't copy over the hasCachedSavedFrame bit. The new BaselineFrame we're
+    // building has a different AbstractFramePtr, so it won't be found in the
+    // LiveSavedFrameCache if we look there.
 
     JitSpew(JitSpew_BaselineBailouts,
             "  Copied from rematerialized frame at (%p,%zu)",
