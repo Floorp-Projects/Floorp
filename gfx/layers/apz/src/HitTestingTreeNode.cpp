@@ -312,6 +312,9 @@ HitTestingTreeNode::HitTest(const LayerPoint& aPoint) const
       mEventRegions.mDispatchToContentHitRegion.Contains(point.x, point.y))
   {
     result |= CompositorHitTestInfo::eDispatchToContent;
+    if (mEventRegions.mDTCRequiresTargetConfirmation) {
+      result |= CompositorHitTestInfo::eRequiresTargetConfirmation;
+    }
   } else if (gfxPrefs::TouchActionEnabled()) {
     if (mEventRegions.mNoActionRegion.Contains(point.x, point.y)) {
       // set all the touch-action flags as disabled
