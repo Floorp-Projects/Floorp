@@ -11,10 +11,7 @@
 #ifdef XP_WIN
 #include <windows.h>
 // we want a wmain entry point
-// but we don't want its DLL load protection, because we'll handle it here
-#define XRE_DONT_PROTECT_DLL_LOAD
 #include "nsWindowsWMain.cpp"
-#include "nsSetDllDirectory.h"
 #else
 // FIXME/cjones testing
 #include <unistd.h>
@@ -49,16 +46,6 @@ content_process_main(mozilla::Bootstrap* bootstrap, int argc, char* argv[])
 #endif
 
     bootstrap->XRE_SetProcessType(argv[--argc]);
-
-#ifdef XP_WIN
-    // For plugins, this is done in PluginProcessChild::Init, as we need to
-    // avoid it for unsupported plugins.  See PluginProcessChild::Init for
-    // the details.
-    if (bootstrap->XRE_GetProcessType() != GeckoProcessType_Plugin) {
-        mozilla::SanitizeEnvironmentVariables();
-        SetDllDirectoryW(L"");
-    }
-#endif
 
     nsresult rv = bootstrap->XRE_InitChildProcess(argc, argv, &childData);
     return NS_FAILED(rv);

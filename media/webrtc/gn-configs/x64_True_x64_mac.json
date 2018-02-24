@@ -48,13 +48,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -95,7 +95,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -133,13 +133,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -185,7 +185,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -223,13 +223,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -268,7 +268,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -306,13 +306,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -355,7 +355,7 @@
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -398,13 +398,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -447,7 +447,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -486,7 +486,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -535,7 +535,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/",
@@ -596,13 +596,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -641,7 +641,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -679,13 +679,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -724,7 +724,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -850,13 +850,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -897,7 +897,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -937,13 +937,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -984,7 +984,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1030,7 +1030,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -1075,7 +1075,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "ApplicationServices.framework",
@@ -1122,13 +1122,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -1167,7 +1167,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1210,7 +1210,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -1247,7 +1247,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -1327,13 +1327,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -1372,7 +1372,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -1466,7 +1466,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -1499,7 +1499,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1538,7 +1538,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -1578,7 +1578,7 @@
                 "//webrtc/modules/interface/",
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -1648,13 +1648,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -1693,7 +1693,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1731,7 +1731,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -1769,7 +1769,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "CoreVideo.framework"
@@ -1812,13 +1812,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -1857,7 +1857,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1900,13 +1900,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -1964,7 +1964,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/audio_coding/include/",
                 "//webrtc/modules/include/",
                 "//",
@@ -2028,13 +2028,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2078,7 +2078,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2116,13 +2116,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2164,7 +2164,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2205,13 +2205,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2253,7 +2253,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2292,13 +2292,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2339,7 +2339,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2378,13 +2378,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2427,7 +2427,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2466,13 +2466,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2516,7 +2516,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -2576,13 +2576,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2633,7 +2633,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/cng/include/",
                 "//",
@@ -2682,13 +2682,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2732,7 +2732,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/cng/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -2778,13 +2778,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2829,7 +2829,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/g711/include/"
             ],
@@ -2872,13 +2872,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -2919,7 +2919,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2960,13 +2960,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3011,7 +3011,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/g722/include/"
             ],
@@ -3054,13 +3054,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3101,7 +3101,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -3143,13 +3143,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3193,7 +3193,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/main/include/"
             ],
@@ -3234,13 +3234,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3284,7 +3284,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/main/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -3378,13 +3378,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3426,7 +3426,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -3467,13 +3467,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3519,7 +3519,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/fix/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -3563,13 +3563,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3616,7 +3616,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/fix/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -3704,13 +3704,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3770,7 +3770,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/cng/include/",
                 "//",
@@ -3893,13 +3893,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -3945,7 +3945,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/pcm16b/include/",
                 "//",
@@ -3990,13 +3990,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -4037,7 +4037,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/pcm16b/include/"
             ],
@@ -4078,13 +4078,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -4135,7 +4135,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/cng/include/",
                 "//",
@@ -4186,13 +4186,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -4243,7 +4243,7 @@
             "include_dirs": [
                 "/include/opus/",
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -4287,13 +4287,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -4336,7 +4336,7 @@
             "include_dirs": [
                 "/media/libopus/include/",
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -4376,7 +4376,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -4415,7 +4415,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/audio_conference_mixer/include/",
                 "//webrtc/modules/include/"
             ],
@@ -4464,7 +4464,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -4506,7 +4506,7 @@
             "include_dirs": [
                 "//webrtc/modules/audio_device/mac/",
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/include/",
                 "//webrtc/modules/audio_device/include/",
                 "//webrtc/modules/audio_device/dummy/",
@@ -4577,13 +4577,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -4622,7 +4622,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -4662,13 +4662,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -4710,7 +4710,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -4749,13 +4749,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -4802,7 +4802,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -4844,13 +4844,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -4902,7 +4902,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/main/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -5094,13 +5094,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -5144,7 +5144,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -5196,13 +5196,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -5242,7 +5242,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -5282,7 +5282,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -5320,7 +5320,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "CoreVideo.framework"
@@ -5364,7 +5364,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -5408,7 +5408,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "CoreVideo.framework"
@@ -5463,13 +5463,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -5516,7 +5516,7 @@
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "AppKit.framework",
@@ -5597,13 +5597,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -5642,7 +5642,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -5681,13 +5681,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -5728,7 +5728,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -5776,7 +5776,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -5814,7 +5814,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -5860,7 +5860,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -5898,7 +5898,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "CoreVideo.framework"
@@ -5945,7 +5945,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -5983,7 +5983,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -6040,7 +6040,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -6085,7 +6085,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -6275,7 +6275,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -6319,7 +6319,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/",
@@ -6337,8 +6337,6 @@
         },
         "//webrtc/modules/video_capture:video_capture_internal_impl": {
             "cflags": [
-                "-fobjc-arc",
-                "-Wno-deprecated-declarations",
                 "-fno-strict-aliasing",
                 "-fstack-protector-strong",
                 "-Wno-builtin-macro-redefined",
@@ -6367,7 +6365,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -6404,7 +6402,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "AVFoundation.framework",
@@ -6412,14 +6410,16 @@
                 "CoreVideo.framework"
             ],
             "sources": [
-                "//webrtc/modules/video_capture/objc/device_info.h",
-                "//webrtc/modules/video_capture/objc/device_info.mm",
-                "//webrtc/modules/video_capture/objc/device_info_objc.h",
-                "//webrtc/modules/video_capture/objc/device_info_objc.mm",
-                "//webrtc/modules/video_capture/objc/rtc_video_capture_objc.h",
-                "//webrtc/modules/video_capture/objc/rtc_video_capture_objc.mm",
-                "//webrtc/modules/video_capture/objc/video_capture.h",
-                "//webrtc/modules/video_capture/objc/video_capture.mm"
+                "//webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation.h",
+                "//webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation.mm",
+                "//webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation_info.h",
+                "//webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation_info.mm",
+                "//webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation_info_objc.h",
+                "//webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation_info_objc.mm",
+                "//webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation_objc.h",
+                "//webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation_objc.mm",
+                "//webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation_utility.h",
+                "//webrtc/modules/video_capture/mac/video_capture_mac.mm"
             ],
             "type": "static_library"
         },
@@ -6453,7 +6453,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -6492,7 +6492,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -6543,7 +6543,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -6590,7 +6590,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -6697,7 +6697,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -6736,7 +6736,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -6793,7 +6793,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -6830,7 +6830,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "CoreVideo.framework"
@@ -6871,7 +6871,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -6909,7 +6909,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -6952,7 +6952,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -6992,7 +6992,7 @@
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7047,7 +7047,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -7085,7 +7085,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7133,7 +7133,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -7174,7 +7174,7 @@
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/",
@@ -7229,7 +7229,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -7265,7 +7265,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -7304,13 +7304,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -7349,7 +7349,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -7388,13 +7388,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -7433,7 +7433,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -7472,13 +7472,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -7521,7 +7521,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -7598,7 +7598,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -7649,7 +7649,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/",
                 "//webrtc/modules/audio_coding/include/",
@@ -7734,13 +7734,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -7781,7 +7781,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -7821,7 +7821,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -7860,7 +7860,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/audio_coding/include/",
                 "//webrtc/modules/include/"
             ],
@@ -7901,7 +7901,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -7940,7 +7940,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -7982,7 +7982,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -8022,7 +8022,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -8064,13 +8064,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -8113,7 +8113,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -8155,7 +8155,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -8214,7 +8214,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/audio_coding/include/",
                 "//webrtc/modules/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -8322,13 +8322,13 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Xclang",
                 "-load",
                 "-Xclang",
-                "../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
+                "../../../../../media/webrtc/trunk/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.dylib",
                 "-Xclang",
                 "-add-plugin",
                 "-Xclang",
@@ -8386,7 +8386,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/",
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/",
@@ -8449,7 +8449,7 @@
                 "-fno-omit-frame-pointer",
                 "-gdwarf-2",
                 "-isysroot",
-                "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
+                "../../../../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk",
                 "-mmacosx-version-min=10.9",
                 "-fvisibility=hidden",
                 "-Wheader-hygiene",
@@ -8482,7 +8482,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/gn-output/gen/"
+                "/Users/dminor/src/firefox/obj-x86_64-apple-darwin16.7.0/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [

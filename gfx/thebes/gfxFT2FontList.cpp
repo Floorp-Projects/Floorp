@@ -13,6 +13,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsIInputStream.h"
+#include "nsReadableUtils.h"
 
 #include "nsXULAppAPI.h"
 #include <dirent.h>
@@ -726,7 +727,9 @@ public:
             buf.AppendInt(entry->mFilesize);
             buf.Append(';');
         }
-        mCache->PutBuffer(CACHE_KEY, buf.get(), buf.Length() + 1);
+
+        mCache->PutBuffer(CACHE_KEY,
+            UniquePtr<char[]>(ToNewCString(buf)), buf.Length() + 1);
     }
 
     // This may be called more than once (if we re-load the font list).
@@ -1568,8 +1571,12 @@ gfxFT2FontList::WillShutdown()
     mozilla::scache::StartupCache* cache =
         mozilla::scache::StartupCache::GetSingleton();
     if (cache && mJarModifiedTime > 0) {
+        const size_t bufSize = sizeof(mJarModifiedTime);
+        auto buf = MakeUnique<char[]>(bufSize);
+        memcpy(buf.get(), &mJarModifiedTime, bufSize);
+
         cache->PutBuffer(JAR_LAST_MODIFED_TIME,
-                         (char*)&mJarModifiedTime, sizeof(mJarModifiedTime));
+                         Move(buf), bufSize);
     }
     mFontNameCache = nullptr;
 }

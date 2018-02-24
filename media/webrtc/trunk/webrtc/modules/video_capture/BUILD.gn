@@ -135,7 +135,7 @@ if (!build_with_chromium) {
         ]
       }
     }
-    if (is_ios || is_mac) {
+    if (!build_with_mozilla && (is_ios || is_mac)) {
       sources = [
         "objc/device_info.h",
         "objc/device_info.mm",
@@ -167,6 +167,21 @@ if (!build_with_chromium) {
       sources = [
         "android/device_info_android.cc",
         "android/video_capture_android.cc",
+      ]
+    }
+
+    if (build_with_mozilla && is_mac) {
+      sources = [
+        "mac/avfoundation/video_capture_avfoundation.h",
+        "mac/avfoundation/video_capture_avfoundation.mm",
+        "mac/avfoundation/video_capture_avfoundation_info.h",
+        "mac/avfoundation/video_capture_avfoundation_info.mm",
+        "mac/avfoundation/video_capture_avfoundation_info_objc.h",
+        "mac/avfoundation/video_capture_avfoundation_info_objc.mm",
+        "mac/avfoundation/video_capture_avfoundation_objc.h",
+        "mac/avfoundation/video_capture_avfoundation_objc.mm",
+        "mac/avfoundation/video_capture_avfoundation_utility.h",
+        "mac/video_capture_mac.mm",
       ]
     }
 
