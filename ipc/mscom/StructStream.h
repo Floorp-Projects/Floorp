@@ -76,6 +76,11 @@ public:
     if (mHandle) {
       ::MesHandleFree(mHandle);
     }
+    if (mBuffer) {
+      // Bug 1440564: You'd think that MesHandleFree would free the buffer,
+      // since it was created by RPC, but it doesn't.
+      midl_user_free(mBuffer);
+    }
   }
 
   static unsigned long GetEmptySize()

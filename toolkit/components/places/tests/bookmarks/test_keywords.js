@@ -12,24 +12,17 @@ async function check_keyword(aURI, aKeyword) {
   if (aKeyword)
     aKeyword = aKeyword.toLowerCase();
 
-  let bms = [];
-  await PlacesUtils.bookmarks.fetch({ url: aURI }, bm => bms.push(bm));
-  for (let bm of bms) {
-    let itemId = await PlacesUtils.promiseItemId(bm.guid);
-    let keyword = PlacesUtils.bookmarks.getKeywordForBookmark(itemId);
-    if (keyword && !aKeyword) {
-      throw (`${aURI} should not have a keyword, found keyword "${keyword}"`);
-    } else if (aKeyword && keyword == aKeyword) {
-      Assert.equal(keyword, aKeyword);
-    }
-  }
-
   if (aKeyword) {
     let uri = await PlacesUtils.keywords.fetch(aKeyword);
     Assert.equal(uri.url, aURI);
     // Check case insensitivity.
     uri = await PlacesUtils.keywords.fetch(aKeyword.toUpperCase());
     Assert.equal(uri.url, aURI);
+  } else {
+    let entry = await PlacesUtils.keywords.fetch({ url: aURI });
+    if (entry) {
+      throw (`${aURI.spec} should not have a keyword`);
+    }
   }
 }
 
@@ -75,14 +68,6 @@ function expectNotifications() {
 }
 
 add_task(function test_invalid_input() {
-  Assert.throws(() => PlacesUtils.bookmarks.getKeywordForBookmark(null),
-                /NS_ERROR_ILLEGAL_VALUE/);
-  Assert.throws(() => PlacesUtils.bookmarks.getKeywordForBookmark(0),
-                /NS_ERROR_ILLEGAL_VALUE/);
-  Assert.throws(() => PlacesUtils.bookmarks.setKeywordForBookmark(null, "k"),
-                /NS_ERROR_ILLEGAL_VALUE/);
-  Assert.throws(() => PlacesUtils.bookmarks.setKeywordForBookmark(0, "k"),
-                /NS_ERROR_ILLEGAL_VALUE/);
 });
 
 add_task(async function test_addBookmarkAndKeyword() {
@@ -554,8 +539,6 @@ add_task(async function test_invalidation() {
 
   ok(!(await PlacesUtils.keywords.fetch({ keyword: "tb" })),
     "Should not return URL for removed bookmark keyword");
-
-  await PlacesTestUtils.promiseAsyncUpdates();
   await check_orphans();
 
   await PlacesUtils.bookmarks.eraseEverything();

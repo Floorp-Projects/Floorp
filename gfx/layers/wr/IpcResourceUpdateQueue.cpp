@@ -37,8 +37,11 @@ ShmSegmentsWriter::Write(Range<uint8_t> aBytes)
 
   if (length >= mChunkSize * 4) {
     auto range = AllocLargeChunk(length);
-    uint8_t* dstPtr = mLargeAllocs.LastElement().get<uint8_t>();
-    memcpy(dstPtr, aBytes.begin().get(), length);
+    if (range.length()) {
+      // Allocation was successful
+      uint8_t* dstPtr = mLargeAllocs.LastElement().get<uint8_t>();
+      memcpy(dstPtr, aBytes.begin().get(), length);
+    }
     return range;
   }
 
@@ -51,14 +54,20 @@ ShmSegmentsWriter::Write(Range<uint8_t> aBytes)
   while (remainingBytesToCopy > 0) {
     if (dstCursor >= mSmallAllocs.Length() * mChunkSize) {
       if (!AllocChunk()) {
+        // Allocation failed, so roll back to the state at the start of this
+        // Write() call and abort.
         for (size_t i = mSmallAllocs.Length() ; currAllocLen < i ; i--) {
-          RefCountedShmem& shm = mSmallAllocs.ElementAt(i);
+          MOZ_ASSERT(i > 0);
+          RefCountedShmem& shm = mSmallAllocs.ElementAt(i - 1);
           RefCountedShm::Dealloc(mShmAllocator, shm);
-          mSmallAllocs.RemoveElementAt(i);
+          mSmallAllocs.RemoveElementAt(i - 1);
         }
+        MOZ_ASSERT(mSmallAllocs.Length() == currAllocLen);
         return layers::OffsetRange(0, start, 0);
       }
-      continue;
+      // Allocation succeeded, so dstCursor should now be pointing to
+      // something inside the allocation buffer
+      MOZ_ASSERT(dstCursor < (mSmallAllocs.Length() * mChunkSize));
     }
 
     const size_t dstMaxOffset = mChunkSize * mSmallAllocs.Length();
@@ -124,6 +133,13 @@ ShmSegmentsWriter::Flush(nsTArray<RefCountedShmem>& aSmallAllocs, nsTArray<ipc::
   MOZ_ASSERT(aLargeAllocs.IsEmpty());
   mSmallAllocs.SwapElements(aSmallAllocs);
   mLargeAllocs.SwapElements(aLargeAllocs);
+  mCursor = 0;
+}
+
+bool
+ShmSegmentsWriter::IsEmpty() const
+{
+  return mCursor == 0;
 }
 
 void
@@ -355,6 +371,16 @@ IpcResourceUpdateQueue::Flush(nsTArray<layers::OpUpdateResource>& aUpdates,
   aUpdates.Clear();
   mUpdates.SwapElements(aUpdates);
   mWriter.Flush(aSmallAllocs, aLargeAllocs);
+}
+
+bool
+IpcResourceUpdateQueue::IsEmpty() const
+{
+  if (mUpdates.Length() == 0) {
+    MOZ_ASSERT(mWriter.IsEmpty());
+    return true;
+  }
+  return false;
 }
 
 void

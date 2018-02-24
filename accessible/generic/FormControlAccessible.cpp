@@ -9,7 +9,6 @@
 #include "Role.h"
 
 #include "mozilla/FloatingPoint.h"
-#include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULControlElement.h"
 

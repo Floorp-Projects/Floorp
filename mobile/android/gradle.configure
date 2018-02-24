@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # If --with-gradle is specified, build mobile/android with Gradle.  If no
-# Gradle binary is specified, or if --without-gradle is specified, use the in
-# tree Gradle wrapper.  The wrapper downloads and installs Gradle, which is
-# good for local developers but not good in automation.
+# Gradle binary is specified use the in tree Gradle wrapper.  The wrapper
+# downloads and installs Gradle, which is good for local developers but not
+# good in automation.
 option('--with-gradle', nargs='?',
        default=True,
        help='Enable building mobile/android with Gradle '
@@ -15,6 +15,10 @@ option('--with-gradle', nargs='?',
 
 @depends('--with-gradle')
 def with_gradle(value):
+    if not value:
+        die('Building --without-gradle is no longer supported: '
+            'see https://bugzilla.mozilla.org/show_bug.cgi?id=1414415.')
+
     if value:
         return True
 

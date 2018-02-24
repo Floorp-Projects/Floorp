@@ -6,11 +6,10 @@ use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayList, ClipId,
 use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale, DeviceUintPoint};
 use api::{DeviceUintRect, DeviceUintSize, DocumentLayer, Epoch, ExtendMode, ExternalScrollId};
 use api::{FontRenderMode, GlyphInstance, GlyphOptions, GradientStop, ImageKey, ImageRendering};
-use api::{ItemRange, LayerPoint, LayerPrimitiveInfo, LayerRect, LayerSize, LayerTransform};
-use api::{LayerVector2D, LayoutTransform, LayoutVector2D, LineOrientation, LineStyle, LocalClip};
-use api::{PipelineId, PremultipliedColorF, PropertyBinding, RepeatMode, ScrollSensitivity, Shadow};
-use api::{TexelRect, TileOffset, TransformStyle, WorldPoint, WorldToLayerTransform, YuvColorSpace};
-use api::YuvData;
+use api::{ItemRange, LayerPoint, LayerPrimitiveInfo, LayerRect, LayerSize, LayerVector2D};
+use api::{LayoutTransform, LayoutVector2D, LineOrientation, LineStyle, LocalClip, PipelineId};
+use api::{PremultipliedColorF, PropertyBinding, RepeatMode, ScrollSensitivity, Shadow, TexelRect};
+use api::{TileOffset, TransformStyle, WorldPoint, YuvColorSpace, YuvData};
 use app_units::Au;
 use border::ImageBorderSegment;
 use clip::{ClipChain, ClipRegion, ClipSource, ClipSources, ClipStore};
@@ -19,12 +18,12 @@ use clip_scroll_tree::{ClipScrollTree, ClipChainIndex};
 use euclid::{SideOffsets2D, vec2};
 use frame::{FrameId, ClipIdToIndexMapper};
 use glyph_rasterizer::FontInstance;
-use gpu_cache::{GpuCache, GpuCacheHandle};
+use gpu_cache::GpuCache;
 use gpu_types::{ClipChainRectIndex, ClipScrollNodeData, PictureType};
 use hit_test::{HitTester, HitTestingItem, HitTestingRun};
 use internal_types::{FastHashMap, FastHashSet};
 use picture::{ContentOrigin, PictureCompositeMode, PictureKind, PicturePrimitive, PictureSurface};
-use prim_store::{BrushKind, BrushPrimitive, BrushSegmentDescriptor, GradientPrimitiveCpu};
+use prim_store::{BrushKind, BrushPrimitive, BrushSegmentDescriptor, CachedGradient, CachedGradientIndex};
 use prim_store::{ImageCacheKey, ImagePrimitiveCpu, ImageSource, PrimitiveContainer};
 use prim_store::{PrimitiveIndex, PrimitiveKind, PrimitiveRun, PrimitiveStore};
 use prim_store::{ScrollNodeAndClipChain, TextRunPrimitiveCpu};
@@ -35,7 +34,7 @@ use scene::{ScenePipeline, SceneProperties};
 use std::{mem, usize, f32};
 use tiling::{CompositeOps, Frame, RenderPass, RenderTargetKind};
 use tiling::{RenderPassKind, RenderTargetContext, ScrollbarPrimitive};
-use util::{self, MaxRect, pack_as_float, RectHelpers, recycle_vec};
+use util::{self, MaxRect, RectHelpers, WorldToLayerFastTransform, recycle_vec};
 
 #[derive(Debug)]
 pub struct ScrollbarInfo(pub ClipId, pub LayerRect);
@@ -86,6 +85,7 @@ pub struct FrameBuilder {
     pub clip_store: ClipStore,
     hit_testing_runs: Vec<HitTestingRun>,
     pub config: FrameBuilderConfig,
+    pub cached_gradients: Vec<CachedGradient>,
 
     // A stack of the current shadow primitives.
     // The sub-Vec stores a buffer of fast-path primitives to be appended on pop.
@@ -124,6 +124,7 @@ pub struct FrameState<'a> {
     pub local_clip_rects: &'a mut Vec<LayerRect>,
     pub resource_cache: &'a mut ResourceCache,
     pub gpu_cache: &'a mut GpuCache,
+    pub cached_gradients: &'a mut [CachedGradient],
 }
 
 pub struct PictureContext<'a> {
@@ -133,7 +134,7 @@ pub struct PictureContext<'a> {
     pub original_reference_frame_id: Option<ClipId>,
     pub display_list: &'a BuiltDisplayList,
     pub draw_text_transformed: bool,
-    pub inv_world_transform: Option<WorldToLayerTransform>,
+    pub inv_world_transform: Option<WorldToLayerFastTransform>,
 }
 
 pub struct PictureState {
@@ -173,6 +174,7 @@ impl FrameBuilder {
         FrameBuilder {
             hit_testing_runs: Vec::new(),
             shadow_prim_stack: Vec::new(),
+            cached_gradients: Vec::new(),
             pending_shadow_contents: Vec::new(),
             scrollbar_prims: Vec::new(),
             reference_frame_stack: Vec::new(),
@@ -201,6 +203,7 @@ impl FrameBuilder {
         FrameBuilder {
             hit_testing_runs: recycle_vec(self.hit_testing_runs),
             shadow_prim_stack: recycle_vec(self.shadow_prim_stack),
+            cached_gradients: recycle_vec(self.cached_gradients),
             pending_shadow_contents: recycle_vec(self.pending_shadow_contents),
             scrollbar_prims: recycle_vec(self.scrollbar_prims),
             reference_frame_stack: recycle_vec(self.reference_frame_stack),
@@ -673,11 +676,8 @@ impl FrameBuilder {
         let root_id = clip_scroll_tree.root_reference_frame_id();
         if let Some(root_node) = clip_scroll_tree.nodes.get_mut(&root_id) {
             if let NodeType::ReferenceFrame(ref mut info) = root_node.node_type {
-                info.resolved_transform = LayerTransform::create_translation(
-                    viewport_offset.x,
-                    viewport_offset.y,
-                    0.0,
-                );
+                info.resolved_transform =
+                    LayerVector2D::new(viewport_offset.x, viewport_offset.y).into();
             }
         }
     }
@@ -1236,6 +1236,53 @@ impl FrameBuilder {
         }
     }
 
+    fn add_gradient_impl(
+        &mut self,
+        clip_and_scroll: ScrollNodeAndClipChain,
+        info: &LayerPrimitiveInfo,
+        start_point: LayerPoint,
+        end_point: LayerPoint,
+        stops: ItemRange<GradientStop>,
+        stops_count: usize,
+        extend_mode: ExtendMode,
+        gradient_index: CachedGradientIndex,
+    ) {
+        // Try to ensure that if the gradient is specified in reverse, then so long as the stops
+        // are also supplied in reverse that the rendered result will be equivalent. To do this,
+        // a reference orientation for the gradient line must be chosen, somewhat arbitrarily, so
+        // just designate the reference orientation as start < end. Aligned gradient rendering
+        // manages to produce the same result regardless of orientation, so don't worry about
+        // reversing in that case.
+        let reverse_stops = start_point.x > end_point.x ||
+            (start_point.x == end_point.x && start_point.y > end_point.y);
+
+        // To get reftests exactly matching with reverse start/end
+        // points, it's necessary to reverse the gradient
+        // line in some cases.
+        let (sp, ep) = if reverse_stops {
+            (end_point, start_point)
+        } else {
+            (start_point, end_point)
+        };
+
+        let prim = BrushPrimitive::new(
+            BrushKind::LinearGradient {
+                stops_range: stops,
+                stops_count,
+                extend_mode,
+                reverse_stops,
+                start_point: sp,
+                end_point: ep,
+                gradient_index,
+            },
+            None,
+        );
+
+        let prim = PrimitiveContainer::Brush(prim);
+
+        self.add_primitive(clip_and_scroll, info, Vec::new(), prim);
+    }
+
     pub fn add_gradient(
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
@@ -1248,62 +1295,40 @@ impl FrameBuilder {
         tile_size: LayerSize,
         tile_spacing: LayerSize,
     ) {
-        let tile_repeat = tile_size + tile_spacing;
-        let is_not_tiled = tile_repeat.width >= info.rect.size.width &&
-            tile_repeat.height >= info.rect.size.height;
+        let gradient_index = CachedGradientIndex(self.cached_gradients.len());
+        self.cached_gradients.push(CachedGradient::new());
 
-        let aligned_and_fills_rect = (start_point.x == end_point.x &&
-            start_point.y.min(end_point.y) <= 0.0 &&
-            start_point.y.max(end_point.y) >= info.rect.size.height) ||
-            (start_point.y == end_point.y && start_point.x.min(end_point.x) <= 0.0 &&
-                start_point.x.max(end_point.x) >= info.rect.size.width);
+        let prim_infos = info.decompose(
+            tile_size,
+            tile_spacing,
+            64 * 64,
+        );
 
-        // Fast path for clamped, axis-aligned gradients, with gradient lines intersecting all of rect:
-        let aligned = extend_mode == ExtendMode::Clamp && is_not_tiled && aligned_and_fills_rect;
-
-        // Try to ensure that if the gradient is specified in reverse, then so long as the stops
-        // are also supplied in reverse that the rendered result will be equivalent. To do this,
-        // a reference orientation for the gradient line must be chosen, somewhat arbitrarily, so
-        // just designate the reference orientation as start < end. Aligned gradient rendering
-        // manages to produce the same result regardless of orientation, so don't worry about
-        // reversing in that case.
-        let reverse_stops = !aligned &&
-            (start_point.x > end_point.x ||
-                (start_point.x == end_point.x && start_point.y > end_point.y));
-
-        // To get reftests exactly matching with reverse start/end
-        // points, it's necessary to reverse the gradient
-        // line in some cases.
-        let (sp, ep) = if reverse_stops {
-            (end_point, start_point)
+        if prim_infos.is_empty() {
+            self.add_gradient_impl(
+                clip_and_scroll,
+                info,
+                start_point,
+                end_point,
+                stops,
+                stops_count,
+                extend_mode,
+                gradient_index,
+            );
         } else {
-            (start_point, end_point)
-        };
-
-        let gradient_cpu = GradientPrimitiveCpu {
-            stops_range: stops,
-            stops_count,
-            extend_mode,
-            reverse_stops,
-            gpu_blocks: [
-                [sp.x, sp.y, ep.x, ep.y].into(),
-                [
-                    tile_size.width,
-                    tile_size.height,
-                    tile_repeat.width,
-                    tile_repeat.height,
-                ].into(),
-                [pack_as_float(extend_mode as u32), 0.0, 0.0, 0.0].into(),
-            ],
-        };
-
-        let prim = if aligned {
-            PrimitiveContainer::AlignedGradient(gradient_cpu)
-        } else {
-            PrimitiveContainer::AngleGradient(gradient_cpu)
-        };
-
-        self.add_primitive(clip_and_scroll, info, Vec::new(), prim);
+            for prim_info in prim_infos {
+                self.add_gradient_impl(
+                    clip_and_scroll,
+                    &prim_info,
+                    start_point,
+                    end_point,
+                    stops,
+                    stops_count,
+                    extend_mode,
+                    gradient_index,
+                );
+            }
+        }
     }
 
     fn add_radial_gradient_impl(
@@ -1317,17 +1342,18 @@ impl FrameBuilder {
         ratio_xy: f32,
         stops: ItemRange<GradientStop>,
         extend_mode: ExtendMode,
+        gradient_index: CachedGradientIndex,
     ) {
         let prim = BrushPrimitive::new(
             BrushKind::RadialGradient {
                 stops_range: stops,
                 extend_mode,
-                stops_handle: GpuCacheHandle::new(),
                 start_center,
                 end_center,
                 start_radius,
                 end_radius,
                 ratio_xy,
+                gradient_index,
             },
             None,
         );
@@ -1354,6 +1380,9 @@ impl FrameBuilder {
         tile_size: LayerSize,
         tile_spacing: LayerSize,
     ) {
+        let gradient_index = CachedGradientIndex(self.cached_gradients.len());
+        self.cached_gradients.push(CachedGradient::new());
+
         let prim_infos = info.decompose(
             tile_size,
             tile_spacing,
@@ -1371,6 +1400,7 @@ impl FrameBuilder {
                 ratio_xy,
                 stops,
                 extend_mode,
+                gradient_index,
             );
         } else {
             for prim_info in prim_infos {
@@ -1384,6 +1414,7 @@ impl FrameBuilder {
                     ratio_xy,
                     stops,
                     extend_mode,
+                    gradient_index,
                 );
             }
         }
@@ -1703,6 +1734,7 @@ impl FrameBuilder {
             local_clip_rects,
             resource_cache,
             gpu_cache,
+            cached_gradients: &mut self.cached_gradients,
         };
 
         let pic_context = PictureContext {
@@ -1871,6 +1903,7 @@ impl FrameBuilder {
                 clip_scroll_tree,
                 use_dual_source_blending,
                 node_data: &node_data,
+                cached_gradients: &self.cached_gradients,
             };
 
             pass.build(
