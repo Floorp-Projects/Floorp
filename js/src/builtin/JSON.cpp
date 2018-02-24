@@ -23,9 +23,8 @@
 #include "vm/JSObject.h"
 #include "vm/JSONParser.h"
 
-#include "jsboolinlines.h"
-
 #include "builtin/Array-inl.h"
+#include "builtin/Boolean-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/NativeObject-inl.h"
 

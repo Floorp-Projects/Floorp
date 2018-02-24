@@ -54,8 +54,7 @@
 #include "vm/TypedArrayObject.h"
 #include "vtune/VTuneWrapper.h"
 
-#include "jsboolinlines.h"
-
+#include "builtin/Boolean-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/CodeGenerator-shared-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
