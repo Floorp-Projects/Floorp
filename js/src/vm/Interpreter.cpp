@@ -17,10 +17,10 @@
 
 #include <string.h>
 
-#include "jsarray.h"
 #include "jslibmath.h"
 #include "jsnum.h"
 
+#include "builtin/Array.h"
 #include "builtin/Eval.h"
 #include "builtin/String.h"
 #include "jit/AtomicOperations.h"

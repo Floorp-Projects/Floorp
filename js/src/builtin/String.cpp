@@ -20,12 +20,12 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jsarray.h"
 #include "jsbool.h"
 #include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ICUStubs.h"
 #include "builtin/RegExp.h"

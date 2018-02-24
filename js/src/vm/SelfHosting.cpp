@@ -11,11 +11,11 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 
-#include "jsarray.h"
 #include "jsdate.h"
 #include "jsfriendapi.h"
 #include "selfhosted.out.h"
 
+#include "builtin/Array.h"
 #include "builtin/intl/Collator.h"
 #include "builtin/intl/DateTimeFormat.h"
 #include "builtin/intl/IntlObject.h"
