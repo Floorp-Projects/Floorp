@@ -44,6 +44,7 @@
 #include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/Stopwatch.h"
+#include "vm/StringType.h"
 #include "vm/TraceLogging.h"
 
 #include "jsboolinlines.h"
