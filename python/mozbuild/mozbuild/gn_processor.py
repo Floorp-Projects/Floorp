@@ -67,7 +67,7 @@ class MozbuildWriter(object):
         for k in sorted(context_attrs.keys()):
             v = context_attrs[k]
             if isinstance(v, (list, set)):
-                self.write_mozbuild_list(k, alphabetical_sorted(v))
+                self.write_mozbuild_list(k, v)
             elif isinstance(v, dict):
                 self.write_mozbuild_dict(k, v)
             else:
@@ -78,7 +78,7 @@ class MozbuildWriter(object):
             self.write('\n')
             self.write(self.indent + key)
             self.write(' += [\n    ' + self.indent)
-            self.write((',\n    ' + self.indent).join(sorted(self.mb_serialize(v) for v in value)))
+            self.write((',\n    ' + self.indent).join(alphabetical_sorted(self.mb_serialize(v) for v in value)))
             self.write('\n')
             self.write_ln(']')
 

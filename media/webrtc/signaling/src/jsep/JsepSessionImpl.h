@@ -14,7 +14,6 @@
 #include "signaling/src/jsep/JsepTrack.h"
 #include "signaling/src/jsep/JsepTransceiver.h"
 #include "signaling/src/jsep/SsrcGenerator.h"
-#include "signaling/src/sdp/RsdparsaSdpParser.h"
 #include "signaling/src/sdp/SipccSdpParser.h"
 #include "signaling/src/sdp/SdpHelper.h"
 #include "signaling/src/common/PtrVector.h"
@@ -284,11 +283,9 @@ private:
   UniquePtr<Sdp> mPendingRemoteDescription;
   PtrVector<JsepCodecDescription> mSupportedCodecs;
   std::string mLastError;
-  SipccSdpParser mSipccParser;
+  SipccSdpParser mParser;
   SdpHelper mSdpHelper;
   SsrcGenerator mSsrcGenerator;
-  bool mRunRustParser;
-  RsdparsaSdpParser mRsdparsaParser;
 };
 
 } // namespace mozilla

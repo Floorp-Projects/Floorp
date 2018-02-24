@@ -46,6 +46,8 @@ JS::Zone::Zone(JSRuntime* rt, ZoneGroup* group)
     usage(&rt->gc.usage),
     threshold(),
     gcDelayBytes(0),
+    tenuredStrings(group, 0),
+    allocNurseryStrings(group, true),
     propertyTree_(group, this),
     baseShapes_(group, this),
     initialShapes_(group, this),

@@ -111,6 +111,24 @@ CodeGeneratorMIPSShared::branchToBlock(Assembler::FloatFormat fmt, FloatRegister
     }
 }
 
+FrameSizeClass
+FrameSizeClass::FromDepth(uint32_t frameDepth)
+{
+    return FrameSizeClass::None();
+}
+
+FrameSizeClass
+FrameSizeClass::ClassLimit()
+{
+    return FrameSizeClass(0);
+}
+
+uint32_t
+FrameSizeClass::frameSize() const
+{
+    MOZ_CRASH("MIPS does not use frame size classes");
+}
+
 void
 OutOfLineBailout::accept(CodeGeneratorMIPSShared* codegen)
 {
@@ -1507,6 +1525,17 @@ CodeGeneratorMIPSShared::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
     masm.bind(ool->rejoin());
 }
 
+
+void
+CodeGeneratorMIPSShared::visitOutOfLineBailout(OutOfLineBailout* ool)
+{
+    // Push snapshotOffset and make sure stack is aligned.
+    masm.subPtr(Imm32(sizeof(Value)), StackPointer);
+    masm.storePtr(ImmWord(ool->snapshot()->snapshotOffset()), Address(StackPointer, 0));
+
+    masm.jump(&deoptLabel_);
+}
+
 void
 CodeGeneratorMIPSShared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool)
 {
@@ -1563,7 +1592,7 @@ CodeGeneratorMIPSShared::visitCopySignD(LCopySignD* ins)
 void
 CodeGeneratorMIPSShared::visitValue(LValue* value)
 {
-    const ValueOperand out = ToOutValue(value);
+    const ValueOperand out = GetValueOutput(value);
 
     masm.moveValue(value->value(), out);
 }

@@ -27,6 +27,7 @@
 #include "irregexp/RegExpEngine.h"
 #include "irregexp/RegExpParser.h"
 #endif
+#include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
 #include "js/Debug.h"
 #include "js/HashTable.h"
@@ -37,6 +38,8 @@
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
 #include "js/Wrapper.h"
+#include "vm/AsyncFunction.h"
+#include "vm/AsyncIteration.h"
 #include "vm/Debugger.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
@@ -279,6 +282,17 @@ GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+ReturnStringCopy(JSContext* cx, CallArgs& args, const char* message)
+{
+    JSString* str = JS_NewStringCopyZ(cx, message);
+    if (!str)
+        return false;
+
+    args.rval().setString(str);
+    return true;
+}
+
+static bool
 GC(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -327,11 +341,7 @@ GC(JSContext* cx, unsigned argc, Value* vp)
     SprintfLiteral(buf, "before %zu, after %zu\n",
                    preBytes, cx->runtime()->gc.usage.gcBytes());
 #endif
-    JSString* str = JS_NewStringCopyZ(cx, buf);
-    if (!str)
-        return false;
-    args.rval().setString(str);
-    return true;
+    return ReturnStringCopy(cx, args, buf);
 }
 
 static bool
@@ -986,11 +996,7 @@ GCState(JSContext* cx, unsigned argc, Value* vp)
     }
 
     const char* state = StateName(cx->runtime()->gc.state());
-    JSString* str = JS_NewStringCopyZ(cx, state);
-    if (!str)
-        return false;
-    args.rval().setString(str);
-    return true;
+    return ReturnStringCopy(cx, args, state);
 }
 
 static bool
@@ -2507,24 +2513,12 @@ testingFunc_inJit(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!jit::IsBaselineEnabled(cx)) {
-        JSString* error = JS_NewStringCopyZ(cx, "Baseline is disabled.");
-        if(!error)
-            return false;
-
-        args.rval().setString(error);
-        return true;
-    }
+    if (!jit::IsBaselineEnabled(cx))
+        return ReturnStringCopy(cx, args, "Baseline is disabled.");
 
     JSScript* script = cx->currentScript();
-    if (script && script->getWarmUpResetCount() >= 20) {
-        JSString* error = JS_NewStringCopyZ(cx, "Compilation is being repeatedly prevented. Giving up.");
-        if (!error)
-            return false;
-
-        args.rval().setString(error);
-        return true;
-    }
+    if (script && script->getWarmUpResetCount() >= 20)
+        return ReturnStringCopy(cx, args, "Compilation is being repeatedly prevented. Giving up.");
 
     args.rval().setBoolean(cx->currentlyRunningInJit());
     return true;
@@ -2535,14 +2529,8 @@ testingFunc_inIon(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!jit::IsIonEnabled(cx)) {
-        JSString* error = JS_NewStringCopyZ(cx, "Ion is disabled.");
-        if (!error)
-            return false;
-
-        args.rval().setString(error);
-        return true;
-    }
+    if (!jit::IsIonEnabled(cx))
+        return ReturnStringCopy(cx, args, "Ion is disabled.");
 
     if (cx->activation()->hasWasmExitFP()) {
         // Exited through wasm. Note this is false when the fast wasm->jit exit
@@ -2560,14 +2548,8 @@ testingFunc_inIon(JSContext* cx, unsigned argc, Value* vp)
     } else {
         // Check if we missed multiple attempts at compiling the innermost script.
         JSScript* script = cx->currentScript();
-        if (script && script->getWarmUpResetCount() >= 20) {
-            JSString* error = JS_NewStringCopyZ(cx, "Compilation is being repeatedly prevented. Giving up.");
-            if (!error)
-                return false;
-
-            args.rval().setString(error);
-            return true;
-        }
+        if (script && script->getWarmUpResetCount() >= 20)
+            return ReturnStringCopy(cx, args, "Compilation is being repeatedly prevented. Giving up.");
     }
 
     args.rval().setBoolean(!iter.done() && iter.isIon());
@@ -3229,19 +3211,14 @@ ObjectAddress(JSContext* cx, unsigned argc, Value* vp)
 
 #ifdef JS_MORE_DETERMINISTIC
     args.rval().setInt32(0);
+    return true;
 #else
     void* ptr = js::UncheckedUnwrap(&args[0].toObject(), true);
     char buffer[64];
     SprintfLiteral(buffer, "%p", ptr);
 
-    JSString* str = JS_NewStringCopyZ(cx, buffer);
-    if (!str)
-        return false;
-
-    args.rval().setString(str);
+    return ReturnStringCopy(cx, args, buffer);
 #endif
-
-    return true;
 }
 
 static bool
@@ -3334,12 +3311,7 @@ GetBacktrace(JSContext* cx, unsigned argc, Value* vp)
     if (!buf)
         return false;
 
-    RootedString str(cx);
-    if (!(str = JS_NewStringCopyZ(cx, buf.get())))
-        return false;
-
-    args.rval().setString(str);
-    return true;
+    return ReturnStringCopy(cx, args, buf.get());
 }
 
 static bool
@@ -4829,13 +4801,8 @@ GetTimeZone(JSContext* cx, unsigned argc, Value* vp)
 
     std::time_t now = std::time(nullptr);
     if (now != static_cast<std::time_t>(-1)) {
-        if (const char* tz = getTimeZone(&now)) {
-            JSString* str = JS_NewStringCopyZ(cx, tz);
-            if (!str)
-                return false;
-            args.rval().setString(str);
-            return true;
-        }
+        if (const char* tz = getTimeZone(&now))
+            return ReturnStringCopy(cx, args, tz);
     }
 
     args.rval().setUndefined();
@@ -4990,6 +4957,129 @@ DisableExpressionClosures(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     JS::ContextOptionsRef(cx).setExpressionClosures(false);
     args.rval().setUndefined();
+    return true;
+}
+
+JSScript*
+js::TestingFunctionArgumentToScript(JSContext* cx,
+                                    HandleValue v,
+                                    JSFunction** funp /* = nullptr */)
+{
+    if (v.isString()) {
+        // To convert a string to a script, compile it. Parse it as an ES6 Program.
+        RootedLinearString linearStr(cx, StringToLinearString(cx, v.toString()));
+        if (!linearStr)
+            return nullptr;
+        size_t len = GetLinearStringLength(linearStr);
+        AutoStableStringChars linearChars(cx);
+        if (!linearChars.initTwoByte(cx, linearStr))
+            return nullptr;
+        const char16_t* chars = linearChars.twoByteRange().begin().get();
+
+        RootedScript script(cx);
+        CompileOptions options(cx);
+        if (!JS::Compile(cx, options, chars, len, &script))
+            return nullptr;
+        return script;
+    }
+
+    RootedFunction fun(cx, JS_ValueToFunction(cx, v));
+    if (!fun)
+        return nullptr;
+
+    // Unwrap bound functions.
+    while (fun->isBoundFunction()) {
+        JSObject* target = fun->getBoundFunctionTarget();
+        if (target && target->is<JSFunction>())
+            fun = &target->as<JSFunction>();
+        else
+            break;
+    }
+
+    // Get unwrapped async function.
+    if (IsWrappedAsyncFunction(fun))
+        fun = GetUnwrappedAsyncFunction(fun);
+    if (IsWrappedAsyncGenerator(fun))
+        fun = GetUnwrappedAsyncGenerator(fun);
+
+    if (!fun->isInterpreted()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TESTING_SCRIPTS_ONLY);
+        return nullptr;
+    }
+
+    JSScript* script = JSFunction::getOrCreateScript(cx, fun);
+    if (!script)
+        return nullptr;
+
+    if (funp)
+        *funp = fun;
+
+    return script;
+}
+
+static bool
+BaselineCompile(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+
+    RootedScript script(cx);
+    if (args.length() == 0) {
+        NonBuiltinScriptFrameIter iter(cx);
+        if (iter.done()) {
+            ReportUsageErrorASCII(cx, callee, "no script argument and no script caller");
+            return false;
+        }
+        script = iter.script();
+    } else {
+        script = TestingFunctionArgumentToScript(cx, args[0]);
+        if (!script)
+            return false;
+    }
+
+    bool forceDebug = false;
+    if (args.length() > 1) {
+        if (args.length() > 2) {
+            ReportUsageErrorASCII(cx, callee, "too many arguments");
+            return false;
+        }
+        if (!args[1].isBoolean() && !args[1].isUndefined()) {
+            ReportUsageErrorASCII(cx, callee, "forceDebugInstrumentation argument should be boolean");
+            return false;
+        }
+        forceDebug = ToBoolean(args[1]);
+    }
+
+    if (script->hasBaselineScript()) {
+        if (forceDebug && !script->baselineScript()->hasDebugInstrumentation()) {
+            // There isn't an easy way to do this for a script that might be on
+            // stack right now. See js::jit::RecompileOnStackBaselineScriptsForDebugMode.
+            ReportUsageErrorASCII(cx, callee,
+                                  "unsupported case: recompiling script for debug mode");
+            return false;
+        }
+
+        args.rval().setUndefined();
+        return true;
+    }
+
+    if (!jit::IsBaselineEnabled(cx))
+        return ReturnStringCopy(cx, args, "baseline disabled");
+    if (!script->canBaselineCompile())
+        return ReturnStringCopy(cx, args, "can't compile");
+
+    jit::MethodStatus status = jit::BaselineCompile(cx, script, forceDebug);
+    switch (status) {
+      case jit::Method_Error:
+        return false;
+      case jit::Method_CantCompile:
+        return ReturnStringCopy(cx, args, "can't compile");
+      case jit::Method_Skipped:
+        return ReturnStringCopy(cx, args, "skipped");
+      case jit::Method_Compiled:
+        args.rval().setUndefined();
+    }
+
     return true;
 }
 
@@ -5621,6 +5711,15 @@ gc::ZealModeHelpText),
     JS_FN_HELP("disableExpressionClosures", DisableExpressionClosures, 0, 0,
 "disableExpressionClosures()",
 "  Disables the deprecated, non-standard expression closures.\n"),
+
+    JS_FN_HELP("baselineCompile", BaselineCompile, 2, 0,
+"baselineCompile([fun/code], forceDebugInstrumentation=false)",
+"  Baseline-compiles the given JS function or script.\n"
+"  Without arguments, baseline-compiles the caller's script; but note\n"
+"  that extra boilerplate is needed afterwards to cause the VM to start\n"
+"  running the jitcode rather than staying in the interpreter:\n"
+"    baselineCompile();  for (var i=0; i<1; i++) {} ...\n"
+"  The interpreter will enter the new jitcode at the loop header.\n"),
 
     JS_FS_HELP_END
 };
