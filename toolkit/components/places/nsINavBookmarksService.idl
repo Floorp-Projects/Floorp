@@ -402,28 +402,6 @@ interface nsINavBookmarksService : nsISupports
                          [optional] in unsigned short aSource);
 
   /**
-   * Gets an undo-able transaction for removing a folder from the bookmarks
-   * tree.
-   *  @param aItemId
-   *         The id of the folder to remove.
-   *  @param [optional] aSource
-   *         The change source, forwarded to all bookmark observers. Defaults
-   *         to SOURCE_DEFAULT.
-   *  @return An object implementing nsITransaction that can be used to undo
-   *          or redo the action.
-   *
-   * This method exists because complex delete->undo operations rely on
-   * recreated folders to have the same ID they had before they were deleted,
-   * so that any other items deleted in different transactions can be
-   * re-inserted correctly. This provides a safe encapsulation of this
-   * functionality without exposing the ability to recreate folders with
-   * specific IDs (potentially dangerous if abused by other code!) in the
-   * public API.
-   */
-  nsITransaction getRemoveFolderTransaction(in long long aItemId,
-                                            [optional] in unsigned short aSource);
-
-  /**
    * Convenience function for container services.  Removes
    * all children of the given folder.
    *  @param aItemId
@@ -455,27 +433,6 @@ interface nsINavBookmarksService : nsISupports
                 in long long aNewParentId,
                 in long aIndex,
                 [optional] in unsigned short aSource);
-
-  /**
-   * Inserts a bookmark separator into the given folder at the given index.
-   * The separator can be removed using removeChildAt().
-   *  @param aParentId
-   *         The id of the parent folder
-   *  @param aIndex
-   *         The separator's index under folder, or DEFAULT_INDEX to append
-   *  @param [optional] aGuid
-   *         The GUID to be set for the new item.  If not set, a new GUID is
-   *         generated.  Unless you've a very sound reason, such as an undo
-   *         manager implementation, do not pass this argument.
-   *  @param [optional] aSource
-   *         The change source, forwarded to all bookmark observers. Defaults
-   *         to SOURCE_DEFAULT.
-   *  @return The ID of the new separator.
-   *  @throws if aGuid is malformed.
-   */
-  long long insertSeparator(in long long aParentId, in long aIndex,
-                            [optional] in ACString aGuid,
-                            [optional] in unsigned short aSource);
 
   /**
    * Set the title for an item.
@@ -537,25 +494,7 @@ interface nsINavBookmarksService : nsISupports
   long long getFolderIdForItem(in long long aItemId);
 
   /**
-   * Associates the given keyword with the given bookmark.
-   *
-   * Use an empty keyword to clear the keyword associated with the URI.
-   * In both of these cases, succeeds but does nothing if the URL/keyword is not found.
-   *
-   * @deprecated Use PlacesUtils.keywords.insert() API instead.
-   */
-  void setKeywordForBookmark(in long long aItemId,
-                             in AString aKeyword,
-                             [optional] in unsigned short aSource);
 
-  /**
-   * Retrieves the keyword for the given bookmark. Will be void string
-   * (null in JS) if no such keyword is found.
-   *
-   * @deprecated Use PlacesUtils.keywords.fetch() API instead.
-   */
-  AString getKeywordForBookmark(in long long aItemId);
-  /**
    * Adds a bookmark observer. If ownsWeak is false, the bookmark service will
    * keep an owning reference to the observer.  If ownsWeak is true, then
    * aObserver must implement nsISupportsWeakReference, and the bookmark

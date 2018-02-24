@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ClipMode, ComplexClipRegion, DeviceIntRect, DevicePixelScale, ImageMask};
-use api::{ImageRendering, LayerRect, LayerToWorldTransform, LayoutPoint, LayoutVector2D};
-use api::LocalClip;
+use api::{ImageRendering, LayerRect, LayoutPoint, LayoutVector2D, LocalClip};
 use border::{BorderCornerClipSource, ensure_no_corner_overlap};
 use clip_scroll_tree::{ClipChainIndex, CoordinateSystemId};
 use ellipse::Ellipse;
@@ -13,7 +12,8 @@ use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
 use gpu_types::ClipScrollNodeIndex;
 use prim_store::{ClipData, ImageMaskData};
 use resource_cache::{ImageRequest, ResourceCache};
-use util::{MaxRect, MatrixHelpers, calculate_screen_bounding_rect, extract_inner_rect_safe};
+use util::{LayerToWorldFastTransform, MaxRect, calculate_screen_bounding_rect};
+use util::extract_inner_rect_safe;
 use std::rc::Rc;
 
 pub type ClipStore = FreeList<ClipSources>;
@@ -252,7 +252,7 @@ impl ClipSources {
 
     pub fn get_screen_bounds(
         &self,
-        transform: &LayerToWorldTransform,
+        transform: &LayerToWorldFastTransform,
         device_pixel_scale: DevicePixelScale,
     ) -> (DeviceIntRect, Option<DeviceIntRect>) {
         // If this translation isn't axis aligned or has a perspective component, don't try to

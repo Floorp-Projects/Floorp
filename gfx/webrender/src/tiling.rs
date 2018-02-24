@@ -16,7 +16,7 @@ use gpu_types::{ClipScrollNodeData, ClipScrollNodeIndex};
 use gpu_types::{PrimitiveInstance};
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 use picture::{PictureKind};
-use prim_store::{PrimitiveIndex, PrimitiveKind, PrimitiveStore};
+use prim_store::{CachedGradient, PrimitiveIndex, PrimitiveKind, PrimitiveStore};
 use prim_store::{BrushMaskKind, BrushKind, DeferredResolve, EdgeAaSegmentMask};
 use profiler::FrameProfileCounters;
 use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
@@ -46,6 +46,7 @@ pub struct RenderTargetContext<'a> {
     pub clip_scroll_tree: &'a ClipScrollTree,
     pub use_dual_source_blending: bool,
     pub node_data: &'a [ClipScrollNodeData],
+    pub cached_gradients: &'a [CachedGradient],
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -599,6 +600,7 @@ impl RenderTarget for AlphaRenderTarget {
                                             BrushKind::Line { .. } |
                                             BrushKind::YuvImage { .. } |
                                             BrushKind::RadialGradient { .. } |
+                                            BrushKind::LinearGradient { .. } |
                                             BrushKind::Image { .. } => {
                                                 unreachable!("bug: unexpected brush here");
                                             }

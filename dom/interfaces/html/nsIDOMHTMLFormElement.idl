@@ -19,19 +19,4 @@
 [uuid(ad9b2ad0-9d29-43f6-b1a2-a1fd24627e6b)]
 interface nsIDOMHTMLFormElement : nsISupports
 {
-           attribute DOMString            acceptCharset;
-           attribute DOMString            action;
-           attribute DOMString            autocomplete;
-           attribute DOMString            enctype;
-           attribute DOMString            encoding;
-           attribute DOMString            method;
-           attribute DOMString            name;
-           attribute boolean              noValidate;
-           attribute DOMString            target;
-
-  readonly attribute long                 length;
-
-  void                      submit();
-  void                      reset();
-  boolean                   checkValidity();
 };

@@ -12,7 +12,6 @@
 #include "nsIDocument.h"
 #include "nsGkAtoms.h"
 #include "nsIFormControl.h"
-#include "nsIDOMHTMLFormElement.h"
 #include "nsError.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
