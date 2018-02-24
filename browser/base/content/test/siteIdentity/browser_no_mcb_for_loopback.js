@@ -24,7 +24,16 @@ const PREF_BLOCK_DISPLAY = "security.mixed_content.block_display_content";
 const PREF_UPGRADE_DISPLAY = "security.mixed_content.upgrade_display_content";
 const PREF_BLOCK_ACTIVE = "security.mixed_content.block_active_content";
 
+function clearAllImageCaches() {
+  let tools = Cc["@mozilla.org/image/tools;1"]
+                .getService(Ci.imgITools);
+  let imageCache = tools.getImgCacheForDocument(window.document);
+  imageCache.clearCache(true); // true=chrome
+  imageCache.clearCache(false); // false=content
+}
+
 registerCleanupFunction(function() {
+  clearAllImageCaches();
   Services.prefs.clearUserPref(PREF_BLOCK_DISPLAY);
   Services.prefs.clearUserPref(PREF_UPGRADE_DISPLAY);
   Services.prefs.clearUserPref(PREF_BLOCK_ACTIVE);
