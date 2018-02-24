@@ -6,40 +6,12 @@
 var EXPORTED_SYMBOLS = ["Addon", "STATE_ENABLED", "STATE_DISABLED"];
 
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://services-sync/addonutils.js");
 ChromeUtils.import("resource://services-sync/util.js");
 ChromeUtils.import("resource://tps/logger.jsm");
 
-const ADDONSGETURL = "http://127.0.0.1:4567/";
 const STATE_ENABLED = 1;
 const STATE_DISABLED = 2;
-
-function GetFileAsText(file) {
-  let channel = NetUtil.newChannel({
-    uri: file,
-    loadUsingSystemPrincipal: true
-  });
-  let inputStream = channel.open2();
-  if (channel instanceof Ci.nsIHttpChannel &&
-      channel.responseStatus != 200) {
-    return "";
-  }
-
-  let streamBuf = "";
-  let sis = Cc["@mozilla.org/scriptableinputstream;1"]
-            .createInstance(Ci.nsIScriptableInputStream);
-  sis.init(inputStream);
-
-  let available;
-  while ((available = sis.available()) != 0) {
-    streamBuf += sis.read(available);
-  }
-
-  inputStream.close();
-  return streamBuf;
-}
 
 function Addon(TPS, id) {
   this.TPS = TPS;
