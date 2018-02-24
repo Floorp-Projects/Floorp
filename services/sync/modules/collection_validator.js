@@ -10,7 +10,7 @@ ChromeUtils.defineModuleGetter(this, "Async",
                                "resource://services-common/async.js");
 
 
-this.EXPORTED_SYMBOLS = ["CollectionValidator", "CollectionProblemData"];
+var EXPORTED_SYMBOLS = ["CollectionValidator", "CollectionProblemData"];
 
 class CollectionProblemData {
   constructor() {

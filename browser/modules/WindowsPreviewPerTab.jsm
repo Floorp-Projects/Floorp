@@ -41,7 +41,7 @@
  * buttons appear on the taskbar, so a magic pref-controlled number determines
  * when this threshold has been crossed.
  */
-this.EXPORTED_SYMBOLS = ["AeroPeek"];
+var EXPORTED_SYMBOLS = ["AeroPeek"];
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
@@ -630,7 +630,7 @@ TabWindow.prototype = {
  * This object acts as global storage and external interface for this feature.
  * It maintains the values of the prefs.
  */
-this.AeroPeek = {
+var AeroPeek = {
   available: false,
   // Does the pref say we're enabled?
   __prefenabled: false,

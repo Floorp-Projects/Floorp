@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["PrefsEngine", "PrefRec"];
+var EXPORTED_SYMBOLS = ["PrefsEngine", "PrefRec"];
 
 const PREF_SYNC_PREFS_PREFIX = "services.sync.prefs.sync.";
 
@@ -21,9 +21,9 @@ ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
 XPCOMUtils.defineLazyGetter(this, "PREFS_GUID",
                             () => CommonUtils.encodeBase64URL(Services.appinfo.ID));
 
-this.PrefRec = function PrefRec(collection, id) {
+function PrefRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
-};
+}
 PrefRec.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.Pref",
@@ -32,9 +32,9 @@ PrefRec.prototype = {
 Utils.deferGetSet(PrefRec, "cleartext", ["value"]);
 
 
-this.PrefsEngine = function PrefsEngine(service) {
+function PrefsEngine(service) {
   SyncEngine.call(this, "Prefs", service);
-};
+}
 PrefsEngine.prototype = {
   __proto__: SyncEngine.prototype,
   _storeObj: PrefStore,

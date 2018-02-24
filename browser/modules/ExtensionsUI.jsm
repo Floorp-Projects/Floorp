@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ExtensionsUI"];
+var EXPORTED_SYMBOLS = ["ExtensionsUI"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
@@ -31,7 +31,7 @@ const BRAND_PROPERTIES = "chrome://branding/locale/brand.properties";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-this.ExtensionsUI = {
+var ExtensionsUI = {
   sideloaded: new Set(),
   updates: new Set(),
   sideloadListener: null,

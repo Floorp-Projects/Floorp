@@ -6,7 +6,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "DownloadsCommon",
 ];
 
@@ -120,7 +120,7 @@ PrefObserver.register({
  * This object is exposed directly to the consumers of this JavaScript module,
  * and provides shared methods for all the instances of the user interface.
  */
-this.DownloadsCommon = {
+var DownloadsCommon = {
   // The following legacy constants are still returned by stateOfDownload, but
   // individual properties of the Download object should normally be used.
   DOWNLOAD_NOTSTARTED: -1,

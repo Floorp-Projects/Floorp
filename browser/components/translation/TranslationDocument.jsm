@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "TranslationDocument" ];
+var EXPORTED_SYMBOLS = [ "TranslationDocument" ];
 
 const TEXT_NODE = Ci.nsIDOMNode.TEXT_NODE;
 
@@ -19,7 +19,7 @@ ChromeUtils.import("resource://services-common/async.js");
  *
  * @param document  The document to be translated
  */
-this.TranslationDocument = function(document) {
+var TranslationDocument = function(document) {
   this.itemsMap = new Map();
   this.roots = [];
   this._init(document);

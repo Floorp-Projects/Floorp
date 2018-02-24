@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-this.EXPORTED_SYMBOLS = ["Prompt", "DoorHanger"];
+var EXPORTED_SYMBOLS = ["Prompt", "DoorHanger"];
 
 function log(msg) {
   Services.console.logStringMessage(msg);

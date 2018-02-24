@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["PrivacyLevel"];
+var EXPORTED_SYMBOLS = ["PrivacyLevel"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 

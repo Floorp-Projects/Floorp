@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "DownloadAddonInstall",
   "LocalAddonInstall",
   "StagedAddonInstall",
@@ -956,7 +956,7 @@ var loadManifestFromZipFile = async function(aXPIFile, aInstallLocation) {
   }
 };
 
-this.loadManifestFromFile = function(aFile, aInstallLocation) {
+var loadManifestFromFile = function(aFile, aInstallLocation) {
   if (aFile.isFile())
     return loadManifestFromZipFile(aFile, aInstallLocation);
   return loadManifestFromDir(aFile, aInstallLocation);
@@ -1170,7 +1170,7 @@ function verifyDirSignedState(aDir, aAddon) {
  *         the add-on object to verify
  * @return a Promise that resolves to an AddonManager.SIGNEDSTATE_* constant.
  */
-this.verifyBundleSignedState = function(aBundle, aAddon) {
+var verifyBundleSignedState = function(aBundle, aAddon) {
   let promise = aBundle.isFile() ? verifyZipSignedState(aBundle, aAddon)
       : verifyDirSignedState(aBundle, aAddon);
   return promise.then(({signedState}) => signedState);
@@ -1989,7 +1989,7 @@ class AddonInstall {
   }
 }
 
-this.LocalAddonInstall = class extends AddonInstall {
+var LocalAddonInstall = class extends AddonInstall {
   /**
    * Initialises this install to be an install from a local file.
    *
@@ -2099,7 +2099,7 @@ this.LocalAddonInstall = class extends AddonInstall {
   }
 };
 
-this.DownloadAddonInstall = class extends AddonInstall {
+var DownloadAddonInstall = class extends AddonInstall {
   /**
    * Instantiates a DownloadAddonInstall
    *
@@ -2511,7 +2511,7 @@ this.DownloadAddonInstall = class extends AddonInstall {
  * can clean it up if the same add-on is installed again (see the comment
  * about "pending installs for the same add-on" in AddonInstall.startInstall)
  */
-this.StagedAddonInstall = class extends AddonInstall {
+var StagedAddonInstall = class extends AddonInstall {
   constructor(installLocation, dir, manifest) {
     super(installLocation, dir);
 
@@ -2659,7 +2659,7 @@ AddonInstallWrapper.prototype = {
  *         An optional platform version to check for updates for
  * @throws if the aListener or aReason arguments are not valid
  */
-this.UpdateChecker = function(aAddon, aListener, aReason, aAppVersion, aPlatformVersion) {
+var UpdateChecker = function(aAddon, aListener, aReason, aAppVersion, aPlatformVersion) {
   if (!aListener || !aReason)
     throw Cr.NS_ERROR_INVALID_ARG;
 

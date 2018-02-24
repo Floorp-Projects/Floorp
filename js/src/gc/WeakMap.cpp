@@ -10,9 +10,9 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jswrapper.h"
 
 #include "gc/PublicIterators.h"
+#include "js/Wrapper.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"

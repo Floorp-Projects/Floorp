@@ -10,15 +10,14 @@
 
 #include <stdint.h>
 
-#include "jsprf.h"
-#include "jswrapper.h"
-
 #include "builtin/Promise.h"
 #include "builtin/TestingFunctions.h"
 #include "gc/GCInternals.h"
 #include "gc/PublicIterators.h"
 #include "gc/WeakMap.h"
+#include "js/Printf.h"
 #include "js/Proxy.h"
+#include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/JSCompartment.h"

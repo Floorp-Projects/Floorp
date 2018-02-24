@@ -819,6 +819,66 @@ SdpHelper::GetMsectionBundleType(const Sdp& sdp,
   return kNoBundle;
 }
 
+static bool
+AttributeListMatch(const SdpAttributeList& list1, const SdpAttributeList& list2)
+{
+  // TODO: Consider adding telemetry in this function to record which
+  // attributes don't match. See Bug 1432955.
+  for (int i = SdpAttribute::kFirstAttribute; i <= SdpAttribute::kLastAttribute; i++) {
+    auto attributeType = static_cast<SdpAttribute::AttributeType>(i);
+    // TODO: We should do more thorough checking here, e.g. serialize and
+    // compare strings. See Bug 1439690.
+    if (list1.HasAttribute(attributeType, false) !=
+        list2.HasAttribute(attributeType, false)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool
+MediaSectionMatch(const SdpMediaSection& mediaSection1,
+                  const SdpMediaSection& mediaSection2)
+{
+  // TODO: We should do more thorough checking in this function.
+  // See Bug 1439690.
+  if (!AttributeListMatch(mediaSection1.GetAttributeList(),
+			  mediaSection2.GetAttributeList())) {
+    return false;
+  }
+  if (mediaSection1.GetPort() != mediaSection2.GetPort()) {
+    return false;
+  }
+  const std::vector<std::string>& formats1 = mediaSection1.GetFormats();
+  const std::vector<std::string>& formats2 = mediaSection2.GetFormats();
+  auto formats1Set = std::set<std::string>(formats1.begin(), formats1.end());
+  auto formats2Set = std::set<std::string>(formats2.begin(), formats2.end());
+  if (formats1Set != formats2Set) {
+    return false;
+  }
+  return true;
+}
+
+bool
+SdpHelper::SdpMatch(const Sdp& sdp1, const Sdp& sdp2)
+{
+  if (sdp1.GetMediaSectionCount() != sdp2.GetMediaSectionCount()) {
+    return false;
+  }
+  if (!AttributeListMatch(sdp1.GetAttributeList(), sdp2.GetAttributeList())) {
+    return false;
+  }
+  for (size_t i = 0; i < sdp1.GetMediaSectionCount(); i++) {
+    const SdpMediaSection& mediaSection1 = sdp1.GetMediaSection(i);
+    const SdpMediaSection& mediaSection2 = sdp2.GetMediaSection(i);
+    if (!MediaSectionMatch(mediaSection1, mediaSection2)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 } // namespace mozilla
 
 

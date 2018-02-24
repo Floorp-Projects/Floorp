@@ -23,12 +23,11 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/RangedPtr.h"
 
-#include "jsprf.h"
-
 #include "builtin/Promise.h"
 #include "gc/FreeOp.h"
 #include "jit/AtomicOperations.h"
 #include "jit/JitOptions.h"
+#include "js/Printf.h"
 #include "vm/Interpreter.h"
 #include "vm/String.h"
 #include "vm/StringBuffer.h"
@@ -2121,7 +2120,6 @@ WasmGlobalObject::value() const
 // ============================================================================
 // WebAssembly class and static methods
 
-#if JS_HAS_TOSOURCE
 static bool
 WebAssembly_toSource(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -2129,7 +2127,6 @@ WebAssembly_toSource(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setString(cx->names().WebAssembly);
     return true;
 }
-#endif
 
 static bool
 RejectWithPendingException(JSContext* cx, Handle<PromiseObject*> promise)
@@ -2864,9 +2861,7 @@ WebAssembly_instantiateStreaming(JSContext* cx, unsigned argc, Value* vp)
 
 static const JSFunctionSpec WebAssembly_static_methods[] =
 {
-#if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, WebAssembly_toSource, 0, 0),
-#endif
     JS_FN("compile", WebAssembly_compile, 1, 0),
     JS_FN("instantiate", WebAssembly_instantiate, 1, 0),
     JS_FN("validate", WebAssembly_validate, 1, 0),

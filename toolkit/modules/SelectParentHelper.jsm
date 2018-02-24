@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "SelectParentHelper"
 ];
 
@@ -26,7 +26,7 @@ var currentZoom = 1;
 var closedWithEnter = false;
 var customStylingEnabled = Services.prefs.getBoolPref("dom.forms.select.customstyling");
 
-this.SelectParentHelper = {
+var SelectParentHelper = {
   /**
    * `populate` takes the `menulist` element and a list of `items` and generates
    * a popup list of options.

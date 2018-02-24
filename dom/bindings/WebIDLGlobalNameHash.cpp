@@ -6,7 +6,7 @@
 
 #include "WebIDLGlobalNameHash.h"
 #include "js/GCAPI.h"
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"

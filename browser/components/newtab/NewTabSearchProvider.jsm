@@ -1,6 +1,6 @@
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["NewTabSearchProvider"];
+var EXPORTED_SYMBOLS = ["NewTabSearchProvider"];
 
 const CURRENT_ENGINE = "browser-search-engine-modified";
 

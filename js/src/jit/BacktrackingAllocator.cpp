@@ -6,9 +6,8 @@
 
 #include "jit/BacktrackingAllocator.h"
 
-#include "jsprf.h"
-
 #include "jit/BitSet.h"
+#include "js/Printf.h"
 
 using namespace js;
 using namespace js::jit;

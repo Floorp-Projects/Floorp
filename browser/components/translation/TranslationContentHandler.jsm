@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "TranslationContentHandler" ];
+var EXPORTED_SYMBOLS = [ "TranslationContentHandler" ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -15,7 +15,7 @@ const STATE_OFFER = 0;
 const STATE_TRANSLATED = 2;
 const STATE_ERROR = 3;
 
-this.TranslationContentHandler = function(global, docShell) {
+var TranslationContentHandler = function(global, docShell) {
   let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIWebProgress);
   webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);

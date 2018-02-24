@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["HiddenFrame"];
+var EXPORTED_SYMBOLS = ["HiddenFrame"];
 
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

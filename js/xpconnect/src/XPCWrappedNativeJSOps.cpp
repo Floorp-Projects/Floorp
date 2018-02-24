@@ -8,12 +8,12 @@
 
 #include "xpcprivate.h"
 #include "xpc_make_class.h"
-#include "jsprf.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsIAddonInterposition.h"
 #include "AddonWrapper.h"
 #include "js/Class.h"
+#include "js/Printf.h"
 
 using namespace mozilla;
 using namespace JS;

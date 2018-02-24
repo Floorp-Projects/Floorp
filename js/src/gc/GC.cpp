@@ -207,7 +207,6 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsprf.h"
 #include "jstypes.h"
 #include "jsutil.h"
 

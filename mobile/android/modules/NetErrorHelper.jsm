@@ -8,7 +8,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 ChromeUtils.import("resource://gre/modules/UITelemetry.jsm");
 
-this.EXPORTED_SYMBOLS = ["NetErrorHelper"];
+var EXPORTED_SYMBOLS = ["NetErrorHelper"];
 
 const KEY_CODE_ENTER = 13;
 

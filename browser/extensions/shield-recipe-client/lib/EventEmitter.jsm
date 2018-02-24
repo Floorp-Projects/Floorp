@@ -5,11 +5,11 @@
 
 ChromeUtils.import("resource://shield-recipe-client/lib/LogManager.jsm");
 
-this.EXPORTED_SYMBOLS = ["EventEmitter"];
+var EXPORTED_SYMBOLS = ["EventEmitter"];
 
 const log = LogManager.getLogger("event-emitter");
 
-this.EventEmitter = function(sandboxManager) {
+var EventEmitter = function(sandboxManager) {
   const listeners = {};
 
   return {

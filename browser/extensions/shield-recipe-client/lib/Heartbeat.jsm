@@ -15,7 +15,7 @@ ChromeUtils.import("resource://shield-recipe-client/lib/LogManager.jsm");
 
 Cu.importGlobalProperties(["URL"]); /* globals URL */
 
-this.EXPORTED_SYMBOLS = ["Heartbeat"];
+var EXPORTED_SYMBOLS = ["Heartbeat"];
 
 const PREF_SURVEY_DURATION = "browser.uitour.surveyDuration";
 const NOTIFICATION_TIME = 3000;
@@ -77,7 +77,7 @@ CleanupManager.addCleanupHandler(() => {
  * @param {String} [options.postAnswerURL=null]
  *        The url to visit after the user answers the question.
  */
-this.Heartbeat = class {
+var Heartbeat = class {
   constructor(chromeWindow, sandboxManager, options) {
     if (typeof options.flowId !== "string") {
       throw new Error("flowId must be a string");

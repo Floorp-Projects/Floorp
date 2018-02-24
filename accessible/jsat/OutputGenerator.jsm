@@ -27,7 +27,7 @@ ChromeUtils.defineModuleGetter(this, "Roles", // jshint ignore:line
 ChromeUtils.defineModuleGetter(this, "States", // jshint ignore:line
   "resource://gre/modules/accessibility/Constants.jsm");
 
-this.EXPORTED_SYMBOLS = ["UtteranceGenerator", "BrailleGenerator"]; // jshint ignore:line
+var EXPORTED_SYMBOLS = ["UtteranceGenerator", "BrailleGenerator"]; // jshint ignore:line
 
 var OutputGenerator = {
 
@@ -581,7 +581,7 @@ var OutputGenerator = {
  * clicked event. Speaking only 'clicked' makes sense. Speaking 'button' does
  * not.
  */
-this.UtteranceGenerator = {  // jshint ignore:line
+var UtteranceGenerator = {  // jshint ignore:line
   __proto__: OutputGenerator, // jshint ignore:line
 
   gActionMap: {
@@ -840,7 +840,7 @@ this.UtteranceGenerator = {  // jshint ignore:line
     }
 };
 
-this.BrailleGenerator = {  // jshint ignore:line
+var BrailleGenerator = {  // jshint ignore:line
   __proto__: OutputGenerator, // jshint ignore:line
 
   genForContext: function genForContext(aContext) {

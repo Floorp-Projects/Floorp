@@ -16,9 +16,9 @@
 #include "jsfriendapi.h"
 #include "js/Proxy.h"
 #include "js/Class.h"
-#include "jswrapper.h"
 #include "js/MemoryMetrics.h"
 #include "js/Principals.h"
+#include "js/Wrapper.h"
 #include "assert.h"
 
 struct ProxyTraps {

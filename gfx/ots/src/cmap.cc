@@ -238,7 +238,7 @@ bool OpenTypeCMAP::ParseFormat4(int platform, int encoding,
         }
         uint16_t glyph;
         std::memcpy(&glyph, data + glyph_id_offset, 2);
-        glyph = ntohs(glyph);
+        glyph = ots_ntohs(glyph);
         if (glyph >= num_glyphs) {
           return Error("Range glyph reference too high (%d > %d)", glyph, num_glyphs - 1);
         }
@@ -771,9 +771,10 @@ bool OpenTypeCMAP::Parse(const uint8_t *data, size_t length) {
                       subtable_headers[i].length, num_glyphs)) {
           return Error("Failed to parse format 4 cmap subtable %d", i);
         }
-      } else if ((subtable_headers[i].encoding == 3) &&
+      } else if ((subtable_headers[i].encoding == 3 ||
+                  subtable_headers[i].encoding == 4) &&
                  (subtable_headers[i].format == 12)) {
-        // parse and output the 0-3-12 table as 3-10-12 table.
+        // parse and output the 0-3-12 or 0-4-12 tables as 3-10-12 table.
         if (!Parse31012(data + subtable_headers[i].offset,
                         subtable_headers[i].length, num_glyphs)) {
           return Error("Failed to parse format 12 cmap subtable %d", i);

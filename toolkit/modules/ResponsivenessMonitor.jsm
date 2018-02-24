@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ResponsivenessMonitor"];
+var EXPORTED_SYMBOLS = ["ResponsivenessMonitor"];
 
 function ResponsivenessMonitor(intervalMS = 100) {
   this._intervalMS = intervalMS;

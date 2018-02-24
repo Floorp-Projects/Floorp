@@ -11,8 +11,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 
-#include "jsalloc.h"
-
+#include "js/AllocPolicy.h"
 #include "js/UbiNode.h"
 #include "js/Utility.h"
 #include "js/Vector.h"

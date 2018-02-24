@@ -21,8 +21,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Unused.h"
 
-#include "jsprf.h"
-
 #include "jit/ProcessExecutableMemory.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmBinaryIterator.h"

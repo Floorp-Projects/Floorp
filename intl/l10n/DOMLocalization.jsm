@@ -626,4 +626,4 @@ class DOMLocalization extends Localization {
 }
 
 this.DOMLocalization = DOMLocalization;
-this.EXPORTED_SYMBOLS = ["DOMLocalization"];
+var EXPORTED_SYMBOLS = ["DOMLocalization"];

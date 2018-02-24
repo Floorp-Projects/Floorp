@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ClientID"];
+var EXPORTED_SYMBOLS = ["ClientID"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -40,7 +40,7 @@ function isValidClientID(id) {
   return UUID_REGEX.test(id);
 }
 
-this.ClientID = Object.freeze({
+var ClientID = Object.freeze({
   /**
    * This returns a promise resolving to the the stable client ID we use for
    * data reporting (FHR & Telemetry).

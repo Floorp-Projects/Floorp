@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Extension", "ExtensionData", "Langpack"];
+var EXPORTED_SYMBOLS = ["Extension", "ExtensionData", "Langpack"];
 
 /* exported Extension, ExtensionData */
 /* globals Extension ExtensionData */

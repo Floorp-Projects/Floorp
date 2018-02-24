@@ -8,7 +8,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "Downloads",
 ];
 
@@ -33,7 +33,7 @@ Integration.downloads.defineModuleGetter(this, "DownloadIntegration",
  * This object is exposed directly to the consumers of this JavaScript module,
  * and provides the only entry point to get references to back-end objects.
  */
-this.Downloads = {
+var Downloads = {
   /**
    * Work on downloads that were not started from a private browsing window.
    */

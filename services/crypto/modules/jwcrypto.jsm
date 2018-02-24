@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyServiceGetter(this,
                                    "@mozilla.org/identity/crypto-service;1",
                                    "nsIIdentityCryptoService");
 
-this.EXPORTED_SYMBOLS = ["jwcrypto"];
+var EXPORTED_SYMBOLS = ["jwcrypto"];
 
 const PREF_LOG_LEVEL = "services.crypto.jwcrypto.log.level";
 
@@ -187,5 +187,5 @@ jwcryptoClass.prototype = {
 
 };
 
-this.jwcrypto = new jwcryptoClass();
+var jwcrypto = new jwcryptoClass();
 this.jwcrypto.ALGORITHMS = ALGORITHMS;

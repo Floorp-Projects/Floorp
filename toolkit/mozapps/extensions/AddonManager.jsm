@@ -92,7 +92,7 @@ Services.ppmm.loadProcessScript(
 
 const INTEGER = /^[1-9]\d*$/;
 
-this.EXPORTED_SYMBOLS = [ "AddonManager", "AddonManagerPrivate" ];
+var EXPORTED_SYMBOLS = [ "AddonManager", "AddonManagerPrivate" ];
 
 const CATEGORY_PROVIDER_MODULE = "addon-provider-module";
 
@@ -2962,7 +2962,7 @@ var AddonManagerInternal = {
  * AddonManagerInternal for documentation however note that these methods are
  * subject to change at any time.
  */
-this.AddonManagerPrivate = {
+var AddonManagerPrivate = {
   startup() {
     AddonManagerInternal.startup();
   },
@@ -3167,7 +3167,7 @@ this.AddonManagerPrivate = {
  * just forward to AddonManagerInternal.
  * @class
  */
-this.AddonManager = {
+var AddonManager = {
   // Constants for the AddonInstall.state property
   // These will show up as AddonManager.STATE_* (eg, STATE_AVAILABLE)
   _states: new Map([

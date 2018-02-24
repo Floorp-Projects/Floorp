@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["OnboardingTourType"];
+var EXPORTED_SYMBOLS = ["OnboardingTourType"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

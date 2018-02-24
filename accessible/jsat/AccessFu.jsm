@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["AccessFu"];
+var EXPORTED_SYMBOLS = ["AccessFu"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
@@ -21,7 +21,7 @@ const SCREENREADER_SETTING = "accessibility.screenreader";
 const QUICKNAV_MODES_PREF = "accessibility.accessfu.quicknav_modes";
 const QUICKNAV_INDEX_PREF = "accessibility.accessfu.quicknav_index";
 
-this.AccessFu = {
+var AccessFu = {
   /**
    * Initialize chrome-layer accessibility functionality.
    * If accessibility is enabled on the platform, then a special accessibility

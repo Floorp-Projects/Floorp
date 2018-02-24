@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["BrowserIDManager", "AuthenticationError"];
+var EXPORTED_SYMBOLS = ["BrowserIDManager", "AuthenticationError"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -51,7 +51,7 @@ const OBSERVER_TOPICS = [
 // It is recorded in the *main* ping, *not* the Sync ping.
 // These bad states may persist across browser restarts, and may never change
 // (eg, users may *never* validate)
-this.telemetryHelper = {
+var telemetryHelper = {
   // These are both the "status" values passed to maybeRecordLoginState and
   // the key we use for our keyed scalar.
   STATES: {
@@ -152,7 +152,7 @@ AuthenticationError.prototype = {
   }
 };
 
-this.BrowserIDManager = function BrowserIDManager() {
+function BrowserIDManager() {
   // NOTE: _fxaService and _tokenServerClient are replaced with mocks by
   // the test suite.
   this._fxaService = fxAccounts;
@@ -162,7 +162,7 @@ this.BrowserIDManager = function BrowserIDManager() {
   this.whenReadyToAuthenticate = null;
   this._log = log;
   XPCOMUtils.defineLazyPreferenceGetter(this, "_username", "services.sync.username");
-};
+}
 
 this.BrowserIDManager.prototype = {
   _fxaService: null,

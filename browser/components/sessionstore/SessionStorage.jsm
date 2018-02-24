@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["SessionStorage"];
+var EXPORTED_SYMBOLS = ["SessionStorage"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -25,7 +25,7 @@ function getPrincipalForFrame(docShell, frame) {
   return ssm.getDocShellCodebasePrincipal(uri, docShell);
 }
 
-this.SessionStorage = Object.freeze({
+var SessionStorage = Object.freeze({
   /**
    * Updates all sessionStorage "super cookies"
    * @param content

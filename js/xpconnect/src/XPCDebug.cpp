@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "xpcprivate.h"
-#include "jsprf.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
 

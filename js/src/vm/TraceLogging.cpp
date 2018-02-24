@@ -14,7 +14,6 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jsprf.h"
 
 #include "jit/BaselineJIT.h"
 #include "jit/CompileWrappers.h"

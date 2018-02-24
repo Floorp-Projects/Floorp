@@ -7,7 +7,7 @@
 #include "nsXULAppAPI.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsprf.h"
+#include "js/Printf.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Preferences.h"

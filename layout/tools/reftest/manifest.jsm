@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ReadTopManifest", "CreateUrls"];
+var EXPORTED_SYMBOLS = ["ReadTopManifest", "CreateUrls"];
 
 var CC = Components.classes;
 const CI = Components.interfaces;

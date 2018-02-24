@@ -7,12 +7,12 @@
 #ifndef vm_Caches_h
 #define vm_Caches_h
 
-#include "jsbytecode.h"
 #include "jsmath.h"
 
 #include "frontend/SourceNotes.h"
 #include "gc/Tracer.h"
 #include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
 #include "vm/ArrayObject.h"
 #include "vm/JSAtom.h"

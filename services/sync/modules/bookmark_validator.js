@@ -20,7 +20,7 @@ ChromeUtils.defineModuleGetter(this, "PlacesSyncUtils",
 
 Cu.importGlobalProperties(["URLSearchParams"]);
 
-this.EXPORTED_SYMBOLS = ["BookmarkValidator", "BookmarkProblemData"];
+var EXPORTED_SYMBOLS = ["BookmarkValidator", "BookmarkProblemData"];
 
 const LEFT_PANE_ROOT_ANNO = "PlacesOrganizer/OrganizerFolder";
 const LEFT_PANE_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";

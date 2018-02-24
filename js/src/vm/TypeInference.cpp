@@ -13,7 +13,6 @@
 #include "mozilla/Sprintf.h"
 
 #include "jsapi.h"
-#include "jsprf.h"
 #include "jsstr.h"
 
 #include "gc/HashUtil.h"

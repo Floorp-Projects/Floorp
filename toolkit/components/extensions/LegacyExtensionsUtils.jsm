@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["LegacyExtensionsUtils"];
+var EXPORTED_SYMBOLS = ["LegacyExtensionsUtils"];
 
 /* exported LegacyExtensionsUtils, LegacyExtensionContext */
 
@@ -245,7 +245,7 @@ EmbeddedExtensionManager = {
   },
 };
 
-this.LegacyExtensionsUtils = {
+var LegacyExtensionsUtils = {
   getEmbeddedExtensionFor: (addon) => {
     return EmbeddedExtensionManager.getEmbeddedExtensionFor(addon);
   },

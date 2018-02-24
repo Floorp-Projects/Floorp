@@ -10,7 +10,6 @@
 #include "jsexn.h"
 #include "jsfriendapi.h"
 #include "jsmath.h"
-#include "jsprototypes.h"
 
 #include "builtin/AtomicsObject.h"
 #include "builtin/DataViewObject.h"
@@ -28,6 +27,7 @@
 #include "builtin/WeakMapObject.h"
 #include "builtin/WeakSetObject.h"
 #include "gc/FreeOp.h"
+#include "js/ProtoKey.h"
 #include "vm/Debugger.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/HelperThreads.h"

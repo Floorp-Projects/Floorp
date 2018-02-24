@@ -10,7 +10,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["FormAutofillHandler"];
+var EXPORTED_SYMBOLS = ["FormAutofillHandler"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -23,7 +23,7 @@ ChromeUtils.defineModuleGetter(this, "FormLikeFactory",
                                "resource://gre/modules/FormLikeFactory.jsm");
 
 this.log = null;
-FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
+FormAutofillUtils.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 const {FIELD_STATES} = FormAutofillUtils;
 

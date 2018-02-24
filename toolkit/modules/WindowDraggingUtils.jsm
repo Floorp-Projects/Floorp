@@ -6,9 +6,9 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const HAVE_CSS_WINDOW_DRAG_SUPPORT = ["win", "macosx"].includes(AppConstants.platform);
 
-this.EXPORTED_SYMBOLS = [ "WindowDraggingElement" ];
+var EXPORTED_SYMBOLS = [ "WindowDraggingElement" ];
 
-this.WindowDraggingElement = function WindowDraggingElement(elem) {
+function WindowDraggingElement(elem) {
   this._elem = elem;
   this._window = elem.ownerGlobal;
   if (HAVE_CSS_WINDOW_DRAG_SUPPORT && !this.isPanel()) {
@@ -16,7 +16,7 @@ this.WindowDraggingElement = function WindowDraggingElement(elem) {
   }
 
   this._elem.addEventListener("mousedown", this);
-};
+}
 
 WindowDraggingElement.prototype = {
   mouseDownCheck(e) { return true; },

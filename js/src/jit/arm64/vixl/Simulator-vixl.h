@@ -33,8 +33,6 @@
 
 #include "mozilla/Vector.h"
 
-#include "jsalloc.h"
-
 #include "jit/arm64/vixl/Assembler-vixl.h"
 #include "jit/arm64/vixl/Disasm-vixl.h"
 #include "jit/arm64/vixl/Globals-vixl.h"
@@ -43,6 +41,7 @@
 #include "jit/arm64/vixl/Simulator-Constants-vixl.h"
 #include "jit/arm64/vixl/Utils-vixl.h"
 #include "jit/IonTypes.h"
+#include "js/AllocPolicy.h"
 #include "vm/MutexIDs.h"
 #include "vm/PosixNSPR.h"
 

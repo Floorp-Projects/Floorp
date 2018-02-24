@@ -16,7 +16,7 @@ ChromeUtils.defineModuleGetter(this, "PlacesUIUtils",
 ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "TabListComponent"
 ];
 

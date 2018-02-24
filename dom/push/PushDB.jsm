@@ -9,7 +9,7 @@ ChromeUtils.import("resource://gre/modules/IndexedDBHelper.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["indexedDB"]);
 
-this.EXPORTED_SYMBOLS = ["PushDB"];
+var EXPORTED_SYMBOLS = ["PushDB"];
 
 XPCOMUtils.defineLazyGetter(this, "console", () => {
   let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyGetter(this, "console", () => {
   });
 });
 
-this.PushDB = function PushDB(dbName, dbVersion, dbStoreName, keyPath, model) {
+function PushDB(dbName, dbVersion, dbStoreName, keyPath, model) {
   console.debug("PushDB()");
   this._dbStoreName = dbStoreName;
   this._keyPath = keyPath;
@@ -28,7 +28,7 @@ this.PushDB = function PushDB(dbName, dbVersion, dbStoreName, keyPath, model) {
   // set the indexeddb database
   this.initDBHelper(dbName, dbVersion,
                     [dbStoreName]);
-};
+}
 
 this.PushDB.prototype = {
   __proto__: IndexedDBHelper.prototype,

@@ -533,7 +533,7 @@ TEST_F(LookupListTableTest, TesBadLookupFlag) {
   // Set IgnoreBaseGlyphs(0x0002) to the lookup flag of LookupTable[0].
   out.Seek(6);
   out.WriteU16(0x0002);
-  EXPECT_FALSE(Parse());
+  EXPECT_TRUE(Parse());
 }
 
 TEST_F(LookupListTableTest, TesBadSubtableCount) {

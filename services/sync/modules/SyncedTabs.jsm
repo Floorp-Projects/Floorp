@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["SyncedTabs"];
+var EXPORTED_SYMBOLS = ["SyncedTabs"];
 
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -220,7 +220,7 @@ Services.obs.addObserver(SyncedTabsInternal, "weave:service:start-over");
 Services.prefs.addObserver("services.sync.engine.tabs", SyncedTabsInternal);
 
 // The public interface.
-this.SyncedTabs = {
+var SyncedTabs = {
   // A mock-point for tests.
   _internal: SyncedTabsInternal,
 

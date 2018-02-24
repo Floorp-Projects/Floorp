@@ -11,7 +11,7 @@
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-this.EXPORTED_SYMBOLS = ["OSCrypto"];
+var EXPORTED_SYMBOLS = ["OSCrypto"];
 
 var OSCrypto = {};
 

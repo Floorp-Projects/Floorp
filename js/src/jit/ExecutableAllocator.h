@@ -35,18 +35,17 @@
 #include <limits>
 #include <stddef.h> // for ptrdiff_t
 
-#include "jsalloc.h"
-
 #ifdef JS_CODEGEN_ARM
-#include "jit/arm/Architecture-arm.h"
+# include "jit/arm/Architecture-arm.h"
 #endif
 #include "jit/arm/Simulator-arm.h"
 #if defined(JS_CODEGEN_ARM64)
-#include "jit/arm64/vixl/Cpu-vixl.h"
+# include "jit/arm64/vixl/Cpu-vixl.h"
 #endif
 #include "jit/mips32/Simulator-mips32.h"
 #include "jit/mips64/Simulator-mips64.h"
 #include "jit/ProcessExecutableMemory.h"
+#include "js/AllocPolicy.h"
 #include "js/HashTable.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"

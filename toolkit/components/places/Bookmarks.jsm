@@ -57,7 +57,7 @@
  * @see nsINavBookmarkObserver
  */
 
-this.EXPORTED_SYMBOLS = [ "Bookmarks" ];
+var EXPORTED_SYMBOLS = [ "Bookmarks" ];
 
 Cu.importGlobalProperties(["URL"]);
 
