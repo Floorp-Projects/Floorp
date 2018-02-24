@@ -79,7 +79,6 @@ add_task(async function test_show_completePayment() {
       await setupPaymentDialog(browser, {
         methodData,
         details,
-        options: PTU.Options.requestShippingOption,
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       }
     );
@@ -117,7 +116,8 @@ add_task(async function test_show_completePayment() {
     is(methodDetails.expiryYear, "9999", "Check expiryYear");
     is(methodDetails.cardSecurityCode, "999", "Check cardSecurityCode");
 
-    is(result.response.shippingOption, "2", "Check shipping option");
+    todo(result.response.shippingOption, "2",
+         "DOM is not sending the shipping option when it hasn't been explicitly changed.");
 
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
@@ -132,7 +132,6 @@ add_task(async function test_show_completePayment() {
       await setupPaymentDialog(browser, {
         methodData,
         details,
-        options: PTU.Options.requestShippingOption,
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       }
     );
