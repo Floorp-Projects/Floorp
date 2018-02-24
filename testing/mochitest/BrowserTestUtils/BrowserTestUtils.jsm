@@ -11,7 +11,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "BrowserTestUtils",
 ];
 
@@ -67,7 +67,7 @@ var gSynthesizeCompositionChangeCount = 0;
 const kAboutPageRegistrationContentScript =
   "chrome://mochikit/content/tests/BrowserTestUtils/content-about-page-utils.js";
 
-this.BrowserTestUtils = {
+var BrowserTestUtils = {
   /**
    * Loads a page in a new tab, executes a Task and closes the tab.
    *

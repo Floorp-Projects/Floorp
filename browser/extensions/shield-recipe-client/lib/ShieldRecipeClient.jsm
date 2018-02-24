@@ -24,7 +24,7 @@ ChromeUtils.defineModuleGetter(this, "AddonStudies",
 ChromeUtils.defineModuleGetter(this, "TelemetryEvents",
   "resource://shield-recipe-client/lib/TelemetryEvents.jsm");
 
-this.EXPORTED_SYMBOLS = ["ShieldRecipeClient"];
+var EXPORTED_SYMBOLS = ["ShieldRecipeClient"];
 
 const PREF_LOGGING_LEVEL = "extensions.shield-recipe-client.logging.level";
 const SHIELD_INIT_NOTIFICATION = "shield-init-complete";
@@ -36,7 +36,7 @@ let log = null;
  * module for most tasks so that we can more easily test startup and shutdown
  * (bootstrap.js is difficult to import in tests).
  */
-this.ShieldRecipeClient = {
+var ShieldRecipeClient = {
   async startup() {
     // Setup logging and listen for changes to logging prefs
     LogManager.configure(Services.prefs.getIntPref(PREF_LOGGING_LEVEL));

@@ -15,12 +15,11 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/MemoryReporting.h"
 
-#include "jsalloc.h"
-
 #include "builtin/SelfHostingDefines.h"
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
 #include "gc/Marking.h"
+#include "js/AllocPolicy.h"
 #include "js/UbiNode.h"
 #include "js/Vector.h"
 #include "vm/ArrayObject.h"

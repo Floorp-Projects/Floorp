@@ -629,5 +629,5 @@ class SubjectPublicKeyInfo extends DecodedDER {
   }
 }
 
-this.X509 = { Certificate };
-this.EXPORTED_SYMBOLS = ["X509"];
+var X509 = { Certificate };
+var EXPORTED_SYMBOLS = ["X509"];

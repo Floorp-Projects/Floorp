@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "ExtensionSearchHandler" ];
+var EXPORTED_SYMBOLS = [ "ExtensionSearchHandler" ];
 
 // Used to keep track of all of the registered keywords, where each keyword is
 // mapped to a KeywordInfo instance.

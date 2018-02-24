@@ -33,7 +33,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
 
-#include "jsalloc.h"
+#include "js/AllocPolicy.h"
 
 namespace vixl {
 

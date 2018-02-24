@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["SessionFile"];
+var EXPORTED_SYMBOLS = ["SessionFile"];
 
 /**
  * Implementation of all the disk I/O required by the session store.
@@ -54,7 +54,7 @@ const PREF_MAX_SERIALIZE_FWD = "browser.sessionstore.max_serialize_forward";
 XPCOMUtils.defineLazyPreferenceGetter(this, "kMaxWriteFailures",
   "browser.sessionstore.max_write_failures", 5);
 
-this.SessionFile = {
+var SessionFile = {
   /**
    * Read the contents of the session file, asynchronously.
    */

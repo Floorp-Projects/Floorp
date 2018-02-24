@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Tabs"];
+var EXPORTED_SYMBOLS = ["Tabs"];
 
 const CUST_TAB = "chrome://browser/skin/customize.svg";
 const PREFS_TAB = "chrome://browser/skin/settings.svg";
@@ -17,7 +17,7 @@ ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
 Cu.importGlobalProperties(["InspectorUtils"]);
 
-this.Tabs = {
+var Tabs = {
   init(libDir) {},
 
   configurations: {

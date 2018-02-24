@@ -8,7 +8,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "PromiseTestUtils",
 ];
 
@@ -18,7 +18,7 @@ ChromeUtils.import("resource://testing-common/Assert.jsm", this);
 // Keep "JSMPromise" separate so "Promise" still refers to DOM Promises.
 let JSMPromise = ChromeUtils.import("resource://gre/modules/Promise.jsm", {}).Promise;
 
-this.PromiseTestUtils = {
+var PromiseTestUtils = {
   /**
    * Array of objects containing the details of the Promise rejections that are
    * currently left uncaught. This includes DOM Promise and Promise.jsm. When

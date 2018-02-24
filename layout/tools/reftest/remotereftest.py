@@ -202,8 +202,7 @@ class RemoteReftest(RefTest):
             localAutomation.BIN_SUFFIX = ".exe"
             localAutomation.IS_WIN32 = True
 
-        paths = [options.xrePath, localAutomation.DIST_BIN, self.automation._product,
-                 os.path.join('..', self.automation._product)]
+        paths = [options.xrePath, localAutomation.DIST_BIN]
         options.xrePath = self.findPath(paths)
         if options.xrePath is None:
             print ("ERROR: unable to find xulrunner path for %s, "
@@ -414,9 +413,6 @@ def run_test_harness(parser, options):
 
     automation = RemoteAutomation(None)
     automation.setDeviceManager(dm)
-
-    if options.remoteProductName:
-        automation.setProduct(options.remoteProductName)
 
     # Set up the defaults and ensure options are set
     parser.validate_remote(options, automation)

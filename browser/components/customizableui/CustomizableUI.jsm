@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["CustomizableUI"];
+var EXPORTED_SYMBOLS = ["CustomizableUI"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -2943,7 +2943,7 @@ var CustomizableUIInternal = {
 };
 Object.freeze(CustomizableUIInternal);
 
-this.CustomizableUI = {
+var CustomizableUI = {
   /**
    * Constant reference to the ID of the navigation toolbar.
    */

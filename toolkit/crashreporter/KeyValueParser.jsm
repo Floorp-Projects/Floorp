@@ -8,14 +8,14 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "parseKeyValuePairsFromLines",
   "parseKeyValuePairs",
   "parseKeyValuePairsFromFile",
   "parseKeyValuePairsFromFileAsync"
 ];
 
-this.parseKeyValuePairsFromLines = function(lines) {
+var parseKeyValuePairsFromLines = function(lines) {
   let data = {};
   for (let line of lines) {
     if (line == "")
@@ -33,13 +33,13 @@ this.parseKeyValuePairsFromLines = function(lines) {
   return data;
 };
 
-this.parseKeyValuePairs = function parseKeyValuePairs(text) {
+function parseKeyValuePairs(text) {
   let lines = text.split("\n");
   return parseKeyValuePairsFromLines(lines);
-};
+}
 
 // some test setup still uses this sync version
-this.parseKeyValuePairsFromFile = function parseKeyValuePairsFromFile(file) {
+function parseKeyValuePairsFromFile(file) {
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
                 createInstance(Ci.nsIFileInputStream);
   fstream.init(file, -1, 0, 0);
@@ -54,9 +54,9 @@ this.parseKeyValuePairsFromFile = function parseKeyValuePairsFromFile(file) {
   is.close();
   fstream.close();
   return parseKeyValuePairs(contents);
-};
+}
 
-this.parseKeyValuePairsFromFileAsync = async function parseKeyValuePairsFromFileAsync(file) {
+async function parseKeyValuePairsFromFileAsync(file) {
   let contents = await OS.File.read(file, { encoding: "utf-8" });
   return parseKeyValuePairs(contents);
-};
+}

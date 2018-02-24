@@ -225,6 +225,7 @@ class SplitBox extends Component {
           dom.div({
             className: endPanelControl ? "uncontrolled" : "controlled",
             style: leftPanelStyle,
+            role: "presentation",
             ref: div => {
               this.startPanelContainer = div;
             }},
@@ -242,6 +243,7 @@ class SplitBox extends Component {
           dom.div({
             className: endPanelControl ? "controlled" : "uncontrolled",
             style: rightPanelStyle,
+            role: "presentation",
             ref: div => {
               this.endPanelContainer = div;
             }},

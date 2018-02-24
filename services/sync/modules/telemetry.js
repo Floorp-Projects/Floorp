@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["SyncTelemetry"];
+var EXPORTED_SYMBOLS = ["SyncTelemetry"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -748,4 +748,4 @@ class SyncTelemetryImpl {
 }
 
 /* global SyncTelemetry */
-this.SyncTelemetry = new SyncTelemetryImpl(ENGINES);
+var SyncTelemetry = new SyncTelemetryImpl(ENGINES);

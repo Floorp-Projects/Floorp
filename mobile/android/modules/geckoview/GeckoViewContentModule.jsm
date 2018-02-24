@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["GeckoViewContentModule"];
+var EXPORTED_SYMBOLS = ["GeckoViewContentModule"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

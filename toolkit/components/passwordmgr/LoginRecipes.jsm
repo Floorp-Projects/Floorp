@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["LoginRecipesContent", "LoginRecipesParent"];
+var EXPORTED_SYMBOLS = ["LoginRecipesContent", "LoginRecipesParent"];
 
 const REQUIRED_KEYS = ["hosts"];
 const OPTIONAL_KEYS = [

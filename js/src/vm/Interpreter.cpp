@@ -20,7 +20,6 @@
 #include "jsarray.h"
 #include "jslibmath.h"
 #include "jsnum.h"
-#include "jsprf.h"
 #include "jsstr.h"
 
 #include "builtin/Eval.h"

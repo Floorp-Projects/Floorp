@@ -20,7 +20,7 @@
  *   implementation isn't always required (or even well defined)
  */
 
-this.EXPORTED_SYMBOLS = [ "console", "ConsoleAPI" ];
+var EXPORTED_SYMBOLS = [ "console", "ConsoleAPI" ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -725,5 +725,4 @@ ConsoleAPI.prototype = {
   },
 };
 
-this.console = new ConsoleAPI();
-this.ConsoleAPI = ConsoleAPI;
+var console = new ConsoleAPI();

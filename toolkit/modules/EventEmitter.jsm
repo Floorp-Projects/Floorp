@@ -10,7 +10,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "console",
                                "resource://gre/modules/Console.jsm");
 
-this.EXPORTED_SYMBOLS = ["EventEmitter"];
+var EXPORTED_SYMBOLS = ["EventEmitter"];
 
 let EventEmitter = this.EventEmitter = function() {};
 

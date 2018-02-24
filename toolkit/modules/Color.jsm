@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Color"];
+var EXPORTED_SYMBOLS = ["Color"];
 
 /**
  * Color class, which describes a color.

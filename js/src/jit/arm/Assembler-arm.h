@@ -1353,14 +1353,11 @@ class Assembler : public AssemblerShared
         jumpRelocations_.writeUnsigned(src.getOffset());
     }
 
-    // As opposed to x86/x64 version, the data relocation has to be executed
-    // before to recover the pointer, and not after.
-    void writeDataRelocation(ImmGCPtr ptr) {
+    void writeDataRelocation(BufferOffset offset, ImmGCPtr ptr) {
         if (ptr.value) {
             if (gc::IsInsideNursery(ptr.value))
                 embedsNurseryPointers_ = true;
-            if (ptr.value)
-                dataRelocations_.writeUnsigned(nextOffset().getOffset());
+            dataRelocations_.writeUnsigned(offset.getOffset());
         }
     }
 

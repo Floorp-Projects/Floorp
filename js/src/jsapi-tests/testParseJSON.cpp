@@ -8,9 +8,9 @@
 #include <limits>
 #include <string.h>
 
-#include "jsprf.h"
 #include "jsstr.h"
 
+#include "js/Printf.h"
 #include "jsapi-tests/tests.h"
 
 using namespace js;

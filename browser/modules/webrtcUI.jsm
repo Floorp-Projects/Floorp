@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["webrtcUI"];
+var EXPORTED_SYMBOLS = ["webrtcUI"];
 
 ChromeUtils.import("resource:///modules/syncedtabs/EventEmitter.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
   return Services.strings.createBundle("chrome://branding/locale/brand.properties");
 });
 
-this.webrtcUI = {
+var webrtcUI = {
   peerConnectionBlockers: new Set(),
   emitter: new EventEmitter(),
 

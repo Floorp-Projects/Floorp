@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["CustomizeMode"];
+var EXPORTED_SYMBOLS = ["CustomizeMode"];
 
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 const kPaletteId = "customization-palette";

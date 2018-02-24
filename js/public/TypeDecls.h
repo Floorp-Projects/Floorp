@@ -22,6 +22,8 @@
 
 #include "js-config.h"
 
+typedef uint8_t jsbytecode;
+
 class JSAtom;
 struct JSCompartment;
 struct JSContext;

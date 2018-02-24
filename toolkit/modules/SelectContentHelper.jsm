@@ -28,11 +28,11 @@ const SUPPORTED_PROPERTIES = [
 // via SelectContentHelper.open.
 var gOpen = false;
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "SelectContentHelper"
 ];
 
-this.SelectContentHelper = function(aElement, aOptions, aGlobal) {
+var SelectContentHelper = function(aElement, aOptions, aGlobal) {
   this.element = aElement;
   this.initialSelection = aElement[aElement.selectedIndex] || null;
   this.global = aGlobal;

@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["TabState"];
+var EXPORTED_SYMBOLS = ["TabState"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
@@ -20,7 +20,7 @@ ChromeUtils.defineModuleGetter(this, "Utils",
 /**
  * Module that contains tab state collection methods.
  */
-this.TabState = Object.freeze({
+var TabState = Object.freeze({
   update(browser, data) {
     TabStateInternal.update(browser, data);
   },

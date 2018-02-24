@@ -32,7 +32,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsCOMPtr.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 #include "mozilla/dom/IterableIteratorBinding.h"
 
 namespace mozilla {

@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUpdateTimerManager",
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
   "@mozilla.org/base/telemetry;1", "nsITelemetry");
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "TelemetryModules",
 ];
 
@@ -35,7 +35,7 @@ const MAX_MODULES_NUM = 512;
 const MAX_NAME_LENGTH = 64;
 const TRUNCATION_DELIMITER = "\u2026";
 
-this.TelemetryModules = Object.freeze({
+var TelemetryModules = Object.freeze({
   _log: Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX),
 
   start() {

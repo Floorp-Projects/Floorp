@@ -307,22 +307,23 @@ MacroAssemblerARM::ma_nop()
     as_nop();
 }
 
-void
+BufferOffset
 MacroAssemblerARM::ma_movPatchable(Imm32 imm_, Register dest, Assembler::Condition c)
 {
     int32_t imm = imm_.value;
     if (HasMOVWT()) {
-        as_movw(dest, Imm16(imm & 0xffff), c);
+        BufferOffset offset = as_movw(dest, Imm16(imm & 0xffff), c);
         as_movt(dest, Imm16(imm >> 16 & 0xffff), c);
+        return offset;
     } else {
-        as_Imm32Pool(dest, imm, c);
+        return as_Imm32Pool(dest, imm, c);
     }
 }
 
-void
+BufferOffset
 MacroAssemblerARM::ma_movPatchable(ImmPtr imm, Register dest, Assembler::Condition c)
 {
-    ma_movPatchable(Imm32(int32_t(imm.value)), dest, c);
+    return ma_movPatchable(Imm32(int32_t(imm.value)), dest, c);
 }
 
 /* static */
@@ -403,10 +404,8 @@ MacroAssemblerARM::ma_mov(ImmWord imm, Register dest, Assembler::Condition c)
 void
 MacroAssemblerARM::ma_mov(ImmGCPtr ptr, Register dest)
 {
-    // As opposed to x86/x64 version, the data relocation has to be executed
-    // before to recover the pointer, and not after.
-    writeDataRelocation(ptr);
-    ma_movPatchable(Imm32(uintptr_t(ptr.value)), dest, Always);
+    BufferOffset offset = ma_movPatchable(Imm32(uintptr_t(ptr.value)), dest, Always);
+    writeDataRelocation(offset, ptr);
 }
 
 // Shifts (just a move with a shifting op2)

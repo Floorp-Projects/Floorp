@@ -3,14 +3,14 @@
  *
  * This file has been reformatted as a Javascript Core Module
  */
-this.EXPORTED_SYMBOLS = ["redux"];
+var EXPORTED_SYMBOLS = ["redux"];
 
 // Defining these prevents redux from using indirect eval or `new
 // Function()` to get its global object.
 const self = this;
 this.Object = Object;
 
-this.redux =
+var redux =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};

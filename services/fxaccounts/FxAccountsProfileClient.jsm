@@ -7,7 +7,7 @@
  */
  "use strict;";
 
-this.EXPORTED_SYMBOLS = ["FxAccountsProfileClient", "FxAccountsProfileClientError"];
+var EXPORTED_SYMBOLS = ["FxAccountsProfileClient", "FxAccountsProfileClientError"];
 
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
@@ -27,7 +27,7 @@ Cu.importGlobalProperties(["URL"]);
  *   The bearer token to access the profile server
  * @constructor
  */
-this.FxAccountsProfileClient = function(options) {
+var FxAccountsProfileClient = function(options) {
   if (!options || !options.serverURL) {
     throw new Error("Missing 'serverURL' configuration option");
   }
@@ -226,7 +226,7 @@ this.FxAccountsProfileClient.prototype = {
  *          Error message
  * @constructor
  */
-this.FxAccountsProfileClientError = function(details) {
+var FxAccountsProfileClientError = function(details) {
   details = details || {};
 
   this.name = "FxAccountsProfileClientError";

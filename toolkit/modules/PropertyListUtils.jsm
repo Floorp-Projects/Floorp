@@ -55,7 +55,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["PropertyListUtils"];
+var EXPORTED_SYMBOLS = ["PropertyListUtils"];
 
 Cu.importGlobalProperties(["File", "FileReader"]);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -65,7 +65,7 @@ ChromeUtils.defineModuleGetter(this, "ctypes",
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 
-this.PropertyListUtils = Object.freeze({
+var PropertyListUtils = Object.freeze({
   /**
    * Asynchronously reads a file as a property list.
    *

@@ -1125,8 +1125,6 @@ ArraySpeciesCreate(JSContext* cx, HandleObject origArray, uint64_t length, Mutab
     return true;
 }
 
-#if JS_HAS_TOSOURCE
-
 static bool
 array_toSource(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -1203,8 +1201,6 @@ array_toSource(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setString(str);
     return true;
 }
-
-#endif
 
 struct EmptySeparatorOp
 {
@@ -3500,9 +3496,7 @@ const JSJitInfo js::array_splice_info = {
 };
 
 static const JSFunctionSpec array_methods[] = {
-#if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,      array_toSource,     0,0),
-#endif
     JS_SELF_HOSTED_FN(js_toString_str, "ArrayToString",      0,0),
     JS_FN(js_toLocaleString_str,       array_toLocaleString, 0,0),
 

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["HistoryEngine", "HistoryRec"];
+var EXPORTED_SYMBOLS = ["HistoryEngine", "HistoryRec"];
 
 const HISTORY_TTL = 5184000; // 60 days in milliseconds
 const THIRTY_DAYS_IN_MS = 2592000000; // 30 days in milliseconds
@@ -21,9 +21,9 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
 ChromeUtils.defineModuleGetter(this, "PlacesSyncUtils",
                                "resource://gre/modules/PlacesSyncUtils.jsm");
 
-this.HistoryRec = function HistoryRec(collection, id) {
+function HistoryRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
-};
+}
 HistoryRec.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.History",
@@ -33,9 +33,9 @@ HistoryRec.prototype = {
 Utils.deferGetSet(HistoryRec, "cleartext", ["histUri", "title", "visits"]);
 
 
-this.HistoryEngine = function HistoryEngine(service) {
+function HistoryEngine(service) {
   SyncEngine.call(this, "History", service);
-};
+}
 HistoryEngine.prototype = {
   __proto__: SyncEngine.prototype,
   _recordObj: HistoryRec,

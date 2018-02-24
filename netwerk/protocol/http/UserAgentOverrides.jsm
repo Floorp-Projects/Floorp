@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "UserAgentOverrides" ];
+var EXPORTED_SYMBOLS = [ "UserAgentOverrides" ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -30,7 +30,7 @@ var gOverrideFunctions = [
 ];
 var gBuiltUAs = new Map;
 
-this.UserAgentOverrides = {
+var UserAgentOverrides = {
   init: function uao_init() {
     if (gInitialized)
       return;

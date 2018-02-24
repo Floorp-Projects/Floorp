@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["RuntimePermissions"];
+var EXPORTED_SYMBOLS = ["RuntimePermissions"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

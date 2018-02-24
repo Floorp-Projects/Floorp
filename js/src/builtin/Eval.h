@@ -7,8 +7,9 @@
 #ifndef builtin_Eval_h
 #define builtin_Eval_h
 
-#include "jsbytecode.h"
 #include "NamespaceImports.h"
+
+#include "js/TypeDecls.h"
 
 namespace js {
 

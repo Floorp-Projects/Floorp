@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["RemotePages", "RemotePageManager", "PageListener"];
+var EXPORTED_SYMBOLS = ["RemotePages", "RemotePageManager", "PageListener"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -59,7 +59,7 @@ MessageListener.prototype = {
  * object for every page loaded. Message listeners added to this object receive
  * messages from all loaded pages from the requested urls.
  */
-this.RemotePages = function(urls) {
+var RemotePages = function(urls) {
   this.urls = Array.isArray(urls) ? urls : [urls];
   this.messagePorts = new Set();
   this.listener = new MessageListener();
@@ -533,7 +533,7 @@ if (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT)
   RemotePageManagerInternal.init();
 
 // The public API for the above object
-this.RemotePageManager = {
+var RemotePageManager = {
   addRemotePageListener: RemotePageManagerInternal.addRemotePageListener.bind(RemotePageManagerInternal),
   removeRemotePageListener: RemotePageManagerInternal.removeRemotePageListener.bind(RemotePageManagerInternal),
 };

@@ -45,7 +45,7 @@ const kDELIVERY_REASON_TO_CODE = {
 
 const prefs = new Preferences("dom.push.");
 
-this.EXPORTED_SYMBOLS = ["PushServiceWebSocket"];
+var EXPORTED_SYMBOLS = ["PushServiceWebSocket"];
 
 XPCOMUtils.defineLazyGetter(this, "console", () => {
   let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
@@ -116,7 +116,7 @@ const STATE_WAITING_FOR_HELLO = 2;
 // Websocket operational, handshake completed, begin protocol messaging.
 const STATE_READY = 3;
 
-this.PushServiceWebSocket = {
+var PushServiceWebSocket = {
   _mainPushService: null,
   _serverURI: null,
 

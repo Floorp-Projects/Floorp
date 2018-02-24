@@ -8,7 +8,7 @@
 
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
-#include "jsprf.h"
+#include "js/Printf.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/Exceptions.h"

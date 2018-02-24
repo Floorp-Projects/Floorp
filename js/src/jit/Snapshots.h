@@ -10,14 +10,12 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/Attributes.h"
 
-#include "jsalloc.h"
-#include "jsbytecode.h"
-
 #include "jit/CompactBuffer.h"
 #include "jit/IonTypes.h"
 #include "jit/Registers.h"
-
+#include "js/AllocPolicy.h"
 #include "js/HashTable.h"
+#include "js/TypeDecls.h"
 
 namespace js {
 class GenericPrinter;

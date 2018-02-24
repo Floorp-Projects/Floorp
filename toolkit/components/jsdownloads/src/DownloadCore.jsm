@@ -9,7 +9,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "Download",
   "DownloadSource",
   "DownloadTarget",
@@ -106,7 +106,7 @@ const kProgressUpdateIntervalMs = 400;
  * is transient, though it can be included in a DownloadList so that it can be
  * managed by the user interface and persisted across sessions.
  */
-this.Download = function() {
+var Download = function() {
   this._deferSucceeded = PromiseUtils.defer();
 };
 
@@ -1192,7 +1192,7 @@ Download.fromSerializable = function(aSerializable) {
 /**
  * Represents the source of a download, for example a document or an URI.
  */
-this.DownloadSource = function() {};
+var DownloadSource = function() {};
 
 this.DownloadSource.prototype = {
   /**
@@ -1318,7 +1318,7 @@ this.DownloadSource.fromSerializable = function(aSerializable) {
  * Represents the target of a download, for example a file in the global
  * downloads directory, or a file in the system temporary directory.
  */
-this.DownloadTarget = function() {};
+var DownloadTarget = function() {};
 
 this.DownloadTarget.prototype = {
   /**
@@ -1457,7 +1457,7 @@ this.DownloadTarget.fromSerializable = function(aSerializable) {
  *        The properties object may also contain any of the DownloadError's
  *        because properties, which will be set accordingly in the error object.
  */
-this.DownloadError = function(aProperties) {
+var DownloadError = function(aProperties) {
   const NS_ERROR_MODULE_BASE_OFFSET = 0x45;
   const NS_ERROR_MODULE_NETWORK = 6;
   const NS_ERROR_MODULE_FILES = 13;
@@ -1632,7 +1632,7 @@ this.DownloadError.fromSerializable = function(aSerializable) {
 /**
  * Template for an object that actually transfers the data for the download.
  */
-this.DownloadSaver = function() {};
+var DownloadSaver = function() {};
 
 this.DownloadSaver.prototype = {
   /**
@@ -1779,7 +1779,7 @@ this.DownloadSaver.fromSerializable = function(aSerializable) {
 /**
  * Saver object that simply copies the entire source file to the target.
  */
-this.DownloadCopySaver = function() {};
+var DownloadCopySaver = function() {};
 
 this.DownloadCopySaver.prototype = {
   __proto__: DownloadSaver.prototype,
@@ -2251,7 +2251,7 @@ this.DownloadCopySaver.fromSerializable = function(aSerializable) {
  *
  * For more background on the process, see the DownloadLegacyTransfer object.
  */
-this.DownloadLegacySaver = function() {
+var DownloadLegacySaver = function() {
   this.deferExecuted = PromiseUtils.defer();
   this.deferCanceled = PromiseUtils.defer();
 };
@@ -2607,7 +2607,7 @@ this.DownloadLegacySaver.fromSerializable = function() {
  * Since this DownloadSaver type requires a live document as a source, it cannot
  * be persisted across sessions, unless the download already succeeded.
  */
-this.DownloadPDFSaver = function() {
+var DownloadPDFSaver = function() {
 };
 
 this.DownloadPDFSaver.prototype = {

@@ -20,9 +20,9 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   });
 });
 
-this.EXPORTED_SYMBOLS = ["PoliciesValidator"];
+var EXPORTED_SYMBOLS = ["PoliciesValidator"];
 
-this.PoliciesValidator = {
+var PoliciesValidator = {
   validateAndParseParameters(param, properties) {
     return validateAndParseParamRecursive(param, properties);
   }

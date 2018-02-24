@@ -11,7 +11,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Credentials"];
+var EXPORTED_SYMBOLS = ["Credentials"];
 
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -42,7 +42,7 @@ var log = Log.repository.getLogger("Identity.FxAccounts");
 log.level = LOG_LEVEL;
 log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 
-this.Credentials = Object.freeze({
+var Credentials = Object.freeze({
   /**
    * Make constants accessible to tests
    */

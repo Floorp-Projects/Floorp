@@ -23,12 +23,12 @@
 #include "mozilla/Maybe.h"
 
 #include "jsnum.h"
-#include "jsprf.h"
 #include "jsstr.h"
 
 #include "ds/LifoAlloc.h"
 #include "js/CharacterEncoding.h"
 #include "js/HashTable.h"
+#include "js/Printf.h"
 #include "util/DoubleToString.h"
 #include "wasm/WasmAST.h"
 #include "wasm/WasmTypes.h"

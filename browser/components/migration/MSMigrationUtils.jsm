@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["MSMigrationUtils"];
+var EXPORTED_SYMBOLS = ["MSMigrationUtils"];
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
