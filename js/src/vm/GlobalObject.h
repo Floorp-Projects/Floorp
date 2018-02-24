@@ -7,11 +7,11 @@
 #ifndef vm_GlobalObject_h
 #define vm_GlobalObject_h
 
-#include "jsarray.h"
 #include "jsbool.h"
 #include "jsexn.h"
 #include "jsnum.h"
 
+#include "builtin/Array.h"
 #include "js/Vector.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/ErrorObject.h"

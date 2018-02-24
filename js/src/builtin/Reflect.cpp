@@ -6,7 +6,7 @@
 
 #include "builtin/Reflect.h"
 
-#include "jsarray.h"
+#include "builtin/Array.h"
 
 #include "jit/InlinableNatives.h"
 #include "vm/ArgumentsObject.h"
