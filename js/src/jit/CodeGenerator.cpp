@@ -49,6 +49,7 @@
 #include "vm/MatchPairs.h"
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
+#include "vm/StringType.h"
 #include "vm/TraceLogging.h"
 #include "vm/TypedArrayObject.h"
 #include "vtune/VTuneWrapper.h"

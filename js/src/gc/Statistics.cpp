@@ -20,6 +20,7 @@
 
 #include "gc/GC.h"
 #include "gc/Memory.h"
+#include "util/Text.h"
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
 #include "vm/Runtime.h"
