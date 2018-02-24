@@ -48,16 +48,6 @@ class js::jit::OutOfLineTableSwitch : public OutOfLineCodeBase<CodeGeneratorMIPS
 };
 
 void
-CodeGeneratorMIPS::visitOutOfLineBailout(OutOfLineBailout* ool)
-{
-    // Push snapshotOffset and make sure stack is aligned.
-    masm.subPtr(Imm32(2 * sizeof(void*)), StackPointer);
-    masm.storePtr(ImmWord(ool->snapshot()->snapshotOffset()), Address(StackPointer, 0));
-
-    masm.jump(&deoptLabel_);
-}
-
-void
 CodeGeneratorMIPS::visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool)
 {
     MTableSwitch* mir = ool->mir();
@@ -109,33 +99,6 @@ CodeGeneratorMIPS::emitTableSwitchDispatch(MTableSwitch* mir, Register index,
     masm.branch(address);
 }
 
-static const uint32_t FrameSizes[] = { 128, 256, 512, 1024 };
-
-FrameSizeClass
-FrameSizeClass::FromDepth(uint32_t frameDepth)
-{
-    for (uint32_t i = 0; i < mozilla::ArrayLength(FrameSizes); i++) {
-        if (frameDepth < FrameSizes[i])
-            return FrameSizeClass(i);
-    }
-
-    return FrameSizeClass::None();
-}
-
-FrameSizeClass
-FrameSizeClass::ClassLimit()
-{
-    return FrameSizeClass(mozilla::ArrayLength(FrameSizes));
-}
-
-uint32_t
-FrameSizeClass::frameSize() const
-{
-    MOZ_ASSERT(class_ != NO_FRAME_SIZE_CLASS_ID);
-    MOZ_ASSERT(class_ < mozilla::ArrayLength(FrameSizes));
-
-    return FrameSizes[class_];
-}
 
 ValueOperand
 CodeGeneratorMIPS::ToValue(LInstruction* ins, size_t pos)

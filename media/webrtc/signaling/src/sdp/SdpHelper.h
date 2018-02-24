@@ -120,8 +120,6 @@ class SdpHelper {
         const std::vector<SdpExtmapAttributeList::Extmap>& localExtensions,
         SdpMediaSection* localMsection);
 
-    bool SdpMatch(const Sdp& sdp1, const Sdp& sdp2);
-
   private:
     std::string& mLastError;
 

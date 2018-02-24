@@ -199,6 +199,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
         tmp = aStream->Read32(&type);
         if (NS_FAILED(tmp)) {
           rv = tmp;
+          break;
         }
 
         if ((nsXULPrototypeNode::Type)type == nsXULPrototypeNode::eType_PI) {
