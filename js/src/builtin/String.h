@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsstr_h
-#define jsstr_h
+#ifndef builtin_String_h
+#define builtin_String_h
 
 #include "mozilla/HashFunctions.h"
 #include "mozilla/PodOperations.h"
@@ -19,8 +19,8 @@
 #include "gc/Rooting.h"
 #include "js/RootingAPI.h"
 #include "js/UniquePtr.h"
+#include "util/Unicode.h"
 #include "vm/Printer.h"
-#include "vm/Unicode.h"
 
 class JSAutoByteString;
 class JSLinearString;
@@ -527,4 +527,4 @@ FlatStringSearch(JSContext* cx, unsigned argc, Value* vp);
 
 } /* namespace js */
 
-#endif /* jsstr_h */
+#endif /* builtin_String_h */

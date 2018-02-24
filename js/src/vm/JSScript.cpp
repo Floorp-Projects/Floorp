@@ -36,6 +36,7 @@
 #include "js/Printf.h"
 #include "js/Utility.h"
 #include "js/Wrapper.h"
+#include "util/StringBuffer.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/Compression.h"
@@ -48,7 +49,6 @@
 #include "vm/SelfHosting.h"
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
-#include "vm/StringBuffer.h"
 #include "vm/Xdr.h"
 #include "vtune/VTuneWrapper.h"
 

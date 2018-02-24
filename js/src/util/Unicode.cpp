@@ -5,7 +5,7 @@
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/
  */
-#include "vm/Unicode.h"
+#include "util/Unicode.h"
 
 using namespace js;
 using namespace js::unicode;

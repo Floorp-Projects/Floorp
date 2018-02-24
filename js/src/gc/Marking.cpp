@@ -27,7 +27,7 @@
 #include "vm/RegExpShared.h"
 #include "vm/Scope.h"
 #include "vm/Shape.h"
-#include "vm/Symbol.h"
+#include "vm/SymbolType.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/UnboxedObject.h"
 #include "wasm/WasmJS.h"
@@ -37,7 +37,7 @@
 #include "gc/PrivateIterators-inl.h"
 #include "vm/JSCompartment-inl.h"
 #include "vm/NativeObject-inl.h"
-#include "vm/String-inl.h"
+#include "vm/StringType-inl.h"
 #include "vm/UnboxedObject-inl.h"
 
 using namespace js;

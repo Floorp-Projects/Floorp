@@ -25,16 +25,17 @@
 
 #include "jsapi.h"
 #include "jsnum.h"
-#include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "builtin/String.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/SourceNotes.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
 #include "js/CharacterEncoding.h"
 #include "js/Printf.h"
+#include "util/StringBuffer.h"
 #include "vm/CodeCoverage.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/JSAtom.h"
@@ -45,7 +46,6 @@
 #include "vm/JSScript.h"
 #include "vm/Opcodes.h"
 #include "vm/Shape.h"
-#include "vm/StringBuffer.h"
 
 #include "gc/PrivateIterators-inl.h"
 #include "vm/JSCompartment-inl.h"
