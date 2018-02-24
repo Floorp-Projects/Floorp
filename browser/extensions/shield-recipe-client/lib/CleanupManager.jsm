@@ -8,7 +8,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AsyncShutdown", "resource://gre/modules/AsyncShutdown.jsm");
 
-this.EXPORTED_SYMBOLS = ["CleanupManager"];
+var EXPORTED_SYMBOLS = ["CleanupManager"];
 
 class CleanupManagerClass {
   constructor() {
@@ -48,4 +48,4 @@ class CleanupManagerClass {
   }
 }
 
-this.CleanupManager = new CleanupManagerClass();
+var CleanupManager = new CleanupManagerClass();

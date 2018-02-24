@@ -12,10 +12,9 @@
 
 #include <stdlib.h>
 
-#include "jsalloc.h"
-
 #include "builtin/MapObject.h"
 #include "gc/Marking.h"
+#include "js/AllocPolicy.h"
 #include "js/Debug.h"
 #include "js/TracingAPI.h"
 #include "js/UbiNode.h"

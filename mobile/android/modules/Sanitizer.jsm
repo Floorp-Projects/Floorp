@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
 });
 
-this.EXPORTED_SYMBOLS = ["Sanitizer"];
+var EXPORTED_SYMBOLS = ["Sanitizer"];
 
 function Sanitizer() {}
 Sanitizer.prototype = {
@@ -357,4 +357,4 @@ Sanitizer.prototype = {
   }
 };
 
-this.Sanitizer = new Sanitizer();
+var Sanitizer = new Sanitizer();

@@ -10,7 +10,6 @@ import os
 import posixpath
 import tempfile
 import shutil
-import subprocess
 import sys
 
 from automation import Automation
@@ -27,34 +26,25 @@ fennecLogcatFilters = [ "The character encoding of the HTML document was not dec
 class RemoteAutomation(Automation):
     _devicemanager = None
 
-    # Part of a hack for Robocop: "am COMMAND" is handled specially if COMMAND
-    # is in this set. See usages below.
-    _specialAmCommands = ('instrument', 'start')
-
     def __init__(self, deviceManager, appName = '', remoteLog = None,
                  processArgs=None):
-        self._devicemanager = deviceManager
+        self._dm = deviceManager
         self._appName = appName
         self._remoteProfile = None
         self._remoteLog = remoteLog
         self._processArgs = processArgs or {};
 
-        # Default our product to fennec
-        self._product = "fennec"
         self.lastTestSeen = "remoteautomation.py"
         Automation.__init__(self)
 
     def setDeviceManager(self, deviceManager):
-        self._devicemanager = deviceManager
+        self._dm = deviceManager
 
     def setAppName(self, appName):
         self._appName = appName
 
     def setRemoteProfile(self, remoteProfile):
         self._remoteProfile = remoteProfile
-
-    def setProduct(self, product):
-        self._product = product
 
     def setRemoteLog(self, logfile):
         self._remoteLog = logfile
@@ -111,7 +101,7 @@ class RemoteAutomation(Automation):
         status = proc.wait(timeout = maxTime, noOutputTimeout = timeout)
         self.lastTestSeen = proc.getLastTestSeen
 
-        topActivity = self._devicemanager.getTopActivity()
+        topActivity = self._dm.getTopActivity()
         if topActivity == proc.procName:
             print "Browser unexpectedly found running. Killing..."
             proc.kill(True)
@@ -133,19 +123,19 @@ class RemoteAutomation(Automation):
         # we make it empty and writable so we can test the ANR reporter later
         traces = "/data/anr/traces.txt"
         try:
-            self._devicemanager.shellCheckOutput(['echo', '', '>', traces], root=True,
-                                                 timeout=DeviceManager.short_timeout)
-            self._devicemanager.shellCheckOutput(['chmod', '666', traces], root=True,
-                                                 timeout=DeviceManager.short_timeout)
+            self._dm.shellCheckOutput(['echo', '', '>', traces], root=True,
+                                       timeout=DeviceManager.short_timeout)
+            self._dm.shellCheckOutput(['chmod', '666', traces], root=True,
+                                       timeout=DeviceManager.short_timeout)
         except DMError:
             print "Error deleting %s" % traces
             pass
 
     def checkForANRs(self):
         traces = "/data/anr/traces.txt"
-        if self._devicemanager.fileExists(traces):
+        if self._dm.fileExists(traces):
             try:
-                t = self._devicemanager.pullFile(traces)
+                t = self._dm.pullFile(traces)
                 if t:
                     stripped = t.strip()
                     if len(stripped) > 0:
@@ -161,11 +151,11 @@ class RemoteAutomation(Automation):
             print "%s not found" % traces
 
     def deleteTombstones(self):
-        # delete any existing tombstone files from device
+        # delete any tombstone files from device
         tombstones = "/data/tombstones/*"
         try:
-            self._devicemanager.shellCheckOutput(['rm', '-r', tombstones], root=True,
-                                                 timeout=DeviceManager.short_timeout)
+            self._dm.shellCheckOutput(['rm', '-r', tombstones], root=True,
+                                       timeout=DeviceManager.short_timeout)
         except DMError:
             # This may just indicate that the tombstone directory is missing
             pass
@@ -173,25 +163,23 @@ class RemoteAutomation(Automation):
     def checkForTombstones(self):
         # pull any tombstones from device and move to MOZ_UPLOAD_DIR
         remoteDir = "/data/tombstones"
-        blobberUploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
-        if blobberUploadDir:
-            if not os.path.exists(blobberUploadDir):
-                os.mkdir(blobberUploadDir)
-            if self._devicemanager.dirExists(remoteDir):
-                # copy tombstone files from device to local blobber upload directory
+        uploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
+        if uploadDir:
+            if not os.path.exists(uploadDir):
+                os.mkdir(uploadDir)
+            if self._dm.dirExists(remoteDir):
+                # copy tombstone files from device to local upload directory
                 try:
-                    self._devicemanager.shellCheckOutput(['chmod', '777', remoteDir], root=True,
-                                                 timeout=DeviceManager.short_timeout)
-                    self._devicemanager.shellCheckOutput(['chmod', '666', os.path.join(remoteDir, '*')], root=True,
-                                                 timeout=DeviceManager.short_timeout)
-                    self._devicemanager.getDirectory(remoteDir, blobberUploadDir, False)
+                    self._dm.shellCheckOutput(['chmod', '777', remoteDir], root=True,
+                                               timeout=DeviceManager.short_timeout)
+                    self._dm.shellCheckOutput(['chmod', '666', os.path.join(remoteDir, '*')],
+                                               root=True, timeout=DeviceManager.short_timeout)
+                    self._dm.getDirectory(remoteDir, uploadDir, False)
                 except DMError:
                     # This may just indicate that no tombstone files are present
                     pass
                 self.deleteTombstones()
-                # add a .txt file extension to each tombstone file name, so
-                # that blobber will upload it
-                for f in glob.glob(os.path.join(blobberUploadDir, "tombstone_??")):
+                for f in glob.glob(os.path.join(uploadDir, "tombstone_??")):
                     # add a unique integer to the file name, in case there are
                     # multiple tombstones generated with the same name, for
                     # instance, after multiple robocop tests
@@ -209,7 +197,7 @@ class RemoteAutomation(Automation):
         self.checkForANRs()
         self.checkForTombstones()
 
-        logcat = self._devicemanager.getLogcat(filterOutRegexps=fennecLogcatFilters)
+        logcat = self._dm.getLogcat(filterOutRegexps=fennecLogcatFilters)
 
         javaException = mozcrash.check_for_java_exception(logcat, test_name=self.lastTestSeen)
         if javaException:
@@ -223,21 +211,17 @@ class RemoteAutomation(Automation):
         try:
             dumpDir = tempfile.mkdtemp()
             remoteCrashDir = posixpath.join(self._remoteProfile, 'minidumps')
-            if not self._devicemanager.dirExists(remoteCrashDir):
+            if not self._dm.dirExists(remoteCrashDir):
                 # If crash reporting is enabled (MOZ_CRASHREPORTER=1), the
                 # minidumps directory is automatically created when Fennec
                 # (first) starts, so its lack of presence is a hint that
                 # something went wrong.
                 print "Automation Error: No crash directory (%s) found on remote device" % remoteCrashDir
-                # Whilst no crash was found, the run should still display as a failure
                 return True
-            self._devicemanager.getDirectory(remoteCrashDir, dumpDir)
+            self._dm.getDirectory(remoteCrashDir, dumpDir)
 
             logger = get_default_logger()
-            if logger is not None:
-                crashed = mozcrash.log_crashes(logger, dumpDir, symbolsPath, test=self.lastTestSeen)
-            else:
-                crashed = Automation.checkForCrashes(self, dumpDir, symbolsPath)
+            crashed = mozcrash.log_crashes(logger, dumpDir, symbolsPath, test=self.lastTestSeen)
 
         finally:
             try:
@@ -248,36 +232,28 @@ class RemoteAutomation(Automation):
 
     def buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs):
         # If remote profile is specified, use that instead
-        if (self._remoteProfile):
+        if self._remoteProfile:
             profileDir = self._remoteProfile
 
         # Hack for robocop, if app & testURL == None and extraArgs contains the rest of the stuff, lets
         # assume extraArgs is all we need
-        if app == "am" and extraArgs[0] in RemoteAutomation._specialAmCommands:
+        if app == "am" and extraArgs[0] in ('instrument', 'start'):
             return app, extraArgs
 
         cmd, args = Automation.buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs)
-        # Remove -foreground if it exists, if it doesn't this just returns
         try:
             args.remove('-foreground')
         except:
             pass
-#TODO: figure out which platform require NO_EM_RESTART
-#        return app, ['--environ:NO_EM_RESTART=1'] + args
         return app, args
 
     def Process(self, cmd, stdout = None, stderr = None, env = None, cwd = None):
-        if stdout == None or stdout == -1 or stdout == subprocess.PIPE:
-            stdout = self._remoteLog
-
-        return self.RProcess(self._devicemanager, cmd, stdout, stderr, env, cwd, self._appName,
+        return self.RProcess(self._dm, cmd, self._remoteLog, env, cwd, self._appName,
                              **self._processArgs)
 
-    # be careful here as this inner class doesn't have access to outer class members
     class RProcess(object):
-        # device manager process
         dm = None
-        def __init__(self, dm, cmd, stdout=None, stderr=None, env=None, cwd=None, app=None,
+        def __init__(self, dm, cmd, stdout=None, env=None, cwd=None, app=None,
                      messageLogger=None, counts=None):
             self.dm = dm
             self.stdoutlen = 0
@@ -292,20 +268,15 @@ class RemoteAutomation(Automation):
                 self.counts['fail'] = 0
                 self.counts['todo'] = 0
 
-            if (self.proc is None):
-                if cmd[0] == 'am':
-                    self.proc = stdout
-                else:
-                    raise Exception("unable to launch process")
-            self.procName = cmd[0].split('/')[-1]
-            if cmd[0] == 'am' and cmd[1] in RemoteAutomation._specialAmCommands:
+            if self.proc is None:
+                self.proc = stdout
+            self.procName = cmd[0].split(posixpath.sep)[-1]
+            if cmd[0] == 'am' and cmd[1] in ('instrument', 'start'):
                 self.procName = app
 
             # Setting timeout at 1 hour since on a remote device this takes much longer.
             # Temporarily increased to 90 minutes because no more chunks can be created.
             self.timeout = 5400
-            # The benefit of the following sleep is unclear; it was formerly 15 seconds
-            time.sleep(1)
 
             # Used to buffer log messages until we meet a line break
             self.logBuffer = ""

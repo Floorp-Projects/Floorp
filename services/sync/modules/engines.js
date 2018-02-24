@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "EngineManager",
   "SyncEngine",
   "Tracker",
@@ -43,7 +43,7 @@ function ensureDirectory(path) {
  * want to sync.
  *
  */
-this.Tracker = function Tracker(name, engine) {
+function Tracker(name, engine) {
   if (!engine) {
     throw new Error("Tracker must be associated with an Engine instance.");
   }
@@ -64,7 +64,7 @@ this.Tracker = function Tracker(name, engine) {
   this.ignoreAll = false;
 
   this.asyncObserver = Async.asyncObserver(this, this._log);
-};
+}
 
 Tracker.prototype = {
   /*
@@ -274,7 +274,7 @@ Tracker.prototype = {
  * and/or applyIncoming function on top of the basic APIs.
  */
 
-this.Store = function Store(name, engine) {
+function Store(name, engine) {
   if (!engine) {
     throw new Error("Store must be associated with an Engine instance.");
   }
@@ -288,7 +288,7 @@ this.Store = function Store(name, engine) {
   XPCOMUtils.defineLazyGetter(this, "_timer", function() {
     return Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   });
-};
+}
 Store.prototype = {
 
   /**
@@ -462,7 +462,7 @@ Store.prototype = {
   }
 };
 
-this.EngineManager = function EngineManager(service) {
+function EngineManager(service) {
   this.service = service;
 
   this._engines = {};
@@ -474,7 +474,7 @@ this.EngineManager = function EngineManager(service) {
   // define the default level for all engine logs here (although each engine
   // allows its level to be controlled via a specific, non-default pref)
   Log.repository.getLogger(`Sync.Engine`).manageLevelFromPref("services.sync.log.logger.engine");
-};
+}
 EngineManager.prototype = {
   get(name) {
     // Return an array of engines if we have an array of names
@@ -629,7 +629,7 @@ EngineManager.prototype = {
   },
 };
 
-this.SyncEngine = function SyncEngine(name, service) {
+function SyncEngine(name, service) {
   if (!service) {
     throw new Error("SyncEngine must be associated with a Service instance.");
   }
@@ -701,7 +701,7 @@ this.SyncEngine = function SyncEngine(name, service) {
   // Additionally, we use this as the set of items to upload for bookmark
   // repair reponse, which has similar constraints.
   this._needWeakUpload = new Map();
-};
+}
 
 // Enumeration to define approaches to handling bad records.
 // Attached to the constructor to allow use as a kind of static enumeration.

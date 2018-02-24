@@ -10,7 +10,7 @@
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsWrapperCacheInlines.h"
 #include "XPCLog.h"
-#include "jsprf.h"
+#include "js/Printf.h"
 #include "jsfriendapi.h"
 #include "AccessCheck.h"
 #include "WrapperFactory.h"

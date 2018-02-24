@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["E10SUtils"];
+var EXPORTED_SYMBOLS = ["E10SUtils"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -78,7 +78,7 @@ function validatedWebRemoteType(aPreferredRemoteType, aTargetUri, aCurrentUri) {
   return WEB_REMOTE_TYPE;
 }
 
-this.E10SUtils = {
+var E10SUtils = {
   DEFAULT_REMOTE_TYPE,
   NOT_REMOTE,
   WEB_REMOTE_TYPE,

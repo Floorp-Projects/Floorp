@@ -7,11 +7,11 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "TestIntegration",
 ];
 
-this.TestIntegration = {
+var TestIntegration = {
   value: "value",
 
   get valueFromThis() {

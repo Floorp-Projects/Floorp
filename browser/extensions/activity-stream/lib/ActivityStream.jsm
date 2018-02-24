@@ -231,7 +231,7 @@ for (const config of FEEDS_DATA) {
   PREFS_CONFIG.set(pref, config);
 }
 
-this.ActivityStream = class ActivityStream {
+var ActivityStream = class ActivityStream {
   /**
    * constructor - Initializes an instance of ActivityStream
    *
@@ -336,4 +336,4 @@ this.ActivityStream = class ActivityStream {
   }
 };
 
-this.EXPORTED_SYMBOLS = ["ActivityStream", "PREFS_CONFIG"];
+var EXPORTED_SYMBOLS = ["ActivityStream", "PREFS_CONFIG"];

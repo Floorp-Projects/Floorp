@@ -544,8 +544,20 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::GuardIsNullOrUndefined, val);
     }
     void guardShape(ObjOperandId obj, Shape* shape) {
+        MOZ_ASSERT(shape);
         writeOpWithOperandId(CacheOp::GuardShape, obj);
         addStubField(uintptr_t(shape), StubField::Type::Shape);
+    }
+    void guardShapeForClass(ObjOperandId obj, Shape* shape) {
+        // Guard shape to ensure that object class is unchanged. This is true
+        // for all shapes.
+        guardShape(obj, shape);
+    }
+    void guardShapeForOwnProperties(ObjOperandId obj, Shape* shape) {
+        // Guard shape to detect changes to (non-dense) own properties. This
+        // also implies |guardShapeForClass|.
+        MOZ_ASSERT(shape->getObjectClass()->isNative());
+        guardShape(obj, shape);
     }
     void guardXrayExpandoShapeAndDefaultProto(ObjOperandId obj, JSObject* shapeWrapper) {
         writeOpWithOperandId(CacheOp::GuardXrayExpandoShapeAndDefaultProto, obj);

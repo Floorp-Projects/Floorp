@@ -7,8 +7,8 @@
 /* Call context. */
 
 #include "xpcprivate.h"
-#include "jswrapper.h"
 #include "jsfriendapi.h"
+#include "js/Wrapper.h"
 #include "nsContentUtils.h"
 
 using namespace mozilla;

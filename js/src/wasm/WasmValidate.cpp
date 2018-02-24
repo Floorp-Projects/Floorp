@@ -20,9 +20,8 @@
 
 #include "mozilla/CheckedInt.h"
 
-#include "jsprf.h"
-
 #include "jit/JitOptions.h"
+#include "js/Printf.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 #include "wasm/WasmBinaryIterator.h"

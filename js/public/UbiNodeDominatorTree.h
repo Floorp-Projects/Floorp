@@ -13,8 +13,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
 
-#include "jsalloc.h"
-
+#include "js/AllocPolicy.h"
 #include "js/UbiNode.h"
 #include "js/UbiNodePostOrder.h"
 #include "js/Utility.h"

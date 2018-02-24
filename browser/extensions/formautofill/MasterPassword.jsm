@@ -9,7 +9,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "MasterPassword",
 ];
 
@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "cryptoSDR",
                                    "@mozilla.org/login-manager/crypto/SDR;1",
                                    Ci.nsILoginManagerCrypto);
 
-this.MasterPassword = {
+var MasterPassword = {
   get _token() {
     let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].createInstance(Ci.nsIPK11TokenDB);
     return tokendb.getInternalKeyToken();

@@ -5,7 +5,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "HomeProvider" ];
+var EXPORTED_SYMBOLS = [ "HomeProvider" ];
 
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
@@ -119,18 +119,18 @@ function syncTimerCallback(timer) {
   }
 }
 
-this.HomeStorage = function(datasetId) {
+var HomeStorage = function(datasetId) {
   this.datasetId = datasetId;
 };
 
-this.ValidationError = function(message) {
+var ValidationError = function(message) {
   this.name = "ValidationError";
   this.message = message;
 };
 ValidationError.prototype = new Error();
 ValidationError.prototype.constructor = ValidationError;
 
-this.HomeProvider = Object.freeze({
+var HomeProvider = Object.freeze({
   ValidationError: ValidationError,
 
   /**

@@ -7,7 +7,7 @@
 #ifndef _xpc_WRAPPERFACTORY_H
 #define _xpc_WRAPPERFACTORY_H
 
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 
 namespace xpc {
 

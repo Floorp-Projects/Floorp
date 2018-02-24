@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ChromeMigrationUtils"];
+var EXPORTED_SYMBOLS = ["ChromeMigrationUtils"];
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
@@ -11,7 +11,7 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-this.ChromeMigrationUtils = {
+var ChromeMigrationUtils = {
   _chromeUserDataPath: null,
 
   _extensionVersionDirectoryNames: {},

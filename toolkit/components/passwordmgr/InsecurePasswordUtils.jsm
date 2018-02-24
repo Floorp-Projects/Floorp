@@ -5,7 +5,7 @@
 /* ownerGlobal doesn't exist in content privileged windows. */
 /* eslint-disable mozilla/use-ownerGlobal */
 
-this.EXPORTED_SYMBOLS = [ "InsecurePasswordUtils" ];
+var EXPORTED_SYMBOLS = [ "InsecurePasswordUtils" ];
 
 const STRINGS_URI = "chrome://global/locale/security/security.properties";
 
@@ -29,7 +29,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
  * A module that provides utility functions for form security.
  *
  */
-this.InsecurePasswordUtils = {
+var InsecurePasswordUtils = {
   _formRootsWarned: new WeakMap(),
 
   /**

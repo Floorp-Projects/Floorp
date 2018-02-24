@@ -236,8 +236,9 @@ bool OpenTypeGDEF::Parse(const uint8_t *data, size_t length) {
     return Error("Bad version");
   }
 
+  bool version_2 = false;
   if (version >= 0x00010002) {
-    this->version_2 = true;
+    version_2 = true;
   }
 
   uint16_t offset_glyph_class_def = 0;
@@ -251,14 +252,14 @@ bool OpenTypeGDEF::Parse(const uint8_t *data, size_t length) {
     return Error("Incomplete table");
   }
   uint16_t offset_mark_glyph_sets_def = 0;
-  if (this->version_2) {
+  if (version_2) {
     if (!table.ReadU16(&offset_mark_glyph_sets_def)) {
       return Error("Incomplete table");
     }
   }
 
   unsigned gdef_header_end = 4 + 4 * 2;
-  if (this->version_2)
+  if (version_2)
     gdef_header_end += 2;
 
   // Parse subtables
@@ -272,7 +273,6 @@ bool OpenTypeGDEF::Parse(const uint8_t *data, size_t length) {
                                  this->m_num_glyphs, kMaxGlyphClassDefValue)) {
       return Error("Invalid glyph classes");
     }
-    this->has_glyph_class_def = true;
   }
 
   if (offset_attach_list) {
@@ -308,7 +308,6 @@ bool OpenTypeGDEF::Parse(const uint8_t *data, size_t length) {
                                  this->m_num_glyphs, kMaxClassDefValue)) {
       return Error("Invalid mark attachment list");
     }
-    this->has_mark_attachment_class_def = true;
   }
 
   if (offset_mark_glyph_sets_def) {
@@ -320,7 +319,6 @@ bool OpenTypeGDEF::Parse(const uint8_t *data, size_t length) {
                                     length - offset_mark_glyph_sets_def)) {
       return Error("Invalid mark glyph sets");
     }
-    this->has_mark_glyph_sets_def = true;
   }
   this->m_data = data;
   this->m_length = length;

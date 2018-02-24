@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["Async"];
+var EXPORTED_SYMBOLS = ["Async"];
 
 // Constants for makeSyncCallback, waitForSyncCallback.
 const CB_READY = {};
@@ -17,7 +17,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 /*
  * Helpers for various async operations.
  */
-this.Async = {
+var Async = {
 
   /**
    * Execute an arbitrary number of asynchronous functions one after the

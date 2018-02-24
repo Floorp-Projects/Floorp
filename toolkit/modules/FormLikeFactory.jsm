@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["FormLikeFactory"];
+var EXPORTED_SYMBOLS = ["FormLikeFactory"];
 
 /**
  * A factory to generate FormLike objects that represent a set of related fields

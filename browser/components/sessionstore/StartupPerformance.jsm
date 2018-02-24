@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["StartupPerformance"];
+var EXPORTED_SYMBOLS = ["StartupPerformance"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
@@ -21,7 +21,7 @@ const COLLECT_RESULTS_AFTER_MS = 10000;
 
 const OBSERVED_TOPICS = ["sessionstore-restoring-on-startup", "sessionstore-initiating-manual-restore"];
 
-this.StartupPerformance = {
+var StartupPerformance = {
   /**
    * Once we have finished restoring initial tabs, we broadcast on this topic.
    */

@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "Panel",
 ];
 
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-this.Panel = function(panelElt, iframeURL) {
+var Panel = function(panelElt, iframeURL) {
   this.p = panelElt;
   this.iframeURL = iframeURL;
   this._initPanel();

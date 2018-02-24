@@ -14,11 +14,11 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EndianUtils.h"
 
-#include "jsbytecode.h"
 #include "jstypes.h"
 #include "NamespaceImports.h"
 
 #include "frontend/SourceNotes.h"
+#include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
 #include "vm/Opcodes.h"
 #include "vm/Printer.h"

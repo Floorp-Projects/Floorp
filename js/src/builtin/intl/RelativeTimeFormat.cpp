@@ -47,7 +47,6 @@ const Class RelativeTimeFormatObject::class_ = {
     &RelativeTimeFormatObject::classOps_
 };
 
-#if JS_HAS_TOSOURCE
 static bool
 relativeTimeFormat_toSource(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -55,7 +54,6 @@ relativeTimeFormat_toSource(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setString(cx->names().RelativeTimeFormat);
     return true;
 }
-#endif
 
 static const JSFunctionSpec relativeTimeFormat_static_methods[] = {
     JS_SELF_HOSTED_FN("supportedLocalesOf", "Intl_RelativeTimeFormat_supportedLocalesOf", 1, 0),
@@ -65,9 +63,7 @@ static const JSFunctionSpec relativeTimeFormat_static_methods[] = {
 static const JSFunctionSpec relativeTimeFormat_methods[] = {
     JS_SELF_HOSTED_FN("resolvedOptions", "Intl_RelativeTimeFormat_resolvedOptions", 0, 0),
     JS_SELF_HOSTED_FN("format", "Intl_RelativeTimeFormat_format", 2, 0),
-#if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, relativeTimeFormat_toSource, 0, 0),
-#endif
     JS_FS_END
 };
 

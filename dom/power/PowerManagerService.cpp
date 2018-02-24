@@ -10,7 +10,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "jsprf.h"
 #include "nsIDOMWakeLockListener.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"

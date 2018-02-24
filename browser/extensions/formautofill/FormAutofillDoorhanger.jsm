@@ -11,7 +11,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["FormAutofillDoorhanger"];
+var EXPORTED_SYMBOLS = ["FormAutofillDoorhanger"];
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -19,7 +19,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
 this.log = null;
-FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
+FormAutofillUtils.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 const GetStringFromName = FormAutofillUtils.stringBundle.GetStringFromName;
 const formatStringFromName = FormAutofillUtils.stringBundle.formatStringFromName;

@@ -12,13 +12,13 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "ContentTaskUtils",
 ];
 
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-this.ContentTaskUtils = {
+var ContentTaskUtils = {
   /**
    * Will poll a condition function until it returns true.
    *

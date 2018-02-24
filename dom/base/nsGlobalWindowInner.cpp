@@ -66,7 +66,7 @@
 // Helper Classes
 #include "nsJSUtils.h"
 #include "jsapi.h"              // for JSAutoRequest
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"

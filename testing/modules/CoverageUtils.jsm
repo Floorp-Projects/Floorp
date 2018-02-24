@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "CoverageCollector",
 ];
 
@@ -16,7 +16,7 @@ addDebuggerToGlobal(Cu.getGlobalForObject(this));
 /**
  * Records coverage for each test by way of the js debugger.
  */
-this.CoverageCollector = function(prefix) {
+var CoverageCollector = function(prefix) {
   this._prefix = prefix;
   this._dbg = new Debugger();
   this._dbg.collectCoverageInfo = true;

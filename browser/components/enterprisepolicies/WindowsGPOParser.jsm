@@ -19,9 +19,9 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   });
 });
 
-this.EXPORTED_SYMBOLS = ["WindowsGPOParser"];
+var EXPORTED_SYMBOLS = ["WindowsGPOParser"];
 
-this.WindowsGPOParser = {
+var WindowsGPOParser = {
   readPolicies(wrk, policies) {
     let childWrk = wrk.openChild("Mozilla\\Firefox", wrk.ACCESS_READ);
     if (!policies) {

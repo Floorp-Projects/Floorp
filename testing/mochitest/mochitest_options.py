@@ -879,13 +879,6 @@ class AndroidArguments(ArgumentContainer):
           "default": 20701,
           "help": "port of remote device to test",
           }],
-        [["--remote-product-name"],
-         {"dest": "remoteProductName",
-          "default": "fennec",
-          "help": "The executable's name of remote product to test - either \
-                   fennec or firefox, defaults to fennec",
-          "suppress": True,
-          }],
         [["--remote-logfile"],
          {"dest": "remoteLogFile",
           "default": None,

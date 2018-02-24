@@ -7,9 +7,8 @@
 #ifndef vm_MatchPairs_h
 #define vm_MatchPairs_h
 
-#include "jsalloc.h"
-
 #include "ds/LifoAlloc.h"
+#include "js/AllocPolicy.h"
 #include "js/Vector.h"
 
 /*

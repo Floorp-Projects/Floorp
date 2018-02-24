@@ -38,7 +38,7 @@ const USER_PREFS_ENCODING = {
 const PREF_IMPRESSION_ID = "impressionId";
 const TELEMETRY_PREF = "telemetry";
 
-this.TelemetryFeed = class TelemetryFeed {
+var TelemetryFeed = class TelemetryFeed {
   constructor(options) {
     this.sessions = new Map();
     this._prefs = new Prefs();
@@ -457,7 +457,7 @@ this.TelemetryFeed = class TelemetryFeed {
   }
 };
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "TelemetryFeed",
   "USER_PREFS_ENCODING",
   "PREF_IMPRESSION_ID",

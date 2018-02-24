@@ -8,7 +8,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "ObjectUtils"
 ];
 
@@ -18,7 +18,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 var pSlice = Array.prototype.slice;
 
-this.ObjectUtils = {
+var ObjectUtils = {
   /**
    * This tests objects & values for deep equality.
    *

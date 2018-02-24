@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "TelemetryUtils"
 ];
 
@@ -22,7 +22,7 @@ const IS_CONTENT_PROCESS = (function() {
   return runtime.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
 })();
 
-this.TelemetryUtils = {
+var TelemetryUtils = {
   Preferences: Object.freeze({
     // General Preferences
     ArchiveEnabled: "toolkit.telemetry.archive.enabled",

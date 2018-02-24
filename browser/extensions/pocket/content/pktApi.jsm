@@ -43,7 +43,7 @@
  */
 
 const Cm = Components.manager;
-this.EXPORTED_SYMBOLS = ["pktApi"];
+var EXPORTED_SYMBOLS = ["pktApi"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

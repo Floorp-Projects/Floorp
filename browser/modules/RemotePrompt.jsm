@@ -5,7 +5,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "RemotePrompt" ];
+var EXPORTED_SYMBOLS = [ "RemotePrompt" ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

@@ -35,7 +35,7 @@ function md5Hash(text) {
 /**
  * Filter out any link objects that have a url with an adult base domain.
  */
-this.filterAdult = function filterAdult(links) {
+function filterAdult(links) {
   return links.filter(({url}) => {
     try {
       const uri = Services.io.newURI(url);
@@ -44,9 +44,9 @@ this.filterAdult = function filterAdult(links) {
       return true;
     }
   });
-};
+}
 
-this.EXPORTED_SYMBOLS = ["filterAdult"];
+var EXPORTED_SYMBOLS = ["filterAdult"];
 
 // These are md5 hashes of base domains to be filtered out. Originally from:
 // https://hg.mozilla.org/mozilla-central/log/default/browser/base/content/newtab/newTab.inadjacent.json

@@ -1,7 +1,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["MockRegistry"];
+var EXPORTED_SYMBOLS = ["MockRegistry"];
 
 ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

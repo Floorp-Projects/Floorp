@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["LaterRun"];
+var EXPORTED_SYMBOLS = ["LaterRun"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 

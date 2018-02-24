@@ -209,10 +209,11 @@ BROTLI_ENC_API BROTLI_BOOL BrotliEncoderSetParameter(
  *
  * @p alloc_func and @p free_func @b MUST be both zero or both non-zero. In the
  * case they are both zero, default memory allocators are used. @p opaque is
- * passed to @p alloc_func and @p free_func when they are called.
+ * passed to @p alloc_func and @p free_func when they are called. @p free_func
+ * should return without doing anything when asked to free a NULL pointer.
  *
  * @param alloc_func custom memory allocation function
- * @param free_func custom memory fee function
+ * @param free_func custom memory free function
  * @param opaque custom memory manager handle
  * @returns @c 0 if instance can not be allocated or initialized
  * @returns pointer to initialized ::BrotliEncoderState otherwise
@@ -283,7 +284,7 @@ BROTLI_ENC_API BROTLI_BOOL BrotliEncoderCompress(
  * that amount.
  *
  * @p total_out, if it is not a null-pointer, will be set to the number
- * of bytes decompressed since the last @p state initialization.
+ * of bytes compressed since the last @p state initialization.
  *
  *
  *

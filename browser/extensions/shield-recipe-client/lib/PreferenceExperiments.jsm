@@ -62,7 +62,7 @@ ChromeUtils.defineModuleGetter(this, "LogManager", "resource://shield-recipe-cli
 ChromeUtils.defineModuleGetter(this, "TelemetryEnvironment", "resource://gre/modules/TelemetryEnvironment.jsm");
 ChromeUtils.defineModuleGetter(this, "TelemetryEvents", "resource://shield-recipe-client/lib/TelemetryEvents.jsm");
 
-this.EXPORTED_SYMBOLS = ["PreferenceExperiments"];
+var EXPORTED_SYMBOLS = ["PreferenceExperiments"];
 
 const EXPERIMENT_FILE = "shield-preference-experiments.json";
 const STARTUP_EXPERIMENT_PREFS_BRANCH = "extensions.shield-recipe-client.startupExperimentPrefs.";
@@ -149,7 +149,7 @@ function setPref(prefBranch, prefName, prefType, prefValue) {
   }
 }
 
-this.PreferenceExperiments = {
+var PreferenceExperiments = {
   /**
    * Update the the experiment storage with changes that happened during early startup.
    * @param {object} studyPrefsChanged Map from pref name to previous pref value

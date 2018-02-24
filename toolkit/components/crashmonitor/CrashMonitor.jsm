@@ -31,7 +31,7 @@
  * does not necessarily tell us that the checkpoint wasn't reached.
  */
 
-this.EXPORTED_SYMBOLS = [ "CrashMonitor" ];
+var EXPORTED_SYMBOLS = [ "CrashMonitor" ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
@@ -126,7 +126,7 @@ var CrashMonitorInternal = {
   }
 };
 
-this.CrashMonitor = {
+var CrashMonitor = {
 
   /**
    * Notifications received during previous session.

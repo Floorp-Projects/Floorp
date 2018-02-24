@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["SearchSuggestionController"];
+var EXPORTED_SYMBOLS = ["SearchSuggestionController"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -42,9 +42,9 @@ Services.prefs.addObserver(BROWSER_SUGGEST_PREF, function(aSubject, aTopic, aDat
  *                                returned by the search method instead if you prefer.
  * @constructor
  */
-this.SearchSuggestionController = function SearchSuggestionController(callback = null) {
+function SearchSuggestionController(callback = null) {
   this._callback = callback;
-};
+}
 
 this.SearchSuggestionController.prototype = {
   /**

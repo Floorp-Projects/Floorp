@@ -11,7 +11,6 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "jsalloc.h"
 #include "jsfriendapi.h"
 #include "jstypes.h"
 
@@ -19,6 +18,7 @@
 #include "ds/LifoAlloc.h"
 #include "gc/Barrier.h"
 #include "jit/IonTypes.h"
+#include "js/AllocPolicy.h"
 #include "js/UbiNode.h"
 #include "js/Utility.h"
 #include "js/Vector.h"

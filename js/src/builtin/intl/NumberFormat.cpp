@@ -57,7 +57,6 @@ const Class NumberFormatObject::class_ = {
     &NumberFormatObject::classOps_
 };
 
-#if JS_HAS_TOSOURCE
 static bool
 numberFormat_toSource(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -65,7 +64,6 @@ numberFormat_toSource(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setString(cx->names().NumberFormat);
     return true;
 }
-#endif
 
 static const JSFunctionSpec numberFormat_static_methods[] = {
     JS_SELF_HOSTED_FN("supportedLocalesOf", "Intl_NumberFormat_supportedLocalesOf", 1, 0),
@@ -75,9 +73,7 @@ static const JSFunctionSpec numberFormat_static_methods[] = {
 static const JSFunctionSpec numberFormat_methods[] = {
     JS_SELF_HOSTED_FN("resolvedOptions", "Intl_NumberFormat_resolvedOptions", 0, 0),
     JS_SELF_HOSTED_FN("formatToParts", "Intl_NumberFormat_formatToParts", 1, 0),
-#if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, numberFormat_toSource, 0, 0),
-#endif
     JS_FS_END
 };
 

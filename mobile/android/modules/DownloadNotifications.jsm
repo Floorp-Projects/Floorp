@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["DownloadNotifications"];
+var EXPORTED_SYMBOLS = ["DownloadNotifications"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

@@ -21,9 +21,8 @@
 
 #include "mozilla/Poison.h"
 
-#include "jsprf.h"
-
 #include "jit/AtomicOp.h"
+#include "js/Printf.h"
 #include "wasm/WasmValidate.h"
 
 namespace js {

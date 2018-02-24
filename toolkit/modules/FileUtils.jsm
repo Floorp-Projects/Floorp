@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = [ "FileUtils" ];
+var EXPORTED_SYMBOLS = [ "FileUtils" ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gDirService",
                                    "@mozilla.org/file/directory_service;1",
                                    "nsIProperties");
 
-this.FileUtils = {
+var FileUtils = {
   MODE_RDONLY: 0x01,
   MODE_WRONLY: 0x02,
   MODE_RDWR: 0x04,

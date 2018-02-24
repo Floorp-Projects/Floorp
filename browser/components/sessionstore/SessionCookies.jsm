@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["SessionCookies"];
+var EXPORTED_SYMBOLS = ["SessionCookies"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
@@ -19,7 +19,7 @@ const MAX_EXPIRY = Number.MAX_SAFE_INTEGER;
 /**
  * The external API implemented by the SessionCookies module.
  */
-this.SessionCookies = Object.freeze({
+var SessionCookies = Object.freeze({
   collect() {
     return SessionCookiesInternal.collect();
   },

@@ -9,7 +9,6 @@
 
 #include "mozilla/EnumeratedArray.h"
 
-#include "jsbytecode.h"
 #include "jstypes.h"
 
 #include "jit/JitOptions.h"

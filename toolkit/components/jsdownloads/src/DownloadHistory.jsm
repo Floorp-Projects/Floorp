@@ -13,7 +13,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "DownloadHistory",
 ];
 
@@ -47,7 +47,7 @@ const METADATA_STATE_DIRTY = 8;
  * Provides methods to retrieve downloads from previous sessions and store
  * downloads for future sessions.
  */
-this.DownloadHistory = {
+var DownloadHistory = {
   /**
    * Retrieves the main DownloadHistoryList object which provides a unified view
    * on downloads from both previous browsing sessions and this session.
@@ -408,7 +408,7 @@ DownloadSlot.prototype = {
  * @param place
  *        Places query used to retrieve history downloads.
  */
-this.DownloadHistoryList = function(publicList, place) {
+var DownloadHistoryList = function(publicList, place) {
   DownloadList.call(this);
 
   // While "this._slots" contains all the data in order, the other properties

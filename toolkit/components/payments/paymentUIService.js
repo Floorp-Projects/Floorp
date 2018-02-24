@@ -80,7 +80,13 @@ PaymentUIService.prototype = {
   },
 
   updatePayment(requestId) {
+    let dialog = this.findDialog(requestId);
     this.log.debug("updatePayment:", requestId);
+    if (!dialog) {
+      this.log.error("updatePayment: no dialog found");
+      return;
+    }
+    dialog.paymentDialogWrapper.updateRequest();
   },
 
   // other helper methods
@@ -90,17 +96,25 @@ PaymentUIService.prototype = {
    * @returns {boolean} whether the specified dialog was closed.
    */
   closeDialog(requestId) {
+    let win = this.findDialog(requestId);
+    if (!win) {
+      return false;
+    }
+    this.log.debug(`closing: ${win.name}`);
+    win.close();
+    return true;
+  },
+
+  findDialog(requestId) {
     let enu = Services.wm.getEnumerator(null);
     let win;
     while ((win = enu.getNext())) {
       if (win.name == `${this.REQUEST_ID_PREFIX}${requestId}`) {
-        this.log.debug(`closing: ${win.name}`);
-        win.close();
-        return true;
+        return win;
       }
     }
 
-    return false;
+    return null;
   },
 
   requestIdForWindow(window) {

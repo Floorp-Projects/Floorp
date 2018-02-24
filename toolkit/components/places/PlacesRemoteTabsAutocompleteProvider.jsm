@@ -9,7 +9,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["PlacesRemoteTabsAutocompleteProvider"];
+var EXPORTED_SYMBOLS = ["PlacesRemoteTabsAutocompleteProvider"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -115,7 +115,7 @@ Services.prefs.addObserver(PREF_SHOW_REMOTE_ICONS, observe);
 observe(null, "nsPref:changed", PREF_SHOW_REMOTE_ICONS);
 
 // This public object is a static singleton.
-this.PlacesRemoteTabsAutocompleteProvider = {
+var PlacesRemoteTabsAutocompleteProvider = {
   // a promise that resolves with an array of matching remote tabs.
   getMatches(searchString) {
     // If Sync isn't configured we bail early.

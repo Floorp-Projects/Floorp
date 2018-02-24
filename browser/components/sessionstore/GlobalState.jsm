@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["GlobalState"];
+var EXPORTED_SYMBOLS = ["GlobalState"];
 
 const EXPORTED_METHODS = ["getState", "clear", "get", "set", "delete", "setFromState"];
 /**

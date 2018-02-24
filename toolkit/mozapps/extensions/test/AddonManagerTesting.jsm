@@ -7,7 +7,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "AddonManagerTesting",
 ];
 
@@ -16,7 +16,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
 
-this.AddonManagerTesting = {
+var AddonManagerTesting = {
   /**
    * Get the add-on that is specified by its ID.
    *

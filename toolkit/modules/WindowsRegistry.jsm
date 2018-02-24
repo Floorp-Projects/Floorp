@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["WindowsRegistry"];
+var EXPORTED_SYMBOLS = ["WindowsRegistry"];
 
 var WindowsRegistry = {
   /**

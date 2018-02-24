@@ -28,7 +28,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "DownloadStore",
 ];
 
@@ -56,7 +56,7 @@ XPCOMUtils.defineLazyGetter(this, "gTextEncoder", function() {
  * @param aPath
  *        String containing the file path where data should be saved.
  */
-this.DownloadStore = function(aList, aPath) {
+var DownloadStore = function(aList, aPath) {
   this.list = aList;
   this.path = aPath;
 };

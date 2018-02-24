@@ -5,7 +5,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["MulticastDNS"];
+var EXPORTED_SYMBOLS = ["MulticastDNS"];
 
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

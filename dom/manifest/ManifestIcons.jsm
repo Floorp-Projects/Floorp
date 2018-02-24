@@ -8,7 +8,7 @@ const {
 
 ChromeUtils.import("resource://gre/modules/PromiseMessage.jsm");
 
-this.ManifestIcons = {
+var ManifestIcons = {
 
   async browserFetchIcon(aBrowser, manifest, iconSize) {
     const msgKey = "DOM:WebManifest:fetchIcon";
@@ -82,4 +82,4 @@ async function fetchIcon(aWindow, src) {
     }));
 }
 
-this.EXPORTED_SYMBOLS = ["ManifestIcons"]; // jshint ignore:line
+var EXPORTED_SYMBOLS = ["ManifestIcons"]; // jshint ignore:line

@@ -20,7 +20,7 @@
 #include "nsISupports.h"
 #include "nsISupportsImpl.h"
 #include "nsCycleCollectionParticipant.h"
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HoldDropJSObjects.h"

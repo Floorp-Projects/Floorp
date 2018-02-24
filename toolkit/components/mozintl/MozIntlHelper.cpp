@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MozIntlHelper.h"
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 #include "mozilla/ModuleUtils.h"
 
 #define MOZ_MOZINTLHELPER_CID \

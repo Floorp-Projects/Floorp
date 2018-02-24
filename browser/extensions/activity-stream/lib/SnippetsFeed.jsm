@@ -29,7 +29,7 @@ const STARTPAGE_VERSION = 5;
 
 const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
 
-this.SnippetsFeed = class SnippetsFeed {
+var SnippetsFeed = class SnippetsFeed {
   constructor() {
     this._refresh = this._refresh.bind(this);
   }
@@ -148,4 +148,4 @@ this.SnippetsFeed = class SnippetsFeed {
   }
 };
 
-this.EXPORTED_SYMBOLS = ["SnippetsFeed"];
+var EXPORTED_SYMBOLS = ["SnippetsFeed"];

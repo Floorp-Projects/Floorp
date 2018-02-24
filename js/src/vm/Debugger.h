@@ -14,8 +14,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Vector.h"
 
-#include "jswrapper.h"
-
 #include "builtin/Promise.h"
 #include "ds/TraceableFifo.h"
 #include "gc/Barrier.h"
@@ -23,6 +21,7 @@
 #include "js/Debug.h"
 #include "js/GCVariant.h"
 #include "js/HashTable.h"
+#include "js/Wrapper.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"

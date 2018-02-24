@@ -6,7 +6,7 @@
 
 'use strict';
 
-this.EXPORTED_SYMBOLS = ['DNSRecord'];
+var EXPORTED_SYMBOLS = ['DNSRecord'];
 
 ChromeUtils.import('resource://gre/modules/DataWriter.jsm');
 ChromeUtils.import('resource://gre/modules/DNSTypes.jsm');

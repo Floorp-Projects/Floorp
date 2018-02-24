@@ -9,8 +9,6 @@
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/Sprintf.h"
 
-#include "jsprf.h"
-
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"

@@ -27,7 +27,7 @@ const HIGHLIGHTS_MAX_LENGTH = 9;
 const MANY_EXTRA_LENGTH = HIGHLIGHTS_MAX_LENGTH * 5 + TOP_SITES_DEFAULT_ROWS * TOP_SITES_MAX_SITES_PER_ROW;
 const SECTION_ID = "highlights";
 
-this.HighlightsFeed = class HighlightsFeed {
+var HighlightsFeed = class HighlightsFeed {
   constructor() {
     this.dedupe = new Dedupe(this._dedupeKey);
     this.linksCache = new LinksCache(NewTabUtils.activityStreamLinks,
@@ -181,4 +181,4 @@ this.HighlightsFeed = class HighlightsFeed {
   }
 };
 
-this.EXPORTED_SYMBOLS = ["HighlightsFeed", "SECTION_ID"];
+var EXPORTED_SYMBOLS = ["HighlightsFeed", "SECTION_ID"];

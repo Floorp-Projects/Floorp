@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["PromiseMessage"];
+var EXPORTED_SYMBOLS = ["PromiseMessage"];
 
 var msgId = 0;
 

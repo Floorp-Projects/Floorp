@@ -14,7 +14,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "MigrationUtils", "resource:///modules/MigrationUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "ProfileAge", "resource://gre/modules/ProfileAge.jsm");
 
-this.ManualMigration = class ManualMigration {
+var ManualMigration = class ManualMigration {
   constructor() {
     Services.obs.addObserver(this, MIGRATION_ENDED_EVENT);
     this._prefs = new Prefs();
@@ -96,4 +96,4 @@ this.ManualMigration = class ManualMigration {
   }
 };
 
-this.EXPORTED_SYMBOLS = ["ManualMigration"];
+var EXPORTED_SYMBOLS = ["ManualMigration"];

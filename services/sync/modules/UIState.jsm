@@ -14,7 +14,7 @@
  * @property {boolean} [syncing] Whether or not we are currently syncing.
  */
 
-this.EXPORTED_SYMBOLS = ["UIState"];
+var EXPORTED_SYMBOLS = ["UIState"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -241,7 +241,7 @@ for (let topic of TOPICS) {
   Services.obs.addObserver(UIStateInternal, topic);
 }
 
-this.UIState = {
+var UIState = {
   _internal: UIStateInternal,
 
   ON_UPDATE,

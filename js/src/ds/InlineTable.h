@@ -9,8 +9,7 @@
 
 #include "mozilla/Move.h"
 
-#include "jsalloc.h"
-
+#include "js/AllocPolicy.h"
 #include "js/HashTable.h"
 
 namespace js {

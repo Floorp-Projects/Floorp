@@ -1,10 +1,10 @@
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["webrequest_test"];
+var EXPORTED_SYMBOLS = ["webrequest_test"];
 
 Components.utils.importGlobalProperties(["fetch", "XMLHttpRequest"]);
 
-this.webrequest_test = {
+var webrequest_test = {
   testFetch(url) {
     return fetch(url);
   },

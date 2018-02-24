@@ -7,7 +7,7 @@
 /* Manage the shared info about interfaces for use by wrappedNatives. */
 
 #include "xpcprivate.h"
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/XPTInterfaceInfoManager.h"

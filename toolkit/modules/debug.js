@@ -8,7 +8,7 @@
 // This file contains functions that are useful for debugging purposes from
 // within JavaScript code.
 
-this.EXPORTED_SYMBOLS = ["NS_ASSERT"];
+var EXPORTED_SYMBOLS = ["NS_ASSERT"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
@@ -33,7 +33,7 @@ var gTraceOnAssert = false;
  * @param message   a string to be displayed upon failure of the assertion
  */
 
-this.NS_ASSERT = function NS_ASSERT(condition, message) {
+function NS_ASSERT(condition, message) {
   if (condition)
     return;
 
@@ -79,4 +79,4 @@ this.NS_ASSERT = function NS_ASSERT(condition, message) {
   }
 
   dump(assertionText + stackText);
-};
+}

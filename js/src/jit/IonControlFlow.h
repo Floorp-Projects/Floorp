@@ -9,8 +9,6 @@
 
 #include "mozilla/Array.h"
 
-#include "jsbytecode.h"
-
 #include "jit/BytecodeAnalysis.h"
 #include "jit/FixedList.h"
 #include "jit/JitAllocPolicy.h"

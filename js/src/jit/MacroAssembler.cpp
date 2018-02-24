@@ -10,7 +10,6 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "jsfriendapi.h"
-#include "jsprf.h"
 
 #include "builtin/TypedObject.h"
 #include "gc/GCTrace.h"
@@ -23,6 +22,7 @@
 #include "jit/Lowering.h"
 #include "jit/MIR.h"
 #include "js/Conversions.h"
+#include "js/Printf.h"
 #include "vm/TraceLogging.h"
 
 #include "gc/Nursery-inl.h"

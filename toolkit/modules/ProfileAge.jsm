@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ProfileAge"];
+var EXPORTED_SYMBOLS = ["ProfileAge"];
 
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
@@ -15,7 +15,7 @@ ChromeUtils.import("resource://services-common/utils.js");
  * This is separate from the provider to simplify testing and enable extraction
  * to a shared location in the future.
  */
-this.ProfileAge = function(profile, log) {
+var ProfileAge = function(profile, log) {
   this.profilePath = profile || OS.Constants.Path.profileDir;
   if (!this.profilePath) {
     throw new Error("No profile directory.");

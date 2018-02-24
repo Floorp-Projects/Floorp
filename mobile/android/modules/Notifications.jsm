@@ -6,7 +6,7 @@
 
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 
-this.EXPORTED_SYMBOLS = ["Notifications"];
+var EXPORTED_SYMBOLS = ["Notifications"];
 
 var _notificationsMap = {};
 var _handlersMap = {};

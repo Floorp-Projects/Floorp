@@ -90,4 +90,4 @@ class UAOverrider {
   }
 }
 
-this.EXPORTED_SYMBOLS = ["UAOverrider"]; /* exported UAOverrider */
+var EXPORTED_SYMBOLS = ["UAOverrider"]; /* exported UAOverrider */

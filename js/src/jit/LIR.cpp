@@ -10,11 +10,10 @@
 
 #include <ctype.h>
 
-#include "jsprf.h"
-
 #include "jit/JitSpewer.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
+#include "js/Printf.h"
 
 using namespace js;
 using namespace js::jit;

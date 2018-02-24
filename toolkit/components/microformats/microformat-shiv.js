@@ -4520,4 +4520,4 @@ try {
     // mozilla jsm support
     Components.utils.importGlobalProperties(["URL"]);
 } catch (e) {}
-this.EXPORTED_SYMBOLS = ["Microformats"];
+var EXPORTED_SYMBOLS = ["Microformats"];

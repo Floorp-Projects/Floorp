@@ -12,7 +12,7 @@
  * the user's profile in open browser tabs, and cacheing/invalidating profile data.
  */
 
-this.EXPORTED_SYMBOLS = ["FxAccountsProfile"];
+var EXPORTED_SYMBOLS = ["FxAccountsProfile"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -22,7 +22,7 @@ ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
 ChromeUtils.defineModuleGetter(this, "FxAccountsProfileClient",
   "resource://gre/modules/FxAccountsProfileClient.jsm");
 
-this.FxAccountsProfile = function(options = {}) {
+var FxAccountsProfile = function(options = {}) {
   this._currentFetchPromise = null;
   this._cachedAt = 0; // when we saved the cached version.
   this._isNotifying = false; // are we sending a notification?

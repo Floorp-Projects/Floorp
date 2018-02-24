@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "Sqlite",
 ];
 
@@ -1455,7 +1455,7 @@ OpenedConnection.prototype = Object.freeze({
   },
 });
 
-this.Sqlite = {
+var Sqlite = {
   openConnection,
   cloneStorageConnection,
   wrapStorageConnection,

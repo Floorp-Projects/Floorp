@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ResetProfile"];
+var EXPORTED_SYMBOLS = ["ResetProfile"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
@@ -12,7 +12,7 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const MOZ_APP_NAME = AppConstants.MOZ_APP_NAME;
 const MOZ_BUILD_APP = AppConstants.MOZ_BUILD_APP;
 
-this.ResetProfile = {
+var ResetProfile = {
   /**
    * Check if reset is supported for the currently running profile.
    *

@@ -7,8 +7,8 @@
 #ifndef __AccessCheck_h__
 #define __AccessCheck_h__
 
-#include "jswrapper.h"
 #include "js/Id.h"
+#include "js/Wrapper.h"
 #include "nsString.h"
 
 class nsIPrincipal;

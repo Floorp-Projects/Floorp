@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["NativeManifests"];
+var EXPORTED_SYMBOLS = ["NativeManifests"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -30,7 +30,7 @@ const NATIVE_MANIFEST_SCHEMA = "chrome://extensions/content/schemas/native_manif
 
 const REGPATH = "Software\\Mozilla";
 
-this.NativeManifests = {
+var NativeManifests = {
   _initializePromise: null,
   _lookup: null,
 

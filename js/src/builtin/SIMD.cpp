@@ -21,7 +21,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jsnum.h"
-#include "jsprf.h"
 
 #include "builtin/TypedObject.h"
 #include "jit/AtomicOperations.h"
