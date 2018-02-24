@@ -1,5 +1,0 @@
-v=0
-o=- 4294967296 2 IN IP4 127.0.0.1
-s=SIP Call
-t=0 0
-a=ice-lite
