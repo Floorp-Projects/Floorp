@@ -1577,7 +1577,6 @@ public:
   mozilla::TextEditor* GetTextEditorInternal();
 
   /**
-   * Helper method for NS_IMPL_BOOL_ATTR macro.
    * Gets value of boolean attribute. Only works for attributes in null
    * namespace.
    *
@@ -1590,7 +1589,6 @@ public:
   }
 
   /**
-   * Helper method for NS_IMPL_BOOL_ATTR macro.
    * Sets value of boolean attribute by removing attribute or setting it to
    * the empty string. Only works for attributes in null namespace.
    *
@@ -1600,7 +1598,6 @@ public:
   nsresult SetBoolAttr(nsAtom* aAttr, bool aValue);
 
   /**
-   * Helper method for NS_IMPL_ENUM_ATTR_DEFAULT_VALUE.
    * Gets the enum value string of an attribute and using a default value if
    * the attribute is missing or the string is an invalid enum value.
    *
@@ -1613,7 +1610,6 @@ public:
                    nsAString& aResult) const;
 
   /**
-   * Helper method for NS_IMPL_ENUM_ATTR_DEFAULT_MISSING_INVALID_VALUES.
    * Gets the enum value string of an attribute and using the default missing
    * value if the attribute is missing or the default invalid value if the
    * string is an invalid enum value.
@@ -2157,43 +2153,5 @@ _elementName::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,   \
   NS_IMPL_ELEMENT_CLONE_WITH_INIT_HELPER(_elementName, ())
 #define NS_IMPL_ELEMENT_CLONE_WITH_INIT_AND_PARSER(_elementName) \
   NS_IMPL_ELEMENT_CLONE_WITH_INIT_HELPER(_elementName, (, NOT_FROM_PARSER))
-
-/**
- * A macro to implement the getter and setter for a given string
- * valued content property. The method uses the generic GetAttr and
- * SetAttr methods.  We use the 5-argument form of SetAttr, because
- * some consumers only implement that one, hiding superclass
- * 4-argument forms.
- */
-#define NS_IMPL_STRING_ATTR(_class, _method, _atom)                     \
-  NS_IMETHODIMP                                                         \
-  _class::Get##_method(nsAString& aValue)                               \
-  {                                                                     \
-    GetAttr(kNameSpaceID_None, nsGkAtoms::_atom, aValue);               \
-    return NS_OK;                                                       \
-  }                                                                     \
-  NS_IMETHODIMP                                                         \
-  _class::Set##_method(const nsAString& aValue)                         \
-  {                                                                     \
-    return SetAttr(kNameSpaceID_None, nsGkAtoms::_atom, nullptr, aValue, true); \
-  }
-
-/**
- * A macro to implement the getter and setter for a given boolean
- * valued content property. The method uses the GetBoolAttr and
- * SetBoolAttr methods.
- */
-#define NS_IMPL_BOOL_ATTR(_class, _method, _atom)                     \
-  NS_IMETHODIMP                                                       \
-  _class::Get##_method(bool* aValue)                                  \
-  {                                                                   \
-    *aValue = GetBoolAttr(nsGkAtoms::_atom);                          \
-    return NS_OK;                                                     \
-  }                                                                   \
-  NS_IMETHODIMP                                                       \
-  _class::Set##_method(bool aValue)                                   \
-  {                                                                   \
-    return SetBoolAttr(nsGkAtoms::_atom, aValue);                     \
-  }
 
 #endif // mozilla_dom_Element_h__
