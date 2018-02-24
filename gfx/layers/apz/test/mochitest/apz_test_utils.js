@@ -232,7 +232,20 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         if (test.onload) {
           w.addEventListener('load', function(e) { test.onload(w); }, { once: true });
         }
-        w.location = location.href.substring(0, location.href.lastIndexOf('/') + 1) + aFile;
+        var subtestUrl = location.href.substring(0, location.href.lastIndexOf('/') + 1) + aFile;
+        function urlResolves(url) {
+          var request = new XMLHttpRequest();
+          request.open('GET', url, false);
+          request.send();
+          return request.status !== 404;
+        }
+        if (!urlResolves(subtestUrl)) {
+          SimpleTest.ok(false, "Subtest URL " + subtestUrl + " does not resolve. " +
+              "Be sure it's present in the support-files section of mochitest.ini.");
+          reject();
+          return;
+        }
+        w.location = subtestUrl;
         return w;
       }
 
