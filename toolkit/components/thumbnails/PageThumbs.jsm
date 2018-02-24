@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["PageThumbs", "PageThumbsStorage"];
+var EXPORTED_SYMBOLS = ["PageThumbs", "PageThumbsStorage"];
 
 const PREF_STORAGE_VERSION = "browser.pagethumbnails.storage_version";
 const LATEST_STORAGE_VERSION = 3;
@@ -80,7 +80,7 @@ const TaskUtils = {
  * Singleton providing functionality for capturing web page thumbnails and for
  * accessing them if already cached.
  */
-this.PageThumbs = {
+var PageThumbs = {
   _initialized: false,
 
   /**
@@ -494,7 +494,7 @@ this.PageThumbs = {
   },
 };
 
-this.PageThumbsStorage = {
+var PageThumbsStorage = {
 
   ensurePath: function Storage_ensurePath() {
     // Create the directory (ignore any error if the directory

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = [ "ZipUtils" ];
+var EXPORTED_SYMBOLS = [ "ZipUtils" ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -82,7 +82,7 @@ function saveStreamAsync(aPath, aStream, aFile) {
 }
 
 
-this.ZipUtils = {
+var ZipUtils = {
 
   /**
    * Asynchronously extracts files from a ZIP file into a directory.

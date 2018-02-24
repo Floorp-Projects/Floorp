@@ -1,6 +1,6 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-this.EXPORTED_SYMBOLS = ["SandboxManager"];
+var EXPORTED_SYMBOLS = ["SandboxManager"];
 
 /**
  * A wrapper class with helper methods for manipulating a sandbox.
@@ -10,7 +10,7 @@ this.EXPORTED_SYMBOLS = ["SandboxManager"];
  * holds are removed. This allows sandboxes to trigger async operations and
  * automatically nuke themselves when they're done.
  */
-this.SandboxManager = class {
+var SandboxManager = class {
   constructor() {
     this._sandbox = new Cu.Sandbox(null, {
       wantComponents: false,

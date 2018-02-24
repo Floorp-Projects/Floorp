@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ScrollPosition"];
+var EXPORTED_SYMBOLS = ["ScrollPosition"];
 
 /**
  * It provides methods to collect scroll positions from single frames and to
@@ -12,7 +12,7 @@ this.EXPORTED_SYMBOLS = ["ScrollPosition"];
  *
  * This is a child process module.
  */
-this.ScrollPosition = Object.freeze({
+var ScrollPosition = Object.freeze({
   collect(frame) {
     return ScrollPositionInternal.collect(frame);
   },

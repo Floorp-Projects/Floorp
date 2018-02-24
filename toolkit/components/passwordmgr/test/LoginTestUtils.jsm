@@ -7,7 +7,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "LoginTestUtils",
 ];
 
@@ -21,7 +21,7 @@ const LoginInfo =
       Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                              "nsILoginInfo", "init");
 
-this.LoginTestUtils = {
+var LoginTestUtils = {
   /**
    * Forces the storage module to save all data, and the Login Manager service
    * to replace the storage module with a newly initialized instance.

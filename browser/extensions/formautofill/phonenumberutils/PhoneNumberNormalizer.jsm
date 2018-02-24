@@ -7,9 +7,9 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["PhoneNumberNormalizer"];
+var EXPORTED_SYMBOLS = ["PhoneNumberNormalizer"];
 
-this.PhoneNumberNormalizer = (function() {
+var PhoneNumberNormalizer = (function() {
   const UNICODE_DIGITS = /[\uFF10-\uFF19\u0660-\u0669\u06F0-\u06F9]/g;
   const VALID_ALPHA_PATTERN = /[a-zA-Z]/g;
   const LEADING_PLUS_CHARS_PATTERN = /^[+\uFF0B]+/g;

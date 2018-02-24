@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ExtensionContent"];
+var EXPORTED_SYMBOLS = ["ExtensionContent"];
 
 /* globals ExtensionContent */
 
@@ -758,7 +758,7 @@ DocumentManager = {
   },
 };
 
-this.ExtensionContent = {
+var ExtensionContent = {
   BrowserExtensionContent,
   Script,
 

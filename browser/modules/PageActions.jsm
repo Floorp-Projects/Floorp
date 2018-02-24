@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "PageActions",
   // PageActions.Action
   // PageActions.Button
@@ -33,7 +33,7 @@ const PREF_PERSISTED_ACTIONS = "browser.pageActions.persistedActions";
 const PERSISTED_ACTIONS_CURRENT_VERSION = 1;
 
 
-this.PageActions = {
+var PageActions = {
   /**
    * Inits.  Call to init.
    */

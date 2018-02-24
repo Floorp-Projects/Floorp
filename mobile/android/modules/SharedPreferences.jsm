@@ -5,7 +5,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["SharedPreferences"];
+var EXPORTED_SYMBOLS = ["SharedPreferences"];
 
 // For adding observers.
 ChromeUtils.import("resource://gre/modules/Services.jsm");

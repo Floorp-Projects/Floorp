@@ -11,7 +11,7 @@ function debug(aStr) {
   }
 }
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "DateTimePickerHelper"
 ];
 
@@ -24,7 +24,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
  * DateTimePickerHelper listens for picker's events and notifies the content
  * side (input box) about them.
  */
-this.DateTimePickerHelper = {
+var DateTimePickerHelper = {
   picker: null,
   weakBrowser: null,
 

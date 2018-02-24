@@ -14,7 +14,7 @@ const LOCAL_EME_SOURCES = [{
   "src": "chrome://global/content/gmp-sources/widevinecdm.json"
 }];
 
-this.EXPORTED_SYMBOLS = [ "ProductAddonChecker" ];
+var EXPORTED_SYMBOLS = [ "ProductAddonChecker" ];
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 

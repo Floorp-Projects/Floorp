@@ -7,7 +7,7 @@ ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 
-this.EXPORTED_SYMBOLS = ["SSLExceptions"];
+var EXPORTED_SYMBOLS = ["SSLExceptions"];
 
 /**
   A class to add exceptions to override SSL certificate problems. The functionality

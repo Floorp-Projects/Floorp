@@ -56,7 +56,6 @@ const Class DateTimeFormatObject::class_ = {
     &DateTimeFormatObject::classOps_
 };
 
-#if JS_HAS_TOSOURCE
 static bool
 dateTimeFormat_toSource(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -64,7 +63,6 @@ dateTimeFormat_toSource(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setString(cx->names().DateTimeFormat);
     return true;
 }
-#endif
 
 static const JSFunctionSpec dateTimeFormat_static_methods[] = {
     JS_SELF_HOSTED_FN("supportedLocalesOf", "Intl_DateTimeFormat_supportedLocalesOf", 1, 0),
@@ -74,9 +72,7 @@ static const JSFunctionSpec dateTimeFormat_static_methods[] = {
 static const JSFunctionSpec dateTimeFormat_methods[] = {
     JS_SELF_HOSTED_FN("resolvedOptions", "Intl_DateTimeFormat_resolvedOptions", 0, 0),
     JS_SELF_HOSTED_FN("formatToParts", "Intl_DateTimeFormat_formatToParts", 1, 0),
-#if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, dateTimeFormat_toSource, 0, 0),
-#endif
     JS_FS_END
 };
 

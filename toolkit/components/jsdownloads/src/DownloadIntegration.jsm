@@ -9,7 +9,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "DownloadIntegration",
 ];
 
@@ -129,7 +129,7 @@ const kVerdictMap = {
  * Provides functions to integrate with the host application, handling for
  * example the global prompts on shutdown.
  */
-this.DownloadIntegration = {
+var DownloadIntegration = {
   /**
    * Main DownloadStore object for loading and saving the list of persistent
    * downloads, or null if the download list was never requested and thus it
@@ -795,7 +795,7 @@ this.DownloadIntegration = {
   },
 };
 
-this.DownloadObserver = {
+var DownloadObserver = {
   /**
    * Flag to determine if the observers have been added previously.
    */
@@ -999,7 +999,7 @@ this.DownloadObserver = {
  * @param aList
  *        DownloadList object linked to this observer.
  */
-this.DownloadHistoryObserver = function(aList) {
+var DownloadHistoryObserver = function(aList) {
   this._list = aList;
   PlacesUtils.history.addObserver(this);
 };
@@ -1045,7 +1045,7 @@ this.DownloadHistoryObserver.prototype = {
  * @param aStore
  *        The DownloadStore object used for saving.
  */
-this.DownloadAutoSaveView = function(aList, aStore) {
+var DownloadAutoSaveView = function(aList, aStore) {
   this._list = aList;
   this._store = aStore;
   this._downloadsMap = new Map();

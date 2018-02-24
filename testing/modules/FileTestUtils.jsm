@@ -8,7 +8,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "FileTestUtils",
 ];
 
@@ -22,7 +22,7 @@ ChromeUtils.import("resource://testing-common/Assert.jsm", this);
 let gFileCounter = 1;
 let gPathsToRemove = [];
 
-this.FileTestUtils = {
+var FileTestUtils = {
   /**
    * Returns a reference to a temporary file that is guaranteed not to exist and
    * to have never been created before. If a file or a directory with this name

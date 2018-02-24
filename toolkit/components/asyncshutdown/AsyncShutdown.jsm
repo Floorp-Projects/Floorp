@@ -340,14 +340,14 @@ function getOrigin(topFrame, filename = null, lineNumber = null, stack = null) {
   }
 }
 
-this.EXPORTED_SYMBOLS = ["AsyncShutdown"];
+var EXPORTED_SYMBOLS = ["AsyncShutdown"];
 
 /**
  * {string} topic -> phase
  */
 var gPhases = new Map();
 
-this.AsyncShutdown = {
+var AsyncShutdown = {
   /**
    * Access function getPhase. For testing purposes only.
    */

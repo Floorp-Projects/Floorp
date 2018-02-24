@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["PlacesTransactions"];
+var EXPORTED_SYMBOLS = ["PlacesTransactions"];
 
 /**
  * Overview

@@ -8,7 +8,7 @@
 var { InlineSpellChecker, SpellCheckHelper } =
   ChromeUtils.import("resource://gre/modules/InlineSpellChecker.jsm", {});
 
-this.EXPORTED_SYMBOLS = [ "InlineSpellCheckerContent" ];
+var EXPORTED_SYMBOLS = [ "InlineSpellCheckerContent" ];
 
 var InlineSpellCheckerContent = {
   _spellChecker: null,

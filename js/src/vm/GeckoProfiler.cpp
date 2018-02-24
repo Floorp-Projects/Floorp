@@ -9,7 +9,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jsnum.h"
-#include "jsprf.h"
 
 #include "gc/PublicIterators.h"
 #include "jit/BaselineFrame.h"

@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["CustomizableWidgets"];
+var EXPORTED_SYMBOLS = ["CustomizableWidgets"];
 
 ChromeUtils.import("resource:///modules/CustomizableUI.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

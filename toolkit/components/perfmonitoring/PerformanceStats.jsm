@@ -5,7 +5,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["PerformanceStats"];
+var EXPORTED_SYMBOLS = ["PerformanceStats"];
 
 /**
  * API for querying and examining performance data.
@@ -566,7 +566,7 @@ Services.obs.addObserver(function(subject, topic, value) {
 }, FINALIZATION_TOPIC);
 
 // Public API
-this.PerformanceStats = {
+var PerformanceStats = {
   /**
    * Create a monitor for observing a set of performance probes.
    */

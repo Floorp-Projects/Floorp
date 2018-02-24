@@ -10,7 +10,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
 });
 
-this.EXPORTED_SYMBOLS = ["GeckoViewUtils"];
+var EXPORTED_SYMBOLS = ["GeckoViewUtils"];
 
 var GeckoViewUtils = {
   /**

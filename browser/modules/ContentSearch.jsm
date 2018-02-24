@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "ContentSearch",
 ];
 
@@ -86,7 +86,7 @@ const MAX_SUGGESTIONS = 6;
  *     data: null
  */
 
-this.ContentSearch = {
+var ContentSearch = {
 
   // Inbound events are queued and processed in FIFO order instead of handling
   // them immediately, which would result in non-FIFO responses due to the

@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "TokenServerClient",
   "TokenServerClientError",
   "TokenServerClientNetworkError",
@@ -26,13 +26,13 @@ const PREF_LOG_LEVEL = "services.common.log.logger.tokenserverclient";
  * @param message
  *        (string) Error message.
  */
-this.TokenServerClientError = function TokenServerClientError(message) {
+function TokenServerClientError(message) {
   this.name = "TokenServerClientError";
   this.message = message || "Client error.";
   // Without explicitly setting .stack, all stacks from these errors will point
   // to the "new Error()" call a few lines down, which isn't helpful.
   this.stack = Error().stack;
-};
+}
 TokenServerClientError.prototype = new Error();
 TokenServerClientError.prototype.constructor = TokenServerClientError;
 TokenServerClientError.prototype._toStringFields = function() {
@@ -53,12 +53,11 @@ TokenServerClientError.prototype.toJSON = function() {
  * @param error
  *        The underlying error thrown by the network layer.
  */
-this.TokenServerClientNetworkError =
- function TokenServerClientNetworkError(error) {
+function TokenServerClientNetworkError(error) {
   this.name = "TokenServerClientNetworkError";
   this.error = error;
   this.stack = Error().stack;
-};
+}
 TokenServerClientNetworkError.prototype = new TokenServerClientError();
 TokenServerClientNetworkError.prototype.constructor =
   TokenServerClientNetworkError;
@@ -96,14 +95,13 @@ TokenServerClientNetworkError.prototype._toStringFields = function() {
  * @param message
  *        (string) Error message.
  */
-this.TokenServerClientServerError =
- function TokenServerClientServerError(message, cause = "general") {
+function TokenServerClientServerError(message, cause = "general") {
   this.now = new Date().toISOString(); // may be useful to diagnose time-skew issues.
   this.name = "TokenServerClientServerError";
   this.message = message || "Server error.";
   this.cause = cause;
   this.stack = Error().stack;
-};
+}
 TokenServerClientServerError.prototype = new TokenServerClientError();
 TokenServerClientServerError.prototype.constructor =
   TokenServerClientServerError;
@@ -145,10 +143,10 @@ TokenServerClientServerError.prototype._toStringFields = function() {
  *    might be helpful if callers had a richer API that communicated who was
  *    at fault (e.g. differentiating a 503 from a 401).
  */
-this.TokenServerClient = function TokenServerClient() {
+function TokenServerClient() {
   this._log = Log.repository.getLogger("Services.Common.TokenServerClient");
   this._log.manageLevelFromPref(PREF_LOG_LEVEL);
-};
+}
 TokenServerClient.prototype = {
   /**
    * Logger instance.

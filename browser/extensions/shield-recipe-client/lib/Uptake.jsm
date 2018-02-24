@@ -9,11 +9,11 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(
   this, "UptakeTelemetry", "resource://services-common/uptake-telemetry.js");
 
-this.EXPORTED_SYMBOLS = ["Uptake"];
+var EXPORTED_SYMBOLS = ["Uptake"];
 
 const SOURCE_PREFIX = "shield-recipe-client";
 
-this.Uptake = {
+var Uptake = {
   // Action uptake
   ACTION_NETWORK_ERROR: UptakeTelemetry.STATUS.NETWORK_ERROR,
   ACTION_PRE_EXECUTION_ERROR: UptakeTelemetry.STATUS.CUSTOM_1_ERROR,

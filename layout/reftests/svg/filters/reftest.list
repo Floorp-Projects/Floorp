@@ -104,7 +104,7 @@ fuzzy-if(skiaContent,1,400) == feDisplacementMap-alpha-01.svg pass.svg
 fuzzy(2,500) == feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.svg
 == feDisplacementMap-scale-01.svg pass.svg
 
-== feDropShadow-01.svg feDropShadow-01-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),2,25) == feDropShadow-01.svg feDropShadow-01-ref.svg
 
 == feGaussianBlur-alpha-01.svg feGaussianBlur-alpha-01-ref.svg
 
@@ -117,7 +117,7 @@ fuzzy(2,500) == feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.
 == feTile-large-02.svg feTile-large-02-ref.svg
 == feTile-outside-01.svg feTile-outside-01-ref.svg
 
-fuzzy(1,217) == feDiffuseLighting-1.svg feDiffuseLighting-1-ref.svg
+fuzzy(1,219) == feDiffuseLighting-1.svg feDiffuseLighting-1-ref.svg
 
 fuzzy(2,2659) skip-if(d2d) == feSpecularLighting-1.svg feSpecularLighting-1-ref.svg
 

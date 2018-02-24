@@ -8,7 +8,7 @@ ChromeUtils.import("resource://shield-recipe-client/lib/NormandyDriver.jsm");
 ChromeUtils.import("resource://shield-recipe-client/lib/SandboxManager.jsm");
 ChromeUtils.import("resource://shield-recipe-client/lib/LogManager.jsm");
 
-this.EXPORTED_SYMBOLS = ["ActionSandboxManager"];
+var EXPORTED_SYMBOLS = ["ActionSandboxManager"];
 
 const log = LogManager.getLogger("recipe-sandbox-manager");
 
@@ -22,7 +22,7 @@ const log = LogManager.getLogger("recipe-sandbox-manager");
  *
  * Callbacks are assumed to be async and must return Promises.
  */
-this.ActionSandboxManager = class extends SandboxManager {
+var ActionSandboxManager = class extends SandboxManager {
   constructor(actionScript) {
     super();
 

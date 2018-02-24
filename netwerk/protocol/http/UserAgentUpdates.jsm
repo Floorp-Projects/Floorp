@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["UserAgentUpdates"];
+var EXPORTED_SYMBOLS = ["UserAgentUpdates"];
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -85,7 +85,7 @@ function readChannel(url) {
   });
 }
 
-this.UserAgentUpdates = {
+var UserAgentUpdates = {
   init: function(callback) {
     if (gInitialized) {
       return;

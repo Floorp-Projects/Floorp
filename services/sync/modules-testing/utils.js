@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "encryptPayload",
   "makeIdentityConfig",
   "makeFxAccountsInternalMock",
@@ -77,7 +77,7 @@ MockFxaStorageManager.prototype = {
  * we can account for the timer in delayedAutoconnect) and then two event
  * loop ticks (to account for the CommonUtils.nextTick() in autoConnect).
  */
-this.waitForZeroTimer = function waitForZeroTimer(callback) {
+function waitForZeroTimer(callback) {
   let ticks = 2;
   function wait() {
     if (ticks) {
@@ -88,15 +88,15 @@ this.waitForZeroTimer = function waitForZeroTimer(callback) {
     callback();
   }
   CommonUtils.namedTimer(wait, 150, {}, "timer");
-};
+}
 
-this.promiseZeroTimer = function() {
+var promiseZeroTimer = function() {
   return new Promise(resolve => {
     waitForZeroTimer(resolve);
   });
 };
 
-this.promiseNamedTimer = function(wait, thisObj, name) {
+var promiseNamedTimer = function(wait, thisObj, name) {
   return new Promise(resolve => {
     CommonUtils.namedTimer(resolve, wait, thisObj, name);
   });
@@ -106,7 +106,7 @@ this.promiseNamedTimer = function(wait, thisObj, name) {
 // providers.  |overrides| can specify overrides for any default values.
 // |server| is optional, but if specified, will be used to form the cluster
 // URL for the FxA identity.
-this.makeIdentityConfig = function(overrides) {
+var makeIdentityConfig = function(overrides) {
   // first setup the defaults.
   let result = {
     // Username used in both fxaccount and sync identity configs.
@@ -148,7 +148,7 @@ this.makeIdentityConfig = function(overrides) {
   return result;
 };
 
-this.makeFxAccountsInternalMock = function(config) {
+var makeFxAccountsInternalMock = function(config) {
   return {
     newAccountState(credentials) {
       // We only expect this to be called with null indicating the (mock)
@@ -169,9 +169,9 @@ this.makeFxAccountsInternalMock = function(config) {
 
 // Configure an instance of an FxAccount identity provider with the specified
 // config (or the default config if not specified).
-this.configureFxAccountIdentity = function(authService,
-                                           config = makeIdentityConfig(),
-                                           fxaInternal = makeFxAccountsInternalMock(config)) {
+var configureFxAccountIdentity = function(authService,
+                                          config = makeIdentityConfig(),
+                                          fxaInternal = makeFxAccountsInternalMock(config)) {
   // until we get better test infrastructure for bid_identity, we set the
   // signedin user's "email" to the username, simply as many tests rely on this.
   config.fxaccount.user.email = config.username;
@@ -204,7 +204,7 @@ this.configureFxAccountIdentity = function(authService,
   authService._account = config.fxaccount.user.email;
 };
 
-this.configureIdentity = async function(identityOverrides, server) {
+var configureIdentity = async function(identityOverrides, server) {
   let config = makeIdentityConfig(identityOverrides, server);
   let ns = {};
   ChromeUtils.import("resource://services-sync/service.js", ns);
@@ -238,7 +238,7 @@ function syncTestLogging(level = "Trace") {
   return logStats;
 }
 
-this.SyncTestingInfrastructure = async function(server, username) {
+var SyncTestingInfrastructure = async function(server, username) {
   let ns = {};
   ChromeUtils.import("resource://services-sync/service.js", ns);
 
@@ -255,7 +255,7 @@ this.SyncTestingInfrastructure = async function(server, username) {
 /**
  * Turn WBO cleartext into fake "encrypted" payload as it goes over the wire.
  */
-this.encryptPayload = function encryptPayload(cleartext) {
+function encryptPayload(cleartext) {
   if (typeof cleartext == "object") {
     cleartext = JSON.stringify(cleartext);
   }
@@ -265,9 +265,9 @@ this.encryptPayload = function encryptPayload(cleartext) {
     IV: "irrelevant",
     hmac: fakeSHA256HMAC(cleartext, CryptoUtils.makeHMACKey("")),
   };
-};
+}
 
-this.sumHistogram = function(name, options = {}) {
+var sumHistogram = function(name, options = {}) {
   let histogram = options.key ? Services.telemetry.getKeyedHistogramById(name) :
                   Services.telemetry.getHistogramById(name);
   let snapshot = histogram.snapshot(options.key);
@@ -279,7 +279,7 @@ this.sumHistogram = function(name, options = {}) {
   return sum;
 };
 
-this.getLoginTelemetryScalar = function() {
+var getLoginTelemetryScalar = function() {
   let dataset = Services.telemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
   let snapshot = Services.telemetry.snapshotKeyedScalars(dataset, true);
   return snapshot.parent ? snapshot.parent["services.sync.sync_login_state_transitions"] : {};

@@ -11,8 +11,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Sprintf.h"
 
-#include "jsprf.h"
-
 #include "gc/Marking.h"
 #include "gc/Statistics.h"
 #include "jit/BaselineJIT.h"

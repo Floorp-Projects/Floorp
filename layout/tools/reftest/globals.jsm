@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-this.EXPORTED_SYMBOLS = [];
+var EXPORTED_SYMBOLS = [];
 
 for (let [key, val] of Object.entries({
   /* Constants */

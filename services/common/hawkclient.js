@@ -24,7 +24,7 @@
  * multiple HAWK services should instantiate one HawkClient per service.
  */
 
-this.EXPORTED_SYMBOLS = ["HawkClient"];
+var EXPORTED_SYMBOLS = ["HawkClient"];
 
 ChromeUtils.import("resource://services-crypto/utils.js");
 ChromeUtils.import("resource://services-common/hawkrequest.js");
@@ -88,7 +88,7 @@ XPCOMUtils.defineLazyGetter(this, "logPII", function() {
  * @param host
  *        The url of the host
  */
-this.HawkClient = function(host) {
+var HawkClient = function(host) {
   this.host = host;
 
   // Clock offset in milliseconds between our client's clock and the date

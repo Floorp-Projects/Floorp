@@ -12,7 +12,7 @@ if (DEBUG) {
   debug = function (s) {}
 }
 
-this.EXPORTED_SYMBOLS = ["IndexedDBHelper"];
+var EXPORTED_SYMBOLS = ["IndexedDBHelper"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["indexedDB"]);
@@ -24,7 +24,7 @@ function getErrorName(err) {
   return err && err.name || "UnknownError";
 }
 
-this.IndexedDBHelper = function IndexedDBHelper() {
+function IndexedDBHelper() {
 }
 
 IndexedDBHelper.prototype = {

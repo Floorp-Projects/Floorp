@@ -46,7 +46,7 @@ class _PrerenderData {
   }
 }
 
-this.PrerenderData = new _PrerenderData({
+var PrerenderData = new _PrerenderData({
   initialPrefs: {
     "migrationExpired": true,
     "showTopSites": true,
@@ -94,4 +94,4 @@ this.PrerenderData = new _PrerenderData({
 });
 
 this._PrerenderData = _PrerenderData;
-this.EXPORTED_SYMBOLS = ["PrerenderData", "_PrerenderData"];
+var EXPORTED_SYMBOLS = ["PrerenderData", "_PrerenderData"];

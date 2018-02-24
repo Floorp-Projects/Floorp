@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "RESTRequest",
   "RESTResponse",
   "TokenAuthenticatedRESTRequest",
@@ -75,7 +75,7 @@ const Prefs = new Preferences("services.common.");
  *   });
  *   request.get();
  */
-this.RESTRequest = function RESTRequest(uri) {
+function RESTRequest(uri) {
   this.status = this.NOT_SENT;
 
   // If we don't have an nsIURI object yet, make one. This will throw if
@@ -89,7 +89,7 @@ this.RESTRequest = function RESTRequest(uri) {
   this._log = Log.repository.getLogger(this._logName);
   this._log.level =
     Log.Level[Prefs.get("log.logger.rest.request")];
-};
+}
 RESTRequest.prototype = {
 
   _logName: "Services.Common.RESTRequest",
@@ -642,11 +642,11 @@ RESTRequest.prototype = {
  * Response object for a RESTRequest. This will be created automatically by
  * the RESTRequest.
  */
-this.RESTResponse = function RESTResponse() {
+function RESTResponse() {
   this._log = Log.repository.getLogger(this._logName);
   this._log.level =
     Log.Level[Prefs.get("log.logger.rest.response")];
-};
+}
 RESTResponse.prototype = {
 
   _logName: "Services.Common.RESTResponse",
@@ -743,12 +743,11 @@ RESTResponse.prototype = {
  *        nonce, and ext. See CrytoUtils.computeHTTPMACSHA1 for information on
  *        the purpose of these values.
  */
-this.TokenAuthenticatedRESTRequest =
- function TokenAuthenticatedRESTRequest(uri, authToken, extra) {
+function TokenAuthenticatedRESTRequest(uri, authToken, extra) {
   RESTRequest.call(this, uri);
   this.authToken = authToken;
   this.extra = extra || {};
-};
+}
 TokenAuthenticatedRESTRequest.prototype = {
   __proto__: RESTRequest.prototype,
 

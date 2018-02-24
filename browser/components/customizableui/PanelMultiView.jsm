@@ -87,7 +87,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "PanelMultiView",
   "PanelView",
 ];
@@ -123,7 +123,7 @@ let gMultiLineElementsMap = new WeakMap();
  * Classes deriving from this one may be easily converted to Custom Elements,
  * although they would lose the ability of being associated lazily.
  */
-this.AssociatedToNode = class {
+var AssociatedToNode = class {
   constructor(node) {
     /**
      * Node associated to this object.
@@ -249,7 +249,7 @@ this.AssociatedToNode = class {
 /**
  * This is associated to <panelmultiview> elements by the panelUI.xml binding.
  */
-this.PanelMultiView = class extends this.AssociatedToNode {
+var PanelMultiView = class extends this.AssociatedToNode {
   /**
    * Tries to open the specified <panel> and displays the main view specified
    * with the "mainViewId" attribute on the <panelmultiview> node it contains.
@@ -1116,7 +1116,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 /**
  * This is associated to <panelview> elements.
  */
-this.PanelView = class extends this.AssociatedToNode {
+var PanelView = class extends this.AssociatedToNode {
   /**
    * The "mainview" attribute is set before the panel is opened when this view
    * is displayed as the main view, and is removed before the <panelview> is

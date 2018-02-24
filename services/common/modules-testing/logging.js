@@ -4,14 +4,14 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "getTestLogger",
   "initTestLogging",
 ];
 
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 
-this.initTestLogging = function initTestLogging(level) {
+function initTestLogging(level) {
   function LogStats() {
     this.errorsLogged = 0;
   }
@@ -48,9 +48,9 @@ this.initTestLogging = function initTestLogging(level) {
   Log.repository.getLogger("Sqlite").level = Log.Level.Info;
 
   return logStats;
-};
+}
 
-this.getTestLogger = function getTestLogger(component) {
+function getTestLogger(component) {
   return Log.repository.getLogger("Testing");
-};
+}
 

@@ -38,6 +38,16 @@ bool OpenTypeGLYF::ParseFlagsForSimpleGlyph(Buffer &glyph,
     delta += 2;
   }
 
+  /* MS and Apple specs say this bit is reserved and must be set to zero, but
+   * Apple spec then contradicts itself and says it should be set on the first
+   * contour flag for simple glyphs with overlapping contours:
+   * https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6AATIntro.html
+   * (“Overlapping contours” section) */
+  if (flag & (1u << 6) && *flag_index != 0) {
+    return Error("Bad glyph flag (%d), "
+                 "bit 6 must be set to zero for flag %d", flag, *flag_index);
+  }
+
   if (flag & (1u << 3)) {  // repeat
     if (*flag_index + 1 >= num_flags) {
       return Error("Count too high (%d + 1 >= %d)", *flag_index, num_flags);
@@ -57,8 +67,8 @@ bool OpenTypeGLYF::ParseFlagsForSimpleGlyph(Buffer &glyph,
     }
   }
 
-  if ((flag & (1u << 6)) || (flag & (1u << 7))) {  // reserved flags
-    return Error("Bad glyph flag value (%d), reserved flags must be set to zero", flag);
+  if (flag & (1u << 7)) {  // reserved flag
+    return Error("Bad glyph flag (%d), reserved bit 7 must be set to zero", flag);
   }
 
   *coordinates_length += delta;

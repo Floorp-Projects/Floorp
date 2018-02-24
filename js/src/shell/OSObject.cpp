@@ -23,10 +23,10 @@
 // For JSFunctionSpecWithHelp
 #include "jsfriendapi.h"
 #include "jsstr.h"
-#include "jswrapper.h"
 
 #include "gc/FreeOp.h"
 #include "js/Conversions.h"
+#include "js/Wrapper.h"
 #include "shell/jsshell.h"
 #include "util/Windows.h"
 #include "vm/JSObject.h"

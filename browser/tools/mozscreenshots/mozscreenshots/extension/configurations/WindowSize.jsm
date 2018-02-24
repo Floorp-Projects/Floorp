@@ -4,13 +4,13 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["WindowSize"];
+var EXPORTED_SYMBOLS = ["WindowSize"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
-this.WindowSize = {
+var WindowSize = {
 
   init(libDir) {
     Services.prefs.setBoolPref("browser.fullscreen.autohide", false);

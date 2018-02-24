@@ -5,7 +5,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Home"];
+var EXPORTED_SYMBOLS = ["Home"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/SharedPreferences.jsm");
@@ -465,7 +465,7 @@ var HomePanels = (function() {
 })();
 
 // Public API
-this.Home = Object.freeze({
+var Home = Object.freeze({
   banner: HomeBanner,
   panels: HomePanels,
 

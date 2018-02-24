@@ -50,7 +50,6 @@ const Class CollatorObject::class_ = {
     &CollatorObject::classOps_
 };
 
-#if JS_HAS_TOSOURCE
 static bool
 collator_toSource(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -58,7 +57,6 @@ collator_toSource(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setString(cx->names().Collator);
     return true;
 }
-#endif
 
 static const JSFunctionSpec collator_static_methods[] = {
     JS_SELF_HOSTED_FN("supportedLocalesOf", "Intl_Collator_supportedLocalesOf", 1, 0),
@@ -67,9 +65,7 @@ static const JSFunctionSpec collator_static_methods[] = {
 
 static const JSFunctionSpec collator_methods[] = {
     JS_SELF_HOSTED_FN("resolvedOptions", "Intl_Collator_resolvedOptions", 0, 0),
-#if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, collator_toSource, 0, 0),
-#endif
     JS_FS_END
 };
 

@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "TelemetryArchive"
 ];
 
@@ -20,7 +20,7 @@ const LOGGER_PREFIX = "TelemetryArchive::";
 ChromeUtils.defineModuleGetter(this, "TelemetryStorage",
                                "resource://gre/modules/TelemetryStorage.jsm");
 
-this.TelemetryArchive = {
+var TelemetryArchive = {
   /**
    * Get a list of the archived pings, sorted by the creation date.
    * Note that scanning the archived pings on disk is delayed on startup,

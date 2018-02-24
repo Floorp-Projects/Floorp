@@ -16,9 +16,9 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/PodOperations.h"
 
-#include "jsprototypes.h"
 #include "jstypes.h"
 
+#include "js/ProtoKey.h"
 #include "js/Result.h"
 #include "js/TraceKind.h"
 #include "js/TypeDecls.h"

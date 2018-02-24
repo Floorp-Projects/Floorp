@@ -6,10 +6,9 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jswrapper.h"
-
 #include "NamespaceImports.h"
 
+#include "js/Wrapper.h"
 #include "vm/String.h"
 
 using namespace js;

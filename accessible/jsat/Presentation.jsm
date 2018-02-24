@@ -21,7 +21,7 @@ ChromeUtils.defineModuleGetter(this, "Roles", // jshint ignore:line
 ChromeUtils.defineModuleGetter(this, "States", // jshint ignore:line
   "resource://gre/modules/accessibility/Constants.jsm");
 
-this.EXPORTED_SYMBOLS = ["Presentation"]; // jshint ignore:line
+var EXPORTED_SYMBOLS = ["Presentation"]; // jshint ignore:line
 
 /**
  * The interface for all presenter classes. A presenter could be, for example,
@@ -672,7 +672,7 @@ BraillePresenter.prototype.textSelectionChanged =
     };
   };
 
-this.Presentation = { // jshint ignore:line
+var Presentation = { // jshint ignore:line
   get presenters() {
     delete this.presenters;
     let presenterMap = {

@@ -13,14 +13,14 @@ ChromeUtils.defineModuleGetter(
 
 Cu.importGlobalProperties(["fetch", "URL"]); /* globals fetch, URL */
 
-this.EXPORTED_SYMBOLS = ["NormandyApi"];
+var EXPORTED_SYMBOLS = ["NormandyApi"];
 
 const log = LogManager.getLogger("normandy-api");
 const prefs = Services.prefs.getBranch("extensions.shield-recipe-client.");
 
 let indexPromise = null;
 
-this.NormandyApi = {
+var NormandyApi = {
   InvalidSignatureError: class InvalidSignatureError extends Error {},
 
   clearIndexCache() {

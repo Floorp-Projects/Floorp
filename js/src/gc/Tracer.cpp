@@ -8,7 +8,6 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "jsprf.h"
 #include "jsutil.h"
 #include "NamespaceImports.h"
 

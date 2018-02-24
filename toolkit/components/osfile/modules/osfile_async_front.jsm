@@ -19,7 +19,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["OS"];
+var EXPORTED_SYMBOLS = ["OS"];
 
 var SharedAll = {};
 ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
@@ -1398,7 +1398,7 @@ File.POS_END = SysAll.POS_END;
 File.Error = OSError;
 File.DirectoryIterator = DirectoryIterator;
 
-this.OS = {};
+var OS = {};
 this.OS.File = File;
 this.OS.Constants = SharedAll.Constants;
 this.OS.Shared = {

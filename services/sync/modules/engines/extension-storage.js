@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ExtensionStorageEngine"];
+var EXPORTED_SYMBOLS = ["ExtensionStorageEngine"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://services-sync/constants.js");
@@ -21,9 +21,9 @@ ChromeUtils.defineModuleGetter(this, "extensionStorageSync",
  * for syncing that we do not need to integrate in the Firefox Sync
  * framework, so this is something of a stub.
  */
-this.ExtensionStorageEngine = function ExtensionStorageEngine(service) {
+function ExtensionStorageEngine(service) {
   SyncEngine.call(this, "Extension-Storage", service);
-};
+}
 ExtensionStorageEngine.prototype = {
   __proto__: SyncEngine.prototype,
   _trackerObj: ExtensionStorageTracker,

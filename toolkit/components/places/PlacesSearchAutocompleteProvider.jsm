@@ -8,7 +8,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "PlacesSearchAutocompleteProvider" ];
+var EXPORTED_SYMBOLS = [ "PlacesSearchAutocompleteProvider" ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -197,7 +197,7 @@ SearchSuggestionControllerWrapper.prototype = {
 
 var gInitializationPromise = null;
 
-this.PlacesSearchAutocompleteProvider = Object.freeze({
+var PlacesSearchAutocompleteProvider = Object.freeze({
   /**
    * Starts initializing the component and returns a promise that is resolved or
    * rejected when initialization finished.  The same promise is returned if

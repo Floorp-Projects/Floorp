@@ -14,7 +14,6 @@
 
 #include "jsarray.h"
 #include "jsnum.h"
-#include "jsprf.h"
 
 #include "vm/JSCompartment.h"
 #include "vm/StringBuffer.h"

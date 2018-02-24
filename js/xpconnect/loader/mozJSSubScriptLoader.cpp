@@ -19,7 +19,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "xpcprivate.h" // For xpc::OptionsBase
-#include "jswrapper.h"
+#include "js/Wrapper.h"
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ToJSValue.h"

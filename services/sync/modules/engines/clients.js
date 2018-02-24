@@ -20,7 +20,7 @@
  *   commands.json, update it, and write it back out.
  */
 
-this.EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "ClientEngine",
   "ClientsRec"
 ];
@@ -65,9 +65,9 @@ function hasDupeCommand(commands, action) {
     Utils.deepEquals(other.args, action.args));
 }
 
-this.ClientsRec = function ClientsRec(collection, id) {
+function ClientsRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
-};
+}
 ClientsRec.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.Clients",
@@ -82,7 +82,7 @@ Utils.deferGetSet(ClientsRec,
                    "fxaDeviceId"]);
 
 
-this.ClientEngine = function ClientEngine(service) {
+function ClientEngine(service) {
   SyncEngine.call(this, "Clients", service);
 
   // Reset the last sync timestamp on every startup so that we fetch all clients
@@ -90,7 +90,7 @@ this.ClientEngine = function ClientEngine(service) {
   this.fxAccounts = fxAccounts;
   this.addClientCommandQueue = Promise.resolve();
   Utils.defineLazyIDProperty(this, "localID", "services.sync.client.GUID");
-};
+}
 ClientEngine.prototype = {
   __proto__: SyncEngine.prototype,
   _storeObj: ClientStore,

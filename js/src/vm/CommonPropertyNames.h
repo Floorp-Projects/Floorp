@@ -9,7 +9,7 @@
 #ifndef vm_CommonPropertyNames_h
 #define vm_CommonPropertyNames_h
 
-#include "jsprototypes.h"
+#include "js/ProtoKey.h"
 
 #define FOR_EACH_COMMON_PROPERTYNAME(macro) \
     macro(add, add, "add") \
