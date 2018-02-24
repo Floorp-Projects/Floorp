@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.4.4 */
+/* Generated with cbindgen:0.5.0 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -223,6 +223,7 @@ enum class WrFilterOpType : uint32_t {
   Saturate = 7,
   Sepia = 8,
   DropShadow = 9,
+  ColorMatrix = 10,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -676,13 +677,7 @@ struct WrFilterOp {
   float argument;
   LayoutVector2D offset;
   ColorF color;
-
-  bool operator==(const WrFilterOp& aOther) const {
-    return filter_type == aOther.filter_type &&
-           argument == aOther.argument &&
-           offset == aOther.offset &&
-           color == aOther.color;
-  }
+  float matrix[20];
 };
 
 struct FontInstanceKey {

@@ -69,7 +69,8 @@ public:
   virtual bool BeginTransaction() override;
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override;
   void EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
-                                  nsDisplayListBuilder* aDisplayListBuilder);
+                                  nsDisplayListBuilder* aDisplayListBuilder,
+                                  const nsTArray<wr::WrFilterOp>& aFilters = nsTArray<wr::WrFilterOp>());
   virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT) override;
