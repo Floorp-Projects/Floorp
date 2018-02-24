@@ -9,7 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "jsmath.h"
+#include "builtin/Math.h"
 
 #include "jit/JitCompartment.h"
 #include "jit/JitFrames.h"

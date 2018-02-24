@@ -7,8 +7,8 @@
 #include "jit/Recover.h"
 
 #include "jsapi.h"
-#include "jsmath.h"
 
+#include "builtin/Math.h"
 #include "builtin/RegExp.h"
 #include "builtin/SIMD.h"
 #include "builtin/String.h"

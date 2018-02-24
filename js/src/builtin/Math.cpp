@@ -8,7 +8,7 @@
  * JS math package.
  */
 
-#include "jsmath.h"
+#include "builtin/Math.h"
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"

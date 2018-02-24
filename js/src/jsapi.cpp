@@ -25,7 +25,6 @@
 
 #include "jsexn.h"
 #include "jsfriendapi.h"
-#include "jsmath.h"
 #include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
@@ -37,6 +36,7 @@
 #include "builtin/Eval.h"
 #include "builtin/JSON.h"
 #include "builtin/MapObject.h"
+#include "builtin/Math.h"
 #include "builtin/Promise.h"
 #include "builtin/RegExp.h"
 #include "builtin/Stream.h"
