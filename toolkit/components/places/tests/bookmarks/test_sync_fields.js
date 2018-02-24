@@ -67,12 +67,14 @@ class TestCases {
       await PlacesTestUtils.markBookmarksAsSynced();
     }
 
-    info("Test 2: reparenting");
-    try {
-      await this.testReparenting();
-    } finally {
-      info("Reset sync fields after test 2");
-      await PlacesTestUtils.markBookmarksAsSynced();
+    if (("moveItem" in this) && ("reorder" in this)) {
+      info("Test 2: reparenting");
+      try {
+        await this.testReparenting();
+      } finally {
+        info("Reset sync fields after test 2");
+        await PlacesTestUtils.markBookmarksAsSynced();
+      }
     }
 
     if ("insertSeparator" in this) {
@@ -267,12 +269,6 @@ class SyncTestCases extends TestCases {
     return PlacesUtils.promiseItemGuid(id);
   }
 
-  async moveItem(guid, newParentGuid, index) {
-    let id = await PlacesUtils.promiseItemId(guid);
-    let newParentId = await PlacesUtils.promiseItemId(newParentGuid);
-    PlacesUtils.bookmarks.moveItem(id, newParentId, index);
-  }
-
   async removeItem(guid) {
     let id = await PlacesUtils.promiseItemId(guid);
     PlacesUtils.bookmarks.removeItem(id);
@@ -285,14 +281,6 @@ class SyncTestCases extends TestCases {
 
   async tagURI(uri, tags) {
     PlacesUtils.tagging.tagURI(uri, tags);
-  }
-
-  async reorder(parentGuid, childGuids) {
-    let parentId = await PlacesUtils.promiseItemId(parentGuid);
-    for (let index = 0; index < childGuids.length; ++index) {
-      let id = await PlacesUtils.promiseItemId(childGuids[index]);
-      PlacesUtils.bookmarks.moveItem(id, parentId, index);
-    }
   }
 }
 

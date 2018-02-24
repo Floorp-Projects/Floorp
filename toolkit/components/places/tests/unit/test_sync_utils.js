@@ -1696,17 +1696,6 @@ add_task(async function test_move_orphans() {
       "Should remove orphan annos from updated bookmark");
   }
 
-  info("Move synced orphan using sync API");
-  {
-    let tbId = await recordIdToId(tbBmk.recordId);
-    PlacesUtils.bookmarks.moveItem(tbId, PlacesUtils.toolbarFolderId,
-      PlacesUtils.bookmarks.DEFAULT_INDEX);
-    let orphanGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
-      SYNC_PARENT_ANNO, nonexistentRecordId);
-    deepEqual(orphanGuids, [],
-      "Should remove orphan annos from moved bookmark");
-  }
-
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
@@ -1808,9 +1797,12 @@ add_task(async function test_unsynced_orphans() {
 
   info("Move unsynced orphan");
   {
-    let unknownId = await recordIdToId(unknownBmk.recordId);
-    PlacesUtils.bookmarks.moveItem(unknownId, PlacesUtils.toolbarFolderId,
-      PlacesUtils.bookmarks.DEFAULT_INDEX);
+    let unknownGuid = await PlacesSyncUtils.bookmarks.recordIdToGuid(unknownBmk.recordId);
+    await PlacesUtils.bookmarks.update({
+      guid: unknownGuid,
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      index: PlacesUtils.bookmarks.DEFAULT_INDEX
+    });
     let orphanGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
       SYNC_PARENT_ANNO, nonexistentRecordId);
     deepEqual(orphanGuids.sort(), [newBmk.recordId].sort(),
@@ -2590,13 +2582,17 @@ add_task(async function test_separator() {
     recordId: makeGuid(),
     url: "https://bar.foo",
   });
-  let child2Id = await recordIdToId(childBmk.recordId);
-  let parentId = await recordIdToId("menu");
-  let separatorId = await recordIdToId(separator.recordId);
+
+  let child2Guid = await PlacesSyncUtils.bookmarks.recordIdToGuid(childBmk.recordId);
+  let parentGuid = await await PlacesSyncUtils.bookmarks.recordIdToGuid("menu");
   let separatorGuid = PlacesSyncUtils.bookmarks.recordIdToGuid(separatorRecordId);
 
   info("Move a bookmark around the separator");
-  PlacesUtils.bookmarks.moveItem(child2Id, parentId, separator + 1);
+  await PlacesUtils.bookmarks.update({
+    guid: child2Guid,
+    parentGuid,
+    index: 2
+  });
   let changes = await PlacesSyncUtils.bookmarks.pullChanges();
   deepEqual(Object.keys(changes).sort(),
     [separator.recordId, "menu"].sort());
@@ -2604,7 +2600,12 @@ add_task(async function test_separator() {
   await setChangesSynced(changes);
 
   info("Move a separator around directly");
-  PlacesUtils.bookmarks.moveItem(separatorId, parentId, 0);
+  await PlacesUtils.bookmarks.update({
+    guid: separatorGuid,
+    parentGuid,
+    index: 0
+  });
+
   changes = await PlacesSyncUtils.bookmarks.pullChanges();
   deepEqual(Object.keys(changes).sort(),
     [separator.recordId, "menu"].sort());
