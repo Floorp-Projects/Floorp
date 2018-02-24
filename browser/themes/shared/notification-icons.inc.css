@@ -119,9 +119,6 @@
 .popup-notification-icon[popupid="midi-sysex"] {
   list-style-image: url(chrome://browser/skin/notification-icons/midi.svg);
 }
-{
-  list-style-image: url(chrome://browser/skin/notification-icons/midi.svg);
-}
 
 #canvas-notification-icon,
 .popup-notification-icon[popupid="canvas-permissions-prompt"],
