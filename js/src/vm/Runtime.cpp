@@ -22,7 +22,7 @@
 # include <sys/mman.h>
 #endif
 
-#include "jsmath.h"
+#include "builtin/Math.h"
 
 #include "builtin/Promise.h"
 #include "gc/FreeOp.h"
