@@ -20,7 +20,6 @@ const {
 } = require("../types");
 
 function prepareMessage(packet, idGenerator) {
-  // This packet is already in the expected packet structure. Simply return.
   if (!packet.source) {
     packet = transformPacket(packet);
   }
@@ -167,6 +166,7 @@ function transformConsoleAPICallPacket(packet) {
     frame,
     timeStamp: message.timeStamp,
     userProvidedStyles: message.styles,
+    prefix: message.prefix,
   });
 }
 

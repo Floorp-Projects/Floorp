@@ -58,6 +58,7 @@ class ToolboxTab extends Component {
         "data-id": id,
         title: tooltip,
         type: "button",
+        "aria-pressed": currentToolId === id ? "true" : "false",
         tabIndex: focusedButton === id ? "0" : "-1",
         onFocus: () => focusButton(id),
         onMouseDown: () => selectTool(id),

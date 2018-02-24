@@ -33,7 +33,6 @@
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsRect.h"
-#include "nsIDOMHTMLFormElement.h"
 #include "nsILoginManager.h"
 #include "nsIDOMMouseEvent.h"
 #include "mozilla/ModuleUtils.h"

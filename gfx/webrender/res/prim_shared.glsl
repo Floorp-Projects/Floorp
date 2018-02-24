@@ -16,6 +16,8 @@
 #define SUBPX_DIR_HORIZONTAL  1
 #define SUBPX_DIR_VERTICAL    2
 
+#define EPSILON     0.0001
+
 uniform sampler2DArray sCacheA8;
 uniform sampler2DArray sCacheRGBA8;
 
@@ -74,7 +76,6 @@ vec4[2] fetch_from_resource_cache_2(int address) {
 #define VECS_PER_RENDER_TASK        3
 #define VECS_PER_PRIM_HEADER        2
 #define VECS_PER_TEXT_RUN           3
-#define VECS_PER_GRADIENT           3
 #define VECS_PER_GRADIENT_STOP      2
 
 uniform HIGHP_SAMPLER_FLOAT sampler2D sClipScrollNodes;
@@ -302,17 +303,6 @@ ClipArea fetch_clip_area(int index) {
     }
 
     return area;
-}
-
-struct Gradient {
-    vec4 start_end_point;
-    vec4 tile_size_repeat;
-    vec4 extend_mode;
-};
-
-Gradient fetch_gradient(int address) {
-    vec4 data[3] = fetch_from_resource_cache_3(address);
-    return Gradient(data[0], data[1], data[2]);
 }
 
 struct Glyph {
@@ -748,7 +738,7 @@ void write_clip(vec2 global_pos, ClipArea area) {
 
 #ifdef WR_FRAGMENT_SHADER
 
-/// Find the appropriate half range to apply the AA smoothstep over.
+/// Find the appropriate half range to apply the AA approximation over.
 /// This range represents a coefficient to go from one CSS pixel to half a device pixel.
 float compute_aa_range(vec2 position) {
     // The constant factor is chosen to compensate for the fact that length(fw) is equal
@@ -759,22 +749,41 @@ float compute_aa_range(vec2 position) {
     // such a pixel (axis aligned) is fully inside the border). We need this so that antialiased
     // curves properly connect with non-antialiased vertical or horizontal lines, among other things.
     //
-    // Using larger aa steps is quite common when rendering shapes with distance fields.
-    // It gives a smoother (although blurrier look) by extending the range that is smoothed
-    // to produce the anti aliasing. In our case, however, extending the range inside of
-    // the shape causes noticeable artifacts at the junction between an antialiased corner
-    // and a straight edge.
+    // Lines over a half-pixel away from the pixel center *can* intersect with the pixel square;
+    // indeed, unless they are horizontal or vertical, they are guaranteed to. However, choosing
+    // a nonzero area for such pixels causes noticeable artifacts at the junction between an anti-
+    // aliased corner and a straight edge.
+    //
     // We may want to adjust this constant in specific scenarios (for example keep the principled
     // value for straight edges where we want pixel-perfect equivalence with non antialiased lines
     // when axis aligned, while selecting a larger and smoother aa range on curves).
     return 0.35355 * length(fwidth(position));
 }
 
-/// Return the blending coefficient to for distance antialiasing.
+/// Return the blending coefficient for distance antialiasing.
 ///
 /// 0.0 means inside the shape, 1.0 means outside.
+///
+/// This cubic polynomial approximates the area of a 1x1 pixel square under a
+/// line, given the signed Euclidean distance from the center of the square to
+/// that line. Calculating the *exact* area would require taking into account
+/// not only this distance but also the angle of the line. However, in
+/// practice, this complexity is not required, as the area is roughly the same
+/// regardless of the angle.
+///
+/// The coefficients of this polynomial were determined through least-squares
+/// regression and are accurate to within 2.16% of the total area of the pixel
+/// square 95% of the time, with a maximum error of 3.53%.
+///
+/// See the comments in `compute_aa_range()` for more information on the
+/// cutoff values of -0.5 and 0.5.
 float distance_aa(float aa_range, float signed_distance) {
-    return 1.0 - smoothstep(-aa_range, aa_range, signed_distance);
+    float dist = 0.5 * signed_distance / aa_range;
+    if (dist <= -0.5 + EPSILON)
+        return 1.0;
+    if (dist >= 0.5 - EPSILON)
+        return 0.0;
+    return 0.5 + dist * (0.8431027 * dist * dist - 1.14453603);
 }
 
 float signed_distance_rect(vec2 pos, vec2 p0, vec2 p1) {
