@@ -65,7 +65,8 @@ stubPreparedMessages.set(`ReferenceError: asdf is not defined`, new ConsoleMessa
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
   "userProvidedStyles": null,
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`SyntaxError: redeclaration of let a`, new ConsoleMessage({
@@ -110,7 +111,8 @@ stubPreparedMessages.set(`SyntaxError: redeclaration of let a`, new ConsoleMessa
       }
     }
   ],
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`TypeError longString message`, new ConsoleMessage({
@@ -157,7 +159,8 @@ stubPreparedMessages.set(`TypeError longString message`, new ConsoleMessage({
   "groupId": null,
   "userProvidedStyles": null,
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`throw ""`, new ConsoleMessage({
@@ -176,7 +179,8 @@ stubPreparedMessages.set(`throw ""`, new ConsoleMessage({
   "groupId": null,
   "userProvidedStyles": null,
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`throw "tomato"`, new ConsoleMessage({
@@ -195,7 +199,8 @@ stubPreparedMessages.set(`throw "tomato"`, new ConsoleMessage({
   "groupId": null,
   "userProvidedStyles": null,
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPackets.set(`ReferenceError: asdf is not defined`, {

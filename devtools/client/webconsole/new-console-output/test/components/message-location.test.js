@@ -40,7 +40,7 @@ describe("Message - location element", () => {
     expect(onViewSource.notCalled).toBe(true);
   });
 
-  it.only("Calls onViewSource when clicked and onViewSourceInDebugger undefined", () => {
+  it("Calls onViewSource when clicked and onViewSourceInDebugger undefined", () => {
     const onViewSource = sinon.spy();
 
     const message = stubPreparedMessages.get("console.log('foobar', 'test')");

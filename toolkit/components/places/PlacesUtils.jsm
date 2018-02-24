@@ -34,12 +34,10 @@ const NEWLINE = AppConstants.platform == "macosx" ? "\n" : "\r\n";
 const TIMERS_RESOLUTION_SKEW_MS = 16;
 
 function QI_node(aNode, aIID) {
-  var result = null;
   try {
-    result = aNode.QueryInterface(aIID);
-  } catch (e) {
-  }
-  return result;
+    return aNode.QueryInterface(aIID);
+  } catch (ex) {}
+  return null;
 }
 function asContainer(aNode) {
   return QI_node(aNode, Ci.nsINavHistoryContainerResultNode);
@@ -79,8 +77,10 @@ async function notifyKeywordChange(url, keyword, source) {
   let bookmarks = [];
   await PlacesUtils.bookmarks.fetch({ url }, b => bookmarks.push(b));
   for (let bookmark of bookmarks) {
-    bookmark.id = await PlacesUtils.promiseItemId(bookmark.guid);
-    bookmark.parentId = await PlacesUtils.promiseItemId(bookmark.parentGuid);
+    let ids = await PlacesUtils.promiseManyItemIds([bookmark.guid,
+                                                    bookmark.parentGuid]);
+    bookmark.id = ids.get(bookmark.guid);
+    bookmark.parentId = ids.get(bookmark.parentGuid);
   }
   let observers = PlacesUtils.bookmarks.getObservers();
   for (let bookmark of bookmarks) {
@@ -192,6 +192,22 @@ function serializeNode(aNode, aIsLivemark) {
 const DB_URL_LENGTH_MAX = 65536;
 const DB_TITLE_LENGTH_MAX = 4096;
 const DB_DESCRIPTION_LENGTH_MAX = 256;
+
+/**
+ * Executes a boolean validate function, throwing if it returns false.
+ *
+ * @param boolValidateFn
+ *        A boolean validate function.
+ * @return the input value.
+ * @throws if input doesn't pass the validate function.
+ */
+function simpleValidateFunc(boolValidateFn) {
+  return (v, input) => {
+    if (!boolValidateFn(v, input))
+      throw new Error("Invalid value");
+    return v;
+  };
+}
 
 /**
  * List of bookmark object validators, one per each known property.
@@ -678,9 +694,6 @@ var PlacesUtils = {
     }
   },
 
-  onPageAnnotationSet() {},
-  onPageAnnotationRemoved() {},
-
   /**
    * Determines whether or not a ResultNode is a host container.
    * @param   aNode
@@ -956,7 +969,7 @@ var PlacesUtils = {
             try {
               titleString = Services.io.newURI(uriString).QueryInterface(Ci.nsIURL)
                                 .fileName;
-            } catch (e) {}
+            } catch (ex) {}
           }
           // note:  Services.io.newURI() will throw if uriString is not a valid URI
           if (Services.io.newURI(uriString)) {
@@ -1419,7 +1432,6 @@ var PlacesUtils = {
    */
   setCharsetForURI: function PU_setCharsetForURI(aURI, aCharset) {
     return new Promise(resolve => {
-
       // Delaying to catch issues with asynchronous behavior while waiting
       // to implement asynchronous annotations in bug 699844.
       Services.tm.dispatchToMainThread(function() {
@@ -1433,7 +1445,6 @@ var PlacesUtils = {
         }
         resolve();
       });
-
     });
   },
 
@@ -1446,18 +1457,14 @@ var PlacesUtils = {
    */
   getCharsetForURI: function PU_getCharsetForURI(aURI) {
     return new Promise(resolve => {
-
       Services.tm.dispatchToMainThread(function() {
         let charset = null;
-
         try {
           charset = PlacesUtils.annotations.getPageAnnotation(aURI,
                                                               PlacesUtils.CHARSET_ANNO);
         } catch (ex) { }
-
         resolve(charset);
       });
-
     });
   },
 
@@ -1472,12 +1479,9 @@ var PlacesUtils = {
   promiseFaviconData(aPageUrl) {
     return new Promise((resolve, reject) => {
       PlacesUtils.favicons.getFaviconDataForPage(NetUtil.newURI(aPageUrl),
-        function(aURI, aDataLen, aData, aMimeType) {
-          if (aURI) {
-            resolve({ uri: aURI,
-                               dataLen: aDataLen,
-                               data: aData,
-                               mimeType: aMimeType });
+        function(uri, dataLen, data, mimeType) {
+          if (uri) {
+            resolve({ uri, dataLen, data, mimeType });
           } else {
             reject();
           }
@@ -1677,8 +1681,8 @@ var PlacesUtils = {
       if (aRow.getResultByName("has_annos")) {
         try {
           item.annos = PlacesUtils.getAnnotationsForItem(itemId);
-        } catch (e) {
-          Cu.reportError("Unexpected error while reading annotations " + e);
+        } catch (ex) {
+          Cu.reportError("Unexpected error while reading annotations " + ex);
         }
       }
 
@@ -1755,7 +1759,6 @@ var PlacesUtils = {
        LEFT JOIN moz_bookmarks b3 ON b3.id = d.parent
        LEFT JOIN moz_places h ON h.id = d.fk
        ORDER BY d.level, d.parent, d.position`;
-
 
     if (!aItemGuid)
       aItemGuid = this.bookmarks.rootGuid;
@@ -2006,8 +2009,13 @@ PlacesUtils.keywords = {
     if (onResult && typeof onResult != "function")
       throw new Error("onResult callback must be a valid function");
 
-    if (hasUrl)
-      keywordOrEntry.url = new URL(keywordOrEntry.url);
+    if (hasUrl) {
+      try {
+        keywordOrEntry.url = BOOKMARK_VALIDATORS.url(keywordOrEntry.url);
+      } catch (ex) {
+        throw new Error(keywordOrEntry.url + " is not a valid URL");
+      }
+    }
     if (hasKeyword)
       keywordOrEntry.keyword = keywordOrEntry.keyword.trim().toLowerCase();
 
@@ -2052,7 +2060,7 @@ PlacesUtils.keywords = {
    *        An object describing the keyword to insert, in the form:
    *        {
    *          keyword: non-empty string,
-   *          URL: URL or href to associate to the keyword,
+   *          url: URL or href to associate to the keyword,
    *          postData: optional POST data to associate to the keyword
    *          source: The change source, forwarded to all bookmark observers.
    *            Defaults to nsINavBookmarksService::SOURCE_DEFAULT.
@@ -2081,7 +2089,11 @@ PlacesUtils.keywords = {
     keyword = keyword.trim().toLowerCase();
     let postData = keywordEntry.postData || "";
     // This also checks href for validity
-    url = new URL(url);
+    try {
+      url = BOOKMARK_VALIDATORS.url(url);
+    } catch (ex) {
+      throw new Error(url + " is not a valid URL");
+    }
 
     return PlacesUtils.withConnectionWrapper("PlacesUtils.keywords.insert", async db => {
         let cache = await promiseKeywordsCache();
@@ -2566,19 +2578,3 @@ var GuidHelper = {
     }
   }
 };
-
-/**
- * Executes a boolean validate function, throwing if it returns false.
- *
- * @param boolValidateFn
- *        A boolean validate function.
- * @return the input value.
- * @throws if input doesn't pass the validate function.
- */
-function simpleValidateFunc(boolValidateFn) {
-  return (v, input) => {
-    if (!boolValidateFn(v, input))
-      throw new Error("Invalid value");
-    return v;
-  };
-}

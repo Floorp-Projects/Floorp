@@ -24,7 +24,6 @@
 #include "nsIConstraintValidation.h"
 #include "nsIControllers.h"
 #include "nsIDocument.h"
-#include "nsIDOMHTMLFormElement.h"
 #include "nsIFormControlFrame.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"

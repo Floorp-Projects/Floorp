@@ -557,7 +557,7 @@ public:
    *
    * For all other cases OwnerDoc and GetOwnerDocument behave identically.
    */
-  nsIDocument *OwnerDoc() const
+  nsIDocument* OwnerDoc() const
   {
     return mNodeInfo->GetDocument();
   }
@@ -566,7 +566,7 @@ public:
    * Return the "owner document" of this node as an nsINode*.  Implemented
    * in nsIDocument.h.
    */
-  nsINode *OwnerDocAsNode() const;
+  inline nsINode* OwnerDocAsNode() const;
 
   /**
    * Returns true if the content has an ancestor that is a document.

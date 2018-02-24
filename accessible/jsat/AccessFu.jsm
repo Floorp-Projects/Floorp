@@ -2,11 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* exported AccessFu */
-
 "use strict";
 
-var EXPORTED_SYMBOLS = ["AccessFu"]; // jshint ignore:line
+var EXPORTED_SYMBOLS = ["AccessFu"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
@@ -15,7 +13,7 @@ if (Utils.MozBuildApp === "mobile/android") {
   ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 }
 
-const ACCESSFU_DISABLE = 0; // jshint ignore:line
+// const ACCESSFU_DISABLE = 0;
 const ACCESSFU_ENABLE = 1;
 const ACCESSFU_AUTO = 2;
 
@@ -23,7 +21,7 @@ const SCREENREADER_SETTING = "accessibility.screenreader";
 const QUICKNAV_MODES_PREF = "accessibility.accessfu.quicknav_modes";
 const QUICKNAV_INDEX_PREF = "accessibility.accessfu.quicknav_index";
 
-var AccessFu = { // jshint ignore:line
+var AccessFu = {
   /**
    * Initialize chrome-layer accessibility functionality.
    * If accessibility is enabled on the platform, then a special accessibility

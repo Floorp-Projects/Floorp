@@ -15,14 +15,7 @@ const ITEM_URL = "http://test.mozilla.org/";
 const TAG_NAME = "testTag";
 
 function validateResults() {
-  var query = PlacesUtils.history.getNewQuery();
-  query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
-  var options = PlacesUtils.history.getNewQueryOptions();
-  var result = PlacesUtils.history.executeQuery(query, options);
-
-  var toolbar = result.root;
-  toolbar.containerOpen = true;
-
+  let toolbar = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId).root;
   // test for our bookmark
   Assert.equal(toolbar.childCount, 1);
   for (var i = 0; i < toolbar.childCount; i++) {
@@ -51,34 +44,45 @@ add_task(async function() {
   // create a tag
   PlacesUtils.tagging.tagURI(Services.io.newURI(ITEM_URL), [TAG_NAME]);
   // get tag folder id
-  var options = PlacesUtils.history.getNewQueryOptions();
-  var query = PlacesUtils.history.getNewQuery();
-  query.setFolders([PlacesUtils.bookmarks.tagsFolder], 1);
-  var result = PlacesUtils.history.executeQuery(query, options);
-  var tagRoot = result.root;
-  tagRoot.containerOpen = true;
+  let tagRoot = PlacesUtils.getFolderContents(PlacesUtils.tagsFolderId).root;
   Assert.equal(tagRoot.childCount, 1);
-  var tagNode = tagRoot.getChild(0)
-                        .QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  let tagItemId = tagNode.itemId;
+  let tagItemGuid = PlacesUtils.asContainer(tagRoot.getChild(0)).bookmarkGuid;
   tagRoot.containerOpen = false;
 
-  // Currently these use the old API as the new API doesn't support inserting
-  // invalid items into the tag folder.
+  function insert({type, parentGuid}) {
+    return PlacesUtils.withConnectionWrapper("test_458683: insert", async db => {
+      await db.executeCached(
+        `INSERT INTO moz_bookmarks (type, parent, position, guid)
+         VALUES (:type,
+                 (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid),
+                 (SELECT MAX(position) + 1 FROM moz_bookmarks WHERE parent = (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid)),
+                 GENERATE_GUID())`, {type, parentGuid});
+    });
+  }
 
   // add a separator and a folder inside tag folder
-  PlacesUtils.bookmarks.insertSeparator(tagItemId,
-                                       PlacesUtils.bookmarks.DEFAULT_INDEX);
-  PlacesUtils.bookmarks.createFolder(tagItemId,
-                                     "test folder",
-                                     PlacesUtils.bookmarks.DEFAULT_INDEX);
+  // We must insert these manually, because the new bookmarking API doesn't
+  // support inserting invalid items into the tag folder.
+  await insert({
+    parentGuid: tagItemGuid,
+    type: PlacesUtils.bookmarks.TYPE_SEPARATOR
+  });
+  await insert({
+    parentGuid: tagItemGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER
+  });
 
   // add a separator and a folder inside tag root
-  PlacesUtils.bookmarks.insertSeparator(PlacesUtils.bookmarks.tagsFolder,
-                                        PlacesUtils.bookmarks.DEFAULT_INDEX);
-  PlacesUtils.bookmarks.createFolder(PlacesUtils.bookmarks.tagsFolder,
-                                     "test tags root folder",
-                                     PlacesUtils.bookmarks.DEFAULT_INDEX);
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.tagsGuid,
+    type: PlacesUtils.bookmarks.TYPE_SEPARATOR
+  });
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.tagsGuid,
+    title: "test tags root folder",
+    type: PlacesUtils.bookmarks.TYPE_FOLDER
+  });
+
   // sanity
   validateResults();
 

@@ -18,7 +18,6 @@ tests.push({
         parentGuid: PlacesUtils.bookmarks.toolbarGuid,
         index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "y",
-        keyword: "b",
         isInQuery: true },
 
       { isBookmark: true,
@@ -26,7 +25,6 @@ tests.push({
         parentGuid: PlacesUtils.bookmarks.toolbarGuid,
         index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "z",
-        keyword: "a",
         isInQuery: true },
 
       { isBookmark: true,
@@ -34,7 +32,6 @@ tests.push({
         parentGuid: PlacesUtils.bookmarks.toolbarGuid,
         index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "x",
-        keyword: "c",
         isInQuery: true },
     ];
 
@@ -436,103 +433,6 @@ tests.push({
 
   check_reverse() {
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING;
-    this._sortedData.reverse();
-    this.check();
-  }
-});
-
-tests.push({
-  _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_KEYWORD_ASCENDING,
-
-  async setup() {
-    info("Sorting test 6: SORT BY KEYWORD");
-
-    this._unsortedData = [
-      { isBookmark: true,
-        uri: "http://example.com/a",
-        parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-        title: "z",
-        keyword: "a",
-        isInQuery: true },
-
-      { isBookmark: true,
-        uri: "http://example.com/c",
-        parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-        title: "x",
-        keyword: "c",
-        isInQuery: true },
-
-      { isBookmark: true,
-        uri: "http://example.com/b1",
-        parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-        title: "y9",
-        keyword: "b",
-        isInQuery: true },
-
-      // without a keyword, should fall back to title
-      { isBookmark: true,
-        uri: "http://example.com/null2",
-        parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-        title: "null8",
-        keyword: null,
-        isInQuery: true },
-
-      // without a keyword, should fall back to title
-      { isBookmark: true,
-        uri: "http://example.com/null1",
-        parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-        title: "null9",
-        keyword: null,
-        isInQuery: true },
-
-      // if keywords are equal, should fall back to title
-      { isBookmark: true,
-        uri: "http://example.com/b1",
-        parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-        title: "y8",
-        keyword: "b",
-        isInQuery: true },
-    ];
-
-    this._sortedData = [
-      this._unsortedData[3],
-      this._unsortedData[4],
-      this._unsortedData[0],
-      this._unsortedData[5],
-      this._unsortedData[2],
-      this._unsortedData[1],
-    ];
-
-    // This function in head_queries.js creates our database with the above data
-    await task_populateDB(this._unsortedData);
-  },
-
-  check() {
-    // Query
-    var query = PlacesUtils.history.getNewQuery();
-    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
-    query.onlyBookmarked = true;
-
-    // query options
-    var options = PlacesUtils.history.getNewQueryOptions();
-    options.sortingMode = this._sortingMode;
-
-    // Results - this gets the result set and opens it for reading and modification.
-    var result = PlacesUtils.history.executeQuery(query, options);
-    var root = result.root;
-    root.containerOpen = true;
-    compareArrayToResult(this._sortedData, root);
-    root.containerOpen = false;
-  },
-
-  check_reverse() {
-    this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_KEYWORD_DESCENDING;
     this._sortedData.reverse();
     this.check();
   }

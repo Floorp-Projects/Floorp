@@ -27,9 +27,6 @@
 #include <algorithm>
 #include "mozilla/dom/NodeInfoInlines.h"
 
-// Form related includes
-#include "nsIDOMHTMLFormElement.h"
-
 #include "PLDHashTable.h"
 
 #ifdef DEBUG_CONTENT_LIST

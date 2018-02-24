@@ -180,38 +180,6 @@ nsIContent::GetAssignedSlotByMode() const
   return slot;
 }
 
-nsINode*
-nsIContent::GetFlattenedTreeParentForDocumentElementNAC() const
-{
-  MOZ_ASSERT(IsRootOfNativeAnonymousSubtree());
-  MOZ_ASSERT(GetParent());
-  MOZ_ASSERT(GetParent() == OwnerDoc()->GetRootElement());
-  MOZ_ASSERT(!IsGeneratedContentContainerForAfter());
-  MOZ_ASSERT(!IsGeneratedContentContainerForBefore());
-
-  nsIContent* parent = GetParent();
-  AutoTArray<nsIContent*, 8> rootElementNAC;
-  nsContentUtils::AppendNativeAnonymousChildren(
-    parent, rootElementNAC, nsIContent::eSkipDocumentLevelNativeAnonymousContent);
-  const bool isDocLevelNAC = !rootElementNAC.Contains(this);
-
-#ifdef DEBUG
-  {
-    // The code below would be slightly more direct, but it gets the wrong
-    // answer when the root scrollframe is being bootstrapped and we're
-    // trying to style the scrollbars (since GetRootScrollFrame() still returns
-    // null at that point). Verify that the results match otherwise.
-    AutoTArray<nsIContent*, 8> docLevelNAC;
-    nsContentUtils::AppendDocumentLevelNativeAnonymousContentTo(OwnerDoc(), docLevelNAC);
-    nsIPresShell* shell = OwnerDoc()->GetShell();
-    MOZ_ASSERT_IF(shell && shell->GetRootScrollFrame(),
-                  isDocLevelNAC == docLevelNAC.Contains(this));
-  }
-#endif
-
-  return isDocLevelNAC ? OwnerDocAsNode() : parent;
-}
-
 nsIContent::IMEState
 nsIContent::GetDesiredIMEState()
 {
