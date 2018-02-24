@@ -18,7 +18,6 @@
 
 #include "nsThreadUtils.h"
 
-#include "signaling/src/sdp/RsdparsaSdpParser.h"
 #include "signaling/src/sdp/SipccSdpParser.h"
 #include "signaling/src/sdp/SdpMediaSection.h"
 #include "signaling/src/sdp/SdpAttribute.h"
@@ -32,8 +31,6 @@ extern "C" {
 #undef CRLF
 #endif
 #define CRLF "\r\n"
-
-#define SKIP_TEST_WITH_RUST_PARSER if (!::testing::get<1>(GetParam())) {return;}
 
 using namespace mozilla;
 
@@ -1503,23 +1500,16 @@ TEST_F(SdpTest, parseIceLite) {
 }
 
 class NewSdpTest : public ::testing::Test,
-                   public ::testing::WithParamInterface<
-                     ::testing::tuple<bool, bool> > {
+                   public ::testing::WithParamInterface<bool> {
   public:
     NewSdpTest() {}
 
     void ParseSdp(const std::string &sdp, bool expectSuccess = true) {
-      if (::testing::get<1>(GetParam())) {
-        mSdpErrorHolder = &mSipccParser;
-        mSdp = mozilla::Move(mSipccParser.Parse(sdp));
-      } else {
-        mSdpErrorHolder = &mRustParser;
-        mSdp = mozilla::Move(mRustParser.Parse(sdp));
-      }
+      mSdp = mozilla::Move(mParser.Parse(sdp));
 
       // Are we configured to do a parse and serialize before actually
       // running the test?
-      if (::testing::get<0>(GetParam())) {
+      if (GetParam()) {
         std::stringstream os;
 
         if (expectSuccess) {
@@ -1530,11 +1520,7 @@ class NewSdpTest : public ::testing::Test,
         if (mSdp) {
           // Serialize and re-parse
           mSdp->Serialize(os);
-          if (::testing::get<1>(GetParam())) {
-            mSdp = mozilla::Move(mSipccParser.Parse(os.str()));
-          } else {
-            mSdp = mozilla::Move(mRustParser.Parse(os.str()));
-          }
+          mSdp = mozilla::Move(mParser.Parse(os.str()));
 
           // Whether we expected the parse to work or not, it should
           // succeed the second time if it succeeded the first.
@@ -1551,7 +1537,7 @@ class NewSdpTest : public ::testing::Test,
 
       if (expectSuccess) {
         ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
-        ASSERT_EQ(0U, mSdpErrorHolder->GetParseErrors().size())
+        ASSERT_EQ(0U, mParser.GetParseErrors().size())
                   << "Got unexpected parse errors/warnings: "
                   << GetParseErrors();
       }
@@ -1560,8 +1546,10 @@ class NewSdpTest : public ::testing::Test,
     // For streaming parse errors
     std::string GetParseErrors() const {
       std::stringstream output;
-      for (auto e: mSdpErrorHolder->GetParseErrors()) {
-        output << e.first << ": " << e.second << std::endl;
+      for (auto e = mParser.GetParseErrors().begin();
+           e != mParser.GetParseErrors().end();
+           ++e) {
+        output << e->first << ": " << e->second << std::endl;
       }
       return output.str();
     }
@@ -1629,9 +1617,7 @@ class NewSdpTest : public ::testing::Test,
       ASSERT_EQ(expected, str.str());
     }
 
-    SdpErrorHolder* mSdpErrorHolder;
-    SipccSdpParser mSipccParser;
-    RsdparsaSdpParser mRustParser;
+    SipccSdpParser mParser;
     mozilla::UniquePtr<Sdp> mSdp;
 }; // class NewSdpTest
 
@@ -1641,7 +1627,7 @@ TEST_P(NewSdpTest, CreateDestroy) {
 TEST_P(NewSdpTest, ParseEmpty) {
   ParseSdp("", false);
   ASSERT_FALSE(mSdp);
-  ASSERT_NE(0U, mSdpErrorHolder->GetParseErrors().size())
+  ASSERT_NE(0U, mParser.GetParseErrors().size())
     << "Expected at least one parse error.";
 }
 
@@ -1650,25 +1636,25 @@ const std::string kBadSdp = "This is SDPARTA!!!!";
 TEST_P(NewSdpTest, ParseGarbage) {
   ParseSdp(kBadSdp, false);
   ASSERT_FALSE(mSdp);
-  ASSERT_NE(0U, mSdpErrorHolder->GetParseErrors().size())
+  ASSERT_NE(0U, mParser.GetParseErrors().size())
     << "Expected at least one parse error.";
 }
 
 TEST_P(NewSdpTest, ParseGarbageTwice) {
   ParseSdp(kBadSdp, false);
   ASSERT_FALSE(mSdp);
-  size_t errorCount = mSdpErrorHolder->GetParseErrors().size();
+  size_t errorCount = mParser.GetParseErrors().size();
   ASSERT_NE(0U, errorCount)
     << "Expected at least one parse error.";
   ParseSdp(kBadSdp, false);
   ASSERT_FALSE(mSdp);
-  ASSERT_EQ(errorCount, mSdpErrorHolder->GetParseErrors().size())
+  ASSERT_EQ(errorCount, mParser.GetParseErrors().size())
     << "Expected same error count for same SDP.";
 }
 
 TEST_P(NewSdpTest, ParseMinimal) {
   ParseSdp(kVideoSdp);
-  ASSERT_EQ(0U, mSdpErrorHolder->GetParseErrors().size()) <<
+  ASSERT_EQ(0U, mParser.GetParseErrors().size()) <<
     "Got parse errors: " << GetParseErrors();
 }
 
@@ -1785,7 +1771,6 @@ TEST_P(NewSdpTest, CheckMediaSectionGetMissingBandwidth) {
 TEST_P(NewSdpTest, CheckMediaSectionGetBandwidth) {
   ParseSdp("v=0\r\n"
            "o=- 4294967296 2 IN IP4 127.0.0.1\r\n"
-           "s=SIP Call\r\n"
            "c=IN IP4 198.51.100.7\r\n"
            "t=0 0\r\n"
            "m=video 56436 RTP/SAVPF 120\r\n"
@@ -1895,6 +1880,7 @@ const std::string kBasicAudioVideoOffer =
 "m=audio 9 RTP/SAVPF 0" CRLF
 "a=mid:third" CRLF
 "a=rtpmap:0 PCMU/8000" CRLF
+"a=ice-lite" CRLF
 "a=ice-options:foo bar" CRLF
 "a=msid:noappdata" CRLF
 "a=bundle-only" CRLF;
@@ -1904,7 +1890,6 @@ TEST_P(NewSdpTest, BasicAudioVideoSdpParse) {
 }
 
 TEST_P(NewSdpTest, CheckRemoveFmtp) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kBasicAudioVideoOffer);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
@@ -2057,7 +2042,6 @@ TEST_P(NewSdpTest, CheckIdentity) {
 }
 
 TEST_P(NewSdpTest, CheckDtlsMessage) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432920
   ParseSdp(kBasicAudioVideoOffer);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_TRUE(mSdp->GetAttributeList().HasAttribute(
@@ -2258,7 +2242,6 @@ static const std::string kAudioWithTelephoneEvent =
   "a=rtpmap:101 telephone-event/8000" CRLF;
 
 TEST_P(NewSdpTest, CheckTelephoneEventNoFmtp) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
@@ -2277,7 +2260,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventNoFmtp) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventWithDefaultEvents) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 0-15" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2288,7 +2270,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventWithDefaultEvents) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventWithBadCharacter) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 0-5." CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2299,7 +2280,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventWithBadCharacter) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventIncludingCommas) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 0-15,66,67" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2310,7 +2290,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventIncludingCommas) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventComplexEvents) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 0,1,2-4,5-15,66,67" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2321,7 +2300,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventComplexEvents) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventNoHyphen) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 5,6,7" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2332,7 +2310,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventNoHyphen) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventOnlyZero) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 0" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2343,7 +2320,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventOnlyZero) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventOnlyOne) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 1" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2354,7 +2330,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventOnlyOne) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadThreeDigit) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 123" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2366,7 +2341,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadThreeDigit) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadThreeDigitWithHyphen) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 0-123" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2378,7 +2352,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadThreeDigitWithHyphen) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadLeadingHyphen) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 -12" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2400,7 +2373,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadTrailingHyphenInMiddle) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadLeadingComma) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 ,2,3" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2412,7 +2384,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadLeadingComma) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadMultipleLeadingComma) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 ,,,2,3" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2424,7 +2395,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadMultipleLeadingComma) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadConsecutiveCommas) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 1,,,,,,,,3" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2436,7 +2406,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadConsecutiveCommas) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadTrailingComma) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 1,2,3," CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2448,7 +2417,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadTrailingComma) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadTwoHyphens) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 1-2-3" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2460,7 +2428,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadTwoHyphens) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadSixDigit) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 112233" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2472,7 +2439,6 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadSixDigit) {
 }
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadRangeReversed) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kAudioWithTelephoneEvent
            + "a=fmtp:101 33-2" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
@@ -2502,7 +2468,6 @@ static const std::string kVideoWithRedAndUlpfecSdp =
   "a=rtpmap:123 ulpfec/90000" CRLF;
 
 TEST_P(NewSdpTest, CheckRedNoFmtp) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kVideoWithRedAndUlpfecSdp);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
@@ -2521,9 +2486,8 @@ TEST_P(NewSdpTest, CheckRedNoFmtp) {
 }
 
 TEST_P(NewSdpTest, CheckRedEmptyFmtp) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   // if serializing and re-parsing, we expect errors
-  if (::testing::get<0>(GetParam())) {
+  if (GetParam()) {
     ParseSdp(kVideoWithRedAndUlpfecSdp + "a=fmtp:122" CRLF);
   } else {
     ParseSdp(kVideoWithRedAndUlpfecSdp + "a=fmtp:122" CRLF, false);
@@ -2547,7 +2511,6 @@ TEST_P(NewSdpTest, CheckRedEmptyFmtp) {
 }
 
 TEST_P(NewSdpTest, CheckRedFmtpWith2Codecs) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kVideoWithRedAndUlpfecSdp + "a=fmtp:122 120/121" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
@@ -2572,7 +2535,6 @@ TEST_P(NewSdpTest, CheckRedFmtpWith2Codecs) {
 }
 
 TEST_P(NewSdpTest, CheckRedFmtpWith3Codecs) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kVideoWithRedAndUlpfecSdp + "a=fmtp:122 120/121/123" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
@@ -2663,10 +2625,10 @@ const std::string kH264AudioVideoOffer =
 "m=audio 9 RTP/SAVPF 0" CRLF
 "a=mid:third" CRLF
 "a=rtpmap:0 PCMU/8000" CRLF
+"a=ice-lite" CRLF
 "a=msid:noappdata" CRLF;
 
 TEST_P(NewSdpTest, CheckFormatParameters) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432918
   ParseSdp(kH264AudioVideoOffer);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
@@ -2819,7 +2781,6 @@ TEST_P(NewSdpTest, CheckDirections) {
 }
 
 TEST_P(NewSdpTest, CheckCandidates) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432920
   ParseSdp(kBasicAudioVideoOffer);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
@@ -3047,14 +3008,12 @@ const std::string kBasicAudioVideoDataOffer =
 "a=setup:actpass" CRLF;
 
 TEST_P(NewSdpTest, BasicAudioVideoDataSdpParse) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432922
   ParseSdp(kBasicAudioVideoDataOffer);
-  ASSERT_EQ(0U, mSdpErrorHolder->GetParseErrors().size()) <<
+  ASSERT_EQ(0U, mParser.GetParseErrors().size()) <<
     "Got parse errors: " << GetParseErrors();
 }
 
 TEST_P(NewSdpTest, CheckApplicationParameters) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432922
   ParseSdp(kBasicAudioVideoDataOffer);
   ASSERT_TRUE(!!mSdp);
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
@@ -3085,7 +3044,6 @@ TEST_P(NewSdpTest, CheckApplicationParameters) {
 }
 
 TEST_P(NewSdpTest, CheckExtmap) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432922
   ParseSdp(kBasicAudioVideoDataOffer);
   ASSERT_TRUE(!!mSdp);
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
@@ -3121,7 +3079,6 @@ TEST_P(NewSdpTest, CheckExtmap) {
 }
 
 TEST_P(NewSdpTest, CheckRtcpFb) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432922
   ParseSdp(kBasicAudioVideoDataOffer);
   ASSERT_TRUE(!!mSdp);
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
@@ -3223,7 +3180,6 @@ TEST_P(NewSdpTest, CheckImageattr)
 
 TEST_P(NewSdpTest, CheckSimulcast)
 {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432920
   ParseSdp(kBasicAudioVideoOffer);
   ASSERT_TRUE(!!mSdp);
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
@@ -3251,7 +3207,6 @@ TEST_P(NewSdpTest, CheckSimulcast)
 }
 
 TEST_P(NewSdpTest, CheckSctpmap) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432922
   ParseSdp(kBasicAudioVideoDataOffer);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
@@ -3295,8 +3250,7 @@ TEST_P(NewSdpTest, NewSctpportSdpParse) {
 
 INSTANTIATE_TEST_CASE_P(RoundTripSerialize,
                         NewSdpTest,
-                        ::testing::Combine(::testing::Bool(),
-                                           ::testing::Bool()));
+                        ::testing::Values(false, true));
 
 const std::string kCandidateInSessionSDP =
 "v=0" CRLF
@@ -3747,8 +3701,7 @@ const std::string kMalformedImageattr =
 
 TEST_P(NewSdpTest, CheckMalformedImageattr)
 {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432930
-  if (::testing::get<0>(GetParam())) {
+  if (GetParam()) {
     // Don't do a parse/serialize before running this test
     return;
   }
@@ -3758,7 +3711,6 @@ TEST_P(NewSdpTest, CheckMalformedImageattr)
 }
 
 TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchSendRid) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432931
   ParseSdp("v=0" CRLF
            "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
            "s=SIP Call" CRLF
@@ -3774,7 +3726,6 @@ TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchSendRid) {
 }
 
 TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchRecvRid) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432932
   ParseSdp("v=0" CRLF
            "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
            "s=SIP Call" CRLF
@@ -3790,7 +3741,6 @@ TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchRecvRid) {
 }
 
 TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchPt) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432933
   ParseSdp("v=0" CRLF
            "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
            "s=SIP Call" CRLF
@@ -3806,7 +3756,6 @@ TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchPt) {
 }
 
 TEST_P(NewSdpTest, ParseInvalidSimulcastNotSending) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432934
   ParseSdp("v=0" CRLF
            "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
            "s=SIP Call" CRLF
@@ -3822,7 +3771,6 @@ TEST_P(NewSdpTest, ParseInvalidSimulcastNotSending) {
 }
 
 TEST_P(NewSdpTest, ParseInvalidSimulcastNotReceiving) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432936
   ParseSdp("v=0" CRLF
            "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
            "s=SIP Call" CRLF
