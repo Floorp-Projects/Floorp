@@ -11,9 +11,9 @@
 
 #include <stdlib.h>
 
-#include "jsarray.h"
 #include "jspubtd.h"
 
+#include "builtin/Array.h"
 #include "builtin/Reflect.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"

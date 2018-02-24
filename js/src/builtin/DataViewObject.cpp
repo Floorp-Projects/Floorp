@@ -13,9 +13,9 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jsarray.h"
 #include "jsnum.h"
 
+#include "builtin/Array.h"
 #include "jit/AtomicOperations.h"
 #include "js/Conversions.h"
 #include "js/Wrapper.h"
