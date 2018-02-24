@@ -6,11 +6,11 @@
 
 #include <math.h>
 
-#include "prlink.h"
 #include "prenv.h"
 #include "gfxPrefs.h"
 #include "nsString.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SharedLibrary.h"
 
 #include "mozilla/gfx/Quaternion.h"
 
@@ -117,22 +117,28 @@ LoadOSVRRuntime()
   static PRLibrary* osvrClientKitLib = nullptr;
   //this looks up the path in the about:config setting, from greprefs.js or modules\libpref\init\all.js
   //we need all the libs to be valid
+#ifdef XP_WIN
+  constexpr static auto* pfnGetPathStringPref = mozilla::Preferences::GetString;
+  nsAutoString osvrUtilPath, osvrCommonPath, osvrClientPath, osvrClientKitPath;
+#else
+  constexpr static auto* pfnGetPathStringPref = mozilla::Preferences::GetCString;
   nsAutoCString osvrUtilPath, osvrCommonPath, osvrClientPath, osvrClientKitPath;
-  if (NS_FAILED(mozilla::Preferences::GetCString("gfx.vr.osvr.utilLibPath",
-                                                 osvrUtilPath)) ||
-      NS_FAILED(mozilla::Preferences::GetCString("gfx.vr.osvr.commonLibPath",
-                                                 osvrCommonPath)) ||
-      NS_FAILED(mozilla::Preferences::GetCString("gfx.vr.osvr.clientLibPath",
-                                                 osvrClientPath)) ||
-      NS_FAILED(mozilla::Preferences::GetCString("gfx.vr.osvr.clientKitLibPath",
-                                                 osvrClientKitPath))) {
+#endif
+  if (NS_FAILED(pfnGetPathStringPref("gfx.vr.osvr.utilLibPath",
+                                     osvrUtilPath, PrefValueKind::User)) ||
+      NS_FAILED(pfnGetPathStringPref("gfx.vr.osvr.commonLibPath",
+                                     osvrCommonPath, PrefValueKind::User)) ||
+      NS_FAILED(pfnGetPathStringPref("gfx.vr.osvr.clientLibPath",
+                                     osvrClientPath, PrefValueKind::User)) ||
+      NS_FAILED(pfnGetPathStringPref("gfx.vr.osvr.clientKitLibPath",
+                                     osvrClientKitPath, PrefValueKind::User))) {
     return false;
   }
 
-  osvrUtilLib = PR_LoadLibrary(osvrUtilPath.BeginReading());
-  osvrCommonLib = PR_LoadLibrary(osvrCommonPath.BeginReading());
-  osvrClientLib = PR_LoadLibrary(osvrClientPath.BeginReading());
-  osvrClientKitLib = PR_LoadLibrary(osvrClientKitPath.BeginReading());
+  osvrUtilLib = LoadLibraryWithFlags(osvrUtilPath.get());
+  osvrCommonLib = LoadLibraryWithFlags(osvrCommonPath.get());
+  osvrClientLib = LoadLibraryWithFlags(osvrClientPath.get());
+  osvrClientKitLib = LoadLibraryWithFlags(osvrClientKitPath.get());
 
   if (!osvrUtilLib) {
     printf_stderr("[OSVR] Failed to load OSVR Util library!\n");
