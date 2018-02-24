@@ -22,7 +22,6 @@
 #include "nsIContentSink.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMHTMLFormElement.h"
 #include "nsIFormControl.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "nsIScriptContext.h"

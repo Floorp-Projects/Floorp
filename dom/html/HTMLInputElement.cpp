@@ -34,7 +34,6 @@
 #include "nsRepeatService.h"
 #include "nsContentCID.h"
 #include "nsIComponentManager.h"
-#include "nsIDOMHTMLFormElement.h"
 #include "mozilla/dom/ProgressEvent.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"

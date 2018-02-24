@@ -9,6 +9,7 @@ ChromeUtils.import("resource://services-sync/service.js");
 ChromeUtils.import("resource://services-sync/util.js");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource:///modules/PlacesUIUtils.jsm");
+ChromeUtils.import("resource://gre/modules/PlacesTransactions.jsm");
 
 let engine;
 let store;
@@ -454,18 +455,6 @@ add_task(async function test_onItemAdded() {
       "Sync Bookmark");
     let syncBmkGUID = await PlacesUtils.promiseItemGuid(syncBmkID);
     await verifyTrackedItems([syncFolderGUID, syncBmkGUID]);
-    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
-
-    await resetTracker();
-    await startTracking();
-
-    _("Insert a separator using the sync API");
-    let index = (await PlacesUtils.bookmarks.fetch(syncFolderGUID)).index;
-    let syncSepID = PlacesUtils.bookmarks.insertSeparator(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      index);
-    let syncSepGUID = await PlacesUtils.promiseItemGuid(syncSepID);
-    await verifyTrackedItems(["menu", syncSepGUID]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
@@ -1242,30 +1231,27 @@ add_task(async function test_onItemDeleted_removeFolderTransaction() {
 
     await startTracking();
 
-    let txn = PlacesUtils.bookmarks.getRemoveFolderTransaction(folder_id);
+    let txn = PlacesTransactions.Remove({guid: folder_guid});
     // We haven't executed the transaction yet.
     await verifyTrackerEmpty();
 
     _("Execute the remove folder transaction");
-    txn.doTransaction();
+    await txn.transact();
     await verifyTrackedItems(["menu", folder_guid, fx_guid, tb_guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
     await resetTracker();
 
     _("Undo the remove folder transaction");
-    txn.undoTransaction();
+    await PlacesTransactions.undo();
 
-    // At this point, the restored folder has the same ID, but a different GUID.
-    let new_folder_guid = await PlacesUtils.promiseItemGuid(folder_id);
-
-    await verifyTrackedItems(["menu", new_folder_guid]);
-    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    await verifyTrackedItems(["menu", folder_guid, fx_guid, tb_guid]);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
     await resetTracker();
 
     _("Redo the transaction");
-    txn.redoTransaction();
-    await verifyTrackedItems(["menu", new_folder_guid]);
-    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    await PlacesTransactions.redo();
+    await verifyTrackedItems(["menu", folder_guid, fx_guid, tb_guid]);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
   } finally {
     _("Clean up.");
     await cleanup();

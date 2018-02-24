@@ -742,10 +742,6 @@ nsNavHistoryContainerResultNode::GetSortingComparator(uint16_t aSortType)
       return &SortComparison_VisitCountLess;
     case nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING:
       return &SortComparison_VisitCountGreater;
-    case nsINavHistoryQueryOptions::SORT_BY_KEYWORD_ASCENDING:
-      return &SortComparison_KeywordLess;
-    case nsINavHistoryQueryOptions::SORT_BY_KEYWORD_DESCENDING:
-      return &SortComparison_KeywordGreater;
     case nsINavHistoryQueryOptions::SORT_BY_ANNOTATION_ASCENDING:
       return &SortComparison_AnnotationLess;
     case nsINavHistoryQueryOptions::SORT_BY_ANNOTATION_DESCENDING:
@@ -1029,43 +1025,6 @@ int32_t nsNavHistoryContainerResultNode::SortComparison_URIGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return -SortComparison_URILess(a, b, closure);
-}
-
-
-int32_t nsNavHistoryContainerResultNode::SortComparison_KeywordLess(
-    nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
-{
-  int32_t value = 0;
-  if (a->mItemId != -1 || b->mItemId != -1) {
-    // compare the keywords
-    nsAutoString keywordA, keywordB;
-    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-    NS_ENSURE_TRUE(bookmarks, 0);
-
-    nsresult rv;
-    if (a->mItemId != -1) {
-      rv = bookmarks->GetKeywordForBookmark(a->mItemId, keywordA);
-      NS_ENSURE_SUCCESS(rv, 0);
-    }
-    if (b->mItemId != -1) {
-      rv = bookmarks->GetKeywordForBookmark(b->mItemId, keywordB);
-      NS_ENSURE_SUCCESS(rv, 0);
-    }
-
-    value = SortComparison_StringLess(keywordA, keywordB);
-  }
-
-  // Fall back to title sorting.
-  if (value == 0)
-    value = SortComparison_TitleLess(a, b, closure);
-
-  return value;
-}
-
-int32_t nsNavHistoryContainerResultNode::SortComparison_KeywordGreater(
-    nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
-{
-  return -SortComparison_KeywordLess(a, b, closure);
 }
 
 int32_t nsNavHistoryContainerResultNode::SortComparison_AnnotationLess(

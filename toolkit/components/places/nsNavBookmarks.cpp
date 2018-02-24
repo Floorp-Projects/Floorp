@@ -798,24 +798,55 @@ nsNavBookmarks::RemoveItem(int64_t aItemId, uint16_t aSource)
 
 
 NS_IMETHODIMP
-nsNavBookmarks::CreateFolder(int64_t aParent, const nsACString& aName,
+nsNavBookmarks::CreateFolder(int64_t aParent, const nsACString& aTitle,
                              int32_t aIndex, const nsACString& aGUID,
-                             uint16_t aSource, int64_t* aNewFolder)
+                             uint16_t aSource, int64_t* aNewFolderId)
 {
   // NOTE: aParent can be null for root creation, so not checked
-  NS_ENSURE_ARG_POINTER(aNewFolder);
-
+  NS_ENSURE_ARG_POINTER(aNewFolderId);
+  NS_ENSURE_ARG_MIN(aIndex, nsINavBookmarksService::DEFAULT_INDEX);
   if (!aGUID.IsEmpty() && !IsValidGUID(aGUID))
     return NS_ERROR_INVALID_ARG;
 
-  // CreateContainerWithID returns the index of the new folder, but that's not
-  // used here.  To avoid any risk of corrupting data should this function
-  // be changed, we'll use a local variable to hold it.  The true argument
-  // will cause notifications to be sent to bookmark observers.
-  int32_t localIndex = aIndex;
-  nsresult rv = CreateContainerWithID(-1, aParent, aName, true, &localIndex,
-                                      aGUID, aSource, aNewFolder);
+  // Get the correct index for insertion.  This also ensures the parent exists.
+  int32_t index = aIndex, folderCount;
+  int64_t grandParentId;
+  nsAutoCString folderGuid;
+  nsresult rv = FetchFolderInfo(aParent, &folderCount, folderGuid, &grandParentId);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mozStorageTransaction transaction(mDB->MainConn(), false);
+
+  if (aIndex == nsINavBookmarksService::DEFAULT_INDEX || aIndex >= folderCount) {
+    index = folderCount;
+  } else {
+    // Create space for the insertion.
+    rv = AdjustIndices(aParent, index, INT32_MAX, 1);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  *aNewFolderId = -1;
+  PRTime dateAdded = RoundedPRNow();
+  nsAutoCString guid(aGUID);
+  nsCString title;
+  TruncateTitle(aTitle, title);
+
+  rv = InsertBookmarkInDB(-1, FOLDER, aParent, index,
+                          title, dateAdded, 0, folderGuid, grandParentId,
+                          nullptr, aSource, aNewFolderId, guid);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  int64_t tagsRootId = TagsRootId();
+
+  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers,
+                             SKIP_TAGS(aParent == tagsRootId),
+                             OnItemAdded(*aNewFolderId, aParent, index, FOLDER,
+                                         nullptr, title, dateAdded, guid,
+                                         folderGuid, aSource));
+
   return NS_OK;
 }
 
@@ -830,140 +861,6 @@ bool nsNavBookmarks::IsLivemark(int64_t aFolderId)
   NS_ENSURE_SUCCESS(rv, false);
   return isLivemark;
 }
-
-nsresult
-nsNavBookmarks::CreateContainerWithID(int64_t aItemId,
-                                      int64_t aParent,
-                                      const nsACString& aTitle,
-                                      bool aIsBookmarkFolder,
-                                      int32_t* aIndex,
-                                      const nsACString& aGUID,
-                                      uint16_t aSource,
-                                      int64_t* aNewFolder)
-{
-  NS_ENSURE_ARG_MIN(*aIndex, nsINavBookmarksService::DEFAULT_INDEX);
-
-  // Get the correct index for insertion.  This also ensures the parent exists.
-  int32_t index, folderCount;
-  int64_t grandParentId;
-  nsAutoCString folderGuid;
-  nsresult rv = FetchFolderInfo(aParent, &folderCount, folderGuid, &grandParentId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mozStorageTransaction transaction(mDB->MainConn(), false);
-
-  if (*aIndex == nsINavBookmarksService::DEFAULT_INDEX ||
-      *aIndex >= folderCount) {
-    index = folderCount;
-  } else {
-    index = *aIndex;
-    // Create space for the insertion.
-    rv = AdjustIndices(aParent, index, INT32_MAX, 1);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  *aNewFolder = aItemId;
-  PRTime dateAdded = RoundedPRNow();
-  nsAutoCString guid(aGUID);
-  nsCString title;
-  TruncateTitle(aTitle, title);
-
-  rv = InsertBookmarkInDB(-1, FOLDER, aParent, index,
-                          title, dateAdded, 0, folderGuid, grandParentId,
-                          nullptr, aSource, aNewFolder, guid);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  int64_t tagsRootId = TagsRootId();
-
-  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers,
-                             SKIP_TAGS(aParent == tagsRootId),
-                             OnItemAdded(*aNewFolder, aParent, index, FOLDER,
-                                         nullptr, title, dateAdded, guid,
-                                         folderGuid, aSource));
-
-  *aIndex = index;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNavBookmarks::InsertSeparator(int64_t aParent,
-                                int32_t aIndex,
-                                const nsACString& aGUID,
-                                uint16_t aSource,
-                                int64_t* aNewItemId)
-{
-  NS_ENSURE_ARG_MIN(aParent, 1);
-  NS_ENSURE_ARG_MIN(aIndex, nsINavBookmarksService::DEFAULT_INDEX);
-  NS_ENSURE_ARG_POINTER(aNewItemId);
-
-  if (!aGUID.IsEmpty() && !IsValidGUID(aGUID))
-    return NS_ERROR_INVALID_ARG;
-
-  // Get the correct index for insertion.  This also ensures the parent exists.
-  int32_t index, folderCount;
-  int64_t grandParentId;
-  nsAutoCString folderGuid;
-  nsresult rv = FetchFolderInfo(aParent, &folderCount, folderGuid, &grandParentId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mozStorageTransaction transaction(mDB->MainConn(), false);
-
-  if (aIndex == nsINavBookmarksService::DEFAULT_INDEX ||
-      aIndex >= folderCount) {
-    index = folderCount;
-  }
-  else {
-    index = aIndex;
-    // Create space for the insertion.
-    rv = AdjustIndices(aParent, index, INT32_MAX, 1);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  *aNewItemId = -1;
-  nsAutoCString guid(aGUID);
-  PRTime dateAdded = RoundedPRNow();
-  rv = InsertBookmarkInDB(-1, SEPARATOR, aParent, index, EmptyCString(), dateAdded,
-                          0, folderGuid, grandParentId, nullptr, aSource,
-                          aNewItemId, guid);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers, DontSkip,
-                             OnItemAdded(*aNewItemId, aParent, index, TYPE_SEPARATOR,
-                                         nullptr, EmptyCString(), dateAdded, guid,
-                                         folderGuid, aSource));
-
-  return NS_OK;
-}
-
-
-NS_IMPL_ISUPPORTS(nsNavBookmarks::RemoveFolderTransaction, nsITransaction)
-
-NS_IMETHODIMP
-nsNavBookmarks::GetRemoveFolderTransaction(int64_t aFolderId, uint16_t aSource,
-                                           nsITransaction** aResult)
-{
-  NS_ENSURE_ARG_MIN(aFolderId, 1);
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  // Create and initialize a RemoveFolderTransaction object that can be used to
-  // recreate the folder safely later.
-
-  RemoveFolderTransaction* rft =
-    new RemoveFolderTransaction(aFolderId, aSource);
-  if (!rft)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*aResult = rft);
-  return NS_OK;
-}
-
 
 nsresult
 nsNavBookmarks::GetDescendantFolders(int64_t aFolderId,
@@ -2247,303 +2144,6 @@ nsNavBookmarks::GetBookmarksForURI(nsIURI* aURI,
   return NS_OK;
 }
 
-
-
-NS_IMETHODIMP
-nsNavBookmarks::SetKeywordForBookmark(int64_t aBookmarkId,
-                                      const nsAString& aUserCasedKeyword,
-                                      uint16_t aSource)
-{
-  NS_ENSURE_ARG_MIN(aBookmarkId, 1);
-
-  // This also ensures the bookmark is valid.
-  BookmarkData bookmark;
-  nsresult rv = FetchItemInfo(aBookmarkId, bookmark);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), bookmark.url);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Shortcuts are always lowercased internally.
-  nsAutoString keyword(aUserCasedKeyword);
-  ToLowerCase(keyword);
-
-  // The same URI can be associated to more than one keyword, provided the post
-  // data differs.  Check if there are already keywords associated to this uri.
-  nsTArray<nsString> oldKeywords;
-  {
-    nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      "SELECT keyword FROM moz_keywords WHERE place_id = :place_id"
-    );
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("place_id"), bookmark.placeId);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool hasMore;
-    while (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) && hasMore) {
-      nsString oldKeyword;
-      rv = stmt->GetString(0, oldKeyword);
-      NS_ENSURE_SUCCESS(rv, rv);
-      oldKeywords.AppendElement(oldKeyword);
-    }
-  }
-
-  // Trying to remove a non-existent keyword is a no-op.
-  if (keyword.IsEmpty() && oldKeywords.Length() == 0) {
-    return NS_OK;
-  }
-
-  int64_t syncChangeDelta = DetermineSyncChangeDelta(aSource);
-
-  mozStorageTransaction transaction(mDB->MainConn(), false);
-
-  // Remove the existing keywords.
-  // Note this is wrong because in the insert-new-keyword case we should only
-  // remove those having the same POST data, but this API doesn't allow that.
-  // And in any case, this API is going away.
-  for (uint32_t i = 0; i < oldKeywords.Length(); ++i) {
-    nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      "DELETE FROM moz_keywords WHERE keyword = :old_keyword"
-    );
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
-    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("old_keyword"),
-                                oldKeywords[i]);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (keyword.IsEmpty()) {
-    // We are removing the existing keywords.
-    for (uint32_t i = 0; i < oldKeywords.Length(); ++i) {
-      nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-        "DELETE FROM moz_keywords WHERE keyword = :old_keyword"
-      );
-      NS_ENSURE_STATE(stmt);
-      mozStorageStatementScoper scoper(stmt);
-      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("old_keyword"),
-                                  oldKeywords[i]);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = stmt->Execute();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    nsTArray<BookmarkData> bookmarks;
-    rv = GetBookmarksForURI(uri, bookmarks);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (syncChangeDelta && !bookmarks.IsEmpty()) {
-      // Build a query to update all bookmarks in a single statement.
-      nsAutoCString changedIds;
-      changedIds.AppendInt(bookmarks[0].id);
-      for (uint32_t i = 1; i < bookmarks.Length(); ++i) {
-        changedIds.Append(',');
-        changedIds.AppendInt(bookmarks[i].id);
-      }
-      // Update the sync change counter for all bookmarks with the removed
-      // keyword.
-      nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-        NS_LITERAL_CSTRING(
-        "UPDATE moz_bookmarks SET "
-         "syncChangeCounter = syncChangeCounter + :delta "
-        "WHERE id IN (") + changedIds + NS_LITERAL_CSTRING(")")
-      );
-      NS_ENSURE_STATE(stmt);
-      mozStorageStatementScoper scoper(stmt);
-
-      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("delta"),
-                                 syncChangeDelta);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = stmt->Execute();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    rv = transaction.Commit();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
-      NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavBookmarkObserver,
-                       OnItemChanged(bookmarks[i].id,
-                                     NS_LITERAL_CSTRING("keyword"),
-                                     false,
-                                     EmptyCString(),
-                                     bookmarks[i].lastModified,
-                                     TYPE_BOOKMARK,
-                                     bookmarks[i].parentId,
-                                     bookmarks[i].guid,
-                                     bookmarks[i].parentGuid,
-                                     // Abusing oldVal to pass out the url.
-                                     bookmark.url,
-                                     aSource));
-    }
-
-    return NS_OK;
-  }
-
-  // A keyword can only be associated to a single URI.  Check if the requested
-  // keyword was already associated, in such a case we will need to notify about
-  // the change.
-  nsAutoCString oldSpec;
-  nsCOMPtr<nsIURI> oldUri;
-  {
-    nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      "SELECT url "
-      "FROM moz_keywords "
-      "JOIN moz_places h ON h.id = place_id "
-      "WHERE keyword = :keyword"
-    );
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
-    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("keyword"), keyword);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool hasMore;
-    if (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) && hasMore) {
-      rv = stmt->GetUTF8String(0, oldSpec);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = NS_NewURI(getter_AddRefs(oldUri), oldSpec);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
-
-  // If another uri is using the new keyword, we must update the keyword entry.
-  // Note we cannot use INSERT OR REPLACE cause it wouldn't invoke the delete
-  // trigger.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  if (oldUri) {
-    // In both cases, notify about the change.
-    nsTArray<BookmarkData> bookmarks;
-    rv = GetBookmarksForURI(oldUri, bookmarks);
-    NS_ENSURE_SUCCESS(rv, rv);
-    for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
-      NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavBookmarkObserver,
-                       OnItemChanged(bookmarks[i].id,
-                                     NS_LITERAL_CSTRING("keyword"),
-                                     false,
-                                     EmptyCString(),
-                                     bookmarks[i].lastModified,
-                                     TYPE_BOOKMARK,
-                                     bookmarks[i].parentId,
-                                     bookmarks[i].guid,
-                                     bookmarks[i].parentGuid,
-                                     // Abusing oldVal to pass out the url.
-                                     oldSpec,
-                                     aSource));
-    }
-
-    stmt = mDB->GetStatement(
-      "UPDATE moz_keywords SET place_id = :place_id WHERE keyword = :keyword"
-    );
-    NS_ENSURE_STATE(stmt);
-  }
-  else {
-    stmt = mDB->GetStatement(
-      "INSERT INTO moz_keywords (keyword, place_id, post_data) "
-      "VALUES (:keyword, :place_id, '')"
-    );
-  }
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
-
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("place_id"), bookmark.placeId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("keyword"), keyword);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsTArray<BookmarkData> bookmarks;
-  rv = GetBookmarksForURI(uri, bookmarks);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (syncChangeDelta && !bookmarks.IsEmpty()) {
-    // Build a query to update all bookmarks in a single statement.
-    nsAutoCString changedIds;
-    changedIds.AppendInt(bookmarks[0].id);
-    for (uint32_t i = 1; i < bookmarks.Length(); ++i) {
-      changedIds.Append(',');
-      changedIds.AppendInt(bookmarks[i].id);
-    }
-    // Update the sync change counter for all bookmarks with the new keyword.
-    nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      NS_LITERAL_CSTRING(
-      "UPDATE moz_bookmarks SET "
-       "syncChangeCounter = syncChangeCounter + :delta "
-      "WHERE id IN (") + changedIds + NS_LITERAL_CSTRING(")")
-    );
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
-
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("delta"), syncChangeDelta);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = stmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // In both cases, notify about the change.
-  for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
-    NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavBookmarkObserver,
-                     OnItemChanged(bookmarks[i].id,
-                                   NS_LITERAL_CSTRING("keyword"),
-                                   false,
-                                   NS_ConvertUTF16toUTF8(keyword),
-                                   bookmarks[i].lastModified,
-                                   TYPE_BOOKMARK,
-                                   bookmarks[i].parentId,
-                                   bookmarks[i].guid,
-                                   bookmarks[i].parentGuid,
-                                   // Abusing oldVal to pass out the url.
-                                   bookmark.url,
-                                   aSource));
-  }
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNavBookmarks::GetKeywordForBookmark(int64_t aBookmarkId, nsAString& aKeyword)
-{
-  NS_ENSURE_ARG_MIN(aBookmarkId, 1);
-  aKeyword.Truncate(0);
-
-  // We can have multiple keywords for the same uri, here we'll just return the
-  // last created one.
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(NS_LITERAL_CSTRING(
-    "SELECT k.keyword "
-    "FROM moz_bookmarks b "
-    "JOIN moz_keywords k ON k.place_id = b.fk "
-    "WHERE b.id = :item_id "
-    "ORDER BY k.ROWID DESC "
-    "LIMIT 1"
-  ));
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
-
-  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"),
-                             aBookmarkId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool hasMore;
-  if (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) && hasMore) {
-    nsAutoString keyword;
-    rv = stmt->GetString(0, keyword);
-    NS_ENSURE_SUCCESS(rv, rv);
-    aKeyword = keyword;
-    return NS_OK;
-  }
-
-  aKeyword.SetIsVoid(true);
-
-  return NS_OK;
-}
 
 
 NS_IMETHODIMP

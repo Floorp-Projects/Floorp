@@ -55,14 +55,6 @@ const SHADERS: &[Shader] = &[
         features: PRIM_FEATURES,
     },
     Shader {
-        name: "ps_gradient",
-        features: PRIM_FEATURES,
-    },
-    Shader {
-        name: "ps_angle_gradient",
-        features: PRIM_FEATURES,
-    },
-    Shader {
         name: "ps_hardware_composite",
         features: PRIM_FEATURES,
     },
@@ -81,7 +73,7 @@ const SHADERS: &[Shader] = &[
     // Brush shaders
     Shader {
         name: "brush_yuv_image",
-        features: &["", "YUV_NV12", "YUV_PLANAR", "YUV_INTERLEAVED"],
+        features: &["", "YUV_NV12", "YUV_PLANAR", "YUV_INTERLEAVED", "YUV_NV12,TEXTURE_RECT"],
     },
     Shader {
         name: "brush_mask",
@@ -109,6 +101,10 @@ const SHADERS: &[Shader] = &[
     },
     Shader {
         name: "brush_radial_gradient",
+        features: &[ "DITHERING" ],
+    },
+    Shader {
+        name: "brush_linear_gradient",
         features: &[],
     },
 ];

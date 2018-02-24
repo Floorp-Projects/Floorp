@@ -129,6 +129,10 @@ WebRenderBridgeChild::UpdateResources(wr::IpcResourceUpdateQueue& aResources)
     return;
   }
 
+  if (aResources.IsEmpty()) {
+    return;
+  }
+
   nsTArray<OpUpdateResource> resourceUpdates;
   nsTArray<RefCountedShmem> smallShmems;
   nsTArray<ipc::Shmem> largeShmems;

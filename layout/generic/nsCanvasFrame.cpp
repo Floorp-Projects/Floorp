@@ -93,6 +93,9 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
                                        reinterpret_cast<void*>(true));
 #endif // DEBUG
 
+  mCustomContentContainer->SetProperty(nsGkAtoms::docLevelNativeAnonymousContent,
+                                       reinterpret_cast<void*>(true));
+
   aElements.AppendElement(mCustomContentContainer);
 
   // Do not create an accessible object for the container.

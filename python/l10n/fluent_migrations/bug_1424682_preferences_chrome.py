@@ -55,12 +55,12 @@ def migrate(ctx):
                 ]
             ),
             FTL.Message(
-                id=FTL.Identifier('search-field'),
+                id=FTL.Identifier('search-input'),
                 attributes=[
                     FTL.Attribute(
                         FTL.Identifier('style'),
                         CONCAT(
-                            FTL.TextElement('min-width: '),
+                            FTL.TextElement('width: '),
                             COPY(
                                 'browser/chrome/browser/preferences/preferences.dtd',
                                 'searchField.width'

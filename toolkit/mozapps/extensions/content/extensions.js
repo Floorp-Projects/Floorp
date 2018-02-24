@@ -3195,7 +3195,8 @@ var gDetailView = {
 
     if (this._addon.optionsType == AddonManager.OPTIONS_TYPE_INLINE_BROWSER) {
       whenViewLoaded(async () => {
-        await this._addon.startupPromise;
+        const addon = this._addon;
+        await addon.startupPromise;
 
         const browserContainer = await this.createOptionsBrowser(rows);
 
@@ -3203,6 +3204,15 @@ var gDetailView = {
           // Make sure the browser is unloaded as soon as we change views,
           // rather than waiting for the next detail view to load.
           document.addEventListener("ViewChanged", function() {
+            // Do not remove the addon options container if the view changed
+            // event is not related to a change to the current selected view
+            // or the current selected addon (e.g. it could be related to the
+            // disco pane view that has completed to load, See Bug 1435705 for
+            // a rationale).
+            if (gViewController.currentViewObj === gDetailView &&
+                gDetailView._addon === addon) {
+              return;
+            }
             browserContainer.remove();
           }, {once: true});
         }

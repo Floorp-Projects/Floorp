@@ -37,7 +37,8 @@ stubPreparedMessages.set(`console.log('foobar', 'test')`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.log(undefined)`, new ConsoleMessage({
@@ -65,7 +66,8 @@ stubPreparedMessages.set(`console.log(undefined)`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.warn('danger, will robinson!')`, new ConsoleMessage({
@@ -91,7 +93,8 @@ stubPreparedMessages.set(`console.warn('danger, will robinson!')`, new ConsoleMe
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.log(NaN)`, new ConsoleMessage({
@@ -119,7 +122,8 @@ stubPreparedMessages.set(`console.log(NaN)`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.log(null)`, new ConsoleMessage({
@@ -147,7 +151,8 @@ stubPreparedMessages.set(`console.log(null)`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.log('鼬')`, new ConsoleMessage({
@@ -173,7 +178,8 @@ stubPreparedMessages.set(`console.log('鼬')`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.clear()`, new ConsoleMessage({
@@ -199,7 +205,8 @@ stubPreparedMessages.set(`console.clear()`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.count('bar')`, new ConsoleMessage({
@@ -223,7 +230,8 @@ stubPreparedMessages.set(`console.count('bar')`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.assert(false, {message: 'foobar'})`, new ConsoleMessage({
@@ -279,7 +287,8 @@ stubPreparedMessages.set(`console.assert(false, {message: 'foobar'})`, new Conso
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.log('hello \nfrom \rthe \"string world!')`, new ConsoleMessage({
@@ -305,7 +314,8 @@ stubPreparedMessages.set(`console.log('hello \nfrom \rthe \"string world!')`, ne
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.log('úṇĩçödê țĕșť')`, new ConsoleMessage({
@@ -331,7 +341,8 @@ stubPreparedMessages.set(`console.log('úṇĩçödê țĕșť')`, new ConsoleMe
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.dirxml(window)`, new ConsoleMessage({
@@ -369,7 +380,8 @@ stubPreparedMessages.set(`console.dirxml(window)`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.log('myarray', ['red', 'green', 'blue'])`, new ConsoleMessage({
@@ -413,7 +425,8 @@ stubPreparedMessages.set(`console.log('myarray', ['red', 'green', 'blue'])`, new
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.log('myregex', /a.b.c/)`, new ConsoleMessage({
@@ -449,7 +462,8 @@ stubPreparedMessages.set(`console.log('myregex', /a.b.c/)`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.table(['red', 'green', 'blue']);`, new ConsoleMessage({
@@ -492,7 +506,8 @@ stubPreparedMessages.set(`console.table(['red', 'green', 'blue']);`, new Console
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.log('myobject', {red: 'redValue', green: 'greenValue', blue: 'blueValue'});`, new ConsoleMessage({
@@ -554,7 +569,8 @@ stubPreparedMessages.set(`console.log('myobject', {red: 'redValue', green: 'gree
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.debug('debug message');`, new ConsoleMessage({
@@ -580,7 +596,8 @@ stubPreparedMessages.set(`console.debug('debug message');`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.info('info message');`, new ConsoleMessage({
@@ -606,7 +623,8 @@ stubPreparedMessages.set(`console.info('info message');`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.error('error message');`, new ConsoleMessage({
@@ -639,7 +657,8 @@ stubPreparedMessages.set(`console.error('error message');`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.log('mymap')`, new ConsoleMessage({
@@ -688,7 +707,8 @@ stubPreparedMessages.set(`console.log('mymap')`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.log('myset')`, new ConsoleMessage({
@@ -731,7 +751,8 @@ stubPreparedMessages.set(`console.log('myset')`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.trace()`, new ConsoleMessage({
@@ -774,7 +795,8 @@ stubPreparedMessages.set(`console.trace()`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.time('bar')`, new ConsoleMessage({
@@ -798,7 +820,8 @@ stubPreparedMessages.set(`console.time('bar')`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`timerAlreadyExists`, new ConsoleMessage({
@@ -822,7 +845,8 @@ stubPreparedMessages.set(`timerAlreadyExists`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.timeEnd('bar')`, new ConsoleMessage({
@@ -846,7 +870,8 @@ stubPreparedMessages.set(`console.timeEnd('bar')`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`timerDoesntExist`, new ConsoleMessage({
@@ -870,7 +895,8 @@ stubPreparedMessages.set(`timerDoesntExist`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.table('bar')`, new ConsoleMessage({
@@ -896,7 +922,8 @@ stubPreparedMessages.set(`console.table('bar')`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.table(['a', 'b', 'c'])`, new ConsoleMessage({
@@ -939,7 +966,8 @@ stubPreparedMessages.set(`console.table(['a', 'b', 'c'])`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.group('bar')`, new ConsoleMessage({
@@ -965,7 +993,8 @@ stubPreparedMessages.set(`console.group('bar')`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.groupEnd('bar')`, new ConsoleMessage({
@@ -989,7 +1018,8 @@ stubPreparedMessages.set(`console.groupEnd('bar')`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.groupCollapsed('foo')`, new ConsoleMessage({
@@ -1015,7 +1045,8 @@ stubPreparedMessages.set(`console.groupCollapsed('foo')`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.groupEnd('foo')`, new ConsoleMessage({
@@ -1039,7 +1070,8 @@ stubPreparedMessages.set(`console.groupEnd('foo')`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.group()`, new ConsoleMessage({
@@ -1065,7 +1097,8 @@ stubPreparedMessages.set(`console.group()`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.groupEnd()`, new ConsoleMessage({
@@ -1089,7 +1122,8 @@ stubPreparedMessages.set(`console.groupEnd()`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.log(%cfoobar)`, new ConsoleMessage({
@@ -1119,7 +1153,8 @@ stubPreparedMessages.set(`console.log(%cfoobar)`, new ConsoleMessage({
     "color:red; line-height: 1.5; background:url('http://example.com/test')"
   ],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.log("%cHello%c|%cWorld")`, new ConsoleMessage({
@@ -1151,7 +1186,8 @@ stubPreparedMessages.set(`console.log("%cHello%c|%cWorld")`, new ConsoleMessage(
     "color: blue"
   ],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.group(%cfoo%cbar)`, new ConsoleMessage({
@@ -1181,7 +1217,8 @@ stubPreparedMessages.set(`console.group(%cfoo%cbar)`, new ConsoleMessage({
     "color:red;background:url('http://example.com/test')"
   ],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.groupEnd(%cfoo%cbar)`, new ConsoleMessage({
@@ -1205,7 +1242,8 @@ stubPreparedMessages.set(`console.groupEnd(%cfoo%cbar)`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.groupCollapsed(%cfoo%cbaz)`, new ConsoleMessage({
@@ -1235,7 +1273,8 @@ stubPreparedMessages.set(`console.groupCollapsed(%cfoo%cbaz)`, new ConsoleMessag
     "color:red;background:url('http://example.com/test')"
   ],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.groupEnd(%cfoo%cbaz)`, new ConsoleMessage({
@@ -1259,7 +1298,8 @@ stubPreparedMessages.set(`console.groupEnd(%cfoo%cbaz)`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.dir({C, M, Y, K})`, new ConsoleMessage({
@@ -1326,7 +1366,8 @@ stubPreparedMessages.set(`console.dir({C, M, Y, K})`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.count | default: 1`, new ConsoleMessage({
@@ -1350,7 +1391,8 @@ stubPreparedMessages.set(`console.count | default: 1`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.count | default: 2`, new ConsoleMessage({
@@ -1374,7 +1416,8 @@ stubPreparedMessages.set(`console.count | default: 2`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.count | test counter: 1`, new ConsoleMessage({
@@ -1398,7 +1441,8 @@ stubPreparedMessages.set(`console.count | test counter: 1`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.count | test counter: 2`, new ConsoleMessage({
@@ -1422,7 +1466,8 @@ stubPreparedMessages.set(`console.count | test counter: 2`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.count | default: 3`, new ConsoleMessage({
@@ -1446,7 +1491,8 @@ stubPreparedMessages.set(`console.count | default: 3`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.count | clear`, new ConsoleMessage({
@@ -1472,7 +1518,8 @@ stubPreparedMessages.set(`console.count | clear`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.count | default: 4`, new ConsoleMessage({
@@ -1496,7 +1543,8 @@ stubPreparedMessages.set(`console.count | default: 4`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`console.count | test counter: 3`, new ConsoleMessage({
@@ -1520,7 +1568,8 @@ stubPreparedMessages.set(`console.count | test counter: 3`, new ConsoleMessage({
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
-  "indent": 0
+  "indent": 0,
+  "prefix": ""
 }));
 
 stubPackets.set(`console.log('foobar', 'test')`, {
