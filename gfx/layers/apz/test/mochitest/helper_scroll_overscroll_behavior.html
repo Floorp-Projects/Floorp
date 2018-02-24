@@ -7,20 +7,10 @@
   <script type="application/javascript">
 
 function* test(testDriver) {
-  var utils = SpecialPowers.getDOMWindowUtils(window);
-  var isWebRender = (utils.layerManagerType == 'WebRender');
-  if (!isWebRender) {
-    // After bug 1440112 is fixed, the test can be enabled
-    // for non-WebRender as well.
-    ok(true, "This test is only enabled for WebRender");
-    return;
-  }
-
   var subframe = document.getElementById('scroll');
 
   // scroll over the middle of the subframe, and make sure that the page
   // does not scroll.
-  var scrollPos = subframe.scrollTop;
   var waitForScroll = false;  // don't wait for a scroll event, it will never come
   yield moveMouseAndScrollWheelOver(subframe, 100, 100, testDriver, waitForScroll);
   ok(window.scrollY == 0, "overscroll-behavior was respected");
