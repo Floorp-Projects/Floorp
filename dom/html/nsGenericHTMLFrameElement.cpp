@@ -56,7 +56,17 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(nsGenericHTMLFrameElement,
                                              nsIMozBrowserFrame,
                                              nsGenericHTMLFrameElement)
 
-NS_IMPL_BOOL_ATTR(nsGenericHTMLFrameElement, Mozbrowser, mozbrowser)
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::GetMozbrowser(bool* aValue)
+{
+  *aValue = GetBoolAttr(nsGkAtoms::mozbrowser);
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::SetMozbrowser(bool aValue)
+{
+  return SetBoolAttr(nsGkAtoms::mozbrowser, aValue);
+}
 
 int32_t
 nsGenericHTMLFrameElement::TabIndexDefault()
