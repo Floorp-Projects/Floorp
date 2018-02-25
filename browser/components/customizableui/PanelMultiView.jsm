@@ -120,6 +120,7 @@ const TRANSITION_PHASES = Object.freeze({
 });
 
 let gNodeToObjectMap = new WeakMap();
+let gWindowsWithUnloadHandler = new WeakSet();
 let gMultiLineElementsMap = new WeakMap();
 
 /**
@@ -252,7 +253,7 @@ var AssociatedToNode = class {
 };
 
 /**
- * This is associated to <panelmultiview> elements by the panelUI.xml binding.
+ * This is associated to <panelmultiview> elements.
  */
 var PanelMultiView = class extends this.AssociatedToNode {
   /**
@@ -288,6 +289,44 @@ var PanelMultiView = class extends this.AssociatedToNode {
     } else {
       panelNode.hidePopup();
     }
+  }
+
+  /**
+   * Removes the specified <panel> from the document, ensuring that any
+   * <panelmultiview> node it contains is destroyed properly.
+   *
+   * If the panel does not contain a <panelmultiview>, it is removed directly.
+   * This allows consumers like page actions to accept different panel types.
+   */
+  static removePopup(panelNode) {
+    try {
+      let panelMultiViewNode = panelNode.querySelector("panelmultiview");
+      if (panelMultiViewNode) {
+        this.forNode(panelMultiViewNode).disconnect();
+      }
+    } finally {
+      // Make sure to remove the panel element even if disconnecting fails.
+      panelNode.remove();
+    }
+  }
+
+  /**
+   * Ensures that when the specified window is closed all the <panelmultiview>
+   * node it contains are destroyed properly.
+   */
+  static ensureUnloadHandlerRegistered(window) {
+    if (gWindowsWithUnloadHandler.has(window)) {
+      return;
+    }
+
+    window.addEventListener("unload", () => {
+      for (let panelMultiViewNode of
+           window.document.querySelectorAll("panelmultiview")) {
+        this.forNode(panelMultiViewNode).disconnect();
+      }
+    }, { once: true });
+
+    gWindowsWithUnloadHandler.add(window);
   }
 
   get _panel() {
@@ -355,6 +394,8 @@ var PanelMultiView = class extends this.AssociatedToNode {
   connect() {
     this.connected = true;
 
+    PanelMultiView.ensureUnloadHandlerRegistered(this.window);
+
     let viewContainer = this._viewContainer =
       this.document.createElement("box");
     viewContainer.classList.add("panel-viewcontainer");
@@ -407,9 +448,9 @@ var PanelMultiView = class extends this.AssociatedToNode {
     });
   }
 
-  destructor() {
+  disconnect() {
     // Guard against re-entrancy.
-    if (!this.node)
+    if (!this.node || !this.connected)
       return;
 
     this._cleanupTransitionPhase();
