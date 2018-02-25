@@ -423,10 +423,7 @@ const PanelUI = {
         }
         aAnchor.open = false;
 
-        // Ensure we run the destructor:
-        PanelMultiView.forNode(multiView).destructor();
-
-        tempPanel.remove();
+        PanelMultiView.removePopup(tempPanel);
       };
 
       if (aAnchor.parentNode.id == "PersonalToolbar") {
