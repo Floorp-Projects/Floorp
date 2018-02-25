@@ -921,6 +921,22 @@ RunModule(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
 }
 
 static bool
+EnqueueJob(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!IsCallable(args.get(0))) {
+        JS_ReportErrorASCII(cx, "EnqueueJob's first argument must be callable");
+        return false;
+    }
+
+    args.rval().setUndefined();
+
+    RootedObject job(cx, &args[0].toObject());
+    return js::EnqueueJob(cx, job);
+}
+
+static bool
 DrainJobQueue(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -7192,6 +7208,10 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "operation. Each element is the name of the function invoked, or the\n"
 "string 'eval:FILENAME' if the code was invoked by 'eval' or something\n"
 "similar.\n"),
+
+    JS_FN_HELP("enqueueJob", EnqueueJob, 1, 0,
+"enqueueJob(fn)",
+"  Enqueue 'fn' on the shell's job queue."),
 
     JS_FN_HELP("drainJobQueue", DrainJobQueue, 0, 0,
 "drainJobQueue()",
