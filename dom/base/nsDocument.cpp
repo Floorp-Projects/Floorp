@@ -1476,6 +1476,7 @@ nsIDocument::nsIDocument()
     mBufferingCSPViolations(false),
     mAllowPaymentRequest(false),
     mEncodingMenuDisabled(false),
+    mIsShadowDOMEnabled(false),
     mIsSVGGlyphsDocument(false),
     mAllowUnsafeHTML(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
@@ -1519,10 +1520,6 @@ nsIDocument::nsIDocument()
   for (auto& cnt : mIncCounters) {
     cnt = 0;
   }
-
-  // Set this when document is created and value stays the same for the lifetime
-  // of the document.
-  mIsShadowDOMEnabled = nsContentUtils::IsShadowDOMEnabled();
 }
 
 nsDocument::nsDocument(const char* aContentType)
@@ -2166,6 +2163,14 @@ nsDocument::Init()
              "Bad NodeType in aNodeInfo");
 
   NS_ASSERTION(OwnerDoc() == this, "Our nodeinfo is busted!");
+
+  UpdateStyleBackendType();
+
+  // Set this when document is initialized and value stays the same for the
+  // lifetime of the document.
+  mIsShadowDOMEnabled =
+    mStyleBackendType == StyleBackendType::Servo &&
+    nsContentUtils::IsShadowDOMEnabled();
 
   // If after creation the owner js global is not set for a document
   // we use the default compartment for this document, instead of creating

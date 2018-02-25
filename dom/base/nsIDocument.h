@@ -1403,10 +1403,8 @@ public:
   }
 
   mozilla::StyleBackendType GetStyleBackendType() const {
-    if (mStyleBackendType == mozilla::StyleBackendType::None) {
-      const_cast<nsIDocument*>(this)->UpdateStyleBackendType();
-    }
-    MOZ_ASSERT(mStyleBackendType != mozilla::StyleBackendType::None);
+    MOZ_ASSERT(mStyleBackendType != mozilla::StyleBackendType::None,
+               "Not initialized yet");
     return mStyleBackendType;
   }
 
