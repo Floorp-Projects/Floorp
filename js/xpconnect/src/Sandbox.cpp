@@ -56,6 +56,7 @@
 #include "mozilla/dom/URLBinding.h"
 #include "mozilla/dom/URLSearchParamsBinding.h"
 #include "mozilla/dom/XMLHttpRequest.h"
+#include "mozilla/dom/FormDataBinding.h"
 #include "mozilla/DeferredFinalize.h"
 
 using namespace mozilla;
@@ -938,6 +939,8 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
             File = true;
         } else if (!strcmp(name.ptr(), "FileReader")) {
             FileReader = true;
+        } else if (!strcmp(name.ptr(), "FormData")) {
+            FormData = true;
         } else if (!strcmp(name.ptr(), "InspectorUtils")) {
             InspectorUtils = true;
         } else if (!strcmp(name.ptr(), "MessageChannel")) {
@@ -1009,6 +1012,10 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
         return false;
 
     if (FileReader && !dom::FileReaderBinding::GetConstructorObject(cx))
+        return false;
+
+    if (FormData &&
+        !dom::FormDataBinding::GetConstructorObject(cx))
         return false;
 
     if (InspectorUtils &&
