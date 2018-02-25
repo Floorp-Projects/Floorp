@@ -16,12 +16,13 @@ add_task(async function test_findCluster() {
     Service.identity._ensureValidToken = () => Promise.reject(new Error("Connection refused"));
 
     _("_findCluster() throws on network errors (e.g. connection refused).");
-    await Assert.rejects(Service.identity._findCluster());
+    await Assert.rejects(Service._clusterManager._findCluster());
 
-    Service.identity._ensureValidToken = () => Promise.resolve({ endpoint: "http://weave.user.node" });
+    Service.identity._ensureValidToken = () => Promise.resolve(true);
+    Service.identity._token = { endpoint: "http://weave.user.node" };
 
     _("_findCluster() returns the user's cluster node");
-    let cluster = await Service.identity._findCluster();
+    let cluster = await Service._clusterManager._findCluster();
     Assert.equal(cluster, "http://weave.user.node/");
 
   } finally {
@@ -36,19 +37,19 @@ add_task(async function test_setCluster() {
     _("Check initial state.");
     Assert.equal(Service.clusterURL, "");
 
-    Service.identity._findCluster = () => "http://weave.user.node/";
+    Service._clusterManager._findCluster = () => "http://weave.user.node/";
 
     _("Set the cluster URL.");
-    Assert.ok((await Service.identity.setCluster()));
+    Assert.ok((await Service._clusterManager.setCluster()));
     Assert.equal(Service.clusterURL, "http://weave.user.node/");
 
     _("Setting it again won't make a difference if it's the same one.");
-    Assert.ok(!(await Service.identity.setCluster()));
+    Assert.ok(!(await Service._clusterManager.setCluster()));
     Assert.equal(Service.clusterURL, "http://weave.user.node/");
 
     _("A 'null' response won't make a difference either.");
-    Service.identity._findCluster = () => null;
-    Assert.ok(!(await Service.identity.setCluster()));
+    Service._clusterManager._findCluster = () => null;
+    Assert.ok(!(await Service._clusterManager.setCluster()));
     Assert.equal(Service.clusterURL, "http://weave.user.node/");
   } finally {
     Svc.Prefs.resetBranch("");

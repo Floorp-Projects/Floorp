@@ -86,7 +86,7 @@ Sync11Service.prototype = {
   storageURL: null,
   metaURL: null,
   cryptoKeyURL: null,
-  // The cluster URL comes via the identity object, which in the FxA
+  // The cluster URL comes via the ClusterManager object, which in the FxA
   // world is ebbedded in the token returned from the token server.
   _clusterURL: null,
 
@@ -129,8 +129,10 @@ Sync11Service.prototype = {
   },
 
   get userBaseURL() {
-    // The user URL is the cluster URL.
-    return this.clusterURL;
+    if (!this._clusterManager) {
+      return null;
+    }
+    return this._clusterManager.getUserBaseURL();
   },
 
   _updateCachedURLs: function _updateCachedURLs() {
@@ -295,6 +297,7 @@ Sync11Service.prototype = {
 
     this._log.info("Loading Weave " + WEAVE_VERSION);
 
+    this._clusterManager = this.identity.createClusterManager(this);
     this.recordManager = new RecordManager(this);
 
     this.enabled = true;
@@ -653,15 +656,22 @@ Sync11Service.prototype = {
   },
 
   async verifyLogin(allow40XRecovery = true) {
+    if (!this.identity.username) {
+      this._log.warn("No username in verifyLogin.");
+      this.status.login = LOGIN_FAILED_NO_USERNAME;
+      return false;
+    }
+
     // Attaching auth credentials to a request requires access to
     // passwords, which means that Resource.get can throw MP-related
     // exceptions!
     // So we ask the identity to verify the login state after unlocking the
     // master password (ie, this call is expected to prompt for MP unlock
     // if necessary) while we still have control.
-    this.status.login = await this.identity.unlockAndVerifyAuthState();
-    this._log.debug("Fetching unlocked auth state returned " + this.status.login);
-    if (this.status.login != STATUS_OK) {
+    let unlockedState = await this.identity.unlockAndVerifyAuthState();
+    this._log.debug("Fetching unlocked auth state returned " + unlockedState);
+    if (unlockedState != STATUS_OK) {
+      this.status.login = unlockedState;
       return false;
     }
 
@@ -669,7 +679,7 @@ Sync11Service.prototype = {
       // Make sure we have a cluster to verify against.
       // This is a little weird, if we don't get a node we pretend
       // to succeed, since that probably means we just don't have storage.
-      if (this.clusterURL == "" && !(await this.identity.setCluster())) {
+      if (this.clusterURL == "" && !(await this._clusterManager.setCluster())) {
         this.status.sync = NO_SYNC_NODE_FOUND;
         return true;
       }
@@ -708,13 +718,16 @@ Sync11Service.prototype = {
 
         case 404:
           // Check that we're verifying with the correct cluster
-          if (allow40XRecovery && (await this.identity.setCluster())) {
+          if (allow40XRecovery && (await this._clusterManager.setCluster())) {
             return await this.verifyLogin(false);
           }
 
           // We must have the right cluster, but the server doesn't expect us.
-          // For FxA this almost certainly means "transient error fetching token".
-          this.status.login = LOGIN_FAILED_NETWORK_ERROR;
+          // The implications of this depend on the identity being used - for
+          // the legacy identity, it's an authoritatively "incorrect password",
+          // (ie, LOGIN_FAILED_LOGIN_REJECTED) but for FxA it probably means
+          // "transient error fetching auth token".
+          this.status.login = this.identity.loginStatusFromVerification404();
           return false;
 
         default:
@@ -813,8 +826,8 @@ Sync11Service.prototype = {
     // possible, so let's fake for the CLIENT_NOT_CONFIGURED status for now
     // by emptying the passphrase (we still need the password).
     this._log.info("Service.startOver dropping sync key and logging out.");
-    this.identity.resetCredentials();
-    this.status.login = LOGIN_FAILED_NO_USERNAME;
+    this.identity.resetSyncKeyBundle();
+    this.status.login = LOGIN_FAILED_NO_PASSPHRASE;
     this.logout();
     Svc.Obs.notify("weave:service:start-over");
 
@@ -837,6 +850,7 @@ Sync11Service.prototype = {
       this.identity.finalize();
       this.status.__authManager = null;
       this.identity = Status._authManager;
+      this._clusterManager = this.identity.createClusterManager(this);
       Svc.Obs.notify("weave:service:start-over:finish");
     } catch (err) {
       this._log.error("startOver failed to re-initialize the identity manager", err);
@@ -854,13 +868,21 @@ Sync11Service.prototype = {
         throw new Error("Application is offline, login should not be called");
       }
 
+      this._log.info("Logging in the user.");
+      // Just let any errors bubble up - they've more context than we do!
+      try {
+        await this.identity.ensureLoggedIn();
+      } finally {
+        this._checkSetup(); // _checkSetup has a side effect of setting the right state.
+      }
+
+      this._updateCachedURLs();
+
       this._log.info("User logged in successfully - verifying login.");
       if (!(await this.verifyLogin())) {
         // verifyLogin sets the failure states here.
         throw new Error(`Login failed: ${this.status.login}`);
       }
-
-      this._updateCachedURLs();
 
       this._loggedIn = true;
 
