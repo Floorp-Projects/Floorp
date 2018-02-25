@@ -23,7 +23,7 @@ tests.push({
   // Initialise something to avoid undefined property warnings in validate.
   _litterTitle: "",
 
-  populate: function populate() {
+  async populate() {
     // check initial size
     var rootNode = PlacesUtils.getFolderContents(PlacesUtils.placesRootId,
                                                  false, false).root;
@@ -43,16 +43,16 @@ tests.push({
     PlacesUtils.tagging.tagURI(this._testURI, this._tags);
 
     // add a child to each root, including our test root
+    await PlacesUtils.bookmarks.eraseEverything();
     this._roots = [PlacesUtils.bookmarksMenuFolderId, PlacesUtils.toolbarFolderId,
                    PlacesUtils.unfiledBookmarksFolderId, PlacesUtils.mobileFolderId,
                    this._folderId];
-    this._roots.forEach(function(aRootId) {
-      // clean slate
-      PlacesUtils.bookmarks.removeFolderChildren(aRootId);
-      // add a test bookmark
+
+    this._roots.forEach(aRootId => {
+          // add a test bookmark
       PlacesUtils.bookmarks.insertBookmark(aRootId, this._testURI,
                                            PlacesUtils.bookmarks.DEFAULT_INDEX, "test");
-    }, this);
+    });
 
     // add a folder to exclude from replacing during restore
     // this will still be present post-restore
@@ -127,11 +127,11 @@ add_task(async function() {
   let jsonFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.json");
 
   // populate db
-  tests.forEach(function(aTest) {
-    aTest.populate();
+  for (let test of tests) {
+    await test.populate();
     // sanity
-    aTest.validate();
-  });
+    test.validate();
+  }
 
   await BookmarkJSONUtils.exportToFile(jsonFile);
 
