@@ -161,7 +161,6 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.MenuUtils;
-import org.mozilla.gecko.util.NetworkUtils;
 import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.ShortcutUtils;
 import org.mozilla.gecko.util.StringUtils;
@@ -3313,12 +3312,14 @@ public class BrowserApp extends GeckoApp
             }
         }
 
-        if (mMenu == null)
+        if (mMenu == null) {
             return;
+        }
 
         final MenuItem menuItem = mMenu.findItem(id);
-        if (menuItem != null)
+        if (menuItem != null) {
             mMenu.removeItem(id);
+        }
     }
 
     private void updateAddonMenuItem(int id, final GeckoBundle options) {
