@@ -14,28 +14,10 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="panelmultiview">
-    <resources>
-      <stylesheet src="chrome://browser/content/customizableui/panelUI.css"/>
-    </resources>
-    <content data-subviewbutton-tooltip="&backCmd.label;">
-      <xul:box anonid="viewContainer" class="panel-viewcontainer" xbl:inherits="panelopen,transitioning">
-        <xul:box anonid="viewStack" xbl:inherits="transitioning" class="panel-viewstack">
-          <children includes="panelview"/>
-        </xul:box>
-      </xul:box>
-      <xul:box class="panel-viewcontainer offscreen">
-        <xul:box anonid="offscreenViewStack" class="panel-viewstack"/>
-      </xul:box>
-    </content>
     <implementation>
-      <constructor><![CDATA[
-        const {PanelMultiView} = ChromeUtils.import("resource:///modules/PanelMultiView.jsm", {});
-        this.instance = PanelMultiView.forNode(this);
-        this.instance.connect();
-      ]]></constructor>
-
       <destructor><![CDATA[
-        this.instance.destructor();
+        const {PanelMultiView} = ChromeUtils.import("resource:///modules/PanelMultiView.jsm", {});
+        PanelMultiView.forNode(this).destructor();
       ]]></destructor>
     </implementation>
   </binding>

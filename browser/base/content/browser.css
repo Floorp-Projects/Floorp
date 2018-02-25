@@ -80,6 +80,10 @@ panelmultiview {
   -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#panelmultiview");
 }
 
+panelmultiview[transitioning] {
+  pointer-events: none;
+}
+
 panelview {
   -moz-box-orient: vertical;
 }
@@ -95,6 +99,26 @@ panelview:not([current]):not([in-transition]) {
 /* Hide the header when a subview is reused as a main view. */
 panelview[mainview] > .panel-header {
   display: none;
+}
+
+.panel-viewcontainer {
+  overflow: hidden;
+}
+
+.panel-viewcontainer[panelopen] {
+  transition-property: height;
+  transition-timing-function: var(--animation-easing-function);
+  transition-duration: var(--panelui-subview-transition-duration);
+  will-change: height;
+}
+
+.panel-viewcontainer.offscreen {
+  position: absolute;
+}
+
+.panel-viewstack {
+  overflow: visible;
+  transition: height var(--panelui-subview-transition-duration);
 }
 
 #navigator-toolbox {

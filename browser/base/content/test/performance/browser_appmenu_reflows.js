@@ -100,21 +100,19 @@ add_task(async function() {
         await BrowserTestUtils.waitForEvent(PanelUI.panel, "ViewShown");
 
         // Workaround until bug 1363756 is fixed, then this can be removed.
+        let container = PanelUI.multiView.querySelector(".panel-viewcontainer");
         await BrowserTestUtils.waitForCondition(() => {
-          return !PanelUI.multiView.instance._viewContainer.hasAttribute("width");
+          return !container.hasAttribute("width");
         });
 
-        info("Shown " + PanelUI.multiView.instance._currentSubView.id);
-        // Unfortunately, I can't find a better accessor to the current
-        // subview, so I have to reach the PanelMultiView instance
-        // here.
-        await openSubViewsRecursively(PanelUI.multiView.instance._currentSubView);
+        info("Shown " + PanelUI.multiView.current.id);
+        await openSubViewsRecursively(PanelUI.multiView.current);
         PanelUI.multiView.goBack();
         await BrowserTestUtils.waitForEvent(PanelUI.panel, "ViewShown");
 
         // Workaround until bug 1363756 is fixed, then this can be removed.
         await BrowserTestUtils.waitForCondition(() => {
-          return !PanelUI.multiView.instance._viewContainer.hasAttribute("width");
+          return !container.hasAttribute("width");
         });
       }
     }
