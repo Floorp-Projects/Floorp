@@ -101,6 +101,11 @@ ChromeUtils.defineModuleGetter(this, "BrowserUtils",
 ChromeUtils.defineModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "gBundle", function() {
+  return Services.strings.createBundle(
+    "chrome://browser/locale/browser.properties");
+});
+
 /**
  * Safety timeout after which asynchronous events will be canceled if any of the
  * registered blockers does not return.
@@ -349,28 +354,39 @@ var PanelMultiView = class extends this.AssociatedToNode {
 
   connect() {
     this.connected = true;
+
+    let viewContainer = this._viewContainer =
+      this.document.createElement("box");
+    viewContainer.classList.add("panel-viewcontainer");
+
+    let viewStack = this._viewStack = this.document.createElement("box");
+    viewStack.classList.add("panel-viewstack");
+    viewContainer.append(viewStack);
+
+    let offscreenViewContainer = this.document.createElement("box");
+    offscreenViewContainer.classList.add("panel-viewcontainer", "offscreen");
+
+    let offscreenViewStack = this._offscreenViewStack =
+      this.document.createElement("box");
+    offscreenViewStack.classList.add("panel-viewstack");
+    offscreenViewContainer.append(offscreenViewStack);
+
+    this.node.prepend(offscreenViewContainer);
+    this.node.prepend(viewContainer);
+
     this.openViews = [];
     this.__transitioning = false;
 
-    const {document, window} = this;
-
-    this._viewContainer =
-      document.getAnonymousElementByAttribute(this.node, "anonid", "viewContainer");
-    this._viewStack =
-      document.getAnonymousElementByAttribute(this.node, "anonid", "viewStack");
-    this._offscreenViewStack =
-      document.getAnonymousElementByAttribute(this.node, "anonid", "offscreenViewStack");
-
     XPCOMUtils.defineLazyGetter(this, "_panelViewCache", () => {
       let viewCacheId = this.node.getAttribute("viewCacheId");
-      return viewCacheId ? document.getElementById(viewCacheId) : null;
+      return viewCacheId ? this.document.getElementById(viewCacheId) : null;
     });
 
     this._panel.addEventListener("popupshowing", this);
     this._panel.addEventListener("popuppositioned", this);
     this._panel.addEventListener("popuphidden", this);
     this._panel.addEventListener("popupshown", this);
-    let cs = window.getComputedStyle(document.documentElement);
+    let cs = this.window.getComputedStyle(this.document.documentElement);
     // Set CSS-determined attributes now to prevent a layout flush when we do
     // it when transitioning between panels.
     this._dir = cs.direction;
@@ -489,21 +505,8 @@ var PanelMultiView = class extends this.AssociatedToNode {
         return true;
       }
       try {
-        // Most of the panel elements in the browser window have their display
-        // turned off for performance reasons, typically by setting the "hidden"
-        // attribute. If the caller has just turned on the display, the XBL
-        // binding for the <panelmultiview> element may still be disconnected.
-        // In this case, give the layout code a chance to run.
         if (!this.connected) {
-          await this.window.promiseDocumentFlushed(() => {});
-
-          // The XBL binding must be connected at this point. If this is not the
-          // case, the calling code should be updated to unhide the panel.
-          if (!this.connected) {
-            throw new Error("The binding for the panelmultiview element isn't" +
-                            " connected. The containing panel may still have" +
-                            " its display turned off by the hidden attribute.");
-          }
+          this.connect();
         }
         // Allow any of the ViewShowing handlers to prevent showing the main view.
         if (!(await this._showMainView())) {
@@ -1060,7 +1063,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
         this.openViews.forEach(panelView => panelView.clearNavigation());
         break;
       case "popupshowing": {
-        this.node.setAttribute("panelopen", "true");
+        this._viewContainer.setAttribute("panelopen", "true");
         if (!this.node.hasAttribute("disablekeynav")) {
           this.window.addEventListener("keydown", this);
           this._panel.addEventListener("mousemove", this);
@@ -1093,7 +1096,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
         // WebExtensions consumers can hide the popup from viewshowing, or
         // mid-transition, which disrupts our state:
         this._transitioning = false;
-        this.node.removeAttribute("panelopen");
+        this._viewContainer.removeAttribute("panelopen");
         this._cleanupTransitionPhase();
         this.window.removeEventListener("keydown", this);
         this._panel.removeEventListener("mousemove", this);
@@ -1181,8 +1184,8 @@ var PanelView = class extends this.AssociatedToNode {
       "subviewbutton subviewbutton-iconic subviewbutton-back";
     backButton.setAttribute("closemenu", "none");
     backButton.setAttribute("tabindex", "0");
-    backButton.setAttribute("tooltip",
-      this.node.getAttribute("data-subviewbutton-tooltip"));
+    backButton.setAttribute("aria-label",
+      gBundle.GetStringFromName("panel.back"));
     backButton.addEventListener("command", () => {
       // The panelmultiview element may change if the view is reused.
       this.node.panelMultiView.goBack();
