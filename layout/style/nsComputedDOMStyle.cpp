@@ -691,8 +691,7 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
   // set.  Using the pres shell from the content also means that any
   // content that's actually *in* a document will get the style from the
   // correct document.
-  nsIPresShell *presShell =
-    nsContentUtils::GetPresShellForContent(aElement);
+  nsIPresShell* presShell = nsContentUtils::GetPresShellForContent(aElement);
   bool inDocWithShell = true;
   if (!presShell) {
     inDocWithShell = false;
