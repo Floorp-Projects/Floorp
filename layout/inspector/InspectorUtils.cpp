@@ -238,9 +238,6 @@ InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
          bindingContent = bindingContent->GetBindingParent()) {
       for (nsXBLBinding* binding = bindingContent->GetXBLBinding();
            binding; binding = binding->GetBaseBinding()) {
-        // TODO(emilio): We're going to need to figure out something for Shadow
-        // DOM and inspector, since those rules can definitely mutate and
-        // such...
         if (auto* map = binding->PrototypeBinding()->GetServoStyleRuleMap()) {
           maps.AppendElement(map);
         }
@@ -250,6 +247,17 @@ InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
       // do not apply to the element directly in those cases, their
       // rules may still show up in the list we get above due to the
       // inheritance in cascading.
+    }
+
+    // Now shadow DOM stuff...
+    if (auto* shadow = aElement.GetShadowRoot()) {
+      maps.AppendElement(&shadow->ServoStyleRuleMap());
+    }
+
+    for (auto* shadow = aElement.GetContainingShadow();
+         shadow;
+         shadow = shadow->Host()->GetContainingShadow()) {
+      maps.AppendElement(&shadow->ServoStyleRuleMap());
     }
 
     // Find matching rules in the table.

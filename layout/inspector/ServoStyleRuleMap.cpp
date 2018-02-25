@@ -44,6 +44,17 @@ ServoStyleRuleMap::EnsureTable(nsXBLPrototypeResources& aXBLResources)
 }
 
 void
+ServoStyleRuleMap::EnsureTable(ShadowRoot& aShadowRoot)
+{
+  if (!IsEmpty()) {
+    return;
+  }
+  for (auto index : IntegerRange(aShadowRoot.SheetCount())) {
+    FillTableFromStyleSheet(*aShadowRoot.SheetAt(index)->AsServo());
+  }
+}
+
+void
 ServoStyleRuleMap::SheetAdded(ServoStyleSheet& aStyleSheet)
 {
   if (!IsEmpty()) {
