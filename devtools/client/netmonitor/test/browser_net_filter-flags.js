@@ -356,14 +356,6 @@ add_task(async function () {
   await teardown(monitor);
 
   async function testContents(visibility) {
-    let requestItems = document.querySelectorAll(".request-list-item");
-    for (let requestItem of requestItems) {
-      requestItem.scrollIntoView();
-      let requestsListStatus = requestItem.querySelector(".requests-list-status");
-      EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
-      await waitUntil(() => requestsListStatus.title);
-    }
-
     let items = getSortedRequests(store.getState());
     let visibleItems = getDisplayedRequests(store.getState());
 
@@ -394,6 +386,19 @@ add_task(async function () {
 
       is(isThere, shouldBeVisible,
         `The item at index ${i} has visibility=${shouldBeVisible}`);
+    }
+
+    // Fake mouse over the status column only after the list is fully updated
+    let requestItems = document.querySelectorAll(".request-list-item");
+    for (let requestItem of requestItems) {
+      requestItem.scrollIntoView();
+      let requestsListStatus = requestItem.querySelector(".requests-list-status");
+      EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
+      await waitUntil(() => requestsListStatus.title);
+    }
+
+    for (let i = 0; i < visibility.length; i++) {
+      let shouldBeVisible = !!visibility[i];
 
       if (shouldBeVisible) {
         let { method, url, data } = EXPECTED_REQUESTS[i];
