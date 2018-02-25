@@ -2336,7 +2336,7 @@ var NativeWindow = {
 
   menu: {
     _callbacks: [],
-    // This value must be kept in sync with GECKO_TOOLS_MENU_UUID in BrowserApp.java.
+    // This value must be kept in sync with GECKO_TOOLS_MENU_UUID in AddonUICache.java.
     toolsMenuID: "{115b9308-2023-44f1-a4e9-3e2197669f07}",
     add: function() {
       let options;
