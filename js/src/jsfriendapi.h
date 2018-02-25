@@ -445,6 +445,15 @@ extern JS_FRIEND_API(bool)
 UseInternalJobQueues(JSContext* cx, bool cooperative = false);
 
 /**
+ * Enqueue job on the run queue.
+ *
+ * This is useful in tests for creating situations where a call occurs with no
+ * other JavaScript on the stack.
+ */
+extern JS_FRIEND_API(bool)
+EnqueueJob(JSContext* cx, JS::HandleObject job);
+
+/**
  * Instruct the runtime to stop draining the internal job queue.
  *
  * Useful if the embedding is in the process of quitting in reaction to a
