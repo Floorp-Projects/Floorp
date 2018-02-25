@@ -12,7 +12,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
 
-const {IS_RELEASE_OR_BETA, MOZILLA_OFFICIAL} = AppConstants;
+const IS_RELEASE_OR_BETA = AppConstants.RELEASE_OR_BETA;
+const MOZILLA_OFFICIAL = AppConstants.MOZILLA_OFFICIAL;
 
 const ACTIVITY_STREAM_PRERENDER_URL = "resource://activity-stream/prerendered/en-US/activity-stream-prerendered.html";
 const ACTIVITY_STREAM_PRERENDER_DEBUG_URL = "resource://activity-stream/prerendered/static/activity-stream-prerendered-debug.html";
