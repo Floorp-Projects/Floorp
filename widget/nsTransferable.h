@@ -25,6 +25,7 @@ struct DataStruct
 {
   explicit DataStruct ( const char* aFlavor )
     : mDataLen(0), mCacheFD(nullptr), mFlavor(aFlavor) { }
+  DataStruct(DataStruct&& aRHS);
   ~DataStruct();
   
   const nsCString& GetFlavor() const { return mFlavor; }
@@ -48,6 +49,10 @@ protected:
   uint32_t mDataLen;
   PRFileDesc* mCacheFD;
   const nsCString mFlavor;
+
+private:
+  DataStruct(const DataStruct&) = delete;
+  DataStruct& operator=(const DataStruct&) = delete;
 
 };
 
