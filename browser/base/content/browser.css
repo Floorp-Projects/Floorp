@@ -87,7 +87,7 @@ panelview {
   -moz-box-orient: vertical;
 }
 
-panelview:not([current]):not([in-transition]) {
+panelview:not([current]) {
   visibility: collapse;
 }
 
