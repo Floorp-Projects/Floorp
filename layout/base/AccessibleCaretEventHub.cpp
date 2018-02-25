@@ -245,7 +245,8 @@ public:
 
   void OnScrollEnd(AccessibleCaretEventHub* aContext) override
   {
-    aContext->SetState(aContext->PostScrollState());
+    aContext->mManager->OnScrollEnd();
+    aContext->SetState(aContext->NoActionState());
   }
 
   void OnScrollPositionChanged(AccessibleCaretEventHub* aContext) override
@@ -260,59 +261,6 @@ public:
     if (aIsLeavingDocument) {
       aContext->SetState(aContext->NoActionState());
     }
-  }
-};
-
-// -----------------------------------------------------------------------------
-// PostScrollState: In this state, we are waiting for another APZ start or press
-// event.
-//
-class AccessibleCaretEventHub::PostScrollState
-  : public AccessibleCaretEventHub::State
-{
-public:
-  const char* Name() const override { return "PostScrollState"; }
-
-  nsEventStatus OnPress(AccessibleCaretEventHub* aContext,
-                        const nsPoint& aPoint, int32_t aTouchId,
-                        EventClassID aEventClass) override
-  {
-    aContext->mManager->OnScrollEnd();
-    aContext->SetState(aContext->NoActionState());
-
-    return aContext->GetState()->OnPress(aContext, aPoint, aTouchId,
-                                         aEventClass);
-  }
-
-  void OnScrollStart(AccessibleCaretEventHub* aContext) override
-  {
-    aContext->SetState(aContext->ScrollState());
-  }
-
-  void OnScrollEnd(AccessibleCaretEventHub* aContext) override
-  {
-    aContext->mManager->OnScrollEnd();
-    aContext->SetState(aContext->NoActionState());
-  }
-
-  void OnBlur(AccessibleCaretEventHub* aContext,
-              bool aIsLeavingDocument) override
-  {
-    aContext->mManager->OnBlur();
-    if (aIsLeavingDocument) {
-      aContext->SetState(aContext->NoActionState());
-    }
-  }
-
-  void Enter(AccessibleCaretEventHub* aContext) override
-  {
-    // Launch the injector to leave PostScrollState.
-    aContext->LaunchScrollEndInjector();
-  }
-
-  void Leave(AccessibleCaretEventHub* aContext) override
-  {
-    aContext->CancelScrollEndInjector();
   }
 };
 
@@ -383,7 +331,6 @@ MOZ_IMPL_STATE_CLASS_GETTER(PressCaretState)
 MOZ_IMPL_STATE_CLASS_GETTER(DragCaretState)
 MOZ_IMPL_STATE_CLASS_GETTER(PressNoCaretState)
 MOZ_IMPL_STATE_CLASS_GETTER(ScrollState)
-MOZ_IMPL_STATE_CLASS_GETTER(PostScrollState)
 MOZ_IMPL_STATE_CLASS_GETTER(LongTapState)
 
 bool AccessibleCaretEventHub::sUseLongTapInjector = false;
@@ -437,8 +384,6 @@ AccessibleCaretEventHub::Init()
     mLongTapInjectorTimer = NS_NewTimer();
   }
 
-  mScrollEndInjectorTimer = NS_NewTimer();
-
   mManager = MakeUnique<AccessibleCaretManager>(mPresShell);
 
   mInitialized = true;
@@ -459,10 +404,6 @@ AccessibleCaretEventHub::Terminate()
 
   if (mLongTapInjectorTimer) {
     mLongTapInjectorTimer->Cancel();
-  }
-
-  if (mScrollEndInjectorTimer) {
-    mScrollEndInjectorTimer->Cancel();
   }
 
   mManager->Terminate();
@@ -743,40 +684,6 @@ AccessibleCaretEventHub::ScrollPositionChanged()
 
   AC_LOG("%s, state: %s", __FUNCTION__, mState->Name());
   mState->OnScrollPositionChanged(this);
-}
-
-void
-AccessibleCaretEventHub::LaunchScrollEndInjector()
-{
-  if (!mScrollEndInjectorTimer) {
-    return;
-  }
-
-  mScrollEndInjectorTimer->InitWithNamedFuncCallback(
-    FireScrollEnd,
-    this,
-    kScrollEndTimerDelay,
-    nsITimer::TYPE_ONE_SHOT,
-    "AccessibleCaretEventHub::LaunchScrollEndInjector");
-}
-
-void
-AccessibleCaretEventHub::CancelScrollEndInjector()
-{
-  if (!mScrollEndInjectorTimer) {
-    return;
-  }
-
-  mScrollEndInjectorTimer->Cancel();
-}
-
-/* static */ void
-AccessibleCaretEventHub::FireScrollEnd(nsITimer* aTimer,
-                                       void* aAccessibleCaretEventHub)
-{
-  RefPtr<AccessibleCaretEventHub> self =
-    static_cast<AccessibleCaretEventHub*>(aAccessibleCaretEventHub);
-  self->mState->OnScrollEnd(self);
 }
 
 nsresult
