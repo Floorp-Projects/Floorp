@@ -58,6 +58,7 @@ headers = [
     "mozilla/dom/AnimationEffectReadOnlyBinding.h",
     "mozilla/dom/HTMLSlotElement.h",
     "mozilla/dom/KeyframeEffectBinding.h",
+    "mozilla/dom/ShadowRoot.h",
     "mozilla/AnimationPropertySegment.h",
     "mozilla/ComputedTiming.h",
     "mozilla/ComputedTimingFunction.h",
