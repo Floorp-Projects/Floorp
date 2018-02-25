@@ -372,8 +372,6 @@ partial interface Window {
 };
 #endif
 
-callback PromiseDocumentFlushedCallback = any ();
-
 // Mozilla extensions for Chrome windows.
 partial interface Window {
   // The STATE_* constants need to match the corresponding enum in nsGlobalWindow.cpp.
@@ -445,47 +443,6 @@ partial interface Window {
    */
   [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   void beginWindowMove(Event mouseDownEvent, optional Element? panel = null);
-
-  /**
-   * Calls the given function as soon as a style or layout flush for the
-   * top-level document is not necessary, and returns a Promise which
-   * resolves to the callback's return value after it executes.
-   *
-   * In the event that the window goes away before a flush can occur, the
-   * callback will still be called and the Promise resolved as the window
-   * tears itself down.
-   *
-   * Note that the callback can be called either synchronously or asynchronously
-   * depending on whether or not flushes are pending:
-   *
-   *   The callback will be called synchronously when calling
-   *   promiseDocumentFlushed when NO flushes are already pending. This is
-   *   to ensure that no script has a chance to dirty the DOM before the callback
-   *   is called.
-   *
-   *   The callback will be called asynchronously if a flush is pending.
-   *
-   * The expected execution order is that all pending callbacks will
-   * be fired first (and in the order that they were queued) and then the
-   * Promise resolution handlers will all be invoked later on during the
-   * next microtask checkpoint.
-   *
-   * promiseDocumentFlushed does not support re-entrancy - so calling it from
-   * within a promiseDocumentFlushed callback will result in the inner call
-   * throwing an NS_ERROR_FAILURE exception, and the outer Promise rejecting
-   * with that exception.
-   *
-   * The callback function *must not make any changes which would require
-   * a style or layout flush*.
-   *
-   * Also throws NS_ERROR_FAILURE if the window is not in a state where flushes
-   * can be waited for (for example, the PresShell has not yet been created).
-   *
-   * @param {function} callback
-   * @returns {Promise}
-   */
-  [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
-  Promise<any> promiseDocumentFlushed(PromiseDocumentFlushedCallback callback);
 
   [Func="IsChromeOrXBL"]
   readonly attribute boolean isChromeWindow;
