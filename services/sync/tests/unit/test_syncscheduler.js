@@ -531,9 +531,6 @@ add_task(async function test_autoconnect_mp_locked() {
   Service.identity._fxaService = new FxAccounts({
     canGetKeys() {
       return false;
-    },
-    getSignedInUser() {
-      return origFxA.getSignedInUser();
     }
   });
 
@@ -719,8 +716,8 @@ add_task(async function test_no_sync_node() {
   let server = sync_httpd_setup();
   await setUp(server);
 
-  let oldfc = Service.identity._findCluster;
-  Service.identity._findCluster = () => null;
+  let oldfc = Service._clusterManager._findCluster;
+  Service._clusterManager._findCluster = () => null;
   Service.clusterURL = "";
   try {
     await Service.sync();
@@ -729,7 +726,7 @@ add_task(async function test_no_sync_node() {
 
     await cleanUpAndGo(server);
   } finally {
-    Service.identity._findCluster = oldfc;
+    Service._clusterManager._findCluster = oldfc;
   }
 });
 

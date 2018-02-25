@@ -44,6 +44,7 @@ var initializeIdentityWithTokenServerResponse = function(response) {
 
   // tie it all together.
   Weave.Status.__authManager = Weave.Service.identity = new BrowserIDManager();
+  Weave.Service._clusterManager = Weave.Service.identity.createClusterManager(Weave.Service);
   let browseridManager = Weave.Service.identity;
   // a sanity check
   if (!(browseridManager instanceof BrowserIDManager)) {

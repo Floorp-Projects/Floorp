@@ -84,7 +84,7 @@ add_task(async function test_verifyLogin() {
     _("Ensure a network error when finding the cluster sets the right Status bits.");
     Service.status.resetSync();
     Service.clusterURL = "";
-    Service.identity._findCluster = () => "http://localhost:12345/";
+    Service._clusterManager._findCluster = () => "http://localhost:12345/";
     Assert.equal(false, (await Service.verifyLogin()));
     Assert.equal(Service.status.service, LOGIN_FAILED);
     Assert.equal(Service.status.login, LOGIN_FAILED_NETWORK_ERROR);

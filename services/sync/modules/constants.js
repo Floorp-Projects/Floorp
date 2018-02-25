@@ -19,6 +19,12 @@ SYNC_API_VERSION:                      "1.5",
 STORAGE_VERSION:                       5,
 PREFS_BRANCH:                          "services.sync.",
 
+// Host "key" to access Weave Identity in the password manager
+PWDMGR_HOST:                           "chrome://weave",
+PWDMGR_PASSWORD_REALM:                 "Mozilla Services Password",
+PWDMGR_PASSPHRASE_REALM:               "Mozilla Services Encryption Passphrase",
+PWDMGR_KEYBUNDLE_REALM:                "Mozilla Services Key Bundles",
+
 // Put in [] because those aren't allowed in a collection name.
 DEFAULT_KEYBUNDLE_NAME:                "[default]",
 

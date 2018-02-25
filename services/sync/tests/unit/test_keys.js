@@ -121,9 +121,12 @@ add_task(async function test_ensureLoggedIn() {
   let log = Log.repository.getLogger("Test");
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
-  await configureIdentity();
+  let identityConfig = makeIdentityConfig();
+  let browseridManager = new BrowserIDManager();
+  configureFxAccountIdentity(browseridManager, identityConfig);
+  await browseridManager.ensureLoggedIn();
 
-  let keyBundle = Weave.Service.identity.syncKeyBundle;
+  let keyBundle = browseridManager.syncKeyBundle;
 
   /*
    * Build a test version of storage/crypto/keys.

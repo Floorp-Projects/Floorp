@@ -25,6 +25,7 @@ add_task(async function setup() {
 
   // Setup the FxA identity manager and cluster manager.
   Status.__authManager = Service.identity = new BrowserIDManager();
+  Service._clusterManager = Service.identity.createClusterManager(Service);
 
   // None of the failures in this file should result in a UI error.
   function onUIError() {
@@ -55,9 +56,8 @@ function prepareServer(cbAfterTokenFetch) {
     __proto__: SyncServerCallback,
     onRequest(req, resp) {
       let full = `${req.scheme}://${req.host}:${req.port}${req.path}`;
-      let expected = config.fxaccount.token.endpoint;
-      Assert.ok(full.startsWith(expected),
-                `request made to ${full}, expected ${expected}`);
+      Assert.ok(full.startsWith(config.fxaccount.token.endpoint),
+                `request made to ${full}`);
     }
   };
   let server = new SyncServer(callback);
@@ -81,7 +81,6 @@ function prepareServer(cbAfterTokenFetch) {
           let token = config.fxaccount.token;
           token.endpoint = server.baseURI + "1.1" + trailingZeros + "/johndoe";
           token.uid = config.username;
-          _(`test server saw token fetch - endpoint now ${token.endpoint}`);
           numTokenRequests += 1;
           res(token);
           if (cbAfterTokenFetch) {
