@@ -26,7 +26,6 @@ ChromeUtils.import("resource://services-common/utils.js");
 ChromeUtils.import("resource://services-crypto/utils.js");
 ChromeUtils.import("resource://services-sync/util.js");
 ChromeUtils.import("resource://services-sync/browserid_identity.js");
-ChromeUtils.import("resource://testing-common/Assert.jsm");
 ChromeUtils.import("resource://testing-common/services/common/logging.js");
 ChromeUtils.import("resource://testing-common/services/sync/fakeservices.js");
 ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
@@ -163,7 +162,7 @@ var makeFxAccountsInternalMock = function(config) {
       return accountState;
     },
     _getAssertion(audience) {
-      return Promise.resolve(config.fxaccount.user.assertion);
+      return Promise.resolve("assertion");
     },
   };
 };
@@ -193,8 +192,6 @@ var configureFxAccountIdentity = function(authService,
 
   let mockTSC = { // TokenServerClient
     async getTokenFromBrowserIDAssertion(uri, assertion) {
-      Assert.equal(uri, Services.prefs.getStringPref("identity.sync.tokenserver.uri"));
-      Assert.equal(assertion, config.fxaccount.user.assertion);
       config.fxaccount.token.uid = config.username;
       return config.fxaccount.token;
     },
@@ -223,12 +220,10 @@ var configureIdentity = async function(identityOverrides, server) {
   }
 
   configureFxAccountIdentity(ns.Service.identity, config);
-  // because we didn't send any FxA LOGIN notifications we must set the username.
-  ns.Service.identity.username = config.username;
-  // many of these tests assume all the auth stuff is setup and don't hit
-  // a path which causes that auth to magically happen - so do it now.
-  await ns.Service.identity._ensureValidToken();
-
+  await ns.Service.identity.initializeWithCurrentIdentity();
+  // The token is fetched in the background, whenReadyToAuthenticate is resolved
+  // when we are ready.
+  await ns.Service.identity.whenReadyToAuthenticate.promise;
   // and cheat to avoid requiring each test do an explicit login - give it
   // a cluster URL.
   if (config.fxaccount.token.endpoint) {

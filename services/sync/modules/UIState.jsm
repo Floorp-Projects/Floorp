@@ -28,7 +28,6 @@ const TOPICS = [
   "weave:service:sync:start",
   "weave:service:sync:finish",
   "weave:service:sync:error",
-  "weave:service:start-over:finish",
   "fxaccounts:onverified",
   "fxaccounts:onlogin", // Defined in FxAccountsCommon, pulling it is expensive.
   "fxaccounts:onlogout",
