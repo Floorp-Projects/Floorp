@@ -52,6 +52,15 @@ size_t GetDataForFlavor (const nsTArray<DataStruct>& aArray,
   return aArray.NoIndex;
 }
 
+DataStruct::DataStruct(DataStruct&& aRHS)
+  : mData(aRHS.mData.forget()),
+    mDataLen(aRHS.mDataLen),
+    mCacheFD(aRHS.mCacheFD),
+    mFlavor(aRHS.mFlavor)
+{
+  aRHS.mCacheFD = nullptr;
+}
+
 //-------------------------------------------------------------------------
 DataStruct::~DataStruct()
 {
