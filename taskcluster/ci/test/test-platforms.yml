@@ -243,6 +243,7 @@ windows10-64-qr/opt:
     build-platform: win64/opt
     test-sets:
         - windows-qr-tests
+        - windows-qr-talos
 
 
 ##
