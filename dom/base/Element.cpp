@@ -1218,17 +1218,17 @@ Element::AttachShadow(const ShadowRootInit& aInit, ErrorResult& aError)
     return nullptr;
   }
 
-  return AttachShadowInternal(aInit.mMode == ShadowRootMode::Closed, aError);
+  return AttachShadowInternal(aInit.mMode, aError);
 }
 
 already_AddRefed<ShadowRoot>
 Element::CreateShadowRoot(ErrorResult& aError)
 {
-  return AttachShadowInternal(false, aError);
+  return AttachShadowInternal(ShadowRootMode::Open, aError);
 }
 
 already_AddRefed<ShadowRoot>
-Element::AttachShadowInternal(bool aClosed, ErrorResult& aError)
+Element::AttachShadowInternal(ShadowRootMode aMode, ErrorResult& aError)
 {
   /**
    * 3. If context object is a shadow host, then throw
@@ -1241,20 +1241,10 @@ Element::AttachShadowInternal(bool aClosed, ErrorResult& aError)
 
   nsAutoScriptBlocker scriptBlocker;
 
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo;
-  nodeInfo = mNodeInfo->NodeInfoManager()->GetNodeInfo(
-    nsGkAtoms::documentFragmentNodeName, nullptr, kNameSpaceID_None,
-    DOCUMENT_FRAGMENT_NODE);
-
-  RefPtr<nsXBLDocumentInfo> docInfo = new nsXBLDocumentInfo(OwnerDoc());
-
-  nsXBLPrototypeBinding* protoBinding = new nsXBLPrototypeBinding();
-  aError = protoBinding->Init(NS_LITERAL_CSTRING("shadowroot"),
-                              docInfo, nullptr, true);
-  if (aError.Failed()) {
-    delete protoBinding;
-    return nullptr;
-  }
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo =
+    mNodeInfo->NodeInfoManager()->GetNodeInfo(
+      nsGkAtoms::documentFragmentNodeName, nullptr, kNameSpaceID_None,
+      DOCUMENT_FRAGMENT_NODE);
 
   if (nsIDocument* doc = GetComposedDoc()) {
     if (nsIPresShell* shell = doc->GetShell()) {
@@ -1264,19 +1254,13 @@ Element::AttachShadowInternal(bool aClosed, ErrorResult& aError)
   }
   MOZ_ASSERT(!GetPrimaryFrame());
 
-  // Unlike for XBL, false is the default for inheriting style.
-  protoBinding->SetInheritsStyle(false);
-
-  // Calling SetPrototypeBinding takes ownership of protoBinding.
-  docInfo->SetPrototypeBinding(NS_LITERAL_CSTRING("shadowroot"), protoBinding);
-
   /**
    * 4. Let shadow be a new shadow root whose node document is
    *    context object’s node document, host is context object,
    *    and mode is init’s mode.
    */
   RefPtr<ShadowRoot> shadowRoot =
-    new ShadowRoot(this, aClosed, nodeInfo.forget(), protoBinding);
+    new ShadowRoot(this, aMode, nodeInfo.forget());
 
   shadowRoot->SetIsComposedDocParticipant(IsInComposedDoc());
 
@@ -1284,13 +1268,6 @@ Element::AttachShadowInternal(bool aClosed, ErrorResult& aError)
    * 5. Set context object’s shadow root to shadow.
    */
   SetShadowRoot(shadowRoot);
-
-  // xblBinding takes ownership of docInfo.
-  RefPtr<nsXBLBinding> xblBinding = new nsXBLBinding(shadowRoot, protoBinding);
-  shadowRoot->SetAssociatedBinding(xblBinding);
-  xblBinding->SetBoundElement(this);
-
-  SetXBLBinding(xblBinding);
 
   /**
    * 6. Return shadow.
