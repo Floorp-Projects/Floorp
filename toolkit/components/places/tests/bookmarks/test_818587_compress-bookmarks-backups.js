@@ -47,7 +47,7 @@ add_task(async function compress_bookmark_backups_test() {
   Assert.equal(node.uri, url);
 
   root.containerOpen = false;
-  PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
+  await PlacesUtils.bookmarks.eraseEverything();
 
   // Cleanup.
   await OS.File.remove(jsonFile);

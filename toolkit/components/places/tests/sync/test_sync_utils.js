@@ -736,19 +736,6 @@ add_task(async function test_pullChanges_tags() {
     await setChangesSynced(changes);
   }
 
-  info("Remove all tag folders");
-  {
-    deepEqual(PlacesUtils.tagging.allTags, ["tricky"], "Should have existing tags");
-
-    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.tagsFolderId);
-    let changes = await PlacesSyncUtils.bookmarks.pullChanges();
-    deepEqual(Object.keys(changes).sort(), [taggedItem.recordId].sort(),
-      "Should include tagged bookmarks after removing all tags");
-
-    deepEqual(PlacesUtils.tagging.allTags, [], "Should remove all tags from tag service");
-    await setChangesSynced(changes);
-  }
-
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
@@ -2277,14 +2264,6 @@ add_task(async function test_pullChanges_custom_roots() {
     let changes = await PlacesSyncUtils.bookmarks.pullChanges();
     deepEqual(changes, {}, `Pulling changes should ignore unsynced sibling ${
       unsyncedSibling.guid}`);
-  }
-
-  info("Clear custom root using old API");
-  {
-    let unsyncedRootId = await PlacesUtils.promiseItemId(unsyncedGuids.rootFolder);
-    PlacesUtils.bookmarks.removeFolderChildren(unsyncedRootId);
-    let changes = await PlacesSyncUtils.bookmarks.pullChanges();
-    deepEqual(changes, {}, "Clearing custom root should not write tombstones for children");
   }
 
   info("Remove custom root");

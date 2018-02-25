@@ -12,9 +12,8 @@ var gLibrary;
 add_task(async function test_setup() {
   gLibrary = await promiseLibrary();
 
-  registerCleanupFunction(function() {
-    PlacesUtils.bookmarks
-               .removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
+  registerCleanupFunction(async () => {
+    await PlacesUtils.bookmarks.eraseEverything();
     // Close Library window.
     gLibrary.close();
   });
