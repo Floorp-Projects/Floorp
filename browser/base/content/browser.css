@@ -77,7 +77,6 @@ toolbar[customizable="true"] {
 
 panelmultiview {
   -moz-box-align: start;
-  -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#panelmultiview");
 }
 
 panelmultiview[transitioning] {
@@ -86,10 +85,6 @@ panelmultiview[transitioning] {
 
 panelview {
   -moz-box-orient: vertical;
-}
-
-panel[hidden] panelmultiview {
-  -moz-binding: none;
 }
 
 panelview:not([current]):not([in-transition]) {
