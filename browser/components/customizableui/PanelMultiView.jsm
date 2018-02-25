@@ -96,8 +96,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
 
@@ -716,6 +714,10 @@ var PanelMultiView = class extends this.AssociatedToNode {
     let oldPanelMultiViewNode = nextPanelView.node.panelMultiView;
     if (oldPanelMultiViewNode) {
       PanelMultiView.forNode(oldPanelMultiViewNode).hidePopup();
+      // Wait for a layout flush after hiding the popup, otherwise the view may
+      // not be displayed correctly for some time after the new panel is opened.
+      // This is filed as bug 1441015.
+      await this.window.promiseDocumentFlushed(() => {});
     }
 
     if (!(await this._openView(nextPanelView))) {
@@ -848,10 +850,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
     if (anchor)
       anchor.setAttribute("open", "true");
 
-    // Since we're going to show two subview at the same time, don't abuse the
-    // 'current' attribute, since it's needed for other state-keeping, but use
-    // a separate 'in-transition' attribute instead.
-    previousViewNode.setAttribute("in-transition", true);
     // Set the viewContainer dimensions to make sure only the current view is
     // visible.
     let olderView = reverse ? nextPanelView : prevPanelView;
@@ -869,7 +867,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
       // reopening a subview, because its contents may have changed.
       viewRect = { width: nextPanelView.knownWidth,
                    height: nextPanelView.knownHeight };
-      viewNode.setAttribute("in-transition", true);
+      nextPanelView.visible = true;
     } else if (viewNode.customRectGetter) {
       // Can't use Object.assign directly with a DOM Rect object because its properties
       // aren't enumerable.
@@ -880,12 +878,13 @@ var PanelMultiView = class extends this.AssociatedToNode {
       if (header && header.classList.contains("panel-header")) {
         viewRect.height += this._dwu.getBoundsWithoutFlushing(header).height;
       }
-      viewNode.setAttribute("in-transition", true);
+      nextPanelView.visible = true;
+      nextPanelView.descriptionHeightWorkaround();
     } else {
       let oldSibling = viewNode.nextSibling || null;
       this._offscreenViewStack.style.minHeight = olderView.knownHeight + "px";
       this._offscreenViewStack.appendChild(viewNode);
-      viewNode.setAttribute("in-transition", true);
+      nextPanelView.visible = true;
 
       // Now that the subview is visible, we can check the height of the
       // description elements it contains.
@@ -972,8 +971,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
     // Apply the final visibility, unless the view was closed in the meantime.
     if (nextPanelView.node.panelMultiView == this.node) {
       prevPanelView.visible = false;
-      nextPanelView.visible = true;
-      nextPanelView.descriptionHeightWorkaround();
     }
 
     // This will complete the operation by removing any transition properties.
@@ -1004,9 +1001,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
 
     // Do the things we _always_ need to do whenever the transition ends or is
     // interrupted.
-    previousViewNode.removeAttribute("in-transition");
-    viewNode.removeAttribute("in-transition");
-
     if (anchor)
       anchor.removeAttribute("open");
 
