@@ -998,6 +998,81 @@ SetPromiseRejectionTrackerCallback(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+BoundToAsyncStack(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedFunction function(cx, (&GetFunctionNativeReserved(&args.callee(), 0)
+                                 .toObject().as<JSFunction>()));
+    RootedObject options(cx, &GetFunctionNativeReserved(&args.callee(), 1).toObject());
+
+    RootedSavedFrame stack(cx, nullptr);
+    JSAutoByteString cause;
+    bool isExplicit;
+
+    RootedValue v(cx);
+
+    if (!JS_GetProperty(cx, options, "stack", &v))
+        return false;
+    if (!v.isObject() || !v.toObject().is<SavedFrame>()) {
+        JS_ReportErrorASCII(cx, "The 'stack' property must be a SavedFrame object.");
+        return false;
+    }
+    stack = &v.toObject().as<SavedFrame>();
+
+    if (!JS_GetProperty(cx, options, "cause", &v))
+        return false;
+    RootedString causeString(cx, ToString(cx, v));
+    if (!causeString || !cause.encodeUtf8(cx, causeString)) {
+        MOZ_ASSERT(cx->isExceptionPending());
+        return false;
+    }
+
+    if (!JS_GetProperty(cx, options, "explicit", &v))
+        return false;
+    isExplicit = v.isUndefined() ? true : ToBoolean(v);
+
+    auto kind = (isExplicit
+                 ? JS::AutoSetAsyncStackForNewCalls::AsyncCallKind::EXPLICIT
+                 : JS::AutoSetAsyncStackForNewCalls::AsyncCallKind::IMPLICIT);
+
+    JS::AutoSetAsyncStackForNewCalls asasfnckthxbye(cx, stack, cause.ptr(), kind);
+    return Call(cx, UndefinedHandleValue, function,
+                JS::HandleValueArray::empty(), args.rval());
+}
+
+static bool
+BindToAsyncStack(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 2) {
+        JS_ReportErrorASCII(cx, "bindToAsyncStack takes exactly two arguments.");
+        return false;
+    }
+
+    if (!args[0].isObject() || !IsCallable(args[0])) {
+        JS_ReportErrorASCII(cx, "bindToAsyncStack's first argument should be a function.");
+        return false;
+    }
+
+    if (!args[1].isObject()) {
+        JS_ReportErrorASCII(cx, "bindToAsyncStack's second argument should be an object.");
+        return false;
+    }
+
+    RootedFunction bound(cx, NewFunctionWithReserved(cx, BoundToAsyncStack, 0, 0,
+                                                     "bindToAsyncStack thunk"));
+    if (!bound)
+        return false;
+    SetFunctionNativeReserved(bound, 0, args[0]);
+    SetFunctionNativeReserved(bound, 1, args[1]);
+
+    args.rval().setObject(*bound);
+    return true;
+}
+
 #ifdef ENABLE_INTL_API
 static bool
 AddIntlExtras(JSContext* cx, unsigned argc, Value* vp)
@@ -7222,6 +7297,26 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "setPromiseRejectionTrackerCallback()",
 "Sets the callback to be invoked whenever a Promise rejection is unhandled\n"
 "or a previously-unhandled rejection becomes handled."),
+
+    JS_FN_HELP("bindToAsyncStack", BindToAsyncStack, 2, 0,
+"bindToAsyncStack(fn, { stack, cause, explicit })",
+"  Returns a new function that calls 'fn' with no arguments, passing\n"
+"  'undefined' as the 'this' value, and supplies an async stack for the\n"
+"  call as described by the second argument, an object with the following\n"
+"  properties (which are not optional, unless specified otherwise):\n"
+"\n"
+"  stack:    A SavedFrame object, like that returned by 'saveStack'. Stacks\n"
+"            captured during calls to the returned function capture this as\n"
+"            their async stack parent, accessible via a SavedFrame's\n"
+"            'asyncParent' property.\n"
+"\n"
+"  cause:    A string, supplied as the async cause on the top frame of\n"
+"            captured async stacks.\n"
+"\n"
+"  explicit: A boolean value, indicating whether the given 'stack' should\n"
+"            always supplant the returned function's true callers (true),\n"
+"            or only when there are no other JavaScript frames on the stack\n"
+"            below it (false). If omitted, this is treated as 'true'."),
 
 #ifdef ENABLE_INTL_API
     JS_FN_HELP("addIntlExtras", AddIntlExtras, 1, 0,
