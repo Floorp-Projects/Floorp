@@ -60,9 +60,7 @@ public:
   using AccessibleCaretEventHub::DragCaretState;
   using AccessibleCaretEventHub::PressNoCaretState;
   using AccessibleCaretEventHub::ScrollState;
-  using AccessibleCaretEventHub::PostScrollState;
   using AccessibleCaretEventHub::LongTapState;
-  using AccessibleCaretEventHub::FireScrollEnd;
 
   MockAccessibleCaretEventHub()
     : AccessibleCaretEventHub(nullptr)
@@ -577,10 +575,6 @@ AccessibleCaretEventHubTester::TestLongTapWithSelectWordSuccessful(
   EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::ScrollState());
 
   mHub->AsyncPanZoomStopped();
-  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::PostScrollState());
-
-  // Simulate scroll end fired by timer.
-  MockAccessibleCaretEventHub::FireScrollEnd(nullptr, mHub);
   EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
 
   HandleEventAndCheckState(aReleaseEventCreator(1, 1),
@@ -658,18 +652,15 @@ AccessibleCaretEventHubTester::TestEventDrivenAsyncPanZoomScroll(
 
     EXPECT_CALL(check, Call("1"));
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollStart());
-
-    EXPECT_CALL(check, Call("2"));
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollEnd());
 
+    EXPECT_CALL(check, Call("2"));
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_, _))
       .WillOnce(Return(NS_ERROR_FAILURE));
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), DragCaret(_)).Times(0);
 
     EXPECT_CALL(check, Call("3"));
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollStart());
-
-    EXPECT_CALL(check, Call("4"));
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollEnd());
   }
 
@@ -697,10 +688,10 @@ AccessibleCaretEventHubTester::TestEventDrivenAsyncPanZoomScroll(
 
   // Event driven scroll ended
   mHub->AsyncPanZoomStopped();
-  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::PostScrollState());
+  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
 
   HandleEventAndCheckState(aReleaseEventCreator(210, 210),
-                           MockAccessibleCaretEventHub::PostScrollState(),
+                           MockAccessibleCaretEventHub::NoActionState(),
                            nsEventStatus_eIgnore);
 
   check.Call("2");
@@ -725,17 +716,11 @@ AccessibleCaretEventHubTester::TestEventDrivenAsyncPanZoomScroll(
 
   // Another APZ scroll ended
   mHub->AsyncPanZoomStopped();
-  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::PostScrollState());
+  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
 
   HandleEventAndCheckState(aReleaseEventCreator(310, 310),
-                           MockAccessibleCaretEventHub::PostScrollState(),
+                           MockAccessibleCaretEventHub::NoActionState(),
                            nsEventStatus_eIgnore);
-
-  check.Call("4");
-
-  // Simulate scroll end fired by timer.
-  MockAccessibleCaretEventHub::FireScrollEnd(nullptr, mHub);
-  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScroll)
@@ -746,14 +731,18 @@ TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScroll)
 
     EXPECT_CALL(check, Call("1"));
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollStart());
-
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(),
-                OnScrollPositionChanged()).Times(2);
+                OnScrollPositionChanged());
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollEnd());
 
     EXPECT_CALL(check, Call("2"));
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollStart());
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(),
+                OnScrollPositionChanged());
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollEnd());
   }
 
+  // First APZ scrolling.
   check.Call("1");
 
   mHub->AsyncPanZoomStarted();
@@ -763,7 +752,10 @@ TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScroll)
   EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::ScrollState());
 
   mHub->AsyncPanZoomStopped();
-  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::PostScrollState());
+  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
+
+  // Second APZ scrolling.
+  check.Call("2");
 
   mHub->AsyncPanZoomStarted();
   EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::ScrollState());
@@ -772,12 +764,6 @@ TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScroll)
   EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::ScrollState());
 
   mHub->AsyncPanZoomStopped();
-  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::PostScrollState());
-
-  check.Call("2");
-
-  // Simulate scroll end fired by timer.
-  MockAccessibleCaretEventHub::FireScrollEnd(nullptr, mHub);
   EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
 }
 
@@ -807,7 +793,7 @@ TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScrollEndedThenBlur)
     InSequence dummy;
 
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollStart());
-    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollEnd()).Times(0);
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollEnd());
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnBlur());
   }
 
@@ -818,7 +804,7 @@ TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScrollEndedThenBlur)
   EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::ScrollState());
 
   mHub->AsyncPanZoomStopped();
-  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::PostScrollState());
+  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
 
   mHub->NotifyBlur(true);
   EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
