@@ -155,8 +155,7 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
       return NS_ERROR_FAILURE;
     }
 
-    sc = nsComputedDOMStyle::GetStyleContext(mContent->AsElement(), nullptr,
-                                             document->GetShell());
+    sc = nsComputedDOMStyle::GetStyleContext(mContent->AsElement(), nullptr);
     if (!sc) {
       return NS_ERROR_FAILURE;
     }
