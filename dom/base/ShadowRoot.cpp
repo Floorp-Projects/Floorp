@@ -104,14 +104,13 @@ ShadowRoot::AddSlot(HTMLSlotElement* aSlot)
   MOZ_ASSERT(aSlot);
 
   // Note that if name attribute missing, the slot is a default slot.
- nsAutoString name;
+  nsAutoString name;
   aSlot->GetName(name);
 
   nsTArray<HTMLSlotElement*>* currentSlots = mSlotMap.LookupOrAdd(name);
   MOZ_ASSERT(currentSlots);
 
-  HTMLSlotElement* oldSlot = currentSlots->IsEmpty() ?
-    nullptr : currentSlots->ElementAt(0);
+  HTMLSlotElement* oldSlot = currentSlots->SafeElementAt(0);
 
   TreeOrderComparator comparator;
   currentSlots->InsertElementSorted(aSlot, comparator);
@@ -166,41 +165,43 @@ ShadowRoot::RemoveSlot(HTMLSlotElement* aSlot)
   nsAutoString name;
   aSlot->GetName(name);
 
-  nsTArray<HTMLSlotElement*>* currentSlots = mSlotMap.Get(name);
+  SlotArray* currentSlots = mSlotMap.Get(name);
+  MOZ_DIAGNOSTIC_ASSERT(currentSlots && currentSlots->Contains(aSlot),
+                        "Slot to deregister wasn't found?");
+  if (currentSlots->Length() == 1) {
+    MOZ_ASSERT(currentSlots->ElementAt(0) == aSlot);
+    mSlotMap.Remove(name);
 
-  if (currentSlots) {
-    if (currentSlots->Length() == 1) {
-      MOZ_ASSERT(currentSlots->ElementAt(0) == aSlot);
-      mSlotMap.Remove(name);
-
-      if (aSlot->AssignedNodes().Length() > 0) {
-        aSlot->ClearAssignedNodes();
-        aSlot->EnqueueSlotChangeEvent();
-      }
-    } else {
-      bool doEnqueueSlotChange = false;
-      bool doReplaceSlot = currentSlots->ElementAt(0) == aSlot;
-      currentSlots->RemoveElement(aSlot);
-      HTMLSlotElement* replacementSlot = currentSlots->ElementAt(0);
-
-      // Move assigned nodes from removed slot to the next slot in
-      // tree order with the same name.
-      if (doReplaceSlot) {
-        const nsTArray<RefPtr<nsINode>>& assignedNodes = aSlot->AssignedNodes();
-        while (assignedNodes.Length() > 0) {
-          nsINode* assignedNode = assignedNodes[0];
-
-          aSlot->RemoveAssignedNode(assignedNode);
-          replacementSlot->AppendAssignedNode(assignedNode);
-          doEnqueueSlotChange = true;
-        }
-
-        if (doEnqueueSlotChange) {
-          aSlot->EnqueueSlotChangeEvent();
-          replacementSlot->EnqueueSlotChangeEvent();
-        }
-      }
+    if (!aSlot->AssignedNodes().IsEmpty()) {
+      aSlot->ClearAssignedNodes();
+      aSlot->EnqueueSlotChangeEvent();
     }
+
+    return;
+  }
+
+  const bool wasFirstSlot = currentSlots->ElementAt(0) == aSlot;
+  currentSlots->RemoveElement(aSlot);
+
+  // Move assigned nodes from removed slot to the next slot in
+  // tree order with the same name.
+  if (!wasFirstSlot) {
+    return;
+  }
+
+  HTMLSlotElement* replacementSlot = currentSlots->ElementAt(0);
+  const nsTArray<RefPtr<nsINode>>& assignedNodes = aSlot->AssignedNodes();
+  bool slottedNodesChanged = !assignedNodes.IsEmpty();
+  while (!assignedNodes.IsEmpty()) {
+    nsINode* assignedNode = assignedNodes[0];
+
+    aSlot->RemoveAssignedNode(assignedNode);
+    replacementSlot->AppendAssignedNode(assignedNode);
+  }
+
+  if (slottedNodesChanged) {
+    aSlot->EnqueueSlotChangeEvent();
+    replacementSlot->EnqueueSlotChangeEvent();
   }
 }
 
