@@ -1226,7 +1226,7 @@ CanvasRenderingContext2D::ParseColor(const nsAString& aString,
     // otherwise resolve it
     nsCOMPtr<nsIPresShell> presShell = GetPresShell();
     RefPtr<nsStyleContext> parentContext;
-    if (mCanvasElement && mCanvasElement->IsInUncomposedDoc()) {
+    if (mCanvasElement && mCanvasElement->IsInComposedDoc()) {
       // Inherit from the canvas element.
       parentContext =
         nsComputedDOMStyle::GetStyleContext(mCanvasElement, nullptr);
@@ -2002,7 +2002,7 @@ CanvasRenderingContext2D::ClearTarget()
 
   SetInitialState();
 
-  if (!mCanvasElement || !mCanvasElement->IsInUncomposedDoc()) {
+  if (!mCanvasElement || !mCanvasElement->IsInComposedDoc()) {
     return;
   }
 
@@ -2739,7 +2739,7 @@ GetFontParentStyleContext(Element* aElement,
                           nsIPresShell* aPresShell,
                           ErrorResult& aError)
 {
-  if (aElement && aElement->IsInUncomposedDoc()) {
+  if (aElement && aElement->IsInComposedDoc()) {
     // Inherit from the canvas element.
     RefPtr<nsStyleContext> result =
       nsComputedDOMStyle::GetStyleContext(aElement, nullptr);
@@ -2919,7 +2919,7 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
   RefPtr<nsStyleContext> parentStyle;
   // have to get a parent style context for inherit-like relative
   // values (2em, bolder, etc.)
-  if (aElement && aElement->IsInUncomposedDoc()) {
+  if (aElement && aElement->IsInComposedDoc()) {
     parentStyle = nsComputedDOMStyle::GetStyleContext(aElement, nullptr);
   } else {
     RefPtr<RawServoDeclarationBlock> declarations =
@@ -4576,7 +4576,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   bool isRTL = false;
 
   RefPtr<nsStyleContext> canvasStyle;
-  if (mCanvasElement && mCanvasElement->IsInUncomposedDoc()) {
+  if (mCanvasElement && mCanvasElement->IsInComposedDoc()) {
     // try to find the closest context
     canvasStyle =
       nsComputedDOMStyle::GetStyleContext(mCanvasElement, nullptr);
