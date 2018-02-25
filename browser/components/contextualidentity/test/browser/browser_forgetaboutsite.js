@@ -211,7 +211,7 @@ async function test_image_cache_cleared() {
   gHits = 0;
 
   // Forget the site.
-  await ForgetAboutSite.removeDataFromDomain("localhost:" + gHttpServer.identity.primaryPort + "/");
+  await ForgetAboutSite.removeDataFromDomain("localhost");
 
   // Load again.
   for (let userContextId of Object.keys(USER_CONTEXTS)) {

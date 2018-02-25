@@ -32,15 +32,16 @@ add_task(async function test_nsNavHistory_UpdateFrecency() {
 add_task(async function test_nsNavHistory_invalidateFrecencies_somePages() {
   let url = Services.io.newURI("http://test-nsNavHistory-invalidateFrecencies-somePages.com/");
   // Bookmarking the URI is enough to add it to moz_places, and importantly, it
-  // means that removePagesFromHost doesn't remove it from moz_places, so its
+  // means that removeByFilter doesn't remove it from moz_places, so its
   // frecency is able to be changed.
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url,
     title: "test"
   });
-  PlacesUtils.history.removePagesFromHost(url.host, false);
-  await onFrecencyChanged(url);
+  let promise = onFrecencyChanged(url);
+  await PlacesUtils.history.removeByFilter({ host: url.host });
+  await promise;
 });
 
 // nsNavHistory::invalidateFrecencies for all pages
