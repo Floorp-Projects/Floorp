@@ -208,8 +208,6 @@ windows-talos:
     - talos-svgr
     - talos-tp5o
     - talos-xperf
-    - talos-tp6
-    - talos-tp6-stylo-threads
     - talos-speedometer
     - talos-motionmark
     - talos-h1
