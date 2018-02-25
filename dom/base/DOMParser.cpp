@@ -463,12 +463,6 @@ DOMParser::SetUpDocument(DocumentFlavor aFlavor, nsIDOMDocument** aResult)
   }
 
   // Try to inherit a style backend.
-  auto styleBackend = StyleBackendType::None;
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(scriptHandlingObject);
-  if (window && window->GetExtantDoc()) {
-    styleBackend = window->GetExtantDoc()->GetStyleBackendType();
-  }
-
   NS_ASSERTION(mPrincipal, "Must have principal by now");
   NS_ASSERTION(mDocumentURI, "Must have document URI by now");
 
@@ -477,6 +471,5 @@ DOMParser::SetUpDocument(DocumentFlavor aFlavor, nsIDOMDocument** aResult)
                            mPrincipal,
                            true,
                            scriptHandlingObject,
-                           aFlavor,
-                           styleBackend);
+                           aFlavor);
 }
