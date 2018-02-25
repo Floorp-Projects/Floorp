@@ -32,10 +32,14 @@ add_task(async function test_revive_bg_tabs_on_demand() {
   await TabStateFlusher.flush(browser2);
 
   // Now crash the selected tab
+  let windowReady = BrowserTestUtils.waitForEvent(window, "SSWindowStateReady");
   await BrowserTestUtils.crashBrowser(browser1);
 
   ok(newTab1.hasAttribute("crashed"), "Selected tab should be crashed");
   ok(!newTab2.hasAttribute("crashed"), "Background tab should not be crashed");
+
+  // Wait until we've had a chance to restore all tabs immediately
+  await windowReady;
 
   // But we should not have restored the background tab
   ok(newTab2.hasAttribute("pending"), "Background tab should be pending");
