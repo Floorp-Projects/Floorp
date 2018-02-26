@@ -212,13 +212,13 @@ var Policies = {
 
   "InstallAddons": {
     onBeforeUIStartup(manager, param) {
-      addAllowDenyPermissions("install", param.Allow, param.Block);
+      addAllowDenyPermissions("install", param.Allow, null);
     }
   },
 
   "Popups": {
     onBeforeUIStartup(manager, param) {
-      addAllowDenyPermissions("popup", param.Allow, param.Block);
+      addAllowDenyPermissions("popup", param.Allow, null);
     }
   },
 

@@ -10,15 +10,9 @@ function URI(str) {
 add_task(async function test_setup_preexisting_permissions() {
   // Pre-existing ALLOW permissions that should be overriden
   // with DENY.
-  Services.perms.add(URI("https://www.pre-existing-allow.com"),
-                     "popup",
-                     Ci.nsIPermissionManager.ALLOW_ACTION,
-                     Ci.nsIPermissionManager.EXPIRE_SESSION);
 
-  Services.perms.add(URI("https://www.pre-existing-allow.com"),
-                     "install",
-                     Ci.nsIPermissionManager.ALLOW_ACTION,
-                     Ci.nsIPermissionManager.EXPIRE_SESSION);
+  // No ALLOW -> DENY override for popup and install permissions,
+  // because their policies only supports the Allow parameter.
 
   Services.perms.add(URI("https://www.pre-existing-allow.com"),
                      "cookie",
@@ -75,20 +69,23 @@ function checkPermission(url, expected, permissionName) {
   }
 }
 
-function checkAllPermissionsForType(type) {
+function checkAllPermissionsForType(type, typeSupportsDeny = true) {
   checkPermission("allow.com", "ALLOW", type);
-  checkPermission("deny.com", "DENY", type);
   checkPermission("unknown.com", "UNKNOWN", type);
-  checkPermission("pre-existing-allow.com", "DENY", type);
   checkPermission("pre-existing-deny.com", "ALLOW", type);
+
+  if (typeSupportsDeny) {
+    checkPermission("deny.com", "DENY", type);
+    checkPermission("pre-existing-allow.com", "DENY", type);
+  }
 }
 
 add_task(async function test_popups_policy() {
-  checkAllPermissionsForType("popup");
+  checkAllPermissionsForType("popup", false);
 });
 
 add_task(async function test_webextensions_policy() {
-  checkAllPermissionsForType("install");
+  checkAllPermissionsForType("install", false);
 });
 
 add_task(async function test_cookies_policy() {
@@ -102,15 +99,15 @@ add_task(async function test_flash_policy() {
 add_task(async function test_change_permission() {
   // Checks that changing a permission will still retain the
   // value set through the engine.
-  Services.perms.add(URI("https://www.allow.com"), "popup",
+  Services.perms.add(URI("https://www.allow.com"), "cookie",
                      Ci.nsIPermissionManager.DENY_ACTION,
                      Ci.nsIPermissionManager.EXPIRE_SESSION);
 
-  checkPermission("allow.com", "ALLOW", "popup");
+  checkPermission("allow.com", "ALLOW", "cookie");
 
   // Also change one un-managed permission to make sure it doesn't
   // cause any problems to the policy engine or the permission manager.
-  Services.perms.add(URI("https://www.unmanaged.com"), "popup",
+  Services.perms.add(URI("https://www.unmanaged.com"), "cookie",
                    Ci.nsIPermissionManager.DENY_ACTION,
                    Ci.nsIPermissionManager.EXPIRE_SESSION);
 });
