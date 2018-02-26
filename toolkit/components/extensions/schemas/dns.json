@@ -1,0 +1,70 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "dns"
+          ]
+        }]
+      }
+    ]
+  },
+  {
+    "namespace": "dns",
+    "description": "Asynchronous DNS API",
+    "permissions": ["dns"],
+    "types": [
+      {
+        "id": "DNSRecord",
+        "type": "object",
+        "description": "An object encapsulating a DNS Record.",
+        "properties": {
+          "canonicalName": {
+            "type": "string",
+            "optional": true,
+            "description": "The canonical hostname for this record.  this value is empty if the record was not fetched with the 'canonical_name' flag."
+          },
+          "isTRR": {
+            "type": "string",
+            "description": "Record retreived with TRR."
+          },
+          "addresses": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    ],
+    "functions": [
+      {
+        "name": "resolve",
+        "type": "function",
+        "description": "Resolves a hostname to a DNS entry.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "hostname",
+            "type": "string"
+          },
+          {
+            "name": "flags",
+            "optional": true,
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "string",
+              "enum": [
+                "bypass_cache", "canonical_name", "priority_medium", "priority_low", "speculate",
+                "disable_ipv6", "disable_ipv4", "offline", "allow_name_collisions", "disable_trr"
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+]
