@@ -58,7 +58,7 @@ import kotlin.reflect.KClass;
 public class GeckoSessionTestRule extends UiThreadTestRule {
 
     private static final long DEFAULT_TIMEOUT_MILLIS = 10000;
-    public static final String APK_URI_PREFIX = "resource://android";
+    public static final String APK_URI_PREFIX = "resource://android/";
 
     /**
      * Specify the timeout for any of the wait methods, in milliseconds. Can be used
