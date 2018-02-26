@@ -8469,10 +8469,12 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
     if (const char* str = op.getStringOption("spectre-mitigations")) {
         if (strcmp(str, "on") == 0) {
             jit::JitOptions.spectreIndexMasking = true;
+            jit::JitOptions.spectreObjectMitigationsBarriers = true;
             jit::JitOptions.spectreStringMitigations = true;
             jit::JitOptions.spectreValueMasking = true;
         } else if (strcmp(str, "off") == 0) {
             jit::JitOptions.spectreIndexMasking = false;
+            jit::JitOptions.spectreObjectMitigationsBarriers = false;
             jit::JitOptions.spectreStringMitigations = false;
             jit::JitOptions.spectreValueMasking = false;
         } else {
