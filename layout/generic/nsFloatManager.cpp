@@ -553,6 +553,7 @@ public:
 
   static UniquePtr<ShapeInfo> CreateShapeBox(
     nsIFrame* const aFrame,
+    nscoord aShapeMargin,
     const LogicalRect& aShapeBoxRect,
     WritingMode aWM,
     const nsSize& aContainerSize);
@@ -1954,6 +1955,12 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
 
   const StyleShapeSource& shapeOutside = mFrame->StyleDisplay()->mShapeOutside;
 
+  nscoord shapeMargin = (shapeOutside.GetType() == StyleShapeSourceType::None)
+   ? 0
+   : nsLayoutUtils::ResolveToLength<true>(
+       mFrame->StyleDisplay()->mShapeMargin,
+       LogicalSize(aWM, aContainerSize).ISize(aWM));
+
   switch (shapeOutside.GetType()) {
     case StyleShapeSourceType::None:
       // No need to create shape info.
@@ -1965,9 +1972,6 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
 
     case StyleShapeSourceType::Image: {
       float shapeImageThreshold = mFrame->StyleDisplay()->mShapeImageThreshold;
-      nscoord shapeMargin = nsLayoutUtils::ResolveToLength<true>(
-        mFrame->StyleDisplay()->mShapeMargin,
-        LogicalSize(aWM, aContainerSize).ISize(aWM));
       mShapeInfo = ShapeInfo::CreateImageShape(shapeOutside.GetShapeImage(),
                                                shapeImageThreshold,
                                                shapeMargin,
@@ -1987,16 +1991,14 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
       // Initialize <shape-box>'s reference rect.
       LogicalRect shapeBoxRect =
         ShapeInfo::ComputeShapeBoxRect(shapeOutside, mFrame, aMarginRect, aWM);
-      mShapeInfo = ShapeInfo::CreateShapeBox(mFrame, shapeBoxRect, aWM,
+      mShapeInfo = ShapeInfo::CreateShapeBox(mFrame, shapeMargin,
+                                             shapeBoxRect, aWM,
                                              aContainerSize);
       break;
     }
 
     case StyleShapeSourceType::Shape: {
       const UniquePtr<StyleBasicShape>& basicShape = shapeOutside.GetBasicShape();
-      nscoord shapeMargin = nsLayoutUtils::ResolveToLength<true>(
-        mFrame->StyleDisplay()->mShapeMargin,
-        LogicalSize(aWM, aContainerSize).ISize(aWM));
       // Initialize <shape-box>'s reference rect.
       LogicalRect shapeBoxRect =
         ShapeInfo::ComputeShapeBoxRect(shapeOutside, mFrame, aMarginRect, aWM);
@@ -2150,6 +2152,7 @@ nsFloatManager::ShapeInfo::ComputeShapeBoxRect(
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>
 nsFloatManager::ShapeInfo::CreateShapeBox(
   nsIFrame* const aFrame,
+  nscoord aShapeMargin,
   const LogicalRect& aShapeBoxRect,
   WritingMode aWM,
   const nsSize& aContainerSize)
@@ -2157,11 +2160,19 @@ nsFloatManager::ShapeInfo::CreateShapeBox(
   nsRect logicalShapeBoxRect
     = ConvertToFloatLogical(aShapeBoxRect, aWM, aContainerSize);
 
+  // Inflate logicalShapeBoxRect by aShapeMargin.
+  logicalShapeBoxRect.Inflate(aShapeMargin);
+
   nscoord physicalRadii[8];
   bool hasRadii = aFrame->GetShapeBoxBorderRadii(physicalRadii);
   if (!hasRadii) {
     return MakeUnique<RoundedBoxShapeInfo>(logicalShapeBoxRect,
                                            UniquePtr<nscoord[]>());
+  }
+
+  // Add aShapeMargin to each of the radii.
+  for (nscoord& r : physicalRadii) {
+    r += aShapeMargin;
   }
 
   return MakeUnique<RoundedBoxShapeInfo>(logicalShapeBoxRect,
