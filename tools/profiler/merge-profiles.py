@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 #
 # This script takes b2g process profiles and merged them into a single profile.
 # The meta data is taken from the first profile. The startTime for each profile
@@ -8,6 +8,7 @@
 import json
 import re
 import sys
+
 
 def MergeProfiles(files):
     threads = []
@@ -108,6 +109,3 @@ if len(sys.argv) > 1:
     sys.exit(0)
 
 print "Usage: merge-profile.py profile_<pid1>_<pname1>.sym profile_<pid2>_<pname2>.sym > merged.sym"
-
-
-

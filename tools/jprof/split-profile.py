@@ -67,6 +67,7 @@ for f in [jprof, splitfile]:
         sys.stderr.write("could not find file: {0}\n".format(f))
         sys.exit(1)
 
+
 def read_splits(splitfile):
     """
     Read splitfile (each line of which contains a name, a space, and
@@ -77,14 +78,16 @@ def read_splits(splitfile):
     def line_to_split(line):
         line = line.strip("\r\n")
         idx = line.index(" ")
-        return (line[0:idx], line[idx+1:])
+        return (line[0:idx], line[idx + 1:])
 
     io = open(splitfile, "r")
     result = [line_to_split(line) for line in io]
     io.close()
     return result
 
+
 splits = read_splits(splitfile)
+
 
 def generate_profile(options, destfile):
     """
@@ -105,8 +108,10 @@ def generate_profile(options, destfile):
     destio.close()
     if process.returncode != 0:
         os.remove(destfile)
-        sys.stderr.write("Error {0} from command:\n  {1}\n".format(process.returncode, " ".join(args)))
+        sys.stderr.write("Error {0} from command:\n  {1}\n".format(
+            process.returncode, " ".join(args)))
         sys.exit(process.returncode)
+
 
 def output_filename(number, splitname):
     """
@@ -126,6 +131,7 @@ def output_filename(number, splitname):
 
     return os.path.join(os.path.dirname(splitfile),
                         "jprof-{0}.html".format(name))
+
 
 # generate the complete profile
 generate_profile([], output_filename(0, None))

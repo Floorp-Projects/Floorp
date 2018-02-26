@@ -8,12 +8,14 @@ import unittest
 import make_incremental_updates as mkup
 from make_incremental_updates import PatchInfo, MarFileEntry
 
+
 class TestPatchInfo(unittest.TestCase):
     def setUp(self):
         self.work_dir = 'work_dir'
-        self.file_exclusion_list = ['update.manifest','updatev2.manifest','updatev3.manifest']
+        self.file_exclusion_list = ['update.manifest', 'updatev2.manifest', 'updatev3.manifest']
         self.path_exclusion_list = ['/readme.txt']
-        self.patch_info = PatchInfo(self.work_dir, self.file_exclusion_list, self.path_exclusion_list)
+        self.patch_info = PatchInfo(
+            self.work_dir, self.file_exclusion_list, self.path_exclusion_list)
 
     def testPatchInfo(self):
         self.assertEquals(self.work_dir, self.patch_info.work_dir)
@@ -30,8 +32,10 @@ class TestPatchInfo(unittest.TestCase):
 
     def test_append_add_if_instruction(self):
         self.patch_info.append_add_instruction('distribution/extensions/extension/file.test')
-        self.assertEquals(['add-if "distribution/extensions/extension" "distribution/extensions/extension/file.test"'], self.patch_info.manifestv2)
-        self.assertEquals(['add-if "distribution/extensions/extension" "distribution/extensions/extension/file.test"'], self.patch_info.manifestv3)
+        self.assertEquals(
+            ['add-if "distribution/extensions/extension" "distribution/extensions/extension/file.test"'], self.patch_info.manifestv2)
+        self.assertEquals(
+            ['add-if "distribution/extensions/extension" "distribution/extensions/extension/file.test"'], self.patch_info.manifestv3)
 
     def test_append_add_if_not_instruction(self):
         self.patch_info.append_add_if_not_instruction('file.test')
@@ -44,9 +48,12 @@ class TestPatchInfo(unittest.TestCase):
         self.assertEquals(['patch "patchname" "file.test"'], self.patch_info.manifestv3)
 
     def test_append_patch_if_instruction(self):
-        self.patch_info.append_patch_instruction('distribution/extensions/extension/file.test', 'patchname')
-        self.assertEquals(['patch-if "distribution/extensions/extension" "patchname" "distribution/extensions/extension/file.test"'], self.patch_info.manifestv2)
-        self.assertEquals(['patch-if "distribution/extensions/extension" "patchname" "distribution/extensions/extension/file.test"'], self.patch_info.manifestv3)
+        self.patch_info.append_patch_instruction(
+            'distribution/extensions/extension/file.test', 'patchname')
+        self.assertEquals(
+            ['patch-if "distribution/extensions/extension" "patchname" "distribution/extensions/extension/file.test"'], self.patch_info.manifestv2)
+        self.assertEquals(
+            ['patch-if "distribution/extensions/extension" "patchname" "distribution/extensions/extension/file.test"'], self.patch_info.manifestv3)
 
     def test_append_remove_instruction(self):
         self.patch_info.append_remove_instruction('file.test')
@@ -69,7 +76,9 @@ class TestPatchInfo(unittest.TestCase):
     """
 
     def test_build_marfile_entry_hash(self):
-        self.assertEquals(({}, set([]), set([])), self.patch_info.build_marfile_entry_hash('root_path'))
+        self.assertEquals(({}, set([]), set([])),
+                          self.patch_info.build_marfile_entry_hash('root_path'))
+
 
 """ FIXME touches the filesystem, need refactoring
 class TestMarFileEntry(unittest.TestCase):
@@ -96,10 +105,12 @@ class TestMarFileEntry(unittest.TestCase):
         self.assertEquals(goodSha, sha)
 """
 
+
 class TestMakeIncrementalUpdates(unittest.TestCase):
     def setUp(self):
         work_dir = '.'
-        self.patch_info = PatchInfo(work_dir, ['update.manifest','updatev2.manifest','updatev3.manifest'],['/readme.txt'])
+        self.patch_info = PatchInfo(
+            work_dir, ['update.manifest', 'updatev2.manifest', 'updatev3.manifest'], ['/readme.txt'])
         root_path = '/'
         filename = 'test.file'
         self.mar_file_entry = MarFileEntry(root_path, filename)
@@ -143,12 +154,14 @@ class TestMakeIncrementalUpdates(unittest.TestCase):
     """
 
     def test_decode_filename(self):
-        expected = {'locale': 'lang', 'platform': 'platform', 'product': 'product', 'version': '1.0', 'type': 'complete'}
+        expected = {'locale': 'lang', 'platform': 'platform',
+                    'product': 'product', 'version': '1.0', 'type': 'complete'}
         self.assertEquals(expected, mkup.decode_filename('product-1.0.lang.platform.complete.mar'))
         self.assertEquals(expected, mkup.decode_filename('platform/lang/product-1.0.complete.mar'))
         with self.assertRaises(Exception) as cm:
             mkup.decode_filename('fail')
         self.assertTrue(cm.exception.args[0].startswith('could not parse filepath fail:'))
+
 
 if __name__ == '__main__':
     unittest.main()
