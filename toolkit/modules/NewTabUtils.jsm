@@ -64,7 +64,10 @@ const ACTIVITY_STREAM_DEFAULT_LIMIT = 12;
 // Some default seconds ago for Activity Stream recent requests
 const ACTIVITY_STREAM_DEFAULT_RECENT = 5 * 24 * 60 * 60;
 
-const POCKET_UPDATE_TIME = 60 * 60 * 1000; // 1 hour
+const POCKET_UPDATE_TIME = 24 * 60 * 60 * 1000; // 1 day
+const POCKET_INACTIVE_TIME = 7 * 24 * 60 * 60 * 1000; // 1 week
+const PREF_POCKET_LATEST_SINCE = "extensions.pocket.settings.latestSince";
+
 /**
  * Calculate the MD5 hash for a string.
  * @param aValue
@@ -987,9 +990,13 @@ var ActivityStreamProvider = {
    * saved Pocket items.
    */
   fetchSavedPocketItems(requestData) {
-    if (!pktApi.isUserLoggedIn()) {
+    const latestSince = (Services.prefs.getStringPref(PREF_POCKET_LATEST_SINCE, 0) * 1000);
+
+    // Do not fetch Pocket items for users that have been inactive for too long, or are not logged in
+    if (!pktApi.isUserLoggedIn() || (Date.now() - latestSince > POCKET_INACTIVE_TIME)) {
       return Promise.resolve(null);
     }
+
     return new Promise((resolve, reject) => {
       pktApi.retrieve(requestData, {
         success(data) {
@@ -1304,6 +1311,7 @@ var ActivityStreamProvider = {
 var ActivityStreamLinks = {
   _savedPocketStories: null,
   _pocketLastUpdated: 0,
+  _pocketLastLatest: 0,
 
  /**
    * Block a url
@@ -1454,12 +1462,17 @@ var ActivityStreamLinks = {
 
     // Add the Pocket items if we need more and want them
     if (aOptions.numItems - results.length > 0 && !aOptions.excludePocket) {
-      // If we do not have saved to Pocket stories already cached, or it has been
-      // more than 1 hour since we last got Pocket stories, invalidate the cache,
-      // get new stories, and update the timestamp
-      if (!this._savedPocketStories || (Date.now() - this._pocketLastUpdated > POCKET_UPDATE_TIME)) {
+      const latestSince = ~~(Services.prefs.getStringPref(PREF_POCKET_LATEST_SINCE, 0));
+      // Invalidate the cache, get new stories, and update timestamps if:
+      //  1. we do not have saved to Pocket stories already cached OR
+      //  2. it has been too long since we last got Pocket stories OR
+      //  3. there has been a paged saved to pocket since we last got new stories
+      if (!this._savedPocketStories ||
+          (Date.now() - this._pocketLastUpdated > POCKET_UPDATE_TIME) ||
+          (this._pocketLastLatest < latestSince)) {
         this._savedPocketStories = await ActivityStreamProvider.getRecentlyPocketed(aOptions);
         this._pocketLastUpdated = Date.now();
+        this._pocketLastLatest = latestSince;
       }
       results.push(...this._savedPocketStories);
     }
