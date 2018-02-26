@@ -69,6 +69,7 @@ var Policies = {
     onBeforeUIStartup(manager, param) {
       if (param) {
         manager.disallowFeature("about:config", true);
+        setAndLockPref("devtools.chrome.enabled", false);
       }
     }
   },
