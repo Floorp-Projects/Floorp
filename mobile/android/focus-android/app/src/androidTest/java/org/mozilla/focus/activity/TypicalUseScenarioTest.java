@@ -86,6 +86,7 @@ public class TypicalUseScenarioTest {
         TestHelper.floatingEraseButton.perform(click());
         TestHelper.erasedMsg.waitForExists(waitingTime);
         assertTrue(TestHelper.erasedMsg.exists());
+        TestHelper.erasedMsg.waitUntilGone(waitingTime);
 
         // Let's go to an actual URL which is https://
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
@@ -106,6 +107,7 @@ public class TypicalUseScenarioTest {
         TestHelper.floatingEraseButton.perform(click());
         TestHelper.erasedMsg.waitForExists(waitingTime);
         assertTrue(TestHelper.erasedMsg.exists());
+        TestHelper.erasedMsg.waitUntilGone(waitingTime);
 
         // Let's go to an actual URL which is http://
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
