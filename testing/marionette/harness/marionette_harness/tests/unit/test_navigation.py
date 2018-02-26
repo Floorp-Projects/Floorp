@@ -22,8 +22,14 @@ from marionette_harness import (
 here = os.path.abspath(os.path.dirname(__file__))
 
 
+BLACK_PIXEL = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' # noqa
+RED_PIXEL = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEX/TQBcNTh/AAAAAXRSTlPM0jRW/QAAAApJREFUeJxjYgAAAAYAAzY3fKgAAAAASUVORK5CYII=' # noqa
+
 def inline(doc):
     return "data:text/html;charset=utf-8,%s" % urllib.quote(doc)
+
+def inline_image(data):
+    return 'data:image/png;base64,%s' % data
 
 
 class BaseNavigationTestCase(WindowManagerMixin, MarionetteTestCase):
@@ -487,6 +493,9 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
         test_pages = [
             {"url": self.marionette.absolute_url("black.png")},
             {"url": self.marionette.absolute_url("white.png")},
+            {"url": inline_image(RED_PIXEL)},
+            {"url": inline_image(BLACK_PIXEL)},
+            {"url": self.marionette.absolute_url("black.png")},
         ]
         self.run_bfcache_test(test_pages)
 
