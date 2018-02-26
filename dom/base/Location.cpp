@@ -407,12 +407,14 @@ Location::SetHostname(const nsAString& aHostname,
   }
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
+  aRv = GetURI(getter_AddRefs(uri));
   if (NS_WARN_IF(aRv.Failed()) || !uri) {
     return;
   }
 
-  aRv = uri->SetHost(NS_ConvertUTF16toUTF8(aHostname));
+  aRv = NS_MutateURI(uri)
+          .SetHost(NS_ConvertUTF16toUTF8(aHostname))
+          .Finalize(uri);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

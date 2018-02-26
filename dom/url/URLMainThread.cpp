@@ -353,7 +353,9 @@ URLMainThread::SetHostname(const nsAString& aHostname, ErrorResult& aRv)
 {
   // nsStandardURL returns NS_ERROR_UNEXPECTED for an empty hostname
   // The return code is silently ignored
-  mURI->SetHost(NS_ConvertUTF16toUTF8(aHostname));
+  mozilla::Unused << NS_MutateURI(mURI)
+                       .SetHost(NS_ConvertUTF16toUTF8(aHostname))
+                       .Finalize(mURI);
 }
 
 void

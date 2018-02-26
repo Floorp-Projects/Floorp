@@ -169,7 +169,7 @@ add_test(function test_setRef()
 add_test(function test_ipv6()
 {
   var url = stringToURL("http://example.com");
-  url.host = "[2001::1]";
+  url = url.mutate().setHost("[2001::1]").finalize();
   Assert.equal(url.host, "2001::1");
 
   url = stringToURL("http://example.com");
@@ -190,14 +190,14 @@ add_test(function test_ipv6_fail()
 {
   var url = stringToURL("http://example.com");
 
-  Assert.throws(() => { url.host = "2001::1"; }, "missing brackets");
-  Assert.throws(() => { url.host = "[2001::1]:20"; }, "url.host with port");
-  Assert.throws(() => { url.host = "[2001::1"; }, "missing last bracket");
-  Assert.throws(() => { url.host = "2001::1]"; }, "missing first bracket");
-  Assert.throws(() => { url.host = "2001[::1]"; }, "bad bracket position");
-  Assert.throws(() => { url.host = "[]"; }, "empty IPv6 address");
-  Assert.throws(() => { url.host = "[hello]"; }, "bad IPv6 address");
-  Assert.throws(() => { url.host = "[192.168.1.1]"; }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHost("2001::1").finalize(); }, "missing brackets");
+  Assert.throws(() => { url = url.mutate().setHost("[2001::1]:20").finalize(); }, "url.host with port");
+  Assert.throws(() => { url = url.mutate().setHost("[2001::1").finalize(); }, "missing last bracket");
+  Assert.throws(() => { url = url.mutate().setHost("2001::1]").finalize(); }, "missing first bracket");
+  Assert.throws(() => { url = url.mutate().setHost("2001[::1]").finalize(); }, "bad bracket position");
+  Assert.throws(() => { url = url.mutate().setHost("[]").finalize(); }, "empty IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHost("[hello]").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHost("[192.168.1.1]").finalize(); }, "bad IPv6 address");
   Assert.throws(() => { url = url.mutate().setHostPort("2001::1").finalize(); }, "missing brackets");
   Assert.throws(() => { url = url.mutate().setHostPort("[2001::1]30").finalize(); }, "missing : after IP");
   Assert.throws(() => { url = url.mutate().setHostPort("[2001:1]").finalize(); }, "bad IPv6 address");
@@ -219,7 +219,7 @@ add_test(function test_clearedSpec()
   Assert.throws(() => { url = url.mutate().setSpec("http: example").finalize(); }, "set bad spec");
   Assert.throws(() => { url = url.mutate().setSpec("").finalize(); }, "set empty spec");
   Assert.equal(url.spec, "http://example.com/path");
-  url.host = "allizom.org";
+  url = url.mutate().setHost("allizom.org").finalize().QueryInterface(Ci.nsIURL);
 
   var ref = stringToURL("http://allizom.org/path");
   symmetricEquality(true, url, ref);
@@ -301,8 +301,7 @@ add_test(function test_hugeStringThrows()
   let url = stringToURL("http://test:test@example.com");
 
   let hugeString = new Array(maxLen + 1).fill("a").join("");
-  let properties = ["scheme",
-                    "host"];
+  let properties = ["scheme"];
   for (let prop of properties) {
     Assert.throws(() => url[prop] = hugeString,
                   /NS_ERROR_MALFORMED_URI/,
@@ -315,6 +314,7 @@ add_test(function test_hugeStringThrows()
     { method: "setPassword", qi: Ci.nsIURIMutator },
     { method: "setFilePath", qi: Ci.nsIURIMutator },
     { method: "setHostPort", qi: Ci.nsIURIMutator },
+    { method: "setHost", qi: Ci.nsIURIMutator },
     { method: "setUserPass", qi: Ci.nsIURIMutator },
     { method: "setPathQueryRef", qi: Ci.nsIURIMutator },
     { method: "setQuery", qi: Ci.nsIURIMutator },
@@ -474,7 +474,7 @@ add_test(function test_ipv4Normalize()
   }
 
   var url = stringToURL("resource://path/to/resource/");
-  url.host = "123";
+  url = url.mutate().setHost("123").finalize();
   Assert.equal(url.host, "123");
 
   run_next_test();
@@ -483,10 +483,10 @@ add_test(function test_ipv4Normalize()
 add_test(function test_invalidHostChars() {
   var url = stringToURL("http://example.org/");
   for (let i = 0; i <= 0x20; i++) {
-    Assert.throws(() => { url.host = "a" + String.fromCharCode(i) + "b"; }, "Trying to set hostname containing char code: " + i);
+    Assert.throws(() => { url = url.mutate().setHost("a" + String.fromCharCode(i) + "b").finalize(); }, "Trying to set hostname containing char code: " + i);
   }
   for (let c of "@[]*<>|:\"") {
-    Assert.throws(() => { url.host = "a" + c; }, "Trying to set hostname containing char: " + c);
+    Assert.throws(() => { url = url.mutate().setHost("a" + c).finalize(); }, "Trying to set hostname containing char: " + c);
   }
 
   // It also can't contain /, \, #, ?, but we treat these characters as
@@ -496,7 +496,7 @@ add_test(function test_invalidHostChars() {
 
 add_test(function test_normalize_ipv6() {
   var url = stringToURL("http://example.com");
-  url.host = "[::192.9.5.5]";
+  url = url.mutate().setHost("[::192.9.5.5]").finalize();
   Assert.equal(url.spec, "http://[::c009:505]/");
 
   run_next_test();

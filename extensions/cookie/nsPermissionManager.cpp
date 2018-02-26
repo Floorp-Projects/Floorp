@@ -28,6 +28,7 @@
 #include "mozilla/Attributes.h"
 #include "nsXULAppAPI.h"
 #include "nsIPrincipal.h"
+#include "nsIURIMutator.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIEffectiveTLDService.h"
@@ -296,13 +297,10 @@ GetNextSubDomainURI(nsIURI* aURI)
   }
 
   nsCOMPtr<nsIURI> uri;
-  rv = aURI->Clone(getter_AddRefs(uri));
+  rv = NS_MutateURI(aURI)
+         .SetHost(domain)
+         .Finalize(uri);
   if (NS_FAILED(rv) || !uri) {
-    return nullptr;
-  }
-
-  rv = uri->SetHost(domain);
-  if (NS_FAILED(rv)) {
     return nullptr;
   }
 
@@ -664,7 +662,9 @@ UpgradeHostToOriginAndInsert(const nsACString& aHost, const nsCString& aType,
       if (NS_WARN_IF(NS_FAILED(rv))) continue;
 
       // Use the provided host - this URI may be for a subdomain, rather than the host we care about.
-      rv = uri->SetHost(aHost);
+      rv = NS_MutateURI(uri)
+             .SetHost(aHost)
+             .Finalize(uri);
       if (NS_WARN_IF(NS_FAILED(rv))) continue;
 
       // We now have a URI which we can make a nsIPrincipal out of
