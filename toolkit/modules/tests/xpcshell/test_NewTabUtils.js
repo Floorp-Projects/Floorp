@@ -544,6 +544,7 @@ add_task(async function getHighlightsWithPocketSuccess() {
 
   // Force a cache invalidation
   NewTabUtils.activityStreamLinks._pocketLastUpdated = Date.now() - (70 * 60 * 1000);
+  NewTabUtils.activityStreamLinks._pocketLastLatest = -1;
   let links = await provider.getHighlights();
 
   // We should have 1 bookmark followed by 1 pocket story in highlights
@@ -610,6 +611,7 @@ add_task(async function getHighlightsWithPocketCached() {
 
   // Now force a cache invalidation and call getHighlights again
   NewTabUtils.activityStreamLinks._pocketLastUpdated = Date.now() - (70 * 60 * 1000);
+  NewTabUtils.activityStreamLinks._pocketLastLatest = -1;
   links = await provider.getHighlights();
   Assert.equal(links.length, 2, "This time we got fresh links with the new response");
   Assert.equal(links[0].url, fakeResponse.list["123"].resolved_url, "First link is unchanged");
@@ -628,6 +630,7 @@ add_task(async function getHighlightsWithPocketFailure() {
 
   // Force a cache invalidation
   NewTabUtils.activityStreamLinks._pocketLastUpdated = Date.now() - (70 * 60 * 1000);
+  NewTabUtils.activityStreamLinks._pocketLastLatest = -1;
   let links = await provider.getHighlights();
   Assert.equal(links.length, 0, "Return empty links if we reject the promise");
 });
@@ -641,6 +644,7 @@ add_task(async function getHighlightsWithPocketNoData() {
 
   // Force a cache invalidation
   NewTabUtils.activityStreamLinks._pocketLastUpdated = Date.now() - (70 * 60 * 1000);
+  NewTabUtils.activityStreamLinks._pocketLastLatest = -1;
   let links = await provider.getHighlights();
   Assert.equal(links.length, 0, "Return empty links if we got no data back from the response");
 });
