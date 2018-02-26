@@ -897,6 +897,8 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
   // lazily drop the servo data. We don't do this eagerly during layout teardown
   // because that would incur an extra whole-tree traversal that's unnecessary
   // most of the time.
+  //
+  // FIXME(emilio): I'm pretty sure this doesn't happen after bug 1414999.
   if (mDocument->IsStyledByServo()) {
     Element* root = mDocument->GetRootElement();
     if (root && root->HasServoData()) {

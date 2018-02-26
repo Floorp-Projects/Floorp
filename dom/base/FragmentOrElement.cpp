@@ -1272,14 +1272,18 @@ FragmentOrElement::SetTextContentInternal(const nsAString& aTextContent,
 void
 FragmentOrElement::DestroyContent()
 {
+  nsIDocument* document = OwnerDoc();
+
   // Drop any servo data. We do this before the RemovedFromDocument call below
   // so that it doesn't need to try to keep the style state sane when shuffling
   // around the flattened tree.
-  if (IsElement() && AsElement()->HasServoData()) {
+  //
+  // TODO(emilio): I suspect this can be asserted against instead, with a bit of
+  // effort to avoid calling nsDocument::Destroy with a shell...
+  if (IsElement() && document->IsStyledByServo()) {
     AsElement()->ClearServoData();
   }
 
-  nsIDocument *document = OwnerDoc();
   document->BindingManager()->RemovedFromDocument(this, document,
                                                   nsBindingManager::eRunDtor);
   document->ClearBoxObjectFor(this);
