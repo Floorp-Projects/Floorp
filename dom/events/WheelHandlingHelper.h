@@ -68,6 +68,12 @@ public:
   static bool CanScrollOn(nsIScrollableFrame* aScrollFrame,
                           double aDirectionX, double aDirectionY);
 
+  // For more details about the concept of a disregarded direction, refer to the
+  // code in struct mozilla::layers::ScrollMetadata which defines
+  // mDisregardedDirection.
+  static Maybe<layers::ScrollDirection>
+  GetDisregardedWheelScrollDirection(const nsIFrame* aFrame);
+
 private:
   static bool CanScrollInRange(nscoord aMin, nscoord aValue, nscoord aMax,
                                double aDirection);
@@ -159,10 +165,10 @@ public:
 
 protected:
   static void BeginTransaction(nsIFrame* aTargetFrame,
-                               WidgetWheelEvent* aEvent);
+                               const WidgetWheelEvent* aEvent);
   // Be careful, UpdateTransaction may fire a DOM event, therefore, the target
   // frame might be destroyed in the event handler.
-  static bool UpdateTransaction(WidgetWheelEvent* aEvent);
+  static bool UpdateTransaction(const WidgetWheelEvent* aEvent);
   static void MayEndTransaction();
 
   static LayoutDeviceIntPoint GetScreenPoint(WidgetGUIEvent* aEvent);

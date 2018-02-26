@@ -205,7 +205,6 @@ class Toolbar extends Component {
           {
             id: "select-view",
             onChange: e => onViewChange(e.target.value),
-            defaultValue: view,
             value: view.state,
           },
           dom.option(

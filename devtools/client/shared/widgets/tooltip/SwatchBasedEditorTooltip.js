@@ -213,7 +213,7 @@ class SwatchBasedEditorTooltip {
   }
 
   /**
-   * This parent class only calls this on <esc> keypress
+   * This parent class only calls this on <esc> keydown
    */
   revert() {
     if (this.activeSwatch) {
@@ -226,7 +226,7 @@ class SwatchBasedEditorTooltip {
   }
 
   /**
-   * This parent class only calls this on <enter> keypress
+   * This parent class only calls this on <enter> keydown
    */
   commit() {
     if (this.activeSwatch) {
@@ -238,7 +238,7 @@ class SwatchBasedEditorTooltip {
   destroy() {
     this.swatches.clear();
     this.activeSwatch = null;
-    this.tooltip.off("keypress", this._onTooltipKeypress);
+    this.tooltip.off("keydown", this._onTooltipKeydown);
     this.tooltip.destroy();
     this.shortcuts.destroy();
   }

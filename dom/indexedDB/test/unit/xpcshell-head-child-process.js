@@ -4,8 +4,6 @@
  */
 
 function run_test() {
-  const { "classes": Cc, "interfaces": Ci, "utils": Cu } = Components;
-
   ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   const INDEXEDDB_HEAD_FILE = "xpcshell-head-parent-process.js";

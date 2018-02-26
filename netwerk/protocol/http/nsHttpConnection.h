@@ -272,7 +272,7 @@ private:
     void     SetupSSL();
 
     // Start the Spdy transaction handler when NPN indicates spdy/*
-    void     StartSpdy(uint8_t versionLevel);
+    void     StartSpdy(nsISSLSocketControl *ssl, uint8_t versionLevel);
     // Like the above, but do the bare minimum to do 0RTT data, so we can back
     // it out, if necessary
     void     Start0RTTSpdy(uint8_t versionLevel);

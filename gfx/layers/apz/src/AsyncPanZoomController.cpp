@@ -1965,10 +1965,17 @@ bool
 AsyncPanZoomController::CanScrollWithWheel(const ParentLayerPoint& aDelta) const
 {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  if (mX.CanScroll(aDelta.x)) {
+
+  // For more details about the concept of a disregarded direction, refer to the
+  // code in struct ScrollMetadata which defines mDisregardedDirection.
+  Maybe<ScrollDirection> disregardedDirection =
+     mScrollMetadata.GetDisregardedDirection();
+  if (mX.CanScroll(aDelta.x) &&
+      disregardedDirection != Some(ScrollDirection::eHorizontal)) {
     return true;
   }
-  if (mY.CanScroll(aDelta.y) && mScrollMetadata.AllowVerticalScrollWithWheel()) {
+  if (mY.CanScroll(aDelta.y) &&
+      disregardedDirection != Some(ScrollDirection::eVertical)) {
     return true;
   }
   return false;
@@ -2713,15 +2720,20 @@ bool AsyncPanZoomController::AttemptScroll(ParentLayerPoint& aStartPoint,
 
   if (scrollThisApzc) {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
+    bool forcesVerticalOverscroll =
+      ScrollSource::Wheel == aOverscrollHandoffState.mScrollSource &&
+      mScrollMetadata.GetDisregardedDirection() == Some(ScrollDirection::eVertical);
+    bool forcesHorizontalOverscroll =
+      ScrollSource::Wheel == aOverscrollHandoffState.mScrollSource &&
+      mScrollMetadata.GetDisregardedDirection() == Some(ScrollDirection::eHorizontal);
 
     ParentLayerPoint adjustedDisplacement;
-    bool forceVerticalOverscroll =
-      (aOverscrollHandoffState.mScrollSource == ScrollSource::Wheel &&
-       !mScrollMetadata.AllowVerticalScrollWithWheel());
-    bool yChanged = mY.AdjustDisplacement(displacement.y, adjustedDisplacement.y, overscroll.y,
-                                          forceVerticalOverscroll);
-    bool xChanged = mX.AdjustDisplacement(displacement.x, adjustedDisplacement.x, overscroll.x);
-
+    bool yChanged = mY.AdjustDisplacement(displacement.y, adjustedDisplacement.y,
+                                          overscroll.y,
+                                          forcesVerticalOverscroll);
+    bool xChanged = mX.AdjustDisplacement(displacement.x, adjustedDisplacement.x,
+                                          overscroll.x,
+                                          forcesHorizontalOverscroll);
     if (xChanged || yChanged) {
       ScheduleComposite();
     }
@@ -3945,6 +3957,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
     mScrollMetadata.SetUsesContainerScrolling(aScrollMetadata.UsesContainerScrolling());
     mFrameMetrics.SetIsScrollInfoLayer(aLayerMetrics.IsScrollInfoLayer());
     mScrollMetadata.SetForceDisableApz(aScrollMetadata.IsApzForceDisabled());
+    mScrollMetadata.SetDisregardedDirection(aScrollMetadata.GetDisregardedDirection());
     mScrollMetadata.SetOverscrollBehavior(aScrollMetadata.GetOverscrollBehavior());
 
     if (scrollOffsetUpdated) {

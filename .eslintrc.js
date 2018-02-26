@@ -62,7 +62,7 @@ module.exports = {
       "no-unused-vars": ["error", {
         "args": "none",
         "vars": "local",
-        "varsIgnorePattern": "^Cc|Ci|Cu|Cr|EXPORTED_SYMBOLS"
+        "varsIgnorePattern": "^EXPORTED_SYMBOLS$"
       }]
     }
   }, {

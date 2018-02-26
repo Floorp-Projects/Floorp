@@ -754,6 +754,9 @@ protected:
     void RemoveBroadcaster(const nsAString & broadcasterId);
 
 protected:
+    void AddTooltipSupport();
+    void RemoveTooltipSupport();
+
     // Internal accessor. This shadows the 'Slots', and returns
     // appropriate value.
     nsIControllers *Controllers() {

@@ -246,29 +246,6 @@ add_task(async function test_bookmarks() {
   bs.setItemTitle(newId6, "Google Sites");
   Assert.equal(bookmarksObserver._itemChangedProperty, "title");
 
-  // move folder, appending, to different folder
-  let oldParentCC = getChildCount(testRoot);
-  bs.moveItem(workFolder, homeFolder, bs.DEFAULT_INDEX);
-  Assert.equal(bookmarksObserver._itemMovedId, workFolder);
-  Assert.equal(bookmarksObserver._itemMovedOldParent, testRoot);
-  Assert.equal(bookmarksObserver._itemMovedOldIndex, 0);
-  Assert.equal(bookmarksObserver._itemMovedNewParent, homeFolder);
-  Assert.equal(bookmarksObserver._itemMovedNewIndex, 1);
-
-  // test that the new index is properly stored
-  Assert.equal(bs.getFolderIdForItem(workFolder), homeFolder);
-
-  // XXX expose FolderCount, and check that the old parent has one less child?
-  Assert.equal(getChildCount(testRoot), oldParentCC - 1);
-
-  // move item, appending, to different folder
-  bs.moveItem(newId5, testRoot, bs.DEFAULT_INDEX);
-  Assert.equal(bookmarksObserver._itemMovedId, newId5);
-  Assert.equal(bookmarksObserver._itemMovedOldParent, homeFolder);
-  Assert.equal(bookmarksObserver._itemMovedOldIndex, 0);
-  Assert.equal(bookmarksObserver._itemMovedNewParent, testRoot);
-  Assert.equal(bookmarksObserver._itemMovedNewIndex, 3);
-
   // test get folder's index
   let tmpFolder = bs.createFolder(testRoot, "tmp", 2);
 

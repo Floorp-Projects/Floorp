@@ -81,6 +81,7 @@
 #include "nsIFrame.h"
 #include "nsNodeInfoManager.h"
 #include "nsXBLBinding.h"
+#include "nsXULTooltipListener.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozAutoDocUpdate.h"
 #include "nsIDOMXULCommandEvent.h"
@@ -734,6 +735,19 @@ private:
   nsCOMPtr<nsIDocument> mDocument;
 };
 
+static bool
+NeedTooltipSupport(const nsXULElement& aXULElement)
+{
+  if (aXULElement.NodeInfo()->Equals(nsGkAtoms::treechildren)) {
+    // treechildren always get tooltip support, since cropped tree cells show
+    // their full text in a tooltip.
+    return true;
+  }
+
+  return aXULElement.GetBoolAttr(nsGkAtoms::tooltip) ||
+         aXULElement.GetBoolAttr(nsGkAtoms::tooltiptext);
+}
+
 nsresult
 nsXULElement::BindToTree(nsIDocument* aDocument,
                          nsIContent* aParent,
@@ -786,6 +800,10 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
     }
   }
 
+  if (doc && NeedTooltipSupport(*this)) {
+      AddTooltipSupport();
+  }
+
   if (aDocument) {
       NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                    "Missing a script blocker!");
@@ -799,6 +817,10 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
 void
 nsXULElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
+    if (NeedTooltipSupport(*this)) {
+        RemoveTooltipSupport();
+    }
+
     // mControllers can own objects that are implemented
     // in JavaScript (such as some implementations of
     // nsIControllers.  These objects prevent their global
@@ -1212,12 +1234,45 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
             }
         }
 
+        if (aName == nsGkAtoms::tooltip || aName == nsGkAtoms::tooltiptext) {
+            if (!!aValue != !!aOldValue &&
+                IsInComposedDoc() &&
+                !NodeInfo()->Equals(nsGkAtoms::treechildren)) {
+                if (aValue) {
+                    AddTooltipSupport();
+                } else {
+                    RemoveTooltipSupport();
+                }
+            }
+        }
         // XXX need to check if they're changing an event handler: if
         // so, then we need to unhook the old one.  Or something.
     }
 
     return nsStyledElement::AfterSetAttr(aNamespaceID, aName,
                                          aValue, aOldValue, aSubjectPrincipal, aNotify);
+}
+
+void
+nsXULElement::AddTooltipSupport()
+{
+  nsXULTooltipListener* listener = nsXULTooltipListener::GetInstance();
+  if (!listener) {
+    return;
+  }
+
+  listener->AddTooltipSupport(this);
+}
+
+void
+nsXULElement::RemoveTooltipSupport()
+{
+  nsXULTooltipListener* listener = nsXULTooltipListener::GetInstance();
+  if (!listener) {
+    return;
+  }
+
+  listener->RemoveTooltipSupport(this);
 }
 
 bool
