@@ -37,7 +37,7 @@ private:
                                      nsDefaultURIFixupInfo* aFixupInfo,
                                      nsIInputStream** aPostData);
   bool PossiblyHostPortUrl(const nsACString& aUrl);
-  bool MakeAlternateURI(nsIURI* aURI);
+  bool MakeAlternateURI(nsCOMPtr<nsIURI>& aURI);
   bool IsDomainWhitelisted(const nsACString& aAsciiHost,
                            const uint32_t aDotLoc);
 };

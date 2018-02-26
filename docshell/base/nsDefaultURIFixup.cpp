@@ -512,7 +512,7 @@ nsDefaultURIFixup::TryKeywordFixupForURIInfo(const nsACString& aURIString,
 }
 
 bool
-nsDefaultURIFixup::MakeAlternateURI(nsIURI* aURI)
+nsDefaultURIFixup::MakeAlternateURI(nsCOMPtr<nsIURI>& aURI)
 {
   if (!Preferences::GetRootBranch()) {
     return false;
@@ -607,7 +607,10 @@ nsDefaultURIFixup::MakeAlternateURI(nsIURI* aURI)
   }
 
   // Assign the new host string over the old one
-  aURI->SetHost(newHost);
+  Unused << NS_MutateURI(aURI)
+              .SetHost(newHost)
+              .Finalize(aURI);
+
   return true;
 }
 

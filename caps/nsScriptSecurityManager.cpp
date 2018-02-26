@@ -16,6 +16,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
 #include "nsIURL.h"
+#include "nsIURIMutator.h"
 #include "nsINestedURI.h"
 #include "nspr.h"
 #include "nsJSPrincipals.h"
@@ -533,10 +534,8 @@ DenyAccessIfURIHasFlags(nsIURI* aURI, uint32_t aURIFlags)
 static bool
 EqualOrSubdomain(nsIURI* aProbeArg, nsIURI* aBase)
 {
-    // Make a clone of the incoming URI, because we're going to mutate it.
-    nsCOMPtr<nsIURI> probe;
-    nsresult rv = aProbeArg->Clone(getter_AddRefs(probe));
-    NS_ENSURE_SUCCESS(rv, false);
+    nsresult rv;
+    nsCOMPtr<nsIURI> probe = aProbeArg;
 
     nsCOMPtr<nsIEffectiveTLDService> tldService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
     NS_ENSURE_TRUE(tldService, false);
@@ -554,7 +553,9 @@ EqualOrSubdomain(nsIURI* aProbeArg, nsIURI* aBase)
             return false;
         }
         NS_ENSURE_SUCCESS(rv, false);
-        rv = probe->SetHost(newHost);
+        rv = NS_MutateURI(probe)
+               .SetHost(newHost)
+               .Finalize(probe);
         NS_ENSURE_SUCCESS(rv, false);
     }
 }

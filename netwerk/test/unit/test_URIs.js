@@ -526,8 +526,7 @@ function do_test_immutable(aTest) {
 
   var URI = NetUtil.newURI(aTest.spec);
   // All the non-readonly attributes on nsIURI.idl:
-  var propertiesToCheck = ["spec", "scheme",
-                           "host"];
+  var propertiesToCheck = ["spec", "scheme"];
 
   propertiesToCheck.forEach(function(aProperty) {
     var threw = false;
