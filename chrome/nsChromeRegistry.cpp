@@ -31,6 +31,7 @@
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/Location.h"
+#include "nsIURIMutator.h"
 
 #include "unicode/uloc.h"
 
@@ -152,7 +153,7 @@ nsChromeRegistry::Init()
 }
 
 nsresult
-nsChromeRegistry::GetProviderAndPath(nsIURL* aChromeURL,
+nsChromeRegistry::GetProviderAndPath(nsIURI* aChromeURL,
                                      nsACString& aProvider, nsACString& aPath)
 {
   nsresult rv;
@@ -199,7 +200,7 @@ nsChromeRegistry::GetProviderAndPath(nsIURL* aChromeURL,
 
 
 nsresult
-nsChromeRegistry::Canonify(nsIURL* aChromeURL)
+nsChromeRegistry::Canonify(nsCOMPtr<nsIURI>& aChromeURL)
 {
   NS_NAMED_LITERAL_CSTRING(kSlash, "/");
 
@@ -228,7 +229,9 @@ nsChromeRegistry::Canonify(nsIURL* aChromeURL)
     else {
       return NS_ERROR_INVALID_ARG;
     }
-    aChromeURL->SetPathQueryRef(path);
+    return NS_MutateURI(aChromeURL)
+             .SetPathQueryRef(path)
+             .Finalize(aChromeURL);
   }
   else {
     // prevent directory traversals ("..")

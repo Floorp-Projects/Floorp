@@ -146,6 +146,7 @@
 #include "nsCSSProps.h"
 #include "nsIDOMFileList.h"
 #include "nsIURIFixup.h"
+#include "nsIURIMutator.h"
 #ifndef DEBUG
 #include "nsIAppStartup.h"
 #include "nsToolkitCompsCID.h"
@@ -5793,8 +5794,11 @@ nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> a
       return;
     }
 
-    if (NS_FAILED(originURI->SetUserPass(EmptyCString())) ||
-        NS_FAILED(originURI->SetPathQueryRef(EmptyCString()))) {
+    nsresult rv = NS_MutateURI(originURI)
+                    .SetUserPass(EmptyCString())
+                    .SetPathQueryRef(EmptyCString())
+                    .Finalize(originURI);
+    if (NS_FAILED(rv)) {
       return;
     }
 

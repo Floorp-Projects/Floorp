@@ -47,6 +47,11 @@ public:
         SetURI(uri);
     }
 
+    void UpdateURI(nsIURI *aURI) {
+        MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread(), "Not thread-safe.");
+        mURI = aURI;
+    }
+
     nsIProxyInfo *ProxyInfo() {
         return mProxyInfo;
     }
