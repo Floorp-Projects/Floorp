@@ -18,7 +18,7 @@ testStepping(
         }
       })                         // line 7
     `,
-    [2, 3, 7]);
+    [1, 2, 3, 7]);
 
 // Stopping at the ClassDeclaration on line 8 is fine. For that matter,
 // stopping on line 5 wouldn't be so bad if we did it after line 3 and before
@@ -38,4 +38,4 @@ testStepping(
       }                 // 10
       f
     `,
-    [2, 3, 8, 9, 10]);
+    [1, 2, 3, 8, 9, 10]);
