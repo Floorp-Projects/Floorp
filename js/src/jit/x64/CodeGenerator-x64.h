@@ -21,7 +21,6 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
   protected:
     Operand ToOperand64(const LInt64Allocation& a);
     ValueOperand ToValue(LInstruction* ins, size_t pos);
-    ValueOperand ToOutValue(LInstruction* ins);
     ValueOperand ToTempValue(LInstruction* ins, size_t pos);
 
     void storeUnboxedValue(const LAllocation* value, MIRType valueType,

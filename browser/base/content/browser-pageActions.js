@@ -251,7 +251,7 @@ var BrowserPageActions = {
     let popupSet = document.getElementById("mainPopupSet");
     popupSet.appendChild(panelNode);
     panelNode.addEventListener("popuphidden", () => {
-      panelNode.remove();
+      PanelMultiView.removePopup(panelNode);
     }, { once: true });
 
     if (iframeNode) {

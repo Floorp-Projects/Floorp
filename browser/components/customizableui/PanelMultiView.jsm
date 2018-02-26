@@ -55,6 +55,20 @@
  *    When navigating backwards, an open subview will first become invisible and
  *    then will be closed.
  *
+ * -- Active or inactive
+ *
+ *    This indicates whether the view is fully scrolled into the visible area
+ *    and ready to receive mouse and keyboard events. An active view is always
+ *    visible, but a visible view may be inactive. For example, during a scroll
+ *    transition, both views will be inactive.
+ *
+ *    When a view becomes active, the ViewShown event is fired synchronously.
+ *    For the main view of the panel, this happens during the "popupshown"
+ *    event, which means that other "popupshown" handlers may be called before
+ *    the view is active. However, the main view can already receive mouse and
+ *    keyboard events at this point, only because this allows regression tests
+ *    to use the "popupshown" event to simulate interaction.
+ *
  * -- Navigating with the keyboard
  *
  *    An open view may keep state related to keyboard navigation, even if it is
@@ -96,10 +110,13 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "gBundle", function() {
+  return Services.strings.createBundle(
+    "chrome://browser/locale/browser.properties");
+});
 
 /**
  * Safety timeout after which asynchronous events will be canceled if any of the
@@ -115,6 +132,7 @@ const TRANSITION_PHASES = Object.freeze({
 });
 
 let gNodeToObjectMap = new WeakMap();
+let gWindowsWithUnloadHandler = new WeakSet();
 let gMultiLineElementsMap = new WeakMap();
 
 /**
@@ -247,7 +265,7 @@ var AssociatedToNode = class {
 };
 
 /**
- * This is associated to <panelmultiview> elements by the panelUI.xml binding.
+ * This is associated to <panelmultiview> elements.
  */
 var PanelMultiView = class extends this.AssociatedToNode {
   /**
@@ -283,6 +301,44 @@ var PanelMultiView = class extends this.AssociatedToNode {
     } else {
       panelNode.hidePopup();
     }
+  }
+
+  /**
+   * Removes the specified <panel> from the document, ensuring that any
+   * <panelmultiview> node it contains is destroyed properly.
+   *
+   * If the panel does not contain a <panelmultiview>, it is removed directly.
+   * This allows consumers like page actions to accept different panel types.
+   */
+  static removePopup(panelNode) {
+    try {
+      let panelMultiViewNode = panelNode.querySelector("panelmultiview");
+      if (panelMultiViewNode) {
+        this.forNode(panelMultiViewNode).disconnect();
+      }
+    } finally {
+      // Make sure to remove the panel element even if disconnecting fails.
+      panelNode.remove();
+    }
+  }
+
+  /**
+   * Ensures that when the specified window is closed all the <panelmultiview>
+   * node it contains are destroyed properly.
+   */
+  static ensureUnloadHandlerRegistered(window) {
+    if (gWindowsWithUnloadHandler.has(window)) {
+      return;
+    }
+
+    window.addEventListener("unload", () => {
+      for (let panelMultiViewNode of
+           window.document.querySelectorAll("panelmultiview")) {
+        this.forNode(panelMultiViewNode).disconnect();
+      }
+    }, { once: true });
+
+    gWindowsWithUnloadHandler.add(window);
   }
 
   get _panel() {
@@ -349,28 +405,41 @@ var PanelMultiView = class extends this.AssociatedToNode {
 
   connect() {
     this.connected = true;
+
+    PanelMultiView.ensureUnloadHandlerRegistered(this.window);
+
+    let viewContainer = this._viewContainer =
+      this.document.createElement("box");
+    viewContainer.classList.add("panel-viewcontainer");
+
+    let viewStack = this._viewStack = this.document.createElement("box");
+    viewStack.classList.add("panel-viewstack");
+    viewContainer.append(viewStack);
+
+    let offscreenViewContainer = this.document.createElement("box");
+    offscreenViewContainer.classList.add("panel-viewcontainer", "offscreen");
+
+    let offscreenViewStack = this._offscreenViewStack =
+      this.document.createElement("box");
+    offscreenViewStack.classList.add("panel-viewstack");
+    offscreenViewContainer.append(offscreenViewStack);
+
+    this.node.prepend(offscreenViewContainer);
+    this.node.prepend(viewContainer);
+
     this.openViews = [];
     this.__transitioning = false;
 
-    const {document, window} = this;
-
-    this._viewContainer =
-      document.getAnonymousElementByAttribute(this.node, "anonid", "viewContainer");
-    this._viewStack =
-      document.getAnonymousElementByAttribute(this.node, "anonid", "viewStack");
-    this._offscreenViewStack =
-      document.getAnonymousElementByAttribute(this.node, "anonid", "offscreenViewStack");
-
     XPCOMUtils.defineLazyGetter(this, "_panelViewCache", () => {
       let viewCacheId = this.node.getAttribute("viewCacheId");
-      return viewCacheId ? document.getElementById(viewCacheId) : null;
+      return viewCacheId ? this.document.getElementById(viewCacheId) : null;
     });
 
     this._panel.addEventListener("popupshowing", this);
     this._panel.addEventListener("popuppositioned", this);
     this._panel.addEventListener("popuphidden", this);
     this._panel.addEventListener("popupshown", this);
-    let cs = window.getComputedStyle(document.documentElement);
+    let cs = this.window.getComputedStyle(this.document.documentElement);
     // Set CSS-determined attributes now to prevent a layout flush when we do
     // it when transitioning between panels.
     this._dir = cs.direction;
@@ -391,9 +460,9 @@ var PanelMultiView = class extends this.AssociatedToNode {
     });
   }
 
-  destructor() {
+  disconnect() {
     // Guard against re-entrancy.
-    if (!this.node)
+    if (!this.node || !this.connected)
       return;
 
     this._cleanupTransitionPhase();
@@ -489,21 +558,8 @@ var PanelMultiView = class extends this.AssociatedToNode {
         return true;
       }
       try {
-        // Most of the panel elements in the browser window have their display
-        // turned off for performance reasons, typically by setting the "hidden"
-        // attribute. If the caller has just turned on the display, the XBL
-        // binding for the <panelmultiview> element may still be disconnected.
-        // In this case, give the layout code a chance to run.
         if (!this.connected) {
-          await this.window.promiseDocumentFlushed(() => {});
-
-          // The XBL binding must be connected at this point. If this is not the
-          // case, the calling code should be updated to unhide the panel.
-          if (!this.connected) {
-            throw new Error("The binding for the panelmultiview element isn't" +
-                            " connected. The containing panel may still have" +
-                            " its display turned off by the hidden attribute.");
-          }
+          this.connect();
         }
         // Allow any of the ViewShowing handlers to prevent showing the main view.
         if (!(await this._showMainView())) {
@@ -631,7 +687,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
     }
 
     await this._transitionViews(prevPanelView.node, viewNode, false, anchor);
-    this._viewShown(nextPanelView);
+    this._activateView(nextPanelView);
   }
 
   /**
@@ -655,7 +711,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
 
     this._closeLatestView();
 
-    this._viewShown(nextPanelView);
+    this._activateView(nextPanelView);
   }
 
   /**
@@ -672,6 +728,10 @@ var PanelMultiView = class extends this.AssociatedToNode {
     let oldPanelMultiViewNode = nextPanelView.node.panelMultiView;
     if (oldPanelMultiViewNode) {
       PanelMultiView.forNode(oldPanelMultiViewNode).hidePopup();
+      // Wait for a layout flush after hiding the popup, otherwise the view may
+      // not be displayed correctly for some time after the new panel is opened.
+      // This is filed as bug 1441015.
+      await this.window.promiseDocumentFlushed(() => {});
     }
 
     if (!(await this._openView(nextPanelView))) {
@@ -688,7 +748,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
     nextPanelView.visible = true;
     nextPanelView.descriptionHeightWorkaround();
 
-    this._viewShown(nextPanelView);
     return true;
   }
 
@@ -728,10 +787,12 @@ var PanelMultiView = class extends this.AssociatedToNode {
   }
 
   /**
-   * Raises the ViewShown event if the specified view is still open.
+   * Activates the specified view and raises the ViewShown event, unless the
+   * view was closed in the meantime.
    */
-  _viewShown(panelView) {
+  _activateView(panelView) {
     if (panelView.node.panelMultiView == this.node) {
+      panelView.active = true;
       panelView.dispatchCustomEvent("ViewShown");
     }
   }
@@ -804,10 +865,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
     if (anchor)
       anchor.setAttribute("open", "true");
 
-    // Since we're going to show two subview at the same time, don't abuse the
-    // 'current' attribute, since it's needed for other state-keeping, but use
-    // a separate 'in-transition' attribute instead.
-    previousViewNode.setAttribute("in-transition", true);
     // Set the viewContainer dimensions to make sure only the current view is
     // visible.
     let olderView = reverse ? nextPanelView : prevPanelView;
@@ -825,7 +882,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
       // reopening a subview, because its contents may have changed.
       viewRect = { width: nextPanelView.knownWidth,
                    height: nextPanelView.knownHeight };
-      viewNode.setAttribute("in-transition", true);
+      nextPanelView.visible = true;
     } else if (viewNode.customRectGetter) {
       // Can't use Object.assign directly with a DOM Rect object because its properties
       // aren't enumerable.
@@ -836,12 +893,13 @@ var PanelMultiView = class extends this.AssociatedToNode {
       if (header && header.classList.contains("panel-header")) {
         viewRect.height += this._dwu.getBoundsWithoutFlushing(header).height;
       }
-      viewNode.setAttribute("in-transition", true);
+      nextPanelView.visible = true;
+      nextPanelView.descriptionHeightWorkaround();
     } else {
       let oldSibling = viewNode.nextSibling || null;
       this._offscreenViewStack.style.minHeight = olderView.knownHeight + "px";
       this._offscreenViewStack.appendChild(viewNode);
-      viewNode.setAttribute("in-transition", true);
+      nextPanelView.visible = true;
 
       // Now that the subview is visible, we can check the height of the
       // description elements it contains.
@@ -884,6 +942,10 @@ var PanelMultiView = class extends this.AssociatedToNode {
     // Use an outline instead of a border so that the size is not affected.
     deepestNode.style.outline = "1px solid var(--panel-separator-color)";
 
+    // Now that all the elements are in place for the start of the transition,
+    // give the layout code a chance to set the initial values.
+    await window.promiseDocumentFlushed(() => {});
+
     // Now set the viewContainer dimensions to that of the new view, which
     // kicks of the height animation.
     this._viewContainer.style.height = viewRect.height + "px";
@@ -894,7 +956,13 @@ var PanelMultiView = class extends this.AssociatedToNode {
     // sliding animation with smaller views.
     viewNode.style.width = viewRect.width + "px";
 
-    await window.promiseDocumentFlushed(() => {});
+    // For proper bookkeeping, mark the view that is about to scrolled out of
+    // the visible area as inactive, because it won't be possible to simulate
+    // mouse events on it properly. In practice this isn't important, because we
+    // use the separate "transitioning" attribute on the panel to suppress
+    // pointer events. This allows mouse events to be available for the main
+    // view in regression tests that wait for the "popupshown" event.
+    prevPanelView.active = false;
 
     // Kick off the transition!
     details.phase = TRANSITION_PHASES.TRANSITION;
@@ -926,8 +994,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
     // Apply the final visibility, unless the view was closed in the meantime.
     if (nextPanelView.node.panelMultiView == this.node) {
       prevPanelView.visible = false;
-      nextPanelView.visible = true;
-      nextPanelView.descriptionHeightWorkaround();
     }
 
     // This will complete the operation by removing any transition properties.
@@ -958,9 +1024,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
 
     // Do the things we _always_ need to do whenever the transition ends or is
     // interrupted.
-    previousViewNode.removeAttribute("in-transition");
-    viewNode.removeAttribute("in-transition");
-
     if (anchor)
       anchor.removeAttribute("open");
 
@@ -1060,7 +1123,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
         this.openViews.forEach(panelView => panelView.clearNavigation());
         break;
       case "popupshowing": {
-        this.node.setAttribute("panelopen", "true");
+        this._viewContainer.setAttribute("panelopen", "true");
         if (!this.node.hasAttribute("disablekeynav")) {
           this.window.addEventListener("keydown", this);
           this._panel.addEventListener("mousemove", this);
@@ -1085,15 +1148,17 @@ var PanelMultiView = class extends this.AssociatedToNode {
         break;
       }
       case "popupshown":
+        let mainPanelView = PanelView.forNode(this._mainView);
         // Now that the main view is visible, we can check the height of the
         // description elements it contains.
-        PanelView.forNode(this._mainView).descriptionHeightWorkaround();
+        mainPanelView.descriptionHeightWorkaround();
+        this._activateView(mainPanelView);
         break;
       case "popuphidden": {
         // WebExtensions consumers can hide the popup from viewshowing, or
         // mid-transition, which disrupts our state:
         this._transitioning = false;
-        this.node.removeAttribute("panelopen");
+        this._viewContainer.removeAttribute("panelopen");
         this._cleanupTransitionPhase();
         this.window.removeEventListener("keydown", this);
         this._panel.removeEventListener("mousemove", this);
@@ -1117,6 +1182,16 @@ var PanelMultiView = class extends this.AssociatedToNode {
  * This is associated to <panelview> elements.
  */
 var PanelView = class extends this.AssociatedToNode {
+  constructor(node) {
+    super(node);
+
+    /**
+     * Indicates whether the view is active. When this is false, consumers can
+     * wait for the ViewShown event to know when the view becomes active.
+     */
+    this.active = false;
+  }
+
   /**
    * The "mainview" attribute is set before the panel is opened when this view
    * is displayed as the main view, and is removed before the <panelview> is
@@ -1131,11 +1206,16 @@ var PanelView = class extends this.AssociatedToNode {
     }
   }
 
+  /**
+   * Determines whether the view is visible. Setting this to false also resets
+   * the "active" property.
+   */
   set visible(value) {
     if (value) {
-      this.node.setAttribute("current", true);
+      this.node.setAttribute("visible", true);
     } else {
-      this.node.removeAttribute("current");
+      this.node.removeAttribute("visible");
+      this.active = false;
     }
   }
 
@@ -1181,8 +1261,8 @@ var PanelView = class extends this.AssociatedToNode {
       "subviewbutton subviewbutton-iconic subviewbutton-back";
     backButton.setAttribute("closemenu", "none");
     backButton.setAttribute("tabindex", "0");
-    backButton.setAttribute("tooltip",
-      this.node.getAttribute("data-subviewbutton-tooltip"));
+    backButton.setAttribute("aria-label",
+      gBundle.GetStringFromName("panel.back"));
     backButton.addEventListener("command", () => {
       // The panelmultiview element may change if the view is reused.
       this.node.panelMultiView.goBack();

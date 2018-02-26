@@ -7788,7 +7788,7 @@ class LLoadUnboxedExpando : public LInstructionHelper<1, 1, 0>
 };
 
 // Guard that a value is in a TypeSet.
-class LTypeBarrierV : public LInstructionHelper<0, BOX_PIECES, 2>
+class LTypeBarrierV : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 2>
 {
   public:
     LIR_HEADER(TypeBarrierV)
@@ -7814,7 +7814,7 @@ class LTypeBarrierV : public LInstructionHelper<0, BOX_PIECES, 2>
 };
 
 // Guard that a object is in a TypeSet.
-class LTypeBarrierO : public LInstructionHelper<0, 1, 1>
+class LTypeBarrierO : public LInstructionHelper<1, 1, 1>
 {
   public:
     LIR_HEADER(TypeBarrierO)
@@ -7831,32 +7831,6 @@ class LTypeBarrierO : public LInstructionHelper<0, 1, 1>
     }
     const LDefinition* temp() {
         return getTemp(0);
-    }
-};
-
-// Guard that a value is in a TypeSet.
-class LMonitorTypes : public LInstructionHelper<0, BOX_PIECES, 2>
-{
-  public:
-    LIR_HEADER(MonitorTypes)
-
-    LMonitorTypes(const LBoxAllocation& input, const LDefinition& unboxTemp,
-                  const LDefinition& objTemp) {
-        setBoxOperand(Input, input);
-        setTemp(0, unboxTemp);
-        setTemp(1, objTemp);
-    }
-
-    static const size_t Input = 0;
-
-    const MMonitorTypes* mir() const {
-        return mir_->toMonitorTypes();
-    }
-    const LDefinition* unboxTemp() {
-        return getTemp(0);
-    }
-    const LDefinition* objTemp() {
-        return getTemp(1);
     }
 };
 

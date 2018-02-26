@@ -32,6 +32,44 @@ struct ImmTag : public Imm32
     { }
 };
 
+// ScratchTagScope and ScratchTagScopeRelease are used to manage the tag
+// register for splitTagForTest(), which has different register management on
+// different platforms.  On 64-bit platforms it requires a scratch register that
+// does not interfere with other operations; on 32-bit platforms it uses a
+// register that is already part of the Value.
+//
+// The ScratchTagScope RAII type acquires the appropriate register; a reference
+// to a variable of this type is then passed to splitTagForTest().
+//
+// On 64-bit platforms ScratchTagScopeRelease makes the owned scratch register
+// available in a dynamic scope during compilation.  However it is important to
+// remember that that does not preserve the register value in any way, so this
+// RAII type should only be used along paths that eventually branch past further
+// uses of the extracted tag value.
+//
+// On 32-bit platforms ScratchTagScopeRelease has no effect, since it does not
+// manage a register, it only aliases a register in the ValueOperand.
+
+class ScratchTagScope : public ScratchRegisterScope
+{
+  public:
+    ScratchTagScope(MacroAssembler& masm, const ValueOperand&)
+      : ScratchRegisterScope(masm)
+    {}
+};
+
+class ScratchTagScopeRelease
+{
+    ScratchTagScope* ts_;
+  public:
+    explicit ScratchTagScopeRelease(ScratchTagScope* ts) : ts_(ts) {
+        ts_->release();
+    }
+    ~ScratchTagScopeRelease() {
+        ts_->reacquire();
+    }
+};
+
 class MacroAssemblerX64 : public MacroAssemblerX86Shared
 {
   private:
@@ -662,19 +700,19 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         splitTag(Operand(operand), dest);
     }
 
-    // Extracts the tag of a value and places it in ScratchReg.
-    Register splitTagForTest(const ValueOperand& value) {
-        splitTag(value, ScratchReg);
-        return ScratchReg;
+    // Extracts the tag of a value and places it in tag.
+    void splitTagForTest(const ValueOperand& value, ScratchTagScope& tag) {
+        splitTag(value, tag);
     }
     void cmpTag(const ValueOperand& operand, ImmTag tag) {
-        Register reg = splitTagForTest(operand);
+        ScratchTagScope reg(asMasm(), operand);
+        splitTagForTest(operand, reg);
         cmp32(reg, tag);
     }
 
     Condition testMagic(Condition cond, const ValueOperand& src) {
-        ScratchRegisterScope scratch(asMasm());
-        splitTag(src, scratch);
+        ScratchTagScope scratch(asMasm(), src);
+        splitTagForTest(src, scratch);
         return testMagic(cond, scratch);
     }
     Condition testError(Condition cond, const ValueOperand& src) {

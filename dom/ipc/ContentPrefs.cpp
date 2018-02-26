@@ -129,6 +129,7 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "javascript.options.parallel_parsing",
   "javascript.options.shared_memory",
   "javascript.options.spectre.index_masking",
+  "javascript.options.spectre.object_mitigations.barriers",
   "javascript.options.spectre.string_mitigations",
   "javascript.options.spectre.value_masking",
   "javascript.options.streams",

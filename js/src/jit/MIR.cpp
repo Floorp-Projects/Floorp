@@ -2361,6 +2361,29 @@ MTypeBarrier::foldsTo(TempAllocator& alloc)
     return input();
 }
 
+bool
+MTypeBarrier::canRedefineInput()
+{
+    // LTypeBarrier does not need its own def usually, because we can use the
+    // input's allocation (LIRGenerator::redefineInput). However, if Spectre
+    // mitigations are enabled, guardObjectType may zero the object register on
+    // speculatively executed paths, so LTypeBarrier needs to have its own def
+    // then to guarantee all uses will see this potentially-zeroed value.
+
+    if (!JitOptions.spectreObjectMitigationsBarriers)
+        return true;
+
+    if (barrierKind() == BarrierKind::TypeTagOnly)
+        return true;
+
+    TemporaryTypeSet* types = resultTypeSet();
+    bool hasSpecificObjects = !types->unknownObject() && types->getObjectCount() > 0;
+    if (!hasSpecificObjects)
+        return true;
+
+    return false;
+}
+
 #ifdef DEBUG
 void
 MPhi::assertLoopPhi() const
@@ -6636,8 +6659,17 @@ TryAddTypeBarrierForWrite(TempAllocator& alloc, CompilerConstraintList* constrai
     if ((*pvalue)->resultTypeSet() && (*pvalue)->resultTypeSet()->objectsAreSubset(types))
         kind = BarrierKind::TypeTagOnly;
 
-    MInstruction* ins = MMonitorTypes::New(alloc, *pvalue, types, kind);
+    MInstruction* ins = MTypeBarrier::New(alloc, *pvalue, types, kind);
     current->add(ins);
+    ins->setNotMovable();
+    if (ins->type() == MIRType::Undefined) {
+        ins = MConstant::New(alloc, UndefinedValue());
+        current->add(ins);
+    } else if (ins->type() == MIRType::Null) {
+        ins = MConstant::New(alloc, NullValue());
+        current->add(ins);
+    }
+    *pvalue = ins;
     return true;
 }
 

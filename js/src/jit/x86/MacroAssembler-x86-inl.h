@@ -1035,6 +1035,12 @@ MacroAssembler::test32MovePtr(Condition cond, const Address& addr, Imm32 mask, R
     cmovCCl(cond, Operand(src), dest);
 }
 
+void
+MacroAssembler::spectreMovePtr(Condition cond, Register src, Register dest)
+{
+    cmovCCl(cond, Operand(src), dest);
+}
+
 // ========================================================================
 // Truncate floating point.
 

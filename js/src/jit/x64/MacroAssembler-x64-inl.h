@@ -846,6 +846,12 @@ MacroAssembler::test32MovePtr(Condition cond, const Address& addr, Imm32 mask, R
     cmovCCq(cond, Operand(src), dest);
 }
 
+void
+MacroAssembler::spectreMovePtr(Condition cond, Register src, Register dest)
+{
+    cmovCCq(cond, Operand(src), dest);
+}
+
 // ========================================================================
 // Truncate floating point.
 
@@ -949,9 +955,12 @@ void
 MacroAssemblerX64::ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure)
 {
     Label isDouble, done;
-    Register tag = splitTagForTest(source);
-    asMasm().branchTestDouble(Assembler::Equal, tag, &isDouble);
-    asMasm().branchTestInt32(Assembler::NotEqual, tag, failure);
+    {
+        ScratchTagScope tag(asMasm(), source);
+        splitTagForTest(source, tag);
+        asMasm().branchTestDouble(Assembler::Equal, tag, &isDouble);
+        asMasm().branchTestInt32(Assembler::NotEqual, tag, failure);
+    }
 
     ScratchRegisterScope scratch(asMasm());
     unboxInt32(source, scratch);

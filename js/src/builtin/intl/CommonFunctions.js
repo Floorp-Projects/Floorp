@@ -5,16 +5,7 @@
 /* Portions Copyright Norbert Lindenberg 2011-2012. */
 
 /**
- * Holder object for encapsulating regexp instances.
- *
- * Regular expression instances should be created after the initialization of
- * self-hosted global.
- */
-var internalIntlRegExps = std_Object_create(null);
-internalIntlRegExps.unicodeLocaleExtensionSequenceRE = null;
-
-/**
- * Regular expression matching a "Unicode locale extension sequence", which the
+ * Returns the start index of a "Unicode locale extension sequence", which the
  * specification defines as: "any substring of a language tag that starts with
  * a separator '-' and the singleton 'u' and includes the maximum sequence of
  * following non-singleton subtags and their preceding '-' separators."
@@ -25,48 +16,108 @@ internalIntlRegExps.unicodeLocaleExtensionSequenceRE = null;
  *
  * Spec: ECMAScript Internationalization API Specification, 6.2.1.
  */
-function getUnicodeLocaleExtensionSequenceRE() {
-    return internalIntlRegExps.unicodeLocaleExtensionSequenceRE ||
-           (internalIntlRegExps.unicodeLocaleExtensionSequenceRE =
-            RegExpCreate("-u(?:-[a-z0-9]{2,8})+"));
+function startOfUnicodeExtensions(locale) {
+    assert(typeof locale === "string", "locale is a string");
+    assert(IsStructurallyValidLanguageTag(locale), "locale is a language tag");
+    assert(CanonicalizeLanguageTag(locale) === locale, "locale is a canonicalized language tag");
+
+    #define HYPHEN 0x2D
+    assert(std_String_fromCharCode(HYPHEN) === "-",
+           "code unit constant should match the expected character");
+
+    // A wholly-privateuse or grandfathered locale has no extension sequences.
+    if (callFunction(std_String_charCodeAt, locale, 1) === HYPHEN) {
+        assert(locale[0] === "x" || locale[0] === "i",
+               "locale[1] === '-' implies a privateuse-only or grandfathered locale");
+        return -1;
+    }
+
+    #undef HYPHEN
+
+    // Search for "-u-" marking the start of a Unicode extension sequence.
+    var start = callFunction(std_String_indexOf, locale, "-u-");
+    if (start < 0)
+        return -1;
+
+    // And search for "-x-" marking the start of any privateuse component to
+    // handle the case when "-u-" was only found within a privateuse subtag.
+    var privateExt = callFunction(std_String_indexOf, locale, "-x-");
+    if (privateExt >= 0 && privateExt < start)
+        return -1;
+
+    return start;
+}
+
+/**
+ * Returns the end index of a Unicode locale extension sequence.
+ */
+function endOfUnicodeExtensions(locale, start) {
+    assert(typeof locale === "string", "locale is a string");
+    assert(IsStructurallyValidLanguageTag(locale), "locale is a language tag");
+    assert(CanonicalizeLanguageTag(locale) === locale, "locale is a canonicalized language tag");
+    assert(0 <= start && start < locale.length, "start is an index into locale");
+    assert(Substring(locale, start, 3) === "-u-", "start points to Unicode extension sequence");
+
+    #define HYPHEN 0x2D
+    assert(std_String_fromCharCode(HYPHEN) === "-",
+           "code unit constant should match the expected character");
+
+    // Search for the start of the next singleton or privateuse subtag.
+    //
+    // Begin searching after the smallest possible Unicode locale extension
+    // sequence, namely |"-u-" 2alphanum|. End searching once the remaining
+    // characters can't fit the smallest possible singleton or privateuse
+    // subtag, namely |"-x-" alphanum|. Note the reduced end-limit means
+    // indexing inside the loop is always in-range.
+    for (var i = start + 5, end = locale.length - 4; i <= end; i++) {
+        if (callFunction(std_String_charCodeAt, locale, i) !== HYPHEN)
+            continue;
+        if (callFunction(std_String_charCodeAt, locale, i + 2) === HYPHEN)
+            return i;
+
+        // Skip over (i + 1) and (i + 2) because we've just verified they
+        // aren't "-", so the next possible delimiter can only be at (i + 3).
+        i += 2;
+    }
+
+    #undef HYPHEN
+
+    // If no singleton or privateuse subtag was found, the Unicode extension
+    // sequence extends until the end of the string.
+    return locale.length;
 }
 
 /**
  * Removes Unicode locale extension sequences from the given language tag.
  */
 function removeUnicodeExtensions(locale) {
-    // A wholly-privateuse locale has no extension sequences.
-    if (callFunction(std_String_startsWith, locale, "x-"))
+    var start = startOfUnicodeExtensions(locale);
+    if (start < 0)
         return locale;
 
-    // Otherwise, split on "-x-" marking the start of any privateuse component.
-    // Replace Unicode locale extension sequences in the left half, and return
-    // the concatenation.
-    var pos = callFunction(std_String_indexOf, locale, "-x-");
-    if (pos < 0)
-        pos = locale.length;
+    var end = endOfUnicodeExtensions(locale, start);
 
-    var left = callFunction(String_substring, locale, 0, pos);
-    var right = callFunction(String_substring, locale, pos);
-
-    var unicodeLocaleExtensionSequenceRE = getUnicodeLocaleExtensionSequenceRE();
-    var extensions = regexp_exec_no_statics(unicodeLocaleExtensionSequenceRE, left);
-    if (extensions !== null) {
-        left = callFunction(String_substring, left, 0, extensions.index) +
-               callFunction(String_substring, left, extensions.index + extensions[0].length);
-    }
-
+    var left = Substring(locale, 0, start);
+    var right = Substring(locale, end, locale.length - end);
     var combined = left + right;
-    assert(IsStructurallyValidLanguageTag(combined), "recombination produced an invalid language tag");
-    assert(function() {
-        var uindex = callFunction(std_String_indexOf, combined, "-u-");
-        if (uindex < 0)
-            return true;
-        var xindex = callFunction(std_String_indexOf, combined, "-x-");
-        return xindex > 0 && xindex < uindex;
-    }(), "recombination failed to remove all Unicode locale extension sequences");
+
+    assert(IsStructurallyValidLanguageTag(combined),
+           "recombination produced an invalid language tag");
+    assert(startOfUnicodeExtensions(combined) < 0,
+           "recombination failed to remove all Unicode locale extension sequences");
 
     return combined;
+}
+
+/**
+ * Returns Unicode locale extension sequences from the given language tag.
+ */
+function getUnicodeExtensions(locale) {
+    var start = startOfUnicodeExtensions(locale);
+    assert(start >= 0, "start of Unicode extension sequence not found");
+    var end = endOfUnicodeExtensions(locale, start);
+
+    return Substring(locale, start, end - start);
 }
 
 /* eslint-disable complexity */
@@ -702,23 +753,6 @@ function ValidateAndCanonicalizeLanguageTag(locale) {
     return CanonicalizeLanguageTagFromObject(localeObj);
 }
 
-function localeContainsNoUnicodeExtensions(locale) {
-    // No "-u-", no possible Unicode extension.
-    if (callFunction(std_String_indexOf, locale, "-u-") === -1)
-        return true;
-
-    // "-u-" within privateuse also isn't one.
-    if (callFunction(std_String_indexOf, locale, "-u-") > callFunction(std_String_indexOf, locale, "-x-"))
-        return true;
-
-    // An entirely-privateuse tag doesn't contain extensions.
-    if (callFunction(std_String_startsWith, locale, "x-"))
-        return true;
-
-    // Otherwise, we have a Unicode extension sequence.
-    return false;
-}
-
 // The last-ditch locale is used if none of the available locales satisfies a
 // request. "en-GB" is used based on the assumptions that English is the most
 // common second language, that both en-GB and en-US are normally available in
@@ -785,7 +819,7 @@ function DefaultLocaleIgnoringAvailableLocales() {
 
     assert(IsStructurallyValidLanguageTag(candidate),
            "the candidate must be structurally valid");
-    assert(localeContainsNoUnicodeExtensions(candidate),
+    assert(startOfUnicodeExtensions(candidate) < 0,
            "the candidate must not contain a Unicode extension sequence");
 
     return candidate;
@@ -825,7 +859,7 @@ function DefaultLocale() {
            "the computed default locale must be structurally valid");
     assert(locale === CanonicalizeLanguageTag(locale),
            "the computed default locale must be canonical");
-    assert(localeContainsNoUnicodeExtensions(locale),
+    assert(startOfUnicodeExtensions(locale) < 0,
            "the computed default locale must not contain a Unicode extension sequence");
 
     localeCache.defaultLocale = locale;
@@ -917,7 +951,7 @@ function CanonicalizeLocaleList(locales) {
 function BestAvailableLocaleHelper(availableLocales, locale, considerDefaultLocale) {
     assert(IsStructurallyValidLanguageTag(locale), "invalid BestAvailableLocale locale structure");
     assert(locale === CanonicalizeLanguageTag(locale), "non-canonical BestAvailableLocale locale");
-    assert(localeContainsNoUnicodeExtensions(locale), "locale must contain no Unicode extensions");
+    assert(startOfUnicodeExtensions(locale) < 0, "locale must contain no Unicode extensions");
 
     // In the spec, [[availableLocales]] is formally a list of all available
     // locales.  But in our implementation, it's an *incomplete* list, not
@@ -1009,12 +1043,8 @@ function LookupMatcher(availableLocales, requestedLocales) {
             result.locale = availableLocale;
 
             // Step 2.c.ii.
-            if (locale !== noExtensionsLocale) {
-                var unicodeLocaleExtensionSequenceRE = getUnicodeLocaleExtensionSequenceRE();
-                var extensionMatch = regexp_exec_no_statics(unicodeLocaleExtensionSequenceRE,
-                                                            locale);
-                result.extension = extensionMatch[0];
-            }
+            if (locale !== noExtensionsLocale)
+                result.extension = getUnicodeExtensions(locale);
 
             // Step 2.c.iii.
             return result;
@@ -1049,11 +1079,9 @@ function BestFitMatcher(availableLocales, requestedLocales) {
  */
 function UnicodeExtensionValue(extension, key) {
     assert(typeof extension === "string", "extension is a string value");
-    assert(function() {
-        var unicodeLocaleExtensionSequenceRE = getUnicodeLocaleExtensionSequenceRE();
-        var extensionMatch = regexp_exec_no_statics(unicodeLocaleExtensionSequenceRE, extension);
-        return extensionMatch !== null && extensionMatch[0] === extension;
-    }(), "extension is a Unicode extension subtag");
+    assert(callFunction(std_String_startsWith, extension, "-u-") &&
+           getUnicodeExtensions("und" + extension) === extension,
+           "extension is a Unicode extension subtag");
     assert(typeof key === "string", "key is a string value");
 
     // Step 1.

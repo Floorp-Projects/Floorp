@@ -311,6 +311,8 @@ class Instruction {
   bool IsNOP() const;
   bool IsADR() const;
   bool IsADRP() const;
+  bool IsMovz() const;
+  bool IsMovk() const;
   bool IsBranchLinkImm() const;
   bool IsTargetReachable(Instruction* target) const;
   ptrdiff_t ImmPCRawOffset() const;

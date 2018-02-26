@@ -13223,6 +13223,8 @@ class MTypeBarrier
     }
     MDefinition* foldsTo(TempAllocator& alloc) override;
 
+    bool canRedefineInput();
+
     bool alwaysBails() const {
         // If mirtype of input doesn't agree with mirtype of barrier,
         // we will definitely bail.
@@ -13241,43 +13243,6 @@ class MTypeBarrier
     }
 
     ALLOW_CLONE(MTypeBarrier)
-};
-
-// Like MTypeBarrier, guard that the value is in the given type set. This is
-// used before property writes to ensure the value being written is represented
-// in the property types for the object.
-class MMonitorTypes
-  : public MUnaryInstruction,
-    public BoxInputsPolicy::Data
-{
-    const TemporaryTypeSet* typeSet_;
-    BarrierKind barrierKind_;
-
-    MMonitorTypes(MDefinition* def, const TemporaryTypeSet* types, BarrierKind kind)
-      : MUnaryInstruction(classOpcode, def),
-        typeSet_(types),
-        barrierKind_(kind)
-    {
-        MOZ_ASSERT(kind == BarrierKind::TypeTagOnly || kind == BarrierKind::TypeSet);
-
-        setGuard();
-        MOZ_ASSERT(!types->unknown());
-    }
-
-  public:
-    INSTRUCTION_HEADER(MonitorTypes)
-    TRIVIAL_NEW_WRAPPERS
-
-    const TemporaryTypeSet* typeSet() const {
-        return typeSet_;
-    }
-    BarrierKind barrierKind() const {
-        return barrierKind_;
-    }
-
-    AliasSet getAliasSet() const override {
-        return AliasSet::None();
-    }
 };
 
 // Given a value being written to another object, update the generational store

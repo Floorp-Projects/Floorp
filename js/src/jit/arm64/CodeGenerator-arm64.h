@@ -158,11 +158,10 @@ class CodeGeneratorARM64 : public CodeGeneratorShared
 
   protected:
     ValueOperand ToValue(LInstruction* ins, size_t pos);
-    ValueOperand ToOutValue(LInstruction* ins);
     ValueOperand ToTempValue(LInstruction* ins, size_t pos);
 
     // Functions for LTestVAndBranch.
-    Register splitTagForTest(const ValueOperand& value);
+    void splitTagForTest(const ValueOperand& value, ScratchTagScope& tag);
 
     void storeElementTyped(const LAllocation* value, MIRType valueType, MIRType elementType,
                            Register elements, const LAllocation* index);

@@ -1119,14 +1119,6 @@ MacroAssemblerMIPSShared::ma_lis(FloatRegister dest, float value)
 }
 
 void
-MacroAssemblerMIPSShared::ma_liNegZero(FloatRegister dest)
-{
-    moveToDoubleLo(zero, dest);
-    ma_li(ScratchRegister, Imm32(INT_MIN));
-    asMasm().moveToDoubleHi(ScratchRegister, dest);
-}
-
-void
 MacroAssemblerMIPSShared::ma_sd(FloatRegister ft, BaseIndex address)
 {
     if (isLoongson() && Imm8::IsInSignedRange(address.offset)) {
@@ -1176,6 +1168,20 @@ MacroAssemblerMIPSShared::ma_ss(FloatRegister ft, BaseIndex address)
 
     asMasm().computeScaledAddress(address, SecondScratchReg);
     asMasm().ma_ss(ft, Address(SecondScratchReg, address.offset));
+}
+
+void
+MacroAssemblerMIPSShared::ma_ld(FloatRegister ft, const BaseIndex& src)
+{
+    asMasm().computeScaledAddress(src, SecondScratchReg);
+    asMasm().ma_ld(ft, Address(SecondScratchReg, src.offset));
+}
+
+void
+MacroAssemblerMIPSShared::ma_ls(FloatRegister ft, const BaseIndex& src)
+{
+    asMasm().computeScaledAddress(src, SecondScratchReg);
+    asMasm().ma_ls(ft, Address(SecondScratchReg, src.offset));
 }
 
 void
@@ -1291,6 +1297,44 @@ MacroAssemblerMIPSShared::minMaxFloat32(FloatRegister srcDest, FloatRegister sec
 }
 
 void
+MacroAssemblerMIPSShared::loadDouble(const Address& address, FloatRegister dest)
+{
+    asMasm().ma_ld(dest, address);
+}
+
+void
+MacroAssemblerMIPSShared::loadDouble(const BaseIndex& src, FloatRegister dest)
+{
+    asMasm().ma_ld(dest, src);
+}
+
+void
+MacroAssemblerMIPSShared::loadFloatAsDouble(const Address& address, FloatRegister dest)
+{
+    asMasm().ma_ls(dest, address);
+    as_cvtds(dest, dest);
+}
+
+void
+MacroAssemblerMIPSShared::loadFloatAsDouble(const BaseIndex& src, FloatRegister dest)
+{
+    asMasm().loadFloat32(src, dest);
+    as_cvtds(dest, dest);
+}
+
+void
+MacroAssemblerMIPSShared::loadFloat32(const Address& address, FloatRegister dest)
+{
+    asMasm().ma_ls(dest, address);
+}
+
+void
+MacroAssemblerMIPSShared::loadFloat32(const BaseIndex& src, FloatRegister dest)
+{
+    asMasm().ma_ls(dest, src);
+}
+
+void
 MacroAssemblerMIPSShared::ma_call(ImmPtr dest)
 {
     asMasm().ma_liPatchable(CallReg, dest);
@@ -1371,7 +1415,7 @@ void
 MacroAssembler::Push(FloatRegister f)
 {
     ma_push(f);
-    adjustFrame(int32_t(sizeof(double)));
+    adjustFrame(int32_t(f.pushSize()));
 }
 
 void
@@ -1385,21 +1429,21 @@ void
 MacroAssembler::Pop(FloatRegister f)
 {
     ma_pop(f);
-    adjustFrame(-int32_t(sizeof(double)));
+    adjustFrame(-int32_t(f.pushSize()));
 }
 
 void
 MacroAssembler::Pop(const ValueOperand& val)
 {
     popValue(val);
-    framePushed_ -= sizeof(Value);
+    adjustFrame(-int32_t(sizeof(Value)));
 }
 
 void
 MacroAssembler::PopStackPtr()
 {
     loadPtr(Address(StackPointer, 0), StackPointer);
-    framePushed_ -= sizeof(intptr_t);
+    adjustFrame(-int32_t(sizeof(intptr_t)));
 }
 
 
@@ -1972,12 +2016,10 @@ MacroAssemblerMIPSShared::wasmLoadImpl(const wasm::MemoryAccessDesc& access, Reg
 
     asMasm().memoryBarrierBefore(access.sync());
     if (isFloat) {
-        if (byteSize == 4) {
-            asMasm().loadFloat32(address, output.fpu());
-        } else {
-            asMasm().computeScaledAddress(address, SecondScratchReg);
-            asMasm().as_ld(output.fpu(), SecondScratchReg, 0);
-        }
+        if (byteSize == 4)
+            asMasm().ma_ls(output.fpu(), address);
+         else
+            asMasm().ma_ld(output.fpu(), address);
     } else {
         asMasm().ma_load(output.gpr(), address, static_cast<LoadStoreSize>(8 * byteSize),
                          isSigned ? SignExtend : ZeroExtend);
@@ -2036,15 +2078,10 @@ MacroAssemblerMIPSShared::wasmStoreImpl(const wasm::MemoryAccessDesc& access, An
 
     asMasm().memoryBarrierBefore(access.sync());
     if (isFloat) {
-        if (byteSize == 4) {
-            asMasm().storeFloat32(value.fpu(), address);
-        } else {
-            //asMasm().storeDouble(value.fpu(), address);
-            // For time being storeDouble for mips32 uses two store instructions,
-            // so we emit only one to get correct behavior in case of OOB access.
-            asMasm().computeScaledAddress(address, SecondScratchReg);
-            asMasm().as_sd(value.fpu(), SecondScratchReg, 0);
-        }
+        if (byteSize == 4)
+            asMasm().ma_ss(value.fpu(), address);
+        else
+            asMasm().ma_sd(value.fpu(), address);
     } else {
         asMasm().ma_store(value.gpr(), address,
                       static_cast<LoadStoreSize>(8 * byteSize),

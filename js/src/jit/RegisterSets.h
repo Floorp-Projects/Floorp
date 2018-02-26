@@ -130,7 +130,7 @@ class ValueOperand
     bool aliases(Register reg) const {
         return type_ == reg || payload_ == reg;
     }
-    Register scratchReg() const {
+    Register payloadOrValueReg() const {
         return payloadReg();
     }
     constexpr bool operator==(const ValueOperand& o) const {
@@ -154,7 +154,7 @@ class ValueOperand
     bool aliases(Register reg) const {
         return value_ == reg;
     }
-    Register scratchReg() const {
+    Register payloadOrValueReg() const {
         return valueReg();
     }
     constexpr bool operator==(const ValueOperand& o) const {
@@ -164,6 +164,10 @@ class ValueOperand
         return !(*this == o);
     }
 #endif
+
+    Register scratchReg() const {
+        return payloadOrValueReg();
+    }
 
     ValueOperand() = default;
 };

@@ -14,6 +14,7 @@
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Unused.h"
 
 #include <type_traits>
 
@@ -442,22 +443,25 @@ CodeGenerator::visitValueToDouble(LValueToDouble* lir)
     ValueOperand operand = ToValue(lir, LValueToDouble::Input);
     FloatRegister output = ToFloatRegister(lir->output());
 
-    Register tag = masm.splitTagForTest(operand);
-
     Label isDouble, isInt32, isBool, isNull, isUndefined, done;
     bool hasBoolean = false, hasNull = false, hasUndefined = false;
 
-    masm.branchTestDouble(Assembler::Equal, tag, &isDouble);
-    masm.branchTestInt32(Assembler::Equal, tag, &isInt32);
+    {
+        ScratchTagScope tag(masm, operand);
+        masm.splitTagForTest(operand, tag);
 
-    if (mir->conversion() != MToFPInstruction::NumbersOnly) {
-        masm.branchTestBoolean(Assembler::Equal, tag, &isBool);
-        masm.branchTestUndefined(Assembler::Equal, tag, &isUndefined);
-        hasBoolean = true;
-        hasUndefined = true;
-        if (mir->conversion() != MToFPInstruction::NonNullNonStringPrimitives) {
-            masm.branchTestNull(Assembler::Equal, tag, &isNull);
-            hasNull = true;
+        masm.branchTestDouble(Assembler::Equal, tag, &isDouble);
+        masm.branchTestInt32(Assembler::Equal, tag, &isInt32);
+
+        if (mir->conversion() != MToFPInstruction::NumbersOnly) {
+            masm.branchTestBoolean(Assembler::Equal, tag, &isBool);
+            masm.branchTestUndefined(Assembler::Equal, tag, &isUndefined);
+            hasBoolean = true;
+            hasUndefined = true;
+            if (mir->conversion() != MToFPInstruction::NonNullNonStringPrimitives) {
+                masm.branchTestNull(Assembler::Equal, tag, &isNull);
+                hasNull = true;
+            }
         }
     }
 
@@ -497,22 +501,25 @@ CodeGenerator::visitValueToFloat32(LValueToFloat32* lir)
     ValueOperand operand = ToValue(lir, LValueToFloat32::Input);
     FloatRegister output = ToFloatRegister(lir->output());
 
-    Register tag = masm.splitTagForTest(operand);
-
     Label isDouble, isInt32, isBool, isNull, isUndefined, done;
     bool hasBoolean = false, hasNull = false, hasUndefined = false;
 
-    masm.branchTestDouble(Assembler::Equal, tag, &isDouble);
-    masm.branchTestInt32(Assembler::Equal, tag, &isInt32);
+    {
+        ScratchTagScope tag(masm, operand);
+        masm.splitTagForTest(operand, tag);
 
-    if (mir->conversion() != MToFPInstruction::NumbersOnly) {
-        masm.branchTestBoolean(Assembler::Equal, tag, &isBool);
-        masm.branchTestUndefined(Assembler::Equal, tag, &isUndefined);
-        hasBoolean = true;
-        hasUndefined = true;
-        if (mir->conversion() != MToFPInstruction::NonNullNonStringPrimitives) {
-            masm.branchTestNull(Assembler::Equal, tag, &isNull);
-            hasNull = true;
+        masm.branchTestDouble(Assembler::Equal, tag, &isDouble);
+        masm.branchTestInt32(Assembler::Equal, tag, &isInt32);
+
+        if (mir->conversion() != MToFPInstruction::NumbersOnly) {
+            masm.branchTestBoolean(Assembler::Equal, tag, &isBool);
+            masm.branchTestUndefined(Assembler::Equal, tag, &isUndefined);
+            hasBoolean = true;
+            hasUndefined = true;
+            if (mir->conversion() != MToFPInstruction::NonNullNonStringPrimitives) {
+                masm.branchTestNull(Assembler::Equal, tag, &isNull);
+                hasNull = true;
+            }
         }
     }
 
@@ -751,7 +758,8 @@ CodeGenerator::testValueTruthyKernel(const ValueOperand& value,
         return;
     }
 
-    Register tag = masm.splitTagForTest(value);
+    ScratchTagScope tag(masm, value);
+    masm.splitTagForTest(value, tag);
 
     if (mightBeUndefined) {
         MOZ_ASSERT(tagCount > 1);
@@ -770,7 +778,10 @@ CodeGenerator::testValueTruthyKernel(const ValueOperand& value,
         Label notBoolean;
         if (tagCount != 1)
             masm.branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
-        masm.branchTestBooleanTruthy(false, value, ifFalsy);
+        {
+            ScratchTagScopeRelease _(&tag);
+            masm.branchTestBooleanTruthy(false, value, ifFalsy);
+        }
         if (tagCount != 1)
             masm.jump(ifTruthy);
         // Else just fall through to truthiness.
@@ -783,7 +794,10 @@ CodeGenerator::testValueTruthyKernel(const ValueOperand& value,
         Label notInt32;
         if (tagCount != 1)
             masm.branchTestInt32(Assembler::NotEqual, tag, &notInt32);
-        masm.branchTestInt32Truthy(false, value, ifFalsy);
+        {
+            ScratchTagScopeRelease _(&tag);
+            masm.branchTestInt32Truthy(false, value, ifFalsy);
+        }
         if (tagCount != 1)
             masm.jump(ifTruthy);
         // Else just fall through to truthiness.
@@ -799,8 +813,11 @@ CodeGenerator::testValueTruthyKernel(const ValueOperand& value,
             if (tagCount != 1)
                 masm.branchTestObject(Assembler::NotEqual, tag, &notObject);
 
-            Register objreg = masm.extractObject(value, ToRegister(scratch1));
-            testObjectEmulatesUndefined(objreg, ifFalsy, ifTruthy, ToRegister(scratch2), ool);
+            {
+                ScratchTagScopeRelease _(&tag);
+                Register objreg = masm.extractObject(value, ToRegister(scratch1));
+                testObjectEmulatesUndefined(objreg, ifFalsy, ifTruthy, ToRegister(scratch2), ool);
+            }
 
             masm.bind(&notObject);
         } else {
@@ -822,7 +839,10 @@ CodeGenerator::testValueTruthyKernel(const ValueOperand& value,
         Label notString;
         if (tagCount != 1)
             masm.branchTestString(Assembler::NotEqual, tag, &notString);
-        masm.branchTestStringTruthy(false, value, ifFalsy);
+        {
+            ScratchTagScopeRelease _(&tag);
+            masm.branchTestStringTruthy(false, value, ifFalsy);
+        }
         if (tagCount != 1)
             masm.jump(ifTruthy);
         // Else just fall through to truthiness.
@@ -842,8 +862,11 @@ CodeGenerator::testValueTruthyKernel(const ValueOperand& value,
     if (mightBeDouble) {
         MOZ_ASSERT(tagCount == 1);
         // If we reach here the value is a double.
-        masm.unboxDouble(value, fr);
-        masm.branchTestDoubleTruthy(false, fr, ifFalsy);
+        {
+            ScratchTagScopeRelease _(&tag);
+            masm.unboxDouble(value, fr);
+            masm.branchTestDoubleTruthy(false, fr, ifFalsy);
+        }
         --tagCount;
     }
 
@@ -1095,7 +1118,7 @@ CodeGenerator::visitValueToString(LValueToString* lir)
                                    StoreRegisterTo(output));
 
     Label done;
-    Register tag = masm.splitTagForTest(input);
+    Register tag = masm.extractTag(input, output);
     const JSAtomState& names = gen->runtime->names();
 
     // String
@@ -2148,7 +2171,7 @@ CodeGenerator::visitRegExpMatcher(LRegExpMatcher* lir)
     MOZ_ASSERT(ToRegister(lir->regexp()) == RegExpMatcherRegExpReg);
     MOZ_ASSERT(ToRegister(lir->string()) == RegExpMatcherStringReg);
     MOZ_ASSERT(ToRegister(lir->lastIndex()) == RegExpMatcherLastIndexReg);
-    MOZ_ASSERT(GetValueOutput(lir) == JSReturnOperand);
+    MOZ_ASSERT(ToOutValue(lir) == JSReturnOperand);
 
 #if defined(JS_NUNBOX32)
     MOZ_ASSERT(RegExpMatcherRegExpReg != JSReturnReg_Type);
@@ -3518,7 +3541,7 @@ void
 CodeGenerator::visitGetPropertyPolymorphicV(LGetPropertyPolymorphicV* ins)
 {
     Register obj = ToRegister(ins->obj());
-    ValueOperand output = GetValueOutput(ins);
+    ValueOperand output = ToOutValue(ins);
     emitGetPropertyPolymorphic(ins, obj, output.scratchReg(), output);
 }
 
@@ -3835,9 +3858,13 @@ CodeGenerator::visitTypeBarrierV(LTypeBarrierV* lir)
     Register unboxScratch = ToTempRegisterOrInvalid(lir->unboxTemp());
     Register objScratch = ToTempRegisterOrInvalid(lir->objTemp());
 
+    // guardObjectType may zero the payload/Value register on speculative paths
+    // (we should have a defineReuseInput allocation in this case).
+    Register spectreRegToZero = operand.payloadOrValueReg();
+
     Label miss;
     masm.guardTypeSet(operand, lir->mir()->resultTypeSet(), lir->mir()->barrierKind(),
-                      unboxScratch, objScratch, &miss);
+                      unboxScratch, objScratch, spectreRegToZero, &miss);
     bailoutFrom(&miss, lir->snapshot());
 }
 
@@ -3859,24 +3886,14 @@ CodeGenerator::visitTypeBarrierO(LTypeBarrierO* lir)
 
     if (lir->mir()->barrierKind() != BarrierKind::TypeTagOnly) {
         masm.comment("Type tag only");
-        masm.guardObjectType(obj, lir->mir()->resultTypeSet(), scratch, &miss);
+        // guardObjectType may zero the object register on speculative paths
+        // (we should have a defineReuseInput allocation in this case).
+        Register spectreRegToZero = obj;
+        masm.guardObjectType(obj, lir->mir()->resultTypeSet(), scratch, spectreRegToZero, &miss);
     }
 
     bailoutFrom(&miss, lir->snapshot());
     masm.bind(&ok);
-}
-
-void
-CodeGenerator::visitMonitorTypes(LMonitorTypes* lir)
-{
-    ValueOperand operand = ToValue(lir, LMonitorTypes::Input);
-    Register unboxScratch = ToTempRegisterOrInvalid(lir->unboxTemp());
-    Register objScratch = ToTempRegisterOrInvalid(lir->objTemp());
-
-    Label matched, miss;
-    masm.guardTypeSet(operand, lir->mir()->typeSet(), lir->mir()->barrierKind(), unboxScratch,
-                      objScratch, &miss);
-    bailoutFrom(&miss, lir->snapshot());
 }
 
 // Out-of-line path to update the store buffer.
@@ -5103,13 +5120,26 @@ CodeGenerator::generateArgumentsChecks(bool assert)
         if (!types || types->unknown())
             continue;
 
+#ifndef JS_CODEGEN_ARM64
         // Calculate the offset on the stack of the argument.
         // (i - info.startArgSlot())    - Compute index of arg within arg vector.
         // ... * sizeof(Value)          - Scale by value size.
         // ArgToStackOffset(...)        - Compute displacement within arg vector.
         int32_t offset = ArgToStackOffset((i - info.startArgSlot()) * sizeof(Value));
         Address argAddr(masm.getStackPointer(), offset);
-        masm.guardTypeSet(argAddr, types, BarrierKind::TypeSet, temp1, temp2, &miss);
+
+        // guardObjectType will zero the stack pointer register on speculative
+        // paths.
+        Register spectreRegToZero = masm.getStackPointer();
+        masm.guardTypeSet(argAddr, types, BarrierKind::TypeSet, temp1, temp2,
+                          spectreRegToZero, &miss);
+#else
+        // On ARM64, the stack pointer situation is more complicated. When we
+        // enable Ion, we should figure out how to mitigate Spectre there.
+        mozilla::Unused << temp1;
+        mozilla::Unused << temp2;
+        MOZ_CRASH("NYI");
+#endif
     }
 
     if (miss.used()) {
@@ -5409,7 +5439,7 @@ CodeGenerator::emitAssertObjectOrStringResult(Register input, MIRType type, cons
         if (type == MIRType::ObjectOrNull)
             masm.branchPtr(Assembler::Equal, input, ImmWord(0), &ok);
         if (typeset->getObjectCount() > 0)
-            masm.guardObjectType(input, typeset, temp, &miss);
+            masm.guardObjectType(input, typeset, temp, input, &miss);
         else
             masm.jump(&miss);
         masm.jump(&ok);
@@ -5475,7 +5505,8 @@ CodeGenerator::emitAssertResultV(const ValueOperand input, const TemporaryTypeSe
     if (typeset && !typeset->unknown()) {
         // We have a result TypeSet, assert this value is in it.
         Label miss, ok;
-        masm.guardTypeSet(input, typeset, BarrierKind::TypeSet, temp1, temp2, &miss);
+        masm.guardTypeSet(input, typeset, BarrierKind::TypeSet, temp1, temp2,
+                          input.payloadOrValueReg(), &miss);
         masm.jump(&ok);
 
         masm.bind(&miss);
@@ -5521,8 +5552,10 @@ CodeGenerator::emitObjectOrStringResultChecks(LInstruction* lir, MDefinition* mi
         return;
 
     MOZ_ASSERT(lir->numDefs() == 1);
-    Register output = ToRegister(lir->getDef(0));
+    if (lir->getDef(0)->isBogusTemp())
+        return;
 
+    Register output = ToRegister(lir->getDef(0));
     emitAssertObjectOrStringResult(output, mir->type(), mir->resultTypeSet());
 }
 
@@ -7576,22 +7609,28 @@ CodeGenerator::visitIsNullOrLikeUndefinedV(LIsNullOrLikeUndefinedV* lir)
             notNullOrLikeUndefined = label2.ptr();
         }
 
-        Register tag = masm.splitTagForTest(value);
-        MDefinition* input = lir->mir()->lhs();
-        if (input->mightBeType(MIRType::Null))
-            masm.branchTestNull(Assembler::Equal, tag, nullOrLikeUndefined);
-        if (input->mightBeType(MIRType::Undefined))
-            masm.branchTestUndefined(Assembler::Equal, tag, nullOrLikeUndefined);
+        {
+            ScratchTagScope tag(masm, value);
+            masm.splitTagForTest(value, tag);
 
-        if (ool) {
-            // Check whether it's a truthy object or a falsy object that emulates
-            // undefined.
-            masm.branchTestObject(Assembler::NotEqual, tag, notNullOrLikeUndefined);
+            MDefinition* input = lir->mir()->lhs();
+            if (input->mightBeType(MIRType::Null))
+                masm.branchTestNull(Assembler::Equal, tag, nullOrLikeUndefined);
+            if (input->mightBeType(MIRType::Undefined))
+                masm.branchTestUndefined(Assembler::Equal, tag, nullOrLikeUndefined);
 
-            Register objreg = masm.extractObject(value, ToTempUnboxRegister(lir->tempToUnbox()));
-            branchTestObjectEmulatesUndefined(objreg, nullOrLikeUndefined, notNullOrLikeUndefined,
-                                              ToRegister(lir->temp()), ool);
-            // fall through
+            if (ool) {
+                // Check whether it's a truthy object or a falsy object that emulates
+                // undefined.
+                masm.branchTestObject(Assembler::NotEqual, tag, notNullOrLikeUndefined);
+
+                ScratchTagScopeRelease _(&tag);
+
+                Register objreg = masm.extractObject(value, ToTempUnboxRegister(lir->tempToUnbox()));
+                branchTestObjectEmulatesUndefined(objreg, nullOrLikeUndefined, notNullOrLikeUndefined,
+                                                  ToRegister(lir->temp()), ool);
+                // fall through
+            }
         }
 
         Label done;
@@ -7652,28 +7691,33 @@ CodeGenerator::visitIsNullOrLikeUndefinedAndBranchV(LIsNullOrLikeUndefinedAndBra
             addOutOfLineCode(ool, lir->cmpMir());
         }
 
-        Register tag = masm.splitTagForTest(value);
+        {
+            ScratchTagScope tag(masm, value);
+            masm.splitTagForTest(value, tag);
 
-        Label* ifTrueLabel = getJumpLabelForBranch(ifTrue);
-        Label* ifFalseLabel = getJumpLabelForBranch(ifFalse);
+            Label* ifTrueLabel = getJumpLabelForBranch(ifTrue);
+            Label* ifFalseLabel = getJumpLabelForBranch(ifFalse);
 
-        MDefinition* input = lir->cmpMir()->lhs();
-        if (input->mightBeType(MIRType::Null))
-            masm.branchTestNull(Assembler::Equal, tag, ifTrueLabel);
-        if (input->mightBeType(MIRType::Undefined))
-            masm.branchTestUndefined(Assembler::Equal, tag, ifTrueLabel);
+            MDefinition* input = lir->cmpMir()->lhs();
+            if (input->mightBeType(MIRType::Null))
+                masm.branchTestNull(Assembler::Equal, tag, ifTrueLabel);
+            if (input->mightBeType(MIRType::Undefined))
+                masm.branchTestUndefined(Assembler::Equal, tag, ifTrueLabel);
 
-        if (ool) {
-            masm.branchTestObject(Assembler::NotEqual, tag, ifFalseLabel);
+            if (ool) {
+                masm.branchTestObject(Assembler::NotEqual, tag, ifFalseLabel);
 
-            // Objects that emulate undefined are loosely equal to null/undefined.
-            Register objreg = masm.extractObject(value, ToTempUnboxRegister(lir->tempToUnbox()));
-            Register scratch = ToRegister(lir->temp());
-            testObjectEmulatesUndefined(objreg, ifTrueLabel, ifFalseLabel, scratch, ool);
-        } else {
-            masm.jump(ifFalseLabel);
+                ScratchTagScopeRelease _(&tag);
+
+                // Objects that emulate undefined are loosely equal to null/undefined.
+                Register objreg = masm.extractObject(value, ToTempUnboxRegister(lir->tempToUnbox()));
+                Register scratch = ToRegister(lir->temp());
+                testObjectEmulatesUndefined(objreg, ifTrueLabel, ifFalseLabel, scratch, ool);
+            } else {
+                masm.jump(ifFalseLabel);
+            }
+            return;
         }
-        return;
     }
 
     MOZ_ASSERT(op == JSOP_STRICTEQ || op == JSOP_STRICTNE);
@@ -9677,7 +9721,7 @@ CodeGenerator::visitArgumentsLength(LArgumentsLength* lir)
 void
 CodeGenerator::visitGetFrameArgument(LGetFrameArgument* lir)
 {
-    ValueOperand result = GetValueOutput(lir);
+    ValueOperand result = ToOutValue(lir);
     const LAllocation* index = lir->index();
     size_t argvOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
 
@@ -10432,7 +10476,7 @@ CodeGenerator::visitLoadFixedSlotV(LLoadFixedSlotV* ins)
 {
     const Register obj = ToRegister(ins->getOperand(0));
     size_t slot = ins->mir()->slot();
-    ValueOperand result = GetValueOutput(ins);
+    ValueOperand result = ToOutValue(ins);
 
     masm.loadValue(Address(obj, NativeObject::getFixedSlotOffset(slot)), result);
 }
@@ -10526,7 +10570,7 @@ CodeGenerator::visitGetNameCache(LGetNameCache* ins)
 {
     LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
     Register envChain = ToRegister(ins->envObj());
-    ValueOperand output(GetValueOutput(ins));
+    ValueOperand output = ToOutValue(ins);
     Register temp = ToRegister(ins->temp());
 
     IonGetNameIC ic(liveRegs, envChain, output, temp);
@@ -10620,7 +10664,7 @@ CodeGenerator::visitGetPropertyCacheV(LGetPropertyCacheV* ins)
     TypedOrValueRegister value =
         toConstantOrRegister(ins, LGetPropertyCacheV::Value, ins->mir()->value()->type()).reg();
     ConstantOrRegister id = toConstantOrRegister(ins, LGetPropertyCacheV::Id, ins->mir()->idval()->type());
-    TypedOrValueRegister output = TypedOrValueRegister(GetValueOutput(ins));
+    TypedOrValueRegister output(ToOutValue(ins));
     Register maybeTemp = ins->temp()->isBogusTemp() ? InvalidReg : ToRegister(ins->temp());
 
     addGetPropertyCache(ins, liveRegs, value, id, output, maybeTemp,
@@ -10649,7 +10693,7 @@ CodeGenerator::visitGetPropSuperCacheV(LGetPropSuperCacheV* ins)
     TypedOrValueRegister receiver =
         toConstantOrRegister(ins, LGetPropSuperCacheV::Receiver, ins->mir()->receiver()->type()).reg();
     ConstantOrRegister id = toConstantOrRegister(ins, LGetPropSuperCacheV::Id, ins->mir()->idval()->type());
-    TypedOrValueRegister output = TypedOrValueRegister(GetValueOutput(ins));
+    TypedOrValueRegister output(ToOutValue(ins));
 
     CacheKind kind = CacheKind::GetElemSuper;
     if (id.constant() && id.value().isString()) {
@@ -10842,7 +10886,7 @@ CodeGenerator::visitTypeOfV(LTypeOfV* lir)
 {
     const ValueOperand value = ToValue(lir, LTypeOfV::Input);
     Register output = ToRegister(lir->output());
-    Register tag = masm.splitTagForTest(value);
+    Register tag = masm.extractTag(value, output);
 
     const JSAtomState& names = gen->runtime->names();
     Label done;
@@ -11050,7 +11094,7 @@ CodeGenerator::visitToIdV(LToIdV* lir)
                                    ArgList(ToValue(lir, LToIdV::Input)),
                                    StoreValueTo(out));
 
-    Register tag = masm.splitTagForTest(input);
+    Register tag = masm.extractTag(input, out.scratchReg());
 
     masm.branchTestInt32(Assembler::NotEqual, tag, &notInt32);
     masm.moveValue(input, out);
@@ -12007,7 +12051,7 @@ CodeGenerator::visitGetDOMMemberV(LGetDOMMemberV* ins)
     // proxies in IonBuilder.
     Register object = ToRegister(ins->object());
     size_t slot = ins->mir()->domMemberSlotIndex();
-    ValueOperand result = GetValueOutput(ins);
+    ValueOperand result = ToOutValue(ins);
 
     masm.loadValue(Address(object, NativeObject::getFixedSlotOffset(slot)), result);
 }
@@ -12622,28 +12666,38 @@ CodeGenerator::visitAssertRangeV(LAssertRangeV* ins)
 {
     const Range* r = ins->range();
     const ValueOperand value = ToValue(ins, LAssertRangeV::Input);
-    Register tag = masm.splitTagForTest(value);
     Label done;
 
     {
-        Label isNotInt32;
-        masm.branchTestInt32(Assembler::NotEqual, tag, &isNotInt32);
-        Register unboxInt32 = ToTempUnboxRegister(ins->temp());
-        Register input = masm.extractInt32(value, unboxInt32);
-        emitAssertRangeI(r, input);
-        masm.jump(&done);
-        masm.bind(&isNotInt32);
-    }
+        ScratchTagScope tag(masm, value);
+        masm.splitTagForTest(value, tag);
 
-    {
-        Label isNotDouble;
-        masm.branchTestDouble(Assembler::NotEqual, tag, &isNotDouble);
-        FloatRegister input = ToFloatRegister(ins->floatTemp1());
-        FloatRegister temp = ToFloatRegister(ins->floatTemp2());
-        masm.unboxDouble(value, input);
-        emitAssertRangeD(r, input, temp);
-        masm.jump(&done);
-        masm.bind(&isNotDouble);
+        {
+            Label isNotInt32;
+            masm.branchTestInt32(Assembler::NotEqual, tag, &isNotInt32);
+            {
+                ScratchTagScopeRelease _(&tag);
+                Register unboxInt32 = ToTempUnboxRegister(ins->temp());
+                Register input = masm.extractInt32(value, unboxInt32);
+                emitAssertRangeI(r, input);
+                masm.jump(&done);
+            }
+            masm.bind(&isNotInt32);
+        }
+
+        {
+            Label isNotDouble;
+            masm.branchTestDouble(Assembler::NotEqual, tag, &isNotDouble);
+            {
+                ScratchTagScopeRelease _(&tag);
+                FloatRegister input = ToFloatRegister(ins->floatTemp1());
+                FloatRegister temp = ToFloatRegister(ins->floatTemp2());
+                masm.unboxDouble(value, input);
+                emitAssertRangeD(r, input, temp);
+                masm.jump(&done);
+            }
+            masm.bind(&isNotDouble);
+        }
     }
 
     masm.assumeUnreachable("Incorrect range for Value.");
@@ -12814,7 +12868,7 @@ CodeGenerator::visitDebugger(LDebugger* ins)
 void
 CodeGenerator::visitNewTarget(LNewTarget *ins)
 {
-    ValueOperand output = GetValueOutput(ins);
+    ValueOperand output = ToOutValue(ins);
 
     // if (isConstructing) output = argv[Max(numActualArgs, numFormalArgs)]
     Label notConstructing, done;
