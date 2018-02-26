@@ -30,6 +30,7 @@ public class SessionManager {
 
     private NonNullMutableLiveData<List<Session>> sessions;
     private String currentSessionUUID;
+    private NonNullMutableLiveData<List<Session>> customTabSessions;
 
     public static SessionManager getInstance() {
         return INSTANCE;
@@ -37,6 +38,8 @@ public class SessionManager {
 
     private SessionManager() {
         this.sessions = new NonNullMutableLiveData<>(
+                Collections.unmodifiableList(Collections.<Session>emptyList()));
+        this.customTabSessions = new NonNullMutableLiveData<>(
                 Collections.unmodifiableList(Collections.<Session>emptyList()));
     }
 
@@ -103,7 +106,7 @@ public class SessionManager {
     }
 
     /**
-     * Is there at least one browsing session?
+     * Is there at least one regular browsing session?
      */
     public boolean hasSession() {
         return !sessions.getValue().isEmpty();
@@ -120,6 +123,18 @@ public class SessionManager {
         return getSessionByUUID(currentSessionUUID);
     }
 
+    public Session getCustomTabSessionByCustomTabId(String customTabId) {
+        final List<Session> sessions = customTabSessions.getValue();
+
+        for (Session session : sessions) {
+            if (session.getCustomTabConfig().id.equals(customTabId)) {
+                return session;
+            }
+        }
+
+        throw new IllegalAccessError("There's no active custom tab session with id " + customTabId);
+    }
+
     public boolean isCurrentSession(@NonNull Session session) {
         return session.getUUID().equals(currentSessionUUID);
     }
@@ -131,11 +146,23 @@ public class SessionManager {
             }
         }
 
+        for (Session session : customTabSessions.getValue()) {
+            if (uuid.equals(session.getUUID())) {
+                return true;
+            }
+        }
+
         return false;
     }
 
     public Session getSessionByUUID(@NonNull String uuid) {
         for (Session session : sessions.getValue()) {
+            if (uuid.equals(session.getUUID())) {
+                return session;
+            }
+        }
+
+        for (Session session : customTabSessions.getValue()) {
             if (uuid.equals(session.getUUID())) {
                 return session;
             }
@@ -168,6 +195,10 @@ public class SessionManager {
         return sessions;
     }
 
+    public NonNullLiveData<List<Session>> getCustomTabSessions() {
+        return customTabSessions;
+    }
+
     public void createSession(@NonNull Source source, @NonNull String url) {
         final Session session = new Session(source, url);
         addSession(session);
@@ -195,12 +226,19 @@ public class SessionManager {
     }
 
     private void addSession(Session session) {
-        currentSessionUUID = session.getUUID();
+        if (session.isCustomTab()) {
+            final List<Session> sessions = new ArrayList<>(this.customTabSessions.getValue());
+            sessions.add(session);
 
-        final List<Session> sessions = new ArrayList<>(this.sessions.getValue());
-        sessions.add(session);
+            customTabSessions.setValue(sessions);
+        } else {
+            currentSessionUUID = session.getUUID();
 
-        this.sessions.setValue(Collections.unmodifiableList(sessions));
+            final List<Session> sessions = new ArrayList<>(this.sessions.getValue());
+            sessions.add(session);
+
+            this.sessions.setValue(Collections.unmodifiableList(sessions));
+        }
     }
 
     public void selectSession(Session session) {
@@ -223,6 +261,10 @@ public class SessionManager {
         sessions.setValue(Collections.unmodifiableList(Collections.<Session>emptyList()));
     }
 
+    @VisibleForTesting void removeAllCustomTabSessions() {
+        customTabSessions.setValue(Collections.unmodifiableList(Collections.<Session>emptyList()));
+    }
+
     /**
      * Remove the current (selected) session.
      */
@@ -230,7 +272,7 @@ public class SessionManager {
         removeSession(currentSessionUUID);
     }
 
-    @VisibleForTesting void removeSession(String uuid) {
+    public void removeSession(String uuid) {
         final List<Session> sessions = new ArrayList<>();
 
         int removedFromPosition = -1;

@@ -4,6 +4,8 @@
 
 package org.mozilla.focus.architecture
 
+import android.support.annotation.NonNull
+
 class NonNullMutableLiveData<T>(initialValue: T) : NonNullLiveData<T>(initialValue) {
     /**
      * Posts a task to a main thread to set the given (non-null) value.
@@ -18,4 +20,7 @@ class NonNullMutableLiveData<T>(initialValue: T) : NonNullLiveData<T>(initialVal
     public override fun setValue(value: T?) {
         super.setValue(value)
     }
+
+    @NonNull
+    override fun getValue(): T = super.getValue()
 }

@@ -70,7 +70,6 @@
         </activity>
 
         <activity android:name=".activity.CustomTabActivity"
-            android:launchMode="singleTask"
             android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
             android:windowSoftInputMode="adjustResize|stateAlwaysHidden"
             android:exported="false"

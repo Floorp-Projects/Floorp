@@ -36,7 +36,10 @@ public class SessionManagerTest {
     @Before
     public void setUp() {
         // Always start tests with a clean session manager
-        SessionManager.getInstance().removeAllSessions();
+        SessionManager sessionManager = SessionManager.getInstance();
+
+        sessionManager.removeAllSessions();
+        sessionManager.removeAllCustomTabSessions();
     }
 
     @Test
@@ -91,15 +94,20 @@ public class SessionManagerTest {
                 .addDefaultShareMenuItem()
                 .build()
                 .intent
-                .setData(Uri.parse(TEST_URL)));
+                .setData(Uri.parse(TEST_URL))
+                .putExtra(CustomTabConfig.EXTRA_CUSTOM_TAB_ID, UUID.randomUUID().toString()));
 
         sessionManager.handleIntent(RuntimeEnvironment.application, intent, null);
 
         final List<Session> sessions = sessionManager.getSessions().getValue();
         assertNotNull(sessions);
-        assertEquals(1, sessions.size());
+        assertEquals(0, sessions.size());
 
-        final Session session = sessions.get(0);
+        final List<Session> customTabSessions = sessionManager.getCustomTabSessions().getValue();
+        assertNotNull(customTabSessions);
+        assertEquals(1, customTabSessions.size());
+
+        final Session session = customTabSessions.get(0);
         assertEquals(TEST_URL, session.getUrl().getValue());
         assertTrue(session.isCustomTab());
         assertNotNull(session.getCustomTabConfig());
@@ -109,7 +117,7 @@ public class SessionManagerTest {
         assertEquals(Color.GREEN, config.toolbarColor.intValue());
         assertTrue(config.showShareMenuItem);
 
-        assertTrue(sessionManager.hasSession());
+        assertFalse(sessionManager.hasSession());
     }
 
     @Test
@@ -289,5 +297,36 @@ public class SessionManagerTest {
 
         assertFalse(sessionManager.hasSession());
         assertEquals(0, sessionManager.getSessions().getValue().size());
+    }
+
+    @Test
+    public void testSeparateCustomTabSessions() {
+        final String customTabId = "342d6440-760a-43ba-86c4-fe896eb20a29";
+
+        final SessionManager sessionManager = SessionManager.getInstance();
+
+        assertFalse(sessionManager.hasSession());
+        assertEquals(0, sessionManager.getCustomTabSessions().getValue().size());
+
+        final SafeIntent intent = new SafeIntent(new CustomTabsIntent.Builder()
+                .build()
+                .intent
+                .setData(Uri.parse(TEST_URL))
+                .putExtra(CustomTabConfig.EXTRA_CUSTOM_TAB_ID, customTabId));
+
+        sessionManager.handleIntent(RuntimeEnvironment.application, intent, null);
+
+        assertFalse(sessionManager.hasSession());
+        assertEquals(1, sessionManager.getCustomTabSessions().getValue().size());
+
+        assertNotNull(sessionManager.getCustomTabSessionByCustomTabId(customTabId));
+    }
+
+    @Test(expected = IllegalAccessError.class)
+    public void testThrowsIfCustomTabDoesNotExist() {
+        final String customTabId = "342d6440-760a-43ba-86c4-fe896eb20a29";
+
+        final SessionManager sessionManager = SessionManager.getInstance();
+        sessionManager.getCustomTabSessionByCustomTabId(customTabId);
     }
 }

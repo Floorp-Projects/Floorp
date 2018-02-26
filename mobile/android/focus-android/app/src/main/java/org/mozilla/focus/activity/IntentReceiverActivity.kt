@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Bundle
 import org.mozilla.focus.customtabs.CustomTabConfig
 import org.mozilla.focus.utils.SafeIntent
+import java.util.UUID
 
 /**
  * This activity receives VIEW intents and either forwards them to MainActivity or CustomTabActivity.
@@ -30,9 +31,12 @@ class IntentReceiverActivity : Activity() {
 
     private fun dispatchCustomTabsIntent() {
         val intent = Intent(intent)
+
         intent.setClassName(applicationContext, CustomTabActivity::class.java.name)
 
-        filterFlags(intent)
+        // We are adding a generated custom tab ID to the intent here. CustomTabActivity will
+        // use this ID to later decide what session to display once it is created.
+        intent.putExtra(CustomTabConfig.EXTRA_CUSTOM_TAB_ID, UUID.randomUUID().toString())
 
         startActivity(intent)
     }
@@ -41,19 +45,6 @@ class IntentReceiverActivity : Activity() {
         val intent = Intent(intent)
         intent.setClassName(applicationContext, MainActivity::class.java.name)
 
-        filterFlags(intent)
-
         startActivity(intent)
-    }
-
-    private fun filterFlags(intent: Intent) {
-        // Explicitly remove the new task and clear task flags (Our browser activity is a single
-        // task activity and we never want to start a second task here). See bug 1280112.
-        intent.flags = intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK.inv()
-        intent.flags = intent.flags and Intent.FLAG_ACTIVITY_CLEAR_TASK.inv()
-
-        // LauncherActivity is started with the "exclude from recents" flag (set in manifest). We do
-        // not want to propagate this flag from the launcher activity to the browser.
-        intent.flags = intent.flags and Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS.inv()
     }
 }
