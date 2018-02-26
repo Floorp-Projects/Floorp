@@ -303,7 +303,7 @@ add_test(function test_hugeStringThrows()
   let hugeString = new Array(maxLen + 1).fill("a").join("");
   let properties = ["scheme", "userPass", "username",
                     "password", "host", "ref",
-                    "query", "filePath"];
+                    "query"];
   for (let prop of properties) {
     Assert.throws(() => url[prop] = hugeString,
                   /NS_ERROR_MALFORMED_URI/,
@@ -312,6 +312,7 @@ add_test(function test_hugeStringThrows()
 
   let setters = [
     { method: "setSpec", qi: Ci.nsIURIMutator },
+    { method: "setFilePath", qi: Ci.nsIURIMutator },
     { method: "setHostPort", qi: Ci.nsIURIMutator },
     { method: "setPathQueryRef", qi: Ci.nsIURIMutator },
     { method: "setFileName", qi: Ci.nsIURLMutator },
@@ -335,7 +336,7 @@ add_test(function test_filterWhitespace()
 
   // These setters should escape \r\n\t, not filter them.
   var url = stringToURL("http://test.com/path?query#hash");
-  url.filePath = "pa\r\n\tth";
+  url = url.mutate().setFilePath("pa\r\n\tth").finalize();
   Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?query#hash");
   url.query = "qu\r\n\tery";
   Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?qu%0D%0A%09ery#hash");
@@ -404,7 +405,7 @@ add_test(function test_encode_C0_and_space()
 
   // Additionally, we need to check the setters.
   var url = stringToURL("http://example.com/path?query#hash");
-  url.filePath = "pa\0th";
+  url = url.mutate().setFilePath("pa\0th").finalize();
   Assert.equal(url.spec, "http://example.com/pa%00th?query#hash");
   url.query = "qu\0ery";
   Assert.equal(url.spec, "http://example.com/pa%00th?qu%00ery#hash");
