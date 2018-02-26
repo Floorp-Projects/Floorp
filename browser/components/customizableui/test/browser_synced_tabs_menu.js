@@ -86,7 +86,7 @@ async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   let viewShownPromise = BrowserTestUtils.waitForEvent(syncPanel, "ViewShown");
   syncButton.click();
   await Promise.all([tabsUpdatedPromise, viewShownPromise]);
-  ok(syncPanel.getAttribute("current"), "Sync Panel is in view");
+  ok(syncPanel.getAttribute("visible"), "Sync Panel is in view");
 
   // Sync is not configured - verify that state is reflected.
   let subpanel = document.getElementById(expectedPanelId);
@@ -187,7 +187,7 @@ add_task(async function() {
   let syncButton = document.getElementById("sync-button");
   syncButton.click();
   await Promise.all([tabsUpdatedPromise, viewShownPromise]);
-  ok(syncPanel.getAttribute("current"), "Sync Panel is in view");
+  ok(syncPanel.getAttribute("visible"), "Sync Panel is in view");
 
   let subpanel = document.getElementById("PanelUI-remotetabs-main");
   ok(!subpanel.hidden, "main pane is visible");
@@ -352,7 +352,7 @@ add_task(async function() {
   await Promise.all([tabsUpdatedPromise, viewShownPromise]);
 
   // Check pre-conditions
-  ok(syncPanel.getAttribute("current"), "Sync Panel is in view");
+  ok(syncPanel.getAttribute("visible"), "Sync Panel is in view");
   let subpanel = document.getElementById("PanelUI-remotetabs-main");
   ok(!subpanel.hidden, "main pane is visible");
   let deck = document.getElementById("PanelUI-remotetabs-deck");

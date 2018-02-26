@@ -1173,9 +1173,9 @@ var PanelView = class extends this.AssociatedToNode {
 
   set visible(value) {
     if (value) {
-      this.node.setAttribute("current", true);
+      this.node.setAttribute("visible", true);
     } else {
-      this.node.removeAttribute("current");
+      this.node.removeAttribute("visible");
     }
   }
 

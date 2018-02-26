@@ -28,7 +28,7 @@ add_task(async function() {
   let promise = BrowserTestUtils.waitForEvent(historyPanel, "ViewShown");
   historyButton.click();
   await promise;
-  ok(historyPanel.getAttribute("current"), "History Panel is in view");
+  ok(historyPanel.getAttribute("visible"), "History Panel is in view");
 
   let browserLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   let panelHiddenPromise = promiseOverflowHidden(window);
