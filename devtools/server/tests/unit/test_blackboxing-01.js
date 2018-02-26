@@ -96,7 +96,7 @@ function evalCode() {
   /* eslint-disable */
   Components.utils.evalInSandbox(
     "" + function doStuff(k) { // line 1
-      let arg = 15;            // line 2 - Step in here
+      var arg = 15;            // line 2 - Step in here
       k(arg);                  // line 3
     },                         // line 4
     gDebuggee,
