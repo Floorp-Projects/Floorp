@@ -14,7 +14,6 @@ const ServerSocket = CC(
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.import("chrome://marionette/content/assert.js");
 const {GeckoDriver} = ChromeUtils.import("chrome://marionette/content/driver.js", {});
@@ -30,9 +29,6 @@ const {
 } = ChromeUtils.import("chrome://marionette/content/message.js", {});
 const {DebuggerTransport} = ChromeUtils.import("chrome://marionette/content/transport.js", {});
 
-XPCOMUtils.defineLazyServiceGetter(
-    this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
-
 const logger = Log.repository.getLogger("Marionette");
 
 const {KeepWhenOffline, LoopbackOnly} = Ci.nsIServerSocket;
@@ -43,8 +39,6 @@ this.EXPORTED_SYMBOLS = ["server"];
 this.server = {};
 
 const PROTOCOL_VERSION = 3;
-
-const ENV_ENABLED = "MOZ_MARIONETTE";
 
 const PREF_CONTENT_LISTENER = "marionette.contentListener";
 const PREF_PORT = "marionette.port";
@@ -115,10 +109,7 @@ server.TCPListener = class {
 
     // Start socket server and listening for connection attempts
     this.acceptConnections = true;
-
     Preferences.set(PREF_PORT, this.port);
-    env.set(ENV_ENABLED, "1");
-
     this.alive = true;
   }
 

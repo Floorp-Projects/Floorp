@@ -552,6 +552,7 @@ class MarionetteMainProcess {
         Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
       }
 
+      env.set(ENV_ENABLED, "1");
       Services.obs.notifyObservers(this, NOTIFY_RUNNING, true);
       log.info(`Listening on port ${this.server.port}`);
     });
