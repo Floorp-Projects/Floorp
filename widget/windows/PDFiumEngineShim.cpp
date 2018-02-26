@@ -65,7 +65,7 @@ PDFiumEngineShim::GetInstanceOrNull()
   RefPtr<PDFiumEngineShim> inst = sPDFiumEngineShim;
   if (!inst) {
     inst = new PDFiumEngineShim();
-    if (!inst->Init(nsCString("pdfium.dll"))) {
+    if (!inst->Init(NS_LITERAL_STRING("pdfium.dll"))) {
       inst = nullptr;
     }
     sPDFiumEngineShim = inst.get();
@@ -76,7 +76,7 @@ PDFiumEngineShim::GetInstanceOrNull()
 
 /* static */
 already_AddRefed<PDFiumEngineShim>
-PDFiumEngineShim::GetInstanceOrNull(const nsCString& aLibrary)
+PDFiumEngineShim::GetInstanceOrNull(const nsString& aLibrary)
 {
   RefPtr<PDFiumEngineShim> shim = new PDFiumEngineShim();
   if (!shim->Init(aLibrary)) {
@@ -107,13 +107,16 @@ PDFiumEngineShim::~PDFiumEngineShim()
 }
 
 bool
-PDFiumEngineShim::Init(const nsCString& aLibrary)
+PDFiumEngineShim::Init(const nsString& aLibrary)
 {
   if (mInitialized) {
     return true;
   }
 
-  mPRLibrary = PR_LoadLibrary(aLibrary.get());
+  PRLibSpec libSpec;
+  libSpec.type = PR_LibSpec_PathnameU;
+  libSpec.value.pathname_u = aLibrary.get();
+  mPRLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
   NS_ENSURE_TRUE(mPRLibrary, false);
 
   mTable->mFPDF_InitLibrary =

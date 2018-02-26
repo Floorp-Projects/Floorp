@@ -473,7 +473,8 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
         Label next;
         switch (fe.sig().args()[i]) {
           case ValType::I32: {
-            Register tag = masm.splitTagForTest(scratchV);
+            ScratchTagScope tag(masm, scratchV);
+            masm.splitTagForTest(scratchV, tag);
 
             // For int32 inputs, just skip.
             masm.branchTestInt32(Assembler::Equal, tag, &next);
@@ -481,9 +482,12 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
             // For double inputs, unbox, truncate and store back.
             Label storeBack, notDouble;
             masm.branchTestDouble(Assembler::NotEqual, tag, &notDouble);
-            masm.unboxDouble(scratchV, scratchF);
-            masm.branchTruncateDoubleMaybeModUint32(scratchF, scratchG, &oolCall);
-            masm.jump(&storeBack);
+            {
+                ScratchTagScopeRelease _(&tag);
+                masm.unboxDouble(scratchV, scratchF);
+                masm.branchTruncateDoubleMaybeModUint32(scratchF, scratchG, &oolCall);
+                masm.jump(&storeBack);
+            }
             masm.bind(&notDouble);
 
             // For null or undefined, store 0.
@@ -491,7 +495,10 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
             masm.branchTestUndefined(Assembler::Equal, tag, &nullOrUndefined);
             masm.branchTestNull(Assembler::NotEqual, tag, &notNullOrUndefined);
             masm.bind(&nullOrUndefined);
-            masm.storeValue(Int32Value(0), jitArgAddr);
+            {
+                ScratchTagScopeRelease _(&tag);
+                masm.storeValue(Int32Value(0), jitArgAddr);
+            }
             masm.jump(&next);
             masm.bind(&notNullOrUndefined);
 
@@ -502,7 +509,10 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
             // fallthrough:
 
             masm.bind(&storeBack);
-            masm.storeValue(JSVAL_TYPE_INT32, scratchG, jitArgAddr);
+            {
+                ScratchTagScopeRelease _(&tag);
+                masm.storeValue(JSVAL_TYPE_INT32, scratchG, jitArgAddr);
+            }
             break;
           }
           case ValType::F32:
@@ -510,29 +520,39 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
             // Note we can reuse the same code for f32/f64 here, since for the
             // case of f32, the conversion of f64 to f32 will happen in the
             // second loop.
-            Register tag = masm.splitTagForTest(scratchV);
+            ScratchTagScope tag(masm, scratchV);
+            masm.splitTagForTest(scratchV, tag);
 
             // For double inputs, just skip.
             masm.branchTestDouble(Assembler::Equal, tag, &next);
 
             // For int32 inputs, convert and rebox.
             Label storeBack, notInt32;
-            masm.branchTestInt32(Assembler::NotEqual, scratchV, &notInt32);
-            masm.int32ValueToDouble(scratchV, scratchF);
-            masm.jump(&storeBack);
+            {
+                ScratchTagScopeRelease _(&tag);
+                masm.branchTestInt32(Assembler::NotEqual, scratchV, &notInt32);
+                masm.int32ValueToDouble(scratchV, scratchF);
+                masm.jump(&storeBack);
+            }
             masm.bind(&notInt32);
 
             // For undefined (missing argument), store NaN.
             Label notUndefined;
             masm.branchTestUndefined(Assembler::NotEqual, tag, &notUndefined);
-            masm.storeValue(DoubleValue(JS::GenericNaN()), jitArgAddr);
-            masm.jump(&next);
+            {
+                ScratchTagScopeRelease _(&tag);
+                masm.storeValue(DoubleValue(JS::GenericNaN()), jitArgAddr);
+                masm.jump(&next);
+            }
             masm.bind(&notUndefined);
 
             // +null is 0.
             Label notNull;
             masm.branchTestNull(Assembler::NotEqual, tag, &notNull);
-            masm.storeValue(DoubleValue(0.), jitArgAddr);
+            {
+                ScratchTagScopeRelease _(&tag);
+                masm.storeValue(DoubleValue(0.), jitArgAddr);
+            }
             masm.jump(&next);
             masm.bind(&notNull);
 

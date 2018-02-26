@@ -742,11 +742,10 @@ class ScriptSourceObject : public NativeObject
         return getReservedSlot(ELEMENT_PROPERTY_SLOT);
     }
     JSScript* introductionScript() const {
-        if (getReservedSlot(INTRODUCTION_SCRIPT_SLOT).isUndefined())
+        Value value = getReservedSlot(INTRODUCTION_SCRIPT_SLOT);
+        if (value.isUndefined())
             return nullptr;
-        void* untyped = getReservedSlot(INTRODUCTION_SCRIPT_SLOT).toPrivate();
-        MOZ_ASSERT(untyped);
-        return static_cast<JSScript*>(untyped);
+        return value.toGCThing()->as<JSScript>();
     }
 
   private:

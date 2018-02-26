@@ -721,6 +721,9 @@ class Simulator : public DecoderVisitor {
   static bool supportsAtomics() {
     return true;
   }
+  template<typename T> T Read(uintptr_t address);
+  template <typename T> void Write(uintptr_t address_, T value);
+  JS::ProfilingFrameIterator::RegisterState registerState();
 
   void ResetState();
 
@@ -731,6 +734,9 @@ class Simulator : public DecoderVisitor {
   // Simulation helpers.
   const Instruction* pc() const { return pc_; }
   const Instruction* get_pc() const { return pc_; }
+  int64_t get_sp() const { return xreg(31, Reg31IsStackPointer); }
+  int64_t get_lr() const { return xreg(30); }
+  int64_t get_fp() const { return xreg(29); }
 
   template <typename T>
   T get_pc_as() const { return reinterpret_cast<T>(const_cast<Instruction*>(pc())); }
@@ -742,6 +748,8 @@ class Simulator : public DecoderVisitor {
 
   void trigger_wasm_interrupt();
   void handle_wasm_interrupt();
+  bool handle_wasm_ill_fault();
+  bool handle_wasm_seg_fault(uintptr_t addr, unsigned numBytes);
 
   void increment_pc() {
     if (!pc_modified_) {
