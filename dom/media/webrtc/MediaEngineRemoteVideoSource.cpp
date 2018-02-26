@@ -522,6 +522,13 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
     int32_t req_ideal_width = (targetCapabilities[i].width >> 16) & 0xffff;
     int32_t req_ideal_height = (targetCapabilities[i].height >> 16) & 0xffff;
 
+    if (aProps.rotation() == 90 || aProps.rotation() == 270) {
+      // This frame is rotated, so what was negotiated as width is now height,
+      // and vice versa.
+      std::swap(req_max_width, req_max_height);
+      std::swap(req_ideal_width, req_ideal_height);
+    }
+
     int32_t dest_max_width = std::min(req_max_width, mWidth);
     int32_t dest_max_height = std::min(req_max_height, mHeight);
     // This logic works for both camera and screen sharing case.
@@ -585,9 +592,11 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
 
 #ifdef DEBUG
       static uint32_t frame_num = 0;
-      LOGFRAME(("frame %d (%dx%d); timeStamp %u, ntpTimeMs %" PRIu64 ", renderTimeMs %" PRIu64,
+      LOGFRAME(("frame %d (%dx%d); rotation %d, timeStamp %u, "
+                "ntpTimeMs %" PRIu64 ", renderTimeMs %" PRIu64,
                 frame_num++, width, height,
-                aProps.timeStamp(), aProps.ntpTimeMs(), aProps.renderTimeMs()));
+                aProps.rotation(), aProps.timeStamp(), aProps.ntpTimeMs(),
+                aProps.renderTimeMs()));
 #endif
     }
 
