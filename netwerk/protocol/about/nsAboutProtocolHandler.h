@@ -138,6 +138,8 @@ public:
 
         friend class nsNestedAboutURI;
     };
+
+    friend BaseURIMutator<nsNestedAboutURI>;
 };
 
 } // namespace net

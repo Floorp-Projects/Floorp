@@ -75,6 +75,20 @@ protected:
         eReplaceRef
     };
 
+    virtual nsresult SetSpecInternal(const nsACString &input);
+    virtual nsresult SetScheme(const nsACString &input);
+    virtual nsresult SetUserPass(const nsACString &input);
+    virtual nsresult SetUsername(const nsACString &input);
+    virtual nsresult SetPassword(const nsACString &input);
+    virtual nsresult SetHostPort(const nsACString &aValue);
+    virtual nsresult SetHost(const nsACString &input);
+    virtual nsresult SetPort(int32_t port);
+    virtual nsresult SetPathQueryRef(const nsACString &input);
+    virtual nsresult SetRef(const nsACString &input);
+    virtual nsresult SetFilePath(const nsACString &input);
+    virtual nsresult SetQuery(const nsACString &input);
+    virtual nsresult SetQueryWithEncoding(const nsACString &input, const Encoding* encoding);
+
     // Helper to share code between Equals methods.
     virtual nsresult EqualsInternal(nsIURI* other,
                                     RefHandlingEnum refHandlingMode,
@@ -127,6 +141,8 @@ public:
 
         friend class nsSimpleURI;
     };
+
+    friend BaseURIMutator<nsSimpleURI>;
 };
 
 } // namespace net

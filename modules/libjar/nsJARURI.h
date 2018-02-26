@@ -80,10 +80,6 @@ protected:
         eReplaceRef
     };
 
-    nsresult SetFileNameInternal(const nsACString& fileName);
-    nsresult SetFileBaseNameInternal(const nsACString& fileBaseName);
-    nsresult SetFileExtensionInternal(const nsACString& fileExtension);
-
     // Helper to share code between Equals methods.
     virtual nsresult EqualsInternal(nsIURI* other,
                                     RefHandlingEnum refHandlingMode,
@@ -103,6 +99,25 @@ protected:
     nsCOMPtr<nsIURL> mJAREntry;
     nsCString        mCharsetHint;
 
+private:
+    nsresult SetSpecInternal(const nsACString &input);
+    nsresult SetScheme(const nsACString &input);
+    nsresult SetUserPass(const nsACString &input);
+    nsresult SetUsername(const nsACString &input);
+    nsresult SetPassword(const nsACString &input);
+    nsresult SetHostPort(const nsACString &aValue);
+    nsresult SetHost(const nsACString &input);
+    nsresult SetPort(int32_t port);
+    nsresult SetPathQueryRef(const nsACString &input);
+    nsresult SetRef(const nsACString &input);
+    nsresult SetFilePath(const nsACString &input);
+    nsresult SetQuery(const nsACString &input);
+    nsresult SetQueryWithEncoding(const nsACString &input, const Encoding* encoding);
+
+    nsresult SetFileNameInternal(const nsACString& fileName);
+    nsresult SetFileBaseNameInternal(const nsACString& fileBaseName);
+    nsresult SetFileExtensionInternal(const nsACString& fileExtension);
+
 public:
     class Mutator final
         : public nsIURIMutator
@@ -120,6 +135,8 @@ public:
 
         friend class nsJARURI;
     };
+
+    friend BaseURIMutator<nsJARURI>;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsJARURI, NS_THIS_JARURI_IMPL_CID)
