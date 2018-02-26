@@ -9,6 +9,8 @@
 #include "nsIFileProtocolHandler.h"
 #include "nsWeakReference.h"
 
+class nsIURIMutator;
+
 class nsFileProtocolHandler : public nsIFileProtocolHandler
                             , public nsSupportsWeakReference
 {

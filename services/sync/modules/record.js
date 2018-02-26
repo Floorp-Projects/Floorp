@@ -641,7 +641,9 @@ Collection.prototype = {
       args.push("offset=" + encodeURIComponent(this._offset));
     }
 
-    this.uri.query = (args.length > 0) ? "?" + args.join("&") : "";
+    this.uri = this.uri.mutate()
+                       .setQuery((args.length > 0) ? "?" + args.join("&") : "")
+                       .finalize();
   },
 
   // get full items
