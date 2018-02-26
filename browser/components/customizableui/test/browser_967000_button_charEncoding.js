@@ -37,7 +37,7 @@ add_task(async function() {
   charEncodingButton.click();
   await subviewShownPromise;
 
-  ok(characterEncodingView.hasAttribute("current"), "The Character encoding panel is displayed");
+  ok(characterEncodingView.hasAttribute("visible"), "The Character encoding panel is displayed");
 
   let pinnedEncodings = document.getElementById("PanelUI-characterEncodingView-pinned");
   let charsetsList = document.getElementById("PanelUI-characterEncodingView-charsets");
