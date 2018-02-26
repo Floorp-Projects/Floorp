@@ -379,14 +379,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
     return this.__screenManager = Cc["@mozilla.org/gfx/screenmanager;1"]
                                     .getService(Ci.nsIScreenManager);
   }
-  /**
-   * @return {panelview} the currently visible subview OR the subview that is
-   *                     about to be shown whilst a 'ViewShowing' event is being
-   *                     dispatched.
-   */
-  get current() {
-    return this.node && this._currentSubView;
-  }
+
   get _currentSubView() {
     // Peek the top of the stack, but fall back to the main view if the list of
     // opened views is currently empty.
@@ -452,7 +445,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
         value: (...args) => this[method](...args)
       });
     });
-    ["current", "showingSubView"].forEach(property => {
+    ["showingSubView"].forEach(property => {
       Object.defineProperty(this.node, property, {
         enumerable: true,
         get: () => this[property]
