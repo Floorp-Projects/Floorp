@@ -928,6 +928,10 @@ var PanelMultiView = class extends this.AssociatedToNode {
     // Use an outline instead of a border so that the size is not affected.
     deepestNode.style.outline = "1px solid var(--panel-separator-color)";
 
+    // Now that all the elements are in place for the start of the transition,
+    // give the layout code a chance to set the initial values.
+    await window.promiseDocumentFlushed(() => {});
+
     // Now set the viewContainer dimensions to that of the new view, which
     // kicks of the height animation.
     this._viewContainer.style.height = viewRect.height + "px";
@@ -937,8 +941,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
     // We're setting the width property to prevent flickering during the
     // sliding animation with smaller views.
     viewNode.style.width = viewRect.width + "px";
-
-    await window.promiseDocumentFlushed(() => {});
 
     // Kick off the transition!
     details.phase = TRANSITION_PHASES.TRANSITION;
