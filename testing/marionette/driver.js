@@ -32,7 +32,7 @@ const {
   InvalidArgumentError,
   InvalidCookieDomainError,
   InvalidSelectorError,
-  NoAlertOpenError,
+  NoSuchAlertError,
   NoSuchFrameError,
   NoSuchWindowError,
   SessionNotCreatedError,
@@ -3162,7 +3162,7 @@ GeckoDriver.prototype.sendKeysToDialog = async function(cmd) {
 
 GeckoDriver.prototype._checkIfAlertIsPresent = function() {
   if (!this.dialog || !this.dialog.ui) {
-    throw new NoAlertOpenError("No modal dialog is currently open");
+    throw new NoSuchAlertError("No modal dialog is currently open");
   }
 };
 

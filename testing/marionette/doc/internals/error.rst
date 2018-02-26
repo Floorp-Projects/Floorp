@@ -19,7 +19,7 @@ error module
 .. js:autoclass:: InvalidSessionIDError
 .. js:autoclass:: JavaScriptError
 .. js:autoclass:: MoveTargetOutOfBoundsError
-.. js:autoclass:: NoAlertOpenError
+.. js:autoclass:: NoSuchAlertError
 .. js:autoclass:: NoSuchElementError
 .. js:autoclass:: NoSuchFrameError
 .. js:autoclass:: NoSuchWindowError
