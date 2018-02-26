@@ -375,9 +375,6 @@ class Bootstrapper(object):
             self.instance.state_dir = state_dir
             self.instance.ensure_stylo_packages(state_dir, checkout_root)
 
-            if 'mobile_android' in application:
-                self.instance.ensure_proguard_packages(state_dir, checkout_root)
-
         print(self.finished % name)
         if not (self.instance.which('rustc') and self.instance._parse_version('rustc')
                 >= MODERN_RUST_VERSION):
