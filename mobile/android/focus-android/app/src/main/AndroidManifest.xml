@@ -28,17 +28,7 @@
                 android:resource="@xml/provider_paths"/>
         </provider>
 
-        <activity android:name=".activity.MainActivity"
-            android:launchMode="singleTask"
-            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
-            android:windowSoftInputMode="adjustResize|stateAlwaysHidden"
-            android:label="@string/app_name">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-
+        <activity android:name=".activity.IntentReceiverActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -57,6 +47,18 @@
                 <data android:mimeType="text/plain"/>
                 <data android:mimeType="application/xhtml+xml"/>
             </intent-filter>
+        </activity>
+
+        <activity android:name=".activity.MainActivity"
+            android:launchMode="singleTask"
+            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
 
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
@@ -66,6 +68,16 @@
 
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
+
+        <activity android:name=".activity.CustomTabActivity"
+            android:launchMode="singleTask"
+            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden"
+            android:exported="false"
+            android:taskAffinity=""
+            android:persistableMode="persistNever"
+            android:autoRemoveFromRecents="false"
+            android:label="@string/app_name" />
 
         <activity android:name=".activity.TextActionActivity"
             android:label="@string/text_selection_search_action"
