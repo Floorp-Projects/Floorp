@@ -201,7 +201,7 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
 
             if (!types->hasType(TypeSet::AnyObjectType())) {
                 Register scratch = (payloadReg == scratch1) ? scratch2 : scratch1;
-                masm.guardObjectType(payloadReg, types, scratch, &failureStoreObject);
+                masm.guardObjectType(payloadReg, types, scratch, payloadReg, &failureStoreObject);
             }
 
             masm.storeUnboxedProperty(targetAddress, JSVAL_TYPE_OBJECT,
