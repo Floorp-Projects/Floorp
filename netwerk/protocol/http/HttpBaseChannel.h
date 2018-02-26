@@ -358,7 +358,7 @@ public: /* Necko internal use only... */
 
     static bool IsReferrerSchemeAllowed(nsIURI *aReferrer);
 
-    static void PropagateReferenceIfNeeded(nsIURI *aURI, nsIURI *aRedirectURI);
+    static void PropagateReferenceIfNeeded(nsIURI *aURI, nsCOMPtr<nsIURI>& aRedirectURI);
 
     // Return whether upon a redirect code of httpStatus for method, the
     // request method should be rewritten to GET.
