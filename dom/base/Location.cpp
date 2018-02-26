@@ -726,7 +726,7 @@ Location::SetProtocol(const nsAString& aProtocol,
   }
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
+  aRv = GetURI(getter_AddRefs(uri));
   if (NS_WARN_IF(aRv.Failed()) || !uri) {
     return;
   }
@@ -737,7 +737,9 @@ Location::SetProtocol(const nsAString& aProtocol,
   nsAString::const_iterator iter(start);
   Unused << FindCharInReadable(':', iter, end);
 
-  nsresult rv = uri->SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)));
+  nsresult rv = NS_MutateURI(uri)
+                  .SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)))
+                  .Finalize(uri);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // Oh, I wish nsStandardURL returned NS_ERROR_MALFORMED_URI for _all_ the
     // malformed cases, not just some of them!

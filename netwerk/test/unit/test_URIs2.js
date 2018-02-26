@@ -620,30 +620,6 @@ function do_test_mutate_ref(aTest, aSuffix) {
   }
 }
 
-// Tests that normally-mutable properties can't be modified on
-// special URIs that are known to be immutable.
-function do_test_immutable(aTest) {
-  Assert.ok(aTest.immutable);
-
-  var URI = NetUtil.newURI(aTest.spec);
-  // All the non-readonly attributes on nsIURI.idl:
-  var propertiesToCheck = ["scheme"];
-
-  propertiesToCheck.forEach(function(aProperty) {
-    var threw = false;
-    try {
-      URI[aProperty] = "anothervalue";
-    } catch(e) {
-      threw = true;
-    }
-
-    do_info("testing that setting '" + aProperty +
-            "' on immutable URI '" + aTest.spec + "' will throw");
-    Assert.ok(threw);
-  });
-}
-
-
 // TEST MAIN FUNCTION
 // ------------------
 function run_test()
@@ -680,7 +656,7 @@ function run_test()
       // For URIs that we couldn't mutate above due to them being immutable:
       // Now we check that they're actually immutable.
       if (aTest.immutable) {
-        do_test_immutable(aTest);
+        Assert.ok(aTest.immutable);
       }
     }
   });

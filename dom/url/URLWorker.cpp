@@ -821,7 +821,9 @@ URLWorker::SetProtocol(const nsAString& aProtocol, ErrorResult& aRv)
   // the scheme is http or https.
   if (mStdURL &&
       (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https"))) {
-    mStdURL->SetScheme(scheme);
+    Unused << NS_MutateURI(mStdURL)
+                .SetScheme(scheme)
+                .Finalize(mStdURL);
     return;
   }
 
