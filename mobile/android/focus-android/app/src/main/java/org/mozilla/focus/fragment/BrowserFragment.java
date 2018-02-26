@@ -399,6 +399,20 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                     TelemetryWrapper.customTabActionButtonEvent();
                 }
             });
+        } else {
+            // If the third-party app doesn't provide an action button configuration then we are
+            // going to disable a "Share" button in the toolbar instead.
+
+            final ImageButton shareButton = view.findViewById(R.id.customtab_actionbutton);
+            shareButton.setVisibility(View.VISIBLE);
+            shareButton.setImageDrawable(DrawableUtils.loadAndTintDrawable(getContext(), R.drawable.ic_share, textColor));
+            shareButton.setContentDescription(getString(R.string.menu_share));
+            shareButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    shareCurrentUrl();
+                }
+            });
         }
 
         // We need to tint some icons.. We already tinted the close button above. Let's tint our other icons too.
@@ -760,6 +774,28 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         SessionManager.getInstance().removeCurrentSession();
     }
 
+    private void shareCurrentUrl() {
+        final String url = getUrl();
+
+        final Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, url);
+
+        // Use title from webView if it's content matches the url
+        final IWebView webView = getWebView();
+        if (webView != null) {
+            final String contentUrl = webView.getUrl();
+            if (contentUrl != null && contentUrl.equals(url)) {
+                final String contentTitle = webView.getTitle();
+                shareIntent.putExtra(Intent.EXTRA_SUBJECT, contentTitle);
+            }
+        }
+
+        startActivity(Intent.createChooser(shareIntent, getString(R.string.share_dialog_title)));
+
+        TelemetryWrapper.shareEvent();
+    }
+
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
@@ -825,22 +861,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
 
             case R.id.share: {
-                final String url = getUrl();
-                final Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                shareIntent.setType("text/plain");
-                shareIntent.putExtra(Intent.EXTRA_TEXT, url);
-                // Use title from webView if it's content matches the url
-                final IWebView webView = getWebView();
-                if (webView != null) {
-                    final String contentUrl = webView.getUrl();
-                    if (contentUrl != null && contentUrl.equals(url)) {
-                        final String contentTitle = webView.getTitle();
-                        shareIntent.putExtra(Intent.EXTRA_SUBJECT, contentTitle);
-                    }
-                }
-                startActivity(Intent.createChooser(shareIntent, getString(R.string.share_dialog_title)));
-
-                TelemetryWrapper.shareEvent();
+                shareCurrentUrl();
                 break;
             }
 
