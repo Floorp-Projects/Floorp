@@ -29,6 +29,7 @@
 #include "nsDOMString.h"
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
+#include "nsIURIMutator.h"
 #include "nsIIOService.h"
 #include "nsNetUtil.h"
 #include "nsIPrivateBrowsingChannel.h"
@@ -926,24 +927,17 @@ nsHTMLDocument::CreateInheritingURIForHost(const nsACString& aHostString)
     return nullptr;
   }
 
-  nsCOMPtr<nsIURI> newURI;
-  nsresult rv = uri->Clone(getter_AddRefs(newURI));
+  nsresult rv;
+  rv = NS_MutateURI(uri)
+         .SetUserPass(EmptyCString())
+         .SetPort(-1) // we want to reset the port number if needed.
+         .SetHostPort(aHostString)
+         .Finalize(uri);
   if (NS_FAILED(rv)) {
     return nullptr;
   }
 
-  rv = newURI->SetUserPass(EmptyCString());
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  // We use SetHostAndPort because we want to reset the port number if needed.
-  rv = newURI->SetHostAndPort(aHostString);
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  return newURI.forget();
+  return uri.forget();
 }
 
 already_AddRefed<nsIURI>
