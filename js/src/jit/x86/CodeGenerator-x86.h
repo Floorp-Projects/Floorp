@@ -25,7 +25,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
 
   protected:
     ValueOperand ToValue(LInstruction* ins, size_t pos);
-    ValueOperand ToOutValue(LInstruction* ins);
     ValueOperand ToTempValue(LInstruction* ins, size_t pos);
 
     template <typename T> void emitWasmLoad(T* ins);

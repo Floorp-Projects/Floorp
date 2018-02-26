@@ -1592,7 +1592,7 @@ CodeGeneratorMIPSShared::visitCopySignD(LCopySignD* ins)
 void
 CodeGeneratorMIPSShared::visitValue(LValue* value)
 {
-    const ValueOperand out = GetValueOutput(value);
+    const ValueOperand out = ToOutValue(value);
 
     masm.moveValue(value->value(), out);
 }

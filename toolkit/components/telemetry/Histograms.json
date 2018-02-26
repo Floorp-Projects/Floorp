@@ -2398,7 +2398,7 @@
   },
   "HTTP_AUTH_DIALOG_STATS_3": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "61",
+    "expires_in_version": "65",
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "bug_numbers": [1357835],
     "kind": "enumerated",
@@ -2427,7 +2427,7 @@
   },
   "TCP_FAST_OPEN_3": {
     "record_in_processes": ["main"],
-    "expires_in_version": "61",
+    "expires_in_version": "65",
     "kind": "enumerated",
     "n_values": 32,
     "description": "When a http connection is closed, track whether or not TCP Fast Open was used: 0=TFO_NOT_SET, 1=TFO_UNKNOWN, 2=TFO_DISABLED, 3=TFO_DISABLED_CONNECT, 4=TFO_NOT_TRIED, 5=TFO_TRIED, 6=TFO_DATA_SENT, 7=TFO_DATA_COOKIE_NOT_ACCEPTED, 8=TFO_FAILED_CONNECTION_REFUSED, 9=TFO_FAILED_NET_TIMEOUT, 10=TFO_FAILED_UNKNOW_ERROR, 11=TFO_FAILED_BACKUP_CONNECTION_TFO_NOT_TRIED, 12=TFO_FAILED_BACKUP_CONNECTION_TFO_TRIED, 13=TFO_FAILED_BACKUP_CONNECTION_TFO_DATA_SENT, 14=TFO_FAILED_BACKUP_CONNECTION_TFO_DATA_COOKIE_NOT_ACCEPTED, 15=TFO_FAILED_CONNECTION_REFUSED_NO_TFO_FAILED_TOO, 16=TFO_FAILED_NET_TIMEOUT__NO_TFO_FAILED_TOO, 17=TFO_FAILED_UNKNOW_ERROR_NO_TFO_FAILED_TOO, 18=TFO_FAILED_BACKUP_CONNECTION_NO_TFO_FAILED_TOO, 19=TFO_BACKUP_CONN. Please look at netwerk/base/TCPFastOpenLayer.h for more info",
@@ -2436,7 +2436,7 @@
   },
   "TCP_FAST_OPEN_STATUS": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "61",
+    "expires_in_version": "65",
     "kind": "enumerated",
     "n_values": 8,
     "description": "TCP Fast Open was: 0=enabled during the session, 1=not available or disabled in the os, 2=disabled by the pref, 3=disabled based on the too many connection failures, 4=disable based on too many http transaction stalls after a connection was idle.",

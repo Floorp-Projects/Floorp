@@ -19,10 +19,6 @@ namespace js {
 JSObject*
 InitRegExpClass(JSContext* cx, HandleObject obj);
 
-// Whether RegExp statics should be updated with the input and results of a
-// regular expression execution.
-enum RegExpStaticsUpdate { UpdateRegExpStatics, DontUpdateRegExpStatics };
-
 /*
  * Legacy behavior of ExecuteRegExp(), which is baked into the JSAPI.
  *
@@ -70,22 +66,6 @@ intrinsic_GetStringDataProperty(JSContext* cx, unsigned argc, Value* vp);
 /*
  * The following functions are for use by self-hosted code.
  */
-
-/*
- * Behaves like regexp.exec(string), but doesn't set RegExp statics.
- *
- * Usage: match = regexp_exec_no_statics(regexp, string)
- */
-extern MOZ_MUST_USE bool
-regexp_exec_no_statics(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Behaves like regexp.test(string), but doesn't set RegExp statics.
- *
- * Usage: does_match = regexp_test_no_statics(regexp, string)
- */
-extern MOZ_MUST_USE bool
-regexp_test_no_statics(JSContext* cx, unsigned argc, Value* vp);
 
 /*
  * Behaves like RegExp(source, flags).

@@ -870,7 +870,7 @@ void
 MacroAssemblerMIPS::ma_ls(FloatRegister ft, Address address)
 {
     if (Imm16::IsInSignedRange(address.offset)) {
-        as_ls(ft, address.base, address.offset);
+        as_lwc1(ft, address.base, address.offset);
     } else {
         MOZ_ASSERT(address.base != ScratchRegister);
         ma_li(ScratchRegister, Imm32(address.offset));
@@ -878,7 +878,7 @@ MacroAssemblerMIPS::ma_ls(FloatRegister ft, Address address)
             as_gslsx(ft, address.base, ScratchRegister, 0);
         } else {
             as_addu(ScratchRegister, address.base, ScratchRegister);
-            as_ls(ft, ScratchRegister, 0);
+            as_lwc1(ft, ScratchRegister, 0);
         }
     }
 }
@@ -886,37 +886,34 @@ MacroAssemblerMIPS::ma_ls(FloatRegister ft, Address address)
 void
 MacroAssemblerMIPS::ma_ld(FloatRegister ft, Address address)
 {
-    // Use single precision load instructions so we don't have to worry about
-    // alignment.
-
-    int32_t off = address.offset + PAYLOAD_OFFSET;
-    int32_t off2 = address.offset + TAG_OFFSET;
-    if (Imm16::IsInSignedRange(off) && Imm16::IsInSignedRange(off2)) {
-        as_ls(ft, address.base, off);
-        as_ls(getOddPair(ft), address.base, off2);
+    if (Imm16::IsInSignedRange(address.offset)) {
+        as_ldc1(ft, address.base, address.offset);
     } else {
         MOZ_ASSERT(address.base != ScratchRegister);
-        ma_li(ScratchRegister, Imm32(off));
-        as_addu(ScratchRegister, address.base, ScratchRegister);
-        as_ls(ft, ScratchRegister, PAYLOAD_OFFSET);
-        as_ls(getOddPair(ft), ScratchRegister, TAG_OFFSET);
+        ma_li(ScratchRegister, Imm32(address.offset));
+        if (isLoongson()) {
+            as_gsldx(ft, address.base, ScratchRegister, 0);
+        } else {
+            as_addu(ScratchRegister, address.base, ScratchRegister);
+            as_ldc1(ft, ScratchRegister, 0);
+        }
     }
 }
 
 void
 MacroAssemblerMIPS::ma_sd(FloatRegister ft, Address address)
 {
-    int32_t off = address.offset + PAYLOAD_OFFSET;
-    int32_t off2 = address.offset + TAG_OFFSET;
-    if (Imm16::IsInSignedRange(off) && Imm16::IsInSignedRange(off2)) {
-        as_ss(ft, address.base, off);
-        as_ss(getOddPair(ft), address.base, off2);
+    if (Imm16::IsInSignedRange(address.offset)) {
+        as_sdc1(ft, address.base, address.offset);
     } else {
         MOZ_ASSERT(address.base != ScratchRegister);
-        ma_li(ScratchRegister, Imm32(off));
-        as_addu(ScratchRegister, address.base, ScratchRegister);
-        as_ss(ft, ScratchRegister, PAYLOAD_OFFSET);
-        as_ss(getOddPair(ft), ScratchRegister, TAG_OFFSET);
+        ma_li(ScratchRegister, Imm32(address.offset));
+        if (isLoongson()) {
+            as_gssdx(ft, address.base, ScratchRegister, 0);
+        } else {
+            as_addu(ScratchRegister, address.base, ScratchRegister);
+            as_sdc1(ft, ScratchRegister, 0);
+        }
     }
 }
 
@@ -924,7 +921,7 @@ void
 MacroAssemblerMIPS::ma_ss(FloatRegister ft, Address address)
 {
     if (Imm16::IsInSignedRange(address.offset)) {
-        as_ss(ft, address.base, address.offset);
+        as_swc1(ft, address.base, address.offset);
     } else {
         MOZ_ASSERT(address.base != ScratchRegister);
         ma_li(ScratchRegister, Imm32(address.offset));
@@ -932,23 +929,51 @@ MacroAssemblerMIPS::ma_ss(FloatRegister ft, Address address)
             as_gsssx(ft, address.base, ScratchRegister, 0);
         } else {
             as_addu(ScratchRegister, address.base, ScratchRegister);
-            as_ss(ft, ScratchRegister, 0);
+            as_swc1(ft, ScratchRegister, 0);
         }
     }
 }
 
 void
-MacroAssemblerMIPS::ma_pop(FloatRegister fs)
+MacroAssemblerMIPS::ma_ldc1WordAligned(FloatRegister ft, Register base, int32_t off)
 {
-    ma_ld(fs.doubleOverlay(), Address(StackPointer, 0));
-    as_addiu(StackPointer, StackPointer, sizeof(double));
+    MOZ_ASSERT(Imm16::IsInSignedRange(off + PAYLOAD_OFFSET) &&
+               Imm16::IsInSignedRange(off + TAG_OFFSET));
+
+    as_lwc1(ft, base, off + PAYLOAD_OFFSET);
+    as_lwc1(getOddPair(ft), base, off + TAG_OFFSET);
 }
 
 void
-MacroAssemblerMIPS::ma_push(FloatRegister fs)
+MacroAssemblerMIPS::ma_sdc1WordAligned(FloatRegister ft, Register base, int32_t off)
 {
-    as_addiu(StackPointer, StackPointer, -sizeof(double));
-    ma_sd(fs.doubleOverlay(), Address(StackPointer, 0));
+    MOZ_ASSERT(Imm16::IsInSignedRange(off + PAYLOAD_OFFSET) &&
+               Imm16::IsInSignedRange(off + TAG_OFFSET));
+
+    as_swc1(ft, base, off + PAYLOAD_OFFSET);
+    as_swc1(getOddPair(ft), base, off + TAG_OFFSET);
+}
+
+void
+MacroAssemblerMIPS::ma_pop(FloatRegister f)
+{
+    if (f.isDouble())
+        ma_ldc1WordAligned(f, StackPointer, 0);
+    else
+        as_lwc1(f, StackPointer, 0);
+
+    as_addiu(StackPointer, StackPointer, f.size());
+}
+
+void
+MacroAssemblerMIPS::ma_push(FloatRegister f)
+{
+    as_addiu(StackPointer, StackPointer, -f.size());
+
+    if(f.isDouble())
+        ma_sdc1WordAligned(f, StackPointer, 0);
+    else
+        as_swc1(f, StackPointer, 0);
 }
 
 bool
@@ -1111,19 +1136,6 @@ MacroAssemblerMIPSCompat::loadPrivate(const Address& address, Register dest)
 }
 
 void
-MacroAssemblerMIPSCompat::loadDouble(const Address& address, FloatRegister dest)
-{
-    ma_ld(dest, address);
-}
-
-void
-MacroAssemblerMIPSCompat::loadDouble(const BaseIndex& src, FloatRegister dest)
-{
-    computeScaledAddress(src, SecondScratchReg);
-    ma_ld(dest, Address(SecondScratchReg, src.offset));
-}
-
-void
 MacroAssemblerMIPSCompat::loadUnalignedDouble(const wasm::MemoryAccessDesc& access,
                                               const BaseIndex& src, Register temp, FloatRegister dest)
 {
@@ -1153,33 +1165,6 @@ MacroAssemblerMIPSCompat::loadUnalignedDouble(const wasm::MemoryAccessDesc& acce
         append(access, load.getOffset(), framePushed);
         moveToDoubleHi(temp, dest);
     }
-}
-
-void
-MacroAssemblerMIPSCompat::loadFloatAsDouble(const Address& address, FloatRegister dest)
-{
-    ma_ls(dest, address);
-    as_cvtds(dest, dest);
-}
-
-void
-MacroAssemblerMIPSCompat::loadFloatAsDouble(const BaseIndex& src, FloatRegister dest)
-{
-    loadFloat32(src, dest);
-    as_cvtds(dest, dest);
-}
-
-void
-MacroAssemblerMIPSCompat::loadFloat32(const Address& address, FloatRegister dest)
-{
-    ma_ls(dest, address);
-}
-
-void
-MacroAssemblerMIPSCompat::loadFloat32(const BaseIndex& src, FloatRegister dest)
-{
-    computeScaledAddress(src, SecondScratchReg);
-    ma_ls(dest, Address(SecondScratchReg, src.offset));
 }
 
 void
@@ -2190,7 +2175,7 @@ MacroAssembler::PushRegsInMask(LiveRegisterSet set)
         diffF -= sizeof(double);
 
         for (FloatRegisterForwardIterator iter(set.fpus().reduceSetForPush()); iter.more(); ++iter) {
-            as_sd(*iter, SecondScratchReg, -diffF);
+            as_sdc1(*iter, SecondScratchReg, -diffF);
             diffF -= sizeof(double);
         }
 
@@ -2216,7 +2201,7 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
         LiveFloatRegisterSet fpignore(ignore.fpus().reduceSetForPush());
         for (FloatRegisterForwardIterator iter(set.fpus().reduceSetForPush()); iter.more(); ++iter) {
             if (!ignore.has(*iter))
-                as_ld(*iter, SecondScratchReg, -diffF);
+                as_ldc1(*iter, SecondScratchReg, -diffF);
             diffF -= sizeof(double);
         }
         freeStack(reservedF);
@@ -2256,7 +2241,7 @@ MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest, Register scra
         diffF -= sizeof(double);
 
         for (FloatRegisterForwardIterator iter(set.fpus().reduceSetForPush()); iter.more(); ++iter) {
-            as_sd(*iter, scratch, -diffF);
+            as_sdc1(*iter, scratch, -diffF);
             diffF -= sizeof(double);
         }
         MOZ_ASSERT(diffF == 0);

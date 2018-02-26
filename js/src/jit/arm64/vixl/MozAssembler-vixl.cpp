@@ -389,12 +389,12 @@ void Assembler::ldr(Instruction* at, const CPURegister& rt, int imm19) {
 
 
 BufferOffset Assembler::hint(SystemHint code) {
-  return Emit(HINT | ImmHint(code) | Rt(xzr));
+  return Emit(HINT | ImmHint(code));
 }
 
 
 void Assembler::hint(Instruction* at, SystemHint code) {
-  Emit(at, HINT | ImmHint(code) | Rt(xzr));
+  Emit(at, HINT | ImmHint(code));
 }
 
 

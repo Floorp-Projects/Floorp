@@ -345,12 +345,17 @@ struct AutoGenericRegisterScope : public RegisterType
 
 #ifdef DEBUG
     MacroAssembler& masm_;
+    bool released_;
     explicit AutoGenericRegisterScope(MacroAssembler& masm, RegisterType reg);
     ~AutoGenericRegisterScope();
+    void release();
+    void reacquire();
 #else
     constexpr explicit AutoGenericRegisterScope(MacroAssembler& masm, RegisterType reg)
       : RegisterType(reg)
     { }
+    void release() {}
+    void reacquire() {}
 #endif
 };
 

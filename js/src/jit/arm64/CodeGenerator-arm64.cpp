@@ -402,13 +402,6 @@ CodeGeneratorARM64::ToValue(LInstruction* ins, size_t pos)
 }
 
 ValueOperand
-CodeGeneratorARM64::ToOutValue(LInstruction* ins)
-{
-    Register payloadReg = ToRegister(ins->getDef(0));
-    return ValueOperand(payloadReg);
-}
-
-ValueOperand
 CodeGeneratorARM64::ToTempValue(LInstruction* ins, size_t pos)
 {
     MOZ_CRASH("CodeGeneratorARM64::ToTempValue");
@@ -444,8 +437,8 @@ CodeGeneratorARM64::visitFloat32(LFloat32* ins)
     MOZ_CRASH("visitFloat32");
 }
 
-Register
-CodeGeneratorARM64::splitTagForTest(const ValueOperand& value)
+void
+CodeGeneratorARM64::splitTagForTest(const ValueOperand& value, ScratchTagScope& tag)
 {
     MOZ_CRASH("splitTagForTest");
 }
