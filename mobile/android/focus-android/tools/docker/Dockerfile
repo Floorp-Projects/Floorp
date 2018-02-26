@@ -38,16 +38,18 @@ RUN cd /opt && rm -f android-sdk.tgz
 
 ENV ANDROID_SDK_HOME /opt/android-sdk-linux
 ENV ANDROID_HOME /opt/android-sdk-linux
-ENV PATH ${PATH}:${ANDROID_SDK_HOME}/tools:${ANDROID_SDK_HOME}/platform-tools:/opt/tools:${ANDROID_SDK_HOME}/build-tools/26.0.1
+ENV PATH ${PATH}:${ANDROID_SDK_HOME}/tools:${ANDROID_SDK_HOME}/platform-tools:/opt/tools:${ANDROID_SDK_HOME}/build-tools/27.0.3
 
 # Platform tools
 RUN echo y | android update sdk --no-ui --all --filter platform-tools | grep 'package installed'
 
 # Android 8.0 / SDK 26
 RUN echo y | android update sdk --no-ui --all --filter android-26 | grep 'package installed'
+RUN echo y | android update sdk --no-ui --all --filter android-27 | grep 'package installed'
 
 # Build tools 26.0.1
 RUN echo y | android update sdk --no-ui --all --filter build-tools-26.0.1 | grep 'package installed'
+RUN echo y | android update sdk --no-ui --all --filter build-tools-27.0.3 | grep 'package installed'
 
 # Extras
 RUN echo y | android update sdk --no-ui --all --filter extra-android-m2repository | grep 'package installed'
