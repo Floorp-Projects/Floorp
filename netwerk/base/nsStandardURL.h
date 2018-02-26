@@ -184,6 +184,7 @@ private:
     nsresult Init(uint32_t urlType, int32_t defaultPort, const nsACString &spec,
                   const char *charset, nsIURI *baseURI);
     nsresult SetDefaultPort(int32_t aNewDefaultPort);
+    nsresult SetFile(nsIFile *file);
 
     nsresult SetFileNameInternal(const nsACString &input);
     nsresult SetFileBaseNameInternal(const nsACString &input);
