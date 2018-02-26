@@ -1147,7 +1147,12 @@ nsFtpState::SetContentType()
         nsAutoCString filePath;
         if(NS_SUCCEEDED(url->GetFilePath(filePath))) {
             filePath.Append('/');
-            url->SetFilePath(filePath);
+            nsresult rv = NS_MutateURI(url)
+                            .SetFilePath(filePath)
+                            .Finalize(url);
+            if (NS_SUCCEEDED(rv)) {
+                mChannel->UpdateURI(url);
+            }
         }
     }
     return mChannel->SetContentType(
