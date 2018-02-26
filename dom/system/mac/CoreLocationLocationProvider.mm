@@ -12,6 +12,7 @@
 #include "CoreLocationLocationProvider.h"
 #include "nsCocoaFeatures.h"
 #include "prtime.h"
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/PositionErrorBinding.h"
 #include "MLSFallback.h"
@@ -92,14 +93,36 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTe
 
   CLLocation* location = [aLocations objectAtIndex:0];
 
+  double altitude;
+  double altitudeAccuracy;
+
+  // A negative verticalAccuracy indicates that the altitude value is invalid.
+  if (location.verticalAccuracy >= 0) {
+    altitude = location.altitude;
+    altitudeAccuracy = location.verticalAccuracy;
+  } else {
+    altitude = UnspecifiedNaN<double>();
+    altitudeAccuracy = UnspecifiedNaN<double>();
+  }
+
+  double speed = location.speed >= 0
+               ? location.speed
+               : UnspecifiedNaN<double>();
+
+  double heading = location.course >= 0
+                 ? location.course
+                 : UnspecifiedNaN<double>();
+
+  // nsGeoPositionCoords will convert NaNs to null for optional properties of
+  // the JavaScript Coordinates object.
   nsCOMPtr<nsIDOMGeoPosition> geoPosition =
     new nsGeoPosition(location.coordinate.latitude,
                       location.coordinate.longitude,
-                      location.altitude,
+                      altitude,
                       location.horizontalAccuracy,
-                      location.verticalAccuracy,
-                      location.course,
-                      location.speed,
+                      altitudeAccuracy,
+                      heading,
+                      speed,
                       PR_Now() / PR_USEC_PER_MSEC);
 
   mProvider->Update(geoPosition);
