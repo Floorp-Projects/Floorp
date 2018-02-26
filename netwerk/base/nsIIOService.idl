@@ -196,7 +196,7 @@ interface nsIIOService : nsISupports
      * is provided purely as an optimization.
      *
      * @param aSpec the URL string to parse
-     * @return URL scheme
+     * @return URL scheme, lowercase
      *
      * @throws NS_ERROR_MALFORMED_URI if URL string is not of the right form.
      */

@@ -57,7 +57,7 @@ nsViewSourceChannel::Init(nsIURI* uri)
       return rv;
 
     // prevent viewing source of javascript URIs (see bug 204779)
-    if (scheme.LowerCaseEqualsLiteral("javascript")) {
+    if (scheme.EqualsLiteral("javascript")) {
       NS_WARNING("blocking view-source:javascript:");
       return NS_ERROR_INVALID_ARG;
     }
