@@ -1043,7 +1043,9 @@ URLWorker::SetPort(const nsAString& aPort, ErrorResult& aRv)
       }
     }
 
-    mStdURL->SetPort(port);
+    Unused << NS_MutateURI(mStdURL)
+                .SetPort(port)
+                .Finalize(mStdURL);
     return;
   }
 
