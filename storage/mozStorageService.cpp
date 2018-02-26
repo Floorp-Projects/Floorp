@@ -297,17 +297,12 @@ Service::unregisterConnection(Connection *aConnection)
   MOZ_ASSERT(forgettingRef,
              "Attempt to unregister unknown storage connection!");
 
-  // Ensure the connection is released on its opening thread.  We explicitly use
-  // aAlwaysDispatch=false because at the time of writing this, LocalStorage's
-  // StorageDBThread uses a hand-rolled PRThread implementation that cannot
-  // handle us dispatching events at it during shutdown.  However, it is
-  // arguably also desirable for callers to not be aware of our connection
-  // tracking mechanism.  And by synchronously dropping the reference (when
-  // on the correct thread), this avoids surprises for the caller and weird
-  // shutdown edge cases.
-  nsCOMPtr<nsIThread> thread = forgettingRef->threadOpenedOn;
-  NS_ProxyRelease(
-    "storage::Service::mConnections", thread, forgettingRef.forget(), false);
+  // Do not proxy the release anywhere, just let this reference drop here.  (We
+  // previously did proxy the release, but that was because we invoked Close()
+  // in the destructor and Close() likes to complain if it's not invoked on the
+  // opener thread, so it was essential that the last reference be dropped on
+  // the opener thread.  We now enqueue Close() inside our caller, Release(), so
+  // it doesn't actually matter what thread our reference drops on.)
 }
 
 void
