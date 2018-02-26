@@ -14,6 +14,7 @@
 #include "nsCDefaultURIFixup.h"
 #include "nsIURIFixup.h"
 #include "nsIURL.h"
+#include "nsIURIMutator.h"
 #include "nsIJARURI.h"
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
@@ -361,12 +362,14 @@ Location::SetHost(const nsAString& aHost,
   }
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
+  aRv = GetURI(getter_AddRefs(uri));
   if (NS_WARN_IF(aRv.Failed()) || !uri) {
     return;
   }
 
-  aRv = uri->SetHostPort(NS_ConvertUTF16toUTF8(aHost));
+  aRv = NS_MutateURI(uri)
+          .SetHostPort(NS_ConvertUTF16toUTF8(aHost))
+          .Finalize(uri);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

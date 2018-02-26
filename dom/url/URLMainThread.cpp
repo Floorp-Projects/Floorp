@@ -8,9 +8,11 @@
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Blob.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsIURL.h"
+#include "nsIURIMutator.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
@@ -314,7 +316,9 @@ URLMainThread::GetHost(nsAString& aHost, ErrorResult& aRv) const
 void
 URLMainThread::SetHost(const nsAString& aHost, ErrorResult& aRv)
 {
-  mURI->SetHostPort(NS_ConvertUTF16toUTF8(aHost));
+  Unused << NS_MutateURI(mURI)
+              .SetHostPort(NS_ConvertUTF16toUTF8(aHost))
+              .Finalize(mURI);
 }
 
 void

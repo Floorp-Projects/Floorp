@@ -173,13 +173,13 @@ add_test(function test_ipv6()
   Assert.equal(url.host, "2001::1");
 
   url = stringToURL("http://example.com");
-  url.hostPort = "[2001::1]:30";
+  url = url.mutate().setHostPort("[2001::1]:30").finalize();
   Assert.equal(url.host, "2001::1");
   Assert.equal(url.port, 30);
   Assert.equal(url.hostPort, "[2001::1]:30");
 
   url = stringToURL("http://example.com");
-  url.hostPort = "2001:1";
+  url = url.mutate().setHostPort("2001:1").finalize();
   Assert.equal(url.host, "0.0.7.209");
   Assert.equal(url.port, 1);
   Assert.equal(url.hostPort, "0.0.7.209:1");
@@ -198,18 +198,18 @@ add_test(function test_ipv6_fail()
   Assert.throws(() => { url.host = "[]"; }, "empty IPv6 address");
   Assert.throws(() => { url.host = "[hello]"; }, "bad IPv6 address");
   Assert.throws(() => { url.host = "[192.168.1.1]"; }, "bad IPv6 address");
-  Assert.throws(() => { url.hostPort = "2001::1"; }, "missing brackets");
-  Assert.throws(() => { url.hostPort = "[2001::1]30"; }, "missing : after IP");
-  Assert.throws(() => { url.hostPort = "[2001:1]"; }, "bad IPv6 address");
-  Assert.throws(() => { url.hostPort = "[2001:1]10"; }, "bad IPv6 address");
-  Assert.throws(() => { url.hostPort = "[2001:1]10:20"; }, "bad IPv6 address");
-  Assert.throws(() => { url.hostPort = "[2001:1]:10:20"; }, "bad IPv6 address");
-  Assert.throws(() => { url.hostPort = "[2001:1"; }, "bad IPv6 address");
-  Assert.throws(() => { url.hostPort = "2001]:1"; }, "bad IPv6 address");
-  Assert.throws(() => { url.hostPort = "2001:1]"; }, "bad IPv6 address");
-  Assert.throws(() => { url.hostPort = ""; }, "Empty hostPort should fail");
-  Assert.throws(() => { url.hostPort = "[2001::1]:"; }, "missing port number");
-  Assert.throws(() => { url.hostPort = "[2001::1]:bad"; }, "bad port number");
+  Assert.throws(() => { url = url.mutate().setHostPort("2001::1").finalize(); }, "missing brackets");
+  Assert.throws(() => { url = url.mutate().setHostPort("[2001::1]30").finalize(); }, "missing : after IP");
+  Assert.throws(() => { url = url.mutate().setHostPort("[2001:1]").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHostPort("[2001:1]10").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHostPort("[2001:1]10:20").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHostPort("[2001:1]:10:20").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHostPort("[2001:1").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHostPort("2001]:1").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHostPort("2001:1]").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHostPort("").finalize(); }, "Empty hostPort should fail");
+  Assert.throws(() => { url = url.mutate().setHostPort("[2001::1]:").finalize(); }, "missing port number");
+  Assert.throws(() => { url = url.mutate().setHostPort("[2001::1]:bad").finalize(); }, "bad port number");
   run_next_test();
 });
 
@@ -302,7 +302,7 @@ add_test(function test_hugeStringThrows()
 
   let hugeString = new Array(maxLen + 1).fill("a").join("");
   let properties = ["scheme", "userPass", "username",
-                    "password", "hostPort", "host", "pathQueryRef", "ref",
+                    "password", "host", "pathQueryRef", "ref",
                     "query", "filePath"];
   for (let prop of properties) {
     Assert.throws(() => url[prop] = hugeString,
@@ -310,11 +310,9 @@ add_test(function test_hugeStringThrows()
                   `Passing a huge string to "${prop}" should throw`);
   }
 
-  Assert.throws(() => { url = url.mutate().setSpec(hugeString).finalize(); },
-                /NS_ERROR_MALFORMED_URI/,
-                "Passing a huge string to setSpec should throw");
-
   let setters = [
+    { method: "setSpec", qi: Ci.nsIURIMutator },
+    { method: "setHostPort", qi: Ci.nsIURIMutator },
     { method: "setFileName", qi: Ci.nsIURLMutator },
     { method: "setFileExtension", qi: Ci.nsIURLMutator },
     { method: "setFileBaseName", qi: Ci.nsIURLMutator },
