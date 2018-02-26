@@ -13,6 +13,7 @@ toolkit.jar:
     content/extensions/ext-contextualIdentities.js
     content/extensions/ext-clipboard.js
     content/extensions/ext-cookies.js
+    content/extensions/ext-dns.js
     content/extensions/ext-downloads.js
     content/extensions/ext-extension.js
     content/extensions/ext-i18n.js
