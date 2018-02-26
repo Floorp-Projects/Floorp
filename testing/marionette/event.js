@@ -30,9 +30,6 @@ function getDOMWindowUtils(win) {
       .getInterface(Ci.nsIDOMWindowUtils);
 }
 
-/** @namespace */
-this.event = {};
-
 event.MouseEvents = {
   click: 0,
   dblclick: 1,
