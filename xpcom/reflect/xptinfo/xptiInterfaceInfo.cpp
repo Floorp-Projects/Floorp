@@ -20,18 +20,14 @@ xptiInterfaceEntry::Create(const char* aName,
                            XPTInterfaceDescriptor* aDescriptor,
                            xptiTypelibGuts* aTypelib)
 {
-    int namelen = strlen(aName);
-    void* place =
-        XPT_CALLOC8(gXPTIStructArena, sizeof(xptiInterfaceEntry) + namelen);
+    void* place = XPT_CALLOC8(gXPTIStructArena, sizeof(xptiInterfaceEntry));
     if (!place) {
         return nullptr;
     }
-    return new (place) xptiInterfaceEntry(aName, namelen, aIID, aDescriptor,
-                                          aTypelib);
+    return new (place) xptiInterfaceEntry(aName, aIID, aDescriptor, aTypelib);
 }
 
 xptiInterfaceEntry::xptiInterfaceEntry(const char* aName,
-                                       size_t aNameLength,
                                        const nsID& aIID,
                                        XPTInterfaceDescriptor* aDescriptor,
                                        xptiTypelibGuts* aTypelib)
@@ -43,8 +39,8 @@ xptiInterfaceEntry::xptiInterfaceEntry(const char* aName,
     , mMethodBaseIndex(0)
     , mConstantBaseIndex(0)
     , mFlags(0)
+    , mName(aName)
 {
-    memcpy(mName, aName, aNameLength);
     SetResolvedState(PARTIALLY_RESOLVED);
 }
 

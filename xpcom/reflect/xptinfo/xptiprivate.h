@@ -267,7 +267,6 @@ public:
 
 private:
     xptiInterfaceEntry(const char* aName,
-                       size_t aNameLength,
                        const nsID& aIID,
                        XPTInterfaceDescriptor* aDescriptor,
                        xptiTypelibGuts* aTypelib);
@@ -320,7 +319,7 @@ private:
 
     xptiInfoFlags           mFlags;
 
-    char                    mName[1];     // Always last. Sized to fit.
+    const char*             mName;
 };
 
 class xptiInterfaceInfo final : public nsIInterfaceInfo
