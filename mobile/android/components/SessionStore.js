@@ -1231,10 +1231,12 @@ SessionStore.prototype = {
     }
 
     try {
-      let currentURI = aWindow.BrowserApp.selectedBrowser.currentURI.clone();
+      let currentURI = aWindow.BrowserApp.selectedBrowser.currentURI;
       // if the current URI contains a username/password, remove it
       try {
-        currentURI.userPass = "";
+        currentURI = currentURI.mutate()
+                               .setUserPass("")
+                               .finalize();
       } catch (ex) { } // ignore failures on about: URIs
 
       Services.appinfo.annotateCrashReport("URL", currentURI.spec);

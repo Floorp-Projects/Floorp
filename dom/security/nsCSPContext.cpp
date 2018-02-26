@@ -30,6 +30,7 @@
 #include "nsIStringStream.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIUploadChannel.h"
+#include "nsIURIMutator.h"
 #include "nsIScriptError.h"
 #include "nsIWebNavigation.h"
 #include "nsMimeTypes.h"
@@ -1455,12 +1456,17 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
 
     if (currentURI) {
       // delete the userpass from the URI.
-      rv = currentURI->CloneIgnoringRef(getter_AddRefs(uriClone));
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = NS_MutateURI(currentURI)
+             .SetRef(EmptyCString())
+             .SetUserPass(EmptyCString())
+             .Finalize(uriClone);
 
-      // We don't care if this succeeds, just want to delete a userpass if
-      // there was one.
-      uriClone->SetUserPass(EmptyCString());
+      // If setUserPass fails for some reason, just return a clone of the
+      // current URI
+      if (NS_FAILED(rv)) {
+        rv = currentURI->CloneIgnoringRef(getter_AddRefs(uriClone));
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
 
       if (CSPCONTEXTLOGENABLED()) {
         CSPCONTEXTLOG(("nsCSPContext::PermitsAncestry, found ancestor: %s",

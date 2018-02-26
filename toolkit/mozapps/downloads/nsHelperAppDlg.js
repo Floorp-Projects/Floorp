@@ -592,9 +592,11 @@ nsUnknownContentTypeDialog.prototype = {
 
     if (!pathString) {
       // wasn't a fileURL
-      var tmpurl = url.clone(); // don't want to change the real url
+      var tmpurl = url; // don't want to change the real url
       try {
-        tmpurl.userPass = "";
+        tmpurl = tmpurl.mutate()
+                       .setUserPass("")
+                       .finalize();
       } catch (ex) {}
       pathString = tmpurl.prePath;
     }
