@@ -5,37 +5,54 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
-   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.bouncer_submission:transforms
    - taskgraph.transforms.release_notifications:transforms
    - taskgraph.transforms.task:transforms
 
 job-defaults:
    description: release bouncer submission job
-   worker-type: buildbot-bridge/buildbot-bridge
+   worker-type:
+      by-project:
+         mozilla-central: scriptworker-prov-v1/bouncer-v1
+         mozilla-beta: scriptworker-prov-v1/bouncer-v1
+         mozilla-release: scriptworker-prov-v1/bouncer-v1
+         default: scriptworker-prov-v1/bouncer-dev
+   worker:
+      implementation: bouncer-submission
+   scopes:
+      by-project:
+         mozilla-beta:
+            - project:releng:bouncer:action:submission
+            - project:releng:bouncer:server:production
+         mozilla-release:
+            - project:releng:bouncer:action:submission
+            - project:releng:bouncer:server:production
+         default:
+            - project:releng:bouncer:action:submission
+            - project:releng:bouncer:server:staging
    run-on-projects: []
    shipping-phase: promote
-   run:
-      using: buildbot
-      release-promotion: true
+   shipping-product: firefox
+   locales-file: browser/locales/l10n-changesets.json
 
 jobs:
+   devedition:
+      bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64']
+      bouncer-products: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer']
+      shipping-product: devedition
+
    fennec:
-      name: fennec_release_bouncer_sub
+      bouncer-platforms: ['android', 'android-x86']
+      bouncer-products: ['apk']
       shipping-product: fennec
-      run:
-         product: fennec
-         buildername: release-{branch}-fennec_bncr_sub
+      locales-file: mobile/locales/l10n-changesets.json
 
    firefox:
-      name: firefox_release_bouncer_sub
+      bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64']
+      bouncer-products: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer']
       shipping-product: firefox
-      run:
-         product: firefox
-         buildername: release-{branch}_firefox_bncr_sub
 
-   devedition:
-      name: devedition_release_bouncer_sub
-      shipping-product: devedition
-      run:
-         product: devedition
-         buildername: release-{branch}_devedition_bncr_sub
+   firefox-rc:
+      bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64']
+      bouncer-products: ['partial-mar-candidates']
+      shipping-product: firefox
