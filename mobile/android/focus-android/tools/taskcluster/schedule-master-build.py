@@ -70,7 +70,7 @@ def generate_release_task(uiTestTaskId):
 		command = ('echo "--" > .adjust_token'
 			       ' && ./gradlew clean assembleBeta'
 			       ' && python tools/taskcluster/sign-preview-builds.py'
-			       ' && touch /opt/focus-android/builds/`date +"%%Y-%%m-%%d-%%-H-%%M"`'
+			       ' && touch /opt/focus-android/builds/`date +"%Y-%m-%d-%H-%M"`'
 			       ' && touch /opt/focus-android/builds/' + COMMIT),
 		dependencies = [ uiTestTaskId ],
 		scopes = [
