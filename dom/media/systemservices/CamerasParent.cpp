@@ -60,9 +60,8 @@ ResolutionFeasibilityDistance(int32_t candidate, int32_t requested)
 
   uint32_t distance =
     std::abs(candidate - requested) * 1000 / std::max(candidate, requested);
-  if (candidate > requested) {
-    // This is a good case, the candidate is higher than the requested
-    // resolution which makes it feasible.
+  if (candidate >= requested) {
+    // This is a good case, the candidate covers the requested resolution.
     return distance;
   }
 
