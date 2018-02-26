@@ -348,7 +348,6 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       @Override
       public void handleSuccess(final TokenServerToken token) {
         FxAccountUtils.pii(LOG_TAG, "Got token! uid is " + token.uid + " and endpoint is " + token.endpoint + ".");
-        fxAccount.setCachedHashedFxAUID(token.hashedFxaUid);
         fxAccount.releaseSharedAccountStateLock();
 
         if (!didReceiveBackoff) {
