@@ -755,6 +755,13 @@ MediaEngineWebRTCMicrophoneSource::Stop(const RefPtr<const AllocationHandle>& aH
 }
 
 void
+MediaEngineWebRTCMicrophoneSource::GetSettings(dom::MediaTrackSettings& aOutSettings) const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  aOutSettings = *mSettings;
+}
+
+void
 MediaEngineWebRTCMicrophoneSource::Pull(const RefPtr<const AllocationHandle>& aHandle,
                                         const RefPtr<SourceMediaStream>& aStream,
                                         TrackID aTrackID,
