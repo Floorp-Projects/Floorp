@@ -1444,9 +1444,9 @@ base_alloc(size_t aSize)
       return nullptr;
     }
 #endif
-    base_next_decommitted = pbase_next_addr;
     base_committed +=
       (uintptr_t)pbase_next_addr - (uintptr_t)base_next_decommitted;
+    base_next_decommitted = pbase_next_addr;
   }
 
   return ret;
