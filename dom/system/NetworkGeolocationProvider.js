@@ -203,12 +203,18 @@ function isCachedRequestMoreAccurateThanServerRequest(newCell, newWifiList)
   return false;
 }
 
-function WifiGeoCoordsObject(lat, lon, acc, alt, altacc) {
+function WifiGeoCoordsObject(lat, lon, acc) {
   this.latitude = lat;
   this.longitude = lon;
   this.accuracy = acc;
-  this.altitude = alt;
-  this.altitudeAccuracy = altacc;
+
+  // Neither GLS nor MLS return the following properties, so set them to NaN
+  // here. nsGeoPositionCoords will convert NaNs to null for optional properties
+  // of the JavaScript Coordinates object.
+  this.altitude = NaN;
+  this.altitudeAccuracy = NaN;
+  this.heading = NaN;
+  this.speed = NaN;
 }
 
 WifiGeoCoordsObject.prototype = {
@@ -216,7 +222,7 @@ WifiGeoCoordsObject.prototype = {
 };
 
 function WifiGeoPositionObject(lat, lng, acc) {
-  this.coords = new WifiGeoCoordsObject(lat, lng, acc, 0, 0);
+  this.coords = new WifiGeoCoordsObject(lat, lng, acc);
   this.address = null;
   this.timestamp = Date.now();
 }
