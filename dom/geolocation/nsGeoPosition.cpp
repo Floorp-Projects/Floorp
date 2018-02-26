@@ -129,20 +129,13 @@ nsGeoPositionCoords::GetSpeed(double *aSpeed)
 nsGeoPosition::nsGeoPosition(double aLat, double aLong,
                              double aAlt, double aHError,
                              double aVError, double aHeading,
-                             double aSpeed, long long aTimestamp) :
+                             double aSpeed, DOMTimeStamp aTimestamp) :
     mTimestamp(aTimestamp)
 {
     mCoords = new nsGeoPositionCoords(aLat, aLong,
                                       aAlt, aHError,
                                       aVError, aHeading,
                                       aSpeed);
-}
-
-nsGeoPosition::nsGeoPosition(nsIDOMGeoPositionCoords *aCoords,
-                             long long aTimestamp) :
-    mTimestamp(aTimestamp),
-    mCoords(aCoords)
-{
 }
 
 nsGeoPosition::nsGeoPosition(nsIDOMGeoPositionCoords *aCoords,
