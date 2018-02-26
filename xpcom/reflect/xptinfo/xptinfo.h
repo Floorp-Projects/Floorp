@@ -198,8 +198,6 @@ public:
             NS_PRECONDITION(idx < GetParamCount(),"bad arg");
             return params[idx];
         }
-    const nsXPTParamInfo GetResult() const
-        {return result;}
 private:
     nsXPTMethodInfo();  // no implementation
 // NO DATA - this a flyweight wrapper
