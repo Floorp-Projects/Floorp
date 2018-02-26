@@ -600,14 +600,19 @@ Location::SetPathname(const nsAString& aPathname,
   }
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
+  aRv = GetURI(getter_AddRefs(uri));
   if (NS_WARN_IF(aRv.Failed()) || !uri) {
     return;
   }
 
-  if (NS_SUCCEEDED(uri->SetFilePath(NS_ConvertUTF16toUTF8(aPathname)))) {
-    aRv = SetURI(uri);
+  nsresult rv = NS_MutateURI(uri)
+                  .SetFilePath(NS_ConvertUTF16toUTF8(aPathname))
+                  .Finalize(uri);
+  if (NS_FAILED(rv)) {
+    return;
   }
+
+  aRv = SetURI(uri);
 }
 
 void

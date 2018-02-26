@@ -506,14 +506,19 @@ Link::SetHostname(const nsAString &aHostname)
 void
 Link::SetPathname(const nsAString &aPathname)
 {
-  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  nsCOMPtr<nsIURI> uri(GetURI());
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
   if (!url) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  (void)url->SetFilePath(NS_ConvertUTF16toUTF8(aPathname));
+  nsresult rv = NS_MutateURI(uri)
+                  .SetFilePath(NS_ConvertUTF16toUTF8(aPathname))
+                  .Finalize(uri);
+  if (NS_FAILED(rv)) {
+    return;
+  }
   SetHrefAttribute(uri);
 }
 

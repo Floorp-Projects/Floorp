@@ -664,7 +664,9 @@ nsJARURI::GetFilePath(nsACString& filePath)
 NS_IMETHODIMP
 nsJARURI::SetFilePath(const nsACString& filePath)
 {
-    return mJAREntry->SetFilePath(filePath);
+    return NS_MutateURI(mJAREntry)
+             .SetFilePath(filePath)
+             .Finalize(mJAREntry);
 }
 
 NS_IMETHODIMP
