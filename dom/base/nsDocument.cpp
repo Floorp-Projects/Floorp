@@ -273,6 +273,7 @@
 #include "mozilla/MediaManager.h"
 
 #include "nsIURIClassifier.h"
+#include "nsIURIMutator.h"
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -9121,8 +9122,8 @@ nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr,
 void
 nsDocument::MaybePreconnect(nsIURI* aOrigURI, mozilla::CORSMode aCORSMode)
 {
-  nsCOMPtr<nsIURI> uri;
-  if (NS_FAILED(aOrigURI->Clone(getter_AddRefs(uri)))) {
+  NS_MutateURI mutator(aOrigURI);
+  if (NS_FAILED(mutator.GetStatus())) {
       return;
   }
 
@@ -9134,9 +9135,15 @@ nsDocument::MaybePreconnect(nsIURI* aOrigURI, mozilla::CORSMode aCORSMode)
   // normalize the path before putting it in the hash to accomplish that.
 
   if (aCORSMode == CORS_ANONYMOUS) {
-    uri->SetPathQueryRef(NS_LITERAL_CSTRING("/anonymous"));
+    mutator.SetPathQueryRef(NS_LITERAL_CSTRING("/anonymous"));
   } else {
-    uri->SetPathQueryRef(NS_LITERAL_CSTRING("/"));
+    mutator.SetPathQueryRef(NS_LITERAL_CSTRING("/"));
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = mutator.Finalize(uri);
+  if (NS_FAILED(rv)) {
+    return;
   }
 
   auto entry = mPreloadedPreconnects.LookupForAdd(uri);

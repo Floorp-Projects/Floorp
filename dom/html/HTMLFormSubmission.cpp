@@ -19,6 +19,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsStringStream.h"
 #include "nsIURI.h"
+#include "nsIURIMutator.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsLinebreakConverter.h"
@@ -113,7 +114,7 @@ public:
 
   virtual nsresult
   GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream,
-                       int64_t* aPostDataStreamLength) override;
+                       int64_t* aPostDataStreamLength, nsCOMPtr<nsIURI>& aOutURI) override;
 
 protected:
 
@@ -268,9 +269,11 @@ HandleMailtoSubject(nsCString& aPath)
 nsresult
 FSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
                                    nsIInputStream** aPostDataStream,
-                                   int64_t* aPostDataStreamLength)
+                                   int64_t* aPostDataStreamLength,
+                                   nsCOMPtr<nsIURI>& aOutURI)
 {
   nsresult rv = NS_OK;
+  aOutURI = aURI;
 
   *aPostDataStream = nullptr;
   *aPostDataStreamLength = -1;
@@ -295,8 +298,9 @@ FSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
 
       path += NS_LITERAL_CSTRING("&force-plain-text=Y&body=") + escapedBody;
 
-      rv = aURI->SetPathQueryRef(path);
-
+      return NS_MutateURI(aURI)
+               .SetPathQueryRef(path)
+               .Finalize(aOutURI);
     } else {
 
       nsCOMPtr<nsIInputStream> dataStream;
@@ -331,7 +335,9 @@ FSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
 
     nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
     if (url) {
-      url->SetQuery(mQueryString);
+      rv = NS_MutateURI(aURI)
+             .SetQuery(mQueryString)
+             .Finalize(aOutURI);
     }
     else {
       nsAutoCString path;
@@ -356,7 +362,9 @@ FSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
       // Bug 42616: Add named anchor to end after query string
       path.Append(mQueryString + namedAnchor);
 
-      aURI->SetPathQueryRef(path);
+      rv = NS_MutateURI(aURI)
+             .SetPathQueryRef(path)
+             .Finalize(aOutURI);
     }
   }
 
@@ -621,9 +629,11 @@ FSMultipartFormData::AddDataChunk(const nsACString& aName,
 nsresult
 FSMultipartFormData::GetEncodedSubmission(nsIURI* aURI,
                                           nsIInputStream** aPostDataStream,
-                                          int64_t* aPostDataStreamLength)
+                                          int64_t* aPostDataStreamLength,
+                                          nsCOMPtr<nsIURI>& aOutURI)
 {
   nsresult rv;
+  aOutURI = aURI;
 
   // Make header
   nsCOMPtr<nsIMIMEInputStream> mimeStream
@@ -686,7 +696,7 @@ public:
 
   virtual nsresult
   GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream,
-                       int64_t* aPostDataStreaLength) override;
+                       int64_t* aPostDataStreaLength, nsCOMPtr<nsIURI>& aOutURI) override;
 
 private:
   nsString mBody;
@@ -726,9 +736,11 @@ FSTextPlain::AddNameDirectoryPair(const nsAString& aName,
 nsresult
 FSTextPlain::GetEncodedSubmission(nsIURI* aURI,
                                   nsIInputStream** aPostDataStream,
-                                  int64_t* aPostDataStreamLength)
+                                  int64_t* aPostDataStreamLength,
+                                  nsCOMPtr<nsIURI>& aOutURI)
 {
   nsresult rv = NS_OK;
+  aOutURI = aURI;
 
   *aPostDataStream = nullptr;
   *aPostDataStreamLength = -1;
@@ -754,8 +766,9 @@ FSTextPlain::GetEncodedSubmission(nsIURI* aURI,
 
     path += NS_LITERAL_CSTRING("&force-plain-text=Y&body=") + escapedBody;
 
-    rv = aURI->SetPathQueryRef(path);
-
+    rv = NS_MutateURI(aURI)
+           .SetPathQueryRef(path)
+           .Finalize(aOutURI);
   } else {
     // Create data stream.
     // We do want to send the data through the charset encoder and we want to
