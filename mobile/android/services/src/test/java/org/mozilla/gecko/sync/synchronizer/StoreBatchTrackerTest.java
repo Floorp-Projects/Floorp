@@ -26,9 +26,7 @@ public class StoreBatchTrackerTest {
         for (int i = 0; i < attempted; ++i) {
             tracker.onRecordStoreAttempted();
         }
-        for (int i = 0; i < succeeded; ++i) {
-            tracker.onRecordStoreSucceeded();
-        }
+        tracker.onRecordStoreSucceeded(succeeded);
         for (int i = 0; i < failed; ++i) {
             tracker.onRecordStoreFailed();
         }

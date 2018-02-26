@@ -67,8 +67,8 @@ public class StoreBatchTracker {
         currentStoreBatchFailed.incrementAndGet();
     }
 
-    /* package-local */ void onRecordStoreSucceeded() {
-        currentStoreBatchAccepted.incrementAndGet();
+    /* package-local */ void onRecordStoreSucceeded(int count) {
+        currentStoreBatchAccepted.addAndGet(count);
     }
 
     /* package-local */ void onRecordStoreAttempted() {

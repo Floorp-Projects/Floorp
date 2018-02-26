@@ -57,7 +57,7 @@ import java.util.ArrayList;
     @Override
     /* package-private */ void storeRecordDeletion(RepositorySessionStoreDelegate storeDelegate, Record record, Record existingRecord) {
         dbHelper.purgeGuid(record.guid);
-        storeDelegate.onRecordStoreSucceeded(record.guid);
+        storeDelegate.onRecordStoreSucceeded(1);
     }
 
     @Override
@@ -150,7 +150,7 @@ import java.util.ArrayList;
         Logger.debug(LOG_TAG, "Calling delegate callback with guid " + preparedToStore.guid +
                 "(" + preparedToStore.androidID + ")");
         delegate.onRecordStoreReconciled(preparedToStore.guid, existingRecord.guid, null);
-        delegate.onRecordStoreSucceeded(preparedToStore.guid);
+        delegate.onRecordStoreSucceeded(1);
 
         return true;
     }
@@ -258,7 +258,7 @@ import java.util.ArrayList;
                 throw e;
             }
             session.trackRecord(succeeded);
-            delegate.onRecordStoreSucceeded(succeeded.guid); // At this point, we are really inserted.
         }
+        delegate.onRecordStoreSucceeded(outgoing.size()); // At this point, we are really inserted.
     }
 }

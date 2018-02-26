@@ -114,7 +114,7 @@ public abstract class ThreadedRepositoryTestCase extends AndroidSyncTestCase {
   }
 
   public static Runnable storeRunnable(final RepositorySession session, final Record record) {
-    return storeRunnable(session, record, new ExpectStoredDelegate(record.guid));
+    return storeRunnable(session, record, new ExpectStoredDelegate(1));
   }
 
   public static Runnable storeManyRunnable(final RepositorySession session, final Record[] records, final DefaultStoreDelegate delegate) {

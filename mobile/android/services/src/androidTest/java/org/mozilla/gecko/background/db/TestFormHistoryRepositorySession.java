@@ -322,7 +322,7 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
     rec = new FormHistoryRecord("new1", "forms", System.currentTimeMillis(), false);
     rec.fieldName  = "fieldName1";
     rec.fieldValue = "fieldValue1";
-    performWait(storeRunnable(session, rec, new ExpectStoredDelegate(rec.guid)));
+    performWait(storeRunnable(session, rec, new ExpectStoredDelegate(1)));
     performWait(fetchRunnable(session, new String[] { rec.guid }, new Record[] { rec }));
 
     // remote deleted, local missing => should delete, but at the moment we ignore.
@@ -345,19 +345,19 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
     rec = new FormHistoryRecord(regular1.guid, regular1.collection, newTimestamp, false);
     rec.fieldName  = regular1.fieldName;
     rec.fieldValue = regular1.fieldValue + "NEW";
-    performWait(storeRunnable(session, rec, new ExpectStoredDelegate(rec.guid)));
+    performWait(storeRunnable(session, rec, new ExpectStoredDelegate(1)));
     performWait(fetchRunnable(session, new String[] { regular1.guid }, new Record[] { rec }));
 
     // remote deleted, local regular, remote newer => should delete everything.
     rec = new FormHistoryRecord(regular2.guid, regular2.collection, newTimestamp, true);
-    performWait(storeRunnable(session, rec, new ExpectStoredDelegate(rec.guid)));
+    performWait(storeRunnable(session, rec, new ExpectStoredDelegate(1)));
     performWait(fetchRunnable(session, new String[] { regular2.guid }, new Record[] { }));
 
     // remote regular, local deleted, remote newer => should update.
     rec = new FormHistoryRecord(deleted1.guid, deleted1.collection, newTimestamp, false);
     rec.fieldName  = regular1.fieldName;
     rec.fieldValue = regular1.fieldValue + "NEW";
-    performWait(storeRunnable(session, rec, new ExpectStoredDelegate(rec.guid)));
+    performWait(storeRunnable(session, rec, new ExpectStoredDelegate(1)));
     performWait(fetchRunnable(session, new String[] { deleted1.guid }, new Record[] { rec }));
 
     // remote deleted, local deleted, remote newer => should delete everything.
@@ -405,7 +405,7 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
     insertTwoRecords(session);
 
     FormHistoryRecord rec = (FormHistoryRecord) regular1.copyWithIDs("distinct", 999);
-    performWait(storeRunnable(session, rec, new ExpectStoredDelegate(rec.guid)));
+    performWait(storeRunnable(session, rec, new ExpectStoredDelegate(1)));
     // Existing record should take remote record's GUID.
     performWait(fetchAllRunnable(session, new Record[] { rec, deleted1 }));
 

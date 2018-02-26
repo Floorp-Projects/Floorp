@@ -251,9 +251,9 @@ public class RecordsChannel implements
   }
 
   @Override
-  public void onRecordStoreSucceeded(String guid) {
-    storeAcceptedCount.incrementAndGet();
-    storeTracker.onRecordStoreSucceeded();
+  public void onRecordStoreSucceeded(int count) {
+    storeAcceptedCount.addAndGet(count);
+    storeTracker.onRecordStoreSucceeded(count);
   }
 
   @Override

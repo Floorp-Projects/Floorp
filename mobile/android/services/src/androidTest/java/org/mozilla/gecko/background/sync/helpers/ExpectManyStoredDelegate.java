@@ -14,22 +14,18 @@ import junit.framework.AssertionFailedError;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
 public class ExpectManyStoredDelegate extends DefaultStoreDelegate {
-  HashSet<String> expectedGUIDs;
+  int expectedStored;
   AtomicLong stored;
 
   public ExpectManyStoredDelegate(Record[] records) {
-    HashSet<String> s = new HashSet<String>();
-    for (Record record : records) {
-      s.add(record.guid);
-    }
-    expectedGUIDs = s;
+    expectedStored = records.length;
     stored = new AtomicLong(0);
   }
 
   @Override
   public void onStoreCompleted() {
     try {
-      assertEquals(expectedGUIDs.size(), stored.get());
+      assertEquals(expectedStored, stored.get());
       performNotify();
     } catch (AssertionFailedError e) {
       performNotify(e);
@@ -37,12 +33,7 @@ public class ExpectManyStoredDelegate extends DefaultStoreDelegate {
   }
 
   @Override
-  public void onRecordStoreSucceeded(String guid) {
-    try {
-      assertTrue(expectedGUIDs.contains(guid));
-    } catch (AssertionFailedError e) {
-      performNotify(e);
-    }
-    stored.incrementAndGet();
+  public void onRecordStoreSucceeded(int count) {
+    stored.addAndGet(count);
   }
 }
