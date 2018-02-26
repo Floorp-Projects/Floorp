@@ -153,12 +153,13 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow,
 
   // Note: AudioDestinationNode needs an AudioContext that must already be
   // bound to the window.
-  bool allowToStart = AutoplayPolicy::IsAudioContextAllowedToPlay(WrapNotNull(this));
-  mDestination = new AudioDestinationNode(this, aIsOffline,
+  bool allowedToStart = AutoplayPolicy::IsAudioContextAllowedToPlay(WrapNotNull(this));
+  mDestination = new AudioDestinationNode(this,
+                                          aIsOffline,
+                                          allowedToStart,
                                           aNumberOfChannels,
                                           aLength,
-                                          aSampleRate,
-                                          allowToStart);
+                                          aSampleRate);
 
   // The context can't be muted until it has a destination.
   if (mute) {
@@ -167,7 +168,7 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow,
 
   // If we won't allow audio context to start, we need to suspend all its stream
   // in order to delay the state changing from 'suspend' to 'start'.
-  if (!allowToStart) {
+  if (!allowedToStart) {
     ErrorResult rv;
     RefPtr<Promise> dummy = Suspend(rv);
     MOZ_ASSERT(!rv.Failed(), "can't create promise");
