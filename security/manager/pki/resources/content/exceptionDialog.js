@@ -132,7 +132,7 @@ function getURI() {
   }
 
   if (uri.port == -1) {
-    uri.port = 443;
+    uri = uri.mutate().setPort(443).finalize();
   }
 
   return uri;

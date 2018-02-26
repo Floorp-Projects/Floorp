@@ -655,7 +655,7 @@ Location::SetPort(const nsAString& aPort,
   }
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
+  aRv = GetURI(getter_AddRefs(uri));
   if (NS_WARN_IF(aRv.Failed() || !uri)) {
     return;
   }
@@ -674,7 +674,9 @@ Location::SetPort(const nsAString& aPort,
     }
   }
 
-  aRv = uri->SetPort(port);
+  aRv = NS_MutateURI(uri)
+          .SetPort(port)
+          .Finalize(uri);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

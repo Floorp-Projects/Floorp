@@ -385,7 +385,9 @@ URLMainThread::SetPort(const nsAString& aPort, ErrorResult& aRv)
     }
   }
 
-  mURI->SetPort(port);
+  Unused << NS_MutateURI(mURI)
+              .SetPort(port)
+              .Finalize(mURI);
 }
 
 void
