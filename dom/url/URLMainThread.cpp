@@ -306,7 +306,9 @@ URLMainThread::GetPassword(nsAString& aPassword, ErrorResult& aRv) const
 void
 URLMainThread::SetPassword(const nsAString& aPassword, ErrorResult& aRv)
 {
-  mURI->SetPassword(NS_ConvertUTF16toUTF8(aPassword));
+  Unused << NS_MutateURI(mURI)
+              .SetPassword(NS_ConvertUTF16toUTF8(aPassword))
+              .Finalize(mURI);
 }
 
 void

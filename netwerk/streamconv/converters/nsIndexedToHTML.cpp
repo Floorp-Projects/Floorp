@@ -186,9 +186,9 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         if (NS_FAILED(rv)) return rv;
         if (!pw.IsEmpty()) {
              nsCOMPtr<nsIURI> newUri;
-             rv = uri->Clone(getter_AddRefs(newUri));
-             if (NS_FAILED(rv)) return rv;
-             rv = newUri->SetPassword(EmptyCString());
+             rv = NS_MutateURI(uri)
+                    .SetPassword(EmptyCString())
+                    .Finalize(newUri);
              if (NS_FAILED(rv)) return rv;
              rv = newUri->GetAsciiSpec(titleUri);
              if (NS_FAILED(rv)) return rv;

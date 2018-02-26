@@ -302,7 +302,7 @@ add_test(function test_hugeStringThrows()
 
   let hugeString = new Array(maxLen + 1).fill("a").join("");
   let properties = ["scheme",
-                    "password", "host", "ref",
+                    "host", "ref",
                     "query"];
   for (let prop of properties) {
     Assert.throws(() => url[prop] = hugeString,
@@ -313,6 +313,7 @@ add_test(function test_hugeStringThrows()
   let setters = [
     { method: "setSpec", qi: Ci.nsIURIMutator },
     { method: "setUsername", qi: Ci.nsIURIMutator },
+    { method: "setPassword", qi: Ci.nsIURIMutator },
     { method: "setFilePath", qi: Ci.nsIURIMutator },
     { method: "setHostPort", qi: Ci.nsIURIMutator },
     { method: "setUserPass", qi: Ci.nsIURIMutator },
@@ -503,19 +504,19 @@ add_test(function test_normalize_ipv6() {
 add_test(function test_emptyPassword() {
   var url = stringToURL("http://a:@example.com");
   Assert.equal(url.spec, "http://a@example.com/");
-  url.password = "pp";
+  url = url.mutate().setPassword("pp").finalize();
   Assert.equal(url.spec, "http://a:pp@example.com/");
-  url.password = "";
+  url = url.mutate().setPassword("").finalize();
   Assert.equal(url.spec, "http://a@example.com/");
   url = url.mutate().setUserPass("xxx:").finalize();
   Assert.equal(url.spec, "http://xxx@example.com/");
-  url.password = "zzzz";
+  url = url.mutate().setPassword("zzzz").finalize();
   Assert.equal(url.spec, "http://xxx:zzzz@example.com/");
   url = url.mutate().setUserPass("xxxxx:yyyyyy").finalize();
   Assert.equal(url.spec, "http://xxxxx:yyyyyy@example.com/");
   url = url.mutate().setUserPass("z:").finalize();
   Assert.equal(url.spec, "http://z@example.com/");
-  url.password = "ppppppppppp";
+  url = url.mutate().setPassword("ppppppppppp").finalize();
   Assert.equal(url.spec, "http://z:ppppppppppp@example.com/");
   run_next_test();
 });
