@@ -646,16 +646,12 @@ URLWorker::Init(const nsAString& aURL, const Optional<nsAString>& aBase,
       }
     }
     nsCOMPtr<nsIURI> uri;
-    rv = NS_MutateURI(new nsStandardURL::Mutator())
-           .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                                   nsIStandardURL::URLTYPE_STANDARD,
-                                   -1, NS_ConvertUTF16toUTF8(aURL),
-                                   nullptr, baseURL, nullptr))
-           .Finalize(uri);
-    aRv = rv;
-    if (NS_SUCCEEDED(rv)) {
-      mStdURL = static_cast<nsStandardURL*>(uri.get());
-    }
+    aRv = NS_MutateURI(new nsStandardURL::Mutator())
+            .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                                    nsIStandardURL::URLTYPE_STANDARD,
+                                    -1, NS_ConvertUTF16toUTF8(aURL),
+                                    nullptr, baseURL, nullptr))
+            .Finalize(mStdURL);
     return;
   }
 
@@ -726,8 +722,7 @@ URLWorker::SetHrefInternal(const nsAString& aHref, Strategy aStrategy,
     nsCOMPtr<nsIURI> uri;
     aRv = NS_MutateURI(new nsStandardURL::Mutator())
             .SetSpec(NS_ConvertUTF16toUTF8(aHref))
-            .Finalize(uri);
-    mStdURL = static_cast<net::nsStandardURL*>(uri.get());
+            .Finalize(mStdURL);
     if (mURLProxy) {
       mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -873,7 +868,9 @@ URLWorker::SetProtocol(const nsAString& aProtocol, ErrorResult& aRv)
 
 #define STDURL_SETTER(value, method)                     \
   if (mStdURL) {                                         \
-    aRv = mStdURL->method(NS_ConvertUTF16toUTF8(value)); \
+    aRv = NS_MutateURI(mStdURL)                          \
+            .method(NS_ConvertUTF16toUTF8(value))        \
+            .Finalize(mStdURL);                          \
     return;                                              \
   }
 

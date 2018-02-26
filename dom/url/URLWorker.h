@@ -132,7 +132,7 @@ private:
 
   WorkerPrivate* mWorkerPrivate;
   RefPtr<URLProxy> mURLProxy;
-  RefPtr<net::nsStandardURL> mStdURL;
+  nsCOMPtr<nsIURI> mStdURL;
 };
 
 } // namespace dom
