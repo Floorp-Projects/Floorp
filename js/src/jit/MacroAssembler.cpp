@@ -80,13 +80,17 @@ EmitTypeCheck(MacroAssembler& masm, Assembler::Condition cond, const T& src, Typ
 
 template <typename Source> void
 MacroAssembler::guardTypeSet(const Source& address, const TypeSet* types, BarrierKind kind,
-                             Register unboxScratch, Register objScratch, Label* miss)
+                             Register unboxScratch, Register objScratch,
+                             Register spectreRegToZero, Label* miss)
 {
     // unboxScratch may be InvalidReg on 32-bit platforms. It should only be
     // used for extracting the Value tag or payload.
     //
     // objScratch may be InvalidReg if the TypeSet does not contain specific
     // objects to guard on. It should only be used for guardObjectType.
+    //
+    // spectreRegToZero is a register that will be zeroed by guardObjectType on
+    // speculatively executed paths.
 
     MOZ_ASSERT(kind == BarrierKind::TypeTagOnly || kind == BarrierKind::TypeSet);
     MOZ_ASSERT(!types->unknown());
@@ -154,12 +158,12 @@ MacroAssembler::guardTypeSet(const Source& address, const TypeSet* types, Barrie
 
     if (kind != BarrierKind::TypeTagOnly) {
         Register obj = extractObject(address, unboxScratch);
-        guardObjectType(obj, types, objScratch, miss);
+        guardObjectType(obj, types, objScratch, spectreRegToZero, miss);
     } else {
 #ifdef DEBUG
         Label fail;
         Register obj = extractObject(address, unboxScratch);
-        guardObjectType(obj, types, objScratch, &fail);
+        guardObjectType(obj, types, objScratch, spectreRegToZero, &fail);
         jump(&matched);
 
         bind(&fail);
@@ -210,8 +214,8 @@ MacroAssembler::guardTypeSetMightBeIncomplete(const TypeSet* types, Register obj
 #endif
 
 void
-MacroAssembler::guardObjectType(Register obj, const TypeSet* types,
-                                Register scratch, Label* miss)
+MacroAssembler::guardObjectType(Register obj, const TypeSet* types, Register scratch,
+                                Register spectreRegToZero, Label* miss)
 {
     MOZ_ASSERT(obj != scratch);
     MOZ_ASSERT(!types->unknown());
@@ -246,33 +250,66 @@ MacroAssembler::guardObjectType(Register obj, const TypeSet* types,
         return;
     }
 
+    if (JitOptions.spectreObjectMitigationsBarriers)
+        move32(Imm32(0), scratch);
+
     if (hasSingletons) {
         for (unsigned i = 0; i < count; i++) {
             JSObject* singleton = types->getSingletonNoBarrier(i);
             if (!singleton)
                 continue;
 
-            if (--numBranches > 0)
-                branchPtr(Equal, obj, ImmGCPtr(singleton), &matched);
-            else
-                branchPtr(NotEqual, obj, ImmGCPtr(singleton), miss);
+            if (JitOptions.spectreObjectMitigationsBarriers) {
+                if (--numBranches > 0) {
+                    Label next;
+                    branchPtr(NotEqual, obj, ImmGCPtr(singleton), &next);
+                    spectreMovePtr(NotEqual, scratch, spectreRegToZero);
+                    jump(&matched);
+                    bind(&next);
+                } else {
+                    branchPtr(NotEqual, obj, ImmGCPtr(singleton), miss);
+                    spectreMovePtr(NotEqual, scratch, spectreRegToZero);
+                }
+            } else {
+                if (--numBranches > 0)
+                    branchPtr(Equal, obj, ImmGCPtr(singleton), &matched);
+                else
+                    branchPtr(NotEqual, obj, ImmGCPtr(singleton), miss);
+            }
         }
     }
 
     if (hasObjectGroups) {
         comment("has object groups");
 
-        loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
+        // If Spectre mitigations are enabled, we use the scratch register as
+        // zero register. Without mitigations we can use it to store the group.
+        Address groupAddr(obj, JSObject::offsetOfGroup());
+        if (!JitOptions.spectreObjectMitigationsBarriers)
+            loadPtr(groupAddr, scratch);
 
         for (unsigned i = 0; i < count; i++) {
             ObjectGroup* group = types->getGroupNoBarrier(i);
             if (!group)
                 continue;
 
-            if (--numBranches > 0)
-                branchPtr(Equal, scratch, ImmGCPtr(group), &matched);
-            else
-                branchPtr(NotEqual, scratch, ImmGCPtr(group), miss);
+            if (JitOptions.spectreObjectMitigationsBarriers) {
+                if (--numBranches > 0) {
+                    Label next;
+                    branchPtr(NotEqual, groupAddr, ImmGCPtr(group), &next);
+                    spectreMovePtr(NotEqual, scratch, spectreRegToZero);
+                    jump(&matched);
+                    bind(&next);
+                } else {
+                    branchPtr(NotEqual, groupAddr, ImmGCPtr(group), miss);
+                    spectreMovePtr(NotEqual, scratch, spectreRegToZero);
+                }
+            } else {
+                if (--numBranches > 0)
+                    branchPtr(Equal, scratch, ImmGCPtr(group), &matched);
+                else
+                    branchPtr(NotEqual, scratch, ImmGCPtr(group), miss);
+            }
         }
     }
 
@@ -283,13 +320,16 @@ MacroAssembler::guardObjectType(Register obj, const TypeSet* types,
 
 template void MacroAssembler::guardTypeSet(const Address& address, const TypeSet* types,
                                            BarrierKind kind, Register unboxScratch,
-                                           Register objScratch, Label* miss);
+                                           Register objScratch, Register spectreRegToZero,
+                                           Label* miss);
 template void MacroAssembler::guardTypeSet(const ValueOperand& value, const TypeSet* types,
                                            BarrierKind kind, Register unboxScratch,
-                                           Register objScratch, Label* miss);
+                                           Register objScratch, Register spectreRegToZero,
+                                           Label* miss);
 template void MacroAssembler::guardTypeSet(const TypedOrValueRegister& value, const TypeSet* types,
                                            BarrierKind kind, Register unboxScratch,
-                                           Register objScratch, Label* miss);
+                                           Register objScratch, Register spectreRegToZero,
+                                           Label* miss);
 
 template<typename S, typename T>
 static void

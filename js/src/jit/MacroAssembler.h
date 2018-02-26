@@ -1367,6 +1367,10 @@ class MacroAssembler : public MacroAssemblerSpecific
                               Register dest)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
+    // Conditional move for Spectre mitigations.
+    inline void spectreMovePtr(Condition cond, Register src, Register dest)
+        DEFINED_ON(arm, arm64, x86, x64);
+
     // Performs a bounds check and zeroes the index register if out-of-bounds
     // (to mitigate Spectre).
     inline void boundsCheck32ForLoad(Register index, Register length, Register scratch,
@@ -1934,9 +1938,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     // register is required.
     template <typename Source>
     void guardTypeSet(const Source& address, const TypeSet* types, BarrierKind kind,
-                      Register unboxScratch, Register objScratch, Label* miss);
+                      Register unboxScratch, Register objScratch, Register spectreRegToZero,
+                      Label* miss);
 
-    void guardObjectType(Register obj, const TypeSet* types, Register scratch, Label* miss);
+    void guardObjectType(Register obj, const TypeSet* types, Register scratch,
+                         Register spectreRegToZero, Label* miss);
 
 #ifdef DEBUG
     void guardTypeSetMightBeIncomplete(const TypeSet* types, Register obj, Register scratch,

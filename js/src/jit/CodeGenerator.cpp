@@ -3835,9 +3835,13 @@ CodeGenerator::visitTypeBarrierV(LTypeBarrierV* lir)
     Register unboxScratch = ToTempRegisterOrInvalid(lir->unboxTemp());
     Register objScratch = ToTempRegisterOrInvalid(lir->objTemp());
 
+    // guardObjectType may zero the payload/Value register on speculative paths
+    // (we should have a defineReuseInput allocation in this case).
+    Register spectreRegToZero = operand.payloadOrValueReg();
+
     Label miss;
     masm.guardTypeSet(operand, lir->mir()->resultTypeSet(), lir->mir()->barrierKind(),
-                      unboxScratch, objScratch, &miss);
+                      unboxScratch, objScratch, spectreRegToZero, &miss);
     bailoutFrom(&miss, lir->snapshot());
 }
 
@@ -3859,24 +3863,14 @@ CodeGenerator::visitTypeBarrierO(LTypeBarrierO* lir)
 
     if (lir->mir()->barrierKind() != BarrierKind::TypeTagOnly) {
         masm.comment("Type tag only");
-        masm.guardObjectType(obj, lir->mir()->resultTypeSet(), scratch, &miss);
+        // guardObjectType may zero the object register on speculative paths
+        // (we should have a defineReuseInput allocation in this case).
+        Register spectreRegToZero = obj;
+        masm.guardObjectType(obj, lir->mir()->resultTypeSet(), scratch, spectreRegToZero, &miss);
     }
 
     bailoutFrom(&miss, lir->snapshot());
     masm.bind(&ok);
-}
-
-void
-CodeGenerator::visitMonitorTypes(LMonitorTypes* lir)
-{
-    ValueOperand operand = ToValue(lir, LMonitorTypes::Input);
-    Register unboxScratch = ToTempRegisterOrInvalid(lir->unboxTemp());
-    Register objScratch = ToTempRegisterOrInvalid(lir->objTemp());
-
-    Label matched, miss;
-    masm.guardTypeSet(operand, lir->mir()->typeSet(), lir->mir()->barrierKind(), unboxScratch,
-                      objScratch, &miss);
-    bailoutFrom(&miss, lir->snapshot());
 }
 
 // Out-of-line path to update the store buffer.
@@ -5091,8 +5085,9 @@ CodeGenerator::generateArgumentsChecks(bool assert)
     // No registers are allocated yet, so it's safe to grab anything.
     AllocatableGeneralRegisterSet temps(GeneralRegisterSet::All());
     Register temp1 = temps.takeAny();
+#ifndef JS_CODEGEN_ARM64
     Register temp2 = temps.takeAny();
-
+#endif
     const CompileInfo& info = gen->info();
 
     Label miss;
@@ -5103,13 +5098,24 @@ CodeGenerator::generateArgumentsChecks(bool assert)
         if (!types || types->unknown())
             continue;
 
+#ifndef JS_CODEGEN_ARM64
         // Calculate the offset on the stack of the argument.
         // (i - info.startArgSlot())    - Compute index of arg within arg vector.
         // ... * sizeof(Value)          - Scale by value size.
         // ArgToStackOffset(...)        - Compute displacement within arg vector.
         int32_t offset = ArgToStackOffset((i - info.startArgSlot()) * sizeof(Value));
         Address argAddr(masm.getStackPointer(), offset);
-        masm.guardTypeSet(argAddr, types, BarrierKind::TypeSet, temp1, temp2, &miss);
+
+        // guardObjectType will zero the stack pointer register on speculative
+        // paths.
+        Register spectreRegToZero = masm.getStackPointer();
+        masm.guardTypeSet(argAddr, types, BarrierKind::TypeSet, temp1, temp2,
+                          spectreRegToZero, &miss);
+#else
+        // On ARM64, the stack pointer situation is more complicated. When we
+        // enable Ion, we should figure out how to mitigate Spectre there.
+        MOZ_CRASH("NYI");
+#endif
     }
 
     if (miss.used()) {
@@ -5409,7 +5415,7 @@ CodeGenerator::emitAssertObjectOrStringResult(Register input, MIRType type, cons
         if (type == MIRType::ObjectOrNull)
             masm.branchPtr(Assembler::Equal, input, ImmWord(0), &ok);
         if (typeset->getObjectCount() > 0)
-            masm.guardObjectType(input, typeset, temp, &miss);
+            masm.guardObjectType(input, typeset, temp, input, &miss);
         else
             masm.jump(&miss);
         masm.jump(&ok);
@@ -5475,7 +5481,8 @@ CodeGenerator::emitAssertResultV(const ValueOperand input, const TemporaryTypeSe
     if (typeset && !typeset->unknown()) {
         // We have a result TypeSet, assert this value is in it.
         Label miss, ok;
-        masm.guardTypeSet(input, typeset, BarrierKind::TypeSet, temp1, temp2, &miss);
+        masm.guardTypeSet(input, typeset, BarrierKind::TypeSet, temp1, temp2,
+                          input.payloadOrValueReg(), &miss);
         masm.jump(&ok);
 
         masm.bind(&miss);
@@ -5521,8 +5528,10 @@ CodeGenerator::emitObjectOrStringResultChecks(LInstruction* lir, MDefinition* mi
         return;
 
     MOZ_ASSERT(lir->numDefs() == 1);
-    Register output = ToRegister(lir->getDef(0));
+    if (lir->getDef(0)->isBogusTemp())
+        return;
 
+    Register output = ToRegister(lir->getDef(0));
     emitAssertObjectOrStringResult(output, mir->type(), mir->resultTypeSet());
 }
 
