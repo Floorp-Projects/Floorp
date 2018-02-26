@@ -149,7 +149,6 @@ interface nsIURISetters : nsIURISetSpec
   [must_use] nsIURIMutator setUsername(in AUTF8String aUsername);
   [must_use] nsIURIMutator setPassword(in AUTF8String aPassword);
   [must_use] nsIURIMutator setHostPort(in AUTF8String aHostPort);
-  [must_use] nsIURIMutator setHostAndPort(in AUTF8String aHostAndPort);
   [must_use] nsIURIMutator setHost(in AUTF8String aHost);
   [must_use] nsIURIMutator setPort(in long aPort);
   [must_use] nsIURIMutator setPathQueryRef(in AUTF8String aPathQueryRef);
@@ -193,12 +192,6 @@ interface nsIURISetters : nsIURISetSpec
   {                                                                           \
     if (aMutator) NS_ADDREF(*aMutator = this);                                \
     return !_to ? NS_ERROR_NULL_POINTER : _to->SetHostPort(aHostPort);        \
-  }                                                                           \
-  MOZ_MUST_USE NS_IMETHOD                                                     \
-  SetHostAndPort(const nsACString& aHostAndPort, nsIURIMutator** aMutator) override \
-  {                                                                           \
-    if (aMutator) NS_ADDREF(*aMutator = this);                                \
-    return !_to ? NS_ERROR_NULL_POINTER : _to->SetHostAndPort(aHostAndPort);  \
   }                                                                           \
   MOZ_MUST_USE NS_IMETHOD                                                     \
   SetHost(const nsACString& aHost, nsIURIMutator** aMutator) override         \
@@ -358,12 +351,6 @@ public:
   {
     NS_ENSURE_SUCCESS(mStatus, *this);
     mStatus = mMutator->SetHostPort(aHostPort, nullptr);
-    return *this;
-  }
-  NS_MutateURI& SetHostAndPort(const nsACString& aHostAndPort)
-  {
-    NS_ENSURE_SUCCESS(mStatus, *this);
-    mStatus = mMutator->SetHostAndPort(aHostAndPort, nullptr);
     return *this;
   }
   NS_MutateURI& SetHost(const nsACString& aHost)
