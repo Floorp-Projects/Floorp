@@ -123,7 +123,7 @@ js::Nursery::Nursery(JSRuntime* rt)
   , previousPromotionRate_(0)
   , profileThreshold_(0)
   , enableProfiling_(false)
-  , canAllocateStrings_(true)
+  , canAllocateStrings_(false)
   , reportTenurings_(0)
   , minorGCTriggerReason_(JS::gcreason::NO_REASON)
   , minorGcCount_(0)
@@ -132,9 +132,9 @@ js::Nursery::Nursery(JSRuntime* rt)
   , lastCanary_(nullptr)
 #endif
 {
-    const char* env = getenv("MOZ_DISABLE_NURSERY_STRINGS");
+    const char* env = getenv("MOZ_ENABLE_NURSERY_STRINGS");
     if (env && *env)
-        canAllocateStrings_ = false;
+        canAllocateStrings_ = true;
 }
 
 bool
@@ -738,39 +738,20 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     bool validPromotionRate;
     const float promotionRate = calcPromotionRate(&validPromotionRate);
     uint32_t pretenureCount = 0;
-    bool shouldPretenure = (validPromotionRate && promotionRate > 0.6) ||
-        IsFullStoreBufferReason(reason);
-
-    if (shouldPretenure) {
-        JSContext* cx = TlsContext.get();
-        for (auto& entry : tenureCounts.entries) {
-            if (entry.count >= 3000) {
-                ObjectGroup* group = entry.group;
-                if (group->canPreTenure() && group->zone()->group()->canEnterWithoutYielding(cx)) {
-                    AutoCompartment ac(cx, group);
-                    group->setShouldPreTenure(cx);
-                    pretenureCount++;
+    if (validPromotionRate) {
+        if (promotionRate > 0.8 || IsFullStoreBufferReason(reason)) {
+            JSContext* cx = TlsContext.get();
+            for (auto& entry : tenureCounts.entries) {
+                if (entry.count >= 3000) {
+                    ObjectGroup* group = entry.group;
+                    if (group->canPreTenure() && group->zone()->group()->canEnterWithoutYielding(cx)) {
+                        AutoCompartment ac(cx, group);
+                        group->setShouldPreTenure(cx);
+                        pretenureCount++;
+                    }
                 }
             }
         }
-    }
-    for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-        if (shouldPretenure && zone->allocNurseryStrings && zone->tenuredStrings >= 30 * 1000) {
-            JSRuntime::AutoProhibitActiveContextChange apacc(rt);
-            CancelOffThreadIonCompile(zone);
-            bool preserving = zone->isPreservingCode();
-            zone->setPreservingCode(false);
-            zone->discardJitCode(rt->defaultFreeOp());
-            zone->setPreservingCode(preserving);
-            for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
-                if (jit::JitCompartment* jitComp = c->jitCompartment()) {
-                    jitComp->discardStubs();
-                    jitComp->stringsCanBeInNursery = false;
-                }
-            }
-            zone->allocNurseryStrings = false;
-        }
-        zone->tenuredStrings = 0;
     }
     endProfile(ProfileKey::Pretenure);
 
@@ -1105,7 +1086,7 @@ js::Nursery::setStartPosition()
 void
 js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason)
 {
-    static const double GrowThreshold   = 0.03;
+    static const double GrowThreshold   = 0.05;
     static const double ShrinkThreshold = 0.01;
     unsigned newMaxNurseryChunks;
 
