@@ -769,6 +769,11 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   // In that case we will get a simulated OnStartRequest() and then the real
   // channel will call in with an errored OnStartRequest().
 
+  if (!mChannel) {
+    MOZ_ASSERT(!mObserver);
+    return NS_BINDING_ABORTED;
+  }
+
   nsresult rv;
   aRequest->GetStatus(&rv);
   if (NS_FAILED(rv)) {
