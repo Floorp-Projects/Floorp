@@ -7,7 +7,7 @@
 const {AddonManager} = require("resource://gre/modules/AddonManager.jsm");
 const Services = require("Services");
 const {getJSON} = require("devtools/client/shared/getjson");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 var ADB_LINK = Services.prefs.getCharPref("devtools.webide.adbAddonURL");
 var ADB_ADDON_ID = Services.prefs.getCharPref("devtools.webide.adbAddonID");

@@ -10,7 +10,7 @@ const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
 const {Connection} = require("devtools/shared/client/connection-manager");
 const {DebuggerServer} = require("devtools/server/main");
 const discovery = require("devtools/shared/discovery/discovery");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 loader.lazyRequireGetter(this, "AuthenticationResult",
   "devtools/shared/security/auth", true);
