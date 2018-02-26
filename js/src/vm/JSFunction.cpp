@@ -622,6 +622,8 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
 
     // Everything added below can substituted by the non-lazy-script version of
     // this function later.
+    if (!xdr->codeAlign(sizeof(js::XDRAlignment)))
+        return false;
     js::AutoXDRTree funTree(xdr, xdr->getTreeKey(fun));
 
     if (!xdr->codeUint32(&firstword))
@@ -678,6 +680,11 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
 
     // Verify marker at end of function to detect buffer trunction.
     if (!xdr->codeMarker(0x9E35CA1F))
+        return false;
+
+    // Required by AutoXDRTree to copy & paste snipet of sub-trees while keeping
+    // the alignment.
+    if (!xdr->codeAlign(sizeof(js::XDRAlignment)))
         return false;
 
     return true;
