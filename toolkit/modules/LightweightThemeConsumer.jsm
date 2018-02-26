@@ -10,6 +10,11 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 // Get the theme variables from the app resource directory.
 // This allows per-app variables.
+const toolkitVariableMap = [
+  ["--arrowpanel-background", "popup"],
+  ["--arrowpanel-color", "popup_text"],
+  ["--arrowpanel-border-color", "popup_border"],
+];
 ChromeUtils.import("resource:///modules/ThemeVariableMap.jsm");
 
 ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
@@ -174,10 +179,12 @@ function _setProperty(elem, active, variableName, value) {
 }
 
 function _setProperties(root, active, vars) {
-  for (let [cssVarName, varsKey, optionalElementID] of ThemeVariableMap) {
-    let elem = optionalElementID ? root.ownerDocument.getElementById(optionalElementID)
-                                 : root;
-    _setProperty(elem, active, cssVarName, vars[varsKey]);
+  for (let map of [toolkitVariableMap, ThemeVariableMap]) {
+    for (let [cssVarName, varsKey, optionalElementID] of map) {
+      let elem = optionalElementID ? root.ownerDocument.getElementById(optionalElementID)
+                                   : root;
+      _setProperty(elem, active, cssVarName, vars[varsKey]);
+    }
   }
 }
 
