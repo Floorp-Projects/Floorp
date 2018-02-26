@@ -4,11 +4,6 @@
       "Allow": [
         "https://www.allow.com",
         "https://www.pre-existing-deny.com"
-      ],
-
-      "Block": [
-        "https://www.deny.com",
-        "https://www.pre-existing-allow.com"
       ]
     },
 
@@ -28,11 +23,6 @@
       "Allow": [
         "https://www.allow.com",
         "https://www.pre-existing-deny.com"
-      ],
-
-      "Block": [
-        "https://www.deny.com",
-        "https://www.pre-existing-allow.com"
       ]
     },
 
