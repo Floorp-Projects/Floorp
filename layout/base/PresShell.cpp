@@ -10658,10 +10658,7 @@ PresShell::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
   aSizes.mLayoutPresContextSize +=
     mPresContext->SizeOfIncludingThis(mallocSizeOf);
 
-  nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
-  if (rootFrame) {
-    rootFrame->AddSizeOfExcludingThisForTree(aSizes);
-  }
+  mFrameConstructor->AddSizeOfIncludingThis(aSizes);
 }
 
 size_t
