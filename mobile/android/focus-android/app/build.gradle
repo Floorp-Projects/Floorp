@@ -170,7 +170,13 @@ jacocoAndroidUnitTestReport {
 repositories {
     mavenCentral()
     maven {
-        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.latest.mobile.android-api-16-opt/artifacts/public/android/maven"
+        // For the latest version of GeckoView (moving target!) use:
+        //   https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.latest.mobile.android-api-16-opt/artifacts/public/android/maven
+        //
+        // For discovering available versions go to:
+        //   https://tools.taskcluster.net/index/gecko.v2.mozilla-central.nightly
+
+        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.2018.02.26.latest.mobile.android-api-16-opt/artifacts/public/android/maven"
     }
 }
 
