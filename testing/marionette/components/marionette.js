@@ -462,7 +462,7 @@ class MarionetteMainProcess {
         if (this.gfxWindow === null || subject === this.gfxWindow) {
           Services.obs.removeObserver(this, topic);
 
-          Services.obs.addObserver(this, "xpcom-shutdown");
+          Services.obs.addObserver(this, "xpcom-will-shutdown");
           this.finalUIStartup = true;
           this.init();
         }
@@ -491,15 +491,15 @@ class MarionetteMainProcess {
         if (this.gfxWindow) {
           Services.obs.addObserver(this, "domwindowclosed");
         } else {
-          Services.obs.addObserver(this, "xpcom-shutdown");
+          Services.obs.addObserver(this, "xpcom-will-shutdown");
           this.finalUIStartup = true;
           this.init();
         }
 
         break;
 
-      case "xpcom-shutdown":
-        Services.obs.removeObserver(this, "xpcom-shutdown");
+      case "xpcom-will-shutdown":
+        Services.obs.removeObserver(this, "xpcom-will-shutdown");
         this.uninit();
         break;
     }
