@@ -15,6 +15,7 @@
 #include "mozilla/places/History.h"
 #endif
 #include "nsIURL.h"
+#include "nsIURIMutator.h"
 #include "nsISizeOf.h"
 #include "nsIDocShell.h"
 #include "nsIPrefetchService.h"
@@ -474,13 +475,18 @@ Link::SetUsername(const nsAString &aUsername)
 void
 Link::SetHost(const nsAString &aHost)
 {
-  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  (void)uri->SetHostPort(NS_ConvertUTF16toUTF8(aHost));
+  nsresult rv = NS_MutateURI(uri)
+                  .SetHostPort(NS_ConvertUTF16toUTF8(aHost))
+                  .Finalize(uri);
+  if (NS_FAILED(rv)) {
+    return;
+  }
   SetHrefAttribute(uri);
 }
 
