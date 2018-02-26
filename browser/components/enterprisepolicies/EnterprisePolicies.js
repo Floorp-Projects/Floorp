@@ -8,7 +8,6 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   WindowsGPOParser: "resource:///modules/policies/WindowsGPOParser.jsm",
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
   Policies: "resource:///modules/policies/Policies.jsm",
   PoliciesValidator: "resource:///modules/policies/PoliciesValidator.jsm",
 });
@@ -140,11 +139,11 @@ EnterprisePoliciesManager.prototype = {
       let policyImpl = Policies[policyName];
 
       for (let timing of Object.keys(this._callbacks)) {
-        let policyCallback = policyImpl["on" + timing];
+        let policyCallback = policyImpl[timing];
         if (policyCallback) {
           this._schedulePolicyCallback(
             timing,
-            policyCallback.bind(null,
+            policyCallback.bind(policyImpl,
                                 this, /* the EnterprisePoliciesManager */
                                 parsedParameters));
         }
@@ -153,10 +152,24 @@ EnterprisePoliciesManager.prototype = {
   },
 
   _callbacks: {
-    BeforeAddons: [],
-    ProfileAfterChange: [],
-    BeforeUIStartup: [],
-    AllWindowsRestored: [],
+    // The earlist that a policy callback can run. This will
+    // happen right after the Policy Engine itself has started,
+    // and before the Add-ons Manager has started.
+    onBeforeAddons: [],
+
+    // This happens after all the initialization related to
+    // the profile has finished (prefs, places database, etc.).
+    onProfileAfterChange: [],
+
+    // Just before the first browser window gets created.
+    onBeforeUIStartup: [],
+
+    // Called after all windows from the last session have been
+    // restored (or the default window and homepage tab, if the
+    // session is not being restored).
+    // The content of the tabs themselves have not necessarily
+    // finished loading.
+    onAllWindowsRestored: [],
   },
 
   _schedulePolicyCallback(timing, callback) {
@@ -216,22 +229,23 @@ EnterprisePoliciesManager.prototype = {
   observe: function BG_observe(subject, topic, data) {
     switch (topic) {
       case "policies-startup":
+        // Before the first set of policy callbacks runs, we must
+        // initialize the service.
         this._initialize();
-        this._runPoliciesCallbacks("BeforeAddons");
+
+        this._runPoliciesCallbacks("onBeforeAddons");
         break;
 
       case "profile-after-change":
-        // Before the first set of policy callbacks runs, we must
-        // initialize the service.
-        this._runPoliciesCallbacks("ProfileAfterChange");
+        this._runPoliciesCallbacks("onProfileAfterChange");
         break;
 
       case "final-ui-startup":
-        this._runPoliciesCallbacks("BeforeUIStartup");
+        this._runPoliciesCallbacks("onBeforeUIStartup");
         break;
 
       case "sessionstore-windows-restored":
-        this._runPoliciesCallbacks("AllWindowsRestored");
+        this._runPoliciesCallbacks("onAllWindowsRestored");
 
         // After the last set of policy callbacks ran, notify the test observer.
         Services.obs.notifyObservers(null,

@@ -32,6 +32,32 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 
 var EXPORTED_SYMBOLS = ["Policies"];
 
+/*
+ * ============================
+ * = POLICIES IMPLEMENTATIONS =
+ * ============================
+ *
+ * The Policies object below is where the implementation for each policy
+ * happens. An object for each policy should be defined, containing
+ * callback functions that will be called by the engine.
+ *
+ * See the _callbacks object in EnterprisePolicies.js for the list of
+ * possible callbacks and an explanation of each.
+ *
+ * Each callback will be called with two parameters:
+ * - manager
+ *   This is the EnterprisePoliciesManager singleton object from
+ *   EnterprisePolicies.js
+ *
+ * - param
+ *   The parameter defined for this policy in policies-schema.json.
+ *   It will be different for each policy. It could be a boolean,
+ *   a string, an array or a complex object. All parameters have
+ *   been validated according to the schema, and no unknown
+ *   properties will be present on them.
+ *
+ * The callbacks will be bound to their parent policy object.
+ */
 var Policies = {
   "BlockAboutAddons": {
     onBeforeUIStartup(manager, param) {
@@ -206,6 +232,19 @@ var Policies = {
  * The functions below are helpers to be used by several policies.
  */
 
+/**
+ * setAndLockPref
+ *
+ * Sets the _default_ value of a pref, and locks it (meaning that
+ * the default value will always be returned, independent from what
+ * is stored as the user value).
+ * The value is only changed in memory, and not stored to disk.
+ *
+ * @param {string} prefName
+ *        The pref to be changed
+ * @param {boolean,number,string} prefValue
+ *        The value to set and lock
+ */
 function setAndLockPref(prefName, prefValue) {
   if (Services.prefs.prefIsLocked(prefName)) {
     Services.prefs.unlockPref(prefName);
@@ -234,6 +273,19 @@ function setAndLockPref(prefName, prefValue) {
   Services.prefs.lockPref(prefName);
 }
 
+/**
+ * addAllowDenyPermissions
+ *
+ * Helper function to call the permissions manager (Services.perms.add)
+ * for two arrays of URLs.
+ *
+ * @param {string} permissionName
+ *        The name of the permission to change
+ * @param {array} allowList
+ *        The list of URLs to be set as ALLOW_ACTION for the chosen permission.
+ * @param {array} blockList
+ *        The list of URLs to be set as DENY_ACTION for the chosen permission.
+ */
 function addAllowDenyPermissions(permissionName, allowList, blockList) {
   allowList = allowList || [];
   blockList = blockList || [];
