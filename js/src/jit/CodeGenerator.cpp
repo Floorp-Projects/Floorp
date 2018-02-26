@@ -14,6 +14,7 @@
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Unused.h"
 
 #include <type_traits>
 
@@ -5085,9 +5086,8 @@ CodeGenerator::generateArgumentsChecks(bool assert)
     // No registers are allocated yet, so it's safe to grab anything.
     AllocatableGeneralRegisterSet temps(GeneralRegisterSet::All());
     Register temp1 = temps.takeAny();
-#ifndef JS_CODEGEN_ARM64
     Register temp2 = temps.takeAny();
-#endif
+
     const CompileInfo& info = gen->info();
 
     Label miss;
@@ -5114,6 +5114,8 @@ CodeGenerator::generateArgumentsChecks(bool assert)
 #else
         // On ARM64, the stack pointer situation is more complicated. When we
         // enable Ion, we should figure out how to mitigate Spectre there.
+        mozilla::Unused << temp1;
+        mozilla::Unused << temp2;
         MOZ_CRASH("NYI");
 #endif
     }
