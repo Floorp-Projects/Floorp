@@ -549,6 +549,7 @@ class MarionetteMainProcess {
         this.server = listener;
       } catch (e) {
         log.fatal("Remote protocol server failed to start", e);
+        this.uninit();
         Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
       }
 
