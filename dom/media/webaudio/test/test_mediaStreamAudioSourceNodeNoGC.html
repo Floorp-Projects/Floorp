@@ -50,19 +50,26 @@ function waitForAudio(analysisFunction, cancelPromise) {
   });
 }
 
-navigator.mediaDevices.getUserMedia({audio: true, fake: true})
-  .then(stream => {
+SpecialPowers.pushPrefEnv({
+  set: [
+    // This test expects the fake audio device, specifically for the tones
+    // it outputs. Explicitly disable the audio loopback device and enable
+    // fake streams.
+    ['media.audio_loopback_dev', ''],
+    ['media.navigator.streams.fake', true]
+  ]
+}).then(async () => {
+  try {
+    let stream = await navigator.mediaDevices.getUserMedia({audio: true});
     stream.onended = () => ended = true;
     let source = context.createMediaStreamSource(stream);
     source.connect(analyser);
-    analyser.connect(context.destination);
-  })
-  .then(() => {
+    await analyser.connect(context.destination);
+
     ok(true, "Waiting for audio to pass through the analyser")
-    return waitForAudio(arr => arr[binIndexForFrequency(1000)] > 200,
-                        wait(60000, "Timeout waiting for audio"));
-  })
-  .then(() => {
+    await waitForAudio(arr => arr[binIndexForFrequency(1000)] > 200,
+                       wait(60000, "Timeout waiting for audio"));
+
     ok(true, "Audio was detected by the analyser. Forcing CC.");
     SpecialPowers.forceCC();
     SpecialPowers.forceGC();
@@ -70,19 +77,18 @@ navigator.mediaDevices.getUserMedia({audio: true, fake: true})
     SpecialPowers.forceGC();
 
     info("Checking that GC didn't destroy the stream or source node");
-    return waitForAudio(arr => arr[binIndexForFrequency(1000)] < 50,
-                        wait(5000, "Timeout waiting for GC (timeout OK)"))
+    await waitForAudio(arr => arr[binIndexForFrequency(1000)] < 50,
+                       wait(5000, "Timeout waiting for GC (timeout OK)"))
                   .then(() => Promise.reject("Audio stopped unexpectedly"),
                         () => Promise.resolve());
-  })
-  .then(() => {
+
     ok(true, "Audio is still flowing");
     SimpleTest.finish();
-  })
-  .catch(e => {
+  } catch(e) {
     ok(false, "Error executing test: " + e + (e.stack ? "\n" + e.stack : ""));
     SimpleTest.finish();
-  });
+  }
+});
 </script>
 </pre>
 </body>
