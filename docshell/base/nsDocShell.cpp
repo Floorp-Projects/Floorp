@@ -9642,9 +9642,9 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     // outside of Gecko.
     const int where = (aWindowTarget.IsEmpty() || targetDocShell)
                       ? nsIBrowserDOMWindow::OPEN_CURRENTWINDOW
-                      : nsIBrowserDOMWindow::OPEN_NEW;
+                      : nsIBrowserDOMWindow::OPEN_NEWWINDOW;
 
-    if (where == nsIBrowserDOMWindow::OPEN_NEW && isDocumentAuxSandboxed) {
+    if (where == nsIBrowserDOMWindow::OPEN_NEWWINDOW && isDocumentAuxSandboxed) {
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;
     }
 
