@@ -36,7 +36,7 @@ made, you can skip these steps:
   1. Bump the version number in testing/webdriver/Cargo.toml
   2. `cargo publish`
 
-[webdriver]: ../webdriver
+[webdriver]: https://searchfox.org/mozilla-central/source/testing/webdriver
 
 
 Update the change log
@@ -63,8 +63,7 @@ mention of this.  Lines are optimally formatted at roughly 72 columns
 to make the file readable in a text editor as well as rendered HTML.
 fmt(1) does a splendid job at text formatting.
 
-[CHANGES.md]: ../CHANGES.md
-[webdriver]: ../../webdriver
+[CHANGES.md]: https://searchfox.org/mozilla-central/source/testing/geckodriver/CHANGES.md
 [rust-mozrunner]: https://github.com/jgraham/rust_mozrunner
 
 
@@ -84,8 +83,8 @@ Updating dependencies should always be made as a separate commit to
 not confuse reviewers because vendoring involves checking in a lot
 of extra code reviewed downstream.
 
-[Cargo.toml]: ../Cargo.toml
-[Cargo.lock]: ../Cargo.lock
+[Cargo.toml]: https://searchfox.org/mozilla-central/source/testing/geckodriver/Cargo.toml
+[Cargo.lock]: https://searchfox.org/mozilla-central/source/testing/geckodriver/Cargo.lock
 
 
 Bump the version number
@@ -123,8 +122,8 @@ of [testing/geckodriver] to the latter branch:
 	% git clean -fxd
 	% cp -r $SRC/gecko/testing/geckodriver/* .
 
-[README]: ../README.md
-[testing/geckodriver]: ../
+[README]: https://searchfox.org/mozilla-central/source/testing/geckodriver/README.md
+[testing/geckodriver]: https://searchfox.org/mozilla-central/source/testing/geckodriver
 
 
 Manually change `webdriver` dependency
