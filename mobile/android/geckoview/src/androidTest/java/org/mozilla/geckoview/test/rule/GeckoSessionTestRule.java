@@ -40,8 +40,10 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import kotlin.jvm.JvmClassMappingKt;
@@ -223,22 +225,29 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     public static class MethodCall {
         public final Method method;
         public final CallRequirement requirement;
+        public final Object target;
         private int currentCount;
-
-        /* package */ MethodCall(final Method method) {
-            this(method, (CallRequirement) null);
-        }
-
-        /* package */ MethodCall(final Method method,
-                                 final AssertCalled requirement) {
-            this(method, requirement != null ? new CallRequirement(
-                    requirement.value(), requirement.count(), requirement.order()) : null);
-        }
 
         public MethodCall(final Method method,
                           final CallRequirement requirement) {
+            this(method, requirement, /* target */ null);
+        }
+
+        /* package */ MethodCall(final Method method, final AssertCalled annotation,
+                                 final Object target) {
+            this(method,
+                 (annotation != null) ? new CallRequirement(annotation.value(),
+                                                            annotation.count(),
+                                                            annotation.order())
+                                      : null,
+                 /* target */ target);
+        }
+
+        /* package */ MethodCall(final Method method, final CallRequirement requirement,
+                                 final Object target) {
             this.method = method;
             this.requirement = requirement;
+            this.target = target;
             currentCount = 0;
         }
 
@@ -303,6 +312,56 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         }
     }
 
+    protected class CallbackDelegates {
+        private final Map<Method, MethodCall> mDelegates = new HashMap<>();
+        private int mOrder;
+
+        public void delegate(final Object callback) {
+            for (final Class<?> ifce : CALLBACK_CLASSES) {
+                if (!ifce.isInstance(callback)) {
+                    continue;
+                }
+                for (final Method method : ifce.getMethods()) {
+                    final Method callbackMethod;
+                    try {
+                        callbackMethod = callback.getClass().getMethod(method.getName(),
+                                                                       method.getParameterTypes());
+                    } catch (final NoSuchMethodException e) {
+                        throw new RuntimeException(e);
+                    }
+                    final MethodCall call = new MethodCall(
+                            callbackMethod, getAssertCalled(callbackMethod, callback), callback);
+                    mDelegates.put(method, call);
+                }
+            }
+        }
+
+        public void clear() {
+            final Collection<MethodCall> values = mDelegates.values();
+            final MethodCall[] valuesArray = values.toArray(new MethodCall[values.size()]);
+
+            mDelegates.clear();
+            mOrder = 0;
+
+            for (final MethodCall call : valuesArray) {
+                assertMatchesCount(call);
+            }
+        }
+
+        public MethodCall prepareMethodCall(final Method method) {
+            final MethodCall call = mDelegates.get(method);
+            if (call == null) {
+                return null;
+            }
+
+            assertAllowMoreCalls(call);
+            call.incrementCounter();
+            assertOrder(call, mOrder);
+            mOrder = Math.max(call.getOrder(), mOrder);
+            return call;
+        }
+    }
+
     protected static class CallRecord {
         public final Method method;
         public final MethodCall methodCall;
@@ -310,7 +369,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
         public CallRecord(final Method method, final Object[] args) {
             this.method = method;
-            this.methodCall = new MethodCall(method);
+            this.methodCall = new MethodCall(method, /* requirement */ null);
             this.args = args;
         }
     }
@@ -364,6 +423,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     protected GeckoSession mSession;
     protected Object mCallbackProxy;
     protected List<CallRecord> mCallRecords;
+    protected CallbackDelegates mWaitScopeDelegates;
+    protected CallbackDelegates mTestScopeDelegates;
     protected int mLastWaitStart;
     protected int mLastWaitEnd;
     protected MethodCall mCurrentMethodCall;
@@ -474,7 +535,11 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         applyAnnotations(description.getAnnotations(), settings);
 
         final List<CallRecord> records = new ArrayList<>();
+        final CallbackDelegates waitDelegates = new CallbackDelegates();
+        final CallbackDelegates testDelegates = new CallbackDelegates();
         mCallRecords = records;
+        mWaitScopeDelegates = waitDelegates;
+        mTestScopeDelegates = testDelegates;
         mLastWaitStart = 0;
         mLastWaitEnd = 0;
 
@@ -487,10 +552,19 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
                 records.add(new CallRecord(method, args));
 
+                MethodCall call = waitDelegates.prepareMethodCall(method);
+                if (call == null) {
+                    call = testDelegates.prepareMethodCall(method);
+                }
+
                 try {
-                    return method.invoke(Callbacks.Default.INSTANCE, args);
+                    mCurrentMethodCall = call;
+                    return method.invoke((call != null) ? call.target
+                                                        : Callbacks.Default.INSTANCE, args);
                 } catch (final IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e.getCause() != null ? e.getCause() : e);
+                } finally {
+                    mCurrentMethodCall = null;
                 }
             }
         };
@@ -515,6 +589,14 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         }
     }
 
+    /**
+     * Internal method to perform callback checks at the end of a test.
+     */
+    public void performTestEndCheck() {
+        mWaitScopeDelegates.clear();
+        mTestScopeDelegates.clear();
+    }
+
     protected void cleanupSession() throws Throwable {
         if (mSession.isOpen()) {
             mSession.closeWindow();
@@ -522,6 +604,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         mSession = null;
         mCallbackProxy = null;
         mCallRecords = null;
+        mWaitScopeDelegates = null;
+        mTestScopeDelegates = null;
         mLastWaitStart = 0;
         mLastWaitEnd = 0;
         mTimeoutMillis = DEFAULT_TIMEOUT_MILLIS;
@@ -535,6 +619,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 try {
                     prepareSession(description);
                     base.evaluate();
+                    performTestEndCheck();
                 } finally {
                     cleanupSession();
                 }
@@ -684,7 +769,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         for (final Method method : callback.getDeclaredMethods()) {
             for (final Pattern pattern : patterns) {
                 if (pattern.matcher(method.getName()).matches()) {
-                    waitMethods.add(new MethodCall(method));
+                    waitMethods.add(new MethodCall(method, /* requirement */ null));
                 }
             }
         }
@@ -721,7 +806,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 }
                 final AssertCalled ac = getAssertCalled(callbackMethod, callback);
                 if (ac != null && ac.value()) {
-                    methodCalls.add(new MethodCall(callbackMethod, ac));
+                    methodCalls.add(new MethodCall(callbackMethod, ac, /* target */ null));
                 }
             }
         }
@@ -771,6 +856,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         }
 
         mLastWaitEnd = index;
+        mWaitScopeDelegates.clear();
     }
 
     /**
@@ -799,7 +885,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                     throw new RuntimeException(e);
                 }
                 methodCalls.add(new MethodCall(
-                        callbackMethod, getAssertCalled(callbackMethod, callback)));
+                        callbackMethod, getAssertCalled(callbackMethod, callback),
+                        /* target */ null));
             }
         }
 
@@ -854,5 +941,29 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     public @NonNull CallInfo getCurrentCall() {
         assertThat("Should be in a method call", mCurrentMethodCall, notNullValue());
         return mCurrentMethodCall.getInfo();
+    }
+
+    /**
+     * Delegate implemented interfaces to the specified callback object, for the rest of the test.
+     * Only GeckoSession callback interfaces are supported. Delegates for {@link
+     * #delegateUntilTestEnd} can be temporarily overridden by delegates for {@link
+     * #delegateDuringNextWait}.
+     *
+     * @param callback Callback object, or null to clear all previously-set delegates.
+     */
+    public void delegateUntilTestEnd(final Object callback) {
+        mTestScopeDelegates.delegate(callback);
+    }
+
+    /**
+     * Delegate implemented interfaces to the specified callback object, during the next wait.
+     * Only GeckoSession callback interfaces are supported. Delegates for {@link
+     * #delegateDuringNextWait} can temporarily take precedence over delegates for
+     * {@link #delegateUntilTestEnd}.
+     *
+     * @param callback Callback object, or null to clear all previously-set delegates.
+     */
+    public void delegateDuringNextWait(final Object callback) {
+        mWaitScopeDelegates.delegate(callback);
     }
 }
