@@ -6,6 +6,7 @@ package org.mozilla.gecko.util;
 import static org.junit.Assert.*;
 
 import android.os.Parcel;
+import android.test.suitebuilder.annotation.SmallTest;
 
 import org.json.JSONException;
 import org.junit.Before;
@@ -17,6 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @RunWith(RobolectricTestRunner.class)
+@SmallTest
 public class GeckoBundleTest {
     private static final int INNER_BUNDLE_SIZE = 25;
     private static final int OUTER_BUNDLE_SIZE = INNER_BUNDLE_SIZE + 6;
