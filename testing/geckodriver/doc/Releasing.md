@@ -76,12 +76,12 @@ Make relevant changes to [Cargo.toml] to upgrade dependencies, then run
 	% ./mach build testing/geckodriver
 
 to pull down and vendor the upgraded libraries.  Remember to check
-in the [Cargo.lock] file, since unlike we want geckodriver builds to
-be reproducible.
+in the [Cargo.lock] file since we want reproducible builds for
+geckodriver, uninfluenced by dependency variations.
 
-Updating dependencies should always be made as a separate commit to
-not confuse reviewers because vendoring involves checking in a lot
-of extra code reviewed downstream.
+The updates to dependencies should always be made as a separate
+commit to not confuse reviewers, because vendoring involves checking
+in a lot of extra code already reviewed downstream.
 
 [Cargo.toml]: https://searchfox.org/mozilla-central/source/testing/geckodriver/Cargo.toml
 [Cargo.lock]: https://searchfox.org/mozilla-central/source/testing/geckodriver/Cargo.lock
@@ -122,7 +122,7 @@ of [testing/geckodriver] to the latter branch:
 	% git clean -fxd
 	% cp -r $SRC/gecko/testing/geckodriver/* .
 
-[README]: https://searchfox.org/mozilla-central/source/testing/geckodriver/README.md
+[README.md]: https://searchfox.org/mozilla-central/source/testing/geckodriver/README.md
 [testing/geckodriver]: https://searchfox.org/mozilla-central/source/testing/geckodriver
 
 
