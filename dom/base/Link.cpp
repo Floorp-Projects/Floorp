@@ -553,7 +553,7 @@ Link::SetSearch(const nsAString& aSearch)
 void
 Link::SetPort(const nsAString &aPort)
 {
-  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
@@ -571,7 +571,12 @@ Link::SetPort(const nsAString &aPort)
     }
   }
 
-  (void)uri->SetPort(port);
+  rv = NS_MutateURI(uri)
+         .SetPort(port)
+         .Finalize(uri);
+  if (NS_FAILED(rv)) {
+    return;
+  }
   SetHrefAttribute(uri);
 }
 

@@ -3,22 +3,22 @@ function run_test() {
     getService(Ci.nsIIOService);
 
   var uri = ios.newURI("http://foo.com/file.txt");
-  uri.port = 90;
+  uri = uri.mutate().setPort(90).finalize();
   Assert.equal(uri.hostPort, "foo.com:90");
 
   uri = ios.newURI("http://foo.com:10/file.txt");
-  uri.port = 500;
+  uri = uri.mutate().setPort(500).finalize();
   Assert.equal(uri.hostPort, "foo.com:500");
-  
+
   uri = ios.newURI("http://foo.com:5000/file.txt");
-  uri.port = 20;
+  uri = uri.mutate().setPort(20).finalize();
   Assert.equal(uri.hostPort, "foo.com:20");
 
   uri = ios.newURI("http://foo.com:5000/file.txt");
-  uri.port = -1;
+  uri = uri.mutate().setPort(-1).finalize();
   Assert.equal(uri.hostPort, "foo.com");
 
   uri = ios.newURI("http://foo.com:5000/file.txt");
-  uri.port = 80;
+  uri = uri.mutate().setPort(80).finalize();
   Assert.equal(uri.hostPort, "foo.com");
 }
