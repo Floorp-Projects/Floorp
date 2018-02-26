@@ -8,7 +8,7 @@
   */
 
 var EXPORTED_SYMBOLS = [
-  "ACTIONS", "Addons", "Addresses", "Bookmarks",
+  "ACTIONS", "Addons", "Addresses", "Bookmarks", "CreditCards",
   "Formdata", "History", "Passwords", "Prefs",
   "Tabs", "TPS", "Windows"
 ];

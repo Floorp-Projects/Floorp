@@ -44,7 +44,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsIBaseWindow.h"
 #include "nsISelection.h"
-#include "nsITextControlElement.h"
 #include "nsFrameSelection.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
@@ -2294,21 +2293,6 @@ GetParentFrameToScroll(nsIFrame* aFrame)
   return aFrame->GetParent();
 }
 
-/*static*/ bool
-EventStateManager::CanVerticallyScrollFrameWithWheel(nsIFrame* aFrame)
-{
-  nsIContent* c = aFrame->GetContent();
-  if (!c) {
-    return true;
-  }
-  nsCOMPtr<nsITextControlElement> ctrl =
-    do_QueryInterface(c->IsInAnonymousSubtree() ? c->GetBindingParent() : c);
-  if (ctrl && ctrl->IsSingleLineTextControl()) {
-    return false;
-  }
-  return true;
-}
-
 void
 EventStateManager::DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
                                                    WidgetWheelEvent* aEvent,
@@ -2608,15 +2592,27 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
     nsIFrame* frameToScroll = do_QueryFrame(scrollableFrame);
     MOZ_ASSERT(frameToScroll);
 
-    // Don't scroll vertically by mouse-wheel on a single-line text control.
-    if (checkIfScrollableY) {
-      if (!CanVerticallyScrollFrameWithWheel(scrollFrame)) {
-        continue;
-      }
-    }
-
     if (!checkIfScrollableX && !checkIfScrollableY) {
       return frameToScroll;
+    }
+
+    // If the frame disregards the direction the user is trying to scroll, then
+    // it should just bubbles the scroll event up to its parental scroll frame
+    Maybe<layers::ScrollDirection> disregardedDirection =
+      WheelHandlingUtils::GetDisregardedWheelScrollDirection(scrollFrame);
+    if (disregardedDirection) {
+      switch (disregardedDirection.ref()) {
+        case layers::ScrollDirection::eHorizontal:
+          if (checkIfScrollableX) {
+            continue;
+          }
+          break;
+        case layers::ScrollDirection::eVertical:
+          if (checkIfScrollableY) {
+            continue;
+          }
+          break;
+      }
     }
 
     ScrollbarStyles ss = scrollableFrame->GetScrollbarStyles();

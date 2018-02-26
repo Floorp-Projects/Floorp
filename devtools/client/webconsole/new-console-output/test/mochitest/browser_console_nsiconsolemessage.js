@@ -3,83 +3,87 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Check that nsIConsoleMessages are displayed in the Browser Console.
-// See bug 859756.
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,<title>bug859756</title>\n" +
-                 "<p>hello world\n<p>nsIConsoleMessages ftw!";
+const TEST_URI =
+`data:text/html;charset=utf8,
+<title>browser_console_nsiconsolemessage.js</title>
+<p>hello world<p>
+nsIConsoleMessages ftw!`;
 
-function test() {
-  const FILTER_PREF = "devtools.browserconsole.filter.jslog";
-  Services.prefs.setBoolPref(FILTER_PREF, true);
+add_task(async function () {
+  // We don't use `openNewTabAndConsole()` here because we need to log a message
+  // before opening the web console.
+  await addTab(TEST_URI);
 
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref(FILTER_PREF);
+  // Test for cached nsIConsoleMessages.
+  Services.console.logStringMessage("cachedBrowserConsoleMessage");
+
+  info("open web console");
+  let hud = await openConsole();
+
+  ok(hud, "web console opened");
+
+  // This "liveBrowserConsoleMessage" message should not be displayed.
+  Services.console.logStringMessage("liveBrowserConsoleMessage");
+
+  // Log a "foobarz" message so that we can be certain the previous message is
+  // not displayed.
+  let text = "foobarz";
+  let onFooBarzMessage = waitForMessage(hud, text);
+  ContentTask.spawn(gBrowser.selectedBrowser, text, function (msg) {
+    content.console.log(msg);
   });
+  await onFooBarzMessage;
+  ok(true, `"${text}" log is displayed in the Web Console as expected`);
 
-  Task.spawn(function* () {
-    const {tab} = yield loadTab(TEST_URI);
+  // Ensure the "liveBrowserConsoleMessage" and "cachedBrowserConsoleMessage"
+  // messages are not displayed.
+  text = hud.outputNode.textContent;
+  ok(!text.includes("cachedBrowserConsoleMessage"),
+    "cached nsIConsoleMessages are not displayed");
+  ok(!text.includes("liveBrowserConsoleMessage"),
+    "nsIConsoleMessages are not displayed");
 
-    // Test for cached nsIConsoleMessages.
-    Services.console.logStringMessage("test1 for bug859756");
+  await closeConsole();
 
-    info("open web console");
-    let hud = yield openConsole(tab);
+  info("web console closed");
+  hud = await HUDService.toggleBrowserConsole();
+  ok(hud, "browser console opened");
 
-    ok(hud, "web console opened");
-    Services.console.logStringMessage("do-not-show-me");
+  await waitFor(() => findMessage(hud, "cachedBrowserConsoleMessage"));
+  Services.console.logStringMessage("liveBrowserConsoleMessage2");
+  await waitFor(() => findMessage(hud, "liveBrowserConsoleMessage2"));
 
-    ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
-      content.console.log("foobarz");
-    });
+  let msg = await waitFor(() => findMessage(hud, "liveBrowserConsoleMessage"));
+  ok(msg, "message element for liveBrowserConsoleMessage (nsIConsoleMessage)");
 
-    yield waitForMessages({
-      webconsole: hud,
-      messages: [{
-        text: "foobarz",
-        category: CATEGORY_WEBDEV,
-        severity: SEVERITY_LOG,
-      }],
-    });
+  const outputNode = hud.ui.outputNode;
+  const toolbar = outputNode.querySelector(".webconsole-filterbar-primary");
 
-    let text = hud.outputNode.textContent;
-    is(text.indexOf("do-not-show-me"), -1,
-       "nsIConsoleMessages are not displayed");
-    is(text.indexOf("test1 for bug859756"), -1,
-       "nsIConsoleMessages are not displayed (confirmed)");
+  // Test that filtering is working by hiding log messages...
+  // show the filter bar.
+  toolbar.querySelector(".devtools-filter-icon").click();
+  const filterBar = await waitFor(() => {
+    return outputNode.querySelector(".webconsole-filterbar-secondary");
+  });
+  ok(filterBar, "Filter bar is shown when filter icon is clicked.");
 
-    yield closeConsole(tab);
+  // Check that messages are not shown when their filter is turned off.
+  filterBar.querySelector(".log").click();
 
-    info("web console closed");
-    hud = yield HUDService.toggleBrowserConsole();
-    ok(hud, "browser console opened");
+  // And then checking that log messages are hidden.
+  await waitFor(() => findMessages(hud, "cachedBrowserConsoleMessage").length === 0);
+  await waitFor(() => findMessages(hud, "liveBrowserConsoleMessage").length === 0);
+  await waitFor(() => findMessages(hud, "liveBrowserConsoleMessage2").length === 0);
 
-    Services.console.logStringMessage("test2 for bug859756");
+  // Turn the log filter off.
+  filterBar.querySelector(".log").click();
 
-    let results = yield waitForMessages({
-      webconsole: hud,
-      messages: [{
-        text: "test1 for bug859756",
-        category: CATEGORY_JS,
-      }, {
-        text: "test2 for bug859756",
-        category: CATEGORY_JS,
-      }, {
-        text: "do-not-show-me",
-        category: CATEGORY_JS,
-      }],
-    });
-
-    let msg = [...results[2].matched][0];
-    ok(msg, "message element for do-not-show-me (nsIConsoleMessage)");
-    isnot(msg.textContent.indexOf("do-not-show"), -1,
-          "element content is correct");
-    ok(!msg.classList.contains("filtered-by-type"), "element is not filtered");
-
-    hud.setFilterState("jslog", false);
-
-    ok(msg.classList.contains("filtered-by-type"), "element is filtered");
-  }).then(finishTest);
-}
+  // Hide the filter bar.
+  toolbar.querySelector(".devtools-filter-icon").click();
+});

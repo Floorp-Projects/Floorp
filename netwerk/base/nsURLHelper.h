@@ -91,7 +91,7 @@ bool net_IsAbsoluteURL(const nsACString& inURL);
  * Extract URI-Scheme if possible
  *
  * @param inURI     URI spec
- * @param scheme    scheme copied to this buffer on return (may be null)
+ * @param scheme    scheme copied to this buffer on return. Is lowercase.
  */
 nsresult net_ExtractURLScheme(const nsACString &inURI,
                               nsACString &scheme);

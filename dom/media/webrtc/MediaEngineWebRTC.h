@@ -416,6 +416,12 @@ public:
                        const nsString& aDeviceId,
                        const char** aOutBadConstraint) override;
 
+  /**
+   * Assigns the current settings of the capture to aOutSettings.
+   * Main thread only.
+   */
+  void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
+
   void Pull(const RefPtr<const AllocationHandle>& aHandle,
             const RefPtr<SourceMediaStream>& aStream,
             TrackID aTrackID,

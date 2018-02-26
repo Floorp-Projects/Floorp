@@ -1067,48 +1067,6 @@ add_task(async function test_onLivemarkDeleted() {
   }
 });
 
-add_task(async function test_onItemMoved() {
-  _("Items moved via the synchronous API should be tracked");
-
-  try {
-    let fx_id = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      CommonUtils.makeURI("http://getfirefox.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Firefox!");
-    let fx_guid = await PlacesUtils.promiseItemGuid(fx_id);
-    _("Firefox GUID: " + fx_guid);
-    let tb_id = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      CommonUtils.makeURI("http://getthunderbird.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Thunderbird!");
-    let tb_guid = await PlacesUtils.promiseItemGuid(tb_id);
-    _("Thunderbird GUID: " + tb_guid);
-
-    await startTracking();
-
-    // Moving within the folder will just track the folder.
-    PlacesUtils.bookmarks.moveItem(
-      tb_id, PlacesUtils.bookmarks.bookmarksMenuFolder, 0);
-    await verifyTrackedItems(["menu"]);
-    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
-    await resetTracker();
-    await PlacesTestUtils.markBookmarksAsSynced();
-
-    // Moving a bookmark to a different folder will track the old
-    // folder, the new folder and the bookmark.
-    PlacesUtils.bookmarks.moveItem(fx_id, PlacesUtils.bookmarks.toolbarFolder,
-                                   PlacesUtils.bookmarks.DEFAULT_INDEX);
-    await verifyTrackedItems(["menu", "toolbar", fx_guid]);
-    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
-
-  } finally {
-    _("Clean up.");
-    await cleanup();
-  }
-});
-
 add_task(async function test_async_onItemMoved_update() {
   _("Items moved via the asynchronous API should be tracked");
 
@@ -1263,38 +1221,42 @@ add_task(async function test_treeMoved() {
 
   try {
     // Create a couple of parent folders.
-    let folder1_id = PlacesUtils.bookmarks.createFolder(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      "First test folder",
-      PlacesUtils.bookmarks.DEFAULT_INDEX);
-    let folder1_guid = await PlacesUtils.promiseItemGuid(folder1_id);
+    let folder1 = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      test: "First test folder",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER
+    });
 
     // A second folder in the first.
-    let folder2_id = PlacesUtils.bookmarks.createFolder(
-      folder1_id,
-      "Second test folder",
-      PlacesUtils.bookmarks.DEFAULT_INDEX);
-    let folder2_guid = await PlacesUtils.promiseItemGuid(folder2_id);
+    let folder2 = await PlacesUtils.bookmarks.insert({
+      parentGuid: folder1.guid,
+      title: "Second test folder",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER
+    });
 
     // Create a couple of bookmarks in the second folder.
-    PlacesUtils.bookmarks.insertBookmark(
-      folder2_id,
-      CommonUtils.makeURI("http://getfirefox.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Firefox!");
-    PlacesUtils.bookmarks.insertBookmark(
-      folder2_id,
-      CommonUtils.makeURI("http://getthunderbird.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Thunderbird!");
+    await PlacesUtils.bookmarks.insert({
+      parentGuid: folder2.guid,
+      url: "http://getfirefox.com",
+      title: "Get Firefox!"
+    });
+    await PlacesUtils.bookmarks.insert({
+      parentGuid: folder2.guid,
+      url: "http://getthunderbird.com",
+      title: "Get Thunderbird!"
+    });
 
     await startTracking();
 
     // Move folder 2 to be a sibling of folder1.
-    PlacesUtils.bookmarks.moveItem(
-      folder2_id, PlacesUtils.bookmarks.bookmarksMenuFolder, 0);
+    await PlacesUtils.bookmarks.update({
+      guid: folder2.guid,
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      index: 0
+    });
+
     // the menu and both folders should be tracked, the children should not be.
-    await verifyTrackedItems(["menu", folder1_guid, folder2_guid]);
+    await verifyTrackedItems(["menu", folder1.guid, folder2.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");

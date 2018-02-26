@@ -46,7 +46,6 @@ class Message extends Component {
       messageId: PropTypes.string,
       scrollToMessage: PropTypes.bool,
       exceptionDocURL: PropTypes.string,
-      parameters: PropTypes.object,
       request: PropTypes.object,
       dispatch: PropTypes.func,
       timeStamp: PropTypes.number,
@@ -261,7 +260,7 @@ class Message extends Component {
       dom.span({ className: "message-body-wrapper" },
         dom.span({
           className: "message-flex-body",
-          onClick: collapsible && this.toggleMessage,
+          onClick: collapsible ? this.toggleMessage : undefined,
         },
           // Add whitespaces for formatting when copying to the clipboard.
           timestampEl ? " " : null,

@@ -20,11 +20,6 @@ function run_test() {
     } catch (ex) {}
 
     try {
-      PlacesUtils.bookmarks.moveItem(root, PlacesUtils.placesRootId, 0);
-      do_throw("Trying to move a root should throw");
-    } catch (ex) {}
-
-    try {
       PlacesUtils.bookmarks.removeFolderChildren(root);
       if (root == PlacesUtils.placesRootId)
         do_throw("Trying to remove children of the main root should throw");

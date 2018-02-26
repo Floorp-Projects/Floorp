@@ -63,7 +63,7 @@ class RequestListContent extends Component {
       scale: PropTypes.number,
       selectedRequest: PropTypes.object,
       sortedRequests: PropTypes.array.isRequired,
-      requestFilterTypes: PropTypes.string.isRequired,
+      requestFilterTypes: PropTypes.object.isRequired,
     };
   }
 

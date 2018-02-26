@@ -198,15 +198,15 @@ add_task(async function() {
 
     let columns = site1.querySelectorAll(".item-box > label");
     is(columns[0].value, "example.com", "Should show the correct host.");
-    is(columns[2].value, "2", "Should show the correct number of cookies.");
-    is(columns[3].value, "", "Should show no site data.");
-    is(columns[4].value, args.creationDate1, "Should show the correct date.");
+    is(columns[1].value, "2", "Should show the correct number of cookies.");
+    is(columns[2].value, "", "Should show no site data.");
+    is(columns[3].value, args.creationDate1, "Should show the correct date.");
 
     columns = site2.querySelectorAll(".item-box > label");
     is(columns[0].value, "example.org", "Should show the correct host.");
-    is(columns[2].value, "1", "Should show the correct number of cookies.");
-    is(columns[3].value, "", "Should show no site data.");
-    is(columns[4].value, args.creationDate2, "Should show the correct date.");
+    is(columns[1].value, "1", "Should show the correct number of cookies.");
+    is(columns[2].value, "", "Should show no site data.");
+    is(columns[3].value, args.creationDate2, "Should show the correct date.");
 
     let removeBtn = frameDoc.getElementById("removeSelected");
     let saveBtn = frameDoc.getElementById("save");
@@ -232,9 +232,9 @@ add_task(async function() {
 
     let columns = site1.querySelectorAll(".item-box > label");
     is(columns[0].value, "example.com", "Should show the correct host.");
-    is(columns[2].value, "2", "Should show the correct number of cookies.");
-    is(columns[3].value, "", "Should show no site data.");
-    is(columns[4].value, args.creationDate1, "Should show the correct date.");
+    is(columns[1].value, "2", "Should show the correct number of cookies.");
+    is(columns[2].value, "", "Should show no site data.");
+    is(columns[3].value, args.creationDate1, "Should show the correct date.");
 
     let removeBtn = frameDoc.getElementById("removeSelected");
     let saveBtn = frameDoc.getElementById("save");

@@ -1680,7 +1680,7 @@ nsAutoCompleteController::CompleteValue(nsString &aValue)
       const int32_t findIndex = 7; // length of "http://"
 
       if ((endSelect < findIndex + mSearchStringLength) ||
-          !scheme.LowerCaseEqualsLiteral("http") ||
+          !scheme.EqualsLiteral("http") ||
           !Substring(aValue, findIndex, mSearchStringLength).Equals(
             mSearchString, nsCaseInsensitiveStringComparator())) {
         return NS_OK;

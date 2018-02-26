@@ -21,7 +21,6 @@ GenericScrollAnimation::GenericScrollAnimation(AsyncPanZoomController& aApzc,
                                                const ScrollAnimationBezierPhysicsSettings& aSettings)
   : mApzc(aApzc)
   , mFinalDestination(aInitialPosition)
-  , mForceVerticalOverscroll(false)
 {
   if (gfxPrefs::SmoothScrollMSDPhysicsEnabled()) {
     mAnimationPhysics = MakeUnique<ScrollAnimationMSDPhysics>(aInitialPosition);
@@ -86,9 +85,12 @@ GenericScrollAnimation::DoSample(FrameMetrics& aFrameMetrics, const TimeDuration
 
   // Note: we ignore overscroll for generic animations.
   ParentLayerPoint adjustedOffset, overscroll;
-  mApzc.mX.AdjustDisplacement(displacement.x, adjustedOffset.x, overscroll.x);
+  mApzc.mX.AdjustDisplacement(displacement.x, adjustedOffset.x, overscroll.x,
+                              mDirectionForcedToOverscroll
+                                == Some(ScrollDirection::eHorizontal));
   mApzc.mY.AdjustDisplacement(displacement.y, adjustedOffset.y, overscroll.y,
-                              mForceVerticalOverscroll);
+                              mDirectionForcedToOverscroll
+                                == Some(ScrollDirection::eVertical));
 
   // If we expected to scroll, but there's no more scroll range on either axis,
   // then end the animation early. Note that the initial displacement could be 0
