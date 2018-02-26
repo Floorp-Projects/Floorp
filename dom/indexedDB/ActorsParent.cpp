@@ -94,6 +94,7 @@
 #include "nsIThread.h"
 #include "nsITimer.h"
 #include "nsIURI.h"
+#include "nsIURIMutator.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsQueryObject.h"
@@ -4199,14 +4200,13 @@ GetDatabaseFileURL(nsIFile* aDatabaseFile,
     return rv;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  rv = fileHandler->NewFileURI(aDatabaseFile, getter_AddRefs(uri));
+  nsCOMPtr<nsIURIMutator> mutator;
+  rv = fileHandler->NewFileURIMutator(aDatabaseFile, getter_AddRefs(mutator));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  nsCOMPtr<nsIFileURL> fileUrl = do_QueryInterface(uri);
-  MOZ_ASSERT(fileUrl);
+  nsCOMPtr<nsIFileURL> fileUrl;
 
   nsAutoCString type;
   PersistenceTypeToText(aPersistenceType, type);
@@ -4218,11 +4218,13 @@ GetDatabaseFileURL(nsIFile* aDatabaseFile,
     telemetryFilenameClause.AppendLiteral(".sqlite");
   }
 
-  rv = fileUrl->SetQuery(NS_LITERAL_CSTRING("persistenceType=") + type +
-                         NS_LITERAL_CSTRING("&group=") + aGroup +
-                         NS_LITERAL_CSTRING("&origin=") + aOrigin +
-                         NS_LITERAL_CSTRING("&cache=private") +
-                         telemetryFilenameClause);
+  rv = NS_MutateURI(mutator)
+         .SetQuery(NS_LITERAL_CSTRING("persistenceType=") + type +
+                   NS_LITERAL_CSTRING("&group=") + aGroup +
+                   NS_LITERAL_CSTRING("&origin=") + aOrigin +
+                   NS_LITERAL_CSTRING("&cache=private") +
+                   telemetryFilenameClause)
+         .Finalize(fileUrl);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

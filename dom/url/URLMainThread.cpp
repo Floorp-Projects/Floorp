@@ -456,7 +456,9 @@ URLMainThread::SetSearchInternal(const nsAString& aSearch, ErrorResult& aRv)
 {
   // Ignore failures to be compatible with NS4.
 
-  mURI->SetQuery(NS_ConvertUTF16toUTF8(aSearch));
+  Unused << NS_MutateURI(mURI)
+              .SetQuery(NS_ConvertUTF16toUTF8(aSearch))
+              .Finalize(mURI);
 }
 
 nsIURI*

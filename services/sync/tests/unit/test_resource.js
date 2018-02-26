@@ -512,7 +512,10 @@ add_test(function test_uri_construction() {
                   .QueryInterface(Ci.nsIURL);
   let uri2 = CommonUtils.makeURI("http://foo/")
                   .QueryInterface(Ci.nsIURL);
-  uri2.query = query;
+  uri2 = uri2.mutate()
+             .setQuery(query)
+             .finalize()
+             .QueryInterface(Ci.nsIURL);
   Assert.equal(uri1.query, uri2.query);
 
   run_next_test();

@@ -678,7 +678,9 @@ nsJARURI::GetQuery(nsACString& query)
 NS_IMETHODIMP
 nsJARURI::SetQuery(const nsACString& query)
 {
-    return mJAREntry->SetQuery(query);
+    return NS_MutateURI(mJAREntry)
+             .SetQuery(query)
+             .Finalize(mJAREntry);
 }
 
 NS_IMETHODIMP

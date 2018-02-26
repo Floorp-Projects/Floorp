@@ -17,6 +17,7 @@
 #include "mozStorageCID.h"
 #include "nsIFile.h"
 #include "nsIURI.h"
+#include "nsIURIMutator.h"
 #include "nsIFileURL.h"
 #include "nsThreadUtils.h"
 
@@ -197,21 +198,22 @@ OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
   rv = handler->Init();
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  nsCOMPtr<nsIURI> uri;
-  rv = handler->NewFileURI(dbFile, getter_AddRefs(uri));
+  nsCOMPtr<nsIURIMutator> mutator;
+  rv = handler->NewFileURIMutator(dbFile, getter_AddRefs(mutator));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  nsCOMPtr<nsIFileURL> dbFileUrl = do_QueryInterface(uri);
-  if (NS_WARN_IF(!dbFileUrl)) { return NS_ERROR_UNEXPECTED; }
+  nsCOMPtr<nsIFileURL> dbFileUrl;
 
   nsAutoCString type;
   PersistenceTypeToText(PERSISTENCE_TYPE_DEFAULT, type);
 
-  rv = dbFileUrl->SetQuery(
+  rv = NS_MutateURI(mutator)
+         .SetQuery(
     NS_LITERAL_CSTRING("persistenceType=") + type +
     NS_LITERAL_CSTRING("&group=") + aQuotaInfo.mGroup +
     NS_LITERAL_CSTRING("&origin=") + aQuotaInfo.mOrigin +
-    NS_LITERAL_CSTRING("&cache=private"));
+    NS_LITERAL_CSTRING("&cache=private"))
+         .Finalize(dbFileUrl);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   nsCOMPtr<mozIStorageService> ss =

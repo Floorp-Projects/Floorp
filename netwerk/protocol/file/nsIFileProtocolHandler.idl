@@ -6,6 +6,7 @@
 #include "nsIProtocolHandler.idl"
 
 interface nsIFile;
+interface nsIURIMutator;
 
 [scriptable, uuid(1fb25bd5-4354-4dcd-8d97-621b7b3ed2e4)]
 interface nsIFileProtocolHandler : nsIProtocolHandler
@@ -17,6 +18,16 @@ interface nsIFileProtocolHandler : nsIProtocolHandler
      * @return reference to a new nsIURI object
      */
     nsIURI newFileURI(in nsIFile aFile);
+
+    /**
+     * This method constructs a new file URI, and returns a URI mutator
+     * that has not yet been finalized, allowing the URI to be changed without
+     * being cloned.
+     *
+     * @param aFile nsIFile
+     * @return reference to a new nsIURIMutator object
+     */
+    nsIURIMutator newFileURIMutator(in nsIFile file);
 
     /**
      * Converts the nsIFile to the corresponding URL string.  NOTE: under
