@@ -95,7 +95,8 @@ RELEASE_LOCALES = [
 # of other locales so that translators of not yet completed locales can
 # verify their work in progress.
 ADDITIONAL_SCREENSHOT_LOCALES = [
-	"lt"
+	"lt",
+	"gu-IN"
 ]
 
 # Those are locales that we take automated screenshots of.
