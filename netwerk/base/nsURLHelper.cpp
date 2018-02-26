@@ -525,6 +525,7 @@ net_ExtractURLScheme(const nsACString &inURI,
 
     p.Claim(scheme);
     scheme.StripTaggedASCII(ASCIIMask::MaskCRLFTab());
+    ToLowerCase(scheme);
     return NS_OK;
 }
 

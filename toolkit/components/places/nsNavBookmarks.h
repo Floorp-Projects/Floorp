@@ -285,12 +285,6 @@ private:
   // Removes a stale synced bookmark tombstone.
   nsresult RemoveTombstone(const nsACString& aGUID);
 
-  // Removes the Sync orphan annotation from a synced item, so that Sync doesn't
-  // try to reparent the item once it sees the original parent. Only synced
-  // bookmarks should have this anno, but we do this for all bookmarks because
-  // the anno may be backed up and restored.
-  nsresult PreventSyncReparenting(const BookmarkData& aBookmark);
-
   nsresult SetItemTitleInternal(BookmarkData& aBookmark,
                                 const nsACString& aTitle,
                                 int64_t aSyncChangeDelta);

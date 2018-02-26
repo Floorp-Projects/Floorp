@@ -162,7 +162,7 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
   // after it. The easiest way to do that is to call this method again with the
   // "view-source:" lopped off and then prepend it again afterwards.
 
-  if (scheme.LowerCaseEqualsLiteral("view-source")) {
+  if (scheme.EqualsLiteral("view-source")) {
     nsCOMPtr<nsIURIFixupInfo> uriInfo;
     // We disable keyword lookup and alternate URIs so that small typos don't
     // cause us to look at very different domains
@@ -177,7 +177,7 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
     innerURIString.Trim(" ");
     nsAutoCString innerScheme;
     ioService->ExtractScheme(innerURIString, innerScheme);
-    if (innerScheme.LowerCaseEqualsLiteral("view-source")) {
+    if (innerScheme.EqualsLiteral("view-source")) {
       return NS_ERROR_FAILURE;
     }
 
@@ -233,47 +233,47 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
   if (sFixTypos && (aFixupFlags & FIXUP_FLAG_FIX_SCHEME_TYPOS)) {
     // Fast-path for common cases.
     if (scheme.IsEmpty() ||
-        scheme.LowerCaseEqualsLiteral("http") ||
-        scheme.LowerCaseEqualsLiteral("https") ||
-        scheme.LowerCaseEqualsLiteral("ftp") ||
-        scheme.LowerCaseEqualsLiteral("file")) {
+        scheme.EqualsLiteral("http") ||
+        scheme.EqualsLiteral("https") ||
+        scheme.EqualsLiteral("ftp") ||
+        scheme.EqualsLiteral("file")) {
       // Do nothing.
-    } else if (scheme.LowerCaseEqualsLiteral("ttp")) {
+    } else if (scheme.EqualsLiteral("ttp")) {
       // ttp -> http.
       uriString.ReplaceLiteral(0, 3, "http");
       scheme.AssignLiteral("http");
       info->mFixupChangedProtocol = true;
-    } else if (scheme.LowerCaseEqualsLiteral("htp")) {
+    } else if (scheme.EqualsLiteral("htp")) {
       // htp -> http.
       uriString.ReplaceLiteral(0, 3, "http");
       scheme.AssignLiteral("http");
       info->mFixupChangedProtocol = true;
-    } else if (scheme.LowerCaseEqualsLiteral("ttps")) {
+    } else if (scheme.EqualsLiteral("ttps")) {
       // ttps -> https.
       uriString.ReplaceLiteral(0, 4, "https");
       scheme.AssignLiteral("https");
       info->mFixupChangedProtocol = true;
-    } else if (scheme.LowerCaseEqualsLiteral("tps")) {
+    } else if (scheme.EqualsLiteral("tps")) {
       // tps -> https.
       uriString.ReplaceLiteral(0, 3, "https");
       scheme.AssignLiteral("https");
       info->mFixupChangedProtocol = true;
-    } else if (scheme.LowerCaseEqualsLiteral("ps")) {
+    } else if (scheme.EqualsLiteral("ps")) {
       // ps -> https.
       uriString.ReplaceLiteral(0, 2, "https");
       scheme.AssignLiteral("https");
       info->mFixupChangedProtocol = true;
-    } else if (scheme.LowerCaseEqualsLiteral("htps")) {
+    } else if (scheme.EqualsLiteral("htps")) {
       // htps -> https.
       uriString.ReplaceLiteral(0, 4, "https");
       scheme.AssignLiteral("https");
       info->mFixupChangedProtocol = true;
-    } else if (scheme.LowerCaseEqualsLiteral("ile")) {
+    } else if (scheme.EqualsLiteral("ile")) {
       // ile -> file.
       uriString.ReplaceLiteral(0, 3, "file");
       scheme.AssignLiteral("file");
       info->mFixupChangedProtocol = true;
-    } else if (scheme.LowerCaseEqualsLiteral("le")) {
+    } else if (scheme.EqualsLiteral("le")) {
       // le -> file.
       uriString.ReplaceLiteral(0, 2, "file");
       scheme.AssignLiteral("file");

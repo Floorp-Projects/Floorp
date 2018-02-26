@@ -138,7 +138,7 @@ class RequestListItem extends Component {
       onMouseDown: PropTypes.func.isRequired,
       onSecurityIconMouseDown: PropTypes.func.isRequired,
       onWaterfallMouseDown: PropTypes.func.isRequired,
-      requestFilterTypes: PropTypes.string.isRequired,
+      requestFilterTypes: PropTypes.object.isRequired,
       waterfallWidth: PropTypes.number,
     };
   }

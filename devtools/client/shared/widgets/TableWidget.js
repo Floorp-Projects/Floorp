@@ -1760,7 +1760,7 @@ EditableFieldsEngine.prototype = {
   },
 
   /**
-   * Handle keypresses when in edit mode:
+   * Handle keydowns when in edit mode:
    *   - <escape> revert the value and close the textbox.
    *   - <return> apply the value and close the textbox.
    *   - <tab> Handled by the consumer's `onTab` callback.

@@ -27,7 +27,6 @@ module.exports = {
     "no-sequences": "error",
     "no-shadow": "error",
     "no-throw-literal": "error",
-    "no-unused-vars": "error",
     "padded-blocks": ["error", "never"],
     "quotes": ["error", "double", "avoid-escape"],
     "semi-spacing": ["error", {"before": false, "after": true}],

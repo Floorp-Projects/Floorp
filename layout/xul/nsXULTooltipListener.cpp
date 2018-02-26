@@ -35,7 +35,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsXULTooltipListener* nsXULTooltipListener::mInstance = nullptr;
+nsXULTooltipListener* nsXULTooltipListener::sInstance = nullptr;
 
 //////////////////////////////////////////////////////////////////////////
 //// nsISupports
@@ -50,28 +50,26 @@ nsXULTooltipListener::nsXULTooltipListener()
   , mLastTreeRow(-1)
 #endif
 {
-  if (sTooltipListenerCount++ == 0) {
-    // register the callback so we get notified of updates
-    Preferences::RegisterCallback(ToolbarTipsPrefChanged,
-                                  "browser.chrome.toolbar_tips");
+  // FIXME(emilio): This can be faster, this should use BoolVarCache.
+  //
+  // register the callback so we get notified of updates
+  Preferences::RegisterCallback(ToolbarTipsPrefChanged,
+                                "browser.chrome.toolbar_tips");
 
-    // Call the pref callback to initialize our state.
-    ToolbarTipsPrefChanged("browser.chrome.toolbar_tips", nullptr);
-  }
+  // Call the pref callback to initialize our state.
+  ToolbarTipsPrefChanged("browser.chrome.toolbar_tips", nullptr);
 }
 
 nsXULTooltipListener::~nsXULTooltipListener()
 {
-  if (nsXULTooltipListener::mInstance == this) {
-    ClearTooltipCache();
-  }
+  MOZ_ASSERT(sInstance == this);
+  sInstance = nullptr;
+
   HideTooltip();
 
-  if (--sTooltipListenerCount == 0) {
-    // Unregister our pref observer
-    Preferences::UnregisterCallback(ToolbarTipsPrefChanged,
-                                    "browser.chrome.toolbar_tips");
-  }
+  // Unregister our pref observer
+  Preferences::UnregisterCallback(ToolbarTipsPrefChanged,
+                                  "browser.chrome.toolbar_tips");
 }
 
 NS_IMPL_ISUPPORTS(nsXULTooltipListener, nsIDOMEventListener)
@@ -295,13 +293,12 @@ nsXULTooltipListener::ToolbarTipsPrefChanged(const char *aPref,
 //// nsXULTooltipListener
 
 bool nsXULTooltipListener::sShowTooltips = false;
-uint32_t nsXULTooltipListener::sTooltipListenerCount = 0;
 
-nsresult
+void
 nsXULTooltipListener::AddTooltipSupport(nsIContent* aNode)
 {
-  if (!aNode)
-    return NS_ERROR_NULL_POINTER;
+  MOZ_ASSERT(aNode);
+  MOZ_ASSERT(this == sInstance);
 
   aNode->AddSystemEventListener(NS_LITERAL_STRING("mouseout"), this,
                                 false, false);
@@ -313,23 +310,22 @@ nsXULTooltipListener::AddTooltipSupport(nsIContent* aNode)
                                 false, false);
   aNode->AddSystemEventListener(NS_LITERAL_STRING("dragstart"), this,
                                 true, false);
-
-  return NS_OK;
 }
 
-nsresult
+void
 nsXULTooltipListener::RemoveTooltipSupport(nsIContent* aNode)
 {
-  if (!aNode)
-    return NS_ERROR_NULL_POINTER;
+  MOZ_ASSERT(aNode);
+  MOZ_ASSERT(this == sInstance);
+
+  // The last reference to us can go after some of these calls.
+  RefPtr<nsXULTooltipListener> instance = this;
 
   aNode->RemoveSystemEventListener(NS_LITERAL_STRING("mouseout"), this, false);
   aNode->RemoveSystemEventListener(NS_LITERAL_STRING("mousemove"), this, false);
   aNode->RemoveSystemEventListener(NS_LITERAL_STRING("mousedown"), this, false);
   aNode->RemoveSystemEventListener(NS_LITERAL_STRING("mouseup"), this, false);
   aNode->RemoveSystemEventListener(NS_LITERAL_STRING("dragstart"), this, true);
-
-  return NS_OK;
 }
 
 #ifdef MOZ_XUL
@@ -713,7 +709,7 @@ nsXULTooltipListener::KillTooltipTimer()
 void
 nsXULTooltipListener::sTooltipCallback(nsITimer *aTimer, void *aListener)
 {
-  RefPtr<nsXULTooltipListener> instance = mInstance;
+  RefPtr<nsXULTooltipListener> instance = sInstance;
   if (instance)
     instance->ShowTooltip();
 }

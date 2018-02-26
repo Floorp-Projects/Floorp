@@ -25,7 +25,7 @@ class Frame extends Component {
         column: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
       }).isRequired,
       // Clicking on the frame link -- probably should link to the debugger.
-      onClick: PropTypes.func.isRequired,
+      onClick: PropTypes.func,
       // Option to display a function name before the source link.
       showFunctionName: PropTypes.bool,
       // Option to display a function name even if it's anonymous.

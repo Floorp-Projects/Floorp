@@ -537,11 +537,11 @@ const gStoragePressureObserver = {
     } else {
       // The firefox-used space >= 5GB, then guide users to about:preferences
       // to clear some data stored on firefox by websites.
-      let descriptionStringID = "spaceAlert.over5GB.message";
+      let descriptionStringID = "spaceAlert.over5GB.message1";
       let prefButtonLabelStringID = "spaceAlert.over5GB.prefButton.label";
       let prefButtonAccesskeyStringID = "spaceAlert.over5GB.prefButton.accesskey";
       if (AppConstants.platform == "win") {
-        descriptionStringID = "spaceAlert.over5GB.messageWin";
+        descriptionStringID = "spaceAlert.over5GB.messageWin1";
         prefButtonLabelStringID = "spaceAlert.over5GB.prefButtonWin.label";
         prefButtonAccesskeyStringID = "spaceAlert.over5GB.prefButtonWin.accesskey";
       }
@@ -553,7 +553,7 @@ const gStoragePressureObserver = {
           // The advanced subpanes are only supported in the old organization, which will
           // be removed by bug 1349689.
           let win = gBrowser.ownerGlobal;
-          win.openPreferences("panePrivacy", { origin: "storagePressure" });
+          win.openPreferences("privacy-sitedata", { origin: "storagePressure" });
         }
       });
     }
@@ -6076,7 +6076,7 @@ function stripUnsafeProtocolOnPaste(pasteData) {
     try {
       scheme = Services.io.extractScheme(pasteData);
     } catch (ex) { }
-    if (scheme.toLowerCase() != "javascript") {
+    if (scheme != "javascript") {
       break;
     }
 

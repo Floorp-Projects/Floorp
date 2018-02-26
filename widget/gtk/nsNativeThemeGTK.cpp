@@ -81,8 +81,9 @@ GetMonitorScaleFactor(nsIFrame* aFrame)
         // integer to avoid rounding errors which would lead to returning 0.
         int monitorScale = int(round(rootWidget->GetDefaultScale().scale
               / gfxPlatformGtk::GetFontScaleFactor()));
+        // Monitor scale can be negative if it has not been initialized in the
+        // puppet widget yet. We also make sure that we return positive value.
         if (monitorScale < 1) {
-          NS_WARNING(nsPrintfCString("Invalid monitor scale: %d", monitorScale).get());
           return 1;
         }
         return monitorScale;
