@@ -49,9 +49,8 @@ class TalosRunner(MozbuildObject):
 
     def make_config(self):
         default_actions = ['populate-webroot']
-        if not os.path.exists(self.virtualenv_path):
-            default_actions.append('create-virtualenv')
         default_actions.extend([
+            'create-virtualenv',
             'setup-mitmproxy',
             'run-tests',
         ])
