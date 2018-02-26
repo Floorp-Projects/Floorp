@@ -13,7 +13,6 @@ job-defaults:
    description: release bouncer submission job
    worker-type:
       by-project:
-         mozilla-central: scriptworker-prov-v1/bouncer-v1
          mozilla-beta: scriptworker-prov-v1/bouncer-v1
          mozilla-release: scriptworker-prov-v1/bouncer-v1
          default: scriptworker-prov-v1/bouncer-dev
@@ -32,7 +31,6 @@ job-defaults:
             - project:releng:bouncer:server:staging
    run-on-projects: []
    shipping-phase: promote
-   shipping-product: firefox
    locales-file: browser/locales/l10n-changesets.json
 
 jobs:
