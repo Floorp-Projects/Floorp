@@ -465,9 +465,7 @@ class DeviceManager(object):
         """
         Returns True if process with name processName is running on device.
         """
-        processInfo = self.processInfo(processName)
-        if processInfo:
-            return processInfo[0]
+        return self.processInfo(processName) is not None
 
     @abstractmethod
     def killProcess(self, processName, sig=None, native=False):
