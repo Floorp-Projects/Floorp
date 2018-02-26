@@ -176,4 +176,3 @@ def die(msg, exit_code=1):
     msg = '%s: %s' % (sys.argv[0], msg)
     print(msg, file=sys.stderr)
     return exit_code
-
