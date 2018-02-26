@@ -239,6 +239,252 @@ const CustomizableWidgets = [
       panelview.appendChild(footer);
     }
   }, {
+    id: "sync-button",
+    label: "remotetabs-panelmenu.label",
+    tooltiptext: "remotetabs-panelmenu.tooltiptext2",
+    type: "view",
+    viewId: "PanelUI-remotetabs",
+    deckIndices: {
+      DECKINDEX_TABS: 0,
+      DECKINDEX_TABSDISABLED: 1,
+      DECKINDEX_FETCHING: 2,
+      DECKINDEX_NOCLIENTS: 3,
+    },
+    TABS_PER_PAGE: 25,
+    NEXT_PAGE_MIN_TABS: 5, // Minimum number of tabs displayed when we click "Show All"
+    onCreated(aNode) {
+      this._initialize(aNode);
+    },
+    _initialize(aNode) {
+      if (this._initialized) {
+        return;
+      }
+      // Add an observer to the button so we get the animation during sync.
+      // (Note the observer sets many attributes, including label and
+      // tooltiptext, but we only want the 'syncstatus' attribute for the
+      // animation)
+      let doc = aNode.ownerDocument;
+      let obnode = doc.createElementNS(kNSXUL, "observes");
+      obnode.setAttribute("element", "sync-status");
+      obnode.setAttribute("attribute", "syncstatus");
+      aNode.appendChild(obnode);
+      this._initialized = true;
+    },
+    onViewShowing(aEvent) {
+      this._initialize(aEvent.target);
+      let doc = aEvent.target.ownerDocument;
+      this._tabsList = doc.getElementById("PanelUI-remotetabs-tabslist");
+      Services.obs.addObserver(this, SyncedTabs.TOPIC_TABS_CHANGED);
+
+      if (SyncedTabs.isConfiguredToSyncTabs) {
+        if (SyncedTabs.hasSyncedThisSession) {
+          this.setDeckIndex(this.deckIndices.DECKINDEX_TABS);
+        } else {
+          // Sync hasn't synced tabs yet, so show the "fetching" panel.
+          this.setDeckIndex(this.deckIndices.DECKINDEX_FETCHING);
+        }
+        // force a background sync.
+        SyncedTabs.syncTabs().catch(ex => {
+          Cu.reportError(ex);
+        });
+        // show the current list - it will be updated by our observer.
+        this._showTabs();
+      } else {
+        // not configured to sync tabs, so no point updating the list.
+        this.setDeckIndex(this.deckIndices.DECKINDEX_TABSDISABLED);
+      }
+    },
+    onViewHiding() {
+      Services.obs.removeObserver(this, SyncedTabs.TOPIC_TABS_CHANGED);
+      this._tabsList = null;
+    },
+    _tabsList: null,
+    observe(subject, topic, data) {
+      switch (topic) {
+        case SyncedTabs.TOPIC_TABS_CHANGED:
+          this._showTabs();
+          break;
+        default:
+          break;
+      }
+    },
+    setDeckIndex(index) {
+      let deck = this._tabsList.ownerDocument.getElementById("PanelUI-remotetabs-deck");
+      // We call setAttribute instead of relying on the XBL property setter due
+      // to things going wrong when we try and set the index before the XBL
+      // binding has been created - see bug 1241851 for the gory details.
+      deck.setAttribute("selectedIndex", index);
+    },
+
+    _showTabsPromise: Promise.resolve(),
+    // Update the tab list after any existing in-flight updates are complete.
+    _showTabs(paginationInfo) {
+      this._showTabsPromise = this._showTabsPromise.then(() => {
+        return this.__showTabs(paginationInfo);
+      }, e => {
+        Cu.reportError(e);
+      });
+    },
+    // Return a new promise to update the tab list.
+    __showTabs(paginationInfo) {
+      if (!this._tabsList) {
+        // Closed between the previous `this._showTabsPromise`
+        // resolving and now.
+        return undefined;
+      }
+      let doc = this._tabsList.ownerDocument;
+      return SyncedTabs.getTabClients().then(clients => {
+        // The view may have been hidden while the promise was resolving.
+        if (!this._tabsList) {
+          return;
+        }
+        if (clients.length === 0 && !SyncedTabs.hasSyncedThisSession) {
+          // the "fetching tabs" deck is being shown - let's leave it there.
+          // When that first sync completes we'll be notified and update.
+          return;
+        }
+
+        if (clients.length === 0) {
+          this.setDeckIndex(this.deckIndices.DECKINDEX_NOCLIENTS);
+          return;
+        }
+
+        this.setDeckIndex(this.deckIndices.DECKINDEX_TABS);
+        this._clearTabList();
+        SyncedTabs.sortTabClientsByLastUsed(clients);
+        let fragment = doc.createDocumentFragment();
+
+        for (let client of clients) {
+          // add a menu separator for all clients other than the first.
+          if (fragment.lastChild) {
+            let separator = doc.createElementNS(kNSXUL, "menuseparator");
+            fragment.appendChild(separator);
+          }
+          if (paginationInfo && paginationInfo.clientId == client.id) {
+            this._appendClient(client, fragment, paginationInfo.maxTabs);
+          } else {
+            this._appendClient(client, fragment);
+          }
+        }
+        this._tabsList.appendChild(fragment);
+        PanelView.forNode(this._tabsList.closest("panelview"))
+                 .descriptionHeightWorkaround();
+      }).catch(err => {
+        Cu.reportError(err);
+      }).then(() => {
+        // an observer for tests.
+        Services.obs.notifyObservers(null, "synced-tabs-menu:test:tabs-updated");
+      });
+    },
+    _clearTabList() {
+      let list = this._tabsList;
+      while (list.lastChild) {
+        list.lastChild.remove();
+      }
+    },
+    _showNoClientMessage() {
+      this._appendMessageLabel("notabslabel");
+    },
+    _appendMessageLabel(messageAttr, appendTo = null) {
+      if (!appendTo) {
+        appendTo = this._tabsList;
+      }
+      let message = this._tabsList.getAttribute(messageAttr);
+      let doc = this._tabsList.ownerDocument;
+      let messageLabel = doc.createElementNS(kNSXUL, "label");
+      messageLabel.textContent = message;
+      appendTo.appendChild(messageLabel);
+      return messageLabel;
+    },
+    _appendClient(client, attachFragment, maxTabs = this.TABS_PER_PAGE) {
+      let doc = attachFragment.ownerDocument;
+      // Create the element for the remote client.
+      let clientItem = doc.createElementNS(kNSXUL, "label");
+      clientItem.setAttribute("itemtype", "client");
+      let window = doc.defaultView;
+      clientItem.setAttribute("tooltiptext",
+        window.gSync.formatLastSyncDate(new Date(client.lastModified)));
+      clientItem.textContent = client.name;
+
+      attachFragment.appendChild(clientItem);
+
+      if (client.tabs.length == 0) {
+        let label = this._appendMessageLabel("notabsforclientlabel", attachFragment);
+        label.setAttribute("class", "PanelUI-remotetabs-notabsforclient-label");
+      } else {
+        // If this page will display all tabs, show no additional buttons.
+        // If the next page will display all the remaining tabs, show a "Show All" button
+        // Otherwise, show a "Shore More" button
+        let hasNextPage = client.tabs.length > maxTabs;
+        let nextPageIsLastPage = hasNextPage && maxTabs + this.TABS_PER_PAGE >= client.tabs.length;
+        if (nextPageIsLastPage) {
+          // When the user clicks "Show All", try to have at least NEXT_PAGE_MIN_TABS more tabs
+          // to display in order to avoid user frustration
+          maxTabs = Math.min(client.tabs.length - this.NEXT_PAGE_MIN_TABS, maxTabs);
+        }
+        if (hasNextPage) {
+          client.tabs = client.tabs.slice(0, maxTabs);
+        }
+        for (let tab of client.tabs) {
+          let tabEnt = this._createTabElement(doc, tab);
+          attachFragment.appendChild(tabEnt);
+        }
+        if (hasNextPage) {
+          let showAllEnt = this._createShowMoreElement(doc, client.id,
+                                                       nextPageIsLastPage ?
+                                                       Infinity :
+                                                       maxTabs + this.TABS_PER_PAGE);
+          attachFragment.appendChild(showAllEnt);
+        }
+      }
+    },
+    _createTabElement(doc, tabInfo) {
+      let item = doc.createElementNS(kNSXUL, "toolbarbutton");
+      let tooltipText = (tabInfo.title ? tabInfo.title + "\n" : "") + tabInfo.url;
+      item.setAttribute("itemtype", "tab");
+      item.setAttribute("class", "subviewbutton");
+      item.setAttribute("targetURI", tabInfo.url);
+      item.setAttribute("label", tabInfo.title != "" ? tabInfo.title : tabInfo.url);
+      item.setAttribute("image", tabInfo.icon);
+      item.setAttribute("tooltiptext", tooltipText);
+      // We need to use "click" instead of "command" here so openUILink
+      // respects different buttons (eg, to open in a new tab).
+      item.addEventListener("click", e => {
+        doc.defaultView.openUILink(tabInfo.url, e);
+        if (doc.defaultView.whereToOpenLink(e) != "current") {
+          e.preventDefault();
+          e.stopPropagation();
+        } else {
+          CustomizableUI.hidePanelForNode(item);
+        }
+        BrowserUITelemetry.countSyncedTabEvent("open", "toolbarbutton-subview");
+      });
+      return item;
+    },
+    _createShowMoreElement(doc, clientId, showCount) {
+      let labelAttr, tooltipAttr;
+      if (showCount === Infinity) {
+        labelAttr = "showAllLabel";
+        tooltipAttr = "showAllTooltipText";
+      } else {
+        labelAttr = "showMoreLabel";
+        tooltipAttr = "showMoreTooltipText";
+      }
+      let showAllItem = doc.createElementNS(kNSXUL, "toolbarbutton");
+      showAllItem.setAttribute("itemtype", "showmorebutton");
+      showAllItem.setAttribute("class", "subviewbutton");
+      let label = this._tabsList.getAttribute(labelAttr);
+      showAllItem.setAttribute("label", label);
+      let tooltipText = this._tabsList.getAttribute(tooltipAttr);
+      showAllItem.setAttribute("tooltiptext", tooltipText);
+      showAllItem.addEventListener("click", e => {
+        e.preventDefault();
+        e.stopPropagation();
+        this._showTabs({ clientId, maxTabs: showCount });
+      });
+      return showAllItem;
+    }
+  }, {
     id: "privatebrowsing-button",
     shortcutId: "key_privatebrowsing",
     onCommand(e) {
@@ -627,256 +873,6 @@ const CustomizableWidgets = [
       win.MailIntegration.sendLinkForBrowser(win.gBrowser.selectedBrowser);
     }
   }];
-
-if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
-  CustomizableWidgets.push({
-    id: "sync-button",
-    label: "remotetabs-panelmenu.label",
-    tooltiptext: "remotetabs-panelmenu.tooltiptext2",
-    type: "view",
-    viewId: "PanelUI-remotetabs",
-    deckIndices: {
-      DECKINDEX_TABS: 0,
-      DECKINDEX_TABSDISABLED: 1,
-      DECKINDEX_FETCHING: 2,
-      DECKINDEX_NOCLIENTS: 3,
-    },
-    TABS_PER_PAGE: 25,
-    NEXT_PAGE_MIN_TABS: 5, // Minimum number of tabs displayed when we click "Show All"
-    onCreated(aNode) {
-      this._initialize(aNode);
-    },
-    _initialize(aNode) {
-      if (this._initialized) {
-        return;
-      }
-      // Add an observer to the button so we get the animation during sync.
-      // (Note the observer sets many attributes, including label and
-      // tooltiptext, but we only want the 'syncstatus' attribute for the
-      // animation)
-      let doc = aNode.ownerDocument;
-      let obnode = doc.createElementNS(kNSXUL, "observes");
-      obnode.setAttribute("element", "sync-status");
-      obnode.setAttribute("attribute", "syncstatus");
-      aNode.appendChild(obnode);
-      this._initialized = true;
-    },
-    onViewShowing(aEvent) {
-      this._initialize(aEvent.target);
-      let doc = aEvent.target.ownerDocument;
-      this._tabsList = doc.getElementById("PanelUI-remotetabs-tabslist");
-      Services.obs.addObserver(this, SyncedTabs.TOPIC_TABS_CHANGED);
-
-      if (SyncedTabs.isConfiguredToSyncTabs) {
-        if (SyncedTabs.hasSyncedThisSession) {
-          this.setDeckIndex(this.deckIndices.DECKINDEX_TABS);
-        } else {
-          // Sync hasn't synced tabs yet, so show the "fetching" panel.
-          this.setDeckIndex(this.deckIndices.DECKINDEX_FETCHING);
-        }
-        // force a background sync.
-        SyncedTabs.syncTabs().catch(ex => {
-          Cu.reportError(ex);
-        });
-        // show the current list - it will be updated by our observer.
-        this._showTabs();
-      } else {
-        // not configured to sync tabs, so no point updating the list.
-        this.setDeckIndex(this.deckIndices.DECKINDEX_TABSDISABLED);
-      }
-    },
-    onViewHiding() {
-      Services.obs.removeObserver(this, SyncedTabs.TOPIC_TABS_CHANGED);
-      this._tabsList = null;
-    },
-    _tabsList: null,
-    observe(subject, topic, data) {
-      switch (topic) {
-        case SyncedTabs.TOPIC_TABS_CHANGED:
-          this._showTabs();
-          break;
-        default:
-          break;
-      }
-    },
-    setDeckIndex(index) {
-      let deck = this._tabsList.ownerDocument.getElementById("PanelUI-remotetabs-deck");
-      // We call setAttribute instead of relying on the XBL property setter due
-      // to things going wrong when we try and set the index before the XBL
-      // binding has been created - see bug 1241851 for the gory details.
-      deck.setAttribute("selectedIndex", index);
-    },
-
-    _showTabsPromise: Promise.resolve(),
-    // Update the tab list after any existing in-flight updates are complete.
-    _showTabs(paginationInfo) {
-      this._showTabsPromise = this._showTabsPromise.then(() => {
-        return this.__showTabs(paginationInfo);
-      }, e => {
-        Cu.reportError(e);
-      });
-    },
-    // Return a new promise to update the tab list.
-    __showTabs(paginationInfo) {
-      if (!this._tabsList) {
-        // Closed between the previous `this._showTabsPromise`
-        // resolving and now.
-        return undefined;
-      }
-      let doc = this._tabsList.ownerDocument;
-      return SyncedTabs.getTabClients().then(clients => {
-        // The view may have been hidden while the promise was resolving.
-        if (!this._tabsList) {
-          return;
-        }
-        if (clients.length === 0 && !SyncedTabs.hasSyncedThisSession) {
-          // the "fetching tabs" deck is being shown - let's leave it there.
-          // When that first sync completes we'll be notified and update.
-          return;
-        }
-
-        if (clients.length === 0) {
-          this.setDeckIndex(this.deckIndices.DECKINDEX_NOCLIENTS);
-          return;
-        }
-
-        this.setDeckIndex(this.deckIndices.DECKINDEX_TABS);
-        this._clearTabList();
-        SyncedTabs.sortTabClientsByLastUsed(clients);
-        let fragment = doc.createDocumentFragment();
-
-        for (let client of clients) {
-          // add a menu separator for all clients other than the first.
-          if (fragment.lastChild) {
-            let separator = doc.createElementNS(kNSXUL, "menuseparator");
-            fragment.appendChild(separator);
-          }
-          if (paginationInfo && paginationInfo.clientId == client.id) {
-            this._appendClient(client, fragment, paginationInfo.maxTabs);
-          } else {
-            this._appendClient(client, fragment);
-          }
-        }
-        this._tabsList.appendChild(fragment);
-        PanelView.forNode(this._tabsList.closest("panelview"))
-                 .descriptionHeightWorkaround();
-      }).catch(err => {
-        Cu.reportError(err);
-      }).then(() => {
-        // an observer for tests.
-        Services.obs.notifyObservers(null, "synced-tabs-menu:test:tabs-updated");
-      });
-    },
-    _clearTabList() {
-      let list = this._tabsList;
-      while (list.lastChild) {
-        list.lastChild.remove();
-      }
-    },
-    _showNoClientMessage() {
-      this._appendMessageLabel("notabslabel");
-    },
-    _appendMessageLabel(messageAttr, appendTo = null) {
-      if (!appendTo) {
-        appendTo = this._tabsList;
-      }
-      let message = this._tabsList.getAttribute(messageAttr);
-      let doc = this._tabsList.ownerDocument;
-      let messageLabel = doc.createElementNS(kNSXUL, "label");
-      messageLabel.textContent = message;
-      appendTo.appendChild(messageLabel);
-      return messageLabel;
-    },
-    _appendClient(client, attachFragment, maxTabs = this.TABS_PER_PAGE) {
-      let doc = attachFragment.ownerDocument;
-      // Create the element for the remote client.
-      let clientItem = doc.createElementNS(kNSXUL, "label");
-      clientItem.setAttribute("itemtype", "client");
-      let window = doc.defaultView;
-      clientItem.setAttribute("tooltiptext",
-        window.gSync.formatLastSyncDate(new Date(client.lastModified)));
-      clientItem.textContent = client.name;
-
-      attachFragment.appendChild(clientItem);
-
-      if (client.tabs.length == 0) {
-        let label = this._appendMessageLabel("notabsforclientlabel", attachFragment);
-        label.setAttribute("class", "PanelUI-remotetabs-notabsforclient-label");
-      } else {
-        // If this page will display all tabs, show no additional buttons.
-        // If the next page will display all the remaining tabs, show a "Show All" button
-        // Otherwise, show a "Shore More" button
-        let hasNextPage = client.tabs.length > maxTabs;
-        let nextPageIsLastPage = hasNextPage && maxTabs + this.TABS_PER_PAGE >= client.tabs.length;
-        if (nextPageIsLastPage) {
-          // When the user clicks "Show All", try to have at least NEXT_PAGE_MIN_TABS more tabs
-          // to display in order to avoid user frustration
-          maxTabs = Math.min(client.tabs.length - this.NEXT_PAGE_MIN_TABS, maxTabs);
-        }
-        if (hasNextPage) {
-          client.tabs = client.tabs.slice(0, maxTabs);
-        }
-        for (let tab of client.tabs) {
-          let tabEnt = this._createTabElement(doc, tab);
-          attachFragment.appendChild(tabEnt);
-        }
-        if (hasNextPage) {
-          let showAllEnt = this._createShowMoreElement(doc, client.id,
-                                                       nextPageIsLastPage ?
-                                                       Infinity :
-                                                       maxTabs + this.TABS_PER_PAGE);
-          attachFragment.appendChild(showAllEnt);
-        }
-      }
-    },
-    _createTabElement(doc, tabInfo) {
-      let item = doc.createElementNS(kNSXUL, "toolbarbutton");
-      let tooltipText = (tabInfo.title ? tabInfo.title + "\n" : "") + tabInfo.url;
-      item.setAttribute("itemtype", "tab");
-      item.setAttribute("class", "subviewbutton");
-      item.setAttribute("targetURI", tabInfo.url);
-      item.setAttribute("label", tabInfo.title != "" ? tabInfo.title : tabInfo.url);
-      item.setAttribute("image", tabInfo.icon);
-      item.setAttribute("tooltiptext", tooltipText);
-      // We need to use "click" instead of "command" here so openUILink
-      // respects different buttons (eg, to open in a new tab).
-      item.addEventListener("click", e => {
-        doc.defaultView.openUILink(tabInfo.url, e);
-        if (doc.defaultView.whereToOpenLink(e) != "current") {
-          e.preventDefault();
-          e.stopPropagation();
-        } else {
-          CustomizableUI.hidePanelForNode(item);
-        }
-        BrowserUITelemetry.countSyncedTabEvent("open", "toolbarbutton-subview");
-      });
-      return item;
-    },
-    _createShowMoreElement(doc, clientId, showCount) {
-      let labelAttr, tooltipAttr;
-      if (showCount === Infinity) {
-        labelAttr = "showAllLabel";
-        tooltipAttr = "showAllTooltipText";
-      } else {
-        labelAttr = "showMoreLabel";
-        tooltipAttr = "showMoreTooltipText";
-      }
-      let showAllItem = doc.createElementNS(kNSXUL, "toolbarbutton");
-      showAllItem.setAttribute("itemtype", "showmorebutton");
-      showAllItem.setAttribute("class", "subviewbutton");
-      let label = this._tabsList.getAttribute(labelAttr);
-      showAllItem.setAttribute("label", label);
-      let tooltipText = this._tabsList.getAttribute(tooltipAttr);
-      showAllItem.setAttribute("tooltiptext", tooltipText);
-      showAllItem.addEventListener("click", e => {
-        e.preventDefault();
-        e.stopPropagation();
-        this._showTabs({ clientId, maxTabs: showCount });
-      });
-      return showAllItem;
-    }
-  });
-}
 
 let preferencesButton = {
   id: "preferences-button",

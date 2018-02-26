@@ -95,15 +95,3 @@ add_task(async function test_tab_contextmenu_sync_not_ready_other_state() {
 
   sandbox.restore();
 });
-
-add_task(async function test_tab_contextmenu_fxa_disabled() {
-  const getter = sinon.stub(gSync, "SYNC_ENABLED").get(() => false);
-  // Simulate onSyncDisabled() being called on window open.
-  gSync.onSyncDisabled();
-
-  updateTabContextMenu(testTab);
-  is(document.getElementById("context_sendTabToDevice").hidden, true, "Send tab to device is hidden");
-  is(document.getElementById("context_sendTabToDevice_separator").hidden, true, "Separator is also hidden");
-
-  getter.restore();
-});

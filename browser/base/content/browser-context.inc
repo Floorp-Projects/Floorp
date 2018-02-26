@@ -263,13 +263,11 @@
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey2;"
                 oncommand="gContextMenu.savePageAs();"/>
-      <menuseparator id="context-sep-sendpagetodevice" class="sync-ui-item"
-                     hidden="true"/>
+      <menuseparator id="context-sep-sendpagetodevice" hidden="true"/>
       <menu id="context-sendpagetodevice"
-            class="sync-ui-item"
-            label="&sendPageToDevice.label;"
-            accesskey="&sendPageToDevice.accesskey;"
-            hidden="true">
+                label="&sendPageToDevice.label;"
+                accesskey="&sendPageToDevice.accesskey;"
+                hidden="true">
         <menupopup id="context-sendpagetodevice-popup"
                    onpopupshowing="(() => { let browser = gBrowser || getPanelBrowser(); gSync.populateSendTabToDevicesMenu(event.target, browser.currentURI.spec, browser.contentTitle); })()"/>
       </menu>
@@ -312,13 +310,11 @@
                 oncommand="AddKeywordForSearchField();"/>
       <menuitem id="context-searchselect"
                 oncommand="BrowserSearch.loadSearchFromContext(this.searchTerms);"/>
-      <menuseparator id="context-sep-sendlinktodevice" class="sync-ui-item"
-                     hidden="true"/>
+      <menuseparator id="context-sep-sendlinktodevice" hidden="true"/>
       <menu id="context-sendlinktodevice"
-            class="sync-ui-item"
-            label="&sendLinkToDevice.label;"
-            accesskey="&sendLinkToDevice.accesskey;"
-            hidden="true">
+                label="&sendLinkToDevice.label;"
+                accesskey="&sendLinkToDevice.accesskey;"
+                hidden="true">
         <menupopup id="context-sendlinktodevice-popup"
                    onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, gContextMenu.linkURL, gContextMenu.linkTextStr);"/>
       </menu>
