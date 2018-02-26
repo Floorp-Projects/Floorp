@@ -2810,13 +2810,17 @@ nsWindow::OnButtonReleaseEvent(GdkEventButton *aEvent)
     gdk_event_get_axis ((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
     event.pressure = pressure ? pressure : mLastMotionPressure;
 
+    // The mRefPoint is manipulated in DispatchInputEvent, we're saving it
+    // to use it for the doubleclick position check.
+    LayoutDeviceIntPoint pos = event.mRefPoint;
+
     nsEventStatus eventStatus = DispatchInputEvent(&event);
 
     bool defaultPrevented = (eventStatus == nsEventStatus_eConsumeNoDefault);
     // Check if mouse position in titlebar and doubleclick happened to
     // trigger restore/maximize.
-    LayoutDeviceIntPoint pos = event.mRefPoint;
     if (!defaultPrevented
+             && mIsCSDEnabled
              && event.button == WidgetMouseEvent::eLeftButton
              && event.mClickCount == 2
              && mDraggableRegion.Contains(pos.x, pos.y)) {
