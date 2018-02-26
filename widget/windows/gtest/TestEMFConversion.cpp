@@ -134,8 +134,7 @@ protected:
                                         NS_OS_CURRENT_WORKING_DIR,
                                         PDFIUM_FILENAME,
                                         pdfiumPath)));
-      const NS_ConvertUTF16toUTF8 externalDll(pdfiumPath);
-      mPDFiumEngine = PDFiumEngineShim::GetInstanceOrNull(externalDll);
+      mPDFiumEngine = PDFiumEngineShim::GetInstanceOrNull(pdfiumPath);
       MOZ_RELEASE_ASSERT(mPDFiumEngine);
     }
 

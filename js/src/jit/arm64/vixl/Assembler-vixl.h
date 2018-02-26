@@ -951,7 +951,38 @@ class Assembler : public MozBaseAssembler {
   }
 
   static inline DoubleCondition InvertCondition(DoubleCondition cond) {
-    MOZ_CRASH("Not yet implemented: InvertCondition(DoubleCondition)");
+      switch (cond) {
+	case DoubleOrdered:
+	  return DoubleUnordered;
+	case DoubleEqual:
+	  return DoubleNotEqualOrUnordered;
+	case DoubleNotEqual:
+	  return DoubleEqualOrUnordered;
+	case DoubleGreaterThan:
+	  return DoubleLessThanOrEqualOrUnordered;
+	case DoubleGreaterThanOrEqual:
+	  return DoubleLessThanOrUnordered;
+	case DoubleLessThan:
+	  return DoubleGreaterThanOrEqualOrUnordered;
+	case DoubleLessThanOrEqual:
+	  return DoubleGreaterThanOrUnordered;
+	case DoubleUnordered:
+	  return DoubleOrdered;
+	case DoubleEqualOrUnordered:
+	  return DoubleNotEqual;
+	case DoubleNotEqualOrUnordered:
+	  return DoubleEqual;
+	case DoubleGreaterThanOrUnordered:
+	  return DoubleLessThanOrEqual;
+	case DoubleGreaterThanOrEqualOrUnordered:
+	  return DoubleLessThan;
+	case DoubleLessThanOrUnordered:
+	  return DoubleGreaterThanOrEqual;
+	case DoubleLessThanOrEqualOrUnordered:
+	  return DoubleGreaterThan;
+	default:
+	  MOZ_CRASH("Bad condition");
+    }
   }
 
   static inline Condition ConditionFromDoubleCondition(DoubleCondition cond) {

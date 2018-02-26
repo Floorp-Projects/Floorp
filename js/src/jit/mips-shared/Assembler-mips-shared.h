@@ -1139,13 +1139,11 @@ class AssemblerMIPSShared : public AssemblerShared
 
     // FP instructions
 
-    // Use these two functions only when you are sure address is aligned.
-    // Otherwise, use ma_ld and ma_sd.
-    BufferOffset as_ld(FloatRegister fd, Register base, int32_t off);
-    BufferOffset as_sd(FloatRegister fd, Register base, int32_t off);
+    BufferOffset as_ldc1(FloatRegister ft, Register base, int32_t off);
+    BufferOffset as_sdc1(FloatRegister ft, Register base, int32_t off);
 
-    BufferOffset as_ls(FloatRegister fd, Register base, int32_t off);
-    BufferOffset as_ss(FloatRegister fd, Register base, int32_t off);
+    BufferOffset as_lwc1(FloatRegister ft, Register base, int32_t off);
+    BufferOffset as_swc1(FloatRegister ft, Register base, int32_t off);
 
     // Loongson-specific FP load and store instructions
     BufferOffset as_gsldl(FloatRegister fd, Register base, int32_t off);

@@ -110,12 +110,6 @@ CodeGeneratorMIPS64::ToValue(LInstruction* ins, size_t pos)
 }
 
 ValueOperand
-CodeGeneratorMIPS64::ToOutValue(LInstruction* ins)
-{
-    return ValueOperand(ToRegister(ins->getDef(0)));
-}
-
-ValueOperand
 CodeGeneratorMIPS64::ToTempValue(LInstruction* ins, size_t pos)
 {
     return ValueOperand(ToRegister(ins->getTemp(pos)));
@@ -199,12 +193,10 @@ CodeGeneratorMIPS64::visitUnbox(LUnbox* unbox)
     }
 }
 
-Register
-CodeGeneratorMIPS64::splitTagForTest(const ValueOperand& value)
+void
+CodeGeneratorMIPS64::splitTagForTest(const ValueOperand& value, ScratchTagScope& Tag)
 {
-    MOZ_ASSERT(value.valueReg() != SecondScratchReg);
-    masm.splitTag(value.valueReg(), SecondScratchReg);
-    return SecondScratchReg;
+    masm.splitTag(value.valueReg(), tag);
 }
 
 void
