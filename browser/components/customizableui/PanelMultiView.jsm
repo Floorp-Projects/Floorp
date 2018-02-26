@@ -55,6 +55,20 @@
  *    When navigating backwards, an open subview will first become invisible and
  *    then will be closed.
  *
+ * -- Active or inactive
+ *
+ *    This indicates whether the view is fully scrolled into the visible area
+ *    and ready to receive mouse and keyboard events. An active view is always
+ *    visible, but a visible view may be inactive. For example, during a scroll
+ *    transition, both views will be inactive.
+ *
+ *    When a view becomes active, the ViewShown event is fired synchronously.
+ *    For the main view of the panel, this happens during the "popupshown"
+ *    event, which means that other "popupshown" handlers may be called before
+ *    the view is active. However, the main view can already receive mouse and
+ *    keyboard events at this point, only because this allows regression tests
+ *    to use the "popupshown" event to simulate interaction.
+ *
  * -- Navigating with the keyboard
  *
  *    An open view may keep state related to keyboard navigation, even if it is
@@ -673,7 +687,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
     }
 
     await this._transitionViews(prevPanelView.node, viewNode, false, anchor);
-    this._viewShown(nextPanelView);
+    this._activateView(nextPanelView);
   }
 
   /**
@@ -697,7 +711,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
 
     this._closeLatestView();
 
-    this._viewShown(nextPanelView);
+    this._activateView(nextPanelView);
   }
 
   /**
@@ -734,7 +748,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
     nextPanelView.visible = true;
     nextPanelView.descriptionHeightWorkaround();
 
-    this._viewShown(nextPanelView);
     return true;
   }
 
@@ -774,10 +787,12 @@ var PanelMultiView = class extends this.AssociatedToNode {
   }
 
   /**
-   * Raises the ViewShown event if the specified view is still open.
+   * Activates the specified view and raises the ViewShown event, unless the
+   * view was closed in the meantime.
    */
-  _viewShown(panelView) {
+  _activateView(panelView) {
     if (panelView.node.panelMultiView == this.node) {
+      panelView.active = true;
       panelView.dispatchCustomEvent("ViewShown");
     }
   }
@@ -940,6 +955,14 @@ var PanelMultiView = class extends this.AssociatedToNode {
     // We're setting the width property to prevent flickering during the
     // sliding animation with smaller views.
     viewNode.style.width = viewRect.width + "px";
+
+    // For proper bookkeeping, mark the view that is about to scrolled out of
+    // the visible area as inactive, because it won't be possible to simulate
+    // mouse events on it properly. In practice this isn't important, because we
+    // use the separate "transitioning" attribute on the panel to suppress
+    // pointer events. This allows mouse events to be available for the main
+    // view in regression tests that wait for the "popupshown" event.
+    prevPanelView.active = false;
 
     // Kick off the transition!
     details.phase = TRANSITION_PHASES.TRANSITION;
@@ -1125,9 +1148,11 @@ var PanelMultiView = class extends this.AssociatedToNode {
         break;
       }
       case "popupshown":
+        let mainPanelView = PanelView.forNode(this._mainView);
         // Now that the main view is visible, we can check the height of the
         // description elements it contains.
-        PanelView.forNode(this._mainView).descriptionHeightWorkaround();
+        mainPanelView.descriptionHeightWorkaround();
+        this._activateView(mainPanelView);
         break;
       case "popuphidden": {
         // WebExtensions consumers can hide the popup from viewshowing, or
@@ -1157,6 +1182,16 @@ var PanelMultiView = class extends this.AssociatedToNode {
  * This is associated to <panelview> elements.
  */
 var PanelView = class extends this.AssociatedToNode {
+  constructor(node) {
+    super(node);
+
+    /**
+     * Indicates whether the view is active. When this is false, consumers can
+     * wait for the ViewShown event to know when the view becomes active.
+     */
+    this.active = false;
+  }
+
   /**
    * The "mainview" attribute is set before the panel is opened when this view
    * is displayed as the main view, and is removed before the <panelview> is
@@ -1171,11 +1206,16 @@ var PanelView = class extends this.AssociatedToNode {
     }
   }
 
+  /**
+   * Determines whether the view is visible. Setting this to false also resets
+   * the "active" property.
+   */
   set visible(value) {
     if (value) {
       this.node.setAttribute("visible", true);
     } else {
       this.node.removeAttribute("visible");
+      this.active = false;
     }
   }
 
