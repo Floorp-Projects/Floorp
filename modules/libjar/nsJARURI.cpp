@@ -685,7 +685,9 @@ NS_IMETHODIMP
 nsJARURI::SetQueryWithEncoding(const nsACString& query,
                                const Encoding* encoding)
 {
-    return mJAREntry->SetQueryWithEncoding(query, encoding);
+    return NS_MutateURI(mJAREntry)
+             .SetQueryWithEncoding(query, encoding)
+             .Finalize(mJAREntry);
 }
 
 NS_IMETHODIMP

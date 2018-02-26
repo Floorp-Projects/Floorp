@@ -525,7 +525,7 @@ Link::SetPathname(const nsAString &aPathname)
 void
 Link::SetSearch(const nsAString& aSearch)
 {
-  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  nsCOMPtr<nsIURI> uri(GetURI());
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
   if (!url) {
     // Ignore failures to be compatible with NS4.
@@ -533,7 +533,12 @@ Link::SetSearch(const nsAString& aSearch)
   }
 
   auto encoding = mElement->OwnerDoc()->GetDocumentCharacterSet();
-  (void)url->SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch), encoding);
+  nsresult rv = NS_MutateURI(uri)
+                  .SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch), encoding)
+                  .Finalize(uri);
+  if (NS_FAILED(rv)) {
+    return;
+  }
   SetHrefAttribute(uri);
 }
 
