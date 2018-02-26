@@ -603,16 +603,16 @@ function do_test_mutate_ref(aTest, aSuffix) {
       var pathWithSuffix = aTest.pathQueryRef + aSuffix;
       do_info("testing that setting path to " +
               pathWithSuffix + " and then clearing ref does what we expect");
-      testURI.pathQueryRef = pathWithSuffix;
+      testURI = testURI.mutate().setPathQueryRef(pathWithSuffix).finalize();
       testURI.ref = "";
       do_check_uri_eq(testURI, refURIWithoutSuffix);
       do_check_uri_eqExceptRef(testURI, refURIWithSuffix);
 
       // Also: make sure that clearing .pathQueryRef also clears .ref
-      testURI.pathQueryRef = pathWithSuffix;
+      testURI = testURI.mutate().setPathQueryRef(pathWithSuffix).finalize();
       do_info("testing that clearing path from " + 
               pathWithSuffix + " also clears .ref");
-      testURI.pathQueryRef = "";
+      testURI = testURI.mutate().setPathQueryRef("").finalize();
       Assert.equal(testURI.ref, "");
     }
   }
@@ -626,7 +626,7 @@ function do_test_immutable(aTest) {
   var URI = NetUtil.newURI(aTest.spec);
   // All the non-readonly attributes on nsIURI.idl:
   var propertiesToCheck = ["scheme", "userPass", "username", "password",
-                           "host", "port", "pathQueryRef", "query", "ref"];
+                           "host", "port", "query", "ref"];
 
   propertiesToCheck.forEach(function(aProperty) {
     var threw = false;

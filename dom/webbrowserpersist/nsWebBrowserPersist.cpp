@@ -625,7 +625,7 @@ nsWebBrowserPersist::SerializeNextFile()
             if (NS_WARN_IF(NS_FAILED(rv))) {
                 break;
             }
-            rv = AppendPathToURI(fileAsURI, data->mFilename);
+            rv = AppendPathToURI(fileAsURI, data->mFilename, fileAsURI);
             if (NS_WARN_IF(NS_FAILED(rv))) {
                 break;
             }
@@ -1305,7 +1305,7 @@ nsWebBrowserPersist::GetLocalFileFromURI(nsIURI *aURI, nsIFile **aLocalFile)
 }
 
 /* static */ nsresult
-nsWebBrowserPersist::AppendPathToURI(nsIURI *aURI, const nsAString & aPath)
+nsWebBrowserPersist::AppendPathToURI(nsIURI *aURI, const nsAString & aPath, nsCOMPtr<nsIURI>& aOutURI)
 {
     NS_ENSURE_ARG_POINTER(aURI);
 
@@ -1322,9 +1322,10 @@ nsWebBrowserPersist::AppendPathToURI(nsIURI *aURI, const nsAString & aPath)
 
     // Store the path back on the URI
     AppendUTF16toUTF8(aPath, newPath);
-    aURI->SetPathQueryRef(newPath);
 
-    return NS_OK;
+    return NS_MutateURI(aURI)
+             .SetPathQueryRef(newPath)
+             .Finalize(aOutURI);
 }
 
 nsresult nsWebBrowserPersist::SaveURIInternal(
@@ -2576,7 +2577,7 @@ nsWebBrowserPersist::URIData::GetLocalURI(nsIURI *targetBaseURI, nsCString& aSpe
     } else {
         rv = mDataPath->Clone(getter_AddRefs(fileAsURI));
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = AppendPathToURI(fileAsURI, mFilename);
+        rv = AppendPathToURI(fileAsURI, mFilename, fileAsURI);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -2699,7 +2700,7 @@ nsWebBrowserPersist::SaveSubframeContent(
     nsCOMPtr<nsIURI> frameURI;
     rv = mCurrentDataPath->Clone(getter_AddRefs(frameURI));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = AppendPathToURI(frameURI, filenameWithExt);
+    rv = AppendPathToURI(frameURI, filenameWithExt, frameURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Work out the path for the subframe data
@@ -2710,7 +2711,7 @@ nsWebBrowserPersist::SaveSubframeContent(
 
     // Append _data
     newFrameDataPath.AppendLiteral("_data");
-    rv = AppendPathToURI(frameDataURI, newFrameDataPath);
+    rv = AppendPathToURI(frameDataURI, newFrameDataPath, frameDataURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Make frame document & data path conformant and unique

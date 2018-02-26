@@ -55,8 +55,8 @@ add_test(function test_setEmptyPath()
   {
     symmetricEquality(false, target, provided);
 
-    provided.pathQueryRef = "";
-    target.pathQueryRef = "";
+    provided = provided.mutate().setPathQueryRef("").finalize();
+    target = target.mutate().setPathQueryRef("").finalize();
 
     Assert.equal(provided.spec, target.spec);
     symmetricEquality(true, target, provided);
@@ -302,7 +302,7 @@ add_test(function test_hugeStringThrows()
 
   let hugeString = new Array(maxLen + 1).fill("a").join("");
   let properties = ["scheme", "userPass", "username",
-                    "password", "host", "pathQueryRef", "ref",
+                    "password", "host", "ref",
                     "query", "filePath"];
   for (let prop of properties) {
     Assert.throws(() => url[prop] = hugeString,
@@ -313,6 +313,7 @@ add_test(function test_hugeStringThrows()
   let setters = [
     { method: "setSpec", qi: Ci.nsIURIMutator },
     { method: "setHostPort", qi: Ci.nsIURIMutator },
+    { method: "setPathQueryRef", qi: Ci.nsIURIMutator },
     { method: "setFileName", qi: Ci.nsIURLMutator },
     { method: "setFileExtension", qi: Ci.nsIURLMutator },
     { method: "setFileBaseName", qi: Ci.nsIURLMutator },

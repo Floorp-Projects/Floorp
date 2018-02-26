@@ -777,7 +777,8 @@ HTMLFormElement::SubmitSubmission(HTMLFormSubmission* aFormSubmission)
     int64_t postDataStreamLength = -1;
     rv = aFormSubmission->GetEncodedSubmission(actionURI,
                                                getter_AddRefs(postDataStream),
-                                               &postDataStreamLength);
+                                               &postDataStreamLength,
+                                               actionURI);
     NS_ENSURE_SUBMIT_SUCCESS(rv);
 
     rv = linkHandler->OnLinkClickSync(this, actionURI,

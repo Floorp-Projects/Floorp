@@ -101,7 +101,8 @@ NS_INTERFACE_MAP_END
 nsresult
 FormData::GetEncodedSubmission(nsIURI* aURI,
                                nsIInputStream** aPostDataStream,
-                               int64_t* aPostDataStreamLength)
+                               int64_t* aPostDataStreamLength,
+                               nsCOMPtr<nsIURI>& aOutURI)
 {
   NS_NOTREACHED("Shouldn't call FormData::GetEncodedSubmission");
   return NS_OK;
