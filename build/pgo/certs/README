@@ -6,4 +6,11 @@ You can generate a new CA cert by running:
 You can generate new server certificates by running:
 ./mach python build/pgo/genpgocert.py --gen-server
 
-These commands will modify cert8.db and key3.db. The changes to these should be committed.
+These commands will modify cert9.db and key4.db. The changes to these should be
+committed.
+
+WARNING: These commands do not recreate all necessary certificates; some are
+mentioned only on their tests. Before completely replacing these DBs, you should
+be careful that you include all the correct certificates. Or fix genpgocert.py
+to create the correct certs. See bug 1441338.
+
