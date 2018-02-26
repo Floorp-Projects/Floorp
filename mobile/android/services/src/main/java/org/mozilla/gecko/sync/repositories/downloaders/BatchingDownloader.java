@@ -247,19 +247,6 @@ public class BatchingDownloader {
             }
         }
 
-        // We need to make another batching request!
-        // Let the delegate know that a batch fetch just completed before we proceed.
-        // Beware that while this operation will run after every call to onFetchedRecord returned,
-        // it's not guaranteed that the 'sink' session actually processed all of the fetched records.
-        // See Bug https://bugzilla.mozilla.org/show_bug.cgi?id=1351673#c28 for details.
-        runTaskOnQueue(new Runnable() {
-            @Override
-            public void run() {
-                Logger.debug(LOG_TAG, "Running onBatchCompleted.");
-                fetchRecordsDelegate.onBatchCompleted();
-            }
-        });
-
         // Should we proceed, however? Do we have enough time?
         if (!mayProceedWithBatching(fetchDeadline)) {
             this.handleFetchFailed(fetchRecordsDelegate, new SyncDeadlineReachedException());

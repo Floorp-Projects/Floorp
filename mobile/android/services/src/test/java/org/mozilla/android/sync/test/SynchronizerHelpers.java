@@ -82,11 +82,6 @@ public class SynchronizerHelpers {
             }
 
             @Override
-            public void onBatchCompleted() {
-
-            }
-
-            @Override
             public RepositorySessionFetchRecordsDelegate deferredFetchDelegate(ExecutorService executor) {
               return this;
             }

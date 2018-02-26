@@ -38,11 +38,6 @@ public class ExpectSuccessRepositorySessionFetchRecordsDelegate extends
   }
 
   @Override
-  public void onBatchCompleted() {
-    log("Batch completed.");
-  }
-
-  @Override
   public RepositorySessionFetchRecordsDelegate deferredFetchDelegate(ExecutorService executor) {
     return this;
   }
