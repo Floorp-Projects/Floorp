@@ -230,7 +230,6 @@ function renderDockButtons(props) {
       title: L10N.getStr("toolbox.closebutton.tooltip"),
       onClick: () => {
         closeToolbox();
-        focusButton(closeButtonId);
       },
       tabIndex: focusedButton === "toolbox-close" ? "0" : "-1",
     })
