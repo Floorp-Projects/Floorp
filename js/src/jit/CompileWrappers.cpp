@@ -205,9 +205,7 @@ CompileZone::addressOfStringNurseryCurrentEnd()
 bool
 CompileZone::canNurseryAllocateStrings()
 {
-    return nurseryExists() &&
-        zone()->group()->nursery().canAllocateStrings() &&
-        zone()->allocNurseryStrings;
+    return nurseryExists() && zone()->group()->nursery().canAllocateStrings();
 }
 
 bool
