@@ -68,7 +68,6 @@ job-template:
          android-api-16-nightly:
             - android-gradle-dependencies
             - android-sdk-linux
-            - proguard-jar
    tooltool:
       by-build-platform:
          default: public
