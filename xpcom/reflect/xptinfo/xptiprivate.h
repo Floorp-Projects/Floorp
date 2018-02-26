@@ -168,8 +168,8 @@ private:
 class xptiInterfaceEntry
 {
 public:
-    static xptiInterfaceEntry* Create(const char* name,
-                                      const nsID& iid,
+    static xptiInterfaceEntry* Create(const char* aName,
+                                      const nsID& aIID,
                                       XPTInterfaceDescriptor* aDescriptor,
                                       xptiTypelibGuts* aTypelib);
 
@@ -266,9 +266,9 @@ public:
     nsresult GetIIDForParamNoAlloc(uint16_t methodIndex, const nsXPTParamInfo * param, nsIID *iid);
 
 private:
-    xptiInterfaceEntry(const char* name,
-                       size_t nameLength,
-                       const nsID& iid,
+    xptiInterfaceEntry(const char* aName,
+                       size_t aNameLength,
+                       const nsID& aIID,
                        XPTInterfaceDescriptor* aDescriptor,
                        xptiTypelibGuts* aTypelib);
     ~xptiInterfaceEntry();

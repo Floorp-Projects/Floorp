@@ -15,26 +15,27 @@
 using namespace mozilla;
 
 /* static */ xptiInterfaceEntry*
-xptiInterfaceEntry::Create(const char* name, const nsID& iid,
+xptiInterfaceEntry::Create(const char* aName,
+                           const nsID& aIID,
                            XPTInterfaceDescriptor* aDescriptor,
                            xptiTypelibGuts* aTypelib)
 {
-    int namelen = strlen(name);
+    int namelen = strlen(aName);
     void* place =
         XPT_CALLOC8(gXPTIStructArena, sizeof(xptiInterfaceEntry) + namelen);
     if (!place) {
         return nullptr;
     }
-    return new (place) xptiInterfaceEntry(name, namelen, iid, aDescriptor,
+    return new (place) xptiInterfaceEntry(aName, namelen, aIID, aDescriptor,
                                           aTypelib);
 }
 
-xptiInterfaceEntry::xptiInterfaceEntry(const char* name,
-                                       size_t nameLength,
-                                       const nsID& iid,
+xptiInterfaceEntry::xptiInterfaceEntry(const char* aName,
+                                       size_t aNameLength,
+                                       const nsID& aIID,
                                        XPTInterfaceDescriptor* aDescriptor,
                                        xptiTypelibGuts* aTypelib)
-    : mIID(iid)
+    : mIID(aIID)
     , mDescriptor(aDescriptor)
     , mTypelib(aTypelib)
     , mParent(nullptr)
@@ -43,7 +44,7 @@ xptiInterfaceEntry::xptiInterfaceEntry(const char* name,
     , mConstantBaseIndex(0)
     , mFlags(0)
 {
-    memcpy(mName, name, nameLength);
+    memcpy(mName, aName, aNameLength);
     SetResolvedState(PARTIALLY_RESOLVED);
 }
 
