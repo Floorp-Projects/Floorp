@@ -3256,7 +3256,7 @@ nsStandardURL::GetFile(nsIFile **result)
     return mFile->Clone(result);
 }
 
-NS_IMETHODIMP
+nsresult
 nsStandardURL::SetFile(nsIFile *file)
 {
     ENSURE_MUTABLE();
