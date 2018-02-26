@@ -5924,6 +5924,7 @@ JS_SetOffthreadIonCompilationEnabled(JSContext* cx, bool enabled);
     Register(JUMP_THRESHOLD, "jump-threshold")                              \
     Register(SIMULATOR_ALWAYS_INTERRUPT, "simulator.always-interrupt")      \
     Register(SPECTRE_INDEX_MASKING, "spectre.index-masking")                \
+    Register(SPECTRE_OBJECT_MITIGATIONS_BARRIERS, "spectre.object-mitigations.barriers") \
     Register(SPECTRE_STRING_MITIGATIONS, "spectre.string-mitigations")      \
     Register(SPECTRE_VALUE_MASKING, "spectre.value-masking")                \
     Register(ASMJS_ATOMICS_ENABLE, "asmjs.atomics.enable")                  \
