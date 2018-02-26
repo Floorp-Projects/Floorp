@@ -187,8 +187,8 @@ public class VersioningDelegateHelper {
         }
 
         @Override
-        public void onRecordStoreSucceeded(String guid) {
-            inner.onRecordStoreSucceeded(guid);
+        public void onRecordStoreSucceeded(int count) {
+            inner.onRecordStoreSucceeded(count);
         }
 
         @Override

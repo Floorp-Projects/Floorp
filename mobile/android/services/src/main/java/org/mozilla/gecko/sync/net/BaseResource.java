@@ -307,7 +307,7 @@ public class BaseResource implements Resource {
     try {
       response = client.execute(request, context);
       Logger.debug(LOG_TAG, "Response: " + response.getStatusLine().toString());
-    } catch (ClientProtocolException e) {
+     } catch (ClientProtocolException e) {
       delegate.handleHttpProtocolException(e);
       return;
     } catch (IOException e) {

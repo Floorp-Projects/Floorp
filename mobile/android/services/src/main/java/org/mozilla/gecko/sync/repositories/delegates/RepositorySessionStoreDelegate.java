@@ -22,7 +22,7 @@ public interface RepositorySessionStoreDelegate {
   void onRecordStoreReconciled(String guid, String oldGuid, Integer newVersion);
 
   // Called with a GUID when store has succeeded.
-  void onRecordStoreSucceeded(String guid);
+  void onRecordStoreSucceeded(int count);
   void onStoreCompleted();
   void onStoreFailed(Exception e);
   // Only relevant for store batches, and exists to help us record correct telemetry.

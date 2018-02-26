@@ -609,7 +609,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
       }
 
       @Override
-      public void onRecordStoreSucceeded(String guid) {
+      public void onRecordStoreSucceeded(int count) {
       }
 
       @Override

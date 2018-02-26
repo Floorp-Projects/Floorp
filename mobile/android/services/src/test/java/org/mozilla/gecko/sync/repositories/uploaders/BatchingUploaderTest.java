@@ -141,8 +141,8 @@ public class BatchingUploaderTest {
         }
 
         @Override
-        public void onRecordStoreSucceeded(String guid) {
-            ++recordStoreSucceeded;
+        public void onRecordStoreSucceeded(int count) {
+            recordStoreSucceeded += count;
         }
 
         @Override
