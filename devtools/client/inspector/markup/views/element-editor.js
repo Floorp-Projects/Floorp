@@ -150,6 +150,8 @@ ElementEditor.prototype = {
     this.newAttr = this.doc.createElement("span");
     this.newAttr.classList.add("newattr");
     this.newAttr.setAttribute("tabindex", "-1");
+    this.newAttr.setAttribute("aria-label",
+      INSPECTOR_L10N.getStr("markupView.newAttribute.label"));
     open.appendChild(this.newAttr);
 
     let closingBracket = this.doc.createElement("span");

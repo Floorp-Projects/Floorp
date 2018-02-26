@@ -152,6 +152,18 @@
               "button_background_active": {
                 "$ref": "ThemeColor",
                 "optional": true
+              },
+              "popup": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
+              "popup_text": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
+              "popup_border": {
+                "$ref": "ThemeColor",
+                "optional": true
               }
             },
             "additionalProperties": { "$ref": "UnrecognizedProperty" }

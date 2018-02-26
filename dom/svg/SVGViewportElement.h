@@ -147,7 +147,7 @@ protected:
 
   bool IsRoot() const {
     NS_ASSERTION((IsInUncomposedDoc() && !GetParent()) ==
-                 (OwnerDoc() && (OwnerDoc()->GetRootElement() == this)),
+                 (OwnerDoc()->GetRootElement() == this),
                  "Can't determine if we're root");
     return IsInUncomposedDoc() && !GetParent();
   }
