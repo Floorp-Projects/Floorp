@@ -20,7 +20,7 @@
     options.opus = codec == "opus";
 
     let test = new PeerConnectionTest(options);
-    test.setMediaConstraints([{audio: true, fake: true}], []);
+    test.setMediaConstraints([{audio: true}], []);
 
     test.chain.insertBefore("PC_LOCAL_SET_LOCAL_DESCRIPTION", [
       function PC_LOCAL_FILTER_OUT_CODECS() {

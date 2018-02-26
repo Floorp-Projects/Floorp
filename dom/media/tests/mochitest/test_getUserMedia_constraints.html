@@ -48,10 +48,10 @@ var tests = [
     constraints: { },
     error: "TypeError" },
   { message: "Triggering mock failure in default video device fails",
-    constraints: { video: { deviceId: 'bad device' }, fake: true },
+    constraints: { video: { deviceId: 'bad device' } },
     error: "NotReadableError" },
   { message: "Triggering mock failure in default audio device fails",
-    constraints: { audio: { deviceId: 'bad device' }, fake: true },
+    constraints: { audio: { deviceId: 'bad device' } },
     error: "NotReadableError" },
   { message: "Success-path: optional video facingMode + audio ignoring facingMode",
     constraints: { audio: { mediaSource: 'microphone',
@@ -101,7 +101,13 @@ var mustFailWith = (msg, reason, constraint, f) =>
  * test by verifying that the right resolution and rejection is fired.
  */
 
-runTest(() => Promise.resolve()
+runTest(() => pushPrefs(
+    // This test expects fake devices, particularly for the 'triggering mock
+    // failure *' steps. So explicitly disable loopback and setup fakes
+    ['media.audio_loopback_dev', ''],
+    ['media.video_loopback_dev', ''],
+    ['media.navigator.streams.fake', true]
+  )
   .then(() => {
     // Check supported constraints first.
     var dict = navigator.mediaDevices.getSupportedConstraints();
