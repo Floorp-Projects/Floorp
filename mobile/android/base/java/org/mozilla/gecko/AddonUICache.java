@@ -6,6 +6,8 @@
 
 package org.mozilla.gecko;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.Log;
@@ -18,7 +20,11 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+
+import static org.mozilla.gecko.toolbar.PageActionLayout.PageAction;
+import static org.mozilla.gecko.toolbar.PageActionLayout.PageActionLayoutDelegate;
 
 /**
  * For certain UI items added by add-ons or other JS/Gecko code, Gecko notifies us whenever an item
@@ -60,6 +66,14 @@ public class AddonUICache implements BundleEventListener {
     private int mAddonMenuNextID = ADDON_MENU_OFFSET;
     private Menu mMenu;
 
+    // A collection of PageAction messages that are still pending transformation into
+    // a full PageAction - most importantly transformation of the image data URI
+    // into a Drawable.
+    private final Map<String, GeckoBundle> mPendingPageActionQueue = new LinkedHashMap<>();
+    // A collection of PageActions ready for immediate usage.
+    private List<PageAction> mResolvedPageActionCache;
+    private PageActionLayoutDelegate mPageActionDelegate;
+
     private boolean mInitialized;
 
     public static AddonUICache getInstance() {
@@ -77,6 +91,8 @@ public class AddonUICache implements BundleEventListener {
             "Menu:Add",
             "Menu:Update",
             "Menu:Remove",
+            "PageActions:Add",
+            "PageActions:Remove",
             null);
 
         mInitialized = true;
@@ -87,6 +103,9 @@ public class AddonUICache implements BundleEventListener {
         mAddonMenuItemsCache.clear();
         mAddonMenuNextID = ADDON_MENU_OFFSET;
         mMenu = null;
+        mPendingPageActionQueue.clear();
+        mResolvedPageActionCache = null;
+        mPageActionDelegate = null;
     }
 
     @Override
@@ -125,7 +144,57 @@ public class AddonUICache implements BundleEventListener {
                 updateAddonMenuItem(message.getString("uuid"),
                                     message.getBundle("options"));
                 break;
+
+            case "PageActions:Add":
+                if (mPageActionDelegate != null) {
+                    mPageActionDelegate.addPageAction(message);
+                } else {
+                    mPendingPageActionQueue.put(message.getString("id"), message);
+                }
+                break;
+
+            case "PageActions:Remove":
+                if (mPageActionDelegate != null) {
+                    mPageActionDelegate.removePageAction(message);
+                } else {
+                    mPendingPageActionQueue.remove(message.getString("id"));
+                }
+                break;
         }
+    }
+
+    /**
+     * If a list of {@link PageAction PageActions} has previously been provided in
+     * {@link AddonUICache#removePageActionLayoutDelegate}, it will be transferred back to the
+     * {@link PageActionLayoutDelegate}.
+     * In addition, any <code>GeckoBundles</code> containing <code>PageAction</code> messages that
+     * arrived while no delegate was available will now be transmitted.
+     * <p>
+     * Following this, any <code>PageAction</code> messages that arrive will be forwarded
+     * immediately to the provided delegate.
+     */
+    public void setPageActionLayoutDelegate(final @NonNull PageActionLayoutDelegate newDelegate) {
+        newDelegate.setCachedPageActions(mResolvedPageActionCache);
+        mResolvedPageActionCache = null;
+
+        for (GeckoBundle pageActionMessage : mPendingPageActionQueue.values()) {
+            newDelegate.addPageAction(pageActionMessage);
+        }
+        mPendingPageActionQueue.clear();
+
+        mPageActionDelegate = newDelegate;
+    }
+
+    /**
+     * Clears the current PageActionDelegate and optionally takes a list of PageActions
+     * that will be stored, e.g. if the class that provided the delegate is going away.
+     *
+     * In addition, all PageAction EventDispatcher messages that arrive while no delegate is
+     * available will be stored for later retrieval.
+     */
+    public void removePageActionLayoutDelegate(final @Nullable List<PageAction> pageActionsToCache) {
+        mPageActionDelegate = null;
+        mResolvedPageActionCache = pageActionsToCache;
     }
 
     /**
@@ -278,4 +347,5 @@ public class AddonUICache implements BundleEventListener {
 
         return null;
     }
+
 }
