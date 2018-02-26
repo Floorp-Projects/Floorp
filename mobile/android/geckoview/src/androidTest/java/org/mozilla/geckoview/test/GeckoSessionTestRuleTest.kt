@@ -505,4 +505,176 @@ class GeckoSessionTestRuleTest {
     fun getCurrentCall_throwOnNoCurrentCall() {
         sessionRule.currentCall
     }
+
+    @Test fun delegateUntilTestEnd() {
+        var counter = 0
+
+        sessionRule.delegateUntilTestEnd(object : Callbacks.ProgressListener {
+            @AssertCalled(count = 1, order = intArrayOf(1))
+            override fun onPageStart(session: GeckoSession, url: String) {
+                counter++
+            }
+
+            @AssertCalled(count = 1, order = intArrayOf(2))
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                counter++
+            }
+        })
+
+        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.waitForPageStop()
+
+        assertThat("Callback count should be correct", counter, equalTo(2))
+    }
+
+    @Test fun delegateUntilTestEnd_notCalled() {
+        sessionRule.delegateUntilTestEnd(
+                GeckoSession.ScrollListener @AssertCalled(false) { _, _, _ -> })
+    }
+
+    @Test(expected = AssertionError::class)
+    fun delegateUntilTestEnd_throwOnNotCalled() {
+        sessionRule.delegateUntilTestEnd(
+                GeckoSession.ScrollListener @AssertCalled(count = 1) { _, _, _ -> })
+        sessionRule.performTestEndCheck()
+    }
+
+    @Test(expected = AssertionError::class)
+    fun delegateUntilTestEnd_throwOnCallingNoCall() {
+        sessionRule.delegateUntilTestEnd(object : Callbacks.ProgressListener {
+            @AssertCalled(false)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+            }
+        })
+
+        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.waitForPageStop()
+    }
+
+    @Test(expected = AssertionError::class)
+    fun delegateUntilTestEnd_throwOnWrongOrder() {
+        sessionRule.delegateUntilTestEnd(object : Callbacks.ProgressListener {
+            @AssertCalled(count = 1, order = intArrayOf(2))
+            override fun onPageStart(session: GeckoSession, url: String) {
+            }
+
+            @AssertCalled(count = 1, order = intArrayOf(1))
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+            }
+        })
+
+        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.waitForPageStop()
+    }
+
+    @Test fun delegateUntilTestEnd_currentCall() {
+        sessionRule.delegateUntilTestEnd(object : Callbacks.ProgressListener {
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                val info = sessionRule.currentCall
+                assertThat("Method info should be valid", info, notNullValue())
+                assertThat("Counter should be correct",
+                           info.counter, equalTo(1))
+                assertThat("Order should equal counter",
+                           info.order, equalTo(0))
+            }
+        })
+
+        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.waitForPageStop()
+    }
+
+    @Test fun delegateDuringNextWait() {
+        var counter = 0
+
+        sessionRule.delegateDuringNextWait(object : Callbacks.ProgressListener {
+            @AssertCalled(count = 1, order = intArrayOf(1))
+            override fun onPageStart(session: GeckoSession, url: String) {
+                counter++
+            }
+
+            @AssertCalled(count = 1, order = intArrayOf(2))
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                counter++
+            }
+        })
+
+        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.waitForPageStop()
+
+        assertThat("Should have delegated", counter, equalTo(2))
+
+        sessionRule.session.reload()
+        sessionRule.waitForPageStop()
+
+        assertThat("Delegate should be cleared", counter, equalTo(2))
+    }
+
+    @Test(expected = AssertionError::class)
+    fun delegateDuringNextWait_throwOnNotCalled() {
+        sessionRule.delegateDuringNextWait(
+                GeckoSession.ScrollListener @AssertCalled(count = 1) { _, _, _ -> })
+        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.waitForPageStop()
+    }
+
+    @Test(expected = AssertionError::class)
+    fun delegateDuringNextWait_throwOnNotCalledAtTestEnd() {
+        sessionRule.delegateDuringNextWait(
+                GeckoSession.ScrollListener @AssertCalled(count = 1) { _, _, _ -> })
+        sessionRule.performTestEndCheck()
+    }
+
+    @Test fun delegateDuringNextWait_hasPrecedence() {
+        var testCounter = 0
+        var waitCounter = 0
+
+        sessionRule.delegateUntilTestEnd(object : Callbacks.ProgressListener,
+                                                  Callbacks.NavigationListener {
+            @AssertCalled(count = 1, order = intArrayOf(2))
+            override fun onPageStart(session: GeckoSession, url: String) {
+                testCounter++
+            }
+
+            @AssertCalled(count = 1, order = intArrayOf(4))
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                testCounter++
+            }
+
+            @AssertCalled(count = 2, order = intArrayOf(1, 3))
+            override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
+                testCounter++
+            }
+
+            @AssertCalled(count = 2, order = intArrayOf(1, 3))
+            override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
+                testCounter++
+            }
+        })
+
+        sessionRule.delegateDuringNextWait(object : Callbacks.ProgressListener {
+            @AssertCalled(count = 1, order = intArrayOf(1))
+            override fun onPageStart(session: GeckoSession, url: String) {
+                waitCounter++
+            }
+
+            @AssertCalled(count = 1, order = intArrayOf(2))
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                waitCounter++
+            }
+        })
+
+        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.waitForPageStop()
+
+        assertThat("Text delegate should be overridden",
+                   testCounter, equalTo(2))
+        assertThat("Wait delegate should be used", waitCounter, equalTo(2))
+
+        sessionRule.session.reload()
+        sessionRule.waitForPageStop()
+
+        assertThat("Test delegate should be used", testCounter, equalTo(6))
+        assertThat("Wait delegate should be cleared", waitCounter, equalTo(2))
+    }
 }
