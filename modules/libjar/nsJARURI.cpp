@@ -699,7 +699,9 @@ nsJARURI::GetRef(nsACString& ref)
 NS_IMETHODIMP
 nsJARURI::SetRef(const nsACString& ref)
 {
-    return mJAREntry->SetRef(ref);
+    return NS_MutateURI(mJAREntry)
+             .SetRef(ref)
+             .Finalize(mJAREntry);
 }
 
 NS_IMETHODIMP

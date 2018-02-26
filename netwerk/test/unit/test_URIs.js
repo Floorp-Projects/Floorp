@@ -457,7 +457,7 @@ function do_test_mutate_ref(aTest, aSuffix) {
   // First: Try setting .ref to our suffix
   do_info("testing that setting .ref on " + aTest.spec +
           " to '" + aSuffix + "' does what we expect");
-  testURI.ref = aSuffix;
+  testURI = testURI.mutate().setRef(aSuffix).finalize();
   do_check_uri_eq(testURI, refURIWithSuffix);
   do_check_uri_eqExceptRef(testURI, refURIWithoutSuffix);
 
@@ -466,7 +466,7 @@ function do_test_mutate_ref(aTest, aSuffix) {
   if (suffixLackingHash) { // (skip this our suffix was *just* a #)
     do_info("testing that setting .ref on " + aTest.spec +
             " to '" + suffixLackingHash + "' does what we expect");
-    testURI.ref = suffixLackingHash;
+    testURI = testURI.mutate().setRef(suffixLackingHash).finalize();
     do_check_uri_eq(testURI, refURIWithSuffix);
     do_check_uri_eqExceptRef(testURI, refURIWithoutSuffix);
   }
@@ -474,7 +474,7 @@ function do_test_mutate_ref(aTest, aSuffix) {
   // Now, clear .ref (should get us back the original spec)
   do_info("testing that clearing .ref on " + testURI.spec +
           " does what we expect");
-  testURI.ref = "";
+  testURI = testURI.mutate().setRef("").finalize();
   do_check_uri_eq(testURI, refURIWithoutSuffix);
   do_check_uri_eqExceptRef(testURI, refURIWithSuffix);
 
@@ -502,8 +502,10 @@ function do_test_mutate_ref(aTest, aSuffix) {
       var pathWithSuffix = aTest.pathQueryRef + aSuffix;
       do_info("testing that setting path to " +
               pathWithSuffix + " and then clearing ref does what we expect");
-      testURI = testURI.mutate().setPathQueryRef(pathWithSuffix).finalize();
-      testURI.ref = "";
+      testURI = testURI.mutate()
+                       .setPathQueryRef(pathWithSuffix)
+                       .setRef("")
+                       .finalize();
       do_check_uri_eq(testURI, refURIWithoutSuffix);
       do_check_uri_eqExceptRef(testURI, refURIWithSuffix);
 
@@ -525,7 +527,7 @@ function do_test_immutable(aTest) {
   var URI = NetUtil.newURI(aTest.spec);
   // All the non-readonly attributes on nsIURI.idl:
   var propertiesToCheck = ["spec", "scheme",
-                           "host", "port", "query", "ref"];
+                           "host", "port", "query"];
 
   propertiesToCheck.forEach(function(aProperty) {
     var threw = false;
