@@ -42,6 +42,7 @@
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmInstance.h"
+#include "wasm/WasmIonCompile.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmValidate.h"
@@ -8726,7 +8727,8 @@ TypeFailureWarning(AsmJSParser& parser, const char* str)
 static bool
 EstablishPreconditions(JSContext* cx, AsmJSParser& parser)
 {
-    if (!HasCompilerSupport(cx))
+    // asm.js requires Ion.
+    if (!HasCompilerSupport(cx) || !IonCanCompile())
         return TypeFailureWarning(parser, "Disabled by lack of compiler support");
 
     switch (parser.options().asmJSOption) {
@@ -8908,7 +8910,7 @@ js::IsAsmJSCompilationAvailable(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // See EstablishPreconditions.
-    bool available = HasCompilerSupport(cx) && cx->options().asmJS();
+    bool available = HasCompilerSupport(cx) && IonCanCompile() && cx->options().asmJS();
 
     args.rval().set(BooleanValue(available));
     return true;

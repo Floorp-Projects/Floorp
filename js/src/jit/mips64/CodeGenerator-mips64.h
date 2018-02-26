@@ -75,11 +75,10 @@ class CodeGeneratorMIPS64 : public CodeGeneratorMIPSShared
     void visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool);
   protected:
     ValueOperand ToValue(LInstruction* ins, size_t pos);
-    ValueOperand ToOutValue(LInstruction* ins);
     ValueOperand ToTempValue(LInstruction* ins, size_t pos);
 
     // Functions for LTestVAndBranch.
-    Register splitTagForTest(const ValueOperand& value);
+    void splitTagForTest(const ValueOperand& value, ScratchTagScope& tag);
 
   public:
     CodeGeneratorMIPS64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm)

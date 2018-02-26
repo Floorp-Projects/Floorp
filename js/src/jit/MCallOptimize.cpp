@@ -4340,7 +4340,7 @@ IonBuilder::prepareForSimdLoadStore(CallInfo& callInfo, Scalar::Type simdType,
     // in bounds while the actual index isn't, so we need two bounds checks
     // here.
     if (byteLoadSize > 1) {
-        indexLoadEnd = addBoundsCheck(indexLoadEnd, length, BoundsCheckKind::UnusedIndex);
+        indexLoadEnd = addBoundsCheck(indexLoadEnd, length, BoundsCheckKind::IsLoad);
         auto* sub = MSub::New(alloc(), indexLoadEnd, constant(Int32Value(byteLoadSize - 1)));
         sub->setInt32Specialization();
         current->add(sub);

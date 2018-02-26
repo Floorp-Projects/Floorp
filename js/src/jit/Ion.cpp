@@ -3156,7 +3156,10 @@ AutoFlushICache::setRange(uintptr_t start, size_t len)
 void
 AutoFlushICache::flush(uintptr_t start, size_t len)
 {
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_NONE)
+    // Nothing
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
+      defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     JSContext* cx = TlsContext.get();
     AutoFlushICache* afc = cx ? cx->autoFlushICache() : nullptr;
     if (!afc) {
@@ -3175,6 +3178,8 @@ AutoFlushICache::flush(uintptr_t start, size_t len)
 
     JitSpewCont(JitSpew_CacheFlush, afc->inhibit_ ? "x" : "*");
     ExecutableAllocator::cacheFlush((void*)start, len);
+#else
+    MOZ_CRASH("Unresolved porting API - AutoFlushICache::flush");
 #endif
 }
 
@@ -3183,12 +3188,17 @@ AutoFlushICache::flush(uintptr_t start, size_t len)
 void
 AutoFlushICache::setInhibit()
 {
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_NONE)
+    // Nothing
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
+      defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     AutoFlushICache* afc = TlsContext.get()->autoFlushICache();
     MOZ_ASSERT(afc);
     MOZ_ASSERT(afc->start_);
     JitSpewCont(JitSpew_CacheFlush, "I");
     afc->inhibit_ = true;
+#else
+    MOZ_CRASH("Unresolved porting API - AutoFlushICache::setInhibit");
 #endif
 }
 

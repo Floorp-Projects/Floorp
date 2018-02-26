@@ -1191,7 +1191,7 @@ class BaseStackFrame
 
     static const size_t StackSizeOfPtr    = sizeof(intptr_t);
     static const size_t StackSizeOfInt64  = sizeof(int64_t);
-#ifdef JS_CODEGEN_ARM
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32)
     static const size_t StackSizeOfFloat  = sizeof(float);
 #else
     static const size_t StackSizeOfFloat  = sizeof(double);
@@ -3750,12 +3750,13 @@ class BaseCompiler final : public BaseCompilerInterface
         if (!ool)
             return false;
         bool isSaturating = flags & TRUNC_SATURATING;
-        if (flags & TRUNC_UNSIGNED)
+        if (flags & TRUNC_UNSIGNED) {
             masm.wasmTruncateFloat32ToUInt64(src, dest, isSaturating, ool->entry(),
                                              ool->rejoin(), temp);
-        else
+        } else {
             masm.wasmTruncateFloat32ToInt64(src, dest, isSaturating, ool->entry(),
                                             ool->rejoin(), temp);
+        }
         return true;
     }
 
@@ -3768,12 +3769,13 @@ class BaseCompiler final : public BaseCompilerInterface
         if (!ool)
             return false;
         bool isSaturating = flags & TRUNC_SATURATING;
-        if (flags & TRUNC_UNSIGNED)
+        if (flags & TRUNC_UNSIGNED) {
             masm.wasmTruncateDoubleToUInt64(src, dest, isSaturating, ool->entry(),
                                             ool->rejoin(), temp);
-        else
+        } else {
             masm.wasmTruncateDoubleToInt64(src, dest, isSaturating, ool->entry(),
                                            ool->rejoin(), temp);
+        }
         return true;
     }
 #endif // RABALDR_FLOAT_TO_I64_CALLOUT

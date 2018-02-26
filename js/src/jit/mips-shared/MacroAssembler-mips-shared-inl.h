@@ -1038,6 +1038,28 @@ MacroAssembler::storeFloat32x3(FloatRegister src, const BaseIndex& dest)
 }
 
 void
+MacroAssembler::storeUncanonicalizedDouble(FloatRegister src, const Address& addr)
+{
+    ma_sd(src, addr);
+}
+void
+MacroAssembler::storeUncanonicalizedDouble(FloatRegister src, const BaseIndex& addr)
+{
+    ma_sd(src, addr);
+}
+
+void
+MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src, const Address& addr)
+{
+    ma_ss(src, addr);
+}
+void
+MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src, const BaseIndex& addr)
+{
+    ma_ss(src, addr);
+}
+
+void
 MacroAssembler::memoryBarrier(MemoryBarrierBits barrier)
 {
     as_sync();

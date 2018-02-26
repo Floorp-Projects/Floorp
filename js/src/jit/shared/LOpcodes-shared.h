@@ -270,7 +270,6 @@
     _(LoadUnboxedExpando)           \
     _(TypeBarrierV)                 \
     _(TypeBarrierO)                 \
-    _(MonitorTypes)                 \
     _(PostWriteBarrierO)            \
     _(PostWriteBarrierS)            \
     _(PostWriteBarrierV)            \

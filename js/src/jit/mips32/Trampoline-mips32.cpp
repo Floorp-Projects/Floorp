@@ -70,24 +70,24 @@ GenerateReturn(MacroAssembler& masm, int returnCode)
     MOZ_ASSERT(masm.framePushed() == sizeof(EnterJITRegs));
 
     // Restore non-volatile registers
-    masm.loadPtr(Address(StackPointer, offsetof(EnterJITRegs, s0)), s0);
-    masm.loadPtr(Address(StackPointer, offsetof(EnterJITRegs, s1)), s1);
-    masm.loadPtr(Address(StackPointer, offsetof(EnterJITRegs, s2)), s2);
-    masm.loadPtr(Address(StackPointer, offsetof(EnterJITRegs, s3)), s3);
-    masm.loadPtr(Address(StackPointer, offsetof(EnterJITRegs, s4)), s4);
-    masm.loadPtr(Address(StackPointer, offsetof(EnterJITRegs, s5)), s5);
-    masm.loadPtr(Address(StackPointer, offsetof(EnterJITRegs, s6)), s6);
-    masm.loadPtr(Address(StackPointer, offsetof(EnterJITRegs, s7)), s7);
-    masm.loadPtr(Address(StackPointer, offsetof(EnterJITRegs, fp)), fp);
-    masm.loadPtr(Address(StackPointer, offsetof(EnterJITRegs, ra)), ra);
+    masm.as_lw(s0, StackPointer, offsetof(EnterJITRegs, s0));
+    masm.as_lw(s1, StackPointer, offsetof(EnterJITRegs, s1));
+    masm.as_lw(s2, StackPointer, offsetof(EnterJITRegs, s2));
+    masm.as_lw(s3, StackPointer, offsetof(EnterJITRegs, s3));
+    masm.as_lw(s4, StackPointer, offsetof(EnterJITRegs, s4));
+    masm.as_lw(s5, StackPointer, offsetof(EnterJITRegs, s5));
+    masm.as_lw(s6, StackPointer, offsetof(EnterJITRegs, s6));
+    masm.as_lw(s7, StackPointer, offsetof(EnterJITRegs, s7));
+    masm.as_lw(fp, StackPointer, offsetof(EnterJITRegs, fp));
+    masm.as_lw(ra, StackPointer, offsetof(EnterJITRegs, ra));
 
     // Restore non-volatile floating point registers
-    masm.loadDouble(Address(StackPointer, offsetof(EnterJITRegs, f20)), f20);
-    masm.loadDouble(Address(StackPointer, offsetof(EnterJITRegs, f22)), f22);
-    masm.loadDouble(Address(StackPointer, offsetof(EnterJITRegs, f24)), f24);
-    masm.loadDouble(Address(StackPointer, offsetof(EnterJITRegs, f26)), f26);
-    masm.loadDouble(Address(StackPointer, offsetof(EnterJITRegs, f28)), f28);
-    masm.loadDouble(Address(StackPointer, offsetof(EnterJITRegs, f30)), f30);
+    masm.as_ldc1(f20, StackPointer, offsetof(EnterJITRegs, f20));
+    masm.as_ldc1(f22, StackPointer, offsetof(EnterJITRegs, f22));
+    masm.as_ldc1(f24, StackPointer, offsetof(EnterJITRegs, f24));
+    masm.as_ldc1(f26, StackPointer, offsetof(EnterJITRegs, f26));
+    masm.as_ldc1(f28, StackPointer, offsetof(EnterJITRegs, f28));
+    masm.as_ldc1(f30, StackPointer, offsetof(EnterJITRegs, f30));
 
     masm.freeStack(sizeof(EnterJITRegs));
 
@@ -101,23 +101,23 @@ GeneratePrologue(MacroAssembler& masm)
     // rather than the JIT'd code, because they are scanned by the conservative
     // scanner.
     masm.reserveStack(sizeof(EnterJITRegs));
-    masm.storePtr(s0, Address(StackPointer, offsetof(EnterJITRegs, s0)));
-    masm.storePtr(s1, Address(StackPointer, offsetof(EnterJITRegs, s1)));
-    masm.storePtr(s2, Address(StackPointer, offsetof(EnterJITRegs, s2)));
-    masm.storePtr(s3, Address(StackPointer, offsetof(EnterJITRegs, s3)));
-    masm.storePtr(s4, Address(StackPointer, offsetof(EnterJITRegs, s4)));
-    masm.storePtr(s5, Address(StackPointer, offsetof(EnterJITRegs, s5)));
-    masm.storePtr(s6, Address(StackPointer, offsetof(EnterJITRegs, s6)));
-    masm.storePtr(s7, Address(StackPointer, offsetof(EnterJITRegs, s7)));
-    masm.storePtr(fp, Address(StackPointer, offsetof(EnterJITRegs, fp)));
-    masm.storePtr(ra, Address(StackPointer, offsetof(EnterJITRegs, ra)));
+    masm.as_sw(s0, StackPointer, offsetof(EnterJITRegs, s0));
+    masm.as_sw(s1, StackPointer, offsetof(EnterJITRegs, s1));
+    masm.as_sw(s2, StackPointer, offsetof(EnterJITRegs, s2));
+    masm.as_sw(s3, StackPointer, offsetof(EnterJITRegs, s3));
+    masm.as_sw(s4, StackPointer, offsetof(EnterJITRegs, s4));
+    masm.as_sw(s5, StackPointer, offsetof(EnterJITRegs, s5));
+    masm.as_sw(s6, StackPointer, offsetof(EnterJITRegs, s6));
+    masm.as_sw(s7, StackPointer, offsetof(EnterJITRegs, s7));
+    masm.as_sw(fp, StackPointer, offsetof(EnterJITRegs, fp));
+    masm.as_sw(ra, StackPointer, offsetof(EnterJITRegs, ra));
 
-    masm.as_sd(f20, StackPointer, offsetof(EnterJITRegs, f20));
-    masm.as_sd(f22, StackPointer, offsetof(EnterJITRegs, f22));
-    masm.as_sd(f24, StackPointer, offsetof(EnterJITRegs, f24));
-    masm.as_sd(f26, StackPointer, offsetof(EnterJITRegs, f26));
-    masm.as_sd(f28, StackPointer, offsetof(EnterJITRegs, f28));
-    masm.as_sd(f30, StackPointer, offsetof(EnterJITRegs, f30));
+    masm.as_sdc1(f20, StackPointer, offsetof(EnterJITRegs, f20));
+    masm.as_sdc1(f22, StackPointer, offsetof(EnterJITRegs, f22));
+    masm.as_sdc1(f24, StackPointer, offsetof(EnterJITRegs, f24));
+    masm.as_sdc1(f26, StackPointer, offsetof(EnterJITRegs, f26));
+    masm.as_sdc1(f28, StackPointer, offsetof(EnterJITRegs, f28));
+    masm.as_sdc1(f30, StackPointer, offsetof(EnterJITRegs, f30));
 }
 
 
@@ -364,9 +364,10 @@ JitRuntime::generateInvalidator(MacroAssembler& masm, Label* bailoutTail)
 
     // Save floating point registers
     // We can use as_sd because stack is alligned.
-    for (uint32_t i = 0; i < FloatRegisters::TotalDouble; i ++)
-        masm.as_sd(FloatRegister::FromIndex(i, FloatRegister::Double), StackPointer,
-                   InvalidationBailoutStack::offsetOfFpRegs() + i * sizeof(double));
+    for (uint32_t i = 0; i < FloatRegisters::TotalDouble; i ++) {
+        masm.as_sdc1(FloatRegister::FromIndex(i, FloatRegister::Double), StackPointer,
+                     InvalidationBailoutStack::offsetOfFpRegs() + i * sizeof(double));
+    }
 
     // Pass pointer to InvalidationBailoutStack structure.
     masm.movePtr(StackPointer, a0);
@@ -576,10 +577,11 @@ PushBailoutFrame(MacroAssembler& masm, uint32_t frameClass, Register spArg)
     }
 
     // Save floating point registers
-    // We can use as_sd because stack is alligned.
-    for (uint32_t i = 0; i < FloatRegisters::TotalDouble; i++)
-        masm.as_sd(FloatRegister::FromIndex(i, FloatRegister::Double), StackPointer,
-                   BailoutStack::offsetOfFpRegs() + i * sizeof(double));
+    // We can use as_sdc1 because stack is alligned.
+    for (uint32_t i = 0; i < FloatRegisters::TotalDouble; i++) {
+        masm.as_sdc1(FloatRegister::FromIndex(i, FloatRegister::Double), StackPointer,
+                     BailoutStack::offsetOfFpRegs() + i * sizeof(double));
+    }
 
     // Store the frameSize_ or tableOffset_ stored in ra
     // See: JitRuntime::generateBailoutTable()
@@ -775,8 +777,8 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
             break;
           case VMFunction::DoubleByRef:
             // Copy double sized argument to aligned place.
-            masm.ma_ld(ScratchDoubleReg, Address(argsBase, argDisp));
-            masm.as_sd(ScratchDoubleReg, doubleArgs, doubleArgDisp);
+            masm.ma_ldc1WordAligned(ScratchDoubleReg, argsBase, argDisp);
+            masm.as_sdc1(ScratchDoubleReg, doubleArgs, doubleArgDisp);
             masm.passABIArg(MoveOperand(doubleArgs, doubleArgDisp, MoveOperand::EFFECTIVE_ADDRESS),
                             MoveOp::GENERAL);
             doubleArgDisp += sizeof(double);
@@ -841,7 +843,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
 
       case Type_Double:
         if (cx->runtime()->jitSupportsFloatingPoint) {
-            masm.as_ld(ReturnDoubleReg, StackPointer, 0);
+            masm.as_ldc1(ReturnDoubleReg, StackPointer, 0);
         } else {
             masm.assumeUnreachable("Unable to load into float reg, with no FP support.");
         }

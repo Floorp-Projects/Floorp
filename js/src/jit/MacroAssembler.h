@@ -1367,6 +1367,10 @@ class MacroAssembler : public MacroAssemblerSpecific
                               Register dest)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
+    // Conditional move for Spectre mitigations.
+    inline void spectreMovePtr(Condition cond, Register src, Register dest)
+        DEFINED_ON(arm, arm64, x86, x64);
+
     // Performs a bounds check and zeroes the index register if out-of-bounds
     // (to mitigate Spectre).
     inline void boundsCheck32ForLoad(Register index, Register length, Register scratch,
@@ -1485,23 +1489,23 @@ class MacroAssembler : public MacroAssemblerSpecific
     void wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister value, Operand dstAddr) DEFINED_ON(x86, x64);
     void wasmStoreI64(const wasm::MemoryAccessDesc& access, Register64 value, Operand dstAddr) DEFINED_ON(x86);
 
-    // For all the ARM wasmLoad and wasmStore functions, `ptr` MUST equal
-    // `ptrScratch`, and that register will be updated based on conditions
+    // For all the ARM and ARM64 wasmLoad and wasmStore functions, `ptr` MUST
+    // equal `ptrScratch`, and that register will be updated based on conditions
     // listed below (where it is only mentioned as `ptr`).
 
     // `ptr` will be updated if access.offset() != 0 or access.type() == Scalar::Int64.
     void wasmLoad(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
                   Register ptrScratch, AnyRegister output)
-        DEFINED_ON(arm, mips_shared);
+        DEFINED_ON(arm, arm64, mips_shared);
     void wasmLoadI64(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
                      Register ptrScratch, Register64 output)
-        DEFINED_ON(arm, mips32, mips64);
+        DEFINED_ON(arm, arm64, mips32, mips64);
     void wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister value, Register memoryBase,
                    Register ptr, Register ptrScratch)
-        DEFINED_ON(arm, mips_shared);
+        DEFINED_ON(arm, arm64, mips_shared);
     void wasmStoreI64(const wasm::MemoryAccessDesc& access, Register64 value, Register memoryBase,
                       Register ptr, Register ptrScratch)
-        DEFINED_ON(arm, mips32, mips64);
+        DEFINED_ON(arm, arm64, mips32, mips64);
 
     // `ptr` will always be updated.
     void wasmUnalignedLoad(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
@@ -1934,9 +1938,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     // register is required.
     template <typename Source>
     void guardTypeSet(const Source& address, const TypeSet* types, BarrierKind kind,
-                      Register unboxScratch, Register objScratch, Label* miss);
+                      Register unboxScratch, Register objScratch, Register spectreRegToZero,
+                      Label* miss);
 
-    void guardObjectType(Register obj, const TypeSet* types, Register scratch, Label* miss);
+    void guardObjectType(Register obj, const TypeSet* types, Register scratch,
+                         Register spectreRegToZero, Label* miss);
 
 #ifdef DEBUG
     void guardTypeSetMightBeIncomplete(const TypeSet* types, Register obj, Register scratch,

@@ -693,8 +693,10 @@ Animation::Tick()
     // during the *previous* tick of the refresh driver, it can still be
     // ahead of the *current* timeline time when we are using the
     // vsync timer so we need to clamp it to the timeline time.
-    mPendingReadyTime.SetValue(std::min(mTimeline->GetCurrentTime().Value(),
-                                        mPendingReadyTime.Value()));
+    TimeDuration currentTime = mTimeline->GetCurrentTime().Value();
+    if (currentTime < mPendingReadyTime.Value()) {
+      mPendingReadyTime.SetValue(currentTime);
+    }
     FinishPendingAt(mPendingReadyTime.Value());
     mPendingReadyTime.SetNull();
   }

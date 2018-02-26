@@ -31,8 +31,10 @@
 #include "vm/Interpreter.h"
 #include "vm/String.h"
 #include "vm/StringBuffer.h"
+#include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmInstance.h"
+#include "wasm/WasmIonCompile.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmStubs.h"
@@ -85,7 +87,8 @@ wasm::HasCompilerSupport(JSContext* cx)
 #if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
     return false;
 #else
-    return true;
+    return (cx->options().wasmBaseline() && BaselineCanCompile()) ||
+           (cx->options().wasmIon() && IonCanCompile());
 #endif
 }
 

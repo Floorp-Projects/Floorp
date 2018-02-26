@@ -216,7 +216,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitStoreSlot(MStoreSlot* ins) override;
     void visitFilterTypeSet(MFilterTypeSet* ins) override;
     void visitTypeBarrier(MTypeBarrier* ins) override;
-    void visitMonitorTypes(MMonitorTypes* ins) override;
     void visitPostWriteBarrier(MPostWriteBarrier* ins) override;
     void visitPostWriteElementBarrier(MPostWriteElementBarrier* ins) override;
     void visitArrayLength(MArrayLength* ins) override;
