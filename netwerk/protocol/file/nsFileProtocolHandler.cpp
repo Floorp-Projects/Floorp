@@ -257,6 +257,34 @@ nsFileProtocolHandler::NewFileURI(nsIFile *file, nsIURI **result)
 }
 
 NS_IMETHODIMP
+nsFileProtocolHandler::NewFileURIMutator(nsIFile *aFile, nsIURIMutator **aResult)
+{
+    NS_ENSURE_ARG_POINTER(aFile);
+    nsresult rv;
+
+    nsCOMPtr<nsIURI> url = new nsStandardURL(true);
+    nsCOMPtr<nsIURIMutator> mutator;
+    rv = url->Mutate(getter_AddRefs(mutator));
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+    nsCOMPtr<nsIFileURLMutator> fileMutator = do_QueryInterface(mutator, &rv);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    // NOTE: the origin charset is assigned the value of the platform
+    // charset by the SetFile method.
+    rv = fileMutator->SetFile(aFile);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    mutator.forget(aResult);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFileProtocolHandler::GetURLSpecFromFile(nsIFile *file, nsACString &result)
 {
     NS_ENSURE_ARG_POINTER(file);

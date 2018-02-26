@@ -82,7 +82,7 @@ add_test(function test_setQuery()
   for (var [provided, target] of pairs) {
     symmetricEquality(false, provided, target);
 
-    provided.query = "foo";
+    provided = provided.mutate().setQuery("foo").finalize().QueryInterface(Ci.nsIURL);
 
     Assert.equal(provided.spec, target.spec);
     symmetricEquality(true, provided, target);
@@ -91,7 +91,7 @@ add_test(function test_setQuery()
   [provided, target] =
     ["http://example.com/#", "http://example.com/?foo#bar"].map(stringToURL);
   symmetricEquality(false, provided, target);
-  provided.query = "foo";
+  provided = provided.mutate().setQuery("foo").finalize().QueryInterface(Ci.nsIURL);
   symmetricEquality(false, provided, target);
 
   var newProvided = Components.classes["@mozilla.org/network/io-service;1"]
@@ -302,8 +302,7 @@ add_test(function test_hugeStringThrows()
 
   let hugeString = new Array(maxLen + 1).fill("a").join("");
   let properties = ["scheme",
-                    "host",
-                    "query"];
+                    "host"];
   for (let prop of properties) {
     Assert.throws(() => url[prop] = hugeString,
                   /NS_ERROR_MALFORMED_URI/,
@@ -318,6 +317,7 @@ add_test(function test_hugeStringThrows()
     { method: "setHostPort", qi: Ci.nsIURIMutator },
     { method: "setUserPass", qi: Ci.nsIURIMutator },
     { method: "setPathQueryRef", qi: Ci.nsIURIMutator },
+    { method: "setQuery", qi: Ci.nsIURIMutator },
     { method: "setRef", qi: Ci.nsIURIMutator },
     { method: "setFileName", qi: Ci.nsIURLMutator },
     { method: "setFileExtension", qi: Ci.nsIURLMutator },
@@ -342,7 +342,7 @@ add_test(function test_filterWhitespace()
   var url = stringToURL("http://test.com/path?query#hash");
   url = url.mutate().setFilePath("pa\r\n\tth").finalize();
   Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?query#hash");
-  url.query = "qu\r\n\tery";
+  url = url.mutate().setQuery("qu\r\n\tery").finalize();
   Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?qu%0D%0A%09ery#hash");
   url = url.mutate().setRef("ha\r\n\tsh").finalize();
   Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?qu%0D%0A%09ery#ha%0D%0A%09sh");
@@ -411,7 +411,7 @@ add_test(function test_encode_C0_and_space()
   var url = stringToURL("http://example.com/path?query#hash");
   url = url.mutate().setFilePath("pa\0th").finalize();
   Assert.equal(url.spec, "http://example.com/pa%00th?query#hash");
-  url.query = "qu\0ery";
+  url = url.mutate().setQuery("qu\0ery").finalize();
   Assert.equal(url.spec, "http://example.com/pa%00th?qu%00ery#hash");
   url = url.mutate().setRef("ha\0sh").finalize();
   Assert.equal(url.spec, "http://example.com/pa%00th?qu%00ery#ha%00sh");

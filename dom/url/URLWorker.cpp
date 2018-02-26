@@ -10,6 +10,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
+#include "mozilla/Unused.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsStandardURL.h"
 #include "nsURLHelper.h"
@@ -1168,7 +1169,9 @@ URLWorker::SetSearchInternal(const nsAString& aSearch, ErrorResult& aRv)
 {
   if (mStdURL) {
     // URLMainThread ignores failures here.
-    mStdURL->SetQuery(NS_ConvertUTF16toUTF8(aSearch));
+    Unused << NS_MutateURI(mStdURL)
+                .SetQuery(NS_ConvertUTF16toUTF8(aSearch))
+                .Finalize(mStdURL);
     return;
   }
 
