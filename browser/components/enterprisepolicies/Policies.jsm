@@ -15,9 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const PREF_LOGLEVEL           = "browser.policies.loglevel";
-const PREF_MENU_ALREADY_DISPLAYED = "browser.policies.menuBarWasDisplayed";
-const BROWSER_DOCUMENT_URL        = "chrome://browser/content/browser.xul";
-const PREF_BOOKMARKS_ALREADY_DISPLAYED = "browser.policies.bookmarkBarWasDisplayed";
+const BROWSER_DOCUMENT_URL    = "chrome://browser/content/browser.xul";
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
@@ -165,13 +163,9 @@ var Policies = {
         // This policy is meant to change the default behavior, not to force it.
         // If this policy was alreay applied and the user chose to re-hide the
         // bookmarks toolbar, do not show it again.
-        if (!Services.prefs.getBoolPref(PREF_BOOKMARKS_ALREADY_DISPLAYED, false)) {
-          log.debug("Showing the bookmarks toolbar");
+        runOnce("displayBookmarksToolbar", () => {
           gXulStore.setValue(BROWSER_DOCUMENT_URL, "PersonalToolbar", "collapsed", "false");
-          Services.prefs.setBoolPref(PREF_BOOKMARKS_ALREADY_DISPLAYED, true);
-        } else {
-          log.debug("Not showing the bookmarks toolbar because it has already been shown.");
-        }
+        });
       }
     }
   },
@@ -182,13 +176,9 @@ var Policies = {
         // This policy is meant to change the default behavior, not to force it.
         // If this policy was alreay applied and the user chose to re-hide the
         // menu bar, do not show it again.
-        if (!Services.prefs.getBoolPref(PREF_MENU_ALREADY_DISPLAYED, false)) {
-          log.debug("Showing the menu bar");
+        runOnce("displayMenuBar", () => {
           gXulStore.setValue(BROWSER_DOCUMENT_URL, "toolbar-menubar", "autohide", "false");
-          Services.prefs.setBoolPref(PREF_MENU_ALREADY_DISPLAYED, true);
-        } else {
-          log.debug("Not showing the menu bar because it has already been shown.");
-        }
+        });
       }
     }
   },
@@ -303,4 +293,24 @@ function addAllowDenyPermissions(permissionName, allowList, blockList) {
                        Ci.nsIPermissionManager.DENY_ACTION,
                        Ci.nsIPermissionManager.EXPIRE_POLICY);
   }
+}
+
+/**
+ * runOnce
+ *
+ * Helper function to run a callback only once per policy.
+ *
+ * @param {string} actionName
+ *        A given name which will be used to track if this callback has run.
+ * @param {Functon} callback
+ *        The callback to run only once.
+ */
+function runOnce(actionName, callback) {
+  let prefName = `browser.policies.runonce.${actionName}`;
+  if (Services.prefs.getBoolPref(prefName, false)) {
+    log.debug(`Not running action ${actionName} again because it has already run.`);
+    return;
+  }
+  callback();
+  Services.prefs.setBoolPref(prefName, true);
 }
