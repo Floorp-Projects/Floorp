@@ -462,14 +462,18 @@ Link::SetPassword(const nsAString &aPassword)
 void
 Link::SetUsername(const nsAString &aUsername)
 {
-  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  uri->SetUsername(NS_ConvertUTF16toUTF8(aUsername));
-  SetHrefAttribute(uri);
+  nsresult rv = NS_MutateURI(uri)
+                  .SetUsername(NS_ConvertUTF16toUTF8(aUsername))
+                  .Finalize(uri);
+  if (NS_SUCCEEDED(rv)) {
+    SetHrefAttribute(uri);
+  }
 }
 
 void
