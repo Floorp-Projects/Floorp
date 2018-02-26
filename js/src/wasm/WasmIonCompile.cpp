@@ -832,8 +832,12 @@ class FunctionCompiler
         }
 
         MWasmLoadTls* boundsCheckLimit = maybeLoadBoundsCheckLimit();
-        if (boundsCheckLimit)
-            curBlock_->add(MWasmBoundsCheck::New(alloc(), *base, boundsCheckLimit, bytecodeOffset()));
+        if (boundsCheckLimit) {
+            auto* ins = MWasmBoundsCheck::New(alloc(), *base, boundsCheckLimit, bytecodeOffset());
+            curBlock_->add(ins);
+            if (JitOptions.spectreIndexMasking)
+                *base = ins;
+        }
     }
 
     bool isSmallerAccessForI64(ValType result, const MemoryAccessDesc* access) {

@@ -1470,8 +1470,10 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void wasmTrap(wasm::Trap trap, wasm::BytecodeOffset bytecodeOffset);
 
-    // Emit a bounds check against the wasm heap limit, jumping to 'label' if 'cond' holds.
-    // Required when WASM_HUGE_MEMORY is not defined.
+    // Emit a bounds check against the wasm heap limit, jumping to 'label' if
+    // 'cond' holds. Required when WASM_HUGE_MEMORY is not defined. If
+    // JitOptions.spectreMaskIndex is true, in speculative executions 'index' is
+    // saturated in-place to 'boundsCheckLimit'.
     template <class L>
     inline void wasmBoundsCheck(Condition cond, Register index, Register boundsCheckLimit, L label)
         DEFINED_ON(arm, arm64, mips32, mips64, x86);
