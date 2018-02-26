@@ -443,14 +443,8 @@ var PanelMultiView = class extends this.AssociatedToNode {
       return;
 
     this._cleanupTransitionPhase();
-    let mainView = this._mainView;
-    if (mainView) {
-      if (this._panelViewCache)
-        this._panelViewCache.appendChild(mainView);
-      mainView.removeAttribute("mainview");
-    }
 
-    this._moveOutKids(this._viewStack);
+    this._moveOutKids();
     this._panel.removeEventListener("mousemove", this);
     this._panel.removeEventListener("popupshowing", this);
     this._panel.removeEventListener("popuppositioned", this);
@@ -601,19 +595,16 @@ var PanelMultiView = class extends this.AssociatedToNode {
    * Remove any child subviews into the panelViewCache, to ensure
    * they remain usable even if this panelmultiview instance is removed
    * from the DOM.
-   * @param viewNodeContainer the container from which to remove subviews
    */
-  _moveOutKids(viewNodeContainer) {
+  _moveOutKids() {
     if (!this._panelViewCache)
       return;
 
     // Node.children and Node.childNodes is live to DOM changes like the
     // ones we're about to do, so iterate over a static copy:
-    let subviews = Array.from(viewNodeContainer.childNodes);
+    let subviews = Array.from(this._viewStack.childNodes);
     for (let subview of subviews) {
-      // XBL lists the 'children' XBL element explicitly. :-(
-      if (subview.nodeName != "children")
-        this._panelViewCache.appendChild(subview);
+      this._panelViewCache.appendChild(subview);
     }
   }
 
