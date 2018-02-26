@@ -292,7 +292,9 @@ URLMainThread::GetUsername(nsAString& aUsername, ErrorResult& aRv) const
 void
 URLMainThread::SetUsername(const nsAString& aUsername, ErrorResult& aRv)
 {
-  mURI->SetUsername(NS_ConvertUTF16toUTF8(aUsername));
+  Unused << NS_MutateURI(mURI)
+              .SetUsername(NS_ConvertUTF16toUTF8(aUsername))
+              .Finalize(mURI);
 }
 
 void

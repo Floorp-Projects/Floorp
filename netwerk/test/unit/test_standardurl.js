@@ -301,7 +301,7 @@ add_test(function test_hugeStringThrows()
   let url = stringToURL("http://test:test@example.com");
 
   let hugeString = new Array(maxLen + 1).fill("a").join("");
-  let properties = ["scheme", "username",
+  let properties = ["scheme",
                     "password", "host", "ref",
                     "query"];
   for (let prop of properties) {
@@ -312,6 +312,7 @@ add_test(function test_hugeStringThrows()
 
   let setters = [
     { method: "setSpec", qi: Ci.nsIURIMutator },
+    { method: "setUsername", qi: Ci.nsIURIMutator },
     { method: "setFilePath", qi: Ci.nsIURIMutator },
     { method: "setHostPort", qi: Ci.nsIURIMutator },
     { method: "setUserPass", qi: Ci.nsIURIMutator },
