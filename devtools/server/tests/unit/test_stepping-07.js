@@ -26,9 +26,12 @@ function run_test_with_server(server, callback) {
   gClient.connect(testSteppingAndReturns);
 }
 
-const testSteppingAndReturns = async function () {
-  const [attachResponse,, threadClient] = await attachTestTabAndResume(gClient,
-                                                                       "test-stepping");
+async function testSteppingAndReturns() {
+  const [attachResponse,, threadClient] = await attachTestTabAndResume(
+    gClient,
+    "test-stepping"
+  );
+
   ok(!attachResponse.error, "Should not get an error attaching");
 
   dumpn("Evaluating test code and waiting for first debugger statement");
@@ -64,7 +67,7 @@ const testSteppingAndReturns = async function () {
   ok(step5.why.frameFinished, "This should be the explicit function return");
 
   finishClient(gClient, gCallback);
-};
+}
 
 function evaluateTestCode() {
   /* eslint-disable */
