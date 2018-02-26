@@ -8010,7 +8010,7 @@ var gIdentityHandler = {
       classes += " in-use";
 
       // Synchronize control center and identity block blinking animations.
-      BrowserUtils.promiseLayoutFlushed(document, "style", () => {
+      window.promiseDocumentFlushed(() => {}).then(() => {
         let sharingIconBlink = document.getElementById("sharing-icon").getAnimations()[0];
         if (sharingIconBlink) {
           let startTime = sharingIconBlink.startTime;

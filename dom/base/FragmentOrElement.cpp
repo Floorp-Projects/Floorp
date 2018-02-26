@@ -1024,8 +1024,7 @@ nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   }
 
   if (!aVisitor.mEvent->mFlags.mComposedInNativeAnonymousContent &&
-      IsRootOfNativeAnonymousSubtree() && OwnerDoc() &&
-      OwnerDoc()->GetWindow()) {
+      IsRootOfNativeAnonymousSubtree() && OwnerDoc()->GetWindow()) {
     aVisitor.SetParentTarget(OwnerDoc()->GetWindow()->GetParentTarget(), true);
   } else if (parent) {
     aVisitor.SetParentTarget(parent, false);

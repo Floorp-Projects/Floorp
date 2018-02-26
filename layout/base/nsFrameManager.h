@@ -17,6 +17,7 @@
 
 class nsContainerFrame;
 class nsPlaceholderFrame;
+class nsWindowSizes;
 
 namespace mozilla {
 /**
@@ -199,6 +200,8 @@ public:
   void RestoreFrameStateFor(nsIFrame* aFrame, nsILayoutHistoryState* aState);
 
   void DestroyAnonymousContent(already_AddRefed<nsIContent> aContent);
+
+  void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
 
 protected:
   static nsIContent* ParentForUndisplayedMap(const nsIContent* aContent);

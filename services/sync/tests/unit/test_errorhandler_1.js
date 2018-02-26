@@ -365,7 +365,7 @@ add_task(async function test_login_syncAndReportErrors_non_network_error() {
   // when calling syncAndReportErrors
   let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
-  Service.identity.resetSyncKeyBundle();
+  Service.identity._syncKeyBundle = null;
 
   let promiseObserved = promiseOneObserver("weave:ui:login:error");
 
@@ -418,7 +418,7 @@ add_task(async function test_login_syncAndReportErrors_prolonged_non_network_err
   // reported when calling syncAndReportErrors.
   let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
-  Service.identity.resetSyncKeyBundle();
+  Service.identity._syncKeyBundle = null;
 
   let promiseObserved = promiseOneObserver("weave:ui:login:error");
 
@@ -543,7 +543,7 @@ add_task(async function test_login_prolonged_non_network_error() {
   // Test prolonged, non-network errors are reported
   let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
-  Service.identity.resetSyncKeyBundle();
+  Service.identity._syncKeyBundle = null;
 
   let promiseObserved = promiseOneObserver("weave:ui:login:error");
 
@@ -630,7 +630,7 @@ add_task(async function test_login_non_network_error() {
   // Test non-network errors are reported
   let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
-  Service.identity.resetSyncKeyBundle();
+  Service.identity._syncKeyBundle = null;
 
   let promiseObserved = promiseOneObserver("weave:ui:login:error");
 
