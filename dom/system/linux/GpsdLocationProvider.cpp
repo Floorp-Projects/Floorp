@@ -217,13 +217,15 @@ protected:
 
     int err = 0;
 
-    double lat = -1;
-    double lon = -1;
-    double alt = -1;
-    double hError = -1;
-    double vError = -1;
-    double heading = -1;
-    double speed = -1;
+    // nsGeoPositionCoords will convert NaNs to null for optional properties of
+    // the JavaScript Coordinates object.
+    double lat = 0;
+    double lon = 0;
+    double alt = UnspecifiedNaN<double>();
+    double hError = 0;
+    double vError = UnspecifiedNaN<double>();
+    double heading = UnspecifiedNaN<double>();
+    double speed = UnspecifiedNaN<double>();
 
     while (IsRunning()) {
 
