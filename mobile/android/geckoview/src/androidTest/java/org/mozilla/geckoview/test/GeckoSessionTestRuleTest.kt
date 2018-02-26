@@ -22,6 +22,9 @@ import org.junit.Test
 import org.junit.rules.ErrorCollector
 import org.junit.runner.RunWith
 
+inline fun GeckoSession.loadTestPath(path: String) =
+        this.loadUri(GeckoSessionTestRule.APK_URI_PREFIX + path.removePrefix("/"))
+
 /**
  * Test for the GeckoSessionTestRule class, to ensure it properly sets up a session for
  * each test, and to ensure it can properly wait for and assert listener/delegate
@@ -31,7 +34,7 @@ import org.junit.runner.RunWith
 @MediumTest
 class GeckoSessionTestRuleTest {
     companion object {
-        const val HELLO_URI = GeckoSessionTestRule.APK_URI_PREFIX + "/assets/www/hello.html"
+        const val HELLO_HTML_PATH = "assets/www/hello.html"
     }
 
     @get:Rule val sessionRule = GeckoSessionTestRule()
@@ -83,7 +86,7 @@ class GeckoSessionTestRuleTest {
     }
 
     @Test fun waitForPageStop() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         var counter = 0
@@ -100,12 +103,12 @@ class GeckoSessionTestRuleTest {
     @Test(expected = AssertionError::class)
     fun waitForPageStop_throwOnChangedCallback() {
         sessionRule.session.progressListener = Callbacks.Default
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
     }
 
     @Test fun waitForPageStops() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.session.reload()
         sessionRule.waitForPageStops(2)
 
@@ -121,7 +124,7 @@ class GeckoSessionTestRuleTest {
     }
 
     @Test fun waitUntilCalled_anyInterfaceMethod() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitUntilCalled(GeckoSession.ProgressListener::class)
 
         var counter = 0
@@ -145,7 +148,7 @@ class GeckoSessionTestRuleTest {
     }
 
     @Test fun waitUntilCalled_specificInterfaceMethod() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitUntilCalled(GeckoSession.ProgressListener::class,
                                      "onPageStart", "onPageStop")
 
@@ -166,12 +169,12 @@ class GeckoSessionTestRuleTest {
 
     @Test(expected = AssertionError::class)
     fun waitUntilCalled_throwOnNotGeckoSessionInterface() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitUntilCalled(CharSequence::class)
     }
 
     @Test fun waitUntilCalled_anyObjectMethod() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
 
         var counter = 0
 
@@ -194,7 +197,7 @@ class GeckoSessionTestRuleTest {
     }
 
     @Test fun waitUntilCalled_specificObjectMethod() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
 
         var counter = 0
 
@@ -214,7 +217,7 @@ class GeckoSessionTestRuleTest {
     }
 
     @Test fun waitUntilCalled_multipleCount() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.session.reload()
 
         var counter = 0
@@ -235,7 +238,7 @@ class GeckoSessionTestRuleTest {
     }
 
     @Test fun waitUntilCalled_currentCall() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.session.reload()
 
         var counter = 0
@@ -257,7 +260,7 @@ class GeckoSessionTestRuleTest {
     }
 
     @Test fun forCallbacksDuringWait_anyMethod() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         var counter = 0
@@ -273,14 +276,14 @@ class GeckoSessionTestRuleTest {
 
     @Test(expected = AssertionError::class)
     fun forCallbacksDuringWait_throwOnAnyMethodNotCalled() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(GeckoSession.ScrollListener { _, _, _ -> })
     }
 
     @Test fun forCallbacksDuringWait_specificMethod() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         var counter = 0
@@ -301,7 +304,7 @@ class GeckoSessionTestRuleTest {
     }
 
     @Test fun forCallbacksDuringWait_specificMethodMultipleTimes() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.session.reload()
         sessionRule.waitForPageStops(2)
 
@@ -324,7 +327,7 @@ class GeckoSessionTestRuleTest {
 
     @Test(expected = AssertionError::class)
     fun forCallbacksDuringWait_throwOnSpecificMethodNotCalled() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
@@ -332,7 +335,7 @@ class GeckoSessionTestRuleTest {
     }
 
     @Test fun forCallbacksDuringWait_specificCount() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.session.reload()
         sessionRule.waitForPageStops(2)
 
@@ -355,7 +358,7 @@ class GeckoSessionTestRuleTest {
 
     @Test(expected = AssertionError::class)
     fun forCallbacksDuringWait_throwOnWrongCount() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.session.reload()
         sessionRule.waitForPageStops(2)
 
@@ -371,7 +374,7 @@ class GeckoSessionTestRuleTest {
     }
 
     @Test fun forCallbacksDuringWait_specificOrder() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressListener {
@@ -387,7 +390,7 @@ class GeckoSessionTestRuleTest {
 
     @Test(expected = AssertionError::class)
     fun forCallbacksDuringWait_throwOnWrongOrder() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressListener {
@@ -402,7 +405,7 @@ class GeckoSessionTestRuleTest {
     }
 
     @Test fun forCallbacksDuringWait_multipleOrder() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.session.reload()
         sessionRule.waitForPageStops(2)
 
@@ -419,7 +422,7 @@ class GeckoSessionTestRuleTest {
 
     @Test(expected = AssertionError::class)
     fun forCallbacksDuringWait_throwOnWrongMultipleOrder() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.session.reload()
         sessionRule.waitForPageStops(2)
 
@@ -435,7 +438,7 @@ class GeckoSessionTestRuleTest {
     }
 
     @Test fun forCallbacksDuringWait_notCalled() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
@@ -444,7 +447,7 @@ class GeckoSessionTestRuleTest {
 
     @Test(expected = AssertionError::class)
     fun forCallbacksDuringWait_throwOnCallingNoCall() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressListener {
@@ -455,7 +458,7 @@ class GeckoSessionTestRuleTest {
     }
 
     @Test fun forCallbacksDuringWait_limitedToLastWait() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.session.reload()
         sessionRule.session.reload()
         sessionRule.session.reload()
@@ -485,7 +488,7 @@ class GeckoSessionTestRuleTest {
     }
 
     @Test fun forCallbacksDuringWait_currentCall() {
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressListener {
@@ -521,7 +524,7 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         assertThat("Callback count should be correct", counter, equalTo(2))
@@ -547,7 +550,7 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
     }
 
@@ -563,7 +566,7 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
     }
 
@@ -580,7 +583,7 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
     }
 
@@ -599,7 +602,7 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         assertThat("Should have delegated", counter, equalTo(2))
@@ -614,7 +617,7 @@ class GeckoSessionTestRuleTest {
     fun delegateDuringNextWait_throwOnNotCalled() {
         sessionRule.delegateDuringNextWait(
                 GeckoSession.ScrollListener @AssertCalled(count = 1) { _, _, _ -> })
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
     }
 
@@ -664,7 +667,7 @@ class GeckoSessionTestRuleTest {
             }
         })
 
-        sessionRule.session.loadUri(HELLO_URI)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         assertThat("Text delegate should be overridden",
