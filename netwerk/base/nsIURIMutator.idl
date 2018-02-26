@@ -315,84 +315,124 @@ public:
   {
     mStatus = m ? NS_OK : NS_ERROR_NULL_POINTER;
     mMutator = m;
+    NS_ENSURE_SUCCESS_VOID(mStatus);
   }
 
   NS_MutateURI& SetSpec(const nsACString& aSpec)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetSpec(aSpec, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetScheme(const nsACString& aScheme)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetScheme(aScheme, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetUserPass(const nsACString& aUserPass)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetUserPass(aUserPass, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetUsername(const nsACString& aUsername)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetUsername(aUsername, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetPassword(const nsACString& aPassword)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetPassword(aPassword, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetHostPort(const nsACString& aHostPort)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetHostPort(aHostPort, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetHost(const nsACString& aHost)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetHost(aHost, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetPort(int32_t aPort)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetPort(aPort, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetPathQueryRef(const nsACString& aPathQueryRef)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetPathQueryRef(aPathQueryRef, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetRef(const nsACString& aRef)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetRef(aRef, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetFilePath(const nsACString& aFilePath)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetFilePath(aFilePath, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetQuery(const nsACString& aQuery)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetQuery(aQuery, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetQueryWithEncoding(const nsACString& query, const mozilla::Encoding *encoding)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetQueryWithEncoding(query, encoding, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
 
@@ -414,7 +454,9 @@ public:
    */
   NS_MutateURI& Apply(const std::function<nsresult(nsIURIMutator*)>& aFunction)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = aFunction(mMutator);
     NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
