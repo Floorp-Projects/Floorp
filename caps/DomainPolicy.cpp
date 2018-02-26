@@ -228,7 +228,9 @@ DomainSet::ContainsSuperDomain(nsIURI* aDomain, bool* aContains)
         if (index == kNotFound)
             break;
         domain.Assign(Substring(domain, index + 1));
-        rv = clone->SetHost(domain);
+        rv = NS_MutateURI(clone)
+               .SetHost(domain)
+               .Finalize(clone);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 

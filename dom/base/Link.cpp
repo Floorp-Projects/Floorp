@@ -501,13 +501,18 @@ Link::SetHost(const nsAString &aHost)
 void
 Link::SetHostname(const nsAString &aHostname)
 {
-  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  (void)uri->SetHost(NS_ConvertUTF16toUTF8(aHostname));
+  nsresult rv = NS_MutateURI(uri)
+                  .SetHost(NS_ConvertUTF16toUTF8(aHostname))
+                  .Finalize(uri);
+  if (NS_FAILED(rv)) {
+    return;
+  }
   SetHrefAttribute(uri);
 }
 
