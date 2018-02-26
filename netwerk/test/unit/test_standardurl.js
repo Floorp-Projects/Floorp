@@ -141,7 +141,7 @@ add_test(function test_setRef()
   {
     /* Test1: starting with empty ref */
     var a = stringToURL(before);
-    a.ref = ref;
+    a = a.mutate().setRef(ref).finalize().QueryInterface(Ci.nsIURL);
     var b = stringToURL(result);
 
     Assert.equal(a.spec, b.spec);
@@ -149,17 +149,17 @@ add_test(function test_setRef()
     symmetricEquality(true, a, b);
 
     /* Test2: starting with non-empty */
-    a.ref = "yyyy";
+    a = a.mutate().setRef("yyyy").finalize().QueryInterface(Ci.nsIURL);
     var c = stringToURL(before);
-    c.ref = "yyyy";
+    c = c.mutate().setRef("yyyy").finalize().QueryInterface(Ci.nsIURL);
     symmetricEquality(true, a, c);
 
     /* Test3: reset the ref */
-    a.ref = "";
+    a = a.mutate().setRef("").finalize().QueryInterface(Ci.nsIURL);
     symmetricEquality(true, a, stringToURL(before));
 
     /* Test4: verify again after reset */
-    a.ref = ref;
+    a = a.mutate().setRef(ref).finalize().QueryInterface(Ci.nsIURL);
     symmetricEquality(true, a, b);
   }
   run_next_test();
@@ -255,7 +255,7 @@ add_test(function test_escapeQuote()
   var url = stringToURL("http://example.com/#'");
   Assert.equal(url.spec, "http://example.com/#'");
   Assert.equal(url.ref, "'");
-  url.ref = "test'test";
+  url = url.mutate().setRef("test'test").finalize();
   Assert.equal(url.spec, "http://example.com/#test'test");
   Assert.equal(url.ref, "test'test");
   run_next_test();
@@ -302,7 +302,7 @@ add_test(function test_hugeStringThrows()
 
   let hugeString = new Array(maxLen + 1).fill("a").join("");
   let properties = ["scheme",
-                    "host", "ref",
+                    "host",
                     "query"];
   for (let prop of properties) {
     Assert.throws(() => url[prop] = hugeString,
@@ -318,6 +318,7 @@ add_test(function test_hugeStringThrows()
     { method: "setHostPort", qi: Ci.nsIURIMutator },
     { method: "setUserPass", qi: Ci.nsIURIMutator },
     { method: "setPathQueryRef", qi: Ci.nsIURIMutator },
+    { method: "setRef", qi: Ci.nsIURIMutator },
     { method: "setFileName", qi: Ci.nsIURLMutator },
     { method: "setFileExtension", qi: Ci.nsIURLMutator },
     { method: "setFileBaseName", qi: Ci.nsIURLMutator },
@@ -343,7 +344,7 @@ add_test(function test_filterWhitespace()
   Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?query#hash");
   url.query = "qu\r\n\tery";
   Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?qu%0D%0A%09ery#hash");
-  url.ref = "ha\r\n\tsh";
+  url = url.mutate().setRef("ha\r\n\tsh").finalize();
   Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?qu%0D%0A%09ery#ha%0D%0A%09sh");
   url = url.mutate().QueryInterface(Ci.nsIURLMutator).setFileName("fi\r\n\tle.name").finalize();
   Assert.equal(url.spec, "http://test.com/fi%0D%0A%09le.name?qu%0D%0A%09ery#ha%0D%0A%09sh");
@@ -412,7 +413,7 @@ add_test(function test_encode_C0_and_space()
   Assert.equal(url.spec, "http://example.com/pa%00th?query#hash");
   url.query = "qu\0ery";
   Assert.equal(url.spec, "http://example.com/pa%00th?qu%00ery#hash");
-  url.ref = "ha\0sh";
+  url = url.mutate().setRef("ha\0sh").finalize();
   Assert.equal(url.spec, "http://example.com/pa%00th?qu%00ery#ha%00sh");
   url = url.mutate().QueryInterface(Ci.nsIURLMutator).setFileName("fi\0le.name").finalize();
   Assert.equal(url.spec, "http://example.com/fi%00le.name?qu%00ery#ha%00sh");
@@ -556,13 +557,13 @@ add_test(function test_idna_host() {
   equal(url.asciiHostPort, "xn--lt-uia.example.org:8080");
   equal(url.asciiSpec, "http://user:password@xn--lt-uia.example.org:8080/path?query#etc");
 
-  url.ref = ""; // SetRef calls InvalidateCache()
+  url = url.mutate().setRef("").finalize(); // SetRef calls InvalidateCache()
   equal(url.spec, "http://user:password@ält.example.org:8080/path?query");
   equal(url.displaySpec, "http://user:password@ält.example.org:8080/path?query");
   equal(url.asciiSpec, "http://user:password@xn--lt-uia.example.org:8080/path?query");
 
   url = stringToURL("http://user:password@www.ält.com:8080/path?query#etc");
-  url.ref = "";
+  url = url.mutate().setRef("").finalize();
   equal(url.spec, "http://user:password@www.ält.com:8080/path?query");
 
   // We also check that the default behaviour changes once we filp the pref
@@ -584,13 +585,13 @@ add_test(function test_idna_host() {
   equal(url.asciiHostPort, "xn--lt-uia.example.org:8080");
   equal(url.asciiSpec, "http://user:password@xn--lt-uia.example.org:8080/path?query#etc");
 
-  url.ref = ""; // SetRef calls InvalidateCache()
+  url = url.mutate().setRef("").finalize(); // SetRef calls InvalidateCache()
   equal(url.spec, "http://user:password@xn--lt-uia.example.org:8080/path?query");
   equal(url.displaySpec, "http://user:password@ält.example.org:8080/path?query");
   equal(url.asciiSpec, "http://user:password@xn--lt-uia.example.org:8080/path?query");
 
   url = stringToURL("http://user:password@www.ält.com:8080/path?query#etc");
-  url.ref = "";
+  url = url.mutate().setRef("").finalize();
   equal(url.spec, "http://user:password@www.xn--lt-uia.com:8080/path?query");
 
   run_next_test();

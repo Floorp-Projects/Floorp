@@ -446,7 +446,9 @@ URLMainThread::GetHash(nsAString& aHash, ErrorResult& aRv) const
 void
 URLMainThread::SetHash(const nsAString& aHash, ErrorResult& aRv)
 {
-  mURI->SetRef(NS_ConvertUTF16toUTF8(aHash));
+  Unused << NS_MutateURI(mURI)
+              .SetRef(NS_ConvertUTF16toUTF8(aHash))
+              .Finalize(mURI);
 }
 
 void
