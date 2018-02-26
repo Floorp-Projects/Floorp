@@ -10,7 +10,7 @@ const Services = require("Services");
 const {AppProjects} = require("devtools/client/webide/modules/app-projects");
 const {Connection} = require("devtools/shared/client/connection-manager");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 const {GetAvailableAddons} = require("devtools/client/webide/modules/addons");
 const {getJSON} = require("devtools/client/shared/getjson");
@@ -128,7 +128,7 @@ var UI = {
     showDoorhanger({ window, type: "deveditionpromo", anchor: document.querySelector("#deck") });
   },
 
-  appManagerUpdate: function (event, what, details) {
+  appManagerUpdate: function (what, details) {
     // Got a message from app-manager.js
     // See AppManager.update() for descriptions of what these events mean.
     switch (what) {
