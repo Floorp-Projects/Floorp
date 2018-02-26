@@ -92,7 +92,7 @@ function getLinkIconURI(aLink) {
   let targetDoc = aLink.ownerDocument;
   let uri = Services.io.newURI(aLink.href, targetDoc.characterSet);
   try {
-    uri.userPass = "";
+    uri = uri.mutate().setUserPass("").finalize();
   } catch (e) {
     // some URIs are immutable
   }

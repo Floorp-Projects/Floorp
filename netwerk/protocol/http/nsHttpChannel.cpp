@@ -36,6 +36,7 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIURL.h"
+#include "nsIURIMutator.h"
 #include "nsIStreamTransportService.h"
 #include "prnetdb.h"
 #include "nsEscape.h"
@@ -1057,9 +1058,9 @@ nsHttpChannel::SetupTransaction()
         if (!buf.IsEmpty() && ((strncmp(mSpec.get(), "http:", 5) == 0) ||
                                 strncmp(mSpec.get(), "https:", 6) == 0)) {
             nsCOMPtr<nsIURI> tempURI;
-            rv = mURI->Clone(getter_AddRefs(tempURI));
-            if (NS_FAILED(rv)) return rv;
-            rv = tempURI->SetUserPass(EmptyCString());
+            rv = NS_MutateURI(mURI)
+                   .SetUserPass(EmptyCString())
+                   .Finalize(tempURI);
             if (NS_FAILED(rv)) return rv;
             rv = tempURI->GetAsciiSpec(path);
             if (NS_FAILED(rv)) return rv;

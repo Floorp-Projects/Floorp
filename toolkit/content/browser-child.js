@@ -187,10 +187,12 @@ var WebProgressListener = {
         : null;
 
       if (AppConstants.MOZ_CRASHREPORTER && CrashReporter.enabled) {
-        let uri = aLocationURI.clone();
+        let uri = aLocationURI;
         try {
           // If the current URI contains a username/password, remove it.
-          uri.userPass = "";
+          uri = uri.mutate()
+                   .setUserPass("")
+                   .finalize();
         } catch (ex) { /* Ignore failures on about: URIs. */ }
         CrashReporter.annotateCrashReport("URL", uri.spec);
       }
@@ -340,7 +342,9 @@ var WebNavigation =  {
       try {
         let url = Services.io.newURI(uri);
         // If the current URI contains a username/password, remove it.
-        url.userPass = "";
+        url = url.mutate()
+                 .setUserPass("")
+                 .finalize();
         annotation = url.spec;
       } catch (ex) { /* Ignore failures to parse and failures
                       on about: URIs. */ }

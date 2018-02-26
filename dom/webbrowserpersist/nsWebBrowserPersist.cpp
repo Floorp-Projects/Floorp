@@ -2582,7 +2582,9 @@ nsWebBrowserPersist::URIData::GetLocalURI(nsIURI *targetBaseURI, nsCString& aSpe
     }
 
     // remove username/password if present
-    fileAsURI->SetUserPass(EmptyCString());
+    Unused << NS_MutateURI(fileAsURI)
+                .SetUserPass(EmptyCString())
+                .Finalize(fileAsURI);
 
     // reset node attribute
     // Use relative or absolute links
