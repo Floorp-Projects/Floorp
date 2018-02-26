@@ -15,7 +15,6 @@ JAR_MANIFESTS += ['jar.mn']
 
 interfaces = [
     'base',
-    'canvas',
     'core',
     'html',
     'events',
