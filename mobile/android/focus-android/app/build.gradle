@@ -93,8 +93,7 @@ android {
     variantFilter { variant ->
         def flavors = variant.flavors*.name
         // We only need a gecko debug and beta build for now.
-        if ((flavors.contains("gecko") && flavors.contains("focus")) ||
-                (flavors.contains("webview") && flavors.contains("klar"))) {
+        if (flavors.contains("gecko") && flavors.contains("focus")) {
             setIgnore(true)
         }
     }
