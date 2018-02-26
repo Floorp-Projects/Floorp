@@ -15,7 +15,7 @@
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
-class JSTracer;
+class JS_PUBLIC_API(JSTracer);
 class PseudoStack;
 
 // This file defines the classes PseudoStack and ProfileEntry.

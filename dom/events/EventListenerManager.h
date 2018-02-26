@@ -16,12 +16,12 @@
 #include "nsGkAtoms.h"
 #include "nsIDOMEventListener.h"
 #include "nsTObserverArray.h"
+#include "js/TracingAPI.h"
 
 class nsIDocShell;
 class nsIDOMEvent;
 class nsIEventListenerInfo;
 class nsPIDOMWindowInner;
-class JSTracer;
 
 struct EventTypeData;
 

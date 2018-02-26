@@ -19,7 +19,6 @@
 
 class JSExternalString;
 class JSFatInlineString;
-class JSTracer;
 
 namespace js {
 
