@@ -15,6 +15,7 @@
 #include "mozilla/net/WebSocketEventService.h"
 
 #include "nsIURI.h"
+#include "nsIURIMutator.h"
 #include "nsIChannel.h"
 #include "nsICryptoHash.h"
 #include "nsIRunnable.h"
@@ -3203,11 +3204,15 @@ WebSocketChannel::AsyncOnChannelRedirect(
   newChannel->SetNotificationCallbacks(this);
 
   mEncrypted = newuriIsHttps;
-  newuri->Clone(getter_AddRefs(mURI));
-  if (mEncrypted)
-    rv = mURI->SetScheme(NS_LITERAL_CSTRING("wss"));
-  else
-    rv = mURI->SetScheme(NS_LITERAL_CSTRING("ws"));
+  rv = NS_MutateURI(newuri)
+         .SetScheme(mEncrypted ? NS_LITERAL_CSTRING("wss")
+                               : NS_LITERAL_CSTRING("ws"))
+         .Finalize(mURI);
+
+  if (NS_FAILED(rv)) {
+    LOG(("WebSocketChannel: Could not set the proper scheme\n"));
+    return rv;
+  }
 
   mHttpChannel = newHttpChannel;
   mChannel = newUpgradeChannel;
@@ -3461,11 +3466,10 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
   nsCOMPtr<nsIURI> localURI;
   nsCOMPtr<nsIChannel> localChannel;
 
-  mURI->Clone(getter_AddRefs(localURI));
-  if (mEncrypted)
-    rv = localURI->SetScheme(NS_LITERAL_CSTRING("https"));
-  else
-    rv = localURI->SetScheme(NS_LITERAL_CSTRING("http"));
+  rv = NS_MutateURI(mURI)
+         .SetScheme(mEncrypted ? NS_LITERAL_CSTRING("https")
+                               : NS_LITERAL_CSTRING("http"))
+         .Finalize(localURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIIOService> ioService;

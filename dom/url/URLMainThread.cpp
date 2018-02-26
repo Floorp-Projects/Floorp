@@ -250,12 +250,9 @@ URLMainThread::SetProtocol(const nsAString& aProtocol, ErrorResult& aRv)
   // implementation. In order to do this properly, we have to serialize the
   // existing URL and reparse it in a new object.
   nsCOMPtr<nsIURI> clone;
-  nsresult rv = mURI->Clone(getter_AddRefs(clone));
-  if (NS_WARN_IF(NS_FAILED(rv)) || !clone) {
-    return;
-  }
-
-  rv = clone->SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)));
+  nsresult rv = NS_MutateURI(mURI)
+                  .SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)))
+                  .Finalize(clone);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }

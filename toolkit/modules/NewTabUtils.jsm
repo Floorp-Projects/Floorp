@@ -968,12 +968,14 @@ var ActivityStreamProvider = {
       }
       let iconData;
       try {
-        const linkUri = Services.io.newURI(link.url);
+        let linkUri = Services.io.newURI(link.url);
         iconData = await this._getIconData(linkUri);
 
         // Switch the scheme to try again with the other
         if (!iconData) {
-          linkUri.scheme = linkUri.scheme === "https" ? "http" : "https";
+          linkUri = linkUri.mutate()
+                           .setScheme(linkUri.scheme === "https" ? "http" : "https")
+                           .finalize();
           iconData = await this._getIconData(linkUri);
         }
       } catch (e) {

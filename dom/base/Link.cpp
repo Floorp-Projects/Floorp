@@ -430,7 +430,7 @@ Link::GetURI() const
 void
 Link::SetProtocol(const nsAString &aProtocol)
 {
-  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
@@ -441,7 +441,12 @@ Link::SetProtocol(const nsAString &aProtocol)
   aProtocol.EndReading(end);
   nsAString::const_iterator iter(start);
   (void)FindCharInReadable(':', iter, end);
-  (void)uri->SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)));
+  nsresult rv = NS_MutateURI(uri)
+                  .SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)))
+                  .Finalize(uri);
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
   SetHrefAttribute(uri);
 }

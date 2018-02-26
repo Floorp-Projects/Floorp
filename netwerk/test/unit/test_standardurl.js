@@ -306,13 +306,6 @@ add_test(function test_hugeStringThrows()
   let url = stringToURL("http://test:test@example.com");
 
   let hugeString = new Array(maxLen + 1).fill("a").join("");
-  let properties = ["scheme"];
-  for (let prop of properties) {
-    Assert.throws(() => url[prop] = hugeString,
-                  /NS_ERROR_MALFORMED_URI/,
-                  `Passing a huge string to "${prop}" should throw`);
-  }
-
   let setters = [
     { method: "setSpec", qi: Ci.nsIURIMutator },
     { method: "setUsername", qi: Ci.nsIURIMutator },
@@ -324,6 +317,7 @@ add_test(function test_hugeStringThrows()
     { method: "setPathQueryRef", qi: Ci.nsIURIMutator },
     { method: "setQuery", qi: Ci.nsIURIMutator },
     { method: "setRef", qi: Ci.nsIURIMutator },
+    { method: "setScheme", qi: Ci.nsIURIMutator },
     { method: "setFileName", qi: Ci.nsIURLMutator },
     { method: "setFileExtension", qi: Ci.nsIURLMutator },
     { method: "setFileBaseName", qi: Ci.nsIURLMutator },
