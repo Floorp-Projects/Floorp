@@ -1868,6 +1868,10 @@ nsStandardURL::SetPassword(const nsACString &input)
         return NS_ERROR_UNEXPECTED;
     }
     if (mUsername.mLen <= 0) {
+        if (password.IsEmpty()) {
+            MOZ_DIAGNOSTIC_ASSERT(Password().IsEmpty());
+            return NS_OK;
+        }
         NS_WARNING("cannot set password without existing username");
         return NS_ERROR_FAILURE;
     }

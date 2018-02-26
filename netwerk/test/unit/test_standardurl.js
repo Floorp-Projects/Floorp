@@ -518,6 +518,12 @@ add_test(function test_emptyPassword() {
   Assert.equal(url.spec, "http://z@example.com/");
   url = url.mutate().setPassword("ppppppppppp").finalize();
   Assert.equal(url.spec, "http://z:ppppppppppp@example.com/");
+
+  url = url.mutate().setUsername("").finalize(); // Should clear password too
+  Assert.equal(url.spec, "http://example.com/");
+  url = url.mutate().setPassword("").finalize(); // Still empty. Should work.
+  Assert.equal(url.spec, "http://example.com/");
+
   run_next_test();
 });
 
