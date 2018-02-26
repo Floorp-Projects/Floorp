@@ -366,15 +366,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
     }
   }
 
-  /**
-   * @return {Boolean} |true| when the 'ephemeral' attribute is set, which means
-   *                   that this instance should be ready to be thrown away at
-   *                   any time.
-   */
-  get _ephemeral() {
-    return this.node.hasAttribute("ephemeral");
-  }
-
   get _screenManager() {
     if (this.__screenManager)
       return this.__screenManager;
