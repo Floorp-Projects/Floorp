@@ -431,6 +431,10 @@ CollectWindowReports(nsGlobalWindowInner *aWindow,
   REPORT_SIZE("/layout/computed-values/visited", mLayoutComputedValuesVisited,
               "Memory used by ComputedValues objects used for visited styles.");
 
+  REPORT_SIZE("/layout/computed-values/stale", mLayoutComputedValuesStale,
+              "Memory used by ComputedValues and style structs it holds that "
+              "is no longer used but still alive.");
+
   REPORT_SIZE("/property-tables", mPropertyTablesSize,
               "Memory used for the property tables within a window.");
 

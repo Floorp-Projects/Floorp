@@ -316,7 +316,7 @@ TabParent::SetOwnerElement(Element* aElement)
 void
 TabParent::AddWindowListeners()
 {
-  if (mFrameElement && mFrameElement->OwnerDoc()) {
+  if (mFrameElement) {
     if (nsCOMPtr<nsPIDOMWindowOuter> window = mFrameElement->OwnerDoc()->GetWindow()) {
       nsCOMPtr<EventTarget> eventTarget = window->GetTopWindowRoot();
       if (eventTarget) {
