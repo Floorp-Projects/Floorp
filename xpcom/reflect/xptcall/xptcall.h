@@ -144,7 +144,7 @@ class nsIXPTCProxy : public nsISupports
 {
 public:
     NS_IMETHOD CallMethod(uint16_t aMethodIndex,
-                          const XPTMethodDescriptor *aInfo,
+                          const nsXPTMethodInfo *aInfo,
                           nsXPTCMiniVariant *aParams) = 0;
 };
 
