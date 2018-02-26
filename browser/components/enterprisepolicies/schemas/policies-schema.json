@@ -210,13 +210,6 @@
           "items": {
             "type": "origin"
           }
-        },
-
-        "Block": {
-          "type": "array",
-          "items": {
-            "type": "origin"
-          }
         }
       }
     },
@@ -228,13 +221,6 @@
       "type": "object",
       "properties": {
         "Allow": {
-          "type": "array",
-          "items": {
-            "type": "origin"
-          }
-        },
-
-        "Block": {
           "type": "array",
           "items": {
             "type": "origin"
