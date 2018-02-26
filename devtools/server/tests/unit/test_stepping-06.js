@@ -40,63 +40,71 @@ function run_test_with_server(server, callback) {
   });
 }
 
-function test_simple_stepping() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
-    gThreadClient.addOneTimeListener("paused", function (event, packet) {
-      // Check that the return value is 10.
-      Assert.equal(packet.type, "paused");
-      Assert.equal(packet.frame.where.line, gDebuggee.line0 + 5);
-      Assert.equal(packet.why.type, "resumeLimit");
-      Assert.equal(packet.why.frameFinished.return, 10);
+async function test_simple_stepping() {
+  await executeOnNextTickAndWaitForPause(evaluateTestCode, gClient);
 
-      gThreadClient.addOneTimeListener("paused", function (event, packet) {
-        gThreadClient.addOneTimeListener("paused", function (event, packet) {
-          // Check that the return value is undefined.
-          Assert.equal(packet.type, "paused");
-          Assert.equal(packet.frame.where.line, gDebuggee.line0 + 8);
-          Assert.equal(packet.why.type, "resumeLimit");
-          Assert.equal(packet.why.frameFinished.return.type, "undefined");
+  const step1 = await stepOut(gClient, gThreadClient);
+  equal(step1.type, "paused");
+  equal(step1.frame.where.line, 6);
+  equal(step1.why.type, "resumeLimit");
+  equal(step1.why.frameFinished.return, 10);
 
-          gThreadClient.addOneTimeListener("paused", function (event, packet) {
-            gThreadClient.addOneTimeListener("paused", function (event, packet) {
-              // Check that the exception was thrown.
-              Assert.equal(packet.type, "paused");
-              Assert.equal(packet.frame.where.line, gDebuggee.line0 + 11);
-              Assert.equal(packet.why.type, "resumeLimit");
-              Assert.equal(packet.why.frameFinished.throw, "ah");
+  gThreadClient.resume();
+  const step2 = await waitForPause(gThreadClient);
+  equal(step2.type, "paused");
+  equal(step2.frame.where.line, 8);
+  equal(step2.why.type, "debuggerStatement");
 
-              gThreadClient.resume(function () {
-                gClient.close().then(gCallback);
-              });
-            });
-            gThreadClient.stepOut();
-          });
-          gThreadClient.resume();
-        });
-        gThreadClient.stepOut();
-      });
-      gThreadClient.resume();
-    });
-    gThreadClient.stepOut();
-  });
+  gThreadClient.stepOut();
+  const step3 = await waitForPause(gThreadClient);
+  equal(step3.type, "paused");
+  equal(step3.frame.where.line, 9);
+  equal(step3.why.type, "resumeLimit");
+  equal(step3.why.frameFinished.return.type, "undefined");
 
+  gThreadClient.resume();
+  const step4 = await waitForPause(gThreadClient);
+
+  equal(step4.type, "paused");
+  equal(step4.frame.where.line, 11);
+
+  gThreadClient.stepOut();
+  const step5 = await waitForPause(gThreadClient);
+  equal(step5.type, "paused");
+  equal(step5.frame.where.line, 12);
+  equal(step5.why.type, "resumeLimit");
+  equal(step5.why.frameFinished.throw, "ah");
+
+  finishClient(gClient, gCallback);
+}
+
+function evaluateTestCode() {
   /* eslint-disable */
-  gDebuggee.eval("var line0 = Error().lineNumber;\n" +
-                 "function f() {\n" +                   // line0 + 1
-                 "  debugger;\n" +                      // line0 + 2
-                 "  var a = 10;\n" +                    // line0 + 3
-                 "  return a;\n" +                      // line0 + 4
-                 "}\n" +                                // line0 + 5
-                 "function g() {\n" +                   // line0 + 6
-                 "  debugger;\n" +                      // line0 + 7
-                 "}\n" +                                // line0 + 8
-                 "function h() {\n" +                   // line0 + 9
-                 "  debugger;\n" +                      // line0 + 10
-                 "  throw 'ah';\n" +                    // line0 + 11
-                 "  return 2;\n" +                      // line0 + 12
-                 "}\n" +                                // line0 + 13
-                 "f();\n" +                             // line0 + 14
-                 "g();\n" +                             // line0 + 15
-                 "try { h() } catch (ex) { };\n");      // line0 + 16
-    /* eslint-enable */
+  Cu.evalInSandbox(
+    `                                   //  1
+    function f() {                      //  2
+      debugger;                         //  3
+      var a = 10;                       //  4
+      return a;                         //  5
+    }                                   //  6
+    function g() {                      //  7
+      debugger;                         //  8
+    }                                   //  9
+    function h() {                      // 10
+      debugger;                         // 11
+      throw 'ah';                       // 12
+      return 2;                         // 13
+    }                                   // 14
+    f()                                 // 15
+    g()                                 // 16
+    try {                               // 17
+      h();                              // 18
+    } catch (ex) { };                   // 19
+    `,                                  // 20
+    gDebuggee,
+    "1.8",
+    "test_stepping-07-test-code.js",
+    1
+  );
+  /* eslint-enable */
 }
