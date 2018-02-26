@@ -15,7 +15,7 @@ module.exports = {
     "no-sequences": "error",
     "no-shadow": "error",
     "no-throw-literal": "error",
-    "no-unused-vars": ["error", { "varsIgnorePattern": "^EXPORTED_SYMBOLS$" }],
+    "no-unused-vars": ["error", { "args": "after-used", "varsIgnorePattern": "^EXPORTED_SYMBOLS$", "vars": "all" }],
     "padded-blocks": ["error", "never"],
     "semi-spacing": ["error", {"before": false, "after": true}],
     "space-in-parens": ["error", "never"],

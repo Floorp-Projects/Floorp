@@ -31,7 +31,7 @@ class ConsoleOutput extends Component {
     return {
       initialized: PropTypes.bool.isRequired,
       messages: PropTypes.object.isRequired,
-      messagesUi: PropTypes.object.isRequired,
+      messagesUi: PropTypes.array.isRequired,
       serviceContainer: PropTypes.shape({
         attachRefToHud: PropTypes.func.isRequired,
         openContextMenu: PropTypes.func.isRequired,

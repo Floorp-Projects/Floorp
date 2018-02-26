@@ -205,7 +205,7 @@
   "Timer.jsm": ["setTimeout", "setTimeoutWithTarget", "clearTimeout", "setInterval", "setIntervalWithTarget", "clearInterval"],
   "tokenserverclient.js": ["TokenServerClient", "TokenServerClientError", "TokenServerClientNetworkError", "TokenServerClientServerError"],
   "ToolboxProcess.jsm": ["BrowserToolboxProcess"],
-  "tps.jsm": ["ACTIONS", "TPS"],
+  "tps.jsm": ["ACTIONS", "Addons", "Addresses", "Bookmarks", "CreditCards", "Formdata", "History", "Passwords", "Prefs", "Tabs", "TPS", "Windows"],
   "Translation.jsm": ["Translation", "TranslationTelemetry"],
   "Traversal.jsm": ["TraversalRules", "TraversalHelper"],
   "UpdateTelemetry.jsm": ["AUSTLMY"],

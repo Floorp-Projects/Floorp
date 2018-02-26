@@ -94,15 +94,12 @@ add_task(async function() {
   let expected = "account.xyz.com";
   is(columns[0].value, expected, "Should group and list sites by host");
 
+  is(columns[1].value, "5", "Should group cookies across scheme, port and origin attributes");
+
   let prefStrBundle = frameDoc.getElementById("bundlePreferences");
-  expected = prefStrBundle.getString("persistent");
-  is(columns[1].value, expected, "Should mark persisted status across scheme, port and origin attributes");
-
-  is(columns[2].value, "5", "Should group cookies across scheme, port and origin attributes");
-
-  expected = prefStrBundle.getFormattedString("siteUsage",
+  expected = prefStrBundle.getFormattedString("siteUsagePersistent",
     DownloadUtils.convertByteUnits(quotaUsage * mockSiteDataManager.fakeSites.length));
-  is(columns[3].value, expected, "Should sum up usages across scheme, port and origin attributes");
+  is(columns[2].value, expected, "Should sum up usages across scheme, port, origin attributes and persistent status");
 
   await mockSiteDataManager.unregister();
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -143,7 +140,6 @@ add_task(async function() {
   let frameDoc = dialogFrame.contentDocument;
   let hostCol = frameDoc.getElementById("hostCol");
   let usageCol = frameDoc.getElementById("usageCol");
-  let statusCol = frameDoc.getElementById("statusCol");
   let cookiesCol = frameDoc.getElementById("cookiesCol");
   let sitesList = frameDoc.getElementById("sitesList");
 
@@ -162,17 +158,11 @@ add_task(async function() {
   hostCol.click();
   assertSortByBaseDomain("descending");
 
-  // Test sorting on the permission status column
+  // Test sorting on the cookies column
   cookiesCol.click();
   assertSortByCookies("ascending");
   cookiesCol.click();
   assertSortByCookies("descending");
-
-  // Test sorting on the cookies column
-  statusCol.click();
-  assertSortByStatus("ascending");
-  statusCol.click();
-  assertSortByStatus("descending");
 
   await mockSiteDataManager.unregister();
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -189,27 +179,6 @@ add_task(async function() {
         Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by host");
       } else {
         Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by host");
-      }
-    }
-  }
-
-  function assertSortByStatus(order) {
-    let siteItems = sitesList.getElementsByTagName("richlistitem");
-    for (let i = 0; i < siteItems.length - 1; ++i) {
-      let aHost = siteItems[i].getAttribute("host");
-      let bHost = siteItems[i + 1].getAttribute("host");
-      let a = findSiteByHost(aHost);
-      let b = findSiteByHost(bHost);
-      let result = 0;
-      if (a.persisted && !b.persisted) {
-        result = 1;
-      } else if (!a.persisted && b.persisted) {
-        result = -1;
-      }
-      if (order == "ascending") {
-        Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by permission status");
-      } else {
-        Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by permission status");
       }
     }
   }

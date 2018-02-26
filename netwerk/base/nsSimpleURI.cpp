@@ -296,7 +296,6 @@ nsSimpleURI::SetSpecInternal(const nsACString &aSpec)
     if (NS_FAILED(rv)) {
         return rv;
     }
-    ToLowerCase(mScheme);
 
     nsAutoCString spec;
     rv = net_FilterAndEscapeURI(aSpec, esc_OnlyNonASCII, spec);
