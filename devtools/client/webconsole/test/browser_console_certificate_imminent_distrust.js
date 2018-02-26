@@ -3,43 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// Tests handling of certificates issued by Symantec. If such
-// certificates have a notBefore before 1 June 2016, and are not
-// issued by an Apple or Google intermediate, they should emit a
-// warning to the console.
+// Tests handling of certificates that will be imminently distrusted, and thus
+// should emit a warning to the console.
 //
-// This test required two certs to be created in build/pgo/certs:
-// 1. A new trusted root. This should theoretically be built with certutil, but
-//    because it needs to have a perfectly-matching Subject, this wasn't
-//    (currently) practical.
-// 2. An affected certificate from before the cutoff
+// This test requires a cert to be created in build/pgo/certs.
 //
 // Change directories to build/pgo/certs:
 //  cd build/pgo/certs
 //
-// Figure out the months-warp-factor for the cutoff, first. We'll use this later.
+//  certutil -S -d . -n "imminently_distrusted" -s "CN=Imminently Distrusted End Entity" -c "pgo temporary ca" -t "P,," -k rsa -g 2048 -Z SHA256 -m 1519140221 -v 120 -8 "imminently-distrusted.example.com"
 //
-//   monthsSince=$(( ( $(date -u +"%s") - $(date -u -d "2016-06-01 00:00:00" +"%s") ) / (60*60*24*30) + 1 ))
-//
-// Constructing the root with certutil should look like this:
-//   certutil -S -s "C=US,O=GeoTrust Inc.,CN=GeoTrust Universal CA" -t "C,," -x -m 1 -w -${monthsSince} -v 120 -n "symantecRoot" -Z SHA256 -g 2048 -2 -d .
-//   (export) certutil -L -d . -n "symantecRoot" -a -o symantecRoot.ca
-//
-// Unfortunately, certutil reorders the RDNs so that C doesn't come first.
-// Instead, we'll use one of the precisely-created certificates from the xpcshell
-// tests: security/manager/ssl/tests/unit/test_symantec_apple_google/test-ca.pem
-//
-// We'll need to cheat and make a pkcs12 file to import to get the key.
-//   openssl pkcs12 -export -out symantecRoot.p12 -inkey ../../../security/manager/ssl/tests/unit/test_symantec_apple_google/default-ee.key -in ../../../security/manager/ssl/tests/unit/test_symantec_apple_google/test-ca.pem
-//   certutil -A -d . -n "symantecRoot" -t "C,," -a -i ../../../security/manager/ssl/tests/unit/test_symantec_apple_google/test-ca.pem
-//   pk12util -d . -i symantecRoot.p12
-//
-// With that in hand, we can generate a keypair for the test site:
-//   certutil -S -d . -n "symantec_affected" -s "CN=symantec-not-whitelisted-before-cutoff.example.com" -c "symantecRoot" -t "P,," -k rsa -g 2048 -Z SHA256 -m 8939454 -w -${monthsSince} -v 120 -8 "symantec-not-whitelisted-before-cutoff.example.com"
-//
-// Finally, copy in that key as a .ca file:
-// (NOTE: files ended in .ca are added as trusted roots by the mochitest harness)
-//   cp ../../../security/manager/ssl/tests/unit/test_symantec_apple_google/test-ca.pem symantecRoot.ca
 
 
 const TEST_URI = "data:text/html;charset=utf8,Browser Console imminent " +
@@ -51,7 +24,7 @@ var gWebconsoleTests = [
   {url: "https://sha256ee.example.com" + TEST_URI_PATH,
    name: "Imminent distrust warnings appropriately not present",
    warning: [], nowarning: ["Upcoming_Distrust_Actions"]},
-  {url: "https://symantec-not-whitelisted-before-cutoff.example.com" +
+  {url: "https://imminently-distrusted.example.com" +
           TEST_URI_PATH,
    name: "Imminent distrust warning displayed successfully",
    warning: ["Upcoming_Distrust_Actions"], nowarning: []},
