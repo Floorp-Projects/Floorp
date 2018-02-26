@@ -51,6 +51,7 @@
 #include "transportlayerice.h"
 
 #include "webrtc/base/bind.h"
+#include "webrtc/base/keep_ref_until_done.h"
 #include "webrtc/common_types.h"
 #include "webrtc/common_video/include/i420_buffer_pool.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
@@ -342,7 +343,6 @@ protected:
         uint32_t width = aImage->GetSize().width;
         uint32_t height = aImage->GetSize().height;
 
-        rtc::Callback0<void> callback_unused;
         rtc::scoped_refptr<webrtc::WrappedI420Buffer> video_frame_buffer(
           new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
             width,
@@ -353,7 +353,7 @@ protected:
             cbCrStride,
             cr,
             cbCrStride,
-            callback_unused));
+            rtc::KeepRefUntilDone(aImage)));
 
         webrtc::VideoFrame i420_frame(video_frame_buffer,
                                       0,

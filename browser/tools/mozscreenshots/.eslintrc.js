@@ -7,9 +7,9 @@ module.exports = {
 
   "rules": {
     "no-unused-vars": ["error", {
+      "args": "none",
       "vars": "all",
-      "varsIgnorePattern": "^(Cc|Ci|Cr|Cu|EXPORTED_SYMBOLS)$",
-      "args": "none"
+      "varsIgnorePattern": "^EXPORTED_SYMBOLS$",
     }]
   }
 };

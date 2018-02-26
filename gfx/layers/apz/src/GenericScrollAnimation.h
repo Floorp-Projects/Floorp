@@ -42,7 +42,12 @@ protected:
   AsyncPanZoomController& mApzc;
   UniquePtr<ScrollAnimationPhysics> mAnimationPhysics;
   nsPoint mFinalDestination;
-  bool mForceVerticalOverscroll;
+  // If a direction is forced to overscroll, it means it's axis in that
+  // direction is locked, and scroll in that direction is treated as overscroll
+  // of an equal amount, which, for example, may then bubble up a scroll action
+  // to its parent, or may behave as whatever an overscroll occurence requires
+  // to behave
+  Maybe<ScrollDirection> mDirectionForcedToOverscroll;
 };
 
 } // namespace layers

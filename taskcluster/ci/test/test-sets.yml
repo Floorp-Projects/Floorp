@@ -159,6 +159,18 @@ windows-qr-tests:
     - mochitest-gpu
     - mochitest-media
 
+windows-qr-talos:
+    - talos-chrome
+    - talos-dromaeojs
+    - talos-g1
+    - talos-g4
+    - talos-perf-reftest
+    - talos-perf-reftest-singletons
+    - talos-svgr
+    - talos-tp5o
+    - talos-speedometer
+    - talos-motionmark
+
 jsdcov-code-coverage-tests:
     - mochitest
     - mochitest-browser-chrome
@@ -208,8 +220,6 @@ windows-talos:
     - talos-svgr
     - talos-tp5o
     - talos-xperf
-    - talos-tp6
-    - talos-tp6-stylo-threads
     - talos-speedometer
     - talos-motionmark
     - talos-h1

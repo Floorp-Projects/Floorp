@@ -6,9 +6,7 @@
 Runs the reftest test harness.
 """
 
-import collections
 import copy
-import itertools
 import json
 import multiprocessing
 import os
@@ -20,6 +18,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+from collections import defaultdict
 from datetime import datetime, timedelta
 
 SCRIPT_DIRECTORY = os.path.abspath(
@@ -227,20 +226,22 @@ class ReftestResolver(object):
 
 
 class RefTest(object):
-    TEST_SEEN_INITIAL = 'reftest'
-    TEST_SEEN_FINAL = 'Main app process exited normally'
     oldcwd = os.getcwd()
-    parse_manifest = True
     resolver_cls = ReftestResolver
     use_marionette = True
 
-    def __init__(self):
+    def __init__(self, suite):
         update_mozinfo()
-        self.lastTestSeen = self.TEST_SEEN_INITIAL
+        self.lastTestSeen = None
         self.haveDumpedScreen = False
         self.resolver = self.resolver_cls()
         self.log = None
+        self.outputHandler = None
         self.testDumpFile = os.path.join(tempfile.gettempdir(), 'reftests.json')
+
+        self.run_by_manifest = True
+        if suite in ('crashtest', 'jstestbrowser'):
+            self.run_by_manifest = False
 
     def _populate_logger(self, options):
         if self.log:
@@ -265,8 +266,7 @@ class RefTest(object):
         return os.path.normpath(os.path.join(self.oldcwd, os.path.expanduser(path)))
 
     def createReftestProfile(self, options, tests=None, manifests=None,
-                             server='localhost', port=0, profile_to_clone=None,
-                             startAfter=None, prefs=None):
+                             server='localhost', port=0, profile_to_clone=None, prefs=None):
         """Sets up a profile for reftest.
 
         :param options: Object containing command line options
@@ -276,7 +276,6 @@ class RefTest(object):
         :param server: Server name to use for http tests
         :param profile_to_clone: Path to a profile to use as the basis for the
                                  test profile
-        :param startAfter: Start running tests after the specified test id
         :param prefs: Extra preferences to set in the profile
         """
         locations = mozprofile.permissions.ServerLocations()
@@ -306,15 +305,17 @@ class RefTest(object):
         prefs['reftest.logLevel'] = options.log_tbpl_level or 'info'
         prefs['reftest.suite'] = options.suite
 
-        if startAfter not in (None, self.TEST_SEEN_INITIAL, self.TEST_SEEN_FINAL):
-            self.log.info("Setting reftest.startAfter to %s" % startAfter)
-            prefs['reftest.startAfter'] = startAfter
-
         # Unconditionally update the e10s pref.
         if options.e10s:
             prefs['browser.tabs.remote.autostart'] = True
         else:
             prefs['browser.tabs.remote.autostart'] = False
+
+        if not self.run_by_manifest:
+            if options.totalChunks:
+                prefs['reftest.totalChunks'] = options.totalChunks
+            if options.thisChunk:
+                prefs['reftest.thisChunk'] = options.thisChunk
 
         # Bug 1262954: For winXP + e10s disable acceleration
         if platform.system() in ("Windows", "Microsoft") and \
@@ -532,6 +533,7 @@ class RefTest(object):
     def runTests(self, tests, options, cmdargs=None):
         cmdargs = cmdargs or []
         self._populate_logger(options)
+        self.outputHandler = OutputHandler(self.log, options.utilityPath, options.symbolsPath)
 
         if options.cleanupCrashes:
             mozcrash.cleanup_pending_crash_reports()
@@ -603,7 +605,7 @@ class RefTest(object):
         focusThread.join()
 
         # Output the summaries that the ReftestThread filters suppressed.
-        summaryObjects = [collections.defaultdict(int) for s in summaryLines]
+        summaryObjects = [defaultdict(int) for s in summaryLines]
         for t in threads:
             for (summaryObj, (text, categories)) in zip(summaryObjects, summaryLines):
                 threadMatches = t.summaryMatches[text]
@@ -677,6 +679,7 @@ class RefTest(object):
 
         if cmdargs is None:
             cmdargs = []
+        cmdargs = cmdargs[:]
 
         if self.use_marionette:
             cmdargs.append('-marionette')
@@ -709,19 +712,17 @@ class RefTest(object):
 
         self.log.add_handler(record_last_test)
 
-        outputHandler = OutputHandler(self.log, options.utilityPath, symbolsPath=symbolsPath)
-
         kp_kwargs = {
             'kill_on_timeout': False,
             'cwd': SCRIPT_DIRECTORY,
             'onTimeout': [timeoutHandler],
-            'processOutputLine': [outputHandler],
+            'processOutputLine': [self.outputHandler],
         }
 
         if mozinfo.isWin:
             # Prevents log interleaving on Windows at the expense of losing
             # true log order. See bug 798300 and bug 1324961 for more details.
-            kp_kwargs['processStderrLine'] = [outputHandler]
+            kp_kwargs['processStderrLine'] = [self.outputHandler]
 
         if interactive:
             # If an interactive debugger is attached,
@@ -741,7 +742,7 @@ class RefTest(object):
                      interactive=interactive,
                      outputTimeout=timeout)
         proc = runner.process_handler
-        outputHandler.proc_name = 'GECKO({})'.format(proc.pid)
+        self.outputHandler.proc_name = 'GECKO({})'.format(proc.pid)
 
         # Used to defer a possible IOError exception from Marionette
         marionette_exception = None
@@ -778,18 +779,16 @@ class RefTest(object):
 
         status = runner.wait()
         runner.process_handler = None
-        outputHandler.proc_name = None
+        self.outputHandler.proc_name = None
 
         if status:
             msg = "TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s" % \
-                (self.lastTestSeen, status)
+                    (self.lastTestSeen, status)
             # use process_output so message is logged verbatim
             self.log.process_output(None, msg)
-        else:
-            self.lastTestSeen = self.TEST_SEEN_FINAL
 
         crashed = mozcrash.log_crashes(self.log, os.path.join(profile.profile, 'minidumps'),
-                                       symbolsPath, test=self.lastTestSeen)
+                                       options.symbolsPath, test=self.lastTestSeen)
         if not status and crashed:
             status = 1
 
@@ -801,7 +800,7 @@ class RefTest(object):
             raise exc, value, tb
 
         self.log.info("Process mode: {}".format('e10s' if options.e10s else 'non-e10s'))
-        return status, self.lastTestSeen, outputHandler.results
+        return status
 
     def getActiveTests(self, manifests, options, testDumpFile=None):
         # These prefs will cause reftest.jsm to parse the manifests,
@@ -810,8 +809,8 @@ class RefTest(object):
             'reftest.manifests': json.dumps(manifests),
             'reftest.manifests.dumpTests': testDumpFile or self.testDumpFile,
         }
-        cmdargs = []  # ['-headless']
-        status, _, _ = self.runApp(options, cmdargs=cmdargs, prefs=prefs)
+        cmdargs = []
+        self.runApp(options, cmdargs=cmdargs, prefs=prefs)
 
         with open(self.testDumpFile, 'r') as fh:
             tests = json.load(fh)
@@ -828,7 +827,7 @@ class RefTest(object):
 
         filters = []
         if options.totalChunks:
-            filters.append(mpf.chunk_by_slice(options.thisChunk, options.totalChunks))
+            filters.append(mpf.chunk_by_manifest(options.thisChunk, options.totalChunks))
 
         tests = mp.active_tests(exists=False, filters=filters)
         return tests
@@ -839,19 +838,9 @@ class RefTest(object):
             debuggerInfo = mozdebug.get_debugger_info(options.debugger, options.debuggerArgs,
                                                       options.debuggerInteractive)
 
-        tests = None
-        if self.parse_manifest:
-            tests = self.getActiveTests(manifests, options)
-
-            ids = [t['identifier'] for t in tests]
-            self.log.suite_start(ids, name=options.suite)
-
-        startAfter = None  # When the previous run crashed, we skip the tests we ran before
-        prevStartAfter = None
-        for i in itertools.count():
-            status, startAfter, results = self.runApp(
+        def run(**kwargs):
+            status = self.runApp(
                 options,
-                tests=tests,
                 manifests=manifests,
                 cmdargs=cmdargs,
                 # We generally want the JS harness or marionette
@@ -865,42 +854,35 @@ class RefTest(object):
                 # the 360 second marionette socket timeout.
                 # See bug 479518 and bug 1414063.
                 timeout=options.timeout + 70.0,
-                symbolsPath=options.symbolsPath,
-                debuggerInfo=debuggerInfo
-            )
+                debuggerInfo=debuggerInfo,
+                **kwargs)
+
             mozleak.process_leak_log(self.leakLogFile,
                                      leak_thresholds=options.leakThresholds,
                                      stack_fixer=get_stack_fixer_function(options.utilityPath,
                                                                           options.symbolsPath))
+            return status
 
-            if status == 0:
-                break
+        if not self.run_by_manifest:
+            return run()
 
-            if startAfter == self.TEST_SEEN_FINAL:
-                self.log.info("Finished running all tests, skipping resume "
-                              "despite non-zero status code: %s" % status)
-                break
+        tests = self.getActiveTests(manifests, options)
+        tests_by_manifest = defaultdict(list)
+        ids_by_manifest = defaultdict(list)
+        for t in tests:
+            tests_by_manifest[t['manifest']].append(t)
+            ids_by_manifest[t['manifest']].append(t['identifier'])
 
-            if startAfter is not None and options.shuffle:
-                self.log.error("Can not resume from a crash with --shuffle "
-                               "enabled. Please consider disabling --shuffle")
-                break
-            if startAfter is not None and options.maxRetries <= i:
-                self.log.error("Hit maximum number of allowed retries ({}) "
-                               "in the test run".format(options.maxRetries))
-                break
-            if startAfter == prevStartAfter:
-                # If the test stuck on the same test, or there the crashed
-                # test appeared more then once, stop
-                self.log.error("Force stop because we keep running into "
-                               "test \"{}\"".format(startAfter))
-                break
-            prevStartAfter = startAfter
-            # TODO: we need to emit an SUITE-END log if it crashed
+        self.log.suite_start(ids_by_manifest, name=options.suite)
 
-        if self.parse_manifest:
-            self.log.suite_end(extra={'results': results})
-        return status
+        overall = 0
+        for manifest, tests in tests_by_manifest.items():
+            self.log.info("Running tests in {}".format(manifest))
+            status = run(tests=tests)
+            overall = overall or status
+
+        self.log.suite_end(extra={'results': self.outputHandler.results})
+        return overall
 
     def copyExtraFilesToProfile(self, options, profile):
         "Copy extra files or dirs specified on the command line to the testing profile."
@@ -928,7 +910,7 @@ class RefTest(object):
 
 
 def run_test_harness(parser, options):
-    reftest = RefTest()
+    reftest = RefTest(options.suite)
     parser.validate(options, reftest)
 
     # We have to validate options.app here for the case when the mach

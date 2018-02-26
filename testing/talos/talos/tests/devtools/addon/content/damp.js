@@ -1032,7 +1032,7 @@ async _consoleOpenWithCachedMessagesTest() {
 
       function maybeResolve() {
         // Have all the requests finished yet?
-        if (payloadReady === expectedRequests && timingsUpdated === expectedRequests) {
+        if (payloadReady >= expectedRequests && timingsUpdated >= expectedRequests) {
           // All requests are done - unsubscribe from events and resolve!
           window.off(EVENTS.PAYLOAD_READY, onPayloadReady);
           window.off(EVENTS.RECEIVED_EVENT_TIMINGS, onTimingsUpdated);

@@ -46,7 +46,8 @@ WheelScrollAnimation::WheelScrollAnimation(AsyncPanZoomController& aApzc,
                                            ScrollWheelInput::ScrollDeltaType aDeltaType)
   : GenericScrollAnimation(aApzc, aInitialPosition, SettingsForDeltaType(aDeltaType))
 {
-  mForceVerticalOverscroll = !mApzc.mScrollMetadata.AllowVerticalScrollWithWheel();
+  mDirectionForcedToOverscroll =
+    mApzc.mScrollMetadata.GetDisregardedDirection();
 }
 
 } // namespace layers

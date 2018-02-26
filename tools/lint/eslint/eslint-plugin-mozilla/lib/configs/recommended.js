@@ -78,7 +78,7 @@ module.exports = {
       "no-unused-vars": ["error", {
         "args": "none",
         "vars": "all",
-        "varsIgnorePattern": "^Cc|Ci|Cu|Cr|EXPORTED_SYMBOLS"
+        "varsIgnorePattern": "^EXPORTED_SYMBOLS$"
       }]
     }
   }],
@@ -355,7 +355,7 @@ module.exports = {
     "no-unused-vars": ["error", {
       "args": "none",
       "vars": "local",
-      "varsIgnorePattern": "^Cc|Ci|Cu|Cr|EXPORTED_SYMBOLS"
+      "varsIgnorePattern": "^EXPORTED_SYMBOLS$"
     }],
 
     // No using variables before defined

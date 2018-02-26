@@ -63,10 +63,11 @@ class BoxModelProperties extends PureComponent {
     return {};
   }
 
-  onToggleExpander() {
+  onToggleExpander(event) {
     this.setState({
       isOpen: !this.state.isOpen,
     });
+    event.stopPropagation();
   }
 
   render() {

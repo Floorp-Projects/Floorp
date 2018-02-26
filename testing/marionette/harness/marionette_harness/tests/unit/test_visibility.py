@@ -4,9 +4,29 @@
 
 from __future__ import absolute_import
 
+import urllib
+
 from marionette_driver.by import By
 
 from marionette_harness import MarionetteTestCase
+
+
+def inline(doc):
+    return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
+
+
+def element_direction_doc(direction):
+    return inline("""
+        <style>
+          .element{{
+            position: absolute;
+            {}: -50px;
+            background_color: red;
+            width: 100px;
+            height: 100px;
+          }}
+        </style>
+        <div class='element'></div>""".format(direction))
 
 
 class TestVisibility(MarionetteTestCase):
@@ -103,21 +123,17 @@ class TestVisibility(MarionetteTestCase):
         self.assertFalse(child.is_displayed())
 
     def testShouldClickOnELementPartiallyOffLeft(self):
-        test_html = self.marionette.absolute_url("element_left.html")
-        self.marionette.navigate(test_html)
+        test_html = self.marionette.navigate(element_direction_doc("left"))
         self.marionette.find_element(By.CSS_SELECTOR, '.element').click()
 
     def testShouldClickOnELementPartiallyOffRight(self):
-        test_html = self.marionette.absolute_url("element_right.html")
-        self.marionette.navigate(test_html)
+        test_html = self.marionette.navigate(element_direction_doc("right"))
         self.marionette.find_element(By.CSS_SELECTOR, '.element').click()
 
     def testShouldClickOnELementPartiallyOffTop(self):
-        test_html = self.marionette.absolute_url("element_top.html")
-        self.marionette.navigate(test_html)
+        test_html = self.marionette.navigate(element_direction_doc("top"))
         self.marionette.find_element(By.CSS_SELECTOR, '.element').click()
 
     def testShouldClickOnELementPartiallyOffBottom(self):
-        test_html = self.marionette.absolute_url("element_bottom.html")
-        self.marionette.navigate(test_html)
+        test_html = self.marionette.navigate(element_direction_doc("bottom"))
         self.marionette.find_element(By.CSS_SELECTOR, '.element').click()

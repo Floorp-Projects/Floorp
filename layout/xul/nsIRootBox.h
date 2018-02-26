@@ -30,9 +30,6 @@ public:
   virtual mozilla::dom::Element* GetDefaultTooltip() = 0;
   virtual void SetDefaultTooltip(mozilla::dom::Element* aTooltip) = 0;
 
-  virtual nsresult AddTooltipSupport(nsIContent* aNode) = 0;
-  virtual nsresult RemoveTooltipSupport(nsIContent* aNode) = 0;
-
   static nsIRootBox* GetRootBox(nsIPresShell* aShell);
 };
 
