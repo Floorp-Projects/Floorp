@@ -7,8 +7,6 @@ package org.mozilla.gecko.sync.stage;
 import org.mozilla.gecko.sync.MetaGlobalException;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.SynchronizerConfiguration;
-import org.mozilla.gecko.sync.middleware.BufferingMiddlewareRepository;
-import org.mozilla.gecko.sync.middleware.storage.MemoryBufferStorage;
 import org.mozilla.gecko.sync.repositories.ConfigurableServer15Repository;
 import org.mozilla.gecko.sync.repositories.NonPersistentRepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.Repository;
@@ -74,11 +72,7 @@ public class RecentHistoryServerSyncStage extends HistoryServerSyncStage {
 
     @Override
     protected Repository getLocalRepository() {
-        return new BufferingMiddlewareRepository(
-                session.getSyncDeadline(),
-                new MemoryBufferStorage(),
-                new HistoryRepository()
-        );
+        return new HistoryRepository();
     }
 
     @Override
