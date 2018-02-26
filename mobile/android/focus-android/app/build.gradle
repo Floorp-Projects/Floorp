@@ -211,7 +211,7 @@ dependencies {
     geckoCompile "org.mozilla:geckoview-nightly-armeabi-v7a:+"
 
     testCompile 'junit:junit:4.12'
-    testCompile "org.robolectric:robolectric:3.5.1"
+    testCompile "org.robolectric:robolectric:3.7.1"
     testCompile 'org.mockito:mockito-core:2.12.0'
 
     androidTestCompile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.3'
