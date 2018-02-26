@@ -19,24 +19,34 @@ In any case, the steps to release geckodriver are as follows:
 [Mozilla’s CI infrastructure]: https://treeherder.mozilla.org/
 
 
-Release new webdriver crate
----------------------------
+Release new in-tree dependency crates
+-------------------------------------
 
-geckodriver depends on the [webdriver] crate, also hosted in
-mozilla-central, by pointing to its in-tree relative path:
+geckodriver depends on a number of Rust crates that also live in
+central by using relative paths:
 
-	[dependencies]
-	webdriver = { path = "../webdriver" }
+    [dependencies]
+    …
+    mozprofile = { path = "../mozbase/rust/mozprofile" }
+	mozrunner = { path = "../mozbase/rust/mozrunner" }
+	mozversion = { path = "../mozbase/rust/mozversion" }
+	…
+    webdriver = { path = "../webdriver" }
 
-Because we need to export the geckodriver source code to the old GitHub
-repository in order to release, we need to publish any changes that
-have been made to webdriver in the interim.  If no changes have been
-made, you can skip these steps:
+Because we need to export the geckodriver source code to the old
+GitHub repository when we release, we first need to publish these
+crates if they have had any changes in the interim since the last
+release.  If they have receieved no changes, you can skip them:
 
-  1. Bump the version number in testing/webdriver/Cargo.toml
+  - `testing/mozbase/rust/mozprofile`
+  - `testing/mozbase/rust/mozrunner`
+  - `testing/mozbase/rust/mozversion`
+  - `testing/webdriver`
+
+For each crate:
+
+  1. Bump the version number in Cargo.toml
   2. `cargo publish`
-
-[webdriver]: ../webdriver
 
 
 Update the change log
@@ -63,8 +73,7 @@ mention of this.  Lines are optimally formatted at roughly 72 columns
 to make the file readable in a text editor as well as rendered HTML.
 fmt(1) does a splendid job at text formatting.
 
-[CHANGES.md]: ../CHANGES.md
-[webdriver]: ../../webdriver
+[CHANGES.md]: https://searchfox.org/mozilla-central/source/testing/geckodriver/CHANGES.md
 [rust-mozrunner]: https://github.com/jgraham/rust_mozrunner
 
 
@@ -77,15 +86,15 @@ Make relevant changes to [Cargo.toml] to upgrade dependencies, then run
 	% ./mach build testing/geckodriver
 
 to pull down and vendor the upgraded libraries.  Remember to check
-in the [Cargo.lock] file, since unlike we want geckodriver builds to
-be reproducible.
+in the [Cargo.lock] file since we want reproducible builds for
+geckodriver, uninfluenced by dependency variations.
 
-Updating dependencies should always be made as a separate commit to
-not confuse reviewers because vendoring involves checking in a lot
-of extra code reviewed downstream.
+The updates to dependencies should always be made as a separate
+commit to not confuse reviewers, because vendoring involves checking
+in a lot of extra code already reviewed downstream.
 
-[Cargo.toml]: ../Cargo.toml
-[Cargo.lock]: ../Cargo.lock
+[Cargo.toml]: https://searchfox.org/mozilla-central/source/testing/geckodriver/Cargo.toml
+[Cargo.lock]: https://searchfox.org/mozilla-central/source/testing/geckodriver/Cargo.lock
 
 
 Bump the version number
@@ -123,24 +132,24 @@ of [testing/geckodriver] to the latter branch:
 	% git clean -fxd
 	% cp -r $SRC/gecko/testing/geckodriver/* .
 
-[README]: ../README.md
-[testing/geckodriver]: ../
+[README.md]: https://searchfox.org/mozilla-central/source/testing/geckodriver/README.md
+[testing/geckodriver]: https://searchfox.org/mozilla-central/source/testing/geckodriver
 
 
-Manually change `webdriver` dependency
---------------------------------------
+Manually change in-tree path dependencies
+------------------------------------------
 
-After the source code has been imported we need to change the
-dependency information for the [webdriver] crate.  As explained
-previously geckodriver depends on a relative path in in the
-mozilla-central repository to build with the latest unreleased
-source code.
+After the source code has been imported we need to change the dependency
+information for the `mozrunner`, `mozprofile`, `mozversion`, and
+`webdriver` crates.  As explained previously geckodriver depends
+on a relative path in in the mozilla-central repository to build
+with the latest unreleased source code.
 
-This relative path does not exist in the GitHub repository and the
-build will fail unless we change it to the latest [webdriver] crate
-version from crates.io.  That version will either be the crate you
-published earlier, or the latest version available if no changes have
-been made to it since the last geckodriver release.
+This relative paths do not exist in the GitHub repository and the
+build will fail unless we change it to the latest crate versions
+from crates.io.  That version will either be the crate you published
+earlier, or the latest version available if no changes have been
+made to it since the last geckodriver release.
 
 
 Commit local changes

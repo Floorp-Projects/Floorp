@@ -161,7 +161,6 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitLoadUnboxedExpando(LLoadUnboxedExpando* lir);
     void visitTypeBarrierV(LTypeBarrierV* lir);
     void visitTypeBarrierO(LTypeBarrierO* lir);
-    void visitMonitorTypes(LMonitorTypes* lir);
     void emitPostWriteBarrier(const LAllocation* obj);
     void emitPostWriteBarrier(Register objreg);
     void emitPostWriteBarrierS(Address address, Register prev, Register next);

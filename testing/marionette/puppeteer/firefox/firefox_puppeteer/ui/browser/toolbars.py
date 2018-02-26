@@ -500,7 +500,7 @@ class IdentityPopupView(UIBaseLib):
 
         :return: `True` if the view is selected.
         """
-        return self.element.get_attribute('current') == 'true'
+        return self.element.get_attribute('visible') == 'true'
 
 
 class IdentityPopupMainView(IdentityPopupView):
