@@ -121,18 +121,11 @@ public class BatchMetaTest {
 
     @Test
     public void testRecordSucceeded() {
-        assertEquals(0, batchMeta.getSuccessRecordGuids().length);
+        assertEquals(0, batchMeta.getSuccessRecordCount());
+        batchMeta.recordsSucceeded(1);
+        assertEquals(1, batchMeta.getSuccessRecordCount());
 
-        batchMeta.recordSucceeded("guid1");
-
-        assertEquals(1, batchMeta.getSuccessRecordGuids().length);
-        assertEquals("guid1", batchMeta.getSuccessRecordGuids()[0]);
-
-        try {
-            batchMeta.recordSucceeded(null);
-            fail();
-        } catch (IllegalStateException e) {
-            assertTrue("Should not be able to 'succeed' a null guid", true);
-        }
+        batchMeta.recordsSucceeded(12);
+        assertEquals(13, batchMeta.getSuccessRecordCount());
     }
 }

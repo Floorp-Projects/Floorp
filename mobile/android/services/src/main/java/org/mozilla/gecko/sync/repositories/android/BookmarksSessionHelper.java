@@ -331,7 +331,7 @@ import java.util.concurrent.ConcurrentHashMap;
             return false;
         }
         session.trackRecord(toStore);
-        delegate.onRecordStoreSucceeded(record.guid);
+        delegate.onRecordStoreSucceeded(1);
         return true;
     }
 
@@ -373,8 +373,8 @@ import java.util.concurrent.ConcurrentHashMap;
                 Logger.warn(LOG_TAG, "Got exception updating bookkeeping of non-folder with guid " + succeeded.guid + ".", e);
             }
             session.trackRecord(succeeded);
-            delegate.onRecordStoreSucceeded(succeeded.guid);
         }
+        delegate.onRecordStoreSucceeded(toStores.size());
     }
 
     @Override
@@ -456,7 +456,7 @@ import java.util.concurrent.ConcurrentHashMap;
         // There's book-keeping which needs to happen with versions, and so we need to pass
         // along the new localVersion.
         delegate.onRecordStoreReconciled(replaced.guid, existingRecord.guid, replaced.localVersion);
-        delegate.onRecordStoreSucceeded(replaced.guid);
+        delegate.onRecordStoreSucceeded(1);
         return true;
     }
 

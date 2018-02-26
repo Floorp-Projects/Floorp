@@ -5,7 +5,7 @@ package org.mozilla.gecko.background.sync.helpers;
 
 public class ExpectNoStoreDelegate extends ExpectStoreCompletedDelegate {
     @Override
-    public void onRecordStoreSucceeded(String guid) {
-        performNotify("Should not have stored record " + guid, null);
+    public void onRecordStoreSucceeded(int count) {
+        performNotify("Should not have stored records: " + count, null);
     }
 }

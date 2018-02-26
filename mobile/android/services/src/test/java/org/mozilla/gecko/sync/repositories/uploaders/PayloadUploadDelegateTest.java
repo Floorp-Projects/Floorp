@@ -63,10 +63,10 @@ public class PayloadUploadDelegateTest {
 
         @Override
         public void payloadSucceeded(final SyncStorageResponse response, final boolean isCommit, final boolean isLastPayload) {
-            final String[] guids = batchWhiteboard.getSuccessRecordGuids();
+            final int successCount = batchWhiteboard.getSuccessRecordCount();
             successResponses.add(response);
             if (!batchWhiteboard.getInBatchingMode() || isCommit) {
-                committedGuids += guids.length;
+                committedGuids += successCount;
             }
             if (isCommit) {
                 ++commitPayloadsSucceeded;
@@ -96,7 +96,7 @@ public class PayloadUploadDelegateTest {
 
     class MockRepositorySessionStoreDelegate implements RepositorySessionStoreDelegate {
         Exception storeFailedException;
-        ArrayList<String> succeededGuids = new ArrayList<>();
+        int successCount = 0;
         HashMap<String, Exception> failedGuids = new HashMap<>();
 
         @Override
@@ -105,8 +105,8 @@ public class PayloadUploadDelegateTest {
         }
 
         @Override
-        public void onRecordStoreSucceeded(String guid) {
-            succeededGuids.add(guid);
+        public void onRecordStoreSucceeded(int count) {
+            successCount = count;
         }
 
         @Override
