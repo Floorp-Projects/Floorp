@@ -154,9 +154,6 @@ public class BookmarksValidationRepository extends Repository {
                 }
 
                 @Override
-                public void onBatchCompleted() {}
-
-                @Override
                 public RepositorySessionFetchRecordsDelegate deferredFetchDelegate(ExecutorService executor) {
                     return null;
                 }

@@ -16,7 +16,15 @@ import org.mozilla.gecko.sync.repositories.android.HistoryRepository;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecordFactory;
 import org.mozilla.gecko.sync.repositories.domain.VersionConstants;
 
-public class HistoryServerSyncStage extends ServerSyncStage {
+/**
+ *  History records are not buffered.
+    We buy little from buffering it from data integrity point of view, but we gain a lot by
+    not buffering:
+    - roughly half the memory footprint, important when dealing with lots of history
+    - ability to resume downloads, since records are stored as they're fetched, and we can
+    -- maintain a "high watermark"
+ */
+public class HistoryServerSyncStage extends NonBufferingServerSyncStage {
   protected static final String LOG_TAG = "HistoryStage";
 
   // Eventually this kind of sync stage will be data-driven,

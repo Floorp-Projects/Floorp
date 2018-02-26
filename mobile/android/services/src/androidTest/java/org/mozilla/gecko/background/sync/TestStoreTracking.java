@@ -106,17 +106,7 @@ public class TestStoreTracking extends AndroidSyncTestCase {
                     performNotify(e);
                   }
                 }
-
-                @Override
-                public void onBatchCompleted() {
-
-                }
               });
-            }
-
-            @Override
-            public void onBatchCompleted() {
-
             }
           });
         } catch (InactiveSessionException e) {
@@ -181,10 +171,6 @@ public class TestStoreTracking extends AndroidSyncTestCase {
             } catch (InactiveSessionException e) {
               performNotify(e);
             }
-          }
-
-          @Override
-          public void onBatchCompleted() {
           }
         });
       }

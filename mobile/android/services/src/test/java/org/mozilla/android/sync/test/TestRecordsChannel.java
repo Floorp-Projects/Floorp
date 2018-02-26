@@ -18,6 +18,7 @@ import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
+import org.mozilla.gecko.sync.synchronizer.NonBufferingRecordsChannel;
 import org.mozilla.gecko.sync.synchronizer.RecordsChannel;
 import org.mozilla.gecko.sync.synchronizer.RecordsChannelDelegate;
 
@@ -25,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -42,7 +44,6 @@ public class TestRecordsChannel {
   private AtomicInteger numFlowStoreFailed;
   private AtomicInteger numFlowCompleted;
   private AtomicBoolean flowBeginFailed;
-  private AtomicBoolean flowFinishFailed;
 
   private volatile RecordsChannel recordsChannel;
   private volatile Exception fetchException;
@@ -54,7 +55,6 @@ public class TestRecordsChannel {
     numFlowStoreFailed = new AtomicInteger(0);
     numFlowCompleted = new AtomicInteger(0);
     flowBeginFailed = new AtomicBoolean(false);
-    flowFinishFailed = new AtomicBoolean(false);
 
     // Repositories and sessions will be set/created by tests.
     sourceRepository = null;
@@ -112,11 +112,15 @@ public class TestRecordsChannel {
     sinkSession = sinkRepository.createSession(null);
   }
 
-  public void doFlow() throws Exception {
+  public void doFlow(boolean nonBuffering) throws Exception {
     createSessions();
     assertNotNull(sourceSession);
     assertNotNull(sinkSession);
-    recordsChannel = new RecordsChannel(sourceSession,  sinkSession, rcDelegate);
+    if (nonBuffering) {
+      recordsChannel = new NonBufferingRecordsChannel(sourceSession, sinkSession, rcDelegate);
+    } else {
+      recordsChannel = new RecordsChannel(sourceSession, sinkSession, rcDelegate);
+    }
     WaitHelper.getTestWaiter().performWait(new Runnable() {
       @Override
       public void run() {
@@ -173,12 +177,26 @@ public class TestRecordsChannel {
   public void testSuccess() throws Exception {
     sourceRepository = full();
     sinkRepository = empty();
-    doFlow();
+    doFlow(false);
     assertEquals(1, numFlowCompleted.get());
     assertEquals(0, numFlowFetchFailed.get());
     assertEquals(0, numFlowStoreFailed.get());
     assertEquals(sourceRepository.wbos, sinkRepository.wbos);
-    assertEquals(0, recordsChannel.getFetchFailureCount());
+    assertFalse(recordsChannel.didFetchFail());
+    assertEquals(0, recordsChannel.getStoreFailureCount());
+    assertEquals(6, recordsChannel.getStoreAttemptedCount());
+  }
+
+  @Test
+  public void testSuccessNB() throws Exception {
+    sourceRepository = full();
+    sinkRepository = empty();
+    doFlow(true);
+    assertEquals(1, numFlowCompleted.get());
+    assertEquals(0, numFlowFetchFailed.get());
+    assertEquals(0, numFlowStoreFailed.get());
+    assertEquals(sourceRepository.wbos, sinkRepository.wbos);
+    assertFalse(recordsChannel.didFetchFail());
     assertEquals(0, recordsChannel.getStoreFailureCount());
     assertEquals(6, recordsChannel.getStoreAttemptedCount());
   }
@@ -187,12 +205,26 @@ public class TestRecordsChannel {
   public void testFetchFail() throws Exception {
     sourceRepository = failingFetch(SynchronizerHelpers.FailMode.FETCH);
     sinkRepository = empty();
-    doFlow();
+    doFlow(false);
     assertEquals(1, numFlowCompleted.get());
     assertTrue(numFlowFetchFailed.get() > 0);
     assertEquals(0, numFlowStoreFailed.get());
     assertTrue(sinkRepository.wbos.size() < 6);
-    assertTrue(recordsChannel.getFetchFailureCount() > 0);
+    assertTrue(recordsChannel.didFetchFail());
+    assertEquals(0, recordsChannel.getStoreFailureCount());
+    assertTrue(recordsChannel.getStoreAttemptedCount() < 6);
+  }
+
+  @Test
+  public void testFetchFailNB() throws Exception {
+    sourceRepository = failingFetch(SynchronizerHelpers.FailMode.FETCH);
+    sinkRepository = empty();
+    doFlow(true);
+    assertEquals(1, numFlowCompleted.get());
+    assertTrue(numFlowFetchFailed.get() > 0);
+    assertEquals(0, numFlowStoreFailed.get());
+    assertTrue(sinkRepository.wbos.size() < 6);
+    assertTrue(recordsChannel.didFetchFail());
     assertEquals(0, recordsChannel.getStoreFailureCount());
     assertTrue(recordsChannel.getStoreAttemptedCount() < 6);
   }
@@ -201,13 +233,33 @@ public class TestRecordsChannel {
   public void testStoreFetchFailedCollectionModified() throws Exception {
     sourceRepository = failingFetch(SynchronizerHelpers.FailMode.COLLECTION_MODIFIED);
     sinkRepository = empty();
-    doFlow();
+    doFlow(false);
     assertEquals(1, numFlowCompleted.get());
     assertTrue(numFlowFetchFailed.get() > 0);
     assertEquals(0, numFlowStoreFailed.get());
     assertTrue(sinkRepository.wbos.size() < 6);
 
-    assertTrue(recordsChannel.getFetchFailureCount() > 0);
+    assertTrue(recordsChannel.didFetchFail());
+    assertEquals(0, recordsChannel.getStoreFailureCount());
+    assertTrue(recordsChannel.getStoreAttemptedCount() < sourceRepository.wbos.size());
+
+    assertEquals(CollectionConcurrentModificationException.class, fetchException.getClass());
+    final Exception ex = recordsChannel.getReflowException();
+    assertNotNull(ex);
+    assertEquals(CollectionConcurrentModificationException.class, ex.getClass());
+  }
+
+  @Test
+  public void testStoreFetchFailedCollectionModifiedNB() throws Exception {
+    sourceRepository = failingFetch(SynchronizerHelpers.FailMode.COLLECTION_MODIFIED);
+    sinkRepository = empty();
+    doFlow(true);
+    assertEquals(1, numFlowCompleted.get());
+    assertTrue(numFlowFetchFailed.get() > 0);
+    assertEquals(0, numFlowStoreFailed.get());
+    assertTrue(sinkRepository.wbos.size() < 6);
+
+    assertTrue(recordsChannel.didFetchFail());
     assertEquals(0, recordsChannel.getStoreFailureCount());
     assertTrue(recordsChannel.getStoreAttemptedCount() < sourceRepository.wbos.size());
 
@@ -221,13 +273,33 @@ public class TestRecordsChannel {
   public void testStoreFetchFailedDeadline() throws Exception {
     sourceRepository = failingFetch(SynchronizerHelpers.FailMode.DEADLINE_REACHED);
     sinkRepository = empty();
-    doFlow();
+    doFlow(false);
     assertEquals(1, numFlowCompleted.get());
     assertTrue(numFlowFetchFailed.get() > 0);
     assertEquals(0, numFlowStoreFailed.get());
     assertTrue(sinkRepository.wbos.size() < 6);
 
-    assertTrue(recordsChannel.getFetchFailureCount() > 0);
+    assertTrue(recordsChannel.didFetchFail());
+    assertEquals(0, recordsChannel.getStoreFailureCount());
+    assertTrue(recordsChannel.getStoreAttemptedCount() < sourceRepository.wbos.size());
+
+    assertEquals(SyncDeadlineReachedException.class, fetchException.getClass());
+    final Exception ex = recordsChannel.getReflowException();
+    assertNotNull(ex);
+    assertEquals(SyncDeadlineReachedException.class, ex.getClass());
+  }
+
+  @Test
+  public void testStoreFetchFailedDeadlineNB() throws Exception {
+    sourceRepository = failingFetch(SynchronizerHelpers.FailMode.DEADLINE_REACHED);
+    sinkRepository = empty();
+    doFlow(true);
+    assertEquals(1, numFlowCompleted.get());
+    assertTrue(numFlowFetchFailed.get() > 0);
+    assertEquals(0, numFlowStoreFailed.get());
+    assertTrue(sinkRepository.wbos.size() < 6);
+
+    assertTrue(recordsChannel.didFetchFail());
     assertEquals(0, recordsChannel.getStoreFailureCount());
     assertTrue(recordsChannel.getStoreAttemptedCount() < sourceRepository.wbos.size());
 
@@ -242,14 +314,32 @@ public class TestRecordsChannel {
     sourceRepository = full();
     sinkRepository = new SynchronizerHelpers.SerialFailStoreWBORepository(
             SynchronizerHelpers.FailMode.STORE);
-    doFlow();
+    doFlow(false);
     assertEquals(1, numFlowCompleted.get());
     assertEquals(0, numFlowFetchFailed.get());
     assertEquals(1, numFlowStoreFailed.get());
     // We will fail to store one of the records but expect flow to continue.
     assertEquals(5, sinkRepository.wbos.size());
 
-    assertEquals(0, recordsChannel.getFetchFailureCount());
+    assertFalse(recordsChannel.didFetchFail());
+    assertEquals(1, recordsChannel.getStoreFailureCount());
+    // Number of store attempts.
+    assertEquals(sourceRepository.wbos.size(), recordsChannel.getStoreAttemptedCount());
+  }
+
+  @Test
+  public void testStoreSerialFailNB() throws Exception {
+    sourceRepository = full();
+    sinkRepository = new SynchronizerHelpers.SerialFailStoreWBORepository(
+            SynchronizerHelpers.FailMode.STORE);
+    doFlow(true);
+    assertEquals(1, numFlowCompleted.get());
+    assertEquals(0, numFlowFetchFailed.get());
+    assertEquals(1, numFlowStoreFailed.get());
+    // We will fail to store one of the records but expect flow to continue.
+    assertEquals(5, sinkRepository.wbos.size());
+
+    assertFalse(recordsChannel.didFetchFail());
     assertEquals(1, recordsChannel.getStoreFailureCount());
     // Number of store attempts.
     assertEquals(sourceRepository.wbos.size(), recordsChannel.getStoreAttemptedCount());
@@ -260,7 +350,7 @@ public class TestRecordsChannel {
     sourceRepository = full();
     sinkRepository = new SynchronizerHelpers.SerialFailStoreWBORepository(
             SynchronizerHelpers.FailMode.COLLECTION_MODIFIED);
-    doFlow();
+    doFlow(false);
     assertEquals(1, numFlowCompleted.get());
     assertEquals(0, numFlowFetchFailed.get());
     assertEquals(1, numFlowStoreFailed.get());
@@ -268,7 +358,30 @@ public class TestRecordsChannel {
     final int sunkenRecords = sinkRepository.wbos.size();
     assertTrue(sunkenRecords > 0 && sunkenRecords < 6);
 
-    assertEquals(0, recordsChannel.getFetchFailureCount());
+    assertFalse(recordsChannel.didFetchFail());
+    // RecordChannel's storeFail count is only incremented for failures of individual records.
+    assertEquals(0, recordsChannel.getStoreFailureCount());
+
+    assertEquals(CollectionConcurrentModificationException.class, storeException.getClass());
+    final Exception ex = recordsChannel.getReflowException();
+    assertNotNull(ex);
+    assertEquals(CollectionConcurrentModificationException.class, ex.getClass());
+  }
+
+  @Test
+  public void testStoreSerialFailCollectionModifiedNB() throws Exception {
+    sourceRepository = full();
+    sinkRepository = new SynchronizerHelpers.SerialFailStoreWBORepository(
+            SynchronizerHelpers.FailMode.COLLECTION_MODIFIED);
+    doFlow(true);
+    assertEquals(1, numFlowCompleted.get());
+    assertEquals(0, numFlowFetchFailed.get());
+    assertEquals(1, numFlowStoreFailed.get());
+    // One of the records will fail, at which point we'll stop flowing them.
+    final int sunkenRecords = sinkRepository.wbos.size();
+    assertTrue(sunkenRecords > 0 && sunkenRecords < 6);
+
+    assertFalse(recordsChannel.didFetchFail());
     // RecordChannel's storeFail count is only incremented for failures of individual records.
     assertEquals(0, recordsChannel.getStoreFailureCount());
 
@@ -282,30 +395,61 @@ public class TestRecordsChannel {
   public void testStoreBatchesFail() throws Exception {
     sourceRepository = full();
     sinkRepository = new SynchronizerHelpers.BatchFailStoreWBORepository(3);
-    doFlow();
+    doFlow(false);
     assertEquals(1, numFlowCompleted.get());
     assertEquals(0, numFlowFetchFailed.get());
     assertEquals(3, numFlowStoreFailed.get()); // One batch fails.
     assertEquals(3, sinkRepository.wbos.size()); // One batch succeeds.
 
-    assertEquals(0, recordsChannel.getFetchFailureCount());
+    assertFalse(recordsChannel.didFetchFail());
     assertEquals(3, recordsChannel.getStoreFailureCount());
     // Number of store attempts.
     assertEquals(sourceRepository.wbos.size(), recordsChannel.getStoreAttemptedCount());
   }
 
+  @Test
+  public void testStoreBatchesFailNB() throws Exception {
+    sourceRepository = full();
+    sinkRepository = new SynchronizerHelpers.BatchFailStoreWBORepository(3);
+    doFlow(true);
+    assertEquals(1, numFlowCompleted.get());
+    assertEquals(0, numFlowFetchFailed.get());
+    assertEquals(3, numFlowStoreFailed.get()); // One batch fails.
+    assertEquals(3, sinkRepository.wbos.size()); // One batch succeeds.
+
+    assertFalse(recordsChannel.didFetchFail());
+    assertEquals(3, recordsChannel.getStoreFailureCount());
+    // Number of store attempts.
+    assertEquals(sourceRepository.wbos.size(), recordsChannel.getStoreAttemptedCount());
+  }
 
   @Test
   public void testStoreOneBigBatchFail() throws Exception {
     sourceRepository = full();
     sinkRepository = new SynchronizerHelpers.BatchFailStoreWBORepository(50);
-    doFlow();
+    doFlow(false);
     assertEquals(1, numFlowCompleted.get());
     assertEquals(0, numFlowFetchFailed.get());
     assertEquals(6, numFlowStoreFailed.get()); // One (big) batch fails.
     assertEquals(0, sinkRepository.wbos.size()); // No batches succeed.
 
-    assertEquals(0, recordsChannel.getFetchFailureCount());
+    assertFalse(recordsChannel.didFetchFail());
+    assertEquals(6, recordsChannel.getStoreFailureCount());
+    // Number of store attempts.
+    assertEquals(sourceRepository.wbos.size(), recordsChannel.getStoreAttemptedCount());
+  }
+
+  @Test
+  public void testStoreOneBigBatchFailNB() throws Exception {
+    sourceRepository = full();
+    sinkRepository = new SynchronizerHelpers.BatchFailStoreWBORepository(50);
+    doFlow(true);
+    assertEquals(1, numFlowCompleted.get());
+    assertEquals(0, numFlowFetchFailed.get());
+    assertEquals(6, numFlowStoreFailed.get()); // One (big) batch fails.
+    assertEquals(0, sinkRepository.wbos.size()); // No batches succeed.
+
+    assertFalse(recordsChannel.didFetchFail());
     assertEquals(6, recordsChannel.getStoreFailureCount());
     // Number of store attempts.
     assertEquals(sourceRepository.wbos.size(), recordsChannel.getStoreAttemptedCount());

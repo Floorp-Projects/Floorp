@@ -152,11 +152,6 @@ public class VersioningDelegateHelper {
         }
 
         @Override
-        public void onBatchCompleted() {
-            this.inner.onBatchCompleted();
-        }
-
-        @Override
         public RepositorySessionFetchRecordsDelegate deferredFetchDelegate(ExecutorService executor) {
             return this.inner.deferredFetchDelegate(executor);
         }

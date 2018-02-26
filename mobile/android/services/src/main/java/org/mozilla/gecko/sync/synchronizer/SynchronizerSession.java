@@ -268,7 +268,7 @@ public class SynchronizerSession implements RecordsChannelDelegate, RepositorySe
 
     // This is the *second* record channel to flow.
     // I, SynchronizerSession, am the delegate for the *second* flow.
-    channelBToA = new RecordsChannel(this.sessionB, this.sessionA, this);
+    channelBToA = getRecordsChannel(this.sessionB, this.sessionA, this);
 
     // This is the delegate for the *first* flow.
     RecordsChannelDelegate channelAToBDelegate = new RecordsChannelDelegate() {
@@ -300,7 +300,7 @@ public class SynchronizerSession implements RecordsChannelDelegate, RepositorySe
     };
 
     // This is the *first* channel to flow.
-    channelAToB = new RecordsChannel(this.sessionA, this.sessionB, channelAToBDelegate);
+    channelAToB = getRecordsChannel(this.sessionA, this.sessionB, channelAToBDelegate);
 
     Logger.trace(LOG_TAG, "Starting A to B flow. Channel is " + channelAToB);
     try {
@@ -308,6 +308,10 @@ public class SynchronizerSession implements RecordsChannelDelegate, RepositorySe
     } catch (InvalidSessionTransitionException e) {
       onFlowBeginFailed(channelAToB, e);
     }
+  }
+
+  protected RecordsChannel getRecordsChannel(RepositorySession sink, RepositorySession source, RecordsChannelDelegate delegate) {
+    return new RecordsChannel(sink, source, delegate);
   }
 
   /**
@@ -327,9 +331,8 @@ public class SynchronizerSession implements RecordsChannelDelegate, RepositorySe
     }
 
     // Fetch failures always abort.
-    int numRemoteFetchFailed = recordsChannel.getFetchFailureCount();
-    if (numRemoteFetchFailed > 0) {
-      final String message = "Got " + numRemoteFetchFailed + " failures fetching remote records!";
+    if (recordsChannel.didFetchFail()) {
+      final String message = "Saw failures fetching remote records!";
       Logger.warn(LOG_TAG, message + " Aborting session.");
       delegate.onSynchronizeFailed(this, new FetchFailedException(), message);
       return;
@@ -374,9 +377,8 @@ public class SynchronizerSession implements RecordsChannelDelegate, RepositorySe
     }
 
     // Fetch failures always abort.
-    int numLocalFetchFailed = recordsChannel.getFetchFailureCount();
-    if (numLocalFetchFailed > 0) {
-      final String message = "Got " + numLocalFetchFailed + " failures fetching local records!";
+    if (recordsChannel.didFetchFail()) {
+      final String message = "Saw failures fetching local records!";
       Logger.warn(LOG_TAG, message + " Aborting session.");
       delegate.onSynchronizeFailed(this, new FetchFailedException(), message);
       return;

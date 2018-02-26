@@ -184,13 +184,6 @@ public abstract class RepositorySession {
   }
 
   /**
-   * Indicates that a number of records have been stored, more are still to come but after some time,
-   * and now would be a good time to flush records and perform any other similar operations.
-   */
-  public void storeFlush() {
-  }
-
-  /**
    * Indicates that a flow of records have been completed.
    */
   public void performCleanup() {

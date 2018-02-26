@@ -2964,7 +2964,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                     // or, less likely, due to record reconciliation bugs at the RepositorySession
                     // level.
                     } catch (SQLiteConstraintException e) {
-                        Log.w(LOGTAG, "Unexpected constraint exception while inserting a visit", e);
+                        // Don't log this, it'll just cause memory churn.
                     }
                 }
                 if (inserted != valueSet.length) {

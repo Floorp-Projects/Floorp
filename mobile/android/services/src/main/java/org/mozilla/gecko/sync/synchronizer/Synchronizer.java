@@ -30,9 +30,9 @@ import android.content.Context;
 public class Synchronizer implements SynchronizerSessionDelegate {
   public static final String LOG_TAG = "SyncDelSDelegate";
 
-  protected String configSyncID; // Used to pass syncID from load() back into save().
+  private String configSyncID; // Used to pass syncID from load() back into save().
 
-  protected SynchronizerDelegate synchronizerDelegate;
+  private SynchronizerDelegate synchronizerDelegate;
 
   protected SynchronizerSession session = null;
 
