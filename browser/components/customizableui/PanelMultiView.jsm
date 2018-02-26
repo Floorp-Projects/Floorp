@@ -93,10 +93,6 @@
  *       │   │   └── Currently visible view
  *       │   │   │
  *       └───┴───┴── Open views
- *
- * If the <panelmultiview> element is "ephemeral", imported subviews will be
- * moved out again to the element specified by the viewCacheId attribute, so
- * that the panel element can be removed safely.
  */
 
 "use strict";
@@ -307,6 +303,10 @@ var PanelMultiView = class extends this.AssociatedToNode {
    * Removes the specified <panel> from the document, ensuring that any
    * <panelmultiview> node it contains is destroyed properly.
    *
+   * If the viewCacheId attribute is present on the <panelmultiview> element,
+   * imported subviews will be moved out again to the element it specifies, so
+   * that the panel element can be removed safely.
+   *
    * If the panel does not contain a <panelmultiview>, it is removed directly.
    * This allows consumers like page actions to accept different panel types.
    */
@@ -314,7 +314,9 @@ var PanelMultiView = class extends this.AssociatedToNode {
     try {
       let panelMultiViewNode = panelNode.querySelector("panelmultiview");
       if (panelMultiViewNode) {
-        this.forNode(panelMultiViewNode).disconnect();
+        let panelMultiView = this.forNode(panelMultiViewNode);
+        panelMultiView._moveOutKids();
+        panelMultiView.disconnect();
       }
     } finally {
       // Make sure to remove the panel element even if disconnecting fails.
@@ -439,7 +441,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
 
     this._cleanupTransitionPhase();
 
-    this._moveOutKids();
     this._panel.removeEventListener("mousemove", this);
     this._panel.removeEventListener("popupshowing", this);
     this._panel.removeEventListener("popuppositioned", this);
