@@ -2503,12 +2503,11 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLContext,
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebGLContext)
     NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-    NS_INTERFACE_MAP_ENTRY(nsIDOMWebGLRenderingContext)
     NS_INTERFACE_MAP_ENTRY(nsICanvasRenderingContextInternal)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
     // If the exact way we cast to nsISupports here ever changes, fix our
     // ToSupports() method.
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMWebGLRenderingContext)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasRenderingContextInternal)
 NS_INTERFACE_MAP_END
 
 } // namespace mozilla

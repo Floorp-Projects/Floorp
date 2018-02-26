@@ -118,8 +118,6 @@ using mozilla::dom::AudioChannelAgent;
 
 #include "nsHTMLCanvasFrame.h"
 
-#include "nsIDOMWebGLRenderingContext.h"
-
 class nsIDocumentLoaderFactory;
 
 #define PRODUCT_NAME "Gecko"
@@ -333,8 +331,6 @@ nsresult NS_NewContainerBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
 #endif
 
-nsresult NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult);
-
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 
 nsresult NS_NewDomSelection(nsISelection** aResult);
@@ -436,8 +432,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoDataProtocolContentPolicy)
 MAKE_CTOR(CreatePluginDocument,           nsIDocument,                 NS_NewPluginDocument)
 MAKE_CTOR(CreateVideoDocument,            nsIDocument,                 NS_NewVideoDocument)
 MAKE_CTOR(CreateFocusManager,             nsIFocusManager,      NS_NewFocusManager)
-
-MAKE_CTOR(CreateCanvasRenderingContextWebGL, nsIDOMWebGLRenderingContext, NS_NewCanvasRenderingContextWebGL)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStyleSheetService, Init)
 
@@ -561,7 +555,6 @@ NS_DEFINE_NAMED_CID(NS_DOMSELECTION_CID);
 NS_DEFINE_NAMED_CID(NS_CONTENTITERATOR_CID);
 NS_DEFINE_NAMED_CID(NS_PRECONTENTITERATOR_CID);
 NS_DEFINE_NAMED_CID(NS_SUBTREEITERATOR_CID);
-NS_DEFINE_NAMED_CID(NS_CANVASRENDERINGCONTEXTWEBGL_CID);
 NS_DEFINE_NAMED_CID(NS_TEXT_ENCODER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLCOPY_TEXT_ENCODER_CID);
 NS_DEFINE_NAMED_CID(NS_XMLCONTENTSERIALIZER_CID);
@@ -809,7 +802,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_CONTENTITERATOR_CID, false, nullptr, CreateContentIterator },
   { &kNS_PRECONTENTITERATOR_CID, false, nullptr, CreatePreContentIterator },
   { &kNS_SUBTREEITERATOR_CID, false, nullptr, CreateSubtreeIterator },
-  { &kNS_CANVASRENDERINGCONTEXTWEBGL_CID, false, nullptr, CreateCanvasRenderingContextWebGL },
   { &kNS_TEXT_ENCODER_CID, false, nullptr, CreateTextEncoder },
   { &kNS_HTMLCOPY_TEXT_ENCODER_CID, false, nullptr, CreateHTMLCopyTextEncoder },
   { &kNS_XMLCONTENTSERIALIZER_CID, false, nullptr, CreateXMLContentSerializer },
@@ -920,7 +912,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/content/post-content-iterator;1", &kNS_CONTENTITERATOR_CID },
   { "@mozilla.org/content/pre-content-iterator;1", &kNS_PRECONTENTITERATOR_CID },
   { "@mozilla.org/content/subtree-content-iterator;1", &kNS_SUBTREEITERATOR_CID },
-  { "@mozilla.org/content/canvas-rendering-context;1?id=webgl", &kNS_CANVASRENDERINGCONTEXTWEBGL_CID },
   { NS_DOC_ENCODER_CONTRACTID_BASE "text/xml", &kNS_TEXT_ENCODER_CID },
   { NS_DOC_ENCODER_CONTRACTID_BASE "application/xml", &kNS_TEXT_ENCODER_CID },
   { NS_DOC_ENCODER_CONTRACTID_BASE "application/xhtml+xml", &kNS_TEXT_ENCODER_CID },
