@@ -154,6 +154,8 @@ interface nsIURI : nsISupports
      *
      * If this attribute is set to a value that only has a host part, the port
      * will not be reset. To reset the port as well use setHostAndPort.
+     * If setting the host succeeds, this method will return NS_OK, even if
+     * setting the port fails (error in parsing the port, or value out of range)
      */
     attribute AUTF8String hostPort;
 

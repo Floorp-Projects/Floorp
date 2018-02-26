@@ -208,8 +208,13 @@ add_test(function test_ipv6_fail()
   Assert.throws(() => { url = url.mutate().setHostPort("2001]:1").finalize(); }, "bad IPv6 address");
   Assert.throws(() => { url = url.mutate().setHostPort("2001:1]").finalize(); }, "bad IPv6 address");
   Assert.throws(() => { url = url.mutate().setHostPort("").finalize(); }, "Empty hostPort should fail");
-  Assert.throws(() => { url = url.mutate().setHostPort("[2001::1]:").finalize(); }, "missing port number");
-  Assert.throws(() => { url = url.mutate().setHostPort("[2001::1]:bad").finalize(); }, "bad port number");
+
+  // These checks used to fail, but now don't (see bug 1433958 comment 57)
+  url = url.mutate().setHostPort("[2001::1]:").finalize();
+  Assert.equal(url.spec, "http://[2001::1]/");
+  url = url.mutate().setHostPort("[2002::1]:bad").finalize();
+  Assert.equal(url.spec, "http://[2002::1]/");
+
   run_next_test();
 });
 
