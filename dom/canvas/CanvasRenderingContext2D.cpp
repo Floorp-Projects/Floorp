@@ -1861,7 +1861,7 @@ CanvasRenderingContext2D::RegisterAllocation()
 static already_AddRefed<LayerManager>
 LayerManagerFromCanvasElement(nsINode* aCanvasElement)
 {
-  if (!aCanvasElement || !aCanvasElement->OwnerDoc()) {
+  if (!aCanvasElement) {
     return nullptr;
   }
 
@@ -1926,7 +1926,7 @@ CanvasRenderingContext2D::TrySharedTarget(RefPtr<gfx::DrawTarget>& aOutDT,
   aOutDT = nullptr;
   aOutProvider = nullptr;
 
-  if (!mCanvasElement || !mCanvasElement->OwnerDoc()) {
+  if (!mCanvasElement) {
     return false;
   }
 
@@ -4967,8 +4967,9 @@ CanvasRenderingContext2D::IsPointInPath(JSContext* aCx, double aX, double aY, co
   // Check for site-specific permission and return false if no permission.
   if (mCanvasElement) {
     nsCOMPtr<nsIDocument> ownerDoc = mCanvasElement->OwnerDoc();
-    if (!ownerDoc || !CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx))
+    if (!CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx)) {
       return false;
+    }
   }
 
   EnsureUserSpacePath(aWinding);
@@ -5009,8 +5010,9 @@ CanvasRenderingContext2D::IsPointInStroke(JSContext* aCx, double aX, double aY)
   // Check for site-specific permission and return false if no permission.
   if (mCanvasElement) {
     nsCOMPtr<nsIDocument> ownerDoc = mCanvasElement->OwnerDoc();
-    if (!ownerDoc || !CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx))
+    if (!CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx)) {
       return false;
+    }
   }
 
   EnsureUserSpacePath();
@@ -5878,8 +5880,7 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
   bool usePlaceholder = false;
   if (mCanvasElement) {
     nsCOMPtr<nsIDocument> ownerDoc = mCanvasElement->OwnerDoc();
-    usePlaceholder = !ownerDoc ||
-      !CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx);
+    usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx);
   }
 
   do {
