@@ -7,11 +7,8 @@ specification] they will be removed step by step.
 
 Currently the following atoms are in use:
 
-* clearElement
-* getText
-* isDisplayed
-* isEnabled
-* isSelected
+- `getElementText`
+- `isDisplayed`
 
 To use one of those atoms Javascript modules will have to import [atom.js].
 
