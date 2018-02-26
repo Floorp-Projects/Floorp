@@ -147,9 +147,7 @@ NarrateControls.prototype = {
         this._setupVoices();
         break;
       case "unload":
-        if (this.narrator.speaking) {
-          TelemetryStopwatch.finish("NARRATE_CONTENT_SPEAKTIME_MS", this);
-        }
+        this.narrator.stop();
         break;
     }
   },
@@ -241,12 +239,13 @@ NarrateControls.prototype = {
         this.narrator.stop();
       } else {
         this._updateSpeechControls(true);
+        TelemetryStopwatch.start("NARRATE_CONTENT_SPEAKTIME_MS", this);
         let options = { rate: this.rate, voice: this.voice };
-        this.narrator.start(options).then(() => {
-          this._updateSpeechControls(false);
-        }, err => {
+        this.narrator.start(options).catch(err => {
           Cu.reportError(`Narrate failed: ${err}.`);
+        }).then(() => {
           this._updateSpeechControls(false);
+          TelemetryStopwatch.finish("NARRATE_CONTENT_SPEAKTIME_MS", this);
         });
       }
     }
@@ -254,6 +253,11 @@ NarrateControls.prototype = {
 
   _updateSpeechControls(speaking) {
     let dropdown = this._doc.querySelector(".narrate-dropdown");
+    if (!dropdown) {
+      // Elements got destroyed, but window lingers on for a bit.
+      return;
+    }
+
     dropdown.classList.toggle("keep-open", speaking);
     dropdown.classList.toggle("speaking", speaking);
 
@@ -263,12 +267,6 @@ NarrateControls.prototype = {
 
     this._doc.querySelector(".narrate-skip-previous").disabled = !speaking;
     this._doc.querySelector(".narrate-skip-next").disabled = !speaking;
-
-    if (speaking) {
-      TelemetryStopwatch.start("NARRATE_CONTENT_SPEAKTIME_MS", this);
-    } else {
-      TelemetryStopwatch.finish("NARRATE_CONTENT_SPEAKTIME_MS", this);
-    }
   },
 
   _createVoiceLabel(voice) {
