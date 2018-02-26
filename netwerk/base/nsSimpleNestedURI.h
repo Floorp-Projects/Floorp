@@ -121,6 +121,8 @@ public:
 
         friend class nsSimpleNestedURI;
     };
+
+    friend BaseURIMutator<nsSimpleNestedURI>;
 };
 
 } // namespace net
