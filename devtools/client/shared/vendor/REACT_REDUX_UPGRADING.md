@@ -9,13 +9,14 @@
 ```bash
 git clone https://github.com/reactjs/react-redux
 cd react-redux
-git checkout v5.0.6 # checkout the right version tag
+git checkout v5.0.7 # checkout the right version tag
 ```
 
 ## Building
 
 ```bash
 npm install
+npm run build:umd
 cp dist/react-redux.js <gecko-dev>/devtools/client/shared/vendor/react-redux.js
 ```
 
@@ -27,8 +28,8 @@ We no longer need the react-redux repo so feel free to delete it.
 - Add the version number to the top of the file:
   ```
   /**
-    * react-redux v5.0.6
-    */
+   * react-redux v5.0.7
+   */
   ```
 - Replace all instances of `'react'` with `'devtools/client/shared/vendor/react'` (including the quotes).
 - Replace all instances of `'redux'` with `'devtools/client/shared/vendor/redux'` (including the quotes).
