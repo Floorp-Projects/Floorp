@@ -819,17 +819,21 @@ Location::SetSearch(const nsAString& aSearch,
   }
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
+  aRv = GetURI(getter_AddRefs(uri));
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
   if (NS_WARN_IF(aRv.Failed()) || !url) {
     return;
   }
 
   if (nsIDocument* doc = GetEntryDocument()) {
-    aRv = url->SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch),
-                                    doc->GetDocumentCharacterSet());
+    aRv = NS_MutateURI(uri)
+            .SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch),
+                                    doc->GetDocumentCharacterSet())
+            .Finalize(uri);
   } else {
-    aRv = url->SetQuery(NS_ConvertUTF16toUTF8(aSearch));
+    aRv = NS_MutateURI(uri)
+            .SetQuery(NS_ConvertUTF16toUTF8(aSearch))
+            .Finalize(uri);
   }
   if (NS_WARN_IF(aRv.Failed())) {
     return;
