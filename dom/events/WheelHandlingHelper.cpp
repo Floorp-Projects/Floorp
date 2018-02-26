@@ -16,6 +16,7 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIScrollableFrame.h"
+#include "nsITextControlElement.h"
 #include "nsITimer.h"
 #include "nsPluginFrame.h"
 #include "nsPresContext.h"
@@ -79,6 +80,31 @@ WheelHandlingUtils::CanScrollOn(nsIScrollableFrame* aScrollFrame,
                            scrollRange.YMost(), aDirectionY));
 }
 
+/*static*/ Maybe<layers::ScrollDirection>
+WheelHandlingUtils::GetDisregardedWheelScrollDirection(const nsIFrame* aFrame)
+{
+  nsIContent* content = aFrame->GetContent();
+  if (!content) {
+    return Nothing();
+  }
+  nsCOMPtr<nsITextControlElement> ctrl =
+    do_QueryInterface(content->IsInAnonymousSubtree()
+                      ? content->GetBindingParent() : content);
+  if (!ctrl || !ctrl->IsSingleLineTextControl()) {
+    return Nothing();
+  }
+  // Disregard scroll in the block-flow direction by mouse wheel on a
+  // single-line text control. For instance, in tranditional Chinese writing
+  // system, a single-line text control cannot be scrolled horizontally with
+  // mouse wheel even if they overflow at the right and left edges; Whereas in
+  // latin-based writing system, a single-line text control cannot be scrolled
+  // vertically with mouse wheel even if they overflow at the top and bottom
+  // edges
+  return Some(aFrame->GetWritingMode().IsVertical()
+              ? layers::ScrollDirection::eHorizontal
+              : layers::ScrollDirection::eVertical);
+}
+
 /******************************************************************/
 /* mozilla::WheelTransaction                                      */
 /******************************************************************/
@@ -105,7 +131,7 @@ WheelTransaction::OwnScrollbars(bool aOwn)
 
 /* static */ void
 WheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
-                                   WidgetWheelEvent* aEvent)
+                                   const WidgetWheelEvent* aEvent)
 {
   NS_ASSERTION(!sTargetFrame, "previous transaction is not finished!");
   MOZ_ASSERT(aEvent->mMessage == eWheel,
@@ -120,7 +146,7 @@ WheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
 }
 
 /* static */ bool
-WheelTransaction::UpdateTransaction(WidgetWheelEvent* aEvent)
+WheelTransaction::UpdateTransaction(const WidgetWheelEvent* aEvent)
 {
   nsIFrame* scrollToFrame = GetTargetFrame();
   nsIScrollableFrame* scrollableFrame = scrollToFrame->GetScrollTargetFrame();

@@ -394,19 +394,6 @@ GeckoRestyleManager::AttributeChanged(Element* aElement,
          tag == nsGkAtoms::listcell))
       return;
   }
-
-  if (aAttribute == nsGkAtoms::tooltiptext ||
-      aAttribute == nsGkAtoms::tooltip)
-  {
-    nsIRootBox* rootBox = nsIRootBox::GetRootBox(PresContext()->GetPresShell());
-    if (rootBox) {
-      if (aModType == MutationEventBinding::REMOVAL)
-        rootBox->RemoveTooltipSupport(aElement);
-      if (aModType == MutationEventBinding::ADDITION)
-        rootBox->AddTooltipSupport(aElement);
-    }
-  }
-
 #endif // MOZ_XUL
 
   if (primaryFrame) {

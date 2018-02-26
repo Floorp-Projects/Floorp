@@ -268,12 +268,6 @@ function InitAndStartRefTests()
     } catch(e) {}
 
     try {
-        g.startAfter = prefs.getCharPref("reftest.startAfter");
-    } catch(e) {
-        g.startAfter = undefined;
-    }
-
-    try {
         g.compareRetainedDisplayLists = prefs.getBoolPref("reftest.compareRetainedDisplayLists");
     } catch (e) {}
 #ifdef MOZ_STYLO
@@ -509,7 +503,7 @@ function StartTests()
             g.urls = g.urls.slice(start, end);
         }
 
-        if (g.manageSuite && g.startAfter === undefined && !g.suiteStarted) {
+        if (g.manageSuite && !g.suiteStarted) {
             var ids = g.urls.map(function(obj) {
                 return obj.identifier;
             });
@@ -519,28 +513,10 @@ function StartTests()
         }
 
         if (g.shuffle) {
-            if (g.startAfter !== undefined) {
-                logger.error("Can't resume from a crashed test when " +
-                             "--shuffle is enabled, continue by shuffling " +
-                             "all the tests");
-                DoneTests();
-                return;
-            }
             Shuffle(g.urls);
-        } else if (g.startAfter !== undefined) {
-            // Skip through previously crashed test
-            // We have to do this after chunking so we don't break the numbers
-            var crash_idx = g.urls.map(function(url) {
-                return url['url1']['spec'];
-            }).indexOf(g.startAfter);
-            if (crash_idx == -1) {
-                throw "Can't find the previously crashed test";
-            }
-            g.urls = g.urls.slice(crash_idx + 1);
         }
 
         g.totalTests = g.urls.length;
-
         if (!g.totalTests && !g.verify)
             throw "No tests to run";
 

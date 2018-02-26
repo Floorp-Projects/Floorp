@@ -41,7 +41,8 @@ module.exports = {
     "no-unused-expressions": "error",
     "no-unused-vars": ["error", {
       args: "none",
-      varsIgnorePattern: "^(Cc|Ci|Cr|Cu|EXPORTED_SYMBOLS)$",
+      vars: "all",
+      varsIgnorePattern: "^EXPORTED_SYMBOLS$",
     }],
     "no-use-before-define": ["error", {
       functions: false,

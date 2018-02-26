@@ -185,7 +185,6 @@ function FlameGraph(parent, sharpness) {
     this._onAnimationFrame = this._onAnimationFrame.bind(this);
     this._onKeyDown = this._onKeyDown.bind(this);
     this._onKeyUp = this._onKeyUp.bind(this);
-    this._onKeyPress = this._onKeyPress.bind(this);
     this._onMouseMove = this._onMouseMove.bind(this);
     this._onMouseDown = this._onMouseDown.bind(this);
     this._onMouseUp = this._onMouseUp.bind(this);
@@ -195,7 +194,6 @@ function FlameGraph(parent, sharpness) {
 
     this._window.addEventListener("keydown", this._onKeyDown);
     this._window.addEventListener("keyup", this._onKeyUp);
-    this._window.addEventListener("keypress", this._onKeyPress);
     this._window.addEventListener("mousemove", this._onMouseMove);
     this._window.addEventListener("mousedown", this._onMouseDown);
     this._window.addEventListener("mouseup", this._onMouseUp);
@@ -239,7 +237,6 @@ FlameGraph.prototype = {
 
     this._window.removeEventListener("keydown", this._onKeyDown);
     this._window.removeEventListener("keyup", this._onKeyUp);
-    this._window.removeEventListener("keypress", this._onKeyPress);
     this._window.removeEventListener("mousemove", this._onMouseMove);
     this._window.removeEventListener("mousedown", this._onMouseDown);
     this._window.removeEventListener("mouseup", this._onMouseUp);
@@ -936,13 +933,6 @@ FlameGraph.prototype = {
       this._userInputStack--;
       this._shouldRedraw = true;
     }
-  },
-
-  /**
-   * Listener for the "keypress" event on the graph's container.
-   */
-  _onKeyPress: function (e) {
-    ViewHelpers.preventScrolling(e);
   },
 
   /**

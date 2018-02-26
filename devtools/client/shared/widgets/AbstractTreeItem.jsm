@@ -442,7 +442,7 @@ AbstractTreeItem.prototype = {
     this._onArrowClick = this._onArrowClick.bind(this);
     this._onClick = this._onClick.bind(this);
     this._onDoubleClick = this._onDoubleClick.bind(this);
-    this._onKeyPress = this._onKeyPress.bind(this);
+    this._onKeyDown = this._onKeyDown.bind(this);
     this._onFocus = this._onFocus.bind(this);
     this._onBlur = this._onBlur.bind(this);
 
@@ -457,7 +457,7 @@ AbstractTreeItem.prototype = {
 
     targetNode.addEventListener("mousedown", this._onClick);
     targetNode.addEventListener("dblclick", this._onDoubleClick);
-    targetNode.addEventListener("keypress", this._onKeyPress);
+    targetNode.addEventListener("keydown", this._onKeyDown);
     targetNode.addEventListener("focus", this._onFocus);
     targetNode.addEventListener("blur", this._onBlur);
 
@@ -579,9 +579,9 @@ AbstractTreeItem.prototype = {
   },
 
   /**
-   * Handler for the "keypress" event on the element displaying this tree item.
+   * Handler for the "keydown" event on the element displaying this tree item.
    */
-  _onKeyPress: function (e) {
+  _onKeyDown: function (e) {
     // Prevent scrolling when pressing navigation keys.
     ViewHelpers.preventScrolling(e);
 
