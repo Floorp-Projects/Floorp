@@ -137,6 +137,10 @@ bool SpeechSynthesis::HasVoices() const
 void
 SpeechSynthesis::Speak(SpeechSynthesisUtterance& aUtterance)
 {
+  if (!mInnerID) {
+    return;
+  }
+
   if (aUtterance.mState != SpeechSynthesisUtterance::STATE_NONE) {
     // XXX: Should probably raise an error
     return;
@@ -317,6 +321,7 @@ SpeechSynthesis::Observe(nsISupports* aSubject, const char* aTopic,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (innerID == mInnerID) {
+      mInnerID = 0;
       Cancel();
 
       nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
