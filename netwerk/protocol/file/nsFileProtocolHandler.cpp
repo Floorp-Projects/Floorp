@@ -239,21 +239,16 @@ nsFileProtocolHandler::AllowPort(int32_t port, const char *scheme, bool *result)
 // nsIFileProtocolHandler methods:
 
 NS_IMETHODIMP
-nsFileProtocolHandler::NewFileURI(nsIFile *file, nsIURI **result)
+nsFileProtocolHandler::NewFileURI(nsIFile *aFile, nsIURI **aResult)
 {
-    NS_ENSURE_ARG_POINTER(file);
-    nsresult rv;
+    NS_ENSURE_ARG_POINTER(aFile);
 
-    nsCOMPtr<nsIFileURL> url = new nsStandardURL(true);
-    if (!url)
-        return NS_ERROR_OUT_OF_MEMORY;
-
+    RefPtr<nsIFile> file(aFile);
     // NOTE: the origin charset is assigned the value of the platform
     // charset by the SetFile method.
-    rv = url->SetFile(file);
-    if (NS_FAILED(rv)) return rv;
-
-    return CallQueryInterface(url, result);
+    return NS_MutateURI(new nsStandardURL::Mutator())
+             .Apply(NS_MutatorMethod(&nsIFileURLMutator::SetFile, file))
+             .Finalize(aResult);
 }
 
 NS_IMETHODIMP
