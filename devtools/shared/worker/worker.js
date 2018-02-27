@@ -17,7 +17,7 @@
     const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
     this.isWorker = false;
     this.Promise = require("resource://gre/modules/Promise.jsm").Promise;
-    this.console = require("resource://gre/modules/Console.jsm").console;
+    this.console = console;
     factory.call(
       this, require, this, { exports: this },
       { Cc, Ci, Cu }, ChromeWorker, null

@@ -30,8 +30,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
 
-ChromeUtils.defineModuleGetter(this, "console",
-  "resource://gre/modules/Console.jsm");
 ChromeUtils.defineModuleGetter(this, "RunState",
   "resource:///modules/sessionstore/RunState.jsm");
 ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",

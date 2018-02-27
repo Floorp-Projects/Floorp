@@ -10,8 +10,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "console",
-  "resource://gre/modules/Console.jsm");
 ChromeUtils.defineModuleGetter(this, "setTimeout",
   "resource://gre/modules/Timer.jsm");
 ChromeUtils.defineModuleGetter(this, "clearTimeout",

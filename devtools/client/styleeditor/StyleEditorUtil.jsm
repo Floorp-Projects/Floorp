@@ -21,7 +21,6 @@ const PROPERTIES_URL = "chrome://devtools/locale/styleeditor.properties";
 
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const Services = require("Services");
-const console = require("resource://gre/modules/Console.jsm").console;
 const gStringBundle = Services.strings.createBundle(PROPERTIES_URL);
 
 /**

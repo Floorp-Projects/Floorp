@@ -1,7 +1,6 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/Console.jsm", this);
 ChromeUtils.import("resource://shield-recipe-client/lib/EventEmitter.jsm", this);
 
 const evidence = {

@@ -11,7 +11,6 @@ const TEST_BASE_HTTP = "http://example.com/browser/devtools/client/commandline/t
 const TEST_BASE_HTTPS = "https://example.com/browser/devtools/client/commandline/test/";
 
 var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-var { console } = require("resource://gre/modules/Console.jsm");
 var flags = require("devtools/shared/flags");
 
 // Import the GCLI test helper

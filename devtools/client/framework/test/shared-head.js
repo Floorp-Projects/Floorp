@@ -37,7 +37,6 @@ PromiseTestUtils.whitelistRejectionsGlobally(/this\.toolbox is null/);
 PromiseTestUtils.whitelistRejectionsGlobally(/this\.webConsoleClient is null/);
 PromiseTestUtils.whitelistRejectionsGlobally(/this\.worker is null/);
 
-const {console} = scopedCuImport("resource://gre/modules/Console.jsm");
 const {ScratchpadManager} = scopedCuImport("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 const {loader, require} = scopedCuImport("resource://devtools/shared/Loader.jsm");
 

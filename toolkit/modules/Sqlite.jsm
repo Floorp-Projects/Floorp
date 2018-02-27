@@ -22,7 +22,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   Task: "resource://gre/modules/Task.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
-  console: "resource://gre/modules/Console.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "FinalizationWitnessService",

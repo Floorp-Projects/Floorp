@@ -18,7 +18,7 @@ const promise = require("resource://gre/modules/Promise.jsm").Promise;
 const jsmScope = require("resource://gre/modules/Services.jsm");
 const { Services } = jsmScope;
 // Steal various globals only available in JSM scope (and not Sandbox one)
-const { ChromeUtils, HeapSnapshot, XMLHttpRequest,
+const { ChromeUtils, HeapSnapshot, XMLHttpRequest, console,
         atob, btoa, TextEncoder, TextDecoder } = Cu.getGlobalForObject(jsmScope);
 
 // Create a single Sandbox to access global properties needed in this module.
@@ -217,6 +217,7 @@ exports.globals = {
   reportError: Cu.reportError,
   atob: atob,
   btoa: btoa,
+  console: console,
   TextEncoder: TextEncoder,
   TextDecoder: TextDecoder,
   URL,
@@ -273,9 +274,6 @@ function lazyGlobal(name, getter) {
 
 // Lazily define a few things so that the corresponding jsms are only loaded
 // when used.
-lazyGlobal("console", () => {
-  return require("resource://gre/modules/Console.jsm").console;
-});
 lazyGlobal("clearTimeout", () => {
   return require("resource://gre/modules/Timer.jsm").clearTimeout;
 });

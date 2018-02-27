@@ -181,7 +181,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TabStateFlusher: "resource:///modules/sessionstore/TabStateFlusher.jsm",
   Utils: "resource://gre/modules/sessionstore/Utils.jsm",
   ViewSourceBrowser: "resource://gre/modules/ViewSourceBrowser.jsm",
-  console: "resource://gre/modules/Console.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
