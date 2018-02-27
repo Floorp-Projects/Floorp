@@ -347,13 +347,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
     return this.node.parentNode;
   }
 
-  get _mainViewId() {
-    return this.node.getAttribute("mainViewId");
-  }
-  get _mainView() {
-    return this.document.getElementById(this._mainViewId);
-  }
-
   get _transitioning() {
     return this.__transitioning;
   }
@@ -675,11 +668,8 @@ var PanelMultiView = class extends this.AssociatedToNode {
    * Prepares the main view before showing the panel.
    */
   async _showMainView() {
-    if (!this.node || !this._mainViewId) {
-      return false;
-    }
-
-    let nextPanelView = PanelView.forNode(this._mainView);
+    let nextPanelView = PanelView.forNode(this.document.getElementById(
+      this.node.getAttribute("mainViewId")));
 
     // If the view is already open in another panel, close the panel first.
     let oldPanelMultiViewNode = nextPanelView.node.panelMultiView;
@@ -1108,9 +1098,10 @@ var PanelMultiView = class extends this.AssociatedToNode {
         break;
       }
       case "popupshown":
-        let mainPanelView = PanelView.forNode(this._mainView);
-        // Now that the main view is visible, we can check the height of the
-        // description elements it contains.
+        // The main view is always open and visible when the panel is first
+        // shown, so we can check the height of the description elements it
+        // contains and notify consumers using the ViewShown event.
+        let mainPanelView = this.openViews[0];
         mainPanelView.descriptionHeightWorkaround();
         this._activateView(mainPanelView);
         break;
