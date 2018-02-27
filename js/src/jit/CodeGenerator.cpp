@@ -10122,9 +10122,6 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
         js_free(ionScript);
     });
 
-    // Also, note that creating the code here during an incremental GC will
-    // trace the code and mark all GC things it refers to. This captures any
-    // read barriers which were skipped while compiling the script off thread.
     Linker linker(masm, nogc);
     AutoFlushICache afc("IonLink");
     JitCode* code = linker.newCode(cx, CodeKind::Ion, !patchableBackedges_.empty());

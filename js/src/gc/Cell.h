@@ -122,6 +122,7 @@ class TenuredCell : public Cell
     MOZ_ALWAYS_INLINE bool markIfUnmarked(MarkColor color = MarkColor::Black) const;
     MOZ_ALWAYS_INLINE void markBlack() const;
     MOZ_ALWAYS_INLINE void copyMarkBitsFrom(const TenuredCell* src);
+    MOZ_ALWAYS_INLINE void unmark();
 
     // Access to the arena.
     inline Arena* arena() const;
@@ -307,6 +308,12 @@ TenuredCell::copyMarkBitsFrom(const TenuredCell* src)
     ChunkBitmap& bitmap = chunk()->bitmap;
     bitmap.copyMarkBit(this, src, ColorBit::BlackBit);
     bitmap.copyMarkBit(this, src, ColorBit::GrayOrBlackBit);
+}
+
+void
+TenuredCell::unmark()
+{
+    chunk()->bitmap.unmark(this);
 }
 
 inline Arena*
