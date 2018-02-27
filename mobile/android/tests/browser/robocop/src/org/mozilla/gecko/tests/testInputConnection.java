@@ -37,7 +37,7 @@ public class testInputConnection extends JavascriptBridgeTest {
         mActions.setPref("dom.select_events.enabled", true, /* flush */ false);
         mActions.setPref("dom.select_events.textcontrols.enabled", true, /* flush */ false);
         // Enable dummy key synthesis.
-        mActions.setPref("intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition",
+        mActions.setPref("intl.ime.hack.on_any_apps.fire_key_events_for_composition",
                          true, /* flush */ false);
 
         final String url = mStringHelper.ROBOCOP_INPUT_URL;
@@ -212,18 +212,11 @@ public class testInputConnection extends JavascriptBridgeTest {
             assertTextAndSelectionAt("Can commit non-key string", ic, "foof", 4);
 
             getJS().syncCall("end_key_log");
-            if (mType.equals("designMode")) {
-                // designMode doesn't support dummy key synthesis.
-                fAssertEquals("Can synthesize keys",
-                              "keydown:o,casm;keypress:o,casm;keyup:o,casm;", // O key
-                              getKeyLog());
-            } else {
-                fAssertEquals("Can synthesize keys",
-                              "keydown:Unidentified,casm;keyup:Unidentified,casm;" + // Dummy
-                              "keydown:o,casm;keypress:o,casm;keyup:o,casm;" +       // O key
-                              "keydown:Unidentified,casm;keyup:Unidentified,casm;",  // Dummy
-                              getKeyLog());
-            }
+            fAssertEquals("Can synthesize keys",
+                          "keydown:Process,casm;keyup:Process,casm;" +     // Dummy
+                          "keydown:o,casm;keypress:o,casm;keyup:o,casm;" + // O key
+                          "keydown:Process,casm;keyup:Process,casm;",      // Dummy
+                          getKeyLog());
 
             ic.deleteSurroundingText(4, 0);
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
