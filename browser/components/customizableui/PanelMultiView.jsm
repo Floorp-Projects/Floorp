@@ -419,8 +419,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
     if (!this.node || !this.connected)
       return;
 
-    this._cleanupTransitionPhase();
-
     this._panel.removeEventListener("mousemove", this);
     this._panel.removeEventListener("popupshowing", this);
     this._panel.removeEventListener("popuppositioned", this);
@@ -736,7 +734,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
     nextPanelView.headerText = "";
     nextPanelView.minMaxWidth = 0;
 
-    this._cleanupTransitionPhase();
+    // Ensure the view will be visible once the panel is opened.
     nextPanelView.visible = true;
     nextPanelView.descriptionHeightWorkaround();
 
@@ -842,9 +840,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
    *                                     previous view or forward to a next view.
    */
   async _transitionViews(previousViewNode, viewNode, reverse) {
-    // Clean up any previous transition that may be active at this point.
-    this._cleanupTransitionPhase();
-
     const { window } = this;
 
     let nextPanelView = PanelView.forNode(viewNode);
@@ -897,6 +892,10 @@ var PanelMultiView = class extends this.AssociatedToNode {
       viewRect = await window.promiseDocumentFlushed(() => {
         return this._dwu.getBoundsWithoutFlushing(viewNode);
       });
+      // Bail out if the panel was closed in the meantime.
+      if (!nextPanelView.isOpenIn(this)) {
+        return;
+      }
 
       try {
         this._viewStack.insertBefore(viewNode, oldSibling);
@@ -934,6 +933,10 @@ var PanelMultiView = class extends this.AssociatedToNode {
     // Now that all the elements are in place for the start of the transition,
     // give the layout code a chance to set the initial values.
     await window.promiseDocumentFlushed(() => {});
+    // Bail out if the panel was closed in the meantime.
+    if (!nextPanelView.isOpenIn(this)) {
+      return;
+    }
 
     // Now set the viewContainer dimensions to that of the new view, which
     // kicks of the height animation.
@@ -979,7 +982,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
     // This will complete the operation by removing any transition properties.
     nextPanelView.node.style.removeProperty("width");
     deepestNode.style.removeProperty("outline");
-    this._cleanupTransitionPhase(details);
+    this._cleanupTransitionPhase();
 
     nextPanelView.focusSelectedElement();
   }
@@ -988,18 +991,14 @@ var PanelMultiView = class extends this.AssociatedToNode {
    * Attempt to clean up the attributes and properties set by `_transitionViews`
    * above. Which attributes and properties depends on the phase the transition
    * was left from.
-   *
-   * @param {Object} details Dictionary object containing details of the transition
-   *                         that should be cleaned up after. Defaults to the most
-   *                         recent details.
    */
-  _cleanupTransitionPhase(details = this._transitionDetails) {
-    if (!details || !this.node)
+  _cleanupTransitionPhase() {
+    if (!this._transitionDetails) {
       return;
+    }
 
-    let {phase, resolve, listener, cancelListener} = details;
-    if (details == this._transitionDetails)
-      this._transitionDetails = null;
+    let {phase, resolve, listener, cancelListener} = this._transitionDetails;
+    this._transitionDetails = null;
 
     if (phase >= TRANSITION_PHASES.START) {
       this._panel.removeAttribute("width");
