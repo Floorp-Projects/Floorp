@@ -207,6 +207,29 @@
       }
     },
 
+    "Homepage": {
+      "description": "Set and optionally lock the homepage.",
+      "first_available": "60.0",
+      "enterprise_only": true,
+
+      "type": "object",
+      "properties": {
+        "URL": {
+          "type": "URL"
+        },
+        "Locked": {
+          "type": "boolean"
+        },
+        "Additional": {
+          "type": "array",
+          "items": {
+            "type": "URL"
+          }
+        }
+      },
+      "required": ["URL"]
+    },
+
     "InstallAddons": {
       "description": "Allow or deny popup websites to install webextensions.",
       "first_available": "60.0",
