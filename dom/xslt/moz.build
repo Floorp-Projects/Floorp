@@ -9,9 +9,6 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     'txIEXSLTRegExFunctions.idl',
-    'txIFunctionEvaluationContext.idl',
-    'txINodeSet.idl',
-    'txIXPathObject.idl',
 ]
 
 XPIDL_MODULE = 'content_xslt'
