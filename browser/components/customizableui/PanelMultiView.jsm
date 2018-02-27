@@ -62,12 +62,14 @@
  *    visible, but a visible view may be inactive. For example, during a scroll
  *    transition, both views will be inactive.
  *
- *    When a view becomes active, the ViewShown event is fired synchronously.
- *    For the main view of the panel, this happens during the "popupshown"
- *    event, which means that other "popupshown" handlers may be called before
- *    the view is active. However, the main view can already receive mouse and
- *    keyboard events at this point, only because this allows regression tests
- *    to use the "popupshown" event to simulate interaction.
+ *    When a view becomes active, the ViewShown event is fired synchronously,
+ *    and the showSubView and goBack methods can be called for navigation.
+ *
+ *    For the main view of the panel, the ViewShown event is dispatched during
+ *    the "popupshown" event, which means that other "popupshown" handlers may
+ *    be called before the view is active. Thus, code that needs to perform
+ *    further navigation automatically should either use the ViewShown event or
+ *    wait for an event loop tick, like BrowserTestUtils.waitForEvent does.
  *
  * -- Navigating with the keyboard
  *
@@ -346,11 +348,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
     return this.node.parentNode;
   }
 
-  get _transitioning() {
-    return this.__transitioning;
-  }
   set _transitioning(val) {
-    this.__transitioning = val;
     if (val) {
       this.node.setAttribute("transitioning", "true");
     } else {
@@ -396,7 +394,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
     this.node.prepend(viewContainer);
 
     this.openViews = [];
-    this.__transitioning = false;
 
     this._panel.addEventListener("popupshowing", this);
     this._panel.addEventListener("popuppositioned", this);
@@ -610,13 +607,42 @@ var PanelMultiView = class extends this.AssociatedToNode {
       return;
     }
 
+    if (!this.openViews.length) {
+      Cu.reportError(new Error(`Cannot show a subview in a closed panel.`));
+      return;
+    }
+
     let prevPanelView = this.openViews[this.openViews.length - 1];
     let nextPanelView = PanelView.forNode(viewNode);
     if (this.openViews.includes(nextPanelView)) {
       Cu.reportError(new Error(`Subview ${viewNode.id} is already open.`));
       return;
     }
+
+    // Do not re-enter the process if navigation is already in progress. Since
+    // there is only one active view at any given time, we can do this check
+    // safely, even considering that during the navigation process the actual
+    // view to which prevPanelView refers will change.
+    if (!prevPanelView.active) {
+      return;
+    }
+    // Marking the view that is about to scrolled out of the visible area as
+    // inactive will prevent re-entrancy and also disable keyboard navigation.
+    // From this point onwards, "await" statements can be used safely.
+    prevPanelView.active = false;
+
+    // If the ViewShowing event cancels the operation we have to re-enable
+    // keyboard navigation, but this must be avoided if the panel was closed.
     if (!(await this._openView(nextPanelView))) {
+      if (prevPanelView.isOpenIn(this)) {
+        // We don't raise a ViewShown event because nothing actually changed.
+        // Technically we should use a different state flag just because there
+        // is code that could check the "active" property to determine whether
+        // to wait for a ViewShown event later, but this only happens in
+        // regression tests and is less likely to be a technique used in
+        // production code, where use of ViewShown is less common.
+        prevPanelView.active = true;
+      }
       return;
     }
 
@@ -654,6 +680,14 @@ var PanelMultiView = class extends this.AssociatedToNode {
 
     let prevPanelView = this.openViews[this.openViews.length - 1];
     let nextPanelView = this.openViews[this.openViews.length - 2];
+
+    // Like in the showSubView method, do not re-enter navigation while it is
+    // in progress, and make the view inactive immediately. From this point
+    // onwards, "await" statements can be used safely.
+    if (!prevPanelView.active) {
+      return;
+    }
+    prevPanelView.active = false;
 
     prevPanelView.captureKnownSize();
     await this._transitionViews(prevPanelView.node, nextPanelView.node, true);
@@ -787,8 +821,9 @@ var PanelMultiView = class extends this.AssociatedToNode {
    * is and the active panelview slides in from the left in LTR mode, right in
    * RTL mode.
    *
-   * @param {panelview} previousViewNode Node that is currently shown as active,
-   *                                     but is about to be transitioned away.
+   * @param {panelview} previousViewNode Node that is currently displayed, but
+   *                                     is about to be transitioned away. This
+   *                                     must be already inactive at this point.
    * @param {panelview} viewNode         Node that will becode the active view,
    *                                     after the transition has finished.
    * @param {Boolean}   reverse          Whether we're navigation back to a
@@ -799,12 +834,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
   async _transitionViews(previousViewNode, viewNode, reverse, anchor) {
     // Clean up any previous transition that may be active at this point.
     this._cleanupTransitionPhase();
-
-    // There's absolutely no need to show off our epic animation skillz when
-    // the panel's not even open.
-    if (this._panel.state != "open") {
-      return;
-    }
 
     const { window } = this;
 
@@ -912,14 +941,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
     // We're setting the width property to prevent flickering during the
     // sliding animation with smaller views.
     viewNode.style.width = viewRect.width + "px";
-
-    // For proper bookkeeping, mark the view that is about to scrolled out of
-    // the visible area as inactive, because it won't be possible to simulate
-    // mouse events on it properly. In practice this isn't important, because we
-    // use the separate "transitioning" attribute on the panel to suppress
-    // pointer events. This allows mouse events to be available for the main
-    // view in regression tests that wait for the "popupshown" event.
-    prevPanelView.active = false;
 
     // Kick off the transition!
     details.phase = TRANSITION_PHASES.TRANSITION;
@@ -1058,13 +1079,11 @@ var PanelMultiView = class extends this.AssociatedToNode {
     }
     switch (aEvent.type) {
       case "keydown":
-        if (!this._transitioning) {
-          // Since we start listening for the "keydown" event when the popup is
-          // already showing and stop listening when the panel is hidden, we
-          // always have at least one view open.
-          let currentView = this.openViews[this.openViews.length - 1];
-          currentView.keyNavigation(aEvent, this._dir);
-        }
+        // Since we start listening for the "keydown" event when the popup is
+        // already showing and stop listening when the panel is hidden, we
+        // always have at least one view open.
+        let currentView = this.openViews[this.openViews.length - 1];
+        currentView.keyNavigation(aEvent, this._dir);
         break;
       case "mousemove":
         this.openViews.forEach(panelView => panelView.clearNavigation());
@@ -1421,11 +1440,18 @@ var PanelView = class extends this.AssociatedToNode {
    *  - The Right key functions the same as the Enter key, simulating a click
    *  - The Left key triggers a navigation back to the previous view.
    *
+   * Key navigation is only enabled while the view is active, meaning that this
+   * method will return early if it is invoked during a sliding transition.
+   *
    * @param {KeyEvent} event
    * @param {String} dir
    *        Direction for arrow navigation, either "ltr" or "rtl".
    */
   keyNavigation(event, dir) {
+    if (!this.active) {
+      return;
+    }
+
     let buttons = this.buttons;
     if (!buttons || !buttons.length) {
       buttons = this.buttons = this.getNavigableElements();
