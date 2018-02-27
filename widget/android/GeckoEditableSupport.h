@@ -106,6 +106,10 @@ class GeckoEditableSupport final
     bool mIMETextChangedDuringFlush;
     bool mIMEMonitorCursor;
 
+    static bool sDispatchKeyEventsInCompositionForAnyApps;
+
+    void ObservePrefs();
+
     nsIWidget* GetWidget() const
     {
         return mDispatcher ? mDispatcher->GetWidget() : mWindow;
@@ -180,12 +184,15 @@ public:
         , mIMESelectionChanged(false)
         , mIMETextChangedDuringFlush(false)
         , mIMEMonitorCursor(false)
-    {}
+    {
+        ObservePrefs();
+    }
 
     // Constructor for content process GeckoEditableChild.
     GeckoEditableSupport(java::GeckoEditableChild::Param aEditableChild)
         : GeckoEditableSupport(nullptr, nullptr, aEditableChild)
-    {}
+    {
+    }
 
     NS_DECL_ISUPPORTS
 
