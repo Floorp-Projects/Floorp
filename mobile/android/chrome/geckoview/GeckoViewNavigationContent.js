@@ -53,9 +53,7 @@ class GeckoViewNavigationContent extends GeckoViewContentModule {
     });
     Services.tm.spinEventLoopUntil(() => handled !== undefined);
 
-    if (!handled) {
-      throw Cr.NS_ERROR_ABORT;
-    }
+    return handled;
   }
 }
 
