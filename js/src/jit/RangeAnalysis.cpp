@@ -15,6 +15,7 @@
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 #include "js/Conversions.h"
+#include "util/PortableMath.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/TypedArrayObject.h"
 
