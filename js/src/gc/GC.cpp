@@ -7263,7 +7263,7 @@ class js::gc::AutoCallGCCallbacks {
         gc_.maybeCallGCCallback(JSGC_BEGIN);
     }
     ~AutoCallGCCallbacks() {
-        gc_.maybeCallGCCallback(JSGC_BEGIN);
+        gc_.maybeCallGCCallback(JSGC_END);
     }
 };
 
