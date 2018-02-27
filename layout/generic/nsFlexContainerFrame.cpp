@@ -1202,13 +1202,6 @@ nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
   return alignment;
 }
 
-bool
-nsFlexContainerFrame::IsHorizontal()
-{
-  const FlexboxAxisTracker axisTracker(this, GetWritingMode());
-  return axisTracker.IsMainAxisHorizontal();
-}
-
 UniquePtr<FlexItem>
 nsFlexContainerFrame::GenerateFlexItemForChild(
   nsPresContext* aPresContext,
