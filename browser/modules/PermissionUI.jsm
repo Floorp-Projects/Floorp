@@ -172,9 +172,9 @@ var PermissionPromptPrototype = {
   },
 
   /**
-   * The message to show the user in the PopupNotification. This
-   * is usually a string describing the permission that is being
-   * requested.
+   * The message to show to the user in the PopupNotification. A string
+   * with "<>" as a placeholder that is usually replaced by an addon name
+   * or a host name, formatted in bold, to describe the permission that is being requested.
    *
    * Subclasses must override this.
    *
@@ -431,7 +431,8 @@ GeolocationPermissionPrompt.prototype = {
     let pref = "browser.geolocation.warning.infoURL";
     let options = {
       learnMoreURL: Services.urlFormatter.formatURLPref(pref),
-      displayURI: false
+      displayURI: false,
+      name: this.principal.URI.hostPort,
     };
 
     if (this.principal.URI.schemeIs("file")) {
@@ -459,22 +460,12 @@ GeolocationPermissionPrompt.prototype = {
   },
 
   get message() {
-    let message = {};
     if (this.principal.URI.schemeIs("file")) {
-      message.start = gBrowserBundle.GetStringFromName("geolocation.shareWithFile3");
-    } else {
-      let header = gBrowserBundle.formatStringFromName("geolocation.shareWithSite3",
-                                                    ["<>"], 1);
-      header = header.split("<>");
-      message.end = header[1];
-      message.start = header[0];
-
-      message.host = "<>";
-      try {
-        message.host = this.principal.URI.hostPort;
-      } catch (ex) { }
+      return gBrowserBundle.GetStringFromName("geolocation.shareWithFile3");
     }
-    return message;
+
+    return gBrowserBundle.formatStringFromName("geolocation.shareWithSite3",
+                                                  ["<>"], 1);
   },
 
   get promptActions() {
@@ -548,7 +539,8 @@ DesktopNotificationPermissionPrompt.prototype = {
 
     return {
       learnMoreURL,
-      displayURI: false
+      displayURI: false,
+      name: this.principal.URI.hostPort,
     };
   },
 
@@ -561,20 +553,8 @@ DesktopNotificationPermissionPrompt.prototype = {
   },
 
   get message() {
-    let message = {};
-
-    message.host = "<>";
-    try {
-      message.host = this.principal.URI.hostPort;
-    } catch (ex) { }
-
-    let header = gBrowserBundle.formatStringFromName("webNotifications.receiveFromSite2",
+    return gBrowserBundle.formatStringFromName("webNotifications.receiveFromSite2",
                                                     ["<>"], 1);
-    header = header.split("<>");
-    message.end = header[1];
-    message.start = header[0];
-
-    return message;
   },
 
   get promptActions() {
@@ -641,7 +621,8 @@ PersistentStoragePermissionPrompt.prototype = {
     return {
       checkbox,
       learnMoreURL,
-      displayURI: false
+      displayURI: false,
+      name: this.principal.URI.hostPort,
     };
   },
 
@@ -654,20 +635,8 @@ PersistentStoragePermissionPrompt.prototype = {
   },
 
   get message() {
-    let message = {};
-
-    message.host = "<>";
-    try {
-      message.host = this.principal.URI.hostPort;
-    } catch (ex) {}
-
-    let header = gBrowserBundle.formatStringFromName("persistentStorage.allowWithSite",
+    return gBrowserBundle.formatStringFromName("persistentStorage.allowWithSite",
                                                     ["<>"], 1);
-    header = header.split("<>");
-    message.end = header[1];
-    message.start = header[0];
-
-    return message;
   },
 
   get promptActions() {
@@ -719,7 +688,8 @@ MIDIPermissionPrompt.prototype = {
   get popupOptions() {
     // TODO (bug 1433235) We need a security/permissions explanation URL for this
     let options = {
-      displayURI: false
+      displayURI: false,
+      name: this.principal.URI.hostPort,
     };
 
     if (this.principal.URI.schemeIs("file")) {
@@ -747,30 +717,19 @@ MIDIPermissionPrompt.prototype = {
   },
 
   get message() {
-    let message = {};
+    let message;
     if (this.principal.URI.schemeIs("file")) {
       if (this.isSysexPerm) {
-        message.start = gBrowserBundle.formatStringFromName("midi.shareSysexWithFile.message");
+        message = gBrowserBundle.formatStringFromName("midi.shareSysexWithFile.message");
       } else {
-        message.start = gBrowserBundle.formatStringFromName("midi.shareWithFile.message");
+        message = gBrowserBundle.formatStringFromName("midi.shareWithFile.message");
       }
+    } else if (this.isSysexPerm) {
+      message = gBrowserBundle.formatStringFromName("midi.shareSysexWithSite.message",
+                                                    ["<>"], 1);
     } else {
-      let header;
-      if (this.isSysexPerm) {
-        header = gBrowserBundle.formatStringFromName("midi.shareSysexWithSite.message",
-                                                     ["<>"], 1);
-      } else {
-        header = gBrowserBundle.formatStringFromName("midi.shareWithSite.message",
-                                                     ["<>"], 1);
-      }
-      header = header.split("<>");
-      message.end = header[1];
-      message.start = header[0];
-
-      message.host = "<>";
-      try {
-        message.host = this.principal.URI.hostPort;
-      } catch (ex) { }
+      message = gBrowserBundle.formatStringFromName("midi.shareWithSite.message",
+                                                    ["<>"], 1);
     }
     return message;
   },

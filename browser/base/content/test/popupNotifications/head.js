@@ -129,7 +129,7 @@ function dismissNotification(popup) {
 function BasicNotification(testId) {
   this.browser = gBrowser.selectedBrowser;
   this.id = "test-notification-" + testId;
-  this.message = "This is popup notification for " + testId;
+  this.message = testId + ": Will you allow <> to perform this action?";
   this.anchorID = null;
   this.mainAction = {
     label: "Main Action",
@@ -144,6 +144,7 @@ function BasicNotification(testId) {
     }
   ];
   this.options = {
+    name: "http://example.com",
     eventCallback: eventName => {
       switch (eventName) {
         case "dismissed":
@@ -204,13 +205,13 @@ function checkPopup(popup, notifyObj) {
        "notification anchored to icon");
   }
 
-  if (typeof notifyObj.message == "string") {
-    is(notification.getAttribute("label"), notifyObj.message, "message matches");
-  } else {
-    is(notification.getAttribute("label"), notifyObj.message.start, "message matches");
-    is(notification.getAttribute("hostname"), notifyObj.message.host, "message matches");
-    is(notification.getAttribute("endlabel"), notifyObj.message.end, "message matches");
-  }
+  let description = notifyObj.message.split("<>");
+  let text = {};
+  text.start = description[0];
+  text.end = description[1];
+  is(notification.getAttribute("label"), text.start, "message matches");
+  is(notification.getAttribute("name"), notifyObj.options.name, "message matches");
+  is(notification.getAttribute("endlabel"), text.end, "message matches");
 
   is(notification.id, notifyObj.id + "-notification", "id matches");
   if (notifyObj.mainAction) {
