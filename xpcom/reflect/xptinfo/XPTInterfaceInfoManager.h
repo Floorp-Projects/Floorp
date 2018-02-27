@@ -57,7 +57,7 @@ private:
 
     void InitMemoryReporter();
 
-    void RegisterXPTHeader(XPTHeader* aHeader);
+    void RegisterXPTHeader(const XPTHeader* aHeader);
 
     // idx is the index of this interface in the XPTHeader
     void VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* iface,

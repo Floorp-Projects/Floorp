@@ -91,9 +91,8 @@ extern XPTArena* gXPTIStructArena;
 class xptiTypelibGuts
 {
 public:
-    static xptiTypelibGuts* Create(XPTHeader* aHeader);
+    static xptiTypelibGuts* Create(const XPTHeader* aHeader);
 
-    XPTHeader*          GetHeader()           {return mHeader;}
     uint16_t            GetEntryCount() const {return mHeader->num_interfaces;}
 
     void                SetEntryAt(uint16_t i, xptiInterfaceEntry* ptr)
@@ -107,13 +106,13 @@ public:
     const char* GetEntryNameAt(uint16_t i);
 
 private:
-    explicit xptiTypelibGuts(XPTHeader* aHeader)
+    explicit xptiTypelibGuts(const XPTHeader* aHeader)
         : mHeader(aHeader)
     { }
     ~xptiTypelibGuts();
 
 private:
-    XPTHeader*           mHeader;        // hold pointer into arena
+    const XPTHeader*     mHeader;        // hold pointer into arena
     xptiInterfaceEntry*  mEntryArray[1]; // Always last. Sized to fit.
 };
 
