@@ -221,6 +221,7 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function() {
 
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
+var gBrowser = null; // Will be instantiated by the <tabbbrowser> constructor.
 var gLastValidURLStr = "";
 var gInPrintPreviewMode = false;
 var gContextMenu = null; // nsContextMenu instance
@@ -234,9 +235,8 @@ if (AppConstants.platform != "macosx") {
   var gEditUIVisible = true;
 }
 
-/* globals gBrowser, gNavToolbox, gURLBar:true */
+/* globals gNavToolbox, gURLBar:true */
 [
-  ["gBrowser",            "content"],
   ["gNavToolbox",         "navigator-toolbox"],
   ["gURLBar",             "urlbar"],
 ].forEach(function(elementGlobal) {
@@ -1196,8 +1196,7 @@ var gBrowserInit = {
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow =
       new nsBrowserAccess();
 
-    let initBrowser =
-      document.getAnonymousElementByAttribute(gBrowser, "anonid", "initialBrowser");
+    let initBrowser = gBrowser.initialBrowser;
 
     // remoteType and sameProcessAsFrameLoader are passed through to
     // updateBrowserRemoteness as part of an options object, which itself defaults
@@ -1301,7 +1300,7 @@ var gBrowserInit = {
 
     if (!gMultiProcessBrowser) {
       // There is a Content:Click message manually sent from content.
-      Services.els.addSystemEventListener(gBrowser, "click", contentAreaClick, true);
+      Services.els.addSystemEventListener(gBrowser.container, "click", contentAreaClick, true);
     }
 
     // hook up UI through progress listener
@@ -4342,15 +4341,11 @@ var XULBrowserWindow = {
   },
 
   forceInitialBrowserRemote(aRemoteType) {
-    let initBrowser =
-      document.getAnonymousElementByAttribute(gBrowser, "anonid", "initialBrowser");
-    gBrowser.updateBrowserRemoteness(initBrowser, true, { remoteType: aRemoteType });
+    gBrowser.updateBrowserRemoteness(gBrowser.initialBrowser, true, { remoteType: aRemoteType });
   },
 
   forceInitialBrowserNonRemote(aOpener) {
-    let initBrowser =
-      document.getAnonymousElementByAttribute(gBrowser, "anonid", "initialBrowser");
-    gBrowser.updateBrowserRemoteness(initBrowser, false, { opener: aOpener });
+    gBrowser.updateBrowserRemoteness(gBrowser.initialBrowser, false, { opener: aOpener });
   },
 
   setDefaultStatus(status) {

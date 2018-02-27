@@ -188,7 +188,7 @@ Notification.prototype = {
  * The PopupNotifications object manages popup notifications for a given browser
  * window.
  * @param tabbrowser
- *        window's <xul:tabbrowser/>. Used to observe tab switching events and
+ *        window's TabBrowser. Used to observe tab switching events and
  *        for determining the active browser element.
  * @param panel
  *        The <xul:panel/> element to use for notifications. The panel is
@@ -211,7 +211,7 @@ Notification.prototype = {
  */
 function PopupNotifications(tabbrowser, panel,
                                                       iconBox, options = {}) {
-  if (!(tabbrowser instanceof Ci.nsIDOMXULElement))
+  if (!tabbrowser)
     throw "Invalid tabbrowser";
   if (iconBox && !(iconBox instanceof Ci.nsIDOMXULElement))
     throw "Invalid iconBox";
