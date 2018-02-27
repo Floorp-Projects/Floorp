@@ -554,6 +554,7 @@ class GCRuntime
     friend class AutoCallGCCallbacks;
     void maybeCallGCCallback(JSGCStatus status);
 
+    void changeToNonIncrementalGC();
     void pushZealSelectedObjects();
     void purgeRuntime();
     MOZ_MUST_USE bool beginMarkPhase(JS::gcreason::Reason reason, AutoTraceSession& session);
@@ -837,11 +838,6 @@ class GCRuntime
 
     friend class SweepGroupsIter;
     friend class WeakCacheSweepIterator;
-
-    /*
-     * List head of arenas allocated during the sweep phase.
-     */
-    ActiveThreadData<Arena*> arenasAllocatedDuringSweep;
 
     /*
      * Incremental compacting state.

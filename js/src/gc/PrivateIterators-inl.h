@@ -119,6 +119,51 @@ class SweepGroupZonesIter {
 
 typedef CompartmentsIterT<SweepGroupZonesIter> SweepGroupCompartmentsIter;
 
+// Iterate the free cells in an arena. See also ArenaCellIterImpl which iterates
+// the allocated cells.
+class ArenaFreeCellIter
+{
+    Arena* arena;
+    size_t thingSize;
+    FreeSpan span;
+    uint_fast16_t thing;
+
+  public:
+    explicit ArenaFreeCellIter(Arena* arena)
+      : arena(arena),
+        thingSize(arena->getThingSize()),
+        span(*arena->getFirstFreeSpan()),
+        thing(span.first)
+    {
+        MOZ_ASSERT(arena);
+        MOZ_ASSERT(thing < ArenaSize);
+    }
+
+    bool done() const {
+        MOZ_ASSERT(thing < ArenaSize);
+        return !thing;
+    }
+
+    TenuredCell* getCell() const {
+        MOZ_ASSERT(!done());
+        return reinterpret_cast<TenuredCell*>(uintptr_t(arena) + thing);
+    }
+
+    void next() {
+        MOZ_ASSERT(!done());
+        MOZ_ASSERT(thing >= span.first && thing <= span.last);
+
+        if (thing == span.last) {
+            span = *span.nextSpan(arena);
+            thing = span.first;
+        } else {
+            thing += thingSize;
+        }
+
+        MOZ_ASSERT(thing < ArenaSize);
+    }
+};
+
 } // namespace gc
 } // namespace js
 
