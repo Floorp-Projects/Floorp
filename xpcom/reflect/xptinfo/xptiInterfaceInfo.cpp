@@ -143,7 +143,7 @@ xptiInterfaceEntry::IsFunction(bool* result)
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
 
-    *result = XPT_ID_IS_FUNCTION(mDescriptor->flags);
+    *result = mDescriptor->IsFunction();
     return NS_OK;
 }
 
