@@ -18,8 +18,6 @@
 
 #include <type_traits>
 
-#include "jslibmath.h"
-
 #include "builtin/Eval.h"
 #include "builtin/Math.h"
 #include "builtin/Number.h"
@@ -43,6 +41,7 @@
 #include "jit/RangeAnalysis.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/StackSlotAllocator.h"
+#include "util/PortableMath.h"
 #include "util/Unicode.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
