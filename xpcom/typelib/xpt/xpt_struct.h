@@ -86,6 +86,16 @@ struct XPTInterfaceDirectoryEntry {
  * its methods.
  */
 struct XPTInterfaceDescriptor {
+  static const uint8_t kScriptableMask =                0x80;
+  static const uint8_t kFunctionMask =                  0x40;
+  static const uint8_t kBuiltinClassMask =              0x20;
+  static const uint8_t kMainProcessScriptableOnlyMask = 0x10;
+
+  bool IsScriptable() const { return !!(flags & kScriptableMask); }
+  bool IsFunction() const { return !!(flags & kFunctionMask); }
+  bool IsBuiltinClass() const { return !!(flags & kBuiltinClassMask); }
+  bool IsMainProcessScriptableOnly() const { return !!(flags & kMainProcessScriptableOnlyMask); }
+
   /*
    * This field ordering minimizes the size of this struct.
    * The fields are serialized on disk in a different order.
@@ -117,16 +127,6 @@ struct XPTInterfaceDescriptor {
    */
   uint8_t num_additional_types;
 };
-
-#define XPT_ID_SCRIPTABLE                   0x80
-#define XPT_ID_FUNCTION                     0x40
-#define XPT_ID_BUILTINCLASS                 0x20
-#define XPT_ID_MAIN_PROCESS_SCRIPTABLE_ONLY 0x10
-
-#define XPT_ID_IS_SCRIPTABLE(flags) (!!(flags & XPT_ID_SCRIPTABLE))
-#define XPT_ID_IS_FUNCTION(flags) (!!(flags & XPT_ID_FUNCTION))
-#define XPT_ID_IS_BUILTINCLASS(flags) (!!(flags & XPT_ID_BUILTINCLASS))
-#define XPT_ID_IS_MAIN_PROCESS_SCRIPTABLE_ONLY(flags) (!!(flags & XPT_ID_MAIN_PROCESS_SCRIPTABLE_ONLY))
 
 /*
  * A TypeDescriptor is a variable-size record used to identify the type of a
