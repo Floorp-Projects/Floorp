@@ -16,9 +16,9 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsnum.h"
 
 #include "builtin/Math.h"
+#include "builtin/Number.h"
 #include "gc/FreeOp.h"
 #include "gc/HashUtil.h"
 #include "gc/Marking.h"

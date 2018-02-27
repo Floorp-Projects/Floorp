@@ -6,8 +6,7 @@
 
 #include "jit/EffectiveAddressAnalysis.h"
 
-#include "jsnum.h"
-
+#include "builtin/Number.h"
 #include "jit/IonAnalysis.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"

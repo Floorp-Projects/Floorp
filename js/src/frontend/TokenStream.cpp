@@ -19,8 +19,8 @@
 #include <string.h>
 
 #include "jsexn.h"
-#include "jsnum.h"
 
+#include "builtin/Number.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
 #include "frontend/ReservedWords.h"

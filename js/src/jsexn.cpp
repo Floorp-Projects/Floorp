@@ -15,10 +15,10 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "builtin/Number.h"
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "js/CharacterEncoding.h"

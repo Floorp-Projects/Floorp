@@ -12,8 +12,8 @@
 #include "mozilla/TypeTraits.h"
 
 #include "jsfriendapi.h"
-#include "jsnum.h"
 
+#include "builtin/Number.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
 #include "gc/FreeOp.h"

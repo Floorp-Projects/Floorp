@@ -10,8 +10,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 
-#include "jsnum.h"
-
+#include "builtin/Number.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 #include "js/Conversions.h"

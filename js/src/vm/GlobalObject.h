@@ -8,10 +8,10 @@
 #define vm_GlobalObject_h
 
 #include "jsexn.h"
-#include "jsnum.h"
 
 #include "builtin/Array.h"
 #include "builtin/Boolean.h"
+#include "builtin/Number.h"
 #include "js/Vector.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/ErrorObject.h"

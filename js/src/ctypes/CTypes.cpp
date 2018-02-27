@@ -28,8 +28,8 @@
 #endif
 
 #include "jsexn.h"
-#include "jsnum.h"
 
+#include "builtin/Number.h"
 #include "builtin/TypedObject.h"
 #include "ctypes/Library.h"
 #include "gc/FreeOp.h"

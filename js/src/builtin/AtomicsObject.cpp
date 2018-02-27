@@ -56,8 +56,8 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsnum.h"
 
+#include "builtin/Number.h"
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"

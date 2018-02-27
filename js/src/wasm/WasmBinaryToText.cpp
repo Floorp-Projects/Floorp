@@ -18,8 +18,7 @@
 
 #include "wasm/WasmBinaryToText.h"
 
-#include "jsnum.h"
-
+#include "builtin/Number.h"
 #include "util/StringBuffer.h"
 #include "vm/ArrayBufferObject.h"
 #include "wasm/WasmAST.h"

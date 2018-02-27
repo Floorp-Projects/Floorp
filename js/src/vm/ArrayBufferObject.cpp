@@ -24,12 +24,12 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
 #include "builtin/Array.h"
 #include "builtin/DataViewObject.h"
+#include "builtin/Number.h"
 #include "gc/Barrier.h"
 #include "gc/FreeOp.h"
 #include "gc/Memory.h"

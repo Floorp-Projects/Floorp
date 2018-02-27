@@ -15,10 +15,10 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "builtin/Number.h"
 #include "ds/Sort.h"
 #include "gc/Heap.h"
 #include "jit/InlinableNatives.h"

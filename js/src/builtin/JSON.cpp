@@ -10,11 +10,11 @@
 #include "mozilla/Range.h"
 #include "mozilla/ScopeExit.h"
 
-#include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
 #include "builtin/Array.h"
+#include "builtin/Number.h"
 #include "builtin/String.h"
 #include "util/StringBuffer.h"
 #include "vm/Interpreter.h"

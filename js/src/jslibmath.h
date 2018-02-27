@@ -11,8 +11,7 @@
 
 #include <math.h>
 
-#include "jsnum.h"
-
+#include "builtin/Number.h"
 #include "vm/JSContext.h"
 
 /*
