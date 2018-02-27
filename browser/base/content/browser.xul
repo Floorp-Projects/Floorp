@@ -16,7 +16,6 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/tabbrowser.css" type="text/css"?>
 
-<?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
 
 # All DTD information is stored in a separate file so that it can be shared by
