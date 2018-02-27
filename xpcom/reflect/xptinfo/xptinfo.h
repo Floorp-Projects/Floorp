@@ -181,22 +181,28 @@ public:
     MOZ_IMPLICIT nsXPTMethodInfo(const XPTMethodDescriptor& desc)
         {*(XPTMethodDescriptor*)this = desc;}
 
-    bool IsGetter()      const {return 0 != (XPT_MD_IS_GETTER(flags) );}
-    bool IsSetter()      const {return 0 != (XPT_MD_IS_SETTER(flags) );}
-    bool IsNotXPCOM()    const {return 0 != (XPT_MD_IS_NOTXPCOM(flags));}
-    bool IsHidden()      const {return 0 != (XPT_MD_IS_HIDDEN(flags) );}
-    bool WantsOptArgc()  const {return 0 != (XPT_MD_WANTS_OPT_ARGC(flags));}
-    bool WantsContext()  const {return 0 != (XPT_MD_WANTS_CONTEXT(flags));}
-    const char* GetName()  const {return name;}
-    uint8_t GetParamCount()  const {return num_args;}
-    /* idx was index before I got _sick_ of the warnings on Unix, sorry jband */
-    const nsXPTParamInfo GetParam(uint8_t idx) const
-        {
-            NS_PRECONDITION(idx < GetParamCount(),"bad arg");
-            return params[idx];
-        }
+    bool IsGetter() const {return !!(flags & kGetterMask);}
+    bool IsSetter() const {return !!(flags & kSetterMask);}
+    bool IsNotXPCOM() const {return !!(flags & kNotXPCOMMask);}
+    bool IsHidden() const {return !!(flags & kHiddenMask);}
+    bool WantsOptArgc() const {return !!(flags & kOptArgcMask);}
+    bool WantsContext() const {return !!(flags & kContextMask);}
+    const char* GetName() const {return name;}
+    uint8_t GetParamCount() const {return num_args;}
+    const nsXPTParamInfo GetParam(uint8_t idx) const {
+        MOZ_ASSERT(idx < GetParamCount(), "bad arg");
+        return params[idx];
+    }
+
 private:
-    nsXPTMethodInfo();  // no implementation
+    static const uint8_t kGetterMask =   0x80;
+    static const uint8_t kSetterMask =   0x40;
+    static const uint8_t kNotXPCOMMask = 0x20;
+    static const uint8_t kHiddenMask =   0x08;
+    static const uint8_t kOptArgcMask =  0x04;
+    static const uint8_t kContextMask =  0x02;
+
+    nsXPTMethodInfo() = delete;
 // NO DATA - this a flyweight wrapper
 };
 
