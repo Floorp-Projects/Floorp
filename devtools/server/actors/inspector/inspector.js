@@ -306,7 +306,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     return true;
   },
 
-  _onColorPicked: function (e, color) {
+  _onColorPicked: function (color) {
     this.emit("color-picked", color);
   },
 
