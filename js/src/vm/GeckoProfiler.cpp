@@ -8,8 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "jsnum.h"
-
+#include "builtin/Number.h"
 #include "gc/PublicIterators.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineJIT.h"

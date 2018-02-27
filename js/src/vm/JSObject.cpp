@@ -20,12 +20,12 @@
 #include "jsapi.h"
 #include "jsexn.h"
 #include "jsfriendapi.h"
-#include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
 #include "builtin/Array.h"
 #include "builtin/Eval.h"
+#include "builtin/Number.h"
 #include "builtin/Object.h"
 #include "builtin/String.h"
 #include "builtin/Symbol.h"

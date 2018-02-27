@@ -27,10 +27,10 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "builtin/Number.h"
 #include "builtin/String.h"
 #include "js/Conversions.h"
 #include "js/Wrapper.h"

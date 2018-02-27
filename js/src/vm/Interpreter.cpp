@@ -18,10 +18,10 @@
 #include <string.h>
 
 #include "jslibmath.h"
-#include "jsnum.h"
 
 #include "builtin/Array.h"
 #include "builtin/Eval.h"
+#include "builtin/Number.h"
 #include "builtin/String.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineJIT.h"
