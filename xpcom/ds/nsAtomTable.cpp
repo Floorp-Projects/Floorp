@@ -161,25 +161,6 @@ nsAtom::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 
 struct AtomTableKey
 {
-  AtomTableKey(const char16_t* aUTF16String, uint32_t aLength, uint32_t aHash)
-    : mUTF16String(aUTF16String)
-    , mUTF8String(nullptr)
-    , mLength(aLength)
-    , mHash(aHash)
-  {
-    MOZ_ASSERT(mHash == HashString(mUTF16String, mLength));
-  }
-
-  AtomTableKey(const char* aUTF8String, uint32_t aLength, uint32_t aHash)
-    : mUTF16String(nullptr)
-    , mUTF8String(aUTF8String)
-    , mLength(aLength)
-    , mHash(aHash)
-  {
-    mozilla::DebugOnly<bool> err;
-    MOZ_ASSERT(aHash == HashUTF8AsUTF16(mUTF8String, mLength, &err));
-  }
-
   AtomTableKey(const char16_t* aUTF16String, uint32_t aLength,
                uint32_t* aHashOut)
     : mUTF16String(aUTF16String)
