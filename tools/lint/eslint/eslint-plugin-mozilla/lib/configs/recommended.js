@@ -50,6 +50,7 @@ module.exports = {
     "WebrtcGlobalInformation": false,
     // Non-standard, specific to Firefox.
     "XULElement": false,
+    "console": true,
     "dump": true,
     "openDialog": false,
     "sizeToContent": false,
