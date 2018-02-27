@@ -861,7 +861,14 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
 
             case R.id.open_in_firefox_focus: {
-                sessionManager.replaceSessionWithNoCustomTab(session);
+                session.stripCustomTabConfiguration();
+
+                getWebView().saveWebViewState(session);
+
+                getActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.container, BrowserFragment.createForSession(session), BrowserFragment.FRAGMENT_TAG)
+                        .commit();
                 break;
             }
 

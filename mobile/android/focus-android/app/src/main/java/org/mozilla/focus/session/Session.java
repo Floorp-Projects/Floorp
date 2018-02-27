@@ -163,4 +163,11 @@ public class Session {
     public void setBlockingEnabled(boolean blockingEnabled) {
         this.isBlockingEnabled = blockingEnabled;
     }
+
+    /**
+     * Remove the custom tab configuration. This will transform this session into a regular session.
+     */
+    public void stripCustomTabConfiguration() {
+        customTabConfig = null;
+    }
 }
