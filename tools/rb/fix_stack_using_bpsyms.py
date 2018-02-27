@@ -81,7 +81,7 @@ class SymbolFile:
     def addrToSymbol(self, address):
         i = bisect.bisect(self.addrs, address) - 1
         if i > 0:
-            #offset = address - self.addrs[i]
+            # offset = address - self.addrs[i]
             return self.funcs[self.addrs[i]]
         else:
             return ""
@@ -132,7 +132,7 @@ parsedSymbolFiles = {}
 
 def getSymbolFile(file, symbolsDir):
     p = None
-    if not file in parsedSymbolFiles:
+    if file not in parsedSymbolFiles:
         symfile = guessSymbolFile(file, symbolsDir)
         if symfile:
             p = SymbolFile(symfile)
