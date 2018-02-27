@@ -10,7 +10,7 @@
 
 #include "jstypes.h"
 
-#include "builtin/MapObject.h"
+#include "builtin/Map.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"

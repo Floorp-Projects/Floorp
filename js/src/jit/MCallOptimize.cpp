@@ -6,13 +6,13 @@
 
 #include "mozilla/Casting.h"
 
-#include "builtin/AtomicsObject.h"
+#include "builtin/Atomics.h"
 #include "builtin/intl/Collator.h"
 #include "builtin/intl/DateTimeFormat.h"
 #include "builtin/intl/NumberFormat.h"
 #include "builtin/intl/PluralRules.h"
 #include "builtin/intl/RelativeTimeFormat.h"
-#include "builtin/MapObject.h"
+#include "builtin/Map.h"
 #include "builtin/Math.h"
 #include "builtin/SIMD.h"
 #include "builtin/String.h"

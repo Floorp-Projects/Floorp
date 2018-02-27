@@ -45,7 +45,7 @@
  * shared memory, or compilation will fail with a predictable error.
  */
 
-#include "builtin/AtomicsObject.h"
+#include "builtin/Atomics.h"
 
 #include "mozilla/Atomics.h"
 #include "mozilla/CheckedInt.h"

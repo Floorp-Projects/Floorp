@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef builtin_intl_IntlObject_h
-#define builtin_intl_IntlObject_h
+#ifndef builtin_intl_Intl_h
+#define builtin_intl_Intl_h
 
 #include "mozilla/Attributes.h"
 
@@ -105,4 +105,4 @@ intl_ComputeDisplayNames(JSContext* cx, unsigned argc, JS::Value* vp);
 
 } // namespace js
 
-#endif /* builtin_intl_IntlObject_h */
+#endif /* builtin_intl_Intl_h */

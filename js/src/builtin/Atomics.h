@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef builtin_AtomicsObject_h
-#define builtin_AtomicsObject_h
+#ifndef builtin_Atomics_h
+#define builtin_Atomics_h
 
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
@@ -162,4 +162,4 @@ atomics_wake_impl(SharedArrayRawBuffer* sarb, uint32_t byteOffset, int64_t count
 
 }  /* namespace js */
 
-#endif /* builtin_AtomicsObject_h */
+#endif /* builtin_Atomics_h */

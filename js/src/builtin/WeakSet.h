@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef builtin_WeakSetObject_h
-#define builtin_WeakSetObject_h
+#ifndef builtin_WeakSet_h
+#define builtin_WeakSet_h
 
-#include "builtin/WeakMapObject.h"
+#include "builtin/WeakMap.h"
 
 namespace js {
 
@@ -39,4 +39,4 @@ JSObject::is<js::WeakCollectionObject>() const
     return is<js::WeakMapObject>() || is<js::WeakSetObject>();
 }
 
-#endif /* builtin_WeakSetObject_h */
+#endif /* builtin_WeakSet_h */

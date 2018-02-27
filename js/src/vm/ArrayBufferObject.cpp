@@ -28,7 +28,7 @@
 #include "jsutil.h"
 
 #include "builtin/Array.h"
-#include "builtin/DataViewObject.h"
+#include "builtin/DataView.h"
 #include "builtin/Number.h"
 #include "gc/Barrier.h"
 #include "gc/FreeOp.h"

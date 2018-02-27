@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef builtin_MapObject_h
-#define builtin_MapObject_h
+#ifndef builtin_Map_h
+#define builtin_Map_h
 
 #include "builtin/SelfHostingDefines.h"
 #include "vm/GlobalObject.h"
@@ -347,4 +347,4 @@ IsOptimizableInitForSet(JSContext* cx, HandleObject setObject, HandleValue itera
 
 } /* namespace js */
 
-#endif /* builtin_MapObject_h */
+#endif /* builtin_Map_h */

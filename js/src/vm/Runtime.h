@@ -21,7 +21,7 @@
 
 #include <setjmp.h>
 
-#include "builtin/AtomicsObject.h"
+#include "builtin/Atomics.h"
 #include "builtin/intl/SharedIntlData.h"
 #include "builtin/Promise.h"
 #include "frontend/NameCollections.h"
