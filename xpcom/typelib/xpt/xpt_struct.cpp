@@ -305,7 +305,7 @@ DoConstDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
         return false;
     }
 
-    switch(XPT_TDP_TAG(cd->type.prefix)) {
+    switch (cd->type.Tag()) {
       case TD_INT16:
         ok = XPT_Do16(cursor, (uint16_t*) &cd->value.i16);
         break;
@@ -386,7 +386,7 @@ DoTypeDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
         return false;
     }
 
-    switch (XPT_TDP_TAG(td->prefix)) {
+    switch (td->Tag()) {
       case TD_INTERFACE_TYPE:
         uint16_t iface;
         if (!XPT_Do16(cursor, &iface))
