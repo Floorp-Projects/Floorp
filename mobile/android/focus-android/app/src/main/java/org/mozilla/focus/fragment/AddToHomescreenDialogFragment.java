@@ -83,21 +83,23 @@ public class AddToHomescreenDialogFragment extends DialogFragment {
             editableTitle.setSelection(title.length());
         }
 
-        addToHomescreenDialogCancelButton.setOnClickListener( new View.OnClickListener() {
+        addToHomescreenDialogCancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 TelemetryWrapper.cancelAddToHomescreenShortcutEvent();
                 dismiss();
-            }});
+            }
+        });
 
-        addToHomescreenDialogConfirmButton.setOnClickListener( new View.OnClickListener() {
+        addToHomescreenDialogConfirmButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 HomeScreen.installShortCut(getContext(), IconGenerator.generateLauncherIcon(getContext(), url), url,
                         editableTitle.getText().toString().trim(), blockingEnabled);
                 TelemetryWrapper.addToHomescreenShortcutEvent();
                 dismiss();
-            }});
+            }
+        });
 
         return builder.create();
     }
