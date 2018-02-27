@@ -33,6 +33,7 @@ EXPORTS.mozilla.ipc += [
     'IPCStreamDestination.h',
     'IPCStreamSource.h',
     'IPCStreamUtils.h',
+    'IPDLParamTraits.h',
     'MessageChannel.h',
     'MessageLink.h',
     'Neutering.h',
