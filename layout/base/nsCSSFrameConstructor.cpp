@@ -8851,7 +8851,7 @@ nsCSSFrameConstructor::EnsureFrameForTextNodeIsCreatedAfterFlush(
 
 void
 nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
-                                            CharacterDataChangeInfo* aInfo)
+                                            const CharacterDataChangeInfo& aInfo)
 {
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
 

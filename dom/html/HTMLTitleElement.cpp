@@ -56,7 +56,7 @@ HTMLTitleElement::SetText(const nsAString& aText, ErrorResult& aError)
 void
 HTMLTitleElement::CharacterDataChanged(nsIDocument *aDocument,
                                        nsIContent *aContent,
-                                       CharacterDataChangeInfo *aInfo)
+                                       const CharacterDataChangeInfo&)
 {
   SendTitleChangeEvent(false);
 }

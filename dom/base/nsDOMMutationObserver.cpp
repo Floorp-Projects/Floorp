@@ -190,9 +190,9 @@ nsMutationReceiver::AttributeWillChange(nsIDocument* aDocument,
 }
 
 void
-nsMutationReceiver::CharacterDataWillChange(nsIDocument *aDocument,
+nsMutationReceiver::CharacterDataWillChange(nsIDocument* aDocument,
                                             nsIContent* aContent,
-                                            CharacterDataChangeInfo* aInfo)
+                                            const CharacterDataChangeInfo&)
 {
   if (nsAutoMutationBatch::IsBatching() ||
       !CharacterData() ||

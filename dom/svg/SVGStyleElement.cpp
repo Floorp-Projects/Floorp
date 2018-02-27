@@ -135,7 +135,7 @@ SVGStyleElement::ParseAttribute(int32_t aNamespaceID,
 void
 SVGStyleElement::CharacterDataChanged(nsIDocument* aDocument,
                                       nsIContent* aContent,
-                                      CharacterDataChangeInfo* aInfo)
+                                      const CharacterDataChangeInfo&)
 {
   ContentChanged(aContent);
 }

@@ -57,7 +57,7 @@ public:
                       const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
-  virtual nsresult CharacterDataChanged(CharacterDataChangeInfo* aInfo) override;
+  virtual nsresult CharacterDataChanged(const CharacterDataChangeInfo&) override;
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,

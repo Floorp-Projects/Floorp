@@ -3368,7 +3368,7 @@ void
 SVGTextFrame::MutationObserver::CharacterDataChanged(
                                                  nsIDocument* aDocument,
                                                  nsIContent* aContent,
-                                                 CharacterDataChangeInfo* aInfo)
+                                                 const CharacterDataChangeInfo&)
 {
   mFrame->NotifyGlyphMetricsChange();
 }

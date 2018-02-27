@@ -4823,7 +4823,7 @@ nsTextFrame::DisconnectTextRuns()
 }
 
 nsresult
-nsTextFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
+nsTextFrame::CharacterDataChanged(const CharacterDataChangeInfo& aInfo)
 {
   if (mContent->HasFlag(NS_HAS_NEWLINE_PROPERTY)) {
     mContent->DeleteProperty(nsGkAtoms::newline);
@@ -4840,12 +4840,12 @@ nsTextFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
   nsTextFrame* textFrame = this;
   while (true) {
     next = textFrame->GetNextContinuation();
-    if (!next || next->GetContentOffset() > int32_t(aInfo->mChangeStart))
+    if (!next || next->GetContentOffset() > int32_t(aInfo.mChangeStart))
       break;
     textFrame = next;
   }
 
-  int32_t endOfChangedText = aInfo->mChangeStart + aInfo->mReplaceLength;
+  int32_t endOfChangedText = aInfo.mChangeStart + aInfo.mReplaceLength;
 
   // Parent of the last frame that we passed to FrameNeedsReflow (or noticed
   // had already received an earlier FrameNeedsReflow call).
@@ -4907,12 +4907,12 @@ nsTextFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
     }
 
     textFrame = textFrame->GetNextContinuation();
-  } while (textFrame && textFrame->GetContentOffset() < int32_t(aInfo->mChangeEnd));
+  } while (textFrame && textFrame->GetContentOffset() < int32_t(aInfo.mChangeEnd));
 
   // This is how much the length of the string changed by --- i.e.,
   // how much the trailing unchanged text moved.
   int32_t sizeChange =
-    aInfo->mChangeStart + aInfo->mReplaceLength - aInfo->mChangeEnd;
+    aInfo.mChangeStart + aInfo.mReplaceLength - aInfo.mChangeEnd;
 
   if (sizeChange) {
     // Fix the offsets of the text frames that start in the trailing

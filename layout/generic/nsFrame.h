@@ -193,7 +193,7 @@ public:
                                                  int32_t aLineStart,
                                                  int8_t aOutSideLimit);
 
-  nsresult CharacterDataChanged(CharacterDataChangeInfo* aInfo) override;
+  nsresult CharacterDataChanged(const CharacterDataChangeInfo& aInfo) override;
   nsresult AttributeChanged(int32_t  aNameSpaceID,
                             nsAtom* aAttribute,
                             int32_t aModType) override;
