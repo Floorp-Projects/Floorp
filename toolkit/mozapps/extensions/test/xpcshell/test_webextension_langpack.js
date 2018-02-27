@@ -35,9 +35,9 @@ add_task(async function() {
   equal(L10nRegistry.getAvailableLocales().includes("und"), false);
   equal(Services.locale.getAvailableLocales().includes("und"), false);
 
-  let [{addon}, ] = await Promise.all([
+  let [, {addon}] = await Promise.all([
+    promiseLangpackStartup(),
     promiseInstallFile(do_get_addon("langpack_1"), true),
-    promiseLangpackStartup()
   ]);
 
   // Now make sure that `und` locale is available.
@@ -50,8 +50,12 @@ add_task(async function() {
   equal(L10nRegistry.getAvailableLocales().includes("und"), false);
   equal(Services.locale.getAvailableLocales().includes("und"), false);
 
-  addon.userDisabled = false;
-  await promiseLangpackStartup();
+  // This quirky code here allows us to handle a scenario where enabling the
+  // addon is synchronous or asynchronous.
+  await Promise.all([
+    promiseLangpackStartup(),
+    (() => { addon.userDisabled = false; })()
+  ]);
 
   // After re-enabling it, the `und` locale is available again.
   equal(L10nRegistry.getAvailableLocales().includes("und"), true);
@@ -69,9 +73,9 @@ add_task(async function() {
  * correct strings available in the language pack.
  */
 add_task(async function() {
-  let [{addon}, ] = await Promise.all([
+  let [, {addon}] = await Promise.all([
+    promiseLangpackStartup(),
     promiseInstallFile(do_get_addon("langpack_1"), true),
-    promiseLangpackStartup()
   ]);
 
   {
@@ -110,9 +114,9 @@ add_task(async function() {
  * gets upgraded.
  */
 add_task(async function() {
-  let [{addon}, ] = await Promise.all([
+  let [, {addon}] = await Promise.all([
+    promiseLangpackStartup(),
     promiseInstallFile(do_get_addon("langpack_1"), true),
-    promiseLangpackStartup()
   ]);
   Assert.ok(addon.isActive);
 
