@@ -93,7 +93,6 @@ public class TestRunnerActivity extends Activity {
 
         final GeckoSession session = new GeckoSession(settings);
         session.setNavigationDelegate(mNavigationDelegate);
-        session.openWindow(this);
         return session;
     }
 
@@ -111,6 +110,7 @@ public class TestRunnerActivity extends Activity {
         // We can't use e10s because we get deadlocked when quickly creating and
         // destroying sessions. Bug 1348361.
         mSession = createSession();
+        mSession.openWindow(this);
 
         // If we were passed a URI in the Intent, open it
         final Uri uri = intent.getData();
