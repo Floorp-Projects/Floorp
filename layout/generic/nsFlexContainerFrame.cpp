@@ -1870,14 +1870,15 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput,
 #endif // DEBUG
 
   // Map align-self 'baseline' value to 'start' when baseline alignment
-  // is not possible because the FlexItem's writing mode is orthogonal to
-  // the main axis of the container. If that's the case, we just directly
+  // is not possible because the FlexItem's block axis is orthogonal to
+  // the cross axis of the container. If that's the case, we just directly
   // convert our align-self value here, so that we don't have to handle this
   // with special cases elsewhere.
   // We are treating this case as one where it is appropriate to use the
-  // fallback values defined at https://www.w3.org/TR/css-align-3/#baseline
-  if (aAxisTracker.IsRowOriented() ==
-      aAxisTracker.GetWritingMode().IsOrthogonalTo(mWM)) {
+  // fallback values defined at https://www.w3.org/TR/css-align/#baseline-values
+  // XXXdholbert That spec text actually says to fall back to 'start'/'end',
+  // not 'flex-start'/'flex-end'... Probably sort this out in bug 1207698.
+  if (!IsBlockAxisCrossAxis()) {
     if (mAlignSelf == NS_STYLE_ALIGN_BASELINE) {
       mAlignSelf = NS_STYLE_ALIGN_FLEX_START;
     } else if (mAlignSelf == NS_STYLE_ALIGN_LAST_BASELINE) {
@@ -1961,18 +1962,22 @@ FlexItem::GetBaselineOffsetFromOuterCrossEdge(
   const FlexboxAxisTracker& aAxisTracker,
   bool aUseFirstLineBaseline) const
 {
-  // NOTE: Currently, 'mAscent' (taken from reflow) is an inherently vertical
-  // measurement -- it's the distance from the border-top edge of this FlexItem
-  // to its baseline. So, we can really only do baseline alignment when the
-  // cross axis is vertical. (The FlexItem constructor enforces this when
-  // resolving the item's "mAlignSelf" value).
-  MOZ_ASSERT(!aAxisTracker.IsCrossAxisHorizontal(),
+  // NOTE:
+  //  * We only use baselines for aligning in the flex container's cross axis.
+  //  * Baselines are a measurement in the item's block axis.
+  // ...so we only expect to get here if the item's block axis is parallel (or
+  // antiparallel) to the container's cross axis.  (Otherwise, the FlexItem
+  // constructor should've resolved mAlignSelf with a fallback value, which
+  // would prevent this function from being called.)
+  MOZ_ASSERT(IsBlockAxisCrossAxis(),
              "Only expecting to be doing baseline computations when the "
-             "cross axis is vertical");
+             "cross axis is the block axis");
 
   AxisOrientationType crossAxis = aAxisTracker.GetCrossAxis();
   mozilla::Side sideToMeasureFrom = kAxisOrientationToSidesMap[crossAxis][aEdge];
 
+  // XXXdholbert The "top"/"bottom" physical-axis dependencies below need to be
+  // logicalized -- see bug 1384266.
   nscoord marginTopToBaseline = ResolvedAscent(aUseFirstLineBaseline) +
                                 mMargin.top;
 
