@@ -29,6 +29,7 @@
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/TypeInference-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -199,10 +200,10 @@ MacroAssembler::guardTypeSetMightBeIncomplete(const TypeSet* types, Register obj
              scratch, Imm32(ObjectGroup::addendumOriginalUnboxedGroupValue()), label);
 
     for (size_t i = 0; i < types->getObjectCount(); i++) {
-        if (JSObject* singleton = types->getSingletonNoBarrier(i)) {
+        if (JSObject* singleton = getSingletonAndDelayBarrier(types, i)) {
             movePtr(ImmGCPtr(singleton), scratch);
             loadPtr(Address(scratch, JSObject::offsetOfGroup()), scratch);
-        } else if (ObjectGroup* group = types->getGroupNoBarrier(i)) {
+        } else if (ObjectGroup* group = getGroupAndDelayBarrier(types, i)) {
             movePtr(ImmGCPtr(group), scratch);
         } else {
             continue;
@@ -236,10 +237,10 @@ MacroAssembler::guardObjectType(Register obj, const TypeSet* types, Register scr
 
     unsigned count = types->getObjectCount();
     for (unsigned i = 0; i < count; i++) {
-        if (types->getGroupNoBarrier(i)) {
+        if (types->hasGroup(i)) {
             hasObjectGroups = true;
             numBranches++;
-        } else if (types->getSingletonNoBarrier(i)) {
+        } else if (types->hasSingleton(i)) {
             hasSingletons = true;
             numBranches++;
         }
@@ -255,7 +256,7 @@ MacroAssembler::guardObjectType(Register obj, const TypeSet* types, Register scr
 
     if (hasSingletons) {
         for (unsigned i = 0; i < count; i++) {
-            JSObject* singleton = types->getSingletonNoBarrier(i);
+            JSObject* singleton = getSingletonAndDelayBarrier(types, i);
             if (!singleton)
                 continue;
 
@@ -289,9 +290,14 @@ MacroAssembler::guardObjectType(Register obj, const TypeSet* types, Register scr
             loadPtr(groupAddr, scratch);
 
         for (unsigned i = 0; i < count; i++) {
-            ObjectGroup* group = types->getGroupNoBarrier(i);
+            ObjectGroup* group = getGroupAndDelayBarrier(types, i);
             if (!group)
                 continue;
+
+            if (!pendingObjectGroupReadBarriers_.append(group)) {
+                setOOM();
+                return;
+            }
 
             if (JitOptions.spectreObjectMitigationsBarriers) {
                 if (--numBranches > 0) {
@@ -3620,6 +3626,58 @@ MacroAssembler::boundsCheck32PowerOfTwo(Register index, uint32_t length, Label* 
     // only affects speculative execution.
     if (JitOptions.spectreIndexMasking)
         and32(Imm32(length - 1), index);
+}
+
+template <typename T, size_t N, typename P>
+static bool
+AddPendingReadBarrier(Vector<T*, N, P>& list, T* value)
+{
+    // Check if value is already present in tail of list.
+    // TODO: Consider using a hash table here.
+    const size_t TailWindow = 4;
+
+    size_t len = list.length();
+    for (size_t i = 0; i < Min(len, TailWindow); i++) {
+        if (list[len - i - 1] == value)
+            return true;
+    }
+
+    return list.append(value);
+}
+
+JSObject*
+MacroAssembler::getSingletonAndDelayBarrier(const TypeSet* types, size_t i)
+{
+    JSObject* object = types->getSingletonNoBarrier(i);
+    if (!object)
+        return nullptr;
+
+    if (!AddPendingReadBarrier(pendingObjectReadBarriers_, object))
+        setOOM();
+
+    return object;
+}
+
+ObjectGroup*
+MacroAssembler::getGroupAndDelayBarrier(const TypeSet* types, size_t i)
+{
+    ObjectGroup* group = types->getGroupNoBarrier(i);
+    if (!group)
+        return nullptr;
+
+    if (!AddPendingReadBarrier(pendingObjectGroupReadBarriers_, group))
+        setOOM();
+
+    return group;
+}
+
+void
+MacroAssembler::performPendingReadBarriers()
+{
+    for (JSObject* object : pendingObjectReadBarriers_)
+        JSObject::readBarrier(object);
+    for (ObjectGroup* group : pendingObjectGroupReadBarriers_)
+        ObjectGroup::readBarrier(group);
 }
 
 namespace js {
