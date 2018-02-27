@@ -986,7 +986,7 @@ nsNavBookmarks::GetDescendantChildren(int64_t aFolderId,
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId, uint16_t aSource)
 {
   AUTO_PROFILER_LABEL("nsNavBookmarks::RemoveFolderChilder", OTHER);

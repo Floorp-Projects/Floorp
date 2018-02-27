@@ -322,6 +322,8 @@ private:
                                int64_t aItemId,
                                PRTime aValue);
 
+  nsresult RemoveFolderChildren(int64_t aFolderId, uint16_t aSource);
+
   // Recursive method to build an array of folder's children
   nsresult GetDescendantChildren(int64_t aFolderId,
                                  const nsACString& aFolderGuid,

@@ -159,6 +159,30 @@ def createSSLServerCertificate(build, srcDir):
       if status:
         return status
 
+      status = runUtil(certutil, ["-S", "-s", "CN=Imminently Distrusted End Entity", "-t", "P,,", "-c", "pgo temporary ca", "-k", "rsa", "-g", "2048", "-Z", "SHA256", "-m", "1519140221", "-n", "imminently_distrusted", "-v", "120", "-8", "imminently-distrusted.example.com", "-d", srcDir, "-z", rndfile.name, "-f", pwfile.name])
+      if status:
+        return status
+
+    """
+    As of February 2018, there are 15 more certificates which are not created by
+    this script. See bug 1441338:
+
+    selfsigned                                                   Pu,u,u
+    Unknown CA                                                   Cu,u,u
+    escapeattack1                                                Pu,u,u
+    untrustedandexpired                                          Pu,u,u
+    alternateTrustedAuthority                                    Cu,u,u
+    dynamicPinningGood                                           Pu,u,u
+    staticPinningBad                                             Pu,u,u
+    sha1_end_entity                                              Pu,u,u
+    bug413909cert                                                u,u,u
+    untrusted                                                    Pu,u,u
+    escapeattack2                                                Pu,u,u
+    expired                                                      Pu,u,u
+    dynamicPinningBad                                            Pu,u,u
+    sha256_end_entity                                            Pu,u,u
+    """
+
   return 0
 
 if len(sys.argv) == 1:

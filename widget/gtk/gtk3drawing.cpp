@@ -48,6 +48,9 @@ static GtkBorder
 GetMarginBorderPadding(GtkStyleContext* aStyle);
 
 static void
+Inset(GdkRectangle* rect, const GtkBorder& aBorder);
+
+static void
 InsetByMargin(GdkRectangle* rect, GtkStyleContext* style);
 
 static void
@@ -56,8 +59,8 @@ moz_gtk_add_style_margin(GtkStyleContext* style,
 {
     GtkBorder margin;
 
-    gtk_style_context_get_margin(style, GTK_STATE_FLAG_NORMAL, &margin);
-
+    gtk_style_context_get_margin(style, gtk_style_context_get_state(style),
+                                 &margin);
     *left += margin.left;
     *right += margin.right;
     *top += margin.top;
@@ -309,11 +312,9 @@ moz_gtk_splitter_get_metrics(gint orientation, gint* size)
 }
 
 static void
-InitToolbarButtonMetrics(ToolbarButtonGTKMetrics *aButtonMetrics,
-                         WidgetNodeType aWidgetType)
+CalculateToolbarButtonMetrics(WidgetNodeType aWidgetType,
+                              ToolbarButtonGTKMetrics* aMetrics)
 {
-    GtkStyleContext* style = GetStyleContext(aWidgetType);
-
     gint iconWidth, iconHeight;
     if (!gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &iconWidth, &iconHeight)) {
         NS_WARNING("Failed to get Gtk+ icon size for titlebar button!");
@@ -323,6 +324,7 @@ InitToolbarButtonMetrics(ToolbarButtonGTKMetrics *aButtonMetrics,
         iconHeight = 16;
     }
 
+    GtkStyleContext* style = GetStyleContext(aWidgetType);
     gint width = 0, height = 0;
     if (gtk_check_version(3, 20, 0) == nullptr) {
         gtk_style_context_get(style,  gtk_style_context_get_state(style),
@@ -338,35 +340,162 @@ InitToolbarButtonMetrics(ToolbarButtonGTKMetrics *aButtonMetrics,
         height = iconHeight;
 
     gint left = 0, top = 0, right = 0, bottom = 0;
-    moz_gtk_add_margin_border_padding(style, &left, &top, &right, &bottom);
+    moz_gtk_add_border_padding(style, &left, &top, &right, &bottom);
 
+    // Button size is calculated as min-width/height + border/padding.
     width += left + right;
     height += top + bottom;
-    aButtonMetrics->minSizeWithBorderMargin.width = width;
-    aButtonMetrics->minSizeWithBorderMargin.height = height;
 
-    // Get border size from gap between icon and button sizes.
-    // Buton size is calculated as min-width/height + border/padding.
-    aButtonMetrics->iconXPosition = (width - iconWidth) / 2;
-    aButtonMetrics->iconYPosition = (height - iconHeight) / 2;
+    // Place icon at button center.
+    aMetrics->iconXPosition = (width - iconWidth) / 2;
+    aMetrics->iconYPosition = (height - iconHeight) / 2;
+
+    aMetrics->minSizeWithBorderMargin.width = width;
+    aMetrics->minSizeWithBorderMargin.height = height;
+}
+
+// We support LTR layout only here for now.
+static void
+CalculateToolbarButtonSpacing(WidgetNodeType aWidgetType,
+                              ToolbarButtonGTKMetrics* aMetrics)
+{
+    GtkStyleContext* style = GetStyleContext(aWidgetType);
+    gtk_style_context_get_margin(style, gtk_style_context_get_state(style),
+                                 &aMetrics->buttonMargin);
+
+    // Get titlebar spacing, a default one is 6 pixels (gtk/gtkheaderbar.c)
+    gint buttonSpacing = 6;
+    g_object_get(GetWidget(MOZ_GTK_HEADER_BAR),
+                 "spacing", &buttonSpacing, nullptr);
+
+    // We apply spacing as a margin equaly to both adjacent buttons.
+    buttonSpacing /= 2;
+
+    if (!aMetrics->firstButton) {
+      aMetrics->buttonMargin.left += buttonSpacing;
+    }
+    if (!aMetrics->lastButton) {
+      aMetrics->buttonMargin.right += buttonSpacing;
+    }
+
+    aMetrics->iconXPosition += aMetrics->buttonMargin.left;
+    aMetrics->iconYPosition += aMetrics->buttonMargin.top;
+
+    aMetrics->minSizeWithBorderMargin.width +=
+        aMetrics->buttonMargin.right + aMetrics->buttonMargin.left;
+    aMetrics->minSizeWithBorderMargin.height +=
+        aMetrics->buttonMargin.top + aMetrics->buttonMargin.bottom;
+}
+
+static int
+GetGtkHeaderBarButtonLayout(WidgetNodeType* aButtonLayout, int aMaxButtonNums)
+{
+  NS_ASSERTION(aMaxButtonNums >= TOOLBAR_BUTTONS,
+               "Requested number of buttons is higher than storage capacity!");
+
+  static auto sGtkHeaderBarGetDecorationLayoutPtr =
+    (const gchar* (*)(GtkWidget*))
+    dlsym(RTLD_DEFAULT, "gtk_header_bar_get_decoration_layout");
+
+  const gchar* decorationLayout = nullptr;
+  if (sGtkHeaderBarGetDecorationLayoutPtr) {
+      GtkWidget* headerBar = GetWidget(MOZ_GTK_HEADER_BAR);
+      decorationLayout = sGtkHeaderBarGetDecorationLayoutPtr(headerBar);
+      if (!decorationLayout) {
+          GtkSettings *settings = gtk_settings_get_for_screen(
+              gdk_screen_get_default());
+          g_object_get(settings, "gtk-decoration-layout",
+                       &decorationLayout,
+                       nullptr);
+      }
+  }
+
+  // Use a default layout
+  if (!decorationLayout) {
+      decorationLayout = "minimize,maximize,close";
+  }
+
+  // We support only default button order now:
+  // minimize/maximize/close
+  int activeButtonNums = 0;
+  if (strstr(decorationLayout, "minimize") != nullptr) {
+      aButtonLayout[activeButtonNums++] = MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE;
+  }
+  if (strstr(decorationLayout, "maximize") != nullptr) {
+      aButtonLayout[activeButtonNums++] = MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE;
+  }
+  if (strstr(decorationLayout, "close") != nullptr) {
+      aButtonLayout[activeButtonNums++] = MOZ_GTK_HEADER_BAR_BUTTON_CLOSE;
+  }
+
+  return activeButtonNums;
+}
+
+static void
+EnsureToolbarMetrics(void)
+{
+  if (!sToolbarMetrics.initialized) {
+      // Make sure we have clean cache after theme reset, etc.
+      memset(&sToolbarMetrics, 0, sizeof(sToolbarMetrics));
+
+      // We're running on old Gtk+ version. Leave the cache empty
+      // which means all buttons are disabled.
+      if (gtk_check_version(3, 10, 0) != nullptr) {
+          sToolbarMetrics.initialized = true;
+          return;
+      }
+
+      // Calculate titlebar button visibility and positions.
+      WidgetNodeType aButtonLayout[TOOLBAR_BUTTONS];
+      int activeButtonNums =
+          GetGtkHeaderBarButtonLayout(aButtonLayout, TOOLBAR_BUTTONS);
+
+      for (int i = 0; i < activeButtonNums; i++) {
+          int buttonIndex = (aButtonLayout[i] - MOZ_GTK_HEADER_BAR_BUTTON_CLOSE);
+          ToolbarButtonGTKMetrics* metrics = sToolbarMetrics.button + buttonIndex;
+          metrics->visible = true;
+          // Mark first button
+          if (!i) {
+              metrics->firstButton = true;
+          }
+          // Mark last button.
+          if (i == (activeButtonNums-1)) {
+              metrics->lastButton = true;
+          }
+
+          CalculateToolbarButtonMetrics(aButtonLayout[i], metrics);
+          CalculateToolbarButtonSpacing(aButtonLayout[i], metrics);
+      }
+
+      sToolbarMetrics.initialized = true;
+  }
 }
 
 const ToolbarButtonGTKMetrics*
 GetToolbarButtonMetrics(WidgetNodeType aWidgetType)
 {
-    if (!sToolbarMetrics.initialized) {
-        for (int i = 0; i < TOOLBAR_BUTTONS; i++) {
-            InitToolbarButtonMetrics(sToolbarMetrics.button + i,
-                WidgetNodeType(int(MOZ_GTK_HEADER_BAR_BUTTON_CLOSE) + i));
-        }
-        sToolbarMetrics.initialized = true;
-    }
+    EnsureToolbarMetrics();
 
     int buttonIndex = (aWidgetType - MOZ_GTK_HEADER_BAR_BUTTON_CLOSE);
     NS_ASSERTION(buttonIndex >= 0 &&
                  buttonIndex <= TOOLBAR_BUTTONS,
                  "GetToolbarButtonMetrics(): Wrong titlebar button!");
     return sToolbarMetrics.button + buttonIndex;
+}
+
+bool
+IsToolbarButtonEnabled(WidgetNodeType aWidgetType)
+{
+    WidgetNodeType aButtonLayout[TOOLBAR_BUTTONS];
+    int activeButtonNums =
+        GetGtkHeaderBarButtonLayout(aButtonLayout, TOOLBAR_BUTTONS);
+
+    for (int i = 0; i < activeButtonNums; i++) {
+        if (aButtonLayout[i] == aWidgetType) {
+            return true;
+        }
+    }
+    return false;
 }
 
 static gint
@@ -444,8 +573,13 @@ moz_gtk_header_bar_button_paint(cairo_t *cr, GdkRectangle* rect,
                                 WidgetNodeType aWidgetType,
                                 GtkTextDirection direction)
 {
+    // We need to inset our calculated margin because it also
+    // contains titlebar button spacing.
+    const ToolbarButtonGTKMetrics* metrics =
+        GetToolbarButtonMetrics(aWidgetType);
+    Inset(rect, metrics->buttonMargin);
+
     GtkWidget *widget = GetWidget(aWidgetType);
-    InsetByMargin(rect, gtk_widget_get_style_context(widget));
     moz_gtk_button_paint(cr, rect, state, relief, widget, direction);
 
     GtkWidget* iconWidget = gtk_bin_get_child(GTK_BIN(widget));
@@ -646,7 +780,7 @@ GetMinMarginBox(WidgetNodeType aNodeType)
 }
 
 static void
-Inset(GdkRectangle* rect, GtkBorder& aBorder)
+Inset(GdkRectangle* rect, const GtkBorder& aBorder)
 {
     MOZ_ASSERT(rect);
     rect->x += aBorder.left;

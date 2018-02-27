@@ -131,7 +131,6 @@
 <!ENTITY detail.lastupdated.label             "Last Updated">
 <!ENTITY detail.creator.label                 "Developer">
 <!ENTITY detail.homepage.label                "Homepage">
-<!ENTITY detail.numberOfDownloads.label       "Downloads">
 
 <!ENTITY detail.contributions.description     "The developer of this add-on asks that you help support its continued development by making a small contribution.">
 

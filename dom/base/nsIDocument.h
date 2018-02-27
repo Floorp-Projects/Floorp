@@ -1403,10 +1403,8 @@ public:
   }
 
   mozilla::StyleBackendType GetStyleBackendType() const {
-    if (mStyleBackendType == mozilla::StyleBackendType::None) {
-      const_cast<nsIDocument*>(this)->UpdateStyleBackendType();
-    }
-    MOZ_ASSERT(mStyleBackendType != mozilla::StyleBackendType::None);
+    MOZ_ASSERT(mStyleBackendType != mozilla::StyleBackendType::None,
+               "Not initialized yet");
     return mStyleBackendType;
   }
 
@@ -1415,14 +1413,6 @@ public:
    * this is only used for XBL documents to set their style backend type to
    * their bounding document's.
    */
-  void SetStyleBackendType(mozilla::StyleBackendType aStyleBackendType) {
-    // We cannot assert mStyleBackendType == mozilla::StyleBackendType::None
-    // because NS_NewXBLDocument() might result GetStyleBackendType() being
-    // called.
-    MOZ_ASSERT(aStyleBackendType != mozilla::StyleBackendType::None,
-               "The StyleBackendType should be set to either Gecko or Servo!");
-    mStyleBackendType = aStyleBackendType;
-  }
 
   /**
    * Decide this document's own style backend type.
@@ -3890,8 +3880,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   nsIPrincipal* aPrincipal,
                   bool aLoadedAsData,
                   nsIGlobalObject* aEventObject,
-                  DocumentFlavor aFlavor,
-                  mozilla::StyleBackendType aStyleBackend);
+                  DocumentFlavor aFlavor);
 
 // This is used only for xbl documents created from the startup cache.
 // Non-cached documents are created in the same manner as xml documents.
@@ -3899,8 +3888,7 @@ nsresult
 NS_NewXBLDocument(nsIDOMDocument** aInstancePtrResult,
                   nsIURI* aDocumentURI,
                   nsIURI* aBaseURI,
-                  nsIPrincipal* aPrincipal,
-                  mozilla::StyleBackendType aStyleBackend);
+                  nsIPrincipal* aPrincipal);
 
 nsresult
 NS_NewPluginDocument(nsIDocument** aInstancePtrResult);

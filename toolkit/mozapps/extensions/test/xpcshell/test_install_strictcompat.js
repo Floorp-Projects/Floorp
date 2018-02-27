@@ -962,7 +962,9 @@ function run_test_18_1() {
 
   Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", true);
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS,
-                             "http://localhost:4444/data/test_install.xml");
+                             "http://localhost:4444/data/test_install_addons.json");
+  Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES,
+                             "http://localhost:4444/data/test_install_compat.json");
 
   Services.prefs.setBoolPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled", false);
 
