@@ -592,6 +592,11 @@ def _cxxConstRefType(ipdltype, side):
     if ipdltype.isIPDL() and ipdltype.isByteBuf():
         t.ref = 1
         return t
+    if ipdltype.isIPDL() and ipdltype.isArray():
+        # Keep same constness as inner type.
+        t.const = _cxxConstRefType(ipdltype.basetype, side).const
+        t.ref = 1
+        return t
     t.const = 1
     t.ref = 1
     return t
