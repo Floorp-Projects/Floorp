@@ -1049,10 +1049,10 @@ class TypeNewScript
     }
 
     void clear() {
-        function_.init(nullptr);
-        templateObject_.init(nullptr);
-        initializedShape_.init(nullptr);
-        initializedGroup_.init(nullptr);
+        function_ = nullptr;
+        templateObject_ = nullptr;
+        initializedShape_ = nullptr;
+        initializedGroup_ = nullptr;
     }
 
     static void writeBarrierPre(TypeNewScript* newScript);
