@@ -737,7 +737,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
    * view was closed in the meantime.
    */
   _activateView(panelView) {
-    if (panelView.node.panelMultiView == this.node) {
+    if (panelView.isOpenIn(this)) {
       panelView.active = true;
       panelView.dispatchCustomEvent("ViewShown");
     }
@@ -936,7 +936,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
     });
 
     // Apply the final visibility, unless the view was closed in the meantime.
-    if (nextPanelView.node.panelMultiView == this.node) {
+    if (nextPanelView.isOpenIn(this)) {
       prevPanelView.visible = false;
     }
 
@@ -944,7 +944,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
     this._cleanupTransitionPhase(details);
 
     // Focus the correct element, unless the view was closed in the meantime.
-    if (nextPanelView.node.panelMultiView == this.node) {
+    if (nextPanelView.isOpenIn(this)) {
       nextPanelView.focusSelectedElement();
     }
   }
@@ -1131,6 +1131,13 @@ var PanelView = class extends this.AssociatedToNode {
      * wait for the ViewShown event to know when the view becomes active.
      */
     this.active = false;
+  }
+
+  /**
+   * Indicates whether the view is open in the specified PanelMultiView object.
+   */
+  isOpenIn(panelMultiView) {
+    return this.node.panelMultiView == panelMultiView.node;
   }
 
   /**
