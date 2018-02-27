@@ -272,12 +272,12 @@ public class GeckoViewActivity extends Activity {
 
         @Override
         public void requestContentPermission(final GeckoSession session, final String uri,
-                                             final String type, final String access,
+                                             final int type, final String access,
                                              final Callback callback) {
             final int resId;
-            if ("geolocation".equals(type)) {
+            if (PERMISSION_GEOLOCATION == type) {
                 resId = R.string.request_geolocation;
-            } else if ("desktop-notification".equals(type)) {
+            } else if (PERMISSION_DESKTOP_NOTIFICATION == type) {
                 resId = R.string.request_notification;
             } else {
                 Log.w(LOGTAG, "Unknown permission: " + type);
