@@ -7210,7 +7210,7 @@ ParseFunction(ModuleValidator& m, ParseNode** fnOut, unsigned* line)
     if (!funpc.init())
         return false;
 
-    if (!m.parser().functionFormalParametersAndBody(InAllowed, YieldIsName, fn, Statement)) {
+    if (!m.parser().functionFormalParametersAndBody(InAllowed, YieldIsName, &fn, Statement)) {
         if (anyChars.hadError() || directives == newDirectives)
             return false;
 
