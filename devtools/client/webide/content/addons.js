@@ -33,34 +33,32 @@ function BuildUI(addons) {
 
 function BuildItem(addon, type) {
 
-  function onAddonUpdate(event, arg) {
-    switch (event) {
-      case "update":
-        progress.removeAttribute("value");
-        li.setAttribute("status", addon.status);
-        status.textContent = Strings.GetStringFromName("addons_status_" + addon.status);
-        break;
-      case "failure":
-        window.parent.UI.reportError("error_operationFail", arg);
-        break;
-      case "progress":
-        if (arg == -1) {
-          progress.removeAttribute("value");
-        } else {
-          progress.value = arg;
-        }
-        break;
+  function onAddonUpdate(arg) {
+    progress.removeAttribute("value");
+    li.setAttribute("status", addon.status);
+    status.textContent = Strings.GetStringFromName("addons_status_" + addon.status);
+  }
+
+  function onAddonFailure(arg) {
+    window.parent.UI.reportError("error_operationFail", arg);
+  }
+
+  function onAddonProgress(arg) {
+    if (arg == -1) {
+      progress.removeAttribute("value");
+    } else {
+      progress.value = arg;
     }
   }
 
-  let events = ["update", "failure", "progress"];
-  for (let e of events) {
-    addon.on(e, onAddonUpdate);
-  }
+  addon.on("update", onAddonUpdate);
+  addon.on("failure", onAddonFailure);
+  addon.on("progress", onAddonProgress);
+
   window.addEventListener("unload", function () {
-    for (let e of events) {
-      addon.off(e, onAddonUpdate);
-    }
+    addon.off("update", onAddonUpdate);
+    addon.off("failure", onAddonFailure);
+    addon.off("progress", onAddonProgress);
   }, {once: true});
 
   let li = document.createElement("li");

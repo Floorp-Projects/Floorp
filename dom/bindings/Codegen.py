@@ -5406,7 +5406,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 assert booleanConversion
                 other.append(booleanConversion[0])
 
-            other = CGWrapper(CGIndenter(other), pre="do {\n", post="} while (0);\n")
+            other = CGWrapper(CGIndenter(other), pre="do {\n", post="} while (false);\n")
             if hasObjectTypes or setDictionary:
                 other = CGWrapper(CGIndenter(other), "{\n", post="}\n")
                 if object:
@@ -6803,7 +6803,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
                 // are different ways to succeed at wrapping the object.
                 do {
                   $*{innerTemplate}
-                } while (0);
+                } while (false);
                 if (!JS_DefineElement(cx, returnArray, ${index}, tmp,
                                       JSPROP_ENUMERATE)) {
                   $*{exceptionCode}
@@ -6869,7 +6869,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
                 // are different ways to succeed at wrapping the value.
                 do {
                   $*{innerTemplate}
-                } while (0);
+                } while (false);
                 $*{expandedKeyDecl}
                 if (!JS_DefineUCProperty(cx, returnObj,
                                          ${keyName}.BeginReading(),
@@ -8127,7 +8127,7 @@ class CGPerSignatureCall(CGThing):
                   JSAutoCompartment ac(cx, conversionScope);
                   do { // block we break out of when done wrapping
                     $*{wrapCode}
-                  } while (0);
+                  } while (false);
                   $*{postConversionSteps}
                 }
                 { // And now store things in the compartment of our slotStorage.
@@ -8530,7 +8530,7 @@ class CGMethodCall(CGThing):
                     # Indent by 4, since we need to indent further
                     # than our "do" statement
                     tryCall(sig, 4, isDefinitelyObject=True)
-                    caseBody.append(CGIndenter(CGGeneric("} while (0);\n")))
+                    caseBody.append(CGIndenter(CGGeneric("} while (false);\n")))
 
                 caseBody.append(CGGeneric("}\n"))
 
@@ -13714,7 +13714,7 @@ class CGDictionary(CGThing):
             CGIndenter(conversion),
             pre=("do {\n"
                  "  // block for our 'break' successCode and scope for 'temp' and 'currentValue'\n"),
-            post="} while(0);\n")
+            post="} while(false);\n")
         if member.canHaveMissingValue():
             # Only do the conversion if we have a value
             conversion = CGIfWrapper(conversion, "%s.WasPassed()" % memberLoc)
@@ -16267,7 +16267,7 @@ class CallbackMember(CGNativeMember):
         # also so that we can just "break;" for our successCode.
         argConversions = [CGWrapper(CGIndenter(CGGeneric(c)),
                                     pre="do {\n",
-                                    post="} while (0);\n")
+                                    post="} while (false);\n")
                           for c in argConversions]
         if self.argCount > 0:
             argConversions.insert(0, self.getArgcDecl())

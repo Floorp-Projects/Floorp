@@ -17,12 +17,14 @@
 #endif
 
 #include "nsIURIFixup.h"
+#include "nsIURIMutator.h"
 #include "nsDefaultURIFixup.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Tokenizer.h"
+#include "mozilla/Unused.h"
 #include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
 
@@ -73,14 +75,15 @@ nsDefaultURIFixup::CreateExposableURI(nsIURI* aURI, nsIURI** aReturn)
     nsresult rv = nsContentUtils::RemoveWyciwygScheme(aURI, getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    // clone the URI so zapping user:pass doesn't change the original
-    nsresult rv = aURI->Clone(getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
+    // No need to clone the URI as NS_MutateURI does that for us.
+    uri = aURI;
   }
 
   // hide user:pass unless overridden by pref
   if (Preferences::GetBool("browser.fixup.hide_user_pass", true)) {
-    uri->SetUserPass(EmptyCString());
+    Unused << NS_MutateURI(uri)
+                .SetUserPass(EmptyCString())
+                .Finalize(uri);
   }
 
   uri.forget(aReturn);
@@ -509,7 +512,7 @@ nsDefaultURIFixup::TryKeywordFixupForURIInfo(const nsACString& aURIString,
 }
 
 bool
-nsDefaultURIFixup::MakeAlternateURI(nsIURI* aURI)
+nsDefaultURIFixup::MakeAlternateURI(nsCOMPtr<nsIURI>& aURI)
 {
   if (!Preferences::GetRootBranch()) {
     return false;
@@ -604,7 +607,10 @@ nsDefaultURIFixup::MakeAlternateURI(nsIURI* aURI)
   }
 
   // Assign the new host string over the old one
-  aURI->SetHost(newHost);
+  Unused << NS_MutateURI(aURI)
+              .SetHost(newHost)
+              .Finalize(aURI);
+
   return true;
 }
 

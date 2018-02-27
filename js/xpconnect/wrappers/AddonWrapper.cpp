@@ -39,19 +39,35 @@ ReportASCIIErrorWithId(JSContext* cx, const char* msg, HandleId id)
 }
 
 bool
+RequiresInterpositions(JSContext* cx, HandleObject unwrapped)
+{
+    Rooted<PropertyDescriptor> desc(cx);
+    JSAutoCompartment ac(cx, unwrapped);
+
+    if (!JS_GetOwnPropertyDescriptor(cx, unwrapped, "requiresAddonInterpositions", &desc)) {
+        JS_ClearPendingException(cx);
+        return false;
+    }
+
+    return desc.hasValue() && desc.value().isTrue();
+}
+
+bool
 InterposeProperty(JSContext* cx, HandleObject target, const nsIID* iid, HandleId id,
                   MutableHandle<PropertyDescriptor> descriptor)
 {
-    // We only want to do interpostion on DOM instances and
-    // wrapped natives.
+    // We only want to do interpostion on DOM instances,
+    // wrapped natives, or if the object explicitly requests it.
     RootedObject unwrapped(cx, UncheckedUnwrap(target));
     const js::Class* clasp = js::GetObjectClass(unwrapped);
     bool isCPOW = jsipc::IsWrappedCPOW(unwrapped);
+
     if (!mozilla::dom::IsDOMClass(clasp) &&
         !IS_WN_CLASS(clasp) &&
         !IS_PROTO_CLASS(clasp) &&
         clasp != &OuterWindowProxyClass &&
-        !isCPOW) {
+        !isCPOW &&
+        !RequiresInterpositions(cx, unwrapped)) {
         return true;
     }
 

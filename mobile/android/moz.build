@@ -48,9 +48,6 @@ DIRS += [
     'locales',
 ]
 
-if CONFIG['MOZ_ANDROID_MLS_STUMBLER']:
-    DIRS += ['stumbler']
-
 DIRS += [
     'base',
     'chrome',

@@ -288,7 +288,9 @@ var PageMetadata = {
       return null;
     }
 
-    uri.userPass = "";
+    uri = uri.mutate()
+             .setUserPass("")
+             .finalize();
 
     return uri.spec;
   },

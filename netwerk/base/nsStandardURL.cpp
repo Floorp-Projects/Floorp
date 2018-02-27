@@ -1868,6 +1868,10 @@ nsStandardURL::SetPassword(const nsACString &input)
         return NS_ERROR_UNEXPECTED;
     }
     if (mUsername.mLen <= 0) {
+        if (password.IsEmpty()) {
+            MOZ_DIAGNOSTIC_ASSERT(Password().IsEmpty());
+            return NS_OK;
+        }
         NS_WARNING("cannot set password without existing username");
         return NS_ERROR_FAILURE;
     }
@@ -1974,25 +1978,25 @@ nsStandardURL::SetHostPort(const nsACString &aValue)
     nsresult rv = SetHost(Substring(start, iter));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Also set the port if needed.
-    if (iter != end) {
-        iter++;
-        if (iter != end) {
-            nsCString portStr(Substring(iter, end));
-            nsresult rv;
-            int32_t port = portStr.ToInteger(&rv);
-            if (NS_SUCCEEDED(rv)) {
-                rv = SetPort(port);
-                NS_ENSURE_SUCCESS(rv, rv);
-            } else {
-                // Failure parsing port number
-                return NS_ERROR_MALFORMED_URI;
-            }
-        } else {
-            // port number is missing
-            return NS_ERROR_MALFORMED_URI;
-        }
+    if (iter == end) {
+        // does not end in colon
+        return NS_OK;
     }
+
+    iter++; // advance over the colon
+    if (iter == end) {
+        // port number is missing
+        return NS_OK;
+    }
+
+    nsCString portStr(Substring(iter, end));
+    int32_t port = portStr.ToInteger(&rv);
+    if (NS_FAILED(rv)) {
+        // Failure parsing the port number
+        return NS_OK;
+    }
+
+    Unused << SetPort(port);
     return NS_OK;
 }
 

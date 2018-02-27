@@ -82,13 +82,15 @@ public:
    * Given a URI and the current submission, create the final URI and data
    * stream that will be submitted.  Subclasses *must* implement this.
    *
-   * @param aURI the URI being submitted to [INOUT]
+   * @param aURI the URI being submitted to [IN]
    * @param aPostDataStream a data stream for POST data [OUT]
    * @param aPostDataStreamLength a data stream for POST data length [OUT]
+   * @param aOutURI the resulting URI. May be the same as aURI [OUT]
    */
   virtual nsresult
   GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream,
-                       int64_t* aPostDataStreamLength) = 0;
+                       int64_t* aPostDataStreamLength,
+                       nsCOMPtr<nsIURI>& aOutURI) = 0;
 
   /**
    * Get the charset that will be used for submission.
@@ -168,7 +170,7 @@ public:
 
   virtual nsresult
   GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream,
-                       int64_t* aPostDataStreamLength) override;
+                       int64_t* aPostDataStreamLength, nsCOMPtr<nsIURI>& aOutURI) override;
 
   void GetContentType(nsACString& aContentType)
   {

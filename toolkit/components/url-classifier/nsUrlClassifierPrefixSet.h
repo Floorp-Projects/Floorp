@@ -61,12 +61,16 @@ private:
   static const uint32_t MAX_INDEX_DIFF = (1 << 16);
   static const uint32_t PREFIXSET_VERSION_MAGIC = 1;
 
+  void Clear();
   nsresult MakePrefixSet(const uint32_t* aArray, uint32_t aLength);
   uint32_t BinSearch(uint32_t start, uint32_t end, uint32_t target);
 
   uint32_t CalculatePreallocateSize();
   nsresult WritePrefixes(nsIOutputStream* out);
   nsresult LoadPrefixes(nsIInputStream* in);
+
+  template<typename T>
+  void CalculateTArrayChecksum(nsTArray<T>& aArray, uint32_t* outChecksum);
 
   // Lock to prevent races between the url-classifier thread (which does most
   // of the operations) and the main thread (which does memory reporting).
@@ -81,9 +85,12 @@ private:
   // prefix from mIndexPrefix. Then every "delta" corresponds
   // to a prefix in the PrefixSet.
   nsTArray<nsTArray<uint16_t> > mIndexDeltas;
+  uint32_t mIndexDeltasChecksum;
+
   // how many prefixes we have.
   uint32_t mTotalPrefixes;
 
+  nsCString mName;
   nsCString mMemoryReportPath;
   mozilla::CorruptionCanary mCanary;
 };

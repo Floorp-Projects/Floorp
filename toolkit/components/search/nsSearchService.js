@@ -4208,7 +4208,9 @@ SearchService.prototype = {
       if (sendSubmissionURL) {
         let uri = engine._getURLOfType("text/html")
                         .getSubmission("", engine, "searchbar").uri;
-        uri.userPass = ""; // Avoid reporting a username or password.
+        uri = uri.mutate()
+                 .setUserPass("") // Avoid reporting a username or password.
+                 .finalize();
         result.submissionURL = uri.spec;
       }
     }

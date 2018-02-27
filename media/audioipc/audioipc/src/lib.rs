@@ -3,7 +3,6 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details
 #![allow(dead_code)] // TODO: Remove.
-
 #![recursion_limit = "1024"]
 #[macro_use]
 extern crate error_chain;
@@ -16,15 +15,15 @@ extern crate serde_derive;
 
 extern crate bincode;
 extern crate bytes;
-extern crate cubeb_core;
+extern crate cubeb;
 #[macro_use]
 extern crate futures;
 extern crate iovec;
 extern crate libc;
 extern crate memmap;
-extern crate serde;
 #[macro_use]
 extern crate scoped_tls;
+extern crate serde;
 extern crate tokio_core;
 #[macro_use]
 extern crate tokio_io;
@@ -43,11 +42,9 @@ mod msg;
 pub mod shm;
 
 use iovec::IoVec;
-
 #[cfg(target_os = "linux")]
 use libc::MSG_CMSG_CLOEXEC;
 pub use messages::{ClientMessage, ServerMessage};
-
 use std::env::temp_dir;
 use std::io;
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
@@ -59,7 +56,11 @@ const MSG_CMSG_CLOEXEC: libc::c_int = 0;
 // We can extend UnixStream by using traits, eliminating the need to introduce a new wrapped
 // UnixStream type.
 pub trait RecvMsg {
-    fn recv_msg(&mut self, iov: &mut [&mut IoVec], cmsg: &mut [u8]) -> io::Result<(usize, usize, i32)>;
+    fn recv_msg(
+        &mut self,
+        iov: &mut [&mut IoVec],
+        cmsg: &mut [u8],
+    ) -> io::Result<(usize, usize, i32)>;
 }
 
 pub trait SendMsg {
@@ -67,7 +68,11 @@ pub trait SendMsg {
 }
 
 impl<T: AsRawFd> RecvMsg for T {
-    fn recv_msg(&mut self, iov: &mut [&mut IoVec], cmsg: &mut [u8]) -> io::Result<(usize, usize, i32)> {
+    fn recv_msg(
+        &mut self,
+        iov: &mut [&mut IoVec],
+        cmsg: &mut [u8],
+    ) -> io::Result<(usize, usize, i32)> {
         msg::recv_msg_with_flags(self.as_raw_fd(), iov, cmsg, MSG_CMSG_CLOEXEC)
     }
 }

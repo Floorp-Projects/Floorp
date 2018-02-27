@@ -61,9 +61,6 @@ public abstract class StoreTrackingRepositorySession extends RepositorySession {
   }
 
   public void trackRecord(Record record) {
-
-    Logger.debug(LOG_TAG, "Tracking record " + record.guid +
-                           " (" + record.lastModified + ") to avoid re-upload.");
     // Future: we care about the timestamp…
     trackGUID(record.guid);
   }

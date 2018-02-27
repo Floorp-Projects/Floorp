@@ -383,7 +383,9 @@ var FeedHandler = {
     // https://foo.com/index.rdf -> feed:https://foo.com/index.rdf
     let feedURI = NetUtil.newURI(aSpec);
     if (feedURI.schemeIs("http")) {
-      feedURI.scheme = "feed";
+      feedURI = feedURI.mutate()
+                       .setScheme("feed")
+                       .finalize();
       aSpec = feedURI.spec;
     } else {
       aSpec = "feed:" + aSpec;

@@ -641,7 +641,9 @@ Collection.prototype = {
       args.push("offset=" + encodeURIComponent(this._offset));
     }
 
-    this.uri.query = (args.length > 0) ? "?" + args.join("&") : "";
+    this.uri = this.uri.mutate()
+                       .setQuery((args.length > 0) ? "?" + args.join("&") : "")
+                       .finalize();
   },
 
   // get full items
@@ -685,6 +687,10 @@ Collection.prototype = {
   // index
   get sort() { return this._sort; },
   set sort(value) {
+    if (value && value != "oldest" && value != "newest" && value != "index") {
+      throw new TypeError(
+        `Illegal value for sort: "${value}" (should be "oldest", "newest", or "index").`);
+    }
     this._sort = value;
     this._rebuildURL();
   },

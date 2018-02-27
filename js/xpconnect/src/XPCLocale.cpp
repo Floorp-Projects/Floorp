@@ -43,12 +43,15 @@ XPCLocaleObserver::Init()
     mozilla::services::GetObserverService();
 
   observerService->AddObserver(this, "intl:app-locales-changed", false);
+
+  Preferences::AddStrongObserver(this, "javascript.use_us_english_locale");
 }
 
 NS_IMETHODIMP
 XPCLocaleObserver::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
 {
-  if (!strcmp(aTopic, "intl:app-locales-changed")) {
+  if (!strcmp(aTopic, "intl:app-locales-changed") ||
+      (!strcmp(aTopic, "nsPref:changed") && !NS_strcmp(aData, u"javascript.use_us_english_locale"))) {
     JSRuntime* rt = CycleCollectedJSRuntime::Get()->Runtime();
     if (!xpc_LocalizeRuntime(rt)) {
       return NS_ERROR_OUT_OF_MEMORY;

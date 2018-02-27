@@ -10,7 +10,7 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - release-secondary-balrog-publishing
+   - release-secondary-balrog-scheduling
    - push-apk
 
 job-defaults:

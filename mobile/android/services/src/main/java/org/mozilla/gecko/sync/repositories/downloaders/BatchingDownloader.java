@@ -73,9 +73,10 @@ public class BatchingDownloader {
     protected final Set<SyncStorageCollectionRequest> pending = Collections.synchronizedSet(new HashSet<SyncStorageCollectionRequest>());
     /* @GuardedBy("this") */ private String lastModified;
 
-    private final ExecutorService taskQueue = Executors.newSingleThreadExecutor();
+    private final ExecutorService taskQueue;
 
     public BatchingDownloader(
+            ExecutorService taskQueue,
             AuthHeaderProvider authHeaderProvider,
             Uri baseCollectionUri,
             long fetchDeadline,
@@ -83,6 +84,7 @@ public class BatchingDownloader {
             boolean keepTrackOfHighWaterMark,
             RepositoryStateProvider stateProvider,
             RepositorySession repositorySession) {
+        this.taskQueue = taskQueue;
         this.repositorySession = repositorySession;
         this.authHeaderProvider = authHeaderProvider;
         this.baseCollectionUri = baseCollectionUri;
@@ -245,19 +247,6 @@ public class BatchingDownloader {
             }
         }
 
-        // We need to make another batching request!
-        // Let the delegate know that a batch fetch just completed before we proceed.
-        // Beware that while this operation will run after every call to onFetchedRecord returned,
-        // it's not guaranteed that the 'sink' session actually processed all of the fetched records.
-        // See Bug https://bugzilla.mozilla.org/show_bug.cgi?id=1351673#c28 for details.
-        runTaskOnQueue(new Runnable() {
-            @Override
-            public void run() {
-                Logger.debug(LOG_TAG, "Running onBatchCompleted.");
-                fetchRecordsDelegate.onBatchCompleted();
-            }
-        });
-
         // Should we proceed, however? Do we have enough time?
         if (!mayProceedWithBatching(fetchDeadline)) {
             this.handleFetchFailed(fetchRecordsDelegate, new SyncDeadlineReachedException());
@@ -324,6 +313,10 @@ public class BatchingDownloader {
                 fetchRecordsDelegate.onFetchFailed(ex);
             }
         });
+
+        // Side-effect of calling this is an orderly shutdown of our task queue. It will process the
+        // above runnable, but won't accept any more work.
+        this.repositorySession.abort();
     }
 
     public void onFetchedRecord(CryptoRecord record,
@@ -349,7 +342,6 @@ public class BatchingDownloader {
 
     @VisibleForTesting
     protected void abortRequests() {
-        this.repositorySession.abort();
         synchronized (this.pending) {
             for (SyncStorageCollectionRequest request : this.pending) {
                 request.abort();

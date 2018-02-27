@@ -4,6 +4,8 @@
 
 "use strict";
 
+const {InvalidArgumentError} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+
 Cu.importGlobalProperties(["crypto"]);
 
 this.EXPORTED_SYMBOLS = ["capture"];
@@ -140,8 +142,8 @@ capture.canvas = function(win, left, top, width, height,
 };
 
 capture.highlight_ = function(context, highlights, top = 0, left = 0) {
-  if (!highlights) {
-    throw new TypeError("Missing highlights");
+  if (typeof highlights == "undefined") {
+    throw new InvalidArgumentError("Missing highlights");
   }
 
   context.lineWidth = "2";

@@ -43,7 +43,6 @@ android-api-16/debug:
         - linux64-clang
         - linux64-rust-android
         - linux64-sccache
-        - proguard-jar
 
 android-x86/opt:
     description: "Android 4.2 x86 Opt"
@@ -95,7 +94,6 @@ android-x86/opt:
         - linux64-clang
         - linux64-rust-android
         - linux64-sccache
-        - proguard-jar
 
 android-x86-nightly/opt:
     description: "Android 4.2 x86 Nightly"
@@ -153,7 +151,6 @@ android-x86-nightly/opt:
         - linux64-clang
         - linux64-rust-android
         - linux64-sccache
-        - proguard-jar
 
 android-api-16/opt:
     description: "Android 4.0 api-16+ Opt"
@@ -200,7 +197,6 @@ android-api-16/opt:
         - linux64-clang
         - linux64-rust-android
         - linux64-sccache
-        - proguard-jar
 
 android-api-16-without-google-play-services/opt:
     description: "Android 4.0 api-16+ (without Google Play Services) Opt"
@@ -249,7 +245,6 @@ android-api-16-without-google-play-services/opt:
         - linux64-clang
         - linux64-rust-android
         - linux64-sccache
-        - proguard-jar
 
 android-api-16-nightly/opt:
     description: "Android 4.0 api-16+ Nightly"
@@ -302,7 +297,6 @@ android-api-16-nightly/opt:
         - linux64-clang
         - linux64-rust-android
         - linux64-sccache
-        - proguard-jar
 
 android-x86-old-id/opt:
     description: "Android 4.2 x86 Opt OldId"
@@ -355,7 +349,6 @@ android-x86-old-id/opt:
         - linux64-clang
         - linux64-rust-android
         - linux64-sccache
-        - proguard-jar
 
 android-x86-old-id-nightly/opt:
     description: "Android 4.2 x86 OldId Nightly"
@@ -412,7 +405,6 @@ android-x86-old-id-nightly/opt:
         - linux64-clang
         - linux64-rust-android
         - linux64-sccache
-        - proguard-jar
 
 android-api-16-old-id/opt:
     description: "Android 4.0 api-16+ Opt OldId"
@@ -460,7 +452,6 @@ android-api-16-old-id/opt:
         - linux64-clang
         - linux64-rust-android
         - linux64-sccache
-        - proguard-jar
 
 android-api-16-old-id-nightly/opt:
     description: "Android 4.0 api-16+ OldId Nightly"
@@ -512,7 +503,6 @@ android-api-16-old-id-nightly/opt:
         - linux64-clang
         - linux64-rust-android
         - linux64-sccache
-        - proguard-jar
 
 android-aarch64/opt:
     description: "Android 5.0 AArch64 Opt"
@@ -559,7 +549,6 @@ android-aarch64/opt:
         - linux64-clang
         - linux64-rust-android
         - linux64-sccache
-        - proguard-jar
 
 android-aarch64-nightly/opt:
     description: "Android 5.0 AArch64 Nightly"
@@ -612,4 +601,3 @@ android-aarch64-nightly/opt:
         - linux64-clang
         - linux64-rust-android
         - linux64-sccache
-        - proguard-jar

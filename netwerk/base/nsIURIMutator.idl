@@ -149,7 +149,6 @@ interface nsIURISetters : nsIURISetSpec
   [must_use] nsIURIMutator setUsername(in AUTF8String aUsername);
   [must_use] nsIURIMutator setPassword(in AUTF8String aPassword);
   [must_use] nsIURIMutator setHostPort(in AUTF8String aHostPort);
-  [must_use] nsIURIMutator setHostAndPort(in AUTF8String aHostAndPort);
   [must_use] nsIURIMutator setHost(in AUTF8String aHost);
   [must_use] nsIURIMutator setPort(in long aPort);
   [must_use] nsIURIMutator setPathQueryRef(in AUTF8String aPathQueryRef);
@@ -193,12 +192,6 @@ interface nsIURISetters : nsIURISetSpec
   {                                                                           \
     if (aMutator) NS_ADDREF(*aMutator = this);                                \
     return !_to ? NS_ERROR_NULL_POINTER : _to->SetHostPort(aHostPort);        \
-  }                                                                           \
-  MOZ_MUST_USE NS_IMETHOD                                                     \
-  SetHostAndPort(const nsACString& aHostAndPort, nsIURIMutator** aMutator) override \
-  {                                                                           \
-    if (aMutator) NS_ADDREF(*aMutator = this);                                \
-    return !_to ? NS_ERROR_NULL_POINTER : _to->SetHostAndPort(aHostAndPort);  \
   }                                                                           \
   MOZ_MUST_USE NS_IMETHOD                                                     \
   SetHost(const nsACString& aHost, nsIURIMutator** aMutator) override         \
@@ -322,90 +315,124 @@ public:
   {
     mStatus = m ? NS_OK : NS_ERROR_NULL_POINTER;
     mMutator = m;
+    NS_ENSURE_SUCCESS_VOID(mStatus);
   }
 
   NS_MutateURI& SetSpec(const nsACString& aSpec)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetSpec(aSpec, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetScheme(const nsACString& aScheme)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetScheme(aScheme, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetUserPass(const nsACString& aUserPass)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetUserPass(aUserPass, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetUsername(const nsACString& aUsername)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetUsername(aUsername, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetPassword(const nsACString& aPassword)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetPassword(aPassword, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetHostPort(const nsACString& aHostPort)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetHostPort(aHostPort, nullptr);
-    return *this;
-  }
-  NS_MutateURI& SetHostAndPort(const nsACString& aHostAndPort)
-  {
     NS_ENSURE_SUCCESS(mStatus, *this);
-    mStatus = mMutator->SetHostAndPort(aHostAndPort, nullptr);
     return *this;
   }
   NS_MutateURI& SetHost(const nsACString& aHost)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetHost(aHost, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetPort(int32_t aPort)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetPort(aPort, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetPathQueryRef(const nsACString& aPathQueryRef)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetPathQueryRef(aPathQueryRef, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetRef(const nsACString& aRef)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetRef(aRef, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetFilePath(const nsACString& aFilePath)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetFilePath(aFilePath, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetQuery(const nsACString& aQuery)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetQuery(aQuery, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetQueryWithEncoding(const nsACString& query, const mozilla::Encoding *encoding)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = mMutator->SetQueryWithEncoding(query, encoding, nullptr);
+    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
 
@@ -427,7 +454,9 @@ public:
    */
   NS_MutateURI& Apply(const std::function<nsresult(nsIURIMutator*)>& aFunction)
   {
-    NS_ENSURE_SUCCESS(mStatus, *this);
+    if (NS_FAILED(mStatus)) {
+      return *this;
+    }
     mStatus = aFunction(mMutator);
     NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;

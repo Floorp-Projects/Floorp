@@ -26,17 +26,11 @@ INNER_ROBOCOP_PACKAGE=true
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 UPLOAD_EXTRA_FILES += robocop.apk
 
-# Robocop/Robotium tests, Android Background tests, and Fennec need to
-# be signed with the same key, which means release signing them all.
-
-ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-robocop_apk := $(topobjdir)/mobile/android/tests/browser/robocop/robocop-debug-unsigned-unaligned.apk
-else
-robocop_apk := $(GRADLE_ANDROID_APP_ANDROIDTEST_APK)
-endif
+# Robocop/Robotium tests and Fennec need to be signed with the same
+# key, which means release signing them all.
 
 INNER_ROBOCOP_PACKAGE= \
-  $(call RELEASE_SIGN_ANDROID_APK,$(robocop_apk),$(ABS_DIST)/robocop.apk)
+  $(call RELEASE_SIGN_ANDROID_APK,$(GRADLE_ANDROID_APP_ANDROIDTEST_APK),$(ABS_DIST)/robocop.apk)
 endif
 else
 INNER_ROBOCOP_PACKAGE=echo 'Testing is disabled - No Android Robocop for you'
@@ -71,7 +65,6 @@ INNER_FENNEC_PACKAGE = \
     --inputs \
       $(GECKO_APP_AP_PATH)/gecko-nodeps.ap_ \
     --omnijar $(MOZ_PKG_DIR)/$(OMNIJAR_NAME) \
-    $(if $(MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE),,--classes-dex $(GECKO_APP_AP_PATH)/classes.dex) \
     --lib-dirs $(MOZ_PKG_DIR)/lib \
     --assets-dirs $(MOZ_PKG_DIR)/assets \
     --features-dirs $(MOZ_PKG_DIR)/features \
@@ -94,7 +87,6 @@ repackage_fennec = \
       $(UNPACKAGE) \
       $(GECKO_APP_AP_PATH)/gecko-nodeps.ap_ \
     --omnijar $(MOZ_PKG_DIR)/$(OMNIJAR_NAME) \
-    $(if $(MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE),,--classes-dex $(GECKO_APP_AP_PATH)/classes.dex) \
     --output $(PACKAGE:.apk=-unsigned-unaligned.apk) && \
   $(call RELEASE_SIGN_ANDROID_APK,$(PACKAGE:.apk=-unsigned-unaligned.apk),$(PACKAGE))
 

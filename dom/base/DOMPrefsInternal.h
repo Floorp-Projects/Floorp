@@ -38,6 +38,7 @@ DOM_PREF(WebkitBlinkDirectoryPickerEnabled, "dom.webkitBlink.dirPicker.enabled")
 DOM_PREF(NetworkInformationEnabled, "dom.netinfo.enabled")
 DOM_PREF(FetchObserverEnabled, "dom.fetchObserver.enabled")
 DOM_PREF(ResistFingerprintingEnabled, "privacy.resistFingerprinting")
+DOM_PREF(EnableAutoDeclineCanvasPrompts, "privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts")
 DOM_PREF(DevToolsEnabled, "devtools.enabled")
 DOM_PREF(PerformanceObserverEnabled, "dom.enable_performance_observer")
 

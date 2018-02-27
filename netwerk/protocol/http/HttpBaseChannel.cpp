@@ -1793,7 +1793,9 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
 
   // strip away any userpass; we don't want to be giving out passwords ;-)
   // This is required by Referrer Policy stripping algorithm.
-  rv = clone->SetUserPass(EmptyCString());
+  rv = NS_MutateURI(clone)
+         .SetUserPass(EmptyCString())
+         .Finalize(clone);
   if (NS_FAILED(rv)) return rv;
 
   // 0: full URI
@@ -1871,9 +1873,10 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
           rv = url->GetFilePath(path);
           if (NS_FAILED(rv)) return rv;
           spec.Append(path);
-          rv = url->SetQuery(EmptyCString());
-          if (NS_FAILED(rv)) return rv;
-          rv = url->SetRef(EmptyCString());
+          rv = NS_MutateURI(url)
+                 .SetQuery(EmptyCString())
+                 .SetRef(EmptyCString())
+                 .Finalize(clone);
           if (NS_FAILED(rv)) return rv;
           break;
         }
@@ -1885,7 +1888,9 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
       case 2: // scheme+host+port+/
         spec.AppendLiteral("/");
         // This nukes any query/ref present as well in the case of nsStandardURL
-        rv = clone->SetPathQueryRef(EmptyCString());
+        rv = NS_MutateURI(clone)
+               .SetPathQueryRef(EmptyCString())
+               .Finalize(clone);
         if (NS_FAILED(rv)) return rv;
         break;
     }
@@ -3414,7 +3419,7 @@ HttpBaseChannel::IsReferrerSchemeAllowed(nsIURI *aReferrer)
 
 /* static */
 void
-HttpBaseChannel::PropagateReferenceIfNeeded(nsIURI* aURI, nsIURI* aRedirectURI)
+HttpBaseChannel::PropagateReferenceIfNeeded(nsIURI* aURI, nsCOMPtr<nsIURI>& aRedirectURI)
 {
   bool hasRef = false;
   nsresult rv = aRedirectURI->GetHasRef(&hasRef);
@@ -3424,7 +3429,9 @@ HttpBaseChannel::PropagateReferenceIfNeeded(nsIURI* aURI, nsIURI* aRedirectURI)
     if (!ref.IsEmpty()) {
       // NOTE: SetRef will fail if mRedirectURI is immutable
       // (e.g. an about: URI)... Oh well.
-      aRedirectURI->SetRef(ref);
+      Unused << NS_MutateURI(aRedirectURI)
+                  .SetRef(ref)
+                  .Finalize(aRedirectURI);
     }
   }
 }

@@ -113,11 +113,11 @@ impl AsyncRecvMsg for UnixStream {
                     cmsg.advance_mut(cmsg_len);
                 }
                 Ok((n, flags).into())
-            },
+            }
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                 self.need_read();
                 Ok(Async::NotReady)
-            },
+            }
             Err(e) => Err(e),
         }
     }
@@ -139,22 +139,7 @@ impl AsyncSendMsg for UnixStream {
             static DUMMY: &[u8] = &[0];
             let nom = <&IoVec>::from(DUMMY);
             let mut bufs = [
-                nom,
-                nom,
-                nom,
-                nom,
-                nom,
-                nom,
-                nom,
-                nom,
-                nom,
-                nom,
-                nom,
-                nom,
-                nom,
-                nom,
-                nom,
-                nom,
+                nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom, nom
             ];
             let n = buf.bytes_vec(&mut bufs);
             self.send_msg(&bufs[..n], cmsg.bytes())
@@ -163,11 +148,11 @@ impl AsyncSendMsg for UnixStream {
             Ok(n) => {
                 buf.advance(n);
                 Ok(Async::Ready(n))
-            },
+            }
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                 self.need_write();
                 Ok(Async::NotReady)
-            },
+            }
             Err(e) => Err(e),
         }
     }

@@ -35,3 +35,7 @@ pref("devtools.onboarding.experiment.flipped", false);
 
 // Flag to check if we already logged the devtools onboarding related probe.
 pref("devtools.onboarding.telemetry.logged", false);
+
+// Completely disable DevTools entry points, as well as all DevTools command line
+// arguments This should be merged with devtools.enabled, see Bug 1440675.
+pref("devtools.policy.disabled", false);

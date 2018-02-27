@@ -35,8 +35,8 @@ pub trait Codec {
             Some(frame) => Ok(frame),
             None => Err(io::Error::new(
                 io::ErrorKind::Other,
-                "bytes remaining on stream"
-            ))
+                "bytes remaining on stream",
+            )),
         }
     }
 
@@ -53,12 +53,12 @@ pub trait Codec {
 pub struct LengthDelimitedCodec<In, Out> {
     state: State,
     __in: PhantomData<In>,
-    __out: PhantomData<Out>
+    __out: PhantomData<Out>,
 }
 
 enum State {
     Length,
-    Data(u16)
+    Data(u16),
 }
 
 impl<In, Out> Default for LengthDelimitedCodec<In, Out> {
@@ -66,7 +66,7 @@ impl<In, Out> Default for LengthDelimitedCodec<In, Out> {
         LengthDelimitedCodec {
             state: State::Length,
             __in: PhantomData,
-            __out: PhantomData
+            __out: PhantomData,
         }
     }
 }
@@ -89,7 +89,7 @@ impl<In, Out> LengthDelimitedCodec<In, Out> {
 
     fn decode_data(&mut self, buf: &mut BytesMut, n: u16) -> io::Result<Option<Out>>
     where
-        Out: DeserializeOwned + Debug
+        Out: DeserializeOwned + Debug,
     {
         // At this point, the buffer has already had the required capacity
         // reserved. All there is to do is read.
@@ -103,7 +103,7 @@ impl<In, Out> LengthDelimitedCodec<In, Out> {
         trace!("Attempting to decode");
         let msg = try!(deserialize::<Out>(buf.as_ref()).map_err(|e| match *e {
             bincode::ErrorKind::IoError(e) => e,
-            _ => io::Error::new(io::ErrorKind::Other, *e)
+            _ => io::Error::new(io::ErrorKind::Other, *e),
         }));
 
         trace!("... Decoded {:?}", msg);
@@ -114,7 +114,7 @@ impl<In, Out> LengthDelimitedCodec<In, Out> {
 impl<In, Out> Codec for LengthDelimitedCodec<In, Out>
 where
     In: Serialize + Debug,
-    Out: DeserializeOwned + Debug
+    Out: DeserializeOwned + Debug,
 {
     type In = In;
     type Out = Out;
@@ -131,11 +131,11 @@ where
                         buf.reserve(n as usize);
 
                         n
-                    },
-                    None => return Ok(None)
+                    }
+                    None => return Ok(None),
                 }
-            },
-            State::Data(n) => n
+            }
+            State::Data(n) => n,
         };
 
         match try!(self.decode_data(buf, n)) {
@@ -147,8 +147,8 @@ where
                 buf.reserve(2);
 
                 Ok(Some(data))
-            },
-            None => Ok(None)
+            }
+            None => Ok(None),
         }
     }
 
@@ -158,7 +158,7 @@ where
         if encoded_len > 8 * 1024 {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
-                "encoded message too big"
+                "encoded message too big",
             ));
         }
 
@@ -171,7 +171,7 @@ where
         {
             match *e {
                 bincode::ErrorKind::IoError(e) => return Err(e),
-                _ => return Err(io::Error::new(io::ErrorKind::Other, *e))
+                _ => return Err(io::Error::new(io::ErrorKind::Other, *e)),
             }
         }
 

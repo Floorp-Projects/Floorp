@@ -25,7 +25,7 @@ const webserver = Services.prefs.getCharPref("addon.test.damp.webserver");
 
 const SIMPLE_URL = webserver + "/tests/devtools/addon/content/pages/simple.html";
 const COMPLICATED_URL = webserver + "/tests/tp5n/bild.de/www.bild.de/index.html";
-const CUSTOM_URL = webserver + "/tests/devtools/addon/content/pages/custom/$TOOL.html";
+const CUSTOM_URL = webserver + "/tests/devtools/addon/content/pages/custom/$TOOL/index.html";
 
 // Record allocation count in new subtests if DEBUG_DEVTOOLS_ALLOCATIONS is set to
 // "normal". Print allocation sites to stdout if DEBUG_DEVTOOLS_ALLOCATIONS is set to
@@ -597,13 +597,10 @@ async _consoleOpenWithCachedMessagesTest() {
       ) + ")()", false);
     });
 
-    // Open the toolbox and record the time.
-    let start = performance.now();
+    // Record the time needed to open the toolbox.
+    let test = this.runTest("inspector.layout.open");
     await this.openToolbox("inspector");
-    this._results.push({
-      name: "inspector.layout.open",
-      value: performance.now() - start
-    });
+    test.done();
 
     await this.closeToolbox();
 
@@ -750,9 +747,47 @@ async _consoleOpenWithCachedMessagesTest() {
     let url = CUSTOM_URL.replace(/\$TOOL/, "inspector");
     await this.testSetup(url);
     let toolbox = await this.openToolboxAndLog("custom.inspector", "inspector");
+
     await this.reloadInspectorAndLog("custom", toolbox);
+    await this.selectNodeWithManyRulesAndLog(toolbox);
     await this.closeToolboxAndLog("custom.inspector", toolbox);
     await this.testTeardown();
+  },
+
+  /**
+   * Measure the time necessary to select a node and display the rule view when many rules
+   * match the element.
+   */
+  async selectNodeWithManyRulesAndLog(toolbox) {
+    let inspector = toolbox.getPanel("inspector");
+
+    // Local helper to select a node front and wait for the ruleview to be refreshed.
+    let selectNodeFront = (nodeFront) => {
+      let onRuleViewRefreshed = inspector.once("rule-view-refreshed");
+      inspector.selection.setNodeFront(nodeFront);
+      return onRuleViewRefreshed;
+    };
+
+    let initialNodeFront = inspector.selection.nodeFront;
+
+    // Retrieve the node front for the test node.
+    let root = await inspector.walker.getRootNode();
+    let referenceNodeFront = await inspector.walker.querySelector(root, ".no-css-rules");
+    let testNodeFront = await inspector.walker.querySelector(root, ".many-css-rules");
+
+    // Select test node and measure the time to display the rule view with many rules.
+    dump("Selecting .many-css-rules test node front\n");
+    let test = this.runTest("custom.inspector.manyrules.selectnode");
+    await selectNodeFront(testNodeFront);
+    test.done();
+
+    // Select reference node and measure the time to empty the rule view.
+    dump("Move the selection to a node with no rules\n");
+    test = this.runTest("custom.inspector.manyrules.deselectnode");
+    await selectNodeFront(referenceNodeFront);
+    test.done();
+
+    await selectNodeFront(initialNodeFront);
   },
 
   async openDebuggerAndLog(label, expectedSources, selectedFile, expectedText) {
@@ -782,7 +817,7 @@ async _consoleOpenWithCachedMessagesTest() {
   async customDebugger() {
     const label = "custom";
     const expectedSources = 7;
-    let url = CUSTOM_URL.replace(/\$TOOL/, "debugger/index");
+    let url = CUSTOM_URL.replace(/\$TOOL/, "debugger");
     await this.testSetup(url);
     const selectedFile = "App.js";
     const expectedText = "import React, { Component } from 'react';";
@@ -812,8 +847,8 @@ async _consoleOpenWithCachedMessagesTest() {
   async customConsole() {
     // These numbers controls the number of console api calls we do in the test
     let sync = 250, stream = 250, async = 250;
-    let page = `console.html?sync=${sync}&stream=${stream}&async=${async}`;
-    let url = CUSTOM_URL.replace(/\$TOOL\.html/, page);
+    let params = `?sync=${sync}&stream=${stream}&async=${async}`;
+    let url = CUSTOM_URL.replace(/\$TOOL/, "console") + params;
     await this.testSetup(url);
     let toolbox = await this.openToolboxAndLog("custom.webconsole", "webconsole");
     await this.reloadConsoleAndLog("custom", toolbox, sync + stream + async);
@@ -1097,13 +1132,16 @@ async _consoleOpenWithCachedMessagesTest() {
     tests["custom.debugger"] = this.customDebugger;
     tests["custom.webconsole"] = this.customConsole;
 
-    // Run individual tests covering a very precise tool feature
+    // Run individual tests covering a very precise tool feature.
     tests["console.bulklog"] = this._consoleBulkLoggingTest;
     tests["console.streamlog"] = this._consoleStreamLoggingTest;
     tests["console.objectexpand"] = this._consoleObjectExpansionTest;
     tests["console.openwithcache"] = this._consoleOpenWithCachedMessagesTest;
     tests["inspector.mutations"] = this._inspectorMutationsTest;
     tests["inspector.layout"] = this._inspectorLayoutTest;
+    // ⚠  Adding new individual tests slows down DAMP execution ⚠
+    // ⚠  Consider contributing to custom.${tool} rather than adding isolated tests ⚠
+    // ⚠  See http://docs.firefox-dev.tools/tests/writing-perf-tests.html ⚠
 
     // Filter tests via `./mach --subtests filter` command line argument
     let filter = Services.prefs.getCharPref("talos.subtests", "");
