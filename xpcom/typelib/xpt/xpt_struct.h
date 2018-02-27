@@ -72,11 +72,11 @@ struct XPTHeader {
  */
 struct XPTInterfaceDirectoryEntry {
   nsID iid;
-  char* name;
+  const char* name;
 
   // This field exists in the on-disk format. But it isn't used so we don't
   // allocate space for it in memory.
-  //char* name_space;
+  //const char* name_space;
 
   XPTInterfaceDescriptor* interface_descriptor;
 };
@@ -247,7 +247,7 @@ union XPTConstValue {
 }; /* varies according to type */
 
 struct XPTConstDescriptor {
-  char* name;
+  const char* name;
   XPTTypeDescriptor type;
   union XPTConstValue value;
 };
@@ -266,7 +266,7 @@ struct XPTParamDescriptor {
  * interface method.
  */
 struct XPTMethodDescriptor {
-  char* name;
+  const char* name;
   XPTParamDescriptor* params;
   //XPTParamDescriptor result; // Present on disk, omitted here.
   uint8_t flags;

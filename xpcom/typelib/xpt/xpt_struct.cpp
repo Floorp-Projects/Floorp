@@ -186,7 +186,7 @@ bool
 DoInterfaceDirectoryEntry(XPTArena *arena, NotNull<XPTCursor*> cursor,
                           XPTInterfaceDirectoryEntry *ide)
 {
-    char* dummy_name_space;
+    const char* dummy_name_space;
 
     /* write the IID in our cursor space */
     if (!XPT_DoIID(cursor, &(ide->iid)) ||
