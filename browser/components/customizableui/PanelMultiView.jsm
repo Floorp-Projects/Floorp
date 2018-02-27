@@ -380,10 +380,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
                                     .getService(Ci.nsIScreenManager);
   }
 
-  get showingSubView() {
-    return this.openViews.length > 1;
-  }
-
   constructor(node) {
     super(node);
     this._openPopupPromise = Promise.resolve(false);
@@ -437,12 +433,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
       Object.defineProperty(this.node, method, {
         enumerable: true,
         value: (...args) => this[method](...args)
-      });
-    });
-    ["showingSubView"].forEach(property => {
-      Object.defineProperty(this.node, property, {
-        enumerable: true,
-        get: () => this[property]
       });
     });
   }
