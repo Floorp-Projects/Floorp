@@ -8,11 +8,10 @@
 
 #include "mozilla/FloatingPoint.h"
 
-#include "jslibmath.h"
-
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 #include "js/Conversions.h"
+#include "util/PortableMath.h"
 #include "vm/StringType.h"
 
 #include "vm/JSContext-inl.h"

@@ -17,8 +17,6 @@
 
 #include <string.h>
 
-#include "jslibmath.h"
-
 #include "builtin/Array.h"
 #include "builtin/Eval.h"
 #include "builtin/Number.h"
@@ -28,6 +26,7 @@
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
 #include "jit/Jit.h"
+#include "util/PortableMath.h"
 #include "util/StringBuffer.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
