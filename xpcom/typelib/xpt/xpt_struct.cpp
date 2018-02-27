@@ -259,18 +259,22 @@ DoInterfaceDescriptor(XPTArena *arena, NotNull<XPTCursor*> outer,
         return false;
     }
 
+    XPTMethodDescriptor* method_descriptors = nullptr;
+
     if (id->num_methods) {
         size_t n = id->num_methods * sizeof(XPTMethodDescriptor);
-        id->method_descriptors =
+        method_descriptors =
             static_cast<XPTMethodDescriptor*>(XPT_CALLOC8(arena, n));
-        if (!id->method_descriptors)
+        if (!method_descriptors)
             return false;
     }
 
     for (i = 0; i < id->num_methods; i++) {
-        if (!DoMethodDescriptor(arena, cursor, &id->method_descriptors[i], id))
+        if (!DoMethodDescriptor(arena, cursor, &method_descriptors[i], id))
             return false;
     }
+
+    id->method_descriptors = method_descriptors;
 
     if (!XPT_Do16(cursor, &id->num_constants)) {
         return false;
