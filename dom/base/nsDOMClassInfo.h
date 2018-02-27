@@ -212,29 +212,4 @@ public:
   }
 };
 
-template<typename Super>
-class nsMessageManagerSH : public Super
-{
-protected:
-  explicit nsMessageManagerSH(nsDOMClassInfoData* aData)
-    : Super(aData)
-  {
-  }
-
-  virtual ~nsMessageManagerSH()
-  {
-  }
-public:
-  NS_IMETHOD Resolve(nsIXPConnectWrappedNative* wrapper, JSContext* cx,
-                     JSObject* obj_, jsid id_, bool* resolvedp,
-                     bool* _retval) override;
-  NS_IMETHOD Enumerate(nsIXPConnectWrappedNative* wrapper, JSContext* cx,
-                       JSObject* obj_, bool* _retval) override;
-
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsMessageManagerSH(aData);
-  }
-};
-
 #endif /* nsDOMClassInfo_h___ */

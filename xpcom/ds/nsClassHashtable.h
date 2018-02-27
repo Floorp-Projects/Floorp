@@ -58,6 +58,25 @@ public:
   UserDataType Get(KeyType aKey) const;
 };
 
+template<typename K, typename T>
+inline void
+ImplCycleCollectionUnlink(nsClassHashtable<K, T>& aField)
+{
+  aField.Clear();
+}
+
+template<typename K, typename T>
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            const nsClassHashtable<K, T>& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  for (auto iter = aField.ConstIter(); !iter.Done(); iter.Next()) {
+    ImplCycleCollectionTraverse(aCallback, *iter.UserData(), aName, aFlags);
+  }
+}
+
 //
 // nsClassHashtable definitions
 //

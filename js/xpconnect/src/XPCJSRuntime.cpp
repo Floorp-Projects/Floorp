@@ -2588,9 +2588,6 @@ AccumulateTelemetryCallback(int id, uint32_t sample, const char* key)
       case JS_TELEMETRY_GC_ANIMATION_MS:
         Telemetry::Accumulate(Telemetry::GC_ANIMATION_MS, sample);
         break;
-      case JS_TELEMETRY_GC_MAX_PAUSE_MS:
-        Telemetry::Accumulate(Telemetry::GC_MAX_PAUSE_MS, sample);
-        break;
       case JS_TELEMETRY_GC_MAX_PAUSE_MS_2:
         Telemetry::Accumulate(Telemetry::GC_MAX_PAUSE_MS_2, sample);
         break;

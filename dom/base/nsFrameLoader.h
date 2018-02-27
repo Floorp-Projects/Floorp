@@ -32,7 +32,7 @@
 class nsIURI;
 class nsSubDocumentFrame;
 class nsView;
-class nsIInProcessContentFrameMessageManager;
+class nsInProcessTabChildGlobal;
 class AutoResetInShow;
 class AutoResetInFrameSwap;
 class nsITabParent;
@@ -44,6 +44,7 @@ namespace mozilla {
 class OriginAttributes;
 
 namespace dom {
+class ChromeMessageSender;
 class ContentParent;
 class PBrowserParent;
 class Promise;
@@ -268,7 +269,7 @@ public:
    */
   RenderFrameParent* GetCurrentRenderFrame() const;
 
-  nsFrameMessageManager* GetFrameMessageManager() { return mMessageManager; }
+  mozilla::dom::ChromeMessageSender* GetFrameMessageManager() { return mMessageManager; }
 
   mozilla::dom::Element* GetOwnerContent() { return mOwnerContent; }
   bool ShouldClipSubdocument() { return mClipSubdocument; }
@@ -319,8 +320,8 @@ public:
   virtual nsIMessageSender* GetProcessMessageManager() const override;
 
   // public because a callback needs these.
-  RefPtr<nsFrameMessageManager> mMessageManager;
-  nsCOMPtr<nsIInProcessContentFrameMessageManager> mChildMessageManager;
+  RefPtr<mozilla::dom::ChromeMessageSender> mMessageManager;
+  RefPtr<nsInProcessTabChildGlobal> mChildMessageManager;
 
   virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 

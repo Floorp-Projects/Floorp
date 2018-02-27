@@ -117,7 +117,7 @@ function PushServiceParent() {
 PushServiceParent.prototype = Object.create(PushServiceBase.prototype);
 
 XPCOMUtils.defineLazyServiceGetter(PushServiceParent.prototype, "_mm",
-  "@mozilla.org/parentprocessmessagemanager;1", "nsIMessageBroadcaster");
+  "@mozilla.org/parentprocessmessagemanager;1", "nsISupports");
 
 Object.assign(PushServiceParent.prototype, {
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(PushServiceParent),
@@ -212,14 +212,13 @@ Object.assign(PushServiceParent.prototype, {
       this.reportDeliveryError(data.messageId, data.reason);
       return;
     }
-    let sender = target.QueryInterface(Ci.nsIMessageSender);
     return this._handleRequest(name, principal, data).then(result => {
-      sender.sendAsyncMessage(this._getResponseName(name, "OK"), {
+      target.sendAsyncMessage(this._getResponseName(name, "OK"), {
         requestID: data.requestID,
         result: result
       });
     }, error => {
-      sender.sendAsyncMessage(this._getResponseName(name, "KO"), {
+      target.sendAsyncMessage(this._getResponseName(name, "KO"), {
         requestID: data.requestID,
         result: error.result,
       });
@@ -320,7 +319,7 @@ PushServiceContent.prototype = Object.create(PushServiceBase.prototype);
 
 XPCOMUtils.defineLazyServiceGetter(PushServiceContent.prototype,
   "_mm", "@mozilla.org/childprocessmessagemanager;1",
-  "nsISyncMessageSender");
+  "nsISupports");
 
 Object.assign(PushServiceContent.prototype, {
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(PushServiceContent),

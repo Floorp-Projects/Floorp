@@ -194,7 +194,7 @@ CodeGeneratorMIPS64::visitUnbox(LUnbox* unbox)
 }
 
 void
-CodeGeneratorMIPS64::splitTagForTest(const ValueOperand& value, ScratchTagScope& Tag)
+CodeGeneratorMIPS64::splitTagForTest(const ValueOperand& value, ScratchTagScope& tag)
 {
     masm.splitTag(value.valueReg(), tag);
 }
