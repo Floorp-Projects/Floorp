@@ -62,28 +62,16 @@ add_task(async function () {
   let msg = await waitFor(() => findMessage(hud, "liveBrowserConsoleMessage"));
   ok(msg, "message element for liveBrowserConsoleMessage (nsIConsoleMessage)");
 
-  const outputNode = hud.ui.outputNode;
-  const toolbar = outputNode.querySelector(".webconsole-filterbar-primary");
-
-  // Test that filtering is working by hiding log messages...
-  // show the filter bar.
-  toolbar.querySelector(".devtools-filter-icon").click();
-  const filterBar = await waitFor(() => {
-    return outputNode.querySelector(".webconsole-filterbar-secondary");
+  // Disable the log filter.
+  await setFilterState(hud, {
+    log: false
   });
-  ok(filterBar, "Filter bar is shown when filter icon is clicked.");
 
-  // Check that messages are not shown when their filter is turned off.
-  filterBar.querySelector(".log").click();
-
-  // And then checking that log messages are hidden.
+  // And then checking that the log messages are hidden.
   await waitFor(() => findMessages(hud, "cachedBrowserConsoleMessage").length === 0);
   await waitFor(() => findMessages(hud, "liveBrowserConsoleMessage").length === 0);
   await waitFor(() => findMessages(hud, "liveBrowserConsoleMessage2").length === 0);
 
-  // Turn the log filter off.
-  filterBar.querySelector(".log").click();
-
-  // Hide the filter bar.
-  toolbar.querySelector(".devtools-filter-icon").click();
+  resetFilters(hud);
+  await setFilterBarVisible(hud, false);
 });
