@@ -42,6 +42,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/Date.h"
 #include "js/Wrapper.h"
+#include "vm/ArgumentsObject.h"
 #include "vm/Compression.h"
 #include "vm/GeneratorObject.h"
 #include "vm/Interpreter.h"
@@ -3194,3 +3195,9 @@ js::GetSelfHostedFunctionName(JSFunction* fun)
 static_assert(JSString::MAX_LENGTH <= INT32_MAX,
               "StringIteratorNext in builtin/String.js assumes the stored index "
               "into the string is an Int32Value");
+
+static_assert(JSString::MAX_LENGTH == MAX_STRING_LENGTH,
+              "JSString::MAX_LENGTH matches self-hosted constant for maximum string length");
+
+static_assert(ARGS_LENGTH_MAX == MAX_ARGS_LENGTH,
+              "ARGS_LENGTH_MAX matches self-hosted constant for maximum arguments length");

@@ -19,4 +19,9 @@ TEST(suite, test) { \
   mozilla::GTestBench(#suite, #test, lambdaOrFunc); \
 }
 
+#define MOZ_GTEST_BENCH_F(suite, test, lambdaOrFunc) \
+TEST_F(suite, test) { \
+  mozilla::GTestBench(#suite, #test, lambdaOrFunc); \
+}
+
 #endif // GTEST_MOZGTESTBENCH_H

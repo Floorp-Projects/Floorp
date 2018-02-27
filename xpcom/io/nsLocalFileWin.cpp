@@ -1188,7 +1188,7 @@ nsLocalFile::OpenNSPRFileDesc(int32_t aFlags, int32_t aMode,
 NS_IMETHODIMP
 nsLocalFile::OpenANSIFileDesc(const char* aMode, FILE** aResult)
 {
-  nsresult rv = ResolveAndStat();
+  nsresult rv = Resolve();
   if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
     return rv;
   }
@@ -1210,7 +1210,7 @@ nsLocalFile::Create(uint32_t aType, uint32_t aAttributes)
     return NS_ERROR_FILE_UNKNOWN_TYPE;
   }
 
-  nsresult rv = ResolveAndStat();
+  nsresult rv = Resolve();
   if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
     return rv;
   }
@@ -1625,7 +1625,7 @@ typedef struct
 NS_IMETHODIMP
 nsLocalFile::GetVersionInfoField(const char* aField, nsAString& aResult)
 {
-  nsresult rv = ResolveAndStat();
+  nsresult rv = Resolve();
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2312,7 +2312,7 @@ nsLocalFile::SetLastModifiedTime(PRTime aLastModifiedTime)
   // Check we are correctly initialized.
   CHECK_mWorkingPath();
 
-  nsresult rv = ResolveAndStat();
+  nsresult rv = Resolve();
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2458,7 +2458,7 @@ nsLocalFile::SetPermissions(uint32_t aPermissions)
   // If true, then this will be for the target of the shortcut file,
   // otherwise it will be for the shortcut file itself (i.e. the same
   // results as SetPermissionsOfLink)
-  nsresult rv = ResolveAndStat();
+  nsresult rv = Resolve();
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2547,7 +2547,7 @@ nsLocalFile::SetFileSize(int64_t aFileSize)
   // Check we are correctly initialized.
   CHECK_mWorkingPath();
 
-  nsresult rv = ResolveAndStat();
+  nsresult rv = Resolve();
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -3051,7 +3051,7 @@ nsLocalFile::GetTarget(nsAString& aResult)
     return NS_ERROR_FILE_INVALID_PATH;
   }
 #endif
-  ResolveAndStat();
+  Resolve();
 
   aResult = mResolvedPath;
   return NS_OK;

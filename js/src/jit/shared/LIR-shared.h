@@ -8428,7 +8428,7 @@ class LWasmAddOffset : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LWasmBoundsCheck : public LInstructionHelper<0, 2, 0>
+class LWasmBoundsCheck : public LInstructionHelper<1, 2, 0>
 {
   public:
     LIR_HEADER(WasmBoundsCheck);
