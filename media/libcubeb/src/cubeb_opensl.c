@@ -26,7 +26,7 @@
 #include "cubeb_resampler.h"
 #include "cubeb-sles.h"
 #include "cubeb_array_queue.h"
-#include "cubeb-jni.h"
+#include "android/cubeb-output-latency.h"
 
 #if defined(__ANDROID__)
 #ifdef LOG
@@ -80,7 +80,7 @@ struct cubeb {
   SLObjectItf engObj;
   SLEngineItf eng;
   SLObjectItf outmixObj;
-  cubeb_jni * jni_obj;
+  output_latency_function * p_output_latency_function;
 };
 
 #define NELEMS(A) (sizeof(A) / sizeof A[0])
@@ -741,9 +741,9 @@ opensl_init(cubeb ** context, char const * context_name)
     return CUBEB_ERROR;
   }
 
-  ctx->jni_obj = cubeb_jni_init();
-  if (!ctx->jni_obj) {
-    LOG("Warning: jni is not initialized, cubeb_stream_get_position() is not supported");
+  ctx->p_output_latency_function = cubeb_output_latency_load_method(android_version);
+  if (!ctx->p_output_latency_function) {
+    LOG("Warning: output latency is not available, cubeb_stream_get_position() is not supported");
   }
 
   *context = ctx;
@@ -777,8 +777,8 @@ opensl_destroy(cubeb * ctx)
   if (ctx->engObj)
     cubeb_destroy_sles_engine(&ctx->engObj);
   dlclose(ctx->lib);
-  if (ctx->jni_obj)
-    cubeb_jni_destroy(ctx->jni_obj);
+  if (ctx->p_output_latency_function)
+    cubeb_output_latency_unload_method(ctx->p_output_latency_function);
   free(ctx);
 }
 
@@ -1452,7 +1452,7 @@ opensl_stream_get_position(cubeb_stream * stm, uint64_t * position)
   uint32_t compensation_msec = 0;
   SLresult res;
 
-  if (!stm->context->jni_obj) {
+  if (!cubeb_output_latency_method_is_loaded(stm->context->p_output_latency_function)) {
     return CUBEB_ERROR_NOT_SUPPORTED;
   }
 
@@ -1471,7 +1471,7 @@ opensl_stream_get_position(cubeb_stream * stm, uint64_t * position)
   }
 
   uint64_t samplerate = stm->user_output_rate;
-  uint32_t mixer_latency = cubeb_get_output_latency_from_jni(stm->context->jni_obj);
+  uint32_t mixer_latency = cubeb_get_output_latency(stm->context->p_output_latency_function);
 
   pthread_mutex_lock(&stm->mutex);
   int64_t maximum_position = stm->written * (int64_t)stm->user_output_rate / stm->output_configured_rate;
