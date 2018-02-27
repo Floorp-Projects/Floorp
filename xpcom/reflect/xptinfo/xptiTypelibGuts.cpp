@@ -44,7 +44,7 @@ xptiTypelibGuts::GetEntryAt(uint16_t i)
     if (r)
         return r;
 
-    XPTInterfaceDirectoryEntry* iface = mHeader->interface_directory + i;
+    const XPTInterfaceDirectoryEntry* iface = mHeader->interface_directory + i;
 
     XPTInterfaceInfoManager::xptiWorkingSet& set =
         XPTInterfaceInfoManager::GetSingleton()->mWorkingSet;
@@ -69,7 +69,7 @@ xptiTypelibGuts::GetEntryNameAt(uint16_t i)
     NS_ASSERTION(mHeader, "bad state");
     NS_ASSERTION(i < GetEntryCount(), "bad index");
 
-    XPTInterfaceDirectoryEntry* iface = mHeader->interface_directory + i;
+    const XPTInterfaceDirectoryEntry* iface = mHeader->interface_directory + i;
 
     return iface->name;
 }

@@ -146,11 +146,13 @@ XPT_DoHeader(XPTArena *arena, NotNull<XPTCursor*> cursor, XPTHeader **headerp)
 
     XPT_SetDataOffset(cursor->state, data_pool);
 
+    XPTInterfaceDirectoryEntry* interface_directory = nullptr;
+
     if (header->num_interfaces) {
         size_t n = header->num_interfaces * sizeof(XPTInterfaceDirectoryEntry);
-        header->interface_directory =
+        interface_directory =
             static_cast<XPTInterfaceDirectoryEntry*>(XPT_CALLOC8(arena, n));
-        if (!header->interface_directory)
+        if (!interface_directory)
             return false;
     }
 
@@ -170,9 +172,11 @@ XPT_DoHeader(XPTArena *arena, NotNull<XPTCursor*> cursor, XPTHeader **headerp)
 
     for (i = 0; i < header->num_interfaces; i++) {
         if (!DoInterfaceDirectoryEntry(arena, cursor,
-                                       &header->interface_directory[i]))
+                                       &interface_directory[i]))
             return false;
     }
+
+    header->interface_directory = interface_directory;
 
     return true;
 }

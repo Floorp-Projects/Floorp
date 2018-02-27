@@ -131,7 +131,7 @@ XPTInterfaceInfoManager::RegisterXPTHeader(const XPTHeader* aHeader)
 }
 
 void
-XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* iface,
+XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(const XPTInterfaceDirectoryEntry* iface,
                                                 uint16_t idx,
                                                 xptiTypelibGuts* typelib)
 {
