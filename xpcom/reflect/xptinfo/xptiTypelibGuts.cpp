@@ -20,7 +20,7 @@ CheckNoVTable<xptiTypelibGuts> gChecker;
 
 // static
 xptiTypelibGuts*
-xptiTypelibGuts::Create(XPTHeader* aHeader)
+xptiTypelibGuts::Create(const XPTHeader* aHeader)
 {
     NS_ASSERTION(aHeader, "bad param");
     size_t n = sizeof(xptiTypelibGuts) +

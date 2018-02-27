@@ -116,7 +116,7 @@ XPTInterfaceInfoManager::RegisterBuffer(char *buf, uint32_t length)
 }
 
 void
-XPTInterfaceInfoManager::RegisterXPTHeader(XPTHeader* aHeader)
+XPTInterfaceInfoManager::RegisterXPTHeader(const XPTHeader* aHeader)
 {
     if (aHeader->major_version >= XPT_MAJOR_INCOMPATIBLE_VERSION) {
         NS_ASSERTION(!aHeader->num_interfaces,"bad libxpt");
