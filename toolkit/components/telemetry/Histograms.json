@@ -967,16 +967,6 @@
     "n_buckets": 50,
     "description": "Time spent running JS GC when animating (ms)"
   },
-  "GC_MAX_PAUSE_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
-    "bug_numbers": [1364503],
-    "expires_in_version": "61",
-    "kind": "linear",
-    "high": 1000,
-    "n_buckets": 50,
-    "description": "Longest GC slice in a GC (ms)"
-  },
   "GC_MAX_PAUSE_MS_2": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],

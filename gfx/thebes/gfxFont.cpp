@@ -1193,7 +1193,13 @@ gfxFont::CheckForFeaturesInvolvingSpace()
                 new nsDataHashtable<nsUint32HashKey,
                                     Script>(size_t(Script::NUM_SCRIPT_CODES));
             sScriptTagToCode->Put(HB_TAG('D','F','L','T'), Script::COMMON);
-            for (Script s = Script::ARABIC; s < Script::NUM_SCRIPT_CODES;
+            // Ensure that we don't try to look at script codes beyond what the
+            // current version of ICU (at runtime -- in case of system ICU)
+            // knows about.
+            Script scriptCount =
+                Script(std::min<int>(u_getIntPropertyMaxValue(UCHAR_SCRIPT) + 1,
+                                     int(Script::NUM_SCRIPT_CODES)));
+            for (Script s = Script::ARABIC; s < scriptCount;
                  s = Script(static_cast<int>(s) + 1)) {
                 hb_script_t scriptTag = hb_script_t(GetScriptTagForCode(s));
                 hb_tag_t s1, s2;

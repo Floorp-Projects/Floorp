@@ -68,9 +68,8 @@ class GlobalPCList {
     Services.obs.addObserver(this, "gmp-plugin-crash", true);
     Services.obs.addObserver(this, "PeerConnection:response:allow", true);
     Services.obs.addObserver(this, "PeerConnection:response:deny", true);
-    if (Cc["@mozilla.org/childprocessmessagemanager;1"]) {
-      let mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
-      mm.addMessageListener("gmp-plugin-crash", this);
+    if (Services.cpmm) {
+      Services.cpmm.addMessageListener("gmp-plugin-crash", this);
     }
   }
 

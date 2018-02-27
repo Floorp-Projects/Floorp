@@ -1369,7 +1369,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // Conditional move for Spectre mitigations.
     inline void spectreMovePtr(Condition cond, Register src, Register dest)
-        DEFINED_ON(arm, arm64, x86, x64);
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
     // Performs a bounds check and zeroes the index register if out-of-bounds
     // (to mitigate Spectre).
@@ -2617,6 +2617,18 @@ class MacroAssembler : public MacroAssemblerSpecific
     void alignJitStackBasedOnNArgs(uint32_t nargs);
 
     inline void assertStackAlignment(uint32_t alignment, int32_t offset = 0);
+
+    void performPendingReadBarriers();
+
+  private:
+    // Methods to get a singleton object or object group from a type set without
+    // a read barrier, and record the result so that we can perform the barrier
+    // later.
+    JSObject* getSingletonAndDelayBarrier(const TypeSet* types, size_t i);
+    ObjectGroup* getGroupAndDelayBarrier(const TypeSet* types, size_t i);
+
+    Vector<JSObject*, 0, SystemAllocPolicy> pendingObjectReadBarriers_;
+    Vector<ObjectGroup*, 0, SystemAllocPolicy> pendingObjectGroupReadBarriers_;
 };
 
 //{{{ check_macroassembler_style

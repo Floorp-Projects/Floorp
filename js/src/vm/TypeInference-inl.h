@@ -1075,6 +1075,18 @@ TypeSet::getGroupNoBarrier(unsigned i) const
     return (key && key->isGroup()) ? key->groupNoBarrier() : nullptr;
 }
 
+inline bool
+TypeSet::hasGroup(unsigned i) const
+{
+    return getGroupNoBarrier(i);
+}
+
+inline bool
+TypeSet::hasSingleton(unsigned i) const
+{
+    return getSingletonNoBarrier(i);
+}
+
 inline const Class*
 TypeSet::getObjectClass(unsigned i) const
 {

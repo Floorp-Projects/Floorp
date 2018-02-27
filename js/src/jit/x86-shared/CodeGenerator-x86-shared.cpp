@@ -577,7 +577,7 @@ CodeGeneratorX86Shared::bailoutIf(Assembler::DoubleCondition condition, LSnapsho
 void
 CodeGeneratorX86Shared::bailoutFrom(Label* label, LSnapshot* snapshot)
 {
-    MOZ_ASSERT(label->used() && !label->bound());
+    MOZ_ASSERT_IF(!masm.oom(), label->used() && !label->bound());
     bailout(BailoutLabel(label), snapshot);
 }
 

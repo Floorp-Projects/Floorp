@@ -952,7 +952,6 @@ Statistics::endGC()
     gcDuration(&total, &longest);
 
     runtime->addTelemetry(JS_TELEMETRY_GC_MS, t(total));
-    runtime->addTelemetry(JS_TELEMETRY_GC_MAX_PAUSE_MS, t(longest));
     runtime->addTelemetry(JS_TELEMETRY_GC_MAX_PAUSE_MS_2, t(longest));
 
     const double mmu50 = computeMMU(TimeDuration::FromMilliseconds(50));

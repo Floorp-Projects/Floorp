@@ -15,6 +15,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptElement.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIXPConnect.h"
 #include "nsCOMPtr.h"
