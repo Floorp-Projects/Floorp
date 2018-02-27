@@ -29,7 +29,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.UiThreadTestRule;
-import android.view.Display;
 import android.view.MotionEvent;
 import android.view.Surface;
 
@@ -552,6 +551,15 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         }
     }
 
+    private static RuntimeException unwrapRuntimeException(Throwable e) {
+        final Throwable cause = e.getCause();
+        if (cause != null && cause instanceof RuntimeException) {
+            return (RuntimeException)cause;
+        }
+
+        return new RuntimeException(cause);
+    }
+
     protected void prepareSession(final Description description) throws Throwable {
         final GeckoSessionSettings settings = new GeckoSessionSettings(mDefaultSettings);
 
@@ -586,7 +594,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                     return method.invoke((call != null) ? call.target
                                                         : Callbacks.Default.INSTANCE, args);
                 } catch (final IllegalAccessException | InvocationTargetException e) {
-                    throw new RuntimeException(e.getCause() != null ? e.getCause() : e);
+                    throw unwrapRuntimeException(e);
                 } finally {
                     mCurrentMethodCall = null;
                 }
@@ -723,7 +731,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 try {
                     msg = (Message) getNextMessage.invoke(queue);
                 } catch (final IllegalAccessException | InvocationTargetException e) {
-                    throw new RuntimeException(e.getCause() != null ? e.getCause() : e);
+                    throw unwrapRuntimeException(e);
                 }
                 if (msg.getTarget() == handler && msg.obj == handler) {
                     // Our idle signal.
@@ -869,7 +877,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                            getCallbackGetter(ifce).invoke(mSession), sameInstance(mCallbackProxy));
             } catch (final NoSuchMethodException | IllegalAccessException |
                            InvocationTargetException e) {
-                throw new RuntimeException(e.getCause() != null ? e.getCause() : e);
+                throw unwrapRuntimeException(e);
             }
         }
 
@@ -955,7 +963,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 mCurrentMethodCall = methodCall;
                 record.method.invoke(callback, record.args);
             } catch (final IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e.getCause() != null ? e.getCause() : e);
+                throw unwrapRuntimeException(e);
             } finally {
                 mCurrentMethodCall = null;
             }
