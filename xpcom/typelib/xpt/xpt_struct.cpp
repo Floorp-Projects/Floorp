@@ -280,19 +280,23 @@ DoInterfaceDescriptor(XPTArena *arena, NotNull<XPTCursor*> outer,
         return false;
     }
 
+    XPTConstDescriptor* const_descriptors = nullptr;
+
     if (id->num_constants) {
         size_t n = id->num_constants * sizeof(XPTConstDescriptor);
-        id->const_descriptors =
+        const_descriptors =
             static_cast<XPTConstDescriptor*>(XPT_CALLOC8(arena, n));
-        if (!id->const_descriptors)
+        if (!const_descriptors)
             return false;
     }
 
     for (i = 0; i < id->num_constants; i++) {
-        if (!DoConstDescriptor(arena, cursor, &id->const_descriptors[i], id)) {
+        if (!DoConstDescriptor(arena, cursor, &const_descriptors[i], id)) {
             return false;
         }
     }
+
+    id->const_descriptors = const_descriptors;
 
     if (!XPT_Do8(cursor, &id->flags)) {
         return false;
