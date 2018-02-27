@@ -6012,3 +6012,8 @@ pref("layers.omtp.paint-workers", 1);
 #endif
 pref("layers.omtp.release-capture-on-main-thread", false);
 pref("layers.omtp.dump-capture", false);
+
+// Limits the depth of recursive conversion of data when opening
+// a content to view.  This is mostly intended to prevent infinite
+// loops with faulty converters involved.
+pref("general.document_open_conversion_depth_limit", 20);

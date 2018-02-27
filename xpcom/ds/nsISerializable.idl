@@ -17,7 +17,7 @@ interface nsISerializable : nsISupports
      * can't be set to default values must have been serialized by write,
      * and should be read from aInputStream in the same order by this method.
      */
-    void read(in nsIObjectInputStream aInputStream);
+    [must_use] void read(in nsIObjectInputStream aInputStream);
 
     /**
      * Serialize the object implementing nsISerializable to aOutputStream, by

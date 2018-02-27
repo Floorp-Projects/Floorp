@@ -1928,6 +1928,9 @@ html .toggle-button.end.vertical svg {
 .source-footer .mapped-source {
   color: var(--theme-body-color);
   padding: 2.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

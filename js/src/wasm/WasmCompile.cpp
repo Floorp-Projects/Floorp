@@ -414,6 +414,8 @@ InitialCompileFlags(const CompileArgs& args, Decoder& d, CompileMode* mode, Tier
     *debug = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
 }
 
+extern unsigned redundantCount;
+
 SharedModule
 wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, UniqueChars* error)
 {
@@ -441,7 +443,11 @@ wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, Uni
     if (!DecodeModuleTail(d, &env))
         return nullptr;
 
-    return mg.finishModule(bytecode);
+    auto module = mg.finishModule(bytecode);
+
+    printf("# redundant: %u\n", redundantCount);
+
+    return module;
 }
 
 bool

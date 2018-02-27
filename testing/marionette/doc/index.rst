@@ -5,11 +5,6 @@ Marionette
 Marionette is the remote protocol that lets OOP programs communicate
 with, instrument, and control Gecko.
 
-
-Description
-===========
-
-Marionette is an automation driver for Mozilla’s Gecko engine.
 It can remotely control either the UI or the internal JavaScript of
 Gecko-based browsers, such as Firefox and Fennec.  It can control
 both the chrome and the content document, giving a high level of

@@ -10102,7 +10102,7 @@ const prefs = new PrefsHelper("devtools", {
   fileSearchWholeWord: ["Bool", "debugger.file-search-whole-word"],
   fileSearchRegexMatch: ["Bool", "debugger.file-search-regex-match"],
   debuggerPrefsSchemaVersion: ["Char", "debugger.prefs-schema-version"],
-  projectDirectoryRoot: ["Char", "project-directory-root", ""]
+  projectDirectoryRoot: ["Char", "debugger.project-directory-root", ""]
 });
 /* harmony export (immutable) */ __webpack_exports__["prefs"] = prefs;
 
@@ -17921,7 +17921,7 @@ function createPendingBreakpoint(bp) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.replaceOriginalVariableName = exports.getFramework = exports.hasSyntaxError = exports.clearSources = exports.setSource = exports.hasSource = exports.getEmptyLines = exports.getNextStep = exports.clearASTs = exports.clearScopes = exports.clearSymbols = exports.findOutOfScopeLocations = exports.getVariablesInScope = exports.getScopes = exports.getSymbols = exports.getClosestExpression = exports.stopParserWorker = exports.startParserWorker = undefined;
+exports.replaceOriginalVariableName = exports.getFramework = exports.hasSyntaxError = exports.clearSources = exports.setSource = exports.hasSource = exports.getEmptyLines = exports.isInvalidPauseLocation = exports.getNextStep = exports.clearASTs = exports.clearScopes = exports.clearSymbols = exports.findOutOfScopeLocations = exports.getVariablesInScope = exports.getScopes = exports.getSymbols = exports.getClosestExpression = exports.stopParserWorker = exports.startParserWorker = undefined;
 
 var _devtoolsUtils = __webpack_require__(1363);
 
@@ -17942,6 +17942,7 @@ const clearSymbols = exports.clearSymbols = dispatcher.task("clearSymbols");
 const clearScopes = exports.clearScopes = dispatcher.task("clearScopes");
 const clearASTs = exports.clearASTs = dispatcher.task("clearASTs");
 const getNextStep = exports.getNextStep = dispatcher.task("getNextStep");
+const isInvalidPauseLocation = exports.isInvalidPauseLocation = dispatcher.task("isInvalidPauseLocation");
 const getEmptyLines = exports.getEmptyLines = dispatcher.task("getEmptyLines");
 const hasSource = exports.hasSource = dispatcher.task("hasSource");
 const setSource = exports.setSource = dispatcher.task("setSource");
@@ -19160,6 +19161,16 @@ const arrowBtn = (onClick, type, className, tooltip) => {
 class SearchInput extends _react.Component {
 
   componentDidMount() {
+    this.setFocus();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.shouldFocus && !prevProps.shouldFocus) {
+      this.setFocus();
+    }
+  }
+
+  setFocus() {
     if (this.$input) {
       const input = this.$input;
       input.focus();
@@ -19953,15 +19964,15 @@ var _selectors = __webpack_require__(1352);
 
 var _ui = __webpack_require__(1421);
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+var _source = __webpack_require__(1356);
 
 function setContextMenu(type, event) {
   return ({ dispatch }) => {
     dispatch({ type: "SET_CONTEXT_MENU", contextMenu: { type, event } });
   };
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function setPrimaryPaneTab(tabName) {
   return { type: "SET_PRIMARY_PANE_TAB", tabName };
@@ -19979,6 +19990,10 @@ function setActiveSearch(activeSearch) {
     const activeSearchState = (0, _selectors.getActiveSearch)(getState());
     if (activeSearchState === activeSearch) {
       return;
+    }
+
+    if ((0, _selectors.getQuickOpenEnabled)(getState())) {
+      dispatch({ type: "CLOSE_QUICK_OPEN" });
     }
 
     dispatch({
@@ -20009,7 +20024,7 @@ function showSource(sourceId) {
 
     dispatch({
       type: "SHOW_SOURCE",
-      sourceUrl: source.get("url")
+      sourceUrl: (0, _source.getRawSourceURL)(source.get("url"))
     });
   };
 }
@@ -20330,6 +20345,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 exports.getPauseReason = getPauseReason;
 exports.isStepping = isStepping;
 exports.isPaused = isPaused;
+exports.getPreviousPauseFrameLocation = getPreviousPauseFrameLocation;
 exports.isEvaluatingExpression = isEvaluatingExpression;
 exports.getPopupObjectProperties = getPopupObjectProperties;
 exports.getIsWaitingOnBreak = getIsWaitingOnBreak;
@@ -20368,7 +20384,8 @@ const createPauseState = exports.createPauseState = () => ({
   shouldIgnoreCaughtExceptions: _prefs.prefs.ignoreCaughtExceptions,
   canRewind: false,
   debuggeeUrl: "",
-  command: ""
+  command: "",
+  previousLocation: null
 });
 
 const emptyPauseState = {
@@ -20379,7 +20396,8 @@ const emptyPauseState = {
     original: {}
   },
   selectedFrameId: null,
-  loadedObjects: {}
+  loadedObjects: {},
+  previousLocation: null
 };
 
 function update(state = createPauseState(), action) {
@@ -20485,7 +20503,12 @@ function update(state = createPauseState(), action) {
       });
 
     case "COMMAND":
-      return action.status === "start" ? _extends({}, state, emptyPauseState, { command: action.command }) : _extends({}, state, { command: "" });
+      {
+        return action.status === "start" ? _extends({}, state, emptyPauseState, {
+          command: action.command,
+          previousLocation: buildPreviousLocation(state, action)
+        }) : _extends({}, state, { command: "" });
+      }
 
     case "RESUME":
       // We clear why on resume because we need it to decide if
@@ -20502,6 +20525,24 @@ function update(state = createPauseState(), action) {
   }
 
   return state;
+}
+
+function buildPreviousLocation(state, action) {
+  const { frames, previousLocation } = state;
+
+  if (action.command !== "stepOver") {
+    return null;
+  }
+
+  const frame = frames && frames.length > 0 ? frames[0] : null;
+  if (!frame) {
+    return previousLocation;
+  }
+
+  return {
+    location: frame.location,
+    generatedLocation: frame.generatedLocation
+  };
 }
 
 // Selectors
@@ -20529,6 +20570,10 @@ function isStepping(state) {
 
 function isPaused(state) {
   return !!getFrames(state);
+}
+
+function getPreviousPauseFrameLocation(state) {
+  return state.pause.previousLocation;
 }
 
 function isEvaluatingExpression(state) {
@@ -21329,74 +21374,7 @@ function setOutOfScopeLocations() {
 }
 
 /***/ }),
-/* 1400 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getPauseReason = getPauseReason;
-exports.isException = isException;
-exports.isInterrupted = isInterrupted;
-exports.inDebuggerEval = inDebuggerEval;
-
-
-// Map protocol pause "why" reason to a valid L10N key
-// These are the known unhandled reasons:
-// "breakpointConditionThrown", "clientEvaluated"
-// "interrupted", "attached"
-const reasons = {
-  debuggerStatement: "whyPaused.debuggerStatement",
-  breakpoint: "whyPaused.breakpoint",
-  exception: "whyPaused.exception",
-  resumeLimit: "whyPaused.resumeLimit",
-  pauseOnDOMEvents: "whyPaused.pauseOnDOMEvents",
-  breakpointConditionThrown: "whyPaused.breakpointConditionThrown",
-
-  // V8
-  DOM: "whyPaused.breakpoint",
-  EventListener: "whyPaused.pauseOnDOMEvents",
-  XHR: "whyPaused.xhr",
-  promiseRejection: "whyPaused.promiseRejection",
-  assert: "whyPaused.assert",
-  debugCommand: "whyPaused.debugCommand",
-  other: "whyPaused.other"
-}; /* This Source Code Form is subject to the terms of the Mozilla Public
-    * License, v. 2.0. If a copy of the MPL was not distributed with this
-    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-function getPauseReason(why) {
-  if (!why) {
-    return null;
-  }
-
-  const reasonType = why.type;
-  if (!reasons[reasonType]) {
-    console.log("Please file an issue: reasonType=", reasonType);
-  }
-  return reasons[reasonType];
-}
-
-function isException(why) {
-  return why && why.type && why.type === "exception";
-}
-
-function isInterrupted(why) {
-  return why && why.type && why.type === "interrupted";
-}
-
-function inDebuggerEval(why) {
-  if (why && why.type === "exception" && why.exception && why.exception.preview && why.exception.preview.fileName) {
-    return why.exception.preview.fileName === "debugger eval code";
-  }
-
-  return false;
-}
-
-/***/ }),
+/* 1400 */,
 /* 1401 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -35210,30 +35188,33 @@ class SearchBar extends _react.Component {
     };
 
     this.closeSearch = e => {
-      const { editor, searchOn } = this.props;
-
+      const { closeFileSearch, editor, searchOn } = this.props;
       if (editor && searchOn) {
         this.clearSearch();
-        this.props.closeFileSearch(editor);
+        closeFileSearch(editor);
         e.stopPropagation();
         e.preventDefault();
       }
+      this.setState({ query: "", inputFocused: false });
     };
 
     this.toggleSearch = e => {
       e.stopPropagation();
       e.preventDefault();
-      const { editor } = this.props;
+      const { editor, searchOn, setActiveSearch } = this.props;
 
-      if (!this.props.searchOn) {
-        this.props.setActiveSearch("file");
+      if (!searchOn) {
+        setActiveSearch("file");
       }
 
-      if (this.props.searchOn && editor) {
-        const selection = editor.codeMirror.getSelection();
-        this.setState({ query: selection });
-        if (selection !== "") {
-          this.doSearch(selection);
+      if (searchOn && editor) {
+        const query = editor.codeMirror.getSelection() || this.state.query;
+
+        if (query !== "") {
+          this.setState({ query, inputFocused: true });
+          this.doSearch(query);
+        } else {
+          this.setState({ query: "", inputFocused: true });
         }
       }
     };
@@ -35272,6 +35253,10 @@ class SearchBar extends _react.Component {
       this.setState({ query: e.target.value });
 
       return this.doSearch(e.target.value);
+    };
+
+    this.onBlur = e => {
+      this.setState({ inputFocused: false });
     };
 
     this.onKeyDown = e => {
@@ -35338,7 +35323,8 @@ class SearchBar extends _react.Component {
       query: props.query,
       selectedResultIndex: 0,
       count: 0,
-      index: -1
+      index: -1,
+      inputFocused: false
     };
   }
 
@@ -35422,11 +35408,13 @@ class SearchBar extends _react.Component {
         placeholder: L10N.getStr("sourceSearch.search.placeholder"),
         summaryMsg: this.buildSummaryMsg(),
         onChange: this.onChange,
+        onBlur: this.onBlur,
         showErrorEmoji: this.shouldShowErrorEmoji(),
         onKeyDown: this.onKeyDown,
         handleNext: e => this.traverseResults(e, false),
         handlePrev: e => this.traverseResults(e, true),
-        handleClose: this.closeSearch
+        handleClose: this.closeSearch,
+        shouldFocus: this.state.inputFocused
       }),
       _react2.default.createElement(
         "div",
@@ -39255,7 +39243,7 @@ var _editor = __webpack_require__(1358);
 
 var _source = __webpack_require__(1356);
 
-var _pause = __webpack_require__(1400);
+var _pause = __webpack_require__(2419);
 
 var _indentation = __webpack_require__(1438);
 
@@ -39727,7 +39715,7 @@ function getMenuItems(event, {
     id: "node-menu-show-source",
     label: revealInTreeLabel,
     accesskey: revealInTreeKey,
-    disabled: isPrettyPrinted,
+    disabled: false,
     click: () => showSource(sourceId)
   };
 
@@ -40454,7 +40442,7 @@ var _source = __webpack_require__(1356);
 
 var _selectors = __webpack_require__(1352);
 
-var _pause = __webpack_require__(1400);
+var _pause = __webpack_require__(2419);
 
 var _breakpoint = __webpack_require__(1364);
 
@@ -41221,7 +41209,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _pause = __webpack_require__(1400);
+var _pause = __webpack_require__(2419);
 
 __webpack_require__(1337);
 
@@ -43363,7 +43351,9 @@ function hasAwait(source, pauseLocation) {
     return false;
   }
 
-  return source.text.split("\n")[line - 1].slice(column, column + 200).match(/(yield|await)/);
+  const snippet = source.text.split("\n")[line - 1].slice(column - 50, column + 50);
+
+  return !!snippet.match(/(yield|await)/);
 }
 
 /**
@@ -43382,6 +43372,7 @@ function astCommand(stepType) {
       // This type definition is ambiguous:
       const frame = (0, _selectors.getTopFrame)(getState());
       const source = (0, _selectors.getSelectedSource)(getState()).toJS();
+
       if (source && hasAwait(source, frame.location)) {
         const nextLocation = await (0, _parser.getNextStep)(source.id, frame.location);
         if (nextLocation) {
@@ -43593,8 +43584,17 @@ var _sources = __webpack_require__(1797);
 
 var _ui = __webpack_require__(1385);
 
+var _commands = __webpack_require__(1637);
+
+var _pause = __webpack_require__(2419);
+
+var _mapFrames = __webpack_require__(1804);
+
 var _fetchScopes = __webpack_require__(1655);
 
+async function getOriginalSourceForFrame(state, frame) {
+  return (0, _selectors.getSources)(state).get(frame.location.sourceId);
+}
 /**
  * Debugger has just paused
  *
@@ -43609,12 +43609,26 @@ var _fetchScopes = __webpack_require__(1655);
 function paused(pauseInfo) {
   return async function ({ dispatch, getState, client, sourceMaps }) {
     const { frames, why, loadedObjects } = pauseInfo;
+    const rootFrame = frames.length > 0 ? frames[0] : null;
+
+    if (rootFrame) {
+      const mappedFrame = await (0, _mapFrames.updateFrameLocation)(rootFrame, sourceMaps);
+      const source = await getOriginalSourceForFrame(getState(), mappedFrame);
+
+      // Ensure that the original file has loaded if there is one.
+      await dispatch((0, _sources.loadSourceText)(source));
+
+      if (await (0, _pause.shouldStep)(mappedFrame, getState(), sourceMaps)) {
+        dispatch((0, _commands.command)("stepOver"));
+        return;
+      }
+    }
 
     dispatch({
       type: "PAUSED",
       why,
       frames,
-      selectedFrameId: frames[0] ? frames[0].id : undefined,
+      selectedFrameId: rootFrame ? rootFrame.id : undefined,
       loadedObjects: loadedObjects || []
     });
 
@@ -43657,7 +43671,7 @@ var _selectors = __webpack_require__(1352);
 
 var _expressions = __webpack_require__(1398);
 
-var _pause = __webpack_require__(1400);
+var _pause = __webpack_require__(2419);
 
 /**
  * Debugger has just resumed
@@ -44001,7 +44015,7 @@ class QuickOpenModal extends _react.Component {
         return;
       }
 
-      if (query == "") {
+      if (query == "" && !this.isShortcutQuery()) {
         return this.showTopSources();
       }
 
@@ -48484,6 +48498,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
  * @module actions/sources
  */
 
+exports.loadSourceMap = loadSourceMap;
 exports.newSource = newSource;
 exports.newSources = newSources;
 
@@ -48510,25 +48525,25 @@ function createOriginalSource(originalUrl, generatedSource, sourceMaps) {
   };
 }
 
-// TODO: It would be nice to make getOriginalURLs a safer api
-async function loadOriginalSourceUrls(sourceMaps, generatedSource) {
-  try {
-    return await sourceMaps.getOriginalURLs(generatedSource);
-  } catch (e) {
-    console.error(e);
-    return null;
-  }
-}
-
 /**
  * @memberof actions/sources
  * @static
  */
 function loadSourceMap(generatedSource) {
   return async function ({ dispatch, getState, sourceMaps }) {
-    const urls = await loadOriginalSourceUrls(sourceMaps, generatedSource);
+    let urls;
+    try {
+      urls = await sourceMaps.getOriginalURLs(generatedSource);
+    } catch (e) {
+      console.error(e);
+      urls = null;
+    }
     if (!urls) {
-      // If this source doesn't have a sourcemap, do nothing.
+      // If this source doesn't have a sourcemap, enable it for pretty printing
+      dispatch({
+        type: "UPDATE_SOURCE",
+        source: _extends({}, generatedSource, { sourceMapURL: "" })
+      });
       return;
     }
 
@@ -48836,6 +48851,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+exports.updateFrameLocation = updateFrameLocation;
 exports.mapFrames = mapFrames;
 
 var _selectors = __webpack_require__(1352);
@@ -50361,6 +50377,7 @@ class ProjectSearch extends _react.Component {
       if (this.isProjectSearchEnabled()) {
         return closeProjectSearch();
       }
+
       return setActiveSearch("project");
     };
 
@@ -50880,11 +50897,11 @@ class Tab extends _react.PureComponent {
       })
     }];
 
-    if (!isPrettySource) {
-      items.push({
-        item: _extends({}, tabMenuItems.showSource, { click: () => showSource(tab) })
-      });
+    items.push({
+      item: _extends({}, tabMenuItems.showSource, { click: () => showSource(tab) })
+    });
 
+    if (!isPrettySource) {
       items.push({
         item: _extends({}, tabMenuItems.prettyPrint, {
           click: () => togglePrettyPrint(tab)
@@ -52108,6 +52125,213 @@ function getExpressionFromCoords(cm, coord) {
     end: { line: lineNumber, column: endHighlight }
   };
   return { expression, location };
+}
+
+/***/ }),
+/* 2361 */,
+/* 2362 */,
+/* 2363 */,
+/* 2364 */,
+/* 2365 */,
+/* 2366 */,
+/* 2367 */,
+/* 2368 */,
+/* 2369 */,
+/* 2370 */,
+/* 2371 */,
+/* 2372 */,
+/* 2373 */,
+/* 2374 */,
+/* 2375 */,
+/* 2376 */,
+/* 2377 */,
+/* 2378 */,
+/* 2379 */,
+/* 2380 */,
+/* 2381 */,
+/* 2382 */,
+/* 2383 */,
+/* 2384 */,
+/* 2385 */,
+/* 2386 */,
+/* 2387 */,
+/* 2388 */,
+/* 2389 */,
+/* 2390 */,
+/* 2391 */,
+/* 2392 */,
+/* 2393 */,
+/* 2394 */,
+/* 2395 */,
+/* 2396 */,
+/* 2397 */,
+/* 2398 */,
+/* 2399 */,
+/* 2400 */,
+/* 2401 */,
+/* 2402 */,
+/* 2403 */,
+/* 2404 */,
+/* 2405 */,
+/* 2406 */,
+/* 2407 */,
+/* 2408 */,
+/* 2409 */,
+/* 2410 */,
+/* 2411 */,
+/* 2412 */,
+/* 2413 */,
+/* 2414 */,
+/* 2415 */,
+/* 2416 */,
+/* 2417 */,
+/* 2418 */,
+/* 2419 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _why = __webpack_require__(2420);
+
+Object.keys(_why).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _why[key];
+    }
+  });
+});
+
+var _stepping = __webpack_require__(2421);
+
+Object.keys(_stepping).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _stepping[key];
+    }
+  });
+});
+
+/***/ }),
+/* 2420 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getPauseReason = getPauseReason;
+exports.isException = isException;
+exports.isInterrupted = isInterrupted;
+exports.inDebuggerEval = inDebuggerEval;
+
+
+// Map protocol pause "why" reason to a valid L10N key
+// These are the known unhandled reasons:
+// "breakpointConditionThrown", "clientEvaluated"
+// "interrupted", "attached"
+const reasons = {
+  debuggerStatement: "whyPaused.debuggerStatement",
+  breakpoint: "whyPaused.breakpoint",
+  exception: "whyPaused.exception",
+  resumeLimit: "whyPaused.resumeLimit",
+  pauseOnDOMEvents: "whyPaused.pauseOnDOMEvents",
+  breakpointConditionThrown: "whyPaused.breakpointConditionThrown",
+
+  // V8
+  DOM: "whyPaused.breakpoint",
+  EventListener: "whyPaused.pauseOnDOMEvents",
+  XHR: "whyPaused.xhr",
+  promiseRejection: "whyPaused.promiseRejection",
+  assert: "whyPaused.assert",
+  debugCommand: "whyPaused.debugCommand",
+  other: "whyPaused.other"
+}; /* This Source Code Form is subject to the terms of the Mozilla Public
+    * License, v. 2.0. If a copy of the MPL was not distributed with this
+    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function getPauseReason(why) {
+  if (!why) {
+    return null;
+  }
+
+  const reasonType = why.type;
+  if (!reasons[reasonType]) {
+    console.log("Please file an issue: reasonType=", reasonType);
+  }
+  return reasons[reasonType];
+}
+
+function isException(why) {
+  return why && why.type && why.type === "exception";
+}
+
+function isInterrupted(why) {
+  return why && why.type && why.type === "interrupted";
+}
+
+function inDebuggerEval(why) {
+  if (why && why.type === "exception" && why.exception && why.exception.preview && why.exception.preview.fileName) {
+    return why.exception.preview.fileName === "debugger eval code";
+  }
+
+  return false;
+}
+
+/***/ }),
+/* 2421 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.shouldStep = shouldStep;
+
+var _lodash = __webpack_require__(2);
+
+var _devtoolsSourceMap = __webpack_require__(1360);
+
+var _selectors = __webpack_require__(1352);
+
+var _parser = __webpack_require__(1365);
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+async function shouldStep(rootFrame, state, sourceMaps) {
+  if (!rootFrame) {
+    return false;
+  }
+
+  const selectedSource = (0, _selectors.getSelectedSource)(state);
+  const previousFrameInfo = (0, _selectors.getPreviousPauseFrameLocation)(state);
+
+  let previousFrameLoc;
+  let currentFrameLoc;
+
+  if (selectedSource && (0, _devtoolsSourceMap.isOriginalId)(selectedSource.get("id"))) {
+    currentFrameLoc = rootFrame.location;
+    previousFrameLoc = previousFrameInfo && previousFrameInfo.location;
+  } else {
+    currentFrameLoc = rootFrame.generatedLocation;
+    previousFrameLoc = previousFrameInfo && previousFrameInfo.generatedLocation;
+  }
+
+  return (0, _devtoolsSourceMap.isOriginalId)(currentFrameLoc.sourceId) && (previousFrameLoc && (0, _lodash.isEqual)(previousFrameLoc, currentFrameLoc) || (await (0, _parser.isInvalidPauseLocation)(currentFrameLoc)));
 }
 
 /***/ })

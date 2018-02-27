@@ -7,7 +7,7 @@ automating user interface tests.
 
 The in-tree test framework supports tests written in Python, using
 Python’s [unittest] library.  Test cases are written as a subclass
-of [`MarionetteTestCase`], with child tests belonging to instance
+of `MarionetteTestCase`, with child tests belonging to instance
 methods that have a name starting with `test_`.
 
 You can additionally define [`setUp`] and [`tearDown`] instance
@@ -36,9 +36,8 @@ The test structure is illustrated here:
 	        # code to execute after all tests are run
 	        MarionetteTestCase.tearDown(self)
 
-[remote protocol]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/Protocol
+[remote protocol]: Protocol.html
 [unittest]: https://docs.python.org/2.7/library/unittest.html
-[`MarionetteTestCase`]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/MarionetteTestCase
 [`setUp`]: https://docs.python.org/2.7/library/unittest.html#unittest.TestCase.setUp
 [`setUpClass`]: https://docs.python.org/2.7/library/unittest.html#unittest.TestCase.setUpClass
 [`tearDown`]: https://docs.python.org/2.7/library/unittest.html#unittest.TestCase.tearDown
@@ -62,10 +61,9 @@ The API
 -------
 
 The full API documentation is found at
-http://marionette-client.readthedocs.io/en/master/, but the key
-objects are:
+<http://marionette-client.readthedocs.io>, but the key objects are:
 
-  * [`MarionetteTestCase`]: a subclass for `unittest.TestCase`
+  * `MarionetteTestCase`: a subclass for `unittest.TestCase`
     used as a base class for all tests to run.
 
   * [`Marionette`]: client that speaks to Firefox.
