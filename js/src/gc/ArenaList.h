@@ -223,8 +223,13 @@ class ArenaLists
      * only for the arena that was not fully allocated.
      */
     ZoneGroupData<AllAllocKindArray<FreeSpan*>> freeLists_;
-    FreeSpan*& freeLists(AllocKind i) { return freeLists_.ref()[i]; }
-    FreeSpan* freeLists(AllocKind i) const { return freeLists_.ref()[i]; }
+    AllAllocKindArray<FreeSpan*>& freeLists() { return freeLists_.ref(); }
+    const AllAllocKindArray<FreeSpan*>& freeLists() const { return freeLists_.ref(); }
+
+    FreeSpan* freeList(AllocKind i) const { return freeLists()[i]; }
+
+    inline void setFreeList(AllocKind i, FreeSpan* span);
+    inline void clearFreeList(AllocKind i);
 
     // Because the JITs can allocate from the free lists, they cannot be null.
     // We use a placeholder FreeSpan that is empty (and wihout an associated
@@ -286,9 +291,9 @@ class ArenaLists
     inline bool needBackgroundFinalizeWait(AllocKind kind) const;
 
     /* Clear the free lists so we won't try to allocate from swept arenas. */
-    inline void purge();
+    inline void clearFreeLists();
 
-    inline void prepareForIncrementalGC();
+    inline void unmarkPreMarkedFreeCells();
 
     /* Check if this arena is in use. */
     inline bool arenaIsInUse(Arena* arena, AllocKind kind) const;

@@ -32,8 +32,7 @@ RuntimeFromActiveCooperatingThreadIsHeapMajorCollecting(JS::shadow::Zone* shadow
 bool
 IsMarkedBlack(JSObject* obj)
 {
-    return obj->isMarkedBlack() ||
-           (obj->isTenured() && obj->asTenured().arena()->allocatedDuringIncremental);
+    return obj->isMarkedBlack();
 }
 
 bool
