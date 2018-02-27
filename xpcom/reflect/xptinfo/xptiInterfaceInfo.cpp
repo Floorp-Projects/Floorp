@@ -304,11 +304,11 @@ xptiInterfaceEntry::GetInterfaceIndexForParam(uint16_t methodIndex,
 
     const XPTTypeDescriptor *td = &param->type;
 
-    while (XPT_TDP_TAG(td->prefix) == TD_ARRAY) {
+    while (td->Tag() == TD_ARRAY) {
         td = &mDescriptor->additional_types[td->u.array.additional_type];
     }
 
-    if(XPT_TDP_TAG(td->prefix) != TD_INTERFACE_TYPE) {
+    if (td->Tag() != TD_INTERFACE_TYPE) {
         NS_ERROR("not an interface");
         return NS_ERROR_INVALID_ARG;
     }
@@ -444,7 +444,7 @@ xptiInterfaceEntry::GetTypeInArray(const nsXPTParamInfo* param,
                 mDescriptor->additional_types;
 
     for (uint16_t i = 0; i < dimension; i++) {
-        if(XPT_TDP_TAG(td->prefix) != TD_ARRAY) {
+        if (td->Tag() != TD_ARRAY) {
             NS_ERROR("bad dimension");
             return NS_ERROR_INVALID_ARG;
         }
@@ -520,7 +520,7 @@ xptiInterfaceEntry::GetSizeIsArgNumberForParam(uint16_t methodIndex,
         td = &param->type;
 
     // verify that this is a type that has size_is
-    switch (XPT_TDP_TAG(td->prefix)) {
+    switch (td->Tag()) {
       case TD_ARRAY:
         *argnum = td->u.array.argnum;
         break;
@@ -557,11 +557,11 @@ xptiInterfaceEntry::GetInterfaceIsArgNumberForParam(uint16_t methodIndex,
 
     const XPTTypeDescriptor *td = &param->type;
 
-    while (XPT_TDP_TAG(td->prefix) == TD_ARRAY) {
+    while (td->Tag() == TD_ARRAY) {
         td = &mDescriptor->additional_types[td->u.array.additional_type];
     }
 
-    if(XPT_TDP_TAG(td->prefix) != TD_INTERFACE_IS_TYPE) {
+    if (td->Tag() != TD_INTERFACE_IS_TYPE) {
         NS_ERROR("not an iid_is");
         return NS_ERROR_INVALID_ARG;
     }

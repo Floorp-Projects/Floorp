@@ -82,9 +82,6 @@ public:
            }
         }
 
-    uint8_t TagPart() const
-        {return (uint8_t) (flags & XPT_TDP_TAGMASK);}
-
     enum
     {
         T_I8                = TD_INT8             ,
