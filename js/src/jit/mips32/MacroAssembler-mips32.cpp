@@ -1961,26 +1961,6 @@ MacroAssemblerMIPSCompat::restoreStackPointer()
 }
 
 void
-MacroAssembler::alignFrameForICArguments(AfterICSaveLive& aic)
-{
-    if (framePushed() % ABIStackAlignment != 0) {
-        aic.alignmentPadding = ABIStackAlignment - (framePushed() % ABIStackAlignment);
-        reserveStack(aic.alignmentPadding);
-    } else {
-        aic.alignmentPadding = 0;
-    }
-    MOZ_ASSERT(framePushed() % ABIStackAlignment == 0);
-    checkStackAlignment();
-}
-
-void
-MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive& aic)
-{
-    if (aic.alignmentPadding != 0)
-        freeStack(aic.alignmentPadding);
-}
-
-void
 MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(void* handler, Label* profilerExitTail)
 {
     // Reserve space for exception information.

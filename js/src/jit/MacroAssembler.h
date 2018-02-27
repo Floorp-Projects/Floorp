@@ -2585,29 +2585,6 @@ class MacroAssembler : public MacroAssemblerSpecific
                                               IntConversionBehavior::ClampToUint8);
     }
 
-  public:
-    class AfterICSaveLive {
-        friend class MacroAssembler;
-        explicit AfterICSaveLive(uint32_t initialStack)
-#ifdef JS_DEBUG
-          : initialStack(initialStack)
-#endif
-        {}
-
-      public:
-#ifdef JS_DEBUG
-        uint32_t initialStack;
-#endif
-        uint32_t alignmentPadding;
-    };
-
-    void alignFrameForICArguments(AfterICSaveLive& aic) PER_ARCH;
-    void restoreFrameAlignmentForICArguments(AfterICSaveLive& aic) PER_ARCH;
-
-    AfterICSaveLive icSaveLive(LiveRegisterSet& liveRegs);
-    MOZ_MUST_USE bool icBuildOOLFakeExitFrame(void* fakeReturnAddr, AfterICSaveLive& aic);
-    void icRestoreLive(LiveRegisterSet& liveRegs, AfterICSaveLive& aic);
-
     MOZ_MUST_USE bool icBuildOOLFakeExitFrame(void* fakeReturnAddr, AutoSaveLiveRegisters& save);
 
     // Align the stack pointer based on the number of arguments which are pushed
