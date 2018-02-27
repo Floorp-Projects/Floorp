@@ -143,8 +143,14 @@ testGCAllocatorUp(const size_t PageSize)
     CHECK(positionIsCorrect("x--xooxxx-------", stagingArea, chunkPool, tempChunks));
     // Check that we fall back to the slow path after two unalignable chunks.
     CHECK(positionIsCorrect("x--xx--xoo--xxx-", stagingArea, chunkPool, tempChunks));
+#ifndef __aarch64__
+    // Bug 1440330 - this test is incorrect for aarch64 because MapMemory only
+    // looks for 1MB-aligned chunks on that platform, and will find one at
+    // position 6 here.
+
     // Check that we also fall back after an unalignable and an alignable chunk.
     CHECK(positionIsCorrect("x--xx---x-oo--x-", stagingArea, chunkPool, tempChunks));
+#endif
     // Check that the last ditch allocator works as expected.
     CHECK(positionIsCorrect("x--xx--xx-oox---", stagingArea, chunkPool, tempChunks,
                             UseLastDitchAllocator));
