@@ -1683,11 +1683,11 @@ js::ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
                            HandleValue rref, int rindex)
 {
     auto uniqueCharsFromString = [](JSContext* cx, HandleValue ref) -> UniqueChars {
-        static const size_t MaxStringLength = 16;
+        static const size_t MAX_STRING_LENGTH = 16;
         RootedString str(cx, ref.toString());
-        if (str->length() > MaxStringLength) {
+        if (str->length() > MAX_STRING_LENGTH) {
             StringBuffer buf(cx);
-            if (!buf.appendSubstring(str, 0, MaxStringLength))
+            if (!buf.appendSubstring(str, 0, MAX_STRING_LENGTH))
                 return nullptr;
             if (!buf.append("..."))
                 return nullptr;
