@@ -16,7 +16,6 @@
 #ifdef XP_MACOSX
 <?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
 #else
-<?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
 #endif
 
@@ -27,6 +26,10 @@
 %editMenuOverlayDTD;
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
 %browserDTD;
+#ifdef XP_MACOSX
+<!ENTITY % baseMenuOverlayDTD SYSTEM "chrome://browser/locale/baseMenuOverlay.dtd">
+%baseMenuOverlayDTD;
+#endif
 ]>
 
 <window id="places"
