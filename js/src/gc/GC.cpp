@@ -971,7 +971,7 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     incrementalLimit(0),
 #endif
     fullCompartmentChecks(false),
-    gcBeginCallbackDepth(0),
+    gcCallbackDepth(0),
     alwaysPreserveCode(false),
 #ifdef DEBUG
     arenasEmptyAtShutdown(true),
@@ -1680,8 +1680,8 @@ GCRuntime::setGCCallback(JSGCCallback callback, void* data)
 void
 GCRuntime::callGCCallback(JSGCStatus status) const
 {
-    if (gcCallback.op)
-        gcCallback.op(TlsContext.get(), status, gcCallback.data);
+    MOZ_ASSERT(gcCallback.op);
+    gcCallback.op(TlsContext.get(), status, gcCallback.data);
 }
 
 void
@@ -7260,46 +7260,40 @@ class js::gc::AutoCallGCCallbacks {
 
   public:
     explicit AutoCallGCCallbacks(GCRuntime& gc) : gc_(gc) {
-        gc_.maybeCallBeginCallback();
+        gc_.maybeCallGCCallback(JSGC_BEGIN);
     }
     ~AutoCallGCCallbacks() {
-        gc_.maybeCallEndCallback();
+        gc_.maybeCallGCCallback(JSGC_BEGIN);
     }
 };
 
 void
-GCRuntime::maybeCallBeginCallback()
+GCRuntime::maybeCallGCCallback(JSGCStatus status)
 {
+    if (!gcCallback.op)
+        return;
+
     if (isIncrementalGCInProgress())
         return;
 
-    if (gcBeginCallbackDepth == 0) {
+    if (gcCallbackDepth == 0) {
         // Save scheduled zone information in case the callback changes it.
         for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
             zone->gcScheduledSaved_ = zone->gcScheduled_;
     }
 
-    gcBeginCallbackDepth++;
+    gcCallbackDepth++;
 
-    callGCCallback(JSGC_BEGIN);
+    callGCCallback(status);
 
-    MOZ_ASSERT(gcBeginCallbackDepth != 0);
-    gcBeginCallbackDepth--;
+    MOZ_ASSERT(gcCallbackDepth != 0);
+    gcCallbackDepth--;
 
-    if (gcBeginCallbackDepth == 0) {
+    if (gcCallbackDepth == 0) {
         // Restore scheduled zone information again.
         for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
             zone->gcScheduled_ = zone->gcScheduledSaved_;
     }
-}
-
-void
-GCRuntime::maybeCallEndCallback()
-{
-    if (isIncrementalGCInProgress())
-        return;
-
-    callGCCallback(JSGC_END);
 }
 
 /*
