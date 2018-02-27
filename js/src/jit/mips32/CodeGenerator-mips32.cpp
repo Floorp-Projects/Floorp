@@ -155,7 +155,7 @@ CodeGeneratorMIPS::visitUnbox(LUnbox* unbox)
 void
 CodeGeneratorMIPS::splitTagForTest(const ValueOperand& value, ScratchTagScope& tag)
 {
-    return value.typeReg();
+    MOZ_ASSERT(value.typeReg() == tag);
 }
 
 void
