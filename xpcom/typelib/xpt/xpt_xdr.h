@@ -16,8 +16,9 @@
 
 using mozilla::NotNull;
 
-struct XPTState;
+struct XPTArena;
 struct XPTCursor;
+struct XPTState;
 
 bool
 XPT_SkipStringInline(NotNull<XPTCursor*> cursor);

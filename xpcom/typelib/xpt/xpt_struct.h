@@ -12,7 +12,6 @@
 #ifndef xpt_struct_h
 #define xpt_struct_h
 
-#include "xpt_arena.h"
 #include "nsID.h"
 #include <stdint.h>
 
@@ -46,18 +45,12 @@ struct XPTHeader {
 
   //uint8_t magic[16];
   uint8_t major_version;
-  uint8_t minor_version;
+  //uint8_t minor_version;
   uint16_t num_interfaces;
   //uint32_t file_length;
   XPTInterfaceDirectoryEntry* interface_directory;
   //uint32_t data_pool;
 };
-
-#define XPT_MAGIC "XPCOM\nTypeLib\r\n\032"
-/* For error messages. */
-#define XPT_MAGIC_STRING "XPCOM\\nTypeLib\\r\\n\\032"
-#define XPT_MAJOR_VERSION 0x01
-#define XPT_MINOR_VERSION 0x02
 
 /*
  * Any file with a major version number of XPT_MAJOR_INCOMPATIBLE_VERSION
@@ -129,7 +122,6 @@ struct XPTInterfaceDescriptor {
 #define XPT_ID_FUNCTION                     0x40
 #define XPT_ID_BUILTINCLASS                 0x20
 #define XPT_ID_MAIN_PROCESS_SCRIPTABLE_ONLY 0x10
-#define XPT_ID_FLAGMASK                     0xf0
 
 #define XPT_ID_IS_SCRIPTABLE(flags) (!!(flags & XPT_ID_SCRIPTABLE))
 #define XPT_ID_IS_FUNCTION(flags) (!!(flags & XPT_ID_FUNCTION))
@@ -273,7 +265,6 @@ struct XPTParamDescriptor {
 #define XPT_PD_SHARED   0x10
 #define XPT_PD_DIPPER   0x08
 #define XPT_PD_OPTIONAL 0x04
-#define XPT_PD_FLAGMASK 0xfc
 
 #define XPT_PD_IS_IN(flags) (flags & XPT_PD_IN)
 #define XPT_PD_IS_OUT(flags) (flags & XPT_PD_OUT)
@@ -301,7 +292,6 @@ struct XPTMethodDescriptor {
 #define XPT_MD_HIDDEN   0x08
 #define XPT_MD_OPT_ARGC 0x04
 #define XPT_MD_CONTEXT  0x02
-#define XPT_MD_FLAGMASK 0xfe
 
 #define XPT_MD_IS_GETTER(flags) (flags & XPT_MD_GETTER)
 #define XPT_MD_IS_SETTER(flags) (flags & XPT_MD_SETTER)
@@ -309,33 +299,5 @@ struct XPTMethodDescriptor {
 #define XPT_MD_IS_HIDDEN(flags) (flags & XPT_MD_HIDDEN)
 #define XPT_MD_WANTS_OPT_ARGC(flags) (flags & XPT_MD_OPT_ARGC)
 #define XPT_MD_WANTS_CONTEXT(flags) (flags & XPT_MD_CONTEXT)
-
-/*
- * Annotation records are variable-size records used to store secondary
- * information about the typelib, e.g. such as the name of the tool that
- * generated the typelib file, the date it was generated, etc.  The
- * information is stored with very loose format requirements so as to
- * allow virtually any private data to be stored in the typelib.
- *
- * There are two types of Annotations:
- *
- * EmptyAnnotation
- * PrivateAnnotation
- *
- * The tag field of the prefix discriminates among the variant record
- * types for Annotation's.  If the tag is 0, this record is an
- * EmptyAnnotation. EmptyAnnotation's are ignored - they're only used to
- * indicate an array of Annotation's that's completely empty.  If the tag
- * is 1, the record is a PrivateAnnotation.
- *
- * We don't actually store annotations; we just skip over them if they are
- * present.
- */
-
-#define XPT_ANN_LAST    0x80
-#define XPT_ANN_PRIVATE 0x40
-
-#define XPT_ANN_IS_LAST(flags) (flags & XPT_ANN_LAST)
-#define XPT_ANN_IS_PRIVATE(flags)(flags & XPT_ANN_PRIVATE)
 
 #endif /* xpt_struct_h */
