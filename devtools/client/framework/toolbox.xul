@@ -47,7 +47,8 @@
 
   <vbox id="toolbox-container" flex="1">
     <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-notificationbox"/>
-    <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-toolbar-mount" />
+    <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-toolbar-mount"
+         role="toolbar" />
     <vbox flex="1" class="theme-body">
       <!-- Set large flex to allow the toolbox-panel-webconsole to have a
            height set to a small value without flexing to fill up extra

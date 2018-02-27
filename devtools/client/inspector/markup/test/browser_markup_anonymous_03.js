@@ -17,7 +17,8 @@ add_task(function* () {
   let shadow = yield getNodeFront("#shadow", inspector.markup);
   let children = yield inspector.walker.children(shadow);
 
-  is(shadow.numChildren, 3, "Children of the shadow root are counted");
+  // Bug 1441535.
+  todo_is(shadow.numChildren, 3, "Children of the shadow root are counted");
   is(children.nodes.length, 3, "Children returned from walker");
 
   info("Checking the ::before pseudo element");

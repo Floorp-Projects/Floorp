@@ -27,7 +27,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ShadowRoot)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ShadowRoot,
                                                   DocumentFragment)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMStyleSheets)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAssociatedBinding)
   for (auto iter = tmp->mIdentifierMap.ConstIter(); !iter.Done();
        iter.Next()) {
     iter.Get()->Traverse(&cb);
@@ -39,7 +38,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ShadowRoot)
     tmp->GetHost()->RemoveMutationObserver(tmp);
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMStyleSheets)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAssociatedBinding)
   tmp->mIdentifierMap.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(DocumentFragment)
 
@@ -51,16 +49,15 @@ NS_INTERFACE_MAP_END_INHERITING(DocumentFragment)
 NS_IMPL_ADDREF_INHERITED(ShadowRoot, DocumentFragment)
 NS_IMPL_RELEASE_INHERITED(ShadowRoot, DocumentFragment)
 
-ShadowRoot::ShadowRoot(Element* aElement, bool aClosed,
-                       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                       nsXBLPrototypeBinding* aProtoBinding)
+ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
+                       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
   : DocumentFragment(aNodeInfo)
   , DocumentOrShadowRoot(*this)
-  , mProtoBinding(aProtoBinding)
+  , mMode(aMode)
+  , mServoStyles(Servo_AuthorStyles_Create())
   , mIsComposedDocParticipant(false)
 {
   SetHost(aElement);
-  mMode = aClosed ? ShadowRootMode::Closed : ShadowRootMode::Open;
 
   // Nodes in a shadow tree should never store a value
   // in the subtree root pointer, nodes in the shadow tree
@@ -81,8 +78,7 @@ ShadowRoot::ShadowRoot(Element* aElement, bool aClosed,
 ShadowRoot::~ShadowRoot()
 {
   if (auto* host = GetHost()) {
-    // mHost may have been unlinked or a new ShadowRoot may have been
-    // created, making this one obsolete.
+    // mHost may have been unlinked.
     host->RemoveMutationObserver(this);
   }
 
@@ -208,14 +204,14 @@ ShadowRoot::RemoveSlot(HTMLSlotElement* aSlot)
 void
 ShadowRoot::StyleSheetChanged()
 {
+  // FIXME(emilio): This is not needed to handle sheet additions / removals,
+  // only for CSSOM mutations, we should distinguish both.
+  Servo_AuthorStyles_ForceDirty(mServoStyles.get());
+  // FIXME(emilio): Similarly, we should notify of the particular mutation to
+  // the rule map, instead of this...
+  mStyleRuleMap.reset(nullptr);
+
   nsIDocument* doc = OwnerDoc();
-
-  if (doc->IsStyledByServo()) {
-    mProtoBinding->SyncServoStyles();
-  } else {
-    mProtoBinding->FlushSkinSheets();
-  }
-
   if (nsIPresShell* shell = doc->GetShell()) {
     doc->BeginUpdate(UPDATE_STYLE);
     shell->RecordShadowStyleChange(*this);
@@ -223,9 +219,9 @@ ShadowRoot::StyleSheetChanged()
   }
 }
 
+
 void
-ShadowRoot::InsertSheet(StyleSheet* aSheet,
-                        nsIContent* aLinkingContent)
+ShadowRoot::InsertSheet(StyleSheet* aSheet, nsIContent* aLinkingContent)
 {
   nsCOMPtr<nsIStyleSheetLinkingElement>
     linkingElement = do_QueryInterface(aLinkingContent);
@@ -236,31 +232,21 @@ ShadowRoot::InsertSheet(StyleSheet* aSheet,
 
   linkingElement->SetStyleSheet(aSheet); // This sets the ownerNode on the sheet
 
-  MOZ_DIAGNOSTIC_ASSERT(mProtoBinding->SheetCount() == DocumentOrShadowRoot::SheetCount());
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  // FIXME(emilio, bug 1425759): For now we keep them duplicated, the proto
-  // binding will disappear soon (tm).
-  {
-    size_t i = 0;
-    for (RefPtr<StyleSheet>& sheet : mStyleSheets) {
-      MOZ_DIAGNOSTIC_ASSERT(sheet.get() == mProtoBinding->StyleSheetAt(i++));
-    }
-  }
-#endif
-
   // Find the correct position to insert into the style sheet list (must
   // be in tree order).
   for (size_t i = 0; i <= SheetCount(); i++) {
     if (i == SheetCount()) {
       AppendStyleSheet(*aSheet);
-      mProtoBinding->AppendStyleSheet(aSheet);
+      Servo_AuthorStyles_AppendStyleSheet(mServoStyles.get(), aSheet->AsServo());
       break;
     }
 
-    nsINode* sheetOwningNode = SheetAt(i)->GetOwnerNode();
+    StyleSheet* sheet = SheetAt(i);
+    nsINode* sheetOwningNode = sheet->GetOwnerNode();
     if (nsContentUtils::PositionIsBefore(aLinkingContent, sheetOwningNode)) {
       InsertSheetAt(i, *aSheet);
-      mProtoBinding->InsertStyleSheetAt(i, aSheet);
+      Servo_AuthorStyles_InsertStyleSheetBefore(
+        mServoStyles.get(), aSheet->AsServo(), sheet->AsServo());
       break;
     }
   }
@@ -273,8 +259,8 @@ ShadowRoot::InsertSheet(StyleSheet* aSheet,
 void
 ShadowRoot::RemoveSheet(StyleSheet* aSheet)
 {
-  mProtoBinding->RemoveStyleSheet(aSheet);
   DocumentOrShadowRoot::RemoveSheet(*aSheet);
+  Servo_AuthorStyles_RemoveStyleSheet(mServoStyles.get(), aSheet->AsServo());
 
   if (aSheet->IsApplicable()) {
     StyleSheetChanged();
@@ -560,6 +546,16 @@ ShadowRoot::ContentRemoved(nsIDocument* aDocument,
       slot->AssignedNodes().IsEmpty()) {
     slot->EnqueueSlotChangeEvent();
   }
+}
+
+ServoStyleRuleMap&
+ShadowRoot::ServoStyleRuleMap()
+{
+  if (!mStyleRuleMap) {
+    mStyleRuleMap = MakeUnique<mozilla::ServoStyleRuleMap>();
+  }
+  mStyleRuleMap->EnsureTable(*this);
+  return *mStyleRuleMap;
 }
 
 nsresult

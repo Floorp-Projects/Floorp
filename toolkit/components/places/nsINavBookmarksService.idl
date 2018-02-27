@@ -402,18 +402,6 @@ interface nsINavBookmarksService : nsISupports
                          [optional] in unsigned short aSource);
 
   /**
-   * Convenience function for container services.  Removes
-   * all children of the given folder.
-   *  @param aItemId
-   *         The id of the folder to remove children from.
-   *  @param [optional] aSource
-   *         The change source, forwarded to all bookmark observers. Defaults
-   *         to SOURCE_DEFAULT.
-   */
-  void removeFolderChildren(in long long aItemId,
-                            [optional] in unsigned short aSource);
-
-  /**
    * Set the title for an item.
    *  @param aItemId
    *         The id of the item whose title should be updated.

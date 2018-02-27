@@ -18,14 +18,5 @@ function run_test() {
       PlacesUtils.bookmarks.removeItem(root);
       do_throw("Trying to remove a root should throw");
     } catch (ex) {}
-
-    try {
-      PlacesUtils.bookmarks.removeFolderChildren(root);
-      if (root == PlacesUtils.placesRootId)
-        do_throw("Trying to remove children of the main root should throw");
-    } catch (ex) {
-      if (root != PlacesUtils.placesRootId)
-        do_throw("Trying to remove children of other roots should not throw");
-    }
   }
 }

@@ -9,6 +9,7 @@
 #include "gfxPlatformFontList.h"
 #include "mozilla/AutoRestyleTimelineMarker.h"
 #include "mozilla/DocumentStyleRootIterator.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/RestyleManagerInlines.h"
 #include "mozilla/ServoBindings.h"
@@ -168,6 +169,37 @@ ServoStyleSet::Init(nsPresContext* aPresContext)
   SetStylistXBLStyleSheetsDirty();
 }
 
+template<typename Functor>
+void
+EnumerateShadowRootsInSubtree(const nsINode& aRoot, const Functor& aCb)
+{
+  for (const nsINode* cur = &aRoot; cur; cur = cur->GetNextNode()) {
+    if (!cur->IsElement()) {
+      continue;
+    }
+
+    auto* shadowRoot = cur->AsElement()->GetShadowRoot();
+    if (!shadowRoot) {
+      continue;
+    }
+
+    aCb(*shadowRoot);
+    EnumerateShadowRootsInSubtree(*shadowRoot, aCb);
+  }
+}
+
+// FIXME(emilio): We may want a faster way to do this.
+template<typename Functor>
+void
+EnumerateShadowRoots(const nsIDocument& aDoc, const Functor& aCb)
+{
+  if (!aDoc.IsShadowDOMEnabled()) {
+    return;
+  }
+
+  EnumerateShadowRootsInSubtree(aDoc, aCb);
+}
+
 void
 ServoStyleSet::Shutdown()
 {
@@ -218,22 +250,27 @@ ServoStyleSet::InvalidateStyleForDocumentStateChanges(EventStates aStatesChanged
   }
 
   // TODO(emilio): It may be nicer to just invalidate stuff in a given subtree
-  // for XBL sheets / shadow DOM. Consider just enumerating bound content
+  // for XBL sheets / Shadow DOM. Consider just enumerating bound content
   // instead and run invalidation individually, passing mRawSet for the UA /
   // User sheets.
-  AutoTArray<RawServoAuthorStylesBorrowed, 20> xblStyles;
+  AutoTArray<RawServoAuthorStylesBorrowed, 20> nonDocumentStyles;
+
+  EnumerateShadowRoots(*mDocument, [&](ShadowRoot& aShadowRoot) {
+    nonDocumentStyles.AppendElement(aShadowRoot.ServoStyles());
+  });
+
   // FIXME(emilio): When bug 1425759 is fixed we need to enumerate ShadowRoots
   // too.
   mDocument->BindingManager()->EnumerateBoundContentBindings(
     [&](nsXBLBinding* aBinding) {
       if (auto* authorStyles = aBinding->PrototypeBinding()->GetServoStyles()) {
-        xblStyles.AppendElement(authorStyles);
+        nonDocumentStyles.AppendElement(authorStyles);
       }
       return true;
     });
 
   Servo_InvalidateStyleForDocStateChanges(
-    root, mRawSet.get(), &xblStyles, aStatesChanged.ServoValue());
+    root, mRawSet.get(), &nonDocumentStyles, aStatesChanged.ServoValue());
 }
 
 static const MediaFeatureChangeReason kMediaFeaturesAffectingDefaultStyle =
@@ -252,9 +289,11 @@ nsRestyleHint
 ServoStyleSet::MediumFeaturesChanged(MediaFeatureChangeReason aReason)
 {
   AutoTArray<RawServoAuthorStylesBorrowedMut, 20> nonDocumentStyles;
-  // FIXME(emilio): When bug 1425759 is fixed we need to enumerate ShadowRoots
-  // too.
-  //
+
+  EnumerateShadowRoots(*mDocument, [&](ShadowRoot& aShadowRoot) {
+    nonDocumentStyles.AppendElement(aShadowRoot.ServoStyles());
+  });
+
   // FIXME(emilio): This is broken for XBL. See bug 1406875.
   mDocument->BindingManager()->EnumerateBoundContentBindings(
     [&](nsXBLBinding* aBinding) {
@@ -1259,7 +1298,7 @@ ServoStyleSet::ComputeAnimationValue(
 bool
 ServoStyleSet::EnsureUniqueInnerOnCSSSheets()
 {
-  using SheetOwner = Variant<ServoStyleSet*, nsXBLPrototypeBinding*>;
+  using SheetOwner = Variant<ServoStyleSet*, nsXBLPrototypeBinding*, ShadowRoot*>;
 
   AutoTArray<Pair<StyleSheet*, SheetOwner>, 32> queue;
   for (auto& entryArray : mSheets) {
@@ -1268,6 +1307,13 @@ ServoStyleSet::EnsureUniqueInnerOnCSSSheets()
       queue.AppendElement(MakePair(downcasted, SheetOwner { this }));
     }
   }
+
+  EnumerateShadowRoots(*mDocument, [&](ShadowRoot& aShadowRoot) {
+    for (auto index : IntegerRange(aShadowRoot.SheetCount())) {
+      queue.AppendElement(
+        MakePair(aShadowRoot.SheetAt(index), SheetOwner { &aShadowRoot }));
+    }
+  });
 
   mDocument->BindingManager()->EnumerateBoundContentBindings(
       [&](nsXBLBinding* aBinding) {
@@ -1279,18 +1325,24 @@ ServoStyleSet::EnsureUniqueInnerOnCSSSheets()
         return true;
       });
 
-  bool anyXBLSheetChanged = false;
+  bool anyNonDocStyleChanged = false;
   while (!queue.IsEmpty()) {
     uint32_t idx = queue.Length() - 1;
     auto* sheet = queue[idx].first();
     SheetOwner owner = queue[idx].second();
     queue.RemoveElementAt(idx);
 
-    if (!sheet->HasUniqueInner() && owner.is<nsXBLPrototypeBinding*>()) {
-      if (auto* styles = owner.as<nsXBLPrototypeBinding*>()->GetServoStyles()) {
-        Servo_AuthorStyles_ForceDirty(styles);
+    if (!sheet->HasUniqueInner()) {
+      if (owner.is<ShadowRoot*>()) {
+        Servo_AuthorStyles_ForceDirty(owner.as<ShadowRoot*>()->ServoStyles());
         mNeedsRestyleAfterEnsureUniqueInner = true;
-        anyXBLSheetChanged = true;
+        anyNonDocStyleChanged = true;
+      } else if (owner.is<nsXBLPrototypeBinding*>()) {
+        if (auto* styles = owner.as<nsXBLPrototypeBinding*>()->GetServoStyles()) {
+          Servo_AuthorStyles_ForceDirty(styles);
+          mNeedsRestyleAfterEnsureUniqueInner = true;
+          anyNonDocStyleChanged = true;
+        }
       }
     }
 
@@ -1312,7 +1364,7 @@ ServoStyleSet::EnsureUniqueInnerOnCSSSheets()
     }
   }
 
-  if (anyXBLSheetChanged) {
+  if (anyNonDocStyleChanged) {
     SetStylistXBLStyleSheetsDirty();
   }
 
@@ -1472,6 +1524,11 @@ ServoStyleSet::UpdateStylist()
 
   if (MOZ_UNLIKELY(mStylistState & StylistState::XBLStyleSheetsDirty)) {
     MOZ_ASSERT(GetPresContext(), "How did they get dirty?");
+
+    EnumerateShadowRoots(*mDocument, [&](ShadowRoot& aShadowRoot) {
+      Servo_AuthorStyles_Flush(aShadowRoot.ServoStyles(), mRawSet.get());
+    });
+
     mDocument->BindingManager()->EnumerateBoundContentBindings(
       [&](nsXBLBinding* aBinding) {
         if (auto* authorStyles = aBinding->PrototypeBinding()->GetServoStyles()) {

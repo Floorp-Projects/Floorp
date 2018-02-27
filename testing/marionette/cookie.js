@@ -31,17 +31,17 @@ this.cookie = {
 /**
  * Unmarshal a JSON Object to a cookie representation.
  *
- * Effectively this will run validation checks on |json|, which will
- * produce the errors expected by WebDriver if the input is not valid.
+ * Effectively this will run validation checks on ``json``, which
+ * will produce the errors expected by WebDriver if the input is
+ * not valid.
  *
  * @param {Object.<string, (number|boolean|string)>} json
- *     Cookie to be deserialised. <var>name</var> and <var>value</var>
- *     are required fields which must be strings. The <var>path</var> and
- *     <var>domain</var> fields are optional, but must be a string if
- *     provided.
- *     The <var>secure</var>, and <var>httpOnly</var> are similarly
- *     optional, but must be booleans. Likewise, the <var>expiry</var> field
- *     is optional but must be unsigned integer.
+ *     Cookie to be deserialised. ``name`` and ``value`` are required
+ *     fields which must be strings.  The ``path`` and ``domain`` fields
+ *     are optional, but must be a string if provided.  The ``secure``,
+ *     and ``httpOnly`` are similarly optional, but must be booleans.
+ *     Likewise, the ``expiry`` field is optional but must be
+ *     unsigned integer.
  *
  * @return {Cookie}
  *     Valid cookie object.
@@ -82,14 +82,14 @@ cookie.fromJSON = function(json) {
  * @param {Cookie} newCookie
  *     Cookie to add.
  * @param {string=} restrictToHost
- *     Perform test that <var>newCookie</var>'s domain matches this.
+ *     Perform test that ``newCookie``'s domain matches this.
  *
  * @throws {TypeError}
- *     If <var>name</var>, <var>value</var>, or <var>domain</var> are
- *     not present and of the correct type.
+ *     If ``name``, ``value``, or ``domain`` are not present and
+ *     of the correct type.
  * @throws {InvalidCookieDomainError}
- *     If <var>restrictToHost</var> is set and <var>newCookie</var>'s
- *     domain does not match.
+ *     If ``restrictToHost`` is set and ``newCookie``'s domain does
+ *     not match.
  * @throws {UnableToSetCookieError}
  *     If an error occurred while trying to save the cookie.
  */
@@ -190,16 +190,15 @@ cookie.remove = function(toDelete) {
 };
 
 /**
- * Iterates over the cookies for the current <var>host</var>.  You may
- * optionally filter for specific paths on that <var>host</var> by
- * specifying a path in <var>currentPath</var>.
+ * Iterates over the cookies for the current ``host``.  You may
+ * optionally filter for specific paths on that ``host`` by specifying
+ * a path in ``currentPath``.
  *
  * @param {string} host
  *     Hostname to retrieve cookies for.
  * @param {string=} [currentPath="/"] currentPath
- *     Optionally filter the cookies for <var>host</var> for the
- *     specific path.  Defaults to "<tt>/</tt>", meaning all cookies
- *     for <var>host</var> are included.
+ *     Optionally filter the cookies for ``host`` for the specific path.
+ *     Defaults to ``/``, meaning all cookies for ``host`` are included.
  *
  * @return {Iterable.<Cookie>}
  *     Iterator.

@@ -1,0 +1,52 @@
+{
+    "page_size": 25,
+    "page_count": 1,
+    "count": 4,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "name": "PASS",
+            "addon_guid": "test_AddonRepository_1@tests.mozilla.org",
+            "version_ranges": [
+                {
+                    "addon_min_version": "0.1",
+                    "addon_max_version": "0.2",
+                    "applications": [
+                        {
+                            "name": "XPCShell",
+                            "guid": "xpcshell@tests.mozilla.org",
+                            "min_version": "3.0",
+                            "max_version": "4.0"
+                        }
+                    ]
+                },
+                {
+                    "addon_min_version": "0.2",
+                    "addon_max_version": "0.3",
+                    "applications": [
+                        {
+                            "name": "XPCShell",
+                            "guid": "xpcshell@tests.mozilla.org",
+                            "min_version": "5.0",
+                            "max_version": "6.0"
+                        }
+                    ]
+                },
+                {
+                    "addon_min_version": "0.2",
+                    "addon_max_version": "0.3",
+                    "applications": [
+                        {
+                            "name": "Unknown App",
+                            "guid": "unknown-app@tests.mozilla.org",
+                            "min_version": "1.0",
+                            "max_version": "999.0"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+

@@ -204,12 +204,6 @@ public:
                  PerformanceStorage* aPerformanceStorage = nullptr)
   {
     MOZ_ASSERT(aPrincipal);
-    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobalObject);
-    if (win) {
-      if (win->GetExtantDoc()) {
-        mStyleBackend = win->GetExtantDoc()->GetStyleBackendType();
-      }
-    }
     mPrincipal = aPrincipal;
     BindToOwner(aGlobalObject);
     mBaseURI = aBaseURI;
@@ -687,8 +681,6 @@ protected:
   Maybe<ServiceWorkerDescriptor> mController;
 
   uint16_t mState;
-
-  StyleBackendType mStyleBackend;
 
   bool mFlagSynchronous;
   bool mFlagAborted;

@@ -76,14 +76,10 @@ function getRepositoryAddon(aAddon, aCallback) {
     aCallback(aAddon);
     return;
   }
-  function completeAddon(aRepositoryAddon) {
-    aAddon._repositoryAddon = aRepositoryAddon;
-    aAddon.compatibilityOverrides = aRepositoryAddon ?
-                                      aRepositoryAddon.compatibilityOverrides :
-                                      null;
+  AddonRepository.getCachedAddonByID(aAddon.id, repoAddon => {
+    aAddon._repositoryAddon = repoAddon;
     aCallback(aAddon);
-  }
-  AddonRepository.getCachedAddonByID(aAddon.id, completeAddon);
+  });
 }
 
 /**

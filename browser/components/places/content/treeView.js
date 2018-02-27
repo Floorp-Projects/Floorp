@@ -1389,6 +1389,10 @@ PlacesTreeView.prototype = {
     if (!this._result)
       throw Cr.NS_ERROR_UNEXPECTED;
 
+    if (this._controller.disableUserActions) {
+      return false;
+    }
+
     // Drop position into a sorted treeview would be wrong.
     if (this.isSorted())
       return false;
@@ -1474,6 +1478,10 @@ PlacesTreeView.prototype = {
   },
 
   drop: function PTV_drop(aRow, aOrientation, aDataTransfer) {
+    if (this._controller.disableUserActions) {
+      return;
+    }
+
     // We are responsible for translating the |index| and |orientation|
     // parameters into a container id and index within the container,
     // since this information is specific to the tree view.

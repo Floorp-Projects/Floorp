@@ -25,34 +25,30 @@ const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
  *     the condition to be revaluated or time out.
  *
  * @return {*}
- *     The value from calling <code>resolve</code>.
+ *     The value from calling ``resolve``.
  */
 
 /**
- * Runs a promise-like function off the main thread until it is resolved
- * through <code>resolve</code> or <code>rejected</code> callbacks.
- * The function is guaranteed to be run at least once, irregardless of
- * the timeout.
+ * Runs a Promise-like function off the main thread until it is resolved
+ * through ``resolve`` or ``rejected`` callbacks.  The function is
+ * guaranteed to be run at least once, irregardless of the timeout.
  *
- * The <var>func</var> is evaluated every <var>interval</var> for as
- * long as its runtime duration does not exceed <var>interval</var>.
- * Evaluations occur sequentially, meaning that evaluations of
- * <var>func</var> are queued if the runtime evaluation duration of
- * <var>func</var> is greater than <var>interval</var>.
+ * The ``func`` is evaluated every ``interval`` for as long as its
+ * runtime duration does not exceed ``interval``.  Evaluations occur
+ * sequentially, meaning that evaluations of ``func`` are queued if
+ * the runtime evaluation duration of ``func`` is greater than ``interval``.
  *
- * <var>func</var> is given two arguments, <code>resolve</code> and
- * <code>reject</code>, of which one must be called for the evaluation
- * to complete.  Calling <code>resolve</code> with an argument
- * indicates that the expected wait condition was met and will return
- * the passed value to the caller.  Conversely, calling
- * <code>reject</code> will evaluate <var>func</var> again until
- * the <var>timeout</var> duration has elapsed or <var>func</var>
- * throws.  The passed value to <code>reject</code> will also be
- * returned to the caller once the wait has expired.
+ * ``func`` is given two arguments, ``resolve`` and ``reject``,
+ * of which one must be called for the evaluation to complete.
+ * Calling ``resolve`` with an argument indicates that the expected
+ * wait condition was met and will return the passed value to the
+ * caller.  Conversely, calling ``reject`` will evaluate ``func``
+ * again until the ``timeout`` duration has elapsed or ``func`` throws.
+ * The passed value to ``reject`` will also be returned to the caller
+ * once the wait has expired.
  *
- * Usage:
+ * Usage::
  *
- * <pre><code>
  *     let els = new PollPromise((resolve, reject) => {
  *       let res = document.querySelectorAll("p");
  *       if (res.length > 0) {
@@ -61,24 +57,23 @@ const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
  *         reject([]);
  *       }
  *     });
- * </pre></code>
  *
  * @param {Condition} func
  *     Function to run off the main thread.
  * @param {number=} [timeout=2000] timeout
  *     Desired timeout.  If 0 or less than the runtime evaluation
- *     time of <var>func</var>, <var>func</var> is guaranteed to run
- *     at least once.  The default is 2000 milliseconds.
+ *     time of ``func``, ``func`` is guaranteed to run at least once.
+ *     The default is 2000 milliseconds.
  * @param {number=} [interval=10] interval
- *     Duration between each poll of <var>func</var> in milliseconds.
+ *     Duration between each poll of ``func`` in milliseconds.
  *     Defaults to 10 milliseconds.
  *
  * @return {Promise.<*>}
- *     Yields the value passed to <var>func</var>'s
- *     <code>resolve</code> or <code>reject</code> callbacks.
+ *     Yields the value passed to ``func``'s
+ *     ``resolve`` or ``reject`` callbacks.
  *
  * @throws {*}
- *     If <var>func</var> throws, its error is propagated.
+ *     If ``func`` throws, its error is propagated.
  */
 function PollPromise(func, {timeout = 2000, interval = 10} = {}) {
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -117,23 +112,21 @@ function PollPromise(func, {timeout = 2000, interval = 10} = {}) {
 }
 
 /**
- * The <code>TimedPromise</code> object represents the timed, eventual
- * completion (or failure) of an asynchronous operation, and its
- * resulting value.
+ * Represents the timed, eventual completion (or failure) of an
+ * asynchronous operation, and its resulting value.
  *
- * In contrast to a regular {@link Promise}, it times out after
- * <var>timeout</var>.
+ * In contrast to a regular Promise, it times out after ``timeout``.
  *
  * @param {Condition} func
- *     Function to run, which will have its <code>reject</code>
- *     callback invoked after the <var>timeout</var> duration is reached.
- *     It is given two callbacks: <code>resolve(value)</code> and
- *     <code>reject(error)</code>.
+ *     Function to run, which will have its ``reject``
+ *     callback invoked after the ``timeout`` duration is reached.
+ *     It is given two callbacks: ``resolve(value)`` and
+ *     ``reject(error)``.
  * @param {timeout=} [timeout=1500] timeout
- *     <var>condition</var>'s <code>reject</code> callback will be called
+ *     ``condition``'s ``reject`` callback will be called
  *     after this timeout.
  * @param {Error=} [throws=TimeoutError] throws
- *     When the <var>timeout</var> is hit, this error class will be
+ *     When the ``timeout`` is hit, this error class will be
  *     thrown.  If it is null, no error is thrown and the promise is
  *     instead resolved on timeout.
  *
