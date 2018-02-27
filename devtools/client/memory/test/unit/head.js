@@ -3,7 +3,6 @@
 
 "use strict";
 
-var { console } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
 var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
 var Services = require("Services");

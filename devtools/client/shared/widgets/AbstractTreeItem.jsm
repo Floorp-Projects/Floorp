@@ -12,9 +12,6 @@ const { KeyCodes } = require("devtools/client/shared/keycodes");
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/old-event-emitter");
 
-ChromeUtils.defineModuleGetter(this, "console",
-  "resource://gre/modules/Console.jsm");
-
 this.EXPORTED_SYMBOLS = ["AbstractTreeItem"];
 
 /**

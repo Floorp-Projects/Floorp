@@ -697,7 +697,6 @@ DevToolsStartup.prototype = {
     if (!window) {
       let require = this.initDevTools("CommandLine");
       let { HUDService } = require("devtools/client/webconsole/hudservice");
-      let { console } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
       HUDService.toggleBrowserConsole().catch(console.error);
     } else {
       // the Browser Console was already open
@@ -725,14 +724,12 @@ DevToolsStartup.prototype = {
         return Services.prefs.getBoolPref(pref);
       });
     } catch (ex) {
-      let { console } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
       console.error(ex);
       return false;
     }
     if (!remoteDebuggingEnabled) {
       let errorMsg = "Could not run chrome debugger! You need the following " +
                      "prefs to be set to true: " + kDebuggerPrefs.join(", ");
-      let { console } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
       console.error(new Error(errorMsg));
       // Dump as well, as we're doing this from a commandline, make sure people
       // don't miss it:

@@ -11,7 +11,6 @@ const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {}
 const Editor = require("devtools/client/sourceeditor/editor");
 const promise = require("promise");
 const {shortSource, prettifyCSS} = require("devtools/shared/inspector/css-logic");
-const {console} = require("resource://gre/modules/Console.jsm");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/old-event-emitter");
 const {Task} = require("devtools/shared/task");

@@ -15,7 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Downloads: "resource://gre/modules/Downloads.jsm",
   DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
-  console: "resource://gre/modules/Console.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
