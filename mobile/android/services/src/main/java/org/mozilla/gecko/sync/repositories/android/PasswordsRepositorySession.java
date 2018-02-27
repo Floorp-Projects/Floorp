@@ -110,7 +110,7 @@ public class PasswordsRepositorySession extends
       }
     };
 
-    delegateQueue.execute(fetchSinceRunnable);
+    fetchWorkQueue.execute(fetchSinceRunnable);
   }
 
   @Override
@@ -127,7 +127,7 @@ public class PasswordsRepositorySession extends
   public void fetch(final String[] guids, final RepositorySessionFetchRecordsDelegate delegate) {
     if (guids == null || guids.length < 1) {
       Logger.error(LOG_TAG, "No guids to be fetched.");
-      delegateQueue.execute(new Runnable() {
+      fetchWorkQueue.execute(new Runnable() {
         @Override
         public void run() {
           delegate.onFetchCompleted();
@@ -177,7 +177,7 @@ public class PasswordsRepositorySession extends
       }
     };
 
-    delegateQueue.execute(fetchRunnable);
+    fetchWorkQueue.execute(fetchRunnable);
   }
 
   @Override
@@ -304,7 +304,7 @@ public class PasswordsRepositorySession extends
             return;
           }
           trackRecord(inserted);
-          storeDelegate.onRecordStoreSucceeded(inserted.guid);
+          storeDelegate.onRecordStoreSucceeded(1);
           return;
         }
 
@@ -340,7 +340,7 @@ public class PasswordsRepositorySession extends
         Logger.debug(LOG_TAG, "Calling delegate callback with guid " + replaced.guid +
                               "(" + replaced.androidID + ")");
         storeDelegate.onRecordStoreReconciled(record.guid, existingRecord.guid, null);
-        storeDelegate.onRecordStoreSucceeded(record.guid);
+        storeDelegate.onRecordStoreSucceeded(1);
         return;
       }
     };
@@ -598,7 +598,7 @@ public class PasswordsRepositorySession extends
       storeDelegate.onRecordStoreFailed(e, record.guid);
       return;
     }
-    storeDelegate.onRecordStoreSucceeded(record.guid);
+    storeDelegate.onRecordStoreSucceeded(1);
   }
 
   /**

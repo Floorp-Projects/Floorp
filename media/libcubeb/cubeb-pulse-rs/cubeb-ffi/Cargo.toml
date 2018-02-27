@@ -1,8 +1,0 @@
-[package]
-name = "cubeb-ffi"
-version = "0.0.2"
-authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
-description = "FFI bindings for implementing cubeb backends"
-
-[dependencies]
-bitflags = "1.0"

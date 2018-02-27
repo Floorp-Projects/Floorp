@@ -625,7 +625,7 @@ nsWebBrowserPersist::SerializeNextFile()
             if (NS_WARN_IF(NS_FAILED(rv))) {
                 break;
             }
-            rv = AppendPathToURI(fileAsURI, data->mFilename);
+            rv = AppendPathToURI(fileAsURI, data->mFilename, fileAsURI);
             if (NS_WARN_IF(NS_FAILED(rv))) {
                 break;
             }
@@ -642,8 +642,9 @@ nsWebBrowserPersist::SerializeNextFile()
             }
 
             if (rv == NS_OK) {
-                // Store the actual object because once it's persisted this
-                // will be fixed up with the right file extension.
+                // URIData.mFile will be updated to point to the correct
+                // URI object when it is fixed up with the right file extension
+                // in OnStartRequest
                 data->mFile = fileAsURI;
                 data->mSaved = true;
             } else {
@@ -868,6 +869,19 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(
             rv = CalculateUniqueFilename(data->mFile, uniqueFilenameURI);
             if (NS_SUCCEEDED(rv)) {
                 data->mFile = uniqueFilenameURI;
+            }
+
+            // The URIData entry is pointing to the old unfixed URI, so we need
+            // to update it.
+            nsCOMPtr<nsIURI> chanURI;
+            rv = channel->GetOriginalURI(getter_AddRefs(chanURI));
+            if (NS_SUCCEEDED(rv)) {
+                nsAutoCString spec;
+                chanURI->GetSpec(spec);
+                URIData *uridata;
+                if (mURIMap.Get(spec, &uridata)) {
+                    uridata->mFile = data->mFile;
+                }
             }
         }
 
@@ -1291,7 +1305,7 @@ nsWebBrowserPersist::GetLocalFileFromURI(nsIURI *aURI, nsIFile **aLocalFile)
 }
 
 /* static */ nsresult
-nsWebBrowserPersist::AppendPathToURI(nsIURI *aURI, const nsAString & aPath)
+nsWebBrowserPersist::AppendPathToURI(nsIURI *aURI, const nsAString & aPath, nsCOMPtr<nsIURI>& aOutURI)
 {
     NS_ENSURE_ARG_POINTER(aURI);
 
@@ -1308,9 +1322,10 @@ nsWebBrowserPersist::AppendPathToURI(nsIURI *aURI, const nsAString & aPath)
 
     // Store the path back on the URI
     AppendUTF16toUTF8(aPath, newPath);
-    aURI->SetPathQueryRef(newPath);
 
-    return NS_OK;
+    return NS_MutateURI(aURI)
+             .SetPathQueryRef(newPath)
+             .Finalize(aOutURI);
 }
 
 nsresult nsWebBrowserPersist::SaveURIInternal(
@@ -2113,18 +2128,15 @@ nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI, nsCOMPtr<nsIURI>& aOu
             localFile->SetLeafName(filenameAsUnichar);
 
             // Resync the URI with the file after the extension has been appended
-            nsresult rv;
-            nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
-            NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-            fileURL->SetFile(localFile);  // this should recalculate uri
+            return NS_MutateURI(aURI)
+                     .Apply(NS_MutatorMethod(&nsIFileURLMutator::SetFile,
+                                             localFile))
+                     .Finalize(aOutURI);
         }
-        else
-        {
-          return NS_MutateURI(url)
-                   .Apply(NS_MutatorMethod(&nsIURLMutator::SetFileName,
-                                           filename, nullptr))
-                   .Finalize(aOutURI);
-        }
+        return NS_MutateURI(url)
+                 .Apply(NS_MutatorMethod(&nsIURLMutator::SetFileName,
+                                         filename, nullptr))
+                 .Finalize(aOutURI);
     }
 
     // TODO (:valentin) This method should always clone aURI
@@ -2291,17 +2303,15 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI,
                     localFile->SetLeafName(NS_ConvertUTF8toUTF16(newFileName));
 
                     // Resync the URI with the file after the extension has been appended
-                    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
-                    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-                    fileURL->SetFile(localFile);  // this should recalculate uri
+                    return NS_MutateURI(url)
+                             .Apply(NS_MutatorMethod(&nsIFileURLMutator::SetFile,
+                                                     localFile))
+                             .Finalize(aOutURI);
                 }
-                else
-                {
-                  return NS_MutateURI(url)
-                           .Apply(NS_MutatorMethod(&nsIURLMutator::SetFileName,
-                                                   newFileName, nullptr))
-                           .Finalize(aOutURI);
-                }
+                return NS_MutateURI(url)
+                         .Apply(NS_MutatorMethod(&nsIURLMutator::SetFileName,
+                                                 newFileName, nullptr))
+                         .Finalize(aOutURI);
             }
 
         }
@@ -2567,12 +2577,14 @@ nsWebBrowserPersist::URIData::GetLocalURI(nsIURI *targetBaseURI, nsCString& aSpe
     } else {
         rv = mDataPath->Clone(getter_AddRefs(fileAsURI));
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = AppendPathToURI(fileAsURI, mFilename);
+        rv = AppendPathToURI(fileAsURI, mFilename, fileAsURI);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
     // remove username/password if present
-    fileAsURI->SetUserPass(EmptyCString());
+    Unused << NS_MutateURI(fileAsURI)
+                .SetUserPass(EmptyCString())
+                .Finalize(fileAsURI);
 
     // reset node attribute
     // Use relative or absolute links
@@ -2690,7 +2702,7 @@ nsWebBrowserPersist::SaveSubframeContent(
     nsCOMPtr<nsIURI> frameURI;
     rv = mCurrentDataPath->Clone(getter_AddRefs(frameURI));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = AppendPathToURI(frameURI, filenameWithExt);
+    rv = AppendPathToURI(frameURI, filenameWithExt, frameURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Work out the path for the subframe data
@@ -2701,7 +2713,7 @@ nsWebBrowserPersist::SaveSubframeContent(
 
     // Append _data
     newFrameDataPath.AppendLiteral("_data");
-    rv = AppendPathToURI(frameDataURI, newFrameDataPath);
+    rv = AppendPathToURI(frameDataURI, newFrameDataPath, frameDataURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Make frame document & data path conformant and unique

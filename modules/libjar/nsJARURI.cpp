@@ -664,7 +664,9 @@ nsJARURI::GetFilePath(nsACString& filePath)
 NS_IMETHODIMP
 nsJARURI::SetFilePath(const nsACString& filePath)
 {
-    return mJAREntry->SetFilePath(filePath);
+    return NS_MutateURI(mJAREntry)
+             .SetFilePath(filePath)
+             .Finalize(mJAREntry);
 }
 
 NS_IMETHODIMP
@@ -676,14 +678,18 @@ nsJARURI::GetQuery(nsACString& query)
 NS_IMETHODIMP
 nsJARURI::SetQuery(const nsACString& query)
 {
-    return mJAREntry->SetQuery(query);
+    return NS_MutateURI(mJAREntry)
+             .SetQuery(query)
+             .Finalize(mJAREntry);
 }
 
 NS_IMETHODIMP
 nsJARURI::SetQueryWithEncoding(const nsACString& query,
                                const Encoding* encoding)
 {
-    return mJAREntry->SetQueryWithEncoding(query, encoding);
+    return NS_MutateURI(mJAREntry)
+             .SetQueryWithEncoding(query, encoding)
+             .Finalize(mJAREntry);
 }
 
 NS_IMETHODIMP
@@ -695,7 +701,9 @@ nsJARURI::GetRef(nsACString& ref)
 NS_IMETHODIMP
 nsJARURI::SetRef(const nsACString& ref)
 {
-    return mJAREntry->SetRef(ref);
+    return NS_MutateURI(mJAREntry)
+             .SetRef(ref)
+             .Finalize(mJAREntry);
 }
 
 NS_IMETHODIMP

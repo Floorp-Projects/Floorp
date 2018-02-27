@@ -14,6 +14,7 @@
 #include "nsCDefaultURIFixup.h"
 #include "nsIURIFixup.h"
 #include "nsIURL.h"
+#include "nsIURIMutator.h"
 #include "nsIJARURI.h"
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
@@ -361,12 +362,14 @@ Location::SetHost(const nsAString& aHost,
   }
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
+  aRv = GetURI(getter_AddRefs(uri));
   if (NS_WARN_IF(aRv.Failed()) || !uri) {
     return;
   }
 
-  aRv = uri->SetHostPort(NS_ConvertUTF16toUTF8(aHost));
+  aRv = NS_MutateURI(uri)
+          .SetHostPort(NS_ConvertUTF16toUTF8(aHost))
+          .Finalize(uri);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -404,12 +407,14 @@ Location::SetHostname(const nsAString& aHostname,
   }
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
+  aRv = GetURI(getter_AddRefs(uri));
   if (NS_WARN_IF(aRv.Failed()) || !uri) {
     return;
   }
 
-  aRv = uri->SetHost(NS_ConvertUTF16toUTF8(aHostname));
+  aRv = NS_MutateURI(uri)
+          .SetHost(NS_ConvertUTF16toUTF8(aHostname))
+          .Finalize(uri);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -597,14 +602,19 @@ Location::SetPathname(const nsAString& aPathname,
   }
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
+  aRv = GetURI(getter_AddRefs(uri));
   if (NS_WARN_IF(aRv.Failed()) || !uri) {
     return;
   }
 
-  if (NS_SUCCEEDED(uri->SetFilePath(NS_ConvertUTF16toUTF8(aPathname)))) {
-    aRv = SetURI(uri);
+  nsresult rv = NS_MutateURI(uri)
+                  .SetFilePath(NS_ConvertUTF16toUTF8(aPathname))
+                  .Finalize(uri);
+  if (NS_FAILED(rv)) {
+    return;
   }
+
+  aRv = SetURI(uri);
 }
 
 void
@@ -647,7 +657,7 @@ Location::SetPort(const nsAString& aPort,
   }
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
+  aRv = GetURI(getter_AddRefs(uri));
   if (NS_WARN_IF(aRv.Failed() || !uri)) {
     return;
   }
@@ -666,7 +676,9 @@ Location::SetPort(const nsAString& aPort,
     }
   }
 
-  aRv = uri->SetPort(port);
+  aRv = NS_MutateURI(uri)
+          .SetPort(port)
+          .Finalize(uri);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -714,7 +726,7 @@ Location::SetProtocol(const nsAString& aProtocol,
   }
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
+  aRv = GetURI(getter_AddRefs(uri));
   if (NS_WARN_IF(aRv.Failed()) || !uri) {
     return;
   }
@@ -725,7 +737,9 @@ Location::SetProtocol(const nsAString& aProtocol,
   nsAString::const_iterator iter(start);
   Unused << FindCharInReadable(':', iter, end);
 
-  nsresult rv = uri->SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)));
+  nsresult rv = NS_MutateURI(uri)
+                  .SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)))
+                  .Finalize(uri);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // Oh, I wish nsStandardURL returned NS_ERROR_MALFORMED_URI for _all_ the
     // malformed cases, not just some of them!
@@ -811,17 +825,21 @@ Location::SetSearch(const nsAString& aSearch,
   }
 
   nsCOMPtr<nsIURI> uri;
-  aRv = GetWritableURI(getter_AddRefs(uri));
+  aRv = GetURI(getter_AddRefs(uri));
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
   if (NS_WARN_IF(aRv.Failed()) || !url) {
     return;
   }
 
   if (nsIDocument* doc = GetEntryDocument()) {
-    aRv = url->SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch),
-                                    doc->GetDocumentCharacterSet());
+    aRv = NS_MutateURI(uri)
+            .SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch),
+                                    doc->GetDocumentCharacterSet())
+            .Finalize(uri);
   } else {
-    aRv = url->SetQuery(NS_ConvertUTF16toUTF8(aSearch));
+    aRv = NS_MutateURI(uri)
+            .SetQuery(NS_ConvertUTF16toUTF8(aSearch))
+            .Finalize(uri);
   }
   if (NS_WARN_IF(aRv.Failed())) {
     return;

@@ -12,21 +12,21 @@ public class CommandHelpers {
   public static Command getCommand1() {
     JSONArray args = new JSONArray();
     args.add("argsA");
-    return new Command("displayURI", args);
+    return new Command("displayURI", args, null);
   }
 
   @SuppressWarnings("unchecked")
   public static Command getCommand2() {
     JSONArray args = new JSONArray();
     args.add("argsB");
-    return new Command("displayURI", args);
+    return new Command("displayURI", args, null);
   }
 
   @SuppressWarnings("unchecked")
   public static Command getCommand3() {
     JSONArray args = new JSONArray();
     args.add("argsC");
-    return new Command("displayURI", args);
+    return new Command("displayURI", args, null);
   }
 
   @SuppressWarnings("unchecked")
@@ -35,6 +35,6 @@ public class CommandHelpers {
     args.add("URI of Page");
     args.add("Sender ID");
     args.add("Title of Page");
-    return new Command("displayURI", args);
+    return new Command("displayURI", args, null);
   }
 }

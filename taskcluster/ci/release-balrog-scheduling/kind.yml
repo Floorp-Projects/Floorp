@@ -1,0 +1,65 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.release_deps:transforms
+   - taskgraph.transforms.worker_type:transforms
+   - taskgraph.transforms.release_notifications:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+   - release-bouncer-check
+   - release-update-verify
+
+job-defaults:
+   worker-type:
+      by-project:
+         maple: scriptworker-prov-v1/balrog-dev
+         birch: scriptworker-prov-v1/balrog-dev
+         mozilla-beta: scriptworker-prov-v1/balrogworker-v1
+         mozilla-release: scriptworker-prov-v1/balrogworker-v1
+         default: invalid/invalid
+   run-on-projects: []
+   shipping-phase: ship
+   worker:
+      implementation: balrog
+      balrog-action: schedule
+
+jobs:
+   firefox:
+      description: Schedule Firefox publishing in balrog
+      name: release-firefox_schedule_publishing_in_balrog
+      shipping-product: firefox
+      worker:
+         product: firefox
+         publish-rules:
+            by-project:
+               maple: [32]
+               birch: [145]
+               mozilla-beta: [32]
+               mozilla-release: [145]
+               default: []
+      treeherder:
+         platform: linux64/opt
+         symbol: Rel(BSFx)
+         tier: 1
+         kind: build
+   devedition:
+      description: Schedule Devedition publishing in balrog
+      name: release-devedition_schedule_publishing_in_balrog
+      shipping-product: devedition
+      worker:
+         product: devedition
+         publish-rules:
+            by-project:
+               maple: [10]
+               mozilla-beta: [10]
+               default: []
+      treeherder:
+         platform: linux64/opt
+         symbol: Rel(BSDev)
+         tier: 1
+         kind: build

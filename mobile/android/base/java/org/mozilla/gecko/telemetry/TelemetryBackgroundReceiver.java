@@ -151,14 +151,6 @@ public class TelemetryBackgroundReceiver extends BroadcastReceiver {
                         telemetryStore = syncTelemetryStore;
                         TelemetrySyncPingBuilder localPingBuilder = new TelemetrySyncPingBuilder();
 
-                        if (uid != null) {
-                            localPingBuilder.setUID(uid);
-                        }
-
-                        if (deviceID != null) {
-                            localPingBuilder.setDeviceID(deviceID);
-                        }
-
                         if (devices != null) {
                             localPingBuilder.setDevices(devices);
                         }
@@ -179,9 +171,7 @@ public class TelemetryBackgroundReceiver extends BroadcastReceiver {
                     case TelemetryContract.KEY_TYPE_EVENT:
                         telemetryStore = syncEventTelemetryStore;
                         localPing = new TelemetrySyncEventPingBuilder()
-                                .fromEventTelemetry(
-                                        (Bundle) intent.getParcelableExtra(
-                                                TelemetryContract.KEY_TELEMETRY))
+                                .fromEventTelemetry(telemetryBundle)
                                 .build();
                         break;
                     default:
@@ -233,6 +223,8 @@ public class TelemetryBackgroundReceiver extends BroadcastReceiver {
 
                     // Bundle up all that we have in our telemetry stores.
                     final TelemetryOutgoingPing syncPing = new TelemetrySyncPingBundleBuilder()
+                            .setUID(uid)
+                            .setDeviceID(deviceID)
                             .setSyncStore(syncTelemetryStore)
                             .setSyncEventStore(syncEventTelemetryStore)
                             .setReason(reasonToUpload)

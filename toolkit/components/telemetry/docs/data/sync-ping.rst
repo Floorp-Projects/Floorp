@@ -229,7 +229,6 @@ client. This is logically the "other end" of ``sendcommand``.
 - value: Not used (ie, ``null``)
 - extra: An object with the following attributes:
 
-  - deviceID: A GUID which identifies the device the command is being sent to.
   - flowID: A GUID which uniquely identifies this command invocation. The value
             for this GUID will be the same as the flowID sent to the client via
             ``sendcommand``.

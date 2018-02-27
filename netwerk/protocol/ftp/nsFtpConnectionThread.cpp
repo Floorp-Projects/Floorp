@@ -40,6 +40,7 @@
 #include "nsIRunnable.h"
 #include "nsISocketTransportService.h"
 #include "nsIURI.h"
+#include "nsIURIMutator.h"
 #include "nsILoadInfo.h"
 #include "NullPrincipal.h"
 #include "nsIAuthPrompt2.h"
@@ -1146,7 +1147,12 @@ nsFtpState::SetContentType()
         nsAutoCString filePath;
         if(NS_SUCCEEDED(url->GetFilePath(filePath))) {
             filePath.Append('/');
-            url->SetFilePath(filePath);
+            nsresult rv = NS_MutateURI(url)
+                            .SetFilePath(filePath)
+                            .Finalize(url);
+            if (NS_SUCCEEDED(rv)) {
+                mChannel->UpdateURI(url);
+            }
         }
     }
     return mChannel->SetContentType(
@@ -1645,11 +1651,19 @@ nsFtpState::Init(nsFtpChannel *channel)
 
     removeParamsFromPath(path);
 
+    nsCOMPtr<nsIURI> outURI;
     // FTP parameters such as type=i are ignored
     if (url) {
-        url->SetFilePath(path);
+        rv = NS_MutateURI(url)
+               .SetFilePath(path)
+               .Finalize(outURI);
     } else {
-        mChannel->URI()->SetPathQueryRef(path);
+        rv = NS_MutateURI(mChannel->URI())
+               .SetPathQueryRef(path)
+               .Finalize(outURI);
+    }
+    if (NS_SUCCEEDED(rv)) {
+        mChannel->UpdateURI(outURI);
     }
 
     // Skip leading slash

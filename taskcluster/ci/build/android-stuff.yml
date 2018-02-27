@@ -38,7 +38,6 @@ android-test/opt:
     toolchains:
         - android-gradle-dependencies
         - android-sdk-linux
-        - proguard-jar
     optimization:
         skip-unless-changed:
             - "mobile/android/base/**"
@@ -90,7 +89,6 @@ android-lint/opt:
     toolchains:
         - android-gradle-dependencies
         - android-sdk-linux
-        - proguard-jar
     optimization:
         skip-unless-changed:
             - "mobile/android/**/*.java"
@@ -145,7 +143,6 @@ android-checkstyle/opt:
     toolchains:
         - android-gradle-dependencies
         - android-sdk-linux
-        - proguard-jar
     optimization:
         skip-unless-changed:
             - "mobile/android/**/checkstyle.xml"
@@ -196,7 +193,6 @@ android-findbugs/opt:
     toolchains:
         - android-gradle-dependencies
         - android-sdk-linux
-        - proguard-jar
     optimization:
         skip-unless-changed:
             - "mobile/android/**/*.java"
@@ -242,7 +238,6 @@ android-geckoview-docs/opt:
     toolchains:
         - android-gradle-dependencies
         - android-sdk-linux
-        - proguard-jar
     optimization:
         skip-unless-changed:
             - "mobile/android/**/*.java"

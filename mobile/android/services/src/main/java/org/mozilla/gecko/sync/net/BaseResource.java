@@ -79,7 +79,7 @@ public class BaseResource implements Resource {
   protected DefaultHttpClient client;
   public    ResourceDelegate delegate;
   protected HttpRequestBase request;
-  public final String charset = "utf-8";
+  public static final String charset = "utf-8";
 
   private boolean shouldGzipCompress = false;
   // A hint whether uploaded payloads are chunked. Default true to use GzipCompressingEntity, which is built-in functionality.
@@ -307,7 +307,7 @@ public class BaseResource implements Resource {
     try {
       response = client.execute(request, context);
       Logger.debug(LOG_TAG, "Response: " + response.getStatusLine().toString());
-    } catch (ClientProtocolException e) {
+     } catch (ClientProtocolException e) {
       delegate.handleHttpProtocolException(e);
       return;
     } catch (IOException e) {

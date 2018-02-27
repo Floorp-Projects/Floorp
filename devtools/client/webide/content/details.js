@@ -16,7 +16,7 @@ window.addEventListener("unload", function () {
   AppManager.off("app-manager-update", onAppManagerUpdate);
 }, {capture: true, once: true});
 
-function onAppManagerUpdate(event, what, details) {
+function onAppManagerUpdate(what, details) {
   if (what == "project" ||
       what == "project-validated") {
     updateUI();

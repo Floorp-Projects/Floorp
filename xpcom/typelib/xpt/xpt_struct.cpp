@@ -316,7 +316,12 @@ DoMethodDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
             return false;
     }
 
-    if (!DoParamDescriptor(arena, cursor, &md->result, id))
+    // |result| appears in the on-disk format but it isn't used,
+    // because a method is either notxpcom, in which case it can't be
+    // called from script so the XPT information is irrelevant, or the
+    // result type is nsresult.
+    XPTParamDescriptor result;
+    if (!DoParamDescriptor(arena, cursor, &result, id))
         return false;
 
     return true;

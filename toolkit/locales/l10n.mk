@@ -243,13 +243,3 @@ ifeq ($(OS_ARCH), WINNT)
 	@echo 'Downloaded $(EN_US_INSTALLER_BINARY_URL)/$(PKG_PATH)$(EN_US_PKG_INST_BASENAME).exe to $(ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe'
 endif
 endif
-
-generate-snippet-%:
-	$(PYTHON) $(MOZILLA_DIR)/tools/update-packaging/generatesnippet.py \
-          --mar-path=$(ABS_DIST)/update \
-          --application-ini-file='$(STAGEDIST)'/application.ini \
-          --locale=$* \
-          --product=$(MOZ_PKG_APPNAME) \
-          --platform=$(MOZ_PKG_PLATFORM) \
-          --download-base-URL=$(DOWNLOAD_BASE_URL) \
-          --verbose

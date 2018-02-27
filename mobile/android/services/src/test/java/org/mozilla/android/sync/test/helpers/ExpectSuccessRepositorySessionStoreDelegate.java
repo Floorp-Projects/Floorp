@@ -23,7 +23,7 @@ public class ExpectSuccessRepositorySessionStoreDelegate extends
   }
 
   @Override
-  public void onRecordStoreSucceeded(String guid) {
+  public void onRecordStoreSucceeded(int count) {
     log("Record store succeeded.");
   }
 

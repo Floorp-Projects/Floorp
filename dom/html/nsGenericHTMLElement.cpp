@@ -1515,12 +1515,6 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsMappedAttributes* aAtt
 
 //----------------------------------------------------------------------
 
-nsresult
-nsGenericHTMLElement::SetAttrHelper(nsAtom* aAttr, const nsAString& aValue)
-{
-  return SetAttr(kNameSpaceID_None, aAttr, aValue, true);
-}
-
 int32_t
 nsGenericHTMLElement::GetIntAttr(nsAtom* aAttr, int32_t aDefault) const
 {

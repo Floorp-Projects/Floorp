@@ -1829,7 +1829,7 @@ public:
     JSObject* GetRootJSObject(JSContext* cx, JSObject* aJSObj);
 
     NS_IMETHOD CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
-                          const XPTMethodDescriptor* info,
+                          const nsXPTMethodInfo* info,
                           nsXPTCMiniVariant* params);
 
     JSObject*  CallQueryInterfaceOnJSObject(JSContext* cx,
@@ -1866,7 +1866,7 @@ private:
          else mDescriptors[i/32] &= ~(1 << (i%32));}
 
     bool GetArraySizeFromParam(JSContext* cx,
-                               const XPTMethodDescriptor* method,
+                               const nsXPTMethodInfo* method,
                                const nsXPTParamInfo& param,
                                uint16_t methodIndex,
                                uint8_t paramIndex,
@@ -1874,7 +1874,7 @@ private:
                                uint32_t* result) const;
 
     bool GetInterfaceTypeFromParam(JSContext* cx,
-                                   const XPTMethodDescriptor* method,
+                                   const nsXPTMethodInfo* method,
                                    const nsXPTParamInfo& param,
                                    uint16_t methodIndex,
                                    const nsXPTType& type,
@@ -1921,7 +1921,7 @@ public:
     NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS_AMBIGUOUS(nsXPCWrappedJS, nsIXPConnectWrappedJS)
 
     NS_IMETHOD CallMethod(uint16_t methodIndex,
-                          const XPTMethodDescriptor* info,
+                          const nsXPTMethodInfo* info,
                           nsXPTCMiniVariant* params) override;
 
     /*
@@ -2049,7 +2049,7 @@ private:
 class XPCConvert
 {
 public:
-    static bool IsMethodReflectable(const XPTMethodDescriptor& info);
+    static bool IsMethodReflectable(const nsXPTMethodInfo& info);
 
     /**
      * Convert a native object into a JS::Value.

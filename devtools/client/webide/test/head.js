@@ -94,7 +94,7 @@ function nextTick() {
 function waitForUpdate(win, update) {
   info("Wait: " + update);
   return new Promise(resolve => {
-    win.AppManager.on("app-manager-update", function onUpdate(e, what) {
+    win.AppManager.on("app-manager-update", function onUpdate(what) {
       info("Got: " + what);
       if (what !== update) {
         return;

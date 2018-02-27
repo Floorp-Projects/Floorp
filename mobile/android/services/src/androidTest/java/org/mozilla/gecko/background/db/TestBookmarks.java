@@ -609,7 +609,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
       }
 
       @Override
-      public void onRecordStoreSucceeded(String guid) {
+      public void onRecordStoreSucceeded(int count) {
       }
 
       @Override
@@ -648,12 +648,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
       public void onFetchCompleted() {
         finishAndNotify(session);
       }
-
-      @Override
-      public void onBatchCompleted() {
-
-      }
-    };
+     };
     session.fetchModified(fetchDelegate);
 
     return fetchedGUIDs;
@@ -676,11 +671,6 @@ public class TestBookmarks extends AndroidSyncTestCase {
       @Override
       public void onFetchCompleted() {
         finishAndNotify(session);
-      }
-
-      @Override
-      public void onBatchCompleted() {
-
       }
     };
 

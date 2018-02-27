@@ -23,10 +23,13 @@
 #include "nsContentUtils.h"
 
 #include "nsIFileURL.h"
+#include "nsIURIMutator.h"
 #include "nsIFile.h"
 #include "nsIMIMEService.h"
 #include "prio.h"
 #include <algorithm>
+
+#include "mozilla/Unused.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -301,7 +304,9 @@ nsFileChannel::Init()
     nsCOMPtr<nsIURL> targetURL = do_QueryInterface(targetURI);
     nsAutoCString queryString;
     if (origURL && targetURL && NS_SUCCEEDED(origURL->GetQuery(queryString))) {
-      targetURL->SetQuery(queryString);
+      Unused << NS_MutateURI(targetURI)
+                  .SetQuery(queryString)
+                  .Finalize(targetURI);
     }
 
     SetURI(targetURI);

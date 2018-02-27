@@ -14,6 +14,7 @@ GetURIMutator(nsIURI* aURI, nsIURIMutator** aMutator)
 NS_MutateURI::NS_MutateURI(nsIURI* aURI)
 {
   mStatus = GetURIMutator(aURI, getter_AddRefs(mMutator));
+  NS_ENSURE_SUCCESS_VOID(mStatus);
 }
 
 NS_MutateURI::NS_MutateURI(const char * aContractID)

@@ -1548,22 +1548,6 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIsInstance(ldflags, ComputedFlags)
         self.assertIsInstance(lib, RustLibrary)
 
-    def test_android_res_dirs(self):
-        """Test that ANDROID_RES_DIRS works properly."""
-        reader = self.reader('android-res-dirs')
-        objs = self.read_topsrcdir(reader)
-
-        self.assertEqual(len(objs), 1)
-        self.assertIsInstance(objs[0], AndroidResDirs)
-
-        # Android resource directories are ordered.
-        expected = [
-            mozpath.join(reader.config.topsrcdir, 'dir1'),
-            mozpath.join(reader.config.topobjdir, 'dir2'),
-            '/dir3',
-        ]
-        self.assertEquals([p.full_path for p in objs[0].paths], expected)
-
     def test_install_shared_lib(self):
         """Test that we can install a shared library with TEST_HARNESS_FILES"""
         reader = self.reader('test-install-shared-lib')

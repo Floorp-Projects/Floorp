@@ -127,15 +127,16 @@ function getURI() {
     return null;
   }
 
+  let mutator = uri.mutate();
   if (uri.scheme == "http") {
-    uri.scheme = "https";
+    mutator.setScheme("https");
   }
 
   if (uri.port == -1) {
-    uri.port = 443;
+    mutator.setPort(443);
   }
 
-  return uri;
+  return mutator.finalize();
 }
 
 function resetDialog() {

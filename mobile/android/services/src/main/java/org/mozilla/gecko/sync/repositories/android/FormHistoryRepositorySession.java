@@ -217,7 +217,7 @@ public class FormHistoryRepositorySession extends
       }
     };
 
-    delegateQueue.execute(command);
+    fetchWorkQueue.execute(command);
   }
 
   protected static String regularBetween(long start, long end) {
@@ -554,7 +554,7 @@ public class FormHistoryRepositorySession extends
               Logger.trace(LOG_TAG, "Remote modified, local not. Deleting.");
               deleteExistingRecord(existingRecord);
               trackRecord(record);
-              storeDelegate.onRecordStoreSucceeded(record.guid);
+              storeDelegate.onRecordStoreSucceeded(1);
               return;
             }
 
@@ -567,7 +567,7 @@ public class FormHistoryRepositorySession extends
               // Currently, locallyModified above is _always_ true if a record exists locally,
               // and so we'll consider any deletions of already present records as reconciliations.
               storeDelegate.onRecordStoreReconciled(record.guid, null, null);
-              storeDelegate.onRecordStoreSucceeded(record.guid);
+              storeDelegate.onRecordStoreSucceeded(1);
               return;
             }
 
@@ -587,7 +587,7 @@ public class FormHistoryRepositorySession extends
             Logger.trace(LOG_TAG, "No match. Inserting.");
             insertNewRegularRecord(record);
             trackRecord(record);
-            storeDelegate.onRecordStoreSucceeded(record.guid);
+            storeDelegate.onRecordStoreSucceeded(1);
             return;
           }
 
@@ -599,7 +599,7 @@ public class FormHistoryRepositorySession extends
             Logger.trace(LOG_TAG, "Remote guid different from local guid. Storing to keep remote guid.");
             replaceExistingRecordWithRegularRecord(record, existingRecord);
             trackRecord(record);
-            storeDelegate.onRecordStoreSucceeded(record.guid);
+            storeDelegate.onRecordStoreSucceeded(1);
             return;
           }
 
@@ -609,7 +609,7 @@ public class FormHistoryRepositorySession extends
             Logger.trace(LOG_TAG, "Remote modified, local not. Storing.");
             replaceExistingRecordWithRegularRecord(record, existingRecord);
             trackRecord(record);
-            storeDelegate.onRecordStoreSucceeded(record.guid);
+            storeDelegate.onRecordStoreSucceeded(1);
             return;
           }
 
@@ -619,7 +619,7 @@ public class FormHistoryRepositorySession extends
             replaceExistingRecordWithRegularRecord(record, existingRecord);
             trackRecord(record);
             storeDelegate.onRecordStoreReconciled(record.guid, existingRecord.guid, null);
-            storeDelegate.onRecordStoreSucceeded(record.guid);
+            storeDelegate.onRecordStoreSucceeded(1);
             return;
           }
 

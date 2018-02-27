@@ -83,8 +83,7 @@ clang_checkers:
    # Controversial, see bug 1371052.
    publish: !!bool no
  - name: modernize-use-bool-literals
-   # Too noisy because of `while (0)` in many macros.
-   publish: !!bool no
+   publish: !!bool yes
 
 # Third party files from mozilla-central
 third_party: tools/rewriting/ThirdPartyPaths.txt

@@ -13,6 +13,7 @@
 #include "nsStringStream.h"
 #include "nsIFile.h"
 #include "nsIFileURL.h"
+#include "nsIURIMutator.h"
 #include "nsEscape.h"
 #include "nsIDirIndex.h"
 #include "nsURLHelper.h"
@@ -25,6 +26,7 @@
 #include "nsString.h"
 #include <algorithm>
 #include "nsIChannel.h"
+#include "mozilla/Unused.h"
 
 using mozilla::intl::LocaleService;
 
@@ -184,9 +186,9 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         if (NS_FAILED(rv)) return rv;
         if (!pw.IsEmpty()) {
              nsCOMPtr<nsIURI> newUri;
-             rv = uri->Clone(getter_AddRefs(newUri));
-             if (NS_FAILED(rv)) return rv;
-             rv = newUri->SetPassword(EmptyCString());
+             rv = NS_MutateURI(uri)
+                    .SetPassword(EmptyCString())
+                    .Finalize(newUri);
              if (NS_FAILED(rv)) return rv;
              rv = newUri->GetAsciiSpec(titleUri);
              if (NS_FAILED(rv)) return rv;
@@ -249,7 +251,9 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         if (baseUri.Last() != '/') {
             baseUri.Append('/');
             path.Append('/');
-            uri->SetPathQueryRef(path);
+            mozilla::Unused << NS_MutateURI(uri)
+                                 .SetPathQueryRef(path)
+                                 .Finalize(uri);
         }
         if (!path.EqualsLiteral("/")) {
             rv = uri->Resolve(NS_LITERAL_CSTRING(".."), parentStr);

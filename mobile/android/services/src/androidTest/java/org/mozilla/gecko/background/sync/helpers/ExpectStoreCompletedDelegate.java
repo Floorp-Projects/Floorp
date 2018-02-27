@@ -6,7 +6,7 @@ package org.mozilla.gecko.background.sync.helpers;
 public class ExpectStoreCompletedDelegate extends DefaultStoreDelegate {
 
   @Override
-  public void onRecordStoreSucceeded(String guid) {
+  public void onRecordStoreSucceeded(int count) {
     // That's fine.
   }
 

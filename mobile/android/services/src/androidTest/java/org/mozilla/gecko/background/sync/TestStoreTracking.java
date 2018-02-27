@@ -51,15 +51,13 @@ public class TestStoreTracking extends AndroidSyncTestCase {
     final SimpleSuccessStoreDelegate storeDelegate = new SimpleSuccessStoreDelegate() {
 
       @Override
-      public void onRecordStoreSucceeded(String guid) {
-        Logger.debug(getName(), "Stored " + guid);
-        assertEq(expectedGUID, guid);
+      public void onRecordStoreSucceeded(int count) {
+        Logger.debug(getName(), "Stored " + count);
       }
 
       @Override
       public void onRecordStoreReconciled(String guid, String oldGuid, Integer newVersion) {
         Logger.debug(getName(), "Reconciled " + guid);
-        assertEq(expectedGUID, guid);
       }
 
       @Override
@@ -106,17 +104,7 @@ public class TestStoreTracking extends AndroidSyncTestCase {
                     performNotify(e);
                   }
                 }
-
-                @Override
-                public void onBatchCompleted() {
-
-                }
               });
-            }
-
-            @Override
-            public void onBatchCompleted() {
-
             }
           });
         } catch (InactiveSessionException e) {
@@ -181,10 +169,6 @@ public class TestStoreTracking extends AndroidSyncTestCase {
             } catch (InactiveSessionException e) {
               performNotify(e);
             }
-          }
-
-          @Override
-          public void onBatchCompleted() {
           }
         });
       }
