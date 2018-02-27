@@ -1,55 +1,24 @@
 "use strict";
 
-add_task(async function test_show_completePayment() {
+add_task(async function setup_profiles() {
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "add");
-  let address = {
-    "given-name": "Timothy",
-    "additional-name": "John",
-    "family-name": "Berners-Lee",
-    organization: "World Wide Web Consortium",
-    "street-address": "32 Vassar Street\nMIT Room 32-G524",
-    "address-level2": "Cambridge",
-    "address-level1": "MA",
-    "postal-code": "02139",
-    country: "US",
-    tel: "+16172535702",
-    email: "timbl@example.org",
-  };
-  profileStorage.addresses.add(address);
+  profileStorage.addresses.add(PTU.Addresses.TimBL);
   await onChanged;
 
   onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                       (subject, data) => data == "add");
-  let address2 = {
-    "given-name": "Timothy",
-    "additional-name": "John",
-    "family-name": "Berners-Lee",
-    organization: "World Wide Web Consortium",
-    "street-address": "1 Pommes Frittes Place",
-    "address-level2": "Berlin",
-    "address-level1": "BE",
-    "postal-code": "02138",
-    country: "DE",
-    tel: "+16172535702",
-    email: "timbl@example.org",
-  };
-  profileStorage.addresses.add(address2);
+  profileStorage.addresses.add(PTU.Addresses.TimBL2);
   await onChanged;
 
   onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                       (subject, data) => data == "add");
 
-  let card = {
-    "cc-exp-month": 1,
-    "cc-exp-year": 9999,
-    "cc-name": "John Doe",
-    "cc-number": "999999999999",
-  };
-
-  profileStorage.creditCards.add(card);
+  profileStorage.creditCards.add(PTU.BasicCards.JohnDoe);
   await onChanged;
+});
 
+add_task(async function test_change_shipping() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: BLANK_PAGE_URL,
@@ -78,7 +47,7 @@ add_task(async function test_show_completePayment() {
     is(shippingOptions.optionCount, 2, "there should be two shipping options");
     is(shippingOptions.selectedOptionValue, "1", "selected should be '1'");
 
-    ContentTask.spawn(browser, {
+    await ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
     }, PTU.ContentTasks.promisePaymentRequestEvent);
     info("added shipping change handler");
@@ -106,19 +75,61 @@ add_task(async function test_show_completePayment() {
     let result = await ContentTask.spawn(browser, {}, PTU.ContentTasks.addCompletionHandler);
     is(result.response.methodName, "basic-card", "Check methodName");
 
-    let addressLines = address2["street-address"].split("\n");
+    let addressLines = PTU.Addresses.TimBL2["street-address"].split("\n");
     let actualShippingAddress = result.response.shippingAddress;
+    let expectedAddress = PTU.Addresses.TimBL2;
     is(actualShippingAddress.addressLine[0], addressLines[0], "Address line 1 should match");
     is(actualShippingAddress.addressLine[1], addressLines[1], "Address line 2 should match");
-    is(actualShippingAddress.country, address2.country, "Country should match");
-    is(actualShippingAddress.region, address2["address-level1"], "Region should match");
-    is(actualShippingAddress.city, address2["address-level2"], "City should match");
-    is(actualShippingAddress.postalCode, address2["postal-code"], "Zip code should match");
-    is(actualShippingAddress.organization, address2.organization, "Org should match");
+    is(actualShippingAddress.country, expectedAddress.country, "Country should match");
+    is(actualShippingAddress.region, expectedAddress["address-level1"], "Region should match");
+    is(actualShippingAddress.city, expectedAddress["address-level2"], "City should match");
+    is(actualShippingAddress.postalCode, expectedAddress["postal-code"], "Zip code should match");
+    is(actualShippingAddress.organization, expectedAddress.organization, "Org should match");
     is(actualShippingAddress.recipient,
-       `${address2["given-name"]} ${address2["additional-name"]} ${address2["family-name"]}`,
-       "Recipient country should match");
-    is(actualShippingAddress.phone, address2.tel, "Phone should match");
+       `${expectedAddress["given-name"]} ${expectedAddress["additional-name"]} ` +
+       `${expectedAddress["family-name"]}`,
+       "Recipient should match");
+    is(actualShippingAddress.phone, expectedAddress.tel, "Phone should match");
+
+    let methodDetails = result.methodDetails;
+    is(methodDetails.cardholderName, "John Doe", "Check cardholderName");
+    is(methodDetails.cardNumber, "999999999999", "Check cardNumber");
+    is(methodDetails.expiryMonth, "01", "Check expiryMonth");
+    is(methodDetails.expiryYear, "9999", "Check expiryYear");
+
+    await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
+  });
+});
+
+add_task(async function test_no_shippingchange_without_shipping() {
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: BLANK_PAGE_URL,
+  }, async browser => {
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData: [PTU.MethodData.basicCard],
+        details: PTU.Details.twoShippingOptions,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
+
+    ContentTask.spawn(browser, {
+      eventName: "shippingaddresschange",
+    }, PTU.ContentTasks.ensureNoPaymentRequestEvent);
+    info("added shipping change handler");
+
+    info("clicking pay");
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
+
+    // Add a handler to complete the payment above.
+    info("acknowledging the completion from the merchant page");
+    let result = await ContentTask.spawn(browser, {}, PTU.ContentTasks.addCompletionHandler);
+    is(result.response.methodName, "basic-card", "Check methodName");
+
+    let actualShippingAddress = result.response.shippingAddress;
+    ok(actualShippingAddress === null,
+       "Check that shipping address is null with requestShipping:false");
 
     let methodDetails = result.methodDetails;
     is(methodDetails.cardholderName, "John Doe", "Check cardholderName");
