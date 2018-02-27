@@ -14,8 +14,6 @@
 
 #include <ctype.h>
 
-#include "jslibmath.h"
-
 #include "builtin/RegExp.h"
 #include "builtin/String.h"
 #include "jit/AtomicOperations.h"
@@ -25,10 +23,10 @@
 #include "jit/MIRGraph.h"
 #include "jit/RangeAnalysis.h"
 #include "js/Conversions.h"
+#include "util/PortableMath.h"
 #include "util/Text.h"
 
 #include "builtin/Boolean-inl.h"
-
 #include "vm/JSAtom-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"

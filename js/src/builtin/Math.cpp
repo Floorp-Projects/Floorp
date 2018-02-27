@@ -24,11 +24,11 @@
 
 #include "fdlibm.h"
 #include "jsapi.h"
-#include "jslibmath.h"
 #include "jstypes.h"
 
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
+#include "util/PortableMath.h"
 #include "util/Windows.h"
 #include "vm/JSAtom.h"
 #include "vm/JSCompartment.h"
