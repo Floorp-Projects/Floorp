@@ -880,7 +880,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
         viewRect.height += this._dwu.getBoundsWithoutFlushing(header).height;
       }
       nextPanelView.visible = true;
-      nextPanelView.descriptionHeightWorkaround();
+      await nextPanelView.descriptionHeightWorkaround();
     } else {
       this._offscreenViewStack.style.minHeight = olderView.knownHeight + "px";
       this._offscreenViewStack.appendChild(viewNode);
@@ -888,7 +888,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
 
       // Now that the subview is visible, we can check the height of the
       // description elements it contains.
-      nextPanelView.descriptionHeightWorkaround();
+      await nextPanelView.descriptionHeightWorkaround();
 
       viewRect = await window.promiseDocumentFlushed(() => {
         return this._dwu.getBoundsWithoutFlushing(viewNode);
@@ -1104,9 +1104,11 @@ var PanelMultiView = class extends this.AssociatedToNode {
       case "popupshown":
         // The main view is always open and visible when the panel is first
         // shown, so we can check the height of the description elements it
-        // contains and notify consumers using the ViewShown event.
+        // contains and notify consumers using the ViewShown event. In order to
+        // minimize flicker we need to allow synchronous reflows, and we still
+        // make sure the ViewShown event is dispatched synchronously.
         let mainPanelView = this.openViews[0];
-        mainPanelView.descriptionHeightWorkaround();
+        mainPanelView.descriptionHeightWorkaround(true).catch(Cu.reportError);
         this._activateView(mainPanelView);
         break;
       case "popuphidden": {
@@ -1267,9 +1269,12 @@ var PanelView = class extends this.AssociatedToNode {
    * of any of these elements changes, this function should be called to
    * refresh the calculated heights.
    *
-   * This may trigger a synchronous layout.
+   * @param allowSyncReflows
+   *        If set to true, the function takes a path that allows synchronous
+   *        reflows, but minimizes flickering. This is used for the main view
+   *        because we cannot use the workaround off-screen.
    */
-  descriptionHeightWorkaround() {
+  async descriptionHeightWorkaround(allowSyncReflows = false) {
     if (!this.node.hasAttribute("descriptionheightworkaround")) {
       // This view does not require the workaround.
       return;
@@ -1279,34 +1284,41 @@ var PanelView = class extends this.AssociatedToNode {
     // First we reset any change we may have made previously. The first time
     // this is called, and in the best case scenario, this has no effect.
     let items = [];
-    // Non-hidden <label> or <description> elements that also aren't empty
-    // and also don't have a value attribute can be multiline (if their
-    // text content is long enough).
-    let isMultiline = ":not(:-moz-any([hidden],[value],:empty))";
-    let selector = [
-      "description" + isMultiline,
-      "label" + isMultiline,
-      "toolbarbutton[wrap]:not([hidden])",
-    ].join(",");
-    for (let element of this.node.querySelectorAll(selector)) {
-      // Ignore items in hidden containers.
-      if (element.closest("[hidden]")) {
-        continue;
-      }
-      // Take the label for toolbarbuttons; it only exists on those elements.
-      element = element.labelElement || element;
+    let collectItems = () => {
+      // Non-hidden <label> or <description> elements that also aren't empty
+      // and also don't have a value attribute can be multiline (if their
+      // text content is long enough).
+      let isMultiline = ":not(:-moz-any([hidden],[value],:empty))";
+      let selector = [
+        "description" + isMultiline,
+        "label" + isMultiline,
+        "toolbarbutton[wrap]:not([hidden])",
+      ].join(",");
+      for (let element of this.node.querySelectorAll(selector)) {
+        // Ignore items in hidden containers.
+        if (element.closest("[hidden]")) {
+          continue;
+        }
+        // Take the label for toolbarbuttons; it only exists on those elements.
+        element = element.labelElement || element;
 
-      let bounds = element.getBoundingClientRect();
-      let previous = gMultiLineElementsMap.get(element);
-      // We don't need to (re-)apply the workaround for invisible elements or
-      // on elements we've seen before and haven't changed in the meantime.
-      if (!bounds.width || !bounds.height ||
-          (previous && element.textContent == previous.textContent &&
-                       bounds.width == previous.bounds.width)) {
-        continue;
-      }
+        let bounds = element.getBoundingClientRect();
+        let previous = gMultiLineElementsMap.get(element);
+        // We don't need to (re-)apply the workaround for invisible elements or
+        // on elements we've seen before and haven't changed in the meantime.
+        if (!bounds.width || !bounds.height ||
+            (previous && element.textContent == previous.textContent &&
+                         bounds.width == previous.bounds.width)) {
+          continue;
+        }
 
-      items.push({ element });
+        items.push({ element });
+      }
+    };
+    if (allowSyncReflows) {
+      collectItems();
+    } else {
+      await this.window.promiseDocumentFlushed(collectItems);
     }
 
     // Removing the 'height' property will only cause a layout flush in the next
@@ -1317,8 +1329,15 @@ var PanelView = class extends this.AssociatedToNode {
 
     // We now read the computed style to store the height of any element that
     // may contain wrapping text.
-    for (let item of items) {
-      item.bounds = item.element.getBoundingClientRect();
+    let measureItems = () => {
+      for (let item of items) {
+        item.bounds = item.element.getBoundingClientRect();
+      }
+    };
+    if (allowSyncReflows) {
+      measureItems();
+    } else {
+      await this.window.promiseDocumentFlushed(measureItems);
     }
 
     // Now we can make all the necessary DOM changes at once.

@@ -44,31 +44,6 @@ const EXPECTED_APPMENU_OPEN_REFLOWS = [
   },
 ];
 
-const EXPECTED_APPMENU_SUBVIEW_REFLOWS = [
-  /**
-   * The synced tabs view has labels that are multiline. Because of bugs in
-   * XUL layout relating to multiline text in scrollable containers, we need
-   * to manually read their height in order to ensure container heights are
-   * correct. Unfortunately this requires 2 sync reflows.
-   *
-   * If we add more views where this is necessary, we may need to duplicate
-   * these expected reflows further. Bug 1392340 is on file to remove the
-   * reflows completely when opening subviews.
-   */
-  {
-    stack: [
-      "descriptionHeightWorkaround@resource:///modules/PanelMultiView.jsm",
-      "_transitionViews@resource:///modules/PanelMultiView.jsm",
-    ],
-
-    maxCount: 4, // This number should only ever go down - never up.
-  },
-
-  /**
-   * Please don't add anything new!
-   */
-];
-
 add_task(async function() {
   await ensureNoPreloadedBrowser();
 
@@ -126,5 +101,5 @@ add_task(async function() {
     let hidden = BrowserTestUtils.waitForEvent(PanelUI.panel, "popuphidden");
     PanelUI.hide();
     await hidden;
-  }, EXPECTED_APPMENU_SUBVIEW_REFLOWS);
+  }, []);
 });
