@@ -1369,7 +1369,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // Conditional move for Spectre mitigations.
     inline void spectreMovePtr(Condition cond, Register src, Register dest)
-        DEFINED_ON(arm, arm64, x86, x64);
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
     // Performs a bounds check and zeroes the index register if out-of-bounds
     // (to mitigate Spectre).
