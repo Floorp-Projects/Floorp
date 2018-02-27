@@ -15,7 +15,8 @@ var testserver = createHttpServer();
 gPort = testserver.identity.primaryPort;
 mapFile("/data/test_update.rdf", testserver);
 mapFile("/data/test_update.json", testserver);
-mapFile("/data/test_update.xml", testserver);
+mapFile("/data/test_update_addons.json", testserver);
+mapFile("/data/test_update_compat.json", testserver);
 testserver.registerDirectory("/addons/", do_get_file("addons"));
 
 const profileDir = gProfD.clone();
@@ -62,8 +63,10 @@ for (let test of testParams) {
       }
     });
 
-    Services.prefs.setCharPref(PREF_GETADDONS_BYIDS_PERFORMANCE,
-                               "http://localhost:" + gPort + "/data/" + updateFile);
+    Services.prefs.setCharPref(PREF_GETADDONS_BYIDS,
+                               `http://localhost:${gPort}/data/test_update_addons.json`);
+    Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES,
+                               `http://localhost:${gPort}/data/test_update_compat.json`);
     Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
 
     AddonManagerInternal.backgroundUpdateCheck();

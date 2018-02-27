@@ -69,6 +69,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/ServoRestyleManager.h"
 #include "mozilla/SizeOfState.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
@@ -1217,17 +1218,17 @@ Element::AttachShadow(const ShadowRootInit& aInit, ErrorResult& aError)
     return nullptr;
   }
 
-  return AttachShadowInternal(aInit.mMode == ShadowRootMode::Closed, aError);
+  return AttachShadowInternal(aInit.mMode, aError);
 }
 
 already_AddRefed<ShadowRoot>
 Element::CreateShadowRoot(ErrorResult& aError)
 {
-  return AttachShadowInternal(false, aError);
+  return AttachShadowInternal(ShadowRootMode::Open, aError);
 }
 
 already_AddRefed<ShadowRoot>
-Element::AttachShadowInternal(bool aClosed, ErrorResult& aError)
+Element::AttachShadowInternal(ShadowRootMode aMode, ErrorResult& aError)
 {
   /**
    * 3. If context object is a shadow host, then throw
@@ -1240,20 +1241,10 @@ Element::AttachShadowInternal(bool aClosed, ErrorResult& aError)
 
   nsAutoScriptBlocker scriptBlocker;
 
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo;
-  nodeInfo = mNodeInfo->NodeInfoManager()->GetNodeInfo(
-    nsGkAtoms::documentFragmentNodeName, nullptr, kNameSpaceID_None,
-    DOCUMENT_FRAGMENT_NODE);
-
-  RefPtr<nsXBLDocumentInfo> docInfo = new nsXBLDocumentInfo(OwnerDoc());
-
-  nsXBLPrototypeBinding* protoBinding = new nsXBLPrototypeBinding();
-  aError = protoBinding->Init(NS_LITERAL_CSTRING("shadowroot"),
-                              docInfo, nullptr, true);
-  if (aError.Failed()) {
-    delete protoBinding;
-    return nullptr;
-  }
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo =
+    mNodeInfo->NodeInfoManager()->GetNodeInfo(
+      nsGkAtoms::documentFragmentNodeName, nullptr, kNameSpaceID_None,
+      DOCUMENT_FRAGMENT_NODE);
 
   if (nsIDocument* doc = GetComposedDoc()) {
     if (nsIPresShell* shell = doc->GetShell()) {
@@ -1263,19 +1254,13 @@ Element::AttachShadowInternal(bool aClosed, ErrorResult& aError)
   }
   MOZ_ASSERT(!GetPrimaryFrame());
 
-  // Unlike for XBL, false is the default for inheriting style.
-  protoBinding->SetInheritsStyle(false);
-
-  // Calling SetPrototypeBinding takes ownership of protoBinding.
-  docInfo->SetPrototypeBinding(NS_LITERAL_CSTRING("shadowroot"), protoBinding);
-
   /**
    * 4. Let shadow be a new shadow root whose node document is
    *    context object’s node document, host is context object,
    *    and mode is init’s mode.
    */
   RefPtr<ShadowRoot> shadowRoot =
-    new ShadowRoot(this, aClosed, nodeInfo.forget(), protoBinding);
+    new ShadowRoot(this, aMode, nodeInfo.forget());
 
   shadowRoot->SetIsComposedDocParticipant(IsInComposedDoc());
 
@@ -1283,13 +1268,6 @@ Element::AttachShadowInternal(bool aClosed, ErrorResult& aError)
    * 5. Set context object’s shadow root to shadow.
    */
   SetShadowRoot(shadowRoot);
-
-  // xblBinding takes ownership of docInfo.
-  RefPtr<nsXBLBinding> xblBinding = new nsXBLBinding(shadowRoot, protoBinding);
-  shadowRoot->SetAssociatedBinding(xblBinding);
-  xblBinding->SetBoundElement(this);
-
-  SetXBLBinding(xblBinding);
 
   /**
    * 6. Return shadow.
@@ -1925,6 +1903,17 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
     // Fully exit full-screen.
     nsIDocument::ExitFullscreenInDocTree(OwnerDoc());
   }
+
+  if (HasServoData()) {
+    MOZ_ASSERT(document);
+    MOZ_ASSERT(IsInAnonymousSubtree());
+    MOZ_ASSERT(document && document->IsStyledByServo());
+  }
+
+  if (document && document->IsStyledByServo()) {
+    ClearServoData(document);
+  }
+
   if (aNullParent) {
     if (GetParent() && GetParent()->IsInUncomposedDoc()) {
       // Update the editable descendant count in the ancestors before we
@@ -1990,19 +1979,6 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
         presContext->EffectCompositor()->ClearRestyleRequestsFor(this);
       }
     }
-  }
-
-  // Computed style data isn't useful for detached nodes, and we'll need to
-  // recompute it anyway if we ever insert the nodes back into a document.
-  if (IsStyledByServo()) {
-    if (document) {
-      ClearServoData(document);
-    } else {
-      MOZ_ASSERT(!HasServoData());
-      MOZ_ASSERT(!HasAnyOfFlags(kAllServoDescendantBits | NODE_NEEDS_FRAME));
-    }
-  } else {
-    MOZ_ASSERT(!HasServoData());
   }
 
   // Editable descendant count only counts descendants that
@@ -2108,24 +2084,8 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
     shadowRoot->SetIsComposedDocParticipant(false);
   }
 
-  // Unbinding of children is the only point in time where we don't enforce the
-  // "child has style data implies parent has it too" invariant.
-  //
-  // As such, the restyle root tracking may incorrectly end up setting dirty
-  // bits on the parent chain when moving from a not yet unbound root with
-  // already unbound parents to a root higher up in the tree, so we clear those
-  // (again, since they're also cleared in ClearServoData) here.
-  //
-  // This can happen when the element changes the state of some ancestor up in
-  // the tree, for example.
-  //
-  // Note that clearing the data itself here would have its own set of problems,
-  // since the invariant we'd be breaking in that case is "HasServoData()
-  // implies InComposedDoc()", which we rely on in various places.
-  UnsetFlags(kAllServoDescendantBits);
-  if (document && document->GetServoRestyleRoot() == this) {
-    document->ClearServoRestyleRoot();
-  }
+  MOZ_ASSERT_IF(IsStyledByServo(), !HasAnyOfFlags(kAllServoDescendantBits));
+  MOZ_ASSERT(!document || document->GetServoRestyleRoot() != this);
 }
 
 nsDOMCSSAttributeDeclaration*
@@ -4405,7 +4365,11 @@ Element::ClearServoData(nsIDocument* aDoc) {
   MOZ_ASSERT(IsStyledByServo());
   MOZ_ASSERT(aDoc);
 #ifdef MOZ_STYLO
-  Servo_Element_ClearData(this);
+  if (HasServoData()) {
+    Servo_Element_ClearData(this);
+  } else {
+    UnsetFlags(kAllServoDescendantBits | NODE_NEEDS_FRAME);
+  }
   // Since this element is losing its servo data, nothing under it may have
   // servo data either, so we can forget restyles rooted at this element. This
   // is necessary for correctness, since we invoke ClearServoData in various
@@ -4516,7 +4480,6 @@ BitsArePropagated(const Element* aElement, uint32_t aBits, nsINode* aRestyleRoot
     nsINode* parentNode = curr->GetParentNode();
     curr = curr->GetFlattenedTreeParentElementForStyle();
     MOZ_ASSERT_IF(!curr,
-                  !parentNode || // can only happen mid-unbind.
                   parentNode == aElement->OwnerDoc() ||
                   parentNode == parentNode->OwnerDoc()->GetRootElement());
   }
@@ -4530,24 +4493,6 @@ AssertNoBitsPropagatedFrom(nsINode* aRoot)
 #ifdef DEBUG
   if (!aRoot || !aRoot->IsElement()) {
     return;
-  }
-
-  // If we are in the middle of unbinding a subtree, then the bits on elements
-  // in that subtree (and which we haven't yet unbound) could be dirty.
-  // Just skip asserting the absence of bits on those element that are in
-  // the unbinding subtree.  (The incorrect bits will only cause us to
-  // incorrectly choose a new restyle root if the newly dirty element is
-  // also within the unbinding subtree, so it is OK to leave them there.)
-  for (nsINode* n = aRoot; n; n = n->GetFlattenedTreeParentElementForStyle()) {
-    if (!n->IsInComposedDoc()) {
-      // Find the top-most element that is marked as no longer in the document,
-      // so we can start checking bits from its parent.
-      do {
-        aRoot = n;
-        n = n->GetFlattenedTreeParentElementForStyle();
-      } while (n && !n->IsInComposedDoc());
-      break;
-    }
   }
 
   auto* element = aRoot->GetFlattenedTreeParentElementForStyle();

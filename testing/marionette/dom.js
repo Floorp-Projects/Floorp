@@ -10,24 +10,22 @@ this.EXPORTED_SYMBOLS = [
 ];
 
 /**
- * The {@link EventTarget} for web elements can be used to observe DOM
+ * The ``EventTarget`` for web elements can be used to observe DOM
  * events in the content document.
  *
  * A caveat of the current implementation is that it is only possible
- * to listen for top-level <code>window</code> global events.
+ * to listen for top-level ``window`` global events.
  *
- * It needs to be backed by a {@link ContentEventObserverService} in a
- * content frame script.
+ * It needs to be backed by a :js:class:`ContentEventObserverService`
+ * in a content frame script.
  *
- * Usage:
+ * Usage::
  *
- * <pre><code>
  *     let observer = new WebElementEventTarget(messageManager);
  *     await new Promise(resolve => {
  *       observer.addEventListener("visibilitychange", resolve, {once: true});
  *       chromeWindow.minimize();
  *     });
- * </code></pre>
  */
 class WebElementEventTarget {
   /**
@@ -47,13 +45,13 @@ class WebElementEventTarget {
    * @param {string} type
    *     Event type to listen for.
    * @param {EventListener} listener
-   *     Object which receives a notification (a {@link BareEvent})
+   *     Object which receives a notification (a ``BareEvent``)
    *     when an event of the specified type occurs.  This must be
-   *     an object implementing the {@link EventListener} interface,
+   *     an object implementing the ``EventListener`` interface,
    *     or a JavaScript function.
    * @param {boolean=} once
-   *     Indicates that the <var>listener</var> should be invoked at
-   *     most once after being added.  If true, the <var>listener</var>
+   *     Indicates that the ``listener`` should be invoked at
+   *     most once after being added.  If true, the ``listener``
    *     would automatically be removed when invoked.
    */
   addEventListener(type, listener, {once = false} = {}) {
@@ -127,7 +125,7 @@ this.WebElementEventTarget = WebElementEventTarget;
 
 /**
  * Provides the frame script backend for the
- * {@link WebElementEventTarget}.
+ * :js:class:`WebElementEventTarget`.
  *
  * This service receives requests for new DOM events to listen for and
  * to cease listening for, and despatches IPC messages to the browser
@@ -149,8 +147,8 @@ class ContentEventObserverService {
   /**
    * Observe a new DOM event.
    *
-   * When the DOM event of <var>type</var> fires, a message is passed
-   * to the parent browser's event observer.
+   * When the DOM event of ``type`` fires, a message is passed to
+   * the parent browser's event observer.
    *
    * If event type is already being observed, only a single message
    * is sent.  E.g. multiple registration for events will only ever emit

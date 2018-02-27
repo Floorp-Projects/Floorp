@@ -7,13 +7,13 @@ var secureURL = "https://example.com/browser/browser/base/content/test/general/b
 var unsecureURL = "http://example.com/browser/browser/base/content/test/general/browser_star_hsts.sjs";
 
 add_task(async function test_star_redirect() {
-  registerCleanupFunction(function() {
+  registerCleanupFunction(async () => {
     // Ensure to remove example.com from the HSTS list.
     let sss = Cc["@mozilla.org/ssservice;1"]
                 .getService(Ci.nsISiteSecurityService);
     sss.removeState(Ci.nsISiteSecurityService.HEADER_HSTS,
                     NetUtil.newURI("http://example.com/"), 0);
-    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
+    await PlacesUtils.bookmarks.eraseEverything();
     gBrowser.removeCurrentTab();
   });
 

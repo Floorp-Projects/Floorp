@@ -46,6 +46,7 @@ For developers
    Debugging.md
    PythonTests.md
    SeleniumAtoms.md
+   internals/index
 
 .. _Contributing to Marionette: https://searchfox.org/mozilla-central/source/testing/marionette/CONTRIBUTING.md
 

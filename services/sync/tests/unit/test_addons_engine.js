@@ -188,7 +188,7 @@ add_task(async function test_disabled_install_semantics() {
 
   let amoServer = new HttpServer();
   amoServer.registerFile("/search/guid:addon1%40tests.mozilla.org",
-                         do_get_file("addon1-search.xml"));
+                         do_get_file("addon1-search.json"));
 
   let installXPI = ExtensionsTestPath("/addons/test_install1.xpi");
   amoServer.registerFile("/addon1.xpi", do_get_file(installXPI));

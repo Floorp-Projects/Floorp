@@ -26,8 +26,6 @@
 #include "WidgetUtils.h"
 #include "nsWindow.h"
 
-#include <dlfcn.h>
-
 #include "mozilla/gfx/2D.h"
 
 #include <cairo-gobject.h>
@@ -1089,35 +1087,12 @@ nsLookAndFeel::EnsureInit()
 
     // We need to initialize whole CSD config explicitly because it's queried
     // as -moz-gtk* media features.
-    mCSDCloseButton = true;
-    mCSDMaximizeButton = false;
-    mCSDMinimizeButton = false;
-
-    if (mCSDAvailable) {
-        static auto sGtkHeaderBarGetDecorationLayoutPtr =
-          (const gchar* (*)(GtkWidget*))
-          dlsym(RTLD_DEFAULT, "gtk_header_bar_get_decoration_layout");
-
-        if (sGtkHeaderBarGetDecorationLayoutPtr) {
-            GtkWidget* headerBar = GetWidget(MOZ_GTK_HEADER_BAR);
-            const gchar* decorationLayout =
-                sGtkHeaderBarGetDecorationLayoutPtr(headerBar);
-            if (!decorationLayout) {
-                g_object_get(settings, "gtk-decoration-layout",
-                             &decorationLayout,
-                             nullptr);
-            }
-
-            if (decorationLayout) {
-                mCSDCloseButton =
-                    (strstr(decorationLayout, "close") != nullptr);
-                mCSDMaximizeButton =
-                    (strstr(decorationLayout, "maximize") != nullptr);
-                mCSDMinimizeButton =
-                    (strstr(decorationLayout, "minimize") != nullptr);
-            }
-        }
-    }
+    mCSDCloseButton =
+        IsToolbarButtonEnabled(MOZ_GTK_HEADER_BAR_BUTTON_CLOSE);
+    mCSDMinimizeButton =
+        IsToolbarButtonEnabled(MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE);
+    mCSDMaximizeButton =
+        IsToolbarButtonEnabled(MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE);
 }
 
 // virtual

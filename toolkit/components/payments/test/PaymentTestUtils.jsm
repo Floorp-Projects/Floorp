@@ -22,6 +22,12 @@ var PaymentTestUtils = {
       };
     },
 
+    ensureNoPaymentRequestEvent: ({eventName}) => {
+      content.rq.addEventListener(eventName, (event) => {
+        ok(false, `Unexpected ${eventName}`);
+      });
+    },
+
     promisePaymentRequestEvent: ({eventName}) => {
       content[eventName + "Promise"] =
         new Promise(resolve => {

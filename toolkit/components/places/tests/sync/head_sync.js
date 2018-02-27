@@ -1,13 +1,22 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+// Import common head.
+{
+  /* import-globals-from ../head_common.js */
+  let commonFile = do_get_file("../head_common.js", false);
+  let uri = Services.io.newFileURI(commonFile);
+  Services.scriptloader.loadSubScript(uri.spec, this);
+}
+
+// Put any other stuff relative to this test folder below.
+
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
 ChromeUtils.import("resource://gre/modules/PlacesSyncUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/SyncedBookmarksMirror.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
 ChromeUtils.import("resource://testing-common/httpd.js");
 
 // These titles are defined in Database::CreateBookmarkRoots

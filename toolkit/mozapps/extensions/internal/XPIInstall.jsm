@@ -1622,19 +1622,19 @@ class AddonInstall {
     // makes it impossible to delete on Windows.
 
     // Try to load from the existing cache first
-    let repoAddon = await new Promise(resolve => AddonRepository.getCachedAddonByID(this.addon.id, resolve));
+    let repoAddon = await AddonRepository.getCachedAddonByID(this.addon.id);
 
     // It wasn't there so try to re-download it
     if (!repoAddon) {
-      await new Promise(resolve => AddonRepository.cacheAddons([this.addon.id], resolve));
-      repoAddon = await new Promise(resolve => AddonRepository.getCachedAddonByID(this.addon.id, resolve));
+      try {
+        [repoAddon] = await AddonRepository.cacheAddons([this.addon.id]);
+      } catch (err) {
+        logger.debug(`Error getting metadata for ${this.addon.id}: ${err.message}`);
+      }
     }
 
     this.addon._repositoryAddon = repoAddon;
     this.name = this.name || this.addon._repositoryAddon.name;
-    this.addon.compatibilityOverrides = repoAddon ?
-      repoAddon.compatibilityOverrides :
-      null;
     this.addon.appDisabled = !isUsableAddon(this.addon);
     return undefined;
   }
@@ -2726,7 +2726,7 @@ UpdateChecker.prototype = {
    * @param  updates
    *         The list of update details for the add-on
    */
-  onUpdateCheckComplete(aUpdates) {
+  async onUpdateCheckComplete(aUpdates) {
     XPIProvider.done(this.addon._updateCheck);
     this.addon._updateCheck = null;
     let AUC = AddonUpdateChecker;
@@ -2784,8 +2784,8 @@ UpdateChecker.prototype = {
     }
 
     let compatOverrides = AddonManager.strictCompatibility ?
-                            null :
-                            this.addon.compatibilityOverrides;
+                          null :
+                          await AddonRepository.getCompatibilityOverrides(this.addon.id);
 
     let update = AUC.getNewestCompatibleUpdate(aUpdates,
                                            this.appVersion,
