@@ -43,6 +43,10 @@ payment-dialog > header {
   position: relative;
 }
 
+#error-text {
+  text-align: center;
+}
+
 #order-details-overlay {
   background-color: -moz-dialog;
   overflow: auto;
