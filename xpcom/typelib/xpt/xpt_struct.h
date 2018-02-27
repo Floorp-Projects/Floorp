@@ -78,7 +78,7 @@ struct XPTInterfaceDirectoryEntry {
   // allocate space for it in memory.
   //const char* name_space;
 
-  XPTInterfaceDescriptor* interface_descriptor;
+  const XPTInterfaceDescriptor* interface_descriptor;
 };
 
 /*

@@ -66,7 +66,7 @@ SkipAnnotation(NotNull<XPTCursor*> cursor, bool *isLast);
 
 static bool
 DoInterfaceDescriptor(XPTArena *arena, NotNull<XPTCursor*> outer,
-                      XPTInterfaceDescriptor **idp);
+                      const XPTInterfaceDescriptor **idp);
 
 static bool
 DoTypeDescriptorPrefix(XPTArena *arena, NotNull<XPTCursor*> cursor,
@@ -233,7 +233,7 @@ InterfaceDescriptorAddType(XPTArena *arena, XPTInterfaceDescriptor *id)
 
 bool
 DoInterfaceDescriptor(XPTArena *arena, NotNull<XPTCursor*> outer,
-                      XPTInterfaceDescriptor **idp)
+                      const XPTInterfaceDescriptor **idp)
 {
     XPTInterfaceDescriptor *id;
     XPTCursor curs;

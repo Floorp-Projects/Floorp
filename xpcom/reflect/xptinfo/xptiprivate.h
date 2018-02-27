@@ -169,7 +169,7 @@ class xptiInterfaceEntry
 public:
     static xptiInterfaceEntry* Create(const char* aName,
                                       const nsID& aIID,
-                                      XPTInterfaceDescriptor* aDescriptor,
+                                      const XPTInterfaceDescriptor* aDescriptor,
                                       xptiTypelibGuts* aTypelib);
 
     enum {
@@ -267,7 +267,7 @@ public:
 private:
     xptiInterfaceEntry(const char* aName,
                        const nsID& aIID,
-                       XPTInterfaceDescriptor* aDescriptor,
+                       const XPTInterfaceDescriptor* aDescriptor,
                        xptiTypelibGuts* aTypelib);
     ~xptiInterfaceEntry();
 
@@ -303,7 +303,7 @@ private:
 
 private:
     nsID                    mIID;
-    XPTInterfaceDescriptor* mDescriptor;
+    const XPTInterfaceDescriptor* mDescriptor;
 
     xptiTypelibGuts* mTypelib;
 
