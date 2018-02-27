@@ -209,7 +209,8 @@ static nsAtom*
 // values we use to select the subtable are evenly distributed, this reduces the
 // probability of contention by a factor of N. See bug 1440824.
 //
-// NB: This is somewhat similar to the technique used by Java's ConcurrentHashTable.
+// NB: This is somewhat similar to the technique used by Java's
+// ConcurrentHashTable.
 class nsAtomSubTable
 {
   friend class nsAtomTable;
@@ -253,17 +254,18 @@ public:
 
   // This hash table op is a static member of this class so that it can take
   // advantage of |friend| declarations.
-  static void AtomTableClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
+  static void AtomTableClearEntry(PLDHashTable* aTable,
+                                  PLDHashEntryHdr* aEntry);
 
   // We achieve measurable reduction in locking contention in parallel CSS
   // parsing by increasing the number of subtables up to 128. This has been
   // measured to have neglible impact on the performance of initialization, GC,
   // and shutdown.
   //
-  // Another important consideration is memory, since we're adding fixed overhead
-  // per content process, which we try to avoid. Measuring a mostly-empty page [1]
-  // with various numbers of subtables, we get the following deep sizes for the
-  // atom table:
+  // Another important consideration is memory, since we're adding fixed
+  // overhead per content process, which we try to avoid. Measuring a
+  // mostly-empty page [1] with various numbers of subtables, we get the
+  // following deep sizes for the atom table:
   //       1 subtable:  278K
   //       8 subtables: 279K
   //      16 subtables: 282K
@@ -272,11 +274,11 @@ public:
   //
   // So 128 subtables costs us 12K relative to a single table, and 4K relative
   // to 64 subtables. Conversely, measuring parallel (6 thread) CSS parsing on
-  // tp6-facebook, a single table provides ~150ms of locking overhead per thread,
-  // 64 subtables provides ~2-3ms of overhead, and 128 subtables provides <1ms.
-  // And so while either 64 or 128 subtables would probably be acceptable,
-  // achieving a measurable reduction in contention for 4k of fixed memory
-  // overhead is probably worth it.
+  // tp6-facebook, a single table provides ~150ms of locking overhead per
+  // thread, 64 subtables provides ~2-3ms of overhead, and 128 subtables
+  // provides <1ms. And so while either 64 or 128 subtables would probably be
+  // acceptable, achieving a measurable reduction in contention for 4k of fixed
+  // memory overhead is probably worth it.
   //
   // [1] The numbers will look different for content processes with complex
   // pages loaded, but in those cases the actual atoms will dominate memory
@@ -459,7 +461,7 @@ nsAtomSubTable::GCLocked(GCKind aKind)
   MOZ_ASSERT(NS_IsMainThread());
   mLock.AssertCurrentThreadOwns();
 
-  int32_t removedCount = 0; // Use a non-atomic temporary for cheaper increments.
+  int32_t removedCount = 0; // A non-atomic temporary for cheaper increments.
   nsAutoCString nonZeroRefcountAtoms;
   uint32_t nonZeroRefcountAtomsCount = 0;
   for (auto i = mTable.Iter(); !i.Done(); i.Next()) {
@@ -476,10 +478,9 @@ nsAtomSubTable::GCLocked(GCKind aKind)
     }
 #ifdef NS_FREE_PERMANENT_DATA
     else if (aKind == GCKind::Shutdown && PR_GetEnv("XPCOM_MEM_BLOAT_LOG")) {
-      // Only report leaking atoms in leak-checking builds in a run
-      // where we are checking for leaks, during shutdown. If
-      // something is anomalous, then we'll assert later in this
-      // function.
+      // Only report leaking atoms in leak-checking builds in a run where we
+      // are checking for leaks, during shutdown. If something is anomalous,
+      // then we'll assert later in this function.
       nsAutoCString name;
       atom->ToUTF8String(name);
       if (nonZeroRefcountAtomsCount == 0) {
@@ -651,10 +652,9 @@ nsAtomTable::RegisterStaticAtoms(const nsStaticAtomSetup* aSetup,
 
     nsStaticAtom* atom;
     if (he->mAtom) {
-      // Disallow creating a dynamic atom, and then later, while the
-      // dynamic atom is still alive, registering that same atom as a
-      // static atom.  It causes subtle bugs, and we're programming in
-      // C++ here, not Smalltalk.
+      // Disallow creating a dynamic atom, and then later, while the dynamic
+      // atom is still alive, registering that same atom as a static atom.  It
+      // causes subtle bugs, and we're programming in C++ here, not Smalltalk.
       if (!he->mAtom->IsStaticAtom()) {
         nsAutoCString name;
         he->mAtom->ToUTF8String(name);
