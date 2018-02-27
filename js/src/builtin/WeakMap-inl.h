@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef builtin_WeakMapObject_inl_h
-#define builtin_WeakMapObject_inl_h
+#ifndef builtin_WeakMap_inl_h
+#define builtin_WeakMap_inl_h
 
-#include "builtin/WeakMapObject.h"
+#include "builtin/WeakMap.h"
 
 #include "vm/ProxyObject.h"
 
@@ -68,4 +68,4 @@ WeakCollectionPutEntryInternal(JSContext* cx, Handle<WeakCollectionObject*> obj,
 
 } // namespace js
 
-#endif /* builtin_WeakMapObject_inl_h */
+#endif /* builtin_WeakMap_inl_h */

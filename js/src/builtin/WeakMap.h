@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef builtin_WeakMapObject_h
-#define builtin_WeakMapObject_h
+#ifndef builtin_WeakMap_h
+#define builtin_WeakMap_h
 
 #include "gc/WeakMap.h"
 #include "vm/JSObject.h"
@@ -37,4 +37,4 @@ InitWeakMapClass(JSContext* cx, HandleObject obj);
 
 } // namespace js
 
-#endif /* builtin_WeakMapObject_h */
+#endif /* builtin_WeakMap_h */

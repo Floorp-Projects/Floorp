@@ -19,7 +19,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Types.h"
 
-#include "builtin/AtomicsObject.h"
+#include "builtin/Atomics.h"
 #include "vm/ArrayBufferObject.h"
 
 #if !defined(__clang__) && !defined(__GNUC__)
