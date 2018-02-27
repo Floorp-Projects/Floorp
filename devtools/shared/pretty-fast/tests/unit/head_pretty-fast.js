@@ -5,7 +5,6 @@ const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", 
 this.sourceMap = require("source-map");
 this.acorn = require("acorn/acorn");
 this.prettyFast = require("devtools/shared/pretty-fast/pretty-fast");
-const { console } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
 
 // Register a console listener, so console messages don't just disappear
 // into the ether.
