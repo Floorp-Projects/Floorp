@@ -145,7 +145,10 @@ class TestMakeIncrementalUpdates(unittest.TestCase):
     def test_decode_filename(self):
         expected = {'locale': 'lang', 'platform': 'platform', 'product': 'product', 'version': '1.0', 'type': 'complete'}
         self.assertEquals(expected, mkup.decode_filename('product-1.0.lang.platform.complete.mar'))
-        self.assertRaises(Exception, mkup.decode_filename, 'fail')
+        self.assertEquals(expected, mkup.decode_filename('platform/lang/product-1.0.complete.mar'))
+        with self.assertRaises(Exception) as cm:
+            mkup.decode_filename('fail')
+        self.assertTrue(cm.exception.args[0].startswith('could not parse filepath fail:'))
 
 if __name__ == '__main__':
     unittest.main()
