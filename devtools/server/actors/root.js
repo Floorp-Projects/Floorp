@@ -6,15 +6,11 @@
 
 "use strict";
 
-const { Cc, Ci, Cu } = require("chrome");
+const { Cu } = require("chrome");
 const Services = require("Services");
 const { ActorPool, appendExtraActors, createExtraActors } = require("devtools/server/actors/common");
 const { DebuggerServer } = require("devtools/server/main");
 
-loader.lazyGetter(this, "ppmm", () => {
-  return Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(
-    Ci.nsIMessageBroadcaster);
-});
 loader.lazyRequireGetter(this, "WindowActor",
   "devtools/server/actors/window", true);
 
@@ -547,7 +543,7 @@ RootActor.prototype = {
     }
 
     let { id } = request;
-    let mm = ppmm.getChildAt(id);
+    let mm = Services.ppmm.getChildAt(id);
     if (!mm) {
       return { error: "noProcess",
                message: "There is no process with id '" + id + "'." };

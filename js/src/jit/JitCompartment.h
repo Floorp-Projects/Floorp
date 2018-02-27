@@ -530,16 +530,27 @@ class JitCompartment
                              BailoutReturnStub::Count,
                              BailoutReturnStubInfo> bailoutReturnStubInfo_;
 
-    // Stubs to concatenate two strings inline, or perform RegExp calls inline.
-    // These bake in zone and compartment specific pointers and can't be stored
-    // in JitRuntime. These are weak pointers, but are not declared as
-    // ReadBarriered since they are only read from during Ion compilation,
-    // which may occur off thread and whose barriers are captured during
-    // CodeGenerator::link.
-    JitCode* stringConcatStub_;
-    JitCode* regExpMatcherStub_;
-    JitCode* regExpSearcherStub_;
-    JitCode* regExpTesterStub_;
+    // The JitCompartment stores stubs to concatenate strings inline and perform
+    // RegExp calls inline.  These bake in zone and compartment specific
+    // pointers and can't be stored in JitRuntime.
+    //
+    // These are weak pointers, but they can by accessed during off-thread Ion
+    // compilation and therefore can't use the usual read barrier. Instead, we
+    // record which stubs have been read and perform the appropriate barriers in
+    // CodeGenerator::link().
+
+    enum StubIndex : uint32_t
+    {
+        StringConcat = 0,
+        RegExpMatcher,
+        RegExpSearcher,
+        RegExpTester,
+        Count
+    };
+
+    mozilla::EnumeratedArray<StubIndex, StubIndex::Count, ReadBarrieredJitCode> stubs_;
+
+    // The same approach is taken for SIMD template objects.
 
     mozilla::EnumeratedArray<SimdType, SimdType::Count, ReadBarrieredObject> simdTemplateObjects_;
 
@@ -547,6 +558,12 @@ class JitCompartment
     JitCode* generateRegExpMatcherStub(JSContext* cx);
     JitCode* generateRegExpSearcherStub(JSContext* cx);
     JitCode* generateRegExpTesterStub(JSContext* cx);
+
+    JitCode* getStubNoBarrier(StubIndex stub, uint32_t* requiredBarriersOut) const {
+        MOZ_ASSERT(CurrentThreadIsIonCompiling());
+        *requiredBarriersOut |= 1 << uint32_t(stub);
+        return stubs_[stub].unbarrieredGet();
+    }
 
   public:
     JSObject* getSimdTemplateObjectFor(JSContext* cx, Handle<SimdTypeDescr*> descr) {
@@ -557,20 +574,13 @@ class JitCompartment
     }
 
     JSObject* maybeGetSimdTemplateObjectFor(SimdType type) const {
-        const ReadBarrieredObject& tpl = simdTemplateObjects_[type];
+        // This function is used by Eager Simd Unbox phase which can run
+        // off-thread, so we cannot use the usual read barrier. For more
+        // information, see the comment above
+        // CodeGenerator::simdRefreshTemplatesDuringLink_.
 
-        // This function is used by Eager Simd Unbox phase, so we cannot use the
-        // read barrier. For more information, see the comment above
-        // CodeGenerator::simdRefreshTemplatesDuringLink_ .
-        return tpl.unbarrieredGet();
-    }
-
-    // This function is used to call the read barrier, to mark the SIMD template
-    // type as used. This function can only be called from the active thread.
-    void registerSimdTemplateObjectFor(SimdType type) {
-        ReadBarrieredObject& tpl = simdTemplateObjects_[type];
-        MOZ_ASSERT(tpl.unbarrieredGet());
-        tpl.get();
+        MOZ_ASSERT(CurrentThreadIsIonCompiling());
+        return simdTemplateObjects_[type].unbarrieredGet();
     }
 
     JitCode* getStubCode(uint32_t key) {
@@ -602,46 +612,61 @@ class JitCompartment
     MOZ_MUST_USE bool initialize(JSContext* cx);
 
     // Initialize code stubs only used by Ion, not Baseline.
-    MOZ_MUST_USE bool ensureIonStubsExist(JSContext* cx);
+    MOZ_MUST_USE bool ensureIonStubsExist(JSContext* cx) {
+        if (stubs_[StringConcat])
+            return true;
+        stubs_[StringConcat] = generateStringConcatStub(cx);
+        return stubs_[StringConcat];
+    }
 
     void sweep(FreeOp* fop, JSCompartment* compartment);
 
-    JitCode* stringConcatStubNoBarrier() const {
-        return stringConcatStub_;
+    JitCode* stringConcatStubNoBarrier(uint32_t* requiredBarriersOut) const {
+        return getStubNoBarrier(StringConcat, requiredBarriersOut);
     }
 
-    JitCode* regExpMatcherStubNoBarrier() const {
-        return regExpMatcherStub_;
+    JitCode* regExpMatcherStubNoBarrier(uint32_t* requiredBarriersOut) const {
+        return getStubNoBarrier(RegExpMatcher, requiredBarriersOut);
     }
 
     MOZ_MUST_USE bool ensureRegExpMatcherStubExists(JSContext* cx) {
-        if (regExpMatcherStub_)
+        if (stubs_[RegExpMatcher])
             return true;
-        regExpMatcherStub_ = generateRegExpMatcherStub(cx);
-        return regExpMatcherStub_ != nullptr;
+        stubs_[RegExpMatcher] = generateRegExpMatcherStub(cx);
+        return stubs_[RegExpMatcher];
     }
 
-    JitCode* regExpSearcherStubNoBarrier() const {
-        return regExpSearcherStub_;
+    JitCode* regExpSearcherStubNoBarrier(uint32_t* requiredBarriersOut) const {
+        return getStubNoBarrier(RegExpSearcher, requiredBarriersOut);
     }
 
     MOZ_MUST_USE bool ensureRegExpSearcherStubExists(JSContext* cx) {
-        if (regExpSearcherStub_)
+        if (stubs_[RegExpSearcher])
             return true;
-        regExpSearcherStub_ = generateRegExpSearcherStub(cx);
-        return regExpSearcherStub_ != nullptr;
+        stubs_[RegExpSearcher] = generateRegExpSearcherStub(cx);
+        return stubs_[RegExpSearcher];
     }
 
-    JitCode* regExpTesterStubNoBarrier() const {
-        return regExpTesterStub_;
+    JitCode* regExpTesterStubNoBarrier(uint32_t* requiredBarriersOut) const {
+        return getStubNoBarrier(RegExpTester, requiredBarriersOut);
     }
 
     MOZ_MUST_USE bool ensureRegExpTesterStubExists(JSContext* cx) {
-        if (regExpTesterStub_)
+        if (stubs_[RegExpTester])
             return true;
-        regExpTesterStub_ = generateRegExpTesterStub(cx);
-        return regExpTesterStub_ != nullptr;
+        stubs_[RegExpTester] = generateRegExpTesterStub(cx);
+        return stubs_[RegExpTester];
     }
+
+    // Perform the necessary read barriers on stubs and SIMD template object
+    // described by the bitmasks passed in. This function can only be called
+    // from the active thread.
+    //
+    // The stub and template object pointers must still be valid by the time
+    // these methods are called. This is arranged by cancelling off-thread Ion
+    // compilation at the start of GC and at the start of sweeping.
+    void performStubReadBarriers(uint32_t stubsToBarrier) const;
+    void performSIMDTemplateReadBarriers(uint32_t simdTemplatesToBarrier) const;
 
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 

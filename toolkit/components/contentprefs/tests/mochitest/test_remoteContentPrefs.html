@@ -220,8 +220,7 @@
 
       for (let test of Object.getOwnPropertyNames(tests)) {
         addMessageListener(`testRemoteContentPrefs:${test}`, function(message) {
-          let mm = message.target.QueryInterface(Ci.nsIMessageSender);
-          testHandler(mm, test);
+          testHandler(message.target, test);
         });
       }
     }
@@ -237,28 +236,28 @@
 
     async function testStructure(mm, isPrivate) {
       var curTest;
-      function testDone(msg) {
+      var testDone = SpecialPowers.wrapCallback(function testDone(msg) {
         info(`in testDone ${msg.name}`);
         curTest.resolve();
-      }
+      });
 
       mm.addMessageListener("testRemoteContentPrefs:test1Finished", testDone);
       mm.addMessageListener("testRemoteContentPrefs:test2Finished", testDone);
       mm.addMessageListener("testRemoteContentPrefs:test3Finished", testDone);
       mm.addMessageListener("testRemoteContentPrefs:test4Finished", testDone);
 
-      mm.addMessageListener("testRemoteContentPrefs:fail", function(msg) {
+      mm.addMessageListener("testRemoteContentPrefs:fail", SpecialPowers.wrapCallback(function(msg) {
         ok(false, msg.data.reason);
         SimpleTest.finish();
-      });
+      }));
 
-      mm.addMessageListener("testRemoteContentPrefs:ok", (msg) => {
+      mm.addMessageListener("testRemoteContentPrefs:ok", SpecialPowers.wrapCallback((msg) => {
         let test = msg.data.test;
         ok(...test);
-      });
-      mm.addMessageListener("testRemoteContentPrefs:info", (msg) => {
+      }));
+      mm.addMessageListener("testRemoteContentPrefs:info", SpecialPowers.wrapCallback((msg) => {
         info(msg.data.note);
-      });
+      }));
 
       curTest = Defer();
       mm.sendAsyncMessage("testRemoteContentPrefs:test1", {});
@@ -283,7 +282,7 @@
       await curTest.promise;
 
       curTest = Defer();
-      mm.addMessageListener("testRemoteContentPrefs:getPref", function(msg) {
+      mm.addMessageListener("testRemoteContentPrefs:getPref", SpecialPowers.wrapCallback(function(msg) {
         let results = [];
         cps.getByDomainAndName(msg.data.group, msg.data.name, null, {
           handleResult(pref) {
@@ -299,7 +298,7 @@
             curTest.reject("got unexpected error");
           }
         });
-      });
+      }));
 
       mm.sendAsyncMessage("testRemoteContentPrefs:test4", {});
       await curTest.promise;

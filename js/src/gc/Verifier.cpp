@@ -18,6 +18,7 @@
 #include "js/HashTable.h"
 #include "vm/JSContext.h"
 
+#include "gc/ArenaList-inl.h"
 #include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
 #include "vm/JSContext-inl.h"
@@ -249,7 +250,7 @@ gc::GCRuntime::startVerifyPreBarriers()
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         MOZ_ASSERT(!zone->usedByHelperThread());
         zone->setNeedsIncrementalBarrier(true);
-        zone->arenas.purge();
+        zone->arenas.clearFreeLists();
     }
 
     return;
@@ -263,7 +264,7 @@ oom:
 static bool
 IsMarkedOrAllocated(TenuredCell* cell)
 {
-    return cell->isMarkedAny() || cell->arena()->allocatedDuringIncremental;
+    return cell->isMarkedAny();
 }
 
 struct CheckEdgeTracer : public JS::CallbackTracer {

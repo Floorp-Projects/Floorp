@@ -44,6 +44,7 @@ protected:
   void WaitForPreviousPresentQuery();
   bool ResizeBufferIfNeeded();
   void DestroyEGLSurface();
+  ID3D11Device* GetDeviceOfEGLDisplay();
 
   RefPtr<gl::GLContext> mGL;
   EGLConfig mEGLConfig;

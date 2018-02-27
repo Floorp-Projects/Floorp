@@ -1808,7 +1808,7 @@ MacroAssemblerMIPS64Compat::ensureDouble(const ValueOperand& source, FloatRegist
 {
     Label isDouble, done;
     {
-        ScratchTagScope tag(this, source);
+        ScratchTagScope tag(asMasm(), source);
         splitTagForTest(source, tag);
         asMasm().branchTestDouble(Assembler::Equal, tag, &isDouble);
         asMasm().branchTestInt32(Assembler::NotEqual, tag, failure);

@@ -552,9 +552,9 @@ class GCRuntime
                                  AutoTraceSession& session);
 
     friend class AutoCallGCCallbacks;
-    void maybeCallBeginCallback();
-    void maybeCallEndCallback();
+    void maybeCallGCCallback(JSGCStatus status);
 
+    void changeToNonIncrementalGC();
     void pushZealSelectedObjects();
     void purgeRuntime();
     MOZ_MUST_USE bool beginMarkPhase(JS::gcreason::Reason reason, AutoTraceSession& session);
@@ -840,11 +840,6 @@ class GCRuntime
     friend class WeakCacheSweepIterator;
 
     /*
-     * List head of arenas allocated during the sweep phase.
-     */
-    ActiveThreadData<Arena*> arenasAllocatedDuringSweep;
-
-    /*
      * Incremental compacting state.
      */
     ActiveThreadData<bool> startedCompacting;
@@ -916,7 +911,7 @@ class GCRuntime
 
     ActiveThreadData<bool> fullCompartmentChecks;
 
-    ActiveThreadData<uint32_t> gcBeginCallbackDepth;
+    ActiveThreadData<uint32_t> gcCallbackDepth;
 
     Callback<JSGCCallback> gcCallback;
     Callback<JS::DoCycleCollectionCallback> gcDoCycleCollectionCallback;

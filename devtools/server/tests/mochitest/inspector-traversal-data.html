@@ -25,7 +25,18 @@
       let host = document.querySelector("#shadow");
       if (host.createShadowRoot) {
         let root = host.createShadowRoot();
-        root.innerHTML = "<h3>Shadow <em>DOM</em></h3><select multiple></select>";
+
+        let h3 = document.createElement("h3");
+        h3.append("Shadow ");
+
+        let em = document.createElement("em");
+        em.append("DOM");
+
+        let select = document.createElement("select");
+        select.setAttribute("multiple", "");
+        h3.appendChild(em);
+        root.appendChild(h3);
+        root.appendChild(select);
       }
 
       // Put a copy of the body in an iframe to test frame traversal.

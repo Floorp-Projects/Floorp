@@ -101,6 +101,7 @@ class FreeSpan
 {
     friend class Arena;
     friend class ArenaCellIterImpl;
+    friend class ArenaFreeCellIter;
 
     uint16_t first;
     uint16_t last;
@@ -245,24 +246,13 @@ class Arena
      * of the stack from the arenas not present in the stack we use the
      * markOverflow flag to tag arenas on the stack.
      *
-     * Delayed marking is also used for arenas that we allocate into during an
-     * incremental GC. In this case, we intend to mark all the objects in the
-     * arena, and it's faster to do this marking in bulk.
-     *
-     * When sweeping we keep track of which arenas have been allocated since
-     * the end of the mark phase. This allows us to tell whether a pointer to
-     * an unmarked object is yet to be finalized or has already been
-     * reallocated. We set the allocatedDuringIncremental flag for this and
-     * clear it at the end of the sweep phase.
-     *
      * To minimize the size of the header fields we record the next linkage as
      * address() >> ArenaShift and pack it with the allocKind and the flags.
      */
     size_t hasDelayedMarking : 1;
-    size_t allocatedDuringIncremental : 1;
     size_t markOverflow : 1;
-    size_t auxNextLink : JS_BITS_PER_WORD - 8 - 1 - 1 - 1;
-    static_assert(ArenaShift >= 8 + 1 + 1 + 1,
+    size_t auxNextLink : JS_BITS_PER_WORD - 8 - 1 - 1;
+    static_assert(ArenaShift >= 8 + 1 + 1,
                   "Arena::auxNextLink packing assumes that ArenaShift has "
                   "enough bits to cover allocKind and hasDelayedMarking.");
 
@@ -312,7 +302,6 @@ class Arena
         zone = nullptr;
         allocKind = size_t(AllocKind::LIMIT);
         hasDelayedMarking = 0;
-        allocatedDuringIncremental = 0;
         markOverflow = 0;
         auxNextLink = 0;
         bufferedCells_ = nullptr;
@@ -419,25 +408,6 @@ class Arena
         auxNextLink = 0;
     }
 
-    Arena* getNextAllocDuringSweep() const {
-        MOZ_ASSERT(allocatedDuringIncremental);
-        return reinterpret_cast<Arena*>(auxNextLink << ArenaShift);
-    }
-
-    void setNextAllocDuringSweep(Arena* arena) {
-        MOZ_ASSERT(!(uintptr_t(arena) & ArenaMask));
-        MOZ_ASSERT(!auxNextLink && !allocatedDuringIncremental);
-        allocatedDuringIncremental = 1;
-        if (arena)
-            auxNextLink = arena->address() >> ArenaShift;
-    }
-
-    void unsetAllocDuringSweep() {
-        MOZ_ASSERT(allocatedDuringIncremental);
-        allocatedDuringIncremental = 0;
-        auxNextLink = 0;
-    }
-
     inline ArenaCellSet*& bufferedCells();
     inline size_t& atomBitmapStart();
 
@@ -447,6 +417,11 @@ class Arena
     static void staticAsserts();
 
     void unmarkAll();
+    void unmarkPreMarkedFreeCells();
+
+#ifdef DEBUG
+    void checkNoMarkedFreeCells();
+#endif
 };
 
 static_assert(ArenaZoneOffset == offsetof(Arena, zone),
@@ -684,6 +659,14 @@ struct ChunkBitmap
         *dstWord &= ~dstMask;
         if (*srcWord & srcMask)
             *dstWord |= dstMask;
+    }
+
+    MOZ_ALWAYS_INLINE void unmark(const TenuredCell* cell) {
+        uintptr_t* word, mask;
+        getMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
+        *word &= ~mask;
+        getMarkWordAndMask(cell, ColorBit::GrayOrBlackBit, &word, &mask);
+        *word &= ~mask;
     }
 
     void clear() {

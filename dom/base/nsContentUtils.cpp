@@ -5239,6 +5239,7 @@ nsContentUtils::ParseFragmentHTML(const nsAString& aSourceBuffer,
 
     nsTreeSanitizer sanitizer(nsIParserUtils::SanitizerAllowStyle |
                               nsIParserUtils::SanitizerAllowComments |
+                              nsIParserUtils::SanitizerDropForms |
                               nsIParserUtils::SanitizerLogRemovals);
     sanitizer.Sanitize(fragment);
 
@@ -5333,6 +5334,7 @@ nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
 
     nsTreeSanitizer sanitizer(nsIParserUtils::SanitizerAllowStyle |
                               nsIParserUtils::SanitizerAllowComments |
+                              nsIParserUtils::SanitizerDropForms |
                               nsIParserUtils::SanitizerLogRemovals);
     sanitizer.Sanitize(fragment);
   }

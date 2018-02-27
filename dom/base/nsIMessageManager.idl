@@ -203,7 +203,7 @@ interface nsIMessageListener : nsISupports
   void receiveMessage();
 };
 
-[scriptable, builtinclass, uuid(b949bfec-bb7d-47bc-b387-ac6a9b655072)]
+[uuid(b949bfec-bb7d-47bc-b387-ac6a9b655072)]
 interface nsIMessageListenerManager : nsISupports
 {
   /**
@@ -261,7 +261,7 @@ interface nsIMessageListenerManager : nsISupports
  * messages that are only delivered to its one parent-process message
  * manager.
  */
-[scriptable, builtinclass, uuid(bb5d79e4-e73c-45e7-9651-4d718f4b994c)]
+[uuid(bb5d79e4-e73c-45e7-9651-4d718f4b994c)]
 interface nsIMessageSender : nsIMessageListenerManager
 {
   /**
@@ -309,7 +309,7 @@ interface nsIMessageSender : nsIMessageListenerManager
  * manager will broadcast the message to all frame message managers
  * within its window.
  */
-[scriptable, builtinclass, uuid(4d7d62ad-4725-4f39-86cf-8fb22bf9c1d8)]
+[uuid(4d7d62ad-4725-4f39-86cf-8fb22bf9c1d8)]
 interface nsIMessageBroadcaster : nsIMessageListenerManager
 {
   /**
@@ -342,7 +342,7 @@ interface nsIMessageBroadcaster : nsIMessageListenerManager
    void releaseCachedProcesses();
 };
 
-[scriptable, builtinclass, uuid(0e602c9e-1977-422a-a8e4-fe0d4a4f78d0)]
+[uuid(0e602c9e-1977-422a-a8e4-fe0d4a4f78d0)]
 interface nsISyncMessageSender : nsIMessageSender
 {
   /**
@@ -372,7 +372,7 @@ interface nsISyncMessageSender : nsIMessageSender
                        [optional] in nsIPrincipal principal);
 };
 
-[scriptable, builtinclass, uuid(13f3555f-769e-44ea-b607-5239230c3162)]
+[uuid(13f3555f-769e-44ea-b607-5239230c3162)]
 interface nsIMessageManagerGlobal : nsISyncMessageSender
 {
   /**
@@ -393,7 +393,7 @@ interface nsIMessageManagerGlobal : nsISyncMessageSender
   DOMString btoa(in DOMString aBase64Data);
 };
 
-[scriptable, builtinclass, uuid(694e367c-aa25-4446-8499-2c527c4bd838)]
+[uuid(694e367c-aa25-4446-8499-2c527c4bd838)]
 interface nsIContentFrameMessageManager : nsIMessageManagerGlobal
 {
   /**
@@ -420,7 +420,7 @@ interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
   [notxpcom] void cacheFrameLoader(in nsIFrameLoader aFrameLoader);
 };
 
-[scriptable, builtinclass, uuid(6d12e467-2446-46db-9965-e4e93cb87ca5)]
+[uuid(6d12e467-2446-46db-9965-e4e93cb87ca5)]
 interface nsIContentProcessMessageManager : nsIMessageManagerGlobal
 {
   /**
@@ -431,7 +431,7 @@ interface nsIContentProcessMessageManager : nsIMessageManagerGlobal
   readonly attribute jsval initialProcessData;
 };
 
-[scriptable, builtinclass, uuid(bf61446b-ba24-4b1d-88c7-4f94724b9ce1)]
+[uuid(bf61446b-ba24-4b1d-88c7-4f94724b9ce1)]
 interface nsIFrameScriptLoader : nsISupports
 {
   /**
@@ -458,7 +458,7 @@ interface nsIFrameScriptLoader : nsISupports
   jsval getDelayedFrameScripts();
 };
 
-[scriptable, builtinclass, uuid(7e1e1a20-b24f-11e4-ab27-0800200c9a66)]
+[uuid(7e1e1a20-b24f-11e4-ab27-0800200c9a66)]
 interface nsIProcessScriptLoader : nsISupports
 {
   /**
@@ -483,7 +483,7 @@ interface nsIProcessScriptLoader : nsISupports
   jsval getDelayedProcessScripts();
 };
 
-[scriptable, builtinclass, uuid(5b390753-abb3-49b0-ae3b-b803dab58144)]
+[uuid(5b390753-abb3-49b0-ae3b-b803dab58144)]
 interface nsIGlobalProcessScriptLoader : nsIProcessScriptLoader
 {
   /**

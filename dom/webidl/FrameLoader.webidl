@@ -8,7 +8,6 @@ interface LoadContext;
 interface TabParent;
 interface URI;
 interface nsIDocShell;
-interface nsIMessageSender;
 interface nsIPrintSettings;
 interface nsIWebBrowserPersistDocumentReceiver;
 interface nsIWebProgressListener;
@@ -104,7 +103,7 @@ interface FrameLoader {
   void activateFrameEvent(DOMString aType, boolean capture);
 
   // Note, when frameloaders are swapped, also messageManagers are swapped.
-  readonly attribute nsIMessageSender? messageManager;
+  readonly attribute MessageSender? messageManager;
 
   /**
    * Request that the next time a remote layer transaction has been

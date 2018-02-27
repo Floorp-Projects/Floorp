@@ -131,7 +131,10 @@ function* createTooltip(doc, autofocus) {
   let div = doc.createElementNS(HTML_NS, "div");
   div.classList.add("tooltip-content");
   div.style.height = "50px";
-  div.innerHTML = '<input type="text"></input>';
+
+  let input = doc.createElementNS(HTML_NS, "input");
+  input.setAttribute("type", "text");
+  div.appendChild(input);
 
   tooltip.setContent(div, {width: 150, height: 50});
   return tooltip;
