@@ -55,13 +55,15 @@ MacroAssembler::move32To64ZeroExtend(Register src, Register64 dest)
 void
 MacroAssembler::move8To64SignExtend(Register src, Register64 dest)
 {
-    move8SignExtend(src, dest.reg);
+    move32To64SignExtend(src, dest);
+    move8SignExtend(dest.reg, dest.reg);
 }
 
 void
 MacroAssembler::move16To64SignExtend(Register src, Register64 dest)
 {
-    move16SignExtend(src, dest.reg);
+    move32To64SignExtend(src, dest);
+    move16SignExtend(dest.reg, dest.reg);
 }
 
 void
