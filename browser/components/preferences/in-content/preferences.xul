@@ -172,6 +172,7 @@
 
         <richlistitem id="category-sync"
                       class="category"
+                      hidden="true"
                       value="paneSync"
                       helpTopic="prefs-weave"
                       data-l10n-id="category-sync"

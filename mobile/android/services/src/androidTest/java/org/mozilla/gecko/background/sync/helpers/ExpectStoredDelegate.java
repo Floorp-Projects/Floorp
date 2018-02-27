@@ -4,36 +4,27 @@
 package org.mozilla.gecko.background.sync.helpers;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
 import junit.framework.AssertionFailedError;
 
 public class ExpectStoredDelegate extends DefaultStoreDelegate {
-  String expectedGUID;
-  String storedGuid;
-
-  public ExpectStoredDelegate(String guid) {
-    this.expectedGUID = guid;
+  final int expectedCount;
+  int count;
+  public ExpectStoredDelegate(int expectedCount) {
+    this.expectedCount = expectedCount;
   }
 
   @Override
   public synchronized void onStoreCompleted() {
     try {
-      assertNotNull(storedGuid);
+      assertEquals(expectedCount, count);
       performNotify();
     } catch (AssertionFailedError e) {
-      performNotify("GUID " + this.expectedGUID + " was not stored", e);
+      performNotify("Wrong # of GUIDS stored: " + count, e);
     }
   }
 
   @Override
-  public synchronized void onRecordStoreSucceeded(String guid) {
-    this.storedGuid = guid;
-    try {
-      if (this.expectedGUID != null) {
-        assertEquals(this.expectedGUID, guid);
-      }
-    } catch (AssertionFailedError e) {
-      performNotify(e);
-    }
+  public synchronized void onRecordStoreSucceeded(int count) {
+    this.count += count;
   }
 }

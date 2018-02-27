@@ -272,7 +272,9 @@ AddonUtilsInternal.prototype = {
         return param;
       });
 
-      addon.sourceURI.query = params.join("&");
+      addon.sourceURI = addon.sourceURI.mutate()
+                                       .setQuery(params.join("&"))
+                                       .finalize();
     }
 
     if (!toInstall.length) {

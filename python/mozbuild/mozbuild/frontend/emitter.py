@@ -561,7 +561,6 @@ class TreeMetadataEmitter(LoggingMixin):
                         'rpath': False,
                         'lto': False,
                         'debug-assertions': True,
-                        'codegen-units': 4,
                         'panic': 'abort',
                     }
                 else:
@@ -1054,9 +1053,6 @@ class TreeMetadataEmitter(LoggingMixin):
         # desired abstraction of the build definition away from makefiles.
         passthru = VariablePassthru(context)
         varlist = [
-            'ANDROID_APK_NAME',
-            'ANDROID_APK_PACKAGE',
-            'ANDROID_GENERATED_RESFILES',
             'EXTRA_DSO_LDOPTS',
             'RCFILE',
             'RESFILE',
@@ -1339,24 +1335,6 @@ class TreeMetadataEmitter(LoggingMixin):
             computed_as_flags.resolve_flags('OS',
                                             context.config.substs.get('YASM_ASFLAGS', []))
 
-
-        for (symbol, cls) in [
-                ('ANDROID_RES_DIRS', AndroidResDirs),
-                ('ANDROID_EXTRA_RES_DIRS', AndroidExtraResDirs),
-                ('ANDROID_ASSETS_DIRS', AndroidAssetsDirs)]:
-            paths = context.get(symbol)
-            if not paths:
-                continue
-            for p in paths:
-                if isinstance(p, SourcePath) and not os.path.isdir(p.full_path):
-                    raise SandboxValidationError('Directory listed in '
-                        '%s is not a directory: \'%s\'' %
-                            (symbol, p.full_path), context)
-            yield cls(context, paths)
-
-        android_extra_packages = context.get('ANDROID_EXTRA_PACKAGES')
-        if android_extra_packages:
-            yield AndroidExtraPackages(context, android_extra_packages)
 
         if passthru.variables:
             yield passthru

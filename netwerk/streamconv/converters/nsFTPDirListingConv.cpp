@@ -14,6 +14,7 @@
 #include "nsCRT.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
+#include "nsIURIMutator.h"
 
 #include "ParseFTPList.h"
 #include <algorithm>
@@ -191,13 +192,14 @@ nsFTPDirListingConv::GetHeaders(nsACString& headers,
     nsAutoCString spec;
     uri->GetPassword(pw);
     if (!pw.IsEmpty()) {
-         rv = uri->SetPassword(EmptyCString());
+         nsCOMPtr<nsIURI> noPassURI;
+         rv = NS_MutateURI(uri)
+                .SetPassword(EmptyCString())
+                .Finalize(noPassURI);
          if (NS_FAILED(rv)) return rv;
-         rv = uri->GetAsciiSpec(spec);
+         rv = noPassURI->GetAsciiSpec(spec);
          if (NS_FAILED(rv)) return rv;
          headers.Append(spec);
-         rv = uri->SetPassword(pw);
-         if (NS_FAILED(rv)) return rv;
     } else {
         rv = uri->GetAsciiSpec(spec);
         if (NS_FAILED(rv)) return rv;

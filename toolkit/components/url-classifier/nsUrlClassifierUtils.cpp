@@ -6,6 +6,7 @@
 #include "nsEscape.h"
 #include "nsString.h"
 #include "nsIURI.h"
+#include "nsIURIMutator.h"
 #include "nsIURL.h"
 #include "nsUrlClassifierUtils.h"
 #include "nsTArray.h"
@@ -479,21 +480,17 @@ GetSpecWithoutSensitiveData(nsIURI* aUri, nsACString &aSpec)
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsIURI> clone;
-  // Clone to make the uri mutable
-  nsresult rv = aUri->CloneIgnoringRef(getter_AddRefs(clone));
-  nsCOMPtr<nsIURL> url(do_QueryInterface(clone));
+  nsresult rv;
+  nsCOMPtr<nsIURL> url(do_QueryInterface(aUri));
   if (url) {
-    rv = url->SetQuery(EmptyCString());
+    nsCOMPtr<nsIURI> clone;
+    rv = NS_MutateURI(url)
+           .SetQuery(EmptyCString())
+           .SetRef(EmptyCString())
+           .SetUserPass(EmptyCString())
+           .Finalize(clone);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = url->SetRef(EmptyCString());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = url->SetUserPass(EmptyCString());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = url->GetAsciiSpec(aSpec);
+    rv = clone->GetAsciiSpec(aSpec);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;

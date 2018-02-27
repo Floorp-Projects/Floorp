@@ -16,7 +16,7 @@ function run_test() {
 
   success = false;
   try {
-    newURI.host = " foo.com";
+    newURI = newURI.mutate().setHost(" foo.com").finalize();
   }
   catch (e) {
     success = e.result == Cr.NS_ERROR_MALFORMED_URI;

@@ -80,20 +80,18 @@ class PayloadDispatcher {
             throw new IllegalStateException("Can't process payload success until we know if we're in a batching mode");
         }
 
-        final String[] guids = batchWhiteboard.getSuccessRecordGuids();
+        final int recordsSucceeded = batchWhiteboard.getSuccessRecordCount();
         // We consider records to have been committed if we're not in a batching mode or this was a commit.
         // If records have been committed, notify our store delegate.
         if (!batchWhiteboard.getInBatchingMode() || isCommit) {
-            for (String guid : guids) {
-                uploader.sessionStoreDelegate.onRecordStoreSucceeded(guid);
-            }
+            uploader.sessionStoreDelegate.onRecordStoreSucceeded(recordsSucceeded);
 
             // If we're not in a batching mode, or just committed a batch, uploaded records have
             // been applied to the server storage and are now visible to other clients.
             // Therefore, we bump our local "last store" timestamp.
             bumpTimestampTo(uploadTimestamp, response.normalizedTimestampForHeader(SyncResponse.X_LAST_MODIFIED));
             uploader.setLastStoreTimestamp(uploadTimestamp);
-            batchWhiteboard.clearSuccessRecordGuids();
+            batchWhiteboard.clearSuccessRecordCounter();
         }
 
         if (isCommit || !batchWhiteboard.getInBatchingMode()) {

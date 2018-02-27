@@ -7,7 +7,7 @@ const {Cu} = require("chrome");
 const {TargetFactory} = require("devtools/client/framework/target");
 const Services = require("Services");
 const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {OS} = require("resource://gre/modules/osfile.jsm");
 const {AppProjects} = require("devtools/client/webide/modules/app-projects");
 const TabStore = require("devtools/client/webide/modules/tab-store");
@@ -625,7 +625,7 @@ var AppManager = exports.AppManager = {
       let {app} = response;
       if (!app.running) {
         let deferred = new Promise(resolve => {
-          self.on("app-manager-update", function onUpdate(event, what) {
+          self.on("app-manager-update", function onUpdate(what) {
             if (what == "project-started") {
               self.off("app-manager-update", onUpdate);
               resolve();

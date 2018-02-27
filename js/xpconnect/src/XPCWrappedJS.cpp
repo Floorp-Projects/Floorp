@@ -602,7 +602,7 @@ nsXPCWrappedJS::GetInterfaceInfo(nsIInterfaceInfo** infoResult)
 
 NS_IMETHODIMP
 nsXPCWrappedJS::CallMethod(uint16_t methodIndex,
-                           const XPTMethodDescriptor* info,
+                           const nsXPTMethodInfo* info,
                            nsXPTCMiniVariant* params)
 {
     // Do a release-mode assert against accessing nsXPCWrappedJS off-main-thread.

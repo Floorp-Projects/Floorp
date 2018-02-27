@@ -1,0 +1,59 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.release_deps:transforms
+   - taskgraph.transforms.worker_type:transforms
+   - taskgraph.transforms.release_notifications:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+   - post-balrog-dummy
+   - post-beetmover-dummy
+   - release-secondary-balrog-submit-toplevel
+   - release-secondary-update-verify
+
+job-defaults:
+   worker-type:
+      by-project:
+         maple: scriptworker-prov-v1/balrog-dev
+         birch: scriptworker-prov-v1/balrog-dev
+         mozilla-beta: scriptworker-prov-v1/balrogworker-v1
+         mozilla-release: scriptworker-prov-v1/balrogworker-v1
+         default: invalid/invalid
+   run-on-projects: []
+   shipping-phase: ship
+   worker:
+      implementation: balrog
+      balrog-action: schedule
+
+jobs:
+   firefox-secondary-rc:
+      description: Schedule Beta Firefox publishing in balrog
+      name: release-firefox_schedule_publishing_in_balrog
+      shipping-product: firefox
+      worker:
+         product: firefox
+         channel-names:
+            by-project:
+               birch: ["beta", "beta-localtest", "beta-cdntest"]
+               mozilla-release: ["beta", "beta-localtest", "beta-cdntest"]
+               default: []
+         publish-rules:
+            by-project:
+               birch: [32]
+               mozilla-release: [32]
+               default: []
+         rules-to-update:
+            by-project:
+               birch: ["firefox-beta-cdntest", "firefox-beta-localtest"]
+               mozilla-release: ["firefox-beta-cdntest", "firefox-beta-localtest"]
+               default: []
+      treeherder:
+         platform: linux64/opt
+         symbol: Rel(BSFxRC)
+         tier: 1
+         kind: build

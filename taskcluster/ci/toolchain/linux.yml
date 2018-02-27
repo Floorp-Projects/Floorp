@@ -288,22 +288,6 @@ linux64-libdmg:
         script: build-libdmg-hfsplus.sh
         toolchain-artifact: public/build/dmg.tar.xz
 
-linux64-proguard-jar-repack:
-    description: "proguard.jar repack toolchain build"
-    treeherder:
-        kind: build
-        platform: toolchains/opt
-        symbol: TL(proguard-jar)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        max-run-time: 36000
-    run:
-        using: toolchain-script
-        script: repack-proguard-jar.sh
-        toolchain-artifact: public/build/proguard-jar.tar.xz
-        toolchain-alias: proguard-jar
-
 linux64-android-sdk-linux-repack:
     description: "Android SDK (Linux) repack toolchain build"
     treeherder:
@@ -380,7 +364,6 @@ linux64-android-gradle-dependencies:
     toolchains:
         # Aliases aren't allowed for toolchains depending on toolchains.
         - linux64-android-sdk-linux-repack
-        - linux64-proguard-jar-repack
 
 linux64-rust-1.24:
     description: "rust repack"

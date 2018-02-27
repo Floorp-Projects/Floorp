@@ -11,6 +11,7 @@
 #include "nsIInputStream.h"
 #include "nsNameSpaceManager.h"
 #include "nsIURI.h"
+#include "nsIURIMutator.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
 #include "nsString.h"
@@ -132,16 +133,22 @@ nsXBLPrototypeBinding::Init(const nsACString& aID,
                             Element* aElement,
                             bool aFirstBinding)
 {
-  nsresult rv = aInfo->DocumentURI()->Clone(getter_AddRefs(mBindingURI));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv;
+  nsCOMPtr<nsIURI> bindingURI = aInfo->DocumentURI();
 
   // The binding URI might be an immutable URI (e.g. for about: URIs). In that case,
   // we'll fail in SetRef below, but that doesn't matter much for now.
   if (aFirstBinding) {
-    rv = mBindingURI->Clone(getter_AddRefs(mAlternateBindingURI));
+    rv = bindingURI->Clone(getter_AddRefs(mAlternateBindingURI));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  mBindingURI->SetRef(aID);
+  rv = NS_MutateURI(bindingURI)
+        .SetRef(aID)
+        .Finalize(mBindingURI);
+  if (NS_FAILED(rv)) {
+    // If SetRef failed, mBindingURI should be a clone.
+    bindingURI->Clone(getter_AddRefs(mBindingURI));
+  }
 
   mXBLDocInfoWeak = aInfo;
 

@@ -177,7 +177,7 @@
                        oncommand="PanelUI._onBannerItemSelected(event)"
                        wrap="true"
                        hidden="true"/>
-        <toolbaritem id="appMenu-fxa-container" class="toolbaritem-combined-buttons">
+        <toolbaritem id="appMenu-fxa-container" class="toolbaritem-combined-buttons sync-ui-item">
           <hbox id="appMenu-fxa-status"
                 flex="1"
                 defaultlabel="&fxaSignIn.label;"
@@ -201,7 +201,7 @@
             <observes element="sync-status" attribute="tooltiptext"/>
           </toolbarbutton>
         </toolbaritem>
-        <toolbarseparator/>
+        <toolbarseparator class="sync-ui-item"/>
         <toolbarbutton id="appMenu-new-window-button"
                        class="subviewbutton subviewbutton-iconic"
                        label="&newNavigatorCmd.label;"
@@ -637,7 +637,7 @@
                        closemenu="none"
                        oncommand="DownloadsSubview.show(this);"/>
         <toolbarbutton id="appMenu-library-remotetabs-button"
-                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav sync-ui-item"
                        label="&appMenuRemoteTabs.label;"
                        closemenu="none"
                        oncommand="PanelUI.showSubView('PanelUI-remotetabs', this)"/>

@@ -8,9 +8,11 @@
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Blob.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsIURL.h"
+#include "nsIURIMutator.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
@@ -248,12 +250,9 @@ URLMainThread::SetProtocol(const nsAString& aProtocol, ErrorResult& aRv)
   // implementation. In order to do this properly, we have to serialize the
   // existing URL and reparse it in a new object.
   nsCOMPtr<nsIURI> clone;
-  nsresult rv = mURI->Clone(getter_AddRefs(clone));
-  if (NS_WARN_IF(NS_FAILED(rv)) || !clone) {
-    return;
-  }
-
-  rv = clone->SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)));
+  nsresult rv = NS_MutateURI(mURI)
+                  .SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)))
+                  .Finalize(clone);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -290,7 +289,9 @@ URLMainThread::GetUsername(nsAString& aUsername, ErrorResult& aRv) const
 void
 URLMainThread::SetUsername(const nsAString& aUsername, ErrorResult& aRv)
 {
-  mURI->SetUsername(NS_ConvertUTF16toUTF8(aUsername));
+  Unused << NS_MutateURI(mURI)
+              .SetUsername(NS_ConvertUTF16toUTF8(aUsername))
+              .Finalize(mURI);
 }
 
 void
@@ -302,7 +303,9 @@ URLMainThread::GetPassword(nsAString& aPassword, ErrorResult& aRv) const
 void
 URLMainThread::SetPassword(const nsAString& aPassword, ErrorResult& aRv)
 {
-  mURI->SetPassword(NS_ConvertUTF16toUTF8(aPassword));
+  Unused << NS_MutateURI(mURI)
+              .SetPassword(NS_ConvertUTF16toUTF8(aPassword))
+              .Finalize(mURI);
 }
 
 void
@@ -314,7 +317,9 @@ URLMainThread::GetHost(nsAString& aHost, ErrorResult& aRv) const
 void
 URLMainThread::SetHost(const nsAString& aHost, ErrorResult& aRv)
 {
-  mURI->SetHostPort(NS_ConvertUTF16toUTF8(aHost));
+  Unused << NS_MutateURI(mURI)
+              .SetHostPort(NS_ConvertUTF16toUTF8(aHost))
+              .Finalize(mURI);
 }
 
 void
@@ -345,7 +350,9 @@ URLMainThread::SetHostname(const nsAString& aHostname, ErrorResult& aRv)
 {
   // nsStandardURL returns NS_ERROR_UNEXPECTED for an empty hostname
   // The return code is silently ignored
-  mURI->SetHost(NS_ConvertUTF16toUTF8(aHostname));
+  mozilla::Unused << NS_MutateURI(mURI)
+                       .SetHost(NS_ConvertUTF16toUTF8(aHostname))
+                       .Finalize(mURI);
 }
 
 void
@@ -377,7 +384,9 @@ URLMainThread::SetPort(const nsAString& aPort, ErrorResult& aRv)
     }
   }
 
-  mURI->SetPort(port);
+  Unused << NS_MutateURI(mURI)
+              .SetPort(port)
+              .Finalize(mURI);
 }
 
 void
@@ -400,7 +409,9 @@ URLMainThread::SetPathname(const nsAString& aPathname, ErrorResult& aRv)
 {
   // Do not throw!
 
-  mURI->SetFilePath(NS_ConvertUTF16toUTF8(aPathname));
+  Unused << NS_MutateURI(mURI)
+              .SetFilePath(NS_ConvertUTF16toUTF8(aPathname))
+              .Finalize(mURI);
 }
 
 void
@@ -436,7 +447,9 @@ URLMainThread::GetHash(nsAString& aHash, ErrorResult& aRv) const
 void
 URLMainThread::SetHash(const nsAString& aHash, ErrorResult& aRv)
 {
-  mURI->SetRef(NS_ConvertUTF16toUTF8(aHash));
+  Unused << NS_MutateURI(mURI)
+              .SetRef(NS_ConvertUTF16toUTF8(aHash))
+              .Finalize(mURI);
 }
 
 void
@@ -444,7 +457,9 @@ URLMainThread::SetSearchInternal(const nsAString& aSearch, ErrorResult& aRv)
 {
   // Ignore failures to be compatible with NS4.
 
-  mURI->SetQuery(NS_ConvertUTF16toUTF8(aSearch));
+  Unused << NS_MutateURI(mURI)
+              .SetQuery(NS_ConvertUTF16toUTF8(aSearch))
+              .Finalize(mURI);
 }
 
 nsIURI*

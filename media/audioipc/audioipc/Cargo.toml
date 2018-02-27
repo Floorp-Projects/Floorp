@@ -8,7 +8,7 @@ authors = [
 description = "Remote Cubeb IPC"
 
 [dependencies]
-cubeb-core = { path = "../../cubeb-rs/cubeb-core" }
+cubeb = "0.4"
 bincode = "0.8"
 bytes = "0.4"
 # rayon-core in Gecko uses futures 0.1.13

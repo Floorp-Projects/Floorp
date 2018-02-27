@@ -1,14 +1,14 @@
-use cubeb_core::Error;
-use cubeb_core::ffi;
+use cubeb_backend::Error;
+use std::os::raw::c_int;
 
 #[doc(hidden)]
 pub fn _err<E>(e: E) -> Error
 where
-    E: Into<Option<ffi::cubeb_error_code>>
+    E: Into<Option<c_int>>,
 {
     match e.into() {
         Some(e) => unsafe { Error::from_raw(e) },
-        None => Error::new()
+        None => Error::error(),
     }
 }
 

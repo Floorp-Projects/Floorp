@@ -15,6 +15,7 @@
 #include "mozilla/places/History.h"
 #endif
 #include "nsIURL.h"
+#include "nsIURIMutator.h"
 #include "nsISizeOf.h"
 #include "nsIDocShell.h"
 #include "nsIPrefetchService.h"
@@ -429,7 +430,7 @@ Link::GetURI() const
 void
 Link::SetProtocol(const nsAString &aProtocol)
 {
-  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
@@ -440,7 +441,12 @@ Link::SetProtocol(const nsAString &aProtocol)
   aProtocol.EndReading(end);
   nsAString::const_iterator iter(start);
   (void)FindCharInReadable(':', iter, end);
-  (void)uri->SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)));
+  nsresult rv = NS_MutateURI(uri)
+                  .SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)))
+                  .Finalize(uri);
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
   SetHrefAttribute(uri);
 }
@@ -448,73 +454,96 @@ Link::SetProtocol(const nsAString &aProtocol)
 void
 Link::SetPassword(const nsAString &aPassword)
 {
-  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  uri->SetPassword(NS_ConvertUTF16toUTF8(aPassword));
-  SetHrefAttribute(uri);
+  nsresult rv = NS_MutateURI(uri)
+                  .SetPassword(NS_ConvertUTF16toUTF8(aPassword))
+                  .Finalize(uri);
+  if (NS_SUCCEEDED(rv)) {
+    SetHrefAttribute(uri);
+  }
 }
 
 void
 Link::SetUsername(const nsAString &aUsername)
 {
-  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  uri->SetUsername(NS_ConvertUTF16toUTF8(aUsername));
-  SetHrefAttribute(uri);
+  nsresult rv = NS_MutateURI(uri)
+                  .SetUsername(NS_ConvertUTF16toUTF8(aUsername))
+                  .Finalize(uri);
+  if (NS_SUCCEEDED(rv)) {
+    SetHrefAttribute(uri);
+  }
 }
 
 void
 Link::SetHost(const nsAString &aHost)
 {
-  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  (void)uri->SetHostPort(NS_ConvertUTF16toUTF8(aHost));
+  nsresult rv = NS_MutateURI(uri)
+                  .SetHostPort(NS_ConvertUTF16toUTF8(aHost))
+                  .Finalize(uri);
+  if (NS_FAILED(rv)) {
+    return;
+  }
   SetHrefAttribute(uri);
 }
 
 void
 Link::SetHostname(const nsAString &aHostname)
 {
-  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  (void)uri->SetHost(NS_ConvertUTF16toUTF8(aHostname));
+  nsresult rv = NS_MutateURI(uri)
+                  .SetHost(NS_ConvertUTF16toUTF8(aHostname))
+                  .Finalize(uri);
+  if (NS_FAILED(rv)) {
+    return;
+  }
   SetHrefAttribute(uri);
 }
 
 void
 Link::SetPathname(const nsAString &aPathname)
 {
-  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  nsCOMPtr<nsIURI> uri(GetURI());
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
   if (!url) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  (void)url->SetFilePath(NS_ConvertUTF16toUTF8(aPathname));
+  nsresult rv = NS_MutateURI(uri)
+                  .SetFilePath(NS_ConvertUTF16toUTF8(aPathname))
+                  .Finalize(uri);
+  if (NS_FAILED(rv)) {
+    return;
+  }
   SetHrefAttribute(uri);
 }
 
 void
 Link::SetSearch(const nsAString& aSearch)
 {
-  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  nsCOMPtr<nsIURI> uri(GetURI());
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
   if (!url) {
     // Ignore failures to be compatible with NS4.
@@ -522,14 +551,19 @@ Link::SetSearch(const nsAString& aSearch)
   }
 
   auto encoding = mElement->OwnerDoc()->GetDocumentCharacterSet();
-  (void)url->SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch), encoding);
+  nsresult rv = NS_MutateURI(uri)
+                  .SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch), encoding)
+                  .Finalize(uri);
+  if (NS_FAILED(rv)) {
+    return;
+  }
   SetHrefAttribute(uri);
 }
 
 void
 Link::SetPort(const nsAString &aPort)
 {
-  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
@@ -547,20 +581,31 @@ Link::SetPort(const nsAString &aPort)
     }
   }
 
-  (void)uri->SetPort(port);
+  rv = NS_MutateURI(uri)
+         .SetPort(port)
+         .Finalize(uri);
+  if (NS_FAILED(rv)) {
+    return;
+  }
   SetHrefAttribute(uri);
 }
 
 void
 Link::SetHash(const nsAString &aHash)
 {
-  nsCOMPtr<nsIURI> uri(GetURIToMutate());
+  nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  (void)uri->SetRef(NS_ConvertUTF16toUTF8(aHash));
+  nsresult rv = NS_MutateURI(uri)
+                  .SetRef(NS_ConvertUTF16toUTF8(aHash))
+                  .Finalize(uri);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
   SetHrefAttribute(uri);
 }
 

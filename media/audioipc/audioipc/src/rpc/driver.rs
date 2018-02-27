@@ -10,7 +10,7 @@ use std::io;
 
 pub struct Driver<T>
 where
-    T: Handler
+    T: Handler,
 {
     // Glue
     handler: T,
@@ -19,19 +19,19 @@ where
     run: bool,
 
     // True when the transport is fully flushed
-    is_flushed: bool
+    is_flushed: bool,
 }
 
 impl<T> Driver<T>
 where
-    T: Handler
+    T: Handler,
 {
     /// Create a new rpc driver with the given service and transport.
     pub fn new(handler: T) -> Driver<T> {
         Driver {
             handler: handler,
             run: true,
-            is_flushed: true
+            is_flushed: true,
         }
     }
 
@@ -65,7 +65,7 @@ where
                     // TODO: Should handler be infalliable?
                     panic!("unimplemented error handling: {:?}", e);
                 }
-            },
+            }
             None => {
                 trace!("received None");
                 // At this point, we just return. This works
@@ -86,14 +86,14 @@ where
                 Async::Ready(Some(message)) => {
                     trace!("  --> got message");
                     try!(self.process_outgoing(message));
-                },
+                }
                 Async::Ready(None) => {
                     trace!("  --> got None");
                     // The service is done with the connection.
                     break;
-                },
+                }
                 // Nothing to dispatch
-                Async::NotReady => break
+                Async::NotReady => break,
             }
         }
 
@@ -121,7 +121,7 @@ where
 
 impl<T> Future for Driver<T>
 where
-    T: Handler
+    T: Handler,
 {
     type Item = ();
     type Error = io::Error;
@@ -153,13 +153,13 @@ fn assert_send<S: Sink>(s: &mut S, item: S::SinkItem) -> Result<(), S::SinkError
         AsyncSink::NotReady(_) => panic!(
             "sink reported itself as ready after `poll_ready` but was \
              then unable to accept a message"
-        )
+        ),
     }
 }
 
 impl<T> fmt::Debug for Driver<T>
 where
-    T: Handler + fmt::Debug
+    T: Handler + fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("rpc::Handler")

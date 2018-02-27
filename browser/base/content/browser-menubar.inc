@@ -486,21 +486,25 @@
 
               <!-- only one of sync-setup, sync-unverifieditem, sync-syncnowitem or sync-reauthitem will be showing at once -->
               <menuitem id="sync-setup"
+                        class="sync-ui-item"
                         label="&syncSignIn.label;"
                         accesskey="&syncSignIn.accesskey;"
                         observes="sync-setup-state"
                         oncommand="gSync.openPrefs('menubar')"/>
               <menuitem id="sync-unverifieditem"
+                        class="sync-ui-item"
                         label="&syncSignIn.label;"
                         accesskey="&syncSignIn.accesskey;"
                         observes="sync-unverified-state"
                         oncommand="gSync.openPrefs('menubar')"/>
               <menuitem id="sync-syncnowitem"
+                        class="sync-ui-item"
                         label="&syncSyncNowItem.label;"
                         accesskey="&syncSyncNowItem.accesskey;"
                         observes="sync-syncnow-state"
                         oncommand="gSync.doSync(event);"/>
               <menuitem id="sync-reauthitem"
+                        class="sync-ui-item"
                         label="&syncReAuthItem.label;"
                         accesskey="&syncReAuthItem.accesskey;"
                         observes="sync-reauth-state"

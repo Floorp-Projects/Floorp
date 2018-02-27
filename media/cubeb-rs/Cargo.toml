@@ -1,6 +1,0 @@
-[workspace]
-members = [
-    "cubeb-core",
-    "cubeb-api",
-    "cubeb-backend"
-]

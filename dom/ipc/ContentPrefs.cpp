@@ -292,6 +292,7 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "privacy.firstparty.isolate.restrict_opener_access",
   "privacy.reduceTimerPrecision",
   "privacy.resistFingerprinting",
+  "privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts",
   "privacy.resistFingerprinting.reduceTimerPrecision.microseconds",
   "privacy.resistFingerprinting.target_video_res",
   "privacy.resistFingerprinting.video_dropped_ratio",

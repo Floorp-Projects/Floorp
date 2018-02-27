@@ -693,6 +693,10 @@ BufferedBookmarksEngine.prototype = {
   // non-buffered engine is enabled.
   overrideTelemetryName: "bookmarks-buffered",
 
+  // Needed to ensure we don't miss items when resuming a sync that failed or
+  // aborted early.
+  _defaultSort: "oldest",
+
   async getLastSync() {
     let mirror = await this._store.ensureOpenMirror();
     return mirror.getCollectionHighWaterMark();
@@ -719,15 +723,12 @@ BufferedBookmarksEngine.prototype = {
   },
 
   async _processIncoming(newitems) {
-    try {
-      await super._processIncoming(newitems);
-    } finally {
-      let buf = await this._store.ensureOpenMirror();
-      let recordsToUpload = await buf.apply({
-        remoteTimeSeconds: Resource.serverTime,
-      });
-      this._modified.replace(recordsToUpload);
-    }
+    await super._processIncoming(newitems);
+    let buf = await this._store.ensureOpenMirror();
+    let recordsToUpload = await buf.apply({
+      remoteTimeSeconds: Resource.serverTime,
+    });
+    this._modified.replace(recordsToUpload);
   },
 
   async _reconcile(item) {
@@ -1076,6 +1077,9 @@ BufferedBookmarksStore.prototype = {
   __proto__: BaseBookmarksStore.prototype,
   _openMirrorPromise: null,
 
+  // For tests.
+  _batchChunkSize: 500,
+
   ensureOpenMirror() {
     if (!this._openMirrorPromise) {
       this._openMirrorPromise = this._openMirror().catch(err => {
@@ -1103,6 +1107,15 @@ BufferedBookmarksStore.prototype = {
                                                  extra);
       },
     });
+  },
+
+  async applyIncomingBatch(records) {
+    let buf = await this.ensureOpenMirror();
+    for (let chunk of PlacesSyncUtils.chunkArray(records, this._batchChunkSize)) {
+      await buf.store(chunk);
+    }
+    // Array of failed records.
+    return [];
   },
 
   async applyIncoming(record) {

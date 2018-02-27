@@ -387,7 +387,7 @@ public class TestPasswordsRepository extends AndroidSyncTestCase {
 
   // Runnable Helpers.
   private static Runnable storeRunnable(final RepositorySession session, final Record record) {
-    return storeRunnable(session, record, new ExpectStoredDelegate(record.guid));
+    return storeRunnable(session, record, new ExpectStoredDelegate(1));
   }
 
   private static Runnable storeRunnable(final RepositorySession session, final Record record, final RepositorySessionStoreDelegate delegate) {

@@ -28,7 +28,6 @@ import org.mozilla.gecko.sync.repositories.Server15Repository;
 import org.mozilla.gecko.sync.repositories.StoreFailedException;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecordFactory;
-import org.mozilla.gecko.sync.synchronizer.ServerLocalSynchronizer;
 import org.mozilla.gecko.sync.synchronizer.Synchronizer;
 import org.simpleframework.http.ContentType;
 import org.simpleframework.http.Request;
@@ -120,13 +119,13 @@ public class TestServer15RepositorySession {
     Crypto5MiddlewareRepository cryptoRepo = new Crypto5MiddlewareRepository(remote, collectionKey);
     cryptoRepo.recordFactory = new BookmarkRecordFactory();
 
-    final Synchronizer synchronizer = new ServerLocalSynchronizer();
+    final Synchronizer synchronizer = new Synchronizer();
     synchronizer.repositoryA = cryptoRepo;
     synchronizer.repositoryB = local;
 
     data.startHTTPServer(server);
     try {
-      Exception e = TestServerLocalSynchronizer.doSynchronize(synchronizer);
+      Exception e = TestSynchronizer.doSynchronize(synchronizer);
       return e;
     } finally {
       data.stopHTTPServer();

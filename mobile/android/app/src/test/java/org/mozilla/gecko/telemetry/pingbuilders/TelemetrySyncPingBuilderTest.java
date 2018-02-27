@@ -16,8 +16,6 @@ import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.synchronizer.StoreBatchTracker;
 import org.mozilla.gecko.sync.telemetry.TelemetryStageCollector;
-import org.mozilla.gecko.sync.validation.BookmarkValidationResults;
-import org.mozilla.gecko.sync.validation.ValidationResults;
 import org.mozilla.gecko.telemetry.TelemetryLocalPing;
 
 import java.util.ArrayList;
@@ -39,27 +37,19 @@ public class TelemetrySyncPingBuilderTest {
     @Test
     public void testGeneralShape() throws Exception {
         TelemetryLocalPing localPing = builder
-                .setDeviceID("device-id")
-                .setUID("uid")
                 .setTook(123L)
                 .setRestarted(false)
                 .build();
         ExtendedJSONObject payload = localPing.getPayload();
-        assertEquals("uid", payload.getString("uid"));
         assertEquals(Long.valueOf(123L), payload.getLong("took"));
-        assertEquals("device-id", payload.getString("deviceID"));
         assertFalse(payload.containsKey("restarted"));
 
         localPing = builder
-                .setDeviceID("device-id")
-                .setUID("uid")
                 .setTook(123L)
                 .setRestarted(true)
                 .build();
         payload = localPing.getPayload();
-        assertEquals("uid", payload.getString("uid"));
         assertEquals(Long.valueOf(123L), payload.getLong("took"));
-        assertEquals("device-id", payload.getString("deviceID"));
         assertTrue(payload.getLong("when") != null);
         assertEquals(true, payload.getBoolean("restarted"));
 

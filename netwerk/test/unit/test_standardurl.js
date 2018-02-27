@@ -55,8 +55,8 @@ add_test(function test_setEmptyPath()
   {
     symmetricEquality(false, target, provided);
 
-    provided.pathQueryRef = "";
-    target.pathQueryRef = "";
+    provided = provided.mutate().setPathQueryRef("").finalize();
+    target = target.mutate().setPathQueryRef("").finalize();
 
     Assert.equal(provided.spec, target.spec);
     symmetricEquality(true, target, provided);
@@ -82,7 +82,7 @@ add_test(function test_setQuery()
   for (var [provided, target] of pairs) {
     symmetricEquality(false, provided, target);
 
-    provided.query = "foo";
+    provided = provided.mutate().setQuery("foo").finalize().QueryInterface(Ci.nsIURL);
 
     Assert.equal(provided.spec, target.spec);
     symmetricEquality(true, provided, target);
@@ -91,7 +91,7 @@ add_test(function test_setQuery()
   [provided, target] =
     ["http://example.com/#", "http://example.com/?foo#bar"].map(stringToURL);
   symmetricEquality(false, provided, target);
-  provided.query = "foo";
+  provided = provided.mutate().setQuery("foo").finalize().QueryInterface(Ci.nsIURL);
   symmetricEquality(false, provided, target);
 
   var newProvided = Components.classes["@mozilla.org/network/io-service;1"]
@@ -141,7 +141,7 @@ add_test(function test_setRef()
   {
     /* Test1: starting with empty ref */
     var a = stringToURL(before);
-    a.ref = ref;
+    a = a.mutate().setRef(ref).finalize().QueryInterface(Ci.nsIURL);
     var b = stringToURL(result);
 
     Assert.equal(a.spec, b.spec);
@@ -149,17 +149,17 @@ add_test(function test_setRef()
     symmetricEquality(true, a, b);
 
     /* Test2: starting with non-empty */
-    a.ref = "yyyy";
+    a = a.mutate().setRef("yyyy").finalize().QueryInterface(Ci.nsIURL);
     var c = stringToURL(before);
-    c.ref = "yyyy";
+    c = c.mutate().setRef("yyyy").finalize().QueryInterface(Ci.nsIURL);
     symmetricEquality(true, a, c);
 
     /* Test3: reset the ref */
-    a.ref = "";
+    a = a.mutate().setRef("").finalize().QueryInterface(Ci.nsIURL);
     symmetricEquality(true, a, stringToURL(before));
 
     /* Test4: verify again after reset */
-    a.ref = ref;
+    a = a.mutate().setRef(ref).finalize().QueryInterface(Ci.nsIURL);
     symmetricEquality(true, a, b);
   }
   run_next_test();
@@ -169,17 +169,17 @@ add_test(function test_setRef()
 add_test(function test_ipv6()
 {
   var url = stringToURL("http://example.com");
-  url.host = "[2001::1]";
+  url = url.mutate().setHost("[2001::1]").finalize();
   Assert.equal(url.host, "2001::1");
 
   url = stringToURL("http://example.com");
-  url.hostPort = "[2001::1]:30";
+  url = url.mutate().setHostPort("[2001::1]:30").finalize();
   Assert.equal(url.host, "2001::1");
   Assert.equal(url.port, 30);
   Assert.equal(url.hostPort, "[2001::1]:30");
 
   url = stringToURL("http://example.com");
-  url.hostPort = "2001:1";
+  url = url.mutate().setHostPort("2001:1").finalize();
   Assert.equal(url.host, "0.0.7.209");
   Assert.equal(url.port, 1);
   Assert.equal(url.hostPort, "0.0.7.209:1");
@@ -190,26 +190,31 @@ add_test(function test_ipv6_fail()
 {
   var url = stringToURL("http://example.com");
 
-  Assert.throws(() => { url.host = "2001::1"; }, "missing brackets");
-  Assert.throws(() => { url.host = "[2001::1]:20"; }, "url.host with port");
-  Assert.throws(() => { url.host = "[2001::1"; }, "missing last bracket");
-  Assert.throws(() => { url.host = "2001::1]"; }, "missing first bracket");
-  Assert.throws(() => { url.host = "2001[::1]"; }, "bad bracket position");
-  Assert.throws(() => { url.host = "[]"; }, "empty IPv6 address");
-  Assert.throws(() => { url.host = "[hello]"; }, "bad IPv6 address");
-  Assert.throws(() => { url.host = "[192.168.1.1]"; }, "bad IPv6 address");
-  Assert.throws(() => { url.hostPort = "2001::1"; }, "missing brackets");
-  Assert.throws(() => { url.hostPort = "[2001::1]30"; }, "missing : after IP");
-  Assert.throws(() => { url.hostPort = "[2001:1]"; }, "bad IPv6 address");
-  Assert.throws(() => { url.hostPort = "[2001:1]10"; }, "bad IPv6 address");
-  Assert.throws(() => { url.hostPort = "[2001:1]10:20"; }, "bad IPv6 address");
-  Assert.throws(() => { url.hostPort = "[2001:1]:10:20"; }, "bad IPv6 address");
-  Assert.throws(() => { url.hostPort = "[2001:1"; }, "bad IPv6 address");
-  Assert.throws(() => { url.hostPort = "2001]:1"; }, "bad IPv6 address");
-  Assert.throws(() => { url.hostPort = "2001:1]"; }, "bad IPv6 address");
-  Assert.throws(() => { url.hostPort = ""; }, "Empty hostPort should fail");
-  Assert.throws(() => { url.hostPort = "[2001::1]:"; }, "missing port number");
-  Assert.throws(() => { url.hostPort = "[2001::1]:bad"; }, "bad port number");
+  Assert.throws(() => { url = url.mutate().setHost("2001::1").finalize(); }, "missing brackets");
+  Assert.throws(() => { url = url.mutate().setHost("[2001::1]:20").finalize(); }, "url.host with port");
+  Assert.throws(() => { url = url.mutate().setHost("[2001::1").finalize(); }, "missing last bracket");
+  Assert.throws(() => { url = url.mutate().setHost("2001::1]").finalize(); }, "missing first bracket");
+  Assert.throws(() => { url = url.mutate().setHost("2001[::1]").finalize(); }, "bad bracket position");
+  Assert.throws(() => { url = url.mutate().setHost("[]").finalize(); }, "empty IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHost("[hello]").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHost("[192.168.1.1]").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHostPort("2001::1").finalize(); }, "missing brackets");
+  Assert.throws(() => { url = url.mutate().setHostPort("[2001::1]30").finalize(); }, "missing : after IP");
+  Assert.throws(() => { url = url.mutate().setHostPort("[2001:1]").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHostPort("[2001:1]10").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHostPort("[2001:1]10:20").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHostPort("[2001:1]:10:20").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHostPort("[2001:1").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHostPort("2001]:1").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHostPort("2001:1]").finalize(); }, "bad IPv6 address");
+  Assert.throws(() => { url = url.mutate().setHostPort("").finalize(); }, "Empty hostPort should fail");
+
+  // These checks used to fail, but now don't (see bug 1433958 comment 57)
+  url = url.mutate().setHostPort("[2001::1]:").finalize();
+  Assert.equal(url.spec, "http://[2001::1]/");
+  url = url.mutate().setHostPort("[2002::1]:bad").finalize();
+  Assert.equal(url.spec, "http://[2002::1]/");
+
   run_next_test();
 });
 
@@ -219,7 +224,7 @@ add_test(function test_clearedSpec()
   Assert.throws(() => { url = url.mutate().setSpec("http: example").finalize(); }, "set bad spec");
   Assert.throws(() => { url = url.mutate().setSpec("").finalize(); }, "set empty spec");
   Assert.equal(url.spec, "http://example.com/path");
-  url.host = "allizom.org";
+  url = url.mutate().setHost("allizom.org").finalize().QueryInterface(Ci.nsIURL);
 
   var ref = stringToURL("http://allizom.org/path");
   symmetricEquality(true, url, ref);
@@ -255,7 +260,7 @@ add_test(function test_escapeQuote()
   var url = stringToURL("http://example.com/#'");
   Assert.equal(url.spec, "http://example.com/#'");
   Assert.equal(url.ref, "'");
-  url.ref = "test'test";
+  url = url.mutate().setRef("test'test").finalize();
   Assert.equal(url.spec, "http://example.com/#test'test");
   Assert.equal(url.ref, "test'test");
   run_next_test();
@@ -301,20 +306,18 @@ add_test(function test_hugeStringThrows()
   let url = stringToURL("http://test:test@example.com");
 
   let hugeString = new Array(maxLen + 1).fill("a").join("");
-  let properties = ["scheme", "userPass", "username",
-                    "password", "hostPort", "host", "pathQueryRef", "ref",
-                    "query", "filePath"];
-  for (let prop of properties) {
-    Assert.throws(() => url[prop] = hugeString,
-                  /NS_ERROR_MALFORMED_URI/,
-                  `Passing a huge string to "${prop}" should throw`);
-  }
-
-  Assert.throws(() => { url = url.mutate().setSpec(hugeString).finalize(); },
-                /NS_ERROR_MALFORMED_URI/,
-                "Passing a huge string to setSpec should throw");
-
   let setters = [
+    { method: "setSpec", qi: Ci.nsIURIMutator },
+    { method: "setUsername", qi: Ci.nsIURIMutator },
+    { method: "setPassword", qi: Ci.nsIURIMutator },
+    { method: "setFilePath", qi: Ci.nsIURIMutator },
+    { method: "setHostPort", qi: Ci.nsIURIMutator },
+    { method: "setHost", qi: Ci.nsIURIMutator },
+    { method: "setUserPass", qi: Ci.nsIURIMutator },
+    { method: "setPathQueryRef", qi: Ci.nsIURIMutator },
+    { method: "setQuery", qi: Ci.nsIURIMutator },
+    { method: "setRef", qi: Ci.nsIURIMutator },
+    { method: "setScheme", qi: Ci.nsIURIMutator },
     { method: "setFileName", qi: Ci.nsIURLMutator },
     { method: "setFileExtension", qi: Ci.nsIURLMutator },
     { method: "setFileBaseName", qi: Ci.nsIURLMutator },
@@ -336,11 +339,11 @@ add_test(function test_filterWhitespace()
 
   // These setters should escape \r\n\t, not filter them.
   var url = stringToURL("http://test.com/path?query#hash");
-  url.filePath = "pa\r\n\tth";
+  url = url.mutate().setFilePath("pa\r\n\tth").finalize();
   Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?query#hash");
-  url.query = "qu\r\n\tery";
+  url = url.mutate().setQuery("qu\r\n\tery").finalize();
   Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?qu%0D%0A%09ery#hash");
-  url.ref = "ha\r\n\tsh";
+  url = url.mutate().setRef("ha\r\n\tsh").finalize();
   Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?qu%0D%0A%09ery#ha%0D%0A%09sh");
   url = url.mutate().QueryInterface(Ci.nsIURLMutator).setFileName("fi\r\n\tle.name").finalize();
   Assert.equal(url.spec, "http://test.com/fi%0D%0A%09le.name?qu%0D%0A%09ery#ha%0D%0A%09sh");
@@ -405,11 +408,11 @@ add_test(function test_encode_C0_and_space()
 
   // Additionally, we need to check the setters.
   var url = stringToURL("http://example.com/path?query#hash");
-  url.filePath = "pa\0th";
+  url = url.mutate().setFilePath("pa\0th").finalize();
   Assert.equal(url.spec, "http://example.com/pa%00th?query#hash");
-  url.query = "qu\0ery";
+  url = url.mutate().setQuery("qu\0ery").finalize();
   Assert.equal(url.spec, "http://example.com/pa%00th?qu%00ery#hash");
-  url.ref = "ha\0sh";
+  url = url.mutate().setRef("ha\0sh").finalize();
   Assert.equal(url.spec, "http://example.com/pa%00th?qu%00ery#ha%00sh");
   url = url.mutate().QueryInterface(Ci.nsIURLMutator).setFileName("fi\0le.name").finalize();
   Assert.equal(url.spec, "http://example.com/fi%00le.name?qu%00ery#ha%00sh");
@@ -470,7 +473,7 @@ add_test(function test_ipv4Normalize()
   }
 
   var url = stringToURL("resource://path/to/resource/");
-  url.host = "123";
+  url = url.mutate().setHost("123").finalize();
   Assert.equal(url.host, "123");
 
   run_next_test();
@@ -479,10 +482,10 @@ add_test(function test_ipv4Normalize()
 add_test(function test_invalidHostChars() {
   var url = stringToURL("http://example.org/");
   for (let i = 0; i <= 0x20; i++) {
-    Assert.throws(() => { url.host = "a" + String.fromCharCode(i) + "b"; }, "Trying to set hostname containing char code: " + i);
+    Assert.throws(() => { url = url.mutate().setHost("a" + String.fromCharCode(i) + "b").finalize(); }, "Trying to set hostname containing char code: " + i);
   }
   for (let c of "@[]*<>|:\"") {
-    Assert.throws(() => { url.host = "a" + c; }, "Trying to set hostname containing char: " + c);
+    Assert.throws(() => { url = url.mutate().setHost("a" + c).finalize(); }, "Trying to set hostname containing char: " + c);
   }
 
   // It also can't contain /, \, #, ?, but we treat these characters as
@@ -492,7 +495,7 @@ add_test(function test_invalidHostChars() {
 
 add_test(function test_normalize_ipv6() {
   var url = stringToURL("http://example.com");
-  url.host = "[::192.9.5.5]";
+  url = url.mutate().setHost("[::192.9.5.5]").finalize();
   Assert.equal(url.spec, "http://[::c009:505]/");
 
   run_next_test();
@@ -501,20 +504,26 @@ add_test(function test_normalize_ipv6() {
 add_test(function test_emptyPassword() {
   var url = stringToURL("http://a:@example.com");
   Assert.equal(url.spec, "http://a@example.com/");
-  url.password = "pp";
+  url = url.mutate().setPassword("pp").finalize();
   Assert.equal(url.spec, "http://a:pp@example.com/");
-  url.password = "";
+  url = url.mutate().setPassword("").finalize();
   Assert.equal(url.spec, "http://a@example.com/");
-  url.userPass = "xxx:";
+  url = url.mutate().setUserPass("xxx:").finalize();
   Assert.equal(url.spec, "http://xxx@example.com/");
-  url.password = "zzzz";
+  url = url.mutate().setPassword("zzzz").finalize();
   Assert.equal(url.spec, "http://xxx:zzzz@example.com/");
-  url.userPass = "xxxxx:yyyyyy";
+  url = url.mutate().setUserPass("xxxxx:yyyyyy").finalize();
   Assert.equal(url.spec, "http://xxxxx:yyyyyy@example.com/");
-  url.userPass = "z:";
+  url = url.mutate().setUserPass("z:").finalize();
   Assert.equal(url.spec, "http://z@example.com/");
-  url.password = "ppppppppppp";
+  url = url.mutate().setPassword("ppppppppppp").finalize();
   Assert.equal(url.spec, "http://z:ppppppppppp@example.com/");
+
+  url = url.mutate().setUsername("").finalize(); // Should clear password too
+  Assert.equal(url.spec, "http://example.com/");
+  url = url.mutate().setPassword("").finalize(); // Still empty. Should work.
+  Assert.equal(url.spec, "http://example.com/");
+
   run_next_test();
 });
 
@@ -547,13 +556,13 @@ add_test(function test_idna_host() {
   equal(url.asciiHostPort, "xn--lt-uia.example.org:8080");
   equal(url.asciiSpec, "http://user:password@xn--lt-uia.example.org:8080/path?query#etc");
 
-  url.ref = ""; // SetRef calls InvalidateCache()
+  url = url.mutate().setRef("").finalize(); // SetRef calls InvalidateCache()
   equal(url.spec, "http://user:password@ält.example.org:8080/path?query");
   equal(url.displaySpec, "http://user:password@ält.example.org:8080/path?query");
   equal(url.asciiSpec, "http://user:password@xn--lt-uia.example.org:8080/path?query");
 
   url = stringToURL("http://user:password@www.ält.com:8080/path?query#etc");
-  url.ref = "";
+  url = url.mutate().setRef("").finalize();
   equal(url.spec, "http://user:password@www.ält.com:8080/path?query");
 
   // We also check that the default behaviour changes once we filp the pref
@@ -575,13 +584,13 @@ add_test(function test_idna_host() {
   equal(url.asciiHostPort, "xn--lt-uia.example.org:8080");
   equal(url.asciiSpec, "http://user:password@xn--lt-uia.example.org:8080/path?query#etc");
 
-  url.ref = ""; // SetRef calls InvalidateCache()
+  url = url.mutate().setRef("").finalize(); // SetRef calls InvalidateCache()
   equal(url.spec, "http://user:password@xn--lt-uia.example.org:8080/path?query");
   equal(url.displaySpec, "http://user:password@ält.example.org:8080/path?query");
   equal(url.asciiSpec, "http://user:password@xn--lt-uia.example.org:8080/path?query");
 
   url = stringToURL("http://user:password@www.ält.com:8080/path?query#etc");
-  url.ref = "";
+  url = url.mutate().setRef("").finalize();
   equal(url.spec, "http://user:password@www.xn--lt-uia.com:8080/path?query");
 
   run_next_test();

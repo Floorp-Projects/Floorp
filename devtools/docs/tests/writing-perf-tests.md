@@ -3,6 +3,16 @@
 See [Performance tests (DAMP)](performance-tests.md) for an overall description of our performance tests.
 Here, we will describe how to write a new test with an example: track the performance of clicking inside the inspector panel.
 
+## Consider modifying existing tests first
+
+If a `custom` page already exists for the tool you are testing, try to modify the existing `custom` test rather than adding a new individual test.
+
+New individual tests run separately, in new tabs, and make DAMP slower than just modifying existing tests. Complexifying `custom` test pages should also help cover more scenarios and catch more regressions. For those reasons, modifying existing tests should be the preferred way of extending DAMP coverage.
+
+`custom` tests are using complex documents that should stress a particular tool in various ways. They are all named `custom.${tool}` (for instance `custom.inspector`). The test pages for those tests can be found in [pages/custom](https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/devtools/addon/content/pages/custom).
+
+If your test case requires a dedicated document or can't run next to the other tests in the current `custom` test, follow the instructions below to add a new individual test.
+
 ## Where is the code for the test?
 
 For now, all the tests live in a single file [damp.js](https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/devtools/addon/content/damp.js).

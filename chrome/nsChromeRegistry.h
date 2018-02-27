@@ -70,7 +70,10 @@ public:
 
   static nsChromeRegistry* gChromeRegistry;
 
-  static nsresult Canonify(nsIURL* aChromeURL);
+  // This method can change its parameter, so due to thread safety issues
+  // it should only be called for nsCOMPtr<nsIURI> that is on the stack,
+  // unless you know what you are doing.
+  static nsresult Canonify(nsCOMPtr<nsIURI>& aChromeURL);
 
 protected:
   virtual ~nsChromeRegistry();
@@ -91,7 +94,7 @@ protected:
                                        uint32_t* aFlags) = 0;
 
   static nsresult RefreshWindow(nsPIDOMWindowOuter* aWindow);
-  static nsresult GetProviderAndPath(nsIURL* aChromeURL,
+  static nsresult GetProviderAndPath(nsIURI* aChromeURL,
                                      nsACString& aProvider, nsACString& aPath);
 
   bool GetDirectionForLocale(const nsACString& aLocale);

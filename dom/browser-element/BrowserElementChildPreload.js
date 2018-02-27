@@ -1514,7 +1514,7 @@ BrowserElementChild.prototype = {
             sendAsyncMsg('error', { type: 'corruptedContentErrorv2' });
             return;
           case Cr.NS_ERROR_BLOCKED_BY_POLICY :
-            sendAsyncMsg('error', { type: 'blockedByPolicyTemp' });
+            sendAsyncMsg('error', { type: 'blockedByPolicy' });
             return;
 
           default:

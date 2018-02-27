@@ -25,4 +25,11 @@ public class TelemetryContract {
   public static final String KEY_DEVICE_OS = "os";
   public static final String KEY_DEVICE_VERSION = "version";
   public static final String KEY_DEVICE_ID = "id";
+
+  public static final String KEY_EVENT_TIMESTAMP = "ts";
+  public static final String KEY_EVENT_CATEGORY = "category";
+  public static final String KEY_EVENT_METHOD = "method";
+  public static final String KEY_EVENT_OBJECT = "object";
+  public static final String KEY_EVENT_VALUE = "value";
+  public static final String KEY_EVENT_EXTRA = "extra";
 }

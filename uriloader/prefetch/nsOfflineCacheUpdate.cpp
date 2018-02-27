@@ -20,6 +20,7 @@
 #include "nsIDocument.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"
+#include "nsIURIMutator.h"
 #include "nsIWebProgress.h"
 #include "nsICryptoHash.h"
 #include "nsICacheEntry.h"
@@ -82,11 +83,13 @@ private:
 namespace {
 
 nsresult
-DropReferenceFromURL(nsIURI * aURI)
+DropReferenceFromURL(nsCOMPtr<nsIURI>& aURI)
 {
     // XXXdholbert If this SetRef fails, callers of this method probably
     // want to call aURI->CloneIgnoringRef() and use the result of that.
-    return aURI->SetRef(EmptyCString());
+    return NS_MutateURI(aURI)
+             .SetRef(EmptyCString())
+             .Finalize(aURI);
 }
 
 void

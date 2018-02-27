@@ -20,6 +20,7 @@
 #include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/TreeWalker.h"
+#include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsContentCID.h"
@@ -42,6 +43,7 @@
 #include "nsISHEntry.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITabParent.h"
+#include "nsIURIMutator.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebPageDescriptor.h"
@@ -741,7 +743,9 @@ PersistNodeFixup::FixupAnchor(nsINode *aNode)
         nsresult rv = NS_NewURI(getter_AddRefs(newURI), oldCValue,
                                 mParent->GetCharacterSet(), relativeURI);
         if (NS_SUCCEEDED(rv) && newURI) {
-            newURI->SetUserPass(EmptyCString());
+            Unused << NS_MutateURI(newURI)
+                        .SetUserPass(EmptyCString())
+                        .Finalize(newURI);
             nsAutoCString uriSpec;
             rv = newURI->GetSpec(uriSpec);
             NS_ENSURE_SUCCESS(rv, rv);

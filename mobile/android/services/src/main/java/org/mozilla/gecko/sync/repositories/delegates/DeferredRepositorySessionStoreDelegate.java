@@ -18,11 +18,11 @@ public class DeferredRepositorySessionStoreDelegate implements
   }
 
   @Override
-  public void onRecordStoreSucceeded(final String guid) {
+  public void onRecordStoreSucceeded(final int count) {
     executor.execute(new Runnable() {
       @Override
       public void run() {
-        inner.onRecordStoreSucceeded(guid);
+        inner.onRecordStoreSucceeded(count);
       }
     });
   }

@@ -29,7 +29,7 @@ function CloseUI() {
   window.parent.UI.openProject();
 }
 
-function OnAppManagerUpdate(event, what) {
+function OnAppManagerUpdate(what) {
   if (what == "connection" || what == "runtime-global-actors") {
     BuildUI();
   }

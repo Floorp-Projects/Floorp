@@ -53,7 +53,7 @@ public:
   }
   void SetLongDesc(const nsAString& aLongDesc, ErrorResult& aError)
   {
-    SetAttrHelper(nsGkAtoms::longdesc, aLongDesc);
+    SetHTMLAttr(nsGkAtoms::longdesc, aLongDesc);
   }
 
   void GetMarginHeight(DOMString& aMarginHeight) const
