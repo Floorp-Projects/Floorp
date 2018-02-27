@@ -770,12 +770,11 @@ KeyframeEffectReadOnly::ComposeStyle(
                      computedTiming);
   }
 
-  // If the animation produces any transform change hint, we need to record the
-  // current time to unthrottle the animation periodically when the animation is
-  // being throttled because it's scrolled out of view.
-  if (mCumulativeChangeHint & (nsChangeHint_UpdatePostTransformOverflow |
-                               nsChangeHint_AddOrRemoveTransform |
-                               nsChangeHint_UpdateTransformLayer)) {
+  // If the animation produces a transform change hint that affects the overflow
+  // region, we need to record the current time to unthrottle the animation
+  // periodically when the animation is being throttled because it's scrolled
+  // out of view.
+  if (HasTransformThatMightAffectOverflow()) {
     nsPresContext* presContext =
       nsContentUtils::GetContextForContent(mTarget->mElement);
     if (presContext) {
@@ -1473,9 +1472,7 @@ KeyframeEffectReadOnly::CanThrottle() const
         frame->IsScrolledOutOfView()) {
       // If there are transform change hints, unthrottle the animation
       // periodically since it might affect the overflow region.
-      if (mCumulativeChangeHint & (nsChangeHint_UpdatePostTransformOverflow |
-                                   nsChangeHint_AddOrRemoveTransform |
-                                   nsChangeHint_UpdateTransformLayer)) {
+      if (HasTransformThatMightAffectOverflow()) {
         return isVisibilityHidden
           ? CanThrottleTransformChangesInScrollable(*frame)
           : CanThrottleTransformChanges(*frame);
@@ -1514,7 +1511,7 @@ KeyframeEffectReadOnly::CanThrottle() const
 
     // If this is a transform animation that affects the overflow region,
     // we should unthrottle the animation periodically.
-    if (record.mProperty == eCSSProperty_transform &&
+    if (HasTransformThatMightAffectOverflow() &&
         !CanThrottleTransformChangesInScrollable(*frame)) {
       return false;
     }

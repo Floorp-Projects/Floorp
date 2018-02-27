@@ -1596,6 +1596,31 @@ waitForAllPaints(() => {
       await ensureElementRemoval(div);
     }
   );
+
+  add_task(
+    async function no_overflow_transform_animations_in_scrollable_element() {
+      await SpecialPowers.pushPrefEnv({ set: [["ui.showHideScrollbars", 1]] });
+
+      var parentElement = addDiv(null,
+        { style: 'overflow-y: scroll; height: 100px;' });
+      var div = addDiv(null);
+      var animation =
+        div.animate({ transform: [ 'translateY(10px)', 'translateY(10px)' ] },
+                    100 * MS_PER_SEC);
+      parentElement.appendChild(div);
+
+      await animation.ready;
+      ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+      var markers = await observeStyling(20);
+      is(markers.length, 0,
+         'No-overflow transform animations running on the compositor should ' +
+         'never update style on the main thread');
+
+      await ensureElementRemoval(parentElement);
+    }
+  );
+
 });
 
 </script>

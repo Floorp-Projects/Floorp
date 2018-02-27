@@ -488,6 +488,17 @@ private:
 
   void UpdateEffectSet(mozilla::EffectSet* aEffectSet = nullptr) const;
 
+  // Returns true if this effect has transform and the transform might affect
+  // the overflow region.
+  // This function is used for updating scroll bars or notifying intersection
+  // observers reflected by the transform.
+  bool HasTransformThatMightAffectOverflow() const
+  {
+    return mCumulativeChangeHint & (nsChangeHint_UpdatePostTransformOverflow |
+                                    nsChangeHint_AddOrRemoveTransform |
+                                    nsChangeHint_UpdateTransformLayer);
+  }
+
   // FIXME: This flag will be removed in bug 1324966.
   bool mIsComposingStyle = false;
 };
