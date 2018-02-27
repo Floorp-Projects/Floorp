@@ -181,7 +181,7 @@ void HTMLOutputElement::DescendantsChanged()
 
 void HTMLOutputElement::CharacterDataChanged(nsIDocument* aDocument,
                                              nsIContent* aContent,
-                                             CharacterDataChangeInfo* aInfo)
+                                             const CharacterDataChangeInfo&)
 {
   DescendantsChanged();
 }

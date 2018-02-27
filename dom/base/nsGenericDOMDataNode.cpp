@@ -306,7 +306,7 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
       aLength,
       aDetails
     };
-    nsNodeUtils::CharacterDataWillChange(this, &info);
+    nsNodeUtils::CharacterDataWillChange(this, info);
   }
 
   Directionality oldDir = eDir_NotSet;
@@ -390,7 +390,7 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
       aLength,
       aDetails
     };
-    nsNodeUtils::CharacterDataChanged(this, &info);
+    nsNodeUtils::CharacterDataChanged(this, info);
 
     if (haveMutationListeners) {
       InternalMutationEvent mutation(true, eLegacyCharacterDataModified);

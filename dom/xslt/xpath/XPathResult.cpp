@@ -123,8 +123,8 @@ XPathResult::NodeWillBeDestroyed(const nsINode* aNode)
 
 void
 XPathResult::CharacterDataChanged(nsIDocument* aDocument,
-                                  nsIContent *aContent,
-                                  CharacterDataChangeInfo* aInfo)
+                                  nsIContent* aContent,
+                                  const CharacterDataChangeInfo&)
 {
     Invalidate(aContent);
 }
