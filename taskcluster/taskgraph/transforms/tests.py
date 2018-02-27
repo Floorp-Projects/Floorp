@@ -1018,8 +1018,8 @@ def make_job_description(config, tests):
 
         if test.get('when'):
             jobdesc['when'] = test['when']
-        elif config.params['project'] != 'try':
-            # for non-try branches, include SETA
+        elif config.params['project'] != 'try' and suite not in INCLUSIVE_COMPONENTS:
+            # for non-try branches and non-inclusive suites, include SETA
             jobdesc['optimization'] = {'skip-unless-schedules-or-seta': schedules}
         else:
             # otherwise just use skip-unless-schedules

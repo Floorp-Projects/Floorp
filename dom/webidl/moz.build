@@ -1034,7 +1034,7 @@ WEBIDL_FILES += [
 
 # We only expose our prefable test interfaces in debug builds, just to be on
 # the safe side.
-if CONFIG['MOZ_DEBUG']:
+if CONFIG['MOZ_DEBUG'] and CONFIG['ENABLE_TESTS']:
     WEBIDL_FILES += ['TestFunctions.webidl',
                      'TestInterfaceJS.webidl',
                      'TestInterfaceJSDictionaries.webidl',

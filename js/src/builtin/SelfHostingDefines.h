@@ -23,6 +23,9 @@
 // NB: keep this in sync with the copy in vm/ArgumentsObject.h.
 #define MAX_ARGS_LENGTH (500 * 1000)
 
+// NB: keep this in sync with the copy in vm/String.h.
+#define MAX_STRING_LENGTH ((1 << 28) - 1)
+
 // Spread non-empty argument list of up to 15 elements.
 #define SPREAD(v, n) SPREAD_##n(v)
 #define SPREAD_1(v) v[0]
