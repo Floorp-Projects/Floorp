@@ -59,7 +59,7 @@ HeapSlot::assertPreconditionForWriteBarrierPost(NativeObject* obj, Kind kind, ui
                    target);
     }
 
-    CheckEdgeIsNotBlackToGray(obj, target);
+    CheckTargetIsNotGray(obj);
 }
 
 bool
@@ -78,6 +78,23 @@ bool
 CurrentThreadIsGCSweeping()
 {
     return TlsContext.get()->gcSweeping;
+}
+
+bool CurrentThreadIsTouchingGrayThings()
+{
+    return TlsContext.get()->isTouchingGrayThings;
+}
+
+AutoTouchingGrayThings::AutoTouchingGrayThings()
+{
+    TlsContext.get()->isTouchingGrayThings++;
+}
+
+AutoTouchingGrayThings::~AutoTouchingGrayThings()
+{
+    JSContext* cx = TlsContext.get();
+    MOZ_ASSERT(cx->isTouchingGrayThings);
+    cx->isTouchingGrayThings--;
 }
 
 #endif // DEBUG

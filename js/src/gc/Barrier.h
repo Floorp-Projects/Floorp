@@ -224,6 +224,7 @@ class JitCode;
 } // namespace jit
 
 #ifdef DEBUG
+
 // Barriers can't be triggered during backend Ion compilation, which may run on
 // a helper thread.
 bool
@@ -237,13 +238,21 @@ CurrentThreadIsGCSweeping();
 
 bool
 IsMarkedBlack(JSObject* obj);
+
+bool
+CurrentThreadIsTouchingGrayThings();
+
 #endif
 
-MOZ_ALWAYS_INLINE void
-CheckEdgeIsNotBlackToGray(JSObject* src, const Value& dst)
+struct MOZ_RAII AutoTouchingGrayThings
 {
-    MOZ_ASSERT_IF(IsMarkedBlack(src), JS::ValueIsNotGray(dst));
-}
+#ifdef DEBUG
+    AutoTouchingGrayThings();
+    ~AutoTouchingGrayThings();
+#else
+    AutoTouchingGrayThings() {}
+#endif
+};
 
 template <typename T>
 struct InternalBarrierMethods {};
@@ -258,6 +267,10 @@ struct InternalBarrierMethods<T*>
     static void postBarrier(T** vp, T* prev, T* next) { T::writeBarrierPost(vp, prev, next); }
 
     static void readBarrier(T* v) { T::readBarrier(v); }
+
+#ifdef DEBUG
+    static bool thingIsNotGray(T* v) { return T::thingIsNotGray(v); }
+#endif
 };
 
 template <typename S> struct PreBarrierFunctor : public VoidDefaultAdaptor<S> {
@@ -301,6 +314,10 @@ struct InternalBarrierMethods<Value>
     static void readBarrier(const Value& v) {
         DispatchTyped(ReadBarrierFunctor<Value>(), v);
     }
+
+#ifdef DEBUG
+    static bool thingIsNotGray(const Value& v) { return JS::ValueIsNotGray(v); }
+#endif
 };
 
 template <>
@@ -309,7 +326,18 @@ struct InternalBarrierMethods<jsid>
     static bool isMarkable(jsid id) { return JSID_IS_GCTHING(id); }
     static void preBarrier(jsid id) { DispatchTyped(PreBarrierFunctor<jsid>(), id); }
     static void postBarrier(jsid* idp, jsid prev, jsid next) {}
+#ifdef DEBUG
+    static bool thingIsNotGray(jsid id) { return JS::IdIsNotGray(id); }
+#endif
 };
+
+template <typename T>
+static inline void
+CheckTargetIsNotGray(const T& v)
+{
+    MOZ_ASSERT(InternalBarrierMethods<T>::thingIsNotGray(v) ||
+               CurrentThreadIsTouchingGrayThings());
+}
 
 // Base class of all barrier types.
 //
@@ -404,6 +432,7 @@ class PreBarriered : public WriteBarrieredBase<T>
 
   private:
     void set(const T& v) {
+        CheckTargetIsNotGray(v);
         this->pre();
         this->value = v;
     }
@@ -448,6 +477,7 @@ class GCPtr : public WriteBarrieredBase<T>
 #endif
 
     void init(const T& v) {
+        CheckTargetIsNotGray(v);
         this->value = v;
         this->post(JS::GCPolicy<T>::initial(), v);
     }
@@ -456,6 +486,7 @@ class GCPtr : public WriteBarrieredBase<T>
 
   private:
     void set(const T& v) {
+        CheckTargetIsNotGray(v);
         this->pre();
         T tmp = this->value;
         this->value = v;
@@ -521,6 +552,7 @@ class HeapPtr : public WriteBarrieredBase<T>
     }
 
     void init(const T& v) {
+        CheckTargetIsNotGray(v);
         this->value = v;
         this->post(JS::GCPolicy<T>::initial(), this->value);
     }
@@ -536,11 +568,13 @@ class HeapPtr : public WriteBarrieredBase<T>
 
   protected:
     void set(const T& v) {
+        CheckTargetIsNotGray(v);
         this->pre();
         postBarrieredSet(v);
     }
 
     void postBarrieredSet(const T& v) {
+        CheckTargetIsNotGray(v);
         T tmp = this->value;
         this->value = v;
         this->post(tmp, this->value);
@@ -603,6 +637,7 @@ class ReadBarriered : public ReadBarrieredBase<T>,
     }
 
     ReadBarriered& operator=(const ReadBarriered& v) {
+        CheckTargetIsNotGray(v.value);
         T prior = this->value;
         this->value = v.value;
         this->post(prior, v.value);
@@ -632,6 +667,7 @@ class ReadBarriered : public ReadBarrieredBase<T>,
 
     void set(const T& v)
     {
+        CheckTargetIsNotGray(v);
         T tmp = this->value;
         this->value = v;
         this->post(tmp, v);
@@ -772,6 +808,7 @@ class ImmutableTenuredPtr
 
     void init(T ptr) {
         MOZ_ASSERT(ptr->isTenured());
+        CheckTargetIsNotGray(ptr);
         value = ptr;
     }
 
