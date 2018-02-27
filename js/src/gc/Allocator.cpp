@@ -17,6 +17,7 @@
 
 #include "gc/ArenaList-inl.h"
 #include "gc/Heap-inl.h"
+#include "gc/PrivateIterators-inl.h"
 #include "vm/JSObject-inl.h"
 
 using namespace js;
@@ -332,12 +333,15 @@ template <typename T>
 GCRuntime::checkIncrementalZoneState(JSContext* cx, T* t)
 {
 #ifdef DEBUG
-    if (cx->helperThread())
+    if (cx->helperThread() || !t)
         return;
 
-    Zone* zone = cx->zone();
-    MOZ_ASSERT_IF(t && zone->wasGCStarted() && (zone->isGCMarking() || zone->isGCSweeping()),
-                  t->asTenured().arena()->allocatedDuringIncremental);
+    TenuredCell* cell = &t->asTenured();
+    Zone* zone = cell->zone();
+    if (zone->isGCMarking() || zone->isGCSweeping())
+        MOZ_ASSERT(cell->isMarkedBlack());
+    else
+        MOZ_ASSERT(!cell->isMarkedAny());
 #endif
 }
 
@@ -452,11 +456,12 @@ ArenaLists::allocateFromArenaInner(JS::Zone* zone, Arena* arena, AllocKind kind)
 {
     size_t thingSize = Arena::thingSize(kind);
 
-    freeLists(kind) = arena->getFirstFreeSpan();
+    setFreeList(kind, arena->getFirstFreeSpan());
 
     if (MOZ_UNLIKELY(zone->wasGCStarted()))
         zone->runtimeFromAnyThread()->gc.arenaAllocatedDuringGC(zone, arena);
-    TenuredCell* thing = freeLists(kind)->allocate(thingSize);
+    TenuredCell* thing = freeList(kind)->allocate(thingSize);
+
     MOZ_ASSERT(thing); // This allocation is infallible.
     return thing;
 }
@@ -464,12 +469,16 @@ ArenaLists::allocateFromArenaInner(JS::Zone* zone, Arena* arena, AllocKind kind)
 void
 GCRuntime::arenaAllocatedDuringGC(JS::Zone* zone, Arena* arena)
 {
-    if (zone->needsIncrementalBarrier()) {
-        arena->allocatedDuringIncremental = true;
-        marker.delayMarkingArena(arena);
-    } else if (zone->isGCSweeping()) {
-        arena->setNextAllocDuringSweep(arenasAllocatedDuringSweep);
-        arenasAllocatedDuringSweep = arena;
+    // Ensure that anything allocated during the mark or sweep phases of an
+    // incremental GC will be marked black by pre-marking all free cells in the
+    // arena we are about to allocate from.
+
+    if (zone->needsIncrementalBarrier() || zone->isGCSweeping()) {
+        for (ArenaFreeCellIter iter(arena); !iter.done(); iter.next()) {
+            TenuredCell* cell = iter.getCell();
+            MOZ_ASSERT(!cell->isMarkedAny());
+            cell->markBlack();
+        }
     }
 }
 

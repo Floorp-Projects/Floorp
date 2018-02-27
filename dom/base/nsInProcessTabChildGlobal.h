@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/ContentFrameMessageManager.h"
 #include "nsCOMPtr.h"
 #include "nsFrameMessageManager.h"
 #include "nsIScriptContext.h"
@@ -27,7 +28,7 @@ namespace mozilla {
 class EventChainPreVisitor;
 } // namespace mozilla
 
-class nsInProcessTabChildGlobal : public mozilla::DOMEventTargetHelper,
+class nsInProcessTabChildGlobal : public mozilla::dom::ContentFrameMessageManager,
                                   public nsMessageManagerScriptExecutor,
                                   public nsIInProcessContentFrameMessageManager,
                                   public nsIGlobalObject,
@@ -46,38 +47,30 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsInProcessTabChildGlobal,
                                                          mozilla::DOMEventTargetHelper)
 
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override
+  {
+    MOZ_CRASH("We should never get here!");
+  }
+  virtual bool WrapGlobalObject(JSContext* aCx,
+                                JS::CompartmentOptions& aOptions,
+                                JS::MutableHandle<JSObject*> aReflector) override;
+
+  virtual already_AddRefed<nsPIDOMWindowOuter>
+    GetContent(mozilla::ErrorResult& aError) override;
+  virtual already_AddRefed<nsIDocShell>
+    GetDocShell(mozilla::ErrorResult& aError) override
+  {
+    nsCOMPtr<nsIDocShell> docShell(mDocShell);
+    return docShell.forget();
+  }
+  virtual already_AddRefed<nsIEventTarget> GetTabEventTarget() override;
+
   NS_FORWARD_SAFE_NSIMESSAGELISTENERMANAGER(mMessageManager)
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
+  NS_FORWARD_SAFE_NSISYNCMESSAGESENDER(mMessageManager);
   NS_FORWARD_SAFE_NSIMESSAGEMANAGERGLOBAL(mMessageManager)
-  NS_IMETHOD SendSyncMessage(const nsAString& aMessageName,
-                             JS::Handle<JS::Value> aObject,
-                             JS::Handle<JS::Value> aRemote,
-                             nsIPrincipal* aPrincipal,
-                             JSContext* aCx,
-                             uint8_t aArgc,
-                             JS::MutableHandle<JS::Value> aRetval) override
-  {
-    return mMessageManager
-      ? mMessageManager->SendSyncMessage(aMessageName, aObject, aRemote,
-                                         aPrincipal, aCx, aArgc, aRetval)
-      : NS_ERROR_NULL_POINTER;
-  }
-  NS_IMETHOD SendRpcMessage(const nsAString& aMessageName,
-                            JS::Handle<JS::Value> aObject,
-                            JS::Handle<JS::Value> aRemote,
-                            nsIPrincipal* aPrincipal,
-                            JSContext* aCx,
-                            uint8_t aArgc,
-                            JS::MutableHandle<JS::Value> aRetval) override
-  {
-    return mMessageManager
-      ? mMessageManager->SendRpcMessage(aMessageName, aObject, aRemote,
-                                        aPrincipal, aCx, aArgc, aRetval)
-      : NS_ERROR_NULL_POINTER;
-  }
-  NS_IMETHOD GetContent(mozIDOMWindowProxy** aContent) override;
-  NS_IMETHOD GetDocShell(nsIDocShell** aDocShell) override;
-  NS_IMETHOD GetTabEventTarget(nsIEventTarget** aTarget) override;
+  NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
 
   NS_DECL_NSIINPROCESSCONTENTFRAMEMESSAGEMANAGER
 
@@ -99,26 +92,6 @@ public:
 
   virtual nsresult GetEventTargetParent(
                      mozilla::EventChainPreVisitor& aVisitor) override;
-  NS_IMETHOD AddEventListener(const nsAString& aType,
-                              nsIDOMEventListener* aListener,
-                              bool aUseCapture)
-  {
-    // By default add listeners only for trusted events!
-    return mozilla::DOMEventTargetHelper::AddEventListener(aType, aListener,
-                                                           aUseCapture, false,
-                                                           2);
-  }
-  NS_IMETHOD AddEventListener(const nsAString& aType,
-                              nsIDOMEventListener* aListener,
-                              bool aUseCapture, bool aWantsUntrusted,
-                              uint8_t optional_argc) override
-  {
-    return mozilla::DOMEventTargetHelper::AddEventListener(aType, aListener,
-                                                           aUseCapture,
-                                                           aWantsUntrusted,
-                                                           optional_argc);
-  }
-  using mozilla::DOMEventTargetHelper::AddEventListener;
 
   virtual nsIPrincipal* GetPrincipal() override { return mPrincipal; }
   void LoadFrameScript(const nsAString& aURL, bool aRunInGlobalScope);
@@ -143,12 +116,9 @@ public:
     mChromeMessageManager = aParent;
   }
 
-  virtual JSObject* GetGlobalJSObject() override {
-    return mGlobal;
-  }
-  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override
+  virtual JSObject* GetGlobalJSObject() override
   {
-    MOZ_CRASH("nsInProcessTabChildGlobal doesn't use DOM bindings!");
+    return GetWrapper();
   }
 
   already_AddRefed<nsIFrameLoader> GetFrameLoader();
@@ -158,7 +128,6 @@ protected:
 
   nsresult Init();
   nsresult InitTabChildGlobal();
-  nsCOMPtr<nsIContentFrameMessageManager> mMessageManager;
   nsCOMPtr<nsIDocShell> mDocShell;
   bool mInitialized;
   bool mLoadingScript;

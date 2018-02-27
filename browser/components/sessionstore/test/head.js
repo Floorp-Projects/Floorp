@@ -15,16 +15,13 @@ const FRAME_SCRIPTS = [
   ROOT + "content-forms.js"
 ];
 
-var globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
-           .getService(Ci.nsIMessageListenerManager);
-
 for (let script of FRAME_SCRIPTS) {
-  globalMM.loadFrameScript(script, true);
+  Services.mm.loadFrameScript(script, true);
 }
 
 registerCleanupFunction(() => {
   for (let script of FRAME_SCRIPTS) {
-    globalMM.removeDelayedFrameScript(script, true);
+    Services.mm.removeDelayedFrameScript(script, true);
   }
 });
 

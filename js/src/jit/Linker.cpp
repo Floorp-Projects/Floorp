@@ -22,6 +22,8 @@ Linker::newCode(JSContext* cx, CodeKind kind, bool hasPatchableBackedges /* = fa
     if (masm.oom())
         return fail(cx);
 
+    masm.performPendingReadBarriers();
+
     static const size_t ExecutableAllocatorAlignment = sizeof(void*);
     static_assert(CodeAlignment >= ExecutableAllocatorAlignment,
                   "Unexpected alignment requirements");

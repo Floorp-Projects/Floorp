@@ -429,11 +429,7 @@ JitZoneGroup::JitZoneGroup(ZoneGroup* group)
 {}
 
 JitCompartment::JitCompartment()
-  : stubCodes_(nullptr),
-    stringConcatStub_(nullptr),
-    regExpMatcherStub_(nullptr),
-    regExpSearcherStub_(nullptr),
-    regExpTesterStub_(nullptr)
+  : stubCodes_(nullptr)
 {
 }
 
@@ -459,16 +455,38 @@ JitCompartment::initialize(JSContext* cx)
     return true;
 }
 
-bool
-JitCompartment::ensureIonStubsExist(JSContext* cx)
+template <typename T>
+static T
+PopNextBitmaskValue(uint32_t* bitmask)
 {
-    if (!stringConcatStub_) {
-        stringConcatStub_ = generateStringConcatStub(cx);
-        if (!stringConcatStub_)
-            return false;
-    }
+    MOZ_ASSERT(*bitmask);
+    uint32_t index = mozilla::CountTrailingZeroes32(*bitmask);
+    *bitmask ^= 1 << index;
 
-    return true;
+    MOZ_ASSERT(index < uint32_t(T::Count));
+    return T(index);
+}
+
+void
+JitCompartment::performStubReadBarriers(uint32_t stubsToBarrier) const
+{
+    while (stubsToBarrier) {
+        auto stub = PopNextBitmaskValue<StubIndex>(&stubsToBarrier);
+        const ReadBarrieredJitCode& jitCode = stubs_[stub];
+        MOZ_ASSERT(jitCode);
+        jitCode.get();
+    }
+}
+
+void
+JitCompartment::performSIMDTemplateReadBarriers(uint32_t simdTemplatesToBarrier) const
+{
+    while (simdTemplatesToBarrier) {
+        auto type = PopNextBitmaskValue<SimdType>(&simdTemplatesToBarrier);
+        const ReadBarrieredObject& tpl = simdTemplateObjects_[type];
+        MOZ_ASSERT(tpl);
+        tpl.get();
+    }
 }
 
 bool
@@ -667,17 +685,10 @@ JitCompartment::sweep(FreeOp* fop, JSCompartment* compartment)
            it = BailoutReturnStubInfo();
     }
 
-    if (stringConcatStub_ && IsAboutToBeFinalizedUnbarriered(&stringConcatStub_))
-        stringConcatStub_ = nullptr;
-
-    if (regExpMatcherStub_ && IsAboutToBeFinalizedUnbarriered(&regExpMatcherStub_))
-        regExpMatcherStub_ = nullptr;
-
-    if (regExpSearcherStub_ && IsAboutToBeFinalizedUnbarriered(&regExpSearcherStub_))
-        regExpSearcherStub_ = nullptr;
-
-    if (regExpTesterStub_ && IsAboutToBeFinalizedUnbarriered(&regExpTesterStub_))
-        regExpTesterStub_ = nullptr;
+    for (ReadBarrieredJitCode& stub : stubs_) {
+        if (stub && IsAboutToBeFinalized(&stub))
+            stub.set(nullptr);
+    }
 
     for (ReadBarrieredObject& obj : simdTemplateObjects_) {
         if (obj && IsAboutToBeFinalized(&obj))
