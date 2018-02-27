@@ -1024,6 +1024,12 @@ MacroAssembler::boundsCheck32ForLoad(Register index, const Address& length, Regi
     branch32(Assembler::BelowOrEqual, length, index, failure);
 }
 
+void
+MacroAssembler::spectreMovePtr(Condition cond, Register src, Register dest)
+{
+    MOZ_CRASH();
+}
+
 // ========================================================================
 // Memory access primitives.
 void
