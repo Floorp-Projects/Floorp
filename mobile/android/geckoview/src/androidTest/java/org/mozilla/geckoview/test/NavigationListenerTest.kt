@@ -24,6 +24,8 @@ class NavigationDelegateTest {
     companion object {
         const val HELLO_HTML_PATH = "/assets/www/hello.html";
         const val HELLO2_HTML_PATH = "/assets/www/hello2.html";
+        const val NEW_SESSION_HTML_PATH = "/assets/www/newSession.html";
+        const val NEW_SESSION_CHILD_HTML_PATH = "/assets/www/newSession_child.html";
     }
 
     @get:Rule val sessionRule = GeckoSessionTestRule()
@@ -224,5 +226,41 @@ class NavigationDelegateTest {
                 assertThat("Load should succeed", success, equalTo(true))
             }
         })
+    }
+
+    @Test
+    @GeckoSessionTestRule.WithDisplay(width = 128, height = 128)
+    fun onNewSession_calledForNewWindow() {
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        sessionRule.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1)
+            override fun onNewSession(session: GeckoSession, uri: String, response: GeckoSession.Response<GeckoSession>) {
+                response.respond(null)
+            }
+        })
+
+        sessionRule.synthesizeTap(5, 5)
+        sessionRule.waitUntilCalled(GeckoSession.NavigationDelegate::class, "onNewSession")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    @GeckoSessionTestRule.WithDisplay(width = 128, height = 128)
+    fun onNewSession_doesNotAllowOpened() {
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        sessionRule.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1)
+            override fun onNewSession(session: GeckoSession, uri: String, response: GeckoSession.Response<GeckoSession>) {
+                var session = GeckoSession(session.settings)
+                session.openWindow(null)
+                response.respond(session)
+            }
+        })
+
+        sessionRule.synthesizeTap(5, 5)
+        sessionRule.waitUntilCalled(GeckoSession.NavigationDelegate::class, "onNewSession")
     }
 }
