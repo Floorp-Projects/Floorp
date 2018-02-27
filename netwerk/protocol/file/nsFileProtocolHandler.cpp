@@ -242,12 +242,18 @@ NS_IMETHODIMP
 nsFileProtocolHandler::NewFileURI(nsIFile *file, nsIURI **result)
 {
     NS_ENSURE_ARG_POINTER(file);
+    nsresult rv;
+
+    nsCOMPtr<nsIFileURL> url = new nsStandardURL(true);
+    if (!url)
+        return NS_ERROR_OUT_OF_MEMORY;
 
     // NOTE: the origin charset is assigned the value of the platform
     // charset by the SetFile method.
-    return NS_MutateURI(new nsStandardURL::Mutator())
-             .Apply(NS_MutatorMethod(&nsIFileURLMutator::SetFile, file))
-             .Finalize(result);
+    rv = url->SetFile(file);
+    if (NS_FAILED(rv)) return rv;
+
+    return CallQueryInterface(url, result);
 }
 
 NS_IMETHODIMP
