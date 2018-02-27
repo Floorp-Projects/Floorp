@@ -122,6 +122,8 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
         emitBranch(reg, Imm32(0), cond, ifTrue, ifFalse);
     }
 
+    void emitTableSwitchDispatch(MTableSwitch* mir, Register index, Register base);
+
     template <typename T>
     void emitWasmLoad(T* ins);
     template <typename T>
@@ -193,6 +195,7 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
 
     // Out of line visitors.
     void visitOutOfLineBailout(OutOfLineBailout* ool);
+    void visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool);
     void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool);
     void visitCopySignD(LCopySignD* ins);
     void visitCopySignF(LCopySignF* ins);
