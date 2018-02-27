@@ -20,7 +20,6 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
@@ -28,6 +27,7 @@
 #include "builtin/Boolean.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ICUStubs.h"
+#include "builtin/Number.h"
 #include "builtin/RegExp.h"
 #include "jit/InlinableNatives.h"
 #include "js/Conversions.h"

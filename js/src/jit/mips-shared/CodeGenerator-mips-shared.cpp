@@ -9,8 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "jsnum.h"
-
+#include "builtin/Number.h"
 #include "jit/CodeGenerator.h"
 #include "jit/JitCompartment.h"
 #include "jit/JitFrames.h"

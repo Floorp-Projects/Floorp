@@ -11,8 +11,7 @@
 
 #include "mozilla/RangedPtr.h"
 
-#include "jsnum.h"
-
+#include "builtin/Number.h"
 #include "vm/Runtime.h"
 #include "vm/StringType.h"
 

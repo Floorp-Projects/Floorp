@@ -718,7 +718,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     }
 
 #if !EXPOSE_INTL_API
-    /* Number localization, used by jsnum.cpp. */
+    /* Number localization, used by builtin/Number.cpp. */
     js::WriteOnceData<const char*> thousandsSeparator;
     js::WriteOnceData<const char*> decimalSeparator;
     js::WriteOnceData<const char*> numGrouping;

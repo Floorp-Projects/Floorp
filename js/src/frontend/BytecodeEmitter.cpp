@@ -19,10 +19,10 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "builtin/Number.h"
 #include "ds/Nestable.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"

@@ -12,9 +12,8 @@
 
 #include <ctype.h>
 
-#include "jsnum.h"
-
 #include "builtin/Array.h"
+#include "builtin/Number.h"
 #include "util/StringBuffer.h"
 #include "vm/JSCompartment.h"
 
