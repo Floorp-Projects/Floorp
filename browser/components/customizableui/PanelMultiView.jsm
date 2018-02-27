@@ -124,7 +124,6 @@ const TRANSITION_PHASES = Object.freeze({
   START: 1,
   PREPARE: 2,
   TRANSITION: 3,
-  END: 4
 });
 
 let gNodeToObjectMap = new WeakMap();
@@ -691,7 +690,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
     nextPanelView.headerText = "";
     nextPanelView.minMaxWidth = 0;
 
-    await this._cleanupTransitionPhase();
+    this._cleanupTransitionPhase();
     nextPanelView.visible = true;
     nextPanelView.descriptionHeightWorkaround();
 
@@ -788,7 +787,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
    */
   async _transitionViews(previousViewNode, viewNode, reverse, anchor) {
     // Clean up any previous transition that may be active at this point.
-    await this._cleanupTransitionPhase();
+    this._cleanupTransitionPhase();
 
     // There's absolutely no need to show off our epic animation skillz when
     // the panel's not even open.
@@ -936,15 +935,13 @@ var PanelMultiView = class extends this.AssociatedToNode {
       });
     });
 
-    details.phase = TRANSITION_PHASES.END;
-
     // Apply the final visibility, unless the view was closed in the meantime.
     if (nextPanelView.node.panelMultiView == this.node) {
       prevPanelView.visible = false;
     }
 
     // This will complete the operation by removing any transition properties.
-    await this._cleanupTransitionPhase(details);
+    this._cleanupTransitionPhase(details);
 
     // Focus the correct element, unless the view was closed in the meantime.
     if (nextPanelView.node.panelMultiView == this.node) {
@@ -955,13 +952,13 @@ var PanelMultiView = class extends this.AssociatedToNode {
   /**
    * Attempt to clean up the attributes and properties set by `_transitionViews`
    * above. Which attributes and properties depends on the phase the transition
-   * was left from - normally that'd be `TRANSITION_PHASES.END`.
+   * was left from.
    *
    * @param {Object} details Dictionary object containing details of the transition
    *                         that should be cleaned up after. Defaults to the most
    *                         recent details.
    */
-  async _cleanupTransitionPhase(details = this._transitionDetails) {
+  _cleanupTransitionPhase(details = this._transitionDetails) {
     if (!details || !this.node)
       return;
 
@@ -1005,13 +1002,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
         this._viewContainer.removeEventListener("transitioncancel", cancelListener);
       if (resolve)
         resolve();
-    }
-    if (phase >= TRANSITION_PHASES.END) {
-      // We force 'display: none' on the previous view node to make sure that it
-      // doesn't cause an annoying flicker whilst resetting the styles above.
-      previousViewNode.style.display = "none";
-      await this.window.promiseDocumentFlushed(() => {});
-      previousViewNode.style.removeProperty("display");
     }
   }
 
