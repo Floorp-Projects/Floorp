@@ -1009,7 +1009,7 @@ ComputeBinary(ParseNodeKind kind, double left, double right)
         return left * right;
 
     if (kind == ParseNodeKind::Mod)
-        return right == 0 ? GenericNaN() : js_fmod(left, right);
+        return NumberMod(left, right);
 
     if (kind == ParseNodeKind::Ursh)
         return ToUint32(left) >> (ToUint32(right) & 31);
