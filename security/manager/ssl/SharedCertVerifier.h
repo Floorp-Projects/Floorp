@@ -27,11 +27,13 @@ public:
                      PinningMode pinningMode, SHA1Mode sha1Mode,
                      BRNameMatchingPolicy::Mode nameMatchingMode,
                      NetscapeStepUpPolicy netscapeStepUpPolicy,
-                     CertificateTransparencyMode ctMode)
+                     CertificateTransparencyMode ctMode,
+                     DistrustedCAPolicy distrustedCAPolicy)
     : mozilla::psm::CertVerifier(odc, osc, ogc, ocspSoftTimeout,
                                  ocspHardTimeout, certShortLifetimeInDays,
                                  pinningMode, sha1Mode, nameMatchingMode,
-                                 netscapeStepUpPolicy, ctMode)
+                                 netscapeStepUpPolicy, ctMode,
+                                 distrustedCAPolicy)
   {
   }
 };
