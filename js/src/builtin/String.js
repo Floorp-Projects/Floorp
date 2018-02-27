@@ -68,7 +68,8 @@ function String_generic_match(thisValue, regexp) {
  * A helper function implementing the logic for both String.prototype.padStart
  * and String.prototype.padEnd as described in ES7 Draft March 29, 2016
  */
-function String_pad(maxLength, fillString, padEnd) {
+function String_pad(maxLength, fillString, padEnd = false) {
+
     // Steps 1-2.
     RequireObjectCoercible(this);
     let str = ToString(this);
@@ -82,28 +83,21 @@ function String_pad(maxLength, fillString, padEnd) {
         return str;
 
     // Steps 6-7.
-    assert(fillString !== undefined, "never called when fillString is undefined");
-    let filler = ToString(fillString);
+    let filler = fillString === undefined ? " " : ToString(fillString);
 
     // Step 8.
     if (filler === "")
         return str;
 
-    // Throw an error if the final string length exceeds the maximum string
-    // length. Perform this check early so we can use int32 operations below.
-    if (intMaxLength > MAX_STRING_LENGTH)
-        ThrowRangeError(JSMSG_RESULTING_STRING_TOO_LARGE);
-
     // Step 9.
     let fillLen = intMaxLength - strLen;
 
     // Step 10.
-    // Perform an int32 division to ensure String_repeat is not called with a
-    // double to avoid repeated bailouts in ToInteger.
     let truncatedStringFiller = callFunction(String_repeat, filler,
-                                             (fillLen / filler.length) | 0);
+                                             fillLen / filler.length);
 
-    truncatedStringFiller += Substring(filler, 0, fillLen % filler.length);
+    truncatedStringFiller += callFunction(String_substr, filler, 0,
+                                          fillLen % filler.length);
 
     // Step 11.
     if (padEnd === true)
@@ -509,14 +503,11 @@ function String_repeat(count) {
     if (n < 0)
         ThrowRangeError(JSMSG_NEGATIVE_REPETITION_COUNT);
 
-    // Inverted condition to handle |Infinity * 0 = NaN| correctly.
-    if (!(n * S.length <= MAX_STRING_LENGTH))
+    if (!(n * S.length < (1 << 28)))
         ThrowRangeError(JSMSG_RESULTING_STRING_TOO_LARGE);
 
     // Communicate |n|'s possible range to the compiler.
-    assert((MAX_STRING_LENGTH & (MAX_STRING_LENGTH + 1)) === 0,
-           "MAX_STRING_LENGTH can be used as a bitmask");
-    n = n & MAX_STRING_LENGTH;
+    n = n & ((1 << 28) - 1);
 
     // Steps 8-9.
     var T = "";
