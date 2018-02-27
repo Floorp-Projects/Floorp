@@ -48,7 +48,7 @@ struct XPTHeader {
   //uint8_t minor_version;
   uint16_t num_interfaces;
   //uint32_t file_length;
-  XPTInterfaceDirectoryEntry* interface_directory;
+  const XPTInterfaceDirectoryEntry* interface_directory;
   //uint32_t data_pool;
 };
 
