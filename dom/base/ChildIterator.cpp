@@ -127,6 +127,16 @@ FlattenedChildIterator::Init(bool aIgnoreXBL)
     return;
   }
 
+  // TODO(emilio): I think it probably makes sense to only allow constructing
+  // FlattenedChildIterators with Element.
+  if (mParent->IsElement()) {
+    if (ShadowRoot* shadow = mParent->AsElement()->GetShadowRoot()) {
+      mParent = shadow;
+      mXBLInvolved = true;
+      return;
+    }
+  }
+
   nsXBLBinding* binding =
     mParent->OwnerDoc()->BindingManager()->GetBindingWithContent(mParent);
 
@@ -139,6 +149,8 @@ FlattenedChildIterator::Init(bool aIgnoreXBL)
   // We set mXBLInvolved to true if either:
   // - The node we're iterating has a binding with content attached to it.
   // - The node is generated XBL content and has an <xbl:children> child.
+  //
+  // FIXME(emilio): This is very slow :(
   if (!mXBLInvolved && mParent->GetBindingParent()) {
     for (nsIContent* child = mParent->GetFirstChild();
          child;

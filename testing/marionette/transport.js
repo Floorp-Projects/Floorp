@@ -821,6 +821,8 @@ if (!this.isWorker) {
     /**
      * A transport that uses a WorkerDebugger to send packets from the main
      * thread to a worker thread.
+     *
+     * @class WorkerDebuggerTransport
      */
     function WorkerDebuggerTransport(dbg, id) {
       this._dbg = dbg;
@@ -873,6 +875,8 @@ if (!this.isWorker) {
     /**
      * A transport that uses a WorkerDebuggerGlobalScope to send packets
      * from a worker thread to the main thread.
+     *
+     * @class WorkerDebuggerTransportThread
      */
     function WorkerDebuggerTransport(scope, id) {
       this._scope = scope;

@@ -16,23 +16,24 @@
 <dialog id="selectBookmarkDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&selectBookmark.title;" style="width: 32em;"
-        persist="screenX screenY width height" screenX="24" screenY="24"      
-        onload="SelectBookmarkDialog.init();" 
+        persist="screenX screenY width height" screenX="24" screenY="24"
+        onload="SelectBookmarkDialog.init();"
         ondialogaccept="SelectBookmarkDialog.accept();">
 
   <script type="application/javascript"
           src="chrome://browser/content/preferences/selectBookmark.js"/>
-  
+
   <description>&selectBookmark.label;</description>
 
   <separator class="thin"/>
 
-  <tree id="bookmarks" flex="1" type="places" 
-        style="height: 15em;" 
+  <tree id="bookmarks" flex="1" type="places"
+        style="height: 15em;"
         hidecolumnpicker="true"
         seltype="single"
         ondblclick="SelectBookmarkDialog.onItemDblClick();"
-        onselect="SelectBookmarkDialog.selectionChanged();">
+        onselect="SelectBookmarkDialog.selectionChanged();"
+        disableUserActions="true">
     <treecols>
       <treecol id="title" flex="1" primary="true" hideheader="true"/>
     </treecols>

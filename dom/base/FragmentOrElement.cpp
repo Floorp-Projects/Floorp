@@ -1193,37 +1193,20 @@ void
 nsIContent::SetAssignedSlot(HTMLSlotElement* aSlot)
 {
   MOZ_ASSERT(aSlot || GetExistingExtendedContentSlots());
-  nsExtendedContentSlots* slots = ExtendedContentSlots();
-
-  RefPtr<HTMLSlotElement> oldSlot = slots->mAssignedSlot.forget();
-  slots->mAssignedSlot = aSlot;
-
-  if (oldSlot != aSlot && IsElement() && AsElement()->HasServoData()) {
-    ServoRestyleManager::ClearServoDataFromSubtree(AsElement());
-  }
+  ExtendedContentSlots()->mAssignedSlot = aSlot;
 }
 
 void
 nsIContent::SetXBLInsertionPoint(nsIContent* aContent)
 {
-  nsCOMPtr<nsIContent> oldInsertionPoint = nullptr;
   if (aContent) {
     nsExtendedContentSlots* slots = ExtendedContentSlots();
     SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
-    oldInsertionPoint = slots->mXBLInsertionPoint.forget();
     slots->mXBLInsertionPoint = aContent;
   } else {
     if (nsExtendedContentSlots* slots = GetExistingExtendedContentSlots()) {
-      oldInsertionPoint = slots->mXBLInsertionPoint.forget();
       slots->mXBLInsertionPoint = nullptr;
     }
-  }
-
-  // We just changed the flattened tree, so any Servo style data is now invalid.
-  // We rely on nsXBLService::LoadBindings to re-traverse the subtree afterwards.
-  if (oldInsertionPoint != aContent && IsElement() &&
-      AsElement()->HasServoData()) {
-    ServoRestyleManager::ClearServoDataFromSubtree(AsElement());
   }
 }
 
@@ -1289,14 +1272,18 @@ FragmentOrElement::SetTextContentInternal(const nsAString& aTextContent,
 void
 FragmentOrElement::DestroyContent()
 {
+  nsIDocument* document = OwnerDoc();
+
   // Drop any servo data. We do this before the RemovedFromDocument call below
   // so that it doesn't need to try to keep the style state sane when shuffling
   // around the flattened tree.
-  if (IsElement() && AsElement()->HasServoData()) {
+  //
+  // TODO(emilio): I suspect this can be asserted against instead, with a bit of
+  // effort to avoid calling nsDocument::Destroy with a shell...
+  if (IsElement() && document->IsStyledByServo()) {
     AsElement()->ClearServoData();
   }
 
-  nsIDocument *document = OwnerDoc();
   document->BindingManager()->RemovedFromDocument(this, document,
                                                   nsBindingManager::eRunDtor);
   document->ClearBoxObjectFor(this);

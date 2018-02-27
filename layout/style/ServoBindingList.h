@@ -180,15 +180,22 @@ SERVO_BINDING_FUNC(Servo_UACache_AddSizeOf, void,
 SERVO_BINDING_FUNC(Servo_AuthorStyles_Create, RawServoAuthorStyles*)
 SERVO_BINDING_FUNC(Servo_AuthorStyles_Drop, void,
                    RawServoAuthorStylesOwned self)
-// TODO(emilio): This will need to take an optional master style set to
-// implement invalidation for Shadow DOM.
+// TODO(emilio): These will need to take a master style set to implement
+// invalidation for Shadow DOM.
 SERVO_BINDING_FUNC(Servo_AuthorStyles_AppendStyleSheet, void,
                    RawServoAuthorStylesBorrowedMut self,
                    const mozilla::ServoStyleSheet* gecko_sheet)
+SERVO_BINDING_FUNC(Servo_AuthorStyles_RemoveStyleSheet, void,
+                   RawServoAuthorStylesBorrowedMut self,
+                   const mozilla::ServoStyleSheet* gecko_sheet)
+SERVO_BINDING_FUNC(Servo_AuthorStyles_InsertStyleSheetBefore, void,
+                   RawServoAuthorStylesBorrowedMut self,
+                   const mozilla::ServoStyleSheet* gecko_sheet,
+                   const mozilla::ServoStyleSheet* before)
 SERVO_BINDING_FUNC(Servo_AuthorStyles_ForceDirty, void,
                    RawServoAuthorStylesBorrowedMut self)
-// TODO(emilio): This will need to take an element to implement invalidation for
-// Shadow DOM.
+// TODO(emilio): This will need to take an element and a master style set to
+// implement invalidation for Shadow DOM.
 SERVO_BINDING_FUNC(Servo_AuthorStyles_Flush, void,
                    RawServoAuthorStylesBorrowedMut self,
                    RawServoStyleSetBorrowed document_styles)

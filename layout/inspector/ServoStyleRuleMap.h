@@ -20,7 +20,9 @@ class ServoStyleSet;
 namespace css {
 class Rule;
 } // namespace css
-
+namespace dom {
+class ShadowRoot;
+}
 class ServoStyleRuleMap
 {
 public:
@@ -28,6 +30,8 @@ public:
 
   void EnsureTable(ServoStyleSet&);
   void EnsureTable(nsXBLPrototypeResources&);
+  void EnsureTable(dom::ShadowRoot&);
+
   ServoStyleRule* Lookup(const RawServoStyleRule* aRawRule) const
   {
     return mTable.Get(aRawRule);

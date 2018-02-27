@@ -246,47 +246,10 @@ add_task(async function test_bookmarks() {
   bs.setItemTitle(newId6, "Google Sites");
   Assert.equal(bookmarksObserver._itemChangedProperty, "title");
 
-  // test get folder's index
-  let tmpFolder = bs.createFolder(testRoot, "tmp", 2);
-
-  // test removeFolderChildren
-  // 1) add/remove each child type (bookmark, folder)
-  tmpFolder = bs.createFolder(testRoot, "removeFolderChildren",
-                              bs.DEFAULT_INDEX);
-  bs.insertBookmark(tmpFolder, uri("http://foo9.com/"), bs.DEFAULT_INDEX, "");
-  bs.createFolder(tmpFolder, "subfolder", bs.DEFAULT_INDEX);
-  // 2) confirm that folder has 2 children
-  let options = hs.getNewQueryOptions();
-  let query = hs.getNewQuery();
-  query.setFolders([tmpFolder], 1);
-  try {
-    let result = hs.executeQuery(query, options);
-    let rootNode = result.root;
-    rootNode.containerOpen = true;
-    Assert.equal(rootNode.childCount, 2);
-    rootNode.containerOpen = false;
-  } catch (ex) {
-    do_throw("test removeFolderChildren() - querying for children failed: " + ex);
-  }
-  // 3) remove all children
-  bs.removeFolderChildren(tmpFolder);
-  // 4) confirm that folder has 0 children
-  try {
-    let result = hs.executeQuery(query, options);
-    let rootNode = result.root;
-    rootNode.containerOpen = true;
-    Assert.equal(rootNode.childCount, 0);
-    rootNode.containerOpen = false;
-  } catch (ex) {
-    do_throw("removeFolderChildren(): " + ex);
-  }
-
-  // XXX - test folderReadOnly
-
   // test bookmark id in query output
   try {
-    options = hs.getNewQueryOptions();
-    query = hs.getNewQuery();
+    let options = hs.getNewQueryOptions();
+    let query = hs.getNewQuery();
     query.setFolders([testRoot], 1);
     let result = hs.executeQuery(query, options);
     let rootNode = result.root;
@@ -322,8 +285,8 @@ add_task(async function test_bookmarks() {
     bs.insertBookmark(testFolder, mURI, bs.DEFAULT_INDEX, "title 2");
 
     // query
-    options = hs.getNewQueryOptions();
-    query = hs.getNewQuery();
+    let options = hs.getNewQueryOptions();
+    let query = hs.getNewQuery();
     query.setFolders([testFolder], 1);
     let result = hs.executeQuery(query, options);
     let rootNode = result.root;
@@ -366,7 +329,7 @@ add_task(async function test_bookmarks() {
                                   bs.DEFAULT_INDEX, "");
   Assert.equal(bookmarksObserver._itemAddedId, newId13);
   Assert.equal(bookmarksObserver._itemAddedParent, testRoot);
-  Assert.equal(bookmarksObserver._itemAddedIndex, 9);
+  Assert.equal(bookmarksObserver._itemAddedIndex, 7);
 
   // set bookmark title
   bs.setItemTitle(newId13, "ZZZXXXYYY");
@@ -384,10 +347,10 @@ add_task(async function test_bookmarks() {
 
   // test search on bookmark title ZZZXXXYYY
   try {
-    options = hs.getNewQueryOptions();
+    let options = hs.getNewQueryOptions();
     options.excludeQueries = 1;
     options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-    query = hs.getNewQuery();
+    let query = hs.getNewQuery();
     query.searchTerms = "ZZZXXXYYY";
     let result = hs.executeQuery(query, options);
     let rootNode = result.root;
@@ -405,10 +368,10 @@ add_task(async function test_bookmarks() {
   // test dateAdded and lastModified properties
   // for a search query
   try {
-    options = hs.getNewQueryOptions();
+    let options = hs.getNewQueryOptions();
     options.excludeQueries = 1;
     options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-    query = hs.getNewQuery();
+    let query = hs.getNewQuery();
     query.searchTerms = "ZZZXXXYYY";
     let result = hs.executeQuery(query, options);
     let rootNode = result.root;
@@ -431,8 +394,8 @@ add_task(async function test_bookmarks() {
   // test dateAdded and lastModified properties
   // for a folder query
   try {
-    options = hs.getNewQueryOptions();
-    query = hs.getNewQuery();
+    let options = hs.getNewQueryOptions();
+    let query = hs.getNewQuery();
     query.setFolders([testRoot], 1);
     let result = hs.executeQuery(query, options);
     let rootNode = result.root;
