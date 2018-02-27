@@ -631,37 +631,49 @@ var PanelMultiView = class extends this.AssociatedToNode {
     // From this point onwards, "await" statements can be used safely.
     prevPanelView.active = false;
 
-    // If the ViewShowing event cancels the operation we have to re-enable
-    // keyboard navigation, but this must be avoided if the panel was closed.
-    if (!(await this._openView(nextPanelView))) {
-      if (prevPanelView.isOpenIn(this)) {
-        // We don't raise a ViewShown event because nothing actually changed.
-        // Technically we should use a different state flag just because there
-        // is code that could check the "active" property to determine whether
-        // to wait for a ViewShown event later, but this only happens in
-        // regression tests and is less likely to be a technique used in
-        // production code, where use of ViewShown is less common.
-        prevPanelView.active = true;
-      }
-      return;
-    }
-
-    prevPanelView.captureKnownSize();
-
-    // The main view of a panel can be a subview in another one. Make sure to
-    // reset all the properties that may be set on a subview.
-    nextPanelView.mainview = false;
-    // The header may change based on how the subview was opened.
-    nextPanelView.headerText = viewNode.getAttribute("title") ||
-                               (anchor && anchor.getAttribute("label"));
-    // The constrained width of subviews may also vary between panels.
-    nextPanelView.minMaxWidth = prevPanelView.knownWidth;
-
+    // Provide visual feedback while navigation is in progress, starting before
+    // the transition starts and ending when the previous view is invisible.
     if (anchor) {
-      viewNode.classList.add("PanelUI-subView");
+      anchor.setAttribute("open", "true");
+    }
+    try {
+      // If the ViewShowing event cancels the operation we have to re-enable
+      // keyboard navigation, but this must be avoided if the panel was closed.
+      if (!(await this._openView(nextPanelView))) {
+        if (prevPanelView.isOpenIn(this)) {
+          // We don't raise a ViewShown event because nothing actually changed.
+          // Technically we should use a different state flag just because there
+          // is code that could check the "active" property to determine whether
+          // to wait for a ViewShown event later, but this only happens in
+          // regression tests and is less likely to be a technique used in
+          // production code, where use of ViewShown is less common.
+          prevPanelView.active = true;
+        }
+        return;
+      }
+
+      prevPanelView.captureKnownSize();
+
+      // The main view of a panel can be a subview in another one. Make sure to
+      // reset all the properties that may be set on a subview.
+      nextPanelView.mainview = false;
+      // The header may change based on how the subview was opened.
+      nextPanelView.headerText = viewNode.getAttribute("title") ||
+                                 (anchor && anchor.getAttribute("label"));
+      // The constrained width of subviews may also vary between panels.
+      nextPanelView.minMaxWidth = prevPanelView.knownWidth;
+
+      if (anchor) {
+        viewNode.classList.add("PanelUI-subView");
+      }
+
+      await this._transitionViews(prevPanelView.node, viewNode, false, anchor);
+    } finally {
+      if (anchor) {
+        anchor.removeAttribute("open");
+      }
     }
 
-    await this._transitionViews(prevPanelView.node, viewNode, false, anchor);
     this._activateView(nextPanelView);
   }
 
@@ -828,10 +840,8 @@ var PanelMultiView = class extends this.AssociatedToNode {
    *                                     after the transition has finished.
    * @param {Boolean}   reverse          Whether we're navigation back to a
    *                                     previous view or forward to a next view.
-   * @param {Element}   anchor           the anchor for which we're opening
-   *                                     a new panelview, if any
    */
-  async _transitionViews(previousViewNode, viewNode, reverse, anchor) {
+  async _transitionViews(previousViewNode, viewNode, reverse) {
     // Clean up any previous transition that may be active at this point.
     this._cleanupTransitionPhase();
 
@@ -845,11 +855,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
 
     let details = this._transitionDetails = {
       phase: TRANSITION_PHASES.START,
-      anchor
     };
-
-    if (anchor)
-      anchor.setAttribute("open", "true");
 
     // Set the viewContainer dimensions to make sure only the current view is
     // visible.
@@ -994,14 +1000,9 @@ var PanelMultiView = class extends this.AssociatedToNode {
     if (!details || !this.node)
       return;
 
-    let {phase, resolve, listener, cancelListener, anchor} = details;
+    let {phase, resolve, listener, cancelListener} = details;
     if (details == this._transitionDetails)
       this._transitionDetails = null;
-
-    // Do the things we _always_ need to do whenever the transition ends or is
-    // interrupted.
-    if (anchor)
-      anchor.removeAttribute("open");
 
     if (phase >= TRANSITION_PHASES.START) {
       this._panel.removeAttribute("width");
