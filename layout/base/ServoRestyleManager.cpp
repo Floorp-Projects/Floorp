@@ -436,21 +436,19 @@ ServoRestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
 /* static */ void
 ServoRestyleManager::ClearServoDataFromSubtree(Element* aElement, IncludeRoot aIncludeRoot)
 {
-  if (!aElement->HasServoData()) {
-    MOZ_ASSERT(!aElement->HasDirtyDescendantsForServo());
-    MOZ_ASSERT(!aElement->HasAnimationOnlyDirtyDescendantsForServo());
-    return;
-  }
-
-  StyleChildrenIterator it(aElement);
-  for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
-    if (n->IsElement()) {
-      ClearServoDataFromSubtree(n->AsElement(), IncludeRoot::Yes);
+  if (aElement->HasServoData()) {
+    StyleChildrenIterator it(aElement);
+    for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
+      if (n->IsElement()) {
+        ClearServoDataFromSubtree(n->AsElement(), IncludeRoot::Yes);
+      }
     }
   }
 
   if (MOZ_LIKELY(aIncludeRoot == IncludeRoot::Yes)) {
     aElement->ClearServoData();
+    MOZ_ASSERT(!aElement->HasAnyOfFlags(Element::kAllServoDescendantBits | NODE_NEEDS_FRAME));
+    MOZ_ASSERT(aElement != aElement->OwnerDoc()->GetServoRestyleRoot());
   }
 }
 

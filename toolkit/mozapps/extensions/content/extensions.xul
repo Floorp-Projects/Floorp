@@ -542,7 +542,6 @@
                           &detail.contributions.description;
                         </description>
                         <hbox align="center">
-                          <label id="detail-contrib-suggested"/>
                           <spacer flex="1"/>
                           <button id="detail-contrib-btn"
                                   label="&cmd.contribute.label;"
@@ -598,7 +597,6 @@
                               <label id="detail-reviews" class="text-link"/>
                             </hbox>
                           </row>
-                          <row class="detail-row" id="detail-downloads" label="&detail.numberOfDownloads.label;"/>
                         </rows>
                       </grid>
                       <hbox id="detail-controls">

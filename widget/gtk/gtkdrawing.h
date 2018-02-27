@@ -87,8 +87,12 @@ typedef struct {
 
 typedef struct {
   MozGtkSize minSizeWithBorderMargin;
+  GtkBorder  buttonMargin;
   gint iconXPosition;
   gint iconYPosition;
+  bool visible;
+  bool firstButton;
+  bool lastButton;
 } ToolbarButtonGTKMetrics;
 
 #define TOOLBAR_BUTTONS 4
@@ -575,5 +579,10 @@ moz_gtk_get_tab_thickness(WidgetNodeType aNodeType);
  */
 const ToolbarButtonGTKMetrics*
 GetToolbarButtonMetrics(WidgetNodeType aWidgetType);
+
+/* Get toolbar button state.
+*/
+bool
+IsToolbarButtonEnabled(WidgetNodeType aWidgetType);
 
 #endif

@@ -9,12 +9,13 @@
 #
 # In here to use the local common.sh to allow the full mars to have unfiltered files
 
-. $(dirname "$0")/common.sh
+# shellcheck disable=SC1090
+. "$(dirname "$0")/common.sh"
 
 # -----------------------------------------------------------------------------
 
 print_usage() {
-  notice "Usage: $(basename $0) [OPTIONS] ARCHIVE DIRECTORY"
+  notice "Usage: $(basename "$0") [OPTIONS] ARCHIVE DIRECTORY"
 }
 
 if [ $# = 0 ]; then
@@ -22,7 +23,7 @@ if [ $# = 0 ]; then
   exit 1
 fi
 
-if [ $1 = -h ]; then
+if [ "$1" = -h ]; then
   print_usage
   notice ""
   notice "The contents of DIRECTORY will be stored in ARCHIVE."
@@ -39,9 +40,9 @@ archive="$1"
 targetdir="$2"
 # Prevent the workdir from being inside the targetdir so it isn't included in
 # the update mar.
-if [ $(echo "$targetdir" | grep -c '\/$') = 1 ]; then
+if [ "$(echo "$targetdir" | grep -c '\/$')" = 1 ]; then
   # Remove the /
-  targetdir=$(echo "$targetdir" | sed -e 's:\/$::')
+  targetdir=${targetdir%/}
 fi
 workdir="$targetdir.work"
 updatemanifestv2="$workdir/updatev2.manifest"
@@ -51,7 +52,7 @@ targetfiles="updatev2.manifest updatev3.manifest"
 mkdir -p "$workdir"
 
 # Generate a list of all files in the target directory.
-pushd "$targetdir"
+pushd "$targetdir" || exit 1
 if test $? -ne 0 ; then
   exit 1
 fi
@@ -63,26 +64,25 @@ if [ ! -f "precomplete" ]; then
   fi
 fi
 
+declare -a files
 list_files files
 
-popd
+popd || exit 1
 
 # Add the type of update to the beginning of the update manifests.
-> $updatemanifestv2
-> $updatemanifestv3
+: > "$updatemanifestv2"
+: > "$updatemanifestv3"
 notice ""
 notice "Adding type instruction to update manifests"
 notice "       type complete"
-echo "type \"complete\"" >> $updatemanifestv2
-echo "type \"complete\"" >> $updatemanifestv3
+echo "type \"complete\"" >> "$updatemanifestv2"
+echo "type \"complete\"" >> "$updatemanifestv3"
 
 notice ""
 notice "Adding file add instructions to update manifests"
-num_files=${#files[*]}
 
-for ((i=0; $i<$num_files; i=$i+1)); do
-  f="${files[$i]}"
-
+for f in "${files[@]}"
+do
   if check_for_add_if_not_update "$f"; then
     make_add_if_not_instruction "$f" "$updatemanifestv3"
     if check_for_add_to_manifestv2 "$f"; then
