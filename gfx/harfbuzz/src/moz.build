@@ -32,12 +32,14 @@ SOURCES += [
     'hb-ot-math.cc', # conflict with hb-ot-layout.cc
     'hb-ot-shape-complex-hangul.cc', # error: redefinition of enumerator 'NONE'
     'hb-ot-shape-complex-indic.cc', # error: redefinition of enumerator 'INIT'
+    'hb-ot-shape-complex-khmer.cc', # error: redefinition of enumerator 'syllable_type_t'
     'hb-ot-shape-complex-use.cc', # error: redefinition of 'basic_features'
     'hb-ot-shape.cc', # error: functions that differ only in their return type cannot be overloaded
     'hb-shape-plan.cc', # error: redefinition of 'hb_ot_shaper_face_data_ensure'
 ]
 
 UNIFIED_SOURCES += [
+    'hb-aat-layout.cc',
     'hb-buffer.cc',
     'hb-face.cc',
     'hb-font.cc',

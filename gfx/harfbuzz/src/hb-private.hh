@@ -29,6 +29,8 @@
 #ifndef HB_PRIVATE_HH
 #define HB_PRIVATE_HH
 
+#define _GNU_SOURCE 1
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -40,6 +42,7 @@
 #define HB_OT_H_IN
 #endif
 
+#include <math.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
@@ -85,8 +88,6 @@ extern "C" void  hb_free_impl(void *ptr);
 #endif // static_assert
 
 #endif // __cplusplus < 201103L
-
-#define _GNU_SOURCE 1
 
 #if (defined(__GNUC__) || defined(__clang__)) && defined(__OPTIMIZE__)
 #define likely(expr) (__builtin_expect (!!(expr), 1))
@@ -297,9 +298,10 @@ static_assert ((sizeof (hb_var_int_t) == 4), "");
 
 /* Misc */
 
-/* Void! */
-struct _hb_void_t {};
-typedef const _hb_void_t *hb_void_t;
+/*
+ * Void!
+ */
+typedef const struct _hb_void_t *hb_void_t;
 #define HB_VOID ((const _hb_void_t *) nullptr)
 
 /* Return the number of 1 bits in mask. */
