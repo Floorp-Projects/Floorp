@@ -18,7 +18,7 @@ using namespace mozilla;
 /* static */ xptiInterfaceEntry*
 xptiInterfaceEntry::Create(const char* aName,
                            const nsID& aIID,
-                           XPTInterfaceDescriptor* aDescriptor,
+                           const XPTInterfaceDescriptor* aDescriptor,
                            xptiTypelibGuts* aTypelib)
 {
     void* place = XPT_CALLOC8(gXPTIStructArena, sizeof(xptiInterfaceEntry));
@@ -30,7 +30,7 @@ xptiInterfaceEntry::Create(const char* aName,
 
 xptiInterfaceEntry::xptiInterfaceEntry(const char* aName,
                                        const nsID& aIID,
-                                       XPTInterfaceDescriptor* aDescriptor,
+                                       const XPTInterfaceDescriptor* aDescriptor,
                                        xptiTypelibGuts* aTypelib)
     : mIID(aIID)
     , mDescriptor(aDescriptor)
