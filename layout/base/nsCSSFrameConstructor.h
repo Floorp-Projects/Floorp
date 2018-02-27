@@ -320,7 +320,7 @@ public:
                       RemoveFlags aFlags);
 
   void CharacterDataChanged(nsIContent* aContent,
-                            CharacterDataChangeInfo* aInfo);
+                            const CharacterDataChangeInfo& aInfo);
 
   // If aContent is a text node that has been optimized away due to being
   // whitespace next to a block boundary (or for some other reason), ensure that

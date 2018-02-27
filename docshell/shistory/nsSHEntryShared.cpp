@@ -255,14 +255,14 @@ nsSHEntryShared::NodeWillBeDestroyed(const nsINode* aNode)
 void
 nsSHEntryShared::CharacterDataWillChange(nsIDocument* aDocument,
                                          nsIContent* aContent,
-                                         CharacterDataChangeInfo* aInfo)
+                                         const CharacterDataChangeInfo&)
 {
 }
 
 void
 nsSHEntryShared::CharacterDataChanged(nsIDocument* aDocument,
                                       nsIContent* aContent,
-                                      CharacterDataChangeInfo* aInfo)
+                                      const CharacterDataChangeInfo&)
 {
   RemoveFromBFCacheAsync();
 }

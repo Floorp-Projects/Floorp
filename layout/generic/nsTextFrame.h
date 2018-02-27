@@ -81,7 +81,7 @@ public:
 
   nsresult GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor) override;
 
-  nsresult CharacterDataChanged(CharacterDataChangeInfo* aInfo) final;
+  nsresult CharacterDataChanged(const CharacterDataChangeInfo&) final;
 
   nsTextFrame* GetPrevContinuation() const override { return nullptr; }
   nsTextFrame* GetNextContinuation() const final { return mNextContinuation; }
