@@ -209,10 +209,6 @@ function RemoteFinderListener(global) {
   this._finder = new Finder(global.docShell);
   this._finder.addResultListener(this);
   this._global = global;
-  this.KeyboardEvent =
-    global.docShell
-          .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindow).KeyboardEvent;
 
   for (let msg of this.MESSAGES) {
     global.addMessageListener(msg, this);
@@ -318,7 +314,8 @@ RemoteFinderListener.prototype = {
         break;
 
       case "Finder:KeyPress":
-        this._finder.keyPress(new this.KeyboardEvent("keypress", data));
+        var KeyboardEvent = this._finder._getWindow().KeyboardEvent;
+        this._finder.keyPress(new KeyboardEvent("keypress", data));
         break;
 
       case "Finder:MatchesCount":

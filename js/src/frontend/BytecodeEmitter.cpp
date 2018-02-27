@@ -895,7 +895,7 @@ BytecodeEmitter::EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind
     if (!ensureCache(bce))
         return false;
 
-    // Marks all names as closed over if the the context requires it. This
+    // Marks all names as closed over if the context requires it. This
     // cannot be done in the Parser as we may not know if the context requires
     // all bindings to be closed over until after parsing is finished. For
     // example, legacy generators require all bindings to be closed over but
@@ -6831,24 +6831,12 @@ BytecodeEmitter::emitLexicalScope(ParseNode* pn)
     if (pn->isEmptyScope())
         return emitLexicalScopeBody(body);
 
-    // Update line number notes before emitting TDZ poison in
-    // EmitterScope::enterLexical to avoid spurious pausing on seemingly
-    // non-effectful lines in Debugger.
-    //
-    // For example, consider the following code.
-    //
-    // L1: {
-    // L2:   let x = 42;
-    // L3: }
-    //
-    // If line number notes were not updated before the TDZ poison, the TDZ
-    // poison bytecode sequence of 'uninitialized; initlexical' will have line
-    // number L1, and the Debugger will pause there.
+    // We are about to emit some bytecode for what the spec calls "declaration
+    // instantiation". Assign these instructions to the opening `{` of the
+    // block. (Using the location of each declaration we're instantiating is
+    // too weird when stepping in the debugger.)
     if (!ParseNodeRequiresSpecialLineNumberNotes(body)) {
-        ParseNode* pnForPos = body;
-        if (body->isKind(ParseNodeKind::StatementList) && body->pn_head)
-            pnForPos = body->pn_head;
-        if (!updateLineNumberNotes(pnForPos->pn_pos.begin))
+        if (!updateSourceCoordNotes(pn->pn_pos.begin))
             return false;
     }
 

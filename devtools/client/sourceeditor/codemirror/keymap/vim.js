@@ -841,7 +841,7 @@
         }
 
         function handleKeyNonInsertMode() {
-          if (handleMacroRecording() || handleEsc()) { return true; };
+          if (handleMacroRecording() || handleEsc()) { return true; }
 
           var keys = vim.inputState.keyBuffer = vim.inputState.keyBuffer + key;
           if (/^[1-9]\d*$/.test(keys)) { return true; }
@@ -1426,7 +1426,7 @@
         } else {
           if (vim.visualMode) {
             showPrompt(cm, { onClose: onPromptClose, prefix: ':', value: '\'<,\'>',
-                onKeyDown: onPromptKeyDown});
+                onKeyDown: onPromptKeyDown, selectValueOnOpen: false});
           } else {
             showPrompt(cm, { onClose: onPromptClose, prefix: ':',
                 onKeyDown: onPromptKeyDown});
@@ -3683,7 +3683,15 @@
       }
     }
     function splitBySlash(argString) {
-      var slashes = findUnescapedSlashes(argString) || [];
+      return splitBySeparator(argString, '/');
+    }
+
+    function findUnescapedSlashes(argString) {
+      return findUnescapedSeparators(argString, '/');
+    }
+
+    function splitBySeparator(argString, separator) {
+      var slashes = findUnescapedSeparators(argString, separator) || [];
       if (!slashes.length) return [];
       var tokens = [];
       // in case of strings like foo/bar
@@ -3695,12 +3703,15 @@
       return tokens;
     }
 
-    function findUnescapedSlashes(str) {
+    function findUnescapedSeparators(str, separator) {
+      if (!separator)
+        separator = '/';
+
       var escapeNextChar = false;
       var slashes = [];
       for (var i = 0; i < str.length; i++) {
         var c = str.charAt(i);
-        if (!escapeNextChar && c == '/') {
+        if (!escapeNextChar && c == separator) {
           slashes.push(i);
         }
         escapeNextChar = !escapeNextChar && (c == '\\');
@@ -4566,7 +4577,7 @@
               'any other getSearchCursor implementation.');
         }
         var argString = params.argString;
-        var tokens = argString ? splitBySlash(argString) : [];
+        var tokens = argString ? splitBySeparator(argString, argString[0]) : [];
         var regexPart, replacePart = '', trailing, flagsPart, count;
         var confirm = false; // Whether to confirm each replace.
         var global = false; // True to replace all instances on a line, false to replace only 1.
@@ -4610,7 +4621,7 @@
               global = true;
               flagsPart.replace('g', '');
             }
-            regexPart = regexPart + '/' + flagsPart;
+            regexPart = regexPart.replace(/\//g, "\\/") + '/' + flagsPart;
           }
         }
         if (regexPart) {
@@ -4826,7 +4837,7 @@
       }
       if (!confirm) {
         replaceAll();
-        if (callback) { callback(); };
+        if (callback) { callback(); }
         return;
       }
       showPrompt(cm, {
@@ -4962,7 +4973,7 @@
             exitInsertMode(cm);
           }
         }
-      };
+      }
       macroModeState.isPlaying = false;
     }
 
@@ -5166,7 +5177,7 @@
         exitInsertMode(cm);
       }
       macroModeState.isPlaying = false;
-    };
+    }
 
     function repeatInsertModeChanges(cm, changes, repeat) {
       function keyHandler(binding) {
