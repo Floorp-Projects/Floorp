@@ -36,9 +36,9 @@
 
 #include "jsapi.h"
 
-#include "builtin/DataViewObject.h"
+#include "builtin/DataView.h"
 #include "builtin/Date.h"
-#include "builtin/MapObject.h"
+#include "builtin/Map.h"
 #include "js/Date.h"
 #include "js/GCHashTable.h"
 #include "js/Wrapper.h"

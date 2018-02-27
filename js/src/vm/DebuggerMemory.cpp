@@ -12,7 +12,7 @@
 
 #include <stdlib.h>
 
-#include "builtin/MapObject.h"
+#include "builtin/Map.h"
 #include "gc/Marking.h"
 #include "js/AllocPolicy.h"
 #include "js/Debug.h"

@@ -6,7 +6,7 @@
 
 /* Implementation of the Intl object and its non-constructor properties. */
 
-#include "builtin/intl/IntlObject.h"
+#include "builtin/intl/Intl.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"

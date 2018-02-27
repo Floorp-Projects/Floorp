@@ -4,17 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "builtin/WeakSetObject.h"
+#include "builtin/WeakSet.h"
 
 #include "jsapi.h"
 
-#include "builtin/MapObject.h"
+#include "builtin/Map.h"
 #include "vm/GlobalObject.h"
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 
-#include "builtin/WeakMapObject-inl.h"
+#include "builtin/WeakMap-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"

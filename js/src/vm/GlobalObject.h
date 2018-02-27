@@ -776,11 +776,11 @@ class GlobalObject : public NativeObject
 
     static bool initAsyncGenerators(JSContext* cx, Handle<GlobalObject*> global);
 
-    // Implemented in builtin/MapObject.cpp.
+    // Implemented in builtin/Map.cpp.
     static bool initMapIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initSetIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
 
-    // Implemented in builtin/intl/IntlObject.cpp.
+    // Implemented in builtin/intl/Intl.cpp.
     static bool initIntlObject(JSContext* cx, Handle<GlobalObject*> global);
 
     // Implemented in builtin/intl/RelativeTimeFormat.cpp.
