@@ -85,7 +85,7 @@ xptiInterfaceEntry::ResolveLocked()
             SetHasNotXPCOMFlag();
         } else {
             for (uint16_t idx = 0; idx < mDescriptor->num_methods; ++idx) {
-                nsXPTMethodInfo* method = reinterpret_cast<nsXPTMethodInfo*>(
+                const nsXPTMethodInfo* method = static_cast<const nsXPTMethodInfo*>(
                     mDescriptor->method_descriptors + idx);
                 if (method->IsNotXPCOM()) {
                     SetHasNotXPCOMFlag();
@@ -190,8 +190,8 @@ xptiInterfaceEntry::GetMethodInfo(uint16_t index, const nsXPTMethodInfo** info)
     }
 
     // else...
-    *info = reinterpret_cast<nsXPTMethodInfo*>
-       (&mDescriptor->method_descriptors[index - mMethodBaseIndex]);
+    *info = static_cast<const nsXPTMethodInfo*>
+        (&mDescriptor->method_descriptors[index - mMethodBaseIndex]);
     return NS_OK;
 }
 
@@ -206,9 +206,8 @@ xptiInterfaceEntry::GetMethodInfoForName(const char* methodName, uint16_t *index
     for(uint16_t i = 0; i < mDescriptor->num_methods; ++i)
     {
         const nsXPTMethodInfo* info;
-        info = reinterpret_cast<nsXPTMethodInfo*>
-                               (&mDescriptor->
-                                        method_descriptors[i]);
+        info = static_cast<const nsXPTMethodInfo*>
+            (&mDescriptor->method_descriptors[i]);
         if (PL_strcmp(methodName, info->GetName()) == 0) {
             *index = i + mMethodBaseIndex;
             *result = info;
