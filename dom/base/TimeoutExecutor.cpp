@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/TimeoutManager.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIEventTarget.h"
 #include "nsString.h"
 
 namespace mozilla {

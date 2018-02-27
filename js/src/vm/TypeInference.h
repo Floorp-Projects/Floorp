@@ -451,9 +451,20 @@ class TypeSet
      * getObject may return nullptr.
      */
     inline unsigned getObjectCount() const;
+    inline bool hasGroup(unsigned i) const;
+    inline bool hasSingleton(unsigned i) const;
     inline ObjectKey* getObject(unsigned i) const;
     inline JSObject* getSingleton(unsigned i) const;
     inline ObjectGroup* getGroup(unsigned i) const;
+
+    /*
+     * Get the objects in the set without triggering barriers. This is
+     * potentially unsafe and you should only call these methods if you know
+     * what you're doing. For JIT compilation, use the following methods
+     * instead:
+     *  - MacroAssembler::getSingletonAndDelayBarrier()
+     *  - MacroAssembler::getGroupAndDelayBarrier()
+     */
     inline JSObject* getSingletonNoBarrier(unsigned i) const;
     inline ObjectGroup* getGroupNoBarrier(unsigned i) const;
 
@@ -1038,10 +1049,10 @@ class TypeNewScript
     }
 
     void clear() {
-        function_.init(nullptr);
-        templateObject_.init(nullptr);
-        initializedShape_.init(nullptr);
-        initializedGroup_.init(nullptr);
+        function_ = nullptr;
+        templateObject_ = nullptr;
+        initializedShape_ = nullptr;
+        initializedGroup_ = nullptr;
     }
 
     static void writeBarrierPre(TypeNewScript* newScript);

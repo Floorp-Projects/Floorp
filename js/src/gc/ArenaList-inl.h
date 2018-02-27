@@ -237,6 +237,28 @@ js::gc::SortedArenaList::toArenaList()
     return ArenaList(segments[0]);
 }
 
+void
+js::gc::ArenaLists::setFreeList(AllocKind i, FreeSpan* span)
+{
+#ifdef DEBUG
+    auto old = freeList(i);
+    if (!old->isEmpty())
+        old->getArena()->checkNoMarkedFreeCells();
+#endif
+    freeLists()[i] = span;
+}
+
+void
+js::gc::ArenaLists::clearFreeList(AllocKind i)
+{
+#ifdef DEBUG
+    auto old = freeList(i);
+    if (!old->isEmpty())
+        old->getArena()->checkNoMarkedFreeCells();
+#endif
+    freeLists()[i] = &placeholder;
+}
+
 js::gc::Arena*
 js::gc::ArenaLists::getFirstArena(AllocKind thingKind) const
 {
@@ -303,23 +325,23 @@ js::gc::ArenaLists::needBackgroundFinalizeWait(AllocKind kind) const
 }
 
 void
-js::gc::ArenaLists::purge()
+js::gc::ArenaLists::clearFreeLists()
 {
     for (auto i : AllAllocKinds())
-        freeLists(i) = &placeholder;
+        clearFreeList(i);
 }
 
 bool
 js::gc::ArenaLists::arenaIsInUse(Arena* arena, AllocKind kind) const
 {
     MOZ_ASSERT(arena);
-    return arena == freeLists(kind)->getArenaUnchecked();
+    return arena == freeList(kind)->getArenaUnchecked();
 }
 
 MOZ_ALWAYS_INLINE js::gc::TenuredCell*
 js::gc::ArenaLists::allocateFromFreeList(AllocKind thingKind, size_t thingSize)
 {
-    return freeLists(thingKind)->allocate(thingSize);
+    return freeList(thingKind)->allocate(thingSize);
 }
 
 void
@@ -347,7 +369,7 @@ js::gc::ArenaLists::checkEmptyArenaLists()
 void
 js::gc::ArenaLists::checkEmptyFreeList(AllocKind kind)
 {
-    MOZ_ASSERT(freeLists(kind)->isEmpty());
+    MOZ_ASSERT(freeList(kind)->isEmpty());
 }
 
 #endif // gc_ArenaList_inl_h

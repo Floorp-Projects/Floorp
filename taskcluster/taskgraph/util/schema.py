@@ -11,6 +11,7 @@ import voluptuous
 
 import taskgraph
 
+from mozbuild import schedules
 from .attributes import keymatch
 
 
@@ -202,3 +203,23 @@ def Schema(*args, **kwargs):
     schema = voluptuous.Schema(*args, **kwargs)
     check_schema(schema)
     return schema
+
+
+OptimizationSchema = voluptuous.Any(
+    # always run this task (default)
+    None,
+    # search the index for the given index namespaces, and replace this task if found
+    # the search occurs in order, with the first match winning
+    {'index-search': [basestring]},
+    # consult SETA and skip this task if it is low-value
+    {'seta': None},
+    # skip this task if none of the given file patterns match
+    {'skip-unless-changed': [basestring]},
+    # skip this task if unless the change files' SCHEDULES contains any of these components
+    {'skip-unless-schedules': list(schedules.ALL_COMPONENTS)},
+    # skip if SETA or skip-unless-schedules says to
+    {'skip-unless-schedules-or-seta': list(schedules.ALL_COMPONENTS)},
+    # only run this task if its dependencies will run (useful for follow-on tasks that
+    # are unnecessary if the parent tasks are not run)
+    {'only-if-dependencies-run': None}
+)

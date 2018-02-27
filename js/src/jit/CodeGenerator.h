@@ -616,10 +616,12 @@ class CodeGenerator final : public CodeGeneratorSpecific
     //
     // Instead of saving the pointers, we just save the index of the Read
     // Barriered objects in a bit mask.
-    uint32_t simdRefreshTemplatesDuringLink_;
+    uint32_t simdTemplatesToReadBarrier_;
 
-    void registerSimdTemplate(SimdType simdType);
-    void captureSimdTemplate(JSContext* cx);
+    // Bit mask of JitCompartment stubs that are to be read-barriered.
+    uint32_t compartmentStubsToReadBarrier_;
+
+    void addSimdTemplateToReadBarrier(SimdType simdType);
 };
 
 } // namespace jit

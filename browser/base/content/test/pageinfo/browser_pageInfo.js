@@ -1,14 +1,17 @@
+const URI = "https://example.com/browser/browser/base/content/test/pageinfo/feed_tab.html";
+
 function test() {
   waitForExplicitFinish();
 
   var pageInfo;
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false,
+                                 URI).then(() => {
     Services.obs.addObserver(observer, "page-info-dialog-loaded");
     pageInfo = BrowserPageInfo();
   });
-  gBrowser.selectedBrowser.loadURI("https://example.com/browser/browser/base/content/test/pageinfo/feed_tab.html");
+  gBrowser.selectedBrowser.loadURI(URI);
 
   function observer(win, topic, data) {
     Services.obs.removeObserver(observer, "page-info-dialog-loaded");

@@ -19,12 +19,6 @@ add_task(async function testExecuteScript() {
       Services.ppmm.getChildAt(0),
     ];
     for (let mm of messageManagerMap.keys()) {
-      // Sanity check: mm is a message manager.
-      try {
-        mm.QueryInterface(Ci.nsIMessageSender);
-      } catch (e) {
-        mm.QueryInterface(Ci.nsIMessageBroadcaster);
-      }
       if (!globalMMs.includes(mm)) {
         ++count;
       }

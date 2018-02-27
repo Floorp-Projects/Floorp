@@ -3947,6 +3947,10 @@ TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group, bool* regenerate,
     group->detachNewScript();
     initialGroup->setNewScript(this);
 
+    // prefixShape was read via a weak pointer, so we need a read barrier before
+    // we store it into the heap.
+    Shape::readBarrier(prefixShape);
+
     initializedShape_ = prefixShape;
     initializedGroup_ = group;
 

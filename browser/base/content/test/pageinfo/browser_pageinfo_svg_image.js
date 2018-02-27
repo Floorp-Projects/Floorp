@@ -1,9 +1,12 @@
+const URI = "https://example.com/browser/browser/base/content/test/pageinfo/svg_image.html";
+
 function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false,
+                                 URI).then(() => {
     var pageInfo = BrowserPageInfo(gBrowser.selectedBrowser.currentURI.spec,
                                    "mediaTab");
 
@@ -32,6 +35,5 @@ function test() {
     }, {capture: true, once: true});
   });
 
-  gBrowser.selectedBrowser.loadURI(
-    "https://example.com/browser/browser/base/content/test/pageinfo/svg_image.html");
+  gBrowser.selectedBrowser.loadURI(URI);
 }

@@ -6,7 +6,6 @@
 #include "domstubs.idl"
 #include "nsIDroppedLinkHandler.idl"
 
-interface nsIContentFrameMessageManager;
 interface nsIWebBrowserChrome3;
 
 native CommandsArray(nsTArray<nsCString>);
@@ -15,7 +14,7 @@ native CommandsArray(nsTArray<nsCString>);
 [scriptable, uuid(1fb79c27-e760-4088-b19c-1ce3673ec24e)]
 interface nsITabChild : nsISupports
 {
-  readonly attribute nsIContentFrameMessageManager messageManager;
+  readonly attribute nsISupports messageManager;
 
   attribute nsIWebBrowserChrome3 webBrowserChrome;
 

@@ -37,7 +37,14 @@
     var component = document.getElementById("component");
     var shadow = component.attachShadow({mode: "open"});
 
-    shadow.innerHTML = "<button>Hello</button>" +
-      '<a href="#"> World</a>';
+    var button = document.createElement("button");
+    button.append("Hello");
+
+    var a = document.createElement("a");
+    a.setAttribute("href", "#");
+    a.append(" World");
+
+    shadow.appendChild(button);
+    shadow.appendChild(a);
   </script>
 </body>

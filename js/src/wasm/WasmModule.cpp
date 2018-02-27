@@ -797,7 +797,9 @@ Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) 
 
         uint32_t funcIndex = ExportedFunctionToFuncIndex(f);
         Instance& instance = ExportedFunctionToInstance(f);
-        const FuncExport& funcExport = instance.metadata(tier).lookupFuncExport(funcIndex);
+        Tier otherTier = instance.code().stableTier();
+
+        const FuncExport& funcExport = instance.metadata(otherTier).lookupFuncExport(funcIndex);
 
         if (funcExport.sig() != metadata(tier).funcImports[i].sig()) {
             const Import& import = FindImportForFuncImport(imports_, i);
