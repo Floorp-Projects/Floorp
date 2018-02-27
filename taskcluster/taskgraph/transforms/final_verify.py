@@ -9,7 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
-from taskgraph.util.scriptworker import get_release_config
+from taskgraph.util.taskcluster import get_taskcluster_artifact_prefix
 
 transforms = TransformSequence()
 
@@ -17,24 +17,27 @@ transforms = TransformSequence()
 @transforms.add
 def add_command(config, tasks):
     for task in tasks:
-        release_config = get_release_config(config)
-        release_tag = "{}_{}_RELEASE_RUNTIME".format(
-            task["shipping-product"].upper(),
-            release_config["version"].replace(".", "_")
-        )
-
         if not task["worker"].get("env"):
             task["worker"]["env"] = {}
+
+        final_verify_configs = []
+        for upstream in task.get("dependencies", {}).keys():
+            if 'update-verify-config' in upstream:
+                final_verify_configs.append(
+                    "{}update-verify.cfg".format(
+                        get_taskcluster_artifact_prefix("<{}>".format(upstream))
+                    )
+                )
         task["worker"]["command"] = [
             "/bin/bash",
             "-c",
-            "hg clone $BUILD_TOOLS_REPO tools && cd tools &&" +
-            "hg up -r {} && cd release && ".format(
-                release_tag,
-            ) +
-            "./final-verification.sh $FINAL_VERIFY_CONFIGS"
+            {
+                "task-reference": "hg clone $BUILD_TOOLS_REPO tools && cd tools/release && " +
+                                  "./final-verification.sh " +
+                                  " ".join(final_verify_configs)
+            }
         ]
-        for thing in ("FINAL_VERIFY_CONFIGS", "BUILD_TOOLS_REPO"):
+        for thing in ("BUILD_TOOLS_REPO",):
             thing = "worker.env.{}".format(thing)
             resolve_keyed_by(task, thing, thing, **config.params)
         yield task
