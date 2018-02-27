@@ -668,7 +668,6 @@ GeckoEditableSupport::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
 /*
  * Send dummy key events for pages that are unaware of input events,
  * to provide web compatibility for pages that depend on key events.
- * Our dummy key events have 0 as the keycode.
  */
 void
 GeckoEditableSupport::SendIMEDummyKeyEvent(nsIWidget* aWidget, EventMessage msg)
@@ -678,7 +677,12 @@ GeckoEditableSupport::SendIMEDummyKeyEvent(nsIWidget* aWidget, EventMessage msg)
 
     WidgetKeyboardEvent event(true, msg, aWidget);
     event.mTime = PR_Now() / 1000;
-    MOZ_ASSERT(event.mKeyCode == 0);
+    // TODO: If we can know scan code of the key event which caused replacing
+    //       composition string, we should set mCodeNameIndex here.  Then,
+    //       we should rename this method because it becomes not a "dummy"
+    //       keyboard event.
+    event.mKeyCode = NS_VK_PROCESSKEY;
+    event.mKeyNameIndex = KEY_NAME_INDEX_Process;
     NS_ENSURE_SUCCESS_VOID(BeginInputTransaction(mDispatcher));
     mDispatcher->DispatchKeyboardEvent(msg, event, status);
 }
@@ -1027,12 +1031,19 @@ GeckoEditableSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
         AddIMETextChange(dummyChange);
     }
 
+    // Until fixing bug 354358 in release channel, we should always ignore
+    // "intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition"
+    // pref in Nightly and early Beta for testing new regressions.
+#ifndef EARLY_BETA_OR_EARLIER
     if (mInputContext.mMayBeIMEUnaware) {
+#endif // #ifndef EARLY_BETA_OR_EARLIER
         SendIMEDummyKeyEvent(widget, eKeyDown);
         if (!mDispatcher || widget->Destroyed()) {
             return;
         }
+#ifndef EARLY_BETA_OR_EARLIER
     }
+#endif // #ifndef EARLY_BETA_OR_EARLIER
 
     if (composing) {
         mDispatcher->SetPendingComposition(string, mIMERanges);
@@ -1046,10 +1057,18 @@ GeckoEditableSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
         return;
     }
 
+    // XXX This works fine if user inputs with virtual keyboard.  However,
+    //     if user inputs with hardware keyboard, keyup event may come later.
+    //     So, perhaps, we need to record actual keyboard events before
+    //     this replacement of composition string.
+#ifndef EARLY_BETA_OR_EARLIER
     if (mInputContext.mMayBeIMEUnaware) {
+#endif // #ifndef EARLY_BETA_OR_EARLIER
         SendIMEDummyKeyEvent(widget, eKeyUp);
         // Widget may be destroyed after dispatching the above event.
+#ifndef EARLY_BETA_OR_EARLIER
     }
+#endif // #ifndef EARLY_BETA_OR_EARLIER
 }
 
 void
