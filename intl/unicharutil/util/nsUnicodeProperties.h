@@ -119,7 +119,11 @@ inline uint32_t
 GetScriptTagForCode(Script aScriptCode)
 {
   const char* tag = uscript_getShortName(UScriptCode(aScriptCode));
-  return HB_TAG(tag[0], tag[1], tag[2], tag[3]);
+  if (tag) {
+    return HB_TAG(tag[0], tag[1], tag[2], tag[3]);
+  }
+  // return UNKNOWN script tag (running with older ICU?)
+  return HB_SCRIPT_UNKNOWN;
 }
 
 inline PairedBracketType
