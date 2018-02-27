@@ -12,8 +12,6 @@ import subprocess
 import sys
 import re
 import os
-import pty
-import termios
 from StringIO import StringIO
 
 objdump_section_re = re.compile(
@@ -255,7 +253,7 @@ file_stuff = {}
 
 
 def addressToSymbol(file, address):
-    if not file in file_stuff:
+    if file not in file_stuff:
         debug_file = separate_debug_file_for(file) or file
 
         # Start an addr2line process for this file. Note that addr2line

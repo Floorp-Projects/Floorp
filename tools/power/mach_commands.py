@@ -11,10 +11,7 @@ from mach.decorators import (
     CommandArgument,
     CommandProvider,
 )
-from mozbuild.base import (
-    MachCommandBase,
-    MachCommandConditions as conditions,
-)
+from mozbuild.base import MachCommandBase
 
 
 def is_osx_10_10_or_greater(cls):
@@ -54,7 +51,7 @@ class MachCommands(MachCommandBase):
         # password to be entered.
         try:
             subprocess.check_call(['sudo', 'true'])
-        except:
+        except Exception:
             print('\nsudo failed; aborting')
             return 1
 

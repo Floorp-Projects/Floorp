@@ -59,7 +59,6 @@ def MergeProfiles(files):
                         stringTable[i] = newLoc
                         symTable[newLoc] = str
             else:
-                samples = thread['samples']
                 for sample in thread['samples']:
                     for frame in sample['frames']:
                         if "location" in frame and frame['location'][0:2] == '0x':

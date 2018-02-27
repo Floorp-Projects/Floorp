@@ -55,7 +55,7 @@ address_adjustments = {}
 
 
 def address_adjustment(file):
-    if not file in address_adjustments:
+    if file not in address_adjustments:
         result = None
         otool = subprocess.Popen(["otool", "-l", file], stdout=subprocess.PIPE)
         while True:
@@ -83,7 +83,7 @@ atoses = {}
 
 def addressToSymbol(file, address):
     converter = None
-    if not file in atoses:
+    if file not in atoses:
         debug_file = separate_debug_file_for(file) or file
         converter = unbufferedLineConverter(
             '/usr/bin/xcrun', ['atos', '-arch', 'x86_64', '-o', debug_file])
