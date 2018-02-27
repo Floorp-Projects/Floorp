@@ -850,9 +850,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
     let nextPanelView = PanelView.forNode(viewNode);
     let prevPanelView = PanelView.forNode(previousViewNode);
 
-    if (this._autoResizeWorkaroundTimer)
-      window.clearTimeout(this._autoResizeWorkaroundTimer);
-
     let details = this._transitionDetails = {
       phase: TRANSITION_PHASES.START,
     };
@@ -1007,16 +1004,8 @@ var PanelMultiView = class extends this.AssociatedToNode {
     if (phase >= TRANSITION_PHASES.START) {
       this._panel.removeAttribute("width");
       this._panel.removeAttribute("height");
-      // Myeah, panel layout auto-resizing is a funky thing. We'll wait
-      // another few milliseconds to remove the width and height 'fixtures',
-      // to be sure we don't flicker annoyingly.
-      // NB: HACK! Bug 1363756 is there to fix this.
-      this._autoResizeWorkaroundTimer = this.window.setTimeout(() => {
-        if (!this._viewContainer)
-          return;
-        this._viewContainer.style.removeProperty("height");
-        this._viewContainer.style.removeProperty("width");
-      }, 500);
+      this._viewContainer.style.removeProperty("height");
+      this._viewContainer.style.removeProperty("width");
     }
     if (phase >= TRANSITION_PHASES.PREPARE) {
       this._transitioning = false;
