@@ -45,37 +45,10 @@ RenderCompositorANGLE::~RenderCompositorANGLE()
   MOZ_ASSERT(!mEGLSurface);
 }
 
-ID3D11Device*
-RenderCompositorANGLE::GetDeviceOfEGLDisplay()
-{
-  const auto& egl = &gl::sEGLLibrary;
-
-  // Fetch the D3D11 device.
-  EGLDeviceEXT eglDevice = nullptr;
-  egl->fQueryDisplayAttribEXT(egl->Display(), LOCAL_EGL_DEVICE_EXT, (EGLAttrib*)&eglDevice);
-  MOZ_ASSERT(eglDevice);
-  ID3D11Device* device = nullptr;
-  egl->fQueryDeviceAttribEXT(eglDevice, LOCAL_EGL_D3D11_DEVICE_ANGLE, (EGLAttrib*)&device);
-  if (!device) {
-    gfxCriticalNote << "Failed to get D3D11Device from EGLDisplay";
-    return false;
-  }
-  return device;
-}
-
 bool
 RenderCompositorANGLE::Initialize()
 {
-  const auto& egl = &gl::sEGLLibrary;
-
-  nsCString discardFailureId;
-  if (!egl->EnsureInitialized(/* forceAccel */ true, &discardFailureId)) {
-    gfxCriticalNote << "Failed to load EGL library: " << discardFailureId.get();
-    return false;
-  }
-
-  mDevice = GetDeviceOfEGLDisplay();
-
+  mDevice = gfx::DeviceManagerDx::Get()->GetCompositorDevice();
   if (!mDevice) {
     gfxCriticalNote << "[D3D11] failed to get compositor device.";
     return false;
@@ -169,6 +142,7 @@ RenderCompositorANGLE::Initialize()
 
   // Create GLContext with dummy EGLSurface, the EGLSurface is not used.
   // Instread we override it with EGLSurface of SwapChain's back buffer.
+  nsCString discardFailureId;
   mGL = gl::GLContextProviderEGL::CreateHeadless(flags, &discardFailureId);
   if (!mGL || !mGL->IsANGLE()) {
     gfxCriticalNote << "Failed ANGLE GL context creation for WebRender: " << gfx::hexa(mGL.get());
