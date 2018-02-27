@@ -17,7 +17,6 @@ var { LocalDebuggerTransport, ChildDebuggerTransport, WorkerDebuggerTransport } 
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
 var flags = require("devtools/shared/flags");
-var OldEventEmitter = require("devtools/shared/old-event-emitter");
 var SyncPromise = require("devtools/shared/deprecated-sync-thenables");
 
 DevToolsUtils.defineLazyGetter(this, "DebuggerSocket", () => {
@@ -1399,7 +1398,7 @@ DevToolsUtils.defineLazyGetter(DebuggerServer, "AuthenticationResult", () => {
   return Authentication.AuthenticationResult;
 });
 
-OldEventEmitter.decorate(DebuggerServer);
+EventEmitter.decorate(DebuggerServer);
 
 if (this.exports) {
   exports.DebuggerServer = DebuggerServer;
