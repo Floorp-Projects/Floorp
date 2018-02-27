@@ -19,11 +19,8 @@ class DelayBuffer final
   typedef dom::ChannelInterpretation ChannelInterpretation;
 
 public:
-  // See WebAudioUtils::ComputeSmoothingRate() for frame to frame exponential
-  // |smoothingRate| multiplier.
-  DelayBuffer(double aMaxDelayTicks, double aSmoothingRate)
-    : mSmoothingRate(aSmoothingRate)
-    , mCurrentDelay(-1.0)
+  explicit DelayBuffer(double aMaxDelayTicks)
+    : mCurrentDelay(-1.0)
     // Round the maximum delay up to the next tick.
     , mMaxDelayTicks(ceil(aMaxDelayTicks))
     , mCurrentChunk(0)
@@ -47,8 +44,8 @@ public:
   void Read(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
             AudioBlock* aOutputChunk,
             ChannelInterpretation aChannelInterpretation);
-  // Read a block with a constant delay, which will be smoothed with the
-  // previous delay.  The delay should be >= 0 and <= MaxDelayTicks().
+  // Read a block with a constant delay. The delay should be >= 0 and
+  // <= MaxDelayTicks().
   void Read(double aDelayTicks, AudioBlock* aOutputChunk,
             ChannelInterpretation aChannelInterpretation);
 
@@ -96,7 +93,6 @@ private:
   FallibleTArray<AudioChunk> mChunks;
   // Cache upmixed channel arrays.
   AutoTArray<const float*,GUESS_AUDIO_CHANNELS> mUpmixChannels;
-  double mSmoothingRate;
   // Current delay, in fractional ticks
   double mCurrentDelay;
   // Maximum delay, in ticks
