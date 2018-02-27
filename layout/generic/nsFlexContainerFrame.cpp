@@ -357,17 +357,6 @@ public:
       : aMargin.IStartEnd(mWM);
   }
 
-  // Returns aFrame's computed value for 'height' or 'width' -- whichever is in
-  // the cross-axis. (NOTE: This is cross-axis-specific for now. If we need a
-  // main-axis version as well, we could generalize or clone this function.)
-  const nsStyleCoord& ComputedCrossSize(const nsIFrame* aFrame) const {
-    const nsStylePosition* stylePos = aFrame->StylePosition();
-
-    return IsCrossAxisHorizontal() ?
-      stylePos->mWidth :
-      stylePos->mHeight;
-  }
-
   /**
    * Converts a "flex-relative" point (a main-axis & cross-axis coordinate)
    * into a LogicalPoint, using the flex container's writing mode.
@@ -555,6 +544,9 @@ public:
   // Indicates whether this item received a preliminary "measuring" reflow
   // before its actual reflow.
   bool HadMeasuringReflow() const  { return mHadMeasuringReflow; }
+
+  // Indicates whether this item's computed cross-size property is 'auto'.
+  bool IsCrossSizeAuto() const;
 
   // Indicates whether this item's cross-size has been stretched (from having
   // "align-self: stretch" with an auto cross-size and no auto margins in the
@@ -2000,6 +1992,18 @@ FlexItem::GetBaselineOffsetFromOuterCrossEdge(
   return GetOuterCrossSize(crossAxis) - marginTopToBaseline;
 }
 
+bool
+FlexItem::IsCrossSizeAuto() const
+{
+  const nsStylePosition* stylePos = mFrame->StylePosition();
+  // Check whichever component is in the flex container's cross axis.
+  // (IsInlineAxisCrossAxis() tells us whether that's our ISize or BSize, in
+  // terms of our own WritingMode, mWM.)
+  return eStyleUnit_Auto == (IsInlineAxisCrossAxis()
+                             ? stylePos->ISize(mWM).GetUnit()
+                             : stylePos->BSize(mWM).GetUnit());
+}
+
 uint32_t
 FlexItem::GetNumAutoMarginsInAxis(AxisOrientationType aAxis) const
 {
@@ -3280,7 +3284,7 @@ FlexItem::ResolveStretchedCrossSize(nscoord aLineCrossSize,
   // conditions don't hold up, we won't stretch.
   if (mAlignSelf != NS_STYLE_ALIGN_STRETCH ||
       GetNumAutoMarginsInAxis(crossAxis) != 0 ||
-      eStyleUnit_Auto != aAxisTracker.ComputedCrossSize(mFrame).GetUnit()) {
+      !IsCrossSizeAuto()) {
     return;
   }
 
