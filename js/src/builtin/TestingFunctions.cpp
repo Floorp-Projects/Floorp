@@ -2911,7 +2911,7 @@ const Class CloneBufferObject::class_ = {
 
 const JSPropertySpec CloneBufferObject::props_[] = {
     JS_PSGS("clonebuffer", getCloneBuffer, setCloneBuffer, 0),
-    JS_PSG("arraybuffer", getCloneBufferAsArrayBuffer, 0),
+    JS_PSGS("arraybuffer", getCloneBufferAsArrayBuffer, setCloneBuffer, 0),
     JS_PS_END
 };
 

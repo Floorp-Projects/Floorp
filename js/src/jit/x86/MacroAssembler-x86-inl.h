@@ -1109,6 +1109,8 @@ MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Register boundsC
 {
     cmp32(index, boundsCheckLimit);
     j(cond, label);
+    if (JitOptions.spectreIndexMasking)
+        cmovCCl(cond, Operand(boundsCheckLimit), index);
 }
 
 template <class L>
@@ -1117,6 +1119,8 @@ MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Address boundsCh
 {
     cmp32(index, Operand(boundsCheckLimit));
     j(cond, label);
+    if (JitOptions.spectreIndexMasking)
+        cmovCCl(cond, Operand(boundsCheckLimit), index);
 }
 
 //}}} check_macroassembler_style
