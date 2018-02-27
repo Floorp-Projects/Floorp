@@ -166,11 +166,12 @@ MacroAssemblerMIPS64Compat::movq(Register rs, Register rd)
 }
 
 void
-MacroAssemblerMIPS64::ma_li(Register dest, CodeOffset* label)
+MacroAssemblerMIPS64::ma_li(Register dest, CodeLabel* label)
 {
     BufferOffset bo = m_buffer.nextOffset();
     ma_liPatchable(dest, ImmWord(/* placeholder */ 0));
-    label->bind(bo.getOffset());
+    label->patchAt()->bind(bo.getOffset());
+    label->setLinkMode(CodeLabel::MoveImmediate);
 }
 
 void

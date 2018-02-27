@@ -252,7 +252,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm)
 
         // Push return address.
         masm.subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
-        masm.ma_li(scratch, returnLabel.patchAt());
+        masm.ma_li(scratch, &returnLabel);
         masm.storePtr(scratch, Address(StackPointer, 0));
 
         // Push previous frame pointer.
@@ -324,7 +324,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm)
         masm.movePtr(framePtr, StackPointer);
         masm.addPtr(Imm32(2 * sizeof(uintptr_t)), StackPointer);
         masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
-        masm.ma_li(scratch, oomReturnLabel.patchAt());
+        masm.ma_li(scratch, &oomReturnLabel);
         masm.jump(scratch);
 
         masm.bind(&notOsr);
@@ -342,9 +342,9 @@ JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm)
 
     {
         // Interpreter -> Baseline OSR will return here.
-        masm.bind(returnLabel.target());
+        masm.bind(&returnLabel);
         masm.addCodeLabel(returnLabel);
-        masm.bind(oomReturnLabel.target());
+        masm.bind(&oomReturnLabel);
         masm.addCodeLabel(oomReturnLabel);
     }
 
