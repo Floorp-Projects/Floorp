@@ -136,7 +136,6 @@ class UrlInputFragment :
         activity?.let {
             urlAutoCompleteFilter.load(it.applicationContext)
         }
-
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
