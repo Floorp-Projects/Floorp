@@ -123,10 +123,10 @@ public:
         {*(XPTParamDescriptor*)this = desc;}
 
 
-    bool IsIn()  const    {return 0 != (XPT_PD_IS_IN(flags));}
-    bool IsOut() const    {return 0 != (XPT_PD_IS_OUT(flags));}
-    bool IsRetval() const {return 0 != (XPT_PD_IS_RETVAL(flags));}
-    bool IsShared() const {return 0 != (XPT_PD_IS_SHARED(flags));}
+    bool IsIn() const {return !!(flags & kInMask);}
+    bool IsOut() const {return !!(flags & kOutMask);}
+    bool IsRetval() const {return !!(flags & kRetvalMask);}
+    bool IsShared() const {return !!(flags & kSharedMask);}
 
     // Dipper types are one of the more inscrutable aspects of xpidl. In a
     // nutshell, dippers are empty container objects, created and passed by
@@ -145,8 +145,8 @@ public:
     // masquerading as in'. The burden of maintaining this illusion falls mostly
     // on XPConnect, which creates the empty containers, and harvest the results
     // after the call.
-    bool IsDipper() const {return 0 != (XPT_PD_IS_DIPPER(flags));}
-    bool IsOptional() const {return 0 != (XPT_PD_IS_OPTIONAL(flags));}
+    bool IsDipper() const {return !!(flags & kDipperMask);}
+    bool IsOptional() const {return !!(flags & kOptionalMask);}
     const nsXPTType GetType() const {return type.prefix;}
 
     bool IsStringClass() const {
@@ -170,7 +170,14 @@ public:
     // NOTE: other activities on types are done via methods on nsIInterfaceInfo
 
 private:
-    nsXPTParamInfo();   // no implementation
+    static const uint8_t kInMask =       0x80;
+    static const uint8_t kOutMask =      0x40;
+    static const uint8_t kRetvalMask =   0x20;
+    static const uint8_t kSharedMask =   0x10;
+    static const uint8_t kDipperMask =   0x08;
+    static const uint8_t kOptionalMask = 0x04;
+
+    nsXPTParamInfo() = delete;
 // NO DATA - this a flyweight wrapper
 };
 
