@@ -38,10 +38,10 @@ public:
   // pointer, so it's more obvious that pointers to a ConstructorEnabled
   // can be null.
   typedef bool
-  (ConstructorEnabled)(JSContext* cx, JS::Handle<JSObject*> obj);
+  (*ConstructorEnabled)(JSContext* cx, JS::Handle<JSObject*> obj);
 
   static void Register(uint16_t aNameOffset, uint16_t aNameLength,
-                       DefineGlobalName aDefine, ConstructorEnabled* aEnabled,
+                       DefineGlobalName aDefine, ConstructorEnabled aEnabled,
                        constructors::id::ID aConstructorId);
 
   static void Remove(const char* aName, uint32_t aLength);

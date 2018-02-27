@@ -214,16 +214,16 @@ function parentFrameScript(mm) {
   function* testSteps() {
     let result = yield undefined;
 
-    is(Array.isArray(result), true, "Child delivered an array of results");
+    is(SpecialPowers.Cu.getClassName(result, true), "Array", "Child delivered an array of results");
     is(result.length, 2, "Child delivered two results");
 
     let blob = result[0];
-    is(blob instanceof Blob, true, "Child delivered a blob");
+    is(SpecialPowers.call_Instanceof(blob, Blob), true, "Child delivered a blob");
     is(blob.size, blobText.length, "Blob has correct size");
     is(blob.type, blobType, "Blob has correct type");
 
     let slice = result[1];
-    is(slice instanceof Blob, true, "Child delivered a slice");
+    is(SpecialPowers.call_Instanceof(slice, Blob), true, "Child delivered a slice");
     is(slice.size, blobData[0].length, "Slice has correct size");
     is(slice.type, blobType, "Slice has correct type");
 
@@ -231,7 +231,7 @@ function parentFrameScript(mm) {
 
     let reader = new FileReader();
     reader.onload = grabAndContinue;
-    reader.readAsText(blob);
+    SpecialPowers.wrap(reader).readAsText(blob);
     yield undefined;
 
     is(reader.result, blobText, "Blob has correct data");
@@ -240,14 +240,14 @@ function parentFrameScript(mm) {
 
     reader = new FileReader();
     reader.onload = grabAndContinue;
-    reader.readAsText(slice);
+    SpecialPowers.wrap(reader).readAsText(slice);
     yield undefined;
 
     is(reader.result, blobData[0], "Slice has correct data");
 
     slice = blob.slice(0, blobData[0].length, blobType);
 
-    is(slice instanceof Blob, true, "Made a new slice from blob");
+    is(SpecialPowers.call_Instanceof(slice, Blob), true, "Child delivered a slice");
     is(slice.size, blobData[0].length, "Second slice has correct size");
     is(slice.type, blobType, "Second slice has correct type");
 
@@ -255,7 +255,7 @@ function parentFrameScript(mm) {
 
     reader = new FileReader();
     reader.onload = grabAndContinue;
-    reader.readAsText(slice);
+    SpecialPowers.wrap(reader).readAsText(slice);
     yield undefined;
 
     is(reader.result, blobData[0], "Second slice has correct data");
@@ -266,7 +266,7 @@ function parentFrameScript(mm) {
   let testGenerator = testSteps();
   testGenerator.next();
 
-  mm.addMessageListener(messageName, function(message) {
+  mm.addMessageListener(messageName, SpecialPowers.wrapCallback(function(message) {
     let data = message.data;
     switch (data.op) {
       case "info": {
@@ -289,7 +289,7 @@ function parentFrameScript(mm) {
         SimpleTest.finish();
       }
     }
-  });
+  }));
 
   mm.loadFrameScript("data:,(" + childFrameScript.toString() + ")();",
                       false);

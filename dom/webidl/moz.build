@@ -678,6 +678,7 @@ WEBIDL_FILES = [
     'MenuBoxObject.webidl',
     'MessageChannel.webidl',
     'MessageEvent.webidl',
+    'MessageManager.webidl',
     'MessagePort.webidl',
     'MIDIAccess.webidl',
     'MIDIInput.webidl',
