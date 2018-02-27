@@ -8082,18 +8082,13 @@ var gIdentityHandler = {
       classes += " in-use";
 
       // Synchronize control center and identity block blinking animations.
-      window.promiseDocumentFlushed(() => {}).then(() => {
+      window.promiseDocumentFlushed(() => {
         let sharingIconBlink = document.getElementById("sharing-icon").getAnimations()[0];
-        if (sharingIconBlink) {
-          let startTime = sharingIconBlink.startTime;
-          window.requestAnimationFrame(() => {
-            // TODO(Bug 1440607): This could cause a style flush, but putting
-            // the getAnimations() call outside of rAF causes a leak.
-            let imgBlink = img.getAnimations()[0];
-            if (imgBlink) {
-              imgBlink.startTime = startTime;
-            }
-          });
+        let imgBlink = img.getAnimations()[0];
+        return [sharingIconBlink, imgBlink];
+      }).then(([sharingIconBlink, imgBlink]) => {
+        if (sharingIconBlink && imgBlink) {
+          imgBlink.startTime = sharingIconBlink.startTime;
         }
       });
     }
