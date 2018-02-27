@@ -198,7 +198,6 @@ struct hb_ot_map_builder_t
   private:
 
   HB_INTERNAL void add_lookups (hb_ot_map_t  &m,
-				hb_face_t    *face,
 				unsigned int  table_index,
 				unsigned int  feature_index,
 				unsigned int  variations_index,

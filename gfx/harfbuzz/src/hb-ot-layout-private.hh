@@ -90,12 +90,12 @@ hb_ot_layout_substitute_start (hb_font_t    *font,
 struct hb_ot_layout_lookup_accelerator_t;
 
 namespace OT {
-  struct hb_apply_context_t;
+  struct hb_ot_apply_context_t;
   struct SubstLookup;
 }
 
 HB_INTERNAL void
-hb_ot_layout_substitute_lookup (OT::hb_apply_context_t *c,
+hb_ot_layout_substitute_lookup (OT::hb_ot_apply_context_t *c,
 				const OT::SubstLookup &lookup,
 				const hb_ot_layout_lookup_accelerator_t &accel);
 
@@ -128,6 +128,10 @@ namespace OT {
   struct MATH;
   struct fvar;
   struct avar;
+}
+
+namespace AAT {
+  struct morx;
 }
 
 struct hb_ot_layout_lookup_accelerator_t
@@ -165,6 +169,7 @@ struct hb_ot_layout_t
   OT::hb_lazy_table_loader_t<struct OT::MATH> math;
   OT::hb_lazy_table_loader_t<struct OT::fvar> fvar;
   OT::hb_lazy_table_loader_t<struct OT::avar> avar;
+  OT::hb_lazy_table_loader_t<struct AAT::morx> morx;
 
   unsigned int gsub_lookup_count;
   unsigned int gpos_lookup_count;
@@ -280,7 +285,11 @@ _hb_glyph_info_set_unicode_props (hb_glyph_info_t *info, hb_buffer_t *buffer)
       else if (unlikely (hb_in_range (u, 0xE0020u, 0xE007Fu))) props |= UPROPS_MASK_HIDDEN;
       /* COMBINING GRAPHEME JOINER should not be skipped; at least some times.
        * https://github.com/harfbuzz/harfbuzz/issues/554 */
-      else if (unlikely (u == 0x034Fu)) props |= UPROPS_MASK_HIDDEN;
+      else if (unlikely (u == 0x034Fu))
+      {
+	buffer->scratch_flags |= HB_BUFFER_SCRATCH_FLAG_HAS_CGJ;
+	props |= UPROPS_MASK_HIDDEN;
+      }
     }
     else if (unlikely (HB_UNICODE_GENERAL_CATEGORY_IS_NON_ENCLOSING_MARK_OR_MODIFIER_SYMBOL (gen_cat)))
     {
@@ -387,6 +396,11 @@ _hb_glyph_info_is_default_ignorable_and_not_hidden (const hb_glyph_info_t *info)
   return ((info->unicode_props() & (UPROPS_MASK_IGNORABLE|UPROPS_MASK_HIDDEN))
 	  == UPROPS_MASK_IGNORABLE) &&
 	 !_hb_glyph_info_ligated (info);
+}
+static inline void
+_hb_glyph_info_unhide (hb_glyph_info_t *info)
+{
+  info->unicode_props() &= ~ UPROPS_MASK_HIDDEN;
 }
 
 static inline bool
