@@ -153,7 +153,7 @@ function testVim(name, run, opts, expectedFail) {
           // Record for insert mode.
           if (handled == "handled" && cm.state.vim.insertMode && arguments[i] != 'Esc') {
             var lastChange = CodeMirror.Vim.getVimGlobalState_().macroModeState.lastInsertModeChanges;
-            if (lastChange && (key.includes('Delete') || key.includes('Backspace'))) {
+            if (lastChange && (key.indexOf('Delete') != -1 || key.indexOf('Backspace') != -1)) {
               lastChange.changes.push(new CodeMirror.Vim.InsertModeKey(key));
             }
           }
@@ -255,7 +255,7 @@ function testJumplist(name, keys, endPos, startPos, dialog) {
     helpers.doKeys.apply(null, keys);
     helpers.assertCursorAt(endPos);
   }, {value: jumplistScene});
-};
+}
 testJumplist('jumplist_H', ['H', '<C-o>'], [5,2], [5,2]);
 testJumplist('jumplist_M', ['M', '<C-o>'], [2,2], [2,2]);
 testJumplist('jumplist_L', ['L', '<C-o>'], [2,2], [2,2]);
@@ -299,15 +299,15 @@ function testMotion(name, keys, endPos, startPos) {
     helpers.doKeys(keys);
     helpers.assertCursorAt(endPos);
   });
-};
+}
 
 function makeCursor(line, ch) {
   return new Pos(line, ch);
-};
+}
 
 function offsetCursor(cur, offsetLine, offsetCh) {
   return new Pos(cur.line + offsetLine, cur.ch + offsetCh);
-};
+}
 
 // Motion tests
 testMotion('|', '|', makeCursor(0, 0), makeCursor(0,4));
@@ -3648,6 +3648,11 @@ testVim('ex_substitute_same_line', function(cm, vim, helpers) {
   helpers.doEx('s/one/two/g');
   eq('one one\n two two', cm.getValue());
 }, { value: 'one one\n one one'});
+testVim('ex_substitute_alternate_separator', function(cm, vim, helpers) {
+  cm.setCursor(1, 0);
+  helpers.doEx('s#o/e#two#g');
+  eq('o/e o/e\n two two', cm.getValue());
+}, { value: 'o/e o/e\n o/e o/e'});
 testVim('ex_substitute_full_file', function(cm, vim, helpers) {
   cm.setCursor(1, 0);
   helpers.doEx('%s/one/two/g');
@@ -3904,7 +3909,7 @@ function testSubstituteConfirm(name, command, initialValue, expectedValue, keys,
       cm.openDialog = savedOpenDialog;
     }
   }, { value: initialValue });
-};
+}
 testSubstituteConfirm('ex_substitute_confirm_emptydoc',
     '%s/x/b/c', '', '', '', makeCursor(0, 0));
 testSubstituteConfirm('ex_substitute_confirm_nomatch',

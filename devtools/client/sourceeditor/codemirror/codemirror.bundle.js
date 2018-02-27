@@ -5454,7 +5454,8 @@ var CodeMirror =
 
 	// Revert a change stored in a document's history.
 	function makeChangeFromHistory(doc, type, allowSelectionOnly) {
-	  if (doc.cm && doc.cm.state.suppressEdits && !allowSelectionOnly) { return }
+	  var suppress = doc.cm && doc.cm.state.suppressEdits
+	  if (suppress && !allowSelectionOnly) { return }
 
 	  var hist = doc.history, event, selAfter = doc.sel
 	  var source = type == "undo" ? hist.done : hist.undone, dest = type == "undo" ? hist.undone : hist.done
@@ -5479,8 +5480,10 @@ var CodeMirror =
 	        return
 	      }
 	      selAfter = event
-	    }
-	    else { break }
+	    } else if (suppress) {
+	      source.push(event)
+	      return
+	    } else { break }
 	  }
 
 	  // Build up a reverse change object to add to the opposite history
@@ -5956,7 +5959,7 @@ var CodeMirror =
 	    }
 	    return true
 	  })
-	  signalLater(cm, "lineWidgetAdded", cm, widget, typeof handle == "number" ? handle : lineNo(handle))
+	  if (cm) { signalLater(cm, "lineWidgetAdded", cm, widget, typeof handle == "number" ? handle : lineNo(handle)) }
 	  return widget
 	}
 
@@ -9892,7 +9895,7 @@ var CodeMirror =
 
 	addLegacyProps(CodeMirror)
 
-	CodeMirror.version = "5.34.0"
+	CodeMirror.version = "5.35.0"
 
 	return CodeMirror;
 
@@ -9923,8 +9926,11 @@ var CodeMirror =
 	      + (regexp.multiline ? "m" : "")
 	  }
 
-	  function ensureGlobal(regexp) {
-	    return regexp.global ? regexp : new RegExp(regexp.source, regexpFlags(regexp) + "g")
+	  function ensureFlags(regexp, flags) {
+	    var current = regexpFlags(regexp), target = current
+	    for (var i = 0; i < flags.length; i++) if (target.indexOf(flags.charAt(i)) == -1)
+	      target += flags.charAt(i)
+	    return current == target ? regexp : new RegExp(regexp.source, target)
 	  }
 
 	  function maybeMultiline(regexp) {
@@ -9932,7 +9938,7 @@ var CodeMirror =
 	  }
 
 	  function searchRegexpForward(doc, regexp, start) {
-	    regexp = ensureGlobal(regexp)
+	    regexp = ensureFlags(regexp, "g")
 	    for (var line = start.line, ch = start.ch, last = doc.lastLine(); line <= last; line++, ch = 0) {
 	      regexp.lastIndex = ch
 	      var string = doc.getLine(line), match = regexp.exec(string)
@@ -9946,7 +9952,7 @@ var CodeMirror =
 	  function searchRegexpForwardMultiline(doc, regexp, start) {
 	    if (!maybeMultiline(regexp)) return searchRegexpForward(doc, regexp, start)
 
-	    regexp = ensureGlobal(regexp)
+	    regexp = ensureFlags(regexp, "gm")
 	    var string, chunk = 1
 	    for (var line = start.line, last = doc.lastLine(); line <= last;) {
 	      // This grows the search buffer in exponentially-sized chunks
@@ -9955,6 +9961,7 @@ var CodeMirror =
 	      // searching for something that has tons of matches), but at the
 	      // same time, the amount of retries is limited.
 	      for (var i = 0; i < chunk; i++) {
+	        if (line > last) break
 	        var curLine = doc.getLine(line++)
 	        string = string == null ? curLine : string + "\n" + curLine
 	      }
@@ -9985,7 +9992,7 @@ var CodeMirror =
 	  }
 
 	  function searchRegexpBackward(doc, regexp, start) {
-	    regexp = ensureGlobal(regexp)
+	    regexp = ensureFlags(regexp, "g")
 	    for (var line = start.line, ch = start.ch, first = doc.firstLine(); line >= first; line--, ch = -1) {
 	      var string = doc.getLine(line)
 	      if (ch > -1) string = string.slice(0, ch)
@@ -9998,7 +10005,7 @@ var CodeMirror =
 	  }
 
 	  function searchRegexpBackwardMultiline(doc, regexp, start) {
-	    regexp = ensureGlobal(regexp)
+	    regexp = ensureFlags(regexp, "gm")
 	    var string, chunk = 1
 	    for (var line = start.line, first = doc.firstLine(); line >= first;) {
 	      for (var i = 0; i < chunk; i++) {
@@ -10117,7 +10124,7 @@ var CodeMirror =
 	        return (reverse ? searchStringBackward : searchStringForward)(doc, query, pos, caseFold)
 	      }
 	    } else {
-	      query = ensureGlobal(query)
+	      query = ensureFlags(query, "gm")
 	      if (!options || options.multiline !== false)
 	        this.matches = function(reverse, pos) {
 	          return (reverse ? searchRegexpBackwardMultiline : searchRegexpForwardMultiline)(doc, query, pos)
@@ -11438,6 +11445,7 @@ var CodeMirror =
 	    if (type == "{") return contCommasep(objprop, "}", null, maybeop);
 	    if (type == "quasi") return pass(quasi, maybeop);
 	    if (type == "new") return cont(maybeTarget(noComma));
+	    if (type == "import") return cont(expression);
 	    return cont();
 	  }
 	  function maybeexpression(type) {
@@ -11632,7 +11640,7 @@ var CodeMirror =
 	  }
 	  function afterType(type, value) {
 	    if (value == "<") return cont(pushlex(">"), commasep(typeexpr, ">"), poplex, afterType)
-	    if (value == "|" || type == ".") return cont(typeexpr)
+	    if (value == "|" || type == "." || value == "&") return cont(typeexpr)
 	    if (type == "[") return cont(expect("]"), afterType)
 	    if (value == "extends" || value == "implements") { cx.marked = "keyword"; return cont(typeexpr) }
 	  }
@@ -11675,7 +11683,8 @@ var CodeMirror =
 	  function maybeelse(type, value) {
 	    if (type == "keyword b" && value == "else") return cont(pushlex("form", "else"), statement, poplex);
 	  }
-	  function forspec(type) {
+	  function forspec(type, value) {
+	    if (value == "await") return cont(forspec);
 	    if (type == "(") return cont(pushlex(")"), forspec1, expect(")"), poplex);
 	  }
 	  function forspec1(type) {
@@ -11764,6 +11773,7 @@ var CodeMirror =
 	  }
 	  function afterImport(type) {
 	    if (type == "string") return cont();
+	    if (type == "(") return pass(expression);
 	    return pass(importSpec, maybeMoreImports, maybeFrom);
 	  }
 	  function importSpec(type, value) {
@@ -14416,7 +14426,7 @@ var CodeMirror =
 	    blockKeywords: words("case do else for if switch while struct"),
 	    defKeywords: words("struct"),
 	    typeFirstDefinitions: true,
-	    atoms: words("null true false"),
+	    atoms: words("NULL true false"),
 	    hooks: {"#": cppHook, "*": pointerHook},
 	    modeProps: {fold: ["brace", "include"]}
 	  });
@@ -14432,7 +14442,7 @@ var CodeMirror =
 	    blockKeywords: words("catch class do else finally for if struct switch try while"),
 	    defKeywords: words("class namespace struct enum union"),
 	    typeFirstDefinitions: true,
-	    atoms: words("true false null"),
+	    atoms: words("true false NULL"),
 	    dontIndentStatements: /^template$/,
 	    isIdentifierChar: /[\w\$_~\xa1-\uffff]/,
 	    hooks: {
@@ -14639,22 +14649,24 @@ var CodeMirror =
 	    name: "clike",
 	    keywords: words(
 	      /*keywords*/
-	      "package as typealias class interface this super val " +
-	      "var fun for is in This throw return " +
+	      "package as typealias class interface this super val operator " +
+	      "var fun for is in This throw return annotation " +
 	      "break continue object if else while do try when !in !is as? " +
 
 	      /*soft keywords*/
 	      "file import where by get set abstract enum open inner override private public internal " +
 	      "protected catch finally out final vararg reified dynamic companion constructor init " +
 	      "sealed field property receiver param sparam lateinit data inline noinline tailrec " +
-	      "external annotation crossinline const operator infix suspend actual expect"
+	      "external annotation crossinline const operator infix suspend actual expect setparam"
 	    ),
 	    types: words(
 	      /* package java.lang */
 	      "Boolean Byte Character CharSequence Class ClassLoader Cloneable Comparable " +
 	      "Compiler Double Exception Float Integer Long Math Number Object Package Pair Process " +
 	      "Runtime Runnable SecurityManager Short StackTraceElement StrictMath String " +
-	      "StringBuffer System Thread ThreadGroup ThreadLocal Throwable Triple Void"
+	      "StringBuffer System Thread ThreadGroup ThreadLocal Throwable Triple Void Annotation Any BooleanArray " +
+	      "ByteArray Char CharArray DeprecationLevel DoubleArray Enum FloatArray Function Int IntArray Lazy " +
+	      "LazyThreadSafetyMode LongArray Nothing ShortArray Unit"
 	    ),
 	    intendSwitch: false,
 	    indentStatements: false,
@@ -16448,7 +16460,7 @@ var CodeMirror =
 	        }
 
 	        function handleKeyNonInsertMode() {
-	          if (handleMacroRecording() || handleEsc()) { return true; };
+	          if (handleMacroRecording() || handleEsc()) { return true; }
 
 	          var keys = vim.inputState.keyBuffer = vim.inputState.keyBuffer + key;
 	          if (/^[1-9]\d*$/.test(keys)) { return true; }
@@ -17033,7 +17045,7 @@ var CodeMirror =
 	        } else {
 	          if (vim.visualMode) {
 	            showPrompt(cm, { onClose: onPromptClose, prefix: ':', value: '\'<,\'>',
-	                onKeyDown: onPromptKeyDown});
+	                onKeyDown: onPromptKeyDown, selectValueOnOpen: false});
 	          } else {
 	            showPrompt(cm, { onClose: onPromptClose, prefix: ':',
 	                onKeyDown: onPromptKeyDown});
@@ -19290,7 +19302,15 @@ var CodeMirror =
 	      }
 	    }
 	    function splitBySlash(argString) {
-	      var slashes = findUnescapedSlashes(argString) || [];
+	      return splitBySeparator(argString, '/');
+	    }
+
+	    function findUnescapedSlashes(argString) {
+	      return findUnescapedSeparators(argString, '/');
+	    }
+
+	    function splitBySeparator(argString, separator) {
+	      var slashes = findUnescapedSeparators(argString, separator) || [];
 	      if (!slashes.length) return [];
 	      var tokens = [];
 	      // in case of strings like foo/bar
@@ -19302,12 +19322,15 @@ var CodeMirror =
 	      return tokens;
 	    }
 
-	    function findUnescapedSlashes(str) {
+	    function findUnescapedSeparators(str, separator) {
+	      if (!separator)
+	        separator = '/';
+
 	      var escapeNextChar = false;
 	      var slashes = [];
 	      for (var i = 0; i < str.length; i++) {
 	        var c = str.charAt(i);
-	        if (!escapeNextChar && c == '/') {
+	        if (!escapeNextChar && c == separator) {
 	          slashes.push(i);
 	        }
 	        escapeNextChar = !escapeNextChar && (c == '\\');
@@ -20173,7 +20196,7 @@ var CodeMirror =
 	              'any other getSearchCursor implementation.');
 	        }
 	        var argString = params.argString;
-	        var tokens = argString ? splitBySlash(argString) : [];
+	        var tokens = argString ? splitBySeparator(argString, argString[0]) : [];
 	        var regexPart, replacePart = '', trailing, flagsPart, count;
 	        var confirm = false; // Whether to confirm each replace.
 	        var global = false; // True to replace all instances on a line, false to replace only 1.
@@ -20217,7 +20240,7 @@ var CodeMirror =
 	              global = true;
 	              flagsPart.replace('g', '');
 	            }
-	            regexPart = regexPart + '/' + flagsPart;
+	            regexPart = regexPart.replace(/\//g, "\\/") + '/' + flagsPart;
 	          }
 	        }
 	        if (regexPart) {
@@ -20433,7 +20456,7 @@ var CodeMirror =
 	      }
 	      if (!confirm) {
 	        replaceAll();
-	        if (callback) { callback(); };
+	        if (callback) { callback(); }
 	        return;
 	      }
 	      showPrompt(cm, {
@@ -20569,7 +20592,7 @@ var CodeMirror =
 	            exitInsertMode(cm);
 	          }
 	        }
-	      };
+	      }
 	      macroModeState.isPlaying = false;
 	    }
 
@@ -20773,7 +20796,7 @@ var CodeMirror =
 	        exitInsertMode(cm);
 	      }
 	      macroModeState.isPlaying = false;
-	    };
+	    }
 
 	    function repeatInsertModeChanges(cm, changes, repeat) {
 	      function keyHandler(binding) {
@@ -20988,8 +21011,14 @@ var CodeMirror =
 	    var ranges = cm.listSelections(), newRanges = [];
 	    for (var i = 0; i < ranges.length; i++) {
 	      var range = ranges[i];
-	      var newAnchor = cm.findPosV(range.anchor, dir, "line");
-	      var newHead = cm.findPosV(range.head, dir, "line");
+	      var newAnchor = cm.findPosV(
+	          range.anchor, dir, "line", range.anchor.goalColumn);
+	      var newHead = cm.findPosV(
+	          range.head, dir, "line", range.head.goalColumn);
+	      newAnchor.goalColumn = range.anchor.goalColumn != null ?
+	          range.anchor.goalColumn : cm.cursorCoords(range.anchor, "div").left;
+	      newHead.goalColumn = range.head.goalColumn != null ?
+	          range.head.goalColumn : cm.cursorCoords(range.head, "div").left;
 	      var newRange = {anchor: newAnchor, head: newHead};
 	      newRanges.push(range);
 	      newRanges.push(newRange);

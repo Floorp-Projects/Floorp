@@ -107,7 +107,7 @@ public final class TextInputController {
         mEditable.setDefaultEditableChild(mEditableChild);
     }
 
-    public void onWindowChanged(final GeckoSession.Window window) {
+    /* package */ void onWindowChanged(final GeckoSession.Window window) {
         if (mQueue.isReady()) {
             window.attachEditable(mEditable, mEditableChild);
         } else {

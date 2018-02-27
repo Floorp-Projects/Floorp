@@ -53,7 +53,6 @@ add_task(async function() {
   await reload(dbg);
   await waitForSource(dbg, "v1");
   await syncBp;
-  await waitForSelectedSource(dbg, "v1");
 
   is(getBreakpoints(dbg).length, 0, "No breakpoints");
 });

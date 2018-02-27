@@ -26,7 +26,7 @@ add_task(async function() {
   const { selectors: { getSelectedSource }, getState } = dbg;
 
   // Make sure the thread is paused in the right source and location
-  await waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
+  await waitForPaused(dbg);
   is(dbg.win.cm.getValue(), "debugger");
   const source = getSelectedSource(getState()).toJS();
   assertPausedLocation(dbg);

@@ -326,8 +326,9 @@ static ArenaAllocator<8192, 1> gPrefNameArena;
 class Pref
 {
 public:
-  explicit Pref()
-    : mType(static_cast<uint32_t>(PrefType::None))
+  explicit Pref(const char* aName)
+    : mName(ArenaStrdup(aName, gPrefNameArena))
+    , mType(static_cast<uint32_t>(PrefType::None))
     , mIsSticky(false)
     , mIsLocked(false)
     , mHasDefaultValue(false)
@@ -340,9 +341,14 @@ public:
 
   ~Pref()
   {
+    // There's no need to free mName because it's allocated in memory owned by
+    // gPrefNameArena.
+
     mDefaultValue.Clear(Type());
     mUserValue.Clear(Type());
   }
+
+  const char* Name() { return mName; }
 
   // Types.
 
@@ -394,6 +400,15 @@ public:
   }
 
   // Other operations.
+
+  bool MatchEntry(const char* aPrefName)
+  {
+    if (!mName || !aPrefName) {
+      return false;
+    }
+
+    return strcmp(mName, aPrefName) == 0;
+  }
 
   nsresult GetBoolValue(PrefValueKind aKind, bool* aResult)
   {
@@ -454,16 +469,11 @@ public:
     return NS_OK;
   }
 
-  // Fills out a dom pref with the values from this pref.
-  // @param aDomPref The pref to update.
-  // @param aName Optional. Override the dom pref's name with aName.
-  void ToDomPref(dom::Pref* aDomPref, const char* aName = nullptr)
+  void ToDomPref(dom::Pref* aDomPref)
   {
     MOZ_ASSERT(XRE_IsParentProcess());
 
-    if (aName) {
-      aDomPref->name() = aName;
-    }
+    aDomPref->name() = mName;
 
     aDomPref->isLocked() = mIsLocked;
 
@@ -492,6 +502,7 @@ public:
   void FromDomPref(const dom::Pref& aDomPref, bool* aValueChanged)
   {
     MOZ_ASSERT(!XRE_IsParentProcess());
+    MOZ_ASSERT(strcmp(mName, aDomPref.name().get()) == 0);
 
     mIsLocked = aDomPref.isLocked();
 
@@ -677,6 +688,7 @@ public:
 
   void AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf, PrefsSizes& aSizes)
   {
+    // Note: mName is allocated in gPrefNameArena, measured elsewhere.
     aSizes.mPrefValues += aMallocSizeOf(this);
     if (IsTypeString()) {
       if (mHasDefaultValue) {
@@ -689,6 +701,8 @@ public:
   }
 
 private:
+  const char* mName; // allocated in gPrefNameArena
+
   uint32_t mType : 2;
   uint32_t mIsSticky : 1;
   uint32_t mIsLocked : 1;
@@ -698,6 +712,36 @@ private:
 
   PrefValue mDefaultValue;
   PrefValue mUserValue;
+};
+
+class PrefEntry : public PLDHashEntryHdr
+{
+public:
+  Pref* mPref;  // Note: this is never null in a live entry.
+
+  static bool MatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
+  {
+    auto entry = static_cast<const PrefEntry*>(aEntry);
+    auto prefName = static_cast<const char*>(aKey);
+
+    return entry->mPref->MatchEntry(prefName);
+  }
+
+  static void InitEntry(PLDHashEntryHdr* aEntry, const void* aKey)
+  {
+    auto entry = static_cast<PrefEntry*>(aEntry);
+    auto prefName = static_cast<const char*>(aKey);
+
+    entry->mPref = new Pref(prefName);
+  }
+
+  static void ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
+  {
+    auto entry = static_cast<PrefEntry*>(aEntry);
+
+    delete entry->mPref;
+    entry->mPref = nullptr;
+  }
 };
 
 struct CallbackNode
@@ -725,21 +769,7 @@ struct CallbackNode
   CallbackNode* mNext;
 };
 
-// Hash key that allocates its string from the `gPrefNameArena`. The base class
-// `nsDepCharHashKey` does not own the string data and no copies are made.
-class StringArenaHashKey : public nsDepCharHashKey
-{
-public:
-  explicit StringArenaHashKey(const char* aKey)
-    : nsDepCharHashKey(ArenaStrdup(aKey, gPrefNameArena))
-  {
-  }
-};
-
-// Hashtable used to map names to pref objects. StringArenaHashKey is used to
-// allocate the strings out of an arena.
-using PrefsTable = nsClassHashtable<StringArenaHashKey, Pref>;
-static PrefsTable* gHashTable;
+static PLDHashTable* gHashTable;
 
 // The callback list contains all the priority callbacks followed by the
 // non-priority callbacks. gLastPriorityNode records where the first part ends.
@@ -751,6 +781,14 @@ static bool gIsAnyPrefLocked = false;
 // These are only used during the call to NotifyCallbacks().
 static bool gCallbacksInProgress = false;
 static bool gShouldCleanupDeadNodes = false;
+
+static PLDHashTableOps pref_HashTableOps = {
+  PLDHashTable::HashStringKey,
+  PrefEntry::MatchEntry,
+  PLDHashTable::MoveEntryStub,
+  PrefEntry::ClearEntry,
+  PrefEntry::InitEntry,
+};
 
 static Pref*
 pref_HashTableLookup(const char* aPrefName);
@@ -765,10 +803,10 @@ pref_savePrefs()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  PrefSaveData savedPrefs(gHashTable->Count());
+  PrefSaveData savedPrefs(gHashTable->EntryCount());
 
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    Pref* pref = iter.Data();
+    Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
 
     nsAutoCString prefValueStr;
     if (!pref->UserValueToStringForSaving(prefValueStr)) {
@@ -776,7 +814,7 @@ pref_savePrefs()
     }
 
     nsAutoCString prefNameStr;
-    StrEscape(iter.Key(), prefNameStr);
+    StrEscape(pref->Name(), prefNameStr);
 
     nsPrintfCString str(
       "user_pref(%s, %s);", prefNameStr.get(), prefValueStr.get());
@@ -827,7 +865,7 @@ IsEarlyPref(const char* aPrefName)
 
 #endif // DEBUG
 
-static PrefsTable::LookupResult
+static PrefEntry*
 pref_HashTableLookupInner(const char* aPrefName)
 {
   MOZ_ASSERT(NS_IsMainThread() || mozilla::ServoStyleSet::IsInServoTraversal());
@@ -850,14 +888,14 @@ pref_HashTableLookupInner(const char* aPrefName)
   }
 #endif
 
-  return gHashTable->Lookup(aPrefName);
+  return static_cast<PrefEntry*>(gHashTable->Search(aPrefName));
 }
 
 static Pref*
 pref_HashTableLookup(const char* aPrefName)
 {
-  PrefsTable::LookupResult entry = pref_HashTableLookupInner(aPrefName);
-  return entry ? static_cast<Pref*>(entry.Data()) : nullptr;
+  PrefEntry* entry = pref_HashTableLookupInner(aPrefName);
+  return entry ? entry->mPref : nullptr;
 }
 
 static nsresult
@@ -874,7 +912,12 @@ pref_SetPref(const char* aPrefName,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  Pref* pref = gHashTable->LookupOrAdd(aPrefName);
+  auto entry = static_cast<PrefEntry*>(gHashTable->Add(aPrefName, fallible));
+  if (!entry) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  Pref* pref = entry->mPref;
   if (pref->IsTypeNone()) {
     // New entry. Set the type.
     pref->SetType(aType);
@@ -1987,11 +2030,13 @@ nsPrefBranch::DeleteBranch(const char* aStartingAt)
     Substring(branchName, 0, branchName.Length() - 1);
 
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
+    Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
+
     // The first disjunct matches branches: e.g. a branch name "foo.bar."
     // matches a name "foo.bar.baz" (but it won't match "foo.barrel.baz").
     // The second disjunct matches leaf nodes: e.g. a branch name "foo.bar."
     // matches a name "foo.bar" (by ignoring the trailing '.').
-    nsDependentCString name(iter.Key());
+    nsDependentCString name(pref->Name());
     if (StringBeginsWith(name, branchName) || name.Equals(branchNameNoDot)) {
       iter.Remove();
     }
@@ -2026,8 +2071,9 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
   const PrefName& parent = GetPrefName(aStartingAt);
   size_t parentLen = parent.Length();
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    if (strncmp(iter.Key(), parent.get(), parentLen) == 0) {
-      prefArray.AppendElement(iter.Key());
+    Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
+    if (strncmp(pref->Name(), parent.get(), parentLen) == 0) {
+      prefArray.AppendElement(pref->Name());
     }
   }
 
@@ -2639,7 +2685,7 @@ PreferenceServiceReporter::CollectReports(
   if (gHashTable) {
     sizes.mHashTable += gHashTable->ShallowSizeOfIncludingThis(mallocSizeOf);
     for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-      Pref* pref = iter.Data();
+      Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
       pref->AddSizeOfIncludingThis(mallocSizeOf, sizes);
     }
   }
@@ -2832,7 +2878,8 @@ Preferences::GetInstanceForService()
   sPreferences = new Preferences();
 
   MOZ_ASSERT(!gHashTable);
-  gHashTable = new PrefsTable(PREF_HASHTABLE_INITIAL_LENGTH);
+  gHashTable = new PLDHashTable(
+    &pref_HashTableOps, sizeof(PrefEntry), PREF_HASHTABLE_INITIAL_LENGTH);
 
   gTelemetryLoadData =
     new nsDataHashtable<nsCStringHashKey, TelemetryLoadData>();
@@ -3087,7 +3134,7 @@ Preferences::ResetPrefs()
 {
   ENSURE_PARENT_PROCESS("Preferences::ResetPrefs", "all prefs");
 
-  gHashTable->Clear();
+  gHashTable->ClearAndPrepareForLength(PREF_HASHTABLE_INITIAL_LENGTH);
   gPrefNameArena.Clear();
 
   return InitInitialObjects().isOk() ? NS_OK : NS_ERROR_FAILURE;
@@ -3102,10 +3149,10 @@ Preferences::ResetUserPrefs()
 
   Vector<const char*> prefNames;
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    Pref* pref = iter.Data();
+    Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
 
     if (pref->HasUserValue()) {
-      if (!prefNames.append(iter.Key())) {
+      if (!prefNames.append(pref->Name())) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
@@ -3179,7 +3226,12 @@ Preferences::SetPreference(const dom::Pref& aDomPref)
 
   const char* prefName = aDomPref.name().get();
 
-  Pref* pref = gHashTable->LookupOrAdd(prefName);
+  auto entry = static_cast<PrefEntry*>(gHashTable->Add(prefName, fallible));
+  if (!entry) {
+    return;
+  }
+
+  Pref* pref = entry->mPref;
 
   bool valueChanged = false;
   pref->FromDomPref(aDomPref, &valueChanged);
@@ -3195,7 +3247,7 @@ Preferences::SetPreference(const dom::Pref& aDomPref)
   //   needlessly, but that's ok because this case is rare.
   //
   if (!pref->HasDefaultValue() && !pref->HasUserValue()) {
-    gHashTable->Remove(prefName);
+    gHashTable->RemoveEntry(entry);
   }
 
   // Note: we don't have to worry about HandleDirty() because we are setting
@@ -3223,9 +3275,9 @@ Preferences::GetPreferences(InfallibleTArray<dom::Pref>* aDomPrefs)
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  aDomPrefs->SetCapacity(gHashTable->Count());
+  aDomPrefs->SetCapacity(gHashTable->EntryCount());
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    Pref* pref = iter.Data();
+    Pref* pref = static_cast<PrefEntry*>(iter.Get())->mPref;
 
     if (!pref->MustSendToContentProcesses()) {
       // The pref value hasn't changed since it was initialized at startup.
@@ -3236,7 +3288,7 @@ Preferences::GetPreferences(InfallibleTArray<dom::Pref>* aDomPrefs)
 
     if (pref->HasAdvisablySizedValues()) {
       dom::Pref* setting = aDomPrefs->AppendElement();
-      pref->ToDomPref(setting, iter.Key());
+      pref->ToDomPref(setting);
     }
   }
 }
@@ -4132,13 +4184,13 @@ Preferences::ClearUserInAnyProcess(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  PrefsTable::LookupResult entry = pref_HashTableLookupInner(aPrefName);
+  PrefEntry* entry = pref_HashTableLookupInner(aPrefName);
   Pref* pref;
-  if (entry && (pref = entry.Data()) && pref->HasUserValue()) {
+  if (entry && (pref = entry->mPref) && pref->HasUserValue()) {
     pref->ClearUserValue();
 
     if (!pref->HasDefaultValue()) {
-      entry.Remove();
+      gHashTable->RemoveEntry(entry);
     }
 
     NotifyCallbacks(aPrefName);

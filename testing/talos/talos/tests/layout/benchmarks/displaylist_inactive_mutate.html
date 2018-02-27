@@ -2,6 +2,7 @@
 <head>
 <style>
   div {
+    transform: translate(1px);
     width:10px;
     height:10px;
     background-color:green;
@@ -14,7 +15,7 @@
 <script>
 
 var start = null;
-var divCount = 10000;
+var divCount = 1000;
 var maxIterations = 600;
 
 for (var i = 0; i < divCount; i++) {
@@ -44,7 +45,7 @@ function runFrame() {
 }
 
 addEventListener("load", function() {
-  TalosContentProfiler.resume("displaylist_mutate.html loaded", true).then(() => {
+  TalosContentProfiler.resume("displaylist_inactive_mutate.html loaded", true).then(() => {
     start = performance.now();
     window.requestAnimationFrame(runFrame);
   });

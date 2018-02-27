@@ -14236,6 +14236,9 @@ class MWasmBoundsCheck
     {
         // Bounds check is effectful: it throws for OOB.
         setGuard();
+
+        if (JitOptions.spectreIndexMasking)
+            setResultType(MIRType::Int32);
     }
 
   public:

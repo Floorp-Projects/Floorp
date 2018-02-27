@@ -121,7 +121,7 @@ SOURCES += [
 # rule stated in the test/ directory, but it's the only way this will work.
 # Test classes are only built in debug mode, and all tests requiring use of
 # them are only run in debug mode.
-if CONFIG['MOZ_DEBUG']:
+if CONFIG['MOZ_DEBUG'] and CONFIG['ENABLE_TESTS']:
     EXPORTS.mozilla.dom += [
         "test/TestFunctions.h",
         "test/TestInterfaceIterableDouble.h",

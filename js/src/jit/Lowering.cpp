@@ -4532,9 +4532,16 @@ LIRGenerator::visitWasmBoundsCheck(MWasmBoundsCheck* ins)
     MDefinition* boundsCheckLimit = ins->boundsCheckLimit();
     MOZ_ASSERT(boundsCheckLimit->type() == MIRType::Int32);
 
-    auto* lir = new(alloc()) LWasmBoundsCheck(useRegisterAtStart(index),
-                                              useRegisterAtStart(boundsCheckLimit));
-    add(lir, ins);
+
+    if (JitOptions.spectreIndexMasking) {
+        auto* lir = new(alloc()) LWasmBoundsCheck(useRegisterAtStart(index),
+                                                  useRegister(boundsCheckLimit));
+        defineReuseInput(lir, ins, 0);
+    } else {
+        auto* lir = new(alloc()) LWasmBoundsCheck(useRegisterAtStart(index),
+                                                  useRegisterAtStart(boundsCheckLimit));
+        add(lir, ins);
+    }
 #endif
 }
 

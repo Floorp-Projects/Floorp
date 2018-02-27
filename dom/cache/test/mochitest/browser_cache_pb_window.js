@@ -70,6 +70,30 @@ function testKeys(browser) {
   });
 }
 
+function testOpen_worker(browser) {
+  return ContentTask.spawn(browser, {}, function() {
+    let workerFunctionString = function () {
+      caches.open("pb-worker-cache").then(function(cacheObject) {
+        postMessage(cacheObject.toString());
+      }, function (reason) {
+        postMessage(reason.name);
+      });
+    }.toString();
+    let workerBlobURL = content.URL.createObjectURL(
+      new Blob(['(', workerFunctionString, ')()'],
+               { type : 'application/javascript' }));
+    let worker = new content.Worker(workerBlobURL);
+    content.URL.revokeObjectURL(workerBlobURL);
+    return new Promise(function(resolve, reject) {
+      worker.addEventListener("message", function (e) {
+        let isGood = (e.data === "SecurityError");
+        ok(isGood, "caches.open() should throw SecurityError from worker");
+        isGood ? resolve() : reject();
+      });
+    });
+  });
+}
+
 function test() {
   let privateWin, privateTab;
   waitForExplicitFinish();
@@ -88,6 +112,7 @@ function test() {
       testOpen(privateTab.linkedBrowser),
       testDelete(privateTab.linkedBrowser),
       testKeys(privateTab.linkedBrowser),
+      testOpen_worker(privateTab.linkedBrowser),
     ]);
   }).then(() => {
     return BrowserTestUtils.closeWindow(privateWin);
