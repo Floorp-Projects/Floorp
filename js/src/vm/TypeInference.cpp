@@ -4307,6 +4307,8 @@ ObjectGroup::sweep(AutoClearTypeInferenceStateOnOOM* oom)
     Maybe<AutoClearTypeInferenceStateOnOOM> fallbackOOM;
     EnsureHasAutoClearTypeInferenceStateOnOOM(oom, zone(), fallbackOOM);
 
+    AutoTouchingGrayThings tgt;
+
     if (maybeUnboxedLayout()) {
         // Remove unboxed layouts that are about to be finalized from the
         // compartment wide list while we are still on the active thread.
