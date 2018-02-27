@@ -211,6 +211,9 @@ RegisterErrorTable()
     { "MOZILLA_PKIX_ERROR_EMPTY_ISSUER_NAME",
       "The server presented a certificate with an empty issuer distinguished "
       "name." },
+    { "MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED",
+      "An additional policy constraint failed when validating this "
+      "certificate." },
   };
   // Note that these error strings are not localizable.
   // When these strings change, update the localization information too.
