@@ -404,29 +404,32 @@ add_task(async function test_tracker_sql_batching() {
 
   const SQLITE_MAX_VARIABLE_NUMBER = 999;
   let numItems = SQLITE_MAX_VARIABLE_NUMBER * 2 + 10;
-  let createdIDs = [];
 
   await startTracking();
 
-  PlacesUtils.bookmarks.runInBatchMode({
-    runBatched() {
-      for (let i = 0; i < numItems; i++) {
-        let syncBmkID = PlacesUtils.bookmarks.insertBookmark(
-                          PlacesUtils.bookmarks.unfiledBookmarksFolder,
-                          CommonUtils.makeURI("https://example.org/" + i),
-                          PlacesUtils.bookmarks.DEFAULT_INDEX,
-                          "Sync Bookmark " + i);
-        createdIDs.push(syncBmkID);
-      }
-    }
-  }, null);
+  let children = [];
+  for (let i = 0; i < numItems; i++) {
+    children.push({
+      url: "https://example.org/" + i,
+      title: "Sync Bookmark " + i
+    });
+  }
+  let inserted = await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.unfiledGuid,
+    children: [{
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      children
+    }]
+  });
 
-  Assert.equal(createdIDs.length, numItems);
-  await verifyTrackedCount(numItems + 1); // the folder is also tracked.
+
+  Assert.equal(children.length, numItems);
+  Assert.equal(inserted.length, numItems + 1);
+  await verifyTrackedCount(numItems + 2); // The parent and grandparent are also tracked.
   await resetTracker();
 
-  PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarks.unfiledBookmarksFolder);
-  await verifyTrackedCount(numItems + 1);
+  await PlacesUtils.bookmarks.remove(inserted[0]);
+  await verifyTrackedCount(numItems + 2);
 
   await cleanup();
 });
@@ -1403,48 +1406,6 @@ add_task(async function test_async_onItemDeleted_eraseEverything() {
                               tbBmk.guid, "unfiled", bzBmk.guid,
                               bugsGrandChildBmk.guid]);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 8);
-  } finally {
-    _("Clean up.");
-    await cleanup();
-  }
-});
-
-add_task(async function test_onItemDeleted_removeFolderChildren() {
-  _("Removing a folder's children should track the folder and its children");
-
-  try {
-    let fx_id = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.mobileFolderId,
-      CommonUtils.makeURI("http://getfirefox.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Firefox!");
-    let fx_guid = await PlacesUtils.promiseItemGuid(fx_id);
-    _(`Firefox GUID: ${fx_guid}`);
-
-    let tb_id = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.mobileFolderId,
-      CommonUtils.makeURI("http://getthunderbird.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Thunderbird!");
-    let tb_guid = await PlacesUtils.promiseItemGuid(tb_id);
-    _(`Thunderbird GUID: ${tb_guid}`);
-
-    let moz_id = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      CommonUtils.makeURI("https://mozilla.org"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Mozilla"
-    );
-    let moz_guid = await PlacesUtils.promiseItemGuid(moz_id);
-    _(`Mozilla GUID: ${moz_guid}`);
-
-    await startTracking();
-
-    _(`Mobile root ID: ${PlacesUtils.mobileFolderId}`);
-    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.mobileFolderId);
-
-    await verifyTrackedItems(["mobile", fx_guid, tb_guid]);
-    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
   } finally {
     _("Clean up.");
     await cleanup();

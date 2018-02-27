@@ -85,6 +85,11 @@ PlacesController.prototype = {
    */
   _view: null,
 
+  // This is used in certain views to disable user actions on the places tree
+  // views. This avoids accidental deletion/modification when the user is not
+  // actually organising the trees.
+  disableUserActions: false,
+
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIClipboardOwner
   ]),
@@ -99,6 +104,9 @@ PlacesController.prototype = {
   },
 
   supportsCommand: function PC_supportsCommand(aCommand) {
+    if (this.disableUserActions) {
+      return false;
+    }
     // Non-Places specific commands that we also support
     switch (aCommand) {
     case "cmd_undo":

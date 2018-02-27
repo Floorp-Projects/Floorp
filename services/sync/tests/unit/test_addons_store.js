@@ -70,14 +70,14 @@ function createAndStartHTTPServer(port) {
     let bootstrap1XPI = ExtensionsTestPath("/addons/test_bootstrap1_1.xpi");
 
     server.registerFile("/search/guid:bootstrap1%40tests.mozilla.org",
-                        do_get_file("bootstrap1-search.xml"));
+                        do_get_file("bootstrap1-search.json"));
     server.registerFile("/bootstrap1.xpi", do_get_file(bootstrap1XPI));
 
     server.registerFile("/search/guid:missing-xpi%40tests.mozilla.org",
-                        do_get_file("missing-xpi-search.xml"));
+                        do_get_file("missing-xpi-search.json"));
 
     server.registerFile("/search/guid:system1%40tests.mozilla.org",
-                        do_get_file("systemaddon-search.xml"));
+                        do_get_file("systemaddon-search.json"));
     server.registerFile("/system.xpi", systemAddonFile);
 
     server.start(port);

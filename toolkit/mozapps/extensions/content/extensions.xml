@@ -1342,8 +1342,8 @@
 
           this.setAttribute("active", this.mAddon.isActive);
 
-          var showProgress = this.mAddon.purchaseURL || (this.mAddon.install &&
-                             this.mAddon.install.state != AddonManager.STATE_INSTALLED);
+          var showProgress = (this.mAddon.install &&
+                              this.mAddon.install.state != AddonManager.STATE_INSTALLED);
           this._showStatus(showProgress ? "progress" : "none");
 
           if (this.mAddon.type == "experiment") {

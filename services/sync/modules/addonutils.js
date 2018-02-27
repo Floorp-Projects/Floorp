@@ -202,19 +202,9 @@ AddonUtilsInternal.prototype = {
       ids.push(addon.id);
     }
 
-    const {addons, addonsLength} = await new Promise((res, rej) => {
-      AddonRepository.getAddonsByIDs(ids, {
-        searchSucceeded: (addons, addonsLength, total) => {
-          res({addons, addonsLength});
-        },
-        searchFailed() {
-          rej(new Error("AddonRepository search failed"));
-        }
-      });
-    });
-
-    this._log.info("Found " + addonsLength + "/" + ids.length +
-                       " add-ons during repository search.");
+    let addons = await AddonRepository.getAddonsByIDs(ids);
+    this._log.info(`Found ${addons.length} / ${ids.length}` +
+                   " add-ons during repository search.");
 
     let ourResult = {
       installedIDs: [],
@@ -223,10 +213,6 @@ AddonUtilsInternal.prototype = {
       skipped:      [],
       errors:       []
     };
-
-    if (!addonsLength) {
-      return ourResult;
-    }
 
     let toInstall = [];
 

@@ -12,9 +12,9 @@ add_task(async function copy_toolbar_shortcut() {
 
   let library = await promiseLibrary();
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(async () => {
     library.close();
-    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
+    await PlacesUtils.bookmarks.eraseEverything();
   });
 
   library.PlacesOrganizer.selectLeftPaneBuiltIn("BookmarksToolbar");

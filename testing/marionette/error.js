@@ -54,21 +54,21 @@ this.EXPORTED_SYMBOLS = [
 this.error = {};
 
 /**
- * Check if |val| is an instance of the |Error| prototype.
+ * Check if ``val`` is an instance of the ``Error`` prototype.
  *
  * Because error objects may originate from different globals, comparing
  * the prototype of the left hand side with the prototype property from
- * the right hand side, which is what |instanceof| does, will not work.
+ * the right hand side, which is what ``instanceof`` does, will not work.
  * If the LHS and RHS come from different globals, this check will always
  * fail because the two objects will not have the same identity.
  *
- * Therefore it is not safe to use |instanceof| in any multi-global
- * situation, e.g. in content across multiple Window objects or anywhere
+ * Therefore it is not safe to use ``instanceof`` in any multi-global
+ * situation, e.g. in content across multiple ``Window`` objects or anywhere
  * in chrome scope.
  *
- * This function also contains a special check if |val| is an XPCOM
- * |nsIException| because they are special snowflakes and may indeed
- * cause Firefox to crash if used with |instanceof|.
+ * This function also contains a special check if ``val`` is an XPCOM
+ * ``nsIException`` because they are special snowflakes and may indeed
+ * cause Firefox to crash if used with ``instanceof``.
  *
  * @param {*} val
  *     Any value that should be undergo the test for errorness.
@@ -92,7 +92,15 @@ error.isError = function(val) {
 };
 
 /**
- * Checks if obj is an object in the WebDriverError prototypal chain.
+ * Checks if ``obj`` is an object in the :js:class:`WebDriverError`
+ * prototypal chain.
+ *
+ * @param {*} obj
+ *     Arbitrary object to test.
+ *
+ * @return {boolean}
+ *     True if ``obj`` is of the WebDriverError prototype chain,
+ *     false otherwise.
  */
 error.isWebDriverError = function(obj) {
   return error.isError(obj) &&
@@ -100,17 +108,17 @@ error.isWebDriverError = function(obj) {
 };
 
 /**
- * Ensures error instance is a WebDriverError.
+ * Ensures error instance is a :js:class:`WebDriverError`.
  *
  * If the given error is already in the WebDriverError prototype
- * chain, |err| is returned unmodified.  If it is not, it is wrapped
- * in UnknownError.
+ * chain, ``err`` is returned unmodified.  If it is not, it is wrapped
+ * in :js:class:`UnknownError`.
  *
  * @param {Error} err
  *     Error to conditionally turn into a WebDriverError.
  *
  * @return {WebDriverError}
- *     If |err| is a WebDriverError, it is returned unmodified.
+ *     If ``err`` is a WebDriverError, it is returned unmodified.
  *     Otherwise an UnknownError type is returned.
  */
 error.wrap = function(err) {
@@ -299,6 +307,10 @@ class InvalidArgumentError extends WebDriverError {
   }
 }
 
+/**
+ * An illegal attempt was made to set a cookie under a different
+ * domain than the current page.
+ */
 class InvalidCookieDomainError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -306,6 +318,11 @@ class InvalidCookieDomainError extends WebDriverError {
   }
 }
 
+/**
+ * A command could not be completed because the element is in an
+ * invalid state, e.g. attempting to clear an element that isn't both
+ * editable and resettable.
+ */
 class InvalidElementStateError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -313,6 +330,7 @@ class InvalidElementStateError extends WebDriverError {
   }
 }
 
+/** Argument was an invalid selector. */
 class InvalidSelectorError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -320,6 +338,10 @@ class InvalidSelectorError extends WebDriverError {
   }
 }
 
+/**
+ * Occurs if the given session ID is not in the list of active sessions,
+ * meaning the session either does not exist or that it's not active.
+ */
 class InvalidSessionIDError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -328,6 +350,8 @@ class InvalidSessionIDError extends WebDriverError {
 }
 
 /**
+ * An error occurred while executing JavaScript supplied by the user.
+ *
  * Creates a richly annotated error for an error situation that occurred
  * whilst evaluating injected scripts.
  */
@@ -379,6 +403,10 @@ class JavaScriptError extends WebDriverError {
   }
 }
 
+/**
+ * The target for mouse interaction is not in the browser's viewport
+ * and cannot be brought into that viewport.
+ */
 class MoveTargetOutOfBoundsError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -386,6 +414,10 @@ class MoveTargetOutOfBoundsError extends WebDriverError {
   }
 }
 
+/**
+ * An attempt was made to operate on a modal dialog when one was
+ * not open.
+ */
 class NoAlertOpenError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -393,6 +425,10 @@ class NoAlertOpenError extends WebDriverError {
   }
 }
 
+/**
+ * An element could not be located on the page using the given
+ * search parameters.
+ */
 class NoSuchElementError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -400,6 +436,10 @@ class NoSuchElementError extends WebDriverError {
   }
 }
 
+/**
+ * A command to switch to a frame could not be satisfied because
+ * the frame could not be found.
+ */
 class NoSuchFrameError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -407,6 +447,10 @@ class NoSuchFrameError extends WebDriverError {
   }
 }
 
+/**
+ * A command to switch to a window could not be satisfied because
+ * the window could not be found.
+ */
 class NoSuchWindowError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -414,6 +458,7 @@ class NoSuchWindowError extends WebDriverError {
   }
 }
 
+/** A script did not complete before its timeout expired. */
 class ScriptTimeoutError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -421,6 +466,7 @@ class ScriptTimeoutError extends WebDriverError {
   }
 }
 
+/** A new session could not be created. */
 class SessionNotCreatedError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -428,6 +474,10 @@ class SessionNotCreatedError extends WebDriverError {
   }
 }
 
+/**
+ * A command failed because the referenced element is no longer
+ * attached to the DOM.
+ */
 class StaleElementReferenceError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -435,6 +485,7 @@ class StaleElementReferenceError extends WebDriverError {
   }
 }
 
+/** An operation did not complete before its timeout expired. */
 class TimeoutError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -442,6 +493,7 @@ class TimeoutError extends WebDriverError {
   }
 }
 
+/** A command to set a cookie's value could not be satisfied. */
 class UnableToSetCookieError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -449,6 +501,7 @@ class UnableToSetCookieError extends WebDriverError {
   }
 }
 
+/** A modal dialog was open, blocking this operation. */
 class UnexpectedAlertOpenError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -456,6 +509,10 @@ class UnexpectedAlertOpenError extends WebDriverError {
   }
 }
 
+/**
+ * A command could not be executed because the remote end is not
+ * aware of it.
+ */
 class UnknownCommandError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -463,6 +520,10 @@ class UnknownCommandError extends WebDriverError {
   }
 }
 
+/**
+ * An unknown error occurred in the remote end while processing
+ * the command.
+ */
 class UnknownError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -470,6 +531,10 @@ class UnknownError extends WebDriverError {
   }
 }
 
+/**
+ * Indicates that a command that should have executed properly
+ * cannot be supported for some reason.
+ */
 class UnsupportedOperationError extends WebDriverError {
   constructor(message) {
     super(message);

@@ -24,10 +24,10 @@ function createAndStartHTTPServer(port = HTTP_PORT) {
     let server = new HttpServer();
 
     server.registerFile("/search/guid:missing-sourceuri%40tests.mozilla.org",
-                        do_get_file("missing-sourceuri.xml"));
+                        do_get_file("missing-sourceuri.json"));
 
     server.registerFile("/search/guid:rewrite%40tests.mozilla.org",
-                        do_get_file("rewrite-search.xml"));
+                        do_get_file("rewrite-search.json"));
 
     server.start(port);
 

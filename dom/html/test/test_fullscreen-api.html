@@ -74,6 +74,13 @@ function shouldSkipTest(test) {
     todo(false, `${test} skipped due to bug 1409805`);
     return true;
   }
+
+  if (!SpecialPowers.DOMWindowUtils.isStyledByServo &&
+      test == "file_fullscreen-shadowdom.html") {
+    // Shadow DOM is stylo-only.
+    return true;
+  }
+
   if (!SpecialPowers.isMainProcess() &&
       navigator.platform.includes('Linux')) {
     for (let item of gLinuxE10sSkipList) {

@@ -95,6 +95,7 @@
                   minheight="150"
                   editable="true"
                   onselect="gEditItemOverlay.onFolderTreeSelect();"
+                  disableUserActions="true"
                   hidecolumnpicker="true">
               <treecols>
                 <treecol anonid="title" flex="1" primary="true" hideheader="true"/>
