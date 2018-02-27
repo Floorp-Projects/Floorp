@@ -1099,6 +1099,30 @@ var ActivityStreamProvider = {
   },
 
   /**
+   * Get total count of all bookmarks.
+   * Note: this includes default bookmarks
+   *
+   * @return {int} The number bookmarks in the places DB.
+   */
+  async getTotalBookmarksCount() {
+    let sqlQuery = `
+      SELECT count(*) FROM moz_bookmarks b
+      JOIN moz_bookmarks t ON t.id = b.parent
+      AND t.parent <> :tags_folder
+     WHERE b.type = :type_bookmark
+    `;
+
+    const result = await this.executePlacesQuery(sqlQuery, {
+      params: {
+        tags_folder: PlacesUtils.tagsFolderId,
+        type_bookmark: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      }
+    });
+
+    return result[0][0];
+  },
+
+  /**
    * Get most-recently-visited history with metadata for Activity Stream.
    *
    * @param {Object} aOptions
