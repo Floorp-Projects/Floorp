@@ -1282,13 +1282,14 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
       aPresContext->DevPixelsToAppUnits(
         aAxisTracker.GetCrossComponent(widgetMinSize));
 
-    // GMWS() returns border-box. We need content-box, so subtract
-    // borderPadding (but don't let that push our min sizes below 0).
+    // GetMinimumWidgetSize() returns border-box. We need content-box, so
+    // subtract borderPadding.
     nsMargin& bp = childRI.ComputedPhysicalBorderPadding();
-    widgetMainMinSize = std::max(widgetMainMinSize -
-                                 aAxisTracker.GetMarginSizeInMainAxis(bp), 0);
-    widgetCrossMinSize = std::max(widgetCrossMinSize -
-                                  aAxisTracker.GetMarginSizeInCrossAxis(bp), 0);
+    widgetMainMinSize -= aAxisTracker.GetMarginSizeInMainAxis(bp);
+    widgetCrossMinSize -= aAxisTracker.GetMarginSizeInCrossAxis(bp);
+    // ... (but don't let that push these min sizes below 0).
+    widgetMainMinSize = std::max(0, widgetMainMinSize);
+    widgetCrossMinSize = std::max(0, widgetCrossMinSize);
 
     if (!canOverride) {
       // Fixed-size widget: freeze our main-size at the widget's mandated size.
