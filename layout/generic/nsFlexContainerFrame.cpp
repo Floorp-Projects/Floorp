@@ -570,14 +570,17 @@ public:
   // visibility:collapse.
   bool IsStrut() const             { return mIsStrut; }
 
-  // Returns true if this item's inline axis is parallel (or antiparallel)
-  // to the container's main axis. Otherwise (i.e. if this item's inline axis
-  // is orthogonal to the container's main axis), this function returns false.
-  bool IsInlineAxisMainAxis() const { return mIsInlineAxisMainAxis; }
-
-  // Same as above, but for cross axis. Equivalent to !IsInlineAxisMainAxis().
-  // This just exists for convenience/readability at callsites.
+  // IsInlineAxisMainAxis() returns true if this item's inline axis is parallel
+  // (or antiparallel) to the container's main axis. Otherwise (i.e. if this
+  // item's inline axis is orthogonal to the container's main axis), this
+  // function returns false. The next 3 methods are all other ways of asking
+  // the same question, and only exist for readability at callsites (depending
+  // on which axes those callsites are reasoning about).
+  bool IsInlineAxisMainAxis() const  { return mIsInlineAxisMainAxis;  }
   bool IsInlineAxisCrossAxis() const { return !mIsInlineAxisMainAxis; }
+  bool IsBlockAxisMainAxis() const   { return !mIsInlineAxisMainAxis; }
+  bool IsBlockAxisCrossAxis() const  { return mIsInlineAxisMainAxis;  }
+
 
   WritingMode GetWritingMode() const { return mWM; }
   uint8_t GetAlignSelf() const     { return mAlignSelf; }
@@ -4863,18 +4866,18 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
   ReflowInput childReflowInput(aPresContext, aReflowInput,
                                      aItem.Frame(), availSize);
 
-  // Keep track of whether we've overriden the child's computed height
-  // and/or width, so we can set its resize flags accordingly.
-  bool didOverrideComputedWidth = false;
-  bool didOverrideComputedHeight = false;
+  // Keep track of whether we've overriden the child's computed ISize
+  // and/or BSize, so we can set its resize flags accordingly.
+  bool didOverrideComputedISize = false;
+  bool didOverrideComputedBSize = false;
 
   // Override computed main-size
-  if (aAxisTracker.IsMainAxisHorizontal()) {
-    childReflowInput.SetComputedWidth(aItem.GetMainSize());
-    didOverrideComputedWidth = true;
+  if (aItem.IsInlineAxisMainAxis()) {
+    childReflowInput.SetComputedISize(aItem.GetMainSize());
+    didOverrideComputedISize = true;
   } else {
-    childReflowInput.SetComputedHeight(aItem.GetMainSize());
-    didOverrideComputedHeight = true;
+    childReflowInput.SetComputedBSize(aItem.GetMainSize());
+    didOverrideComputedBSize = true;
   }
 
   // Override reflow state's computed cross-size if either:
@@ -4888,16 +4891,24 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
   // cheaper to just directly set it instead of setting a frame property.)
   if (aItem.IsStretched() ||
       aItem.HasIntrinsicRatio()) {
-    if (aAxisTracker.IsCrossAxisHorizontal()) {
-      childReflowInput.SetComputedWidth(aItem.GetCrossSize());
-      didOverrideComputedWidth = true;
+    if (aItem.IsInlineAxisCrossAxis()) {
+      childReflowInput.SetComputedISize(aItem.GetCrossSize());
+      didOverrideComputedISize = true;
     } else {
-      childReflowInput.SetComputedHeight(aItem.GetCrossSize());
-      didOverrideComputedHeight = true;
+      childReflowInput.SetComputedBSize(aItem.GetCrossSize());
+      didOverrideComputedBSize = true;
     }
   }
-  if (aItem.IsStretched() && !aAxisTracker.IsCrossAxisHorizontal()) {
-    // If this item's height is stretched, it's a relative height.
+  if (aItem.IsStretched() && aItem.IsBlockAxisCrossAxis()) {
+    // This item is stretched (in the cross axis), and that axis is its block
+    // axis.  That stretching effectively gives it a relative BSize.
+    // XXXdholbert This flag only makes a difference if we use the flex items'
+    // frame-state when deciding whether to reflow them -- and we don't, as of
+    // the changes in bug 851607. So this has no effect right now, but it might
+    // make a difference if we optimize to use dirty bits in the
+    // future. (Reftests flexbox-resizeviewport-1.xhtml and -2.xhtml are
+    // intended to catch any regressions here, if we end up relying on this bit
+    // & neglecting to set it.)
     aItem.Frame()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
   }
 
@@ -4909,15 +4920,15 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
   // earlier "measuring" reflow, then this upcoming reflow needs to be
   // treated as a resize.
   if (aItem.HadMeasuringReflow()) {
-    if (didOverrideComputedWidth) {
-      // (This is somewhat redundant, since the reflow state already
-      // sets mHResize whenever our computed width has changed since the
-      // previous reflow. Still, it's nice for symmetry, and it may become
-      // necessary once we support orthogonal flows.)
-      childReflowInput.SetHResize(true);
+    if (didOverrideComputedISize) {
+      // (This is somewhat redundant, since ReflowInput::InitResizeFlags()
+      // already calls SetIResize() whenever our computed ISize has changed
+      // since the previous reflow. Still, it's nice for symmetry, and it might
+      // be necessary for some edge cases.)
+      childReflowInput.SetIResize(true);
     }
-    if (didOverrideComputedHeight) {
-      childReflowInput.SetVResize(true);
+    if (didOverrideComputedBSize) {
+      childReflowInput.SetBResize(true);
     }
   }
   // NOTE: Be very careful about doing anything else with childReflowInput
