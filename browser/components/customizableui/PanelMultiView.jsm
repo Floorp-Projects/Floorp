@@ -701,6 +701,9 @@ var PanelMultiView = class extends this.AssociatedToNode {
    * Opens the specified PanelView and dispatches the ViewShowing event, which
    * can be used to populate the subview or cancel the operation.
    *
+   * This also clears all the attributes and styles that may be left by a
+   * transition that was interrupted.
+   *
    * @resolves With true if the view was opened, false otherwise.
    */
   async _openView(panelView) {
@@ -729,6 +732,13 @@ var PanelMultiView = class extends this.AssociatedToNode {
       return false;
     }
 
+    // Clean up all the attributes and styles related to transitions. We do this
+    // here rather than when the view is closed because we are likely to make
+    // other DOM modifications soon, which isn't the case when closing.
+    let { style } = panelView.node;
+    style.removeProperty("outline");
+    style.removeProperty("width");
+
     return true;
   }
 
@@ -755,7 +765,8 @@ var PanelMultiView = class extends this.AssociatedToNode {
     panelView.dispatchCustomEvent("ViewHiding");
     panelView.node.panelMultiView = null;
     // Views become invisible synchronously when they are closed, and they won't
-    // become visible again until they are opened.
+    // become visible again until they are opened. When this is called at the
+    // end of backwards navigation, the view is already invisible.
     panelView.visible = false;
   }
 
@@ -805,7 +816,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
 
     let details = this._transitionDetails = {
       phase: TRANSITION_PHASES.START,
-      previousViewNode, viewNode, reverse, anchor
+      anchor
     };
 
     if (anchor)
@@ -935,18 +946,18 @@ var PanelMultiView = class extends this.AssociatedToNode {
       });
     });
 
-    // Apply the final visibility, unless the view was closed in the meantime.
-    if (nextPanelView.isOpenIn(this)) {
-      prevPanelView.visible = false;
+    // Bail out if the panel was closed during the transition.
+    if (!nextPanelView.isOpenIn(this)) {
+      return;
     }
+    prevPanelView.visible = false;
 
     // This will complete the operation by removing any transition properties.
+    nextPanelView.node.style.removeProperty("width");
+    deepestNode.style.removeProperty("outline");
     this._cleanupTransitionPhase(details);
 
-    // Focus the correct element, unless the view was closed in the meantime.
-    if (nextPanelView.isOpenIn(this)) {
-      nextPanelView.focusSelectedElement();
-    }
+    nextPanelView.focusSelectedElement();
   }
 
   /**
@@ -962,7 +973,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
     if (!details || !this.node)
       return;
 
-    let {phase, previousViewNode, viewNode, reverse, resolve, listener, cancelListener, anchor} = details;
+    let {phase, resolve, listener, cancelListener, anchor} = details;
     if (details == this._transitionDetails)
       this._transitionDetails = null;
 
@@ -987,15 +998,11 @@ var PanelMultiView = class extends this.AssociatedToNode {
     }
     if (phase >= TRANSITION_PHASES.PREPARE) {
       this._transitioning = false;
-      if (reverse)
-        this._viewStack.style.removeProperty("margin-inline-start");
-      let deepestNode = reverse ? previousViewNode : viewNode;
-      deepestNode.style.removeProperty("outline");
+      this._viewStack.style.removeProperty("margin-inline-start");
       this._viewStack.style.removeProperty("transition");
     }
     if (phase >= TRANSITION_PHASES.TRANSITION) {
       this._viewStack.style.removeProperty("transform");
-      viewNode.style.removeProperty("width");
       if (listener)
         this._viewContainer.removeEventListener("transitionend", listener);
       if (cancelListener)
