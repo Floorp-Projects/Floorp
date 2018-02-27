@@ -24,68 +24,50 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#ifndef HB_OT_SHAPE_COMPLEX_INDIC_MACHINE_HH
-#define HB_OT_SHAPE_COMPLEX_INDIC_MACHINE_HH
+#ifndef HB_OT_SHAPE_COMPLEX_KHMER_MACHINE_HH
+#define HB_OT_SHAPE_COMPLEX_KHMER_MACHINE_HH
 
 #include "hb-private.hh"
 
 %%{
-  machine indic_syllable_machine;
+  machine khmer_syllable_machine;
   alphtype unsigned char;
   write data;
 }%%
 
 %%{
 
-# Same order as enum indic_category_t.  Not sure how to avoid duplication.
+# Same order as enum khmer_category_t.  Not sure how to avoid duplication.
 C    = 1;
 V    = 2;
 N    = 3;
-H    = 4;
 ZWNJ = 5;
 ZWJ  = 6;
 M    = 7;
 SM   = 8;
-A    = 10;
 PLACEHOLDER = 11;
 DOTTEDCIRCLE = 12;
 RS    = 13;
-Repha = 15;
+Coeng = 14;
 Ra    = 16;
-CM    = 17;
-Symbol= 18;
-CS    = 19;
 
-c = (C | Ra);			# is_consonant
+c = (C | Ra | V);		# is_consonant
 n = ((ZWNJ?.RS)? (N.N?)?);	# is_consonant_modifier
 z = ZWJ|ZWNJ;			# is_joiner
-reph = (Ra H | Repha);		# possible reph
 
-cn = c.ZWJ?.n?;
-forced_rakar = ZWJ H ZWJ Ra;
-symbol = Symbol.N?;
-matra_group = z{0,3}.M.N?.(H | forced_rakar)?;
-syllable_tail = (z?.SM.SM?.ZWNJ?)? A{0,3}?;
-halant_group = (z?.H.(ZWJ.N?)?);
-final_halant_group = halant_group | H.ZWNJ;
-medial_group = CM?;
-halant_or_matra_group = (final_halant_group | (H.ZWJ)? matra_group{0,4});
+cn = c.n?;
+matra_group = z?.M.N?;
+syllable_tail = (SM.SM?)?;
 
 
-consonant_syllable =	(Repha|CS)? (cn.halant_group){0,4} cn medial_group halant_or_matra_group syllable_tail;
-vowel_syllable =	reph? V.n? (ZWJ | (halant_group.cn){0,4} medial_group halant_or_matra_group syllable_tail);
-standalone_cluster =	((Repha|CS)? PLACEHOLDER | reph? DOTTEDCIRCLE).n? (halant_group.cn){0,4} medial_group halant_or_matra_group syllable_tail;
-symbol_cluster = 	symbol syllable_tail;
-broken_cluster =	reph? n? (halant_group.cn){0,4} medial_group halant_or_matra_group syllable_tail;
+broken_cluster =	n? (Coeng.cn)* matra_group* (Coeng.cn)? syllable_tail;
+consonant_syllable =	(c|PLACEHOLDER|DOTTEDCIRCLE) broken_cluster;
 other =			any;
 
 main := |*
 	consonant_syllable	=> { found_syllable (consonant_syllable); };
-	vowel_syllable		=> { found_syllable (vowel_syllable); };
-	standalone_cluster	=> { found_syllable (standalone_cluster); };
-	symbol_cluster		=> { found_syllable (symbol_cluster); };
 	broken_cluster		=> { found_syllable (broken_cluster); };
-	other			=> { found_syllable (non_indic_cluster); };
+	other			=> { found_syllable (non_khmer_cluster); };
 *|;
 
 
@@ -109,7 +91,7 @@ find_syllables (hb_buffer_t *buffer)
   hb_glyph_info_t *info = buffer->info;
   %%{
     write init;
-    getkey info[p].indic_category();
+    getkey info[p].khmer_category();
   }%%
 
   p = 0;
@@ -122,4 +104,4 @@ find_syllables (hb_buffer_t *buffer)
   }%%
 }
 
-#endif /* HB_OT_SHAPE_COMPLEX_INDIC_MACHINE_HH */
+#endif /* HB_OT_SHAPE_COMPLEX_KHMER_MACHINE_HH */

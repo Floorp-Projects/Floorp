@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011,2012  Google, Inc.
+ * Copyright © 2017  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -24,49 +24,17 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#ifndef HB_OT_MAXP_TABLE_HH
-#define HB_OT_MAXP_TABLE_HH
+#ifndef HB_AAT_LAYOUT_PRIVATE_HH
+#define HB_AAT_LAYOUT_PRIVATE_HH
 
+#include "hb-private.hh"
+
+#include "hb-font-private.hh"
+#include "hb-buffer-private.hh"
 #include "hb-open-type-private.hh"
 
 
-namespace OT {
+HB_INTERNAL void
+hb_aat_layout_substitute (hb_font_t *font, hb_buffer_t *buffer);
 
-
-/*
- * maxp -- The Maximum Profile Table
- */
-
-#define HB_OT_TAG_maxp HB_TAG('m','a','x','p')
-
-struct maxp
-{
-  static const hb_tag_t tableTag	= HB_OT_TAG_maxp;
-
-  inline unsigned int get_num_glyphs (void) const
-  {
-    return numGlyphs;
-  }
-
-  inline bool sanitize (hb_sanitize_context_t *c) const
-  {
-    TRACE_SANITIZE (this);
-    return_trace (c->check_struct (this) &&
-		  likely (version.major == 1 ||
-			  (version.major == 0 && version.minor == 0x5000u)));
-  }
-
-  /* We only implement version 0.5 as none of the extra fields in version 1.0 are useful. */
-  protected:
-  FixedVersion<>version;		/* Version of the maxp table (0.5 or 1.0),
-					 * 0x00005000u or 0x00010000u. */
-  HBUINT16	numGlyphs;		/* The number of glyphs in the font. */
-  public:
-  DEFINE_SIZE_STATIC (6);
-};
-
-
-} /* namespace OT */
-
-
-#endif /* HB_OT_MAXP_TABLE_HH */
+#endif /* HB_AAT_LAYOUT_PRIVATE_HH */
