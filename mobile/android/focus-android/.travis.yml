@@ -17,6 +17,7 @@ sudo: false
 
 before_install:
   - touch local.properties
+  - yes | sdkmanager "platforms;android-27"
 
 script:
   - ./gradlew clean assemble
