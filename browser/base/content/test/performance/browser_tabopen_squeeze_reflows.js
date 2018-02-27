@@ -14,7 +14,7 @@ const EXPECTED_REFLOWS = [
     stack: [
       "select@chrome://global/content/bindings/textbox.xml",
       "focusAndSelectUrlBar@chrome://browser/content/browser.js",
-      "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml",
+      "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.js",
     ],
   }
 ];
