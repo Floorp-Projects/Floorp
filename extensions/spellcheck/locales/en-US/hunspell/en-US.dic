@@ -1,4 +1,4 @@
-52520
+52537
 0/nm
 0th/pt
 1/n1
@@ -11738,6 +11738,8 @@ TEirtza/M
 TGIF
 THC
 THz/M
+TIF/MS
+TIFF/MS
 TKO/M
 TLC/M
 TM
@@ -17861,6 +17863,7 @@ bunting/M
 buoy/MDGS
 buoyancy/M
 buoyant/Y
+bupkis
 bur/SMY
 burble/DSMG
 burbs/M
@@ -21339,6 +21342,7 @@ cranky/PRT
 cranny/DSM
 crap/MS
 crape/SM
+crapola
 crapped
 crapper/S
 crappie/M
@@ -21843,6 +21847,7 @@ cybercafé/S
 cybernetic/S
 cybernetics/M
 cyberpunk/SM
+cybersecurity
 cybersex
 cyberspace/MS
 cyborg/SM
@@ -24498,6 +24503,8 @@ emotionless
 emotive/Y
 empanel/GDS
 empathetic
+empathic
+empathically
 empathize/DSG
 empathy/M
 emperor/MS
@@ -25310,6 +25317,8 @@ exerciser/M
 exert/SDG
 exertion/MS
 exeunt
+exfiltrate/DGS
+exfiltration/S
 exfoliate/GNDS
 exhalation/MS
 exhale/DSG
@@ -28661,6 +28670,7 @@ gunshot/MS
 gunslinger/SM
 gunsmith/M
 gunsmiths
+gunsmoke
 gunwale/MS
 guppy/SM
 gurgle/MGDS
@@ -41926,7 +41936,7 @@ redemption/M
 redemptive
 redesign/DSG
 redhead/SMD
-redirection
+redirection/S
 redistrict/GD
 redivide/GDS
 redlining/M
@@ -42510,6 +42520,7 @@ revealing/Y
 reveille/M
 revel/JMDRSZG
 revelation/SM
+revelatory
 reveler/M
 revelry/SM
 revenge/MGDS
@@ -46024,7 +46035,8 @@ spirituous
 spirochete/SM
 spiry
 spit/MDGS
-spitball/SM
+spitball/SMG
+spitballer/S
 spite/ASM
 spiteful/PY
 spitefuller
@@ -49934,6 +49946,8 @@ unblinking/Y
 unblushing/Y
 unbosom/DG
 unbound/D
+unbox/DS
+unboxing/S
 unbreakable
 unbroken
 uncanny/T
@@ -50232,6 +50246,8 @@ unlovable
 unlovely/TR
 unloving
 unlucky/T
+unmaintainable
+unmaintained
 unman/S
 unmanly/T
 unmarried
@@ -50877,7 +50893,7 @@ videophone/MS
 videotape/DSMG
 videotex
 vie/DS
-view/AMDRSZG
+view/AMDRSZGB
 viewer/AM
 viewership/M
 viewfinder/SM
@@ -51695,6 +51711,7 @@ whiteboard/S
 whitecap/SM
 whitefish/MS
 whitehead/MS
+whitelist/DGS
 whiten/ZGDRJ
 whitener/M
 whiteness/M
