@@ -134,6 +134,7 @@ public:
   explicit FlattenedChildIterator(const nsIContent* aParent,
                                   bool aStartAtBeginning = true)
     : ExplicitChildIterator(aParent, aStartAtBeginning)
+    , mXBLInvolved(false)
     , mOriginalContent(aParent)
   {
     Init(false);
@@ -141,29 +142,19 @@ public:
 
   FlattenedChildIterator(FlattenedChildIterator&& aOther)
     : ExplicitChildIterator(Move(aOther))
-    , mOriginalContent(aOther.mOriginalContent)
     , mXBLInvolved(aOther.mXBLInvolved)
+    , mOriginalContent(aOther.mOriginalContent)
   {}
 
   FlattenedChildIterator(const FlattenedChildIterator& aOther)
     : ExplicitChildIterator(aOther)
-    , mOriginalContent(aOther.mOriginalContent)
     , mXBLInvolved(aOther.mXBLInvolved)
+    , mOriginalContent(aOther.mOriginalContent)
   {}
 
-  bool XBLInvolved() {
-    if (mXBLInvolved.isNothing()) {
-      mXBLInvolved = Some(ComputeWhetherXBLIsInvolved());
-    }
-    return *mXBLInvolved;
-  }
+  bool XBLInvolved() { return mXBLInvolved; }
 
   const nsIContent* Parent() const { return mOriginalContent; }
-
-private:
-  bool ComputeWhetherXBLIsInvolved() const;
-
-  void Init(bool aIgnoreXBL);
 
 protected:
   /**
@@ -173,20 +164,20 @@ protected:
   FlattenedChildIterator(const nsIContent* aParent, uint32_t aFlags,
                          bool aStartAtBeginning = true)
     : ExplicitChildIterator(aParent, aStartAtBeginning)
+    , mXBLInvolved(false)
     , mOriginalContent(aParent)
   {
     bool ignoreXBL = aFlags & nsIContent::eAllButXBL;
     Init(ignoreXBL);
   }
 
-  const nsIContent* mOriginalContent;
+  void Init(bool aIgnoreXBL);
 
-private:
-  // For certain optimizations, nsCSSFrameConstructor needs to know if the child
-  // list of the element that we're iterating matches its .childNodes.
-  //
-  // This is lazily computed when asked for it.
-  Maybe<bool> mXBLInvolved;
+  // For certain optimizations, nsCSSFrameConstructor needs to know if the
+  // child list of the element that we're iterating matches its .childNodes.
+  bool mXBLInvolved;
+
+  const nsIContent* mOriginalContent;
 };
 
 /**
