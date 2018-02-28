@@ -34,6 +34,8 @@ const SIGNATURE_SCHEME_LABEL = L10N.getStr("netmonitor.security.signatureScheme"
 const HSTS_LABEL = L10N.getStr("netmonitor.security.hsts");
 const HPKP_LABEL = L10N.getStr("netmonitor.security.hpkp");
 const CERTIFICATE_LABEL = L10N.getStr("netmonitor.security.certificate");
+const CERTIFICATE_TRANSPARENCY_LABEL =
+    L10N.getStr("certmgr.certificateTransparency.label");
 const SUBJECT_INFO_LABEL = L10N.getStr("certmgr.subjectinfo.label");
 const CERT_DETAIL_COMMON_NAME_LABEL = L10N.getStr("certmgr.certdetail.cn");
 const CERT_DETAIL_ORG_LABEL = L10N.getStr("certmgr.certdetail.o");
@@ -166,6 +168,8 @@ class SecurityPanel extends Component {
             [SHA1_FINGERPRINT_LABEL]:
               fingerprint.sha1 || NOT_AVAILABLE,
           },
+          [CERTIFICATE_TRANSPARENCY_LABEL]:
+          securityInfo.certificateTransparency || NOT_AVAILABLE,
         },
       };
     } else {
