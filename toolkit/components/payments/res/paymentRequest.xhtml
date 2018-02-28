@@ -13,6 +13,7 @@
   <!ENTITY cancelPaymentButton.label   "Cancel">
   <!ENTITY approvePaymentButton.label  "Pay">
   <!ENTITY processingPaymentButton.label "Processing">
+  <!ENTITY successPaymentButton.label    "Done">
   <!ENTITY orderDetailsLabel          "Order Details">
   <!ENTITY orderTotalLabel            "Total">
 ]>
@@ -87,7 +88,8 @@
           <button id="cancel">&cancelPaymentButton.label;</button>
           <button id="pay"
                   data-initial-label="&approvePaymentButton.label;"
-                  data-processing-label="&processingPaymentButton.label;"></button>
+                  data-processing-label="&processingPaymentButton.label;"
+                  data-success-label="&successPaymentButton.label;"></button>
         </footer>
       </section>
       <section id="order-details-overlay" hidden="hidden">

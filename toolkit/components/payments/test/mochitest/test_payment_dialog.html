@@ -121,6 +121,10 @@ add_task(async function test_completionState() {
   await asyncElementRendered();
   is(payButton.textContent, "Processing", "Check processing label");
   ok(!payButton.disabled, "Button is still enabled");
+  await el1.requestStore.setState({completionState: "success"});
+  await asyncElementRendered();
+  is(payButton.textContent, "Done", "Check success label");
+  ok(!payButton.disabled, "Button is still enabled");
 });
 
 add_task(async function test_completionStateChangesPrevented() {
@@ -139,13 +143,20 @@ add_task(async function test_completionStateChangesPrevented() {
   await asyncElementRendered();
   is(payButton.textContent, "Processing", "Check processing label");
   ok(payButton.disabled, "Button is disabled");
-  let {
-    x,
-    y,
-    width,
-    height,
-  } = payButton.getBoundingClientRect();
-  let visibleElement = document.elementFromPoint(x + width / 2, y + height / 2);
+  let rect = payButton.getBoundingClientRect();
+  let visibleElement =
+    document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+  ok(payButton === visibleElement, "Pay button is on top of the overlay");
+
+  await el1.requestStore.setState({
+    changesPrevented: true,
+    completionState: "success",
+  });
+  await asyncElementRendered();
+  is(payButton.textContent, "Done", "Check success label");
+  ok(payButton.disabled, "Button is disabled");
+  rect = payButton.getBoundingClientRect();
+  visibleElement = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
   ok(payButton === visibleElement, "Pay button is on top of the overlay");
 });
 
