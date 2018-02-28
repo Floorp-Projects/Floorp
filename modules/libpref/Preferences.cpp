@@ -746,8 +746,9 @@ public:
   }
 };
 
-struct CallbackNode
+class CallbackNode
 {
+public:
   CallbackNode(const char* aDomain,
                PrefChangedFunc aFunc,
                void* aData,
@@ -760,12 +761,27 @@ struct CallbackNode
   {
   }
 
+  // mDomain is a UniquePtr<>, so any uses of Domain() should only be temporary
+  // borrows.
+  const char* Domain() const { return mDomain.get(); }
+
+  PrefChangedFunc Func() const { return mFunc; }
+  void ClearFunc() { mFunc = nullptr; }
+
+  void* Data() const { return mData; }
+
+  Preferences::MatchKind MatchKind() const { return mMatchKind; }
+
+  CallbackNode* Next() const { return mNext; }
+  void SetNext(CallbackNode* aNext) { mNext = aNext; }
+
   void AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf, PrefsSizes& aSizes)
   {
     aSizes.mCallbacksObjects += aMallocSizeOf(this);
     aSizes.mCallbacksDomains += aMallocSizeOf(mDomain.get());
   }
 
+private:
   UniqueFreePtr<const char> mDomain;
 
   // If someone attempts to remove the node from the callback list while
@@ -964,16 +980,16 @@ pref_SetPref(const char* aPrefName,
 static CallbackNode*
 pref_RemoveCallbackNode(CallbackNode* aNode, CallbackNode* aPrevNode)
 {
-  NS_PRECONDITION(!aPrevNode || aPrevNode->mNext == aNode, "invalid params");
+  NS_PRECONDITION(!aPrevNode || aPrevNode->Next() == aNode, "invalid params");
   NS_PRECONDITION(aPrevNode || gFirstCallback == aNode, "invalid params");
 
   NS_ASSERTION(
     !gCallbacksInProgress,
     "modifying the callback list while gCallbacksInProgress is true");
 
-  CallbackNode* next_node = aNode->mNext;
+  CallbackNode* next_node = aNode->Next();
   if (aPrevNode) {
-    aPrevNode->mNext = next_node;
+    aPrevNode->SetNext(next_node);
   } else {
     gFirstCallback = next_node;
   }
@@ -995,15 +1011,14 @@ NotifyCallbacks(const char* aPrefName)
   // if we haven't reentered.
   gCallbacksInProgress = true;
 
-  for (CallbackNode* node = gFirstCallback; node; node = node->mNext) {
-    if (node->mFunc) {
-      bool matches = node->mMatchKind == Preferences::ExactMatch
-                       ? strcmp(node->mDomain.get(), aPrefName) == 0
-                       : strncmp(node->mDomain.get(),
-                                 aPrefName,
-                                 strlen(node->mDomain.get())) == 0;
+  for (CallbackNode* node = gFirstCallback; node; node = node->Next()) {
+    if (node->Func()) {
+      bool matches =
+        node->MatchKind() == Preferences::ExactMatch
+          ? strcmp(node->Domain(), aPrefName) == 0
+          : strncmp(node->Domain(), aPrefName, strlen(node->Domain())) == 0;
       if (matches) {
-        (node->mFunc)(aPrefName, node->mData);
+        (node->Func())(aPrefName, node->Data());
       }
     }
   }
@@ -1015,11 +1030,11 @@ NotifyCallbacks(const char* aPrefName)
     CallbackNode* node = gFirstCallback;
 
     while (node) {
-      if (!node->mFunc) {
+      if (!node->Func()) {
         node = pref_RemoveCallbackNode(node, prev_node);
       } else {
         prev_node = node;
-        node = node->mNext;
+        node = node->Next();
       }
     }
     gShouldCleanupDeadNodes = false;
@@ -2705,7 +2720,7 @@ PreferenceServiceReporter::CollectReports(
 
   sizes.mPrefNameArena += gPrefNameArena.SizeOfExcludingThis(mallocSizeOf);
 
-  for (CallbackNode* node = gFirstCallback; node; node = node->mNext) {
+  for (CallbackNode* node = gFirstCallback; node; node = node->Next()) {
     node->AddSizeOfIncludingThis(mallocSizeOf, sizes);
   }
 
@@ -3011,7 +3026,7 @@ Preferences::~Preferences()
 
   CallbackNode* node = gFirstCallback;
   while (node) {
-    CallbackNode* next_node = node->mNext;
+    CallbackNode* next_node = node->Next();
     delete node;
     node = next_node;
   }
@@ -4355,7 +4370,7 @@ Preferences::RegisterCallback(PrefChangedFunc aCallback,
 
   if (aIsPriority) {
     // Add to the start of the list.
-    node->mNext = gFirstCallback;
+    node->SetNext(gFirstCallback);
     gFirstCallback = node;
     if (!gLastPriorityNode) {
       gLastPriorityNode = node;
@@ -4363,10 +4378,10 @@ Preferences::RegisterCallback(PrefChangedFunc aCallback,
   } else {
     // Add to the start of the non-priority part of the list.
     if (gLastPriorityNode) {
-      node->mNext = gLastPriorityNode->mNext;
-      gLastPriorityNode->mNext = node;
+      node->SetNext(gLastPriorityNode->Next());
+      gLastPriorityNode->SetNext(node);
     } else {
-      node->mNext = gFirstCallback;
+      node->SetNext(gFirstCallback);
       gFirstCallback = node;
     }
   }
@@ -4406,23 +4421,23 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
   CallbackNode* prev_node = nullptr;
 
   while (node) {
-    if (node->mFunc == aCallback && node->mData == aData &&
-        node->mMatchKind == aMatchKind &&
-        strcmp(node->mDomain.get(), aPrefNode) == 0) {
+    if (node->Func() == aCallback && node->Data() == aData &&
+        node->MatchKind() == aMatchKind &&
+        strcmp(node->Domain(), aPrefNode) == 0) {
       if (gCallbacksInProgress) {
-        // postpone the node removal until after
-        // callbacks enumeration is finished.
-        node->mFunc = nullptr;
+        // Postpone the node removal until after callbacks enumeration is
+        // finished.
+        node->ClearFunc();
         gShouldCleanupDeadNodes = true;
         prev_node = node;
-        node = node->mNext;
+        node = node->Next();
       } else {
         node = pref_RemoveCallbackNode(node, prev_node);
       }
       rv = NS_OK;
     } else {
       prev_node = node;
-      node = node->mNext;
+      node = node->Next();
     }
   }
   return rv;
