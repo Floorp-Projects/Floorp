@@ -64,7 +64,7 @@ test-verify:
         by-test-platform:
             android.*: xlarge
             default: default
-    max-run-time: 5400
+    max-run-time: 10800
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
