@@ -388,9 +388,19 @@ function getInitialMessageCountForViewport(win) {
   return Math.ceil(win.innerHeight / minMessageHeight);
 }
 
+function isPacketPrivate(packet) {
+  return (
+    packet.private === true ||
+    (packet.message && packet.message.private === true) ||
+    (packet.pageError && packet.pageError.private === true) ||
+    (packet.networkEvent && packet.networkEvent.private === true)
+  );
+}
+
 module.exports = {
   getInitialMessageCountForViewport,
   isGroupType,
+  isPacketPrivate,
   l10n,
   prepareMessage,
   // Export for use in testing.
