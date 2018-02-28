@@ -5,7 +5,7 @@
 dump("Loading remote script!\n");
 dump(content + "\n");
 
-var cpm = Components.classes["@mozilla.org/childprocessmessagemanager;1"].getService();
+var cpm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService();
 cpm.addMessageListener("cpm-async",
   function(m) {
     cpm.sendSyncMessage("ppm-sync");
@@ -25,8 +25,8 @@ addEventListener("click",
     dump(e.target + "\n");
     if (ChromeUtils.getClassName(e.target) === "HTMLAnchorElement" &&
         dshell == docShell) {
-      var retval = docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                            getInterface(Components.interfaces.nsIContentFrameMessageManager).
+      var retval = docShell.QueryInterface(Ci.nsIInterfaceRequestor).
+                            getInterface(Ci.nsIContentFrameMessageManager).
                             sendSyncMessage("linkclick", { href: e.target.href });
       dump(uneval(retval[0]) + "\n");
       // Test here also that both retvals are the same

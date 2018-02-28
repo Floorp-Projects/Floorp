@@ -30,17 +30,17 @@ var cookieVal = "C1=V1";
 var listener = {
   onStartRequest: function test_onStartR(request, ctx) {
     try {
-      var chan = request.QueryInterface(Components.interfaces.nsIHttpChannel);
+      var chan = request.QueryInterface(Ci.nsIHttpChannel);
       check_request_header(chan, "Cookie", cookieVal);
     } catch (e) {
       do_throw("Unexpected exception: " + e);
     }
 
-    throw Components.results.NS_ERROR_ABORT;
+    throw Cr.NS_ERROR_ABORT;
   },
 
   onDataAvailable: function test_ODA() {
-    throw Components.results.NS_ERROR_UNEXPECTED;
+    throw Cr.NS_ERROR_UNEXPECTED;
   },
 
   onStopRequest: function test_onStopR(request, ctx, status) {
@@ -58,7 +58,7 @@ var listener = {
 
 function makeChan() {
   return NetUtil.newChannel({uri: URL, loadUsingSystemPrincipal: true})
-                .QueryInterface(Components.interfaces.nsIHttpChannel);
+                .QueryInterface(Ci.nsIHttpChannel);
 }
 
 var httpserv = null;
@@ -83,8 +83,8 @@ function run_test() {
 function run_test_continued() {
   var chan = makeChan();
 
-  var cookServ = Components.classes["@mozilla.org/cookieService;1"]
-                           .getService(Components.interfaces.nsICookieService);
+  var cookServ = Cc["@mozilla.org/cookieService;1"]
+                   .getService(Ci.nsICookieService);
   var cookie2 = "C2=V2";
   cookServ.setCookieString(chan.URI, null, cookie2, chan);
   chan.setRequestHeader("Cookie", cookieVal, false);

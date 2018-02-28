@@ -29,8 +29,8 @@
     let browser1 = win1.document.getElementById("browser");
     let browser2 = win2.document.getElementById("browser");
 
-    let flo1 = browser1.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
-    let flo2 = browser2.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
+    let flo1 = browser1.QueryInterface(Ci.nsIFrameLoaderOwner);
+    let flo2 = browser2.QueryInterface(Ci.nsIFrameLoaderOwner);
 
     let pongCount = 0;
 

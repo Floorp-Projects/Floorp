@@ -12,7 +12,7 @@ function run_test() {
   Assert.ok(global1 === global2);
   Assert.ok(scope1.NetUtil === scope2.NetUtil);
 
-  Components.utils.unload("resource://gre/modules/NetUtil.jsm");
+  Cu.unload("resource://gre/modules/NetUtil.jsm");
 
   var scope3 = {};
   var global3 = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", scope3);

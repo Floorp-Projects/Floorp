@@ -74,7 +74,7 @@ var expectConditional = false;
 var Listener = function() {};
 Listener.prototype = {
   onStartRequest: function testOnStartRequest(request, ctx) {
-    Assert.ok(request instanceof Components.interfaces.nsIHttpChannel);
+    Assert.ok(request instanceof Ci.nsIHttpChannel);
 
     if (expectPass) {
       if (!Components.isSuccessCode(request.status)) {

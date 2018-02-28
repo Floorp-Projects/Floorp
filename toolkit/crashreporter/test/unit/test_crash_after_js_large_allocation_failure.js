@@ -8,8 +8,8 @@ function run_test() {
     function() {
       crashType = CrashTestUtils.CRASH_MOZ_CRASH;
       crashReporter.annotateCrashReport("TestingOOMCrash", "Yes");
-      Components.utils.getJSTestingFunctions().reportLargeAllocationFailure();
-      Components.utils.forceGC();
+      Cu.getJSTestingFunctions().reportLargeAllocationFailure();
+      Cu.forceGC();
     },
     function(mdump, extra) {
       Assert.equal(extra.TestingOOMCrash, "Yes");

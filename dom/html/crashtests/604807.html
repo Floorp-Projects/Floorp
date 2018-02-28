@@ -2,7 +2,7 @@
 <script>
 try {
   var selectElem = document.createElementNS("http://www.w3.org/1999/xhtml", "select");
-  selectElem.QueryInterface(Components.interfaces.nsISelectElement);
+  selectElem.QueryInterface(Ci.nsISelectElement);
   selectElem.getOptionIndex(null, 0, true);
 } catch (e) {
 }

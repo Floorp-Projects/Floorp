@@ -194,7 +194,7 @@ TimerManager.prototype = {
 
       tryFire(function() {
         try {
-          Components.classes[cid][method](Ci.nsITimerCallback).notify(timer);
+          Cc[cid][method](Ci.nsITimerCallback).notify(timer);
           LOG("TimerManager:notify - notified " + cid);
         } catch (e) {
           LOG("TimerManager:notify - error notifying component id: " +

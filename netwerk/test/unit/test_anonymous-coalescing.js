@@ -82,7 +82,7 @@ var Listener = function() {};
 Listener.prototype.clientPort = 0;
 Listener.prototype = {
   onStartRequest: function testOnStartRequest(request, ctx) {
-    Assert.ok(request instanceof Components.interfaces.nsIHttpChannel);
+    Assert.ok(request instanceof Ci.nsIHttpChannel);
 
     if (!Components.isSuccessCode(request.status)) {
       do_throw("Channel should have a success code! (" + request.status + ")");

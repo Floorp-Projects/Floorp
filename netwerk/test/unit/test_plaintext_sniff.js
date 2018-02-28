@@ -78,10 +78,10 @@ function makeChan(headerIdx, bodyIdx) {
     uri: "http://localhost:" + httpserv.identity.primaryPort +
          "/" + headerIdx + "/" + bodyIdx,
     loadUsingSystemPrincipal: true
-  }).QueryInterface(Components.interfaces.nsIHttpChannel);
+  }).QueryInterface(Ci.nsIHttpChannel);
 
   chan.loadFlags |=
-    Components.interfaces.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS;
+    Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS;
 
   return chan;
 }
@@ -90,9 +90,9 @@ function makeListener(headerIdx, bodyIdx) {
   var listener = {
     onStartRequest : function test_onStartR(request, ctx) {
       try {
-        var chan = request.QueryInterface(Components.interfaces.nsIChannel);
+        var chan = request.QueryInterface(Ci.nsIChannel);
 
-        Assert.equal(chan.status, Components.results.NS_OK);
+        Assert.equal(chan.status, Cr.NS_OK);
         
         var type = chan.contentType;
 
@@ -115,7 +115,7 @@ function makeListener(headerIdx, bodyIdx) {
         do_throw("Unexpected exception: " + e);
       }
 
-      throw Components.results.NS_ERROR_ABORT;
+      throw Cr.NS_ERROR_ABORT;
     },
 
     onDataAvailable: function test_ODA() {

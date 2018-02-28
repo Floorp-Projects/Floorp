@@ -19,9 +19,9 @@
 
     function openPopup()
     {
-      docviewer = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                        .getInterface(Components.interfaces.nsIWebNavigation)
-                        .QueryInterface(Components.interfaces.nsIDocShell)
+      docviewer = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIWebNavigation)
+                        .QueryInterface(Ci.nsIDocShell)
                         .contentViewer;
       savedzoom = docviewer.fullZoom;
       docviewer.fullZoom = 2;

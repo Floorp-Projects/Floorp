@@ -17,9 +17,9 @@
 
     var winLowerThanVista = navigator.platform.indexOf("Win") == 0;
     if (winLowerThanVista) {
-      var version = Components.classes["@mozilla.org/system-info;1"]
-                              .getService(Components.interfaces.nsIPropertyBag2)
-                              .getProperty("version");
+      var version = Cc["@mozilla.org/system-info;1"]
+                      .getService(Ci.nsIPropertyBag2)
+                      .getProperty("version");
       winLowerThanVista = parseFloat(version) < 6.0;
     }
 
@@ -45,8 +45,8 @@
         isnot(win.mozPaintCount, initialCount, "mozPaintCount has increased" + testInfo());
 
         function testLeafLayersPartitionWindow() {
-          var success = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIDOMWindowUtils)
+          var success = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils)
                            .leafLayersPartitionWindow();
           // "[leafLayersPartitionWindow()] Always returns true in non-DEBUG builds."
           // To prevent random failures on Windows, try to run this again after a timeout.
@@ -74,10 +74,10 @@
         }
         win.addEventListener("resize", resizeListener, true);
         SimpleTest.info("Maximizing test " + testIndex + " window" + testInfo());
-        Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                  .getService(Components.interfaces.nsIWindowMediator)
-                  .getMostRecentWindow("navigator:browser")
-                  .maximize();
+        Cc["@mozilla.org/appshell/window-mediator;1"]
+          .getService(Ci.nsIWindowMediator)
+          .getMostRecentWindow("navigator:browser")
+          .maximize();
       } else {
         SimpleTest.executeSoon(nextStep);
       }

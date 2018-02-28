@@ -31,19 +31,19 @@ function getLoadContext() {
 
 function copyToClipboard(txt)
 {
-  var clipid = Components.interfaces.nsIClipboard;
+  var clipid = Ci.nsIClipboard;
   var clip =
-    Components.classes['@mozilla.org/widget/clipboard;1'].createInstance(clipid);
+    Cc['@mozilla.org/widget/clipboard;1'].createInstance(clipid);
   if (!clip)
     return false;
   var trans =
-    Components.classes['@mozilla.org/widget/transferable;1'].createInstance(Components.interfaces.nsITransferable);
+    Cc['@mozilla.org/widget/transferable;1'].createInstance(Ci.nsITransferable);
   if (!trans)
     return false;
   trans.init(getLoadContext());
   trans.addDataFlavor('text/html');
   var str =
-    Components.classes['@mozilla.org/supports-string;1'].createInstance(Components.interfaces.nsISupportsString);
+    Cc['@mozilla.org/supports-string;1'].createInstance(Ci.nsISupportsString);
   var copytext = txt;
   str.data = copytext;
   trans.setTransferData("text/html",str,copytext.length*2);
@@ -55,13 +55,13 @@ function copyToClipboard(txt)
 
 function readFromClipboard()
 {
-  var clipid = Components.interfaces.nsIClipboard;
+  var clipid = Ci.nsIClipboard;
   var clip =
-    Components.classes['@mozilla.org/widget/clipboard;1'].createInstance(clipid);
+    Cc['@mozilla.org/widget/clipboard;1'].createInstance(clipid);
   if (!clip)
     return;
   var trans =
-    Components.classes['@mozilla.org/widget/transferable;1'].createInstance(Components.interfaces.nsITransferable);
+    Cc['@mozilla.org/widget/transferable;1'].createInstance(Ci.nsITransferable);
   if (!trans)
     return;
   trans.init(getLoadContext());
@@ -71,7 +71,7 @@ function readFromClipboard()
   var strLength = new Object();
   trans.getTransferData("text/html",str,strLength);
   if (str)
-    str = str.value.QueryInterface(Components.interfaces.nsISupportsString);
+    str = str.value.QueryInterface(Ci.nsISupportsString);
   if (str)
     pastetext = str.data.substring(0,strLength.value / 2);
   return pastetext;

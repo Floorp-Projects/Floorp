@@ -9,15 +9,15 @@ const TPS_ID                         = "tps@mozilla.org";
 const TPS_CMDLINE_CONTRACTID         = "@mozilla.org/commandlinehandler/general-startup;1?type=tps";
 const TPS_CMDLINE_CLSID              = Components.ID("{4e5bd3f0-41d3-11df-9879-0800200c9a66}");
 const CATMAN_CONTRACTID              = "@mozilla.org/categorymanager;1";
-const nsISupports                    = Components.interfaces.nsISupports;
+const nsISupports                    = Ci.nsISupports;
 
-const nsICategoryManager             = Components.interfaces.nsICategoryManager;
-const nsICmdLineHandler              = Components.interfaces.nsICmdLineHandler;
-const nsICommandLine                 = Components.interfaces.nsICommandLine;
-const nsICommandLineHandler          = Components.interfaces.nsICommandLineHandler;
-const nsIComponentRegistrar          = Components.interfaces.nsIComponentRegistrar;
-const nsISupportsString              = Components.interfaces.nsISupportsString;
-const nsIWindowWatcher               = Components.interfaces.nsIWindowWatcher;
+const nsICategoryManager             = Ci.nsICategoryManager;
+const nsICmdLineHandler              = Ci.nsICmdLineHandler;
+const nsICommandLine                 = Ci.nsICommandLine;
+const nsICommandLineHandler          = Ci.nsICommandLineHandler;
+const nsIComponentRegistrar          = Ci.nsIComponentRegistrar;
+const nsISupportsString              = Ci.nsISupportsString;
+const nsIWindowWatcher               = Ci.nsIWindowWatcher;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -82,7 +82,7 @@ TPSCmdLineHandler.prototype = {
 var TPSCmdLineFactory = {
   createInstance(outer, iid) {
     if (outer != null) {
-      throw new Error(Components.results.NS_ERROR_NO_AGGREGATION);
+      throw new Error(Cr.NS_ERROR_NO_AGGREGATION);
     }
 
     return new TPSCmdLineHandler().QueryInterface(iid);
@@ -101,7 +101,7 @@ var TPSCmdLineModule = {
                                     location,
                                     type);
 
-    var catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
+    var catman = Cc[CATMAN_CONTRACTID].getService(nsICategoryManager);
     catman.addCategoryEntry("command-line-argument-handlers",
                             "TPS command line handler",
                             TPS_CMDLINE_CONTRACTID, true, true);
@@ -114,7 +114,7 @@ var TPSCmdLineModule = {
     compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
 
     compMgr.unregisterFactoryLocation(TPS_CMDLINE_CLSID, fileSpec);
-    let catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
+    let catman = Cc[CATMAN_CONTRACTID].getService(nsICategoryManager);
     catman.deleteCategoryEntry("command-line-argument-handlers",
                                "TPS command line handler", true);
     catman.deleteCategoryEntry("command-line-handler",
@@ -126,11 +126,11 @@ var TPSCmdLineModule = {
       return TPSCmdLineFactory;
     }
 
-    if (!iid.equals(Components.interfaces.nsIFactory)) {
-      throw new Error(Components.results.NS_ERROR_NOT_IMPLEMENTED);
+    if (!iid.equals(Ci.nsIFactory)) {
+      throw new Error(Cr.NS_ERROR_NOT_IMPLEMENTED);
     }
 
-    throw new Error(Components.results.NS_ERROR_NO_INTERFACE);
+    throw new Error(Cr.NS_ERROR_NO_INTERFACE);
   },
 
   canUnload(compMgr) {

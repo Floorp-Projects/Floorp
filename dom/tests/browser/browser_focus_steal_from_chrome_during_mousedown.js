@@ -13,8 +13,8 @@ add_task(async function test() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, kTestURI);
 
-  let fm = Components.classes["@mozilla.org/focus-manager;1"].
-        getService(Components.interfaces.nsIFocusManager);
+  let fm = Cc["@mozilla.org/focus-manager;1"].
+        getService(Ci.nsIFocusManager);
 
   for (var button = 0; button < 3; button++) {
     // Set focus to a chrome element before synthesizing a mouse down event.
@@ -31,8 +31,8 @@ add_task(async function test() {
        "Failed to move focus away from search bar: button=" + button);
 
     await ContentTask.spawn(tab.linkedBrowser, button, async function (button) {
-      let fm = Components.classes["@mozilla.org/focus-manager;1"].
-          getService(Components.interfaces.nsIFocusManager);
+      let fm = Cc["@mozilla.org/focus-manager;1"].
+          getService(Ci.nsIFocusManager);
 
       let attempts = 10;
       await new Promise(resolve => {

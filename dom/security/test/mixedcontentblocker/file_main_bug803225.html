@@ -111,8 +111,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
     })
 
     var pScript = "data:,new " + function () {
-      var os = Components.classes["@mozilla.org/observer-service;1"]
-        .getService(Components.interfaces.nsIObserverService);
+      var os = Cc["@mozilla.org/observer-service;1"]
+        .getService(Ci.nsIObserverService);
       var observer = {
         observe: function(subject, topic, data) {
           if (topic == "content-document-global-created" && data == "http://example.com") {

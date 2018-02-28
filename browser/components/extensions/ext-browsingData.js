@@ -80,7 +80,7 @@ const clearIndexedDB = async function(options) {
 
   await new Promise(resolve => {
     quotaManagerService.getUsage(request => {
-      if (request.resultCode != Components.results.NS_OK) {
+      if (request.resultCode != Cr.NS_OK) {
         // We are probably shutting down. We don't want to propagate the error,
         // rejecting the promise.
         resolve();

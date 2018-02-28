@@ -166,7 +166,7 @@ add_task(async function test() {
   // Make sure we have a GC to work with in both processes.
   Cu.forceGC();
   if (multiprocess) {
-    runRemote(() => Components.utils.forceGC());
+    runRemote(() => Cu.forceGC());
   }
 
   info("Waiting for GCs");

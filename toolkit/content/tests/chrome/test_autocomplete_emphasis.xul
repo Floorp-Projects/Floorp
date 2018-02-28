@@ -21,7 +21,7 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const ACR = Components.interfaces.nsIAutoCompleteResult;
+const ACR = Ci.nsIAutoCompleteResult;
 
 // A global variable to hold the search result for the current search.
 var resultText = "";
@@ -54,12 +54,12 @@ var autoCompleteSimpleID = Components.ID("0a2afbdb-f30e-47d1-9cb1-0cd160240aca")
 var autoCompleteSimpleName = "@mozilla.org/autocomplete/search;1?name=simple"
 var autoCompleteSimple = {
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsISupports) ||
-        iid.equals(Components.interfaces.nsIFactory) ||
-        iid.equals(Components.interfaces.nsIAutoCompleteSearch))
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIFactory) ||
+        iid.equals(Ci.nsIAutoCompleteSearch))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   createInstance: function(outer, iid) {
@@ -75,7 +75,7 @@ var autoCompleteSimple = {
 };
 
 var componentManager = Components.manager
-                                 .QueryInterface(Components.interfaces.nsIComponentRegistrar);
+                                 .QueryInterface(Ci.nsIComponentRegistrar);
 componentManager.registerFactory(autoCompleteSimpleID, "Test Simple Autocomplete",
                                  autoCompleteSimpleName, autoCompleteSimple);
 

@@ -4,7 +4,7 @@ function test_policy(test) {
   info("Running test: " + test.toSource());
 
   var prefs = Cc["@mozilla.org/preferences-service;1"]
-    .getService(Components.interfaces.nsIPrefBranch);
+    .getService(Ci.nsIPrefBranch);
   if (test.defaultReferrerPolicyPref !== undefined) {
     prefs.setIntPref("network.http.referer.defaultPolicy",
                      test.defaultReferrerPolicyPref);
@@ -19,7 +19,7 @@ function test_policy(test) {
   });
 
   var referrer = NetUtil.newURI(test.referrer);
-  chan.QueryInterface(Components.interfaces.nsIHttpChannel);
+  chan.QueryInterface(Ci.nsIHttpChannel);
   chan.setReferrerWithPolicy(referrer, test.policy);
   if (test.expectedReferrerSpec === undefined) {
     try {

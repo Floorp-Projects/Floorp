@@ -11,8 +11,8 @@
   function done() { window.opener.done.apply(window.opener, arguments); }
   let e = {};
 
-  let dwu = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                  .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                  .getInterface(Ci.nsIDOMWindowUtils);
 
   /*
     nsIDOMNodeList nodesFromRect(in float aX,

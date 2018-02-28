@@ -846,7 +846,7 @@ LivemarkLoadListener.prototype = {
       this._processor.parseAsync(null, channel.URI);
       this._processor.onStartRequest(aRequest, aContext);
     } catch (ex) {
-      Components.utils.reportError("Livemark Service: feed processor received an invalid channel for " + channel.URI.spec);
+      Cu.reportError("Livemark Service: feed processor received an invalid channel for " + channel.URI.spec);
       this.abort(ex);
     }
   },

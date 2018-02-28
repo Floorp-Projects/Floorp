@@ -17,7 +17,7 @@
 SimpleTest.waitForExplicitFinish();
 
 function getMisspelledWords(editor) {
-  return editor.selectionController.getSelection(Components.interfaces.nsISelectionController.SELECTION_SPELLCHECK).toString();
+  return editor.selectionController.getSelection(Ci.nsISelectionController.SELECTION_SPELLCHECK).toString();
 }
 
 function getDictionaryList(editor) {
@@ -42,18 +42,17 @@ function RunTest() {
   textbox.focus();
   var editor = textbox.editor;
 
-  var dir = Components.classes["@mozilla.org/file/directory_service;1"].
-            getService(Components.interfaces.nsIProperties).
-            get("CurWorkD", Components.interfaces.nsIFile);
+  var dir = Cc["@mozilla.org/file/directory_service;1"].
+            getService(Ci.nsIProperties).
+            get("CurWorkD", Ci.nsIFile);
   dir.append("chrome");
   dir.append("extensions");
   dir.append("spellcheck");
   dir.append("tests");
   dir.append("chrome");
 
-  var hunspell = Components
-    .classes["@mozilla.org/spellchecker/engine;1"]
-    .getService(Components.interfaces.mozISpellCheckingEngine);
+  var hunspell = Cc["@mozilla.org/spellchecker/engine;1"]
+    .getService(Ci.mozISpellCheckingEngine);
 
   // install base dictionary
   var base = dir.clone();

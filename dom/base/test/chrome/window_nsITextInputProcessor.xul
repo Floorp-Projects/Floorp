@@ -71,8 +71,8 @@ var inputInChildWindow = otherDocument.getElementById("input");
 
 function createTIP()
 {
-  return Components.classes["@mozilla.org/text-input-processor;1"].
-           createInstance(Components.interfaces.nsITextInputProcessor);
+  return Cc["@mozilla.org/text-input-processor;1"].
+           createInstance(Ci.nsITextInputProcessor);
 }
 
 function runBeginInputTransactionMethodTests()

@@ -14,16 +14,16 @@ var httpserv;
 
 function addCreds(scheme, host)
 {
-  var authMgr = Components.classes['@mozilla.org/network/http-auth-manager;1']
-                          .getService(Ci.nsIHttpAuthManager);
+  var authMgr = Cc['@mozilla.org/network/http-auth-manager;1']
+                  .getService(Ci.nsIHttpAuthManager);
   authMgr.setAuthIdentity(scheme, host, httpserv.identity.primaryPort,
                           "basic", "secret", "/", "", "user", "pass");
 }
 
 function clearCreds()
 {
-  var authMgr = Components.classes['@mozilla.org/network/http-auth-manager;1']
-                          .getService(Ci.nsIHttpAuthManager);
+  var authMgr = Cc['@mozilla.org/network/http-auth-manager;1']
+                  .getService(Ci.nsIHttpAuthManager);
   authMgr.clearAll();
 }
 

@@ -119,8 +119,8 @@ var gBlocklistManager = {
       Services.prefs.setCharPref(TRACKING_TABLE_PREF, trackingTable);
 
       // Force an update after changing the tracking protection table.
-      let listmanager = Components.classes["@mozilla.org/url-classifier/listmanager;1"]
-                        .getService(Components.interfaces.nsIUrlListManager);
+      let listmanager = Cc["@mozilla.org/url-classifier/listmanager;1"]
+                        .getService(Ci.nsIUrlListManager);
       if (listmanager) {
         listmanager.forceUpdates(trackingTable);
       }

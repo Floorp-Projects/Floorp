@@ -4,7 +4,7 @@ const CWD = do_get_cwd();
 function checkOS(os) {
   const nsILocalFile_ = "nsILocalFile" + os;
   return nsILocalFile_ in Components.interfaces &&
-         CWD instanceof Components.interfaces[nsILocalFile_];
+         CWD instanceof Ci[nsILocalFile_];
 }
 
 const isWin = checkOS("Win");

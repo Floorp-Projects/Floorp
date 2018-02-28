@@ -3,7 +3,7 @@
  */
 
 function continue_test(status, entry) {
-  Assert.equal(status, Components.results.NS_OK);
+  Assert.equal(status, Cr.NS_OK);
   // TODO - mayhemer: remove this tests completely
   // entry.deviceID;
   // if the above line does not crash, the test was successful

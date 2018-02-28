@@ -10,7 +10,7 @@
 //                                  [absolute path to]/RootHashes.inc'
 
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
-const CertDb = Components.classes[nsX509CertDB].getService(Ci.nsIX509CertDB);
+const CertDb = Cc[nsX509CertDB].getService(Ci.nsIX509CertDB);
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");

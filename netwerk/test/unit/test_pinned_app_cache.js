@@ -119,7 +119,7 @@ function init_http_server() {
 
 function init_cache_capacity() {
   let prefs = Cc["@mozilla.org/preferences-service;1"]
-    .getService(Components.interfaces.nsIPrefBranch);
+    .getService(Ci.nsIPrefBranch);
   prefs.setIntPref("browser.cache.offline.capacity", kCacheSize / 1024);
 }
 

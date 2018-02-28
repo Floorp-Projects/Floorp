@@ -15,8 +15,8 @@ const TEST_UNICODE_ARGS = ["M\u00F8z\u00EEll\u00E5",
 function test_kill() {
   var file = get_test_program("TestBlockingProcess");
 
-  var process = Components.classes["@mozilla.org/process/util;1"]
-                          .createInstance(Components.interfaces.nsIProcess);
+  var process = Cc["@mozilla.org/process/util;1"]
+                  .createInstance(Ci.nsIProcess);
   process.init(file);
 
   Assert.ok(!process.isRunning);
@@ -45,8 +45,8 @@ function test_kill() {
 function test_quick() {
   var file = get_test_program("TestQuickReturn");
 
-  var process = Components.classes["@mozilla.org/process/util;1"]
-                          .createInstance(Components.interfaces.nsIProcess);
+  var process = Cc["@mozilla.org/process/util;1"]
+                  .createInstance(Ci.nsIProcess);
   process.init(file);
 
   // to get an exit value it must be a blocking process
@@ -56,8 +56,8 @@ function test_quick() {
 }
 
 function test_args(file, args, argsAreASCII) {
-  var process = Components.classes["@mozilla.org/process/util;1"]
-                          .createInstance(Components.interfaces.nsIProcess);
+  var process = Cc["@mozilla.org/process/util;1"]
+                  .createInstance(Ci.nsIProcess);
   process.init(file);
 
   if (argsAreASCII)
@@ -110,13 +110,13 @@ function test_unicode_app() {
 function test_notify_blocking() {
   var file = get_test_program("TestQuickReturn");
 
-  var process = Components.classes["@mozilla.org/process/util;1"]
-                          .createInstance(Components.interfaces.nsIProcess);
+  var process = Cc["@mozilla.org/process/util;1"]
+                  .createInstance(Ci.nsIProcess);
   process.init(file);
 
   process.runAsync([], 0, {
     observe(subject, topic, data) {
-      process = subject.QueryInterface(Components.interfaces.nsIProcess);
+      process = subject.QueryInterface(Ci.nsIProcess);
       Assert.equal(topic, "process-finished");
       Assert.equal(process.exitValue, 42);
       test_notify_nonblocking();
@@ -128,13 +128,13 @@ function test_notify_blocking() {
 function test_notify_nonblocking() {
   var file = get_test_program("TestArguments");
 
-  var process = Components.classes["@mozilla.org/process/util;1"]
-                          .createInstance(Components.interfaces.nsIProcess);
+  var process = Cc["@mozilla.org/process/util;1"]
+                  .createInstance(Ci.nsIProcess);
   process.init(file);
 
   process.runAsync(TEST_ARGS, TEST_ARGS.length, {
     observe(subject, topic, data) {
-      process = subject.QueryInterface(Components.interfaces.nsIProcess);
+      process = subject.QueryInterface(Ci.nsIProcess);
       Assert.equal(topic, "process-finished");
       Assert.equal(process.exitValue, 0);
       test_notify_killed();
@@ -146,13 +146,13 @@ function test_notify_nonblocking() {
 function test_notify_killed() {
   var file = get_test_program("TestBlockingProcess");
 
-  var process = Components.classes["@mozilla.org/process/util;1"]
-                          .createInstance(Components.interfaces.nsIProcess);
+  var process = Cc["@mozilla.org/process/util;1"]
+                  .createInstance(Ci.nsIProcess);
   process.init(file);
 
   process.runAsync([], 0, {
     observe(subject, topic, data) {
-      process = subject.QueryInterface(Components.interfaces.nsIProcess);
+      process = subject.QueryInterface(Ci.nsIProcess);
       Assert.equal(topic, "process-finished");
       do_test_finished();
     }

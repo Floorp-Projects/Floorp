@@ -1065,7 +1065,7 @@ Blocklist.prototype = {
               // Devices can't contain comma.
               // (c.f serialization in _notifyObserversBlocklistGFX)
               const e = new Error(`Unsupported device name ${childValue}`);
-              Components.utils.reportError(e);
+              Cu.reportError(e);
             } else {
               value.push(childValue);
             }

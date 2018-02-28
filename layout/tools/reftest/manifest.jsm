@@ -55,7 +55,7 @@ function ReadManifest(aURL, aFilter)
     var listURL = aURL;
     var channel = NetUtil.newChannel({uri: aURL, loadUsingSystemPrincipal: true});
     var inputStream = channel.open2();
-    if (channel instanceof Components.interfaces.nsIHttpChannel
+    if (channel instanceof Ci.nsIHttpChannel
         && channel.responseStatus != 200) {
       g.logger.error("HTTP ERROR : " + channel.responseStatus);
     }
@@ -142,7 +142,7 @@ function ReadManifest(aURL, aFilter)
             if (m) {
                 stat = m[1];
                 // Note: m[2] contains the parentheses, and we want them.
-                cond = Components.utils.evalInSandbox(m[2], sandbox);
+                cond = Cu.evalInSandbox(m[2], sandbox);
             } else if (item.match(/^(fails|random|skip)$/)) {
                 stat = item;
                 cond = true;
@@ -156,7 +156,7 @@ function ReadManifest(aURL, aFilter)
                                                  : Number(m[2].substring(1));
             } else if ((m = item.match(/^asserts-if\((.*?),(\d+)(-\d+)?\)$/))) {
                 cond = false;
-                if (Components.utils.evalInSandbox("(" + m[1] + ")", sandbox)) {
+                if (Cu.evalInSandbox("(" + m[1] + ")", sandbox)) {
                     minAsserts = Number(m[2]);
                     maxAsserts =
                       (m[3] == undefined) ? minAsserts
@@ -191,7 +191,7 @@ function ReadManifest(aURL, aFilter)
                 }
             } else if ((m = item.match(/^slow-if\((.*?)\)$/))) {
                 cond = false;
-                if (Components.utils.evalInSandbox("(" + m[1] + ")", sandbox))
+                if (Cu.evalInSandbox("(" + m[1] + ")", sandbox))
                     slow = true;
             } else if (item == "silentfail") {
                 cond = false;
@@ -208,7 +208,7 @@ function ReadManifest(aURL, aFilter)
               fuzzy_pixels = ExtractRange(m, 3);
             } else if ((m = item.match(/^fuzzy-if\((.*?),(\d+)(-\d+)?,(\d+)(-\d+)?\)$/))) {
               cond = false;
-              if (Components.utils.evalInSandbox("(" + m[1] + ")", sandbox)) {
+              if (Cu.evalInSandbox("(" + m[1] + ")", sandbox)) {
                 expected_status = EXPECTED_FUZZY;
                 fuzzy_delta = ExtractRange(m, 2);
                 fuzzy_pixels = ExtractRange(m, 4);
@@ -394,7 +394,7 @@ function getStreamContent(inputStream)
 
 // Build the sandbox for fails-if(), etc., condition evaluation.
 function BuildConditionSandbox(aURL) {
-    var sandbox = new Components.utils.Sandbox(aURL.spec);
+    var sandbox = new Cu.Sandbox(aURL.spec);
     var xr = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULRuntime);
     var appInfo = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULAppInfo);
     sandbox.isDebugBuild = g.debug.isDebugBuild;
@@ -592,7 +592,7 @@ function AddStyloTestPrefs(aSandbox, aTestPrefSettings, aRefPrefSettings) {
 }
 
 function AddPrefSettings(aWhere, aPrefName, aPrefValExpression, aSandbox, aTestPrefSettings, aRefPrefSettings) {
-    var prefVal = Components.utils.evalInSandbox("(" + aPrefValExpression + ")", aSandbox);
+    var prefVal = Cu.evalInSandbox("(" + aPrefValExpression + ")", aSandbox);
     var prefType;
     var valType = typeof(prefVal);
     if (valType == "boolean") {

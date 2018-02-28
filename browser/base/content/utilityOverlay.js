@@ -103,7 +103,7 @@ function openUILink(url, event, aIgnoreButton, aIgnoreAlt, aAllowThirdPartyFixup
       allowThirdPartyFixup: aAllowThirdPartyFixup,
       postData: aPostData,
       referrerURI: aReferrerURI,
-      referrerPolicy: Components.interfaces.nsIHttpChannel.REFERRER_POLICY_UNSET,
+      referrerPolicy: Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
       initiatingDoc: event ? event.target.ownerDocument : null,
     };
   }
@@ -198,7 +198,7 @@ function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerURI
       allowThirdPartyFixup: aAllowThirdPartyFixup,
       postData: aPostData,
       referrerURI: aReferrerURI,
-      referrerPolicy: Components.interfaces.nsIHttpChannel.REFERRER_POLICY_UNSET,
+      referrerPolicy: Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
     };
   }
 
@@ -245,7 +245,7 @@ function openLinkIn(url, where, params) {
       saveURL(url, null, null, true, true, aNoReferrer ? null : aReferrerURI, null, params.isContentWindowPrivate);
     } else {
       if (!aInitiatingDoc) {
-        Components.utils.reportError("openUILink/openLinkIn was called with " +
+        Cu.reportError("openUILink/openLinkIn was called with " +
           "where == 'save' but without initiatingDoc.  See bug 814264.");
         return;
       }

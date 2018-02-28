@@ -4,10 +4,10 @@
 /* import-globals-from ../../head.js */
 
 function run_test() {
-  let env = Components.classes["@mozilla.org/process/environment;1"]
-                      .getService(Components.interfaces.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"]
+              .getService(Ci.nsIEnvironment);
   do_check_throws_nsIException(function() {
-    env.QueryInterface(Components.interfaces.nsIFile);
+    env.QueryInterface(Ci.nsIFile);
   }, "NS_NOINTERFACE");
 }
 

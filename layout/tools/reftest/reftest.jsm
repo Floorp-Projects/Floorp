@@ -162,8 +162,8 @@ function OnRefTestLoad(win)
     var env = CC["@mozilla.org/process/environment;1"].
               getService(CI.nsIEnvironment);
 
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                getService(Components.interfaces.nsIPrefBranch);
+    var prefs = Cc["@mozilla.org/preferences-service;1"].
+                getService(Ci.nsIPrefBranch);
     g.browserIsRemote = prefs.getBoolPref("browser.tabs.remote.autostart", false);
 
     g.browserIsIframe = prefs.getBoolPref("reftest.browser.iframe.enabled", false);
@@ -223,8 +223,8 @@ function InitAndStartRefTests()
 {
     /* These prefs are optional, so we don't need to spit an error to the log */
     try {
-        var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefBranch);
+        var prefs = Cc["@mozilla.org/preferences-service;1"].
+                    getService(Ci.nsIPrefBranch);
     } catch(e) {
         logger.error("EXCEPTION: " + e);
     }
@@ -347,8 +347,8 @@ function ReadTests() {
         }
 
         g.urls = [];
-        var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefBranch);
+        var prefs = Cc["@mozilla.org/preferences-service;1"].
+                    getService(Ci.nsIPrefBranch);
 
         /* There are three modes implemented here:
          * 1) reftest.manifests
@@ -430,8 +430,8 @@ function StartTests()
 {
     /* These prefs are optional, so we don't need to spit an error to the log */
     try {
-        var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefBranch);
+        var prefs = Cc["@mozilla.org/preferences-service;1"].
+                    getService(Ci.nsIPrefBranch);
     } catch(e) {
         logger.error("EXCEPTION: " + e);
     }
@@ -659,8 +659,8 @@ function StartCurrentURI(aURLTargetType)
 
     RestoreChangedPreferences();
 
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-        getService(Components.interfaces.nsIPrefBranch);
+    var prefs = Cc["@mozilla.org/preferences-service;1"].
+        getService(Ci.nsIPrefBranch);
 
     const prefSettings =
       g.urls[0][isStartingRef ? "prefSettings2" : "prefSettings1"];
@@ -1363,8 +1363,8 @@ function ResetRenderingState()
 function RestoreChangedPreferences()
 {
     if (g.prefsToRestore.length > 0) {
-        var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefBranch);
+        var prefs = Cc["@mozilla.org/preferences-service;1"].
+                    getService(Ci.nsIPrefBranch);
         g.prefsToRestore.reverse();
         g.prefsToRestore.forEach(function(ps) {
             var value = ps.value;

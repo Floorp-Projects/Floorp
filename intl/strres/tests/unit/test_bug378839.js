@@ -29,10 +29,10 @@ const value_hello = "Hello World"; // tests formatStringFromName with parameter
 
 function run_test() {
     var StringBundle = 
-	Components.classes["@mozilla.org/intl/stringbundle;1"]
-	 .getService(Components.interfaces.nsIStringBundleService);
-    var ios = Components.classes["@mozilla.org/network/io-service;1"]
-	 .getService(Components.interfaces.nsIIOService);
+	Cc["@mozilla.org/intl/stringbundle;1"]
+	 .getService(Ci.nsIStringBundleService);
+    var ios = Cc["@mozilla.org/network/io-service;1"]
+	 .getService(Ci.nsIIOService);
     var bundleURI = ios.newFileURI(do_get_file("strres.properties"));
 
     var bundle = StringBundle.createBundle(bundleURI.spec);

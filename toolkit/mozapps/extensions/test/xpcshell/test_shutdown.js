@@ -58,7 +58,7 @@ async function test_functions() {
       await AddonManager[prop](...args);
       do_throw(prop + " did not throw an exception");
     } catch (e) {
-      if (e.result != Components.results.NS_ERROR_NOT_INITIALIZED)
+      if (e.result != Cr.NS_ERROR_NOT_INITIALIZED)
         do_throw(prop + " threw an unexpected exception: " + e);
     }
   }
@@ -74,7 +74,7 @@ async function test_functions() {
       AddonManagerPrivate[prop]();
       do_throw(prop + " did not throw an exception");
     } catch (e) {
-      if (e.result != Components.results.NS_ERROR_NOT_INITIALIZED)
+      if (e.result != Cr.NS_ERROR_NOT_INITIALIZED)
         do_throw(prop + " threw an unexpected exception: " + e);
     }
   }

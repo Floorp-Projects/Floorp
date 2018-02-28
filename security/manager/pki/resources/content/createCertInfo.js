@@ -9,7 +9,7 @@
 var keygenThread;
 
 function onLoad() {
-  keygenThread = window.arguments[0].QueryInterface(Components.interfaces.nsIKeygenThread);
+  keygenThread = window.arguments[0].QueryInterface(Ci.nsIKeygenThread);
 
   if (!keygenThread) {
     window.close();

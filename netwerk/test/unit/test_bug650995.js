@@ -25,7 +25,7 @@ function setupChannel(suffix, value) {
         uri: "http://localhost:" + httpserver.identity.primaryPort + suffix,
         loadUsingSystemPrincipal: true
     });
-    var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
+    var httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
     httpChan.setRequestHeader("x-request", value, false);
     
     return httpChan;

@@ -13,7 +13,7 @@ var gThreadClient;
 function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-grips");
-  Components.utils.evalInSandbox(function stopMe() {
+  Cu.evalInSandbox(function stopMe() {
     debugger;
   }.toString(), gDebuggee);
 
@@ -40,7 +40,7 @@ function add_pause_listener() {
 }
 
 function eval_code() {
-  Components.utils.evalInSandbox([
+  Cu.evalInSandbox([
     "this.line0 = Error().lineNumber;",
     "function f() {}",
     "stopMe(f, {});"

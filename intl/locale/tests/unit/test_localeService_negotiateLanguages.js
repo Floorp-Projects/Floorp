@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const localeService =
-  Components.classes["@mozilla.org/intl/localeservice;1"]
-  .getService(Components.interfaces.mozILocaleService);
+  Cc["@mozilla.org/intl/localeservice;1"]
+  .getService(Ci.mozILocaleService);
 
 const data = {
   "filtering": {

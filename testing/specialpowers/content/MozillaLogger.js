@@ -88,16 +88,16 @@ MozillaFileLogger.prototype = {
     var PR_WRITE_ONLY   = 0x02; // Open for writing only.
     var PR_CREATE_FILE  = 0x08;
     var PR_APPEND       = 0x10;
-    this._file = Components.classes["@mozilla.org/file/local;1"].
-                            createInstance(Components.interfaces.nsIFile);
+    this._file = Cc["@mozilla.org/file/local;1"].
+                            createInstance(Ci.nsIFile);
     this._file.initWithPath(path);
-    this._foStream = Components.classes["@mozilla.org/network/file-output-stream;1"].
-                                     createInstance(Components.interfaces.nsIFileOutputStream);
+    this._foStream = Cc["@mozilla.org/network/file-output-stream;1"].
+                                     createInstance(Ci.nsIFileOutputStream);
     this._foStream.init(this._file, PR_WRITE_ONLY | PR_CREATE_FILE | PR_APPEND,
                                      436 /* 0664 */, 0);
 
-    this._converter = Components.classes["@mozilla.org/intl/converter-output-stream;1"].
-                    createInstance(Components.interfaces.nsIConverterOutputStream);
+    this._converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
+                    createInstance(Ci.nsIConverterOutputStream);
     this._converter.init(this._foStream, "UTF-8");
   },
 

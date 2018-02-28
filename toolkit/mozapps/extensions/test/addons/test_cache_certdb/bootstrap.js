@@ -36,11 +36,11 @@ function overrideCertDB() {
 
   let fakeCertDB = {
     openSignedAppFileAsync(root, file, callback) {
-      callback.openSignedAppFileFinished(Components.results.NS_OK, null, fakeCert);
+      callback.openSignedAppFileFinished(Cr.NS_OK, null, fakeCert);
     },
 
     verifySignedDirectoryAsync(root, dir, callback) {
-      callback.verifySignedDirectoryFinished(Components.results.NS_OK, fakeCert);
+      callback.verifySignedDirectoryFinished(Cr.NS_OK, fakeCert);
     },
 
     QueryInterface: XPCOMUtils.generateQI([AM_Ci.nsIX509CertDB])
@@ -59,7 +59,7 @@ function overrideCertDB() {
   let certDBFactory = {
     createInstance(outer, iid) {
       if (outer != null) {
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
+        throw Cr.NS_ERROR_NO_AGGREGATION;
       }
       return fakeCertDB.QueryInterface(iid);
     }

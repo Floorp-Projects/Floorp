@@ -41,7 +41,7 @@ function run_test() {
           result += temp;
         }
       } catch(e) {
-	Assert.equal(e.result, Components.results.NS_BASE_STREAM_CLOSED);
+	Assert.equal(e.result, Cr.NS_BASE_STREAM_CLOSED);
       }
       Assert.equal(result, testStr);
       do_test_finished();

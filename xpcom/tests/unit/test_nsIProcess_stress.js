@@ -2,12 +2,12 @@ function run_test() {
   set_process_running_environment();
 
   var file = get_test_program("TestQuickReturn");
-  var tm = Components.classes["@mozilla.org/thread-manager;1"]
-                     .getService();
+  var tm = Cc["@mozilla.org/thread-manager;1"]
+             .getService();
 
   for (var i = 0; i < 1000; i++) {
-    var process = Components.classes["@mozilla.org/process/util;1"]
-                          .createInstance(Components.interfaces.nsIProcess);
+    var process = Cc["@mozilla.org/process/util;1"]
+                          .createInstance(Ci.nsIProcess);
     process.init(file);
 
     process.run(false, [], 0);

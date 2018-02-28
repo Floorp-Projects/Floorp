@@ -6,15 +6,15 @@
 
 function run_test()
 {
-  var sb = Components.utils.Sandbox("http://www.blah.com");
+  var sb = Cu.Sandbox("http://www.blah.com");
   var resolveFun;
   var p1 = new sb.Promise((res, rej) => {resolveFun = res});
   var rejectFun;
   var p2 = new sb.Promise((res, rej) => {rejectFun = rej});
-  Components.utils.nukeSandbox(sb);
-  Assert.ok(Components.utils.isDeadWrapper(sb), "sb should be dead");
-  Assert.ok(Components.utils.isDeadWrapper(p1), "p1 should be dead");
-  Assert.ok(Components.utils.isDeadWrapper(p2), "p2 should be dead");
+  Cu.nukeSandbox(sb);
+  Assert.ok(Cu.isDeadWrapper(sb), "sb should be dead");
+  Assert.ok(Cu.isDeadWrapper(p1), "p1 should be dead");
+  Assert.ok(Cu.isDeadWrapper(p2), "p2 should be dead");
 
   var exception;
 

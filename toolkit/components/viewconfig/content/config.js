@@ -6,15 +6,15 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const nsIPrefLocalizedString = Components.interfaces.nsIPrefLocalizedString;
-const nsISupportsString = Components.interfaces.nsISupportsString;
-const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
-const nsIClipboardHelper = Components.interfaces.nsIClipboardHelper;
+const nsIPrefLocalizedString = Ci.nsIPrefLocalizedString;
+const nsISupportsString = Ci.nsISupportsString;
+const nsIPrefBranch = Ci.nsIPrefBranch;
+const nsIClipboardHelper = Ci.nsIClipboardHelper;
 
 const nsClipboardHelper_CONTRACTID = "@mozilla.org/widget/clipboardhelper;1";
 
 const gPrefBranch = Services.prefs;
-const gClipboardHelper = Components.classes[nsClipboardHelper_CONTRACTID].getService(nsIClipboardHelper);
+const gClipboardHelper = Cc[nsClipboardHelper_CONTRACTID].getService(nsIClipboardHelper);
 
 var gLockProps = ["default", "user", "locked"];
 // we get these from a string bundle

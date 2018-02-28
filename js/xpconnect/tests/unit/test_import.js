@@ -19,7 +19,7 @@ function run_test() {
   Assert.ok(scope.XPCOMUtils == module.XPCOMUtils);
 
   // import symbols to our global object
-  Assert.equal(typeof(Components.utils.import), "function");
+  Assert.equal(typeof(Cu.import), "function");
   ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
   Assert.equal(typeof(XPCOMUtils), "object");
   Assert.equal(typeof(XPCOMUtils.generateNSGetFactory), "function");
@@ -33,8 +33,8 @@ function run_test() {
   Assert.ok(scope2.XPCOMUtils == scope.XPCOMUtils);
 
   // try on a new object using the resolved URL
-  var res = Components.classes["@mozilla.org/network/protocol;1?name=resource"]
-                      .getService(Components.interfaces.nsIResProtocolHandler);
+  var res = Cc["@mozilla.org/network/protocol;1?name=resource"]
+              .getService(Ci.nsIResProtocolHandler);
   var resURI = res.newURI("resource://gre/modules/XPCOMUtils.jsm");
   dump("resURI: " + resURI + "\n");
   var filePath = res.resolveURI(resURI);
@@ -56,8 +56,8 @@ function run_test() {
   do_load_manifest("component_import.manifest");
   const contractID = "@mozilla.org/tests/module-importer;";
   Assert.ok((contractID + "1") in Components.classes);
-  var foo = Components.classes[contractID + "1"]
-                      .createInstance(Components.interfaces.nsIClassInfo);
+  var foo = Cc[contractID + "1"]
+              .createInstance(Ci.nsIClassInfo);
   Assert.ok(Boolean(foo));
   Assert.ok(foo.contractID == contractID + "1");
   // XXX the following check succeeds only if the test component wasn't
@@ -70,19 +70,19 @@ function run_test() {
   // Kind of odd that this is not returning an array containing the
   // number... Or for that matter not returning an array containing an object?
   var interfaces = foo.getInterfaces({});
-  Assert.equal(interfaces, Components.interfaces.nsIClassInfo.number);
+  Assert.equal(interfaces, Ci.nsIClassInfo.number);
 
   // try to create a component by CID
   const cid = "{6b933fe6-6eba-4622-ac86-e4f654f1b474}";
   Assert.ok(cid in Components.classesByID);
   foo = Components.classesByID[cid]
-                  .createInstance(Components.interfaces.nsIClassInfo);
+                  .createInstance(Ci.nsIClassInfo);
   Assert.ok(foo.contractID == contractID + "1");
 
   // try to create another component which doesn't directly implement QI
   Assert.ok((contractID + "2") in Components.classes);
-  var bar = Components.classes[contractID + "2"]
-                      .createInstance(Components.interfaces.nsIClassInfo);
+  var bar = Cc[contractID + "2"]
+              .createInstance(Ci.nsIClassInfo);
   Assert.ok(Boolean(bar));
   Assert.ok(bar.contractID == contractID + "2");
 }

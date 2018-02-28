@@ -5,14 +5,14 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
-const nsIPKCS11Slot = Components.interfaces.nsIPKCS11Slot;
-const nsIPKCS11Module = Components.interfaces.nsIPKCS11Module;
+const nsIPKCS11Slot = Ci.nsIPKCS11Slot;
+const nsIPKCS11Module = Ci.nsIPKCS11Module;
 const nsPKCS11ModuleDB = "@mozilla.org/security/pkcs11moduledb;1";
-const nsIPKCS11ModuleDB = Components.interfaces.nsIPKCS11ModuleDB;
-const nsIPK11Token = Components.interfaces.nsIPK11Token;
+const nsIPKCS11ModuleDB = Ci.nsIPKCS11ModuleDB;
+const nsIPK11Token = Ci.nsIPK11Token;
 const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
-const nsIPK11TokenDB = Components.interfaces.nsIPK11TokenDB;
-const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
+const nsIPK11TokenDB = Ci.nsIPK11TokenDB;
+const nsIDialogParamBlock = Ci.nsIDialogParamBlock;
 const nsDialogParamBlock = "@mozilla.org/embedcomp/dialogparam;1";
 
 var bundle;
@@ -22,7 +22,7 @@ var skip_enable_buttons = false;
 /* Do the initial load of all PKCS# modules and list them. */
 function LoadModules() {
   bundle = document.getElementById("pippki_bundle");
-  secmoddb = Components.classes[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
+  secmoddb = Cc[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
   RefreshDeviceList();
 }
 
@@ -358,8 +358,8 @@ function doUnload() {
 
 function changePassword() {
   getSelectedItem();
-  let params = Components.classes[nsDialogParamBlock]
-                         .createInstance(nsIDialogParamBlock);
+  let params = Cc[nsDialogParamBlock]
+                 .createInstance(nsIDialogParamBlock);
   params.SetString(1, selected_slot.tokenName);
   window.openDialog("changepassword.xul", "", "chrome,centerscreen,modal",
                     params);
@@ -389,7 +389,7 @@ function toggleFIPS() {
     // In FIPS mode the password must be non-empty.
     // This is different from what we allow in NON-Fips mode.
 
-    var tokendb = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
+    var tokendb = Cc[nsPK11TokenDB].getService(nsIPK11TokenDB);
     var internal_token = tokendb.getInternalKeyToken(); // nsIPK11Token
     if (!internal_token.hasPassword) {
       // Token has either no or an empty password.

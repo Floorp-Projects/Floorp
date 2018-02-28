@@ -6,8 +6,8 @@
 
 function wrapInputStream(input)
 {
-  var nsIScriptableInputStream = Components.interfaces.nsIScriptableInputStream;
-  var factory = Components.classes["@mozilla.org/scriptableinputstream;1"];
+  var nsIScriptableInputStream = Ci.nsIScriptableInputStream;
+  var factory = Cc["@mozilla.org/scriptableinputstream;1"];
   var wrapper = factory.createInstance(nsIScriptableInputStream);
   wrapper.init(input);
   return wrapper;
@@ -32,7 +32,7 @@ function run_test() {
   var dirstream= wrapInputStream(zipreader.getInputStream("modules/libjar/test/"))
   zipreader.close();
   zipreader = null;
-  Components.utils.forceGC();
+  Cu.forceGC();
   Assert.ok(stream.read(1024).length > 0);
   Assert.ok(dirstream.read(100).length > 0);
 }

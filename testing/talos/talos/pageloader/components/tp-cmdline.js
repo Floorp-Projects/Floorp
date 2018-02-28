@@ -43,14 +43,14 @@
 const TP_CMDLINE_CONTRACTID     = "@mozilla.org/commandlinehandler/general-startup;1?type=tp";
 const TP_CMDLINE_CLSID          = Components.ID("{8AF052F5-8EFE-4359-8266-E16498A82E8B}");
 const CATMAN_CONTRACTID         = "@mozilla.org/categorymanager;1";
-const nsISupports               = Components.interfaces.nsISupports;
+const nsISupports               = Ci.nsISupports;
 
-const nsICategoryManager        = Components.interfaces.nsICategoryManager;
-const nsICommandLine            = Components.interfaces.nsICommandLine;
-const nsICommandLineHandler     = Components.interfaces.nsICommandLineHandler;
-const nsIComponentRegistrar     = Components.interfaces.nsIComponentRegistrar;
-const nsISupportsString         = Components.interfaces.nsISupportsString;
-const nsIWindowWatcher          = Components.interfaces.nsIWindowWatcher;
+const nsICategoryManager        = Ci.nsICategoryManager;
+const nsICommandLine            = Ci.nsICommandLine;
+const nsICommandLineHandler     = Ci.nsICommandLineHandler;
+const nsIComponentRegistrar     = Ci.nsIComponentRegistrar;
+const nsISupportsString         = Ci.nsISupportsString;
+const nsIWindowWatcher          = Ci.nsIWindowWatcher;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -65,7 +65,7 @@ PageLoaderCmdLineHandler.prototype =
     if (nsICommandLineHandler && iid.equals(nsICommandLineHandler))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   /* nsICommandLineHandler */
@@ -98,7 +98,7 @@ var PageLoaderCmdLineFactory =
 {
   createInstance(outer, iid) {
     if (outer != null) {
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
+      throw Cr.NS_ERROR_NO_AGGREGATION;
     }
 
     return new PageLoaderCmdLineHandler().QueryInterface(iid);
@@ -107,7 +107,7 @@ var PageLoaderCmdLineFactory =
 
 function NSGetFactory(cid) {
   if (!cid.equals(TP_CMDLINE_CLSID))
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
 
   return PageLoaderCmdLineFactory;
 }
@@ -124,7 +124,7 @@ var PageLoaderCmdLineModule =
                                     location,
                                     type);
 
-    var catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
+    var catman = Cc[CATMAN_CONTRACTID].getService(nsICategoryManager);
     catman.addCategoryEntry("command-line-handler",
                             "m-tp",
                             TP_CMDLINE_CONTRACTID, true, true);
@@ -134,7 +134,7 @@ var PageLoaderCmdLineModule =
     compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
 
     compMgr.unregisterFactoryLocation(TP_CMDLINE_CLSID, fileSpec);
-    var catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
+    var catman = Cc[CATMAN_CONTRACTID].getService(nsICategoryManager);
     catman.deleteCategoryEntry("command-line-handler",
                                "m-tp", true);
   },

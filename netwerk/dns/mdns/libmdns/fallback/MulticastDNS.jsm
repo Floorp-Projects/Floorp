@@ -20,7 +20,7 @@ ChromeUtils.import('resource://gre/modules/DNSTypes.jsm');
 const NS_NETWORK_LINK_TOPIC = 'network:link-status-changed';
 
 let observerService     = Cc["@mozilla.org/observer-service;1"]
-                            .getService(Components.interfaces.nsIObserverService);
+                            .getService(Ci.nsIObserverService);
 let networkInfoService  = Cc['@mozilla.org/network-info-service;1']
                             .createInstance(Ci.nsINetworkInfoService);
 

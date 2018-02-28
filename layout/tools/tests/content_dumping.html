@@ -7,13 +7,13 @@
 
 <script type="application/javascript">
 
-const nsILayoutDebuggingTools = Components.interfaces.nsILayoutDebuggingTools;
+const nsILayoutDebuggingTools = Ci.nsILayoutDebuggingTools;
 var gDebugTools;
 
 function Init()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  gDebugTools = Components.classes["@mozilla.org/layout-debug/layout-debuggingtools;1"].createInstance(nsILayoutDebuggingTools);
+  gDebugTools = Cc["@mozilla.org/layout-debug/layout-debuggingtools;1"].createInstance(nsILayoutDebuggingTools);
   gDebugTools.init(window.frames.pageframe);
 }
 

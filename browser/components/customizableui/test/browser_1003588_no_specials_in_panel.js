@@ -4,8 +4,8 @@
 "use strict";
 
 function simulateItemDragAndEnd(aToDrag, aTarget) {
-  var ds = Components.classes["@mozilla.org/widget/dragservice;1"].
-           getService(Components.interfaces.nsIDragService);
+  var ds = Cc["@mozilla.org/widget/dragservice;1"].
+           getService(Ci.nsIDragService);
 
   ds.startDragSession();
   try {

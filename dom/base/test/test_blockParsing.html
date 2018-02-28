@@ -85,8 +85,8 @@ add_task(async function() {
 add_task(async function test_cleanup() {
   const TOPIC = "blocking-promise-destroyed";
 
-  const finalizationWitness = Components.classes["@mozilla.org/toolkit/finalizationwitness;1"]
-      .getService(Components.interfaces.nsIFinalizationWitnessService);
+  const finalizationWitness = Cc["@mozilla.org/toolkit/finalizationwitness;1"]
+      .getService(Ci.nsIFinalizationWitnessService);
 
   for (let url of ["http://mochi.test:8888/chrome/dom/base/test/file_inline_script.html",
                    "http://mochi.test:8888/chrome/dom/base/test/file_inline_script.xhtml"]) {
@@ -117,9 +117,9 @@ add_task(async function test_cleanup() {
     witness = null;
     iframe.remove();
 
-    Components.utils.forceGC();
-    Components.utils.forceCC();
-    Components.utils.forceGC();
+    Cu.forceGC();
+    Cu.forceCC();
+    Cu.forceGC();
 
     // Make sure the blocker promise has been collected.
     let [, data] = await destroyedPromise;

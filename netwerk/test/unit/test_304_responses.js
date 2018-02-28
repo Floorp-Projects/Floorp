@@ -31,7 +31,7 @@ function make_channel(url) {
 }
 
 function clearCache() {
-    var service = Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
+    var service = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
         .getService(Ci.nsICacheStorageService);
     service.clear();
 }
@@ -58,7 +58,7 @@ function finish_test(request, buffer) {
 }
 
 function consume304(request, buffer) {
-  request.QueryInterface(Components.interfaces.nsIHttpChannel);
+  request.QueryInterface(Ci.nsIHttpChannel);
   Assert.equal(request.responseStatus, 304);
   Assert.equal(request.getResponseHeader("Returned-From-Handler"), "1");
   run_next_test();
@@ -87,7 +87,7 @@ add_test(function test_304_stored_in_cache() {
       var chan = make_channel(baseURI + existingCached304);
 
       // make it a custom conditional request
-      chan.QueryInterface(Components.interfaces.nsIHttpChannel);
+      chan.QueryInterface(Ci.nsIHttpChannel);
       chan.setRequestHeader("If-None-Match", '"foo"', false);
 
       chan.asyncOpen2(new ChannelListener(consume304, null));

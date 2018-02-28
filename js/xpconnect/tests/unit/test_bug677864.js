@@ -1,5 +1,5 @@
 function check_cl(iface, desc) {
-    Assert.equal(iface.QueryInterface(Components.interfaces.nsIClassInfo).classDescription, desc);
+    Assert.equal(iface.QueryInterface(Ci.nsIClassInfo).classDescription, desc);
 }
 
 function run_test() {

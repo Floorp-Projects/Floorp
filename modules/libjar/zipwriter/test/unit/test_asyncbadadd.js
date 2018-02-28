@@ -12,7 +12,7 @@ var observer = {
 
   onStopRequest: function(request, context, status)
   {
-    Assert.equal(status, Components.results.NS_ERROR_FILE_NOT_FOUND);
+    Assert.equal(status, Cr.NS_ERROR_FILE_NOT_FOUND);
     zipW.close();
     Assert.equal(ZIP_EOCDR_HEADER_SIZE, tmpFile.fileSize);
     do_test_finished();

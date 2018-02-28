@@ -13,10 +13,10 @@ add_task(async function test() {
                .QueryInterface(Ci.nsIProperties)
                .get("ProfD", Ci.nsIFile);
   file.append('file.txt');
-  file.createUnique(Components.interfaces.nsIFile.FILE_TYPE, 0o600);
+  file.createUnique(Ci.nsIFile.FILE_TYPE, 0o600);
 
-  let outStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
-                      .createInstance(Components.interfaces.nsIFileOutputStream);
+  let outStream = Cc["@mozilla.org/network/file-output-stream;1"]
+                      .createInstance(Ci.nsIFileOutputStream);
   outStream.init(file, 0x02 | 0x08 | 0x20, // write, create, truncate
                  0666, 0);
   outStream.write(fileData, fileData.length);

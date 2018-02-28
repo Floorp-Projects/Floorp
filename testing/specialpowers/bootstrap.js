@@ -10,7 +10,7 @@ function startup(data, reason) {
   let observer = {};
   ChromeUtils.import("chrome://specialpowers/content/SpecialPowersObserver.jsm", observer);
 
-  let registrar = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   registrar.registerFactory(
     observer.SpecialPowersObserver.prototype.classID,
     "SpecialPowersObserver",
@@ -26,7 +26,7 @@ function shutdown(data, reason) {
   let observer = {};
   ChromeUtils.import("chrome://specialpowers/content/SpecialPowersObserver.jsm", observer);
 
-  let registrar = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   registrar.unregisterFactory(
     observer.SpecialPowersObserver.prototype.classID,
     observer.SpecialPowersObserverFactory

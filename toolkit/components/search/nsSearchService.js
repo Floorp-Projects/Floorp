@@ -324,7 +324,7 @@ loadListener.prototype = {
   asyncOnChannelRedirect: function SRCH_loadCRedirect(aOldChannel, aNewChannel,
                                                       aFlags, callback) {
     this._channel = aNewChannel;
-    callback.onRedirectVerifyCallback(Components.results.NS_OK);
+    callback.onRedirectVerifyCallback(Cr.NS_OK);
   },
 
   // nsIInterfaceRequestor
@@ -519,7 +519,7 @@ var ensureKnownCountryCode = async function(ss) {
         resolve();
       };
       fetchRegionDefault(ss).then(callback).catch(err => {
-        Components.utils.reportError(err);
+        Cu.reportError(err);
         callback();
       });
     });
@@ -644,7 +644,7 @@ function fetchCountryCode(ss) {
 
       if (result && geoSpecificDefaultsEnabled()) {
         fetchRegionDefault(ss).then(callback).catch(err => {
-          Components.utils.reportError(err);
+          Cu.reportError(err);
           callback();
         });
       } else {
@@ -2533,13 +2533,13 @@ Engine.prototype = {
       throw Cr.NS_ERROR_INVALID_ARG;
     }
     let connector =
-        Services.io.QueryInterface(Components.interfaces.nsISpeculativeConnect);
+        Services.io.QueryInterface(Ci.nsISpeculativeConnect);
 
     let searchURI = this.getSubmission("dummy").uri;
 
-    let callbacks = options.window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIWebNavigation)
-                           .QueryInterface(Components.interfaces.nsILoadContext);
+    let callbacks = options.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIWebNavigation)
+                           .QueryInterface(Ci.nsILoadContext);
 
     // Using the codebase principal which is constructed by the search URI
     // and given originAttributes. If originAttributes are not given, we
@@ -3737,7 +3737,7 @@ SearchService.prototype = {
         },
         function onError(aReason) {
           Cu.reportError("Internal error while initializing SearchService: " + aReason);
-          observer.onInitComplete(Components.results.NS_ERROR_UNEXPECTED);
+          observer.onInitComplete(Cr.NS_ERROR_UNEXPECTED);
         }
       );
     }

@@ -15,8 +15,8 @@ var gSetBackground = {
   _imageName: null,
 
   get _shell() {
-    return Components.classes["@mozilla.org/browser/shell-service;1"]
-                     .getService(Ci.nsIShellService);
+    return Cc["@mozilla.org/browser/shell-service;1"]
+             .getService(Ci.nsIShellService);
   },
 
   load() {

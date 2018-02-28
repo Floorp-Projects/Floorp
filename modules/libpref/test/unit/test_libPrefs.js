@@ -378,7 +378,7 @@ function run_test() {
       if (aIID.equals(Ci.nsIObserver) ||
           aIID.equals(Ci.nsISupports))
          return this;
-      throw Components.results.NS_NOINTERFACE;
+      throw Cr.NS_NOINTERFACE;
     }
 
     observe(aSubject, aTopic, aState) {

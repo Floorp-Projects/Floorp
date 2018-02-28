@@ -33,10 +33,10 @@ test.prototype =
 
   QueryInterface: function(iid) {
         netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-        if (iid.equals(Components.interfaces.nsIWifiListener) ||
-            iid.equals(Components.interfaces.nsISupports))
+        if (iid.equals(Ci.nsIWifiListener) ||
+            iid.equals(Ci.nsISupports))
             return this;
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+        throw Cr.NS_ERROR_NO_INTERFACE;
    },
 }
 
@@ -44,7 +44,7 @@ test.prototype =
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
   var listener = new test();
-  var wifi_service = Components.classes["@mozilla.org/wifi/monitor;1"].getService(Components.interfaces.nsIWifiMonitor);
+  var wifi_service = Cc["@mozilla.org/wifi/monitor;1"].getService(Ci.nsIWifiMonitor);
 
   wifi_service.startWatching(listener);
 
