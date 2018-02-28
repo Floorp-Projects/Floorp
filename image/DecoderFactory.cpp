@@ -225,6 +225,29 @@ DecoderFactory::CreateAnimationDecoder(DecoderType aType,
   return NS_OK;
 }
 
+/* static */ already_AddRefed<Decoder>
+DecoderFactory::CloneAnimationDecoder(Decoder* aDecoder)
+{
+  MOZ_ASSERT(aDecoder);
+  MOZ_ASSERT(aDecoder->HasAnimation());
+
+  RefPtr<Decoder> decoder = GetDecoder(aDecoder->GetType(), nullptr,
+                                       /* aIsRedecode = */ true);
+  MOZ_ASSERT(decoder, "Should have a decoder now");
+
+  // Initialize the decoder.
+  decoder->SetMetadataDecode(false);
+  decoder->SetIterator(aDecoder->GetSourceBuffer()->Iterator());
+  decoder->SetDecoderFlags(aDecoder->GetDecoderFlags());
+  decoder->SetSurfaceFlags(aDecoder->GetSurfaceFlags());
+
+  if (NS_FAILED(decoder->Init())) {
+    return nullptr;
+  }
+
+  return decoder.forget();
+}
+
 /* static */ already_AddRefed<IDecodingTask>
 DecoderFactory::CreateMetadataDecoder(DecoderType aType,
                                       NotNull<RasterImage*> aImage,
