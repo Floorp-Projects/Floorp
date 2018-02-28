@@ -78,6 +78,20 @@ XULMAP(
 )
 
 XULMAP(
+  menupopup,
+  [](nsIContent* aContent, Accessible* aContext) {
+    return CreateMenupopupAccessible(aContent, aContext);
+  }
+)
+
+XULMAP(
+  popup,
+  [](nsIContent* aContent, Accessible* aContext) {
+    return CreateMenupopupAccessible(aContent, aContext);
+  }
+)
+
+XULMAP(
   thumb,
   [](nsIContent* aContent, Accessible* aContext) -> Accessible* {
     if (aContent->IsElement() &&
