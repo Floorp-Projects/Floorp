@@ -27,8 +27,6 @@
       "PlacesTransactions", "resource://gre/modules/PlacesTransactions.jsm");
     ChromeUtils.defineModuleGetter(window,
       "ForgetAboutSite", "resource://gre/modules/ForgetAboutSite.jsm");
-    ChromeUtils.defineModuleGetter(window,
-      "PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
     XPCOMUtils.defineLazyScriptGetter(window, "PlacesTreeView",
       "chrome://browser/content/places/treeView.js");
