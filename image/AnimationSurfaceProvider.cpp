@@ -17,7 +17,8 @@ namespace image {
 
 AnimationSurfaceProvider::AnimationSurfaceProvider(NotNull<RasterImage*> aImage,
                                                    const SurfaceKey& aSurfaceKey,
-                                                   NotNull<Decoder*> aDecoder)
+                                                   NotNull<Decoder*> aDecoder,
+                                                   size_t aCurrentFrame)
   : ISurfaceProvider(ImageKey(aImage.get()), aSurfaceKey,
                      AvailabilityState::StartAsPlaceholder())
   , mImage(aImage.get())

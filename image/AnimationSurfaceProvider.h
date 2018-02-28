@@ -31,7 +31,8 @@ public:
 
   AnimationSurfaceProvider(NotNull<RasterImage*> aImage,
                            const SurfaceKey& aSurfaceKey,
-                           NotNull<Decoder*> aDecoder);
+                           NotNull<Decoder*> aDecoder,
+                           size_t aCurrentFrame);
 
 
   //////////////////////////////////////////////////////////////////////////////
