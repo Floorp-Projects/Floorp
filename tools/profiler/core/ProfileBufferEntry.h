@@ -183,20 +183,13 @@ public:
     {
     }
 
-    FrameKey(const FrameKey& aToCopy)
-     : mLocation(aToCopy.mLocation)
-     , mLine(aToCopy.mLine)
-     , mCategory(aToCopy.mCategory)
-     , mJITAddress(aToCopy.mJITAddress)
-     , mJITDepth(aToCopy.mJITDepth)
-    {
-    }
-
     FrameKey(const JITAddress& aJITAddress, uint32_t aJITDepth)
      : mJITAddress(mozilla::Some(aJITAddress))
      , mJITDepth(mozilla::Some(aJITDepth))
     {
     }
+
+    FrameKey(const FrameKey& aToCopy) = default;
 
     uint32_t Hash() const;
     bool operator==(const FrameKey& aOther) const;
