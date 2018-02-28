@@ -762,7 +762,6 @@ a.learn-more-link.webconsole-learn-more-link {
   height: 100%;
   -moz-user-focus: normal;
   color: var(--console-output-color);
-  --console-output-indent-width: 1rem;
   --console-output-indent-border-color: var(--theme-selection-background);
   --icon-top-margin: 3px;
   --object-inspector-hover-background: transparent;
@@ -928,7 +927,7 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 .theme-dark .webconsole-output-wrapper .message.error .tree.object-inspector,
 .theme-dark .webconsole-output-wrapper .message.warn .tree.object-inspector {
-  --tree-indent-border-color: var(--theme-body-color);
+  --console-output-indent-border-color: var(--theme-body-color);
 }
 
 .webconsole-output-wrapper .message-flex-body > .message-body {
