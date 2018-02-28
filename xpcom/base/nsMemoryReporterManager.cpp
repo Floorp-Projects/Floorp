@@ -1395,11 +1395,28 @@ public:
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize) override
   {
-    int64_t size = NS_SizeOfAtomTableIncludingThis(MallocSizeOf);
+    AtomsSizes sizes;
+    NS_AddSizeOfAtoms(MallocSizeOf, sizes);
 
     MOZ_COLLECT_REPORT(
-      "explicit/atom-table", KIND_HEAP, UNITS_BYTES, size,
+      "explicit/atoms/table", KIND_HEAP, UNITS_BYTES, sizes.mTable,
       "Memory used by the atom table.");
+
+    MOZ_COLLECT_REPORT(
+      "explicit/atoms/static/atom-objects", KIND_HEAP, UNITS_BYTES,
+      sizes.mStaticAtomObjects,
+      "Memory used by static atom objects.");
+
+    MOZ_COLLECT_REPORT(
+      "explicit/atoms/dynamic/atom-objects", KIND_HEAP, UNITS_BYTES,
+      sizes.mDynamicAtomObjects,
+      "Memory used by dynamic atom objects.");
+
+    MOZ_COLLECT_REPORT(
+      "explicit/atoms/dynamic/unshared-buffers", KIND_HEAP, UNITS_BYTES,
+      sizes.mDynamicUnsharedBuffers,
+      "Memory used by unshared string buffers pointed to by dynamic atom "
+      "objects.");
 
     return NS_OK;
   }
