@@ -868,19 +868,20 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
         }
         strbuf[kMaxFrameKeyLength - 1] = '\0';
 
-        UniqueStacks::FrameKey frameKey(strbuf.get());
-
+        Maybe<unsigned> line;
         if (e.Has() && e.Get().IsLineNumber()) {
-          frameKey.mLine = Some(unsigned(e.Get().u.mInt));
+          line = Some(unsigned(e.Get().u.mInt));
           e.Next();
         }
 
+        Maybe<unsigned> category;
         if (e.Has() && e.Get().IsCategory()) {
-          frameKey.mCategory = Some(unsigned(e.Get().u.mInt));
+          category = Some(unsigned(e.Get().u.mInt));
           e.Next();
         }
 
-        stack = aUniqueStacks.AppendFrame(stack, frameKey);
+        stack = aUniqueStacks.AppendFrame(
+          stack, UniqueStacks::FrameKey(strbuf.get(), line, category));
 
       } else if (e.Get().IsJitReturnAddr()) {
         numFrames++;
