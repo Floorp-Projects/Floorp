@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 XULMAP_TYPE(browser, OuterDocAccessible)
+XULMAP_TYPE(button, XULButtonAccessible)
 XULMAP_TYPE(checkbox, XULCheckboxAccessible)
 XULMAP_TYPE(dropMarker, XULDropmarkerAccessible)
 XULMAP_TYPE(editor, OuterDocAccessible)
@@ -37,6 +38,7 @@ XULMAP_TYPE(treecol, XULColumnItemAccessible)
 XULMAP_TYPE(treecolpicker, XULButtonAccessible)
 XULMAP_TYPE(treecols, XULTreeColumAccessible)
 XULMAP_TYPE(toolbar, XULToolbarAccessible)
+XULMAP_TYPE(toolbarbutton, XULToolbarButtonAccessible)
 XULMAP_TYPE(tooltip, XULTooltipAccessible)
 
 XULMAP(
