@@ -103,8 +103,8 @@ TEST_P(TlsPaddingTest, LastByteOfPadWrong) {
 
 class RecordReplacer : public TlsRecordFilter {
  public:
-  RecordReplacer(size_t size)
-      : TlsRecordFilter(), enabled_(false), size_(size) {}
+  RecordReplacer(const std::shared_ptr<TlsAgent>& agent, size_t size)
+      : TlsRecordFilter(agent), enabled_(false), size_(size) {}
 
   PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
                                     const DataBuffer& data,
@@ -135,8 +135,8 @@ TEST_F(TlsConnectStreamTls13, LargeRecord) {
   EnsureTlsSetup();
 
   const size_t record_limit = 16384;
-  auto replacer = std::make_shared<RecordReplacer>(record_limit);
-  client_->SetTlsRecordFilter(replacer);
+  auto replacer = MakeTlsFilter<RecordReplacer>(client_, record_limit);
+  replacer->EnableDecryption();
   Connect();
 
   replacer->Enable();
@@ -149,8 +149,8 @@ TEST_F(TlsConnectStreamTls13, TooLargeRecord) {
   EnsureTlsSetup();
 
   const size_t record_limit = 16384;
-  auto replacer = std::make_shared<RecordReplacer>(record_limit + 1);
-  client_->SetTlsRecordFilter(replacer);
+  auto replacer = MakeTlsFilter<RecordReplacer>(client_, record_limit + 1);
+  replacer->EnableDecryption();
   Connect();
 
   replacer->Enable();
@@ -177,4 +177,4 @@ auto kTrueFalse = ::testing::ValuesIn(kTrueFalseArr);
 
 INSTANTIATE_TEST_CASE_P(TlsPadding, TlsPaddingTest,
                         ::testing::Combine(kContentSizes, kTrueFalse));
-}  // namespace nspr_test
+}  // namespace nss_test

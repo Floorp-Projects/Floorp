@@ -164,6 +164,7 @@ CERTCertificate *PK11_MakeCertFromHandle(PK11SlotInfo *slot,
 SECItem *pk11_GenerateNewParamWithKeyLen(CK_MECHANISM_TYPE type, int keyLen);
 SECItem *pk11_ParamFromIVWithLen(CK_MECHANISM_TYPE type,
                                  SECItem *iv, int keyLen);
+SECItem *pk11_mkcertKeyID(CERTCertificate *cert);
 
 SEC_END_PROTOS
 

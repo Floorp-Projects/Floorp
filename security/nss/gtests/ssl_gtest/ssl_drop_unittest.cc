@@ -22,13 +22,13 @@ extern "C" {
 namespace nss_test {
 
 TEST_P(TlsConnectDatagramPre13, DropClientFirstFlightOnce) {
-  client_->SetPacketFilter(std::make_shared<SelectiveDropFilter>(0x1));
+  client_->SetFilter(std::make_shared<SelectiveDropFilter>(0x1));
   Connect();
   SendReceive();
 }
 
 TEST_P(TlsConnectDatagramPre13, DropServerFirstFlightOnce) {
-  server_->SetPacketFilter(std::make_shared<SelectiveDropFilter>(0x1));
+  server_->SetFilter(std::make_shared<SelectiveDropFilter>(0x1));
   Connect();
   SendReceive();
 }
@@ -37,32 +37,32 @@ TEST_P(TlsConnectDatagramPre13, DropServerFirstFlightOnce) {
 // flights that they send.  Note: In DTLS 1.3, the shorter handshake means that
 // this will also drop some application data, so we can't call SendReceive().
 TEST_P(TlsConnectDatagramPre13, DropAllFirstTransmissions) {
-  client_->SetPacketFilter(std::make_shared<SelectiveDropFilter>(0x15));
-  server_->SetPacketFilter(std::make_shared<SelectiveDropFilter>(0x5));
+  client_->SetFilter(std::make_shared<SelectiveDropFilter>(0x15));
+  server_->SetFilter(std::make_shared<SelectiveDropFilter>(0x5));
   Connect();
 }
 
 // This drops the server's first flight three times.
 TEST_P(TlsConnectDatagramPre13, DropServerFirstFlightThrice) {
-  server_->SetPacketFilter(std::make_shared<SelectiveDropFilter>(0x7));
+  server_->SetFilter(std::make_shared<SelectiveDropFilter>(0x7));
   Connect();
 }
 
 // This drops the client's second flight once
 TEST_P(TlsConnectDatagramPre13, DropClientSecondFlightOnce) {
-  client_->SetPacketFilter(std::make_shared<SelectiveDropFilter>(0x2));
+  client_->SetFilter(std::make_shared<SelectiveDropFilter>(0x2));
   Connect();
 }
 
 // This drops the client's second flight three times.
 TEST_P(TlsConnectDatagramPre13, DropClientSecondFlightThrice) {
-  client_->SetPacketFilter(std::make_shared<SelectiveDropFilter>(0xe));
+  client_->SetFilter(std::make_shared<SelectiveDropFilter>(0xe));
   Connect();
 }
 
 // This drops the server's second flight three times.
 TEST_P(TlsConnectDatagramPre13, DropServerSecondFlightThrice) {
-  server_->SetPacketFilter(std::make_shared<SelectiveDropFilter>(0xe));
+  server_->SetFilter(std::make_shared<SelectiveDropFilter>(0xe));
   Connect();
 }
 
@@ -74,7 +74,7 @@ class TlsDropDatagram13 : public TlsConnectDatagram13 {
         expected_client_acks_(0),
         expected_server_acks_(1) {}
 
-  void SetUp() {
+  void SetUp() override {
     TlsConnectDatagram13::SetUp();
     ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
     SetFilters();
@@ -82,12 +82,8 @@ class TlsDropDatagram13 : public TlsConnectDatagram13 {
 
   void SetFilters() {
     EnsureTlsSetup();
-    client_->SetPacketFilter(client_filters_.chain_);
-    client_filters_.ack_->SetAgent(client_.get());
-    client_filters_.ack_->EnableDecryption();
-    server_->SetPacketFilter(server_filters_.chain_);
-    server_filters_.ack_->SetAgent(server_.get());
-    server_filters_.ack_->EnableDecryption();
+    client_filters_.Init(client_);
+    server_filters_.Init(server_);
   }
 
   void HandshakeAndAck(const std::shared_ptr<TlsAgent>& agent) {
@@ -119,11 +115,17 @@ class TlsDropDatagram13 : public TlsConnectDatagram13 {
   class DropAckChain {
    public:
     DropAckChain()
-        : records_(std::make_shared<TlsRecordRecorder>()),
-          ack_(std::make_shared<TlsRecordRecorder>(content_ack)),
-          drop_(std::make_shared<SelectiveRecordDropFilter>(0, false)),
-          chain_(std::make_shared<ChainedPacketFilter>(
-              ChainedPacketFilterInit({records_, ack_, drop_}))) {}
+        : records_(nullptr), ack_(nullptr), drop_(nullptr), chain_(nullptr) {}
+
+    void Init(const std::shared_ptr<TlsAgent>& agent) {
+      records_ = std::make_shared<TlsRecordRecorder>(agent);
+      ack_ = std::make_shared<TlsRecordRecorder>(agent, content_ack);
+      ack_->EnableDecryption();
+      drop_ = std::make_shared<SelectiveRecordDropFilter>(agent, 0, false);
+      chain_ = std::make_shared<ChainedPacketFilter>(
+          ChainedPacketFilterInit({records_, ack_, drop_}));
+      agent->SetFilter(chain_);
+    }
 
     const TlsRecord& record(size_t i) const { return records_->record(i); }
 
@@ -227,7 +229,7 @@ TEST_F(TlsDropDatagram13, DropServerSecondRecordOnce) {
   HandshakeAndAck(client_);
   expected_client_acks_ = 1;
   CheckedHandshakeSendReceive();
-  CheckAcks(client_filters_, 0, {0});
+  CheckAcks(client_filters_, 0, {0});  // ServerHello
   CheckAcks(server_filters_, 0, {0x0002000000000000ULL});
 }
 
@@ -257,7 +259,7 @@ TEST_F(TlsDropDatagram13, DropServerAckOnce) {
   CheckPostHandshake();
   // There should be two copies of the finished ACK
   CheckAcks(server_filters_, 0, {0x0002000000000000ULL});
-  CheckAcks(server_filters_, 0, {0x0002000000000000ULL});
+  CheckAcks(server_filters_, 1, {0x0002000000000000ULL});
 }
 
 // Drop the client certificate verify.
@@ -276,10 +278,9 @@ TEST_F(TlsDropDatagram13, DropClientCertVerify) {
   // Ack of the whole client handshake.
   CheckAcks(
       server_filters_, 1,
-      {0x0002000000000000ULL,  // CH (we drop everything after this on client)
-       0x0002000000000003ULL,  // CT (2)
-       0x0002000000000004ULL}  // FIN (2)
-      );
+      {0x0002000000000000ULL,    // CH (we drop everything after this on client)
+       0x0002000000000003ULL,    // CT (2)
+       0x0002000000000004ULL});  // FIN (2)
 }
 
 // Shrink the MTU down so that certs get split and drop the first piece.
@@ -303,10 +304,9 @@ TEST_F(TlsDropDatagram13, DropFirstHalfOfServerCertificate) {
   EXPECT_EQ(ct1_size, server_filters_.record(0).buffer.len());
   CheckedHandshakeSendReceive();
   CheckAcks(client_filters_, 0,
-            {0,                      // SH
-             0x0002000000000000ULL,  // EE
-             0x0002000000000002ULL}  // CT2
-            );
+            {0,                        // SH
+             0x0002000000000000ULL,    // EE
+             0x0002000000000002ULL});  // CT2
   CheckAcks(server_filters_, 0, {0x0002000000000000ULL});
 }
 
@@ -540,7 +540,10 @@ TEST_F(TlsDropDatagram13, NoDropsDuringZeroRtt) {
   ExpectEarlyDataAccepted(true);
   CheckConnected();
   SendReceive();
-  CheckAcks(server_filters_, 0, {0x0002000000000000ULL});
+  EXPECT_EQ(0U, client_filters_.ack_->count());
+  CheckAcks(server_filters_, 0,
+            {0x0001000000000001ULL,    // EOED
+             0x0002000000000000ULL});  // Finished
 }
 
 TEST_F(TlsDropDatagram13, DropEEDuringZeroRtt) {
@@ -558,7 +561,9 @@ TEST_F(TlsDropDatagram13, DropEEDuringZeroRtt) {
   CheckConnected();
   SendReceive();
   CheckAcks(client_filters_, 0, {0});
-  CheckAcks(server_filters_, 0, {0x0002000000000000ULL});
+  CheckAcks(server_filters_, 0,
+            {0x0001000000000002ULL,    // EOED
+             0x0002000000000000ULL});  // Finished
 }
 
 class TlsReorderDatagram13 : public TlsDropDatagram13 {
@@ -688,6 +693,7 @@ TEST_F(TlsDropDatagram13, SendOutOfOrderHsNonsenseWithHandshakeKey) {
       kTlsHandshakeType, DataBuffer(buf, sizeof(buf))));
   server_->Handshake();
   EXPECT_EQ(2UL, server_filters_.ack_->count());
+  // The server acknowledges client Finished twice.
   CheckAcks(server_filters_, 0, {0x0002000000000000ULL});
   CheckAcks(server_filters_, 1, {0x0002000000000000ULL});
 }
@@ -746,7 +752,9 @@ TEST_F(TlsReorderDatagram13, DataAfterEOEDDuringZeroRtt) {
   ReSend(TlsAgent::CLIENT, std::vector<size_t>({1, 0, 2}));
   server_->Handshake();
   CheckConnected();
-  CheckAcks(server_filters_, 0, {0x0002000000000000ULL});
+  EXPECT_EQ(0U, client_filters_.ack_->count());
+  // Acknowledgements for EOED and Finished.
+  CheckAcks(server_filters_, 0, {0x0001000000000002ULL, 0x0002000000000000ULL});
   uint8_t buf[8];
   rv = PR_Read(server_->ssl_fd(), buf, sizeof(buf));
   EXPECT_EQ(-1, rv);
@@ -783,7 +791,9 @@ TEST_F(TlsReorderDatagram13, DataAfterFinDuringZeroRtt) {
   ReSend(TlsAgent::CLIENT, std::vector<size_t>({1, 2, 0}));
   server_->Handshake();
   CheckConnected();
-  CheckAcks(server_filters_, 0, {0x0002000000000000ULL});
+  EXPECT_EQ(0U, client_filters_.ack_->count());
+  // Acknowledgements for EOED and Finished.
+  CheckAcks(server_filters_, 0, {0x0001000000000002ULL, 0x0002000000000000ULL});
   uint8_t buf[8];
   rv = PR_Read(server_->ssl_fd(), buf, sizeof(buf));
   EXPECT_EQ(-1, rv);
