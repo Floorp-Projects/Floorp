@@ -203,9 +203,6 @@ public:
 
     uint32_t Hash() const;
     bool operator==(const FrameKey& aOther) const;
-    bool operator<(const FrameKey& aOther) const {
-      return mHash < aOther.mHash;
-    }
 
   private:
     uint32_t mHash;
@@ -232,10 +229,6 @@ public:
     {
       return mPrefixStackIndex == aOther.mPrefixStackIndex &&
              mFrameIndex == aOther.mFrameIndex;
-    }
-    bool operator<(const StackKey& aOther) const
-    {
-      return mHash < aOther.mHash;
     }
 
   private:
