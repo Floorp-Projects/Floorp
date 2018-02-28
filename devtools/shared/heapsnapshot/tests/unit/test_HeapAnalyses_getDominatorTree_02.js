@@ -13,12 +13,12 @@ const breakdown = {
   other: { by: "count", count: true, bytes: true },
 };
 
-add_task(function* () {
+add_task(async function () {
   const client = new HeapAnalysesClient();
 
   let threw = false;
   try {
-    yield client.getDominatorTree({ dominatorTreeId: 42, breakdown });
+    await client.getDominatorTree({ dominatorTreeId: 42, breakdown });
   } catch (_) {
     threw = true;
   }

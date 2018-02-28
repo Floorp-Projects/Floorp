@@ -4509,6 +4509,7 @@ nsCSSFrameConstructor::FindXULTagData(Element* aElement,
   static const FrameConstructionDataByTag sXULTagData[] = {
 #ifdef MOZ_XUL
     SCROLLABLE_XUL_CREATE(button, NS_NewButtonBoxFrame),
+    SCROLLABLE_XUL_CREATE(thumb, NS_NewButtonBoxFrame),
     SCROLLABLE_XUL_CREATE(checkbox, NS_NewButtonBoxFrame),
     SCROLLABLE_XUL_CREATE(radio, NS_NewButtonBoxFrame),
     SCROLLABLE_XUL_CREATE(autorepeatbutton, NS_NewAutoRepeatBoxFrame),
@@ -8851,7 +8852,7 @@ nsCSSFrameConstructor::EnsureFrameForTextNodeIsCreatedAfterFlush(
 
 void
 nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
-                                            CharacterDataChangeInfo* aInfo)
+                                            const CharacterDataChangeInfo& aInfo)
 {
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
 

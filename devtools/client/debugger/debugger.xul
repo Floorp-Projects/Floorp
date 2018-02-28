@@ -10,8 +10,9 @@
 <!DOCTYPE window [
   <!ENTITY % debuggerDTD SYSTEM "chrome://devtools/locale/debugger.dtd">
   %debuggerDTD;
+  <!ENTITY % editMenuDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+  %editMenuDTD;
 ]>
-<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
@@ -37,7 +38,7 @@
   <script type="text/javascript" src="views/stack-frames-classic-view.js"/>
   <script type="text/javascript" src="views/filter-view.js"/>
 
-  <commandset id="editMenuCommands"/>
+#include ../../../toolkit/content/editMenuCommands.inc.xul
 
   <commandset id="debuggerCommands"></commandset>
 
@@ -61,9 +62,11 @@
                 key="addWatchExpressionKey"
                 command="addWatchExpressionCommand"/>
       <menuseparator/>
-      <menuitem id="cMenu_copy"/>
+      <menuitem id="cMenu_copy" label="&copyCmd.label;"
+                accesskey="&copyCmd.accesskey;" command="cmd_copy"/>
       <menuseparator/>
-      <menuitem id="cMenu_selectAll"/>
+      <menuitem id="cMenu_selectAll" label="&selectAllCmd.label;"
+                accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll"/>
       <menuseparator/>
       <menuitem id="se-dbg-cMenu-findFile"
                 label="&debuggerUI.searchFile;"

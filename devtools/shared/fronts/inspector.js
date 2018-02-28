@@ -15,7 +15,6 @@ const {
   walkerSpec
 } = require("devtools/shared/specs/inspector");
 const defer = require("devtools/shared/defer");
-const { Task } = require("devtools/shared/task");
 loader.lazyRequireGetter(this, "nodeConstants",
   "devtools/shared/dom-node-constants");
 loader.lazyRequireGetter(this, "CommandUtils",
@@ -207,7 +206,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
    *    - "selectorOnly": treat input as a selector string (don't search text
    *                      tags, attributes, etc)
    */
-  search: custom(Task.async(function* (query, options = { }) {
+  search: custom(async function (query, options = { }) {
     let nodeList;
     let searchType;
     let searchData = this.searchData = this.searchData || { };
@@ -215,10 +214,10 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
 
     if (selectorOnly) {
       searchType = "selector";
-      nodeList = yield this.multiFrameQuerySelectorAll(query);
+      nodeList = await this.multiFrameQuerySelectorAll(query);
     } else {
       searchType = "search";
-      let result = yield this._search(query, options);
+      let result = await this._search(query, options);
       nodeList = result.list;
     }
 
@@ -245,14 +244,14 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
     }
 
     // Send back the single node, along with any relevant search data
-    let node = yield nodeList.item(searchData.index);
+    let node = await nodeList.item(searchData.index);
     return {
       type: searchType,
       node: node,
       resultsLength: nodeList.length,
       resultsIndex: searchData.index,
     };
-  }), {
+  }, {
     impl: "_search"
   }),
 
@@ -437,14 +436,14 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
     return !!this.conn._transport._serverConnection;
   },
 
-  removeNode: custom(Task.async(function* (node) {
-    let previousSibling = yield this.previousSibling(node);
-    let nextSibling = yield this._removeNode(node);
+  removeNode: custom(async function (node) {
+    let previousSibling = await this.previousSibling(node);
+    let nextSibling = await this._removeNode(node);
     return {
       previousSibling: previousSibling,
       nextSibling: nextSibling,
     };
-  }), {
+  }, {
     impl: "_removeNode"
   }),
 });
@@ -494,15 +493,15 @@ var InspectorFront = FrontClassWithSpec(inspectorSpec, {
     impl: "_getPageStyle"
   }),
 
-  pickColorFromPage: custom(Task.async(function* (toolbox, options) {
+  pickColorFromPage: custom(async function (toolbox, options) {
     if (toolbox) {
       // If the eyedropper was already started using the gcli command, hide it so we don't
       // end up with 2 instances of the eyedropper on the page.
       CommandUtils.executeOnTarget(toolbox.target, "eyedropper --hide");
     }
 
-    yield this._pickColorFromPage(options);
-  }), {
+    await this._pickColorFromPage(options);
+  }, {
     impl: "_pickColorFromPage"
   })
 });

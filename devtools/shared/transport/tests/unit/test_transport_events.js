@@ -6,21 +6,21 @@
 function run_test() {
   initTestDebuggerServer();
 
-  add_task(function* () {
-    yield test_transport_events("socket", socket_transport);
-    yield test_transport_events("local", local_transport);
+  add_task(async function () {
+    await test_transport_events("socket", socket_transport);
+    await test_transport_events("local", local_transport);
     DebuggerServer.destroy();
   });
 
   run_next_test();
 }
 
-function* test_transport_events(name, transportFactory) {
+async function test_transport_events(name, transportFactory) {
   info(`Started testing of transport: ${name}`);
 
   Assert.equal(Object.keys(DebuggerServer._connections).length, 0);
 
-  let transport = yield transportFactory();
+  let transport = await transportFactory();
 
   // Transport expects the hooks to be not null
   transport.hooks = {
@@ -35,7 +35,7 @@ function* test_transport_events(name, transportFactory) {
   });
 
   transport.ready();
-  yield rootReceived;
+  await rootReceived;
 
   let echoSent = transport.once("send", (event, packet) => {
     info(`Send event: ${event} ${JSON.stringify(packet)}`);
@@ -52,8 +52,8 @@ function* test_transport_events(name, transportFactory) {
   });
 
   transport.send({ to: "root", type: "echo" });
-  yield echoSent;
-  yield echoReceived;
+  await echoSent;
+  await echoReceived;
 
   let clientClosed = transport.once("close", (event) => {
     info(`Close event: ${event}`);
@@ -68,8 +68,8 @@ function* test_transport_events(name, transportFactory) {
 
   transport.close();
 
-  yield clientClosed;
-  yield serverClosed;
+  await clientClosed;
+  await serverClosed;
 
   info(`Finished testing of transport: ${name}`);
 }

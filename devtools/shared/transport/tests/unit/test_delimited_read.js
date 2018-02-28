@@ -8,11 +8,11 @@ const StringInputStream = CC("@mozilla.org/io/string-input-stream;1",
                              "nsIStringInputStream", "setData");
 
 function run_test() {
-  add_task(function* () {
-    yield test_delimited_read("0123:", "0123:");
-    yield test_delimited_read("0123:4567:", "0123:");
-    yield test_delimited_read("012345678901:", "0123456789");
-    yield test_delimited_read("0123/0123", "0123/0123");
+  add_task(async function () {
+    await test_delimited_read("0123:", "0123:");
+    await test_delimited_read("0123:4567:", "0123:");
+    await test_delimited_read("012345678901:", "0123456789");
+    await test_delimited_read("0123/0123", "0123/0123");
   });
 
   run_next_test();

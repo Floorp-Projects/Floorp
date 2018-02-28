@@ -1468,7 +1468,7 @@ void
 nsTextControlFrame::nsAnonDivObserver::CharacterDataChanged(
   nsIDocument* aDocument,
   nsIContent* aContent,
-  CharacterDataChangeInfo* aInfo)
+  const CharacterDataChangeInfo&)
 {
   mFrame.ClearCachedValue();
 }

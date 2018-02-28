@@ -10,7 +10,7 @@ const BREAKDOWN = {
   other: { by: "count", count: true, bytes: false },
 };
 
-add_task(function* () {
+add_task(async function () {
   const client = new HeapAnalysesClient();
 
   const markers = [allocationMarker()];
@@ -23,18 +23,18 @@ add_task(function* () {
 
   const secondSnapshotFilePath = saveNewHeapSnapshot();
 
-  yield client.readHeapSnapshot(firstSnapshotFilePath);
-  yield client.readHeapSnapshot(secondSnapshotFilePath);
+  await client.readHeapSnapshot(firstSnapshotFilePath);
+  await client.readHeapSnapshot(secondSnapshotFilePath);
   ok(true, "Should have read both heap snapshot files");
 
-  const { delta } = yield client.takeCensusDiff(firstSnapshotFilePath,
+  const { delta } = await client.takeCensusDiff(firstSnapshotFilePath,
                                                 secondSnapshotFilePath,
                                                 { breakdown: BREAKDOWN });
 
   equal(delta.AllocationMarker.count, 1,
     "There exists one new AllocationMarker in the second heap snapshot");
 
-  const { delta: deltaTreeNode } = yield client.takeCensusDiff(firstSnapshotFilePath,
+  const { delta: deltaTreeNode } = await client.takeCensusDiff(firstSnapshotFilePath,
                                                                secondSnapshotFilePath,
                                                                { breakdown: BREAKDOWN },
                                                                { asTreeNode: true });

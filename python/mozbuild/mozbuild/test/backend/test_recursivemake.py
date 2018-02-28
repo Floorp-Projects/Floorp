@@ -442,6 +442,34 @@ class TestRecursiveMakeBackend(BackendTester):
         self.maxDiff = None
         self.assertEqual(lines, expected)
 
+    def test_localized_generated_files_AB_CD(self):
+        """Ensure LOCALIZED_GENERATED_FILES is handled properly
+        when {AB_CD} and {AB_rCD} are used."""
+        env = self._consume('localized-generated-files-AB_CD', RecursiveMakeBackend)
+
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        expected = [
+            'libs:: foo$(AB_CD).xyz',
+            'GARBAGE += foo$(AB_CD).xyz',
+            'EXTRA_MDDEPEND_FILES += foo$(AB_CD).xyz.pp',
+            'foo$(AB_CD).xyz: %s/generate-foo.py $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,
+            '$(REPORT_BUILD)',
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main foo$(AB_CD).xyz $(MDDEPDIR)/foo$(AB_CD).xyz.pp $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,
+            '',
+            'include $(topsrcdir)/config/AB_rCD.mk',
+            'GARBAGE += bar$(AB_rCD).xyz',
+            'EXTRA_MDDEPEND_FILES += bar$(AB_rCD).xyz.pp',
+            'bar$(AB_rCD).xyz: %s/generate-foo.py $(call MERGE_RELATIVE_FILE,localized-input,/locales/inner) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,
+            '$(REPORT_BUILD)',
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main bar$(AB_rCD).xyz $(MDDEPDIR)/bar$(AB_rCD).xyz.pp $(call MERGE_RELATIVE_FILE,localized-input,/locales/inner) $(srcdir)/non-localized-input)' % env.topsrcdir,
+            '',
+        ]
+
+        self.maxDiff = None
+        self.assertEqual(lines, expected)
+
     def test_exports_generated(self):
         """Ensure EXPORTS that are listed in GENERATED_FILES
         are handled properly."""

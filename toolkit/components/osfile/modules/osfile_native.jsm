@@ -8,7 +8,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["read"];
+var EXPORTED_SYMBOLS = ["read", "writeAtomic"];
 
 var SharedAll = ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", {});
 

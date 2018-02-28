@@ -6564,7 +6564,7 @@ nsIFrame::IsContentDisabled() const
 }
 
 nsresult
-nsFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
+nsFrame::CharacterDataChanged(const CharacterDataChangeInfo&)
 {
   NS_NOTREACHED("should only be called for text frames");
   return NS_OK;

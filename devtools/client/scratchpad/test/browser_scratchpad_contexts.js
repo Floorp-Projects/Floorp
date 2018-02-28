@@ -91,7 +91,7 @@ function runTests() {
          "setText() worked with no end for the replace range");
     },
     then: function* ([, , result]) {
-      is(result.class, "XULElement",
+      is(result.class, "Object",
          "chrome context has access to chrome objects");
     }
   }, {

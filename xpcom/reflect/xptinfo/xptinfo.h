@@ -82,9 +82,6 @@ public:
            }
         }
 
-    uint8_t TagPart() const
-        {return (uint8_t) (flags & XPT_TDP_TAGMASK);}
-
     enum
     {
         T_I8                = TD_INT8             ,
@@ -126,10 +123,10 @@ public:
         {*(XPTParamDescriptor*)this = desc;}
 
 
-    bool IsIn()  const    {return 0 != (XPT_PD_IS_IN(flags));}
-    bool IsOut() const    {return 0 != (XPT_PD_IS_OUT(flags));}
-    bool IsRetval() const {return 0 != (XPT_PD_IS_RETVAL(flags));}
-    bool IsShared() const {return 0 != (XPT_PD_IS_SHARED(flags));}
+    bool IsIn() const {return !!(flags & kInMask);}
+    bool IsOut() const {return !!(flags & kOutMask);}
+    bool IsRetval() const {return !!(flags & kRetvalMask);}
+    bool IsShared() const {return !!(flags & kSharedMask);}
 
     // Dipper types are one of the more inscrutable aspects of xpidl. In a
     // nutshell, dippers are empty container objects, created and passed by
@@ -148,8 +145,8 @@ public:
     // masquerading as in'. The burden of maintaining this illusion falls mostly
     // on XPConnect, which creates the empty containers, and harvest the results
     // after the call.
-    bool IsDipper() const {return 0 != (XPT_PD_IS_DIPPER(flags));}
-    bool IsOptional() const {return 0 != (XPT_PD_IS_OPTIONAL(flags));}
+    bool IsDipper() const {return !!(flags & kDipperMask);}
+    bool IsOptional() const {return !!(flags & kOptionalMask);}
     const nsXPTType GetType() const {return type.prefix;}
 
     bool IsStringClass() const {
@@ -173,7 +170,14 @@ public:
     // NOTE: other activities on types are done via methods on nsIInterfaceInfo
 
 private:
-    nsXPTParamInfo();   // no implementation
+    static const uint8_t kInMask =       0x80;
+    static const uint8_t kOutMask =      0x40;
+    static const uint8_t kRetvalMask =   0x20;
+    static const uint8_t kSharedMask =   0x10;
+    static const uint8_t kDipperMask =   0x08;
+    static const uint8_t kOptionalMask = 0x04;
+
+    nsXPTParamInfo() = delete;
 // NO DATA - this a flyweight wrapper
 };
 
@@ -184,22 +188,28 @@ public:
     MOZ_IMPLICIT nsXPTMethodInfo(const XPTMethodDescriptor& desc)
         {*(XPTMethodDescriptor*)this = desc;}
 
-    bool IsGetter()      const {return 0 != (XPT_MD_IS_GETTER(flags) );}
-    bool IsSetter()      const {return 0 != (XPT_MD_IS_SETTER(flags) );}
-    bool IsNotXPCOM()    const {return 0 != (XPT_MD_IS_NOTXPCOM(flags));}
-    bool IsHidden()      const {return 0 != (XPT_MD_IS_HIDDEN(flags) );}
-    bool WantsOptArgc()  const {return 0 != (XPT_MD_WANTS_OPT_ARGC(flags));}
-    bool WantsContext()  const {return 0 != (XPT_MD_WANTS_CONTEXT(flags));}
-    const char* GetName()  const {return name;}
-    uint8_t GetParamCount()  const {return num_args;}
-    /* idx was index before I got _sick_ of the warnings on Unix, sorry jband */
-    const nsXPTParamInfo GetParam(uint8_t idx) const
-        {
-            NS_PRECONDITION(idx < GetParamCount(),"bad arg");
-            return params[idx];
-        }
+    bool IsGetter() const {return !!(flags & kGetterMask);}
+    bool IsSetter() const {return !!(flags & kSetterMask);}
+    bool IsNotXPCOM() const {return !!(flags & kNotXPCOMMask);}
+    bool IsHidden() const {return !!(flags & kHiddenMask);}
+    bool WantsOptArgc() const {return !!(flags & kOptArgcMask);}
+    bool WantsContext() const {return !!(flags & kContextMask);}
+    const char* GetName() const {return name;}
+    uint8_t GetParamCount() const {return num_args;}
+    const nsXPTParamInfo GetParam(uint8_t idx) const {
+        MOZ_ASSERT(idx < GetParamCount(), "bad arg");
+        return params[idx];
+    }
+
 private:
-    nsXPTMethodInfo();  // no implementation
+    static const uint8_t kGetterMask =   0x80;
+    static const uint8_t kSetterMask =   0x40;
+    static const uint8_t kNotXPCOMMask = 0x20;
+    static const uint8_t kHiddenMask =   0x08;
+    static const uint8_t kOptArgcMask =  0x04;
+    static const uint8_t kContextMask =  0x02;
+
+    nsXPTMethodInfo() = delete;
 // NO DATA - this a flyweight wrapper
 };
 

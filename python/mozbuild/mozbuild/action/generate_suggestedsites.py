@@ -7,9 +7,9 @@
 
 This script follows these steps:
 
-1. Read the region.properties file in all the given source directories
-(see srcdir option). Merge all properties into a single dict accounting for
-the priority of source directories.
+1. Read all the given region.properties files (see inputs and --fallback
+options). Merge all properties into a single dict accounting for the priority
+of inputs.
 
 2. Read the list of sites from the list 'browser.suggestedsites.list.INDEX' and
 'browser.suggestedsites.restricted.list.INDEX' properties with value of these keys
@@ -30,6 +30,7 @@ from __future__ import absolute_import, print_function
 
 import argparse
 import copy
+import errno
 import json
 import sys
 import os
@@ -46,20 +47,20 @@ from mozpack.files import (
 import mozpack.path as mozpath
 
 
-def merge_properties(filename, srcdirs):
-    """Merges properties from the given file in the given source directories."""
+def merge_properties(paths):
+    """Merges properties from the given paths."""
     properties = DotProperties()
-    for srcdir in srcdirs:
-        path = mozpath.join(srcdir, filename)
+    for path in paths:
         try:
             properties.update(path)
-        except IOError:
-            # Ignore non-existing files
-            continue
+        except IOError as e:
+            if e.errno == errno.ENOENT:
+                # Ignore non-existant files.
+                continue
     return properties
 
 
-def main(args):
+def main(output, *args, **kwargs):
     parser = argparse.ArgumentParser()
     parser.add_argument('--verbose', '-v', default=False, action='store_true',
                         help='be verbose')
@@ -71,15 +72,24 @@ def main(args):
     parser.add_argument('--resources', metavar='RESOURCES',
                         default=None,
                         help='optional Android resource directory to find drawables in')
-    parser.add_argument('--srcdir', metavar='SRCDIR',
-                        action='append', required=True,
-                        help='directories to read inputs from, in order of priority')
-    parser.add_argument('output', metavar='OUTPUT',
-                        help='output')
+    parser.add_argument('inputs', metavar='INPUT', nargs='*',
+                        help='inputs, in order of priority')
+    # This awkward "extra input" is an expedient work-around for an issue with
+    # the build system.  It allows to specify the in-tree unlocalized version
+    # of a resource where a regular input will always be the localized version.
+    parser.add_argument('--fallback',
+                        required=True,
+                        help='fallback input')
     opts = parser.parse_args(args)
 
+    # Ensure the fallback is valid.
+    if not os.path.isfile(opts.fallback):
+        print('Fallback path {fallback} is not a file!'.format(fallback=opts.fallback))
+        return 1
+
     # Use reversed order so that the first srcdir has higher priority to override keys.
-    properties = merge_properties('region.properties', reversed(opts.srcdir))
+    sources = [opts.fallback] + list(reversed(opts.inputs))
+    properties = merge_properties(sources)
 
     # Keep these two in sync.
     image_url_template = 'android.resource://%s/drawable/suggestedsites_{name}' % opts.android_package_name
@@ -127,20 +137,21 @@ def main(args):
             print('Reading {len} suggested sites from {list}: {names}'.format(len=len(names), list=list_name, names=names))
         add_names(names, list_item_defaults)
 
+    # We must define at least one site -- that's what the fallback is for.
+    if not sites:
+        print('No sites defined: searched in {}!'.format(sources))
+        return 1
 
-    # FileAvoidWrite creates its parent directories.
-    output = os.path.abspath(opts.output)
-    fh = FileAvoidWrite(output)
-    json.dump(sites, fh)
-    existed, updated = fh.close()
+    json.dump(sites, output)
+    existed, updated = output.close()  # It's safe to close a FileAvoidWrite multiple times.
 
     if not opts.silent:
         if updated:
-            print('{output} updated'.format(output=output))
+            print('{output} updated'.format(output=os.path.abspath(output.name)))
         else:
-            print('{output} already up-to-date'.format(output=output))
+            print('{output} already up-to-date'.format(output=os.path.abspath(output.name)))
 
-    return 0
+    return set([opts.fallback])
 
 
 if __name__ == '__main__':

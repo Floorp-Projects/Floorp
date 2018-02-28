@@ -5,6 +5,8 @@
 <!DOCTYPE window [
 <!ENTITY % webConsoleDTD SYSTEM "chrome://devtools/locale/webConsole.dtd">
 %webConsoleDTD;
+<!ENTITY % editMenuDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+%editMenuDTD;
 ]>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/widgets.css"
@@ -13,7 +15,6 @@
                  type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/components-frame.css"
                  type="text/css"?>
-<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="devtools-webconsole"
         macanimationtype="document"
@@ -35,7 +36,7 @@ function goUpdateConsoleCommands() {
 }
   // ]]></script>
 
-  <commandset id="editMenuCommands"/>
+#include ../../../toolkit/content/editMenuCommands.inc.xul
 
   <commandset id="consoleCommands"
               commandupdater="true"
@@ -48,7 +49,7 @@ function goUpdateConsoleCommands() {
   </commandset>
   <keyset id="consoleKeys">
   </keyset>
-  <keyset id="editMenuKeys"/>
+#include ../../../toolkit/content/editMenuKeys.inc.xul
 
   <popupset id="mainPopupSet">
     <menupopup id="output-contextmenu" onpopupshowing="goUpdateGlobalEditMenuItems()">
@@ -62,8 +63,10 @@ function goUpdateConsoleCommands() {
         accesskey="&openInVarViewCmd.accesskey;" disabled="true"/>
       <menuitem id="menu_storeAsGlobal" label="&storeAsGlobalVar.label;"
         accesskey="&storeAsGlobalVar.accesskey;"/>
-      <menuitem id="cMenu_copy"/>
-      <menuitem id="cMenu_selectAll"/>
+      <menuitem id="cMenu_copy" label="&copyCmd.label;"
+                accesskey="&copyCmd.accesskey;" command="cmd_copy"/>
+      <menuitem id="cMenu_selectAll" label="&selectAllCmd.label;"
+                accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll"/>
     </menupopup>
   </popupset>
 

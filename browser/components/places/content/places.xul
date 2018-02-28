@@ -17,7 +17,6 @@
 <?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
 #else
 <?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
 #endif
 
@@ -58,7 +57,7 @@
 #ifdef XP_MACOSX
 #include ../../../base/content/browserMountPoints.inc
 #else
-  <commandset id="editMenuCommands"/>
+#include ../../../../toolkit/content/editMenuCommands.inc.xul
   <commandset id="placesCommands"/>
 #endif
 
@@ -129,11 +128,12 @@
 #endif
   </keyset>
 
-  <keyset id="editMenuKeys">
+#include ../../../../toolkit/content/editMenuKeys.inc.xul
 #ifdef XP_MACOSX
+  <keyset id="editMenuKeysExtra">
     <key id="key_delete2" keycode="VK_BACK" command="cmd_delete"/>
-#endif
   </keyset>
+#endif
 
   <popupset id="placesPopupset">
     <menupopup id="placesContext"/>

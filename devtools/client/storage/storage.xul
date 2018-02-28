@@ -13,15 +13,13 @@
   %storageDTD;
 ]>
 
-<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
-
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript"
           src="chrome://devtools/content/shared/theme-switching.js"/>
   <script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
 
-  <commandset id="editMenuCommands"/>
+#include ../../../toolkit/content/editMenuCommands.inc.xul
 
   <popupset id="storagePopupSet">
     <menupopup id="storage-tree-popup">

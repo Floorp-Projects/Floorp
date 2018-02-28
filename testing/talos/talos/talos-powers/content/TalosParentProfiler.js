@@ -18,7 +18,6 @@ var TalosParentProfiler;
 
 (function() {
   ChromeUtils.import("resource://gre/modules/Services.jsm");
-  ChromeUtils.import("resource://gre/modules/Console.jsm");
 
   // Whether or not this TalosContentProfiler object has had initFromObject
   // or initFromURLQueryParams called on it. Any functions that change the

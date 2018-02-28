@@ -134,12 +134,12 @@ nsHtml5TreeOperation::AppendTextToTextNode(const char16_t* aBuffer,
     oldLength,
     aLength
   };
-  nsNodeUtils::CharacterDataWillChange(aTextNode, &info);
+  nsNodeUtils::CharacterDataWillChange(aTextNode, info);
 
   nsresult rv = aTextNode->AppendText(aBuffer, aLength, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsNodeUtils::CharacterDataChanged(aTextNode, &info);
+  nsNodeUtils::CharacterDataChanged(aTextNode, info);
   return rv;
 }
 

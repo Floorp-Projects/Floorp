@@ -326,7 +326,7 @@ nsLeafBoxFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 nsresult
-nsLeafBoxFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
+nsLeafBoxFrame::CharacterDataChanged(const CharacterDataChangeInfo& aInfo)
 {
   MarkIntrinsicISizesDirty();
   return nsLeafFrame::CharacterDataChanged(aInfo);

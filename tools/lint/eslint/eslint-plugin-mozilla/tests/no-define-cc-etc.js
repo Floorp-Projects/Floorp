@@ -16,19 +16,24 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 // Tests
 // ------------------------------------------------------------------------------
 
-function invalidCode(code, varName) {
-  return {code, errors: [{
-    message: `${varName} is now defined in global scope, a separate definition is no longer necessary.`,
-    type: "VariableDeclarator"
-  }]};
+function invalidCode(code, varNames) {
+  if (!Array.isArray(varNames)) {
+    varNames = [varNames];
+  }
+  return {
+    code, errors: varNames.map(name => [{
+      message: `${name} is now defined in global scope, a separate definition is no longer necessary.`,
+      type: "VariableDeclarator"
+    }])
+  };
 }
 
 ruleTester.run("no-define-cc-etc", rule, {
   valid: [
     "var Cm = Components.manager;",
     "const CC = Components.Constructor;",
-    "var {CC: Constructor, Cm: manager} = Components;",
-    "const {CC: Constructor, Cm: manager} = Components;",
+    "var {Constructor: CC, manager: Cm} = Components;",
+    "const {Constructor: CC, manager: Cm} = Components;",
     "foo.Cc.test();"
   ],
   invalid: [
@@ -38,17 +43,10 @@ ruleTester.run("no-define-cc-etc", rule, {
     invalidCode("let Cr;", "Cr"),
     invalidCode("let Cu;", "Cu"),
     invalidCode("var Cc = Components.classes;", "Cc"),
-    invalidCode("const {Cc} = Components;", "Cc"),
-    invalidCode("let {Cc, Cm} = Components", "Cc"),
-    invalidCode("const Cu = Components.utils;", "Cu"), {
-      code: "var {Ci: interfaces, Cc: classes} = Components;",
-      errors: [{
-        message: `Ci is now defined in global scope, a separate definition is no longer necessary.`,
-        type: "VariableDeclarator"
-      }, {
-        message: `Cc is now defined in global scope, a separate definition is no longer necessary.`,
-        type: "VariableDeclarator"
-      }]
-    }
+    invalidCode("const {classes: Cc} = Components;", "Cc"),
+    invalidCode("let {classes: Cc, manager: Cm} = Components", "Cc"),
+    invalidCode("const Cu = Components.utils;", "Cu"),
+    invalidCode("var Ci = Components.interfaces, Cc = Components.classes;", ["Ci", "Cc"]),
+    invalidCode("var {'interfaces': Ci, 'classes': Cc} = Components;", ["Ci", "Cc"])
   ]
 });

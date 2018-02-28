@@ -44,10 +44,10 @@ let secondTabExpectedCalls = [
   }
 ];
 
-let startTest = Task.async(function*() {
+let startTest = async function () {
   removeEventListener("load", startTest);
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     SpecialPowers.pushPrefEnv({"set": [
       ["dom.serviceWorkers.enabled", true],
       ["devtools.webconsole.filter.serviceworkers", true]
@@ -55,11 +55,11 @@ let startTest = Task.async(function*() {
   });
 
   info("Adding a tab and attaching a service worker");
-  let tab1 = yield addTab(FRAME_URL);
-  let swr = yield withActiveServiceWorker(tab1.linkedBrowser.contentWindow,
+  let tab1 = await addTab(FRAME_URL);
+  let swr = await withActiveServiceWorker(tab1.linkedBrowser.contentWindow,
                                 SERVICE_WORKER_URL);
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     info("Attaching console to tab 1");
     attachConsoleToTab(["ConsoleAPI"], function(state) {
       state.client.getCachedMessages(["ConsoleAPI"], function(calls) {
@@ -73,8 +73,8 @@ let startTest = Task.async(function*() {
   // they shouldn't show up in a call to getCachedMessages.
   // However, there is a fetch event which is logged due to loading the tab.
   info("Adding a new tab at the same URL");
-  let tab2 = yield addTab(FRAME_URL);
-  yield new Promise(resolve => {
+  let tab2 = await addTab(FRAME_URL);
+  await new Promise(resolve => {
     info("Attaching console to tab 2");
     attachConsoleToTab(["ConsoleAPI"], function(state) {
       state.client.getCachedMessages(["ConsoleAPI"], function(calls) {
@@ -84,10 +84,10 @@ let startTest = Task.async(function*() {
     });
   });
 
-  yield swr.unregister();
+  await swr.unregister();
 
   SimpleTest.finish();
-});
+};
 addEventListener("load", startTest);
 
 // This test needs to add tabs that are controlled by a service worker

@@ -10,10 +10,7 @@
    closeDebugger, checkConsoleAPICalls, checkRawHeaders, runTests, nextTest, Ci, Cc,
    withActiveServiceWorker, Services */
 
-// This gives logging to stdout for tests
-const {console} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-const {Task} = require("devtools/shared/task");
 const {DebuggerServer} = require("devtools/server/main");
 const {DebuggerClient} = require("devtools/shared/client/debugger-client");
 const ObjectClient = require("devtools/shared/client/object-client");
@@ -52,7 +49,7 @@ function attachConsoleToWorker(listeners, callback) {
   _attachConsole(listeners, callback, true, true);
 }
 
-var _attachConsole = Task.async(function* (
+var _attachConsole = async function (
   listeners, callback, attachToTab, attachToWorker
 ) {
   function _onAttachConsole(state, response, webConsoleClient) {
@@ -72,7 +69,7 @@ var _attachConsole = Task.async(function* (
     });
   }
 
-  let [state, response] = yield connectToDebugger();
+  let [state, response] = await connectToDebugger();
   if (response.error) {
     console.error("client.connect() failed: " + response.error + " " +
                   response.message);
@@ -81,15 +78,15 @@ var _attachConsole = Task.async(function* (
   }
 
   if (!attachToTab) {
-    response = yield state.dbgClient.getProcess();
-    yield state.dbgClient.attachTab(response.form.actor);
+    response = await state.dbgClient.getProcess();
+    await state.dbgClient.attachTab(response.form.actor);
     let consoleActor = response.form.consoleActor;
     state.actor = consoleActor;
     state.dbgClient.attachConsole(consoleActor, listeners,
                                   _onAttachConsole.bind(null, state));
     return;
   }
-  response = yield state.dbgClient.listTabs();
+  response = await state.dbgClient.listTabs();
   if (response.error) {
     console.error("listTabs failed: " + response.error + " " +
                   response.message);
@@ -97,7 +94,7 @@ var _attachConsole = Task.async(function* (
     return;
   }
   let tab = response.tabs[response.selected];
-  let [, tabClient] = yield state.dbgClient.attachTab(tab.actor);
+  let [, tabClient] = await state.dbgClient.attachTab(tab.actor);
   if (attachToWorker) {
     let workerName = "console-test-worker.js#" + new Date().getTime();
     let worker = new Worker(workerName);
@@ -105,22 +102,22 @@ var _attachConsole = Task.async(function* (
     // GCd during the test (bug 1237492).
     // eslint-disable-next-line camelcase
     state._worker_ref = worker;
-    yield waitForMessage(worker);
+    await waitForMessage(worker);
 
-    let { workers } = yield tabClient.listWorkers();
+    let { workers } = await tabClient.listWorkers();
     let workerActor = workers.filter(w => w.url == workerName)[0].actor;
     if (!workerActor) {
       console.error("listWorkers failed. Unable to find the " +
                     "worker actor\n");
       return;
     }
-    let [workerResponse, workerClient] = yield tabClient.attachWorker(workerActor);
+    let [workerResponse, workerClient] = await tabClient.attachWorker(workerActor);
     if (!workerClient || workerResponse.error) {
       console.error("attachWorker failed. No worker client or " +
                     " error: " + workerResponse.error);
       return;
     }
-    yield workerClient.attachThread({});
+    await workerClient.attachThread({});
     state.actor = workerClient.consoleActor;
     state.dbgClient.attachConsole(workerClient.consoleActor, listeners,
                                   _onAttachConsole.bind(null, state));
@@ -129,7 +126,7 @@ var _attachConsole = Task.async(function* (
     state.dbgClient.attachConsole(tab.consoleActor, listeners,
                                    _onAttachConsole.bind(null, state));
   }
-});
+};
 
 function closeDebugger(state, callback) {
   state.dbgClient.close().then(callback);

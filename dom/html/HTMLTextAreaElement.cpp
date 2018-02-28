@@ -990,7 +990,7 @@ HTMLTextAreaElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 void
 HTMLTextAreaElement::CharacterDataChanged(nsIDocument* aDocument,
                                           nsIContent* aContent,
-                                          CharacterDataChangeInfo* aInfo)
+                                          const CharacterDataChangeInfo&)
 {
   ContentChanged(aContent);
 }

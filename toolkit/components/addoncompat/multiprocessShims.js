@@ -113,10 +113,10 @@ AddonInterpositionService.prototype = {
       if (target.localName == "browser" && target.isRemoteBrowser) {
         return "RemoteBrowserElement";
       }
+    }
 
-      if (target.localName == "tabbrowser") {
-        return "TabBrowserElement";
-      }
+    if (target.ownerGlobal && target === target.ownerGlobal.gBrowser) {
+      return "TabBrowserElement";
     }
 
     if (target instanceof Ci.nsIDOMChromeWindow && target.gMultiProcessBrowser) {

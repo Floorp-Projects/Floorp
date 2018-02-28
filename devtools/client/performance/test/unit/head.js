@@ -5,7 +5,6 @@
    synthesizeProfileForTest */
 var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 var Services = require("Services");
-var { console } = require("resource://gre/modules/Console.jsm");
 const RecordingUtils = require("devtools/shared/performance/recording-utils");
 const PLATFORM_DATA_PREF = "devtools.performance.ui.show-platform-data";
 

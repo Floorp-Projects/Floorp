@@ -147,9 +147,9 @@ SVGUseElement::Height()
 // nsIMutationObserver methods
 
 void
-SVGUseElement::CharacterDataChanged(nsIDocument *aDocument,
-                                    nsIContent *aContent,
-                                    CharacterDataChangeInfo* aInfo)
+SVGUseElement::CharacterDataChanged(nsIDocument* aDocument,
+                                    nsIContent* aContent,
+                                    const CharacterDataChangeInfo&)
 {
   if (nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
     TriggerReclone();

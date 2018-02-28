@@ -338,6 +338,9 @@ sysinstall_cmd = install_cmd
 # MOZ_UI_LOCALE directly, but use an intermediate variable that can be
 # overridden by the command line. (Besides, AB_CD is prettier).
 AB_CD = $(MOZ_UI_LOCALE)
+
+include $(topsrcdir)/config/AB_rCD.mk
+
 # Many locales directories want this definition.
 ACDEFINES += -DAB_CD=$(AB_CD)
 
@@ -376,17 +379,21 @@ MERGE_FILE = $(firstword \
   $(wildcard $(REAL_LOCALE_MERGEDIR)/$(subst /locales,,$(LOCALE_RELATIVEDIR))/$(1)) \
   $(wildcard $(LOCALE_SRCDIR)/$(1)) \
   $(srcdir)/en-US/$(1) )
+# Like MERGE_FILE, but with the specified relative source directory
+# $(2) replacing $(srcdir).  It's expected that $(2) will include
+# '/locales' but not '/locales/en-US'.
+#
+# MERGE_RELATIVE_FILE and MERGE_FILE could be -- ahem -- merged by
+# making the second argument optional, but that expression makes for
+# difficult to read Make.
+MERGE_RELATIVE_FILE = $(firstword \
+  $(wildcard $(REAL_LOCALE_MERGEDIR)/$(subst /locales,,$(2))/$(1)) \
+  $(wildcard $(call EXPAND_LOCALE_SRCDIR,$(2))/$(1)) \
+  $(topsrcdir)/$(2)/en-US/$(1) )
 else
 MERGE_FILE = $(LOCALE_SRCDIR)/$(1)
+MERGE_RELATIVE_FILE = $(call EXPAND_LOCALE_SRCDIR,$(2))/$(1)
 endif
-MERGE_FILES = $(foreach f,$(1),$(call MERGE_FILE,$(f)))
-
-# These marcros are similar to MERGE_FILE, but no merging, and en-US first.
-# They're used for searchplugins, for example.
-EN_US_OR_L10N_FILE = $(firstword \
-  $(wildcard $(srcdir)/en-US/$(1)) \
-  $(LOCALE_SRCDIR)/$(1) )
-EN_US_OR_L10N_FILES = $(foreach f,$(1),$(call EN_US_OR_L10N_FILE,$(f)))
 
 ifneq (WINNT,$(OS_ARCH))
 RUN_TEST_PROGRAM = $(DIST)/bin/run-mozilla.sh

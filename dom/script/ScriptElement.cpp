@@ -80,7 +80,7 @@ ScriptElement::ScriptEvaluated(nsresult aResult,
 void
 ScriptElement::CharacterDataChanged(nsIDocument* aDocument,
                                     nsIContent* aContent,
-                                    CharacterDataChangeInfo* aInfo)
+                                    const CharacterDataChangeInfo&)
 {
   MaybeProcessScript();
 }

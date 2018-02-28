@@ -376,7 +376,7 @@ var FullScreen = {
         // request was initiated from an in-process browser, we need
         // to get its corresponding browser here.
         let browser;
-        if (event.target == gBrowser) {
+        if (event.target == gBrowser.container) {
           browser = event.originalTarget;
         } else {
           let topWin = event.target.ownerGlobal.top;

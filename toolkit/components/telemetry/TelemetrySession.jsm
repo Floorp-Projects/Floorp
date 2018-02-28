@@ -46,7 +46,6 @@ const REASON_SHUTDOWN = "shutdown";
 
 const ENVIRONMENT_CHANGE_LISTENER = "TelemetrySession::onEnvironmentChange";
 
-const MS_IN_ONE_HOUR  = 60 * 60 * 1000;
 const MIN_SUBSESSION_LENGTH_MS = Services.prefs.getIntPref("toolkit.telemetry.minSubsessionLength", 5 * 60) * 1000;
 
 const LOGGER_NAME = "Toolkit.Telemetry";
@@ -55,9 +54,6 @@ const LOGGER_PREFIX = "TelemetrySession" + (Utils.isContentProcess ? "#content::
 const MESSAGE_TELEMETRY_PAYLOAD = "Telemetry:Payload";
 const MESSAGE_TELEMETRY_USS = "Telemetry:USS";
 const MESSAGE_TELEMETRY_GET_CHILD_USS = "Telemetry:GetChildUSS";
-
-const DATAREPORTING_DIRECTORY = "datareporting";
-const ABORTED_SESSION_FILE_NAME = "aborted-session-ping";
 
 // Whether the FHR/Telemetry unification features are enabled.
 // Changing this pref requires a restart.

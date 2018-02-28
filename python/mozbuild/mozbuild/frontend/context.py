@@ -1461,10 +1461,17 @@ VARIABLES = {
            which provides the locale in use, i.e. ``en-US``.
         2. The ``inputs`` list may contain paths to files that will be taken from the locale
            source directory (see ``LOCALIZED_FILES`` for a discussion of the specifics). Paths
-           in ``inputs`` starting with ``en-US/`` are considered localized files.
+           in ``inputs`` starting with ``en-US/`` or containing ``/locales/en-US/`` are considered
+           localized files.
 
         To place the generated output file in a specific location, list its objdir path in
         ``LOCALIZED_FILES``.
+
+        In addition, ``LOCALIZED_GENERATED_FILES`` can use the special substitutions ``{AB_CD}``
+        and ``{AB_rCD}`` in their output paths.  ``{AB_CD}`` expands to the current locale during
+        multi-locale builds and single-locale repacks and ``{AB_rCD}`` expands to an
+        Android-specific encoding of the current locale.  Both expand to the empty string when the
+        current locale is ``en-US``.
         """),
 
     'OBJDIR_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,

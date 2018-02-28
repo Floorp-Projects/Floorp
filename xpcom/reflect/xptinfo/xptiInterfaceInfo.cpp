@@ -6,6 +6,7 @@
 /* Implementation of xptiInterfaceEntry and xptiInterfaceInfo. */
 
 #include "xptiprivate.h"
+#include "xpt_arena.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/XPTInterfaceInfoManager.h"
@@ -15,26 +16,23 @@
 using namespace mozilla;
 
 /* static */ xptiInterfaceEntry*
-xptiInterfaceEntry::Create(const char* name, const nsID& iid,
+xptiInterfaceEntry::Create(const char* aName,
+                           const nsID& aIID,
                            XPTInterfaceDescriptor* aDescriptor,
                            xptiTypelibGuts* aTypelib)
 {
-    int namelen = strlen(name);
-    void* place =
-        XPT_CALLOC8(gXPTIStructArena, sizeof(xptiInterfaceEntry) + namelen);
+    void* place = XPT_CALLOC8(gXPTIStructArena, sizeof(xptiInterfaceEntry));
     if (!place) {
         return nullptr;
     }
-    return new (place) xptiInterfaceEntry(name, namelen, iid, aDescriptor,
-                                          aTypelib);
+    return new (place) xptiInterfaceEntry(aName, aIID, aDescriptor, aTypelib);
 }
 
-xptiInterfaceEntry::xptiInterfaceEntry(const char* name,
-                                       size_t nameLength,
-                                       const nsID& iid,
+xptiInterfaceEntry::xptiInterfaceEntry(const char* aName,
+                                       const nsID& aIID,
                                        XPTInterfaceDescriptor* aDescriptor,
                                        xptiTypelibGuts* aTypelib)
-    : mIID(iid)
+    : mIID(aIID)
     , mDescriptor(aDescriptor)
     , mTypelib(aTypelib)
     , mParent(nullptr)
@@ -42,8 +40,8 @@ xptiInterfaceEntry::xptiInterfaceEntry(const char* name,
     , mMethodBaseIndex(0)
     , mConstantBaseIndex(0)
     , mFlags(0)
+    , mName(aName)
 {
-    memcpy(mName, name, nameLength);
     SetResolvedState(PARTIALLY_RESOLVED);
 }
 
@@ -145,7 +143,7 @@ xptiInterfaceEntry::IsFunction(bool* result)
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
 
-    *result = XPT_ID_IS_FUNCTION(mDescriptor->flags);
+    *result = mDescriptor->IsFunction();
     return NS_OK;
 }
 
@@ -306,11 +304,11 @@ xptiInterfaceEntry::GetInterfaceIndexForParam(uint16_t methodIndex,
 
     const XPTTypeDescriptor *td = &param->type;
 
-    while (XPT_TDP_TAG(td->prefix) == TD_ARRAY) {
+    while (td->Tag() == TD_ARRAY) {
         td = &mDescriptor->additional_types[td->u.array.additional_type];
     }
 
-    if(XPT_TDP_TAG(td->prefix) != TD_INTERFACE_TYPE) {
+    if (td->Tag() != TD_INTERFACE_TYPE) {
         NS_ERROR("not an interface");
         return NS_ERROR_INVALID_ARG;
     }
@@ -446,7 +444,7 @@ xptiInterfaceEntry::GetTypeInArray(const nsXPTParamInfo* param,
                 mDescriptor->additional_types;
 
     for (uint16_t i = 0; i < dimension; i++) {
-        if(XPT_TDP_TAG(td->prefix) != TD_ARRAY) {
+        if (td->Tag() != TD_ARRAY) {
             NS_ERROR("bad dimension");
             return NS_ERROR_INVALID_ARG;
         }
@@ -522,7 +520,7 @@ xptiInterfaceEntry::GetSizeIsArgNumberForParam(uint16_t methodIndex,
         td = &param->type;
 
     // verify that this is a type that has size_is
-    switch (XPT_TDP_TAG(td->prefix)) {
+    switch (td->Tag()) {
       case TD_ARRAY:
         *argnum = td->u.array.argnum;
         break;
@@ -559,11 +557,11 @@ xptiInterfaceEntry::GetInterfaceIsArgNumberForParam(uint16_t methodIndex,
 
     const XPTTypeDescriptor *td = &param->type;
 
-    while (XPT_TDP_TAG(td->prefix) == TD_ARRAY) {
+    while (td->Tag() == TD_ARRAY) {
         td = &mDescriptor->additional_types[td->u.array.additional_type];
     }
 
-    if(XPT_TDP_TAG(td->prefix) != TD_INTERFACE_IS_TYPE) {
+    if (td->Tag() != TD_INTERFACE_IS_TYPE) {
         NS_ERROR("not an iid_is");
         return NS_ERROR_INVALID_ARG;
     }

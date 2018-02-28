@@ -17,13 +17,13 @@ function testReject() {
   return deferred.promise;
 }
 
-add_task(function* () {
-  const success = yield testResolve();
+add_task(async function () {
+  const success = await testResolve();
   equal(success, "success");
 
   let error;
   try {
-    yield testReject();
+    await testReject();
   } catch (e) {
     error = e;
   }

@@ -6,7 +6,6 @@
 
 const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
 const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
-const {console} = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
 const {ScratchpadManager} = ChromeUtils.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm", {});
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const {gDevTools} = require("devtools/client/framework/devtools");

@@ -7,10 +7,8 @@
 
 <!DOCTYPE overlay [
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-  <!ENTITY % applicationsDTD SYSTEM "chrome://browser/locale/preferences/applications.dtd">
   <!ENTITY % containersDTD SYSTEM "chrome://browser/locale/preferences/containers.dtd">
   %brandDTD;
-  %applicationsDTD;
   %containersDTD;
 ]>
 

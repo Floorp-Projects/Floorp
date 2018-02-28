@@ -17,7 +17,6 @@ loader.lazyRequireGetter(this, "cert",
   "devtools/shared/security/cert");
 loader.lazyRequireGetter(this, "asyncStorage",
   "devtools/shared/async-storage");
-const { Task } = require("devtools/shared/task");
 
 /**
  * A simple enum-like object with keys mirrored to values.
@@ -343,14 +342,14 @@ OOBCert.Client.prototype = {
     };
 
     transport.hooks = {
-      onPacket: Task.async(function* (packet) {
+      onPacket: async (packet) => {
         closeDialog();
         let { authResult } = packet;
         switch (authResult) {
           case AuthenticationResult.PENDING:
             // Step B.8
             // Client creates hash(ClientCert) + K(random 128-bit number)
-            oobData = yield this._createOOB();
+            oobData = await this._createOOB();
             activeSendDialog = this.sendOOB({
               host,
               port,
@@ -382,7 +381,7 @@ OOBCert.Client.prototype = {
             transport.close(new Error("Invalid auth result: " + authResult));
             break;
         }
-      }.bind(this)),
+      },
       onClosed(reason) {
         closeDialog();
         // Transport died before auth completed
@@ -398,13 +397,13 @@ OOBCert.Client.prototype = {
    * Create the package of data that needs to be transferred across the OOB
    * channel.
    */
-  _createOOB: Task.async(function* () {
-    let clientCert = yield cert.local.getOrCreate();
+  async _createOOB() {
+    let clientCert = await cert.local.getOrCreate();
     return {
       sha256: clientCert.sha256Fingerprint,
       k: this._createRandom()
     };
-  }),
+  },
 
   _createRandom() {
     // 16 bytes / 128 bits
@@ -511,11 +510,11 @@ OOBCert.Server.prototype = {
    * @return An AuthenticationResult value.
    *         A promise that will be resolved to the above is also allowed.
    */
-  authenticate: Task.async(function* ({ client, server, transport }) {
+  async authenticate({ client, server, transport }) {
     // Step B.3 / C.3
     // TLS connection established, authentication begins
     const storageKey = `devtools.auth.${this.mode}.approved-clients`;
-    let approvedClients = (yield asyncStorage.getItem(storageKey)) || {};
+    let approvedClients = (await asyncStorage.getItem(storageKey)) || {};
     // Step C.4
     // Server sees that ClientCert is from a known client via hash(ClientCert)
     if (approvedClients[client.cert.sha256]) {
@@ -536,7 +535,7 @@ OOBCert.Server.prototype = {
     // Step B.5
     // User is shown a Allow / Deny / Always Allow prompt on the Server
     // with Client name and hash(ClientCert)
-    let authResult = yield this.allowConnection({
+    let authResult = await this.allowConnection({
       authentication: this.mode,
       client,
       server
@@ -553,7 +552,7 @@ OOBCert.Server.prototype = {
     }
 
     // Examine additional data for authentication
-    let oob = yield this.receiveOOB();
+    let oob = await this.receiveOOB();
     if (!oob) {
       dumpn("Invalid OOB data received");
       return AuthenticationResult.DENY;
@@ -583,7 +582,7 @@ OOBCert.Server.prototype = {
     // Persist Client if we want to always allow in the future
     if (authResult === AuthenticationResult.ALLOW_PERSIST) {
       approvedClients[client.cert.sha256] = true;
-      yield asyncStorage.setItem(storageKey, approvedClients);
+      await asyncStorage.setItem(storageKey, approvedClients);
     }
 
     // Client may decide to abort if K does not match.
@@ -592,7 +591,7 @@ OOBCert.Server.prototype = {
     // Step B.13
     // Debugging begins
     return authResult;
-  }),
+  },
 
   /**
    * Prompt the user to accept or decline the incoming connection. The default

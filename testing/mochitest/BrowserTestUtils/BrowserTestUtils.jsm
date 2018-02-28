@@ -144,7 +144,7 @@ var BrowserTestUtils = {
    */
   openNewForegroundTab(tabbrowser, ...args) {
     let options;
-    if (tabbrowser instanceof Ci.nsIDOMXULElement) {
+    if (tabbrowser.ownerGlobal && tabbrowser === tabbrowser.ownerGlobal.gBrowser) {
       // tabbrowser is a tabbrowser, read the rest of the arguments from args.
       let [
         opening = "about:blank",

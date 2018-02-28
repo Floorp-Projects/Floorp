@@ -20,7 +20,7 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const Utils = TelemetryUtils;
 
-const { AddonManager, AddonManagerPrivate } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
+const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
 
 ChromeUtils.defineModuleGetter(this, "AttributionCode",
                                "resource:///modules/AttributionCode.jsm");
@@ -47,6 +47,7 @@ const MAX_EXPERIMENT_TYPE_LENGTH = 20;
 /**
  * This is a policy object used to override behavior for testing.
  */
+// eslint-disable-next-line no-unused-vars
 var Policy = {
   now: () => new Date(),
 };

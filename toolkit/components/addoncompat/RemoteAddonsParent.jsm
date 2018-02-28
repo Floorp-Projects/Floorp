@@ -425,11 +425,15 @@ var EventTargetParent = {
 
       // Some non-browser windows define gBrowser globals which are not elements
       // and can't be passed to target.contains().
-      if (window &&
-          window.gBrowser instanceof Ci.nsIDOMXULElement &&
-          target.contains(window.gBrowser)) {
+      if (window && window.gBrowser &&
+          window.gBrowser.container instanceof Ci.nsIDOMXULElement &&
+          target.contains(window.gBrowser.container)) {
         return window;
       }
+    }
+
+    if (target.ownerGlobal && target === target.ownerGlobal.gBrowser) {
+      return target.ownerGlobal;
     }
 
     return null;

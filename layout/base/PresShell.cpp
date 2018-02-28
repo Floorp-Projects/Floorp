@@ -4289,9 +4289,9 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 }
 
 void
-PresShell::CharacterDataChanged(nsIDocument *aDocument,
-                                nsIContent*  aContent,
-                                CharacterDataChangeInfo* aInfo)
+PresShell::CharacterDataChanged(nsIDocument* aDocument,
+                                nsIContent* aContent,
+                                const CharacterDataChangeInfo& aInfo)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected CharacterDataChanged");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
@@ -4306,7 +4306,7 @@ PresShell::CharacterDataChanged(nsIDocument *aDocument,
     container ? (container->GetFlags() & NODE_ALL_SELECTOR_FLAGS) : 0;
   if (selectorFlags != 0 && !aContent->IsRootOfAnonymousSubtree()) {
     Element* element = container->AsElement();
-    if (aInfo->mAppend && !aContent->GetNextSibling())
+    if (aInfo.mAppend && !aContent->GetNextSibling())
       mPresContext->RestyleManager()->RestyleForAppend(element, aContent);
     else
       mPresContext->RestyleManager()->RestyleForInsertOrChange(element, aContent);

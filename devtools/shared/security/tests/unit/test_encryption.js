@@ -16,12 +16,12 @@ function connectClient(client) {
   return client.connect(() => client.listTabs());
 }
 
-add_task(function* () {
+add_task(async function () {
   initTestDebuggerServer();
 });
 
 // Client w/ encryption connects successfully to server w/ encryption
-add_task(function* () {
+add_task(async function () {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
   let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
@@ -35,10 +35,10 @@ add_task(function* () {
   listener.portOrPath = -1;
   listener.authenticator = authenticator;
   listener.encryption = true;
-  yield listener.open();
+  await listener.open();
   equal(DebuggerServer.listeningSockets, 1, "1 listening socket");
 
-  let transport = yield DebuggerClient.socketConnect({
+  let transport = await DebuggerClient.socketConnect({
     host: "127.0.0.1",
     port: listener.port,
     encryption: true
@@ -50,11 +50,11 @@ add_task(function* () {
     do_throw("Closed unexpectedly");
   };
   client.addListener("closed", onUnexpectedClose);
-  yield connectClient(client);
+  await connectClient(client);
 
   // Send a message the server will echo back
   let message = "secrets";
-  let reply = yield client.request({
+  let reply = await client.request({
     to: "root",
     type: "echo",
     message
@@ -68,7 +68,7 @@ add_task(function* () {
 });
 
 // Client w/o encryption fails to connect to server w/ encryption
-add_task(function* () {
+add_task(async function () {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
   let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
@@ -82,11 +82,11 @@ add_task(function* () {
   listener.portOrPath = -1;
   listener.authenticator = authenticator;
   listener.encryption = true;
-  yield listener.open();
+  await listener.open();
   equal(DebuggerServer.listeningSockets, 1, "1 listening socket");
 
   try {
-    yield DebuggerClient.socketConnect({
+    await DebuggerClient.socketConnect({
       host: "127.0.0.1",
       port: listener.port
       // encryption: false is the default
@@ -101,6 +101,6 @@ add_task(function* () {
   do_throw("Connection unexpectedly succeeded");
 });
 
-add_task(function* () {
+add_task(async function () {
   DebuggerServer.destroy();
 });

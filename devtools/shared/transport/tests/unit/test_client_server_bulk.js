@@ -10,13 +10,13 @@ function run_test() {
   initTestDebuggerServer();
   add_test_bulk_actor();
 
-  add_task(function* () {
-    yield test_bulk_request_cs(socket_transport, "jsonReply", "json");
-    yield test_bulk_request_cs(local_transport, "jsonReply", "json");
-    yield test_bulk_request_cs(socket_transport, "bulkEcho", "bulk");
-    yield test_bulk_request_cs(local_transport, "bulkEcho", "bulk");
-    yield test_json_request_cs(socket_transport, "bulkReply", "bulk");
-    yield test_json_request_cs(local_transport, "bulkReply", "bulk");
+  add_task(async function () {
+    await test_bulk_request_cs(socket_transport, "jsonReply", "json");
+    await test_bulk_request_cs(local_transport, "jsonReply", "json");
+    await test_bulk_request_cs(socket_transport, "bulkEcho", "bulk");
+    await test_bulk_request_cs(local_transport, "bulkEcho", "bulk");
+    await test_json_request_cs(socket_transport, "bulkReply", "bulk");
+    await test_json_request_cs(local_transport, "bulkReply", "bulk");
     DebuggerServer.destroy();
   });
 
@@ -133,7 +133,7 @@ var replyHandlers = {
 
 /** * Tests ***/
 
-var test_bulk_request_cs = Task.async(function* (transportFactory, actorType, replyType) {
+var test_bulk_request_cs = async function (transportFactory, actorType, replyType) {
   // Ensure test files are not present from a failed run
   cleanup_files();
   writeTestTempFile("bulk-input", really_long());
@@ -142,7 +142,7 @@ var test_bulk_request_cs = Task.async(function* (transportFactory, actorType, re
   let serverDeferred = defer();
   let bulkCopyDeferred = defer();
 
-  let transport = yield transportFactory();
+  let transport = await transportFactory();
 
   let client = new DebuggerClient(transport);
   client.connect().then(([app, traits]) => {
@@ -190,9 +190,9 @@ var test_bulk_request_cs = Task.async(function* (transportFactory, actorType, re
     bulkCopyDeferred.promise,
     serverDeferred.promise
   ]);
-});
+};
 
-var test_json_request_cs = Task.async(function* (transportFactory, actorType, replyType) {
+var test_json_request_cs = async function (transportFactory, actorType, replyType) {
   // Ensure test files are not present from a failed run
   cleanup_files();
   writeTestTempFile("bulk-input", really_long());
@@ -200,7 +200,7 @@ var test_json_request_cs = Task.async(function* (transportFactory, actorType, re
   let clientDeferred = defer();
   let serverDeferred = defer();
 
-  let transport = yield transportFactory();
+  let transport = await transportFactory();
 
   let client = new DebuggerClient(transport);
   client.connect((app, traits) => {
@@ -231,7 +231,7 @@ var test_json_request_cs = Task.async(function* (transportFactory, actorType, re
     clientDeferred.promise,
     serverDeferred.promise
   ]);
-});
+};
 
 /** * Test Utils ***/
 

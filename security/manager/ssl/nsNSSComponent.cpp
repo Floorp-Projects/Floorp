@@ -1689,6 +1689,21 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting)
       break;
   }
 
+  DistrustedCAPolicy defaultCAPolicyMode =
+    DistrustedCAPolicy::DistrustSymantecRoots;
+  DistrustedCAPolicy distrustedCAPolicy =
+    static_cast<DistrustedCAPolicy>
+      (Preferences::GetUint("security.pki.distrust_ca_policy",
+                            static_cast<uint32_t>(defaultCAPolicyMode)));
+  switch(distrustedCAPolicy) {
+    case DistrustedCAPolicy::Permit:
+    case DistrustedCAPolicy::DistrustSymantecRoots:
+      break;
+    default:
+      distrustedCAPolicy = defaultCAPolicyMode;
+      break;
+  }
+
   CertVerifier::OcspDownloadConfig odc;
   CertVerifier::OcspStrictConfig osc;
   CertVerifier::OcspGetConfig ogc;
@@ -1704,7 +1719,7 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting)
                                                 pinningMode, sha1Mode,
                                                 nameMatchingMode,
                                                 netscapeStepUpPolicy,
-                                                ctMode);
+                                                ctMode, distrustedCAPolicy);
 }
 
 // Enable the TLS versions given in the prefs, defaulting to TLS 1.0 (min) and
@@ -2273,7 +2288,8 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                prefName.EqualsLiteral("security.pki.name_matching_mode") ||
                prefName.EqualsLiteral("security.pki.netscape_step_up_policy") ||
                prefName.EqualsLiteral("security.OCSP.timeoutMilliseconds.soft") ||
-               prefName.EqualsLiteral("security.OCSP.timeoutMilliseconds.hard")) {
+               prefName.EqualsLiteral("security.OCSP.timeoutMilliseconds.hard") ||
+               prefName.EqualsLiteral("security.pki.distrust_ca_policy")) {
       setValidationOptions(false);
 #ifdef DEBUG
     } else if (prefName.EqualsLiteral("security.test.built_in_root_hash")) {

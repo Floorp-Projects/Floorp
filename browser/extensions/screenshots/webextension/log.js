@@ -4,17 +4,17 @@
 "use strict";
 
 this.log = (function() {
-  let exports = {};
+  const exports = {};
 
   const levels = ["debug", "info", "warn", "error"];
   if (!levels.includes(buildSettings.logLevel)) {
     console.warn("Invalid buildSettings.logLevel:", buildSettings.logLevel);
   }
-  let shouldLog = {};
+  const shouldLog = {};
 
   {
     let startLogging = false;
-    for (let level of levels) {
+    for (const level of levels) {
       if (buildSettings.logLevel === level) {
         startLogging = true;
       }

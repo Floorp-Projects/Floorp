@@ -126,13 +126,13 @@
     "message": "스크린 샷을 찍고 싶을 때는 언제든지 주소창의 페이지 작업 메뉴를 열어주세요."
   },
   "tourHeaderClickAndDrag": {
-    "message": "원하는 것을 캡춰하세요"
+    "message": "원하는 것을 캡처하세요"
   },
   "tourBodyClickAndDrag": {
-    "message": "캡춰할 페이지의 부분을 클릭해서 드래그 해 보세요. 마우스를 올려서 선택한 부분을 확인할 수 있습니다."
+    "message": "캡처할 페이지의 부분을 클릭해서 드래그 해 보세요. 마우스를 올려서 선택한 부분을 확인할 수 있습니다."
   },
   "tourHeaderFullPage": {
-    "message": "창이나 페이지 전체를 캡춰할 수 있습니다"
+    "message": "창이나 페이지 전체를 캡처할 수 있습니다"
   },
   "tourBodyFullPage": {
     "message": "우측 위에 있는 버튼을 눌러 창을 캡처하거나 페이지 전체를 캡처할 수 있습니다."

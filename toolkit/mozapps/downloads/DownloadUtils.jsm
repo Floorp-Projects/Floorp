@@ -539,8 +539,8 @@ function convertTimeUnitsUnits(aTime, aIndex) {
  * @param aMsg
  *        Error message to log or an array of strings to concat
  */
-function log(aMsg) {
-  let msg = "DownloadUtils.jsm: " + (aMsg.join ? aMsg.join("") : aMsg);
-  Services.console.logStringMessage(msg);
-  dump(msg + "\n");
-}
+// function log(aMsg) {
+//   let msg = "DownloadUtils.jsm: " + (aMsg.join ? aMsg.join("") : aMsg);
+//   Services.console.logStringMessage(msg);
+//   dump(msg + "\n");
+// }

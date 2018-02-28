@@ -3,9 +3,9 @@
 "use strict";
 
 this.communication = (function() {
-  let exports = {};
+  const exports = {};
 
-  let registeredFunctions = {};
+  const registeredFunctions = {};
 
   exports.onMessage = catcher.watchFunction((req, sender, sendResponse) => {
     if (!(req.funcName in registeredFunctions)) {
@@ -18,7 +18,7 @@ this.communication = (function() {
       sendResponse({type: "error", name: "No .args"});
       return;
     }
-    let func = registeredFunctions[req.funcName];
+    const func = registeredFunctions[req.funcName];
     let result;
     try {
       req.args.unshift(sender);
@@ -36,7 +36,7 @@ this.communication = (function() {
         log.error(`Promise error in ${req.funcName}:`, errorResult, errorResult && errorResult.stack);
         sendResponse({type: "error", message: errorResult + "", errorCode: errorResult.errorCode, popupMessage: errorResult.popupMessage});
       });
-      return true;
+      return;
     }
     sendResponse({type: "success", value: result});
   });
@@ -53,7 +53,7 @@ this.communication = (function() {
       if (result.type === "success") {
         return result.value;
       }
-      throw new Error(`Error in ${funcName}: ${result.name || 'unknown'}`);
+      throw new Error(`Error in ${funcName}: ${result.name || "unknown"}`);
     }, (error) => {
       if (isBootstrapMissingError(error)) {
         return exports.NO_BOOTSTRAP;
@@ -66,7 +66,7 @@ this.communication = (function() {
     if (!error) {
       return false;
     }
-    return ('errorCode' in error && error.errorCode === "NO_RECEIVING_END") ||
+    return ("errorCode" in error && error.errorCode === "NO_RECEIVING_END") ||
       (!error.errorCode && error.message === "Could not establish connection. Receiving end does not exist.");
   }
 

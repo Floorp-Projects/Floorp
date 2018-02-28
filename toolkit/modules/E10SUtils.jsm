@@ -15,8 +15,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "allowLinkedWebInFileUriProcess",
                                       "browser.tabs.remote.allowLinkedWebInFileUriProcess", false);
 ChromeUtils.defineModuleGetter(this, "Utils",
                                "resource://gre/modules/sessionstore/Utils.jsm");
-ChromeUtils.defineModuleGetter(this, "console",
-                               "resource://gre/modules/Console.jsm");
 
 function getAboutModule(aURL) {
   // Needs to match NS_GetAboutModuleName

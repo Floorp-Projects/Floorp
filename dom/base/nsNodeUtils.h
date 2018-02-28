@@ -34,7 +34,7 @@ public:
    * @see nsIMutationObserver::CharacterDataWillChange
    */
   static void CharacterDataWillChange(nsIContent* aContent,
-                                      CharacterDataChangeInfo* aInfo);
+                                      const CharacterDataChangeInfo&);
 
   /**
    * Send CharacterDataChanged notifications to nsIMutationObservers.
@@ -43,7 +43,7 @@ public:
    * @see nsIMutationObserver::CharacterDataChanged
    */
   static void CharacterDataChanged(nsIContent* aContent,
-                                   CharacterDataChangeInfo* aInfo);
+                                   const CharacterDataChangeInfo&);
 
   /**
    * Send AttributeWillChange notifications to nsIMutationObservers.

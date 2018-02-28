@@ -8,7 +8,7 @@
 // Adapted from https://github.com/mozilla-b2g/gaia/blob/f09993563fb5fec4393eb71816ce76cb00463190/apps/sharedtest/test/unit/async_storage_test.js.
 
 const asyncStorage = require("devtools/shared/async-storage");
-add_task(function* () {
+add_task(async function () {
   is(typeof asyncStorage.length, "function", "API exists.");
   is(typeof asyncStorage.key, "function", "API exists.");
   is(typeof asyncStorage.getItem, "function", "API exists.");
@@ -17,61 +17,61 @@ add_task(function* () {
   is(typeof asyncStorage.clear, "function", "API exists.");
 });
 
-add_task(function* () {
-  yield asyncStorage.setItem("foo", "bar");
-  let value = yield asyncStorage.getItem("foo");
+add_task(async function () {
+  await asyncStorage.setItem("foo", "bar");
+  let value = await asyncStorage.getItem("foo");
   is(value, "bar", "value is correct");
-  yield asyncStorage.setItem("foo", "overwritten");
-  value = yield asyncStorage.getItem("foo");
+  await asyncStorage.setItem("foo", "overwritten");
+  value = await asyncStorage.getItem("foo");
   is(value, "overwritten", "value is correct");
-  yield asyncStorage.removeItem("foo");
-  value = yield asyncStorage.getItem("foo");
+  await asyncStorage.removeItem("foo");
+  value = await asyncStorage.getItem("foo");
   is(value, null, "value is correct");
 });
 
-add_task(function* () {
+add_task(async function () {
   let object = {
     x: 1,
     y: "foo",
     z: true
   };
 
-  yield asyncStorage.setItem("myobj", object);
-  let value = yield asyncStorage.getItem("myobj");
+  await asyncStorage.setItem("myobj", object);
+  let value = await asyncStorage.getItem("myobj");
   is(object.x, value.x, "value is correct");
   is(object.y, value.y, "value is correct");
   is(object.z, value.z, "value is correct");
-  yield asyncStorage.removeItem("myobj");
-  value = yield asyncStorage.getItem("myobj");
+  await asyncStorage.removeItem("myobj");
+  value = await asyncStorage.getItem("myobj");
   is(value, null, "value is correct");
 });
 
-add_task(function* () {
-  yield asyncStorage.clear();
-  let len = yield asyncStorage.length();
+add_task(async function () {
+  await asyncStorage.clear();
+  let len = await asyncStorage.length();
   is(len, 0, "length is correct");
-  yield asyncStorage.setItem("key1", "value1");
-  len = yield asyncStorage.length();
+  await asyncStorage.setItem("key1", "value1");
+  len = await asyncStorage.length();
   is(len, 1, "length is correct");
-  yield asyncStorage.setItem("key2", "value2");
-  len = yield asyncStorage.length();
+  await asyncStorage.setItem("key2", "value2");
+  len = await asyncStorage.length();
   is(len, 2, "length is correct");
-  yield asyncStorage.setItem("key3", "value3");
-  len = yield asyncStorage.length();
+  await asyncStorage.setItem("key3", "value3");
+  len = await asyncStorage.length();
   is(len, 3, "length is correct");
 
-  let key = yield asyncStorage.key(0);
+  let key = await asyncStorage.key(0);
   is(key, "key1", "key is correct");
-  key = yield asyncStorage.key(1);
+  key = await asyncStorage.key(1);
   is(key, "key2", "key is correct");
-  key = yield asyncStorage.key(2);
+  key = await asyncStorage.key(2);
   is(key, "key3", "key is correct");
-  key = yield asyncStorage.key(3);
+  key = await asyncStorage.key(3);
   is(key, null, "key is correct");
-  yield asyncStorage.clear();
-  key = yield asyncStorage.key(0);
+  await asyncStorage.clear();
+  key = await asyncStorage.key(0);
   is(key, null, "key is correct");
 
-  len = yield asyncStorage.length();
+  len = await asyncStorage.length();
   is(len, 0, "length is correct");
 });
