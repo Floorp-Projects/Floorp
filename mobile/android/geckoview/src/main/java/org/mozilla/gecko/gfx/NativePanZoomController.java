@@ -459,7 +459,7 @@ public final class NativePanZoomController extends JNIObject {
 
     @WrapForJNI(calledFrom = "ui")
     private void synthesizeNativeTouchPoint(int pointerId, int eventType, int clientX,
-                                            int clientY, double pressure, int orientation) {
+                                           int clientY, double pressure, int orientation) {
         if (pointerId == PointerInfo.RESERVED_MOUSE_POINTER_ID) {
             throw new IllegalArgumentException("Pointer ID reserved for mouse");
         }
