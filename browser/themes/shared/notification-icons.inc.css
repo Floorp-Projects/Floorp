@@ -6,8 +6,9 @@
 
 .popup-notification-icon,
 .identity-popup-permission-icon {
-  -moz-context-properties: fill;
-  fill: GrayText;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.6;
 }
 
 #notification-popup-box {
