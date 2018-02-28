@@ -174,8 +174,9 @@ XULButtonAccessible::IsAcceptableChild(nsIContent* aEl) const
   nsAutoString role;
   nsCoreUtils::XBLBindingRole(aEl, role);
 
-  // Get an accessible for menupopup or panel elements.
-  if (role.EqualsLiteral("xul:menupopup")) {
+  // Get an accessible for menupopup or popup elements.
+  if (aEl->IsXULElement(nsGkAtoms::menupopup) ||
+      aEl->IsXULElement(nsGkAtoms::popup)) {
     return true;
   }
 
