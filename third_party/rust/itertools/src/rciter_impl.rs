@@ -15,27 +15,34 @@ pub struct RcIter<I> {
 /// same original iterator.
 ///
 /// `RcIter` allows doing interesting things like using `.zip()` on an iterator with
-/// itself, at the cost of runtime borrow checking.
-/// (If it is not obvious: this has a performance penalty.)
+/// itself, at the cost of runtime borrow checking which may have a performance
+/// penalty.
 ///
 /// Iterator element type is `Self::Item`.
 ///
 /// ```
 /// use itertools::rciter;
+/// use itertools::zip;
 ///
-/// let mut rit = rciter(0..9);
-/// let mut z = rit.clone().zip(rit.clone());
+/// // In this example a range iterator is created and we iterate it using
+/// // three separate handles (two of them given to zip).
+/// // We also use the IntoIterator implementation for `&RcIter`.
+///
+/// let mut iter = rciter(0..9);
+/// let mut z = zip(&iter, &iter);
+///
 /// assert_eq!(z.next(), Some((0, 1)));
 /// assert_eq!(z.next(), Some((2, 3)));
 /// assert_eq!(z.next(), Some((4, 5)));
-/// assert_eq!(rit.next(), Some(6));
+/// assert_eq!(iter.next(), Some(6));
 /// assert_eq!(z.next(), Some((7, 8)));
 /// assert_eq!(z.next(), None);
 /// ```
 ///
-/// **Panics** in iterator methods if a borrow error is encountered,
-/// but it can only happen if the `RcIter` is reentered in for example `.next()`,
-/// i.e. if it somehow participates in an “iterator knot” where it is an adaptor of itself.
+/// **Panics** in iterator methods if a borrow error is encountered in the
+/// iterator methods. It can only happen if the `RcIter` is reentered in
+/// `.next()`, i.e. if it somehow participates in an “iterator knot”
+/// where it is an adaptor of itself.
 pub fn rciter<I>(iterable: I) -> RcIter<I::IntoIter>
     where I: IntoIterator
 {
@@ -76,6 +83,7 @@ impl<I> DoubleEndedIterator for RcIter<I>
         self.rciter.borrow_mut().next_back()
     }
 }
+
 /// Return an iterator from `&RcIter<I>` (by simply cloning it).
 impl<'a, I> IntoIterator for &'a RcIter<I>
     where I: Iterator
