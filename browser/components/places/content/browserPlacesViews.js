@@ -217,7 +217,7 @@ PlacesViewBase.prototype = {
       }
     }
 
-    if (PlacesControllerDragHelper.disallowInsertion(container, this))
+    if (this.controller.disallowInsertion(container))
       return null;
 
     return new PlacesInsertionPoint({

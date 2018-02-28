@@ -257,61 +257,6 @@ var PlacesUIUtils = {
   },
 
   /**
-   * Constructs a Places Transaction for the drop or paste of a blob of data
-   * into a container.
-   *
-   * @param   aData
-   *          The unwrapped data blob of dropped or pasted data.
-   * @param   aNewParentGuid
-   *          GUID of the container the data was dropped or pasted into.
-   * @param   aIndex
-   *          The index within the container the item was dropped or pasted at.
-   * @param   aCopy
-   *          The drag action was copy, so don't move folders or links.
-   *
-   * @return  a Places Transaction that can be transacted for performing the
-   *          move/insert command.
-   */
-  getTransactionForData(aData, aNewParentGuid, aIndex, aCopy) {
-    if (!this.SUPPORTED_FLAVORS.includes(aData.type))
-      throw new Error(`Unsupported '${aData.type}' data type`);
-
-    if ("itemGuid" in aData && "instanceId" in aData &&
-        aData.instanceId == PlacesUtils.instanceId) {
-      if (!this.PLACES_FLAVORS.includes(aData.type))
-        throw new Error(`itemGuid unexpectedly set on ${aData.type} data`);
-
-      let info = { guid: aData.itemGuid,
-                   newParentGuid: aNewParentGuid,
-                   newIndex: aIndex };
-      if (aCopy) {
-        info.excludingAnnotation = "Places/SmartBookmark";
-        return PlacesTransactions.Copy(info);
-      }
-      return PlacesTransactions.Move(info);
-    }
-
-    // Since it's cheap and harmless, we allow the paste of separators and
-    // bookmarks from builds that use legacy transactions (i.e. when itemGuid
-    // was not set on PLACES_FLAVORS data). Containers are a different story,
-    // and thus disallowed.
-    if (aData.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER)
-      throw new Error("Can't copy a container from a legacy-transactions build");
-
-    if (aData.type == PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) {
-      return PlacesTransactions.NewSeparator({ parentGuid: aNewParentGuid,
-                                               index: aIndex });
-    }
-
-    let title = aData.type != PlacesUtils.TYPE_UNICODE ? aData.title
-                                                       : aData.uri;
-    return PlacesTransactions.NewBookmark({ url: Services.io.newURI(aData.uri),
-                                            title,
-                                            parentGuid: aNewParentGuid,
-                                            index: aIndex });
-  },
-
-  /**
    * Shows the bookmark dialog corresponding to the specified info.
    *
    * @param aInfo
@@ -1247,8 +1192,119 @@ var PlacesUIUtils = {
       }
     }
   },
-};
 
+  /**
+   * Constructs a Places Transaction for the drop or paste of a blob of data
+   * into a container.
+   *
+   * @param   aData
+   *          The unwrapped data blob of dropped or pasted data.
+   * @param   aNewParentGuid
+   *          GUID of the container the data was dropped or pasted into.
+   * @param   aIndex
+   *          The index within the container the item was dropped or pasted at.
+   * @param   aCopy
+   *          The drag action was copy, so don't move folders or links.
+   *
+   * @return  a Places Transaction that can be transacted for performing the
+   *          move/insert command.
+   */
+  getTransactionForData(aData, aNewParentGuid, aIndex, aCopy) {
+    if (!this.SUPPORTED_FLAVORS.includes(aData.type))
+      throw new Error(`Unsupported '${aData.type}' data type`);
+
+    if ("itemGuid" in aData && "instanceId" in aData &&
+        aData.instanceId == PlacesUtils.instanceId) {
+      if (!this.PLACES_FLAVORS.includes(aData.type))
+        throw new Error(`itemGuid unexpectedly set on ${aData.type} data`);
+
+      let info = { guid: aData.itemGuid,
+                   newParentGuid: aNewParentGuid,
+                   newIndex: aIndex };
+      if (aCopy) {
+        info.excludingAnnotation = "Places/SmartBookmark";
+        return PlacesTransactions.Copy(info);
+      }
+      return PlacesTransactions.Move(info);
+    }
+
+    // Since it's cheap and harmless, we allow the paste of separators and
+    // bookmarks from builds that use legacy transactions (i.e. when itemGuid
+    // was not set on PLACES_FLAVORS data). Containers are a different story,
+    // and thus disallowed.
+    if (aData.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER)
+      throw new Error("Can't copy a container from a legacy-transactions build");
+
+    if (aData.type == PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) {
+      return PlacesTransactions.NewSeparator({ parentGuid: aNewParentGuid,
+                                               index: aIndex });
+    }
+
+    let title = aData.type != PlacesUtils.TYPE_UNICODE ? aData.title
+                                                       : aData.uri;
+    return PlacesTransactions.NewBookmark({ url: Services.io.newURI(aData.uri),
+                                            title,
+                                            parentGuid: aNewParentGuid,
+                                            index: aIndex });
+  },
+
+  /**
+   * Processes a set of transfer items that have been dropped or pasted.
+   * Batching will be applied where necessary.
+   *
+   * @param {Array} items A list of unwrapped nodes to process.
+   * @param {Object} insertionPoint The requested point for insertion.
+   * @param {Boolean} doCopy Set to true to copy the items, false will move them
+   *                         if possible.
+   * @paramt {Object} view The view that should be used for batching.
+   * @return {Array} Returns an empty array when the insertion point is a tag, else
+   *                 returns an array of copied or moved guids.
+   */
+  async handleTransferItems(items, insertionPoint, doCopy, view) {
+    let transactions;
+    let itemsCount;
+    if (insertionPoint.isTag) {
+      let urls = items.filter(item => "uri" in item).map(item => item.uri);
+      itemsCount = urls.length;
+      transactions = [PlacesTransactions.Tag({ urls, tag: insertionPoint.tagName })];
+    } else {
+      let insertionIndex = await insertionPoint.getIndex();
+      itemsCount = items.length;
+      transactions = await getTransactionsForTransferItems(
+        items, insertionIndex, insertionPoint.guid, doCopy);
+    }
+
+    // Check if we actually have something to add, if we don't it probably wasn't
+    // valid, or it was moving to the same location, so just ignore it.
+    if (!transactions.length) {
+      return [];
+    }
+
+    let guidsToSelect = [];
+    let resultForBatching = getResultForBatching(view);
+
+    // If we're inserting into a tag, we don't get the guid, so we'll just
+    // pass the transactions direct to the batch function.
+    let batchingItem = transactions;
+    if (!insertionPoint.isTag) {
+      // If we're not a tag, then we need to get the ids of the items to select.
+      batchingItem = async () => {
+        for (let transaction of transactions) {
+          let guid = await transaction.transact();
+          if (guid) {
+            guidsToSelect.push(guid);
+          }
+        }
+      };
+    }
+
+    await this.batchUpdatesForNode(resultForBatching, itemsCount, async () => {
+      await PlacesTransactions.batch(batchingItem);
+    });
+
+    return guidsToSelect;
+  },
+};
 
 PlacesUIUtils.PLACES_FLAVORS = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
                                 PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
@@ -1272,3 +1328,117 @@ XPCOMUtils.defineLazyPreferenceGetter(PlacesUIUtils, "loadBookmarksInTabs",
                                       PREF_LOAD_BOOKMARKS_IN_TABS, false);
 XPCOMUtils.defineLazyPreferenceGetter(PlacesUIUtils, "openInTabClosesMenu",
   "browser.bookmarks.openInTabClosesMenu", false);
+
+/**
+ * Determines if an unwrapped node can be moved.
+ *
+ * @param unwrappedNode
+ *        A node unwrapped by PlacesUtils.unwrapNodes().
+ * @return True if the node can be moved, false otherwise.
+ */
+function canMoveUnwrappedNode(unwrappedNode) {
+  if ((unwrappedNode.concreteGuid && PlacesUtils.isRootItem(unwrappedNode.concreteGuid)) ||
+      unwrappedNode.id <= 0 || PlacesUtils.isRootItem(unwrappedNode.id)) {
+    return false;
+  }
+
+  let parentGuid = unwrappedNode.parentGuid;
+  // If there's no parent Guid, this was likely a virtual query that returns
+  // bookmarks, such as a tags query.
+  if (!parentGuid ||
+      parentGuid == PlacesUtils.bookmarks.rootGuid) {
+    return false;
+  }
+  // leftPaneFolderId and allBookmarksFolderId are lazy getters running
+  // at least a synchronous DB query. Therefore we don't want to invoke
+  // them first, especially because isCommandEnabled may be called way
+  // before the left pane folder is even necessary.
+  if (typeof Object.getOwnPropertyDescriptor(PlacesUIUtils, "leftPaneFolderId").get != "function" &&
+      (unwrappedNode.parent == PlacesUIUtils.leftPaneFolderId)) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * This gets the most appropriate item for using for batching. In the case of multiple
+ * views being related, the method returns the most expensive result to batch.
+ * For example, if it detects the left-hand library pane, then it will look for
+ * and return the reference to the right-hand pane.
+ *
+ * @param {Object} viewOrElement The item to check.
+ * @return {Object} Will return the best result node to batch, or null
+ *                  if one could not be found.
+ */
+function getResultForBatching(viewOrElement) {
+  if (viewOrElement && viewOrElement instanceof Ci.nsIDOMElement &&
+      viewOrElement.id === "placesList") {
+    // Note: fall back to the existing item if we can't find the right-hane pane.
+    viewOrElement = viewOrElement.ownerDocument.getElementById("placeContent") || viewOrElement;
+  }
+
+  if (viewOrElement && viewOrElement.result) {
+    return viewOrElement.result;
+  }
+
+  return null;
+}
+
+/**
+ * Processes a set of transfer items and returns transactions to insert or
+ * move them.
+ *
+ * @param {Array} items A list of unwrapped nodes to get transactions for.
+ * @param {Integer} insertionIndex The requested index for insertion.
+ * @param {String} insertionParentGuid The guid of the parent folder to insert
+ *                                     or move the items to.
+ * @param {Boolean} doCopy Set to true to copy the items, false will move them
+ *                         if possible.
+ * @return {Array} Returns an array of created PlacesTransactions.
+ */
+async function getTransactionsForTransferItems(items, insertionIndex,
+                                               insertionParentGuid, doCopy) {
+  let transactions = [];
+  let index = insertionIndex;
+
+  for (let item of items) {
+    if (index != -1 && item.itemGuid) {
+      // Note: we use the parent from the existing bookmark as the sidebar
+      // gives us an unwrapped.parent that is actually a query and not the real
+      // parent.
+      let existingBookmark = await PlacesUtils.bookmarks.fetch(item.itemGuid);
+
+      // If we're dropping on the same folder, then we may need to adjust
+      // the index to insert at the correct place.
+      if (existingBookmark && insertionParentGuid == existingBookmark.parentGuid) {
+        if (index > existingBookmark.index) {
+          // If we're dragging down, we need to go one lower to insert at
+          // the real point as moving the element changes the index of
+          // everything below by 1.
+          index--;
+        } else if (index == existingBookmark.index) {
+          // This isn't moving so we skip it.
+          continue;
+        }
+      }
+    }
+
+    // If this is not a copy, check for safety that we can move the
+    // source, otherwise report an error and fallback to a copy.
+    if (!doCopy && !canMoveUnwrappedNode(item)) {
+      Components.utils.reportError("Tried to move an unmovable Places " +
+                                  "node, reverting to a copy operation.");
+      doCopy = true;
+    }
+    transactions.push(
+      PlacesUIUtils.getTransactionForData(item,
+                                          insertionParentGuid,
+                                          index,
+                                          doCopy));
+
+    if (index != -1 && item.itemGuid) {
+      index++;
+    }
+  }
+  return transactions;
+}
