@@ -1013,6 +1013,19 @@ private:
 
   nscoord mBStart = nscoord_MAX;
   nscoord mBEnd = nscoord_MIN;
+
+  // CreateInterval transforms the supplied aIMin and aIMax and aB
+  // values into an interval that respects the writing mode. An
+  // aOffsetFromContainer can be provided if the aIMin, aIMax, aB
+  // values were generated relative to something other than the container
+  // rect (such as the content rect or margin rect).
+  void CreateInterval(int32_t aIMin,
+                      int32_t aIMax,
+                      int32_t aB,
+                      int32_t aAppUnitsPerDevPixel,
+                      const nsPoint& aOffsetFromContainer,
+                      WritingMode aWM,
+                      const nsSize& aContainerSize);
 };
 
 nsFloatManager::ImageShapeInfo::ImageShapeInfo(
@@ -1064,44 +1077,11 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
 
     // At the end of a row or column; did we find something?
     if (iMin != -1) {
-      // Store an interval as an nsRect with our inline axis values stored in x
-      // and our block axis values stored in y. The position is dependent on
-      // the writing mode, but the size is the same for all writing modes.
-
-      // Size is the difference in inline axis edges stored as x, and one
-      // block axis pixel stored as y. For the inline axis, we add 1 to iMax
-      // because we want to capture the far edge of the last pixel.
-      nsSize size(((iMax + 1) - iMin) * aAppUnitsPerDevPixel,
-                  aAppUnitsPerDevPixel);
-
-      // Since we started our scanning of the image pixels from the top left,
-      // the interval position starts from the origin of the content rect,
-      // converted to logical coordinates.
-      nsPoint origin = ConvertToFloatLogical(aContentRect.TopLeft(), aWM,
-                                             aContainerSize);
-
-      // Depending on the writing mode, we now move the origin.
-      if (aWM.IsVerticalRL()) {
-        // vertical-rl or sideways-rl.
-        // These writing modes proceed from the top right, and each interval
-        // moves in a positive inline direction and negative block direction.
-        // That means that the intervals will be reversed after all have been
-        // constructed. We add 1 to b to capture the end of the block axis pixel.
-        origin.MoveBy(iMin * aAppUnitsPerDevPixel, (b + 1) * -aAppUnitsPerDevPixel);
-      } else if (aWM.IsVerticalLR() && aWM.IsSideways()) {
-        // sideways-lr.
-        // These writing modes proceed from the bottom left, and each interval
-        // moves in a negative inline direction and a positive block direction.
-        // We add 1 to iMax to capture the end of the inline axis pixel.
-        origin.MoveBy((iMax + 1) * -aAppUnitsPerDevPixel, b * aAppUnitsPerDevPixel);
-      } else {
-        // horizontal-tb or vertical-lr.
-        // These writing modes proceed from the top left and each interval
-        // moves in a positive step in both inline and block directions.
-        origin.MoveBy(iMin * aAppUnitsPerDevPixel, b * aAppUnitsPerDevPixel);
-      }
-
-      mIntervals.AppendElement(nsRect(origin, size));
+      // We need to supply an offset of the content rect top left, since
+      // our col and row have been calculated from the content rect,
+      // instead of the margin rect (against which floats are applied).
+      CreateInterval(iMin, iMax, b, aAppUnitsPerDevPixel,
+                     aContentRect.TopLeft(), aWM, aContainerSize);
     }
   }
 
@@ -1117,6 +1097,56 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
     mBStart = mIntervals[0].Y();
     mBEnd = mIntervals.LastElement().YMost();
   }
+}
+
+void
+nsFloatManager::ImageShapeInfo::CreateInterval(
+  int32_t aIMin,
+  int32_t aIMax,
+  int32_t aB,
+  int32_t aAppUnitsPerDevPixel,
+  const nsPoint& aOffsetFromContainer,
+  WritingMode aWM,
+  const nsSize& aContainerSize)
+{
+  // Store an interval as an nsRect with our inline axis values stored in x
+  // and our block axis values stored in y. The position is dependent on
+  // the writing mode, but the size is the same for all writing modes.
+
+  // Size is the difference in inline axis edges stored as x, and one
+  // block axis pixel stored as y. For the inline axis, we add 1 to aIMax
+  // because we want to capture the far edge of the last pixel.
+  nsSize size(((aIMax + 1) - aIMin) * aAppUnitsPerDevPixel,
+  aAppUnitsPerDevPixel);
+
+  // Since we started our scanning of the image pixels from the top left,
+  // the interval position starts from the origin of the content rect,
+  // converted to logical coordinates.
+  nsPoint origin = ConvertToFloatLogical(aOffsetFromContainer, aWM,
+                                         aContainerSize);
+
+  // Depending on the writing mode, we now move the origin.
+  if (aWM.IsVerticalRL()) {
+    // vertical-rl or sideways-rl.
+    // These writing modes proceed from the top right, and each interval
+    // moves in a positive inline direction and negative block direction.
+    // That means that the intervals will be reversed after all have been
+    // constructed. We add 1 to aB to capture the end of the block axis pixel.
+    origin.MoveBy(aIMin * aAppUnitsPerDevPixel, (aB + 1) * -aAppUnitsPerDevPixel);
+  } else if (aWM.IsVerticalLR() && aWM.IsSideways()) {
+    // sideways-lr.
+    // These writing modes proceed from the bottom left, and each interval
+    // moves in a negative inline direction and a positive block direction.
+    // We add 1 to aIMax to capture the end of the inline axis pixel.
+    origin.MoveBy((aIMax + 1) * -aAppUnitsPerDevPixel, aB * aAppUnitsPerDevPixel);
+  } else {
+    // horizontal-tb or vertical-lr.
+    // These writing modes proceed from the top left and each interval
+    // moves in a positive step in both inline and block directions.
+    origin.MoveBy(aIMin * aAppUnitsPerDevPixel, aB * aAppUnitsPerDevPixel);
+  }
+
+  mIntervals.AppendElement(nsRect(origin, size));
 }
 
 nscoord
