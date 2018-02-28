@@ -254,21 +254,15 @@ PhysicalCoordFromFlexRelativeCoord(nscoord aFlexRelativeCoord,
   return aContainerSize - aFlexRelativeCoord;
 }
 
-// Helper-macro to let us pick one of two expressions to evaluate
-// (a width expression vs. a height expression), to get a main-axis or
-// cross-axis component.
-// For code that has e.g. a nsSize object, FlexboxAxisTracker::GetMainComponent
-// and GetCrossComponent are cleaner; but in cases where we simply have
-// two separate expressions for width and height (which may be expensive to
-// evaluate), these macros will ensure that only the expression for the correct
-// axis gets evaluated.
-#define GET_MAIN_COMPONENT(axisTracker_, width_, height_)  \
-  (axisTracker_).IsMainAxisHorizontal() ? (width_) : (height_)
-
-#define GET_CROSS_COMPONENT(axisTracker_, width_, height_)  \
-  (axisTracker_).IsCrossAxisHorizontal() ? (width_) : (height_)
-
-// Logical versions of helper-macros above:
+// Helper-macros to let us pick one of two expressions to evaluate
+// (an inline-axis expression vs. a block-axis expression), to get a
+// main-axis or cross-axis component.
+// For code that has e.g. a LogicalSize object, the methods
+// FlexboxAxisTracker::GetMainComponent and GetCrossComponent are cleaner
+// than these macros. But in cases where we simply have two separate
+// expressions for ISize and BSize (which may be expensive to evaluate),
+// these macros can be used to ensure that only the needed expression is
+// evaluated.
 #define GET_MAIN_COMPONENT_LOGICAL(axisTracker_, wm_, isize_, bsize_)  \
   wm_.IsOrthogonalTo(axisTracker_.GetWritingMode()) != \
     (axisTracker_).IsRowOriented() ? (isize_) : (bsize_)
@@ -334,7 +328,7 @@ public:
     return IsRowOriented() ? aSize.ISize(mWM) : aSize.BSize(mWM);
   }
   int32_t GetMainComponent(const LayoutDeviceIntSize& aIntSize) const {
-    return GET_MAIN_COMPONENT(*this, aIntSize.width, aIntSize.height);
+    return IsMainAxisHorizontal() ? aIntSize.width : aIntSize.height;
   }
 
   // aSize is expected to match the flex container's WritingMode.
@@ -342,7 +336,7 @@ public:
     return IsRowOriented() ? aSize.BSize(mWM) : aSize.ISize(mWM);
   }
   int32_t GetCrossComponent(const LayoutDeviceIntSize& aIntSize) const {
-    return GET_CROSS_COMPONENT(*this, aIntSize.width, aIntSize.height);
+    return IsMainAxisHorizontal() ? aIntSize.height : aIntSize.width;
   }
 
   // NOTE: aMargin is expected to use the flex container's WritingMode.
