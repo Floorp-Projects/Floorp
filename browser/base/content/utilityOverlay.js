@@ -860,9 +860,9 @@ function makeURLAbsolute(aBase, aUrl) {
  *        referrer header derived from aDocument (null case).
  * @param aPostData
  *        Form POST data, or null.
- * @param aEvent
- *        The triggering event (for the purpose of determining whether to open
- *        in the background), or null.
+ * @param aShiftKey
+ *        True if shift key is held.  This value is used for the purpose of
+ *        determining whether to open in the background.
  * @param aAllowThirdPartyFixup
  *        If true, then we allow the URL text to be sent to third party services
  *        (e.g., Google's I Feel Lucky) for interpretation. This parameter may
@@ -872,7 +872,7 @@ function makeURLAbsolute(aBase, aUrl) {
  * @param [optional] aReferrerPolicy
  *        Referrer policy - Ci.nsIHttpChannel.REFERRER_POLICY_*.
  */
-function openNewTabWith(aURL, aDocument, aPostData, aEvent,
+function openNewTabWith(aURL, aDocument, aPostData, aShiftKey,
                         aAllowThirdPartyFixup, aReferrer, aReferrerPolicy) {
 
   // As in openNewWindowWith(), we want to pass the charset of the
@@ -881,7 +881,7 @@ function openNewTabWith(aURL, aDocument, aPostData, aEvent,
   if (document.documentElement.getAttribute("windowtype") == "navigator:browser")
     originCharset = gBrowser.selectedBrowser.characterSet;
 
-  openLinkIn(aURL, aEvent && aEvent.shiftKey ? "tabshifted" : "tab",
+  openLinkIn(aURL, aShiftKey ? "tabshifted" : "tab",
              { charset: originCharset,
                postData: aPostData,
                allowThirdPartyFixup: aAllowThirdPartyFixup,
