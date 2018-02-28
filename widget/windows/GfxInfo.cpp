@@ -372,6 +372,7 @@ GfxInfo::Init()
   // Unfortunately, the Device ID is nullptr, and we can't enumerate
   // it using the setup infrastructure (SetupDiGetClassDevsW below
   // will return INVALID_HANDLE_VALUE).
+  UINT flags = DIGCF_PRESENT | DIGCF_PROFILE | DIGCF_ALLCLASSES;
   if (mWindowsVersion >= kWindows8 &&
       mDeviceID[0].Length() == 0 &&
       mDeviceString[0].EqualsLiteral("RDPUDD Chained DD"))
@@ -386,12 +387,12 @@ GfxInfo::Init()
 
       // 0x1414 is Microsoft; 0xfefe is an invented (and unused) code
       mDeviceID[0].AssignLiteral("PCI\\VEN_1414&DEV_FEFE&SUBSYS_00000000");
+      flags |= DIGCF_DEVICEINTERFACE;
     }
   }
 
   /* create a device information set composed of the current display device */
-  HDEVINFO devinfo = SetupDiGetClassDevsW(nullptr, mDeviceID[0].get(), nullptr,
-                                          DIGCF_PRESENT | DIGCF_PROFILE | DIGCF_ALLCLASSES);
+  HDEVINFO devinfo = SetupDiGetClassDevsW(nullptr, mDeviceID[0].get(), nullptr, flags);
 
   if (devinfo != INVALID_HANDLE_VALUE) {
     HKEY key;
