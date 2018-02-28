@@ -1847,7 +1847,7 @@ CodeGeneratorX86Shared::visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool)
     MTableSwitch* mir = ool->mir();
 
     masm.haltingAlign(sizeof(void*));
-    masm.bind(ool->jumpLabel());
+    masm.use(ool->jumpLabel()->target());
     masm.addCodeLabel(*ool->jumpLabel());
 
     for (size_t i = 0; i < mir->numCases(); i++) {
@@ -1858,7 +1858,7 @@ CodeGeneratorX86Shared::visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool)
         // The entries of the jump table need to be absolute addresses and thus
         // must be patched after codegen is finished.
         CodeLabel cl;
-        masm.writeCodePointer(&cl);
+        masm.writeCodePointer(cl.patchAt());
         cl.target()->bind(caseoffset);
         masm.addCodeLabel(cl);
     }
@@ -1885,7 +1885,7 @@ CodeGeneratorX86Shared::emitTableSwitchDispatch(MTableSwitch* mir, Register inde
     addOutOfLineCode(ool, mir);
 
     // Compute the position where a pointer to the right case stands.
-    masm.mov(ool->jumpLabel(), base);
+    masm.mov(ool->jumpLabel()->patchAt(), base);
     BaseIndex pointer(base, index, ScalePointer);
 
     // Jump to the right case

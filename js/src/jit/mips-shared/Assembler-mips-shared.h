@@ -1256,8 +1256,11 @@ class AssemblerMIPSShared : public AssemblerShared
     void bind(Label* label, BufferOffset boff = BufferOffset());
     void bindLater(Label* label, wasm::OldTrapDesc target);
     virtual void bind(InstImm* inst, uintptr_t branch, uintptr_t target) = 0;
-    void bind(CodeLabel* label) {
-        label->target()->bind(currentOffset());
+    void bind(CodeOffset* label) {
+        label->bind(currentOffset());
+    }
+    void use(CodeOffset* label) {
+        label->bind(currentOffset());
     }
     uint32_t currentOffset() {
         return nextOffset().getOffset();
@@ -1299,11 +1302,9 @@ class AssemblerMIPSShared : public AssemblerShared
     }
 
     void addLongJump(BufferOffset src, BufferOffset dst) {
-        CodeLabel cl;
-        cl.patchAt()->bind(src.getOffset());
-        cl.target()->bind(dst.getOffset());
-        cl.setLinkMode(CodeLabel::JumpImmediate);
-        addCodeLabel(mozilla::Move(cl));
+        CodeOffset patchAt(src.getOffset());
+        CodeOffset target(dst.getOffset());
+        addCodeLabel(CodeLabel(patchAt, target));
     }
 
   public:
