@@ -87,7 +87,7 @@ protected:
     nsCOMPtr<nsIURI> mBaseURI;
 
 public:
-    class Mutator
+    class Mutator final
         : public nsIURIMutator
         , public BaseURIMutator<nsNestedAboutURI>
     {
