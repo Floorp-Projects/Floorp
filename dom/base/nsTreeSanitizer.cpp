@@ -1087,7 +1087,7 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
                                     nsIDocument* aDocument,
                                     nsIURI* aBaseURI)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   aSanitized.Truncate();
   // aSanitized will hold the permitted CSS text.
   // -moz-binding is blacklisted.
@@ -1109,16 +1109,17 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
   sheet->SetURIs(aDocument->GetDocumentURI(), nullptr, aBaseURI);
   sheet->SetPrincipal(aDocument->NodePrincipal());
   if (aDocument->IsStyledByServo()) {
-    rv = sheet->AsServo()->ParseSheet(
-        aDocument->CSSLoader(), NS_ConvertUTF16toUTF8(aOriginal),
-        aDocument->GetDocumentURI(), aBaseURI, aDocument->NodePrincipal(),
-        0, aDocument->GetCompatibilityMode());
+    sheet->AsServo()->ParseSheetSync(
+      aDocument->CSSLoader(), NS_ConvertUTF16toUTF8(aOriginal),
+      aDocument->GetDocumentURI(), aBaseURI, aDocument->NodePrincipal(),
+      /* aLoadData = */ nullptr, 0, aDocument->GetCompatibilityMode());
   } else {
 #ifdef MOZ_OLD_STYLE
     // Create the CSS parser, and parse the CSS text.
     nsCSSParser parser(nullptr, sheet->AsGecko());
-    rv = parser.ParseSheet(aOriginal, aDocument->GetDocumentURI(), aBaseURI,
-                           aDocument->NodePrincipal(), 0);
+    rv = parser.ParseSheet(aOriginal, aDocument->GetDocumentURI(),
+                           aBaseURI, aDocument->NodePrincipal(),
+                           /* aLoadData = */ nullptr, 0);
 #else
     MOZ_CRASH("old style system disabled");
 #endif

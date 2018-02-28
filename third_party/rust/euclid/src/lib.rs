@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg_attr(feature = "unstable", feature(asm, repr_simd, test, fn_must_use))]
+#![cfg_attr(feature = "unstable", feature(cfg_target_feature, test, fn_must_use))]
 
 //! A collection of strongly typed math tools for computer graphics with an inclination
 //! towards 2d graphics and layout.
@@ -55,33 +55,26 @@
 //! assert_eq!(p.x, p.x_typed().get());
 //! ```
 
-#[cfg_attr(test, macro_use)]
-extern crate log;
+#[cfg(feature = "serde")]
+#[macro_use]
 extern crate serde;
 
+extern crate num_traits;
 #[cfg(test)]
 extern crate rand;
 #[cfg(feature = "unstable")]
 extern crate test;
-extern crate num_traits;
 
 pub use length::Length;
 pub use scale::TypedScale;
 pub use transform2d::{Transform2D, TypedTransform2D};
 pub use transform3d::{Transform3D, TypedTransform3D};
-pub use point::{
-    Point2D, TypedPoint2D, point2,
-    Point3D, TypedPoint3D, point3,
-};
-pub use vector::{
-    Vector2D, TypedVector2D, vec2,
-    Vector3D, TypedVector3D, vec3,
-};
+pub use point::{Point2D, Point3D, TypedPoint2D, TypedPoint3D, point2, point3};
+pub use vector::{TypedVector2D, TypedVector3D, Vector2D, Vector3D, vec2, vec3};
 
-pub use rect::{Rect, TypedRect, rect};
-pub use rotation::{TypedRotation2D, Rotation2D, TypedRotation3D, Rotation3D, Angle};
+pub use rect::{rect, Rect, TypedRect};
+pub use rotation::{Angle, Rotation2D, Rotation3D, TypedRotation2D, TypedRotation3D};
 pub use side_offsets::{SideOffsets2D, TypedSideOffsets2D};
-#[cfg(feature = "unstable")] pub use side_offsets::SideOffsets2DSimdI32;
 pub use size::{Size2D, TypedSize2D, size2};
 pub use trig::Trig;
 
