@@ -25,11 +25,17 @@
       "PlacesUIUtils", "resource:///modules/PlacesUIUtils.jsm");
     ChromeUtils.defineModuleGetter(window,
       "PlacesTransactions", "resource://gre/modules/PlacesTransactions.jsm");
+    ChromeUtils.defineModuleGetter(window,
+      "ForgetAboutSite", "resource://gre/modules/ForgetAboutSite.jsm");
+    ChromeUtils.defineModuleGetter(window,
+      "PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm");
+
     XPCOMUtils.defineLazyScriptGetter(window, "PlacesTreeView",
       "chrome://browser/content/places/treeView.js");
+    XPCOMUtils.defineLazyScriptGetter(window,
+      ["PlacesInsertionPoint", "PlacesController", "PlacesControllerDragHelper"],
+      "chrome://browser/content/places/controller.js");
   ]]></script>
-  <script type="application/javascript"
-          src="chrome://browser/content/places/controller.js"/>
 
   <!-- Bookmarks and history tooltip -->
   <tooltip id="bhTooltip" noautohide="true"
