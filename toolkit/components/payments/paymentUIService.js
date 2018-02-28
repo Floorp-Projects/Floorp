@@ -69,6 +69,10 @@ PaymentUIService.prototype = {
 
   completePayment(requestId) {
     this.log.debug("completePayment:", requestId);
+    let dialog = this.findDialog(requestId);
+    if (dialog && dialog.unknownTimeoutId) {
+      dialog.clearTimeout(dialog.unknownTimeoutId);
+    }
     let closed = this.closeDialog(requestId);
     let responseCode = closed ?
         Ci.nsIPaymentActionResponse.COMPLETE_SUCCEEDED :

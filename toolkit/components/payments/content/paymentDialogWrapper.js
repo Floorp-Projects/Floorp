@@ -411,6 +411,12 @@ var paymentDialogWrapper = {
     });
     paymentSrv.respondPayment(showResponse);
     this.sendMessageToContent("responseSent");
+
+    // If the merchant has not called response.complete() within unknownTimeoutMS
+    // then we will close the dialog, treating it the same as if the merchant
+    // passed "unknown" to response.complete().
+    const timeoutMS = Services.prefs.getIntPref("dom.payments.unknownTimeoutMS");
+    window.unknownTimeoutId = window.setTimeout(window.close, timeoutMS);
   },
 
   async onChangeShippingAddress({shippingAddressGUID}) {
