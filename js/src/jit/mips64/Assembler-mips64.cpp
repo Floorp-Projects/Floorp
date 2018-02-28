@@ -227,21 +227,12 @@ Assembler::trace(JSTracer* trc)
 }
 
 void
-Assembler::Bind(uint8_t* rawCode, const CodeLabel& label)
+Assembler::Bind(uint8_t* rawCode, CodeOffset label, CodeOffset target)
 {
-    if (label.patchAt().bound()) {
-
-        auto mode = label.linkMode();
-        intptr_t offset = label.patchAt().offset();
-        intptr_t target = label.target().offset();
-
-        if (mode == CodeLabel::RawPointer) {
-            *reinterpret_cast<const void**>(rawCode + offset) = rawCode + target;
-        } else {
-            MOZ_ASSERT(mode == CodeLabel::MoveImmediate || mode == CodeLabel::JumpImmediate);
-            Instruction* inst = (Instruction*) (rawCode + offset);
-            Assembler::UpdateLoad64Value(inst, (uint64_t)(rawCode + target));
-        }
+    if (label.bound()) {
+        intptr_t offset = label.offset();
+        Instruction* inst = (Instruction*) (rawCode + offset);
+        Assembler::UpdateLoad64Value(inst, (uint64_t)(rawCode + target.offset()));
     }
 }
 
@@ -373,8 +364,9 @@ Assembler::bind(RepatchLabel* label)
 void
 Assembler::processCodeLabels(uint8_t* rawCode)
 {
-    for (const CodeLabel& label : codeLabels_) {
-        Bind(rawCode, label);
+    for (size_t i = 0; i < codeLabels_.length(); i++) {
+        CodeLabel label = codeLabels_[i];
+        Bind(rawCode, *label.patchAt(), *label.target());
     }
 }
 

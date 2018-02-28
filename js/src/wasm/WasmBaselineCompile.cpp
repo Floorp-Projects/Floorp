@@ -3386,7 +3386,7 @@ class BaseCompiler final : public BaseCompilerInterface
 
         for (uint32_t i = 0; i < labels.length(); i++) {
             CodeLabel cl;
-            masm.writeCodePointer(&cl);
+            masm.writeCodePointer(cl.patchAt());
             cl.target()->bind(labels[i].offset());
             masm.addCodeLabel(cl);
         }
@@ -3399,7 +3399,7 @@ class BaseCompiler final : public BaseCompilerInterface
         ScratchI32 scratch(*this);
         CodeLabel tableCl;
 
-        masm.mov(&tableCl, scratch);
+        masm.mov(tableCl.patchAt(), scratch);
 
         tableCl.target()->bind(theTable->offset());
         masm.addCodeLabel(tableCl);
@@ -3435,12 +3435,18 @@ class BaseCompiler final : public BaseCompilerInterface
         ScratchI32 scratch(*this);
         CodeLabel tableCl;
 
-        masm.ma_li(scratch, &tableCl);
+        masm.ma_li(scratch, tableCl.patchAt());
+# ifdef JS_CODEGEN_MIPS32
+        masm.lshiftPtr(Imm32(4), switchValue);
+# else
+        masm.ma_mul(switchValue, switchValue, Imm32(6 * 4));
+# endif
+        masm.addPtr(switchValue, scratch);
 
         tableCl.target()->bind(theTable->offset());
         masm.addCodeLabel(tableCl);
 
-        masm.branchToComputedAddress(BaseIndex(scratch, switchValue, ScalePointer));
+        masm.branch(scratch);
 #else
         MOZ_CRASH("BaseCompiler platform hook: tableSwitch");
 #endif

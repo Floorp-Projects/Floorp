@@ -288,9 +288,9 @@ JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm)
 
     {
         // Interpreter -> Baseline OSR will return here.
-        masm.bind(&returnLabel);
+        masm.use(returnLabel.target());
         masm.addCodeLabel(returnLabel);
-        masm.bind(&oomReturnLabel);
+        masm.use(oomReturnLabel.target());
         masm.addCodeLabel(oomReturnLabel);
     }
 
