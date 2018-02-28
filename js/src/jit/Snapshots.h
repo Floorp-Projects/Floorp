@@ -303,6 +303,9 @@ class RValueAllocation
     void write(CompactBufferWriter& writer) const;
 
   public:
+    bool valid() const {
+        return mode_ != INVALID;
+    }
     Mode mode() const {
         return Mode(mode_ & MODE_BITS_MASK);
     }
