@@ -514,14 +514,14 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
     config.Set<webrtc::DelayAgnostic>(new webrtc::DelayAgnostic(mDelayAgnostic));
     mAudioProcessing->SetExtraOptions(config);
   }
-  SetLastPrefs(prefs);
+  mLastPrefs = prefs;
   return NS_OK;
 }
 
 #undef HANDLE_APM_ERROR
 
 void
-MediaEngineWebRTCMicrophoneSource::SetLastPrefs(const MediaEnginePrefs& aPrefs)
+MediaEngineWebRTCMicrophoneSource::ApplySettings(const MediaEnginePrefs& aPrefs)
 {
   AssertIsOnOwningThread();
 
@@ -535,6 +535,7 @@ MediaEngineWebRTCMicrophoneSource::SetLastPrefs(const MediaEnginePrefs& aPrefs)
       break;
     }
   }
+  MOZ_DIAGNOSTIC_ASSERT(graph);
   NS_DispatchToMainThread(media::NewRunnableFrom([that, graph, aPrefs]() mutable {
     that->mSettings->mEchoCancellation.Value() = aPrefs.mAecOn;
     that->mSettings->mAutoGainControl.Value() = aPrefs.mAgcOn;
@@ -710,6 +711,8 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>& a
     MOZ_ASSERT(mState != kReleased);
     mState = kStarted;
   }
+
+  ApplySettings(mLastPrefs);
 
   return NS_OK;
 }

@@ -527,7 +527,7 @@ private:
   void UpdateAGCSettingsIfNeeded(bool aEnable, webrtc::AgcModes aMode);
   void UpdateNSSettingsIfNeeded(bool aEnable, webrtc::NsModes aMode);
 
-  void SetLastPrefs(const MediaEnginePrefs& aPrefs);
+  void ApplySettings(const MediaEnginePrefs& aPrefs);
 
   bool HasEnabledTrack() const;
 
