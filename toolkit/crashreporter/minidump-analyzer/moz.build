@@ -24,18 +24,19 @@ if CONFIG['OS_TARGET'] != 'Android':
                 'Dbghelp',
                 'Imagehlp'
             ]
-else:
-    Library('minidump-analyzer')
-
-    EXPORTS += [
-        'minidump-analyzer.h',
-    ]
 
     if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CC_TYPE'] == 'gcc':
         # This allows us to use wmain as the entry point on mingw
         LDFLAGS += [
             '-municode',
         ]
+
+else:
+    Library('minidump-analyzer')
+
+    EXPORTS += [
+        'minidump-analyzer.h',
+    ]
 
 UNIFIED_SOURCES += [
     'minidump-analyzer.cpp',
