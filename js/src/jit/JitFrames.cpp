@@ -143,7 +143,7 @@ CloseLiveIteratorIon(JSContext* cx, const InlineFrameIterator& frame, JSTryNote*
         else
             IteratorCloseForException(cx, iterObject);
     } else {
-        UnwindIteratorForUncatchableException(cx, iterObject);
+        UnwindIteratorForUncatchableException(iterObject);
     }
 }
 
@@ -369,7 +369,7 @@ CloseLiveIteratorsBaselineForUncatchableException(JSContext* cx, const JSJitFram
             BaselineFrameAndStackPointersFromTryNote(tn, frame, &framePointer, &stackPointer);
             Value iterValue(*(Value*) stackPointer);
             RootedObject iterObject(cx, &iterValue.toObject());
-            UnwindIteratorForUncatchableException(cx, iterObject);
+            UnwindIteratorForUncatchableException(iterObject);
         }
     }
 }
