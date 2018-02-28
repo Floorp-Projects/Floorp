@@ -486,7 +486,7 @@
   <hbox align="center">
     <vbox flex="1">
       <description id="updateAppInfo">
-        <html:a id="releasenotes-link" class="learnMore text-link" hidden="true"/>
+        <html:a id="releasenotes" class="learnMore text-link" hidden="true"/>
       </description>
       <description id="distribution" class="text-blurb" hidden="true"/>
       <description id="distributionId" class="text-blurb" hidden="true"/>
