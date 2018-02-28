@@ -32,6 +32,7 @@ macro_rules! define_matrix {
 
         impl<T: Copy, $($phantom),+> Copy for $name<T, $($phantom),+> {}
 
+        #[cfg(feature = "serde")]
         impl<'de, T, $($phantom),+> ::serde::Deserialize<'de> for $name<T, $($phantom),+>
             where T: ::serde::Deserialize<'de>
         {
@@ -47,6 +48,7 @@ macro_rules! define_matrix {
             }
         }
 
+        #[cfg(feature = "serde")]
         impl<T, $($phantom),+> ::serde::Serialize for $name<T, $($phantom),+>
             where T: ::serde::Serialize
         {

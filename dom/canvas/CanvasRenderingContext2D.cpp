@@ -2921,6 +2921,12 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
   // values (2em, bolder, etc.)
   if (aElement && aElement->IsInComposedDoc()) {
     parentStyle = nsComputedDOMStyle::GetStyleContext(aElement, nullptr);
+    if (!parentStyle) {
+      // The flush killed the shell, so we couldn't get any meaningful style
+      // back.
+      aError.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
   } else {
     RefPtr<RawServoDeclarationBlock> declarations =
       CreateFontDeclarationForServo(NS_LITERAL_STRING("10px sans-serif"),
@@ -2934,7 +2940,8 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
   MOZ_RELEASE_ASSERT(parentStyle, "Should have a valid parent style");
 
   MOZ_ASSERT(!aPresShell->IsDestroying(),
-             "GetFontParentStyleContext should have returned an error if the presshell is being destroyed.");
+             "We should have returned an error above if the presshell is "
+             "being destroyed.");
 
   RefPtr<ServoStyleContext> sc =
     styleSet->ResolveForDeclarations(parentStyle->AsServo(), declarations);
@@ -3090,7 +3097,7 @@ CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
                                presShell,
                                aError);
   if (!computedValues) {
-     return false;
+    return false;
   }
 
   const nsStyleEffects* effects = computedValues->ComputedData()->GetStyleEffects();

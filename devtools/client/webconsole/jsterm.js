@@ -16,7 +16,7 @@ const {KeyCodes} = require("devtools/client/shared/keycodes");
 loader.lazyServiceGetter(this, "clipboardHelper",
                          "@mozilla.org/widget/clipboardhelper;1",
                          "nsIClipboardHelper");
-loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/old-event-emitter");
+loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "AutocompletePopup", "devtools/client/shared/autocomplete-popup");
 loader.lazyRequireGetter(this, "ToolSidebar", "devtools/client/framework/sidebar", true);
 loader.lazyRequireGetter(this, "Messages", "devtools/client/webconsole/console-output", true);
@@ -639,7 +639,7 @@ JSTerm.prototype = {
         window.focus();
       }
 
-      this.emit("variablesview-open", view, options);
+      this.emit("variablesview-open", {view, options});
       return view;
     };
 

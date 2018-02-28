@@ -14,8 +14,6 @@
 #include "mozilla/dom/Text.h"
 #include "mozilla/EditorDOMPoint.h" // for EditorDOMPoint
 
-class nsIDOMNode;
-
 namespace mozilla {
 
 class HTMLEditor;
@@ -166,7 +164,6 @@ public:
   enum {eBoth   = eBefore | eAfter};
 
   WSRunObject(HTMLEditor* aHTMLEditor, nsINode* aNode, int32_t aOffset);
-  WSRunObject(HTMLEditor* aHTMLEditor, nsIDOMNode* aNode, int32_t aOffset);
   ~WSRunObject();
 
   // ScrubBlockBoundary removes any non-visible whitespace at the specified

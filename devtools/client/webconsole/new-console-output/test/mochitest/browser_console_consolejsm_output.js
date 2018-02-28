@@ -7,7 +7,7 @@
 
 "use strict";
 
-function onNewMessage(aEvent, aNewMessages) {
+function onNewMessage(aNewMessages) {
   for (let msg of aNewMessages) {
     // Messages that shouldn't be output contain the substring FAIL_TEST
     if (msg.node.textContent.includes("FAIL_TEST")) {
@@ -119,7 +119,7 @@ add_task(function* () {
 
   let deferred = defer();
 
-  let onFetch = (aEvent, aVar) => {
+  let onFetch = (aVar) => {
     // Skip the notification from console.dir variablesview-fetched.
     if (aVar._variablesView != hud.jsterm._variablesView) {
       return;

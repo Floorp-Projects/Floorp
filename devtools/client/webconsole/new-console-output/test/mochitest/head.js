@@ -31,6 +31,8 @@ const STATUS_CODES_GA_PARAMS = `?${new URLSearchParams({
   "utm_campaign": "default"
 })}`;
 
+const wcActions = require("devtools/client/webconsole/new-console-output/actions/index");
+
 Services.prefs.setBoolPref("devtools.browserconsole.new-frontend-enabled", true);
 registerCleanupFunction(async function () {
   Services.prefs.clearUserPref("devtools.browserconsole.new-frontend-enabled");
@@ -108,7 +110,7 @@ function waitForMessages({ hud, messages }) {
   return new Promise(resolve => {
     const matchedMessages = [];
     hud.ui.on("new-messages",
-      function messagesReceived(e, newMessages) {
+      function messagesReceived(newMessages) {
         for (let message of messages) {
           if (message.matched) {
             continue;
@@ -475,10 +477,12 @@ async function closeConsole(tab = gBrowser.selectedTab) {
  * @param Object clickEventProps
  *        The custom properties which would be used to dispatch a click event
  * @returns Promise
- *          A Promise that is resolved when the link click simulation occured or when the click is not dispatched.
+ *          A Promise that is resolved when the link click simulation occured or
+ *          when the click is not dispatched.
  *          The promise resolves with an object that holds the following properties
  *          - link: url of the link or null(if event not fired)
- *          - where: "tab" if tab is active or "tabshifted" if tab is inactive or null(if event not fired)
+ *          - where: "tab" if tab is active or "tabshifted" if tab is inactive
+ *            or null(if event not fired)
  */
 function simulateLinkClick(element, clickEventProps) {
   // Override openUILinkIn to prevent navigating.
@@ -501,7 +505,7 @@ function simulateLinkClick(element, clickEventProps) {
 
   // Declare a timeout Promise that we can use to make sure openUILinkIn was not called.
   let timeoutId;
-  const onTimeout = new Promise(function(resolve, reject) {
+  const onTimeout = new Promise(function (resolve) {
     timeoutId = setTimeout(() => {
       window.openUILinkIn = oldOpenUILinkIn;
       timeoutId = null;
@@ -565,11 +569,11 @@ async function openMessageInNetmonitor(toolbox, hud, url, urlInConsole) {
   ok(true, "The netmonitor panel is selected when clicking on the network message");
 
   let { store, windowRequire } = panelWin;
-  let actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  let nmActions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let { getSelectedRequest } =
     windowRequire("devtools/client/netmonitor/src/selectors/index");
 
-  store.dispatch(actions.batchEnable(false));
+  store.dispatch(nmActions.batchEnable(false));
 
   await waitUntil(() => {
     const selected = getSelectedRequest(store.getState());
@@ -607,4 +611,136 @@ async function waitForBrowserConsole() {
       executeSoon(() => resolve(hud));
     }, "web-console-created");
   });
+}
+
+/**
+ * Get the state of a console filter.
+ *
+ * @param {Object} hud
+ */
+async function getFilterState(hud) {
+  const filterBar = await setFilterBarVisible(hud, true);
+  const buttons = filterBar.querySelectorAll("button");
+  const result = { };
+
+  for (let button of buttons) {
+    let classes = new Set(button.classList.values());
+    let checked = classes.has("checked");
+
+    classes.delete("devtools-button");
+    classes.delete("checked");
+
+    let category = classes.values().next().value;
+
+    result[category] = checked;
+  }
+
+  return result;
+}
+
+/**
+ * Set the state of a console filter.
+ *
+ * @param {Object} hud
+ * @param {Object} settings
+ *        Category settings in the following format:
+ *          {
+ *            error: true,
+ *            warn: true,
+ *            log: true,
+ *            info: true,
+ *            debug: true,
+ *            css: false,
+ *            netxhr: false,
+ *            net: false
+ *          }
+ */
+async function setFilterState(hud, settings) {
+  const filterBar = await setFilterBarVisible(hud, true);
+
+  for (let category in settings) {
+    let check = settings[category];
+    let button = filterBar.querySelector(`.${category}`);
+
+    if (!button) {
+      ok(false, `setFilterState() called with a category of ${category}, ` +
+                `which doesn't exist.`);
+    }
+
+    info(`Setting the ${category} category to ${check ? "checked" : "disabled"}`);
+
+    let checked = button.classList.contains("checked");
+    if (check) {
+      // Enable filter.
+      if (checked) {
+        return;
+      }
+      button.click();
+      await waitFor(() => {
+        return button.classList.contains("checked");
+      });
+    } else if (checked) {
+      // Disable filter.
+      button.click();
+      await waitFor(() => {
+        return !button.classList.contains("checked");
+      });
+    }
+  }
+}
+
+/**
+ * Set the visibility of the filter bar.
+ *
+ * @param {Object} hud
+ * @param {Boolean} state
+ *        Set filter bar visibility
+ */
+async function setFilterBarVisible(hud, state) {
+  info(`Setting the filter bar visibility to ${state}`);
+
+  const outputNode = hud.ui.outputNode;
+  const toolbar = await waitFor(() => {
+    return outputNode.querySelector(".webconsole-filterbar-primary");
+  });
+  let filterBar = outputNode.querySelector(".webconsole-filterbar-secondary");
+
+  // Show filter bar if state is true
+  if (state) {
+    if (!filterBar) {
+      // Click the filter icon to show the filter bar.
+      toolbar.querySelector(".devtools-filter-icon").click();
+      filterBar = await waitFor(() => {
+        return outputNode.querySelector(".webconsole-filterbar-secondary");
+      });
+    }
+    return filterBar;
+  }
+
+  // Hide filter bar if it is visible.
+  if (filterBar) {
+    // Click the filter icon to hide the filter bar.
+    toolbar.querySelector(".devtools-filter-icon").click();
+    await waitFor(() => {
+      return !outputNode.querySelector(".webconsole-filterbar-secondary");
+    });
+  }
+
+  return null;
+}
+
+/**
+ * Reset the filters at the end of a test that has changed them. This is
+ * important when using the `--verify` test option as when it is used you need
+ * to manually reset the filters.
+ *
+ * The css, netxhr and net filters are disabled by default.
+ *
+ * @param {Object} hud
+ */
+async function resetFilters(hud) {
+  info("Resetting filters to their default state");
+
+  const store = hud.ui.newConsoleOutput.getStore();
+  store.dispatch(wcActions.filtersClear());
 }

@@ -437,7 +437,7 @@ function* generateNetworkEventStubs() {
 
     let onNetworkUpdate = new Promise(resolve => {
       let i = 0;
-      ui.jsterm.hud.on("network-message-updated", function onNetworkUpdated(event, res) {
+      ui.jsterm.hud.on("network-message-updated", function onNetworkUpdated(res) {
         let updateKey = `${keys[i++]} update`;
         // We cannot ensure the form of the network update packet, some properties
         // might be in another order than in the original packet.

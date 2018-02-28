@@ -262,7 +262,7 @@ protected:
   void UndefineCaretBidiLevel(Selection* aSelection);
 
   nsresult CheckBidiLevelForDeletion(Selection* aSelection,
-                                     nsIDOMNode* aSelNode,
+                                     nsINode* aSelNode,
                                      int32_t aSelOffset,
                                      nsIEditor::EDirection aAction,
                                      bool* aCancel);

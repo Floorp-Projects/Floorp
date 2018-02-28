@@ -84,7 +84,7 @@ function test() {
   function* testNotSorted(aObject) {
     info("Testing " + aObject);
     let deferred = defer();
-    jsterm.once("variablesview-fetched", (_, aVar) => deferred.resolve(aVar));
+    jsterm.once("variablesview-fetched", (aVar) => deferred.resolve(aVar));
     jsterm.execute("inspect(" + aObject + ")");
 
     let variableScope = yield deferred.promise;
@@ -110,7 +110,7 @@ function test() {
   function* testSorted(aObject) {
     info("Testing " + aObject);
     let deferred = defer();
-    jsterm.once("variablesview-fetched", (_, aVar) => deferred.resolve(aVar));
+    jsterm.once("variablesview-fetched", (aVar) => deferred.resolve(aVar));
     jsterm.execute("inspect(" + aObject + ")");
 
     let variableScope = yield deferred.promise;

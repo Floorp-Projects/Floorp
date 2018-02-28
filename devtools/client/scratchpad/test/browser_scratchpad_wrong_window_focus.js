@@ -49,7 +49,7 @@ function test()
 function testFocus(sw, hud) {
   let sp = sw.Scratchpad;
 
-  function onMessage(event, messages) {
+  function onMessage(messages) {
     let msg = [...messages][0];
     let node = msg.node;
 

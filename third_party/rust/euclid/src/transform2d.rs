@@ -25,8 +25,8 @@ define_matrix! {
     ///
     /// Transforms can be parametrized over the source and destination units, to describe a
     /// transformation from a space to another.
-    /// For example, `TypedTransform2D<f32, WordSpace, ScreenSpace>::transform_point4d`
-    /// takes a `TypedPoint2D<f32, WordSpace>` and returns a `TypedPoint2D<f32, ScreenSpace>`.
+    /// For example, `TypedTransform2D<f32, WorldSpace, ScreenSpace>::transform_point4d`
+    /// takes a `TypedPoint2D<f32, WorldSpace>` and returns a `TypedPoint2D<f32, ScreenSpace>`.
     ///
     /// Transforms expose a set of convenience methods for pre- and post-transformations.
     /// A pre-transformation corresponds to adding an operation that is applied before
@@ -357,7 +357,6 @@ where T: Copy + Clone +
          Mul<T, Output=T> +
          Div<T, Output=T> +
          Neg<Output=T> +
-         ApproxEq<T> +
          PartialOrd +
          Trig +
          One + Zero {

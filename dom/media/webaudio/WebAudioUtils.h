@@ -50,15 +50,6 @@ namespace WebAudioUtils {
   }
 
   /**
-   * Computes an exponential smoothing rate for a time based variable
-   * over aDuration seconds.
-   */
-  inline double ComputeSmoothingRate(double aDuration, double aSampleRate)
-  {
-    return 1.0 - std::exp(-1.0 / (aDuration * aSampleRate));
-  }
-
-  /**
    * Converts an AudioTimelineEvent's floating point time values to tick values
    * with respect to a destination AudioNodeStream.
    *

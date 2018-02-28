@@ -12,7 +12,7 @@ const actions = require("devtools/client/webconsole/new-console-output/actions/i
 const { createContextMenu } = require("devtools/client/webconsole/new-console-output/utils/context-menu");
 const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
 
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const ConsoleOutput = createFactory(require("devtools/client/webconsole/new-console-output/components/ConsoleOutput"));
 const FilterBar = createFactory(require("devtools/client/webconsole/new-console-output/components/FilterBar"));
 const SideBar = createFactory(require("devtools/client/webconsole/new-console-output/components/SideBar"));
@@ -241,7 +241,7 @@ NewConsoleOutputWrapper.prototype = {
 
       promise = new Promise(resolve => {
         let jsterm = this.jsterm;
-        jsterm.hud.on("new-messages", function onThisMessage(e, messages) {
+        jsterm.hud.on("new-messages", function onThisMessage(messages) {
           for (let m of messages) {
             if (m.timeStamp === timeStampToMatch) {
               resolve(m.node);

@@ -26,8 +26,8 @@ define_matrix! {
     ///
     /// Transforms can be parametrized over the source and destination units, to describe a
     /// transformation from a space to another.
-    /// For example, `TypedTransform3D<f32, WordSpace, ScreenSpace>::transform_point3d`
-    /// takes a `TypedPoint3D<f32, WordSpace>` and returns a `TypedPoint3D<f32, ScreenSpace>`.
+    /// For example, `TypedTransform3D<f32, WorldSpace, ScreenSpace>::transform_point3d`
+    /// takes a `TypedPoint3D<f32, WorldSpace>` and returns a `TypedPoint3D<f32, ScreenSpace>`.
     ///
     /// Transforms expose a set of convenience methods for pre- and post-transformations.
     /// A pre-transformation corresponds to adding an operation that is applied before
@@ -117,7 +117,6 @@ where T: Copy + Clone +
          Mul<T, Output=T> +
          Div<T, Output=T> +
          Neg<Output=T> +
-         ApproxEq<T> +
          PartialOrd +
          Trig +
          One + Zero {
@@ -155,7 +154,7 @@ where T: Copy + Clone +
 
     /// Returns true if this transform can be represented with a TypedTransform2D.
     ///
-    /// See https://drafts.csswg.org/css-transforms/#2d-transform
+    /// See <https://drafts.csswg.org/css-transforms/#2d-transform>
     #[inline]
     pub fn is_2d(&self) -> bool {
         let (_0, _1): (T, T) = (Zero::zero(), One::one());
@@ -166,7 +165,7 @@ where T: Copy + Clone +
         self.m33 == _1 && self.m44 == _1
     }
 
-    /// Create a 2D transform picking the relevent terms from this transform.
+    /// Create a 2D transform picking the relevant terms from this transform.
     ///
     /// This method assumes that self represents a 2d transformation, callers
     /// should check that self.is_2d() returns true beforehand.
@@ -190,7 +189,8 @@ where T: Copy + Clone +
         (m33 * det) < _0
     }
 
-    pub fn approx_eq(&self, other: &Self) -> bool {
+    pub fn approx_eq(&self, other: &Self) -> bool
+    where T : ApproxEq<T> {
         self.m11.approx_eq(&other.m11) && self.m12.approx_eq(&other.m12) &&
         self.m13.approx_eq(&other.m13) && self.m14.approx_eq(&other.m14) &&
         self.m21.approx_eq(&other.m21) && self.m22.approx_eq(&other.m22) &&
@@ -560,7 +560,7 @@ where T: Copy + Clone +
 
     /// Create a 2d skew transform.
     ///
-    /// See https://drafts.csswg.org/css-transforms/#funcdef-skew
+    /// See <https://drafts.csswg.org/css-transforms/#funcdef-skew>
     pub fn create_skew(alpha: Angle<T>, beta: Angle<T>) -> Self {
         let (_0, _1): (T, T) = (Zero::zero(), One::one());
         let (sx, sy) = (beta.get().tan(), alpha.get().tan());
@@ -768,7 +768,6 @@ mod tests {
              0.0,  0.0,        -1.0, 0.0,
             -1.0, -1.22222222, -0.0, 1.0
         );
-        debug!("result={:?} expected={:?}", result, expected);
         assert!(result.approx_eq(&expected));
     }
 

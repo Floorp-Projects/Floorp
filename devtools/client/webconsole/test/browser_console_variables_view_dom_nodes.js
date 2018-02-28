@@ -37,7 +37,7 @@ function test() {
     const jsterm = hud.jsterm;
 
     let deferred = defer();
-    jsterm.once("variablesview-fetched", (_, val) => deferred.resolve(val));
+    jsterm.once("variablesview-fetched", (val) => deferred.resolve(val));
     jsterm.execute("inspect(document.querySelectorAll('div'))");
 
     let variableScope = yield deferred.promise;

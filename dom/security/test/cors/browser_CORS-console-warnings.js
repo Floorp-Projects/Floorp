@@ -16,7 +16,7 @@ var webconsole = null;
 var messages_seen = 0;
 var expected_messages = 50;
 
-function on_new_message(event, new_messages) {
+function on_new_message(new_messages) {
   for (let message of new_messages) {
     let elem = message.node;
     let text = elem.textContent;

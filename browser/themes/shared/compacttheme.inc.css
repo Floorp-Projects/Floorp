@@ -8,7 +8,6 @@
 
 :root:-moz-lwtheme {
   --toolbar-bgcolor: var(--chrome-secondary-background-color);
-  --toolbar-gbimage: none;
   --toolbar-non-lwt-bgcolor: var(--toolbar-bgcolor);
   --toolbar-non-lwt-textcolor: var(--chrome-color);
   --toolbar-non-lwt-bgimage: none;
