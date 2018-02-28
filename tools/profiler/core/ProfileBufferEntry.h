@@ -26,6 +26,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsClassHashtable.h"
 #include "mozilla/Variant.h"
+#include "nsTArray.h"
 
 class ProfilerMarker;
 
@@ -140,6 +141,76 @@ public:
 private:
   SpliceableChunkedJSONWriter mStringTableWriter;
   nsDataHashtable<nsCStringHashKey, uint32_t> mStringToIndexMap;
+};
+
+// Contains all the information about JIT frames that is needed to stream stack
+// frames for JitReturnAddr entries in the profiler buffer.
+// Every return address (void*) is mapped to one or more JITFrameKeys, and
+// every JITFrameKey is mapped to a JSON string for that frame.
+// mRangeStart and mRangeEnd describe the range in the buffer for which this
+// mapping is valid. Only JitReturnAddr entries within that buffer range can be
+// processed using this JITFrameInfoForBufferRange object.
+struct JITFrameInfoForBufferRange final
+{
+  JITFrameInfoForBufferRange Clone() const;
+
+  uint64_t mRangeStart;
+  uint64_t mRangeEnd; // mRangeEnd marks the first invalid index.
+
+  struct JITFrameKey
+  {
+    uint32_t Hash() const;
+    bool operator==(const JITFrameKey& aOther) const;
+    bool operator!=(const JITFrameKey& aOther) const { return !(*this == aOther); }
+
+    void* mCanonicalAddress;
+    uint32_t mDepth;
+  };
+  nsClassHashtable<nsPtrHashKey<void>, nsTArray<JITFrameKey>> mJITAddressToJITFramesMap;
+  nsClassHashtable<nsGenericHashKey<JITFrameKey>, nsCString> mJITFrameToFrameJSONMap;
+};
+
+// Contains JITFrameInfoForBufferRange objects for multiple profiler buffer ranges.
+struct JITFrameInfo final
+{
+  JITFrameInfo()
+    : mUniqueStrings(mozilla::MakeUnique<UniqueJSONStrings>())
+  {}
+
+  MOZ_IMPLICIT JITFrameInfo(const JITFrameInfo& aOther);
+
+  // Creates a new JITFrameInfoForBufferRange object in mRanges by looking up
+  // information about the provided JIT return addresses using aCx.
+  // Addresses are provided like this:
+  // The caller of AddInfoForRange supplies a function in aJITAddressProvider.
+  // This function will be called once, synchronously, with an
+  // aJITAddressConsumer argument, which is a function that needs to be called
+  // for every address. That function can be called multiple times for the same
+  // address.
+  void AddInfoForRange(uint64_t aRangeStart, uint64_t aRangeEnd, JSContext* aCx,
+                       std::function<void(std::function<void(void*)>)> aJITAddressProvider);
+
+  // Returns whether the information stored in this object is still relevant
+  // for any entries in the buffer.
+  bool HasExpired(uint64_t aCurrentBufferRangeStart) const
+  {
+    if (mRanges.IsEmpty()) {
+      // No information means no relevant information. Allow this object to be
+      // discarded.
+      return true;
+    }
+    return mRanges.LastElement().mRangeEnd <= aCurrentBufferRangeStart;
+  }
+
+  // The array of ranges of JIT frame information, sorted by buffer position.
+  // Ranges are non-overlapping.
+  // The JSON of the cached frames can contain string indexes, which refer
+  // to strings in mUniqueStrings.
+  nsTArray<JITFrameInfoForBufferRange> mRanges;
+
+  // The string table which contains strings used in the frame JSON that's
+  // cached in mRanges.
+  mozilla::UniquePtr<UniqueJSONStrings> mUniqueStrings;
 };
 
 class UniqueStacks
