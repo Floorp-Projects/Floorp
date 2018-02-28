@@ -1047,7 +1047,8 @@ var ActivityStreamProvider = {
                     preview_image_url: item.image && item.image.src,
                     title: item.resolved_title,
                     url: item.resolved_url,
-                    pocket_id: item.item_id
+                    pocket_id: item.item_id,
+                    open_url: item.open_url
                   }));
 
     return this._processHighlights(items, aOptions, "pocket");
