@@ -27,6 +27,7 @@ apps:
       - pulseaudio
       - screen-inhibit-control
       - unity7
+      - upower-observe
       - x11
 
 plugs:
