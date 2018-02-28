@@ -305,7 +305,8 @@ struct PrefsSizes
     , mCacheData(0)
     , mRootBranches(0)
     , mPrefNameArena(0)
-    , mCallbacks(0)
+    , mCallbacksObjects(0)
+    , mCallbacksDomains(0)
     , mMisc(0)
   {
   }
@@ -316,7 +317,8 @@ struct PrefsSizes
   size_t mCacheData;
   size_t mRootBranches;
   size_t mPrefNameArena;
-  size_t mCallbacks;
+  size_t mCallbacksObjects;
+  size_t mCallbacksDomains;
   size_t mMisc;
 };
 }
@@ -756,6 +758,12 @@ struct CallbackNode
     , mMatchKind(aMatchKind)
     , mNext(nullptr)
   {
+  }
+
+  void AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf, PrefsSizes& aSizes)
+  {
+    aSizes.mCallbacksObjects += aMallocSizeOf(this);
+    aSizes.mCallbacksDomains += aMallocSizeOf(mDomain.get());
   }
 
   UniqueFreePtr<const char> mDomain;
@@ -2698,8 +2706,7 @@ PreferenceServiceReporter::CollectReports(
   sizes.mPrefNameArena += gPrefNameArena.SizeOfExcludingThis(mallocSizeOf);
 
   for (CallbackNode* node = gFirstCallback; node; node = node->mNext) {
-    sizes.mCallbacks += mallocSizeOf(node);
-    sizes.mCallbacks += mallocSizeOf(node->mDomain.get());
+    node->AddSizeOfIncludingThis(mallocSizeOf, sizes);
   }
 
   MOZ_COLLECT_REPORT("explicit/preferences/hash-table",
@@ -2738,12 +2745,18 @@ PreferenceServiceReporter::CollectReports(
                      sizes.mPrefNameArena,
                      "Memory used by libpref's arena for pref names.");
 
-  MOZ_COLLECT_REPORT("explicit/preferences/callbacks",
+  MOZ_COLLECT_REPORT("explicit/preferences/callbacks/objects",
                      KIND_HEAP,
                      UNITS_BYTES,
-                     sizes.mCallbacks,
-                     "Memory used by libpref's callbacks list, including "
-                     "pref names and prefixes.");
+                     sizes.mCallbacksObjects,
+                     "Memory used by pref callback objects.");
+
+  MOZ_COLLECT_REPORT("explicit/preferences/callbacks/domains",
+                     KIND_HEAP,
+                     UNITS_BYTES,
+                     sizes.mCallbacksDomains,
+                     "Memory used by pref callback domains (pref names and "
+                     "prefixes).");
 
   MOZ_COLLECT_REPORT("explicit/preferences/misc",
                      KIND_HEAP,
