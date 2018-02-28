@@ -253,7 +253,7 @@ GetImports(JSContext* cx,
             MOZ_ASSERT(global.importIndex() == globalIndex - 1);
             MOZ_ASSERT(!global.isMutable());
 
-#ifdef ENABLE_WASM_GLOBAL
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
             if (v.isObject() && v.toObject().is<WasmGlobalObject>())
                 v.set(v.toObject().as<WasmGlobalObject>().value());
 #endif
@@ -1935,7 +1935,7 @@ WasmTableObject::table() const
 // ============================================================================
 // WebAssembly.global class and methods
 
-#ifdef ENABLE_WASM_GLOBAL
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
 
 const ClassOps WasmGlobalObject::classOps_ =
 {
@@ -2128,7 +2128,7 @@ WasmGlobalObject::value() const
     return getReservedSlot(VALUE_SLOT);
 }
 
-#endif // ENABLE_WASM_GLOBAL
+#endif // ENABLE_WASM_GLOBAL && EARLY_BETA_OR_EARLIER
 
 // ============================================================================
 // WebAssembly class and static methods
@@ -2968,7 +2968,7 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
         return nullptr;
 
     RootedObject moduleProto(cx), instanceProto(cx), memoryProto(cx), tableProto(cx);
-#ifdef ENABLE_WASM_GLOBAL
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
     RootedObject globalProto(cx);
 #endif
     if (!InitConstructor<WasmModuleObject>(cx, wasm, "Module", &moduleProto))
@@ -2979,7 +2979,7 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
         return nullptr;
     if (!InitConstructor<WasmTableObject>(cx, wasm, "Table", &tableProto))
         return nullptr;
-#ifdef ENABLE_WASM_GLOBAL
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
     if (!InitConstructor<WasmGlobalObject>(cx, wasm, "Global", &globalProto))
         return nullptr;
 #endif
@@ -3002,7 +3002,7 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
     global->setPrototype(JSProto_WasmInstance, ObjectValue(*instanceProto));
     global->setPrototype(JSProto_WasmMemory, ObjectValue(*memoryProto));
     global->setPrototype(JSProto_WasmTable, ObjectValue(*tableProto));
-#ifdef ENABLE_WASM_GLOBAL
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
     global->setPrototype(JSProto_WasmGlobal, ObjectValue(*globalProto));
 #endif
     global->setConstructor(JSProto_WebAssembly, ObjectValue(*wasm));

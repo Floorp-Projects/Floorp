@@ -1016,7 +1016,7 @@ GetGlobalExport(JSContext* cx, const GlobalDescVector& globals, uint32_t globalI
 
     ToJSValue(val, jsval);
 
-#ifdef ENABLE_WASM_GLOBAL
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
     Rooted<WasmGlobalObject*> go(cx, WasmGlobalObject::create(cx, ValType::I32, false, jsval));
     if (!go)
         return false;
