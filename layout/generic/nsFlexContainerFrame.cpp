@@ -294,16 +294,6 @@ public:
   // XXXdholbert [BEGIN DEPRECATED]
   AxisOrientationType GetMainAxis() const  { return mMainAxis;  }
   AxisOrientationType GetCrossAxis() const { return mCrossAxis; }
-
-  bool IsMainAxisHorizontal() const {
-    // If we're row-oriented, and our writing mode is NOT vertical,
-    // or we're column-oriented and our writing mode IS vertical,
-    // then our main axis is horizontal. This handles all cases:
-    return mIsRowOriented != mWM.IsVertical();
-  }
-  bool IsCrossAxisHorizontal() const {
-    return !IsMainAxisHorizontal();
-  }
   // XXXdholbert [END DEPRECATED]
 
   // Returns the flex container's writing mode.
@@ -411,6 +401,15 @@ private:
   // (unnecessary) copying.
   FlexboxAxisTracker(const FlexboxAxisTracker&) = delete;
   FlexboxAxisTracker& operator=(const FlexboxAxisTracker&) = delete;
+
+  // Private because callers shouldn't need to care about physical axes
+  // (but we do internally, to provide one API).
+  bool IsMainAxisHorizontal() const {
+    // If we're row-oriented, and our writing mode is NOT vertical,
+    // or we're column-oriented and our writing mode IS vertical,
+    // then our main axis is horizontal. This handles all cases:
+    return mIsRowOriented != mWM.IsVertical();
+  }
 
   // Helpers for constructor which determine the orientation of our axes, based
   // on legacy box properties (-webkit-box-orient, -webkit-box-direction) or
