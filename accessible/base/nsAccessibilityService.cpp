@@ -1472,7 +1472,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 {
   nsAutoString role;
   nsCoreUtils::XBLBindingRole(aContent, role);
-  if (role.IsEmpty() || role.EqualsLiteral("none"))
+  if (role.IsEmpty())
     return nullptr;
 
   RefPtr<Accessible> accessible;
@@ -1486,9 +1486,6 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 
   } else if (role.EqualsLiteral("xul:link")) {
     accessible = new XULLinkAccessible(aContent, aDoc);
-
-  } else if(role.EqualsLiteral("xul:pane")) {
-    accessible = new EnumRoleAccessible<roles::PANE>(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:panel")) {
     if (aContent->IsElement() &&
