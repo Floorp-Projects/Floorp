@@ -92,6 +92,28 @@ add_task(async function multiple_tabs_over_max_cancel() {
   await popPrefs();
 });
 
+// Open URLs ignoring non-URL.
+add_task(async function multiple_urls() {
+  await dropText(`
+    mochi.test/urls0
+    mochi.test/urls1
+    mochi.test/urls2
+    non-url0
+    mochi.test/urls3
+    non-url1
+    non-url2
+`, 4);
+});
+
+// Open single search if there's no URL.
+add_task(async function multiple_text() {
+  await dropText(`
+    non-url0
+    non-url1
+    non-url2
+`, 1);
+});
+
 function dropText(text, expectedTabOpenCount = 0) {
   return drop([[{type: "text/plain", data: text}]], expectedTabOpenCount);
 }

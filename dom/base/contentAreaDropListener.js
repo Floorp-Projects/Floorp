@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
@@ -62,8 +63,32 @@ ContentAreaDropListener.prototype =
         data = dt.mozGetDataAt(type, i);
         if (data) {
           let lines = data.replace(/^\s+|\s+$/mg, "").split("\n");
+          if (!lines.length) {
+            return;
+          }
+
+          // For plain text, there are 2 cases:
+          //   * if there is at least one URI:
+          //       Add all URIs, ignoring non-URI lines, so that all URIs
+          //       are opened in tabs.
+          //   * if there's no URI:
+          //       Add the entire text as a single entry, so that the entire
+          //       text is searched.
+          let hasURI = false;
+          let flags = Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
+              Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
           for (let line of lines) {
-            this._addLink(links, line, line, type);
+            let info = Services.uriFixup.getFixupURIInfo(line, flags);
+            if (info.fixedURI) {
+              // Use the original line here, and let the caller decide
+              // whether to perform fixup or not.
+              hasURI = true;
+              this._addLink(links, line, line, type);
+            }
+          }
+
+          if (!hasURI) {
+            this._addLink(links, data, data, type);
           }
           return;
         }
