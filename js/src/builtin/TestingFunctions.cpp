@@ -460,17 +460,6 @@ GCParameter(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (param == JSGC_MAX_BYTES) {
-        uint32_t gcBytes = JS_GetGCParameter(cx, JSGC_BYTES);
-        if (value < gcBytes) {
-            JS_ReportErrorASCII(cx,
-                                "attempt to set maxBytes to the value less than the current "
-                                "gcBytes (%u)",
-                                gcBytes);
-            return false;
-        }
-    }
-
     bool ok;
     {
         JSRuntime* rt = cx->runtime();
