@@ -295,7 +295,7 @@ ThreadedDriver::RunThread()
     }
 
     GraphTime nextStateComputedTime =
-      mGraphImpl->RoundUpToNextAudioBlock(
+      mGraphImpl->RoundUpToEndOfAudioBlock(
         mIterationEnd + mGraphImpl->MillisecondsToMediaTime(AUDIO_TARGET_MS));
     if (nextStateComputedTime < stateComputedTime) {
       // A previous driver may have been processing further ahead of
@@ -923,7 +923,8 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   // compute the iteration start and end from there, trying to keep the amount
   // of buffering in the graph constant.
   GraphTime nextStateComputedTime =
-    mGraphImpl->RoundUpToNextAudioBlock(stateComputedTime + mBuffer.Available());
+    mGraphImpl->RoundUpToEndOfAudioBlock(
+      stateComputedTime + mBuffer.Available());
 
   mIterationStart = mIterationEnd;
   // inGraph is the number of audio frames there is between the state time and
