@@ -37,18 +37,18 @@ function loadChain(prefix, names) {
   return chain;
 }
 
-function check_telemetry(expected_index, expected, expectedId="") {
+function check_telemetry(expected_index, expected, expectedId = "") {
   for (let i = 0; i < 10; i++) {
     let expected_value = 0;
     if (i == expected_index) {
       expected_value = expected;
     }
     let errorSnapshot = ERROR_HISTOGRAM.snapshot();
-    for (var k in errorSnapshot) {
+    for (let k in errorSnapshot) {
       // We clear the histogram every time so there should be only this one
       // category.
       equal(k, expectedId);
-      equal(errorSnapshot[k]["counts"][i], expected_value);
+      equal(errorSnapshot[k].counts[i], expected_value);
     }
     equal(VERIFICATION_HISTOGRAM.snapshot().counts[i], expected_value,
       "count " + i + ": " + VERIFICATION_HISTOGRAM.snapshot().counts[i] +
