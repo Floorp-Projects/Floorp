@@ -80,15 +80,6 @@
           <menuitem label="&historyHeader.custom.label;" value="custom" searchkeywords="&privateBrowsingPermanent2.label;
                                                                                         &rememberHistory2.label;
                                                                                         &rememberSearchForm.label;
-                                                                                        &acceptCookies4.label;
-                                                                                        &cookieExceptions.label;
-                                                                                        &acceptThirdParty3.pre.label;
-                                                                                        &acceptThirdParty.always.label;
-                                                                                        &acceptThirdParty.visited.label;
-                                                                                        &acceptThirdParty.never.label;
-                                                                                        &keepUntil2.label;
-                                                                                        &expire.label;
-                                                                                        &close.label;
                                                                                         &clearOnClose.label;
                                                                                         &clearOnCloseSettings.label;"/>
         </menupopup>
@@ -228,30 +219,39 @@
       </radiogroup>
     </vbox>
     <vbox>
-      <button id="clearSiteDataButton"
-          class="accessory-button"
-          icon="clear"
-          label="&clearSiteData1.label;" accesskey="&clearSiteData1.accesskey;"/>
-      <button id="siteDataSettings"
-              class="accessory-button"
-              label="&siteDataSettings.label;"
-              accesskey="&siteDataSettings.accesskey;"
-              searchkeywords="&window.title;
-                              &hostCol.label;
-                              &statusCol.label;
-                              &usageCol.label;"/>
-      <button id="cookieExceptions"
-              class="accessory-button"
-              label="&cookieExceptions.label;" accesskey="&cookieExceptions.accesskey;"
-              preference="pref.privacy.disable_button.cookie_exceptions"
-              searchkeywords="&address2.label;
-                              &block.label;
-                              &session.label;
-                              &allow.label;
-                              &removepermission2.label;
-                              &removeallpermissions2.label;
-                              &button.cancel.label;
-                              &button.ok.label;"/>
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="clearSiteDataButton"
+            class="accessory-button"
+            icon="clear"
+            searchkeywords="&clearSiteData.label;
+                            &clearCache.label;"
+            label="&clearSiteData1.label;" accesskey="&clearSiteData1.accesskey;"/>
+      </hbox>
+      <hbox>
+        <button id="siteDataSettings"
+                class="accessory-button"
+                label="&siteDataSettings.label;"
+                accesskey="&siteDataSettings.accesskey;"
+                searchkeywords="&window1.title;
+                                &hostCol.label;
+                                &cookiesCol.label;
+                                &usageCol.label;"/>
+      </hbox>
+      <hbox>
+        <button id="cookieExceptions"
+                class="accessory-button"
+                label="&cookieExceptions.label;" accesskey="&cookieExceptions.accesskey;"
+                preference="pref.privacy.disable_button.cookie_exceptions"
+                searchkeywords="&address2.label;
+                                &block.label;
+                                &session.label;
+                                &allow.label;
+                                &removepermission2.label;
+                                &removeallpermissions2.label;
+                                &button.cancel.label;
+                                &button.ok.label;"/>
+      </hbox>
     </vbox>
   </hbox>
 </groupbox>
