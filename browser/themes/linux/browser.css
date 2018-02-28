@@ -671,6 +671,14 @@ notification[value="translation"] menulist > .menulist-dropmarker {
     padding-top: calc(-1 * var(--space-above-tabbar));
   }
 
+  /* Make #TabsToolbar transparent as we style underlying #titlebar with
+   * -moz-window-titlebar (Gtk+ theme).
+   */
+  :root[tabsintitlebar] #TabsToolbar,
+  :root[tabsintitlebar] #toolbar-menubar {
+    -moz-appearance: none;
+  }
+
   /* The button box must appear on top of the navigator-toolbox in order for
    * click and hover mouse events to work properly for the button in the restored
    * window state. Otherwise, elements in the navigator-toolbox, like the menubar,
