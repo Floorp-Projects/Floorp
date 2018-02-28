@@ -170,7 +170,7 @@ var processInfo = {
   _GetProcessIoCounters: null,
   _GetCurrentProcess: null,
   getCounters() {
-    let isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
+    let isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
     if (isWindows)
       return this.getCounters_Windows();
     return null;

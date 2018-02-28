@@ -56,7 +56,7 @@ Http2CheckListener.prototype = {
       do_throw("Channel succeeded unexpectedly!");
     }
 
-    Assert.ok(request instanceof Components.interfaces.nsIHttpChannel);
+    Assert.ok(request instanceof Ci.nsIHttpChannel);
     Assert.equal(request.requestSucceeded, this.shouldSucceed);
     if (this.shouldSucceed) {
       Assert.equal(request.responseStatus, 200);
@@ -183,7 +183,7 @@ Http2ContinuedHeaderListener.prototype.QueryInterface = function (aIID) {
   if (aIID.equals(Ci.nsIHttpPushListener) ||
       aIID.equals(Ci.nsIStreamListener))
     return this;
-  throw Components.results.NS_ERROR_NO_INTERFACE;
+  throw Cr.NS_ERROR_NO_INTERFACE;
 };
 
 Http2ContinuedHeaderListener.prototype.getInterface = function(aIID) {
@@ -303,7 +303,7 @@ ResumeStalledChannelListener.prototype = {
     if (!Components.isSuccessCode(request.status))
       do_throw("Channel should have a success code! (" + request.status + ")");
 
-    Assert.ok(request instanceof Components.interfaces.nsIHttpChannel);
+    Assert.ok(request instanceof Ci.nsIHttpChannel);
     Assert.equal(request.responseStatus, 200);
     Assert.equal(request.requestSucceeded, true);
   },
@@ -594,12 +594,12 @@ ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var httpserv = null;
 var httpserv2 = null;
-var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                    .getService(Components.interfaces.nsIIOService);
+var ios = Cc["@mozilla.org/network/io-service;1"]
+            .getService(Ci.nsIIOService);
 
 var altsvcClientListener = {
   onStartRequest: function test_onStartR(request, ctx) {
-    Assert.equal(request.status, Components.results.NS_OK);
+    Assert.equal(request.status, Cr.NS_OK);
   },
 
   onDataAvailable: function test_ODA(request, cx, stream, offset, cnt) {
@@ -607,11 +607,11 @@ var altsvcClientListener = {
   },
 
   onStopRequest: function test_onStopR(request, ctx, status) {
-    var isHttp2Connection = checkIsHttp2(request.QueryInterface(Components.interfaces.nsIHttpChannel));
+    var isHttp2Connection = checkIsHttp2(request.QueryInterface(Ci.nsIHttpChannel));
     if (!isHttp2Connection) {
       dump("/altsvc1 not over h2 yet - retry\n");
       var chan = makeChan("http://foo.example.com:" + httpserv.identity.primaryPort + "/altsvc1")
-                .QueryInterface(Components.interfaces.nsIHttpChannel);
+                .QueryInterface(Ci.nsIHttpChannel);
       // we use this header to tell the server to issue a altsvc frame for the
       // speficied origin we will use in the next part of the test
       chan.setRequestHeader("x-redirect-origin",
@@ -621,7 +621,7 @@ var altsvcClientListener = {
     } else {
       Assert.ok(isHttp2Connection);
       var chan = makeChan("http://foo.example.com:" + httpserv2.identity.primaryPort + "/altsvc2")
-                .QueryInterface(Components.interfaces.nsIHttpChannel);
+                .QueryInterface(Ci.nsIHttpChannel);
       chan.loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
       chan.asyncOpen2(altsvcClientListener2);
     }
@@ -630,7 +630,7 @@ var altsvcClientListener = {
 
 var altsvcClientListener2 = {
   onStartRequest: function test_onStartR(request, ctx) {
-    Assert.equal(request.status, Components.results.NS_OK);
+    Assert.equal(request.status, Cr.NS_OK);
   },
 
   onDataAvailable: function test_ODA(request, cx, stream, offset, cnt) {
@@ -638,11 +638,11 @@ var altsvcClientListener2 = {
   },
 
   onStopRequest: function test_onStopR(request, ctx, status) {
-    var isHttp2Connection = checkIsHttp2(request.QueryInterface(Components.interfaces.nsIHttpChannel));
+    var isHttp2Connection = checkIsHttp2(request.QueryInterface(Ci.nsIHttpChannel));
     if (!isHttp2Connection) {
       dump("/altsvc2 not over h2 yet - retry\n");
       var chan = makeChan("http://foo.example.com:" + httpserv2.identity.primaryPort + "/altsvc2")
-                .QueryInterface(Components.interfaces.nsIHttpChannel);
+                .QueryInterface(Ci.nsIHttpChannel);
       chan.loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
       chan.asyncOpen2(altsvcClientListener2);
     } else {
@@ -698,7 +698,7 @@ function h1ServerWK2(metadata, response) {
 }
 function test_http2_altsvc() {
   var chan = makeChan("http://foo.example.com:" + httpserv.identity.primaryPort + "/altsvc1")
-           .QueryInterface(Components.interfaces.nsIHttpChannel);
+           .QueryInterface(Ci.nsIHttpChannel);
   chan.asyncOpen2(altsvcClientListener);
 }
 
@@ -715,7 +715,7 @@ Http2PushApiListener.prototype = {
     if (aIID.equals(Ci.nsIHttpPushListener) ||
         aIID.equals(Ci.nsIStreamListener))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   // nsIHttpPushListener
@@ -725,7 +725,7 @@ Http2PushApiListener.prototype = {
 
     pushChannel.asyncOpen2(this);
     if (pushChannel.originalURI.spec == "https://localhost:" + serverPort + "/pushapi1/2") {
-      pushChannel.cancel(Components.results.NS_ERROR_ABORT);
+      pushChannel.cancel(Cr.NS_ERROR_ABORT);
     } else if (pushChannel.originalURI.spec == "https://localhost:" + serverPort + "/pushapi1/3") {
       Assert.ok(pushChannel.getRequestHeader("Accept-Encoding").includes("br"));
     }
@@ -756,9 +756,9 @@ Http2PushApiListener.prototype = {
 
   onStopRequest: function test_onStopR(request, ctx, status) {
     if (request.originalURI.spec == "https://localhost:" + serverPort + "/pushapi1/2") {
-      Assert.equal(request.status, Components.results.NS_ERROR_ABORT);
+      Assert.equal(request.status, Cr.NS_ERROR_ABORT);
     } else {
-      Assert.equal(request.status, Components.results.NS_OK);
+      Assert.equal(request.status, Cr.NS_OK);
     }
 
     --this.checksPending; // 5 times - one for each push plus the pull
@@ -985,7 +985,7 @@ FromDiskCacheListener.prototype = {
       do_throw("Channel should have a success code! (" + request.status + ")");
     }
 
-    Assert.ok(request instanceof Components.interfaces.nsIHttpChannel);
+    Assert.ok(request instanceof Ci.nsIHttpChannel);
     Assert.ok(request.requestSucceeded);
     Assert.equal(request.responseStatus, 200);
   },
@@ -1190,7 +1190,7 @@ CertOverrideListener.prototype = {
         aIID.equals(Ci.nsIInterfaceRequestor) ||
         aIID.equals(Ci.nsISupports))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   notifyCertProblem: function(socketInfo, sslStatus, targetHost) {

@@ -17,7 +17,7 @@ function run_test() {
   let consoleListener = {
     observe(aMessage) {
       // Ignore unexpected messages.
-      if (!(aMessage instanceof Components.interfaces.nsIConsoleMessage)) {
+      if (!(aMessage instanceof Ci.nsIConsoleMessage)) {
         return;
       }
       // This is required, as printing to the |Services.console|

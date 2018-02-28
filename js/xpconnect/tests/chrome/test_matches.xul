@@ -33,10 +33,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
           doc.createElement('div'), 'div');
         is(res, true, "matches call through xray, with .call");
                         
-        var sb = new Components.utils.Sandbox(ifr.contentWindow);
+        var sb = new Cu.Sandbox(ifr.contentWindow);
         sb.doc = doc;
         var str = "doc.documentElement.matches.call(doc.createElement( 'div' ),'div')";
-        res = Components.utils.evalInSandbox(str, sb);
+        res = Cu.evalInSandbox(str, sb);
         is(res, true, "matches call through xray (same origin), with .call");
         
         docElem.matches = function(){return false};

@@ -238,7 +238,7 @@ CommonDialog.prototype = {
         let button = this.ui["button" + b];
 
         if (!this.hasInputField) {
-            let isOSX = ("nsILocalFileMac" in Components.interfaces);
+            let isOSX = ("nsILocalFileMac" in Ci);
             if (isOSX)
                 this.ui.infoBody.focus();
             else

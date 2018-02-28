@@ -50,8 +50,8 @@ var listener = {
 
   onDataAvailable(request, context, stream, offset, count) {
     try {
-      var bis = Components.classes["@mozilla.org/binaryinputstream;1"]
-                          .createInstance(Components.interfaces.nsIBinaryInputStream);
+      var bis = Cc["@mozilla.org/binaryinputstream;1"]
+                  .createInstance(Ci.nsIBinaryInputStream);
       bis.setInputStream(stream);
       bis.readByteArray(bis.available());
     } catch (ex) {
@@ -71,7 +71,7 @@ function setupChannel(url) {
     loadUsingSystemPrincipal: true,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_MEDIA
   });
-  var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
+  var httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
   return httpChan;
 }
 
@@ -88,8 +88,8 @@ function getFileContents(aFile) {
   var fileStream = Cc["@mozilla.org/network/file-input-stream;1"]
                       .createInstance(Ci.nsIFileInputStream);
   fileStream.init(aFile, 1, -1, null);
-  var bis = Components.classes["@mozilla.org/binaryinputstream;1"]
-                      .createInstance(Components.interfaces.nsIBinaryInputStream);
+  var bis = Cc["@mozilla.org/binaryinputstream;1"]
+              .createInstance(Ci.nsIBinaryInputStream);
   bis.setInputStream(fileStream);
 
   var data = bis.readByteArray(bis.available());

@@ -23,9 +23,9 @@ SimpleTest.waitForExplicitFinish();
 function doTest()
 {
   var viewer = window
-                 .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                 .getInterface(Components.interfaces.nsIWebNavigation)
-                 .QueryInterface(Components.interfaces.nsIDocShell)
+                 .QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIWebNavigation)
+                 .QueryInterface(Ci.nsIDocShell)
                  .contentViewer;
   viewer.authorStyleDisabled = true;
 

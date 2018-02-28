@@ -25,8 +25,8 @@ add_task(async function() {
   // async-ness of the 'shown' yield...
   let panelHiddenPromise = promisePanelElementHidden(window, widgetOverflowPanel);
 
-  var ds = Components.classes["@mozilla.org/widget/dragservice;1"].
-           getService(Components.interfaces.nsIDragService);
+  var ds = Cc["@mozilla.org/widget/dragservice;1"].
+           getService(Ci.nsIDragService);
 
   ds.startDragSession();
   try {

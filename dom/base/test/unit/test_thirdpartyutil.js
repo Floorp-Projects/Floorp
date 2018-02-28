@@ -15,7 +15,7 @@ var prefs = Cc["@mozilla.org/preferences-service;1"].
 // the ContentPolicyType assertion in the constructor.
 prefs.setBoolPref("network.loadinfo.skip_type_assertion", true);
 
-var NS_ERROR_INVALID_ARG = Components.results.NS_ERROR_INVALID_ARG;
+var NS_ERROR_INVALID_ARG = Cr.NS_ERROR_INVALID_ARG;
 
 function do_check_throws(f, result, stack)
 {

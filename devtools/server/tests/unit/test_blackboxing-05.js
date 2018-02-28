@@ -39,7 +39,7 @@ function test_black_box() {
   gClient.addOneTimeListener("paused", test_black_box_exception);
 
   /* eslint-disable no-multi-spaces, no-unreachable */
-  Components.utils.evalInSandbox(
+  Cu.evalInSandbox(
     "" + function doStuff(k) {                                   // line 1
       throw new Error("wu tang clan ain't nuthin' ta fuck wit"); // line 2
       k(100);                                                    // line 3
@@ -50,7 +50,7 @@ function test_black_box() {
     1
   );
 
-  Components.utils.evalInSandbox(
+  Cu.evalInSandbox(
     "" + function runTest() {                   // line 1
       doStuff(                                  // line 2
         function (n) {                          // line 3

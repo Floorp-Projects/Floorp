@@ -62,7 +62,7 @@ function run_test() {
   prefs.setIntPref("network.proxy.type", 1);
   prefs.setBoolPref("network.proxy.socks_remote_dns", true);
   var chan = Cc["@mozilla.org/network/protocol;1?name=ws"].
-    createInstance(Components.interfaces.nsIWebSocketChannel);
+    createInstance(Ci.nsIWebSocketChannel);
 
   chan.initLoadInfo(null, // aLoadingNode
                     Services.scriptSecurityManager.getSystemPrincipal(),

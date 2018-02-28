@@ -95,7 +95,7 @@
           while (aStartItem) {
             aStartItem = aStartItem[prop];
             if (aStartItem && aStartItem instanceof
-                Components.interfaces.nsIDOMXULSelectControlItemElement &&
+                Ci.nsIDOMXULSelectControlItemElement &&
                 (!this._userSelecting || this._canUserSelect(aStartItem))) {
               --aDelta;
               if (aDelta == 0)
@@ -117,7 +117,7 @@
           while (aStartItem) {
             aStartItem = aStartItem[prop];
             if (aStartItem && aStartItem instanceof
-                Components.interfaces.nsIDOMXULSelectControlItemElement &&
+                Ci.nsIDOMXULSelectControlItemElement &&
                 (!this._userSelecting || this._canUserSelect(aStartItem))) {
               --aDelta;
               if (aDelta == 0)
@@ -320,7 +320,7 @@
       <property name="children" readonly="true">
         <getter>
           <![CDATA[
-            let iface = Components.interfaces.nsIDOMXULSelectControlItemElement;
+            let iface = Ci.nsIDOMXULSelectControlItemElement;
             let children = Array.from(this.childNodes)
                                 .filter(node => node instanceof iface);
             if (this.dir == "reverse" && this._mayReverse) {

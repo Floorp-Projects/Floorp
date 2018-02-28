@@ -52,7 +52,7 @@ add_task(async function() {
 
   let isWrapperDead = SpecialPowers.Cu.evalInSandbox(`(${
       function isWrapperDead() {
-        return Components.utils.isDeadWrapper(obj);
+        return Cu.isDeadWrapper(obj);
       }
     })`,
     sandbox);

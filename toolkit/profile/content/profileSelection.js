@@ -7,8 +7,8 @@
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const C = Components.classes;
-const I = Components.interfaces;
+const C = Cc;
+const I = Ci;
 
 const ToolkitProfileService = "@mozilla.org/toolkit/profile-service;1";
 

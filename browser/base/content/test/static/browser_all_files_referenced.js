@@ -480,8 +480,8 @@ function chromeFileExists(aURI) {
     available = sstream.available();
     sstream.close();
   } catch (e) {
-    if (e.result != Components.results.NS_ERROR_FILE_NOT_FOUND &&
-        e.result != Components.results.NS_ERROR_NOT_AVAILABLE) {
+    if (e.result != Cr.NS_ERROR_FILE_NOT_FOUND &&
+        e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
       todo(false, "Failed to check if " + aURI + "exists: " + e);
     }
   }

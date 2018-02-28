@@ -23,7 +23,7 @@ function initExceptionDialog() {
   gBundleBrand = document.getElementById("brand_bundle");
   gPKIBundle = document.getElementById("pippki_bundle");
   gSecHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
-  gNsISecTel = Components.interfaces.nsISecurityUITelemetry;
+  gNsISecTel = Ci.nsISecurityUITelemetry;
 
   var brandName = gBundleBrand.getString("brandShortName");
   setText("warningText", gPKIBundle.getFormattedString("addExceptionBrandedWarning2", [brandName]));
@@ -297,8 +297,8 @@ function addException() {
     return;
   }
 
-  var overrideService = Components.classes["@mozilla.org/security/certoverride;1"]
-                                  .getService(Components.interfaces.nsICertOverrideService);
+  var overrideService = Cc["@mozilla.org/security/certoverride;1"]
+                          .getService(Ci.nsICertOverrideService);
   var flags = 0;
   let confirmBucketId = gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_BASE;
   if (gSSLStatus.isUntrusted) {

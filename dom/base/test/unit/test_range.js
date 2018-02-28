@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-Components.utils.importGlobalProperties(["NodeFilter"]);
-
-const C_i = Components.interfaces;
+Cu.importGlobalProperties(["NodeFilter"]);
 
 const UNORDERED_TYPE = 8; // XPathResult.ANY_UNORDERED_NODE_TYPE
 
@@ -58,7 +56,7 @@ function dumpFragment(aFragment) {
  * @return nsIDOMNode  The target node retrieved from the XPath.
  */
 function evalXPathInDocumentFragment(aContextNode, aPath) {
-  Assert.ok(aContextNode instanceof C_i.nsIDOMDocumentFragment);
+  Assert.ok(aContextNode instanceof Ci.nsIDOMDocumentFragment);
   Assert.ok(aContextNode.childNodes.length > 0);
   if (aPath == ".") {
     return aContextNode;
@@ -150,8 +148,8 @@ function evalXPathInDocumentFragment(aContextNode, aPath) {
  * @return Range object.
  */
 function getRange(aSourceNode, aFragment) {
-  Assert.ok(aSourceNode instanceof C_i.nsIDOMElement);
-  Assert.ok(aFragment instanceof C_i.nsIDOMDocumentFragment);
+  Assert.ok(aSourceNode instanceof Ci.nsIDOMElement);
+  Assert.ok(aFragment instanceof Ci.nsIDOMDocumentFragment);
   var doc = aSourceNode.ownerDocument;
 
   var containerPath = aSourceNode.getAttribute("startContainer");
@@ -179,7 +177,7 @@ function getParsedDocument(aPath) {
 
 function processParsedDocument(doc) {
   Assert.ok(doc.documentElement.localName != "parsererror");
-  Assert.ok(doc instanceof C_i.nsIDOMDocument);
+  Assert.ok(doc instanceof Ci.nsIDOMDocument);
 
   // Clean out whitespace.
   var walker = doc.createTreeWalker(doc,
@@ -362,7 +360,7 @@ function do_miscellaneous_tests(doc) {
   // Text range manipulation.
   if ((endOffset > startOffset) &&
       (startContainer == endContainer) &&
-      (startContainer instanceof C_i.nsIDOMText)) {
+      (startContainer instanceof Ci.nsIDOMText)) {
     // Invalid start node
     try {
       baseRange.setStart(null, 0);
@@ -388,7 +386,7 @@ function do_miscellaneous_tests(doc) {
     }
   
     // Invalid index
-    var newOffset = startContainer instanceof C_i.nsIDOMText ?
+    var newOffset = startContainer instanceof Ci.nsIDOMText ?
                       startContainer.nodeValue.length + 1 :
                       startContainer.childNodes.length + 1;
     try {
@@ -444,14 +442,14 @@ function do_miscellaneous_tests(doc) {
 
   // Requested by smaug:  A range involving a comment as a document child.
   doc = parser.parseFromString("<!-- foo --><foo/>", "application/xml");
-  Assert.ok(doc instanceof C_i.nsIDOMDocument);
+  Assert.ok(doc instanceof Ci.nsIDOMDocument);
   Assert.equal(doc.childNodes.length, 2);
   baseRange = doc.createRange();
   baseRange.setStart(doc.firstChild, 1);
   baseRange.setEnd(doc.firstChild, 2);
   var frag = baseRange.extractContents();
   Assert.equal(frag.childNodes.length, 1);
-  Assert.ok(frag.firstChild instanceof C_i.nsIDOMComment);
+  Assert.ok(frag.firstChild instanceof Ci.nsIDOMComment);
   Assert.equal(frag.firstChild.nodeValue, "f");
 
   /* smaug also requested attribute tests.  Sadly, those are not yet supported

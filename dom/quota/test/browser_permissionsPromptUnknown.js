@@ -29,7 +29,7 @@ add_task(async function testPermissionUnknownInPrivateWindow() {
   await waitForMessage(false, win.gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
-     Components.interfaces.nsIPermissionManager.UNKNOWN_ACTION,
+     Ci.nsIPermissionManager.UNKNOWN_ACTION,
      "Correct permission set");
   unregisterAllPopupEventHandlers(win);
   win.gBrowser.removeCurrentTab();

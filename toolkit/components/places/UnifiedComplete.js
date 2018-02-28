@@ -1541,8 +1541,8 @@ Search.prototype = {
     // match the search string.  If this happens there is some case we
     // are not handling properly yet.
     if (!value.startsWith(this._originalSearchString)) {
-      Components.utils.reportError(`Trying to inline complete in-the-middle
-                                    ${this._originalSearchString} to ${value}`);
+      Cu.reportError(`Trying to inline complete in-the-middle
+                      ${this._originalSearchString} to ${value}`);
       return false;
     }
 

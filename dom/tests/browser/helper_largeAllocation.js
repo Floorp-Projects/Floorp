@@ -40,8 +40,8 @@ function expectNoProcess() {
 
 function getPID(aBrowser) {
   return ContentTask.spawn(aBrowser, null, () => {
-    const appinfo = Components.classes["@mozilla.org/xre/app-info;1"]
-            .getService(Components.interfaces.nsIXULRuntime);
+    const appinfo = Cc["@mozilla.org/xre/app-info;1"]
+            .getService(Ci.nsIXULRuntime);
     return appinfo.processID;
   });
 }

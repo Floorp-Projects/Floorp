@@ -79,8 +79,8 @@
       <property name="_prefBranch" readonly="true">
         <getter><![CDATA[
           if (this.__prefBranch === null) {
-            this.__prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
-                                          .getService(Components.interfaces.nsIPrefBranch);
+            this.__prefBranch = Cc["@mozilla.org/preferences-service;1"]
+                                  .getService(Ci.nsIPrefBranch);
           }
           return this.__prefBranch;
         ]]></getter>
@@ -175,8 +175,8 @@
           if (!("_DOMWindowUtils" in this)) {
             try {
               this._DOMWindowUtils =
-                window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
+                window.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindowUtils);
             } catch (e) {
               // Can't access nsIDOMWindowUtils if we're unprivileged.
               this._DOMWindowUtils = null;
@@ -682,8 +682,8 @@
 
           if (!this._scrollTimer)
             this._scrollTimer =
-              Components.classes["@mozilla.org/timer;1"]
-                        .createInstance(Components.interfaces.nsITimer);
+              Cc["@mozilla.org/timer;1"]
+                .createInstance(Ci.nsITimer);
           else
             this._scrollTimer.cancel();
 

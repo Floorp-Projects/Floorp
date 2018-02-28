@@ -188,7 +188,7 @@ ContentAreaDropListener.prototype =
       }
     }
     let ioService = Cc["@mozilla.org/network/io-service;1"]
-        .getService(Components.interfaces.nsIIOService);
+        .getService(Ci.nsIIOService);
     let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].
         getService(Ci.nsIScriptSecurityManager);
     return secMan.createCodebasePrincipal(ioService.newURI(principalURISpec), {});
@@ -310,8 +310,8 @@ ContentAreaDropListener.prototype =
       return false;
 
     return ownerDoc.defaultView
-                   .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                   .getInterface(Components.interfaces.nsIDOMWindowUtils)
+                   .QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindowUtils)
                    .isNodeDisabledForEvents(aEvent.originalTarget);
   }
 };

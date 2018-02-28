@@ -44,13 +44,13 @@
     function testCpowMessage(message) {
       ok(message.json.check == "ok", "correct json");
 
-      ok(!Components.utils.isCrossProcessWrapper(message.json), "not everything is a CPOW");
+      ok(!Cu.isCrossProcessWrapper(message.json), "not everything is a CPOW");
 
       let data = message.objects.data;
       let document = message.objects.document;
       if (test_state == "remote") {
-        ok(Components.utils.isCrossProcessWrapper(data), "got a CPOW");
-        ok(Components.utils.isCrossProcessWrapper(document), "got a CPOW");
+        ok(Cu.isCrossProcessWrapper(data), "got a CPOW");
+        ok(Cu.isCrossProcessWrapper(document), "got a CPOW");
       }
       ok(data.i === 5, "integer property");
       ok(data.b === true, "boolean property");
@@ -209,9 +209,9 @@
     function recvDomTest(message) {
       savedElement = message.objects.element;
 
-      is(savedElement.QueryInterface(Components.interfaces.nsISupports), savedElement,
+      is(savedElement.QueryInterface(Ci.nsISupports), savedElement,
          "QI to nsISupports works");
-      is(savedElement.QueryInterface(Components.interfaces.nsIDOMNode), savedElement,
+      is(savedElement.QueryInterface(Ci.nsIDOMNode), savedElement,
          "QI to a random (implemented) interface works");
 
       function testNoInterface(savedElement, i) {
@@ -219,11 +219,11 @@
           savedElement.QueryInterface(i);
           ok(false, "should have thrown an exception");
         } catch (e) {
-          is(e.result, Components.results.NS_ERROR_NO_INTERFACE, "threw the right exception");
+          is(e.result, Cr.NS_ERROR_NO_INTERFACE, "threw the right exception");
         }
       }
 
-      testNoInterface(savedElement, Components.interfaces.nsIClassInfo);
+      testNoInterface(savedElement, Ci.nsIClassInfo);
 
       // Test to ensure that we don't pass CPOWs to C++-implemented interfaces.
       // See bug 1072980.
@@ -245,8 +245,8 @@
         // as it's detectable).
         is(savedElement.isEqualNode, savedElement.isEqualNode, "webidl function identity works");
 
-        let walker = Components.classes["@mozilla.org/inspector/deep-tree-walker;1"]
-                               .createInstance(Components.interfaces.inIDeepTreeWalker);
+        let walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"]
+                       .createInstance(Ci.inIDeepTreeWalker);
         const SHOW_ELEMENT = NodeFilter.SHOW_ELEMENT;
         walker.showAnonymousContent = true;
         walker.showSubDocuments = false;
@@ -255,7 +255,7 @@
           walker.init(savedElement, SHOW_ELEMENT);
           ok(false, "expected exception passing CPOW to C++");
         } catch (e) {
-          is(e.result, Components.results.NS_ERROR_XPC_CANT_PASS_CPOW_TO_NATIVE,
+          is(e.result, Cr.NS_ERROR_XPC_CANT_PASS_CPOW_TO_NATIVE,
              "got exception when passing CPOW to C++");
         }
       }
@@ -357,7 +357,7 @@
       }
       ok(threw, "limited-lifetime CPOW stopped working");
       wontDie = null;
-      Components.utils.schedulePreciseGC(function() {
+      Cu.schedulePreciseGC(function() {
         savedMM.sendAsyncMessage("cpows:lifetime_test_3");
       });
     }

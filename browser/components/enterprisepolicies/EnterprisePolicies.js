@@ -51,7 +51,7 @@ const EnterprisePoliciesFactory = {
   _instance: null,
   createInstance: function BGSF_createInstance(outer, iid) {
     if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
+      throw Cr.NS_ERROR_NO_AGGREGATION;
     return this._instance == null ?
       this._instance = new EnterprisePoliciesManager() : this._instance;
   }

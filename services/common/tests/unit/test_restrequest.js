@@ -98,7 +98,7 @@ add_test(function test_forbidden_port() {
     if (!error) {
       do_throw("Should have got an error.");
     }
-    Assert.equal(error.result, Components.results.NS_ERROR_PORT_ACCESS_NOT_ALLOWED);
+    Assert.equal(error.result, Cr.NS_ERROR_PORT_ACCESS_NOT_ALLOWED);
     run_next_test();
   });
 });

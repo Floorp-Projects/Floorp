@@ -18,7 +18,7 @@
 
 window.opener.wrappedJSObject.SimpleTest.waitForFocus(prepareTests, window);
 
-const nsIDOMWindowUtils = Components.interfaces.nsIDOMWindowUtils;
+const nsIDOMWindowUtils = Ci.nsIDOMWindowUtils;
 
 const WHEEL_PAGESCROLL = 4294967295;
 
@@ -69,8 +69,8 @@ const kTimeoutPref                = "mousewheel.windows.transaction.timeout";
 const kMouseLineScrollEvent  = "DOMMouseScroll";
 const kMousePixelScrollEvent = "MozMousePixelScroll";
 
-const kVAxis = Components.interfaces.nsIDOMMouseScrollEvent.VERTICAL_AXIS;
-const kHAxis = Components.interfaces.nsIDOMMouseScrollEvent.HORIZONTAL_AXIS;
+const kVAxis = Ci.nsIDOMMouseScrollEvent.VERTICAL_AXIS;
+const kHAxis = Ci.nsIDOMMouseScrollEvent.HORIZONTAL_AXIS;
 
 var gLineHeight = 0;
 var gCharWidth  = 0;
@@ -131,7 +131,7 @@ function getWindowUtils(aWindow)
   if (!aWindow) {
     aWindow = window;
   }
-  return aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+  return aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                 .getInterface(nsIDOMWindowUtils);
 }
 
@@ -1112,8 +1112,8 @@ var gDeactiveWindowTests = [
       SpecialPowers.setIntPref(kHAmountPref, 3);
     },
     onLineScrollEvent: function (aEvent) {
-      var fm = Components.classes["@mozilla.org/focus-manager;1"].
-            getService(Components.interfaces.nsIFocusManager);
+      var fm = Cc["@mozilla.org/focus-manager;1"].
+            getService(Ci.nsIFocusManager);
       is(fm.activeWindow, gOtherWindow, "The other window isn't activated");
     },
   },

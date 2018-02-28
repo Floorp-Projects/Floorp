@@ -23,7 +23,7 @@ var listener = {
   },
 
   onStopRequest: function (request, ctx, status) {
-      Assert.equal(status, Components.results.NS_OK);
+      Assert.equal(status, Cr.NS_OK);
       server.stop(do_test_finished);
   },
 
@@ -38,7 +38,7 @@ function run_test() {
         response.write("Hello world");
     });
     var chan = NetUtil.newChannel({uri: baseURL, loadUsingSystemPrincipal: true})
-                      .QueryInterface(Components.interfaces.nsIHttpChannel);
+                      .QueryInterface(Ci.nsIHttpChannel);
     chan.asyncOpen2(listener);
     do_test_pending();
 }

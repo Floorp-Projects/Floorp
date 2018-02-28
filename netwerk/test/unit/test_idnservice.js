@@ -8,8 +8,8 @@ var reference = [
                 ];
 
 function run_test() {
-  var idnService = Components.classes["@mozilla.org/network/idn-service;1"]
-                             .getService(Components.interfaces.nsIIDNService);
+  var idnService = Cc["@mozilla.org/network/idn-service;1"]
+                     .getService(Ci.nsIIDNService);
 
   for (var i = 0; i < reference.length; ++i) {
      dump("Testing " + reference[i] + "\n");

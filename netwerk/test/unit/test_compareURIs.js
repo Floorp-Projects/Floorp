@@ -29,7 +29,7 @@ function run_test()
 	[ "view-source:http://mozilla.org/", "http://mozilla.org/", true ]
     ];
 
-    var secman = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService(Components.interfaces.nsIScriptSecurityManager);
+    var secman = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
 
     tests.forEach(function(aTest) {
         do_info("Comparing " + aTest[0] + " to " + aTest[1]);

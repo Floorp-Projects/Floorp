@@ -7,8 +7,8 @@
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-var gIoService = Components.classes["@mozilla.org/network/io-service;1"]
-                           .getService(Components.interfaces.nsIIOService);
+var gIoService = Cc["@mozilla.org/network/io-service;1"]
+                   .getService(Ci.nsIIOService);
 
 
 // Run by: cd objdir;  make -C netwerk/test/ xpcshell-tests    

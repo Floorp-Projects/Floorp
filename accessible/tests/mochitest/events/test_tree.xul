@@ -32,7 +32,7 @@
       this.target = gTree;
       this.check = function check(aEvent)
       {
-        var propBag = aEvent.detail.QueryInterface(Components.interfaces.nsIPropertyBag2);
+        var propBag = aEvent.detail.QueryInterface(Ci.nsIPropertyBag2);
         var index = propBag.getPropertyAsInt32("index");
         is(index, aIdx, "Wrong 'index' data of 'treeRowCountChanged' event.");
 
@@ -54,7 +54,7 @@
       this.target = gTree;
       this.check = function check(aEvent)
       {
-        var propBag = aEvent.detail.QueryInterface(Components.interfaces.nsIPropertyBag2);
+        var propBag = aEvent.detail.QueryInterface(Ci.nsIPropertyBag2);
         try {
           var startRow = propBag.getPropertyAsInt32("startrow");
         } catch (e) {

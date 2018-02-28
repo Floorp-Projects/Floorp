@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const nsILDAPURL = Components.interfaces.nsILDAPURL;
+const nsILDAPURL = Ci.nsILDAPURL;
 const LDAPURLContractID = "@mozilla.org/network/ldap-url;1";
-const nsILDAPSyncQuery = Components.interfaces.nsILDAPSyncQuery;
+const nsILDAPSyncQuery = Ci.nsILDAPSyncQuery;
 const LDAPSyncQueryContractID = "@mozilla.org/ldapsyncquery;1";
-const nsIPrefService = Components.interfaces.nsIPrefService;
+const nsIPrefService = Ci.nsIPrefService;
 const PrefServiceContractID = "@mozilla.org/preferences-service;1";
 
 var gVersion;
@@ -16,8 +16,8 @@ var gIsUTF8;
 
 function getPrefBranch() {
 
-    var prefService = Components.classes[PrefServiceContractID]
-                                .getService(nsIPrefService);
+    var prefService = Cc[PrefServiceContractID]
+                        .getService(nsIPrefService);
     return prefService.getBranch(null);
 }
 
@@ -45,8 +45,8 @@ function pref(prefName, value) {
 function defaultPref(prefName, value) {
 
     try {
-        var prefService = Components.classes[PrefServiceContractID]
-                                    .getService(nsIPrefService);
+        var prefService = Cc[PrefServiceContractID]
+                            .getService(nsIPrefService);
         var prefBranch = prefService.getDefaultBranch(null);
         if (typeof value == "string") {
             if (gIsUTF8) {
@@ -139,16 +139,16 @@ function getLDAPAttributes(host, base, filter, attribs, isSecure) {
         var urlSpec = "ldap" + (isSecure ? "s" : "") + "://" + host + (isSecure ? ":636" : "") + "/" + base + "?" + attribs + "?sub?" +
                       filter;
 
-        var url = Components.classes["@mozilla.org/network/io-service;1"]
-                            .getService(Components.interfaces.nsIIOService)
-                            .newURI(urlSpec)
-                            .QueryInterface(Components.interfaces.nsILDAPURL);
+        var url = Cc["@mozilla.org/network/io-service;1"]
+                    .getService(Ci.nsIIOService)
+                    .newURI(urlSpec)
+                    .QueryInterface(Ci.nsILDAPURL);
 
-        var ldapquery = Components.classes[LDAPSyncQueryContractID]
-                                  .createInstance(nsILDAPSyncQuery);
+        var ldapquery = Cc[LDAPSyncQueryContractID]
+                          .createInstance(nsILDAPSyncQuery);
         // default to LDAP v3
         if (!gVersion)
-          gVersion = Components.interfaces.nsILDAPConnection.VERSION3;
+          gVersion = Ci.nsILDAPConnection.VERSION3;
         // user supplied method
         processLDAPValues(ldapquery.getQueryResults(url, gVersion));
     } catch (e) {
@@ -184,11 +184,11 @@ function getLDAPValue(str, key) {
 function displayError(funcname, message) {
 
     try {
-        var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                      .getService(Components.interfaces.nsIPromptService);
-        var bundle = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                               .getService(Components.interfaces.nsIStringBundleService)
-                               .createBundle("chrome://autoconfig/locale/autoconfig.properties");
+        var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"]
+                              .getService(Ci.nsIPromptService);
+        var bundle = Cc["@mozilla.org/intl/stringbundle;1"]
+                       .getService(Ci.nsIStringBundleService)
+                       .createBundle("chrome://autoconfig/locale/autoconfig.properties");
 
          var title = bundle.GetStringFromName("autoConfigTitle");
          var msg = bundle.formatStringFromName("autoConfigMsg", [funcname], 1);
@@ -198,8 +198,8 @@ function displayError(funcname, message) {
 
 function getenv(name) {
     try {
-        var environment = Components.classes["@mozilla.org/process/environment;1"].
-            getService(Components.interfaces.nsIEnvironment);
+        var environment = Cc["@mozilla.org/process/environment;1"].
+            getService(Ci.nsIEnvironment);
         return environment.get(name);
     } catch (e) {
         displayError("getEnvironment", e);

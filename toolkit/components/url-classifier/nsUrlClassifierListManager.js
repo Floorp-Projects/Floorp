@@ -681,7 +681,7 @@ PROT_ListManager.prototype.QueryInterface = function(iid) {
       iid.equals(Ci.nsITimerCallback))
     return this;
 
-  throw Components.results.NS_ERROR_NO_INTERFACE;
+  throw Cr.NS_ERROR_NO_INTERFACE;
 };
 
 var modScope = this;
@@ -704,7 +704,7 @@ RegistrationData.prototype = {
     _xpcom_factory: {
         createInstance(outer, iid) {
             if (outer != null)
-                throw Components.results.NS_ERROR_NO_AGGREGATION;
+                throw Cr.NS_ERROR_NO_AGGREGATION;
             Init();
             return (new PROT_ListManager()).QueryInterface(iid);
         }

@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=444800
 
   <script class="testbody" type="application/javascript">
   <![CDATA[
-const knsIClipboard = Components.interfaces.nsIClipboard;
+const knsIClipboard = Ci.nsIClipboard;
 
 function copyImageToClipboard()
 {
@@ -54,8 +54,8 @@ function runImageClipboardTests(aCBSvc, aImageType)
   ok(hasImage, aImageType + " - hasDataMatchingFlavors()");
 
   // Verify that getData() is working correctly.
-  var xfer = Components.classes["@mozilla.org/widget/transferable;1"]
-                       .createInstance(Components.interfaces.nsITransferable);
+  var xfer = Cc["@mozilla.org/widget/transferable;1"]
+               .createInstance(Ci.nsITransferable);
   xfer.init(getLoadContext());
   xfer.addDataFlavor(aImageType);
   aCBSvc.getData(xfer, knsIClipboard.kGlobalClipboard);
@@ -66,7 +66,7 @@ function runImageClipboardTests(aCBSvc, aImageType)
   ok(gotValue, aImageType + " - getData() returned a value");
   if (gotValue)
   {
-    const knsIInputStream = Components.interfaces.nsIInputStream;
+    const knsIInputStream = Ci.nsIInputStream;
     var imgStream = dataObj.value.QueryInterface(knsIInputStream);
     ok((null != imgStream), aImageType + " - got an nsIInputStream");
     var bytesAvailable = imgStream.available();
@@ -80,8 +80,8 @@ function initAndRunTests()
 
   copyImageToClipboard();
 
-  var cbSvc = Components.classes["@mozilla.org/widget/clipboard;1"]
-                        .getService(knsIClipboard);
+  var cbSvc = Cc["@mozilla.org/widget/clipboard;1"]
+                .getService(knsIClipboard);
 
   // Work around a problem on Windows where clipboard is not ready after copy.
   setTimeout(function() { runTests(cbSvc); }, 0);

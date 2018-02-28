@@ -2,7 +2,7 @@
 
 var EXPORTED_SYMBOLS = ["webrequest_test"];
 
-Components.utils.importGlobalProperties(["fetch", "XMLHttpRequest"]);
+Cu.importGlobalProperties(["fetch", "XMLHttpRequest"]);
 
 var webrequest_test = {
   testFetch(url) {

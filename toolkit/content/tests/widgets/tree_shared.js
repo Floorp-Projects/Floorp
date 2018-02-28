@@ -104,7 +104,7 @@ function testtag_tree(treeid, treerowinfoid, seltype, columnstype, testid) {
 
   tree.startEditing(1, ecolumn);
   var inputField = tree.inputField;
-  is(inputField instanceof Components.interfaces.nsIDOMXULTextBoxElement, true, testid + "inputField");
+  is(inputField instanceof Ci.nsIDOMXULTextBoxElement, true, testid + "inputField");
   inputField.value = "Changed Value";
   tree.stopEditing(true);
   is(tree.view.getCellText(1, ecolumn), "Changed Value", testid + "edit cell accept");
@@ -208,7 +208,7 @@ function testtag_tree_TreeSelection(tree, testid, multiple) {
   testid += " selection ";
 
   var selection = tree.view.selection;
-  is(selection instanceof Components.interfaces.nsITreeSelection, true,
+  is(selection instanceof Ci.nsITreeSelection, true,
                 testid + "selection is a TreeSelection");
   is(selection.single, !multiple, testid + "single");
 
@@ -873,7 +873,7 @@ function testtag_tree_TreeView(tree, testid, rowInfo) {
   var columns = tree.columns;
   var view = tree.view;
 
-  is(view instanceof Components.interfaces.nsITreeView, true, testid + "view is a TreeView");
+  is(view instanceof Ci.nsITreeView, true, testid + "view is a TreeView");
   is(view.rowCount, rowInfo.rows.length, testid + "rowCount");
 
   testtag_tree_TreeView_rows(tree, testid, rowInfo, 0);

@@ -1263,9 +1263,9 @@ function synthFocus(aNodeOrID, aCheckerOrEventSeq) {
   this.__proto__ = new synthAction(aNodeOrID, checkerOfEventSeq);
 
   this.invoke = function synthFocus_invoke() {
-    if (this.DOMNode instanceof Components.interfaces.nsIDOMNSEditableElement &&
+    if (this.DOMNode instanceof Ci.nsIDOMNSEditableElement &&
         this.DOMNode.editor ||
-        this.DOMNode instanceof Components.interfaces.nsIDOMXULTextBoxElement) {
+        this.DOMNode instanceof Ci.nsIDOMXULTextBoxElement) {
       this.DOMNode.selectionStart = this.DOMNode.selectionEnd = this.DOMNode.value.length;
     }
     this.DOMNode.focus();
@@ -1421,8 +1421,8 @@ function synthSelectAll(aNodeOrID, aCheckerOrEventSeq) {
   this.__proto__ = new synthAction(aNodeOrID, aCheckerOrEventSeq);
 
   this.invoke = function synthSelectAll_invoke() {
-    if (this.DOMNode instanceof Components.interfaces.nsIDOMHTMLInputElement ||
-        this.DOMNode instanceof Components.interfaces.nsIDOMXULTextBoxElement) {
+    if (this.DOMNode instanceof Ci.nsIDOMHTMLInputElement ||
+        this.DOMNode instanceof Ci.nsIDOMXULTextBoxElement) {
       this.DOMNode.select();
 
     } else {

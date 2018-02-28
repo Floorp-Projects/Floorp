@@ -10,7 +10,7 @@
     testwindow.close();
     SimpleTest.finish();
   }
-  var isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
+  var isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
   var testwindow = window.open("queryCaretRect" + (isWindows ? "Win" : "Unix") + ".html",
                                "_new", "width=800,height=800");
 </script>

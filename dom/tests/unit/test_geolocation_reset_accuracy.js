@@ -5,19 +5,19 @@ const categoryName = "geolocation-provider";
 
 var provider = {
   QueryInterface: function eventsink_qi(iid) {
-    if (iid.equals(Components.interfaces.nsISupports) ||
-        iid.equals(Components.interfaces.nsIFactory) ||
-        iid.equals(Components.interfaces.nsIGeolocationProvider))
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIFactory) ||
+        iid.equals(Ci.nsIGeolocationProvider))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
   createInstance: function eventsink_ci(outer, iid) {
     if (outer)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
+      throw Cr.NS_ERROR_NO_AGGREGATION;
     return this.QueryInterface(iid);
   },
   lockFactory: function eventsink_lockf(lock) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
   startup: function() {
   },
@@ -38,9 +38,9 @@ var provider = {
 
 var runningInParent = true;
 try {
-  runningInParent = Components.classes["@mozilla.org/xre/runtime;1"].
-                    getService(Components.interfaces.nsIXULRuntime).processType
-                    == Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+  runningInParent = Cc["@mozilla.org/xre/runtime;1"].
+                    getService(Ci.nsIXULRuntime).processType
+                    == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
 catch (e) { }
 
@@ -69,8 +69,8 @@ function run_test()
 
     Components.manager.nsIComponentRegistrar.registerFactory(providerCID,
       "Unit test geo provider", providerContract, provider);
-    var catMan = Components.classes["@mozilla.org/categorymanager;1"]
-                           .getService(Components.interfaces.nsICategoryManager);
+    var catMan = Cc["@mozilla.org/categorymanager;1"]
+                   .getService(Ci.nsICategoryManager);
     catMan.nsICategoryManager.addCategoryEntry(categoryName, "unit test",
                                                providerContract, false, true);
 

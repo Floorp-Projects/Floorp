@@ -4,8 +4,8 @@
 
 /* eslint-disable mozilla/use-chromeutils-import */
 
-Components.utils.import("resource://gre/modules/Messaging.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Messaging.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 let java = new JavaBridge(this);
 do_register_cleanup(() => {

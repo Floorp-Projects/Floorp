@@ -4,7 +4,7 @@
 
 // Tests that a pending upgrade during a schema update doesn't break things
 
-Components.utils.importGlobalProperties(["File"]);
+Cu.importGlobalProperties(["File"]);
 
 var addon1 = {
   id: "addon1@tests.mozilla.org",

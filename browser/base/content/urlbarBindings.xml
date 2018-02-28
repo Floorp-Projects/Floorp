@@ -59,14 +59,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       </field>
 
       <constructor><![CDATA[
-        this._prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                                .getService(Components.interfaces.nsIPrefService)
-                                .getBranch("browser.urlbar.");
+        this._prefs = Cc["@mozilla.org/preferences-service;1"]
+                        .getService(Ci.nsIPrefService)
+                        .getBranch("browser.urlbar.");
         this._prefs.addObserver("", this);
 
-        this._defaultPrefs = Components.classes["@mozilla.org/preferences-service;1"]
-                                       .getService(Components.interfaces.nsIPrefService)
-                                       .getDefaultBranch("browser.urlbar.");
+        this._defaultPrefs = Cc["@mozilla.org/preferences-service;1"]
+                               .getService(Ci.nsIPrefService)
+                               .getDefaultBranch("browser.urlbar.");
 
         Services.prefs.addObserver("browser.search.suggest.enabled", this);
         this.browserSearchSuggestEnabled = Services.prefs.getBoolPref("browser.search.suggest.enabled");
@@ -2072,7 +2072,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
           } catch (ex) {
             // Not critical for the urlbar functionality, just report the error.
-            Components.utils.reportError(ex);
+            Cu.reportError(ex);
           }
 
           // Position the popup below the navbar.  To get the y-coordinate,

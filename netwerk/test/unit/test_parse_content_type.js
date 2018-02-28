@@ -22,8 +22,8 @@ function check(aType, aCharset, aHadCharset) {
 }
 
 function run_test() {
-  var netutil = Components.classes["@mozilla.org/network/util;1"]
-                          .getService(Components.interfaces.nsINetUtil);
+  var netutil = Cc["@mozilla.org/network/util;1"]
+                  .getService(Ci.nsINetUtil);
 
   type = netutil.parseRequestContentType("text/html", charset, hadCharset);
   check("text/html", "", false);

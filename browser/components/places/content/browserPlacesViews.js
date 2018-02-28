@@ -42,8 +42,8 @@ PlacesViewBase.prototype = {
   _nativeView: false,
 
   QueryInterface: XPCOMUtils.generateQI(
-    [Components.interfaces.nsINavHistoryResultObserver,
-     Components.interfaces.nsISupportsWeakReference]),
+    [Ci.nsINavHistoryResultObserver,
+     Ci.nsISupportsWeakReference]),
 
   _place: "",
   get place() {
@@ -737,7 +737,7 @@ PlacesViewBase.prototype = {
           else
             this._getDOMNodeForPlacesNode(child).removeAttribute("visited");
         }
-      }, Components.utils.reportError);
+      }, Cu.reportError);
   },
 
   /**
@@ -1424,7 +1424,7 @@ PlacesToolbar.prototype = {
           .then(aLivemark => {
             this.controller.cacheLivemarkInfo(aPlacesNode, aLivemark);
             this.invalidateContainer(aPlacesNode);
-          }, Components.utils.reportError);
+          }, Cu.reportError);
       }
     } else {
       // Node is in a submenu.
@@ -1783,7 +1783,7 @@ PlacesToolbar.prototype = {
     let dropPoint = this._getDropPoint(aEvent);
     if (dropPoint && dropPoint.ip) {
       PlacesControllerDragHelper.onDrop(dropPoint.ip, aEvent.dataTransfer)
-                                .catch(Components.utils.reportError);
+                                .catch(Cu.reportError);
       aEvent.preventDefault();
     }
 
@@ -2071,7 +2071,7 @@ PlacesPanelMenuView.prototype = {
         .then(aLivemark => {
           this.controller.cacheLivemarkInfo(aPlacesNode, aLivemark);
           this.invalidateContainer(aPlacesNode);
-        }, Components.utils.reportError);
+        }, Cu.reportError);
     }
   },
 

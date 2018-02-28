@@ -9,5 +9,5 @@ ChromeUtils.import("resource://testing-common/httpd.js");
 function run_test() {
   var httpserver = new HttpServer();
   Assert.notEqual(httpserver, null);
-  Assert.notEqual(httpserver.QueryInterface(Components.interfaces.nsIHttpServer), null);
+  Assert.notEqual(httpserver.QueryInterface(Ci.nsIHttpServer), null);
 }

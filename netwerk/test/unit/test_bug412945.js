@@ -26,7 +26,7 @@ function run_test() {
     loadUsingSystemPrincipal: true
   });
 
-  channel.QueryInterface(Components.interfaces.nsIHttpChannel);
+  channel.QueryInterface(Ci.nsIHttpChannel);
   channel.requestMethod = "POST";
   channel.asyncOpen2(new TestListener(), null);
 
