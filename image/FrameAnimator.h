@@ -290,6 +290,12 @@ public:
   }
 
   /**
+   * Call when you need to re-start animating. Ensures we start from the first
+   * frame.
+   */
+  void ResetAnimation(AnimationState& aState);
+
+  /**
    * Re-evaluate what frame we're supposed to be on, and do whatever blending
    * is necessary to get us to that frame.
    *
