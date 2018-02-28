@@ -557,7 +557,7 @@ nsRFPService::ReduceTimePrecisionAsUSecsWrapper(double aTime)
     aTime,
     MicroSeconds,
     TimerResolution(),
-    0,
+    0, /* For absolute timestamps (all the JS engine does), supply zero context mixin */
     TimerPrecisionType::All);
 }
 
