@@ -58,7 +58,7 @@ def make_release_generate_checksums_signing_description(config, jobs):
         treeherder.setdefault('tier', 1)
         treeherder.setdefault('kind', 'build')
 
-        job_template = "{}-{}".format(dep_job.label,"signing")
+        job_template = "{}-{}".format(dep_job.label, "signing")
         label = job.get("label", job_template)
         description = "Signing of the overall release-related checksums"
 
