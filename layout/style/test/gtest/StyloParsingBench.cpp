@@ -34,6 +34,7 @@ static void ServoParsingBench() {
     RefPtr<RawServoStyleSheetContents> stylesheet =
       Servo_StyleSheet_FromUTF8Bytes(nullptr,
                                      nullptr,
+                                     nullptr,
                                      css.Elements(),
                                      css.Length(),
                                      eAuthorSheetFeatures,

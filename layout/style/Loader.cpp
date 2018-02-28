@@ -1704,6 +1704,7 @@ Loader::ParseSheet(const nsAString& aUTF16,
                            sheetURI,
                            baseURI,
                            aLoadData->mSheet->Principal(),
+                           aLoadData,
                            aLoadData->mLineNumber);
 #else
     MOZ_CRASH("old style system disabled");
@@ -1715,6 +1716,7 @@ Loader::ParseSheet(const nsAString& aUTF16,
       sheetURI,
       baseURI,
       aLoadData->mSheet->Principal(),
+      aLoadData,
       aLoadData->mLineNumber,
       GetCompatibilityMode());
   }
@@ -2143,6 +2145,7 @@ HaveAncestorDataWithURI(SheetLoadData *aData, nsIURI *aURI)
 
 nsresult
 Loader::LoadChildSheet(StyleSheet* aParentSheet,
+                       SheetLoadData* aParentData,
                        nsIURI* aURL,
                        dom::MediaList* aMedia,
                        ImportRule* aGeckoParentRule,
@@ -2186,22 +2189,19 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
   nsresult rv = CheckContentPolicy(loadingPrincipal, principal, aURL, context, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  SheetLoadData* parentData = nullptr;
   nsCOMPtr<nsICSSLoaderObserver> observer;
 
-  int32_t count = mParsingDatas.Length();
-  if (count > 0) {
+  if (aParentData) {
     LOG(("  Have a parent load"));
-    parentData = mParsingDatas.ElementAt(count - 1);
     // Check for cycles
-    if (HaveAncestorDataWithURI(parentData, aURL)) {
+    if (HaveAncestorDataWithURI(aParentData, aURL)) {
       // Houston, we have a loop, blow off this child and pretend this never
       // happened
       LOG_ERROR(("  @import cycle detected, dropping load"));
       return NS_OK;
     }
 
-    NS_ASSERTION(parentData->mSheet == aParentSheet,
+    NS_ASSERTION(aParentData->mSheet == aParentSheet,
                  "Unexpected call to LoadChildSheet");
   } else {
     LOG(("  No parent load; must be CSSOM"));
@@ -2231,7 +2231,7 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
                      aParentSheet->ParsingMode(),
                      CORS_NONE, aParentSheet->GetReferrerPolicy(),
                      EmptyString(), // integrity is only checked on main sheet
-                     parentData ? parentData->mSyncLoad : false,
+                     aParentData ? aParentData->mSyncLoad : false,
                      false, empty, state, &isAlternate, &sheet);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2250,7 +2250,7 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
   }
 
   nsCOMPtr<nsINode> requestingNode = do_QueryInterface(context);
-  SheetLoadData* data = new SheetLoadData(this, aURL, sheet, parentData,
+  SheetLoadData* data = new SheetLoadData(this, aURL, sheet, aParentData,
                                           observer, principal, requestingNode);
 
   NS_ADDREF(data);

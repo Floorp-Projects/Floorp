@@ -201,6 +201,7 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                             nsIURI* aSheetURI,
                             nsIURI* aBaseURI,
                             nsIPrincipal* aSheetPrincipal,
+                            css::SheetLoadData* aLoadData,
                             uint32_t aLineNumber,
                             nsCompatibility aCompatMode,
                             css::LoaderReusableStyleSheets* aReusableSheets)
@@ -211,6 +212,7 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
 
   Inner()->mContents = Servo_StyleSheet_FromUTF8Bytes(aLoader,
                                                       this,
+                                                      aLoadData,
                                                       aInput.Elements(),
                                                       aInput.Length(),
                                                       mParsingMode,
@@ -303,6 +305,7 @@ ServoStyleSheet::ReparseSheet(const nsAString& aInput)
                            mInner->mSheetURI,
                            mInner->mBaseURI,
                            mInner->mPrincipal,
+                           /* aLoadData = */ nullptr,
                            lineNumber,
                            eCompatibility_FullStandards,
                            &reusableSheets);
