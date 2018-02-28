@@ -20,6 +20,7 @@
 
 using namespace mozilla;
 using namespace mozilla::image;
+using mozilla::Move;
 
 // The split of imgRequestProxy and imgRequestProxyStatic means that
 // certain overridden functions need to be usable in the destructor.
@@ -352,7 +353,7 @@ imgRequestProxy::AddToOwner(nsIDocument* aLoadingDocument)
   // scheduler group is valid with or without a document, but that means
   // we will use the most generic event target possible on dispatch.
   if (aLoadingDocument) {
-    RefPtr<dom::DocGroup> docGroup = aLoadingDocument->GetDocGroup();
+    RefPtr<mozilla::dom::DocGroup> docGroup = aLoadingDocument->GetDocGroup();
     if (docGroup) {
       mTabGroup = docGroup->GetTabGroup();
       MOZ_ASSERT(mTabGroup);
