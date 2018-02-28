@@ -46,7 +46,7 @@ protected:
                        // kStateStrings
 
 public:
-  class Mutator
+  class Mutator final
       : public nsIURIMutator
       , public BaseURIMutator<nsMozIconURI>
   {

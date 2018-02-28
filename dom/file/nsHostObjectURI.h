@@ -78,7 +78,7 @@ protected:
   virtual ~nsHostObjectURI() {}
 
 public:
-  class Mutator
+  class Mutator final
     : public nsIURIMutator
     , public BaseURIMutator<nsHostObjectURI>
     , public nsIBlobURIMutator
