@@ -14,13 +14,13 @@ import org.mozilla.geckoview.GeckoSession;
 
 import android.util.Log;
 
-/* package */ abstract class GeckoSessionHandler<Delegate>
+/* package */ abstract class GeckoSessionHandler<Listener>
     implements BundleEventListener {
 
     private static final String LOGTAG = "GeckoSessionHandler";
     private static final boolean DEBUG = false;
 
-    private Delegate mDelegate;
+    private Listener mListener;
     private final boolean mAlwaysListen;
     private final String mModuleName;
     private final String[] mEvents;
@@ -45,23 +45,23 @@ import android.util.Log;
         }
     }
 
-    public Delegate getDelegate() {
-        return mDelegate;
+    public Listener getListener() {
+        return mListener;
     }
 
-    public void setDelegate(final Delegate delegate, final GeckoSession session) {
+    public void setListener(final Listener listener, final GeckoSession session) {
         final EventDispatcher eventDispatcher = session.getEventDispatcher();
-        if (mDelegate == delegate) {
+        if (mListener == listener) {
             return;
         }
 
-        if (!mAlwaysListen && mDelegate != null) {
+        if (!mAlwaysListen && mListener != null) {
             unregister(eventDispatcher);
         }
 
-        mDelegate = delegate;
+        mListener = listener;
 
-        if (!mAlwaysListen && mDelegate != null) {
+        if (!mAlwaysListen && mListener != null) {
             register(eventDispatcher);
         }
     }
@@ -87,14 +87,14 @@ import android.util.Log;
             Log.d(LOGTAG, mModuleName + " handleMessage: event = " + event);
         }
 
-        if (mDelegate != null) {
-            handleMessage(mDelegate, event, message, callback);
+        if (mListener != null) {
+            handleMessage(mListener, event, message, callback);
         } else {
             callback.sendError("No listener registered");
         }
     }
 
-    protected abstract void handleMessage(final Delegate delegate,
+    protected abstract void handleMessage(final Listener listener,
                                           final String event,
                                           final GeckoBundle message,
                                           final EventCallback callback);
