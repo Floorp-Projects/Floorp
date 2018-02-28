@@ -1777,6 +1777,7 @@ Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
   // pending.
   BlockOnload();
   RefPtr<SheetLoadData> loadData = aLoadData;
+  nsCOMPtr<nsISerialEventTarget> target = DispatchTarget();
   aSheet->ParseSheet(
     this,
     aUTF8.IsEmpty() ? NS_ConvertUTF16toUTF8(aUTF16) : aUTF8,
@@ -1786,7 +1787,7 @@ Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
     aLoadData,
     aLoadData->mLineNumber,
     GetCompatibilityMode()
-  )->Then(GetMainThreadSerialEventTarget(), __func__,
+  )->Then(target, __func__,
           [loadData](bool aDummy) {
             MOZ_ASSERT(NS_IsMainThread());
             loadData->mIsBeingParsed = false;
@@ -2761,6 +2762,20 @@ Loader::UnblockOnload(bool aFireSync)
   }
 }
 
+already_AddRefed<nsISerialEventTarget>
+Loader::DispatchTarget()
+{
+  nsCOMPtr<nsISerialEventTarget> target;
+  if (mDocument) {
+    target = mDocument->EventTargetFor(TaskCategory::Other);
+  } else if (mDocGroup) {
+    target = mDocGroup->EventTargetFor(TaskCategory::Other);
+  } else {
+    target = SystemGroup::EventTargetFor(TaskCategory::Other);
+  }
+
+  return target.forget();
+}
 
 } // namespace css
 } // namespace mozilla
