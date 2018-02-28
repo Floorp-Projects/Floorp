@@ -43,8 +43,8 @@ class NavigationDelegateTest {
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = intArrayOf(1))
-            override fun onLoadUri(session: GeckoSession, uri: String,
-                                   where: Int): Boolean {
+            override fun onLoadRequest(session: GeckoSession, uri: String,
+                                       where: Int): Boolean {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URI should not be null", uri, notNullValue())
                 assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
@@ -89,8 +89,8 @@ class NavigationDelegateTest {
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = intArrayOf(1))
-            override fun onLoadUri(session: GeckoSession, uri: String,
-                                   where: Int): Boolean {
+            override fun onLoadRequest(session: GeckoSession, uri: String,
+                                       where: Int): Boolean {
                 assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
                 assertThat("Where should match", where,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
@@ -138,8 +138,8 @@ class NavigationDelegateTest {
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = intArrayOf(1))
-            override fun onLoadUri(session: GeckoSession, uri: String,
-                                   where: Int): Boolean {
+            override fun onLoadRequest(session: GeckoSession, uri: String,
+                                       where: Int): Boolean {
                 assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
                 assertThat("Where should match", where,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
@@ -172,8 +172,8 @@ class NavigationDelegateTest {
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = intArrayOf(1))
-            override fun onLoadUri(session: GeckoSession, uri: String,
-                                   where: Int): Boolean {
+            override fun onLoadRequest(session: GeckoSession, uri: String,
+                                       where: Int): Boolean {
                 assertThat("URI should match", uri, endsWith(HELLO2_HTML_PATH))
                 assertThat("Where should match", where,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
@@ -205,8 +205,8 @@ class NavigationDelegateTest {
     @Test fun onLoadUri_returnTrueCancelsLoad() {
         sessionRule.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 2)
-            override fun onLoadUri(session: GeckoSession, uri: String,
-                                   where: Int): Boolean {
+            override fun onLoadRequest(session: GeckoSession, uri: String,
+                                       where: Int): Boolean {
                 return uri.endsWith(HELLO_HTML_PATH)
             }
         })
