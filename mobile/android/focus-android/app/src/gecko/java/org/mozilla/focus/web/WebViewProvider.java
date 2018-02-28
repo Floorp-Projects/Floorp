@@ -13,8 +13,8 @@ import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.view.View;
 
-import org.mozilla.focus.R;
 import org.mozilla.focus.session.Session;
+import org.mozilla.focus.utils.Settings;
 import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
@@ -48,10 +48,6 @@ public class WebViewProvider {
         private boolean isSecure;
         private GeckoSession geckoSession;
         private String webViewTitle;
-        private boolean socialTrackersBlocked;
-        private boolean adTrackersBlocked;
-        private boolean analyticTrackersBlocked;
-        private boolean contentTrackersBlocked;
 
         public GeckoWebView(Context context, AttributeSet attrs) {
             super(context, attrs);
@@ -62,14 +58,10 @@ public class WebViewProvider {
 
             geckoSession = new GeckoSession(settings);
 
-            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            context.getSharedPreferences(context.getResources().getString(R.string.pref_key_privacy_block_social), Context.MODE_PRIVATE);
-            socialTrackersBlocked = prefs.getBoolean(context.getResources().getString(R.string.pref_key_privacy_block_social), true);
-            analyticTrackersBlocked = prefs.getBoolean(context.getResources().getString(R.string.pref_key_privacy_block_analytics), true);
-            adTrackersBlocked = prefs.getBoolean(context.getResources().getString(R.string.pref_key_privacy_block_ads), true);
-            contentTrackersBlocked = prefs.getBoolean(context.getResources().getString(R.string.pref_key_privacy_block_other), false);
+            PreferenceManager.getDefaultSharedPreferences(context)
+                    .registerOnSharedPreferenceChangeListener(this);
+
             updateBlocking();
-            prefs.registerOnSharedPreferenceChangeListener(this);
 
             geckoSession.setContentListener(createContentListener());
             geckoSession.setProgressListener(createProgressListener());
@@ -153,32 +145,23 @@ public class WebViewProvider {
 
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String prefName) {
-            if (!prefName.isEmpty() && sharedPreferences != null) {
-                if (prefName.equals(getContext().getResources().getString(R.string.pref_key_privacy_block_social))) {
-                    socialTrackersBlocked = sharedPreferences.getBoolean(prefName, true);
-                } else if (prefName.equals(getContext().getResources().getString(R.string.pref_key_privacy_block_ads))) {
-                    adTrackersBlocked = sharedPreferences.getBoolean(prefName, true);
-                } else if (prefName.equals(getContext().getResources().getString(R.string.pref_key_privacy_block_analytics))) {
-                    analyticTrackersBlocked = sharedPreferences.getBoolean(prefName, true);
-                } else if (prefName.equals(getContext().getResources().getString(R.string.pref_key_privacy_block_other))) {
-                    contentTrackersBlocked = sharedPreferences.getBoolean(prefName, false);
-                }
-            }
             updateBlocking();
         }
 
         private void updateBlocking() {
+            final Settings settings = Settings.getInstance(getContext());
+
             int categories = 0;
-            if (socialTrackersBlocked) {
+            if (settings.shouldBlockSocialTrackers()) {
                 categories += GeckoSession.TrackingProtectionDelegate.CATEGORY_SOCIAL;
             }
-            if (adTrackersBlocked) {
+            if (settings.shouldBlockAdTrackers()) {
                 categories += GeckoSession.TrackingProtectionDelegate.CATEGORY_AD;
             }
-            if (analyticTrackersBlocked) {
+            if (settings.shouldBlockAnalyticTrackers()) {
                 categories += GeckoSession.TrackingProtectionDelegate.CATEGORY_ANALYTIC;
             }
-            if (contentTrackersBlocked) {
+            if (settings.shouldBlockOtherTrackers()) {
                 categories += GeckoSession.TrackingProtectionDelegate.CATEGORY_CONTENT;
             }
             if (geckoSession != null) {

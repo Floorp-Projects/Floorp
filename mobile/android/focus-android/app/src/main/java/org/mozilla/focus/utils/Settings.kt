@@ -16,6 +16,7 @@ import org.mozilla.focus.search.SearchEngine
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
  */
+@Suppress("TooManyFunctions") // This class is designed to have a lot of (simple) functions
 class Settings private constructor(context: Context) {
     companion object {
         private var instance: Settings? = null
@@ -63,6 +64,26 @@ class Settings private constructor(context: Context) {
     fun shouldAutocompleteFromCustomDomainList() =
             preferences.getBoolean(
                     getPreferenceKey(R.string.pref_key_autocomplete_custom),
+                    false)
+
+    fun shouldBlockAdTrackers() =
+            preferences.getBoolean(
+                    getPreferenceKey(R.string.pref_key_privacy_block_ads),
+                    true)
+
+    fun shouldBlockAnalyticTrackers() =
+            preferences.getBoolean(
+                    getPreferenceKey(R.string.pref_key_privacy_block_analytics),
+                    true)
+
+    fun shouldBlockSocialTrackers() =
+            preferences.getBoolean(
+                    getPreferenceKey(R.string.pref_key_privacy_block_social),
+                    true)
+
+    fun shouldBlockOtherTrackers() =
+            preferences.getBoolean(
+                    getPreferenceKey(R.string.pref_key_privacy_block_other),
                     false)
 
     private fun getPreferenceKey(resourceId: Int): String =
