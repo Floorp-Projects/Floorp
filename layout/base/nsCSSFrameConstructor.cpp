@@ -6837,7 +6837,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
 template<nsCSSFrameConstructor::SiblingDirection aDirection>
 nsIFrame*
 nsCSSFrameConstructor::FindSiblingInternal(
-  FlattenedChildIterator aIter,
+  FlattenedChildIterator& aIter,
   nsIContent* aTargetContent,
   StyleDisplay& aTargetContentDisplay)
 {
@@ -6949,8 +6949,9 @@ nsCSSFrameConstructor::FindSibling(const FlattenedChildIterator& aIter,
                                    StyleDisplay& aTargetContentDisplay)
 {
   nsIContent* targetContent = aIter.Get();
-  nsIFrame* sibling =
-    FindSiblingInternal<aDirection>(aIter, targetContent, aTargetContentDisplay);
+  FlattenedChildIterator siblingIter = aIter;
+  nsIFrame* sibling = FindSiblingInternal<aDirection>(
+    siblingIter, targetContent, aTargetContentDisplay);
   if (sibling) {
     return sibling;
   }
