@@ -3534,24 +3534,6 @@ EditorBase::GetChildOffset(nsINode* aChild,
 }
 
 // static
-already_AddRefed<nsIDOMNode>
-EditorBase::GetNodeLocation(nsIDOMNode* aChild,
-                            int32_t* outOffset)
-{
-  MOZ_ASSERT(aChild && outOffset);
-  NS_ENSURE_TRUE(aChild && outOffset, nullptr);
-  *outOffset = -1;
-
-  nsCOMPtr<nsINode> child = do_QueryInterface(aChild);
-  nsCOMPtr<nsIDOMNode> parent = do_QueryInterface(child->GetParentNode());
-
-  if (parent) {
-    *outOffset = GetChildOffset(aChild, parent);
-  }
-
-  return parent.forget();
-}
-
 nsINode*
 EditorBase::GetNodeLocation(nsINode* aChild,
                             int32_t* aOffset)
@@ -4080,28 +4062,6 @@ EditorBase::GetNodeAtRangeOffsetPoint(const RawRangeBoundary& aPoint)
  */
 nsresult
 EditorBase::GetStartNodeAndOffset(Selection* aSelection,
-                                  nsIDOMNode** outStartNode,
-                                  int32_t* outStartOffset)
-{
-  NS_ENSURE_TRUE(outStartNode && outStartOffset && aSelection, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsINode> startNode;
-  nsresult rv = GetStartNodeAndOffset(aSelection, getter_AddRefs(startNode),
-                                      outStartOffset);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (startNode) {
-    NS_ADDREF(*outStartNode = startNode->AsDOMNode());
-  } else {
-    *outStartNode = nullptr;
-  }
-  return NS_OK;
-}
-
-nsresult
-EditorBase::GetStartNodeAndOffset(Selection* aSelection,
                                   nsINode** aStartContainer,
                                   int32_t* aStartOffset)
 {
@@ -4145,26 +4105,6 @@ EditorBase::GetStartPoint(Selection* aSelection)
  * GetEndNodeAndOffset() returns whatever the end parent & offset is of
  * the first range in the selection.
  */
-nsresult
-EditorBase::GetEndNodeAndOffset(Selection* aSelection,
-                                nsIDOMNode** outEndNode,
-                                int32_t* outEndOffset)
-{
-  NS_ENSURE_TRUE(outEndNode && outEndOffset && aSelection, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsINode> endNode;
-  nsresult rv = GetEndNodeAndOffset(aSelection, getter_AddRefs(endNode),
-                                    outEndOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (endNode) {
-    NS_ADDREF(*outEndNode = endNode->AsDOMNode());
-  } else {
-    *outEndNode = nullptr;
-  }
-  return NS_OK;
-}
-
 nsresult
 EditorBase::GetEndNodeAndOffset(Selection* aSelection,
                                 nsINode** aEndContainer,
