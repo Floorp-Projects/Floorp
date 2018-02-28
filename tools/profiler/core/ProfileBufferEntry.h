@@ -172,11 +172,11 @@ public:
   struct FrameKey {
     // This cannot be a std::string, as it is not memmove compatible, which
     // is used by nsHashTable
-    nsCString mLocation;
-    mozilla::Maybe<unsigned> mLine;
-    mozilla::Maybe<unsigned> mCategory;
-    mozilla::Maybe<JITAddress> mJITAddress;
-    mozilla::Maybe<uint32_t> mJITDepth;
+    const nsCString mLocation;
+    const mozilla::Maybe<unsigned> mLine;
+    const mozilla::Maybe<unsigned> mCategory;
+    const mozilla::Maybe<JITAddress> mJITAddress;
+    const mozilla::Maybe<uint32_t> mJITDepth;
 
     explicit FrameKey(const char* aLocation)
      : mLocation(aLocation)
