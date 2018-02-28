@@ -290,10 +290,10 @@ NS_INTERFACE_MAP_BEGIN(nsBufferedInputStream)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIInputStream, nsIBufferedInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIBufferedInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIStreamBufferAccess)
-    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream, IsIPCSerializable())
-    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAsyncInputStream, IsAsyncInputStream())
-    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIInputStreamCallback, IsAsyncInputStream())
-    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICloneableInputStream, IsCloneableInputStream())
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream, mIsIPCSerializable)
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAsyncInputStream, mIsAsyncInputStream)
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIInputStreamCallback, mIsAsyncInputStream)
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICloneableInputStream, mIsCloneableInputStream)
     NS_IMPL_QUERY_CLASSINFO(nsBufferedInputStream)
 NS_INTERFACE_MAP_END_INHERITING(nsBufferedStream)
 
@@ -302,6 +302,13 @@ NS_IMPL_CI_INTERFACE_GETTER(nsBufferedInputStream,
                             nsIBufferedInputStream,
                             nsISeekableStream,
                             nsIStreamBufferAccess)
+
+nsBufferedInputStream::nsBufferedInputStream()
+   : nsBufferedStream()
+   , mIsIPCSerializable(true)
+   , mIsAsyncInputStream(false)
+   , mIsCloneableInputStream(false)
+{}
 
 nsresult
 nsBufferedInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -321,7 +328,25 @@ nsBufferedInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult
 NS_IMETHODIMP
 nsBufferedInputStream::Init(nsIInputStream* stream, uint32_t bufferSize)
 {
-    return nsBufferedStream::Init(stream, bufferSize);
+    nsresult rv = nsBufferedStream::Init(stream, bufferSize);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    {
+        nsCOMPtr<nsIIPCSerializableInputStream> stream = do_QueryInterface(mStream);
+        mIsIPCSerializable = !!stream;
+    }
+
+    {
+        nsCOMPtr<nsIAsyncInputStream> stream = do_QueryInterface(mStream);
+        mIsAsyncInputStream = !!stream;
+    }
+
+    {
+        nsCOMPtr<nsICloneableInputStream> stream = do_QueryInterface(mStream);
+        mIsCloneableInputStream = !!stream;
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -622,31 +647,6 @@ nsBufferedInputStream::ExpectedSerializedLength()
         return stream->ExpectedSerializedLength();
     }
     return Nothing();
-}
-
-bool
-nsBufferedInputStream::IsIPCSerializable() const
-{
-    if (!mStream) {
-      return true;
-    }
-
-    nsCOMPtr<nsIIPCSerializableInputStream> stream = do_QueryInterface(mStream);
-    return !!stream;
-}
-
-bool
-nsBufferedInputStream::IsAsyncInputStream() const
-{
-    nsCOMPtr<nsIAsyncInputStream> stream = do_QueryInterface(mStream);
-    return !!stream;
-}
-
-bool
-nsBufferedInputStream::IsCloneableInputStream() const
-{
-    nsCOMPtr<nsICloneableInputStream> stream = do_QueryInterface(mStream);
-    return !!stream;
 }
 
 NS_IMETHODIMP
