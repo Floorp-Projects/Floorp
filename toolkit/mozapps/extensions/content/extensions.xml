@@ -1930,10 +1930,10 @@
               var url = Cc["@mozilla.org/network/standard-url-mutator;1"]
                           .createInstance(Ci.nsIStandardURLMutator)
                           .init(Ci.nsIStandardURL.URLTYPE_STANDARD,
-                                        80, this.mInstall.sourceURI.spec,
-                                        null, null)
-                                  .finalize()
-                                  .QueryInterface(Ci.nsIURL);
+                                80, this.mInstall.sourceURI.spec,
+                                null, null)
+                          .finalize()
+                          .QueryInterface(Ci.nsIURL);
               this._name.value = url.fileName;
             }
           }

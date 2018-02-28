@@ -5,7 +5,7 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var ioService = Cc["@mozilla.org/network/io-service;1"]
-                           .getService(Ci.nsIIOService);
+                  .getService(Ci.nsIIOService);
 
 XPCOMUtils.defineLazyGetter(this, "uri", function() {
     return ioService.newURI("http://localhost:" +

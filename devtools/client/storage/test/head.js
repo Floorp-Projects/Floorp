@@ -945,7 +945,7 @@ function setPermission(url, permission) {
   Cc["@mozilla.org/permissionmanager;1"]
     .getService(nsIPermissionManager)
     .addFromPrincipal(principal, permission,
-                              nsIPermissionManager.ALLOW_ACTION);
+                      nsIPermissionManager.ALLOW_ACTION);
 }
 
 function toggleSidebar() {
