@@ -1179,6 +1179,11 @@ toolbarpaletteitem[place="menu-panel"] > .toolbaritem-combined-buttons > toolbar
   max-width: calc(@menuPanelButtonWidth@ - 1px);
 }
 
+.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton[disabled] {
+  /* Override toolbarbutton.css which sets the color to GrayText */
+  color: inherit;
+}
+
 #main-window:not([customizing]) .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton[disabled] > .toolbarbutton-icon {
   opacity: .25;
 }
