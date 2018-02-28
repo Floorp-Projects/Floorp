@@ -124,7 +124,6 @@ void
 FlattenedChildIterator::Init(bool aIgnoreXBL)
 {
   if (aIgnoreXBL) {
-    mXBLInvolved = Some(false);
     return;
   }
 
@@ -133,7 +132,7 @@ FlattenedChildIterator::Init(bool aIgnoreXBL)
   if (mParent->IsElement()) {
     if (ShadowRoot* shadow = mParent->AsElement()->GetShadowRoot()) {
       mParent = shadow;
-      mXBLInvolved = Some(true);
+      mXBLInvolved = true;
       return;
     }
   }
@@ -144,31 +143,25 @@ FlattenedChildIterator::Init(bool aIgnoreXBL)
   if (binding) {
     MOZ_ASSERT(binding->GetAnonymousContent());
     mParent = binding->GetAnonymousContent();
-    mXBLInvolved = Some(true);
-  }
-}
-
-bool
-FlattenedChildIterator::ComputeWhetherXBLIsInvolved() const
-{
-  MOZ_ASSERT(mXBLInvolved.isNothing());
-  // We set mXBLInvolved to true if either the node we're iterating has a
-  // binding with content attached to it (in which case it is handled in Init),
-  // or the node is generated XBL content and has an <xbl:children> child.
-  if (!mParent->GetBindingParent()) {
-    return false;
+    mXBLInvolved = true;
   }
 
-  for (nsIContent* child = mParent->GetFirstChild();
-       child;
-       child = child->GetNextSibling()) {
-    if (child->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
-      MOZ_ASSERT(child->GetBindingParent());
-      return true;
+  // We set mXBLInvolved to true if either:
+  // - The node we're iterating has a binding with content attached to it.
+  // - The node is generated XBL content and has an <xbl:children> child.
+  //
+  // FIXME(emilio): This is very slow :(
+  if (!mXBLInvolved && mParent->GetBindingParent()) {
+    for (nsIContent* child = mParent->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
+      if (child->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
+        MOZ_ASSERT(child->GetBindingParent());
+        mXBLInvolved = true;
+        break;
+      }
     }
   }
-
-  return false;
 }
 
 bool
