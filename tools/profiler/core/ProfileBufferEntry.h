@@ -183,6 +183,14 @@ public:
     {
     }
 
+    FrameKey(const char* aLocation, const mozilla::Maybe<unsigned>& aLine,
+             const mozilla::Maybe<unsigned>& aCategory)
+     : mLocation(aLocation)
+     , mLine(aLine)
+     , mCategory(aCategory)
+    {
+    }
+
     FrameKey(const JITAddress& aJITAddress, uint32_t aJITDepth)
      : mJITAddress(mozilla::Some(aJITAddress))
      , mJITDepth(mozilla::Some(aJITDepth))
