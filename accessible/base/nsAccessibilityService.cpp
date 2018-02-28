@@ -1472,7 +1472,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 {
   nsAutoString role;
   nsCoreUtils::XBLBindingRole(aContent, role);
-  if (role.IsEmpty() || role.EqualsLiteral("none"))
+  if (role.IsEmpty())
     return nullptr;
 
   RefPtr<Accessible> accessible;
