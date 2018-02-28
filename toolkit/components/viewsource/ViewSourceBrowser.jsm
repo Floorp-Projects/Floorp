@@ -73,7 +73,6 @@ ViewSourceBrowser.prototype = {
       this.mm.addMessageListener(msgName, this);
     });
 
-    // If we have a known <browser> already, load the frame script here.
     this.loadFrameScript();
   },
 
@@ -91,6 +90,12 @@ ViewSourceBrowser.prototype = {
    * For a new browser we've not seen before, load the frame script.
    */
   loadFrameScript() {
+    // Check for a browser first. There won't be one for the window case
+    // (still used by other applications like Thunderbird), as the element
+    // does not exist until the XUL document loads.
+    if (!this.browser) {
+      return;
+    }
     if (!gKnownBrowsers.has(this.browser)) {
       gKnownBrowsers.add(this.browser);
       this.mm.loadFrameScript(FRAME_SCRIPT, false);

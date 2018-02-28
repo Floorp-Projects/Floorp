@@ -351,7 +351,7 @@ _hb_rename_font (hb_blob_t *blob, wchar_t *new_name)
    * full, PS. All of them point to the same name data with our unique name.
    */
 
-  blob = OT::Sanitizer<OT::OpenTypeFontFile>::sanitize (blob);
+  blob = OT::Sanitizer<OT::OpenTypeFontFile>().sanitize (blob);
 
   unsigned int length, new_length, name_str_len;
   const char *orig_sfnt_data = hb_blob_get_data (blob, &length);

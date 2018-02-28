@@ -72,7 +72,7 @@ protected:
 
 
 public:
-    class Mutator
+    class Mutator final
         : public nsIURIMutator
         , public BaseURIMutator<nsSimpleNestedURI>
     {

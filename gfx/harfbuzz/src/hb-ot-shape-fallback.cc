@@ -442,10 +442,10 @@ _hb_ot_shape_fallback_kern (const hb_ot_shape_plan_t *plan,
 {
   if (!plan->has_kern) return;
 
-  OT::hb_apply_context_t c (1, font, buffer);
+  OT::hb_ot_apply_context_t c (1, font, buffer);
   c.set_lookup_mask (plan->kern_mask);
   c.set_lookup_props (OT::LookupFlag::IgnoreMarks);
-  OT::hb_apply_context_t::skipping_iterator_t &skippy_iter = c.iter_input;
+  OT::hb_ot_apply_context_t::skipping_iterator_t &skippy_iter = c.iter_input;
   skippy_iter.init (&c);
 
   unsigned int count = buffer->len;
@@ -473,6 +473,7 @@ _hb_ot_shape_fallback_kern (const hb_ot_shape_plan_t *plan,
       pos[idx].x_advance += kern1;
       pos[skippy_iter.idx].x_advance += kern2;
       pos[skippy_iter.idx].x_offset += kern2;
+      buffer->unsafe_to_break (idx, skippy_iter.idx + 1);
     }
 
     if (y_kern)
@@ -482,6 +483,7 @@ _hb_ot_shape_fallback_kern (const hb_ot_shape_plan_t *plan,
       pos[idx].y_advance += kern1;
       pos[skippy_iter.idx].y_advance += kern2;
       pos[skippy_iter.idx].y_offset += kern2;
+      buffer->unsafe_to_break (idx, skippy_iter.idx + 1);
     }
 
     idx = skippy_iter.idx;

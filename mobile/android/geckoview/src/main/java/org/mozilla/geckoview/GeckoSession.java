@@ -252,11 +252,19 @@ public class GeckoSession extends LayerSession
                             GeckoSession.this, message.getStringArray("perms"),
                             new PermissionCallback("android", callback));
                 } else if ("GeckoView:ContentPermission".equals(event)) {
-                    final String type = message.getString("perm");
+                    final String typeString = message.getString("perm");
+                    final int type;
+                    if ("geolocation".equals(typeString)) {
+                        type = PermissionDelegate.PERMISSION_GEOLOCATION;
+                    } else if ("desktop_notification".equals(typeString)) {
+                        type = PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION;
+                    } else {
+                        throw new IllegalArgumentException("Unknown permission request: " + typeString);
+                    }
                     listener.requestContentPermission(
                             GeckoSession.this, message.getString("uri"),
                             type, message.getString("access"),
-                            new PermissionCallback(type, callback));
+                            new PermissionCallback(typeString, callback));
                 } else if ("GeckoView:MediaPermission".equals(event)) {
                     GeckoBundle[] videoBundles = message.getBundleArray("video");
                     GeckoBundle[] audioBundles = message.getBundleArray("audio");
@@ -1646,12 +1654,7 @@ public class GeckoSession extends LayerSession
          * @param session GeckoSession that triggered the prompt
          * @param title Title for the prompt dialog.
          * @param msg Message for the prompt dialog.
-         * @param options Bundle containing options for the prompt with keys,
-         *                "flags": int, bit field of AUTH_FLAG_* flags;
-         *                "uri": String, URI for the auth request or null if unknown;
-         *                "level": int, one of AUTH_LEVEL_* indicating level of encryption;
-         *                "username": String, initial username or null if password-only;
-         *                "password": String, intiial password;
+         * @param options AuthenticationOptions containing options for the prompt
          * @param callback Callback interface.
          */
         void promptForAuth(GeckoSession session, String title, String msg,
@@ -1779,18 +1782,7 @@ public class GeckoSession extends LayerSession
          * @param title Title for the prompt dialog, or null for no title.
          * @param msg Message for the prompt dialog, or null for no message.
          * @param type One of CHOICE_TYPE_* indicating the type of prompt.
-         * @param choices Array of bundles each representing an item or group, with keys,
-         *                "disabled": boolean, true if the item should not be selectable;
-         *                "icon": String, URI of the item icon or null if none
-         *                        (only valid for menus);
-         *                "id": String, ID of the item or group;
-         *                "items": Choice[], array of sub-items in a group or null
-         *                         if not a group.
-         *                "label": String, label for displaying the item or group;
-         *                "selected": boolean, true if the item should be pre-selected
-         *                            (pre-checked for menu items);
-         *                "separator": boolean, true if the item should be a menu separator
-         *                             (only valid for menus);
+         * @param choices Array of Choices each representing an item or group.
          * @param callback Callback interface.
          */
         void promptForChoice(GeckoSession session, String title, String msg, int type,
@@ -1956,6 +1948,18 @@ public class GeckoSession extends LayerSession
      **/
     public interface PermissionDelegate {
         /**
+         * Permission for using the geolocation API.
+         * See: https://developer.mozilla.org/en-US/docs/Web/API/Geolocation
+         */
+        public static final int PERMISSION_GEOLOCATION = 0;
+
+        /**
+         * Permission for using the notifications API.
+         * See: https://developer.mozilla.org/en-US/docs/Web/API/notification
+         */
+        public static final int PERMISSION_DESKTOP_NOTIFICATION = 1;
+
+        /**
          * Callback interface for notifying the result of a permission request.
          */
         interface Callback {
@@ -1992,12 +1996,12 @@ public class GeckoSession extends LayerSession
          * @param session GeckoSession instance requesting the permission.
          * @param uri The URI of the content requesting the permission.
          * @param type The type of the requested permission; possible values are,
-         *             "geolocation": permission for using the geolocation API
-         *             "desktop-notification": permission for using the notifications API
+         *             PERMISSION_GEOLOCATION
+         *             PERMISSION_DESKTOP_NOTIFICATION
          * @param access Not used.
          * @param callback Callback interface.
          */
-        void requestContentPermission(GeckoSession session, String uri, String type,
+        void requestContentPermission(GeckoSession session, String uri, int type,
                                       String access, Callback callback);
 
         class MediaSource {

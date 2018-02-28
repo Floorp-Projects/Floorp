@@ -500,6 +500,9 @@ struct JSContext : public JS::RootingContext,
     // GCHelperState.
     js::ThreadLocalData<bool> gcHelperStateThread;
 
+    // Whether this thread is currently manipulating possibly-gray GC things.
+    js::ThreadLocalData<size_t> isTouchingGrayThings;
+
     js::ThreadLocalData<size_t> noGCOrAllocationCheck;
     js::ThreadLocalData<size_t> noNurseryAllocationCheck;
 

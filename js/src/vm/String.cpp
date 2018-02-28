@@ -1508,6 +1508,11 @@ NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n, const JSStrin
         return str;
     }
 
+    if (JSThinInlineString::lengthFits<Latin1Char>(n) && CanStoreCharsAsLatin1(s, n)) {
+        *allocatedExternal = false;
+        return NewInlineStringDeflated<AllowGC::CanGC>(cx, mozilla::Range<const char16_t>(s, n));
+    }
+
     ExternalStringCache& cache = cx->zone()->externalStringCache();
     if (JSString* str = cache.lookup(s, n)) {
         *allocatedExternal = false;

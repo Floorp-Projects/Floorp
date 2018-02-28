@@ -53,7 +53,7 @@ private:
   nsAutoCStringN<NSID_LENGTH> mPath;
 
 public:
-  class Mutator
+  class Mutator final
       : public nsIURIMutator
       , public BaseURIMutator<NullPrincipalURI>
   {
