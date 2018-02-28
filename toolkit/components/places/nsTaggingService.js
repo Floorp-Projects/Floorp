@@ -462,210 +462,75 @@ TaggingService.prototype = {
   ])
 };
 
-
-function TagAutoCompleteResult(searchString, searchResult,
-                               defaultIndex, errorDescription,
-                               results, comments) {
-  this._searchString = searchString;
-  this._searchResult = searchResult;
-  this._defaultIndex = defaultIndex;
-  this._errorDescription = errorDescription;
-  this._results = results;
-  this._comments = comments;
-}
-
-TagAutoCompleteResult.prototype = {
-
-  /**
-   * The original search string
-   */
-  get searchString() {
-    return this._searchString;
-  },
-
-  /**
-   * The result code of this result object, either:
-   *         RESULT_IGNORED   (invalid searchString)
-   *         RESULT_FAILURE   (failure)
-   *         RESULT_NOMATCH   (no matches found)
-   *         RESULT_SUCCESS   (matches found)
-   */
-  get searchResult() {
-    return this._searchResult;
-  },
-
-  /**
-   * Index of the default item that should be entered if none is selected
-   */
-  get defaultIndex() {
-    return this._defaultIndex;
-  },
-
-  /**
-   * A string describing the cause of a search failure
-   */
-  get errorDescription() {
-    return this._errorDescription;
-  },
-
-  /**
-   * The number of matches
-   */
-  get matchCount() {
-    return this._results.length;
-  },
-
-  /**
-   * Get the value of the result at the given index
-   */
-  getValueAt: function PTACR_getValueAt(index) {
-    return this._results[index];
-  },
-
-  getLabelAt: function PTACR_getLabelAt(index) {
-    return this.getValueAt(index);
-  },
-
-  /**
-   * Get the comment of the result at the given index
-   */
-  getCommentAt: function PTACR_getCommentAt(index) {
-    return this._comments[index];
-  },
-
-  /**
-   * Get the style hint for the result at the given index
-   */
-  getStyleAt: function PTACR_getStyleAt(index) {
-    return null;
-  },
-
-  /**
-   * Get the image for the result at the given index
-   */
-  getImageAt: function PTACR_getImageAt(index) {
-    return null;
-  },
-
-  /**
-   * Get the image for the result at the given index
-   */
-  getFinalCompleteValueAt: function PTACR_getFinalCompleteValueAt(index) {
-    return this.getValueAt(index);
-  },
-
-  /**
-   * Remove the value at the given index from the autocomplete results.
-   * If removeFromDb is set to true, the value should be removed from
-   * persistent storage as well.
-   */
-  removeValueAt: function PTACR_removeValueAt(index, removeFromDb) {
-    this._results.splice(index, 1);
-    this._comments.splice(index, 1);
-  },
-
-  // nsISupports
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIAutoCompleteResult
-  ])
-};
-
 // Implements nsIAutoCompleteSearch
 function TagAutoCompleteSearch() {
-  XPCOMUtils.defineLazyServiceGetter(this, "tagging",
-                                     "@mozilla.org/browser/tagging-service;1",
-                                     "nsITaggingService");
 }
 
 TagAutoCompleteSearch.prototype = {
   _stopped: false,
 
   /*
-   * Search for a given string and notify a listener (either synchronously
-   * or asynchronously) of the result
+   * Search for a given string and notify a listener of the result.
    *
    * @param searchString - The string to search for
    * @param searchParam - An extra parameter
    * @param previousResult - A previous result to use for faster searching
    * @param listener - A listener to notify when the search is complete
    */
-  startSearch: function PTACS_startSearch(searchString, searchParam, result, listener) {
-    var searchResults = this.tagging.allTags;
-    var results = [];
-    var comments = [];
+  startSearch(searchString, searchParam, previousResult, listener) {
+    let searchResults = PlacesUtils.tagging.allTags;
     this._stopped = false;
 
     // only search on characters for the last tag
-    var index = Math.max(searchString.lastIndexOf(","),
-      searchString.lastIndexOf(";"));
-    var before = "";
+    let index = Math.max(searchString.lastIndexOf(","),
+                         searchString.lastIndexOf(";"));
+    let before = "";
     if (index != -1) {
       before = searchString.slice(0, index + 1);
       searchString = searchString.slice(index + 1);
       // skip past whitespace
       var m = searchString.match(/\s+/);
       if (m) {
-         before += m[0];
-         searchString = searchString.slice(m[0].length);
+        before += m[0];
+        searchString = searchString.slice(m[0].length);
       }
     }
 
+    // Create a new result to add eventual matches.  Note we need a result
+    // regardless having matches.
+    let result = Cc["@mozilla.org/autocomplete/simple-result;1"]
+                   .createInstance(Ci.nsIAutoCompleteSimpleResult);
+    result.setSearchString(searchString);
+
+    let count = 0;
     if (!searchString.length) {
-      var newResult = new TagAutoCompleteResult(searchString,
-        Ci.nsIAutoCompleteResult.RESULT_NOMATCH, 0, "", results, comments);
-      listener.onSearchResult(self, newResult);
+      this.notifyResult(result, count, listener, false);
       return;
     }
 
-    var self = this;
-    // generator: if yields true, not done
-    function* doSearch() {
-      var i = 0;
-      while (i < searchResults.length) {
-        if (self._stopped)
+    // Chunk the search results via a generator.
+    let gen = (function* () {
+      for (let i = 0; i < searchResults.length; ++i) {
+        if (this._stopped)
           yield false;
-        // for each match, prepend what the user has typed so far
-        if (searchResults[i].toLowerCase()
-                            .indexOf(searchString.toLowerCase()) == 0 &&
-            !comments.includes(searchResults[i])) {
-          results.push(before + searchResults[i]);
-          comments.push(searchResults[i]);
+
+        if (searchResults[i].toLowerCase().startsWith(searchString.toLowerCase())) {
+          // For each match, prepend what the user has typed so far.
+          count++;
+          result.appendMatch(before + searchResults[i], searchResults[i]);
         }
 
-        ++i;
-
-        /* TODO: bug 481451
-         * For each yield we pass a new result to the autocomplete
-         * listener. The listener appends instead of replacing previous results,
-         * causing invalid matchCount values.
-         *
-         * As a workaround, all tags are searched through in a single batch,
-         * making this synchronous until the above issue is fixed.
-         */
-
-        /*
-        // 100 loops per yield
-        if ((i % 100) == 0) {
-          var newResult = new TagAutoCompleteResult(searchString,
-            Ci.nsIAutoCompleteResult.RESULT_SUCCESS_ONGOING, 0, "", results, comments);
-          listener.onSearchResult(self, newResult);
+        // In case of many tags, notify once every 50 loops.
+        if ((i % 10) == 0) {
+          this.notifyResult(result, count, listener, true);
           yield true;
         }
-        */
       }
-
-      let searchResult = results.length > 0 ?
-                           Ci.nsIAutoCompleteResult.RESULT_SUCCESS :
-                           Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
-      var newResult = new TagAutoCompleteResult(searchString, searchResult, 0,
-                                                "", results, comments);
-      listener.onSearchResult(self, newResult);
       yield false;
-    }
+    }.bind(this))();
 
-    // chunk the search results via the generator
-    var gen = doSearch();
     while (gen.next().value);
+    this.notifyResult(result, count, listener, false);
   },
 
   /**
@@ -675,12 +540,17 @@ TagAutoCompleteSearch.prototype = {
     this._stopped = true;
   },
 
-  // nsISupports
+  notifyResult(result, count, listener, searchOngoing) {
+    let resultCode = count ? "RESULT_SUCCESS" : "RESULT_NOMATCH";
+    if (searchOngoing) {
+      resultCode += "_ONGOING";
+    }
+    result.setSearchResult(Ci.nsIAutoCompleteResult[resultCode]);
+    listener.onSearchResult(this, result);
+  },
 
   classID: Components.ID("{1dcc23b0-d4cb-11dc-9ad6-479d56d89593}"),
-
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(TagAutoCompleteSearch),
-
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIAutoCompleteSearch
   ])
