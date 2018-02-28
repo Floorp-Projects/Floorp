@@ -181,7 +181,6 @@ public:
     explicit FrameKey(const char* aLocation)
      : mLocation(aLocation)
     {
-      mHash = Hash();
     }
 
     FrameKey(const FrameKey& aToCopy)
@@ -191,21 +190,16 @@ public:
      , mJITAddress(aToCopy.mJITAddress)
      , mJITDepth(aToCopy.mJITDepth)
     {
-      mHash = Hash();
     }
 
     FrameKey(const JITAddress& aJITAddress, uint32_t aJITDepth)
      : mJITAddress(mozilla::Some(aJITAddress))
      , mJITDepth(mozilla::Some(aJITDepth))
     {
-      mHash = Hash();
     }
 
     uint32_t Hash() const;
     bool operator==(const FrameKey& aOther) const;
-
-  private:
-    uint32_t mHash;
   };
 
   struct StackKey {
