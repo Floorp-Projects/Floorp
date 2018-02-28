@@ -40,12 +40,12 @@ write_secret_to_file('key_password', data, key='keyPassword')
 build_output_path = os.path.join(os.path.dirname(__file__), '../../app/build/outputs/apk')
 
 # Run zipalign
-for apk in glob.glob(build_output_path + "/*-unsigned.apk"):
+for apk in glob.glob(build_output_path + "/*/*/*-unsigned.apk"):
 	split = os.path.splitext(apk)
 	print subprocess.check_output(["zipalign", "-f", "-v", "-p", "4", apk, split[0] + "-aligned" + split[1]])
 
 # Sign APKs
-for apk in glob.glob(build_output_path + "/*-aligned.apk"):
+for apk in glob.glob(build_output_path + "/*/*/*-aligned.apk"):
 	##	"for apk in %s/*-aligned.apk;do     -v \"$apk\";done" % (build_output_path),
 	print "Signing", apk
 	print subprocess.check_output([
@@ -64,7 +64,7 @@ if not os.path.exists(artifacts_path):
     os.makedirs(artifacts_path)
 
 # Verify signature and move APK to artifact path
-for apk in glob.glob(build_output_path + "/*-signed-*.apk"):
+for apk in glob.glob(build_output_path + "/*/*/*-signed-*.apk"):
 	print "Verifying", apk
 	print subprocess.check_output(['apksigner', 'verify', apk])
 
