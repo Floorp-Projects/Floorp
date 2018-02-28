@@ -44,6 +44,6 @@ add_task(async function test_engineUpdate() {
     // set last update to 8 days ago, since the default interval is 7, then
     // trigger an update
     engine.wrappedJSObject.setAttr("updateexpir", Date.now() - (ONE_DAY_IN_MS * 8));
-    Services.search.QueryInterface(Components.interfaces.nsITimerCallback).notify(null);
+    Services.search.QueryInterface(Ci.nsITimerCallback).notify(null);
   });
 });

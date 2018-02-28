@@ -11,12 +11,12 @@
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                    .getService(Components.interfaces.nsIIOService);
-var pps = Components.classes["@mozilla.org/network/protocol-proxy-service;1"]
-                    .getService();
-var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                     .getService(Components.interfaces.nsIPrefBranch);
+var ios = Cc["@mozilla.org/network/io-service;1"]
+            .getService(Ci.nsIIOService);
+var pps = Cc["@mozilla.org/network/protocol-proxy-service;1"]
+            .getService();
+var prefs = Cc["@mozilla.org/preferences-service;1"]
+                     .getService(Ci.nsIPrefBranch);
 
 /**
  * Test nsIProtocolHandler that allows proxying, but doesn't allow HTTP
@@ -26,28 +26,28 @@ function TestProtocolHandler() {
 }
 TestProtocolHandler.prototype = {
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIProtocolHandler) ||
-        iid.equals(Components.interfaces.nsISupports))
+    if (iid.equals(Ci.nsIProtocolHandler) ||
+        iid.equals(Ci.nsISupports))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
   scheme: "moz-test",
   defaultPort: -1,
-  protocolFlags: Components.interfaces.nsIProtocolHandler.URI_NOAUTH |
-                 Components.interfaces.nsIProtocolHandler.URI_NORELATIVE |
-                 Components.interfaces.nsIProtocolHandler.ALLOWS_PROXY |
-                 Components.interfaces.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD,
+  protocolFlags: Ci.nsIProtocolHandler.URI_NOAUTH |
+                 Ci.nsIProtocolHandler.URI_NORELATIVE |
+                 Ci.nsIProtocolHandler.ALLOWS_PROXY |
+                 Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD,
   newURI: function(spec, originCharset, baseURI) {
-    return Components.classes["@mozilla.org/network/simple-uri-mutator;1"]
-                     .createInstance(Components.interfaces.nsIURIMutator)
-                     .setSpec(spec)
-                     .finalize();
+    return Cc["@mozilla.org/network/simple-uri-mutator;1"]
+             .createInstance(Ci.nsIURIMutator)
+             .setSpec(spec)
+             .finalize();
   },
   newChannel2: function(uri, aLoadInfo) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
   newChannel: function(uri) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
   allowPort: function(port, scheme) {
     return true;
@@ -66,7 +66,7 @@ TestProtocolHandlerFactory.prototype = {
 
 function register_test_protocol_handler() {
   var reg = Components.manager.QueryInterface(
-      Components.interfaces.nsIComponentRegistrar);
+      Ci.nsIComponentRegistrar);
   reg.registerFactory(Components.ID("{4ea7dd3a-8cae-499c-9f18-e1de773ca25b}"),
                       "TestProtocolHandler",
                       "@mozilla.org/network/protocol;1?name=moz-test",
@@ -110,10 +110,10 @@ TestFilter.prototype = {
   _throwing: false,
 
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIProtocolProxyFilter) ||
-        iid.equals(Components.interfaces.nsISupports))
+    if (iid.equals(Ci.nsIProtocolProxyFilter) ||
+        iid.equals(Ci.nsISupports))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   applyFilter: function(pps, uri, pi, cb) {
@@ -141,10 +141,10 @@ resolveCallback.prototype = {
   nextFunction: null,
 
   QueryInterface : function (iid) {
-    const interfaces = [Components.interfaces.nsIProtocolProxyCallback,
-                        Components.interfaces.nsISupports];
+    const interfaces = [Ci.nsIProtocolProxyCallback,
+                        Ci.nsISupports];
     if (!interfaces.some( function(v) { return iid.equals(v) } ))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     return this;
   },
 

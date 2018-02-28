@@ -1,6 +1,6 @@
 function run_test() {
-  const ios = Components.classes["@mozilla.org/network/io-service;1"]
-                        .getService(Components.interfaces.nsIIOService);
+  const ios = Cc["@mozilla.org/network/io-service;1"]
+                .getService(Ci.nsIIOService);
 
   var base = ios.newURI("http://localhost/bug379034/index.html");
 

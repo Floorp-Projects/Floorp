@@ -37,7 +37,7 @@ add_task(async function setup() {
   // crashreporter/test/Makefile.in.  Assign its URL to MOZ_CRASHREPORTER_URL,
   // which CrashSubmit.jsm uses as a server override.
   let env = Cc["@mozilla.org/process/environment;1"].
-            getService(Components.interfaces.nsIEnvironment);
+            getService(Ci.nsIEnvironment);
   let noReport = env.get("MOZ_CRASHREPORTER_NO_REPORT");
   let serverURL = env.get("MOZ_CRASHREPORTER_URL");
   env.set("MOZ_CRASHREPORTER_NO_REPORT", "");
@@ -94,7 +94,7 @@ add_task(async function() {
       }, "Waited too long for plugin to activate.");
 
       try {
-        Components.utils.waiveXrays(plugin).crash();
+        Cu.waiveXrays(plugin).crash();
       } catch (e) {
       }
 
@@ -197,7 +197,7 @@ add_task(async function() {
       }, "Waited too long for plugin to activate.");
 
       try {
-        Components.utils.waiveXrays(plugin).crash();
+        Cu.waiveXrays(plugin).crash();
       } catch (e) {}
     });
 

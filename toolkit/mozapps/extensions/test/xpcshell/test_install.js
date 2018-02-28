@@ -186,7 +186,7 @@ function check_test_1(installSyncGUID) {
           // Ensure that extension bundle (or icon if unpacked) has updated
           // lastModifiedDate.
           let testURI = a1.getResourceURI(TEST_UNPACKED ? "icon.png" : "");
-          let testFile = testURI.QueryInterface(Components.interfaces.nsIFileURL).file;
+          let testFile = testURI.QueryInterface(Ci.nsIFileURL).file;
           Assert.ok(testFile.exists());
           difference = testFile.lastModifiedTime - Date.now();
           Assert.ok(Math.abs(difference) < MAX_TIME_DIFFERENCE);
@@ -226,7 +226,7 @@ function run_test_2() {
       install.addListener({
         onDownloadProgress() {
           executeSoon(function() {
-            Components.utils.forceGC();
+            Cu.forceGC();
           });
         }
       });
@@ -1322,7 +1322,7 @@ function run_test_26() {
         return;
 
       // Request should have been cancelled
-      Assert.equal(aChannel.status, Components.results.NS_BINDING_ABORTED);
+      Assert.equal(aChannel.status, Cr.NS_BINDING_ABORTED);
 
       observerService.removeObserver(this);
 

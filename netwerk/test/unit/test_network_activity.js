@@ -7,7 +7,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {
 var httpserver = new HttpServer();
 var results = [];
 var prefs = Cc["@mozilla.org/preferences-service;1"]
-               .getService(Components.interfaces.nsIPrefBranch);
+               .getService(Ci.nsIPrefBranch);
 
 
 function createChannel() {
@@ -15,7 +15,7 @@ function createChannel() {
         uri: "http://localhost:" + httpserver.identity.primaryPort + "/ok",
         loadUsingSystemPrincipal: true
     });
-    var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
+    var httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
     return httpChan;
 }
 

@@ -763,7 +763,7 @@ function createNewZipFile(zipName, data) {
                  createInstance(Ci.nsIStringInputStream);
     stream.setData(data, data.length);
     let zipWriter = Cc["@mozilla.org/zipwriter;1"].
-                    createInstance(Components.interfaces.nsIZipWriter);
+                    createInstance(Ci.nsIZipWriter);
     let zipFile = FileUtils.getFile("TmpD", [zipName]);
     if (zipFile.exists()) {
       zipFile.remove(false);

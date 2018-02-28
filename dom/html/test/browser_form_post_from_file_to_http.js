@@ -30,7 +30,7 @@ add_task(async function() {
                                                      TEST_HTTP_POST);
     await ContentTask.spawn(fileBrowser, [TEST_HTTP_POST, filePaths],
                                          ([actionUri, filePaths]) => {
-      Components.utils.importGlobalProperties(["File"]);
+      Cu.importGlobalProperties(["File"]);
 
       let doc = content.document;
       let form = doc.body.appendChild(doc.createElement("form"));

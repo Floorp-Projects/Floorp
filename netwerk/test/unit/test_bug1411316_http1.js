@@ -115,5 +115,5 @@ function setup_http_server()
 
 function run_test() {
   setup_http_server();
-  setupHttpRequests(Components.results.NS_ERROR_ABORT);
+  setupHttpRequests(Cr.NS_ERROR_ABORT);
 }

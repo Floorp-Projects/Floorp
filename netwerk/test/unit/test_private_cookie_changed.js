@@ -8,7 +8,7 @@ function makeChan(uri, isPrivate) {
   var chan = NetUtil.newChannel ({
     uri: uri.spec,
     loadUsingSystemPrincipal: true
-  }).QueryInterface(Components.interfaces.nsIHttpChannel);
+  }).QueryInterface(Ci.nsIHttpChannel);
 
   chan.QueryInterface(Ci.nsIPrivateBrowsingChannel).setPrivate(isPrivate);
   return chan;

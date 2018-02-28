@@ -16,9 +16,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=695639
 SimpleTest.waitForExplicitFinish();
 
 function RunTest() {
-  const CI = Components.interfaces;
-  const CC = Components.classes;
-
   var rng = document.createRange();
   var elem, fonts, f;
 

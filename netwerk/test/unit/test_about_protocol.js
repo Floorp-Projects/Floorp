@@ -22,11 +22,11 @@ var unsafeAboutModule = {
 var factory = {
   createInstance: function(aOuter, aIID) {
     if (aOuter)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
+      throw Cr.NS_ERROR_NO_AGGREGATION;
     return unsafeAboutModule.QueryInterface(aIID);
   },
   lockFactory: function(aLock) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
 };

@@ -28,5 +28,5 @@ add_task(async function test_watching_non_existing() {
 
     // Wait until the watcher informs us that there was an error.
   });
-  Assert.equal(error, Components.results.NS_ERROR_FILE_NOT_FOUND);
+  Assert.equal(error, Cr.NS_ERROR_FILE_NOT_FOUND);
 });

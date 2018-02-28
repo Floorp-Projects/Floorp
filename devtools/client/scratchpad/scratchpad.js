@@ -1082,14 +1082,14 @@ var Scratchpad = {
     let writePromise = OS.File.writeAtomic(aFile.path, buffer, {tmpPath: aFile.path + ".tmp"});
     writePromise.then(value => {
       if (aCallback) {
-        aCallback.call(this, Components.results.NS_OK);
+        aCallback.call(this, Cr.NS_OK);
       }
     }, reason => {
       if (!aSilentError) {
         window.alert(this.strings.GetStringFromName("saveFile.failed"));
       }
       if (aCallback) {
-        aCallback.call(this, Components.results.NS_ERROR_UNEXPECTED);
+        aCallback.call(this, Cr.NS_ERROR_UNEXPECTED);
       }
     });
 
@@ -1234,8 +1234,8 @@ var Scratchpad = {
           if (aFile) {
             file = aFile;
           } else {
-            file = Components.classes["@mozilla.org/file/local;1"].
-                   createInstance(Components.interfaces.nsIFile);
+            file = Cc["@mozilla.org/file/local;1"].
+                   createInstance(Ci.nsIFile);
             let filePath = this.getRecentFiles()[aIndex];
             file.initWithPath(filePath);
           }

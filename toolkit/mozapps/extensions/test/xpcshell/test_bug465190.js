@@ -5,7 +5,7 @@
 
 var installLocation = gProfD.clone();
 installLocation.append("baddir");
-installLocation.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o664);
+installLocation.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o664);
 
 var dirProvider2 = {
   getFile(prop, persistent) {
@@ -15,14 +15,14 @@ var dirProvider2 = {
     return null;
   },
   QueryInterface(iid) {
-    if (iid.equals(Components.interfaces.nsIDirectoryServiceProvider) ||
-        iid.equals(Components.interfaces.nsISupports)) {
+    if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
+        iid.equals(Ci.nsISupports)) {
       return this;
     }
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   }
 };
-Services.dirsvc.QueryInterface(Components.interfaces.nsIDirectoryService)
+Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)
                .registerProvider(dirProvider2);
 
 function run_test() {

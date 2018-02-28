@@ -64,7 +64,7 @@ const test = async function () {
 
 function evalCode() {
   // Start a new script
-  Components.utils.evalInSandbox(`
+  Cu.evalInSandbox(`
 var line0 = Error().lineNumber;
 function some_function() {
   // breakpoint is valid here -- it slides one line below (line0 + 2)

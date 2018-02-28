@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=715156
   function runTests() {
     var doc = document.getElementById("testFrame").contentDocument;
     var options = doc.createElement("select").options;
-    ok(Components.utils.isXrayWrapper(options), "should be an Xray wrapper");
+    ok(Cu.isXrayWrapper(options), "should be an Xray wrapper");
     var option = doc.createElement("option");
     options[4] = option;
     is(options.length, 5, "setting an indexed property through an Xray wrapper should work")

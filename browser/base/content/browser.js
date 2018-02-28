@@ -577,14 +577,14 @@ const gStoragePressureObserver = {
  *          subframes.
  */
 function findChildShell(aDocument, aDocShell, aSoughtURI) {
-  aDocShell.QueryInterface(Components.interfaces.nsIWebNavigation);
-  aDocShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-  var doc = aDocShell.getInterface(Components.interfaces.nsIDOMDocument);
+  aDocShell.QueryInterface(Ci.nsIWebNavigation);
+  aDocShell.QueryInterface(Ci.nsIInterfaceRequestor);
+  var doc = aDocShell.getInterface(Ci.nsIDOMDocument);
   if ((aDocument && doc == aDocument) ||
       (aSoughtURI && aSoughtURI.spec == aDocShell.currentURI.spec))
     return aDocShell;
 
-  var node = aDocShell.QueryInterface(Components.interfaces.nsIDocShellTreeItem);
+  var node = aDocShell.QueryInterface(Ci.nsIDocShellTreeItem);
   for (var i = 0; i < node.childCount; ++i) {
     var docShell = node.getChildAt(i);
     docShell = findChildShell(aDocument, docShell, aSoughtURI);
@@ -2528,8 +2528,8 @@ function readFromClipboard() {
 
   try {
     // Create transferable that will transfer the text.
-    var trans = Components.classes["@mozilla.org/widget/transferable;1"]
-                          .createInstance(Components.interfaces.nsITransferable);
+    var trans = Cc["@mozilla.org/widget/transferable;1"]
+                  .createInstance(Ci.nsITransferable);
     trans.init(getLoadContext());
 
     trans.addDataFlavor("text/unicode");
@@ -2545,7 +2545,7 @@ function readFromClipboard() {
     trans.getTransferData("text/unicode", data, dataLen);
 
     if (data) {
-      data = data.value.QueryInterface(Components.interfaces.nsISupportsString);
+      data = data.value.QueryInterface(Ci.nsISupportsString);
       url = data.data.substring(0, dataLen.value / 2);
     }
   } catch (ex) {
@@ -3041,7 +3041,7 @@ var BrowserOnClick = {
               params.location = location;
           }
         } catch (e) {
-          Components.utils.reportError("Couldn't get ssl_override pref: " + e);
+          Cu.reportError("Couldn't get ssl_override pref: " + e);
         }
 
         window.openDialog("chrome://pippki/content/exceptionDialog.xul",
@@ -3234,7 +3234,7 @@ function getDefaultHomePage() {
     if (url.includes("|"))
       url = url.split("|")[0];
   } catch (e) {
-    Components.utils.reportError("Couldn't get homepage pref: " + e);
+    Cu.reportError("Couldn't get homepage pref: " + e);
   }
   return url;
 }
@@ -4133,8 +4133,8 @@ function OpenBrowserWindow(options) {
   var telemetryObj = {};
   TelemetryStopwatch.start("FX_NEW_WINDOW_MS", telemetryObj);
 
-  var handler = Components.classes["@mozilla.org/browser/clh;1"]
-                          .getService(Components.interfaces.nsIBrowserHandler);
+  var handler = Cc["@mozilla.org/browser/clh;1"]
+                  .getService(Ci.nsIBrowserHandler);
   var defaultArgs = handler.defaultArgs;
   var wintype = document.documentElement.getAttribute("windowtype");
 
@@ -4561,7 +4561,7 @@ var XULBrowserWindow = {
 
           if (location.spec != "about:blank") {
             switch (aStatus) {
-              case Components.results.NS_ERROR_NET_TIMEOUT:
+              case Cr.NS_ERROR_NET_TIMEOUT:
                 msg = gNavigatorBundle.getString("nv_timeout");
                 break;
             }
@@ -4733,7 +4733,7 @@ var XULBrowserWindow = {
         gCrashReporter.annotateCrashReport("URL", uri.spec);
       } catch (ex) {
         // Don't make noise when the crash reporter is built but not enabled.
-        if (ex.result != Components.results.NS_ERROR_NOT_INITIALIZED) {
+        if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED) {
           throw ex;
         }
       }
@@ -4800,7 +4800,7 @@ var XULBrowserWindow = {
 
     CombinedStopReload.onTabSwitch();
 
-    var nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+    var nsIWebProgressListener = Ci.nsIWebProgressListener;
     var loadingDone = aStateFlags & nsIWebProgressListener.STATE_STOP;
     // use a pseudo-object instead of a (potentially nonexistent) channel for getting
     // a correct error message - and make sure that the UI is always either in
@@ -5746,7 +5746,7 @@ var gHomeButton = {
     var url;
     try {
       url = Services.prefs.getComplexValue(this.prefDomain,
-                                  Components.interfaces.nsIPrefLocalizedString).data;
+                                  Ci.nsIPrefLocalizedString).data;
     } catch (e) {
     }
 

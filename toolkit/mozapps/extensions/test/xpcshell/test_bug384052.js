@@ -20,7 +20,7 @@ var paramHandlerFactory = {
     if (iid.equals(AM_Ci.nsIFactory) || iid.equals(AM_Ci.nsISupports))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   createInstance(outer, iid) {

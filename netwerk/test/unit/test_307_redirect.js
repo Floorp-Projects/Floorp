@@ -76,7 +76,7 @@ function run_test()
   httpserver.start(-1);
 
   var prefs = Cc["@mozilla.org/preferences-service;1"]
-                .getService(Components.interfaces.nsIPrefBranch);
+                .getService(Ci.nsIPrefBranch);
   prefs.setBoolPref("network.http.prompt-temp-redirect", false);
 
   var chan = make_channel(noRedirectURI);

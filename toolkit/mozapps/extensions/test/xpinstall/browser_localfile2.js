@@ -2,8 +2,8 @@
 // Test whether an install fails if the url is a local file when requested from
 // web content
 add_task(async function test() {
-  var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                     .getService(Components.interfaces.nsIChromeRegistry);
+  var cr = Cc["@mozilla.org/chrome/chrome-registry;1"]
+             .getService(Ci.nsIChromeRegistry);
 
   var chromeroot = getChromeRoot(gTestPath);
   var xpipath = chromeroot + "amosigned.xpi";

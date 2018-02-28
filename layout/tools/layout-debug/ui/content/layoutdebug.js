@@ -6,9 +6,9 @@ var gBrowser;
 var gProgressListener;
 var gDebugger;
 
-const nsILayoutDebuggingTools = Components.interfaces.nsILayoutDebuggingTools;
-const nsIDocShell = Components.interfaces.nsIDocShell;
-const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+const nsILayoutDebuggingTools = Ci.nsILayoutDebuggingTools;
+const nsIDocShell = Ci.nsIDocShell;
+const nsIWebProgressListener = Ci.nsIWebProgressListener;
 
 const NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID = "@mozilla.org/layout-debug/layout-debuggingtools;1";
 
@@ -31,11 +31,11 @@ nsLDBBrowserContentListener.prototype = {
 
   QueryInterface : function(aIID)
     {
-      if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
-          aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
-          aIID.equals(Components.interfaces.nsISupports))
+      if (aIID.equals(Ci.nsIWebProgressListener) ||
+          aIID.equals(Ci.nsISupportsWeakReference) ||
+          aIID.equals(Ci.nsISupports))
         return this;
-      throw Components.results.NS_NOINTERFACE;
+      throw Cr.NS_NOINTERFACE;
     },
 
   // nsIWebProgressListener implementation
@@ -107,7 +107,7 @@ function OnLDBLoad()
   gProgressListener = new nsLDBBrowserContentListener();
   gBrowser.addProgressListener(gProgressListener);
 
-  gDebugger = Components.classes[NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID].
+  gDebugger = Cc[NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID].
                   createInstance(nsILayoutDebuggingTools);
 
   if (window.arguments && window.arguments[0])
@@ -153,8 +153,8 @@ function toggle(menuitem)
 
 function openFile()
 {
-  var nsIFilePicker = Components.interfaces.nsIFilePicker;
-  var fp = Components.classes["@mozilla.org/filepicker;1"]
+  var nsIFilePicker = Ci.nsIFilePicker;
+  var fp = Cc["@mozilla.org/filepicker;1"]
         .createInstance(nsIFilePicker);
   fp.init(window, "Select a File", nsIFilePicker.modeOpen);
   fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterAll);

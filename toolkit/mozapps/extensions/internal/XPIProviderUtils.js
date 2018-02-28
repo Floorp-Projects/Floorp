@@ -385,13 +385,13 @@ this.XPIDatabase = {
     try {
       let readTimer = AddonManagerPrivate.simpleTimer("XPIDB_syncRead_MS");
       logger.debug("Opening XPI database " + this.jsonFile.path);
-      fstream = Components.classes["@mozilla.org/network/file-input-stream;1"].
-              createInstance(Components.interfaces.nsIFileInputStream);
+      fstream = Cc["@mozilla.org/network/file-input-stream;1"].
+              createInstance(Ci.nsIFileInputStream);
       fstream.init(this.jsonFile, -1, 0, 0);
       let cstream = null;
       try {
-        cstream = Components.classes["@mozilla.org/intl/converter-input-stream;1"].
-                createInstance(Components.interfaces.nsIConverterInputStream);
+        cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].
+                createInstance(Ci.nsIConverterInputStream);
         cstream.init(fstream, "UTF-8", 0, 0);
 
         let str = {};

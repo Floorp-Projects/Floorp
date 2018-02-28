@@ -7,7 +7,7 @@ var listener = {
         iid.equals(Ci.nsIUnicharStreamLoaderObserver)) {
       return this;
     }
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
   onDetermineCharset : function onDetermineCharset(loader, context, data)
   {
@@ -19,7 +19,7 @@ var listener = {
       if (this.expect_failure)
         Assert.ok(!Components.isSuccessCode(status));
       else
-        Assert.equal(status, Components.results.NS_OK);
+        Assert.equal(status, Cr.NS_OK);
       Assert.equal(data, "");
       Assert.notEqual(loader.channel, null);
       tests[current_test++]();

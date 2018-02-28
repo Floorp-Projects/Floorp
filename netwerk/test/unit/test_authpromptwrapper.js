@@ -6,16 +6,16 @@
 // - Proxies
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const nsIAuthInformation = Components.interfaces.nsIAuthInformation;
-const nsIAuthPromptAdapterFactory = Components.interfaces.nsIAuthPromptAdapterFactory;
+const nsIAuthInformation = Ci.nsIAuthInformation;
+const nsIAuthPromptAdapterFactory = Ci.nsIAuthPromptAdapterFactory;
 
 function run_test() {
   const contractID = "@mozilla.org/network/authprompt-adapter-factory;1";
-  if (!(contractID in Components.classes)) {
+  if (!(contractID in Cc)) {
     print("No adapter factory found, skipping testing");
     return;
   }
-  var adapter = Components.classes[contractID].getService();
+  var adapter = Cc[contractID].getService();
   Assert.equal(adapter instanceof nsIAuthPromptAdapterFactory, true);
 
   // NOTE: xpconnect lets us get away with passing an empty object here
@@ -49,10 +49,10 @@ function run_test() {
     scheme: "http",
 
     QueryInterface: function authprompt_qi(iid) {
-      if (iid.equals(Components.interfaces.nsISupports) ||
-          iid.equals(Components.interfaces.nsIAuthPrompt))
+      if (iid.equals(Ci.nsISupports) ||
+          iid.equals(Ci.nsIAuthPrompt))
         return this;
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
     prompt: function ap1_prompt(title, text, realm, save, defaultText, result) {

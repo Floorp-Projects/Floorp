@@ -475,7 +475,7 @@
           while (aStartItem) {
             aStartItem = aStartItem.nextSibling;
             if (aStartItem && aStartItem instanceof
-                Components.interfaces.nsIDOMXULSelectControlItemElement &&
+                Ci.nsIDOMXULSelectControlItemElement &&
                 (!this._userSelecting || this._canUserSelect(aStartItem))) {
               --aDelta;
               if (aDelta == 0)
@@ -494,7 +494,7 @@
           while (aStartItem) {
             aStartItem = aStartItem.previousSibling;
             if (aStartItem && aStartItem instanceof
-                Components.interfaces.nsIDOMXULSelectControlItemElement &&
+                Ci.nsIDOMXULSelectControlItemElement &&
                 (!this._userSelecting || this._canUserSelect(aStartItem))) {
               --aDelta;
               if (aDelta == 0)
@@ -999,7 +999,7 @@
         <getter><![CDATA[
           var parent = this.parentNode;
           while (parent) {
-            if (parent instanceof Components.interfaces.nsIDOMXULSelectControlElement)
+            if (parent instanceof Ci.nsIDOMXULSelectControlElement)
               return parent;
             parent = parent.parentNode;
           }

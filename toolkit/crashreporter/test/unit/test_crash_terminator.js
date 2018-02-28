@@ -14,8 +14,8 @@ function setup_crash() {
   // Initialize the terminator
   // (normally, this is done through the manifest file, but xpcshell
   // doesn't take them into account).
-  let terminator = Components.classes["@mozilla.org/toolkit/shutdown-terminator;1"].
-    createInstance(Components.interfaces.nsIObserver);
+  let terminator = Cc["@mozilla.org/toolkit/shutdown-terminator;1"].
+    createInstance(Ci.nsIObserver);
   terminator.observe(null, "profile-after-change", null);
 
   // Inform the terminator that shutdown has started

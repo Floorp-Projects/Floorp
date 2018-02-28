@@ -354,7 +354,7 @@ var PlacesUIUtils = {
 
     if (!performed &&
         topUndoEntry != PlacesTransactions.topUndoEntry) {
-      PlacesTransactions.undo().catch(Components.utils.reportError);
+      PlacesTransactions.undo().catch(Cu.reportError);
     }
 
     return performed;

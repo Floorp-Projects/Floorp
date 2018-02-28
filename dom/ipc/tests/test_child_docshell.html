@@ -46,13 +46,13 @@ SpecialPowers.pushPrefEnv({'set':[
   });
   // Inject a frame script in the child process:
   mm.loadFrameScript('data:,new ' + function ContentScriptScope() {
-    var processType = Components.classes["@mozilla.org/xre/runtime;1"]
-                                .getService(Components.interfaces.nsIXULRuntime)
-                                .processType;
+    var processType = Cc["@mozilla.org/xre/runtime;1"]
+                        .getService(Ci.nsIXULRuntime)
+                        .processType;
     var chromeEventHandler = docShell.chromeEventHandler;
     sendAsyncMessage("chromeEventHandler", {
       processType: Services.appinfo.processType,
-      hasCorrectInterface: chromeEventHandler instanceof Components.interfaces.nsIDOMEventTarget
+      hasCorrectInterface: chromeEventHandler instanceof Ci.nsIDOMEventTarget
     });
 
     /*

@@ -403,7 +403,7 @@ var PlacesCommandHook = {
         description = docInfo.description;
         charset = aUrl ? null : aBrowser.characterSet;
       } catch (e) {
-        Components.utils.reportError(e);
+        Cu.reportError(e);
       }
 
       if (aShowEditUI && isNewBookmark) {
@@ -1531,7 +1531,7 @@ var BookmarkingUI = {
     let pendingUpdate = this._pendingUpdate = {};
 
     PlacesUtils.bookmarks.fetch({url: this._uri}, b => guids.add(b.guid), { concurrent: true })
-      .catch(Components.utils.reportError)
+      .catch(Cu.reportError)
       .then(() => {
          if (pendingUpdate != this._pendingUpdate) {
            return;
@@ -1554,7 +1554,7 @@ var BookmarkingUI = {
              PlacesUtils.bookmarks.addObserver(this);
              this._hasBookmarksObserver = true;
            } catch (ex) {
-             Components.utils.reportError("BookmarkingUI failed adding a bookmarks observer: " + ex);
+             Cu.reportError("BookmarkingUI failed adding a bookmarks observer: " + ex);
            }
          }
 

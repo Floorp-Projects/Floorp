@@ -8,7 +8,7 @@ function TestUtils() {}
 TestUtils.prototype = {
 
   /* Boilerplate */
-  QueryInterface: XPCOMUtils.generateQI([Components.interfaces["nsIXPCTestUtils"]]),
+  QueryInterface: XPCOMUtils.generateQI([Ci["nsIXPCTestUtils"]]),
   contractID: "@mozilla.org/js/xpc/test/js/TestUtils;1",
   classID: Components.ID("{e86573c4-a384-441a-8c92-7b99e8575b28}"),
   doubleWrapFunction(fun) { return fun }

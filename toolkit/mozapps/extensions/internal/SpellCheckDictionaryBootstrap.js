@@ -7,8 +7,8 @@
 var hunspell, dir;
 
 function startup(data) {
-  hunspell = Components.classes["@mozilla.org/spellchecker/engine;1"]
-                       .getService(Components.interfaces.mozISpellCheckingEngine);
+  hunspell = Cc["@mozilla.org/spellchecker/engine;1"]
+               .getService(Ci.mozISpellCheckingEngine);
   dir = data.installPath.clone();
   dir.append("dictionaries");
   hunspell.addDirectory(dir);

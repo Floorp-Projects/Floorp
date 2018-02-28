@@ -219,7 +219,7 @@ const mockSiteDataManager = {
       persisted: site.persisted,
       lastAccessed: site.lastAccessed,
     }));
-    onUsageResult({ result, resultCode: Components.results.NS_OK });
+    onUsageResult({ result, resultCode: Cr.NS_OK });
   },
 
   _removeQuotaUsage(site) {

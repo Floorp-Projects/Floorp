@@ -6,10 +6,10 @@ addMessageListener("file.open", function (e) {
                    .QueryInterface(Ci.nsIProperties)
                    .get("ProfD", Ci.nsIFile);
   testFile.append("ipc_fileReader_testing");
-  testFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o600);
+  testFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
-  var outStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
-                      .createInstance(Components.interfaces.nsIFileOutputStream);
+  var outStream = Cc["@mozilla.org/network/file-output-stream;1"]
+                      .createInstance(Ci.nsIFileOutputStream);
   outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
                  0666, 0);
 
@@ -28,10 +28,10 @@ addMessageListener("emptyfile.open", function (e) {
                    .QueryInterface(Ci.nsIProperties)
                    .get("ProfD", Ci.nsIFile);
   testFile.append("ipc_fileReader_testing");
-  testFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o600);
+  testFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
-  var outStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
-                      .createInstance(Components.interfaces.nsIFileOutputStream);
+  var outStream = Cc["@mozilla.org/network/file-output-stream;1"]
+                      .createInstance(Ci.nsIFileOutputStream);
   outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
                  0666, 0);
 

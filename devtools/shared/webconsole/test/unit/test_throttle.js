@@ -22,7 +22,7 @@ TestStreamListener.prototype = {
   },
 
   onDataAvailable: function (request, context, inputStream, offset, count) {
-    const sin = Components.classes["@mozilla.org/scriptableinputstream;1"]
+    const sin = Cc["@mozilla.org/scriptableinputstream;1"]
           .createInstance(nsIScriptableInputStream);
     sin.init(inputStream);
     this.data = sin.read(count);

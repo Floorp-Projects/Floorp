@@ -30,10 +30,10 @@
           }
 
           // We want to double-wrap the JS implemented interface, so that QI and instanceof works.
-          var ptr = Components.classes["@mozilla.org/supports-interface-pointer;1"]
-                              .createInstance(Components.interfaces.nsISupportsInterfacePointer);
+          var ptr = Cc["@mozilla.org/supports-interface-pointer;1"]
+                      .createInstance(Ci.nsISupportsInterfacePointer);
           ptr.data = this._securityUI;
-          return ptr.data.QueryInterface(Components.interfaces.nsISecureBrowserUI);
+          return ptr.data.QueryInterface(Ci.nsISecureBrowserUI);
         ]]></getter>
       </property>
 
@@ -374,7 +374,7 @@
             Services.tm.dispatchToMainThread(function() {});
           }
 
-          let timer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
+          let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
           timer.initWithCallback(timeout, kTimeout, timer.TYPE_ONE_SHOT);
 
           while (!finished && !timedOut) {
@@ -393,8 +393,8 @@
            * the <browser> element may not be initialized yet.
            */
 
-          this._remoteWebNavigation = Components.classes["@mozilla.org/remote-web-navigation;1"]
-                                                .createInstance(Components.interfaces.nsIWebNavigation);
+          this._remoteWebNavigation = Cc["@mozilla.org/remote-web-navigation;1"]
+                                        .createInstance(Ci.nsIWebNavigation);
           this._remoteWebNavigationImpl = this._remoteWebNavigation.wrappedJSObject;
           this._remoteWebNavigationImpl.swapBrowser(this);
 
@@ -534,15 +534,15 @@
             }
 
             case "DOMFullscreen:RequestExit": {
-              let windowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
+              let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                      .getInterface(Ci.nsIDOMWindowUtils);
               windowUtils.exitFullscreen();
               break;
             }
 
             case "DOMFullscreen:RequestRollback": {
-              let windowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
+              let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                      .getInterface(Ci.nsIDOMWindowUtils);
               windowUtils.remoteFrameFullscreenReverted();
               break;
             }
@@ -581,7 +581,7 @@
               this.messageManager.sendAsyncMessage("Browser:PurgeSessionHistory");
             } catch (ex) {
               // This can throw if the browser has started to go away.
-              if (ex.result != Components.results.NS_ERROR_NOT_INITIALIZED) {
+              if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED) {
                 throw ex;
               }
             }

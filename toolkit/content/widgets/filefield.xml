@@ -51,23 +51,23 @@
         <body>
         <![CDATA[
           if (/Win/.test(navigator.platform)) {
-            var lfw = aFile.QueryInterface(Components.interfaces.nsILocalFileWin);
+            var lfw = aFile.QueryInterface(Ci.nsILocalFileWin);
             try {
               return lfw.getVersionInfoField("FileDescription");
             } catch (e) {
               // fall through to the filename
             }
           } else if (/Mac/.test(navigator.platform)) {
-            var lfm = aFile.QueryInterface(Components.interfaces.nsILocalFileMac);
+            var lfm = aFile.QueryInterface(Ci.nsILocalFileMac);
             try {
               return lfm.bundleDisplayName;
             } catch (e) {
               // fall through to the file name
             }
           }
-          var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService(Components.interfaces.nsIIOService);
-          var url = ios.newFileURI(aFile).QueryInterface(Components.interfaces.nsIURL);
+          var ios = Cc["@mozilla.org/network/io-service;1"]
+                      .getService(Ci.nsIIOService);
+          var url = ios.newFileURI(aFile).QueryInterface(Ci.nsIURL);
           return url.fileName;
         ]]>
         </body>
@@ -79,10 +79,10 @@
         <![CDATA[
           if (!aFile)
             return "";
-          var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService(Components.interfaces.nsIIOService);
+          var ios = Cc["@mozilla.org/network/io-service;1"]
+                      .getService(Ci.nsIIOService);
           var fph = ios.getProtocolHandler("file")
-                       .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+                       .QueryInterface(Ci.nsIFileProtocolHandler);
           var urlspec = fph.getURLSpecFromFile(aFile);
           return "moz-icon://" + urlspec + "?size=16";
         ]]>

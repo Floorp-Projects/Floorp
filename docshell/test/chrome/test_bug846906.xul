@@ -17,23 +17,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=846906
   /** Test for Bug 846906 **/
   SimpleTest.waitForExplicitFinish();
 
-  var appShellService = Components.classes["@mozilla.org/appshell/appShellService;1"]
-                                  .getService(Components.interfaces.nsIAppShellService);
+  var appShellService = Cc["@mozilla.org/appshell/appShellService;1"]
+                          .getService(Ci.nsIAppShellService);
   ok(appShellService, "Should be able to get app shell service");
 
   var windowlessBrowser = appShellService.createWindowlessBrowser();
   ok(windowlessBrowser, "Should be able to create windowless browser");
 
-  ok(windowlessBrowser instanceof Components.interfaces.nsIWindowlessBrowser,
+  ok(windowlessBrowser instanceof Ci.nsIWindowlessBrowser,
      "Windowless browser should implement nsIWindowlessBrowser");
 
-  var webNavigation = windowlessBrowser.QueryInterface(Components.interfaces.nsIWebNavigation);
+  var webNavigation = windowlessBrowser.QueryInterface(Ci.nsIWebNavigation);
   ok(webNavigation, "Windowless browser should implement nsIWebNavigation");
 
-  var interfaceRequestor = windowlessBrowser.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+  var interfaceRequestor = windowlessBrowser.QueryInterface(Ci.nsIInterfaceRequestor);
   ok(interfaceRequestor, "Should be able to query interface requestor interface");
 
-  var docShell = interfaceRequestor.getInterface(Components.interfaces.nsIDocShell);
+  var docShell = interfaceRequestor.getInterface(Ci.nsIDocShell);
   ok(docShell, "Should be able to get doc shell interface");
 
   var document = webNavigation.document;
@@ -66,17 +66,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=846906
         // Once the browser is closed, nsIWebNavigation and
         // nsIInterfaceRequestor methods should no longer be accessible.
         try {
-          windowlessBrowser.getInterface(Components.interfaces.nsIDocShell);
+          windowlessBrowser.getInterface(Ci.nsIDocShell);
           ok(false);
         } catch (e) {
-          is(e.result, Components.results.NS_ERROR_NULL_POINTER);
+          is(e.result, Cr.NS_ERROR_NULL_POINTER);
         }
 
         try {
           windowlessBrowser.document;
           ok(false);
         } catch (e) {
-          is(e.result, Components.results.NS_ERROR_NULL_POINTER);
+          is(e.result, Cr.NS_ERROR_NULL_POINTER);
         }
 
         SimpleTest.finish();

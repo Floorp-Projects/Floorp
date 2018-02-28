@@ -1,5 +1,5 @@
 function run_test() {
-  if (!("@mozilla.org/toolkit/crash-reporter;1" in Components.classes)) {
+  if (!("@mozilla.org/toolkit/crash-reporter;1" in Cc)) {
     dump("INFO | test_crash_after_js_oom_reported.js | Can't test crashreporter in a non-libxul build.\n");
     return;
   }
@@ -11,9 +11,9 @@ function run_test() {
 
       // GC now to avoid having it happen randomly later, which would make the
       // test bogusly fail. See comment below.
-      Components.utils.forceGC();
+      Cu.forceGC();
 
-      Components.utils.getJSTestingFunctions().reportOutOfMemory();
+      Cu.getJSTestingFunctions().reportOutOfMemory();
     },
     function(mdump, extra) {
       Assert.equal(extra.TestingOOMCrash, "Yes");

@@ -5,8 +5,8 @@ function test() {
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
 
-  var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                     .getService(Components.interfaces.nsIChromeRegistry);
+  var cr = Cc["@mozilla.org/chrome/chrome-registry;1"]
+             .getService(Ci.nsIChromeRegistry);
 
   var chromeroot = extractChromeRoot(gTestPath);
   var xpipath = chromeroot + "unsigned.xpi";

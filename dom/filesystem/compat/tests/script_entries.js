@@ -8,7 +8,7 @@ addMessageListener("entries.open", function (e) {
               .QueryInterface(Ci.nsIProperties)
               .get('TmpD', Ci.nsIFile)
   tmpFile.append('file.txt');
-  tmpFile.createUnique(Components.interfaces.nsIFile.FILE_TYPE, 0o600);
+  tmpFile.createUnique(Ci.nsIFile.FILE_TYPE, 0o600);
 
   tmpDir = Cc["@mozilla.org/file/directory_service;1"]
               .getService(Ci.nsIDirectoryService)
@@ -16,23 +16,23 @@ addMessageListener("entries.open", function (e) {
               .get('TmpD', Ci.nsIFile)
 
   tmpDir.append('dir-test');
-  tmpDir.createUnique(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o700);
+  tmpDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
 
   var file1 = tmpDir.clone();
   file1.append('foo.txt');
-  file1.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o600);
+  file1.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
   var dir1 = tmpDir.clone();
   dir1.append('subdir');
-  dir1.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o700);
+  dir1.create(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
 
   var file2 = dir1.clone();
   file2.append('bar..txt'); // Note the double ..
-  file2.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o600);
+  file2.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
   var dir2 = dir1.clone();
   dir2.append('subsubdir');
-  dir2.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o700);
+  dir2.create(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
 
   File.createFromNsIFile(tmpFile).then(function(file) {
     sendAsyncMessage("entries.opened", {

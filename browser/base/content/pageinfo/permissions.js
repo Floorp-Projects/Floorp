@@ -22,7 +22,7 @@ gPermissions.push("plugins");
 var permissionObserver = {
   observe(aSubject, aTopic, aData) {
     if (aTopic == "perm-changed") {
-      var permission = aSubject.QueryInterface(Components.interfaces.nsIPermission);
+      var permission = aSubject.QueryInterface(Ci.nsIPermission);
       if (permission.matchesURI(gPermURI, true)) {
         if (gPermissions.indexOf(permission.type) > -1)
           initRow(permission.type);
@@ -210,7 +210,7 @@ function clearPluginPermissionTemplate() {
 
 function initPluginsRow() {
   let vulnerableLabel = document.getElementById("browserBundle").getString("pluginActivateVulnerable.label");
-  let pluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
+  let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 
   let permissionMap = new Map();
 

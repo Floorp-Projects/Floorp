@@ -319,12 +319,12 @@ var InstallConfirm = {
 var InstallConfirmFactory = {
   createInstance: function createInstance(outer, iid) {
     if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
+      throw Cr.NS_ERROR_NO_AGGREGATION;
     return InstallConfirm.QueryInterface(iid);
   }
 };
 
-var registrar = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 registrar.registerFactory(Components.ID("{f0863905-4dde-42e2-991c-2dc8209bc9ca}"),
                           "Fake Install Prompt",
                           "@mozilla.org/addons/web-install-prompt;1", InstallConfirmFactory);

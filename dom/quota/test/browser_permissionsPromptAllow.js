@@ -28,7 +28,7 @@ add_task(async function testPermissionAllow() {
   await waitForMessage(true, gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
-     Components.interfaces.nsIPermissionManager.ALLOW_ACTION,
+     Ci.nsIPermissionManager.ALLOW_ACTION,
      "Correct permission set");
   gBrowser.removeCurrentTab();
   unregisterAllPopupEventHandlers();
@@ -54,7 +54,7 @@ add_task(async function testNoPermissionPrompt() {
   await waitForMessage(true, gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
-     Components.interfaces.nsIPermissionManager.ALLOW_ACTION,
+     Ci.nsIPermissionManager.ALLOW_ACTION,
      "Correct permission set");
   gBrowser.removeCurrentTab();
   unregisterAllPopupEventHandlers();

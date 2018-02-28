@@ -28,7 +28,7 @@ function run_test() {
 async function testSymbols(client, debuggee) {
   const evalCode = () => {
     /* eslint-disable */
-    Components.utils.evalInSandbox(
+    Cu.evalInSandbox(
       "(" + function () {
         Symbol.prototype.toString = () => {
           throw new Error("lololol");

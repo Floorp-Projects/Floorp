@@ -1,12 +1,12 @@
 var file;
-Components.utils.importGlobalProperties(["File"]);
+Cu.importGlobalProperties(["File"]);
 
 addMessageListener("file.create", function (message) {
-  file = Components.classes["@mozilla.org/file/directory_service;1"]
-             .getService(Components.interfaces.nsIProperties)
-             .get("TmpD", Components.interfaces.nsIFile);
+  file = Cc["@mozilla.org/file/directory_service;1"]
+             .getService(Ci.nsIProperties)
+             .get("TmpD", Ci.nsIFile);
   file.append("foo.txt");
-  file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o600);
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
   File.createFromNsIFile(file).then(function(domFile) {
     sendAsyncMessage("file.created", domFile);
   });

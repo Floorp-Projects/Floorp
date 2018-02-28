@@ -91,7 +91,7 @@ amManager.prototype = {
         try {
           aCallback.onInstallEnded(uri, status);
         } catch (e) {
-          Components.utils.reportError(e);
+          Cu.reportError(e);
         }
       }
 

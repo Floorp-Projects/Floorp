@@ -38,8 +38,8 @@ add_task(async function() {
   }
   addEventListener("popupshown", tooltipNotExpected, true);
 
-  let dragService = Components.classes["@mozilla.org/widget/dragservice;1"].
-                      getService(Components.interfaces.nsIDragService);
+  let dragService = Cc["@mozilla.org/widget/dragservice;1"].
+                      getService(Ci.nsIDragService);
   dragService.startDragSession();
   await BrowserTestUtils.synthesizeMouse("#target", 5, 15, { type: "mousemove" }, browser);
 

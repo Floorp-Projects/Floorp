@@ -16,11 +16,11 @@
 
     function crashObserver(subject, topic, data) {
       is(topic, 'ipc:content-shutdown', 'Received correct observer topic.');
-      ok(subject instanceof Components.interfaces.nsIPropertyBag2,
+      ok(subject instanceof Ci.nsIPropertyBag2,
          'Subject implements nsIPropertyBag2.');
 
       var dumpID;
-      if ('nsICrashReporter' in Components.interfaces) {
+      if ('nsICrashReporter' in Ci) {
         dumpID = subject.getPropertyAsAString('dumpID');
         ok(dumpID, "dumpID is present and not an empty string");
       }

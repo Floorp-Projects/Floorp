@@ -116,7 +116,7 @@ var reference_dir_contents = function reference_dir_contents(path) {
   let result = [];
   let entries = new FileUtils.File(path).directoryEntries;
   while (entries.hasMoreElements()) {
-    let entry = entries.getNext().QueryInterface(Components.interfaces.nsIFile);
+    let entry = entries.getNext().QueryInterface(Ci.nsIFile);
     result.push(entry.path);
   }
   return result;
@@ -409,7 +409,7 @@ var test_debug_test = maketest("debug_test", function debug_test(test) {
     let consoleListener = {
       observe(aMessage) {
         // Ignore unexpected messages.
-        if (!(aMessage instanceof Components.interfaces.nsIConsoleMessage)) {
+        if (!(aMessage instanceof Ci.nsIConsoleMessage)) {
           return;
         }
         if (!aMessage.message.includes("TEST OS")) {

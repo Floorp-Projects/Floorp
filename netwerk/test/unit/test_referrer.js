@@ -12,7 +12,7 @@ function getTestReferrer(server_uri, referer_uri, isPrivate=false) {
     securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
   });
 
-  chan.QueryInterface(Components.interfaces.nsIHttpChannel);
+  chan.QueryInterface(Ci.nsIHttpChannel);
   chan.referrer = referrer;
   var header = null;
   try {
@@ -24,7 +24,7 @@ function getTestReferrer(server_uri, referer_uri, isPrivate=false) {
 
 function run_test() {
   var prefs = Cc["@mozilla.org/preferences-service;1"]
-                .getService(Components.interfaces.nsIPrefBranch);
+                .getService(Ci.nsIPrefBranch);
 
   var server_uri = "http://bar.examplesite.com/path2";
   var server_uri_2 = "http://bar.example.com/anotherpath";

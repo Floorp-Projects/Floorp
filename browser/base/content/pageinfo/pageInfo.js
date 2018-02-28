@@ -233,26 +233,26 @@ const PREFERENCES_CONTRACTID    = "@mozilla.org/preferences-service;1";
 
 // a number of services I'll need later
 // the cache services
-const nsICacheStorageService = Components.interfaces.nsICacheStorageService;
-const nsICacheStorage = Components.interfaces.nsICacheStorage;
-const cacheService = Components.classes["@mozilla.org/netwerk/cache-storage-service;1"].getService(nsICacheStorageService);
+const nsICacheStorageService = Ci.nsICacheStorageService;
+const nsICacheStorage = Ci.nsICacheStorage;
+const cacheService = Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(nsICacheStorageService);
 
 var loadContextInfo = Services.loadContextInfo.fromLoadContext(
-  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Components.interfaces.nsIWebNavigation)
-        .QueryInterface(Components.interfaces.nsILoadContext), false);
+  window.QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIWebNavigation)
+        .QueryInterface(Ci.nsILoadContext), false);
 var diskStorage = cacheService.diskCacheStorage(loadContextInfo, false);
 
-const nsICookiePermission  = Components.interfaces.nsICookiePermission;
-const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
+const nsICookiePermission  = Ci.nsICookiePermission;
+const nsIPermissionManager = Ci.nsIPermissionManager;
 
-const nsICertificateDialogs = Components.interfaces.nsICertificateDialogs;
+const nsICertificateDialogs = Ci.nsICertificateDialogs;
 const CERTIFICATEDIALOGS_CONTRACTID = "@mozilla.org/nsCertificateDialogs;1";
 
 // clipboard helper
 function getClipboardHelper() {
     try {
-        return Components.classes["@mozilla.org/widget/clipboardhelper;1"].getService(Components.interfaces.nsIClipboardHelper);
+        return Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
     } catch (e) {
         // do nothing, later code will handle the error
         return null;
@@ -489,7 +489,7 @@ function toggleGroupbox(id) {
 function openCacheEntry(key, cb) {
   var checkCacheListener = {
     onCacheEntryCheck(entry, appCache) {
-      return Components.interfaces.nsICacheEntryOpenCallback.ENTRY_WANTED;
+      return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
     },
     onCacheEntryAvailable(entry, isNew, appCache, status) {
       cb(entry);
@@ -654,10 +654,10 @@ function getSelectedRow(tree) {
 }
 
 function selectSaveFolder(aCallback) {
-  const nsIFile = Components.interfaces.nsIFile;
-  const nsIFilePicker = Components.interfaces.nsIFilePicker;
+  const nsIFile = Ci.nsIFile;
+  const nsIFilePicker = Ci.nsIFilePicker;
   let titleText = gBundle.getString("mediaSelectFolder");
-  let fp = Components.classes["@mozilla.org/filepicker;1"].
+  let fp = Cc["@mozilla.org/filepicker;1"].
            createInstance(nsIFilePicker);
   let fpCallback = function fpCallback_done(aResult) {
     if (aResult == nsIFilePicker.returnOK) {
@@ -715,7 +715,7 @@ function saveMedia() {
           let uri = makeURI(uriString);
 
           try {
-            uri.QueryInterface(Components.interfaces.nsIURL);
+            uri.QueryInterface(Ci.nsIURL);
             dir.append(decodeURIComponent(uri.fileName));
           } catch (ex) {
             // data:/blob: uris
@@ -739,8 +739,8 @@ function saveMedia() {
 }
 
 function onBlockImage() {
-  var permissionManager = Components.classes[PERMISSION_CONTRACTID]
-                                    .getService(nsIPermissionManager);
+  var permissionManager = Cc[PERMISSION_CONTRACTID]
+                            .getService(nsIPermissionManager);
 
   var checkbox = document.getElementById("blockImage");
   var uri = makeURI(document.getElementById("imageurltext").value);
@@ -834,8 +834,8 @@ function makePreview(row) {
     var physWidth = 0, physHeight = 0;
     var width = 0, height = 0;
 
-    let serial = Components.classes["@mozilla.org/network/serialization-helper;1"]
-                           .getService(Components.interfaces.nsISerializationHelper);
+    let serial = Cc["@mozilla.org/network/serialization-helper;1"]
+                   .getService(Ci.nsISerializationHelper);
     let triggeringPrinStr = serial.serializeToString(gDocInfo.principal);
     if ((item.HTMLLinkElement || item.HTMLInputElement ||
          item.HTMLImageElement || item.SVGImageElement ||
@@ -944,8 +944,8 @@ function makePreview(row) {
 }
 
 function makeBlockImage(url) {
-  var permissionManager = Components.classes[PERMISSION_CONTRACTID]
-                                    .getService(nsIPermissionManager);
+  var permissionManager = Cc[PERMISSION_CONTRACTID]
+                            .getService(nsIPermissionManager);
 
   var checkbox = document.getElementById("blockImage");
   var imagePref = Services.prefs.getIntPref("permissions.default.image");
@@ -971,7 +971,7 @@ var imagePermissionObserver = {
       return;
 
     if (aTopic == "perm-changed") {
-      var permission = aSubject.QueryInterface(Components.interfaces.nsIPermission);
+      var permission = aSubject.QueryInterface(Ci.nsIPermission);
       if (permission.type == "image") {
         var imageTree = document.getElementById("imagetree");
         var row = getSelectedRow(imageTree);

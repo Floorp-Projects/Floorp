@@ -937,15 +937,15 @@ function getCookieId(name, domain, path) {
 }
 
 function setPermission(url, permission) {
-  const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
+  const nsIPermissionManager = Ci.nsIPermissionManager;
 
   let uri = Services.io.newURI(url);
   let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
 
-  Components.classes["@mozilla.org/permissionmanager;1"]
-            .getService(nsIPermissionManager)
-            .addFromPrincipal(principal, permission,
-                              nsIPermissionManager.ALLOW_ACTION);
+  Cc["@mozilla.org/permissionmanager;1"]
+    .getService(nsIPermissionManager)
+    .addFromPrincipal(principal, permission,
+                      nsIPermissionManager.ALLOW_ACTION);
 }
 
 function toggleSidebar() {

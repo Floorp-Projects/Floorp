@@ -114,11 +114,11 @@ var windowOfContenteditable;
 var input = document.getElementById("input");
 var textareaInFrame;
 
-const nsITextInputProcessorCallback = Components.interfaces.nsITextInputProcessorCallback;
-const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
-const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor;
-const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
-const nsIDocShell = Components.interfaces.nsIDocShell;
+const nsITextInputProcessorCallback = Ci.nsITextInputProcessorCallback;
+const nsIDOMNSEditableElement = Ci.nsIDOMNSEditableElement;
+const nsIInterfaceRequestor = Ci.nsIInterfaceRequestor;
+const nsIWebNavigation = Ci.nsIWebNavigation;
+const nsIDocShell = Ci.nsIDocShell;
 
 function hitEventLoop(aFunc, aTimes)
 {

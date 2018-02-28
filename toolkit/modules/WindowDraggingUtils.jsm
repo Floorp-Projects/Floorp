@@ -52,7 +52,7 @@ WindowDraggingElement.prototype = {
     return true;
   },
   isPanel() {
-    return this._elem instanceof Components.interfaces.nsIDOMXULElement &&
+    return this._elem instanceof Ci.nsIDOMXULElement &&
            this._elem.localName == "panel";
   },
   handleEvent(aEvent) {

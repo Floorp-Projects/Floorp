@@ -731,8 +731,8 @@ async function injectEventUtilsInContentTask(browser) {
     EventUtils.window = {};
     EventUtils.parent = EventUtils.window;
     /* eslint-disable camelcase */
-    EventUtils._EU_Ci = Components.interfaces;
-    EventUtils._EU_Cc = Components.classes;
+    EventUtils._EU_Ci = Ci;
+    EventUtils._EU_Cc = Cc;
     /* eslint-enable camelcase */
     // EventUtils' `sendChar` function relies on the navigator to synthetize events.
     EventUtils.navigator = content.navigator;

@@ -45,7 +45,7 @@ function run_test()
     do_throw("shouldn't be able to remove an entry that doesn't exist");
   }
   catch (e) {
-    Assert.equal(e.result, Components.results.NS_ERROR_FILE_NOT_FOUND);
+    Assert.equal(e.result, Cr.NS_ERROR_FILE_NOT_FOUND);
   }
 
   for (var i = 0; i < TESTS.length; i++) {

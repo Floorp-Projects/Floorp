@@ -16,8 +16,8 @@
 
   <script type="application/javascript"><![CDATA[
 
-var fm = Components.classes["@mozilla.org/focus-manager;1"].
-           getService(Components.interfaces.nsIFocusManager);
+var fm = Cc["@mozilla.org/focus-manager;1"].
+           getService(Ci.nsIFocusManager);
 
 const kChildDocumentRootIndex = 13;
 const kBeforeTabboxIndex = 34;
@@ -274,11 +274,11 @@ function checkSelection(node, testid)
 
 function getTopWindow(win)
 {
-  return win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-             getInterface(Components.interfaces.nsIWebNavigation).
-             QueryInterface(Components.interfaces.nsIDocShellTreeItem).rootTreeItem.
-             QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-             getInterface(Components.interfaces.nsIDOMWindow);
+  return win.QueryInterface(Ci.nsIInterfaceRequestor).
+             getInterface(Ci.nsIWebNavigation).
+             QueryInterface(Ci.nsIDocShellTreeItem).rootTreeItem.
+             QueryInterface(Ci.nsIInterfaceRequestor).
+             getInterface(Ci.nsIDOMWindow);
 }
 
 function mouseWillTriggerFocus(element)
@@ -1026,8 +1026,8 @@ function testMoveFocus()
   is(fm.focusedElement, t25, "move caret to link focusedElement");
 
   // enable caret browsing temporarily to test caret movement
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                getService(Components.interfaces.nsIPrefBranch);
+  var prefs = Cc["@mozilla.org/preferences-service;1"].
+                getService(Ci.nsIPrefBranch);
   prefs.setBoolPref("accessibility.browsewithcaret", true);
 
   synthesizeKey("KEY_ArrowLeft", {}, gChildWindow);

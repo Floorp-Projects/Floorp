@@ -221,15 +221,15 @@ function scheduleGC()
 }
 
 function setTimeout(fun, timeout) {
-  let timer = Components.classes["@mozilla.org/timer;1"]
-                        .createInstance(Components.interfaces.nsITimer);
+  let timer = Cc["@mozilla.org/timer;1"]
+                .createInstance(Ci.nsITimer);
   var event = {
     notify(timer) {
       fun();
     }
   };
   timer.initWithCallback(event, timeout,
-                         Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+                         Ci.nsITimer.TYPE_ONE_SHOT);
   return timer;
 }
 
@@ -429,7 +429,7 @@ function verifyBuffers(buffer1, buffer2)
 
 function verifyBlob(blob1, blob2)
 {
-  is(blob1 instanceof Components.interfaces.nsIDOMBlob, true,
+  is(blob1 instanceof Ci.nsIDOMBlob, true,
      "Instance of nsIDOMBlob");
   is(blob1 instanceof File, blob2 instanceof File,
      "Instance of DOM File");
@@ -575,7 +575,7 @@ var SpecialPowers = {
 
     function doPreciseGCandCC() {
       function scheduledGCCallback() {
-        Components.utils.forceCC();
+        Cu.forceCC();
 
         if (++count < 2) {
           doPreciseGCandCC();
@@ -584,7 +584,7 @@ var SpecialPowers = {
         }
       }
 
-      Components.utils.schedulePreciseGC(scheduledGCCallback);
+      Cu.schedulePreciseGC(scheduledGCCallback);
     }
 
     doPreciseGCandCC();
