@@ -36,8 +36,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1018265
   }
 
   function getContentViewer(win) {
-    return win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-              .getInterface(Components.interfaces.nsIDocShell).contentViewer;
+    return win.QueryInterface(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIDocShell).contentViewer;
   }
 
   function shouldHaveTwoNonHiddenContentViewers() {

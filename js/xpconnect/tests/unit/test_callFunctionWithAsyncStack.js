@@ -13,7 +13,7 @@ function run_test() {
   // asyncCause may contain non-ASCII characters.
   let testAsyncCause = "Tes" + String.fromCharCode(355) + "String";
 
-  Components.utils.callFunctionWithAsyncStack(function asyncCallback() {
+  Cu.callFunctionWithAsyncStack(function asyncCallback() {
     let stack = Components.stack;
 
     Assert.equal(stack.name, "asyncCallback");

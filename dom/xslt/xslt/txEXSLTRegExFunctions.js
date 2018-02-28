@@ -27,8 +27,8 @@ txEXSLTRegExFunctions.prototype = {
 
     // txIEXSLTRegExFunctions
     match: function(context, str, regex, flags) {
-        var nodeset = Components.classes[NODESET_CONTRACTID]
-                                .createInstance(Ci.txINodeSet);
+        var nodeset = Cc[NODESET_CONTRACTID]
+                        .createInstance(Ci.txINodeSet);
 
         var re = new RegExp(regex, flags);
         var matches = str.match(re);

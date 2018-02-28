@@ -479,7 +479,7 @@ SpecialPowersObserverAPI.prototype = {
         let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
         let sandboxOptions = Object.assign({wantGlobalProperties: ["ChromeUtils"]},
                                            aMessage.json.sandboxOptions);
-        let sb = Components.utils.Sandbox(systemPrincipal, sandboxOptions);
+        let sb = Cu.Sandbox(systemPrincipal, sandboxOptions);
         let mm = aMessage.target.frameLoader
                          .messageManager;
         sb.sendAsyncMessage = (name, message) => {
@@ -500,7 +500,7 @@ SpecialPowersObserverAPI.prototype = {
         };
         Object.defineProperty(sb, "assert", {
           get() {
-            let scope = Components.utils.createObjectIn(sb);
+            let scope = Cu.createObjectIn(sb);
             Services.scriptloader.loadSubScript("chrome://specialpowers/content/Assert.jsm",
                                                 scope);
 
@@ -513,7 +513,7 @@ SpecialPowersObserverAPI.prototype = {
 
         // Evaluate the chrome script
         try {
-          Components.utils.evalInSandbox(jsScript, sb, "1.8", scriptName, 1);
+          Cu.evalInSandbox(jsScript, sb, "1.8", scriptName, 1);
         } catch (e) {
           throw new SpecialPowersError(
             "Error while executing chrome script '" + scriptName + "':\n" +

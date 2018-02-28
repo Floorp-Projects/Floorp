@@ -46,6 +46,6 @@ function test_source_maps() {
     mappings: "AACA",
     sourcesContent: ["foo"]
   });
-  Components.utils.evalInSandbox(code, gDebuggee, "1.8",
-                                 "http://example.com/foo.js", 1);
+  Cu.evalInSandbox(code, gDebuggee, "1.8",
+                   "http://example.com/foo.js", 1);
 }

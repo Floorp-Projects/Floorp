@@ -243,7 +243,7 @@
         <parameter name="aHomeOrEnd"/>
         <body>
         <![CDATA[
-          const nsIWebBrowserPrint = Components.interfaces.nsIWebBrowserPrint;
+          const nsIWebBrowserPrint = Ci.nsIWebBrowserPrint;
           let navType, pageNum;
 
           // we use only one of aHomeOrEnd, aDirection, or aPageNum
@@ -366,7 +366,7 @@
         <parameter name="aOrientation"/>
         <body>
         <![CDATA[
-          const kIPrintSettings = Components.interfaces.nsIPrintSettings;
+          const kIPrintSettings = Ci.nsIPrintSettings;
           var orientValue = (aOrientation == "portrait") ? kIPrintSettings.kPortraitOrientation :
                                                            kIPrintSettings.kLandscapeOrientation;
           var settings = PrintUtils.getPrintSettings();
@@ -415,7 +415,7 @@
         <![CDATA[
           var settings = PrintUtils.getPrintSettings();
 
-          var isPortrait = settings.orientation == Components.interfaces.nsIPrintSettings.kPortraitOrientation;
+          var isPortrait = settings.orientation == Ci.nsIPrintSettings.kPortraitOrientation;
 
           this.mPortaitButton.checked = isPortrait;
           this.mLandscapeButton.checked = !isPortrait;
@@ -435,8 +435,8 @@
         <parameter name="settings"/>
         <parameter name="flags"/>
         <body><![CDATA[
-          var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                                .getService(Components.interfaces.nsIPrintSettingsService);
+          var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"]
+                        .getService(Ci.nsIPrintSettingsService);
           PSSVC.savePrintSettingsToPrefs(settings, true, flags);
         ]]></body>
       </method>

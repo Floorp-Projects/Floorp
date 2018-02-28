@@ -790,7 +790,7 @@ ComponentsUtilsInterposition.methods.Sandbox =
       }
       return SandboxParent.makeContentSandbox(addon, chromeGlobal, array, ...rest);
     }
-    return Components.utils.Sandbox(principals, ...rest);
+    return Cu.Sandbox(principals, ...rest);
   };
 
 ComponentsUtilsInterposition.methods.evalInSandbox =
@@ -798,7 +798,7 @@ ComponentsUtilsInterposition.methods.evalInSandbox =
     if (sandbox && Cu.isCrossProcessWrapper(sandbox)) {
       return SandboxParent.evalInSandbox(code, sandbox, ...rest);
     }
-    return Components.utils.evalInSandbox(code, sandbox, ...rest);
+    return Cu.evalInSandbox(code, sandbox, ...rest);
   };
 
 // This interposition handles cases where an add-on tries to import a

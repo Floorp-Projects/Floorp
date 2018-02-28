@@ -37,9 +37,9 @@ function execTests() {
 
   function getPrefs(branch) {
     const prefSvcContractID = "@mozilla.org/preferences-service;1";
-    const prefSvcIID = Components.interfaces.nsIPrefService;
-    return Components.classes[prefSvcContractID].getService(prefSvcIID)
-                                                 .getBranch(branch);
+    const prefSvcIID = Ci.nsIPrefService;
+    return Cc[prefSvcContractID].getService(prefSvcIID)
+             .getBranch(branch);
   }
 
   function setPref(branch, pref, newValue) {

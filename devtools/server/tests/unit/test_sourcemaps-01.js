@@ -60,6 +60,6 @@ function test_simple_source_map() {
 
   code += "//# sourceMappingURL=data:text/json;base64," + btoa(map.toString());
 
-  Components.utils.evalInSandbox(code, gDebuggee, "1.8",
-                                 "http://example.com/www/js/abc.js", 1);
+  Cu.evalInSandbox(code, gDebuggee, "1.8",
+                   "http://example.com/www/js/abc.js", 1);
 }

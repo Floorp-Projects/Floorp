@@ -53,17 +53,17 @@ function test() {
   gBrowser.getBrowserForTab(gNewTab)
           .webProgress
           .addProgressListener(gWebProgressListener,
-                               Components.interfaces.nsIWebProgress
-                                                    .NOTIFY_LOCATION);
+                               Ci.nsIWebProgress
+                                 .NOTIFY_LOCATION);
 }
 
 var gWebProgressListener = {
   QueryInterface(aIID) {
-    if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
-        aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
-        aIID.equals(Components.interfaces.nsISupports))
+    if (aIID.equals(Ci.nsIWebProgressListener) ||
+        aIID.equals(Ci.nsISupportsWeakReference) ||
+        aIID.equals(Ci.nsISupports))
       return this;
-    throw Components.results.NS_NOINTERFACE;
+    throw Cr.NS_NOINTERFACE;
   },
 
   // ---------------------------------------------------------------------------

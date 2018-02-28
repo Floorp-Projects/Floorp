@@ -2,8 +2,8 @@ var gHttpTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/con
 var gPageInfo = null;
 var gNextTest = null;
 var gTestBrowser = null;
-var gPluginHost = Components.classes["@mozilla.org/plugin/host;1"]
-                    .getService(Components.interfaces.nsIPluginHost);
+var gPluginHost = Cc["@mozilla.org/plugin/host;1"]
+                    .getService(Ci.nsIPluginHost);
 var gTestPermissionString = gPluginHost.getPermissionStringForType("application/x-test");
 var gSecondTestPermissionString = gPluginHost.getPermissionStringForType("application/x-second-test");
 

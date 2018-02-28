@@ -5,12 +5,12 @@
 
 const enablePrivilege = netscape.security.PrivilegeManager.enablePrivilege;
 const IOSERVICE_CTRID = "@mozilla.org/network/io-service;1";
-const nsIIOService    = Components.interfaces.nsIIOService;
+const nsIIOService    = Ci.nsIIOService;
 const SIS_CTRID       = "@mozilla.org/scriptableinputstream;1";
-const nsISIS          = Components.interfaces.nsIScriptableInputStream;
-const nsIFilePicker   = Components.interfaces.nsIFilePicker;
+const nsISIS          = Ci.nsIScriptableInputStream;
+const nsIFilePicker   = Ci.nsIFilePicker;
 const STDURLMUT_CTRID = "@mozilla.org/network/standard-url-mutator;1";
-const nsIURIMutator   = Components.interfaces.nsIURIMutator;
+const nsIURIMutator   = Ci.nsIURIMutator;
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
@@ -19,17 +19,17 @@ var gStop = false;
 function loadFile(aUriSpec)
 {
     enablePrivilege('UniversalXPConnect');
-    var serv = Components.classes[IOSERVICE_CTRID].
+    var serv = Cc[IOSERVICE_CTRID].
         getService(nsIIOService);
     if (!serv) {
-        throw Components.results.ERR_FAILURE;
+        throw Cr.ERR_FAILURE;
     }
     var chan = NetUtil.newChannel({
         uri: aUriSpec,
         loadUsingSystemPrincipal: true
     });
     var instream = 
-        Components.classes[SIS_CTRID].createInstance(nsISIS);
+        Cc[SIS_CTRID].createInstance(nsISIS);
     instream.init(chan.open2());
 
     return instream.read(instream.available());

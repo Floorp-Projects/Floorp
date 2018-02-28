@@ -55,7 +55,7 @@ const secondLocation = {
 function test_breakpoints_columns() {
   gClient.addOneTimeListener("paused", set_breakpoints);
 
-  Components.utils.evalInSandbox(code, gDebuggee, "1.8", "http://example.com/", 1);
+  Cu.evalInSandbox(code, gDebuggee, "1.8", "http://example.com/", 1);
 }
 
 function set_breakpoints(event, packet) {

@@ -23,8 +23,8 @@ function doTest()
 {
   var tb = document.getElementById("tb01");
   var inputField = tb.inputField;
-  var editor = inputField.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
-  editor = editor.QueryInterface(Components.interfaces.nsIPlaintextEditor);
+  var editor = inputField.QueryInterface(Ci.nsIDOMNSEditableElement).editor;
+  editor = editor.QueryInterface(Ci.nsIPlaintextEditor);
   editor.wrapWidth = -1;
 
   ok(true, "Didn't crash");

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const nsIBLS = Components.interfaces.nsIBlocklistService;
+const nsIBLS = Ci.nsIBlocklistService;
 ChromeUtils.import("resource://testing-common/httpd.js");
 
 var gNotifier = null;
@@ -59,7 +59,7 @@ var PLUGINS = [{
 }];
 
 function test_basic() {
-  var blocklist = Components.classes["@mozilla.org/extensions/blocklist;1"].getService(nsIBLS);
+  var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(nsIBLS);
 
   Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == nsIBLS.STATE_OUTDATED);
 
@@ -78,7 +78,7 @@ function test_basic() {
 }
 
 function get_test_plugin() {
-  var pluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
+  var pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
   for (var plugin of pluginHost.getPluginTags()) {
     if (plugin.name == "Test Plug-in")
       return plugin;
@@ -92,8 +92,8 @@ function get_test_plugin() {
 function test_is_not_clicktoplay() {
   var plugin = get_test_plugin();
   var blocklistState = Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
-  Assert.notEqual(blocklistState, Components.interfaces.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
-  Assert.notEqual(blocklistState, Components.interfaces.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
+  Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
+  Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" + gPort + "/data/test_pluginBlocklistCtpUndo.xml");
   gNextTest = test_is_clicktoplay;
@@ -105,7 +105,7 @@ function test_is_not_clicktoplay() {
 function test_is_clicktoplay() {
   var plugin = get_test_plugin();
   var blocklistState = Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
-  Assert.equal(blocklistState, Components.interfaces.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
+  Assert.equal(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" + gPort + "/data/test_pluginBlocklistCtp.xml");
   gNextTest = test_is_not_clicktoplay2;
@@ -117,8 +117,8 @@ function test_is_clicktoplay() {
 function test_is_not_clicktoplay2() {
   var plugin = get_test_plugin();
   var blocklistState = Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
-  Assert.notEqual(blocklistState, Components.interfaces.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
-  Assert.notEqual(blocklistState, Components.interfaces.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
+  Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
+  Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" + gPort + "/data/test_pluginBlocklistCtpUndo.xml");
   gNextTest = test_disable_blocklist;
@@ -130,20 +130,20 @@ function test_is_not_clicktoplay2() {
 function test_disable_blocklist() {
   var plugin = get_test_plugin();
   var blocklistState = Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
-  Assert.equal(blocklistState, Components.interfaces.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
+  Assert.equal(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 
   gNextTest = null;
   Services.prefs.setBoolPref("extensions.blocklist.enabled", false);
   blocklistState = Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
-  Assert.notEqual(blocklistState, Components.interfaces.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
-  Assert.notEqual(blocklistState, Components.interfaces.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
+  Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
+  Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
 
   // it should still be possible to make a plugin click-to-play via the pref
   // and setting that plugin's enabled state to click-to-play
   Services.prefs.setBoolPref("plugins.click_to_play", true);
   let previousEnabledState = plugin.enabledState;
-  plugin.enabledState = Components.interfaces.nsIPluginTag.STATE_CLICKTOPLAY;
-  Assert.equal(gPluginHost.getStateForType("application/x-test"), Components.interfaces.nsIPluginTag.STATE_CLICKTOPLAY);
+  plugin.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
+  Assert.equal(gPluginHost.getStateForType("application/x-test"), Ci.nsIPluginTag.STATE_CLICKTOPLAY);
   // clean up plugin state
   plugin.enabledState = previousEnabledState;
 
@@ -163,8 +163,8 @@ function run_test() {
   Services.prefs.setBoolPref("plugin.load_flash_only", false);
   startupManager();
 
-  gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
-  gNotifier = Components.classes["@mozilla.org/extensions/blocklist;1"].getService(Components.interfaces.nsITimerCallback);
+  gPluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+  gNotifier = Cc["@mozilla.org/extensions/blocklist;1"].getService(Ci.nsITimerCallback);
   Services.obs.addObserver(observer, "blocklist-updated");
 
   registerCleanupFunction(function() {

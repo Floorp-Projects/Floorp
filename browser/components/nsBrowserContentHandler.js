@@ -21,30 +21,30 @@ XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils",
 ChromeUtils.defineModuleGetter(this, "UpdatePing",
                                "resource://gre/modules/UpdatePing.jsm");
 
-const nsISupports            = Components.interfaces.nsISupports;
+const nsISupports            = Ci.nsISupports;
 
-const nsIBrowserDOMWindow    = Components.interfaces.nsIBrowserDOMWindow;
-const nsIBrowserHandler      = Components.interfaces.nsIBrowserHandler;
-const nsIBrowserHistory      = Components.interfaces.nsIBrowserHistory;
-const nsIChannel             = Components.interfaces.nsIChannel;
-const nsICommandLine         = Components.interfaces.nsICommandLine;
-const nsICommandLineHandler  = Components.interfaces.nsICommandLineHandler;
-const nsIContentHandler      = Components.interfaces.nsIContentHandler;
-const nsIDocShellTreeItem    = Components.interfaces.nsIDocShellTreeItem;
-const nsIDOMChromeWindow     = Components.interfaces.nsIDOMChromeWindow;
-const nsIDOMWindow           = Components.interfaces.nsIDOMWindow;
-const nsIFileURL             = Components.interfaces.nsIFileURL;
-const nsIInterfaceRequestor  = Components.interfaces.nsIInterfaceRequestor;
-const nsINetUtil             = Components.interfaces.nsINetUtil;
-const nsIPrefLocalizedString = Components.interfaces.nsIPrefLocalizedString;
-const nsISupportsString      = Components.interfaces.nsISupportsString;
-const nsIWebNavigation       = Components.interfaces.nsIWebNavigation;
-const nsIWebNavigationInfo   = Components.interfaces.nsIWebNavigationInfo;
-const nsICommandLineValidator = Components.interfaces.nsICommandLineValidator;
+const nsIBrowserDOMWindow    = Ci.nsIBrowserDOMWindow;
+const nsIBrowserHandler      = Ci.nsIBrowserHandler;
+const nsIBrowserHistory      = Ci.nsIBrowserHistory;
+const nsIChannel             = Ci.nsIChannel;
+const nsICommandLine         = Ci.nsICommandLine;
+const nsICommandLineHandler  = Ci.nsICommandLineHandler;
+const nsIContentHandler      = Ci.nsIContentHandler;
+const nsIDocShellTreeItem    = Ci.nsIDocShellTreeItem;
+const nsIDOMChromeWindow     = Ci.nsIDOMChromeWindow;
+const nsIDOMWindow           = Ci.nsIDOMWindow;
+const nsIFileURL             = Ci.nsIFileURL;
+const nsIInterfaceRequestor  = Ci.nsIInterfaceRequestor;
+const nsINetUtil             = Ci.nsINetUtil;
+const nsIPrefLocalizedString = Ci.nsIPrefLocalizedString;
+const nsISupportsString      = Ci.nsISupportsString;
+const nsIWebNavigation       = Ci.nsIWebNavigation;
+const nsIWebNavigationInfo   = Ci.nsIWebNavigationInfo;
+const nsICommandLineValidator = Ci.nsICommandLineValidator;
 
-const NS_BINDING_ABORTED = Components.results.NS_BINDING_ABORTED;
+const NS_BINDING_ABORTED = Cr.NS_BINDING_ABORTED;
 const NS_ERROR_WONT_HANDLE_CONTENT = 0x805d0001;
-const NS_ERROR_ABORT = Components.results.NS_ERROR_ABORT;
+const NS_ERROR_ABORT = Cr.NS_ERROR_ABORT;
 
 function shouldLoadURI(aURI) {
   if (aURI && !aURI.schemeIs("chrome"))
@@ -68,7 +68,7 @@ function resolveURIInternal(aCmdLine, aArgument) {
     if (uri.file.exists())
       return uri;
   } catch (e) {
-    Components.utils.reportError(e);
+    Cu.reportError(e);
   }
 
   // We have interpreted the argument as a relative file URI, but the file
@@ -77,7 +77,7 @@ function resolveURIInternal(aCmdLine, aArgument) {
   try {
     uri = uriFixup.createFixupURI(aArgument, 0);
   } catch (e) {
-    Components.utils.reportError(e);
+    Cu.reportError(e);
   }
 
   return uri;
@@ -140,21 +140,21 @@ function needHomepageOverride(prefb) {
  * @return The override page.
  */
 function getPostUpdateOverridePage(defaultOverridePage) {
-  var um = Components.classes["@mozilla.org/updates/update-manager;1"]
-                     .getService(Components.interfaces.nsIUpdateManager);
+  var um = Cc["@mozilla.org/updates/update-manager;1"]
+             .getService(Ci.nsIUpdateManager);
   // The active update should be present when this code is called. If for
   // whatever reason it isn't fallback to the latest update in the update
   // history.
   if (um.activeUpdate) {
     var update = um.activeUpdate
-                   .QueryInterface(Components.interfaces.nsIPropertyBag);
+                   .QueryInterface(Ci.nsIPropertyBag);
   } else {
     // If the updates.xml file is deleted then getUpdateAt will throw.
     try {
       update = um.getUpdateAt(0)
-                 .QueryInterface(Components.interfaces.nsIPropertyBag);
+                 .QueryInterface(Ci.nsIPropertyBag);
     } catch (e) {
-      Components.utils.reportError("Unable to find update: " + e);
+      Cu.reportError("Unable to find update: " + e);
       return defaultOverridePage;
     }
   }
@@ -181,8 +181,8 @@ function openWindow(parent, url, target, features, args, noExternalArgs) {
     // Just pass in the defaultArgs directly
     var argstring;
     if (args) {
-      argstring = Components.classes["@mozilla.org/supports-string;1"]
-                            .createInstance(nsISupportsString);
+      argstring = Cc["@mozilla.org/supports-string;1"]
+                    .createInstance(nsISupportsString);
       argstring.data = args;
     }
 
@@ -190,8 +190,8 @@ function openWindow(parent, url, target, features, args, noExternalArgs) {
   }
 
   // Pass an array to avoid the browser "|"-splitting behavior.
-  var argArray = Components.classes["@mozilla.org/array;1"]
-                    .createInstance(Components.interfaces.nsIMutableArray);
+  var argArray = Cc["@mozilla.org/array;1"]
+                    .createInstance(Ci.nsIMutableArray);
 
   // add args to the arguments array
   var stringArgs = null;
@@ -202,11 +202,11 @@ function openWindow(parent, url, target, features, args, noExternalArgs) {
 
   if (stringArgs) {
     // put the URIs into argArray
-    var uriArray = Components.classes["@mozilla.org/array;1"]
-                       .createInstance(Components.interfaces.nsIMutableArray);
+    var uriArray = Cc["@mozilla.org/array;1"]
+                       .createInstance(Ci.nsIMutableArray);
     stringArgs.forEach(function(uri) {
-      var sstring = Components.classes["@mozilla.org/supports-string;1"]
-                              .createInstance(nsISupportsString);
+      var sstring = Cc["@mozilla.org/supports-string;1"]
+                      .createInstance(nsISupportsString);
       sstring.data = uri;
       uriArray.appendElement(sstring);
     });
@@ -232,11 +232,11 @@ function openPreferences(extraArgs) {
   } else {
     Services.telemetry.getHistogramById("FX_PREFERENCES_OPENED_VIA").add("other");
   }
-  var args = Components.classes["@mozilla.org/array;1"]
-                     .createInstance(Components.interfaces.nsIMutableArray);
+  var args = Cc["@mozilla.org/array;1"]
+                     .createInstance(Ci.nsIMutableArray);
 
-  var wuri = Components.classes["@mozilla.org/supports-string;1"]
-                       .createInstance(Components.interfaces.nsISupportsString);
+  var wuri = Cc["@mozilla.org/supports-string;1"]
+               .createInstance(Ci.nsISupportsString);
   wuri.data = "about:preferences";
 
   args.appendElement(wuri);
@@ -260,11 +260,11 @@ function doSearch(searchTerm, cmdLine) {
   var submission = engine.getSubmission(searchTerm, null, "system");
 
   // fill our nsIMutableArray with uri-as-wstring, null, null, postData
-  var args = Components.classes["@mozilla.org/array;1"]
-                     .createInstance(Components.interfaces.nsIMutableArray);
+  var args = Cc["@mozilla.org/array;1"]
+                     .createInstance(Ci.nsIMutableArray);
 
-  var wuri = Components.classes["@mozilla.org/supports-string;1"]
-                       .createInstance(Components.interfaces.nsISupportsString);
+  var wuri = Cc["@mozilla.org/supports-string;1"]
+               .createInstance(Ci.nsISupportsString);
   wuri.data = submission.uri.spec;
 
   args.appendElement(wuri);
@@ -290,7 +290,7 @@ nsBrowserContentHandler.prototype = {
   _xpcom_factory: {
     createInstance: function bch_factory_ci(outer, iid) {
       if (outer)
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
+        throw Cr.NS_ERROR_NO_AGGREGATION;
       return gBrowserContentHandler.QueryInterface(iid);
     }
   },
@@ -348,7 +348,7 @@ nsBrowserContentHandler.prototype = {
         cmdLine.preventDefault = true;
       }
     } catch (e) {
-      Components.utils.reportError(e);
+      Cu.reportError(e);
     }
 
     try {
@@ -359,7 +359,7 @@ nsBrowserContentHandler.prototype = {
         cmdLine.preventDefault = true;
       }
     } catch (e) {
-      Components.utils.reportError(e);
+      Cu.reportError(e);
     }
 
     var chromeParam = cmdLine.handleFlagWithParam("chrome", false);
@@ -374,8 +374,8 @@ nsBrowserContentHandler.prototype = {
         let resolvedURI = resolveURIInternal(cmdLine, chromeParam);
         let isLocal = uri => {
           let localSchemes = new Set(["chrome", "file", "resource"]);
-          if (uri instanceof Components.interfaces.nsINestedURI) {
-            uri = uri.QueryInterface(Components.interfaces.nsINestedURI).innerMostURI;
+          if (uri instanceof Ci.nsINestedURI) {
+            uri = uri.QueryInterface(Ci.nsINestedURI).innerMostURI;
           }
           return localSchemes.has(uri.scheme);
         };
@@ -389,7 +389,7 @@ nsBrowserContentHandler.prototype = {
           dump("    If you're trying to load a webpage, do not pass --chrome.\n");
         }
       } catch (e) {
-        Components.utils.reportError(e);
+        Cu.reportError(e);
       }
     }
     if (cmdLine.handleFlag("preferences", false)) {
@@ -408,7 +408,7 @@ nsBrowserContentHandler.prototype = {
         cmdLine.preventDefault = true;
       }
     } catch (e) {
-      if (e.result != Components.results.NS_ERROR_INVALID_ARG) {
+      if (e.result != Cr.NS_ERROR_INVALID_ARG) {
         throw e;
       }
       // NS_ERROR_INVALID_ARG is thrown when flag exists, but has no param.
@@ -514,8 +514,8 @@ nsBrowserContentHandler.prototype = {
             // into account because that requires waiting for the session file
             // to be read. If a crash occurs after updating, before restarting,
             // we may open the startPage in addition to restoring the session.
-            var ss = Components.classes["@mozilla.org/browser/sessionstartup;1"]
-                               .getService(Components.interfaces.nsISessionStartup);
+            var ss = Cc["@mozilla.org/browser/sessionstartup;1"]
+                       .getService(Ci.nsISessionStartup);
             willRestoreSession = ss.isAutomaticRestoreEnabled();
 
             overridePage = Services.urlFormatter.formatURLPref("startup.homepage_override_url");
@@ -559,7 +559,7 @@ nsBrowserContentHandler.prototype = {
       if (choice == 1 || choice == 3)
         startPage = this.startPage;
     } catch (e) {
-      Components.utils.reportError(e);
+      Cu.reportError(e);
     }
 
     if (startPage == "about:blank")
@@ -622,8 +622,8 @@ nsBrowserContentHandler.prototype = {
 
   handleContent: function bch_handleContent(contentType, context, request) {
     try {
-      var webNavInfo = Components.classes["@mozilla.org/webnavigation-info;1"]
-                                 .getService(nsIWebNavigationInfo);
+      var webNavInfo = Cc["@mozilla.org/webnavigation-info;1"]
+                         .getService(nsIWebNavigationInfo);
       if (!webNavInfo.isTypeSupported(contentType, null)) {
         throw NS_ERROR_WONT_HANDLE_CONTENT;
       }
@@ -705,7 +705,7 @@ nsDefaultCommandLineHandler.prototype = {
   QueryInterface: function dch_QI(iid) {
     if (!iid.equals(nsISupports) &&
         !iid.equals(nsICommandLineHandler))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
 
     return this;
   },
@@ -726,7 +726,7 @@ nsDefaultCommandLineHandler.prototype = {
       if (!this._haveProfile) {
         try {
           // This will throw when a profile has not been selected.
-          Services.dirsvc.get("ProfD", Components.interfaces.nsIFile);
+          Services.dirsvc.get("ProfD", Ci.nsIFile);
           this._haveProfile = true;
         } catch (e) {
           while ((ar = cmdLine.handleFlagWithParam("url", false)));
@@ -742,7 +742,7 @@ nsDefaultCommandLineHandler.prototype = {
         urilist.push(uri);
       }
     } catch (e) {
-      Components.utils.reportError(e);
+      Cu.reportError(e);
     }
 
     if (cmdLine.findFlag("screenshot", true) != -1) {
@@ -753,7 +753,7 @@ nsDefaultCommandLineHandler.prototype = {
     for (let i = 0; i < cmdLine.length; ++i) {
       var curarg = cmdLine.getArgument(i);
       if (curarg.match(/^-/)) {
-        Components.utils.reportError("Warning: unrecognized command line flag " + curarg + "\n");
+        Cu.reportError("Warning: unrecognized command line flag " + curarg + "\n");
         // To emulate the pre-nsICommandLine behavior, we ignore
         // the argument after an unrecognized flag.
         ++i;
@@ -761,7 +761,7 @@ nsDefaultCommandLineHandler.prototype = {
         try {
           urilist.push(resolveURIInternal(cmdLine, curarg));
         } catch (e) {
-          Components.utils.reportError("Error opening URI '" + curarg + "' from the command line: " + e + "\n");
+          Cu.reportError("Error opening URI '" + curarg + "' from the command line: " + e + "\n");
         }
       }
     }

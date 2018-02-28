@@ -107,8 +107,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758415
   function testContentXrays() {
 
     // Give A1 and A3 xrays to (same-origin) A2.
-    Components.utils.setWantXrays(gWinA1);
-    Components.utils.setWantXrays(gWinA3);
+    Cu.setWantXrays(gWinA1);
+    Cu.setWantXrays(gWinA3);
 
     gWinA1.wrappedJSObject.placeExpando('A1_expando', 11, gWinA2.document);
     gWinA3.wrappedJSObject.placeExpando('A3_expando', 33, gWinA2.document);

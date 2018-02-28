@@ -31,7 +31,7 @@ SSLExceptions.prototype = {
         aIID.equals(Ci.nsISupports))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   /**
@@ -61,9 +61,9 @@ SSLExceptions.prototype = {
       // We *expect* exceptions if there are problems with the certificate
       // presented by the site.  Log it, just in case, but we can proceed here,
       // with appropriate sanity checks
-      Components.utils.reportError("Attempted to connect to a site with a bad certificate in the add exception dialog. " +
-                                   "This results in a (mostly harmless) exception being thrown. " +
-                                   "Logged for information purposes only: " + e);
+      Cu.reportError("Attempted to connect to a site with a bad certificate in the add exception dialog. " +
+                     "This results in a (mostly harmless) exception being thrown. " +
+                     "Logged for information purposes only: " + e);
     }
 
     return this._sslStatus;

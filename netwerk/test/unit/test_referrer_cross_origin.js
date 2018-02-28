@@ -34,7 +34,7 @@ function test_policy(test) {
     securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
   });
 
-  chan.QueryInterface(Components.interfaces.nsIHttpChannel);
+  chan.QueryInterface(Ci.nsIHttpChannel);
   chan.setReferrerWithPolicy(referrer, test.policy);
   if (test.expectedReferrerSpec === undefined) {
     try {

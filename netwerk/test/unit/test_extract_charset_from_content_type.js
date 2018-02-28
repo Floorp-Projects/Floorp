@@ -24,8 +24,8 @@ function check(aHadCharset, aCharset, aCharsetStart, aCharsetEnd) {
 }
 
 function run_test() {
-  var netutil = Components.classes["@mozilla.org/network/util;1"]
-                          .getService(Components.interfaces.nsINetUtil);
+  var netutil = Cc["@mozilla.org/network/util;1"]
+                  .getService(Ci.nsINetUtil);
   hadCharset =
     netutil.extractCharsetFromContentType("text/html", charset, charsetStart,
 					  charsetEnd);

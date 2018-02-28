@@ -4,8 +4,8 @@
 function read_stream(stream, count) {
   /* assume stream has non-ASCII data */
   var wrapper =
-      Components.classes["@mozilla.org/binaryinputstream;1"]
-                .createInstance(Components.interfaces.nsIBinaryInputStream);
+      Cc["@mozilla.org/binaryinputstream;1"]
+        .createInstance(Ci.nsIBinaryInputStream);
   wrapper.setInputStream(stream);
   /* JS methods can be called with a maximum of 65535 arguments, and input
      streams don't have to return all the data they make .available() when
@@ -65,11 +65,11 @@ ChannelListener.prototype = {
   _lastEvent: 0,
 
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIStreamListener) ||
-        iid.equals(Components.interfaces.nsIRequestObserver) ||
-        iid.equals(Components.interfaces.nsISupports))
+    if (iid.equals(Ci.nsIStreamListener) ||
+        iid.equals(Ci.nsIRequestObserver) ||
+        iid.equals(Ci.nsISupports))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   onStartRequest: function(request, context) {
@@ -94,7 +94,7 @@ ChannelListener.prototype = {
       else if (!this._isFromCache && !thrown)
         do_throw("Shouldn't get a CacheEntryId");
 
-      request.QueryInterface(Components.interfaces.nsIChannel);
+      request.QueryInterface(Ci.nsIChannel);
       try {
         this._contentLen = request.contentLength;
       }

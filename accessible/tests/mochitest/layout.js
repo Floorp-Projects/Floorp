@@ -60,9 +60,9 @@ function testOffsetAtPoint(aHyperTextID, aX, aY, aCoordType, aExpectedOffset) {
  */
 function zoomDocument(aDocument, aZoom) {
   var docShell = aDocument.defaultView.
-    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-    getInterface(Components.interfaces.nsIWebNavigation).
-    QueryInterface(Components.interfaces.nsIDocShell);
+    QueryInterface(Ci.nsIInterfaceRequestor).
+    getInterface(Ci.nsIWebNavigation).
+    QueryInterface(Ci.nsIDocShell);
   var docViewer = docShell.contentViewer;
 
   docViewer.fullZoom = aZoom;
@@ -238,8 +238,8 @@ function getBoundsForDOMElm(aID) {
 
 function CSSToDevicePixels(aWindow, aX, aY, aWidth, aHeight) {
   var winUtil = aWindow.
-    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-    getInterface(Components.interfaces.nsIDOMWindowUtils);
+    QueryInterface(Ci.nsIInterfaceRequestor).
+    getInterface(Ci.nsIDOMWindowUtils);
 
   var ratio = winUtil.screenPixelsPerCSSPixel;
 

@@ -49,8 +49,8 @@ function testFirstPartyDomain(pageInfo) {
         }
 
         // Check the node has the attribute 'triggeringprincipal'.
-        let serial = Components.classes["@mozilla.org/network/serialization-helper;1"]
-                               .getService(Components.interfaces.nsISerializationHelper);
+        let serial = Cc["@mozilla.org/network/serialization-helper;1"]
+                       .getService(Ci.nsISerializationHelper);
         let loadingPrincipalStr = preview.getAttribute("triggeringprincipal");
         let loadingPrincipal = serial.deserializeObject(loadingPrincipalStr);
         Assert.equal(loadingPrincipal.originAttributes.firstPartyDomain, EXPECTED_DOMAIN,

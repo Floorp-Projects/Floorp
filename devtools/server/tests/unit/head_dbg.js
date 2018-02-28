@@ -651,7 +651,7 @@ function executeOnNextTickAndWaitForPause(action, client) {
 }
 
 function evalCallback(debuggeeGlobal, func) {
-  Components.utils.evalInSandbox(
+  Cu.evalInSandbox(
     "(" + func + ")()",
     debuggeeGlobal,
     "1.8",

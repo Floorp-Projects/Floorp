@@ -31,8 +31,8 @@ var gSearchPane = {
    * Initialize autocomplete to ensure prefs are in sync.
    */
   _initAutocomplete() {
-    Components.classes["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
-              .getService(Components.interfaces.mozIPlacesAutoComplete);
+    Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
+      .getService(Ci.mozIPlacesAutoComplete);
   },
 
   init() {
@@ -235,7 +235,7 @@ var gSearchPane = {
 
   observe(aEngine, aTopic, aVerb) {
     if (aTopic == "browser-search-engine-modified") {
-      aEngine.QueryInterface(Components.interfaces.nsISearchEngine);
+      aEngine.QueryInterface(Ci.nsISearchEngine);
       switch (aVerb) {
       case "engine-added":
         gEngineView._engineStore.addEngine(aEngine);
@@ -614,7 +614,7 @@ EngineView.prototype = {
     var sourceIndex = this.getSourceIndexFromDrag(dataTransfer);
     var sourceEngine = this._engineStore.engines[sourceIndex];
 
-    const nsITreeView = Components.interfaces.nsITreeView;
+    const nsITreeView = Ci.nsITreeView;
     if (dropIndex > sourceIndex) {
       if (orientation == nsITreeView.DROP_BEFORE)
         dropIndex--;

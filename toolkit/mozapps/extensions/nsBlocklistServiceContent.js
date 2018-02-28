@@ -81,7 +81,7 @@ Blocklist.prototype = {
   },
 
   getAddonBlocklistState(aAddon, aAppVersion, aToolkitVersion) {
-    return Components.interfaces.nsIBlocklistService.STATE_BLOCKED;
+    return Ci.nsIBlocklistService.STATE_BLOCKED;
   },
 
   // There are a few callers in layout that rely on this.

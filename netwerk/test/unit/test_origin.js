@@ -75,7 +75,7 @@ var Listener = function() {};
 Listener.prototype.clientPort = 0;
 Listener.prototype = {
   onStartRequest: function testOnStartRequest(request, ctx) {
-    Assert.ok(request instanceof Components.interfaces.nsIHttpChannel);
+    Assert.ok(request instanceof Ci.nsIHttpChannel);
 
     if (!Components.isSuccessCode(request.status)) {
       do_throw("Channel should have a success code! (" + request.status + ")");
@@ -104,7 +104,7 @@ Listener.prototype = {
 var FailListener = function() {};
 FailListener.prototype = {
   onStartRequest: function testOnStartRequest(request, ctx) {
-    Assert.ok(request instanceof Components.interfaces.nsIHttpChannel);
+    Assert.ok(request instanceof Ci.nsIHttpChannel);
     Assert.ok(!Components.isSuccessCode(request.status));
   },
   onDataAvailable: function testOnDataAvailable(request, ctx, stream, off, cnt) {
@@ -272,7 +272,7 @@ Http2PushApiListener.prototype = {
     if (aIID.equals(Ci.nsIHttpPushListener) ||
         aIID.equals(Ci.nsIStreamListener))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   // nsIHttpPushListener
@@ -291,7 +291,7 @@ Http2PushApiListener.prototype = {
       // any push of bar or madeup should not end up in onPush()
       Assert.equal(true, false);
     }
-    pushChannel.cancel(Components.results.NS_ERROR_ABORT);
+    pushChannel.cancel(Cr.NS_ERROR_ABORT);
   },
 
  // normal Channel listeners

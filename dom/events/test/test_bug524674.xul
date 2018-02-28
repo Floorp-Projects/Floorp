@@ -19,8 +19,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=524674
   <![CDATA[
   /** Test for Bug 524674 **/
 
-  var els = Components.classes["@mozilla.org/eventlistenerservice;1"]
-                      .getService(Components.interfaces.nsIEventListenerService);
+  var els = Cc["@mozilla.org/eventlistenerservice;1"]
+              .getService(Ci.nsIEventListenerService);
 
   function dummyListener() {}
 

@@ -30,7 +30,7 @@ add_task(async function test1() {
 
   await waitForMessage(true, gBrowser);
   is(getPermission(testPageURL, "indexedDB"),
-     Components.interfaces.nsIPermissionManager.ALLOW_ACTION,
+     Ci.nsIPermissionManager.ALLOW_ACTION,
      "Correct permission set");
   gBrowser.removeCurrentTab();
 });
@@ -54,7 +54,7 @@ add_task(async function test2() {
 
   await waitForMessage(true, gBrowser);
   is(getPermission(testPageURL, "indexedDB"),
-     Components.interfaces.nsIPermissionManager.ALLOW_ACTION,
+     Ci.nsIPermissionManager.ALLOW_ACTION,
      "Correct permission set");
   gBrowser.removeCurrentTab();
   unregisterAllPopupEventHandlers();

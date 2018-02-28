@@ -1,7 +1,7 @@
 function run_test() {
   dump("INFO | test_crashreporter.js | Get crashreporter service.\n");
-  var cr = Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
-                     .getService(Components.interfaces.nsICrashReporter);
+  var cr = Cc["@mozilla.org/toolkit/crash-reporter;1"]
+             .getService(Ci.nsICrashReporter);
   Assert.notEqual(cr, null);
 
   Assert.ok(cr.enabled);
@@ -10,7 +10,7 @@ function run_test() {
     cr.serverURL;
     do_throw("Getting serverURL when not set should have thrown!");
   } catch (ex) {
-    Assert.equal(ex.result, Components.results.NS_ERROR_FAILURE);
+    Assert.equal(ex.result, Cr.NS_ERROR_FAILURE);
   }
 
   // check setting/getting serverURL
@@ -28,7 +28,7 @@ function run_test() {
     cr.serverURL = Services.io.newURI("ftp://example.com/submit");
     do_throw("Setting serverURL to a non-http(s) URL should have thrown!");
   } catch (ex) {
-    Assert.equal(ex.result, Components.results.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 
   // check getting/setting minidumpPath
@@ -43,19 +43,19 @@ function run_test() {
     cr.annotateCrashReport("equal=equal", "");
     do_throw("Calling annotateCrashReport() with an '=' in key should have thrown!");
   } catch (ex) {
-    Assert.equal(ex.result, Components.results.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
   try {
     cr.annotateCrashReport("new\nline", "");
     do_throw("Calling annotateCrashReport() with a '\\n' in key should have thrown!");
   } catch (ex) {
-    Assert.equal(ex.result, Components.results.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
   try {
     cr.annotateCrashReport("", "da\0ta");
     do_throw("Calling annotateCrashReport() with a '\\0' in data should have thrown!");
   } catch (ex) {
-    Assert.equal(ex.result, Components.results.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
   cr.annotateCrashReport("testKey", "testData1");
   // Replace previous data.
@@ -65,7 +65,7 @@ function run_test() {
     cr.appendAppNotesToCrashReport("da\0ta");
     do_throw("Calling appendAppNotesToCrashReport() with a '\\0' in data should have thrown!");
   } catch (ex) {
-    Assert.equal(ex.result, Components.results.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
   cr.appendAppNotesToCrashReport("additional testData3");
   // Add more data.

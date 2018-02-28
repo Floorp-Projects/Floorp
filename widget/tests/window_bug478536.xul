@@ -80,8 +80,8 @@ var gTests = [
 var gCurrentTestIndex = -1;
 var gIgnoreScrollEvent = true;
 
-var gPrefSvc = Components.classes["@mozilla.org/preferences-service;1"].
-               getService(Components.interfaces.nsIPrefBranch);
+var gPrefSvc = Cc["@mozilla.org/preferences-service;1"].
+               getService(Ci.nsIPrefBranch);
 const kPrefSmoothScroll = "general.smoothScroll";
 const kPrefNameTimeout = "mousewheel.transaction.timeout";
 const kDefaultTimeout = gPrefSvc.getIntPref(kPrefNameTimeout);

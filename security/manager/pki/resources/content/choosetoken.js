@@ -6,7 +6,7 @@
 /* import-globals-from pippki.js */
 "use strict";
 
-const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
+const nsIDialogParamBlock = Ci.nsIDialogParamBlock;
 
 var dialogParams;
 

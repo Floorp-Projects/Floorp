@@ -86,7 +86,7 @@
                 this.updateDisplay();
                 BrowserSearch.updateOpenSearchBadge();
               } else {
-                Components.utils.reportError("Cannot initialize search service, bailing out: " + aStatus);
+                Cu.reportError("Cannot initialize search service, bailing out: " + aStatus);
               }
             });
           });
@@ -447,7 +447,7 @@
                 fieldname: textBox.getAttribute("autocompletesearchparam"),
                 value: aData },
               { handleError(aError) {
-                  Components.utils.reportError("Saving search to form history failed: " + aError.message);
+                  Cu.reportError("Saving search to form history failed: " + aError.message);
               }});
           }
 

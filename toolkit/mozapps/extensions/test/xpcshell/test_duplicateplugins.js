@@ -87,11 +87,11 @@ var PluginHost = {
   },
 
   QueryInterface(iid) {
-    if (iid.equals(Components.interfaces.nsIPluginHost)
-     || iid.equals(Components.interfaces.nsISupports))
+    if (iid.equals(Ci.nsIPluginHost)
+     || iid.equals(Ci.nsISupports))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   }
 };
 

@@ -420,7 +420,7 @@ add_task(async function log_message_with_params() {
    * a named param or they're the only param, but not if they're a field in a
    * larger structure.
    */
-  let err = Components.Exception("test exception", Components.results.NS_ERROR_FAILURE);
+  let err = Components.Exception("test exception", Cr.NS_ERROR_FAILURE);
   let str = formatMessage("Exception is ${}", err);
   Assert.ok(str.includes('Exception is [Exception... "test exception"'));
   Assert.ok(str.includes("(NS_ERROR_FAILURE)"));

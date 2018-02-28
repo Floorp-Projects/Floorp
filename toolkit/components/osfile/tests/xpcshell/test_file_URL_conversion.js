@@ -7,7 +7,7 @@ function run_test() {
   ChromeUtils.import("resource://gre/modules/osfile.jsm");
   ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
-  let isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
+  let isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 
   // Test cases for filePathToURI
   let paths = isWindows ? [
@@ -98,7 +98,7 @@ function run_test() {
 
   for (let uri of uris) {
     // convert URIs to paths with nsIFileURI, which fromFileURI is trying to model
-    let path = Services.io.newURI(uri).QueryInterface(Components.interfaces.nsIFileURL).file.path;
+    let path = Services.io.newURI(uri).QueryInterface(Ci.nsIFileURL).file.path;
     Assert.equal(path, OS.Path.fromFileURI(uri));
   }
 

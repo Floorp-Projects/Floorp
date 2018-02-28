@@ -5,8 +5,8 @@
 
 function run_test()
 {
-  var domParser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
-                            .createInstance(Components.interfaces.nsIDOMParser);
+  var domParser = Cc["@mozilla.org/xmlextras/domparser;1"]
+                    .createInstance(Ci.nsIDOMParser);
   var aDom = domParser.parseFromString("<root><feed><entry/><entry/></feed></root>",
                                        "application/xml");
   var feedList = aDom.getElementsByTagName("feed");

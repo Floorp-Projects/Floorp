@@ -142,7 +142,7 @@ var SitePermissions = {
   ALLOW: Services.perms.ALLOW_ACTION,
   BLOCK: Services.perms.DENY_ACTION,
   PROMPT: Services.perms.PROMPT_ACTION,
-  ALLOW_COOKIES_FOR_SESSION: Components.interfaces.nsICookiePermission.ACCESS_SESSION,
+  ALLOW_COOKIES_FOR_SESSION: Ci.nsICookiePermission.ACCESS_SESSION,
 
   // Permission scopes.
   SCOPE_REQUEST: "{SitePermissions.SCOPE_REQUEST}",

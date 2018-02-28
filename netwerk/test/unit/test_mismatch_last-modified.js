@@ -21,11 +21,11 @@ var listener_3 = {
     // the cache invalidation. it expects to see the 'right data'
 
     QueryInterface: function(iid) {
-	if (iid.equals(Components.interfaces.nsIStreamListener) ||
-            iid.equals(Components.interfaces.nsIRequestObserver) ||
-            iid.equals(Components.interfaces.nsISupports))
+	if (iid.equals(Ci.nsIStreamListener) ||
+            iid.equals(Ci.nsIRequestObserver) ||
+            iid.equals(Ci.nsISupports))
 	    return this;
-	throw Components.results.NS_ERROR_NO_INTERFACE;
+	throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
     onStartRequest: function test_onStartR(request, ctx) {},
@@ -48,11 +48,11 @@ XPCOMUtils.defineLazyGetter(this, "listener_2", function() {
     // corrupted cache entry. its revalidation prompts it to be cleaned
 
     QueryInterface: function(iid) {
-	if (iid.equals(Components.interfaces.nsIStreamListener) ||
-            iid.equals(Components.interfaces.nsIRequestObserver) ||
-            iid.equals(Components.interfaces.nsISupports))
+	if (iid.equals(Ci.nsIStreamListener) ||
+            iid.equals(Ci.nsIRequestObserver) ||
+            iid.equals(Ci.nsISupports))
 	    return this;
-	throw Components.results.NS_ERROR_NO_INTERFACE;
+	throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
     onStartRequest: function test_onStartR(request, ctx) {},
@@ -84,11 +84,11 @@ XPCOMUtils.defineLazyGetter(this, "listener_1", function() {
     // the server responds with the wrong data ('A')
 
     QueryInterface: function(iid) {
-	if (iid.equals(Components.interfaces.nsIStreamListener) ||
-            iid.equals(Components.interfaces.nsIRequestObserver) ||
-            iid.equals(Components.interfaces.nsISupports))
+	if (iid.equals(Ci.nsIStreamListener) ||
+            iid.equals(Ci.nsIRequestObserver) ||
+            iid.equals(Ci.nsISupports))
 	    return this;
-	throw Components.results.NS_ERROR_NO_INTERFACE;
+	throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
     onStartRequest: function test_onStartR(request, ctx) {},

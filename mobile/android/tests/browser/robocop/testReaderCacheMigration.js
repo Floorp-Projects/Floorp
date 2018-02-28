@@ -6,7 +6,7 @@
 
 /* eslint-disable mozilla/use-chromeutils-import */
 
-Components.utils.import("resource://gre/modules/ReaderMode.jsm");
+Cu.import("resource://gre/modules/ReaderMode.jsm");
 
 var java = new JavaBridge(this);
 

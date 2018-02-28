@@ -625,7 +625,7 @@ nsPlacesExpiration.prototype = {
                   .getHistogramById("PLACES_MOST_RECENT_EXPIRED_VISIT_DAYS")
                   .add(this._mostRecentExpiredVisitDays);
         } catch (ex) {
-          Components.utils.reportError("Unable to report telemetry.");
+          Cu.reportError("Unable to report telemetry.");
         } finally {
           delete this._mostRecentExpiredVisitDays;
         }
@@ -651,7 +651,7 @@ nsPlacesExpiration.prototype = {
                       .getHistogramById("PLACES_EXPIRATION_STEPS_TO_CLEAN2")
                       .add(this._telemetrySteps);
             } catch (ex) {
-              Components.utils.reportError("Unable to report telemetry.");
+              Cu.reportError("Unable to report telemetry.");
             }
           }
           this._telemetrySteps = 1;

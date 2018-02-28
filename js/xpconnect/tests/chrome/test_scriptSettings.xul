@@ -36,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=937317
 
     // If we call a scripted function in the other compartment, that becomes
     // the incumbent script.
-    function gib() { return Components.utils.getIncumbentGlobal(); };
+    function gib() { return Cu.getIncumbentGlobal(); };
     Cu.evalInSandbox(gib.toSource(), sb);
     iwin.eval(gib.toSource());
     is(sb.gib(), sb, "cross-compartment sb scripted");

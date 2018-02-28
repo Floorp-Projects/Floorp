@@ -22,8 +22,7 @@
 const {PSEUDO_ELEMENTS, CSS_PROPERTIES, PREFERENCES} = require("devtools/shared/css/generated/properties-db");
 const {generateCssProperties} = require("devtools/server/actors/css-properties");
 const {Preferences} = require("resource://gre/modules/Preferences.jsm");
-
-Components.utils.importGlobalProperties(["InspectorUtils"]);
+const InspectorUtils = require("InspectorUtils");
 
 function run_test() {
   const propertiesErrorMessage = "If this assertion fails, then the client side CSS " +

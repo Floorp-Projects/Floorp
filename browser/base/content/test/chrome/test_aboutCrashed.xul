@@ -52,7 +52,7 @@
 
       let errorPageReady = waitForErrorPage(frame1);
       frame1.docShell.chromeEventHandler.setAttribute("crashedPageTitle", "pageTitle");
-      frame1.docShell.displayLoadError(Components.results.NS_ERROR_CONTENT_CRASHED, uri1, null);
+      frame1.docShell.displayLoadError(Cr.NS_ERROR_CONTENT_CRASHED, uri1, null);
 
       await errorPageReady;
       frame1.docShell.chromeEventHandler.removeAttribute("crashedPageTitle");
@@ -62,7 +62,7 @@
                     "Correct about:tabcrashed displayed for page with title.");
 
       errorPageReady = waitForErrorPage(frame2);
-      frame2.docShell.displayLoadError(Components.results.NS_ERROR_CONTENT_CRASHED, uri2, null);
+      frame2.docShell.displayLoadError(Cr.NS_ERROR_CONTENT_CRASHED, uri2, null);
 
       await errorPageReady;
 

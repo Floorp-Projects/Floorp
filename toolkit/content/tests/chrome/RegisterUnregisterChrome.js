@@ -51,7 +51,7 @@ function copyDirToTempProfile(path, subdirname) {
 
   let tmpdir = Services.dirsvc.get("ProfD", Ci.nsIFile);
   tmpdir.append(subdirname);
-  tmpdir.createUnique(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o777);
+  tmpdir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o777);
 
   let rootDir = getParent(path);
   if (rootDir == "") {

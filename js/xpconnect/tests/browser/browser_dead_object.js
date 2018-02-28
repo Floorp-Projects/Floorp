@@ -14,12 +14,12 @@ add_task(async function test() {
     let doc = content.document;
     let {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm", {});
     let promise = TestUtils.topicObserved("inner-window-nuked", (subject, data) => {
-      let id = subject.QueryInterface(Components.interfaces.nsISupportsPRUint64).data;
+      let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
       return id == args.innerWindowId;
     });
     content.location = "about:home";
     await promise;
-    return Components.utils.isDeadWrapper(doc);
+    return Cu.isDeadWrapper(doc);
   });
   is(contentDocDead, true, "wrapper is dead");
   await BrowserTestUtils.removeTab(newTab); 

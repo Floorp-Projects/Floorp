@@ -63,7 +63,7 @@ const test = async function () {
 /* eslint-disable */
 function evalCode() {
   // Start a new script
-  Components.utils.evalInSandbox(
+  Cu.evalInSandbox(
     "var line0 = Error().lineNumber;\n(" + function () {
       debugger;
       var a = (function () {

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const nsIBLS = Components.interfaces.nsIBlocklistService;
+const nsIBLS = Ci.nsIBlocklistService;
 
 var PLUGINS = [{
   // Normal blacklisted plugin, before an invalid regexp
@@ -40,8 +40,8 @@ function run_test() {
   // We cannot force the blocklist to update so just copy our test list to the profile
   copyBlocklistToProfile(do_get_file("data/test_bug468528.xml"));
 
-  var blocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
-                            .getService(nsIBLS);
+  var blocklist = Cc["@mozilla.org/extensions/blocklist;1"]
+                    .getService(nsIBLS);
 
   // blocked (sanity check)
   Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == nsIBLS.STATE_BLOCKED);

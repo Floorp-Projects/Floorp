@@ -69,8 +69,8 @@
     let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIDOMWindowUtils);
 
-    let os = Components.classes["@mozilla.org/xre/app-info;1"]
-                       .getService(Ci.nsIXULRuntime).OS;
+    let os = Cc["@mozilla.org/xre/app-info;1"]
+               .getService(Ci.nsIXULRuntime).OS;
     let isLinux = (os == "Linux");
     let isMac = (os == "Darwin");
     let isWindows = (os == "WINNT");

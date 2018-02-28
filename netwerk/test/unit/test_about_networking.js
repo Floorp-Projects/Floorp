@@ -9,8 +9,8 @@ ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const gDashboard = Cc['@mozilla.org/network/dashboard;1']
   .getService(Ci.nsIDashboard);
 
-const gServerSocket = Components.classes["@mozilla.org/network/server-socket;1"]
-                             .createInstance(Components.interfaces.nsIServerSocket);
+const gServerSocket = Cc["@mozilla.org/network/server-socket;1"]
+                             .createInstance(Ci.nsIServerSocket);
 const gHttpServer = new HttpServer();
 
 add_test(function test_http() {

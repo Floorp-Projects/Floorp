@@ -90,10 +90,10 @@ function OpenCacheEntry(key, where, flags, lci) {
       _appCache: null,
 
       QueryInterface(iid) {
-        if (iid.equals(Components.interfaces.nsICacheEntryOpenCallback) ||
-            iid.equals(Components.interfaces.nsISupports))
+        if (iid.equals(Ci.nsICacheEntryOpenCallback) ||
+            iid.equals(Ci.nsISupports))
           return this;
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+        throw Cr.NS_ERROR_NO_INTERFACE;
       },
 
       onCacheEntryCheck(entry, appCache) {

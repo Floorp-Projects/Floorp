@@ -124,7 +124,7 @@ var BookmarkJSONUtils = Object.freeze({
               .getHistogramById("PLACES_BACKUPS_TOJSON_MS")
               .add(Date.now() - startTime);
     } catch (ex) {
-      Components.utils.reportError("Unable to report telemetry.");
+      Cu.reportError("Unable to report telemetry.");
     }
 
     let hash = generateHash(jsonString);
@@ -492,7 +492,7 @@ function insertFaviconForNode(node) {
         PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
         Services.scriptSecurityManager.getSystemPrincipal());
     } catch (ex) {
-      Components.utils.reportError("Failed to import favicon data:" + ex);
+      Cu.reportError("Failed to import favicon data:" + ex);
     }
   }
 
@@ -506,7 +506,7 @@ function insertFaviconForNode(node) {
       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
       Services.scriptSecurityManager.getSystemPrincipal());
   } catch (ex) {
-    Components.utils.reportError("Failed to import favicon URI:" + ex);
+    Cu.reportError("Failed to import favicon URI:" + ex);
   }
 }
 

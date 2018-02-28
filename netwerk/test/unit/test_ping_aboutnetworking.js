@@ -52,7 +52,7 @@ function run_test() {
     ps.clearUserPref("network.notify.changed");
   });
 
-  let serverSocket = Components.classes["@mozilla.org/network/server-socket;1"]
+  let serverSocket = Cc["@mozilla.org/network/server-socket;1"]
     .createInstance(Ci.nsIServerSocket);
   serverSocket.init(-1, true, -1);
 

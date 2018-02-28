@@ -48,7 +48,7 @@ function _updateCurrentContentOuterWindowID(aBrowser) {
         " id=" + aBrowser.outerWindowID);
 
   _lastTopLevelWindowID = aBrowser.outerWindowID;
-  let windowIDWrapper = Components.classes["@mozilla.org/supports-PRUint64;1"]
+  let windowIDWrapper = Cc["@mozilla.org/supports-PRUint64;1"]
                           .createInstance(Ci.nsISupportsPRUint64);
   windowIDWrapper.data = _lastTopLevelWindowID;
   Services.obs.notifyObservers(windowIDWrapper,

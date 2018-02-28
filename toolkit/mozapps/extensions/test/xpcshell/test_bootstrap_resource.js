@@ -13,7 +13,7 @@ function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "2");
 
   let resourceProtocol = Services.io.getProtocolHandler("resource")
-                                 .QueryInterface(Components.interfaces.nsIResProtocolHandler);
+                                 .QueryInterface(Ci.nsIResProtocolHandler);
   startupManager();
 
   installAllFiles([do_get_addon("test_chromemanifest_6")],

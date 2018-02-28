@@ -131,7 +131,7 @@ var testnum = 0;
 var testdesc = "Setup of nsLoginInfo test-users";
 var nsLoginInfo = new Components.Constructor(
                     "@mozilla.org/login-manager/loginInfo;1",
-                    Components.interfaces.nsILoginInfo);
+                    Ci.nsILoginInfo);
 Assert.ok(nsLoginInfo != null);
 
 var testuser1 = new nsLoginInfo;

@@ -312,8 +312,8 @@ var openContextMenuForContentSelector = async function(browser, selector) {
 
     /* Open context menu so chrome can access the element */
     const domWindowUtils =
-      content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-             .getInterface(Components.interfaces.nsIDOMWindowUtils);
+      content.QueryInterface(Ci.nsIInterfaceRequestor)
+             .getInterface(Ci.nsIDOMWindowUtils);
     let rect = elt.getBoundingClientRect();
     let left = rect.left + rect.width / 2;
     let top = rect.top + rect.height / 2;

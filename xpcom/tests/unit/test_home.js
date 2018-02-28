@@ -3,8 +3,8 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 const CWD = do_get_cwd();
 function checkOS(os) {
   const nsILocalFile_ = "nsILocalFile" + os;
-  return nsILocalFile_ in Components.interfaces &&
-         CWD instanceof Components.interfaces[nsILocalFile_];
+  return nsILocalFile_ in Ci &&
+         CWD instanceof Ci[nsILocalFile_];
 }
 
 const isWin = checkOS("Win");

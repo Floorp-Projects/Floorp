@@ -1,5 +1,5 @@
-const ONLY_NONASCII = Components.interfaces.nsINetUtil.ESCAPE_URL_ONLY_NONASCII;
-const SKIP_CONTROL = Components.interfaces.nsINetUtil.ESCAPE_URL_SKIP_CONTROL;
+const ONLY_NONASCII = Ci.nsINetUtil.ESCAPE_URL_ONLY_NONASCII;
+const SKIP_CONTROL = Ci.nsINetUtil.ESCAPE_URL_SKIP_CONTROL;
 
 
 var tests = [
@@ -19,8 +19,8 @@ var tests = [
 ];
 
 function run_test() {
-  var util = Components.classes["@mozilla.org/network/util;1"]
-                       .getService(Components.interfaces.nsINetUtil);
+  var util = Cc["@mozilla.org/network/util;1"]
+               .getService(Ci.nsINetUtil);
 
   for (var i = 0; i < tests.length; ++i) {
     dump("Test " + i + " (" + tests[i][0] + ", " + tests[i][2] + ")\n");

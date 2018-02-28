@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const I                    = Components.interfaces;
-const C                    = Components.classes;
+const I                    = Ci;
+const C                    = Cc;
 
 const nsIFile         = I.nsIFile;
 const nsIProperties        = I.nsIProperties;

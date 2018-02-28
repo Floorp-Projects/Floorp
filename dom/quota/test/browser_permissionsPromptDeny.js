@@ -28,7 +28,7 @@ add_task(async function testPermissionDenied() {
   await waitForMessage(false, gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
-     Components.interfaces.nsIPermissionManager.DENY_ACTION,
+     Ci.nsIPermissionManager.DENY_ACTION,
      "Correct permission set");
   unregisterAllPopupEventHandlers();
   gBrowser.removeCurrentTab();
@@ -54,7 +54,7 @@ add_task(async function testNoPermissionPrompt() {
   await waitForMessage(false, gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
-     Components.interfaces.nsIPermissionManager.DENY_ACTION,
+     Ci.nsIPermissionManager.DENY_ACTION,
      "Correct permission set");
   unregisterAllPopupEventHandlers();
   gBrowser.removeCurrentTab();
@@ -82,7 +82,7 @@ add_task(async function testPermissionDeniedDismiss() {
   await waitForMessage(false, gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
-     Components.interfaces.nsIPermissionManager.DENY_ACTION,
+     Ci.nsIPermissionManager.DENY_ACTION,
      "Correct permission set");
   unregisterAllPopupEventHandlers();
   gBrowser.removeCurrentTab();

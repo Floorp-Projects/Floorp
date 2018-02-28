@@ -455,7 +455,7 @@ var PlacesBackups = {
               .getHistogramById("PLACES_BACKUPS_BOOKMARKSTREE_MS")
               .add(Date.now() - startTime);
     } catch (ex) {
-      Components.utils.reportError("Unable to report telemetry.");
+      Cu.reportError("Unable to report telemetry.");
     }
     return [root, root.itemsCount];
   },

@@ -77,7 +77,7 @@ TestInterfaceJS.prototype = {
   },
 
   testThrowNsresult: function() {
-      throw Components.results.NS_BINDING_ABORTED;
+      throw Cr.NS_BINDING_ABORTED;
   },
 
   testThrowNsresultFromNative: function(x) {

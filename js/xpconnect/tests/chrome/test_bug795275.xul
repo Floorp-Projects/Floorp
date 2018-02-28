@@ -38,15 +38,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795275
   var gListener = {
     observe: onWarning,
     QueryInterface: function (iid) {
-      if (!iid.equals(Components.interfaces.nsIConsoleListener) &&
-          !iid.equals(Components.interfaces.nsISupports)) {
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+      if (!iid.equals(Ci.nsIConsoleListener) &&
+          !iid.equals(Ci.nsISupports)) {
+        throw Cr.NS_ERROR_NO_INTERFACE;
       }
       return this;
     }
   };
-  var gConsoleService = Components.classes["@mozilla.org/consoleservice;1"]
-                                  .getService(Components.interfaces.nsIConsoleService);
+  var gConsoleService = Cc["@mozilla.org/consoleservice;1"]
+                          .getService(Ci.nsIConsoleService);
   gConsoleService.registerListener(gListener);
 
   // Wait for all four child frame to load.

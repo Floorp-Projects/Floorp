@@ -47,21 +47,21 @@ adapted from test_bug607584.xul by Kent James <kent@caspia.com>
   
     QueryInterface : function(aIID)
       {
-        if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
-            aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
-            aIID.equals(Components.interfaces.nsISupports))
+        if (aIID.equals(Ci.nsIWebProgressListener) ||
+            aIID.equals(Ci.nsISupportsWeakReference) ||
+            aIID.equals(Ci.nsISupports))
           return this;
-        throw Components.results.NS_NOINTERFACE;
+        throw Cr.NS_NOINTERFACE;
       },
   
     onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
     {
-        if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
+        if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
         {
           var editor = this.mEditor.getEditor(this.mEditor.contentWindow);
           if (editor) {
               this.mEditor.focus();
-              editor instanceof Components.interfaces.nsIHTMLEditor;
+              editor instanceof Ci.nsIHTMLEditor;
               editor.returnInParagraphCreatesNewParagraph = true;
               source = "<html><body><table><head></table></body></html>";
               editor.rebuildDocumentFromSource(source);
@@ -104,9 +104,9 @@ adapted from test_bug607584.xul by Kent James <kent@caspia.com>
     var newEditorElement = document.getElementById("editor");
     newEditorElement.makeEditable("html", true);
     var docShell = newEditorElement.boxObject.docShell;
-    progress = docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);
+    progress = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebProgress);
     progressListener = new EditorContentListener(newEditorElement);
-    progress.addProgressListener(progressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+    progress.addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_ALL);
     newEditorElement.setAttribute("src", "data:text/html,");
   }
 ]]>
