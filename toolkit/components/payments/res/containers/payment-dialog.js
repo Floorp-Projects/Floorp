@@ -155,6 +155,7 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
     switch (state.completionState) {
       case "initial":
       case "processing":
+      case "success":
         break;
       default:
         throw new Error("Invalid completionState");
