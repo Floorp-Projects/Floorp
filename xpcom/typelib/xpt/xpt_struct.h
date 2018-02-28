@@ -72,6 +72,9 @@ struct XPTHeader {
  * using its IID.  No interface should appear more than once in the array.
  */
 struct XPTInterfaceDirectoryEntry {
+  inline const XPTInterfaceDescriptor* InterfaceDescriptor() const;
+  inline const char* Name() const;
+
   nsID mIID;
   const char* mName;
 
@@ -96,6 +99,9 @@ struct XPTInterfaceDescriptor {
   bool IsFunction() const { return !!(mFlags & kFunctionMask); }
   bool IsBuiltinClass() const { return !!(mFlags & kBuiltinClassMask); }
   bool IsMainProcessScriptableOnly() const { return !!(mFlags & kMainProcessScriptableOnlyMask); }
+
+  inline const XPTMethodDescriptor& Method(size_t aIndex) const;
+  inline const XPTConstDescriptor& Const(size_t aIndex) const;
 
   /*
    * This field ordering minimizes the size of this struct.
@@ -245,6 +251,10 @@ union XPTConstValue {
 }; /* varies according to type */
 
 struct XPTConstDescriptor {
+  const char* Name() const {
+    return mName;
+  }
+
   const char* mName;
   XPTTypeDescriptor mType;
   union XPTConstValue mValue;
@@ -264,11 +274,38 @@ struct XPTParamDescriptor {
  * interface method.
  */
 struct XPTMethodDescriptor {
+  const char* Name() const {
+    return mName;
+  }
+  const XPTParamDescriptor& Param(uint8_t aIndex) const {
+    return mParams[aIndex];
+  }
+
   const char* mName;
   const XPTParamDescriptor* mParams;
   //XPTParamDescriptor mResult; // Present on disk, omitted here.
   uint8_t mFlags;
   uint8_t mNumArgs;
 };
+
+const char*
+XPTInterfaceDirectoryEntry::Name() const {
+  return mName;
+}
+
+const XPTInterfaceDescriptor*
+XPTInterfaceDirectoryEntry::InterfaceDescriptor() const {
+  return mInterfaceDescriptor;
+}
+
+const XPTMethodDescriptor&
+XPTInterfaceDescriptor::Method(size_t aIndex) const {
+  return mMethodDescriptors[aIndex];
+}
+
+const XPTConstDescriptor&
+XPTInterfaceDescriptor::Const(size_t aIndex) const {
+  return mConstDescriptors[aIndex];
+}
 
 #endif /* xpt_struct_h */
