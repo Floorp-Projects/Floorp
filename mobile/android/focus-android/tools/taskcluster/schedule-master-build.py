@@ -26,14 +26,14 @@ def generate_build_task():
 		description = "Build Focus/Klar for Android from source code.",
 		command = ('echo "--" > .adjust_token'
 				   ' && python tools/l10n/check_translations.py'
-				   ' && ./gradlew clean assemble'))
+				   ' && ./gradlew --no-daemon clean assemble'))
 
 
 def generate_unit_test_task(buildTaskId):
 	return taskcluster.slugId(), generate_task(
 		name = "(Focus for Android) Unit tests",
 		description = "Run unit tests for Focus/Klar for Android.",
-		command = 'echo "--" > .adjust_token && ./gradlew clean test',
+		command = 'echo "--" > .adjust_token && ./gradlew --no-daemon clean test',
 		dependencies = [ buildTaskId ])
 
 
@@ -41,7 +41,7 @@ def generate_code_quality_task(buildTaskId):
 	return taskcluster.slugId(), generate_task(
 		name = "(Focus for Android) Code quality",
 		description = "Run code quality tools on Focus/Klar for Android code base.",
-		command = 'echo "--" > .adjust_token && ./gradlew clean detektCheck ktlint lint pmd checkstyle findbugs',
+		command = 'echo "--" > .adjust_token && ./gradlew --no-daemon clean detektCheck ktlint lint pmd checkstyle findbugs',
 		dependencies = [ buildTaskId ])
 
 
@@ -50,7 +50,7 @@ def generate_ui_test_task(dependencies):
 		name = "(Focus for Android) UI tests",
 		description = "Run UI tests for Focus/Klar for Android.",
 		command = ('echo "--" > .adjust_token'
-			' && ./gradlew clean assembleFocusWebviewDebug assembleFocusWebviewDebugAndroidTest'
+			' && ./gradlew --no-daemon clean assembleFocusWebviewDebug assembleFocusWebviewDebugAndroidTest'
 			' && tools/taskcluster/execute-firebase-test.sh'),
 		dependencies = dependencies,
 		scopes = [ 'secrets:get:project/focus/firebase' ],
@@ -68,7 +68,7 @@ def generate_release_task(uiTestTaskId):
 		name = "(Focus for Android) Preview release",
 		description = "Build preview versions for testing Focus/Klar for Android.",
 		command = ('echo "--" > .adjust_token'
-			       ' && ./gradlew clean assembleBeta'
+			       ' && ./gradlew --no-daemon clean assembleBeta'
 			       ' && python tools/taskcluster/sign-preview-builds.py'
 			       ' && touch /opt/focus-android/builds/`date +"%Y-%m-%d-%H-%M"`'
 			       ' && touch /opt/focus-android/builds/' + COMMIT),

@@ -25,7 +25,7 @@ export LC_ALL="en_US.UTF-8"
 emulator64-arm -avd test -noaudio -no-window -no-accel -gpu off -verbose &
 
 # Build and install app & test APKs (while the emulator is booting..)
-./gradlew assembleFocusWebviewDebug assembleFocusWebviewDebugAndroidTest
+./gradlew --no-daemon assembleFocusWebviewDebug assembleFocusWebviewDebugAndroidTest
 
 # Start our server for running screencap on the emulator host (via HTTP)
 python $directory/screencap-server.py &
