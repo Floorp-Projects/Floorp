@@ -73,9 +73,9 @@ import java.util.List;
 public class CustomTabsActivity extends AppCompatActivity
                                 implements ActionModePresenter,
                                            GeckoMenu.Callback,
-                                           GeckoSession.ContentDelegate,
-                                           GeckoSession.NavigationDelegate,
-                                           GeckoSession.ProgressDelegate {
+                                           GeckoSession.ContentListener,
+                                           GeckoSession.NavigationListener,
+                                           GeckoSession.ProgressListener {
 
     private static final String LOGTAG = "CustomTabsActivity";
 
@@ -134,9 +134,9 @@ public class CustomTabsActivity extends AppCompatActivity
         mGeckoSession = new GeckoSession();
         mGeckoView.setSession(mGeckoSession);
 
-        mGeckoSession.setNavigationDelegate(this);
-        mGeckoSession.setProgressDelegate(this);
-        mGeckoSession.setContentDelegate(this);
+        mGeckoSession.setNavigationListener(this);
+        mGeckoSession.setProgressListener(this);
+        mGeckoSession.setContentListener(this);
 
         mPromptService = new PromptService(this, mGeckoView.getEventDispatcher());
         mDoorHangerPopup = new DoorHangerPopup(this, mGeckoView.getEventDispatcher());
@@ -591,7 +591,7 @@ public class CustomTabsActivity extends AppCompatActivity
         return null;
     }
 
-    /* GeckoSession.NavigationDelegate */
+    /* GeckoSession.NavigationListener */
     @Override
     public void onLocationChange(GeckoSession session, String url) {
         mCurrentUrl = url;
@@ -656,7 +656,7 @@ public class CustomTabsActivity extends AppCompatActivity
         throw new IllegalStateException("Unexpected new session");
     }
 
-    /* GeckoSession.ProgressDelegate */
+    /* GeckoSession.ProgressListener */
     @Override
     public void onPageStart(GeckoSession session, String url) {
         mCurrentUrl = url;
@@ -679,7 +679,7 @@ public class CustomTabsActivity extends AppCompatActivity
         updateActionBar();
     }
 
-    /* GeckoSession.ContentDelegate */
+    /* GeckoSession.ContentListener */
     @Override
     public void onTitleChange(GeckoSession session, String title) {
         mCurrentTitle = title;

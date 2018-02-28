@@ -63,7 +63,7 @@ public class BaseGeckoViewTest {
 
     protected void loadTestPage(final String url, final Runnable finished) {
         final String path = Uri.parse(url).getPath();
-        mSession.setProgressDelegate(new GeckoSession.ProgressDelegate() {
+        mSession.setProgressListener(new GeckoSession.ProgressListener() {
             @Override
             public void onPageStart(GeckoSession session, String loadingUrl) {
                 assertTrue("Loaded url should end with " + path, loadingUrl.endsWith(path));
@@ -72,7 +72,7 @@ public class BaseGeckoViewTest {
             @Override
             public void onPageStop(GeckoSession session, boolean success) {
                 assertTrue("Load should succeed", success);
-                mSession.setProgressDelegate(null);
+                mSession.setProgressListener(null);
                 finished.run();
             }
 

@@ -37,7 +37,7 @@ public class NavigationTests extends BaseGeckoViewTest {
             @Override public void run() {
                 loadTestPath("hello2.html", new Runnable() {
                     @Override public void run() {
-                        mSession.setNavigationDelegate(new GeckoSession.NavigationDelegate() {
+                        mSession.setNavigationListener(new GeckoSession.NavigationListener() {
                             @Override
                             public void onLocationChange(GeckoSession session, String url) {
                                 assertTrue("URL should end with " + startPath + ", got " + url, url.endsWith(startPath));
@@ -78,7 +78,7 @@ public class NavigationTests extends BaseGeckoViewTest {
     public void testReload() {
         loadTestPath("hello.html", new Runnable() {
             @Override public void run() {
-                mSession.setProgressDelegate(new GeckoSession.ProgressDelegate() {
+                mSession.setProgressListener(new GeckoSession.ProgressListener() {
                     @Override
                     public void onPageStart(GeckoSession session, String url) {
                     }
@@ -104,7 +104,7 @@ public class NavigationTests extends BaseGeckoViewTest {
 
     @Test
     public void testExpiredCert() {
-        mSession.setProgressDelegate(new GeckoSession.ProgressDelegate() {
+        mSession.setProgressListener(new GeckoSession.ProgressListener() {
             private boolean mNotBlank;
 
             @Override
@@ -133,7 +133,7 @@ public class NavigationTests extends BaseGeckoViewTest {
 
     @Test
     public void testValidTLS() {
-        mSession.setProgressDelegate(new GeckoSession.ProgressDelegate() {
+        mSession.setProgressListener(new GeckoSession.ProgressListener() {
             private boolean mNotBlank;
 
             @Override
@@ -162,7 +162,7 @@ public class NavigationTests extends BaseGeckoViewTest {
 
     @Test
     public void testOnNewSession() {
-        mSession.setNavigationDelegate(new GeckoSession.NavigationDelegate() {
+        mSession.setNavigationListener(new GeckoSession.NavigationListener() {
             @Override
             public void onLocationChange(GeckoSession session, String url) {
             }
@@ -185,7 +185,7 @@ public class NavigationTests extends BaseGeckoViewTest {
             @Override
             public void onNewSession(GeckoSession session, String uri, GeckoSession.Response<GeckoSession> response) {
                 final GeckoSession newSession = new GeckoSession(session.getSettings());
-                newSession.setContentDelegate(new GeckoSession.ContentDelegate() {
+                newSession.setContentListener(new GeckoSession.ContentListener() {
                     @Override
                     public void onTitleChange(GeckoSession session, String title) {
 
@@ -218,7 +218,7 @@ public class NavigationTests extends BaseGeckoViewTest {
             }
         });
 
-        mSession.setProgressDelegate(new GeckoSession.ProgressDelegate() {
+        mSession.setProgressListener(new GeckoSession.ProgressListener() {
             @Override
             public void onPageStart(GeckoSession session, String url) {
 
@@ -245,10 +245,10 @@ public class NavigationTests extends BaseGeckoViewTest {
     @Test(expected = IllegalArgumentException.class)
     public void testOnNewSessionNoExisting() {
         // This makes sure that we get an exception if you try to return
-        // an existing GeckoSession instance from the NavigationDelegate.onNewSession()
+        // an existing GeckoSession instance from the NavigationListener.onNewSession()
         // implementation.
 
-        mSession.setNavigationDelegate(new GeckoSession.NavigationDelegate() {
+        mSession.setNavigationListener(new GeckoSession.NavigationListener() {
             @Override
             public void onLocationChange(GeckoSession session, String url) {
             }
@@ -275,7 +275,7 @@ public class NavigationTests extends BaseGeckoViewTest {
             }
         });
 
-        mSession.setProgressDelegate(new GeckoSession.ProgressDelegate() {
+        mSession.setProgressListener(new GeckoSession.ProgressListener() {
             @Override
             public void onPageStart(GeckoSession session, String url) {
 
