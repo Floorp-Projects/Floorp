@@ -1456,7 +1456,7 @@ class Assembler : public AssemblerShared
     static void WriteInstStatic(uint32_t x, uint32_t* dest);
 
   public:
-    void writeCodePointer(CodeOffset* label);
+    void writeCodePointer(CodeLabel* label);
 
     void haltingAlign(int alignment);
     void nopAlign(int alignment);
@@ -1732,7 +1732,7 @@ class Assembler : public AssemblerShared
     // I'm going to pretend this doesn't exist for now.
     void retarget(Label* label, void* target, Relocation::Kind reloc);
 
-    static void Bind(uint8_t* rawCode, CodeOffset label, CodeOffset target);
+    static void Bind(uint8_t* rawCode, const CodeLabel& label);
 
     void as_bkpt();
     BufferOffset as_illegal_trap();

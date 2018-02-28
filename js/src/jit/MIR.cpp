@@ -6458,49 +6458,6 @@ jit::PropertyReadIsIdempotent(CompilerConstraintList* constraints,
     return true;
 }
 
-void
-jit::AddObjectsForPropertyRead(TempAllocator& tempAlloc, MDefinition* obj, PropertyName* name,
-                               TemporaryTypeSet* observed)
-{
-    // Add objects to observed which *could* be observed by reading name from obj,
-    // to hopefully avoid unnecessary type barriers and code invalidations.
-
-    LifoAlloc* alloc = tempAlloc.lifoAlloc();
-
-    TemporaryTypeSet* types = obj->resultTypeSet();
-    if (!types || types->unknownObject()) {
-        observed->addType(TypeSet::AnyObjectType(), alloc);
-        return;
-    }
-
-    for (size_t i = 0; i < types->getObjectCount(); i++) {
-        TypeSet::ObjectKey* key = types->getObject(i);
-        if (!key)
-            continue;
-
-        if (key->unknownProperties()) {
-            observed->addType(TypeSet::AnyObjectType(), alloc);
-            return;
-        }
-
-        jsid id = name ? NameToId(name) : JSID_VOID;
-        HeapTypeSetKey property = key->property(id);
-        HeapTypeSet* types = property.maybeTypes();
-        if (!types)
-            continue;
-
-        if (types->unknownObject()) {
-            observed->addType(TypeSet::AnyObjectType(), alloc);
-            return;
-        }
-
-        for (size_t i = 0; i < types->getObjectCount(); i++) {
-            if (TypeSet::ObjectKey* key = types->getObject(i))
-                observed->addType(TypeSet::ObjectType(key), alloc);
-        }
-    }
-}
-
 AbortReasonOr<bool>
 PrototypeHasIndexedProperty(IonBuilder* builder, JSObject* obj)
 {

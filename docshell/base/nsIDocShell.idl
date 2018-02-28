@@ -1183,6 +1183,9 @@ interface nsIDocShell : nsIDocShellTreeItem
   [noscript, nostdcall, notxpcom]
   UniqueClientSource TakeInitialClientSource();
 
+  void setColorMatrix([array, size_is(aMatrixLen)] in float aMatrix,
+                      [optional] in unsigned long aMatrixLen);
+
 %{C++
   /**
    * These methods call nsDocShell::GetHTMLEditorInternal() and

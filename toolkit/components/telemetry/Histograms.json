@@ -10436,6 +10436,16 @@
     "bug_numbers": [1258647],
     "description": "What was the result of the content signature verification? 0=valid, 1=invalid, 2=noCertChain, 3=createContextFailedWithOtherError, 4=expiredCert, 5=certNotValidYet, 6=buildCertChainFailed, 7=eeCertForWrongHost, 8=extractKeyError, 9=vfyContextError"
   },
+  "CONTENT_SIGNATURE_VERIFICATION_ERRORS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "fkiefer@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "keyed": true,
+    "labels": ["err0", "err1", "err2", "err3", "err4", "err5", "err6", "err7", "err8", "err9"],
+    "bug_numbers": [1435713],
+    "description": "Result of the content signature verification keyed by application (certificate fingerprint). 0=valid, 1=invalid, 2=noCertChain, 3=createContextFailedWithOtherError, 4=expiredCert, 5=certNotValidYet, 6=buildCertChainFailed, 7=eeCertForWrongHost, 8=extractKeyError, 9=vfyContextError"
+  },
   "HSTS_UPGRADE_SOURCE": {
     "record_in_processes": [ "main" ],
     "alert_emails": ["seceng-telemetry@mozilla.com"],

@@ -150,9 +150,8 @@ TEST_F(TlsConnectStreamTls13, CustomExtensionWriterDisable) {
       client_->ssl_fd(), ssl_signed_cert_timestamp_xtn, NoopExtensionWriter,
       nullptr, NoopExtensionHandler, nullptr);
   EXPECT_EQ(SECSuccess, rv);
-  auto capture =
-      std::make_shared<TlsExtensionCapture>(ssl_signed_cert_timestamp_xtn);
-  client_->SetPacketFilter(capture);
+  auto capture = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_signed_cert_timestamp_xtn);
 
   Connect();
   // So nothing will be sent.
@@ -204,9 +203,8 @@ TEST_F(TlsConnectStreamTls13, CustomExtensionOverride) {
   EXPECT_EQ(SECSuccess, rv);
 
   // Capture it to see what we got.
-  auto capture =
-      std::make_shared<TlsExtensionCapture>(ssl_signed_cert_timestamp_xtn);
-  client_->SetPacketFilter(capture);
+  auto capture = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_signed_cert_timestamp_xtn);
 
   ConnectExpectAlert(server_, kTlsAlertDecodeError);
 
@@ -246,8 +244,7 @@ TEST_F(TlsConnectStreamTls13, CustomExtensionClientToServer) {
   EXPECT_EQ(SECSuccess, rv);
 
   // Capture it to see what we got.
-  auto capture = std::make_shared<TlsExtensionCapture>(extension_code);
-  client_->SetPacketFilter(capture);
+  auto capture = MakeTlsFilter<TlsExtensionCapture>(client_, extension_code);
 
   // Handle it so that the handshake completes.
   rv = SSL_InstallExtensionHooks(server_->ssl_fd(), extension_code,
@@ -290,9 +287,8 @@ TEST_F(TlsConnectStreamTls13, CustomExtensionServerToClientSH) {
   EXPECT_EQ(SECSuccess, rv);
 
   // Capture the extension from the ServerHello only and check it.
-  auto capture = std::make_shared<TlsExtensionCapture>(extension_code);
+  auto capture = MakeTlsFilter<TlsExtensionCapture>(server_, extension_code);
   capture->SetHandshakeTypes({kTlsHandshakeServerHello});
-  server_->SetPacketFilter(capture);
 
   Connect();
 
@@ -329,9 +325,9 @@ TEST_F(TlsConnectStreamTls13, CustomExtensionServerToClientEE) {
   EXPECT_EQ(SECSuccess, rv);
 
   // Capture the extension from the EncryptedExtensions only and check it.
-  auto capture = std::make_shared<TlsExtensionCapture>(extension_code);
+  auto capture = MakeTlsFilter<TlsExtensionCapture>(server_, extension_code);
   capture->SetHandshakeTypes({kTlsHandshakeEncryptedExtensions});
-  server_->SetTlsRecordFilter(capture);
+  capture->EnableDecryption();
 
   Connect();
 
@@ -350,8 +346,7 @@ TEST_F(TlsConnectStreamTls13, CustomExtensionUnsolicitedServer) {
   EXPECT_EQ(SECSuccess, rv);
 
   // Capture it to see what we got.
-  auto capture = std::make_shared<TlsExtensionCapture>(extension_code);
-  server_->SetPacketFilter(capture);
+  auto capture = MakeTlsFilter<TlsExtensionCapture>(server_, extension_code);
 
   client_->ExpectSendAlert(kTlsAlertUnsupportedExtension);
   server_->ExpectSendAlert(kTlsAlertBadRecordMac);
@@ -500,4 +495,4 @@ TEST_F(TlsConnectStreamTls13, CustomExtensionOverrunBuffer) {
   client_->CheckErrorCode(SEC_ERROR_APPLICATION_CALLBACK_ERROR);
 }
 
-}  // namespace "nss_test"
+}  // namespace nss_test

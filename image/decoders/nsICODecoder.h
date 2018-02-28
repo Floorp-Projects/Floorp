@@ -45,6 +45,7 @@ public:
   /// @return The offset from the beginning of the ICO to the first resource.
   size_t FirstResourceOffset() const;
 
+  DecoderType GetType() const override { return DecoderType::ICO; }
   LexerResult DoDecode(SourceBufferIterator& aIterator,
                        IResumable* aOnResume) override;
   nsresult FinishInternal() override;

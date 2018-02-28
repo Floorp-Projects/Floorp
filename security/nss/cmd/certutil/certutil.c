@@ -1371,7 +1371,7 @@ luF(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "F"));
     if (ul == usage_all || !command || is_my_command)
-    FPS "%-15s Delete a key from the database\n",
+    FPS "%-15s Delete a key and associated certificate from the database\n",
         "-F");
     if (ul == usage_selected && !is_my_command)
         return;
