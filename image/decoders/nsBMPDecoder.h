@@ -125,6 +125,8 @@ class nsBMPDecoder : public Decoder
 public:
   ~nsBMPDecoder();
 
+  DecoderType GetType() const override { return DecoderType::BMP; }
+
   /// @return true if this BMP is a valid ICO resource.
   bool IsValidICOResource() const override { return true; }
 
