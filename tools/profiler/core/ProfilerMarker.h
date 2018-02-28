@@ -54,7 +54,7 @@ public:
 
     aWriter.StartArrayElement();
     {
-      aUniqueStacks.mUniqueStrings->WriteElement(aWriter, mMarkerName.get());
+      aUniqueStacks.mUniqueStrings.WriteElement(aWriter, mMarkerName.get());
       aWriter.DoubleElement(mTime);
       // TODO: Store the callsite for this marker if available:
       // if have location data
