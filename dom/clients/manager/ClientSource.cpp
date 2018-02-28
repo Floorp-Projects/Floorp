@@ -8,6 +8,7 @@
 
 #include "ClientManager.h"
 #include "ClientManagerChild.h"
+#include "ClientPrincipalUtils.h"
 #include "ClientSourceChild.h"
 #include "ClientState.h"
 #include "ClientValidation.h"
@@ -375,6 +376,11 @@ void
 ClientSource::SetController(const ServiceWorkerDescriptor& aServiceWorker)
 {
   NS_ASSERT_OWNINGTHREAD(ClientSource);
+
+  // We should never have a cross-origin controller.  Since this would be
+  // same-origin policy violation we do a full release assertion here.
+  MOZ_RELEASE_ASSERT(ClientMatchPrincipalInfo(mClientInfo.PrincipalInfo(),
+                                              aServiceWorker.PrincipalInfo()));
 
   // A client in private browsing mode should never be controlled by
   // a service worker.  The principal origin attributes should guarantee
