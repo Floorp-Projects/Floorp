@@ -597,8 +597,7 @@ function _execute_test() {
     }
     _cleanupFunctions = [];
   }).catch(reportCleanupError).then(() => complete = true);
-  let tm = Cc["@mozilla.org/thread-manager;1"].getService();
-  tm.spinEventLoopUntil(() => complete);
+  _Services.tm.spinEventLoopUntil(() => complete);
 
   // Restore idle service to avoid leaks.
   _fakeIdleService.deactivate();
