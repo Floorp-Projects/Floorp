@@ -35,6 +35,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
   LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
+  OpenInTabsUtils: "resource:///modules/OpenInTabsUtils.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
   PanelMultiView: "resource:///modules/PanelMultiView.jsm",
@@ -3569,12 +3570,23 @@ var newTabButtonObserver = {
   },
   onDragExit(aEvent) {},
   async onDrop(aEvent) {
+    let shiftKey = aEvent.shiftKey;
     let links = browserDragAndDrop.dropLinks(aEvent);
+
+    if (links.length >= Services.prefs.getIntPref("browser.tabs.maxOpenBeforeWarn")) {
+      // Sync dialog cannot be used inside drop event handler.
+      let answer = await OpenInTabsUtils.promiseConfirmOpenInTabs(links.length,
+                                                                  window);
+      if (!answer) {
+        return;
+      }
+    }
+
     for (let link of links) {
       if (link.url) {
         let data = await getShortcutOrURIAndPostData(link.url);
         // Allow third-party services to fixup this URL.
-        openNewTabWith(data.url, null, data.postData, aEvent, true);
+        openNewTabWith(data.url, null, data.postData, shiftKey, true);
       }
     }
   }
@@ -3587,6 +3599,16 @@ var newWindowButtonObserver = {
   onDragExit(aEvent) {},
   async onDrop(aEvent) {
     let links = browserDragAndDrop.dropLinks(aEvent);
+
+    if (links.length >= Services.prefs.getIntPref("browser.tabs.maxOpenBeforeWarn")) {
+      // Sync dialog cannot be used inside drop event handler.
+      let answer = await OpenInTabsUtils.promiseConfirmOpenInTabs(links.length,
+                                                                  window);
+      if (!answer) {
+        return;
+      }
+    }
+
     for (let link of links) {
       if (link.url) {
         let data = await getShortcutOrURIAndPostData(link.url);
@@ -6113,6 +6135,15 @@ function handleDroppedLink(event, urlOrLinks, nameOrTriggeringPrincipal, trigger
   }
 
   (async function() {
+    if (links.length >= Services.prefs.getIntPref("browser.tabs.maxOpenBeforeWarn")) {
+      // Sync dialog cannot be used inside drop event handler.
+      let answer = await OpenInTabsUtils.promiseConfirmOpenInTabs(links.length,
+                                                                  window);
+      if (!answer) {
+        return;
+      }
+    }
+
     let urls = [];
     let postDatas = [];
     for (let link of links) {
