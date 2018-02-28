@@ -301,7 +301,7 @@ xptiInterfaceEntry::GetInterfaceIndexForParam(uint16_t methodIndex,
     const XPTTypeDescriptor *td = &param->mType;
 
     while (td->Tag() == TD_ARRAY) {
-        td = td->ArrayElementType(mDescriptor);
+        td = td->ArrayElementType();
     }
 
     if (td->Tag() != TD_INTERFACE_TYPE) {
@@ -441,7 +441,7 @@ xptiInterfaceEntry::GetTypeInArray(const nsXPTParamInfo* param,
             NS_ERROR("bad dimension");
             return NS_ERROR_INVALID_ARG;
         }
-        td = td->ArrayElementType(mDescriptor);
+        td = td->ArrayElementType();
     }
 
     *type = td;
@@ -549,7 +549,7 @@ xptiInterfaceEntry::GetInterfaceIsArgNumberForParam(uint16_t methodIndex,
     const XPTTypeDescriptor *td = &param->mType;
 
     while (td->Tag() == TD_ARRAY) {
-        td = td->ArrayElementType(mDescriptor);
+        td = td->ArrayElementType();
     }
 
     if (td->Tag() != TD_INTERFACE_IS_TYPE) {
