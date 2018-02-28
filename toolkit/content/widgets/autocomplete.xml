@@ -43,8 +43,8 @@
       <field name="_textRevertedHandler">null</field>
 
       <constructor><![CDATA[
-        this.mController = Components.classes["@mozilla.org/autocomplete/controller;1"].
-          getService(Components.interfaces.nsIAutoCompleteController);
+        this.mController = Cc["@mozilla.org/autocomplete/controller;1"].
+          getService(Ci.nsIAutoCompleteController);
 
         this._searchBeginHandler = this.initEventHandler("searchbegin");
         this._searchCompleteHandler = this.initEventHandler("searchcomplete");
@@ -176,8 +176,8 @@
         <parameter name="aValue"/>
         <parameter name="aReason"/>
         <body><![CDATA[
-          if (aReason == Components.interfaces.nsIAutoCompleteInput
-                                   .TEXTVALUE_REASON_COMPLETEDEFAULT) {
+          if (aReason == Ci.nsIAutoCompleteInput
+                           .TEXTVALUE_REASON_COMPLETEDEFAULT) {
             this._disableTrim = true;
           }
           this.textValue = aValue;
@@ -581,7 +581,7 @@
       <field name="_pasteController"><![CDATA[
         ({
           _autocomplete: this,
-          _kGlobalClipboard: Components.interfaces.nsIClipboard.kGlobalClipboard,
+          _kGlobalClipboard: Ci.nsIClipboard.kGlobalClipboard,
           supportsCommand: aCommand => aCommand == "cmd_paste",
           doCommand(aCommand) {
             this._autocomplete._valueIsPasted = true;
@@ -1035,7 +1035,7 @@
             // due to new results, but only when: the item is the same, *OR*
             // we are about to replace the currently moused-over item, to
             // avoid surprising the user.
-            let iface = Components.interfaces.nsIAutoCompletePopup;
+            let iface = Ci.nsIAutoCompletePopup;
             if (reusable &&
                 originalText == trimmedSearchString &&
                 invalidateReason == iface.INVALIDATE_REASON_NEW_RESULT &&
@@ -1425,8 +1425,8 @@
           <![CDATA[
           if (!this._boundaryCutoff) {
             this._boundaryCutoff =
-              Components.classes["@mozilla.org/preferences-service;1"].
-              getService(Components.interfaces.nsIPrefBranch).
+              Cc["@mozilla.org/preferences-service;1"].
+              getService(Ci.nsIPrefBranch).
               getIntPref("toolkit.autocomplete.richBoundaryCutoff");
           }
           return this._boundaryCutoff;

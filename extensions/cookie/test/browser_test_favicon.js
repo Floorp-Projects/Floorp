@@ -7,7 +7,7 @@ add_task(async function() {
 	await SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 1]]});
 
   let promise = TestUtils.topicObserved("cookie-rejected", subject => {
-    let uri = subject.QueryInterface(Components.interfaces.nsIURI);
+    let uri = subject.QueryInterface(Ci.nsIURI);
     return uri.spec == iconUrl;
   });
 

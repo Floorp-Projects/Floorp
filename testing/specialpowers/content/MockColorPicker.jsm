@@ -22,11 +22,11 @@ var newFactory = function(window) {
   return {
     createInstance(aOuter, aIID) {
       if (aOuter)
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
+        throw Cr.NS_ERROR_NO_AGGREGATION;
       return new MockColorPickerInstance(window).QueryInterface(aIID);
     },
     lockFactory(aLock) {
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     },
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
   };

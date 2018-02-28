@@ -1884,8 +1884,8 @@ class PPAPIInstance {
     }
 
     let clipboardHelper =
-      Components.classes["@mozilla.org/widget/clipboardhelper;1"].
-      getService(Components.interfaces.nsIClipboardHelper);
+      Cc["@mozilla.org/widget/clipboardhelper;1"].
+      getService(Ci.nsIClipboardHelper);
     clipboardHelper.copyString(this.selectedText);
   }
 }
@@ -2637,8 +2637,8 @@ dump(`callFromJSON: < ${JSON.stringify(call)}\n`);
     PPB_Flash_Clipboard_WriteData: function(json) {
       //FIXME We only support standard clipboard w/ plaintext format
       let clipboardHelper =
-        Components.classes["@mozilla.org/widget/clipboardhelper;1"].
-        getService(Components.interfaces.nsIClipboardHelper);
+        Cc["@mozilla.org/widget/clipboardhelper;1"].
+        getService(Ci.nsIClipboardHelper);
       for (let i = 0; i < json.data_item_count; ++i) {
         if (json.formats[i] ==
             PP_Flash_Clipboard_Format.PP_FLASH_CLIPBOARD_FORMAT_PLAINTEXT) {

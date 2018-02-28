@@ -28,8 +28,8 @@ var Modules = (function (modules) {
         getDOMParser: function () {
             if (typeof DOMParser === undefined) {
                 try {
-                    return Components.classes["@mozilla.org/xmlextras/domparser;1"]
-                        .createInstance(Components.interfaces.nsIDOMParser);
+                    return Cc["@mozilla.org/xmlextras/domparser;1"]
+                        .createInstance(Ci.nsIDOMParser);
                 } catch (e) {
                     return undefined;
                 }

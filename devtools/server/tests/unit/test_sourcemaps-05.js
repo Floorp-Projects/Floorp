@@ -42,6 +42,6 @@ function test_relative_source_map() {
   let code = readFile("sourcemapped.js")
     + "\n//# sourceMappingURL=source-map-data/sourcemapped.map";
 
-  Components.utils.evalInSandbox(code, gDebuggee, "1.8",
-                                 getFileUrl("sourcemapped.js"), 1);
+  Cu.evalInSandbox(code, gDebuggee, "1.8",
+                   getFileUrl("sourcemapped.js"), 1);
 }

@@ -26,8 +26,8 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests, window);
 
-var fm = Components.classes["@mozilla.org/focus-manager;1"].
-           getService(Components.interfaces.nsIFocusManager);
+var fm = Cc["@mozilla.org/focus-manager;1"].
+           getService(Ci.nsIFocusManager);
 var textarea = document.getElementById("textarea");
 var otherWindow;
 var timer;

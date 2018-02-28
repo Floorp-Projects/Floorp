@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
     ok(!clipboardFile.exists(), "failed to presanitize the environment");
 
     // Overflow a nsTransferable region by using the clipboard helper
-    const gClipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"].getService(Components.interfaces.nsIClipboardHelper);
+    const gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
     gClipboardHelper.copyString(Ipsum);
 
     // Undefined private browsing mode should not cache to disk

@@ -113,7 +113,7 @@ function structural_check_eq_aux(a, b) {
 
 function trigger_gc() {
   dump("Triggering garbage-collection");
-  Components.utils.forceGC();
+  Cu.forceGC();
 }
 
 function must_throw(f, expected) {

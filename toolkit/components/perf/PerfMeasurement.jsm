@@ -16,4 +16,4 @@ var EXPORTED_SYMBOLS = [ "PerfMeasurement" ];
  *
  */
 
-Components.classes["@mozilla.org/jsperf;1"].createInstance()();
+Cc["@mozilla.org/jsperf;1"].createInstance()();

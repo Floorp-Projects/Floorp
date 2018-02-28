@@ -9,8 +9,8 @@ const { loadSubScript } = Cc["@mozilla.org/moz/jssubscript-loader;1"].
 let EventUtils = {};
 EventUtils.window = content;
 EventUtils.parent = EventUtils.window;
-EventUtils._EU_Ci = Components.interfaces;
-EventUtils._EU_Cc = Components.classes;
+EventUtils._EU_Ci = Ci;
+EventUtils._EU_Cc = Cc;
 EventUtils.navigator = content.navigator;
 EventUtils.KeyboardEvent = content.KeyboardEvent;
 loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);

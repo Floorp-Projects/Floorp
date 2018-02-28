@@ -14,8 +14,7 @@ add_task(function* () {
   yield checkConsoleFocus(hud);
 
   let isFocused = yield ContentTask.spawn(browser, { }, function* () {
-    var fm = Components.classes["@mozilla.org/focus-manager;1"].
-                         getService(Components.interfaces.nsIFocusManager);
+    var fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
     return fm.focusedWindow == content;
   });
 

@@ -141,7 +141,7 @@ function makeDownload(verdict) {
     state: DownloadsCommon.DOWNLOAD_DIRTY,
     hasBlockedData: true,
     errorObj: {
-      result: Components.results.NS_ERROR_FAILURE,
+      result: Cr.NS_ERROR_FAILURE,
       message: "Download blocked.",
       becauseBlocked: true,
       becauseBlockedByReputationCheck: true,

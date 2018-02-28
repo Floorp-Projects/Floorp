@@ -63,10 +63,10 @@ function setup_code() {
 
   code += "//# sourceMappingURL=data:text/json," + map.toString();
 
-  Components.utils.evalInSandbox(code,
-                                 gDebuggee,
-                                 "1.8",
-                                 "http://example.com/abc.js");
+  Cu.evalInSandbox(code,
+                   gDebuggee,
+                   "1.8",
+                   "http://example.com/abc.js");
 }
 
 function black_box_code() {

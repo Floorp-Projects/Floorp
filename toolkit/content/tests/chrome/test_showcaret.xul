@@ -69,8 +69,8 @@ function otherWindowFocused()
   otherWindow.removeEventListener("focus", otherWindowFocused, false);
 
   // enable caret browsing temporarily to test caret movement
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                getService(Components.interfaces.nsIPrefBranch);
+  var prefs = Cc["@mozilla.org/preferences-service;1"].
+                getService(Ci.nsIPrefBranch);
   prefs.setBoolPref("accessibility.browsewithcaret", true);
 
   var hbox = otherWindow.document.documentElement.firstChild;

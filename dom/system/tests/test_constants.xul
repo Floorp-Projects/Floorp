@@ -50,8 +50,8 @@ function test_libc() {
 
 // Test that OS.Constants.Win is defined
 function test_Win() {
-  var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]
-                           .getService(Components.interfaces.nsIXULRuntime);
+  var xulRuntime = Cc["@mozilla.org/xre/app-info;1"]
+                           .getService(Ci.nsIXULRuntime);
   if(xulRuntime.OS == "Windows") {
     ok("Win" in OS.Constants, "OS.Constants.Win is defined");
     is(OS.Constants.Win.INVALID_HANDLE_VALUE, -1,
@@ -76,20 +76,20 @@ function test() {
   ok(true, "test_constants.xul: Starting test");
 
   // Test 1: Load libxul from main thread
-  Components.classes["@mozilla.org/net/osfileconstantsservice;1"].
-    getService(Components.interfaces.nsIOSFileConstantsService).
+  Cc["@mozilla.org/net/osfileconstantsservice;1"].
+    getService(Ci.nsIOSFileConstantsService).
     init();
   ChromeUtils.import("resource://gre/modules/ctypes.jsm");
   test_xul();
   test_libc();
   test_Win();
 
-  let isDebugBuild = Components.classes["@mozilla.org/xpcom/debug;1"]
-                            .getService(Components.interfaces.nsIDebug2).isDebugBuild;
+  let isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"]
+                            .getService(Ci.nsIDebug2).isDebugBuild;
   test_debugBuildMainThread(isDebugBuild);
 
-  let umask = Components.classes["@mozilla.org/system-info;1"].
-    getService(Components.interfaces.nsIPropertyBag2).
+  let umask = Cc["@mozilla.org/system-info;1"].
+    getService(Ci.nsIPropertyBag2).
     getProperty("umask");
   test_umaskMainThread(umask);
 

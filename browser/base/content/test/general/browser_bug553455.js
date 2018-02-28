@@ -591,8 +591,8 @@ async function test_url() {
 },
 
 async function test_localFile() {
-  let cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                     .getService(Components.interfaces.nsIChromeRegistry);
+  let cr = Cc["@mozilla.org/chrome/chrome-registry;1"]
+             .getService(Ci.nsIChromeRegistry);
   let path;
   try {
     path = cr.convertChromeURL(makeURI(CHROMEROOT + "corrupt.xpi")).spec;

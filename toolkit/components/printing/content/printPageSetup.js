@@ -13,7 +13,7 @@ var gPrintSettings = null;
 var gStringBundle  = null;
 var gDoingMetric   = false;
 
-var gPrintSettingsInterface = Components.interfaces.nsIPrintSettings;
+var gPrintSettingsInterface = Ci.nsIPrintSettings;
 var gDoDebug = false;
 
 // ---------------------------------------------------
@@ -236,11 +236,11 @@ function loadDialog() {
   var print_margin_right  = 0.5;
 
   try {
-    gPrintService = Components.classes["@mozilla.org/gfx/printsettings-service;1"];
+    gPrintService = Cc["@mozilla.org/gfx/printsettings-service;1"];
     if (gPrintService) {
       gPrintService = gPrintService.getService();
       if (gPrintService) {
-        gPrintService = gPrintService.QueryInterface(Components.interfaces.nsIPrintSettingsService);
+        gPrintService = gPrintService.QueryInterface(Ci.nsIPrintSettingsService);
       }
     }
   } catch (ex) {
@@ -330,8 +330,8 @@ function onLoad() {
   initDialog();
 
   if (window.arguments[0] != null) {
-    gPrintSettings = window.arguments[0].QueryInterface(Components.interfaces.nsIPrintSettings);
-    paramBlock     = window.arguments[1].QueryInterface(Components.interfaces.nsIDialogParamBlock);
+    gPrintSettings = window.arguments[0].QueryInterface(Ci.nsIPrintSettings);
+    paramBlock     = window.arguments[1].QueryInterface(Ci.nsIDialogParamBlock);
   } else if (gDoDebug) {
     alert("window.arguments[0] == null!");
   }

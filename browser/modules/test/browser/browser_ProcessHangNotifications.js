@@ -80,10 +80,10 @@ TestHangReport.prototype = {
   },
 
   QueryInterface(aIID) {
-    if (aIID.equals(Components.interfaces.nsIHangReport) ||
-        aIID.equals(Components.interfaces.nsISupports))
+    if (aIID.equals(Ci.nsIHangReport) ||
+        aIID.equals(Ci.nsISupports))
       return this;
-    throw Components.results.NS_NOINTERFACE;
+    throw Cr.NS_NOINTERFACE;
   },
 
   userCanceled() {

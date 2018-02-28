@@ -172,7 +172,7 @@ function makeMockPermissionRequest(browser) {
     options: [],
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionType]),
   };
-  let types = Cc["@mozilla.org/array;1"].createInstance(Components.interfaces.nsIMutableArray);
+  let types = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
   types.appendElement(type);
   let result = {
     types,

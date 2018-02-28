@@ -24,8 +24,8 @@ var gChecked = false;
 function runTests()
 {
   var button = document.getElementById("button");
-  var windowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                          .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindowUtils);
   windowUtils.disableNonTestMouseEvents(true);
   synthesizeMouse(button, 2, 2, { type: "mouseover" });
   synthesizeMouse(button, 4, 4, { type: "mousemove" });

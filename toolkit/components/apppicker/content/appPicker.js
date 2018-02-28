@@ -16,7 +16,7 @@ AppPicker.prototype =
     * Init the dialog and populate the application list
     */
     appPickerLoad: function appPickerLoad() {
-        const nsILocalHandlerApp = Components.interfaces.nsILocalHandlerApp;
+        const nsILocalHandlerApp = Ci.nsILocalHandlerApp;
 
         this._incomingParams = window.arguments[0];
         this._incomingParams.handlerApp = null;
@@ -98,7 +98,7 @@ AppPicker.prototype =
     */
     getFileIconURL: function getFileIconURL(file) {
       const nsIFileProtocolHandler =
-        Components.interfaces.nsIFileProtocolHandler;
+        Ci.nsIFileProtocolHandler;
 
       var fph = Services.io.getProtocolHandler("file")
                 .QueryInterface(nsIFileProtocolHandler);
@@ -113,13 +113,13 @@ AppPicker.prototype =
     */
     getFileDisplayName: function getFileDisplayName(file) {
       if (AppConstants.platform == "win") {
-        if (file instanceof Components.interfaces.nsILocalFileWin) {
+        if (file instanceof Ci.nsILocalFileWin) {
           try {
             return file.getVersionInfoField("FileDescription");
           } catch (e) {}
         }
       } else if (AppConstants.platform == "macosx") {
-        if (file instanceof Components.interfaces.nsILocalFileMac) {
+        if (file instanceof Ci.nsILocalFileMac) {
           try {
             return file.bundleDisplayName;
           } catch (e) {}
@@ -170,8 +170,8 @@ AppPicker.prototype =
     * User browse for an app.
     */
     appPickerBrowse: function appPickerBrowse() {
-      var nsIFilePicker = Components.interfaces.nsIFilePicker;
-      var fp = Components.classes["@mozilla.org/filepicker;1"].
+      var nsIFilePicker = Ci.nsIFilePicker;
+      var fp = Cc["@mozilla.org/filepicker;1"].
                createInstance(nsIFilePicker);
 
       fp.init(window, this._incomingParams.title, nsIFilePicker.modeOpen);
@@ -186,13 +186,13 @@ AppPicker.prototype =
         startLocation = "Home";
       }
       fp.displayDirectory =
-        Services.dirsvc.get(startLocation, Components.interfaces.nsIFile);
+        Services.dirsvc.get(startLocation, Ci.nsIFile);
 
       fp.open(rv => {
           if (rv == nsIFilePicker.returnOK && fp.file) {
               var localHandlerApp =
-                Components.classes["@mozilla.org/uriloader/local-handler-app;1"].
-                createInstance(Components.interfaces.nsILocalHandlerApp);
+                Cc["@mozilla.org/uriloader/local-handler-app;1"].
+                createInstance(Ci.nsILocalHandlerApp);
               localHandlerApp.executable = fp.file;
 
               this._incomingParams.handlerApp = localHandlerApp;

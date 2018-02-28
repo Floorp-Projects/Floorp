@@ -28,8 +28,8 @@ function runTest()
 {
   var script = SpecialPowers.loadChromeScript(function() {
     var gPromptInput = null;
-    var os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Components.interfaces.nsIObserverService);
+    var os = Cc["@mozilla.org/observer-service;1"]
+               .getService(Ci.nsIObserverService);
 
     os.addObserver(onPromptLoad, "common-dialog-loaded");
     os.addObserver(onPromptLoad, "tabmodal-dialog-loaded");
@@ -48,8 +48,8 @@ function runTest()
       gPromptInput.removeEventListener("focus", onPromptFocus);
 
       var listenerService =
-        Components.classes["@mozilla.org/eventlistenerservice;1"]
-                  .getService(Components.interfaces.nsIEventListenerService);
+        Cc["@mozilla.org/eventlistenerservice;1"]
+          .getService(Ci.nsIEventListenerService);
 
       var listener = {
         handleEvent: function _hv(aEvent) {
@@ -66,12 +66,12 @@ function runTest()
       sendAsyncMessage("info", "sending key");
       var EventUtils = {};
       EventUtils.window = {};
-      EventUtils._EU_Ci = Components.interfaces;
-      EventUtils._EU_Cc = Components.classes;
-      Components.classes['@mozilla.org/moz/jssubscript-loader;1']
-                .getService(Components.interfaces.mozIJSSubScriptLoader)
-                .loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
-                               EventUtils);
+      EventUtils._EU_Ci = Ci;
+      EventUtils._EU_Cc = Cc;
+      Cc['@mozilla.org/moz/jssubscript-loader;1']
+        .getService(Ci.mozIJSSubScriptLoader)
+        .loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
+                       EventUtils);
       EventUtils.synthesizeKey("VK_ESCAPE", {},
                                gPromptInput.ownerDocument.defaultView);
     }

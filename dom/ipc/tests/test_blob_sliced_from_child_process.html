@@ -13,7 +13,7 @@
 function childFrameScript() {
   "use strict";
 
-  Components.utils.importGlobalProperties(["Blob"]);
+  Cu.importGlobalProperties(["Blob"]);
 
   const messageName = "test:blob-slice-test";
   const blobData = ["So", " ", "many", " ", "blobs!"];

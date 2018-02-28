@@ -62,7 +62,7 @@ var docShell = getBaseWindowInterfaceFromDocShell(win);
 
 ok(
   shouldThrowException(function(){docShell.nativeHandle;},
-              Components.results.NS_ERROR_NOT_IMPLEMENTED),
+              Cr.NS_ERROR_NOT_IMPLEMENTED),
   "nativeHandle should not be implemented for nsDocShell"
 );
 

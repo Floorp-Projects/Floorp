@@ -85,13 +85,13 @@ var PrintUtils = {
   showPageSetup() {
     try {
       var printSettings = this.getPrintSettings();
-      var PRINTPROMPTSVC = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
-                                     .getService(Components.interfaces.nsIPrintingPromptService);
+      var PRINTPROMPTSVC = Cc["@mozilla.org/embedcomp/printingprompt-service;1"]
+                             .getService(Ci.nsIPrintingPromptService);
       PRINTPROMPTSVC.showPageSetup(window, printSettings, null);
       if (gSavePrintSettings) {
         // Page Setup data is a "native" setting on the Mac
-        var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                              .getService(Components.interfaces.nsIPrintSettingsService);
+        var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"]
+                      .getService(Ci.nsIPrintSettingsService);
         PSSVC.savePrintSettingsToPrefs(printSettings, true, printSettings.kInitSaveNativeData);
       }
     } catch (e) {
@@ -103,12 +103,12 @@ var PrintUtils = {
 
   getDefaultPrinterName() {
     try {
-      let PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                            .getService(Components.interfaces.nsIPrintSettingsService);
+      let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"]
+                    .getService(Ci.nsIPrintSettingsService);
 
       return PSSVC.defaultPrinterName;
     } catch (e) {
-      Components.utils.reportError(e);
+      Cu.reportError(e);
     }
 
     return null;
@@ -212,8 +212,8 @@ var PrintUtils = {
     // automatically opened from the print engine because the XUL scrollbars in the PP window
     // will layout before the content window and a crash will occur.
     // Doing it all from script, means it lays out before hand and we can let printing do its own thing
-    let PPROMPTSVC = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
-                               .getService(Components.interfaces.nsIPrintingPromptService);
+    let PPROMPTSVC = Cc["@mozilla.org/embedcomp/printingprompt-service;1"]
+                       .getService(Ci.nsIPrintingPromptService);
     // just in case we are already printing,
     // an error code could be returned if the Progress Dialog is already displayed
     try {
@@ -275,7 +275,7 @@ var PrintUtils = {
 
     for (let code of MSG_CODES) {
       let nsErrorResult = "NS_ERROR_" + code;
-      if (Components.results[nsErrorResult] == nsresult) {
+      if (Cr[nsErrorResult] == nsresult) {
         msgName = "PERR_" + code;
         break;
       }
@@ -333,7 +333,7 @@ var PrintUtils = {
       }
 
       case "Printing:Preview:StateChange": {
-        if (data.stateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP) {
+        if (data.stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
           // Strangely, the printing engine sends 2 STATE_STOP messages when
           // print preview is finishing. One has the STATE_IS_DOCUMENT flag,
           // the other has the STATE_IS_NETWORK flag. However, the webProgressPP
@@ -372,8 +372,8 @@ var PrintUtils = {
 
     var printSettings;
     try {
-      var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                            .getService(Components.interfaces.nsIPrintSettingsService);
+      var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"]
+                    .getService(Ci.nsIPrintSettingsService);
       if (gPrintSettingsAreGlobal) {
         printSettings = PSSVC.globalPrintSettings;
         this.setPrinterDefaultsForSelectedPrinter(PSSVC, printSettings);
@@ -395,11 +395,11 @@ var PrintUtils = {
     },
 
     QueryInterface(iid) {
-      if (iid.equals(Components.interfaces.nsIObserver) ||
-          iid.equals(Components.interfaces.nsISupportsWeakReference) ||
-          iid.equals(Components.interfaces.nsISupports))
+      if (iid.equals(Ci.nsIObserver) ||
+          iid.equals(Ci.nsISupportsWeakReference) ||
+          iid.equals(Ci.nsISupports))
         return this;
-      throw Components.results.NS_NOINTERFACE;
+      throw Cr.NS_NOINTERFACE;
     }
   },
 
@@ -672,7 +672,7 @@ var PrintUtils = {
   ensureProgressDialogClosed() {
     if (this._webProgressPP && this._webProgressPP.value) {
       this._webProgressPP.value.onStateChange(null, null,
-        Components.interfaces.nsIWebProgressListener.STATE_STOP, 0);
+        Ci.nsIWebProgressListener.STATE_STOP, 0);
     }
   },
 };

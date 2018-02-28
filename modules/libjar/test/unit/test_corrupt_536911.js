@@ -4,8 +4,8 @@
 
 function wrapInputStream(input)
 {
-  var nsIScriptableInputStream = Components.interfaces.nsIScriptableInputStream;
-  var factory = Components.classes["@mozilla.org/scriptableinputstream;1"];
+  var nsIScriptableInputStream = Ci.nsIScriptableInputStream;
+  var factory = Cc["@mozilla.org/scriptableinputstream;1"];
   var wrapper = factory.createInstance(nsIScriptableInputStream);
   wrapper.init(input);
   return wrapper;

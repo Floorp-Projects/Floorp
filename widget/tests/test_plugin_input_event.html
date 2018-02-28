@@ -32,8 +32,8 @@ SimpleTest.waitForExplicitFinish();
 var gPlugin = document.getElementById("plugin");
 
 var gUtils = window.
-      QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-      getInterface(Components.interfaces.nsIDOMWindowUtils);
+      QueryInterface(Ci.nsIInterfaceRequestor).
+      getInterface(Ci.nsIDOMWindowUtils);
 
 function* doTest() {
   gPlugin.focus();

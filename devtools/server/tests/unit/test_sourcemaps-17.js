@@ -41,7 +41,7 @@ function test_source_map() {
     file: "root.js",
     sourceRoot: "root",
   });
-  Components.utils.evalInSandbox(
+  Cu.evalInSandbox(
     code + "//# sourceMappingURL=data:text/json;base64," + btoa(map.toString()),
     gDebuggee,
     "1.8",

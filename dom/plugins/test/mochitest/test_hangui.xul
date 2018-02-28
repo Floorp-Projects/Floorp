@@ -51,7 +51,7 @@ worker.onerror = function(event) {
 
 var iframe;
 var p;
-var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
 
 function hanguiOperation(testName, timeoutSec, expectFind, expectClose, opCode,
                          commandId, check, cb) {

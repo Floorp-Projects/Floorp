@@ -43,7 +43,7 @@ function setupChannel(url)
     uri: URL + url,
     loadUsingSystemPrincipal: true
   });
-  var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
+  var httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
   return httpChan;
 }
 
@@ -74,7 +74,7 @@ function handler1(metadata, response)
 
 function completeTest1(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Cr.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(2);
 }
@@ -120,7 +120,7 @@ function handler3(metadata, response)
 
 function completeTest3(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Cr.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(4);
 }
@@ -150,7 +150,7 @@ function handler4(metadata, response)
 
 function completeTest4(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Cr.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(5);
 }
@@ -208,7 +208,7 @@ function handler6(metadata, response)
 
 function completeTest6(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Cr.NS_ERROR_CORRUPTED_CONTENT);
 
 //  run_test_number(7);   // Test 7 leaking under e10s: unrelated bug?
   run_test_number(8);
@@ -236,7 +236,7 @@ function handler7(metadata, response)
 function completeTest7(request, data, ctx)
 {
   // for some reason need this here
-  request.QueryInterface(Components.interfaces.nsIHttpChannel);
+  request.QueryInterface(Ci.nsIHttpChannel);
 
   try {
     referer = request.getResponseHeader("Referer");
@@ -270,7 +270,7 @@ function handler8(metadata, response)
 
 function completeTest8(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Cr.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(9);
 }
@@ -301,7 +301,7 @@ function handler9(metadata, response)
 function completeTest9(request, data, ctx)
 {
   // All redirection should fail:
-  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Cr.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(10);
 }
@@ -328,7 +328,7 @@ function handler10(metadata, response)
 
 function completeTest10(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Cr.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(11);
 }
@@ -385,7 +385,7 @@ function handler12(metadata, response)
 
 function completeTest12(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_OK);
+  Assert.equal(request.status, Cr.NS_OK);
   Assert.equal(30, data.length);
 
   run_test_number(13);
@@ -410,7 +410,7 @@ function handler13(metadata, response)
 
 function completeTest13(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_OK);
+  Assert.equal(request.status, Cr.NS_OK);
   Assert.equal(30, data.length);
 
   run_test_number(14);
@@ -437,7 +437,7 @@ function handler14(metadata, response)
 
 function completeTest14(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Cr.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(15);
 }
@@ -463,7 +463,7 @@ function handler15(metadata, response)
 
 function completeTest15(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Cr.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(16);
 }
@@ -489,7 +489,7 @@ function handler16(metadata, response)
 
 function completeTest16(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_OK);
+  Assert.equal(request.status, Cr.NS_OK);
   Assert.equal(30, data.length);
 
   if (!reran16) {
@@ -521,7 +521,7 @@ function handler17(metadata, response)
 
 function completeTest17(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Cr.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(18);
 }
@@ -545,7 +545,7 @@ function handler18(metadata, response)
 
 function completeTest18(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_OK);
+  Assert.equal(request.status, Cr.NS_OK);
   Assert.equal(30, data.length);
 
   run_test_number(19);
@@ -570,7 +570,7 @@ function handler19(metadata, response)
 
 function completeTest19(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_OK);
+  Assert.equal(request.status, Cr.NS_OK);
   Assert.equal(30, data.length);
 
   run_test_number(20);
@@ -598,7 +598,7 @@ function handler20(metadata, response)
 
 function completeTest20(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Cr.NS_ERROR_CORRUPTED_CONTENT);
 
   endTests();
 }

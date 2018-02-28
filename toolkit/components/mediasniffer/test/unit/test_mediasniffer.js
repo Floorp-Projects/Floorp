@@ -49,8 +49,8 @@ var listener = {
 
   onDataAvailable(request, context, stream, offset, count) {
     try {
-      var bis = Components.classes["@mozilla.org/binaryinputstream;1"]
-                          .createInstance(Components.interfaces.nsIBinaryInputStream);
+      var bis = Cc["@mozilla.org/binaryinputstream;1"]
+                  .createInstance(Ci.nsIBinaryInputStream);
       bis.setInputStream(stream);
       bis.readByteArray(bis.available());
     } catch (ex) {
@@ -73,7 +73,7 @@ function setupChannel(url, flags) {
     contentPolicyType: Ci.nsIContentPolicy.TYPE_MEDIA
   });
   chan.loadFlags |= flags;
-  var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
+  var httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
   return httpChan;
 }
 

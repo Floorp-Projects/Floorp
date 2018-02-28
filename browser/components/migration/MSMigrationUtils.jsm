@@ -425,7 +425,7 @@ Bookmarks.prototype = {
           }
         }
       } catch (ex) {
-        Components.utils.reportError("Unable to import " + this.importedAppLabel + " favorite (" + entry.leafName + "): " + ex);
+        Cu.reportError("Unable to import " + this.importedAppLabel + " favorite (" + entry.leafName + "): " + ex);
       }
     }
     return rv;
@@ -550,7 +550,7 @@ Cookies.prototype = {
         try {
           this._parseCookieBuffer(fileReader.result);
         } catch (ex) {
-          Components.utils.reportError("Unable to migrate cookie: " + ex);
+          Cu.reportError("Unable to migrate cookie: " + ex);
           success = false;
         } finally {
           aCallback(success);

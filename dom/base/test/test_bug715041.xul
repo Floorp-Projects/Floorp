@@ -30,12 +30,12 @@ target="_blank">Mozilla Bug 715041</a>
     timesAdded: [],
 
     QueryInterface: function(iid) {
-      if (iid.equals(Components.interfaces.nsISupports) ||
-          iid.equals(Components.interfaces.nsIFactory) ||
-          iid.equals(Components.interfaces.nsIIdleService)) {
+      if (iid.equals(Ci.nsISupports) ||
+          iid.equals(Ci.nsIFactory) ||
+          iid.equals(Ci.nsIIdleService)) {
         return this;
       }
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
     createInstance: function(outer, iid) {
@@ -52,8 +52,8 @@ target="_blank">Mozilla Bug 715041</a>
 
     getWindowFromObserver: function(observer) {
       try {
-        var interfaceRequestor = observer.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-        var window = interfaceRequestor.getInterface(Components.interfaces.nsIDOMWindow);
+        var interfaceRequestor = observer.QueryInterface(Ci.nsIInterfaceRequestor);
+        var window = interfaceRequestor.getInterface(Ci.nsIDOMWindow);
         return window;
       }
       catch (e) {}
@@ -756,7 +756,7 @@ target="_blank">Mozilla Bug 715041</a>
   try {
     var idleServiceCID = Components.ID("287075a6-f968-4516-8043-406c46f503b4");
     var idleServiceContractID = "@mozilla.org/widget/idleservice;1";
-    var oldIdleService = Components.classes[idleServiceContractID].getService(Components.interfaces.nsIIdleService);
+    var oldIdleService = Cc[idleServiceContractID].getService(Ci.nsIIdleService);
   }
   catch(ex) {
     dump("test_bug715041.xul: 1) Failed to get old idle service.\n");
@@ -764,14 +764,14 @@ target="_blank">Mozilla Bug 715041</a>
 
   try {
     // Registering new moch JS idle service
-    var componentMgr = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+    var componentMgr = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   }
   catch(err) {
     dump("test_bug715041.xul: Failed to query component registrar interface.\n");
   }
 
   try {
-    var oldIdleServiceFactoryObj = componentMgr.getClassObjectByContractID(idleServiceContractID, Components.interfaces.nsIFactory);
+    var oldIdleServiceFactoryObj = componentMgr.getClassObjectByContractID(idleServiceContractID, Ci.nsIFactory);
   }
   catch(err) {
     dump("test_bug715041.xul: Failed to get old idle service.\n");

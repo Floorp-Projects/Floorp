@@ -53,7 +53,7 @@ function test_black_box() {
   });
 
   /* eslint-disable no-multi-spaces */
-  Components.utils.evalInSandbox(
+  Cu.evalInSandbox(
     "" + function doStuff(k) { // line 1
       let arg = 15;            // line 2 - Break here
       k(arg);                  // line 3
@@ -64,7 +64,7 @@ function test_black_box() {
     1
   );
 
-  Components.utils.evalInSandbox(
+  Cu.evalInSandbox(
     "" + function runTest() { // line 1
       doStuff(                // line 2
         function (n) {        // line 3

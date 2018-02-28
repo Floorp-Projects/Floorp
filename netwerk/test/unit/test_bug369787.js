@@ -19,7 +19,7 @@ function TestListener() {
 TestListener.prototype.onStartRequest = function(request, context) {
   try {
     // request might be different from channel
-    channel = request.QueryInterface(Components.interfaces.nsIChannel);
+    channel = request.QueryInterface(Ci.nsIChannel);
 
     change_content_type();
   } catch (ex) {
@@ -59,7 +59,7 @@ function run_test() {
     uri: "http://localhost:" + server.identity.primaryPort + "/bug" + BUGID,
     loadUsingSystemPrincipal: true
   });
-  channel.QueryInterface(Components.interfaces.nsIHttpChannel);
+  channel.QueryInterface(Ci.nsIHttpChannel);
   channel.asyncOpen2(new TestListener());
 
   do_test_pending();

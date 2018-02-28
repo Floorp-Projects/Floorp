@@ -6,7 +6,7 @@ const {ExtensionAPI, ExtensionAPIs} = ExtensionCommon;
 
 const {ExtensionManager} = ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm", {});
 
-Components.utils.importGlobalProperties(["Blob", "URL"]);
+Cu.importGlobalProperties(["Blob", "URL"]);
 
 let schema = [
   {

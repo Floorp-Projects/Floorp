@@ -71,9 +71,9 @@
 
   // Strings in the nursery are not reported, so make sure the above test
   // strings are tenured.
-  Components.utils.forceGC();
+  Cu.forceGC();
 
-  let mySandbox = Components.utils.Sandbox(document.nodePrincipal,
+  let mySandbox = Cu.Sandbox(document.nodePrincipal,
                     { sandboxName: "this-is-a-sandbox-name" });
 
   function handleReportNormal(aProcess, aPath, aKind, aUnits, aAmount,

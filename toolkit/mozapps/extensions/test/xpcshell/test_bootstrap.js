@@ -102,7 +102,7 @@ function do_check_bootstrappedPref(aCallback) {
 
       Assert.equal(addonData.version, addon.version);
       Assert.equal(addonData.type, addon.type);
-      let file = addon.getResourceURI().QueryInterface(Components.interfaces.nsIFileURL).file;
+      let file = addon.getResourceURI().QueryInterface(Ci.nsIFileURL).file;
       Assert.equal(addonData.path, file.path);
     }
     Assert.equal(Object.keys(data).length, 0);

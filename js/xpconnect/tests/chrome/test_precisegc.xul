@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-      Components.utils.schedulePreciseGC(
+      Cu.schedulePreciseGC(
         function() {
           ok(true, "callback executed");
           SimpleTest.finish();

@@ -39,8 +39,8 @@
     }
 
     function setGlobals() {
-      var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
-                          getService(Components.interfaces.nsIWindowMediator);
+      var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+                  getService(Ci.nsIWindowMediator);
       gChromeWindow = wm.getMostRecentWindow("navigator:browser");
       // For some reason, a global <key> element's oncommand handler only gets
       // invoked if the focus is outside both of the <browser> elements

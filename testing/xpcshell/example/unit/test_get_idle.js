@@ -4,10 +4,10 @@
 
 function run_test() {
   print("Init the fake idle service and check its identity.");
-  let fakeIdleService = Components.classes["@mozilla.org/widget/idleservice;1"].
-                        getService(Components.interfaces.nsIIdleService);
+  let fakeIdleService = Cc["@mozilla.org/widget/idleservice;1"].
+                        getService(Ci.nsIIdleService);
   try {
-    fakeIdleService.QueryInterface(Components.interfaces.nsIFactory);
+    fakeIdleService.QueryInterface(Ci.nsIFactory);
   } catch (ex) {
     do_throw("The fake idle service implements nsIFactory.");
   }
@@ -17,7 +17,7 @@ function run_test() {
   print("Init the real idle service and check its identity.");
   let realIdleService = do_get_idle();
   try {
-    realIdleService.QueryInterface(Components.interfaces.nsIFactory);
+    realIdleService.QueryInterface(Ci.nsIFactory);
     do_throw("The real idle service does not implement nsIFactory.");
   } catch (ex) {}
 }

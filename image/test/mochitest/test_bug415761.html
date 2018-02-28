@@ -19,13 +19,13 @@ SimpleTest.waitForExplicitFinish();
 
 // First, obtain the file URI to the ourselves:
 var chromeURI = location.href;
-var io = Components.classes['@mozilla.org/network/io-service;1']
-           .getService(Components.interfaces.nsIIOService);
+var io = Cc['@mozilla.org/network/io-service;1']
+           .getService(Ci.nsIIOService);
 chromeURI = io.newURI(chromeURI);
-var chromeReg = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                  .getService(Components.interfaces.nsIChromeRegistry);
+var chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                  .getService(Ci.nsIChromeRegistry);
 fileURI = chromeReg.convertChromeURL(chromeURI);
-fileURI.QueryInterface(Components.interfaces.nsIFileURL);
+fileURI.QueryInterface(Ci.nsIFileURL);
 var self = fileURI.file;
 
 // Check if the non-ascii-named icon is still hanging around from a previous test

@@ -117,7 +117,7 @@ function setTestPluginEnabledState(aState, aPluginName) {
  */
 function getTestPlugin(aName) {
   let pluginName = aName || "Test Plug-in";
-  let ph = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
+  let ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
   let tags = ph.getPluginTags();
 
   // Find the test plugin

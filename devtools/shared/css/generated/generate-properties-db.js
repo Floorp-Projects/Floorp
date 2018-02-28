@@ -4,8 +4,6 @@
 
 "use strict";
 
-/* globals InspectorUtils */
-
 /*
  * This is an xpcshell script that runs to generate a static list of CSS properties
  * as known by the platform. It is run from ./mach_commands.py by running
@@ -13,8 +11,7 @@
  */
 var {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 var {generateCssProperties} = require("devtools/server/actors/css-properties");
-
-Components.utils.importGlobalProperties(["InspectorUtils"]);
+const InspectorUtils = require("InspectorUtils");
 
 // xpcshell can output extra information, so place some delimiter text between
 // the output of the css properties database.

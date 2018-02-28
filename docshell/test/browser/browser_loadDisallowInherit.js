@@ -36,7 +36,7 @@ function startTest() {
         ok(browser.contentPrincipal.equals(pagePrincipal), url + " should inherit principal");
 
         // Now load the URL and disallow inheriting the principal
-        let webNav = Components.interfaces.nsIWebNavigation;
+        let webNav = Ci.nsIWebNavigation;
         loadURL(url, webNav.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL, function () {
           let newPrincipal = browser.contentPrincipal;
           ok(newPrincipal, "got inner principal");

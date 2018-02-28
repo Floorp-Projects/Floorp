@@ -748,7 +748,7 @@ add_task(async function contextMenu() {
 
 function promiseSyncReady() {
   let service = Cc["@mozilla.org/weave/service;1"]
-                  .getService(Components.interfaces.nsISupports)
+                  .getService(Ci.nsISupports)
                   .wrappedJSObject;
   return service.whenLoaded().then(() => {
     UIState.isReady();

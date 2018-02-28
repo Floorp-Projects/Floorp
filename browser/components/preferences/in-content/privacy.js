@@ -230,8 +230,8 @@ var gPrivacyPane = {
    * Initialize autocomplete to ensure prefs are in sync.
    */
   _initAutocomplete() {
-    Components.classes["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
-      .getService(Components.interfaces.mozIPlacesAutoComplete);
+    Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
+      .getService(Ci.mozIPlacesAutoComplete);
   },
 
   /**
@@ -1270,8 +1270,8 @@ var gPrivacyPane = {
       malwareTable.value = malware.join(",");
 
       // Force an update after changing the malware table.
-      let listmanager = Components.classes["@mozilla.org/url-classifier/listmanager;1"]
-                        .getService(Components.interfaces.nsIUrlListManager);
+      let listmanager = Cc["@mozilla.org/url-classifier/listmanager;1"]
+                        .getService(Ci.nsIUrlListManager);
       if (listmanager) {
         listmanager.forceUpdates(malwareTable.value);
       }

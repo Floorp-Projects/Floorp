@@ -33,7 +33,7 @@ function run_test()
   bunnies = null;
   keys = null;
 
-  Components.utils.forceGC();
+  Cu.forceGC();
 
   keys = ChromeUtils.nondeterministicGetWeakMapKeys(weakmap);
   equal(keys.length, 1, "length of nondeterministicGetWeakMapKeys after GC");
