@@ -20,24 +20,24 @@
       class="subcategory"
       hidden="true"
       data-category="paneGeneral">
-      <label class="header-name" flex="1" data-l10n-id="pane-general-title"/>
+  <label class="header-name" flex="1">&paneGeneral.title;</label>
 </hbox>
 
 <!-- Startup -->
 <groupbox id="startupGroup"
           data-category="paneGeneral"
           hidden="true">
-  <caption><label data-l10n-id="startup-header"/></caption>
+  <caption><label>&startup.label;</label></caption>
 
 #ifdef MOZ_DEV_EDITION
   <vbox id="separateProfileBox">
     <checkbox id="separateProfileMode"
-              data-l10n-id="separate-profile-mode"/>
-    <hbox aid="sync-dev-edition-root" lign="center" class="indent">
-      <label id="useFirefoxSync" data-l10n-id="use-firefox-sync"/>
+              label="&separateProfileMode.label;"/>
+    <hbox id="sync-dev-edition-root" align="center" class="indent">
+      <label id="useFirefoxSync">&useFirefoxSync.label;</label>
       <deck id="getStarted">
-        <label class="text-link" data-l10n-id="get-started-not-logged-in"/>
-        <label class="text-link" data-l10n-id="get-started-configured"/>
+        <label class="text-link">&getStarted.notloggedin.label;</label>
+        <label class="text-link">&getStarted.configured.label;</label>
       </deck>
     </hbox>
   </vbox>
@@ -46,36 +46,36 @@
 #ifdef HAVE_SHELL_SERVICE
   <vbox id="defaultBrowserBox">
     <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
-              data-l10n-id="always-check-default"/>
+              label="&alwaysCheckDefault2.label;" accesskey="&alwaysCheckDefault2.accesskey;"/>
     <deck id="setDefaultPane">
       <hbox align="center" class="indent">
         <image class="face-sad"/>
-        <label id="isNotDefaultLabel" flex="1" data-l10n-id="is-not-default"/>
+        <label id="isNotDefaultLabel" flex="1">&isNotDefault.label;</label>
         <button id="setDefaultButton"
                 class="accessory-button"
-                data-l10n-id="set-as-my-default-browser"
+                label="&setAsMyDefaultBrowser3.label;" accesskey="&setAsMyDefaultBrowser3.accesskey;"
                 preference="pref.general.disable_button.default_browser"/>
       </hbox>
       <hbox align="center" class="indent">
         <image class="face-smile"/>
-        <label id="isDefaultLabel" flex="1" data-l10n-id="is-default"/>
+        <label id="isDefaultLabel" flex="1">&isDefault.label;</label>
       </hbox>
     </deck>
   </vbox>
 #endif
 
   <vbox id="startupPageBox">
-    <label data-l10n-id="startup-page"
-           control="browserStartupPage"/>
+    <label accesskey="&startupPage2.accesskey;"
+           control="browserStartupPage">&startupPage2.label;</label>
     <radiogroup id="browserStartupPage"
                 preference="browser.startup.page">
-      <radio data-l10n-id="startup-user-homepage"
+      <radio label="&startupUserHomePage.label;"
              value="1"
              id="browserStartupHomePage"/>
-      <radio data-l10n-id="startup-blank-page"
+      <radio label="&startupBlankPage.label;"
              value="0"
              id="browserStartupBlank"/>
-      <radio data-l10n-id="startup-prev-session"
+      <radio label="&startupPrevSession.label;"
              value="3"
              id="browserStartupLastSession"/>
     </radiogroup>
@@ -83,7 +83,7 @@
       <description control="disableNewTabExtension" flex="1" />
       <button id="disableNewTabExtension"
               class="extension-controlled-button accessory-button"
-              data-l10n-id="disable-extension" />
+              label="&disableExtension.label;" />
     </hbox>
   </vbox>
 </groupbox>
@@ -92,13 +92,13 @@
 <groupbox id="homepageGroup"
           data-category="paneGeneral"
           hidden="true">
-  <caption><label data-l10n-id="home-page-header"/></caption>
+  <caption><label>&homepage2.label;</label></caption>
 
   <hbox id="browserHomePageExtensionContent" align="center" hidden="true">
     <description control="disableHomePageExtension" flex="1" />
     <button id="disableHomePageExtension"
             class="extension-controlled-button accessory-button"
-            data-l10n-id="disable-extension" />
+            label="&disableExtension.label;" />
   </hbox>
 
   <vbox>
@@ -116,20 +116,23 @@
     <button id="useCurrent"
             flex="1"
             class="homepage-button"
-            data-l10n-id="use-current-pages"
-            data-l10n-args='{"tabCount": 0}'
-            disabled="true"
+            label=""
+            accesskey="&useCurrentPage.accesskey;"
+            label1="&useCurrentPage.label;"
+            label2="&useMultiple.label;"
             preference="pref.browser.homepage.disable_button.current_page"/>
     <button id="useBookmark"
             flex="1"
             class="homepage-button"
-            data-l10n-id="choose-bookmark"
+            label="&chooseBookmark.label;"
+            accesskey="&chooseBookmark.accesskey;"
             preference="pref.browser.homepage.disable_button.bookmark_page"
             searchkeywords="&selectBookmark.title; &selectBookmark.label;"/>
     <button id="restoreDefaultHomePage"
             flex="1"
             class="homepage-button"
-            data-l10n-id="restore-default"
+            label="&restoreDefault.label;"
+            accesskey="&restoreDefault.accesskey;"
             preference="pref.browser.homepage.disable_button.restore_default"/>
   </hbox>
 </groupbox>
@@ -137,27 +140,33 @@
 <!-- Tab preferences -->
 <groupbox data-category="paneGeneral"
           hidden="true">
-    <caption><label data-l10n-id="tabs-group-header"/></caption>
+    <caption><label>&tabsGroup.label;</label></caption>
 
-    <checkbox id="ctrlTabRecentlyUsedOrder" data-l10n-id="ctrl-tab-recently-used-order"
+    <checkbox id="ctrlTabRecentlyUsedOrder" label="&ctrlTabRecentlyUsedOrder.label;"
+              accesskey="&ctrlTabRecentlyUsedOrder.accesskey;"
               preference="browser.ctrlTab.previews"/>
 
-    <checkbox id="linkTargeting" data-l10n-id="open-new-link-as-tabs"
+    <checkbox id="linkTargeting" label="&newWindowsAsTabs3.label;"
+              accesskey="&newWindowsAsTabs3.accesskey;"
               preference="browser.link.open_newwindow"
               onsyncfrompreference="return gMainPane.readLinkTarget();"
               onsynctopreference="return gMainPane.writeLinkTarget();"/>
 
-    <checkbox id="warnCloseMultiple" data-l10n-id="warn-on-close-multiple-tabs"
+    <checkbox id="warnCloseMultiple" label="&warnOnCloseMultipleTabs.label;"
+              accesskey="&warnOnCloseMultipleTabs.accesskey;"
               preference="browser.tabs.warnOnClose"/>
 
-    <checkbox id="warnOpenMany" data-l10n-id="warn-on-open-many-tabs"
+    <checkbox id="warnOpenMany" label="&warnOnOpenManyTabs.label;"
+              accesskey="&warnOnOpenManyTabs.accesskey;"
               preference="browser.tabs.warnOnOpen"/>
 
-    <checkbox id="switchToNewTabs" data-l10n-id="switch-links-to-new-tabs"
+    <checkbox id="switchToNewTabs" label="&switchLinksToNewTabs.label;"
+              accesskey="&switchLinksToNewTabs.accesskey;"
               preference="browser.tabs.loadInBackground"/>
 
 #ifdef XP_WIN
-    <checkbox id="showTabsInTaskbar" data-l10n-id="show-tabs-in-taskbar"
+    <checkbox id="showTabsInTaskbar" label="&showTabsInTaskbar.label;"
+              accesskey="&showTabsInTaskbar.accesskey;"
               preference="browser.taskbar.previews.enable"/>
 #endif
 
@@ -166,21 +175,25 @@
         <description control="disableContainersExtension" flex="1" />
         <button id="disableContainersExtension"
                 class="extension-controlled-button accessory-button"
-                data-l10n-id="disable-extension" />
+                label="&disableExtension.label;" />
       </hbox>
       <hbox align="center">
         <checkbox id="browserContainersCheckbox"
                   class="tail-with-learn-more"
-                  data-l10n-id="browser-containers-enabled"
+                  label="&browserContainersEnabled.label;"
+                  accesskey="&browserContainersEnabled.accesskey;"
                   preference="privacy.userContext.enabled"
                   onsyncfrompreference="return gMainPane.readBrowserContainersCheckbox();"/>
-        <label id="browserContainersLearnMore" class="learnMore text-link" data-l10n-id="browser-containers-learn-more"/>
+        <label id="browserContainersLearnMore" class="learnMore text-link">
+          &browserContainersLearnMore.label;
+        </label>
         <spacer flex="1"/>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
         <hbox>
           <button id="browserContainersSettings"
                   class="accessory-button"
-                  data-l10n-id="browser-containers-settings"
+                  label="&browserContainersSettings.label;"
+                  accesskey="&browserContainersSettings.accesskey;"
                   searchkeywords="&addButton.label;
                                   &preferencesButton.label;
                                   &removeButton.label;"/>
@@ -193,22 +206,22 @@
       class="subcategory"
       hidden="true"
       data-category="paneGeneral">
-  <label class="header-name" flex="1" data-l10n-id="language-and-appearance-header"/>
+  <label class="header-name" flex="1">&languageAndAppearance.label;</label>
 </hbox>
 
 <!-- Fonts and Colors -->
 <groupbox id="fontsGroup" data-category="paneGeneral" hidden="true">
-  <caption><label data-l10n-id="fonts-and-colors-header"/></caption>
+  <caption><label>&fontsAndColors.label;</label></caption>
 
   <vbox>
     <hbox id="fontSettings">
       <hbox align="center" flex="1">
-        <label control="defaultFont" data-l10n-id="default-font"/>
+        <label control="defaultFont" accesskey="&defaultFont2.accesskey;">&defaultFont2.label;</label>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
         <hbox flex="1">
           <menulist id="defaultFont" flex="1" delayprefsave="true" onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
         </hbox>
-        <label id="defaultFontSizeLabel" control="defaultFontSize" data-l10n-id="default-font-size"></label>
+        <label id="defaultFontSizeLabel" control="defaultFontSize" accesskey="&defaultSize2.accesskey;">&defaultSize2.label;</label>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
         <hbox>
           <menulist id="defaultFontSize" delayprefsave="true">
@@ -248,7 +261,8 @@
         <button id="advancedFonts"
                 class="accessory-button"
                 icon="select-font"
-                data-l10n-id="advanced-fonts"
+                label="&advancedFonts.label;"
+                accesskey="&advancedFonts.accesskey;"
                 searchkeywords="&fontsDialog.title;
                                 &fonts.label;
                                 &size2.label;
@@ -318,7 +332,8 @@
         <button id="colors"
                 class="accessory-button"
                 icon="select-color"
-                data-l10n-id="colors-settings"
+                label="&colors.label;"
+                accesskey="&colors.accesskey;"
                 searchkeywords="&overrideDefaultPageColors2.label;
                                 &overrideDefaultPageColors.always.label;
                                 &overrideDefaultPageColors.auto.label;
@@ -338,15 +353,16 @@
 
 <!-- Languages -->
 <groupbox id="languagesGroup" data-category="paneGeneral" hidden="true">
-  <caption><label data-l10n-id="language-header"/></caption>
+  <caption><label>&language2.label;</label></caption>
 
   <hbox id="languagesBox" align="center">
-    <description flex="1" control="chooseLanguage" data-l10n-id="choose-language-description"/>
+    <description flex="1" control="chooseLanguage">&chooseLanguage.label;</description>
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
     <hbox>
       <button id="chooseLanguage"
               class="accessory-button"
-              data-l10n-id="choose-button"
+              label="&chooseButton.label;"
+              accesskey="&chooseButton.accesskey;"
               searchkeywords="&languages.customize.Header;
                               &languages.customize2.description;
                               &languages.customize.moveUp.label;
@@ -360,10 +376,11 @@
   <hbox id="translationBox" hidden="true">
     <hbox align="center" flex="1">
       <checkbox id="translate" preference="browser.translation.detectLanguage"
-                data-l10n-id="translate-web-pages"
+                label="&translateWebPages.label;." accesskey="&translateWebPages.accesskey;"
                 onsyncfrompreference="return gMainPane.updateButtons('translateButton',
                                               'browser.translation.detectLanguage');"/>
       <hbox id="bingAttribution" hidden="true" align="center">
+        <separator orient="vertical" class="thin"/>
         <label>&translation.options.attribution.beforeLogo;</label>
         <separator orient="vertical" class="thin"/>
         <image id="translationAttributionImage" aria-label="Microsoft Translator"
@@ -374,10 +391,12 @@
     </hbox>
     <button id="translateButton"
             class="accessory-button"
-            data-l10n-id="translate-exceptions"/>
+            label="&translateExceptions.label;"
+            accesskey="&translateExceptions.accesskey;"/>
   </hbox>
   <checkbox id="checkSpelling"
-          data-l10n-id="check-user-spelling"
+          label="&checkUserSpelling.label;"
+          accesskey="&checkUserSpelling.accesskey;"
           onsyncfrompreference="return gMainPane.readCheckSpelling();"
           onsynctopreference="return gMainPane.writeCheckSpelling();"
           preference="layout.spellcheckDefault"/>
@@ -388,12 +407,12 @@
       class="subcategory"
       hidden="true"
       data-category="paneGeneral">
-  <label class="header-name" flex="1" data-l10n-id="files-and-applications-title"/>
+  <label class="header-name" flex="1">&filesAndApplications.label;</label>
 </hbox>
 
 <!--Downloads-->
 <groupbox id="downloadsGroup" data-category="paneGeneral" hidden="true">
-  <caption><label data-l10n-id="download-header"/></caption>
+  <caption><label>&downloads.label;</label></caption>
 
   <radiogroup id="saveWhere"
               preference="browser.download.useDownloadDir"
@@ -401,7 +420,8 @@
     <hbox id="saveToRow">
       <radio id="saveTo"
             value="true"
-            data-l10n-id="download-save-to"
+            label="&saveTo.label;"
+            accesskey="&saveTo.accesskey;"
             aria-labelledby="saveTo downloadFolder"/>
       <filefield id="downloadFolder"
                 flex="1"
@@ -410,7 +430,13 @@
                 aria-labelledby="saveTo"
                 onsyncfrompreference="return gMainPane.displayDownloadDirPref();"/>
       <button id="chooseFolder"
-              data-l10n-id="download-choose-folder"
+#ifdef XP_MACOSX
+              accesskey="&chooseFolderMac.accesskey;"
+              label="&chooseFolderMac.label;"
+#else
+              accesskey="&chooseFolderWin.accesskey;"
+              label="&chooseFolderWin.label;"
+#endif
       />
     </hbox>
     <!-- Additional radio button added to support CloudStorage - Bug 1357171 -->
@@ -419,27 +445,28 @@
           hidden="true"/>
     <radio id="alwaysAsk"
           value="false"
-          data-l10n-id="download-always-ask-where"/>
+          label="&alwaysAskWhere.label;"
+          accesskey="&alwaysAskWhere.accesskey;"/>
   </radiogroup>
 </groupbox>
 
 <groupbox id="applicationsGroup" data-category="paneGeneral" hidden="true">
-  <caption><label data-l10n-id="applications-header"/></caption>
-  <description data-l10n-id="applications-description"/>
+  <caption><label>&applications.label;</label></caption>
+  <description>&applications.description;</description>
   <textbox id="filter" flex="1"
            type="search"
-           data-l10n-id="applications-filter"
+           placeholder="&filter2.emptytext;"
            aria-controls="handlersView"/>
 
   <richlistbox id="handlersView" orient="vertical" persist="lastSelectedType"
                preference="pref.downloads.disable_button.edit_actions"
                flex="1">
     <listheader equalsize="always">
-        <treecol id="typeColumn" data-l10n-id="applications-type-column" value="type"
-                 persist="sortDirection"
+        <treecol id="typeColumn" label="&typeColumn.label;" value="type"
+                 accesskey="&typeColumn.accesskey;" persist="sortDirection"
                  flex="1" sortDirection="ascending"/>
-        <treecol id="actionColumn" data-l10n-id="applications-action-column" value="action"
-                 persist="sortDirection"
+        <treecol id="actionColumn" label="&actionColumn2.label;" value="action"
+                 accesskey="&actionColumn2.accesskey;" persist="sortDirection"
                  flex="1"/>
     </listheader>
   </richlistbox>
@@ -448,7 +475,7 @@
 
 <!-- DRM Content -->
 <groupbox id="drmGroup" data-category="paneGeneral" data-subcategory="drm" hidden="true">
-  <caption><label data-l10n-id="drm-content-header"/></caption>
+  <caption><label>&drmContent2.label;</label></caption>
   <grid id="contentGrid2">
     <columns>
       <column flex="1"/>
@@ -458,8 +485,10 @@
       <row id="playDRMContentRow">
         <hbox align="center">
           <checkbox id="playDRMContent" preference="media.eme.enabled"
-                    class="tail-with-learn-more" data-l10n-id="play-drm-content" />
-          <label id="playDRMContentLink" class="learnMore text-link" data-l10n-id="play-drm-content-learn-more"/>
+                    class="tail-with-learn-more" label="&playDRMContent2.label;" accesskey="&playDRMContent2.accesskey;"/>
+          <label id="playDRMContentLink" class="learnMore text-link">
+            &playDRMContent.learnMore.label;
+          </label>
         </hbox>
       </row>
     </rows>
@@ -475,18 +504,19 @@
       class="subcategory"
       hidden="true"
       data-category="paneGeneral">
-  <label class="header-name" flex="1" data-l10n-id="update-application-title"/>
+  <label class="header-name" flex="1">&updateApplication.label;</label>
 </hbox>
 
 <!-- Update -->
 <groupbox id="updateApp" data-category="paneGeneral" hidden="true">
-  <caption class="search-header" hidden="true"><label data-l10n-id="update-application-title"/></caption>
+  <caption class="search-header" hidden="true"><label>&updateApplication.label;</label></caption>
 
-  <label data-l10n-id="update-application-description"/>
+  <label>&updateApplicationDescription.label;</label>
   <hbox align="center">
     <vbox flex="1">
-      <description id="updateAppInfo">
-        <html:a id="releasenotes" class="learnMore text-link" hidden="true"/>
+      <description>
+        &updateApplication.version.pre;<label id="version" class="tail-with-learn-more" />&updateApplication.version.post;
+        <label id="releasenotes" class="learnMore text-link" hidden="true">&releaseNotes.link;</label>
       </description>
       <description id="distribution" class="text-blurb" hidden="true"/>
       <description id="distributionId" class="text-blurb" hidden="true"/>
@@ -497,7 +527,8 @@
     <vbox>
       <button id="showUpdateHistory"
               class="accessory-button"
-              data-l10n-id="update-history"
+              label="&updateHistory2.label;"
+              accesskey="&updateHistory2.accesskey;"
               preference="app.update.disable_button.showUpdateHistory"
               searchkeywords="&history.title; &history2.intro;"/>
     </vbox>
@@ -599,24 +630,29 @@
 #endif
 
 #ifdef MOZ_UPDATER
-  <description data-l10n-id="update-application-allow-description"></description>
+  <description>&updateApplication.description;</description>
   <radiogroup id="updateRadioGroup">
     <radio id="autoDesktop"
            value="auto"
-           data-l10n-id="update-application-auto"/>
+           label="&updateAuto3.label;"
+           accesskey="&updateAuto3.accesskey;"/>
     <radio value="checkOnly"
-           data-l10n-id="update-application-check-choose"/>
+          label="&updateCheckChoose2.label;"
+          accesskey="&updateCheckChoose2.accesskey;"/>
     <radio value="manual"
-           data-l10n-id="update-application-manual"/>
+          label="&updateManual2.label;"
+          accesskey="&updateManual2.accesskey;"/>
   </radiogroup>
 #ifdef MOZ_MAINTENANCE_SERVICE
   <checkbox id="useService"
-            data-l10n-id="update-application-use-service"
+            label="&useService.label;"
+            accesskey="&useService.accesskey;"
             preference="app.update.service.enabled"/>
 #endif
 #endif
   <checkbox id="enableSearchUpdate"
-            data-l10n-id="update-enable-search-update"
+            label="&enableSearchUpdate2.label;"
+            accesskey="&enableSearchUpdate2.accesskey;"
             preference="browser.search.update"/>
 </groupbox>
 
@@ -624,28 +660,30 @@
       class="subcategory"
       hidden="true"
       data-category="paneGeneral">
-  <label class="header-name" flex="1" data-l10n-id="performance-title"/>
+  <label class="header-name" flex="1">&performance.label;</label>
 </hbox>
 
 <!-- Performance -->
 <groupbox id="performanceGroup" data-category="paneGeneral" hidden="true">
-  <caption class="search-header" hidden="true"><label data-l10n-id="performance-title"/></caption>
+  <caption class="search-header" hidden="true"><label>&performance.label;</label></caption>
 
   <hbox align="center">
     <checkbox id="useRecommendedPerformanceSettings"
               class="tail-with-learn-more"
-              data-l10n-id="performance-use-recommended-settings-checkbox"
+              label="&useRecommendedPerformanceSettings2.label;"
+              accesskey="&useRecommendedPerformanceSettings2.accesskey;"
               preference="browser.preferences.defaultPerformanceSettings.enabled"/>
-    <label id="performanceSettingsLearnMore" class="learnMore text-link" data-l10n-id="performance-settings-learn-more"/>
+    <label id="performanceSettingsLearnMore" class="learnMore text-link">&performanceSettingsLearnMore.label;</label>
   </hbox>
-  <description class="indent tip-caption" data-l10n-id="performance-use-recommended-settings-desc"/>
+  <description class="indent tip-caption">&useRecommendedPerformanceSettings2.description;</description>
 
   <vbox id="performanceSettings" class="indent" hidden="true">
     <checkbox id="allowHWAccel"
-              data-l10n-id="performance-allow-hw-accel"
+              label="&allowHWAccel.label;"
+              accesskey="&allowHWAccel.accesskey;"
               preference="layers.acceleration.disabled"/>
     <hbox align="center">
-      <label id="limitContentProcess" data-l10n-id="performance-limit-content-process-option" control="contentProcessCount"/>
+      <label id="limitContentProcess" accesskey="&limitContentProcessOption.accesskey;" control="contentProcessCount">&limitContentProcessOption.label;</label>
       <menulist id="contentProcessCount" preference="dom.ipc.processCount">
         <menupopup>
           <menuitem label="1" value="1"/>
@@ -658,10 +696,8 @@
         </menupopup>
       </menulist>
     </hbox>
-    <description id="contentProcessCountEnabledDescription" class="tip-caption" data-l10n-id="performance-limit-content-process-enabled-desc"/>
-    <description id="contentProcessCountDisabledDescription" class="tip-caption" data-l10n-id="performance-limit-content-process-disabled-desc">
-      <html:a class="text-link" href="https://wiki.mozilla.org/Electrolysis"/>
-    </description>
+    <description id="contentProcessCountEnabledDescription" class="tip-caption">&limitContentProcessOption.description;</description>
+    <description id="contentProcessCountDisabledDescription" class="tip-caption">&limitContentProcessOption.disabledDescription;<label class="text-link" href="https://wiki.mozilla.org/Electrolysis">&limitContentProcessOption.disabledDescriptionLink;</label></description>
   </vbox>
 </groupbox>
 
@@ -669,31 +705,36 @@
       class="subcategory"
       hidden="true"
       data-category="paneGeneral">
-  <label class="header-name" flex="1" data-l10n-id="browsing-title"/>
+  <label class="header-name" flex="1">&browsing.label;</label>
 </hbox>
 
 <!-- Browsing -->
 <groupbox id="browsingGroup" data-category="paneGeneral" hidden="true">
-  <caption class="search-header" hidden="true"><label data-l10n-id="browsing-title"/></caption>
+  <caption class="search-header" hidden="true"><label>&browsing.label;</label></caption>
 
   <checkbox id="useAutoScroll"
-            data-l10n-id="browsing-use-autoscroll"
+            label="&useAutoScroll.label;"
+            accesskey="&useAutoScroll.accesskey;"
             preference="general.autoScroll"/>
   <checkbox id="useSmoothScrolling"
-            data-l10n-id="browsing-use-smooth-scrolling"
+            label="&useSmoothScrolling.label;"
+            accesskey="&useSmoothScrolling.accesskey;"
             preference="general.smoothScroll"/>
 
 #ifdef XP_WIN
   <checkbox id="useOnScreenKeyboard"
             hidden="true"
-            data-l10n-id="browsing-use-onscreen-keyboard"
+            label="&useOnScreenKeyboard.label;"
+            accesskey="&useOnScreenKeyboard.accesskey;"
             preference="ui.osk.enabled"/>
 #endif
   <checkbox id="useCursorNavigation"
-            data-l10n-id="browsing-use-cursor-navigation"
+            label="&useCursorNavigation.label;"
+            accesskey="&useCursorNavigation.accesskey;"
             preference="accessibility.browsewithcaret"/>
   <checkbox id="searchStartTyping"
-            data-l10n-id="browsing-search-on-start-typing"
+            label="&searchOnStartTyping.label;"
+            accesskey="&searchOnStartTyping.accesskey;"
             preference="accessibility.typeaheadfind"/>
 </groupbox>
 
@@ -701,19 +742,19 @@
       class="subcategory"
       hidden="true"
       data-category="paneGeneral">
-  <label class="header-name" flex="1" data-l10n-id="network-proxy-title"/>
+  <label class="header-name" flex="1">&networkProxy.label;</label>
 </hbox>
 
 <!-- Network Proxy-->
 <groupbox id="connectionGroup" data-category="paneGeneral" hidden="true">
-  <caption class="search-header" hidden="true"><label data-l10n-id="network-proxy-title"/></caption>
+  <caption class="search-header" hidden="true"><label>&networkProxy.label;</label></caption>
 
   <hbox align="center">
     <hbox align="center" flex="1">
-      <description id="connectionSettingsDescription" control="connectionSettings"/>
+      <description id="connectionSettingsDescription" control="connectionSettings"></description>
       <spacer width="5"/>
-      <label id="connectionSettingsLearnMore" class="learnMore text-link"
-        data-l10n-id="network-proxy-connection-learn-more">
+      <label id="connectionSettingsLearnMore" class="learnMore text-link">
+        &connectionSettingsLearnMore.label;
       </label>
       <separator orient="vertical"/>
     </hbox>
@@ -723,7 +764,8 @@
       <button id="connectionSettings"
               class="accessory-button"
               icon="network"
-              data-l10n-id="network-proxy-connection-settings"
+              label="&connectionSettings.label;"
+              accesskey="&connectionSettings.accesskey;"
               searchkeywords="&connectionsDialog.title;
                               &noProxyTypeRadio.label;
                               &WPADTypeRadio.label;

@@ -498,11 +498,7 @@ var gMainPane = {
     let arch = bundle.GetStringFromName(archResource);
     version += ` (${arch})`;
 
-    document.l10n.setAttributes(
-      document.getElementById("updateAppInfo"),
-      "update-application-info",
-      { version }
-    );
+    document.getElementById("version").textContent = version;
 
     // Show a release notes link if we have a URL.
     let relNotesLink = document.getElementById("releasenotes");
@@ -770,32 +766,23 @@ var gMainPane = {
     this._updateUseCurrentButton();
 
     function setInputDisabledStates(isControlled) {
-      let tabCount = this._getTabsForHomePage().length;
-
       // Disable or enable the inputs based on if this is controlled by an extension.
       document.querySelectorAll("#browserHomePage, .homepage-button")
         .forEach((element) => {
-          let pref = element.getAttribute("preference");
-
-          let isDisabled = Preferences.get(pref).locked || isControlled;
-          if (pref == "pref.browser.disable_button.current_page") {
-            // Special case for current_page to disable it if tabCount is 0
-            isDisabled = isDisabled || tabCount < 1;
-          }
-
-          element.disabled = isDisabled;
+          let isLocked = Preferences.get(element.getAttribute("preference")).locked;
+          element.disabled = isLocked || isControlled;
         });
     }
 
     if (homePref.locked) {
       // An extension can't control these settings if they're locked.
       hideControllingExtension(HOMEPAGE_OVERRIDE_KEY);
-      setInputDisabledStates.call(this, false);
+      setInputDisabledStates(false);
     } else {
       // Asynchronously update the extension controlled UI.
       handleControllingExtension(
         PREF_SETTING_TYPE, HOMEPAGE_OVERRIDE_KEY, "extensionControlled.homepage_override2")
-        .then(setInputDisabledStates.bind(this));
+        .then(setInputDisabledStates);
     }
 
     // If the pref is set to about:home or about:newtab, set the value to ""
@@ -897,12 +884,14 @@ var gMainPane = {
     let useCurrent = document.getElementById("useCurrent");
     let tabs = this._getTabsForHomePage();
 
-    const tabCount = tabs.length;
-
-    document.l10n.setAttributes(useCurrent, "use-current-pages", { tabCount });
+    if (tabs.length > 1)
+      useCurrent.label = useCurrent.getAttribute("label2");
+    else
+      useCurrent.label = useCurrent.getAttribute("label1");
 
     // If the homepage is controlled by an extension then you can't use this.
     if (await getControllingExtensionInfo(PREF_SETTING_TYPE, HOMEPAGE_OVERRIDE_KEY)) {
+      useCurrent.disabled = true;
       return;
     }
 
@@ -911,7 +900,7 @@ var gMainPane = {
     if (Preferences.get(prefName).locked)
       return;
 
-    useCurrent.disabled = tabCount < 1;
+    useCurrent.disabled = !tabs.length;
   },
 
   _getTabsForHomePage() {
@@ -924,8 +913,6 @@ var gMainPane = {
 
       tabs = win.gBrowser.visibleTabs.slice(win.gBrowser._numPinnedTabs);
       tabs = tabs.filter(this.isNotAboutPreferences);
-      // XXX: Bug 1441637 - Fix tabbrowser to report tab.closing before it blurs it
-      tabs = tabs.filter(tab => !tab.closing);
     }
 
     return tabs;
@@ -1143,7 +1130,7 @@ var gMainPane = {
     description.appendChild(fragment);
   },
 
-  async checkBrowserContainers(event) {
+  checkBrowserContainers(event) {
     let checkbox = document.getElementById("browserContainersCheckbox");
     if (checkbox.checked) {
       Services.prefs.setBoolPref("privacy.userContext.enabled", true);
@@ -1156,16 +1143,14 @@ var gMainPane = {
       return;
     }
 
-    let [
-      title, message, okButton, cancelButton
-    ] = await document.l10n.formatValues([
-      "containers-disable-alert-title",
-      "containers-disable-alert-desc",
-      "containers-disable-alert-ok-button",
-      "containers-disable-alert-cancel-button"
-    ], {
-      tabCount: count
-    });
+    let bundlePreferences = document.getElementById("bundlePreferences");
+
+    let title = bundlePreferences.getString("disableContainersAlertTitle");
+    let message = PluralForm.get(count, bundlePreferences.getString("disableContainersMsg"))
+      .replace("#S", count);
+    let okButton = PluralForm.get(count, bundlePreferences.getString("disableContainersOkButton"))
+      .replace("#S", count);
+    let cancelButton = bundlePreferences.getString("disableContainersButton2");
 
     let buttonFlags = (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
       (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
@@ -1364,15 +1349,29 @@ var gMainPane = {
     if (Services.appinfo.browserTabsRemoteAutostart) {
       let processCountPref = Preferences.get("dom.ipc.processCount");
       let defaultProcessCount = processCountPref.defaultValue;
+      let bundlePreferences = document.getElementById("bundlePreferences");
 
       let contentProcessCount =
         document.querySelector(`#contentProcessCount > menupopup >
                                 menuitem[value="${defaultProcessCount}"]`);
 
-      document.l10n.setAttributes(
-        contentProcessCount,
-        "performance-default-content-process-count",
-        { num: defaultProcessCount });
+      // New localization API experiment (October 2017).
+      // See bug 1402061 for details.
+      //
+      // The `intl.l10n.fluent.disabled` pref can be used
+      // to opt-out of the experiment in case of any
+      // unforseen problems. The legacy API will then
+      // be used.
+      if (Services.prefs.getBoolPref("intl.l10n.fluent.disabled", false)) {
+        let label = bundlePreferences.getFormattedString("defaultContentProcessCount",
+          [defaultProcessCount]);
+        contentProcessCount.label = label;
+      } else {
+        document.l10n.setAttributes(
+          contentProcessCount,
+          "default-content-process-count",
+          { num: defaultProcessCount });
+      }
 
       document.getElementById("limitContentProcess").disabled = false;
       document.getElementById("contentProcessCount").disabled = false;
