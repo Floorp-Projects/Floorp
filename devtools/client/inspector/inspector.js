@@ -710,7 +710,7 @@ Inspector.prototype = {
 
     // If the 3 Pane Inspector feature is disabled, use the old order:
     // Rules, Computed, Layout, etc.
-    if (!Services.prefs.getBoolPref("devtools.inspector.split-sidebar-toggle")) {
+    if (!this.showSplitSidebarToggle) {
       this.sidebar.addExistingTab(
         "computedview",
         INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
@@ -743,7 +743,7 @@ Inspector.prototype = {
 
     // If the 3 Pane Inspector feature is enabled, use the new order:
     // Rules, Layout, Computed, etc.
-    if (Services.prefs.getBoolPref("devtools.inspector.split-sidebar-toggle")) {
+    if (this.showSplitSidebarToggle) {
       this.sidebar.addExistingTab(
         "computedview",
         INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
