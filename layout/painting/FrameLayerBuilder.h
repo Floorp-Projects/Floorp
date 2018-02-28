@@ -156,6 +156,8 @@ private:
     */
   void BeginUpdate(layers::Layer* aLayer, LayerState aState,
                    nsDisplayItem* aItem = nullptr);
+  void BeginUpdate(layers::Layer* aLayer, LayerState aState,
+                   nsDisplayItem* aItem, bool aIsReused, bool aIsMerged);
 
   /**
     * Completes the update of this, and removes any references to data that won't live
@@ -212,17 +214,14 @@ struct AssignedDisplayItem
 {
   AssignedDisplayItem(nsDisplayItem* aItem,
                       const DisplayItemClip& aClip,
-                      LayerState aLayerState)
-    : mItem(aItem)
-    , mClip(aClip)
-    , mLayerState(aLayerState)
-  {}
-
+                      LayerState aLayerState,
+                      DisplayItemData* aData);
   ~AssignedDisplayItem();
 
   nsDisplayItem* mItem;
   DisplayItemClip mClip;
   LayerState mLayerState;
+  DisplayItemData* mDisplayItemData;
 
   /**
    * If the display item is being rendered as an inactive
@@ -230,6 +229,9 @@ struct AssignedDisplayItem
    * used for the inactive transaction.
    */
   RefPtr<layers::LayerManager> mInactiveLayerManager;
+
+  bool mReused;
+  bool mMerged;
 };
 
 
@@ -502,21 +504,6 @@ public:
    */
 
   /**
-   * Record aItem as a display item that is rendered by aLayer.
-   *
-   * @param aLayer Layer that the display item will be rendered into
-   * @param aItem Display item to be drawn.
-   * @param aLayerState What LayerState the item is using.
-   * @param aManager If the layer is in the LAYER_INACTIVE state,
-   * then this is the temporary layer manager to draw with.
-   */
-  void AddLayerDisplayItem(Layer* aLayer,
-                           nsDisplayItem* aItem,
-                           LayerState aLayerState,
-                           BasicLayerManager* aManager,
-                           DisplayItemData* aData);
-
-  /**
    * Record aItem as a display item that is rendered by the PaintedLayer
    * aLayer, with aClipRect, where aContainerLayerFrame is the frame
    * for the container layer this ThebesItem belongs to.
@@ -524,13 +511,9 @@ public:
    * @param aTopLeft offset from active scrolled root to reference frame
    */
   void AddPaintedDisplayItem(PaintedLayerData* aLayer,
-                            nsDisplayItem* aItem,
-                            const DisplayItemClip& aClip,
-                            ContainerState& aContainerState,
-                            LayerState aLayerState,
-                            const nsPoint& aTopLeft,
-                            DisplayItemData* aData,
-                            AssignedDisplayItem& aAssignedDisplayItem);
+                             AssignedDisplayItem& aAssignedDisplayItem,
+                             ContainerState& aContainerState,
+                             const nsPoint& aTopLeft);
 
   /**
    * Calls GetOldLayerForFrame on the underlying frame of the display item,
@@ -627,10 +610,6 @@ public:
    */
   DisplayItemData* GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey, DisplayItemData* aOldData = nullptr);
 
-protected:
-
-  friend class LayerManagerData;
-
   /**
    * Stores DisplayItemData associated with aFrame, stores the data in
    * mNewDisplayItemData.
@@ -641,6 +620,9 @@ protected:
                          uint32_t aDisplayItemKey,
                          Layer* aLayer,
                          LayerState aState);
+
+protected:
+  friend class LayerManagerData;
 
   // Flash the area within the context clip if paint flashing is enabled.
   static void FlashPaint(gfxContext *aContext);
