@@ -144,6 +144,28 @@ MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument)
   return false;
 }
 
+/**
+ * Used by XULMap.h to map both menupopup and popup elements
+ */
+#ifdef MOZ_XUL
+Accessible*
+CreateMenupopupAccessible(nsIContent* aContent, Accessible* aContext)
+{
+#ifdef MOZ_ACCESSIBILITY_ATK
+    // ATK considers this node to be redundant when within menubars, and it makes menu
+    // navigation with assistive technologies more difficult
+    // XXX In the future we will should this for consistency across the nsIAccessible
+    // implementations on each platform for a consistent scripting environment, but
+    // then strip out redundant accessibles in the AccessibleWrap class for each platform.
+    nsIContent *parent = aContent->GetParent();
+    if (parent && parent->IsXULElement(nsGkAtoms::menu))
+      return nullptr;
+#endif
+
+    return new XULMenupopupAccessible(aContent, aContext->Document());
+}
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible constructors
 
@@ -1470,20 +1492,6 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 
   } else if (role.EqualsLiteral("xul:link")) {
     accessible = new XULLinkAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:menupopup")) {
-#ifdef MOZ_ACCESSIBILITY_ATK
-    // ATK considers this node to be redundant when within menubars, and it makes menu
-    // navigation with assistive technologies more difficult
-    // XXX In the future we will should this for consistency across the nsIAccessible
-    // implementations on each platform for a consistent scripting environment, but
-    // then strip out redundant accessibles in the AccessibleWrap class for each platform.
-    nsIContent *parent = aContent->GetParent();
-    if (parent && parent->IsXULElement(nsGkAtoms::menu))
-      return nullptr;
-#endif
-
-    accessible = new XULMenupopupAccessible(aContent, aDoc);
 
   } else if(role.EqualsLiteral("xul:pane")) {
     accessible = new EnumRoleAccessible<roles::PANE>(aContent, aDoc);
