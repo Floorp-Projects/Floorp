@@ -20,7 +20,7 @@
 #endif
 
 class nsAtom;
-class nsIDOMNode;
+class nsINode;
 
 namespace mozilla {
 
@@ -97,7 +97,7 @@ protected:
   nsTArray<PropItem*> mSetArray;
   nsTArray<PropItem*> mClearedArray;
   int32_t mRelativeFontSize;
-  nsCOMPtr<nsIDOMNode> mLastSelectionContainer;
+  nsCOMPtr<nsINode> mLastSelectionContainer;
   int32_t mLastSelectionOffset;
 
   friend class HTMLEditRules;
