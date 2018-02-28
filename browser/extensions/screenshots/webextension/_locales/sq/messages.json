@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "“Mos mbaj kurrë mend historikun” është e aktivizuar."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Po përdorni Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Ngarkimet janë çaktivizuar."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Lidhja u Kopjua"
   },

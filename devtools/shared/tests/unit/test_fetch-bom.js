@@ -61,16 +61,16 @@ registerCleanupFunction(() => {
   return new Promise(resolve => server.stop(resolve));
 });
 
-add_task(function* () {
-  yield test_one(serverURL + "/u8", "UTF-8");
-  yield test_one(serverURL + "/u16be", "UTF-16BE");
-  yield test_one(serverURL + "/u16le", "UTF-16LE");
+add_task(async function () {
+  await test_one(serverURL + "/u8", "UTF-8");
+  await test_one(serverURL + "/u16be", "UTF-16BE");
+  await test_one(serverURL + "/u16le", "UTF-16LE");
 });
 
-function* test_one(url, encoding) {
+async function test_one(url, encoding) {
   // Be sure to set the encoding to something that will yield an
   // invalid result if BOM sniffing is not done.
-  yield DevToolsUtils.fetch(url, { charset: "ISO-8859-1" }).then(({content}) => {
+  await DevToolsUtils.fetch(url, { charset: "ISO-8859-1" }).then(({content}) => {
     Assert.equal(content, "hı", "The content looks correct for " + encoding);
   });
 }

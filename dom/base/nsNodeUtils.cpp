@@ -130,7 +130,7 @@ enum class IsRemoveNotification
 
 void
 nsNodeUtils::CharacterDataWillChange(nsIContent* aContent,
-                                     CharacterDataChangeInfo* aInfo)
+                                     const CharacterDataChangeInfo& aInfo)
 {
   nsIDocument* doc = aContent->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(CharacterDataWillChange, aContent,
@@ -139,7 +139,7 @@ nsNodeUtils::CharacterDataWillChange(nsIContent* aContent,
 
 void
 nsNodeUtils::CharacterDataChanged(nsIContent* aContent,
-                                  CharacterDataChangeInfo* aInfo)
+                                  const CharacterDataChangeInfo& aInfo)
 {
   nsIDocument* doc = aContent->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(CharacterDataChanged, aContent,

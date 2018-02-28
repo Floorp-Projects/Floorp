@@ -15,7 +15,7 @@ const BREAKDOWN = {
   other: { by: "count", count: true, bytes: true }
 };
 
-add_task(function* () {
+add_task(async function () {
   const g = newGlobal();
   const dbg = new Debugger(g);
 
@@ -53,14 +53,14 @@ add_task(function* () {
   const snapshotFilePath = saveNewHeapSnapshot({ debugger: dbg });
 
   const client = new HeapAnalysesClient();
-  yield client.readHeapSnapshot(snapshotFilePath);
+  await client.readHeapSnapshot(snapshotFilePath);
   ok(true, "Should have read the heap snapshot");
 
-  const { report } = yield client.takeCensus(snapshotFilePath, {
+  const { report } = await client.takeCensus(snapshotFilePath, {
     breakdown: BREAKDOWN
   });
 
-  const { report: treeNode } = yield client.takeCensus(snapshotFilePath, {
+  const { report: treeNode } = await client.takeCensus(snapshotFilePath, {
     breakdown: BREAKDOWN
   }, {
     asTreeNode: true

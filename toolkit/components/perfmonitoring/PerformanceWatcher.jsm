@@ -136,7 +136,6 @@ ChildManager._get = function(map, key) {
   }
   return result;
 };
-let gListeners = new WeakMap();
 
 /**
  * An object in charge of managing all the observables for a single

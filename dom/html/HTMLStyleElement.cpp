@@ -66,7 +66,7 @@ HTMLStyleElement::SetDisabled(bool aDisabled)
 void
 HTMLStyleElement::CharacterDataChanged(nsIDocument* aDocument,
                                        nsIContent* aContent,
-                                       CharacterDataChangeInfo* aInfo)
+                                       const CharacterDataChangeInfo&)
 {
   ContentChanged(aContent);
 }

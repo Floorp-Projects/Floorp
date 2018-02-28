@@ -6,7 +6,6 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
-<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
 
 <!DOCTYPE page SYSTEM "chrome://browser/locale/places/places.dtd">
@@ -23,7 +22,7 @@
           src="chrome://browser/content/bookmarks/bookmarksPanel.js"/>
 
   <commandset id="placesCommands"/>
-  <commandset id="editMenuCommands"/>
+#include ../../../../toolkit/content/editMenuCommands.inc.xul
   <menupopup id="placesContext"/>
 
   <!-- Bookmarks and history tooltip -->

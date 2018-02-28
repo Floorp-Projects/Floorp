@@ -423,7 +423,6 @@ function keysFromContext(method, ctx, keys, translations) {
     }
 
     if (messageErrors.length) {
-      const { console } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
       messageErrors.forEach(error => console.warn(error));
     }
   });

@@ -312,14 +312,16 @@ AppCacheUtils.prototype = {
         let htmlNode = this.doc.querySelector("html[manifest]");
         if (htmlNode) {
           let pageUri = this.doc.location ? this.doc.location.href : this.uri;
-          let origin = pageUri.substr(0, pageUri.lastIndexOf("/") + 1);
           let manifestURI = htmlNode.getAttribute("manifest");
 
-          if (manifestURI.startsWith("/")) {
-            manifestURI = manifestURI.substr(1);
+          let originRegExp = new RegExp(/([a-z]*:\/\/[^/]*\/)/);
+          if (originRegExp.test(manifestURI)) {
+            return manifestURI;
+          } else if (manifestURI.startsWith("/")) {
+            return pageUri.match(originRegExp)[0] + manifestURI.substring(1);
           }
 
-          return origin + manifestURI;
+          return pageUri.substring(0, pageUri.lastIndexOf("/") + 1) + manifestURI;
         }
       };
 

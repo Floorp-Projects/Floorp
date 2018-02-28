@@ -21,10 +21,10 @@ registerCleanupFunction(() => {
                              asyncStackEnabled);
 });
 
-add_task(function* () {
+add_task(async function () {
   Services.prefs.setBoolPref("javascript.options.asyncstack", true);
 
-  yield waitForTick();
+  await waitForTick();
 
   let stack = Components.stack;
   while (stack) {

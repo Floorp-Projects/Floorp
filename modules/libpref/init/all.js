@@ -2638,11 +2638,7 @@ pref("security.mixed_content.block_active_content", false);
 pref("security.mixed_content.block_display_content", false);
 
 // Upgrade mixed display content before it's blocked
-#ifdef NIGHTLY_BUILD
-pref("security.mixed_content.upgrade_display_content", true);
-#else
 pref("security.mixed_content.upgrade_display_content", false);
-#endif
 
 // Block sub requests that happen within an object
 #ifdef EARLY_BETA_OR_EARLIER
@@ -5321,7 +5317,7 @@ pref("dom.placeholder.show_on_focus", true);
 
 // WebVR is enabled by default in beta and release for Windows and for all
 // platforms in nightly and aurora.
-#if defined(XP_WIN) || !defined(RELEASE_OR_BETA)
+#if defined(XP_WIN) || defined(XP_MACOSX) || !defined(RELEASE_OR_BETA)
 pref("dom.vr.enabled", true);
 #else
 pref("dom.vr.enabled", false);

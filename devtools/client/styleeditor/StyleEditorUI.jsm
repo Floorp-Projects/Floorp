@@ -25,7 +25,6 @@ const {StyleSheetEditor} = require("resource://devtools/client/styleeditor/Style
 const {PluralForm} = require("devtools/shared/plural-form");
 const {PrefObserver} = require("devtools/client/shared/prefs");
 const csscoverage = require("devtools/shared/fronts/csscoverage");
-const {console} = require("resource://gre/modules/Console.jsm");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 const {OriginalSource} = require("devtools/client/styleeditor/original-source");
 

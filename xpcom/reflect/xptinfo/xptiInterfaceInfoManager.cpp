@@ -142,7 +142,7 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* ifac
     // in xpcom/reflect/xptcall/genstubs.pl; do not change this value
     // without changing that one or you WILL see problems.
     if (iface->interface_descriptor->num_methods > 250 &&
-            !(XPT_ID_IS_BUILTINCLASS(iface->interface_descriptor->flags))) {
+            !iface->interface_descriptor->IsBuiltinClass()) {
         NS_ASSERTION(0, "Too many methods to handle for the stub, cannot load");
         fprintf(stderr, "ignoring too large interface: %s\n", iface->name);
         return;
@@ -166,10 +166,10 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* ifac
         return;
 
     //XXX  We should SetHeader too as part of the validation, no?
-    entry->SetScriptableFlag(XPT_ID_IS_SCRIPTABLE(iface->interface_descriptor->flags));
-    entry->SetBuiltinClassFlag(XPT_ID_IS_BUILTINCLASS(iface->interface_descriptor->flags));
+    entry->SetScriptableFlag(iface->interface_descriptor->IsScriptable());
+    entry->SetBuiltinClassFlag(iface->interface_descriptor->IsBuiltinClass());
     entry->SetMainProcessScriptableOnlyFlag(
-      XPT_ID_IS_MAIN_PROCESS_SCRIPTABLE_ONLY(iface->interface_descriptor->flags));
+      iface->interface_descriptor->IsMainProcessScriptableOnly());
 
     mWorkingSet.mIIDTable.Put(entry->IID(), entry);
     mWorkingSet.mNameTable.Put(entry->GetTheName(), entry);

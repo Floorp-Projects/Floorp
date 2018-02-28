@@ -29,6 +29,22 @@ add_connection_test("symantec-not-whitelisted-after-cutoff.example.com",
 add_connection_test("symantec-not-whitelisted-before-cutoff.example.com",
                     SEC_ERROR_UNKNOWN_ISSUER, null, null);
 
+// Disable the distrust, should be back to the console warning
+add_test(function() {
+  clearSessionCache();
+  Services.prefs.setIntPref("security.pki.distrust_ca_policy",
+                            /* DistrustedCAPolicy::Permit */ 0);
+  run_next_test();
+});
+
+add_connection_test("symantec-not-whitelisted-before-cutoff.example.com",
+                    PRErrorCodeSuccess, null, shouldBeImminentlyDistrusted);
+
+add_test(function() {
+  clearSessionCache();
+  Services.prefs.clearUserPref("security.pki.distrust_ca_policy");
+  run_next_test();
+});
 
 // Load the wildcard *.google.com cert and its intermediate, then verify
 // it at a reasonable time and make sure the whitelists work
@@ -39,6 +55,9 @@ function run_test() {
   // Since we don't want to actually try to fetch OCSP for this certificate,
   // (as an external fetch is bad in the tests), disable OCSP first.
   Services.prefs.setIntPref("security.OCSP.enabled", 0);
+
+  Services.prefs.setIntPref("security.pki.distrust_ca_policy",
+                            /* DistrustedCAPolicy::DistrustSymantecRoots */ 1);
 
   // (new Date("2018-02-16")).getTime() / 1000
   const VALIDATION_TIME = 1518739200;

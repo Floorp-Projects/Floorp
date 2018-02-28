@@ -2,103 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include $(topsrcdir)/config/config.mk
-
-# special case some locale codes, he and id
-# http://code.google.com/p/android/issues/detail?id=3639
-AB_rCD = $(if $(filter he, $(AB_CD)),iw,$(if $(filter id, $(AB_CD)),in,$(subst -,-r,$(AB_CD))))
-
-SYNCSTRINGSPATH = $(abspath $(call MERGE_FILE,sync_strings.dtd))
-STRINGSPATH = $(abspath $(call MERGE_FILE,android_strings.dtd))
-# Fennec branding is en-US only: see $(MOZ_BRANDING_DIRECTORY)/locales/jar.mn.
-BRANDPATH := $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/locales/en-US/brand.dtd
-$(warnIfEmpty,AB_CD) # todo: $(errorIfEmpty )
-
-dir-res-values := ../res/values
-strings-xml    := $(dir-res-values)/strings.xml
-strings-xml-in := $(srcdir)/../strings.xml.in
-
-GARBAGE += $(strings-xml)
-
-dir-res-raw := ../res/raw
-suggestedsites := $(dir-res-raw)/suggestedsites.json
-browsersearch := $(dir-res-raw)/browsersearch.json
-
-libs realchrome:: \
-  $(strings-xml) \
-  $(NULL)
+include $(topsrcdir)/config/AB_rCD.mk
 
 chrome-%:: AB_CD=$*
 chrome-%::
 	@$(MAKE) \
-	  $(dir-res-values)-$(AB_rCD)/strings.xml \
-	  $(dir-res-raw)-$(AB_rCD)/suggestedsites.json \
-	  $(dir-res-raw)-$(AB_rCD)/browsersearch.json \
+	  ../res/values$(AB_rCD)/strings.xml \
+	  ../res/raw$(AB_rCD)/suggestedsites.json \
+	  ../res/raw$(AB_rCD)/browsersearch.json \
 	  AB_CD=$*
-
-# Determine the ../res/values[-*]/ path
-strings-xml-bypath  = $(filter %/strings.xml,$(MAKECMDGOALS))
-ifeq (,$(strip $(strings-xml-bypath)))
-  strings-xml-bypath = $(strings-xml)
-endif
-dir-strings-xml = $(patsubst %/,%,$(dir $(strings-xml-bypath)))
-
-strings-xml-preqs =\
-  $(strings-xml-in) \
-  $(BRANDPATH) \
-  $(STRINGSPATH) \
-  $(SYNCSTRINGSPATH) \
-  $(if $(IS_LANGUAGE_REPACK),FORCE) \
-  $(NULL)
-
-$(dir-strings-xml)/strings.xml: $(strings-xml-preqs)
-	$(call py_action,preprocessor, \
-      $(DEFINES) \
-      $(ACDEFINES) \
-	  -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
-	  -DBRANDPATH='$(BRANDPATH)' \
-	  -DMOZ_APP_DISPLAYNAME='@MOZ_APP_DISPLAYNAME@' \
-	  -DSTRINGSPATH='$(STRINGSPATH)' \
-	  -DSYNCSTRINGSPATH='$(SYNCSTRINGSPATH)' \
-      $< \
-	  -o $@)
-
-# Arg 1: Valid Make identifier, like suggestedsites.
-# Arg 2: File name, like suggestedsites.json.
-define generated_file_template
-
-# Determine the ../res/raw[-*] path.  This can be ../res/raw when no
-# locale is explicitly specified.
-$(1)-bypath = $(filter %/$(2),$(MAKECMDGOALS))
-ifeq (,$$(strip $$($(1)-bypath)))
-  $(1)-bypath = $($(1))
-endif
-$(1)-dstdir-raw = $$(patsubst %/,%,$$(dir $$($(1)-bypath)))
-
-GARBAGE += $($(1))
-
-libs realchrome:: $($(1))
-endef
-
-# L10NBASEDIR is not defined for en-US.
-l10n-srcdir := $(if $(filter en-US,$(AB_CD)),,$(or $(realpath $(L10NBASEDIR)),$(abspath $(L10NBASEDIR)))/$(AB_CD)/mobile/chrome)
-
-$(eval $(call generated_file_template,suggestedsites,suggestedsites.json))
-
-$(suggestedsites-dstdir-raw)/suggestedsites.json: FORCE
-	$(call py_action,generate_suggestedsites, \
-		--verbose \
-		--android-package-name=$(ANDROID_PACKAGE_NAME) \
-		--resources=$(topsrcdir)/mobile/android/app/src/photon/res \
-		$(if $(filter en-US,$(AB_CD)),,--srcdir=$(l10n-srcdir)) \
-		--srcdir=$(topsrcdir)/mobile/locales/en-US/chrome \
-		$@)
-
-$(eval $(call generated_file_template,browsersearch,browsersearch.json))
-
-$(browsersearch-dstdir-raw)/browsersearch.json: FORCE
-	$(call py_action,generate_browsersearch, \
-		--verbose \
-		$(if $(filter en-US,$(AB_CD)),,--srcdir=$(l10n-srcdir)) \
-		--srcdir=$(topsrcdir)/mobile/locales/en-US/chrome \
-		$@)

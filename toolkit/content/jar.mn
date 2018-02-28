@@ -45,7 +45,6 @@ toolkit.jar:
    content/global/datepicker.xhtml
 #ifndef MOZ_FENNEC
    content/global/editMenuOverlay.js
-*  content/global/editMenuOverlay.xul
 #endif
    content/global/filepicker.properties
    content/global/globalOverlay.js

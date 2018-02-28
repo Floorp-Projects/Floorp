@@ -39,9 +39,9 @@ SVGTitleElement::~SVGTitleElement()
 }
 
 void
-SVGTitleElement::CharacterDataChanged(nsIDocument *aDocument,
-                                      nsIContent *aContent,
-                                      CharacterDataChangeInfo *aInfo)
+SVGTitleElement::CharacterDataChanged(nsIDocument* aDocument,
+                                      nsIContent* aContent,
+                                      const CharacterDataChangeInfo&)
 {
   SendTitleChangeEvent(false);
 }

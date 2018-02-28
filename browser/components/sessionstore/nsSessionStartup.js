@@ -34,8 +34,6 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "console",
-  "resource://gre/modules/Console.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionFile",
   "resource:///modules/sessionstore/SessionFile.jsm");
 ChromeUtils.defineModuleGetter(this, "StartupPerformance",

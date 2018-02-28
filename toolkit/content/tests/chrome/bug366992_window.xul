@@ -5,7 +5,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <window id="366992 test"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -14,10 +13,27 @@
         height="600"
         title="366992 test">
 
-  <commandset id="editMenuCommands"/>
+  <commandset id="editMenuCommands">
+    <commandset id="editMenuCommandSetAll" commandupdater="true" events="focus,select"
+                oncommandupdate="goUpdateGlobalEditMenuItems()"/>
+    <commandset id="editMenuCommandSetUndo" commandupdater="true" events="undo"
+                oncommandupdate="goUpdateUndoEditMenuItems()"/>
+    <commandset id="editMenuCommandSetPaste" commandupdater="true" events="clipboard"
+                oncommandupdate="goUpdatePasteMenuItems()"/>
+    <command id="cmd_undo" oncommand="goDoCommand('cmd_undo')"/>
+    <command id="cmd_redo" oncommand="goDoCommand('cmd_redo')"/>
+    <command id="cmd_cut" oncommand="goDoCommand('cmd_cut')"/>
+    <command id="cmd_copy" oncommand="goDoCommand('cmd_copy')"/>
+    <command id="cmd_paste" oncommand="goDoCommand('cmd_paste')"/>
+    <command id="cmd_delete" oncommand="goDoCommand('cmd_delete')"/>
+    <command id="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')"/>
+    <command id="cmd_switchTextDirection" oncommand="goDoCommand('cmd_switchTextDirection');"/>
+  </commandset>
 
   <script type="application/javascript"
           src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript"
+          src="chrome://global/content/editMenuOverlay.js"/>
   <script type="application/javascript"><![CDATA[
     // Without the fix for bug 366992, the delete command would be enabled
     // for the textbox even though the textbox's controller for this command

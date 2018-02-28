@@ -204,6 +204,28 @@ var Async = {
     };
   },
 
+  /**
+   * Turn a synchronous iterator/iterable into an async iterator that calls a
+   * Async.jankYielder at each step.
+   *
+   * @param iterable {Iterable}
+   *        Iterable or iterator that should be wrapped. (Anything usable in
+   *        for..of should work)
+   *
+   * @param [maybeYield = 50] {number|() => Promise<void>}
+   *        Either an existing jankYielder to use, or a number to provide as the
+   *        argument to Async.jankYielder.
+   */
+  async* yieldingIterator(iterable, maybeYield = 50) {
+    if (typeof maybeYield == "number") {
+      maybeYield = Async.jankYielder(maybeYield);
+    }
+    for (let item of iterable) {
+      await maybeYield();
+      yield item;
+    }
+  },
+
   asyncQueueCaller(log) {
     return new AsyncQueueCaller(log);
   },

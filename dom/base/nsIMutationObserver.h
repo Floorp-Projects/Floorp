@@ -118,9 +118,9 @@ public:
    *       assume that this call will happen when there are script blockers on
    *       the stack.
    */
-  virtual void CharacterDataWillChange(nsIDocument *aDocument,
+  virtual void CharacterDataWillChange(nsIDocument* aDocument,
                                        nsIContent* aContent,
-                                       CharacterDataChangeInfo* aInfo) = 0;
+                                       const CharacterDataChangeInfo&) = 0;
 
   /**
    * Notification that the node value of a data node (text, cdata, pi, comment)
@@ -140,9 +140,9 @@ public:
    *       assume that this call will happen when there are script blockers on
    *       the stack.
    */
-  virtual void CharacterDataChanged(nsIDocument *aDocument,
+  virtual void CharacterDataChanged(nsIDocument* aDocument,
                                     nsIContent* aContent,
-                                    CharacterDataChangeInfo* aInfo) = 0;
+                                    const CharacterDataChangeInfo&) = 0;
 
   /**
    * Notification that an attribute of an element will change.  This
@@ -241,7 +241,7 @@ public:
    *       assume that this call will happen when there are script blockers on
    *       the stack.
    */
-  virtual void ContentAppended(nsIDocument *aDocument,
+  virtual void ContentAppended(nsIDocument* aDocument,
                                nsIContent* aContainer,
                                nsIContent* aFirstNewContent) = 0;
 
@@ -264,7 +264,7 @@ public:
    *       assume that this call will happen when there are script blockers on
    *       the stack.
    */
-  virtual void ContentInserted(nsIDocument *aDocument,
+  virtual void ContentInserted(nsIDocument* aDocument,
                                nsIContent* aContainer,
                                nsIContent* aChild) = 0;
 
@@ -290,7 +290,7 @@ public:
    *       assume that this call will happen when there are script blockers on
    *       the stack.
    */
-  virtual void ContentRemoved(nsIDocument *aDocument,
+  virtual void ContentRemoved(nsIDocument* aDocument,
                               nsIContent* aContainer,
                               nsIContent* aChild,
                               nsIContent* aPreviousSibling) = 0;
@@ -338,12 +338,12 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMutationObserver, NS_IMUTATION_OBSERVER_IID)
 #define NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATAWILLCHANGE                  \
     virtual void CharacterDataWillChange(nsIDocument* aDocument,             \
                                          nsIContent* aContent,               \
-                                         CharacterDataChangeInfo* aInfo) override;
+                                         const CharacterDataChangeInfo& aInfo) override;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED                     \
     virtual void CharacterDataChanged(nsIDocument* aDocument,                \
                                       nsIContent* aContent,                  \
-                                      CharacterDataChangeInfo* aInfo) override;
+                                      const CharacterDataChangeInfo& aInfo) override;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE                      \
     virtual void AttributeWillChange(nsIDocument* aDocument,                 \
@@ -410,13 +410,13 @@ _class::NodeWillBeDestroyed(const nsINode* aNode)                               
 void                                                                      \
 _class::CharacterDataWillChange(nsIDocument* aDocument,                   \
                                 nsIContent* aContent,                     \
-                                CharacterDataChangeInfo* aInfo)           \
+                                const CharacterDataChangeInfo& aInfo)     \
 {                                                                         \
 }                                                                         \
 void                                                                      \
 _class::CharacterDataChanged(nsIDocument* aDocument,                      \
                              nsIContent* aContent,                        \
-                             CharacterDataChangeInfo* aInfo)              \
+                             const CharacterDataChangeInfo& aInfo)        \
 {                                                                         \
 }                                                                         \
 void                                                                      \

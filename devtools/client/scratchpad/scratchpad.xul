@@ -15,7 +15,6 @@
 
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
 <?xml-stylesheet href="chrome://devtools/skin/scratchpad.css"?>
-<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <window id="main-window"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -32,7 +31,7 @@
 <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
 <script type="application/javascript" src="chrome://devtools/content/scratchpad/scratchpad.js"/>
 
-<commandset id="editMenuCommands"/>
+#include ../../../toolkit/content/editMenuCommands.inc.xul
 
 <commandset id="sourceEditorCommands">
   <command id="cmd_find" oncommand=";"/>
@@ -68,8 +67,7 @@
   <command id="sp-cmd-hideSidebar" oncommand=";"/>
 </commandset>
 
-<keyset id="editMenuKeys"/>
-
+#include ../../../toolkit/content/editMenuKeys.inc.xul
 <keyset id="sp-keyset">
   <key id="sp-key-window"
        key="&newWindowCmd.commandkey;"
@@ -191,17 +189,33 @@
   <menu id="sp-edit-menu" label="&editMenu.label;"
         accesskey="&editMenu.accesskey;">
     <menupopup id="sp-menu_editpopup">
-      <menuitem id="menu_undo"/>
-      <menuitem id="menu_redo"/>
+      <menuitem id="menu_undo" label="&undoCmd.label;"
+                key="key_undo" accesskey="&undoCmd.accesskey;"
+                command="cmd_undo"/>
+      <menuitem id="menu_redo" label="&redoCmd.label;"
+                key="key_redo" accesskey="&redoCmd.accesskey;"
+                command="cmd_redo"/>
       <menuseparator/>
-      <menuitem id="menu_cut"/>
-      <menuitem id="menu_copy"/>
-      <menuitem id="menu_paste"/>
+      <menuitem id="menu_cut" label="&cutCmd.label;"
+                key="key_cut" accesskey="&cutCmd.accesskey;"
+                command="cmd_cut"/>
+      <menuitem id="menu_copy" label="&copyCmd.label;"
+                key="key_copy" accesskey="&copyCmd.accesskey;"
+                command="cmd_copy"/>
+      <menuitem id="menu_paste" label="&pasteCmd.label;"
+                key="key_paste" accesskey="&pasteCmd.accesskey;"
+                command="cmd_paste"/>
       <menuseparator/>
-      <menuitem id="menu_selectAll"/>
+      <menuitem id="menu_selectAll" label="&selectAllCmd.label;"
+                key="key_selectAll" accesskey="&selectAllCmd.accesskey;"
+                command="cmd_selectAll"/>
       <menuseparator/>
-      <menuitem id="menu_find"/>
-      <menuitem id="menu_findAgain"/>
+      <menuitem id="menu_find" label="&findCmd.label;"
+                key="key_find" accesskey="&findCmd.accesskey;"
+                command="cmd_find"/>
+      <menuitem id="menu_findAgain" label="&findAgainCmd.label;"
+                key="key_findAgain" accesskey="&findAgainCmd.accesskey;"
+                command="cmd_findAgain"/>
       <menuseparator/>
       <menuitem id="se-menu-gotoLine"
           label="&gotoLineCmd.label;"
@@ -354,12 +368,17 @@
 
 <popupset id="scratchpad-popups">
   <menupopup id="scratchpad-text-popup">
-    <menuitem id="cMenu_cut"/>
-    <menuitem id="cMenu_copy"/>
-    <menuitem id="cMenu_paste"/>
-    <menuitem id="cMenu_delete"/>
+    <menuitem id="cMenu_cut" label="&cutCmd.label;"
+              accesskey="&cutCmd.accesskey;" command="cmd_cut"/>
+    <menuitem id="cMenu_copy" label="&copyCmd.label;"
+              accesskey="&copyCmd.accesskey;" command="cmd_copy"/>
+    <menuitem id="cMenu_paste" label="&pasteCmd.label;"
+              accesskey="&pasteCmd.accesskey;" command="cmd_paste"/>
+    <menuitem id="cMenu_delete" label="&deleteCmd.label;"
+              accesskey="&deleteCmd.accesskey;" command="cmd_delete"/>
     <menuseparator/>
-    <menuitem id="cMenu_selectAll"/>
+    <menuitem id="cMenu_selectAll" label="&selectAllCmd.label;"
+              accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll"/>
     <menuseparator/>
     <menuitem id="sp-text-run"
               label="&run.label;"

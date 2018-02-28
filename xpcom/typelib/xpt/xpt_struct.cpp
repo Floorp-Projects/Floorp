@@ -14,6 +14,38 @@
 
 using mozilla::WrapNotNull;
 
+#define XPT_MAGIC "XPCOM\nTypeLib\r\n\032"
+#define XPT_MAGIC_STRING "XPCOM\\nTypeLib\\r\\n\\032"
+
+/*
+ * Annotation records are variable-size records used to store secondary
+ * information about the typelib, e.g. such as the name of the tool that
+ * generated the typelib file, the date it was generated, etc.  The
+ * information is stored with very loose format requirements so as to
+ * allow virtually any private data to be stored in the typelib.
+ *
+ * There are two types of Annotations:
+ *
+ * EmptyAnnotation
+ * PrivateAnnotation
+ *
+ * The tag field of the prefix discriminates among the variant record
+ * types for Annotation's.  If the tag is 0, this record is an
+ * EmptyAnnotation. EmptyAnnotation's are ignored - they're only used to
+ * indicate an array of Annotation's that's completely empty.  If the tag
+ * is 1, the record is a PrivateAnnotation.
+ *
+ * We don't actually store annotations; we just skip over them if they are
+ * present.
+ */
+
+#define XPT_ANN_LAST    0x80
+#define XPT_ANN_PRIVATE 0x40
+
+#define XPT_ANN_IS_LAST(flags) (flags & XPT_ANN_LAST)
+#define XPT_ANN_IS_PRIVATE(flags)(flags & XPT_ANN_PRIVATE)
+
+
 /***************************************************************************/
 /* Forward declarations. */
 
@@ -77,8 +109,9 @@ XPT_DoHeader(XPTArena *arena, NotNull<XPTCursor*> cursor, XPTHeader **headerp)
         return false;
     }
 
+    uint8_t minor_version;
     if (!XPT_Do8(cursor, &header->major_version) ||
-        !XPT_Do8(cursor, &header->minor_version)) {
+        !XPT_Do8(cursor, &minor_version)) {
         return false;
     }
 
@@ -272,7 +305,7 @@ DoConstDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
         return false;
     }
 
-    switch(XPT_TDP_TAG(cd->type.prefix)) {
+    switch (cd->type.Tag()) {
       case TD_INT16:
         ok = XPT_Do16(cursor, (uint16_t*) &cd->value.i16);
         break;
@@ -353,7 +386,7 @@ DoTypeDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
         return false;
     }
 
-    switch (XPT_TDP_TAG(td->prefix)) {
+    switch (td->Tag()) {
       case TD_INTERFACE_TYPE:
         uint16_t iface;
         if (!XPT_Do16(cursor, &iface))

@@ -27,30 +27,6 @@
 <!ENTITY  microphoneSettingsButton.label                        "Settings…">
 <!ENTITY  microphoneSettingsButton.accesskey                    "t">
 
-<!ENTITY  fontsAndColors.label        "Fonts &amp; Colors">
-
-<!ENTITY  defaultFont2.label          "Default font">
-<!ENTITY  defaultFont2.accesskey      "D">
-<!ENTITY  defaultSize2.label          "Size">
-<!ENTITY  defaultSize2.accesskey      "S">
-
-<!ENTITY  advancedFonts.label         "Advanced…">
-<!ENTITY  advancedFonts.accesskey     "A">
-
-<!ENTITY  colors.label                "Colors…">
-<!ENTITY  colors.accesskey            "C">
-
-
-<!ENTITY language2.label              "Language">
-<!ENTITY chooseLanguage.label         "Choose your preferred language for displaying pages">
-<!ENTITY chooseButton.label           "Choose…">
-<!ENTITY chooseButton.accesskey       "o">
-
-<!ENTITY translateWebPages.label      "Translate web content">
-<!ENTITY translateWebPages.accesskey  "T">
-<!ENTITY translateExceptions.label    "Exceptions…">
-<!ENTITY translateExceptions.accesskey "x">
-
 <!-- LOCALIZATION NOTE (translation.options.attribution.beforeLogo,
   -                     translation.options.attribution.afterLogo):
   -  These 2 strings are displayed before and after a 'Microsoft Translator'
@@ -60,9 +36,3 @@
   -->
 <!ENTITY translation.options.attribution.beforeLogo "Translations by">
 <!ENTITY translation.options.attribution.afterLogo "">
-
-<!ENTITY  drmContent2.label              "Digital Rights Management (DRM) Content">
-
-<!ENTITY  playDRMContent2.label          "Play DRM-controlled content">
-<!ENTITY  playDRMContent2.accesskey      "P">
-<!ENTITY  playDRMContent.learnMore.label "Learn more">
