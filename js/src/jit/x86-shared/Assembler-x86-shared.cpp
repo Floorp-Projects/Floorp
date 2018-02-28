@@ -138,8 +138,9 @@ AssemblerX86Shared::executableCopy(void* buffer)
 void
 AssemblerX86Shared::processCodeLabels(uint8_t* rawCode)
 {
-    for (const CodeLabel& label : codeLabels_) {
-        Bind(rawCode, label);
+    for (size_t i = 0; i < codeLabels_.length(); i++) {
+        CodeLabel label = codeLabels_[i];
+        Bind(rawCode, *label.patchAt(), *label.target());
     }
 }
 
