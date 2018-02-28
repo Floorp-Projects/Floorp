@@ -12,7 +12,6 @@
 #include "nsError.h"
 #include "nsFrameSelection.h"
 #include "nsIContent.h"
-#include "nsIDOMNode.h"
 #include "nsIEditor.h"
 #include "nsIPresShell.h"
 #include "nsISupportsImpl.h"
@@ -26,7 +25,7 @@ using namespace dom;
 // Test for distance between caret and text that will be deleted
 nsresult
 TextEditRules::CheckBidiLevelForDeletion(Selection* aSelection,
-                                         nsIDOMNode* aSelNode,
+                                         nsINode* aSelNode,
                                          int32_t aSelOffset,
                                          nsIEditor::EDirection aAction,
                                          bool* aCancel)
@@ -44,8 +43,10 @@ TextEditRules::CheckBidiLevelForDeletion(Selection* aSelection,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aSelNode);
-  NS_ENSURE_TRUE(content, NS_ERROR_NULL_POINTER);
+  if (!aSelNode || !aSelNode->IsContent()) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsCOMPtr<nsIContent> content = aSelNode->AsContent();
 
   nsBidiLevel levelBefore;
   nsBidiLevel levelAfter;
