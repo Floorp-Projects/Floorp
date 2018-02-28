@@ -225,7 +225,11 @@ pref("dom.gamepad.haptic_feedback.enabled", true);
 // If this is true, TextEventDispatcher dispatches keydown and keyup events
 // even during composition (keypress events are never fired during composition
 // even if this is true).
+#ifdef EARLY_BETA_OR_EARLIER
+pref("dom.keyboardevent.dispatch_during_composition", true);
+#else
 pref("dom.keyboardevent.dispatch_during_composition", false);
+#endif
 
 // If this is true, TextEventDispatcher dispatches keypress event with setting
 // WidgetEvent::mFlags::mOnlySystemGroupDispatchInContent to true if it won't
