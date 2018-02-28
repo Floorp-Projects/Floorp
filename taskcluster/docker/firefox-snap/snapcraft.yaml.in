@@ -51,3 +51,12 @@ parts:
       - xdg-utils
       - ffmpeg
     after: [desktop-gtk3]
+
+  optimization:
+    after: [firefox]
+    plugin: nil
+    stage-packages:
+      - shared-mime-info
+    install: |
+      set -eux
+      update-mime-database $SNAPCRAFT_PART_INSTALL/usr/share/mime
