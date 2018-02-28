@@ -375,7 +375,7 @@ async function loadManifestFromWebManifest(aUri) {
   addon.iconURL = null;
   addon.icon64URL = null;
   addon.icons = manifest.icons || {};
-  addon.userPermissions = extension.manifestPermissions;
+  addon.userPermissions = extension.userPermissions;
 
   addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
 
