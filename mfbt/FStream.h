@@ -15,7 +15,8 @@
 #define mozilla_FStream_h
 
 #include "mozilla/Char16.h"
-#include <iostream>
+#include <istream>
+#include <ostream>
 #include <fstream>
 #if defined(__MINGW32__)
 #include "mozilla/UniquePtr.h"
