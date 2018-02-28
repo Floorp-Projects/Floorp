@@ -1816,14 +1816,10 @@ JsepSessionImpl::ValidateAnswer(const Sdp& offer, const Sdp& answer)
             }
 
             if (offExt.entry < 4096 && (offExt.entry != ansExt.entry)) {
-              // FIXME we do not return an error here, because Cisco Spark
-              // actually does respond with different extension ID's then we
-              // offer. See bug 1361206 for details.
-              MOZ_MTLOG(ML_WARNING, "[" << mName << "]: Answer changed id for "
-                        "extmap attribute at level " << i << " ("
-                        << offExt.extensionname << ") from " << offExt.entry
-                        << " to " << ansExt.entry << ".");
-              // return NS_ERROR_INVALID_ARG;
+              JSEP_SET_ERROR("Answer changed id for extmap attribute at level "
+                        << i << " (" << offExt.extensionname << ") from "
+                        << offExt.entry << " to " << ansExt.entry << ".");
+               return NS_ERROR_INVALID_ARG;
             }
 
             if (ansExt.entry >= 4096) {
