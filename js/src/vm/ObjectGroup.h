@@ -677,7 +677,7 @@ class ObjectGroupCompartment
 
     void clearTables();
 
-    void sweep(FreeOp* fop);
+    void sweep();
 
     void purge() {
         defaultNewGroupCache.purge();
