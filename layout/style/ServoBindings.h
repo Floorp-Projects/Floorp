@@ -13,6 +13,7 @@
 #include "mozilla/ServoTypes.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoElementSnapshot.h"
+#include "mozilla/css/SheetLoadData.h"
 #include "mozilla/css/SheetParsingMode.h"
 #include "mozilla/css/URLMatchingFunction.h"
 #include "mozilla/EffectCompositor.h"
@@ -179,6 +180,7 @@ RawGeckoNodeBorrowedOrNull Gecko_GetNextStyleChild(RawGeckoStyleChildrenIterator
 mozilla::ServoStyleSheet*
 Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
                      mozilla::ServoStyleSheet* parent,
+                     mozilla::css::SheetLoadData* parent_load_data,
                      mozilla::css::LoaderReusableStyleSheets* reusable_sheets,
                      RawGeckoURLExtraData* base_url_data,
                      const uint8_t* url_bytes,

@@ -298,6 +298,8 @@ public:
    * nsICSSLoaderObserver notification will be sent.
    *
    * @param aParentSheet the parent of this child sheet
+   * @param aParentData the SheetLoadData corresponding to the load of the
+   *                    parent sheet.
    * @param aURL the URL of the child sheet
    * @param aMedia the already-parsed media list for the child sheet
    * @param aGeckoParentRule the @import rule importing this child, when using
@@ -307,6 +309,7 @@ public:
    *              for this load
    */
   nsresult LoadChildSheet(StyleSheet* aParentSheet,
+                          SheetLoadData* aParentData,
                           nsIURI* aURL,
                           dom::MediaList* aMedia,
                           ImportRule* aGeckoParentRule,
