@@ -101,14 +101,14 @@
       <vbox id="historyRememberPane">
         <hbox align="center" flex="1">
           <vbox flex="1">
-            <description>&rememberDescription1.label;</description>
+            <description class="description-with-side-element">&rememberDescription1.label;</description>
           </vbox>
         </hbox>
       </vbox>
       <vbox id="historyDontRememberPane">
         <hbox align="center" flex="1">
           <vbox flex="1">
-            <description>&dontrememberDescription.label;</description>
+            <description class="description-with-side-element">&dontrememberDescription.label;</description>
           </vbox>
         </hbox>
       </vbox>
@@ -172,62 +172,62 @@
 
   <hbox data-subcategory="sitedata" align="baseline">
     <vbox flex="1">
+      <description class="description-with-side-element" flex="1">
+        <html:span id="totalSiteDataSize" class="tail-with-learn-more"></html:span>
+        <label id="siteDataLearnMoreLink" class="learnMore text-link">&siteDataLearnMoreLink.label;</label>
+      </description>
       <radiogroup id="acceptCookies"
                   preference="network.cookie.cookieBehavior"
                   onsyncfrompreference="return gPrivacyPane.readAcceptCookies();"
                   onsynctopreference="return gPrivacyPane.writeAcceptCookies();">
-      <description flex="1">
-        <label id="totalSiteDataSize" class="tail-with-learn-more"></label>
-        <label id="siteDataLearnMoreLink" class="learnMore text-link">&siteDataLearnMoreLink.label;</label>
-      </description>
-      <hbox id="cookiesBox">
-        <radio label="&acceptCookies3.label;"
-               value="0"
-               accesskey="&acceptCookies3.accesskey;"
+        <hbox id="cookiesBox">
+          <radio label="&acceptCookies4.label;"
+                 value="0"
+                 accesskey="&acceptCookies4.accesskey;"
+                 flex="1" />
+        </hbox>
+        <hbox id="keepRow"
+              class="indent"
+              align="center">
+          <label id="keepUntil"
+                 control="keepCookiesUntil"
+                 accesskey="&keepUntil2.accesskey;">&keepUntil2.label;</label>
+          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+          <hbox>
+            <menulist id="keepCookiesUntil"
+                      preference="network.cookie.lifetimePolicy">
+              <menupopup>
+                <menuitem label="&expire.label;" value="0"/>
+                <menuitem label="&close.label;" value="2"/>
+              </menupopup>
+            </menulist>
+          </hbox>
+        </hbox>
+        <hbox id="acceptThirdPartyRow"
+              class="indent"
+              align="center">
+          <label id="acceptThirdPartyLabel" control="acceptThirdPartyMenu"
+                 accesskey="&acceptThirdParty3.pre.accesskey;">&acceptThirdParty3.pre.label;</label>
+          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+          <hbox>
+            <menulist id="acceptThirdPartyMenu" preference="network.cookie.cookieBehavior"
+            onsyncfrompreference="return gPrivacyPane.readAcceptThirdPartyCookies();"
+            onsynctopreference="return gPrivacyPane.writeAcceptThirdPartyCookies();">
+              <menupopup>
+                <menuitem label="&acceptThirdParty.always.label;" value="always"/>
+                <menuitem label="&acceptThirdParty.visited.label;" value="visited"/>
+                <menuitem label="&acceptThirdParty.never.label;" value="never"/>
+              </menupopup>
+            </menulist>
+          </hbox>
+        </hbox>
+        <radio label="&blockCookies.label;"
+               value="2"
+               accesskey="&blockCookies.accesskey;"
                flex="1" />
-      </hbox>
-      <hbox id="keepRow"
-            class="indent"
-            align="center">
-        <label id="keepUntil"
-               control="keepCookiesUntil"
-               accesskey="&keepUntil2.accesskey;">&keepUntil2.label;</label>
-        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-        <hbox>
-          <menulist id="keepCookiesUntil"
-                    preference="network.cookie.lifetimePolicy">
-            <menupopup>
-              <menuitem label="&expire.label;" value="0"/>
-              <menuitem label="&close.label;" value="2"/>
-            </menupopup>
-          </menulist>
-        </hbox>
-      </hbox>
-      <hbox id="acceptThirdPartyRow"
-            class="indent"
-            align="center">
-        <label id="acceptThirdPartyLabel" control="acceptThirdPartyMenu"
-               accesskey="&acceptThirdParty3.pre.accesskey;">&acceptThirdParty3.pre.label;</label>
-        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-        <hbox>
-          <menulist id="acceptThirdPartyMenu" preference="network.cookie.cookieBehavior"
-          onsyncfrompreference="return gPrivacyPane.readAcceptThirdPartyCookies();"
-          onsynctopreference="return gPrivacyPane.writeAcceptThirdPartyCookies();">
-            <menupopup>
-              <menuitem label="&acceptThirdParty.always.label;" value="always"/>
-              <menuitem label="&acceptThirdParty.visited.label;" value="visited"/>
-              <menuitem label="&acceptThirdParty.never.label;" value="never"/>
-            </menupopup>
-          </menulist>
-        </hbox>
-      </hbox>
-      <radio label="&blockCookies.label;"
-             value="2"
-             accesskey="&blockCookies.accesskey;"
-             flex="1" />
-    </radiogroup>
+      </radiogroup>
     </vbox>
-    <vbox align="end">
+    <vbox>
       <button id="clearSiteDataButton"
           class="accessory-button"
           icon="clear"
