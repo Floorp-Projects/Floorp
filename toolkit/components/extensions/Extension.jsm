@@ -423,51 +423,12 @@ class ExtensionData {
     });
   }
 
-  /**
-   * Returns an object representing any capabilities that the extension
-   * has access to based on fixed properties in the manifest.  The result
-   * includes the contents of the "permissions" property as well as other
-   * capabilities that are derived from manifest fields that users should
-   * be informed of (e.g., origins where content scripts are injected).
-   */
-  get manifestPermissions() {
-    if (this.type !== "extension") {
-      return null;
-    }
-
-    let permissions = new Set();
-    let origins = new Set();
-    for (let perm of this.manifest.permissions || []) {
-      let type = classifyPermission(perm);
-      if (type.origin) {
-        origins.add(perm);
-      } else if (!type.api) {
-        permissions.add(perm);
-      }
-    }
-
-    if (this.manifest.devtools_page) {
-      permissions.add("devtools");
-    }
-
-    for (let entry of this.manifest.content_scripts || []) {
-      for (let origin of entry.matches) {
-        origins.add(origin);
-      }
-    }
-
-    return {
-      permissions: Array.from(permissions),
-      origins: Array.from(origins),
-    };
-  }
-
-  /**
-   * Returns an object representing all capabilities this extension has
-   * access to, including fixed ones from the manifest as well as dynamically
-   * granted permissions.
-   */
-  get activePermissions() {
+  // This method should return a structured representation of any
+  // capabilities this extension has access to, as derived from the
+  // manifest.  The current implementation just returns the contents
+  // of the permissions attribute, if we add things like url_overrides,
+  // they should also be added here.
+  get userPermissions() {
     if (this.type !== "extension") {
       return null;
     }
@@ -477,6 +438,11 @@ class ExtensionData {
       apis: [...this.apiNames],
     };
 
+    if (Array.isArray(this.manifest.content_scripts)) {
+      for (let entry of this.manifest.content_scripts) {
+        result.origins.push(...entry.matches);
+      }
+    }
     const EXP_PATTERN = /^experiments\.\w+/;
     result.permissions = [...this.permissions]
       .filter(p => !result.origins.includes(p) && !EXP_PATTERN.test(p));
@@ -576,6 +542,10 @@ class ExtensionData {
     };
 
     if (this.type === "extension") {
+      if (this.manifest.devtools_page) {
+        permissions.add("devtools");
+      }
+
       for (let perm of manifest.permissions) {
         if (perm === "geckoProfiler" && !this.isPrivileged) {
           const acceptedExtensions = Services.prefs.getStringPref("extensions.geckoProfiler.acceptedExtensionIds", "");
