@@ -12,25 +12,28 @@
 #include "seccomon.h"
 #include "secerr.h"
 #include "blapit.h"
+#include "blapii.h"
 
 #ifndef NSS_DISABLE_CHACHAPOLY
-#if defined(HAVE_INT128_SUPPORT) && (defined(NSS_X86_OR_X64) || defined(__aarch64__))
-#include "verified/Hacl_Poly1305_64.h"
-#else
-#include "poly1305.h"
-#endif
-#include "chacha20.h"
 #include "chacha20poly1305.h"
-#endif
+// Forward declaration from "Hacl_Chacha20_Vec128.h".
+extern void Hacl_Chacha20_Vec128_chacha20(uint8_t *output, uint8_t *plain,
+                                          uint32_t len, uint8_t *k, uint8_t *n1,
+                                          uint32_t ctr);
+// Forward declaration from "Hacl_Chacha20.h".
+extern void Hacl_Chacha20_chacha20(uint8_t *output, uint8_t *plain, uint32_t len,
+                                   uint8_t *k, uint8_t *n1, uint32_t ctr);
 
 /* Poly1305Do writes the Poly1305 authenticator of the given additional data
  * and ciphertext to |out|. */
-#ifndef NSS_DISABLE_CHACHAPOLY
-
 #if defined(HAVE_INT128_SUPPORT) && (defined(NSS_X86_OR_X64) || defined(__aarch64__))
+/* Use HACL* Poly1305 on 64-bit Intel and ARM */
+#include "verified/Hacl_Poly1305_64.h"
 
 static void
-Poly1305PadUpdate(Hacl_Impl_Poly1305_64_State_poly1305_state state, unsigned char *block, const unsigned char *p, const unsigned int pLen)
+Poly1305PadUpdate(Hacl_Impl_Poly1305_64_State_poly1305_state state,
+                  unsigned char *block, const unsigned char *p,
+                  const unsigned int pLen)
 {
     unsigned int pRemLen = pLen % 16;
     Hacl_Poly1305_64_update(state, (uint8_t *)p, (pLen / 16));
@@ -46,7 +49,8 @@ Poly1305Do(unsigned char *out, const unsigned char *ad, unsigned int adLen,
            const unsigned char key[32])
 {
     uint64_t tmp1[6U] = { 0U };
-    Hacl_Impl_Poly1305_64_State_poly1305_state state = Hacl_Poly1305_64_mk_state(tmp1, tmp1 + 3);
+    Hacl_Impl_Poly1305_64_State_poly1305_state state =
+        Hacl_Poly1305_64_mk_state(tmp1, tmp1 + 3);
 
     unsigned char block[16] = { 0 };
     Hacl_Poly1305_64_init(state, (uint8_t *)key);
@@ -68,6 +72,8 @@ Poly1305Do(unsigned char *out, const unsigned char *ad, unsigned int adLen,
     Hacl_Poly1305_64_finish(state, out, (uint8_t *)(key + 16));
 }
 #else
+/* All other platforms get the 32-bit poly1305 reference implementation. */
+#include "poly1305.h"
 
 static void
 Poly1305Do(unsigned char *out, const unsigned char *ad, unsigned int adLen,
@@ -165,6 +171,17 @@ ChaCha20Poly1305_DestroyContext(ChaCha20Poly1305Context *ctx, PRBool freeit)
 #endif
 }
 
+void
+ChaCha20Xor(uint8_t *output, uint8_t *block, uint32_t len, uint8_t *k,
+            uint8_t *nonce, uint32_t ctr)
+{
+    if (ssse3_support() || arm_neon_support()) {
+        Hacl_Chacha20_Vec128_chacha20(output, block, len, k, nonce, ctr);
+    } else {
+        Hacl_Chacha20_chacha20(output, block, len, k, nonce, ctr);
+    }
+}
+
 SECStatus
 ChaCha20Poly1305_Seal(const ChaCha20Poly1305Context *ctx, unsigned char *output,
                       unsigned int *outputLen, unsigned int maxOutputLen,
@@ -191,8 +208,10 @@ ChaCha20Poly1305_Seal(const ChaCha20Poly1305Context *ctx, unsigned char *output,
     PORT_Memset(block, 0, sizeof(block));
     // Generate a block of keystream. The first 32 bytes will be the poly1305
     // key. The remainder of the block is discarded.
-    ChaCha20XOR(block, block, sizeof(block), ctx->key, nonce, 0);
-    ChaCha20XOR(output, input, inputLen, ctx->key, nonce, 1);
+    ChaCha20Xor(block, (uint8_t *)block, sizeof(block), (uint8_t *)ctx->key,
+                (uint8_t *)nonce, 0);
+    ChaCha20Xor(output, (uint8_t *)input, inputLen, (uint8_t *)ctx->key,
+                (uint8_t *)nonce, 1);
 
     Poly1305Do(tag, ad, adLen, output, inputLen, block);
     PORT_Memcpy(output + inputLen, tag, ctx->tagLen);
@@ -233,14 +252,16 @@ ChaCha20Poly1305_Open(const ChaCha20Poly1305Context *ctx, unsigned char *output,
     PORT_Memset(block, 0, sizeof(block));
     // Generate a block of keystream. The first 32 bytes will be the poly1305
     // key. The remainder of the block is discarded.
-    ChaCha20XOR(block, block, sizeof(block), ctx->key, nonce, 0);
+    ChaCha20Xor(block, (uint8_t *)block, sizeof(block), (uint8_t *)ctx->key,
+                (uint8_t *)nonce, 0);
     Poly1305Do(tag, ad, adLen, input, ciphertextLen, block);
     if (NSS_SecureMemcmp(tag, &input[ciphertextLen], ctx->tagLen) != 0) {
         PORT_SetError(SEC_ERROR_BAD_DATA);
         return SECFailure;
     }
 
-    ChaCha20XOR(output, input, ciphertextLen, ctx->key, nonce, 1);
+    ChaCha20Xor(output, (uint8_t *)input, ciphertextLen, (uint8_t *)ctx->key,
+                (uint8_t *)nonce, 1);
 
     return SECSuccess;
 #endif

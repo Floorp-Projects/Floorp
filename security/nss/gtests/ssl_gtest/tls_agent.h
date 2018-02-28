@@ -14,7 +14,6 @@
 #include <iostream>
 
 #include "test_io.h"
-#include "tls_filter.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
@@ -37,7 +36,10 @@ enum SessionResumptionMode {
   RESUME_BOTH = RESUME_SESSIONID | RESUME_TICKET
 };
 
+class PacketFilter;
 class TlsAgent;
+class TlsCipherSpec;
+struct TlsRecord;
 
 const extern std::vector<SSLNamedGroup> kAllDHEGroups;
 const extern std::vector<SSLNamedGroup> kECDHEGroups;
@@ -80,18 +82,10 @@ class TlsAgent : public PollTarget {
     adapter_->SetPeer(peer->adapter_);
   }
 
-  // Set a filter that can access plaintext (TLS 1.3 only).
-  void SetTlsRecordFilter(std::shared_ptr<TlsRecordFilter> filter) {
-    filter->SetAgent(this);
-    adapter_->SetPacketFilter(filter);
-    filter->EnableDecryption();
-  }
-
-  void SetPacketFilter(std::shared_ptr<PacketFilter> filter) {
+  void SetFilter(std::shared_ptr<PacketFilter> filter) {
     adapter_->SetPacketFilter(filter);
   }
-
-  void DeletePacketFilter() { adapter_->SetPacketFilter(nullptr); }
+  void ClearFilter() { adapter_->SetPacketFilter(nullptr); }
 
   void StartConnect(PRFileDesc* model = nullptr);
   void CheckKEA(SSLKEAType kea_type, SSLNamedGroup group,
@@ -463,7 +457,7 @@ class TlsAgentTestBase : public ::testing::Test {
   void ProcessMessage(const DataBuffer& buffer, TlsAgent::State expected_state,
                       int32_t error_code = 0);
 
-  std::unique_ptr<TlsAgent> agent_;
+  std::shared_ptr<TlsAgent> agent_;
   TlsAgent::Role role_;
   SSLProtocolVariant variant_;
   uint16_t version_;

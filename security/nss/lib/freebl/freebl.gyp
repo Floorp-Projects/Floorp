@@ -10,7 +10,7 @@
       'target_name': 'intel-gcm-wrap_c_lib',
       'type': 'static_library',
       'sources': [
-        'intel-gcm-wrap.c'
+        'intel-gcm-wrap.c',
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports'
@@ -21,6 +21,38 @@
       'cflags_mozilla': [
         '-mssse3'
       ]
+    },
+    {
+      # TODO: make this so that all hardware accelerated code is in here.
+      'target_name': 'hw-acc-crypto',
+      'type': 'static_library',
+      'sources': [
+        'verified/Hacl_Chacha20_Vec128.c',
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports'
+      ],
+      'conditions': [
+        [ 'target_arch=="ia32" or target_arch=="x64"', {
+          'cflags': [
+            '-mssse3'
+          ],
+          'cflags_mozilla': [
+            '-mssse3'
+          ],
+          # GCC doesn't define this.
+          'defines': [
+            '__SSSE3__',
+          ],
+        }],
+        [ 'OS=="android"', {
+          # On Android we can't use any of the hardware acceleration :(
+          'defines!': [
+            '__ARM_NEON__',
+            '__ARM_NEON',
+          ],
+        }],
+      ],
     },
     {
       'target_name': 'gcm-aes-x86_c_lib',
@@ -74,11 +106,12 @@
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
+        'hw-acc-crypto',
       ],
       'conditions': [
         [ 'target_arch=="ia32" or target_arch=="x64"', {
           'dependencies': [
-            'gcm-aes-x86_c_lib'
+            'gcm-aes-x86_c_lib',
           ],
         }],
         [ 'OS=="linux"', {
@@ -110,11 +143,12 @@
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
+        'hw-acc-crypto',
       ],
       'conditions': [
         [ 'target_arch=="ia32" or target_arch=="x64"', {
           'dependencies': [
-            'gcm-aes-x86_c_lib'
+            'gcm-aes-x86_c_lib',
           ]
         }],
         [ 'OS!="linux" and OS!="android"', {
@@ -271,6 +305,11 @@
           'FREEBL_LOWHASH',
           'FREEBL_NO_DEPEND',
         ],
+        'cflags': [
+          '-std=gnu99',
+        ],
+      }],
+      [ 'OS=="dragonfly" or OS=="freebsd" or OS=="netbsd" or OS=="openbsd"', {
         'cflags': [
           '-std=gnu99',
         ],

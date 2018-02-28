@@ -90,20 +90,22 @@ NSS_IMPLEMENT void
 nssSlot_ResetDelay(
     NSSSlot *slot)
 {
-    slot->lastTokenPing = 0;
+    PZ_Lock(slot->isPresentLock);
+    slot->lastTokenPingState = nssSlotLastPingState_Reset;
+    PZ_Unlock(slot->isPresentLock);
 }
 
 static PRBool
 within_token_delay_period(const NSSSlot *slot)
 {
-    PRIntervalTime time, lastTime;
+    PRIntervalTime time;
+    int lastPingState = slot->lastTokenPingState;
     /* Set the delay time for checking the token presence */
     if (s_token_delay_time == 0) {
         s_token_delay_time = PR_SecondsToInterval(NSSSLOT_TOKEN_DELAY_TIME);
     }
     time = PR_IntervalNow();
-    lastTime = slot->lastTokenPing;
-    if ((lastTime) && ((time - lastTime) < s_token_delay_time)) {
+    if ((lastPingState == nssSlotLastPingState_Valid) && ((time - slot->lastTokenPingTime) < s_token_delay_time)) {
         return PR_TRUE;
     }
     return PR_FALSE;
@@ -156,7 +158,9 @@ nssSlot_IsTokenPresent(
     }
     /* this is the winning thread, block all others until we've determined
      * if the token is present and that it needs initialization. */
+    slot->lastTokenPingState = nssSlotLastPingState_Update;
     slot->inIsPresent = PR_TRUE;
+
     PZ_Unlock(slot->isPresentLock);
 
     nssSlot_EnterMonitor(slot);
@@ -240,14 +244,19 @@ nssSlot_IsTokenPresent(
 done:
     /* Once we've set up the condition variable,
      * Before returning, it's necessary to:
-     *  1) Set the lastTokenPing time so that any other threads waiting on this
+     *  1) Set the lastTokenPingTime so that any other threads waiting on this
      *     initialization and any future calls within the initialization window
      *     return the just-computed status.
      *  2) Indicate we're complete, waking up all other threads that may still
      *     be waiting on initialization can progress.
      */
     PZ_Lock(slot->isPresentLock);
-    slot->lastTokenPing = PR_IntervalNow();
+    /* don't update the time if we were reset while we were
+     * getting the token state */
+    if (slot->lastTokenPingState == nssSlotLastPingState_Update) {
+        slot->lastTokenPingTime = PR_IntervalNow();
+        slot->lastTokenPingState = nssSlotLastPingState_Valid;
+    }
     slot->inIsPresent = PR_FALSE;
     PR_NotifyAllCondVar(slot->isPresentCondition);
     PZ_Unlock(slot->isPresentLock);

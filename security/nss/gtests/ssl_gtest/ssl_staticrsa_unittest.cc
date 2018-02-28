@@ -48,10 +48,9 @@ TEST_P(TlsConnectGenericPre13, ConnectStaticRSA) {
 // This test is stream so we can catch the bad_record_mac alert.
 TEST_P(TlsConnectStreamPre13, ConnectStaticRSABogusCKE) {
   EnableOnlyStaticRsaCiphers();
-  auto i1 = std::make_shared<TlsInspectorReplaceHandshakeMessage>(
-      kTlsHandshakeClientKeyExchange,
+  MakeTlsFilter<TlsInspectorReplaceHandshakeMessage>(
+      client_, kTlsHandshakeClientKeyExchange,
       DataBuffer(kBogusClientKeyExchange, sizeof(kBogusClientKeyExchange)));
-  client_->SetPacketFilter(i1);
   ConnectExpectAlert(server_, kTlsAlertBadRecordMac);
 }
 
@@ -59,8 +58,7 @@ TEST_P(TlsConnectStreamPre13, ConnectStaticRSABogusCKE) {
 // This test is stream so we can catch the bad_record_mac alert.
 TEST_P(TlsConnectStreamPre13, ConnectStaticRSABogusPMSVersionDetect) {
   EnableOnlyStaticRsaCiphers();
-  client_->SetPacketFilter(
-      std::make_shared<TlsInspectorClientHelloVersionChanger>(server_));
+  MakeTlsFilter<TlsClientHelloVersionChanger>(client_, server_);
   ConnectExpectAlert(server_, kTlsAlertBadRecordMac);
 }
 
@@ -69,8 +67,7 @@ TEST_P(TlsConnectStreamPre13, ConnectStaticRSABogusPMSVersionDetect) {
 // ConnectStaticRSABogusPMSVersionDetect.
 TEST_P(TlsConnectGenericPre13, ConnectStaticRSABogusPMSVersionIgnore) {
   EnableOnlyStaticRsaCiphers();
-  client_->SetPacketFilter(
-      std::make_shared<TlsInspectorClientHelloVersionChanger>(server_));
+  MakeTlsFilter<TlsClientHelloVersionChanger>(client_, server_);
   server_->SetOption(SSL_ROLLBACK_DETECTION, PR_FALSE);
   Connect();
 }
@@ -79,10 +76,9 @@ TEST_P(TlsConnectGenericPre13, ConnectStaticRSABogusPMSVersionIgnore) {
 TEST_P(TlsConnectStreamPre13, ConnectExtendedMasterSecretStaticRSABogusCKE) {
   EnableOnlyStaticRsaCiphers();
   EnableExtendedMasterSecret();
-  auto inspect = std::make_shared<TlsInspectorReplaceHandshakeMessage>(
-      kTlsHandshakeClientKeyExchange,
+  MakeTlsFilter<TlsInspectorReplaceHandshakeMessage>(
+      client_, kTlsHandshakeClientKeyExchange,
       DataBuffer(kBogusClientKeyExchange, sizeof(kBogusClientKeyExchange)));
-  client_->SetPacketFilter(inspect);
   ConnectExpectAlert(server_, kTlsAlertBadRecordMac);
 }
 
@@ -91,8 +87,7 @@ TEST_P(TlsConnectStreamPre13,
        ConnectExtendedMasterSecretStaticRSABogusPMSVersionDetect) {
   EnableOnlyStaticRsaCiphers();
   EnableExtendedMasterSecret();
-  client_->SetPacketFilter(
-      std::make_shared<TlsInspectorClientHelloVersionChanger>(server_));
+  MakeTlsFilter<TlsClientHelloVersionChanger>(client_, server_);
   ConnectExpectAlert(server_, kTlsAlertBadRecordMac);
 }
 
@@ -100,10 +95,9 @@ TEST_P(TlsConnectStreamPre13,
        ConnectExtendedMasterSecretStaticRSABogusPMSVersionIgnore) {
   EnableOnlyStaticRsaCiphers();
   EnableExtendedMasterSecret();
-  client_->SetPacketFilter(
-      std::make_shared<TlsInspectorClientHelloVersionChanger>(server_));
+  MakeTlsFilter<TlsClientHelloVersionChanger>(client_, server_);
   server_->SetOption(SSL_ROLLBACK_DETECTION, PR_FALSE);
   Connect();
 }
 
-}  // namespace nspr_test
+}  // namespace nss_test

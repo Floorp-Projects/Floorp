@@ -452,7 +452,7 @@ size_t TlsHandshakeFilter::HandshakeHeader::Write(
   return offset;
 }
 
-PacketFilter::Action TlsInspectorRecordHandshakeMessage::FilterHandshake(
+PacketFilter::Action TlsHandshakeRecorder::FilterHandshake(
     const HandshakeHeader& header, const DataBuffer& input,
     DataBuffer* output) {
   // Only do this once.
@@ -763,7 +763,7 @@ PacketFilter::Action AfterRecordN::FilterRecord(const TlsRecordHeader& header,
   if (counter_++ == record_) {
     DataBuffer buf;
     header.Write(&buf, 0, body);
-    src_.lock()->SendDirect(buf);
+    agent()->SendDirect(buf);
     dest_.lock()->Handshake();
     func_();
     return DROP;
@@ -772,7 +772,7 @@ PacketFilter::Action AfterRecordN::FilterRecord(const TlsRecordHeader& header,
   return KEEP;
 }
 
-PacketFilter::Action TlsInspectorClientHelloVersionChanger::FilterHandshake(
+PacketFilter::Action TlsClientHelloVersionChanger::FilterHandshake(
     const HandshakeHeader& header, const DataBuffer& input,
     DataBuffer* output) {
   EXPECT_EQ(SECSuccess,
@@ -808,7 +808,7 @@ PacketFilter::Action SelectiveRecordDropFilter::FilterRecord(
   return pattern;
 }
 
-PacketFilter::Action TlsInspectorClientHelloVersionSetter::FilterHandshake(
+PacketFilter::Action TlsClientHelloVersionSetter::FilterHandshake(
     const HandshakeHeader& header, const DataBuffer& input,
     DataBuffer* output) {
   *output = input;
