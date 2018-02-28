@@ -26,7 +26,7 @@ SimpleTest.waitForExplicitFinish();
 
 SimpleTest.waitForFocus(function () {
   var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-                      getService(Ci.nsIWindowMediator);
+              getService(Ci.nsIWindowMediator);
   var win = wm.getMostRecentWindow("navigator:browser");
   win.maximize();
   var maxX = win.screenX, maxY = win.screenY;

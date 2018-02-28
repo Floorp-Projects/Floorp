@@ -12,8 +12,8 @@ function test_stream(stream) {
 
   // Check that the stream is not buffered
   Assert.equal(Cc["@mozilla.org/io-util;1"]
-                          .getService(Ci.nsIIOUtil)
-                          .inputStreamIsBuffered(stream),
+                 .getService(Ci.nsIIOUtil)
+                 .inputStreamIsBuffered(stream),
                false);
   
   // Wrap it in a binary stream (to avoid wrong results that

@@ -39,7 +39,7 @@ function execTests() {
     const prefSvcContractID = "@mozilla.org/preferences-service;1";
     const prefSvcIID = Ci.nsIPrefService;
     return Cc[prefSvcContractID].getService(prefSvcIID)
-                                 .getBranch(branch);
+             .getBranch(branch);
   }
 
   function setPref(branch, pref, newValue) {
