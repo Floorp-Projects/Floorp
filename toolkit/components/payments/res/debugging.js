@@ -299,6 +299,12 @@ let buttonActions = {
       completionState: "success",
     });
   },
+
+  setStateFail() {
+    requestStore.setState({
+      completionState: "fail",
+    });
+  },
 };
 
 window.addEventListener("click", function onButtonClick(evt) {
