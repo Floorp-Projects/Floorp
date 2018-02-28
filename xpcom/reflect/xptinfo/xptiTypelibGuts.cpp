@@ -52,7 +52,7 @@ xptiTypelibGuts::GetEntryAt(uint16_t i)
     {
         ReentrantMonitorAutoEnter monitor(set.mTableReentrantMonitor);
         if (iface->mIID.Equals(zeroIID))
-            r = set.mNameTable.Get(iface->mName);
+            r = set.mNameTable.Get(iface->Name());
         else
             r = set.mIIDTable.Get(iface->mIID);
     }
@@ -71,5 +71,5 @@ xptiTypelibGuts::GetEntryNameAt(uint16_t i)
 
     const XPTInterfaceDirectoryEntry* iface = mHeader->mInterfaceDirectory + i;
 
-    return iface->mName;
+    return iface->Name();
 }
