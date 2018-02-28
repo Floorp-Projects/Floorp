@@ -1249,9 +1249,11 @@ RasterImage::Decode(const IntSize& aSize,
   nsresult rv;
   bool animated = mAnimationState && aPlaybackType == PlaybackType::eAnimated;
   if (animated) {
+    size_t currentFrame = mAnimationState->GetCurrentAnimationFrameIndex();
     rv = DecoderFactory::CreateAnimationDecoder(mDecoderType, WrapNotNull(this),
                                                 mSourceBuffer, mSize,
                                                 decoderFlags, surfaceFlags,
+                                                currentFrame,
                                                 getter_AddRefs(task));
   } else {
     rv = DecoderFactory::CreateDecoder(mDecoderType, WrapNotNull(this),
