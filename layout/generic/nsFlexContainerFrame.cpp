@@ -1942,20 +1942,20 @@ FlexItem::CheckForMinSizeAuto(const ReflowInput& aFlexItemReflowInput,
   const nsStyleDisplay* disp = aFlexItemReflowInput.mStyleDisplay;
 
   // We'll need special behavior for "min-[width|height]:auto" (whichever is in
-  // the main axis) iff:
+  // the flex container's main axis) iff:
   // (a) its computed value is "auto"
   // (b) the "overflow" sub-property in the same axis (the main axis) has a
   //     computed value of "visible"
-  const nsStyleCoord& minSize = GET_MAIN_COMPONENT(aAxisTracker,
-                                                   pos->mMinWidth,
-                                                   pos->mMinHeight);
+  const nsStyleCoord& mainMinSize = aAxisTracker.IsRowOriented()
+    ? pos->MinISize(aAxisTracker.GetWritingMode())
+    : pos->MinBSize(aAxisTracker.GetWritingMode());
 
-  const uint8_t overflowVal = GET_MAIN_COMPONENT(aAxisTracker,
-                                                 disp->mOverflowX,
-                                                 disp->mOverflowY);
-
-  mNeedsMinSizeAutoResolution = (minSize.GetUnit() == eStyleUnit_Auto &&
-                                 overflowVal == NS_STYLE_OVERFLOW_VISIBLE);
+  // NOTE: Technically we should be checking the 'overflow' subproperty in the
+  // main axis. But since we only care whether it's 'visible', we can check
+  // either subproperty -- because they must be BOTH 'visible' or BOTH
+  // non-'visible' due to the way the subproperties interact.
+  mNeedsMinSizeAutoResolution = (mainMinSize.GetUnit() == eStyleUnit_Auto &&
+                                 disp->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE);
 }
 
 nscoord
