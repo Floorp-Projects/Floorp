@@ -53,6 +53,45 @@ add_task(async function() {
                 data: "mochi.test/11\nTITLE11"}]], 1);
 });
 
+// Warn when too many URLs are dropped.
+add_task(async function multiple_tabs_under_max() {
+  let urls = [];
+  for (let i = 0; i < 5; i++) {
+    urls.push("mochi.test/multi" + i);
+  }
+  await dropText(urls.join("\n"), 5);
+});
+add_task(async function multiple_tabs_over_max_accept() {
+  await pushPrefs(["browser.tabs.maxOpenBeforeWarn", 4]);
+
+  let confirmPromise = BrowserTestUtils.promiseAlertDialog("accept");
+
+  let urls = [];
+  for (let i = 0; i < 5; i++) {
+    urls.push("mochi.test/accept" + i);
+  }
+  await dropText(urls.join("\n"), 5, true);
+
+  await confirmPromise;
+
+  await popPrefs();
+});
+add_task(async function multiple_tabs_over_max_cancel() {
+  await pushPrefs(["browser.tabs.maxOpenBeforeWarn", 4]);
+
+  let confirmPromise = BrowserTestUtils.promiseAlertDialog("cancel");
+
+  let urls = [];
+  for (let i = 0; i < 5; i++) {
+    urls.push("mochi.test/cancel" + i);
+  }
+  await dropText(urls.join("\n"), 0, true);
+
+  await confirmPromise;
+
+  await popPrefs();
+});
+
 function dropText(text, expectedTabOpenCount = 0) {
   return drop([[{type: "text/plain", data: text}]], expectedTabOpenCount);
 }
