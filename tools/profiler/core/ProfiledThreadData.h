@@ -16,23 +16,6 @@
 #include "ProfileBuffer.h"
 #include "ThreadInfo.h"
 
-// Contains data for partial profiles that get saved when
-// ThreadInfo::FlushSamplesAndMarkers gets called.
-struct PartialThreadProfile final
-{
-  PartialThreadProfile(mozilla::UniquePtr<char[]>&& aSamplesJSON,
-                       mozilla::UniquePtr<char[]>&& aMarkersJSON,
-                       mozilla::UniquePtr<UniqueStacks>&& aUniqueStacks)
-    : mSamplesJSON(mozilla::Move(aSamplesJSON))
-    , mMarkersJSON(mozilla::Move(aMarkersJSON))
-    , mUniqueStacks(mozilla::Move(aUniqueStacks))
-  {}
-
-  mozilla::UniquePtr<char[]> mSamplesJSON;
-  mozilla::UniquePtr<char[]> mMarkersJSON;
-  mozilla::UniquePtr<UniqueStacks> mUniqueStacks;
-};
-
 // This class contains information about a thread that is only relevant while
 // the profiler is running, for any threads (both alive and dead) whose thread
 // name matches the "thread filter" in the current profiler run.
@@ -109,11 +92,11 @@ private:
   // This thread's thread info.
   const RefPtr<ThreadInfo> mThreadInfo;
 
-  // JS frames in the buffer may require a live JSRuntime to stream (e.g.,
-  // stringifying JIT frames). In the case of JSRuntime destruction,
-  // FlushSamplesAndMarkers should be called to save them. These are spliced
-  // into the final stream.
-  UniquePtr<PartialThreadProfile> mPartialProfile;
+  // Contains JSON for JIT frames from any JSContexts that were used for this
+  // thread in the past.
+  // Null if this thread has never lost a JSContext or if all samples from
+  // previous JSContexts have been evicted from the profiler buffer.
+  UniquePtr<JITFrameInfo> mJITFrameInfoForPreviousJSContexts;
 
   // Group B:
   // The following fields are only used while this thread is alive and
