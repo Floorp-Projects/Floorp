@@ -12,8 +12,6 @@ body,html { color:black; background:white; font:16px/1 monospace; padding:0; mar
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(2,minmax(auto, 15px));
-  grid-template-rows:    repeat(2,minmax(auto, 10px));
   grid-gap: 1px;
   align-items: start;
   justify-items: start;
@@ -27,52 +25,11 @@ body,html { color:black; background:white; font:16px/1 monospace; padding:0; mar
   height: 40px;
 }
 
-.definite {
-  grid-template-columns: repeat(2,15px);
-  grid-template-rows:    repeat(2,10px);
-}
-.min {
-  grid-template-columns: repeat(2,minmax(min-content, 15px));
-  grid-template-rows:    repeat(2,minmax(min-content, 10px));
-}
-.max {
-  grid-template-columns: repeat(2,minmax(max-content, 15px));
-  grid-template-rows:    repeat(2,minmax(max-content, 10px));
-}
-
-.larger .grid {
-  grid-template-columns: repeat(2,minmax(auto, 25px));
-  grid-template-rows:    repeat(2,minmax(auto, 28px));
-}
-.larger .definite {
-  grid-template-columns: repeat(2,25px);
-  grid-template-rows:    repeat(2,28px);
-}
-.larger .min {
-  grid-template-columns: repeat(2,minmax(min-content, 25px));
-  grid-template-rows:    repeat(2,minmax(min-content, 28px));
-}
-.larger .max {
-  grid-template-columns: repeat(2,minmax(max-content, 25px));
-  grid-template-rows:    repeat(2,minmax(max-content, 28px));
-}
-
 .stretch .grid {
   align-items: stretch;
   justify-items: stretch;
 }
-.grid.a {
-  width:54px;
-}
-.grid.a2 {
-  width:38px;
-}
-.larger .grid.a {
-  width:64px;
-}
-.larger .grid.a2 {
-  width:51px;
-}
+
 img {
   grid-area: 1 / 1;
   border: 1px solid;
@@ -155,13 +112,6 @@ document.body.appendChild(wrap);
 <script>
 var imgSizes =
 [
-  ['0px', '0px'],
-  ['20px', '32px'],
-  ['2px', '3px'],
-  ['20px', '32px'],
-  ['0px', '0px'],
-  ['20px', '32px'],
-  ['2px', '3px'],
   ['20px', '32px'],
   ['20px', '32px'],
   ['20px', '32px'],
@@ -171,11 +121,18 @@ var imgSizes =
   ['20px', '32px'],
   ['20px', '32px'],
   ['20px', '32px'],
-  ['6px', '10px'],
   ['20px', '32px'],
   ['20px', '32px'],
   ['20px', '32px'],
-  ['6px', '10px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
   ['20px', '32px'],
   ['20px', '32px'],
   ['20px', '32px'],
@@ -225,6 +182,83 @@ for (var i = 0; i < imgs.length; ++i) {
   imgs[i].style.width = imgSizes[i][0];
   imgs[i].style.height = imgSizes[i][1];
 }
+
+
+var track_sizes =
+[
+  ['18px 10px / 18px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['18px 10px / 18px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['50px 10px / 38px 15px'],
+  ['24.5px 24.5px / 18.5px 18.5px'],
+  ['50px 0px / 38px 1px'],
+  ['24.5px 24.5px / 18.5px 18.5px'],
+  ['50px 10px / 38px 15px'],
+  ['24.5px 24.5px / 18.5px 18.5px'],
+  ['50px 0px / 38px 1px'],
+  ['24.5px 24.5px / 18.5px 18.5px'],
+  ['28px 28px / 25px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['28px 11px / 25px 14px'],
+  ['28px 28px / 25px 25px'],
+  ['24.5px 24.5px / 19.5px 19.5px'],
+  ['28px 28px / 25px 25px'],
+  ['50px 28px / 38px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['50px 0px / 38px 1px'],
+  ['24.5px 24.5px / 19.5px 19.5px'],
+  ['50px 28px / 38px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['50px 0px / 38px 1px'],
+  ['24.5px 24.5px / 19.5px 19.5px'],
+  ['18px 10px / 18px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['18px 10px / 18px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['10px 10px / 15px 15px'],
+  ['50px 10px / 38px 15px'],
+  ['24.5px 24.5px / 18.5px 18.5px'],
+  ['50px 0px / 38px 1px'],
+  ['24.5px 24.5px / 18.5px 18.5px'],
+  ['50px 10px / 38px 15px'],
+  ['24.5px 24.5px / 18.5px 18.5px'],
+  ['50px 0px / 38px 1px'],
+  ['24.5px 24.5px / 18.5px 18.5px'],
+  ['28px 28px / 25px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['28px 11px / 25px 14px'],
+  ['28px 28px / 25px 25px'],
+  ['24.5px 24.5px / 19.5px 19.5px'],
+  ['28px 28px / 25px 25px'],
+  ['50px 28px / 38px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['50px 0px / 38px 1px'],
+  ['24.5px 24.5px / 19.5px 19.5px'],
+  ['50px 28px / 38px 25px'],
+  ['28px 28px / 25px 25px'],
+  ['50px 0px / 38px 1px'],
+  ['24.5px 24.5px / 19.5px 19.5px'],
+];
+
+var grids = document.querySelectorAll('.grid');
+for (var i = 0; i < grids.length; ++i) {
+  grids[i].style.grid = track_sizes[i];
+  grids[i].style.gridGap = "1px";
+}
+
+
 </script>
 
 </body></html>
