@@ -373,6 +373,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
         InternalBarrierMethods<JSObject*>::readBarrier(dbg->object);
     }
     static void writeBarrierPost(Debugger** vp, Debugger* prev, Debugger* next) {}
+#ifdef DEBUG
+    static bool thingIsNotGray(Debugger* dbg) { return true; }
+#endif
 
   private:
     GCPtrNativeObject object; /* The Debugger object. Strong reference. */

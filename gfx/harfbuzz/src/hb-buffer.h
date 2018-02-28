@@ -247,13 +247,21 @@ hb_buffer_guess_segment_properties (hb_buffer_t *buffer);
  *                      of the text without the full context.
  * @HB_BUFFER_FLAG_EOT: flag indicating that special handling of the end of text
  *                      paragraph can be applied to this buffer, similar to
- *                      @HB_BUFFER_FLAG_EOT.
+ *                      @HB_BUFFER_FLAG_BOT.
  * @HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES:
  *                      flag indication that character with Default_Ignorable
  *                      Unicode property should use the corresponding glyph
- *                      from the font, instead of hiding them (currently done
- *                      by replacing them with the space glyph and zeroing the
- *                      advance width.)
+ *                      from the font, instead of hiding them (done by
+ *                      replacing them with the space glyph and zeroing the
+ *                      advance width.)  This flag takes precedence over
+ *                      @HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES.
+ * @HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES:
+ *                      flag indication that character with Default_Ignorable
+ *                      Unicode property should be removed from glyph string
+ *                      instead of hiding them (done by replacing them with the
+ *                      space glyph and zeroing the advance width.)
+ *                      @HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES takes
+ *                      precedence over this flag. Since: 1.8.0
  *
  * Since: 0.9.20
  */
@@ -261,7 +269,8 @@ typedef enum { /*< flags >*/
   HB_BUFFER_FLAG_DEFAULT			= 0x00000000u,
   HB_BUFFER_FLAG_BOT				= 0x00000001u, /* Beginning-of-text */
   HB_BUFFER_FLAG_EOT				= 0x00000002u, /* End-of-text */
-  HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES	= 0x00000004u
+  HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES	= 0x00000004u,
+  HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES	= 0x00000008u
 } hb_buffer_flags_t;
 
 HB_EXTERN void
@@ -412,6 +421,9 @@ hb_buffer_normalize_glyphs (hb_buffer_t *buffer);
  * @HB_BUFFER_SERIALIZE_FLAG_NO_POSITIONS: do not serialize glyph position information.
  * @HB_BUFFER_SERIALIZE_FLAG_NO_GLYPH_NAMES: do no serialize glyph name.
  * @HB_BUFFER_SERIALIZE_FLAG_GLYPH_EXTENTS: serialize glyph extents.
+ * @HB_BUFFER_SERIALIZE_FLAG_GLYPH_FLAGS: serialize glyph flags. Since: 1.5.0
+ * @HB_BUFFER_SERIALIZE_FLAG_NO_ADVANCES: do not serialize glyph advances,
+ *  glyph offsets will reflect absolute glyph positions. Since: 1.8.0
  *
  * Flags that control what glyph information are serialized in hb_buffer_serialize_glyphs().
  *
@@ -423,7 +435,8 @@ typedef enum { /*< flags >*/
   HB_BUFFER_SERIALIZE_FLAG_NO_POSITIONS		= 0x00000002u,
   HB_BUFFER_SERIALIZE_FLAG_NO_GLYPH_NAMES	= 0x00000004u,
   HB_BUFFER_SERIALIZE_FLAG_GLYPH_EXTENTS	= 0x00000008u,
-  HB_BUFFER_SERIALIZE_FLAG_GLYPH_FLAGS		= 0x00000010u
+  HB_BUFFER_SERIALIZE_FLAG_GLYPH_FLAGS		= 0x00000010u,
+  HB_BUFFER_SERIALIZE_FLAG_NO_ADVANCES		= 0x00000020u
 } hb_buffer_serialize_flags_t;
 
 /**

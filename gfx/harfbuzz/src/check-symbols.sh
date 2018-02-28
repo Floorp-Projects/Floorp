@@ -4,6 +4,7 @@ LC_ALL=C
 export LC_ALL
 
 test -z "$srcdir" && srcdir=.
+test -z "$libs" && libs=.libs
 stat=0
 
 
@@ -17,7 +18,7 @@ fi
 echo "Checking that we are not exposing internal symbols"
 tested=false
 for suffix in so dylib; do
-	so=.libs/libharfbuzz.$suffix
+	so=$libs/libharfbuzz.$suffix
 	if ! test -f "$so"; then continue; fi
 
 	EXPORTED_SYMBOLS="`nm "$so" | grep ' [BCDGINRSTVW] .' | grep -v ' _fini\>\| _init\>\| _fdata\>\| _ftext\>\| _fbss\>\| __bss_start\>\| __bss_start__\>\| __bss_end__\>\| _edata\>\| _end\>\| _bss_end__\>\| __end__\>\| __gcov_flush\>\| ___gcov_flush\>\| llvm_\| _llvm_' | cut -d' ' -f3`"

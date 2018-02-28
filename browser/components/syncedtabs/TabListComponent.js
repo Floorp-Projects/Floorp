@@ -5,16 +5,15 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let log = ChromeUtils.import("resource://gre/modules/Log.jsm", {})
             .Log.repository.getLogger("Sync.RemoteTabs");
 
-ChromeUtils.defineModuleGetter(this, "BrowserUITelemetry",
-  "resource:///modules/BrowserUITelemetry.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesUIUtils",
-  "resource:///modules/PlacesUIUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserUITelemetry: "resource:///modules/BrowserUITelemetry.jsm",
+  OpenInTabsUtils: "resource:///modules/OpenInTabsUtils.jsm",
+});
 
 var EXPORTED_SYMBOLS = [
   "TabListComponent"
@@ -119,7 +118,7 @@ TabListComponent.prototype = {
   },
 
   onOpenTabs(urls, where) {
-    if (!PlacesUIUtils.confirmOpenInTabs(urls.length, this._window)) {
+    if (!OpenInTabsUtils.confirmOpenInTabs(urls.length, this._window)) {
       return;
     }
     if (where == "window") {

@@ -144,6 +144,12 @@ interface nsISSLSocketControl : nsISupports {
     attribute nsIX509Cert clientCert;
 
     /**
+     * True iff a client cert has been sent to the server - i.e. this
+     * socket has been client-cert authenticated.
+     */
+    [infallible] readonly attribute boolean clientCertSent;
+
+    /**
      * bypassAuthentication is true if the server certificate checks are
      * not be enforced. This is to enable non-secure transport over TLS.
      */

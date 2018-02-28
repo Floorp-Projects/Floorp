@@ -44,7 +44,7 @@ x { width:32px; height:2px; background:cyan; }
 
 <br>
 
-<div class="grid w4" style="grid:8px 10px 8px / repeat(7, 4px); grid-column-gap:32px; width:292px">
+<div class="grid w4" style="grid:8px 10px 8px / repeat(7, 4px); grid-column-gap:32px; width:220px">
 <div style="height:8px; width:2px; background:cyan; grid-row:1"></div>
 <div style="height:10px; grid-row:2; grid-column: span 7"></div>
 <div style="height:8px; grid-row:3"></div>
@@ -53,7 +53,7 @@ x { width:32px; height:2px; background:cyan; }
 
 <br>
 
-<div class="grid w4" style="grid:32px 10px 32px / repeat(7, 4px); grid-column-gap:32px; width:292px">
+<div class="grid w4" style="grid:32px 10px 32px / repeat(7, 4px); grid-column-gap:32px; width:220px">
 <div style="height:32px; width:2px; background:cyan; grid-row:1"></div>
 <div style="height:10px; grid-row:2; grid-column: span 7"></div>
 <div style="height:32px; grid-row:3"></div>
@@ -62,7 +62,7 @@ x { width:32px; height:2px; background:cyan; }
 
 <br>
 
-<div class="grid w8" style="grid:4px 10px 4px 2px 2px / repeat(7, 8px); grid-gap:8px; width:152px">
+<div class="grid w8" style="grid:4px 10px 4px 2px 2px / repeat(7, 8px); grid-gap:8px; width:104px">
 <div style="height:4px; width:2px; background:cyan; grid-row:1"></div>
 <div style="height:10px; grid-row:2; grid-column: span 7"></div>
 <div style="height:4px; grid-row:3"></div>
@@ -115,51 +115,52 @@ var imgSizes =
   ['4px', '4px'],
   ['4px', '4px'],
   ['4px', '8px'],
-  ['4px', '4px'],
+  ['8px', '8px'],
+  ['16px', '8px'],
+  ['8px', '8px'],
+  ['16px', '8px'],
   ['4px', '8px'],
-  ['4px', '4px'],
-  ['4px', '8px'],
-  ['4px', '8px'],
-  ['4px', '8px'],
-  ['4px', '8px'],
+  ['4px', '16px'],
+  ['4px', '16px'],
   ['4px', '8px'],
   ['4px', '4px'],
   ['4px', '4px'],
   ['4px', '4px'],
   ['4px', '32px'],
-  ['4px', '4px'],
-  ['4px', '32px'],
-  ['4px', '4px'],
-  ['4px', '32px'],
+  ['16px', '16px'],
+  ['16px', '32px'],
+  ['16px', '16px'],
+  ['16px', '32px'],
   ['4px', '16px'],
   ['4px', '16px'],
   ['4px', '16px'],
   ['4px', '32px'],
   ['4px', '4px'],
-  ['4px', '4px'],
-  ['4px', '4px'],
-  ['8px', '4px'],
-  ['4px', '4px'],
-  ['8px', '4px'],
-  ['4px', '4px'],
-  ['8px', '4px'],
-  ['8px', '4px'],
-  ['8px', '4px'],
-  ['8px', '4px'],
-  ['8px', '4px'],
   ['8px', '8px'],
   ['8px', '8px'],
+  ['8px', '4px'],
+  ['4px', '4px'],
+  ['16px', '4px'],
+  ['4px', '4px'],
+  ['16px', '4px'],
+  ['8px', '4px'],
+  ['8px', '16px'],
+  ['8px', '16px'],
+  ['8px', '4px'],
   ['8px', '8px'],
+  ['16px', '16px'],
+  ['16px', '16px'],
   ['16px', '8px'],
   ['8px', '8px'],
   ['16px', '8px'],
   ['8px', '8px'],
   ['16px', '8px'],
   ['32px', '8px'],
-  ['32px', '8px'],
-  ['32px', '8px'],
+  ['32px', '16px'],
+  ['32px', '16px'],
   ['32px', '8px'],
 ];
+
 var index = 0;  // imgSizes index
 for (var i = 0; i < grids.length; ++i) {
   for (var j = 0; j < js.length; j++) {

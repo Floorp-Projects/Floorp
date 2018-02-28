@@ -176,6 +176,17 @@ struct GCPolicy<jsid>
     }
 };
 
+#ifdef DEBUG
+MOZ_ALWAYS_INLINE bool
+IdIsNotGray(jsid id)
+{
+    if (!JSID_IS_GCTHING(id))
+        return true;
+
+    return CellIsNotGray(JSID_TO_GCTHING(id).asCell());
+}
+#endif
+
 } // namespace JS
 
 namespace js {

@@ -10,10 +10,10 @@
 #include <windows.h>
 #endif
 
-#include <vector>
-#include <map>
-#include <string>
 #include <algorithm>
+#include <map>
+#include <memory>
+#include <string>
 
 namespace CrashReporter {
 
@@ -26,14 +26,12 @@ extern MinidumpAnalyzerOptions gMinidumpAnalyzerOptions;
 
 #ifdef XP_WIN
 
-#if !defined(_MSC_VER)
 static inline std::string
 WideToMBCP(const std::wstring& wide, unsigned int cp, bool* success = nullptr)
 {
-  char* buffer = nullptr;
-  int buffer_size = WideCharToMultiByte(cp, 0, wide.c_str(),
-                                        -1, nullptr, 0, nullptr, nullptr);
-  if (buffer_size == 0) {
+  int bufferCharLen = WideCharToMultiByte(cp, 0, wide.c_str(), wide.length(),
+                                          nullptr, 0, nullptr, nullptr);
+  if (!bufferCharLen) {
     if (success) {
       *success = false;
     }
@@ -41,8 +39,8 @@ WideToMBCP(const std::wstring& wide, unsigned int cp, bool* success = nullptr)
     return "";
   }
 
-  buffer = new char[buffer_size];
-  if (buffer == nullptr) {
+  auto buffer = std::make_unique<char[]>(bufferCharLen);
+  if (!buffer) {
     if (success) {
       *success = false;
     }
@@ -50,26 +48,22 @@ WideToMBCP(const std::wstring& wide, unsigned int cp, bool* success = nullptr)
     return "";
   }
 
-  WideCharToMultiByte(cp, 0, wide.c_str(),
-                      -1, buffer, buffer_size, nullptr, nullptr);
-  std::string mb = buffer;
-  delete [] buffer;
-
+  int result = WideCharToMultiByte(cp, 0, wide.c_str(), wide.length(),
+                                   buffer.get(), bufferCharLen, nullptr, nullptr);
   if (success) {
-    *success = true;
+    *success = result > 0;
   }
 
-  return mb;
+  return std::string(buffer.get(), result);
 }
-#endif /* !defined(_MSC_VER) */
 
 static inline std::wstring
-UTF8ToWide(const std::string& aUtf8Str, bool *aSuccess = nullptr)
+MBCPToWide(const std::string& aMbStr, unsigned int aCodepage,
+           bool *aSuccess = nullptr)
 {
-  wchar_t* buffer = nullptr;
-  int buffer_size = MultiByteToWideChar(CP_UTF8, 0, aUtf8Str.c_str(),
-                                        -1, nullptr, 0);
-  if (buffer_size == 0) {
+  int bufferCharLen = MultiByteToWideChar(aCodepage, 0, aMbStr.c_str(),
+                                          aMbStr.length(), nullptr, 0);
+  if (!bufferCharLen) {
     if (aSuccess) {
       *aSuccess = false;
     }
@@ -77,9 +71,8 @@ UTF8ToWide(const std::string& aUtf8Str, bool *aSuccess = nullptr)
     return L"";
   }
 
-  buffer = new wchar_t[buffer_size];
-
-  if (buffer == nullptr) {
+  auto buffer = std::make_unique<wchar_t[]>(bufferCharLen);
+  if (!buffer) {
     if (aSuccess) {
       *aSuccess = false;
     }
@@ -87,63 +80,53 @@ UTF8ToWide(const std::string& aUtf8Str, bool *aSuccess = nullptr)
     return L"";
   }
 
-  MultiByteToWideChar(CP_UTF8, 0, aUtf8Str.c_str(),
-                      -1, buffer, buffer_size);
-  std::wstring str = buffer;
-  delete [] buffer;
-
+  int result = MultiByteToWideChar(aCodepage, 0, aMbStr.c_str(), aMbStr.length(),
+                                   buffer.get(), bufferCharLen);
   if (aSuccess) {
-    *aSuccess = true;
+    *aSuccess = result > 0;
   }
 
-  return str;
+  return std::wstring(buffer.get(), result);
 }
 
 static inline std::string
-WideToMBCS(const std::wstring &inp) {
-  int buffer_size = WideCharToMultiByte(CP_ACP, 0, inp.c_str(), -1,
-                                        nullptr, 0, NULL, NULL);
-  if (buffer_size == 0) {
-    return "";
-  }
-
-  std::vector<char> buffer(buffer_size);
-  buffer[0] = 0;
-
-  WideCharToMultiByte(CP_ACP, 0, inp.c_str(), -1,
-                      buffer.data(), buffer_size, NULL, NULL);
-
-  return buffer.data();
-}
-
-static inline std::string
-UTF8toMBCS(const std::string &inp) {
-  std::wstring wide = UTF8ToWide(inp);
-  std::string ret = WideToMBCS(wide);
-  return ret;
-}
-
-#endif // XP_WIN
-
-// Check if a file exists at the specified path
-
-static inline bool
-FileExists(const std::string& aPath)
+WideToUTF8(const std::wstring& aWide, bool* aSuccess = nullptr)
 {
-#if defined(XP_WIN)
-  DWORD attrs = GetFileAttributes(UTF8ToWide(aPath).c_str());
-  return (attrs != INVALID_FILE_ATTRIBUTES);
-#else // Non-Windows
-  struct stat sb;
-  int ret = stat(aPath.c_str(), &sb);
-  if (ret == -1 || !(sb.st_mode & S_IFREG)) {
-    return false;
-  }
-
-  return true;
-#endif // XP_WIN
+  return WideToMBCP(aWide, CP_UTF8, aSuccess);
 }
 
-} // namespace
+static inline std::wstring
+UTF8ToWide(const std::string& aUtf8Str, bool* aSuccess = nullptr)
+{
+  return MBCPToWide(aUtf8Str, CP_UTF8, aSuccess);
+}
+
+static inline std::wstring
+MBCSToWide(const std::string& aMbStr, bool* aSuccess = nullptr)
+{
+  return MBCPToWide(aMbStr, CP_ACP, aSuccess);
+}
+
+static inline std::string
+WideToMBCS(const std::wstring &aWide, bool* aSuccess = nullptr)
+{
+  return WideToMBCP(aWide, CP_ACP, aSuccess);
+}
+
+static inline std::string
+UTF8ToMBCS(const std::string &aUtf8)
+{
+  return WideToMBCS(UTF8ToWide(aUtf8));
+}
+
+static inline std::string
+MBCSToUTF8(const std::string &aMbcs)
+{
+  return WideToUTF8(MBCSToWide(aMbcs));
+}
+
+#endif // XP_WIN
+
+} // namespace CrashReporter
 
 #endif // MinidumpAnalyzerUtils_h

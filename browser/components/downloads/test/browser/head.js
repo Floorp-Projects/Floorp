@@ -173,32 +173,6 @@ function openLibrary(aLeftPaneRoot) {
   });
 }
 
-function promiseAlertDialogOpen(buttonAction) {
-  return new Promise(resolve => {
-    Services.ww.registerNotification(function onOpen(subj, topic, data) {
-      if (topic == "domwindowopened" && subj instanceof Ci.nsIDOMWindow) {
-        // The test listens for the "load" event which guarantees that the alert
-        // class has already been added (it is added when "DOMContentLoaded" is
-        // fired).
-        subj.addEventListener("load", function() {
-          if (subj.document.documentURI ==
-              "chrome://global/content/commonDialog.xul") {
-            Services.ww.unregisterNotification(onOpen);
-
-            let dialog = subj.document.getElementById("commonDialog");
-            ok(dialog.classList.contains("alert-dialog"),
-               "The dialog element should contain an alert class.");
-
-            let doc = subj.document.documentElement;
-            doc.getButton(buttonAction).click();
-            resolve();
-          }
-        }, {once: true});
-      }
-    });
-  });
-}
-
 /**
  * Waits for a given button to become visible.
  */

@@ -5520,22 +5520,11 @@ nsLayoutUtils::IntrinsicForAxis(PhysicalAxis              aAxis,
     // For -moz-max-content and -moz-min-content, we handle them like
     // specified widths, but ignore box-sizing.
     boxSizing = StyleBoxSizing::Content;
-    if (aMarginBoxMinSizeClamp != NS_MAXSIZE &&
-        styleISize.GetIntValue() == NS_STYLE_WIDTH_MIN_CONTENT) {
-      // We need |result| to be the 'min-content size' for the clamping below.
-      result = aFrame->GetMinISize(aRenderingContext);
-    }
   } else if (!styleISize.ConvertsToLength() &&
              !(haveFixedMinISize && haveFixedMaxISize && maxISize <= minISize)) {
 #ifdef DEBUG_INTRINSIC_WIDTH
     ++gNoiseIndent;
 #endif
-    if (aType != MIN_ISIZE) {
-      // At this point, |styleISize| is auto/-moz-fit-content/-moz-available or
-      // has a percentage.  The intrinisic size for those under a max-content
-      // constraint is the max-content contribution which we shouldn't clamp.
-      aMarginBoxMinSizeClamp = NS_MAXSIZE;
-    }
     if (MOZ_UNLIKELY(!isInlineAxis)) {
       IntrinsicSize intrinsicSize = aFrame->GetIntrinsicSize();
       const nsStyleCoord intrinsicBCoord =
