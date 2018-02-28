@@ -7,7 +7,7 @@
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const { connect } = require("../utils/redux-connect");
 const Actions = require("../actions/index");
 const { getSelectedRequest } = require("../selectors/index");
 
