@@ -4,9 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var CC = Components.classes;
-const CI = Components.interfaces;
-
 const NS_GFXINFO_CONTRACTID = "@mozilla.org/gfx/info;1";
 
 var gContainingWindow = null;
@@ -30,7 +27,7 @@ this.OnRecordingLoad = function OnRecordingLoad(win) {
 
     gBrowser = gContainingWindow.document.getElementById("browser");
 
-    var gfxInfo = (NS_GFXINFO_CONTRACTID in CC) && CC[NS_GFXINFO_CONTRACTID].getService(CI.nsIGfxInfo);
+    var gfxInfo = (NS_GFXINFO_CONTRACTID in Cc) && Cc[NS_GFXINFO_CONTRACTID].getService(Ci.nsIGfxInfo);
     var info = gfxInfo.getInfo();
     dump(info.AzureContentBackend + "\n");
     if (info.AzureContentBackend == "none") {
