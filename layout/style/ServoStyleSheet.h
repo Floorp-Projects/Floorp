@@ -23,6 +23,7 @@ class ServoCSSRuleList;
 namespace css {
 class Loader;
 class LoaderReusableStyleSheets;
+class SheetLoadData;
 }
 
 // -------------------------------
@@ -84,12 +85,15 @@ public:
 
   bool HasRules() const;
 
+  // Parses a stylesheet. The aLoadData argument corresponds to the
+  // SheetLoadData for this stylesheet. It may be null in some cases.
   MOZ_MUST_USE nsresult
   ParseSheet(css::Loader* aLoader,
              Span<const uint8_t> aInput,
              nsIURI* aSheetURI,
              nsIURI* aBaseURI,
              nsIPrincipal* aSheetPrincipal,
+             css::SheetLoadData* aLoadData,
              uint32_t aLineNumber,
              nsCompatibility aCompatMode,
              css::LoaderReusableStyleSheets* aReusableSheets = nullptr);
