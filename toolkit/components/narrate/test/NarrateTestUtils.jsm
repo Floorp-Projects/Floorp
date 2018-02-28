@@ -77,8 +77,8 @@ var NarrateTestUtils = {
 
   getEventUtils(window) {
     let eventUtils = {
-      "_EU_Ci": Components.interfaces,
-      "_EU_Cc": Components.classes,
+      "_EU_Ci": Ci,
+      "_EU_Cc": Cc,
       window,
       parent: window,
       navigator: window.navigator,

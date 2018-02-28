@@ -59,7 +59,7 @@ function pathHandler(metadata, response) {
   var ABI = "noarch-spidermonkey";
   // the blacklist service special-cases ABI for Universal binaries,
   // so do the same here.
-  if ("@mozilla.org/xpcom/mac-utils;1" in Components.classes) {
+  if ("@mozilla.org/xpcom/mac-utils;1" in Cc) {
     var macutils = Cc["@mozilla.org/xpcom/mac-utils;1"]
                      .getService(Ci.nsIMacUtils);
     if (macutils.isUniversalBinary)

@@ -66,8 +66,8 @@ function runTest()
       sendAsyncMessage("info", "sending key");
       var EventUtils = {};
       EventUtils.window = {};
-      EventUtils._EU_Ci = Components.interfaces;
-      EventUtils._EU_Cc = Components.classes;
+      EventUtils._EU_Ci = Ci;
+      EventUtils._EU_Cc = Cc;
       Cc['@mozilla.org/moz/jssubscript-loader;1']
         .getService(Ci.mozIJSSubScriptLoader)
         .loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js",

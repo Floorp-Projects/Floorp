@@ -1,4 +1,4 @@
-var AM_Ci = Components.interfaces;
+var AM_Ci = Ci;
 
 const CERTDB_CONTRACTID = "@mozilla.org/security/x509certdb;1";
 const CERTDB_CID = Components.ID("{fb0bbc5c-452e-4783-b32c-80124693d871}");

@@ -117,7 +117,7 @@ add_task(async function test_sort_date_site_grouping() {
   // On Linux, the (local files) folder is shown after sites unlike Mac/Windows.
   // Thus, we avoid running this test on Linux but this should be re-enabled
   // after bug 624024 is resolved.
-  let isLinux = ("@mozilla.org/gnome-gconf-service;1" in Components.classes);
+  let isLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc);
   if (isLinux)
     return;
 

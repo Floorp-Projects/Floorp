@@ -1070,7 +1070,7 @@ nsUnknownContentTypeDialog.prototype = {
         // Remember the file they chose to run.
         this.chosenApp = params.handlerApp;
       }
-    } else if ("@mozilla.org/applicationchooser;1" in Components.classes) {
+    } else if ("@mozilla.org/applicationchooser;1" in Cc) {
       var nsIApplicationChooser = Ci.nsIApplicationChooser;
       var appChooser = Cc["@mozilla.org/applicationchooser;1"]
                          .createInstance(nsIApplicationChooser);

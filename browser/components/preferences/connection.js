@@ -96,7 +96,7 @@ var gConnectionsDialog = {
   },
 
   checkForSystemProxy() {
-    if ("@mozilla.org/system-proxy-settings;1" in Components.classes)
+    if ("@mozilla.org/system-proxy-settings;1" in Cc)
       document.getElementById("systemPref").removeAttribute("hidden");
   },
 

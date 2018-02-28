@@ -4,9 +4,9 @@
 
 /* eslint no-unused-vars: ["error", {vars: "local", args: "none"}] */
 
-var AM_Cc = Components.classes;
-var AM_Ci = Components.interfaces;
-var AM_Cu = Components.utils;
+var AM_Cc = Cc;
+var AM_Ci = Ci;
+var AM_Cu = Cu;
 
 AM_Cu.importGlobalProperties(["TextEncoder"]);
 
