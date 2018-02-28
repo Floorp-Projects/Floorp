@@ -4,11 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var CC = Components.classes;
-const CI = Components.interfaces;
-const CR = Components.results;
-const CU = Components.utils;
-
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 const DEBUG_CONTRACTID = "@mozilla.org/xpcom/debug;1";
@@ -21,9 +16,9 @@ const IO_SERVICE_CONTRACTID = "@mozilla.org/network/io-service;1"
 // "<!--CLEAR-->"
 const BLANK_URL_FOR_CLEARING = "data:text/html;charset=UTF-8,%3C%21%2D%2DCLEAR%2D%2D%3E";
 
-CU.import("resource://gre/modules/Timer.jsm");
-CU.import("chrome://reftest/content/AsyncSpellCheckTestHelper.jsm");
-CU.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("chrome://reftest/content/AsyncSpellCheckTestHelper.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var gBrowserIsRemote;
 var gIsWebRenderEnabled;
@@ -66,12 +61,12 @@ function markupDocumentViewer() {
 }
 
 function webNavigation() {
-    return docShell.QueryInterface(CI.nsIWebNavigation);
+    return docShell.QueryInterface(Ci.nsIWebNavigation);
 }
 
 function windowUtilsForWindow(w) {
-    return w.QueryInterface(CI.nsIInterfaceRequestor)
-            .getInterface(CI.nsIDOMWindowUtils);
+    return w.QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIDOMWindowUtils);
 }
 
 function windowUtils() {
@@ -111,8 +106,8 @@ function OnInitialLoad()
 {
     removeEventListener("load", OnInitialLoad, true);
 
-    gDebug = CC[DEBUG_CONTRACTID].getService(CI.nsIDebug2);
-    var env = CC[ENVIRONMENT_CONTRACTID].getService(CI.nsIEnvironment);
+    gDebug = Cc[DEBUG_CONTRACTID].getService(Ci.nsIDebug2);
+    var env = Cc[ENVIRONMENT_CONTRACTID].getService(Ci.nsIEnvironment);
     gVerbose = !!env.get("MOZ_REFTEST_VERBOSE");
 
     RegisterMessageListeners();
@@ -205,7 +200,7 @@ function doPrintMode(contentRootElement) {
 
 function setupPrintMode() {
    var PSSVC =
-       CC[PRINTSETTINGS_CONTRACTID].getService(CI.nsIPrintSettingsService);
+       Cc[PRINTSETTINGS_CONTRACTID].getService(Ci.nsIPrintSettingsService);
    var ps = PSSVC.newPrintSettings;
    ps.paperWidth = 5;
    ps.paperHeight = 3;
@@ -247,11 +242,11 @@ function printToPdf(callback) {
     }
 
     let fileName = "reftest-print.pdf";
-    let file = Services.dirsvc.get("TmpD", CI.nsIFile);
+    let file = Services.dirsvc.get("TmpD", Ci.nsIFile);
     file.append(fileName);
     file.createUnique(file.NORMAL_FILE_TYPE, 0o644);
 
-    let PSSVC = CC[PRINTSETTINGS_CONTRACTID].getService(CI.nsIPrintSettingsService);
+    let PSSVC = Cc[PRINTSETTINGS_CONTRACTID].getService(Ci.nsIPrintSettingsService);
     let ps = PSSVC.newPrintSettings;
     ps.printSilent = true;
     ps.showPrintProgress = false;
@@ -259,24 +254,24 @@ function printToPdf(callback) {
     ps.printBGColors = true;
     ps.printToFile = true;
     ps.toFileName = file.path;
-    ps.printFrameType = CI.nsIPrintSettings.kFramesAsIs;
-    ps.outputFormat = CI.nsIPrintSettings.kOutputFormatPDF;
+    ps.printFrameType = Ci.nsIPrintSettings.kFramesAsIs;
+    ps.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
 
     if (isPrintSelection) {
-        ps.printRange = CI.nsIPrintSettings.kRangeSelection;
+        ps.printRange = Ci.nsIPrintSettings.kRangeSelection;
     } else if (printRange) {
-        ps.printRange = CI.nsIPrintSettings.kRangeSpecifiedPageRange;
+        ps.printRange = Ci.nsIPrintSettings.kRangeSpecifiedPageRange;
         let range = printRange.split('-');
         ps.startPageRange = +range[0] || 1;
         ps.endPageRange = +range[1] || 1;
     }
 
-    let webBrowserPrint = content.QueryInterface(CI.nsIInterfaceRequestor)
-                                 .getInterface(CI.nsIWebBrowserPrint);
+    let webBrowserPrint = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIWebBrowserPrint);
     webBrowserPrint.print(ps, {
         onStateChange: function(webProgress, request, stateFlags, status) {
-            if (stateFlags & CI.nsIWebProgressListener.STATE_STOP &&
-                stateFlags & CI.nsIWebProgressListener.STATE_IS_NETWORK) {
+            if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+                stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
                 callback(status, file.path);
             }
         },
@@ -497,8 +492,8 @@ function FlushRendering() {
     var anyPendingPaintsGeneratedInDescendants = false;
 
     function flushWindow(win) {
-        var utils = win.QueryInterface(CI.nsIInterfaceRequestor)
-                    .getInterface(CI.nsIDOMWindowUtils);
+        var utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindowUtils);
         var afterPaintWasPending = utils.isMozAfterPaintPending;
 
         var root = win.document.documentElement;
@@ -670,7 +665,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
             LogInfo("MakeProgress: STATE_WAITING_FOR_APZ_FLUSH");
             gFailureReason = "timed out waiting for APZ flush to complete";
 
-            var os = CC[NS_OBSERVER_SERVICE_CONTRACTID].getService(CI.nsIObserverService);
+            var os = Cc[NS_OBSERVER_SERVICE_CONTRACTID].getService(Ci.nsIObserverService);
             var flushWaiter = function(aSubject, aTopic, aData) {
                 if (aTopic) LogInfo("MakeProgress: apz-repaints-flushed fired");
                 os.removeObserver(flushWaiter, "apz-repaints-flushed");
@@ -1166,7 +1161,7 @@ function SendAssertionCount(numAssertions)
 
 function SendContentReady()
 {
-    let gfxInfo = (NS_GFXINFO_CONTRACTID in CC) && CC[NS_GFXINFO_CONTRACTID].getService(CI.nsIGfxInfo);
+    let gfxInfo = (NS_GFXINFO_CONTRACTID in Cc) && Cc[NS_GFXINFO_CONTRACTID].getService(Ci.nsIGfxInfo);
     let info = gfxInfo.getInfo();
 
     // The webrender check has to be separate from the d2d checks

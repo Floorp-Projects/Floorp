@@ -1,6 +1,4 @@
-var Ci = Components.interfaces,
-    Cc = Components.classes,
-    CC = Components.Constructor;
+var CC = Components.Constructor;
 var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                   .createInstance(Ci.nsIScriptableUnicodeConverter);
 converter.charset = "UTF-8";
