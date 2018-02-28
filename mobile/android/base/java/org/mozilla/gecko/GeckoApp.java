@@ -1030,6 +1030,10 @@ public abstract class GeckoApp extends GeckoActivity
         mLayerView = (GeckoView) findViewById(R.id.layer_view);
 
         final GeckoSession session = new GeckoSession();
+        // If the view already has a session, we need to ensure it is closed.
+        if (mLayerView.getSession() != null) {
+            mLayerView.getSession().closeWindow();
+        }
         mLayerView.setSession(session);
         mLayerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
