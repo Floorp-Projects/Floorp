@@ -154,7 +154,7 @@ public class GeckoSession extends LayerSession
                     final String uri = message.getString("uri");
                     final int where = convertGeckoTarget(message.getInt("where"));
                     final boolean result =
-                        delegate.onLoadUri(GeckoSession.this, uri, where);
+                        delegate.onLoadRequest(GeckoSession.this, uri, where);
                     callback.sendSuccess(result);
                 } else if ("GeckoView:OnNewSession".equals(event)) {
                     final String uri = message.getString("uri");
@@ -1422,7 +1422,7 @@ public class GeckoSession extends LayerSession
          * @return Whether or not the load was handled. Returning false will allow Gecko
          *         to continue the load as normal.
          */
-        boolean onLoadUri(GeckoSession session, String uri, int target);
+        boolean onLoadRequest(GeckoSession session, String uri, int target);
 
         /**
         * A request has been made to open a new session. The URI is provided only for

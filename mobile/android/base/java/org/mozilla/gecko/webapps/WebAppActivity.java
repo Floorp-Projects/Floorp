@@ -379,8 +379,8 @@ public class WebAppActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onLoadUri(final GeckoSession session, final String urlStr,
-                             final int target) {
+    public boolean onLoadRequest(final GeckoSession session, final String urlStr,
+                                 final int target) {
         final Uri uri = Uri.parse(urlStr);
         if (uri == null) {
             // We can't really handle this, so deny it?
@@ -430,7 +430,7 @@ public class WebAppActivity extends AppCompatActivity
     @Override
     public void onNewSession(final GeckoSession session, final String uri,
                              final GeckoSession.Response<GeckoSession> response) {
-        // We should never get here because we abort loads that need a new session in onLoadUri()
+        // We should never get here because we abort loads that need a new session in onLoadRequest()
         throw new IllegalStateException("Unexpected new session");
     }
 
