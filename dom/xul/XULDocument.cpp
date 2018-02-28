@@ -3219,6 +3219,16 @@ XULDocument::OnScriptCompileComplete(JSScript* aScript, nsresult aStatus)
         *docp = doc->mNextSrcLoadWaiter;
         doc->mNextSrcLoadWaiter = nullptr;
 
+        if (aStatus == NS_BINDING_ABORTED && !scriptProto->HasScriptObject()) {
+            // If the previous doc load was aborted, we want to try loading
+            // again for the next doc. Otherwise, one abort would lead to all
+            // subsequent waiting docs to abort as well.
+            bool block = false;
+            doc->LoadScript(scriptProto, &block);
+            NS_RELEASE(doc);
+            return rv;
+        }
+
         // Execute only if we loaded and compiled successfully, then resume
         if (NS_SUCCEEDED(aStatus) && scriptProto->HasScriptObject()) {
             doc->ExecuteScript(scriptProto);
