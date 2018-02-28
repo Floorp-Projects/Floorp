@@ -8,6 +8,8 @@
  */
 
 add_task(async function() {
+  await pushPref("security.pki.certificate_transparency.mode", 1);
+
   let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
@@ -76,6 +78,9 @@ add_task(async function() {
   isnot(textboxes[14].value, "", "Label was not empty.");
   // cert sha256 fingerprint
   isnot(textboxes[15].value, "", "Label was not empty.");
+
+  // Certificate transparency
+  isnot(textboxes[16].value, "", "Label was not empty.");
 
   await teardown(monitor);
 });
