@@ -31,7 +31,9 @@ const gWindowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
  */
 function assertNoFlushesRequired() {
   Assert.ok(!gWindowUtils.needsFlush(Ci.nsIDOMWindowUtils.FLUSH_STYLE),
-            "No flushes are required.");
+            "No style flushes are required.");
+  Assert.ok(!gWindowUtils.needsFlush(Ci.nsIDOMWindowUtils.FLUSH_LAYOUT),
+            "No layout flushes are required.");
 }
 
 /**
@@ -39,8 +41,10 @@ function assertNoFlushesRequired() {
  * are required.
  */
 function assertFlushesRequired() {
+  Assert.ok(gWindowUtils.needsFlush(Ci.nsIDOMWindowUtils.FLUSH_STYLE),
+            "Style flush required.");
   Assert.ok(gWindowUtils.needsFlush(Ci.nsIDOMWindowUtils.FLUSH_LAYOUT),
-            "Style and layout flushes are required.");
+            "Layout flush required.");
 }
 
 /**
