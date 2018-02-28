@@ -79,7 +79,7 @@ public:
     NS_DECL_NSIINPUTSTREAMCALLBACK
     NS_DECL_NSICLONEABLEINPUTSTREAM
 
-    nsBufferedInputStream() : nsBufferedStream() {}
+    nsBufferedInputStream();
 
     static nsresult
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
@@ -91,14 +91,13 @@ public:
 protected:
     virtual ~nsBufferedInputStream() {}
 
-    bool IsIPCSerializable() const;
-    bool IsAsyncInputStream() const;
-    bool IsCloneableInputStream() const;
-
     NS_IMETHOD Fill() override;
     NS_IMETHOD Flush() override { return NS_OK; } // no-op for input streams
 
     nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
+    bool mIsIPCSerializable;
+    bool mIsAsyncInputStream;
+    bool mIsCloneableInputStream;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

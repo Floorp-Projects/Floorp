@@ -4,6 +4,7 @@ LC_ALL=C
 export LC_ALL
 
 test -z "$srcdir" && srcdir=.
+test -z "$libs" && libs=.libs
 stat=0
 
 
@@ -14,7 +15,7 @@ else
 	exit 77
 fi
 
-OBJS=.libs/*.o
+OBJS=$libs/*.o
 if test "x`echo $OBJS`" = "x$OBJS" 2>/dev/null >/dev/null; then
 	echo "check-static-inits.sh: object files not found; skipping test"
 	exit 77

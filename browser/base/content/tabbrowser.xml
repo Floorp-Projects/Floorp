@@ -1390,7 +1390,6 @@
             return;
 
           let inBackground = Services.prefs.getBoolPref("browser.tabs.loadInBackground");
-
           if (event.shiftKey)
             inBackground = !inBackground;
 
@@ -1401,15 +1400,27 @@
           let urls = links.map(link => link.url);
 
           let triggeringPrincipal = browserDragAndDrop.getTriggeringPrincipal(event);
-          this.tabbrowser.loadTabs(urls, {
-            inBackground,
-            replace,
-            allowThirdPartyFixup: true,
-            targetTab,
-            newIndex,
-            userContextId,
-            triggeringPrincipal,
-          });
+
+          (async () => {
+            if (urls.length >= Services.prefs.getIntPref("browser.tabs.maxOpenBeforeWarn")) {
+              // Sync dialog cannot be used inside drop event handler.
+              let answer = await OpenInTabsUtils.promiseConfirmOpenInTabs(urls.length,
+                                                                          window);
+              if (!answer) {
+                return;
+              }
+            }
+
+            this.tabbrowser.loadTabs(urls, {
+              inBackground,
+              replace,
+              allowThirdPartyFixup: true,
+              targetTab,
+              newIndex,
+              userContextId,
+              triggeringPrincipal,
+            });
+          })();
         }
 
         if (draggedTab) {

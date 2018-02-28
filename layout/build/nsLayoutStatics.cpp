@@ -158,7 +158,7 @@ nsLayoutStatics::Initialize()
   nsHTMLTags::RegisterAtoms();
   nsRDFAtoms::RegisterAtoms();
 
-  NS_SealStaticAtomTable();
+  NS_SetStaticAtomsDone();
 
   StartupJSEnvironment();
   rv = nsRegion::InitStatic();

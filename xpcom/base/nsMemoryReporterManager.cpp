@@ -1395,16 +1395,11 @@ public:
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize) override
   {
-    size_t Main, Static;
-    NS_SizeOfAtomTablesIncludingThis(MallocSizeOf, &Main, &Static);
+    int64_t size = NS_SizeOfAtomTableIncludingThis(MallocSizeOf);
 
     MOZ_COLLECT_REPORT(
-      "explicit/atom-tables/main", KIND_HEAP, UNITS_BYTES, Main,
-      "Memory used by the main atoms table.");
-
-    MOZ_COLLECT_REPORT(
-      "explicit/atom-tables/static", KIND_HEAP, UNITS_BYTES, Static,
-      "Memory used by the static atoms table.");
+      "explicit/atom-table", KIND_HEAP, UNITS_BYTES, size,
+      "Memory used by the atom table.");
 
     return NS_OK;
   }

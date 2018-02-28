@@ -10,9 +10,7 @@ const mpToken = Cc["@mozilla.org/security/pk11tokendb;1"]
 
 async function checkDeviceManager({buttonIsDisabled}) {
   let deviceManagerWindow = window.openDialog("chrome://pippki/content/device_manager.xul", "", "");
-  await new Promise(resolve => {
-    deviceManagerWindow.addEventListener("load", resolve, {once: true});
-  });
+  await BrowserTestUtils.waitForEvent(deviceManagerWindow, "load");
 
   let tree = deviceManagerWindow.document.getElementById("device_tree");
   ok(tree, "The device tree exists");

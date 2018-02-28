@@ -47,20 +47,20 @@ struct SmallGlyphMetrics
     extents->height = -height;
   }
 
-  UINT8 height;
-  UINT8 width;
-  INT8 bearingX;
-  INT8 bearingY;
-  UINT8 advance;
+  HBUINT8 height;
+  HBUINT8 width;
+  HBINT8 bearingX;
+  HBINT8 bearingY;
+  HBUINT8 advance;
 
   DEFINE_SIZE_STATIC(5);
 };
 
 struct BigGlyphMetrics : SmallGlyphMetrics
 {
-  INT8 vertBearingX;
-  INT8 vertBearingY;
-  UINT8 vertAdvance;
+  HBINT8 vertBearingX;
+  HBINT8 vertBearingY;
+  HBUINT8 vertAdvance;
 
   DEFINE_SIZE_STATIC(8);
 };
@@ -73,18 +73,18 @@ struct SBitLineMetrics
     return_trace (c->check_struct (this));
   }
 
-  INT8 ascender;
-  INT8 decender;
-  UINT8 widthMax;
-  INT8 caretSlopeNumerator;
-  INT8 caretSlopeDenominator;
-  INT8 caretOffset;
-  INT8 minOriginSB;
-  INT8 minAdvanceSB;
-  INT8 maxBeforeBL;
-  INT8 minAfterBL;
-  INT8 padding1;
-  INT8 padding2;
+  HBINT8 ascender;
+  HBINT8 decender;
+  HBUINT8 widthMax;
+  HBINT8 caretSlopeNumerator;
+  HBINT8 caretSlopeDenominator;
+  HBINT8 caretOffset;
+  HBINT8 minOriginSB;
+  HBINT8 minAdvanceSB;
+  HBINT8 maxBeforeBL;
+  HBINT8 minAfterBL;
+  HBINT8 padding1;
+  HBINT8 padding2;
 
   DEFINE_SIZE_STATIC(12);
 };
@@ -102,9 +102,9 @@ struct IndexSubtableHeader
     return_trace (c->check_struct (this));
   }
 
-  UINT16 indexFormat;
-  UINT16 imageFormat;
-  UINT32 imageDataOffset;
+  HBUINT16 indexFormat;
+  HBUINT16 imageFormat;
+  HBUINT32 imageDataOffset;
 
   DEFINE_SIZE_STATIC(8);
 };
@@ -137,8 +137,8 @@ struct IndexSubtableFormat1Or3
   DEFINE_SIZE_ARRAY(8, offsetArrayZ);
 };
 
-struct IndexSubtableFormat1 : IndexSubtableFormat1Or3<UINT32> {};
-struct IndexSubtableFormat3 : IndexSubtableFormat1Or3<UINT16> {};
+struct IndexSubtableFormat1 : IndexSubtableFormat1Or3<HBUINT32> {};
+struct IndexSubtableFormat3 : IndexSubtableFormat1Or3<HBUINT16> {};
 
 struct IndexSubtable
 {
@@ -214,8 +214,8 @@ struct IndexSubtableRecord
 						   offset, length, format);
   }
 
-  UINT16 firstGlyphIndex;
-  UINT16 lastGlyphIndex;
+  HBUINT16 firstGlyphIndex;
+  HBUINT16 lastGlyphIndex;
   LOffsetTo<IndexSubtable> offsetToSubtable;
 
   DEFINE_SIZE_STATIC(8);
@@ -276,17 +276,17 @@ struct BitmapSizeTable
 
   protected:
   LOffsetTo<IndexSubtableArray> indexSubtableArrayOffset;
-  UINT32 indexTablesSize;
-  UINT32 numberOfIndexSubtables;
-  UINT32 colorRef;
+  HBUINT32 indexTablesSize;
+  HBUINT32 numberOfIndexSubtables;
+  HBUINT32 colorRef;
   SBitLineMetrics horizontal;
   SBitLineMetrics vertical;
-  UINT16 startGlyphIndex;
-  UINT16 endGlyphIndex;
-  UINT8 ppemX;
-  UINT8 ppemY;
-  UINT8 bitDepth;
-  INT8 flags;
+  HBUINT16 startGlyphIndex;
+  HBUINT16 endGlyphIndex;
+  HBUINT8 ppemX;
+  HBUINT8 ppemY;
+  HBUINT8 bitDepth;
+  HBINT8 flags;
 
   public:
   DEFINE_SIZE_STATIC(48);
@@ -300,8 +300,8 @@ struct BitmapSizeTable
 struct GlyphBitmapDataFormat17
 {
   SmallGlyphMetrics glyphMetrics;
-  UINT32 dataLen;
-  UINT8 dataZ[VAR];
+  HBUINT32 dataLen;
+  HBUINT8 dataZ[VAR];
 
   DEFINE_SIZE_ARRAY(9, dataZ);
 };
@@ -379,8 +379,8 @@ struct CBDT
     {
       upem = face->get_upem();
 
-      cblc_blob = Sanitizer<CBLC>::sanitize (face->reference_table (HB_OT_TAG_CBLC));
-      cbdt_blob = Sanitizer<CBDT>::sanitize (face->reference_table (HB_OT_TAG_CBDT));
+      cblc_blob = Sanitizer<CBLC>().sanitize (face->reference_table (HB_OT_TAG_CBLC));
+      cbdt_blob = Sanitizer<CBDT>().sanitize (face->reference_table (HB_OT_TAG_CBDT));
       cbdt_len = hb_blob_get_length (cbdt_blob);
 
       if (hb_blob_get_length (cblc_blob) == 0) {
@@ -460,7 +460,7 @@ struct CBDT
 
   protected:
   FixedVersion<>version;
-  UINT8 dataZ[VAR];
+  HBUINT8 dataZ[VAR];
 
   public:
   DEFINE_SIZE_ARRAY(4, dataZ);

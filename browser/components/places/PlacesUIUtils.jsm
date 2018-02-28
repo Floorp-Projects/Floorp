@@ -10,6 +10,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  OpenInTabsUtils: "resource:///modules/OpenInTabsUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -590,47 +591,6 @@ var PlacesUIUtils = {
     return itemId == this.leftPaneFolderId;
   },
 
-  /**
-   * Gives the user a chance to cancel loading lots of tabs at once
-   */
-  confirmOpenInTabs(numTabsToOpen, aWindow) {
-    const WARN_ON_OPEN_PREF = "browser.tabs.warnOnOpen";
-    var reallyOpen = true;
-
-    if (Services.prefs.getBoolPref(WARN_ON_OPEN_PREF)) {
-      if (numTabsToOpen >= Services.prefs.getIntPref("browser.tabs.maxOpenBeforeWarn")) {
-        // default to true: if it were false, we wouldn't get this far
-        var warnOnOpen = { value: true };
-
-        var messageKey = "tabs.openWarningMultipleBranded";
-        var openKey = "tabs.openButtonMultiple";
-        const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
-        var brandShortName = Services.strings.
-                             createBundle(BRANDING_BUNDLE_URI).
-                             GetStringFromName("brandShortName");
-
-        var buttonPressed = Services.prompt.confirmEx(
-          aWindow,
-          this.getString("tabs.openWarningTitle"),
-          this.getFormattedString(messageKey, [numTabsToOpen, brandShortName]),
-          (Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0) +
-            (Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1),
-          this.getString(openKey), null, null,
-          this.getFormattedString("tabs.openWarningPromptMeBranded",
-                                  [brandShortName]),
-          warnOnOpen
-        );
-
-        reallyOpen = (buttonPressed == 0);
-        // don't set the pref unless they press OK and it's false
-        if (reallyOpen && !warnOnOpen.value)
-          Services.prefs.setBoolPref(WARN_ON_OPEN_PREF, false);
-      }
-    }
-
-    return reallyOpen;
-  },
-
   /** aItemsToOpen needs to be an array of objects of the form:
     * {uri: string, isBookmark: boolean}
     */
@@ -699,7 +659,7 @@ var PlacesUIUtils = {
           urlsToOpen.push({uri: node.uri, isBookmark: false});
         }
 
-        if (this.confirmOpenInTabs(urlsToOpen.length, window)) {
+        if (OpenInTabsUtils.confirmOpenInTabs(urlsToOpen.length, window)) {
           this._openTabset(urlsToOpen, aEvent, window);
         }
       }, Cu.reportError);
@@ -710,7 +670,7 @@ var PlacesUIUtils = {
     let window = aView.ownerWindow;
 
     let urlsToOpen = PlacesUtils.getURLsForContainerNode(aNode);
-    if (this.confirmOpenInTabs(urlsToOpen.length, window)) {
+    if (OpenInTabsUtils.confirmOpenInTabs(urlsToOpen.length, window)) {
       this._openTabset(urlsToOpen, aEvent, window);
     }
   },

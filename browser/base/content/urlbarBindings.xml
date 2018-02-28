@@ -659,6 +659,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <parameter name="event"/>
         <parameter name="openUILinkWhere"/>
         <parameter name="openUILinkParams"/>
+        <parameter name="triggeringPrincipal"/>
         <body><![CDATA[
           let isMouseEvent = event instanceof MouseEvent;
           if (isMouseEvent && event.button == 2) {
@@ -789,7 +790,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 if (where != "current" ||
                     browser.lastLocationChange == lastLocationChange) {
                   this._loadURL(data.url, browser, data.postData, where,
-                                openUILinkParams, data.mayInheritPrincipal);
+                                openUILinkParams, data.mayInheritPrincipal,
+                                triggeringPrincipal);
                 }
               });
               return;
@@ -797,7 +799,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           }
 
           this._loadURL(url, browser, postData, where, openUILinkParams,
-                        mayInheritPrincipal);
+                        mayInheritPrincipal, triggeringPrincipal);
         ]]></body>
       </method>
 
@@ -826,6 +828,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <parameter name="openUILinkWhere"/>
         <parameter name="openUILinkParams"/>
         <parameter name="mayInheritPrincipal"/>
+        <parameter name="triggeringPrincipal"/>
         <body><![CDATA[
           this.value = url;
           browser.userTypedValue = url;
@@ -843,6 +846,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           let params = {
             postData,
             allowThirdPartyFixup: true,
+            triggeringPrincipal,
           };
           if (openUILinkWhere == "current") {
             params.targetBrowser = browser;
@@ -1008,6 +1012,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // The URL bar automatically handles inputs with newline characters,
           // so we can get away with treating text/x-moz-url flavours as text/plain.
           if (links.length > 0 && links[0].url) {
+            let triggeringPrincipal = browserDragAndDrop.getTriggeringPrincipal(aEvent);
             aEvent.preventDefault();
             let url = links[0].url;
             let strippedURL = stripUnsafeProtocolOnPaste(url);
@@ -1026,7 +1031,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               // URL object. If the *security checks* fail, return null.
               try {
                 urlSecurityCheck(url,
-                                 gBrowser.contentPrincipal,
+                                 triggeringPrincipal,
                                  Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
                 return urlObj;
               } catch (ex) {
@@ -1054,10 +1059,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <body><![CDATA[
           let droppedItem = this._getDroppableItem(aEvent);
           if (droppedItem) {
+            let triggeringPrincipal = browserDragAndDrop.getTriggeringPrincipal(aEvent);
             this.value = droppedItem instanceof URL ? droppedItem.href : droppedItem;
             SetPageProxyState("invalid");
             this.focus();
-            this.handleCommand();
+            this.handleCommand(null, undefined, undefined, triggeringPrincipal);
             // Force not showing the dropped URI immediately.
             gBrowser.userTypedValue = null;
             URLBarSetURI();

@@ -9,6 +9,7 @@
 
 #include "nsNetUtil.h"
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/LoadInfo.h"
@@ -1554,6 +1555,7 @@ public:
         , mBufferType(aBuffer ? eExternal : eInternal)
         , mAsyncResult(NS_OK)
         , mBufferSize(0)
+        , mCompleted(false)
     {
         MOZ_ASSERT(aInputStream);
         MOZ_ASSERT(aCount == -1 || aCount > 0);
@@ -1678,6 +1680,7 @@ private:
         rv = lock.Wait();
         NS_ENSURE_SUCCESS(rv, rv);
 
+        mCompleted = true;
         return mAsyncResult;
     }
 
@@ -1691,6 +1694,10 @@ private:
         MOZ_ASSERT(!mInputStream);
 
         MonitorAutoLock lock(mMonitor);
+
+        if (mCompleted) {
+            return NS_OK;
+        }
 
         if (mCount == 0) {
             OperationCompleted(lock, NS_OK);
@@ -1730,7 +1737,7 @@ private:
             if (NS_WARN_IF(NS_FAILED(rv))) {
                 OperationCompleted(lock, rv);
             }
-        
+
             return NS_OK;
         }
 
@@ -1822,6 +1829,7 @@ private:
     // The following set if needed for the async read.
     nsresult mAsyncResult;
     uint64_t mBufferSize;
+    Atomic<bool> mCompleted;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(BufferWriter, Runnable, nsIInputStreamCallback)

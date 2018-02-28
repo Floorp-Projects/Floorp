@@ -169,6 +169,12 @@ function pushPrefs(...aPrefs) {
   });
 }
 
+function popPrefs() {
+  return new Promise(resolve => {
+    SpecialPowers.popPrefEnv(resolve);
+  });
+}
+
 function updateBlocklist(aCallback) {
   var blocklistNotifier = Cc["@mozilla.org/extensions/blocklist;1"]
                           .getService(Ci.nsITimerCallback);

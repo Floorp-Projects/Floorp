@@ -466,7 +466,7 @@ public:
         friend T;
     };
 
-    class Mutator
+    class Mutator final
         : public TemplatedMutator<nsStandardURL>
     {
         NS_DECL_ISUPPORTS

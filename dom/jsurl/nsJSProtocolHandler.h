@@ -61,7 +61,8 @@ protected:
 };
 
 
-class nsJSURI : public mozilla::net::nsSimpleURI
+class nsJSURI final
+    : public mozilla::net::nsSimpleURI
 {
 public:
     using mozilla::net::nsSimpleURI::Read;
@@ -105,7 +106,7 @@ private:
     nsCOMPtr<nsIURI> mBaseURI;
 
 public:
-    class Mutator
+    class Mutator final
         : public nsIURIMutator
         , public BaseURIMutator<nsJSURI>
     {

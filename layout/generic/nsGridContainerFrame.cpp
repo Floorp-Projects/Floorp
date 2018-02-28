@@ -614,22 +614,22 @@ struct nsGridContainerFrame::GridItemInfo
                               LogicalAxis aContainerAxis,
                               nscoord aPercentageBasis) const
   {
-    const auto pos = mFrame->StylePosition();
+    const auto* pos = mFrame->IsTableWrapperFrame() ?
+      mFrame->PrincipalChildList().FirstChild()->StylePosition() :
+      mFrame->StylePosition();
     const auto& size = aContainerAxis == eLogicalAxisInline ?
       pos->ISize(aContainerWM) : pos->BSize(aContainerWM);
-    // NOTE: if we have a definite or 'max-content' size then our automatic
-    // minimum size can't affect our size.  Excluding these simplifies applying
+    // NOTE: if we have a definite size then our automatic minimum size
+    // can't affect our size.  Excluding these simplifies applying
     // the clamping in the right cases later.
-    if (size.GetUnit() == eStyleUnit_Auto ||
-        ::IsPercentOfIndefiniteSize(size, aPercentageBasis) || // same as 'auto'
-        (size.GetUnit() == eStyleUnit_Enumerated &&
-         size.GetIntValue() != NS_STYLE_WIDTH_MAX_CONTENT)) {
-      const auto& minSize = aContainerAxis == eLogicalAxisInline ?
-        pos->MinISize(aContainerWM) : pos->MinBSize(aContainerWM);
-      return minSize.GetUnit() == eStyleUnit_Auto &&
-             mFrame->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE;
+    if (size.GetUnit() != eStyleUnit_Auto &&
+        !::IsPercentOfIndefiniteSize(size, aPercentageBasis)) {
+      return false;
     }
-    return false;
+    const auto& minSize = aContainerAxis == eLogicalAxisInline ?
+      pos->MinISize(aContainerWM) : pos->MinBSize(aContainerWM);
+    return minSize.GetUnit() == eStyleUnit_Auto &&
+           mFrame->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE;
   }
 
 #ifdef DEBUG
@@ -3779,33 +3779,25 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   TrackSize& sz = mSizes[aRange.mStart];
   WritingMode wm = aState.mWM;
 
-  // Check if we need to apply "Automatic Minimum Size" and cache it.
-  if ((sz.mState & TrackSize::eAutoMinSizing) &&
-      aGridItem.ShouldApplyAutoMinSize(wm, mAxis, aPercentageBasis)) {
-    aGridItem.mState[mAxis] |= ItemState::eApplyAutoMinSize;
-  }
-
-  // Calculate data for "Automatic Minimum Size" clamping, if needed.
-  bool needed = ((sz.mState & TrackSize::eIntrinsicMinSizing) ||
-                 aConstraint == SizingConstraint::eNoConstraint) &&
-                (aGridItem.mState[mAxis] & ItemState::eApplyAutoMinSize);
-  if (needed && TrackSize::IsDefiniteMaxSizing(sz.mState)) {
-    if (sz.mState & TrackSize::eIntrinsicMinSizing) {
-      auto maxCoord = aFunctions.MaxSizingFor(aRange.mStart);
-      cache.mMinSizeClamp = maxCoord.ComputeCoordPercentCalc(aPercentageBasis);
-    }
-    aGridItem.mState[mAxis] |= ItemState::eClampMarginBoxMinSize;
-  }
   // min sizing
   gfxContext* rc = &aState.mRenderingContext;
   if (sz.mState & TrackSize::eAutoMinSizing) {
     nscoord s;
-    if (aConstraint == SizingConstraint::eMinContent) {
-      s = MinContentContribution(aGridItem, aState, rc, wm, mAxis, &cache);
-    } else if (aConstraint == SizingConstraint::eMaxContent) {
-      s = MaxContentContribution(aGridItem, aState, rc, wm, mAxis, &cache);
+    // Check if we need to apply "Automatic Minimum Size" and cache it.
+    if (aGridItem.ShouldApplyAutoMinSize(wm, mAxis, aPercentageBasis)) {
+      aGridItem.mState[mAxis] |= ItemState::eApplyAutoMinSize;
+      // Clamp it if it's spanning a definite track max-sizing function.
+      if (TrackSize::IsDefiniteMaxSizing(sz.mState)) {
+        auto maxCoord = aFunctions.MaxSizingFor(aRange.mStart);
+        cache.mMinSizeClamp = maxCoord.ComputeCoordPercentCalc(aPercentageBasis);
+        aGridItem.mState[mAxis] |= ItemState::eClampMarginBoxMinSize;
+      }
+      if (aConstraint != SizingConstraint::eMaxContent) {
+        s = MinContentContribution(aGridItem, aState, rc, wm, mAxis, &cache);
+      } else {
+        s = MaxContentContribution(aGridItem, aState, rc, wm, mAxis, &cache);
+      }
     } else {
-      MOZ_ASSERT(aConstraint == SizingConstraint::eNoConstraint);
       s = MinSize(aGridItem, aState, rc, wm, mAxis, &cache);
     }
     sz.mBase = std::max(sz.mBase, s);
@@ -5073,18 +5065,31 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   // Setup the ClampMarginBoxMinSize reflow flags and property, if needed.
   uint32_t flags = 0;
   if (aGridItemInfo) {
+    // Clamp during reflow if we're stretching in that axis.
+    auto* pos = aChild->StylePosition();
+    auto j = pos->UsedJustifySelf(StyleContext());
+    auto a = pos->UsedAlignSelf(StyleContext());
+    bool stretch[2];
+    stretch[eLogicalAxisInline] = j == NS_STYLE_JUSTIFY_NORMAL ||
+                                  j == NS_STYLE_JUSTIFY_STRETCH;
+    stretch[eLogicalAxisBlock] = a == NS_STYLE_ALIGN_NORMAL ||
+                                 a == NS_STYLE_ALIGN_STRETCH;
     auto childIAxis = isOrthogonal ? eLogicalAxisBlock : eLogicalAxisInline;
-    if (aGridItemInfo->mState[childIAxis] & ItemState::eClampMarginBoxMinSize) {
+    if (stretch[childIAxis] &&
+        aGridItemInfo->mState[childIAxis] & ItemState::eClampMarginBoxMinSize) {
       flags |= ReflowInput::I_CLAMP_MARGIN_BOX_MIN_SIZE;
     }
+
     auto childBAxis = GetOrthogonalAxis(childIAxis);
-    if (aGridItemInfo->mState[childBAxis] & ItemState::eClampMarginBoxMinSize) {
+    if (stretch[childBAxis] &&
+        aGridItemInfo->mState[childBAxis] & ItemState::eClampMarginBoxMinSize) {
       flags |= ReflowInput::B_CLAMP_MARGIN_BOX_MIN_SIZE;
       aChild->SetProperty(BClampMarginBoxMinSizeProperty(),
                           childCBSize.BSize(childWM));
     } else {
       aChild->DeleteProperty(BClampMarginBoxMinSizeProperty());
     }
+
     if ((aGridItemInfo->mState[childIAxis] & ItemState::eApplyAutoMinSize)) {
       flags |= ReflowInput::I_APPLY_AUTO_MIN_SIZE;
     }

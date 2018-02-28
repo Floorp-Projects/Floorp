@@ -1309,6 +1309,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     performingGC(false),
     gcSweeping(false),
     gcHelperStateThread(false),
+    isTouchingGrayThings(false),
     noGCOrAllocationCheck(0),
     noNurseryAllocationCheck(0),
     disableStrictProxyCheckingCount(0),
