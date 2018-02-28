@@ -136,6 +136,9 @@ public:
   // completing or being cancelled).
   bool mIsLoading : 1;
 
+  // mIsBeingParsed is true if this stylesheet is currently being parsed.
+  bool mIsBeingParsed : 1;
+
   // mIsCancelled is set to true when a sheet load is stopped by
   // Stop() or StopLoadingSheet() (which was removed in Bug 556446).
   // SheetLoadData::OnStreamComplete() checks this to avoid parsing

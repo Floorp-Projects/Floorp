@@ -11,11 +11,12 @@
 use num::One;
 
 use num_traits::NumCast;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
-use std::ops::{Add, Mul, Sub, Div, Neg};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::marker::PhantomData;
-use {TypedRect, TypedSize2D, TypedPoint2D, TypedVector2D};
+use {TypedPoint2D, TypedRect, TypedSize2D, TypedVector2D};
 
 /// A scaling factor between two different units of measurement.
 ///
@@ -39,15 +40,31 @@ use {TypedRect, TypedSize2D, TypedPoint2D, TypedVector2D};
 #[repr(C)]
 pub struct TypedScale<T, Src, Dst>(pub T, PhantomData<(Src, Dst)>);
 
-impl<'de, T, Src, Dst> Deserialize<'de> for TypedScale<T, Src, Dst> where T: Deserialize<'de> {
+#[cfg(feature = "serde")]
+impl<'de, T, Src, Dst> Deserialize<'de> for TypedScale<T, Src, Dst>
+where
+    T: Deserialize<'de>,
+{
     fn deserialize<D>(deserializer: D) -> Result<TypedScale<T, Src, Dst>, D::Error>
-                      where D: Deserializer<'de> {
-        Ok(TypedScale(try!(Deserialize::deserialize(deserializer)), PhantomData))
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(TypedScale(
+            try!(Deserialize::deserialize(deserializer)),
+            PhantomData,
+        ))
     }
 }
 
-impl<T, Src, Dst> Serialize for TypedScale<T, Src, Dst> where T: Serialize {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+#[cfg(feature = "serde")]
+impl<T, Src, Dst> Serialize for TypedScale<T, Src, Dst>
+where
+    T: Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         self.0.serialize(serializer)
     }
 }
@@ -64,7 +81,7 @@ impl<T: Clone, Src, Dst> TypedScale<T, Src, Dst> {
     }
 }
 
-impl<T: Clone + One + Div<T, Output=T>, Src, Dst> TypedScale<T, Src, Dst> {
+impl<T: Clone + One + Div<T, Output = T>, Src, Dst> TypedScale<T, Src, Dst> {
     /// The inverse TypedScale (1.0 / self).
     pub fn inv(&self) -> TypedScale<T, Dst, Src> {
         let one: T = One::one();
@@ -73,8 +90,7 @@ impl<T: Clone + One + Div<T, Output=T>, Src, Dst> TypedScale<T, Src, Dst> {
 }
 
 // scale0 * scale1
-impl<T: Clone + Mul<T, Output=T>, A, B, C>
-Mul<TypedScale<T, B, C>> for TypedScale<T, A, B> {
+impl<T: Clone + Mul<T, Output = T>, A, B, C> Mul<TypedScale<T, B, C>> for TypedScale<T, A, B> {
     type Output = TypedScale<T, A, C>;
     #[inline]
     fn mul(self, other: TypedScale<T, B, C>) -> TypedScale<T, A, C> {
@@ -83,7 +99,7 @@ Mul<TypedScale<T, B, C>> for TypedScale<T, A, B> {
 }
 
 // scale0 + scale1
-impl<T: Clone + Add<T, Output=T>, Src, Dst> Add for TypedScale<T, Src, Dst> {
+impl<T: Clone + Add<T, Output = T>, Src, Dst> Add for TypedScale<T, Src, Dst> {
     type Output = TypedScale<T, Src, Dst>;
     #[inline]
     fn add(self, other: TypedScale<T, Src, Dst>) -> TypedScale<T, Src, Dst> {
@@ -92,7 +108,7 @@ impl<T: Clone + Add<T, Output=T>, Src, Dst> Add for TypedScale<T, Src, Dst> {
 }
 
 // scale0 - scale1
-impl<T: Clone + Sub<T, Output=T>, Src, Dst> Sub for TypedScale<T, Src, Dst> {
+impl<T: Clone + Sub<T, Output = T>, Src, Dst> Sub for TypedScale<T, Src, Dst> {
     type Output = TypedScale<T, Src, Dst>;
     #[inline]
     fn sub(self, other: TypedScale<T, Src, Dst>) -> TypedScale<T, Src, Dst> {
@@ -108,11 +124,8 @@ impl<T: NumCast + Clone, Src, Dst0> TypedScale<T, Src, Dst0> {
 }
 
 impl<T, Src, Dst> TypedScale<T, Src, Dst>
-where T: Copy + Clone +
-         Mul<T, Output=T> +
-         Neg<Output=T> +
-         PartialEq +
-         One
+where
+    T: Copy + Clone + Mul<T, Output = T> + Neg<Output = T> + PartialEq + One,
 {
     /// Returns the given point transformed by this scale.
     #[inline]

@@ -212,7 +212,8 @@ class Message extends Component {
     let onFrameClick;
     if (serviceContainer && frame) {
       if (source === MESSAGE_SOURCE.CSS) {
-        onFrameClick = serviceContainer.onViewSourceInStyleEditor;
+        onFrameClick = serviceContainer.onViewSourceInStyleEditor
+          || serviceContainer.onViewSource;
       } else if (/^Scratchpad\/\d+$/.test(frame.source)) {
         onFrameClick = serviceContainer.onViewSourceInScratchpad
           || serviceContainer.onViewSource;

@@ -2203,7 +2203,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
     }
 
     // Test for distance between caret and text that will be deleted
-    rv = CheckBidiLevelForDeletion(aSelection, GetAsDOMNode(startNode),
+    rv = CheckBidiLevelForDeletion(aSelection, startNode,
                                    startOffset, aAction, aCancel);
     NS_ENSURE_SUCCESS(rv, rv);
     if (*aCancel) {
@@ -7993,7 +7993,7 @@ nsresult
 HTMLEditRules::AdjustWhitespace(Selection* aSelection)
 {
   // get selection point
-  nsCOMPtr<nsIDOMNode> selNode;
+  nsCOMPtr<nsINode> selNode;
   int32_t selOffset;
   nsresult rv =
     EditorBase::GetStartNodeAndOffset(aSelection,
@@ -8018,18 +8018,21 @@ HTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
   }
 
   // get the (collapsed) selection location
-  nsCOMPtr<nsIDOMNode> selNode;
+  nsCOMPtr<nsINode> selNode;
   int32_t selOffset;
   nsresult rv =
     EditorBase::GetStartNodeAndOffset(aSelection,
                                       getter_AddRefs(selNode), &selOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (NS_WARN_IF(!selNode)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // use ranges and sRangeHelper to compare sel point to new block
-  nsCOMPtr<nsINode> node = do_QueryInterface(selNode);
-  NS_ENSURE_STATE(node);
-  RefPtr<nsRange> range = new nsRange(node);
-  rv = range->CollapseTo(node, selOffset);
+  RefPtr<nsRange> range = new nsRange(selNode);
+  rv = range->CollapseTo(selNode, selOffset);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

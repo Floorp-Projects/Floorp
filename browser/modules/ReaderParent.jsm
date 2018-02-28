@@ -64,7 +64,6 @@ var ReaderParent = {
       button.setAttribute("readeractive", true);
       button.hidden = false;
       let closeText = gStringBundle.GetStringFromName("readerView.close");
-      button.setAttribute("tooltiptext", closeText);
       command.setAttribute("label", closeText);
       command.setAttribute("hidden", false);
       command.setAttribute("accesskey", gStringBundle.GetStringFromName("readerView.close.accesskey"));
@@ -74,7 +73,6 @@ var ReaderParent = {
       button.removeAttribute("readeractive");
       button.hidden = !browser.isArticle;
       let enterText = gStringBundle.GetStringFromName("readerView.enter");
-      button.setAttribute("tooltiptext", enterText);
       command.setAttribute("label", enterText);
       command.setAttribute("hidden", !browser.isArticle);
       command.setAttribute("accesskey", gStringBundle.GetStringFromName("readerView.enter.accesskey"));

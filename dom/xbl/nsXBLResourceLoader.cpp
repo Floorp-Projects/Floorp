@@ -226,6 +226,7 @@ nsXBLResourceLoader::AddResourceListener(nsIContent* aBoundElement)
 {
   if (aBoundElement) {
     mBoundElements.AppendObject(aBoundElement);
+    aBoundElement->OwnerDoc()->BlockOnload();
   }
 }
 
@@ -242,6 +243,7 @@ nsXBLResourceLoader::NotifyBoundElements()
   for (uint32_t j = 0; j < eltCount; j++) {
     nsCOMPtr<nsIContent> content = mBoundElements.ObjectAt(j);
     MOZ_ASSERT(content->IsElement());
+    content->OwnerDoc()->UnblockOnload(/* aFireSync = */ false);
 
     bool ready = false;
     xblService->BindingReady(content, bindingURI, &ready);
