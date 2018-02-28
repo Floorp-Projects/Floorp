@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /*
- * Structures matching the in-memory representation of typelib structures.
+ * Structures for representing typelib structures in memory.
  * http://www.mozilla.org/scriptable/typelib_file.html
  */
 
@@ -16,18 +16,6 @@
 #include <stdint.h>
 #include "mozilla/Assertions.h"
 
-/*
- * Originally, I was going to have structures that exactly matched the on-disk
- * representation, but that proved difficult: different compilers can pack
- * their structs differently, and that makes overlaying them atop a
- * read-from-disk byte buffer troublesome.  So now I just have some structures
- * that are used in memory, and we're going to write a nice XDR library to
- * write them to disk and stuff.  It is pure joy. -- shaver
- */
-
-/* Structures for the typelib components */
-
-struct XPTHeader;
 struct XPTInterfaceDirectoryEntry;
 struct XPTInterfaceDescriptor;
 struct XPTConstDescriptor;
@@ -36,40 +24,17 @@ struct XPTParamDescriptor;
 struct XPTTypeDescriptor;
 struct XPTTypeDescriptorPrefix;
 
-/*
- * Every XPCOM typelib file begins with a header.
- */
 struct XPTHeader {
-  // Some of these fields exists in the on-disk format but don't need to be
-  // stored in memory (other than very briefly, which can be done with local
-  // variables).
-
-  //uint8_t mMagic[16];
-  uint8_t mMajorVersion;
-  //uint8_t mMinorVersion;
   uint16_t mNumInterfaces;
-  //uint32_t mFileLength;
   const XPTInterfaceDirectoryEntry* mInterfaceDirectory;
-  //uint32_t mDataPool;
+
+  static const XPTHeader kHeader;
 };
 
 /*
- * Any file with a major version number of XPT_MAJOR_INCOMPATIBLE_VERSION
- * or higher is to be considered incompatible by this version of xpt and
- * we will refuse to read it. We will return a header with magic, major and
- * minor versions set from the file. num_interfaces will be set to zero to
- * confirm our inability to read the file; i.e. even if some client of this
- * library gets out of sync with us regarding the agreed upon value for
- * XPT_MAJOR_INCOMPATIBLE_VERSION, anytime num_interfaces is zero we *know*
- * that this library refused to read the file due to version incompatibility.
- */
-#define XPT_MAJOR_INCOMPATIBLE_VERSION 0x02
-
-/*
- * A contiguous array of fixed-size InterfaceDirectoryEntry records begins at
- * the byte offset identified by the mInterfaceDirectory field in the file
- * header.  The array is used to quickly locate an interface description
- * using its IID.  No interface should appear more than once in the array.
+ * An array of directory entries is used to quickly locate an interface
+ * description using its IID. No interface should appear more than once in the
+ * array.
  */
 struct XPTInterfaceDirectoryEntry {
   inline const XPTInterfaceDescriptor* InterfaceDescriptor() const;
@@ -77,11 +42,6 @@ struct XPTInterfaceDirectoryEntry {
 
   nsID mIID;
   const char* mName;
-
-  // This field exists in the on-disk format. But it isn't used so we don't
-  // allocate space for it in memory.
-  //const char* mNameSpace;
-
   const XPTInterfaceDescriptor* mInterfaceDescriptor;
 };
 
@@ -105,8 +65,6 @@ struct XPTInterfaceDescriptor {
 
   /*
    * This field ordering minimizes the size of this struct.
-   * The fields are serialized on disk in a different order.
-   * See DoInterfaceDescriptor().
    */
   const XPTMethodDescriptor* mMethodDescriptors;
   const XPTConstDescriptor* mConstDescriptors;
@@ -115,29 +73,12 @@ struct XPTInterfaceDescriptor {
   uint16_t mNumMethods;
   uint16_t mNumConstants;
   uint8_t mFlags;
-
-  /*
-   * mAdditionalTypes are used for arrays where we may need multiple
-   * XPTTypeDescriptors for a single XPTMethodDescriptor. Since we still
-   * want to have a simple array of XPTMethodDescriptor (each with a single
-   * embedded XPTTypeDescriptor), a XPTTypeDescriptor can have a reference
-   * to an 'additional_type'. That reference is an index in this
-   * "mAdditionalTypes" array. So a given XPTMethodDescriptor might have
-   * a whole chain of these XPTTypeDescriptors to represent, say, a multi
-   * dimensional array.
-   *
-   * Note that in the typelib file these additional types are stored 'inline'
-   * in the MethodDescriptor. But, in the typelib MethodDescriptors can be
-   * of varying sizes, where in XPT's in memory mapping of the data we want
-   * them to be of fixed size. This mAdditionalTypes scheme is here to allow
-   * for that.
-   */
   uint8_t mNumAdditionalTypes;
 };
 
 /*
- * A TypeDescriptor is a variable-size record used to identify the type of a
- * method argument or return value.
+ * A TypeDescriptor is a union used to identify the type of a method
+ * argument or return value.
  *
  * There are three types of TypeDescriptors:
  *
@@ -146,10 +87,9 @@ struct XPTInterfaceDescriptor {
  * InterfaceIsTypeDescriptor
  *
  * The tag field in the prefix indicates which of the variant TypeDescriptor
- * records is being used, and hence the way any remaining fields should be
- * parsed. Values from 0 to 17 refer to SimpleTypeDescriptors. The value 18
- * designates an InterfaceTypeDescriptor, while 19 represents an
- * InterfaceIsTypeDescriptor.
+ * records is being used, and hence which union members are valid. Values from 0
+ * to 17 refer to SimpleTypeDescriptors. The value 18 designates an
+ * InterfaceTypeDescriptor, while 19 represents an InterfaceIsTypeDescriptor.
  */
 
 /* why bother with a struct?  - other code relies on this being a struct */
@@ -234,21 +174,19 @@ struct XPTTypeDescriptor {
 };
 
 /*
- * A ConstDescriptor is a variable-size record that records the name and
- * value of a scoped interface constant. This is allowed only for a subset
- * of types.
+ * A ConstDescriptor records the name and value of a scoped interface constant.
+ * This is allowed only for a subset of types.
  *
- * The type (and thus the size) of the value record is determined by the
- * contents of the associated TypeDescriptor record. For instance, if type
- * corresponds to int16_t, then value is a two-byte record consisting of a
- * 16-bit signed integer.
+ * The type of the value record is determined by the contents of the associated
+ * TypeDescriptor record. For instance, if type corresponds to int16_t, then
+ * value is a 16-bit signed integer.
  */
 union XPTConstValue {
   int16_t i16;
   uint16_t ui16;
   int32_t i32;
   uint32_t ui32;
-}; /* varies according to type */
+};
 
 struct XPTConstDescriptor {
   const char* Name() const {
@@ -261,8 +199,8 @@ struct XPTConstDescriptor {
 };
 
 /*
- * A ParamDescriptor is a variable-size record used to describe either a
- * single argument to a method or a method's result.
+ * A ParamDescriptor is used to describe either a single argument to a method or
+ * a method's result.
  */
 struct XPTParamDescriptor {
   uint8_t mFlags;
@@ -270,8 +208,7 @@ struct XPTParamDescriptor {
 };
 
 /*
- * A MethodDescriptor is a variable-size record used to describe a single
- * interface method.
+ * A MethodDescriptor is used to describe a single interface method.
  */
 struct XPTMethodDescriptor {
   const char* Name() const {
@@ -283,7 +220,6 @@ struct XPTMethodDescriptor {
 
   const char* mName;
   const XPTParamDescriptor* mParams;
-  //XPTParamDescriptor mResult; // Present on disk, omitted here.
   uint8_t mFlags;
   uint8_t mNumArgs;
 };

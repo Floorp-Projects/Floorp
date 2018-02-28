@@ -15,7 +15,6 @@
 // this after nsISupports, to pick up IID
 // so that xpt stuff doesn't try to define it itself...
 #include "xpt_struct.h"
-#include "xpt_xdr.h"
 
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
@@ -62,6 +61,7 @@ class xptiInterfaceInfo;
 class xptiInterfaceEntry;
 class xptiTypelibGuts;
 
+struct XPTArena;
 extern XPTArena* gXPTIStructArena;
 
 /***************************************************************************/

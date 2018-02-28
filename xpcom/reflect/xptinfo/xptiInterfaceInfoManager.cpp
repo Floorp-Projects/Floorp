@@ -81,6 +81,12 @@ XPTInterfaceInfoManager::XPTInterfaceInfoManager()
     :   mWorkingSet(),
         mResolveLock("XPTInterfaceInfoManager.mResolveLock")
 {
+    xptiTypelibGuts* typelib = xptiTypelibGuts::Create(&XPTHeader::kHeader);
+
+    ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
+    for (uint16_t k = 0; k < XPTHeader::kHeader.mNumInterfaces; k++) {
+        VerifyAndAddEntryIfNew(XPTHeader::kHeader.mInterfaceDirectory + k, k, typelib);
+    }
 }
 
 XPTInterfaceInfoManager::~XPTInterfaceInfoManager()
@@ -95,38 +101,6 @@ void
 XPTInterfaceInfoManager::InitMemoryReporter()
 {
     RegisterWeakMemoryReporter(this);
-}
-
-void
-XPTInterfaceInfoManager::RegisterBuffer(char *buf, uint32_t length)
-{
-    XPTState state;
-    XPT_InitXDRState(&state, buf, length);
-
-    XPTCursor curs;
-    NotNull<XPTCursor*> cursor = WrapNotNull(&curs);
-    if (!XPT_MakeCursor(&state, XPT_HEADER, 0, cursor)) {
-        return;
-    }
-
-    XPTHeader *header = nullptr;
-    if (XPT_DoHeader(gXPTIStructArena, cursor, &header)) {
-        RegisterXPTHeader(header);
-    }
-}
-
-void
-XPTInterfaceInfoManager::RegisterXPTHeader(const XPTHeader* aHeader)
-{
-    if (aHeader->mMajorVersion >= XPT_MAJOR_INCOMPATIBLE_VERSION) {
-        MOZ_ASSERT(!aHeader->mNumInterfaces, "bad libxpt");
-    }
-
-    xptiTypelibGuts* typelib = xptiTypelibGuts::Create(aHeader);
-
-    ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
-    for(uint16_t k = 0; k < aHeader->mNumInterfaces; k++)
-        VerifyAndAddEntryIfNew(aHeader->mInterfaceDirectory + k, k, typelib);
 }
 
 void
