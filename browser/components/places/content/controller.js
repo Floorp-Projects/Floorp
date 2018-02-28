@@ -1510,62 +1510,6 @@ XPCOMUtils.defineLazyServiceGetter(PlacesControllerDragHelper, "dragService",
                                    "@mozilla.org/widget/dragservice;1",
                                    "nsIDragService");
 
-function goUpdatePlacesCommands() {
-  // Get the controller for one of the places commands.
-  var placesController = doGetPlacesControllerForCommand("placesCmd_open");
-  function updatePlacesCommand(aCommand) {
-    goSetCommandEnabled(aCommand, placesController &&
-                                  placesController.isCommandEnabled(aCommand));
-  }
-
-  updatePlacesCommand("placesCmd_open");
-  updatePlacesCommand("placesCmd_open:window");
-  updatePlacesCommand("placesCmd_open:privatewindow");
-  updatePlacesCommand("placesCmd_open:tab");
-  updatePlacesCommand("placesCmd_new:folder");
-  updatePlacesCommand("placesCmd_new:bookmark");
-  updatePlacesCommand("placesCmd_new:separator");
-  updatePlacesCommand("placesCmd_show:info");
-  updatePlacesCommand("placesCmd_reload");
-  updatePlacesCommand("placesCmd_sortBy:name");
-  updatePlacesCommand("placesCmd_cut");
-  updatePlacesCommand("placesCmd_copy");
-  updatePlacesCommand("placesCmd_paste");
-  updatePlacesCommand("placesCmd_delete");
-}
-
-function doGetPlacesControllerForCommand(aCommand) {
-  // A context menu may be built for non-focusable views.  Thus, we first try
-  // to look for a view associated with document.popupNode
-  let popupNode;
-  try {
-    popupNode = document.popupNode;
-  } catch (e) {
-    // The document went away (bug 797307).
-    return null;
-  }
-  if (popupNode) {
-    let view = PlacesUIUtils.getViewForNode(popupNode);
-    if (view && view._contextMenuShown)
-      return view.controllers.getControllerForCommand(aCommand);
-  }
-
-  // When we're not building a context menu, only focusable views
-  // are possible.  Thus, we can safely use the command dispatcher.
-  let controller = top.document.commandDispatcher
-                      .getControllerForCommand(aCommand);
-  if (controller)
-    return controller;
-
-  return null;
-}
-
-function goDoPlacesCommand(aCommand) {
-  let controller = doGetPlacesControllerForCommand(aCommand);
-  if (controller && controller.isCommandEnabled(aCommand))
-    controller.doCommand(aCommand);
-}
-
 /**
  * This gets the most appropriate item for using for batching. In the case of multiple
  * views being related, the method returns the most expensive result to batch.

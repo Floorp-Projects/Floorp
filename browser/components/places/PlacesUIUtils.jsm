@@ -405,6 +405,77 @@ var PlacesUIUtils = {
   },
 
   /**
+   * Returns the active PlacesController for a given command.
+   *
+   * @param win The window containing the affected view
+   * @param command The command
+   * @return a PlacesController
+   */
+  getControllerForCommand(win, command) {
+    // A context menu may be built for non-focusable views.  Thus, we first try
+    // to look for a view associated with document.popupNode
+    let popupNode;
+    try {
+      popupNode = win.document.popupNode;
+    } catch (e) {
+      // The document went away (bug 797307).
+      return null;
+    }
+    if (popupNode) {
+      let view = this.getViewForNode(popupNode);
+      if (view && view._contextMenuShown)
+        return view.controllers.getControllerForCommand(command);
+    }
+
+    // When we're not building a context menu, only focusable views
+    // are possible.  Thus, we can safely use the command dispatcher.
+    let controller = win.top.document.commandDispatcher
+                        .getControllerForCommand(command);
+    return controller || null;
+  },
+
+  /**
+   * Update all the Places commands for the given window.
+   *
+   * @param win The window to update.
+   */
+  updateCommands(win) {
+    // Get the controller for one of the places commands.
+    let controller = this.getControllerForCommand(win, "placesCmd_open");
+    for (let command of [
+      "placesCmd_open",
+      "placesCmd_open:window",
+      "placesCmd_open:privatewindow",
+      "placesCmd_open:tab",
+      "placesCmd_new:folder",
+      "placesCmd_new:bookmark",
+      "placesCmd_new:separator",
+      "placesCmd_show:info",
+      "placesCmd_reload",
+      "placesCmd_sortBy:name",
+      "placesCmd_cut",
+      "placesCmd_copy",
+      "placesCmd_paste",
+      "placesCmd_delete",
+    ]) {
+      win.goSetCommandEnabled(command,
+                              controller && controller.isCommandEnabled(command));
+    }
+  },
+
+  /**
+   * Executes the given command on the currently active controller.
+   *
+   * @param win The window containing the affected view
+   * @param command The command to execute
+   */
+  doCommand(win, command) {
+    let controller = this.getControllerForCommand(win, command);
+    if (controller && controller.isCommandEnabled(command))
+      controller.doCommand(command);
+  },
+
+  /**
    * By calling this before visiting an URL, the visit will be associated to a
    * TRANSITION_TYPED transition (if there is no a referrer).
    * This is used when visiting pages from the history menu, history sidebar,
