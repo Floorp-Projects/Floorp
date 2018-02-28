@@ -84,7 +84,7 @@ RestyleManager::ContentAppended(nsIContent* aContainer, nsIContent* aFirstNewCon
       // so be conservative and assume :-moz-only-whitespace (i.e., make
       // IsSignificantChild less likely to be true, and thus make us more
       // likely to restyle).
-      if (nsStyleUtil::IsSignificantChild(cur, true, false)) {
+      if (nsStyleUtil::IsSignificantChild(cur, false)) {
         wasEmpty = false;
         break;
       }
@@ -230,7 +230,7 @@ HasAnySignificantSibling(Element* aContainer, nsIContent* aChild)
     // so be conservative and assume :-moz-only-whitespace (i.e., make
     // IsSignificantChild less likely to be true, and thus make us more
     // likely to restyle).
-    if (nsStyleUtil::IsSignificantChild(child, true, false)) {
+    if (nsStyleUtil::IsSignificantChild(child, false)) {
       return true;
     }
   }
@@ -404,7 +404,7 @@ RestyleManager::ContentRemoved(nsINode* aContainer,
       // so be conservative and assume :-moz-only-whitespace (i.e., make
       // IsSignificantChild less likely to be true, and thus make us more
       // likely to restyle).
-      if (nsStyleUtil::IsSignificantChild(child, true, false)) {
+      if (nsStyleUtil::IsSignificantChild(child, false)) {
         isEmpty = false;
         break;
       }
