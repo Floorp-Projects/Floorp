@@ -61,7 +61,8 @@ protected:
 };
 
 
-class nsJSURI : public mozilla::net::nsSimpleURI
+class nsJSURI final
+    : public mozilla::net::nsSimpleURI
 {
 public:
     using mozilla::net::nsSimpleURI::Read;
