@@ -40,7 +40,7 @@ public class TestRunnerActivity extends Activity {
         }
 
         @Override
-        public boolean onLoadUri(GeckoSession session, String uri, TargetWindow where) {
+        public boolean onLoadUri(GeckoSession session, String uri, int target) {
             // Allow Gecko to load all URIs
             return false;
         }
