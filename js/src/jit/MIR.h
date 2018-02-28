@@ -15168,8 +15168,6 @@ PropertyReadOnPrototypeNeedsTypeBarrier(IonBuilder* builder,
                                         TemporaryTypeSet* observed);
 bool PropertyReadIsIdempotent(CompilerConstraintList* constraints,
                               MDefinition* obj, PropertyName* name);
-void AddObjectsForPropertyRead(TempAllocator& tempAlloc, MDefinition* obj, PropertyName* name,
-                               TemporaryTypeSet* observed);
 bool CanWriteProperty(TempAllocator& alloc, CompilerConstraintList* constraints,
                       HeapTypeSetKey property, MDefinition* value,
                       MIRType implicitType = MIRType::None);
