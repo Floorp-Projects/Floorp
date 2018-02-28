@@ -25,6 +25,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/UniquePtr.h"
 #include "nsClassHashtable.h"
+#include "mozilla/Variant.h"
 
 class ProfilerMarker;
 
@@ -170,35 +171,42 @@ public:
   };
 
   struct FrameKey {
-    const nsCString mLocation;
-    const mozilla::Maybe<unsigned> mLine;
-    const mozilla::Maybe<unsigned> mCategory;
-    const mozilla::Maybe<JITAddress> mJITAddress;
-    const mozilla::Maybe<uint32_t> mJITDepth;
-
     explicit FrameKey(const char* aLocation)
-     : mLocation(aLocation)
+      : mData(NormalFrameData{
+                nsCString(aLocation), mozilla::Nothing(), mozilla::Nothing() })
     {
     }
 
     FrameKey(const char* aLocation, const mozilla::Maybe<unsigned>& aLine,
              const mozilla::Maybe<unsigned>& aCategory)
-     : mLocation(aLocation)
-     , mLine(aLine)
-     , mCategory(aCategory)
+      : mData(NormalFrameData{ nsCString(aLocation), aLine, aCategory })
     {
     }
 
     FrameKey(const JITAddress& aJITAddress, uint32_t aJITDepth)
-     : mJITAddress(mozilla::Some(aJITAddress))
-     , mJITDepth(mozilla::Some(aJITDepth))
+      : mData(JITFrameData{ aJITAddress, aJITDepth })
     {
     }
 
     FrameKey(const FrameKey& aToCopy) = default;
 
     uint32_t Hash() const;
-    bool operator==(const FrameKey& aOther) const;
+    bool operator==(const FrameKey& aOther) const { return mData == aOther.mData; }
+
+    struct NormalFrameData {
+      bool operator==(const NormalFrameData& aOther) const;
+
+      nsCString mLocation;
+      mozilla::Maybe<unsigned> mLine;
+      mozilla::Maybe<unsigned> mCategory;
+    };
+    struct JITFrameData {
+      bool operator==(const JITFrameData& aOther) const;
+
+      JITAddress mAddress;
+      uint32_t mDepth;
+    };
+    mozilla::Variant<NormalFrameData, JITFrameData> mData;
   };
 
   struct StackKey {
