@@ -30,8 +30,11 @@ define_matrix! {
 
 impl<T: fmt::Debug, U> fmt::Debug for TypedSideOffsets2D<T, U> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "({:?},{:?},{:?},{:?})",
-               self.top, self.right, self.bottom, self.left)
+        write!(
+            f,
+            "({:?},{:?},{:?},{:?})",
+            self.top, self.right, self.bottom, self.left
+        )
     }
 }
 
@@ -51,24 +54,34 @@ impl<T: Copy, U> TypedSideOffsets2D<T, U> {
     }
 
     /// Constructor taking a typed Length for each side.
-    pub fn from_lengths(top: Length<T, U>,
-                        right: Length<T, U>,
-                        bottom: Length<T, U>,
-                        left: Length<T, U>) -> Self {
+    pub fn from_lengths(
+        top: Length<T, U>,
+        right: Length<T, U>,
+        bottom: Length<T, U>,
+        left: Length<T, U>,
+    ) -> Self {
         TypedSideOffsets2D::new(top.0, right.0, bottom.0, left.0)
     }
 
     /// Access self.top as a typed Length instead of a scalar value.
-    pub fn top_typed(&self) -> Length<T, U> { Length::new(self.top) }
+    pub fn top_typed(&self) -> Length<T, U> {
+        Length::new(self.top)
+    }
 
     /// Access self.right as a typed Length instead of a scalar value.
-    pub fn right_typed(&self) -> Length<T, U> { Length::new(self.right) }
+    pub fn right_typed(&self) -> Length<T, U> {
+        Length::new(self.right)
+    }
 
     /// Access self.bottom as a typed Length instead of a scalar value.
-    pub fn bottom_typed(&self) -> Length<T, U> { Length::new(self.bottom) }
+    pub fn bottom_typed(&self) -> Length<T, U> {
+        Length::new(self.bottom)
+    }
 
     /// Access self.left as a typed Length instead of a scalar value.
-    pub fn left_typed(&self) -> Length<T, U> { Length::new(self.left) }
+    pub fn left_typed(&self) -> Length<T, U> {
+        Length::new(self.left)
+    }
 
     /// Constructor setting the same value to all sides, taking a scalar value directly.
     pub fn new_all_same(all: T) -> Self {
@@ -81,7 +94,10 @@ impl<T: Copy, U> TypedSideOffsets2D<T, U> {
     }
 }
 
-impl<T, U> TypedSideOffsets2D<T, U> where T: Add<T, Output=T> + Copy {
+impl<T, U> TypedSideOffsets2D<T, U>
+where
+    T: Add<T, Output = T> + Copy,
+{
     pub fn horizontal(&self) -> T {
         self.left + self.right
     }
@@ -99,7 +115,10 @@ impl<T, U> TypedSideOffsets2D<T, U> where T: Add<T, Output=T> + Copy {
     }
 }
 
-impl<T, U> Add for TypedSideOffsets2D<T, U> where T : Copy + Add<T, Output=T> {
+impl<T, U> Add for TypedSideOffsets2D<T, U>
+where
+    T: Copy + Add<T, Output = T>,
+{
     type Output = Self;
     fn add(self, other: Self) -> Self {
         TypedSideOffsets2D::new(
@@ -114,162 +133,6 @@ impl<T, U> Add for TypedSideOffsets2D<T, U> where T : Copy + Add<T, Output=T> {
 impl<T: Copy + Zero, U> TypedSideOffsets2D<T, U> {
     /// Constructor, setting all sides to zero.
     pub fn zero() -> Self {
-        TypedSideOffsets2D::new(
-            Zero::zero(),
-            Zero::zero(),
-            Zero::zero(),
-            Zero::zero(),
-        )
-    }
-}
-
-/// A SIMD enabled version of TypedSideOffsets2D specialized for i32.
-#[cfg(feature = "unstable")]
-#[derive(Clone, Copy, PartialEq)]
-#[repr(simd)]
-pub struct SideOffsets2DSimdI32 {
-    pub top: i32,
-    pub bottom: i32,
-    pub right: i32,
-    pub left: i32,
-}
-
-#[cfg(feature = "unstable")]
-impl SideOffsets2DSimdI32 {
-    #[inline]
-    pub fn new(top: i32, right: i32, bottom: i32, left: i32) -> SideOffsets2DSimdI32 {
-        SideOffsets2DSimdI32 {
-            top: top,
-            bottom: bottom,
-            right: right,
-            left: left,
-        }
-    }
-}
-
-#[cfg(feature = "unstable")]
-impl SideOffsets2DSimdI32 {
-    #[inline]
-    pub fn new_all_same(all: i32) -> SideOffsets2DSimdI32 {
-        SideOffsets2DSimdI32::new(all.clone(), all.clone(), all.clone(), all.clone())
-    }
-}
-
-#[cfg(feature = "unstable")]
-impl SideOffsets2DSimdI32 {
-    #[inline]
-    pub fn horizontal(&self) -> i32 {
-        self.left + self.right
-    }
-
-    #[inline]
-    pub fn vertical(&self) -> i32 {
-        self.top + self.bottom
-    }
-}
-
-/*impl Add for SideOffsets2DSimdI32 {
-    type Output = SideOffsets2DSimdI32;
-    #[inline]
-    fn add(self, other: SideOffsets2DSimdI32) -> SideOffsets2DSimdI32 {
-        self + other // Use SIMD addition
-    }
-}*/
-
-#[cfg(feature = "unstable")]
-impl SideOffsets2DSimdI32 {
-    #[inline]
-    pub fn zero() -> SideOffsets2DSimdI32 {
-        SideOffsets2DSimdI32 {
-            top: 0,
-            bottom: 0,
-            right: 0,
-            left: 0,
-        }
-    }
-
-    #[cfg(not(target_arch = "x86_64"))]
-    #[inline]
-    pub fn is_zero(&self) -> bool {
-        self.top == 0 && self.right == 0 && self.bottom == 0 && self.left == 0
-    }
-
-    #[cfg(target_arch = "x86_64")]
-    #[inline]
-    pub fn is_zero(&self) -> bool {
-        let is_zero: bool;
-        unsafe {
-            asm! {
-                "ptest $1, $1
-                 setz $0"
-                : "=r"(is_zero)
-                : "x"(*self)
-                :
-                : "intel"
-            };
-        }
-        is_zero
-    }
-}
-
-#[cfg(feature = "unstable")]
-#[cfg(test)]
-mod tests {
-    use super::SideOffsets2DSimdI32;
-
-    #[test]
-    fn test_is_zero() {
-        assert!(SideOffsets2DSimdI32::new_all_same(0).is_zero());
-        assert!(!SideOffsets2DSimdI32::new_all_same(1).is_zero());
-        assert!(!SideOffsets2DSimdI32::new(1, 0, 0, 0).is_zero());
-        assert!(!SideOffsets2DSimdI32::new(0, 1, 0, 0).is_zero());
-        assert!(!SideOffsets2DSimdI32::new(0, 0, 1, 0).is_zero());
-        assert!(!SideOffsets2DSimdI32::new(0, 0, 0, 1).is_zero());
-    }
-}
-
-#[cfg(feature = "unstable")]
-#[cfg(bench)]
-mod bench {
-    use test::BenchHarness;
-    use std::num::Zero;
-    use rand::{XorShiftRng, Rng};
-    use super::SideOffsets2DSimdI32;
-
-    #[cfg(target_arch = "x86")]
-    #[cfg(target_arch = "x86_64")]
-    #[bench]
-    fn bench_naive_is_zero(bh: &mut BenchHarness) {
-        fn is_zero(x: &SideOffsets2DSimdI32) -> bool {
-            x.top.is_zero() && x.right.is_zero() && x.bottom.is_zero() && x.left.is_zero()
-        }
-        let mut rng = XorShiftRng::new().unwrap();
-        bh.iter(|| is_zero(&rng.gen::<SideOffsets2DSimdI32>()))
-    }
-
-    #[bench]
-    fn bench_is_zero(bh: &mut BenchHarness) {
-        let mut rng = XorShiftRng::new().unwrap();
-        bh.iter(|| rng.gen::<SideOffsets2DSimdI32>().is_zero())
-    }
-
-    #[bench]
-    fn bench_naive_add(bh: &mut BenchHarness) {
-        fn add(x: &SideOffsets2DSimdI32, y: &SideOffsets2DSimdI32) -> SideOffsets2DSimdI32 {
-            SideOffsets2DSimdI32 {
-                top: x.top + y.top,
-                right: x.right + y.right,
-                bottom: x.bottom + y.bottom,
-                left: x.left + y.left,
-            }
-        }
-        let mut rng = XorShiftRng::new().unwrap();
-        bh.iter(|| add(&rng.gen::<SideOffsets2DSimdI32>(), &rng.gen::<SideOffsets2DSimdI32>()))
-    }
-
-    #[bench]
-    fn bench_add(bh: &mut BenchHarness) {
-        let mut rng = XorShiftRng::new().unwrap();
-        bh.iter(|| rng.gen::<SideOffsets2DSimdI32>() + rng.gen::<SideOffsets2DSimdI32>())
+        TypedSideOffsets2D::new(Zero::zero(), Zero::zero(), Zero::zero(), Zero::zero())
     }
 }
