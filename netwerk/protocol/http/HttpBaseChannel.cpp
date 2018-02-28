@@ -2893,6 +2893,12 @@ HttpBaseChannel::SetFetchCacheMode(uint32_t aFetchCacheMode)
 
   // Now, set the load flags that implement each cache mode.
   switch (aFetchCacheMode) {
+  case nsIHttpChannelInternal::FETCH_CACHE_MODE_DEFAULT:
+    // The "default" mode means to use the http cache normally and
+    // respect any http cache-control headers.  We effectively want
+    // to clear our cache related load flags.
+    SetCacheFlags(mLoadFlags, 0);
+    break;
   case nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_STORE:
     // no-store means don't consult the cache on the way to the network, and
     // don't store the response in the cache even if it's cacheable.
