@@ -7,6 +7,7 @@
 #include "GeckoTaskTracer.h"
 #include "GeckoTaskTracerImpl.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/ThreadLocal.h"
