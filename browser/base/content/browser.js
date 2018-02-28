@@ -3593,6 +3593,7 @@ var newTabButtonObserver = {
   async onDrop(aEvent) {
     let shiftKey = aEvent.shiftKey;
     let links = browserDragAndDrop.dropLinks(aEvent);
+    let triggeringPrincipal = browserDragAndDrop.getTriggeringPrincipal(aEvent);
 
     if (links.length >= Services.prefs.getIntPref("browser.tabs.maxOpenBeforeWarn")) {
       // Sync dialog cannot be used inside drop event handler.
@@ -3607,7 +3608,11 @@ var newTabButtonObserver = {
       if (link.url) {
         let data = await getShortcutOrURIAndPostData(link.url);
         // Allow third-party services to fixup this URL.
-        openNewTabWith(data.url, null, data.postData, shiftKey, true);
+        openNewTabWith(data.url, shiftKey, {
+          postData: data.postData,
+          allowThirdPartyFixup: true,
+          triggeringPrincipal,
+        });
       }
     }
   }
@@ -3620,6 +3625,7 @@ var newWindowButtonObserver = {
   onDragExit(aEvent) {},
   async onDrop(aEvent) {
     let links = browserDragAndDrop.dropLinks(aEvent);
+    let triggeringPrincipal = browserDragAndDrop.getTriggeringPrincipal(aEvent);
 
     if (links.length >= Services.prefs.getIntPref("browser.tabs.maxOpenBeforeWarn")) {
       // Sync dialog cannot be used inside drop event handler.
@@ -3634,7 +3640,11 @@ var newWindowButtonObserver = {
       if (link.url) {
         let data = await getShortcutOrURIAndPostData(link.url);
         // Allow third-party services to fixup this URL.
-        openNewWindowWith(data.url, null, data.postData, true);
+        openNewWindowWith(data.url, {
+          postData: data.postData,
+          allowThirdPartyFixup: true,
+          triggeringPrincipal,
+        });
       }
     }
   }
