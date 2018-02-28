@@ -228,6 +228,9 @@ MediaEngineWebRTCMicrophoneSource::Reconfigure(const RefPtr<AllocationHandle>& a
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aHandle);
+
+  LOG(("Mic source %p allocation %p Reconfigure()", this, aHandle.get()));
+
   NormalizedConstraints constraints(aConstraints);
   return ReevaluateAllocation(aHandle, &constraints, aPrefs, aDeviceId,
                               aOutBadConstraint);
@@ -569,6 +572,9 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
   MOZ_ASSERT(aOutHandle);
   auto handle = MakeRefPtr<AllocationHandle>(aConstraints, aPrincipalInfo,
                                              aPrefs, aDeviceId);
+
+  LOG(("Mic source %p allocation %p Allocate()", this, handle.get()));
+
   nsresult rv = ReevaluateAllocation(handle, nullptr, aPrefs, aDeviceId,
                                      aOutBadConstraint);
   if (NS_FAILED(rv)) {
@@ -593,6 +599,8 @@ MediaEngineWebRTCMicrophoneSource::Deallocate(const RefPtr<const AllocationHandl
   MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex);
   MOZ_DIAGNOSTIC_ASSERT(!mAllocations[i].mEnabled,
                         "Source should be stopped for the track before removing");
+
+  LOG(("Mic source %p allocation %p Deallocate()", this, aHandle.get()));
 
   if (mAllocations[i].mStream && IsTrackIDExplicit(mAllocations[i].mTrackID)) {
     mAllocations[i].mStream->EndTrack(mAllocations[i].mTrackID);
@@ -628,6 +636,9 @@ MediaEngineWebRTCMicrophoneSource::SetTrack(const RefPtr<const AllocationHandle>
   AssertIsOnOwningThread();
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(IsTrackIDExplicit(aTrackID));
+
+  LOG(("Mic source %p allocation %p SetTrack() stream=%p, track=%" PRId32,
+       this, aHandle.get(), aStream.get(), aTrackID));
 
   // Until we fix bug 1400488 we need to block a second tab (OuterWindow)
   // from opening an already-open device.  If it's the same tab, they
@@ -674,6 +685,8 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>& a
     return NS_ERROR_FAILURE;
   }
 
+  LOG(("Mic source %p allocation %p Start()", this, aHandle.get()));
+
   size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
   MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex,
                         "Can't start track that hasn't been added");
@@ -715,6 +728,8 @@ nsresult
 MediaEngineWebRTCMicrophoneSource::Stop(const RefPtr<const AllocationHandle>& aHandle)
 {
   AssertIsOnOwningThread();
+
+  LOG(("Mic source %p allocation %p Stop()", this, aHandle.get()));
 
   size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
   MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex,
@@ -765,8 +780,6 @@ MediaEngineWebRTCMicrophoneSource::Pull(const RefPtr<const AllocationHandle>& aH
                                         StreamTime aDesiredTime,
                                         const PrincipalHandle& aPrincipalHandle)
 {
-  LOG_FRAMES(("NotifyPull, desired = %" PRId64, (int64_t) aDesiredTime));
-
   StreamTime delta;
 
   {
@@ -797,6 +810,9 @@ MediaEngineWebRTCMicrophoneSource::Pull(const RefPtr<const AllocationHandle>& aH
                   mAllocations[i].mHandle.get(), -delta));
       return;
     }
+
+    LOG_FRAMES(("Pulling %" PRId64 " frames of silence for allocation %p",
+                delta, mAllocations[i].mHandle.get()));
 
     // This assertion fails when we append silence here in the same iteration
     // as there were real audio samples already appended by the audio callback.
@@ -1015,6 +1031,9 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
         continue;
       }
 
+      LOG_FRAMES(("Appending %" PRIu32 " frames of packetized audio for allocation %p",
+                  mPacketizerInput->PacketSize(), allocation.mHandle.get()));
+
 #ifdef DEBUG
       allocation.mLastCallbackAppendTime =
         allocation.mStream->GraphImpl()->IterationEnd();
@@ -1119,6 +1138,9 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
                                    aChannels,
                                    write_channels.Elements());
     }
+
+    LOG_FRAMES(("Appending %zu frames of raw audio for allocation %p",
+                aFrames, allocation.mHandle.get()));
 
     MOZ_ASSERT(aChannels == channels.Length());
     segment.AppendFrames(buffer.forget(), channels, aFrames,
