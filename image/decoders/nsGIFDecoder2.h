@@ -24,6 +24,8 @@ class nsGIFDecoder2 : public Decoder
 public:
   ~nsGIFDecoder2();
 
+  DecoderType GetType() const override { return DecoderType::GIF; }
+
 protected:
   LexerResult DoDecode(SourceBufferIterator& aIterator,
                        IResumable* aOnResume) override;

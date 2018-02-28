@@ -244,6 +244,11 @@ public:
     mIterator.emplace(Move(aIterator));
   }
 
+  SourceBuffer* GetSourceBuffer() const
+  {
+    return mIterator->Owner();
+  }
+
   /**
    * Should this decoder send partial invalidations?
    */
@@ -296,6 +301,12 @@ public:
   virtual bool IsValidICOResource() const
   {
     return false;
+  }
+
+  /// Type of decoder.
+  virtual DecoderType GetType() const
+  {
+    return DecoderType::UNKNOWN;
   }
 
   enum DecodeStyle {
