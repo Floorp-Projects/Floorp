@@ -2468,8 +2468,7 @@ Zone::prepareForCompacting()
 void
 GCRuntime::sweepTypesAfterCompacting(Zone* zone)
 {
-    FreeOp* fop = rt->defaultFreeOp();
-    zone->beginSweepTypes(fop, rt->gc.releaseObservedTypes && !zone->isPreservingCode());
+    zone->beginSweepTypes(rt->gc.releaseObservedTypes && !zone->isPreservingCode());
 
     AutoClearTypeInferenceStateOnOOM oom(zone);
 
@@ -2496,7 +2495,7 @@ GCRuntime::sweepZoneAfterCompacting(Zone* zone)
         jitZone->sweep();
 
     for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
-        c->objectGroups.sweep(fop);
+        c->objectGroups.sweep();
         c->sweepRegExps();
         c->sweepSavedStacks();
         c->sweepVarNames();
@@ -5363,7 +5362,7 @@ static void
 SweepObjectGroups(JSRuntime* runtime)
 {
     for (SweepGroupCompartmentsIter c(runtime); !c.done(); c.next())
-        c->objectGroups.sweep(runtime->defaultFreeOp());
+        c->objectGroups.sweep();
 }
 
 static void
@@ -5518,7 +5517,7 @@ GCRuntime::sweepJitDataOnMainThread(FreeOp* fop)
         gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP_TYPES);
         gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::SWEEP_TYPES_BEGIN);
         for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next())
-            zone->beginSweepTypes(fop, releaseObservedTypes && !zone->isPreservingCode());
+            zone->beginSweepTypes(releaseObservedTypes && !zone->isPreservingCode());
     }
 }
 
@@ -8469,7 +8468,7 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt)
         c->checkWrapperMapAfterMovingGC();
         c->checkScriptMapsAfterMovingGC();
         if (c->debugEnvs)
-            c->debugEnvs->checkHashTablesAfterMovingGC(rt);
+            c->debugEnvs->checkHashTablesAfterMovingGC();
     }
 }
 #endif
