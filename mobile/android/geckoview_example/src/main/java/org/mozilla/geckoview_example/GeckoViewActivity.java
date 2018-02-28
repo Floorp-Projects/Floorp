@@ -348,9 +348,9 @@ public class GeckoViewActivity extends Activity {
         }
 
         @Override
-        public boolean onLoadUri(final GeckoSession session, final String uri,
-                                 final int target) {
-            Log.d(LOGTAG, "onLoadUri=" + uri + " where=" + target);
+        public boolean onLoadRequest(final GeckoSession session, final String uri,
+                                     final int target) {
+            Log.d(LOGTAG, "onLoadRequest=" + uri + " where=" + target);
             return false;
         }
 
