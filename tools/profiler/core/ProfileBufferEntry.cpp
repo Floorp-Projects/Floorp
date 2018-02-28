@@ -293,6 +293,52 @@ UniqueStacks::AppendFrame(const StackKey& aStack, const FrameKey& aFrame)
 }
 
 uint32_t
+JITFrameInfoForBufferRange::JITFrameKey::Hash() const
+{
+  uint32_t hash = 0;
+  hash = AddToHash(hash, mCanonicalAddress);
+  hash = AddToHash(hash, mDepth);
+  return hash;
+}
+
+bool
+JITFrameInfoForBufferRange::JITFrameKey::operator==(const JITFrameKey& aOther) const
+{
+  return mCanonicalAddress == aOther.mCanonicalAddress &&
+         mDepth == aOther.mDepth;
+}
+
+template<class KeyClass, class T> void
+CopyClassHashtable(nsClassHashtable<KeyClass, T>& aDest,
+                   const nsClassHashtable<KeyClass, T>& aSrc)
+{
+  for (auto iter = aSrc.ConstIter(); !iter.Done(); iter.Next()) {
+    const T& objRef = *iter.Data();
+    aDest.LookupOrAdd(iter.Key(), objRef);
+  }
+}
+
+JITFrameInfoForBufferRange
+JITFrameInfoForBufferRange::Clone() const
+{
+  nsClassHashtable<nsPtrHashKey<void>, nsTArray<JITFrameKey>> jitAddressToJITFramesMap;
+  nsClassHashtable<nsGenericHashKey<JITFrameKey>, nsCString> jitFrameToFrameJSONMap;
+  CopyClassHashtable(jitAddressToJITFramesMap, mJITAddressToJITFramesMap);
+  CopyClassHashtable(jitFrameToFrameJSONMap, mJITFrameToFrameJSONMap);
+  return JITFrameInfoForBufferRange{
+    mRangeStart, mRangeEnd,
+    Move(jitAddressToJITFramesMap), Move(jitFrameToFrameJSONMap) };
+}
+
+JITFrameInfo::JITFrameInfo(const JITFrameInfo& aOther)
+  : mUniqueStrings(MakeUnique<UniqueJSONStrings>(*aOther.mUniqueStrings))
+{
+  for (const JITFrameInfoForBufferRange& range : aOther.mRanges) {
+    mRanges.AppendElement(range.Clone());
+  }
+}
+
+uint32_t
 UniqueStacks::JITAddress::Hash() const
 {
   uint32_t hash = 0;
@@ -560,9 +606,10 @@ StreamJITFrameOptimizations(SpliceableJSONWriter& aWriter,
   aWriter.EndObject();
 }
 
-void
-UniqueStacks::StreamJITFrame(JSContext* aContext,
-                             const JS::ProfiledFrameHandle& aJITFrame)
+static void
+StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
+               UniqueJSONStrings& aUniqueStrings,
+               const JS::ProfiledFrameHandle& aJITFrame)
 {
   enum Schema : uint32_t {
     LOCATION = 0,
@@ -572,7 +619,7 @@ UniqueStacks::StreamJITFrame(JSContext* aContext,
     CATEGORY = 4
   };
 
-  AutoArraySchemaWriter writer(mFrameTableWriter, *mUniqueStrings);
+  AutoArraySchemaWriter writer(aWriter, aUniqueStrings);
 
   writer.StringElement(LOCATION, aJITFrame.label());
 
@@ -591,6 +638,76 @@ UniqueStacks::StreamJITFrame(JSContext* aContext,
                                     aJITFrame);
       });
   }
+}
+
+struct CStringWriteFunc : public JSONWriteFunc
+{
+  nsACString& mBuffer; // The struct must not outlive this buffer
+  explicit CStringWriteFunc(nsACString& aBuffer) : mBuffer(aBuffer) {}
+
+  void Write(const char* aStr) override
+  {
+    mBuffer.Append(aStr);
+  }
+};
+
+static nsCString
+JSONForJITFrame(JSContext* aContext, const JS::ProfiledFrameHandle& aJITFrame,
+                UniqueJSONStrings& aUniqueStrings)
+{
+  nsCString json;
+  SpliceableJSONWriter writer(MakeUnique<CStringWriteFunc>(json));
+  StreamJITFrame(aContext, writer, aUniqueStrings, aJITFrame);
+  return json;
+}
+
+void
+JITFrameInfo::AddInfoForRange(uint64_t aRangeStart, uint64_t aRangeEnd,
+                              JSContext* aCx,
+                              std::function<void(std::function<void(void*)>)> aJITAddressProvider)
+{
+  MOZ_RELEASE_ASSERT(aRangeStart < aRangeEnd, "Range must be non-empty");
+
+  if (!mRanges.IsEmpty()) {
+    const JITFrameInfoForBufferRange& prevRange = mRanges.LastElement();
+    MOZ_RELEASE_ASSERT(prevRange.mRangeEnd <= aRangeStart,
+                        "Ranges must be non-overlapping and added in-order.");
+  }
+
+  using JITFrameKey = JITFrameInfoForBufferRange::JITFrameKey;
+
+  nsClassHashtable<nsPtrHashKey<void>, nsTArray<JITFrameKey>> jitAddressToJITFrameMap;
+  nsClassHashtable<nsGenericHashKey<JITFrameKey>, nsCString> jitFrameToFrameJSONMap;
+
+  aJITAddressProvider([&](void* aJITAddress) {
+    // Make sure that we have cached data for aJITAddress.
+    if (!jitAddressToJITFrameMap.Contains(aJITAddress)) {
+      nsTArray<JITFrameKey>& jitFrameKeys =
+        *jitAddressToJITFrameMap.LookupOrAdd(aJITAddress);
+      for (JS::ProfiledFrameHandle handle : JS::GetProfiledFrames(aCx, aJITAddress)) {
+        uint32_t depth = jitFrameKeys.Length();
+        JITFrameKey jitFrameKey{ handle.canonicalAddress(), depth };
+        if (!jitFrameToFrameJSONMap.Contains(jitFrameKey)) {
+          nsCString& json = *jitFrameToFrameJSONMap.LookupOrAdd(jitFrameKey);
+          json = JSONForJITFrame(aCx, handle, *mUniqueStrings);
+        }
+        jitFrameKeys.AppendElement(jitFrameKey);
+      }
+    }
+  });
+
+  mRanges.AppendElement(JITFrameInfoForBufferRange{
+    aRangeStart, aRangeEnd,
+    Move(jitAddressToJITFrameMap), Move(jitFrameToFrameJSONMap)
+  });
+}
+
+// This method will go away in the next patch.
+void
+UniqueStacks::StreamJITFrame(JSContext* aContext,
+                             const JS::ProfiledFrameHandle& aJITFrame)
+{
+  ::StreamJITFrame(aContext, mFrameTableWriter, *mUniqueStrings, aJITFrame);
 }
 
 struct ProfileSample
@@ -966,6 +1083,49 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
 
   return haveSamples;
   #undef ERROR_AND_CONTINUE
+}
+
+void
+ProfileBuffer::AddJITInfoForRange(uint64_t aRangeStart,
+                                  int aThreadId, JSContext* aContext,
+                                  JITFrameInfo& aJITFrameInfo) const
+{
+  // We can only process JitReturnAddr entries if we have a JSContext.
+  MOZ_RELEASE_ASSERT(aContext);
+
+  aRangeStart = std::max(aRangeStart, mRangeStart);
+  aJITFrameInfo.AddInfoForRange(aRangeStart, mRangeEnd, aContext,
+    [&](std::function<void(void*)> aJITAddressConsumer) {
+      // Find all JitReturnAddr entries in the given range for the given thread,
+      // and call aJITAddressConsumer with those addresses.
+
+      EntryGetter e(*this, aRangeStart);
+      while (true) {
+        // Advance to the next ThreadId entry.
+        while (e.Has() && !e.Get().IsThreadId()) {
+          e.Next();
+        }
+        if (!e.Has()) {
+          break;
+        }
+
+        MOZ_ASSERT(e.Get().IsThreadId());
+        int threadId = e.Get().u.mInt;
+        e.Next();
+
+        // Ignore samples that are for a different thread.
+        if (threadId != aThreadId) {
+          continue;
+        }
+
+        while (e.Has() && !e.Get().IsThreadId()) {
+          if (e.Get().IsJitReturnAddr()) {
+            aJITAddressConsumer(e.Get().u.mPtr);
+          }
+          e.Next();
+        }
+      }
+    });
 }
 
 // This method returns true if it wrote anything to the writer.
