@@ -932,7 +932,7 @@ var gEditItemOverlay = {
 
     // default to the bookmarks menu folder
     if (!ip) {
-      ip = new InsertionPoint({
+      ip = new PlacesInsertionPoint({
         parentId: PlacesUtils.bookmarksMenuFolderId,
         parentGuid: PlacesUtils.bookmarks.menuGuid
       });

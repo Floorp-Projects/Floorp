@@ -56,7 +56,7 @@ async function run_drag_test(startBookmarkIndex, newParentGuid) {
     // Simulating a drag-drop with a tree view turns out to be really difficult
     // as you can't get a node for the source/target. Hence, we fake the
     // insertion point and drag data and call the function direct.
-    let ip = new InsertionPoint({
+    let ip = new PlacesInsertionPoint({
       isTag: true,
       tagName: TAG_NAME,
       orientation: Ci.nsITreeView.DROP_ON

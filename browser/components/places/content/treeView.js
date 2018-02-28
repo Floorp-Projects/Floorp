@@ -1470,7 +1470,7 @@ PlacesTreeView.prototype = {
         return null;
     }
 
-    return new InsertionPoint({
+    return new PlacesInsertionPoint({
       parentId: PlacesUtils.getConcreteItemId(container),
       parentGuid: PlacesUtils.getConcreteItemGuid(container),
       index, orientation, tagName, dropNearNode
