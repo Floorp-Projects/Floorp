@@ -13,14 +13,16 @@ use scale::TypedScale;
 use num::*;
 use point::TypedPoint2D;
 use vector::TypedVector2D;
+use side_offsets::TypedSideOffsets2D;
 use size::TypedSize2D;
 
 use num_traits::NumCast;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::cmp::PartialOrd;
 use std::fmt;
 use std::hash::{Hash, Hasher};
-use std::ops::{Add, Sub, Mul, Div};
+use std::ops::{Add, Div, Mul, Sub};
 
 /// A 2d Rectangle optionally tagged with a unit.
 #[repr(C)]
@@ -32,25 +34,28 @@ pub struct TypedRect<T, U = UnknownUnit> {
 /// The default rectangle type with no unit.
 pub type Rect<T> = TypedRect<T, UnknownUnit>;
 
+#[cfg(feature = "serde")]
 impl<'de, T: Copy + Deserialize<'de>, U> Deserialize<'de> for TypedRect<T, U> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         let (origin, size) = try!(Deserialize::deserialize(deserializer));
         Ok(TypedRect::new(origin, size))
     }
 }
 
+#[cfg(feature = "serde")]
 impl<T: Serialize, U> Serialize for TypedRect<T, U> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
+    where
+        S: Serializer,
     {
         (&self.origin, &self.size).serialize(serializer)
     }
 }
 
-impl<T: Hash, U> Hash for TypedRect<T, U>
-{
+impl<T: Hash, U> Hash for TypedRect<T, U> {
     fn hash<H: Hasher>(&self, h: &mut H) {
         self.origin.hash(h);
         self.size.hash(h);
@@ -60,7 +65,9 @@ impl<T: Hash, U> Hash for TypedRect<T, U>
 impl<T: Copy, U> Copy for TypedRect<T, U> {}
 
 impl<T: Copy, U> Clone for TypedRect<T, U> {
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 
 impl<T: PartialEq, U> PartialEq<TypedRect<T, U>> for TypedRect<T, U> {
@@ -72,7 +79,7 @@ impl<T: PartialEq, U> PartialEq<TypedRect<T, U>> for TypedRect<T, U> {
 impl<T: Eq, U> Eq for TypedRect<T, U> {}
 
 impl<T: fmt::Debug, U> fmt::Debug for TypedRect<T, U> {
-   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "TypedRect({:?} at {:?})", self.size, self.origin)
     }
 }
@@ -94,13 +101,15 @@ impl<T, U> TypedRect<T, U> {
 }
 
 impl<T, U> TypedRect<T, U>
-where T: Copy + Clone + Zero + PartialOrd + PartialEq + Add<T, Output=T> + Sub<T, Output=T> {
+where
+    T: Copy + Clone + Zero + PartialOrd + PartialEq + Add<T, Output = T> + Sub<T, Output = T>,
+{
     #[inline]
     pub fn intersects(&self, other: &Self) -> bool {
-        self.origin.x < other.origin.x + other.size.width &&
-       other.origin.x <  self.origin.x + self.size.width &&
-        self.origin.y < other.origin.y + other.size.height &&
-       other.origin.y <  self.origin.y + self.size.height
+        self.origin.x < other.origin.x + other.size.width
+            && other.origin.x < self.origin.x + self.size.width
+            && self.origin.y < other.origin.y + other.size.height
+            && other.origin.y < self.origin.y + self.size.height
     }
 
     #[inline]
@@ -149,13 +158,17 @@ where T: Copy + Clone + Zero + PartialOrd + PartialEq + Add<T, Output=T> + Sub<T
             return None;
         }
 
-        let upper_left = TypedPoint2D::new(max(self.min_x(), other.min_x()),
-                                      max(self.min_y(), other.min_y()));
+        let upper_left = TypedPoint2D::new(
+            max(self.min_x(), other.min_x()),
+            max(self.min_y(), other.min_y()),
+        );
         let lower_right_x = min(self.max_x(), other.max_x());
         let lower_right_y = min(self.max_y(), other.max_y());
 
-        Some(TypedRect::new(upper_left, TypedSize2D::new(lower_right_x - upper_left.x,
-                                                    lower_right_y - upper_left.y)))
+        Some(TypedRect::new(
+            upper_left,
+            TypedSize2D::new(lower_right_x - upper_left.x, lower_right_y - upper_left.y),
+        ))
     }
 
     /// Returns the same rectangle, translated by a vector.
@@ -170,8 +183,8 @@ where T: Copy + Clone + Zero + PartialOrd + PartialEq + Add<T, Output=T> + Sub<T
     /// are on the right or bottom edge.
     #[inline]
     pub fn contains(&self, other: &TypedPoint2D<T, U>) -> bool {
-        self.origin.x <= other.x && other.x < self.origin.x + self.size.width &&
-        self.origin.y <= other.y && other.y < self.origin.y + self.size.height
+        self.origin.x <= other.x && other.x < self.origin.x + self.size.width
+            && self.origin.y <= other.y && other.y < self.origin.y + self.size.height
     }
 
     /// Returns true if this rectangle contains the interior of rect. Always
@@ -179,9 +192,9 @@ where T: Copy + Clone + Zero + PartialOrd + PartialEq + Add<T, Output=T> + Sub<T
     /// nonempty but this rectangle is empty.
     #[inline]
     pub fn contains_rect(&self, rect: &Self) -> bool {
-        rect.is_empty() ||
-            (self.min_x() <= rect.min_x() && rect.max_x() <= self.max_x() &&
-             self.min_y() <= rect.min_y() && rect.max_y() <= self.max_y())
+        rect.is_empty()
+            || (self.min_x() <= rect.min_x() && rect.max_x() <= self.max_x()
+                && self.min_y() <= rect.min_y() && rect.max_y() <= self.max_y())
     }
 
     #[inline]
@@ -189,7 +202,10 @@ where T: Copy + Clone + Zero + PartialOrd + PartialEq + Add<T, Output=T> + Sub<T
     pub fn inflate(&self, width: T, height: T) -> Self {
         TypedRect::new(
             TypedPoint2D::new(self.origin.x - width, self.origin.y - height),
-            TypedSize2D::new(self.size.width + width + width, self.size.height + height + height),
+            TypedSize2D::new(
+                self.size.width + width + width,
+                self.size.height + height + height,
+            ),
         )
     }
 
@@ -220,14 +236,68 @@ where T: Copy + Clone + Zero + PartialOrd + PartialEq + Add<T, Output=T> + Sub<T
         self.translate(&size.to_vector())
     }
 
-    /// Returns the smallest rectangle containing the four points.
-    pub fn from_points(points: &[TypedPoint2D<T, U>]) -> Self {
-        if points.len() == 0 {
+    /// Calculate the size and position of an inner rectangle.
+    ///
+    /// Subtracts the side offsets from all sides. The horizontal and vertical
+    /// offsets must not be larger than the original side length.
+    pub fn inner_rect(&self, offsets: TypedSideOffsets2D<T, U>) -> Self {
+        let rect = TypedRect::new(
+            TypedPoint2D::new(
+                self.origin.x + offsets.left,
+                self.origin.y + offsets.top
+            ),
+            TypedSize2D::new(
+                self.size.width - offsets.horizontal(),
+                self.size.height - offsets.vertical()
+            )
+        );
+        debug_assert!(rect.size.width >= Zero::zero());
+        debug_assert!(rect.size.height >= Zero::zero());
+        rect
+    }
+
+    /// Calculate the size and position of an outer rectangle.
+    ///
+    /// Add the offsets to all sides. The expanded rectangle is returned.
+    pub fn outer_rect(&self, offsets: TypedSideOffsets2D<T, U>) -> Self {
+        TypedRect::new(
+            TypedPoint2D::new(
+                self.origin.x - offsets.left,
+                self.origin.y - offsets.top
+            ),
+            TypedSize2D::new(
+                self.size.width + offsets.horizontal(),
+                self.size.height + offsets.vertical()
+            )
+        )
+    }
+
+    /// Returns the smallest rectangle defined by the top/bottom/left/right-most
+    /// points provided as parameter.
+    ///
+    /// Note: This function has a behavior that can be surprising because
+    /// the right-most and bottom-most points are exactly on the edge
+    /// of the rectangle while the `contains` function is has exclusive
+    /// semantic on these edges. This means that the right-most and bottom-most
+    /// points provided to `from_points` will count as not contained by the rect.
+    /// This behavior may change in the future.
+    pub fn from_points<'a, I>(points: I) -> Self
+    where
+        U: 'a,
+        T: 'a,
+        I: IntoIterator<Item = &'a TypedPoint2D<T, U>>,
+    {
+        let mut points = points.into_iter();
+
+        let first = if let Some(first) = points.next() {
+            first
+        } else {
             return TypedRect::zero();
-        }
-        let (mut min_x, mut min_y) = (points[0].x, points[0].y);
+        };
+
+        let (mut min_x, mut min_y) = (first.x, first.y);
         let (mut max_x, mut max_y) = (min_x, min_y);
-        for point in &points[1..] {
+        for point in points {
             if point.x < min_x {
                 min_x = point.x
             }
@@ -241,14 +311,18 @@ where T: Copy + Clone + Zero + PartialOrd + PartialEq + Add<T, Output=T> + Sub<T
                 max_y = point.y
             }
         }
-        TypedRect::new(TypedPoint2D::new(min_x, min_y),
-                       TypedSize2D::new(max_x - min_x, max_y - min_y))
+        TypedRect::new(
+            TypedPoint2D::new(min_x, min_y),
+            TypedSize2D::new(max_x - min_x, max_y - min_y),
+        )
     }
 }
 
 impl<T, U> TypedRect<T, U>
-where T: Copy + One + Add<Output=T> + Sub<Output=T> + Mul<Output=T> {
-    /// Linearly interpolate between this rectangle and another rectange.
+where
+    T: Copy + One + Add<Output = T> + Sub<Output = T> + Mul<Output = T>,
+{
+    /// Linearly interpolate between this rectangle and another rectangle.
     ///
     /// `t` is expected to be between zero and one.
     #[inline]
@@ -261,7 +335,9 @@ where T: Copy + One + Add<Output=T> + Sub<Output=T> + Mul<Output=T> {
 }
 
 impl<T, U> TypedRect<T, U>
-where T: Copy + Clone + PartialOrd + Add<T, Output=T> + Sub<T, Output=T> + Zero {
+where
+    T: Copy + Clone + PartialOrd + Add<T, Output = T> + Sub<T, Output = T> + Zero,
+{
     #[inline]
     pub fn union(&self, other: &Self) -> Self {
         if self.size == Zero::zero() {
@@ -271,15 +347,17 @@ where T: Copy + Clone + PartialOrd + Add<T, Output=T> + Sub<T, Output=T> + Zero 
             return *self;
         }
 
-        let upper_left = TypedPoint2D::new(min(self.min_x(), other.min_x()),
-                                      min(self.min_y(), other.min_y()));
+        let upper_left = TypedPoint2D::new(
+            min(self.min_x(), other.min_x()),
+            min(self.min_y(), other.min_y()),
+        );
 
         let lower_right_x = max(self.max_x(), other.max_x());
         let lower_right_y = max(self.max_y(), other.max_y());
 
         TypedRect::new(
             upper_left,
-            TypedSize2D::new(lower_right_x - upper_left.x, lower_right_y - upper_left.y)
+            TypedSize2D::new(lower_right_x - upper_left.x, lower_right_y - upper_left.y),
         )
     }
 }
@@ -287,11 +365,12 @@ where T: Copy + Clone + PartialOrd + Add<T, Output=T> + Sub<T, Output=T> + Zero 
 impl<T, U> TypedRect<T, U> {
     #[inline]
     pub fn scale<S: Copy>(&self, x: S, y: S) -> Self
-        where T: Copy + Clone + Mul<S, Output=T>
+    where
+        T: Copy + Clone + Mul<S, Output = T>,
     {
         TypedRect::new(
             TypedPoint2D::new(self.origin.x * x, self.origin.y * y),
-            TypedSize2D::new(self.size.width * x, self.size.height * y)
+            TypedSize2D::new(self.size.width * x, self.size.height * y),
         )
     }
 }
@@ -299,10 +378,7 @@ impl<T, U> TypedRect<T, U> {
 impl<T: Copy + PartialEq + Zero, U> TypedRect<T, U> {
     /// Constructor, setting all sides to zero.
     pub fn zero() -> Self {
-        TypedRect::new(
-            TypedPoint2D::origin(),
-            TypedSize2D::zero(),
-        )
+        TypedRect::new(TypedPoint2D::origin(), TypedSize2D::zero())
     }
 
     /// Returns true if the size is zero, regardless of the origin's value.
@@ -311,16 +387,23 @@ impl<T: Copy + PartialEq + Zero, U> TypedRect<T, U> {
     }
 }
 
-
 pub fn min<T: Clone + PartialOrd>(x: T, y: T) -> T {
-    if x <= y { x } else { y }
+    if x <= y {
+        x
+    } else {
+        y
+    }
 }
 
 pub fn max<T: Clone + PartialOrd>(x: T, y: T) -> T {
-    if x >= y { x } else { y }
+    if x >= y {
+        x
+    } else {
+        y
+    }
 }
 
-impl<T: Copy + Mul<T, Output=T>, U> Mul<T> for TypedRect<T, U> {
+impl<T: Copy + Mul<T, Output = T>, U> Mul<T> for TypedRect<T, U> {
     type Output = Self;
     #[inline]
     fn mul(self, scale: T) -> Self {
@@ -328,7 +411,7 @@ impl<T: Copy + Mul<T, Output=T>, U> Mul<T> for TypedRect<T, U> {
     }
 }
 
-impl<T: Copy + Div<T, Output=T>, U> Div<T> for TypedRect<T, U> {
+impl<T: Copy + Div<T, Output = T>, U> Div<T> for TypedRect<T, U> {
     type Output = Self;
     #[inline]
     fn div(self, scale: T) -> Self {
@@ -336,7 +419,7 @@ impl<T: Copy + Div<T, Output=T>, U> Div<T> for TypedRect<T, U> {
     }
 }
 
-impl<T: Copy + Mul<T, Output=T>, U1, U2> Mul<TypedScale<T, U1, U2>> for TypedRect<T, U1> {
+impl<T: Copy + Mul<T, Output = T>, U1, U2> Mul<TypedScale<T, U1, U2>> for TypedRect<T, U1> {
     type Output = TypedRect<T, U2>;
     #[inline]
     fn mul(self, scale: TypedScale<T, U1, U2>) -> TypedRect<T, U2> {
@@ -344,7 +427,7 @@ impl<T: Copy + Mul<T, Output=T>, U1, U2> Mul<TypedScale<T, U1, U2>> for TypedRec
     }
 }
 
-impl<T: Copy + Div<T, Output=T>, U1, U2> Div<TypedScale<T, U1, U2>> for TypedRect<T, U2> {
+impl<T: Copy + Div<T, Output = T>, U1, U2> Div<TypedScale<T, U1, U2>> for TypedRect<T, U2> {
     type Output = TypedRect<T, U1>;
     #[inline]
     fn div(self, scale: TypedScale<T, U1, U2>) -> TypedRect<T, U1> {
@@ -360,7 +443,10 @@ impl<T: Copy, Unit> TypedRect<T, Unit> {
 
     /// Tag a unitless value with units.
     pub fn from_untyped(r: &Rect<T>) -> TypedRect<T, Unit> {
-        TypedRect::new(TypedPoint2D::from_untyped(&r.origin), TypedSize2D::from_untyped(&r.size))
+        TypedRect::new(
+            TypedPoint2D::from_untyped(&r.origin),
+            TypedSize2D::from_untyped(&r.size),
+        )
     }
 }
 
@@ -373,12 +459,12 @@ impl<T0: NumCast + Copy, Unit> TypedRect<T0, Unit> {
     pub fn cast<T1: NumCast + Copy>(&self) -> Option<TypedRect<T1, Unit>> {
         match (self.origin.cast(), self.size.cast()) {
             (Some(origin), Some(size)) => Some(TypedRect::new(origin, size)),
-            _ => None
+            _ => None,
         }
     }
 }
 
-impl<T: Floor + Ceil + Round + Add<T, Output=T> + Sub<T, Output=T>, U> TypedRect<T, U> {
+impl<T: Floor + Ceil + Round + Add<T, Output = T> + Sub<T, Output = T>, U> TypedRect<T, U> {
     /// Return a rectangle with edges rounded to integer coordinates, such that
     /// the returned rectangle has the same set of pixel centers as the original
     /// one.
@@ -463,6 +549,7 @@ pub fn rect<T: Copy, U>(x: T, y: T, w: T, h: T) -> TypedRect<T, U> {
 mod tests {
     use point::Point2D;
     use vector::vec2;
+    use side_offsets::SideOffsets2D;
     use size::Size2D;
     use super::*;
 
@@ -478,16 +565,15 @@ mod tests {
     #[test]
     fn test_translate() {
         let p = Rect::new(Point2D::new(0u32, 0u32), Size2D::new(50u32, 40u32));
-        let pp = p.translate(&vec2(10,15));
+        let pp = p.translate(&vec2(10, 15));
 
         assert!(pp.size.width == 50);
         assert!(pp.size.height == 40);
         assert!(pp.origin.x == 10);
         assert!(pp.origin.y == 15);
 
-
         let r = Rect::new(Point2D::new(-10, -5), Size2D::new(50, 40));
-        let rr = r.translate(&vec2(0,-10));
+        let rr = r.translate(&vec2(0, -10));
 
         assert!(rr.size.width == 50);
         assert!(rr.size.height == 40);
@@ -498,16 +584,15 @@ mod tests {
     #[test]
     fn test_translate_by_size() {
         let p = Rect::new(Point2D::new(0u32, 0u32), Size2D::new(50u32, 40u32));
-        let pp = p.translate_by_size(&Size2D::new(10,15));
+        let pp = p.translate_by_size(&Size2D::new(10, 15));
 
         assert!(pp.size.width == 50);
         assert!(pp.size.height == 40);
         assert!(pp.origin.x == 10);
         assert!(pp.origin.y == 15);
 
-
         let r = Rect::new(Point2D::new(-10, -5), Size2D::new(50, 40));
-        let rr = r.translate_by_size(&Size2D::new(0,-10));
+        let rr = r.translate_by_size(&Size2D::new(0, -10));
 
         assert!(rr.size.width == 50);
         assert!(rr.size.height == 40);
@@ -518,7 +603,7 @@ mod tests {
     #[test]
     fn test_union() {
         let p = Rect::new(Point2D::new(0, 0), Size2D::new(50, 40));
-        let q = Rect::new(Point2D::new(20,20), Size2D::new(5, 5));
+        let q = Rect::new(Point2D::new(20, 20), Size2D::new(5, 5));
         let r = Rect::new(Point2D::new(-15, -30), Size2D::new(200, 15));
         let s = Rect::new(Point2D::new(20, -15), Size2D::new(250, 200));
 
@@ -533,7 +618,6 @@ mod tests {
         let ps = p.union(&s);
         assert!(ps.origin == Point2D::new(0, -15));
         assert!(ps.size == Size2D::new(270, 200));
-
     }
 
     #[test]
@@ -590,10 +674,10 @@ mod tests {
 
         let r = Rect::new(Point2D::new(-20.0, 15.0), Size2D::new(100.0, 200.0));
         assert!(r.contains_rect(&r));
-        assert!(!r.contains_rect(&r.translate(&vec2( 0.1,  0.0))));
-        assert!(!r.contains_rect(&r.translate(&vec2(-0.1,  0.0))));
-        assert!(!r.contains_rect(&r.translate(&vec2( 0.0,  0.1))));
-        assert!(!r.contains_rect(&r.translate(&vec2( 0.0, -0.1))));
+        assert!(!r.contains_rect(&r.translate(&vec2(0.1, 0.0))));
+        assert!(!r.contains_rect(&r.translate(&vec2(-0.1, 0.0))));
+        assert!(!r.contains_rect(&r.translate(&vec2(0.0, 0.1))));
+        assert!(!r.contains_rect(&r.translate(&vec2(0.0, -0.1))));
         // Empty rectangles are always considered as contained in other rectangles,
         // even if their origin is not.
         let p = Point2D::new(1.0, 1.0);
@@ -637,6 +721,18 @@ mod tests {
         assert!(rr.size.height == 10);
         assert!(rr.origin.x == 2);
         assert!(rr.origin.y == 5);
+    }
+
+    #[test]
+    fn test_inner_outer_rect() {
+        let inner_rect: Rect<i32> = Rect::new(Point2D::new(20, 40), Size2D::new(80, 100));
+        let offsets = SideOffsets2D::new(20, 10, 10, 10);
+        let outer_rect = inner_rect.outer_rect(offsets);
+        assert_eq!(outer_rect.origin.x, 10);
+        assert_eq!(outer_rect.origin.y, 20);
+        assert_eq!(outer_rect.size.width, 100);
+        assert_eq!(outer_rect.size.height, 130);
+        assert_eq!(outer_rect.inner_rect(offsets), inner_rect);
     }
 
     #[test]

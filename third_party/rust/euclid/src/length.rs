@@ -13,10 +13,11 @@ use num::Zero;
 
 use num_traits::{NumCast, Saturating};
 use num::One;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::cmp::Ordering;
-use std::ops::{Add, Sub, Mul, Div, Neg};
-use std::ops::{AddAssign, SubAssign, MulAssign, DivAssign};
+use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
 use std::marker::PhantomData;
 use std::fmt;
 
@@ -42,15 +43,31 @@ impl<T: Clone, Unit> Clone for Length<T, Unit> {
 
 impl<T: Copy, Unit> Copy for Length<T, Unit> {}
 
-impl<'de, Unit, T> Deserialize<'de> for Length<T, Unit> where T: Deserialize<'de> {
+#[cfg(feature = "serde")]
+impl<'de, Unit, T> Deserialize<'de> for Length<T, Unit>
+where
+    T: Deserialize<'de>,
+{
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-                      where D: Deserializer<'de> {
-        Ok(Length(try!(Deserialize::deserialize(deserializer)), PhantomData))
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(Length(
+            try!(Deserialize::deserialize(deserializer)),
+            PhantomData,
+        ))
     }
 }
 
-impl<T, Unit> Serialize for Length<T, Unit> where T: Serialize {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+#[cfg(feature = "serde")]
+impl<T, Unit> Serialize for Length<T, Unit>
+where
+    T: Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         self.0.serialize(serializer)
     }
 }
@@ -80,7 +97,7 @@ impl<T: fmt::Display + Clone, U> fmt::Display for Length<T, U> {
 }
 
 // length + length
-impl<U, T: Clone + Add<T, Output=T>> Add for Length<T, U> {
+impl<U, T: Clone + Add<T, Output = T>> Add for Length<T, U> {
     type Output = Length<T, U>;
     fn add(self, other: Length<T, U>) -> Length<T, U> {
         Length::new(self.get() + other.get())
@@ -95,7 +112,7 @@ impl<U, T: Clone + AddAssign<T>> AddAssign for Length<T, U> {
 }
 
 // length - length
-impl<U, T: Clone + Sub<T, Output=T>> Sub<Length<T, U>> for Length<T, U> {
+impl<U, T: Clone + Sub<T, Output = T>> Sub<Length<T, U>> for Length<T, U> {
     type Output = Length<T, U>;
     fn sub(self, other: Length<T, U>) -> <Self as Sub>::Output {
         Length::new(self.get() - other.get())
@@ -121,7 +138,7 @@ impl<U, T: Clone + Saturating> Saturating for Length<T, U> {
 }
 
 // length / length
-impl<Src, Dst, T: Clone + Div<T, Output=T>> Div<Length<T, Src>> for Length<T, Dst> {
+impl<Src, Dst, T: Clone + Div<T, Output = T>> Div<Length<T, Src>> for Length<T, Dst> {
     type Output = TypedScale<T, Src, Dst>;
     #[inline]
     fn div(self, other: Length<T, Src>) -> TypedScale<T, Src, Dst> {
@@ -130,7 +147,7 @@ impl<Src, Dst, T: Clone + Div<T, Output=T>> Div<Length<T, Src>> for Length<T, Ds
 }
 
 // length * scalar
-impl<T: Copy + Mul<T, Output=T>, U> Mul<T> for Length<T, U> {
+impl<T: Copy + Mul<T, Output = T>, U> Mul<T> for Length<T, U> {
     type Output = Self;
     #[inline]
     fn mul(self, scale: T) -> Self {
@@ -139,7 +156,7 @@ impl<T: Copy + Mul<T, Output=T>, U> Mul<T> for Length<T, U> {
 }
 
 // length *= scalar
-impl<T: Copy + Mul<T, Output=T>, U> MulAssign<T> for Length<T, U> {
+impl<T: Copy + Mul<T, Output = T>, U> MulAssign<T> for Length<T, U> {
     #[inline]
     fn mul_assign(&mut self, scale: T) {
         *self = *self * scale
@@ -147,7 +164,7 @@ impl<T: Copy + Mul<T, Output=T>, U> MulAssign<T> for Length<T, U> {
 }
 
 // length / scalar
-impl<T: Copy + Div<T, Output=T>, U> Div<T> for Length<T, U> {
+impl<T: Copy + Div<T, Output = T>, U> Div<T> for Length<T, U> {
     type Output = Self;
     #[inline]
     fn div(self, scale: T) -> Self {
@@ -156,7 +173,7 @@ impl<T: Copy + Div<T, Output=T>, U> Div<T> for Length<T, U> {
 }
 
 // length /= scalar
-impl<T: Copy + Div<T, Output=T>, U> DivAssign<T> for Length<T, U> {
+impl<T: Copy + Div<T, Output = T>, U> DivAssign<T> for Length<T, U> {
     #[inline]
     fn div_assign(&mut self, scale: T) {
         *self = *self / scale
@@ -164,7 +181,7 @@ impl<T: Copy + Div<T, Output=T>, U> DivAssign<T> for Length<T, U> {
 }
 
 // length * scaleFactor
-impl<Src, Dst, T: Clone + Mul<T, Output=T>> Mul<TypedScale<T, Src, Dst>> for Length<T, Src> {
+impl<Src, Dst, T: Clone + Mul<T, Output = T>> Mul<TypedScale<T, Src, Dst>> for Length<T, Src> {
     type Output = Length<T, Dst>;
     #[inline]
     fn mul(self, scale: TypedScale<T, Src, Dst>) -> Length<T, Dst> {
@@ -173,7 +190,7 @@ impl<Src, Dst, T: Clone + Mul<T, Output=T>> Mul<TypedScale<T, Src, Dst>> for Len
 }
 
 // length / scaleFactor
-impl<Src, Dst, T: Clone + Div<T, Output=T>> Div<TypedScale<T, Src, Dst>> for Length<T, Dst> {
+impl<Src, Dst, T: Clone + Div<T, Output = T>> Div<TypedScale<T, Src, Dst>> for Length<T, Dst> {
     type Output = Length<T, Src>;
     #[inline]
     fn div(self, scale: TypedScale<T, Src, Dst>) -> Length<T, Src> {
@@ -182,7 +199,7 @@ impl<Src, Dst, T: Clone + Div<T, Output=T>> Div<TypedScale<T, Src, Dst>> for Len
 }
 
 // -length
-impl <U, T:Clone + Neg<Output=T>> Neg for Length<T, U> {
+impl<U, T: Clone + Neg<Output = T>> Neg for Length<T, U> {
     type Output = Length<T, U>;
     #[inline]
     fn neg(self) -> Length<T, U> {
@@ -198,7 +215,9 @@ impl<Unit, T0: NumCast + Clone> Length<T0, Unit> {
 }
 
 impl<Unit, T: Clone + PartialEq> PartialEq for Length<T, Unit> {
-    fn eq(&self, other: &Self) -> bool { self.get().eq(&other.get()) }
+    fn eq(&self, other: &Self) -> bool {
+        self.get().eq(&other.get())
+    }
 }
 
 impl<Unit, T: Clone + PartialOrd> PartialOrd for Length<T, Unit> {
@@ -210,7 +229,9 @@ impl<Unit, T: Clone + PartialOrd> PartialOrd for Length<T, Unit> {
 impl<Unit, T: Clone + Eq> Eq for Length<T, Unit> {}
 
 impl<Unit, T: Clone + Ord> Ord for Length<T, Unit> {
-    fn cmp(&self, other: &Self) -> Ordering { self.get().cmp(&other.get()) }
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.get().cmp(&other.get())
+    }
 }
 
 impl<Unit, T: Zero> Zero for Length<T, Unit> {
@@ -220,7 +241,9 @@ impl<Unit, T: Zero> Zero for Length<T, Unit> {
 }
 
 impl<T, U> Length<T, U>
-where T: Copy + One + Add<Output=T> + Sub<Output=T> + Mul<Output=T> {
+where
+    T: Copy + One + Add<Output = T> + Sub<Output = T> + Mul<Output = T>,
+{
     /// Linearly interpolate between this length and another length.
     ///
     /// `t` is expected to be between zero and one.
@@ -240,14 +263,26 @@ mod tests {
     use scale::TypedScale;
     use std::f32::INFINITY;
 
-    extern crate serde_test;
-    use self::serde_test::Token;
-    use self::serde_test::assert_tokens;
-
     enum Inch {}
     enum Mm {}
     enum Cm {}
     enum Second {}
+
+    #[cfg(feature = "serde")]
+    mod serde {
+        use super::*;
+
+        extern crate serde_test;
+        use self::serde_test::Token;
+        use self::serde_test::assert_tokens;
+
+        #[test]
+        fn test_length_serde() {
+            let one_cm: Length<f32, Mm> = Length::new(10.0);
+
+            assert_tokens(&one_cm, &[Token::F32(10.0)]);
+        }
+    }
 
     #[test]
     fn test_clone() {
@@ -263,13 +298,6 @@ mod tests {
     }
 
     #[test]
-    fn test_length_serde() {
-        let one_cm: Length<f32, Mm> = Length::new(10.0);
-
-        assert_tokens(&one_cm, &[Token::F32(10.0)]);
-    }
-
-    #[test]
     fn test_get_clones_length_value() {
         // Calling get returns a clone of the Length's value.
         // To test this, we need something clone-able - hence a vector.
@@ -280,26 +308,6 @@ mod tests {
 
         assert_eq!(value, vec![1, 2, 3]);
         assert_eq!(length.get(), vec![1, 2, 3, 4]);
-    }
-
-    #[test]
-    fn test_fmt_debug() {
-        // Debug and display format the value only.
-        let one_cm: Length<f32, Mm> = Length::new(10.0);
-
-        let result = format!("{:?}", one_cm);
-
-        assert_eq!(result, "10");
-    }
-
-    #[test]
-    fn test_fmt_display() {
-        // Debug and display format the value only.
-        let one_cm: Length<f32, Mm> = Length::new(10.0);
-
-        let result = format!("{}", one_cm);
-
-        assert_eq!(result, "10");
     }
 
     #[test]

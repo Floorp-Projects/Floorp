@@ -31,7 +31,6 @@
 #include "nsIContent.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNode.h"
 #include "nsNameSpaceManager.h"
 #include "nsINode.h"
 #include "nsIPlaintextEditor.h"
@@ -1033,7 +1032,7 @@ TextEditRules::WillDeleteSelection(Selection* aSelection,
       mPasswordText.Cut(start, end-start);
     }
   } else {
-    nsCOMPtr<nsIDOMNode> startNode;
+    nsCOMPtr<nsINode> startNode;
     int32_t startOffset;
     nsresult rv =
       EditorBase::GetStartNodeAndOffset(aSelection, getter_AddRefs(startNode),

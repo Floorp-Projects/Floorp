@@ -25,7 +25,7 @@ function consoleOpened(hud) {
   hud.jsterm.once("variablesview-fetched", onOpen);
 }
 
-function onViewOpened(hud, event, view) {
+function onViewOpened(hud, view) {
   let doc = gBrowser.contentWindowAsCPOW.wrappedJSObject.document;
 
   findVariableViewProperties(view, [

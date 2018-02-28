@@ -8,6 +8,7 @@
 #define mozilla_ServoStyleSheet_h
 
 #include "mozilla/dom/SRIMetadata.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/StyleSheet.h"
@@ -19,10 +20,14 @@
 namespace mozilla {
 
 class ServoCSSRuleList;
+typedef MozPromise</* Dummy */ bool,
+                   /* Dummy */ bool,
+                   /* IsExclusive = */ true> StyleSheetParsePromise;
 
 namespace css {
 class Loader;
 class LoaderReusableStyleSheets;
+class SheetLoadData;
 }
 
 // -------------------------------
@@ -84,15 +89,31 @@ public:
 
   bool HasRules() const;
 
-  MOZ_MUST_USE nsresult
+  // Parses a stylesheet. The aLoadData argument corresponds to the
+  // SheetLoadData for this stylesheet. It may be null in some cases.
+  RefPtr<StyleSheetParsePromise>
   ParseSheet(css::Loader* aLoader,
              Span<const uint8_t> aInput,
              nsIURI* aSheetURI,
              nsIURI* aBaseURI,
              nsIPrincipal* aSheetPrincipal,
+             css::SheetLoadData* aLoadData,
              uint32_t aLineNumber,
              nsCompatibility aCompatMode,
              css::LoaderReusableStyleSheets* aReusableSheets = nullptr);
+
+  // Similar to the above, but guarantees that parsing will be performed
+  // synchronously.
+  void
+  ParseSheetSync(css::Loader* aLoader,
+                 Span<const uint8_t> aInput,
+                 nsIURI* aSheetURI,
+                 nsIURI* aBaseURI,
+                 nsIPrincipal* aSheetPrincipal,
+                 css::SheetLoadData* aLoadData,
+                 uint32_t aLineNumber,
+                 nsCompatibility aCompatMode,
+                 css::LoaderReusableStyleSheets* aReusableSheets = nullptr);
 
   nsresult ReparseSheet(const nsAString& aInput);
 
@@ -154,6 +175,9 @@ private:
                   nsIDocument* aDocumentToUse,
                   nsINode* aOwningNodeToUse);
 
+  // Common tail routine for the synchronous and asynchronous parsing paths.
+  void FinishParse();
+
   void DropRuleList();
 
   // Take the recently cloned sheets from the `@import` rules, and reparent them
@@ -161,6 +185,8 @@ private:
   void BuildChildListAfterInnerClone();
 
   RefPtr<ServoCSSRuleList> mRuleList;
+
+  MozPromiseHolder<StyleSheetParsePromise> mParsePromise;
 
   friend class StyleSheet;
 };

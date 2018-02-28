@@ -195,31 +195,69 @@ ServoStyleSheet::HasRules() const
   return Servo_StyleSheet_HasRules(Inner()->mContents);
 }
 
-nsresult
+RefPtr<StyleSheetParsePromise>
 ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                             Span<const uint8_t> aInput,
                             nsIURI* aSheetURI,
                             nsIURI* aBaseURI,
                             nsIPrincipal* aSheetPrincipal,
+                            css::SheetLoadData* aLoadData,
                             uint32_t aLineNumber,
                             nsCompatibility aCompatMode,
                             css::LoaderReusableStyleSheets* aReusableSheets)
 {
+  MOZ_ASSERT(mParsePromise.IsEmpty());
+  RefPtr<StyleSheetParsePromise> p = mParsePromise.Ensure(__func__);
   MOZ_ASSERT(!mMedia || mMedia->IsServo());
-  RefPtr<URLExtraData> extraData =
-    new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal);
-
+  Inner()->mURLData = new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal); // RefPtr
   Inner()->mContents = Servo_StyleSheet_FromUTF8Bytes(aLoader,
                                                       this,
+                                                      aLoadData,
                                                       aInput.Elements(),
                                                       aInput.Length(),
                                                       mParsingMode,
-                                                      extraData,
+                                                      Inner()->mURLData,
+                                                      aLineNumber,
+                                                      aCompatMode,
+                                                      aReusableSheets)
+                         .Consume();
+  FinishParse();
+  mParsePromise.Resolve(true, __func__);
+  return Move(p);
+}
+
+void
+ServoStyleSheet::ParseSheetSync(css::Loader* aLoader,
+                                Span<const uint8_t> aInput,
+                                nsIURI* aSheetURI,
+                                nsIURI* aBaseURI,
+                                nsIPrincipal* aSheetPrincipal,
+                                css::SheetLoadData* aLoadData,
+                                uint32_t aLineNumber,
+                                nsCompatibility aCompatMode,
+                                css::LoaderReusableStyleSheets* aReusableSheets)
+{
+  MOZ_ASSERT(!mMedia || mMedia->IsServo());
+  Inner()->mURLData = new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal); // RefPtr
+
+  Inner()->mContents = Servo_StyleSheet_FromUTF8Bytes(aLoader,
+                                                      this,
+                                                      aLoadData,
+                                                      aInput.Elements(),
+                                                      aInput.Length(),
+                                                      mParsingMode,
+                                                      Inner()->mURLData,
                                                       aLineNumber,
                                                       aCompatMode,
                                                       aReusableSheets)
                          .Consume();
 
+  FinishParse();
+}
+
+void
+ServoStyleSheet::FinishParse()
+{
   nsString sourceMapURL;
   Servo_StyleSheet_GetSourceMapURL(Inner()->mContents, &sourceMapURL);
   SetSourceMapURLFromComment(sourceMapURL);
@@ -227,9 +265,6 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
   nsString sourceURL;
   Servo_StyleSheet_GetSourceURL(Inner()->mContents, &sourceURL);
   SetSourceURL(sourceURL);
-
-  Inner()->mURLData = extraData.forget();
-  return NS_OK;
 }
 
 nsresult
@@ -298,16 +333,16 @@ ServoStyleSheet::ReparseSheet(const nsAString& aInput)
 
   DropRuleList();
 
-  nsresult rv = ParseSheet(loader,
-                           NS_ConvertUTF16toUTF8(aInput),
-                           mInner->mSheetURI,
-                           mInner->mBaseURI,
-                           mInner->mPrincipal,
-                           lineNumber,
-                           eCompatibility_FullStandards,
-                           &reusableSheets);
+  ParseSheetSync(loader,
+                 NS_ConvertUTF16toUTF8(aInput),
+                 mInner->mSheetURI,
+                 mInner->mBaseURI,
+                 mInner->mPrincipal,
+                 /* aLoadData = */ nullptr,
+                 lineNumber,
+                 eCompatibility_FullStandards,
+                 &reusableSheets);
   DidDirty();
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Notify the stylesets about the new rules.
   {

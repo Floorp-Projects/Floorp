@@ -57,7 +57,7 @@ function consoleOpened(HUD) {
   });
 }
 
-function testVariablesView(aWebconsole, aEvent, aView) {
+function testVariablesView(aWebconsole, aView) {
   findVariableViewProperties(aView, [
     { name: "gen1", isGenerator: true },
     { name: "gen2", isGenerator: true },

@@ -23,7 +23,6 @@
 #include "nsError.h"
 #include "nsIContent.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNode.h"
 #include "nsISupportsImpl.h"
 #include "nsRange.h"
 #include "nsString.h"
@@ -39,24 +38,6 @@ WSRunObject::WSRunObject(HTMLEditor* aHTMLEditor,
                          nsINode* aNode,
                          int32_t aOffset)
   : mNode(aNode)
-  , mOffset(aOffset)
-  , mPRE(false)
-  , mStartOffset(0)
-  , mEndOffset(0)
-  , mFirstNBSPOffset(0)
-  , mLastNBSPOffset(0)
-  , mStartRun(nullptr)
-  , mEndRun(nullptr)
-  , mHTMLEditor(aHTMLEditor)
-{
-  GetWSNodes();
-  GetRuns();
-}
-
-WSRunObject::WSRunObject(HTMLEditor* aHTMLEditor,
-                         nsIDOMNode* aNode,
-                         int32_t aOffset)
-  : mNode(do_QueryInterface(aNode))
   , mOffset(aOffset)
   , mPRE(false)
   , mStartOffset(0)

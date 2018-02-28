@@ -38,11 +38,6 @@ class FontInspector {
     this.init();
   }
 
-  componentWillMount() {
-    this.store.dispatch(updatePreviewText(""));
-    this.update(false, "");
-  }
-
   init() {
     if (!this.inspector) {
       return;
@@ -67,6 +62,9 @@ class FontInspector {
 
     // Listen for theme changes as the color of the previews depend on the theme
     gDevTools.on("theme-switched", this.onThemeChanged);
+
+    this.store.dispatch(updatePreviewText(""));
+    this.update(false, "");
   }
 
   /**

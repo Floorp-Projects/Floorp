@@ -28,7 +28,7 @@ function testObjectInspectorPropertiesAreNotSet(variablesView) {
 }
 
 function* getVariablesView(hud) {
-  function openVariablesView(event, vview) {
+  function openVariablesView(vview) {
     deferred.resolve(vview._variablesView);
   }
 

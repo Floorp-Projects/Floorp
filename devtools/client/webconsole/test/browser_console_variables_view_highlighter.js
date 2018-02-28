@@ -40,7 +40,7 @@ function onQSAexecuted(msg) {
   );
 }
 
-function onNodeListViewFetched(event, variable) {
+function onNodeListViewFetched(variable) {
   gVariablesView = variable._variablesView;
   ok(gVariablesView, "variables view object");
 

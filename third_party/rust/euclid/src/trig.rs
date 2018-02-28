@@ -7,7 +7,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-
 /// Trait for basic trigonometry functions, so they can be used on generic numeric types
 pub trait Trig {
     fn sin(self) -> Self;
@@ -28,7 +27,7 @@ macro_rules! trig {
             #[inline]
             fn tan(self) -> $ty { self.tan() }
 
-            /// A slightly faster approximation of atan2.
+            /// A slightly faster approximation of `atan2`.
             ///
             /// Note that it does not deal with the case where both x and y are 0.
             #[inline]
@@ -68,4 +67,3 @@ macro_rules! trig {
 
 trig!(f32);
 trig!(f64);
-

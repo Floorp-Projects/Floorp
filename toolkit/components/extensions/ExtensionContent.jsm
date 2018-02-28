@@ -441,6 +441,20 @@ class Script {
             runSafeSyncWithoutClone(winUtils.addSheet, sheet, type);
           });
         }
+
+        // We're loading stylesheets via the stylesheet service, which means
+        // that the normal mechanism for blocking layout and onload for pending
+        // stylesheets aren't in effect (since there's no document to block). So
+        // we need to do something custom here, similar to what we do for
+        // scripts. Blocking parsing is overkill, since we really just want to
+        // block layout and onload. But we have an API to do the former and not
+        // the latter, so we do it that way. This hopefully isn't a performance
+        // problem since there are no network loads involved, and since we cache
+        // the stylesheets on first load. We should fix this up if it does becomes
+        // a problem.
+        if (this.css.length > 0) {
+          context.contentWindow.document.blockParsing(cssPromise, {blockScriptCreated: false});
+        }
       }
     }
 
