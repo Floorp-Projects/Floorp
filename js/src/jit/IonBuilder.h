@@ -36,6 +36,8 @@ enum class InlinableNative : uint16_t;
 BaselineFrameInspector*
 NewBaselineFrameInspector(TempAllocator* temp, BaselineFrame* frame, CompileInfo* info);
 
+using CallTargets = Vector<JSFunction*, 6, JitAllocPolicy>;
+
 class IonBuilder
   : public MIRGenerator,
     public mozilla::LinkedListElement<IonBuilder>
@@ -822,9 +824,11 @@ class IonBuilder
                                   BoolVector& choiceSet, MGetPropertyCache* maybeCache);
 
     // Inlining helpers.
-    AbortReasonOr<Ok> inlineGenericFallback(JSFunction* target, CallInfo& callInfo,
+    AbortReasonOr<Ok> inlineGenericFallback(const Maybe<CallTargets>& targets,
+                                            CallInfo& callInfo,
                                             MBasicBlock* dispatchBlock);
-    AbortReasonOr<Ok> inlineObjectGroupFallback(CallInfo& callInfo, MBasicBlock* dispatchBlock,
+    AbortReasonOr<Ok> inlineObjectGroupFallback(const Maybe<CallTargets>& targets,
+                                                CallInfo& callInfo, MBasicBlock* dispatchBlock,
                                                 MObjectGroupDispatch* dispatch,
                                                 MGetPropertyCache* cache,
                                                 MBasicBlock** fallbackTarget);
@@ -842,7 +846,8 @@ class IonBuilder
 
     bool testNeedsArgumentCheck(JSFunction* target, CallInfo& callInfo);
 
-    AbortReasonOr<MCall*> makeCallHelper(JSFunction* target, CallInfo& callInfo);
+    AbortReasonOr<MCall*> makeCallHelper(const Maybe<CallTargets>& targets, CallInfo& callInfo);
+    AbortReasonOr<Ok> makeCall(const Maybe<CallTargets>& targets, CallInfo& callInfo);
     AbortReasonOr<Ok> makeCall(JSFunction* target, CallInfo& callInfo);
 
     MDefinition* patchInlinedReturn(CallInfo& callInfo, MBasicBlock* exit, MBasicBlock* bottom);
