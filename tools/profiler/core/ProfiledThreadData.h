@@ -16,6 +16,23 @@
 #include "ProfileBuffer.h"
 #include "ThreadInfo.h"
 
+// Contains data for partial profiles that get saved when
+// ThreadInfo::FlushSamplesAndMarkers gets called.
+struct PartialThreadProfile final
+{
+  PartialThreadProfile(mozilla::UniquePtr<char[]>&& aSamplesJSON,
+                       mozilla::UniquePtr<char[]>&& aMarkersJSON,
+                       mozilla::UniquePtr<UniqueStacks>&& aUniqueStacks)
+    : mSamplesJSON(mozilla::Move(aSamplesJSON))
+    , mMarkersJSON(mozilla::Move(aMarkersJSON))
+    , mUniqueStacks(mozilla::Move(aUniqueStacks))
+  {}
+
+  mozilla::UniquePtr<char[]> mSamplesJSON;
+  mozilla::UniquePtr<char[]> mMarkersJSON;
+  mozilla::UniquePtr<UniqueStacks> mUniqueStacks;
+};
+
 // This class contains information about a thread that is only relevant while
 // the profiler is running, for any threads (both alive and dead) whose thread
 // name matches the "thread filter" in the current profiler run.
@@ -49,8 +66,6 @@ public:
   {
     mResponsiveness.reset();
     mLastSample = mozilla::Nothing();
-    MOZ_ASSERT(!mBufferPositionWhenReceivedJSContext,
-               "JSContext should have been cleared before the thread was unregistered");
     mUnregisterTime = TimeStamp::Now();
     mBufferPositionWhenUnregistered = mozilla::Some(aBufferPosition);
   }
@@ -63,6 +78,12 @@ public:
                   const mozilla::TimeStamp& aProcessStartTime,
                   double aSinceTime);
 
+  // Call this method when the JS entries inside the buffer are about to
+  // become invalid, i.e., just before JS shutdown.
+  void FlushSamplesAndMarkers(JSContext* aCx,
+                              const mozilla::TimeStamp& aProcessStartTime,
+                              ProfileBuffer& aBuffer);
+
   // Returns nullptr if this is not the main thread or if this thread is not
   // being profiled.
   ThreadResponsiveness* GetThreadResponsiveness()
@@ -73,17 +94,6 @@ public:
 
   const RefPtr<ThreadInfo> Info() const { return mThreadInfo; }
 
-  void NotifyReceivedJSContext(uint64_t aCurrentBufferPosition)
-  {
-    mBufferPositionWhenReceivedJSContext = mozilla::Some(aCurrentBufferPosition);
-  }
-
-  // Call this method when the JS entries inside the buffer are about to
-  // become invalid, i.e., just before JS shutdown.
-  void NotifyAboutToLoseJSContext(JSContext* aCx,
-                                  const TimeStamp& aProcessStartTime,
-                                  ProfileBuffer& aBuffer);
-
 private:
   // Group A:
   // The following fields are interesting for the entire lifetime of a
@@ -92,11 +102,11 @@ private:
   // This thread's thread info.
   const RefPtr<ThreadInfo> mThreadInfo;
 
-  // Contains JSON for JIT frames from any JSContexts that were used for this
-  // thread in the past.
-  // Null if this thread has never lost a JSContext or if all samples from
-  // previous JSContexts have been evicted from the profiler buffer.
-  UniquePtr<JITFrameInfo> mJITFrameInfoForPreviousJSContexts;
+  // JS frames in the buffer may require a live JSRuntime to stream (e.g.,
+  // stringifying JIT frames). In the case of JSRuntime destruction,
+  // FlushSamplesAndMarkers should be called to save them. These are spliced
+  // into the final stream.
+  UniquePtr<PartialThreadProfile> mPartialProfile;
 
   // Group B:
   // The following fields are only used while this thread is alive and
@@ -110,9 +120,6 @@ private:
   // recent sample for this thread, or Nothing() if there is no sample for this
   // thread in the buffer.
   mozilla::Maybe<uint64_t> mLastSample;
-
-  // Only non-Nothing() if the thread currently has a JSContext.
-  mozilla::Maybe<uint64_t> mBufferPositionWhenReceivedJSContext;
 
   // Group C:
   // The following fields are only used once this thread has been unregistered.
@@ -129,6 +136,9 @@ StreamSamplesAndMarkers(const char* aName, int aThreadId,
                         const TimeStamp& aRegisterTime,
                         const TimeStamp& aUnregisterTime,
                         double aSinceTime,
+                        JSContext* aContext,
+                        UniquePtr<char[]>&& aPartialSamplesJSON,
+                        UniquePtr<char[]>&& aPartialMarkersJSON,
                         UniqueStacks& aUniqueStacks);
 
 #endif  // ProfiledThreadData_h
