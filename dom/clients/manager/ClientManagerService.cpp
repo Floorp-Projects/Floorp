@@ -10,6 +10,7 @@
 #include "ClientNavigateOpParent.h"
 #include "ClientOpenWindowOpParent.h"
 #include "ClientOpenWindowUtils.h"
+#include "ClientPrincipalUtils.h"
 #include "ClientSourceParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -24,48 +25,12 @@ namespace mozilla {
 namespace dom {
 
 using mozilla::ipc::AssertIsOnBackgroundThread;
-using mozilla::ipc::ContentPrincipalInfo;
 using mozilla::ipc::PrincipalInfo;
 
 namespace {
 
 ClientManagerService* sClientManagerServiceInstance = nullptr;
 bool sClientManagerServiceShutdownRegistered = false;
-
-bool
-MatchPrincipalInfo(const PrincipalInfo& aLeft, const PrincipalInfo& aRight)
-{
-  if (aLeft.type() != aRight.type()) {
-    return false;
-  }
-
-  switch (aLeft.type()) {
-    case PrincipalInfo::TContentPrincipalInfo:
-    {
-      const ContentPrincipalInfo& leftContent = aLeft.get_ContentPrincipalInfo();
-      const ContentPrincipalInfo& rightContent = aRight.get_ContentPrincipalInfo();
-      return leftContent.attrs() == rightContent.attrs() &&
-             leftContent.originNoSuffix() == rightContent.originNoSuffix();
-    }
-    case PrincipalInfo::TSystemPrincipalInfo:
-    {
-      // system principal always matches
-      return true;
-    }
-    case PrincipalInfo::TNullPrincipalInfo:
-    {
-      // null principal never matches
-      return false;
-    }
-    default:
-    {
-      break;
-    }
-  }
-
-  // Clients (windows/workers) should never have an expanded principal type.
-  MOZ_CRASH("unexpected principal type!");
-}
 
 class ClientShutdownBlocker final : public nsIAsyncShutdownBlocker
 {
@@ -278,7 +243,7 @@ ClientManagerService::FindSource(const nsID& aID, const PrincipalInfo& aPrincipa
 
   ClientSourceParent* source = entry.Data();
   if (source->IsFrozen() ||
-      !MatchPrincipalInfo(source->Info().PrincipalInfo(), aPrincipalInfo)) {
+      !ClientMatchPrincipalInfo(source->Info().PrincipalInfo(), aPrincipalInfo)) {
     return nullptr;
   }
 
@@ -455,7 +420,7 @@ ClientManagerService::MatchAll(const ClientMatchAllArgs& aArgs)
       continue;
     }
 
-    if (!MatchPrincipalInfo(source->Info().PrincipalInfo(), principalInfo)) {
+    if (!ClientMatchPrincipalInfo(source->Info().PrincipalInfo(), principalInfo)) {
       continue;
     }
 
@@ -501,7 +466,7 @@ ClientManagerService::Claim(const ClientClaimArgs& aArgs)
       continue;
     }
 
-    if (!MatchPrincipalInfo(source->Info().PrincipalInfo(), principalInfo)) {
+    if (!ClientMatchPrincipalInfo(source->Info().PrincipalInfo(), principalInfo)) {
       continue;
     }
 
