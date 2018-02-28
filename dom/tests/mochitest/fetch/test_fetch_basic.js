@@ -113,6 +113,14 @@ function testRequestMozErrors() {
   });
 }
 
+function testViewSourceURL() {
+  var p2 = fetch('view-source:/').then(function(res) {
+    ok(false, "view-source: URL should fail");
+  }, function(e) {
+    ok(e instanceof TypeError, "view-source: URL should fail");
+  });
+}
+
 function runTest() {
   return Promise.resolve()
     .then(testAboutURL)
@@ -120,5 +128,7 @@ function runTest() {
     .then(testSameOriginBlobURL)
     .then(testNonGetBlobURL)
     .then(testMozErrors)
+    .then(testRequestMozErrors)
+    .then(testViewSourceURL)
     // Put more promise based tests here.
 }
