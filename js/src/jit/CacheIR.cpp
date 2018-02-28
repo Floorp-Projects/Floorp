@@ -229,7 +229,7 @@ GetPropIRGenerator::tryAttachStub()
                 return true;
             if (tryAttachDenseElementHole(obj, objId, index, indexId))
                 return true;
-            if (tryAttachArgumentsObjectArg(obj, objId, index, indexId))
+            if (tryAttachArgumentsObjectArg(obj, objId, indexId))
                 return true;
 
             trackAttached(IRGenerator::NotAttached);
@@ -1838,7 +1838,7 @@ GetPropIRGenerator::tryAttachMagicArgument(ValOperandId valId, ValOperandId inde
 
 bool
 GetPropIRGenerator::tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId objId,
-                                                uint32_t index, Int32OperandId indexId)
+                                                Int32OperandId indexId)
 {
     if (!obj->is<ArgumentsObject>() || obj->as<ArgumentsObject>().hasOverriddenElement())
         return false;
@@ -2548,7 +2548,7 @@ HasPropIRGenerator::tryAttachDenseHole(HandleObject obj, ObjOperandId objId,
 
 bool
 HasPropIRGenerator::tryAttachSparse(HandleObject obj, ObjOperandId objId,
-                                    uint32_t index, Int32OperandId indexId)
+                                    Int32OperandId indexId)
 {
     bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
@@ -2702,7 +2702,7 @@ HasPropIRGenerator::tryAttachUnboxedExpando(JSObject* obj, ObjOperandId objId,
 
 bool
 HasPropIRGenerator::tryAttachTypedArray(HandleObject obj, ObjOperandId objId,
-                                        uint32_t index, Int32OperandId indexId)
+                                        Int32OperandId indexId)
 {
     if (!obj->is<TypedArrayObject>() && !IsPrimitiveArrayTypedObject(obj))
         return false;
@@ -2851,9 +2851,9 @@ HasPropIRGenerator::tryAttachStub()
             return true;
         if (tryAttachDenseHole(obj, objId, index, indexId))
             return true;
-        if (tryAttachTypedArray(obj, objId, index, indexId))
+        if (tryAttachTypedArray(obj, objId, indexId))
             return true;
-        if (tryAttachSparse(obj, objId, index, indexId))
+        if (tryAttachSparse(obj, objId, indexId))
             return true;
 
         trackAttached(IRGenerator::NotAttached);
@@ -4250,7 +4250,7 @@ GetIteratorIRGenerator::tryAttachNativeIterator(ObjOperandId objId, HandleObject
 }
 
 CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, JSOp op,
-                                 ICCall_Fallback* stub, ICState::Mode mode, uint32_t argc,
+                                 ICState::Mode mode, uint32_t argc,
                                  HandleValue callee, HandleValue thisval, HandleValueArray args)
   : IRGenerator(cx, script, pc, CacheKind::Call, mode),
     op_(op),

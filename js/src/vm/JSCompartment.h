@@ -949,7 +949,7 @@ struct JSCompartment
     void sweepSavedStacks();
     void sweepGlobalObject();
     void sweepSelfHostingScriptSource();
-    void sweepJitCompartment(js::FreeOp* fop);
+    void sweepJitCompartment();
     void sweepRegExps();
     void sweepDebugEnvironments();
     void sweepNativeIterators();

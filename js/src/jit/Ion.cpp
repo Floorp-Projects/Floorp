@@ -672,7 +672,7 @@ JitRuntime::SweepJitcodeGlobalTable(JSRuntime* rt)
 }
 
 void
-JitCompartment::sweep(FreeOp* fop, JSCompartment* compartment)
+JitCompartment::sweep(JSCompartment* compartment)
 {
     // Any outstanding compilations should have been cancelled by the GC.
     MOZ_ASSERT(!HasOffThreadIonCompile(compartment));
@@ -697,7 +697,7 @@ JitCompartment::sweep(FreeOp* fop, JSCompartment* compartment)
 }
 
 void
-JitZone::sweep(FreeOp* fop)
+JitZone::sweep()
 {
     baselineCacheIRStubCodes_.sweep();
 }
@@ -1120,7 +1120,7 @@ IonScript::copyPatchableBackedges(JSContext* cx, JitCode* code,
 }
 
 void
-IonScript::copySafepointIndices(const SafepointIndex* si, MacroAssembler& masm)
+IonScript::copySafepointIndices(const SafepointIndex* si)
 {
     // Jumps in the caches reflect the offset of those jumps in the compiled
     // code, not the absolute positions of the jumps. Update according to the
@@ -1130,7 +1130,7 @@ IonScript::copySafepointIndices(const SafepointIndex* si, MacroAssembler& masm)
 }
 
 void
-IonScript::copyOsiIndices(const OsiIndex* oi, MacroAssembler& masm)
+IonScript::copyOsiIndices(const OsiIndex* oi)
 {
     memcpy(osiIndices(), oi, osiIndexEntries_ * sizeof(OsiIndex));
 }
@@ -1340,7 +1340,7 @@ namespace js {
 namespace jit {
 
 static void
-OptimizeSinCos(MIRGenerator *mir, MIRGraph &graph)
+OptimizeSinCos(MIRGraph &graph)
 {
     // Now, we are looking for:
     // var y = sin(x);
@@ -1784,7 +1784,7 @@ OptimizeMIR(MIRGenerator* mir)
 
     if (mir->optimizationInfo().sincosEnabled()) {
         AutoTraceLog log(logger, TraceLogger_Sincos);
-        OptimizeSinCos(mir, graph);
+        OptimizeSinCos(graph);
         gs.spewPass("Sincos optimization");
         AssertExtendedGraphCoherency(graph);
 
@@ -1816,7 +1816,7 @@ OptimizeMIR(MIRGenerator* mir)
 
     if (mir->optimizationInfo().instructionReorderingEnabled()) {
         AutoTraceLog log(logger, TraceLogger_ReorderInstructions);
-        if (!ReorderInstructions(mir, graph))
+        if (!ReorderInstructions(graph))
             return false;
         gs.spewPass("Reordering");
 
@@ -2171,7 +2171,7 @@ IonCompile(JSContext* cx, JSScript* script,
 
     BaselineFrameInspector* baselineFrameInspector = nullptr;
     if (baselineFrame) {
-        baselineFrameInspector = NewBaselineFrameInspector(temp, baselineFrame, info);
+        baselineFrameInspector = NewBaselineFrameInspector(temp, baselineFrame);
         if (!baselineFrameInspector)
             return AbortReason::Alloc;
     }
@@ -2322,7 +2322,7 @@ CheckFrame(JSContext* cx, BaselineFrame* frame)
 }
 
 static bool
-CheckScript(JSContext* cx, JSScript* script, bool osr)
+CheckScript(JSContext* cx, JSScript* script)
 {
     if (script->isForEval()) {
         // Eval frames are not yet supported. Supporting this will require new
@@ -2392,9 +2392,9 @@ CheckScriptSize(JSContext* cx, JSScript* script)
 }
 
 bool
-CanIonCompileScript(JSContext* cx, JSScript* script, bool osr)
+CanIonCompileScript(JSContext* cx, JSScript* script)
 {
-    if (!script->canIonCompile() || !CheckScript(cx, script, osr))
+    if (!script->canIonCompile() || !CheckScript(cx, script))
         return false;
 
     return CheckScriptSize(cx, script) == Method_Compiled;
@@ -2422,7 +2422,7 @@ Compile(JSContext* cx, HandleScript script, BaselineFrame* osrFrame, jsbytecode*
         return Method_Skipped;
     }
 
-    if (!CheckScript(cx, script, bool(osrPc))) {
+    if (!CheckScript(cx, script)) {
         JitSpew(JitSpew_IonAbort, "Aborted compilation of %s:%zu", script->filename(), script->lineno());
         return Method_CantCompile;
     }

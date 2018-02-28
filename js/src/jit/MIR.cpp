@@ -5239,8 +5239,7 @@ MArrayState::initFromTemplateObject(TempAllocator& alloc, MDefinition* undefined
 }
 
 MArrayState*
-MArrayState::New(TempAllocator& alloc, MDefinition* arr, MDefinition* undefinedVal,
-                 MDefinition* initLength)
+MArrayState::New(TempAllocator& alloc, MDefinition* arr, MDefinition* initLength)
 {
     MArrayState* res = new(alloc) MArrayState(arr);
     if (!res || !res->init(alloc, arr, initLength))
