@@ -247,12 +247,46 @@ nsRFPService::GetSpoofedUserAgent(nsACString &userAgent)
   // https://developer.mozilla.org/en-US/docs/Web/API/NavigatorID/userAgent
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
 
-  uint32_t spoofedVersion = 52;
+  nsresult rv;
+  nsCOMPtr<nsIXULAppInfo> appInfo =
+    do_GetService("@mozilla.org/xre/app-info;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString appVersion;
+  rv = appInfo->GetVersion(appVersion);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // The browser version will be spoofed as the last ESR version.
+  // By doing so, the anonymity group will cover more versions instead of one
+  // version.
+  uint32_t firefoxVersion = appVersion.ToInteger(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Starting from Firefox 10, Firefox ESR was released once every seven
+  // Firefox releases, e.g. Firefox 10, 17, 24, 31, and so on.
+  // We infer the last and closest ESR version based on this rule.
+  nsCOMPtr<nsIXULRuntime> runtime =
+    do_GetService("@mozilla.org/xre/runtime;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString updateChannel;
+  rv = runtime->GetDefaultUpdateChannel(updateChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If we are running in Firefox ESR, determine whether the formula of ESR
+  // version has changed.  Once changed, we must update the formula in this
+  // function.
+  if (updateChannel.EqualsLiteral("esr")) {
+    MOZ_ASSERT(((firefoxVersion % 7) == 3),
+      "Please udpate ESR version formula in nsRFPService.cpp");
+  }
+
+  uint32_t spoofedVersion = firefoxVersion - ((firefoxVersion - 3) % 7);
   userAgent.Assign(nsPrintfCString(
     "Mozilla/5.0 (%s; rv:%d.0) Gecko/%s Firefox/%d.0",
     SPOOFED_UA_OS, spoofedVersion, LEGACY_BUILD_ID, spoofedVersion));
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult
