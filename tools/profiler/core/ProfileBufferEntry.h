@@ -170,8 +170,6 @@ public:
   };
 
   struct FrameKey {
-    // This cannot be a std::string, as it is not memmove compatible, which
-    // is used by nsHashTable
     const nsCString mLocation;
     const mozilla::Maybe<unsigned> mLine;
     const mozilla::Maybe<unsigned> mCategory;
