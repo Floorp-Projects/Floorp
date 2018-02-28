@@ -4,7 +4,7 @@
 "use strict";
 
 add_task(async function test_policy_disable_shield() {
-  const { RecipeRunner } = ChromeUtils.import("resource://shield-recipe-client/lib/RecipeRunner.jsm", {});
+  const { RecipeRunner } = ChromeUtils.import("resource://normandy/lib/RecipeRunner.jsm", {});
 
   await SpecialPowers.pushPrefEnv({ set: [["extensions.shield-recipe-client.api_url",
                                             "https://localhost/selfsupport-dummy/"],
