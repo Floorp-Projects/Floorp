@@ -1000,12 +1000,9 @@ pref_SetPref(const char* aPrefName,
 static CallbackNode*
 pref_RemoveCallbackNode(CallbackNode* aNode, CallbackNode* aPrevNode)
 {
-  NS_PRECONDITION(!aPrevNode || aPrevNode->Next() == aNode, "invalid params");
-  NS_PRECONDITION(aPrevNode || gFirstCallback == aNode, "invalid params");
-
-  NS_ASSERTION(
-    !gCallbacksInProgress,
-    "modifying the callback list while gCallbacksInProgress is true");
+  MOZ_ASSERT(!aPrevNode || aPrevNode->Next() == aNode);
+  MOZ_ASSERT(aPrevNode || gFirstCallback == aNode);
+  MOZ_ASSERT(!gCallbacksInProgress);
 
   CallbackNode* next_node = aNode->Next();
   if (aPrevNode) {
@@ -2306,7 +2303,7 @@ nsPrefBranch::FreeObserverList()
 void
 nsPrefBranch::RemoveExpiredCallback(PrefCallback* aCallback)
 {
-  NS_PRECONDITION(aCallback->IsExpired(), "Callback should be expired.");
+  MOZ_ASSERT(aCallback->IsExpired());
   mObservers.Remove(aCallback);
 }
 
@@ -2342,7 +2339,7 @@ nsPrefBranch::GetDefaultFromPropertiesFile(const char* aPrefName,
 nsPrefBranch::PrefName
 nsPrefBranch::GetPrefName(const char* aPrefName) const
 {
-  NS_ASSERTION(aPrefName, "null pref name!");
+  MOZ_ASSERT(aPrefName);
 
   // For speed, avoid strcpy if we can.
   if (mPrefRoot.IsEmpty()) {
@@ -2544,7 +2541,7 @@ public:
     // Tell the safe output stream to overwrite the real prefs file.
     // (It'll abort if there were any errors during writing.)
     nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(outStream);
-    NS_ASSERTION(safeStream, "expected a safe output stream!");
+    MOZ_ASSERT(safeStream, "expected a safe output stream!");
     if (safeStream) {
       rv = safeStream->Finish();
     }
@@ -3041,8 +3038,7 @@ Preferences::~Preferences()
   delete gCacheData;
   gCacheData = nullptr;
 
-  NS_ASSERTION(!gCallbacksInProgress,
-               "~Preferences was called while gCallbacksInProgress is true!");
+  MOZ_ASSERT(!gCallbacksInProgress);
 
   CallbackNode* node = gFirstCallback;
   while (node) {
@@ -3666,7 +3662,7 @@ pref_LoadPrefsInDir(nsIFile* aDir,
 
     nsAutoCString leafName;
     prefFile->GetNativeLeafName(leafName);
-    NS_ASSERTION(
+    MOZ_ASSERT(
       !leafName.IsEmpty(),
       "Failure in default prefs: directory enumerator returned empty file?");
 
@@ -3985,7 +3981,7 @@ Preferences::InitInitialObjects()
 /* static */ nsresult
 Preferences::GetBool(const char* aPrefName, bool* aResult, PrefValueKind aKind)
 {
-  NS_PRECONDITION(aResult, "aResult must not be NULL");
+  MOZ_ASSERT(aResult);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
   Pref* pref = pref_HashTableLookup(aPrefName);
@@ -3997,7 +3993,7 @@ Preferences::GetInt(const char* aPrefName,
                     int32_t* aResult,
                     PrefValueKind aKind)
 {
-  NS_PRECONDITION(aResult, "aResult must not be NULL");
+  MOZ_ASSERT(aResult);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
   Pref* pref = pref_HashTableLookup(aPrefName);
@@ -4009,7 +4005,7 @@ Preferences::GetFloat(const char* aPrefName,
                       float* aResult,
                       PrefValueKind aKind)
 {
-  NS_PRECONDITION(aResult, "aResult must not be NULL");
+  MOZ_ASSERT(aResult);
 
   nsAutoCString result;
   nsresult rv = Preferences::GetCString(aPrefName, result, aKind);
@@ -4070,7 +4066,7 @@ Preferences::GetLocalizedString(const char* aPrefName,
                                           NS_GET_IID(nsIPrefLocalizedString),
                                           getter_AddRefs(prefLocalString));
   if (NS_SUCCEEDED(rv)) {
-    NS_ASSERTION(prefLocalString, "Succeeded but the result is NULL");
+    MOZ_ASSERT(prefLocalString, "Succeeded but the result is NULL");
     prefLocalString->GetData(aResult);
   }
   return rv;
@@ -4483,7 +4479,7 @@ BoolVarChanged(const char* aPref, void* aClosure)
 /* static */ nsresult
 Preferences::AddBoolVarCache(bool* aCache, const char* aPref, bool aDefault)
 {
-  NS_ASSERTION(aCache, "aCache must not be NULL");
+  MOZ_ASSERT(aCache);
 #ifdef DEBUG
   AssertNotAlreadyCached("bool", aPref, aCache);
 #endif
@@ -4515,7 +4511,7 @@ Preferences::AddAtomicBoolVarCache(Atomic<bool, Order>* aCache,
                                    const char* aPref,
                                    bool aDefault)
 {
-  NS_ASSERTION(aCache, "aCache must not be NULL");
+  MOZ_ASSERT(aCache);
 #ifdef DEBUG
   AssertNotAlreadyCached("bool", aPref, aCache);
 #endif
@@ -4545,7 +4541,7 @@ Preferences::AddIntVarCache(int32_t* aCache,
                             const char* aPref,
                             int32_t aDefault)
 {
-  NS_ASSERTION(aCache, "aCache must not be NULL");
+  MOZ_ASSERT(aCache);
 #ifdef DEBUG
   AssertNotAlreadyCached("int", aPref, aCache);
 #endif
@@ -4574,7 +4570,7 @@ Preferences::AddAtomicIntVarCache(Atomic<int32_t, Order>* aCache,
                                   const char* aPref,
                                   int32_t aDefault)
 {
-  NS_ASSERTION(aCache, "aCache must not be NULL");
+  MOZ_ASSERT(aCache);
 #ifdef DEBUG
   AssertNotAlreadyCached("int", aPref, aCache);
 #endif
@@ -4604,7 +4600,7 @@ Preferences::AddUintVarCache(uint32_t* aCache,
                              const char* aPref,
                              uint32_t aDefault)
 {
-  NS_ASSERTION(aCache, "aCache must not be NULL");
+  MOZ_ASSERT(aCache);
 #ifdef DEBUG
   AssertNotAlreadyCached("uint", aPref, aCache);
 #endif
@@ -4636,7 +4632,7 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
                                    const char* aPref,
                                    uint32_t aDefault)
 {
-  NS_ASSERTION(aCache, "aCache must not be NULL");
+  MOZ_ASSERT(aCache);
 #ifdef DEBUG
   AssertNotAlreadyCached("uint", aPref, aCache);
 #endif
@@ -4695,7 +4691,7 @@ FloatVarChanged(const char* aPref, void* aClosure)
 /* static */ nsresult
 Preferences::AddFloatVarCache(float* aCache, const char* aPref, float aDefault)
 {
-  NS_ASSERTION(aCache, "aCache must not be NULL");
+  MOZ_ASSERT(aCache);
 #ifdef DEBUG
   AssertNotAlreadyCached("float", aPref, aCache);
 #endif
