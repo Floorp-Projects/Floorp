@@ -50,6 +50,13 @@ public:
   // Maximum size of a frameKey string that we'll handle.
   static const size_t kMaxFrameKeyLength = 512;
 
+  // Add JIT frame information to aJITFrameInfo for any JitReturnAddr entries
+  // that are currently in the buffer at or after aRangeStart, in samples
+  // for the given thread.
+  void AddJITInfoForRange(uint64_t aRangeStart,
+                          int aThreadId, JSContext* aContext,
+                          JITFrameInfo& aJITFrameInfo) const;
+
   bool StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                            double aSinceTime, JSContext* cx,
                            UniqueStacks& aUniqueStacks) const;
