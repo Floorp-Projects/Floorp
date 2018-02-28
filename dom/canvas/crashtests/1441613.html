@@ -9,8 +9,11 @@ iframe.onload = function() {
   let ctx = canvas.getContext('2d');
   document.body.offsetTop;
   iframe.style.display = 'none';
-  ctx.font = '10px serif';
-  document.documentElement.className = "";
+  try {
+    ctx.font = '10px serif';
+  } finally {
+    document.documentElement.className = "";
+  }
 };
 </script>
 </html>
