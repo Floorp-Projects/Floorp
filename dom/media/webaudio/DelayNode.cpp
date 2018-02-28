@@ -37,9 +37,7 @@ public:
     , mDelay(0.f)
     // Use a smoothing range of 20ms
     , mBuffer(std::max(aMaxDelayTicks,
-                       static_cast<double>(WEBAUDIO_BLOCK_SIZE)),
-              WebAudioUtils::ComputeSmoothingRate(0.02,
-                                                  mDestination->SampleRate()))
+                       static_cast<double>(WEBAUDIO_BLOCK_SIZE)))
     , mMaxDelay(aMaxDelayTicks)
     , mHaveProducedBeforeInput(false)
     , mLeftOverData(INT32_MIN)

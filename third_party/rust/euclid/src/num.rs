@@ -10,13 +10,14 @@
 
 use num_traits;
 
-
 pub trait Zero {
     fn zero() -> Self;
 }
 
 impl<T: num_traits::Zero> Zero for T {
-    fn zero() -> T { num_traits::Zero::zero() }
+    fn zero() -> T {
+        num_traits::Zero::zero()
+    }
 }
 
 pub trait One {
@@ -24,13 +25,20 @@ pub trait One {
 }
 
 impl<T: num_traits::One> One for T {
-    fn one() -> T { num_traits::One::one() }
+    fn one() -> T {
+        num_traits::One::one()
+    }
 }
 
-
-pub trait Round : Copy { fn round(self) -> Self; }
-pub trait Floor : Copy { fn floor(self) -> Self; }
-pub trait Ceil : Copy { fn ceil(self) -> Self; }
+pub trait Round: Copy {
+    fn round(self) -> Self;
+}
+pub trait Floor: Copy {
+    fn floor(self) -> Self;
+}
+pub trait Ceil: Copy {
+    fn ceil(self) -> Self;
+}
 
 macro_rules! num_int {
     ($ty:ty) => (
