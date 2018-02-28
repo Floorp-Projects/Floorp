@@ -378,6 +378,7 @@ testing/talos/talos/scripts/jszip.min.js
 testing/talos/talos/startup_test/sessionrestore/profile/sessionstore.js
 testing/talos/talos/startup_test/sessionrestore/profile-manywindows/sessionstore.js
 testing/talos/talos/tests/canvasmark/**
+testing/talos/talos/tests/devtools/addon/content/pages/**
 testing/talos/talos/tests/dromaeo/**
 testing/talos/talos/tests/v8_7/**
 testing/talos/talos/tests/kraken/**
