@@ -611,9 +611,9 @@ public class CustomTabsActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onLoadUri(final GeckoSession session, final String urlStr,
-                             final TargetWindow where) {
-        if (where != TargetWindow.NEW) {
+    public boolean onLoadRequest(final GeckoSession session, final String urlStr,
+                                 final int target) {
+        if (target != GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW) {
             return false;
         }
 

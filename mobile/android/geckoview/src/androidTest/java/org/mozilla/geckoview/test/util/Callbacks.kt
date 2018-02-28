@@ -40,7 +40,7 @@ class Callbacks private constructor() {
         override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
         }
 
-        override fun onLoadUri(session: GeckoSession, uri: String, where: GeckoSession.NavigationDelegate.TargetWindow): Boolean {
+        override fun onLoadUri(session: GeckoSession, uri: String, where: Int): Boolean {
             return false;
         }
 
