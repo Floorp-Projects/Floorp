@@ -73,6 +73,8 @@ private:
   nsCOMPtr<nsIContentSignatureReceiverCallback> mCallback;
   // channel to download the cert chain
   nsCOMPtr<nsIChannel> mChannel;
+  // EE certificate fingerprint
+  nsCString mFingerprint;
 };
 
 #endif // ContentSignatureVerifier_h

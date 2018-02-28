@@ -13,6 +13,7 @@
 #include "FrameAnimator.h"
 #include "IDecodingTask.h"
 #include "ISurfaceProvider.h"
+#include "AnimationFrameBuffer.h"
 
 namespace mozilla {
 namespace image {
@@ -31,7 +32,8 @@ public:
 
   AnimationSurfaceProvider(NotNull<RasterImage*> aImage,
                            const SurfaceKey& aSurfaceKey,
-                           NotNull<Decoder*> aDecoder);
+                           NotNull<Decoder*> aDecoder,
+                           size_t aCurrentFrame);
 
 
   //////////////////////////////////////////////////////////////////////////////
@@ -44,11 +46,14 @@ public:
   DrawableSurface Surface() override { return DrawableSurface(WrapNotNull(this)); }
 
   bool IsFinished() const override;
+  bool IsFullyDecoded() const override;
   size_t LogicalSizeInBytes() const override;
   void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                               size_t& aHeapSizeOut,
                               size_t& aNonHeapSizeOut,
                               size_t& aExtHandlesOut) override;
+  void Reset() override;
+  void Advance(size_t aFrame) override;
 
 protected:
   DrawableFrameRef DrawableRef(size_t aFrame) override;
@@ -78,10 +83,14 @@ private:
   virtual ~AnimationSurfaceProvider();
 
   void DropImageReference();
-  void CheckForNewFrameAtYield();
-  void CheckForNewFrameAtTerminalState();
   void AnnounceSurfaceAvailable();
   void FinishDecoding();
+
+  // @returns Whether or not we should continue decoding.
+  bool CheckForNewFrameAtYield();
+
+  // @returns Whether or not we should restart decoding.
+  bool CheckForNewFrameAtTerminalState();
 
   /// The image associated with our decoder.
   RefPtr<RasterImage> mImage;
@@ -96,7 +105,7 @@ private:
   mutable Mutex mFramesMutex;
 
   /// The frames of this animation, in order.
-  nsTArray<RawAccessFrameRef> mFrames;
+  AnimationFrameBuffer mFrames;
 };
 
 } // namespace image

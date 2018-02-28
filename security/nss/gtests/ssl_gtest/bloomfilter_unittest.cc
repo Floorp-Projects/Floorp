@@ -105,4 +105,4 @@ static const BloomFilterConfig kBloomFilterConfigurations[] = {
 INSTANTIATE_TEST_CASE_P(BloomFilterConfigurations, BloomFilterTest,
                         ::testing::ValuesIn(kBloomFilterConfigurations));
 
-}  // namespace nspr_test
+}  // namespace nss_test

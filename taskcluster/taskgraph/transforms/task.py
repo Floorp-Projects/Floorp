@@ -506,6 +506,15 @@ task_description_schema = Schema({
         # locale key, if this is a locale beetmover job
         Optional('locale'): basestring,
 
+        Required('release-properties'): {
+            'app-name': basestring,
+            'app-version': basestring,
+            'branch': basestring,
+            'build-id': basestring,
+            'hash-type': basestring,
+            'platform': basestring,
+        },
+
         # list of artifact URLs for the artifacts that should be beetmoved
         Required('upstream-artifacts'): [{
             # taskId of the task with the artifact
@@ -1018,11 +1027,20 @@ def build_binary_transparency_payload(config, task, task_def):
 def build_beetmover_payload(config, task, task_def):
     worker = task['worker']
     release_config = get_release_config(config)
+    release_properties = worker['release-properties']
 
     task_def['payload'] = {
         'maxRunTime': worker['max-run-time'],
+        'releaseProperties': {
+            'appName': release_properties['app-name'],
+            'appVersion': release_properties['app-version'],
+            'branch': release_properties['branch'],
+            'buildid': release_properties['build-id'],
+            'hashType': release_properties['hash-type'],
+            'platform': release_properties['platform'],
+        },
         'upload_date': config.params['build_date'],
-        'upstreamArtifacts':  worker['upstream-artifacts']
+        'upstreamArtifacts':  worker['upstream-artifacts'],
     }
     if worker.get('locale'):
         task_def['payload']['locale'] = worker['locale']

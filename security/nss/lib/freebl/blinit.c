@@ -23,6 +23,12 @@ static PRCallOnceType coFreeblInit;
 static PRBool aesni_support_ = PR_FALSE;
 static PRBool clmul_support_ = PR_FALSE;
 static PRBool avx_support_ = PR_FALSE;
+static PRBool ssse3_support_ = PR_FALSE;
+static PRBool arm_neon_support_ = PR_FALSE;
+static PRBool arm_aes_support_ = PR_FALSE;
+static PRBool arm_sha1_support_ = PR_FALSE;
+static PRBool arm_sha2_support_ = PR_FALSE;
+static PRBool arm_pmull_support_ = PR_FALSE;
 
 #ifdef NSS_X86_OR_X64
 /*
@@ -62,6 +68,7 @@ check_xcr0_ymm()
 #define ECX_XSAVE (1 << 26)
 #define ECX_OSXSAVE (1 << 27)
 #define ECX_AVX (1 << 28)
+#define ECX_SSSE3 (1 << 9)
 #define AVX_BITS (ECX_XSAVE | ECX_OSXSAVE | ECX_AVX)
 
 void
@@ -71,6 +78,7 @@ CheckX86CPUSupport()
     char *disable_hw_aes = PR_GetEnvSecure("NSS_DISABLE_HW_AES");
     char *disable_pclmul = PR_GetEnvSecure("NSS_DISABLE_PCLMUL");
     char *disable_avx = PR_GetEnvSecure("NSS_DISABLE_AVX");
+    char *disable_ssse3 = PR_GetEnvSecure("NSS_DISABLE_SSSE3");
     freebl_cpuid(1, &eax, &ebx, &ecx, &edx);
     aesni_support_ = (PRBool)((ecx & ECX_AESNI) != 0 && disable_hw_aes == NULL);
     clmul_support_ = (PRBool)((ecx & ECX_CLMUL) != 0 && disable_pclmul == NULL);
@@ -78,8 +86,106 @@ CheckX86CPUSupport()
      * as well as XMM and YMM state. */
     avx_support_ = (PRBool)((ecx & AVX_BITS) == AVX_BITS) && check_xcr0_ymm() &&
                    disable_avx == NULL;
+    ssse3_support_ = (PRBool)((ecx & ECX_SSSE3) != 0 &&
+                              disable_ssse3 == NULL);
 }
 #endif /* NSS_X86_OR_X64 */
+
+#if (defined(__aarch64__) || defined(__arm__)) && !defined(__ANDROID__)
+#if defined(__GNUC__) && __GNUC__ >= 2 && defined(__ELF__)
+#include <sys/auxv.h>
+extern unsigned long getauxval(unsigned long type) __attribute__((weak));
+#else
+static unsigned long (*getauxval)(unsigned long) = NULL;
+#define AT_HWCAP2
+#define AT_HWCAP
+#endif /* defined(__GNUC__) && __GNUC__ >= 2 && defined(__ELF__)*/
+#endif /* (defined(__aarch64__) || defined(__arm__)) && !defined(__ANDROID__) */
+
+#if defined(__aarch64__) && !defined(__ANDROID__)
+// Defines from hwcap.h in Linux kernel - ARM64
+#define HWCAP_AES (1 << 3)
+#define HWCAP_PMULL (1 << 4)
+#define HWCAP_SHA1 (1 << 5)
+#define HWCAP_SHA2 (1 << 6)
+
+void
+CheckARMSupport()
+{
+    char *disable_arm_neon = PR_GetEnvSecure("NSS_DISABLE_ARM_NEON");
+    char *disable_hw_aes = PR_GetEnvSecure("NSS_DISABLE_HW_AES");
+    if (getauxval) {
+        long hwcaps = getauxval(AT_HWCAP);
+        arm_aes_support_ = hwcaps & HWCAP_AES && disable_hw_aes == NULL;
+        arm_pmull_support_ = hwcaps & HWCAP_PMULL;
+        arm_sha1_support_ = hwcaps & HWCAP_SHA1;
+        arm_sha2_support_ = hwcaps & HWCAP_SHA2;
+    }
+    /* aarch64 must support NEON. */
+    arm_neon_support_ = disable_arm_neon == NULL;
+}
+#endif /* defined(__aarch64__) && !defined(__ANDROID__) */
+
+#if defined(__arm__) && !defined(__ANDROID__)
+// Defines from hwcap.h in Linux kernel - ARM
+/*
+ * HWCAP flags - for elf_hwcap (in kernel) and AT_HWCAP
+ */
+#define HWCAP_NEON (1 << 12)
+
+/*
+ * HWCAP2 flags - for elf_hwcap2 (in kernel) and AT_HWCAP2
+ */
+#define HWCAP2_AES (1 << 0)
+#define HWCAP2_PMULL (1 << 1)
+#define HWCAP2_SHA1 (1 << 2)
+#define HWCAP2_SHA2 (1 << 3)
+
+void
+CheckARMSupport()
+{
+    char *disable_arm_neon = PR_GetEnvSecure("NSS_DISABLE_ARM_NEON");
+    char *disable_hw_aes = PR_GetEnvSecure("NSS_DISABLE_HW_AES");
+    if (getauxval) {
+        long hwcaps = getauxval(AT_HWCAP2);
+        arm_aes_support_ = hwcaps & HWCAP2_AES && disable_hw_aes == NULL;
+        arm_pmull_support_ = hwcaps & HWCAP2_PMULL;
+        arm_sha1_support_ = hwcaps & HWCAP2_SHA1;
+        arm_sha2_support_ = hwcaps & HWCAP2_SHA2;
+        arm_neon_support_ = hwcaps & HWCAP_NEON && disable_arm_neon == NULL;
+    }
+}
+#endif /* defined(__arm__) && !defined(__ANDROID__) */
+
+// Enable when Firefox can use it.
+// #if defined(__ANDROID__) && (defined(__arm__) || defined(__aarch64__))
+// #include <cpu-features.h>
+// void
+// CheckARMSupport()
+// {
+//     char *disable_arm_neon = PR_GetEnvSecure("NSS_DISABLE_ARM_NEON");
+//     char *disable_hw_aes = PR_GetEnvSecure("NSS_DISABLE_HW_AES");
+//     AndroidCpuFamily family = android_getCpuFamily();
+//     uint64_t features = android_getCpuFeatures();
+//     if (family == ANDROID_CPU_FAMILY_ARM64) {
+//         arm_aes_support_ = features & ANDROID_CPU_ARM64_FEATURE_AES &&
+//                            disable_hw_aes == NULL;
+//         arm_pmull_support_ = features & ANDROID_CPU_ARM64_FEATURE_PMULL;
+//         arm_sha1_support_ = features & ANDROID_CPU_ARM64_FEATURE_SHA1;
+//         arm_sha2_support_ = features & ANDROID_CPU_ARM64_FEATURE_SHA2;
+//         arm_neon_support_ = disable_arm_neon == NULL;
+//     }
+//     if (family == ANDROID_CPU_FAMILY_ARM) {
+//         arm_aes_support_ = features & ANDROID_CPU_ARM_FEATURE_AES &&
+//                            disable_hw_aes == NULL;
+//         arm_pmull_support_ = features & ANDROID_CPU_ARM_FEATURE_PMULL;
+//         arm_sha1_support_ = features & ANDROID_CPU_ARM_FEATURE_SHA1;
+//         arm_sha2_support_ = features & ANDROID_CPU_ARM_FEATURE_SHA2;
+//         arm_neon_support_ = hwcaps & ANDROID_CPU_ARM_FEATURE_NEON &&
+//                             disable_arm_neon == NULL;
+//     }
+// }
+// #endif /* defined(__ANDROID__) && (defined(__arm__) || defined(__aarch64__)) */
 
 PRBool
 aesni_support()
@@ -96,12 +202,44 @@ avx_support()
 {
     return avx_support_;
 }
+PRBool
+ssse3_support()
+{
+    return ssse3_support_;
+}
+PRBool
+arm_neon_support()
+{
+    return arm_neon_support_;
+}
+PRBool
+arm_aes_support()
+{
+    return arm_aes_support_;
+}
+PRBool
+arm_pmull_support()
+{
+    return arm_pmull_support_;
+}
+PRBool
+arm_sha1_support()
+{
+    return arm_sha1_support_;
+}
+PRBool
+arm_sha2_support()
+{
+    return arm_sha2_support_;
+}
 
 static PRStatus
 FreeblInit(void)
 {
 #ifdef NSS_X86_OR_X64
     CheckX86CPUSupport();
+#elif (defined(__aarch64__) || defined(__arm__)) && !defined(__ANDROID__)
+    CheckARMSupport();
 #endif
     return PR_SUCCESS;
 }

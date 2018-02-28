@@ -1,4 +1,4 @@
-52491
+52537
 0/nm
 0th/pt
 1/n1
@@ -3891,6 +3891,7 @@ Emanuele/M
 Emeline/M
 Emerson/M
 Emery/M
+Emeryville/M
 Emil/M
 Emile/M
 Emilia/M
@@ -9368,7 +9369,9 @@ PJ's
 PLO/M
 PM/SMDG
 PMS/M
+PNG/MS
 PO
+POTUS/M
 POW/M
 PP
 PPS
@@ -9756,6 +9759,7 @@ Pittman/M
 Pitts/M
 Pittsburgh/M
 Pius/M
+Pixar/M
 Pizarro/M
 Pkwy
 Pl
@@ -10678,6 +10682,7 @@ SASE
 SAT
 SBA
 SC/M
+SCOTUS/M
 SCSI/M
 SD
 SDI
@@ -11733,6 +11738,8 @@ TEirtza/M
 TGIF
 THC
 THz/M
+TIF/MS
+TIFF/MS
 TKO/M
 TLC/M
 TM
@@ -13042,6 +13049,8 @@ X/M
 XBL/M
 XEmacs/M
 XL/M
+XLS/MS
+XLSX/MS
 XML
 XPCOM/M
 XPConnect/M
@@ -13668,6 +13677,7 @@ adaptability/M
 adaptation/MS
 adapter/M
 adaption/S
+add-on/S
 add/SDRBZG
 addend/MS
 addenda
@@ -17853,6 +17863,7 @@ bunting/M
 buoy/MDGS
 buoyancy/M
 buoyant/Y
+bupkis
 bur/SMY
 burble/DSMG
 burbs/M
@@ -21171,6 +21182,7 @@ counterspy/SM
 counterstroke/SM
 countersunk
 countertenor/MS
+countertop/S
 countervail/GSD
 counterweight/MS
 countess/MS
@@ -21330,6 +21342,7 @@ cranky/PRT
 cranny/DSM
 crap/MS
 crape/SM
+crapola
 crapped
 crapper/S
 crappie/M
@@ -21555,6 +21568,7 @@ crowbar/MS
 crowd/SMDG
 crowded/U
 crowdfund/SDG
+crowdsource/SDG
 crowfeet
 crowfoot/SM
 crown/SMDG
@@ -21620,6 +21634,7 @@ crypt's
 crypt/S
 cryptic
 cryptically
+cryptocurrency/S
 cryptogram/SM
 cryptographer/SM
 cryptographic
@@ -21832,6 +21847,7 @@ cybercafé/S
 cybernetic/S
 cybernetics/M
 cyberpunk/SM
+cybersecurity
 cybersex
 cyberspace/MS
 cyborg/SM
@@ -22177,6 +22193,7 @@ decolletage/SM
 decollete
 decongestant/MS
 deconstructionism
+decontextualize/DGS
 decor/MS
 decorate/AGNVDS
 decorating/M
@@ -23674,9 +23691,13 @@ drear
 drearily
 dreariness/M
 dreary/RPT
+dreck
+dreckish
+drecky
 dredge/DRSMZG
 dredger/M
 dregs/M
+drek
 drench/GDS
 dress/AUGSDM
 dressage/M
@@ -24482,6 +24503,8 @@ emotionless
 emotive/Y
 empanel/GDS
 empathetic
+empathic
+empathically
 empathize/DSG
 empathy/M
 emperor/MS
@@ -25294,6 +25317,8 @@ exerciser/M
 exert/SDG
 exertion/MS
 exeunt
+exfiltrate/DGS
+exfiltration/S
 exfoliate/GNDS
 exhalation/MS
 exhale/DSG
@@ -28645,6 +28670,7 @@ gunshot/MS
 gunslinger/SM
 gunsmith/M
 gunsmiths
+gunsmoke
 gunwale/MS
 guppy/SM
 gurgle/MGDS
@@ -30784,6 +30810,7 @@ inconvenience/GD
 incorporate/ADSGN
 incorporated/U
 incorporation/AM
+incorporator/S
 incorporeal
 incorrect/Y
 incorrigible/P
@@ -31400,6 +31427,9 @@ internist/MS
 internment/M
 internship/MS
 interoffice
+interoperability
+interoperable
+interoperate
 interpenetrate/DSGN
 interpersonal
 interplanetary
@@ -34268,6 +34298,7 @@ maxillary
 maxim/SM
 maxima
 maximal/Y
+maximalist/MS
 maximization/M
 maximize/GDS
 maximum/SM
@@ -37187,7 +37218,7 @@ ointment/SM
 okapi/SM
 okay/MDSG
 okra/MS
-old/TMNRP
+old/TMNRPS
 oldie/SM
 oldish
 oldness/M
@@ -37957,6 +37988,8 @@ oxygenate/DSGN
 oxygenation/M
 oxymora
 oxymoron/M
+oyes
+oyez
 oyster/SM
 oz
 ozone/M
@@ -41766,6 +41799,7 @@ rebid/S
 rebidding
 rebirth/M
 reboil/SDG
+rebrand/DG
 rebuild/SG
 rebuke/DSMG
 rebuking/Y
@@ -41884,7 +41918,7 @@ recyclable/SM
 recycling/M
 red/PSM
 redact/SDG
-redaction/M
+redaction/MS
 redactor/SM
 redbird/SM
 redbreast/MS
@@ -41902,7 +41936,7 @@ redemption/M
 redemptive
 redesign/DSG
 redhead/SMD
-redirection
+redirection/S
 redistrict/GD
 redivide/GDS
 redlining/M
@@ -42084,7 +42118,7 @@ rejoinder/SM
 rejuvenate/DSGN
 rejuvenation/M
 rel
-relate/DRSXZGNV
+relate/DRSXZGNVB
 relatedness/M
 relater/M
 relation/M
@@ -42486,6 +42520,7 @@ revealing/Y
 reveille/M
 revel/JMDRSZG
 revelation/SM
+revelatory
 reveler/M
 revelry/SM
 revenge/MGDS
@@ -42809,6 +42844,7 @@ rollerskating/M
 rollick/SDG
 rollicking/M
 rollmop/S
+rollout
 rollover/SM
 romaine/MS
 roman/M
@@ -45513,6 +45549,7 @@ sodomize/GDS
 sodomy/M
 soever
 sofa/MS
+soffit/S
 soft/NRYXTP
 softback
 softball/MS
@@ -45998,7 +46035,8 @@ spirituous
 spirochete/SM
 spiry
 spit/MDGS
-spitball/SM
+spitball/SMG
+spitballer/S
 spite/ASM
 spiteful/PY
 spitefuller
@@ -46064,7 +46102,7 @@ sponger/M
 sponginess/M
 spongy/RPT
 sponsor/MDGS
-sponsorship/M
+sponsorship/MS
 spontaneity/M
 spontaneous/Y
 spoof/SMDG
@@ -46748,6 +46786,7 @@ streetcar/MS
 streetlamp/S
 streetlight/SM
 streetwalker/SM
+streetwalking
 streetwise
 strength/M
 strengthen/AGDS
@@ -49907,6 +49946,8 @@ unblinking/Y
 unblushing/Y
 unbosom/DG
 unbound/D
+unbox/DS
+unboxing/S
 unbreakable
 unbroken
 uncanny/T
@@ -50205,6 +50246,8 @@ unlovable
 unlovely/TR
 unloving
 unlucky/T
+unmaintainable
+unmaintained
 unman/S
 unmanly/T
 unmarried
@@ -50243,6 +50286,7 @@ unread/B
 unready
 unreal
 unreasoning
+unredacted
 unregenerate
 unrelated
 unrelenting/Y
@@ -50849,7 +50893,7 @@ videophone/MS
 videotape/DSMG
 videotex
 vie/DS
-view/AMDRSZG
+view/AMDRSZGB
 viewer/AM
 viewership/M
 viewfinder/SM
@@ -51667,6 +51711,7 @@ whiteboard/S
 whitecap/SM
 whitefish/MS
 whitehead/MS
+whitelist/DGS
 whiten/ZGDRJ
 whitener/M
 whiteness/M
@@ -52302,6 +52347,7 @@ yawl/MS
 yawn/MDRSZG
 yawner/M
 yaws/M
+yay
 yd
 ye/RST
 yea/SM

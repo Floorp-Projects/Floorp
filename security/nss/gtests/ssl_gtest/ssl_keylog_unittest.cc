@@ -20,8 +20,8 @@ static const std::string keylog_env = "SSLKEYLOGFILE=" + keylog_file_path;
 
 class KeyLogFileTest : public TlsConnectGeneric {
  public:
-  void SetUp() {
-    TlsConnectTestBase::SetUp();
+  void SetUp() override {
+    TlsConnectGeneric::SetUp();
     // Remove previous results (if any).
     (void)remove(keylog_file_path.c_str());
     PR_SetEnv(keylog_env.c_str());

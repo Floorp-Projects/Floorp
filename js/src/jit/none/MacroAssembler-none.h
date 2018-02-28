@@ -153,7 +153,7 @@ class Assembler : public AssemblerShared
     static void ToggleToCmp(CodeLocationLabel) { MOZ_CRASH(); }
     static void ToggleCall(CodeLocationLabel, bool) { MOZ_CRASH(); }
 
-    static void Bind(uint8_t*, CodeOffset, CodeOffset) { MOZ_CRASH(); }
+    static void Bind(uint8_t*, const CodeLabel&) { MOZ_CRASH(); }
 
     static uintptr_t GetPointer(uint8_t*) { MOZ_CRASH(); }
 
@@ -231,7 +231,7 @@ class MacroAssemblerNone : public Assembler
     void bindLater(Label*, wasm::OldTrapDesc) { MOZ_CRASH(); }
     template <typename T> void j(Condition, T) { MOZ_CRASH(); }
     template <typename T> void jump(T) { MOZ_CRASH(); }
-    void writeCodePointer(CodeOffset* label) { MOZ_CRASH(); }
+    void writeCodePointer(CodeLabel* label) { MOZ_CRASH(); }
     void haltingAlign(size_t) { MOZ_CRASH(); }
     void nopAlign(size_t) { MOZ_CRASH(); }
     void checkStackAlignment() { MOZ_CRASH(); }

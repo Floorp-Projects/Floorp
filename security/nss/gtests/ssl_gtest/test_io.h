@@ -74,7 +74,9 @@ class DummyPrSocket : public DummyIOLayerMethods {
 
   std::weak_ptr<DummyPrSocket>& peer() { return peer_; }
   void SetPeer(const std::shared_ptr<DummyPrSocket>& peer) { peer_ = peer; }
-  void SetPacketFilter(std::shared_ptr<PacketFilter> filter);
+  void SetPacketFilter(const std::shared_ptr<PacketFilter>& filter) {
+    filter_ = filter;
+  }
   // Drops peer, packet filter and any outstanding packets.
   void Reset();
 
@@ -176,6 +178,6 @@ class Poller {
       timers_;
 };
 
-}  // end of namespace
+}  // namespace nss_test
 
 #endif

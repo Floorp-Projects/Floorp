@@ -70,6 +70,14 @@ struct nssSlotAuthInfoStr {
     PRIntervalTime askPasswordTimeout;
 };
 
+/* values for lastTokenPingState */
+typedef enum {
+    nssSlotLastPingState_Reset = 0,  /* the state has just been reset, discard
+                                      * our cache */
+    nssSlotLastPingState_Update = 1, /* we are updating the lastTokenPingTime */
+    nssSlotLastPingState_Valid = 2,  /* lastTokenPingTime is valid */
+} nssSlotLastPingState;
+
 struct NSSSlotStr {
     struct nssDeviceBaseStr base;
     NSSModule *module; /* Parent */
@@ -77,7 +85,8 @@ struct NSSSlotStr {
     CK_SLOT_ID slotID;
     CK_FLAGS ckFlags; /* from CK_SLOT_INFO.flags */
     struct nssSlotAuthInfoStr authInfo;
-    PRIntervalTime lastTokenPing;
+    PRIntervalTime lastTokenPingTime;
+    nssSlotLastPingState lastTokenPingState;
     PZLock *lock;
     void *epv;
     PK11SlotInfo *pk11slot;
