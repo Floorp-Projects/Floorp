@@ -279,6 +279,15 @@ ContentAreaDropListener.prototype =
     return links;
   },
 
+  validateURIsForDrop: function(aEvent, aURIsCount, aURIs, aDisallowInherit)
+  {
+    let dataTransfer = aEvent.dataTransfer;
+
+    for (let uri of aURIs) {
+      this._validateURI(dataTransfer, uri, aDisallowInherit);
+    }
+  },
+
   queryLinks: function(aDataTransfer, aCount)
   {
     let links = this._getDropLinks(aDataTransfer);
