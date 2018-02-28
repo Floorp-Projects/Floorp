@@ -329,15 +329,17 @@ public:
   bool IsRowOriented() const { return mIsRowOriented; }
   bool IsColumnOriented() const { return !mIsRowOriented; }
 
-  nscoord GetMainComponent(const nsSize& aSize) const {
-    return GET_MAIN_COMPONENT(*this, aSize.width, aSize.height);
+  // aSize is expected to match the flex container's WritingMode.
+  nscoord GetMainComponent(const LogicalSize& aSize) const {
+    return IsRowOriented() ? aSize.ISize(mWM) : aSize.BSize(mWM);
   }
   int32_t GetMainComponent(const LayoutDeviceIntSize& aIntSize) const {
     return GET_MAIN_COMPONENT(*this, aIntSize.width, aIntSize.height);
   }
 
-  nscoord GetCrossComponent(const nsSize& aSize) const {
-    return GET_CROSS_COMPONENT(*this, aSize.width, aSize.height);
+  // aSize is expected to match the flex container's WritingMode.
+  nscoord GetCrossComponent(const LogicalSize& aSize) const {
+    return IsRowOriented() ? aSize.BSize(mWM) : aSize.ISize(mWM);
   }
   int32_t GetCrossComponent(const LayoutDeviceIntSize& aIntSize) const {
     return GET_CROSS_COMPONENT(*this, aIntSize.width, aIntSize.height);
@@ -620,8 +622,10 @@ public:
     return mFlexShrink * mFlexBaseSize;
   }
 
-  const nsSize& IntrinsicRatio() const { return mIntrinsicRatio; }
-  bool HasIntrinsicRatio() const { return mIntrinsicRatio != nsSize(); }
+  // Returns a LogicalSize representing the flex item's logical intrinsic ratio
+  // (ISize:BSize), as expressed in the *flex container's* writing mode.
+  const LogicalSize& IntrinsicRatio() const { return mIntrinsicRatio; }
+  bool HasIntrinsicRatio() const { return !mIntrinsicRatio.IsAllZero(); }
 
   // Getters for margin:
   // ===================
@@ -816,7 +820,7 @@ protected:
   nsIFrame* const mFrame; // The flex item's frame.
   const float mFlexGrow;
   const float mFlexShrink;
-  const nsSize mIntrinsicRatio;
+  const LogicalSize mIntrinsicRatio;
   const nsMargin mBorderPadding;
   nsMargin mMargin; // non-const because we need to resolve auto margins
 
@@ -1402,22 +1406,19 @@ CrossSizeToUseWithRatio(const FlexItem& aFlexItem,
 }
 
 // Convenience function; returns a main-size, given a cross-size and an
-// intrinsic ratio. The intrinsic ratio must not have 0 in its cross-axis
-// component (or else we'll divide by 0).
+// intrinsic ratio. The caller is responsible for ensuring that the passed-in
+// intrinsic ratio must not have 0 in its cross-axis component (or else we'll
+// divide by 0).
 static nscoord
 MainSizeFromAspectRatio(nscoord aCrossSize,
-                        const nsSize& aIntrinsicRatio,
+                        const LogicalSize& aIntrinsicRatio,
                         const FlexboxAxisTracker& aAxisTracker)
 {
   MOZ_ASSERT(aAxisTracker.GetCrossComponent(aIntrinsicRatio) != 0,
              "Invalid ratio; will divide by 0! Caller should've checked...");
-
-  if (aAxisTracker.IsCrossAxisHorizontal()) {
-    // cross axis horiz --> aCrossSize is a width. Converting to height.
-    return NSCoordMulDiv(aCrossSize, aIntrinsicRatio.height, aIntrinsicRatio.width);
-  }
-  // cross axis vert --> aCrossSize is a height. Converting to width.
-  return NSCoordMulDiv(aCrossSize, aIntrinsicRatio.width, aIntrinsicRatio.height);
+  return NSCoordMulDiv(aCrossSize,
+                       aAxisTracker.GetMainComponent(aIntrinsicRatio),
+                       aAxisTracker.GetCrossComponent(aIntrinsicRatio));
 }
 
 // Partially resolves "min-[width|height]:auto" and returns the resulting value.
@@ -1799,7 +1800,8 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput,
   : mFrame(aFlexItemReflowInput.mFrame),
     mFlexGrow(aFlexGrow),
     mFlexShrink(aFlexShrink),
-    mIntrinsicRatio(mFrame->GetIntrinsicRatio()),
+    // We store the intrinsic ratio in the *flex container's* WM:
+    mIntrinsicRatio(aAxisTracker.GetWritingMode(), mFrame->GetIntrinsicRatio()),
     mBorderPadding(aFlexItemReflowInput.ComputedPhysicalBorderPadding()),
     mMargin(aFlexItemReflowInput.ComputedPhysicalMargin()),
     mMainMinSize(aMainMinSize),
@@ -1895,7 +1897,7 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
   : mFrame(aChildFrame),
     mFlexGrow(0.0f),
     mFlexShrink(0.0f),
-    mIntrinsicRatio(),
+    mIntrinsicRatio(aContainerWM),
     // mBorderPadding uses default constructor,
     // mMargin uses default constructor,
     mFlexBaseSize(0),
