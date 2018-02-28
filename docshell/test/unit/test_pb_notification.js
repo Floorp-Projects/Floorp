@@ -1,8 +1,3 @@
-if (typeof Cc === "undefined")
-  Cc = Components.classes;
-if (typeof Ci === "undefined")
-  Ci = Components.interfaces;
-
 function destroy_transient_docshell() {
   var docshell = Cc["@mozilla.org/docshell;1"].createInstance(Ci.nsIDocShell);
   docshell.setOriginAttributes({privateBrowsingId : 1});

@@ -50,8 +50,7 @@ function doTests()
   var f = document.getElementById("f");
   var fBounds = f.getBoundingClientRect();
 
-  const CI = Components.interfaces;
-  var fshell = f.contentWindow.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIWebNavigation).QueryInterface(CI.nsIDocShell);
+  var fshell = f.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShell);
   var fmudv = fshell.contentViewer;
 
   isRounded(f.contentWindow.mozInnerScreenX,
