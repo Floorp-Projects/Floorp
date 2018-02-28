@@ -110,11 +110,11 @@ fn main() {
         // using Itertools::set_from
         plot.iter_mut().set_from(repeat(' '));
 
-        // using Itertools::minmax_by
+        // using Itertools::minmax
         let min_max = |data: &[Iris], col| {
             data.iter()
                 .map(|iris| iris.data[col])
-                .minmax_by(|a, b| f32::partial_cmp(a, b).unwrap())
+                .minmax()
                 .into_option()
                 .expect("Can't find min/max of empty iterator")
         };

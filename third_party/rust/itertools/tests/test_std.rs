@@ -1,33 +1,14 @@
-//! Licensed under the Apache License, Version 2.0
-//! http://www.apache.org/licenses/LICENSE-2.0 or the MIT license
-//! http://opensource.org/licenses/MIT, at your
-//! option. This file may not be copied, modified, or distributed
-//! except according to those terms.
 
 #[macro_use] extern crate itertools as it;
 extern crate permutohedron;
 
 use it::Itertools;
-use it::interleave;
 use it::multizip;
 use it::multipeek;
-use it::FoldWhile;
 use it::free::rciter;
-use it::free::put_back;
 use it::free::put_back_n;
+use it::FoldWhile;
 use it::cloned;
-
-#[test]
-fn product2() {
-    let s = "αβ";
-
-    let mut prod = iproduct!(s.chars(), 0..2);
-    assert!(prod.next() == Some(('α', 0)));
-    assert!(prod.next() == Some(('α', 1)));
-    assert!(prod.next() == Some(('β', 0)));
-    assert!(prod.next() == Some(('β', 1)));
-    assert!(prod.next() == None);
-}
 
 #[test]
 fn product3() {
@@ -44,74 +25,6 @@ fn product3() {
     for (_, _, _, _) in iproduct!(0..3, 0..2, 0..2, 0..3) {
         /* test compiles */
     }
-}
-
-#[test]
-fn product_temporary() {
-    for (_x, _y, _z) in iproduct!(
-        [0, 1, 2].iter().cloned(),
-        [0, 1, 2].iter().cloned(),
-        [0, 1, 2].iter().cloned())
-    {
-        // ok
-    }
-}
-
-
-#[test]
-fn izip_macro() {
-    let mut zip = izip!(0..3, 0..2, 0..2i8);
-    for i in 0..2 {
-        assert!((i as usize, i, i as i8) == zip.next().unwrap());
-    }
-    assert!(zip.next().is_none());
-
-    let xs: [isize; 0] = [];
-    let mut zip = izip!(0..3, 0..2, 0..2i8, &xs);
-    assert!(zip.next().is_none());
-}
-
-#[test]
-fn izip3() {
-    let mut zip = multizip((0..3, 0..2, 0..2i8));
-    for i in 0..2 {
-        assert!((i as usize, i, i as i8) == zip.next().unwrap());
-    }
-    assert!(zip.next().is_none());
-
-    let xs: [isize; 0] = [];
-    let mut zip = multizip((0..3, 0..2, 0..2i8, xs.iter()));
-    assert!(zip.next().is_none());
-
-    for (_, _, _, _, _) in multizip((0..3, 0..2, xs.iter(), &xs, xs.to_vec())) {
-        /* test compiles */
-    }
-}
-
-#[test]
-fn write_to() {
-    let xs = [7, 9, 8];
-    let mut ys = [0; 5];
-    let cnt = ys.iter_mut().set_from(xs.iter().map(|x| *x));
-    assert!(cnt == xs.len());
-    assert!(ys == [7, 9, 8, 0, 0]);
-
-    let cnt = ys.iter_mut().set_from(0..10);
-    assert!(cnt == ys.len());
-    assert!(ys == [0, 1, 2, 3, 4]);
-}
-
-#[test]
-fn test_interleave() {
-    let xs: [u8; 0]  = [];
-    let ys = [7u8, 9, 8, 10];
-    let zs = [2u8, 77];
-    let it = interleave(xs.iter(), ys.iter());
-    it::assert_equal(it, ys.iter());
-
-    let rs = [7u8, 2, 9, 77, 8, 10];
-    let it = interleave(ys.iter(), zs.iter());
-    it::assert_equal(it, rs.iter());
 }
 
 #[test]
@@ -139,22 +52,22 @@ fn interleave_shortest() {
     assert_eq!(it.size_hint(), (6, Some(6)));
 }
 
+
 #[test]
-fn foreach() {
-    let xs = [1i32, 2, 3];
-    let mut sum = 0;
-    xs.iter().foreach(|elt| sum += *elt);
-    assert!(sum == 6);
+fn unique_by() {
+    let xs = ["aaa", "bbbbb", "aa", "ccc", "bbbb", "aaaaa", "cccc"];
+    let ys = ["aaa", "bbbbb", "ccc"];
+    it::assert_equal(ys.iter(), xs.iter().unique_by(|x| x[..2].to_string()));
 }
 
 #[test]
-fn dropping() {
-    let xs = [1, 2, 3];
-    let mut it = xs.iter().dropping(2);
-    assert_eq!(it.next(), Some(&3));
-    assert!(it.next().is_none());
-    let mut it = xs.iter().dropping(5);
-    assert!(it.next().is_none());
+fn unique() {
+    let xs = [0, 1, 2, 3, 2, 1, 3];
+    let ys = [0, 1, 2, 3];
+    it::assert_equal(ys.iter(), xs.iter().unique());
+    let xs = [0, 1];
+    let ys = [0, 1];
+    it::assert_equal(ys.iter(), xs.iter().unique());
 }
 
 #[test]
@@ -186,48 +99,12 @@ fn dedup() {
 }
 
 #[test]
-fn unique_by() {
-    let xs = ["aaa", "bbbbb", "aa", "ccc", "bbbb", "aaaaa", "cccc"];
-    let ys = ["aaa", "bbbbb", "ccc"];
-    it::assert_equal(ys.iter(), xs.iter().unique_by(|x| x[..2].to_string()));
-}
-
-#[test]
-fn unique() {
-    let xs = [0, 1, 2, 3, 2, 1, 3];
-    let ys = [0, 1, 2, 3];
-    it::assert_equal(ys.iter(), xs.iter().unique());
-    let xs = [0, 1];
-    let ys = [0, 1];
-    it::assert_equal(ys.iter(), xs.iter().unique());
-}
-
-#[test]
-fn batching() {
-    let xs = [0, 1, 2, 1, 3];
-    let ys = [(0, 1), (2, 1)];
-
-    // An iterator that gathers elements up in pairs
-    let pit = xs.iter().cloned().batching(|mut it| {
-               match it.next() {
-                   None => None,
-                   Some(x) => match it.next() {
-                       None => None,
-                       Some(y) => Some((x, y)),
-                   }
-               }
-           });
-    it::assert_equal(pit, ys.iter().cloned());
-}
-
-#[test]
-fn test_put_back() {
-    let xs = [0, 1, 1, 1, 2, 1, 3, 3];
-    let mut pb = put_back(xs.iter().cloned());
-    pb.next();
-    pb.put_back(1);
-    pb.put_back(0);
-    it::assert_equal(pb, xs.iter().cloned());
+fn all_equal() {
+    assert!(!"AABBCCC".chars().all_equal());
+    assert!("AAAAAAA".chars().all_equal());
+    for (_key, mut sub) in &"AABBCCC".chars().group_by(|&x| x) {
+        assert!(sub.all_equal());
+    }
 }
 
 #[test]
@@ -289,13 +166,6 @@ fn test_rciter() {
 }
 
 #[test]
-fn step() {
-    it::assert_equal((0..10).step(1), (0..10));
-    it::assert_equal((0..10).step(2), (0..10).filter(|x: &i32| *x % 2 == 0));
-    it::assert_equal((0..10).step(10), 0..1);
-}
-
-#[test]
 fn trait_pointers() {
     struct ByRef<'r, I: ?Sized>(&'r mut I) where I: 'r;
 
@@ -314,7 +184,7 @@ fn trait_pointers() {
 
     {
         /* make sure foreach works on non-Sized */
-        let mut jt: &mut Iterator<Item=i32> = &mut *it;
+        let jt: &mut Iterator<Item = i32> = &mut *it;
         assert_eq!(jt.next(), Some(1));
 
         {
@@ -325,11 +195,6 @@ fn trait_pointers() {
         assert_eq!(jt.find_position(|x| *x == 4), Some((1, 4)));
         jt.foreach(|_| ());
     }
-}
-
-#[test]
-fn merge() {
-    it::assert_equal((0..10).step(2).merge((1..10).step(2)), (0..10));
 }
 
 #[test]
@@ -365,7 +230,7 @@ fn kmerge() {
 #[test]
 fn kmerge_2() {
     let its = vec![3, 2, 1, 0].into_iter().map(|s| (s..10).step(4));
-    
+
     it::assert_equal(its.kmerge(), (0..10));
 }
 
@@ -410,6 +275,15 @@ fn sorted_by() {
 }
 
 #[test]
+fn sorted_by_key() {
+    let sc = [3, 4, 1, 2].iter().cloned().sorted_by_key(|&x| x);
+    assert_eq!(sc, vec![1, 2, 3, 4]);
+
+    let v = (0..5).sorted_by_key(|&x| -x);
+    assert_eq!(v, vec![4, 3, 2, 1, 0]);
+}
+
+#[test]
 fn test_multipeek() {
     let nums = vec![1u8,2,3,4,5];
 
@@ -428,6 +302,8 @@ fn test_multipeek() {
     assert_eq!(mp.peek(), None);
     assert_eq!(mp.next(), Some(3));
     assert_eq!(mp.next(), Some(4));
+    assert_eq!(mp.peek(), Some(&5));
+    assert_eq!(mp.peek(), None);
     assert_eq!(mp.next(), Some(5));
     assert_eq!(mp.next(), None);
     assert_eq!(mp.peek(), None);
@@ -449,66 +325,29 @@ fn test_multipeek_reset() {
 }
 
 #[test]
-fn repeatn() {
-    let s = "α";
-    let mut it = it::repeat_n(s, 3);
-    assert_eq!(it.len(), 3);
-    assert_eq!(it.next(), Some(s));
-    assert_eq!(it.next(), Some(s));
-    assert_eq!(it.next(), Some(s));
-    assert_eq!(it.next(), None);
-    assert_eq!(it.next(), None);
-}
+fn test_multipeek_peeking_next() {
+    use it::PeekingNext;
+    let nums = vec![1u8,2,3,4,5,6,7];
 
-#[test]
-fn count_clones() {
-    // Check that RepeatN only clones N - 1 times.
-
-    use std::cell::Cell;
-    #[derive(PartialEq, Debug)]
-    struct Foo {
-        n: Cell<usize>
-    }
-
-    impl Clone for Foo
-    {
-        fn clone(&self) -> Self
-        {
-            let n = self.n.get();
-            self.n.set(n + 1);
-            Foo { n: Cell::new(n + 1) }
-        }
-    }
-
-
-    for n in 0..10 {
-        let f = Foo{n: Cell::new(0)};
-        let it = it::repeat_n(f, n);
-        // drain it
-        let last = it.last();
-        if n == 0 {
-            assert_eq!(last, None);
-        } else {
-            assert_eq!(last, Some(Foo{n: Cell::new(n - 1)}));
-        }
-    }
-}
-
-#[test]
-fn part() {
-    let mut data = [7, 1, 1, 9, 1, 1, 3];
-    let i = it::partition(&mut data, |elt| *elt >= 3);
-    assert_eq!(i, 3);
-    assert_eq!(data, [7, 3, 9, 1, 1, 1, 1]);
-
-    let i = it::partition(&mut data, |elt| *elt == 1);
-    assert_eq!(i, 4);
-    assert_eq!(data, [1, 1, 1, 1, 9, 3, 7]);
-
-    let mut data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-    let i = it::partition(&mut data, |elt| *elt % 3 == 0);
-    assert_eq!(i, 3);
-    assert_eq!(data, [9, 6, 3, 4, 5, 2, 7, 8, 1]);
+    let mut mp = multipeek(nums.iter().map(|&x| x));
+    assert_eq!(mp.peeking_next(|&x| x != 0), Some(1));
+    assert_eq!(mp.next(), Some(2));
+    assert_eq!(mp.peek(), Some(&3));
+    assert_eq!(mp.peek(), Some(&4));
+    assert_eq!(mp.peeking_next(|&x| x == 3), Some(3));
+    assert_eq!(mp.peek(), Some(&4));
+    assert_eq!(mp.peeking_next(|&x| x != 4), None);
+    assert_eq!(mp.peeking_next(|&x| x == 4), Some(4));
+    assert_eq!(mp.peek(), Some(&5));
+    assert_eq!(mp.peek(), Some(&6));
+    assert_eq!(mp.peeking_next(|&x| x != 5), None);
+    assert_eq!(mp.peek(), Some(&7));
+    assert_eq!(mp.peeking_next(|&x| x == 5), Some(5));
+    assert_eq!(mp.peeking_next(|&x| x == 6), Some(6));
+    assert_eq!(mp.peek(), Some(&7));
+    assert_eq!(mp.peek(), None);
+    assert_eq!(mp.next(), Some(7));
+    assert_eq!(mp.peek(), None);
 }
 
 #[test]
@@ -522,13 +361,6 @@ fn pad_using() {
     let v: Vec<usize> = vec![0, 1, 2];
     let r = v.into_iter().pad_using(1, |_| panic!());
     it::assert_equal(r, vec![0, 1, 2]);
-}
-
-#[test]
-fn while_some() {
-    let ns = (1..10).map(|x| if x % 5 != 0 { Some(x) } else { None })
-                    .while_some();
-    it::assert_equal(ns, vec![1, 2, 3, 4]);
 }
 
 #[test]
@@ -694,31 +526,23 @@ fn chunks() {
 }
 
 #[test]
+fn concat_empty() {
+    let data: Vec<Vec<()>> = Vec::new();
+    assert_eq!(data.into_iter().concat(), Vec::new())
+}
+
+#[test]
+fn concat_non_empty() {
+    let data = vec![vec![1,2,3], vec![4,5,6], vec![7,8,9]];
+    assert_eq!(data.into_iter().concat(), vec![1,2,3,4,5,6,7,8,9])
+}
+
+#[test]
 fn flatten_iter() {
     let data = vec![vec![1,2,3], vec![4,5,6]];
     let flattened = data.into_iter().flatten();
 
     it::assert_equal(flattened, vec![1,2,3,4,5,6]);
-}
-
-#[test]
-fn flatten_rev() {
-    let data = vec![vec![1,2,3].into_iter(), vec![4,5,6].into_iter()];
-    let flattened = data.into_iter().flatten().rev();
-    it::assert_equal(flattened, vec![6,5,4,3,2,1]);
-}
-
-#[test]
-fn flatten_clone() {
-    let data = &[
-        &[1,2,3],
-        &[4,5,6]
-    ];
-    let flattened1 = data.into_iter().cloned().flatten();
-    let flattened2 = flattened1.clone();
-
-    it::assert_equal(flattened1, &[1,2,3,4,5,6]);
-    it::assert_equal(flattened2, &[1,2,3,4,5,6]);
 }
 
 #[test]
@@ -770,10 +594,9 @@ fn combinations_of_too_short() {
 }
 
 
-#[should_panic]
 #[test]
 fn combinations_zero() {
-    (1..3).combinations(0);
+    it::assert_equal((1..3).combinations(0), vec![vec![]]);
 }
 
 #[test]
@@ -815,23 +638,6 @@ fn diff_shorter() {
         Some(it::Diff::Shorter(len, _)) => len == 2,
         _ => false,
     });
-}
-
-#[test]
-fn fold_while() {
-    let mut iterations = 0;
-    let vec = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    let sum = vec.into_iter().fold_while(0, |acc, item| {
-        iterations += 1;
-        let new_sum = acc.clone() + item;
-        if new_sum <= 20 {
-            FoldWhile::Continue(new_sum)
-        } else {
-            FoldWhile::Done(acc)
-        }
-    });
-    assert_eq!(iterations, 6);
-    assert_eq!(sum, 15);
 }
 
 #[test]
@@ -889,3 +695,28 @@ fn format() {
     let t3 = format!("{:.2e}", dataf.iter().format(", "));
     assert_eq!(t3, "1.10e0, 2.72e0, -2.20e1");
 }
+
+#[test]
+fn while_some() {
+    let ns = (1..10).map(|x| if x % 5 != 0 { Some(x) } else { None })
+                    .while_some();
+    it::assert_equal(ns, vec![1, 2, 3, 4]);
+}
+
+#[test]
+fn fold_while() {
+    let mut iterations = 0;
+    let vec = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    let sum = vec.into_iter().fold_while(0, |acc, item| {
+        iterations += 1;
+        let new_sum = acc.clone() + item;
+        if new_sum <= 20 {
+            FoldWhile::Continue(new_sum)
+        } else {
+            FoldWhile::Done(acc)
+        }
+    }).into_inner();
+    assert_eq!(iterations, 6);
+    assert_eq!(sum, 15);
+}
+
