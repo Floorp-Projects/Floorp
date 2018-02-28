@@ -77,8 +77,8 @@ public class GeckoSession extends LayerSession
     private String mId = UUID.randomUUID().toString().replace("-", "");
     /* package */ String getId() { return mId; }
 
-    private final GeckoSessionHandler<ContentDelegate> mContentHandler =
-        new GeckoSessionHandler<ContentDelegate>(
+    private final GeckoSessionHandler<ContentListener> mContentHandler =
+        new GeckoSessionHandler<ContentListener>(
             "GeckoViewContent", this,
             new String[]{
                 "GeckoView:ContextMenu",
@@ -90,34 +90,34 @@ public class GeckoSession extends LayerSession
             }
         ) {
             @Override
-            public void handleMessage(final ContentDelegate delegate,
+            public void handleMessage(final ContentListener listener,
                                       final String event,
                                       final GeckoBundle message,
                                       final EventCallback callback) {
 
                 if ("GeckoView:ContextMenu".equals(event)) {
-                    delegate.onContextMenu(GeckoSession.this,
+                    listener.onContextMenu(GeckoSession.this,
                                            message.getInt("screenX"),
                                            message.getInt("screenY"),
                                            message.getString("uri"),
                                            message.getString("elementSrc"));
                 } else if ("GeckoView:DOMTitleChanged".equals(event)) {
-                    delegate.onTitleChange(GeckoSession.this,
+                    listener.onTitleChange(GeckoSession.this,
                                            message.getString("title"));
                 } else if ("GeckoView:DOMWindowFocus".equals(event)) {
-                    delegate.onFocusRequest(GeckoSession.this);
+                    listener.onFocusRequest(GeckoSession.this);
                 } else if ("GeckoView:DOMWindowClose".equals(event)) {
-                    delegate.onCloseRequest(GeckoSession.this);
+                    listener.onCloseRequest(GeckoSession.this);
                 } else if ("GeckoView:FullScreenEnter".equals(event)) {
-                    delegate.onFullScreen(GeckoSession.this, true);
+                    listener.onFullScreen(GeckoSession.this, true);
                 } else if ("GeckoView:FullScreenExit".equals(event)) {
-                    delegate.onFullScreen(GeckoSession.this, false);
+                    listener.onFullScreen(GeckoSession.this, false);
                 }
             }
         };
 
-    private final GeckoSessionHandler<NavigationDelegate> mNavigationHandler =
-        new GeckoSessionHandler<NavigationDelegate>(
+    private final GeckoSessionHandler<NavigationListener> mNavigationHandler =
+        new GeckoSessionHandler<NavigationListener>(
             "GeckoViewNavigation", this,
             new String[]{
                 "GeckoView:LocationChange",
@@ -126,28 +126,28 @@ public class GeckoSession extends LayerSession
             }
         ) {
             @Override
-            public void handleMessage(final NavigationDelegate delegate,
+            public void handleMessage(final NavigationListener listener,
                                       final String event,
                                       final GeckoBundle message,
                                       final EventCallback callback) {
                 if ("GeckoView:LocationChange".equals(event)) {
-                    delegate.onLocationChange(GeckoSession.this,
+                    listener.onLocationChange(GeckoSession.this,
                                               message.getString("uri"));
-                    delegate.onCanGoBack(GeckoSession.this,
+                    listener.onCanGoBack(GeckoSession.this,
                                          message.getBoolean("canGoBack"));
-                    delegate.onCanGoForward(GeckoSession.this,
+                    listener.onCanGoForward(GeckoSession.this,
                                             message.getBoolean("canGoForward"));
                 } else if ("GeckoView:OnLoadUri".equals(event)) {
                     final String uri = message.getString("uri");
-                    final NavigationDelegate.TargetWindow where =
-                        NavigationDelegate.TargetWindow.forGeckoValue(
+                    final NavigationListener.TargetWindow where =
+                        NavigationListener.TargetWindow.forGeckoValue(
                             message.getInt("where"));
                     final boolean result =
-                        delegate.onLoadUri(GeckoSession.this, uri, where);
+                        listener.onLoadUri(GeckoSession.this, uri, where);
                     callback.sendSuccess(result);
                 } else if ("GeckoView:OnNewSession".equals(event)) {
                     final String uri = message.getString("uri");
-                    delegate.onNewSession(GeckoSession.this, uri,
+                    listener.onNewSession(GeckoSession.this, uri,
                         new Response<GeckoSession>() {
                             @Override
                             public void respond(GeckoSession session) {
@@ -162,8 +162,8 @@ public class GeckoSession extends LayerSession
             }
         };
 
-    private final GeckoSessionHandler<ProgressDelegate> mProgressHandler =
-        new GeckoSessionHandler<ProgressDelegate>(
+    private final GeckoSessionHandler<ProgressListener> mProgressHandler =
+        new GeckoSessionHandler<ProgressListener>(
             "GeckoViewProgress", this,
             new String[]{
                 "GeckoView:PageStart",
@@ -172,36 +172,36 @@ public class GeckoSession extends LayerSession
             }
         ) {
             @Override
-            public void handleMessage(final ProgressDelegate delegate,
+            public void handleMessage(final ProgressListener listener,
                                       final String event,
                                       final GeckoBundle message,
                                       final EventCallback callback) {
                 if ("GeckoView:PageStart".equals(event)) {
-                    delegate.onPageStart(GeckoSession.this,
+                    listener.onPageStart(GeckoSession.this,
                                          message.getString("uri"));
                 } else if ("GeckoView:PageStop".equals(event)) {
-                    delegate.onPageStop(GeckoSession.this,
+                    listener.onPageStop(GeckoSession.this,
                                         message.getBoolean("success"));
                 } else if ("GeckoView:SecurityChanged".equals(event)) {
                     final GeckoBundle identity = message.getBundle("identity");
-                    delegate.onSecurityChange(GeckoSession.this, new ProgressDelegate.SecurityInformation(identity));
+                    listener.onSecurityChange(GeckoSession.this, new ProgressListener.SecurityInformation(identity));
                 }
             }
         };
 
-    private final GeckoSessionHandler<ScrollDelegate> mScrollHandler =
-        new GeckoSessionHandler<ScrollDelegate>(
+    private final GeckoSessionHandler<ScrollListener> mScrollHandler =
+        new GeckoSessionHandler<ScrollListener>(
             "GeckoViewScroll", this,
             new String[]{ "GeckoView:ScrollChanged" }
         ) {
             @Override
-            public void handleMessage(final ScrollDelegate delegate,
+            public void handleMessage(final ScrollListener listener,
                                       final String event,
                                       final GeckoBundle message,
                                       final EventCallback callback) {
 
                 if ("GeckoView:ScrollChanged".equals(event)) {
-                    delegate.onScrollChanged(GeckoSession.this,
+                    listener.onScrollChanged(GeckoSession.this,
                                              message.getInt("scrollX"),
                                              message.getInt("scrollY"));
                 }
@@ -238,17 +238,17 @@ public class GeckoSession extends LayerSession
             }, /* alwaysListen */ true
         ) {
             @Override
-            public void handleMessage(final PermissionDelegate delegate,
+            public void handleMessage(final PermissionDelegate listener,
                                       final String event,
                                       final GeckoBundle message,
                                       final EventCallback callback) {
 
-                if (delegate == null) {
+                if (listener == null) {
                     callback.sendSuccess(/* granted */ false);
                     return;
                 }
                 if ("GeckoView:AndroidPermission".equals(event)) {
-                    delegate.onAndroidPermissionsRequest(
+                    listener.requestAndroidPermissions(
                             GeckoSession.this, message.getStringArray("perms"),
                             new PermissionCallback("android", callback));
                 } else if ("GeckoView:ContentPermission".equals(event)) {
@@ -261,7 +261,7 @@ public class GeckoSession extends LayerSession
                     } else {
                         throw new IllegalArgumentException("Unknown permission request: " + typeString);
                     }
-                    delegate.onContentPermissionRequest(
+                    listener.requestContentPermission(
                             GeckoSession.this, message.getString("uri"),
                             type, message.getString("access"),
                             new PermissionCallback(typeString, callback));
@@ -285,7 +285,7 @@ public class GeckoSession extends LayerSession
                         }
                     }
 
-                    delegate.onMediaPermissionRequest(
+                    listener.requestMediaPermission(
                             GeckoSession.this, message.getString("uri"),
                             videos, audios, new PermissionCallback("media", callback));
                 }
@@ -346,7 +346,7 @@ public class GeckoSession extends LayerSession
      * @return PromptDelegate instance or null if using default delegate.
      */
     public PermissionDelegate getPermissionDelegate() {
-        return mPermissionHandler.getDelegate();
+        return mPermissionHandler.getListener();
     }
 
     /**
@@ -354,7 +354,7 @@ public class GeckoSession extends LayerSession
      * @param delegate PermissionDelegate instance or null to use the default delegate.
      */
     public void setPermissionDelegate(final PermissionDelegate delegate) {
-        mPermissionHandler.setDelegate(delegate, this);
+        mPermissionHandler.setListener(delegate, this);
     }
 
     private PromptDelegate mPromptDelegate;
@@ -734,65 +734,65 @@ public class GeckoSession extends LayerSession
     /**
     * Set the content callback handler.
     * This will replace the current handler.
-    * @param delegate An implementation of ContentDelegate.
+    * @param listener An implementation of ContentListener.
     */
-    public void setContentDelegate(ContentDelegate delegate) {
-        mContentHandler.setDelegate(delegate, this);
+    public void setContentListener(ContentListener listener) {
+        mContentHandler.setListener(listener, this);
     }
 
     /**
     * Get the content callback handler.
     * @return The current content callback handler.
     */
-    public ContentDelegate getContentDelegate() {
-        return mContentHandler.getDelegate();
+    public ContentListener getContentListener() {
+        return mContentHandler.getListener();
     }
 
     /**
     * Set the progress callback handler.
     * This will replace the current handler.
-    * @param delegate An implementation of ProgressDelegate.
+    * @param listener An implementation of ProgressListener.
     */
-    public void setProgressDelegate(ProgressDelegate delegate) {
-        mProgressHandler.setDelegate(delegate, this);
+    public void setProgressListener(ProgressListener listener) {
+        mProgressHandler.setListener(listener, this);
     }
 
     /**
     * Get the progress callback handler.
     * @return The current progress callback handler.
     */
-    public ProgressDelegate getProgressDelegate() {
-        return mProgressHandler.getDelegate();
+    public ProgressListener getProgressListener() {
+        return mProgressHandler.getListener();
     }
 
     /**
     * Set the navigation callback handler.
     * This will replace the current handler.
-    * @param delegate An implementation of NavigationDelegate.
+    * @param listener An implementation of NavigationListener.
     */
-    public void setNavigationDelegate(NavigationDelegate delegate) {
-        mNavigationHandler.setDelegate(delegate, this);
+    public void setNavigationListener(NavigationListener listener) {
+        mNavigationHandler.setListener(listener, this);
     }
 
     /**
     * Get the navigation callback handler.
     * @return The current navigation callback handler.
     */
-    public NavigationDelegate getNavigationDelegate() {
-        return mNavigationHandler.getDelegate();
+    public NavigationListener getNavigationListener() {
+        return mNavigationHandler.getListener();
     }
 
     /**
     * Set the content scroll callback handler.
     * This will replace the current handler.
-    * @param delegate An implementation of ScrollDelegate.
+    * @param listener An implementation of ScrollListener.
     */
-    public void setScrollDelegate(ScrollDelegate delegate) {
-        mScrollHandler.setDelegate(delegate, this);
+    public void setScrollListener(ScrollListener listener) {
+        mScrollHandler.setListener(listener, this);
     }
 
-    public ScrollDelegate getScrollDelegate() {
-        return mScrollHandler.getDelegate();
+    public ScrollListener getScrollListener() {
+        return mScrollHandler.getListener();
     }
 
     /**
@@ -801,7 +801,7 @@ public class GeckoSession extends LayerSession
     * @param delegate An implementation of TrackingProtectionDelegate.
     */
     public void setTrackingProtectionDelegate(TrackingProtectionDelegate delegate) {
-        mTrackingProtectionHandler.setDelegate(delegate, this);
+        mTrackingProtectionHandler.setListener(delegate, this);
     }
 
     /**
@@ -809,7 +809,7 @@ public class GeckoSession extends LayerSession
     * @return The current tracking protection callback handler.
     */
     public TrackingProtectionDelegate getTrackingProtectionDelegate() {
-        return mTrackingProtectionHandler.getDelegate();
+        return mTrackingProtectionHandler.getListener();
     }
 
     /**
@@ -1066,7 +1066,7 @@ public class GeckoSession extends LayerSession
         final String msg = message.getString("msg");
         switch (type) {
             case "alert": {
-                delegate.onAlert(session, title, msg, cb);
+                delegate.alert(session, title, msg, cb);
                 break;
             }
             case "button": {
@@ -1087,15 +1087,15 @@ public class GeckoSession extends LayerSession
                     }
                     btnCustomTitle[i] = Resources.getSystem().getString(resId);
                 }
-                delegate.onButtonPrompt(session, title, msg, btnCustomTitle, cb);
+                delegate.promptForButton(session, title, msg, btnCustomTitle, cb);
                 break;
             }
             case "text": {
-                delegate.onTextPrompt(session, title, msg, message.getString("value"), cb);
+                delegate.promptForText(session, title, msg, message.getString("value"), cb);
                 break;
             }
             case "auth": {
-                delegate.onAuthPrompt(session, title, msg, new PromptDelegate.AuthOptions(message.getBundle("options")), cb);
+                delegate.promptForAuth(session, title, msg, new PromptDelegate.AuthenticationOptions(message.getBundle("options")), cb);
                 break;
             }
             case "choice": {
@@ -1121,12 +1121,12 @@ public class GeckoSession extends LayerSession
                         choices[i] = new PromptDelegate.Choice(choiceBundles[i]);
                     }
                 }
-                delegate.onChoicePrompt(session, title, msg, intMode,
+                delegate.promptForChoice(session, title, msg, intMode,
                                          choices, cb);
                 break;
             }
             case "color": {
-                delegate.onColorPrompt(session, title, message.getString("value"), cb);
+                delegate.promptForColor(session, title, message.getString("value"), cb);
                 break;
             }
             case "datetime": {
@@ -1145,7 +1145,7 @@ public class GeckoSession extends LayerSession
                     callback.sendError("Invalid mode");
                     return;
                 }
-                delegate.onDateTimePrompt(session, title, intMode,
+                delegate.promptForDateTime(session, title, intMode,
                                            message.getString("value"),
                                            message.getString("min"),
                                            message.getString("max"), cb);
@@ -1176,7 +1176,7 @@ public class GeckoSession extends LayerSession
                     }
                     mimeTypes = combined.toArray(new String[combined.size()]);
                 }
-                delegate.onFilePrompt(session, title, intMode, mimeTypes, cb);
+                delegate.promptForFile(session, title, intMode, mimeTypes, cb);
                 break;
             }
             default: {
@@ -1190,7 +1190,7 @@ public class GeckoSession extends LayerSession
         return mEventDispatcher;
     }
 
-    public interface ProgressDelegate {
+    public interface ProgressListener {
         /**
          * Class representing security information for a site.
          */
@@ -1298,7 +1298,7 @@ public class GeckoSession extends LayerSession
         void onSecurityChange(GeckoSession session, SecurityInformation securityInfo);
     }
 
-    public interface ContentDelegate {
+    public interface ContentListener {
         /**
         * A page title was discovered in the content or updated after the content
         * loaded.
@@ -1358,7 +1358,7 @@ public class GeckoSession extends LayerSession
         void respond(T val);
     }
 
-    public interface NavigationDelegate {
+    public interface NavigationListener {
         /**
         * A view has started loading content from the network.
         * @param session The GeckoSession that initiated the callback.
@@ -1496,7 +1496,7 @@ public class GeckoSession extends LayerSession
          * @param msg Message for the prompt dialog.
          * @param callback Callback interface.
          */
-        void onAlert(GeckoSession session, String title, String msg, AlertCallback callback);
+        void alert(GeckoSession session, String title, String msg, AlertCallback callback);
 
         /**
          * Callback interface for notifying the result of a button prompt.
@@ -1528,7 +1528,7 @@ public class GeckoSession extends LayerSession
          *               The button is hidden if the corresponding label is null.
          * @param callback Callback interface.
          */
-        void onButtonPrompt(GeckoSession session, String title, String msg,
+        void promptForButton(GeckoSession session, String title, String msg,
                              String[] btnMsg, ButtonCallback callback);
 
         /**
@@ -1554,7 +1554,7 @@ public class GeckoSession extends LayerSession
          * @param value Default input text for the prompt.
          * @param callback Callback interface.
          */
-        void onTextPrompt(GeckoSession session, String title, String msg,
+        void promptForText(GeckoSession session, String title, String msg,
                            String value, TextCallback callback);
 
         /**
@@ -1579,7 +1579,7 @@ public class GeckoSession extends LayerSession
             void confirm(String username, String password);
         }
 
-        class AuthOptions {
+        class AuthenticationOptions {
             /**
              * The auth prompt is for a network host.
              */
@@ -1639,7 +1639,7 @@ public class GeckoSession extends LayerSession
              */
             public String password;
 
-            /* package */ AuthOptions(GeckoBundle options) {
+            /* package */ AuthenticationOptions(GeckoBundle options) {
                 flags = options.getInt("flags");
                 uri = options.getString("uri");
                 level = options.getInt("level");
@@ -1654,11 +1654,11 @@ public class GeckoSession extends LayerSession
          * @param session GeckoSession that triggered the prompt
          * @param title Title for the prompt dialog.
          * @param msg Message for the prompt dialog.
-         * @param options AuthOptions containing options for the prompt
+         * @param options AuthenticationOptions containing options for the prompt
          * @param callback Callback interface.
          */
-        void onAuthPrompt(GeckoSession session, String title, String msg,
-                           AuthOptions options, AuthCallback callback);
+        void promptForAuth(GeckoSession session, String title, String msg,
+                           AuthenticationOptions options, AuthCallback callback);
 
         class Choice {
             /**
@@ -1785,7 +1785,7 @@ public class GeckoSession extends LayerSession
          * @param choices Array of Choices each representing an item or group.
          * @param callback Callback interface.
          */
-        void onChoicePrompt(GeckoSession session, String title, String msg, int type,
+        void promptForChoice(GeckoSession session, String title, String msg, int type,
                              Choice[] choices, ChoiceCallback callback);
 
         /**
@@ -1797,7 +1797,7 @@ public class GeckoSession extends LayerSession
          * @param callback Callback interface; the result passed to confirm() must be in
          *                 HTML color format.
          */
-        void onColorPrompt(GeckoSession session, String title, String value,
+        void promptForColor(GeckoSession session, String title, String value,
                             TextCallback callback);
 
         /**
@@ -1837,7 +1837,7 @@ public class GeckoSession extends LayerSession
          * @param callback Callback interface; the result passed to confirm() must be in
          *                 HTML date/time format.
          */
-        void onDateTimePrompt(GeckoSession session, String title, int type,
+        void promptForDateTime(GeckoSession session, String title, int type,
                                String value, String min, String max, TextCallback callback);
 
         /**
@@ -1877,7 +1877,7 @@ public class GeckoSession extends LayerSession
          *                  "*" to indicate any value.
          * @param callback Callback interface.
          */
-        void onFilePrompt(GeckoSession session, String title, int type,
+        void promptForFile(GeckoSession session, String title, int type,
                            String[] mimeTypes, FileCallback callback);
     }
 
@@ -1885,7 +1885,7 @@ public class GeckoSession extends LayerSession
      * GeckoSession applications implement this interface to handle content scroll
      * events.
      **/
-    public interface ScrollDelegate {
+    public interface ScrollListener {
         /**
          * The scroll position of the content has changed.
          *
@@ -1987,7 +1987,7 @@ public class GeckoSession extends LayerSession
          *                    android.Manifest.permission.RECORD_AUDIO
          * @param callback Callback interface.
          */
-        void onAndroidPermissionsRequest(GeckoSession session, String[] permissions,
+        void requestAndroidPermissions(GeckoSession session, String[] permissions,
                                        Callback callback);
 
         /**
@@ -2001,7 +2001,7 @@ public class GeckoSession extends LayerSession
          * @param access Not used.
          * @param callback Callback interface.
          */
-        void onContentPermissionRequest(GeckoSession session, String uri, int type,
+        void requestContentPermission(GeckoSession session, String uri, int type,
                                       String access, Callback callback);
 
         class MediaSource {
@@ -2175,7 +2175,7 @@ public class GeckoSession extends LayerSession
          * @param audio List of audio sources, or null if not requesting audio.
          * @param callback Callback interface.
          */
-        void onMediaPermissionRequest(GeckoSession session, String uri, MediaSource[] video,
+        void requestMediaPermission(GeckoSession session, String uri, MediaSource[] video,
                                     MediaSource[] audio, MediaCallback callback);
     }
 }

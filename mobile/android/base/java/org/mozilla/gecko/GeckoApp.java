@@ -115,7 +115,7 @@ public abstract class GeckoApp extends GeckoActivity
                                           BundleEventListener,
                                           GeckoMenu.Callback,
                                           GeckoMenu.MenuPresenter,
-                                          GeckoSession.ContentDelegate,
+                                          GeckoSession.ContentListener,
                                           ScreenOrientationDelegate,
                                           Tabs.OnTabsChangedListener,
                                           ViewTreeObserver.OnGlobalLayoutListener {
@@ -852,19 +852,19 @@ public abstract class GeckoApp extends GeckoActivity
         return inSampleSize;
     }
 
-    @Override // GeckoSession.ContentDelegate
+    @Override // GeckoSession.ContentListener
     public void onTitleChange(final GeckoSession session, final String title) {
     }
 
-    @Override // GeckoSession.ContentDelegate
+    @Override // GeckoSession.ContentListener
     public void onFocusRequest(final GeckoSession session) {
     }
 
-    @Override // GeckoSession.ContentDelegate
+    @Override // GeckoSession.ContentListener
     public void onCloseRequest(final GeckoSession session) {
     }
 
-    @Override // GeckoSession.ContentDelegate
+    @Override // GeckoSession.ContentListener
     public void onFullScreen(final GeckoSession session, final boolean fullScreen) {
         if (fullScreen) {
             SnackbarBuilder.builder(this)
@@ -1066,7 +1066,7 @@ public abstract class GeckoApp extends GeckoActivity
 
         session.getSettings().setString(GeckoSessionSettings.CHROME_URI,
                                         "chrome://browser/content/browser.xul");
-        session.setContentDelegate(this);
+        session.setContentListener(this);
 
         GeckoAccessibility.setDelegate(mLayerView);
 

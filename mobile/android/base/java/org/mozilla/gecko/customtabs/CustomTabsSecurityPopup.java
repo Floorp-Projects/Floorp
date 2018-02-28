@@ -33,7 +33,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.AnchoredPopup;
 import org.mozilla.gecko.widget.DoorHanger;
 import org.mozilla.gecko.widget.DoorHanger.OnButtonClickListener;
-import org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation;
+import org.mozilla.geckoview.GeckoSession.ProgressListener.SecurityInformation;
 import org.mozilla.geckoview.GeckoView;
 
 import android.app.Activity;
