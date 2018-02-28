@@ -44,7 +44,7 @@ notice() {
 }
 
 get_file_size() {
-  stat -f"%z" "$1"
+  stat -c"%s" "$1"
 }
 
 copy_perm() {
