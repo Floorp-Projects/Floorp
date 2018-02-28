@@ -8,7 +8,7 @@
 registerCleanupFunction(() => {});
 
 async function assertDialogResult({ args, buttonToClick, expectedResult }) {
-  promiseAlertDialogOpen(buttonToClick);
+  BrowserTestUtils.promiseAlertDialogOpen(buttonToClick);
   is(await DownloadsCommon.confirmUnblockDownload(args), expectedResult);
 }
 

@@ -185,6 +185,7 @@ struct hb_set_t
 
   inline void init (void)
   {
+    in_error = false;
     page_map.init ();
     pages.init ();
   }

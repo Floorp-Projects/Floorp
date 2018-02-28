@@ -76,7 +76,7 @@ struct SingleSubstFormat1
     return_trace (c->len == 1 && (this+coverage).get_coverage (c->glyphs[0]) != NOT_COVERED);
   }
 
-  inline bool apply (hb_apply_context_t *c) const
+  inline bool apply (hb_ot_apply_context_t *c) const
   {
     TRACE_APPLY (this);
     hb_codepoint_t glyph_id = c->buffer->cur().codepoint;
@@ -110,11 +110,11 @@ struct SingleSubstFormat1
   }
 
   protected:
-  UINT16	format;			/* Format identifier--format = 1 */
+  HBUINT16	format;			/* Format identifier--format = 1 */
   OffsetTo<Coverage>
 		coverage;		/* Offset to Coverage table--from
 					 * beginning of Substitution table */
-  INT16		deltaGlyphID;		/* Add to original GlyphID to get
+  HBINT16		deltaGlyphID;		/* Add to original GlyphID to get
 					 * substitute GlyphID */
   public:
   DEFINE_SIZE_STATIC (6);
@@ -161,7 +161,7 @@ struct SingleSubstFormat2
     return_trace (c->len == 1 && (this+coverage).get_coverage (c->glyphs[0]) != NOT_COVERED);
   }
 
-  inline bool apply (hb_apply_context_t *c) const
+  inline bool apply (hb_ot_apply_context_t *c) const
   {
     TRACE_APPLY (this);
     hb_codepoint_t glyph_id = c->buffer->cur().codepoint;
@@ -195,7 +195,7 @@ struct SingleSubstFormat2
   }
 
   protected:
-  UINT16	format;			/* Format identifier--format = 2 */
+  HBUINT16	format;			/* Format identifier--format = 2 */
   OffsetTo<Coverage>
 		coverage;		/* Offset to Coverage table--from
 					 * beginning of Substitution table */
@@ -249,7 +249,7 @@ struct SingleSubst
 
   protected:
   union {
-  UINT16		format;		/* Format identifier */
+  HBUINT16		format;		/* Format identifier */
   SingleSubstFormat1	format1;
   SingleSubstFormat2	format2;
   } u;
@@ -272,7 +272,7 @@ struct Sequence
     c->output->add_array (substitute.array, substitute.len);
   }
 
-  inline bool apply (hb_apply_context_t *c) const
+  inline bool apply (hb_ot_apply_context_t *c) const
   {
     TRACE_APPLY (this);
     unsigned int count = substitute.len;
@@ -363,7 +363,7 @@ struct MultipleSubstFormat1
     return_trace (c->len == 1 && (this+coverage).get_coverage (c->glyphs[0]) != NOT_COVERED);
   }
 
-  inline bool apply (hb_apply_context_t *c) const
+  inline bool apply (hb_ot_apply_context_t *c) const
   {
     TRACE_APPLY (this);
 
@@ -398,7 +398,7 @@ struct MultipleSubstFormat1
   }
 
   protected:
-  UINT16	format;			/* Format identifier--format = 1 */
+  HBUINT16	format;			/* Format identifier--format = 1 */
   OffsetTo<Coverage>
 		coverage;		/* Offset to Coverage table--from
 					 * beginning of Substitution table */
@@ -440,7 +440,7 @@ struct MultipleSubst
 
   protected:
   union {
-  UINT16		format;		/* Format identifier */
+  HBUINT16		format;		/* Format identifier */
   MultipleSubstFormat1	format1;
   } u;
 };
@@ -495,7 +495,7 @@ struct AlternateSubstFormat1
     return_trace (c->len == 1 && (this+coverage).get_coverage (c->glyphs[0]) != NOT_COVERED);
   }
 
-  inline bool apply (hb_apply_context_t *c) const
+  inline bool apply (hb_ot_apply_context_t *c) const
   {
     TRACE_APPLY (this);
     hb_codepoint_t glyph_id = c->buffer->cur().codepoint;
@@ -548,7 +548,7 @@ struct AlternateSubstFormat1
   }
 
   protected:
-  UINT16	format;			/* Format identifier--format = 1 */
+  HBUINT16	format;			/* Format identifier--format = 1 */
   OffsetTo<Coverage>
 		coverage;		/* Offset to Coverage table--from
 					 * beginning of Substitution table */
@@ -590,7 +590,7 @@ struct AlternateSubst
 
   protected:
   union {
-  UINT16		format;		/* Format identifier */
+  HBUINT16		format;		/* Format identifier */
   AlternateSubstFormat1	format1;
   } u;
 };
@@ -628,7 +628,7 @@ struct Ligature
     return_trace (true);
   }
 
-  inline bool apply (hb_apply_context_t *c) const
+  inline bool apply (hb_ot_apply_context_t *c) const
   {
     TRACE_APPLY (this);
     unsigned int count = component.len;
@@ -730,7 +730,7 @@ struct LigatureSet
     return_trace (false);
   }
 
-  inline bool apply (hb_apply_context_t *c) const
+  inline bool apply (hb_ot_apply_context_t *c) const
   {
     TRACE_APPLY (this);
     unsigned int num_ligs = ligature.len;
@@ -821,7 +821,7 @@ struct LigatureSubstFormat1
     return_trace (lig_set.would_apply (c));
   }
 
-  inline bool apply (hb_apply_context_t *c) const
+  inline bool apply (hb_ot_apply_context_t *c) const
   {
     TRACE_APPLY (this);
     hb_codepoint_t glyph_id = c->buffer->cur().codepoint;
@@ -862,7 +862,7 @@ struct LigatureSubstFormat1
   }
 
   protected:
-  UINT16	format;			/* Format identifier--format = 1 */
+  HBUINT16	format;			/* Format identifier--format = 1 */
   OffsetTo<Coverage>
 		coverage;		/* Offset to Coverage table--from
 					 * beginning of Substitution table */
@@ -912,7 +912,7 @@ struct LigatureSubst
 
   protected:
   union {
-  UINT16		format;		/* Format identifier */
+  HBUINT16		format;		/* Format identifier */
   LigatureSubstFormat1	format1;
   } u;
 };
@@ -993,7 +993,7 @@ struct ReverseChainSingleSubstFormat1
     return_trace (c->len == 1 && (this+coverage).get_coverage (c->glyphs[0]) != NOT_COVERED);
   }
 
-  inline bool apply (hb_apply_context_t *c) const
+  inline bool apply (hb_ot_apply_context_t *c) const
   {
     TRACE_APPLY (this);
     if (unlikely (c->nesting_level_left != HB_MAX_NESTING_LEVEL))
@@ -1007,11 +1007,11 @@ struct ReverseChainSingleSubstFormat1
 
   unsigned int start_index = 0, end_index = 0;
     if (match_backtrack (c,
-			 backtrack.len, (UINT16 *) backtrack.array,
+			 backtrack.len, (HBUINT16 *) backtrack.array,
 			 match_coverage, this,
 			 &start_index) &&
         match_lookahead (c,
-			 lookahead.len, (UINT16 *) lookahead.array,
+			 lookahead.len, (HBUINT16 *) lookahead.array,
 			 match_coverage, this,
 			 1, &end_index))
     {
@@ -1039,7 +1039,7 @@ struct ReverseChainSingleSubstFormat1
   }
 
   protected:
-  UINT16	format;			/* Format identifier--format = 1 */
+  HBUINT16	format;			/* Format identifier--format = 1 */
   OffsetTo<Coverage>
 		coverage;		/* Offset to Coverage table--from
 					 * beginning of table */
@@ -1073,7 +1073,7 @@ struct ReverseChainSingleSubst
 
   protected:
   union {
-  UINT16				format;		/* Format identifier */
+  HBUINT16				format;		/* Format identifier */
   ReverseChainSingleSubstFormat1	format1;
   } u;
 };
@@ -1119,7 +1119,7 @@ struct SubstLookupSubTable
 
   protected:
   union {
-  UINT16			sub_format;
+  HBUINT16			sub_format;
   SingleSubst			single;
   MultipleSubst			multiple;
   AlternateSubst		alternate;
@@ -1150,7 +1150,7 @@ struct SubstLookup : Lookup
     return lookup_type_is_reverse (type);
   }
 
-  inline bool apply (hb_apply_context_t *c) const
+  inline bool apply (hb_ot_apply_context_t *c) const
   {
     TRACE_APPLY (this);
     return_trace (dispatch (c));
@@ -1186,7 +1186,7 @@ struct SubstLookup : Lookup
       return_trace (dispatch (c));
   }
 
-  static bool apply_recurse_func (hb_apply_context_t *c, unsigned int lookup_index);
+  static bool apply_recurse_func (hb_ot_apply_context_t *c, unsigned int lookup_index);
 
   inline SubstLookupSubTable& serialize_subtable (hb_serialize_context_t *c,
 						  unsigned int i)
@@ -1272,10 +1272,9 @@ struct SubstLookup : Lookup
     {
       /* The spec says all subtables of an Extension lookup should
        * have the same type, which shall not be the Extension type
-       * itself. This is specially important if one has a reverse type! */
+       * itself (but we already checked for that).
+       * This is specially important if one has a reverse type! */
       unsigned int type = get_subtable (0).u.extension.get_type ();
-      if (unlikely (type == SubstLookupSubTable::Extension))
-	return_trace (false);
       unsigned int count = get_subtable_count ();
       for (unsigned int i = 1; i < count; i++)
         if (get_subtable (i).u.extension.get_type () != type)
@@ -1344,7 +1343,7 @@ template <typename context_t>
   return l.dispatch (c);
 }
 
-/*static*/ inline bool SubstLookup::apply_recurse_func (hb_apply_context_t *c, unsigned int lookup_index)
+/*static*/ inline bool SubstLookup::apply_recurse_func (hb_ot_apply_context_t *c, unsigned int lookup_index)
 {
   const GSUB &gsub = *(hb_ot_layout_from_face (c->face)->gsub);
   const SubstLookup &l = gsub.get_lookup (lookup_index);

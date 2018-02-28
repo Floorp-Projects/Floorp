@@ -104,7 +104,7 @@ protected:
     nsCString        mCharsetHint;
 
 public:
-    class Mutator
+    class Mutator final
         : public nsIURIMutator
         , public BaseURIMutator<nsJARURI>
         , public nsIURLMutator

@@ -143,16 +143,27 @@ document.body.appendChild(wrap);
 
 </script>
 
-<!--  For generating image size results in -ref file
+<!--
 <script>
-document.body.clientHeight;
-var imgs = document.querySelectorAll('img');
-var s = '  [\n';
-for (var i = 0; i < imgs.length; ++i) {
-  s += "  ['"+ imgs[i].width + "px', '" + imgs[i].height + "px'],\n";
+document.body.onload = function() {
+  document.body.clientHeight;
+  var imgs = document.querySelectorAll('img');
+  var s = '  [\n';
+  for (var i = 0; i < imgs.length; ++i) {
+    s += "  ['"+ imgs[i].width + "px', '" + imgs[i].height + "px'],\n";
+  }
+  s += ']';
+  console.log(s)
+
+  var grids = document.querySelectorAll('.grid');
+  var s = '  [\n';
+  for (var i = 0; i < grids.length; ++i) {
+    let cs = window.getComputedStyle(grids[i]);
+    s += "  ['"+ cs.gridTemplateRows + " / " + cs.gridTemplateColumns + "'],\n";
+  }
+  s += ']';
+  console.log(s)
 }
-s += ']';
-console.log(s)
 </script>
 -->
 

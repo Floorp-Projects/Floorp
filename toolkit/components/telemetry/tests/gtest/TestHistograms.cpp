@@ -18,6 +18,9 @@ TEST_F(TelemetryTestFixture, AccumulateCountHistogram)
   const uint32_t kExpectedValue = 100;
   AutoJSContextWithGlobal cx(mCleanGlobal);
 
+  const char* telemetryTestCountName = Telemetry::GetHistogramName(Telemetry::TELEMETRY_TEST_COUNT);
+  ASSERT_STREQ(telemetryTestCountName, "TELEMETRY_TEST_COUNT") << "The histogram name is wrong";
+
   GetAndClearHistogram(cx.GetJSContext(), mTelemetry, NS_LITERAL_CSTRING("TELEMETRY_TEST_COUNT"),
                        false);
 
@@ -26,11 +29,11 @@ TEST_F(TelemetryTestFixture, AccumulateCountHistogram)
 
   // Get a snapshot for all the histograms
   JS::RootedValue snapshot(cx.GetJSContext());
-  GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_COUNT", &snapshot, false);
+  GetSnapshots(cx.GetJSContext(), mTelemetry, telemetryTestCountName, &snapshot, false);
 
   // Get the histogram from the snapshot
   JS::RootedValue histogram(cx.GetJSContext());
-  GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_COUNT", snapshot, &histogram);
+  GetProperty(cx.GetJSContext(), telemetryTestCountName, snapshot, &histogram);
 
   // Get "sum" property from histogram
   JS::RootedValue sum(cx.GetJSContext());

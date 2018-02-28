@@ -73,7 +73,7 @@ ModuleUnwindParser::ModuleUnwindParser(const std::string& aPath)
 {
   // Convert wchar to native charset because ImageLoad only takes
   // a PSTR as input.
-  std::string code_file = UTF8toMBCS(aPath);
+  std::string code_file = UTF8ToMBCS(aPath);
 
   mImg = ImageLoad((PSTR)code_file.c_str(), NULL);
   if (!mImg || !mImg->FileHeader) {
