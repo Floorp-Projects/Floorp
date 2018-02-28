@@ -22,6 +22,7 @@ apps:
       - gsettings
       - home
       - network
+      - network-observe
       - opengl
       - pulseaudio
       - screen-inhibit-control
