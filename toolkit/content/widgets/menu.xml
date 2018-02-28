@@ -33,7 +33,7 @@
       <property name="parentContainer" readonly="true">
         <getter>
           for (var parent = this.parentNode; parent; parent = parent.parentNode) {
-            if (parent instanceof Components.interfaces.nsIDOMXULContainerElement)
+            if (parent instanceof Ci.nsIDOMXULContainerElement)
               return parent;
           }
           return null;

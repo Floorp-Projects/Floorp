@@ -45,9 +45,11 @@
 /* global setImmediate:false */
 
 /* eslint-disable mozilla/no-define-cc-etc */
+/* eslint-disable mozilla/use-cc-etc */
 var Cu = this.require ? require("chrome").Cu : Components.utils;
 var Cc = this.require ? require("chrome").Cc : Components.classes;
 var Ci = this.require ? require("chrome").Ci : Components.interfaces;
+/* eslint-enable mozilla/use-cc-etc */
 /* eslint-enable mozilla/no-define-cc-etc */
 // If we can access Components, then we use it to capture an async
 // parent stack trace; see scheduleWalkerLoop.  However, as it might

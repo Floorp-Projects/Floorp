@@ -604,8 +604,7 @@
       </property>
 
       <field name="mPrefs" readonly="true">
-        Components.classes["@mozilla.org/preferences-service;1"]
-                  .getService(Components.interfaces.nsIPrefBranch);
+        Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
       </field>
 
       <field name="_mStrBundle">null</field>
