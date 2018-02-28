@@ -868,8 +868,10 @@ var PanelMultiView = class extends this.AssociatedToNode {
                    height: nextPanelView.knownHeight };
       nextPanelView.visible = true;
     } else if (viewNode.customRectGetter) {
-      // Can't use Object.assign directly with a DOM Rect object because its properties
-      // aren't enumerable.
+      // We use a customRectGetter for WebExtensions panels, because they need
+      // to query the size from an embedded browser. The presence of this
+      // getter also provides an indication that the view node shouldn't be
+      // moved around, otherwise the state of the browser would get disrupted.
       let width = prevPanelView.knownWidth;
       let height = prevPanelView.knownHeight;
       viewRect = Object.assign({height, width}, viewNode.customRectGetter());
@@ -880,7 +882,6 @@ var PanelMultiView = class extends this.AssociatedToNode {
       nextPanelView.visible = true;
       nextPanelView.descriptionHeightWorkaround();
     } else {
-      let oldSibling = viewNode.nextSibling || null;
       this._offscreenViewStack.style.minHeight = olderView.knownHeight + "px";
       this._offscreenViewStack.appendChild(viewNode);
       nextPanelView.visible = true;
@@ -897,11 +898,9 @@ var PanelMultiView = class extends this.AssociatedToNode {
         return;
       }
 
-      try {
-        this._viewStack.insertBefore(viewNode, oldSibling);
-      } catch (ex) {
-        this._viewStack.appendChild(viewNode);
-      }
+      // Place back the view after all the other views that are already open in
+      // order for the transition to work as expected.
+      this._viewStack.appendChild(viewNode);
 
       this._offscreenViewStack.style.removeProperty("min-height");
     }
