@@ -1924,6 +1924,7 @@ function run_FunctionType_tests() {
   Assert.equal(t4_t.name, "char*(*(**[][8])(int32_t, g_t(*)()))[]");
 
   // Not available in a Worker
+  // eslint-disable-next-line mozilla/use-cc-etc
   if ("@mozilla.org/systemprincipal;1" in Components.classes) {
     var sp = Cc["@mozilla.org/systemprincipal;1"].
                createInstance(Ci.nsIPrincipal);
