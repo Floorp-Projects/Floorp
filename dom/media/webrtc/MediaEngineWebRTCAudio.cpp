@@ -104,19 +104,6 @@ MediaEngineWebRTCMicrophoneSource::Allocation::Allocation(
 
 MediaEngineWebRTCMicrophoneSource::Allocation::~Allocation() = default;
 
-#ifdef DEBUG
-void
-MediaEngineWebRTCMicrophoneSource::Allocation::RegisterLastAppendTime(
-    MediaStreamGraphImpl* aGraph)
-{
-  aGraph->AssertOnGraphThreadOrNotRunning();
-  MOZ_ASSERT((aGraph->IterationEnd() == 0 && mLastAppendTime == 0) ||
-             aGraph->IterationEnd() > mLastAppendTime,
-             "Iteration time didn't advance since last append");
-  mLastAppendTime = aGraph->IterationEnd();
-}
-#endif
-
 MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
     mozilla::AudioInput* aAudioInput,
     int aIndex,
@@ -698,6 +685,13 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>& a
     MutexAutoLock lock(mMutex);
     allocation.mEnabled = true;
 
+#ifdef DEBUG
+    // Ensure that callback-tracking state is reset when callbacks start coming.
+    allocation.mLastCallbackAppendTime = 0;
+#endif
+    allocation.mLiveFramesAppended = false;
+    allocation.mLiveSilenceAppended = false;
+
     if (!mListener) {
       mListener = new WebRTCAudioDataListener(this);
     }
@@ -773,6 +767,8 @@ MediaEngineWebRTCMicrophoneSource::Pull(const RefPtr<const AllocationHandle>& aH
 {
   LOG_FRAMES(("NotifyPull, desired = %" PRId64, (int64_t) aDesiredTime));
 
+  StreamTime delta;
+
   {
     MutexAutoLock lock(mMutex);
     size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
@@ -782,19 +778,45 @@ MediaEngineWebRTCMicrophoneSource::Pull(const RefPtr<const AllocationHandle>& aH
       return;
     }
 
-#ifdef DEBUG
-    mAllocations[i].RegisterLastAppendTime(
-      static_cast<MediaStreamGraphImpl*>(aStream->Graph()));
-#endif
-  }
+    // We don't want to GetEndOfAppendedData() above at the declaration if the
+    // allocation was removed and the track non-existant. An assert will fail.
+    delta = aDesiredTime - aStream->GetEndOfAppendedData(aTrackID);
 
-  StreamTime delta = aDesiredTime - aStream->GetEndOfAppendedData(aTrackID);
-  if (delta <= 0) {
-    return;
-  }
+    if (!mAllocations[i].mLiveFramesAppended ||
+        !mAllocations[i].mLiveSilenceAppended) {
+      // These are the iterations after starting or resuming audio capture.
+      // Make sure there's at least one extra block buffered until audio
+      // callbacks come in. We also allow appending silence one time after
+      // audio callbacks have started, to cover the case where audio callbacks
+      // start appending data immediately and there is no extra data buffered.
+      delta += WEBAUDIO_BLOCK_SIZE;
+    }
 
-  // Not enough data has been pushed so we fill it with silence.
-  // This could be due to underruns or because we have been stopped.
+    if (delta < 0) {
+      LOG_FRAMES(("Not appending silence for allocation %p; %" PRId64 " frames already buffered",
+                  mAllocations[i].mHandle.get(), -delta));
+      return;
+    }
+
+    // This assertion fails when we append silence here in the same iteration
+    // as there were real audio samples already appended by the audio callback.
+    // Note that this is exempted until live samples and a subsequent chunk of silence have been appended to the track. This will cover cases like:
+    // - After Start(), there is silence (maybe multiple times) appended before
+    //   the first audio callback.
+    // - After Start(), there is real data (maybe multiple times) appended
+    //   before the first graph iteration.
+    // And other combinations of order of audio sample sources.
+    MOZ_ASSERT_IF(
+      mAllocations[i].mEnabled &&
+      mAllocations[i].mLiveFramesAppended &&
+      mAllocations[i].mLiveSilenceAppended,
+      aStream->GraphImpl()->IterationEnd() >
+      mAllocations[i].mLastCallbackAppendTime);
+
+    if (mAllocations[i].mLiveFramesAppended) {
+      mAllocations[i].mLiveSilenceAppended = true;
+    }
+  }
 
   AudioSegment audio;
   audio.AppendNullData(delta);
@@ -984,10 +1006,20 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
     }
 
     AudioSegment segment;
-    for (const Allocation& allocation : mAllocations) {
+    for (Allocation& allocation : mAllocations) {
       if (!allocation.mStream) {
         continue;
       }
+
+      if (!allocation.mEnabled) {
+        continue;
+      }
+
+#ifdef DEBUG
+      allocation.mLastCallbackAppendTime =
+        allocation.mStream->GraphImpl()->IterationEnd();
+#endif
+      allocation.mLiveFramesAppended = true;
 
       // We already have planar audio data of the right format. Insert into the
       // MSG.
@@ -1043,9 +1075,15 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
       continue;
     }
 
+    if (!allocation.mEnabled) {
+      continue;
+    }
+
 #ifdef DEBUG
-    allocation.RegisterLastAppendTime(allocation.mStream->GraphImpl());
+    allocation.mLastCallbackAppendTime =
+      allocation.mStream->GraphImpl()->IterationEnd();
 #endif
+    allocation.mLiveFramesAppended = true;
 
     TimeStamp insertTime;
     // Make sure we include the stream and the track.
