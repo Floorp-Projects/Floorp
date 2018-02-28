@@ -269,7 +269,7 @@ function test_cycles(size, tc) {
   }
   do_test_pending();
 
-  Components.utils.schedulePreciseGC(
+  Cu.schedulePreciseGC(
     function after_gc() {
       // Check that _something_ has been finalized
       Assert.ok(count_finalized(size, tc) > 0);

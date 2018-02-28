@@ -1,6 +1,6 @@
 var rootDir = getRootDirectory(gTestPath);
 const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
-var gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
+var gPluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 
 add_task(async function() {
   registerCleanupFunction(function() {

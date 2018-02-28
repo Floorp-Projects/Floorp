@@ -42,7 +42,7 @@ function run_test()
     Assert.ok(e.toString().indexOf("can't access dead object") > -1);
   }
 
-  Components.utils.isDeadWrapper(refToObjFromSb, "ref to object from sb should be dead");
+  Cu.isDeadWrapper(refToObjFromSb, "ref to object from sb should be dead");
   try{
     refToObjFromSb.prop2;
     Assert.ok(false);

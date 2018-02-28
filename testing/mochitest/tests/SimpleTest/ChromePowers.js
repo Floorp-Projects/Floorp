@@ -3,13 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function ChromePowers(window) {
-  this.window = Components.utils.getWeakReference(window);
+  this.window = Cu.getWeakReference(window);
 
   // In the case of browser-chrome tests, we are running as a [ChromeWindow]
   // and we have no window.QueryInterface available, content.window is what we need
   if (typeof(window) == "ChromeWindow" && typeof(content.window) == "Window") {
     this.DOMWindowUtils = bindDOMWindowUtils(content.window);
-    this.window = Components.utils.getWeakReference(content.window);
+    this.window = Cu.getWeakReference(content.window);
   } else {
     this.DOMWindowUtils = bindDOMWindowUtils(window);
   }

@@ -180,7 +180,7 @@ BadCertHandler.prototype = {
   // nsIChannelEventSink
   asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
     if (this.allowNonBuiltInCerts) {
-      callback.onRedirectVerifyCallback(Components.results.NS_OK);
+      callback.onRedirectVerifyCallback(Cr.NS_OK);
       return;
     }
 
@@ -190,7 +190,7 @@ BadCertHandler.prototype = {
     if (!(flags & Ci.nsIChannelEventSink.REDIRECT_INTERNAL))
       checkCert(oldChannel);
 
-    callback.onRedirectVerifyCallback(Components.results.NS_OK);
+    callback.onRedirectVerifyCallback(Cr.NS_OK);
   },
 
   // nsIInterfaceRequestor

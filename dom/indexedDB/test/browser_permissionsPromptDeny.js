@@ -29,7 +29,7 @@ add_task(async function test1() {
   await waitForMessage("InvalidStateError", gBrowser);
 
   is(getPermission(testPageURL, "indexedDB"),
-     Components.interfaces.nsIPermissionManager.DENY_ACTION,
+     Ci.nsIPermissionManager.DENY_ACTION,
      "Correct permission set");
   gBrowser.removeCurrentTab();
 });
@@ -56,7 +56,7 @@ add_task(async function test2() {
   await waitForMessage("InvalidStateError", win.gBrowser);
 
   is(getPermission(testPageURL, "indexedDB"),
-     Components.interfaces.nsIPermissionManager.DENY_ACTION,
+     Ci.nsIPermissionManager.DENY_ACTION,
      "Correct permission set");
   unregisterAllPopupEventHandlers();
   win.gBrowser.removeCurrentTab();
@@ -82,7 +82,7 @@ add_task(async function test3() {
   await waitForMessage("InvalidStateError", gBrowser);
 
   is(getPermission(testPageURL, "indexedDB"),
-     Components.interfaces.nsIPermissionManager.DENY_ACTION,
+     Ci.nsIPermissionManager.DENY_ACTION,
      "Correct permission set");
   gBrowser.removeCurrentTab();
   unregisterAllPopupEventHandlers();

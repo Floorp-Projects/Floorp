@@ -6,7 +6,7 @@ addMessageListener("file.open", function (e) {
                   .QueryInterface(Ci.nsIProperties)
                   .get('TmpD', Ci.nsIFile)
   tmpFile.append('file.txt');
-  tmpFile.createUnique(Components.interfaces.nsIFile.FILE_TYPE, 0o600);
+  tmpFile.createUnique(Ci.nsIFile.FILE_TYPE, 0o600);
 
   File.createFromNsIFile(tmpFile).then(function(file) {
     sendAsyncMessage("file.opened", { data: file });

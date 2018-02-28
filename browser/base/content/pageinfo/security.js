@@ -25,8 +25,8 @@ var security = {
   },
 
   _getSecurityInfo() {
-    const nsISSLStatusProvider = Components.interfaces.nsISSLStatusProvider;
-    const nsISSLStatus = Components.interfaces.nsISSLStatus;
+    const nsISSLStatusProvider = Ci.nsISSLStatusProvider;
+    const nsISSLStatus = Ci.nsISSLStatus;
 
     // We don't have separate info for a frame, return null until further notice
     // (see bug 138479)
@@ -40,14 +40,14 @@ var security = {
       return null;
 
     var isBroken =
-      (ui.state & Components.interfaces.nsIWebProgressListener.STATE_IS_BROKEN);
+      (ui.state & Ci.nsIWebProgressListener.STATE_IS_BROKEN);
     var isMixed =
-      (ui.state & (Components.interfaces.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT |
-                   Components.interfaces.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT));
+      (ui.state & (Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT |
+                   Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT));
     var isInsecure =
-      (ui.state & Components.interfaces.nsIWebProgressListener.STATE_IS_INSECURE);
+      (ui.state & Ci.nsIWebProgressListener.STATE_IS_INSECURE);
     var isEV =
-      (ui.state & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL);
+      (ui.state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL);
     ui.QueryInterface(nsISSLStatusProvider);
     var status = ui.SSLStatus;
 
@@ -305,7 +305,7 @@ function viewCertHelper(parent, cert) {
   if (!cert)
     return;
 
-  var cd = Components.classes[CERTIFICATEDIALOGS_CONTRACTID].getService(nsICertificateDialogs);
+  var cd = Cc[CERTIFICATEDIALOGS_CONTRACTID].getService(nsICertificateDialogs);
   cd.viewCert(parent, cert);
 }
 
@@ -333,8 +333,8 @@ function previousVisitCount(host, endTimeReference) {
   if (!host)
     return false;
 
-  var historyService = Components.classes["@mozilla.org/browser/nav-history-service;1"]
-                                 .getService(Components.interfaces.nsINavHistoryService);
+  var historyService = Cc["@mozilla.org/browser/nav-history-service;1"]
+                         .getService(Ci.nsINavHistoryService);
 
   var options = historyService.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_VISIT;

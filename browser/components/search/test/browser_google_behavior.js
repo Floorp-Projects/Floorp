@@ -65,7 +65,7 @@ function promiseStateChangeURI() {
 
         Assert.ok(req instanceof Ci.nsIChannel, "req is a channel");
 
-        req.cancel(Components.results.NS_ERROR_FAILURE);
+        req.cancel(Cr.NS_ERROR_FAILURE);
 
         executeSoon(() => {
           resolve(spec);

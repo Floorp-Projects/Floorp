@@ -44,20 +44,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=616590
 
     QueryInterface : function(aIID)
     {
-      if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
-          aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
-          aIID.equals(Components.interfaces.nsISupports))
+      if (aIID.equals(Ci.nsIWebProgressListener) ||
+          aIID.equals(Ci.nsISupportsWeakReference) ||
+          aIID.equals(Ci.nsISupports))
         return this;
-      throw Components.results.NS_NOINTERFACE;
+      throw Cr.NS_NOINTERFACE;
     },
 
     onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
     {
-      if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
       {
         var editor = this.mEditor.getEditor(this.mEditor.contentWindow);
         if (editor) {
-          editor.QueryInterface(Components.interfaces.nsIEditorMailSupport);
+          editor.QueryInterface(Ci.nsIEditorMailSupport);
           editor.insertAsCitedQuotation("<html><body><div contenteditable>foo</div></body></html>", "", true);
           document.documentElement.clientWidth;
           progress.removeProgressListener(this);
@@ -95,9 +95,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=616590
     var editorElement = document.getElementById("editor");
     editorElement.makeEditable("htmlmail", true);
     var docShell = editorElement.boxObject.docShell;
-    progress = docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);
+    progress = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebProgress);
     progressListener = new EditorContentListener(editorElement);
-    progress.addProgressListener(progressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+    progress.addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_ALL);
     editorElement.setAttribute("src", "data:text/html,");
   }
 ]]>

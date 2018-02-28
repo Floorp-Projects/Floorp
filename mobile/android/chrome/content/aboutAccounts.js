@@ -127,15 +127,15 @@ var wrapper = {
           try {
             failure = aRequest.responseStatus != 200;
           } catch (e) {
-            failure = aStatus != Components.results.NS_OK;
+            failure = aStatus != Cr.NS_OK;
           }
         }
       }
 
       // Calling cancel() will raise some OnStateChange notifications by itself,
       // so avoid doing that more than once
-      if (failure && aStatus != Components.results.NS_BINDING_ABORTED) {
-        aRequest.cancel(Components.results.NS_BINDING_ABORTED);
+      if (failure && aStatus != Cr.NS_BINDING_ABORTED) {
+        aRequest.cancel(Cr.NS_BINDING_ABORTED);
         // Since after a promise is fulfilled, subsequent fulfillments are
         // treated as no-ops, we don't care that we might see multiple failures
         // due to multiple listener callbacks.  (It's not easy to extract this
@@ -148,7 +148,7 @@ var wrapper = {
 
     onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
       if (aRequest && aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
-        aRequest.cancel(Components.results.NS_BINDING_ABORTED);
+        aRequest.cancel(Cr.NS_BINDING_ABORTED);
         // As above, we're not concerned by multiple listener callbacks.
         loadedDeferred.reject(new Error("Failed in onLocationChange!"));
         show("networkError");

@@ -51,13 +51,13 @@ function test_simple_breakpoint() {
   });
 
   /* eslint-disable */
-  Components.utils.evalInSandbox("debugger;\n" +   // 1
-                                 "var a = 1;\n" +  // 2
-                                 "var b = 2;\n" +  // 3
-                                 "debugger;",      // 4
-                                 gDebuggee,
-                                 "1.8",
-                                 "test.js",
-                                 1);
+  Cu.evalInSandbox("debugger;\n" +   // 1
+                   "var a = 1;\n" +  // 2
+                   "var b = 2;\n" +  // 3
+                   "debugger;",      // 4
+                   gDebuggee,
+                   "1.8",
+                   "test.js",
+                   1);
   /* eslint-enable */
 }

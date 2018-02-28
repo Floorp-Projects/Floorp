@@ -8,11 +8,11 @@
 // Tests to make sure that the certificate DB works with non-ASCII paths.
 
 // Append a single quote and non-ASCII characters to the profile path.
-let env = Components.classes["@mozilla.org/process/environment;1"]
-                    .getService(Components.interfaces.nsIEnvironment);
+let env = Cc["@mozilla.org/process/environment;1"]
+            .getService(Ci.nsIEnvironment);
 let profd = env.get("XPCSHELL_TEST_PROFILE_DIR");
-let file = Components.classes["@mozilla.org/file/local;1"]
-                     .createInstance(Components.interfaces.nsIFile);
+let file = Cc["@mozilla.org/file/local;1"]
+             .createInstance(Ci.nsIFile);
 file.initWithPath(profd);
 file.append("'÷1");
 env.set("XPCSHELL_TEST_PROFILE_DIR", file.path);
@@ -22,7 +22,7 @@ Assert.ok(/[^\x20-\x7f]/.test(file.path), "the profile path should contain a non
 // Due to 8.3 names being enabled on Thunderbird's Buildbot, this will fail. It passes
 // on TaskCluster, so this check can be removed when Buildbot is dropped.
 if (mozinfo.os == "win" && AppConstants.MOZ_APP_NAME != "thunderbird") {
-  file.QueryInterface(Components.interfaces.nsILocalFileWin);
+  file.QueryInterface(Ci.nsILocalFileWin);
   Assert.ok(/[^\x20-\x7f]/.test(file.canonicalPath), "the profile short path should contain a non-ASCII character");
 }
 

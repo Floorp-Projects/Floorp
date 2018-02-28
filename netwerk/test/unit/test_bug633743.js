@@ -11,7 +11,7 @@ function make_channel(flags, vary, value) {
   var chan = NetUtil.newChannel({
     uri: "http://localhost:" + httpserver.identity.primaryPort + "/bug633743",
     loadUsingSystemPrincipal: true
-  }).QueryInterface(Components.interfaces.nsIHttpChannel);
+  }).QueryInterface(Ci.nsIHttpChannel);
   return chan.QueryInterface(Ci.nsIHttpChannel);
 }
 

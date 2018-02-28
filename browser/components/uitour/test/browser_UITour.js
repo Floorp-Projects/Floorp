@@ -167,7 +167,7 @@ var tests = [
           done();
         }, "Highlight should move to the appMenu button");
       }, "Highlight should be shown after showHighlight() for fixed panel items");
-    }).catch(Components.utils.reportError);
+    }).catch(Cu.reportError);
   },
   function test_highlight_effect(done) {
     function waitForHighlightWithEffect(highlightEl, effect, next, error) {

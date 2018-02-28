@@ -18,9 +18,9 @@ var ctx1;
 var ctx2;
 var counter = 0;
 
-var file = Components.classes["@mozilla.org/file/directory_service;1"]
-             .getService(Components.interfaces.nsIProperties)
-             .get("TmpD", Components.interfaces.nsIFile);
+var file = Cc["@mozilla.org/file/directory_service;1"]
+             .getService(Ci.nsIProperties)
+             .get("TmpD", Ci.nsIFile);
 filePath = file.path;
 
 function printpreview() {
@@ -34,14 +34,14 @@ function printpreview() {
     onStateChange: function(webProgress, request, stateFlags, status) { },
     onStatusChange: function(webProgress, request, status, message) { },
     QueryInterface: function(iid) {
-      if (iid.equals(Components.interfaces.nsIWebProgressListener) ||
-          iid.equals(Components.interfaces.nsISupportsWeakReference))
+      if (iid.equals(Ci.nsIWebProgressListener) ||
+          iid.equals(Ci.nsISupportsWeakReference))
             return this;
-      throw Components.results.NS_NOINTERFACE;
+      throw Cr.NS_NOINTERFACE;
     }
   }
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                            .getService(Components.interfaces.nsIPrefBranch);
+  var prefs = Cc["@mozilla.org/preferences-service;1"]
+                .getService(Ci.nsIPrefBranch);
   prefs.setBoolPref('print.show_print_progress', false);
   //XXX I would have thought this would work, instead I'm forced to use prefs service
   gWbp.globalPrintSettings.showPrintProgress = false;
@@ -70,12 +70,12 @@ function finish() {
 
 function runTests()
 {
-  var printService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                               .getService(Components.interfaces.nsIPrintSettingsService);
+  var printService = Cc["@mozilla.org/gfx/printsettings-service;1"]
+                       .getService(Ci.nsIPrintSettingsService);
 
   try {
-    Components.classes["@mozilla.org/gfx/printerenumerator;1"]
-              .getService(Components.interfaces.nsIPrinterEnumerator);
+    Cc["@mozilla.org/gfx/printerenumerator;1"]
+      .getService(Ci.nsIPrinterEnumerator);
   } catch(e) {
     todo(false, "Test skipped on MacOSX, as the print preview code doesn't work there");
     finish();
@@ -91,8 +91,8 @@ function runTests()
 }
 
 function compareCanvases() {
-  return window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-               .getInterface(Components.interfaces.nsIDOMWindowUtils)
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIDOMWindowUtils)
                .compareCanvases(document.getElementsByTagName("canvas")[0],
                                 document.getElementsByTagName("canvas")[1],
                                 {}) == 0;

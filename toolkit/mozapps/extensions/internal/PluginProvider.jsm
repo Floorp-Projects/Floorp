@@ -472,7 +472,7 @@ PluginWrapper.prototype = {
       if (path.startsWith(dir.path))
         return AddonManager.SCOPE_USER;
     } catch (e) {
-      if (!e.result || e.result != Components.results.NS_ERROR_FAILURE)
+      if (!e.result || e.result != Cr.NS_ERROR_FAILURE)
         throw e;
       // Do nothing: missing "Home".
     }

@@ -35,28 +35,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=874090
     },
 
     QueryInterface: function(aIID) {
-      if (aIID.equals(Components.interfaces.nsISupports) ||
-          aIID.equals(Components.interfaces.nsIAlertsService)) {
+      if (aIID.equals(Ci.nsISupports) ||
+          aIID.equals(Ci.nsIAlertsService)) {
         return this;
       }
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
     createInstance: function(aOuter, aIID) {
       if (aOuter != null) {
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
+        throw Cr.NS_ERROR_NO_AGGREGATION;
       }
       return this.QueryInterface(aIID);
     }
   };
 
   function registerMock() {
-    Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar).
+    Components.manager.QueryInterface(Ci.nsIComponentRegistrar).
       registerFactory(MOCK_CID, "alerts service", ALERTS_SERVICE_CONTRACT_ID, mockAlertsService);
   }
 
   function unregisterMock() {
-    Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar).
+    Components.manager.QueryInterface(Ci.nsIComponentRegistrar).
       unregisterFactory(MOCK_CID, mockAlertsService);
   }
 

@@ -6,7 +6,7 @@
 
 function onLoad() {
   let protectedAuthThread =
-    window.arguments[0].QueryInterface(Components.interfaces.nsIProtectedAuthThread);
+    window.arguments[0].QueryInterface(Ci.nsIProtectedAuthThread);
 
   if (!protectedAuthThread) {
     window.close();

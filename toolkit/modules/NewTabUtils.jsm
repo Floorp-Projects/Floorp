@@ -109,7 +109,7 @@ function LinksStorage() {
   } catch (ex) {
     // Something went wrong in the update process, we can't recover from here,
     // so just clear the storage and start from scratch (dataloss!).
-    Components.utils.reportError(
+    Cu.reportError(
       "Unable to migrate the newTab storage to the current version. " +
       "Restarting from scratch.\n" + ex);
     this.clear();

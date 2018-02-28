@@ -1,10 +1,10 @@
 
-const nsISupports = Components.interfaces.nsISupports;
-const nsIAutoCompleteResult = Components.interfaces.nsIAutoCompleteResult;
-const nsIAutoCompleteSearch = Components.interfaces.nsIAutoCompleteSearch;
-const nsIFactory = Components.interfaces.nsIFactory;
-const nsIUUIDGenerator = Components.interfaces.nsIUUIDGenerator;
-const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
+const nsISupports = Ci.nsISupports;
+const nsIAutoCompleteResult = Ci.nsIAutoCompleteResult;
+const nsIAutoCompleteSearch = Ci.nsIAutoCompleteSearch;
+const nsIFactory = Ci.nsIFactory;
+const nsIUUIDGenerator = Ci.nsIUUIDGenerator;
+const nsIComponentRegistrar = Ci.nsIComponentRegistrar;
 
 var gDefaultAutoCompleteSearch = null;
 
@@ -41,7 +41,7 @@ function shutdownAutoComplete() {
 function registerAutoCompleteSearch(aSearch, aDescription) {
   var name = "@mozilla.org/autocomplete/search;1?name=" + aSearch.name;
 
-  var uuidGenerator = Components.classes["@mozilla.org/uuid-generator;1"].
+  var uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].
     getService(nsIUUIDGenerator);
   var cid = uuidGenerator.generateUUID();
 
@@ -119,7 +119,7 @@ AutoCompleteSearch.prototype =
         iid.equals(nsIAutoCompleteSearch))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   // nsIFactory implementation
@@ -193,7 +193,7 @@ AutoCompleteResult.prototype =
         iid.equals(nsIAutoCompleteResult))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   // Data

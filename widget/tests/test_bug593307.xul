@@ -29,12 +29,12 @@ function finish() {
   SimpleTest.finish();
 }
 
-var mainWindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                       .getInterface(Components.interfaces.nsIWebNavigation)
-                       .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIWebNavigation)
+                       .QueryInterface(Ci.nsIDocShellTreeItem)
                        .rootTreeItem
-                       .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                       .getInterface(Components.interfaces.nsIDOMWindow);
+                       .QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDOMWindow);
 
 var offscreenWindow = mainWindow.openDialog("window_bug593307_offscreen.xul", "",
                                             "dialog=no,chrome,width=200,height=200,screenX=-3000,screenY=-3000",

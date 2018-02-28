@@ -56,6 +56,6 @@ function addSources(debuggee) {
 
   code += "//# sourceMappingURL=data:text/json;base64," + btoa(map.toString());
 
-  Components.utils.evalInSandbox(code, debuggee, "1.8",
-                                 "http://example.com/www/js/abc.js", 1);
+  Cu.evalInSandbox(code, debuggee, "1.8",
+                   "http://example.com/www/js/abc.js", 1);
 }

@@ -55,8 +55,8 @@ function hideStatusMessage() {
 
 var connect = async function () {
   // Initiate the connection
-  let env = Components.classes["@mozilla.org/process/environment;1"]
-    .getService(Components.interfaces.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"]
+    .getService(Ci.nsIEnvironment);
   let port = env.get("MOZ_BROWSER_TOOLBOX_PORT");
   let addonID = env.get("MOZ_BROWSER_TOOLBOX_ADDONID");
 
@@ -161,8 +161,8 @@ function onNewToolbox(toolbox) {
   gToolbox = toolbox;
   bindToolboxHandlers();
   raise();
-  let env = Components.classes["@mozilla.org/process/environment;1"]
-    .getService(Components.interfaces.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"]
+    .getService(Ci.nsIEnvironment);
   let testScript = env.get("MOZ_TOOLBOX_TEST_SCRIPT");
   if (testScript) {
     // Only allow executing random chrome scripts when a special

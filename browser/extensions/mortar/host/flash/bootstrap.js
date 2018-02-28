@@ -7,7 +7,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 function sandboxScript(sandbox)
 {
   dump("sandboxScript " + sandbox.pluginElement + "\n");
-  Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript("resource://ppapiflash.js/ppapi-content-sandbox.js", sandbox);
+  Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader).loadSubScript("resource://ppapiflash.js/ppapi-content-sandbox.js", sandbox);
 }
 
 let plugins;

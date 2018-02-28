@@ -11,8 +11,8 @@ function sbTest() {
 }
 
 function run_test() {
-  var sb = Components.utils.Sandbox('http://www.example.com', { wantComponents: true });
+  var sb = Cu.Sandbox('http://www.example.com', { wantComponents: true });
   sb.ok = ok;
-  Components.utils.evalInSandbox(sbTest.toSource(), sb);
-  Components.utils.evalInSandbox('sbTest();', sb);
+  Cu.evalInSandbox(sbTest.toSource(), sb);
+  Cu.evalInSandbox('sbTest();', sb);
 }

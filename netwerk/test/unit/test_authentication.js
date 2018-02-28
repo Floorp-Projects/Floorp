@@ -25,8 +25,8 @@ const CROSS_ORIGIN = 1 << 4;
 const FLAG_NO_REALM = 1 << 5;
 const FLAG_NON_ASCII_USER_PASSWORD = 1 << 6;
 
-const nsIAuthPrompt2 = Components.interfaces.nsIAuthPrompt2;
-const nsIAuthInformation = Components.interfaces.nsIAuthInformation;
+const nsIAuthPrompt2 = Ci.nsIAuthPrompt2;
+const nsIAuthInformation = Ci.nsIAuthInformation;
 
 
 function AuthPrompt1(flags) {
@@ -40,10 +40,10 @@ AuthPrompt1.prototype = {
   expectedRealm: "secret",
 
   QueryInterface: function authprompt_qi(iid) {
-    if (iid.equals(Components.interfaces.nsISupports) ||
-        iid.equals(Components.interfaces.nsIAuthPrompt))
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIAuthPrompt))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   prompt: function ap1_prompt(title, text, realm, save, defaultText, result) {
@@ -112,10 +112,10 @@ AuthPrompt2.prototype = {
   expectedRealm: "secret",
 
   QueryInterface: function authprompt2_qi(iid) {
-    if (iid.equals(Components.interfaces.nsISupports) ||
-        iid.equals(Components.interfaces.nsIAuthPrompt2))
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIAuthPrompt2))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   promptAuth:
@@ -185,7 +185,7 @@ AuthPrompt2.prototype = {
   },
 
   asyncPromptAuth: function ap2_async(chan, cb, ctx, lvl, info) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   }
 };
 
@@ -196,29 +196,29 @@ function Requestor(flags, versions) {
 
 Requestor.prototype = {
   QueryInterface: function requestor_qi(iid) {
-    if (iid.equals(Components.interfaces.nsISupports) ||
-        iid.equals(Components.interfaces.nsIInterfaceRequestor))
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIInterfaceRequestor))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   getInterface: function requestor_gi(iid) {
     if (this.versions & 1 &&
-        iid.equals(Components.interfaces.nsIAuthPrompt)) {
+        iid.equals(Ci.nsIAuthPrompt)) {
       // Allow the prompt to store state by caching it here
       if (!this.prompt1)
         this.prompt1 = new AuthPrompt1(this.flags);
       return this.prompt1;
     }
     if (this.versions & 2 &&
-        iid.equals(Components.interfaces.nsIAuthPrompt2)) {
+        iid.equals(Ci.nsIAuthPrompt2)) {
       // Allow the prompt to store state by caching it here
       if (!this.prompt2)
         this.prompt2 = new AuthPrompt2(this.flags);
       return this.prompt2;
     }
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   prompt1: null,
@@ -229,18 +229,18 @@ function RealmTestRequestor() {}
 
 RealmTestRequestor.prototype = {
   QueryInterface: function realmtest_qi(iid) {
-    if (iid.equals(Components.interfaces.nsISupports) ||
-        iid.equals(Components.interfaces.nsIInterfaceRequestor) ||
-        iid.equals(Components.interfaces.nsIAuthPrompt2))
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIInterfaceRequestor) ||
+        iid.equals(Ci.nsIAuthPrompt2))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   getInterface: function realmtest_interface(iid) {
-    if (iid.equals(Components.interfaces.nsIAuthPrompt2))
+    if (iid.equals(Ci.nsIAuthPrompt2))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   promptAuth: function realmtest_checkAuth(channel, level, authInfo) {
@@ -250,7 +250,7 @@ RealmTestRequestor.prototype = {
   },
 
   asyncPromptAuth: function realmtest_async(chan, cb, ctx, lvl, info) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   }
 };
 
@@ -262,7 +262,7 @@ var listener = {
       if (!Components.isSuccessCode(request.status))
         do_throw("Channel should have a success code!");
 
-      if (!(request instanceof Components.interfaces.nsIHttpChannel))
+      if (!(request instanceof Ci.nsIHttpChannel))
         do_throw("Expecting an HTTP channel");
 
       Assert.equal(request.responseStatus, this.expectedCode);
@@ -273,7 +273,7 @@ var listener = {
       do_throw("Unexpected exception: " + e);
     }
 
-    throw Components.results.NS_ERROR_ABORT;
+    throw Cr.NS_ERROR_ABORT;
   },
 
   onDataAvailable: function test_ODA() {
@@ -281,13 +281,13 @@ var listener = {
   },
 
   onStopRequest: function test_onStopR(request, ctx, status) {
-    Assert.equal(status, Components.results.NS_ERROR_ABORT);
+    Assert.equal(status, Cr.NS_ERROR_ABORT);
 
     if (current_test < (tests.length - 1)) {
       // First, gotta clear the auth cache
-      Components.classes["@mozilla.org/network/http-auth-manager;1"]
-                .getService(Components.interfaces.nsIHttpAuthManager)
-                .clearAll();
+      Cc["@mozilla.org/network/http-auth-manager;1"]
+        .getService(Ci.nsIHttpAuthManager)
+        .clearAll();
 
       current_test++;
       tests[current_test]();
@@ -309,7 +309,7 @@ function makeChan(url, loadingUrl) {
   return NetUtil.newChannel(
     { uri: url, loadingPrincipal: principal,
       securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-      contentPolicyType: Components.interfaces.nsIContentPolicy.TYPE_OTHER
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
     });
 }
 
@@ -580,8 +580,8 @@ function authNonascii(metadata, response) {
 // 
 function bytesFromString(str) {
  var converter =
-   Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
-     .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+   Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+     .createInstance(Ci.nsIScriptableUnicodeConverter);
  converter.charset = "UTF-8";
  var data = converter.convertToByteArray(str);
  return data;
@@ -594,9 +594,9 @@ function toHexString(charCode) {
 
 function H(str) {
  var data = bytesFromString(str);
- var ch = Components.classes["@mozilla.org/security/hash;1"]
-            .createInstance(Components.interfaces.nsICryptoHash);
- ch.init(Components.interfaces.nsICryptoHash.MD5);
+ var ch = Cc["@mozilla.org/security/hash;1"]
+            .createInstance(Ci.nsICryptoHash);
+ ch.init(Ci.nsICryptoHash.MD5);
  ch.update(data, data.length);
  var hash = ch.finish(false);
  return Array.from(hash, (c, i) => toHexString(hash.charCodeAt(i))).join("");

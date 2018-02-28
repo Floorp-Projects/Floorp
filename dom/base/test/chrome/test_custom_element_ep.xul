@@ -35,7 +35,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1130028
     var frame = $("frame");
 
     // Create a sandbox with an extended principal then run a script that registers a custom element in the sandbox.
-    var sandbox = Components.utils.Sandbox([frame.contentWindow], { sandboxPrototype: frame.contentWindow });
+    var sandbox = Cu.Sandbox([frame.contentWindow], { sandboxPrototype: frame.contentWindow });
     sandbox.finishTest = finishTest;
     Services.scriptloader.loadSubScript("chrome://mochitests/content/chrome/dom/base/test/chrome/custom_element_ep.js", sandbox);
   }

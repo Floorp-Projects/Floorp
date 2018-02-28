@@ -53,7 +53,7 @@ function emptyLoopHandler(metadata, response)
 
 function testFullLoop(request, buffer)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_REDIRECT_LOOP);
+  Assert.equal(request.status, Cr.NS_ERROR_REDIRECT_LOOP);
 
   var chan = make_channel(relativeLoopURI);
   chan.asyncOpen2(new ChannelListener(testRelativeLoop, null, CL_EXPECT_FAILURE));
@@ -61,7 +61,7 @@ function testFullLoop(request, buffer)
 
 function testRelativeLoop(request, buffer)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_REDIRECT_LOOP);
+  Assert.equal(request.status, Cr.NS_ERROR_REDIRECT_LOOP);
 
   var chan = make_channel(emptyLoopURI);
   chan.asyncOpen2(new ChannelListener(testEmptyLoop, null, CL_EXPECT_FAILURE));
@@ -69,7 +69,7 @@ function testRelativeLoop(request, buffer)
 
 function testEmptyLoop(request, buffer)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_REDIRECT_LOOP);
+  Assert.equal(request.status, Cr.NS_ERROR_REDIRECT_LOOP);
 
   httpServer.stop(do_test_finished);
 }

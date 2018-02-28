@@ -2253,7 +2253,7 @@ var gDiscoverView = {
 
     // Canceling the request will send an error to onStateChange which will show
     // the error page
-    aRequest.cancel(Components.results.NS_BINDING_ABORTED);
+    aRequest.cancel(Cr.NS_BINDING_ABORTED);
   },
 
   onSecurityChange(aWebProgress, aRequest, aState) {
@@ -2267,7 +2267,7 @@ var gDiscoverView = {
 
     // Canceling the request will send an error to onStateChange which will show
     // the error page
-    aRequest.cancel(Components.results.NS_BINDING_ABORTED);
+    aRequest.cancel(Cr.NS_BINDING_ABORTED);
   },
 
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {

@@ -29,7 +29,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
         return;
       }
 
-      var win = aSubject.QueryInterface(Components.interfaces.nsIDOMWindow);
+      var win = aSubject.QueryInterface(Ci.nsIDOMWindow);
       win.addEventListener("load", function() {
         let windowType = win.document.documentElement.getAttribute("windowtype");
         if (windowType == "alert:alert") {

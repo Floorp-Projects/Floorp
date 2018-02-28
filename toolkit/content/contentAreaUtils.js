@@ -38,7 +38,7 @@ function urlSecurityCheck(aURL, aPrincipal, aFlags) {
 
 function forbidCPOW(arg, func, argname) {
   if (arg && (typeof(arg) == "object" || typeof(arg) == "function") &&
-      Components.utils.isCrossProcessWrapper(arg)) {
+      Cu.isCrossProcessWrapper(arg)) {
     throw new Error(`no CPOWs allowed for argument ${argname} to ${func}`);
   }
 }
@@ -76,8 +76,8 @@ function saveURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
 // calling internalSave
 // Clientele: (Make sure you don't break any of these)
 //  - Context ->  Save Image As...
-const imgICache = Components.interfaces.imgICache;
-const nsISupportsCString = Components.interfaces.nsISupportsCString;
+const imgICache = Ci.imgICache;
+const nsISupportsCString = Ci.nsISupportsCString;
 
 /**
  * Offers to save an image URL to the file system.
@@ -117,7 +117,7 @@ function saveImageURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
   forbidCPOW(aReferrer, "saveImageURL", "aReferrer");
 
   if (aDoc && aIsContentWindowPrivate == undefined) {
-    if (Components.utils.isCrossProcessWrapper(aDoc)) {
+    if (Cu.isCrossProcessWrapper(aDoc)) {
       Deprecated.warning("saveImageURL should not be passed document CPOWs. " +
                          "The caller should pass in the content type and " +
                          "disposition themselves",
@@ -137,12 +137,12 @@ function saveImageURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
     throw new Error("saveImageURL couldn't compute private state of content window");
   }
 
-  if (!aShouldBypassCache && (aDoc && !Components.utils.isCrossProcessWrapper(aDoc)) &&
+  if (!aShouldBypassCache && (aDoc && !Cu.isCrossProcessWrapper(aDoc)) &&
       (!aContentType && !aContentDisp)) {
     try {
-      var imageCache = Components.classes["@mozilla.org/image/tools;1"]
-                                 .getService(Components.interfaces.imgITools)
-                                 .getImgCacheForDocument(aDoc);
+      var imageCache = Cc["@mozilla.org/image/tools;1"]
+                         .getService(Ci.imgITools)
+                         .getImgCacheForDocument(aDoc);
       var props =
         imageCache.findEntryProperties(makeURI(aURL, getCharsetforSave(null)), aDoc);
       if (props) {
@@ -262,25 +262,25 @@ function DownloadListener(win, transfer) {
 
 DownloadListener.prototype = {
   QueryInterface: function dl_qi(aIID) {
-    if (aIID.equals(Components.interfaces.nsIInterfaceRequestor) ||
-        aIID.equals(Components.interfaces.nsIWebProgressListener) ||
-        aIID.equals(Components.interfaces.nsIWebProgressListener2) ||
-        aIID.equals(Components.interfaces.nsISupports)) {
+    if (aIID.equals(Ci.nsIInterfaceRequestor) ||
+        aIID.equals(Ci.nsIWebProgressListener) ||
+        aIID.equals(Ci.nsIWebProgressListener2) ||
+        aIID.equals(Ci.nsISupports)) {
       return this;
     }
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   getInterface: function dl_gi(aIID) {
-    if (aIID.equals(Components.interfaces.nsIAuthPrompt) ||
-        aIID.equals(Components.interfaces.nsIAuthPrompt2)) {
+    if (aIID.equals(Ci.nsIAuthPrompt) ||
+        aIID.equals(Ci.nsIAuthPrompt2)) {
       var ww =
-        Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                  .getService(Components.interfaces.nsIPromptFactory);
+        Cc["@mozilla.org/embedcomp/window-watcher;1"]
+          .getService(Ci.nsIPromptFactory);
       return ww.getPrompt(this.window, aIID);
     }
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   }
 };
 
@@ -407,7 +407,7 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
       file = fpParams.file;
 
       continueSave();
-    }).catch(Components.utils.reportError);
+    }).catch(Cu.reportError);
   }
 
   function continueSave() {
@@ -421,11 +421,11 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
     // as converted text, pass the document to the web browser persist component.
     // If we're just saving the HTML (second option in the list), send only the URI.
     let nonCPOWDocument =
-      aDocument && !Components.utils.isCrossProcessWrapper(aDocument);
+      aDocument && !Cu.isCrossProcessWrapper(aDocument);
 
     let isPrivate = aIsContentWindowPrivate;
     if (isPrivate === undefined) {
-      isPrivate = aInitiatingDocument instanceof Components.interfaces.nsIDOMDocument
+      isPrivate = aInitiatingDocument instanceof Ci.nsIDOMDocument
         ? PrivateBrowsingUtils.isContentWindowPrivate(aInitiatingDocument.defaultView)
         : aInitiatingDocument.isPrivate;
     }
@@ -481,7 +481,7 @@ function internalPersist(persistArgs) {
   var persist = makeWebBrowserPersist();
 
   // Calculate persist flags.
-  const nsIWBP = Components.interfaces.nsIWebBrowserPersist;
+  const nsIWBP = Ci.nsIWebBrowserPersist;
   const flags = nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
                 nsIWBP.PERSIST_FLAGS_FORCE_ALLOW_COOKIES;
   if (persistArgs.bypassCache)
@@ -496,7 +496,7 @@ function internalPersist(persistArgs) {
   var targetFileURL = makeFileURI(persistArgs.targetFile);
 
   // Create download and initiate it (below)
-  var tr = Components.classes["@mozilla.org/transfer;1"].createInstance(Components.interfaces.nsITransfer);
+  var tr = Cc["@mozilla.org/transfer;1"].createInstance(Ci.nsITransfer);
   tr.init(persistArgs.sourceURI,
           targetFileURL, "", null, null, null, persist, persistArgs.isPrivate);
   persist.progressListener = new DownloadListener(window, tr);
@@ -532,7 +532,7 @@ function internalPersist(persistArgs) {
     persist.savePrivacyAwareURI(persistArgs.sourceURI,
                                 persistArgs.sourceCacheKey,
                                 persistArgs.sourceReferrer,
-                                Components.interfaces.nsIHttpChannel.REFERRER_POLICY_UNSET,
+                                Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
                                 persistArgs.sourcePostData,
                                 null,
                                 targetFileURL,
@@ -592,7 +592,7 @@ function initFileInfo(aFI, aURL, aURLCharset, aDocument,
       aFI.uri = makeURI(aURL, aURLCharset);
       // Assuming nsiUri is valid, calling QueryInterface(...) on it will
       // populate extra object fields (eg filename and file extension).
-      var url = aFI.uri.QueryInterface(Components.interfaces.nsIURL);
+      var url = aFI.uri.QueryInterface(Ci.nsIURL);
       aFI.fileExt = url.fileExtension;
     } catch (e) {
     }
@@ -679,13 +679,13 @@ function promiseTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRel
 
     if (!dirExists) {
       // Default to desktop.
-      dir = Services.dirsvc.get("Desk", Components.interfaces.nsIFile);
+      dir = Services.dirsvc.get("Desk", Ci.nsIFile);
     }
 
     let fp = makeFilePicker();
     let titleKey = aFpP.fpTitleKey || "SaveLinkTitle";
     fp.init(window, ContentAreaUtils.stringBundle.GetStringFromName(titleKey),
-            Components.interfaces.nsIFilePicker.modeSave);
+            Ci.nsIFilePicker.modeSave);
 
     fp.displayDirectory = dir;
     fp.defaultExtension = aFpP.fileInfo.fileExt;
@@ -709,7 +709,7 @@ function promiseTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRel
         resolve(aResult);
       });
     });
-    if (result == Components.interfaces.nsIFilePicker.returnCancel || !fp.file) {
+    if (result == Ci.nsIFilePicker.returnCancel || !fp.file) {
       return false;
     }
 
@@ -769,9 +769,9 @@ function DownloadURL(aURL, aFileName, aInitiatingDocument) {
   // For private browsing, try to get document out of the most recent browser
   // window, or provide our own if there's no browser window.
   let isPrivate = aInitiatingDocument.defaultView
-                                     .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                     .getInterface(Components.interfaces.nsIWebNavigation)
-                                     .QueryInterface(Components.interfaces.nsILoadContext)
+                                     .QueryInterface(Ci.nsIInterfaceRequestor)
+                                     .getInterface(Ci.nsIWebNavigation)
+                                     .QueryInterface(Ci.nsILoadContext)
                                      .usePrivateBrowsing;
 
   let fileInfo = new FileInfo(aFileName);
@@ -800,7 +800,7 @@ function DownloadURL(aURL, aFileName, aInitiatingDocument) {
     // Add the download to the list, allowing it to be managed.
     let list = await Downloads.getList(Downloads.ALL);
     list.add(download);
-  })().catch(Components.utils.reportError);
+  })().catch(Cu.reportError);
 }
 
 // We have no DOM, and can only save the URL as is.
@@ -883,10 +883,10 @@ function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, 
   }
 
   if (aSaveMode & SAVEMODE_COMPLETE_TEXT)
-    aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterText);
+    aFilePicker.appendFilters(Ci.nsIFilePicker.filterText);
 
   // Always append the all files (*) filter
-  aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
+  aFilePicker.appendFilters(Ci.nsIFilePicker.filterAll);
 }
 
 function getPostData(aDocument) {
@@ -912,8 +912,8 @@ function getPostData(aDocument) {
 
 function makeWebBrowserPersist() {
   const persistContractID = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
-  const persistIID = Components.interfaces.nsIWebBrowserPersist;
-  return Components.classes[persistContractID].createInstance(persistIID);
+  const persistIID = Ci.nsIWebBrowserPersist;
+  return Cc[persistContractID].createInstance(persistIID);
 }
 
 function makeURI(aURL, aOriginCharset, aBaseURI) {
@@ -926,14 +926,14 @@ function makeFileURI(aFile) {
 
 function makeFilePicker() {
   const fpContractID = "@mozilla.org/filepicker;1";
-  const fpIID = Components.interfaces.nsIFilePicker;
-  return Components.classes[fpContractID].createInstance(fpIID);
+  const fpIID = Ci.nsIFilePicker;
+  return Cc[fpContractID].createInstance(fpIID);
 }
 
 function getMIMEService() {
   const mimeSvcContractID = "@mozilla.org/mime;1";
-  const mimeSvcIID = Components.interfaces.nsIMIMEService;
-  const mimeSvc = Components.classes[mimeSvcContractID].getService(mimeSvcIID);
+  const mimeSvcIID = Ci.nsIMIMEService;
+  const mimeSvc = Cc[mimeSvcContractID].getService(mimeSvcIID);
   return mimeSvc;
 }
 
@@ -966,8 +966,8 @@ function getDefaultFileName(aDefaultFileName, aURI, aDocument,
   // 1) look for a filename in the content-disposition header, if any
   if (aContentDisposition) {
     const mhpContractID = "@mozilla.org/network/mime-hdrparam;1";
-    const mhpIID = Components.interfaces.nsIMIMEHeaderParam;
-    const mhp = Components.classes[mhpContractID].getService(mhpIID);
+    const mhpIID = Ci.nsIMIMEHeaderParam;
+    const mhp = Cc[mhpContractID].getService(mhpIID);
     var dummy = { value: null }; // Need an out param...
     var charset = getCharsetforSave(aDocument);
 
@@ -1002,7 +1002,7 @@ function getDefaultFileName(aDefaultFileName, aURI, aDocument,
   }
 
   try {
-    var url = aURI.QueryInterface(Components.interfaces.nsIURL);
+    var url = aURI.QueryInterface(Ci.nsIURL);
     if (url.fileName != "") {
       // 3) Use the actual file name, if present
       return validateFileName(Services.textToSubURI.unEscapeURIForUI("UTF-8", url.fileName));
@@ -1090,12 +1090,12 @@ function getDefaultExtension(aFilename, aURI, aContentType) {
     return ""; // temporary fix for bug 120327
 
   // First try the extension from the filename
-  var url = Components.classes["@mozilla.org/network/standard-url-mutator;1"]
-                      .createInstance(Components.interfaces.nsIURIMutator)
-                      .setSpec("http://example.com") // construct the URL
-                      .setFilePath(aFilename)
-                      .finalize()
-                      .QueryInterface(Components.interfaces.nsIURL);
+  var url = Cc["@mozilla.org/network/standard-url-mutator;1"]
+              .createInstance(Ci.nsIURIMutator)
+              .setSpec("http://example.com") // construct the URL
+              .setFilePath(aFilename)
+              .finalize()
+              .QueryInterface(Ci.nsIURL);
 
   var ext = url.fileExtension;
 
@@ -1110,7 +1110,7 @@ function getDefaultExtension(aFilename, aURI, aContentType) {
   // Well, that failed.  Now try the extension from the URI
   var urlext;
   try {
-    url = aURI.QueryInterface(Components.interfaces.nsIURL);
+    url = aURI.QueryInterface(Ci.nsIURL);
     urlext = url.fileExtension;
   } catch (e) {
   }
@@ -1131,7 +1131,7 @@ function getDefaultExtension(aFilename, aURI, aContentType) {
 function GetSaveModeForContentType(aContentType, aDocument) {
   // We can only save a complete page if we have a loaded document,
   // and it's not a CPOW -- nsWebBrowserPersist needs a real document.
-  if (!aDocument || Components.utils.isCrossProcessWrapper(aDocument))
+  if (!aDocument || Cu.isCrossProcessWrapper(aDocument))
     return SAVEMODE_FILEONLY;
 
   // Find the possible save modes using the provided content type
@@ -1171,8 +1171,8 @@ function getCharsetforSave(aDocument) {
 function openURL(aURL) {
   var uri = makeURI(aURL);
 
-  var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
-                              .getService(Components.interfaces.nsIExternalProtocolService);
+  var protocolSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
+                      .getService(Ci.nsIExternalProtocolService);
 
   if (!protocolSvc.isExposedProtocol(uri.scheme)) {
     // If we're not a browser, use the external protocol service to load the URI.
@@ -1184,8 +1184,8 @@ function openURL(aURL) {
       return;
     }
 
-    var loadgroup = Components.classes["@mozilla.org/network/load-group;1"]
-                              .createInstance(Components.interfaces.nsILoadGroup);
+    var loadgroup = Cc["@mozilla.org/network/load-group;1"]
+                      .createInstance(Ci.nsILoadGroup);
     var appstartup = Services.startup;
 
     var loadListener = {
@@ -1196,11 +1196,11 @@ function openURL(aURL) {
         appstartup.exitLastWindowClosingSurvivalArea();
       },
       QueryInterface: function ll_QI(iid) {
-        if (iid.equals(Components.interfaces.nsISupports) ||
-            iid.equals(Components.interfaces.nsIRequestObserver) ||
-            iid.equals(Components.interfaces.nsISupportsWeakReference))
+        if (iid.equals(Ci.nsISupports) ||
+            iid.equals(Ci.nsIRequestObserver) ||
+            iid.equals(Ci.nsISupportsWeakReference))
           return this;
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+        throw Cr.NS_ERROR_NO_INTERFACE;
       }
     };
     loadgroup.groupObserver = loadListener;
@@ -1213,11 +1213,11 @@ function openURL(aURL) {
       loadCookie: null,
       parentContentListener: null,
       getInterface(iid) {
-        if (iid.equals(Components.interfaces.nsIURIContentListener))
+        if (iid.equals(Ci.nsIURIContentListener))
           return this;
-        if (iid.equals(Components.interfaces.nsILoadGroup))
+        if (iid.equals(Ci.nsILoadGroup))
           return loadgroup;
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+        throw Cr.NS_ERROR_NO_INTERFACE;
       }
     };
 
@@ -1230,10 +1230,10 @@ function openURL(aURL) {
       channel.channelIsForDownload = true;
     }
 
-    var uriLoader = Components.classes["@mozilla.org/uriloader;1"]
-                              .getService(Components.interfaces.nsIURILoader);
+    var uriLoader = Cc["@mozilla.org/uriloader;1"]
+                      .getService(Ci.nsIURILoader);
     uriLoader.openURI(channel,
-                      Components.interfaces.nsIURILoader.IS_CONTENT_PREFERRED,
+                      Ci.nsIURILoader.IS_CONTENT_PREFERRED,
                       uriListener);
   }
 }

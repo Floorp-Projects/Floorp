@@ -30,17 +30,17 @@ Debugger.Object.prototype.getProperty = function (name) {
 
 function run_test() {
   // Create a low-privilege sandbox, and a chrome-privilege sandbox.
-  let contentBox = Components.utils.Sandbox("http://www.example.com");
-  let chromeBox = Components.utils.Sandbox(this);
+  let contentBox = Cu.Sandbox("http://www.example.com");
+  let chromeBox = Cu.Sandbox(this);
 
   // Create an objects in this compartment, and one in each sandbox. We'll
   // refer to the objects as "mainObj", "contentObj", and "chromeObj", in
   // variable and property names.
   let mainObj = { name: "mainObj" };
-  Components.utils.evalInSandbox('var contentObj = { name: "contentObj" };',
-                                 contentBox);
-  Components.utils.evalInSandbox('var chromeObj = { name: "chromeObj" };',
-                                 chromeBox);
+  Cu.evalInSandbox('var contentObj = { name: "contentObj" };',
+                   contentBox);
+  Cu.evalInSandbox('var chromeObj = { name: "chromeObj" };',
+                   chromeBox);
 
   // Give each global a pointer to all the other globals' objects.
   contentBox.mainObj = chromeBox.mainObj = mainObj;
@@ -53,17 +53,17 @@ function run_test() {
 
   // The objects appear as global variables in the sandbox, and as
   // the sandbox object's properties in chrome.
-  Assert.ok(Components.utils.evalInSandbox("mainObj", contentBox)
+  Assert.ok(Cu.evalInSandbox("mainObj", contentBox)
             === contentBox.mainObj);
-  Assert.ok(Components.utils.evalInSandbox("contentObj", contentBox)
+  Assert.ok(Cu.evalInSandbox("contentObj", contentBox)
             === contentBox.contentObj);
-  Assert.ok(Components.utils.evalInSandbox("chromeObj", contentBox)
+  Assert.ok(Cu.evalInSandbox("chromeObj", contentBox)
             === contentBox.chromeObj);
-  Assert.ok(Components.utils.evalInSandbox("mainObj", chromeBox)
+  Assert.ok(Cu.evalInSandbox("mainObj", chromeBox)
             === chromeBox.mainObj);
-  Assert.ok(Components.utils.evalInSandbox("contentObj", chromeBox)
+  Assert.ok(Cu.evalInSandbox("contentObj", chromeBox)
             === chromeBox.contentObj);
-  Assert.ok(Components.utils.evalInSandbox("chromeObj", chromeBox)
+  Assert.ok(Cu.evalInSandbox("chromeObj", chromeBox)
             === chromeBox.chromeObj);
 
   // We (the main global) can see properties of all objects in all globals.
@@ -72,21 +72,21 @@ function run_test() {
   Assert.ok(contentBox.chromeObj.name === "chromeObj");
 
   // chromeBox can see properties of all objects in all globals.
-  Assert.equal(Components.utils.evalInSandbox("mainObj.name", chromeBox),
+  Assert.equal(Cu.evalInSandbox("mainObj.name", chromeBox),
                "mainObj");
-  Assert.equal(Components.utils.evalInSandbox("contentObj.name", chromeBox),
+  Assert.equal(Cu.evalInSandbox("contentObj.name", chromeBox),
                "contentObj");
-  Assert.equal(Components.utils.evalInSandbox("chromeObj.name", chromeBox),
+  Assert.equal(Cu.evalInSandbox("chromeObj.name", chromeBox),
                "chromeObj");
 
   // contentBox can see properties of the content object, but not of either
   // chrome object, because by default, content -> chrome wrappers hide all
   // object properties.
-  Assert.equal(Components.utils.evalInSandbox("mainObj.name", contentBox),
+  Assert.equal(Cu.evalInSandbox("mainObj.name", contentBox),
                undefined);
-  Assert.equal(Components.utils.evalInSandbox("contentObj.name", contentBox),
+  Assert.equal(Cu.evalInSandbox("contentObj.name", contentBox),
                "contentObj");
-  Assert.equal(Components.utils.evalInSandbox("chromeObj.name", contentBox),
+  Assert.equal(Cu.evalInSandbox("chromeObj.name", contentBox),
                undefined);
 
   // When viewing an object in compartment A from the vantage point of

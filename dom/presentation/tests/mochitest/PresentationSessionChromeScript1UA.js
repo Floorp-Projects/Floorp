@@ -182,7 +182,7 @@ const mockDevicePrompt = {
                                          Ci.nsIFactory]),
   createInstance: function(aOuter, aIID) {
     if (aOuter) {
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
+      throw Cr.NS_ERROR_NO_AGGREGATION;
     }
     return this.QueryInterface(aIID);
   },
@@ -215,7 +215,7 @@ const mockRequestUIGlue = {
   },
   createInstance: function(aOuter, aIID) {
     if (aOuter) {
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
+      throw Cr.NS_ERROR_NO_AGGREGATION;
     }
     return this.QueryInterface(aIID);
   },

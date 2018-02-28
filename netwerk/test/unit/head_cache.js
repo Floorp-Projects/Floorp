@@ -6,8 +6,8 @@ function get_cache_service() {
   if (_CSvc)
     return _CSvc;
 
-  return _CSvc = Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
-                           .getService(Components.interfaces.nsICacheStorageService);
+  return _CSvc = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
+                   .getService(Ci.nsICacheStorageService);
 }
 
 function evict_cache_entries(where)
@@ -37,8 +37,8 @@ function evict_cache_entries(where)
 
 function createURI(urispec)
 {
-  var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
-                         .getService(Components.interfaces.nsIIOService);
+  var ioServ = Cc["@mozilla.org/network/io-service;1"]
+                 .getService(Ci.nsIIOService);
   return ioServ.newURI(urispec);
 }
 
@@ -64,10 +64,10 @@ function asyncOpenCacheEntry(key, where, flags, lci, callback, appcache)
     _appCache: appcache,
 
     QueryInterface: function (iid) {
-      if (iid.equals(Components.interfaces.nsICacheEntryOpenCallback) ||
-          iid.equals(Components.interfaces.nsISupports))
+      if (iid.equals(Ci.nsICacheEntryOpenCallback) ||
+          iid.equals(Ci.nsISupports))
         return this;
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
     onCacheEntryCheck: function(entry, appCache) {
@@ -101,7 +101,7 @@ function syncWithCacheIOThread(callback, force)
     asyncOpenCacheEntry(
       "http://nonexistententry/", "disk", Ci.nsICacheStorage.OPEN_READONLY, null,
       function(status, entry) {
-        Assert.equal(status, Components.results.NS_ERROR_CACHE_KEY_NOT_FOUND);
+        Assert.equal(status, Cr.NS_ERROR_CACHE_KEY_NOT_FOUND);
         callback();
       });
   }

@@ -27,8 +27,8 @@ function runTests() {
     return;
   }
 
-  var domWindowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                             .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var domWindowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
 
   var pluginRect = pluginElement.getBoundingClientRect();
   var pluginX = pluginRect.left + (window.mozInnerScreenX - window.screenX);

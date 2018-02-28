@@ -109,8 +109,8 @@ function runCurrentTest()
 
 function SetPrefs(aSet)
 {
-  var prefSvc = Components.classes["@mozilla.org/preferences-service;1"].
-                           getService(Components.interfaces.nsIPrefBranch);
+  var prefSvc = Cc["@mozilla.org/preferences-service;1"].
+                           getService(Ci.nsIPrefBranch);
   const kPrefName = "ui.cursor_snapping.always_enabled";
   if (aSet) {
     prefSvc.setBoolPref(kPrefName, true);

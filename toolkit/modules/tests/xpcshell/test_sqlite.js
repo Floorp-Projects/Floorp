@@ -1098,9 +1098,9 @@ add_task(async function test_close_database_on_gc() {
   let last = await getDummyDatabase("gc_last");
   await last.close();
 
-  Components.utils.forceGC();
-  Components.utils.forceCC();
-  Components.utils.forceShrinkingGC();
+  Cu.forceGC();
+  Cu.forceCC();
+  Cu.forceShrinkingGC();
 
   await finalPromise;
   failTestsOnAutoClose(true);

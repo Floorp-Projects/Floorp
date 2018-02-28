@@ -174,8 +174,8 @@ class TabBrowser {
 
     this.mCurrentTab = this.tabContainer.firstChild;
     const nsIEventListenerService =
-      Components.interfaces.nsIEventListenerService;
-    let els = Components.classes["@mozilla.org/eventlistenerservice;1"]
+      Ci.nsIEventListenerService;
+    let els = Cc["@mozilla.org/eventlistenerservice;1"]
       .getService(nsIEventListenerService);
     els.addSystemEventListener(document, "keydown", this, false);
     if (AppConstants.platform == "macosx") {
@@ -202,8 +202,8 @@ class TabBrowser {
 
     // Hook up the event listeners to the first browser
     var tabListener = this.mTabProgressListener(this.mCurrentTab, this.mCurrentBrowser, true, false);
-    const nsIWebProgress = Components.interfaces.nsIWebProgress;
-    const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
+    const nsIWebProgress = Ci.nsIWebProgress;
+    const filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
       .createInstance(nsIWebProgress);
     filter.addProgressListener(tabListener, nsIWebProgress.NOTIFY_ALL);
     this._tabListeners.set(this.mCurrentTab, tabListener);
@@ -709,7 +709,7 @@ class TabBrowser {
               rv = false;
           } catch (e) {
             // don't inhibit other listeners
-            Components.utils.reportError(e);
+            Cu.reportError(e);
           }
         }
       }
@@ -826,7 +826,7 @@ class TabBrowser {
 
         // If the state has STATE_STOP, and no requests were in flight, then this
         // must be the initial "stop" for the initial about:blank document.
-        const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+        const nsIWebProgressListener = Ci.nsIWebProgressListener;
         if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
             this.mRequestCount == 0 &&
             !aLocation) {
@@ -867,8 +867,8 @@ class TabBrowser {
         if (!aRequest)
           return;
 
-        const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
-        const nsIChannel = Components.interfaces.nsIChannel;
+        const nsIWebProgressListener = Ci.nsIWebProgressListener;
+        const nsIChannel = Ci.nsIChannel;
         let location, originalLocation;
         try {
           aRequest.QueryInterface(nsIChannel);
@@ -1185,12 +1185,12 @@ class TabBrowser {
       },
 
       QueryInterface(aIID) {
-        if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
-          aIID.equals(Components.interfaces.nsIWebProgressListener2) ||
-          aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
-          aIID.equals(Components.interfaces.nsISupports))
+        if (aIID.equals(Ci.nsIWebProgressListener) ||
+          aIID.equals(Ci.nsIWebProgressListener2) ||
+          aIID.equals(Ci.nsISupportsWeakReference) ||
+          aIID.equals(Ci.nsISupports))
           return this;
-        throw Components.results.NS_NOINTERFACE;
+        throw Cr.NS_NOINTERFACE;
       }
     });
   }
@@ -1202,7 +1202,7 @@ class TabBrowser {
       }
       PlacesUIUtils.loadFavicon(aBrowser, aLoadingPrincipal, aURI, aRequestContextID);
     } catch (ex) {
-      Components.utils.reportError(ex);
+      Cu.reportError(ex);
     }
   }
 
@@ -1242,7 +1242,7 @@ class TabBrowser {
   setPageInfo(aURL, aDescription, aPreviewImage) {
     if (aURL) {
       let pageInfo = { url: aURL, description: aDescription, previewImageURL: aPreviewImage };
-      PlacesUtils.history.update(pageInfo).catch(Components.utils.reportError);
+      PlacesUtils.history.update(pageInfo).catch(Cu.reportError);
     }
   }
 
@@ -1468,7 +1468,7 @@ class TabBrowser {
 
     // If the new tab is busy, and our current state is not busy, then
     // we need to fire a start to all progress listeners.
-    const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+    const nsIWebProgressListener = Ci.nsIWebProgressListener;
     if (this.mCurrentTab.hasAttribute("busy") && !this.mIsBusy) {
       this.mIsBusy = true;
       this._callProgressListeners(null, "onStateChange",
@@ -3711,7 +3711,7 @@ class TabBrowser {
 
   addProgressListener(aListener) {
     if (arguments.length != 1) {
-      Components.utils.reportError("gBrowser.addProgressListener was " +
+      Cu.reportError("gBrowser.addProgressListener was " +
         "called with a second argument, " +
         "which is not supported. See bug " +
         "608628. Call stack: " + new Error().stack);
@@ -4150,7 +4150,7 @@ class TabBrowser {
         };
 
         var timer = Cc["@mozilla.org/timer;1"]
-          .createInstance(Components.interfaces.nsITimer);
+          .createInstance(Ci.nsITimer);
         timer.initWithCallback(event, timeout, Ci.nsITimer.TYPE_ONE_SHOT);
         return timer;
       },
@@ -5504,8 +5504,8 @@ class TabBrowser {
       }
     }
     const nsIEventListenerService =
-      Components.interfaces.nsIEventListenerService;
-    let els = Components.classes["@mozilla.org/eventlistenerservice;1"]
+      Ci.nsIEventListenerService;
+    let els = Cc["@mozilla.org/eventlistenerservice;1"]
       .getService(nsIEventListenerService);
     els.removeSystemEventListener(document, "keydown", this, false);
     if (AppConstants.platform == "macosx") {

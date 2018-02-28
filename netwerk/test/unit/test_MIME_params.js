@@ -473,8 +473,8 @@ var rfc5987paramtests = [
 
 function do_tests(whichRFC)
 {
-  var mhp = Components.classes["@mozilla.org/network/mime-hdrparam;1"]
-                      .getService(Components.interfaces.nsIMIMEHeaderParam);
+  var mhp = Cc["@mozilla.org/network/mime-hdrparam;1"]
+              .getService(Ci.nsIMIMEHeaderParam);
 
   var unused = { value : null };
 
@@ -532,8 +532,8 @@ function do_tests(whichRFC)
 }
 
 function test_decode5987Param() {
-  var mhp = Components.classes["@mozilla.org/network/mime-hdrparam;1"]
-                      .getService(Components.interfaces.nsIMIMEHeaderParam);
+  var mhp = Cc["@mozilla.org/network/mime-hdrparam;1"]
+              .getService(Ci.nsIMIMEHeaderParam);
 
   for (var i = 0; i < rfc5987paramtests.length; ++i) {
     dump("Testing #" + i + ": " + rfc5987paramtests[i] + "\n");

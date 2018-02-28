@@ -51,7 +51,7 @@ add_task(async function test_initial_state() {
       card1GUID,
     }) {
       info("checkInitialStore");
-      let contentWin = Components.utils.waiveXrays(content);
+      let contentWin = Cu.waiveXrays(content);
       let {
         savedAddresses,
         savedBasicCards,
@@ -90,7 +90,7 @@ add_task(async function test_initial_state() {
       card1GUID,
     }) {
       info("checkAdd");
-      let contentWin = Components.utils.waiveXrays(content);
+      let contentWin = Cu.waiveXrays(content);
       let {
         savedAddresses,
         savedBasicCards,
@@ -126,7 +126,7 @@ add_task(async function test_initial_state() {
       card1GUID,
     }) {
       info("checkUpdate");
-      let contentWin = Components.utils.waiveXrays(content);
+      let contentWin = Cu.waiveXrays(content);
       let {
         savedAddresses,
         savedBasicCards,
@@ -160,7 +160,7 @@ add_task(async function test_initial_state() {
       card1GUID,
     }) {
       info("checkRemove");
-      let contentWin = Components.utils.waiveXrays(content);
+      let contentWin = Cu.waiveXrays(content);
       let {
         savedAddresses,
         savedBasicCards,

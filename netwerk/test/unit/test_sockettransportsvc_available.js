@@ -1,7 +1,7 @@
 function run_test() {
   try {
-    var sts = Components.classes["@mozilla.org/network/socket-transport-service;1"]
-                        .getService(Components.interfaces.nsISocketTransportService);
+    var sts = Cc["@mozilla.org/network/socket-transport-service;1"]
+                .getService(Ci.nsISocketTransportService);
   } catch(e) {}
 
   Assert.ok(!!sts);

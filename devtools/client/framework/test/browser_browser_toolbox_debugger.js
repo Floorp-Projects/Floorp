@@ -54,8 +54,8 @@ add_task(function* runTest() {
 
   // Be careful, this JS function is going to be executed in the browser toolbox,
   // which lives in another process. So do not try to use any scope variable!
-  let env = Components.classes["@mozilla.org/process/environment;1"]
-                      .getService(Components.interfaces.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"]
+              .getService(Ci.nsIEnvironment);
   // First inject a very minimal head, with simplest assertion methods
   // and very common globals
   let testHead = (function () {

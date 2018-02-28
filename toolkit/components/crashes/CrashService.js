@@ -198,7 +198,7 @@ CrashService.prototype = Object.freeze({
     }
 
     let cr = Cc["@mozilla.org/toolkit/crash-reporter;1"]
-               .getService(Components.interfaces.nsICrashReporter);
+               .getService(Ci.nsICrashReporter);
     let minidumpPath = cr.getMinidumpForID(id).path;
     let extraPath = cr.getExtraFileForID(id).path;
     let metadata = {};

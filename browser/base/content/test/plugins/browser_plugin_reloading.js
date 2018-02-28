@@ -1,5 +1,5 @@
 var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
-var gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
+var gPluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 var gTestBrowser = null;
 
 function updateAllTestPlugins(aState) {
@@ -67,11 +67,11 @@ add_task(async function() {
 
   await ContentTask.spawn(gTestBrowser, null, async function() {
     let plugin = content.document.getElementById("test");
-    let npobj1 = Components.utils.waiveXrays(plugin).getObjectValue();
+    let npobj1 = Cu.waiveXrays(plugin).getObjectValue();
     plugin.src = plugin.src;
     let pluginsDiffer = false;
     try {
-      Components.utils.waiveXrays(plugin).checkObjectValue(npobj1);
+      Cu.waiveXrays(plugin).checkObjectValue(npobj1);
     } catch (e) {
       pluginsDiffer = true;
     }

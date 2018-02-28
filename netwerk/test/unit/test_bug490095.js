@@ -14,7 +14,7 @@ var tests = [
 
     // Setting the VALIDATE_NEVER flag should grab entry from cache
     {url: "/freshness?a", server: "2", expected: "1",
-     flags: Components.interfaces.nsIRequest.VALIDATE_NEVER },
+     flags: Ci.nsIRequest.VALIDATE_NEVER },
 
     // Finally, check that request is validated with no flags set
     {url: "/freshness?a", server: "99", expected: "99"},
@@ -24,7 +24,7 @@ var tests = [
 
     // Setting the LOAD_FROM_CACHE flag also grab the entry from cache
     {url: "/freshness?b", server: "2", expected: "1",
-     flags: Components.interfaces.nsIRequest.LOAD_FROM_CACHE },
+     flags: Ci.nsIRequest.LOAD_FROM_CACHE },
 
     // Finally, check that request is validated with no flags set
     {url: "/freshness?b", server: "99", expected: "99"},
@@ -44,7 +44,7 @@ function setupChannel(suffix, value) {
         uri: "http://localhost:" + httpserver.identity.primaryPort + suffix,
         loadUsingSystemPrincipal: true
     });
-    var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
+    var httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
     httpChan.requestMethod = "GET";
     httpChan.setRequestHeader("x-request", value, false);
     return httpChan;

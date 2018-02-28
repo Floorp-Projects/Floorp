@@ -15,7 +15,7 @@ var observer = {
     if (iid.equals(Ci.nsISupports) || iid.equals(Ci.nsIObserver))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   observe(subject, topic, data) {

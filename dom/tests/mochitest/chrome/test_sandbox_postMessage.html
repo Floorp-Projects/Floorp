@@ -7,13 +7,13 @@
 <script type="application/javascript">
   SimpleTest.waitForExplicitFinish();
   function doTest() {
-    var sandbox = Components.utils.Sandbox("http://mochi.test:8888/", { wantXrays: true });
+    var sandbox = Cu.Sandbox("http://mochi.test:8888/", { wantXrays: true });
     var win = window.frames["sameDomain"];
     sandbox.win = win;
     sandbox.is = is;
     sandbox.done = SimpleTest.finish;
 
-    result = Components.utils.evalInSandbox('var data = {some:"data"};'
+    result = Cu.evalInSandbox('var data = {some:"data"};'
     +'win.addEventListener("message", receiveMessage, false);'
     +'function receiveMessage(event)'
     +'{'

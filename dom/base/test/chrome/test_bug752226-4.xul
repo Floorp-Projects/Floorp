@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=752226
   <![CDATA[
   /** Test for Bug 752226 **/
   try {
-    new Components.utils.Sandbox("about:blank", null);
+    new Cu.Sandbox("about:blank", null);
   } catch (e) {}
   ok(true, "Didn't crash");
   ]]>

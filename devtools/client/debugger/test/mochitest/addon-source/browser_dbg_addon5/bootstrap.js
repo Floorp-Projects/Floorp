@@ -13,7 +13,7 @@ function startup(aParams, aReason) {
 
 function shutdown(aParams, aReason) {
   // Unload the JS module
-  Components.utils.unload("resource://browser_dbg_addon5/test.jsm");
+  Cu.unload("resource://browser_dbg_addon5/test.jsm");
 
   let res = Services.io.getProtocolHandler("resource")
                        .QueryInterface(Ci.nsIResProtocolHandler);

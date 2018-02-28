@@ -30,7 +30,7 @@ add_task(async function test1() {
 
   await waitForMessage("ok", gBrowser);
   is(getPermission(testWorkerURL, "indexedDB"),
-     Components.interfaces.nsIPermissionManager.ALLOW_ACTION,
+     Ci.nsIPermissionManager.ALLOW_ACTION,
      "Correct permission set");
   gBrowser.removeCurrentTab();
 });
@@ -57,7 +57,7 @@ add_task(async function test2() {
   gBrowser.selectedBrowser.loadURI(testSharedWorkerURL);
   await waitForMessage("InvalidStateError", gBrowser);
   is(getPermission(testSharedWorkerURL, "indexedDB"),
-     Components.interfaces.nsIPermissionManager.UNKNOWN_ACTION,
+     Ci.nsIPermissionManager.UNKNOWN_ACTION,
      "Correct permission set");
   gBrowser.removeCurrentTab();
 });

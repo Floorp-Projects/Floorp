@@ -13,7 +13,7 @@ var factory = {
     throw new Error("There is no history service");
   },
   lockFactory: function() {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
 };

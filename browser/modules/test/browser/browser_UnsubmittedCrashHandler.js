@@ -194,7 +194,7 @@ add_task(async function setup() {
   }
 
   let env = Cc["@mozilla.org/process/environment;1"]
-              .getService(Components.interfaces.nsIEnvironment);
+              .getService(Ci.nsIEnvironment);
   let oldServerURL = env.get("MOZ_CRASHREPORTER_URL");
   env.set("MOZ_CRASHREPORTER_URL", SERVER_URL);
 

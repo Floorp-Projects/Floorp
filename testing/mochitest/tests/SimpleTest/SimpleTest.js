@@ -757,8 +757,8 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
 
       function focusedWindow() {
           if (isChildProcess) {
-              return Components.classes["@mozilla.org/focus-manager;1"].
-                      getService(Components.interfaces.nsIFocusManager).focusedWindow;
+              return Cc["@mozilla.org/focus-manager;1"].
+                      getService(Ci.nsIFocusManager).focusedWindow;
           }
           return SpecialPowers.focusedWindow();
       }
@@ -820,8 +820,8 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
 
           var childDesiredWindow = { };
           if (isChildProcess) {
-              var fm = Components.classes["@mozilla.org/focus-manager;1"].
-                         getService(Components.interfaces.nsIFocusManager);
+              var fm = Cc["@mozilla.org/focus-manager;1"].
+                         getService(Ci.nsIFocusManager);
               fm.getFocusedElementForWindow(desiredWindow, true, childDesiredWindow);
               childDesiredWindow = childDesiredWindow.value;
           } else {

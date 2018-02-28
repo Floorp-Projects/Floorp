@@ -11,7 +11,7 @@ const prefPdfiumEnable = "pdfium.enabled";
 function sandboxScript(sandbox)
 {
   dump("sandboxScript " + sandbox.pluginElement + "\n");
-  Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript("resource://ppapipdf.js/ppapi-content-sandbox.js", sandbox);
+  Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader).loadSubScript("resource://ppapipdf.js/ppapi-content-sandbox.js", sandbox);
 }
 
 function prefObserver(aSubject, aTopic, aData) {

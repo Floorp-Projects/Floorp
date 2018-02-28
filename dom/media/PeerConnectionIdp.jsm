@@ -171,8 +171,8 @@ PeerConnectionIdp.prototype = {
     if (providerPortIdx > 0) {
       provider = provider.substring(0, providerPortIdx);
     }
-    let idnService = Components.classes["@mozilla.org/network/idn-service;1"]
-        .getService(Components.interfaces.nsIIDNService);
+    let idnService = Cc["@mozilla.org/network/idn-service;1"]
+        .getService(Ci.nsIIDNService);
     if (idnService.convertUTF8toACE(tail) !==
         idnService.convertUTF8toACE(provider)) {
       error('name "' + name +

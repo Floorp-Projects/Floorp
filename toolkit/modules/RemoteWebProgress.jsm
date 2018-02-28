@@ -143,7 +143,7 @@ RemoteWebProgressManager.prototype = {
     let deserialized = null;
     if (aStatus) {
       let helper = Cc["@mozilla.org/network/serialization-helper;1"]
-                    .getService(Components.interfaces.nsISerializationHelper);
+                    .getService(Ci.nsISerializationHelper);
 
       deserialized = helper.deserializeObject(aStatus);
       deserialized.QueryInterface(Ci.nsISSLStatus);

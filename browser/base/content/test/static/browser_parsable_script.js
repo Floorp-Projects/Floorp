@@ -17,7 +17,7 @@ const kWhitelist = new Set([
 // our zone that point to the AST data never get collected, and so the
 // AST data itself is never collected. We need to GC both zones at
 // once to fix the problem.
-const init = Components.classes["@mozilla.org/jsreflect;1"].createInstance();
+const init = Cc["@mozilla.org/jsreflect;1"].createInstance();
 init();
 
 /**

@@ -1,7 +1,7 @@
 function testActual(SimpleURIClassByID)
 {
   var simpleURI =
-    Components.classes["@mozilla.org/network/simple-uri;1"].createInstance();
+    Cc["@mozilla.org/network/simple-uri;1"].createInstance();
 
   Assert.equal(simpleURI instanceof SimpleURIClassByID, true);
 }
@@ -9,7 +9,7 @@ function testActual(SimpleURIClassByID)
 function testInherited(SimpleURIClassByID)
 {
   var simpleURI =
-    Components.classes["@mozilla.org/network/simple-uri;1"].createInstance();
+    Cc["@mozilla.org/network/simple-uri;1"].createInstance();
 
   var inherited = Object.create(simpleURI);
 
@@ -19,9 +19,9 @@ function testInherited(SimpleURIClassByID)
 function testInheritedCrossGlobal(SimpleURIClassByID)
 {
   var simpleURI =
-    Components.classes["@mozilla.org/network/simple-uri;1"].createInstance();
+    Cc["@mozilla.org/network/simple-uri;1"].createInstance();
 
-  var sb = new Components.utils.Sandbox(this, { wantComponents: true });
+  var sb = new Cu.Sandbox(this, { wantComponents: true });
   var inheritedCross = sb.Object.create(simpleURI);
 
   Assert.equal(inheritedCross instanceof SimpleURIClassByID, true);
@@ -30,9 +30,9 @@ function testInheritedCrossGlobal(SimpleURIClassByID)
 function testCrossGlobalArbitraryGetPrototype(SimpleURIClassByID)
 {
   var simpleURI =
-    Components.classes["@mozilla.org/network/simple-uri;1"].createInstance();
+    Cc["@mozilla.org/network/simple-uri;1"].createInstance();
 
-  var sb = new Components.utils.Sandbox(this, { wantComponents: true });
+  var sb = new Cu.Sandbox(this, { wantComponents: true });
   var firstLevel = Object.create(simpleURI);
 
   var obj = { shouldThrow: false };

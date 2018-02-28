@@ -55,11 +55,11 @@ function getSymbolTable(debugName, breakpadId) {
  */
 function createPromiseInPage(fun, contentGlobal) {
   function funThatClonesObjects(resolve, reject) {
-    return fun(result => resolve(Components.utils.cloneInto(result, contentGlobal)),
-               error => reject(Components.utils.cloneInto(error, contentGlobal)));
+    return fun(result => resolve(Cu.cloneInto(result, contentGlobal)),
+               error => reject(Cu.cloneInto(error, contentGlobal)));
   }
-  return new contentGlobal.Promise(Components.utils.exportFunction(funThatClonesObjects,
-                                                                   contentGlobal));
+  return new contentGlobal.Promise(Cu.exportFunction(funThatClonesObjects,
+                                                     contentGlobal));
 }
 
 /**
@@ -75,7 +75,7 @@ function wrapFunction(fun, contentGlobal) {
         return createPromiseInPage((resolve, reject) =>
           result.then(resolve, reject), contentGlobal);
       }
-      return Components.utils.cloneInto(result, contentGlobal);
+      return Cu.cloneInto(result, contentGlobal);
     }
     return result;
   };
@@ -87,15 +87,15 @@ function wrapFunction(fun, contentGlobal) {
  * consumed by the page.
  */
 function makeAccessibleToPage(obj, contentGlobal) {
-  let result = Components.utils.createObjectIn(contentGlobal);
+  let result = Cu.createObjectIn(contentGlobal);
   for (let field in obj) {
     switch (typeof obj[field]) {
       case "function":
-        Components.utils.exportFunction(
+        Cu.exportFunction(
           wrapFunction(obj[field], contentGlobal), result, { defineAs: field });
         break;
       case "object":
-        Components.utils.cloneInto(obj[field], result, { defineAs: field });
+        Cu.cloneInto(obj[field], result, { defineAs: field });
         break;
       default:
         result[field] = obj[field];

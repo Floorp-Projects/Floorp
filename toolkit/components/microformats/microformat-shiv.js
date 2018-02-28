@@ -2398,8 +2398,8 @@ var Microformats; // jshint ignore:line
         getDOMParser() {
             if (typeof DOMParser === "undefined") {
                 try {
-                    return Components.classes["@mozilla.org/xmlextras/domparser;1"]
-                        .createInstance(Components.interfaces.nsIDOMParser);
+                    return Cc["@mozilla.org/xmlextras/domparser;1"]
+                        .createInstance(Ci.nsIDOMParser);
                 } catch (e) {
                     return undefined;
                 }
@@ -4518,6 +4518,6 @@ var Microformats; // jshint ignore:line
 }));
 try {
     // mozilla jsm support
-    Components.utils.importGlobalProperties(["URL"]);
+    Cu.importGlobalProperties(["URL"]);
 } catch (e) {}
 var EXPORTED_SYMBOLS = ["Microformats"];

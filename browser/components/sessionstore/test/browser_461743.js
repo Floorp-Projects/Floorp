@@ -25,7 +25,7 @@ function test() {
       executeSoon(function() {
         let iframes = tab2.linkedBrowser.contentWindow.frames;
         let innerHTML = iframes[1].document.body.innerHTML;
-        isnot(innerHTML, Components.utils.reportError.toString(),
+        isnot(innerHTML, Cu.reportError.toString(),
               "chrome access denied!");
 
         // Clean up.

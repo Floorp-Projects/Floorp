@@ -21,13 +21,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1160724
   <script type="application/javascript">
   <![CDATA[
   var errorLogged = false;
-  const serv = Components.classes["@mozilla.org/consoleservice;1"]
-                         .getService(Components.interfaces.nsIConsoleService);
+  const serv = Cc["@mozilla.org/consoleservice;1"]
+                 .getService(Ci.nsIConsoleService);
   var listener = {
     QueryInterface(iid) {
-      if (!iid.equals(Components.interfaces.nsISupports) &&
-          !iid.equals(Components.interfaces.nsIConsoleListener)) {
-        throw Components.results.NS_NOINTERFACE;
+      if (!iid.equals(Ci.nsISupports) &&
+          !iid.equals(Ci.nsIConsoleListener)) {
+        throw Cr.NS_NOINTERFACE;
       }
       return this;
     },

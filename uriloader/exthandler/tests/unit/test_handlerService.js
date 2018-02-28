@@ -22,7 +22,7 @@ function run_test() {
                     getService(Ci.nsIIOService);
 
   const env = Cc["@mozilla.org/process/environment;1"].
-              getService(Components.interfaces.nsIEnvironment);
+              getService(Ci.nsIEnvironment);
 
   const rootPrefBranch = prefSvc.getBranch("");
   

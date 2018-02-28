@@ -96,7 +96,7 @@ function run_test_1() {
     // Modification time should be updated when the addon is copied to the
     // profile.
     let testURI = a1.getResourceURI(TEST_UNPACKED ? "install.rdf" : "");
-    let testFile = testURI.QueryInterface(Components.interfaces.nsIFileURL).file;
+    let testFile = testURI.QueryInterface(Ci.nsIFileURL).file;
 
     Assert.ok(testFile.exists());
     let difference = testFile.lastModifiedTime - Date.now();

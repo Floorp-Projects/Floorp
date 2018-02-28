@@ -23,7 +23,7 @@ function startup(data, reason) {
   resource = `extension-${namespace.toLowerCase()}-api`;
 
   resProto = Services.io.getProtocolHandler("resource")
-                     .QueryInterface(Components.interfaces.nsIResProtocolHandler);
+                     .QueryInterface(Ci.nsIResProtocolHandler);
 
   resProto.setSubstitution(resource, data.resourceURI);
 

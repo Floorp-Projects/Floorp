@@ -137,7 +137,7 @@ function dom_test(finish)
   content.document.body.appendChild(element);
 
   sendRpcMessage("cpows:dom_test", {}, {element: element});
-  Components.utils.schedulePreciseGC(function() {
+  Cu.schedulePreciseGC(function() {
     sendRpcMessage("cpows:dom_test_after_gc");
     finish();
   });
@@ -267,7 +267,7 @@ function lifetime_test(finish)
   ok(result == 10, "got sync result");
   ok(obj.wont_die.f == undefined, "got reverse CPOW");
   obj.will_die = null;
-  Components.utils.schedulePreciseGC(function() {
+  Cu.schedulePreciseGC(function() {
     addMessageListener("cpows:lifetime_test_3", (msg) => {
       ok(obj.wont_die.f == undefined, "reverse CPOW still works");
       finish();

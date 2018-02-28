@@ -12,9 +12,9 @@ add_task(async function() {
   let url = "javascript:http://www.example.com/";
   await new Promise((resolve, reject) => {
     SimpleTest.waitForClipboard(url, () => {
-      Components.classes["@mozilla.org/widget/clipboardhelper;1"]
-                .getService(Components.interfaces.nsIClipboardHelper)
-                .copyString(url);
+      Cc["@mozilla.org/widget/clipboardhelper;1"]
+        .getService(Ci.nsIClipboardHelper)
+        .copyString(url);
     }, resolve, () => {
       ok(false, "Clipboard copy failed");
       reject();

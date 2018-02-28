@@ -59,7 +59,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
           Services.search.currentEngine = engine;
         }
       } catch (e) {
-        Components.utils.reportError(e);
+        Cu.reportError(e);
       }
     }
   }
@@ -76,7 +76,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       try {
         Services.search.removeEngine(engine);
       } catch (e) {
-        Components.utils.reportError(e);
+        Cu.reportError(e);
       }
     }
   }
@@ -227,7 +227,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         }
       }
     } catch (e) {
-      Components.utils.reportError(e);
+      Cu.reportError(e);
       return false;
     }
     return true;

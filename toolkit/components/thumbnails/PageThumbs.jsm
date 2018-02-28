@@ -375,7 +375,7 @@ var PageThumbs = {
         let buffer = await TaskUtils.readBlob(blob);
         await this._store(originalURL, url, buffer, channelError);
       } catch (ex) {
-        Components.utils.reportError("Exception thrown during thumbnail capture: '" + ex + "'");
+        Cu.reportError("Exception thrown during thumbnail capture: '" + ex + "'");
         isSuccess = false;
       }
       if (aCallback) {
@@ -504,7 +504,7 @@ var PageThumbsStorage = {
     // the directory exists.
     return PageThumbsWorker.post("makeDir",
       [PageThumbsStorageService.path, {ignoreExisting: true}]).catch(function onError(aReason) {
-          Components.utils.reportError("Could not create thumbnails directory" + aReason);
+          Cu.reportError("Could not create thumbnails directory" + aReason);
         });
   },
 
