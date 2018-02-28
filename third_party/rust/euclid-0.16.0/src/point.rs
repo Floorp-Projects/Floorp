@@ -16,7 +16,7 @@ use num::*;
 use num_traits::{Float, NumCast};
 use vector::{TypedVector2D, TypedVector3D, vec2, vec3};
 use std::fmt;
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+use std::ops::{Add, Mul, Sub, Div, AddAssign, SubAssign, MulAssign, DivAssign};
 use std::marker::PhantomData;
 
 define_matrix! {
@@ -67,11 +67,7 @@ impl<T: Copy, U> TypedPoint2D<T, U> {
     /// Constructor taking scalar values directly.
     #[inline]
     pub fn new(x: T, y: T) -> Self {
-        TypedPoint2D {
-            x: x,
-            y: y,
-            _unit: PhantomData,
-        }
+        TypedPoint2D { x: x, y: y, _unit: PhantomData }
     }
 
     /// Constructor taking properly typed Lengths instead of scalar values.
@@ -102,15 +98,11 @@ impl<T: Copy, U> TypedPoint2D<T, U> {
 
     /// Returns self.x as a Length carrying the unit.
     #[inline]
-    pub fn x_typed(&self) -> Length<T, U> {
-        Length::new(self.x)
-    }
+    pub fn x_typed(&self) -> Length<T, U> { Length::new(self.x) }
 
     /// Returns self.y as a Length carrying the unit.
     #[inline]
-    pub fn y_typed(&self) -> Length<T, U> {
-        Length::new(self.y)
-    }
+    pub fn y_typed(&self) -> Length<T, U> { Length::new(self.y) }
 
     /// Drop the units, preserving only the numeric value.
     #[inline]
@@ -130,14 +122,14 @@ impl<T: Copy, U> TypedPoint2D<T, U> {
     }
 }
 
-impl<T: Copy + Add<T, Output = T>, U> TypedPoint2D<T, U> {
+impl<T: Copy + Add<T, Output=T>, U> TypedPoint2D<T, U> {
     #[inline]
     pub fn add_size(&self, other: &TypedSize2D<T, U>) -> Self {
         point2(self.x + other.width, self.y + other.height)
     }
 }
 
-impl<T: Copy + Add<T, Output = T>, U> Add<TypedSize2D<T, U>> for TypedPoint2D<T, U> {
+impl<T: Copy + Add<T, Output=T>, U> Add<TypedSize2D<T, U>> for TypedPoint2D<T, U> {
     type Output = Self;
     #[inline]
     fn add(self, other: TypedSize2D<T, U>) -> Self {
@@ -145,21 +137,21 @@ impl<T: Copy + Add<T, Output = T>, U> Add<TypedSize2D<T, U>> for TypedPoint2D<T,
     }
 }
 
-impl<T: Copy + Add<T, Output = T>, U> AddAssign<TypedVector2D<T, U>> for TypedPoint2D<T, U> {
+impl<T: Copy + Add<T, Output=T>, U> AddAssign<TypedVector2D<T, U>> for TypedPoint2D<T, U> {
     #[inline]
     fn add_assign(&mut self, other: TypedVector2D<T, U>) {
         *self = *self + other
     }
 }
 
-impl<T: Copy + Sub<T, Output = T>, U> SubAssign<TypedVector2D<T, U>> for TypedPoint2D<T, U> {
+impl<T: Copy + Sub<T, Output=T>, U> SubAssign<TypedVector2D<T, U>> for TypedPoint2D<T, U> {
     #[inline]
     fn sub_assign(&mut self, other: TypedVector2D<T, U>) {
         *self = *self - other
     }
 }
 
-impl<T: Copy + Add<T, Output = T>, U> Add<TypedVector2D<T, U>> for TypedPoint2D<T, U> {
+impl<T: Copy + Add<T, Output=T>, U> Add<TypedVector2D<T, U>> for TypedPoint2D<T, U> {
     type Output = Self;
     #[inline]
     fn add(self, other: TypedVector2D<T, U>) -> Self {
@@ -167,7 +159,7 @@ impl<T: Copy + Add<T, Output = T>, U> Add<TypedVector2D<T, U>> for TypedPoint2D<
     }
 }
 
-impl<T: Copy + Sub<T, Output = T>, U> Sub for TypedPoint2D<T, U> {
+impl<T: Copy + Sub<T, Output=T>, U> Sub for TypedPoint2D<T, U> {
     type Output = TypedVector2D<T, U>;
     #[inline]
     fn sub(self, other: Self) -> TypedVector2D<T, U> {
@@ -175,7 +167,7 @@ impl<T: Copy + Sub<T, Output = T>, U> Sub for TypedPoint2D<T, U> {
     }
 }
 
-impl<T: Copy + Sub<T, Output = T>, U> Sub<TypedVector2D<T, U>> for TypedPoint2D<T, U> {
+impl<T: Copy + Sub<T, Output=T>, U> Sub<TypedVector2D<T, U>> for TypedPoint2D<T, U> {
     type Output = Self;
     #[inline]
     fn sub(self, other: TypedVector2D<T, U>) -> Self {
@@ -186,7 +178,7 @@ impl<T: Copy + Sub<T, Output = T>, U> Sub<TypedVector2D<T, U>> for TypedPoint2D<
 impl<T: Float, U> TypedPoint2D<T, U> {
     #[inline]
     pub fn min(self, other: Self) -> Self {
-        point2(self.x.min(other.x), self.y.min(other.y))
+         point2(self.x.min(other.x), self.y.min(other.y))
     }
 
     #[inline]
@@ -195,7 +187,7 @@ impl<T: Float, U> TypedPoint2D<T, U> {
     }
 }
 
-impl<T: Copy + Mul<T, Output = T>, U> Mul<T> for TypedPoint2D<T, U> {
+impl<T: Copy + Mul<T, Output=T>, U> Mul<T> for TypedPoint2D<T, U> {
     type Output = Self;
     #[inline]
     fn mul(self, scale: T) -> Self {
@@ -203,14 +195,14 @@ impl<T: Copy + Mul<T, Output = T>, U> Mul<T> for TypedPoint2D<T, U> {
     }
 }
 
-impl<T: Copy + Mul<T, Output = T>, U> MulAssign<T> for TypedPoint2D<T, U> {
+impl<T: Copy + Mul<T, Output=T>, U> MulAssign<T> for TypedPoint2D<T, U> {
     #[inline]
     fn mul_assign(&mut self, scale: T) {
         *self = *self * scale
     }
 }
 
-impl<T: Copy + Div<T, Output = T>, U> Div<T> for TypedPoint2D<T, U> {
+impl<T: Copy + Div<T, Output=T>, U> Div<T> for TypedPoint2D<T, U> {
     type Output = Self;
     #[inline]
     fn div(self, scale: T) -> Self {
@@ -218,14 +210,14 @@ impl<T: Copy + Div<T, Output = T>, U> Div<T> for TypedPoint2D<T, U> {
     }
 }
 
-impl<T: Copy + Div<T, Output = T>, U> DivAssign<T> for TypedPoint2D<T, U> {
+impl<T: Copy + Div<T, Output=T>, U> DivAssign<T> for TypedPoint2D<T, U> {
     #[inline]
     fn div_assign(&mut self, scale: T) {
         *self = *self / scale
     }
 }
 
-impl<T: Copy + Mul<T, Output = T>, U1, U2> Mul<TypedScale<T, U1, U2>> for TypedPoint2D<T, U1> {
+impl<T: Copy + Mul<T, Output=T>, U1, U2> Mul<TypedScale<T, U1, U2>> for TypedPoint2D<T, U1> {
     type Output = TypedPoint2D<T, U2>;
     #[inline]
     fn mul(self, scale: TypedScale<T, U1, U2>) -> TypedPoint2D<T, U2> {
@@ -233,7 +225,7 @@ impl<T: Copy + Mul<T, Output = T>, U1, U2> Mul<TypedScale<T, U1, U2>> for TypedP
     }
 }
 
-impl<T: Copy + Div<T, Output = T>, U1, U2> Div<TypedScale<T, U1, U2>> for TypedPoint2D<T, U2> {
+impl<T: Copy + Div<T, Output=T>, U1, U2> Div<TypedScale<T, U1, U2>> for TypedPoint2D<T, U2> {
     type Output = TypedPoint2D<T, U1>;
     #[inline]
     fn div(self, scale: TypedScale<T, U1, U2>) -> TypedPoint2D<T, U1> {
@@ -287,7 +279,7 @@ impl<T: NumCast + Copy, U> TypedPoint2D<T, U> {
     pub fn cast<NewT: NumCast + Copy>(&self) -> Option<TypedPoint2D<NewT, U>> {
         match (NumCast::from(self.x), NumCast::from(self.y)) {
             (Some(x), Some(y)) => Some(point2(x, y)),
-            _ => None,
+            _ => None
         }
     }
 
@@ -337,20 +329,21 @@ impl<T: NumCast + Copy, U> TypedPoint2D<T, U> {
 }
 
 impl<T, U> TypedPoint2D<T, U>
-where
-    T: Copy + One + Add<Output = T> + Sub<Output = T> + Mul<Output = T>,
-{
+where T: Copy + One + Add<Output=T> + Sub<Output=T> + Mul<Output=T> {
     /// Linearly interpolate between this point and another point.
     ///
     /// `t` is expected to be between zero and one.
     #[inline]
     pub fn lerp(&self, other: Self, t: T) -> Self {
         let one_t = T::one() - t;
-        point2(one_t * self.x + t * other.x, one_t * self.y + t * other.y)
+        point2(
+            one_t * self.x + t * other.x,
+            one_t * self.y + t * other.y,
+        )
     }
 }
 
-impl<T: Copy + ApproxEq<T>, U> ApproxEq<TypedPoint2D<T, U>> for TypedPoint2D<T, U> {
+impl<T: Copy+ApproxEq<T>, U> ApproxEq<TypedPoint2D<T, U>> for TypedPoint2D<T, U> {
     #[inline]
     fn approx_epsilon() -> Self {
         point2(T::approx_epsilon(), T::approx_epsilon())
@@ -378,6 +371,7 @@ impl<T: Copy, U> From<[T; 2]> for TypedPoint2D<T, U> {
         point2(array[0], array[1])
     }
 }
+
 
 define_matrix! {
     /// A 3d Point tagged with a unit.
@@ -409,9 +403,7 @@ impl<T: Copy + One, U> TypedPoint3D<T, U> {
 }
 
 impl<T, U> TypedPoint3D<T, U>
-where
-    T: Copy + One + Add<Output = T> + Sub<Output = T> + Mul<Output = T>,
-{
+where T: Copy + One + Add<Output=T> + Sub<Output=T> + Mul<Output=T> {
     /// Linearly interpolate between this point and another point.
     ///
     /// `t` is expected to be between zero and one.
@@ -442,12 +434,7 @@ impl<T: Copy, U> TypedPoint3D<T, U> {
     /// Constructor taking scalar values directly.
     #[inline]
     pub fn new(x: T, y: T, z: T) -> Self {
-        TypedPoint3D {
-            x: x,
-            y: y,
-            z: z,
-            _unit: PhantomData,
-        }
+        TypedPoint3D { x: x, y: y, z: z, _unit: PhantomData }
     }
 
     /// Constructor taking properly typed Lengths instead of scalar values.
@@ -484,26 +471,18 @@ impl<T: Copy, U> TypedPoint3D<T, U> {
 
     /// Returns self.x as a Length carrying the unit.
     #[inline]
-    pub fn x_typed(&self) -> Length<T, U> {
-        Length::new(self.x)
-    }
+    pub fn x_typed(&self) -> Length<T, U> { Length::new(self.x) }
 
     /// Returns self.y as a Length carrying the unit.
     #[inline]
-    pub fn y_typed(&self) -> Length<T, U> {
-        Length::new(self.y)
-    }
+    pub fn y_typed(&self) -> Length<T, U> { Length::new(self.y) }
 
     /// Returns self.z as a Length carrying the unit.
     #[inline]
-    pub fn z_typed(&self) -> Length<T, U> {
-        Length::new(self.z)
-    }
+    pub fn z_typed(&self) -> Length<T, U> { Length::new(self.z) }
 
     #[inline]
-    pub fn to_array(&self) -> [T; 3] {
-        [self.x, self.y, self.z]
-    }
+    pub fn to_array(&self) -> [T; 3] { [self.x, self.y, self.z] }
 
     /// Drop the units, preserving only the numeric value.
     #[inline]
@@ -524,21 +503,21 @@ impl<T: Copy, U> TypedPoint3D<T, U> {
     }
 }
 
-impl<T: Copy + Add<T, Output = T>, U> AddAssign<TypedVector3D<T, U>> for TypedPoint3D<T, U> {
+impl<T: Copy + Add<T, Output=T>, U> AddAssign<TypedVector3D<T, U>> for TypedPoint3D<T, U> {
     #[inline]
     fn add_assign(&mut self, other: TypedVector3D<T, U>) {
         *self = *self + other
     }
 }
 
-impl<T: Copy + Sub<T, Output = T>, U> SubAssign<TypedVector3D<T, U>> for TypedPoint3D<T, U> {
+impl<T: Copy + Sub<T, Output=T>, U> SubAssign<TypedVector3D<T, U>> for TypedPoint3D<T, U> {
     #[inline]
     fn sub_assign(&mut self, other: TypedVector3D<T, U>) {
         *self = *self - other
     }
 }
 
-impl<T: Copy + Add<T, Output = T>, U> Add<TypedVector3D<T, U>> for TypedPoint3D<T, U> {
+impl<T: Copy + Add<T, Output=T>, U> Add<TypedVector3D<T, U>> for TypedPoint3D<T, U> {
     type Output = Self;
     #[inline]
     fn add(self, other: TypedVector3D<T, U>) -> Self {
@@ -546,7 +525,7 @@ impl<T: Copy + Add<T, Output = T>, U> Add<TypedVector3D<T, U>> for TypedPoint3D<
     }
 }
 
-impl<T: Copy + Sub<T, Output = T>, U> Sub for TypedPoint3D<T, U> {
+impl<T: Copy + Sub<T, Output=T>, U> Sub for TypedPoint3D<T, U> {
     type Output = TypedVector3D<T, U>;
     #[inline]
     fn sub(self, other: Self) -> TypedVector3D<T, U> {
@@ -554,7 +533,7 @@ impl<T: Copy + Sub<T, Output = T>, U> Sub for TypedPoint3D<T, U> {
     }
 }
 
-impl<T: Copy + Sub<T, Output = T>, U> Sub<TypedVector3D<T, U>> for TypedPoint3D<T, U> {
+impl<T: Copy + Sub<T, Output=T>, U> Sub<TypedVector3D<T, U>> for TypedPoint3D<T, U> {
     type Output = Self;
     #[inline]
     fn sub(self, other: TypedVector3D<T, U>) -> Self {
@@ -562,7 +541,7 @@ impl<T: Copy + Sub<T, Output = T>, U> Sub<TypedVector3D<T, U>> for TypedPoint3D<
     }
 }
 
-impl<T: Copy + Mul<T, Output = T>, U> Mul<T> for TypedPoint3D<T, U> {
+impl<T: Copy + Mul<T, Output=T>, U> Mul<T> for TypedPoint3D<T, U> {
     type Output = Self;
     #[inline]
     fn mul(self, scale: T) -> Self {
@@ -570,7 +549,7 @@ impl<T: Copy + Mul<T, Output = T>, U> Mul<T> for TypedPoint3D<T, U> {
     }
 }
 
-impl<T: Copy + Div<T, Output = T>, U> Div<T> for TypedPoint3D<T, U> {
+impl<T: Copy + Div<T, Output=T>, U> Div<T> for TypedPoint3D<T, U> {
     type Output = Self;
     #[inline]
     fn div(self, scale: T) -> Self {
@@ -581,20 +560,12 @@ impl<T: Copy + Div<T, Output = T>, U> Div<T> for TypedPoint3D<T, U> {
 impl<T: Float, U> TypedPoint3D<T, U> {
     #[inline]
     pub fn min(self, other: Self) -> Self {
-        point3(
-            self.x.min(other.x),
-            self.y.min(other.y),
-            self.z.min(other.z),
-        )
+         point3(self.x.min(other.x), self.y.min(other.y), self.z.min(other.z))
     }
 
     #[inline]
     pub fn max(self, other: Self) -> Self {
-        point3(
-            self.x.max(other.x),
-            self.y.max(other.y),
-            self.z.max(other.z),
-        )
+        point3(self.x.max(other.x), self.y.max(other.y), self.z.max(other.z))
     }
 }
 
@@ -636,16 +607,14 @@ impl<T: NumCast + Copy, U> TypedPoint3D<T, U> {
     ///
     /// When casting from floating point to integer coordinates, the decimals are truncated
     /// as one would expect from a simple cast, but this behavior does not always make sense
-    /// geometrically. Consider using `round()`, `ceil()` or `floor()` before casting.
+    /// geometrically. Consider using round(), ceil or floor() before casting.
     #[inline]
     pub fn cast<NewT: NumCast + Copy>(&self) -> Option<TypedPoint3D<NewT, U>> {
-        match (
-            NumCast::from(self.x),
-            NumCast::from(self.y),
-            NumCast::from(self.z),
-        ) {
+        match (NumCast::from(self.x),
+               NumCast::from(self.y),
+               NumCast::from(self.z)) {
             (Some(x), Some(y), Some(z)) => Some(point3(x, y, z)),
-            _ => None,
+            _ => None
         }
     }
 
@@ -694,24 +663,23 @@ impl<T: NumCast + Copy, U> TypedPoint3D<T, U> {
     }
 }
 
-impl<T: Copy + ApproxEq<T>, U> ApproxEq<TypedPoint3D<T, U>> for TypedPoint3D<T, U> {
+impl<T: Copy+ApproxEq<T>, U> ApproxEq<TypedPoint3D<T, U>> for TypedPoint3D<T, U> {
     #[inline]
     fn approx_epsilon() -> Self {
-        point3(
-            T::approx_epsilon(),
-            T::approx_epsilon(),
-            T::approx_epsilon(),
-        )
+        point3(T::approx_epsilon(), T::approx_epsilon(), T::approx_epsilon())
     }
 
     #[inline]
     fn approx_eq(&self, other: &Self) -> bool {
-        self.x.approx_eq(&other.x) && self.y.approx_eq(&other.y) && self.z.approx_eq(&other.z)
+        self.x.approx_eq(&other.x)
+            && self.y.approx_eq(&other.y)
+            && self.z.approx_eq(&other.z)
     }
 
     #[inline]
     fn approx_eq_eps(&self, other: &Self, eps: &Self) -> bool {
-        self.x.approx_eq_eps(&other.x, &eps.x) && self.y.approx_eq_eps(&other.y, &eps.y)
+        self.x.approx_eq_eps(&other.x, &eps.x)
+            && self.y.approx_eq_eps(&other.y, &eps.y)
             && self.z.approx_eq_eps(&other.z, &eps.z)
     }
 }
@@ -727,6 +695,7 @@ impl<T: Copy, U> From<[T; 3]> for TypedPoint3D<T, U> {
         point3(array[0], array[1], array[2])
     }
 }
+
 
 pub fn point2<T: Copy, U>(x: T, y: T) -> TypedPoint2D<T, U> {
     TypedPoint2D::new(x, y)
@@ -772,7 +741,7 @@ mod point2d {
 
 #[cfg(test)]
 mod typedpoint2d {
-    use super::{Point2D, TypedPoint2D, point2};
+    use super::{TypedPoint2D, Point2D, point2};
     use scale::TypedScale;
     use vector::vec2;
 
@@ -816,8 +785,8 @@ mod typedpoint2d {
 
         for i in 0..100 {
             // We don't care about these values as long as they are not the same.
-            let x = i as f32 * 0.012345;
-            let y = i as f32 * 0.987654;
+            let x = i as f32 *0.012345;
+            let y = i as f32 *0.987654;
             let p: Point2D<f32> = point2(x, y);
             assert_eq!(p.to_vector().to_point(), p);
         }
@@ -859,8 +828,8 @@ mod point3d {
         use point3;
         for i in 0..100 {
             // We don't care about these values as long as they are not the same.
-            let x = i as f32 * 0.012345;
-            let y = i as f32 * 0.987654;
+            let x = i as f32 *0.012345;
+            let y = i as f32 *0.987654;
             let z = x * y;
             let p: Point3D<f32> = point3(x, y, z);
             assert_eq!(p.to_vector().to_point(), p);
