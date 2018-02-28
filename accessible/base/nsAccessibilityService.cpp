@@ -1478,10 +1478,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
   RefPtr<Accessible> accessible;
 #ifdef MOZ_XUL
   // XUL controls
-  if (role.EqualsLiteral("xul:button")) {
-    accessible = new XULButtonAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:colorpicker")) {
+  if (role.EqualsLiteral("xul:colorpicker")) {
     accessible = new XULColorPickerAccessible(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:colorpickertile")) {
@@ -1510,9 +1507,6 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 
   } else if (role.EqualsLiteral("xul:textbox")) {
     accessible = new EnumRoleAccessible<roles::SECTION>(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:toolbarbutton")) {
-    accessible = new XULToolbarButtonAccessible(aContent, aDoc);
 
   }
 #endif // MOZ_XUL
