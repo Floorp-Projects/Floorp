@@ -94,6 +94,19 @@ XULMAP(
 )
 
 XULMAP(
+  textbox,
+  [](nsIContent* aContent, Accessible* aContext) -> Accessible* {
+    if (aContent->IsElement() &&
+        aContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                           nsGkAtoms::autocomplete, eIgnoreCase)) {
+      return new XULComboboxAccessible(aContent, aContext->Document());
+    }
+
+    return new EnumRoleAccessible<roles::SECTION>(aContent, aContext->Document());
+  }
+)
+
+XULMAP(
   thumb,
   [](nsIContent* aContent, Accessible* aContext) -> Accessible* {
     if (aContent->IsElement() &&
