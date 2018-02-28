@@ -61,7 +61,7 @@ function readFile(aFile) {
 
 function runProcess(aExeFile, aArgs) {
   let process = Cc["@mozilla.org/process/util;1"]
-                  .createInstance(Components.interfaces.nsIProcess);
+                  .createInstance(Ci.nsIProcess);
   process.init(aExeFile);
   process.run(/* blocking = */true, aArgs, aArgs.length);
   return process.exitValue;
@@ -165,8 +165,8 @@ function run_test() {
   jsonFile = FileUtils.getFile("CurWorkD", ["basic-scan.json"]);
   ok(scanTest(jsonFile.path), "Basic scan test");
 
-  let is64Bit = Components.classes["@mozilla.org/xre/app-info;1"]
-                          .getService(Components.interfaces.nsIXULRuntime).is64Bit;
+  let is64Bit = Cc["@mozilla.org/xre/app-info;1"]
+                  .getService(Ci.nsIXULRuntime).is64Bit;
   let basicScanFileName = "basic-scan-" + (is64Bit ? "64" : "32");
   test(basicScanFileName, ["--clamp-contents", jsonFile.path]);
   ok(scanTest(jsonFile.path, ["--clamp-contents"]), "Scan with address clamping");

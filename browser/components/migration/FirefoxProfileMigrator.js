@@ -40,9 +40,9 @@ FirefoxProfileMigrator.prototype = Object.create(MigratorPrototype);
 FirefoxProfileMigrator.prototype._getAllProfiles = function() {
   let allProfiles = new Map();
   let profiles =
-    Components.classes["@mozilla.org/toolkit/profile-service;1"]
-              .getService(Components.interfaces.nsIToolkitProfileService)
-              .profiles;
+    Cc["@mozilla.org/toolkit/profile-service;1"]
+      .getService(Ci.nsIToolkitProfileService)
+      .profiles;
   while (profiles.hasMoreElements()) {
     let profile = profiles.getNext().QueryInterface(Ci.nsIToolkitProfile);
     let rootDir = profile.rootDir;
@@ -75,9 +75,9 @@ FirefoxProfileMigrator.prototype._getFileObject = function(dir, fileName) {
 
 FirefoxProfileMigrator.prototype.getResources = function(aProfile) {
   let sourceProfileDir = aProfile ? this._getAllProfiles().get(aProfile.id) :
-    Components.classes["@mozilla.org/toolkit/profile-service;1"]
-              .getService(Components.interfaces.nsIToolkitProfileService)
-              .selectedProfile.rootDir;
+    Cc["@mozilla.org/toolkit/profile-service;1"]
+      .getService(Ci.nsIToolkitProfileService)
+      .selectedProfile.rootDir;
   if (!sourceProfileDir || !sourceProfileDir.exists() ||
       !sourceProfileDir.isReadable())
     return null;

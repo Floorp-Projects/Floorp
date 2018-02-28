@@ -1411,7 +1411,7 @@ nsContextMenu.prototype = {
   bookmarkThisPage: function CM_bookmarkThisPage() {
     window.top.PlacesCommandHook
               .bookmarkPage(this.browser, true)
-              .catch(Components.utils.reportError);
+              .catch(Cu.reportError);
   },
 
   bookmarkLink: function CM_bookmarkLink() {
@@ -1430,7 +1430,7 @@ nsContextMenu.prototype = {
                                                 uri.spec,
                                                 message.data.title,
                                                 message.data.description)
-                                  .catch(Components.utils.reportError);
+                                  .catch(Cu.reportError);
     };
     mm.addMessageListener("ContextMenu:BookmarkFrame:Result", onMessage);
 

@@ -19,6 +19,6 @@ var EXPORTED_SYMBOLS = [ "Reflect" ];
 
 
 // Initialize the ctypes object. You do not need to do this yourself.
-const init = Components.classes["@mozilla.org/jsreflect;1"].createInstance();
+const init = Cc["@mozilla.org/jsreflect;1"].createInstance();
 init();
 this.Reflect = Reflect;

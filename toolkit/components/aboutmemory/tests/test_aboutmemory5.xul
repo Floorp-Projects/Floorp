@@ -65,8 +65,8 @@
 
     function getFilePath(aFilename) {
       let file = Cc["@mozilla.org/file/directory_service;1"]
-                 .getService(Components.interfaces.nsIProperties)
-                 .get("CurWorkD", Components.interfaces.nsIFile);
+                 .getService(Ci.nsIProperties)
+                 .get("CurWorkD", Ci.nsIFile);
       file.append("chrome");
       file.append("toolkit");
       file.append("components");

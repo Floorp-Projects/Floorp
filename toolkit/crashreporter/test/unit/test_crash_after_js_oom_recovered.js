@@ -8,8 +8,8 @@ function run_test() {
     function() {
       crashType = CrashTestUtils.CRASH_MOZ_CRASH;
       crashReporter.annotateCrashReport("TestingOOMCrash", "Yes");
-      Components.utils.getJSTestingFunctions().reportOutOfMemory();
-      Components.utils.forceGC();
+      Cu.getJSTestingFunctions().reportOutOfMemory();
+      Cu.forceGC();
     },
     function(mdump, extra) {
       Assert.equal(extra.TestingOOMCrash, "Yes");

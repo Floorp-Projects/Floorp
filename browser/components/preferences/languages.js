@@ -65,7 +65,7 @@ var gLanguagesDialog = {
     var strings = bundleAccepted.strings;
     while (strings.hasMoreElements()) {
       var currString = strings.getNext();
-      if (!(currString instanceof Components.interfaces.nsIPropertyElement))
+      if (!(currString instanceof Ci.nsIPropertyElement))
         break;
 
       var property = currString.key.split("."); // ab[-cd].accept

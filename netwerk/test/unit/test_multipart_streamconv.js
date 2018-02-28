@@ -43,11 +43,11 @@ var multipartListener = {
   _index: 0,
 
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIStreamListener) ||
-        iid.equals(Components.interfaces.nsIRequestObserver) ||
-        iid.equals(Components.interfaces.nsISupports))
+    if (iid.equals(Ci.nsIStreamListener) ||
+        iid.equals(Ci.nsIRequestObserver) ||
+        iid.equals(Ci.nsISupports))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   onStartRequest: function(request, context) {

@@ -14,10 +14,10 @@
 
 var [gStyleSheetService, gIOService] = (function() {
     return [
-            Components.classes["@mozilla.org/content/style-sheet-service;1"]
-                .getService(Components.interfaces.nsIStyleSheetService),
-            Components.classes["@mozilla.org/network/io-service;1"]
-                .getService(Components.interfaces.nsIIOService)
+            Cc["@mozilla.org/content/style-sheet-service;1"]
+                .getService(Ci.nsIStyleSheetService),
+            Cc["@mozilla.org/network/io-service;1"]
+                .getService(Ci.nsIIOService)
            ];
 })();
 function set_user_sheet(sheeturi)

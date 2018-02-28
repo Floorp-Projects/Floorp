@@ -48,8 +48,8 @@ var scrollbarTester = {
     var y = 5;
     
     var isMac = navigator.platform.includes("Mac");
-    var runtime = Components.classes["@mozilla.org/xre/app-info;1"]
-                                    .getService(Components.interfaces.nsIXULRuntime);
+    var runtime = Cc["@mozilla.org/xre/app-info;1"]
+                    .getService(Ci.nsIXULRuntime);
     var isGtk = runtime.widgetToolkit.includes("gtk");
     
     // Start the drag.
@@ -98,8 +98,8 @@ var scrollbarTester = {
     // It would be better to test with different middlePref settings,
     // but the setting is only queried once, at browser startup, so
     // changing it here wouldn't have any effect
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                .getService(Components.interfaces.nsIPrefService);
+    var prefService = Cc["@mozilla.org/preferences-service;1"]
+                        .getService(Ci.nsIPrefService);
     var mouseBranch = prefService.getBranch("middlemouse.");
     return mouseBranch.getBoolPref("scrollbarPosition");
   },

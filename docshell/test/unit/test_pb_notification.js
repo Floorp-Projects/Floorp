@@ -7,7 +7,7 @@ function destroy_transient_docshell() {
   var docshell = Cc["@mozilla.org/docshell;1"].createInstance(Ci.nsIDocShell);
   docshell.setOriginAttributes({privateBrowsingId : 1});
   do_test_pending();
-  do_timeout(0, Components.utils.forceGC);
+  do_timeout(0, Cu.forceGC);
 }
 
 function run_test() {

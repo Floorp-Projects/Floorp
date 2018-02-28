@@ -128,7 +128,7 @@ function testConsoleData(aMessageObject) {
       // It'd be nice to just use XPCNativeWrapper.unwrap here, but there are
       // a number of dumb reasons we can't. See bug 868675.
       var arg = aMessageObject.arguments[i];
-      if (Components.utils.isXrayWrapper(arg))
+      if (Cu.isXrayWrapper(arg))
         arg = arg.wrappedJSObject;
       is(arg, a, "correct arg " + i);
     });

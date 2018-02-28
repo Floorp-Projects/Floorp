@@ -179,11 +179,11 @@ var PlacesOrganizer = {
   },
 
   QueryInterface: function PO_QueryInterface(aIID) {
-    if (aIID.equals(Components.interfaces.nsIDOMEventListener) ||
-        aIID.equals(Components.interfaces.nsISupports))
+    if (aIID.equals(Ci.nsIDOMEventListener) ||
+        aIID.equals(Ci.nsISupports))
       return this;
 
-    throw Components.results.NS_NOINTERFACE;
+    throw Cr.NS_NOINTERFACE;
   },
 
   handleEvent: function PO_handleEvent(aEvent) {
@@ -406,7 +406,7 @@ var PlacesOrganizer = {
       if (aResult != Ci.nsIFilePicker.returnCancel && fp.fileURL) {
         ChromeUtils.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
         BookmarkHTMLUtils.importFromURL(fp.fileURL.spec, false)
-                         .catch(Components.utils.reportError);
+                         .catch(Cu.reportError);
       }
     };
 
@@ -425,7 +425,7 @@ var PlacesOrganizer = {
       if (aResult != Ci.nsIFilePicker.returnCancel) {
         ChromeUtils.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
         BookmarkHTMLUtils.exportToFile(fp.file.path)
-                         .catch(Components.utils.reportError);
+                         .catch(Cu.reportError);
       }
     };
 
@@ -1259,7 +1259,7 @@ var ContentArea = {
         return view;
       }
     } catch (ex) {
-      Components.utils.reportError(ex);
+      Cu.reportError(ex);
     }
     return ContentTree.view;
   },

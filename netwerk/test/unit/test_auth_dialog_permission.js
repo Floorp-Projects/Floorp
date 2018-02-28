@@ -61,10 +61,10 @@ AuthPrompt.prototype = {
   pass: "guest",
 
   QueryInterface: function authprompt_qi(iid) {
-    if (iid.equals(Components.interfaces.nsISupports) ||
-        iid.equals(Components.interfaces.nsIAuthPrompt))
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIAuthPrompt))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   prompt: function(title, text, realm, save, defaultText, result) {
@@ -92,19 +92,19 @@ function Requestor(promptExpected) {
 
 Requestor.prototype = {
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsISupports) ||
-        iid.equals(Components.interfaces.nsIInterfaceRequestor))
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIInterfaceRequestor))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   getInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
+    if (iid.equals(Ci.nsIAuthPrompt)) {
       this.prompter = new AuthPrompt(this.promptExpected);
       return this.prompter;
     }
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   prompter: null
@@ -127,7 +127,7 @@ function makeChan(loadingUrl, url, contentPolicy) {
     loadingPrincipal: principal,
     securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
     contentPolicyType: contentPolicy
-  }).QueryInterface(Components.interfaces.nsIHttpChannel);
+  }).QueryInterface(Ci.nsIHttpChannel);
 }
 
 function Test(subresource_http_auth_allow_pref, loadingUri, uri, contentPolicy,
@@ -152,7 +152,7 @@ Test.prototype = {
         do_throw("Channel should have a success code!");
       }
 
-      if (!(request instanceof Components.interfaces.nsIHttpChannel)) {
+      if (!(request instanceof Ci.nsIHttpChannel)) {
         do_throw("Expecting an HTTP channel");
       }
 
@@ -164,7 +164,7 @@ Test.prototype = {
       do_throw("Unexpected exception: " + e);
     }
 
-    throw Components.results.NS_ERROR_ABORT;
+    throw Cr.NS_ERROR_ABORT;
   },
 
   onDataAvailable: function(request, context, stream, offset, count) {
@@ -172,12 +172,12 @@ Test.prototype = {
   },
 
   onStopRequest: function(request, ctx, status) {
-    Assert.equal(status, Components.results.NS_ERROR_ABORT);
+    Assert.equal(status, Cr.NS_ERROR_ABORT);
 
     // Clear the auth cache.
-    Components.classes["@mozilla.org/network/http-auth-manager;1"]
-              .getService(Components.interfaces.nsIHttpAuthManager)
-              .clearAll();
+    Cc["@mozilla.org/network/http-auth-manager;1"]
+      .getService(Ci.nsIHttpAuthManager)
+      .clearAll();
 
     do_timeout(0, run_next_test);
   },

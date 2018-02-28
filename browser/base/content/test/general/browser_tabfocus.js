@@ -72,9 +72,9 @@ function focusInChild() {
     event.stopImmediatePropagation();
 
     var id;
-    if (event.target instanceof Components.interfaces.nsIDOMWindow)
+    if (event.target instanceof Ci.nsIDOMWindow)
       id = getWindowDocId(event.originalTarget) + "-window";
-    else if (event.target instanceof Components.interfaces.nsIDOMDocument)
+    else if (event.target instanceof Ci.nsIDOMDocument)
       id = getWindowDocId(event.originalTarget) + "-document";
     else
       id = event.originalTarget.id;

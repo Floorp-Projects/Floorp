@@ -71,8 +71,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=812415
     // Make our sandboxes. We pass wantXrays=false for the nsEP to ensure that
     // the Xrays we get are the result of being an nsEP, not from the wantXrays
     // flag.
-    var regular = new Components.utils.Sandbox(iwin);
-    var expanded = new Components.utils.Sandbox([iwin], {wantXrays: false});
+    var regular = new Cu.Sandbox(iwin);
+    var expanded = new Cu.Sandbox([iwin], {wantXrays: false});
 
     // Because of the crazy secret life of wantXrays, passing wantXrays=false
     // has the side effect of waiving Xrays on the returned sandbox. Undo that.

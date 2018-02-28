@@ -1925,18 +1925,18 @@ function run_FunctionType_tests() {
 
   // Not available in a Worker
   if ("@mozilla.org/systemprincipal;1" in Components.classes) {
-    var sp = Components.classes["@mozilla.org/systemprincipal;1"].
-               createInstance(Components.interfaces.nsIPrincipal);
-    var s = new Components.utils.Sandbox(sp);
+    var sp = Cc["@mozilla.org/systemprincipal;1"].
+               createInstance(Ci.nsIPrincipal);
+    var s = new Cu.Sandbox(sp);
     s.ctypes = ctypes;
     s.equal = equal;
     s.ok = ok;
-    Components.utils.evalInSandbox("var f5_t = ctypes.FunctionType(ctypes.default_abi, ctypes.int, [ctypes.int]);", s);
-    Components.utils.evalInSandbox("equal(f5_t.toSource(), 'ctypes.FunctionType(ctypes.default_abi, ctypes.int, [ctypes.int])');", s);
-    Components.utils.evalInSandbox("equal(f5_t.name, 'int(int)');", s);
-    Components.utils.evalInSandbox("function f5(aArg) { return 5; };", s);
-    Components.utils.evalInSandbox("var f = f5_t.ptr(f5);", s);
-    Components.utils.evalInSandbox("ok(f(6) == 5);", s);
+    Cu.evalInSandbox("var f5_t = ctypes.FunctionType(ctypes.default_abi, ctypes.int, [ctypes.int]);", s);
+    Cu.evalInSandbox("equal(f5_t.toSource(), 'ctypes.FunctionType(ctypes.default_abi, ctypes.int, [ctypes.int])');", s);
+    Cu.evalInSandbox("equal(f5_t.name, 'int(int)');", s);
+    Cu.evalInSandbox("function f5(aArg) { return 5; };", s);
+    Cu.evalInSandbox("var f = f5_t.ptr(f5);", s);
+    Cu.evalInSandbox("ok(f(6) == 5);", s);
   }
 }
 
@@ -2601,9 +2601,9 @@ function run_single_closure_tests(library, abi, suffix) {
   // Make sure that we don't run into an assertion caused by a cx stack
   // mismatch with the cx stashed in the closure.
   try {
-    var sb = Components.utils.Sandbox("http://www.example.com");
+    var sb = Cu.Sandbox("http://www.example.com");
     sb.fn = fn_v_t(function() { sb.foo = {}; });
-    Components.utils.evalInSandbox("fn();", sb);
+    Cu.evalInSandbox("fn();", sb);
   } catch (e) {} // Components not available in workers.
 
   // Make sure that a void callback can't return an error sentinel.

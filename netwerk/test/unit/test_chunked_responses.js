@@ -48,7 +48,7 @@ function setupChannel(url)
     uri: URL + url,
     loadUsingSystemPrincipal: true
   });
-  var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
+  var httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
   return httpChan;
 }
 
@@ -77,7 +77,7 @@ function handler1(metadata, response)
 
 function completeTest1(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_UNEXPECTED);
+  Assert.equal(request.status, Cr.NS_ERROR_UNEXPECTED);
 
   run_test_number(2);
 }
@@ -102,7 +102,7 @@ function handler2(metadata, response)
 
 function completeTest2(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_UNEXPECTED);
+  Assert.equal(request.status, Cr.NS_ERROR_UNEXPECTED);
   run_test_number(3);
 }
 
@@ -175,7 +175,7 @@ function handler5(metadata, response)
 
 function completeTest5(request, data, ctx)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_UNEXPECTED);
+  Assert.equal(request.status, Cr.NS_ERROR_UNEXPECTED);
   endTests();
 //  run_test_number(6);
 }

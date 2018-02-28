@@ -67,8 +67,8 @@ var expectedResults = {
 
 // Put a multi-line string in the clipboard
 SimpleTest.waitForClipboard(testString, function() {
-  var clip = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
-                       .getService(Components.interfaces.nsIClipboardHelper);
+  var clip = Cc["@mozilla.org/widget/clipboardhelper;1"]
+               .getService(Ci.nsIClipboardHelper);
   clip.copyString(testString);
 }, function() {
   for (let [item, expected] of Object.entries(expectedResults)) {

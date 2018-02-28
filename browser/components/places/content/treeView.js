@@ -870,7 +870,7 @@ PlacesTreeView.prototype = {
           let child = children[i];
           this.nodeInserted(placesNode, child, i);
         }
-      }, Components.utils.reportError);
+      }, Cu.reportError);
   },
 
   nodeTitleChanged: function PTV_nodeTitleChanged(aNode, aNewTitle) {
@@ -931,7 +931,7 @@ PlacesTreeView.prototype = {
           this._cellProperties.set(aNode, properties += " livemark");
           // The livemark attribute is set as a cell property on the title cell.
           this._invalidateCellValue(aNode, this.COLUMN_TYPE_TITLE);
-        }, Components.utils.reportError);
+        }, Cu.reportError);
     }
   },
 
@@ -960,7 +960,7 @@ PlacesTreeView.prototype = {
             let shouldInvalidate =
               !this._controller.hasCachedLivemarkInfo(aNode);
             this._controller.cacheLivemarkInfo(aNode, aLivemark);
-            if (aNewState == Components.interfaces.nsINavHistoryContainerResultNode.STATE_OPENED) {
+            if (aNewState == Ci.nsINavHistoryContainerResultNode.STATE_OPENED) {
               aLivemark.registerForUpdates(aNode, this);
               // Prioritize the current livemark.
               aLivemark.reload();
@@ -1488,7 +1488,7 @@ PlacesTreeView.prototype = {
     let ip = this._getInsertionPoint(aRow, aOrientation);
     if (ip) {
       PlacesControllerDragHelper.onDrop(ip, aDataTransfer, this._tree.element)
-                                .catch(Components.utils.reportError)
+                                .catch(Cu.reportError)
                                 .then(() => {
                                   // We should only clear the drop target once
                                   // the onDrop is complete, as it is an async function.

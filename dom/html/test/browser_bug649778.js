@@ -16,17 +16,17 @@ function checkCache(url, inMemory, shouldExist, cb)
     this.inMemory = inMemory;
     this.shouldExist = shouldExist;
     this.onCacheEntryCheck = function() {
-      return Components.interfaces.nsICacheEntryOpenCallback.ENTRY_WANTED;
+      return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
     };
 
     this.onCacheEntryAvailable = function oCEA(entry, isNew, appCache, status) {
       if (shouldExist) {
         ok(entry, "Entry not found");
         is(this.inMemory, !entry.persistent, "Entry is " + (inMemory ? "" : " not ") + " in memory as expected");
-        is(status, Components.results.NS_OK, "Entry not found");
+        is(status, Cr.NS_OK, "Entry not found");
       } else {
         ok(!entry, "Entry found");
-        is(status, Components.results.NS_ERROR_CACHE_KEY_NOT_FOUND,
+        is(status, Cr.NS_ERROR_CACHE_KEY_NOT_FOUND,
            "Invalid error code");
       }
 
@@ -35,12 +35,12 @@ function checkCache(url, inMemory, shouldExist, cb)
   };
 
   storage.asyncOpenURI(Services.io.newURI(url), "",
-                       Components.interfaces.nsICacheStorage.OPEN_READONLY,
+                       Ci.nsICacheStorage.OPEN_READONLY,
                        new CheckCacheListener(inMemory, shouldExist));
 }
 function getPopupURL() {
-  var sh = popup.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                .getInterface(Components.interfaces.nsIWebNavigation)
+  var sh = popup.QueryInterface(Ci.nsIInterfaceRequestor)
+                .getInterface(Ci.nsIWebNavigation)
                 .sessionHistory;
 
   return sh.getEntryAtIndex(sh.index, false).URI.spec;

@@ -91,8 +91,8 @@ function testInit() {
 
       // Window is the [ChromeWindow] for messageManager, so we need content.window
       // Currently chrome tests are run in a content window instead of a ChromeWindow
-      var webNav = content.window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                         .getInterface(Components.interfaces.nsIWebNavigation);
+      var webNav = content.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation);
       webNav.loadURI(url, null, null, null, null);
     };
 
@@ -1166,7 +1166,7 @@ Tester.prototype = {
         aIID.equals(Ci.nsISupports))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   }
 };
 
@@ -1225,7 +1225,7 @@ function testResult({ name, pass, todo, ex, stack, allowFailure }) {
   if (stack) {
     this.msg += "\nStack trace:\n";
     let normalized;
-    if (stack instanceof Components.interfaces.nsIStackFrame) {
+    if (stack instanceof Ci.nsIStackFrame) {
       let frames = [];
       for (let frame = stack; frame; frame = frame.caller) {
         frames.push(frame.filename + ":" + frame.name + ":" + frame.lineNumber);

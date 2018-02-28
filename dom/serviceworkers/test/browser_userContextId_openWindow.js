@@ -28,7 +28,7 @@ let mockAlertsService = {
     if (aIID.equals(Ci.nsISupports) || aIID.equals(Ci.nsIAlertsService)) {
       return this;
     }
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   createInstance: function(aOuter, aIID) {

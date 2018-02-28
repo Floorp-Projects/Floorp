@@ -35,8 +35,8 @@ function doTests()
   catch(ex) { }
   ok(!readable, "window pixels per css pixel shouldn't be readable to content");
 
-  var domWindowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var domWindowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
   var devPxPerCSSPx = domWindowUtils.screenPixelsPerCSSPixel;
 
   is(window.devicePixelRatio, devPxPerCSSPx, "window.devicePixelRatio");
@@ -62,8 +62,8 @@ function doTests()
             "frame screen Y");
 
   fmudv.fullZoom *= 2;
-  var frameDomWindowUtils = f.contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                              .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var frameDomWindowUtils = f.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIDOMWindowUtils);
   is(frameDomWindowUtils.screenPixelsPerCSSPixel, 2*devPxPerCSSPx,
      "frame screen pixels per CSS pixel");
 

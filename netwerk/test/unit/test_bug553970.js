@@ -1,8 +1,8 @@
 function makeURL(spec) {
   return Cc["@mozilla.org/network/io-service;1"].
-           getService(Components.interfaces.nsIIOService).
+           getService(Ci.nsIIOService).
            newURI(spec).
-           QueryInterface(Components.interfaces.nsIURL);
+           QueryInterface(Ci.nsIURL);
 }
 
 // Checks that nsIURL::GetRelativeSpec does what it claims to do.

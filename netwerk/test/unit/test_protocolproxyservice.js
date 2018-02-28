@@ -22,12 +22,12 @@
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                    .getService(Components.interfaces.nsIIOService);
-var pps = Components.classes["@mozilla.org/network/protocol-proxy-service;1"]
-                    .getService();
-var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                     .getService(Components.interfaces.nsIPrefBranch);
+var ios = Cc["@mozilla.org/network/io-service;1"]
+            .getService(Ci.nsIIOService);
+var pps = Cc["@mozilla.org/network/protocol-proxy-service;1"]
+            .getService();
+var prefs = Cc["@mozilla.org/preferences-service;1"]
+                     .getService(Ci.nsIPrefBranch);
 
 /**
  * Test nsIProtocolHandler that allows proxying, but doesn't allow HTTP
@@ -37,28 +37,28 @@ function TestProtocolHandler() {
 }
 TestProtocolHandler.prototype = {
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIProtocolHandler) ||
-        iid.equals(Components.interfaces.nsISupports))
+    if (iid.equals(Ci.nsIProtocolHandler) ||
+        iid.equals(Ci.nsISupports))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
   scheme: "moz-test",
   defaultPort: -1,
-  protocolFlags: Components.interfaces.nsIProtocolHandler.URI_NOAUTH |
-                 Components.interfaces.nsIProtocolHandler.URI_NORELATIVE |
-                 Components.interfaces.nsIProtocolHandler.ALLOWS_PROXY |
-                 Components.interfaces.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD,
+  protocolFlags: Ci.nsIProtocolHandler.URI_NOAUTH |
+                 Ci.nsIProtocolHandler.URI_NORELATIVE |
+                 Ci.nsIProtocolHandler.ALLOWS_PROXY |
+                 Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD,
   newURI: function(spec, originCharset, baseURI) {
-    return Components.classes["@mozilla.org/network/simple-uri-mutator;1"]
-                     .createInstance(Components.interfaces.nsIURIMutator)
-                     .setSpec(spec)
-                     .finalize();
+    return Cc["@mozilla.org/network/simple-uri-mutator;1"]
+             .createInstance(Ci.nsIURIMutator)
+             .setSpec(spec)
+             .finalize();
   },
   newChannel2: function(uri, aLoadInfo) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
   newChannel: function(uri) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
   allowPort: function(port, scheme) {
     return true;
@@ -77,7 +77,7 @@ TestProtocolHandlerFactory.prototype = {
 
 function register_test_protocol_handler() {
   var reg = Components.manager.QueryInterface(
-      Components.interfaces.nsIComponentRegistrar);
+      Ci.nsIComponentRegistrar);
   reg.registerFactory(Components.ID("{4ea7dd3a-8cae-499c-9f18-e1de773ca25b}"),
                       "TestProtocolHandler",
                       "@mozilla.org/network/protocol;1?name=moz-test",
@@ -113,10 +113,10 @@ TestFilter.prototype = {
   _flags: 0,
   _timeout: 0,
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIProtocolProxyFilter) ||
-        iid.equals(Components.interfaces.nsISupports))
+    if (iid.equals(Ci.nsIProtocolProxyFilter) ||
+        iid.equals(Ci.nsISupports))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
   applyFilter: function(pps, uri, pi, cb) {
     var pi_tail = pps.newProxyInfo(this._type, this._host, this._port,
@@ -132,10 +132,10 @@ TestFilter.prototype = {
 function BasicFilter() {}
 BasicFilter.prototype = {
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIProtocolProxyFilter) ||
-        iid.equals(Components.interfaces.nsISupports))
+    if (iid.equals(Ci.nsIProtocolProxyFilter) ||
+        iid.equals(Ci.nsISupports))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
   applyFilter: function(pps, uri, pi, cb) {
     cb.onProxyFilterResult(
@@ -148,10 +148,10 @@ BasicFilter.prototype = {
 function BasicChannelFilter() {}
 BasicChannelFilter.prototype = {
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIProtocolProxyChannelFilter) ||
-        iid.equals(Components.interfaces.nsISupports))
+    if (iid.equals(Ci.nsIProtocolProxyChannelFilter) ||
+        iid.equals(Ci.nsISupports))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
   applyFilter: function(pps, channel, pi, cb) {
     cb.onProxyFilterResult(
@@ -166,10 +166,10 @@ resolveCallback.prototype = {
   nextFunction: null,
 
   QueryInterface : function (iid) {
-    const interfaces = [Components.interfaces.nsIProtocolProxyCallback,
-                        Components.interfaces.nsISupports];
+    const interfaces = [Ci.nsIProtocolProxyCallback,
+                        Ci.nsISupports];
     if (!interfaces.some( function(v) { return iid.equals(v) } ))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     return this;
   },
 
@@ -496,10 +496,10 @@ function TestResolveCallback(type, nexttest) {
 TestResolveCallback.prototype = {
   QueryInterface:
   function TestResolveCallback_QueryInterface(iid) {
-    if (iid.equals(Components.interfaces.nsIProtocolProxyCallback) ||
-        iid.equals(Components.interfaces.nsISupports))
+    if (iid.equals(Ci.nsIProtocolProxyCallback) ||
+        iid.equals(Ci.nsISupports))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   onProxyAvailable:
@@ -613,10 +613,10 @@ function TestResolveCancelationCallback() {
 TestResolveCancelationCallback.prototype = {
   QueryInterface:
   function TestResolveCallback_QueryInterface(iid) {
-    if (iid.equals(Components.interfaces.nsIProtocolProxyCallback) ||
-        iid.equals(Components.interfaces.nsISupports))
+    if (iid.equals(Ci.nsIProtocolProxyCallback) ||
+        iid.equals(Ci.nsISupports))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   onProxyAvailable:
@@ -625,7 +625,7 @@ TestResolveCancelationCallback.prototype = {
 
     Assert.notEqual(req, null);
     Assert.notEqual(channel, null);
-    Assert.equal(status, Components.results.NS_ERROR_ABORT);
+    Assert.equal(status, Cr.NS_ERROR_ABORT);
     Assert.equal(pi, null);
 
     prefs.setCharPref("network.proxy.autoconfig_url", "");
@@ -649,7 +649,7 @@ function run_pac_cancel_test() {
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
 
   var req = pps.asyncResolve(channel, 0, new TestResolveCancelationCallback());
-  req.cancel(Components.results.NS_ERROR_ABORT);
+  req.cancel(Cr.NS_ERROR_ABORT);
 }
 
 var hostList;
@@ -881,8 +881,8 @@ function failed_script_callback(pi)
   pps.registerFilter(directFilter, 10);
 
   // test that on-modify-request contains the proxy info too
-  var obs = Components.classes["@mozilla.org/observer-service;1"].getService();
-  obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
+  var obs = Cc["@mozilla.org/observer-service;1"].getService();
+  obs = obs.QueryInterface(Ci.nsIObserverService);
   obs.addObserver(directFilterListener, "http-on-modify-request");
 
   var chan = NetUtil.newChannel({
@@ -900,14 +900,14 @@ var directFilterListener = {
 
   onStopRequest: function test_onStop(request, ctx, status) {
     // check on the PI from the channel itself
-    request.QueryInterface(Components.interfaces.nsIProxiedChannel);
+    request.QueryInterface(Ci.nsIProxiedChannel);
     check_proxy(request.proxyInfo, "http", "127.0.0.1", 7246, 0, 0, false);
     pps.unregisterFilter(directFilter);
 
     // check on the PI from on-modify-request
     Assert.ok(this.onModifyRequestCalled);
-    var obs = Components.classes["@mozilla.org/observer-service;1"].getService();
-    obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
+    var obs = Cc["@mozilla.org/observer-service;1"].getService();
+    obs = obs.QueryInterface(Ci.nsIObserverService);
     obs.removeObserver(this, "http-on-modify-request");
 
     run_isresolvable_test();
@@ -915,8 +915,8 @@ var directFilterListener = {
 
    observe: function(subject, topic, data) {
      if (topic === "http-on-modify-request" &&
-         subject instanceof Components.interfaces.nsIHttpChannel &&
-         subject instanceof Components.interfaces.nsIProxiedChannel) {
+         subject instanceof Ci.nsIHttpChannel &&
+         subject instanceof Ci.nsIProxiedChannel) {
        check_proxy(subject.proxyInfo, "http", "127.0.0.1", 7246, 0, 0, false);
        this.onModifyRequestCalled = true;
      }

@@ -327,7 +327,7 @@ var AddonTestUtils = {
                                             .QueryInterface(Ci.nsIDirectoryEnumerator);
         while (featuresDirEntries.hasMoreElements()) {
           let entry = featuresDirEntries.getNext();
-          entry.QueryInterface(Components.interfaces.nsIFile);
+          entry.QueryInterface(Ci.nsIFile);
           systemAddonDirs.push(entry);
         }
 

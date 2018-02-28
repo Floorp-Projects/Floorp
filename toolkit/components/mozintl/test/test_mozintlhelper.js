@@ -2,8 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
-  const miHelper = Components.classes["@mozilla.org/mozintlhelper;1"]
-                             .getService(Components.interfaces.mozIMozIntlHelper);
+  const miHelper = Cc["@mozilla.org/mozintlhelper;1"]
+                     .getService(Ci.mozIMozIntlHelper);
 
   test_this_global(miHelper);
   test_cross_global(miHelper);
@@ -21,11 +21,11 @@ function test_this_global(miHelper) {
 }
 
 function test_cross_global(miHelper) {
-  var global = new Components.utils.Sandbox("https://example.com/");
+  var global = new Cu.Sandbox("https://example.com/");
   var x = global.Object();
 
   miHelper.addGetCalendarInfo(x);
-  var waivedX = Components.utils.waiveXrays(x);
+  var waivedX = Cu.waiveXrays(x);
   equal(waivedX.getCalendarInfo instanceof Function, false);
   equal(waivedX.getCalendarInfo instanceof global.Function, true);
   equal(waivedX.getCalendarInfo() instanceof Object, false);

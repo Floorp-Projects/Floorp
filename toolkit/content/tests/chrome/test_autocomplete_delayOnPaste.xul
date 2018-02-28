@@ -28,14 +28,14 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function autoCompleteSimpleResult(aString) {
   this.searchString = aString;
-  this.searchResult = Components.interfaces.nsIAutoCompleteResult.RESULT_SUCCESS;
+  this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
   this.matchCount = 1;
   this._param = "Result";
 }
 autoCompleteSimpleResult.prototype = {
  _param: "",
  searchString: null,
- searchResult: Components.interfaces.nsIAutoCompleteResult.RESULT_FAILURE,
+ searchResult: Ci.nsIAutoCompleteResult.RESULT_FAILURE,
  defaultIndex: 0,
  errorDescription: null,
  matchCount: 0,
@@ -53,8 +53,8 @@ let autoCompleteSimple = {
   classID: Components.ID("0a2afbdb-f30e-47d1-9cb1-0cd160240aca"),
   contractID: "@mozilla.org/autocomplete/search;1?name=simple",
   QueryInterface: XPCOMUtils.generateQI([
-    Components.interfaces.nsIFactory,
-    Components.interfaces.nsIAutoCompleteSearch
+    Ci.nsIFactory,
+    Ci.nsIAutoCompleteSearch
   ]),
   createInstance: function (outer, iid) {
     return this.QueryInterface(iid);
@@ -62,13 +62,13 @@ let autoCompleteSimple = {
 
   registerFactory: function () {
     let registrar =
-      Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+      Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
     registrar.registerFactory(this.classID, "Test Simple Autocomplete",
                               this.contractID, this);
   },
   unregisterFactory: function () {
     let registrar =
-      Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+      Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
     registrar.unregisterFactory(this.classID, this);
   },
 
@@ -108,9 +108,9 @@ function runTest() {
 
   SimpleTest.waitForClipboard(SEARCH_STRING, function () {
     gACTimer = Date.now();
-    Components.classes["@mozilla.org/widget/clipboardhelper;1"]
-      .getService(Components.interfaces.nsIClipboardHelper)
-      .copyStringToClipboard(SEARCH_STRING, Components.interfaces.nsIClipboard.kGlobalClipboard);
+    Cc["@mozilla.org/widget/clipboardhelper;1"]
+      .getService(Ci.nsIClipboardHelper)
+      .copyStringToClipboard(SEARCH_STRING, Ci.nsIClipboard.kGlobalClipboard);
   }, cbCallback, cbCallback);
 }
 ]]>

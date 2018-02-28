@@ -23,7 +23,7 @@ function run_test()
                invalidArchive + " !");
     } catch (e) {
       if (!(e instanceof Ci.nsIException &&
-            e.result == Components.results.NS_ERROR_FILE_CORRUPTED)) {
+            e.result == Cr.NS_ERROR_FILE_CORRUPTED)) {
         throw e;
       }
       // do nothing

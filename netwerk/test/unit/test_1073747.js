@@ -11,7 +11,7 @@ var test = function(s, funcName){
     for (var i = 0; i < 10; ++i) {
 	args.push(new Arg());
     }
-    var up = Components.classes["@mozilla.org/network/url-parser;1?auth=maybe"].getService(Components.interfaces.nsIURLParser);
+    var up = Cc["@mozilla.org/network/url-parser;1?auth=maybe"].getService(Ci.nsIURLParser);
     try {
 	up[funcName].apply(up, args);
 	return args;

@@ -6,8 +6,8 @@ add_task(function() {
   do_load_manifest("component-file.manifest");
   const contractID = "@mozilla.org/tests/component-file;1";
   Assert.ok(contractID in Components.classes);
-  var foo = Components.classes[contractID]
-                      .createInstance(Components.interfaces.nsIClassInfo);
+  var foo = Cc[contractID]
+              .createInstance(Ci.nsIClassInfo);
   Assert.ok(Boolean(foo));
   Assert.ok(foo.contractID == contractID);
   Assert.ok(!!foo.wrappedJSObject);

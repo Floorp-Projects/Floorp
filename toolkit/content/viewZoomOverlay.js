@@ -50,7 +50,7 @@ var ZoomManager = {
 
   setZoomForBrowser: function ZoomManager_setZoomForBrowser(aBrowser, aVal) {
     if (aVal < this.MIN || aVal > this.MAX)
-      throw Components.results.NS_ERROR_INVALID_ARG;
+      throw Cr.NS_ERROR_INVALID_ARG;
 
     if (this.useFullZoom || aBrowser.isSyntheticDocument) {
       aBrowser.textZoom = 1;

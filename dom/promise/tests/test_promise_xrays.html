@@ -231,7 +231,7 @@ function testResolve3() {
 
 function testResolve4() {
   var p = new win.Promise((res, rej) => {});
-  Components.utils.getJSTestingFunctions().resolvePromise(p, 42);
+  Cu.getJSTestingFunctions().resolvePromise(p, 42);
   p.then(
     function(arg) {
       is(arg, 42, "Resolving an Xray to a promise with TestingFunctions resolvePromise should work");
@@ -257,7 +257,7 @@ function testReject1() {
 
 function testReject2() {
   var p = new win.Promise((res, rej) => {});
-  Components.utils.getJSTestingFunctions().rejectPromise(p, 42);
+  Cu.getJSTestingFunctions().rejectPromise(p, 42);
   p.then(
     function(arg) {
       ok(false, "Rejecting an Xray to a promise with TestingFunctions rejectPromise should trigger catch handler");

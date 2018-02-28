@@ -200,7 +200,7 @@ var BookmarkHTMLUtils = Object.freeze({
               .getHistogramById("PLACES_EXPORT_TOHTML_MS")
               .add(Date.now() - startTime);
     } catch (ex) {
-      Components.utils.reportError("Unable to report telemetry.");
+      Cu.reportError("Unable to report telemetry.");
     }
 
     return count;
@@ -1105,7 +1105,7 @@ BookmarkExporter.prototype = {
     try {
       favicon  = await PlacesUtils.promiseFaviconData(aItem.uri);
     } catch (ex) {
-      Components.utils.reportError("Unexpected Error trying to fetch icon data");
+      Cu.reportError("Unexpected Error trying to fetch icon data");
       return;
     }
 
@@ -1146,7 +1146,7 @@ function insertFaviconForNode(node) {
         PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
         Services.scriptSecurityManager.getSystemPrincipal());
     } catch (ex) {
-      Components.utils.reportError("Failed to import favicon data:" + ex);
+      Cu.reportError("Failed to import favicon data:" + ex);
     }
   }
 
@@ -1160,7 +1160,7 @@ function insertFaviconForNode(node) {
       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
       Services.scriptSecurityManager.getSystemPrincipal());
   } catch (ex) {
-    Components.utils.reportError("Failed to import favicon URI:" + ex);
+    Cu.reportError("Failed to import favicon URI:" + ex);
   }
 }
 

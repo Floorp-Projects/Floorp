@@ -43,7 +43,7 @@ var _Task = ChromeUtils.import("resource://gre/modules/Task.jsm", {}).Task;
 
 let _NetUtil = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {}).NetUtil;
 
-Components.utils.importGlobalProperties(["XMLHttpRequest"]);
+Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 // Support a common assertion library, Assert.jsm.
 var AssertCls = ChromeUtils.import("resource://testing-common/Assert.jsm", null).Assert;
@@ -80,9 +80,9 @@ try {
   // Don't use Services.appinfo here as it disables replacing appinfo with stubs
   // for test usage.
   // eslint-disable-next-line mozilla/use-services
-  runningInParent = Components.classes["@mozilla.org/xre/runtime;1"].
-                      getService(Components.interfaces.nsIXULRuntime).processType
-                      == Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+  runningInParent = Cc["@mozilla.org/xre/runtime;1"].
+                      getService(Ci.nsIXULRuntime).processType
+                      == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 } catch (e) { }
 
 // Only if building of places is enabled.
@@ -115,8 +115,8 @@ try {
   if (runningInParent &&
       "@mozilla.org/toolkit/crash-reporter;1" in Components.classes) {
     let crashReporter =
-          Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
-          .getService(Components.interfaces.nsICrashReporter);
+          Cc["@mozilla.org/toolkit/crash-reporter;1"]
+          .getService(Ci.nsICrashReporter);
     crashReporter.UpdateCrashEventsDir();
     crashReporter.minidumpPath = do_get_minidumpdir();
   }
@@ -127,14 +127,14 @@ try {
 try {
   let levelNames = {};
   for (let level of ["debug", "info", "warn", "error"]) {
-    levelNames[Components.interfaces.nsIConsoleMessage[level]] = level;
+    levelNames[Ci.nsIConsoleMessage[level]] = level;
   }
 
   let listener = {
     QueryInterface(iid) {
-      if (!iid.equals(Components.interfaces.nsISupports) &&
-          !iid.equals(Components.interfaces.nsIConsoleListener)) {
-        throw Components.results.NS_NOINTERFACE;
+      if (!iid.equals(Ci.nsISupports) &&
+          !iid.equals(Ci.nsIConsoleListener)) {
+        throw Cr.NS_NOINTERFACE;
       }
       return this;
     },
@@ -146,9 +146,9 @@ try {
   // Don't use _Services.console here as it causes one of the devtools tests
   // to fail, probably due to initializing Services.console too early.
   // eslint-disable-next-line mozilla/use-services
-  Components.classes["@mozilla.org/consoleservice;1"]
-            .getService(Components.interfaces.nsIConsoleService)
-            .registerListener(listener);
+  Cc["@mozilla.org/consoleservice;1"]
+    .getService(Ci.nsIConsoleService)
+    .registerListener(listener);
 } catch (e) {}
 /**
  * Date.now() is not necessarily monotonically increasing (insert sob story
@@ -170,8 +170,8 @@ function _Timer(func, delay) {
   this._start = Date.now();
   this._delay = delay;
 
-  var timer = Components.classes["@mozilla.org/timer;1"]
-                        .createInstance(Components.interfaces.nsITimer);
+  var timer = Cc["@mozilla.org/timer;1"]
+                .createInstance(Ci.nsITimer);
   timer.initWithCallback(this, delay + _timerFuzz, timer.TYPE_ONE_SHOT);
 
   // Keep timer alive until it fires
@@ -179,11 +179,11 @@ function _Timer(func, delay) {
 }
 _Timer.prototype = {
   QueryInterface(iid) {
-    if (iid.equals(Components.interfaces.nsITimerCallback) ||
-        iid.equals(Components.interfaces.nsISupports))
+    if (iid.equals(Ci.nsITimerCallback) ||
+        iid.equals(Ci.nsISupports))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   notify(timer) {
@@ -216,7 +216,7 @@ function _do_main() {
 
   _testLogger.info("running event loop");
 
-  var tm = Components.classes["@mozilla.org/thread-manager;1"].getService();
+  var tm = Cc["@mozilla.org/thread-manager;1"].getService();
 
   tm.spinEventLoopUntil(() => _quit);
 
@@ -242,7 +242,7 @@ var _fakeIdleService = {
   get registrar() {
     delete this.registrar;
     return this.registrar =
-      Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+      Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   },
   contractID: "@mozilla.org/widget/idleservice;1",
   get CID() {
@@ -253,8 +253,8 @@ var _fakeIdleService = {
     if (!this.originalFactory) {
       // Save original factory.
       this.originalFactory =
-        Components.manager.getClassObject(Components.classes[this.contractID],
-                                          Components.interfaces.nsIFactory);
+        Components.manager.getClassObject(Cc[this.contractID],
+                                          Ci.nsIFactory);
       // Unregister original factory.
       this.registrar.unregisterFactory(this.CID, this.originalFactory);
       // Replace with the mock.
@@ -279,19 +279,19 @@ var _fakeIdleService = {
     // nsIFactory
     createInstance(aOuter, aIID) {
       if (aOuter) {
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
+        throw Cr.NS_ERROR_NO_AGGREGATION;
       }
       return _fakeIdleService.QueryInterface(aIID);
     },
     lockFactory(aLock) {
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     },
     QueryInterface(aIID) {
-      if (aIID.equals(Components.interfaces.nsIFactory) ||
-          aIID.equals(Components.interfaces.nsISupports)) {
+      if (aIID.equals(Ci.nsIFactory) ||
+          aIID.equals(Ci.nsISupports)) {
         return this;
       }
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     }
   },
 
@@ -304,14 +304,14 @@ var _fakeIdleService = {
 
   QueryInterface(aIID) {
     // Useful for testing purposes, see test_get_idle.js.
-    if (aIID.equals(Components.interfaces.nsIFactory)) {
+    if (aIID.equals(Ci.nsIFactory)) {
       return this.factory;
     }
-    if (aIID.equals(Components.interfaces.nsIIdleService) ||
-        aIID.equals(Components.interfaces.nsISupports)) {
+    if (aIID.equals(Ci.nsIIdleService) ||
+        aIID.equals(Ci.nsISupports)) {
       return this;
     }
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   }
 };
 
@@ -321,8 +321,8 @@ var _fakeIdleService = {
  */
 function do_get_idle() {
   _fakeIdleService.deactivate();
-  return Components.classes[_fakeIdleService.contractID]
-                   .getService(Components.interfaces.nsIIdleService);
+  return Cc[_fakeIdleService.contractID]
+           .getService(Ci.nsIIdleService);
 }
 
 // Map resource://test/ to current working directory and
@@ -330,7 +330,7 @@ function do_get_idle() {
 function _register_protocol_handlers() {
   let protocolHandler =
     _Services.io.getProtocolHandler("resource")
-                .QueryInterface(Components.interfaces.nsIResProtocolHandler);
+                .QueryInterface(Ci.nsIResProtocolHandler);
 
   let curDirURI = _Services.io.newFileURI(do_get_cwd());
   protocolHandler.setSubstitution("test", curDirURI);
@@ -347,10 +347,10 @@ function _register_modules_protocol_handler() {
 
   let protocolHandler =
     _Services.io.getProtocolHandler("resource")
-                .QueryInterface(Components.interfaces.nsIResProtocolHandler);
+                .QueryInterface(Ci.nsIResProtocolHandler);
 
-  let modulesFile = Components.classes["@mozilla.org/file/local;1"].
-                    createInstance(Components.interfaces.nsIFile);
+  let modulesFile = Cc["@mozilla.org/file/local;1"].
+                    createInstance(Ci.nsIFile);
   modulesFile.initWithPath(_TESTING_MODULES_DIR);
 
   if (!modulesFile.exists()) {
@@ -375,8 +375,8 @@ function _setupDebuggerServer(breakpointFiles, callback) {
   _Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
   // for debugging-the-debugging, let an env var cause log spew.
-  let env = Components.classes["@mozilla.org/process/environment;1"]
-                      .getService(Components.interfaces.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"]
+              .getService(Ci.nsIEnvironment);
   if (env.get("DEVTOOLS_DEBUGGER_LOG")) {
     _Services.prefs.setBoolPref("devtools.debugger.log", true);
   }
@@ -467,7 +467,7 @@ function _initDebugging(port) {
   listener.open();
 
   // spin an event loop until the debugger connects.
-  let tm = Components.classes["@mozilla.org/thread-manager;1"].getService();
+  let tm = Cc["@mozilla.org/thread-manager;1"].getService();
   tm.spinEventLoopUntil(() => {
     if (initialized) {
       return true;
@@ -544,7 +544,7 @@ function _execute_test() {
     // possible that this will mask an NS_ERROR_ABORT that happens after a
     // do_check failure though.
 
-    if (!_quit || e != Components.results.NS_ERROR_ABORT) {
+    if (!_quit || e != Cr.NS_ERROR_ABORT) {
       let extra = {};
       if (e.fileName) {
         extra.source_file = e.fileName;
@@ -574,7 +574,7 @@ function _execute_test() {
     } else {
       stack = Components.stack.caller;
     }
-    if (stack instanceof Components.interfaces.nsIStackFrame) {
+    if (stack instanceof Ci.nsIStackFrame) {
       filename = stack.filename;
     } else if (ex.fileName) {
       filename = ex.fileName;
@@ -597,7 +597,7 @@ function _execute_test() {
     }
     _cleanupFunctions = [];
   }).catch(reportCleanupError).then(() => complete = true);
-  let tm = Components.classes["@mozilla.org/thread-manager;1"].getService();
+  let tm = Cc["@mozilla.org/thread-manager;1"].getService();
   tm.spinEventLoopUntil(() => complete);
 
   // Restore idle service to avoid leaks.
@@ -690,7 +690,7 @@ function executeSoon(callback, aName) {
         // has already been logged so there is no need to log it again. It's
         // possible that this will mask an NS_ERROR_ABORT that happens after a
         // do_check failure though.
-        if (!_quit || e != Components.results.NS_ERROR_ABORT) {
+        if (!_quit || e != Cr.NS_ERROR_ABORT) {
           let stack = e.stack ? _format_stack(e.stack) : null;
           _testLogger.testStatus(_TEST_NAME,
                                  funcName,
@@ -720,7 +720,7 @@ function do_throw(error, stack) {
   // otherwise get it from our call context
   stack = stack || error.stack || Components.stack.caller;
 
-  if (stack instanceof Components.interfaces.nsIStackFrame)
+  if (stack instanceof Ci.nsIStackFrame)
     filename = stack.filename;
   else if (error.fileName)
     filename = error.fileName;
@@ -737,12 +737,12 @@ function _abort_failed_test() {
   // Called to abort the test run after all failures are logged.
   _passed = false;
   _do_quit();
-  throw Components.results.NS_ERROR_ABORT;
+  throw Cr.NS_ERROR_ABORT;
 }
 
 function _format_stack(stack) {
   let normalized;
-  if (stack instanceof Components.interfaces.nsIStackFrame) {
+  if (stack instanceof Ci.nsIStackFrame) {
     let frames = [];
     for (let frame = stack; frame; frame = frame.caller) {
       frames.push(frame.filename + ":" + frame.name + ":" + frame.lineNumber);
@@ -788,7 +788,7 @@ function do_report_unexpected_exception(ex, text) {
                       stack: _format_stack(ex.stack)
                     });
   _do_quit();
-  throw Components.results.NS_ERROR_ABORT;
+  throw Cr.NS_ERROR_ABORT;
 }
 
 function do_note_exception(ex, text) {
@@ -884,7 +884,7 @@ function todo_check_null(condition, stack = Components.stack.caller) {
 // |Components.results[resultName]| as the value of its 'result' property.
 function do_check_throws_nsIException(func, resultName,
                                       stack = Components.stack.caller, todo = false) {
-  let expected = Components.results[resultName];
+  let expected = Cr[resultName];
   if (typeof expected !== "number") {
     do_throw("do_check_throws_nsIException requires a Components.results" +
              " property name, not " + uneval(resultName), stack);
@@ -897,7 +897,7 @@ function do_check_throws_nsIException(func, resultName,
   try {
     func();
   } catch (ex) {
-    if (!(ex instanceof Components.interfaces.nsIException) ||
+    if (!(ex instanceof Ci.nsIException) ||
         ex.result !== expected) {
       do_report_result(false, msg + ", threw " + legible_exception(ex) +
                        " instead", stack, todo);
@@ -917,14 +917,14 @@ function do_check_throws_nsIException(func, resultName,
 function legible_exception(exception) {
   switch (typeof exception) {
     case "object":
-    if (exception instanceof Components.interfaces.nsIException) {
+    if (exception instanceof Ci.nsIException) {
       return "nsIException instance: " + uneval(exception.toString());
     }
     return exception.toString();
 
     case "number":
     for (let name in Components.results) {
-      if (exception === Components.results[name]) {
+      if (exception === Cr[name]) {
         return "Components.results." + name;
       }
     }
@@ -965,7 +965,7 @@ function do_test_finished(aName) {
 
 function do_get_file(path, allowNonexistent) {
   try {
-    let lf = _Services.dirsvc.get("CurWorkD", Components.interfaces.nsIFile);
+    let lf = _Services.dirsvc.get("CurWorkD", Ci.nsIFile);
 
     let bits = path.split("/");
     for (let i = 0; i < bits.length; i++) {
@@ -1000,7 +1000,7 @@ function do_get_cwd() {
 
 function do_load_manifest(path) {
   var lf = do_get_file(path);
-  const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
+  const nsIComponentRegistrar = Ci.nsIComponentRegistrar;
   Assert.ok(Components.manager instanceof nsIComponentRegistrar);
   // Previous do_check_true() is not a test check.
   Components.manager.autoRegister(lf);
@@ -1060,12 +1060,12 @@ function registerCleanupFunction(aFunction) {
  * @return nsIFile of the temporary directory
  */
 function do_get_tempdir() {
-  let env = Components.classes["@mozilla.org/process/environment;1"]
-                      .getService(Components.interfaces.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"]
+              .getService(Ci.nsIEnvironment);
   // the python harness sets this in the environment for us
   let path = env.get("XPCSHELL_TEST_TEMP_DIR");
-  let file = Components.classes["@mozilla.org/file/local;1"]
-                       .createInstance(Components.interfaces.nsIFile);
+  let file = Cc["@mozilla.org/file/local;1"]
+               .createInstance(Ci.nsIFile);
   file.initWithPath(path);
   return file;
 }
@@ -1076,13 +1076,13 @@ function do_get_tempdir() {
  * @return nsIFile of the minidump directory
  */
 function do_get_minidumpdir() {
-  let env = Components.classes["@mozilla.org/process/environment;1"]
-                      .getService(Components.interfaces.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"]
+              .getService(Ci.nsIEnvironment);
   // the python harness may set this in the environment for us
   let path = env.get("XPCSHELL_MINIDUMP_DIR");
   if (path) {
-    let file = Components.classes["@mozilla.org/file/local;1"]
-                         .createInstance(Components.interfaces.nsIFile);
+    let file = Cc["@mozilla.org/file/local;1"]
+                 .createInstance(Ci.nsIFile);
     file.initWithPath(path);
     return file;
   }
@@ -1102,12 +1102,12 @@ function do_get_profile(notifyProfileAfterChange = false) {
     return null;
   }
 
-  let env = Components.classes["@mozilla.org/process/environment;1"]
-                      .getService(Components.interfaces.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"]
+              .getService(Ci.nsIEnvironment);
   // the python harness sets this in the environment for us
   let profd = env.get("XPCSHELL_TEST_PROFILE_DIR");
-  let file = Components.classes["@mozilla.org/file/local;1"]
-                       .createInstance(Components.interfaces.nsIFile);
+  let file = Cc["@mozilla.org/file/local;1"]
+               .createInstance(Ci.nsIFile);
   file.initWithPath(profd);
 
   let provider = {
@@ -1120,22 +1120,22 @@ function do_get_profile(notifyProfileAfterChange = false) {
       return null;
     },
     QueryInterface(iid) {
-      if (iid.equals(Components.interfaces.nsIDirectoryServiceProvider) ||
-          iid.equals(Components.interfaces.nsISupports)) {
+      if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
+          iid.equals(Ci.nsISupports)) {
         return this;
       }
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     }
   };
-  _Services.dirsvc.QueryInterface(Components.interfaces.nsIDirectoryService)
+  _Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)
            .registerProvider(provider);
 
   // We need to update the crash events directory when the profile changes.
   if (runningInParent &&
       "@mozilla.org/toolkit/crash-reporter;1" in Components.classes) {
     let crashReporter =
-        Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
-                          .getService(Components.interfaces.nsICrashReporter);
+        Cc["@mozilla.org/toolkit/crash-reporter;1"]
+          .getService(Ci.nsICrashReporter);
     crashReporter.UpdateCrashEventsDir();
   }
 
@@ -1492,11 +1492,11 @@ try {
 } catch (e) { }
 
 function _load_mozinfo() {
-  let mozinfoFile = Components.classes["@mozilla.org/file/local;1"]
-    .createInstance(Components.interfaces.nsIFile);
+  let mozinfoFile = Cc["@mozilla.org/file/local;1"]
+    .createInstance(Ci.nsIFile);
   mozinfoFile.initWithPath(_MOZINFO_JS_PATH);
-  let stream = Components.classes["@mozilla.org/network/file-input-stream;1"]
-    .createInstance(Components.interfaces.nsIFileInputStream);
+  let stream = Cc["@mozilla.org/network/file-input-stream;1"]
+    .createInstance(Ci.nsIFileInputStream);
   stream.init(mozinfoFile, -1, 0, 0);
   let bytes = _NetUtil.readInputStream(stream, stream.available());
   let mozinfo = JSON.parse((new TextDecoder()).decode(bytes));

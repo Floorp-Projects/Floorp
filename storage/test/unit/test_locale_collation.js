@@ -168,7 +168,7 @@ function readTestData() {
   let istream = Cc["@mozilla.org/network/file-input-stream;1"].
                 createInstance(Ci.nsIFileInputStream);
   istream.init(file, -1, -1, 0);
-  istream.QueryInterface(Components.interfaces.nsILineInputStream);
+  istream.QueryInterface(Ci.nsILineInputStream);
 
   let line = {};
   let lines = [];

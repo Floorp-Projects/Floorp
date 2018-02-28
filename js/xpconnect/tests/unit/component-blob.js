@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.importGlobalProperties(['Blob', 'File']);
+Cu.importGlobalProperties(['Blob', 'File']);
 
 const Assert = {
   ok(cond, text) {
@@ -60,7 +60,7 @@ BlobComponent.prototype =
   flags: 0,
 
   getInterfaces: function getInterfaces(aCount) {
-    var interfaces = [Components.interfaces.nsIClassInfo];
+    var interfaces = [Ci.nsIClassInfo];
     aCount.value = interfaces.length;
     return interfaces;
   },
@@ -70,7 +70,7 @@ BlobComponent.prototype =
   },
 
   // nsISupports
-  QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsIClassInfo])
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIClassInfo])
 };
 
 var gComponentsArray = [BlobComponent];

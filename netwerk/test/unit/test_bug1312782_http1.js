@@ -170,7 +170,7 @@ function run_test() {
   // Make sure "network.http.active_tab_priority" is true, so we can expect to
   // receive http requests with focused window id before others.
   var prefs = Cc["@mozilla.org/preferences-service;1"]
-                .getService(Components.interfaces.nsIPrefBranch);
+                .getService(Ci.nsIPrefBranch);
   prefs.setBoolPref("network.http.active_tab_priority", true);
 
   setup_http_server();

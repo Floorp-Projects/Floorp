@@ -48,7 +48,7 @@ function test() {
           return;
         }
 
-        req.cancel(Components.results.NS_ERROR_FAILURE);
+        req.cancel(Cr.NS_ERROR_FAILURE);
       },
 
       QueryInterface: function QueryInterface(aIID) {
@@ -59,7 +59,7 @@ function test() {
           return this;
         }
 
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+        throw Cr.NS_ERROR_NO_INTERFACE;
       }
     };
 

@@ -49,7 +49,7 @@ function test_executable_lines() {
   let code = readFile("sourcemapped.js") + "\n//# sourceMappingURL=" +
     getFileUrl("source-map-data/sourcemapped.map");
 
-  Components.utils.evalInSandbox(code, gDebuggee, "1.8",
+  Cu.evalInSandbox(code, gDebuggee, "1.8",
     SOURCE_MAPPED_FILE, 1);
 }
 

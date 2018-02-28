@@ -22,7 +22,7 @@ function log(aMsg) {
 }
 
 function generateUuid() {
-  var uuidGenerator = Components.classes["@mozilla.org/uuid-generator;1"].
+  var uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].
     getService(Ci.nsIUUIDGenerator);
   return uuidGenerator.generateUUID().toString();
 }

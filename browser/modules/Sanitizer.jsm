@@ -342,8 +342,8 @@ var Sanitizer = {
 
         // Clear deviceIds. Done asynchronously (returns before complete).
         try {
-          let mediaMgr = Components.classes["@mozilla.org/mediaManagerService;1"]
-                                   .getService(Ci.nsIMediaManagerService);
+          let mediaMgr = Cc["@mozilla.org/mediaManagerService;1"]
+                           .getService(Ci.nsIMediaManagerService);
           mediaMgr.sanitizeDeviceIds(range && range[0]);
         } catch (ex) {
           seenException = ex;
@@ -451,8 +451,8 @@ var Sanitizer = {
         }
 
         try {
-          let predictor = Components.classes["@mozilla.org/network/predictor;1"]
-                                    .getService(Components.interfaces.nsINetworkPredictor);
+          let predictor = Cc["@mozilla.org/network/predictor;1"]
+                            .getService(Ci.nsINetworkPredictor);
           predictor.reset();
         } catch (ex) {
           seenException = ex;
@@ -559,8 +559,8 @@ var Sanitizer = {
 
         try {
           // clear all auth tokens
-          let sdr = Components.classes["@mozilla.org/security/sdr;1"]
-                              .getService(Components.interfaces.nsISecretDecoderRing);
+          let sdr = Cc["@mozilla.org/security/sdr;1"]
+                      .getService(Ci.nsISecretDecoderRing);
           sdr.logoutAndTeardown();
 
           // clear FTP and plain HTTP auth sessions
@@ -594,8 +594,8 @@ var Sanitizer = {
 
         try {
           // Clear site-specific settings like page-zoom level
-          let cps = Components.classes["@mozilla.org/content-pref/service;1"]
-                              .getService(Components.interfaces.nsIContentPrefService2);
+          let cps = Cc["@mozilla.org/content-pref/service;1"]
+                      .getService(Ci.nsIContentPrefService2);
           if (startDateMS == null) {
             cps.removeAllDomains(null);
           } else {
@@ -885,7 +885,7 @@ async function clearPluginData(range) {
             ph.clearSiteData(tag, null, FLAG_CLEAR_ALL, age, resolve)
           );
           // If the plugin doesn't support clearing by age, clear everything.
-          if (rv == Components.results.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED) {
+          if (rv == Cr.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED) {
             await new Promise(resolve =>
               ph.clearSiteData(tag, null, FLAG_CLEAR_ALL, -1, resolve)
             );

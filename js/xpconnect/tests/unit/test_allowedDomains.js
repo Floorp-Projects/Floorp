@@ -42,6 +42,6 @@ function run_test() {
   
   // Bug 777705:
   sbMaster.Components = cu.getComponentsForScope(sbMaster);
-  Components.utils.evalInSandbox("Components.interfaces", sbMaster);
+  Cu.evalInSandbox("Components.interfaces", sbMaster);
   Assert.ok(true);
 }

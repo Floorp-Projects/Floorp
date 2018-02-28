@@ -25,8 +25,8 @@
   }
 
   function checkInitialSize() {
-    let runtime = Components.classes["@mozilla.org/xre/app-info;1"]
-                            .getService(Components.interfaces.nsIXULRuntime);
+    let runtime = Cc["@mozilla.org/xre/app-info;1"]
+                    .getService(Ci.nsIXULRuntime);
     let test = runtime.widgetToolkit == "windows" ? todo_is : is; // bug 602745
     test(win.outerHeight,170, "initial outerHeight");
     test(win.outerWidth, 200, "initial outerWidth");

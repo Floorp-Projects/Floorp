@@ -37,18 +37,18 @@ function getEventDir() {
  */
 function do_crash(setup, callback, canReturnZero) {
   // get current process filename (xpcshell)
-  let bin = Services.dirsvc.get("XREExeF", Components.interfaces.nsIFile);
+  let bin = Services.dirsvc.get("XREExeF", Ci.nsIFile);
   if (!bin.exists()) {
     // weird, can't find xpcshell binary?
     do_throw("Can't find xpcshell binary!");
   }
   // get Gre dir (GreD)
-  let greD = Services.dirsvc.get("GreD", Components.interfaces.nsIFile);
+  let greD = Services.dirsvc.get("GreD", Ci.nsIFile);
   let headfile = do_get_file("crasher_subprocess_head.js");
   let tailfile = do_get_file("crasher_subprocess_tail.js");
   // run xpcshell -g GreD -f head -e "some setup code" -f tail
-  let process = Components.classes["@mozilla.org/process/util;1"]
-                  .createInstance(Components.interfaces.nsIProcess);
+  let process = Cc["@mozilla.org/process/util;1"]
+                  .createInstance(Ci.nsIProcess);
   process.init(bin);
   let args = ["-g", greD.path,
               "-f", headfile.path];
@@ -60,8 +60,8 @@ function do_crash(setup, callback, canReturnZero) {
   }
   args.push("-f", tailfile.path);
 
-  let env = Components.classes["@mozilla.org/process/environment;1"]
-                              .getService(Components.interfaces.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"]
+              .getService(Ci.nsIEnvironment);
 
   let crashD = do_get_tempdir();
   crashD.append("crash-events");
@@ -90,7 +90,7 @@ function do_crash(setup, callback, canReturnZero) {
 function getMinidump() {
   let en = do_get_tempdir().directoryEntries;
   while (en.hasMoreElements()) {
-    let f = en.getNext().QueryInterface(Components.interfaces.nsIFile);
+    let f = en.getNext().QueryInterface(Ci.nsIFile);
     if (f.leafName.substr(-4) == ".dmp") {
       return f;
     }
@@ -182,8 +182,8 @@ function do_content_crash(setup, callback) {
   // Setting the minidump path won't work in the child, so we need to do
   // that here.
   let crashReporter =
-      Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
-                .getService(Components.interfaces.nsICrashReporter);
+      Cc["@mozilla.org/toolkit/crash-reporter;1"]
+        .getService(Ci.nsICrashReporter);
   crashReporter.minidumpPath = do_get_tempdir();
 
   /* import-globals-from ../unit/crasher_subprocess_head.js */
@@ -235,8 +235,8 @@ function do_triggered_content_crash(trigger, callback) {
   // Setting the minidump path won't work in the child, so we need to do
   // that here.
   let crashReporter =
-      Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
-                .getService(Components.interfaces.nsICrashReporter);
+      Cc["@mozilla.org/toolkit/crash-reporter;1"]
+        .getService(Ci.nsICrashReporter);
   crashReporter.minidumpPath = do_get_tempdir();
 
   /* import-globals-from ../unit/crasher_subprocess_head.js */

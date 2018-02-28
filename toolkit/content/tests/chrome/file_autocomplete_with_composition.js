@@ -65,7 +65,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
 
     waitForCondition(() => {
       return this._controller.searchStatus >=
-             Components.interfaces.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
+             Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
     },
     this._checkResult.bind(this));
   },

@@ -355,7 +355,7 @@ var TelemetryStopwatchImpl = {
       return false;
     }
 
-    return Timers.put(histogram, object, key, Components.utils.now());
+    return Timers.put(histogram, object, key, Cu.now());
   },
 
   running(histogram, object, key) {
@@ -378,7 +378,7 @@ var TelemetryStopwatchImpl = {
     }
 
     try {
-      let delta = Components.utils.now() - startTime;
+      let delta = Cu.now() - startTime;
       return Math.round(delta);
     } catch (e) {
       if (!this._suppressErrors) {

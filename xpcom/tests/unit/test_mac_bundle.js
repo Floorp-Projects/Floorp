@@ -10,8 +10,8 @@ function run_test() {
   var keynoteBundle = do_get_file("data/presentation.key");
   var appBundle = do_get_file("data/SmallApp.app");
 
-  Assert.ok(keynoteBundle instanceof Components.interfaces.nsILocalFileMac);
-  Assert.ok(appBundle instanceof Components.interfaces.nsILocalFileMac);
+  Assert.ok(keynoteBundle instanceof Ci.nsILocalFileMac);
+  Assert.ok(appBundle instanceof Ci.nsILocalFileMac);
 
   Assert.ok(keynoteBundle.isPackage());
   Assert.ok(appBundle.isPackage());

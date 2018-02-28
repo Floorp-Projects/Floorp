@@ -243,9 +243,9 @@
           if (!this._mStrBundle) {
             // need to create string bundle manually instead of using <xul:stringbundle/>
             // see bug 63370 for details
-            this._mStrBundle = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                         .getService(Components.interfaces.nsIStringBundleService)
-                                         .createBundle("chrome://global/locale/dialog.properties");
+            this._mStrBundle = Cc["@mozilla.org/intl/stringbundle;1"]
+                                 .getService(Ci.nsIStringBundleService)
+                                 .createBundle("chrome://global/locale/dialog.properties");
           }
           return this._mStrBundle;
         ]]></getter>

@@ -1220,7 +1220,7 @@ LoginManagerStorage_mozStorage.prototype = {
       try {
         this._dbConnection.close();
       } catch (e) {
-        Components.utils.reportError(e);
+        Cu.reportError(e);
       }
     }
     this._dbConnection = null;

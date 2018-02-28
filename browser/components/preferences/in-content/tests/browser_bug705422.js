@@ -26,8 +26,8 @@ function initTest() {
     // matches must correspond to above data
     const matches = 6;
 
-    var cookieSvc = Components.classes["@mozilla.org/cookieService;1"]
-                              .getService(Components.interfaces.nsICookieService);
+    var cookieSvc = Cc["@mozilla.org/cookieService;1"]
+                      .getService(Ci.nsICookieService);
     var v;
     // inject cookies
     for (v in vals) {

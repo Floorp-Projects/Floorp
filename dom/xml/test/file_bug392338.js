@@ -7,10 +7,10 @@ var modifyObserver = {
       try {
         // We should be able to QI the request to an nsIChannel, then get
         // the notificationCallbacks without throwing an exception.
-        var ir = subject.QueryInterface(Components.interfaces.nsIChannel).notificationCallbacks;
+        var ir = subject.QueryInterface(Ci.nsIChannel).notificationCallbacks;
 
         // The notificationCallbacks should be an nsIInterfaceRequestor.
-        testOk = ir.toString().includes(Components.interfaces.nsIInterfaceRequestor);
+        testOk = ir.toString().includes(Ci.nsIInterfaceRequestor);
       } catch (e) {
       }
       sendAsyncMessage('modify-request-completed', testOk);

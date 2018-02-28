@@ -4,12 +4,12 @@
 /* import-globals-from pippki.js */
 "use strict";
 
-const nsIFilePicker = Components.interfaces.nsIFilePicker;
+const nsIFilePicker = Ci.nsIFilePicker;
 const nsFilePicker = "@mozilla.org/filepicker;1";
-const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
+const nsIX509CertDB = Ci.nsIX509CertDB;
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
-const nsIX509Cert = Components.interfaces.nsIX509Cert;
-const nsICertTree = Components.interfaces.nsICertTree;
+const nsIX509Cert = Ci.nsIX509Cert;
+const nsICertTree = Ci.nsICertTree;
 const nsCertTree = "@mozilla.org/security/nsCertTree;1";
 
 const gCertFileTypes = "*.p7b; *.crt; *.cert; *.cer; *.pem; *.der";
@@ -49,25 +49,25 @@ var emailTreeView;
 var userTreeView;
 
 function LoadCerts() {
-  certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
+  certdb = Cc[nsX509CertDB].getService(nsIX509CertDB);
   var certcache = certdb.getCerts();
 
-  caTreeView = Components.classes[nsCertTree]
+  caTreeView = Cc[nsCertTree]
                     .createInstance(nsICertTree);
   caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
   document.getElementById("ca-tree").view = caTreeView;
 
-  serverTreeView = Components.classes[nsCertTree]
+  serverTreeView = Cc[nsCertTree]
                         .createInstance(nsICertTree);
   serverTreeView.loadCertsFromCache(certcache, nsIX509Cert.SERVER_CERT);
   document.getElementById("server-tree").view = serverTreeView;
 
-  emailTreeView = Components.classes[nsCertTree]
+  emailTreeView = Cc[nsCertTree]
                        .createInstance(nsICertTree);
   emailTreeView.loadCertsFromCache(certcache, nsIX509Cert.EMAIL_CERT);
   document.getElementById("email-tree").view = emailTreeView;
 
-  userTreeView = Components.classes[nsCertTree]
+  userTreeView = Cc[nsCertTree]
                       .createInstance(nsICertTree);
   userTreeView.loadCertsFromCache(certcache, nsIX509Cert.USER_CERT);
   document.getElementById("user-tree").view = userTreeView;
@@ -266,7 +266,7 @@ function backupCerts() {
   }
 
   var bundle = document.getElementById("pippki_bundle");
-  var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
+  var fp = Cc[nsFilePicker].createInstance(nsIFilePicker);
   fp.init(window,
           bundle.getString("chooseP12BackupFileDialog"),
           nsIFilePicker.modeSave);
@@ -297,7 +297,7 @@ function editCerts() {
 
 function restoreCerts() {
   var bundle = document.getElementById("pippki_bundle");
-  var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
+  var fp = Cc[nsFilePicker].createInstance(nsIFilePicker);
   fp.init(window,
           bundle.getString("chooseP12RestoreFileDialog2"),
           nsIFilePicker.modeOpen);
@@ -323,8 +323,8 @@ function restoreCerts() {
     }
 
     if (isX509FileType) {
-      let fstream = Components.classes["@mozilla.org/network/file-input-stream;1"]
-                      .createInstance(Components.interfaces.nsIFileInputStream);
+      let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
+                      .createInstance(Ci.nsIFileInputStream);
       fstream.init(fp.file, -1, 0, 0);
       let dataString = NetUtil.readInputStreamToString(fstream, fstream.available());
       let dataArray = [];
@@ -417,7 +417,7 @@ function viewCerts() {
 
 function addCACerts() {
   var bundle = document.getElementById("pippki_bundle");
-  var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
+  var fp = Cc[nsFilePicker].createInstance(nsIFilePicker);
   fp.init(window,
           bundle.getString("importCACertsPrompt"),
           nsIFilePicker.modeOpen);
@@ -435,7 +435,7 @@ function addCACerts() {
 
 function addEmailCert() {
   var bundle = document.getElementById("pippki_bundle");
-  var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
+  var fp = Cc[nsFilePicker].createInstance(nsIFilePicker);
   fp.init(window,
           bundle.getString("importEmailCertPrompt"),
           nsIFilePicker.modeOpen);

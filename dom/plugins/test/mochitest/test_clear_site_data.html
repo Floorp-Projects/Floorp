@@ -15,8 +15,8 @@
   <script class="testbody" type="application/javascript">
     SimpleTest.waitForExplicitFinish();
 
-    const pluginHostIface = Components.interfaces.nsIPluginHost;
-    var pluginHost = Components.classes["@mozilla.org/plugin/host;1"].
+    const pluginHostIface = Ci.nsIPluginHost;
+    var pluginHost = Cc["@mozilla.org/plugin/host;1"].
                      getService(pluginHostIface);
     const FLAG_CLEAR_ALL = pluginHostIface.FLAG_CLEAR_ALL;
     const FLAG_CLEAR_CACHE = pluginHostIface.FLAG_CLEAR_CACHE;
@@ -122,25 +122,25 @@
       p.setSitesWithDataCapabilities(false);
 
       pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_ALL, 20, {callback: function(rv) {
-        is(rv, Components.results.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
+        is(rv, Cr.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
         test8(rv);
       }});
     }
     function test8(rv) {
       pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_CACHE, 20, {callback: function(rv) {
-        is(rv, Components.results.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
+        is(rv, Cr.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
         test9(rv);
       }});
     }
     function test9(rv) {
       pluginHost.clearSiteData(pluginTag, "baz.com", FLAG_CLEAR_ALL, 20, {callback: function(rv) {
-        is(rv, Components.results.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
+        is(rv, Cr.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
         test10(rv);
       }});
     }
     function test10(rv) {
       pluginHost.clearSiteData(pluginTag, "baz.com", FLAG_CLEAR_CACHE, 20, {callback: function(rv) {
-        is(rv, Components.results.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
+        is(rv, Cr.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
           test11();
           }});
     }

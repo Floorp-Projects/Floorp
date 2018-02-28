@@ -25,12 +25,12 @@ let mockPushService = {
   pushTopic: this.pushService.pushTopic,
   subscriptionChangeTopic: this.pushService.subscriptionChangeTopic,
   subscribe(scope, principal, cb) {
-    cb(Components.results.NS_OK, {
+    cb(Cr.NS_OK, {
       endpoint: MOCK_ENDPOINT
     });
   },
   unsubscribe(scope, principal, cb) {
-    cb(Components.results.NS_OK, true);
+    cb(Cr.NS_OK, true);
   }
 };
 
@@ -65,7 +65,7 @@ add_task(async function registerPushEndpointSuccess() {
 add_task(async function registerPushEndpointFailure() {
   let failPushService = Object.assign(mockPushService, {
     subscribe(scope, principal, cb) {
-      cb(Components.results.NS_ERROR_ABORT);
+      cb(Cr.NS_ERROR_ABORT);
     }
   });
 
@@ -91,7 +91,7 @@ add_task(async function unsubscribeSuccess() {
 add_task(async function unsubscribeFailure() {
   let failPushService = Object.assign(mockPushService, {
     unsubscribe(scope, principal, cb) {
-      cb(Components.results.NS_ERROR_ABORT);
+      cb(Cr.NS_ERROR_ABORT);
     }
   });
 

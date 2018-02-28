@@ -6,52 +6,52 @@
 
 function run_test()
 {
-  let sandbox = Components.utils.Sandbox("http://www.blah.com", {
+  let sandbox = Cu.Sandbox("http://www.blah.com", {
     metadata: "test metadata",
     addonId: "12345"
   });
 
-  Components.utils.importGlobalProperties(["XMLHttpRequest"]);
+  Cu.importGlobalProperties(["XMLHttpRequest"]);
 
-  Assert.equal(Components.utils.getSandboxMetadata(sandbox), "test metadata");
-  Assert.equal(Components.utils.getSandboxAddonId(sandbox), "12345");
+  Assert.equal(Cu.getSandboxMetadata(sandbox), "test metadata");
+  Assert.equal(Cu.getSandboxAddonId(sandbox), "12345");
 
-  sandbox = Components.utils.Sandbox("http://www.blah.com", {
+  sandbox = Cu.Sandbox("http://www.blah.com", {
     metadata: { foopy: { bar: 2 }, baz: "hi" }
   });
 
-  let metadata = Components.utils.getSandboxMetadata(sandbox);
+  let metadata = Cu.getSandboxMetadata(sandbox);
   Assert.equal(metadata.baz, "hi");
   Assert.equal(metadata.foopy.bar, 2);
   metadata.baz = "foo";
 
-  metadata = Components.utils.getSandboxMetadata(sandbox);
+  metadata = Cu.getSandboxMetadata(sandbox);
   Assert.equal(metadata.baz, "foo");
 
   metadata = { foo: "bar" };
-  Components.utils.setSandboxMetadata(sandbox, metadata);
+  Cu.setSandboxMetadata(sandbox, metadata);
   metadata.foo = "baz";
-  metadata = Components.utils.getSandboxMetadata(sandbox);
+  metadata = Cu.getSandboxMetadata(sandbox);
   Assert.equal(metadata.foo, "bar");
 
   let thrown = false;
   let reflector = new XMLHttpRequest();
 
   try {
-    Components.utils.setSandboxMetadata(sandbox, { foo: reflector });
+    Cu.setSandboxMetadata(sandbox, { foo: reflector });
   } catch(e) {
     thrown = true;
   }
 
   Assert.equal(thrown, true);
 
-  sandbox = Components.utils.Sandbox(this, {
+  sandbox = Cu.Sandbox(this, {
     metadata: { foopy: { bar: 2 }, baz: "hi" }
   });
 
-  let inner = Components.utils.evalInSandbox("Components.utils.Sandbox('http://www.blah.com')", sandbox);
+  let inner = Cu.evalInSandbox("Components.utils.Sandbox('http://www.blah.com')", sandbox);
 
-  metadata = Components.utils.getSandboxMetadata(inner);
+  metadata = Cu.getSandboxMetadata(inner);
   Assert.equal(metadata.baz, "hi");
   Assert.equal(metadata.foopy.bar, 2);
   metadata.baz = "foo";

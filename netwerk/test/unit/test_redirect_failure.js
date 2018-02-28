@@ -27,7 +27,7 @@ function redirectHandler(metadata, response)
 
 function finish_test(request, buffer)
 {
-  Assert.equal(request.status, Components.results.NS_ERROR_UNKNOWN_PROTOCOL);
+  Assert.equal(request.status, Cr.NS_ERROR_UNKNOWN_PROTOCOL);
 
   Assert.equal(buffer, "");
   httpServer.stop(do_test_finished);

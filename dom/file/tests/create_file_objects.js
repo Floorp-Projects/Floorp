@@ -1,4 +1,4 @@
-Components.utils.importGlobalProperties(['File']);
+Cu.importGlobalProperties(['File']);
 
 addMessageListener("create-file-objects", function(message) {
   let files = []

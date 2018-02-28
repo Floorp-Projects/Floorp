@@ -95,7 +95,7 @@ Probe.prototype = {
       try {
         this._impl.isActive = false;
       } catch (ex) {
-        if (ex && typeof ex == "object" && ex.result == Components.results.NS_ERROR_NOT_AVAILABLE) {
+        if (ex && typeof ex == "object" && ex.result == Cr.NS_ERROR_NOT_AVAILABLE) {
           // The service has already been shutdown. Ignore further shutdown requests.
           return;
         }

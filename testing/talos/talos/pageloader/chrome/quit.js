@@ -44,8 +44,8 @@
 
 function canQuitApplication() {
   try {
-    var cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
-      .createInstance(Components.interfaces.nsISupportsPRBool);
+    var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
+      .createInstance(Ci.nsISupportsPRBool);
     Services.obs.notifyObservers(cancelQuit, "quit-application-requested");
 
     // Something aborted the quit process.
@@ -69,10 +69,10 @@ function goQuitApplication() {
 
   if (kAppStartup in Components.classes) {
     appService = Services.startup;
-    forceQuit  = Components.interfaces.nsIAppStartup.eForceQuit;
+    forceQuit  = Ci.nsIAppStartup.eForceQuit;
   } else if (kAppShell in Components.classes) {
     appService = Services.appShell;
-    forceQuit = Components.interfaces.nsIAppShellService.eForceQuit;
+    forceQuit = Ci.nsIAppShellService.eForceQuit;
   } else {
     throw "goQuitApplication: no AppStartup/appShell";
   }

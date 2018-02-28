@@ -5,8 +5,8 @@
 function run_test()
 {
   const osprefs =
-    Components.classes["@mozilla.org/intl/ospreferences;1"]
-    .getService(Components.interfaces.mozIOSPreferences);
+    Cc["@mozilla.org/intl/ospreferences;1"]
+    .getService(Ci.mozIOSPreferences);
 
   const systemLocale = osprefs.systemLocale;
   Assert.ok(systemLocale != "", "systemLocale is non-empty");

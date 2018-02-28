@@ -41,7 +41,7 @@ function run_test() {
   var chan = NetUtil.newChannel({
     uri: "http://localhost/",
     loadUsingSystemPrincipal: true
-  }).QueryInterface(Components.interfaces.nsIHttpChannel);
+  }).QueryInterface(Ci.nsIHttpChannel);
 
   for (var i = 0; i < testMethods.length; i++) {
     chan.requestMethod = testMethods[i];

@@ -22,7 +22,7 @@
           <![CDATA[
             var parent = this.parentNode;
             if (parent &&
-                parent.parentNode instanceof Components.interfaces.nsIDOMXULSelectControlElement)
+                parent.parentNode instanceof Ci.nsIDOMXULSelectControlElement)
               return parent.parentNode;
             return null;
           ]]>

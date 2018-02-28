@@ -28,16 +28,16 @@ function createTreeFile(depth, parent) {
                 .QueryInterface(Ci.nsIProperties)
                 .get('TmpD', Ci.nsIFile);
     parent.append('dir-tree-test');
-    parent.createUnique(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o700);
+    parent.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
   }
 
   var nextFile = parent.clone();
   if (depth == 0) {
     nextFile.append('file.txt');
-    nextFile.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o600);
+    nextFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
   } else {
     nextFile.append('subdir' + depth);
-    nextFile.createUnique(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o700);
+    nextFile.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
     // Decrement the maximal depth by one for each level of nesting.
     for (i = 0; i < depth; i++) {
       createTreeFile(i, nextFile);
@@ -69,19 +69,19 @@ function createTestFile() {
                   .QueryInterface(Ci.nsIProperties)
                   .get('TmpD', Ci.nsIFile)
   tmpFile.append('dir-test');
-  tmpFile.createUnique(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o700);
+  tmpFile.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
 
   var file1 = tmpFile.clone();
   file1.append('foo.txt');
-  file1.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o600);
+  file1.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
   var dir = tmpFile.clone();
   dir.append('subdir');
-  dir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o700);
+  dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
 
   var file2 = dir.clone();
   file2.append('bar.txt');
-  file2.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o600);
+  file2.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
   return tmpFile;
 }

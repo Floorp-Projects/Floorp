@@ -60,7 +60,7 @@ const testSameBreakpoint = async function () {
 
 function evalCode() {
   /* eslint-disable */
-  Components.utils.evalInSandbox(
+  Cu.evalInSandbox(
     "" + function doStuff(k) { // line 1
       let arg = 15;            // line 2 - Step in here
       k(arg);                  // line 3

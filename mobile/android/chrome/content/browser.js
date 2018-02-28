@@ -4428,13 +4428,13 @@ Tab.prototype = {
       let uri = "";
       try {
         // Remember original URI for UA changes on redirected pages
-        this.originalURI = aRequest.QueryInterface(Components.interfaces.nsIChannel).originalURI;
+        this.originalURI = aRequest.QueryInterface(Ci.nsIChannel).originalURI;
 
         if (this.originalURI != null)
           uri = this.originalURI.displaySpec;
       } catch (e) { }
       try {
-        success = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel).requestSucceeded;
+        success = aRequest.QueryInterface(Ci.nsIHttpChannel).requestSucceeded;
       } catch (e) {
         // If the request does not handle the nsIHttpChannel interface, use nsIRequest's success
         // status. Used for local files. See bug 948849.
@@ -5551,7 +5551,7 @@ var IdentityHandler = {
   */
   getIdentityData : function() {
     let result = {};
-    let status = this._lastStatus.QueryInterface(Components.interfaces.nsISSLStatus);
+    let status = this._lastStatus.QueryInterface(Ci.nsISSLStatus);
     let cert = status.serverCert;
 
     // Human readable name of Subject
@@ -5657,7 +5657,7 @@ var IdentityHandler = {
    */
   checkIdentity: function checkIdentity(aState, aBrowser) {
     this._lastStatus = aBrowser.securityUI
-                               .QueryInterface(Components.interfaces.nsISSLStatusProvider)
+                               .QueryInterface(Ci.nsISSLStatusProvider)
                                .SSLStatus;
 
     // Don't pass in the actual location object, since it can cause us to

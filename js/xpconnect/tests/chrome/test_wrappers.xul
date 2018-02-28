@@ -23,8 +23,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
 
   function go() {
     var win = $('ifr').contentWindow;
-    var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
+    var utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindowUtils);
     is(utils.getClassName(window), "Proxy", "our window is wrapped correctly")
     is(utils.getClassName(location), "Location", "chrome doesn't have location wrappers")
     is(utils.getClassName(win), "Proxy", "win is an Proxy");
@@ -78,7 +78,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
    // Test QI on new dom bindings.
    var contentXHR = XPCNativeWrapper(win.wrappedJSObject.xhr);
    try {
-     var QIed = contentXHR.QueryInterface(Components.interfaces.nsIClassInfo);
+     var QIed = contentXHR.QueryInterface(Ci.nsIClassInfo);
      ok(false, "Should throw for new binding objects not having classinfo");
    } catch(e) {
      ok(true, "Threw while QI-ing on wrapper");

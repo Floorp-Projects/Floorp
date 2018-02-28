@@ -91,7 +91,7 @@
       <property name="editor" readonly="true">
         <getter><![CDATA[
           if (!this.mEditor) {
-            const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
+            const nsIDOMNSEditableElement = Ci.nsIDOMNSEditableElement;
             this.mEditor = this.inputField.QueryInterface(nsIDOMNSEditableElement).editor;
           }
           return this.mEditor;
@@ -140,7 +140,7 @@
         <body><![CDATA[
           var str = this.getAttribute("newlines");
           if (str && this.editor) {
-            const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
+            const nsIPlaintextEditor = Ci.nsIPlaintextEditor;
             for (var x in nsIPlaintextEditor) {
               if (/^eNewlines/.test(x)) {
                 if (str == RegExp.rightContext.toLowerCase()) {

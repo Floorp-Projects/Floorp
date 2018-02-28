@@ -36,7 +36,7 @@ FilePicker.prototype = {
     this.guid = idService.generateUUID().toString();
 
     if (aMode != Ci.nsIFilePicker.modeOpen && aMode != Ci.nsIFilePicker.modeOpenMultiple)
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
   appendFilters: function(aFilterMask) {
@@ -258,7 +258,7 @@ FilePicker.prototype = {
       },
       getNext: function() {
         if (this.mIndex >= this.mFiles.length) {
-          throw Components.results.NS_ERROR_FAILURE;
+          throw Cr.NS_ERROR_FAILURE;
         }
         return this.mFiles[this.mIndex++];
       }

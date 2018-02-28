@@ -56,8 +56,8 @@ try {
 
 function ensure_tag_results(uris, searchTerm) {
   print("Searching for '" + searchTerm + "'");
-  var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
-                   getService(Components.interfaces.nsIAutoCompleteController);
+  var controller = Cc["@mozilla.org/autocomplete/controller;1"].
+                   getService(Ci.nsIAutoCompleteController);
 
   // Make an AutoCompleteInput that uses our searches
   // and confirms results on search complete

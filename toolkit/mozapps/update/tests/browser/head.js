@@ -36,7 +36,7 @@ var gURLData = URL_HOST + "/" + REL_PATH_DATA;
 const URL_MANUAL_UPDATE = gURLData + "downloadPage.html";
 
 const gEnv = Cc["@mozilla.org/process/environment;1"].
-             getService(Components.interfaces.nsIEnvironment);
+             getService(Ci.nsIEnvironment);
 
 const NOTIFICATIONS = [
   "update-available",

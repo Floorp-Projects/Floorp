@@ -17,7 +17,7 @@ CheckGetHostListener.prototype = {
 
     gotOnStartRequest = true;
 
-    request.QueryInterface(Components.interfaces.nsIHttpChannelInternal);
+    request.QueryInterface(Ci.nsIHttpChannelInternal);
     try {
       Assert.equal(request.localAddress, "127.0.0.1");
       Assert.equal(request.localPort > 0, true);
@@ -37,11 +37,11 @@ CheckGetHostListener.prototype = {
   },
 
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIRequestObserver) ||
-        iid.equals(Components.interfaces.nsISupports)
+    if (iid.equals(Ci.nsIRequestObserver) ||
+        iid.equals(Ci.nsISupports)
         )
       return this;
-    throw Components.results.NS_NOINTERFACE;
+    throw Cr.NS_NOINTERFACE;
   },
 }
 
@@ -49,7 +49,7 @@ function make_channel(url) {
   return NetUtil.newChannel({
     uri: url,
     loadUsingSystemPrincipal: true
-  }).QueryInterface(Components.interfaces.nsIHttpChannel);
+  }).QueryInterface(Ci.nsIHttpChannel);
 }
 
 function test_handler(metadata, response) {
