@@ -37,7 +37,6 @@ class CodeGeneratorMIPS64 : public CodeGeneratorMIPSShared
         emitBranch(SecondScratchReg, ImmTag(JSVAL_TAG_OBJECT), cond, ifTrue, ifFalse);
     }
 
-    void emitTableSwitchDispatch(MTableSwitch* mir, Register index, Register base);
 
     template <typename T>
     void emitWasmLoadI64(T* ins);
@@ -72,7 +71,6 @@ class CodeGeneratorMIPS64 : public CodeGeneratorMIPSShared
 
     // Out of line visitors.
     void visitOutOfLineBailout(OutOfLineBailout* ool);
-    void visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool);
   protected:
     ValueOperand ToValue(LInstruction* ins, size_t pos);
     ValueOperand ToTempValue(LInstruction* ins, size_t pos);

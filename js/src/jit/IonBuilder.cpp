@@ -41,6 +41,7 @@ using namespace js::jit;
 using mozilla::AssertedCast;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
+using mozilla::Nothing;
 
 using JS::TrackedStrategy;
 using JS::TrackedOutcome;
@@ -4398,7 +4399,8 @@ IonBuilder::inlineCallsite(const InliningTargets& targets, CallInfo& callInfo)
 }
 
 AbortReasonOr<Ok>
-IonBuilder::inlineGenericFallback(JSFunction* target, CallInfo& callInfo, MBasicBlock* dispatchBlock)
+IonBuilder::inlineGenericFallback(const Maybe<CallTargets>& targets, CallInfo& callInfo,
+                                  MBasicBlock* dispatchBlock)
 {
     // Generate a new block with all arguments on-stack.
     MBasicBlock* fallbackBlock;
@@ -4413,16 +4415,17 @@ IonBuilder::inlineGenericFallback(JSFunction* target, CallInfo& callInfo, MBasic
 
     // Generate an MCall, which uses stateful |current|.
     MOZ_TRY(setCurrentAndSpecializePhis(fallbackBlock));
-    MOZ_TRY(makeCall(target, fallbackInfo));
+    MOZ_TRY(makeCall(targets, fallbackInfo));
 
     // Pass return block to caller as |current|.
     return Ok();
 }
 
 AbortReasonOr<Ok>
-IonBuilder::inlineObjectGroupFallback(CallInfo& callInfo, MBasicBlock* dispatchBlock,
-                                     MObjectGroupDispatch* dispatch, MGetPropertyCache* cache,
-                                     MBasicBlock** fallbackTarget)
+IonBuilder::inlineObjectGroupFallback(const Maybe<CallTargets>& targets,
+                                      CallInfo& callInfo, MBasicBlock* dispatchBlock,
+                                      MObjectGroupDispatch* dispatch, MGetPropertyCache* cache,
+                                      MBasicBlock** fallbackTarget)
 {
     // Getting here implies the following:
     // 1. The call function is an MGetPropertyCache, or an MGetPropertyCache
@@ -4508,7 +4511,7 @@ IonBuilder::inlineObjectGroupFallback(CallInfo& callInfo, MBasicBlock* dispatchB
     getPropBlock->end(MGoto::New(alloc(), preCallBlock));
 
     // Now inline the MCallGeneric, using preCallBlock as the dispatch point.
-    MOZ_TRY(inlineGenericFallback(nullptr, fallbackInfo, preCallBlock));
+    MOZ_TRY(inlineGenericFallback(targets, fallbackInfo, preCallBlock));
 
     // inlineGenericFallback() set the return block as |current|.
     preCallBlock->end(MGoto::New(alloc(), current));
@@ -4727,32 +4730,31 @@ IonBuilder::inlineCalls(CallInfo& callInfo, const InliningTargets& targets, Bool
 
     // If necessary, generate a fallback path.
     if (useFallback) {
+        // Annotate the fallback call with the target information.
+        Maybe<CallTargets> remainingTargets;
+        remainingTargets.emplace(alloc());
+        for (uint32_t i = 0; i < targets.length(); i++) {
+            if (!maybeCache && choiceSet[i])
+                continue;
+
+            JSObject* target = targets[i].target;
+            if (!target->is<JSFunction>()) {
+                remainingTargets = Nothing();
+                break;
+            }
+            if (!remainingTargets->append(&target->as<JSFunction>()))
+                return abort(AbortReason::Alloc);
+        }
+
         // Generate fallback blocks, and set |current| to the fallback return block.
         if (maybeCache) {
             MBasicBlock* fallbackTarget;
-            MOZ_TRY(inlineObjectGroupFallback(callInfo, dispatchBlock,
+            MOZ_TRY(inlineObjectGroupFallback(remainingTargets, callInfo, dispatchBlock,
                                               dispatch->toObjectGroupDispatch(),
                                               maybeCache, &fallbackTarget));
             dispatch->addFallback(fallbackTarget);
         } else {
-            JSFunction* remaining = nullptr;
-
-            // If there is only 1 remaining case, we can annotate the fallback call
-            // with the target information.
-            if (dispatch->numCases() + 1 == targets.length()) {
-                for (uint32_t i = 0; i < targets.length(); i++) {
-                    if (choiceSet[i])
-                        continue;
-
-                    MOZ_ASSERT(!remaining);
-                    JSObject* target = targets[i].target;
-                    if (target->is<JSFunction>() && target->isSingleton())
-                        remaining = &target->as<JSFunction>();
-                    break;
-                }
-            }
-
-            MOZ_TRY(inlineGenericFallback(remaining, callInfo, dispatchBlock));
+            MOZ_TRY(inlineGenericFallback(remainingTargets, callInfo, dispatchBlock));
             dispatch->addFallback(current);
         }
 
@@ -5417,11 +5419,24 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing, bool ignoresReturnValue)
     replaceMaybeFallbackFunctionGetter(nullptr);
 
     // No inline, just make the call.
-    JSFunction* target = nullptr;
-    if (targets.length() == 1 && targets[0].target->is<JSFunction>())
-        target = &targets[0].target->as<JSFunction>();
+    Maybe<CallTargets> callTargets;
+    if (!targets.empty()) {
+        callTargets.emplace(alloc());
+        for (const InliningTarget& target : targets) {
+            if (!target.target->is<JSFunction>()) {
+                callTargets = Nothing();
+                break;
+            }
+            if (!callTargets->append(&target.target->as<JSFunction>()))
+                return abort(AbortReason::Alloc);
+        }
+    }
 
-    if (target && status == InliningStatus_WarmUpCountTooLow) {
+    if (status == InliningStatus_WarmUpCountTooLow &&
+        callTargets &&
+        callTargets->length() == 1)
+    {
+        JSFunction* target = callTargets.ref()[0];
         MRecompileCheck* check =
             MRecompileCheck::New(alloc(), target->nonLazyScript(),
                                  optimizationInfo().inliningRecompileThreshold(),
@@ -5429,7 +5444,7 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing, bool ignoresReturnValue)
         current->add(check);
     }
 
-    return makeCall(target, callInfo);
+    return makeCall(callTargets, callInfo);
 }
 
 AbortReasonOr<bool>
@@ -5492,6 +5507,10 @@ IonBuilder::testNeedsArgumentCheck(JSFunction* target, CallInfo& callInfo)
     // If we have a known target, check if the caller arg types are a subset of callee.
     // Since typeset accumulates and can't decrease that means we don't need to check
     // the arguments anymore.
+
+    if (target->isNative())
+        return false;
+
     if (!target->hasScript())
         return true;
 
@@ -5513,10 +5532,16 @@ IonBuilder::testNeedsArgumentCheck(JSFunction* target, CallInfo& callInfo)
 }
 
 AbortReasonOr<MCall*>
-IonBuilder::makeCallHelper(JSFunction* target, CallInfo& callInfo)
+IonBuilder::makeCallHelper(const Maybe<CallTargets>& targets, CallInfo& callInfo)
 {
     // This function may be called with mutated stack.
     // Querying TI for popped types is invalid.
+
+    MOZ_ASSERT_IF(targets, !targets->empty());
+
+    JSFunction* target = nullptr;
+    if (targets && targets->length() == 1)
+        target = targets.ref()[0];
 
     uint32_t targetArgs = callInfo.argc();
 
@@ -5581,8 +5606,22 @@ IonBuilder::makeCallHelper(JSFunction* target, CallInfo& callInfo)
     MDefinition* thisArg = callInfo.thisArg();
     call->addArg(0, thisArg);
 
-    if (target && !testNeedsArgumentCheck(target, callInfo))
-        call->disableArgCheck();
+    if (targets) {
+        // The callee must be one of the target JSFunctions, so we don't need a
+        // Class check.
+        call->disableClassCheck();
+
+        // Determine whether we can skip the callee's prologue type checks.
+        bool needArgCheck = false;
+        for (JSFunction* target : targets.ref()) {
+            if (testNeedsArgumentCheck(target, callInfo)) {
+                needArgCheck = true;
+                break;
+            }
+        }
+        if (!needArgCheck)
+            call->disableArgCheck();
+    }
 
     call->initFunction(callInfo.fun());
 
@@ -5610,14 +5649,19 @@ DOMCallNeedsBarrier(const JSJitInfo* jitinfo, TemporaryTypeSet* types)
 }
 
 AbortReasonOr<Ok>
-IonBuilder::makeCall(JSFunction* target, CallInfo& callInfo)
+IonBuilder::makeCall(const Maybe<CallTargets>& targets, CallInfo& callInfo)
 {
+#ifdef DEBUG
     // Constructor calls to non-constructors should throw. We don't want to use
     // CallKnown in this case.
-    MOZ_ASSERT_IF(callInfo.constructing() && target, target->isConstructor());
+    if (callInfo.constructing() && targets) {
+        for (JSFunction* target : targets.ref())
+            MOZ_ASSERT(target->isConstructor());
+    }
+#endif
 
     MCall* call;
-    MOZ_TRY_VAR(call, makeCallHelper(target, callInfo));
+    MOZ_TRY_VAR(call, makeCallHelper(targets, callInfo));
 
     current->push(call);
     if (call->isEffectful())
@@ -5629,6 +5673,18 @@ IonBuilder::makeCall(JSFunction* target, CallInfo& callInfo)
         return pushDOMTypeBarrier(call, types, call->getSingleTarget()->rawJSFunction());
 
     return pushTypeBarrier(call, types, BarrierKind::TypeSet);
+}
+
+AbortReasonOr<Ok>
+IonBuilder::makeCall(JSFunction* target, CallInfo& callInfo)
+{
+    Maybe<CallTargets> targets;
+    if (target) {
+        targets.emplace(alloc());
+        if (!targets->append(target))
+            return abort(AbortReason::Alloc);
+    }
+    return makeCall(targets, callInfo);
 }
 
 AbortReasonOr<Ok>
@@ -8593,12 +8649,6 @@ IonBuilder::jsop_getelem_dense(MDefinition* obj, MDefinition* index)
     TemporaryTypeSet* types = bytecodeTypes(pc);
 
     MOZ_ASSERT(index->type() == MIRType::Int32 || index->type() == MIRType::Double);
-    if (JSOp(*pc) == JSOP_CALLELEM) {
-        // Indexed call on an element of an array. Populate the observed types
-        // with any objects that could be in the array, to avoid extraneous
-        // type barriers.
-        AddObjectsForPropertyRead(alloc(), obj, nullptr, types);
-    }
 
     BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, alloc(), constraints(),
                                                        obj, nullptr, types);
@@ -11740,8 +11790,12 @@ IonBuilder::setPropTryCommonSetter(bool* emitted, MDefinition* obj,
         }
     }
 
+    Maybe<CallTargets> targets;
+    targets.emplace(alloc());
+    if (!targets->append(commonSetter))
+        return abort(AbortReason::Alloc);
     MCall* call;
-    MOZ_TRY_VAR(call, makeCallHelper(commonSetter, callInfo));
+    MOZ_TRY_VAR(call, makeCallHelper(targets, callInfo));
 
     current->push(value);
     MOZ_TRY(resumeAfter(call));

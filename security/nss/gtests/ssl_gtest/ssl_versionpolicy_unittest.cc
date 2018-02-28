@@ -189,12 +189,12 @@ class TestPolicyVersionRange
     }
   }
 
-  void SetUp() {
-    SetPolicy(policy_.range());
+  void SetUp() override {
     TlsConnectTestBase::SetUp();
+    SetPolicy(policy_.range());
   }
 
-  void TearDown() {
+  void TearDown() override {
     TlsConnectTestBase::TearDown();
     saved_version_policy_.RestoreOriginalPolicy();
   }

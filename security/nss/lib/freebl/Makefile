@@ -519,23 +519,16 @@ ifndef NSS_DISABLE_CHACHAPOLY
         else
             EXTRA_SRCS += poly1305.c
         endif
-
-        ifneq (1,$(CC_IS_GCC))
-            EXTRA_SRCS += chacha20.c
-            VERIFIED_SRCS += Hacl_Chacha20.c
-        else
-            EXTRA_SRCS += chacha20_vec.c
-        endif
     else
         ifeq ($(CPU_ARCH),aarch64)
             EXTRA_SRCS += Hacl_Poly1305_64.c
         else
             EXTRA_SRCS += poly1305.c
         endif
-
-        EXTRA_SRCS += chacha20.c
-        VERIFIED_SRCS += Hacl_Chacha20.c
     endif # x86_64
+
+    VERIFIED_SRCS += Hacl_Chacha20.c
+    VERIFIED_SRCS += Hacl_Chacha20_Vec128.c
 endif # NSS_DISABLE_CHACHAPOLY
 
 ifeq (,$(filter-out i386 x386 x86 x86_64 aarch64,$(CPU_ARCH)))

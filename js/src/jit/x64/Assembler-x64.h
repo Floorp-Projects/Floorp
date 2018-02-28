@@ -937,9 +937,9 @@ class Assembler : public AssemblerX86Shared
     void mov(Register src, Register dest) {
         movq(src, dest);
     }
-    void mov(CodeOffset* label, Register dest) {
+    void mov(CodeLabel* label, Register dest) {
         masm.movq_i64r(/* placeholder */ 0, dest.encoding());
-        label->bind(masm.size());
+        label->patchAt()->bind(masm.size());
     }
     void xchg(Register src, Register dest) {
         xchgq(src, dest);

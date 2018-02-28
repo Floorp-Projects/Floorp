@@ -81,7 +81,7 @@ class MacroAssemblerMIPS64 : public MacroAssemblerMIPSShared
     using MacroAssemblerMIPSShared::ma_cmp_set;
     using MacroAssemblerMIPSShared::ma_subTestOverflow;
 
-    void ma_li(Register dest, CodeOffset* label);
+    void ma_li(Register dest, CodeLabel* label);
     void ma_li(Register dest, ImmWord imm);
     void ma_liPatchable(Register dest, ImmPtr imm);
     void ma_liPatchable(Register dest, ImmWord imm, LiFlags flags = Li48);
@@ -236,7 +236,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void mov(ImmPtr imm, Register dest) {
         mov(ImmWord(uintptr_t(imm.value)), dest);
     }
-    void mov(CodeOffset* label, Register dest) {
+    void mov(CodeLabel* label, Register dest) {
         ma_li(dest, label);
     }
     void mov(Register src, Address dest) {
@@ -335,11 +335,12 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         return offset;
     }
 
-    void writeCodePointer(CodeOffset* label) {
-        label->bind(currentOffset());
-        ma_liPatchable(ScratchRegister, ImmWord(0));
-        as_jr(ScratchRegister);
-        as_nop();
+    void writeCodePointer(CodeLabel* label) {
+        label->patchAt()->bind(currentOffset());
+        label->setLinkMode(CodeLabel::RawPointer);
+        m_buffer.ensureSpace(sizeof(void*));
+        writeInst(-1);
+        writeInst(-1);
     }
 
     void jump(Label* label) {

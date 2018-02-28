@@ -74,8 +74,7 @@ struct RNGContextStr {
 #define V_type V_Data[0]
 #define V(rng) (((rng)->V_Data) + 1)
 #define VSize(rng) ((sizeof(rng)->V_Data) - 1)
-    PRUint8 C[PRNG_SEEDLEN];           /* internal state variables */
-    PRUint8 lastOutput[SHA256_LENGTH]; /* for continuous rng checking */
+    PRUint8 C[PRNG_SEEDLEN]; /* internal state variables */
     /* If we get calls for the PRNG to return less than the length of our
      * hash, we extend the request for a full hash (since we'll be doing
      * the full hash anyway). Future requests for random numbers are fulfilled
@@ -286,7 +285,6 @@ prng_Hashgen(RNGContext *rng, PRUint8 *returned_bytes,
 {
     PRUint8 data[VSize(rng)];
     PRUint8 thisHash[SHA256_LENGTH];
-    PRUint8 *lastHash = rng->lastOutput;
 
     PORT_Memcpy(data, V(rng), VSize(rng));
     while (no_of_returned_bytes) {
@@ -297,15 +295,10 @@ prng_Hashgen(RNGContext *rng, PRUint8 *returned_bytes,
         SHA256_Begin(&ctx);
         SHA256_Update(&ctx, data, sizeof data);
         SHA256_End(&ctx, thisHash, &len, SHA256_LENGTH);
-        if (PORT_Memcmp(lastHash, thisHash, len) == 0) {
-            rng->isValid = PR_FALSE;
-            break;
-        }
         if (no_of_returned_bytes < SHA256_LENGTH) {
             len = no_of_returned_bytes;
         }
         PORT_Memcpy(returned_bytes, thisHash, len);
-        lastHash = returned_bytes;
         returned_bytes += len;
         no_of_returned_bytes -= len;
         /* The carry parameter is a bool (increment or not).
@@ -313,7 +306,6 @@ prng_Hashgen(RNGContext *rng, PRUint8 *returned_bytes,
         carry = no_of_returned_bytes;
         PRNG_ADD_CARRY_ONLY(data, (sizeof data) - 1, carry);
     }
-    PORT_Memcpy(rng->lastOutput, thisHash, SHA256_LENGTH);
     PORT_Memset(data, 0, sizeof data);
     PORT_Memset(thisHash, 0, sizeof thisHash);
 }
@@ -361,11 +353,6 @@ prng_generateNewBytes(RNGContext *rng,
     if (no_of_returned_bytes == SHA256_LENGTH) {
         /* short_cut to hashbuf and a couple of copies and clears */
         SHA256_HashBuf(returned_bytes, V(rng), VSize(rng));
-        /* continuous rng check */
-        if (memcmp(rng->lastOutput, returned_bytes, SHA256_LENGTH) == 0) {
-            rng->isValid = PR_FALSE;
-        }
-        PORT_Memcpy(rng->lastOutput, returned_bytes, sizeof rng->lastOutput);
     } else {
         prng_Hashgen(rng, returned_bytes, no_of_returned_bytes);
     }

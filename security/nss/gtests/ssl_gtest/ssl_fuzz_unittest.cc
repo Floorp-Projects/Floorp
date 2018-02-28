@@ -27,7 +27,8 @@ class TlsFuzzTest : public ::testing::Test {};
 // Record the application data stream.
 class TlsApplicationDataRecorder : public TlsRecordFilter {
  public:
-  TlsApplicationDataRecorder() : buffer_() {}
+  TlsApplicationDataRecorder(const std::shared_ptr<TlsAgent>& agent)
+      : TlsRecordFilter(agent), buffer_() {}
 
   virtual PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
                                             const DataBuffer& input,
@@ -106,16 +107,16 @@ FUZZ_P(TlsConnectGeneric, DeterministicTranscript) {
     DisableECDHEServerKeyReuse();
 
     DataBuffer buffer;
-    client_->SetPacketFilter(std::make_shared<TlsConversationRecorder>(buffer));
-    server_->SetPacketFilter(std::make_shared<TlsConversationRecorder>(buffer));
+    MakeTlsFilter<TlsConversationRecorder>(client_, buffer);
+    MakeTlsFilter<TlsConversationRecorder>(server_, buffer);
 
     // Reset the RNG state.
     EXPECT_EQ(SECSuccess, RNG_RandomUpdate(NULL, 0));
     Connect();
 
     // Ensure the filters go away before |buffer| does.
-    client_->DeletePacketFilter();
-    server_->DeletePacketFilter();
+    client_->ClearFilter();
+    server_->ClearFilter();
 
     if (last.len() > 0) {
       EXPECT_EQ(last, buffer);
@@ -133,10 +134,8 @@ FUZZ_P(TlsConnectGeneric, ConnectSendReceive_NullCipher) {
   EnsureTlsSetup();
 
   // Set up app data filters.
-  auto client_recorder = std::make_shared<TlsApplicationDataRecorder>();
-  client_->SetPacketFilter(client_recorder);
-  auto server_recorder = std::make_shared<TlsApplicationDataRecorder>();
-  server_->SetPacketFilter(server_recorder);
+  auto client_recorder = MakeTlsFilter<TlsApplicationDataRecorder>(client_);
+  auto server_recorder = MakeTlsFilter<TlsApplicationDataRecorder>(server_);
 
   Connect();
 
@@ -161,10 +160,9 @@ FUZZ_P(TlsConnectGeneric, ConnectSendReceive_NullCipher) {
 FUZZ_P(TlsConnectGeneric, BogusClientFinished) {
   EnsureTlsSetup();
 
-  auto i1 = std::make_shared<TlsInspectorReplaceHandshakeMessage>(
-      kTlsHandshakeFinished,
+  MakeTlsFilter<TlsInspectorReplaceHandshakeMessage>(
+      client_, kTlsHandshakeFinished,
       DataBuffer(kShortEmptyFinished, sizeof(kShortEmptyFinished)));
-  client_->SetPacketFilter(i1);
   Connect();
   SendReceive();
 }
@@ -173,10 +171,9 @@ FUZZ_P(TlsConnectGeneric, BogusClientFinished) {
 FUZZ_P(TlsConnectGeneric, BogusServerFinished) {
   EnsureTlsSetup();
 
-  auto i1 = std::make_shared<TlsInspectorReplaceHandshakeMessage>(
-      kTlsHandshakeFinished,
+  MakeTlsFilter<TlsInspectorReplaceHandshakeMessage>(
+      server_, kTlsHandshakeFinished,
       DataBuffer(kLongEmptyFinished, sizeof(kLongEmptyFinished)));
-  server_->SetPacketFilter(i1);
   Connect();
   SendReceive();
 }
@@ -187,7 +184,7 @@ FUZZ_P(TlsConnectGeneric, BogusServerAuthSignature) {
   uint8_t msg_type = version_ == SSL_LIBRARY_VERSION_TLS_1_3
                          ? kTlsHandshakeCertificateVerify
                          : kTlsHandshakeServerKeyExchange;
-  server_->SetPacketFilter(std::make_shared<TlsLastByteDamager>(msg_type));
+  MakeTlsFilter<TlsLastByteDamager>(server_, msg_type);
   Connect();
   SendReceive();
 }
@@ -197,8 +194,7 @@ FUZZ_P(TlsConnectGeneric, BogusClientAuthSignature) {
   EnsureTlsSetup();
   client_->SetupClientAuth();
   server_->RequestClientAuth(true);
-  client_->SetPacketFilter(
-      std::make_shared<TlsLastByteDamager>(kTlsHandshakeCertificateVerify));
+  MakeTlsFilter<TlsLastByteDamager>(client_, kTlsHandshakeCertificateVerify);
   Connect();
 }
 
@@ -219,29 +215,28 @@ FUZZ_P(TlsConnectGeneric, SessionTicketResumption) {
 FUZZ_P(TlsConnectGeneric, UnencryptedSessionTickets) {
   ConfigureSessionCache(RESUME_TICKET, RESUME_TICKET);
 
-  auto i1 = std::make_shared<TlsInspectorRecordHandshakeMessage>(
-      kTlsHandshakeNewSessionTicket);
-  server_->SetPacketFilter(i1);
+  auto filter = MakeTlsFilter<TlsHandshakeRecorder>(
+      server_, kTlsHandshakeNewSessionTicket);
   Connect();
 
-  std::cerr << "ticket" << i1->buffer() << std::endl;
+  std::cerr << "ticket" << filter->buffer() << std::endl;
   size_t offset = 4; /* lifetime */
   if (version_ == SSL_LIBRARY_VERSION_TLS_1_3) {
     offset += 4; /* ticket_age_add */
     uint32_t nonce_len = 0;
-    EXPECT_TRUE(i1->buffer().Read(offset, 1, &nonce_len));
+    EXPECT_TRUE(filter->buffer().Read(offset, 1, &nonce_len));
     offset += 1 + nonce_len;
   }
   offset += 2 + /* ticket length */
             2;  /* TLS_EX_SESS_TICKET_VERSION */
   // Check the protocol version number.
   uint32_t tls_version = 0;
-  EXPECT_TRUE(i1->buffer().Read(offset, sizeof(version_), &tls_version));
+  EXPECT_TRUE(filter->buffer().Read(offset, sizeof(version_), &tls_version));
   EXPECT_EQ(version_, static_cast<decltype(version_)>(tls_version));
 
   // Check the cipher suite.
   uint32_t suite = 0;
-  EXPECT_TRUE(i1->buffer().Read(offset + sizeof(version_), 2, &suite));
+  EXPECT_TRUE(filter->buffer().Read(offset + sizeof(version_), 2, &suite));
   client_->CheckCipherSuite(static_cast<uint16_t>(suite));
 }
 }

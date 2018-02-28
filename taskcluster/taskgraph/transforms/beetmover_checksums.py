@@ -8,6 +8,7 @@ Transform the checksums signing task into an actual task description.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.beetmover import craft_release_properties
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import validate_schema, Schema
 from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
@@ -132,11 +133,6 @@ def generate_upstream_artifacts(refs, platform, locale=None):
         "taskType": "signing",
         "paths": common_paths,
         "locale": locale or "en-US",
-    }, {
-        "taskId": {"task-reference": refs["beetmover"]},
-        "taskType": "beetmover",
-        "paths": ["public/balrog_props.json"],
-        "locale": locale or "en-US",
     }]
 
     return upstream_artifacts
@@ -165,11 +161,14 @@ def make_beetmover_checksums_worker(config, jobs):
             raise NotImplementedError(
                 "Beetmover checksums must have a beetmover and signing dependency!")
 
-        upstream_artifacts = generate_upstream_artifacts(refs,
-                                                         platform, locale)
+        worker = {
+            'implementation': 'beetmover',
+            'release-properties': craft_release_properties(config, job),
+            'upstream-artifacts': generate_upstream_artifacts(
+                refs, platform, locale
+            ),
+        }
 
-        worker = {'implementation': 'beetmover',
-                  'upstream-artifacts': upstream_artifacts}
         if locale:
             worker["locale"] = locale
         job["worker"] = worker

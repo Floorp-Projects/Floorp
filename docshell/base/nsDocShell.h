@@ -16,6 +16,7 @@
 #include "mozilla/WeakPtr.h"
 
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
+#include "mozilla/gfx/Matrix.h"
 
 #include "nsIAuthPromptProvider.h"
 #include "nsIBaseWindow.h"
@@ -359,6 +360,10 @@ public:
 
   // Update any pointers (mOSHE or mLSHE) to aOldEntry to point to aNewEntry
   void SwapHistoryEntries(nsISHEntry* aOldEntry, nsISHEntry* aNewEntry);
+
+  mozilla::gfx::Matrix5x4* GetColorMatrix() {
+    return mColorMatrix.get();
+  }
 
   static bool SandboxFlagsImplyCookies(const uint32_t &aSandboxFlags);
 
@@ -988,6 +993,8 @@ private: // data members
   // the LOAD_NORMAL_ALLOW_MIXED_CONTENT flag is set.
   // Checked in nsMixedContentBlocker, to see if the channels match.
   nsCOMPtr<nsIChannel> mMixedContentChannel;
+
+  mozilla::UniquePtr<mozilla::gfx::Matrix5x4> mColorMatrix;
 
   const mozilla::Encoding* mForcedCharset;
   const mozilla::Encoding* mParentCharset;

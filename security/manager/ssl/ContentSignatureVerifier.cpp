@@ -58,6 +58,8 @@ ContentSignatureVerifier::VerifyContentSignature(
     // This failure can have many different reasons but we don't treat it as
     // invalid signature.
     Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 3);
+    Telemetry::AccumulateCategoricalKeyed(mFingerprint,
+      Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err3);
     return rv;
   }
 
@@ -163,6 +165,18 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
     return NS_ERROR_FAILURE;
   }
 
+  // Get EE certificate fingerprint for telemetry.
+  unsigned char fingerprint[SHA256_LENGTH] = {0};
+  SECStatus srv =
+    PK11_HashBuf(SEC_OID_SHA256, fingerprint, certSecItem->data,
+                 AssertedCast<int32_t>(certSecItem->len));
+  if (srv != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+  SECItem fingerprintItem = {siBuffer, fingerprint, SHA256_LENGTH};
+  mFingerprint.Truncate();
+  UniquePORTString tmpFingerprintString(CERT_Hexify(&fingerprintItem, 0));
+  mFingerprint.Append(tmpFingerprintString.get());
 
   // Check the signerCert chain is good
   CSTrustDomain trustDomain(certCertList);
@@ -180,12 +194,18 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
     // otherwise, assume the signature was invalid
     if (result == mozilla::pkix::Result::ERROR_EXPIRED_CERTIFICATE) {
       Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 4);
+      Telemetry::AccumulateCategoricalKeyed(mFingerprint,
+        Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err4);
     } else if (result ==
                mozilla::pkix::Result::ERROR_NOT_YET_VALID_CERTIFICATE) {
       Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 5);
+      Telemetry::AccumulateCategoricalKeyed(mFingerprint,
+        Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err5);
     } else {
       // Building cert chain failed for some other reason.
       Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 6);
+      Telemetry::AccumulateCategoricalKeyed(mFingerprint,
+        Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err6);
     }
     CSVerifier_LOG(("CSVerifier: The supplied chain is bad (%s)\n",
                     MapResultToName(result)));
@@ -207,6 +227,8 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
   if (result != Success) {
     // EE cert isnot valid for the given host name.
     Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 7);
+    Telemetry::AccumulateCategoricalKeyed(mFingerprint,
+      Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err7);
     return NS_ERROR_INVALID_SIGNATURE;
   }
 
@@ -215,6 +237,8 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
   // in case we were not able to extract a key
   if (!mKey) {
     Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 8);
+    Telemetry::AccumulateCategoricalKeyed(mFingerprint,
+      Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err8);
     CSVerifier_LOG(("CSVerifier: unable to extract a key\n"));
     return NS_ERROR_INVALID_SIGNATURE;
   }
@@ -255,12 +279,16 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
   if (!mCx) {
     // Creating context failed.
     Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 9);
+    Telemetry::AccumulateCategoricalKeyed(mFingerprint,
+      Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err9);
     return NS_ERROR_INVALID_SIGNATURE;
   }
 
   if (VFY_Begin(mCx.get()) != SECSuccess) {
     // Creating context failed.
     Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 9);
+    Telemetry::AccumulateCategoricalKeyed(mFingerprint,
+      Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err9);
     return NS_ERROR_INVALID_SIGNATURE;
   }
 
@@ -428,6 +456,8 @@ ContentSignatureVerifier::End(bool* _retval)
     Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 0);
   } else {
     Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 1);
+    Telemetry::AccumulateCategoricalKeyed(mFingerprint,
+      Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err1);
   }
   *_retval = result;
 

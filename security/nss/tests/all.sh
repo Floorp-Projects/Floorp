@@ -325,6 +325,11 @@ NSS_SSL_RUN="${NSS_SSL_RUN:-$nss_ssl_run}"
 ENV_BACKUP=${HOSTDIR}/env.sh
 env_backup > ${ENV_BACKUP}
 
+# Print hardware support if we built it.
+if [ -f ${BINDIR}/hw-support ]; then
+    ${BINDIR}/hw-support
+fi
+
 if [ "${O_CRON}" = "ON" ]; then
     run_cycles >> ${LOGFILE}
 else

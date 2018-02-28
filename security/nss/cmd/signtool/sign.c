@@ -43,6 +43,7 @@ SignArchive(char *tree, char *keyName, char *zip_file, int javascript,
     int status;
     char tempfn[FNSIZE], fullfn[FNSIZE];
     int keyType = rsaKey;
+    int count;
 
     metafile = meta_file;
     optimize = _optimize;
@@ -81,9 +82,18 @@ SignArchive(char *tree, char *keyName, char *zip_file, int javascript,
         }
 
         /* rsa/dsa to zip */
-        sprintf(tempfn, "META-INF/%s.%s", base, (keyType == dsaKey ? "dsa"
-                                                                   : "rsa"));
-        sprintf(fullfn, "%s/%s", tree, tempfn);
+        count = snprintf(tempfn, sizeof(tempfn), "META-INF/%s.%s", base, (keyType == dsaKey ? "dsa" : "rsa"));
+        if (count >= sizeof(tempfn)) {
+            PR_fprintf(errorFD, "unable to write key metadata\n");
+            errorCount++;
+            exit(ERRX);
+        }
+        count = snprintf(fullfn, sizeof(fullfn), "%s/%s", tree, tempfn);
+        if (count >= sizeof(fullfn)) {
+            PR_fprintf(errorFD, "unable to write key metadata\n");
+            errorCount++;
+            exit(ERRX);
+        }
         JzipAdd(fullfn, tempfn, zipfile, compression_level);
 
         /* Loop through all files & subdirectories, add to archive */
@@ -93,20 +103,44 @@ SignArchive(char *tree, char *keyName, char *zip_file, int javascript,
     }
     /* mf to zip */
     strcpy(tempfn, "META-INF/manifest.mf");
-    sprintf(fullfn, "%s/%s", tree, tempfn);
+    count = snprintf(fullfn, sizeof(fullfn), "%s/%s", tree, tempfn);
+    if (count >= sizeof(fullfn)) {
+        PR_fprintf(errorFD, "unable to write manifest\n");
+        errorCount++;
+        exit(ERRX);
+    }
     JzipAdd(fullfn, tempfn, zipfile, compression_level);
 
     /* sf to zip */
-    sprintf(tempfn, "META-INF/%s.sf", base);
-    sprintf(fullfn, "%s/%s", tree, tempfn);
+    count = snprintf(tempfn, sizeof(tempfn), "META-INF/%s.sf", base);
+    if (count >= sizeof(tempfn)) {
+        PR_fprintf(errorFD, "unable to write sf metadata\n");
+        errorCount++;
+        exit(ERRX);
+    }
+    count = snprintf(fullfn, sizeof(fullfn), "%s/%s", tree, tempfn);
+    if (count >= sizeof(fullfn)) {
+        PR_fprintf(errorFD, "unable to write sf metadata\n");
+        errorCount++;
+        exit(ERRX);
+    }
     JzipAdd(fullfn, tempfn, zipfile, compression_level);
 
     /* Add the rsa/dsa file to the zip archive normally */
     if (!xpi_arc) {
         /* rsa/dsa to zip */
-        sprintf(tempfn, "META-INF/%s.%s", base, (keyType == dsaKey ? "dsa"
-                                                                   : "rsa"));
-        sprintf(fullfn, "%s/%s", tree, tempfn);
+        count = snprintf(tempfn, sizeof(tempfn), "META-INF/%s.%s", base, (keyType == dsaKey ? "dsa" : "rsa"));
+        if (count >= sizeof(tempfn)) {
+            PR_fprintf(errorFD, "unable to write key metadata\n");
+            errorCount++;
+            exit(ERRX);
+        }
+        count = snprintf(fullfn, sizeof(fullfn), "%s/%s", tree, tempfn);
+        if (count >= sizeof(fullfn)) {
+            PR_fprintf(errorFD, "unable to write key metadata\n");
+            errorCount++;
+            exit(ERRX);
+        }
         JzipAdd(fullfn, tempfn, zipfile, compression_level);
     }
 
@@ -408,6 +442,7 @@ static int
 manifesto_xpi_fn(char *relpath, char *basedir, char *reldir, char *filename, void *arg)
 {
     char fullname[FNSIZE];
+    int count;
 
     if (verbosity >= 0) {
         PR_fprintf(outputFD, "--> %s\n", relpath);
@@ -421,7 +456,10 @@ manifesto_xpi_fn(char *relpath, char *basedir, char *reldir, char *filename, voi
         if (!PL_HashTableLookup(extensions, ext))
             return 0;
     }
-    sprintf(fullname, "%s/%s", basedir, relpath);
+    count = snprintf(fullname, sizeof(fullname), "%s/%s", basedir, relpath);
+    if (count >= sizeof(fullname)) {
+        return 1;
+    }
     JzipAdd(fullname, relpath, zipfile, compression_level);
 
     return 0;

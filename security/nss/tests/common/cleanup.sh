@@ -30,6 +30,8 @@ if [ -z "${CLEANUP}" -o "${CLEANUP}" = "${SCRIPTNAME}" ]; then
     echo "NSS_DISABLE_HW_AES=${NSS_DISABLE_HW_AES}"
     echo "NSS_DISABLE_PCLMUL=${NSS_DISABLE_PCLMUL}"
     echo "NSS_DISABLE_AVX=${NSS_DISABLE_AVX}"
+    echo "NSS_DISABLE_ARM_NEON=${NSS_DISABLE_ARM_NEON}"
+    echo "NSS_DISABLE_SSSE3=${NSS_DISABLE_SSSE3}"
     echo
     echo "Tests summary:"
     echo "--------------"
