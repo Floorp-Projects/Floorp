@@ -2259,7 +2259,7 @@ IonCompile(JSContext* cx, JSScript* script,
             return AbortReason::Alloc;
 
         AutoLockHelperThreadState lock;
-        if (!StartOffThreadIonCompile(cx, builder, lock)) {
+        if (!StartOffThreadIonCompile(builder, lock)) {
             JitSpew(JitSpew_IonAbort, "Unable to start off-thread ion compilation.");
             builder->graphSpewer().endFunction();
             return AbortReason::Alloc;
