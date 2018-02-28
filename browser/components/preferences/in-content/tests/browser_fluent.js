@@ -32,7 +32,7 @@ add_task(async function() {
   let defaultProcessCount = processCountPref.defaultValue;
 
   let [ msg ] = await doc.l10n.formatMessages([
-    ["default-content-process-count", { num: defaultProcessCount }]
+    ["performance-default-content-process-count", { num: defaultProcessCount }]
   ]);
 
   let elem = doc.querySelector(
