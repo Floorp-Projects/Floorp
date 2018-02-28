@@ -338,15 +338,6 @@ JITFrameInfo::JITFrameInfo(const JITFrameInfo& aOther)
   }
 }
 
-uint32_t
-UniqueStacks::JITAddress::Hash() const
-{
-  uint32_t hash = 0;
-  hash = AddToHash(hash, mAddress);
-  hash = AddToHash(hash, mStreamingGen);
-  return hash;
-}
-
 bool
 UniqueStacks::FrameKey::NormalFrameData::operator==(const NormalFrameData& aOther) const
 {
@@ -358,8 +349,9 @@ UniqueStacks::FrameKey::NormalFrameData::operator==(const NormalFrameData& aOthe
 bool
 UniqueStacks::FrameKey::JITFrameData::operator==(const JITFrameData& aOther) const
 {
-  return mAddress == aOther.mAddress &&
-         mDepth == aOther.mDepth;
+  return mCanonicalAddress == aOther.mCanonicalAddress &&
+         mDepth == aOther.mDepth &&
+         mRangeIndex == aOther.mRangeIndex;
 }
 
 uint32_t
@@ -379,14 +371,20 @@ UniqueStacks::FrameKey::Hash() const
     }
   } else {
     const JITFrameData& data = mData.as<JITFrameData>();
-    hash = AddToHash(hash, data.mAddress.Hash());
+    hash = AddToHash(hash, data.mCanonicalAddress);
     hash = AddToHash(hash, data.mDepth);
+    hash = AddToHash(hash, data.mRangeIndex);
   }
   return hash;
 }
 
-UniqueStacks::UniqueStacks()
-  : mUniqueStrings(MakeUnique<UniqueJSONStrings>())
+// Consume aJITFrameInfo by stealing its string table and its JIT frame info
+// ranges. The JIT frame info contains JSON which refers to strings from the
+// JIT frame info's string table, so our string table needs to have the same
+// strings at the same indices.
+UniqueStacks::UniqueStacks(JITFrameInfo&& aJITFrameInfo)
+  : mUniqueStrings(Move(aJITFrameInfo.mUniqueStrings))
+  , mJITInfoRanges(Move(aJITFrameInfo.mRanges))
 {
   mFrameTableWriter.StartBareList();
   mStackTableWriter.StartBareList();
@@ -406,45 +404,57 @@ uint32_t UniqueStacks::GetOrAddStackIndex(const StackKey& aStack)
   return index;
 }
 
-MOZ_MUST_USE nsTArray<UniqueStacks::FrameKey>
-UniqueStacks::GetOrAddJITFrameKeysForAddress(JSContext* aContext,
-                                             const JITAddress& aJITAddress)
+template<typename RangeT, typename PosT>
+struct PositionInRangeComparator final
 {
-  nsTArray<FrameKey>& frameKeys =
-    *mAddressToJITFrameKeysMap.LookupOrAdd(aJITAddress);
+  bool Equals(const RangeT& aRange, PosT aPos) const
+  {
+    return aRange.mRangeStart <= aPos && aPos < aRange.mRangeEnd;
+  }
 
-  if (frameKeys.IsEmpty()) {
-    for (JS::ProfiledFrameHandle handle :
-           JS::GetProfiledFrames(aContext, aJITAddress.mAddress)) {
-      // JIT frames with the same canonical address should be treated as the
-      // same frame, so set the frame key's address to the canonical address.
-      FrameKey frameKey(
-        JITAddress{ handle.canonicalAddress(), aJITAddress.mStreamingGen },
-        frameKeys.Length());
-      MaybeAddJITFrameIndex(aContext, frameKey, handle);
-      frameKeys.AppendElement(frameKey);
+  bool LessThan(const RangeT& aRange, PosT aPos) const
+  {
+    return aRange.mRangeEnd <= aPos;
+  }
+};
+
+Maybe<nsTArray<UniqueStacks::FrameKey>>
+UniqueStacks::LookupFramesForJITAddressFromBufferPos(void* aJITAddress,
+                                                     uint64_t aBufferPos)
+{
+  size_t rangeIndex = mJITInfoRanges.BinaryIndexOf(aBufferPos,
+    PositionInRangeComparator<JITFrameInfoForBufferRange, uint64_t>());
+  MOZ_RELEASE_ASSERT(rangeIndex != mJITInfoRanges.NoIndex,
+                     "Buffer position of jit address needs to be in one of the ranges");
+
+  using JITFrameKey = JITFrameInfoForBufferRange::JITFrameKey;
+
+  const JITFrameInfoForBufferRange& jitFrameInfoRange = mJITInfoRanges[rangeIndex];
+  const nsTArray<JITFrameKey>* jitFrameKeys =
+    jitFrameInfoRange.mJITAddressToJITFramesMap.Get(aJITAddress);
+  if (!jitFrameKeys) {
+    return Nothing();
+  }
+
+  // Map the array of JITFrameKeys to an array of FrameKeys, and ensure that
+  // each of the FrameKeys exists in mFrameToIndexMap.
+  nsTArray<FrameKey> frameKeys;
+  for (const JITFrameKey& jitFrameKey : *jitFrameKeys) {
+    FrameKey frameKey(jitFrameKey.mCanonicalAddress, jitFrameKey.mDepth, rangeIndex);
+    if (!mFrameToIndexMap.Contains(frameKey)) {
+      // We need to add this frame to our frame table. The JSON for this frame
+      // already exists in jitFrameInfoRange, we just need to splice it into
+      // the frame table and give it an index.
+      uint32_t index = mFrameToIndexMap.Count();
+      const nsCString* frameJSON =
+        jitFrameInfoRange.mJITFrameToFrameJSONMap.Get(jitFrameKey);
+      MOZ_RELEASE_ASSERT(frameJSON, "Should have cached JSON for this frame");
+      mFrameTableWriter.Splice(frameJSON->get());
+      mFrameToIndexMap.Put(frameKey, index);
     }
-    MOZ_ASSERT(frameKeys.Length() > 0);
+    frameKeys.AppendElement(Move(frameKey));
   }
-
-  // Return a copy of the array.
-  return nsTArray<FrameKey>(frameKeys);
-}
-
-void
-UniqueStacks::MaybeAddJITFrameIndex(JSContext* aContext,
-                                    const FrameKey& aFrame,
-                                    const JS::ProfiledFrameHandle& aJITFrame)
-{
-  uint32_t index;
-  if (mFrameToIndexMap.Get(aFrame, &index)) {
-    MOZ_ASSERT(index < mFrameToIndexMap.Count());
-    return;
-  }
-
-  index = mFrameToIndexMap.Count();
-  mFrameToIndexMap.Put(aFrame, index);
-  StreamJITFrame(aContext, aJITFrame);
+  return Some(Move(frameKeys));
 }
 
 uint32_t
@@ -702,14 +712,6 @@ JITFrameInfo::AddInfoForRange(uint64_t aRangeStart, uint64_t aRangeEnd,
   });
 }
 
-// This method will go away in the next patch.
-void
-UniqueStacks::StreamJITFrame(JSContext* aContext,
-                             const JS::ProfiledFrameHandle& aJITFrame)
-{
-  ::StreamJITFrame(aContext, mFrameTableWriter, *mUniqueStrings, aJITFrame);
-}
-
 struct ProfileSample
 {
   uint32_t mStack;
@@ -768,6 +770,7 @@ public:
   bool Has() const { return mReadPos != mBuffer.mRangeEnd; }
   const ProfileBufferEntry& Get() const { return mBuffer.GetEntry(mReadPos); }
   void Next() { mReadPos++; }
+  uint64_t CurPos() { return mReadPos; }
 
 private:
   const ProfileBuffer& mBuffer;
@@ -1028,15 +1031,13 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
       } else if (e.Get().IsJitReturnAddr()) {
         numFrames++;
 
-        // We can only process JitReturnAddr entries if we have a JSContext.
-        MOZ_RELEASE_ASSERT(aContext);
-
         // A JIT frame may expand to multiple frames due to inlining.
         void* pc = e.Get().u.mPtr;
-        UniqueStacks::JITAddress address = { pc, aUniqueStacks.CurrentGen() };
-        nsTArray<UniqueStacks::FrameKey> frameKeys =
-          aUniqueStacks.GetOrAddJITFrameKeysForAddress(aContext, address);
-        for (const UniqueStacks::FrameKey& frameKey : frameKeys) {
+        const Maybe<nsTArray<UniqueStacks::FrameKey>>& frameKeys =
+          aUniqueStacks.LookupFramesForJITAddressFromBufferPos(pc, e.CurPos());
+        MOZ_RELEASE_ASSERT(frameKeys,
+          "Attempting to stream samples for a buffer range for which we don't have JITFrameInfo?");
+        for (const UniqueStacks::FrameKey& frameKey : *frameKeys) {
           stack = aUniqueStacks.AppendFrame(stack, frameKey);
         }
 
