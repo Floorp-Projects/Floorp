@@ -2285,9 +2285,15 @@ moz_gtk_header_bar_paint(WidgetNodeType widgetType,
     GtkStyleContext *style = GetStyleContext(widgetType, GTK_TEXT_DIR_LTR,
                                              state_flags);
     InsetByMargin(rect, style);
-    gtk_render_background(style, cr, rect->x, rect->y, rect->width,
-                          rect->height);
-    gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
+
+    // Some themes (Adwaita for instance) draws bold dark line at
+    // titlebar bottom. It does not fit well with Firefox tabs so
+    // draw with some extent to make the titlebar bottom part invisible.
+    #define TITLEBAR_EXTENT 4
+    gtk_render_background(style, cr, rect->x, rect->y,
+                          rect->width, rect->height + TITLEBAR_EXTENT);
+    gtk_render_frame(style, cr, rect->x, rect->y,
+                     rect->width, rect->height + TITLEBAR_EXTENT);
 
     return MOZ_GTK_SUCCESS;
 }
