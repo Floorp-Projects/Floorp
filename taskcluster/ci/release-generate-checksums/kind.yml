@@ -4,43 +4,105 @@
 
 loader: taskgraph.loader.transform:loader
 
-transforms:
-   - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.job:transforms
-   - taskgraph.transforms.release_notifications:transforms
-   - taskgraph.transforms.task:transforms
-
 kind-dependencies:
    - beetmover-source
    - post-beetmover-checksums-dummy
 
+transforms:
+   - taskgraph.transforms.build:transforms
+   - taskgraph.transforms.release_deps:transforms
+   - taskgraph.transforms.release_generate_checksums:transforms
+   - taskgraph.transforms.release_notifications:transforms
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
 job-defaults:
+   name: generate-checksums
    description: generates checksums
-   worker-type: buildbot-bridge/buildbot-bridge
-   run-on-projects: []
+   run-on-projects: []  # to make sure this never runs as part of CI
    shipping-phase: promote
+   worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+   worker:
+      max-run-time: 1200
+      artifacts:
+         - name: public/build/SHA256SUMMARY
+           path: /builds/worker/SHA256SUMMARY
+           type: file
+         - name: public/build/SHA256SUMS
+           path: /builds/worker/SHA256SUMS
+           type: file
+         - name: public/build/SHA512SUMMARY
+           path: /builds/worker/SHA512SUMMARY
+           type: file
+         - name: public/build/SHA512SUMS
+           path: /builds/worker/SHA512SUMS
+           type: file
    run:
-      using: buildbot
-      release-promotion: true
+      using: mozharness
+      actions: [create-virtualenv collect-individual-checksums create-big-checksums create-summary]
+      options:
+         - "version={version}"
+         - "build-number={build_number}"
+      script: "mozharness/scripts/release/generate-checksums.py"
+   treeherder:
+      symbol: Rel(GenChcks)
+      kind: test
+      tier: 1
 
 jobs:
    firefox:
-      name: release-firefox_chcksms
       shipping-product: firefox
+      attributes:
+         build_platform: linux64
+         build_type: opt
       run:
-         product: firefox
-         buildername: release-{branch}-firefox_chcksms
+         config:
+            by-project:
+               mozilla-release:
+                  - releases/checksums_firefox.py
+               mozilla-beta:
+                  - releases/checksums_firefox.py
+               maple:
+                  - releases/dev_checksums_firefox.py
+               default:
+                  - releases/dev_checksums_firefox.py
+      treeherder:
+         platform: linux64/opt
 
    fennec:
-      name: release-fennec_chcksms
       shipping-product: fennec
+      attributes:
+         build_platform: android-nightly
+         build_type: opt
       run:
-         product: fennec
-         buildername: release-{branch}-fennec_chcksms
+         config:
+            by-project:
+               mozilla-release:
+                  - releases/checksums_fennec.py
+               mozilla-beta:
+                  - releases/checksums_fennec.py
+               maple:
+                  - releases/dev_checksums_fennec.py
+               default:
+                  - releases/dev_checksums_fennec.py
+      treeherder:
+         platform: Android/opt
 
    devedition:
-      name: devedition_release_chcksms
       shipping-product: devedition
+      attributes:
+         build_platform: linux64-devedition
+         build_type: opt
       run:
-         product: devedition
-         buildername: release-{branch}-devedition_chcksms
+         config:
+            by-project:
+               mozilla-release:
+                  - releases/checksums_devedition.py
+               mozilla-beta:
+                  - releases/checksums_devedition.py
+               maple:
+                  - releases/dev_checksums_devedition.py
+               default:
+                  - releases/dev_checksums_devedition.py
+      treeherder:
+         platform: linux64-devedition/opt

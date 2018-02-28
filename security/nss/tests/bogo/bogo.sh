@@ -25,7 +25,7 @@ bogo_init()
   BORING=${BORING:=boringssl}
   if [ ! -d "$BORING" ]; then
     git clone -q https://boringssl.googlesource.com/boringssl "$BORING"
-    git -C "$BORING" checkout -q bbfe603519bc54fbc4c8dd87efe1ed385df550b4
+    git -C "$BORING" checkout -q a513e86c1ebb1383930c9e504bdabcc302a85f30
   fi
 
   SCRIPTNAME="bogo.sh"

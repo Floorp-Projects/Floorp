@@ -4,7 +4,7 @@
 
 #include "blapi.h"
 #include "blapit.h"
-#include "chacha20.h"
+#include "Hacl_Chacha20.h"
 #include "nssilock.h"
 #include "seccomon.h"
 #include "secerr.h"
@@ -99,7 +99,7 @@ RNG_GenerateGlobalRandomBytes(void *dest, size_t len)
 
     memset(dest, 0, len);
     memcpy(dest, globalBytes, PR_MIN(len, GLOBAL_BYTES_SIZE));
-    ChaCha20XOR(dest, dest, len, key, nonce, 0);
+    Hacl_Chacha20_chacha20(dest, (uint8_t *)dest, len, (uint8_t *)key, nonce, 0);
     ChaCha20Poly1305_DestroyContext(cx, PR_TRUE);
 
     PZ_Unlock(rng_lock);

@@ -84,11 +84,11 @@
 
       <varlistentry>
         <term>-F</term>
-        <listitem><para>Delete a private key from a key database. Specify the key to delete with the -n argument. Specify the database from which to delete the key with the 
-<option>-d</option> argument. Use the <option>-k</option> argument to specify explicitly whether to delete a DSA, RSA, or ECC key. If you don't use the <option>-k</option> argument, the option looks for an RSA key matching the specified nickname. 
+        <listitem><para>Delete a private key and the associated certificate from a database. Specify the key to delete with the -n argument. Specify the database from which to delete the key with the 
+<option>-d</option> argument.
 </para>
 <para>
-When you delete keys, be sure to also remove any certificates associated with those keys from the certificate database, by using -D. Some smart cards do not let you remove a public key you have generated. In such a case, only the private key is deleted from the key pair. You can display the public key with the command certutil -K -h tokenname. </para></listitem>
+Some smart cards do not let you remove a public key you have generated. In such a case, only the private key is deleted from the key pair.</para></listitem>
       </varlistentry>
 
       <varlistentry>

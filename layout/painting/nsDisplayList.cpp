@@ -2666,9 +2666,21 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
 
     WebRenderLayerManager* wrManager = static_cast<WebRenderLayerManager*>(layerManager.get());
 
+    nsIDocShell* docShell = presContext->GetDocShell();
+    nsTArray<wr::WrFilterOp> wrFilters;
+    gfx::Matrix5x4* colorMatrix = nsDocShell::Cast(docShell)->GetColorMatrix();
+    if (colorMatrix) {
+      wr::WrFilterOp gs = {
+        wr::WrFilterOpType::ColorMatrix
+      };
+      MOZ_ASSERT(sizeof(gs.matrix) == sizeof(colorMatrix->components));
+      memcpy(&(gs.matrix), colorMatrix->components, sizeof(gs.matrix));
+      wrFilters.AppendElement(gs);
+    }
+
     MaybeSetupTransactionIdAllocator(layerManager, presContext);
     bool temp = aBuilder->SetIsCompositingCheap(layerManager->IsCompositingCheap());
-    wrManager->EndTransactionWithoutLayer(this, aBuilder);
+    wrManager->EndTransactionWithoutLayer(this, aBuilder, wrFilters);
 
     // For layers-free mode, we check the invalidation state bits in the EndTransaction.
     // So we clear the invalidation state bits after EndTransaction.

@@ -95,6 +95,148 @@ add_task(async function test_session_permission() {
   Services.perms.remove(Services.io.newURI(PAGE_URI), "cookie");
 });
 
+// Test to verify an about:blank iframe successfully inherits the
+// parent's controller when storage is blocked between opening the
+// parent page and creating the iframe.
+add_task(async function test_block_storage_before_blank_iframe() {
+  Services.perms.remove(Services.io.newURI(PAGE_URI), "cookie");
+
+  let tab = BrowserTestUtils.addTab(gBrowser, SCOPE);
+  let browser = gBrowser.getBrowserForTab(tab);
+  await BrowserTestUtils.browserLoaded(browser);
+
+  let controller = await ContentTask.spawn(browser, null, async function() {
+    return content.navigator.serviceWorker.controller;
+  });
+
+  ok(!!controller, "page should be controlled with storage allowed");
+
+  let controller2 = await ContentTask.spawn(browser, null, async function() {
+    let f = content.document.createElement("iframe");
+    content.document.body.appendChild(f);
+    await new Promise(resolve => f.onload = resolve);
+    return !!f.contentWindow.navigator.serviceWorker.controller;
+  });
+
+  ok(!!controller2, "page should be controlled with storage allowed");
+
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT],
+  ]});
+
+  let controller3 = await ContentTask.spawn(browser, null, async function() {
+    let f = content.document.createElement("iframe");
+    content.document.body.appendChild(f);
+    await new Promise(resolve => f.onload = resolve);
+    return !!f.contentWindow.navigator.serviceWorker.controller;
+  });
+
+  ok(!!controller3, "page should be controlled with storage allowed");
+
+  await SpecialPowers.popPrefEnv();
+  await BrowserTestUtils.removeTab(tab);
+});
+
+// Test to verify a blob URL iframe successfully inherits the
+// parent's controller when storage is blocked between opening the
+// parent page and creating the iframe.
+add_task(async function test_block_storage_before_blob_iframe() {
+  Services.perms.remove(Services.io.newURI(PAGE_URI), "cookie");
+
+  let tab = BrowserTestUtils.addTab(gBrowser, SCOPE);
+  let browser = gBrowser.getBrowserForTab(tab);
+  await BrowserTestUtils.browserLoaded(browser);
+
+  let controller = await ContentTask.spawn(browser, null, async function() {
+    return content.navigator.serviceWorker.controller;
+  });
+
+  ok(!!controller, "page should be controlled with storage allowed");
+
+  let controller2 = await ContentTask.spawn(browser, null, async function() {
+    let b = new content.Blob(["<!DOCTYPE html><html></html>"], { type: "text/html" });
+    let f = content.document.createElement("iframe");
+    // No need to call revokeObjectURL() since the window will be closed shortly.
+    f.src = content.URL.createObjectURL(b);
+    content.document.body.appendChild(f);
+    await new Promise(resolve => f.onload = resolve);
+    return !!f.contentWindow.navigator.serviceWorker.controller;
+  });
+
+  ok(!!controller2, "page should be controlled with storage allowed");
+
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT],
+  ]});
+
+  let controller3 = await ContentTask.spawn(browser, null, async function() {
+    let b = new content.Blob(["<!DOCTYPE html><html></html>"], { type: "text/html" });
+    let f = content.document.createElement("iframe");
+    // No need to call revokeObjectURL() since the window will be closed shortly.
+    f.src = content.URL.createObjectURL(b);
+    content.document.body.appendChild(f);
+    await new Promise(resolve => f.onload = resolve);
+    return !!f.contentWindow.navigator.serviceWorker.controller;
+  });
+
+  ok(!!controller3, "page should be controlled with storage allowed");
+
+  await SpecialPowers.popPrefEnv();
+  await BrowserTestUtils.removeTab(tab);
+});
+
+// Test to verify a blob worker script does not hit our service
+// worker storage assertions when storage is blocked between opening
+// the parent page and creating the worker.  Note, we cannot
+// explicitly check if the worker is controlled since we don't expose
+// WorkerNavigator.serviceWorkers.controller yet.
+add_task(async function test_block_storage_before_blob_worker() {
+  Services.perms.remove(Services.io.newURI(PAGE_URI), "cookie");
+
+  let tab = BrowserTestUtils.addTab(gBrowser, SCOPE);
+  let browser = gBrowser.getBrowserForTab(tab);
+  await BrowserTestUtils.browserLoaded(browser);
+
+  let controller = await ContentTask.spawn(browser, null, async function() {
+    return content.navigator.serviceWorker.controller;
+  });
+
+  ok(!!controller, "page should be controlled with storage allowed");
+
+  let scriptURL = await ContentTask.spawn(browser, null, async function() {
+    let b = new content.Blob(["self.postMessage(self.location.href);self.close()"],
+                             { type: "application/javascript" });
+    // No need to call revokeObjectURL() since the window will be closed shortly.
+    let u = content.URL.createObjectURL(b);
+    let w = new content.Worker(u);
+    return await new Promise(resolve => {
+      w.onmessage = e => resolve(e.data);
+    });
+  });
+
+  ok(scriptURL.startsWith("blob:"), "blob URL worker should run");
+
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT],
+  ]});
+
+  let scriptURL2 = await ContentTask.spawn(browser, null, async function() {
+    let b = new content.Blob(["self.postMessage(self.location.href);self.close()"],
+                             { type: "application/javascript" });
+    // No need to call revokeObjectURL() since the window will be closed shortly.
+    let u = content.URL.createObjectURL(b);
+    let w = new content.Worker(u);
+    return await new Promise(resolve => {
+      w.onmessage = e => resolve(e.data);
+    });
+  });
+
+  ok(scriptURL2.startsWith("blob:"), "blob URL worker should run");
+
+  await SpecialPowers.popPrefEnv();
+  await BrowserTestUtils.removeTab(tab);
+});
+
 add_task(async function cleanup() {
   Services.perms.remove(Services.io.newURI(PAGE_URI), "cookie");
 

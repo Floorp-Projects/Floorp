@@ -12,37 +12,19 @@ transforms = TransformSequence()
 
 
 @transforms.add
-def tweak_beetmover_source_dependencies_and_upstream_artifacts(config, jobs):
+def remove_build_dependency_in_beetmover_source(config, jobs):
     for job in jobs:
-        # HACK1: instead of grabbing SOURCE file from `release-source` task, we
-        # instead take it along with SOURCE.asc directly from the
-        # `release-source-signing`.
-        #
-        # HACK2: This way, we can just overwrite the `build`
-        # dependency, which at this point still is `release-source` task, with
-        # the actual Nightly en-US linux64 build which contains the
-        # `balrog_props` file we're interested in.
-        #
-        # XXX: this hack should go away by either:
-        # * rewriting beetmover transforms to allow more flexibility in deps
-        # * ditch balrog_props in beetmover and rely on in-tree task payload
+        # XXX: We delete the build dependency because, unlike the other beetmover
+        # tasks, source doesn't depend on any build task at all. This hack should
+        # go away when we rewrite beetmover transforms to allow more flexibility in deps
+        del job['dependencies']['build']
 
-        if job['attributes']['shipping_product'] == 'firefox':
-            job['dependencies']['build'] = u'build-linux64-nightly/opt'
-        elif job['attributes']['shipping_product'] == 'fennec':
-            job['dependencies']['build'] = u'build-android-api-16-nightly/opt'
-        elif job['attributes']['shipping_product'] == 'devedition':
-            job['dependencies']['build'] = u'build-linux64-devedition-nightly/opt'
-        else:
-            raise NotImplemented(
-                "Unknown shipping_product {} for beetmover_source!".format(
-                    job['attributes']['shipping_product']
-                )
-            )
-        upstream_artifacts = job['worker']['upstream-artifacts']
-        for artifact in upstream_artifacts:
-            if artifact['taskType'] == 'build':
-                artifact['paths'].append(u'public/build/balrog_props.json')
-                break
+        all_upstream_artifacts = job['worker']['upstream-artifacts']
+        upstream_artifacts_without_build = [
+            upstream_artifact
+            for upstream_artifact in all_upstream_artifacts
+            if upstream_artifact['taskId']['task-reference'] != '<build>'
+        ]
+        job['worker']['upstream-artifacts'] = upstream_artifacts_without_build
 
         yield job

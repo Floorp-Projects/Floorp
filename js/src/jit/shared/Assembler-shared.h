@@ -32,6 +32,10 @@
 # define JS_SMALL_BRANCH
 #endif
 
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+# define JS_CODELABEL_LINKMODE
+#endif
+
 using mozilla::CheckedInt;
 
 namespace js {
@@ -529,6 +533,8 @@ class CodeOffset
 // cannot be patched until after linking.
 // When the source label is resolved into a memory address, this address is
 // patched into the destination address.
+// Some need to distinguish between multiple ways of patching that address.
+// See JS_CODELABEL_LINKMODE.
 class CodeLabel
 {
     // The destination position, where the absolute reference should get
@@ -538,6 +544,19 @@ class CodeLabel
     // The source label (relative) in the code to where the destination should
     // get patched to.
     CodeOffset target_;
+
+#ifdef JS_CODELABEL_LINKMODE
+public:
+    enum LinkMode
+    {
+        Uninitialized = 0,
+        RawPointer,
+        MoveImmediate,
+        JumpImmediate
+    };
+private:
+    LinkMode linkMode_ = Uninitialized;
+#endif
 
   public:
     CodeLabel()
@@ -561,6 +580,14 @@ class CodeLabel
     CodeOffset target() const {
         return target_;
     }
+#ifdef JS_CODELABEL_LINKMODE
+    LinkMode linkMode() const {
+        return linkMode_;
+    }
+    void setLinkMode(LinkMode value) {
+        linkMode_ = value;
+    }
+#endif
 };
 
 typedef Vector<CodeLabel, 0, SystemAllocPolicy> CodeLabelVector;

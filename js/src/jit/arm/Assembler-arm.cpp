@@ -962,23 +962,24 @@ Assembler::trace(JSTracer* trc)
 void
 Assembler::processCodeLabels(uint8_t* rawCode)
 {
-    for (size_t i = 0; i < codeLabels_.length(); i++) {
-        CodeLabel label = codeLabels_[i];
-        Bind(rawCode, *label.patchAt(), *label.target());
+    for (const CodeLabel& label : codeLabels_) {
+        Bind(rawCode, label);
     }
 }
 
 void
-Assembler::writeCodePointer(CodeOffset* label)
+Assembler::writeCodePointer(CodeLabel* label)
 {
     BufferOffset off = writeInst(-1);
-    label->bind(off.getOffset());
+    label->patchAt()->bind(off.getOffset());
 }
 
 void
-Assembler::Bind(uint8_t* rawCode, CodeOffset label, CodeOffset target)
+Assembler::Bind(uint8_t* rawCode, const CodeLabel& label)
 {
-    *reinterpret_cast<const void**>(rawCode + label.offset()) = rawCode + target.offset();
+    size_t offset = label.patchAt().offset();
+    size_t target = label.target().offset();
+    *reinterpret_cast<const void**>(rawCode + offset) = rawCode + target;
 }
 
 Assembler::Condition

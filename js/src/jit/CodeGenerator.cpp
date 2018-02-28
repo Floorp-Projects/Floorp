@@ -4488,7 +4488,10 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
     masm.checkStackAlignment();
 
     // Guard that calleereg is actually a function object.
-    masm.branchTestObjClass(Assembler::NotEqual, calleereg, nargsreg, &JSFunction::class_, &invoke);
+    if (call->mir()->needsClassCheck()) {
+        masm.branchTestObjClass(Assembler::NotEqual, calleereg, nargsreg, &JSFunction::class_,
+                                &invoke);
+    }
 
     // Guard that calleereg is an interpreted function with a JSScript or a
     // wasm function.
@@ -4501,7 +4504,10 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
                                 &invoke);
     }
 
-    masm.loadJitCodeRaw(calleereg, objreg);
+    if (call->mir()->needsArgCheck())
+        masm.loadJitCodeRaw(calleereg, objreg);
+    else
+        masm.loadJitCodeNoArgCheck(calleereg, objreg);
 
     // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
@@ -11370,7 +11376,7 @@ class OutOfLineSwitch : public OutOfLineCodeBase<CodeGenerator>
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
             MOZ_CRASH("NYI: SwitchTableType::OutOfLine");
 #else
-            masm.mov(start_.patchAt(), temp);
+            masm.mov(start(), temp);
             base = temp;
 #endif
         }
@@ -11384,7 +11390,7 @@ class OutOfLineSwitch : public OutOfLineCodeBase<CodeGenerator>
             (isOutOfLine_ && tableType == SwitchTableType::OutOfLine))
         {
             CodeLabel cl;
-            masm.writeCodePointer(cl.patchAt());
+            masm.writeCodePointer(&cl);
             masm.propagateOOM(codeLabels_.append(mozilla::Move(cl)));
         }
     }
@@ -11412,7 +11418,7 @@ CodeGenerator::visitOutOfLineSwitch(OutOfLineSwitch<tableType>* jumpTable)
         MOZ_CRASH();
 #else
         masm.haltingAlign(sizeof(void*));
-        masm.use(jumpTable->start()->target());
+        masm.bind(jumpTable->start());
         masm.addCodeLabel(*jumpTable->start());
 #endif
     }
