@@ -101,7 +101,7 @@ add_task(async function initializeState() {
   // of experiments it doesn't know about. We remove it from the equation
   // because here we are only concerned with core Addon Manager operation,
   // not the superset Experiments Manager has imposed.
-  if ("@mozilla.org/browser/experiments-service;1" in Components.classes) {
+  if ("@mozilla.org/browser/experiments-service;1" in Cc) {
     let tmp = {};
     ChromeUtils.import("resource:///modules/experiments/Experiments.jsm", tmp);
     // There is a race condition between XPCOM service initialization and

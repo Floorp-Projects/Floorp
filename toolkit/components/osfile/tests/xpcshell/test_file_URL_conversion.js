@@ -7,7 +7,7 @@ function run_test() {
   ChromeUtils.import("resource://gre/modules/osfile.jsm");
   ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
-  let isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
+  let isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 
   // Test cases for filePathToURI
   let paths = isWindows ? [

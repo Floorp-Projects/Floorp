@@ -11,7 +11,7 @@ const nsIAuthPromptAdapterFactory = Ci.nsIAuthPromptAdapterFactory;
 
 function run_test() {
   const contractID = "@mozilla.org/network/authprompt-adapter-factory;1";
-  if (!(contractID in Components.classes)) {
+  if (!(contractID in Cc)) {
     print("No adapter factory found, skipping testing");
     return;
   }

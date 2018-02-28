@@ -67,10 +67,10 @@ function goQuitApplication() {
   var appService;
   var forceQuit;
 
-  if (kAppStartup in Components.classes) {
+  if (kAppStartup in Cc) {
     appService = Services.startup;
     forceQuit  = Ci.nsIAppStartup.eForceQuit;
-  } else if (kAppShell in Components.classes) {
+  } else if (kAppShell in Cc) {
     appService = Services.appShell;
     forceQuit = Ci.nsIAppShellService.eForceQuit;
   } else {

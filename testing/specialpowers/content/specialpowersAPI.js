@@ -659,7 +659,7 @@ SpecialPowersAPI.prototype = {
   get Cc() { return wrapPrivileged(this.getFullComponents().classes); },
   get Ci() {
  return this.Components ? this.Components.interfaces
-                                    : Components.interfaces;
+                                    : Ci;
 },
   get Cu() { return wrapPrivileged(this.getFullComponents().utils); },
   get Cr() { return wrapPrivileged(this.Components.results); },

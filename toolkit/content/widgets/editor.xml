@@ -103,7 +103,7 @@
         <getter>
         <![CDATA[
           if (!this._fastFind) {
-            if (!("@mozilla.org/typeaheadfind;1" in Components.classes))
+            if (!("@mozilla.org/typeaheadfind;1" in Cc))
               return null;
 
             if (!this.docShell)

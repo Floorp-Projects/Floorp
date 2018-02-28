@@ -439,7 +439,7 @@
       <property name="fastFind" readonly="true">
         <getter><![CDATA[
           if (!this._fastFind) {
-            if (!("@mozilla.org/typeaheadfind;1" in Components.classes))
+            if (!("@mozilla.org/typeaheadfind;1" in Cc))
               return null;
 
             var tabBrowser = this.getTabBrowser();
@@ -911,7 +911,7 @@
             if (!this.docShell.securityUI) {
               const SECUREBROWSERUI_CONTRACTID = "@mozilla.org/secure_browser_ui;1";
               if (!this.hasAttribute("disablesecurity") &&
-                  SECUREBROWSERUI_CONTRACTID in Components.classes) {
+                  SECUREBROWSERUI_CONTRACTID in Cc) {
                 var securityUI = Cc[SECUREBROWSERUI_CONTRACTID]
                                    .createInstance(Ci.nsISecureBrowserUI);
                 securityUI.init(this.contentWindow);
