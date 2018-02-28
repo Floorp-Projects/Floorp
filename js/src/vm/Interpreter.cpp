@@ -1200,7 +1200,7 @@ UnwindIteratorsForUncatchableException(JSContext* cx, const InterpreterRegs& reg
         JSTryNote* tn = *tni;
         if (tn->kind == JSTRY_FOR_IN) {
             Value* sp = regs.spForStackDepth(tn->stackDepth);
-            UnwindIteratorForUncatchableException(cx, &sp[-1].toObject());
+            UnwindIteratorForUncatchableException(&sp[-1].toObject());
         }
     }
 }
