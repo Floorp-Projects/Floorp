@@ -54,7 +54,7 @@ function* testVariablesView(hud) {
 
   info("Waiting for variable view to appear");
   let variable = yield new Promise(resolve => {
-    jsterm.once("variablesview-fetched", (e, variable) => {
+    jsterm.once("variablesview-fetched", (variable) => {
       resolve(variable);
     });
     executeSoon(() => EventUtils.synthesizeMouse(anchor, 2, 2, {},

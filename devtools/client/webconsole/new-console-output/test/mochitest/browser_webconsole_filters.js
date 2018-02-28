@@ -3,34 +3,30 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+ /* import-globals-from head.js */
+
 // Tests filters.
 
 "use strict";
-const { MESSAGE_LEVEL } = require("devtools/client/webconsole/new-console-output/constants");
+
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/mochitest/test-console-filters.html";
+
 add_task(async function () {
-  let hud = await openNewTabAndConsole(TEST_URI);
-  const outputNode = hud.ui.outputNode;
-  const toolbar = await waitFor(() => {
-    return outputNode.querySelector(".webconsole-filterbar-primary");
-  });
-  ok(toolbar, "Toolbar found");
-  // Show the filter bar
-  toolbar.querySelector(".devtools-filter-icon").click();
-  const filterBar = await waitFor(() => {
-    return outputNode.querySelector(".webconsole-filterbar-secondary");
-  });
-  ok(filterBar, "Filter bar is shown when filter icon is clicked.");
+  const hud = await openNewTabAndConsole(TEST_URI);
+  await setFilterBarVisible(hud, true);
+
+  let filterState = await getFilterState(hud);
 
   // Check defaults.
-  Object.values(MESSAGE_LEVEL).forEach(level => {
-    ok(filterIsEnabled(filterBar.querySelector(`.${level}`)),
-      `Filter button for ${level} is on by default`);
-  });
-  ["net", "netxhr"].forEach(category => {
-    ok(!filterIsEnabled(filterBar.querySelector(`.${category}`)),
-      `Filter button for ${category} is off by default`);
-  });
+
+  for (let category of ["error", "warn", "log", "info", "debug"]) {
+    let state = filterState[category];
+    ok(state, `Filter button for ${category} is on by default`);
+  }
+  for (let category of ["css", "net", "netxhr"]) {
+    let state = filterState[category];
+    ok(!state, `Filter button for ${category} is off by default`);
+  }
 
   // Check that messages are shown as expected. This depends on cached messages being
   // shown.
@@ -38,7 +34,9 @@ add_task(async function () {
     "Messages of all levels shown when filters are on.");
 
   // Check that messages are not shown when their filter is turned off.
-  filterBar.querySelector(".error").click();
+  await setFilterState(hud, {
+    error: false
+  });
   await waitFor(() => findMessages(hud, "").length == 4);
   ok(true, "When a filter is turned off, its messages are not shown.");
 
@@ -62,5 +60,8 @@ async function testFilterPersistence() {
   ok(!filterIsEnabled(filterBar.querySelector(".error")),
     "Filter button setting is persisted");
   ok(findMessages(hud, "").length == 4,
-    "Messages of all levels shown when filters are on.");
+    "testFilterPersistence: Messages of all levels shown when filters are on.");
+
+  await resetFilters(hud);
+  await setFilterBarVisible(hud, false);
 }

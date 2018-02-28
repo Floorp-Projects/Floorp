@@ -81,7 +81,7 @@ function onExecuteGetName(results) {
   });
 }
 
-function onGetNameFetch(evt, view) {
+function onGetNameFetch(view) {
   gVariablesView = view._variablesView;
   ok(gVariablesView, "variables view object");
 

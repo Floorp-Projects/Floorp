@@ -426,7 +426,7 @@ enum ShutdownMode {
 };
 
 static ShutdownMode sShutdownMode = ShutdownNormal;
-static string sShutdownToken = "";
+static string sShutdownToken;
 
 void
 FakeDecryptor::UpdateSession(uint32_t aPromiseId,

@@ -7,6 +7,8 @@
 /* eslint-env browser */
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const { CustomizableUI } = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", {});
+const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
 const { gDevTools } = require("devtools/client/framework/devtools");
 
 /**
@@ -14,10 +16,18 @@ const { gDevTools } = require("devtools/client/framework/devtools");
  */
 add_task(async function () {
   info("Disable DevTools entry points (does not apply to the already created window");
-  new Promise(resolve => {
+  await new Promise(resolve => {
     let options = {"set": [["devtools.policy.disabled", true]]};
     SpecialPowers.pushPrefEnv(options, resolve);
   });
+
+  // In DEV_EDITION the browser starts with the developer-button in the toolbar. This
+  // applies to all new windows and forces creating keyboard shortcuts. The preference
+  // tested should not change without restart, but for the needs of the test, remove the
+  // developer-button from the UI before opening a new window.
+  if (AppConstants.MOZ_DEV_EDITION) {
+    CustomizableUI.removeWidgetFromArea("developer-button");
+  }
 
   info("Open a new window, all window-specific hooks for DevTools will be disabled.");
   let win = OpenBrowserWindow({private: false});

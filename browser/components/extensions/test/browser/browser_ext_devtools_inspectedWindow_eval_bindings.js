@@ -126,7 +126,7 @@ add_task(async function test_devtools_inspectedWindow_eval_bindings() {
     if (jsterm.hud.NEW_CONSOLE_OUTPUT_ENABLED === true) {
       // Wait for the message to appear on the console.
       const messageNode = await new Promise(resolve => {
-        jsterm.hud.on("new-messages", function onThisMessage(e, messages) {
+        jsterm.hud.on("new-messages", function onThisMessage(messages) {
           for (let m of messages) {
             resolve(m.node);
             jsterm.hud.off("new-messages", onThisMessage);
@@ -166,7 +166,7 @@ add_task(async function test_devtools_inspectedWindow_eval_bindings() {
       is(nodes.length, 3, "The object preview has the expected number of nodes");
     } else {
       const options = await new Promise(resolve => {
-        jsterm.once("variablesview-open", (evt, view, options) => resolve(options));
+        jsterm.once("variablesview-open", (view, options) => resolve(options));
       });
 
       const objectType = options.objectActor.type;

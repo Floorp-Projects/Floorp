@@ -88,14 +88,14 @@ impl<T: Floor, U> TypedSize2D<T, U> {
     }
 }
 
-impl<T: Copy + Add<T, Output=T>, U> Add for TypedSize2D<T, U> {
+impl<T: Copy + Add<T, Output = T>, U> Add for TypedSize2D<T, U> {
     type Output = Self;
     fn add(self, other: Self) -> Self {
         TypedSize2D::new(self.width + other.width, self.height + other.height)
     }
 }
 
-impl<T: Copy + Sub<T, Output=T>, U> Sub for TypedSize2D<T, U> {
+impl<T: Copy + Sub<T, Output = T>, U> Sub for TypedSize2D<T, U> {
     type Output = Self;
     fn sub(self, other: Self) -> Self {
         TypedSize2D::new(self.width - other.width, self.height - other.height)
@@ -103,11 +103,15 @@ impl<T: Copy + Sub<T, Output=T>, U> Sub for TypedSize2D<T, U> {
 }
 
 impl<T: Copy + Clone + Mul<T>, U> TypedSize2D<T, U> {
-    pub fn area(&self) -> T::Output { self.width * self.height }
+    pub fn area(&self) -> T::Output {
+        self.width * self.height
+    }
 }
 
 impl<T, U> TypedSize2D<T, U>
-where T: Copy + One + Add<Output=T> + Sub<Output=T> + Mul<Output=T> {
+where
+    T: Copy + One + Add<Output = T> + Sub<Output = T> + Mul<Output = T>,
+{
     /// Linearly interpolate between this size and another size.
     ///
     /// `t` is expected to be between zero and one.
@@ -121,25 +125,26 @@ where T: Copy + One + Add<Output=T> + Sub<Output=T> + Mul<Output=T> {
     }
 }
 
+impl<T: Zero + PartialOrd, U> TypedSize2D<T, U> {
+    pub fn is_empty_or_negative(&self) -> bool {
+        let zero = T::zero();
+        self.width <= zero || self.height <= zero
+    }
+}
+
 impl<T: Zero, U> TypedSize2D<T, U> {
     pub fn zero() -> Self {
-        TypedSize2D::new(
-            Zero::zero(),
-            Zero::zero(),
-        )
+        TypedSize2D::new(Zero::zero(), Zero::zero())
     }
 }
 
 impl<T: Zero, U> Zero for TypedSize2D<T, U> {
     fn zero() -> Self {
-        TypedSize2D::new(
-            Zero::zero(),
-            Zero::zero(),
-        )
+        TypedSize2D::new(Zero::zero(), Zero::zero())
     }
 }
 
-impl<T: Copy + Mul<T, Output=T>, U> Mul<T> for TypedSize2D<T, U> {
+impl<T: Copy + Mul<T, Output = T>, U> Mul<T> for TypedSize2D<T, U> {
     type Output = Self;
     #[inline]
     fn mul(self, scale: T) -> Self {
@@ -147,7 +152,7 @@ impl<T: Copy + Mul<T, Output=T>, U> Mul<T> for TypedSize2D<T, U> {
     }
 }
 
-impl<T: Copy + Div<T, Output=T>, U> Div<T> for TypedSize2D<T, U> {
+impl<T: Copy + Div<T, Output = T>, U> Div<T> for TypedSize2D<T, U> {
     type Output = Self;
     #[inline]
     fn div(self, scale: T) -> Self {
@@ -155,7 +160,7 @@ impl<T: Copy + Div<T, Output=T>, U> Div<T> for TypedSize2D<T, U> {
     }
 }
 
-impl<T: Copy + Mul<T, Output=T>, U1, U2> Mul<TypedScale<T, U1, U2>> for TypedSize2D<T, U1> {
+impl<T: Copy + Mul<T, Output = T>, U1, U2> Mul<TypedScale<T, U1, U2>> for TypedSize2D<T, U1> {
     type Output = TypedSize2D<T, U2>;
     #[inline]
     fn mul(self, scale: TypedScale<T, U1, U2>) -> TypedSize2D<T, U2> {
@@ -163,7 +168,7 @@ impl<T: Copy + Mul<T, Output=T>, U1, U2> Mul<TypedScale<T, U1, U2>> for TypedSiz
     }
 }
 
-impl<T: Copy + Div<T, Output=T>, U1, U2> Div<TypedScale<T, U1, U2>> for TypedSize2D<T, U2> {
+impl<T: Copy + Div<T, Output = T>, U1, U2> Div<TypedScale<T, U1, U2>> for TypedSize2D<T, U2> {
     type Output = TypedSize2D<T, U1>;
     #[inline]
     fn div(self, scale: TypedScale<T, U1, U2>) -> TypedSize2D<T, U1> {
@@ -174,17 +179,25 @@ impl<T: Copy + Div<T, Output=T>, U1, U2> Div<TypedScale<T, U1, U2>> for TypedSiz
 impl<T: Copy, U> TypedSize2D<T, U> {
     /// Returns self.width as a Length carrying the unit.
     #[inline]
-    pub fn width_typed(&self) -> Length<T, U> { Length::new(self.width) }
+    pub fn width_typed(&self) -> Length<T, U> {
+        Length::new(self.width)
+    }
 
     /// Returns self.height as a Length carrying the unit.
     #[inline]
-    pub fn height_typed(&self) -> Length<T, U> { Length::new(self.height) }
+    pub fn height_typed(&self) -> Length<T, U> {
+        Length::new(self.height)
+    }
 
     #[inline]
-    pub fn to_array(&self) -> [T; 2] { [self.width, self.height] }
+    pub fn to_array(&self) -> [T; 2] {
+        [self.width, self.height]
+    }
 
     #[inline]
-    pub fn to_vector(&self) -> TypedVector2D<T, U> { vec2(self.width, self.height) }
+    pub fn to_vector(&self) -> TypedVector2D<T, U> {
+        vec2(self.width, self.height)
+    }
 
     /// Drop the units, preserving only the numeric value.
     pub fn to_untyped(&self) -> Size2D<T> {
@@ -206,7 +219,7 @@ impl<T: NumCast + Copy, Unit> TypedSize2D<T, Unit> {
     pub fn cast<NewT: NumCast + Copy>(&self) -> Option<TypedSize2D<NewT, Unit>> {
         match (NumCast::from(self.width), NumCast::from(self.height)) {
             (Some(w), Some(h)) => Some(TypedSize2D::new(w, h)),
-            _ => None
+            _ => None,
         }
     }
 
@@ -251,7 +264,9 @@ impl<T: NumCast + Copy, Unit> TypedSize2D<T, Unit> {
 }
 
 impl<T, U> TypedSize2D<T, U>
-where T: Signed {
+where
+    T: Signed,
+{
     pub fn abs(&self) -> Self {
         size2(self.width.abs(), self.height.abs())
     }

@@ -13,6 +13,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/css/Loader.h"
+#include "mozilla/css/SheetLoadData.h"
 
 #include "nsCSSPropertyID.h"
 #include "nsCSSScanner.h"
@@ -74,6 +75,7 @@ public:
    * @param aSheetPrincipal the principal of the stylesheet.  This must match
    *                        the principal of the sheet passed to the
    *                        constructor.
+   * @param aLoadData the SheetLoadData for this sheet, if applicable.
    * @param aLineNumber the line number of the first line of the sheet.
    * @param aReusableSheets style sheets that can be reused by an @import.
    *                        This can be nullptr.
@@ -82,6 +84,7 @@ public:
                       nsIURI*          aSheetURL,
                       nsIURI*          aBaseURI,
                       nsIPrincipal*    aSheetPrincipal,
+                      mozilla::css::SheetLoadData* aLoadData,
                       uint32_t         aLineNumber,
                       mozilla::css::LoaderReusableStyleSheets* aReusableSheets =
                         nullptr);

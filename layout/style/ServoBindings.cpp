@@ -2523,6 +2523,7 @@ Gecko_GetAppUnitsPerPhysicalInch(RawGeckoPresContextBorrowed aPresContext)
 ServoStyleSheet*
 Gecko_LoadStyleSheet(css::Loader* aLoader,
                      ServoStyleSheet* aParent,
+                     SheetLoadData* aParentLoadData,
                      css::LoaderReusableStyleSheets* aReusableSheets,
                      RawGeckoURLExtraData* aURLExtraData,
                      const uint8_t* aURLString,
@@ -2544,7 +2545,7 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
 
   StyleSheet* previousFirstChild = aParent->GetFirstChild();
   if (NS_SUCCEEDED(rv)) {
-    rv = aLoader->LoadChildSheet(aParent, uri, media, nullptr, aReusableSheets);
+    rv = aLoader->LoadChildSheet(aParent, aParentLoadData, uri, media, nullptr, aReusableSheets);
   }
 
   if (NS_FAILED(rv) ||

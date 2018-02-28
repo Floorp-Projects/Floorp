@@ -116,7 +116,7 @@
    }
 
    function clickMessageAndShowVariablesView() {
-     let result = jsterm.once("variablesview-fetched", (event, vview) => {
+     let result = jsterm.once("variablesview-fetched", (vview) => {
        variablesView = vview;
      });
 
