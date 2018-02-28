@@ -1306,16 +1306,21 @@ var PlacesUIUtils = {
   },
 };
 
-PlacesUIUtils.PLACES_FLAVORS = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
-                                PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
-                                PlacesUtils.TYPE_X_MOZ_PLACE];
-
-PlacesUIUtils.URI_FLAVORS = [PlacesUtils.TYPE_X_MOZ_URL,
-                             TAB_DROP_TYPE,
-                             PlacesUtils.TYPE_UNICODE],
-
-PlacesUIUtils.SUPPORTED_FLAVORS = [...PlacesUIUtils.PLACES_FLAVORS,
-                                   ...PlacesUIUtils.URI_FLAVORS];
+// These are lazy getters to avoid importing PlacesUtils immediately.
+XPCOMUtils.defineLazyGetter(PlacesUIUtils, "PLACES_FLAVORS", () => {
+  return [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
+          PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
+          PlacesUtils.TYPE_X_MOZ_PLACE];
+});
+XPCOMUtils.defineLazyGetter(PlacesUIUtils, "URI_FLAVORS", () => {
+  return [PlacesUtils.TYPE_X_MOZ_URL,
+          TAB_DROP_TYPE,
+          PlacesUtils.TYPE_UNICODE];
+});
+XPCOMUtils.defineLazyGetter(PlacesUIUtils, "SUPPORTED_FLAVORS", () => {
+  return [...PlacesUIUtils.PLACES_FLAVORS,
+          ...PlacesUIUtils.URI_FLAVORS];
+});
 
 XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ellipsis", function() {
   return Services.prefs.getComplexValue("intl.ellipsis",
