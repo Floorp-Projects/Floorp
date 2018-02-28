@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
@@ -62,8 +63,32 @@ ContentAreaDropListener.prototype =
         data = dt.mozGetDataAt(type, i);
         if (data) {
           let lines = data.replace(/^\s+|\s+$/mg, "").split("\n");
+          if (!lines.length) {
+            return;
+          }
+
+          // For plain text, there are 2 cases:
+          //   * if there is at least one URI:
+          //       Add all URIs, ignoring non-URI lines, so that all URIs
+          //       are opened in tabs.
+          //   * if there's no URI:
+          //       Add the entire text as a single entry, so that the entire
+          //       text is searched.
+          let hasURI = false;
+          let flags = Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
+              Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
           for (let line of lines) {
-            this._addLink(links, line, line, type);
+            let info = Services.uriFixup.getFixupURIInfo(line, flags);
+            if (info.fixedURI) {
+              // Use the original line here, and let the caller decide
+              // whether to perform fixup or not.
+              hasURI = true;
+              this._addLink(links, line, line, type);
+            }
+          }
+
+          if (!hasURI) {
+            this._addLink(links, data, data, type);
           }
           return;
         }
@@ -89,7 +114,8 @@ ContentAreaDropListener.prototype =
     return links;
   },
 
-  _validateURI: function(dataTransfer, uriString, disallowInherit)
+  _validateURI: function(dataTransfer, uriString, disallowInherit,
+                         triggeringPrincipal)
   {
     if (!uriString)
       return "";
@@ -100,28 +126,29 @@ ContentAreaDropListener.prototype =
     // sure the source document can load the dropped URI.
     uriString = uriString.replace(/^\s*|\s*$/g, '');
 
-    let uri;
-    let ioService = Cc["@mozilla.org/network/io-service;1"]
-                      .getService(Components.interfaces.nsIIOService);
-    try {
-      // Check that the uri is valid first and return an empty string if not.
-      // It may just be plain text and should be ignored here
-      uri = ioService.newURI(uriString);
-    } catch (ex) { }
-    if (!uri)
+    // Apply URI fixup so that this validation prevents bad URIs even if the
+    // similar fixup is applied later, especialy fixing typos up will convert
+    // non-URI to URI.
+    let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
+        Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+    let info = Services.uriFixup.getFixupURIInfo(uriString, fixupFlags);
+    if (!info.fixedURI || info.keywordProviderName) {
+      // Loading a keyword search should always be fine for all cases.
       return uriString;
+    }
+    let uri = info.fixedURI;
 
-    // uriString is a valid URI, so do the security check.
     let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].
                    getService(Ci.nsIScriptSecurityManager);
     let flags = secMan.STANDARD;
     if (disallowInherit)
       flags |= secMan.DISALLOW_INHERIT_PRINCIPAL;
 
-    let principal = this._getTriggeringPrincipalFromDataTransfer(dataTransfer, false);
-    secMan.checkLoadURIStrWithPrincipal(principal, uriString, flags);
+    secMan.checkLoadURIWithPrincipal(triggeringPrincipal, uri, flags);
 
-    return uriString;
+    // Once we validated, return the URI after fixup, instead of the original
+    // uriString.
+    return uri.spec;
   },
 
   _getTriggeringPrincipalFromDataTransfer: function(aDataTransfer,
@@ -236,10 +263,12 @@ ContentAreaDropListener.prototype =
 
     let dataTransfer = aEvent.dataTransfer;
     let links = this._getDropLinks(dataTransfer);
+    let triggeringPrincipal = this._getTriggeringPrincipalFromDataTransfer(dataTransfer, false);
 
     for (let link of links) {
       try {
-        link.url = this._validateURI(dataTransfer, link.url, aDisallowInherit);
+        link.url = this._validateURI(dataTransfer, link.url, aDisallowInherit,
+                                     triggeringPrincipal);
       } catch (ex) {
         // Prevent the drop entirely if any of the links are invalid even if
         // one of them is valid.
@@ -252,6 +281,17 @@ ContentAreaDropListener.prototype =
       aCount.value = links.length;
 
     return links;
+  },
+
+  validateURIsForDrop: function(aEvent, aURIsCount, aURIs, aDisallowInherit)
+  {
+    let dataTransfer = aEvent.dataTransfer;
+    let triggeringPrincipal = this._getTriggeringPrincipalFromDataTransfer(dataTransfer, false);
+
+    for (let uri of aURIs) {
+      this._validateURI(dataTransfer, uri, aDisallowInherit,
+                        triggeringPrincipal);
+    }
   },
 
   queryLinks: function(aDataTransfer, aCount)

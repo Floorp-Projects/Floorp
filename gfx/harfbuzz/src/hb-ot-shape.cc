@@ -40,6 +40,8 @@
 #include "hb-unicode-private.hh"
 #include "hb-set-private.hh"
 
+#include "hb-ot-layout-gsubgpos-private.hh"
+#include "hb-aat-layout-private.hh"
 
 static hb_tag_t common_features[] = {
   HB_TAG('c','c','m','p'),
@@ -450,7 +452,8 @@ hb_ot_zero_width_default_ignorables (hb_ot_shape_context_t *c)
   hb_buffer_t *buffer = c->buffer;
 
   if (!(buffer->scratch_flags & HB_BUFFER_SCRATCH_FLAG_HAS_DEFAULT_IGNORABLES) ||
-      (buffer->flags & HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES))
+      (buffer->flags & HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES) ||
+      (buffer->flags & HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES))
     return;
 
   unsigned int count = buffer->len;
@@ -486,7 +489,8 @@ hb_ot_hide_default_ignorables (hb_ot_shape_context_t *c)
     return;
 
   hb_codepoint_t space;
-  if (c->font->get_nominal_glyph (' ', &space))
+  if (!(buffer->flags & HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES) &&
+      c->font->get_nominal_glyph (' ', &space))
   {
     /* Replace default-ignorables with a zero-advance space glyph. */
     for (/*continue*/; i < count; i++)
@@ -614,7 +618,8 @@ hb_ot_substitute_complex (hb_ot_shape_context_t *c)
 
   c->plan->substitute (c->font, buffer);
 
-  return;
+  /* XXX Call morx instead. */
+  //hb_aat_layout_substitute (c->font, c->buffer);
 }
 
 static inline void

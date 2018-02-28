@@ -6,7 +6,7 @@ export LC_ALL
 test -z "$srcdir" && srcdir=.
 stat=0
 
-test "x$HBHEADERS" = x && HBHEADERS=`cd "$srcdir"; find . -maxdepth 1 -name 'hb*.h'`
+test "x$HBHEADERS" = x && HBHEADERS=`cd "$srcdir"; find . -maxdepth 1 -name 'hb*.h' ! -name 'hb-gobject-structs.h'`
 test "x$HBSOURCES" = x && HBSOURCES=`cd "$srcdir"; find . -maxdepth 1 -name 'hb-*.cc' -or -name 'hb-*.hh'`
 
 for x in $HBHEADERS $HBSOURCES; do

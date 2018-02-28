@@ -89,7 +89,8 @@ SMBlw	= 42; # SYM_MOD_BELOW
 CS	= 43; # CONS_WITH_STACKER
 
 
-consonant_modifiers = CMAbv* CMBlw* ((H B | SUB) VS? CMAbv? CMBlw*)*;
+# Override: Adjoc ZWJ placement. https://github.com/harfbuzz/harfbuzz/issues/542#issuecomment-353169729
+consonant_modifiers = CMAbv* CMBlw* ((ZWJ?.H.ZWJ? B | SUB) VS? CMAbv? CMBlw*)*;
 # Override: Allow two MBlw. https://github.com/harfbuzz/harfbuzz/issues/376
 medial_consonants = MPre? MAbv? MBlw?.MBlw? MPst?;
 dependent_vowels = VPre* VAbv* VBlw* VPst*;

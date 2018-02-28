@@ -29,15 +29,21 @@ class BufferOffset
 
     explicit BufferOffset(int offset_)
       : offset(offset_)
-    { }
+    {
+        MOZ_ASSERT(offset >= 0);
+    }
 
     explicit BufferOffset(Label* l)
       : offset(l->offset())
-    { }
+    {
+        MOZ_ASSERT(offset >= 0);
+    }
 
     explicit BufferOffset(RepatchLabel* l)
       : offset(l->offset())
-    { }
+    {
+        MOZ_ASSERT(offset >= 0);
+    }
 
     int getOffset() const { return offset; }
     bool assigned() const { return offset != INT_MIN; }
@@ -187,8 +193,13 @@ class AssemblerBuffer
         return !(size() & (alignment - 1));
     }
 
-  protected:
-    virtual Slice* newSlice(LifoAlloc& a) {
+  private:
+    Slice* newSlice(LifoAlloc& a) {
+        // Clients of IonAssemblerBuffer can only handle a size up to INT_MAX.
+        if (size() + sizeof(Slice) > INT32_MAX) {
+            fail_oom();
+            return nullptr;
+        }
         Slice* tmp = static_cast<Slice*>(a.alloc(sizeof(Slice)));
         if (!tmp) {
             fail_oom();

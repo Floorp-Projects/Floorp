@@ -64,9 +64,9 @@ typedef struct TableRecord
 
   Tag		tag;		/* 4-byte identifier. */
   CheckSum	checkSum;	/* CheckSum for this table. */
-  UINT32		offset;		/* Offset from beginning of TrueType font
+  HBUINT32		offset;		/* Offset from beginning of TrueType font
 				 * file. */
-  UINT32		length;		/* Length of this table. */
+  HBUINT32		length;		/* Length of this table. */
   public:
   DEFINE_SIZE_STATIC (16);
 } OpenTypeTable;
@@ -154,7 +154,7 @@ struct TTCHeaderVersion1
   Tag		ttcTag;		/* TrueType Collection ID string: 'ttcf' */
   FixedVersion<>version;	/* Version of the TTC Header (1.0),
 				 * 0x00010000u */
-  ArrayOf<LOffsetTo<OffsetTable>, UINT32>
+  ArrayOf<LOffsetTo<OffsetTable>, HBUINT32>
 		table;		/* Array of offsets to the OffsetTable for each font
 				 * from the beginning of the file */
   public:
