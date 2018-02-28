@@ -378,16 +378,12 @@ html|input.urlbar-input {
 
 /* BOOKMARKING PANEL */
 #editBookmarkPanelStarIcon {
-  list-style-image: url("chrome://browser/skin/places/starred48.png");
-  width: 48px;
-  height: 48px;
-}
-
-@media (min-resolution: 2dppx) {
-  #editBookmarkPanelStarIcon {
-    list-style-image: url("chrome://browser/skin/places/starred48@2x.png");
-    -moz-image-region: rect(0px 96px 96px 0px);
-  }
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
+  -moz-context-properties: fill;
+  fill: var(--toolbarbutton-icon-fill-attention);
+  width: 40px;
+  height: 40px;
+  margin: 4px;
 }
 
 #editBookmarkPanelTitle {
