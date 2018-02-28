@@ -111,6 +111,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
+  Normandy: "resource://normandy/Normandy.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
@@ -711,6 +712,7 @@ BrowserGlue.prototype = {
       author: vendorShortName,
     });
 
+    Normandy.init();
 
     // Initialize the default l10n resource sources for L10nRegistry.
     let locales = Services.locale.getPackagedLocales();
@@ -1059,6 +1061,8 @@ BrowserGlue.prototype = {
     if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_DATA_REPORTING) {
       this.browserErrorReporter.uninit();
     }
+
+    Normandy.uninit();
   },
 
   // All initial windows have opened.
