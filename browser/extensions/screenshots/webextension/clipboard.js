@@ -3,11 +3,11 @@
 "use strict";
 
 this.clipboard = (function() {
-  let exports = {};
+  const exports = {};
 
   exports.copy = function(text) {
     return new Promise((resolve, reject) => {
-      let element = document.createElement("iframe");
+      const element = document.createElement("iframe");
       element.src = browser.extension.getURL("blank.html");
       // We can't actually hide the iframe while copying, but we can make
       // it close to invisible:
@@ -16,20 +16,20 @@ this.clipboard = (function() {
       element.style.height = "1px";
       element.addEventListener("load", catcher.watchFunction(() => {
         try {
-          let doc = element.contentDocument;
+          const doc = element.contentDocument;
           assertIsBlankDocument(doc);
-          let el = doc.createElement("textarea");
+          const el = doc.createElement("textarea");
           doc.body.appendChild(el);
           el.value = text;
           if (!text) {
-            let exc = new Error("Clipboard copy given empty text");
+            const exc = new Error("Clipboard copy given empty text");
             exc.noPopup = true;
             catcher.unhandled(exc);
           }
           el.select();
           if (doc.activeElement !== el) {
-            let unhandledTag = doc.activeElement ? doc.activeElement.tagName : "No active element";
-            let exc = new Error("Clipboard el.select failed");
+            const unhandledTag = doc.activeElement ? doc.activeElement.tagName : "No active element";
+            const exc = new Error("Clipboard el.select failed");
             exc.activeElement = unhandledTag;
             exc.noPopup = true;
             catcher.unhandled(exc);

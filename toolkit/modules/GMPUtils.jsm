@@ -4,9 +4,6 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu, manager: Cm} =
-  Components;
-
 var EXPORTED_SYMBOLS = [ "GMP_PLUGIN_IDS",
                          "GMPPrefs",
                          "GMPUtils",
@@ -20,16 +17,6 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const OPEN_H264_ID  = "gmp-gmpopenh264";
 const WIDEVINE_ID   = "gmp-widevinecdm";
 const GMP_PLUGIN_IDS = [ OPEN_H264_ID, WIDEVINE_ID ];
-
-var GMPPluginUnsupportedReason = {
-  NOT_WINDOWS: 1,
-  WINDOWS_VERSION: 2,
-};
-
-var GMPPluginHiddenReason = {
-  UNSUPPORTED: 1,
-  EME_DISABLED: 2,
-};
 
 var GMPUtils = {
   /**

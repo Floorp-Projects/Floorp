@@ -7,7 +7,6 @@ var EXPORTED_SYMBOLS = ["ContextualIdentityService"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const DEFAULT_TAB_COLOR = "#909090";
 const SAVE_DELAY_MS = 1500;
 const CONTEXTUAL_IDENTITY_ENABLED_PREF = "privacy.userContext.enabled";
 

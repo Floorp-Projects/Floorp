@@ -27,7 +27,7 @@ window.onload = function() {
     "t3jVw2dwTPwJq1KYG3gAklCgu37yGxeScYKyiCc+7DR34hPVQiuQ7UhJMagyEb" +
     "lymmzJk0a9q8iTOnzp0NCgAAOw==";
 
-  (async function() {
+  (async function () {
     let result = await QR.decodeFromURI(testImage);
     is(result, "HELLO", "Decoded data URI result matches");
     let canvas = await drawToCanvas(testImage);

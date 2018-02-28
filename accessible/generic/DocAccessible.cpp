@@ -1141,14 +1141,14 @@ DocAccessible::DocumentStatesChanged(nsIDocument* aDocument,
 void
 DocAccessible::CharacterDataWillChange(nsIDocument* aDocument,
                                        nsIContent* aContent,
-                                       CharacterDataChangeInfo* aInfo)
+                                       const CharacterDataChangeInfo&)
 {
 }
 
 void
 DocAccessible::CharacterDataChanged(nsIDocument* aDocument,
                                     nsIContent* aContent,
-                                    CharacterDataChangeInfo* aInfo)
+                                    const CharacterDataChangeInfo&)
 {
 }
 

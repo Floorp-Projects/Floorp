@@ -3,7 +3,7 @@
 const BUTTON_ID = "pageAction-panel-screenshots";
 
 function checkElements(expectPresent, l) {
-  for (let id of l) {
+  for (const id of l) {
     is(!!document.getElementById(id), expectPresent, "element " + id + (expectPresent ? " is" : " is not") + " present");
   }
 }

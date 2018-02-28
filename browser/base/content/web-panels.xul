@@ -6,7 +6,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
-<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
 
 <!DOCTYPE page [
@@ -57,7 +56,7 @@
     </menupopup>
   </popupset>
 
-  <commandset id="editMenuCommands"/> 
+#include ../../../toolkit/content/editMenuCommands.inc.xul
   <browser id="web-panels-browser" persist="cachedurl" type="content" flex="1"
            context="contentAreaContextMenu" tooltip="aHTMLTooltip"
            onclick="window.parent.contentAreaClick(event, true);"/>

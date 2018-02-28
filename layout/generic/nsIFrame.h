@@ -2059,7 +2059,7 @@ public:
    * This call is invoked on the primary frame for a character data content
    * node, when it is changed in the content tree.
    */
-  virtual nsresult  CharacterDataChanged(CharacterDataChangeInfo* aInfo) = 0;
+  virtual nsresult  CharacterDataChanged(const CharacterDataChangeInfo&) = 0;
 
   /**
    * This call is invoked when the value of a content objects's attribute

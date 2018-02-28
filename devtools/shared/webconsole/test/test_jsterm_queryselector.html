@@ -41,16 +41,16 @@ function startTest() {
   });
 }
 
-let setupWindow = Task.async(function*() {
+let setupWindow = async function () {
   info ("Shimming window functions for the content privileged tab");
-  yield evaluateJS("document.querySelector = function() { throw 'should not call qS'; }");
-  yield evaluateJS("document.querySelectorAll = function() { throw 'should not call qSA'; }");
+  await evaluateJS("document.querySelector = function() { throw 'should not call qS'; }");
+  await evaluateJS("document.querySelectorAll = function() { throw 'should not call qSA'; }");
   nextTest();
-});
+};
 
-let checkQuerySelector = Task.async(function*() {
+let checkQuerySelector = async function () {
   info ("$ returns an DOMNode");
-  let response = yield evaluateJS("$('body')");
+  let response = await evaluateJS("$('body')");
   basicResultCheck(response, "$('body')", {
     type: "object",
     class: "HTMLBodyElement",
@@ -60,11 +60,11 @@ let checkQuerySelector = Task.async(function*() {
     }
   });
   nextTest();
-});
+};
 
-let checkQuerySelectorAll = Task.async(function*() {
+let checkQuerySelectorAll = async function () {
   info ("$$ returns an array");
-  let response = yield evaluateJS("$$('body')");
+  let response = await evaluateJS("$$('body')");
   basicResultCheck(response, "$$('body')", {
     type: "object",
     class: "Array",
@@ -73,11 +73,11 @@ let checkQuerySelectorAll = Task.async(function*() {
     }
   });
   nextTest();
-});
+};
 
-let checkQuerySelectorAllNotExist = Task.async(function*() {
+let checkQuerySelectorAllNotExist = async function () {
   info ("$$ returns an array even if query yields no results");
-  let response = yield evaluateJS("$$('foobar')");
+  let response = await evaluateJS("$$('foobar')");
   basicResultCheck(response, "$$('foobar')", {
     type: "object",
     class: "Array",
@@ -86,11 +86,11 @@ let checkQuerySelectorAllNotExist = Task.async(function*() {
     }
   });
   nextTest();
-});
+};
 
-let checkQuerySelectorException = Task.async(function*() {
+let checkQuerySelectorException = async function () {
   info ("$ returns an exception if an invalid selector was provided");
-  let response = yield evaluateJS("$(':foo')");
+  let response = await evaluateJS("$(':foo')");
   checkObject(response, {
     input: "$(':foo')",
     exceptionMessage: "SyntaxError: ':foo' is not a valid selector",
@@ -105,11 +105,11 @@ let checkQuerySelectorException = Task.async(function*() {
     }
   });
   nextTest();
-});
+};
 
-let checkQuerySelectorAllException = Task.async(function*() {
+let checkQuerySelectorAllException = async function () {
   info ("$$ returns an exception if an invalid selector was provided");
-  let response = yield evaluateJS("$$(':foo')");
+  let response = await evaluateJS("$$(':foo')");
   checkObject(response, {
     input: "$$(':foo')",
     exceptionMessage: "SyntaxError: ':foo' is not a valid selector",
@@ -124,7 +124,7 @@ let checkQuerySelectorAllException = Task.async(function*() {
     }
   });
   nextTest();
-});
+};
 
 function basicResultCheck(response, input, output) {
   checkObject(response, {
@@ -145,10 +145,10 @@ function testEnd() {
   });
 }
 
-let load = Task.async(function*() {
+let load = async function () {
   removeEventListener("load", load);
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     SpecialPowers.pushPrefEnv({"set": [
       ["security.data_uri.unique_opaque_origin", false],
     ]}, resolve);
@@ -158,7 +158,7 @@ let load = Task.async(function*() {
   gWin = window.open("data:text/html,");
   info ("Waiting for content window to load");
   gWin.onload = startTest;
-});
+};
 addEventListener("load", load);
 
 </script>

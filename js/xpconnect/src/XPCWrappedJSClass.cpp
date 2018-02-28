@@ -1086,8 +1086,10 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
 
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
     uint8_t paramCount = info->GetParamCount();
-    uint8_t argc = paramCount -
-        (paramCount && XPT_PD_IS_RETVAL(info->GetParam(paramCount - 1).flags) ? 1 : 0);
+    uint8_t argc = paramCount;
+    if (paramCount > 0 && info->GetParam(paramCount - 1).IsRetval()) {
+        argc -= 1;
+    }
 
     if (!scriptEval.StartEvaluating(obj))
         goto pre_call_clean_up;

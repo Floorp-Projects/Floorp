@@ -29,6 +29,15 @@
   "downloadScreenshot": {
     "message": "Λήψη"
   },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Τα cookies τρίτων είναι απενεργοποιημένα."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Χρησιμοποιείτε το Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Οι μεταφορτώσεις έχουν απενεργοποιηθεί."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Ο σύνδεσμος αντιγράφηκε"
   },

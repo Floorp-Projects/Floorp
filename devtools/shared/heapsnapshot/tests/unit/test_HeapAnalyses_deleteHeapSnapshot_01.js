@@ -12,22 +12,22 @@ const breakdown = {
   other: { by: "count", count: true, bytes: true },
 };
 
-add_task(function* () {
+add_task(async function () {
   const client = new HeapAnalysesClient();
 
   const snapshotFilePath = saveNewHeapSnapshot();
-  yield client.readHeapSnapshot(snapshotFilePath);
+  await client.readHeapSnapshot(snapshotFilePath);
   ok(true, "Should have read the heap snapshot");
 
-  let dominatorTreeId = yield client.computeDominatorTree(snapshotFilePath);
+  let dominatorTreeId = await client.computeDominatorTree(snapshotFilePath);
   ok(true, "Should have computed the dominator tree");
 
-  yield client.deleteHeapSnapshot(snapshotFilePath);
+  await client.deleteHeapSnapshot(snapshotFilePath);
   ok(true, "Should have deleted the snapshot");
 
   let threw = false;
   try {
-    yield client.getDominatorTree({
+    await client.getDominatorTree({
       dominatorTreeId: dominatorTreeId,
       breakdown
     });
@@ -38,7 +38,7 @@ add_task(function* () {
 
   threw = false;
   try {
-    yield client.computeDominatorTree(snapshotFilePath);
+    await client.computeDominatorTree(snapshotFilePath);
   } catch (_) {
     threw = true;
   }
@@ -46,7 +46,7 @@ add_task(function* () {
 
   threw = false;
   try {
-    yield client.takeCensus(snapshotFilePath);
+    await client.takeCensus(snapshotFilePath);
   } catch (_) {
     threw = true;
   }

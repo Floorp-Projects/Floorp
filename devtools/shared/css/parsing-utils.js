@@ -19,7 +19,6 @@ loader.lazyRequireGetter(this, "CSS_ANGLEUNIT",
 
 const promise = require("promise");
 const {getCSSLexer} = require("devtools/shared/css/lexer");
-const {Task} = require("devtools/shared/task");
 
 const SELECTOR_ATTRIBUTE = exports.SELECTOR_ATTRIBUTE = 1;
 const SELECTOR_ELEMENT = exports.SELECTOR_ELEMENT = 2;
@@ -902,7 +901,7 @@ RuleRewriter.prototype = {
    * @return {Promise} a promise that is resolved when the edit has
    *                   completed
    */
-  internalCreateProperty: Task.async(function* (index, name, value, priority, enabled) {
+  async internalCreateProperty(index, name, value, priority, enabled) {
     this.completeInitialization(index);
     let newIndentation = "";
     if (this.hasNewLine) {
@@ -912,7 +911,7 @@ RuleRewriter.prototype = {
       } else if (this.defaultIndentation) {
         newIndentation = this.defaultIndentation;
       } else {
-        newIndentation = yield this.getDefaultIndentation();
+        newIndentation = await this.getDefaultIndentation();
       }
     }
 
@@ -954,7 +953,7 @@ RuleRewriter.prototype = {
       // index.
       this.completeCopying(this.decl.offsets[0]);
     }
-  }),
+  },
 
   /**
    * Create a new declaration.

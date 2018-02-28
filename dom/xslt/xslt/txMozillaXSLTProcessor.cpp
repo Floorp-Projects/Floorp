@@ -1236,8 +1236,8 @@ txMozillaXSLTProcessor::NodeWillBeDestroyed(const nsINode* aNode)
 
 void
 txMozillaXSLTProcessor::CharacterDataChanged(nsIDocument* aDocument,
-                                             nsIContent *aContent,
-                                             CharacterDataChangeInfo* aInfo)
+                                             nsIContent* aContent,
+                                             const CharacterDataChangeInfo&)
 {
     mStylesheet = nullptr;
 }

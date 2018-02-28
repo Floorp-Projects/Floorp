@@ -927,7 +927,7 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
 void
 IMEContentObserver::CharacterDataWillChange(nsIDocument* aDocument,
                                             nsIContent* aContent,
-                                            CharacterDataChangeInfo* aInfo)
+                                            const CharacterDataChangeInfo& aInfo)
 {
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
                "character data changed for non-text node");
@@ -950,17 +950,17 @@ IMEContentObserver::CharacterDataWillChange(nsIDocument* aDocument,
   MaybeNotifyIMEOfAddedTextDuringDocumentChange();
 
   mPreCharacterDataChangeLength =
-    ContentEventHandler::GetNativeTextLength(aContent, aInfo->mChangeStart,
-                                             aInfo->mChangeEnd);
+    ContentEventHandler::GetNativeTextLength(aContent, aInfo.mChangeStart,
+                                             aInfo.mChangeEnd);
   MOZ_ASSERT(mPreCharacterDataChangeLength >=
-               aInfo->mChangeEnd - aInfo->mChangeStart,
+               aInfo.mChangeEnd - aInfo.mChangeStart,
              "The computed length must be same as or larger than XP length");
 }
 
 void
 IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
                                          nsIContent* aContent,
-                                         CharacterDataChangeInfo* aInfo)
+                                         const CharacterDataChangeInfo& aInfo)
 {
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
                "character data changed for non-text node");
@@ -987,16 +987,16 @@ IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
   nsresult rv =
     ContentEventHandler::GetFlatTextLengthInRange(
                            NodePosition(mRootContent, 0),
-                           NodePosition(aContent, aInfo->mChangeStart),
+                           NodePosition(aContent, aInfo.mChangeStart),
                            mRootContent, &offset, LINE_BREAK_TYPE_NATIVE);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
   uint32_t newLength =
-    ContentEventHandler::GetNativeTextLength(aContent, aInfo->mChangeStart,
-                                             aInfo->mChangeStart +
-                                               aInfo->mReplaceLength);
+    ContentEventHandler::GetNativeTextLength(aContent, aInfo.mChangeStart,
+                                             aInfo.mChangeStart +
+                                               aInfo.mReplaceLength);
 
   uint32_t oldEnd = offset + static_cast<uint32_t>(removedLength);
   uint32_t newEnd = offset + newLength;

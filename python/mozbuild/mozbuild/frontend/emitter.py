@@ -1235,10 +1235,17 @@ class TreeMetadataEmitter(LoggingMixin):
                                  '%s: %s')
                                 % (var, f,), context)
                     if var.startswith('LOCALIZED_'):
-                        if isinstance(f, SourcePath) and not f.startswith('en-US/'):
-                            raise SandboxValidationError(
-                                    '%s paths must start with `en-US/`: %s'
-                                    % (var, f,), context)
+                        if isinstance(f, SourcePath):
+                            if f.startswith('en-US/'):
+                                pass
+                            elif '/locales/en-US/' in f:
+                                pass
+                            else:
+                                raise SandboxValidationError(
+                                        '%s paths must start with `en-US/` or '
+                                        'contain `/locales/en-US/`: %s'
+                                        % (var, f,), context)
+
                     if not isinstance(f, ObjDirPath):
                         path = f.full_path
                         if '*' not in path and not os.path.exists(path):

@@ -26,18 +26,18 @@ const BREAKDOWN = {
   },
 };
 
-add_task(function* () {
+add_task(async function () {
   const client = new HeapAnalysesClient();
 
   const snapshotFilePath = saveNewHeapSnapshot();
-  yield client.readHeapSnapshot(snapshotFilePath);
+  await client.readHeapSnapshot(snapshotFilePath);
   ok(true, "Should have read the heap snapshot");
 
-  const { report } = yield client.takeCensus(snapshotFilePath, {
+  const { report } = await client.takeCensus(snapshotFilePath, {
     breakdown: BREAKDOWN
   });
 
-  const { report: treeNode } = yield client.takeCensus(snapshotFilePath, {
+  const { report: treeNode } = await client.takeCensus(snapshotFilePath, {
     breakdown: BREAKDOWN
   }, {
     asInvertedTreeNode: true

@@ -21,16 +21,16 @@ function connectClient(client) {
   });
 }
 
-add_task(function* () {
+add_task(async function () {
   initTestDebuggerServer();
 });
 
 // Client w/ OOB_CERT auth connects successfully to server w/ OOB_CERT auth
-add_task(function* () {
+add_task(async function () {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
   // Grab our cert, instead of relying on a discovery advertisement
-  let serverCert = yield cert.local.getOrCreate();
+  let serverCert = await cert.local.getOrCreate();
 
   let oobData = defer();
   let AuthenticatorType = DebuggerServer.Authenticators.get("OOB_CERT");
@@ -46,7 +46,7 @@ add_task(function* () {
   listener.portOrPath = -1;
   listener.encryption = true;
   listener.authenticator = serverAuth;
-  yield listener.open();
+  await listener.open();
   equal(DebuggerServer.listeningSockets, 1, "1 listening socket");
 
   let clientAuth = new AuthenticatorType.Client();
@@ -56,7 +56,7 @@ add_task(function* () {
     oobData.resolve(oob);
   };
 
-  let transport = yield DebuggerClient.socketConnect({
+  let transport = await DebuggerClient.socketConnect({
     host: "127.0.0.1",
     port: listener.port,
     encryption: true,
@@ -72,11 +72,11 @@ add_task(function* () {
     do_throw("Closed unexpectedly");
   };
   client.addListener("closed", onUnexpectedClose);
-  yield connectClient(client);
+  await connectClient(client);
 
   // Send a message the server will echo back
   let message = "secrets";
-  let reply = yield client.request({
+  let reply = await client.request({
     to: "root",
     type: "echo",
     message
@@ -90,7 +90,7 @@ add_task(function* () {
 });
 
 // Client w/o OOB_CERT auth fails to connect to server w/ OOB_CERT auth
-add_task(function* () {
+add_task(async function () {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
   let oobData = defer();
@@ -107,12 +107,12 @@ add_task(function* () {
   listener.portOrPath = -1;
   listener.encryption = true;
   listener.authenticator = serverAuth;
-  yield listener.open();
+  await listener.open();
   equal(DebuggerServer.listeningSockets, 1, "1 listening socket");
 
   // This will succeed, but leaves the client in confused state, and no data is
   // actually accessible
-  let transport = yield DebuggerClient.socketConnect({
+  let transport = await DebuggerClient.socketConnect({
     host: "127.0.0.1",
     port: listener.port,
     encryption: true
@@ -129,12 +129,12 @@ add_task(function* () {
     deferred.resolve();
   };
   client.connect();
-  yield deferred.promise;
+  await deferred.promise;
 
   // Try to send a message the server will echo back
   let message = "secrets";
   try {
-    yield client.request({
+    await client.request({
       to: "root",
       type: "echo",
       message
@@ -151,11 +151,11 @@ add_task(function* () {
 });
 
 // Client w/ invalid K value fails to connect
-add_task(function* () {
+add_task(async function () {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
   // Grab our cert, instead of relying on a discovery advertisement
-  let serverCert = yield cert.local.getOrCreate();
+  let serverCert = await cert.local.getOrCreate();
 
   let oobData = defer();
   let AuthenticatorType = DebuggerServer.Authenticators.get("OOB_CERT");
@@ -182,11 +182,11 @@ add_task(function* () {
   listener.portOrPath = -1;
   listener.encryption = true;
   listener.authenticator = serverAuth;
-  yield listener.open();
+  await listener.open();
   equal(DebuggerServer.listeningSockets, 1, "1 listening socket");
 
   try {
-    yield DebuggerClient.socketConnect({
+    await DebuggerClient.socketConnect({
       host: "127.0.0.1",
       port: listener.port,
       encryption: true,
@@ -206,11 +206,11 @@ add_task(function* () {
 });
 
 // Client w/ invalid cert hash fails to connect
-add_task(function* () {
+add_task(async function () {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
   // Grab our cert, instead of relying on a discovery advertisement
-  let serverCert = yield cert.local.getOrCreate();
+  let serverCert = await cert.local.getOrCreate();
 
   let oobData = defer();
   let AuthenticatorType = DebuggerServer.Authenticators.get("OOB_CERT");
@@ -237,11 +237,11 @@ add_task(function* () {
   listener.portOrPath = -1;
   listener.encryption = true;
   listener.authenticator = serverAuth;
-  yield listener.open();
+  await listener.open();
   equal(DebuggerServer.listeningSockets, 1, "1 listening socket");
 
   try {
-    yield DebuggerClient.socketConnect({
+    await DebuggerClient.socketConnect({
       host: "127.0.0.1",
       port: listener.port,
       encryption: true,
@@ -260,6 +260,6 @@ add_task(function* () {
   do_throw("Connection unexpectedly succeeded");
 });
 
-add_task(function* () {
+add_task(async function () {
   DebuggerServer.destroy();
 });

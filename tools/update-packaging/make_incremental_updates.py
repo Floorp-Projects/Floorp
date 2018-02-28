@@ -460,7 +460,7 @@ def decode_filename(filepath):
         '(?P<product>\w+)(-)(?P<version>\w+\.\w+(\.\w+){0,2})(\.)(?P<locale>.+?)(\.)(?P<platform>.+?)(\.)(?P<type>\w+)(.mar)',
       os.path.basename(filepath))
       return m.groupdict()
-    except Exception(exc):
+    except Exception as exc:
       try:
         m = re.search(
           '(?P<platform>.+?)\/(?P<locale>.+?)\/(?P<product>\w+)-(?P<version>\w+\.\w+)\.(?P<type>\w+).mar',

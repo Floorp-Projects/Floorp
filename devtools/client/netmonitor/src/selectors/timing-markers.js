@@ -5,7 +5,12 @@
 "use strict";
 
 function getDisplayedTimingMarker(state, marker) {
-  return state.timingMarkers[marker] - state.requests.firstStartedMillis;
+  let value = state.timingMarkers[marker];
+  if (value == -1) {
+    return value;
+  }
+
+  return value - state.requests.firstStartedMillis;
 }
 
 module.exports = {

@@ -9,8 +9,6 @@
   %webideDTD;
 ]>
 
-<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
-
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
 <?xml-stylesheet href="resource://devtools/client/themes/common.css"?>
 <?xml-stylesheet href="chrome://webide/skin/webide.css"?>
@@ -31,8 +29,9 @@
   <script type="application/javascript" src="runtime-panel.js"></script>
   <script type="application/javascript" src="webide.js"></script>
 
+#include ../../../../toolkit/content/editMenuCommands.inc.xul
+
   <commandset id="mainCommandSet">
-    <commandset id="editMenuCommands"/>
     <commandset id="webideCommands">
       <command id="cmd_quit" oncommand="Cmds.quit()"/>
       <command id="cmd_newApp" oncommand="Cmds.newApp()" label="&projectMenu_newApp_label;"/>

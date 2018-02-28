@@ -55,7 +55,6 @@ module.exports = {
     "files": [
       "browser/components/**/*.jsm",
       "browser/extensions/**/*.jsm",
-      "toolkit/**/*.jsm",
     ],
     "rules": {
       "mozilla/mark-exported-symbols-as-used": "error",

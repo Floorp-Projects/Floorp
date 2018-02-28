@@ -4,12 +4,7 @@
 
 "use strict";
 
-const {
-  Constructor: CC,
-  classes: Cc,
-  interfaces: Ci,
-  results: Cr,
-} = Components;
+const CC = Components.Constructor;
 
 ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");

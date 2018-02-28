@@ -129,3 +129,10 @@ pref("security.ssl.errorReporting.automatic", false);
 // blacking themselves out by setting a bad pin.  (60 days by default)
 // https://tools.ietf.org/html/rfc7469#section-4.1
 pref("security.cert_pinning.max_max_age_seconds", 5184000);
+
+// security.pki.distrust_ca_policy controls what root program distrust policies
+// are enforced at this time:
+// 0: No distrust policies enforced
+// 1: Symantec root distrust policy enforced
+// See https://wiki.mozilla.org/CA/Upcoming_Distrust_Actions for more details.
+pref("security.pki.distrust_ca_policy", 0);

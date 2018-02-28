@@ -24,14 +24,13 @@
       const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
       const promise = require("promise");
       const EventEmitter = require("devtools/shared/old-event-emitter");
-      const { Task } = require("devtools/shared/task");
 
       SimpleTest.waitForExplicitFinish();
 
       testEmitter();
       testEmitter({});
 
-      Task.spawn(testPromise)
+      testPromise()
           .catch(ok.bind(null, false))
           .then(SimpleTest.finish);
 

@@ -69,14 +69,14 @@ nsresult nsMenuGroupOwnerX::Create(mozilla::dom::Element* aContent)
 
 void nsMenuGroupOwnerX::CharacterDataWillChange(nsIDocument* aDocument,
                                                 nsIContent* aContent,
-                                                CharacterDataChangeInfo* aInfo)
+                                                const CharacterDataChangeInfo&)
 {
 }
 
 
 void nsMenuGroupOwnerX::CharacterDataChanged(nsIDocument* aDocument,
                                              nsIContent* aContent,
-                                             CharacterDataChangeInfo* aInfo)
+                                             const CharacterDataChangeInfo&)
 {
 }
 

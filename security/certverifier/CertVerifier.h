@@ -61,6 +61,13 @@ enum class SHA1ModeResult {
   Failed = 5,
 };
 
+// Whether or not we are enforcing one of our CA distrust policies. For context,
+// see Bug 1437754 and Bug 1409257.
+enum class DistrustedCAPolicy : uint32_t {
+  Permit = 0,
+  DistrustSymantecRoots = 1,
+};
+
 enum class NetscapeStepUpPolicy : uint32_t;
 
 class PinningTelemetryInfo
@@ -194,7 +201,8 @@ public:
                PinningMode pinningMode, SHA1Mode sha1Mode,
                BRNameMatchingPolicy::Mode nameMatchingMode,
                NetscapeStepUpPolicy netscapeStepUpPolicy,
-               CertificateTransparencyMode ctMode);
+               CertificateTransparencyMode ctMode,
+               DistrustedCAPolicy distrustedCAPolicy);
   ~CertVerifier();
 
   void ClearOCSPCache() { mOCSPCache.Clear(); }
@@ -210,6 +218,7 @@ public:
   const BRNameMatchingPolicy::Mode mNameMatchingMode;
   const NetscapeStepUpPolicy mNetscapeStepUpPolicy;
   const CertificateTransparencyMode mCTMode;
+  const DistrustedCAPolicy mDistrustedCAPolicy;
 
 private:
   OCSPCache mOCSPCache;
