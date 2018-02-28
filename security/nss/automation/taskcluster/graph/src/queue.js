@@ -31,10 +31,11 @@ function parseRoutes(routes) {
   ];
 
   // Notify about failures (except on try).
-  if (process.env.TC_PROJECT != "nss-try") {
+  // Turned off, too noisy.
+  /*if (process.env.TC_PROJECT != "nss-try") {
     rv.push(`notify.email.${process.env.TC_OWNER}.on-failed`,
             `notify.email.${process.env.TC_OWNER}.on-exception`);
-  }
+  }*/
 
   return rv;
 }

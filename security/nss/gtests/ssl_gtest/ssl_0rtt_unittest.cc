@@ -94,7 +94,7 @@ class TlsZeroRttReplayTest : public TlsConnectTls13 {
 
     // Now run a true 0-RTT handshake, but capture the first packet.
     auto first_packet = std::make_shared<SaveFirstPacket>();
-    client_->SetPacketFilter(first_packet);
+    client_->SetFilter(first_packet);
     client_->Set0RttEnabled(true);
     server_->Set0RttEnabled(true);
     ExpectResumption(RESUME_TICKET);
@@ -116,8 +116,7 @@ class TlsZeroRttReplayTest : public TlsConnectTls13 {
 
     // Capture the early_data extension, which should not appear.
     auto early_data_ext =
-        std::make_shared<TlsExtensionCapture>(ssl_tls13_early_data_xtn);
-    server_->SetPacketFilter(early_data_ext);
+        MakeTlsFilter<TlsExtensionCapture>(server_, ssl_tls13_early_data_xtn);
 
     // Finally, replay the ClientHello and force the server to consume it.  Stop
     // after the server sends its first flight; the client will not be able to
@@ -604,7 +603,7 @@ TEST_P(TlsConnectTls13, ZeroRttOrdering) {
   // Now, coalesce the next three things from the client: early data, second
   // flight and 1-RTT data.
   auto coalesce = std::make_shared<PacketCoalesceFilter>();
-  client_->SetPacketFilter(coalesce);
+  client_->SetFilter(coalesce);
 
   // Send (and hold) early data.
   static const std::vector<uint8_t> early_data = {3, 2, 1};

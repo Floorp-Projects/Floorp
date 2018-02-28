@@ -160,9 +160,8 @@ TEST_F(TlsAgentStreamTestClient, Set0RttOptionThenWrite) {
                           SSL_LIBRARY_VERSION_TLS_1_3);
   agent_->StartConnect();
   agent_->Set0RttEnabled(true);
-  auto filter = std::make_shared<TlsInspectorRecordHandshakeMessage>(
-      kTlsHandshakeClientHello);
-  agent_->SetPacketFilter(filter);
+  auto filter =
+      MakeTlsFilter<TlsHandshakeRecorder>(agent_, kTlsHandshakeClientHello);
   PRInt32 rv = PR_Write(agent_->ssl_fd(), k0RttData, strlen(k0RttData));
   EXPECT_EQ(-1, rv);
   int32_t err = PORT_GetError();

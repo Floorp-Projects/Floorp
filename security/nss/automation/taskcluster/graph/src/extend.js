@@ -77,7 +77,8 @@ queue.filter(task => {
     }
   }
 
-  if (task.tests == "fips" && task.platform == "mac") {
+  if (task.tests == "fips" &&
+     (task.platform == "mac" || task.platform == "aarch64")) {
     return false;
   }
 
@@ -93,7 +94,7 @@ queue.filter(task => {
     }
   }
 
-  // Don't run additional hardware tests on ARM (we don't have anything there).
+  // Don't run all additional hardware tests on ARM.
   if (task.group == "Cipher" && task.platform == "aarch64" && task.env &&
       (task.env.NSS_DISABLE_PCLMUL == "1" || task.env.NSS_DISABLE_HW_AES == "1"
        || task.env.NSS_DISABLE_AVX == "1")) {
@@ -268,6 +269,18 @@ export default async function main() {
         "bin/checkout.sh && nss/automation/taskcluster/scripts/build_gyp.sh --opt"
       ],
       collection: "opt",
+    }, aarch64_base)
+  );
+
+  await scheduleLinux("Linux AArch64 (debug, make)",
+    merge({
+      env: {USE_64: "1"},
+      command: [
+         "/bin/bash",
+         "-c",
+         "bin/checkout.sh && nss/automation/taskcluster/scripts/build.sh"
+      ],
+      collection: "make",
     }, aarch64_base)
   );
 
@@ -898,6 +911,13 @@ function scheduleTests(task_build, task_cert, test_base) {
   queue.scheduleTask(merge(no_cert_base, {
     name: "Cipher tests", symbol: "NoAVX", tests: "cipher",
     env: {NSS_DISABLE_AVX: "1"}, group: "Cipher"
+  }));
+  queue.scheduleTask(merge(no_cert_base, {
+    name: "Cipher tests", symbol: "NoSSSE3|NEON", tests: "cipher",
+    env: {
+      NSS_DISABLE_ARM_NEON: "1",
+      NSS_DISABLE_SSSE3: "1"
+    }, group: "Cipher"
   }));
   queue.scheduleTask(merge(no_cert_base, {
     name: "EC tests", symbol: "EC", tests: "ec"

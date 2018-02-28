@@ -32,7 +32,7 @@ nssCryptokiObject_Create(
         /* a failure here indicates a device error */
         return (nssCryptokiObject *)NULL;
     }
-    if (cert_template[0].ulValueLen == 0) {
+    if (cert_template[0].ulValueLen == 0 || !cert_template[0].pValue) {
         nss_ZFreeIf(cert_template[1].pValue);
         return (nssCryptokiObject *)NULL;
     }

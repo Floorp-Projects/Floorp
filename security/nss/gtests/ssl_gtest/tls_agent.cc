@@ -12,6 +12,7 @@
 #include "sslerr.h"
 #include "sslexp.h"
 #include "sslproto.h"
+#include "tls_filter.h"
 #include "tls_parser.h"
 
 extern "C" {

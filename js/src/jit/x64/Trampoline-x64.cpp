@@ -188,7 +188,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm)
         masm.movq(numStackValuesAddr, numStackValues);
 
         // Push return address
-        masm.mov(returnLabel.patchAt(), scratch);
+        masm.mov(&returnLabel, scratch);
         masm.push(scratch);
 
         // Push previous frame pointer.
@@ -278,7 +278,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm)
         masm.mov(framePtr, rsp);
         masm.addPtr(Imm32(2 * sizeof(uintptr_t)), rsp);
         masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
-        masm.mov(oomReturnLabel.patchAt(), scratch);
+        masm.mov(&oomReturnLabel, scratch);
         masm.jump(scratch);
 
         masm.bind(&notOsr);
@@ -294,9 +294,9 @@ JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm)
 
     {
         // Interpreter -> Baseline OSR will return here.
-        masm.use(returnLabel.target());
+        masm.bind(&returnLabel);
         masm.addCodeLabel(returnLabel);
-        masm.use(oomReturnLabel.target());
+        masm.bind(&oomReturnLabel);
         masm.addCodeLabel(oomReturnLabel);
     }
 

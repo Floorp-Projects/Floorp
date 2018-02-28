@@ -14497,3 +14497,31 @@ nsDocShell::SetDisplayMode(uint32_t aDisplayMode)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDocShell::SetColorMatrix(float* aMatrix, uint32_t aMatrixLen)
+{
+  if (aMatrixLen == 20) {
+    mColorMatrix.reset(new gfx::Matrix5x4());
+    MOZ_ASSERT(aMatrixLen * sizeof(*aMatrix) == sizeof(mColorMatrix->components));
+    memcpy(mColorMatrix->components, aMatrix, sizeof(mColorMatrix->components));
+  } else if (aMatrixLen == 0) {
+    mColorMatrix.reset();
+  } else {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIFrame* frame = presShell->GetRootFrame();
+  if (!frame) {
+    return NS_ERROR_FAILURE;
+  }
+
+  frame->SchedulePaint();
+
+  return NS_OK;
+}

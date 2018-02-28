@@ -25,10 +25,6 @@ namespace nss_test {
     if (g_ssl_gtest_verbose) LOG(a); \
   } while (false)
 
-void DummyPrSocket::SetPacketFilter(std::shared_ptr<PacketFilter> filter) {
-  filter_ = filter;
-}
-
 ScopedPRFileDesc DummyPrSocket::CreateFD() {
   static PRDescIdentity test_fd_identity =
       PR_GetUniqueIdentity("testtransportadapter");
