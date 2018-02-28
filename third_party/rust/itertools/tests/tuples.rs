@@ -71,3 +71,18 @@ fn next_tuple() {
     assert_eq!(iter.next_tuple().map(|(&x, &y)| (x, y)), Some((3, 4)));
     assert_eq!(iter.next_tuple::<(_, _)>(), None);
 }
+
+#[test]
+fn collect_tuple() {
+    let v = [1, 2];
+    let iter = v.iter().cloned();
+    assert_eq!(iter.collect_tuple(), Some((1, 2)));
+
+    let v = [1];
+    let iter = v.iter().cloned();
+    assert_eq!(iter.collect_tuple::<(_, _)>(), None);
+
+    let v = [1, 2, 3];
+    let iter = v.iter().cloned();
+    assert_eq!(iter.collect_tuple::<(_, _)>(), None);
+}

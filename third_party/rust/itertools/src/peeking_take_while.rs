@@ -1,6 +1,7 @@
 
 use std::iter::Peekable;
 use PutBack;
+#[cfg(feature = "use_std")]
 use PutBackN;
 
 /// An iterator that allows peeking at an element before deciding to accept it.
@@ -52,6 +53,7 @@ impl<I> PeekingNext for PutBack<I>
     }
 }
 
+#[cfg(feature = "use_std")]
 impl<I> PeekingNext for PutBackN<I>
     where I: Iterator,
 {
@@ -74,6 +76,7 @@ impl<I> PeekingNext for PutBackN<I>
 ///
 /// See [`.peeking_take_while()`](../trait.Itertools.html#method.peeking_take_while)
 /// for more information.
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct PeekingTakeWhile<'a, I: 'a, F>
     where I: Iterator,
 {
@@ -110,10 +113,7 @@ impl<'a, I, F> Iterator for PeekingTakeWhile<'a, I, F>
 // Some iterators are so lightweight we can simply clone them to save their
 // state and use that for peeking.
 macro_rules! peeking_next_by_clone {
-    (@as_item $x:item) => ($x);
     ([$($typarm:tt)*] $type_:ty) => {
-        // FIXME: Ast coercion is dead as soon as we can dep on Rust 1.12
-        peeking_next_by_clone! { @as_item
         impl<$($typarm)*> PeekingNext for $type_ {
             fn peeking_next<F>(&mut self, accept: F) -> Option<Self::Item>
                 where F: FnOnce(&Self::Item) -> bool
@@ -129,7 +129,6 @@ macro_rules! peeking_next_by_clone {
                 None
             }
         }
-        }
     }
 }
 
@@ -140,7 +139,9 @@ peeking_next_by_clone! { ['a] ::std::str::Bytes<'a> }
 peeking_next_by_clone! { ['a, T] ::std::option::Iter<'a, T> }
 peeking_next_by_clone! { ['a, T] ::std::result::Iter<'a, T> }
 peeking_next_by_clone! { [T] ::std::iter::Empty<T> }
+#[cfg(feature = "use_std")]
 peeking_next_by_clone! { ['a, T] ::std::collections::linked_list::Iter<'a, T> }
+#[cfg(feature = "use_std")]
 peeking_next_by_clone! { ['a, T] ::std::collections::vec_deque::Iter<'a, T> }
 
 // cloning a Rev has no extra overhead; peekable and put backs are never DEI.
