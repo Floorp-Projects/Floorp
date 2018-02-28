@@ -923,9 +923,11 @@ nssPKIObjectCollection_AddInstanceAsObject(
         return PR_FAILURE;
     }
     if (!node->haveObject) {
+        nssPKIObject *original = node->object;
         node->object = (*collection->createObject)(node->object);
         if (!node->object) {
             /*remove bogus object from list*/
+            nssPKIObject_Destroy(original);
             nssPKIObjectCollection_RemoveNode(collection, node);
             return PR_FAILURE;
         }

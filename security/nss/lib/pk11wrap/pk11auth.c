@@ -636,7 +636,7 @@ PK11_DoPassword(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
             break;
     }
     if (rv == SECSuccess) {
-        if (!PK11_IsFriendly(slot)) {
+        if (!contextSpecific && !PK11_IsFriendly(slot)) {
             nssTrustDomain_UpdateCachedTokenCerts(slot->nssToken->trustDomain,
                                                   slot->nssToken);
         }
