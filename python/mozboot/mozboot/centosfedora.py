@@ -82,6 +82,10 @@ class CentOSFedoraBootstrapper(StyloInstall, BaseBootstrapper):
                 'python-dbus',
             ]
 
+            self.mobile_android_packages += [
+                'ncurses-compat-libs',
+            ]
+
     def install_system_packages(self):
         self.dnf_groupinstall(*self.group_packages)
         self.dnf_install(*self.packages)
