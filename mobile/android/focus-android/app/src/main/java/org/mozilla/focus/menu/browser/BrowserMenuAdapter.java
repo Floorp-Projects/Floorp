@@ -64,12 +64,20 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
 
         this.items = new ArrayList<>();
 
-        if (customTabConfig != null) {
-            items.add(new MenuItem(R.id.open_in_firefox_focus, resources.getString(R.string.menu_open_in_firefox_focus)));
-        }
-
         if (customTabConfig == null || customTabConfig.showShareMenuItem) {
             items.add(new MenuItem(R.id.share, resources.getString(R.string.menu_share)));
+        }
+
+        items.add(new MenuItem(R.id.add_to_homescreen, resources.getString(R.string.menu_add_to_home_screen)));
+
+        if (browsers.hasMultipleThirdPartyBrowsers(context)) {
+            items.add(new MenuItem(R.id.open_select_browser, resources.getString(
+                    R.string.menu_open_with_a_browser)));
+        }
+
+        if (customTabConfig != null) {
+            items.add(new MenuItem(R.id.open_in_firefox_focus, resources.getString(R.string.menu_open_in_firefox_focus,
+                    resources.getString(R.string.app_name))));
         }
 
         if (browsers.hasThirdPartyDefaultBrowser(context)) {
@@ -78,14 +86,10 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
                             context.getPackageManager()))));
         }
 
-        if (browsers.hasMultipleThirdPartyBrowsers(context)) {
-            items.add(new MenuItem(R.id.open_select_browser, resources.getString(
-                    R.string.menu_open_with_a_browser)));
+        if (customTabConfig == null) {
+            // There’s no need for Settings in a custom tab. The user can go to the browser app itself in order to do this.
+            items.add(new MenuItem(R.id.settings, resources.getString(R.string.menu_settings)));
         }
-
-        items.add(new MenuItem(R.id.add_to_homescreen, resources.getString(R.string.menu_add_to_home_screen)));
-
-        items.add(new MenuItem(R.id.settings, resources.getString(R.string.menu_settings)));
 
         if (customTabConfig != null) {
             addCustomTabMenuItems(items, customTabConfig);
