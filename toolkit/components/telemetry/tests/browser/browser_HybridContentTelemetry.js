@@ -92,7 +92,7 @@ add_task(async function test_untrusted_http_origin() {
   await ContentTask.spawn(newTab.linkedBrowser, [TEST_CONTENT_EVENT],
                           ([testContentEvent]) => {
     // Call the hybrid content telemetry API.
-    let contentWin = Components.utils.waiveXrays(content);
+    let contentWin = Cu.waiveXrays(content);
     contentWin.testRegisterEvents(testContentEvent[0], JSON.stringify({}));
     // Record from the usual telemetry API a "canary" event.
     Services.telemetry.recordEvent(...testContentEvent);
@@ -134,7 +134,7 @@ add_task(async function test_secure_non_whitelisted_origin() {
   await ContentTask.spawn(newTab.linkedBrowser, [TEST_CONTENT_EVENT],
                           ([testContentEvent]) => {
     // Call the hybrid content telemetry API.
-    let contentWin = Components.utils.waiveXrays(content);
+    let contentWin = Cu.waiveXrays(content);
     contentWin.testRegisterEvents(testContentEvent[0], JSON.stringify({}));
     // Record from the usual telemetry API a "canary" event.
     Services.telemetry.recordEvent(...testContentEvent);
@@ -182,7 +182,7 @@ add_task(async function test_trusted_disabled_hybrid_telemetry() {
   await ContentTask.spawn(newTab.linkedBrowser, [TEST_CONTENT_EVENT],
                           ([testContentEvent]) => {
     // Call the hybrid content telemetry API.
-    let contentWin = Components.utils.waiveXrays(content);
+    let contentWin = Cu.waiveXrays(content);
     contentWin.testRegisterEvents(testContentEvent[0], JSON.stringify({}));
     // Record from the usual telemetry API a "canary" event.
     Services.telemetry.recordEvent(...testContentEvent);
@@ -239,7 +239,7 @@ add_task(async function test_hybrid_content_with_iframe() {
     await promiseIframeLoaded;
 
     // Call the hybrid content telemetry API.
-    let contentWin = Components.utils.waiveXrays(iframe.contentWindow);
+    let contentWin = Cu.waiveXrays(iframe.contentWindow);
     contentWin.testRegisterEvents(testContentEvent[0], JSON.stringify({}));
 
     // Record from the usual telemetry API a "canary" event.
@@ -287,7 +287,7 @@ add_task(async function test_hybrid_content_recording() {
   await ContentTask.spawn(newTab.linkedBrowser,
                           [TEST_EVENT_CATEGORY, RECORDED_TEST_EVENTS, NON_RECORDED_TEST_EVENTS],
                           ([eventCategory, recordedTestEvents, nonRecordedTestEvents]) => {
-    let contentWin = Components.utils.waiveXrays(content);
+    let contentWin = Cu.waiveXrays(content);
 
     // If we tried to call contentWin.Mozilla.ContentTelemetry.* functions
     // and pass non-string parameters, |waiveXrays| would complain and not
@@ -350,7 +350,7 @@ add_task(async function test_can_upload() {
 
   // Check that CanUpload reports the correct value.
   await ContentTask.spawn(newTab.linkedBrowser, {}, () => {
-    let contentWin = Components.utils.waiveXrays(content);
+    let contentWin = Cu.waiveXrays(content);
     // We don't need to pass any parameter, we can safely call Mozilla.ContentTelemetry.
     let canUpload = contentWin.Mozilla.ContentTelemetry.canUpload();
     ok(!canUpload, "CanUpload must report 'false' if the preference has that value.");
@@ -359,7 +359,7 @@ add_task(async function test_can_upload() {
   // Flip the pref and check again.
   await SpecialPowers.pushPrefEnv({set: [[TelemetryUtils.Preferences.FhrUploadEnabled, true]]});
   await ContentTask.spawn(newTab.linkedBrowser, {}, () => {
-    let contentWin = Components.utils.waiveXrays(content);
+    let contentWin = Cu.waiveXrays(content);
     let canUpload = contentWin.Mozilla.ContentTelemetry.canUpload();
     ok(canUpload, "CanUpload must report 'true' if the preference has that value.");
   });

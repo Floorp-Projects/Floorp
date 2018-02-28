@@ -1290,7 +1290,7 @@ var gMainPane = {
         }
       }
     })()
-      .catch(Components.utils.reportError);
+      .catch(Cu.reportError);
   },
 
   /**
@@ -1433,8 +1433,8 @@ var gMainPane = {
       else // enabledPref.value && !autoPref.value
         radiogroup.value = "checkOnly"; // 2. Check, but let me choose
 
-      var canCheck = Components.classes["@mozilla.org/updates/update-service;1"].
-        getService(Components.interfaces.nsIApplicationUpdateService).
+      var canCheck = Cc["@mozilla.org/updates/update-service;1"].
+        getService(Ci.nsIApplicationUpdateService).
         canCheckForUpdates;
       // canCheck is false if the enabledPref is false and locked,
       // or the binary platform or OS version is not known.
@@ -1449,8 +1449,8 @@ var gMainPane = {
         // If it is don't show the preference at all.
         var installed;
         try {
-          var wrk = Components.classes["@mozilla.org/windows-registry-key;1"]
-            .createInstance(Components.interfaces.nsIWindowsRegKey);
+          var wrk = Cc["@mozilla.org/windows-registry-key;1"]
+            .createInstance(Ci.nsIWindowsRegKey);
           wrk.open(wrk.ROOT_KEY_LOCAL_MACHINE,
             "SOFTWARE\\Mozilla\\MaintenanceService",
             wrk.ACCESS_READ | wrk.WOW64_64);
@@ -2541,7 +2541,7 @@ var gMainPane = {
     downloadFolder.disabled = !preference.value || preference.locked;
     chooseFolder.disabled = !preference.value || preference.locked;
 
-    this.readCloudStorage().catch(Components.utils.reportError);
+    this.readCloudStorage().catch(Cu.reportError);
     // don't override the preference's value in UI
     return undefined;
   },
@@ -2586,7 +2586,7 @@ var gMainPane = {
    * button based on option selected.
    */
   handleSaveToCommand(event) {
-    return this.handleSaveToCommandTask(event).catch(Components.utils.reportError);
+    return this.handleSaveToCommandTask(event).catch(Cu.reportError);
   },
   async handleSaveToCommandTask(event) {
     if (event.target.id !== "saveToCloud" && event.target.id !== "saveTo") {
@@ -2631,7 +2631,7 @@ var gMainPane = {
    * response to the choice, if one is made.
    */
   chooseFolder() {
-    return this.chooseFolderTask().catch(Components.utils.reportError);
+    return this.chooseFolderTask().catch(Cu.reportError);
   },
   async chooseFolderTask() {
     let bundlePreferences = document.getElementById("bundlePreferences");
@@ -2639,11 +2639,11 @@ var gMainPane = {
     let folderListPref = Preferences.get("browser.download.folderList");
     let currentDirPref = await this._indexToFolder(folderListPref.value);
     let defDownloads = await this._indexToFolder(1);
-    let fp = Components.classes["@mozilla.org/filepicker;1"].
-      createInstance(Components.interfaces.nsIFilePicker);
+    let fp = Cc["@mozilla.org/filepicker;1"].
+      createInstance(Ci.nsIFilePicker);
 
-    fp.init(window, title, Components.interfaces.nsIFilePicker.modeGetFolder);
-    fp.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
+    fp.init(window, title, Ci.nsIFilePicker.modeGetFolder);
+    fp.appendFilters(Ci.nsIFilePicker.filterAll);
     // First try to open what's currently configured
     if (currentDirPref && currentDirPref.exists()) {
       fp.displayDirectory = currentDirPref;
@@ -2656,7 +2656,7 @@ var gMainPane = {
     }
 
     let result = await new Promise(resolve => fp.open(resolve));
-    if (result != Components.interfaces.nsIFilePicker.returnOK) {
+    if (result != Ci.nsIFilePicker.returnOK) {
       return;
     }
 
@@ -2674,7 +2674,7 @@ var gMainPane = {
    * preferences.
    */
   displayDownloadDirPref() {
-    this.displayDownloadDirPrefTask().catch(Components.utils.reportError);
+    this.displayDownloadDirPrefTask().catch(Cu.reportError);
 
     // don't override the preference's value in UI
     return undefined;
@@ -2688,7 +2688,7 @@ var gMainPane = {
 
     // Used in defining the correct path to the folder icon.
     var fph = Services.io.getProtocolHandler("file")
-      .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+      .QueryInterface(Ci.nsIFileProtocolHandler);
     var iconUrlSpec;
 
     let folderIndex = folderListPref.value;
@@ -2738,7 +2738,7 @@ var gMainPane = {
   async _getDownloadsFolder(aFolder) {
     switch (aFolder) {
       case "Desktop":
-        return Services.dirsvc.get("Desk", Components.interfaces.nsIFile);
+        return Services.dirsvc.get("Desk", Ci.nsIFile);
       case "Downloads":
         let downloadsDir = await Downloads.getSystemDownloadsDirectory();
         return new FileUtils.File(downloadsDir);

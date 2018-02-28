@@ -33,7 +33,7 @@ function get_ca_array() {
 
 
 function check_matching_issuer_and_getchain(expected_issuer_serial, cert) {
-  const nsIX509Cert = Components.interfaces.nsIX509Cert;
+  const nsIX509Cert = Ci.nsIX509Cert;
 
   equal(expected_issuer_serial, cert.issuer.serialNumber,
         "Expected and actual issuer serial numbers should match");
@@ -49,7 +49,7 @@ function check_getchain(ee_cert, ssl_ca, email_ca) {
   // a SSL trust domain, then an EMAIL trust domain and then
   // an object signer trust domain.
 
-  const nsIX509Cert = Components.interfaces.nsIX509Cert;
+  const nsIX509Cert = Ci.nsIX509Cert;
   certdb.setCertTrust(ssl_ca, nsIX509Cert.CA_CERT,
                       Ci.nsIX509CertDB.TRUSTED_SSL);
   certdb.setCertTrust(email_ca, nsIX509Cert.CA_CERT,

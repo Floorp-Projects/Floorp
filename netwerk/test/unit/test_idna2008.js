@@ -45,8 +45,8 @@ const nonTransitionalExpected = [
 // Test options for converting IDN URLs under IDNA2008
 function run_test()
 {
-  var idnService = Components.classes["@mozilla.org/network/idn-service;1"]
-                             .getService(Components.interfaces.nsIIDNService);
+  var idnService = Cc["@mozilla.org/network/idn-service;1"]
+                     .getService(Ci.nsIIDNService);
 
 
   for (var i = 0; i < labels.length; ++i) {

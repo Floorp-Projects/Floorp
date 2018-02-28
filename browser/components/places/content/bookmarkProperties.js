@@ -253,7 +253,7 @@ var BookmarkPropertiesPanel = {
     // Allow initialization to complete in a truely async manner so that we're
     // not blocking the main thread.
     this._initDialog().catch(ex => {
-      Components.utils.reportError(`Failed to initialize dialog: ${ex}`);
+      Cu.reportError(`Failed to initialize dialog: ${ex}`);
     });
   },
 

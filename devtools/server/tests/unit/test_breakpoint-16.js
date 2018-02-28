@@ -74,7 +74,7 @@ function test_column_breakpoint() {
   });
 
   /* eslint-disable */
-  Components.utils.evalInSandbox(
+  Cu.evalInSandbox(
     "var line0 = Error().lineNumber;\n" +
     "(function () { debugger; this.acc = 0; for (var i = 0; i < 3; i++) this.acc++; }());",
     gDebuggee

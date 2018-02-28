@@ -65,26 +65,6 @@ module.exports = {
       }]
     }
   }, {
-    // XXX Bug 1433175. These directories are still being fixed, so turn off
-    // mozilla/use-cc-etc for now.
-    "files": [
-      "accessible/**",
-      "browser/**",
-      "devtools/**",
-      "dom/**",
-      "extensions/pref/**",
-      "mobile/android/**",
-      "security/manager/**",
-      "services/**",
-      "storage/test/**",
-      "testing/**",
-      "toolkit/**",
-      "xpcom/**",
-    ],
-    "rules": {
-      "mozilla/use-cc-etc": "off",
-    }
-  }, {
     // XXX Bug 1436303. These directories are still being fixed, so turn off
     // mozilla/no-cc-etc for now.
     "files": [

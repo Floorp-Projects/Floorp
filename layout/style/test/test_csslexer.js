@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-Components.utils.importGlobalProperties(["InspectorUtils"]);
+Cu.importGlobalProperties(["InspectorUtils"]);
 
 function test_lexer(cssText, tokenTypes) {
   let lexer = InspectorUtils.getCSSLexer(cssText);

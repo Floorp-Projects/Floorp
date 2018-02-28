@@ -56,7 +56,7 @@ AutoCompleteInput.prototype = {
           iid.equals(Ci.nsIAutoCompletePopup))
         return this;
 
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     }
   },
 
@@ -66,7 +66,7 @@ AutoCompleteInput.prototype = {
         iid.equals(Ci.nsIAutoCompleteInput))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   }
 };
 
@@ -135,7 +135,7 @@ AutoCompleteResult.prototype = {
         iid.equals(Ci.nsIAutoCompleteResult))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   }
 };
 
@@ -178,7 +178,7 @@ AutoCompleteSearch.prototype = {
         iid.equals(Ci.nsIAutoCompleteSearch))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   // nsIFactory implementation
@@ -241,8 +241,8 @@ function run_test() {
   registerAutoCompleteSearch(emptySearch);
   registerAutoCompleteSearch(regularSearch);
 
-  var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
-                   getService(Components.interfaces.nsIAutoCompleteController);
+  var controller = Cc["@mozilla.org/autocomplete/controller;1"].
+                   getService(Ci.nsIAutoCompleteController);
 
   // Make an AutoCompleteInput that uses our searches
   // and confirms results on search complete

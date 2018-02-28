@@ -39,7 +39,7 @@ add_test(function test_headerChange() {
   if (dbg) { print("============== test_headerChange setup: in"); }
 
   var channel1 = setupChannel(testpath);
-  channel1.loadFlags = Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
+  channel1.loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
 
   // ChannelListener defined in head_channels.js
   channel1.asyncOpen2(new ChannelListener(checkResponse, null));
@@ -51,7 +51,7 @@ add_test(function test_fromCache() {
   if (dbg) { print("============== test_fromCache setup: in"); }
 
   var channel2 = setupChannel(testpath);
-  channel2.loadFlags = Components.interfaces.nsIRequest.LOAD_FROM_CACHE;
+  channel2.loadFlags = Ci.nsIRequest.LOAD_FROM_CACHE;
 
   // ChannelListener defined in head_channels.js
   channel2.asyncOpen2(new ChannelListener(checkResponse, null));
@@ -68,7 +68,7 @@ function setupChannel(path) {
   var chan = NetUtil.newChannel ({
     uri: URL + path,
     loadUsingSystemPrincipal: true
-  }).QueryInterface(Components.interfaces.nsIHttpChannel);
+  }).QueryInterface(Ci.nsIHttpChannel);
   chan.requestMethod = "GET";
   return chan;
 }
@@ -104,7 +104,7 @@ function serverHandler(metadata, response) {
 function checkResponse(request, data, context) {
   if (dbg) { print("============== checkResponse: in"); }
 
-  request.QueryInterface(Components.interfaces.nsIHttpChannel);
+  request.QueryInterface(Ci.nsIHttpChannel);
   Assert.equal(request.responseStatus, 200);
   Assert.equal(request.responseStatusText, "OK");
   Assert.ok(request.requestSucceeded);

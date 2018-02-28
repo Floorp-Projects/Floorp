@@ -79,7 +79,7 @@ var progressListener = {
     ];
     if (iids.some(function (i) { return iid.equals(i); }))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 };
 

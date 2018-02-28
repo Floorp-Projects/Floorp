@@ -15,8 +15,8 @@ ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
  *
  */
 function getChromeURI(url) {
-  var ios = Components.classes["@mozilla.org/network/io-service;1"].
-              getService(Components.interfaces.nsIIOService);
+  var ios = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService);
   return ios.newURI(url);
 }
 
@@ -29,12 +29,12 @@ function getChromeURI(url) {
  */
 function getResolvedURI(url) {
   var chromeURI = getChromeURI(url);
-  var resolvedURI = Components.classes["@mozilla.org/chrome/chrome-registry;1"].
-                    getService(Components.interfaces.nsIChromeRegistry).
+  var resolvedURI = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                    getService(Ci.nsIChromeRegistry).
                     convertChromeURL(chromeURI);
 
   try {
-    resolvedURI = resolvedURI.QueryInterface(Components.interfaces.nsIJARURI);
+    resolvedURI = resolvedURI.QueryInterface(Ci.nsIJARURI);
   } catch (ex) {} //not a jar file
 
   return resolvedURI;
@@ -51,10 +51,10 @@ function getResolvedURI(url) {
  */
 function getChromeDir(resolvedURI) {
 
-  var fileHandler = Components.classes["@mozilla.org/network/protocol;1?name=file"].
-                    getService(Components.interfaces.nsIFileProtocolHandler);
+  var fileHandler = Cc["@mozilla.org/network/protocol;1?name=file"].
+                    getService(Ci.nsIFileProtocolHandler);
   var chromeDir = fileHandler.getFileFromURLSpec(resolvedURI.spec);
-  return chromeDir.parent.QueryInterface(Components.interfaces.nsIFile);
+  return chromeDir.parent.QueryInterface(Ci.nsIFile);
 }
 
 //used by tests to determine their directory based off window.location.path
@@ -63,7 +63,7 @@ function getRootDirectory(path, chromeURI) {
   {
     chromeURI = getChromeURI(path);
   }
-  var myURL = chromeURI.QueryInterface(Components.interfaces.nsIURL);
+  var myURL = chromeURI.QueryInterface(Ci.nsIURL);
   var mydir = myURL.directory;
 
   if (mydir.match('/$') != '/')
@@ -107,19 +107,19 @@ function getJar(uri) {
  *  we will return the location of /TmpD/mochikit.tmp* so you can reference the files locally
  */
 function extractJarToTmp(jar) {
-  var tmpdir = Components.classes["@mozilla.org/file/directory_service;1"]
-                      .getService(Components.interfaces.nsIProperties)
-                      .get("ProfD", Components.interfaces.nsIFile);
+  var tmpdir = Cc["@mozilla.org/file/directory_service;1"]
+                      .getService(Ci.nsIProperties)
+                      .get("ProfD", Ci.nsIFile);
   tmpdir.append("mochikit.tmp");
   // parseInt is used because octal escape sequences cause deprecation warnings
   // in strict mode (which is turned on in debug builds)
-  tmpdir.createUnique(Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt("0777", 8));
+  tmpdir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0777", 8));
 
-  var zReader = Components.classes["@mozilla.org/libjar/zip-reader;1"].
-                  createInstance(Components.interfaces.nsIZipReader);
+  var zReader = Cc["@mozilla.org/libjar/zip-reader;1"].
+                  createInstance(Ci.nsIZipReader);
 
-  var fileHandler = Components.classes["@mozilla.org/network/protocol;1?name=file"].
-                    getService(Components.interfaces.nsIFileProtocolHandler);
+  var fileHandler = Cc["@mozilla.org/network/protocol;1?name=file"].
+                    getService(Ci.nsIFileProtocolHandler);
 
   var fileName = fileHandler.getFileFromURLSpec(jar.JARFile.spec);
   zReader.open(fileName);
@@ -142,7 +142,7 @@ function extractJarToTmp(jar) {
     // parseInt is used because octal escape sequences cause deprecation warnings
     // in strict mode (which is turned on in debug builds)
     if (!targetDir.exists()) {
-      targetDir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt("0777", 8));
+      targetDir.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0777", 8));
     }
   }
 
@@ -177,8 +177,8 @@ function getTestFilePath(path) {
     file = extractJarToTmp(parentURI);
   } else {
     // Otherwise, we can directly cast it to a file URI
-    var fileHandler = Components.classes["@mozilla.org/network/protocol;1?name=file"].
-                      getService(Components.interfaces.nsIFileProtocolHandler);
+    var fileHandler = Cc["@mozilla.org/network/protocol;1?name=file"].
+                      getService(Ci.nsIFileProtocolHandler);
     file = fileHandler.getFileFromURLSpec(parentURI.spec);
   }
   // Then walk by the given relative path
@@ -206,8 +206,8 @@ function buildRelativePath(jarentryname, destdir, basepath)
 
   var parts = jarentryname.split('/');
 
-  var targetFile = Components.classes["@mozilla.org/file/local;1"]
-                   .createInstance(Components.interfaces.nsIFile);
+  var targetFile = Cc["@mozilla.org/file/local;1"]
+                   .createInstance(Ci.nsIFile);
   targetFile.initWithFile(destdir);
 
   for (var i = baseParts.length; i < parts.length; i++) {
@@ -220,16 +220,16 @@ function buildRelativePath(jarentryname, destdir, basepath)
 function readConfig(filename) {
   filename = filename || "testConfig.js";
 
-  var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].
-                    getService(Components.interfaces.nsIProperties);
-  var configFile = fileLocator.get("ProfD", Components.interfaces.nsIFile);
+  var fileLocator = Cc["@mozilla.org/file/directory_service;1"].
+                    getService(Ci.nsIProperties);
+  var configFile = fileLocator.get("ProfD", Ci.nsIFile);
   configFile.append(filename);
 
   if (!configFile.exists())
     return {};
 
-  var fileInStream = Components.classes["@mozilla.org/network/file-input-stream;1"].
-                     createInstance(Components.interfaces.nsIFileInputStream);
+  var fileInStream = Cc["@mozilla.org/network/file-input-stream;1"].
+                     createInstance(Ci.nsIFileInputStream);
   fileInStream.init(configFile, -1, 0, 0);
 
   var str = NetUtil.readInputStreamToString(fileInStream, fileInStream.available());

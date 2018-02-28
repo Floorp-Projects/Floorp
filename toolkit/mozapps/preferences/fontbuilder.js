@@ -10,8 +10,8 @@ var FontBuilder = {
   _enumerator: null,
   get enumerator() {
     if (!this._enumerator) {
-      this._enumerator = Components.classes["@mozilla.org/gfx/fontenumerator;1"]
-                                   .createInstance(Components.interfaces.nsIFontEnumerator);
+      this._enumerator = Cc["@mozilla.org/gfx/fontenumerator;1"]
+                           .createInstance(Ci.nsIFontEnumerator);
     }
     return this._enumerator;
   },

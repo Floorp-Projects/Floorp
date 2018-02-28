@@ -69,7 +69,7 @@
       iframe.src = childFrameURL;
 
       let sb = new Cu.Sandbox(['http://foo.example.com', 'http://bar.example.com']);
-      let ep = Components.utils.getObjectPrincipal(sb);
+      let ep = Cu.getObjectPrincipal(sb);
 
       iframe.addEventListener("mozbrowserloadend", function() {
         ok(true, "Got iframe load event.");

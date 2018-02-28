@@ -112,8 +112,8 @@ var SiteDataManager = {
         },
 
         QueryInterface: XPCOMUtils.generateQI([
-          Components.interfaces.nsICacheStorageConsumptionObserver,
-          Components.interfaces.nsISupportsWeakReference
+          Ci.nsICacheStorageConsumptionObserver,
+          Ci.nsISupportsWeakReference
         ])
       };
 

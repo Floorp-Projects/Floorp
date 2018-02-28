@@ -342,7 +342,7 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
   Assert.ok(!failedProfileLocksFile.exists());
 
 
-  let isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
+  let isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
   if (isWindows) {
     Assert.ok(payload.simpleMeasurements.startupSessionRestoreReadBytes > 0);
     Assert.ok(payload.simpleMeasurements.startupSessionRestoreWriteBytes > 0);

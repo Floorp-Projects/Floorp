@@ -86,7 +86,7 @@ PasswordEngine.prototype = {
         let ids = [];
         for (let host of Utils.getSyncCredentialsHosts()) {
           for (let info of Services.logins.findLogins({}, host, "", "")) {
-            ids.push(info.QueryInterface(Components.interfaces.nsILoginMetaInfo).guid);
+            ids.push(info.QueryInterface(Ci.nsILoginMetaInfo).guid);
           }
         }
         if (ids.length) {

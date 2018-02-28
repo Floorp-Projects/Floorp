@@ -146,7 +146,7 @@ XPCOMUtils.defineLazyGetter(this, "REGION_NAMES", function() {
   let regionNames = {};
   let countries = Services.strings.createBundle("chrome://global/locale/regionNames.properties").getSimpleEnumeration();
   while (countries.hasMoreElements()) {
-    let country = countries.getNext().QueryInterface(Components.interfaces.nsIPropertyElement);
+    let country = countries.getNext().QueryInterface(Ci.nsIPropertyElement);
     regionNames[country.key.toUpperCase()] = country.value;
   }
   return regionNames;

@@ -20,7 +20,7 @@ var gAppUpdater;
 
 function onUnload(aEvent) {
   if (gAppUpdater.isChecking)
-    gAppUpdater.checker.stopChecking(Components.interfaces.nsIUpdateChecker.CURRENT_CHECK);
+    gAppUpdater.checker.stopChecking(Ci.nsIUpdateChecker.CURRENT_CHECK);
   // Safe to call even when there isn't a download in progress.
   gAppUpdater.removeDownloadListener();
   gAppUpdater = null;
@@ -229,8 +229,8 @@ appUpdater.prototype =
     gAppUpdater.selectPanel("restarting");
 
     // Notify all windows that an application quit has been requested.
-    let cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"].
-                     createInstance(Components.interfaces.nsISupportsPRBool);
+    let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].
+                     createInstance(Ci.nsISupportsPRBool);
     Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
 
     // Something aborted the quit process.
@@ -241,12 +241,12 @@ appUpdater.prototype =
 
     // If already in safe mode restart in safe mode (bug 327119)
     if (Services.appinfo.inSafeMode) {
-      Services.startup.restartInSafeMode(Components.interfaces.nsIAppStartup.eAttemptQuit);
+      Services.startup.restartInSafeMode(Ci.nsIAppStartup.eAttemptQuit);
       return;
     }
 
-    Services.startup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit |
-                          Components.interfaces.nsIAppStartup.eRestart);
+    Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit |
+                          Ci.nsIAppStartup.eRestart);
   },
 
   /**
@@ -302,9 +302,9 @@ appUpdater.prototype =
      * See nsISupports.idl
      */
     QueryInterface(aIID) {
-      if (!aIID.equals(Components.interfaces.nsIUpdateCheckListener) &&
-          !aIID.equals(Components.interfaces.nsISupports))
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+      if (!aIID.equals(Ci.nsIUpdateCheckListener) &&
+          !aIID.equals(Ci.nsISupports))
+        throw Cr.NS_ERROR_NO_INTERFACE;
       return this;
     }
   },
@@ -315,7 +315,7 @@ appUpdater.prototype =
   startDownload() {
     if (!this.update)
       this.update = this.um.activeUpdate;
-    this.update.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
+    this.update.QueryInterface(Ci.nsIWritablePropertyBag);
     this.update.setProperty("foregroundDownload", "true");
 
     this.aus.pauseDownload();
@@ -356,7 +356,7 @@ appUpdater.prototype =
    */
   onStopRequest(aRequest, aContext, aStatusCode) {
     switch (aStatusCode) {
-    case Components.results.NS_ERROR_UNEXPECTED:
+    case Cr.NS_ERROR_UNEXPECTED:
       if (this.update.selectedPatch.state == "download-failed" &&
           (this.update.isCompleteUpdate || this.update.patchCount != 2)) {
         // Verification error of complete patch, informational text is held in
@@ -368,10 +368,10 @@ appUpdater.prototype =
       // Verification failed for a partial patch, complete patch is now
       // downloading so return early and do NOT remove the download listener!
       break;
-    case Components.results.NS_BINDING_ABORTED:
+    case Cr.NS_BINDING_ABORTED:
       // Do not remove UI listener since the user may resume downloading again.
       break;
-    case Components.results.NS_OK:
+    case Cr.NS_OK:
       this.removeDownloadListener();
       if (this.backgroundUpdateEnabled) {
         this.selectPanel("applying");
@@ -428,10 +428,10 @@ appUpdater.prototype =
    * See nsISupports.idl
    */
   QueryInterface(aIID) {
-    if (!aIID.equals(Components.interfaces.nsIProgressEventSink) &&
-        !aIID.equals(Components.interfaces.nsIRequestObserver) &&
-        !aIID.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+    if (!aIID.equals(Ci.nsIProgressEventSink) &&
+        !aIID.equals(Ci.nsIRequestObserver) &&
+        !aIID.equals(Ci.nsISupports))
+      throw Cr.NS_ERROR_NO_INTERFACE;
     return this;
   }
 };

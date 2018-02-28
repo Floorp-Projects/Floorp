@@ -243,7 +243,7 @@ function chromeFileExists(aURI) {
     available = sstream.available();
     sstream.close();
   } catch (e) {
-    if (e.result != Components.results.NS_ERROR_FILE_NOT_FOUND) {
+    if (e.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
       dump("Checking " + aURI + ": " + e + "\n");
       Cu.reportError(e);
     }

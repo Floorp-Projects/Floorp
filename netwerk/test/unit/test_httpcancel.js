@@ -7,23 +7,23 @@
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                    .getService(Components.interfaces.nsIIOService);
+var ios = Cc["@mozilla.org/network/io-service;1"]
+            .getService(Ci.nsIIOService);
 var observer = {
   QueryInterface: function eventsink_qi(iid) {
-    if (iid.equals(Components.interfaces.nsISupports) ||
-        iid.equals(Components.interfaces.nsIObserver))
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIObserver))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   observe: function(subject, topic, data) {
-    subject = subject.QueryInterface(Components.interfaces.nsIRequest);
-    subject.cancel(Components.results.NS_BINDING_ABORTED);
+    subject = subject.QueryInterface(Ci.nsIRequest);
+    subject.cancel(Cr.NS_BINDING_ABORTED);
 
     // ENSURE_CALLED_BEFORE_CONNECT: setting values should still work
     try {
-      subject.QueryInterface(Components.interfaces.nsIHttpChannel);
+      subject.QueryInterface(Ci.nsIHttpChannel);
       currentReferrer = subject.getRequestHeader("Referer");
       Assert.equal(currentReferrer, "http://site1.com/");
       var uri = ios.newURI("http://site2.com");
@@ -32,26 +32,26 @@ var observer = {
       do_throw("Exception: " + ex);
     }
 
-    var obs = Components.classes["@mozilla.org/observer-service;1"].getService();
-    obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
+    var obs = Cc["@mozilla.org/observer-service;1"].getService();
+    obs = obs.QueryInterface(Ci.nsIObserverService);
     obs.removeObserver(observer, "http-on-modify-request");
   }
 };
 
 var listener = {
   onStartRequest: function test_onStartR(request, ctx) {
-    Assert.equal(request.status, Components.results.NS_BINDING_ABORTED);
+    Assert.equal(request.status, Cr.NS_BINDING_ABORTED);
 
     // ENSURE_CALLED_BEFORE_CONNECT: setting referrer should now fail
     try {
-      request.QueryInterface(Components.interfaces.nsIHttpChannel);
+      request.QueryInterface(Ci.nsIHttpChannel);
       currentReferrer = request.getRequestHeader("Referer");
       Assert.equal(currentReferrer, "http://site2.com/");
       var uri = ios.newURI("http://site3.com/");
 
       // Need to set NECKO_ERRORS_ARE_FATAL=0 else we'll abort process
-      var env = Components.classes["@mozilla.org/process/environment;1"].
-                  getService(Components.interfaces.nsIEnvironment);
+      var env = Cc["@mozilla.org/process/environment;1"].
+                  getService(Ci.nsIEnvironment);
       env.set("NECKO_ERRORS_ARE_FATAL", "0");
       // we expect setting referrer to fail
       try {
@@ -74,7 +74,7 @@ var listener = {
 
 function makeChan(url) {
   var chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
-                    .QueryInterface(Components.interfaces.nsIHttpChannel);
+                    .QueryInterface(Ci.nsIHttpChannel);
 
   // ENSURE_CALLED_BEFORE_CONNECT: set original value
   var uri = ios.newURI("http://site1.com");
@@ -89,8 +89,8 @@ function execute_test() {
   var chan = makeChan("http://localhost:" +
                       httpserv.identity.primaryPort + "/failtest");
 
-  var obs = Components.classes["@mozilla.org/observer-service;1"].getService();
-  obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
+  var obs = Cc["@mozilla.org/observer-service;1"].getService();
+  obs = obs.QueryInterface(Ci.nsIObserverService);
   obs.addObserver(observer, "http-on-modify-request");
 
   chan.asyncOpen2(listener);

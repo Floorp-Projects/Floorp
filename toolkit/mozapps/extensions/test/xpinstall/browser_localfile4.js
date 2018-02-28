@@ -9,8 +9,8 @@ function test() {
   // Disable file request whitelisting, installing by file referrer should be blocked.
   Services.prefs.setBoolPref("xpinstall.whitelist.fileRequest", false);
 
-  var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                     .getService(Components.interfaces.nsIChromeRegistry);
+  var cr = Cc["@mozilla.org/chrome/chrome-registry;1"]
+             .getService(Ci.nsIChromeRegistry);
 
   var chromeroot = extractChromeRoot(gTestPath);
   var xpipath = chromeroot;

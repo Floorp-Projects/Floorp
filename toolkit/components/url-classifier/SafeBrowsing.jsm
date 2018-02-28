@@ -180,7 +180,7 @@ var SafeBrowsing = {
 
       default:
         let err = "SafeBrowsing getReportURL() called with unknown kind: " + kind;
-        Components.utils.reportError(err);
+        Cu.reportError(err);
         throw err;
     }
 

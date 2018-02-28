@@ -16,7 +16,7 @@ var gInstallProperties = [{
 
 function test() {
   try {
-    if (Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).D2DEnabled) {
+    if (Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).D2DEnabled) {
       requestLongerTimeout(2);
     }
   } catch (e) {}

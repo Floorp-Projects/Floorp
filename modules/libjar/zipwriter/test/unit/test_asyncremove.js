@@ -15,7 +15,7 @@ var observer = {
 
   onStopRequest: function(request, context, status)
   {
-    Assert.equal(status, Components.results.NS_OK);
+    Assert.equal(status, Cr.NS_OK);
 
     zipW.close();
 

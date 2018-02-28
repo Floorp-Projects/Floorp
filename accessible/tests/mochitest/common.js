@@ -1,56 +1,56 @@
 // //////////////////////////////////////////////////////////////////////////////
 // Interfaces
 
-const nsIAccessibilityService = Components.interfaces.nsIAccessibilityService;
+const nsIAccessibilityService = Ci.nsIAccessibilityService;
 
-const nsIAccessibleEvent = Components.interfaces.nsIAccessibleEvent;
+const nsIAccessibleEvent = Ci.nsIAccessibleEvent;
 const nsIAccessibleStateChangeEvent =
-  Components.interfaces.nsIAccessibleStateChangeEvent;
+  Ci.nsIAccessibleStateChangeEvent;
 const nsIAccessibleCaretMoveEvent =
-  Components.interfaces.nsIAccessibleCaretMoveEvent;
+  Ci.nsIAccessibleCaretMoveEvent;
 const nsIAccessibleTextChangeEvent =
-  Components.interfaces.nsIAccessibleTextChangeEvent;
+  Ci.nsIAccessibleTextChangeEvent;
 const nsIAccessibleVirtualCursorChangeEvent =
-  Components.interfaces.nsIAccessibleVirtualCursorChangeEvent;
+  Ci.nsIAccessibleVirtualCursorChangeEvent;
 const nsIAccessibleObjectAttributeChangedEvent =
-  Components.interfaces.nsIAccessibleObjectAttributeChangedEvent;
+  Ci.nsIAccessibleObjectAttributeChangedEvent;
 
-const nsIAccessibleStates = Components.interfaces.nsIAccessibleStates;
-const nsIAccessibleRole = Components.interfaces.nsIAccessibleRole;
-const nsIAccessibleScrollType = Components.interfaces.nsIAccessibleScrollType;
-const nsIAccessibleCoordinateType = Components.interfaces.nsIAccessibleCoordinateType;
+const nsIAccessibleStates = Ci.nsIAccessibleStates;
+const nsIAccessibleRole = Ci.nsIAccessibleRole;
+const nsIAccessibleScrollType = Ci.nsIAccessibleScrollType;
+const nsIAccessibleCoordinateType = Ci.nsIAccessibleCoordinateType;
 
-const nsIAccessibleRelation = Components.interfaces.nsIAccessibleRelation;
-const nsIAccessibleTextRange = Components.interfaces.nsIAccessibleTextRange;
+const nsIAccessibleRelation = Ci.nsIAccessibleRelation;
+const nsIAccessibleTextRange = Ci.nsIAccessibleTextRange;
 
-const nsIAccessible = Components.interfaces.nsIAccessible;
+const nsIAccessible = Ci.nsIAccessible;
 
-const nsIAccessibleDocument = Components.interfaces.nsIAccessibleDocument;
-const nsIAccessibleApplication = Components.interfaces.nsIAccessibleApplication;
+const nsIAccessibleDocument = Ci.nsIAccessibleDocument;
+const nsIAccessibleApplication = Ci.nsIAccessibleApplication;
 
-const nsIAccessibleText = Components.interfaces.nsIAccessibleText;
-const nsIAccessibleEditableText = Components.interfaces.nsIAccessibleEditableText;
+const nsIAccessibleText = Ci.nsIAccessibleText;
+const nsIAccessibleEditableText = Ci.nsIAccessibleEditableText;
 
-const nsIAccessibleHyperLink = Components.interfaces.nsIAccessibleHyperLink;
-const nsIAccessibleHyperText = Components.interfaces.nsIAccessibleHyperText;
+const nsIAccessibleHyperLink = Ci.nsIAccessibleHyperLink;
+const nsIAccessibleHyperText = Ci.nsIAccessibleHyperText;
 
-const nsIAccessibleImage = Components.interfaces.nsIAccessibleImage;
-const nsIAccessiblePivot = Components.interfaces.nsIAccessiblePivot;
-const nsIAccessibleSelectable = Components.interfaces.nsIAccessibleSelectable;
-const nsIAccessibleTable = Components.interfaces.nsIAccessibleTable;
-const nsIAccessibleTableCell = Components.interfaces.nsIAccessibleTableCell;
-const nsIAccessibleTraversalRule = Components.interfaces.nsIAccessibleTraversalRule;
-const nsIAccessibleValue = Components.interfaces.nsIAccessibleValue;
+const nsIAccessibleImage = Ci.nsIAccessibleImage;
+const nsIAccessiblePivot = Ci.nsIAccessiblePivot;
+const nsIAccessibleSelectable = Ci.nsIAccessibleSelectable;
+const nsIAccessibleTable = Ci.nsIAccessibleTable;
+const nsIAccessibleTableCell = Ci.nsIAccessibleTableCell;
+const nsIAccessibleTraversalRule = Ci.nsIAccessibleTraversalRule;
+const nsIAccessibleValue = Ci.nsIAccessibleValue;
 
-const nsIObserverService = Components.interfaces.nsIObserverService;
+const nsIObserverService = Ci.nsIObserverService;
 
-const nsIDOMDocument = Components.interfaces.nsIDOMDocument;
-const nsIDOMEvent = Components.interfaces.nsIDOMEvent;
-const nsIDOMNode = Components.interfaces.nsIDOMNode;
-const nsIDOMWindow = Components.interfaces.nsIDOMWindow;
-const nsIDOMXULElement = Components.interfaces.nsIDOMXULElement;
+const nsIDOMDocument = Ci.nsIDOMDocument;
+const nsIDOMEvent = Ci.nsIDOMEvent;
+const nsIDOMNode = Ci.nsIDOMNode;
+const nsIDOMWindow = Ci.nsIDOMWindow;
+const nsIDOMXULElement = Ci.nsIDOMXULElement;
 
-const nsIPropertyElement = Components.interfaces.nsIPropertyElement;
+const nsIPropertyElement = Ci.nsIPropertyElement;
 
 // //////////////////////////////////////////////////////////////////////////////
 // OS detect
@@ -94,7 +94,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 /**
  * nsIAccessibilityService service.
  */
-var gAccService = Components.classes["@mozilla.org/accessibilityService;1"].
+var gAccService = Cc["@mozilla.org/accessibilityService;1"].
   getService(nsIAccessibilityService);
 
 /**
@@ -601,7 +601,7 @@ function testDefunctAccessible(aAcc, aNodeOrId) {
   try {
     aAcc.firstChild;
   } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE);
+    success = (e.result == Cr.NS_ERROR_FAILURE);
   }
   ok(success, "firstChild" + msg);
 
@@ -610,7 +610,7 @@ function testDefunctAccessible(aAcc, aNodeOrId) {
   try {
     aAcc.lastChild;
   } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE);
+    success = (e.result == Cr.NS_ERROR_FAILURE);
   }
   ok(success, "lastChild" + msg);
 
@@ -619,7 +619,7 @@ function testDefunctAccessible(aAcc, aNodeOrId) {
   try {
     aAcc.childCount;
   } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE);
+    success = (e.result == Cr.NS_ERROR_FAILURE);
   }
   ok(success, "childCount" + msg);
 
@@ -628,7 +628,7 @@ function testDefunctAccessible(aAcc, aNodeOrId) {
   try {
     aAcc.children;
   } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE);
+    success = (e.result == Cr.NS_ERROR_FAILURE);
   }
   ok(success, "children" + msg);
 
@@ -637,7 +637,7 @@ function testDefunctAccessible(aAcc, aNodeOrId) {
   try {
     aAcc.nextSibling;
   } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE);
+    success = (e.result == Cr.NS_ERROR_FAILURE);
   }
   ok(success, "nextSibling" + msg);
 
@@ -646,7 +646,7 @@ function testDefunctAccessible(aAcc, aNodeOrId) {
   try {
     aAcc.previousSibling;
   } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE);
+    success = (e.result == Cr.NS_ERROR_FAILURE);
   }
   ok(success, "previousSibling" + msg);
 
@@ -655,7 +655,7 @@ function testDefunctAccessible(aAcc, aNodeOrId) {
   try {
     aAcc.parent;
   } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE);
+    success = (e.result == Cr.NS_ERROR_FAILURE);
   }
   ok(success, "parent" + msg);
 }
@@ -707,8 +707,8 @@ function getLoadContext() {
  * Return text from clipboard.
  */
 function getTextFromClipboard() {
-  var trans = Components.classes["@mozilla.org/widget/transferable;1"].
-    createInstance(Components.interfaces.nsITransferable);
+  var trans = Cc["@mozilla.org/widget/transferable;1"].
+    createInstance(Ci.nsITransferable);
   trans.init(getLoadContext());
   if (!trans)
     return "";
@@ -721,7 +721,7 @@ function getTextFromClipboard() {
   trans.getTransferData("text/unicode", str, strLength);
 
   if (str)
-    str = str.value.QueryInterface(Components.interfaces.nsISupportsString);
+    str = str.value.QueryInterface(Ci.nsISupportsString);
   if (str)
     return str.data.substring(0, strLength.value / 2);
 
@@ -843,12 +843,12 @@ function shortenString(aString, aMaxLength) {
  * Return main chrome window (crosses chrome boundary)
  */
 function getMainChromeWindow(aWindow) {
-  return aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                .getInterface(Components.interfaces.nsIWebNavigation)
-                .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+  return aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                .getInterface(Ci.nsIWebNavigation)
+                .QueryInterface(Ci.nsIDocShellTreeItem)
                 .rootTreeItem
-                .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                .getInterface(Components.interfaces.nsIDOMWindow);
+                .QueryInterface(Ci.nsIInterfaceRequestor)
+                .getInterface(Ci.nsIDOMWindow);
 }
 
 /** Sets the test plugin(s) initially expected enabled state.

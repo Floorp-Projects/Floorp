@@ -20,7 +20,7 @@ class Context extends BaseContext {
       value: principal,
       configurable: true,
     });
-    this.sandbox = Components.utils.Sandbox(principal, {wantXrays: false});
+    this.sandbox = Cu.Sandbox(principal, {wantXrays: false});
     this.extension = {id: "test@web.extension"};
   }
 

@@ -8,21 +8,21 @@ function run_test()
 {
   // Bug 712649: Calling getWeakReference(null) should work.
   try {
-    var nullWeak = Components.utils.getWeakReference(null);
+    var nullWeak = Cu.getWeakReference(null);
     Assert.ok(nullWeak.get() === null);
   } catch (e) {
     Assert.ok(false);
   }
 
   var obj = { num: 5, str: 'foo' };
-  var weak = Components.utils.getWeakReference(obj);
+  var weak = Cu.getWeakReference(obj);
 
   Assert.ok(weak.get() === obj);
   Assert.ok(weak.get().num == 5);
   Assert.ok(weak.get().str == 'foo');
 
   // Force garbage collection
-  Components.utils.forceGC();
+  Cu.forceGC();
 
   // obj still references the object, so it should still be accessible via weak
   Assert.ok(weak.get() === obj);
@@ -34,10 +34,10 @@ function run_test()
   // native stack and the conservative GC would not find it we force the same
   // code paths that we used for the initial allocation.
   obj = { num: 6, str: 'foo2' };
-  var weak2 = Components.utils.getWeakReference(obj);
+  var weak2 = Cu.getWeakReference(obj);
   Assert.ok(weak2.get() === obj);
 
-  Components.utils.forceGC();
+  Cu.forceGC();
 
   // The object should have been garbage collected and so should no longer be
   // accessible via weak

@@ -19,31 +19,31 @@ const categoryName = "net-channel-event-sinks";
  */
 var eventsink = {
   QueryInterface: function eventsink_qi(iid) {
-    if (iid.equals(Components.interfaces.nsISupports) ||
-        iid.equals(Components.interfaces.nsIFactory) ||
-        iid.equals(Components.interfaces.nsIChannelEventSink))
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIFactory) ||
+        iid.equals(Ci.nsIChannelEventSink))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
   createInstance: function eventsink_ci(outer, iid) {
     if (outer)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
+      throw Cr.NS_ERROR_NO_AGGREGATION;
     return this.QueryInterface(iid);
   },
   lockFactory: function eventsink_lockf(lock) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
   asyncOnChannelRedirect: function eventsink_onredir(oldChan, newChan, flags, callback) {
     // veto
     this.called = true;
-    throw Components.results.NS_BINDING_ABORTED;
+    throw Cr.NS_BINDING_ABORTED;
   },
 
   getInterface: function eventsink_gi(iid) {
-    if (iid.equals(Components.interfaces.nsIChannelEventSink))
+    if (iid.equals(Ci.nsIChannelEventSink))
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   called: false
@@ -60,12 +60,12 @@ var listener = {
 
       // The current URI must be the original URI, as all redirects have been
       // cancelled
-      if (!(request instanceof Components.interfaces.nsIChannel) ||
+      if (!(request instanceof Ci.nsIChannel) ||
           !request.URI.equals(request.originalURI))
         do_throw("Wrong URI: Is <" + request.URI.spec + ">, should be <" +
                  request.originalURI.spec + ">");
 
-      if (request instanceof Components.interfaces.nsIHttpChannel) {
+      if (request instanceof Ci.nsIHttpChannel) {
         // As we expect a blocked redirect, verify that we have a 3xx status
         Assert.equal(Math.floor(request.responseStatus / 100), 3);
         Assert.equal(request.requestSucceeded, false);
@@ -76,7 +76,7 @@ var listener = {
       do_throw("Unexpected exception: " + e);
     }
 
-    throw Components.results.NS_ERROR_ABORT;
+    throw Cr.NS_ERROR_ABORT;
   },
 
   onDataAvailable: function test_ODA() {
@@ -123,8 +123,8 @@ function run_test() {
 function run_test_continued() {
   eventsink.called = false;
 
-  var catMan = Components.classes["@mozilla.org/categorymanager;1"]
-                         .getService(Components.interfaces.nsICategoryManager);
+  var catMan = Cc["@mozilla.org/categorymanager;1"]
+                 .getService(Ci.nsICategoryManager);
 
   var chan;
   if (listener._iteration == 1) {

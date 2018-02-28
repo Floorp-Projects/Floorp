@@ -43,7 +43,7 @@ add_task(function test_extractFiles() {
 add_task(async function test_extractFilesAsync() {
   let target = dir.clone();
   target.append("test_extractFilesAsync");
-  target.create(Components.interfaces.nsIFile.DIRECTORY_TYPE,
+  target.create(Ci.nsIFile.DIRECTORY_TYPE,
     FileUtils.PERMS_DIRECTORY);
 
   await ZipUtils.extractFilesAsync(archive, target).then(

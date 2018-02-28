@@ -1,6 +1,6 @@
 var EXPORTED_SYMBOLS = ['checkFromJSM'];
 
-Components.utils.importGlobalProperties(['URL']);
+Cu.importGlobalProperties(['URL']);
 
 function checkFromJSM(ok, is, finish) {
   let worker = new ChromeWorker("jsm_url_worker.js");

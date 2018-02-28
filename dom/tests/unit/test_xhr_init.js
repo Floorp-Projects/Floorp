@@ -1,6 +1,6 @@
 function run_test()
 {
-    Components.utils.importGlobalProperties(["XMLHttpRequest"]);
+    Cu.importGlobalProperties(["XMLHttpRequest"]);
 
     var x = new XMLHttpRequest({mozAnon: true, mozSystem: false});
     Assert.ok(x.mozAnon);

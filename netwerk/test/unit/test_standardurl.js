@@ -1,6 +1,6 @@
 "use strict";
 
-const gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+const gPrefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
 function symmetricEquality(expect, a, b)
 {
@@ -94,10 +94,10 @@ add_test(function test_setQuery()
   provided = provided.mutate().setQuery("foo").finalize().QueryInterface(Ci.nsIURL);
   symmetricEquality(false, provided, target);
 
-  var newProvided = Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService(Components.interfaces.nsIIOService)
-                              .newURI("#bar", null, provided)
-                              .QueryInterface(Components.interfaces.nsIURL);
+  var newProvided = Cc["@mozilla.org/network/io-service;1"]
+                      .getService(Ci.nsIIOService)
+                      .newURI("#bar", null, provided)
+                      .QueryInterface(Ci.nsIURL);
 
   Assert.equal(newProvided.spec, target.spec);
   symmetricEquality(true, newProvided, target);
@@ -546,7 +546,7 @@ add_test(function test_idna_host() {
   equal(url.prePath, "http://user:password@ält.example.org:8080");
   equal(url.spec, "http://user:password@ält.example.org:8080/path?query#etc");
   equal(url.specIgnoringRef, "http://user:password@ält.example.org:8080/path?query");
-  equal(url.QueryInterface(Components.interfaces.nsISensitiveInfoHiddenURI).getSensitiveInfoHiddenSpec(), "http://user:****@ält.example.org:8080/path?query#etc");
+  equal(url.QueryInterface(Ci.nsISensitiveInfoHiddenURI).getSensitiveInfoHiddenSpec(), "http://user:****@ält.example.org:8080/path?query#etc");
 
   equal(url.displayHost, "ält.example.org");
   equal(url.displayHostPort, "ält.example.org:8080");
@@ -574,7 +574,7 @@ add_test(function test_idna_host() {
   equal(url.prePath, "http://user:password@xn--lt-uia.example.org:8080");
   equal(url.spec, "http://user:password@xn--lt-uia.example.org:8080/path?query#etc");
   equal(url.specIgnoringRef, "http://user:password@xn--lt-uia.example.org:8080/path?query");
-  equal(url.QueryInterface(Components.interfaces.nsISensitiveInfoHiddenURI).getSensitiveInfoHiddenSpec(), "http://user:****@xn--lt-uia.example.org:8080/path?query#etc");
+  equal(url.QueryInterface(Ci.nsISensitiveInfoHiddenURI).getSensitiveInfoHiddenSpec(), "http://user:****@xn--lt-uia.example.org:8080/path?query#etc");
 
   equal(url.displayHost, "ält.example.org");
   equal(url.displayHostPort, "ält.example.org:8080");

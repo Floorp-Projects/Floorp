@@ -39,7 +39,7 @@ function test_pause_frame() {
     /* eslint-disable */
     gDebuggee.eval("(" + function () {
       function QueryInterface() {
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+        throw Cr.NS_ERROR_NO_INTERFACE;
       }
       function stopMe() {
         throw 42;

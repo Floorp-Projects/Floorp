@@ -11,7 +11,7 @@ const gExpectedHistory = {
 
 function get_remote_history(browser) {
   function frame_script() {
-    let webNav = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+    let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
     let sessionHistory = webNav.sessionHistory;
     let result = {
       index: sessionHistory.index,

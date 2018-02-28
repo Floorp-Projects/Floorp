@@ -32,12 +32,12 @@ var idleObserver =
 {
     QueryInterface: function _qi(iid)
     {
-        if (iid.equals(Components.interfaces.nsISupports) ||
-            iid.equals(Components.interfaces.nsIObserver))
+        if (iid.equals(Ci.nsISupports) ||
+            iid.equals(Ci.nsIObserver))
         {
             return this;
         }
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+        throw Cr.NS_ERROR_NO_INTERFACE;
     },
     observe: function _observe(subject, topic, data)
     {
@@ -81,12 +81,12 @@ var idleObserver =
 };
 
 
-const nsIIdleService = Components.interfaces.nsIIdleService;
+const nsIIdleService = Ci.nsIIdleService;
 const nsIISCID = "@mozilla.org/widget/idleservice;1";
 var idleService = null;
 try
 {
-    idleService = Components.classes[nsIISCID].getService(nsIIdleService);
+    idleService = Cc[nsIISCID].getService(nsIIdleService);
 }
 catch (ex)
 {}

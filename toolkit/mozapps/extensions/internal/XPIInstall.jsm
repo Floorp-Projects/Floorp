@@ -531,7 +531,7 @@ async function loadManifestFromRDF(aUri, aStream) {
       pos += count;
       count = aStream.available();
     }
-    listener.onStopRequest(channel, null, Components.results.NS_OK);
+    listener.onStopRequest(channel, null, Cr.NS_OK);
   } catch (e) {
     listener.onStopRequest(channel, null, e.result);
     throw e;

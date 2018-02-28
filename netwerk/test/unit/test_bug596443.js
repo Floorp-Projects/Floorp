@@ -14,7 +14,7 @@ function setupChannel(suffix, xRequest, flags) {
     if (flags)
         chan.loadFlags |= flags;
 
-    var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
+    var httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
     httpChan.setRequestHeader("x-request", xRequest, false);
         
     return httpChan;
@@ -28,11 +28,11 @@ Listener.prototype = {
     _buffer: null,
 
     QueryInterface: function(iid) {
-        if (iid.equals(Components.interfaces.nsIStreamListener) ||
-            iid.equals(Components.interfaces.nsIRequestObserver) ||
-            iid.equals(Components.interfaces.nsISupports))
+        if (iid.equals(Ci.nsIStreamListener) ||
+            iid.equals(Ci.nsIRequestObserver) ||
+            iid.equals(Ci.nsISupports))
           return this;
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+        throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
     onStartRequest: function (request, ctx) {

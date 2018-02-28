@@ -12,7 +12,7 @@ var view =
     browseForConfig: function()
     {
         enablePrivilege('UniversalXPConnect');
-        var fp = Components.classes["@mozilla.org/filepicker;1"].
+        var fp = Cc["@mozilla.org/filepicker;1"].
         createInstance(nsIFilePicker);
         fp.init(window,'XSLTMark Description File',nsIFilePicker.modeOpen);
         fp.appendFilter('*.conf', '*.conf');
@@ -20,10 +20,10 @@ var view =
         var res = fp.show();
 
         if (res == nsIFilePicker.returnOK) {
-            this.configUrl = Components.classes[STDURLMUT_CTRID]
-                                       .createInstance(nsIURIMutator)
-                                       .setSpec(fp.fileURL.spec)
-                                       .finalize();
+            this.configUrl = Cc[STDURLMUT_CTRID]
+                               .createInstance(nsIURIMutator)
+                               .setSpec(fp.fileURL.spec)
+                               .finalize();
             document.getElementById('config').setAttribute('value', this.configUrl.spec);
         }
         this.parseConfig();
@@ -156,10 +156,10 @@ var view =
         if (!this.testArray) {
             if (!this.configUrl) {
                 this.configUrl =
-                    Components.classes[STDURLMUT_CTRID]
-                              .createInstance(nsIURIMutator)
-                              .setSpec(document.getElementById('config').value)
-                              .finalize();
+                    Cc[STDURLMUT_CTRID]
+                      .createInstance(nsIURIMutator)
+                      .setSpec(document.getElementById('config').value)
+                      .finalize();
             }
             this.parseConfig();
         }

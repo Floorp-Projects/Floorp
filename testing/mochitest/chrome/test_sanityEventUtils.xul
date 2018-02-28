@@ -19,9 +19,9 @@
   <script type="application/javascript">
   <![CDATA[
     info("\nProfile::EventUtilsLoadTime: " + (loadTime - start) + "\n");
-    var testFile = Components.classes["@mozilla.org/file/directory_service;1"].
-                      getService(Components.interfaces.nsIProperties).
-                      get("CurWorkD", Components.interfaces.nsIFile);
+    var testFile = Cc["@mozilla.org/file/directory_service;1"].
+                      getService(Ci.nsIProperties).
+                      get("CurWorkD", Ci.nsIFile);
     var regularDtForDrag1 = null;
     var gSetDropEffect = true;
     var gData;

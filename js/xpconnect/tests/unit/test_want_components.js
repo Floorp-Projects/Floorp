@@ -1,8 +1,6 @@
 function run_test() {
-  var cu = Components.utils;
-  var sb = cu.Sandbox(this, 
-	    {wantComponents: false});
+  var sb = Cu.Sandbox(this, {wantComponents: false});
 
-  var rv = cu.evalInSandbox("this.Components", sb);
+  var rv = Cu.evalInSandbox("this.Components", sb);
   Assert.equal(rv, undefined);
 }  

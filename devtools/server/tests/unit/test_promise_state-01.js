@@ -35,7 +35,7 @@ function run_test() {
 
 function evalCode(debuggee) {
   /* eslint-disable */
-  Components.utils.evalInSandbox(
+  Cu.evalInSandbox(
     "doTest();\n" +
     function doTest() {
       var p = new Promise(function () {});

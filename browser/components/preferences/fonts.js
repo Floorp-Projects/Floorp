@@ -71,7 +71,7 @@ var gFontsDialog = {
         }
       }
     })()
-      .catch(Components.utils.reportError);
+      .catch(Cu.reportError);
   },
 
   readFontLanguageGroup() {

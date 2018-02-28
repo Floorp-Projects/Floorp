@@ -6,7 +6,7 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let listener = msg => {
-  void (msg instanceof Components.interfaces.nsIConsoleMessage);
+  void (msg instanceof Ci.nsIConsoleMessage);
   dump(`Console message: ${msg}\n`);
 };
 

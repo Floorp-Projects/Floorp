@@ -9,7 +9,7 @@ var obs = Cc["@mozilla.org/observer-service;1"]
             .getService(Ci.nsIObserverService);
 
 var ios = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Components.interfaces.nsIIOService);
+            .getService(Ci.nsIIOService);
 
 // baseUrl is always the initial connection attempt and is handled by
 // failResponseHandler since every test expects that request will either be

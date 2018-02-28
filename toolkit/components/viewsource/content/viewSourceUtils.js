@@ -22,9 +22,9 @@ ChromeUtils.defineModuleGetter(this, "Services",
 
 var gViewSourceUtils = {
 
-  mnsIWebBrowserPersist: Components.interfaces.nsIWebBrowserPersist,
-  mnsIWebProgress: Components.interfaces.nsIWebProgress,
-  mnsIWebPageDescriptor: Components.interfaces.nsIWebPageDescriptor,
+  mnsIWebBrowserPersist: Ci.nsIWebBrowserPersist,
+  mnsIWebProgress: Ci.nsIWebProgress,
+  mnsIWebPageDescriptor: Ci.nsIWebPageDescriptor,
 
   /**
    * Opens the view source window.
@@ -63,8 +63,8 @@ var gViewSourceUtils = {
         return;
       }
       Services.ww.unregisterNotification(onOpen);
-      let win = subj.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                    .getInterface(Components.interfaces.nsIDOMWindow);
+      let win = subj.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindow);
       win.addEventListener("load", () => {
         aArgs.viewSourceBrowser = win.gBrowser.selectedTab.linkedBrowser;
         utils.viewSourceInBrowser(aArgs);
@@ -204,7 +204,7 @@ var gViewSourceUtils = {
       var contentType = data.doc ? data.doc.contentType : null;
       if (uri.scheme == "file") {
         // it's a local file; we can open it directly
-        path = uri.QueryInterface(Components.interfaces.nsIFileURL).file.path;
+        path = uri.QueryInterface(Ci.nsIFileURL).file.path;
 
         var editorArgs = this.buildEditorArgs(path, data.lineNumber);
         editor.runw(false, editorArgs, editorArgs.length);
@@ -220,17 +220,16 @@ var gViewSourceUtils = {
           var file = this.getTemporaryFile(uri, data.doc, contentType);
           this.viewSourceProgressListener.file = file;
 
-          var webBrowserPersist = Components
-                                  .classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
+          var webBrowserPersist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
                                   .createInstance(this.mnsIWebBrowserPersist);
           // the default setting is to not decode. we need to decode.
           webBrowserPersist.persistFlags = this.mnsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
           webBrowserPersist.progressListener = this.viewSourceProgressListener;
-          let referrerPolicy = Components.interfaces.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER;
+          let referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER;
           webBrowserPersist.savePrivacyAwareURI(uri, null, null, referrerPolicy, null, null, file, data.isPrivate);
 
-          let helperService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"]
-                                        .getService(Components.interfaces.nsPIExternalAppLauncher);
+          let helperService = Cc["@mozilla.org/uriloader/external-helper-app-service;1"]
+                                .getService(Ci.nsPIExternalAppLauncher);
           if (data.isPrivate) {
             // register the file to be deleted when possible
             helperService.deleteTemporaryPrivateFileWhenPossible(file);
@@ -244,8 +243,8 @@ var gViewSourceUtils = {
           // XXXbz this is so broken...  This code doesn't set up this docshell
           // at all correctly; if somehow the view-source stuff managed to
           // execute script we'd be in big trouble here, I suspect.
-          var webShell = Components.classes["@mozilla.org/docshell;1"].createInstance();
-          webShell.QueryInterface(Components.interfaces.nsIBaseWindow).create();
+          var webShell = Cc["@mozilla.org/docshell;1"].createInstance();
+          webShell.QueryInterface(Ci.nsIBaseWindow).create();
           this.viewSourceProgressListener.webShell = webShell;
           var progress = webShell.QueryInterface(this.mnsIWebProgress);
           progress.addProgressListener(this.viewSourceProgressListener,
@@ -256,7 +255,7 @@ var gViewSourceUtils = {
       }
     } catch (ex) {
       // we failed loading it with the external editor.
-      Components.utils.reportError(ex);
+      Cu.reportError(ex);
       this.handleCallBack(aCallBack, false, data);
     }
   },
@@ -274,14 +273,14 @@ var gViewSourceUtils = {
     try {
       let viewSourceAppPath =
         Services.prefs.getComplexValue("view_source.editor.path",
-                                       Components.interfaces.nsIFile);
-      let editor = Components.classes["@mozilla.org/process/util;1"]
-                             .createInstance(Components.interfaces.nsIProcess);
+                                       Ci.nsIFile);
+      let editor = Cc["@mozilla.org/process/util;1"]
+                     .createInstance(Ci.nsIProcess);
       editor.init(viewSourceAppPath);
 
       return editor;
     } catch (ex) {
-      Components.utils.reportError(ex);
+      Cu.reportError(ex);
     }
 
     return null;
@@ -289,19 +288,19 @@ var gViewSourceUtils = {
 
   viewSourceProgressListener: {
 
-    mnsIWebProgressListener: Components.interfaces.nsIWebProgressListener,
+    mnsIWebProgressListener: Ci.nsIWebProgressListener,
 
     QueryInterface(aIID) {
      if (aIID.equals(this.mnsIWebProgressListener) ||
-         aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
-         aIID.equals(Components.interfaces.nsISupports))
+         aIID.equals(Ci.nsISupportsWeakReference) ||
+         aIID.equals(Ci.nsISupports))
        return this;
-     throw Components.results.NS_NOINTERFACE;
+     throw Cr.NS_NOINTERFACE;
     },
 
     destroy() {
       if (this.webShell) {
-        this.webShell.QueryInterface(Components.interfaces.nsIBaseWindow).destroy();
+        this.webShell.QueryInterface(Ci.nsIBaseWindow).destroy();
       }
       this.webShell = null;
       this.editor = null;
@@ -322,7 +321,7 @@ var gViewSourceUtils = {
           this.onContentLoaded();
           return 0;
         }
-        var webNavigation = this.webShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+        var webNavigation = this.webShell.QueryInterface(Ci.nsIWebNavigation);
         if (webNavigation.document.readyState == "complete") {
           // This branch is probably never taken. Including it for completeness.
           this.onContentLoaded();
@@ -350,12 +349,12 @@ var gViewSourceUtils = {
                                                         this.data.doc.contentType);
 
           // we have to convert from the source charset.
-          var webNavigation = this.webShell.QueryInterface(Components.interfaces.nsIWebNavigation);
-          var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
-                                   .createInstance(Components.interfaces.nsIFileOutputStream);
+          var webNavigation = this.webShell.QueryInterface(Ci.nsIWebNavigation);
+          var foStream = Cc["@mozilla.org/network/file-output-stream;1"]
+                           .createInstance(Ci.nsIFileOutputStream);
           foStream.init(this.file, 0x02 | 0x08 | 0x20, -1, 0); // write | create | truncate
-          var coStream = Components.classes["@mozilla.org/intl/converter-output-stream;1"]
-                                   .createInstance(Components.interfaces.nsIConverterOutputStream);
+          var coStream = Cc["@mozilla.org/intl/converter-output-stream;1"]
+                           .createInstance(Ci.nsIConverterOutputStream);
           coStream.init(foStream, this.data.doc.characterSet);
 
           // write the source to the file
@@ -365,8 +364,8 @@ var gViewSourceUtils = {
           coStream.close();
           foStream.close();
 
-          let helperService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"]
-                              .getService(Components.interfaces.nsPIExternalAppLauncher);
+          let helperService = Cc["@mozilla.org/uriloader/external-helper-app-service;1"]
+                              .getService(Ci.nsPIExternalAppLauncher);
           if (this.data.isPrivate) {
             // register the file to be deleted when possible
             helperService.deleteTemporaryPrivateFileWhenPossible(this.file);
@@ -384,7 +383,7 @@ var gViewSourceUtils = {
         gViewSourceUtils.handleCallBack(this.callBack, true, this.data);
       } catch (ex) {
         // we failed loading it with the external editor.
-        Components.utils.reportError(ex);
+        Cu.reportError(ex);
         gViewSourceUtils.handleCallBack(this.callBack, false, this.data);
       } finally {
         this.destroy();
@@ -406,7 +405,7 @@ var gViewSourceUtils = {
       Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", this._caUtils);
     }
 
-    var tempFile = Services.dirsvc.get("TmpD", Components.interfaces.nsIFile);
+    var tempFile = Services.dirsvc.get("TmpD", Ci.nsIFile);
     var fileName = this._caUtils.getDefaultFileName(null, aURI, aDocument, aContentType);
     var extension = this._caUtils.getDefaultExtension(fileName, aURI, aContentType);
     var leafName = this._caUtils.getNormalizedLeafName(fileName, extension);

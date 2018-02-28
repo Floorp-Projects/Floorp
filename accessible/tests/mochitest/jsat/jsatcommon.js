@@ -31,7 +31,7 @@ var AccessFuTest = {
     var listener = {
       observe: function observe(aMessage) {
         // Ignore unexpected messages.
-        if (!(aMessage instanceof Components.interfaces.nsIConsoleMessage)) {
+        if (!(aMessage instanceof Ci.nsIConsoleMessage)) {
           return;
         }
         if (!aMessage.message.includes(aWaitForMessage)) {

@@ -55,7 +55,7 @@ PushSubscriptionListener.prototype = {
         aIID.equals(Ci.nsIStreamListener)) {
       return this;
     }
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   getInterface: function(aIID) {

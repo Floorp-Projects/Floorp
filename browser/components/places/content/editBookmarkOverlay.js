@@ -260,7 +260,7 @@ var gEditItemOverlay = {
     }
 
     if (showOrCollapse("keywordRow", isBookmark, "keyword")) {
-      this._initKeywordField().catch(Components.utils.reportError);
+      this._initKeywordField().catch(Cu.reportError);
       this._keywordField.readOnly = this.readOnly;
     }
 
@@ -280,7 +280,7 @@ var gEditItemOverlay = {
     // not cheap (we don't always have the parent), and there's no use case for
     // this (it's only the Star UI that shows the folderPicker)
     if (showOrCollapse("folderRow", isItem, "folderPicker")) {
-      this._initFolderMenuList(parentId).catch(Components.utils.reportError);
+      this._initFolderMenuList(parentId).catch(Cu.reportError);
     }
 
     // Selection count.
@@ -472,8 +472,8 @@ var gEditItemOverlay = {
   },
 
   QueryInterface:
-  XPCOMUtils.generateQI([Components.interfaces.nsIDOMEventListener,
-                         Components.interfaces.nsINavBookmarkObserver]),
+  XPCOMUtils.generateQI([Ci.nsIDOMEventListener,
+                         Ci.nsINavBookmarkObserver]),
 
   _element(aID) {
     return document.getElementById("editBMPanel_" + aID);
@@ -511,7 +511,7 @@ var gEditItemOverlay = {
           // Check _paneInfo here as we might be closing the dialog.
           if (anyChanges && this._paneInfo)
             this._mayUpdateFirstEditField("tagsField");
-        }, Components.utils.reportError);
+        }, Cu.reportError);
     }
   },
 
@@ -560,9 +560,9 @@ var gEditItemOverlay = {
     // TODO bug 1093030: cleanup this mess when the bookmarksProperties dialog
     // and star UI code don't "run a batch in the background".
     if (window.document.documentElement.id == "places")
-      PlacesTransactions.batch(setTags).catch(Components.utils.reportError);
+      PlacesTransactions.batch(setTags).catch(Cu.reportError);
     else
-      setTags().catch(Components.utils.reportError);
+      setTags().catch(Cu.reportError);
     return true;
   },
 
@@ -637,7 +637,7 @@ var gEditItemOverlay = {
         { name: PlacesUIUtils.DESCRIPTION_ANNO, value: description };
       let guid = this._paneInfo.itemGuid;
       PlacesTransactions.Annotate({ guid, annotation })
-                        .transact().catch(Components.utils.reportError);
+                        .transact().catch(Cu.reportError);
     }
   },
 
@@ -658,7 +658,7 @@ var gEditItemOverlay = {
 
     let guid = this._paneInfo.itemGuid;
     PlacesTransactions.EditUrl({ guid, url: newURI })
-                      .transact().catch(Components.utils.reportError);
+                      .transact().catch(Cu.reportError);
   },
 
   onKeywordFieldChange() {
@@ -670,7 +670,7 @@ var gEditItemOverlay = {
     let postData = this._paneInfo.postData;
     let guid = this._paneInfo.itemGuid;
     PlacesTransactions.EditKeyword({ guid, keyword, postData, oldKeyword })
-                      .transact().catch(Components.utils.reportError);
+                      .transact().catch(Cu.reportError);
   },
 
   onLoadInSidebarCheckboxCommand() {
@@ -683,7 +683,7 @@ var gEditItemOverlay = {
 
     let guid = this._paneInfo.itemGuid;
     PlacesTransactions.Annotate({ guid, annotation })
-                      .transact().catch(Components.utils.reportError);
+                      .transact().catch(Cu.reportError);
   },
 
   toggleFolderTreeVisibility() {
@@ -778,7 +778,7 @@ var gEditItemOverlay = {
           containerId != PlacesUtils.toolbarFolderId &&
           containerId != PlacesUtils.bookmarksMenuFolderId) {
         this._markFolderAsRecentlyUsed(containerId)
-            .catch(Components.utils.reportError);
+            .catch(Cu.reportError);
       }
 
       // Auto-show the bookmarks toolbar when adding / moving an item there.
@@ -827,14 +827,14 @@ var gEditItemOverlay = {
     if (guids.length > 0) {
       let annotation = this._getLastUsedAnnotationObject(false);
       PlacesTransactions.Annotate({ guids, annotation  })
-                        .transact().catch(Components.utils.reportError);
+                        .transact().catch(Cu.reportError);
     }
 
     // Mark folder as recently used
     let annotation = this._getLastUsedAnnotationObject(true);
     let guid = await PlacesUtils.promiseItemGuid(aFolderId);
     PlacesTransactions.Annotate({ guid, annotation })
-                      .transact().catch(Components.utils.reportError);
+                      .transact().catch(Cu.reportError);
   },
 
   /**
@@ -942,7 +942,7 @@ var gEditItemOverlay = {
     let title = this._element("newFolderButton").label;
     await PlacesTransactions.NewFolder({ parentGuid: ip.guid, title,
                                          index: await ip.getIndex() })
-                            .transact().catch(Components.utils.reportError);
+                            .transact().catch(Cu.reportError);
 
     this._folderTree.focus();
     this._folderTree.selectItems([ip.itemId]);
@@ -1057,7 +1057,7 @@ var gEditItemOverlay = {
   onItemChanged(aItemId, aProperty, aIsAnnotationProperty, aValue,
                 aLastModified, aItemType, aParentId, aGuid) {
     if (aProperty == "tags" && this._paneInfo.visibleRows.has("tagsRow")) {
-      this._onTagsChange(aGuid).catch(Components.utils.reportError);
+      this._onTagsChange(aGuid).catch(Cu.reportError);
       return;
     }
     if (aProperty == "title" && (this._paneInfo.isItem || this._paneInfo.isTag)) {
@@ -1080,13 +1080,13 @@ var gEditItemOverlay = {
 
         if (this._paneInfo.visibleRows.has("tagsRow")) {
           delete this._paneInfo._cachedCommonTags;
-          this._onTagsChange(aGuid, newURI).catch(Components.utils.reportError);
+          this._onTagsChange(aGuid, newURI).catch(Cu.reportError);
         }
       }
       break;
     case "keyword":
       if (this._paneInfo.visibleRows.has("keywordRow"))
-        this._initKeywordField(aValue).catch(Components.utils.reportError);
+        this._initKeywordField(aValue).catch(Cu.reportError);
       break;
     case PlacesUIUtils.DESCRIPTION_ANNO:
       if (this._paneInfo.visibleRows.has("descriptionRow"))

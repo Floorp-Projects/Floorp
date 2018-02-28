@@ -49,9 +49,9 @@ function countReflows(testfn, expected) {
   return new Promise(resolve => {
     observer.reflows = [];
     let docShell = panel.ownerGlobal
-                    .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                    .getInterface(Components.interfaces.nsIWebNavigation)
-                    .QueryInterface(Components.interfaces.nsIDocShell);
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShell);
     docShell.addWeakReflowObserver(observer);
     testfn().then(() => {
       docShell.removeWeakReflowObserver(observer);

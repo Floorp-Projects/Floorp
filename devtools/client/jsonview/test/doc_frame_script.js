@@ -16,8 +16,8 @@
 let EventUtils = {};
 EventUtils.window = content;
 EventUtils.parent = EventUtils.window;
-EventUtils._EU_Ci = Components.interfaces; // eslint-disable-line
-EventUtils._EU_Cc = Components.classes; // eslint-disable-line
+EventUtils._EU_Ci = Ci; // eslint-disable-line
+EventUtils._EU_Cc = Cc; // eslint-disable-line
 EventUtils.navigator = content.navigator;
 EventUtils.KeyboardEvent = content.KeyboardEvent;
 
@@ -129,7 +129,7 @@ addMessageListener("Test:JsonView:Eval", function (msg) {
   sendAsyncMessage(msg.name, {result});
 });
 
-Components.utils.exportFunction(content.document.querySelector.bind(content.document),
+Cu.exportFunction(content.document.querySelector.bind(content.document),
   content, {defineAs: "$"});
-Components.utils.exportFunction(content.document.querySelectorAll.bind(content.document),
+Cu.exportFunction(content.document.querySelectorAll.bind(content.document),
   content, {defineAs: "$$"});

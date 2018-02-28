@@ -8,7 +8,7 @@
 /* eslint "mozilla/use-chromeutils-import": ["error", {allowCu: true}] */
 
 // eslint-disable-next-line mozilla/no-define-cc-etc
-const Cu = Components.utils;
+const Cu = Components.utils; // eslint-disable-line mozilla/use-cc-etc
 const { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 const { devtools } = Cu.import("resource://devtools/shared/Loader.jsm", {});

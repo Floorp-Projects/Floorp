@@ -1,10 +1,10 @@
 function run_test() {
   var sp = Cc["@mozilla.org/systemprincipal;1"].
            createInstance(Ci.nsIPrincipal);
-  var s = Components.utils.Sandbox(sp);
+  var s = Cu.Sandbox(sp);
   s.a = [];
-  s.Cu = Components.utils;
+  s.Cu = Cu;
   s.C = Components;
   s.notEqual = notEqual;
-  Components.utils.evalInSandbox("notEqual(Cu.import, undefined);", s);
+  Cu.evalInSandbox("notEqual(Cu.import, undefined);", s);
 }

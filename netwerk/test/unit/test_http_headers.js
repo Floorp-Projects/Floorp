@@ -15,7 +15,7 @@ function run_test() {
   var chan = NetUtil.newChannel ({
     uri: "http://www.mozilla.org/",
     loadUsingSystemPrincipal: true
-  }).QueryInterface(Components.interfaces.nsIHttpChannel);
+  }).QueryInterface(Ci.nsIHttpChannel);
 
   check_request_header(chan, "host", "www.mozilla.org");
   check_request_header(chan, "Host", "www.mozilla.org");

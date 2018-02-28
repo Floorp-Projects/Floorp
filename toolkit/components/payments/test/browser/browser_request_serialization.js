@@ -5,7 +5,7 @@
 
 add_task(async function test_serializeRequest_displayItems() {
   const testTask = ({methodData, details}) => {
-    let contentWin = Components.utils.waiveXrays(content);
+    let contentWin = Cu.waiveXrays(content);
     let store = contentWin.document.querySelector("payment-dialog").requestStore;
     let state = store && store.getState();
     ok(state, "got request store state");
@@ -33,7 +33,7 @@ add_task(async function test_serializeRequest_displayItems() {
 
 add_task(async function test_serializeRequest_shippingOptions() {
   const testTask = ({methodData, details}) => {
-    let contentWin = Components.utils.waiveXrays(content);
+    let contentWin = Cu.waiveXrays(content);
     let store = contentWin.document.querySelector("payment-dialog").requestStore;
     let state = store && store.getState();
     ok(state, "got request store state");
@@ -63,7 +63,7 @@ add_task(async function test_serializeRequest_shippingOptions() {
 
 add_task(async function test_serializeRequest_paymentMethods() {
   const testTask = ({methodData, details}) => {
-    let contentWin = Components.utils.waiveXrays(content);
+    let contentWin = Cu.waiveXrays(content);
     let store = contentWin.document.querySelector("payment-dialog").requestStore;
     let state = store && store.getState();
     ok(state, "got request store state");
@@ -83,7 +83,7 @@ add_task(async function test_serializeRequest_paymentMethods() {
 
 add_task(async function test_serializeRequest_modifiers() {
   const testTask = ({methodData, details}) => {
-    let contentWin = Components.utils.waiveXrays(content);
+    let contentWin = Cu.waiveXrays(content);
     let store = contentWin.document.querySelector("payment-dialog").requestStore;
     let state = store && store.getState();
     ok(state, "got request store state");

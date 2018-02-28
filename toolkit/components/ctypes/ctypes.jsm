@@ -18,6 +18,6 @@ var EXPORTED_SYMBOLS = [ "ctypes" ];
  */
 
 // Initialize the ctypes object. You do not need to do this yourself.
-const init = Components.classes["@mozilla.org/jsctypes;1"].createInstance();
+const init = Cc["@mozilla.org/jsctypes;1"].createInstance();
 init();
 

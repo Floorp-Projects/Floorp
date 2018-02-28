@@ -18,9 +18,9 @@ function AddToZip(zipWriter, path, file)
   
   // if it's a dir, continue adding its contents recursively...
   if (file.isDirectory()) {
-    var entries = file.QueryInterface(Components.interfaces.nsIFile).directoryEntries;
+    var entries = file.QueryInterface(Ci.nsIFile).directoryEntries;
     while (entries.hasMoreElements()) {
-      var entry = entries.getNext().QueryInterface(Components.interfaces.nsIFile);
+      var entry = entries.getNext().QueryInterface(Ci.nsIFile);
       AddToZip(zipWriter, currentPath, entry);
     }
   }

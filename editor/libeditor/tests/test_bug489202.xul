@@ -47,12 +47,12 @@ function runTest() {
   cstr.data = test_data;
   trans.setTransferData("text/html", cstr, test_data.length*2);
 
-  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-     .getInterface(Components.interfaces.nsIWebNavigation)
-     .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+  window.QueryInterface(Ci.nsIInterfaceRequestor)
+     .getInterface(Ci.nsIWebNavigation)
+     .QueryInterface(Ci.nsIDocShellTreeItem)
      .rootTreeItem
-     .QueryInterface(Components.interfaces.nsIDocShell)
-     .appType = Components.interfaces.nsIDocShell.APP_TYPE_EDITOR; 
+     .QueryInterface(Ci.nsIDocShell)
+     .appType = Ci.nsIDocShell.APP_TYPE_EDITOR; 
   var e = document.getElementById('i1');
   var doc = e.contentDocument;
   doc.designMode = "on";
