@@ -869,7 +869,8 @@ RasterImage::ResetAnimation()
   }
 
   MOZ_ASSERT(mAnimationState, "Should have AnimationState");
-  mAnimationState->ResetAnimation();
+  MOZ_ASSERT(mFrameAnimator, "Should have FrameAnimator");
+  mFrameAnimator->ResetAnimation(*mAnimationState);
 
   NotifyProgress(NoProgress, mAnimationState->FirstFrameRefreshArea());
 
