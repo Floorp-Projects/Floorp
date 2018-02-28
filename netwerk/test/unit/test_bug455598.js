@@ -27,8 +27,7 @@ function run_test() {
       throw Cr.NS_ERROR_NO_INTERFACE;
     }
   };
-  var cm = Cc["@mozilla.org/cookiemanager;1"].
-                      getService(Ci.nsICookieManager);
+  var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   Assert.ok(!cm.cookieExists(cookie));
   // if the above line does not crash, the test was successful
   do_test_finished();
