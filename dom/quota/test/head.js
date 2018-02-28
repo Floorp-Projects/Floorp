@@ -111,28 +111,28 @@ function waitForMessage(aMessage, browser)
 
 function removePermission(url, permission)
 {
-  let uri = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(Components.interfaces.nsIIOService)
-                      .newURI(url);
-  let ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                      .getService(Ci.nsIScriptSecurityManager);
+  let uri = Cc["@mozilla.org/network/io-service;1"]
+              .getService(Ci.nsIIOService)
+              .newURI(url);
+  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+              .getService(Ci.nsIScriptSecurityManager);
   let principal = ssm.createCodebasePrincipal(uri, {});
 
-  Components.classes["@mozilla.org/permissionmanager;1"]
-            .getService(Components.interfaces.nsIPermissionManager)
-            .removeFromPrincipal(principal, permission);
+  Cc["@mozilla.org/permissionmanager;1"]
+    .getService(Ci.nsIPermissionManager)
+    .removeFromPrincipal(principal, permission);
 }
 
 function getPermission(url, permission)
 {
-  let uri = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(Components.interfaces.nsIIOService)
-                      .newURI(url);
-  let ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                      .getService(Ci.nsIScriptSecurityManager);
+  let uri = Cc["@mozilla.org/network/io-service;1"]
+              .getService(Ci.nsIIOService)
+              .newURI(url);
+  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+              .getService(Ci.nsIScriptSecurityManager);
   let principal = ssm.createCodebasePrincipal(uri, {});
 
-  return Components.classes["@mozilla.org/permissionmanager;1"]
-                   .getService(Components.interfaces.nsIPermissionManager)
-                   .testPermissionFromPrincipal(principal, permission);
+  return Cc["@mozilla.org/permissionmanager;1"]
+           .getService(Ci.nsIPermissionManager)
+           .testPermissionFromPrincipal(principal, permission);
 }

@@ -23,7 +23,7 @@ function setText(id, value) {
   element.appendChild(document.createTextNode(value));
 }
 
-const nsICertificateDialogs = Components.interfaces.nsICertificateDialogs;
+const nsICertificateDialogs = Ci.nsICertificateDialogs;
 const nsCertificateDialogs = "@mozilla.org/nsCertificateDialogs;1";
 
 function viewCertHelper(parent, cert) {
@@ -31,7 +31,7 @@ function viewCertHelper(parent, cert) {
     return;
   }
 
-  var cd = Components.classes[nsCertificateDialogs].getService(nsICertificateDialogs);
+  var cd = Cc[nsCertificateDialogs].getService(nsICertificateDialogs);
   cd.viewCert(parent, cert);
 }
 
@@ -69,8 +69,8 @@ function alertPromptService(title, message) {
   // XXX Bug 1425832 - Using Services.prompt here causes tests to report memory
   // leaks.
   // eslint-disable-next-line mozilla/use-services
-  var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
-           getService(Components.interfaces.nsIPromptService);
+  var ps = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+           getService(Ci.nsIPromptService);
   ps.alert(window, title, message);
 }
 
@@ -107,8 +107,8 @@ async function exportToFile(parent, cert) {
     return undefined;
   }
 
-  var nsIFilePicker = Components.interfaces.nsIFilePicker;
-  var fp = Components.classes["@mozilla.org/filepicker;1"].
+  var nsIFilePicker = Ci.nsIFilePicker;
+  var fp = Cc["@mozilla.org/filepicker;1"].
            createInstance(nsIFilePicker);
   fp.init(parent, bundle.getString("SaveCertAs"),
           nsIFilePicker.modeSave);
@@ -137,17 +137,17 @@ async function exportToFile(parent, cert) {
         content = getPEMString(cert);
         var chain = cert.getChain();
         for (let i = 1; i < chain.length; i++) {
-          content += getPEMString(chain.queryElementAt(i, Components.interfaces.nsIX509Cert));
+          content += getPEMString(chain.queryElementAt(i, Ci.nsIX509Cert));
         }
         break;
       case 2:
         content = getDERString(cert);
         break;
       case 3:
-        content = getPKCS7String(cert, Components.interfaces.nsIX509Cert.CMS_CHAIN_MODE_CertOnly);
+        content = getPKCS7String(cert, Ci.nsIX509Cert.CMS_CHAIN_MODE_CertOnly);
         break;
       case 4:
-        content = getPKCS7String(cert, Components.interfaces.nsIX509Cert.CMS_CHAIN_MODE_CertChainWithRoot);
+        content = getPKCS7String(cert, Ci.nsIX509Cert.CMS_CHAIN_MODE_CertChainWithRoot);
         break;
       case 0:
       default:
@@ -157,25 +157,25 @@ async function exportToFile(parent, cert) {
     var msg;
     var written = 0;
     try {
-      var file = Components.classes["@mozilla.org/file/local;1"].
-                 createInstance(Components.interfaces.nsIFile);
+      var file = Cc["@mozilla.org/file/local;1"].
+                 createInstance(Ci.nsIFile);
       file.initWithPath(fp.file.path);
-      var fos = Components.classes["@mozilla.org/network/file-output-stream;1"].
-                createInstance(Components.interfaces.nsIFileOutputStream);
+      var fos = Cc["@mozilla.org/network/file-output-stream;1"].
+                createInstance(Ci.nsIFileOutputStream);
       // flags: PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
       fos.init(file, 0x02 | 0x08 | 0x20, 0o0644, 0);
       written = fos.write(content, content.length);
       fos.close();
     } catch (e) {
       switch (e.result) {
-        case Components.results.NS_ERROR_FILE_ACCESS_DENIED:
+        case Cr.NS_ERROR_FILE_ACCESS_DENIED:
           msg = bundle.getString("writeFileAccessDenied");
           break;
-        case Components.results.NS_ERROR_FILE_IS_LOCKED:
+        case Cr.NS_ERROR_FILE_IS_LOCKED:
           msg = bundle.getString("writeFileIsLocked");
           break;
-        case Components.results.NS_ERROR_FILE_NO_DEVICE_SPACE:
-        case Components.results.NS_ERROR_FILE_DISK_FULL:
+        case Cr.NS_ERROR_FILE_NO_DEVICE_SPACE:
+        case Cr.NS_ERROR_FILE_DISK_FULL:
           msg = bundle.getString("writeFileNoDeviceSpace");
           break;
         default:

@@ -23,7 +23,7 @@ function ignoreEvent(aSubject, aTopic, aData) {
   // With e10s disabled, our content script receives notifications for the
   // preview displayed in our screen sharing permission prompt; ignore them.
   const kBrowserURL = "chrome://browser/content/browser.xul";
-  const nsIPropertyBag = Components.interfaces.nsIPropertyBag;
+  const nsIPropertyBag = Ci.nsIPropertyBag;
   if (aTopic == "recording-device-events" &&
       aSubject.QueryInterface(nsIPropertyBag).getProperty("requestURL") == kBrowserURL) {
     return true;

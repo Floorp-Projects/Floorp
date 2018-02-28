@@ -52,7 +52,7 @@ function NS_ASSERT(condition, message) {
   var assertionText = "ASSERT: " + message + "\n";
 
   // Report the error to the console
-  Components.utils.reportError(assertionText);
+  Cu.reportError(assertionText);
 
   if (releaseBuild) {
     return;

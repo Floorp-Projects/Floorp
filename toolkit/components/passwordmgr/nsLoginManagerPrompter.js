@@ -126,8 +126,8 @@ LoginManagerPromptFactory.prototype = {
                 e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
               self.log("_doAsyncPrompt:run bypassed, UI is not available in this context");
             } else {
-              Components.utils.reportError("LoginManagerPrompter: " +
-                                           "_doAsyncPrompt:run: " + e + "\n");
+              Cu.reportError("LoginManagerPrompter: " +
+                             "_doAsyncPrompt:run: " + e + "\n");
             }
           }
 
@@ -588,7 +588,7 @@ LoginManagerPrompter.prototype = {
     } catch (e) {
       // Ignore any errors and display the prompt anyway.
       epicfail = true;
-      Components.utils.reportError("LoginManagerPrompter: " +
+      Cu.reportError("LoginManagerPrompter: " +
           "Epic fail in promptAuth: " + e + "\n");
     }
 
@@ -649,7 +649,7 @@ LoginManagerPrompter.prototype = {
         this._updateLogin(selectedLogin);
       }
     } catch (e) {
-      Components.utils.reportError("LoginManagerPrompter: " +
+      Cu.reportError("LoginManagerPrompter: " +
           "Fail2 in promptAuth: " + e + "\n");
     }
 
@@ -693,7 +693,7 @@ LoginManagerPrompter.prototype = {
       this._factory._asyncPrompts[hashKey] = asyncPrompt;
       this._factory._doAsyncPrompt();
     } catch (e) {
-      Components.utils.reportError("LoginManagerPrompter: " +
+      Cu.reportError("LoginManagerPrompter: " +
           "asyncPromptAuth: " + e + "\nFalling back to promptAuth\n");
       // Fail the prompt operation to let the consumer fall back
       // to synchronous promptAuth method

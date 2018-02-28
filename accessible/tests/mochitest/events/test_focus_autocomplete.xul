@@ -264,8 +264,8 @@
       var popupNode = autocompleteNode.popup;
       if (!popupNode) {
         // HTML form autocomplete
-        var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
-          getService(Components.interfaces.nsIAutoCompleteController);
+        var controller = Cc["@mozilla.org/autocomplete/controller;1"].
+          getService(Ci.nsIAutoCompleteController);
         popupNode = controller.input.popup.QueryInterface(nsIDOMNode);
       }
 

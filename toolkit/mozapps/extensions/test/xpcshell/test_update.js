@@ -248,7 +248,7 @@ for (let test of testParams) {
 
         // Make sure that the extension lastModifiedTime was updated.
         let testURI = a1.getResourceURI(TEST_UNPACKED ? "install.rdf" : "");
-        let testFile = testURI.QueryInterface(Components.interfaces.nsIFileURL).file;
+        let testFile = testURI.QueryInterface(Ci.nsIFileURL).file;
         let difference = testFile.lastModifiedTime - startupTime;
         Assert.ok(Math.abs(difference) < MAX_TIME_DIFFERENCE);
 

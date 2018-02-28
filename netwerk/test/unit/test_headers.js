@@ -75,7 +75,7 @@ function setupChannel(url)
     uri: URL + url,
     loadUsingSystemPrincipal: true
   });
-  var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
+  var httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
   return httpChan;
 }
 

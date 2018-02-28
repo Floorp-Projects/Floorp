@@ -74,7 +74,7 @@
       <method name="reload">
         <body>
           <![CDATA[
-            const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+            const nsIWebNavigation = Ci.nsIWebNavigation;
             const flags = nsIWebNavigation.LOAD_FLAGS_NONE;
             this.reloadWithFlags(flags);
           ]]>
@@ -93,7 +93,7 @@
       <method name="stop">
         <body>
           <![CDATA[
-            const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+            const nsIWebNavigation = Ci.nsIWebNavigation;
             const flags = nsIWebNavigation.STOP_ALL;
             this.webNavigation.stop(flags);
           ]]>
@@ -107,7 +107,7 @@
         <parameter name="aCharset"/>
         <body>
           <![CDATA[
-            const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+            const nsIWebNavigation = Ci.nsIWebNavigation;
             const flags = nsIWebNavigation.LOAD_FLAGS_NONE;
             this._wrapURIChangeCall(() =>
               this.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset));
@@ -127,7 +127,7 @@
             if (!aURI)
               aURI = "about:blank";
 
-            var aReferrerPolicy = Components.interfaces.nsIHttpChannel.REFERRER_POLICY_UNSET;
+            var aReferrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_UNSET;
             var aTriggeringPrincipal;
 
             // Check for loadURIWithFlags(uri, { ... });
@@ -240,7 +240,7 @@
           return this._sameProcessAsFrameLoader && this._sameProcessAsFrameLoader.get();
         ]]></getter>
         <setter><![CDATA[
-          this._sameProcessAsFrameLoader = Components.utils.getWeakReference(val);
+          this._sameProcessAsFrameLoader = Cu.getWeakReference(val);
         ]]></setter>
       </property>
 
@@ -330,7 +330,7 @@
         <getter>
           <![CDATA[
             var document = this.contentDocument;
-            if (!document || !(document instanceof Components.interfaces.nsIImageDocument))
+            if (!document || !(document instanceof Ci.nsIImageDocument))
               return null;
 
             try {
@@ -387,7 +387,7 @@
             if (!this.docShell) {
               return null;
             }
-            this._webNavigation = this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+            this._webNavigation = this.docShell.QueryInterface(Ci.nsIWebNavigation);
           }
           return this._webNavigation;
         ]]>
@@ -401,7 +401,7 @@
         <getter>
         <![CDATA[
           if (!this._webBrowserFind)
-            this._webBrowserFind = this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebBrowserFind);
+            this._webBrowserFind = this.docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebBrowserFind);
           return this._webBrowserFind;
         ]]>
         </getter>
@@ -449,8 +449,8 @@
             if (!this.docShell)
               return null;
 
-            this._fastFind = Components.classes["@mozilla.org/typeaheadfind;1"]
-                                       .createInstance(Components.interfaces.nsITypeAheadFind);
+            this._fastFind = Cc["@mozilla.org/typeaheadfind;1"]
+                               .createInstance(Ci.nsITypeAheadFind);
             this._fastFind.init(this.docShell);
           }
           return this._fastFind;
@@ -460,8 +460,8 @@
       <property name="outerWindowID" readonly="true">
         <getter><![CDATA[
           return this.contentWindow
-                     .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                     .getInterface(Components.interfaces.nsIDOMWindowUtils)
+                     .QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIDOMWindowUtils)
                      .outerWindowID;
         ]]></getter>
       </property>
@@ -470,8 +470,8 @@
         <getter><![CDATA[
           try {
             return this.contentWindow
-                       .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                       .getInterface(Components.interfaces.nsIDOMWindowUtils)
+                       .QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDOMWindowUtils)
                        .currentInnerWindowID;
           } catch (e) {
             if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
@@ -616,9 +616,9 @@
           if (!this._mStrBundle) {
             // need to create string bundle manually instead of using <xul:stringbundle/>
             // see bug 63370 for details
-            this._mStrBundle = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                         .getService(Components.interfaces.nsIStringBundleService)
-                                         .createBundle("chrome://global/locale/browser.properties");
+            this._mStrBundle = Cc["@mozilla.org/intl/stringbundle;1"]
+                                 .getService(Ci.nsIStringBundleService)
+                                 .createBundle("chrome://global/locale/browser.properties");
           }
           return this._mStrBundle;
         ]]></getter>
@@ -630,7 +630,7 @@
         <body>
           <![CDATA[
             if (!aNotifyMask) {
-              aNotifyMask = Components.interfaces.nsIWebProgress.NOTIFY_ALL;
+              aNotifyMask = Ci.nsIWebProgress.NOTIFY_ALL;
             }
             this.webProgress.addProgressListener(aListener, aNotifyMask);
           ]]>
@@ -651,11 +651,11 @@
         <parameter name="aSoughtURI"/>
         <body>
           <![CDATA[
-            if (aDocShell.QueryInterface(Components.interfaces.nsIWebNavigation)
+            if (aDocShell.QueryInterface(Ci.nsIWebNavigation)
                          .currentURI.spec == aSoughtURI.spec)
               return aDocShell;
             var node = aDocShell.QueryInterface(
-                                   Components.interfaces.nsIDocShellTreeItem);
+                                   Ci.nsIDocShellTreeItem);
             for (var i = 0; i < node.childCount; ++i) {
               var docShell = node.getChildAt(i);
               docShell = this.findChildShell(docShell, aSoughtURI);
@@ -912,8 +912,8 @@
               const SECUREBROWSERUI_CONTRACTID = "@mozilla.org/secure_browser_ui;1";
               if (!this.hasAttribute("disablesecurity") &&
                   SECUREBROWSERUI_CONTRACTID in Components.classes) {
-                var securityUI = Components.classes[SECUREBROWSERUI_CONTRACTID]
-                                           .createInstance(Components.interfaces.nsISecureBrowserUI);
+                var securityUI = Cc[SECUREBROWSERUI_CONTRACTID]
+                                   .createInstance(Ci.nsISecureBrowserUI);
                 securityUI.init(this.contentWindow);
               }
             }
@@ -990,8 +990,8 @@
             // loader when creating the docShell as long as this xul:browser
             // doesn't have the 'disablehistory' attribute set.
             if (this.docShell && this.webNavigation.sessionHistory) {
-              var os = Components.classes["@mozilla.org/observer-service;1"]
-                                 .getService(Components.interfaces.nsIObserverService);
+              var os = Cc["@mozilla.org/observer-service;1"]
+                         .getService(Ci.nsIObserverService);
               os.addObserver(this, "browser:purge-session-history", true);
 
               // enable global history if we weren't told otherwise
@@ -1000,12 +1000,12 @@
                   this.docShell.useGlobalHistory = true;
                 } catch (ex) {
                   // This can occur if the Places database is locked
-                  Components.utils.reportError("Error enabling browser global history: " + ex);
+                  Cu.reportError("Error enabling browser global history: " + ex);
                 }
               }
             }
           } catch (e) {
-            Components.utils.reportError(e);
+            Cu.reportError(e);
           }
           try {
             // Ensures the securityUI is initialized.
@@ -1071,8 +1071,8 @@
           this.mDestroyed = true;
 
           if (this.docShell && this.webNavigation.sessionHistory) {
-            var os = Components.classes["@mozilla.org/observer-service;1"]
-                               .getService(Components.interfaces.nsIObserverService);
+            var os = Cc["@mozilla.org/observer-service;1"]
+                       .getService(Ci.nsIObserverService);
             try {
               os.removeObserver(this, "browser:purge-session-history");
             } catch (ex) {
@@ -1131,8 +1131,8 @@
                   // If APZ is handling the autoscroll, it may decide to cancel
                   // it of its own accord, so register an observer to allow it
                   // to notify us of that.
-                  var os = Components.classes["@mozilla.org/observer-service;1"]
-                                     .getService(Components.interfaces.nsIObserverService);
+                  var os = Cc["@mozilla.org/observer-service;1"]
+                             .getService(Ci.nsIObserverService);
                   os.addObserver(this, "apz:cancel-autoscroll", true);
 
                   usingApz = tabParent.startApzAutoscroll(
@@ -1270,8 +1270,8 @@
               window.removeEventListener("keyup", this, true);
               this.messageManager.sendAsyncMessage("Autoscroll:Stop");
 
-              var os = Components.classes["@mozilla.org/observer-service;1"]
-                                 .getService(Components.interfaces.nsIObserverService);
+              var os = Cc["@mozilla.org/observer-service;1"]
+                         .getService(Ci.nsIObserverService);
               try {
                 os.removeObserver(this, "apz:cancel-autoscroll");
               } catch (ex) {
@@ -1331,8 +1331,8 @@
               this._autoScrollPopup.style.margin = -POPUP_SIZE / 2 + "px";
             }
 
-            let screenManager = Components.classes["@mozilla.org/gfx/screenmanager;1"]
-              .getService(Components.interfaces.nsIScreenManager);
+            let screenManager = Cc["@mozilla.org/gfx/screenmanager;1"]
+              .getService(Ci.nsIScreenManager);
             let screen = screenManager.screenForRect(screenX, screenY, 1, 1);
 
             // we need these attributes so themers don't need to create per-platform packages
@@ -1645,7 +1645,7 @@
           <![CDATA[
             if (!this.frameLoader) {
               throw Components.Exception("No frame loader.",
-                                         Components.results.NS_ERROR_FAILURE);
+                                         Cr.NS_ERROR_FAILURE);
             }
 
             this.frameLoader.print(aOuterWindowID, aPrintSettings,
@@ -1695,8 +1695,8 @@
           var warn = this.mPrefs.getBoolPref(kPrefWarnOnEnable, true);
           if (warn && !browseWithCaretOn) {
             var checkValue = {value: false};
-            var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                          .getService(Components.interfaces.nsIPromptService);
+            var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"]
+                                  .getService(Ci.nsIPromptService);
 
             var buttonPressed = promptService.confirmEx(window,
               this.mStrBundle.GetStringFromName("browsewithcaret.checkWindowTitle"),
@@ -1749,8 +1749,8 @@
         if (this.isRemoteBrowser)
           return;
 
-        let linkHandler = Components.classes["@mozilla.org/content/dropped-link-handler;1"].
-                            getService(Components.interfaces.nsIDroppedLinkHandler);
+        let linkHandler = Cc["@mozilla.org/content/dropped-link-handler;1"].
+                            getService(Ci.nsIDroppedLinkHandler);
         if (linkHandler.canDropLink(event, false))
           event.preventDefault();
       ]]>
@@ -1762,8 +1762,8 @@
         if (!this.droppedLinkHandler || event.defaultPrevented || this.isRemoteBrowser)
           return;
 
-        let linkHandler = Components.classes["@mozilla.org/content/dropped-link-handler;1"].
-                            getService(Components.interfaces.nsIDroppedLinkHandler);
+        let linkHandler = Cc["@mozilla.org/content/dropped-link-handler;1"].
+                            getService(Ci.nsIDroppedLinkHandler);
         try {
           // Pass true to prevent the dropping of javascript:/data: URIs
           var links = linkHandler.dropLinks(event, true);

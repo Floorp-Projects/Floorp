@@ -3,7 +3,7 @@
 // Forward messages from the test to the iframe as events.
 addMessageListener("TestMessage", msg => {
   content.dispatchEvent(new content.CustomEvent("TestEvent", {
-    detail: Components.utils.cloneInto(msg.data, content),
+    detail: Cu.cloneInto(msg.data, content),
   }));
 });
 
@@ -11,7 +11,7 @@ addMessageListener("TestMessage", msg => {
 addEventListener("TestEventAck", event => {
   // The waiveXrays call is copied from the contentSearch.js part of
   // browser_ContentSearch.js test.  Not sure whether it's necessary here.
-  sendAsyncMessage("TestMessageAck", Components.utils.waiveXrays(event.detail));
+  sendAsyncMessage("TestMessageAck", Cu.waiveXrays(event.detail));
 }, true, true);
 
 // Send a message to the test when the iframe is loaded.

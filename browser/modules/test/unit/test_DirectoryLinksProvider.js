@@ -176,15 +176,15 @@ function run_test() {
 
 
 function setTimeout(fun, timeout) {
-  let timer = Components.classes["@mozilla.org/timer;1"]
-                        .createInstance(Components.interfaces.nsITimer);
+  let timer = Cc["@mozilla.org/timer;1"]
+                .createInstance(Ci.nsITimer);
   var event = {
     notify() {
       fun();
     }
   };
   timer.initWithCallback(event, timeout,
-                         Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+                         Ci.nsITimer.TYPE_ONE_SHOT);
   return timer;
 }
 

@@ -14,8 +14,8 @@ const resProtocol = Cc["@mozilla.org/network/protocol;1?name=resource"]
 
 function frameScript() {
   ChromeUtils.import("resource://gre/modules/Services.jsm");
-  let resProtocol = Components.classes["@mozilla.org/network/protocol;1?name=resource"]
-                              .getService(Components.interfaces.nsIResProtocolHandler);
+  let resProtocol = Cc["@mozilla.org/network/protocol;1?name=resource"]
+                      .getService(Ci.nsIResProtocolHandler);
 
   addMessageListener("Test:ResolveURI", function({ data: uri }) {
     uri = Services.io.newURI(uri);

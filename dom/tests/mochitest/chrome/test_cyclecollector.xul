@@ -18,15 +18,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <script type="application/javascript">
   <![CDATA[
   /** Test for Bug  **/
-  var obs = Components.classes["@mozilla.org/observer-service;1"]
-                      .getService(Ci.nsIObserverService);
+  var obs = Cc["@mozilla.org/observer-service;1"]
+              .getService(Ci.nsIObserverService);
   var didCall = false;
   var observer = {
     QueryInterface: function QueryInterface(aIID) {
       if (aIID.equals(Ci.nsIObserver) ||
           aIID.equals(Ci.nsISupports))
         return this;
-      throw Components.results.NS_NOINTERFACE;
+      throw Cr.NS_NOINTERFACE;
     },
     observe: function(subject, topic, data) {
       obs.removeObserver(observer, "cycle-collector-begin");

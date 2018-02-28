@@ -94,7 +94,7 @@ const testBlackBox = async function () {
 
 function evalCode() {
   /* eslint-disable */
-  Components.utils.evalInSandbox(
+  Cu.evalInSandbox(
     "" + function doStuff(k) { // line 1
       var arg = 15;            // line 2 - Step in here
       k(arg);                  // line 3
@@ -105,7 +105,7 @@ function evalCode() {
     1
   );
 
-  Components.utils.evalInSandbox(
+  Cu.evalInSandbox(
     "" + function runTest() { // line 1
       doStuff(                // line 2 - Break here
         function (n) {        // line 3 - Step through `doStuff` to here

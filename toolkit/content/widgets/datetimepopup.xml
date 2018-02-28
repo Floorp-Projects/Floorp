@@ -31,8 +31,8 @@
       <field name="DATE_PICKER_WIDTH" readonly="true">"23.1em"</field>
       <field name="DATE_PICKER_HEIGHT" readonly="true">"20.7em"</field>
       <constructor><![CDATA[
-        this.mozIntl = Components.classes["@mozilla.org/mozintl;1"]
-                                 .getService(Components.interfaces.mozIMozIntl);
+        this.mozIntl = Cc["@mozilla.org/mozintl;1"]
+                         .getService(Ci.mozIMozIntl);
         // Notify DateTimePickerHelper.jsm that binding is ready.
         this.dispatchEvent(new CustomEvent("DateTimePickerBindingReady"));
       ]]></constructor>

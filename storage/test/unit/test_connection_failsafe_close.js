@@ -25,7 +25,7 @@ add_task(async function test_failsafe_close_of_async_connection() {
   // the async statement.
   db = gDBConn = null;
   // (we don't need to cycle collect)
-  Components.utils.forceGC();
+  Cu.forceGC();
 
   // now we need to wait for that callback to have completed.
   await callbackInvoked;

@@ -57,7 +57,7 @@ function readFile(file) {
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
     createInstance(Ci.nsIFileInputStream);
   let sstream = Cc["@mozilla.org/scriptableinputstream;1"].
-    createInstance(Components.interfaces.nsIScriptableInputStream);
+    createInstance(Ci.nsIScriptableInputStream);
 
   const RO = 0x01;
   const READ_OTHERS = 4;

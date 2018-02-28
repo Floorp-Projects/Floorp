@@ -29,7 +29,7 @@ function cacheDataForContext(loadContextInfo) {
         if (iid.equals(Ci.nsICacheStorageVisitor))
           return this;
 
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+        throw Cr.NS_ERROR_NO_INTERFACE;
       }
     };
     // Visiting the disk cache also visits memory storage so we do not

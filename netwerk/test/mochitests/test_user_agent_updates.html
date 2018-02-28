@@ -213,8 +213,8 @@ SpecialPowers.pushPrefEnv({
 
 const chromeScript = SpecialPowers.loadChromeScript(_ => {
   // Enter update timer manager test mode
-  Components.classes["@mozilla.org/updates/timer-manager;1"].getService(
-    Components.interfaces.nsIObserver).observe(null, "utm-test-init", "");
+  Cc["@mozilla.org/updates/timer-manager;1"].getService(
+    Ci.nsIObserver).observe(null, "utm-test-init", "");
 
   var _notifyOnUpdate = false;
 

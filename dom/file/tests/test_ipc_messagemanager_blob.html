@@ -20,7 +20,7 @@
       "use strict";
 
       addMessageListener("test:ipcClonedMessage", function(message) {
-        if (!(message.json instanceof Components.interfaces.nsIDOMBlob)) {
+        if (!(message.json instanceof Ci.nsIDOMBlob)) {
           sendAsyncMessage(message.name, message.json);
           return;
         }

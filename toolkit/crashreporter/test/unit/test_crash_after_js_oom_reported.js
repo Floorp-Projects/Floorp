@@ -11,9 +11,9 @@ function run_test() {
 
       // GC now to avoid having it happen randomly later, which would make the
       // test bogusly fail. See comment below.
-      Components.utils.forceGC();
+      Cu.forceGC();
 
-      Components.utils.getJSTestingFunctions().reportOutOfMemory();
+      Cu.getJSTestingFunctions().reportOutOfMemory();
     },
     function(mdump, extra) {
       Assert.equal(extra.TestingOOMCrash, "Yes");

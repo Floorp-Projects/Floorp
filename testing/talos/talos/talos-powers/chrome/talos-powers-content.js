@@ -10,8 +10,8 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function canQuitApplication() {
   try {
-    var cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
-      .createInstance(Components.interfaces.nsISupportsPRBool);
+    var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
+      .createInstance(Ci.nsISupportsPRBool);
     Services.obs.notifyObservers(cancelQuit, "quit-application-requested");
 
     // Something aborted the quit process.
@@ -62,11 +62,10 @@ function goQuitApplication(waitForSafeBrowsing) {
     throw "goQuitApplication: no AppStartup/appShell";
   }
 
-  var windowManager = Components.
-    classes["@mozilla.org/appshell/window-mediator;1"].getService();
+  var windowManager = Cc["@mozilla.org/appshell/window-mediator;1"].getService();
 
   var windowManagerInterface = windowManager.
-    QueryInterface(Components.interfaces.nsIWindowMediator);
+    QueryInterface(Ci.nsIWindowMediator);
 
   var enumerator = windowManagerInterface.getEnumerator(null);
 

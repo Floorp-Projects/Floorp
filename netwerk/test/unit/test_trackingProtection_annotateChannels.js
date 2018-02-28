@@ -41,7 +41,7 @@ listener.prototype = {
       Assert.ok(request.QueryInterface(Ci.nsIClassOfService).classFlags &
                 Ci.nsIClassOfService.Throttleable);
     }
-    request.cancel(Components.results.NS_ERROR_ABORT);
+    request.cancel(Cr.NS_ERROR_ABORT);
     this._nextTest();
   },
   onDataAvailable: function(request, context, stream, offset, count) {

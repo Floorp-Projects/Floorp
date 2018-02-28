@@ -187,9 +187,9 @@
           <![CDATA[
             if (val != this._eventNode) {
               const nsIEventListenerService =
-                Components.interfaces.nsIEventListenerService;
-              let els = Components.classes["@mozilla.org/eventlistenerservice;1"]
-                                  .getService(nsIEventListenerService);
+                Ci.nsIEventListenerService;
+              let els = Cc["@mozilla.org/eventlistenerservice;1"]
+                          .getService(nsIEventListenerService);
               els.addSystemEventListener(val, "keydown", this, false);
               els.removeSystemEventListener(this._eventNode, "keydown", this, false);
               this._eventNode = val;
@@ -717,7 +717,7 @@
         <getter>
           <![CDATA[
             var parent = this.parentNode;
-            if (parent instanceof Components.interfaces.nsIDOMXULSelectControlElement)
+            if (parent instanceof Ci.nsIDOMXULSelectControlElement)
               return parent;
             return null;
           ]]>

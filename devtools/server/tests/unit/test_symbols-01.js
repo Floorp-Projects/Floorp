@@ -28,7 +28,7 @@ function run_test() {
 async function testSymbols(client, debuggee) {
   const evalCode = () => {
     /* eslint-disable */
-    Components.utils.evalInSandbox(
+    Cu.evalInSandbox(
       "(" + function () {
         var symbolWithName = Symbol("Chris");
         var symbolWithoutName = Symbol();

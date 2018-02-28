@@ -209,7 +209,7 @@ function run_test_2(aAddon) {
       install.addListener({
         onDownloadProgress() {
           executeSoon(function() {
-            Components.utils.forceGC();
+            Cu.forceGC();
           });
         }
       });
@@ -1301,7 +1301,7 @@ function run_test_26() {
         return;
 
       // Request should have been cancelled
-      Assert.equal(aChannel.status, Components.results.NS_BINDING_ABORTED);
+      Assert.equal(aChannel.status, Cr.NS_BINDING_ABORTED);
 
       observerService.removeObserver(this);
 

@@ -528,8 +528,8 @@ add_task(async function test_subprocess_pathSearch() {
 
 add_task(async function test_subprocess_workdir() {
   let procDir = await OS.File.getCurrentDirectory();
-  let tmpDirFile = Components.classes["@mozilla.org/file/local;1"]
-                     .createInstance(Components.interfaces.nsIFile);
+  let tmpDirFile = Cc["@mozilla.org/file/local;1"]
+                     .createInstance(Ci.nsIFile);
   tmpDirFile.initWithPath(OS.Constants.Path.tmpDir);
   tmpDirFile.normalize();
   let tmpDir = tmpDirFile.path;

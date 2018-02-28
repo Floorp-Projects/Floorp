@@ -81,7 +81,7 @@ function test_row_enumerate() {
   // throws an error.
   let savedOffRow = stmt.row;
   stmt = null;
-  Components.utils.forceGC();
+  Cu.forceGC();
   Assert.throws(() => { return savedOffRow.string; },
                 "GC'ed statement should throw");
 }

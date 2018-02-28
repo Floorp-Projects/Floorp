@@ -30,14 +30,14 @@ var results = [
 ];
 
 function run_test() {
-  var pm = Components.classes["@mozilla.org/permissionmanager;1"]
-                     .getService(Components.interfaces.nsIPermissionManager);
+  var pm = Cc["@mozilla.org/permissionmanager;1"]
+             .getService(Ci.nsIPermissionManager);
 
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                            .getService(Components.interfaces.nsIIOService);
+  var ioService = Cc["@mozilla.org/network/io-service;1"]
+                    .getService(Ci.nsIIOService);
 
-  var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                         .getService(Components.interfaces.nsIScriptSecurityManager);
+  var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                 .getService(Ci.nsIScriptSecurityManager);
 
   // nsIPermissionManager implementation is an extension; don't fail if it's not there
   if (!pm)
@@ -65,7 +65,7 @@ function run_test() {
   var perms = new Array();
   var enumerator = pm.enumerator;
   while (enumerator.hasMoreElements()) {
-    perms[j] = enumerator.getNext().QueryInterface(Components.interfaces.nsIPermission);
+    perms[j] = enumerator.getNext().QueryInterface(Ci.nsIPermission);
     ++j;
   }
   Assert.equal(perms.length, hosts.length);
@@ -98,7 +98,7 @@ function run_test() {
   pm.add(uri, "utf8", 1);
   var enumerator = pm.enumerator;
   Assert.equal(enumerator.hasMoreElements(), true);
-  var ace = enumerator.getNext().QueryInterface(Components.interfaces.nsIPermission);
+  var ace = enumerator.getNext().QueryInterface(Ci.nsIPermission);
   Assert.equal(ace.principal.URI.asciiHost, aceref);
   Assert.equal(enumerator.hasMoreElements(), false);
 

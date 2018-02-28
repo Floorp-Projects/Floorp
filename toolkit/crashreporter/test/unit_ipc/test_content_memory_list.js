@@ -6,8 +6,8 @@ load("../unit/head_crashreporter.js");
 
 function run_test() {
   var is_win7_or_newer = false;
-  var ph = Components.classes["@mozilla.org/network/protocol;1?name=http"]
-             .getService(Components.interfaces.nsIHttpProtocolHandler);
+  var ph = Cc["@mozilla.org/network/protocol;1?name=http"]
+             .getService(Ci.nsIHttpProtocolHandler);
   var match = ph.userAgent.match(/Windows NT (\d+).(\d+)/);
   if (match && (parseInt(match[1]) > 6 ||
                 parseInt(match[1]) == 6 && parseInt(match[2]) >= 1)) {

@@ -24,7 +24,7 @@ var CrashReports = {
     if (this.submittedDir.exists() && this.submittedDir.isDirectory()) {
       let entries = this.submittedDir.directoryEntries;
       while (entries.hasMoreElements()) {
-        let file = entries.getNext().QueryInterface(Components.interfaces.nsIFile);
+        let file = entries.getNext().QueryInterface(Ci.nsIFile);
         let leaf = file.leafName;
         if (leaf.startsWith("bp-") &&
             leaf.endsWith(".txt")) {
@@ -42,7 +42,7 @@ var CrashReports = {
       let uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       let entries = this.pendingDir.directoryEntries;
       while (entries.hasMoreElements()) {
-        let file = entries.getNext().QueryInterface(Components.interfaces.nsIFile);
+        let file = entries.getNext().QueryInterface(Ci.nsIFile);
         let leaf = file.leafName;
         let id = leaf.slice(0, -4);
         if (leaf.endsWith(".dmp") && uuidRegex.test(id)) {
@@ -62,20 +62,20 @@ var CrashReports = {
 };
 
 function CrashReports_pendingDir() {
-  let pendingDir = Services.dirsvc.get("UAppData", Components.interfaces.nsIFile);
+  let pendingDir = Services.dirsvc.get("UAppData", Ci.nsIFile);
   pendingDir.append("Crash Reports");
   pendingDir.append("pending");
   return pendingDir;
 }
 
 function CrashReports_reportsDir() {
-  let reportsDir = Services.dirsvc.get("UAppData", Components.interfaces.nsIFile);
+  let reportsDir = Services.dirsvc.get("UAppData", Ci.nsIFile);
   reportsDir.append("Crash Reports");
   return reportsDir;
 }
 
 function CrashReports_submittedDir() {
-  let submittedDir = Services.dirsvc.get("UAppData", Components.interfaces.nsIFile);
+  let submittedDir = Services.dirsvc.get("UAppData", Ci.nsIFile);
   submittedDir.append("Crash Reports");
   submittedDir.append("submitted");
   return submittedDir;

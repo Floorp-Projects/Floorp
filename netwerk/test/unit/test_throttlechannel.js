@@ -12,7 +12,7 @@ function test_handler(metadata, response) {
 
 function make_channel(url) {
   return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
-                .QueryInterface(Components.interfaces.nsIHttpChannel);
+                .QueryInterface(Ci.nsIHttpChannel);
 }
 
 function run_test() {

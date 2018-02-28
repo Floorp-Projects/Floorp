@@ -48,7 +48,7 @@ function test_executable_lines() {
 
   let code = readFile("sourcemapped.js");
 
-  Components.utils.evalInSandbox(code, gDebuggee, "1.8",
+  Cu.evalInSandbox(code, gDebuggee, "1.8",
     SOURCE_MAPPED_FILE, 1);
 }
 

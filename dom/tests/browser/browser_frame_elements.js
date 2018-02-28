@@ -8,8 +8,8 @@ const TEST_URI = "http://example.com/browser/dom/tests/browser/browser_frame_ele
 
 function getWindowUtils(window) {
   return window.
-    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-    getInterface(Components.interfaces.nsIDOMWindowUtils);
+    QueryInterface(Ci.nsIInterfaceRequestor).
+    getInterface(Ci.nsIDOMWindowUtils);
 }
 
 add_task(async function test() {
@@ -30,8 +30,8 @@ add_task(async function test() {
 function startTests() {
   function getWindowUtils(window) {
     return window.
-      QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-      getInterface(Components.interfaces.nsIDOMWindowUtils);
+      QueryInterface(Ci.nsIInterfaceRequestor).
+      getInterface(Ci.nsIDOMWindowUtils);
   }
   info("Frame tests started");
 

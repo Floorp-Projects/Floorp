@@ -27,14 +27,14 @@ function run_test() {
               prop == "ProfLDS" || prop == "TmpD") {
             return file.clone();
           }
-          throw Components.results.NS_ERROR_FAILURE;
+          throw Cr.NS_ERROR_FAILURE;
         },
         QueryInterface(iid) {
           if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
               iid.equals(Ci.nsISupports)) {
             return this;
           }
-          throw Components.results.NS_ERROR_NO_INTERFACE;
+          throw Cr.NS_ERROR_NO_INTERFACE;
         }
       };
       Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)

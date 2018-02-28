@@ -241,7 +241,7 @@ var PluginHost = {
      || iid.equals(Ci.nsISupports))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   }
 };
 
@@ -269,7 +269,7 @@ var WindowWatcher = {
      || iid.equals(Ci.nsISupports))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   }
 };
 
@@ -299,8 +299,8 @@ function create_addon(addon) {
   target.append(addon.id);
   target.append("install.rdf");
   target.create(target.NORMAL_FILE_TYPE, 0o644);
-  var stream = Components.classes["@mozilla.org/network/file-output-stream;1"]
-                         .createInstance(Ci.nsIFileOutputStream);
+  var stream = Cc["@mozilla.org/network/file-output-stream;1"]
+                 .createInstance(Ci.nsIFileOutputStream);
   stream.init(target, 0x04 | 0x08 | 0x20, 0o664, 0); // write, create, truncate
   stream.write(installrdf, installrdf.length);
   stream.close();
@@ -350,8 +350,8 @@ function check_state(test, lastTest, callback) {
 
 function load_blocklist(file) {
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" + gPort + "/data/" + file);
-  var blocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
-                            .getService(Ci.nsITimerCallback);
+  var blocklist = Cc["@mozilla.org/extensions/blocklist;1"]
+                    .getService(Ci.nsITimerCallback);
   blocklist.notify(null);
 }
 

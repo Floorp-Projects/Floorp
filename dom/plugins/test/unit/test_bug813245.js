@@ -23,8 +23,8 @@ function write_registry(version, info) {
 
   var registry = gProfD.clone();
   registry.append("pluginreg.dat");
-  var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
-                           .createInstance(Components.interfaces.nsIFileOutputStream);
+  var foStream = Cc["@mozilla.org/network/file-output-stream;1"]
+                   .createInstance(Ci.nsIFileOutputStream);
   // write, create, truncate
   foStream.init(registry, 0x02 | 0x08 | 0x20, 0o666, 0);
 

@@ -26,7 +26,7 @@ function run_test()
     do_throw("Should not be able to add the same file twice");
   }
   catch (e) {
-    Assert.equal(e.result, Components.results.NS_ERROR_FILE_ALREADY_EXISTS);
+    Assert.equal(e.result, Cr.NS_ERROR_FILE_ALREADY_EXISTS);
   }
 
   // Remove all the tests and see if we are left with an empty zip

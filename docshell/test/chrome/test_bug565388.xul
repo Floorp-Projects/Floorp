@@ -44,10 +44,10 @@ function test() {
     },
 
     QueryInterface: function(iid) {
-      if (iid.equals(Components.interfaces.nsIWebProgressListener) ||
-          iid.equals(Components.interfaces.nsISupportsWeakReference))
+      if (iid.equals(Ci.nsIWebProgressListener) ||
+          iid.equals(Ci.nsISupportsWeakReference))
         return this;
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     }
   }
 

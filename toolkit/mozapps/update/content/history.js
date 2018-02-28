@@ -15,8 +15,8 @@ var gUpdateHistory = {
     this._view = document.getElementById("historyItems");
 
     var um =
-        Components.classes["@mozilla.org/updates/update-manager;1"].
-        getService(Components.interfaces.nsIUpdateManager);
+        Cc["@mozilla.org/updates/update-manager;1"].
+        getService(Ci.nsIUpdateManager);
     var uc = um.updateCount;
     if (uc) {
       while (this._view.hasChildNodes())

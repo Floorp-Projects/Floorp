@@ -8,16 +8,16 @@ const CID = Components.ID("{5645d2c1-d6d8-4091-b117-fe7ee4027db7}");
 XPCOMUtils.defineLazyGetter(this, "systemSettings", function() {
   return {
     QueryInterface: function (iid) {
-      if (iid.equals(Components.interfaces.nsISupports) ||
-          iid.equals(Components.interfaces.nsISystemProxySettings))
+      if (iid.equals(Ci.nsISupports) ||
+          iid.equals(Ci.nsISystemProxySettings))
         return this;
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
     mainThreadOnly: true,
     PACURI: "http://localhost:" + httpserv.identity.primaryPort + "/redirect",
     getProxyForURI: function(aURI) {
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     }
   };
 });
@@ -30,7 +30,7 @@ function checkValue(request, data, ctx) {
 
 function makeChan(url) {
   return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
-                .QueryInterface(Components.interfaces.nsIHttpChannel);
+                .QueryInterface(Ci.nsIHttpChannel);
 }
 
 function run_test() {
@@ -48,7 +48,7 @@ function run_test() {
                    .getService(Ci.nsIPrefBranch);
   prefs.setIntPref(
     "network.proxy.type",
-    Components.interfaces.nsIProtocolProxyService.PROXYCONFIG_SYSTEM);
+    Ci.nsIProtocolProxyService.PROXYCONFIG_SYSTEM);
 
   // clear cache
   evict_cache_entries();

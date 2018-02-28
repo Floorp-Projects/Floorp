@@ -45,7 +45,7 @@ const testBlackBox = async function () {
 };
 
 function evalCode() {
-  Components.utils.evalInSandbox(
+  Cu.evalInSandbox(
     "" + function blackBoxed() {},
     gDebuggee,
     "1.8",
@@ -53,7 +53,7 @@ function evalCode() {
     1
   );
 
-  Components.utils.evalInSandbox(
+  Cu.evalInSandbox(
     "" + function source() {}
       + "\ndebugger;",
     gDebuggee,

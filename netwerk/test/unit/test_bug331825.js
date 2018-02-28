@@ -9,7 +9,7 @@ function TestListener() {
 TestListener.prototype.onStartRequest = function(request, context) {
 }
 TestListener.prototype.onStopRequest = function(request, context, status) {
-  var channel = request.QueryInterface(Components.interfaces.nsIHttpChannel);
+  var channel = request.QueryInterface(Ci.nsIHttpChannel);
   Assert.equal(channel.responseStatus, 304);
 
   server.stop(do_test_finished);
@@ -29,7 +29,7 @@ function run_test() {
     loadUsingSystemPrincipal: true
   });
 
-  channel.QueryInterface(Components.interfaces.nsIHttpChannel);
+  channel.QueryInterface(Ci.nsIHttpChannel);
   channel.setRequestHeader("If-None-Match", "foobar", false);
   channel.asyncOpen2(new TestListener());
 

@@ -10,7 +10,7 @@ ChromeUtils.import("resource://testing-common/AppData.jsm", this);
 function compare_paths(ospath, key) {
   let file;
   try {
-    file = Services.dirsvc.get(key, Components.interfaces.nsIFile);
+    file = Services.dirsvc.get(key, Ci.nsIFile);
   } catch (ex) {}
 
   if (file) {

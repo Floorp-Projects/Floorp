@@ -5,8 +5,8 @@
 
 function run_test()
 {
-  const ios = Components.classes["@mozilla.org/network/io-service;1"]
-                        .getService(Components.interfaces.nsIIOService);
+  const ios = Cc["@mozilla.org/network/io-service;1"]
+                .getService(Ci.nsIIOService);
   const str = "javascript:10";
   var uri = ios.newURI(str);
   var uri2 = ios.newURI(str);
@@ -19,10 +19,10 @@ function run_test()
   Assert.ok(!uri3.equals(uri2));
   Assert.ok(!uri2.equals(uri3));
 
-  var simple = Components.classes["@mozilla.org/network/simple-uri-mutator;1"]
-                         .createInstance(Components.interfaces.nsIURIMutator)
-                         .setSpec(str)
-                         .finalize();
+  var simple = Cc["@mozilla.org/network/simple-uri-mutator;1"]
+                 .createInstance(Ci.nsIURIMutator)
+                 .setSpec(str)
+                 .finalize();
   Assert.equal(simple.spec, uri.spec);
   Assert.ok(!simple.equals(uri));
   Assert.ok(!uri.equals(simple));

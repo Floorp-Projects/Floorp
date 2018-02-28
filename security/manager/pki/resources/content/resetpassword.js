@@ -5,8 +5,8 @@
 "use strict";
 
 function resetPassword() {
-  var pk11db = Components.classes["@mozilla.org/security/pk11tokendb;1"]
-                                 .getService(Components.interfaces.nsIPK11TokenDB);
+  var pk11db = Cc["@mozilla.org/security/pk11tokendb;1"]
+                 .getService(Ci.nsIPK11TokenDB);
   var token = pk11db.getInternalKeyToken();
   token.reset();
 
@@ -16,8 +16,8 @@ function resetPassword() {
   }
 
   var bundle = document.getElementById("pippki_bundle");
-  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-  promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+  var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService();
+  promptService = promptService.QueryInterface(Ci.nsIPromptService);
   if (promptService && bundle) {
     promptService.alert(window,
                         bundle.getString("resetPasswordConfirmationTitle"),

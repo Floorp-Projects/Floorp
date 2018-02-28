@@ -10,14 +10,14 @@ function frameScript()
     sendAsyncMessage("Test:Event", [e.type, e.target === content.document, e.eventPhase]);
   }
 
-  let outerID = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-        getInterface(Components.interfaces.nsIDOMWindowUtils).outerWindowID;
+  let outerID = content.QueryInterface(Ci.nsIInterfaceRequestor).
+        getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
   function onOuterWindowDestroyed(subject, topic, data) {
     if (docShell) {
       sendAsyncMessage("Test:Fail", "docShell is non-null");
     }
 
-    let id = subject.QueryInterface(Components.interfaces.nsISupportsPRUint64).data;
+    let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
     sendAsyncMessage("Test:Event", ["outer-window-destroyed", id == outerID]);
     if (id == outerID) {
       Services.obs.removeObserver(onOuterWindowDestroyed, "outer-window-destroyed");

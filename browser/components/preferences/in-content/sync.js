@@ -51,8 +51,8 @@ var gSyncPane = {
     this._adjustForPrefs();
 
     // If the Service hasn't finished initializing, wait for it.
-    let xps = Components.classes["@mozilla.org/weave/service;1"]
-      .getService(Components.interfaces.nsISupports)
+    let xps = Cc["@mozilla.org/weave/service;1"]
+      .getService(Ci.nsISupports)
       .wrappedJSObject;
 
     if (xps.ready) {
@@ -254,8 +254,8 @@ var gSyncPane = {
   },
 
   updateWeavePrefs() {
-    let service = Components.classes["@mozilla.org/weave/service;1"]
-      .getService(Components.interfaces.nsISupports)
+    let service = Cc["@mozilla.org/weave/service;1"]
+      .getService(Ci.nsISupports)
       .wrappedJSObject;
 
     let displayNameLabel = document.getElementById("fxaDisplayName");

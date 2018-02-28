@@ -28,7 +28,7 @@ add_task(async function system_shutdown() {
       let observer = function(aMessage) {
         try {
           info("Got message: " + aMessage);
-          if (!(aMessage instanceof Components.interfaces.nsIConsoleMessage)) {
+          if (!(aMessage instanceof Ci.nsIConsoleMessage)) {
             return;
           }
           let message = aMessage.message;

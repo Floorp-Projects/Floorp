@@ -17,7 +17,7 @@ var DevelopmentHelpers = {
     Services.obs.notifyObservers(null, "startupcache-invalidate");
 
     let env = Cc["@mozilla.org/process/environment;1"].
-              getService(Components.interfaces.nsIEnvironment);
+              getService(Ci.nsIEnvironment);
     env.set("MOZ_DISABLE_SAFE_MODE_KEY", "1");
 
     Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);

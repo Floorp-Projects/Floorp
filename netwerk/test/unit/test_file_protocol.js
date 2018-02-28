@@ -16,9 +16,9 @@ const special_type = "application/x-our-special-type";
 ].forEach(add_test);
 
 function getFile(key) {
-  var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
-                         .getService(Components.interfaces.nsIProperties);
-  return dirSvc.get(key, Components.interfaces.nsIFile);
+  var dirSvc = Cc["@mozilla.org/file/directory_service;1"]
+                 .getService(Ci.nsIProperties);
+  return dirSvc.get(key, Ci.nsIFile);
 }
 
 function new_file_input_stream(file, buffered) {

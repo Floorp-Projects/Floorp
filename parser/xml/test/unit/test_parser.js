@@ -1,9 +1,9 @@
 function updateDocumentSourceMaps(source) {
-  const nsIDOMNode = Components.interfaces.nsIDOMNode;
+  const nsIDOMNode = Ci.nsIDOMNode;
 
-  const nsISAXXMLReader = Components.interfaces.nsISAXXMLReader;
-  const saxReader = Components.classes["@mozilla.org/saxparser/xmlreader;1"]
-                              .createInstance(nsISAXXMLReader);
+  const nsISAXXMLReader = Ci.nsISAXXMLReader;
+  const saxReader = Cc["@mozilla.org/saxparser/xmlreader;1"]
+                      .createInstance(nsISAXXMLReader);
   try {
     saxReader.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
     saxReader.setFeature("http://xml.org/sax/features/namespace", true);

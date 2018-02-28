@@ -29,7 +29,7 @@ let test = function test() {
       SimpleTest.ok(false, "received error "+error);
     }
    worker.onmessage = function onmessage(msg) {
-    Components.utils.forceShrinkingGC();
+    Cu.forceShrinkingGC();
     switch (msg.data.kind) {
       case "is":
         SimpleTest.ok(msg.data.outcome, msg.data.description +

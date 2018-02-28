@@ -8,7 +8,7 @@ function xmlEncode(aFile, aFlags, aCharset) {
     if(aCharset == undefined) aCharset = "UTF-8";
 
     return do_parse_document(aFile, "text/xml").then(doc => {
-      var encoder = Components.classes["@mozilla.org/layout/documentEncoder;1?type=text/xml"]
+      var encoder = Cc["@mozilla.org/layout/documentEncoder;1?type=text/xml"]
                      .createInstance(nsIDocumentEncoder);
       encoder.setCharset(aCharset);
       encoder.init(doc, "text/xml", aFlags);
@@ -19,7 +19,7 @@ function xmlEncode(aFile, aFlags, aCharset) {
 function run_test()
 {
     var result, expected;
-    const de = Components.interfaces.nsIDocumentEncoder;
+    const de = Ci.nsIDocumentEncoder;
 
     xmlEncode("1_original.xml", de.OutputLFLineBreak).then(result => {
       expected = loadContentFile("1_result.xml");
@@ -71,8 +71,8 @@ function run_test()
 }
 
 function run_namespace_tests(doc) {
-    const de = Components.interfaces.nsIDocumentEncoder;
-    var encoder = Components.classes["@mozilla.org/layout/documentEncoder;1?type=text/xml"]
+    const de = Ci.nsIDocumentEncoder;
+    var encoder = Cc["@mozilla.org/layout/documentEncoder;1?type=text/xml"]
                    .createInstance(nsIDocumentEncoder);
     encoder.setCharset("UTF-8");
     encoder.init(doc, "text/xml", de.OutputLFLineBreak);

@@ -14,7 +14,7 @@ function run_test() {
       }
 
       Services.obs.addObserver(crashWhileReporting, "memory-pressure");
-      Components.utils.getJSTestingFunctions().reportLargeAllocationFailure();
+      Cu.getJSTestingFunctions().reportLargeAllocationFailure();
     },
     function(mdump, extra) {
       Assert.equal(extra.TestingOOMCrash, "Yes");

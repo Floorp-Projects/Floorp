@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
 
   /** Test for Bug 741267 **/
     function isXrayWrapper(x) {
-      return Components.utils.isXrayWrapper(x);
+      return Cu.isXrayWrapper(x);
     }
 
     function doTest() {
@@ -33,26 +33,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       ok(isXrayWrapper(win),
          "We want to be testing things with an Xray as sandboxPrototype here");
 
-      var sandbox = Components.utils.Sandbox(win, { sandboxPrototype: win });
+      var sandbox = Cu.Sandbox(win, { sandboxPrototype: win });
 
       is(sandbox._content, undefined, "_content does nothing over Xray");
 
       try {
-        var css = Components.utils.evalInSandbox("CSSStyleDeclaration", sandbox);
+        var css = Cu.evalInSandbox("CSSStyleDeclaration", sandbox);
         is(String(css.prototype), "[object CSSStyleDeclarationPrototype]",
            "'CSSStyleDeclaration.prototype' in a sandbox should return the CSSStyleDeclaration interface prototype object");
       } catch (e) {
         ok(false, "'CSSStyleDeclaration' shouldn't throw in a sandbox");
       }
       try {
-        var et = Components.utils.evalInSandbox("EventTarget", sandbox);
+        var et = Cu.evalInSandbox("EventTarget", sandbox);
         ok(et, "'EventTarget' in a sandbox should return the EventTarget interface object");
         ok(isXrayWrapper(et), "Getting an interface object on an Xray wrapper should return an Xray wrapper");
       } catch (e) {
         ok(false, "'EventTarget' shouldn't throw in a sandbox");
       }
       try {
-        var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype", sandbox);
+        var xhr = Cu.evalInSandbox("XMLHttpRequest.prototype", sandbox);
         ok(xhr, "'XMLHttpRequest.prototype' in a sandbox should return the XMLHttpRequest interface prototype object");
         ok(isXrayWrapper(xhr), "Getting an interface prototype object on an Xray wrapper should return an Xray wrapper");
         ok(isXrayWrapper(xhr.constructor), "Getting the constructor property on an Xray wrapper of an interface prototype object should return an Xray wrapper");
@@ -68,28 +68,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
         ok(false, "'XMLHttpRequest.prototype' shouldn't throw in a sandbox");
       }
       try {
-        var img = Components.utils.evalInSandbox("Image.prototype", sandbox);
+        var img = Cu.evalInSandbox("Image.prototype", sandbox);
         ok(img, "'Image.prototype' in a sandbox should return the interface prototype object");
         ok(isXrayWrapper(img), "Getting an interface prototype object on an Xray wrapper should return an Xray wrapper");
       } catch (e) {
         ok(false, "'Image.prototype' shouldn't throw in a sandbox");
       }
       try {
-        var xhr = Components.utils.evalInSandbox("XMLHttpRequest", sandbox);
+        var xhr = Cu.evalInSandbox("XMLHttpRequest", sandbox);
         xhr.prototype = "notok";
       } finally {
         isnot(xhr.prototype, "notok", "'XMLHttpRequest.prototype' should be readonly");
       }
       var constructorWritable = false;
       try {
-        var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype", sandbox);
+        var xhr = Cu.evalInSandbox("XMLHttpRequest.prototype", sandbox);
         xhr.constructor = "ok";
         is(xhr.constructor, "ok", "'XMLHttpRequest.prototype.constructor' should be writeable");
       } catch (e) {
         ok(false, "'XMLHttpRequest.prototype.constructor' should be writeable");
       }
       try {
-        var xhr = Components.utils.evalInSandbox("XMLHttpRequest", sandbox);
+        var xhr = Cu.evalInSandbox("XMLHttpRequest", sandbox);
         is(String(xhr), String(XMLHttpRequest), "'XMLHttpRequest' in a sandbox should return the XMLHttpRequest interface object");
         ok(isXrayWrapper(xhr.prototype), "Getting the prototype property on an Xray wrapper of an interface object should return an Xray wrapper");
         isnot(Object.getOwnPropertyDescriptor(xhr, "UNSENT"), undefined,
@@ -104,19 +104,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
         ok(false, "'XMLHttpRequest' shouldn't throw in a sandbox");
       }
       try {
-        var xhr = Components.utils.evalInSandbox("new XMLHttpRequest()", sandbox);
+        var xhr = Cu.evalInSandbox("new XMLHttpRequest()", sandbox);
         is("" + xhr, new XMLHttpRequest() + "", "'new XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
       } catch (e) {
         ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox (1)");
       }
       try {
-        var xhr = Components.utils.evalInSandbox("XMLHttpRequest.toString = function () { return 'Failed'; }; XMLHttpRequest;", sandbox);
+        var xhr = Cu.evalInSandbox("XMLHttpRequest.toString = function () { return 'Failed'; }; XMLHttpRequest;", sandbox);
         is(xhr.toString(), XMLHttpRequest + "", "XMLHttpRequest.toString in the sandbox should not override the native toString behaviour");
       } catch (e) {
         ok(false, "'XMLHttpRequest' shouldn't throw in a sandbox");
       }
       try {
-        var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype.toString = function () { return 'Failed'; }; new XMLHttpRequest();", sandbox);
+        var xhr = Cu.evalInSandbox("XMLHttpRequest.prototype.toString = function () { return 'Failed'; }; new XMLHttpRequest();", sandbox);
         is(xhr.toString(), new XMLHttpRequest() + "", "XMLHttpRequest.prototype.toString in the sandbox should not override the native toString behaviour");
       } catch (e) {
         ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox (2)");
@@ -125,7 +125,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       try {
         // have to run this test before document.defaultView.XMLHttpRequest
         // gets munged in the sandbox.
-        var proto = Components.utils.evalInSandbox("XMLHttpRequest.prototype", sandbox);
+        var proto = Cu.evalInSandbox("XMLHttpRequest.prototype", sandbox);
         props = [];
         for (var i in proto) {
           props.push(i);
@@ -139,37 +139,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
         ok(false, "XMLHttpRequest.prototype manipulation via an Xray shouldn't throw" + e);
       }
       try {
-        Components.utils.evalInSandbox("XMLHttpRequest.prototype.a = 'expando a'", sandbox);
-        Components.utils.evalInSandbox("XMLHttpRequest.prototype.b = 'expando b'", sandbox);
-        Components.utils.evalInSandbox("XMLHttpRequest.prototype", sandbox).b = 'xrayexpando';
-        var xhr = Components.utils.evalInSandbox("new XMLHttpRequest()", sandbox);
+        Cu.evalInSandbox("XMLHttpRequest.prototype.a = 'expando a'", sandbox);
+        Cu.evalInSandbox("XMLHttpRequest.prototype.b = 'expando b'", sandbox);
+        Cu.evalInSandbox("XMLHttpRequest.prototype", sandbox).b = 'xrayexpando';
+        var xhr = Cu.evalInSandbox("new XMLHttpRequest()", sandbox);
         is(xhr.a, undefined, "'XMLHttpRequest()' in a sandbox should not have expandos from inside the sandbox");
         is(xhr.b, "xrayexpando", "'new XMLHttpRequest()' in a sandbox should have Xray expandos");
       } catch (e) {
         ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox");
       }
       try {
-        Components.utils.evalInSandbox("document.defaultView.XMLHttpRequest = function() {};", sandbox);
-        var win = Components.utils.evalInSandbox("document.defaultView", sandbox);
+        Cu.evalInSandbox("document.defaultView.XMLHttpRequest = function() {};", sandbox);
+        var win = Cu.evalInSandbox("document.defaultView", sandbox);
         var xhr = new win.XMLHttpRequest();
         is("" + xhr, new XMLHttpRequest() + "", "'new XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
       } catch (e) {
         ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox");
       }
       try {
-        var canvas = Components.utils.evalInSandbox("document.createElement('canvas').getContext('2d')", sandbox);
+        var canvas = Cu.evalInSandbox("document.createElement('canvas').getContext('2d')", sandbox);
         is(canvas.DRAWWINDOW_DRAW_CARET, CanvasRenderingContext2D.DRAWWINDOW_DRAW_CARET, "Constants should be defined on DOM objects in a sandbox");
       } catch (e) {
         ok(false, "'document.createElement('canvas').getContext('2D')' shouldn't throw in a sandbox");
       }
       try {
-        var classList = Components.utils.evalInSandbox("document.body.className = 'a b'; document.body.classList", sandbox);
+        var classList = Cu.evalInSandbox("document.body.className = 'a b'; document.body.classList", sandbox);
         is(classList.toString(), "a b", "Stringifier should be called");
       } catch (e) {
         ok(false, "Stringifying shouldn't throw in a sandbox");
       }
       try {
-        var ctx = Components.utils.evalInSandbox("var ctx = document.createElement('canvas').getContext('2d'); ctx.foopy = 5; ctx", sandbox);
+        var ctx = Cu.evalInSandbox("var ctx = document.createElement('canvas').getContext('2d'); ctx.foopy = 5; ctx", sandbox);
         ok(!("foopy" in ctx), "We should have an Xray here");
         var data = ctx.createImageData(1, 1);
         for (var i = 0; i < data.data.length; ++i) {
@@ -192,7 +192,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       }
 
       try {
-        var list = Components.utils.evalInSandbox("document.getElementsByTagName('*')", sandbox);
+        var list = Cu.evalInSandbox("document.getElementsByTagName('*')", sandbox);
         props = [];
         for (var i in list) {
           props.push(i);
@@ -207,7 +207,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       }
 
       try {
-        var proto = Components.utils.evalInSandbox("NodeList.prototype", sandbox);
+        var proto = Cu.evalInSandbox("NodeList.prototype", sandbox);
         props = [];
         for (var i in proto) {
           props.push(i);
@@ -222,7 +222,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       }
 
       try {
-        var url = Components.utils.evalInSandbox("URL", sandbox);
+        var url = Cu.evalInSandbox("URL", sandbox);
         for (var i in url) {
           url[i];
         }
@@ -240,17 +240,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       ok(true, "We didn't crash!");
 
       // And now tests that don't use a window-associated sandbox
-      sandbox = Components.utils.Sandbox(win.document.nodePrincipal,
-                                         { sandboxPrototype: win });
+      sandbox = Cu.Sandbox(win.document.nodePrincipal,
+                           { sandboxPrototype: win });
       try {
-        var ws = Components.utils.evalInSandbox('var ws = new WebSocket("ws://example.org"); ws', sandbox);
+        var ws = Cu.evalInSandbox('var ws = new WebSocket("ws://example.org"); ws', sandbox);
         // Test that we actually got a WebSocket object, probably
         ok("bufferedAmount" in ws, "What is this object?");
       } catch (e) {
         ok(false, "Should be able to create a WebSocket in a sandbox " + e);
       }
       try {
-        var es = Components.utils.evalInSandbox('var es = new EventSource("about:blank"); es', sandbox);
+        var es = Cu.evalInSandbox('var es = new EventSource("about:blank"); es', sandbox);
         // Test that we actually got a EventSource object, probably
         is(es.url, "about:blank", "What is this object?");
       } catch (e) {
@@ -258,7 +258,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       }
 
       try {
-        var nodeFilterIface = Components.utils.evalInSandbox(
+        var nodeFilterIface = Cu.evalInSandbox(
           'NodeFilter.myExpando = "FAIL"; NodeFilter', sandbox);
         is(nodeFilterIface.myExpando, undefined,
            "Should have Xrays for callback interface objects");
@@ -267,7 +267,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       }
 
       try {
-        var eventCtor = Components.utils.evalInSandbox("Event", sandbox);
+        var eventCtor = Cu.evalInSandbox("Event", sandbox);
         var e = new eventCtor("test", { bubbles: true });
         is(e.bubbles, true, "Dictionary argument should work");
       } catch (e) {
@@ -275,11 +275,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       }
 
       try {
-        var elem = Components.utils.evalInSandbox('document.createElement("p")', sandbox);
+        var elem = Cu.evalInSandbox('document.createElement("p")', sandbox);
         elem.expando = 5;
         elem.expando = 7;
         is(elem.expando, 7, "Should be able to set expandos on Xrays for DOM bindings");
-        var doc = Components.utils.evalInSandbox('document', sandbox);
+        var doc = Cu.evalInSandbox('document', sandbox);
         doc.expando = 5;
         doc.expando = 7;
         is(doc.expando, 7, "Should be able to set expandos on Xrays for DOM bindings with named properties");
@@ -290,7 +290,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       // Test that binding a bareword window method produces something
       // which has a .call
       try {
-        var binary = Components.utils.evalInSandbox(
+        var binary = Cu.evalInSandbox(
           'btoa.bind(window).call(null, "foo")', sandbox);
         is(binary, "Zm9v", "Should get the right result from .call on bound btoa");
       } catch (e) {
@@ -300,7 +300,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       // Test that binding a bareword window method produces something
       // which has a .apply
       try {
-        var binary = Components.utils.evalInSandbox(
+        var binary = Cu.evalInSandbox(
           'btoa.bind(window).apply(null, ["foo"])', sandbox);
         is(binary, "Zm9v", "Should get the right result from .apply on bound btoa");
       } catch (e) {

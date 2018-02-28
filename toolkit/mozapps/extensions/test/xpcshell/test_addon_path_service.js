@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var service = Components.classes["@mozilla.org/addon-path-service;1"].getService(Components.interfaces.amIAddonPathService);
+var service = Cc["@mozilla.org/addon-path-service;1"].getService(Ci.amIAddonPathService);
 
 function insert(path, value) {
   service.insertPath("/test/" + path, value);

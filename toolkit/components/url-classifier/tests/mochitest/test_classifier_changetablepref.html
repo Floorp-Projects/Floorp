@@ -66,7 +66,7 @@ function waitForUpdateSuccess(callback) {
 
   timer.initWithCallback(function() {
     waitForUpdateSuccess(callback);
-  }, 10, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+  }, 10, Ci.nsITimer.TYPE_ONE_SHOT);
 }
 
 function runTest() {

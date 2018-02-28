@@ -6,8 +6,8 @@
 var gExpectedStatus = null;
 var gNextTestFunc   = null;
 
-var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-    getService(Components.interfaces.nsIPrefBranch);
+var prefs = Cc["@mozilla.org/preferences-service;1"].
+    getService(Ci.nsIPrefBranch);
 
 var asyncXHR = {
   load: function() {
@@ -19,7 +19,7 @@ var asyncXHR = {
     request.send(null);
   },
   onError: function doAsyncRequest_onError(event) {
-    var request = event.target.channel.QueryInterface(Components.interfaces.nsIRequest);
+    var request = event.target.channel.QueryInterface(Ci.nsIRequest);
     Assert.equal(request.status, gExpectedStatus);
     gNextTestFunc();
   }
@@ -32,8 +32,8 @@ function run_test() {
 
 // network offline
 function run_test_pt1() {
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                            .getService(Components.interfaces.nsIIOService);
+  var ioService = Cc["@mozilla.org/network/io-service;1"]
+                    .getService(Ci.nsIIOService);
 
   try {
     ioService.manageOfflineStatus = false;
@@ -43,7 +43,7 @@ function run_test_pt1() {
   ioService.offline = true;
   prefs.setBoolPref("network.dns.offline-localhost", false);
 
-  gExpectedStatus = Components.results.NS_ERROR_OFFLINE;
+  gExpectedStatus = Cr.NS_ERROR_OFFLINE;
   gNextTestFunc = run_test_pt2;
   dump("Testing error returned by async XHR when the network is offline\n");
   asyncXHR.load();
@@ -51,12 +51,12 @@ function run_test_pt1() {
 
 // connection refused
 function run_test_pt2() {
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                            .getService(Components.interfaces.nsIIOService);
+  var ioService = Cc["@mozilla.org/network/io-service;1"]
+                    .getService(Ci.nsIIOService);
   ioService.offline = false;
   prefs.clearUserPref("network.dns.offline-localhost");
 
-  gExpectedStatus = Components.results.NS_ERROR_CONNECTION_REFUSED;
+  gExpectedStatus = Cr.NS_ERROR_CONNECTION_REFUSED;
   gNextTestFunc = end_test;
   dump("Testing error returned by aync XHR when the connection is refused\n");
   asyncXHR.load();

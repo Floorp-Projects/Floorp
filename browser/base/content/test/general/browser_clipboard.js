@@ -16,8 +16,8 @@ add_task(async function() {
   await SimpleTest.promiseFocus(browser.contentWindowAsCPOW);
 
   const modifier = (navigator.platform.includes("Mac")) ?
-                   Components.interfaces.nsIDOMWindowUtils.MODIFIER_META :
-                   Components.interfaces.nsIDOMWindowUtils.MODIFIER_CONTROL;
+                   Ci.nsIDOMWindowUtils.MODIFIER_META :
+                   Ci.nsIDOMWindowUtils.MODIFIER_CONTROL;
 
   function sendKey(message) {
     BrowserTestUtils.synthesizeKey(message.data.key,
