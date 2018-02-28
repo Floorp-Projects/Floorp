@@ -9,7 +9,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="autocomplete" role="xul:combobox"
+  <binding id="autocomplete"
            extends="chrome://global/content/bindings/textbox.xml#textbox">
     <resources>
       <stylesheet src="chrome://global/content/autocomplete.css"/>
