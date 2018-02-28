@@ -91,7 +91,31 @@ MISSING_LOCALES = {
         'local_name': "Tu'un savi",
         'plural_rule': 'id',
         'team': 'mix <LL@li.org>\n'
-    }
+    },
+    'oc': {
+        'name': 'Occitan',
+        'local_name': 'occitan',
+        'plural_rule': 'fi',
+        'team': 'oc <LL@li.org>\n'
+    },
+    'an': {
+        'name': 'Aragonese',
+        'local_name': 'Aragonés',
+        'plural_rule': 'fi',
+        'team': 'an <LL@li.org>\n'
+    },
+    'wo': {
+        'name': 'Wolof',
+        'local_name': 'Wolof',
+        'plural_rule': 'id',
+        'team': 'wo <LL@li.org>\n'
+    },
+    'tt': {
+        'name': 'Tatar',
+        'local_name': 'татарча',
+        'plural_rule': 'fi',
+        'team': 'tt <LL@li.org>\n'
+    },
 }
 
 
