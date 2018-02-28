@@ -1326,7 +1326,7 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
 
     bool tryAttachMagicArgument(ValOperandId valId, ValOperandId indexId);
     bool tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId objId,
-                                     uint32_t index, Int32OperandId indexId);
+                                     Int32OperandId indexId);
 
     bool tryAttachDenseElement(HandleObject obj, ObjOperandId objId,
                                uint32_t index, Int32OperandId indexId);
@@ -1554,9 +1554,9 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator
     bool tryAttachDenseHole(HandleObject obj, ObjOperandId objId,
                             uint32_t index, Int32OperandId indexId);
     bool tryAttachTypedArray(HandleObject obj, ObjOperandId objId,
-                             uint32_t index, Int32OperandId indexId);
+                             Int32OperandId indexId);
     bool tryAttachSparse(HandleObject obj, ObjOperandId objId,
-                         uint32_t index, Int32OperandId indexId);
+                         Int32OperandId indexId);
     bool tryAttachNamedProp(HandleObject obj, ObjOperandId objId,
                             HandleId key, ValOperandId keyId);
     bool tryAttachMegamorphic(ObjOperandId objId, ValOperandId keyId);
@@ -1644,7 +1644,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator
 
   public:
     CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
-                    JSOp op, ICCall_Fallback* stub, ICState::Mode mode,
+                    JSOp op, ICState::Mode mode,
                     uint32_t argc, HandleValue callee, HandleValue thisval,
                     HandleValueArray args);
 
