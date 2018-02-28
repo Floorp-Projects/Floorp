@@ -29,14 +29,14 @@ xptiInterfaceEntry::Create(const XPTInterfaceDirectoryEntry* aEntry,
 xptiInterfaceEntry::xptiInterfaceEntry(const XPTInterfaceDirectoryEntry* aEntry,
                                        xptiTypelibGuts* aTypelib)
     : mIID(aEntry->mIID)
-    , mDescriptor(aEntry->mInterfaceDescriptor)
+    , mDescriptor(aEntry->InterfaceDescriptor())
     , mTypelib(aTypelib)
     , mParent(nullptr)
     , mInfo(nullptr)
     , mMethodBaseIndex(0)
     , mConstantBaseIndex(0)
     , mFlags(0)
-    , mName(aEntry->mName)
+    , mName(aEntry->Name())
 {
     SetResolvedState(PARTIALLY_RESOLVED);
     SetScriptableFlag(mDescriptor->IsScriptable());
@@ -85,7 +85,7 @@ xptiInterfaceEntry::ResolveLocked()
         } else {
             for (uint16_t idx = 0; idx < mDescriptor->mNumMethods; ++idx) {
                 const nsXPTMethodInfo* method = static_cast<const nsXPTMethodInfo*>(
-                    mDescriptor->mMethodDescriptors + idx);
+                    &mDescriptor->Method(idx));
                 if (method->IsNotXPCOM()) {
                     SetHasNotXPCOMFlag();
                     break;
@@ -189,7 +189,7 @@ xptiInterfaceEntry::GetMethodInfo(uint16_t index, const nsXPTMethodInfo** info)
 
     // else...
     *info = static_cast<const nsXPTMethodInfo*>
-        (&mDescriptor->mMethodDescriptors[index - mMethodBaseIndex]);
+        (&mDescriptor->Method(index - mMethodBaseIndex));
     return NS_OK;
 }
 
@@ -204,7 +204,7 @@ xptiInterfaceEntry::GetMethodInfoForName(const char* methodName, uint16_t *index
     for(uint16_t i = 0; i < mDescriptor->mNumMethods; ++i)
     {
         const nsXPTMethodInfo* info;
-        info = static_cast<const nsXPTMethodInfo*>(&mDescriptor->mMethodDescriptors[i]);
+        info = static_cast<const nsXPTMethodInfo*>(&mDescriptor->Method(i));
         if (PL_strcmp(methodName, info->GetName()) == 0) {
             *index = i + mMethodBaseIndex;
             *result = info;
@@ -239,7 +239,7 @@ xptiInterfaceEntry::GetConstant(uint16_t index, JS::MutableHandleValue constant,
         return NS_ERROR_INVALID_ARG;
     }
 
-    const auto& c = mDescriptor->mConstDescriptors[index - mConstantBaseIndex];
+    const auto& c = mDescriptor->Const(index - mConstantBaseIndex);
     AutoJSContext cx;
     JS::Rooted<JS::Value> v(cx);
     v.setUndefined();
@@ -272,7 +272,7 @@ xptiInterfaceEntry::GetConstant(uint16_t index, JS::MutableHandleValue constant,
     }
 
     constant.set(v);
-    *name = ToNewCString(nsDependentCString(c.mName));
+    *name = ToNewCString(nsDependentCString(c.Name()));
 
     return NS_OK;
 }
