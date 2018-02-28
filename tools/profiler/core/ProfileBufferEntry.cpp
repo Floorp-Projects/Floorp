@@ -20,7 +20,13 @@
 // Self
 #include "ProfileBufferEntry.h"
 
-using namespace mozilla;
+using mozilla::JSONWriter;
+using mozilla::MakeUnique;
+using mozilla::Maybe;
+using mozilla::Nothing;
+using mozilla::Some;
+using mozilla::TimeStamp;
+using mozilla::UniquePtr;
 
 ////////////////////////////////////////////////////////////////////////
 // BEGIN ProfileBufferEntry
@@ -245,25 +251,6 @@ MakeForEachTrackedOptimizationAttemptsLambdaOp(LambdaT&& aLambda)
   return ForEachTrackedOptimizationAttemptsLambdaOp<LambdaT>(Move(aLambda));
 }
 
-UniqueJSONStrings::UniqueJSONStrings()
-{
-  mStringTableWriter.StartBareList();
-}
-
-UniqueJSONStrings::UniqueJSONStrings(const UniqueJSONStrings& aOther)
-{
-  mStringTableWriter.StartBareList();
-  if (aOther.mStringToIndexMap.Count() > 0) {
-    for (auto iter = aOther.mStringToIndexMap.ConstIter();
-         !iter.Done(); iter.Next()) {
-      mStringToIndexMap.Put(iter.Key(), iter.Data());
-    }
-    UniquePtr<char[]> stringTableJSON =
-      aOther.mStringTableWriter.WriteFunc()->CopyData();
-    mStringTableWriter.Splice(stringTableJSON.get());
-  }
-}
-
 uint32_t
 UniqueJSONStrings::GetOrAddIndex(const char* aStr)
 {
@@ -280,6 +267,15 @@ UniqueJSONStrings::GetOrAddIndex(const char* aStr)
   return index;
 }
 
+bool UniqueStacks::FrameKey::operator==(const FrameKey& aOther) const
+{
+  return mLocation == aOther.mLocation &&
+         mLine == aOther.mLine &&
+         mCategory == aOther.mCategory &&
+         mJITAddress == aOther.mJITAddress &&
+         mJITDepth == aOther.mJITDepth;
+}
+
 UniqueStacks::StackKey
 UniqueStacks::BeginStack(const FrameKey& aFrame)
 {
@@ -293,98 +289,36 @@ UniqueStacks::AppendFrame(const StackKey& aStack, const FrameKey& aFrame)
 }
 
 uint32_t
-JITFrameInfoForBufferRange::JITFrameKey::Hash() const
+UniqueStacks::JITAddress::Hash() const
 {
   uint32_t hash = 0;
-  hash = AddToHash(hash, mCanonicalAddress);
-  hash = AddToHash(hash, mDepth);
+  hash = AddToHash(hash, mAddress);
+  hash = AddToHash(hash, mStreamingGen);
   return hash;
 }
 
-bool
-JITFrameInfoForBufferRange::JITFrameKey::operator==(const JITFrameKey& aOther) const
-{
-  return mCanonicalAddress == aOther.mCanonicalAddress &&
-         mDepth == aOther.mDepth;
-}
-
-template<class KeyClass, class T> void
-CopyClassHashtable(nsClassHashtable<KeyClass, T>& aDest,
-                   const nsClassHashtable<KeyClass, T>& aSrc)
-{
-  for (auto iter = aSrc.ConstIter(); !iter.Done(); iter.Next()) {
-    const T& objRef = *iter.Data();
-    aDest.LookupOrAdd(iter.Key(), objRef);
-  }
-}
-
-JITFrameInfoForBufferRange
-JITFrameInfoForBufferRange::Clone() const
-{
-  nsClassHashtable<nsPtrHashKey<void>, nsTArray<JITFrameKey>> jitAddressToJITFramesMap;
-  nsClassHashtable<nsGenericHashKey<JITFrameKey>, nsCString> jitFrameToFrameJSONMap;
-  CopyClassHashtable(jitAddressToJITFramesMap, mJITAddressToJITFramesMap);
-  CopyClassHashtable(jitFrameToFrameJSONMap, mJITFrameToFrameJSONMap);
-  return JITFrameInfoForBufferRange{
-    mRangeStart, mRangeEnd,
-    Move(jitAddressToJITFramesMap), Move(jitFrameToFrameJSONMap) };
-}
-
-JITFrameInfo::JITFrameInfo(const JITFrameInfo& aOther)
-  : mUniqueStrings(MakeUnique<UniqueJSONStrings>(*aOther.mUniqueStrings))
-{
-  for (const JITFrameInfoForBufferRange& range : aOther.mRanges) {
-    mRanges.AppendElement(range.Clone());
-  }
-}
-
-bool
-UniqueStacks::FrameKey::NormalFrameData::operator==(const NormalFrameData& aOther) const
-{
-  return mLocation == aOther.mLocation &&
-         mLine == aOther.mLine &&
-         mCategory == aOther.mCategory;
-}
-
-bool
-UniqueStacks::FrameKey::JITFrameData::operator==(const JITFrameData& aOther) const
-{
-  return mCanonicalAddress == aOther.mCanonicalAddress &&
-         mDepth == aOther.mDepth &&
-         mRangeIndex == aOther.mRangeIndex;
-}
-
-uint32_t
-UniqueStacks::FrameKey::Hash() const
+uint32_t UniqueStacks::FrameKey::Hash() const
 {
   uint32_t hash = 0;
-  if (mData.is<NormalFrameData>()) {
-    const NormalFrameData& data = mData.as<NormalFrameData>();
-    if (!data.mLocation.IsEmpty()) {
-      hash = AddToHash(hash, HashString(data.mLocation.get()));
+  if (!mLocation.IsEmpty()) {
+    hash = mozilla::HashString(mLocation.get());
+  }
+  if (mLine.isSome()) {
+    hash = mozilla::AddToHash(hash, *mLine);
+  }
+  if (mCategory.isSome()) {
+    hash = mozilla::AddToHash(hash, *mCategory);
+  }
+  if (mJITAddress.isSome()) {
+    hash = mozilla::AddToHash(hash, mJITAddress->Hash());
+    if (mJITDepth.isSome()) {
+      hash = mozilla::AddToHash(hash, *mJITDepth);
     }
-    if (data.mLine.isSome()) {
-      hash = AddToHash(hash, *data.mLine);
-    }
-    if (data.mCategory.isSome()) {
-      hash = AddToHash(hash, *data.mCategory);
-    }
-  } else {
-    const JITFrameData& data = mData.as<JITFrameData>();
-    hash = AddToHash(hash, data.mCanonicalAddress);
-    hash = AddToHash(hash, data.mDepth);
-    hash = AddToHash(hash, data.mRangeIndex);
   }
   return hash;
 }
 
-// Consume aJITFrameInfo by stealing its string table and its JIT frame info
-// ranges. The JIT frame info contains JSON which refers to strings from the
-// JIT frame info's string table, so our string table needs to have the same
-// strings at the same indices.
-UniqueStacks::UniqueStacks(JITFrameInfo&& aJITFrameInfo)
-  : mUniqueStrings(Move(aJITFrameInfo.mUniqueStrings))
-  , mJITInfoRanges(Move(aJITFrameInfo.mRanges))
+UniqueStacks::UniqueStacks()
 {
   mFrameTableWriter.StartBareList();
   mStackTableWriter.StartBareList();
@@ -404,57 +338,45 @@ uint32_t UniqueStacks::GetOrAddStackIndex(const StackKey& aStack)
   return index;
 }
 
-template<typename RangeT, typename PosT>
-struct PositionInRangeComparator final
+MOZ_MUST_USE nsTArray<UniqueStacks::FrameKey>
+UniqueStacks::GetOrAddJITFrameKeysForAddress(JSContext* aContext,
+                                             const JITAddress& aJITAddress)
 {
-  bool Equals(const RangeT& aRange, PosT aPos) const
-  {
-    return aRange.mRangeStart <= aPos && aPos < aRange.mRangeEnd;
-  }
+  nsTArray<FrameKey>& frameKeys =
+    *mAddressToJITFrameKeysMap.LookupOrAdd(aJITAddress);
 
-  bool LessThan(const RangeT& aRange, PosT aPos) const
-  {
-    return aRange.mRangeEnd <= aPos;
-  }
-};
-
-Maybe<nsTArray<UniqueStacks::FrameKey>>
-UniqueStacks::LookupFramesForJITAddressFromBufferPos(void* aJITAddress,
-                                                     uint64_t aBufferPos)
-{
-  size_t rangeIndex = mJITInfoRanges.BinaryIndexOf(aBufferPos,
-    PositionInRangeComparator<JITFrameInfoForBufferRange, uint64_t>());
-  MOZ_RELEASE_ASSERT(rangeIndex != mJITInfoRanges.NoIndex,
-                     "Buffer position of jit address needs to be in one of the ranges");
-
-  using JITFrameKey = JITFrameInfoForBufferRange::JITFrameKey;
-
-  const JITFrameInfoForBufferRange& jitFrameInfoRange = mJITInfoRanges[rangeIndex];
-  const nsTArray<JITFrameKey>* jitFrameKeys =
-    jitFrameInfoRange.mJITAddressToJITFramesMap.Get(aJITAddress);
-  if (!jitFrameKeys) {
-    return Nothing();
-  }
-
-  // Map the array of JITFrameKeys to an array of FrameKeys, and ensure that
-  // each of the FrameKeys exists in mFrameToIndexMap.
-  nsTArray<FrameKey> frameKeys;
-  for (const JITFrameKey& jitFrameKey : *jitFrameKeys) {
-    FrameKey frameKey(jitFrameKey.mCanonicalAddress, jitFrameKey.mDepth, rangeIndex);
-    if (!mFrameToIndexMap.Contains(frameKey)) {
-      // We need to add this frame to our frame table. The JSON for this frame
-      // already exists in jitFrameInfoRange, we just need to splice it into
-      // the frame table and give it an index.
-      uint32_t index = mFrameToIndexMap.Count();
-      const nsCString* frameJSON =
-        jitFrameInfoRange.mJITFrameToFrameJSONMap.Get(jitFrameKey);
-      MOZ_RELEASE_ASSERT(frameJSON, "Should have cached JSON for this frame");
-      mFrameTableWriter.Splice(frameJSON->get());
-      mFrameToIndexMap.Put(frameKey, index);
+  if (frameKeys.IsEmpty()) {
+    for (JS::ProfiledFrameHandle handle :
+           JS::GetProfiledFrames(aContext, aJITAddress.mAddress)) {
+      // JIT frames with the same canonical address should be treated as the
+      // same frame, so set the frame key's address to the canonical address.
+      FrameKey frameKey(
+        JITAddress{ handle.canonicalAddress(), aJITAddress.mStreamingGen },
+        frameKeys.Length());
+      MaybeAddJITFrameIndex(aContext, frameKey, handle);
+      frameKeys.AppendElement(frameKey);
     }
-    frameKeys.AppendElement(Move(frameKey));
+    MOZ_ASSERT(frameKeys.Length() > 0);
   }
-  return Some(Move(frameKeys));
+
+  // Return a copy of the array.
+  return nsTArray<FrameKey>(frameKeys);
+}
+
+void
+UniqueStacks::MaybeAddJITFrameIndex(JSContext* aContext,
+                                    const FrameKey& aFrame,
+                                    const JS::ProfiledFrameHandle& aJITFrame)
+{
+  uint32_t index;
+  if (mFrameToIndexMap.Get(aFrame, &index)) {
+    MOZ_ASSERT(index < mFrameToIndexMap.Count());
+    return;
+  }
+
+  index = mFrameToIndexMap.Count();
+  mFrameToIndexMap.Put(aFrame, index);
+  StreamJITFrame(aContext, aJITFrame);
 }
 
 uint32_t
@@ -491,7 +413,7 @@ void UniqueStacks::StreamStack(const StackKey& aStack)
     FRAME = 1
   };
 
-  AutoArraySchemaWriter writer(mStackTableWriter, *mUniqueStrings);
+  AutoArraySchemaWriter writer(mStackTableWriter, mUniqueStrings);
   if (aStack.mPrefixStackIndex.isSome()) {
     writer.IntElement(PREFIX, *aStack.mPrefixStackIndex);
   }
@@ -501,8 +423,6 @@ void UniqueStacks::StreamStack(const StackKey& aStack)
 void
 UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame)
 {
-  using NormalFrameData = FrameKey::NormalFrameData;
-
   enum Schema : uint32_t {
     LOCATION = 0,
     IMPLEMENTATION = 1,
@@ -511,15 +431,14 @@ UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame)
     CATEGORY = 4
   };
 
-  AutoArraySchemaWriter writer(mFrameTableWriter, *mUniqueStrings);
+  AutoArraySchemaWriter writer(mFrameTableWriter, mUniqueStrings);
 
-  const NormalFrameData& data = aFrame.mData.as<NormalFrameData>();
-  writer.StringElement(LOCATION, data.mLocation.get());
-  if (data.mLine.isSome()) {
-    writer.IntElement(LINE, *data.mLine);
+  writer.StringElement(LOCATION, aFrame.mLocation.get());
+  if (aFrame.mLine.isSome()) {
+    writer.IntElement(LINE, *aFrame.mLine);
   }
-  if (data.mCategory.isSome()) {
-    writer.IntElement(CATEGORY, *data.mCategory);
+  if (aFrame.mCategory.isSome()) {
+    writer.IntElement(CATEGORY, *aFrame.mCategory);
   }
 }
 
@@ -604,7 +523,7 @@ StreamJITFrameOptimizations(SpliceableJSONWriter& aWriter,
 
     if (JSAtom* name = js::GetPropertyNameFromPC(script, pc)) {
       char buf[512];
-      JS_PutEscapedFlatString(buf, ArrayLength(buf), js::AtomToFlatString(name), 0);
+      JS_PutEscapedFlatString(buf, mozilla::ArrayLength(buf), js::AtomToFlatString(name), 0);
       aUniqueStrings.WriteProperty(aWriter, "propertyName", buf);
     }
 
@@ -616,10 +535,9 @@ StreamJITFrameOptimizations(SpliceableJSONWriter& aWriter,
   aWriter.EndObject();
 }
 
-static void
-StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
-               UniqueJSONStrings& aUniqueStrings,
-               const JS::ProfiledFrameHandle& aJITFrame)
+void
+UniqueStacks::StreamJITFrame(JSContext* aContext,
+                             const JS::ProfiledFrameHandle& aJITFrame)
 {
   enum Schema : uint32_t {
     LOCATION = 0,
@@ -629,7 +547,7 @@ StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
     CATEGORY = 4
   };
 
-  AutoArraySchemaWriter writer(aWriter, aUniqueStrings);
+  AutoArraySchemaWriter writer(mFrameTableWriter, mUniqueStrings);
 
   writer.StringElement(LOCATION, aJITFrame.label());
 
@@ -648,68 +566,6 @@ StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
                                     aJITFrame);
       });
   }
-}
-
-struct CStringWriteFunc : public JSONWriteFunc
-{
-  nsACString& mBuffer; // The struct must not outlive this buffer
-  explicit CStringWriteFunc(nsACString& aBuffer) : mBuffer(aBuffer) {}
-
-  void Write(const char* aStr) override
-  {
-    mBuffer.Append(aStr);
-  }
-};
-
-static nsCString
-JSONForJITFrame(JSContext* aContext, const JS::ProfiledFrameHandle& aJITFrame,
-                UniqueJSONStrings& aUniqueStrings)
-{
-  nsCString json;
-  SpliceableJSONWriter writer(MakeUnique<CStringWriteFunc>(json));
-  StreamJITFrame(aContext, writer, aUniqueStrings, aJITFrame);
-  return json;
-}
-
-void
-JITFrameInfo::AddInfoForRange(uint64_t aRangeStart, uint64_t aRangeEnd,
-                              JSContext* aCx,
-                              std::function<void(std::function<void(void*)>)> aJITAddressProvider)
-{
-  MOZ_RELEASE_ASSERT(aRangeStart < aRangeEnd, "Range must be non-empty");
-
-  if (!mRanges.IsEmpty()) {
-    const JITFrameInfoForBufferRange& prevRange = mRanges.LastElement();
-    MOZ_RELEASE_ASSERT(prevRange.mRangeEnd <= aRangeStart,
-                        "Ranges must be non-overlapping and added in-order.");
-  }
-
-  using JITFrameKey = JITFrameInfoForBufferRange::JITFrameKey;
-
-  nsClassHashtable<nsPtrHashKey<void>, nsTArray<JITFrameKey>> jitAddressToJITFrameMap;
-  nsClassHashtable<nsGenericHashKey<JITFrameKey>, nsCString> jitFrameToFrameJSONMap;
-
-  aJITAddressProvider([&](void* aJITAddress) {
-    // Make sure that we have cached data for aJITAddress.
-    if (!jitAddressToJITFrameMap.Contains(aJITAddress)) {
-      nsTArray<JITFrameKey>& jitFrameKeys =
-        *jitAddressToJITFrameMap.LookupOrAdd(aJITAddress);
-      for (JS::ProfiledFrameHandle handle : JS::GetProfiledFrames(aCx, aJITAddress)) {
-        uint32_t depth = jitFrameKeys.Length();
-        JITFrameKey jitFrameKey{ handle.canonicalAddress(), depth };
-        if (!jitFrameToFrameJSONMap.Contains(jitFrameKey)) {
-          nsCString& json = *jitFrameToFrameJSONMap.LookupOrAdd(jitFrameKey);
-          json = JSONForJITFrame(aCx, handle, *mUniqueStrings);
-        }
-        jitFrameKeys.AppendElement(jitFrameKey);
-      }
-    }
-  });
-
-  mRanges.AppendElement(JITFrameInfoForBufferRange{
-    aRangeStart, aRangeEnd,
-    Move(jitAddressToJITFrameMap), Move(jitFrameToFrameJSONMap)
-  });
 }
 
 struct ProfileSample
@@ -770,7 +626,6 @@ public:
   bool Has() const { return mReadPos != mBuffer.mRangeEnd; }
   const ProfileBufferEntry& Get() const { return mBuffer.GetEntry(mReadPos); }
   void Next() { mReadPos++; }
-  uint64_t CurPos() { return mReadPos; }
 
 private:
   const ProfileBuffer& mBuffer;
@@ -885,9 +740,12 @@ private:
 //     DynamicStringFragment("a800.bun")
 //     DynamicStringFragment("dle.js:2")
 //     DynamicStringFragment("5)")
-void
+//
+// This method returns true if it wrote anything to the writer.
+bool
 ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                                    double aSinceTime,
+                                   JSContext* aContext,
                                    UniqueStacks& aUniqueStacks) const
 {
   UniquePtr<char[]> strbuf = MakeUnique<char[]>(kMaxFrameKeyLength);
@@ -903,6 +761,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
     }
 
   EntryGetter e(*this);
+  bool haveSamples = false;
 
   for (;;) {
     // This block skips entries until we find the start of the next sample.
@@ -1009,31 +868,32 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
         }
         strbuf[kMaxFrameKeyLength - 1] = '\0';
 
-        Maybe<unsigned> line;
+        UniqueStacks::FrameKey frameKey(strbuf.get());
+
         if (e.Has() && e.Get().IsLineNumber()) {
-          line = Some(unsigned(e.Get().u.mInt));
+          frameKey.mLine = Some(unsigned(e.Get().u.mInt));
           e.Next();
         }
 
-        Maybe<unsigned> category;
         if (e.Has() && e.Get().IsCategory()) {
-          category = Some(unsigned(e.Get().u.mInt));
+          frameKey.mCategory = Some(unsigned(e.Get().u.mInt));
           e.Next();
         }
 
-        stack = aUniqueStacks.AppendFrame(
-          stack, UniqueStacks::FrameKey(strbuf.get(), line, category));
+        stack = aUniqueStacks.AppendFrame(stack, frameKey);
 
       } else if (e.Get().IsJitReturnAddr()) {
         numFrames++;
 
+        // We can only process JitReturnAddr entries if we have a JSContext.
+        MOZ_RELEASE_ASSERT(aContext);
+
         // A JIT frame may expand to multiple frames due to inlining.
         void* pc = e.Get().u.mPtr;
-        const Maybe<nsTArray<UniqueStacks::FrameKey>>& frameKeys =
-          aUniqueStacks.LookupFramesForJITAddressFromBufferPos(pc, e.CurPos());
-        MOZ_RELEASE_ASSERT(frameKeys,
-          "Attempting to stream samples for a buffer range for which we don't have JITFrameInfo?");
-        for (const UniqueStacks::FrameKey& frameKey : *frameKeys) {
+        UniqueStacks::JITAddress address = { pc, aUniqueStacks.CurrentGen() };
+        nsTArray<UniqueStacks::FrameKey> frameKeys =
+          aUniqueStacks.GetOrAddJITFrameKeysForAddress(aContext, address);
+        for (const UniqueStacks::FrameKey& frameKey : frameKeys) {
           stack = aUniqueStacks.AppendFrame(stack, frameKey);
         }
 
@@ -1074,56 +934,16 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
       e.Next();
     }
 
-    WriteSample(aWriter, *aUniqueStacks.mUniqueStrings, sample);
+    WriteSample(aWriter, aUniqueStacks.mUniqueStrings, sample);
+    haveSamples = true;
   }
 
+  return haveSamples;
   #undef ERROR_AND_CONTINUE
 }
 
-void
-ProfileBuffer::AddJITInfoForRange(uint64_t aRangeStart,
-                                  int aThreadId, JSContext* aContext,
-                                  JITFrameInfo& aJITFrameInfo) const
-{
-  // We can only process JitReturnAddr entries if we have a JSContext.
-  MOZ_RELEASE_ASSERT(aContext);
-
-  aRangeStart = std::max(aRangeStart, mRangeStart);
-  aJITFrameInfo.AddInfoForRange(aRangeStart, mRangeEnd, aContext,
-    [&](std::function<void(void*)> aJITAddressConsumer) {
-      // Find all JitReturnAddr entries in the given range for the given thread,
-      // and call aJITAddressConsumer with those addresses.
-
-      EntryGetter e(*this, aRangeStart);
-      while (true) {
-        // Advance to the next ThreadId entry.
-        while (e.Has() && !e.Get().IsThreadId()) {
-          e.Next();
-        }
-        if (!e.Has()) {
-          break;
-        }
-
-        MOZ_ASSERT(e.Get().IsThreadId());
-        int threadId = e.Get().u.mInt;
-        e.Next();
-
-        // Ignore samples that are for a different thread.
-        if (threadId != aThreadId) {
-          continue;
-        }
-
-        while (e.Has() && !e.Get().IsThreadId()) {
-          if (e.Get().IsJitReturnAddr()) {
-            aJITAddressConsumer(e.Get().u.mPtr);
-          }
-          e.Next();
-        }
-      }
-    });
-}
-
-void
+// This method returns true if it wrote anything to the writer.
+bool
 ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
                                    int aThreadId,
                                    const TimeStamp& aProcessStartTime,
@@ -1131,6 +951,7 @@ ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
                                    UniqueStacks& aUniqueStacks) const
 {
   EntryGetter e(*this);
+  bool haveMarkers = false;
 
   // Stream all markers whose threadId matches aThreadId. We skip other entries,
   // because we process them in StreamSamplesToJSON().
@@ -1144,10 +965,13 @@ ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
       if (marker->GetTime() >= aSinceTime &&
           marker->GetThreadId() == aThreadId) {
         marker->StreamJSON(aWriter, aProcessStartTime, aUniqueStacks);
+        haveMarkers = true;
       }
     }
     e.Next();
   }
+
+  return haveMarkers;
 }
 
 static void
