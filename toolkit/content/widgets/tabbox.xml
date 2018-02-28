@@ -205,18 +205,14 @@
           case "window": this._eventNode = window; break;
           case "document": this._eventNode = document; break;
         }
-        const nsIEventListenerService =
-          Components.interfaces.nsIEventListenerService;
-        let els = Components.classes["@mozilla.org/eventlistenerservice;1"]
-                            .getService(nsIEventListenerService);
+        let els = Cc["@mozilla.org/eventlistenerservice;1"]
+                    .getService(Ci.nsIEventListenerService);
         els.addSystemEventListener(this._eventNode, "keydown", this, false);
       </constructor>
 
       <destructor>
-        const nsIEventListenerService =
-          Components.interfaces.nsIEventListenerService;
-        let els = Components.classes["@mozilla.org/eventlistenerservice;1"]
-                            .getService(nsIEventListenerService);
+        let els = Cc["@mozilla.org/eventlistenerservice;1"]
+                    .getService(Ci.nsIEventListenerService);
         els.removeSystemEventListener(this._eventNode, "keydown", this, false);
       </destructor>
     </implementation>

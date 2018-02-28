@@ -24,6 +24,7 @@
  * for more information.
  */
 
+/* eslint-disable mozilla/use-cc-etc */
 /* eslint-disable mozilla/use-chromeutils-import */
 
 var _quit = false;

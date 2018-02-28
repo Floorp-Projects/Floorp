@@ -1605,55 +1605,55 @@
 
       <method name="setFieldValue">
         <body>
-          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+          throw Cr.NS_ERROR_NOT_IMPLEMENTED;
         </body>
       </method>
 
       <method name="clearInputFields">
         <body>
-          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+          throw Cr.NS_ERROR_NOT_IMPLEMENTED;
         </body>
       </method>
 
       <method name="setFieldsFromInputValue">
         <body>
-          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+          throw Cr.NS_ERROR_NOT_IMPLEMENTED;
         </body>
       </method>
 
       <method name="setInputValueFromFields">
         <body>
-          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+          throw Cr.NS_ERROR_NOT_IMPLEMENTED;
         </body>
       </method>
 
       <method name="setFieldsFromPicker">
         <body>
-          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+          throw Cr.NS_ERROR_NOT_IMPLEMENTED;
         </body>
       </method>
 
       <method name="handleKeypress">
         <body>
-          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+          throw Cr.NS_ERROR_NOT_IMPLEMENTED;
         </body>
       </method>
 
       <method name="handleKeyboardNav">
         <body>
-          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+          throw Cr.NS_ERROR_NOT_IMPLEMENTED;
         </body>
       </method>
 
       <method name="getCurrentValue">
         <body>
-          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+          throw Cr.NS_ERROR_NOT_IMPLEMENTED;
         </body>
       </method>
 
       <method name="isAnyFieldAvailable">
         <body>
-          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+          throw Cr.NS_ERROR_NOT_IMPLEMENTED;
         </body>
       </method>
 
