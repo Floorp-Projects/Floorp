@@ -261,15 +261,6 @@ UniqueJSONStrings::GetOrAddIndex(const char* aStr)
   return index;
 }
 
-bool UniqueStacks::FrameKey::operator==(const FrameKey& aOther) const
-{
-  return mLocation == aOther.mLocation &&
-         mLine == aOther.mLine &&
-         mCategory == aOther.mCategory &&
-         mJITAddress == aOther.mJITAddress &&
-         mJITDepth == aOther.mJITDepth;
-}
-
 UniqueStacks::StackKey
 UniqueStacks::BeginStack(const FrameKey& aFrame)
 {
@@ -291,23 +282,40 @@ UniqueStacks::JITAddress::Hash() const
   return hash;
 }
 
-uint32_t UniqueStacks::FrameKey::Hash() const
+bool
+UniqueStacks::FrameKey::NormalFrameData::operator==(const NormalFrameData& aOther) const
+{
+  return mLocation == aOther.mLocation &&
+         mLine == aOther.mLine &&
+         mCategory == aOther.mCategory;
+}
+
+bool
+UniqueStacks::FrameKey::JITFrameData::operator==(const JITFrameData& aOther) const
+{
+  return mAddress == aOther.mAddress &&
+         mDepth == aOther.mDepth;
+}
+
+uint32_t
+UniqueStacks::FrameKey::Hash() const
 {
   uint32_t hash = 0;
-  if (!mLocation.IsEmpty()) {
-    hash = HashString(mLocation.get());
-  }
-  if (mLine.isSome()) {
-    hash = AddToHash(hash, *mLine);
-  }
-  if (mCategory.isSome()) {
-    hash = AddToHash(hash, *mCategory);
-  }
-  if (mJITAddress.isSome()) {
-    hash = AddToHash(hash, mJITAddress->Hash());
-    if (mJITDepth.isSome()) {
-      hash = AddToHash(hash, *mJITDepth);
+  if (mData.is<NormalFrameData>()) {
+    const NormalFrameData& data = mData.as<NormalFrameData>();
+    if (!data.mLocation.IsEmpty()) {
+      hash = AddToHash(hash, HashString(data.mLocation.get()));
     }
+    if (data.mLine.isSome()) {
+      hash = AddToHash(hash, *data.mLine);
+    }
+    if (data.mCategory.isSome()) {
+      hash = AddToHash(hash, *data.mCategory);
+    }
+  } else {
+    const JITFrameData& data = mData.as<JITFrameData>();
+    hash = AddToHash(hash, data.mAddress.Hash());
+    hash = AddToHash(hash, data.mDepth);
   }
   return hash;
 }
@@ -417,6 +425,8 @@ void UniqueStacks::StreamStack(const StackKey& aStack)
 void
 UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame)
 {
+  using NormalFrameData = FrameKey::NormalFrameData;
+
   enum Schema : uint32_t {
     LOCATION = 0,
     IMPLEMENTATION = 1,
@@ -427,12 +437,13 @@ UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame)
 
   AutoArraySchemaWriter writer(mFrameTableWriter, mUniqueStrings);
 
-  writer.StringElement(LOCATION, aFrame.mLocation.get());
-  if (aFrame.mLine.isSome()) {
-    writer.IntElement(LINE, *aFrame.mLine);
+  const NormalFrameData& data = aFrame.mData.as<NormalFrameData>();
+  writer.StringElement(LOCATION, data.mLocation.get());
+  if (data.mLine.isSome()) {
+    writer.IntElement(LINE, *data.mLine);
   }
-  if (aFrame.mCategory.isSome()) {
-    writer.IntElement(CATEGORY, *aFrame.mCategory);
+  if (data.mCategory.isSome()) {
+    writer.IntElement(CATEGORY, *data.mCategory);
   }
 }
 
