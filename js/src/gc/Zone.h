@@ -265,7 +265,7 @@ struct Zone : public JS::shadow::Zone,
 #endif
 
     void sweepBreakpoints(js::FreeOp* fop);
-    void sweepUniqueIds(js::FreeOp* fop);
+    void sweepUniqueIds();
     void sweepWeakMaps();
     void sweepCompartments(js::FreeOp* fop, bool keepAtleastOne, bool lastGC);
 

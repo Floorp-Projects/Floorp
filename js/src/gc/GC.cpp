@@ -784,7 +784,7 @@ GCRuntime::expireEmptyChunkPool(const AutoLockGC& lock)
 }
 
 static void
-FreeChunkPool(JSRuntime* rt, ChunkPool& pool)
+FreeChunkPool(ChunkPool& pool)
 {
     for (ChunkPool::Iter iter(pool); !iter.done();) {
         Chunk* chunk = iter.get();
@@ -797,9 +797,9 @@ FreeChunkPool(JSRuntime* rt, ChunkPool& pool)
 }
 
 void
-GCRuntime::freeEmptyChunks(JSRuntime* rt, const AutoLockGC& lock)
+GCRuntime::freeEmptyChunks(const AutoLockGC& lock)
 {
-    FreeChunkPool(rt, emptyChunks(lock));
+    FreeChunkPool(emptyChunks(lock));
 }
 
 inline void
@@ -818,7 +818,7 @@ GCRuntime::prepareToFreeChunk(ChunkInfo& info)
 }
 
 inline void
-GCRuntime::updateOnArenaFree(const ChunkInfo& info)
+GCRuntime::updateOnArenaFree()
 {
     ++numArenasFreeCommitted;
 }
@@ -831,11 +831,11 @@ Chunk::addArenaToFreeList(JSRuntime* rt, Arena* arena)
     info.freeArenasHead = arena;
     ++info.numArenasFreeCommitted;
     ++info.numArenasFree;
-    rt->gc.updateOnArenaFree(info);
+    rt->gc.updateOnArenaFree();
 }
 
 void
-Chunk::addArenaToDecommittedList(JSRuntime* rt, const Arena* arena)
+Chunk::addArenaToDecommittedList(const Arena* arena)
 {
     ++info.numArenasFree;
     decommittedArenas.set(Chunk::arenaIndex(arena->address()));
@@ -873,7 +873,7 @@ Chunk::decommitOneFreeArena(JSRuntime* rt, AutoLockGC& lock)
     }
 
     if (ok)
-        addArenaToDecommittedList(rt, arena);
+        addArenaToDecommittedList(arena);
     else
         addArenaToFreeList(rt, arena);
     updateChunkListAfterFree(rt, lock);
@@ -917,7 +917,7 @@ Chunk::updateChunkListAfterFree(JSRuntime* rt, const AutoLockGC& lock)
     } else {
         MOZ_ASSERT(unused());
         rt->gc.availableChunks(lock).remove(this);
-        decommitAllArenas(rt);
+        decommitAllArenas();
         MOZ_ASSERT(info.numArenasFreeCommitted == 0);
         rt->gc.recycleChunk(this, lock);
     }
@@ -1276,9 +1276,9 @@ GCRuntime::finish()
 
     groups().clear();
 
-    FreeChunkPool(rt, fullChunks_.ref());
-    FreeChunkPool(rt, availableChunks_.ref());
-    FreeChunkPool(rt, emptyChunks_.ref());
+    FreeChunkPool(fullChunks_.ref());
+    FreeChunkPool(availableChunks_.ref());
+    FreeChunkPool(emptyChunks_.ref());
 
     FinishTrace();
 
@@ -2519,7 +2519,7 @@ UpdateCellPointers(MovingTracer* trc, T* cell)
 
 template <typename T>
 static void
-UpdateArenaPointersTyped(MovingTracer* trc, Arena* arena, JS::TraceKind traceKind)
+UpdateArenaPointersTyped(MovingTracer* trc, Arena* arena)
 {
     for (ArenaCellIterUnderGC i(arena); !i.done(); i.next())
         UpdateCellPointers(trc, reinterpret_cast<T*>(i.getCell()));
@@ -2536,7 +2536,7 @@ UpdateArenaPointers(MovingTracer* trc, Arena* arena)
     switch (kind) {
 #define EXPAND_CASE(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
       case AllocKind::allocKind: \
-        UpdateArenaPointersTyped<type>(trc, arena, JS::TraceKind::traceKind); \
+        UpdateArenaPointersTyped<type>(trc, arena); \
         return;
 FOR_EACH_ALLOCKIND(EXPAND_CASE)
 #undef EXPAND_CASE
@@ -2723,7 +2723,7 @@ GCRuntime::updateTypeDescrObjects(MovingTracer* trc, Zone* zone)
 }
 
 void
-GCRuntime::updateCellPointers(MovingTracer* trc, Zone* zone, AllocKinds kinds, size_t bgTaskCount)
+GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds, size_t bgTaskCount)
 {
     AllocKinds fgKinds = bgTaskCount == 0 ? kinds : ForegroundUpdateKinds(kinds);
     AllocKinds bgKinds = kinds - fgKinds;
@@ -2815,13 +2815,13 @@ GCRuntime::updateAllCellPointers(MovingTracer* trc, Zone* zone)
 {
     size_t bgTaskCount = CellUpdateBackgroundTaskCount();
 
-    updateCellPointers(trc, zone, UpdatePhaseMisc, bgTaskCount);
+    updateCellPointers(zone, UpdatePhaseMisc, bgTaskCount);
 
     // Update TypeDescrs before all other objects as typed objects access these
     // objects when we trace them.
     updateTypeDescrObjects(trc, zone);
 
-    updateCellPointers(trc, zone, UpdatePhaseObjects, bgTaskCount);
+    updateCellPointers(zone, UpdatePhaseObjects, bgTaskCount);
 }
 
 /*
@@ -3048,11 +3048,11 @@ ArenaLists::queueForForegroundSweep(FreeOp* fop, const FinalizePhase& phase)
 {
     gcstats::AutoPhase ap(fop->runtime()->gc.stats(), phase.statsPhase);
     for (auto kind : phase.kinds)
-        queueForForegroundSweep(fop, kind);
+        queueForForegroundSweep(kind);
 }
 
 void
-ArenaLists::queueForForegroundSweep(FreeOp* fop, AllocKind thingKind)
+ArenaLists::queueForForegroundSweep(AllocKind thingKind)
 {
     MOZ_ASSERT(!IsBackgroundFinalized(thingKind));
     MOZ_ASSERT(backgroundFinalizeState(thingKind) == BFS_DONE);
@@ -3067,11 +3067,11 @@ ArenaLists::queueForBackgroundSweep(FreeOp* fop, const FinalizePhase& phase)
 {
     gcstats::AutoPhase ap(fop->runtime()->gc.stats(), phase.statsPhase);
     for (auto kind : phase.kinds)
-        queueForBackgroundSweep(fop, kind);
+        queueForBackgroundSweep(kind);
 }
 
 inline void
-ArenaLists::queueForBackgroundSweep(FreeOp* fop, AllocKind thingKind)
+ArenaLists::queueForBackgroundSweep(AllocKind thingKind)
 {
     MOZ_ASSERT(IsBackgroundFinalized(thingKind));
 
@@ -3143,7 +3143,7 @@ ArenaLists::releaseForegroundSweptEmptyArenas()
 }
 
 void
-ArenaLists::queueForegroundThingsForSweep(FreeOp* fop)
+ArenaLists::queueForegroundThingsForSweep()
 {
     gcShapeArenasToUpdate = arenaListsToSweep(AllocKind::SHAPE);
     gcAccessorShapeArenasToUpdate = arenaListsToSweep(AllocKind::ACCESSOR_SHAPE);
@@ -3456,7 +3456,7 @@ js::gc::BackgroundDecommitTask::run()
     ChunkPool toFree = runtime()->gc.expireEmptyChunkPool(lock);
     if (toFree.count()) {
         AutoUnlockGC unlock(lock);
-        FreeChunkPool(runtime(), toFree);
+        FreeChunkPool(toFree);
     }
 }
 
@@ -3726,7 +3726,7 @@ UniqueIdGCPolicy::needsSweep(Cell** cell, uint64_t*)
 }
 
 void
-JS::Zone::sweepUniqueIds(js::FreeOp* fop)
+JS::Zone::sweepUniqueIds()
 {
     uniqueIds().sweep();
 }
@@ -5432,9 +5432,8 @@ SweepWeakMaps(JSRuntime* runtime)
 static void
 SweepUniqueIds(JSRuntime* runtime)
 {
-    FreeOp fop(nullptr);
     for (SweepGroupZonesIter zone(runtime); !zone.done(); zone.next())
-        zone->sweepUniqueIds(&fop);
+        zone->sweepUniqueIds();
 }
 
 void
@@ -5689,7 +5688,7 @@ GCRuntime::beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget)
         for (unsigned i = 0; i < ArrayLength(BackgroundFinalizePhases); ++i)
             zone->arenas.queueForBackgroundSweep(fop, BackgroundFinalizePhases[i]);
 
-        zone->arenas.queueForegroundThingsForSweep(fop);
+        zone->arenas.queueForegroundThingsForSweep();
     }
 
     sweepCache = nullptr;
@@ -6651,13 +6650,13 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason, SliceBudget& sliceBudget,
 }
 
 void
-GCRuntime::endCompactPhase(JS::gcreason::Reason reason)
+GCRuntime::endCompactPhase()
 {
     startedCompacting = false;
 }
 
 void
-GCRuntime::finishCollection(JS::gcreason::Reason reason)
+GCRuntime::finishCollection()
 {
     assertBackgroundSweepingFinished();
     MOZ_ASSERT(marker.isDrained());
@@ -7116,7 +7115,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
             if (compactPhase(reason, budget, session) == NotFinished)
                 break;
 
-            endCompactPhase(reason);
+            endCompactPhase();
         }
 
         startDecommit();
@@ -7135,7 +7134,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
             decommitTask.join();
         }
 
-        finishCollection(reason);
+        finishCollection();
         incrementalState = State::NotActive;
         break;
     }
@@ -7721,7 +7720,7 @@ GCRuntime::onOutOfMallocMemory(const AutoLockGC& lock)
     releaseHeldRelocatedArenasWithoutUnlocking(lock);
 
     // Throw away any excess chunks we have lying around.
-    freeEmptyChunks(rt, lock);
+    freeEmptyChunks(lock);
 
     // Immediately decommit as many arenas as possible in the hopes that this
     // might let the OS scrape together enough pages to satisfy the failing
