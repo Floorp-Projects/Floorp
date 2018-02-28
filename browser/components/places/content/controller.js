@@ -5,8 +5,6 @@
 
 ChromeUtils.defineModuleGetter(this, "ForgetAboutSite",
                                "resource://gre/modules/ForgetAboutSite.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
@@ -230,7 +228,7 @@ PlacesController.prototype = {
         var queries = this._view.selectedNode.getQueries();
         host = queries[0].domain;
       } else
-        host = NetUtil.newURI(this._view.selectedNode.uri).host;
+        host = Services.io.newURI(this._view.selectedNode.uri).host;
       ForgetAboutSite.removeDataFromDomain(host)
                      .catch(Cu.reportError);
       break;
@@ -275,7 +273,7 @@ PlacesController.prototype = {
                                                         "keyword",
                                                         "location",
                                                         "loadInSidebar" ],
-                                         uri: NetUtil.newURI(node.uri),
+                                         uri: Services.io.newURI(node.uri),
                                          title: node.title
                                        }, window.top);
       break;
@@ -428,7 +426,7 @@ PlacesController.prototype = {
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_URI:
           nodeData.link = true;
-          uri = NetUtil.newURI(node.uri);
+          uri = Services.io.newURI(node.uri);
           if (PlacesUtils.nodeIsBookmark(node)) {
             nodeData.bookmark = true;
             var parentNode = node.parent;
