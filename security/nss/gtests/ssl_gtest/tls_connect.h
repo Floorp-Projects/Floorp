@@ -45,8 +45,8 @@ class TlsConnectTestBase : public ::testing::Test {
   TlsConnectTestBase(SSLProtocolVariant variant, uint16_t version);
   virtual ~TlsConnectTestBase();
 
-  void SetUp();
-  void TearDown();
+  virtual void SetUp();
+  virtual void TearDown();
 
   // Initialize client and server.
   void Init();
@@ -319,7 +319,7 @@ class TlsKeyExchangeTest : public TlsConnectGeneric {
   std::shared_ptr<TlsExtensionCapture> groups_capture_;
   std::shared_ptr<TlsExtensionCapture> shares_capture_;
   std::shared_ptr<TlsExtensionCapture> shares_capture2_;
-  std::shared_ptr<TlsInspectorRecordHandshakeMessage> capture_hrr_;
+  std::shared_ptr<TlsHandshakeRecorder> capture_hrr_;
 
   void EnsureKeyShareSetup();
   void ConfigNamedGroups(const std::vector<SSLNamedGroup>& groups);

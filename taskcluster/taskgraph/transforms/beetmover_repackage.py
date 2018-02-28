@@ -8,6 +8,7 @@ Transform the beetmover task into an actual task description.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.beetmover import craft_release_properties
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.partials import (get_balrog_platform_name,
                                      get_partials_artifacts,
@@ -37,7 +38,6 @@ _WINDOWS_BUILD_PLATFORMS = [
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
 _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
-    "balrog_props.json",
     "target.common.tests.zip",
     "target.cppunittest.tests.zip",
     "target.crashreporter-symbols.zip",
@@ -63,7 +63,6 @@ _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
 # See example in bug 1348286
 _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_L10N = [
     "target.langpack.xpi",
-    "balrog_props.json",
 ]
 
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
@@ -371,13 +370,15 @@ def make_task_worker(config, jobs):
         build_signing_task_ref = "<" + str(build_signing_task) + ">"
         repackage_task_ref = "<" + str(repackage_task) + ">"
         repackage_signing_task_ref = "<" + str(repackage_signing_task) + ">"
-        upstream_artifacts = generate_upstream_artifacts(
-            build_task_ref, build_signing_task_ref, repackage_task_ref,
-            repackage_signing_task_ref, platform, locale
-        )
 
-        worker = {'implementation': 'beetmover',
-                  'upstream-artifacts': upstream_artifacts}
+        worker = {
+            'implementation': 'beetmover',
+            'release-properties': craft_release_properties(config, job),
+            'upstream-artifacts': generate_upstream_artifacts(
+                build_task_ref, build_signing_task_ref, repackage_task_ref,
+                repackage_signing_task_ref, platform, locale
+            ),
+        }
         if locale:
             worker["locale"] = locale
         job["worker"] = worker

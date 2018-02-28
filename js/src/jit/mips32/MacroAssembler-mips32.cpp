@@ -180,11 +180,12 @@ MacroAssemblerMIPSCompat::convertInt32ToFloat32(const Address& src, FloatRegiste
 }
 
 void
-MacroAssemblerMIPS::ma_li(Register dest, CodeOffset* label)
+MacroAssemblerMIPS::ma_li(Register dest, CodeLabel* label)
 {
     BufferOffset bo = m_buffer.nextOffset();
     ma_liPatchable(dest, ImmWord(/* placeholder */ 0));
-    label->bind(bo.getOffset());
+    label->patchAt()->bind(bo.getOffset());
+    label->setLinkMode(CodeLabel::MoveImmediate);
 }
 
 void

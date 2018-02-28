@@ -37,6 +37,8 @@ class nsIconDecoder : public Decoder
 public:
   virtual ~nsIconDecoder();
 
+  DecoderType GetType() const override { return DecoderType::ICON; }
+
   LexerResult DoDecode(SourceBufferIterator& aIterator,
                        IResumable* aOnResume) override;
 

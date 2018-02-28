@@ -466,4 +466,4 @@ static const SecStatusParams kSecStatusTestValuesArr[] = {
 INSTANTIATE_TEST_CASE_P(TestSecurityStatus, SecurityStatusTest,
                         ::testing::ValuesIn(kSecStatusTestValuesArr));
 
-}  // namespace nspr_test
+}  // namespace nss_test

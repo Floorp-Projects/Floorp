@@ -4212,6 +4212,7 @@ class MCall
     bool ignoresReturnValue_:1;
 
     bool needsArgCheck_:1;
+    bool needsClassCheck_:1;
 
     MCall(WrappedFunction* target, uint32_t numActualArgs, bool construct, bool ignoresReturnValue)
       : MVariadicInstruction(classOpcode),
@@ -4219,7 +4220,8 @@ class MCall
         numActualArgs_(numActualArgs),
         construct_(construct),
         ignoresReturnValue_(ignoresReturnValue),
-        needsArgCheck_(true)
+        needsArgCheck_(true),
+        needsClassCheck_(true)
     {
         setResultType(MIRType::Value);
     }
@@ -4237,10 +4239,17 @@ class MCall
     bool needsArgCheck() const {
         return needsArgCheck_;
     }
-
     void disableArgCheck() {
         needsArgCheck_ = false;
     }
+
+    bool needsClassCheck() const {
+        return needsClassCheck_;
+    }
+    void disableClassCheck() {
+        needsClassCheck_ = false;
+    }
+
     MDefinition* getFunction() const {
         return getOperand(FunctionOperandIndex);
     }
@@ -15159,8 +15168,6 @@ PropertyReadOnPrototypeNeedsTypeBarrier(IonBuilder* builder,
                                         TemporaryTypeSet* observed);
 bool PropertyReadIsIdempotent(CompilerConstraintList* constraints,
                               MDefinition* obj, PropertyName* name);
-void AddObjectsForPropertyRead(TempAllocator& tempAlloc, MDefinition* obj, PropertyName* name,
-                               TemporaryTypeSet* observed);
 bool CanWriteProperty(TempAllocator& alloc, CompilerConstraintList* constraints,
                       HeapTypeSetKey property, MDefinition* value,
                       MIRType implicitType = MIRType::None);

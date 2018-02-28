@@ -52,6 +52,8 @@ class nsJPEGDecoder : public Decoder
 public:
   virtual ~nsJPEGDecoder();
 
+  DecoderType GetType() const override { return DecoderType::JPEG; }
+
   void NotifyDone();
 
 protected:
