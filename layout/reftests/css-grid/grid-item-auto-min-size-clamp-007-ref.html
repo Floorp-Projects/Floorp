@@ -23,7 +23,6 @@ body,html { color:black; background:white; font:16px/1 monospace; padding:0; mar
   margin-bottom: 14px;
 }
 .c-auto { grid-template-columns: 15px; width: 15px; }
-.c-1530 { grid-template-columns: 15px; width: 30px; }
 .c-30 { grid-template-columns: 30px; width: 30px; }
 .r-auto { grid-template-rows: 15px; height: 15px; }
 .r-min { grid-template-rows: 40px; height: 40px; }
@@ -52,21 +51,14 @@ x { display:block; width:30px; height:40px; }
 span { width:15px; }
 .r span { width:20px; }
 .grid.c-30 span, .r.grid.c-30 span { width:30px; }
+.grid.r-auto span { height:40px; }
 .r span { height:15px; }
 .r.r-min span, .r.r-max span { height:40px; }
   </style>
 </head>
 <body>
 
-<div class="grid c-1530"><y></y><span><x>X</x></span></div>
-<div class="grid c-auto"><y></y><span><x>X</x></span></div>
-<div class="grid c-30"><y style="width:30px"></y><span><x>X</x></span></div>
-<div class="grid c-1530"><y></y><span><x>X</x></span></div>
-<div class="grid c-1530"><y></y><span><x>X</x></span></div>
-
-<br>
-
-<div class="grid c-30"><y></y><span><x>X</x></span></div>
+<div class="grid c-auto"><y></y><span style="width:30px"><x>X</x></span></div>
 <div class="grid c-30"><y></y><span><x>X</x></span></div>
 <div class="grid c-30"><y></y><span><x>X</x></span></div>
 <div class="grid c-30"><y></y><span><x>X</x></span></div>
@@ -82,11 +74,19 @@ span { width:15px; }
 
 <br>
 
-<div class="grid r r-auto"><y></y><span><x>X</x></span></div>
-<div class="grid r r-auto"><y></y><span><x>X</x></span></div>
-<div class="grid r r-auto"><y></y><span><x>X</x></span></div>
-<div class="grid r r-auto"><y></y><span><x>X</x></span></div>
-<div class="grid r r-auto"><y></y><span><x>X</x></span></div>
+<div class="grid c-30"><y></y><span><x>X</x></span></div>
+<div class="grid c-30"><y></y><span><x>X</x></span></div>
+<div class="grid c-30"><y></y><span><x>X</x></span></div>
+<div class="grid c-30"><y></y><span><x>X</x></span></div>
+<div class="grid c-30"><y></y><span><x>X</x></span></div>
+
+<br>
+
+<div class="grid r r-auto"><y></y><span style="width:30px"><x>X</x></span></div>
+<div class="grid r r-auto"><y></y><span style="width:30px"><x>X</x></span></div>
+<div class="grid r r-auto"><y></y><span style="width:30px"><x>X</x></span></div>
+<div class="grid r r-auto"><y></y><span style="width:30px"><x>X</x></span></div>
+<div class="grid r r-auto"><y></y><span style="width:20px"><x>X</x></span></div>
 
 <br>
 

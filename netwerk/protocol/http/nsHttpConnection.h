@@ -243,6 +243,11 @@ public:
 
     void SetEvent(nsresult aStatus);
 
+    // Return true when the socket this connection is using has not been
+    // authenticated using a client certificate.  Before SSL negotiation
+    // has finished this returns false.
+    bool NoClientCertAuth() const;
+
 private:
     // Value (set in mTCPKeepaliveConfig) indicates which set of prefs to use.
     enum TCPKeepaliveConfig {

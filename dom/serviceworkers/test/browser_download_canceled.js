@@ -33,44 +33,25 @@ async function clearDownloads() {
 /**
  * Returns a Promise that will be resolved once the download dialog shows up and
  * we have clicked the given button.
- *
- * Derived from browser/components/downloads/test/browser/head.js's
- * self-contained promiseAlertDialogOpen helper, but modified to work on the
- * download dialog instead of commonDialog.xul.
  */
 function promiseClickDownloadDialogButton(buttonAction) {
-  return new Promise(resolve => {
-    Services.ww.registerNotification(function onOpen(win, topic, data) {
-      if (topic === "domwindowopened" && win instanceof Ci.nsIDOMWindow) {
-        // The test listens for the "load" event which guarantees that the alert
-        // class has already been added (it is added when "DOMContentLoaded" is
-        // fired).
-        win.addEventListener("load", function() {
-          info(`found window of type: ${win.document.documentURI}`);
-          if (win.document.documentURI ===
-                "chrome://mozapps/content/downloads/unknownContentType.xul") {
-            Services.ww.unregisterNotification(onOpen);
+  const uri = "chrome://mozapps/content/downloads/unknownContentType.xul";
+  BrowserTestUtils.promiseAlertDialogOpen(buttonAction, uri, async win => {
+    // nsHelperAppDlg.js currently uses an eval-based setTimeout(0) to invoke
+    // its postShowCallback that results in a misleading error to the console
+    // if we close the dialog before it gets a chance to run.  Just a
+    // setTimeout is not sufficient because it appears we get our "load"
+    // listener before the document's, so we use TestUtils.waitForTick() to
+    // defer until after its load handler runs, then use setTimeout(0) to end
+    // up after its eval.
+    await TestUtils.waitForTick();
 
-            // nsHelperAppDlg.js currently uses an eval-based setTimeout(0) to
-            // invoke its postShowCallback that results in a misleading error to
-            // the console if we close the dialog before it gets a chance to
-            // run.  Just a setTimeout is not sufficient because it appears we
-            // get our "load" listener before the document's, so we use
-            // executeSoon to defer until after its load handler runs, then
-            // use setTimeout(0) to end up after its eval.
-            executeSoon(function() {
-              setTimeout(function() {
-                const button = win.document.documentElement.getButton(buttonAction);
-                button.disabled = false;
-                info(`clicking ${buttonAction} button`);
-                button.click();
-                resolve();
-              }, 0);
-            });
-          }
-        }, {once: true});
-      }
-    });
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    const button = win.document.documentElement.getButton(buttonAction);
+    button.disabled = false;
+    info(`clicking ${buttonAction} button`);
+    button.click();
   });
 }
 

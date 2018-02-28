@@ -2580,5 +2580,26 @@ nsHttpConnection::SetEvent(nsresult aStatus)
   }
 }
 
+bool
+nsHttpConnection::NoClientCertAuth() const
+{
+  if (!mSocketTransport) {
+    return false;
+  }
+
+  nsCOMPtr<nsISupports> secInfo;
+  mSocketTransport->GetSecurityInfo(getter_AddRefs(secInfo));
+  if (!secInfo) {
+    return false;
+  }
+
+  nsCOMPtr<nsISSLSocketControl> ssc(do_QueryInterface(secInfo));
+  if (!ssc) {
+    return false;
+  }
+
+  return !ssc->GetClientCertSent();
+}
+
 } // namespace net
 } // namespace mozilla

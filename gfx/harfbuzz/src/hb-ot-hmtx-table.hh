@@ -74,7 +74,7 @@ struct hmtxvmtx
       bool got_font_extents = false;
       if (T::os2Tag)
       {
-	hb_blob_t *os2_blob = Sanitizer<os2>::sanitize (face->reference_table (T::os2Tag));
+	hb_blob_t *os2_blob = Sanitizer<os2>().sanitize (face->reference_table (T::os2Tag));
 	const os2 *os2_table = Sanitizer<os2>::lock_instance (os2_blob);
 #define USE_TYPO_METRICS (1u<<7)
 	if (0 != (os2_table->fsSelection & USE_TYPO_METRICS))
@@ -87,7 +87,7 @@ struct hmtxvmtx
 	hb_blob_destroy (os2_blob);
       }
 
-      hb_blob_t *_hea_blob = Sanitizer<_hea>::sanitize (face->reference_table (T::headerTag));
+      hb_blob_t *_hea_blob = Sanitizer<_hea>().sanitize (face->reference_table (T::headerTag));
       const _hea *_hea_table = Sanitizer<_hea>::lock_instance (_hea_blob);
       num_advances = _hea_table->numberOfLongMetrics;
       if (!got_font_extents)
@@ -101,7 +101,7 @@ struct hmtxvmtx
 
       has_font_extents = got_font_extents;
 
-      blob = Sanitizer<hmtxvmtx>::sanitize (face->reference_table (T::tableTag));
+      blob = Sanitizer<hmtxvmtx>().sanitize (face->reference_table (T::tableTag));
 
       /* Cap num_metrics() and num_advances() based on table length. */
       unsigned int len = hb_blob_get_length (blob);
@@ -119,7 +119,7 @@ struct hmtxvmtx
       }
       table = Sanitizer<hmtxvmtx>::lock_instance (blob);
 
-      var_blob = Sanitizer<HVARVVAR>::sanitize (face->reference_table (T::variationsTag));
+      var_blob = Sanitizer<HVARVVAR>().sanitize (face->reference_table (T::variationsTag));
       var_table = Sanitizer<HVARVVAR>::lock_instance (var_blob);
     }
 
@@ -144,7 +144,7 @@ struct hmtxvmtx
       }
 
       return table->longMetric[MIN (glyph, (uint32_t) num_advances - 1)].advance
-	   + var_table->get_advance_var (glyph, font->coords, font->num_coords); // TODO Optimize?!
+	   + (font->num_coords ? var_table->get_advance_var (glyph, font->coords, font->num_coords) : 0); // TODO Optimize?!
     }
 
     public:

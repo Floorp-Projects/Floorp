@@ -50,18 +50,19 @@ _hb_ot_layout_create (hb_face_t *face)
   if (unlikely (!layout))
     return nullptr;
 
-  layout->gdef_blob = OT::Sanitizer<OT::GDEF>::sanitize (face->reference_table (HB_OT_TAG_GDEF));
+  layout->gdef_blob = OT::Sanitizer<OT::GDEF>().sanitize (face->reference_table (HB_OT_TAG_GDEF));
   layout->gdef = OT::Sanitizer<OT::GDEF>::lock_instance (layout->gdef_blob);
 
-  layout->gsub_blob = OT::Sanitizer<OT::GSUB>::sanitize (face->reference_table (HB_OT_TAG_GSUB));
+  layout->gsub_blob = OT::Sanitizer<OT::GSUB>().sanitize (face->reference_table (HB_OT_TAG_GSUB));
   layout->gsub = OT::Sanitizer<OT::GSUB>::lock_instance (layout->gsub_blob);
 
-  layout->gpos_blob = OT::Sanitizer<OT::GPOS>::sanitize (face->reference_table (HB_OT_TAG_GPOS));
+  layout->gpos_blob = OT::Sanitizer<OT::GPOS>().sanitize (face->reference_table (HB_OT_TAG_GPOS));
   layout->gpos = OT::Sanitizer<OT::GPOS>::lock_instance (layout->gpos_blob);
 
   layout->math.init (face);
   layout->fvar.init (face);
   layout->avar.init (face);
+  layout->morx.init (face);
 
   {
     /*
@@ -209,6 +210,7 @@ _hb_ot_layout_destroy (hb_ot_layout_t *layout)
   layout->math.fini ();
   layout->fvar.fini ();
   layout->avar.fini ();
+  layout->morx.fini ();
 
   free (layout);
 }
@@ -1055,13 +1057,13 @@ struct hb_get_subtables_context_t :
        OT::hb_dispatch_context_t<hb_get_subtables_context_t, hb_void_t, HB_DEBUG_APPLY>
 {
   template <typename Type>
-  static inline bool apply_to (const void *obj, OT::hb_apply_context_t *c)
+  static inline bool apply_to (const void *obj, OT::hb_ot_apply_context_t *c)
   {
     const Type *typed_obj = (const Type *) obj;
     return typed_obj->apply (c);
   }
 
-  typedef bool (*hb_apply_func_t) (const void *obj, OT::hb_apply_context_t *c);
+  typedef bool (*hb_apply_func_t) (const void *obj, OT::hb_ot_apply_context_t *c);
 
   struct hb_applicable_t
   {
@@ -1071,7 +1073,7 @@ struct hb_get_subtables_context_t :
       apply_func = apply_func_;
     }
 
-    inline bool apply (OT::hb_apply_context_t *c) const { return apply_func (obj, c); }
+    inline bool apply (OT::hb_ot_apply_context_t *c) const { return apply_func (obj, c); }
 
     private:
     const void *obj;
@@ -1102,7 +1104,7 @@ struct hb_get_subtables_context_t :
 };
 
 static inline bool
-apply_forward (OT::hb_apply_context_t *c,
+apply_forward (OT::hb_ot_apply_context_t *c,
 	       const hb_ot_layout_lookup_accelerator_t &accel,
 	       const hb_get_subtables_context_t::array_t &subtables)
 {
@@ -1132,7 +1134,7 @@ apply_forward (OT::hb_apply_context_t *c,
 }
 
 static inline bool
-apply_backward (OT::hb_apply_context_t *c,
+apply_backward (OT::hb_ot_apply_context_t *c,
 	       const hb_ot_layout_lookup_accelerator_t &accel,
 	       const hb_get_subtables_context_t::array_t &subtables)
 {
@@ -1161,7 +1163,7 @@ apply_backward (OT::hb_apply_context_t *c,
 
 template <typename Proxy>
 static inline void
-apply_string (OT::hb_apply_context_t *c,
+apply_string (OT::hb_ot_apply_context_t *c,
 	      const typename Proxy::Lookup &lookup,
 	      const hb_ot_layout_lookup_accelerator_t &accel)
 {
@@ -1212,7 +1214,7 @@ inline void hb_ot_map_t::apply (const Proxy &proxy,
 {
   const unsigned int table_index = proxy.table_index;
   unsigned int i = 0;
-  OT::hb_apply_context_t c (table_index, font, buffer);
+  OT::hb_ot_apply_context_t c (table_index, font, buffer);
   c.set_recurse_func (Proxy::Lookup::apply_recurse_func);
 
   for (unsigned int stage_index = 0; stage_index < stages[table_index].len; stage_index++) {
@@ -1252,7 +1254,7 @@ void hb_ot_map_t::position (const hb_ot_shape_plan_t *plan, hb_font_t *font, hb_
 }
 
 HB_INTERNAL void
-hb_ot_layout_substitute_lookup (OT::hb_apply_context_t *c,
+hb_ot_layout_substitute_lookup (OT::hb_ot_apply_context_t *c,
 				const OT::SubstLookup &lookup,
 				const hb_ot_layout_lookup_accelerator_t &accel)
 {

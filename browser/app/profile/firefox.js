@@ -1678,7 +1678,7 @@ pref("webchannel.allowObject.urlWhitelist", "https://content.cdn.mozilla.net htt
 // Whether or not the browser should scan for unsubmitted
 // crash reports, and then show a notification for submitting
 // those reports.
-#ifdef EARLY_BETA_OR_EARLIER
+#ifdef NIGHTLY_BUILD
 pref("browser.crashReports.unsubmittedCheck.enabled", true);
 #else
 pref("browser.crashReports.unsubmittedCheck.enabled", false);

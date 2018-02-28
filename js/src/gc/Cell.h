@@ -94,6 +94,7 @@ struct Cell
     }
 
 #ifdef DEBUG
+    static inline bool thingIsNotGray(Cell* cell);
     inline bool isAligned() const;
     void dump(GenericPrinter& out) const;
     void dump() const;
@@ -438,6 +439,13 @@ TenuredCell::writeBarrierPost(void* cellp, TenuredCell* prior, TenuredCell* next
 }
 
 #ifdef DEBUG
+
+/* static */ bool
+Cell::thingIsNotGray(Cell* cell)
+{
+    return JS::CellIsNotGray(cell);
+}
+
 bool
 Cell::isAligned() const
 {

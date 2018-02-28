@@ -855,60 +855,33 @@ function makeURLAbsolute(aBase, aUrl) {
  *
  * @param aURL
  *        The URL to open (as a string).
- * @param aDocument
- *        Note this parameter is now ignored. There is no security check & no
- *        referrer header derived from aDocument (null case).
- * @param aPostData
- *        Form POST data, or null.
- * @param aEvent
- *        The triggering event (for the purpose of determining whether to open
- *        in the background), or null.
- * @param aAllowThirdPartyFixup
- *        If true, then we allow the URL text to be sent to third party services
- *        (e.g., Google's I Feel Lucky) for interpretation. This parameter may
- *        be undefined in which case it is treated as false.
- * @param [optional] aReferrer
- *        This will be used as the referrer. There will be no security check.
- * @param [optional] aReferrerPolicy
- *        Referrer policy - Ci.nsIHttpChannel.REFERRER_POLICY_*.
+ * @param aShiftKey
+ *        True if shift key is held.  This value is used for the purpose of
+ *        determining whether to open in the background.
+ * @param aParams
+ *        parameters passed to openLinkIn
  */
-function openNewTabWith(aURL, aDocument, aPostData, aEvent,
-                        aAllowThirdPartyFixup, aReferrer, aReferrerPolicy) {
+function openNewTabWith(aURL, aShiftKey, aParams = {}) {
 
   // As in openNewWindowWith(), we want to pass the charset of the
   // current document over to a new tab.
-  let originCharset = null;
   if (document.documentElement.getAttribute("windowtype") == "navigator:browser")
-    originCharset = gBrowser.selectedBrowser.characterSet;
+    aParams.charset = gBrowser.selectedBrowser.characterSet;
 
-  openLinkIn(aURL, aEvent && aEvent.shiftKey ? "tabshifted" : "tab",
-             { charset: originCharset,
-               postData: aPostData,
-               allowThirdPartyFixup: aAllowThirdPartyFixup,
-               referrerURI: aReferrer,
-               referrerPolicy: aReferrerPolicy,
-             });
+  openLinkIn(aURL, aShiftKey ? "tabshifted" : "tab", aParams);
 }
 
 /**
- * @param aDocument
- *        Note this parameter is ignored. See openNewTabWith()
+ * openNewWindowWith: opens a new window with the given URL.
+ * See openNewTabWith for parameters.
  */
-function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup,
-                           aReferrer, aReferrerPolicy) {
+function openNewWindowWith(aURL, aParams = {}) {
   // Extract the current charset menu setting from the current document and
   // use it to initialize the new browser window...
-  let originCharset = null;
   if (document.documentElement.getAttribute("windowtype") == "navigator:browser")
-    originCharset = gBrowser.selectedBrowser.characterSet;
+    aParams.charset = gBrowser.selectedBrowser.characterSet;
 
-  openLinkIn(aURL, "window",
-             { charset: originCharset,
-               postData: aPostData,
-               allowThirdPartyFixup: aAllowThirdPartyFixup,
-               referrerURI: aReferrer,
-               referrerPolicy: aReferrerPolicy,
-             });
+  openLinkIn(aURL, "window", aParams);
 }
 
 function getHelpLinkURL(aHelpTopic) {

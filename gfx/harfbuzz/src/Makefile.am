@@ -1,5 +1,6 @@
 # Process this file with automake to produce Makefile.in
 
+NULL =
 SUBDIRS =
 DIST_SUBDIRS =
 BUILT_SOURCES =
@@ -134,7 +135,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = harfbuzz.pc
 EXTRA_DIST += harfbuzz.pc.in
 
-FUZZING_CPPFLAGS= \
+FUZZING_CPPFLAGS = \
 	-DHB_NDEBUG \
 	-DHB_MAX_NESTING_LEVEL=3 \
 	-DHB_SANITIZE_MAX_EDITS=3 \
@@ -222,21 +223,14 @@ CLEANFILES += $(pkgconfig_DATA)
 
 CLEANFILES += harfbuzz.def
 harfbuzz.def: $(HBHEADERS) $(HBNODISTHEADERS)
-	$(AM_V_GEN) (echo EXPORTS; \
-	(cat $^ || echo 'hb_ERROR ()' ) | \
-	$(EGREP) '^hb_.* \(' | \
-	sed -e 's/ (.*//' | \
-	LC_ALL=C sort; \
-	echo LIBRARY libharfbuzz-0.dll; \
-	) >"$@"
-	@ ! grep -q hb_ERROR "$@" \
-	|| ($(RM) "$@"; false)
+	$(AM_V_GEN) headers="$^" $(srcdir)/gen-def.py $@
 
 
 GENERATORS = \
 	gen-arabic-table.py \
 	gen-indic-table.py \
 	gen-use-table.py \
+	gen-def.py \
 	$(NULL)
 EXTRA_DIST += $(GENERATORS)
 

@@ -53,7 +53,9 @@ private:
 
 
 // Class to allow us to propagate the base URI to about:blank correctly
-class nsNestedAboutURI : public nsSimpleNestedURI {
+class nsNestedAboutURI final
+    : public nsSimpleNestedURI
+{
 public:
     nsNestedAboutURI(nsIURI* aInnerURI, nsIURI* aBaseURI)
         : nsSimpleNestedURI(aInnerURI)
@@ -87,7 +89,7 @@ protected:
     nsCOMPtr<nsIURI> mBaseURI;
 
 public:
-    class Mutator
+    class Mutator final
         : public nsIURIMutator
         , public BaseURIMutator<nsNestedAboutURI>
     {

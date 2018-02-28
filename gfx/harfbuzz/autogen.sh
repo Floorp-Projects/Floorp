@@ -42,5 +42,7 @@ echo "running autoreconf --force --install --verbose"
 autoreconf --force --install --verbose || exit $?
 
 cd $olddir
-echo "running configure $@"
-test -n "$NOCONFIGURE" || "$srcdir/configure" "$@"
+test -n "$NOCONFIGURE" || {
+	echo "running configure $@"
+	"$srcdir/configure" "$@"
+}

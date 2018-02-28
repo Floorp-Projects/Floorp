@@ -54,6 +54,12 @@
 #define I128(v) static_cast<__int128_t>(v)
 #define U128(v) static_cast<__uint128_t>(v)
 
+#define I32_CHECK(v) \
+({ \
+    MOZ_ASSERT(I64(I32(v)) == I64(v)); \
+    I32((v)); \
+})
+
 namespace js {
 namespace jit {
 
@@ -2621,7 +2627,7 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             return_addr_reg = instr->rdValue();
             break;
           case ff_sll:
-            alu_out = I32(rt) << sa;
+            alu_out = I64(I32(rt) << sa);
             break;
           case ff_dsll:
             alu_out = rt << sa;
@@ -2633,12 +2639,12 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             if (rs_reg == 0) {
                 // Regular logical right shift of a word by a fixed number of
                 // bits instruction. RS field is always equal to 0.
-                alu_out = I32(U32(rt) >> sa);
+                alu_out = I64(I32(U32(I32_CHECK(rt)) >> sa));
             } else {
                 // Logical right-rotate of a word by a fixed number of bits. This
                 // is special case of SRL instruction, added in MIPS32 Release 2.
                 // RS field is equal to 00001.
-                alu_out = I32((U32(rt) >> sa) | (U32(rt) << (32 - sa)));
+                alu_out = I64(I32((U32(I32_CHECK(rt)) >> sa) | (U32(I32_CHECK(rt)) << (32 - sa))));
             }
             break;
           case ff_dsrl:
@@ -2666,7 +2672,7 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             }
             break;
           case ff_sra:
-            alu_out = I32(rt) >> sa;
+            alu_out = I64(I32_CHECK(rt)) >> sa;
             break;
           case ff_dsra:
             alu_out = rt >> sa;
@@ -2675,7 +2681,7 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             alu_out = rt >> (sa + 32);
             break;
           case ff_sllv:
-            alu_out = I32(rt) << rs;
+            alu_out = I64(I32(rt) << rs);
             break;
           case ff_dsllv:
             alu_out = rt << rs;
@@ -2684,12 +2690,12 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             if (sa == 0) {
                 // Regular logical right-shift of a word by a variable number of
                 // bits instruction. SA field is always equal to 0.
-                alu_out = I32(U32(rt) >> rs);
+                alu_out = I64(I32(U32(I32_CHECK(rt)) >> rs));
             } else {
                 // Logical right-rotate of a word by a variable number of bits.
                 // This is special case od SRLV instruction, added in MIPS32
                 // Release 2. SA field is equal to 00001.
-                alu_out = I32((U32(rt) >> rs) | (U32(rt) << (32 - rs)));
+                alu_out = I64(I32((U32(I32_CHECK(rt)) >> rs) | (U32(I32_CHECK(rt)) << (32 - rs))));
             }
             break;
           case ff_dsrlv:
@@ -2705,7 +2711,7 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             }
             break;
           case ff_srav:
-            alu_out = I32(rt) >> rs;
+            alu_out = I64(I32_CHECK(rt) >> rs);
             break;
           case ff_dsrav:
             alu_out = rt >> rs;
@@ -2717,19 +2723,19 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             alu_out = getRegister(LO);
             break;
           case ff_mult:
-            i128hilo = I32(rs) * I32(rt);
+            i128hilo = I64(U32(I32_CHECK(rs))) * I64(U32(I32_CHECK(rt)));
             break;
           case ff_dmult:
             i128hilo = I128(rs) * I128(rt);
             break;
           case ff_multu:
-            u128hilo = U32(rs) * U32(rt);
+            u128hilo = U64(U32(I32_CHECK(rs))) * U64(U32(I32_CHECK(rt)));
             break;
           case ff_dmultu:
             u128hilo = U128(rs) * U128(rt);
             break;
           case ff_add:
-            alu_out = I32(rs) + I32(rt);
+            alu_out = I32_CHECK(rs) + I32_CHECK(rt);
             if ((alu_out << 32) != (alu_out << 31))
               exceptions[kIntegerOverflow] = 1;
             alu_out = I32(alu_out);
@@ -2741,13 +2747,13 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             alu_out = I64(temp);
             break;
           case ff_addu:
-            alu_out = I32(U32(rs) + U32(rt));
+            alu_out = I32(I32_CHECK(rs) + I32_CHECK(rt));
             break;
           case ff_daddu:
             alu_out = rs + rt;
             break;
           case ff_sub:
-            alu_out = I32(rs) - I32(rt);
+            alu_out = I32_CHECK(rs) - I32_CHECK(rt);
             if ((alu_out << 32) != (alu_out << 31))
               exceptions[kIntegerUnderflow] = 1;
             alu_out = I32(alu_out);
@@ -2759,7 +2765,7 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             alu_out = I64(temp);
             break;
           case ff_subu:
-            alu_out = I32(U32(rs) - U32(rt));
+            alu_out = I32(I32_CHECK(rs) - I32_CHECK(rt));
             break;
           case ff_dsubu:
             alu_out = rs - rt;
@@ -2777,7 +2783,7 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             alu_out = ~(rs | rt);
             break;
           case ff_slt:
-            alu_out = rs < rt ? 1 : 0;
+            alu_out = I32_CHECK(rs) < I32_CHECK(rt) ? 1 : 0;
             break;
           case ff_sltu:
             alu_out = U64(rs) < U64(rt) ? 1 : 0;
@@ -2812,16 +2818,16 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             // No action taken on decode.
             break;
           case ff_div:
-            if (I32(rs) == INT_MIN && I32(rt) == -1) {
+            if (I32_CHECK(rs) == INT_MIN && I32_CHECK(rt) == -1) {
                 i128hilo = U32(INT_MIN);
             } else {
-                uint32_t div = I32(rs) / I32(rt);
-                uint32_t mod = I32(rs) % I32(rt);
+                uint32_t div = I32_CHECK(rs) / I32_CHECK(rt);
+                uint32_t mod = I32_CHECK(rs) % I32_CHECK(rt);
                 i128hilo = (I64(mod) << 32) | div;
             }
             break;
           case ff_ddiv:
-            if (I32(rs) == INT_MIN && I32(rt) == -1) {
+            if (I32_CHECK(rs) == INT_MIN && I32_CHECK(rt) == -1) {
                 i128hilo = U64(INT64_MIN);
             } else {
                 uint64_t div = rs / rt;
@@ -2830,8 +2836,8 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             }
             break;
           case ff_divu: {
-                uint32_t div = U32(rs) / U32(rt);
-                uint32_t mod = U32(rs) % U32(rt);
+                uint32_t div = U32(I32_CHECK(rs)) / U32(I32_CHECK(rt));
+                uint32_t mod = U32(I32_CHECK(rs)) % U32(I32_CHECK(rt));
                 i128hilo = (U64(mod) << 32) | div;
             }
             break;
@@ -2851,10 +2857,10 @@ Simulator::configureTypeRegister(SimInstruction* instr,
       case op_special2:
         switch (instr->functionFieldRaw()) {
           case ff_mul:
-            alu_out = I32(I32(rs) * I32(rt));  // Only the lower 32 bits are kept.
+            alu_out = I32(I32_CHECK(rs) * I32_CHECK(rt));  // Only the lower 32 bits are kept.
             break;
           case ff_clz:
-            alu_out = U32(rs) ? __builtin_clz(U32(rs)) : 32;
+            alu_out = U32(I32_CHECK(rs)) ? __builtin_clz(U32(I32_CHECK(rs))) : 32;
             break;
           case ff_dclz:
             alu_out = U64(rs) ? __builtin_clzl(U64(rs)) : 64;
@@ -2875,7 +2881,7 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             if (lsb > msb)
               alu_out = Unpredictable;
             else
-              alu_out = (U32(rt) & ~(mask << lsb)) | ((U32(rs) & mask) << lsb);
+              alu_out = (U32(I32_CHECK(rt)) & ~(mask << lsb)) | ((U32(I32_CHECK(rs)) & mask) << lsb);
             break;
           }
           case ff_dins: {   // Mips64r2 instruction.
@@ -2924,7 +2930,7 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             if ((lsb + msb) > 31)
               alu_out = Unpredictable;
             else
-              alu_out = (U32(rs) & (mask << lsb)) >> lsb;
+              alu_out = (U32(I32_CHECK(rs)) & (mask << lsb)) >> lsb;
             break;
           }
           case ff_dext: {   // Mips64r2 instruction.
@@ -2965,9 +2971,9 @@ Simulator::configureTypeRegister(SimInstruction* instr,
           }
           case ff_bshfl: {   // Mips32r2 instruction.
             if (16 == sa) // seb
-              alu_out = I64(I8(rt));
-            else if (24 == sa) // seh
-              alu_out = I64(I16(rt));
+              alu_out = I64(I8(I32_CHECK(rt)));
+             else if (24 == sa) // seh
+              alu_out = I64(I16(I32_CHECK(rt)));
             break;
           }
           default:
@@ -3672,10 +3678,10 @@ Simulator::decodeTypeImmediate(SimInstruction* instr)
         break;
         // ------------- Arithmetic instructions.
       case op_addi:
-        alu_out = I32(rs) + se_imm16;
+        alu_out = I32_CHECK(rs) + se_imm16;
         if ((alu_out << 32) != (alu_out << 31))
           exceptions[kIntegerOverflow] = 1;
-        alu_out = I32(alu_out);
+        alu_out = I32_CHECK(alu_out);
         break;
       case op_daddi:
         temp = alu_out = rs + se_imm16;
@@ -3684,7 +3690,7 @@ Simulator::decodeTypeImmediate(SimInstruction* instr)
         alu_out = I64(temp);
         break;
       case op_addiu:
-        alu_out = I32(I32(rs) + se_imm16);
+        alu_out = I32(I32_CHECK(rs) + se_imm16);
         break;
       case op_daddiu:
         alu_out = rs + se_imm16;

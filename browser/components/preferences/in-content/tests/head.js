@@ -145,24 +145,11 @@ function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
 }
 
 function promiseWindowDialogOpen(buttonAction, url) {
-  return new Promise(resolve => {
-    Services.ww.registerNotification(function onOpen(subj, topic, data) {
-      if (topic == "domwindowopened" && subj instanceof Ci.nsIDOMWindow) {
-        subj.addEventListener("load", function onLoad() {
-          if (subj.document.documentURI == url) {
-            Services.ww.unregisterNotification(onOpen);
-            let doc = subj.document.documentElement;
-            doc.getButton(buttonAction).click();
-            resolve();
-          }
-        }, { once: true });
-      }
-    });
-  });
+  return BrowserTestUtils.promiseAlertDialogOpen(buttonAction, url);
 }
 
 function promiseAlertDialogOpen(buttonAction) {
-  return promiseWindowDialogOpen(buttonAction, "chrome://global/content/commonDialog.xul");
+  return BrowserTestUtils.promiseAlertDialogOpen(buttonAction);
 }
 
 function promiseSiteDataManagerSitesUpdated() {
