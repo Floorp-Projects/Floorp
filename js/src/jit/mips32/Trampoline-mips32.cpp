@@ -746,7 +746,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
     masm.reserveStack(outParamOffset);
     masm.movePtr(StackPointer, doubleArgs);
 
-    if (!generateTLEnterVM(cx, masm, f))
+    if (!generateTLEnterVM(masm, f))
         return false;
 
     masm.setupAlignedABICall();
@@ -798,7 +798,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
 
     masm.callWithABI(f.wrapped, MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
-    if (!generateTLExitVM(cx, masm, f))
+    if (!generateTLExitVM(masm, f))
         return false;
 
     // Test for failure.

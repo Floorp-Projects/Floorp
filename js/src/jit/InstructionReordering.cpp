@@ -44,7 +44,7 @@ IsLastUse(MDefinition* ins, MDefinition* input, MBasicBlock* loopHeader)
 }
 
 bool
-jit::ReorderInstructions(MIRGenerator* mir, MIRGraph& graph)
+jit::ReorderInstructions(MIRGraph& graph)
 {
     // Renumber all instructions in the graph as we go.
     size_t nextId = 0;

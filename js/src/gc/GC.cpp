@@ -2493,7 +2493,7 @@ GCRuntime::sweepZoneAfterCompacting(Zone* zone)
         cache->sweep();
 
     if (jit::JitZone* jitZone = zone->jitZone())
-        jitZone->sweep(fop);
+        jitZone->sweep();
 
     for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
         c->objectGroups.sweep(fop);
@@ -2503,7 +2503,7 @@ GCRuntime::sweepZoneAfterCompacting(Zone* zone)
         c->sweepGlobalObject();
         c->sweepSelfHostingScriptSource();
         c->sweepDebugEnvironments();
-        c->sweepJitCompartment(fop);
+        c->sweepJitCompartment();
         c->sweepNativeIterators();
         c->sweepTemplateObjects();
     }
@@ -5493,11 +5493,11 @@ GCRuntime::sweepJitDataOnMainThread(FreeOp* fop)
         js::CancelOffThreadIonCompile(rt, JS::Zone::Sweep);
 
         for (SweepGroupCompartmentsIter c(rt); !c.done(); c.next())
-            c->sweepJitCompartment(fop);
+            c->sweepJitCompartment();
 
         for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
             if (jit::JitZone* jitZone = zone->jitZone())
-                jitZone->sweep(fop);
+                jitZone->sweep();
         }
 
         // Bug 1071218: the following method has not yet been refactored to

@@ -880,7 +880,7 @@ js::Nursery::doCollection(JS::gcreason::Reason reason,
 
     // Update any slot or element pointers whose destination has been tenured.
     startProfile(ProfileKey::UpdateJitActivations);
-    js::jit::UpdateJitActivationsForMinorGC(rt, &mover);
+    js::jit::UpdateJitActivationsForMinorGC(rt);
     forwardedBuffers.finish();
     endProfile(ProfileKey::UpdateJitActivations);
 
