@@ -16,8 +16,8 @@
 let EventUtils = {};
 EventUtils.window = content;
 EventUtils.parent = EventUtils.window;
-EventUtils._EU_Ci = Components.interfaces; // eslint-disable-line
-EventUtils._EU_Cc = Components.classes; // eslint-disable-line
+EventUtils._EU_Ci = Ci; // eslint-disable-line
+EventUtils._EU_Cc = Cc; // eslint-disable-line
 EventUtils.navigator = content.navigator;
 EventUtils.KeyboardEvent = content.KeyboardEvent;
 

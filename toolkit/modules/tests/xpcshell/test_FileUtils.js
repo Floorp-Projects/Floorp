@@ -118,7 +118,7 @@ var openFileOutputStream_defaultFlags = function(aKind, aFileName) {
 
   // No nsIXULRuntime in xpcshell, so use this trick to determine whether we're
   // on Windows.
-  if ("@mozilla.org/windows-registry-key;1" in Components.classes) {
+  if ("@mozilla.org/windows-registry-key;1" in Cc) {
     Assert.equal(file.permissions, 0o666);
   } else {
     Assert.equal(file.permissions, FileUtils.PERMS_FILE);

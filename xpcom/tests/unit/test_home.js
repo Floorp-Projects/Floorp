@@ -3,7 +3,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 const CWD = do_get_cwd();
 function checkOS(os) {
   const nsILocalFile_ = "nsILocalFile" + os;
-  return nsILocalFile_ in Components.interfaces &&
+  return nsILocalFile_ in Ci &&
          CWD instanceof Ci[nsILocalFile_];
 }
 

@@ -28,7 +28,7 @@ function run_test() {
       // support NTFS permissions so we don't need to test there. OSX's isExecutable
       // only tests if the file is an application so it is better to just check the
       // raw permission bits
-      if (!("nsIWindowsRegKey" in Components.interfaces))
+      if (!("nsIWindowsRegKey" in Ci))
         Assert.ok((file.permissions & 0o100) == 0o100);
 
       executeSoon(do_test_finished);

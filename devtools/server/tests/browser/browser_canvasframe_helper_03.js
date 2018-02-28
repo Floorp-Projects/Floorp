@@ -101,8 +101,8 @@ add_task(async function () {
       let EventUtils = {
         window: content,
         parent: content,
-        _EU_Ci: Components.interfaces,
-        _EU_Cc: Components.classes,
+        _EU_Ci: Ci,
+        _EU_Cc: Cc,
       };
       Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
       EventUtils.synthesizeMouseAtPoint(x, y, {type: "mousedown"}, win);

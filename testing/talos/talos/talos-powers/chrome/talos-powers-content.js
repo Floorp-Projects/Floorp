@@ -54,9 +54,9 @@ function goQuitApplication(waitForSafeBrowsing) {
   const kAppShell   = "@mozilla.org/appshell/appShellService;1";
   var appService;
 
-  if (kAppStartup in Components.classes) {
+  if (kAppStartup in Cc) {
     appService = Services.startup;
-  } else if (kAppShell in Components.classes) {
+  } else if (kAppShell in Cc) {
     appService = Services.appShell;
   } else {
     throw "goQuitApplication: no AppStartup/appShell";
