@@ -1,8 +1,7 @@
 import os
 import socket
-import sys
 
-PYTHON = sys.executable
+PYTHON = 'c:/mozilla-build/python27/python.exe'
 PYTHON_DLL = 'c:/mozilla-build/python27/python27.dll'
 VENV_PATH = os.path.join(os.getcwd(), 'build/venv')
 
@@ -23,8 +22,7 @@ config = {
                          '%s/scripts/easy_install-2.7-script.py' % VENV_PATH],
         'mozinstall': ['%s/scripts/python' % VENV_PATH,
                        '%s/scripts/mozinstall-script.py' % VENV_PATH],
-        'hg': os.path.join(os.environ['PROGRAMFILES'], 'Mercurial', 'hg'),
-        'tooltool.py': [PYTHON, os.path.join(os.environ['MOZILLABUILD'], 'tooltool.py')],
+        'hg': 'c:/mozilla-build/hg/hg',
     },
     "title": socket.gethostname().split('.')[0],
     "default_actions": [
