@@ -28,10 +28,10 @@ ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
                               const TimeStamp& aProcessStartTime,
                               UniqueStacks& aUniqueStacks)
 {
-  // This call to StreamSamplesAndMarkers() can safely pass in a non-null
-  // JSContext. That's because StreamSamplesAndMarkers() only accesses the
-  // JSContext when streaming JitReturnAddress entries, and such entries
-  // never appear in synchronous samples.
+  // Unlike ProfiledThreadData::StreamJSON, we don't need to call
+  // ProfileBuffer::AddJITInfoForRange because mBuffer does not contain any
+  // JitReturnAddr entries. For synchronous samples, JIT frames get expanded
+  // at sample time.
   StreamSamplesAndMarkers(mName.get(), mThreadId,
                           *mBuffer.get(), aWriter, aProcessStartTime,
                           /* aRegisterTime */ TimeStamp(),

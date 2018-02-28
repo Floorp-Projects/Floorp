@@ -216,30 +216,6 @@ struct JITFrameInfo final
 class UniqueStacks
 {
 public:
-  // We de-duplicate information about JIT frames based on the return address
-  // of the frame. However, if the same UniqueStacks object is used to stream
-  // profiler buffer contents more than once, then in the time between the two
-  // stream attempts ("streaming generations"), JIT code can have been freed
-  // and reallocated in the same areas of memory. Consequently, during the next
-  // streaming generation, we may see JIT return addresses that we've already
-  // seen before, but which now represent completely different JS functions.
-  // So we need to make sure that any de-duplication takes the streaming
-  // generation into account and does not only compare the address itself.
-  // The JITAddress struct packages the two together and can be used as a hash
-  // key.
-  struct JITAddress
-  {
-    void* mAddress;
-    uint32_t mStreamingGen;
-
-    uint32_t Hash() const;
-    bool operator==(const JITAddress& aRhs) const
-    {
-      return mAddress == aRhs.mAddress && mStreamingGen == aRhs.mStreamingGen;
-    }
-    bool operator!=(const JITAddress& aRhs) const { return !(*this == aRhs); }
-  };
-
   struct FrameKey {
     explicit FrameKey(const char* aLocation)
       : mData(NormalFrameData{
@@ -253,8 +229,8 @@ public:
     {
     }
 
-    FrameKey(const JITAddress& aJITAddress, uint32_t aJITDepth)
-      : mData(JITFrameData{ aJITAddress, aJITDepth })
+    FrameKey(void* aJITAddress, uint32_t aJITDepth, uint32_t aRangeIndex)
+      : mData(JITFrameData{ aJITAddress, aJITDepth, aRangeIndex })
     {
     }
 
@@ -273,8 +249,9 @@ public:
     struct JITFrameData {
       bool operator==(const JITFrameData& aOther) const;
 
-      JITAddress mAddress;
+      void* mCanonicalAddress;
       uint32_t mDepth;
+      uint32_t mRangeIndex;
     };
     mozilla::Variant<NormalFrameData, JITFrameData> mData;
   };
@@ -306,13 +283,7 @@ public:
     uint32_t mHash;
   };
 
-  explicit UniqueStacks();
-
-  // Needs to be called when using a UniqueStacks object again after having
-  // streamed entries that are no longer in the buffer (and which could have
-  // been GC'ed and their memory reused).
-  void AdvanceStreamingGeneration() { mStreamingGeneration++; }
-  uint32_t CurrentGen() { return mStreamingGeneration; }
+  explicit UniqueStacks(JITFrameInfo&& aJITFrameInfo);
 
   // Return a StackKey for aFrame as the stack's root frame (no prefix).
   MOZ_MUST_USE StackKey BeginStack(const FrameKey& aFrame);
@@ -321,9 +292,14 @@ public:
   MOZ_MUST_USE StackKey AppendFrame(const StackKey& aStack,
                                     const FrameKey& aFrame);
 
-  MOZ_MUST_USE nsTArray<FrameKey>
-  GetOrAddJITFrameKeysForAddress(JSContext* aContext,
-                                 const JITAddress& aJITAddress);
+  // Look up frame keys for the given JIT address, and ensure that our frame
+  // table has entries for the returned frame keys. The JSON for these frames
+  // is taken from mJITInfoRanges.
+  // aBufferPosition is needed in order to look up the correct JIT frame info
+  // object in mJITInfoRanges.
+  MOZ_MUST_USE mozilla::Maybe<nsTArray<UniqueStacks::FrameKey>>
+  LookupFramesForJITAddressFromBufferPos(void* aJITAddress,
+                                         uint64_t aBufferPosition);
 
   MOZ_MUST_USE uint32_t GetOrAddFrameIndex(const FrameKey& aFrame);
   MOZ_MUST_USE uint32_t GetOrAddStackIndex(const StackKey& aStack);
@@ -332,35 +308,20 @@ public:
   void SpliceStackTableElements(SpliceableJSONWriter& aWriter);
 
 private:
-  // Make sure that there exists a frame index for aFrame, and if there isn't
-  // one already, create one and call StreamJITFrame for the frame.
-  void MaybeAddJITFrameIndex(JSContext* aContext,
-                             const FrameKey& aFrame,
-                             const JS::ProfiledFrameHandle& aJITFrame);
-
   void StreamNonJITFrame(const FrameKey& aFrame);
-  void StreamJITFrame(JSContext* aContext,
-                      const JS::ProfiledFrameHandle& aJITFrame);
   void StreamStack(const StackKey& aStack);
 
 public:
   mozilla::UniquePtr<UniqueJSONStrings> mUniqueStrings;
 
 private:
-  // To avoid incurring JitcodeGlobalTable lookup costs for every JIT frame,
-  // we cache the frame keys of frames keyed by JIT code address. All FrameKeys
-  // in mAddressToJITFrameKeysMap are guaranteed to be in mFrameToIndexMap.
-  nsClassHashtable<nsGenericHashKey<JITAddress>, nsTArray<FrameKey>> mAddressToJITFrameKeysMap;
-
   SpliceableChunkedJSONWriter mFrameTableWriter;
   nsDataHashtable<nsGenericHashKey<FrameKey>, uint32_t> mFrameToIndexMap;
 
   SpliceableChunkedJSONWriter mStackTableWriter;
   nsDataHashtable<nsGenericHashKey<StackKey>, uint32_t> mStackToIndexMap;
 
-  // Used to avoid collisions between JITAddresses that refer to different
-  // frames.
-  uint32_t mStreamingGeneration;
+  nsTArray<JITFrameInfoForBufferRange> mJITInfoRanges;
 };
 
 //
