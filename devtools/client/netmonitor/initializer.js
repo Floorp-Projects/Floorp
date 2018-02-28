@@ -22,7 +22,7 @@ const { render, unmountComponentAtNode } = require("devtools/client/shared/vendo
 const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
 const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
 const { Connector } = require("./src/connector/index");
-const { configureStore } = require("./src/utils/create-store");
+const { configureStore } = require("./src/create-store");
 const App = createFactory(require("./src/components/App"));
 const { EVENTS } = require("./src/constants");
 const {
