@@ -1008,4 +1008,16 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     public void delegateDuringNextWait(final Object callback) {
         mWaitScopeDelegates.delegate(callback);
     }
+
+    public void synthesizeTap(int x, int y) {
+        final long downTime = SystemClock.uptimeMillis();
+        final MotionEvent down = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(),
+            MotionEvent.ACTION_DOWN, x, y, 0);
+
+        mSession.getPanZoomController().onTouchEvent(down);
+
+        final MotionEvent up = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(),
+                MotionEvent.ACTION_UP, x, y, 0);
+        mSession.getPanZoomController().onTouchEvent(up);
+    }
 }
