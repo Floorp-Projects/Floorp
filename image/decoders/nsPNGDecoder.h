@@ -25,6 +25,8 @@ public:
   /// @return true if this PNG is a valid ICO resource.
   bool IsValidICOResource() const override;
 
+  DecoderType GetType() const override { return DecoderType::PNG; }
+
 protected:
   nsresult InitInternal() override;
   nsresult FinishInternal() override;
