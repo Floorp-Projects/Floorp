@@ -512,7 +512,7 @@ add_task(async function onItemRemoved_folder_recursive() {
       { name: "onItemAdded",
         args: [
           { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
-          { name: "parentId", check: v => v === PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0) },
+          { name: "parentId", check: v => typeof(v) == "number" && v > 0 },
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
           { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
@@ -525,7 +525,7 @@ add_task(async function onItemRemoved_folder_recursive() {
       { name: "onItemAdded",
         args: [
           { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
-          { name: "parentId", check: v => v === PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0) },
+          { name: "parentId", check: v => typeof(v) == "number" && v > 0 },
           { name: "index", check: v => v === 1 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_FOLDER },
           { name: "uri", check: v => v === null },
@@ -538,7 +538,7 @@ add_task(async function onItemRemoved_folder_recursive() {
       { name: "onItemAdded",
         args: [
           { name: "itemId", check: v => typeof(v) == "number" && v > 0 },
-          { name: "parentId", check: v => v === PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0), 1) },
+          { name: "parentId", check: v => typeof(v) == "number" && v > 0 },
           { name: "index", check: v => v === 0 },
           { name: "itemType", check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK },
           { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
