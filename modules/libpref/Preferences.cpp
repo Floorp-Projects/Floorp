@@ -717,7 +717,7 @@ private:
 class PrefEntry : public PLDHashEntryHdr
 {
 public:
-  Pref* mPref;  // Note: this is never null in a live entry.
+  Pref* mPref; // Note: this is never null in a live entry.
 
   static bool MatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
   {
@@ -783,10 +783,8 @@ static bool gCallbacksInProgress = false;
 static bool gShouldCleanupDeadNodes = false;
 
 static PLDHashTableOps pref_HashTableOps = {
-  PLDHashTable::HashStringKey,
-  PrefEntry::MatchEntry,
-  PLDHashTable::MoveEntryStub,
-  PrefEntry::ClearEntry,
+  PLDHashTable::HashStringKey, PrefEntry::MatchEntry,
+  PLDHashTable::MoveEntryStub, PrefEntry::ClearEntry,
   PrefEntry::InitEntry,
 };
 
