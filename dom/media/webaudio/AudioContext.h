@@ -13,6 +13,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/TypedArray.h"
+#include "mozilla/RelativeTimeline.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -117,7 +118,8 @@ private:
 enum class AudioContextOperation { Suspend, Resume, Close };
 
 class AudioContext final : public DOMEventTargetHelper,
-                           public nsIMemoryReporter
+                           public nsIMemoryReporter,
+                           public RelativeTimeline
 {
   AudioContext(nsPIDOMWindowInner* aParentWindow,
                bool aIsOffline,
@@ -181,7 +183,7 @@ public:
 
   bool ShouldSuspendNewStream() const { return mSuspendCalled; }
 
-  double CurrentTime() const;
+  double CurrentTime();
 
   AudioListener* Listener();
 
