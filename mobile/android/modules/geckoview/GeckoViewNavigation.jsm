@@ -31,8 +31,8 @@ function debug(aMsg) {
 // Implements nsILoadURIDelegate.
 class GeckoViewNavigation extends GeckoViewModule {
   init() {
+    this._frameScriptLoaded = false;
     this.window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = this;
-    this.browser.docShell.loadURIDelegate = this;
 
     this.eventDispatcher.registerListener(this, [
       "GeckoView:GoBack",
@@ -69,36 +69,6 @@ class GeckoViewNavigation extends GeckoViewModule {
   // Message manager event handler.
   receiveMessage(aMsg) {
     debug("receiveMessage " + aMsg.name);
-  }
-
-  handleLoadUri(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
-    debug("handleOpenURI: aUri=" + (aUri && aUri.spec) +
-          " aWhere=" + aWhere +
-          " aFlags=" + aFlags);
-
-    if (!this.isRegistered) {
-      return false;
-    }
-
-    let message = {
-      type: "GeckoView:OnLoadUri",
-      uri: aUri ? aUri.displaySpec : "",
-      where: aWhere,
-      flags: aFlags
-    };
-
-    debug("dispatch " + JSON.stringify(message));
-
-    let handled = undefined;
-    this.eventDispatcher.sendRequestForResult(message).then(response => {
-      handled = response;
-    }, () => {
-      // There was an error or listener was not registered in GeckoSession, treat as unhandled.
-      handled = false;
-    });
-    Services.tm.spinEventLoopUntil(() => handled !== undefined);
-
-    return handled;
   }
 
   waitAndSetOpener(aSessionId, aOpener) {
@@ -148,18 +118,6 @@ class GeckoViewNavigation extends GeckoViewModule {
     // Wait indefinitely for app to respond with a browser or null
     Services.tm.spinEventLoopUntil(() => browser !== undefined);
     return browser;
-  }
-
-  // nsILoadURIDelegate.
-  loadURI(aUri, aWhere, aFlags, aTriggeringPrincipal) {
-    debug("loadURI " + aUri + " " + aWhere + " " + aFlags + " " +
-          aTriggeringPrincipal);
-
-    const handled = this.handleLoadUri(aUri, null, aWhere, aFlags,
-                                       aTriggeringPrincipal);
-    if (!handled) {
-      throw Cr.NS_ERROR_ABORT;
-    }
   }
 
   // nsIBrowserDOMWindow.
@@ -216,6 +174,12 @@ class GeckoViewNavigation extends GeckoViewModule {
 
   register() {
     debug("register");
+
+    if (!this._frameScriptLoaded) {
+      this.messageManager.loadFrameScript(
+        "chrome://geckoview/content/GeckoViewNavigationContent.js", true);
+      this._frameScriptLoaded = true;
+    }
 
     let flags = Ci.nsIWebProgress.NOTIFY_LOCATION;
     this.progressFilter =

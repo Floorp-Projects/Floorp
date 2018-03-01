@@ -410,19 +410,25 @@ def generate_upstream_artifacts(signing_task_ref, build_task_ref, platform,
         artifact_prefix = 'public/build/{}'.format(locale)
         platform = "{}-l10n".format(platform)
 
-    upstream_artifacts = [{
-        "taskId": {"task-reference": build_task_ref},
-        "taskType": "build",
-        "paths": ["{}/{}".format(artifact_prefix, p)
-                  for p in build_mapping[platform]],
-        "locale": locale or "en-US",
-        }, {
+    upstream_artifacts = []
+
+    # Some platforms (like android-api-16-nightly-l10n) may not depend on any unsigned artifact
+    if build_mapping[platform]:
+        upstream_artifacts.append({
+            "taskId": {"task-reference": build_task_ref},
+            "taskType": "build",
+            "paths": ["{}/{}".format(artifact_prefix, p)
+                      for p in build_mapping[platform]],
+            "locale": locale or "en-US",
+        })
+
+    upstream_artifacts.append({
         "taskId": {"task-reference": signing_task_ref},
         "taskType": "signing",
         "paths": ["{}/{}".format(artifact_prefix, p)
                   for p in signing_mapping[platform]],
         "locale": locale or "en-US",
-    }]
+    })
 
     if not locale and "android" in platform:
         # edge case to support 'multi' locale paths

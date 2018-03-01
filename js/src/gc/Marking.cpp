@@ -3049,7 +3049,7 @@ js::TenuringTracer::moveToTenuredSlow(JSObject* src)
     if (src->isNative()) {
         NativeObject* ndst = &dst->as<NativeObject>();
         NativeObject* nsrc = &src->as<NativeObject>();
-        tenuredSize += moveSlotsToTenured(ndst, nsrc, dstKind);
+        tenuredSize += moveSlotsToTenured(ndst, nsrc);
         tenuredSize += moveElementsToTenured(ndst, nsrc, dstKind);
 
         // There is a pointer into a dictionary mode object from the head of its
@@ -3094,7 +3094,7 @@ js::TenuringTracer::movePlainObjectToTenured(PlainObject* src)
     js_memcpy(dst, src, srcSize);
 
     // Move the slots and elements.
-    tenuredSize += moveSlotsToTenured(dst, src, dstKind);
+    tenuredSize += moveSlotsToTenured(dst, src);
     tenuredSize += moveElementsToTenured(dst, src, dstKind);
 
     MOZ_ASSERT(!dst->getClass()->extObjectMovedOp());
@@ -3108,7 +3108,7 @@ js::TenuringTracer::movePlainObjectToTenured(PlainObject* src)
 }
 
 size_t
-js::TenuringTracer::moveSlotsToTenured(NativeObject* dst, NativeObject* src, AllocKind dstKind)
+js::TenuringTracer::moveSlotsToTenured(NativeObject* dst, NativeObject* src)
 {
     /* Fixed slots have already been copied over. */
     if (!src->hasDynamicSlots())

@@ -56,7 +56,7 @@ void*
 SymbolicAddressTarget(SymbolicAddress sym);
 
 void*
-MaybeGetBuiltinThunk(HandleFunction f, const Sig& sig, JSContext* cx);
+MaybeGetBuiltinThunk(HandleFunction f, const Sig& sig);
 
 void
 ReleaseBuiltinThunks();

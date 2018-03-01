@@ -408,7 +408,7 @@ var gPrivacyPane = {
       signonBundle.getString("loginsDescriptionAll2"),
     ]);
     appendSearchKeywords("cookieExceptions", [
-      bundlePrefs.getString("cookiepermissionstext"),
+      bundlePrefs.getString("cookiepermissionstext1"),
     ]);
     appendSearchKeywords("trackingProtectionExceptions", [
       bundlePrefs.getString("trackingprotectionpermissionstitle"),
@@ -454,7 +454,7 @@ var gPrivacyPane = {
       pkiBundle.getString("enable_fips"),
     ]);
     appendSearchKeywords("siteDataSettings", [
-      bundlePrefs.getString("siteDataSettings2.description"),
+      bundlePrefs.getString("siteDataSettings3.description"),
       bundlePrefs.getString("removeAllCookies.label"),
       bundlePrefs.getString("removeSelectedCookies.label"),
     ]);
@@ -881,8 +881,8 @@ var gPrivacyPane = {
       allowVisible: true,
       prefilledHost: "",
       permissionType: "cookie",
-      windowTitle: bundlePreferences.getString("cookiepermissionstitle"),
-      introText: bundlePreferences.getString("cookiepermissionstext")
+      windowTitle: bundlePreferences.getString("cookiepermissionstitle1"),
+      introText: bundlePreferences.getString("cookiepermissionstext1")
     };
     gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
       null, params);
@@ -1405,7 +1405,7 @@ var gPrivacyPane = {
       let totalSiteDataSizeLabel = document.getElementById("totalSiteDataSize");
       let totalUsage = siteDataUsage + cacheUsage;
       let size = DownloadUtils.convertByteUnits(totalUsage);
-      totalSiteDataSizeLabel.textContent = prefStrBundle.getFormattedString("totalSiteDataSize1", size);
+      totalSiteDataSizeLabel.textContent = prefStrBundle.getFormattedString("totalSiteDataSize2", size);
     });
   },
 
