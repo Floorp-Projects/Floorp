@@ -189,6 +189,7 @@
 #include "mozilla/dom/ImageTracker.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsBindingManager.h"
+#include "plhash.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
