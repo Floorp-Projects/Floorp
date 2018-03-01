@@ -22,7 +22,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
-class ProgressListenerTest {
+class ProgressDelegateTest {
     companion object {
         const val INVALID_URI = "http://www.test.invalid/"
         const val HELLO_HTML_PATH = "/assets/www/hello.html";
@@ -42,7 +42,7 @@ class ProgressListenerTest {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressListener {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
             @AssertCalled(count = 1, order = intArrayOf(1))
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("Session should not be null", session, notNullValue())
@@ -52,14 +52,14 @@ class ProgressListenerTest {
 
             @AssertCalled(count = 1, order = intArrayOf(2))
             override fun onSecurityChange(session: GeckoSession,
-                                          securityInfo: GeckoSession.ProgressListener.SecurityInformation) {
+                                          securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("Security info should not be null", securityInfo, notNullValue())
 
                 assertThat("Should not be secure", securityInfo.isSecure, equalTo(false))
                 assertThat("Tracking mode should match",
                            securityInfo.trackingMode,
-                           equalTo(GeckoSession.ProgressListener.SecurityInformation.CONTENT_UNKNOWN))
+                           equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN))
             }
 
             @AssertCalled(count = 1, order = intArrayOf(3))
@@ -75,7 +75,7 @@ class ProgressListenerTest {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStops(2)
 
-        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressListener {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
             @AssertCalled(count = 2, order = intArrayOf(1, 3))
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("URL should match", url,
@@ -100,7 +100,7 @@ class ProgressListenerTest {
         sessionRule.session.reload()
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressListener {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
             @AssertCalled(count = 1, order = intArrayOf(1))
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
@@ -108,7 +108,7 @@ class ProgressListenerTest {
 
             @AssertCalled(count = 1, order = intArrayOf(2))
             override fun onSecurityChange(session: GeckoSession,
-                                          securityInfo: GeckoSession.ProgressListener.SecurityInformation) {
+                                          securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
             }
 
             @AssertCalled(count = 1, order = intArrayOf(3))
@@ -127,7 +127,7 @@ class ProgressListenerTest {
         sessionRule.session.goBack()
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressListener {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
             @AssertCalled(count = 1, order = intArrayOf(1))
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
@@ -135,7 +135,7 @@ class ProgressListenerTest {
 
             @AssertCalled(count = 1, order = intArrayOf(2))
             override fun onSecurityChange(session: GeckoSession,
-                                          securityInfo: GeckoSession.ProgressListener.SecurityInformation) {
+                                          securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
             }
 
             @AssertCalled(count = 1, order = intArrayOf(3))
@@ -147,7 +147,7 @@ class ProgressListenerTest {
         sessionRule.session.goForward()
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressListener {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
             @AssertCalled(count = 1, order = intArrayOf(1))
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("URL should match", url, endsWith(HELLO2_HTML_PATH))
@@ -155,7 +155,7 @@ class ProgressListenerTest {
 
             @AssertCalled(count = 1, order = intArrayOf(2))
             override fun onSecurityChange(session: GeckoSession,
-                                          securityInfo: GeckoSession.ProgressListener.SecurityInformation) {
+                                          securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
             }
 
             @AssertCalled(count = 1, order = intArrayOf(3))
@@ -170,10 +170,10 @@ class ProgressListenerTest {
         sessionRule.session.loadUri("https://mozilla-modern.badssl.com")
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressListener {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
             @AssertCalled(count = 1)
             override fun onSecurityChange(session: GeckoSession,
-                                          securityInfo: GeckoSession.ProgressListener.SecurityInformation) {
+                                          securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
                 assertThat("Should be secure",
                            securityInfo.isSecure, equalTo(true))
                 assertThat("Should not be exception",
@@ -198,16 +198,16 @@ class ProgressListenerTest {
                            equalTo("DigiCert Inc"))
                 assertThat("Security mode should match",
                            securityInfo.securityMode,
-                           equalTo(GeckoSession.ProgressListener.SecurityInformation.SECURITY_MODE_IDENTIFIED))
+                           equalTo(GeckoSession.ProgressDelegate.SecurityInformation.SECURITY_MODE_IDENTIFIED))
                 assertThat("Active mixed mode should match",
                            securityInfo.mixedModeActive,
-                           equalTo(GeckoSession.ProgressListener.SecurityInformation.CONTENT_UNKNOWN))
+                           equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN))
                 assertThat("Passive mixed mode should match",
                            securityInfo.mixedModePassive,
-                           equalTo(GeckoSession.ProgressListener.SecurityInformation.CONTENT_UNKNOWN))
+                           equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN))
                 assertThat("Tracking mode should match",
                            securityInfo.trackingMode,
-                           equalTo(GeckoSession.ProgressListener.SecurityInformation.CONTENT_UNKNOWN))
+                           equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN))
             }
         })
     }
@@ -217,7 +217,7 @@ class ProgressListenerTest {
         sessionRule.session.loadUri("https://expired.badssl.com")
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressListener {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
             @AssertCalled(count = 1)
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("Load should fail", success, equalTo(false))
@@ -225,7 +225,7 @@ class ProgressListenerTest {
 
             @AssertCalled(false)
             override fun onSecurityChange(session: GeckoSession,
-                                          securityInfo: GeckoSession.ProgressListener.SecurityInformation) {
+                                          securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
             }
         })
     }
