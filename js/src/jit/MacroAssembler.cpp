@@ -3262,8 +3262,8 @@ void
 MacroAssembler::branchIfInlineTypedObject(Register obj, Register scratch, Label* label)
 {
     loadObjClassUnsafe(obj, scratch);
-    branchPtr(Assembler::Equal, temp1, ImmPtr(&InlineOpaqueTypedObject::class_), label);
-    branchPtr(Assembler::Equal, temp1, ImmPtr(&InlineTransparentTypedObject::class_), label);
+    branchPtr(Assembler::Equal, scratch, ImmPtr(&InlineOpaqueTypedObject::class_), label);
+    branchPtr(Assembler::Equal, scratch, ImmPtr(&InlineTransparentTypedObject::class_), label);
 }
 
 void
