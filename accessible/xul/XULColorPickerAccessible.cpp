@@ -7,7 +7,6 @@
 
 #include "Accessible-inl.h"
 #include "nsAccUtils.h"
-#include "nsCoreUtils.h"
 #include "DocAccessible.h"
 #include "Role.h"
 #include "States.h"
@@ -135,10 +134,7 @@ XULColorPickerAccessible::AreItemsOperable() const
 bool
 XULColorPickerAccessible::IsAcceptableChild(nsIContent* aEl) const
 {
-  nsAutoString role;
-  nsCoreUtils::XBLBindingRole(aEl, role);
-  return role.EqualsLiteral("xul:panel") &&
-    aEl->IsElement() &&
+  return aEl->IsXULElement(nsGkAtoms::panel) &&
     aEl->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::noautofocus,
                                   nsGkAtoms::_true, eCaseMatters);
 }
