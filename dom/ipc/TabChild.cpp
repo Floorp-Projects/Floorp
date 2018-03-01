@@ -2971,14 +2971,11 @@ TabChild::IsVisible()
 }
 
 NS_IMETHODIMP
-TabChild::GetMessageManager(nsIContentFrameMessageManager** aResult)
+TabChild::GetMessageManager(nsISupports** aResult)
 {
-  if (mTabChildGlobal) {
-    NS_ADDREF(*aResult = mTabChildGlobal);
-    return NS_OK;
-  }
-  *aResult = nullptr;
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIContentFrameMessageManager> mm(mTabChildGlobal);
+  mm.forget(aResult);
+  return *aResult ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

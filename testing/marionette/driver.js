@@ -77,8 +77,7 @@ const SUPPORTED_STRATEGIES = new Set([
 ]);
 
 const logger = Log.repository.getLogger("Marionette");
-const globalMessageManager = Cc["@mozilla.org/globalmessagemanager;1"]
-    .getService(Ci.nsIMessageBroadcaster);
+const globalMessageManager = Services.mm;
 
 /**
  * The Marionette WebDriver services provides a standard conforming

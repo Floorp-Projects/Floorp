@@ -5,7 +5,6 @@
 #include "nsISupports.idl"
 
 interface nsIDOMElement;
-interface nsIMessageSender;
 interface nsIURI;
 
 [scriptable, builtinclass, uuid(456f58be-29dd-4973-885b-95aece1c9a8a)]
@@ -36,7 +35,7 @@ interface nsIContentProcessInfo : nsISupports
    * The process manager for this ContentParent (so a process message manager
    * as opposed to a frame message manager.
    */
-  readonly attribute nsIMessageSender messageManager;
+  readonly attribute nsISupports messageManager;
 };
 
 [scriptable, uuid(83ffb063-5f65-4c45-ae07-3f553e0809bb)]

@@ -108,16 +108,13 @@ function testInit() {
       prefs.setIntPref("dom.ipc.keepProcessesAlive.web", processCount);
     }
 
-    let globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
-                     .getService(Ci.nsIMessageListenerManager);
-    globalMM.loadFrameScript("chrome://mochikit/content/shutdown-leaks-collector.js", true);
+    Services.mm.loadFrameScript("chrome://mochikit/content/shutdown-leaks-collector.js", true);
   } else {
     // In non-e10s, only run the ShutdownLeaksCollector in the parent process.
     ChromeUtils.import("chrome://mochikit/content/ShutdownLeaksCollector.jsm");
   }
 
-  let gmm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
-  gmm.loadFrameScript("chrome://mochikit/content/tests/SimpleTest/AsyncUtilsContent.js", true);
+  Services.mm.loadFrameScript("chrome://mochikit/content/tests/SimpleTest/AsyncUtilsContent.js", true);
 
   var testSuite = Cc["@mozilla.org/process/environment;1"].
                     getService(Ci.nsIEnvironment).
