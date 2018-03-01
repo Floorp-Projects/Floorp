@@ -25,7 +25,6 @@
 #include "nsServiceManagerUtils.h"
 #include "ServiceWorker.h"
 #include "ServiceWorkerManager.h"
-#include "ServiceWorkerPrivate.h"
 #include "ServiceWorkerRegistration.h"
 
 #include "nsIDocument.h"
@@ -134,7 +133,7 @@ namespace {
 
 void
 UpdateInternal(nsIPrincipal* aPrincipal,
-               const nsACString& aScope,
+               const nsAString& aScope,
                ServiceWorkerUpdateFinishCallback* aCallback)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -147,7 +146,7 @@ UpdateInternal(nsIPrincipal* aPrincipal,
     return;
   }
 
-  swm->Update(aPrincipal, aScope, aCallback);
+  swm->Update(aPrincipal, NS_ConvertUTF16toUTF8(aScope), aCallback);
 }
 
 class MainThreadUpdateCallback final : public ServiceWorkerUpdateFinishCallback
@@ -282,52 +281,12 @@ public:
 
 class SWRUpdateRunnable final : public Runnable
 {
-  class TimerCallback final : public nsITimerCallback
-  {
-    RefPtr<ServiceWorkerPrivate> mPrivate;
-    RefPtr<Runnable> mRunnable;
-
-  public:
-    TimerCallback(ServiceWorkerPrivate* aPrivate,
-                  Runnable* aRunnable)
-      : mPrivate(aPrivate)
-      , mRunnable(aRunnable)
-    {
-      MOZ_ASSERT(mPrivate);
-      MOZ_ASSERT(aRunnable);
-    }
-
-    nsresult
-    Notify(nsITimer* aTimer) override
-    {
-      mRunnable->Run();
-      mPrivate->RemoveISupports(aTimer);
-
-      return NS_OK;
-    }
-
-    NS_DECL_THREADSAFE_ISUPPORTS
-
-  private:
-    ~TimerCallback()
-    { }
-  };
-
 public:
-  explicit SWRUpdateRunnable(PromiseWorkerProxy* aPromiseProxy)
+  SWRUpdateRunnable(PromiseWorkerProxy* aPromiseProxy, const nsAString& aScope)
     : Runnable("dom::SWRUpdateRunnable")
     , mPromiseProxy(aPromiseProxy)
-    , mDescriptor(aPromiseProxy->GetWorkerPrivate()->GetServiceWorkerDescriptor())
-    , mDelayed(false)
-  {
-    MOZ_ASSERT(mPromiseProxy);
-
-    // This runnable is used for update calls originating from a worker thread,
-    // which may be delayed in some cases.
-    MOZ_ASSERT(mPromiseProxy->GetWorkerPrivate()->IsServiceWorker());
-    MOZ_ASSERT(mPromiseProxy->GetWorkerPrivate());
-    mPromiseProxy->GetWorkerPrivate()->AssertIsOnWorkerThread();
-  }
+    , mScope(aScope)
+  {}
 
   NS_IMETHOD
   Run() override
@@ -348,64 +307,19 @@ public:
     }
     MOZ_ASSERT(principal);
 
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (NS_WARN_IF(!swm)) {
-      return NS_OK;
-    }
-
-    // This will delay update jobs originating from a service worker thread.
-    // We don't currently handle ServiceWorkerRegistration.update() from other
-    // worker types. Also, we assume this registration matches self.registration
-    // on the service worker global. This is ok for now because service worker globals
-    // are the only worker contexts where we expose ServiceWorkerRegistration.
-    RefPtr<ServiceWorkerRegistrationInfo> registration =
-      swm->GetRegistration(principal, mDescriptor.Scope());
-    if (NS_WARN_IF(!registration)) {
-      return NS_OK;
-    }
-
-    RefPtr<ServiceWorkerInfo> worker = registration->GetByDescriptor(mDescriptor);
-    uint32_t delay = registration->GetUpdateDelay();
-
-    // if we have a timer object, it means we've already been delayed once.
-    if (delay && !mDelayed) {
-      nsCOMPtr<nsITimerCallback> cb = new TimerCallback(worker->WorkerPrivate(), this);
-      Result<nsCOMPtr<nsITimer>, nsresult> result =
-        NS_NewTimerWithCallback(cb, delay, nsITimer::TYPE_ONE_SHOT,
-                                SystemGroup::EventTargetFor(TaskCategory::Other));
-
-      nsCOMPtr<nsITimer> timer = result.unwrapOr(nullptr);
-      if (NS_WARN_IF(!timer)) {
-        return NS_OK;
-      }
-
-      mDelayed = true;
-      // We're storing the timer object on the calling service worker's private.
-      // ServiceWorkerPrivate will drop the reference if the worker terminates,
-      // which will cancel the timer.
-      worker->WorkerPrivate()->StoreISupports(timer);
-
-      return NS_OK;
-    }
-
     RefPtr<WorkerThreadUpdateCallback> cb =
       new WorkerThreadUpdateCallback(mPromiseProxy);
-    UpdateInternal(principal, mDescriptor.Scope(), cb);
+    UpdateInternal(principal, mScope, cb);
     return NS_OK;
   }
 
 private:
   ~SWRUpdateRunnable()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-  }
+  {}
 
   RefPtr<PromiseWorkerProxy> mPromiseProxy;
-  const ServiceWorkerDescriptor mDescriptor;
-  bool mDelayed;
+  const nsString mScope;
 };
-
-NS_IMPL_ISUPPORTS(SWRUpdateRunnable::TimerCallback, nsITimerCallback)
 
 class UnregisterCallback final : public nsIServiceWorkerUnregisterCallback
 {
@@ -619,7 +533,7 @@ ServiceWorkerRegistrationMainThread::Update(ErrorResult& aRv)
 
   RefPtr<MainThreadUpdateCallback> cb =
     new MainThreadUpdateCallback(mOuter->GetOwner(), promise);
-  UpdateInternal(doc->NodePrincipal(), NS_ConvertUTF16toUTF8(mScope), cb);
+  UpdateInternal(doc->NodePrincipal(), mScope, cb);
 
   return promise.forget();
 }
@@ -934,7 +848,7 @@ ServiceWorkerRegistrationWorkerThread::Update(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<SWRUpdateRunnable> r = new SWRUpdateRunnable(proxy);
+  RefPtr<SWRUpdateRunnable> r = new SWRUpdateRunnable(proxy, mScope);
   MOZ_ALWAYS_SUCCEEDS(worker->DispatchToMainThread(r.forget()));
 
   return promise.forget();
