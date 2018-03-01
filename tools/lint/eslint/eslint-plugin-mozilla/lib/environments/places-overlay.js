@@ -16,7 +16,6 @@
 var path = require("path");
 var helpers = require("../helpers");
 var globals = require("../globals");
-var modules = helpers.modulesGlobalData;
 
 const placesOverlayFiles = [
   "toolkit/content/globalOverlay.js",
@@ -29,6 +28,7 @@ const extraPlacesDefinitions = [
   // single) variable.
   {name: "XPCOMUtils", writable: false},
   {name: "Task", writable: false},
+  {name: "PlacesUtils", writable: false},
   {name: "PlacesUIUtils", writable: false},
   {name: "PlacesTransactions", writable: false},
   {name: "ForgetAboutSite", writable: false},
@@ -36,10 +36,6 @@ const extraPlacesDefinitions = [
   {name: "PlacesInsertionPoint", writable: false},
   {name: "PlacesController", writable: false},
   {name: "PlacesControllerDragHelper", writable: false}
-];
-
-const placesOverlayModules = [
-  "PlacesUtils.jsm"
 ];
 
 function getScriptGlobals() {
@@ -50,14 +46,6 @@ function getScriptGlobals() {
       fileGlobals = fileGlobals.concat(globals.getGlobalsForFile(fileName));
     } catch (e) {
       // The file isn't present, this is probably not an m-c repo.
-    }
-  }
-
-  for (let file of placesOverlayModules) {
-    if (file in modules) {
-      for (let globalVar of modules[file]) {
-        fileGlobals.push({name: globalVar, writable: false});
-      }
     }
   }
 
