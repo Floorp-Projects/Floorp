@@ -153,6 +153,14 @@
       "enum": [true]
     },
 
+    "DisablePrivateBrowsing": {
+      "description": "Disables private browsing.",
+      "first_available": "60.0",
+
+      "type": "boolean",
+      "enum": [true]
+    },
+
     "DisplayBookmarksToolbar": {
       "description": "Causes the bookmarks toolbar to be displayed by default.",
       "first_available": "60.0",
