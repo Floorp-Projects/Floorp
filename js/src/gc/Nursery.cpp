@@ -132,9 +132,9 @@ js::Nursery::Nursery(JSRuntime* rt)
   , lastCanary_(nullptr)
 #endif
 {
-    const char* env = getenv("MOZ_ENABLE_NURSERY_STRINGS");
+    const char* env = getenv("MOZ_NURSERY_STRINGS");
     if (env && *env)
-        canAllocateStrings_ = true;
+        canAllocateStrings_ = (*env == '1');
 }
 
 bool
