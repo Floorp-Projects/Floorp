@@ -246,15 +246,21 @@ Connection::GetTransactionInProgress(bool* aResultOut)
 }
 
 NS_IMETHODIMP
-Connection::BeginTransaction()
+Connection::GetDefaultTransactionType(int32_t* aResultOut)
 {
-  return mBase->BeginTransaction();
+  return mBase->GetDefaultTransactionType(aResultOut);
 }
 
 NS_IMETHODIMP
-Connection::BeginTransactionAs(int32_t aType)
+Connection::SetDefaultTransactionType(int32_t aType)
 {
-  return mBase->BeginTransactionAs(aType);
+  return mBase->SetDefaultTransactionType(aType);
+}
+
+NS_IMETHODIMP
+Connection::BeginTransaction()
+{
+  return mBase->BeginTransaction();
 }
 
 NS_IMETHODIMP

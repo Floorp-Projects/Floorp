@@ -84,6 +84,15 @@ add_task(async function test_setup() {
 
 add_task(async function test_open_normal() {
   let c = await Sqlite.openConnection({path: "test_open_normal.sqlite"});
+  Assert.equal(c.defaultTransactionType, "DEFERRED");
+  await c.close();
+});
+
+add_task(async function test_open_with_defaultTransactionType() {
+  let c = await getConnection("execute_transaction_types", {
+    defaultTransactionType: "IMMEDIATE",
+  });
+  Assert.equal(c.defaultTransactionType, "IMMEDIATE");
   await c.close();
 });
 
@@ -915,10 +924,15 @@ add_task(async function test_cloneStorageConnection() {
   });
 
   let clone = await Sqlite.cloneStorageConnection({ connection: c, readOnly: true });
+  Assert.equal(clone.defaultTransactionType, "DEFERRED");
   // Just check that it works.
   await clone.execute("SELECT 1");
 
+  info("Set default transaction type on storage connection");
+  c.defaultTransactionType = Ci.mozIStorageConnection.TRANSACTION_IMMEDIATE;
+
   let clone2 = await Sqlite.cloneStorageConnection({ connection: c, readOnly: false });
+  Assert.equal(clone2.defaultTransactionType, "IMMEDIATE");
   // Just check that it works.
   await clone2.execute("CREATE TABLE test (id INTEGER PRIMARY KEY)");
 
@@ -984,6 +998,7 @@ add_task(async function test_wrapStorageConnection() {
   });
 
   let wrapper = await Sqlite.wrapStorageConnection({ connection: c });
+  Assert.equal(wrapper.defaultTransactionType, "DEFERRED");
   // Just check that it works.
   await wrapper.execute("SELECT 1");
   await wrapper.executeCached("SELECT 1");
@@ -991,6 +1006,17 @@ add_task(async function test_wrapStorageConnection() {
   // Closing the wrapper should just finalize statements but not close the
   // database.
   await wrapper.close();
+
+  info("Set default transaction type on storage connection");
+  c.defaultTransactionType = Ci.mozIStorageConnection.TRANSACTION_EXCLUSIVE;
+
+  let wrapper2 = await Sqlite.wrapStorageConnection({ connection: c });
+  Assert.equal(wrapper2.defaultTransactionType, "EXCLUSIVE");
+  // Just check that it works.
+  await wrapper2.execute("SELECT 1");
+
+  await wrapper2.close();
+
   await c.asyncClose();
 });
 

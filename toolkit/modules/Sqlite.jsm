@@ -225,6 +225,12 @@ function ConnectionData(connection, identifier, options = {}) {
   // Increments whenever we request a unique operation id.
   this._operationsCounter = 0;
 
+  if ("defaultTransactionType" in options) {
+    this.defaultTransactionType = options.defaultTransactionType;
+  } else {
+    this.defaultTransactionType = convertStorageTransactionType(
+      this._dbConn.defaultTransactionType);
+  }
   this._hasInProgressTransaction = false;
   // Manages a chain of transactions promises, so that new transactions
   // always happen in queue to the previous ones.  It never rejects.
@@ -539,8 +545,10 @@ ConnectionData.prototype = Object.freeze({
   },
 
   executeTransaction(func, type) {
-    if (typeof type == "undefined") {
-      throw new Error("Internal error: expected a type");
+    if (type == OpenedConnection.prototype.TRANSACTION_DEFAULT) {
+      type = this.defaultTransactionType;
+    } else if (!OpenedConnection.TRANSACTION_TYPES.includes(type)) {
+      throw new Error("Unknown transaction type: " + type);
     }
     this.ensureOpen();
 
@@ -918,6 +926,16 @@ function openConnection(options) {
       options.shrinkMemoryOnConnectionIdleMS;
   }
 
+  if ("defaultTransactionType" in options) {
+    let defaultTransactionType = options.defaultTransactionType;
+    if (!OpenedConnection.TRANSACTION_TYPES.includes(defaultTransactionType)) {
+      throw new Error("Unknown default transaction type: " +
+                      defaultTransactionType);
+    }
+
+    openedOptions.defaultTransactionType = defaultTransactionType;
+  }
+
   let file = FileUtils.File(path);
   let identifier = getIdentifierByFileName(OS.Path.basename(path));
 
@@ -1156,12 +1174,22 @@ function OpenedConnection(connection, identifier, options = {}) {
     this._connectionData._identifier);
 }
 
+OpenedConnection.TRANSACTION_TYPES = ["DEFERRED", "IMMEDIATE", "EXCLUSIVE"];
+
+// Converts a `mozIStorageAsyncConnection::TRANSACTION_*` constant into the
+// corresponding `OpenedConnection.TRANSACTION_TYPES` constant.
+function convertStorageTransactionType(type) {
+  if (!(type in OpenedConnection.TRANSACTION_TYPES)) {
+    throw new Error("Unknown storage transaction type: " + type);
+  }
+  return OpenedConnection.TRANSACTION_TYPES[type];
+}
+
 OpenedConnection.prototype = Object.freeze({
+  TRANSACTION_DEFAULT: "DEFAULT",
   TRANSACTION_DEFERRED: "DEFERRED",
   TRANSACTION_IMMEDIATE: "IMMEDIATE",
   TRANSACTION_EXCLUSIVE: "EXCLUSIVE",
-
-  TRANSACTION_TYPES: ["DEFERRED", "IMMEDIATE", "EXCLUSIVE"],
 
   /**
    * The integer schema version of the database.
@@ -1329,6 +1357,13 @@ OpenedConnection.prototype = Object.freeze({
   },
 
   /**
+   * The default behavior for transactions run on this connection.
+   */
+  get defaultTransactionType() {
+    return this._connectionData.defaultTransactionType;
+  },
+
+  /**
    * Whether a transaction is currently in progress.
    */
   get transactionInProgress() {
@@ -1373,11 +1408,7 @@ OpenedConnection.prototype = Object.freeze({
    * @param type optional
    *        One of the TRANSACTION_* constants attached to this type.
    */
-  executeTransaction(func, type = this.TRANSACTION_DEFERRED) {
-    if (!this.TRANSACTION_TYPES.includes(type)) {
-      throw new Error("Unknown transaction type: " + type);
-    }
-
+  executeTransaction(func, type = this.TRANSACTION_DEFAULT) {
     return this._connectionData.executeTransaction(() => func(this), type);
   },
 

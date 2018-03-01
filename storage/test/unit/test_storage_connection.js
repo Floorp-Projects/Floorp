@@ -914,6 +914,62 @@ add_task(async function test_sync_clone_with_function() {
   clone.close();
 });
 
+add_task(async function test_defaultTransactionType() {
+  info("Open connection");
+  let db = Services.storage.openDatabase(getTestDB());
+  Assert.ok(db instanceof Ci.mozIStorageAsyncConnection);
+
+  info("Verify default transaction type");
+  Assert.equal(db.defaultTransactionType,
+    Ci.mozIStorageConnection.TRANSACTION_DEFERRED);
+
+  info("Test other transaction types");
+  for (let type of [Ci.mozIStorageConnection.TRANSACTION_IMMEDIATE,
+                    Ci.mozIStorageConnection.TRANSACTION_EXCLUSIVE]) {
+    db.defaultTransactionType = type;
+    Assert.equal(db.defaultTransactionType, type);
+  }
+
+  info("Should reject unknown transaction types");
+  Assert.throws(() => db.defaultTransactionType =
+                        Ci.mozIStorageConnection.TRANSACTION_DEFAULT,
+                /NS_ERROR_ILLEGAL_VALUE/);
+
+  db.defaultTransactionType =
+    Ci.mozIStorageConnection.TRANSACTION_IMMEDIATE;
+
+  info("Clone should inherit default transaction type");
+  let clone = await asyncClone(db, true);
+  Assert.ok(clone instanceof Ci.mozIStorageAsyncConnection);
+  Assert.equal(clone.defaultTransactionType,
+    Ci.mozIStorageConnection.TRANSACTION_IMMEDIATE);
+
+  info("Begin immediate transaction on main connection");
+  db.beginTransaction();
+
+  info("Queue immediate transaction on clone");
+  let stmts = [
+    clone.createAsyncStatement(`BEGIN IMMEDIATE TRANSACTION`),
+    clone.createAsyncStatement(`DELETE FROM test WHERE name = 'new'`),
+    clone.createAsyncStatement(`COMMIT`),
+  ];
+  let promiseStmtsRan = stmts.map(stmt => executeAsync(stmt));
+
+  info("Commit immediate transaction on main connection");
+  db.executeSimpleSQL(`INSERT INTO test(name) VALUES('new')`);
+  db.commitTransaction();
+
+  info("Wait for transaction to succeed on clone");
+  await Promise.all(promiseStmtsRan);
+
+  info("Clean up");
+  for (let stmt of stmts) {
+    stmt.finalize();
+  }
+  await asyncClose(clone);
+  await asyncClose(db);
+});
+
 add_task(async function test_getInterface() {
   let db = getOpenedDatabase();
   let target = db.QueryInterface(Ci.nsIInterfaceRequestor)
