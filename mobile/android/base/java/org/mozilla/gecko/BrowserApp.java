@@ -3596,7 +3596,7 @@ public class BrowserApp extends GeckoApp
             super.closeOptionsMenu();
     }
 
-    @Override // GeckoView.ContentListener
+    @Override // GeckoView.ContentDelegate
     public void onFullScreen(final GeckoSession session, final boolean fullscreen) {
         super.onFullScreen(session, fullscreen);
 
