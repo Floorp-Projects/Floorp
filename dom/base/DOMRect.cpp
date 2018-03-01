@@ -77,27 +77,12 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMRectList, mParent, mArray)
 
 NS_INTERFACE_TABLE_HEAD(DOMRectList)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
-  NS_INTERFACE_TABLE(DOMRectList, nsIDOMClientRectList)
+  NS_INTERFACE_TABLE0(DOMRectList)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(DOMRectList)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMRectList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMRectList)
-
-
-NS_IMETHODIMP
-DOMRectList::GetLength(uint32_t* aLength)
-{
-  *aLength = Length();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMRectList::Item(uint32_t aIndex, nsIDOMClientRect** aReturn)
-{
-  NS_IF_ADDREF(*aReturn = Item(aIndex));
-  return NS_OK;
-}
 
 JSObject*
 DOMRectList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
