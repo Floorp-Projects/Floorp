@@ -81,7 +81,7 @@
                 "$ref": "ThemeColor",
                 "optional": true
               },
-              "background_tab_text": {
+              "tab_background_text": {
                 "$ref": "ThemeColor",
                 "optional": true
               },
