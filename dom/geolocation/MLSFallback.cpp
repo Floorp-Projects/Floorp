@@ -28,6 +28,12 @@ MLSFallback::Startup(nsIGeolocationUpdate* aWatcher)
   }
 
   mUpdateWatcher = aWatcher;
+
+  // No need to schedule a timer callback if there is no startup delay.
+  if (mDelayMs == 0) {
+    return CreateMLSFallbackProvider();
+  }
+
   return NS_NewTimerWithCallback(getter_AddRefs(mHandoffTimer),
                                  this, mDelayMs, nsITimer::TYPE_ONE_SHOT);
 }

@@ -74,12 +74,7 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTe
 
   // The CL provider does not fallback to GeoIP, so use NetworkGeolocationProvider for this.
   // The concept here is: on error, hand off geolocation to MLS, which will then report
-  // back a location or error. We can't call this with no delay however, as this method
-  // is called with an error code of 0 in both failed geolocation cases, and also when
-  // geolocation is not immediately available.
-  // The 2 sec delay is arbitrarily large enough that CL has a reasonable head start and
-  // if it is likely to succeed, it should complete before the MLS provider.
-  // Take note that in locationManager:didUpdateLocations: the handoff to MLS is stopped.
+  // back a location or error.
   mProvider->CreateMLSFallbackProvider();
 }
 
@@ -149,12 +144,14 @@ CoreLocationLocationProvider::MLSUpdate::Update(nsIDOMGeoPosition *position)
   Telemetry::Accumulate(Telemetry::GEOLOCATION_OSX_SOURCE_IS_MLS, true);
   return NS_OK;
 }
+
 NS_IMETHODIMP
 CoreLocationLocationProvider::MLSUpdate::NotifyError(uint16_t error)
 {
   mParentLocationProvider.NotifyError(error);
   return NS_OK;
 }
+
 class CoreLocationObjects {
 public:
   nsresult Init(CoreLocationLocationProvider* aProvider) {
@@ -256,13 +253,11 @@ CoreLocationLocationProvider::Update(nsIDOMGeoPosition* aSomewhere)
     mCallback->Update(aSomewhere);
   }
 }
-
 void
 CoreLocationLocationProvider::NotifyError(uint16_t aErrorCode)
 {
   mCallback->NotifyError(aErrorCode);
 }
-
 void
 CoreLocationLocationProvider::CreateMLSFallbackProvider()
 {
@@ -270,7 +265,7 @@ CoreLocationLocationProvider::CreateMLSFallbackProvider()
     return;
   }
 
-  mMLSFallbackProvider = new MLSFallback();
+  mMLSFallbackProvider = new MLSFallback(0);
   mMLSFallbackProvider->Startup(new MLSUpdate(*this));
 }
 

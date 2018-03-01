@@ -102,7 +102,6 @@ LocationEvent::QueryInterface(REFIID iid, void** ppv)
   return S_OK;
 }
 
-
 STDMETHODIMP
 LocationEvent::OnStatusChanged(REFIID aReportType,
                                LOCATION_REPORT_STATUS aStatus)
@@ -276,7 +275,7 @@ WindowsLocationProvider::CreateAndWatchMLSProvider(
     return NS_OK;
   }
 
-  mMLSProvider = new MLSFallback();
+  mMLSProvider = new MLSFallback(0);
   return mMLSProvider->Startup(new MLSUpdate(aCallback));
 }
 
