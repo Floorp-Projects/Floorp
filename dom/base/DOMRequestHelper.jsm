@@ -21,6 +21,10 @@ var EXPORTED_SYMBOLS = ["DOMRequestIpcHelper"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
+                                   "@mozilla.org/childprocessmessagemanager;1",
+                                   "nsIMessageListenerManager");
+
 function DOMRequestIpcHelper() {
   // _listeners keeps a list of messages for which we added a listener and the
   // kind of listener that we added (strong or weak). It's an object of this
@@ -85,8 +89,8 @@ DOMRequestIpcHelper.prototype = {
         }
       }
 
-      aMsg.weakRef ? Services.cpmm.addWeakMessageListener(name, this)
-                   : Services.cpmm.addMessageListener(name, this);
+      aMsg.weakRef ? cpmm.addWeakMessageListener(name, this)
+                   : cpmm.addMessageListener(name, this);
       this._listeners[name] = {
         weakRef: !!aMsg.weakRef,
         count: 1
@@ -116,8 +120,8 @@ DOMRequestIpcHelper.prototype = {
       // be waiting on a message.
       if (!--this._listeners[aName].count) {
         this._listeners[aName].weakRef ?
-            Services.cpmm.removeWeakMessageListener(aName, this)
-          : Services.cpmm.removeMessageListener(aName, this);
+            cpmm.removeWeakMessageListener(aName, this)
+          : cpmm.removeMessageListener(aName, this);
         delete this._listeners[aName];
       }
     });
@@ -177,9 +181,8 @@ DOMRequestIpcHelper.prototype = {
 
     if (this._listeners) {
       Object.keys(this._listeners).forEach((aName) => {
-        this._listeners[aName].weakRef ?
-            Services.cpmm.removeWeakMessageListener(aName, this)
-          : Services.cpmm.removeMessageListener(aName, this);
+        this._listeners[aName].weakRef ? cpmm.removeWeakMessageListener(aName, this)
+                                       : cpmm.removeMessageListener(aName, this);
       });
     }
 
