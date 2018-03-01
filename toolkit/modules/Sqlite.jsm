@@ -8,8 +8,10 @@ var EXPORTED_SYMBOLS = [
   "Sqlite",
 ];
 
-// The time to wait before considering a transaction stuck and rejecting it.
-const TRANSACTIONS_QUEUE_TIMEOUT_MS = 240000; // 4 minutes
+// The maximum time to wait before considering a transaction stuck and rejecting
+// it. (Note that the minimum amount of time we wait is 20% less than this, see
+// the `_getTimeoutPromise` method on `ConnectionData` for details).
+const TRANSACTIONS_QUEUE_TIMEOUT_MS = 300000; // 5 minutes
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
@@ -265,6 +267,14 @@ function ConnectionData(connection, identifier, options = {}) {
       statementCounter: this._statementCounter,
     })
   );
+
+  // We avoid creating a timer every transaction that exists solely as a safety
+  // check (e.g. one that never should fire) by reusing it if it's sufficiently
+  // close to when the previous promise was created (see bug 1442353 and
+  // `_getTimeoutPromise` for more info).
+  this._timeoutPromise = null;
+  // The last timestamp when we should consider using `this._timeoutPromise`.
+  this._timeoutPromiseExpires = 0;
 }
 
 /**
@@ -642,10 +652,7 @@ ConnectionData.prototype = Object.freeze({
       // nested, it could hang the transactions queue forever.  Thus we timeout
       // the execution after a meaningful amount of time, to ensure in any case
       // we'll proceed after a while.
-      let timeoutPromise = new Promise((resolve, reject) => {
-        setTimeout(() => reject(new Error("Transaction timeout, most likely caused by unresolved pending work.")),
-                   TRANSACTIONS_QUEUE_TIMEOUT_MS);
-      });
+      let timeoutPromise = this._getTimeoutPromise();
       return Promise.race([transactionPromise, timeoutPromise]);
     });
     // Atomically update the queue before anyone else has a chance to enqueue
@@ -851,6 +858,28 @@ ConnectionData.prototype = Object.freeze({
     this._idleShrinkTimer.initWithCallback(this.shrinkMemory.bind(this),
                                            this._idleShrinkMS,
                                            this._idleShrinkTimer.TYPE_ONE_SHOT);
+  },
+
+  // Returns a promise that will resolve after a time comprised between 80% of
+  // `TRANSACTIONS_QUEUE_TIMEOUT_MS` and `TRANSACTIONS_QUEUE_TIMEOUT_MS`. Use
+  // this promise instead of creating several individual timers to reduce the
+  // overhead due to timers (see bug 1442353).
+  _getTimeoutPromise() {
+    if (this._timeoutPromise && Cu.now() <= this._timeoutPromiseExpires) {
+      return this._timeoutPromise;
+    }
+    let timeoutPromise = new Promise((resolve, reject) => {
+      setTimeout(() => {
+        // Clear out this._timeoutPromise if it hasn't changed since we set it.
+        if (this._timeoutPromise == timeoutPromise) {
+          this._timeoutPromise = null;
+        }
+        reject(new Error("Transaction timeout, most likely caused by unresolved pending work."));
+      }, TRANSACTIONS_QUEUE_TIMEOUT_MS);
+    });
+    this._timeoutPromise = timeoutPromise;
+    this._timeoutPromiseExpires = Cu.now() + TRANSACTIONS_QUEUE_TIMEOUT_MS * 0.2;
+    return this._timeoutPromise;
   }
 });
 
