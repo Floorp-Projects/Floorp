@@ -685,7 +685,7 @@ FunctionStatementList(ParseNode* fn)
 }
 
 static inline bool
-IsNormalObjectField(JSContext* cx, ParseNode* pn)
+IsNormalObjectField(ParseNode* pn)
 {
     return pn->isKind(ParseNodeKind::Colon) &&
            pn->getOp() == JSOP_INITPROP &&
@@ -693,17 +693,17 @@ IsNormalObjectField(JSContext* cx, ParseNode* pn)
 }
 
 static inline PropertyName*
-ObjectNormalFieldName(JSContext* cx, ParseNode* pn)
+ObjectNormalFieldName(ParseNode* pn)
 {
-    MOZ_ASSERT(IsNormalObjectField(cx, pn));
+    MOZ_ASSERT(IsNormalObjectField(pn));
     MOZ_ASSERT(BinaryLeft(pn)->isKind(ParseNodeKind::ObjectPropertyName));
     return BinaryLeft(pn)->pn_atom->asPropertyName();
 }
 
 static inline ParseNode*
-ObjectNormalFieldInitializer(JSContext* cx, ParseNode* pn)
+ObjectNormalFieldInitializer(ParseNode* pn)
 {
-    MOZ_ASSERT(IsNormalObjectField(cx, pn));
+    MOZ_ASSERT(IsNormalObjectField(pn));
     return BinaryRight(pn);
 }
 
@@ -2165,7 +2165,7 @@ class MOZ_STACK_CLASS ModuleValidator
         g.pod.u.ffiIndex_ = ffiIndex;
         return asmJSMetadata_->asmJSGlobals.append(Move(g));
     }
-    bool addExportField(ParseNode* pn, const Func& func, PropertyName* maybeField) {
+    bool addExportField(const Func& func, PropertyName* maybeField) {
         // Record the field name of this export.
         CacheableChars fieldChars;
         if (maybeField)
@@ -5663,7 +5663,7 @@ CheckSimdAnyTrue(FunctionValidator& f, ParseNode* call, SimdType opType, Type* t
 }
 
 static bool
-CheckSimdCheck(FunctionValidator& f, ParseNode* call, SimdType opType, Type* type)
+CheckSimdCheck(FunctionValidator& f, ParseNode* call, Type* type)
 {
     Type coerceTo;
     ParseNode* argNode;
@@ -5693,7 +5693,7 @@ CheckSimdOperationCall(FunctionValidator& f, ParseNode* call, const ModuleValida
 
     switch (SimdOperation op = global->simdOperation()) {
       case SimdOperation::Fn_check:
-        return CheckSimdCheck(f, call, opType, type);
+        return CheckSimdCheck(f, call, type);
 
 #define _CASE(OP) case SimdOperation::Fn_##OP:
       FOREACH_SHIFT_SIMD_OP(_CASE)
@@ -7401,7 +7401,7 @@ CheckModuleExportFunction(ModuleValidator& m, ParseNode* pn, PropertyName* maybe
     if (!func)
         return m.failName(pn, "function '%s' not found", funcName);
 
-    return m.addExportField(pn, *func, maybeFieldName);
+    return m.addExportField(*func, maybeFieldName);
 }
 
 static bool
@@ -7410,12 +7410,12 @@ CheckModuleExportObject(ModuleValidator& m, ParseNode* object)
     MOZ_ASSERT(object->isKind(ParseNodeKind::Object));
 
     for (ParseNode* pn = ListHead(object); pn; pn = NextNode(pn)) {
-        if (!IsNormalObjectField(m.cx(), pn))
+        if (!IsNormalObjectField(pn))
             return m.fail(pn, "only normal object properties may be used in the export object literal");
 
-        PropertyName* fieldName = ObjectNormalFieldName(m.cx(), pn);
+        PropertyName* fieldName = ObjectNormalFieldName(pn);
 
-        ParseNode* initNode = ObjectNormalFieldInitializer(m.cx(), pn);
+        ParseNode* initNode = ObjectNormalFieldInitializer(pn);
         if (!initNode->isKind(ParseNodeKind::Name))
             return m.fail(initNode, "initializer of exported object literal must be name of function");
 
@@ -8757,7 +8757,7 @@ EstablishPreconditions(JSContext* cx, AsmJSParser& parser)
 }
 
 static UniqueChars
-BuildConsoleMessage(JSContext* cx, unsigned time, JS::AsmJSCacheResult cacheResult)
+BuildConsoleMessage(unsigned time, JS::AsmJSCacheResult cacheResult)
 {
 #ifndef JS_MORE_DETERMINISTIC
     const char* cacheString = "";
@@ -8838,7 +8838,7 @@ js::CompileAsmJS(JSContext* cx, AsmJSParser& parser, ParseNode* stmtList, bool* 
         JS::AsmJSCacheResult cacheResult = StoreAsmJSModuleInCache(parser, *module, cx);
 
         // Build the string message to display in the developer console.
-        message = BuildConsoleMessage(cx, time, cacheResult);
+        message = BuildConsoleMessage(time, cacheResult);
         if (!message)
             return NoExceptionPending(cx);
     }

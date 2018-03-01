@@ -34,6 +34,8 @@
 <!ENTITY % connectionDTD SYSTEM "chrome://browser/locale/preferences/connection.dtd">
 <!ENTITY % siteDataSettingsDTD SYSTEM
   "chrome://browser/locale/preferences/siteDataSettings.dtd" >
+<!ENTITY % clearSiteDataDTD SYSTEM
+  "chrome://browser/locale/preferences/clearSiteData.dtd" >
 <!ENTITY % privacyDTD SYSTEM "chrome://browser/locale/preferences/privacy.dtd">
 <!ENTITY % searchDTD SYSTEM "chrome://browser/locale/preferences/search.dtd">
 <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
@@ -64,6 +66,7 @@
 %deviceManangerDTD;
 %connectionDTD;
 %siteDataSettingsDTD;
+%clearSiteDataDTD;
 %privacyDTD;
 %searchDTD;
 %syncBrandDTD;

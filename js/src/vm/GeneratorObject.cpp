@@ -94,7 +94,7 @@ GeneratorObject::suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame
 }
 
 void
-GeneratorObject::finalSuspend(JSContext* cx, HandleObject obj)
+GeneratorObject::finalSuspend(HandleObject obj)
 {
     GeneratorObject* genObj = &obj->as<GeneratorObject>();
     MOZ_ASSERT(genObj->isRunning() || genObj->isClosing());

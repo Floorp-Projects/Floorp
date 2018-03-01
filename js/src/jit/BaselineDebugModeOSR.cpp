@@ -642,7 +642,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx, const CooperatingContext& target,
 static void
 SkipInterpreterFrameEntries(const Debugger::ExecutionObservableSet& obs,
                             const ActivationIterator& activation,
-                            DebugModeOSREntryVector& entries, size_t* start)
+                            size_t* start)
 {
     size_t entryIndex = *start;
 
@@ -912,7 +912,7 @@ jit::RecompileOnStackBaselineScriptsForDebugMode(JSContext* cx,
             if (iter->isJit())
                 PatchBaselineFramesForDebugMode(cx, target, obs, iter, entries, &processed);
             else if (iter->isInterpreter())
-                SkipInterpreterFrameEntries(obs, iter, entries, &processed);
+                SkipInterpreterFrameEntries(obs, iter, &processed);
         }
     }
     MOZ_ASSERT(processed == entries.length());

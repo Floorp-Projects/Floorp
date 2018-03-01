@@ -377,7 +377,7 @@ AsyncGeneratorObject::dequeueRequest(JSContext* cx, Handle<AsyncGeneratorObject*
 }
 
 /* static */ AsyncGeneratorRequest*
-AsyncGeneratorObject::peekRequest(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj)
+AsyncGeneratorObject::peekRequest(Handle<AsyncGeneratorObject*> asyncGenObj)
 {
     if (asyncGenObj->isSingleQueue())
         return asyncGenObj->singleQueueRequest();

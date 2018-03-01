@@ -65,7 +65,7 @@ class jit::BaselineFrameInspector
 };
 
 BaselineFrameInspector*
-jit::NewBaselineFrameInspector(TempAllocator* temp, BaselineFrame* frame, CompileInfo* info)
+jit::NewBaselineFrameInspector(TempAllocator* temp, BaselineFrame* frame)
 {
     MOZ_ASSERT(frame);
 
@@ -1037,7 +1037,7 @@ IonBuilder::buildInline(IonBuilder* callerBuilder, MResumePoint* callerResumePoi
 }
 
 void
-IonBuilder::rewriteParameter(uint32_t slotIdx, MDefinition* param, int32_t argIndex)
+IonBuilder::rewriteParameter(uint32_t slotIdx, MDefinition* param)
 {
     MOZ_ASSERT(param->isParameter() || param->isGetArgumentsObjectArg());
 
@@ -1075,7 +1075,7 @@ IonBuilder::rewriteParameters()
         if (!alloc().ensureBallast())
             return abort(AbortReason::Alloc);
         MDefinition* param = current->getSlot(i);
-        rewriteParameter(i, param, param->toParameter()->index());
+        rewriteParameter(i, param);
     }
 
     return Ok();
@@ -4913,7 +4913,7 @@ IonBuilder::getSingletonPrototype(JSFunction* target)
 }
 
 MDefinition*
-IonBuilder::createThisScriptedSingleton(JSFunction* target, MDefinition* callee)
+IonBuilder::createThisScriptedSingleton(JSFunction* target)
 {
     if (!target->hasScript())
         return nullptr;
@@ -5054,7 +5054,7 @@ IonBuilder::createThis(JSFunction* target, MDefinition* callee, MDefinition* new
     }
 
     // Try baking in the prototype.
-    if (MDefinition* createThis = createThisScriptedSingleton(target, callee))
+    if (MDefinition* createThis = createThisScriptedSingleton(target))
         return createThis;
 
     if (MDefinition* createThis = createThisScriptedBaseline(callee))
@@ -5800,7 +5800,7 @@ IonBuilder::jsop_compare(JSOp op, MDefinition* left, MDefinition* right)
             return Ok();
     }
 
-    MOZ_TRY(compareTrySharedStub(&emitted, op, left, right));
+    MOZ_TRY(compareTrySharedStub(&emitted, left, right));
     if (emitted)
         return Ok();
 
@@ -5995,7 +5995,7 @@ IonBuilder::compareTrySpecializedOnBaselineInspector(bool* emitted, JSOp op, MDe
 }
 
 AbortReasonOr<Ok>
-IonBuilder::compareTrySharedStub(bool* emitted, JSOp op, MDefinition* left, MDefinition* right)
+IonBuilder::compareTrySharedStub(bool* emitted, MDefinition* left, MDefinition* right)
 {
     MOZ_ASSERT(*emitted == false);
 
@@ -6530,12 +6530,11 @@ IonBuilder::jsop_initprop(PropertyName* name)
         MDefinition* value = current->pop();
         MDefinition* obj = current->pop();
 
-        TemporaryTypeSet* objTypes = obj->resultTypeSet();
         bool barrier = PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current, &obj, name, &value,
                                                  /* canModify = */ true);
 
         bool emitted = false;
-        MOZ_TRY(setPropTryCache(&emitted, obj, name, value, barrier, objTypes));
+        MOZ_TRY(setPropTryCache(&emitted, obj, name, value, barrier));
         MOZ_ASSERT(emitted == true);
     }
 
@@ -7893,7 +7892,6 @@ IonBuilder::getElemTryTypedObject(bool* emitted, MDefinition* obj, MDefinition* 
 
 bool
 IonBuilder::checkTypedObjectIndexInBounds(uint32_t elemSize,
-                                          MDefinition* obj,
                                           MDefinition* index,
                                           TypedObjectPrediction objPrediction,
                                           LinearSum* indexAsByteOffset,
@@ -7944,7 +7942,7 @@ IonBuilder::getElemTryScalarElemOfTypedObject(bool* emitted,
     MOZ_ASSERT(elemSize == ScalarTypeDescr::alignment(elemType));
 
     LinearSum indexAsByteOffset(alloc());
-    if (!checkTypedObjectIndexInBounds(elemSize, obj, index, objPrediction, &indexAsByteOffset,
+    if (!checkTypedObjectIndexInBounds(elemSize, index, objPrediction, &indexAsByteOffset,
                                        BoundsCheckKind::IsLoad))
     {
         return Ok();
@@ -7969,7 +7967,7 @@ IonBuilder::getElemTryReferenceElemOfTypedObject(bool* emitted,
     uint32_t elemSize = ReferenceTypeDescr::size(elemType);
 
     LinearSum indexAsByteOffset(alloc());
-    if (!checkTypedObjectIndexInBounds(elemSize, obj, index, objPrediction, &indexAsByteOffset,
+    if (!checkTypedObjectIndexInBounds(elemSize, index, objPrediction, &indexAsByteOffset,
                                        BoundsCheckKind::IsLoad))
     {
         return Ok();
@@ -8093,7 +8091,7 @@ IonBuilder::getElemTryComplexElemOfTypedObject(bool* emitted,
     MDefinition* elemTypeObj = typeObjectForElementFromArrayStructType(type);
 
     LinearSum indexAsByteOffset(alloc());
-    if (!checkTypedObjectIndexInBounds(elemSize, obj, index, objPrediction, &indexAsByteOffset,
+    if (!checkTypedObjectIndexInBounds(elemSize, index, objPrediction, &indexAsByteOffset,
                                        BoundsCheckKind::IsLoad))
     {
         return Ok();
@@ -8680,7 +8678,7 @@ IonBuilder::jsop_getelem_dense(MDefinition* obj, MDefinition* index)
     // Note: to help GVN, use the original MElements instruction and not
     // MConvertElementsToDoubles as operand. This is fine because converting
     // elements to double does not change the initialized length.
-    MInstruction* initLength = initializedLength(obj, elements);
+    MInstruction* initLength = initializedLength(elements);
 
     // If we can load the element as a definite double, make sure to check that
     // the array has been converted to homogenous doubles first.
@@ -8973,7 +8971,7 @@ IonBuilder::jsop_setelem()
             return Ok();
 
         trackOptimizationAttempt(TrackedStrategy::SetElem_Arguments);
-        MOZ_TRY(setElemTryArguments(&emitted, object, index, value));
+        MOZ_TRY(setElemTryArguments(&emitted, object));
         if (emitted)
             return Ok();
 
@@ -9069,7 +9067,7 @@ IonBuilder::setElemTryReferenceElemOfTypedObject(bool* emitted,
     uint32_t elemSize = ReferenceTypeDescr::size(elemType);
 
     LinearSum indexAsByteOffset(alloc());
-    if (!checkTypedObjectIndexInBounds(elemSize, obj, index, objPrediction, &indexAsByteOffset,
+    if (!checkTypedObjectIndexInBounds(elemSize, index, objPrediction, &indexAsByteOffset,
                                        BoundsCheckKind::IsStore))
     {
         return Ok();
@@ -9093,7 +9091,7 @@ IonBuilder::setElemTryScalarElemOfTypedObject(bool* emitted,
     MOZ_ASSERT(elemSize == ScalarTypeDescr::alignment(elemType));
 
     LinearSum indexAsByteOffset(alloc());
-    if (!checkTypedObjectIndexInBounds(elemSize, obj, index, objPrediction, &indexAsByteOffset,
+    if (!checkTypedObjectIndexInBounds(elemSize, index, objPrediction, &indexAsByteOffset,
                                        BoundsCheckKind::IsStore))
     {
         return Ok();
@@ -9232,8 +9230,7 @@ IonBuilder::initOrSetElemTryDense(bool* emitted, MDefinition* object,
 }
 
 AbortReasonOr<Ok>
-IonBuilder::setElemTryArguments(bool* emitted, MDefinition* object,
-                                MDefinition* index, MDefinition* value)
+IonBuilder::setElemTryArguments(bool* emitted, MDefinition* object)
 {
     MOZ_ASSERT(*emitted == false);
 
@@ -9391,7 +9388,7 @@ IonBuilder::initOrSetElemDense(TemporaryTypeSet::DoubleConversion conversion,
 
         current->add(ins);
     } else {
-        MInstruction* initLength = initializedLength(obj, elements);
+        MInstruction* initLength = initializedLength(elements);
 
         id = addBoundsCheck(id, initLength, BoundsCheckKind::IsStore);
         bool needsHoleCheck = !packed && hasExtraIndexedProperty;
@@ -11654,7 +11651,7 @@ IonBuilder::jsop_setprop(PropertyName* name)
     if (!forceInlineCaches()) {
         // Try to emit stores to unboxed objects.
         trackOptimizationAttempt(TrackedStrategy::SetProp_Unboxed);
-        MOZ_TRY(setPropTryUnboxed(&emitted, obj, name, value, barrier, objTypes));
+        MOZ_TRY(setPropTryUnboxed(&emitted, obj, name, value, barrier));
         if (emitted)
             return Ok();
     }
@@ -11662,7 +11659,7 @@ IonBuilder::jsop_setprop(PropertyName* name)
     if (!forceInlineCaches()) {
         // Try to emit store from definite slots.
         trackOptimizationAttempt(TrackedStrategy::SetProp_DefiniteSlot);
-        MOZ_TRY(setPropTryDefiniteSlot(&emitted, obj, name, value, barrier, objTypes));
+        MOZ_TRY(setPropTryDefiniteSlot(&emitted, obj, name, value, barrier));
         if (emitted)
             return Ok();
 
@@ -11675,7 +11672,7 @@ IonBuilder::jsop_setprop(PropertyName* name)
 
     // Emit a polymorphic cache.
     trackOptimizationAttempt(TrackedStrategy::SetProp_InlineCache);
-    MOZ_TRY(setPropTryCache(&emitted, obj, name, value, barrier, objTypes));
+    MOZ_TRY(setPropTryCache(&emitted, obj, name, value, barrier));
     MOZ_ASSERT(emitted == true);
     return Ok();
 }
@@ -11917,7 +11914,7 @@ IonBuilder::setPropTryScalarPropOfTypedObject(bool* emitted,
 AbortReasonOr<Ok>
 IonBuilder::setPropTryDefiniteSlot(bool* emitted, MDefinition* obj,
                                    PropertyName* name, MDefinition* value,
-                                   bool barrier, TemporaryTypeSet* objTypes)
+                                   bool barrier)
 {
     MOZ_ASSERT(*emitted == false);
 
@@ -12035,7 +12032,7 @@ IonBuilder::storeUnboxedValue(MDefinition* obj, MDefinition* elements, int32_t e
 AbortReasonOr<Ok>
 IonBuilder::setPropTryUnboxed(bool* emitted, MDefinition* obj,
                               PropertyName* name, MDefinition* value,
-                              bool barrier, TemporaryTypeSet* objTypes)
+                              bool barrier)
 {
     MOZ_ASSERT(*emitted == false);
 
@@ -12207,7 +12204,7 @@ IonBuilder::setPropTryInlineAccess(bool* emitted, MDefinition* obj,
 AbortReasonOr<Ok>
 IonBuilder::setPropTryCache(bool* emitted, MDefinition* obj,
                             PropertyName* name, MDefinition* value,
-                            bool barrier, TemporaryTypeSet* objTypes)
+                            bool barrier)
 {
     MOZ_ASSERT(*emitted == false);
 
@@ -12769,7 +12766,7 @@ IonBuilder::walkEnvironmentChain(unsigned hops)
 }
 
 bool
-IonBuilder::hasStaticEnvironmentObject(EnvironmentCoordinate ec, JSObject** pcall)
+IonBuilder::hasStaticEnvironmentObject(JSObject** pcall)
 {
     JSScript* outerScript = EnvironmentCoordinateFunctionScript(script(), pc);
     if (!outerScript || !outerScript->treatAsRunOnce())
@@ -12849,7 +12846,7 @@ AbortReasonOr<Ok>
 IonBuilder::jsop_getaliasedvar(EnvironmentCoordinate ec)
 {
     JSObject* call = nullptr;
-    if (hasStaticEnvironmentObject(ec, &call) && call) {
+    if (hasStaticEnvironmentObject(&call) && call) {
         PropertyName* name = EnvironmentCoordinateName(envCoordinateNameCache, script(), pc);
         bool emitted = false;
         MOZ_TRY(getStaticName(&emitted, call, name, takeLexicalCheck()));
@@ -12871,7 +12868,7 @@ AbortReasonOr<Ok>
 IonBuilder::jsop_setaliasedvar(EnvironmentCoordinate ec)
 {
     JSObject* call = nullptr;
-    if (hasStaticEnvironmentObject(ec, &call)) {
+    if (hasStaticEnvironmentObject(&call)) {
         uint32_t depth = current->stackDepth() + 1;
         if (depth > current->nslots()) {
             if (!current->increaseSlots(depth - current->nslots()))
@@ -12977,7 +12974,7 @@ IonBuilder::inTryDense(bool* emitted, MDefinition* obj, MDefinition* id)
     MElements* elements = MElements::New(alloc(), obj);
     current->add(elements);
 
-    MInstruction* initLength = initializedLength(obj, elements);
+    MInstruction* initLength = initializedLength(elements);
 
     // If there are no holes, speculate the InArray check will not fail.
     if (!needsHoleCheck && !failedBoundsCheck_) {
@@ -13795,7 +13792,7 @@ IonBuilder::constantInt(int32_t i)
 }
 
 MInstruction*
-IonBuilder::initializedLength(MDefinition* obj, MDefinition* elements)
+IonBuilder::initializedLength(MDefinition* elements)
 {
     MInstruction* res = MInitializedLength::New(alloc(), elements);
     current->add(res);

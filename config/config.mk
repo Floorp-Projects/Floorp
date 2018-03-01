@@ -339,7 +339,7 @@ sysinstall_cmd = install_cmd
 # overridden by the command line. (Besides, AB_CD is prettier).
 AB_CD = $(MOZ_UI_LOCALE)
 
-include $(topsrcdir)/config/AB_rCD.mk
+include $(MOZILLA_DIR)/config/AB_rCD.mk
 
 # Many locales directories want this definition.
 ACDEFINES += -DAB_CD=$(AB_CD)

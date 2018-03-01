@@ -229,7 +229,7 @@ GetPropIRGenerator::tryAttachStub()
                 return true;
             if (tryAttachDenseElementHole(obj, objId, index, indexId))
                 return true;
-            if (tryAttachArgumentsObjectArg(obj, objId, index, indexId))
+            if (tryAttachArgumentsObjectArg(obj, objId, indexId))
                 return true;
 
             trackAttached(IRGenerator::NotAttached);
@@ -1838,7 +1838,7 @@ GetPropIRGenerator::tryAttachMagicArgument(ValOperandId valId, ValOperandId inde
 
 bool
 GetPropIRGenerator::tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId objId,
-                                                uint32_t index, Int32OperandId indexId)
+                                                Int32OperandId indexId)
 {
     if (!obj->is<ArgumentsObject>() || obj->as<ArgumentsObject>().hasOverriddenElement())
         return false;
@@ -2548,7 +2548,7 @@ HasPropIRGenerator::tryAttachDenseHole(HandleObject obj, ObjOperandId objId,
 
 bool
 HasPropIRGenerator::tryAttachSparse(HandleObject obj, ObjOperandId objId,
-                                    uint32_t index, Int32OperandId indexId)
+                                    Int32OperandId indexId)
 {
     bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
@@ -2702,7 +2702,7 @@ HasPropIRGenerator::tryAttachUnboxedExpando(JSObject* obj, ObjOperandId objId,
 
 bool
 HasPropIRGenerator::tryAttachTypedArray(HandleObject obj, ObjOperandId objId,
-                                        uint32_t index, Int32OperandId indexId)
+                                        Int32OperandId indexId)
 {
     if (!obj->is<TypedArrayObject>() && !IsPrimitiveArrayTypedObject(obj))
         return false;
@@ -2851,9 +2851,9 @@ HasPropIRGenerator::tryAttachStub()
             return true;
         if (tryAttachDenseHole(obj, objId, index, indexId))
             return true;
-        if (tryAttachTypedArray(obj, objId, index, indexId))
+        if (tryAttachTypedArray(obj, objId, indexId))
             return true;
-        if (tryAttachSparse(obj, objId, index, indexId))
+        if (tryAttachSparse(obj, objId, indexId))
             return true;
 
         trackAttached(IRGenerator::NotAttached);
@@ -4250,7 +4250,7 @@ GetIteratorIRGenerator::tryAttachNativeIterator(ObjOperandId objId, HandleObject
 }
 
 CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, JSOp op,
-                                 ICCall_Fallback* stub, ICState::Mode mode, uint32_t argc,
+                                 ICState::Mode mode, uint32_t argc,
                                  HandleValue callee, HandleValue thisval, HandleValueArray args)
   : IRGenerator(cx, script, pc, CacheKind::Call, mode),
     op_(op),
@@ -4627,6 +4627,31 @@ CompareIRGenerator::tryAttachSymbol(ValOperandId lhsId, ValOperandId rhsId)
 }
 
 bool
+CompareIRGenerator::tryAttachStrictDifferentTypes(ValOperandId lhsId, ValOperandId rhsId)
+{
+    MOZ_ASSERT(IsEqualityOp(op_));
+
+    if (op_ != JSOP_STRICTEQ && op_ != JSOP_STRICTNE)
+        return false;
+
+    // Probably can't hit some of these.
+    if (SameType(lhsVal_, rhsVal_) || (lhsVal_.isNumber() && rhsVal_.isNumber()))
+        return false;
+
+    // Compare tags
+    ValueTagOperandId lhsTypeId = writer.loadValueTag(lhsId);
+    ValueTagOperandId rhsTypeId = writer.loadValueTag(rhsId);
+    writer.guardTagNotEqual(lhsTypeId, rhsTypeId);
+
+    // Now that we've passed the guard, we know differing types, so return the bool result.
+    writer.loadBooleanResult(op_ == JSOP_STRICTNE ? true : false);
+    writer.returnFromIC();
+
+    trackAttached("StrictDifferentTypes");
+    return true;
+}
+
+bool
 CompareIRGenerator::tryAttachStub()
 {
     MOZ_ASSERT(cacheKind_ == CacheKind::Compare);
@@ -4645,6 +4670,8 @@ CompareIRGenerator::tryAttachStub()
         if (tryAttachObject(lhsId, rhsId))
             return true;
         if (tryAttachSymbol(lhsId, rhsId))
+            return true;
+        if (tryAttachStrictDifferentTypes(lhsId, rhsId))
             return true;
 
         trackAttached(IRGenerator::NotAttached);

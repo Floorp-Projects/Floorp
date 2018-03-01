@@ -36,18 +36,6 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
     Csel(dest, dest, wzr, GreaterThan);
 }
 
-void
-MacroAssembler::alignFrameForICArguments(MacroAssembler::AfterICSaveLive& aic)
-{
-    // Exists for MIPS compatibility.
-}
-
-void
-MacroAssembler::restoreFrameAlignmentForICArguments(MacroAssembler::AfterICSaveLive& aic)
-{
-    // Exists for MIPS compatibility.
-}
-
 js::jit::MacroAssembler&
 MacroAssemblerCompat::asMasm()
 {
