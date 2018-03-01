@@ -3898,9 +3898,21 @@ Preferences::InitInitialObjects()
   developerBuild = !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "default");
 #endif
 
+  // Release Candidate builds are builds that think they are release builds, but
+  // are shipped to beta users. We still need extended data from these users.
+  bool releaseCandidateOnBeta = false;
+  if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "release")) {
+    nsAutoCString updateChannelPrefValue;
+    Preferences::GetCString(kChannelPref, updateChannelPrefValue,
+                            PrefValueKind::Default);
+    releaseCandidateOnBeta = updateChannelPrefValue.EqualsLiteral("beta");
+  }
+
   if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "nightly") ||
       !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "aurora") ||
-      !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta") || developerBuild) {
+      !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta") ||
+      developerBuild ||
+      releaseCandidateOnBeta) {
     Preferences::SetBoolInAnyProcess(
       kTelemetryPref, true, PrefValueKind::Default);
   } else {

@@ -7,12 +7,9 @@ Transform the push-apk kind into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import functools
-
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
-from taskgraph.util.schema import resolve_keyed_by, Schema
-from taskgraph.util.push_apk import fill_labels_tranform, validate_jobs_schema_transform_partial
+from taskgraph.util.schema import resolve_keyed_by, Schema, validate_schema
 
 from voluptuous import Required
 
@@ -37,14 +34,16 @@ google_play_description_schema = Schema({
     Required('worker'): object,
 })
 
-validate_jobs_schema_transform = functools.partial(
-    validate_jobs_schema_transform_partial,
-    google_play_description_schema,
-    'GooglePlayStrings'
-)
 
-transforms.add(fill_labels_tranform)
-transforms.add(validate_jobs_schema_transform)
+@transforms.add
+def validate_jobs_schema(config, jobs):
+    for job in jobs:
+        job['label'] = job['name']
+        validate_schema(
+            google_play_description_schema, job,
+            "In GooglePlayStrings ({!r} kind) task for {!r}:".format(config.kind, job['label'])
+        )
+        yield job
 
 
 @transforms.add

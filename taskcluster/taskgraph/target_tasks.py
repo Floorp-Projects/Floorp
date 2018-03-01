@@ -52,8 +52,7 @@ def filter_beta_release_tasks(task, parameters, ignore_kinds=None, allow_l10n=Fa
             'beetmover-repackage', 'beetmover-repackage-signing',
             'checksums-signing',
             'nightly-l10n', 'nightly-l10n-signing',
-            'push-apk', 'push-apk-breakpoint',
-            'repackage-l10n',
+            'push-apk', 'repackage-l10n',
         ]
     platform = task.attributes.get('build_platform')
     if platform in (
@@ -486,7 +485,7 @@ def target_tasks_promote_fennec(full_task_graph, parameters, graph_config):
             # are using run-on-projects properly here.
             if 'old-id' in task.label:
                 return False
-            if task.kind not in ('balrog', 'push-apk', 'push-apk-breakpoint'):
+            if task.kind not in ('balrog', 'push-apk'):
                 if task.attributes.get('nightly'):
                     return True
         if task.attributes.get('shipping_product') == 'fennec' and \
@@ -512,12 +511,9 @@ def target_tasks_ship_fennec(full_task_graph, parameters, graph_config):
         if task.attributes.get('shipping_product') != 'fennec' or \
                 task.attributes.get('shipping_phase') not in ('ship', 'push'):
             return False
-        # We always run push-apk* during ship
-        if task.kind in (
-            'push-apk',
-            'push-apk-breakpoint',
-        ):
-                return True
+        # We always run push-apk during ship
+        if task.kind == 'push-apk':
+            return True
         # secondary-notify-ship is only for RC
         if task.kind in (
             'release-secondary-notify-ship',

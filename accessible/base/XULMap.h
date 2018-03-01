@@ -2,10 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+XULMAP_TYPE(browser, OuterDocAccessible)
+XULMAP_TYPE(button, XULButtonAccessible)
 XULMAP_TYPE(checkbox, XULCheckboxAccessible)
 XULMAP_TYPE(dropMarker, XULDropmarkerAccessible)
+XULMAP_TYPE(editor, OuterDocAccessible)
 XULMAP_TYPE(findbar, XULToolbarAccessible)
 XULMAP_TYPE(groupbox, XULGroupboxAccessible)
+XULMAP_TYPE(iframe, OuterDocAccessible)
 XULMAP_TYPE(listbox, XULListboxAccessibleWrap)
 XULMAP_TYPE(listhead, XULColumAccessible)
 XULMAP_TYPE(listheader, XULColumnItemAccessible)
@@ -22,6 +26,7 @@ XULMAP_TYPE(radio, XULRadioButtonAccessible)
 XULMAP_TYPE(radiogroup, XULRadioGroupAccessible)
 XULMAP_TYPE(richlistbox, XULListboxAccessibleWrap)
 XULMAP_TYPE(richlistitem, XULListitemAccessible)
+XULMAP_TYPE(scale, XULSliderAccessible)
 XULMAP_TYPE(statusbar, XULStatusBarAccessible)
 XULMAP_TYPE(tab, XULTabAccessible)
 XULMAP_TYPE(tabpanels, XULTabpanelsAccessible)
@@ -33,6 +38,7 @@ XULMAP_TYPE(treecol, XULColumnItemAccessible)
 XULMAP_TYPE(treecolpicker, XULButtonAccessible)
 XULMAP_TYPE(treecols, XULTreeColumAccessible)
 XULMAP_TYPE(toolbar, XULToolbarAccessible)
+XULMAP_TYPE(toolbarbutton, XULToolbarButtonAccessible)
 XULMAP_TYPE(tooltip, XULTooltipAccessible)
 
 XULMAP(
@@ -69,6 +75,44 @@ XULMAP(
       }
     }
 
+    return nullptr;
+  }
+)
+
+XULMAP(
+  menupopup,
+  [](nsIContent* aContent, Accessible* aContext) {
+    return CreateMenupopupAccessible(aContent, aContext);
+  }
+)
+
+XULMAP(
+  popup,
+  [](nsIContent* aContent, Accessible* aContext) {
+    return CreateMenupopupAccessible(aContent, aContext);
+  }
+)
+
+XULMAP(
+  textbox,
+  [](nsIContent* aContent, Accessible* aContext) -> Accessible* {
+    if (aContent->IsElement() &&
+        aContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                           nsGkAtoms::autocomplete, eIgnoreCase)) {
+      return new XULComboboxAccessible(aContent, aContext->Document());
+    }
+
+    return new EnumRoleAccessible<roles::SECTION>(aContent, aContext->Document());
+  }
+)
+
+XULMAP(
+  thumb,
+  [](nsIContent* aContent, Accessible* aContext) -> Accessible* {
+    if (aContent->IsElement() &&
+        aContent->AsElement()->ClassList()->Contains(NS_LITERAL_STRING("scale-thumb"))) {
+      return new XULThumbAccessible(aContent, aContext->Document());
+    }
     return nullptr;
   }
 )

@@ -57,6 +57,10 @@ function runConnectionTests(win) {
   is(networkProxyNone.getAttribute("rows"), "2",
      "networkProxyNone textbox has two rows");
 
+  // make sure manual proxy controls are disabled when the window is opened
+  let networkProxyHTTP = doc.getElementById("networkProxyHTTP");
+  is(networkProxyHTTP.disabled, true, "networkProxyHTTP textbox is disabled");
+
   // check if sanitizing the given input for the no_proxies_on pref results in
   // expected string
   function testSanitize(input, expected, errorMessage) {

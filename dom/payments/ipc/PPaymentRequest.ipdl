@@ -27,6 +27,7 @@ struct IPCPaymentItem
   nsString label;
   IPCPaymentCurrencyAmount amount;
   bool pending;
+  nsString type;
 };
 
 struct IPCPaymentDetailsModifier

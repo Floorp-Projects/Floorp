@@ -5,6 +5,7 @@ use std::iter::{Fuse,Peekable};
 /// Iterator element type is `Position<I::Item>`.
 ///
 /// See [`.with_position()`](../trait.Itertools.html#method.with_position) for more information.
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct WithPosition<I>
     where I: Iterator,
 {
