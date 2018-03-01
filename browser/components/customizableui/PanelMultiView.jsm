@@ -1318,6 +1318,10 @@ var PanelView = class extends this.AssociatedToNode {
     if (allowSyncReflows) {
       collectItems();
     } else {
+      // FIXME: Need to wait for the next tick, due to the collision with
+      //        bug 1193394
+      await new Promise(r => Services.tm.dispatchToMainThread(r));
+
       await this.window.promiseDocumentFlushed(collectItems);
     }
 
@@ -1337,6 +1341,10 @@ var PanelView = class extends this.AssociatedToNode {
     if (allowSyncReflows) {
       measureItems();
     } else {
+      // FIXME: Need to wait for the next tick, due to the collision with
+      //        bug 1193394
+      await new Promise(r => Services.tm.dispatchToMainThread(r));
+
       await this.window.promiseDocumentFlushed(measureItems);
     }
 
