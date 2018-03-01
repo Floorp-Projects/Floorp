@@ -51,7 +51,8 @@ struct MatchPair
     }
 };
 
-/* Base class for RegExp execution output. */
+// MachPairs is used as base class for VectorMatchPairs but can also be
+// stack-allocated (without a Vector) in JIT code.
 class MatchPairs
 {
   protected:
@@ -72,10 +73,6 @@ class MatchPairs
     friend class RegExpShared;
     friend class RegExpStatics;
 
-    /* MatchPair buffer allocator: set pairs_ and pairCount_. */
-    virtual bool allocOrExpandArray(size_t pairCount) = 0;
-
-    bool initArrayFrom(MatchPairs& copyFrom);
     void forgetArray() { pairs_ = nullptr; }
 
     void checkAgainst(size_t inputLength) {
@@ -114,37 +111,18 @@ class MatchPairs
     }
 };
 
-/* MatchPairs allocated into temporary storage, removed when out of scope. */
-class ScopedMatchPairs : public MatchPairs
-{
-    LifoAllocScope lifoScope_;
-
-  public:
-    /* Constructs an implicit LifoAllocScope. */
-    explicit ScopedMatchPairs(LifoAlloc* lifoAlloc)
-      : lifoScope_(lifoAlloc)
-    { }
-
-  protected:
-    bool allocOrExpandArray(size_t pairCount) override;
-};
-
-/*
- * MatchPairs allocated into permanent storage, for RegExpStatics.
- * The Vector of MatchPairs is reusable by Vector expansion.
- */
 class VectorMatchPairs : public MatchPairs
 {
     Vector<MatchPair, 10, SystemAllocPolicy> vec_;
 
-  public:
-    VectorMatchPairs() {
-        vec_.clear();
-    }
-
   protected:
+    friend class RegExpShared;
     friend class RegExpStatics;
-    bool allocOrExpandArray(size_t pairCount) override;
+
+    /* MatchPair buffer allocator: set pairs_ and pairCount_. */
+    bool allocOrExpandArray(size_t pairCount);
+
+    bool initArrayFrom(VectorMatchPairs& copyFrom);
 };
 
 } /* namespace js */
