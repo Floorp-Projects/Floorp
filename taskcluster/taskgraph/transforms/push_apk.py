@@ -7,14 +7,12 @@ Transform the push-apk kind into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import functools
+import re
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
-from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema
+from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema, validate_schema
 from taskgraph.util.scriptworker import get_push_apk_scope
-from taskgraph.util.push_apk import fill_labels_tranform, validate_jobs_schema_transform_partial, \
-    validate_dependent_tasks_transform, delete_non_required_fields_transform, generate_dependencies
 
 from voluptuous import Optional, Required
 
@@ -45,15 +43,42 @@ push_apk_description_schema = Schema({
     Optional('extra'): task_description_schema['extra'],
 })
 
-validate_jobs_schema_transform = functools.partial(
-    validate_jobs_schema_transform_partial,
-    push_apk_description_schema,
-    'PushApk'
-)
 
-transforms.add(fill_labels_tranform)
-transforms.add(validate_jobs_schema_transform)
-transforms.add(validate_dependent_tasks_transform)
+REQUIRED_ARCHITECTURES = {
+    'android-x86-nightly',
+    'android-api-16-nightly',
+}
+PLATFORM_REGEX = re.compile(r'build-signing-android-(\S+)-nightly')
+
+
+@transforms.add
+def validate_jobs_schema_transform_partial(config, jobs):
+    for job in jobs:
+        label = job.get('label', '?no-label?')
+        validate_schema(
+            push_apk_description_schema, job,
+            "In PushApk ({!r} kind) task for {!r}:".format(config.kind, label)
+        )
+        yield job
+
+
+@transforms.add
+def validate_dependent_tasks(_, jobs):
+    for job in jobs:
+        check_every_architecture_is_present_in_dependent_tasks(job['dependent-tasks'])
+        yield job
+
+
+def check_every_architecture_is_present_in_dependent_tasks(dependent_tasks):
+    dep_platforms = set(t.attributes.get('build_platform') for t in dependent_tasks)
+    missed_architectures = REQUIRED_ARCHITECTURES - dep_platforms
+    if missed_architectures:
+        raise Exception('''One or many required architectures are missing.
+
+Required architectures: {}.
+Given dependencies: {}.
+'''.format(REQUIRED_ARCHITECTURES, dependent_tasks)
+        )
 
 
 @transforms.add
@@ -66,8 +91,6 @@ def make_task_description(config, jobs):
         if config.params['release_type'] == 'rc':
             job['worker']['google-play-track'] = job['worker']['rc-google-play-track']
             job['worker']['rollout-percentage'] = job['worker']['rc-rollout-percentage']
-        del(job['worker']['rc-google-play-track'])
-        del(job['worker']['rc-rollout-percentage'])
 
         resolve_keyed_by(
             job, 'worker.google-play-track', item_name=job['name'],
@@ -93,7 +116,16 @@ def make_task_description(config, jobs):
         yield job
 
 
-transforms.add(delete_non_required_fields_transform)
+def generate_dependencies(dependent_tasks):
+    # Because we depend on several tasks that have the same kind, we introduce the platform
+    dependencies = {}
+    for task in dependent_tasks:
+        platform_match = PLATFORM_REGEX.match(task.label)
+        # platform_match is None when the google-play-string task is given, for instance
+        task_kind = task.kind if platform_match is None else \
+            '{}-{}'.format(task.kind, platform_match.group(1))
+        dependencies[task_kind] = task.label
+    return dependencies
 
 
 def generate_upstream_artifacts(dependencies):
@@ -102,7 +134,7 @@ def generate_upstream_artifacts(dependencies):
         'taskType': 'signing',
         'paths': ['public/build/target.apk'],
     } for task_kind in dependencies.keys()
-      if task_kind not in ('push-apk-breakpoint', 'google-play-strings', 'beetmover-checksums')
+      if task_kind not in ('google-play-strings', 'beetmover-checksums')
     ]
 
     google_play_strings = [{
@@ -115,3 +147,15 @@ def generate_upstream_artifacts(dependencies):
     ]
 
     return apks + google_play_strings
+
+
+@transforms.add
+def delete_non_required_fields(_, jobs):
+    for job in jobs:
+        del job['name']
+        del job['dependent-tasks']
+
+        del(job['worker']['rc-google-play-track'])
+        del(job['worker']['rc-rollout-percentage'])
+
+        yield job

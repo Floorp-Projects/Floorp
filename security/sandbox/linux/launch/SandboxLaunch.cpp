@@ -103,16 +103,24 @@ IsDisplayLocal()
 }
 
 // Content processes may need direct access to SysV IPC in certain
-// uncommon use cases: if using fglrx GPU drivers (officially obsolete
-// but still in use), or the ALSA dmix plugin without cubeb remoting.
+// uncommon use cases.
 static bool
 ContentNeedsSysVIPC()
 {
+  // The ALSA dmix plugin uses SysV semaphores and shared memory to
+  // coordinate software mixing.
 #ifdef MOZ_ALSA
   if (!Preferences::GetBool("media.cubeb.sandbox")) {
     return true;
   }
 #endif
+
+  // Bug 1438391: VirtualGL uses SysV shm for images and configuration.
+  if (PR_GetEnv("VGL_ISACTIVE") != nullptr) {
+    return true;
+  }
+
+  // The fglrx (ATI Catalyst) GPU drivers use SysV IPC.
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   nsAutoString vendorID;
   static const Array<nsresult (nsIGfxInfo::*)(nsAString&), 2> kMethods = {

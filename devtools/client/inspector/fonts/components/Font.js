@@ -26,11 +26,9 @@ class Font extends PureComponent {
     super(props);
 
     this.state = {
-      isFontExpanded: false,
       isFontFaceRuleExpanded: false,
     };
 
-    this.onFontToggle = this.onFontToggle.bind(this);
     this.onFontFaceRuleToggle = this.onFontFaceRuleToggle.bind(this);
   }
 
@@ -40,16 +38,8 @@ class Font extends PureComponent {
     }
 
     this.setState({
-      isFontExpanded: false,
       isFontFaceRuleExpanded: false,
     });
-  }
-
-  onFontToggle(event) {
-    this.setState({
-      isFontExpanded: !this.state.isFontExpanded
-    });
-    event.stopPropagation();
   }
 
   onFontFaceRuleToggle(event) {
@@ -57,15 +47,6 @@ class Font extends PureComponent {
       isFontFaceRuleExpanded: !this.state.isFontFaceRuleExpanded
     });
     event.stopPropagation();
-  }
-
-  renderFontCSS(cssFamilyName) {
-    return dom.p(
-      {
-        className: "font-css-name"
-      },
-      `${getStr("fontinspector.usedAs")} "${cssFamilyName}"`
-    );
   }
 
   renderFontCSSCode(rule, ruleText) {
@@ -89,14 +70,13 @@ class Font extends PureComponent {
       this.renderFontCSSCodeTwisty(),
       leading,
       isFontFaceRuleExpanded ?
-        null
-        :
+        body :
         dom.span(
           {
-            className: "font-css-code-expander"
+            className: "font-css-code-expander",
+            onClick: this.onFontFaceRuleToggle,
           }
         ),
-      isFontFaceRuleExpanded ? body : null,
       trailing
     );
   }
@@ -129,29 +109,20 @@ class Font extends PureComponent {
   renderFontName(name) {
     return dom.h1(
       {
-        className: "font-name",
-        onClick: this.onFontToggle,
+        className: "font-name"
       },
       name
     );
   }
 
-  renderFontTwisty() {
-    let { isFontExpanded } = this.state;
-    return this.renderTwisty(isFontExpanded, this.onFontToggle);
-  }
-
   renderFontCSSCodeTwisty() {
     let { isFontFaceRuleExpanded } = this.state;
-    return this.renderTwisty(isFontFaceRuleExpanded, this.onFontFaceRuleToggle);
-  }
 
-  renderTwisty(isExpanded, onClick) {
     let attributes = {
       className: "theme-twisty",
-      onClick,
+      onClick: this.onFontFaceRuleToggle,
     };
-    if (isExpanded) {
+    if (isFontFaceRuleExpanded) {
       attributes.open = "true";
     }
 
@@ -168,7 +139,6 @@ class Font extends PureComponent {
     let { previewText } = fontOptions;
 
     let {
-      CSSFamilyName,
       format,
       name,
       previewUrl,
@@ -177,23 +147,14 @@ class Font extends PureComponent {
       URI,
     } = font;
 
-    let { isFontExpanded } = this.state;
-
     return dom.li(
       {
-        className: "font" + (isFontExpanded ? " expanded" : ""),
+        className: "font",
       },
-      this.renderFontTwisty(),
       this.renderFontName(name),
       FontPreview({ previewText, previewUrl, onPreviewFonts }),
-      dom.div(
-        {
-          className: "font-details"
-        },
-        this.renderFontTypeAndURL(URI, format),
-        this.renderFontCSSCode(rule, ruleText),
-        this.renderFontCSS(CSSFamilyName)
-      )
+      this.renderFontTypeAndURL(URI, format),
+      this.renderFontCSSCode(rule, ruleText)
     );
   }
 }

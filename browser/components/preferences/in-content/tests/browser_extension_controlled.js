@@ -673,17 +673,30 @@ add_task(async function testExtensionControlledProxyConfig() {
       }
       function getProxyControls() {
         let controlGroup = doc.getElementById("networkProxyType");
-        return [
-          ...controlGroup.querySelectorAll(":scope > radio"),
-          ...controlGroup.querySelectorAll("label"),
-          ...controlGroup.querySelectorAll("textbox"),
-          ...controlGroup.querySelectorAll("checkbox"),
-          ...doc.querySelectorAll("#networkProxySOCKSVersion > radio"),
-          ...doc.querySelectorAll("#ConnectionsDialogPane > checkbox"),
-        ];
+        let manualControlContainer = controlGroup.querySelector("grid");
+        return {
+          manualControls: [
+            ...manualControlContainer.querySelectorAll("label"),
+            ...manualControlContainer.querySelectorAll("textbox"),
+            ...manualControlContainer.querySelectorAll("checkbox"),
+            ...doc.querySelectorAll("#networkProxySOCKSVersion > radio")],
+          pacControls: [doc.getElementById("networkProxyAutoconfigURL")],
+          otherControls: [
+            ...controlGroup.querySelectorAll(":scope > radio"),
+            ...doc.querySelectorAll("#ConnectionsDialogPane > checkbox")],
+        };
       }
       let controlState = isControlled ? "disabled" : "enabled";
-      for (let element of getProxyControls()) {
+      let controls = getProxyControls();
+      for (let element of controls.manualControls) {
+        let disabled = isControlled || proxyType !== proxySvc.PROXYCONFIG_MANUAL;
+        is(element.disabled, disabled, `Proxy controls are ${controlState}.`);
+      }
+      for (let element of controls.pacControls) {
+        let disabled = isControlled || proxyType !== proxySvc.PROXYCONFIG_PAC;
+        is(element.disabled, disabled, `Proxy controls are ${controlState}.`);
+      }
+      for (let element of controls.otherControls) {
         is(element.disabled, isControlled, `Proxy controls are ${controlState}.`);
       }
     } else {
@@ -750,7 +763,7 @@ add_task(async function testExtensionControlledProxyConfig() {
 
   verifyState(mainDoc, false);
 
-  // Install an extension that sets Tracking Protection.
+  // Install an extension that controls proxy settings.
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {

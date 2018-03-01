@@ -251,7 +251,7 @@
 
   </binding>
 
-  <binding id="popup" role="xul:menupopup"
+  <binding id="popup"
            extends="chrome://global/content/bindings/popup.xml#popup-base">
 
     <content>

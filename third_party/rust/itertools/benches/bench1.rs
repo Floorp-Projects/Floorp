@@ -1,7 +1,7 @@
 #![feature(test)]
 
 extern crate test;
-extern crate itertools;
+#[macro_use] extern crate itertools;
 
 use test::{black_box};
 use itertools::Itertools;
@@ -648,4 +648,88 @@ fn step_range_10(b: &mut test::Bencher) {
     b.iter(|| {
         fast_integer_sum(v.clone().step(10))
     });
+}
+
+#[bench]
+fn cartesian_product_iterator(b: &mut test::Bencher)
+{
+    let xs = vec![0; 16];
+
+    b.iter(|| {
+        let mut sum = 0;
+        for (&x, &y, &z) in iproduct!(&xs, &xs, &xs) {
+            sum += x;
+            sum += y;
+            sum += z;
+        }
+        sum
+    })
+}
+
+#[bench]
+fn cartesian_product_fold(b: &mut test::Bencher)
+{
+    let xs = vec![0; 16];
+
+    b.iter(|| {
+        let mut sum = 0;
+        iproduct!(&xs, &xs, &xs).fold((), |(), (&x, &y, &z)| {
+            sum += x;
+            sum += y;
+            sum += z;
+        });
+        sum
+    })
+}
+
+#[bench]
+fn multi_cartesian_product_iterator(b: &mut test::Bencher)
+{
+    let xs = [vec![0; 16], vec![0; 16], vec![0; 16]];
+
+    b.iter(|| {
+        let mut sum = 0;
+        for x in xs.into_iter().multi_cartesian_product() {
+            sum += x[0];
+            sum += x[1];
+            sum += x[2];
+        }
+        sum
+    })
+}
+
+#[bench]
+fn multi_cartesian_product_fold(b: &mut test::Bencher)
+{
+    let xs = [vec![0; 16], vec![0; 16], vec![0; 16]];
+
+    b.iter(|| {
+        let mut sum = 0;
+        xs.into_iter().multi_cartesian_product().fold((), |(), x| {
+            sum += x[0];
+            sum += x[1];
+            sum += x[2];
+        });
+        sum
+    })
+}
+
+#[bench]
+fn cartesian_product_nested_for(b: &mut test::Bencher)
+{
+    let xs = vec![0; 16];
+
+    b.iter(|| {
+        let mut sum = 0;
+        for &x in &xs {
+            for &y in &xs {
+                for &z in &xs {
+                    sum += x;
+                    sum += y;
+                    sum += z;
+                }
+            }
+        }
+        sum
+    })
 }
