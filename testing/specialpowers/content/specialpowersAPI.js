@@ -19,6 +19,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 // We're loaded with "this" not set to the global in some cases, so we
 // have to play some games to get at the global object here.  Normally
@@ -2235,6 +2236,8 @@ SpecialPowersAPI.prototype = {
                                                           tables,
                                                           wrapCallback);
   },
+
+  EARLY_BETA_OR_EARLIER: AppConstants.EARLY_BETA_OR_EARLIER,
 
 };
 
