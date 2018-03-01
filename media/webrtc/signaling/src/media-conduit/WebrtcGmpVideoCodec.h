@@ -33,7 +33,6 @@
 #ifndef WEBRTCGMPVIDEOCODEC_H_
 #define WEBRTCGMPVIDEOCODEC_H_
 
-#include <iostream>
 #include <queue>
 #include <string>
 

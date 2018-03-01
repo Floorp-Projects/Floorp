@@ -14,7 +14,6 @@
 #include "WebRenderTypes.h"
 #include "webrender_ffi.h"
 
-#include <iostream>
 #include <unordered_map>
 
 #ifdef XP_MACOSX
