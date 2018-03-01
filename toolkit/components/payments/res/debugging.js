@@ -7,6 +7,24 @@ const paymentDialog = window.parent.document.querySelector("payment-dialog");
 // happen through setStateFromParent which includes some consistency checks.
 const requestStore = paymentDialog.requestStore;
 
+// keep the payment options checkboxes in sync w. actual state
+const paymentOptionsUpdater = {
+  stateChangeCallback(state) {
+    this.render(state);
+  },
+  render(state) {
+    let options = state.request.paymentOptions;
+    let checkboxes = document.querySelectorAll("#paymentOptions input[type='checkbox']");
+    for (let input of checkboxes) {
+      if (options.hasOwnProperty(input.name)) {
+        input.checked = options[input.name];
+      }
+    }
+  },
+};
+
+requestStore.subscribe(paymentOptionsUpdater);
+
 let REQUEST_1 = {
   tabId: 9,
   topLevelPrincipal: {URI: {displayHost: "tschaeff.github.io"}},
@@ -116,28 +134,6 @@ let REQUEST_2 = {
     requestPayerEmail: false,
     requestPayerPhone: false,
     requestShipping: true,
-    shippingType: "shipping",
-  },
-};
-
-let REQUEST_CONTACT_NO_SHIPPING = {
-  tabId: 10,
-  topLevelPrincipal: {URI: {displayHost: "example.org"}},
-  requestId: "8288347a-ccec-4190-b4b1-673dbc709738",
-  paymentMethods: [],
-  paymentDetails: {
-    id: "",
-    totalItem: {label: "", amount: {currency: "EUR", value: "1234.56"}, pending: false},
-    displayItems: [],
-    shippingOptions: [],
-    modifiers: null,
-    error: "",
-  },
-  paymentOptions: {
-    requestPayerName: true,
-    requestPayerEmail: true,
-    requestPayerPhone: true,
-    requestShipping: false,
     shippingType: "shipping",
   },
 };
@@ -268,8 +264,29 @@ let buttonActions = {
     requestStore.setState({request: REQUEST_2});
   },
 
-  setRequestContactNoShipping() {
-    requestStore.setState({request: REQUEST_CONTACT_NO_SHIPPING});
+  setRequestPayerName() {
+    buttonActions.setPaymentOptions();
+  },
+  setRequestPayerEmail() {
+    buttonActions.setPaymentOptions();
+  },
+  setRequestPayerPhone() {
+    buttonActions.setPaymentOptions();
+  },
+  setRequestShipping() {
+    buttonActions.setPaymentOptions();
+  },
+
+  setPaymentOptions() {
+    let options = {};
+    let checkboxes = document.querySelectorAll("#paymentOptions input[type='checkbox']");
+    for (let input of checkboxes) {
+      options[input.name] = input.checked;
+    }
+    let req = Object.assign({}, requestStore.getState().request, {
+      paymentOptions: options,
+    });
+    requestStore.setState({ request: req });
   },
 
   setShippingError() {
