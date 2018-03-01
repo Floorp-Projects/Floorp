@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Cc, Ci, Cu, CC} = require("chrome");
+const {Ci, Cu, CC} = require("chrome");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const Services = require("Services");
 
@@ -17,9 +17,6 @@ loader.lazyGetter(this, "debugJsModules", function() {
   return !!(AppConstants.DEBUG_JS_MODULES);
 });
 
-const childProcessMessageManager =
-  Cc["@mozilla.org/childprocessmessagemanager;1"]
-    .getService(Ci.nsISyncMessageSender);
 const BinaryInput = CC("@mozilla.org/binaryinputstream;1",
                        "nsIBinaryInputStream", "setInputStream");
 const BufferStream = CC("@mozilla.org/io/arraybuffer-input-stream;1",
@@ -309,7 +306,7 @@ function onContentMessage(e) {
   let value = e.detail.value;
   switch (e.detail.type) {
     case "save":
-      childProcessMessageManager.sendAsyncMessage(
+      Services.cpmm.sendAsyncMessage(
         "devtools:jsonview:save", value);
   }
 }
