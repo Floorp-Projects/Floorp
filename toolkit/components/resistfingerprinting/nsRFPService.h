@@ -273,10 +273,6 @@ private:
 
   static nsDataHashtable<KeyboardHashKey, const SpoofingKeyboardCode*>* sSpoofingKeyboardCodes;
 
-  static mozilla::Mutex* sLock;
-  static UniquePtr<LRUCache> sCache;
-  static UniquePtr<uint8_t[]> sSecretMidpointSeed;
-
   nsCString mInitialTZValue;
 };
 
