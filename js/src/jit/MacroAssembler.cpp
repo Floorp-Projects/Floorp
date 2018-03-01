@@ -1751,7 +1751,7 @@ void
 MacroAssembler::typeOfObject(Register obj, Register scratch, Label* slow,
                              Label* isObject, Label* isCallable, Label* isUndefined)
 {
-    loadObjClass(obj, scratch);
+    loadObjClassUnsafe(obj, scratch);
 
     // Proxies can emulate undefined and have complex isCallable behavior.
     branchTestClassIsProxy(true, scratch, slow);
@@ -3248,6 +3248,22 @@ MacroAssembler::branchIfPretenuredGroup(const ObjectGroup* group, Register scrat
     movePtr(ImmGCPtr(group), scratch);
     branchTest32(Assembler::NonZero, Address(scratch, ObjectGroup::offsetOfFlags()),
                  Imm32(OBJECT_FLAG_PRE_TENURE), label);
+}
+
+void
+MacroAssembler::branchIfNonNativeObj(Register obj, Register scratch, Label* label)
+{
+    loadObjClassUnsafe(obj, scratch);
+    branchTest32(Assembler::NonZero, Address(scratch, Class::offsetOfFlags()),
+                 Imm32(Class::NON_NATIVE), label);
+}
+
+void
+MacroAssembler::branchIfInlineTypedObject(Register obj, Register scratch, Label* label)
+{
+    loadObjClassUnsafe(obj, scratch);
+    branchPtr(Assembler::Equal, temp1, ImmPtr(&InlineOpaqueTypedObject::class_), label);
+    branchPtr(Assembler::Equal, temp1, ImmPtr(&InlineTransparentTypedObject::class_), label);
 }
 
 void

@@ -934,9 +934,7 @@ IonCacheIRCompiler::emitMegamorphicLoadSlotResult()
         return false;
 
     // The object must be Native.
-    masm.loadObjClass(obj, scratch3);
-    masm.branchTest32(Assembler::NonZero, Address(scratch3, Class::offsetOfFlags()),
-                      Imm32(Class::NON_NATIVE), failure->label());
+    masm.branchIfNonNativeObj(obj, scratch3, failure->label());
 
     masm.Push(UndefinedValue());
     masm.moveStackPtrTo(scratch3.get());

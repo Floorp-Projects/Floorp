@@ -467,7 +467,7 @@ MacroAssembler::branchIfObjectEmulatesUndefined(Register objReg, Register scratc
 {
     // The branches to out-of-line code here implement a conservative version
     // of the JSObject::isWrapper test performed in EmulatesUndefined.
-    loadObjClass(objReg, scratch);
+    loadObjClassUnsafe(objReg, scratch);
 
     branchTestClassIsProxy(true, scratch, slowCheck);
 
@@ -544,7 +544,7 @@ MacroAssembler::branchTestClassIsProxy(bool proxy, Register clasp, Label* label)
 void
 MacroAssembler::branchTestObjectIsProxy(bool proxy, Register object, Register scratch, Label* label)
 {
-    loadObjClass(object, scratch);
+    loadObjClassUnsafe(object, scratch);
     branchTestClassIsProxy(proxy, scratch, label);
 }
 
