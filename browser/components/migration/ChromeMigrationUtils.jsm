@@ -227,6 +227,8 @@ var ChromeMigrationUtils = {
       },
       linux: {
         Chrome: ["google-chrome"],
+        "Chrome Beta": ["google-chrome-beta"],
+        "Chrome Dev": ["google-chrome-unstable"],
         Chromium: ["chromium"],
         // Canary is not available on Linux.
       },
