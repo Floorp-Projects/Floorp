@@ -51,6 +51,9 @@ add_task(async function test_update() {
     ["dom.serviceWorkers.update_delay", 30000],
     ["dom.serviceWorkers.idle_extended_timeout", 299999]]});
 
+  // clear version counter
+  await fetch("self_update_worker.sjs?clearcounter");
+
   var worker;
   let registration = await navigator.serviceWorker.register(
     "self_update_worker.sjs",
