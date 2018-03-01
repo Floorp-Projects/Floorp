@@ -20,7 +20,8 @@ const MSG_JAR_FLUSH = "AddonJarFlush";
  */
 function flushJarCache(aJarFile) {
   Services.obs.notifyObservers(aJarFile, "flush-cache-entry");
-  Services.mm.broadcastAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
+  Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageBroadcaster)
+    .broadcastAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
 }
 
 
