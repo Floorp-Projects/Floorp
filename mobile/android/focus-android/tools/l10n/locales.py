@@ -20,6 +20,7 @@
 # shipping in previous releases. Ping :delphine in case you want
 # to add or remove locales from releases.
 RELEASE_LOCALES = [
+	"am"
 	"ar",
 	"ast",
 	"az",
@@ -47,6 +48,7 @@ RELEASE_LOCALES = [
 	"fy-NL",
 	"ga-IE",
 	"hi-IN",
+	"hr",
 	"hsb",
 	"hu",
 	"hy-AM",
