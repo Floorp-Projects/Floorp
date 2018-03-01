@@ -67,7 +67,7 @@ android {
         }
     }
 
-    flavorDimensions "product", "engine"
+    flavorDimensions "product", "engine", "abi"
 
     productFlavors {
         // In most countries we are Firefox Focus - but in some we need to be Firefox Klar
@@ -92,12 +92,34 @@ android {
 
             applicationIdSuffix ".gecko"
         }
+
+        x86 {
+            dimension "abi"
+        }
+
+        arm {
+            dimension "abi"
+        }
+
+        universal {
+            dimension "abi"
+        }
     }
 
     variantFilter { variant ->
         def flavors = variant.flavors*.name
         // We only need a gecko debug and beta build for now.
         if (flavors.contains("gecko") && flavors.contains("focus")) {
+            setIgnore(true)
+        }
+
+        if (flavors.contains("webview") && !flavors.contains("universal")) {
+            // WebView builds support all ABIs
+            setIgnore(true)
+        }
+
+        if (flavors.contains("gecko") && flavors.contains("universal")) {
+            // There are only x86 and ARM builds using Gecko
             setIgnore(true)
         }
     }
@@ -180,7 +202,12 @@ repositories {
         // For discovering available versions go to:
         //   https://tools.taskcluster.net/index/gecko.v2.mozilla-central.nightly
 
+        // ARM GeckoView builds
         url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.2018.02.26.latest.mobile.android-api-16-opt/artifacts/public/android/maven"
+    }
+    maven {
+        // x86 GeckoView builds
+        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.2018.02.26.latest.mobile.android-x86-opt/artifacts/public/android/maven"
     }
 }
 
@@ -207,8 +234,11 @@ dependencies {
     focusCompile 'com.adjust.sdk:adjust-android:4.11.4'
     focusCompile 'com.google.android.gms:play-services-analytics:10.2.6' // Required by Adjust
 
-    // gecko_version = '60.0a1'
-    geckoCompile "org.mozilla:geckoview-nightly-armeabi-v7a:+"
+    // What I actually want to define here is geckoArmCompile and geckoX86Compile. But gradle doesn't
+    // allow me to define dependencies for such a flavor combination. However as we are not building
+    // WebView + (ARM / x86) flavor combinations this should be good enough for now.
+    armCompile "org.mozilla:geckoview-nightly-armeabi-v7a:60.0a1"
+    x86Compile "org.mozilla:geckoview-nightly-x86:60.0a1"
 
     testCompile 'junit:junit:4.12'
     testCompile "org.robolectric:robolectric:3.7.1"
