@@ -6,6 +6,9 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
+
 let { getChromeWindow } = ChromeUtils.import("resource:///modules/syncedtabs/util.js", {});
 
 let log = ChromeUtils.import("resource://gre/modules/Log.jsm", {})
@@ -520,8 +523,10 @@ TabListView.prototype = {
     while (el) {
       let show = false;
       if (showTabOptions) {
-        if (el.getAttribute("id") != "syncedTabsOpenAllInTabs" &&
-            el.getAttribute("id") != "syncedTabsManageDevices") {
+        if (el.getAttribute("id") == "syncedTabsOpenSelectedInPrivateWindow") {
+          show = PrivateBrowsingUtils.enabled;
+        } else if (el.getAttribute("id") != "syncedTabsOpenAllInTabs" &&
+                   el.getAttribute("id") != "syncedTabsManageDevices") {
           show = true;
         }
       } else if (el.getAttribute("id") == "syncedTabsOpenAllInTabs") {
