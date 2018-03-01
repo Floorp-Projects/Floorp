@@ -84,6 +84,7 @@ const PREF_XPI_PERMISSIONS_BRANCH     = "xpinstall.";
 const PREF_INSTALL_REQUIRESECUREORIGIN = "extensions.install.requireSecureOrigin";
 const PREF_INSTALL_DISTRO_ADDONS      = "extensions.installDistroAddons";
 const PREF_BRANCH_INSTALLED_ADDON     = "extensions.installedDistroAddon.";
+const PREF_DISTRO_ADDONS_PERMS        = "extensions.distroAddons.promptForPermissions";
 const PREF_INTERPOSITION_ENABLED      = "extensions.interposition.enabled";
 const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
 const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
@@ -1814,6 +1815,8 @@ var XPIProvider = {
   // True if all of the add-ons found during startup were installed in the
   // application install location
   allAppGlobal: true,
+  // New distribution addons awaiting permissions approval
+  newDistroAddons: null,
   // Keep track of startup phases for telemetry
   runPhase: XPI_STARTING,
   // Per-addon telemetry information
@@ -3105,6 +3108,14 @@ var XPIProvider = {
       // Install the add-on
       try {
         addon._sourceBundle = profileLocation.installAddon({ id, source: entry, action: "copy" });
+        if (Services.prefs.getBoolPref(PREF_DISTRO_ADDONS_PERMS, false)) {
+          addon.userDisabled = true;
+          if (!this.newDistroAddons) {
+            this.newDistroAddons = new Set();
+          }
+          this.newDistroAddons.add(id);
+        }
+
         XPIStates.addAddon(addon);
         logger.debug("Installed distribution add-on " + id);
 
@@ -3125,6 +3136,12 @@ var XPIProvider = {
     entries.close();
 
     return changed;
+  },
+
+  getNewDistroAddons() {
+    let addons = this.newDistroAddons;
+    this.newDistroAddons = null;
+    return addons;
   },
 
   /**
