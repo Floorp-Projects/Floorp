@@ -107,6 +107,9 @@ class FTLParserStream(ParserStream):
         return is_digit
 
     def is_char_pattern_continuation(self, ch):
+        if ch is None:
+            return False
+
         return ch not in SPECIAL_LINE_START_CHARS
 
     def is_peek_pattern_start(self):
