@@ -26,6 +26,21 @@ interface nsIFile;
 [scriptable, uuid(8bfd34d5-4ddf-4e4b-89dd-9b14f33534c6)]
 interface mozIStorageAsyncConnection : nsISupports {
   /**
+   * Transaction behavior constants.
+   */
+  const int32_t TRANSACTION_DEFAULT = -1;
+  const int32_t TRANSACTION_DEFERRED = 0;
+  const int32_t TRANSACTION_IMMEDIATE = 1;
+  const int32_t TRANSACTION_EXCLUSIVE = 2;
+
+  /**
+   * The default behavior for all transactions run on this connection. Defaults
+   * to `TRANSACTION_DEFERRED`, and can be overridden for individual
+   * transactions.
+   */
+  attribute int32_t defaultTransactionType;
+
+  /**
    * Close this database connection, allowing all pending statements
    * to complete first.
    *
