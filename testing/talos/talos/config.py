@@ -168,7 +168,7 @@ DEFAULTS = dict(
         'media.gmp-manager.updateEnabled': False,
         'extensions.systemAddon.update.url':
             'http://127.0.0.1/dummy-system-addons.xml',
-        'app.normandy.api_url':
+        'extensions.shield-recipe-client.api_url':
             'https://127.0.0.1/selfsupport-dummy/',
         'browser.ping-centre.staging.endpoint':
             'https://127.0.0.1/pingcentre/dummy/',
