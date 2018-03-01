@@ -174,7 +174,13 @@ gfxFT2FontBase::GetCharWidth(char aChar, gfxFloat* aWidth)
 {
     FT_UInt gid = GetGlyph(aChar);
     if (gid) {
-        *aWidth = FLOAT_FROM_16_16(GetFTGlyphAdvance(gid));
+        int32_t width;
+        if (!GetFTGlyphAdvance(gid, &width)) {
+            cairo_text_extents_t extents;
+            GetGlyphExtents(gid, &extents);
+            width = NS_lround(0x10000 * extents.x_advance);
+        }
+        *aWidth = FLOAT_FROM_16_16(width);
     }
     return gid;
 }
@@ -507,35 +513,42 @@ gfxFT2FontBase::GetGlyph(uint32_t unicode, uint32_t variation_selector)
     return GetGlyph(unicode);
 }
 
-FT_Fixed
-gfxFT2FontBase::GetFTGlyphAdvance(uint16_t aGID)
+bool
+gfxFT2FontBase::GetFTGlyphAdvance(uint16_t aGID, int32_t* aAdvance)
 {
     gfxFT2LockedFace face(this);
     MOZ_ASSERT(face.get());
     if (!face.get()) {
         // Failed to get the FT_Face? Give up already.
-        return 0;
+        NS_WARNING("failed to get FT_Face!");
+        return false;
     }
+
+    // Due to bugs like 1435234 and 1440938, we currently prefer to fall back
+    // to reading the advance from cairo extents, unless we're dealing with
+    // a variation font (for which cairo metrics may be wrong, due to FreeType
+    // bug 52683).
+    if (!(face.get()->face_flags & FT_FACE_FLAG_SCALABLE) ||
+        !(face.get()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS)) {
+        return false;
+    }
+
     bool hinting = gfxPlatform::GetPlatform()->FontHintingEnabled();
     int32_t flags =
         hinting ? FT_LOAD_ADVANCE_ONLY
                 : FT_LOAD_ADVANCE_ONLY | FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING;
     FT_Error ftError = FT_Load_Glyph(face.get(), aGID, flags);
-    MOZ_ASSERT(!ftError);
     if (ftError != FT_Err_Ok) {
         // FT_Face was somehow broken/invalid? Don't try to access glyph slot.
-        return 0;
+        // This probably shouldn't happen, but does: see bug 1440938.
+        NS_WARNING("failed to load glyph!");
+        return false;
     }
-    FT_Fixed advance = 0;
+
     // Due to freetype bug 52683 we MUST use the linearHoriAdvance field when
-    // dealing with a variation font; also use it for scalable fonts when not
-    // applying hinting. Otherwise, prefer hinted width from glyph->advance.x.
-    if ((face.get()->face_flags & FT_FACE_FLAG_SCALABLE) &&
-        (!hinting || (face.get()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS))) {
-        advance = face.get()->glyph->linearHoriAdvance;
-    } else {
-        advance = face.get()->glyph->advance.x << 10; // convert 26.6 to 16.16
-    }
+    // dealing with a variation font. (And other fonts would have returned
+    // earlier, so only variation fonts currently reach here.)
+    FT_Fixed advance = face.get()->glyph->linearHoriAdvance;
 
     // If freetype emboldening is being used, and it's not a zero-width glyph,
     // adjust the advance to account for the increased width.
@@ -550,9 +563,9 @@ gfxFT2FontBase::GetFTGlyphAdvance(uint16_t aGID)
 
     // Round the 16.16 fixed-point value to whole pixels for better consistency
     // with how cairo renders the glyphs.
-    advance = (advance + 0x8000) & 0xffff0000u;
+    *aAdvance = (advance + 0x8000) & 0xffff0000u;
 
-    return advance;
+    return true;
 }
 
 int32_t
@@ -568,7 +581,11 @@ gfxFT2FontBase::GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID)
         return width;
     }
 
-    width = GetFTGlyphAdvance(aGID);
+    if (!GetFTGlyphAdvance(aGID, &width)) {
+        cairo_text_extents_t extents;
+        GetGlyphExtents(aGID, &extents);
+        width = NS_lround(0x10000 * extents.x_advance);
+    }
     mGlyphWidths->Put(aGID, width);
 
     return width;
