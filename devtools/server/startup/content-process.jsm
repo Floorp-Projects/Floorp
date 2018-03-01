@@ -57,7 +57,6 @@ function setupServer(mm) {
 
 function init(msg) {
   let mm = msg.target;
-  mm.QueryInterface(Ci.nsISyncMessageSender);
   let prefix = msg.data.prefix;
 
   // Using the JS debugger causes problems when we're trying to
