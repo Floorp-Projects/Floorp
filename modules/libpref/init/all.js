@@ -3390,7 +3390,7 @@ pref("dom.ipc.processCount.file", 1);
 pref("dom.ipc.processCount.extension", 1);
 
 // Whether a native event loop should be used in the content process.
-#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+#if defined(XP_WIN)
 pref("dom.ipc.useNativeEventProcessing.content", false);
 #else
 pref("dom.ipc.useNativeEventProcessing.content", true);
