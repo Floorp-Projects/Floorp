@@ -9,7 +9,9 @@
 /*
  * The classes LittleEndian and BigEndian expose static methods for
  * reading and writing 16-, 32-, and 64-bit signed and unsigned integers
- * in their respective endianness.  The naming scheme is:
+ * in their respective endianness.  The addresses read from or written
+ * to may be misaligned (although misaligned accesses may incur
+ * architecture-specific performance costs).  The naming scheme is:
  *
  * {Little,Big}Endian::{read,write}{Uint,Int}<bitsize>
  *
@@ -361,6 +363,12 @@ protected:
     return read<uint64_t>(aPtr);
   }
 
+  /** Read a uintptr_t in ThisEndian endianness from |aPtr| and return it. */
+  static MOZ_MUST_USE uintptr_t readUintptr(const void* aPtr)
+  {
+    return read<uintptr_t>(aPtr);
+  }
+
   /** Read an int16_t in ThisEndian endianness from |aPtr| and return it. */
   static MOZ_MUST_USE int16_t readInt16(const void* aPtr)
   {
@@ -377,6 +385,12 @@ protected:
   static MOZ_MUST_USE int64_t readInt64(const void* aPtr)
   {
     return read<int64_t>(aPtr);
+  }
+
+  /** Read an intptr_t in ThisEndian endianness from |aPtr| and return it. */
+  static MOZ_MUST_USE intptr_t readIntptr(const void* aPtr)
+  {
+    return read<intptr_t>(aPtr);
   }
 
   /** Write |aValue| to |aPtr| using ThisEndian endianness. */
@@ -398,6 +412,12 @@ protected:
   }
 
   /** Write |aValue| to |aPtr| using ThisEndian endianness. */
+  static void writeUintptr(void* aPtr, uintptr_t aValue)
+  {
+    write(aPtr, aValue);
+  }
+
+  /** Write |aValue| to |aPtr| using ThisEndian endianness. */
   static void writeInt16(void* aPtr, int16_t aValue)
   {
     write(aPtr, aValue);
@@ -411,6 +431,12 @@ protected:
 
   /** Write |aValue| to |aPtr| using ThisEndian endianness. */
   static void writeInt64(void* aPtr, int64_t aValue)
+  {
+    write(aPtr, aValue);
+  }
+
+  /** Write |aValue| to |aPtr| using ThisEndian endianness. */
+  static void writeIntptr(void* aPtr, intptr_t aValue)
   {
     write(aPtr, aValue);
   }
@@ -630,15 +656,19 @@ public:
   using super::readUint16;
   using super::readUint32;
   using super::readUint64;
+  using super::readUintptr;
   using super::readInt16;
   using super::readInt32;
   using super::readInt64;
+  using super::readIntptr;
   using super::writeUint16;
   using super::writeUint32;
   using super::writeUint64;
+  using super::writeUintptr;
   using super::writeInt16;
   using super::writeInt32;
   using super::writeInt64;
+  using super::writeIntptr;
 };
 
 } /* namespace detail */
