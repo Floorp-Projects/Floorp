@@ -1772,25 +1772,20 @@ void
 CodeGeneratorMIPSShared::visitGuardShape(LGuardShape* guard)
 {
     Register obj = ToRegister(guard->input());
-    Register tmp = ToRegister(guard->tempInt());
-
-    masm.loadPtr(Address(obj, ShapedObject::offsetOfShape()), tmp);
-    bailoutCmpPtr(Assembler::NotEqual, tmp, ImmGCPtr(guard->mir()->shape()),
-                  guard->snapshot());
+    Label bail;
+    masm.branchTestObjShape(Assembler::NotEqual, obj, guard->mir()->shape(), &bail);
+    bailoutFrom(&bail, guard->snapshot());
 }
 
 void
 CodeGeneratorMIPSShared::visitGuardObjectGroup(LGuardObjectGroup* guard)
 {
     Register obj = ToRegister(guard->input());
-    Register tmp = ToRegister(guard->tempInt());
-    MOZ_ASSERT(obj != tmp);
-
-    masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), tmp);
-    Assembler::Condition cond = guard->mir()->bailOnEquality()
-                                ? Assembler::Equal
-                                : Assembler::NotEqual;
-    bailoutCmpPtr(cond, tmp, ImmGCPtr(guard->mir()->group()), guard->snapshot());
+    Assembler::Condition cond =
+        guard->mir()->bailOnEquality() ? Assembler::Equal : Assembler::NotEqual;
+    Label bail;
+    masm.branchTestObjGroup(cond, obj, guard->mir()->group(), &bail);
+    bailoutFrom(&bail, guard->snapshot());
 }
 
 void
@@ -1798,10 +1793,9 @@ CodeGeneratorMIPSShared::visitGuardClass(LGuardClass* guard)
 {
     Register obj = ToRegister(guard->input());
     Register tmp = ToRegister(guard->tempInt());
-
-    masm.loadObjClass(obj, tmp);
-    bailoutCmpPtr(Assembler::NotEqual, tmp, ImmPtr(guard->mir()->getClass()),
-                  guard->snapshot());
+    Label bail;
+    masm.branchTestObjClass(Assembler::NotEqual, obj, tmp, guard->mir()->getClass(), &bail);
+    bailoutFrom(&bail, guard->snapshot());
 }
 
 void

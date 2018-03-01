@@ -200,12 +200,6 @@ IsReversedDirectionFrame(nsIFrame* aFrame)
 }
 
 #include "nsILineIterator.h"
-
-//non Hack prototypes
-#if 0
-static void RefreshContentFrames(nsPresContext* aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
-#endif
-
 #include "prenv.h"
 
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(BoxMetricsProperty, nsBoxLayoutMetrics)

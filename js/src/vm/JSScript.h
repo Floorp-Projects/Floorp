@@ -1142,6 +1142,9 @@ class JSScript : public js::gc::TenuredCell
     bool hasRest_:1;
     bool isExprBody_:1;
 
+    // True if the debugger's onNewScript hook has not yet been called.
+    bool hideScriptFromDebugger_:1;
+
     // Add padding so JSScript is gc::Cell aligned. Make padding protected
     // instead of private to suppress -Wunused-private-field compiler warnings.
   protected:
@@ -1461,6 +1464,13 @@ class JSScript : public js::gc::TenuredCell
     }
     void setIsExprBody() {
         isExprBody_ = true;
+    }
+
+    bool hideScriptFromDebugger() const {
+        return hideScriptFromDebugger_;
+    }
+    void clearHideScriptFromDebugger() {
+        hideScriptFromDebugger_ = false;
     }
 
     void setNeedsHomeObject() {
