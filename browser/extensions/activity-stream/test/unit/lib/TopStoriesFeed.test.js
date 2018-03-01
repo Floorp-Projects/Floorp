@@ -495,6 +495,8 @@ describe("Top Stories Feed", () => {
       assert.equal(action.data.rows[0].guid, "rec1");
       assert.equal(action.data.rows[1].guid, "rec2");
       assert.equal(action.data.rows[2].guid, "spoc1");
+      // Make sure spoc is marked as pinned so it doesn't get removed when preloaded tabs refresh
+      assert.equal(action.data.rows[2].pinned, true);
 
       // Second new tab shouldn't trigger a section update event (spocsPerNewTab === 0.5)
       globals.set("Math", {random: () => 0.6});
@@ -510,6 +512,8 @@ describe("Top Stories Feed", () => {
       assert.equal(action.data.rows[0].guid, "rec1");
       assert.equal(action.data.rows[1].guid, "rec2");
       assert.equal(action.data.rows[2].guid, "spoc1");
+      // Make sure spoc is marked as pinned so it doesn't get removed when preloaded tabs refresh
+      assert.equal(action.data.rows[2].pinned, true);
     });
     it("should delay inserting spoc if stories haven't been fetched", async () => {
       let fetchStub = globals.sandbox.stub();

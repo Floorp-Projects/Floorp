@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["Screenshots"];
+const EXPORTED_SYMBOLS = ["Screenshots"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -24,7 +24,7 @@ ChromeUtils.defineModuleGetter(this, "Services",
 
 const GREY_10 = "#F9F9FA";
 
-var Screenshots = {
+this.Screenshots = {
   /**
    * Convert bytes to a string using extremely fast String.fromCharCode without
    * exceeding the max number of arguments that can be provided to a function.

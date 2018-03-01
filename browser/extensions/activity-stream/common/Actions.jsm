@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var MAIN_MESSAGE_TYPE = "ActivityStream:Main";
-var CONTENT_MESSAGE_TYPE = "ActivityStream:Content";
-var PRELOAD_MESSAGE_TYPE = "ActivityStream:PreloadedBrowser";
-var UI_CODE = 1;
-var BACKGROUND_PROCESS = 2;
+this.MAIN_MESSAGE_TYPE = "ActivityStream:Main";
+this.CONTENT_MESSAGE_TYPE = "ActivityStream:Content";
+this.PRELOAD_MESSAGE_TYPE = "ActivityStream:PreloadedBrowser";
+this.UI_CODE = 1;
+this.BACKGROUND_PROCESS = 2;
 
 /**
  * globalImportContext - Are we in UI code (i.e. react, a dom) or some kind of background process?
@@ -88,6 +88,8 @@ for (const type of [
   "TOP_SITES_PIN",
   "TOP_SITES_UNPIN",
   "TOP_SITES_UPDATED",
+  "TOTAL_BOOKMARKS_REQUEST",
+  "TOTAL_BOOKMARKS_RESPONSE",
   "UNINIT",
   "WEBEXT_CLICK",
   "WEBEXT_DISMISS"
@@ -277,7 +279,7 @@ function WebExtEvent(type, data, importContext = globalImportContext) {
 
 this.actionTypes = actionTypes;
 
-var actionCreators = {
+this.actionCreators = {
   BroadcastToContent,
   UserEvent,
   UndesiredEvent,
@@ -293,7 +295,7 @@ var actionCreators = {
 };
 
 // These are helpers to test for certain kinds of actions
-var actionUtils = {
+this.actionUtils = {
   isSendToMain(action) {
     if (!action.meta) {
       return false;
@@ -338,7 +340,7 @@ var actionUtils = {
   _RouteMessage
 };
 
-var EXPORTED_SYMBOLS = [
+const EXPORTED_SYMBOLS = [
   "actionTypes",
   "actionCreators",
   "actionUtils",

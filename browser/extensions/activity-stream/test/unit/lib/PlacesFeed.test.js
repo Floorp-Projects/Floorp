@@ -182,6 +182,23 @@ describe("PlacesFeed", () => {
       assert.propertyVal(params, "referrerPolicy", 5);
       assert.propertyVal(params.referrerURI, "spec", "foo.com/ref");
     });
+    it("should open the pocket link if it's a pocket story on OPEN_LINK", () => {
+      const openLinkIn = sinon.stub();
+      const openLinkAction = {
+        type: at.OPEN_LINK,
+        data: {url: "foo.com", open_url: "getpocket.com/foo", type: "pocket"},
+        _target: {browser: {ownerGlobal: {openLinkIn, whereToOpenLink: e => "current"}}}
+      };
+
+      feed.onAction(openLinkAction);
+
+      assert.calledOnce(openLinkIn);
+      const [url, where, params] = openLinkIn.firstCall.args;
+      assert.equal(url, "getpocket.com/foo");
+      assert.equal(where, "current");
+      assert.propertyVal(params, "private", false);
+      assert.propertyVal(params, "triggeringPrincipal", undefined);
+    });
     it("should call saveToPocket on SAVE_TO_POCKET", () => {
       const action = {
         type: at.SAVE_TO_POCKET,
@@ -213,7 +230,7 @@ describe("PlacesFeed", () => {
     });
     it("should broadcast to content if we successfully added a link to Pocket", async () => {
       // test in the form that the API returns data based on: https://getpocket.com/developer/docs/v3/add
-      global.NewTabUtils.activityStreamLinks.addPocketEntry = sandbox.stub().resolves({item: {item_id: 1234}});
+      global.NewTabUtils.activityStreamLinks.addPocketEntry = sandbox.stub().resolves({item: {open_url: "pocket.com/itemID", item_id: 1234}});
       const action = {
         data: {site: {url: "raspberry.com", title: "raspberry"}},
         _target: {browser: {}}
@@ -223,7 +240,8 @@ describe("PlacesFeed", () => {
       assert.deepEqual(feed.store.dispatch.firstCall.args[0].data, {
         url: "raspberry.com",
         title: "raspberry",
-        pocket_id: 1234
+        pocket_id: 1234,
+        open_url: "pocket.com/itemID"
       });
     });
     it("should only broadcast if we got some data back from addPocketEntry", async () => {
