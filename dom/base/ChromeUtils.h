@@ -170,6 +170,11 @@ public:
   static void
   GetCallerLocation(const GlobalObject& global, nsIPrincipal* principal,
                     JS::MutableHandle<JSObject*> aRetval);
+
+  static void
+  CreateError(const GlobalObject& global, const nsAString& message,
+              JS::Handle<JSObject*> stack,
+              JS::MutableHandle<JSObject*> aRetVal, ErrorResult& aRv);
 };
 
 } // namespace dom
