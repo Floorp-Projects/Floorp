@@ -134,47 +134,105 @@ android {
             }
         }
 
-        focusWebviewRelease {
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        // WebView
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Release
+
+        focusWebviewUniversalRelease {
             java.srcDir 'src/focusRelease/java'
             manifest.srcFile 'src/focusRelease/AndroidManifest.xml'
             res.srcDir 'src/focusRelease/res'
         }
-        klarWebviewRelease {
+
+        klarWebviewUniversalRelease {
             java.srcDir 'src/klarRelease/java'
             res.srcDir 'src/klarRelease/res'
         }
-        focusWebviewBeta {
+
+        // Beta
+
+        focusWebviewUniversalBeta {
             res.srcDir 'src/focusBeta/res'
         }
-        focusGeckoBeta {
-            res.srcDir 'src/focusBeta/res'
-        }
-        klarWebviewBeta {
+
+        klarWebviewUniversalBeta {
             res.srcDir 'src/klarBeta/res'
         }
+
+        // Debug
+
         focusWebviewDebug {
             res.srcDir 'src/focusDebug/res'
         }
-        focusGeckoDebug {
-            res.srcDir 'src/focusDebug/res'
-        }
+
         klarWebviewDebug {
             res.srcDir 'src/klarDebug/res'
         }
-        klarGeckoRelease {
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        // Gecko
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Release
+
+        klarGeckoArmRelease {
             java.srcDir 'src/klarRelease/java'
             res.srcDir 'src/klarRelease/res'
         }
-        focusGeckoRelease {
+
+        klarGeckoX86Release {
+            java.srcDir 'src/klarRelease/java'
+            res.srcDir 'src/klarRelease/res'
+        }
+
+        focusGeckoArmRelease {
             java.srcDir 'src/focusRelease/java'
             manifest.srcFile 'src/focusRelease/AndroidManifest.xml'
             res.srcDir 'src/focusRelease/res'
         }
-        klarGeckoDebug {
+
+        focusGeckoX86Release {
+            java.srcDir 'src/focusRelease/java'
+            manifest.srcFile 'src/focusRelease/AndroidManifest.xml'
+            res.srcDir 'src/focusRelease/res'
+        }
+
+        // Beta
+
+        focusGeckoArmBeta {
+            res.srcDir 'src/focusBeta/res'
+        }
+
+        focusGeckoX86Beta {
+            res.srcDir 'src/focusBeta/res'
+        }
+
+        klarGeckoArmBeta {
+            res.srcDir 'src/klarBeta/res'
+        }
+
+        klarGeckoX86Beta {
+            res.srcDir 'src/klarBeta/res'
+        }
+
+        // Debug
+
+        focusGeckoArmDebug {
+            res.srcDir 'src/focusDebug/res'
+        }
+
+        focusGeckoX86Debug {
+            res.srcDir 'src/focusDebug/res'
+        }
+
+        klarGeckoArmDebug {
             res.srcDir 'src/klarDebug/res'
         }
-        klarGeckoBeta {
-            res.srcDir 'src/klarBeta/res'
+
+        klarGeckoX86Debug {
+            res.srcDir 'src/klarDebug/res'
         }
     }
 }
