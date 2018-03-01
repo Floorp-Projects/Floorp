@@ -1384,15 +1384,19 @@ struct WrapperValue
     Value value;
 };
 
-class MOZ_RAII AutoWrapperVector : public JS::AutoVectorRooterBase<WrapperValue>
+class MOZ_RAII AutoWrapperVector : public JS::GCVector<WrapperValue, 8>,
+                                   private JS::AutoGCRooter
 {
   public:
     explicit AutoWrapperVector(JSContext* cx
                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooterBase<WrapperValue>(cx, WRAPVECTOR)
+      : JS::GCVector<WrapperValue, 8>(cx),
+        JS::AutoGCRooter(cx, WRAPVECTOR)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
+
+    friend void AutoGCRooter::trace(JSTracer* trc);
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
