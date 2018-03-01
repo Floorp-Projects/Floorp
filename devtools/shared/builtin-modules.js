@@ -19,33 +19,39 @@ const jsmScope = require("resource://gre/modules/Services.jsm");
 const { Services } = jsmScope;
 // Steal various globals only available in JSM scope (and not Sandbox one)
 const {
-  atob,
-  btoa,
-  ChromeUtils,
   console,
   HeapSnapshot,
-  TextDecoder,
-  TextEncoder,
-  XMLHttpRequest,
 } = Cu.getGlobalForObject(jsmScope);
 
 // Create a single Sandbox to access global properties needed in this module.
 // Sandbox are memory expensive, so we should create as little as possible.
 const {
+  atob,
+  btoa,
+  ChromeUtils,
   CSS,
   CSSRule,
   FileReader,
   indexedDB,
   InspectorUtils,
+  TextDecoder,
+  TextEncoder,
   URL,
+  XMLHttpRequest,
 } = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(), {
   wantGlobalProperties: [
+    "atob",
+    "btoa",
+    "ChromeUtils",
     "CSS",
     "CSSRule",
     "FileReader",
     "indexedDB",
+    "TextDecoder",
+    "TextEncoder",
     "InspectorUtils",
     "URL",
+    "XMLHttpRequest",
   ]
 });
 
