@@ -131,24 +131,64 @@ impl ResourceUpdates {
 ///  - no redundant work is performed if two commands in the same transaction cause the scene or
 ///    the frame to be rebuilt.
 pub struct Transaction {
-    ops: Vec<DocumentMsg>,
+    // Operations affecting the scene (applied before scene building).
+    scene_ops: Vec<SceneMsg>,
+    // Operations affecting the generation of frames (applied after scene building).
+    frame_ops: Vec<FrameMsg>,
+
+    // Additional display list data.
     payloads: Vec<Payload>,
+
+    // Resource updates are applied after scene building.
+    resource_updates: ResourceUpdates,
+
+    // If true the transaction is piped through the scene building thread, if false
+    // it will be applied directly on the render backend.
+    use_scene_builder_thread: bool,
+
+    generate_frame: bool,
 }
 
 impl Transaction {
     pub fn new() -> Self {
         Transaction {
-            ops: Vec::new(),
+            scene_ops: Vec::new(),
+            frame_ops: Vec::new(),
+            resource_updates: ResourceUpdates::new(),
             payloads: Vec::new(),
+            use_scene_builder_thread: false, // TODO: make this true by default.
+            generate_frame: false,
         }
     }
 
+    // TODO: better name?
+    pub fn skip_scene_builder(&mut self) {
+        self.use_scene_builder_thread = false;
+    }
+
+    // TODO: this is temporary, using the scene builder thread is the default for
+    // most transactions, and opt-in for specific cases like scrolling and async video.
+    pub fn use_scene_builder_thread(&mut self) {
+        self.use_scene_builder_thread = true;
+    }
+
     pub fn is_empty(&self) -> bool {
-        self.ops.is_empty()
+        !self.generate_frame &&
+            self.scene_ops.is_empty() &&
+            self.frame_ops.is_empty() &&
+            self.resource_updates.updates.is_empty()
     }
 
     pub fn update_epoch(&mut self, pipeline_id: PipelineId, epoch: Epoch) {
-        self.ops.push(DocumentMsg::UpdateEpoch(pipeline_id, epoch));
+        // We track epochs before and after scene building.
+        // This one will be applied to the pending scene right away:
+        self.scene_ops.push(SceneMsg::UpdateEpoch(pipeline_id, epoch));
+        // And this one will be applied to the currently built scene at the end
+        // of the transaction (potentially long after the scene_ops one).
+        self.frame_ops.push(FrameMsg::UpdateEpoch(pipeline_id, epoch));
+        // We could avoid the duplication here by storing the epoch updates in a
+        // separate array and let the render backend schedule the updates at the
+        // proper times, but it wouldn't make things simpler.
     }
 
     /// Sets the root pipeline.
@@ -164,14 +204,14 @@ impl Transaction {
     /// # }
     /// ```
     pub fn set_root_pipeline(&mut self, pipeline_id: PipelineId) {
-        self.ops.push(DocumentMsg::SetRootPipeline(pipeline_id));
+        self.scene_ops.push(SceneMsg::SetRootPipeline(pipeline_id));
     }
 
     /// Removes data associated with a pipeline from the internal data structures.
     /// If the specified `pipeline_id` is for the root pipeline, the root pipeline
     /// is reset back to `None`.
     pub fn remove_pipeline(&mut self, pipeline_id: PipelineId) {
-        self.ops.push(DocumentMsg::RemovePipeline(pipeline_id));
+        self.scene_ops.push(SceneMsg::RemovePipeline(pipeline_id));
     }
 
     /// Supplies a new frame to WebRender.
@@ -205,8 +245,8 @@ impl Transaction {
         preserve_frame_state: bool,
     ) {
         let (display_list_data, list_descriptor) = display_list.into_data();
-        self.ops.push(
-            DocumentMsg::SetDisplayList {
+        self.scene_ops.push(
+            SceneMsg::SetDisplayList {
                 epoch,
                 pipeline_id,
                 background,
@@ -220,7 +260,7 @@ impl Transaction {
     }
 
     pub fn update_resources(&mut self, resources: ResourceUpdates) {
-        self.ops.push(DocumentMsg::UpdateResources(resources));
+        self.resource_updates.merge(resources);
     }
 
     pub fn set_window_parameters(
@@ -229,8 +269,8 @@ impl Transaction {
         inner_rect: DeviceUintRect,
         device_pixel_ratio: f32,
     ) {
-        self.ops.push(
-            DocumentMsg::SetWindowParameters {
+        self.scene_ops.push(
+            SceneMsg::SetWindowParameters {
                 window_size,
                 inner_rect,
                 device_pixel_ratio,
@@ -248,7 +288,7 @@ impl Transaction {
         cursor: WorldPoint,
         phase: ScrollEventPhase,
     ) {
-        self.ops.push(DocumentMsg::Scroll(scroll_location, cursor, phase));
+        self.frame_ops.push(FrameMsg::Scroll(scroll_location, cursor, phase));
     }
 
     pub fn scroll_node_with_id(
@@ -257,43 +297,95 @@ impl Transaction {
         id: ExternalScrollId,
         clamp: ScrollClamping,
     ) {
-        self.ops.push(DocumentMsg::ScrollNodeWithId(origin, id, clamp));
+        self.frame_ops.push(FrameMsg::ScrollNodeWithId(origin, id, clamp));
     }
 
     pub fn set_page_zoom(&mut self, page_zoom: ZoomFactor) {
-        self.ops.push(DocumentMsg::SetPageZoom(page_zoom));
+        self.scene_ops.push(SceneMsg::SetPageZoom(page_zoom));
     }
 
     pub fn set_pinch_zoom(&mut self, pinch_zoom: ZoomFactor) {
-        self.ops.push(DocumentMsg::SetPinchZoom(pinch_zoom));
+        self.scene_ops.push(SceneMsg::SetPinchZoom(pinch_zoom));
     }
 
     pub fn set_pan(&mut self, pan: DeviceIntPoint) {
-        self.ops.push(DocumentMsg::SetPan(pan));
+        self.frame_ops.push(FrameMsg::SetPan(pan));
     }
 
     pub fn tick_scrolling_bounce_animations(&mut self) {
-        self.ops.push(DocumentMsg::TickScrollingBounce);
+        self.frame_ops.push(FrameMsg::TickScrollingBounce);
     }
 
     /// Generate a new frame.
     pub fn generate_frame(&mut self) {
-        self.ops.push(DocumentMsg::GenerateFrame);
+        self.generate_frame = true;
     }
 
     /// Supply a list of animated property bindings that should be used to resolve
     /// bindings in the current display list.
     pub fn update_dynamic_properties(&mut self, properties: DynamicProperties) {
-        self.ops.push(DocumentMsg::UpdateDynamicProperties(properties));
+        self.frame_ops.push(FrameMsg::UpdateDynamicProperties(properties));
     }
 
     /// Enable copying of the output of this pipeline id to
     /// an external texture for callers to consume.
     pub fn enable_frame_output(&mut self, pipeline_id: PipelineId, enable: bool) {
-        self.ops.push(DocumentMsg::EnableFrameOutput(pipeline_id, enable));
+        self.frame_ops.push(FrameMsg::EnableFrameOutput(pipeline_id, enable));
+    }
+
+    fn finalize(self) -> (TransactionMsg, Vec<Payload>) {
+        (
+            TransactionMsg {
+                scene_ops: self.scene_ops,
+                frame_ops: self.frame_ops,
+                resource_updates: self.resource_updates,
+                use_scene_builder_thread: self.use_scene_builder_thread,
+                generate_frame: self.generate_frame,
+            },
+            self.payloads,
+        )
     }
 }
 
+/// Represents a transaction in the format sent through the channel.
+#[derive(Clone, Deserialize, Serialize)]
+pub struct TransactionMsg {
+    pub scene_ops: Vec<SceneMsg>,
+    pub frame_ops: Vec<FrameMsg>,
+    pub resource_updates: ResourceUpdates,
+    pub generate_frame: bool,
+    pub use_scene_builder_thread: bool,
+}
+
+impl TransactionMsg {
+    pub fn is_empty(&self) -> bool {
+        !self.generate_frame &&
+            self.scene_ops.is_empty() &&
+            self.frame_ops.is_empty() &&
+            self.resource_updates.updates.is_empty()
+    }
+
+    // TODO: We only need this for a few RenderApi methods which we should remove.
+    fn frame_message(msg: FrameMsg) -> Self {
+        TransactionMsg {
+            scene_ops: Vec::new(),
+            frame_ops: vec![msg],
+            resource_updates: ResourceUpdates::new(),
+            generate_frame: false,
+            use_scene_builder_thread: false,
+        }
+    }
+
+    fn scene_message(msg: SceneMsg) -> Self {
+        TransactionMsg {
+            scene_ops: vec![msg],
+            frame_ops: Vec::new(),
+            resource_updates: ResourceUpdates::new(),
+            generate_frame: false,
+            use_scene_builder_thread: false,
+        }
+    }
+}
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct AddImage {
@@ -358,9 +450,14 @@ pub struct AddFontInstance {
     pub variations: Vec<FontVariation>,
 }
 
+// Frame messages affect building the scene.
 #[derive(Clone, Deserialize, Serialize)]
-pub enum DocumentMsg {
-    HitTest(Option<PipelineId>, WorldPoint, HitTestFlags, MsgSender<HitTestResult>),
+pub enum SceneMsg {
+    UpdateEpoch(PipelineId, Epoch),
+    SetPageZoom(ZoomFactor),
+    SetPinchZoom(ZoomFactor),
+    SetRootPipeline(PipelineId),
+    RemovePipeline(PipelineId),
     SetDisplayList {
         list_descriptor: BuiltDisplayListDescriptor,
         epoch: Epoch,
@@ -370,47 +467,53 @@ pub enum DocumentMsg {
         content_size: LayoutSize,
         preserve_frame_state: bool,
     },
-    UpdateResources(ResourceUpdates),
-    UpdateEpoch(PipelineId, Epoch),
-    SetPageZoom(ZoomFactor),
-    SetPinchZoom(ZoomFactor),
-    SetPan(DeviceIntPoint),
-    SetRootPipeline(PipelineId),
-    RemovePipeline(PipelineId),
-    EnableFrameOutput(PipelineId, bool),
     SetWindowParameters {
         window_size: DeviceUintSize,
         inner_rect: DeviceUintRect,
         device_pixel_ratio: f32,
     },
+}
+
+// Frame messages affect frame generation (applied after building the scene).
+#[derive(Clone, Deserialize, Serialize)]
+pub enum FrameMsg {
+    UpdateEpoch(PipelineId, Epoch),
+    HitTest(Option<PipelineId>, WorldPoint, HitTestFlags, MsgSender<HitTestResult>),
+    SetPan(DeviceIntPoint),
+    EnableFrameOutput(PipelineId, bool),
     Scroll(ScrollLocation, WorldPoint, ScrollEventPhase),
     ScrollNodeWithId(LayoutPoint, ExternalScrollId, ScrollClamping),
     TickScrollingBounce,
     GetScrollNodeState(MsgSender<Vec<ScrollNodeState>>),
-    GenerateFrame,
     UpdateDynamicProperties(DynamicProperties),
 }
 
-impl fmt::Debug for DocumentMsg {
+impl fmt::Debug for SceneMsg {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(match *self {
-            DocumentMsg::SetDisplayList { .. } => "DocumentMsg::SetDisplayList",
-            DocumentMsg::HitTest(..) => "DocumentMsg::HitTest",
-            DocumentMsg::SetPageZoom(..) => "DocumentMsg::SetPageZoom",
-            DocumentMsg::SetPinchZoom(..) => "DocumentMsg::SetPinchZoom",
-            DocumentMsg::SetPan(..) => "DocumentMsg::SetPan",
-            DocumentMsg::SetRootPipeline(..) => "DocumentMsg::SetRootPipeline",
-            DocumentMsg::RemovePipeline(..) => "DocumentMsg::RemovePipeline",
-            DocumentMsg::SetWindowParameters { .. } => "DocumentMsg::SetWindowParameters",
-            DocumentMsg::Scroll(..) => "DocumentMsg::Scroll",
-            DocumentMsg::ScrollNodeWithId(..) => "DocumentMsg::ScrollNodeWithId",
-            DocumentMsg::TickScrollingBounce => "DocumentMsg::TickScrollingBounce",
-            DocumentMsg::GetScrollNodeState(..) => "DocumentMsg::GetScrollNodeState",
-            DocumentMsg::GenerateFrame => "DocumentMsg::GenerateFrame",
-            DocumentMsg::EnableFrameOutput(..) => "DocumentMsg::EnableFrameOutput",
-            DocumentMsg::UpdateResources(..) => "DocumentMsg::UpdateResources",
-            DocumentMsg::UpdateEpoch(..) => "DocumentMsg::UpdateEpoch",
-            DocumentMsg::UpdateDynamicProperties(..) => "DocumentMsg::UpdateDynamicProperties",
+            SceneMsg::UpdateEpoch(..) => "SceneMsg::UpdateEpoch",
+            SceneMsg::SetDisplayList { .. } => "SceneMsg::SetDisplayList",
+            SceneMsg::SetPageZoom(..) => "SceneMsg::SetPageZoom",
+            SceneMsg::SetPinchZoom(..) => "SceneMsg::SetPinchZoom",
+            SceneMsg::RemovePipeline(..) => "SceneMsg::RemovePipeline",
+            SceneMsg::SetWindowParameters { .. } => "SceneMsg::SetWindowParameters",
+            SceneMsg::SetRootPipeline(..) => "SceneMsg::SetRootPipeline",
+        })
+    }
+}
+
+impl fmt::Debug for FrameMsg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(match *self {
+            FrameMsg::UpdateEpoch(..) => "FrameMsg::UpdateEpoch",
+            FrameMsg::HitTest(..) => "FrameMsg::HitTest",
+            FrameMsg::SetPan(..) => "FrameMsg::SetPan",
+            FrameMsg::Scroll(..) => "FrameMsg::Scroll",
+            FrameMsg::ScrollNodeWithId(..) => "FrameMsg::ScrollNodeWithId",
+            FrameMsg::TickScrollingBounce => "FrameMsg::TickScrollingBounce",
+            FrameMsg::GetScrollNodeState(..) => "FrameMsg::GetScrollNodeState",
+            FrameMsg::EnableFrameOutput(..) => "FrameMsg::EnableFrameOutput",
+            FrameMsg::UpdateDynamicProperties(..) => "FrameMsg::UpdateDynamicProperties",
         })
     }
 }
@@ -496,7 +599,7 @@ pub enum ApiMsg {
     /// Adds a new document with given initial size.
     AddDocument(DocumentId, DeviceUintSize, DocumentLayer),
     /// A message targeted at a particular document.
-    UpdateDocument(DocumentId, Vec<DocumentMsg>),
+    UpdateDocument(DocumentId, TransactionMsg),
     /// Deletes an existing document.
     DeleteDocument(DocumentId),
     /// An opaque handle that must be passed to the render notifier. It is used by Gecko
@@ -509,6 +612,9 @@ pub enum ApiMsg {
     MemoryPressure,
     /// Change debugging options.
     DebugCommand(DebugCommand),
+    /// Wakes the render backend's event loop up. Needed when an event is communicated
+    /// through another channel.
+    WakeUp,
     ShutDown,
 }
 
@@ -527,6 +633,7 @@ impl fmt::Debug for ApiMsg {
             ApiMsg::MemoryPressure => "ApiMsg::MemoryPressure",
             ApiMsg::DebugCommand(..) => "ApiMsg::DebugCommand",
             ApiMsg::ShutDown => "ApiMsg::ShutDown",
+            ApiMsg::WakeUp => "ApiMsg::WakeUp",
         })
     }
 }
@@ -617,10 +724,22 @@ impl RenderApiSender {
             channel::msg_channel().expect("Failed to create channel");
         let msg = ApiMsg::CloneApi(sync_tx);
         self.api_sender.send(msg).expect("Failed to send CloneApi message");
+        let namespace_id = match sync_rx.recv() {
+            Ok(id) => id,
+            Err(e) => {
+                // This is used to discover the underlying cause of https://github.com/servo/servo/issues/13480.
+                let webrender_is_alive = self.api_sender.send(ApiMsg::WakeUp);
+                if webrender_is_alive.is_err() {
+                    panic!("Webrender was shut down before processing CloneApi: {}", e);
+                } else {
+                    panic!("CloneApi message response was dropped while Webrender was still alive: {}", e);
+                }
+            }
+        };
         RenderApi {
             api_sender: self.api_sender.clone(),
             payload_sender: self.payload_sender.clone(),
-            namespace_id: sync_rx.recv().expect("Failed to receive API response"),
+            namespace_id: namespace_id,
             next_id: Cell::new(ResourceId(0)),
         }
     }
@@ -756,25 +875,31 @@ impl RenderApi {
     }
 
     /// A helper method to send document messages.
-    fn send(&self, document_id: DocumentId, msg: DocumentMsg) {
+    fn send_scene_msg(&self, document_id: DocumentId, msg: SceneMsg) {
         // This assertion fails on Servo use-cases, because it creates different
         // `RenderApi` instances for layout and compositor.
         //assert_eq!(document_id.0, self.namespace_id);
         self.api_sender
-            .send(ApiMsg::UpdateDocument(document_id, vec![msg]))
+            .send(ApiMsg::UpdateDocument(document_id, TransactionMsg::scene_message(msg)))
             .unwrap()
     }
 
-    // TODO(nical) - decide what to do with the methods that are duplicated in Transaction.
-    // I think that we should remove them from RenderApi but we could also leave them here if
-    // it makes things easier for servo.
-    // They are all equivalent to creating a transaction with a single command.
+    /// A helper method to send document messages.
+    fn send_frame_msg(&self, document_id: DocumentId, msg: FrameMsg) {
+        // This assertion fails on Servo use-cases, because it creates different
+        // `RenderApi` instances for layout and compositor.
+        //assert_eq!(document_id.0, self.namespace_id);
+        self.api_sender
+            .send(ApiMsg::UpdateDocument(document_id, TransactionMsg::frame_message(msg)))
+            .unwrap()
+    }
 
     pub fn send_transaction(&self, document_id: DocumentId, transaction: Transaction) {
-        for payload in transaction.payloads {
+        let (msg, payloads) = transaction.finalize();
+        for payload in payloads {
             self.payload_sender.send_payload(payload).unwrap();
         }
-        self.api_sender.send(ApiMsg::UpdateDocument(document_id, transaction.ops)).unwrap();
+        self.api_sender.send(ApiMsg::UpdateDocument(document_id, msg)).unwrap();
     }
 
     /// Does a hit test on display items in the specified document, at the given
@@ -790,7 +915,11 @@ impl RenderApi {
                     flags: HitTestFlags)
                     -> HitTestResult {
         let (tx, rx) = channel::msg_channel().unwrap();
-        self.send(document_id, DocumentMsg::HitTest(pipeline_id, point, flags, tx));
+
+        self.send_frame_msg(
+            document_id,
+            FrameMsg::HitTest(pipeline_id, point, flags, tx)
+        );
         rx.recv().unwrap()
     }
 
@@ -801,19 +930,15 @@ impl RenderApi {
         inner_rect: DeviceUintRect,
         device_pixel_ratio: f32,
     ) {
-        self.send(
+        self.send_scene_msg(
             document_id,
-            DocumentMsg::SetWindowParameters {
-                window_size,
-                inner_rect,
-                device_pixel_ratio,
-            },
+            SceneMsg::SetWindowParameters { window_size, inner_rect, device_pixel_ratio, },
         );
     }
 
     pub fn get_scroll_node_state(&self, document_id: DocumentId) -> Vec<ScrollNodeState> {
         let (tx, rx) = channel::msg_channel().unwrap();
-        self.send(document_id, DocumentMsg::GetScrollNodeState(tx));
+        self.send_frame_msg(document_id, FrameMsg::GetScrollNodeState(tx));
         rx.recv().unwrap()
     }
 

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{LayerToWorldTransform};
-use gpu_cache::GpuCacheAddress;
+use api::{DevicePoint, LayerToWorldTransform, PremultipliedColorF};
+use gpu_cache::{GpuCacheAddress, GpuDataRequest};
 use prim_store::EdgeAaSegmentMask;
 use render_task::RenderTaskAddress;
 
@@ -203,7 +203,6 @@ impl From<BrushInstance> for PrimitiveInstance {
 pub enum BrushImageKind {
     Simple = 0,     // A normal rect
     NinePatch = 1,  // A nine-patch image (stretch inside segments)
-    Mirror = 2,     // A top left corner only (mirror across x/y axes)
 }
 
 #[derive(Copy, Debug, Clone, PartialEq)]
@@ -244,4 +243,34 @@ pub enum PictureType {
     Image = 1,
     TextShadow = 2,
     BoxShadow = 3,
+}
+
+#[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[repr(C)]
+pub struct ImageSource {
+    pub p0: DevicePoint,
+    pub p1: DevicePoint,
+    pub texture_layer: f32,
+    pub user_data: [f32; 3],
+    pub color: PremultipliedColorF,
+}
+
+impl ImageSource {
+    pub fn write_gpu_blocks(&self, request: &mut GpuDataRequest) {
+        request.push([
+            self.p0.x,
+            self.p0.y,
+            self.p1.x,
+            self.p1.y,
+        ]);
+        request.push([
+            self.texture_layer,
+            self.user_data[0],
+            self.user_data[1],
+            self.user_data[2],
+        ]);
+        request.push(self.color);
+    }
 }
