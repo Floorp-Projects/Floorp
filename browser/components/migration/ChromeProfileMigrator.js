@@ -160,7 +160,7 @@ ChromeProfileMigrator.prototype.getSourceProfiles =
 
     let profiles = [];
     try {
-      let localState = await ChromeMigrationUtils.getLocalState();
+      let localState = await ChromeMigrationUtils.getLocalState(this._chromeUserDataPathSuffix);
       let info_cache = localState.profile.info_cache;
       for (let profileFolderName in info_cache) {
         profiles.push({

@@ -52,19 +52,6 @@ add_task(async function test_getDataPath_function() {
   }
 });
 
-add_task(async function test_getChromeUserDataPath_function() {
-  let chromeUserDataPath = ChromeMigrationUtils.getChromeUserDataPath();
-  let expectedPath;
-  if (AppConstants.platform == "win") {
-    expectedPath = OS.Path.join(getRootPath(), "Google", "Chrome", "User Data");
-  } else if (AppConstants.platform == "macosx") {
-    expectedPath = OS.Path.join(getRootPath(), "Application Support", "Google", "Chrome");
-  } else {
-    expectedPath = OS.Path.join(getRootPath(), ".config", "google-chrome");
-  }
-  Assert.equal(chromeUserDataPath, expectedPath, "Should get the path of Chrome user data directory.");
-});
-
 add_task(async function test_getExtensionPath_function() {
   let extensionPath = ChromeMigrationUtils.getExtensionPath("Default");
   let expectedPath;
