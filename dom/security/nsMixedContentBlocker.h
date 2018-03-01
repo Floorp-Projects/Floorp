@@ -48,6 +48,7 @@ public:
   // See:
   // https://w3c.github.io/webappsec-secure-contexts/#is-origin-trustworthy
   static bool IsPotentiallyTrustworthyLoopbackURL(nsIURI* aURL);
+  static bool IsPotentiallyTrustworthyOnion(nsIURI* aURL);
 
   /* Static version of ShouldLoad() that contains all the Mixed Content Blocker
    * logic.  Called from non-static ShouldLoad().
