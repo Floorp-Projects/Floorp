@@ -66,6 +66,7 @@ protected:
   void MetadataLoaded(UniquePtr<MediaInfo> aInfo,
                       UniquePtr<MetadataTags> aTags,
                       MediaDecoderEventVisibility aEventVisibility) override;
+  void NotifyPrincipalChanged() override;
 
   RefPtr<ResourceCallback> mResourceCallback;
   RefPtr<BaseMediaResource> mResource;
