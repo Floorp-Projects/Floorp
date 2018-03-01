@@ -849,26 +849,22 @@ DispatchSuccessEvent(ResultHelper* aResultHelper,
                  IDB_LOG_STRINGIFY(aEvent, kSuccessEventType));
   }
 
-  MOZ_ASSERT_IF(transaction,
-                transaction->IsOpen() && !transaction->IsAborted());
-
   bool dummy;
   nsresult rv = request->DispatchEvent(aEvent, &dummy);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
+  MOZ_ASSERT_IF(transaction,
+                transaction->IsOpen() || transaction->IsAborted());
+
   WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
   MOZ_ASSERT(internalEvent);
 
   if (transaction &&
-      transaction->IsOpen()) {
-    if (internalEvent->mFlags.mExceptionWasRaised) {
-      transaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
-    } else {
-      // To handle upgrade transaction.
-      transaction->Run();
-    }
+      transaction->IsOpen() &&
+      internalEvent->mFlags.mExceptionWasRaised) {
+    transaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
   }
 }
 

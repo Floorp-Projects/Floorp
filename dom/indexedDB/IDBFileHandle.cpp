@@ -99,7 +99,7 @@ IDBFileHandle::Create(IDBMutableFile* aMutableFile,
   MOZ_ASSERT(NS_IsMainThread(), "This won't work on non-main threads!");
 
   nsCOMPtr<nsIRunnable> runnable = do_QueryObject(fileHandle);
-  nsContentUtils::AddPendingIDBTransaction(runnable.forget());
+  nsContentUtils::RunInMetastableState(runnable.forget());
 
   fileHandle->mCreating = true;
 

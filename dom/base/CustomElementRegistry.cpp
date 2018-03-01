@@ -1067,7 +1067,7 @@ CustomElementReactionsStack::Enqueue(Element* aElement,
 
   CycleCollectedJSContext* context = CycleCollectedJSContext::Get();
   RefPtr<BackupQueueMicroTask> bqmt = new BackupQueueMicroTask(this);
-  context->DispatchToMicroTask(bqmt.forget());
+  context->DispatchMicroTaskRunnable(bqmt.forget());
 }
 
 void

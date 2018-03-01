@@ -140,9 +140,11 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
   , mExceptionHandling(aExceptionHandling)
   , mIsMainThread(NS_IsMainThread())
 {
-  CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
-  if (ccjs) {
-    ccjs->EnterMicroTask();
+  if (mIsMainThread) {
+    CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
+    if (ccjs) {
+      ccjs->EnterMicroTask();
+    }
   }
 
   // Compute the caller's subject principal (if necessary) early, before we
@@ -349,9 +351,11 @@ CallbackObject::CallSetup::~CallSetup()
 
   // It is important that this is the last thing we do, after leaving the
   // compartment and undoing all our entry/incumbent script changes
-  CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
-  if (ccjs) {
-    ccjs->LeaveMicroTask();
+  if (mIsMainThread) {
+    CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
+    if (ccjs) {
+      ccjs->LeaveMicroTask();
+    }
   }
 }
 
