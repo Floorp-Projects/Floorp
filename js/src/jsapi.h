@@ -3565,6 +3565,7 @@ class JS_FRIEND_API(TransitiveCompileOptions)
         sourceIsLazy(false),
         allowHTMLComments(true),
         isProbablySystemOrAddonCode(false),
+        hideScriptFromDebugger(false),
         introductionType(nullptr),
         introductionLineno(0),
         introductionOffset(0),
@@ -3600,6 +3601,7 @@ class JS_FRIEND_API(TransitiveCompileOptions)
     bool sourceIsLazy;
     bool allowHTMLComments;
     bool isProbablySystemOrAddonCode;
+    bool hideScriptFromDebugger;
 
     // |introductionType| is a statically allocated C string:
     // one of "eval", "Function", or "GeneratorFunction".
@@ -4006,6 +4008,13 @@ CompileFunction(JSContext* cx, AutoObjectVector& envChain,
 extern JS_PUBLIC_API(bool)
 InitScriptSourceElement(JSContext* cx, HandleScript script,
                         HandleObject element, HandleString elementAttrName = nullptr);
+
+/*
+ * For a script compiled with the hideScriptFromDebugger option, expose the
+ * script to the debugger by calling the debugger's onNewScript hook.
+ */
+extern JS_PUBLIC_API(void)
+ExposeScriptToDebugger(JSContext* cx, HandleScript script);
 
 } /* namespace JS */
 
