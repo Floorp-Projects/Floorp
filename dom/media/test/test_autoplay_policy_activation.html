@@ -76,15 +76,14 @@
             should_play: true,
           },
 
-          // TODO: This case fails, Firefox's behaviour needs to be fixed.
-          // {
-          //   name: "audible playback in unactivated cross-origin iframe in activated parent blocked",
-          //   muted: false,
-          //   same_origin_child: false,
-          //   activated_child: false,
-          //   activated_parent: true,
-          //   should_play: false,
-          // },
+          {
+            name: "audible playback in unactivated cross-origin iframe in activated parent blocked",
+            muted: false,
+            same_origin_child: false,
+            activated_child: false,
+            activated_parent: true,
+            should_play: false,
+          },
 
           {
             name: "audible playback in unactivated cross-origin iframe in unactivated parent blocked",
