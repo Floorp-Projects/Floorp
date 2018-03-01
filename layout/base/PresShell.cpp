@@ -560,6 +560,8 @@ public:
   {
     MOZ_ASSERT(aEvent);
     if (!aTargetContent || aEvent->mClass != ePointerEventClass) {
+      // Make the destructor happy.
+      mTargetContent = nullptr;
       return;
     }
     MOZ_ASSERT(aShell);

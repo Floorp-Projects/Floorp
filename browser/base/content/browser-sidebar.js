@@ -360,6 +360,15 @@ var SidebarUI = {
     return this.show(commandID, triggerNode);
   },
 
+  _loadSidebarExtension(sidebarBroadcaster) {
+    let extensionId = sidebarBroadcaster.getAttribute("extensionId");
+    if (extensionId) {
+      let extensionUrl = sidebarBroadcaster.getAttribute("panel");
+      let browserStyle = sidebarBroadcaster.getAttribute("browserStyle");
+      SidebarUI.browser.contentWindow.loadPanel(extensionId, extensionUrl, browserStyle);
+    }
+  },
+
   /**
    * Show the sidebar, using the parameters from the specified broadcaster.
    * @see SidebarUI note.
@@ -371,7 +380,9 @@ var SidebarUI = {
    *                                showing of the sidebar.
    */
   show(commandID, triggerNode) {
-    return this._show(commandID).then(() => {
+    return this._show(commandID).then((sidebarBroadcaster) => {
+      this._loadSidebarExtension(sidebarBroadcaster);
+
       if (triggerNode) {
         updateToggleControlLabel(triggerNode);
       }
@@ -388,9 +399,11 @@ var SidebarUI = {
    *
    * @param {string} commandID ID of the xul:broadcaster element to use.
    */
-   showInitially(commandID) {
-     return this._show(commandID);
-   },
+  showInitially(commandID) {
+    return this._show(commandID).then((sidebarBroadcaster) => {
+      this._loadSidebarExtension(sidebarBroadcaster);
+    });
+  },
 
   /**
    * Implementation for show. Also used internally for sidebars that are shown
@@ -446,14 +459,14 @@ var SidebarUI = {
           // We're handling the 'load' event before it bubbles up to the usual
           // (non-capturing) event handlers. Let it bubble up before resolving.
           setTimeout(() => {
-            resolve();
+            resolve(sidebarBroadcaster);
 
             // Now that the currentId is updated, fire a show event.
             this._fireShowEvent();
           }, 0);
         }, {capture: true, once: true});
       } else {
-        resolve();
+        resolve(sidebarBroadcaster);
 
         // Now that the currentId is updated, fire a show event.
         this._fireShowEvent();

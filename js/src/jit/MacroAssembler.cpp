@@ -2829,33 +2829,10 @@ MacroAssembler::MacroAssembler(JSContext* cx, IonScript* ion,
     }
 }
 
-MacroAssembler::AfterICSaveLive
-MacroAssembler::icSaveLive(LiveRegisterSet& liveRegs)
-{
-    PushRegsInMask(liveRegs);
-    AfterICSaveLive aic(framePushed());
-    alignFrameForICArguments(aic);
-    return aic;
-}
-
-bool
-MacroAssembler::icBuildOOLFakeExitFrame(void* fakeReturnAddr, AfterICSaveLive& aic)
-{
-    return buildOOLFakeExitFrame(fakeReturnAddr);
-}
-
 bool
 MacroAssembler::icBuildOOLFakeExitFrame(void* fakeReturnAddr, AutoSaveLiveRegisters& save)
 {
     return buildOOLFakeExitFrame(fakeReturnAddr);
-}
-
-void
-MacroAssembler::icRestoreLive(LiveRegisterSet& liveRegs, AfterICSaveLive& aic)
-{
-    restoreFrameAlignmentForICArguments(aic);
-    MOZ_ASSERT(framePushed() == aic.initialStack);
-    PopRegsInMask(liveRegs);
 }
 
 #ifndef JS_CODEGEN_ARM64

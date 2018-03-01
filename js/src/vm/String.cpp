@@ -199,7 +199,7 @@ JSString::dumpRepresentation(js::GenericPrinter& out, int indent) const
 }
 
 void
-JSString::dumpRepresentationHeader(js::GenericPrinter& out, int indent, const char* subclass) const
+JSString::dumpRepresentationHeader(js::GenericPrinter& out, const char* subclass) const
 {
     uint32_t flags = d.u1.flags;
     // Print the string's address as an actual C++ expression, to facilitate
@@ -341,7 +341,7 @@ JSRope::copyCharsInternal(JSContext* cx, ScopedJSFreePtr<CharT>& out,
 void
 JSRope::dumpRepresentation(js::GenericPrinter& out, int indent) const
 {
-    dumpRepresentationHeader(out, indent, "JSRope");
+    dumpRepresentationHeader(out, "JSRope");
     indent += 2;
 
     out.printf("%*sleft:  ", indent, "");
@@ -744,7 +744,7 @@ JSDependentString::undepend(JSContext* cx)
 void
 JSDependentString::dumpRepresentation(js::GenericPrinter& out, int indent) const
 {
-    dumpRepresentationHeader(out, indent, "JSDependentString");
+    dumpRepresentationHeader(out, "JSDependentString");
     indent += 2;
 
     if (mozilla::Maybe<size_t> offset = baseOffset())
@@ -1161,7 +1161,7 @@ JSAtom::dump()
 void
 JSExternalString::dumpRepresentation(js::GenericPrinter& out, int indent) const
 {
-    dumpRepresentationHeader(out, indent, "JSExternalString");
+    dumpRepresentationHeader(out, "JSExternalString");
     indent += 2;
 
     out.printf("%*sfinalizer: ((JSStringFinalizer*) %p)\n", indent, "", externalFinalizer());
@@ -1534,7 +1534,7 @@ NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n, const JSStrin
 void
 JSExtensibleString::dumpRepresentation(js::GenericPrinter& out, int indent) const
 {
-    dumpRepresentationHeader(out, indent, "JSExtensibleString");
+    dumpRepresentationHeader(out, "JSExtensibleString");
     indent += 2;
 
     out.printf("%*scapacity: %zu\n", indent, "", capacity());
@@ -1544,8 +1544,7 @@ JSExtensibleString::dumpRepresentation(js::GenericPrinter& out, int indent) cons
 void
 JSInlineString::dumpRepresentation(js::GenericPrinter& out, int indent) const
 {
-    dumpRepresentationHeader(out, indent,
-                             isFatInline() ? "JSFatInlineString" : "JSThinInlineString");
+    dumpRepresentationHeader(out, isFatInline() ? "JSFatInlineString" : "JSThinInlineString");
     indent += 2;
 
     dumpRepresentationChars(out, indent);
@@ -1554,7 +1553,7 @@ JSInlineString::dumpRepresentation(js::GenericPrinter& out, int indent) const
 void
 JSFlatString::dumpRepresentation(js::GenericPrinter& out, int indent) const
 {
-    dumpRepresentationHeader(out, indent, "JSFlatString");
+    dumpRepresentationHeader(out, "JSFlatString");
     indent += 2;
 
     dumpRepresentationChars(out, indent);

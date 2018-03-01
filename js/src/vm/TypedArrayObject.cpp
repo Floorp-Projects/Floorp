@@ -408,8 +408,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     }
 
     static TypedArrayObject*
-    makeTypedInstance(JSContext* cx, uint32_t len, CreateSingleton createSingleton,
-                      gc::AllocKind allocKind)
+    makeTypedInstance(JSContext* cx, CreateSingleton createSingleton, gc::AllocKind allocKind)
     {
         const Class* clasp = instanceClass();
         if (createSingleton == CreateSingleton::Yes) {
@@ -466,7 +465,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         if (proto && proto != checkProto)
             obj = makeProtoInstance(cx, proto, allocKind);
         else
-            obj = makeTypedInstance(cx, len, createSingleton, allocKind);
+            obj = makeTypedInstance(cx, createSingleton, allocKind);
         if (!obj)
             return nullptr;
 

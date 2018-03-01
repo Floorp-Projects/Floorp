@@ -6,6 +6,7 @@
 
 #include "uiaRawElmProvider.h"
 
+#include "Accessible-inl.h"
 #include "AccessibleWrap.h"
 #include "ARIAMap.h"
 #include "nsIPersistentProperties2.h"

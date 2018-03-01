@@ -2828,6 +2828,16 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     }
   }
 
+  // nsDisplayPerspective items use an index to keep their PerFrameKey unique.
+  // We need to make sure we build all of them for them to be consistent, so
+  // rebuild all items if we have perspective. Bug 1431249 should remove
+  // this requirement.
+  if (aBuilder->IsRetainingDisplayList() &&
+      ChildrenHavePerspective(disp)) {
+    dirtyRect = visibleRect;
+    aBuilder->MarkFrameModifiedDuringBuilding(this);
+  }
+
   bool inTransform = aBuilder->IsInTransform();
   bool isTransformed = IsTransformed(disp);
   bool hasPerspective = HasPerspective(disp);

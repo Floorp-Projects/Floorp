@@ -987,7 +987,7 @@ class DebugEnvironments
     void sweep();
     void finish();
 #ifdef JS_GC_ZEAL
-    void checkHashTablesAfterMovingGC(JSRuntime* rt);
+    void checkHashTablesAfterMovingGC();
 #endif
 
     // If a live frame has a synthesized entry in missingEnvs, make sure it's not

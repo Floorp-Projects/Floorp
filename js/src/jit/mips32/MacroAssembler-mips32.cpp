@@ -616,19 +616,6 @@ MacroAssemblerMIPS::branchWithCode(InstImm code, Label* label, JumpKind jumpKind
         as_nop();
 }
 
-void
-MacroAssemblerMIPS::ma_cmp_set(Register rd, Register rs, Address addr, Condition c)
-{
-    ma_lw(ScratchRegister, addr);
-    ma_cmp_set(rd, rs, ScratchRegister, c);
-}
-
-void
-MacroAssemblerMIPS::ma_cmp_set(Register dst, Address lhs, Register rhs, Condition c)
-{
-    ma_lw(ScratchRegister, lhs);
-    ma_cmp_set(dst, ScratchRegister, rhs, c);
-}
 
 void
 MacroAssemblerMIPSCompat::cmp64Set(Condition cond, Register64 lhs, Imm64 val, Register dest) {
@@ -1971,26 +1958,6 @@ void
 MacroAssemblerMIPSCompat::restoreStackPointer()
 {
     loadPtr(Address(StackPointer, 0), StackPointer);
-}
-
-void
-MacroAssembler::alignFrameForICArguments(AfterICSaveLive& aic)
-{
-    if (framePushed() % ABIStackAlignment != 0) {
-        aic.alignmentPadding = ABIStackAlignment - (framePushed() % ABIStackAlignment);
-        reserveStack(aic.alignmentPadding);
-    } else {
-        aic.alignmentPadding = 0;
-    }
-    MOZ_ASSERT(framePushed() % ABIStackAlignment == 0);
-    checkStackAlignment();
-}
-
-void
-MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive& aic)
-{
-    if (aic.alignmentPadding != 0)
-        freeStack(aic.alignmentPadding);
 }
 
 void
