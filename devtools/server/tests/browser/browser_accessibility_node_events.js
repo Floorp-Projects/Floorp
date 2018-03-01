@@ -10,10 +10,8 @@ add_task(async function () {
   let {client, walker, accessibility} =
     await initAccessibilityFrontForUrl(MAIN_DOMAIN + "doc_accessibility.html");
 
-  let a11yWalker = await accessibility.getWalker();
-  await accessibility.enable();
-  let rootNode = await walker.getRootNode();
-  let a11yDoc = await a11yWalker.getAccessibleFor(rootNode);
+  let a11yWalker = await accessibility.getWalker(walker);
+  let a11yDoc = await a11yWalker.getDocument();
   let buttonNode = await walker.querySelector(walker.rootNode, "#button");
   let accessibleFront = await a11yWalker.getAccessibleFor(buttonNode);
   let sliderNode = await walker.querySelector(walker.rootNode, "#slider");
@@ -28,21 +26,7 @@ add_task(async function () {
     help: "",
     keyboardShortcut: "",
     childCount: 1,
-    domNodeType: 1,
-    indexInParent: 1,
-    states: ["focusable", "selectable text", "opaque", "enabled", "sensitive"],
-    actions: [ "Press" ],
-    attributes: {
-      "margin-top": "0px",
-      display: "inline-block",
-      "text-align": "center",
-      "text-indent": "0px",
-      "margin-left": "0px",
-      tag: "button",
-      "margin-right": "0px",
-      id: "button",
-      "margin-bottom": "0px"
-    }
+    domNodeType: 1
   });
 
   info("Name change event");
@@ -61,35 +45,27 @@ add_task(async function () {
       content.document.getElementById("button").removeAttribute("aria-describedby")));
 
   info("State change event");
+  let states = await accessibleFront.getState();
   let expectedStates = ["unavailable", "selectable text", "opaque"];
-  await emitA11yEvent(accessibleFront, "states-change",
-    newStates => {
-      checkA11yFront(accessibleFront, { states: expectedStates });
-      SimpleTest.isDeeply(newStates, expectedStates, "States are updated");
-    }, () => ContentTask.spawn(browser, null, () =>
+  SimpleTest.isDeeply(states, ["focusable", "selectable text", "opaque",
+                               "enabled", "sensitive"], "States are correct");
+  await emitA11yEvent(accessibleFront, "state-change",
+    newStates => SimpleTest.isDeeply(newStates, expectedStates,
+                                     "States are updated"),
+    () => ContentTask.spawn(browser, null, () =>
       content.document.getElementById("button").setAttribute("disabled", true)));
+  states = await accessibleFront.getState();
+  SimpleTest.isDeeply(states, expectedStates, "States are updated");
 
   info("Attributes change event");
+  let attrs = await accessibleFront.getAttributes();
+  ok(!attrs.live, "Attribute is not present");
   await emitA11yEvent(accessibleFront, "attributes-change",
-    newAttrs => {
-      checkA11yFront(accessibleFront, { attributes: {
-        "container-live": "polite",
-        display: "inline-block",
-        "event-from-input": "false",
-        "explicit-name": "true",
-        id: "button",
-        live: "polite",
-        "margin-bottom": "0px",
-        "margin-left": "0px",
-        "margin-right": "0px",
-        "margin-top": "0px",
-        tag: "button",
-        "text-align": "center",
-        "text-indent": "0px"
-      }});
-      is(newAttrs.live, "polite", "Attributes are updated");
-    }, () => ContentTask.spawn(browser, null, () =>
+    newAttrs => is(newAttrs.live, "polite", "Attributes are updated"),
+    () => ContentTask.spawn(browser, null, () =>
       content.document.getElementById("button").setAttribute("aria-live", "polite")));
+  attrs = await accessibleFront.getAttributes();
+  is(attrs.live, "polite", "Attributes are updated");
 
   info("Value change event");
   checkA11yFront(accessibleSliderFront, { value: "5" });
@@ -100,29 +76,18 @@ add_task(async function () {
 
   info("Reorder event");
   is(accessibleSliderFront.childCount, 1, "Slider has only 1 child");
-  let [firstChild, ] = await accessibleSliderFront.children();
-  is(firstChild.indexInParent, 0, "Slider's first child has correct index in parent");
   await emitA11yEvent(accessibleSliderFront, "reorder",
-    childCount => {
-      is(childCount, 2, "Child count is updated");
-      is(accessibleSliderFront.childCount, 2, "Child count is updated");
-      is(firstChild.indexInParent, 1,
-        "Slider's first child has an updated index in parent");
-    }, () => ContentTask.spawn(browser, null, () => {
-      let doc = content.document;
-      let slider = doc.getElementById("slider");
-      let button = doc.createElement("button");
+    childCount => is(childCount, 2, "Child count is updated"),
+    () => ContentTask.spawn(browser, null, () => {
+      let button = content.document.createElement("button");
       button.innerText = "Slider button";
-      content.document.getElementById("slider").insertBefore(button, slider.firstChild);
+      content.document.getElementById("slider").appendChild(button);
     }));
+  is(accessibleSliderFront.childCount, 2, "Child count is updated");
 
-  await emitA11yEvent(firstChild, "index-in-parent-change", indexInParent =>
-    is(indexInParent, 0, "Slider's first child has an updated index in parent"), () =>
-    ContentTask.spawn(browser, null, () =>
-      content.document.getElementById("slider").firstChild.remove()));
-
-  await accessibility.disable();
-  await waitForA11yShutdown();
+  let a11yShutdown = waitForA11yShutdown();
   await client.close();
+  forceCollections();
+  await a11yShutdown;
   gBrowser.removeCurrentTab();
 });

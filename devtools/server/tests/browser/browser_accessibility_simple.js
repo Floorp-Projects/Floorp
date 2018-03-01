@@ -4,19 +4,10 @@
 
 "use strict";
 
-const PREF_ACCESSIBILITY_FORCE_DISABLED = "accessibility.force_disabled";
-
-function checkAccessibilityState(accessibility, expected) {
-  let { enabled, canBeDisabled, canBeEnabled } = accessibility;
-  is(enabled, expected.enabled, "Enabled state is correct.");
-  is(canBeDisabled, expected.canBeDisabled, "canBeDisabled state is correct.");
-  is(canBeEnabled, expected.canBeEnabled, "canBeEnabled state is correct.");
-}
-
 // Simple checks for the AccessibilityActor and AccessibleWalkerActor
 
 add_task(async function () {
-  let { walker: domWalker, client, accessibility} = await initAccessibilityFrontForUrl(
+  let {client, accessibility} = await initAccessibilityFrontForUrl(
     "data:text/html;charset=utf-8,<title>test</title><div></div>");
 
   ok(accessibility, "The AccessibilityFront was created");
@@ -24,44 +15,6 @@ add_task(async function () {
 
   let a11yWalker = await accessibility.getWalker();
   ok(a11yWalker, "The AccessibleWalkerFront was returned");
-
-  checkAccessibilityState(accessibility,
-    { enabled: false, canBeDisabled: true, canBeEnabled: true });
-
-  info("Force disable accessibility service: updates canBeEnabled flag");
-  let onEvent = accessibility.once("can-be-enabled-change");
-  Services.prefs.setIntPref(PREF_ACCESSIBILITY_FORCE_DISABLED, 1);
-  await onEvent;
-  checkAccessibilityState(accessibility,
-    { enabled: false, canBeDisabled: true, canBeEnabled: false });
-
-  info("Clear force disable accessibility service: updates canBeEnabled flag");
-  onEvent = accessibility.once("can-be-enabled-change");
-  Services.prefs.clearUserPref(PREF_ACCESSIBILITY_FORCE_DISABLED);
-  await onEvent;
-  checkAccessibilityState(accessibility,
-    { enabled: false, canBeDisabled: true, canBeEnabled: true });
-
-  info("Initialize accessibility service");
-  let initEvent = accessibility.once("init");
-  await accessibility.enable();
-  await waitForA11yInit();
-  await initEvent;
-  checkAccessibilityState(accessibility,
-    { enabled: true, canBeDisabled: true, canBeEnabled: true });
-
-  a11yWalker = await accessibility.getWalker();
-  let rootNode = await domWalker.getRootNode();
-  let a11yDoc = await a11yWalker.getAccessibleFor(rootNode);
-  ok(a11yDoc, "Accessible document actor is created");
-
-  info("Shutdown accessibility service");
-  let shutdownEvent = accessibility.once("shutdown");
-  await accessibility.disable();
-  await waitForA11yShutdown();
-  await shutdownEvent;
-  checkAccessibilityState(accessibility,
-    { enabled: false, canBeDisabled: true, canBeEnabled: true });
 
   await client.close();
   gBrowser.removeCurrentTab();
