@@ -232,7 +232,7 @@ struct URLValue final : public URLValueData
            nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal);
 
   // This constructor is safe to call from any thread.
-  URLValue(const nsAString& aString,
+  URLValue(ServoRawOffsetArc<RustString> aString,
            already_AddRefed<URLExtraData> aExtraData)
     : URLValueData(aString, Move(aExtraData)) {}
 
