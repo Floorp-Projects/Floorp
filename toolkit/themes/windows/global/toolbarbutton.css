@@ -66,7 +66,6 @@ toolbarbutton[checked="true"]:not([disabled="true"]) {
   padding-bottom: 2px;
   padding-inline-start: 4px;
   padding-inline-end: 2px;
-  color: ButtonText;
 }
 
 @media (-moz-windows-default-theme) {

@@ -76,7 +76,7 @@ async function run_drag_test(startBookmarkIndex, insertionIndex, newParentGuid,
     // Simulating a drag-drop with a tree view turns out to be really difficult
     // as you can't get a node for the source/target. Hence, we fake the
     // insertion point and drag data and call the function direct.
-    let ip = new InsertionPoint({
+    let ip = new PlacesInsertionPoint({
       parentId: await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.unfiledGuid),
       parentGuid: newParentGuid,
       index: insertionIndex,
