@@ -164,6 +164,12 @@ function tunnelToInnerBrowser(outer, inner) {
       // even though it's not true.  Since the actions the browser UI performs are sent
       // down to the inner browser by this tunnel, the tab's remoteness effectively is the
       // remoteness of the inner browser.
+      // Setting this attribute changes the browser to the remote XBL binding via CSS.
+      // The XBL binding for remote browsers uses the message manager for many actions in
+      // the UI and that works well here, since it gives us one main thing we need to
+      // route to the inner browser (the messages), instead of having to tweak many
+      // different browser properties.  It is safe to alter a XBL binding dynamically.
+      // The content within is not reloaded.
       outer.setAttribute("remote", "true");
       outer.setAttribute("remoteType", inner.remoteType);
 
@@ -171,13 +177,6 @@ function tunnelToInnerBrowser(outer, inner) {
       // such as form fill controllers.  Otherwise they will remain in place and leak the
       // outer docshell.
       outer.destroy();
-      // The XBL binding for remote browsers uses the message manager for many actions in
-      // the UI and that works well here, since it gives us one main thing we need to
-      // route to the inner browser (the messages), instead of having to tweak many
-      // different browser properties.  It is safe to alter a XBL binding dynamically.
-      // The content within is not reloaded.
-      outer.style.MozBinding = "url(chrome://browser/content/tabbrowser.xml" +
-                               "#tabbrowser-remote-browser)";
 
       // The constructor of the new XBL binding is run asynchronously and there is no
       // event to signal its completion.  Spin an event loop to watch for properties that
@@ -185,6 +184,10 @@ function tunnelToInnerBrowser(outer, inner) {
       Services.tm.spinEventLoopUntil(() => {
         return outer._remoteWebNavigation;
       });
+      // Verify that we indeed have the correct binding.
+      if (!outer.isRemoteBrowser) {
+        throw new Error("Browser failed to switch to remote browser binding");
+      }
 
       // Replace the `webNavigation` object with our own version which tries to use
       // mozbrowser APIs where possible.  This replaces the webNavigation object that the
@@ -279,7 +282,6 @@ function tunnelToInnerBrowser(outer, inner) {
 
       // Reset the XBL binding back to the default.
       outer.destroy();
-      outer.style.MozBinding = "";
 
       // Reset @remote since this is now back to a regular, non-remote browser
       outer.setAttribute("remote", "false");
