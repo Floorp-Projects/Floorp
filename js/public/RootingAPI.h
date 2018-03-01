@@ -895,18 +895,11 @@ class JS_PUBLIC_API(AutoGCRooter)
 #if defined(JS_BUILD_BINAST)
         BINPARSER =    -4, /* js::frontend::BinSource */
 #endif // defined(JS_BUILD_BINAST)
-        VALVECTOR =   -10, /* js::AutoValueVector */
-        IDVECTOR =    -11, /* js::AutoIdVector */
-        OBJVECTOR =   -14, /* js::AutoObjectVector */
         IONMASM =     -19, /* js::jit::MacroAssembler */
         WRAPVECTOR =  -20, /* js::AutoWrapperVector */
         WRAPPER =     -21, /* js::AutoWrapperRooter */
         CUSTOM =      -26  /* js::CustomAutoRooter */
     };
-
-    static ptrdiff_t GetTag(const Value& value) { return VALVECTOR; }
-    static ptrdiff_t GetTag(const jsid& id) { return IDVECTOR; }
-    static ptrdiff_t GetTag(JSObject* obj) { return OBJVECTOR; }
 
   private:
     AutoGCRooter ** const stackTop;

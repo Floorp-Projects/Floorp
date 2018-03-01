@@ -20,7 +20,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
-class NavigationListenerTest {
+class NavigationDelegateTest {
     companion object {
         const val HELLO_HTML_PATH = "/assets/www/hello.html";
         const val HELLO2_HTML_PATH = "/assets/www/hello2.html";
@@ -39,16 +39,16 @@ class NavigationListenerTest {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationListener {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = intArrayOf(1))
             override fun onLoadUri(session: GeckoSession, uri: String,
-                                   where: GeckoSession.NavigationListener.TargetWindow): Boolean {
+                                   where: GeckoSession.NavigationDelegate.TargetWindow): Boolean {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URI should not be null", uri, notNullValue())
                 assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
                 assertThat("Where should not be null", where, notNullValue())
                 assertThat("Where should match", where,
-                           equalTo(GeckoSession.NavigationListener.TargetWindow.CURRENT))
+                           equalTo(GeckoSession.NavigationDelegate.TargetWindow.CURRENT))
                 return false
             }
 
@@ -85,13 +85,13 @@ class NavigationListenerTest {
         sessionRule.session.reload()
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationListener {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = intArrayOf(1))
             override fun onLoadUri(session: GeckoSession, uri: String,
-                                   where: GeckoSession.NavigationListener.TargetWindow): Boolean {
+                                   where: GeckoSession.NavigationDelegate.TargetWindow): Boolean {
                 assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
                 assertThat("Where should match", where,
-                           equalTo(GeckoSession.NavigationListener.TargetWindow.CURRENT))
+                           equalTo(GeckoSession.NavigationDelegate.TargetWindow.CURRENT))
                 return false
             }
 
@@ -124,7 +124,7 @@ class NavigationListenerTest {
         sessionRule.session.loadTestPath(HELLO2_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationListener {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLocationChange(session: GeckoSession, url: String) {
                 assertThat("URL should match", url, endsWith(HELLO2_HTML_PATH))
@@ -134,13 +134,13 @@ class NavigationListenerTest {
         sessionRule.session.goBack()
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationListener {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = intArrayOf(1))
             override fun onLoadUri(session: GeckoSession, uri: String,
-                                   where: GeckoSession.NavigationListener.TargetWindow): Boolean {
+                                   where: GeckoSession.NavigationDelegate.TargetWindow): Boolean {
                 assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
                 assertThat("Where should match", where,
-                           equalTo(GeckoSession.NavigationListener.TargetWindow.CURRENT))
+                           equalTo(GeckoSession.NavigationDelegate.TargetWindow.CURRENT))
                 return false
             }
 
@@ -168,13 +168,13 @@ class NavigationListenerTest {
         sessionRule.session.goForward()
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationListener {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1, order = intArrayOf(1))
             override fun onLoadUri(session: GeckoSession, uri: String,
-                                   where: GeckoSession.NavigationListener.TargetWindow): Boolean {
+                                   where: GeckoSession.NavigationDelegate.TargetWindow): Boolean {
                 assertThat("URI should match", uri, endsWith(HELLO2_HTML_PATH))
                 assertThat("Where should match", where,
-                           equalTo(GeckoSession.NavigationListener.TargetWindow.CURRENT))
+                           equalTo(GeckoSession.NavigationDelegate.TargetWindow.CURRENT))
                 return false
             }
 
@@ -201,10 +201,10 @@ class NavigationListenerTest {
     }
 
     @Test fun onLoadUri_returnTrueCancelsLoad() {
-        sessionRule.delegateDuringNextWait(object : Callbacks.NavigationListener {
+        sessionRule.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 2)
             override fun onLoadUri(session: GeckoSession, uri: String,
-                                   where: GeckoSession.NavigationListener.TargetWindow): Boolean {
+                                   where: GeckoSession.NavigationDelegate.TargetWindow): Boolean {
                 return uri.endsWith(HELLO_HTML_PATH)
             }
         })
@@ -213,7 +213,7 @@ class NavigationListenerTest {
         sessionRule.session.loadTestPath(HELLO2_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressListener {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
             @AssertCalled(count = 1, order = intArrayOf(1))
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("URL should match", url, endsWith(HELLO2_HTML_PATH))

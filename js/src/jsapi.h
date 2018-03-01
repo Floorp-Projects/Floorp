@@ -102,133 +102,6 @@ class MOZ_RAII AutoValueArray : public AutoGCRooter
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-template<class T>
-class MOZ_RAII AutoVectorRooterBase : protected AutoGCRooter
-{
-    typedef js::Vector<T, 8> VectorImpl;
-    VectorImpl vector;
-
-  public:
-    explicit AutoVectorRooterBase(JSContext* cx, ptrdiff_t tag
-                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, tag), vector(cx)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    typedef T ElementType;
-    typedef typename VectorImpl::Range Range;
-
-    size_t length() const { return vector.length(); }
-    bool empty() const { return vector.empty(); }
-
-    MOZ_MUST_USE bool append(const T& v) { return vector.append(v); }
-    MOZ_MUST_USE bool appendN(const T& v, size_t len) { return vector.appendN(v, len); }
-    MOZ_MUST_USE bool append(const T* ptr, size_t len) { return vector.append(ptr, len); }
-    MOZ_MUST_USE bool appendAll(const AutoVectorRooterBase<T>& other) {
-        return vector.appendAll(other.vector);
-    }
-
-    MOZ_MUST_USE bool insert(T* p, const T& val) { return vector.insert(p, val); }
-
-    /* For use when space has already been reserved. */
-    void infallibleAppend(const T& v) { vector.infallibleAppend(v); }
-
-    void popBack() { vector.popBack(); }
-    T popCopy() { return vector.popCopy(); }
-
-    MOZ_MUST_USE bool growBy(size_t inc) {
-        size_t oldLength = vector.length();
-        if (!vector.growByUninitialized(inc))
-            return false;
-        makeRangeGCSafe(oldLength);
-        return true;
-    }
-
-    MOZ_MUST_USE bool resize(size_t newLength) {
-        size_t oldLength = vector.length();
-        if (newLength <= oldLength) {
-            vector.shrinkBy(oldLength - newLength);
-            return true;
-        }
-        if (!vector.growByUninitialized(newLength - oldLength))
-            return false;
-        makeRangeGCSafe(oldLength);
-        return true;
-    }
-
-    void clear() { vector.clear(); }
-
-    MOZ_MUST_USE bool reserve(size_t newLength) {
-        return vector.reserve(newLength);
-    }
-
-    JS::MutableHandle<T> operator[](size_t i) {
-        return JS::MutableHandle<T>::fromMarkedLocation(&vector[i]);
-    }
-    JS::Handle<T> operator[](size_t i) const {
-        return JS::Handle<T>::fromMarkedLocation(&vector[i]);
-    }
-
-    const T* begin() const { return vector.begin(); }
-    T* begin() { return vector.begin(); }
-
-    const T* end() const { return vector.end(); }
-    T* end() { return vector.end(); }
-
-    Range all() { return vector.all(); }
-
-    const T& back() const { return vector.back(); }
-
-    friend void AutoGCRooter::trace(JSTracer* trc);
-
-  private:
-    void makeRangeGCSafe(size_t oldLength) {
-        T* t = vector.begin() + oldLength;
-        for (size_t i = oldLength; i < vector.length(); ++i, ++t)
-            memset(t, 0, sizeof(T));
-    }
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-template <typename T>
-class MOZ_RAII AutoVectorRooter : public AutoVectorRooterBase<T>
-{
-  public:
-    explicit AutoVectorRooter(JSContext* cx
-                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooterBase<T>(cx, this->GetTag(T()))
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-class AutoValueVector : public Rooted<GCVector<Value, 8>> {
-    using Vec = GCVector<Value, 8>;
-    using Base = Rooted<Vec>;
-  public:
-    explicit AutoValueVector(JSContext* cx) : Base(cx, Vec(cx)) {}
-};
-
-class AutoIdVector : public Rooted<GCVector<jsid, 8>> {
-    using Vec = GCVector<jsid, 8>;
-    using Base = Rooted<Vec>;
-  public:
-    explicit AutoIdVector(JSContext* cx) : Base(cx, Vec(cx)) {}
-
-    bool appendAll(const AutoIdVector& other) { return this->Base::appendAll(other.get()); }
-};
-
-class AutoObjectVector : public Rooted<GCVector<JSObject*, 8>> {
-    using Vec = GCVector<JSObject*, 8>;
-    using Base = Rooted<Vec>;
-  public:
-    explicit AutoObjectVector(JSContext* cx) : Base(cx, Vec(cx)) {}
-};
-
 using ValueVector = JS::GCVector<JS::Value>;
 using IdVector = JS::GCVector<jsid>;
 using ScriptVector = JS::GCVector<JSScript*>;
@@ -3692,6 +3565,7 @@ class JS_FRIEND_API(TransitiveCompileOptions)
         sourceIsLazy(false),
         allowHTMLComments(true),
         isProbablySystemOrAddonCode(false),
+        hideScriptFromDebugger(false),
         introductionType(nullptr),
         introductionLineno(0),
         introductionOffset(0),
@@ -3727,6 +3601,7 @@ class JS_FRIEND_API(TransitiveCompileOptions)
     bool sourceIsLazy;
     bool allowHTMLComments;
     bool isProbablySystemOrAddonCode;
+    bool hideScriptFromDebugger;
 
     // |introductionType| is a statically allocated C string:
     // one of "eval", "Function", or "GeneratorFunction".
@@ -4133,6 +4008,13 @@ CompileFunction(JSContext* cx, AutoObjectVector& envChain,
 extern JS_PUBLIC_API(bool)
 InitScriptSourceElement(JSContext* cx, HandleScript script,
                         HandleObject element, HandleString elementAttrName = nullptr);
+
+/*
+ * For a script compiled with the hideScriptFromDebugger option, expose the
+ * script to the debugger by calling the debugger's onNewScript hook.
+ */
+extern JS_PUBLIC_API(void)
+ExposeScriptToDebugger(JSContext* cx, HandleScript script);
 
 } /* namespace JS */
 
