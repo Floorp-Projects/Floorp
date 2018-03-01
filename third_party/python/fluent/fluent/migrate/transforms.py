@@ -235,6 +235,7 @@ class PLURALS(Source):
     `foreach` function transforms the source text into a Pattern with a single
     TextElement.
     """
+    DEFAULT_ORDER = ('zero', 'one', 'two', 'few', 'many', 'other')
 
     def __init__(self, path, key, selector, foreach=pattern_from_text):
         super(self.__class__, self).__init__(path, key)
@@ -253,10 +254,22 @@ class PLURALS(Source):
             variant, = variants
             return evaluate(ctx, self.foreach(variant))
 
-        last_index = min(len(variants), len(keys)) - 1
+        # The default CLDR form should be the last we have in
+        # DEFAULT_ORDER, usually `other`, but in some cases `many`.
+        # If we don't have a variant for that, we'll append one,
+        # using the, in CLDR order, last existing variant in the legacy
+        # translation. That may or may not be the last variant.
+        default_key = [
+            key for key in reversed(self.DEFAULT_ORDER) if key in keys
+        ][0]
 
-        def createVariant(zipped_enum):
-            index, (key, variant) = zipped_enum
+        keys_and_variants = zip(keys, variants)
+        keys_and_variants.sort(key=lambda (k, v): self.DEFAULT_ORDER.index(k))
+        last_key, last_variant = keys_and_variants[-1]
+        if last_key != default_key:
+            keys_and_variants.append((default_key, last_variant))
+
+        def createVariant(key, variant):
             # Run the legacy variant through `foreach` which returns an
             # `FTL.Node` describing the transformation required for each
             # variant.  Then evaluate it to a migrated FTL node.
@@ -264,12 +277,15 @@ class PLURALS(Source):
             return FTL.Variant(
                 key=FTL.VariantName(key),
                 value=value,
-                default=index == last_index
+                default=key == default_key
             )
 
         select = FTL.SelectExpression(
             expression=selector,
-            variants=map(createVariant, enumerate(zip(keys, variants)))
+            variants=[
+                createVariant(key, variant)
+                for key, variant in keys_and_variants
+            ]
         )
 
         placeable = FTL.Placeable(select)

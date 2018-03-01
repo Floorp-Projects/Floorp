@@ -28,7 +28,8 @@ Services.scriptloader.loadSubScript("chrome://specialpowers/content/SpecialPower
 /* XPCOM gunk */
 function SpecialPowersObserver() {
   this._isFrameScriptLoaded = false;
-  this._messageManager = Services.mm;
+  this._messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
+                         getService(Ci.nsIMessageBroadcaster);
 }
 
 

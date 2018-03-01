@@ -649,10 +649,11 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
     *aSink = GetTabChild().take();
     return *aSink ? NS_OK : NS_ERROR_FAILURE;
   } else if (aIID.Equals(NS_GET_IID(nsIContentFrameMessageManager))) {
-    RefPtr<TabChild> tabChild = TabChild::GetFrom(this);
+    nsCOMPtr<nsITabChild> tabChild =
+      do_GetInterface(static_cast<nsIDocShell*>(this));
     nsCOMPtr<nsIContentFrameMessageManager> mm;
     if (tabChild) {
-      mm = tabChild->GetMessageManager();
+      tabChild->GetMessageManager(getter_AddRefs(mm));
     } else {
       if (nsPIDOMWindowOuter* win = GetWindow()) {
         mm = do_QueryInterface(win->GetParentTarget());
