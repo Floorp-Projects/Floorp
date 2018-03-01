@@ -30,22 +30,3 @@ bench = false
 doc = false
 plugin = false
 harness = false
-
-# Explicitly specify what our profiles use.
-[profile.dev]
-opt-level = 1
-rpath = false
-lto = false
-debug-assertions = true
-panic = "abort"
-
-[profile.release]
-opt-level = 2
-rpath = false
-debug-assertions = false
-panic = "abort"
-codegen-units = 1
-
-[patch.crates-io]
-libudev-sys = { path = "../../../../dom/webauthn/libudev-sys" }
-serde_derive = { git = "https://github.com/gankro/serde", branch = "deserialize_from_enums4" }
