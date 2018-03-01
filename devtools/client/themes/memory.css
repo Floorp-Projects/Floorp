@@ -209,9 +209,13 @@ html, body, #app, #memory-tool {
 
 .snapshot-list-item .delete {
   cursor: pointer;
+  background-color: transparent;
+  border: 0;
+  padding: 0;
   position: relative;
   min-height: 1em;
   min-width: 1.3em;
+  color: currentColor;
 }
 
 .snapshot-list-item .delete::before {
