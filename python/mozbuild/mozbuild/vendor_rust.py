@@ -266,24 +266,12 @@ license file's hash.
         mozfile.remove(vendor_dir)
         # Once we require a new enough cargo to switch to workspaces, we can
         # just do this once on the workspace root crate.
-        crates_and_roots = (
-            ('gkrust', 'toolkit/library/rust'),
-            ('gkrust-gtest', 'toolkit/library/gtest/rust'),
-            ('js', 'js/rust'),
-            ('mozjs_sys', 'js/src'),
-            ('geckodriver', 'testing/geckodriver'),
-        )
 
-        lockfiles = []
-        for (lib, crate_root) in crates_and_roots:
-            path = mozpath.join(self.topsrcdir, crate_root)
-            # We use check_call instead of mozprocess to ensure errors are displayed.
-            # We do an |update -p| here to regenerate the Cargo.lock file with minimal changes. See bug 1324462
-            subprocess.check_call([cargo, 'update', '--manifest-path', mozpath.join(path, 'Cargo.toml'), '-p', lib], cwd=self.topsrcdir)
-            lockfiles.append('--sync')
-            lockfiles.append(mozpath.join(path, 'Cargo.lock'))
+        # We use check_call instead of mozprocess to ensure errors are displayed.
+        # We do an |update -p| here to regenerate the Cargo.lock file with minimal changes. See bug 1324462
+        subprocess.check_call([cargo, 'update', '-p', 'gkrust'], cwd=self.topsrcdir)
 
-        subprocess.check_call([cargo, 'vendor', '--quiet', '--no-delete'] + lockfiles + [vendor_dir], cwd=self.topsrcdir)
+        subprocess.check_call([cargo, 'vendor', '--quiet', '--no-delete', '--sync', 'Cargo.lock'] + [vendor_dir], cwd=self.topsrcdir)
 
         if not self._check_licenses(vendor_dir):
             self.log(logging.ERROR, 'license_check_failed', {},

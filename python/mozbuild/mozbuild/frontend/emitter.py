@@ -531,52 +531,6 @@ class TreeMetadataEmitter(LoggingMixin):
                 'crate-type %s is not permitted for %s' % (crate_type, libname),
                 context)
 
-        # Check that the [profile.{dev,release}.panic] field is "abort"
-        profile_section = config.get('profile', None)
-        if not profile_section:
-            raise SandboxValidationError(
-                'Cargo.toml for %s has no [profile] section' % libname,
-                context)
-
-        for profile_name in ['dev', 'release']:
-            profile = profile_section.get(profile_name, None)
-            if not profile:
-                raise SandboxValidationError(
-                    'Cargo.toml for %s has no [profile.%s] section' % (libname, profile_name),
-                    context)
-
-            panic = profile.get('panic', None)
-            if panic != 'abort':
-                raise SandboxValidationError(
-                    ('Cargo.toml for %s does not specify `panic = "abort"`'
-                     ' in [profile.%s] section') % (libname, profile_name),
-                    context)
-
-            # gkrust and gkrust-gtest must have the exact same profile settings
-            # for our almost-workspaces configuration to work properly.
-            if libname in ('gkrust', 'gkrust-gtest'):
-                if profile_name == 'dev':
-                    expected_profile = {
-                        'opt-level': 1,
-                        'rpath': False,
-                        'lto': False,
-                        'debug-assertions': True,
-                        'panic': 'abort',
-                    }
-                else:
-                    expected_profile = {
-                        'opt-level': 2,
-                        'rpath': False,
-                        'debug-assertions': False,
-                        'panic': 'abort',
-                        'codegen-units': 1,
-                    }
-
-                if profile != expected_profile:
-                    raise SandboxValidationError(
-                        'Cargo profile.%s for %s is incorrect' % (profile_name, libname),
-                        context)
-
         cargo_target_dir = context.get('RUST_LIBRARY_TARGET_DIR', '.')
 
         dependencies = set(config.get('dependencies', {}).iterkeys())
