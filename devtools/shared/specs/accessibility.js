@@ -9,17 +9,6 @@ const { Arg, generateActorSpec, RetVal, types } = protocol;
 
 types.addActorType("accessible");
 
-/**
- * Accessible with children listed in the ancestry structure calculated by the
- * walker.
- */
-types.addDictType("accessibleWithChildren", {
-  // Accessible
-  accessible: "accessible",
-  // Accessible's children
-  children: "array:accessible"
-});
-
 const accessibleSpec = generateActorSpec({
   typeName: "accessible",
 
@@ -31,8 +20,7 @@ const accessibleSpec = generateActorSpec({
     "name-change": {
       type: "nameChange",
       name: Arg(0, "string"),
-      parent: Arg(1, "nullable:accessible"),
-      walker: Arg(2, "nullable:accessiblewalker")
+      parent: Arg(1, "nullable:accessible")
     },
     "value-change": {
       type: "valueChange",
@@ -42,13 +30,13 @@ const accessibleSpec = generateActorSpec({
       type: "descriptionChange",
       description: Arg(0, "string")
     },
-    "states-change": {
-      type: "statesChange",
+    "state-change": {
+      type: "stateChange",
       states: Arg(0, "array:string")
     },
     "attributes-change": {
       type: "attributesChange",
-      attributes: Arg(0, "json")
+      states: Arg(0, "json")
     },
     "help-change": {
       type: "helpChange",
@@ -60,20 +48,38 @@ const accessibleSpec = generateActorSpec({
     },
     "reorder": {
       type: "reorder",
-      childCount: Arg(0, "number"),
-      walker: Arg(1, "nullable:accessiblewalker")
+      childCount: Arg(0, "number")
     },
     "text-change": {
-      type: "textChange",
-      walker: Arg(0, "nullable:accessiblewalker")
-    },
-    "index-in-parent-change": {
-      type: "indexInParentChange",
-      indexInParent: Arg(0, "number")
+      type: "textChange"
     }
   },
 
   methods: {
+    getActions: {
+      request: {},
+      response: {
+        actions: RetVal("array:string")
+      }
+    },
+    getIndexInParent: {
+      request: {},
+      response: {
+        indexInParent: RetVal("number")
+      }
+    },
+    getState: {
+      request: {},
+      response: {
+        states: RetVal("array:string")
+      }
+    },
+    getAttributes: {
+      request: {},
+      response: {
+        attributes: RetVal("json")
+      }
+    },
     children: {
       request: {},
       response: {
@@ -90,24 +96,6 @@ const accessibleWalkerSpec = generateActorSpec({
     "accessible-destroy": {
       type: "accessibleDestroy",
       accessible: Arg(0, "accessible")
-    },
-    "document-ready": {
-      type: "documentReady",
-    },
-    "picker-accessible-picked": {
-      type: "pickerAccessiblePicked",
-      accessible: Arg(0, "nullable:accessible")
-    },
-    "picker-accessible-previewed": {
-      type: "pickerAccessiblePreviewed",
-      accessible: Arg(0, "nullable:accessible")
-    },
-    "picker-accessible-hovered": {
-      type: "pickerAccessibleHovered",
-      accessible: Arg(0, "nullable:accessible")
-    },
-    "picker-accessible-canceled": {
-      type: "pickerAccessibleCanceled"
     }
   },
 
@@ -118,76 +106,30 @@ const accessibleWalkerSpec = generateActorSpec({
         children: RetVal("array:accessible")
       }
     },
+    getDocument: {
+      request: {},
+      response: {
+        document: RetVal("accessible")
+      }
+    },
     getAccessibleFor: {
       request: { node: Arg(0, "domnode") },
       response: {
         accessible: RetVal("accessible")
       }
-    },
-    getAncestry: {
-      request: { accessible: Arg(0, "accessible") },
-      response: {
-        ancestry: RetVal("array:accessibleWithChildren")
-      }
-    },
-    highlightAccessible: {
-      request: {
-        accessible: Arg(0, "accessible"),
-        options: Arg(1, "nullable:json")
-      },
-      response: {
-        value: RetVal("nullable:boolean")
-      }
-    },
-    unhighlight: {
-      request: {}
-    },
-    pick: {},
-    pickAndFocus: {},
-    cancelPick: {}
+    }
   }
 });
 
 const accessibilitySpec = generateActorSpec({
   typeName: "accessibility",
 
-  events: {
-    "init": {
-      type: "init"
-    },
-    "shutdown": {
-      type: "shutdown"
-    },
-    "can-be-disabled-change": {
-      type: "canBeDisabledChange",
-      canBeDisabled: Arg(0, "boolean")
-    },
-    "can-be-enabled-change": {
-      type: "canBeEnabledChange",
-      canBeEnabled: Arg(0, "boolean")
-    }
-  },
-
   methods: {
-    bootstrap: {
-      request: {},
-      response: {
-        state: RetVal("json")
-      }
-    },
     getWalker: {
       request: {},
       response: {
         walker: RetVal("accessiblewalker")
       }
-    },
-    enable: {
-      request: {},
-      response: {}
-    },
-    disable: {
-      request: {},
-      response: {}
     }
   }
 });
