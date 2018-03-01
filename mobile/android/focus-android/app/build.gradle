@@ -271,10 +271,32 @@ android.applicationVariants.all { variant ->
     def isBetaOrRelease = buildType == "release" || buildType == "beta"
 
     if (isBetaOrRelease) {
-        variant.mergedFlavor.versionCode = generatedVersionCode
+        def versionCode = generatedVersionCode
+
+        // The Google Play Store does not allow multiple APKs for the same app that all have the
+        // same version code. Therefore we need to have different version codes for our ARM and x86
+        // builds.
+        // Our generated version code has a length of 8 (See tools/gradle/versionCode.gradle).
+        // We will prefix our ARM builds with 1 and our x86 builds with 2. Our x86 builds need a
+        // higher version code to avoid installing ARM builds on an x86 device with ARM
+        // compatibility mode.
+        def multiplier = 100000000
+
+        if (variant.flavorName.contains("X86")) {
+            versionCode = versionCode + (2 * multiplier)
+        } else if (variant.flavorName.contains("Arm")) {
+            versionCode = versionCode + (1 * multiplier)
+        }
+
+        variant.mergedFlavor.versionCode = versionCode
     }
 
-    println("Build type: " + buildType + " (versionCode = " + variant.mergedFlavor.versionCode + ")")
+    println("----------------------------------------------")
+    println("Build type:   " + buildType)
+    println("Flavor:       " + variant.flavorName)
+    println("Version code: " + variant.mergedFlavor.versionCode)
+
+
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -313,13 +335,13 @@ tasks.whenTaskAdded { task ->
 android.applicationVariants.all { variant ->
     def variantName = variant.getName()
 
-    print("Adjust token (" + variantName + "): ")
+    print("Adjust token: ")
 
     if (variantName.contains("Release") && variantName.contains("focus")) {
         try {
             def token = new File("${rootDir}/.adjust_token").text.trim()
             buildConfigField 'String', 'ADJUST_TOKEN', '"' + token + '"'
-            println "(Added from .adjust_token file"
+            println "(Added from .adjust_token file)"
         } catch (java.io.FileNotFoundException e) {
             buildConfigField 'String', 'ADJUST_TOKEN', 'null'
             println("X_X")
