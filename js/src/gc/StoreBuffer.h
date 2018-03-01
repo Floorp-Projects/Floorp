@@ -277,17 +277,17 @@ class StoreBuffer
         const static int ElementKind = 1;
 
         uintptr_t objectAndKind_; // NativeObject* | Kind
-        int32_t start_;
-        int32_t count_;
+        uint32_t start_;
+        uint32_t count_;
 
         SlotsEdge() : objectAndKind_(0), start_(0), count_(0) {}
-        SlotsEdge(NativeObject* object, int kind, int32_t start, int32_t count)
+        SlotsEdge(NativeObject* object, int kind, uint32_t start, uint32_t count)
           : objectAndKind_(uintptr_t(object) | kind), start_(start), count_(count)
         {
             MOZ_ASSERT((uintptr_t(object) & 1) == 0);
             MOZ_ASSERT(kind <= 1);
-            MOZ_ASSERT(start >= 0);
             MOZ_ASSERT(count > 0);
+            MOZ_ASSERT(start + count > start);
         }
 
         NativeObject* object() const { return reinterpret_cast<NativeObject*>(objectAndKind_ & ~1); }
@@ -314,10 +314,12 @@ class StoreBuffer
             // is particularly useful for coalescing a series of increasing or
             // decreasing single index writes 0, 1, 2, ..., N into a SlotsEdge
             // range of elements [0, N].
-            auto end = start_ + count_ + 1;
-            auto start = start_ - 1;
+            uint32_t end = start_ + count_ + 1;
+            uint32_t start = start_ > 0 ? start_ - 1 : 0;
+            MOZ_ASSERT(start < end);
 
-            auto otherEnd = other.start_ + other.count_;
+            uint32_t otherEnd = other.start_ + other.count_;
+            MOZ_ASSERT(other.start_ <= otherEnd);
             return (start <= other.start_ && other.start_ <= end) ||
                    (start <= otherEnd && otherEnd <= end);
         }
@@ -327,7 +329,7 @@ class StoreBuffer
         // overlap.
         void merge(const SlotsEdge& other) {
             MOZ_ASSERT(overlaps(other));
-            auto end = Max(start_ + count_, other.start_ + other.count_);
+            uint32_t end = Max(start_ + count_, other.start_ + other.count_);
             start_ = Min(start_, other.start_);
             count_ = end - start_;
         }
@@ -415,7 +417,7 @@ class StoreBuffer
     void unputValue(JS::Value* vp) { unput(bufferVal, ValueEdge(vp)); }
     void putCell(Cell** cellp) { put(bufferCell, CellPtrEdge(cellp)); }
     void unputCell(Cell** cellp) { unput(bufferCell, CellPtrEdge(cellp)); }
-    void putSlot(NativeObject* obj, int kind, int32_t start, int32_t count) {
+    void putSlot(NativeObject* obj, int kind, uint32_t start, uint32_t count) {
         SlotsEdge edge(obj, kind, start, count);
         if (bufferSlot.last_.overlaps(edge))
             bufferSlot.last_.merge(edge);
