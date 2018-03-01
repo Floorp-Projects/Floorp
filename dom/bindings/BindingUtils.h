@@ -35,7 +35,7 @@
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
 #include "nsISupportsImpl.h"
-#include "qsObjectHelper.h"
+#include "xpcObjectHelper.h"
 #include "xpcpublic.h"
 #include "nsIVariant.h"
 #include "mozilla/dom/FakeString.h"
@@ -1477,7 +1477,7 @@ WrapObject(JSContext* cx, T* p, nsWrapperCache* cache, const nsIID* iid,
 {
   if (xpc_FastGetCachedWrapper(cx, cache, rval))
     return true;
-  qsObjectHelper helper(p, cache);
+  xpcObjectHelper helper(ToSupports(p), cache);
   JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
   return XPCOMObjectToJsval(cx, scope, helper, iid, true, rval);
 }
@@ -1577,7 +1577,7 @@ template<typename T>
 static inline JSObject*
 WrapNativeISupports(JSContext* cx, T* p, nsWrapperCache* cache)
 {
-  qsObjectHelper helper(ToSupports(p), cache);
+  xpcObjectHelper helper(ToSupports(p), cache);
   JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
   JS::Rooted<JS::Value> v(cx);
   return XPCOMObjectToJsval(cx, scope, helper, nullptr, false, &v) ?

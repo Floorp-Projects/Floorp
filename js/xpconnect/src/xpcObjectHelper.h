@@ -26,40 +26,17 @@ class xpcObjectHelper
 {
 public:
     explicit xpcObjectHelper(nsISupports* aObject, nsWrapperCache* aCache = nullptr)
-      : mCanonical(nullptr)
-      , mObject(aObject)
+      : mObject(aObject)
       , mCache(aCache)
     {
-        if (!mCache) {
-            if (aObject)
-                CallQueryInterface(aObject, &mCache);
-            else
-                mCache = nullptr;
+        if (!mCache && aObject) {
+            CallQueryInterface(aObject, &mCache);
         }
     }
 
     nsISupports* Object()
     {
         return mObject;
-    }
-
-    nsISupports* GetCanonical()
-    {
-        if (!mCanonical) {
-            mCanonicalStrong = do_QueryInterface(mObject);
-            mCanonical = mCanonicalStrong;
-        }
-        return mCanonical;
-    }
-
-    already_AddRefed<nsISupports> forgetCanonical()
-    {
-        MOZ_ASSERT(mCanonical, "Huh, no canonical to forget?");
-
-        if (!mCanonicalStrong)
-            mCanonicalStrong = mCanonical;
-        mCanonical = nullptr;
-        return mCanonicalStrong.forget();
     }
 
     nsIClassInfo* GetClassInfo()
@@ -93,7 +70,7 @@ public:
 
         // If that didn't work, try just QI-ing. This handles BackstagePass.
         if (!sinfo)
-            sinfo = do_QueryInterface(GetCanonical());
+            sinfo = do_QueryInterface(mObject);
 
         // We should have something by now.
         MOZ_ASSERT(sinfo);
@@ -106,22 +83,6 @@ public:
     {
         return mCache;
     }
-
-protected:
-    xpcObjectHelper(nsISupports* aObject, nsISupports* aCanonical,
-                    nsWrapperCache* aCache)
-      : mCanonical(aCanonical)
-      , mObject(aObject)
-      , mCache(aCache)
-    {
-        if (!mCache && aObject)
-            CallQueryInterface(aObject, &mCache);
-    }
-
-    nsCOMPtr<nsISupports>    mCanonicalStrong;
-    nsISupports* MOZ_UNSAFE_REF("xpcObjectHelper has been specifically optimized "
-                                "to avoid unnecessary AddRefs and Releases. "
-                                "(see bug 565742)") mCanonical;
 
 private:
     xpcObjectHelper(xpcObjectHelper& aOther) = delete;
