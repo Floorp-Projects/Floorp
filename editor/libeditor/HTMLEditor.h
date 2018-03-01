@@ -1163,9 +1163,7 @@ protected:
                                     int32_t& aMarginLeft,
                                     int32_t& aMarginTop);
 
-  bool IsInObservedSubtree(nsIDocument* aDocument,
-                           nsIContent* aContainer,
-                           nsIContent* aChild);
+  bool IsInObservedSubtree(nsIContent* aChild);
 
   void UpdateRootElement();
 
@@ -1359,9 +1357,7 @@ private:
                                        nsAtom* aAttribute,
                                        const nsAString& aValue);
   typedef enum { eInserted, eAppended } InsertedOrAppended;
-  void DoContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
-                         nsIContent* aChild,
-                         InsertedOrAppended aInsertedOrAppended);
+  void DoContentInserted(nsIContent* aChild, InsertedOrAppended);
   already_AddRefed<Element> GetElementOrParentByTagName(
                               const nsAString& aTagName, nsINode* aNode);
   already_AddRefed<Element> CreateElementWithDefaults(

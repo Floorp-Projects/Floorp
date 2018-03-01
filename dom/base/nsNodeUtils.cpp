@@ -134,7 +134,7 @@ nsNodeUtils::CharacterDataWillChange(nsIContent* aContent,
 {
   nsIDocument* doc = aContent->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(CharacterDataWillChange, aContent,
-                             (doc, aContent, aInfo), IsRemoveNotification::No);
+                             (aContent, aInfo), IsRemoveNotification::No);
 }
 
 void
@@ -143,7 +143,7 @@ nsNodeUtils::CharacterDataChanged(nsIContent* aContent,
 {
   nsIDocument* doc = aContent->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(CharacterDataChanged, aContent,
-                             (doc, aContent, aInfo), IsRemoveNotification::No);
+                             (aContent, aInfo), IsRemoveNotification::No);
 }
 
 void
@@ -155,7 +155,7 @@ nsNodeUtils::AttributeWillChange(Element* aElement,
 {
   nsIDocument* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(AttributeWillChange, aElement,
-                             (doc, aElement, aNameSpaceID, aAttribute,
+                             (aElement, aNameSpaceID, aAttribute,
                               aModType, aNewValue), IsRemoveNotification::No);
 }
 
@@ -168,7 +168,7 @@ nsNodeUtils::AttributeChanged(Element* aElement,
 {
   nsIDocument* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(AttributeChanged, aElement,
-                             (doc, aElement, aNameSpaceID, aAttribute,
+                             (aElement, aNameSpaceID, aAttribute,
                               aModType, aOldValue), IsRemoveNotification::No);
 }
 
@@ -179,7 +179,7 @@ nsNodeUtils::AttributeSetToCurrentValue(Element* aElement,
 {
   nsIDocument* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(AttributeSetToCurrentValue, aElement,
-                             (doc, aElement, aNameSpaceID, aAttribute),
+                             (aElement, aNameSpaceID, aAttribute),
                              IsRemoveNotification::No);
 }
 
@@ -190,7 +190,7 @@ nsNodeUtils::ContentAppended(nsIContent* aContainer,
   nsIDocument* doc = aContainer->OwnerDoc();
 
   IMPL_MUTATION_NOTIFICATION(ContentAppended, aContainer,
-                             (doc, aContainer, aFirstNewContent),
+                             (aFirstNewContent),
                              IsRemoveNotification::No);
 }
 
@@ -202,7 +202,7 @@ nsNodeUtils::NativeAnonymousChildListChange(nsIContent* aContent,
   auto isRemove = aIsRemove
     ? IsRemoveNotification::Yes : IsRemoveNotification::No;
   IMPL_MUTATION_NOTIFICATION(NativeAnonymousChildListChange, aContent,
-                            (doc, aContent, aIsRemove),
+                            (aContent, aIsRemove),
                             isRemove);
 }
 
@@ -213,19 +213,8 @@ nsNodeUtils::ContentInserted(nsINode* aContainer,
   NS_PRECONDITION(aContainer->IsContent() ||
                   aContainer->IsNodeOfType(nsINode::eDOCUMENT),
                   "container must be an nsIContent or an nsIDocument");
-  nsIContent* container;
   nsIDocument* doc = aContainer->OwnerDoc();
-  nsIDocument* document;
-  if (aContainer->IsContent()) {
-    container = aContainer->AsContent();
-    document = doc;
-  } else {
-    container = nullptr;
-    document = static_cast<nsIDocument*>(aContainer);
-  }
-
-  IMPL_MUTATION_NOTIFICATION(ContentInserted, aContainer,
-                             (document, container, aChild),
+  IMPL_MUTATION_NOTIFICATION(ContentInserted, aContainer, (aChild),
                              IsRemoveNotification::No);
 }
 
@@ -237,19 +226,11 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
   NS_PRECONDITION(aContainer->IsContent() ||
                   aContainer->IsNodeOfType(nsINode::eDOCUMENT),
                   "container must be an nsIContent or an nsIDocument");
-  nsIContent* container;
   nsIDocument* doc = aContainer->OwnerDoc();
-  nsIDocument* document;
-  if (aContainer->IsContent()) {
-    container = static_cast<nsIContent*>(aContainer);
-    document = doc;
-  } else {
-    container = nullptr;
-    document = static_cast<nsIDocument*>(aContainer);
-  }
-
+  MOZ_ASSERT(aChild->GetParentNode() == aContainer,
+             "We expect the parent link to be still around at this point");
   IMPL_MUTATION_NOTIFICATION(ContentRemoved, aContainer,
-                             (document, container, aChild, aPreviousSibling),
+                             (aChild, aPreviousSibling),
                              IsRemoveNotification::Yes);
 }
 
