@@ -93,7 +93,7 @@ add_task(async function() {
   await PlacesUtils.bookmarks.remove(item);
 
   // restore json file
-  await BookmarkJSONUtils.importFromFile(jsonFile, true);
+  await BookmarkJSONUtils.importFromFile(jsonFile, { replace: true });
 
   validateResults();
 

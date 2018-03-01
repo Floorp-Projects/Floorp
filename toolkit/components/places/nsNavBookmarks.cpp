@@ -139,7 +139,8 @@ DetermineInitialSyncStatus(uint16_t aSource) {
   if (aSource == nsINavBookmarksService::SOURCE_SYNC) {
     return nsINavBookmarksService::SYNC_STATUS_NORMAL;
   }
-  if (aSource == nsINavBookmarksService::SOURCE_IMPORT_REPLACE) {
+  if (aSource == nsINavBookmarksService::SOURCE_RESTORE ||
+      aSource == nsINavBookmarksService::SOURCE_RESTORE_ON_STARTUP) {
     return nsINavBookmarksService::SYNC_STATUS_UNKNOWN;
   }
   return nsINavBookmarksService::SYNC_STATUS_NEW;

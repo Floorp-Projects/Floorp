@@ -319,23 +319,34 @@ interface nsINavBookmarksService : nsISupports
   const unsigned short SOURCE_DEFAULT = 0;
   const unsigned short SOURCE_SYNC = 1;
   const unsigned short SOURCE_IMPORT = 2;
-  const unsigned short SOURCE_IMPORT_REPLACE = 3;
   const unsigned short SOURCE_SYNC_REPARENT_REMOVED_FOLDER_CHILDREN = 4;
+  const unsigned short SOURCE_RESTORE = 5;
+  const unsigned short SOURCE_RESTORE_ON_STARTUP = 6;
 
   /**
-   * Sync status flags.
+   * Sync status flags, stored in Places for each item. These affect conflict
+   * resolution, when an item is changed both locally and remotely; deduping,
+   * when a local item matches a remote item with similar contents and different
+   * GUIDs; and whether we write a tombstone when an item is deleted locally.
+   *
+   * Status  | Description               | Conflict   | Can     | Needs
+   *         |                           | resolution | dedupe? | tombstone?
+   * -----------------------------------------------------------------------
+   * UNKNOWN | Automatically restored    | Prefer     | No      | No
+   *         | on startup to recover     | deletion   |         |
+   *         | from database corruption, |            |         |
+   *         | or sync ID change on      |            |         |
+   *         | server.                   |            |         |
+   * -----------------------------------------------------------------------
+   * NEW     | Item not uploaded to      | Prefer     | Yes     | No
+   *         | server yet, or Sync       | newer      |         |
+   *         | disconnected.             |            |         |
+   * -----------------------------------------------------------------------
+   * NORMAL  | Item uploaded to server.  | Prefer     | No      | Yes
+   *         |                           | newer      |         |
    */
-  // "UNKNOWN" means sync tracking information was lost because the item
-  // was restored from a backup, and needs to be reconciled with the server.
-  // This is set for migrated and restored bookmarks, and changed to "NORMAL"
-  // before upload.
   const unsigned short SYNC_STATUS_UNKNOWN = 0;
-  // "NEW" means the item has never been synced, so we don't need to write
-  // a tombstone if it's deleted. This is set for all new local bookmarks, and
-  // changed to "NORMAL" before upload.
   const unsigned short SYNC_STATUS_NEW = 1;
-  // "NORMAL" means the item has been uploaded to the server, and needs a
-  // tombstone if it's deleted.
   const unsigned short SYNC_STATUS_NORMAL = 2;
 
   /**

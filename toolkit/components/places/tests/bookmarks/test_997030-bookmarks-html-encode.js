@@ -21,7 +21,7 @@ add_task(async function() {
 
   // Remove the bookmarks, then restore the backup.
   await PlacesUtils.bookmarks.remove(bm);
-  await BookmarkHTMLUtils.importFromFile(file, true);
+  await BookmarkHTMLUtils.importFromFile(file, { replace: true });
 
   info("Checking first level");
   let root = PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId).root;
