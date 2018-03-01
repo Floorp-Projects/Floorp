@@ -50,7 +50,7 @@ def generate_ui_test_task(dependencies):
 		name = "(Focus for Android) UI tests",
 		description = "Run UI tests for Focus/Klar for Android.",
 		command = ('echo "--" > .adjust_token'
-			' && ./gradlew --no-daemon clean assembleFocusWebviewDebug assembleFocusWebviewDebugAndroidTest'
+			' && ./gradlew --no-daemon clean assembleFocusWebviewUniversalDebug assembleFocusWebviewUniversalDebugAndroidTest'
 			' && tools/taskcluster/execute-firebase-test.sh'),
 		dependencies = dependencies,
 		scopes = [ 'secrets:get:project/focus/firebase' ],

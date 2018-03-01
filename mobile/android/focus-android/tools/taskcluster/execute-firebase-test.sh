@@ -18,8 +18,8 @@ set +e
 # Execute test set
 /google-cloud-sdk/bin/gcloud --format="json" firebase test android run \
 --type=instrumentation \
---app="app/build/outputs/apk/focusWebview/debug/app-focus-webview-debug.apk" \
---test="app/build/outputs/apk/androidTest/focusWebview/debug/app-focus-webview-debug-androidTest.apk" \
+--app="app/build/outputs/apk/focusWebviewUniversal/debug/app-focus-webview-universal-debug.apk" \
+--test="app/build/outputs/apk/androidTest/focusWebviewUniversal/debug/app-focus-webview-universal-debug-androidTest.apk" \
 --results-bucket="focus_android_test_artifacts" \
 --timeout="30m" \
 --no-auto-google-login \
