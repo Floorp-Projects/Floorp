@@ -8,6 +8,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/Mutex.h"
 #include "nsIDocument.h"
 #include "nsIObserver.h"
 
@@ -46,6 +47,9 @@
 
 #define SPOOFED_APPNAME    "Netscape"
 #define LEGACY_BUILD_ID    "20100101"
+
+// Forward declare LRUCache, defined in nsRFPService.cpp
+class LRUCache;
 
 namespace mozilla {
 
@@ -175,13 +179,17 @@ public:
   static double ReduceTimePrecisionAsSecs(
     double aTime,
     TimerPrecisionType aType = TimerPrecisionType::All);
+
   // Public only for testing purposes
   static double ReduceTimePrecisionImpl(
     double aTime,
     TimeScale aTimeScale,
     double aResolutionUSec,
     TimerPrecisionType aType);
-
+  static nsresult RandomMidpoint(long long aClampedTimeUSec,
+                                 long long aResolutionUSec,
+                                 long long* aMidpointOut,
+                                 uint8_t * aSecretSeed = nullptr);
 
   // This method calculates the video resolution (i.e. height x width) based
   // on the video quality (480p, 720p, etc).
@@ -260,6 +268,10 @@ private:
   static Atomic<bool, Relaxed> sPrivacyTimerPrecisionReduction;
 
   static nsDataHashtable<KeyboardHashKey, const SpoofingKeyboardCode*>* sSpoofingKeyboardCodes;
+
+  static mozilla::Mutex* sLock;
+  static UniquePtr<LRUCache> sCache;
+  static UniquePtr<uint8_t[]> sSecretMidpointSeed;
 
   nsCString mInitialTZValue;
 };
