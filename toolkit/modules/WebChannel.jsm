@@ -108,7 +108,7 @@ var WebChannelBroker = Object.create({
   /**
    * The global message manager operates on every <browser>
    */
-  _manager: Services.mm,
+  _manager: Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager),
   /**
    * Boolean used to detect if the global message manager event is already attached
    */

@@ -8,11 +8,14 @@ def indent(content):
     )
 
 
-def contain_new_line(elems):
-    return bool([
-        elem for elem in elems
-        if isinstance(elem, ast.TextElement) and "\n" in elem.value
-    ])
+def includes_new_line(elem):
+    return isinstance(elem, ast.TextElement) and "\n" in elem.value
+
+
+def is_select_expr(elem):
+    return (
+        isinstance(elem, ast.Placeable) and
+        isinstance(elem.expression, ast.SelectExpression))
 
 
 class FluentSerializer(object):
@@ -116,8 +119,10 @@ def serialize_attribute(attribute):
 
 
 def serialize_value(pattern):
-    multi = contain_new_line(pattern.elements)
-    schema = "\n    {}" if multi else " {}"
+    start_on_new_line = any(
+        includes_new_line(elem) or is_select_expr(elem)
+        for elem in pattern.elements)
+    schema = "\n    {}" if start_on_new_line else " {}"
 
     content = serialize_pattern(pattern)
     return schema.format(indent(content))

@@ -32,6 +32,7 @@ from mozharness.mozilla.repo_manipulation import MercurialRepoManipulationMixin
 
 VALID_MIGRATION_BEHAVIORS = (
     "beta_to_release", "central_to_beta", "release_to_esr", "bump_second_digit",
+    "bump_and_tag_central",
 )
 
 
@@ -85,6 +86,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
                 'set_push_to_ssh',
                 'migrate',
                 'bump_second_digit',
+                'bump_and_tag_central',
                 'commit-changes',
                 'push',
             ],
@@ -170,8 +172,6 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
     def query_commit_dirs(self):
         dirs = self.query_abs_dirs()
         commit_dirs = [dirs['abs_to_dir']]
-        if self.config['migration_behavior'] == 'central_to_beta':
-            commit_dirs.append(dirs['abs_from_dir'])
         return commit_dirs
 
     def query_commit_message(self):
@@ -328,6 +328,37 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             )
 
     # Branch-specific workflow helper methods {{{1
+    def bump_and_tag_central(self):
+        """No migrating. Just tag, bump version, and clobber mozilla-central.
+
+        Like bump_esr logic, to_dir is the target repo. In this case: mozilla-central. It's
+        needed due to the way this script is designed. There is no "from_dir" that we are
+        migrating from.
+        """
+        dirs = self.query_abs_dirs()
+        curr_mc_version = self.get_version(dirs['abs_to_dir'])[0]
+        next_mc_version = str(int(curr_mc_version) + 1)
+        to_fx_major_version = self.get_version(dirs['abs_to_dir'])[0]
+        end_tag = self.config['end_tag'] % {'major_version': to_fx_major_version}
+        base_to_rev = self.query_to_revision()
+
+        # tag m-c again since there are csets between tagging during m-c->m-b merge
+        # e.g.
+        # m-c tag during m-c->m-b migration: FIREFOX_BETA_60_BASE
+        # m-c tag we are doing in this method now: FIREFOX_NIGHTLY_60_END
+        # context: https://bugzilla.mozilla.org/show_bug.cgi?id=1431363#c14
+        self.hg_tag(
+            dirs['abs_to_dir'], end_tag, user=self.config['hg_user'],
+            revision=base_to_rev, force=True,
+        )
+        self.bump_version(
+            dirs['abs_to_dir'], curr_mc_version, next_mc_version, "a1", "a1",
+            bump_major=True,
+            use_config_suffix=False
+        )
+        # touch clobber files
+        self.touch_clobber_file(dirs['abs_to_dir'])
+
     def central_to_beta(self, end_tag):
         """ mozilla-central -> mozilla-beta behavior.
 
@@ -341,16 +372,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
         self.bump_version(dirs['abs_to_dir'], next_mb_version, next_mb_version, "a1", "",
                           use_config_suffix=True)
         self.apply_replacements()
-        # bump m-c version
-        curr_mc_version = self.get_version(dirs['abs_from_dir'])[0]
-        next_mc_version = str(int(curr_mc_version) + 1)
-        self.bump_version(
-            dirs['abs_from_dir'], curr_mc_version, next_mc_version, "a1", "a1",
-            bump_major=True,
-            use_config_suffix=False
-        )
         # touch clobber files
-        self.touch_clobber_file(dirs['abs_from_dir'])
         self.touch_clobber_file(dirs['abs_to_dir'])
 
     def beta_to_release(self, *args, **kwargs):
@@ -477,7 +499,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
         base_from_rev = self.query_from_revision()
         base_to_rev = self.query_to_revision()
         base_tag = self.config['base_tag'] % {'major_version': from_fx_major_version}
-        self.hg_tag(
+        self.hg_tag(  # tag the base of the from repo
             dirs['abs_from_dir'], base_tag, user=self.config['hg_user'],
             revision=base_from_rev,
         )
@@ -497,7 +519,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
                 user=self.config['hg_user'],
             )
 
-        end_tag = self.config.get('end_tag')
+        end_tag = self.config.get('end_tag')  # tag the end of the to repo
         if end_tag:
             end_tag = end_tag % {'major_version': to_fx_major_version}
             self.hg_tag(
