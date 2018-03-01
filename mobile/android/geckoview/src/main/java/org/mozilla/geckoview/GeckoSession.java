@@ -171,7 +171,7 @@ public class GeckoSession extends LayerSession
                                     throw new IllegalArgumentException("Must use an unopened GeckoSession instance");
                                 }
 
-                                session.openWindow(null);
+                                session.open(null);
                                 callback.sendSuccess(session.getId());
                             }
                         });
@@ -601,8 +601,21 @@ public class GeckoSession extends LayerSession
     /* package */ boolean isReady() {
         return mNativeQueue.isReady();
     }
-
-    public void openWindow(final @Nullable Context appContext) {
+    
+    /**
+     * Opens the session.
+     *
+     * The session is in a 'closed' state when first created. Opening it creates
+     * the underlying Gecko objects necessary to load a page, etc. Most GeckoSession
+     * methods only take affect on an open session, and are queued until the session
+     * is opened here. Opening a session is an asynchronous operation. You can check
+     * the current state via isOpen().
+     *
+     * Call this when you are ready to use a GeckoSession instance.
+     *
+     * @param appContext An application context
+     */
+    public void open(final @Nullable Context appContext) {
         ThreadUtils.assertOnUiThread();
 
         if (isOpen()) {
@@ -643,7 +656,14 @@ public class GeckoSession extends LayerSession
         onWindowChanged();
     }
 
-    public void closeWindow() {
+    /**
+     * Closes the session.
+     *
+     * This frees the underlying Gecko objects and unloads the current page. The session may be
+     * reopened later, but page state is not restored. Call this when you are finished using
+     * a GeckoSession instance.
+     */
+    public void close() {
         ThreadUtils.assertOnUiThread();
 
         if (!isOpen()) {
