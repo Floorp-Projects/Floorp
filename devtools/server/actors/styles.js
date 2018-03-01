@@ -5,6 +5,7 @@
 "use strict";
 
 const {Ci} = require("chrome");
+const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
 const InspectorUtils = require("InspectorUtils");
@@ -28,6 +29,9 @@ loader.lazyRequireGetter(this, "UPDATE_GENERAL",
 
 loader.lazyGetter(this, "PSEUDO_ELEMENTS", () => {
   return InspectorUtils.getCSSPseudoElementNames();
+});
+loader.lazyGetter(this, "FONT_VARIATIONS_ENABLED", () => {
+  return Services.prefs.getBoolPref("layout.css.font-variations.enabled");
 });
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
@@ -115,7 +119,10 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
         // been fixed must make sure cssLogic.highlight(node) was called before.
         getAppliedCreatesStyleCache: true,
         // Whether addNewRule accepts the editAuthored argument.
-        authoredStyles: true
+        authoredStyles: true,
+        // Whether getAllUsedFontFaces/getUsedFontFaces accepts the includeVariations
+        // argument.
+        fontVariations: FONT_VARIATIONS_ENABLED,
       }
     };
   },
@@ -320,6 +327,12 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
           size: size
         };
       }
+
+      if (options.includeVariations && FONT_VARIATIONS_ENABLED) {
+        fontFace.variationAxes = font.getVariationAxes();
+        fontFace.variationInstances = font.getVariationInstances();
+      }
+
       fontsArray.push(fontFace);
     }
 
