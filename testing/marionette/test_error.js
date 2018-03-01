@@ -15,7 +15,7 @@ const {
   InvalidSessionIDError,
   JavaScriptError,
   MoveTargetOutOfBoundsError,
-  NoSuchAlertError,
+  NoAlertOpenError,
   NoSuchElementError,
   NoSuchFrameError,
   NoSuchWindowError,
@@ -333,9 +333,9 @@ add_test(function test_JavaScriptError() {
   run_next_test();
 });
 
-add_test(function test_NoSuchAlertError() {
-  let err = new NoSuchAlertError("foo");
-  equal("NoSuchAlertError", err.name);
+add_test(function test_NoAlertOpenError() {
+  let err = new NoAlertOpenError("foo");
+  equal("NoAlertOpenError", err.name);
   equal("foo", err.message);
   equal("no such alert", err.status);
   ok(err instanceof WebDriverError);
