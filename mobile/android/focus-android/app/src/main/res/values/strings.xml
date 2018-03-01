@@ -25,19 +25,15 @@
     <string name="menu_share">Share…</string>
 
     <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
-      replaces with the name of the browser like: "Open with Firefox" or "Open with Chrome". Some
-      links can be opened by native apps that aren't a browser, e.g. "Open with YouTube" -->
-    <string name="menu_open_with_default_browser">Open with %1$s</string>
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">Open in %1$s</string>
 
     <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
       will be shown if there are multiple browsers and we do not know which one is the default
       browser or in case Focus is actually the default browser. Clicking this menu item will show
       a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
-    <string name="menu_open_with_a_browser">Open with…</string>
-
-    <!-- Menu item: Switch from "custom tab" to a normal tab inside the browser. Thus, this menu item
-        is only visible in custom tabs. %1$s will be replaced with the app name. -->
-    <string name="menu_open_in_firefox_focus">Open in %1$s</string>
+    <string name="menu_open_with_a_browser2">Open in…</string>
 
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Add to Home screen</string>

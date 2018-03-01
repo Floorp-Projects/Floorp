@@ -72,17 +72,18 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
 
         if (browsers.hasMultipleThirdPartyBrowsers(context)) {
             items.add(new MenuItem(R.id.open_select_browser, resources.getString(
-                    R.string.menu_open_with_a_browser)));
+                    R.string.menu_open_with_a_browser2)));
         }
 
         if (customTabConfig != null) {
-            items.add(new MenuItem(R.id.open_in_firefox_focus, resources.getString(R.string.menu_open_in_firefox_focus,
+            // "Open in Firefox Focus" to switch from a custom tab to the full-featured browser
+            items.add(new MenuItem(R.id.open_in_firefox_focus, resources.getString(R.string.menu_open_with_default_browser2,
                     resources.getString(R.string.app_name))));
         }
 
         if (browsers.hasThirdPartyDefaultBrowser(context)) {
             items.add(new MenuItem(R.id.open_default, resources.getString(
-                    R.string.menu_open_with_default_browser, browsers.getDefaultBrowser().loadLabel(
+                    R.string.menu_open_with_default_browser2, browsers.getDefaultBrowser().loadLabel(
                             context.getPackageManager()))));
         }
 
