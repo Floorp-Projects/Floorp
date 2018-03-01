@@ -18,6 +18,12 @@
 // ];
 //
 // See createInterfaceMap() below for a complete list of properties.
+//
+// The values of the properties need to be literal true/false
+// (e.g. indicating whether something is enabled on a particular
+// channel/OS).  If we ever end up in a situation where a propert
+// value needs to depend on channel or OS, we will need to make sure
+// we have that information before setting up the property lists.
 
 // IMPORTANT: Do not change this list without review from
 //            a JavaScript Engine peer!
