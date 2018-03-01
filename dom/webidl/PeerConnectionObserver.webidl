@@ -34,9 +34,6 @@ interface PeerConnectionObserver
   /* Notification of one of several types of state changed */
   void onStateChange(PCObserverStateType state);
 
-  /* Changes to MediaStreamTracks */
-  void onRemoveStream(MediaStream stream);
-
   /* Transceiver management; called when setRemoteDescription causes a
      transceiver to be created on the C++ side */
   void onTransceiverNeeded(DOMString kind, TransceiverImpl transceiverImpl);
