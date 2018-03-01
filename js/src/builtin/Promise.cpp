@@ -2880,7 +2880,7 @@ AsyncGeneratorResumeNext(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenOb
 
         // Steps 7-8.
         Rooted<AsyncGeneratorRequest*> request(
-            cx, AsyncGeneratorObject::peekRequest(cx, asyncGenObj));
+            cx, AsyncGeneratorObject::peekRequest(asyncGenObj));
         if (!request)
             return false;
 

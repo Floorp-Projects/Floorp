@@ -18,9 +18,9 @@ var code = `(module
 try {
     wasmFullPass(code, Math.fround(13.37), {}, 13.37);
 } catch (e) {
-    // ASAN will fail these tests because its stack frames are much bigger than
-    // usual ones and the parser will bail out during its recursive descent.
+    // Some configurations, like e.g. ASAN, will fail these tests because its
+    // stack frames are much bigger than usual ones and the parser will bail
+    // out during its recursive descent.
     // Ignore those errors specifically.
     assertEq(e.message.includes('out of memory'), true);
-    assertEq(getBuildConfiguration().asan, true);
 }

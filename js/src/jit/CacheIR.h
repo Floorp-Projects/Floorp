@@ -81,6 +81,13 @@ class ValOperandId : public OperandId
     explicit ValOperandId(uint16_t id) : OperandId(id) {}
 };
 
+class ValueTagOperandId : public OperandId
+{
+  public:
+    ValueTagOperandId() = default;
+    explicit ValueTagOperandId(uint16_t id) : OperandId(id) {}
+};
+
 class ObjOperandId : public OperandId
 {
   public:
@@ -128,6 +135,9 @@ class TypedOperandId : public OperandId
     {}
     MOZ_IMPLICIT TypedOperandId(Int32OperandId id)
       : OperandId(id.id()), type_(JSVAL_TYPE_INT32)
+    {}
+    MOZ_IMPLICIT TypedOperandId(ValueTagOperandId val)
+      : OperandId(val.id()), type_(JSVAL_TYPE_UNKNOWN)
     {}
     TypedOperandId(ValOperandId val, JSValueType type)
       : OperandId(val.id()), type_(type)
@@ -199,6 +209,7 @@ extern const char* CacheKindNames[];
     _(GuardHasGetterSetter)               \
     _(GuardGroupHasUnanalyzedNewScript)   \
     _(GuardIndexIsNonNegative)            \
+    _(GuardTagNotEqual)                   \
     _(GuardXrayExpandoShapeAndDefaultProto) \
     _(GuardFunctionPrototype)             \
     _(LoadStackValue)                     \
@@ -206,6 +217,7 @@ extern const char* CacheKindNames[];
     _(LoadProto)                          \
     _(LoadEnclosingEnvironment)           \
     _(LoadWrapperTarget)                  \
+    _(LoadValueTag)                       \
                                           \
     _(MegamorphicLoadSlotResult)          \
     _(MegamorphicLoadSlotByValueResult)   \
@@ -693,6 +705,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void guardIndexIsNonNegative(Int32OperandId index) {
         writeOpWithOperandId(CacheOp::GuardIndexIsNonNegative, index);
     }
+    void guardTagNotEqual(ValueTagOperandId lhs, ValueTagOperandId rhs) {
+        writeOpWithOperandId(CacheOp::GuardTagNotEqual, lhs);
+        writeOperandId(rhs);
+    }
 
     void loadFrameCalleeResult() {
         writeOp(CacheOp::LoadFrameCalleeResult);
@@ -745,6 +761,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     ObjOperandId loadWrapperTarget(ObjOperandId obj) {
         ObjOperandId res(nextOperandId_++);
         writeOpWithOperandId(CacheOp::LoadWrapperTarget, obj);
+        writeOperandId(res);
+        return res;
+    }
+
+    ValueTagOperandId loadValueTag(ValOperandId val) {
+        ValueTagOperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::LoadValueTag, val);
         writeOperandId(res);
         return res;
     }
@@ -1145,6 +1168,7 @@ class MOZ_RAII CacheIRReader
     void skip() { buffer_.readByte(); }
 
     ValOperandId valOperandId() { return ValOperandId(buffer_.readByte()); }
+    ValueTagOperandId valueTagOperandId() { return ValueTagOperandId(buffer_.readByte()); }
     ObjOperandId objOperandId() { return ObjOperandId(buffer_.readByte()); }
     StringOperandId stringOperandId() { return StringOperandId(buffer_.readByte()); }
     SymbolOperandId symbolOperandId() { return SymbolOperandId(buffer_.readByte()); }
@@ -1302,7 +1326,7 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
 
     bool tryAttachMagicArgument(ValOperandId valId, ValOperandId indexId);
     bool tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId objId,
-                                     uint32_t index, Int32OperandId indexId);
+                                     Int32OperandId indexId);
 
     bool tryAttachDenseElement(HandleObject obj, ObjOperandId objId,
                                uint32_t index, Int32OperandId indexId);
@@ -1530,9 +1554,9 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator
     bool tryAttachDenseHole(HandleObject obj, ObjOperandId objId,
                             uint32_t index, Int32OperandId indexId);
     bool tryAttachTypedArray(HandleObject obj, ObjOperandId objId,
-                             uint32_t index, Int32OperandId indexId);
+                             Int32OperandId indexId);
     bool tryAttachSparse(HandleObject obj, ObjOperandId objId,
-                         uint32_t index, Int32OperandId indexId);
+                         Int32OperandId indexId);
     bool tryAttachNamedProp(HandleObject obj, ObjOperandId objId,
                             HandleId key, ValOperandId keyId);
     bool tryAttachMegamorphic(ObjOperandId objId, ValOperandId keyId);
@@ -1620,7 +1644,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator
 
   public:
     CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
-                    JSOp op, ICCall_Fallback* stub, ICState::Mode mode,
+                    JSOp op, ICState::Mode mode,
                     uint32_t argc, HandleValue callee, HandleValue thisval,
                     HandleValueArray args);
 
@@ -1644,6 +1668,7 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator
     bool tryAttachString(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachObject(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachSymbol(ValOperandId lhsId, ValOperandId rhsId);
+    bool tryAttachStrictDifferentTypes(ValOperandId lhsId, ValOperandId rhsId);
 
     void trackAttached(const char* name);
 

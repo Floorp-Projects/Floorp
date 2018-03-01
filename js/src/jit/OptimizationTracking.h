@@ -88,7 +88,7 @@ class OptimizationTypeInfo
 
     HashNumber hash() const;
 
-    MOZ_MUST_USE bool writeCompact(JSContext* cx, CompactBufferWriter& writer,
+    MOZ_MUST_USE bool writeCompact(CompactBufferWriter& writer,
                                    UniqueTrackedTypes& uniqueTypes) const;
 };
 

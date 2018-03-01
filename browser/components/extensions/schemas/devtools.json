@@ -24,7 +24,7 @@
   },
   {
     "namespace": "devtools",
-    "permissions": ["devtools"],
+    "permissions": ["manifest:devtools_page"],
     "allowedContexts": ["devtools", "devtools_only"],
     "defaultContexts": ["devtools", "devtools_only"]
   }

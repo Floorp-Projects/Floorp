@@ -1666,6 +1666,18 @@ CacheIRCompiler::emitLoadWrapperTarget()
 }
 
 bool
+CacheIRCompiler::emitLoadValueTag()
+{
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    Register res = allocator.defineRegister(masm, reader.valueTagOperandId());
+
+    Register tag = masm.extractTag(val, res);
+    if (tag != res)
+        masm.mov(tag, res);
+    return true;
+}
+
+bool
 CacheIRCompiler::emitLoadDOMExpandoValue()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
@@ -1972,6 +1984,28 @@ CacheIRCompiler::emitGuardIndexIsNonNegative()
         return false;
 
     masm.branch32(Assembler::LessThan, index, Imm32(0), failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardTagNotEqual()
+{
+    Register lhs = allocator.useRegister(masm, reader.valueTagOperandId());
+    Register rhs = allocator.useRegister(masm, reader.valueTagOperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Label done;
+    masm.branch32(Assembler::Equal, lhs, rhs, failure->label());
+
+    // If both lhs and rhs are numbers, can't use tag comparison to do inequality comparison
+    masm.branchTestNumber(Assembler::NotEqual, lhs, &done);
+    masm.branchTestNumber(Assembler::NotEqual, rhs, &done);
+    masm.jump(failure->label());
+
+    masm.bind(&done);
     return true;
 }
 

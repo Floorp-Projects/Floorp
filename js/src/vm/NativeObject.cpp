@@ -2285,8 +2285,7 @@ enum IsNameLookup { NotNameLookup = false, NameLookup = true };
  *     Gecko code.)
  */
 static bool
-GetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
-                       HandleValue receiver, IsNameLookup nameLookup, MutableHandleValue vp)
+GetNonexistentProperty(JSContext* cx, HandleId id, IsNameLookup nameLookup, MutableHandleValue vp)
 {
     vp.setUndefined();
 
@@ -2336,8 +2335,8 @@ GetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
 
 /* The NoGC version of GetNonexistentProperty, present only to make types line up. */
 bool
-GetNonexistentProperty(JSContext* cx, NativeObject* const& obj, const jsid& id, const Value& receiver,
-                       IsNameLookup nameLookup, FakeMutableHandle<Value> vp)
+GetNonexistentProperty(JSContext* cx, const jsid& id, IsNameLookup nameLookup,
+                       FakeMutableHandle<Value> vp)
 {
     return false;
 }
@@ -2424,7 +2423,7 @@ NativeGetPropertyInline(JSContext* cx,
         // Step 4.c. The spec algorithm simply returns undefined if proto is
         // null, but see the comment on GetNonexistentProperty.
         if (!proto)
-            return GetNonexistentProperty(cx, obj, id, receiver, nameLookup, vp);
+            return GetNonexistentProperty(cx, id, nameLookup, vp);
 
         // Step 4.d. If the prototype is also native, this step is a
         // recursive tail call, and we don't need to go through all the
@@ -2511,7 +2510,7 @@ MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleString propname)
  */
 static bool
 NativeSetExistingDataProperty(JSContext* cx, HandleNativeObject obj, HandleShape shape,
-                              HandleValue v, HandleValue receiver, ObjectOpResult& result)
+                              HandleValue v, ObjectOpResult& result)
 {
     MOZ_ASSERT(obj->isNative());
     MOZ_ASSERT(shape->isDataDescriptor());
@@ -2736,7 +2735,7 @@ SetExistingProperty(JSContext* cx, HandleNativeObject obj, HandleId id, HandleVa
                 Rooted<ArrayObject*> arr(cx, &pobj->as<ArrayObject>());
                 return ArraySetLength(cx, arr, id, shape->attributes(), v, result);
             }
-            return NativeSetExistingDataProperty(cx, pobj, shape, v, receiver, result);
+            return NativeSetExistingDataProperty(cx, pobj, shape, v, result);
         }
 
         // SpiderMonkey special case: assigning to an inherited slotless

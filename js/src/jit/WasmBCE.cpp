@@ -15,8 +15,6 @@ using namespace mozilla;
 typedef js::HashMap<uint32_t, MDefinition*, DefaultHasher<uint32_t>, SystemAllocPolicy>
     LastSeenMap;
 
-unsigned redundantCount = 0;
-
 // The Wasm Bounds Check Elimination (BCE) pass looks for bounds checks
 // on SSA values that have already been checked. (in the same block or in a
 // dominating block). These bounds checks are redundant and thus eliminated.
@@ -62,7 +60,6 @@ jit::EliminateBoundsChecks(MIRGenerator* mir, MIRGraph& graph)
                     uint32_t(addr->toConstant()->toInt32()) < mir->minWasmHeapLength())
                 {
                     bc->setRedundant();
-                    redundantCount++;
                     if (JitOptions.spectreIndexMasking)
                         bc->replaceAllUsesWith(addr);
                     else
@@ -75,7 +72,6 @@ jit::EliminateBoundsChecks(MIRGenerator* mir, MIRGraph& graph)
                         MDefinition* prevCheckOrPhi = ptr->value();
                         if (prevCheckOrPhi->block()->dominates(block)) {
                             bc->setRedundant();
-                            redundantCount++;
                             if (JitOptions.spectreIndexMasking)
                                 bc->replaceAllUsesWith(prevCheckOrPhi);
                             else

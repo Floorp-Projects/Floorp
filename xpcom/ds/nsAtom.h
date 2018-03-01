@@ -11,10 +11,15 @@
 #include "nsString.h"
 #include "nsStringBuffer.h"
 
+namespace mozilla {
+struct AtomsSizes;
+}
+
 class nsAtom
 {
 public:
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                              mozilla::AtomsSizes& aSizes) const;
 
   enum class AtomKind : uint8_t {
     DynamicAtom = 0,

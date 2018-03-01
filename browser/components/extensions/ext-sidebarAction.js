@@ -136,20 +136,6 @@ this.sidebarAction = class extends ExtensionAPI {
     }
   }
 
-  sidebarUrl(panel) {
-    let url = `${sidebarURL}?panel=${encodeURIComponent(panel)}`;
-
-    if (this.extension.remote) {
-      url += "&remote=1";
-    }
-
-    if (this.browserStyle) {
-      url += "&browser-style=1";
-    }
-
-    return url;
-  }
-
   createMenuItem(window, details) {
     let {document, SidebarUI} = window;
 
@@ -161,7 +147,12 @@ this.sidebarAction = class extends ExtensionAPI {
     broadcaster.setAttribute("type", "checkbox");
     broadcaster.setAttribute("group", "sidebar");
     broadcaster.setAttribute("label", details.title);
-    broadcaster.setAttribute("sidebarurl", this.sidebarUrl(details.panel));
+    broadcaster.setAttribute("sidebarurl", sidebarURL);
+    broadcaster.setAttribute("panel", details.panel);
+    if (this.browserStyle) {
+      broadcaster.setAttribute("browserStyle", "true");
+    }
+    broadcaster.setAttribute("extensionId", this.extension.id);
     let id = `ext-key-id-${this.id}`;
     broadcaster.setAttribute("key", id);
 
@@ -227,10 +218,9 @@ this.sidebarAction = class extends ExtensionAPI {
     broadcaster.setAttribute("tooltiptext", title);
     broadcaster.setAttribute("label", title);
 
-    let url = this.sidebarUrl(tabData.panel);
-    let urlChanged = url !== broadcaster.getAttribute("sidebarurl");
+    let urlChanged = tabData.panel !== broadcaster.getAttribute("panel");
     if (urlChanged) {
-      broadcaster.setAttribute("sidebarurl", url);
+      broadcaster.setAttribute("panel", tabData.panel);
     }
 
     this.setMenuIcon(menu, tabData);

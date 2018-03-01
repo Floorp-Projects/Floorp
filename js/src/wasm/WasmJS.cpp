@@ -1538,7 +1538,7 @@ WasmMemoryObject::addMovingGrowObserver(JSContext* cx, WasmInstanceObject* insta
 }
 
 /* static */ uint32_t
-WasmMemoryObject::growShared(HandleWasmMemoryObject memory, uint32_t delta, JSContext* cx)
+WasmMemoryObject::growShared(HandleWasmMemoryObject memory, uint32_t delta)
 {
     SharedArrayRawBuffer* rawBuf = memory->sharedArrayRawBuffer();
     SharedArrayRawBuffer::Lock lock(rawBuf);
@@ -1568,7 +1568,7 @@ WasmMemoryObject::growShared(HandleWasmMemoryObject memory, uint32_t delta, JSCo
 WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta, JSContext* cx)
 {
     if (memory->isShared())
-        return growShared(memory, delta, cx);
+        return growShared(memory, delta);
 
     RootedArrayBufferObject oldBuf(cx, &memory->buffer().as<ArrayBufferObject>());
 
@@ -2181,8 +2181,8 @@ Reject(JSContext* cx, const CompileArgs& args, UniqueChars error, Handle<Promise
 }
 
 static bool
-Resolve(JSContext* cx, Module& module, const CompileArgs& compileArgs,
-        Handle<PromiseObject*> promise, bool instantiate, HandleObject importObj)
+Resolve(JSContext* cx, Module& module, Handle<PromiseObject*> promise, bool instantiate,
+        HandleObject importObj)
 {
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
     RootedObject moduleObj(cx, WasmModuleObject::create(cx, module, proto));
@@ -2252,7 +2252,7 @@ struct CompileBufferTask : PromiseHelperTask
 
     bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
         return module
-               ? Resolve(cx, *module, *compileArgs, promise, instantiate, importObj)
+               ? Resolve(cx, *module, promise, instantiate, importObj)
                : Reject(cx, *compileArgs, Move(error), promise);
     }
 };
@@ -2498,7 +2498,7 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
     bool rejectAndDestroyAfterHelperThreadStarted(unsigned errorNumber) {
         MOZ_ASSERT(streamState_.lock() == Code || streamState_.lock() == Tail);
         MOZ_ASSERT(!streamError_);
-        streamError_ = Some(JSMSG_OUT_OF_MEMORY);
+        streamError_ = Some(errorNumber);
         streamFailed_ = true;
         exclusiveCodeStreamEnd_.lock().notify_one();
         exclusiveTailBytes_.lock().notify_one();
@@ -2639,7 +2639,7 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
         MOZ_ASSERT(streamState_.lock() == Closed);
         MOZ_ASSERT_IF(module_, !streamFailed_ && !streamError_ && !compileError_);
         return module_
-               ? Resolve(cx, *module_, *compileArgs_, promise, instantiate_, importObj_)
+               ? Resolve(cx, *module_, promise, instantiate_, importObj_)
                : streamError_
                  ? RejectWithErrorNumber(cx, *streamError_, promise)
                  : Reject(cx, *compileArgs_, Move(compileError_), promise);
