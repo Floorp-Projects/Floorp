@@ -17,6 +17,12 @@ onactivate = function(event) {
 `;
 
 function handleRequest(request, response) {
+  if (request.queryString == 'clearcounter') {
+    setState('count', "1");
+    response.write("ok");
+    return;
+  }
+
   let count = getState("count");
   if (count === "") {
     count = 1;
