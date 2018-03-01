@@ -17,7 +17,7 @@ add_task(async function test_support_theme_frame() {
         },
         "colors": {
           "frame": FRAME_COLOR,
-          "background_tab_text": TAB_TEXT_COLOR,
+          "tab_background_text": TAB_TEXT_COLOR,
         },
       },
     },
