@@ -96,7 +96,9 @@ function isAccessibleTree(tree, options = {}) {
   for (let node of treeNodes) {
     ok(node.id, "TreeNode has an id");
     is(node.getAttribute("role"), "treeitem", "Tree item semantics is present");
-    ok(node.hasAttribute("aria-level"), "Aria level attribute is set");
+    is(parseInt(node.getAttribute("aria-level"), 10),
+       parseInt(node.getAttribute("data-depth"), 10) + 1,
+       "Aria level attribute is set correctly");
   }
 }
 

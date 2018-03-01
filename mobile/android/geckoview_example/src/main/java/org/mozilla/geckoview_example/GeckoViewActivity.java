@@ -74,11 +74,11 @@ public class GeckoViewActivity extends Activity {
         mGeckoSession = new GeckoSession();
         mGeckoView.setSession(mGeckoSession);
 
-        mGeckoSession.setContentListener(new MyGeckoViewContent());
+        mGeckoSession.setContentDelegate(new MyGeckoViewContent());
         final MyTrackingProtection tp = new MyTrackingProtection();
         mGeckoSession.setTrackingProtectionDelegate(tp);
-        mGeckoSession.setProgressListener(new MyGeckoViewProgress(tp));
-        mGeckoSession.setNavigationListener(new Navigation());
+        mGeckoSession.setProgressDelegate(new MyGeckoViewProgress(tp));
+        mGeckoSession.setNavigationDelegate(new Navigation());
 
         final BasicGeckoViewPrompt prompt = new BasicGeckoViewPrompt(this);
         prompt.filePickerRequestCode = REQUEST_FILE_PICKER;
@@ -168,7 +168,7 @@ public class GeckoViewActivity extends Activity {
         }
     }
 
-    private class MyGeckoViewContent implements GeckoSession.ContentListener {
+    private class MyGeckoViewContent implements GeckoSession.ContentDelegate {
         @Override
         public void onTitleChange(GeckoSession session, String title) {
             Log.i(LOGTAG, "Content title changed to " + title);
@@ -206,7 +206,7 @@ public class GeckoViewActivity extends Activity {
         }
     }
 
-    private class MyGeckoViewProgress implements GeckoSession.ProgressListener {
+    private class MyGeckoViewProgress implements GeckoSession.ProgressDelegate {
         private MyTrackingProtection mTp;
 
         private MyGeckoViewProgress(final MyTrackingProtection tp) {
@@ -259,7 +259,7 @@ public class GeckoViewActivity extends Activity {
         }
 
         @Override
-        public void requestAndroidPermissions(final GeckoSession session, final String[] permissions,
+        public void onAndroidPermissionsRequest(final GeckoSession session, final String[] permissions,
                                               final Callback callback) {
             if (Build.VERSION.SDK_INT < 23) {
                 // requestPermissions was introduced in API 23.
@@ -271,7 +271,7 @@ public class GeckoViewActivity extends Activity {
         }
 
         @Override
-        public void requestContentPermission(final GeckoSession session, final String uri,
+        public void onContentPermissionRequest(final GeckoSession session, final String uri,
                                              final int type, final String access,
                                              final Callback callback) {
             final int resId;
@@ -288,7 +288,7 @@ public class GeckoViewActivity extends Activity {
             final String title = getString(resId, Uri.parse(uri).getAuthority());
             final BasicGeckoViewPrompt prompt = (BasicGeckoViewPrompt)
                     mGeckoSession.getPromptDelegate();
-            prompt.promptForPermission(session, title, callback);
+            prompt.onPermissionPrompt(session, title, callback);
         }
 
         private void normalizeMediaName(final MediaSource[] sources) {
@@ -316,7 +316,7 @@ public class GeckoViewActivity extends Activity {
         }
 
         @Override
-        public void requestMediaPermission(final GeckoSession session, final String uri,
+        public void onMediaPermissionRequest(final GeckoSession session, final String uri,
                                            final MediaSource[] video, final MediaSource[] audio,
                                            final MediaCallback callback) {
             final String host = Uri.parse(uri).getAuthority();
@@ -334,11 +334,11 @@ public class GeckoViewActivity extends Activity {
 
             final BasicGeckoViewPrompt prompt = (BasicGeckoViewPrompt)
                     mGeckoSession.getPromptDelegate();
-            prompt.promptForMedia(session, title, video, audio, callback);
+            prompt.onMediaPrompt(session, title, video, audio, callback);
         }
     }
 
-    private class Navigation implements GeckoSession.NavigationListener {
+    private class Navigation implements GeckoSession.NavigationDelegate {
         @Override
         public void onLocationChange(GeckoSession session, final String url) {
         }

@@ -179,13 +179,13 @@ AutoGCRooter::trace(JSTracer* trc)
       }
 
       case WRAPVECTOR: {
-        AutoWrapperVector::VectorImpl& vector = static_cast<AutoWrapperVector*>(this)->vector;
+        auto vector = static_cast<AutoWrapperVector*>(this);
         /*
          * We need to use TraceManuallyBarrieredEdge here because we trace
          * wrapper roots in every slice. This is because of some rule-breaking
          * in RemapAllWrappersForObject; see comment there.
          */
-        for (WrapperValue* p = vector.begin(); p < vector.end(); p++)
+        for (WrapperValue* p = vector->begin(); p < vector->end(); p++)
             TraceManuallyBarrieredEdge(trc, &p->get(), "js::AutoWrapperVector.vector");
         return;
       }

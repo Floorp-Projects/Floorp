@@ -40,8 +40,6 @@ extern JS_FRIEND_DATA(const js::Class* const) FunctionClassPtr;
 
 namespace JS {
 
-class AutoIdVector;
-
 /**
  * The answer to a successful query as to whether an object is an Array per
  * ES6's internal |IsArray| operation (as exposed by |Array.isArray|).

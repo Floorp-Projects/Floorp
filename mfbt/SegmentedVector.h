@@ -139,6 +139,11 @@ public:
       aIdealSegmentSize - sizeof(Segment) < sizeof(T));
   }
 
+  SegmentedVector(SegmentedVector&& aOther)
+    : mSegments(mozilla::Move(aOther.mSegments))
+  {
+  }
+
   ~SegmentedVector() { Clear(); }
 
   bool IsEmpty() const { return !mSegments.getFirst(); }

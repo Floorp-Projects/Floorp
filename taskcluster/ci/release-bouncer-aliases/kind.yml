@@ -6,7 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 transforms:
    - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.bouncer_aliases:transforms
    - taskgraph.transforms.release_notifications:transforms
    - taskgraph.transforms.task:transforms
 
@@ -15,39 +15,36 @@ kind-dependencies:
 
 job-defaults:
    description: Update bouncer aliases job
-   worker-type: buildbot-bridge/buildbot-bridge
+   worker-type:
+      by-project:
+         mozilla-beta: scriptworker-prov-v1/bouncer-v1
+         mozilla-release: scriptworker-prov-v1/bouncer-v1
+         default: scriptworker-prov-v1/bouncer-dev
+   worker:
+      implementation: bouncer-aliases
+   scopes:
+      by-project:
+         mozilla-beta:
+            - project:releng:bouncer:action:submission
+            - project:releng:bouncer:server:production
+         mozilla-release:
+            - project:releng:bouncer:action:submission
+            - project:releng:bouncer:server:production
+         default:
+            - project:releng:bouncer:action:submission
+            - project:releng:bouncer:server:staging
    run-on-projects: []
    shipping-phase: ship
-   run:
-      using: buildbot
-      release-promotion: true
-   worker:
-      properties:
-         tuxedo_server_url:
-            by-project:
-               mozilla-beta: https://bounceradmin.mozilla.com/api
-               mozilla-release: https://bounceradmin.mozilla.com/api
-               maple: https://admin-bouncer-releng.stage.mozaws.net/api
-               default: http://localhost/api
 
 jobs:
+   devedition:
+      bouncer-products: ['installer', 'installer-ssl', 'stub-installer']
+      shipping-product: devedition
+
    fennec:
-      name: fennec_release_bouncer_aliases
+      bouncer-products: ['apk']
       shipping-product: fennec
-      run:
-         product: fennec
-         buildername: release-{branch}-fennec_bouncer_aliases
 
    firefox:
-      name: firefox_release_bouncer_aliases
+      bouncer-products: ['installer', 'installer-ssl', 'stub-installer']
       shipping-product: firefox
-      run:
-         product: firefox
-         buildername: release-{branch}-firefox_bouncer_aliases
-
-   devedition:
-      name: devedition_release_bouncer_aliases
-      shipping-product: devedition
-      run:
-         product: devedition
-         buildername: release-{branch}-devedition_bouncer_aliases
