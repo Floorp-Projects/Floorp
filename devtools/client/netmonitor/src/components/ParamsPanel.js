@@ -7,7 +7,7 @@
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const { connect } = require("../utils/redux-connect");
 const { L10N } = require("../utils/l10n");
 const {
   fetchNetworkUpdatePacket,
