@@ -3259,10 +3259,8 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
       static_cast<nsIRunnable*>(runnable)->Run();
       runnable->Release();
 
-      CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
-      if (ccjs) {
-        ccjs->PerformDebuggerMicroTaskCheckpoint();
-      }
+      // Flush the promise queue.
+      Promise::PerformWorkerDebuggerMicroTaskCheckpoint();
 
       if (debuggerRunnablesPending) {
         WorkerDebuggerGlobalScope* globalScope = DebuggerGlobalScope();
@@ -4346,12 +4344,9 @@ WorkerPrivate::EnterDebuggerEventLoop()
     {
       MutexAutoLock lock(mMutex);
 
-      CycleCollectedJSContext* context = CycleCollectedJSContext::Get();
-      std::queue<RefPtr<MicroTaskRunnable>>& debuggerMtQueue =
-        context->GetDebuggerMicroTaskQueue();
       while (mControlQueue.IsEmpty() &&
              !(debuggerRunnablesPending = !mDebuggerQueue.IsEmpty()) &&
-             debuggerMtQueue.empty()) {
+             Promise::IsWorkerDebuggerMicroTaskEmpty()) {
         WaitForWorkerEvents();
       }
 
@@ -4359,9 +4354,8 @@ WorkerPrivate::EnterDebuggerEventLoop()
 
       // XXXkhuey should we abort JS on the stack here if we got Abort above?
     }
-    CycleCollectedJSContext* context = CycleCollectedJSContext::Get();
-    if (context) {
-      context->PerformDebuggerMicroTaskCheckpoint();
+    if (!Promise::IsWorkerDebuggerMicroTaskEmpty()) {
+      Promise::PerformWorkerDebuggerMicroTaskCheckpoint();
     }
     if (debuggerRunnablesPending) {
       // Start the periodic GC timer if it is not already running.
@@ -4379,10 +4373,8 @@ WorkerPrivate::EnterDebuggerEventLoop()
       static_cast<nsIRunnable*>(runnable)->Run();
       runnable->Release();
 
-      CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
-      if (ccjs) {
-        ccjs->PerformDebuggerMicroTaskCheckpoint();
-      }
+      // Flush the promise queue.
+      Promise::PerformWorkerDebuggerMicroTaskCheckpoint();
 
       // Now *might* be a good time to GC. Let the JS engine make the decision.
       if (JS::CurrentGlobalOrNull(cx)) {
@@ -4747,8 +4739,8 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
 
     RefPtr<Function> callback = info->mHandler->GetCallback();
     if (!callback) {
-      nsAutoMicroTask mt;
-
+      // scope for the AutoEntryScript, so it comes off the stack before we do
+      // Promise::PerformMicroTaskCheckpoint.
       AutoEntryScript aes(global, reason, false);
 
       // Evaluate the timeout expression.
@@ -4782,6 +4774,10 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
 
       rv.SuppressException();
     }
+
+    // Since we might be processing more timeouts, go ahead and flush
+    // the promise queue now before we do that.
+    Promise::PerformWorkerMicroTaskCheckpoint();
 
     NS_ASSERTION(mRunningExpiredTimeouts, "Someone changed this!");
   }

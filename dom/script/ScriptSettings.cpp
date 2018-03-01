@@ -830,6 +830,8 @@ AutoSafeJSContext::AutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMP
 AutoSlowOperation::AutoSlowOperation(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
   : AutoJSAPI()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
   Init();
@@ -838,12 +840,9 @@ AutoSlowOperation::AutoSlowOperation(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMP
 void
 AutoSlowOperation::CheckForInterrupt()
 {
-  // For now we support only main thread!
-  if (mIsMainThread) {
-    // JS_CheckForInterrupt expects us to be in a compartment.
-    JSAutoCompartment ac(cx(), xpc::UnprivilegedJunkScope());
-    JS_CheckForInterrupt(cx());
-  }
+  // JS_CheckForInterrupt expects us to be in a compartment.
+  JSAutoCompartment ac(cx(), xpc::UnprivilegedJunkScope());
+  JS_CheckForInterrupt(cx());
 }
 
 } // namespace mozilla

@@ -1052,10 +1052,6 @@ public:
   {
     MOZ_COUNT_CTOR_INHERITED(WorkerJSContext, CycleCollectedJSContext);
     MOZ_ASSERT(aWorkerPrivate);
-    // Magical number 2. Workers have the base recursion depth 1, and normal
-    // runnables run at level 2, and we don't want to process microtasks
-    // at any other level.
-    SetTargetedMicroTaskRecursionDepth(2);
   }
 
   ~WorkerJSContext()
@@ -1109,14 +1105,26 @@ public:
     return NS_OK;
   }
 
-  virtual void DispatchToMicroTask(already_AddRefed<MicroTaskRunnable> aRunnable) override
+  virtual void AfterProcessTask(uint32_t aRecursionDepth) override
   {
-    RefPtr<MicroTaskRunnable> runnable(aRunnable);
+    // Only perform the Promise microtask checkpoint on the outermost event
+    // loop.  Don't run it, for example, during sync XHR or importScripts.
+    if (aRecursionDepth == 2) {
+      CycleCollectedJSContext::AfterProcessTask(aRecursionDepth);
+    } else if (aRecursionDepth > 2) {
+      AutoDisableMicroTaskCheckpoint disableMicroTaskCheckpoint;
+      CycleCollectedJSContext::AfterProcessTask(aRecursionDepth);
+    }
+  }
+
+  virtual void DispatchToMicroTask(already_AddRefed<nsIRunnable> aRunnable) override
+  {
+    RefPtr<nsIRunnable> runnable(aRunnable);
 
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(runnable);
 
-    std::queue<RefPtr<MicroTaskRunnable>>* microTaskQueue = nullptr;
+    std::queue<nsCOMPtr<nsIRunnable>>* microTaskQueue = nullptr;
 
     JSContext* cx = GetCurrentWorkerThreadJSContext();
     NS_ASSERTION(cx, "This should never be null!");
@@ -1125,16 +1133,16 @@ public:
     NS_ASSERTION(global, "This should never be null!");
 
     // On worker threads, if the current global is the worker global, we use the
-    // main micro task queue. Otherwise, the current global must be
+    // main promise micro task queue. Otherwise, the current global must be
     // either the debugger global or a debugger sandbox, and we use the debugger
-    // micro task queue instead.
+    // promise micro task queue instead.
     if (IsWorkerGlobal(global)) {
-      microTaskQueue = &GetMicroTaskQueue();
+      microTaskQueue = &mPromiseMicroTaskQueue;
     } else {
       MOZ_ASSERT(IsWorkerDebuggerGlobal(global) ||
                  IsWorkerDebuggerSandbox(global));
 
-      microTaskQueue = &GetDebuggerMicroTaskQueue();
+      microTaskQueue = &mDebuggerPromiseMicroTaskQueue;
     }
 
     microTaskQueue->push(runnable.forget());

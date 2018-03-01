@@ -7,6 +7,7 @@
 #include "DocumentTimeline.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/dom/DocumentTimelineBinding.h"
+#include "mozilla/dom/Promise.h"
 #include "AnimationUtils.h"
 #include "nsContentUtils.h"
 #include "nsDOMMutationObserver.h"
@@ -159,11 +160,14 @@ DocumentTimeline::WillRefresh(mozilla::TimeStamp aTime)
 
   // https://drafts.csswg.org/web-animations-1/#update-animations-and-send-events,
   // step2.
+  // FIXME: This needs to be replaced with nsAutoMicroTask.
   // Note that this should be done before nsAutoAnimationMutationBatch.  If
   // PerformMicroTaskCheckpoint was called before nsAutoAnimationMutationBatch
   // is destroyed, some mutation records might not be delivered in this
   // checkpoint.
-  nsAutoMicroTask mt;
+  auto autoPerformMicrotaskCheckpoint = MakeScopeExit([] {
+    Promise::PerformMicroTaskCheckpoint();
+  });
   nsAutoAnimationMutationBatch mb(mDocument);
 
   for (Animation* animation = mAnimationOrder.getFirst(); animation;
