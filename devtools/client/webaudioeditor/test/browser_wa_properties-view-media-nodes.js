@@ -20,10 +20,12 @@ function waitForDeviceClosed() {
 
   return new Promise((resolve, reject) => {
     const message = "webrtc:UpdateGlobalIndicators";
-    Services.ppmm.addMessageListener(message, function listener(aMessage) {
+    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+                 .getService(Ci.nsIMessageBroadcaster);
+    ppmm.addMessageListener(message, function listener(aMessage) {
       info("Received " + message + " message");
       if (!aMessage.data.showGlobalIndicator) {
-        Services.ppmm.removeMessageListener(message, listener);
+        ppmm.removeMessageListener(message, listener);
         resolve();
       }
     });
