@@ -459,6 +459,10 @@ class ObjectGroup : public gc::TenuredCell
 
     static const JS::TraceKind TraceKind = JS::TraceKind::ObjectGroup;
 
+  private:
+    // See JSObject::offsetOfGroup() comment.
+    friend class js::jit::MacroAssembler;
+
     static inline uint32_t offsetOfClasp() {
         return offsetof(ObjectGroup, clasp_);
     }
@@ -479,6 +483,7 @@ class ObjectGroup : public gc::TenuredCell
         return offsetof(ObjectGroup, flags_);
     }
 
+  public:
     const ObjectGroupFlags* addressOfFlags() const {
         return &flags_;
     }

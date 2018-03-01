@@ -1169,14 +1169,19 @@ class Shape : public gc::TenuredCell
     void fixupGetterSetterForBarrier(JSTracer* trc);
     void updateBaseShapeAfterMovingGC();
 
-    /* For JIT usage */
-    static inline size_t offsetOfBase() { return offsetof(Shape, base_); }
+#ifdef DEBUG
+    // For JIT usage.
     static inline size_t offsetOfSlotInfo() { return offsetof(Shape, slotInfo); }
     static inline uint32_t fixedSlotsMask() { return FIXED_SLOTS_MASK; }
+#endif
 
   private:
     void fixupDictionaryShapeAfterMovingGC();
     void fixupShapeTreeAfterMovingGC();
+
+    static Shape* fromParentFieldPointer(uintptr_t p) {
+        return reinterpret_cast<Shape*>(p - offsetof(Shape, parent));
+    }
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(offsetof(Shape, base_) == offsetof(js::shadow::Shape, base));
