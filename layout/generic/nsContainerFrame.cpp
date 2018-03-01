@@ -8,7 +8,6 @@
 
 #include "nsContainerFrame.h"
 
-#include "mozilla/dom/HTMLDetailsElement.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsAttrValue.h"
