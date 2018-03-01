@@ -174,7 +174,7 @@ DayWithinYear(double time, double year);
 // Sets the time resolution for fingerprinting protection.
 // If it's set to zero, then no rounding will happen.
 JS_PUBLIC_API(void)
-SetTimeResolutionUsec(uint32_t resolution);
+SetTimeResolutionUsec(uint32_t resolution, bool jitter);
 
 } // namespace JS
 

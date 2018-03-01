@@ -63,6 +63,8 @@ using JS::ToInteger;
 
 // When this value is non-zero, we'll round the time by this resolution.
 static Atomic<uint32_t, Relaxed> sResolutionUsec;
+// This is not implemented yet, but we will use this to know to jitter the time in the JS shell
+static Atomic<bool, Relaxed> sJitter;
 
 /*
  * The JS 'Date' object is patterned after the Java 'Date' object.
@@ -405,9 +407,10 @@ JS::DayWithinYear(double time, double year)
 }
 
 JS_PUBLIC_API(void)
-JS::SetTimeResolutionUsec(uint32_t resolution)
+JS::SetTimeResolutionUsec(uint32_t resolution, bool jitter)
 {
     sResolutionUsec = resolution;
+    sJitter = jitter;
 }
 
 /*
