@@ -13,6 +13,7 @@ DIRS += [
 ]
 
 DevToolsModules(
+    'accessibility-parent.js',
     'accessibility.js',
     'actor-registry.js',
     'addon.js',
