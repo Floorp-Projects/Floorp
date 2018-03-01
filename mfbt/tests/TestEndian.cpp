@@ -367,6 +367,18 @@ main()
   MOZ_RELEASE_ASSERT(
     BigEndian::readUint64(&unsigned_bytes[0]) == 0x102030405060708ULL);
 
+  if (sizeof(uintptr_t) == 8) {
+    MOZ_RELEASE_ASSERT(
+      LittleEndian::readUintptr(&unsigned_bytes[0]) == 0x0807060504030201ULL);
+    MOZ_RELEASE_ASSERT(
+      BigEndian::readUintptr(&unsigned_bytes[0]) == 0x0102030405060708ULL);
+  } else {
+    MOZ_RELEASE_ASSERT(
+      LittleEndian::readUintptr(&unsigned_bytes[0]) == 0x04030201U);
+    MOZ_RELEASE_ASSERT(
+      BigEndian::readUintptr(&unsigned_bytes[0]) == 0x01020304U);
+  }
+
   LittleEndian::writeUint16(&buffer[0], 0x201);
   MOZ_RELEASE_ASSERT(
     memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint16_t)) == 0);
@@ -388,6 +400,26 @@ main()
   MOZ_RELEASE_ASSERT(
     memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uint64_t)) == 0);
 
+  memset(&buffer[0], 0xff, sizeof(buffer));
+  LittleEndian::writeUintptr(&buffer[0], uintptr_t(0x0807060504030201ULL));
+  MOZ_RELEASE_ASSERT(
+    memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uintptr_t)) == 0);
+  if (sizeof(uintptr_t) == 4) {
+    MOZ_RELEASE_ASSERT(
+      LittleEndian::readUint32(&buffer[4]) == 0xffffffffU);
+  }
+
+  memset(&buffer[0], 0xff, sizeof(buffer));
+  if (sizeof(uintptr_t) == 8) {
+    BigEndian::writeUintptr(&buffer[0], uintptr_t(0x0102030405060708ULL));
+  } else {
+    BigEndian::writeUintptr(&buffer[0], uintptr_t(0x01020304U));
+    MOZ_RELEASE_ASSERT(
+      LittleEndian::readUint32(&buffer[4]) == 0xffffffffU);
+  }
+  MOZ_RELEASE_ASSERT(
+    memcmp(&unsigned_bytes[0], &buffer[0], sizeof(uintptr_t)) == 0);
+
   MOZ_RELEASE_ASSERT(
     LittleEndian::readInt16(&signed_bytes[0]) == int16_t(0xf2f1));
   MOZ_RELEASE_ASSERT(
@@ -402,6 +434,18 @@ main()
     LittleEndian::readInt64(&signed_bytes[0]) == int64_t(0xf8f7f6f5f4f3f2f1LL));
   MOZ_RELEASE_ASSERT(
     BigEndian::readInt64(&signed_bytes[0]) == int64_t(0xf1f2f3f4f5f6f7f8LL));
+
+  if (sizeof(uintptr_t) == 8) {
+    MOZ_RELEASE_ASSERT(
+      LittleEndian::readIntptr(&signed_bytes[0]) == intptr_t(0xf8f7f6f5f4f3f2f1LL));
+    MOZ_RELEASE_ASSERT(
+      BigEndian::readIntptr(&signed_bytes[0]) == intptr_t(0xf1f2f3f4f5f6f7f8LL));
+  } else {
+    MOZ_RELEASE_ASSERT(
+      LittleEndian::readIntptr(&signed_bytes[0]) == intptr_t(0xf4f3f2f1));
+    MOZ_RELEASE_ASSERT(
+      BigEndian::readIntptr(&signed_bytes[0]) == intptr_t(0xf1f2f3f4));
+  }
 
   LittleEndian::writeInt16(&buffer[0], int16_t(0xf2f1));
   MOZ_RELEASE_ASSERT(
@@ -423,6 +467,26 @@ main()
   BigEndian::writeInt64(&buffer[0], 0xf1f2f3f4f5f6f7f8LL);
   MOZ_RELEASE_ASSERT(
     memcmp(&signed_bytes[0], &buffer[0], sizeof(int64_t)) == 0);
+
+  memset(&buffer[0], 0xff, sizeof(buffer));
+  LittleEndian::writeIntptr(&buffer[0], intptr_t(0xf8f7f6f5f4f3f2f1LL));
+  MOZ_RELEASE_ASSERT(
+    memcmp(&signed_bytes[0], &buffer[0], sizeof(intptr_t)) == 0);
+  if (sizeof(intptr_t) == 4) {
+    MOZ_RELEASE_ASSERT(
+      LittleEndian::readUint32(&buffer[4]) == 0xffffffffU);
+  }
+
+  memset(&buffer[0], 0xff, sizeof(buffer));
+  if (sizeof(intptr_t) == 8) {
+    BigEndian::writeIntptr(&buffer[0], intptr_t(0xf1f2f3f4f5f6f7f8LL));
+  } else {
+    BigEndian::writeIntptr(&buffer[0], intptr_t(0xf1f2f3f4));
+    MOZ_RELEASE_ASSERT(
+      LittleEndian::readUint32(&buffer[4]) == 0xffffffffU);
+  }
+  MOZ_RELEASE_ASSERT(
+    memcmp(&signed_bytes[0], &buffer[0], sizeof(intptr_t)) == 0);
 
   TestSingleSwap(uint16_t(0xf2f1), uint16_t(0xf1f2));
   TestSingleSwap(uint32_t(0xf4f3f2f1), uint32_t(0xf1f2f3f4));
