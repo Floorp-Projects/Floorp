@@ -234,7 +234,7 @@ add_task(async function test_disabled_install_semantics() {
   // retained and unmodified.
   Assert.equal(1, collection.count());
 
-  let payload = collection.cleartextPayloads()[0];
+  let payload = collection.payloads()[0];
   Assert.notEqual(null, collection.wbo(id));
   Assert.equal(ADDON_ID, payload.addonID);
   Assert.ok(!payload.enabled);

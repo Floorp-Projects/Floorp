@@ -359,7 +359,7 @@ async function test_restoreOrImport(engine, { replace }) {
 
     _("Verify that there's the right bookmarks on the server.");
     // Of course, there's also the Bookmarks Toolbar and Bookmarks Menu...
-    let payloads     = server.user("foo").collection("bookmarks").cleartextPayloads();
+    let payloads     = server.user("foo").collection("bookmarks").payloads();
     let bookmarkWBOs = payloads.filter(function(wbo) {
                          return wbo.type == "bookmark";
                        });
@@ -797,7 +797,7 @@ add_bookmark_test(async function test_sync_dateAdded(engine) {
     let newRecord2 = await store.createRecord(item2GUID);
     equal(newRecord2.dateAdded, item2.dateAdded, "dateAdded update should work for earlier date");
 
-    let bzWBO = collection.cleartext(bz.guid);
+    let bzWBO = JSON.parse(JSON.parse(collection._wbos[bz.guid].payload).ciphertext);
     ok(bzWBO.dateAdded, "Locally added dateAdded lost");
 
     let localRecord = await store.createRecord(bz.guid);
@@ -867,7 +867,8 @@ add_task(async function test_sync_imap_URLs() {
       "invalidazPrahy.jpg",
       "Remote bookmark A with IMAP URL should exist locally");
 
-    let bPayload = collection.cleartext("bookmarkBBBB");
+    let bPayload = JSON.parse(JSON.parse(
+      collection.payload("bookmarkBBBB")).ciphertext);
     equal(bPayload.bmkUri, "imap://eleven.vs.solnicky.cz:993/" +
       "fetch%3EUID%3E/CURRENT%3E2433?part=1.2&type=text/html&filename=" +
       "TomEdwards.html",
