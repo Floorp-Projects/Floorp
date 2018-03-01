@@ -283,9 +283,7 @@ BaselineCacheIRCompiler::emitGuardCompartment()
         return false;
 
     Address addr(stubAddress(reader.stubOffset()));
-    masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
-    masm.loadPtr(Address(scratch, ObjectGroup::offsetOfCompartment()), scratch);
-    masm.branchPtr(Assembler::NotEqual, addr, scratch, failure->label());
+    masm.branchTestObjCompartment(Assembler::NotEqual, obj, addr, scratch, failure->label());
     return true;
 }
 
@@ -300,10 +298,7 @@ BaselineCacheIRCompiler::emitGuardAnyClass()
         return false;
 
     Address testAddr(stubAddress(reader.stubOffset()));
-
-    masm.loadObjGroup(obj, scratch);
-    masm.loadPtr(Address(scratch, ObjectGroup::offsetOfClasp()), scratch);
-    masm.branchPtr(Assembler::NotEqual, testAddr, scratch, failure->label());
+    masm.branchTestObjClass(Assembler::NotEqual, obj, scratch, testAddr, failure->label());
     return true;
 }
 
@@ -1176,27 +1171,22 @@ BaselineCacheIRCompiler::emitAddAndStoreSlotShared(CacheOp op)
         // per the acquired properties analysis. Only change the group if the
         // old group still has a newScript. This only applies to PlainObjects.
         Label noGroupChange;
-        masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch1);
-        masm.branchPtr(Assembler::Equal,
-                       Address(scratch1, ObjectGroup::offsetOfAddendum()),
-                       ImmWord(0),
-                       &noGroupChange);
+        masm.branchIfObjGroupHasNoAddendum(obj, scratch1, &noGroupChange);
 
-        // Reload the new group from the cache.
+        // Update the object's group.
         masm.loadPtr(newGroupAddr, scratch1);
-
-        Address groupAddr(obj, JSObject::offsetOfGroup());
-        EmitPreBarrier(masm, groupAddr, MIRType::ObjectGroup);
-        masm.storePtr(scratch1, groupAddr);
+        masm.storeObjGroup(scratch1, obj, [](MacroAssembler& masm, const Address& addr) {
+            EmitPreBarrier(masm, addr, MIRType::ObjectGroup);
+        });
 
         masm.bind(&noGroupChange);
     }
 
     // Update the object's shape.
-    Address shapeAddr(obj, ShapedObject::offsetOfShape());
     masm.loadPtr(newShapeAddr, scratch1);
-    EmitPreBarrier(masm, shapeAddr, MIRType::Shape);
-    masm.storePtr(scratch1, shapeAddr);
+    masm.storeObjShape(scratch1, obj, [](MacroAssembler& masm, const Address& addr) {
+        EmitPreBarrier(masm, addr, MIRType::Shape);
+    });
 
     // Perform the store. No pre-barrier required since this is a new
     // initialization.

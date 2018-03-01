@@ -1177,12 +1177,27 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchIfObjectEmulatesUndefined(Register objReg, Register scratch, Label* slowCheck,
                                                 Label* label);
 
-    inline void branchTestObjClass(Condition cond, Register obj, Register scratch, const js::Class* clasp,
-                                   Label* label);
+    inline void branchTestObjClass(Condition cond, Register obj, Register scratch,
+                                   const js::Class* clasp, Label* label);
+    inline void branchTestObjClass(Condition cond, Register obj, Register scratch,
+                                   const Address& clasp, Label* label);
     inline void branchTestObjShape(Condition cond, Register obj, const Shape* shape, Label* label);
     inline void branchTestObjShape(Condition cond, Register obj, Register shape, Label* label);
-    inline void branchTestObjGroup(Condition cond, Register obj, ObjectGroup* group, Label* label);
+    inline void branchTestObjGroup(Condition cond, Register obj, const ObjectGroup* group,
+                                   Label* label);
     inline void branchTestObjGroup(Condition cond, Register obj, Register group, Label* label);
+
+    void branchTestObjGroup(Condition cond, Register obj, const Address& group, Register scratch,
+                            Label* label);
+
+    void branchTestObjCompartment(Condition cond, Register obj, const Address& compartment,
+                                  Register scratch, Label* label);
+    void branchTestObjCompartment(Condition cond, Register obj, const JSCompartment* compartment,
+                                  Register scratch, Label* label);
+    void branchIfObjGroupHasNoAddendum(Register obj, Register scratch, Label* label);
+    void branchIfPretenuredGroup(const ObjectGroup* group, Register scratch, Label* label);
+
+    void branchIfNotSimdObject(Register obj, Register scratch, SimdType simdType, Label* label);
 
     inline void branchTestClassIsProxy(bool proxy, Register clasp, Label* label);
 
@@ -1190,6 +1205,11 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void branchTestProxyHandlerFamily(Condition cond, Register proxy, Register scratch,
                                              const void* handlerp, Label* label);
+
+    void copyObjGroupNoPreBarrier(Register sourceObj, Register destObj, Register scratch);
+
+    void loadTypedObjectDescr(Register obj, Register dest);
+    void loadTypedObjectLength(Register obj, Register dest);
 
     // Emit type case branch on tag matching if the type tag in the definition
     // might actually be that type.
@@ -1951,18 +1971,23 @@ class MacroAssembler : public MacroAssemblerSpecific
                                        Label* label);
 #endif
 
-    void loadObjShape(Register objReg, Register dest) {
-        loadPtr(Address(objReg, ShapedObject::offsetOfShape()), dest);
+    // Unsafe here means the caller is responsible for Spectre mitigations if
+    // needed. Prefer branchTestObjGroup or one of the other masm helpers!
+    void loadObjGroupUnsafe(Register obj, Register dest) {
+        loadPtr(Address(obj, JSObject::offsetOfGroup()), dest);
     }
-    void loadObjGroup(Register objReg, Register dest) {
-        loadPtr(Address(objReg, JSObject::offsetOfGroup()), dest);
-    }
-    void loadBaseShape(Register objReg, Register dest) {
-        loadObjShape(objReg, dest);
-        loadPtr(Address(dest, Shape::offsetOfBase()), dest);
-    }
-    void loadObjClass(Register objReg, Register dest) {
-        loadObjGroup(objReg, dest);
+
+    template <typename EmitPreBarrier>
+    inline void storeObjGroup(Register group, Register obj, EmitPreBarrier emitPreBarrier);
+    template <typename EmitPreBarrier>
+    inline void storeObjGroup(ObjectGroup* group, Register obj, EmitPreBarrier emitPreBarrier);
+    template <typename EmitPreBarrier>
+    inline void storeObjShape(Register shape, Register obj, EmitPreBarrier emitPreBarrier);
+    template <typename EmitPreBarrier>
+    inline void storeObjShape(Shape* shape, Register obj, EmitPreBarrier emitPreBarrier);
+
+    void loadObjClass(Register obj, Register dest) {
+        loadPtr(Address(obj, JSObject::offsetOfGroup()), dest);
         loadPtr(Address(dest, ObjectGroup::offsetOfClasp()), dest);
     }
 
@@ -2192,6 +2217,7 @@ class MacroAssembler : public MacroAssemblerSpecific
                               const ConstantOrRegister& value, Label* failure);
 
     void debugAssertIsObject(const ValueOperand& val);
+    void debugAssertObjHasFixedSlots(Register obj, Register scratch);
 
     using MacroAssemblerSpecific::extractTag;
     Register extractTag(const TypedOrValueRegister& reg, Register scratch) {

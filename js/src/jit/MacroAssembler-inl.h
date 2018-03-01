@@ -492,11 +492,20 @@ MacroAssembler::branchFunctionKind(Condition cond, JSFunction::FunctionKind kind
 }
 
 void
-MacroAssembler::branchTestObjClass(Condition cond, Register obj, Register scratch, const js::Class* clasp,
-                                   Label* label)
+MacroAssembler::branchTestObjClass(Condition cond, Register obj, Register scratch,
+                                   const js::Class* clasp, Label* label)
 {
-    loadObjGroup(obj, scratch);
+    loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
     branchPtr(cond, Address(scratch, ObjectGroup::offsetOfClasp()), ImmPtr(clasp), label);
+}
+
+void
+MacroAssembler::branchTestObjClass(Condition cond, Register obj, Register scratch,
+                                   const Address& clasp, Label* label)
+{
+    loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
+    loadPtr(Address(scratch, ObjectGroup::offsetOfClasp()), scratch);
+    branchPtr(cond, clasp, scratch, label);
 }
 
 void
@@ -512,7 +521,8 @@ MacroAssembler::branchTestObjShape(Condition cond, Register obj, Register shape,
 }
 
 void
-MacroAssembler::branchTestObjGroup(Condition cond, Register obj, ObjectGroup* group, Label* label)
+MacroAssembler::branchTestObjGroup(Condition cond, Register obj, const ObjectGroup* group,
+                                   Label* label)
 {
     branchPtr(cond, Address(obj, JSObject::offsetOfGroup()), ImmGCPtr(group), label);
 }
@@ -732,6 +742,44 @@ MacroAssembler::reserveStack(uint32_t amount)
     adjustFrame(amount);
 }
 #endif // !JS_CODEGEN_ARM64
+
+template <typename EmitPreBarrier>
+void
+MacroAssembler::storeObjGroup(Register group, Register obj, EmitPreBarrier emitPreBarrier)
+{
+    MOZ_ASSERT(group != obj);
+    Address groupAddr(obj, JSObject::offsetOfGroup());
+    emitPreBarrier(*this, groupAddr);
+    storePtr(group, groupAddr);
+}
+
+template <typename EmitPreBarrier>
+void
+MacroAssembler::storeObjGroup(ObjectGroup* group, Register obj, EmitPreBarrier emitPreBarrier)
+{
+    Address groupAddr(obj, JSObject::offsetOfGroup());
+    emitPreBarrier(*this, groupAddr);
+    storePtr(ImmGCPtr(group), groupAddr);
+}
+
+template <typename EmitPreBarrier>
+void
+MacroAssembler::storeObjShape(Register shape, Register obj, EmitPreBarrier emitPreBarrier)
+{
+    MOZ_ASSERT(shape != obj);
+    Address shapeAddr(obj, ShapedObject::offsetOfShape());
+    emitPreBarrier(*this, shapeAddr);
+    storePtr(shape, shapeAddr);
+}
+
+template <typename EmitPreBarrier>
+void
+MacroAssembler::storeObjShape(Shape* shape, Register obj, EmitPreBarrier emitPreBarrier)
+{
+    Address shapeAddr(obj, ShapedObject::offsetOfShape());
+    emitPreBarrier(*this, shapeAddr);
+    storePtr(ImmGCPtr(shape), shapeAddr);
+}
 
 template <typename T>
 void

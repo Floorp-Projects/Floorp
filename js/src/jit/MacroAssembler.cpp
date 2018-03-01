@@ -3201,6 +3201,112 @@ MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch
 }
 
 void
+MacroAssembler::branchTestObjGroup(Condition cond, Register obj, const Address& group,
+                                   Register scratch, Label* label)
+{
+    // Note: obj and scratch registers may alias.
+
+    loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
+    branchPtr(cond, group, scratch, label);
+}
+
+void
+MacroAssembler::branchTestObjCompartment(Condition cond, Register obj, const Address& compartment,
+                                         Register scratch, Label* label)
+{
+    MOZ_ASSERT(obj != scratch);
+    loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
+    loadPtr(Address(scratch, ObjectGroup::offsetOfCompartment()), scratch);
+    branchPtr(cond, compartment, scratch, label);
+}
+
+void
+MacroAssembler::branchTestObjCompartment(Condition cond, Register obj,
+                                         const JSCompartment* compartment, Register scratch,
+                                         Label* label)
+{
+    MOZ_ASSERT(obj != scratch);
+    loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
+    loadPtr(Address(scratch, ObjectGroup::offsetOfCompartment()), scratch);
+    branchPtr(cond, scratch, ImmPtr(compartment), label);
+}
+
+void
+MacroAssembler::branchIfObjGroupHasNoAddendum(Register obj, Register scratch, Label* label)
+{
+    MOZ_ASSERT(obj != scratch);
+    loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
+    branchPtr(Assembler::Equal,
+              Address(scratch, ObjectGroup::offsetOfAddendum()),
+              ImmWord(0),
+              label);
+}
+
+void
+MacroAssembler::branchIfPretenuredGroup(const ObjectGroup* group, Register scratch, Label* label)
+{
+    movePtr(ImmGCPtr(group), scratch);
+    branchTest32(Assembler::NonZero, Address(scratch, ObjectGroup::offsetOfFlags()),
+                 Imm32(OBJECT_FLAG_PRE_TENURE), label);
+}
+
+void
+MacroAssembler::branchIfNotSimdObject(Register obj, Register scratch, SimdType simdType,
+                                      Label* label)
+{
+    loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
+
+    // Guard that the object has the same representation as the one produced for
+    // SIMD value-type.
+    Address clasp(scratch, ObjectGroup::offsetOfClasp());
+    static_assert(!SimdTypeDescr::Opaque, "SIMD objects are transparent");
+    branchPtr(Assembler::NotEqual, clasp, ImmPtr(&InlineTransparentTypedObject::class_),
+              label);
+
+    // obj->type()->typeDescr()
+    // The previous class pointer comparison implies that the addendumKind is
+    // Addendum_TypeDescr.
+    loadPtr(Address(scratch, ObjectGroup::offsetOfAddendum()), scratch);
+
+    // Check for the /Kind/ reserved slot of the TypeDescr.  This is an Int32
+    // Value which is equivalent to the object class check.
+    static_assert(JS_DESCR_SLOT_KIND < NativeObject::MAX_FIXED_SLOTS, "Load from fixed slots");
+    Address typeDescrKind(scratch, NativeObject::getFixedSlotOffset(JS_DESCR_SLOT_KIND));
+    assertTestInt32(Assembler::Equal, typeDescrKind,
+      "MOZ_ASSERT(obj->type()->typeDescr()->getReservedSlot(JS_DESCR_SLOT_KIND).isInt32())");
+    branch32(Assembler::NotEqual, ToPayload(typeDescrKind), Imm32(js::type::Simd), label);
+
+    // Check if the SimdTypeDescr /Type/ matches the specialization of this
+    // MSimdUnbox instruction.
+    static_assert(JS_DESCR_SLOT_TYPE < NativeObject::MAX_FIXED_SLOTS, "Load from fixed slots");
+    Address typeDescrType(scratch, NativeObject::getFixedSlotOffset(JS_DESCR_SLOT_TYPE));
+    assertTestInt32(Assembler::Equal, typeDescrType,
+      "MOZ_ASSERT(obj->type()->typeDescr()->getReservedSlot(JS_DESCR_SLOT_TYPE).isInt32())");
+    branch32(Assembler::NotEqual, ToPayload(typeDescrType), Imm32(int32_t(simdType)), label);
+}
+
+void
+MacroAssembler::copyObjGroupNoPreBarrier(Register sourceObj, Register destObj, Register scratch)
+{
+    loadPtr(Address(sourceObj, JSObject::offsetOfGroup()), scratch);
+    storePtr(scratch, Address(destObj, JSObject::offsetOfGroup()));
+}
+
+void
+MacroAssembler::loadTypedObjectDescr(Register obj, Register dest)
+{
+    loadPtr(Address(obj, JSObject::offsetOfGroup()), dest);
+    loadPtr(Address(dest, ObjectGroup::offsetOfAddendum()), dest);
+}
+
+void
+MacroAssembler::loadTypedObjectLength(Register obj, Register dest)
+{
+    loadTypedObjectDescr(obj, dest);
+    unboxInt32(Address(dest, ArrayTypeDescr::offsetOfLength()), dest);
+}
+
+void
 MacroAssembler::maybeBranchTestType(MIRType type, MDefinition* maybeDef, Register tag, Label* label)
 {
     if (!maybeDef || maybeDef->mightBeType(type)) {
@@ -3567,6 +3673,21 @@ MacroAssembler::debugAssertIsObject(const ValueOperand& val)
     branchTestObject(Assembler::Equal, val, &ok);
     assumeUnreachable("Expected an object!");
     bind(&ok);
+#endif
+}
+
+void
+MacroAssembler::debugAssertObjHasFixedSlots(Register obj, Register scratch)
+{
+#ifdef DEBUG
+    Label hasFixedSlots;
+    loadPtr(Address(obj, ShapedObject::offsetOfShape()), scratch);
+    branchTest32(Assembler::NonZero,
+                 Address(scratch, Shape::offsetOfSlotInfo()),
+                 Imm32(Shape::fixedSlotsMask()),
+                 &hasFixedSlots);
+    assumeUnreachable("Expected a fixed slot");
+    bind(&hasFixedSlots);
 #endif
 }
 

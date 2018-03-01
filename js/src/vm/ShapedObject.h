@@ -50,6 +50,14 @@ class ShapedObject : public JSObject
         TraceEdge(trc, shapePtr(), "shape");
     }
 
+    static JSObject* fromShapeFieldPointer(uintptr_t p) {
+        return reinterpret_cast<JSObject*>(p - ShapedObject::offsetOfShape());
+    }
+
+  private:
+    // See JSObject::offsetOfGroup() comment.
+    friend class js::jit::MacroAssembler;
+
     static constexpr size_t offsetOfShape() {
         static_assert(offsetOfShapeOrExpando() == offsetof(shadow::Object, shape),
                       "shadow shape must match actual shape");
