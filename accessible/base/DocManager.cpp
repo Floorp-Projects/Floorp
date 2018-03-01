@@ -22,7 +22,6 @@
 
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
-#include "nsContentUtils.h"
 #include "nsCURILoader.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsIChannel.h"
@@ -476,16 +475,6 @@ DocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
   if (!aDocument->IsVisibleConsideringAncestors() ||
       aDocument->IsResourceDoc() || aDocument->IsStaticDocument() ||
       !aDocument->IsActive()) {
-    return nullptr;
-  }
-
-  nsIDocShell* docShell = aDocument->GetDocShell();
-  if (!docShell || docShell->IsInvisible()) {
-    return nullptr;
-  }
-
-  nsIWidget* widget = nsContentUtils::WidgetForDocument(aDocument);
-  if (!widget || widget->WindowType() == eWindowType_invisible) {
     return nullptr;
   }
 
