@@ -15,7 +15,7 @@
  *          openTabContextMenu closeTabContextMenu
  *          openToolsMenu closeToolsMenu
  *          imageBuffer imageBufferFromDataURI
- *          getListStyleImage getPanelForNode
+ *          getListStyleImage getPanelForNode getPanelViewForNode
  *          awaitExtensionPanel awaitPopupResize
  *          promiseContentDimensions alterContent
  *          promisePrefChangeObserved openContextMenuInFrame
@@ -201,6 +201,13 @@ function getPanelForNode(node) {
   return node;
 }
 
+function getPanelViewForNode(node) {
+  while (node && node.localName != "panelview") {
+    node = node.parentNode;
+  }
+  return node;
+}
+
 var awaitBrowserLoaded = browser => ContentTask.spawn(browser, null, () => {
   if (content.document.readyState !== "complete" ||
       content.document.documentURI === "about:blank") {
@@ -215,8 +222,19 @@ var awaitExtensionPanel = async function(extension, win = window, awaitLoad = tr
     win.document, "WebExtPopupLoaded", true,
     event => event.detail.extension.id === extension.id);
 
+  let panelview = getPanelViewForNode(browser);
+  let viewShownPromise = null;
+  if (panelview) {
+    let view = PanelView.forNode(panelview);
+    if (!view.active) {
+      viewShownPromise = BrowserTestUtils.waitForEvent(panelview, "ViewShown");
+    }
+  }
+
   await Promise.all([
     promisePopupShown(getPanelForNode(browser)),
+
+    viewShownPromise,
 
     awaitLoad && awaitBrowserLoaded(browser),
   ]);
