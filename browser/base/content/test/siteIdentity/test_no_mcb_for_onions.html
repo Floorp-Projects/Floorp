@@ -1,0 +1,28 @@
+<!-- See browser_no_mcb_for_onions.js -->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf8">
+    <title>Bug 1382359</title>
+  </head>
+
+  <style>
+    @font-face {
+      src: url("http://123456789abcdef.onion:8/test.ttf");
+    }
+  </style>
+
+  <body>
+    <img src="http://123456789abcdef.onion:8/test.png">
+
+    <iframe src="http://123456789abcdef.onion:8/test.html"></iframe>
+  </body>
+
+  <script src="http://123456789abcdef.onion:8/test.js"></script>
+
+  <link href="http://123456789abcdef.onion:8/test.css" rel="stylesheet"></link>
+
+  <script>
+    fetch("http://123456789abcdef.onion:8");
+  </script>
+</html>
