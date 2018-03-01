@@ -325,4 +325,11 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     false;
 }
 
+/* static */
+bool
+DecoderTraits::CrossOriginRedirectsProhibited(const MediaContainerType& aType)
+{
+  return WaveDecoder::IsSupportedType(aType);
+}
+
 } // namespace mozilla
