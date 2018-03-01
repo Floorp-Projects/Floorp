@@ -155,7 +155,7 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
                                 XPCWrappedNative** wrappedGlobal)
 {
     AutoJSContext cx;
-    nsISupports* identity = nativeHelper.GetCanonical();
+    nsCOMPtr<nsISupports> identity = do_QueryInterface(nativeHelper.Object());
 
     // The object should specify that it's meant to be global.
     MOZ_ASSERT(nativeHelper.GetScriptableFlags() & XPC_SCRIPTABLE_IS_GLOBAL_OBJECT);
@@ -211,8 +211,7 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
 
     // Construct the wrapper, which takes over the strong reference to the
     // native object.
-    RefPtr<XPCWrappedNative> wrapper =
-        new XPCWrappedNative(nativeHelper.forgetCanonical(), proto);
+    RefPtr<XPCWrappedNative> wrapper = new XPCWrappedNative(identity.forget(), proto);
 
     //
     // We don't call ::Init() on this wrapper, because our setup requirements
@@ -283,7 +282,7 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
     MOZ_ASSERT(!Scope->GetRuntime()->GCIsRunning(),
                "XPCWrappedNative::GetNewOrUsed called during GC");
 
-    nsISupports* identity = helper.GetCanonical();
+    nsCOMPtr<nsISupports> identity = do_QueryInterface(helper.Object());
 
     if (!identity) {
         NS_ERROR("This XPCOM object fails in QueryInterface to nsISupports!");
@@ -405,7 +404,7 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
         if (!proto)
             return NS_ERROR_FAILURE;
 
-        wrapper = new XPCWrappedNative(helper.forgetCanonical(), proto);
+        wrapper = new XPCWrappedNative(identity.forget(), proto);
     } else {
         RefPtr<XPCNativeInterface> iface = Interface;
         if (!iface)
@@ -418,8 +417,7 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
         if (!set)
             return NS_ERROR_FAILURE;
 
-        wrapper = new XPCWrappedNative(helper.forgetCanonical(), Scope,
-                                       set.forget());
+        wrapper = new XPCWrappedNative(identity.forget(), Scope, set.forget());
     }
 
     MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(parent),

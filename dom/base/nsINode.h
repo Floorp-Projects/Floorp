@@ -2142,10 +2142,4 @@ ToSupports(nsINode* aPointer)
   return aPointer;
 }
 
-inline nsISupports*
-ToCanonicalSupports(nsINode* aPointer)
-{
-  return aPointer;
-}
-
 #endif /* nsINode_h___ */

@@ -414,18 +414,6 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-inline nsISupports*
-ToSupports(mozilla::dom::Event* e)
-{
-  return static_cast<nsIDOMEvent*>(e);
-}
-
-inline nsISupports*
-ToCanonicalSupports(mozilla::dom::Event* e)
-{
-  return static_cast<nsIDOMEvent*>(e);
-}
-
 already_AddRefed<mozilla::dom::Event>
 NS_NewDOMEvent(mozilla::dom::EventTarget* aOwner,
                nsPresContext* aPresContext,
