@@ -17,7 +17,6 @@
 #include "FrameLayerBuilder.h"
 #include "nsPrintfCString.h"
 
-#include <iostream>
 #include <stdio.h>
 
 using namespace mozilla;
@@ -267,7 +266,7 @@ PrintDisplayItemToStdout(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem)
 {
   std::stringstream stream;
   PrintDisplayItemTo(aBuilder, aItem, stream, 0, true, false);
-  std::cout << stream.str() << std::endl;
+  puts(stream.str().c_str());
 }
 
 void
@@ -275,7 +274,7 @@ PrintDisplayListToStdout(nsDisplayListBuilder* aBuilder, const nsDisplayList& aL
 {
   std::stringstream stream;
   PrintDisplayListTo(aBuilder, aList, stream, 0, false);
-  std::cout << stream.str() << std::endl;
+  puts(stream.str().c_str());
 }
 
 #ifdef MOZ_DUMP_PAINTING
