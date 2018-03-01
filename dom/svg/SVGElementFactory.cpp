@@ -10,6 +10,7 @@
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FromParser.h"
+#include "plhash.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
