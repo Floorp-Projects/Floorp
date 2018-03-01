@@ -301,6 +301,15 @@ partial namespace ChromeUtils {
    * exists on the call stack, returns null.
    */
   object? getCallerLocation(Principal principal);
+
+  /**
+   * Creates a JS Error object with the given message and stack.
+   *
+   * If a stack object is provided, the error object is created in the global
+   * that it belongs to.
+   */
+  [Throws]
+  object createError(DOMString message, optional object? stack = null);
 };
 
 /**

@@ -58,4 +58,27 @@ add_task(async function() {
   Assert.throws(() => { Cu.reportError("Meh", {}); },
                 err => err.result == Cr.NS_ERROR_INVALID_ARG,
                 "reportError should throw when passed a non-SavedFrame object");
+
+
+  // createError
+
+  Assert.throws(() => { ChromeUtils.createError("Meh", {}); },
+                err => err.result == Cr.NS_ERROR_INVALID_ARG,
+                "createError should throw when passed a non-SavedFrame object");
+
+  let cloned = Cu.cloneInto(frame, sandbox);
+  let error = ChromeUtils.createError("Meh", cloned);
+
+  equal(String(cloned), String(frame),
+        "Cloning a SavedStack preserves its stringification");
+
+  equal(Cu.getGlobalForObject(error), sandbox,
+        "createError creates errors in the global of the SavedFrame");
+  equal(error.stack, String(cloned),
+        "createError creates errors with the correct stack");
+
+  equal(error.message, "Meh", "Error message");
+  equal(error.fileName, "thing.js", "Error filename");
+  equal(error.lineNumber, 5, "Error line");
+  equal(error.columnNumber, 14, "Error column");
 });
