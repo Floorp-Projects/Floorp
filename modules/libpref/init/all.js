@@ -227,7 +227,11 @@ pref("dom.keyboardevent.dispatch_during_composition", false);
 // If this is true, TextEventDispatcher dispatches keypress event with setting
 // WidgetEvent::mFlags::mOnlySystemGroupDispatchInContent to true if it won't
 // cause inputting printable character.
+#ifdef EARLY_BETA_OR_EARLIER
+pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", true);
+#else
 pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", false);
+#endif
 
 // Whether the WebMIDI API is enabled
 pref("dom.webmidi.enabled", false);
@@ -5069,8 +5073,17 @@ pref("geo.enabled", true);
 // Timeout for outbound network geolocation provider XHR
 pref("geo.wifi.xhr.timeout", 60000);
 
-// Enable/Disable the orientation API for content
+// Enable/Disable the various sensor APIs for content
 pref("device.sensors.enabled", true);
+pref("device.sensors.orientation.enabled", true);
+pref("device.sensors.motion.enabled", true);
+#ifdef EARLY_BETA_OR_EARLIER
+pref("device.sensors.proximity.enabled", false);
+pref("device.sensors.ambientLight.enabled", false);
+#else
+pref("device.sensors.proximity.enabled", true);
+pref("device.sensors.ambientLight.enabled", true);
+#endif
 
 // Enable/Disable the device storage API for content
 pref("device.storage.enabled", false);

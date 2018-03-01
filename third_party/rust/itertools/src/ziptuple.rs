@@ -2,19 +2,9 @@ use super::size_hint;
 
 /// See [`multizip`](../fn.multizip.html) for more information.
 #[derive(Clone)]
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct Zip<T> {
     t: T,
-}
-
-impl<T> Zip<T> {
-    /// Deprecated: renamed to multizip
-    #[deprecated(note = "Renamed to multizip")]
-    pub fn new<U>(t: U) -> Zip<T>
-        where Zip<T>: From<U>,
-              Zip<T>: Iterator,
-    {
-        multizip(t)
-    }
 }
 
 /// An iterator that generalizes *.zip()* and allows running multiple iterators in lockstep.
@@ -26,18 +16,27 @@ impl<T> Zip<T> {
 /// The iterator element type is a tuple like like `(A, B, ..., E)` where `A` to `E` are the
 /// element types of the subiterator.
 ///
+/// **Note:** The result of this macro is a value of a named type (`Zip<(I, J,
+/// ..)>` of each component iterator `I, J, ...`) if each component iterator is
+/// nameable.
+///
+/// Prefer [`izip!()`] over `multizip` for the performance benefits of using the
+/// standard library `.zip()`. Prefer `multizip` if a nameable type is needed.
+///
+/// [`izip!()`]: macro.izip.html
+///
 /// ```
 /// use itertools::multizip;
 ///
-/// // Iterate over three sequences side-by-side
-/// let mut xs = [0, 0, 0];
-/// let ys = [69, 107, 101];
+/// // iterate over three sequences side-by-side
+/// let mut results = [0, 0, 0, 0];
+/// let inputs = [3, 7, 9, 6];
 ///
-/// for (i, a, b) in multizip((0..100, &mut xs, &ys)) {
-///    *a = i ^ *b;
+/// for (r, index, input) in multizip((&mut results, 0..10, &inputs)) {
+///     *r = index * 10 + input;
 /// }
 ///
-/// assert_eq!(xs, [69, 106, 103]);
+/// assert_eq!(results, [0 + 3, 10 + 7, 29, 36]);
 /// ```
 pub fn multizip<T, U>(t: U) -> Zip<T>
     where Zip<T>: From<U>,

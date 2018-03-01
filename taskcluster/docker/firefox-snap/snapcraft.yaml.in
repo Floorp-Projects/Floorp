@@ -22,10 +22,12 @@ apps:
       - gsettings
       - home
       - network
+      - network-observe
       - opengl
       - pulseaudio
       - screen-inhibit-control
       - unity7
+      - upower-observe
       - x11
 
 plugs:
@@ -49,3 +51,12 @@ parts:
       - xdg-utils
       - ffmpeg
     after: [desktop-gtk3]
+
+  optimization:
+    after: [firefox]
+    plugin: nil
+    stage-packages:
+      - shared-mime-info
+    install: |
+      set -eux
+      update-mime-database $SNAPCRAFT_PART_INSTALL/usr/share/mime

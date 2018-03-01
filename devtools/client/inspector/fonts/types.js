@@ -10,9 +10,6 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
  * A single font.
  */
 const font = exports.font = {
-  // The name of the font family
-  CSSFamilyName: PropTypes.string,
-
   // The format of the font
   format: PropTypes.string,
 
