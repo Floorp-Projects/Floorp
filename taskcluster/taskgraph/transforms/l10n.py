@@ -163,7 +163,7 @@ l10n_description_schema = Schema({
 transforms = TransformSequence()
 
 
-def _parse_locales_file(locales_file, platform):
+def parse_locales_file(locales_file, platform=None):
     """ Parse the passed locales file for a list of locales.
     """
     locales = []
@@ -175,7 +175,7 @@ def _parse_locales_file(locales_file, platform):
             locales = {
                 locale: data['revision']
                 for locale, data in all_locales.items()
-                if platform in data['platforms']
+                if platform is None or platform in data['platforms']
             }
         else:
             all_locales = f.read().split()
@@ -299,8 +299,8 @@ def handle_keyed_by(config, jobs):
 def all_locales_attribute(config, jobs):
     for job in jobs:
         locales_platform = job['attributes']['build_platform'].replace("-nightly", "")
-        locales_with_changesets = _parse_locales_file(job["locales-file"],
-                                                      platform=locales_platform)
+        locales_with_changesets = parse_locales_file(job["locales-file"],
+                                                     platform=locales_platform)
         locales_with_changesets = _remove_locales(locales_with_changesets,
                                                   to_remove=job['ignore-locales'])
 

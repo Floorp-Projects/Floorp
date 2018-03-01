@@ -292,8 +292,7 @@ LIRGeneratorMIPSShared::visitGuardShape(MGuardShape* ins)
 {
     MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
-    LDefinition tempObj = temp(LDefinition::OBJECT);
-    LGuardShape* guard = new(alloc()) LGuardShape(useRegister(ins->object()), tempObj);
+    LGuardShape* guard = new(alloc()) LGuardShape(useRegister(ins->object()));
     assignSnapshot(guard, ins->bailoutKind());
     add(guard, ins);
     redefine(ins, ins->object());
@@ -304,8 +303,7 @@ LIRGeneratorMIPSShared::visitGuardObjectGroup(MGuardObjectGroup* ins)
 {
     MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
-    LDefinition tempObj = temp(LDefinition::OBJECT);
-    LGuardObjectGroup* guard = new(alloc()) LGuardObjectGroup(useRegister(ins->object()), tempObj);
+    LGuardObjectGroup* guard = new(alloc()) LGuardObjectGroup(useRegister(ins->object()));
     assignSnapshot(guard, ins->bailoutKind());
     add(guard, ins);
     redefine(ins, ins->object());

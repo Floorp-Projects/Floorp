@@ -53,8 +53,8 @@ import org.mozilla.geckoview.GeckoView;
 
 public class WebAppActivity extends AppCompatActivity
                             implements ActionModePresenter,
-                                       GeckoSession.ContentListener,
-                                       GeckoSession.NavigationListener {
+                                       GeckoSession.ContentDelegate,
+                                       GeckoSession.NavigationDelegate {
     private static final String LOGTAG = "WebAppActivity";
 
     public static final String MANIFEST_PATH = "MANIFEST_PATH";
@@ -103,9 +103,9 @@ public class WebAppActivity extends AppCompatActivity
         mGeckoSession = new GeckoSession();
         mGeckoView.setSession(mGeckoSession);
 
-        mGeckoSession.setNavigationListener(this);
-        mGeckoSession.setContentListener(this);
-        mGeckoSession.setProgressListener(new GeckoSession.ProgressListener() {
+        mGeckoSession.setNavigationDelegate(this);
+        mGeckoSession.setContentDelegate(this);
+        mGeckoSession.setProgressDelegate(new GeckoSession.ProgressDelegate() {
             @Override
             public void onPageStart(GeckoSession session, String url) {
 
@@ -332,36 +332,36 @@ public class WebAppActivity extends AppCompatActivity
         mGeckoView.getSettings().setInt(GeckoSessionSettings.DISPLAY_MODE, mode);
     }
 
-    @Override // GeckoSession.NavigationListener
+    @Override // GeckoSession.NavigationDelegate
     public void onLocationChange(GeckoSession session, String url) {
     }
 
-    @Override // GeckoSession.NavigationListener
+    @Override // GeckoSession.NavigationDelegate
     public void onCanGoBack(GeckoSession session, boolean canGoBack) {
         mCanGoBack = canGoBack;
     }
 
-    @Override // GeckoSession.NavigationListener
+    @Override // GeckoSession.NavigationDelegate
     public void onCanGoForward(GeckoSession session, boolean canGoForward) {
     }
 
-    @Override // GeckoSession.ContentListener
+    @Override // GeckoSession.ContentDelegate
     public void onTitleChange(GeckoSession session, String title) {
     }
 
-    @Override // GeckoSession.ContentListener
+    @Override // GeckoSession.ContentDelegate
     public void onFocusRequest(GeckoSession session) {
         Intent intent = new Intent(getIntent());
         intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         startActivity(intent);
     }
 
-    @Override // GeckoSession.ContentListener
+    @Override // GeckoSession.ContentDelegate
     public void onCloseRequest(GeckoSession session) {
         // Ignore
     }
 
-    @Override // GeckoSession.ContentListener
+    @Override // GeckoSession.ContentDelegate
     public void onContextMenu(GeckoSession session, int screenX, int screenY,
                               String uri, String elementSrc) {
         final String content = uri != null ? uri : elementSrc != null ? elementSrc : "";
@@ -373,7 +373,7 @@ public class WebAppActivity extends AppCompatActivity
         WebApps.openInFennec(validUri, WebAppActivity.this);
     }
 
-    @Override // GeckoSession.ContentListener
+    @Override // GeckoSession.ContentDelegate
     public void onFullScreen(GeckoSession session, boolean fullScreen) {
         updateFullScreenContent(fullScreen);
     }
