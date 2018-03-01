@@ -453,7 +453,7 @@ class SyncedBookmarksMirror {
       await this.db.execute(`DELETE FROM itemsToUpload`);
 
       return changeRecords;
-    }, this.db.TRANSACTION_IMMEDIATE);
+    });
 
     MirrorLog.debug("Replaying recorded observer notifications");
     try {
