@@ -647,7 +647,7 @@ var AddonRepository = {
 
     if (typeof aEntry.ratings == "object") {
       addon.averageRating = Math.min(5, aEntry.ratings.average);
-      addon.reviewCount = aEntry.ratings.count;
+      addon.reviewCount = aEntry.ratings.text_count;
     }
 
     addon.reviewURL = aEntry.ratings_url;

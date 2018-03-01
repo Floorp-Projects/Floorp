@@ -34,7 +34,7 @@ add_task(async function test() {
   let tree = sidebar.contentDocument.getElementById("bookmarks-view");
   tree.focus();
 
-  let controller = doGetPlacesControllerForCommand("placesCmd_copy");
+  let controller = PlacesUIUtils.getControllerForCommand(window, "placesCmd_copy");
   let treeController = tree.controllers
                            .getControllerForCommand("placesCmd_copy");
   ok(controller == treeController, "tree controller was returned");
@@ -45,7 +45,7 @@ add_task(async function test() {
   EventUtils.synthesizeMouse(toolbarItems.childNodes[0],
                              4, 4, { type: "contextmenu", button: 2 },
                              window);
-  controller = doGetPlacesControllerForCommand("placesCmd_copy");
+  controller = PlacesUIUtils.getControllerForCommand(window, "placesCmd_copy");
   let toolbarController = document.getElementById("PlacesToolbar")
                                   .controllers
                                   .getControllerForCommand("placesCmd_copy");
@@ -55,7 +55,7 @@ add_task(async function test() {
 
   // Now that the context menu is closed, try to get the tree controller again.
   tree.focus();
-  controller = doGetPlacesControllerForCommand("placesCmd_copy");
+  controller = PlacesUIUtils.getControllerForCommand(window, "placesCmd_copy");
   ok(controller == treeController, "tree controller was returned");
 
   if (wasCollapsed) {

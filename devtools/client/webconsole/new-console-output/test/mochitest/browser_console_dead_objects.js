@@ -3,93 +3,41 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Check that Dead Objects do not break the Web/Browser Consoles.
-// See bug 883649.
-// This test does:
-// - opens a new tab,
-// - opens the Browser Console,
-// - stores a reference to the content document of the tab on the chrome
-//   window object,
-// - closes the tab,
-// - tries to use the object that was pointing to the now-defunct content
-// document. This is the dead object.
+//
+// This test:
+// - Opens the Browser Console.
+// - Creates a sandbox.
+// - Stores a reference to the sandbox on the chrome window object.
+// - Nukes the sandbox
+// - Tries to use the sandbox. This is the dead object.
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,<p>dead objects!";
+add_task(async function () {
+  let hud = await HUDService.toggleBrowserConsole();
+  ok(hud, "browser console opened");
 
-function test() {
-  let hud = null;
+  let jsterm = hud.jsterm;
 
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("devtools.chrome.enabled");
-  });
+  // Add the reference to the nuked sandbox.
+  await jsterm.execute("window.nukedSandbox = Cu.Sandbox(null);" +
+                       "Cu.nukeSandbox(nukedSandbox);");
 
-  Task.spawn(runner).then(finishTest);
+  await jsterm.execute("nukedSandbox");
+  await waitFor(() => findMessage(hud, "DeadObject", ".objectTitle"));
 
-  function* runner() {
-    Services.prefs.setBoolPref("devtools.chrome.enabled", true);
-    yield loadTab(TEST_URI);
-    let browser = gBrowser.selectedBrowser;
-    let winID = browser.outerWindowID;
+  jsterm.execute("nukedSandbox.hello");
+  let msg = await waitFor(() => findMessage(hud, "can't access dead object"));
 
-    info("open the browser console");
+  // Check that the link contains an anchor. We can't click on the link because
+  // clicking links from tests attempts to access an external URL and crashes
+  // Firefox.
+  let anchor = msg.querySelector("a");
+  is(anchor.textContent, "[Learn More]", "Link text is correct");
 
-    hud = yield HUDService.toggleBrowserConsole();
-    ok(hud, "browser console opened");
-
-    let jsterm = hud.jsterm;
-
-    jsterm.clearOutput();
-
-    // Add the reference to the content document.
-    yield jsterm.execute("Cu = Components.utils;" +
-                  "Cu.import('resource://gre/modules/Services.jsm');" +
-                  "chromeWindow = Services.wm.getMostRecentWindow('" +
-                  "navigator:browser');" +
-                  "foobarzTezt = chromeWindow.content.document;" +
-                  "delete chromeWindow");
-
-    gBrowser.removeCurrentTab();
-
-    yield TestUtils.topicObserved("outer-window-nuked", (subject, data) => {
-      let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-      return id == winID;
-    });
-
-    let msg = yield jsterm.execute("foobarzTezt");
-
-    isnot(hud.outputNode.textContent.indexOf("DeadObject"), -1,
-          "dead object found");
-
-    jsterm.setInputValue("foobarzTezt");
-
-    for (let c of ".hello") {
-      EventUtils.synthesizeKey(c, {}, hud.iframeWindow);
-    }
-
-    yield jsterm.execute();
-
-    isnot(hud.outputNode.textContent.indexOf("can't access dead object"), -1,
-          "'cannot access dead object' message found");
-
-    // Click the second execute output.
-    let clickable = msg.querySelector("a");
-    ok(clickable, "clickable object found");
-    isnot(clickable.textContent.indexOf("DeadObject"), -1,
-          "message text check");
-
-    msg.scrollIntoView();
-
-    executeSoon(() => {
-      EventUtils.synthesizeMouseAtCenter(clickable, {}, hud.iframeWindow);
-    });
-
-    yield jsterm.once("variablesview-fetched");
-    ok(true, "variables view fetched");
-
-    msg = yield jsterm.execute("delete window.foobarzTezt; 2013-26");
-
-    isnot(msg.textContent.indexOf("1987"), -1, "result message found");
-  }
-}
+  await jsterm.execute("delete window.nukedSandbox; 2013-26");
+  await waitFor(() => findMessage(hud, "1987"));
+});
