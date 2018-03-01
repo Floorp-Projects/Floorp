@@ -5,6 +5,8 @@
 
 Cu.importGlobalProperties(["ChromeUtils"]);
 
+ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+
 add_task(async function() {
   const sandbox = Cu.Sandbox("http://example.com/");
 
@@ -42,4 +44,18 @@ add_task(async function() {
   equal(frame.parent, null, "Frame parent");
 
   equal(String(frame), "it@thing.js:5:14\n", "Stringified frame");
+
+
+  // reportError
+
+  let {messages} = await AddonTestUtils.promiseConsoleOutput(() => {
+    Cu.reportError("Meh", frame);
+  });
+
+  equal(messages[0].stack, frame, "reportError stack frame");
+  equal(messages[0].message, '[JavaScript Error: "Meh" {file: "thing.js" line: 5}]\nit@thing.js:5:14\n');
+
+  Assert.throws(() => { Cu.reportError("Meh", {}); },
+                err => err.result == Cr.NS_ERROR_INVALID_ARG,
+                "reportError should throw when passed a non-SavedFrame object");
 });
