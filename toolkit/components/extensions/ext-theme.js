@@ -132,7 +132,7 @@ class Theme {
           this.lwtStyles.accentcolorInactive = cssColor;
           break;
         case "textcolor":
-        case "background_tab_text":
+        case "tab_background_text":
           this.lwtStyles.textcolor = cssColor;
           break;
         case "toolbar":
