@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<iframe id="iframe" src="about:blank"></iframe>
+<script>
+iframe.onload = function() {
+  let doc = iframe.contentDocument;
+  let canvas = doc.createElement('canvas');
+  doc.body.appendChild(canvas);
+  let ctx = canvas.getContext('2d');
+  document.body.offsetTop;
+  iframe.style.display = 'none';
+  try {
+    ctx.font = '10px serif';
+  } finally {
+    document.documentElement.className = "";
+  }
+};
+</script>
+</html>

@@ -54,10 +54,10 @@
       </property>
 
       <field name="labelElement"/>
-    </implementation>      
+    </implementation>
   </binding>
 
-  <binding id="iframe" role="outerdoc">
+  <binding id="iframe">
     <implementation>
       <property name="docShell" readonly="true">
         <getter><![CDATA[

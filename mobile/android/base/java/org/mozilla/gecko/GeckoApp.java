@@ -9,7 +9,6 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.health.HealthRecorder;
 import org.mozilla.gecko.health.SessionInformation;
 import org.mozilla.gecko.health.StubbedHealthRecorder;
@@ -28,7 +27,6 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
-import org.mozilla.gecko.text.FloatingToolbarTextSelection;
 import org.mozilla.gecko.text.TextSelection;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityUtils;
@@ -57,7 +55,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
@@ -78,7 +75,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.Window;
@@ -171,7 +167,6 @@ public abstract class GeckoApp extends GeckoActivity
     protected RelativeLayout mMainLayout;
 
     protected RelativeLayout mGeckoLayout;
-    private OrientationEventListener mCameraOrientationEventListener;
     protected MenuPanel mMenuPanel;
     protected Menu mMenu;
     protected boolean mIsRestoringActivity;
@@ -323,6 +318,8 @@ public abstract class GeckoApp extends GeckoActivity
     private Telemetry.Timer mGeckoReadyStartupTimer;
 
     private String mPrivateBrowsingSession;
+    private boolean mPrivateBrowsingSessionOutdated;
+    private static final int MAX_PRIVATE_TABS_UPDATE_WAIT_MSEC = 500;
 
     private volatile HealthRecorder mHealthRecorder;
     private volatile Locale mLastLocale;
@@ -613,10 +610,28 @@ public abstract class GeckoApp extends GeckoActivity
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
+        synchronized (this) {
+            mPrivateBrowsingSessionOutdated = true;
+        }
+        // Through the GeckoActivityMonitor, this will flush tabs if the whole
+        // application is going into the background.
         super.onSaveInstanceState(outState);
 
+        // If on the other hand we're merely switching to a different activity
+        // within our app, we need to trigger a tabs flush ourselves.
+        if (!isApplicationInBackground()) {
+            EventDispatcher.getInstance().dispatch("Session:FlushTabs", null);
+        }
+        synchronized (this) {
+            if (GeckoThread.isRunning() && mPrivateBrowsingSessionOutdated) {
+                try {
+                    wait(MAX_PRIVATE_TABS_UPDATE_WAIT_MSEC);
+                } catch (final InterruptedException e) { }
+            }
+            outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
+        }
+
         outState.putBoolean(SAVED_STATE_IN_BACKGROUND, isApplicationInBackground());
-        outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
     }
 
     public void addTab() { }
@@ -708,7 +723,13 @@ public abstract class GeckoApp extends GeckoActivity
             showSiteSettingsDialog(permissions);
 
         } else if ("PrivateBrowsing:Data".equals(event)) {
-            mPrivateBrowsingSession = message.getString("session");
+            synchronized (this) {
+                if (!message.getBoolean("noChange", false)) {
+                    mPrivateBrowsingSession = message.getString("session");
+                }
+                mPrivateBrowsingSessionOutdated = false;
+                notifyAll();
+            }
 
         } else if ("SystemUI:Visibility".equals(event)) {
             if (message.getBoolean("visible", true)) {
@@ -1068,6 +1089,7 @@ public abstract class GeckoApp extends GeckoActivity
 
         getAppEventDispatcher().registerGeckoThreadListener(this,
             "Locale:Set",
+            "PrivateBrowsing:Data",
             null);
 
         getAppEventDispatcher().registerUiThreadListener(this,
@@ -1080,7 +1102,6 @@ public abstract class GeckoApp extends GeckoActivity
             "Mma:web_save_image",
             "Mma:web_save_media",
             "Permissions:Data",
-            "PrivateBrowsing:Data",
             "SystemUI:Visibility",
             "ToggleChrome:Focus",
             "ToggleChrome:Hide",
@@ -2075,6 +2096,7 @@ public abstract class GeckoApp extends GeckoActivity
 
         getAppEventDispatcher().unregisterGeckoThreadListener(this,
             "Locale:Set",
+            "PrivateBrowsing:Data",
             null);
 
         getAppEventDispatcher().unregisterUiThreadListener(this,
@@ -2087,7 +2109,6 @@ public abstract class GeckoApp extends GeckoActivity
             "Mma:web_save_image",
             "Mma:web_save_media",
             "Permissions:Data",
-            "PrivateBrowsing:Data",
             "SystemUI:Visibility",
             "ToggleChrome:Focus",
             "ToggleChrome:Hide",

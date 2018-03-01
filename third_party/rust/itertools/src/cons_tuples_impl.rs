@@ -16,6 +16,11 @@ macro_rules! impl_cons_iter(
             fn size_hint(&self) -> (usize, Option<usize>) {
                 self.iter.size_hint()
             }
+            fn fold<Acc, Fold>(self, accum: Acc, mut f: Fold) -> Acc
+                where Fold: FnMut(Acc, Self::Item) -> Acc,
+            {
+                self.iter.fold(accum, move |acc, (($($B,)*), x)| f(acc, ($($B,)* x, )))
+            }
         }
 
         #[allow(non_snake_case)]
@@ -36,6 +41,7 @@ impl_cons_iter!(A, B, C, D, E, F, G, H,);
 /// `((A, B), C)` to an iterator of `(A, B, C)`.
 ///
 /// Used by the `iproduct!()` macro.
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct ConsTuples<I, J>
     where I: Iterator<Item=J>,
 {

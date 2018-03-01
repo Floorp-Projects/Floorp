@@ -161,32 +161,16 @@
     margin-inline-start: -3px;
     position: relative;
   }
+
+  @media (-moz-os-version: windows-win7) {
+    #detailsDeck {
+      border-top-color: #A9B7C9;
+    }
+  }
 }
 
 @media (-moz-windows-glass) {
   #placesToolbox {
     border-top: none;
-  }
-}
-
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
-  #placesView,
-  #infoPane,
-  #placesList,
-  #placeContent {
-    background-color: #EEF3FA;
-  }
-
-  #detailsDeck {
-    border-top-color: #A9B7C9;
-  }
-
-  #searchFilter {
-    -moz-appearance: none;
-    padding: 2px;
-    padding-inline-start: 4px;
-    background-clip: padding-box;
-    border: 1px solid rgba(0,0,0,.32);
-    border-radius: 2px;
   }
 }

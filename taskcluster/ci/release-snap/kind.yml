@@ -51,7 +51,12 @@ job-defaults:
          BUILD_NUMBER: "{release_config[build_number]}"
          PUSH_TO_CHANNEL:
             by-project:
-               mozilla-beta: "edge"
+               # The snap stores exposes 4 channels: edge, beta, candidate, release.
+               # Let's use edge and candidate for QE to test. Then, on the Snap Store UI,
+               # we can promote builds to beta and release, respectively.
+               # For more info: https://docs.snapcraft.io/reference/channels
+               mozilla-beta: edge
+               mozilla-release: candidate
                default: ""
          CANDIDATES_DIR:
             by-project:

@@ -23,9 +23,12 @@ XPCOMUtils.defineLazyGetter(this, "TargetFactory", function() {
 
 const webserver = Services.prefs.getCharPref("addon.test.damp.webserver");
 
-const SIMPLE_URL = webserver + "/tests/devtools/addon/content/pages/simple.html";
+const PAGES_BASE_URL = webserver + "/tests/devtools/addon/content/pages/";
+const SIMPLE_URL = PAGES_BASE_URL + "simple.html";
 const COMPLICATED_URL = webserver + "/tests/tp5n/bild.de/www.bild.de/index.html";
-const CUSTOM_URL = webserver + "/tests/devtools/addon/content/pages/custom/$TOOL/index.html";
+const CUSTOM_URL = PAGES_BASE_URL + "custom/$TOOL/index.html";
+const PANELS_IN_BACKGROUND = PAGES_BASE_URL +
+  "custom/panels-in-background/panels-in-background.html";
 
 // Record allocation count in new subtests if DEBUG_DEVTOOLS_ALLOCATIONS is set to
 // "normal". Print allocation sites to stdout if DEBUG_DEVTOOLS_ALLOCATIONS is set to
@@ -711,25 +714,46 @@ async _consoleOpenWithCachedMessagesTest() {
   },
 
   async _panelsInBackgroundReload() {
-    let url = "data:text/html;charset=UTF-8," + encodeURIComponent(`
-      <script>
-      // Log a significant amount of messages
-      for(let i = 0; i < 2000; i++) {
-        console.log("log in background", i);
-      }
-      </script>
-    `);
-    await this.testSetup(url);
-    let toolbox = await this.openToolbox("webconsole");
+    await this.testSetup(PANELS_IN_BACKGROUND);
 
-    // Select the options panel to make the console be in background.
+    // Make sure the Console and Network panels are initialized
+    let toolbox = await this.openToolbox("webconsole");
+    let monitor = await toolbox.selectTool("netmonitor");
+
+    // Select the options panel to make both the Console and Network
+    // panel be in background.
     // Options panel should not do anything on page reload.
     await toolbox.selectTool("options");
 
+    // Reload the page and wait for all HTTP requests
+    // to finish (1 doc + 600 XHRs).
+    let payloadReady = this.waitForPayload(601, monitor.panelWin);
     await this.reloadPageAndLog("panelsInBackground", toolbox);
+    await payloadReady;
 
+    // Clean up
     await this.closeToolbox();
     await this.testTeardown();
+  },
+
+  waitForPayload(count, panelWin) {
+    return new Promise(resolve => {
+      let payloadReady = 0;
+
+      function onPayloadReady(_, id) {
+        payloadReady++;
+        maybeResolve();
+      }
+
+      function maybeResolve() {
+        if (payloadReady >= count) {
+          panelWin.off(EVENTS.PAYLOAD_READY, onPayloadReady);
+          resolve();
+        }
+      }
+
+      panelWin.on(EVENTS.PAYLOAD_READY, onPayloadReady);
+    });
   },
 
   async reloadInspectorAndLog(label, toolbox) {

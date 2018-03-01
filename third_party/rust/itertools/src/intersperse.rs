@@ -10,6 +10,7 @@ use super::size_hint;
 /// This iterator is *fused*.
 ///
 /// See [`.intersperse()`](../trait.Itertools.html#method.intersperse) for more information.
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct Intersperse<I>
     where I: Iterator
 {

@@ -2969,11 +2969,11 @@ nsGenericHTMLElement::NewURIFromString(const nsAString& aURISpec,
 static bool
 IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
 {
-  // FIXME(emilio): In the servo case it should suffice to do something like:
-  //
-  // return !aElement->HasServoData() || Servo_Element_IsDisplayNone(aElement);
-  //
-  // at least in the case the element is part of the flattened tree...
+  if (aPresShell->StyleSet()->IsServo()) {
+    return !aElement->HasServoData() || Servo_Element_IsDisplayNone(aElement);
+  }
+
+#ifdef MOZ_OLD_STYLE
   AutoTArray<Element*, 10> elementsToCheck;
   // Style and layout work on the flattened tree, so this is what we need to
   // check in order to figure out whether we're in a display: none subtree.
@@ -2990,26 +2990,22 @@ IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
     return false;
   }
 
-  StyleSetHandle styleSet = aPresShell->StyleSet();
-  RefPtr<nsStyleContext> sc;
+  nsStyleSet* styleSet = aPresShell->StyleSet()->AsGecko();
+  RefPtr<GeckoStyleContext> sc;
   for (auto* element : Reversed(elementsToCheck)) {
     if (sc) {
-      if (styleSet->IsGecko()) {
-        sc = styleSet->ResolveStyleFor(element, sc,
-                                       LazyComputeBehavior::Assert);
-      } else {
-        // Call ResolveStyleLazily to protect against stale element data in
-        // the tree when styled by Servo.
-        sc = styleSet->AsServo()->ResolveStyleLazily(
-            element, CSSPseudoElementType::NotPseudo);
-      }
+      sc = styleSet->ResolveStyleFor(element, sc, LazyComputeBehavior::Assert);
     } else {
-      sc = nsComputedDOMStyle::GetStyleContextNoFlush(element, nullptr);
+      sc = nsComputedDOMStyle::GetStyleContextNoFlush(element, nullptr)
+        .downcast<GeckoStyleContext>();
     }
     if (sc->StyleDisplay()->mDisplay == StyleDisplay::None) {
       return true;
     }
   }
+#else
+  MOZ_CRASH("Old style system disabled");
+#endif
 
   return false;
 }

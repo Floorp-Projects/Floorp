@@ -3,6 +3,7 @@
 use std::iter::Fuse;
 use std::collections::VecDeque;
 use size_hint;
+use PeekingNext;
 
 /// See [`multipeek()`](../fn.multipeek.html) for more information.
 #[derive(Clone, Debug)]
@@ -54,6 +55,25 @@ impl<I: Iterator> MultiPeek<I> {
 
         self.index += 1;
         ret
+    }
+}
+
+impl<I> PeekingNext for MultiPeek<I>
+    where I: Iterator,
+{
+    fn peeking_next<F>(&mut self, accept: F) -> Option<Self::Item>
+        where F: FnOnce(&Self::Item) -> bool
+    {
+        if self.buf.is_empty() {
+            if let Some(r) = self.peek() {
+                if !accept(r) { return None }
+            }
+        } else {
+            if let Some(r) = self.buf.get(0) {
+                if !accept(r) { return None }
+            }
+        }
+        self.next()
     }
 }
 

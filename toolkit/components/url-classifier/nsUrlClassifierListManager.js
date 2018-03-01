@@ -284,7 +284,7 @@ PROT_ListManager.prototype.kickoffUpdate_ = function(onDiskTableData) {
         updateDelay = Math.min(maxDelayMs, Math.max(0, nextUpdate - Date.now()));
         log("Next update at " + nextUpdate);
       }
-      log("Next update " + updateDelay / 60000 + "min from now");
+      log("Next update " + Math.round(updateDelay / 60000) + "min from now");
 
       this.setUpdateCheckTimer(updateUrl, updateDelay);
     } else {
@@ -566,14 +566,14 @@ PROT_ListManager.prototype.updateSuccess_ = function(tableList, updateUrl,
   // timer since the delay is set differently at every callback.
   if (delay > maxDelayMs) {
     log("Ignoring delay from server (too long), waiting " +
-        maxDelayMs / 60000 + "min");
+        Math.round(maxDelayMs / 60000) + "min");
     delay = maxDelayMs;
   } else if (delay < minDelayMs) {
     log("Ignoring delay from server (too short), waiting " +
-        this.updateInterval / 60000 + "min");
+        Math.round(this.updateInterval / 60000) + "min");
     delay = this.updateInterval;
   } else {
-    log("Waiting " + delay / 60000 + "min");
+    log("Waiting " + Math.round(delay / 60000) + "min");
   }
 
   this.setUpdateCheckTimer(updateUrl, delay);
@@ -606,7 +606,7 @@ PROT_ListManager.prototype.updateSuccess_ = function(tableList, updateUrl,
   let nextUpdatePref = "browser.safebrowsing.provider." + provider + ".nextupdatetime";
   let targetTime = now + delay;
   log("Setting next update of " + provider + " to " + targetTime
-      + " (" + delay / 60000 + "min from now)");
+      + " (" + Math.round(delay / 60000) + "min from now)");
   Services.prefs.setCharPref(nextUpdatePref, targetTime.toString());
 
   Services.obs.notifyObservers(null, "safebrowsing-update-finished", "success");

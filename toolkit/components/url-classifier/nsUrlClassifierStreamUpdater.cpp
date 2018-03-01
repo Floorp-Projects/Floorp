@@ -53,6 +53,7 @@ const uint32_t FETCH_NEXT_REQUEST_RETRY_DELAY_MS = 1000;
 // MOZ_LOG=UrlClassifierStreamUpdater:5
 static mozilla::LazyLogModule gUrlClassifierStreamUpdaterLog("UrlClassifierStreamUpdater");
 #define LOG(args) TrimAndLog args
+#define LOG_ENABLED() MOZ_LOG_TEST(gUrlClassifierStreamUpdaterLog, mozilla::LogLevel::Debug)
 
 // Calls nsIURLFormatter::TrimSensitiveURLs to remove sensitive
 // info from the logging message.
@@ -408,7 +409,10 @@ nsUrlClassifierStreamUpdater::FetchNext()
                             true, // This method is for v2 and v2 is always a POST.
                             update.mTable);
   if (NS_FAILED(rv)) {
-    LOG(("Error fetching update url: %s\n", update.mUrl.get()));
+    nsAutoCString errorName;
+    mozilla::GetErrorName(rv, errorName);
+    LOG(("Error (%s) fetching update url: %s\n", errorName.get(),
+         update.mUrl.get()));
     // We can commit the urls that we've applied so far.  This is
     // probably a transient server problem, so trigger backoff.
     mDownloadError = true;
@@ -475,8 +479,12 @@ nsUrlClassifierStreamUpdater::StreamFinished(nsresult status,
   // We are a service and may not be reset with Init between calls, so reset
   // mBeganStream manually.
   mBeganStream = false;
-  LOG(("nsUrlClassifierStreamUpdater::StreamFinished [%" PRIx32 ", %d]",
-       static_cast<uint32_t>(status), requestedDelay));
+  if (LOG_ENABLED()) {
+    nsAutoCString errorName;
+    mozilla::GetErrorName(status, errorName);
+    LOG(("nsUrlClassifierStreamUpdater::StreamFinished [%s, %d]",
+         errorName.get(), requestedDelay));
+  }
   if (NS_FAILED(status) || mPendingUpdates.Length() == 0) {
     // We're done.
     LOG(("nsUrlClassifierStreamUpdater::Done [this=%p]", this));
@@ -546,9 +554,9 @@ nsUrlClassifierStreamUpdater::UpdateError(nsresult result)
     mDownloadError ? mCurrentRequest->mDownloadErrorCallback.get() : nullptr;
   DownloadDone();
 
-  nsAutoCString strResult;
-  strResult.AppendInt(static_cast<uint32_t>(result));
   if (errorCallback) {
+    nsAutoCString strResult;
+    mozilla::GetErrorName(result, strResult);
     errorCallback->HandleEvent(strResult);
   } else if (downloadErrorCallback) {
     LOG(("Notify download error callback in UpdateError [this=%p]", this));
@@ -606,7 +614,7 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
     rv = httpChannel->GetStatus(&status);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (MOZ_LOG_TEST(gUrlClassifierStreamUpdaterLog, mozilla::LogLevel::Debug)) {
+    if (LOG_ENABLED()) {
       nsAutoCString errorName, spec;
       mozilla::GetErrorName(status, errorName);
       nsCOMPtr<nsIURI> uri;
@@ -720,8 +728,12 @@ nsUrlClassifierStreamUpdater::OnStopRequest(nsIRequest *request, nsISupports* co
   if (!mDBService)
     return NS_ERROR_NOT_INITIALIZED;
 
-  LOG(("OnStopRequest (status %" PRIx32 ", beganStream %s, this=%p)",
-       static_cast<uint32_t>(aStatus), mBeganStream ? "true" : "false", this));
+  if (LOG_ENABLED()) {
+    nsAutoCString errorName;
+    mozilla::GetErrorName(aStatus, errorName);
+    LOG(("OnStopRequest (status %s, beganStream %s, this=%p)",
+         errorName.get(), mBeganStream ? "true" : "false", this));
+  }
 
   nsresult rv;
 

@@ -179,6 +179,7 @@ public class GeckoApplication extends Application
         // low memory killer subsequently kills us, the disk cache will
         // be left in a consistent state, avoiding costly cleanup and
         // re-creation.
+        EventDispatcher.getInstance().dispatch("Session:FlushTabs", null);
         GeckoThread.onPause();
         mPausedGecko = true;
 
