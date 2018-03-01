@@ -10,12 +10,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 public class TestRunnerActivity extends Activity {
     private static final String LOGTAG = "TestRunnerActivity";
@@ -64,7 +58,7 @@ public class TestRunnerActivity extends Activity {
 
         @Override
         public void onCloseRequest(GeckoSession session) {
-            session.closeWindow();
+            session.close();
         }
 
         @Override
@@ -107,7 +101,7 @@ public class TestRunnerActivity extends Activity {
         // We can't use e10s because we get deadlocked when quickly creating and
         // destroying sessions. Bug 1348361.
         mSession = createSession();
-        mSession.openWindow(this);
+        mSession.open(this);
 
         // If we were passed a URI in the Intent, open it
         final Uri uri = intent.getData();
@@ -122,7 +116,7 @@ public class TestRunnerActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        mSession.closeWindow();
+        mSession.close();
         super.onDestroy();
     }
 
