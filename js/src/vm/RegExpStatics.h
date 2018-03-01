@@ -62,7 +62,8 @@ class RegExpStatics
     /* Mutators. */
     inline void updateLazily(JSContext* cx, JSLinearString* input,
                              RegExpShared* shared, size_t lastIndex);
-    inline bool updateFromMatchPairs(JSContext* cx, JSLinearString* input, MatchPairs& newPairs);
+    inline bool updateFromMatchPairs(JSContext* cx, JSLinearString* input,
+                                     VectorMatchPairs& newPairs);
 
     inline void clear();
 
@@ -251,7 +252,8 @@ RegExpStatics::updateLazily(JSContext* cx, JSLinearString* input,
 }
 
 inline bool
-RegExpStatics::updateFromMatchPairs(JSContext* cx, JSLinearString* input, MatchPairs& newPairs)
+RegExpStatics::updateFromMatchPairs(JSContext* cx, JSLinearString* input,
+                                    VectorMatchPairs& newPairs)
 {
     MOZ_ASSERT(input);
 
