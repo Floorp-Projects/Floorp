@@ -57,7 +57,7 @@ public:
     return task.forget();
   }
 
-  nsTArray<SourceBufferTask>::size_type Length() const
+  nsTArray<RefPtr<SourceBufferTask>>::size_type Length() const
   {
     return mQueue.Length();
   }
