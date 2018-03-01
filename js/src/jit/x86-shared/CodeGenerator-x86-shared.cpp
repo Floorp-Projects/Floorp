@@ -2373,36 +2373,6 @@ CodeGeneratorX86Shared::visitNearbyIntF(LNearbyIntF* lir)
 }
 
 void
-CodeGeneratorX86Shared::visitGuardShape(LGuardShape* guard)
-{
-    Register obj = ToRegister(guard->input());
-    Label bail;
-    masm.branchTestObjShape(Assembler::NotEqual, obj, guard->mir()->shape(), &bail);
-    bailoutFrom(&bail, guard->snapshot());
-}
-
-void
-CodeGeneratorX86Shared::visitGuardObjectGroup(LGuardObjectGroup* guard)
-{
-    Register obj = ToRegister(guard->input());
-    Assembler::Condition cond =
-        guard->mir()->bailOnEquality() ? Assembler::Equal : Assembler::NotEqual;
-    Label bail;
-    masm.branchTestObjGroup(cond, obj, guard->mir()->group(), &bail);
-    bailoutFrom(&bail, guard->snapshot());
-}
-
-void
-CodeGeneratorX86Shared::visitGuardClass(LGuardClass* guard)
-{
-    Register obj = ToRegister(guard->input());
-    Register tmp = ToRegister(guard->tempInt());
-    Label bail;
-    masm.branchTestObjClass(Assembler::NotEqual, obj, tmp, guard->mir()->getClass(), &bail);
-    bailoutFrom(&bail, guard->snapshot());
-}
-
-void
 CodeGeneratorX86Shared::visitEffectiveAddress(LEffectiveAddress* ins)
 {
     const MEffectiveAddress* mir = ins->mir();

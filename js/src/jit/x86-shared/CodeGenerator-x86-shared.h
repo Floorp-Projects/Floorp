@@ -241,9 +241,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void visitRoundF(LRoundF* lir);
     void visitNearbyInt(LNearbyInt* lir);
     void visitNearbyIntF(LNearbyIntF* lir);
-    void visitGuardShape(LGuardShape* guard);
-    void visitGuardObjectGroup(LGuardObjectGroup* guard);
-    void visitGuardClass(LGuardClass* guard);
     void visitEffectiveAddress(LEffectiveAddress* ins);
     void visitUDivOrMod(LUDivOrMod* ins);
     void visitUDivOrModConstant(LUDivOrModConstant *ins);
