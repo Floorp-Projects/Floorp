@@ -208,9 +208,7 @@ ClientSource::WorkerExecutionReady(WorkerPrivate* aWorkerPrivate)
   // execution ready.  We can't reliably determine what our storage policy
   // is before execution ready, unfortunately.
   if (mController.isSome()) {
-    MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate->IsStorageAllowed() ||
-                          StringBeginsWith(aWorkerPrivate->ScriptURL(),
-                                           NS_LITERAL_STRING("blob:")));
+    MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate->IsStorageAllowed());
   }
 
   // Its safe to store the WorkerPrivate* here because the ClientSource
@@ -238,36 +236,34 @@ ClientSource::WindowExecutionReady(nsPIDOMWindowInner* aInnerWindow)
   }
 
   nsIDocument* doc = aInnerWindow->GetExtantDoc();
-  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
-
-  nsIURI* uri = doc->GetOriginalURI();
-  NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
-
-  // Don't use nsAutoCString here since IPC requires a full nsCString anyway.
-  nsCString spec;
-  nsresult rv = uri->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(!doc)) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   // A client without access to storage should never be controlled by
   // a service worker.  Check this here in case we were controlled before
   // execution ready.  We can't reliably determine what our storage policy
   // is before execution ready, unfortunately.
-  //
-  // Note, explicitly avoid checking storage policy for windows that inherit
-  // service workers from their parent.  If a user opens a controlled window
-  // and then blocks storage, that window will continue to be controlled by
-  // the SW until the window is closed.  Any about:blank or blob URL should
-  // continue to inherit the SW as well.  We need to avoid triggering the
-  // assertion in this corner case.
   if (mController.isSome()) {
-    MOZ_DIAGNOSTIC_ASSERT(spec.LowerCaseEqualsLiteral("about:blank") ||
-                          StringBeginsWith(spec, NS_LITERAL_CSTRING("blob:")) ||
-                          nsContentUtils::StorageAllowedForWindow(aInnerWindow) ==
+    MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::StorageAllowedForWindow(aInnerWindow) ==
                           nsContentUtils::StorageAccess::eAllow);
   }
 
+  // Don't use nsAutoCString here since IPC requires a full nsCString anyway.
+  nsCString spec;
+
+  nsIURI* uri = doc->GetOriginalURI();
+  if (uri) {
+    nsresult rv = uri->GetSpec(spec);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
   nsPIDOMWindowOuter* outer = aInnerWindow->GetOuterWindow();
-  NS_ENSURE_TRUE(outer, NS_ERROR_UNEXPECTED);
+  if (NS_WARN_IF(!outer)) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   FrameType frameType = FrameType::Top_level;
   if (!outer->IsTopLevelWindow()) {
@@ -390,19 +386,11 @@ ClientSource::SetController(const ServiceWorkerDescriptor& aServiceWorker)
   // A client without access to storage should never be controlled a
   // a service worker.  If we are already execution ready with a real
   // window or worker, then verify assert the storage policy is correct.
-  //
-  // Note, explicitly avoid checking storage policy for clients that inherit
-  // service workers from their parent.  This basically means blob: URLs
-  // and about:blank windows.
   if (GetInnerWindow()) {
-    MOZ_DIAGNOSTIC_ASSERT(Info().URL().LowerCaseEqualsLiteral("about:blank") ||
-                          StringBeginsWith(Info().URL(), NS_LITERAL_CSTRING("blob:")) ||
-                          nsContentUtils::StorageAllowedForWindow(GetInnerWindow()) ==
+    MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::StorageAllowedForWindow(GetInnerWindow()) ==
                           nsContentUtils::StorageAccess::eAllow);
-  } else if (WorkerPrivate* wp = GetWorkerPrivate()) {
-    MOZ_DIAGNOSTIC_ASSERT(wp->IsStorageAllowed() ||
-                          StringBeginsWith(wp->ScriptURL(),
-                                           NS_LITERAL_STRING("blob:")));
+  } else if (GetWorkerPrivate()) {
+    MOZ_DIAGNOSTIC_ASSERT(GetWorkerPrivate()->IsStorageAllowed());
   }
 
   if (mController.isSome() && mController.ref() == aServiceWorker) {
