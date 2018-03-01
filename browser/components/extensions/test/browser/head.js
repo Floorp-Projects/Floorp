@@ -215,25 +215,11 @@ var awaitExtensionPanel = async function(extension, win = window, awaitLoad = tr
     win.document, "WebExtPopupLoaded", true,
     event => event.detail.extension.id === extension.id);
 
-  let popup = getPanelForNode(browser);
-
-  // Wait for the sliding down transition/animation of the popup, to make sure
-  // the content of the popup is in the fixed position.
-  let anims = popup.getAnimations();
-  let animationPromises = anims.map(animation => animation.finished);
-
   await Promise.all([
-    promisePopupShown(popup),
-
-    ...animationPromises,
+    promisePopupShown(getPanelForNode(browser)),
 
     awaitLoad && awaitBrowserLoaded(browser),
   ]);
-
-  // The popup's position returned by popup.getOuterScreenRect() might not be
-  // updated yet at the point of the animations' promises are resolved.
-  // Wait for the next event tick to make sure the position is updated.
-  await new Promise(SimpleTest.executeSoon);
 
   return browser;
 };
