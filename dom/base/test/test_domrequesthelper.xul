@@ -18,7 +18,8 @@
     ChromeUtils.import("resource://gre/modules/DOMRequestHelper.jsm");
     let obs = Cc["@mozilla.org/observer-service;1"].
               getService(Ci.nsIObserverService);
-    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
+    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"].
+              getService(Ci.nsIMessageBroadcaster);
 
     function DummyHelperSubclass() {
       this.onuninit = null;

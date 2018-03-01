@@ -7,7 +7,6 @@
 #include "nsIContentChild.h"
 
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ChildProcessMessageManager.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/PermissionMessageUtils.h"

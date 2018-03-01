@@ -20,7 +20,9 @@ var ContentCollector = {
         return;
       }
 
-    Services.cpmm.addMessageListener("browser-test:collect-request", this);
+    let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
+                 .getService(Ci.nsISyncMessageSender);
+    cpmm.addMessageListener("browser-test:collect-request", this);
   },
 
   receiveMessage: function(aMessage) {
@@ -57,7 +59,9 @@ var ContentCollector = {
     let pid = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processID;
     dump("Completed ShutdownLeaks collections in process " + pid + "\n");
 
-    Services.cpmm.removeMessageListener("browser-test:collect-request", this);
+    let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
+                 .getService(Ci.nsISyncMessageSender);
+    cpmm.removeMessageListener("browser-test:collect-request", this);
   },
 
 };

@@ -3127,20 +3127,9 @@ ConvertExceptionToPromise(JSContext* cx,
 
 /* static */
 void
-CreateGlobalOptionsWithXPConnect::TraceGlobal(JSTracer* aTrc, JSObject* aObj)
+CreateGlobalOptions<nsGlobalWindowInner>::TraceGlobal(JSTracer* aTrc, JSObject* aObj)
 {
   xpc::TraceXPCGlobal(aTrc, aObj);
-}
-
-/* static */
-bool
-CreateGlobalOptionsWithXPConnect::PostCreateGlobal(JSContext* aCx,
-                                                   JS::Handle<JSObject*> aGlobal)
-{
-  // Invoking the XPCWrappedNativeScope constructor automatically hooks it
-  // up to the compartment of aGlobal.
-  (void) new XPCWrappedNativeScope(aCx, aGlobal);
-  return true;
 }
 
 static bool sRegisteredDOMNames = false;
@@ -3176,7 +3165,10 @@ CreateGlobalOptions<nsGlobalWindowInner>::PostCreateGlobal(JSContext* aCx,
     return Throw(aCx, rv);
   }
 
-  return CreateGlobalOptionsWithXPConnect::PostCreateGlobal(aCx, aGlobal);
+  // Invoking the XPCWrappedNativeScope constructor automatically hooks it
+  // up to the compartment of aGlobal.
+  (void) new XPCWrappedNativeScope(aCx, aGlobal);
+  return true;
 }
 
 #ifdef DEBUG

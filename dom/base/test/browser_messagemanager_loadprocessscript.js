@@ -1,6 +1,10 @@
+var ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+           .getService(Ci.nsIMessageBroadcaster);
+ppmm.QueryInterface(Ci.nsIProcessScriptLoader);
+
 const BASE_NUMBER_OF_PROCESSES = 3;
 function checkBaseProcessCount(description) {
-  const {childCount} = Services.ppmm;
+  const {childCount} = ppmm;
   // With preloaded activity-stream, process count is a bit undeterministic, so
   // allow for some variation
   const extraCount = BASE_NUMBER_OF_PROCESSES + 1;
@@ -8,12 +12,14 @@ function checkBaseProcessCount(description) {
 }
 
 function processScript() {
-  if (Services.cpmm !== this) {
+  let cpmm = Components.classes["@mozilla.org/childprocessmessagemanager;1"]
+           .getService(Components.interfaces.nsISyncMessageSender);
+  if (cpmm !== this) {
     dump("Test failed: wrong global object\n");
     return;
   }
 
-  this.cpmm = Services.cpmm;
+  this.cpmm = cpmm;
 
   addMessageListener("ProcessTest:Reply", function listener(msg) {
     removeMessageListener("ProcessTest:Reply", listener);
@@ -64,7 +70,7 @@ add_task(async function(){
   if (!gMultiProcessBrowser)
     return;
 
-  Services.ppmm.releaseCachedProcesses();
+  ppmm.releaseCachedProcesses();
 
   await SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", 5]]})
   await SpecialPowers.pushPrefEnv({"set": [["dom.ipc.keepProcessesAlive.web", 5]]})
@@ -78,17 +84,17 @@ add_task(async function(){
     await BrowserTestUtils.removeTab(tabs[i]);
   }
 
-  Services.ppmm.releaseCachedProcesses();
+  ppmm.releaseCachedProcesses();
   checkBaseProcessCount("Should get back to the base number of processes at this point");
 })
 
 // Test that loading a process script loads in all existing processes
 add_task(async function() {
   let checks = [];
-  for (let i = 0; i < Services.ppmm.childCount; i++)
-    checks.push(checkProcess(Services.ppmm.getChildAt(i)));
+  for (let i = 0; i < ppmm.childCount; i++)
+    checks.push(checkProcess(ppmm.getChildAt(i)));
 
-  Services.ppmm.loadProcessScript(processScriptURL, false);
+  ppmm.loadProcessScript(processScriptURL, false);
   await Promise.all(checks);
 });
 
@@ -104,7 +110,7 @@ add_task(async function() {
   gBrowser.selectedBrowser.loadURI("about:robots");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  let init = Services.ppmm.initialProcessData;
+  let init = ppmm.initialProcessData;
   init.test123 = "hello";
   init.test456 = new Map();
   init.test456.set("hi", "bye");
@@ -113,16 +119,16 @@ add_task(async function() {
   // However, stuff like remote thumbnails can cause a content
   // process to exist nonetheless. This should be rare, though,
   // so the test is useful most of the time.
-  if (Services.ppmm.childCount == 2) {
-    let mainMM = Services.ppmm.getChildAt(0);
+  if (ppmm.childCount == 2) {
+    let mainMM = ppmm.getChildAt(0);
 
-    let check = checkProcess(Services.ppmm);
-    Services.ppmm.loadProcessScript(processScriptURL, true);
+    let check = checkProcess(ppmm);
+    ppmm.loadProcessScript(processScriptURL, true);
 
     // The main process should respond
     await check;
 
-    check = checkProcess(Services.ppmm);
+    check = checkProcess(ppmm);
     // Reset the default browser to start a new child process
     gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, true);
     gBrowser.selectedBrowser.loadURI("about:blank");
@@ -133,10 +139,10 @@ add_task(async function() {
     // The new process should have responded
     await check;
 
-    Services.ppmm.removeDelayedProcessScript(processScriptURL);
+    ppmm.removeDelayedProcessScript(processScriptURL);
 
     let childMM;
-    childMM = Services.ppmm.getChildAt(2);
+    childMM = ppmm.getChildAt(2);
 
     childMM.loadProcessScript(initTestScriptURL, false);
     let msg = await promiseMessage(childMM, "ProcessTest:InitGood");
