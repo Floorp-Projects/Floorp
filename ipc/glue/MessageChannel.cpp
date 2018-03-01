@@ -701,7 +701,30 @@ MessageChannel::Clear()
     if (!Unsound_IsClosed()) {
         CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProtocolName"),
                                            nsDependentCString(mName));
-        MOZ_CRASH("MessageChannel destroyed without being closed");
+        switch (mChannelState) {
+            case ChannelOpening:
+                MOZ_CRASH("MessageChannel destroyed without being closed " \
+                          "(mChannelState == ChannelOpening).");
+                break;
+            case ChannelConnected:
+                MOZ_CRASH("MessageChannel destroyed without being closed " \
+                          "(mChannelState == ChannelConnected).");
+                break;
+            case ChannelTimeout:
+                MOZ_CRASH("MessageChannel destroyed without being closed " \
+                          "(mChannelState == ChannelTimeout).");
+                break;
+            case ChannelClosing:
+                MOZ_CRASH("MessageChannel destroyed without being closed " \
+                          "(mChannelState == ChannelClosing).");
+                break;
+            case ChannelError:
+                MOZ_CRASH("MessageChannel destroyed without being closed " \
+                          "(mChannelState == ChannelError).");
+                break;
+            default:
+                MOZ_CRASH("MessageChannel destroyed without being closed.");
+        }
     }
 #endif
 
