@@ -13,6 +13,7 @@ flat varying float vAmount;
 flat varying int vOp;
 flat varying mat4 vColorMat;
 flat varying vec4 vColorOffset;
+flat varying vec4 vUvClipBounds;
 
 #ifdef WR_VERTEX_SHADER
 
@@ -29,6 +30,10 @@ void brush_vs(
               src_task.common_data.task_rect.p0 -
               src_task.content_origin;
     vUv = vec3(uv / texture_size, src_task.common_data.texture_layer_index);
+
+    vec2 uv0 = src_task.common_data.task_rect.p0;
+    vec2 uv1 = uv0 + src_task.common_data.task_rect.size;
+    vUvClipBounds = vec4(uv0, uv1) / texture_size.xyxy;
 
     vOp = user_data.y;
 
@@ -141,6 +146,10 @@ vec4 brush_fs() {
         default:
             color = vColorMat * Cs + vColorOffset;
     }
+
+    // Fail-safe to ensure that we don't sample outside the rendered
+    // portion of a blend source.
+    color.a *= point_inside_rect(vUv.xy, vUvClipBounds.xy, vUvClipBounds.zw);
 
     // Pre-multiply the alpha into the output value.
     color.rgb *= color.a;
