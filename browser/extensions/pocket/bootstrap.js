@@ -408,7 +408,9 @@ var PocketOverlay = {
     }
   },
   shutdown(reason) {
-    Services.ppmm.broadcastAsyncMessage("PocketShuttingDown");
+    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+                 .getService(Ci.nsIMessageBroadcaster);
+    ppmm.broadcastAsyncMessage("PocketShuttingDown");
     Services.obs.removeObserver(this, "browser-delayed-startup-finished");
     // Although the ppmm loads the scripts into the chrome process as well,
     // we need to manually unregister here anyway to ensure these aren't part

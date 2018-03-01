@@ -1259,9 +1259,9 @@ function do_await_remote_message(name, optionalCallback) {
 
     var mm;
     if (runningInParent) {
-      mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
+      mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIMessageBroadcaster);
     } else {
-      mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService();
+      mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
     }
     do_test_pending();
     mm.addMessageListener(name, listener);
@@ -1276,10 +1276,10 @@ function do_send_remote_message(name) {
   var mm;
   var sender;
   if (runningInParent) {
-    mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
+    mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIMessageBroadcaster);
     sender = "broadcastAsyncMessage";
   } else {
-    mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService();
+    mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
     sender = "sendAsyncMessage";
   }
   mm[sender](name);

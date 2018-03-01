@@ -1246,7 +1246,8 @@ nsGlobalWindowInner::CleanUp()
   if (mCleanMessageManager) {
     MOZ_ASSERT(mIsChrome, "only chrome should have msg manager cleaned");
     if (mChromeFields.mMessageManager) {
-      mChromeFields.mMessageManager->Disconnect();
+      static_cast<nsFrameMessageManager*>(
+        mChromeFields.mMessageManager.get())->Disconnect();
     }
   }
 
@@ -7586,7 +7587,7 @@ nsGlobalWindowInner::GetMessageManager(nsIMessageBroadcaster** aManager)
   return rv.StealNSResult();
 }
 
-ChromeMessageBroadcaster*
+nsIMessageBroadcaster*
 nsGlobalWindowInner::GetMessageManager(ErrorResult& aError)
 {
   MOZ_ASSERT(IsChromeWindow());
@@ -7594,7 +7595,9 @@ nsGlobalWindowInner::GetMessageManager(ErrorResult& aError)
     nsCOMPtr<nsIMessageBroadcaster> globalMM =
       do_GetService("@mozilla.org/globalmessagemanager;1");
     mChromeFields.mMessageManager =
-      new ChromeMessageBroadcaster(static_cast<nsFrameMessageManager*>(globalMM.get()));
+      new nsFrameMessageManager(nullptr,
+                                static_cast<nsFrameMessageManager*>(globalMM.get()),
+                                MM_CHROME | MM_BROADCASTER);
   }
   return mChromeFields.mMessageManager;
 }
@@ -7609,18 +7612,21 @@ nsGlobalWindowInner::GetGroupMessageManager(const nsAString& aGroup,
   return rv.StealNSResult();
 }
 
-ChromeMessageBroadcaster*
+nsIMessageBroadcaster*
 nsGlobalWindowInner::GetGroupMessageManager(const nsAString& aGroup,
                                             ErrorResult& aError)
 {
   MOZ_ASSERT(IsChromeWindow());
 
-  RefPtr<ChromeMessageBroadcaster> messageManager =
+  nsCOMPtr<nsIMessageBroadcaster> messageManager =
     mChromeFields.mGroupMessageManagers.LookupForAdd(aGroup).OrInsert(
       [this, &aError] () {
-        nsFrameMessageManager* parent = GetMessageManager(aError);
+        nsFrameMessageManager* parent =
+          static_cast<nsFrameMessageManager*>(GetMessageManager(aError));
 
-        return new ChromeMessageBroadcaster(parent);
+        return new nsFrameMessageManager(nullptr,
+                                         parent,
+                                         MM_CHROME | MM_BROADCASTER);
       });
   return messageManager;
 }

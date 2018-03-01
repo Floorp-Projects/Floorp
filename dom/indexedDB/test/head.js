@@ -80,14 +80,11 @@ function waitForMessage(aMessage, browser)
 {
   return new Promise((resolve, reject) => {
     /* eslint-disable no-undef */
-    // When contentScript runs, "this" is a ContentFrameMessageManager (so that's where
-    // addEventListener will add the listener), but the non-bubbling "message" event is
-    // sent to the Window involved, so we need a capturing listener.
     function contentScript() {
       addEventListener("message", function(event) {
         sendAsyncMessage("testLocal:message",
           {message: event.data});
-      }, {once: true, capture: true}, true);
+      }, {once: true}, true);
     }
     /* eslint-enable no-undef */
 

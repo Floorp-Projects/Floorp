@@ -5,7 +5,8 @@
 dump("Loading remote script!\n");
 dump(content + "\n");
 
-var cpm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService();
+var cpm = Cc["@mozilla.org/childprocessmessagemanager;1"]
+            .getService(Components.interfaces.nsISyncMessageSender);
 cpm.addMessageListener("cpm-async",
   function(m) {
     cpm.sendSyncMessage("ppm-sync");
