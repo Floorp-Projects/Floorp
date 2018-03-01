@@ -5,6 +5,9 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+ChromeUtils.defineModuleGetter(this, "AppConstants",
+  "resource://gre/modules/AppConstants.jsm");
+
 // NB: Eagerly load modules that will be loaded/constructed/initialized in the
 // common case to avoid the overhead of wrapping and detecting lazy loading.
 const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
@@ -111,6 +114,11 @@ const PREFS_CONFIG = new Map([
   ["telemetry", {
     title: "Enable system error and usage data collection",
     value: true,
+    value_local_dev: false
+  }],
+  ["telemetry.ut.events", {
+    title: "Enable Unified Telemetry event data collection",
+    value: !AppConstants.RELEASE_OR_BETA,
     value_local_dev: false
   }],
   ["telemetry.ping.endpoint", {
@@ -234,7 +242,7 @@ for (const config of FEEDS_DATA) {
   PREFS_CONFIG.set(pref, config);
 }
 
-var ActivityStream = class ActivityStream {
+this.ActivityStream = class ActivityStream {
   /**
    * constructor - Initializes an instance of ActivityStream
    *
@@ -339,4 +347,4 @@ var ActivityStream = class ActivityStream {
   }
 };
 
-var EXPORTED_SYMBOLS = ["ActivityStream", "PREFS_CONFIG"];
+const EXPORTED_SYMBOLS = ["ActivityStream", "PREFS_CONFIG"];

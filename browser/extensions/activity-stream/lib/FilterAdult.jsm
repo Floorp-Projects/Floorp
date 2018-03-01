@@ -46,7 +46,7 @@ function filterAdult(links) {
   });
 }
 
-var EXPORTED_SYMBOLS = ["filterAdult"];
+const EXPORTED_SYMBOLS = ["filterAdult"];
 
 // These are md5 hashes of base domains to be filtered out. Originally from:
 // https://hg.mozilla.org/mozilla-central/log/default/browser/base/content/newtab/newTab.inadjacent.json
