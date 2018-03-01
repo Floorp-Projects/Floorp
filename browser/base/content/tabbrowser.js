@@ -201,7 +201,7 @@ class TabBrowser {
     this.mCurrentBrowser.droppedLinkHandler = handleDroppedLink;
 
     // Hook up the event listeners to the first browser
-    var tabListener = this.mTabProgressListener(this.mCurrentTab, this.mCurrentBrowser, true, false);
+    var tabListener = new TabProgressListener(this.mCurrentTab, this.mCurrentBrowser, true, false);
     const nsIWebProgress = Ci.nsIWebProgress;
     const filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
       .createInstance(nsIWebProgress);
@@ -762,437 +762,6 @@ class TabBrowser {
       // aURI might be invalid.
       return false;
     }
-  }
-
-  /**
-   * A web progress listener object definition for a given tab.
-   */
-  mTabProgressListener(aTab, aBrowser, aStartsBlank, aWasPreloadedBrowser, aOrigStateFlags) {
-    let stateFlags = aOrigStateFlags || 0;
-    // Initialize mStateFlags to non-zero e.g. when creating a progress
-    // listener for preloaded browsers as there was no progress listener
-    // around when the content started loading. If the content didn't
-    // quite finish loading yet, mStateFlags will very soon be overridden
-    // with the correct value and end up at STATE_STOP again.
-    if (aWasPreloadedBrowser) {
-      stateFlags = Ci.nsIWebProgressListener.STATE_STOP |
-        Ci.nsIWebProgressListener.STATE_IS_REQUEST;
-    }
-
-    return ({
-      mTabBrowser: this,
-      mTab: aTab,
-      mBrowser: aBrowser,
-      mBlank: aStartsBlank,
-
-      // cache flags for correct status UI update after tab switching
-      mStateFlags: stateFlags,
-      mStatus: 0,
-      mMessage: "",
-      mTotalProgress: 0,
-
-      // count of open requests (should always be 0 or 1)
-      mRequestCount: 0,
-
-      destroy() {
-        delete this.mTab;
-        delete this.mBrowser;
-        delete this.mTabBrowser;
-      },
-
-      _callProgressListeners() {
-        Array.unshift(arguments, this.mBrowser);
-        return this.mTabBrowser._callProgressListeners.apply(this.mTabBrowser, arguments);
-      },
-
-      _shouldShowProgress(aRequest) {
-        if (this.mBlank)
-          return false;
-
-        // Don't show progress indicators in tabs for about: URIs
-        // pointing to local resources.
-        if ((aRequest instanceof Ci.nsIChannel) &&
-            this.mTabBrowser._isLocalAboutURI(aRequest.originalURI, aRequest.URI)) {
-          return false;
-        }
-
-        return true;
-      },
-
-      _isForInitialAboutBlank(aWebProgress, aStateFlags, aLocation) {
-        if (!this.mBlank || !aWebProgress.isTopLevel) {
-          return false;
-        }
-
-        // If the state has STATE_STOP, and no requests were in flight, then this
-        // must be the initial "stop" for the initial about:blank document.
-        const nsIWebProgressListener = Ci.nsIWebProgressListener;
-        if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
-            this.mRequestCount == 0 &&
-            !aLocation) {
-          return true;
-        }
-
-        let location = aLocation ? aLocation.spec : "";
-        return location == "about:blank";
-      },
-
-      onProgressChange(aWebProgress, aRequest,
-        aCurSelfProgress, aMaxSelfProgress,
-        aCurTotalProgress, aMaxTotalProgress) {
-        this.mTotalProgress = aMaxTotalProgress ? aCurTotalProgress / aMaxTotalProgress : 0;
-
-        if (!this._shouldShowProgress(aRequest))
-          return;
-
-        if (this.mTotalProgress && this.mTab.hasAttribute("busy"))
-          this.mTab.setAttribute("progress", "true");
-
-        this._callProgressListeners("onProgressChange",
-                                    [aWebProgress, aRequest,
-                                     aCurSelfProgress, aMaxSelfProgress,
-                                     aCurTotalProgress, aMaxTotalProgress]);
-      },
-
-      onProgressChange64(aWebProgress, aRequest,
-        aCurSelfProgress, aMaxSelfProgress,
-        aCurTotalProgress, aMaxTotalProgress) {
-        return this.onProgressChange(aWebProgress, aRequest,
-          aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress,
-          aMaxTotalProgress);
-      },
-
-      /* eslint-disable complexity */
-      onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-        if (!aRequest)
-          return;
-
-        const nsIWebProgressListener = Ci.nsIWebProgressListener;
-        const nsIChannel = Ci.nsIChannel;
-        let location, originalLocation;
-        try {
-          aRequest.QueryInterface(nsIChannel);
-          location = aRequest.URI;
-          originalLocation = aRequest.originalURI;
-        } catch (ex) {}
-
-        let ignoreBlank = this._isForInitialAboutBlank(aWebProgress, aStateFlags,
-          location);
-
-        // If we were ignoring some messages about the initial about:blank, and we
-        // got the STATE_STOP for it, we'll want to pay attention to those messages
-        // from here forward. Similarly, if we conclude that this state change
-        // is one that we shouldn't be ignoring, then stop ignoring.
-        if ((ignoreBlank &&
-            aStateFlags & nsIWebProgressListener.STATE_STOP &&
-            aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) ||
-            !ignoreBlank && this.mBlank) {
-          this.mBlank = false;
-        }
-
-        if (aStateFlags & nsIWebProgressListener.STATE_START) {
-          this.mRequestCount++;
-        } else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
-          const NS_ERROR_UNKNOWN_HOST = 2152398878;
-          if (--this.mRequestCount > 0 && aStatus == NS_ERROR_UNKNOWN_HOST) {
-            // to prevent bug 235825: wait for the request handled
-            // by the automatic keyword resolver
-            return;
-          }
-          // since we (try to) only handle STATE_STOP of the last request,
-          // the count of open requests should now be 0
-          this.mRequestCount = 0;
-        }
-
-        if (aStateFlags & nsIWebProgressListener.STATE_START &&
-            aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
-          if (aWebProgress.isTopLevel) {
-            // Need to use originalLocation rather than location because things
-            // like about:home and about:privatebrowsing arrive with nsIRequest
-            // pointing to their resolved jar: or file: URIs.
-            if (!(originalLocation && gInitialPages.includes(originalLocation.spec) &&
-                originalLocation != "about:blank" &&
-                this.mBrowser.initialPageLoadedFromURLBar != originalLocation.spec &&
-                this.mBrowser.currentURI && this.mBrowser.currentURI.spec == "about:blank")) {
-              // Indicating that we started a load will allow the location
-              // bar to be cleared when the load finishes.
-              // In order to not overwrite user-typed content, we avoid it
-              // (see if condition above) in a very specific case:
-              // If the load is of an 'initial' page (e.g. about:privatebrowsing,
-              // about:newtab, etc.), was not explicitly typed in the location
-              // bar by the user, is not about:blank (because about:blank can be
-              // loaded by websites under their principal), and the current
-              // page in the browser is about:blank (indicating it is a newly
-              // created or re-created browser, e.g. because it just switched
-              // remoteness or is a new tab/window).
-              this.mBrowser.urlbarChangeTracker.startedLoad();
-            }
-            delete this.mBrowser.initialPageLoadedFromURLBar;
-            // If the browser is loading it must not be crashed anymore
-            this.mTab.removeAttribute("crashed");
-          }
-
-          if (this._shouldShowProgress(aRequest)) {
-            if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING) &&
-                aWebProgress && aWebProgress.isTopLevel) {
-              this.mTab.setAttribute("busy", "true");
-              this.mTab._notselectedsinceload = !this.mTab.selected;
-              SchedulePressure.startMonitoring(window, {
-                highPressureFn() {
-                  // Only switch back to the SVG loading indicator after getting
-                  // three consecutive low pressure callbacks. Used to prevent
-                  // switching quickly between the SVG and APNG loading indicators.
-                  gBrowser.tabContainer._schedulePressureCount = gBrowser.schedulePressureDefaultCount;
-                  gBrowser.tabContainer.setAttribute("schedulepressure", "true");
-                },
-                lowPressureFn() {
-                  if (!gBrowser.tabContainer._schedulePressureCount ||
-                    --gBrowser.tabContainer._schedulePressureCount <= 0) {
-                    gBrowser.tabContainer.removeAttribute("schedulepressure");
-                  }
-
-                  // If tabs are closed while they are loading we need to
-                  // stop monitoring schedule pressure. We don't stop monitoring
-                  // during high pressure times because we want to eventually
-                  // return to the SVG tab loading animations.
-                  let continueMonitoring = true;
-                  if (!document.querySelector(".tabbrowser-tab[busy]")) {
-                    SchedulePressure.stopMonitoring(window);
-                    continueMonitoring = false;
-                  }
-                  return { continueMonitoring };
-                },
-              });
-              this.mTabBrowser.syncThrobberAnimations(this.mTab);
-            }
-
-            if (this.mTab.selected) {
-              this.mTabBrowser.mIsBusy = true;
-            }
-          }
-        } else if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
-                   aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
-
-          if (this.mTab.hasAttribute("busy")) {
-            this.mTab.removeAttribute("busy");
-            if (!document.querySelector(".tabbrowser-tab[busy]")) {
-              SchedulePressure.stopMonitoring(window);
-              this.mTabBrowser.tabContainer.removeAttribute("schedulepressure");
-            }
-
-            // Only animate the "burst" indicating the page has loaded if
-            // the top-level page is the one that finished loading.
-            if (aWebProgress.isTopLevel && !aWebProgress.isLoadingDocument &&
-                Components.isSuccessCode(aStatus) &&
-                !this.mTabBrowser.tabAnimationsInProgress &&
-                Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
-              if (this.mTab._notselectedsinceload) {
-                this.mTab.setAttribute("notselectedsinceload", "true");
-              } else {
-                this.mTab.removeAttribute("notselectedsinceload");
-              }
-
-              this.mTab.setAttribute("bursting", "true");
-            }
-
-            this.mTabBrowser._tabAttrModified(this.mTab, ["busy"]);
-            if (!this.mTab.selected)
-              this.mTab.setAttribute("unread", "true");
-          }
-          this.mTab.removeAttribute("progress");
-
-          if (aWebProgress.isTopLevel) {
-            let isSuccessful = Components.isSuccessCode(aStatus);
-            if (!isSuccessful && !isTabEmpty(this.mTab)) {
-              // Restore the current document's location in case the
-              // request was stopped (possibly from a content script)
-              // before the location changed.
-
-              this.mBrowser.userTypedValue = null;
-
-              let inLoadURI = this.mBrowser.inLoadURI;
-              if (this.mTab.selected && gURLBar && !inLoadURI) {
-                URLBarSetURI();
-              }
-            } else if (isSuccessful) {
-              this.mBrowser.urlbarChangeTracker.finishedLoad();
-            }
-
-            // Ignore initial about:blank to prevent flickering.
-            if (!this.mBrowser.mIconURL && !ignoreBlank) {
-              // Don't switch to the default icon on about:home or about:newtab,
-              // since these pages get their favicon set in browser code to
-              // improve perceived performance.
-              let isNewTab = originalLocation &&
-                (originalLocation.spec == "about:newtab" ||
-                  originalLocation.spec == "about:privatebrowsing" ||
-                  originalLocation.spec == "about:home");
-              if (!isNewTab) {
-                this.mTabBrowser.useDefaultIcon(this.mTab);
-              }
-            }
-          }
-
-          // For keyword URIs clear the user typed value since they will be changed into real URIs
-          if (location.scheme == "keyword")
-            this.mBrowser.userTypedValue = null;
-
-          if (this.mTab.selected)
-            this.mTabBrowser.mIsBusy = false;
-        }
-
-        if (ignoreBlank) {
-          this._callProgressListeners("onUpdateCurrentBrowser",
-                                      [aStateFlags, aStatus, "", 0],
-                                      true, false);
-        } else {
-          this._callProgressListeners("onStateChange",
-                                      [aWebProgress, aRequest, aStateFlags, aStatus],
-                                      true, false);
-        }
-
-        this._callProgressListeners("onStateChange",
-                                    [aWebProgress, aRequest, aStateFlags, aStatus],
-                                    false);
-
-        if (aStateFlags & (nsIWebProgressListener.STATE_START |
-            nsIWebProgressListener.STATE_STOP)) {
-          // reset cached temporary values at beginning and end
-          this.mMessage = "";
-          this.mTotalProgress = 0;
-        }
-        this.mStateFlags = aStateFlags;
-        this.mStatus = aStatus;
-      },
-      /* eslint-enable complexity */
-
-      onLocationChange(aWebProgress, aRequest, aLocation,
-        aFlags) {
-        // OnLocationChange is called for both the top-level content
-        // and the subframes.
-        let topLevel = aWebProgress.isTopLevel;
-
-        if (topLevel) {
-          let isSameDocument = !!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT);
-          // We need to clear the typed value
-          // if the document failed to load, to make sure the urlbar reflects the
-          // failed URI (particularly for SSL errors). However, don't clear the value
-          // if the error page's URI is about:blank, because that causes complete
-          // loss of urlbar contents for invalid URI errors (see bug 867957).
-          // Another reason to clear the userTypedValue is if this was an anchor
-          // navigation initiated by the user.
-          if (this.mBrowser.didStartLoadSinceLastUserTyping() ||
-              ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) &&
-                aLocation.spec != "about:blank") ||
-              (isSameDocument && this.mBrowser.inLoadURI)) {
-            this.mBrowser.userTypedValue = null;
-          }
-
-          // If the tab has been set to "busy" outside the stateChange
-          // handler below (e.g. by sessionStore.navigateAndRestore), and
-          // the load results in an error page, it's possible that there
-          // isn't any (STATE_IS_NETWORK & STATE_STOP) state to cause busy
-          // attribute being removed. In this case we should remove the
-          // attribute here.
-          if ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) &&
-              this.mTab.hasAttribute("busy")) {
-            this.mTab.removeAttribute("busy");
-            this.mTabBrowser._tabAttrModified(this.mTab, ["busy"]);
-          }
-
-          // If the browser was playing audio, we should remove the playing state.
-          if (this.mTab.hasAttribute("soundplaying") && !isSameDocument) {
-            clearTimeout(this.mTab._soundPlayingAttrRemovalTimer);
-            this.mTab._soundPlayingAttrRemovalTimer = 0;
-            this.mTab.removeAttribute("soundplaying");
-            this.mTabBrowser._tabAttrModified(this.mTab, ["soundplaying"]);
-          }
-
-          // If the browser was previously muted, we should restore the muted state.
-          if (this.mTab.hasAttribute("muted")) {
-            this.mTab.linkedBrowser.mute();
-          }
-
-          if (this.mTabBrowser.isFindBarInitialized(this.mTab)) {
-            let findBar = this.mTabBrowser.getFindBar(this.mTab);
-
-            // Close the Find toolbar if we're in old-style TAF mode
-            if (findBar.findMode != findBar.FIND_NORMAL) {
-              findBar.close();
-            }
-          }
-
-          this.mTabBrowser.setTabTitle(this.mTab);
-
-          // Don't clear the favicon if this tab is in the pending
-          // state, as SessionStore will have set the icon for us even
-          // though we're pointed at an about:blank. Also don't clear it
-          // if onLocationChange was triggered by a pushState or a
-          // replaceState (bug 550565) or a hash change (bug 408415).
-          if (!this.mTab.hasAttribute("pending") &&
-              aWebProgress.isLoadingDocument &&
-              !isSameDocument) {
-            this.mBrowser.mIconURL = null;
-          }
-
-          let userContextId = this.mBrowser.getAttribute("usercontextid") || 0;
-          if (this.mBrowser.registeredOpenURI) {
-            this.mTabBrowser._unifiedComplete
-              .unregisterOpenPage(this.mBrowser.registeredOpenURI,
-                userContextId);
-            delete this.mBrowser.registeredOpenURI;
-          }
-          // Tabs in private windows aren't registered as "Open" so
-          // that they don't appear as switch-to-tab candidates.
-          if (!isBlankPageURL(aLocation.spec) &&
-              (!PrivateBrowsingUtils.isWindowPrivate(window) ||
-                PrivateBrowsingUtils.permanentPrivateBrowsing)) {
-            this.mTabBrowser._unifiedComplete
-              .registerOpenPage(aLocation, userContextId);
-            this.mBrowser.registeredOpenURI = aLocation;
-          }
-        }
-
-        if (!this.mBlank) {
-          this._callProgressListeners("onLocationChange",
-                                      [aWebProgress, aRequest, aLocation, aFlags]);
-        }
-
-        if (topLevel) {
-          this.mBrowser.lastURI = aLocation;
-          this.mBrowser.lastLocationChange = Date.now();
-        }
-      },
-
-      onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
-        if (this.mBlank)
-          return;
-
-        this._callProgressListeners("onStatusChange",
-                                    [aWebProgress, aRequest, aStatus, aMessage]);
-
-        this.mMessage = aMessage;
-      },
-
-      onSecurityChange(aWebProgress, aRequest, aState) {
-        this._callProgressListeners("onSecurityChange",
-                                    [aWebProgress, aRequest, aState]);
-      },
-
-      onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {
-        return this._callProgressListeners("onRefreshAttempted",
-                                           [aWebProgress, aURI, aDelay, aSameURI]);
-      },
-
-      QueryInterface(aIID) {
-        if (aIID.equals(Ci.nsIWebProgressListener) ||
-          aIID.equals(Ci.nsIWebProgressListener2) ||
-          aIID.equals(Ci.nsISupportsWeakReference) ||
-          aIID.equals(Ci.nsISupports))
-          return this;
-        throw Cr.NS_NOINTERFACE;
-      }
-    });
   }
 
   storeIcon(aBrowser, aURI, aLoadingPrincipal, aRequestContextID) {
@@ -2115,7 +1684,7 @@ class TabBrowser {
     // Create a new tab progress listener for the new browser we just injected,
     // since tab progress listeners have logic for handling the initial about:blank
     // load
-    listener = this.mTabProgressListener(tab, aBrowser, true, false);
+    listener = new TabProgressListener(tab, aBrowser, true, false);
     this._tabListeners.set(tab, listener);
     filter.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_ALL);
 
@@ -2516,7 +2085,7 @@ class TabBrowser {
     }
 
     // wire up a progress listener for the new browser object.
-    let tabListener = this.mTabProgressListener(aTab, browser, uriIsAboutBlank, usingPreloadedContent);
+    let tabListener = new TabProgressListener(aTab, browser, uriIsAboutBlank, usingPreloadedContent);
     const filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
       .createInstance(Ci.nsIWebProgress);
     filter.addProgressListener(tabListener, Ci.nsIWebProgress.NOTIFY_ALL);
@@ -3601,7 +3170,7 @@ class TabBrowser {
     this._swapBrowserDocShells(aOurTab, otherBrowser, aFlags);
 
     // Restore the listeners for the swapped in tab.
-    tabListener = otherTabBrowser.mTabProgressListener(aOtherTab, otherBrowser, false, false);
+    tabListener = new otherTabBrowser.ownerGlobal.TabProgressListener(aOtherTab, otherBrowser, false, false);
     otherTabBrowser._tabListeners.set(aOtherTab, tabListener);
 
     const notifyAll = Ci.nsIWebProgress.NOTIFY_ALL;
@@ -3667,8 +3236,7 @@ class TabBrowser {
     }
 
     // Restore the progress listener
-    tabListener = this.mTabProgressListener(aOurTab, ourBrowser, false, false,
-      aStateFlags);
+    tabListener = new TabProgressListener(aOurTab, ourBrowser, false, false, aStateFlags);
     this._tabListeners.set(aOurTab, tabListener);
 
     const notifyAll = Ci.nsIWebProgress.NOTIFY_ALL;
@@ -5735,3 +5303,428 @@ class TabBrowser {
     });
   }
 }
+
+/**
+ * A web progress listener object definition for a given tab.
+ */
+class TabProgressListener {
+  constructor(aTab, aBrowser, aStartsBlank, aWasPreloadedBrowser, aOrigStateFlags) {
+    let stateFlags = aOrigStateFlags || 0;
+    // Initialize mStateFlags to non-zero e.g. when creating a progress
+    // listener for preloaded browsers as there was no progress listener
+    // around when the content started loading. If the content didn't
+    // quite finish loading yet, mStateFlags will very soon be overridden
+    // with the correct value and end up at STATE_STOP again.
+    if (aWasPreloadedBrowser) {
+      stateFlags = Ci.nsIWebProgressListener.STATE_STOP |
+        Ci.nsIWebProgressListener.STATE_IS_REQUEST;
+    }
+
+    this.mTab = aTab;
+    this.mBrowser = aBrowser;
+    this.mBlank = aStartsBlank;
+
+    // cache flags for correct status UI update after tab switching
+    this.mStateFlags = stateFlags;
+    this.mStatus = 0;
+    this.mMessage = "";
+    this.mTotalProgress = 0;
+
+    // count of open requests (should always be 0 or 1)
+    this.mRequestCount = 0;
+  }
+
+  destroy() {
+    delete this.mTab;
+    delete this.mBrowser;
+  }
+
+  _callProgressListeners() {
+    Array.unshift(arguments, this.mBrowser);
+    return gBrowser._callProgressListeners.apply(gBrowser, arguments);
+  }
+
+  _shouldShowProgress(aRequest) {
+    if (this.mBlank)
+      return false;
+
+    // Don't show progress indicators in tabs for about: URIs
+    // pointing to local resources.
+    if ((aRequest instanceof Ci.nsIChannel) &&
+        gBrowser._isLocalAboutURI(aRequest.originalURI, aRequest.URI)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  _isForInitialAboutBlank(aWebProgress, aStateFlags, aLocation) {
+    if (!this.mBlank || !aWebProgress.isTopLevel) {
+      return false;
+    }
+
+    // If the state has STATE_STOP, and no requests were in flight, then this
+    // must be the initial "stop" for the initial about:blank document.
+    const nsIWebProgressListener = Ci.nsIWebProgressListener;
+    if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
+        this.mRequestCount == 0 &&
+        !aLocation) {
+      return true;
+    }
+
+    let location = aLocation ? aLocation.spec : "";
+    return location == "about:blank";
+  }
+
+  onProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
+                   aCurTotalProgress, aMaxTotalProgress) {
+    this.mTotalProgress = aMaxTotalProgress ? aCurTotalProgress / aMaxTotalProgress : 0;
+
+    if (!this._shouldShowProgress(aRequest))
+      return;
+
+    if (this.mTotalProgress && this.mTab.hasAttribute("busy"))
+      this.mTab.setAttribute("progress", "true");
+
+    this._callProgressListeners("onProgressChange",
+                                [aWebProgress, aRequest,
+                                 aCurSelfProgress, aMaxSelfProgress,
+                                 aCurTotalProgress, aMaxTotalProgress]);
+  }
+
+  onProgressChange64(aWebProgress, aRequest, aCurSelfProgress,
+                     aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {
+    return this.onProgressChange(aWebProgress, aRequest,
+      aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress,
+      aMaxTotalProgress);
+  }
+
+  /* eslint-disable complexity */
+  onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
+    if (!aRequest)
+      return;
+
+    const nsIWebProgressListener = Ci.nsIWebProgressListener;
+    const nsIChannel = Ci.nsIChannel;
+    let location, originalLocation;
+    try {
+      aRequest.QueryInterface(nsIChannel);
+      location = aRequest.URI;
+      originalLocation = aRequest.originalURI;
+    } catch (ex) {}
+
+    let ignoreBlank = this._isForInitialAboutBlank(aWebProgress, aStateFlags,
+      location);
+
+    // If we were ignoring some messages about the initial about:blank, and we
+    // got the STATE_STOP for it, we'll want to pay attention to those messages
+    // from here forward. Similarly, if we conclude that this state change
+    // is one that we shouldn't be ignoring, then stop ignoring.
+    if ((ignoreBlank &&
+        aStateFlags & nsIWebProgressListener.STATE_STOP &&
+        aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) ||
+        !ignoreBlank && this.mBlank) {
+      this.mBlank = false;
+    }
+
+    if (aStateFlags & nsIWebProgressListener.STATE_START) {
+      this.mRequestCount++;
+    } else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
+      const NS_ERROR_UNKNOWN_HOST = 2152398878;
+      if (--this.mRequestCount > 0 && aStatus == NS_ERROR_UNKNOWN_HOST) {
+        // to prevent bug 235825: wait for the request handled
+        // by the automatic keyword resolver
+        return;
+      }
+      // since we (try to) only handle STATE_STOP of the last request,
+      // the count of open requests should now be 0
+      this.mRequestCount = 0;
+    }
+
+    if (aStateFlags & nsIWebProgressListener.STATE_START &&
+        aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+      if (aWebProgress.isTopLevel) {
+        // Need to use originalLocation rather than location because things
+        // like about:home and about:privatebrowsing arrive with nsIRequest
+        // pointing to their resolved jar: or file: URIs.
+        if (!(originalLocation && gInitialPages.includes(originalLocation.spec) &&
+            originalLocation != "about:blank" &&
+            this.mBrowser.initialPageLoadedFromURLBar != originalLocation.spec &&
+            this.mBrowser.currentURI && this.mBrowser.currentURI.spec == "about:blank")) {
+          // Indicating that we started a load will allow the location
+          // bar to be cleared when the load finishes.
+          // In order to not overwrite user-typed content, we avoid it
+          // (see if condition above) in a very specific case:
+          // If the load is of an 'initial' page (e.g. about:privatebrowsing,
+          // about:newtab, etc.), was not explicitly typed in the location
+          // bar by the user, is not about:blank (because about:blank can be
+          // loaded by websites under their principal), and the current
+          // page in the browser is about:blank (indicating it is a newly
+          // created or re-created browser, e.g. because it just switched
+          // remoteness or is a new tab/window).
+          this.mBrowser.urlbarChangeTracker.startedLoad();
+        }
+        delete this.mBrowser.initialPageLoadedFromURLBar;
+        // If the browser is loading it must not be crashed anymore
+        this.mTab.removeAttribute("crashed");
+      }
+
+      if (this._shouldShowProgress(aRequest)) {
+        if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING) &&
+            aWebProgress && aWebProgress.isTopLevel) {
+          this.mTab.setAttribute("busy", "true");
+          this.mTab._notselectedsinceload = !this.mTab.selected;
+          SchedulePressure.startMonitoring(window, {
+            highPressureFn() {
+              // Only switch back to the SVG loading indicator after getting
+              // three consecutive low pressure callbacks. Used to prevent
+              // switching quickly between the SVG and APNG loading indicators.
+              gBrowser.tabContainer._schedulePressureCount = gBrowser.schedulePressureDefaultCount;
+              gBrowser.tabContainer.setAttribute("schedulepressure", "true");
+            },
+            lowPressureFn() {
+              if (!gBrowser.tabContainer._schedulePressureCount ||
+                --gBrowser.tabContainer._schedulePressureCount <= 0) {
+                gBrowser.tabContainer.removeAttribute("schedulepressure");
+              }
+
+              // If tabs are closed while they are loading we need to
+              // stop monitoring schedule pressure. We don't stop monitoring
+              // during high pressure times because we want to eventually
+              // return to the SVG tab loading animations.
+              let continueMonitoring = true;
+              if (!document.querySelector(".tabbrowser-tab[busy]")) {
+                SchedulePressure.stopMonitoring(window);
+                continueMonitoring = false;
+              }
+              return { continueMonitoring };
+            },
+          });
+          gBrowser.syncThrobberAnimations(this.mTab);
+        }
+
+        if (this.mTab.selected) {
+          gBrowser.mIsBusy = true;
+        }
+      }
+    } else if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
+               aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+
+      if (this.mTab.hasAttribute("busy")) {
+        this.mTab.removeAttribute("busy");
+        if (!document.querySelector(".tabbrowser-tab[busy]")) {
+          SchedulePressure.stopMonitoring(window);
+          gBrowser.tabContainer.removeAttribute("schedulepressure");
+        }
+
+        // Only animate the "burst" indicating the page has loaded if
+        // the top-level page is the one that finished loading.
+        if (aWebProgress.isTopLevel && !aWebProgress.isLoadingDocument &&
+            Components.isSuccessCode(aStatus) &&
+            !gBrowser.tabAnimationsInProgress &&
+            Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
+          if (this.mTab._notselectedsinceload) {
+            this.mTab.setAttribute("notselectedsinceload", "true");
+          } else {
+            this.mTab.removeAttribute("notselectedsinceload");
+          }
+
+          this.mTab.setAttribute("bursting", "true");
+        }
+
+        gBrowser._tabAttrModified(this.mTab, ["busy"]);
+        if (!this.mTab.selected)
+          this.mTab.setAttribute("unread", "true");
+      }
+      this.mTab.removeAttribute("progress");
+
+      if (aWebProgress.isTopLevel) {
+        let isSuccessful = Components.isSuccessCode(aStatus);
+        if (!isSuccessful && !isTabEmpty(this.mTab)) {
+          // Restore the current document's location in case the
+          // request was stopped (possibly from a content script)
+          // before the location changed.
+
+          this.mBrowser.userTypedValue = null;
+
+          let inLoadURI = this.mBrowser.inLoadURI;
+          if (this.mTab.selected && gURLBar && !inLoadURI) {
+            URLBarSetURI();
+          }
+        } else if (isSuccessful) {
+          this.mBrowser.urlbarChangeTracker.finishedLoad();
+        }
+
+        // Ignore initial about:blank to prevent flickering.
+        if (!this.mBrowser.mIconURL && !ignoreBlank) {
+          // Don't switch to the default icon on about:home or about:newtab,
+          // since these pages get their favicon set in browser code to
+          // improve perceived performance.
+          let isNewTab = originalLocation &&
+            (originalLocation.spec == "about:newtab" ||
+              originalLocation.spec == "about:privatebrowsing" ||
+              originalLocation.spec == "about:home");
+          if (!isNewTab) {
+            gBrowser.useDefaultIcon(this.mTab);
+          }
+        }
+      }
+
+      // For keyword URIs clear the user typed value since they will be changed into real URIs
+      if (location.scheme == "keyword")
+        this.mBrowser.userTypedValue = null;
+
+      if (this.mTab.selected)
+        gBrowser.mIsBusy = false;
+    }
+
+    if (ignoreBlank) {
+      this._callProgressListeners("onUpdateCurrentBrowser",
+                                  [aStateFlags, aStatus, "", 0],
+                                  true, false);
+    } else {
+      this._callProgressListeners("onStateChange",
+                                  [aWebProgress, aRequest, aStateFlags, aStatus],
+                                  true, false);
+    }
+
+    this._callProgressListeners("onStateChange",
+                                [aWebProgress, aRequest, aStateFlags, aStatus],
+                                false);
+
+    if (aStateFlags & (nsIWebProgressListener.STATE_START |
+        nsIWebProgressListener.STATE_STOP)) {
+      // reset cached temporary values at beginning and end
+      this.mMessage = "";
+      this.mTotalProgress = 0;
+    }
+    this.mStateFlags = aStateFlags;
+    this.mStatus = aStatus;
+  }
+  /* eslint-enable complexity */
+
+  onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
+    // OnLocationChange is called for both the top-level content
+    // and the subframes.
+    let topLevel = aWebProgress.isTopLevel;
+
+    if (topLevel) {
+      let isSameDocument = !!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT);
+      // We need to clear the typed value
+      // if the document failed to load, to make sure the urlbar reflects the
+      // failed URI (particularly for SSL errors). However, don't clear the value
+      // if the error page's URI is about:blank, because that causes complete
+      // loss of urlbar contents for invalid URI errors (see bug 867957).
+      // Another reason to clear the userTypedValue is if this was an anchor
+      // navigation initiated by the user.
+      if (this.mBrowser.didStartLoadSinceLastUserTyping() ||
+          ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) &&
+            aLocation.spec != "about:blank") ||
+          (isSameDocument && this.mBrowser.inLoadURI)) {
+        this.mBrowser.userTypedValue = null;
+      }
+
+      // If the tab has been set to "busy" outside the stateChange
+      // handler below (e.g. by sessionStore.navigateAndRestore), and
+      // the load results in an error page, it's possible that there
+      // isn't any (STATE_IS_NETWORK & STATE_STOP) state to cause busy
+      // attribute being removed. In this case we should remove the
+      // attribute here.
+      if ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) &&
+          this.mTab.hasAttribute("busy")) {
+        this.mTab.removeAttribute("busy");
+        gBrowser._tabAttrModified(this.mTab, ["busy"]);
+      }
+
+      // If the browser was playing audio, we should remove the playing state.
+      if (this.mTab.hasAttribute("soundplaying") && !isSameDocument) {
+        clearTimeout(this.mTab._soundPlayingAttrRemovalTimer);
+        this.mTab._soundPlayingAttrRemovalTimer = 0;
+        this.mTab.removeAttribute("soundplaying");
+        gBrowser._tabAttrModified(this.mTab, ["soundplaying"]);
+      }
+
+      // If the browser was previously muted, we should restore the muted state.
+      if (this.mTab.hasAttribute("muted")) {
+        this.mTab.linkedBrowser.mute();
+      }
+
+      if (gBrowser.isFindBarInitialized(this.mTab)) {
+        let findBar = gBrowser.getFindBar(this.mTab);
+
+        // Close the Find toolbar if we're in old-style TAF mode
+        if (findBar.findMode != findBar.FIND_NORMAL) {
+          findBar.close();
+        }
+      }
+
+      gBrowser.setTabTitle(this.mTab);
+
+      // Don't clear the favicon if this tab is in the pending
+      // state, as SessionStore will have set the icon for us even
+      // though we're pointed at an about:blank. Also don't clear it
+      // if onLocationChange was triggered by a pushState or a
+      // replaceState (bug 550565) or a hash change (bug 408415).
+      if (!this.mTab.hasAttribute("pending") &&
+          aWebProgress.isLoadingDocument &&
+          !isSameDocument) {
+        this.mBrowser.mIconURL = null;
+      }
+
+      let userContextId = this.mBrowser.getAttribute("usercontextid") || 0;
+      if (this.mBrowser.registeredOpenURI) {
+        gBrowser._unifiedComplete
+          .unregisterOpenPage(this.mBrowser.registeredOpenURI, userContextId);
+        delete this.mBrowser.registeredOpenURI;
+      }
+      // Tabs in private windows aren't registered as "Open" so
+      // that they don't appear as switch-to-tab candidates.
+      if (!isBlankPageURL(aLocation.spec) &&
+          (!PrivateBrowsingUtils.isWindowPrivate(window) ||
+            PrivateBrowsingUtils.permanentPrivateBrowsing)) {
+        gBrowser._unifiedComplete.registerOpenPage(aLocation, userContextId);
+        this.mBrowser.registeredOpenURI = aLocation;
+      }
+    }
+
+    if (!this.mBlank) {
+      this._callProgressListeners("onLocationChange",
+                                  [aWebProgress, aRequest, aLocation, aFlags]);
+    }
+
+    if (topLevel) {
+      this.mBrowser.lastURI = aLocation;
+      this.mBrowser.lastLocationChange = Date.now();
+    }
+  }
+
+  onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
+    if (this.mBlank)
+      return;
+
+    this._callProgressListeners("onStatusChange",
+                                [aWebProgress, aRequest, aStatus, aMessage]);
+
+    this.mMessage = aMessage;
+  }
+
+  onSecurityChange(aWebProgress, aRequest, aState) {
+    this._callProgressListeners("onSecurityChange",
+                                [aWebProgress, aRequest, aState]);
+  }
+
+  onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {
+    return this._callProgressListeners("onRefreshAttempted",
+                                       [aWebProgress, aURI, aDelay, aSameURI]);
+  }
+
+  QueryInterface(aIID) {
+    if (aIID.equals(Ci.nsIWebProgressListener) ||
+        aIID.equals(Ci.nsIWebProgressListener2) ||
+        aIID.equals(Ci.nsISupportsWeakReference) ||
+        aIID.equals(Ci.nsISupports))
+      return this;
+    throw Cr.NS_NOINTERFACE;
+  }
+}
+
