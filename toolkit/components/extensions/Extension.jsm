@@ -631,11 +631,8 @@ class ExtensionData {
           .map(path => path.replace(/^\/*/, "/")));
       }
     } else if (this.type == "langpack") {
-      // Langpack startup is performance critical, so we want to compute as much
-      // as possible here to make startup not trigger async DB reads.
-      // We'll store the four items below in the startupData.
-
-      // 1. Compute the chrome resources to be registered for this langpack.
+      // Compute the chrome resources to be registered for this langpack
+      // and stash them in startupData
       const platform = AppConstants.platform;
       const chromeEntries = [];
       for (const [language, entry] of Object.entries(manifest.languages)) {
@@ -650,39 +647,7 @@ class ExtensionData {
         }
       }
 
-
-      // 2. Compute langpack ID.
-      const productCodeName = AppConstants.MOZ_BUILD_APP.replace("/", "-");
-
-      // The result path looks like this:
-      //   Firefox - `langpack-pl-browser`
-      //   Fennec - `langpack-pl-mobile-android`
-      const langpackId =
-        `langpack-${manifest.langpack_id}-${productCodeName}`;
-
-
-      // 3. Compute L10nRegistry sources for this langpack.
-      const l10nRegistrySources = {};
-
-      // Check if there's a root directory `/localization` in the langpack.
-      // If there is one, add it with the name `toolkit` as a FileSource.
-      const entries = await this.readDirectory("localization");
-      if (entries.length > 0) {
-        l10nRegistrySources.toolkit = "";
-      }
-
-      // Add any additional sources listed in the manifest
-      if (manifest.sources) {
-        for (const [sourceName, {base_path}] of Object.entries(manifest.sources)) {
-          l10nRegistrySources[sourceName] = base_path;
-        }
-      }
-
-      // 4. Save the list of languages handled by this langpack.
-      const languages = Object.keys(manifest.languages);
-
-
-      this.startupData = {chromeEntries, langpackId, l10nRegistrySources, languages};
+      this.startupData = {chromeEntries};
     }
 
     if (schemaPromises.size) {
@@ -1808,9 +1773,41 @@ class Langpack extends ExtensionData {
       });
   }
 
+  async _parseManifest() {
+    let data = await super.parseManifest();
+
+    const productCodeName = AppConstants.MOZ_BUILD_APP.replace("/", "-");
+
+    // The result path looks like this:
+    //   Firefox - `langpack-pl-browser`
+    //   Fennec - `langpack-pl-mobile-android`
+    data.langpackId =
+      `langpack-${data.manifest.langpack_id}-${productCodeName}`;
+
+    const l10nRegistrySources = {};
+
+    // Check if there's a root directory `/localization` in the langpack.
+    // If there is one, add it with the name `toolkit` as a FileSource.
+    const entries = await this.readDirectory("localization");
+    if (entries.length > 0) {
+      l10nRegistrySources.toolkit = "";
+    }
+
+    // Add any additional sources listed in the manifest
+    if (data.manifest.sources) {
+      for (const [sourceName, {base_path}] of Object.entries(data.manifest.sources)) {
+        l10nRegistrySources[sourceName] = base_path;
+      }
+    }
+
+    data.l10nRegistrySources = l10nRegistrySources;
+
+    return data;
+  }
+
   parseManifest() {
     return StartupCache.manifests.get(this.manifestCacheKey,
-                                      () => super.parseManifest());
+                                      () => this._parseManifest());
   }
 
   async startup(reason) {
@@ -1821,16 +1818,18 @@ class Langpack extends ExtensionData {
         aomStartup.registerChrome(manifestURI, this.startupData.chromeEntries);
     }
 
-    const langpackId = this.startupData.langpackId;
-    const l10nRegistrySources = this.startupData.l10nRegistrySources;
+    const data = await this.parseManifest();
+    this.langpackId = data.langpackId;
+    this.l10nRegistrySources = data.l10nRegistrySources;
 
-    resourceProtocol.setSubstitution(langpackId, this.rootURI);
+    const languages = Object.keys(data.manifest.languages);
+    resourceProtocol.setSubstitution(this.langpackId, this.rootURI);
 
-    for (const [sourceName, basePath] of Object.entries(l10nRegistrySources)) {
+    for (const [sourceName, basePath] of Object.entries(this.l10nRegistrySources)) {
       L10nRegistry.registerSource(new FileSource(
-        `${sourceName}-${langpackId}`,
-        this.startupData.languages,
-        `resource://${langpackId}/${basePath}localization/{locale}/`
+        `${sourceName}-${this.langpackId}`,
+        languages,
+        `resource://${this.langpackId}/${basePath}localization/{locale}/`
       ));
     }
 
@@ -1839,14 +1838,14 @@ class Langpack extends ExtensionData {
   }
 
   async shutdown(reason) {
-    for (const sourceName of Object.keys(this.startupData.l10nRegistrySources)) {
-      L10nRegistry.removeSource(`${sourceName}-${this.startupData.langpackId}`);
+    for (const sourceName of Object.keys(this.l10nRegistrySources)) {
+      L10nRegistry.removeSource(`${sourceName}-${this.langpackId}`);
     }
     if (this.chromeRegistryHandle) {
       this.chromeRegistryHandle.destruct();
       this.chromeRegistryHandle = null;
     }
 
-    resourceProtocol.setSubstitution(this.startupData.langpackId, null);
+    resourceProtocol.setSubstitution(this.langpackId, null);
   }
 }
