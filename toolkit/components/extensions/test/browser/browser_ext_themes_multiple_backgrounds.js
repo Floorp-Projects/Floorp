@@ -16,7 +16,7 @@ add_task(async function test_support_backgrounds_position() {
         },
         "colors": {
           "accentcolor": `rgb(${FRAME_COLOR.join(",")})`,
-          "textcolor": `rgb(${BACKGROUND_TAB_TEXT_COLOR.join(",")})`,
+          "textcolor": `rgb(${TAB_BACKGROUND_TEXT_COLOR.join(",")})`,
         },
         "properties": {
           "additional_backgrounds_alignment": ["left top", "center top", "right bottom"],
@@ -67,7 +67,7 @@ add_task(async function test_support_backgrounds_repeat() {
         },
         "colors": {
           "frame": FRAME_COLOR,
-          "background_tab_text": BACKGROUND_TAB_TEXT_COLOR,
+          "tab_background_text": TAB_BACKGROUND_TEXT_COLOR,
         },
         "properties": {
           "additional_backgrounds_tiling": ["repeat-x", "repeat-y", "repeat"],
@@ -115,7 +115,7 @@ add_task(async function test_additional_images_check() {
         },
         "colors": {
           "frame": FRAME_COLOR,
-          "background_tab_text": BACKGROUND_TAB_TEXT_COLOR,
+          "tab_background_text": TAB_BACKGROUND_TEXT_COLOR,
         },
         "properties": {
           "additional_backgrounds_tiling": ["repeat-x", "repeat-y", "repeat"],
