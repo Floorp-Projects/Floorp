@@ -111,9 +111,6 @@ let whitelist = [
   // Bug 1441929
   {propName: "--theme-search-overlays-semitransparent",
    isFromDevTools: true},
-  // Bug 1441877
-  {propName: "--breakpoint-hover-background",
-   isFromDevTools: true},
   // Bug 1441878
   {propName: "--theme-codemirror-gutter-background",
    isFromDevTools: true},
