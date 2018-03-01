@@ -39,7 +39,7 @@ var gEditItemOverlay = {
       // so we'll need to fetch it later.
     }
     let isURI = node && PlacesUtils.nodeIsURI(node);
-    let uri = isURI ? NetUtil.newURI(node.uri) : null;
+    let uri = isURI ? Services.io.newURI(node.uri) : null;
     let title = node ? node.title : null;
     let isBookmark = isItem && isURI;
     let bulkTagging = !node;
@@ -932,7 +932,7 @@ var gEditItemOverlay = {
 
     // default to the bookmarks menu folder
     if (!ip) {
-      ip = new InsertionPoint({
+      ip = new PlacesInsertionPoint({
         parentId: PlacesUtils.bookmarksMenuFolderId,
         parentGuid: PlacesUtils.bookmarks.menuGuid
       });
@@ -1072,7 +1072,7 @@ var gEditItemOverlay = {
 
     switch (aProperty) {
     case "uri":
-      let newURI = NetUtil.newURI(aValue);
+      let newURI = Services.ui.newURI(aValue);
       if (!newURI.equals(this._paneInfo.uri)) {
         this._paneInfo.uri = newURI;
         if (this._paneInfo.visibleRows.has("locationRow"))

@@ -8,7 +8,6 @@
 #define security_sandbox_loggingCallbacks_h__
 
 #include <sstream>
-#include <iostream>
 
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
