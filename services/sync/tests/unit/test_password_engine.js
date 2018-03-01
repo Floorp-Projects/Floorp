@@ -160,7 +160,8 @@ add_task(async function test_password_engine() {
   try {
     await sync_engine_and_validate_telem(engine, false);
 
-    let newRec = collection.cleartext(newLogin.guid);
+    let newRec = JSON.parse(JSON.parse(
+      collection.payload(newLogin.guid)).ciphertext);
     equal(newRec.password, "password",
       "Should update remote password for newer login");
 
