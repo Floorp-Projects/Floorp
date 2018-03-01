@@ -172,6 +172,17 @@ var Policies = {
     }
   },
 
+  "DisablePrivateBrowsing": {
+    onBeforeAddons(manager, param) {
+      if (param) {
+        manager.disallowFeature("privatebrowsing");
+        manager.disallowFeature("about:privatebrowsing", true);
+        setAndLockPref("browser.privatebrowsing.autostart", false);
+      }
+    }
+  },
+
+
   "DisplayBookmarksToolbar": {
     onBeforeUIStartup(manager, param) {
       if (param) {

@@ -128,6 +128,9 @@ this.windows = class extends ExtensionAPI {
             if (createData.incognito !== null && createData.incognito != incognito) {
               return Promise.reject({message: "`incognito` property must match the incognito state of tab"});
             }
+            if (createData.incognito && !PrivateBrowsingUtils.enabled) {
+              return Promise.reject({message: "`incognito` cannot be used if incognito mode is disabled"});
+            }
             createData.incognito = incognito;
 
             args.appendElement(tab);

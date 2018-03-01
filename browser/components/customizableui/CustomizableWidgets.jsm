@@ -239,13 +239,6 @@ const CustomizableWidgets = [
       panelview.appendChild(footer);
     }
   }, {
-    id: "privatebrowsing-button",
-    shortcutId: "key_privatebrowsing",
-    onCommand(e) {
-      let win = e.target.ownerGlobal;
-      win.OpenBrowserWindow({private: true});
-    }
-  }, {
     id: "save-page-button",
     shortcutId: "key_savePage",
     tooltiptext: "save-page-button.tooltiptext3",
@@ -946,5 +939,16 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
       let forgetButton = aEvent.target.querySelector("#PanelUI-panic-view-button");
       forgetButton.removeEventListener("command", this);
     },
+  });
+}
+
+if (PrivateBrowsingUtils.enabled) {
+  CustomizableWidgets.push({
+    id: "privatebrowsing-button",
+    shortcutId: "key_privatebrowsing",
+    onCommand(e) {
+      let win = e.target.ownerGlobal;
+      win.OpenBrowserWindow({private: true});
+    }
   });
 }
