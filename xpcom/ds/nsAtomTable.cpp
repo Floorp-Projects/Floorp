@@ -141,20 +141,23 @@ nsAtom::ToUTF8String(nsACString& aBuf) const
   CopyUTF16toUTF8(nsDependentString(mString, mLength), aBuf);
 }
 
-size_t
-nsAtom::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+void
+nsAtom::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf, AtomsSizes& aSizes)
+  const
 {
-  MOZ_ASSERT(!IsHTML5Atom(), "Called SizeOfIncludingThis() on an HTML5 atom");
-  size_t n = aMallocSizeOf(this);
-  // String buffers pointed to by static atoms are in static memory, and so
-  // are not measured here.
-  if (IsDynamicAtom()) {
-    n += nsStringBuffer::FromData(mString)->SizeOfIncludingThisIfUnshared(
-           aMallocSizeOf);
+  MOZ_ASSERT(!IsHTML5Atom(),
+             "Called AddSizeOfIncludingThis() on an HTML5 atom");
+  size_t thisSize = aMallocSizeOf(this);
+  if (IsStaticAtom()) {
+    // String buffers pointed to by static atoms are in static memory, and so
+    // are not measured here.
+    aSizes.mStaticAtomObjects += thisSize;
   } else {
-    MOZ_ASSERT(IsStaticAtom());
+    aSizes.mDynamicAtomObjects += thisSize;
+    aSizes.mDynamicUnsharedBuffers +=
+      nsStringBuffer::FromData(mString)->SizeOfIncludingThisIfUnshared(
+        aMallocSizeOf);
   }
-  return n;
 }
 
 //----------------------------------------------------------------------
@@ -218,7 +221,8 @@ class nsAtomSubTable
   PLDHashTable mTable;
   nsAtomSubTable();
   void GCLocked(GCKind aKind);
-  size_t SizeOfExcludingThisLocked(MallocSizeOf aMallocSizeOf);
+  void AddSizeOfExcludingThisLocked(MallocSizeOf aMallocSizeOf,
+                                    AtomsSizes& aSizes);
 
   AtomTableEntry* Search(AtomTableKey& aKey)
   {
@@ -239,7 +243,7 @@ class nsAtomTable
 {
 public:
   nsAtomSubTable& SelectSubTable(AtomTableKey& aKey);
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf);
+  void AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf, AtomsSizes& aSizes);
   void GC(GCKind aKind);
   already_AddRefed<nsAtom> Atomize(const nsAString& aUTF16String);
   already_AddRefed<nsAtom> Atomize(const nsACString& aUTF8String);
@@ -385,17 +389,16 @@ nsAtomTable::SelectSubTable(AtomTableKey& aKey)
   return mSubTables[aKey.mHash & (kNumSubTables - 1)];
 }
 
-size_t
-nsAtomTable::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
+void
+nsAtomTable::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
+                                    AtomsSizes& aSizes)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  size_t size = aMallocSizeOf(this);
+  aSizes.mTable += aMallocSizeOf(this);
   for (auto& table : mSubTables) {
     MutexAutoLock lock(table.mLock);
-    size += table.SizeOfExcludingThisLocked(aMallocSizeOf);
+    table.AddSizeOfExcludingThisLocked(aMallocSizeOf, aSizes);
   }
-
-  return size;
 }
 
 void nsAtomTable::GC(GCKind aKind)
@@ -608,25 +611,24 @@ NS_ShutdownAtomTable()
   gAtomTable = nullptr;
 }
 
-size_t
-NS_SizeOfAtomTableIncludingThis(MallocSizeOf aMallocSizeOf)
+void
+NS_AddSizeOfAtoms(MallocSizeOf aMallocSizeOf, AtomsSizes& aSizes)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(gAtomTable);
-  return gAtomTable->SizeOfIncludingThis(aMallocSizeOf);
+  return gAtomTable->AddSizeOfIncludingThis(aMallocSizeOf, aSizes);
 }
 
-size_t
-nsAtomSubTable::SizeOfExcludingThisLocked(MallocSizeOf aMallocSizeOf)
+void
+nsAtomSubTable::AddSizeOfExcludingThisLocked(MallocSizeOf aMallocSizeOf,
+                                             AtomsSizes& aSizes)
 {
   mLock.AssertCurrentThreadOwns();
-  size_t size = mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  aSizes.mTable += mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = mTable.Iter(); !iter.Done(); iter.Next()) {
     auto entry = static_cast<AtomTableEntry*>(iter.Get());
-    size += entry->mAtom->SizeOfIncludingThis(aMallocSizeOf);
+    entry->mAtom->AddSizeOfIncludingThis(aMallocSizeOf, aSizes);
   }
-
-  return size;
 }
 
 void

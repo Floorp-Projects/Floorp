@@ -550,8 +550,7 @@ class BytecodeEmitter::EmitterScope : public Nestable<BytecodeEmitter::EmitterSc
         return searchAndCache(bce, name);
     }
 
-    Maybe<NameLocation> locationBoundInScope(BytecodeEmitter* bce, JSAtom* name,
-                                             EmitterScope* target);
+    Maybe<NameLocation> locationBoundInScope(JSAtom* name, EmitterScope* target);
 };
 
 void
@@ -829,8 +828,7 @@ BytecodeEmitter::EmitterScope::searchAndCache(BytecodeEmitter* bce, JSAtom* name
 }
 
 Maybe<NameLocation>
-BytecodeEmitter::EmitterScope::locationBoundInScope(BytecodeEmitter* bce, JSAtom* name,
-                                                    EmitterScope* target)
+BytecodeEmitter::EmitterScope::locationBoundInScope(JSAtom* name, EmitterScope* target)
 {
     // The target scope must be an intra-frame enclosing scope of this
     // one. Count the number of extra hops to reach it.
@@ -1669,7 +1667,7 @@ class MOZ_STACK_CLASS TryEmitter
     }
 
   private:
-    bool emitCatchEnd(bool hasNext) {
+    bool emitCatchEnd() {
         MOZ_ASSERT(state_ == Catch);
 
         if (!controlInfo_)
@@ -1708,7 +1706,7 @@ class MOZ_STACK_CLASS TryEmitter
                 return false;
         } else {
             MOZ_ASSERT(state_ == Catch);
-            if (!emitCatchEnd(false))
+            if (!emitCatchEnd())
                 return false;
         }
 
@@ -1770,7 +1768,7 @@ class MOZ_STACK_CLASS TryEmitter
     bool emitEnd() {
         if (state_ == Catch) {
             MOZ_ASSERT(!hasFinally());
-            if (!emitCatchEnd(false))
+            if (!emitCatchEnd())
                 return false;
         } else {
             MOZ_ASSERT(state_ == Finally);
@@ -2229,7 +2227,7 @@ BytecodeEmitter::lookupName(JSAtom* name)
 Maybe<NameLocation>
 BytecodeEmitter::locationOfNameBoundInScope(JSAtom* name, EmitterScope* target)
 {
-    return innermostEmitterScope->locationBoundInScope(this, name, target);
+    return innermostEmitterScope->locationBoundInScope(name, target);
 }
 
 Maybe<NameLocation>
@@ -2238,7 +2236,7 @@ BytecodeEmitter::locationOfNameBoundInFunctionScope(JSAtom* name, EmitterScope* 
     EmitterScope* funScope = source;
     while (!funScope->scope(this)->is<FunctionScope>())
         funScope = funScope->enclosingInFrame();
-    return source->locationBoundInScope(this, name, funScope);
+    return source->locationBoundInScope(name, funScope);
 }
 
 bool
@@ -8992,7 +8990,7 @@ BytecodeEmitter::emitSelfHostedResumeGenerator(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitSelfHostedForceInterpreter(ParseNode* pn)
+BytecodeEmitter::emitSelfHostedForceInterpreter()
 {
     if (!emit1(JSOP_FORCEINTERPRETER))
         return false;
@@ -9125,7 +9123,7 @@ BytecodeEmitter::isRestParameter(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitCallee(ParseNode* callee, ParseNode* call, bool spread, bool* callop)
+BytecodeEmitter::emitCallee(ParseNode* callee, ParseNode* call, bool* callop)
 {
     switch (callee->getKind()) {
       case ParseNodeKind::Name:
@@ -9210,7 +9208,7 @@ BytecodeEmitter::emitPipeline(ParseNode* pn)
 
     do {
         bool callop = true;
-        if (!emitCallee(callee, pn, false, &callop))
+        if (!emitCallee(callee, pn, &callop))
             return false;
 
         // Emit room for |this|
@@ -9274,7 +9272,7 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn, ValueUsage valueUsage /* = ValueUs
         if (pn2->name() == cx->names().resumeGenerator)
             return emitSelfHostedResumeGenerator(pn);
         if (pn2->name() == cx->names().forceInterpreter)
-            return emitSelfHostedForceInterpreter(pn);
+            return emitSelfHostedForceInterpreter();
         if (pn2->name() == cx->names().allowContentIter)
             return emitSelfHostedAllowContentIter(pn);
         if (pn2->name() == cx->names().defineDataPropertyIntrinsic && pn->pn_count == 4)
@@ -9286,7 +9284,7 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn, ValueUsage valueUsage /* = ValueUs
         // Fall through
     }
 
-    if (!emitCallee(pn2, pn, spread, &callop))
+    if (!emitCallee(pn2, pn, &callop))
         return false;
 
     bool isNewOp = pn->getOp() == JSOP_NEW || pn->getOp() == JSOP_SPREADNEW ||

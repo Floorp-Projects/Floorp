@@ -192,7 +192,7 @@ struct Zone : public JS::shadow::Zone,
     }
     void reportAllocationOverflow() { js::ReportAllocationOverflow(nullptr); }
 
-    void beginSweepTypes(js::FreeOp* fop, bool releaseTypes);
+    void beginSweepTypes(bool releaseTypes);
 
     bool hasMarkedCompartments();
 
@@ -265,7 +265,7 @@ struct Zone : public JS::shadow::Zone,
 #endif
 
     void sweepBreakpoints(js::FreeOp* fop);
-    void sweepUniqueIds(js::FreeOp* fop);
+    void sweepUniqueIds();
     void sweepWeakMaps();
     void sweepCompartments(js::FreeOp* fop, bool keepAtleastOne, bool lastGC);
 

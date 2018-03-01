@@ -96,7 +96,7 @@ js::ForOfPIC::Chain::tryOptimizeArray(JSContext* cx, HandleArrayObject array, bo
 
     } else if (!disabled_ && !isArrayStateStillSane()) {
         // Otherwise, if array state is no longer sane, reinitialize.
-        reset(cx);
+        reset();
 
         if (!initialize(cx))
             return false;
@@ -175,7 +175,7 @@ js::ForOfPIC::Chain::isArrayStateStillSane()
 }
 
 void
-js::ForOfPIC::Chain::reset(JSContext* cx)
+js::ForOfPIC::Chain::reset()
 {
     // Should never reset a disabled_ stub.
     MOZ_ASSERT(!disabled_);

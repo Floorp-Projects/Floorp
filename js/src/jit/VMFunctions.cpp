@@ -923,10 +923,10 @@ NormalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame, jsbytecode*
 }
 
 bool
-FinalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame, jsbytecode* pc)
+FinalSuspend(JSContext* cx, HandleObject obj, jsbytecode* pc)
 {
     MOZ_ASSERT(*pc == JSOP_FINALYIELDRVAL);
-    GeneratorObject::finalSuspend(cx, obj);
+    GeneratorObject::finalSuspend(obj);
     return true;
 }
 

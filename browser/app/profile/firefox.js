@@ -1659,17 +1659,9 @@ pref("extensions.pocket.enabled", true);
 
 pref("signon.schemeUpgrades", true);
 
-// "Simplify Page" feature in Print Preview. This feature is disabled by default
-// in toolkit.
-//
-// This feature is only enabled on Nightly for Linux until bug 1306295 is fixed.
-#ifdef UNIX_BUT_NOT_MAC
-#if defined(NIGHTLY_BUILD)
+// Enable the "Simplify Page" feature in Print Preview. This feature
+// is disabled by default in toolkit.
 pref("print.use_simplify_page", true);
-#endif
-#else
-pref("print.use_simplify_page", true);
-#endif
 
 // Space separated list of URLS that are allowed to send objects (instead of
 // only strings) through webchannels. This list is duplicated in mobile/android/app/mobile.js

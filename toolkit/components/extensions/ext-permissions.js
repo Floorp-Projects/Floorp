@@ -64,7 +64,7 @@ this.permissions = class extends ExtensionAPI {
         },
 
         async getAll() {
-          let perms = context.extension.userPermissions;
+          let perms = context.extension.activePermissions;
           delete perms.apis;
           return perms;
         },

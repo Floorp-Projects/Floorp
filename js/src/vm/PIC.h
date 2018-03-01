@@ -230,7 +230,7 @@ struct ForOfPIC
         bool hasMatchingStub(ArrayObject* obj);
 
         // Reset the PIC and all info associated with it.
-        void reset(JSContext* cx);
+        void reset();
 
         // Erase the stub chain.
         void eraseChain();

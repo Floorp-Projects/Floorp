@@ -44,7 +44,7 @@ class RegExpStatics
 
   public:
     RegExpStatics() { clear(); }
-    static RegExpStaticsObject* create(JSContext* cx, Handle<GlobalObject*> parent);
+    static RegExpStaticsObject* create(JSContext* cx);
 
   private:
     bool executeLazy(JSContext* cx);

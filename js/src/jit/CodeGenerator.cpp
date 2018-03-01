@@ -2610,7 +2610,7 @@ CodeGenerator::visitOutOfLineRegExpInstanceOptimizable(OutOfLineRegExpInstanceOp
 }
 
 static void
-FindFirstDollarIndex(MacroAssembler& masm, Register str, Register len, Register chars,
+FindFirstDollarIndex(MacroAssembler& masm, Register len, Register chars,
                      Register temp, Register output, bool isLatin1)
 {
     masm.move32(Imm32(0), output);
@@ -2655,13 +2655,13 @@ CodeGenerator::visitGetFirstDollarIndex(LGetFirstDollarIndex* ins)
     masm.branchLatin1String(str, &isLatin1);
     {
         masm.loadStringChars(str, temp0, CharEncoding::TwoByte);
-        FindFirstDollarIndex(masm, str, len, temp0, temp1, output, /* isLatin1 = */ false);
+        FindFirstDollarIndex(masm, len, temp0, temp1, output, /* isLatin1 = */ false);
         masm.jump(&done);
     }
     masm.bind(&isLatin1);
     {
         masm.loadStringChars(str, temp0, CharEncoding::Latin1);
-        FindFirstDollarIndex(masm, str, len, temp0, temp1, output, /* isLatin1 = */ true);
+        FindFirstDollarIndex(masm, len, temp0, temp1, output, /* isLatin1 = */ true);
     }
     masm.bind(&done);
     masm.bind(ool->rejoin());
@@ -8018,7 +8018,7 @@ static void
 ConcatInlineString(MacroAssembler& masm, Register lhs, Register rhs, Register output,
                    Register temp1, Register temp2, Register temp3,
                    bool stringsCanBeInNursery,
-                   Label* failure, Label* failurePopTemps, bool isTwoByte)
+                   Label* failure, bool isTwoByte)
 {
     // State: result length in temp2.
 
@@ -8219,7 +8219,7 @@ JitCompartment::generateStringConcatStub(JSContext* cx)
     Register temp3 = CallTempReg4;
     Register output = CallTempReg5;
 
-    Label failure, failurePopTemps;
+    Label failure;
 #ifdef JS_USE_LINK_REGISTER
     masm.pushReturnAddress();
 #endif
@@ -8288,13 +8288,12 @@ JitCompartment::generateStringConcatStub(JSContext* cx)
 
     masm.bind(&isFatInlineTwoByte);
     ConcatInlineString(masm, lhs, rhs, output, temp1, temp2, temp3,
-                       stringsCanBeInNursery, &failure, &failurePopTemps, true);
+                       stringsCanBeInNursery, &failure, true);
 
     masm.bind(&isFatInlineLatin1);
     ConcatInlineString(masm, lhs, rhs, output, temp1, temp2, temp3,
-                       stringsCanBeInNursery, &failure, &failurePopTemps, false);
+                       stringsCanBeInNursery, &failure, false);
 
-    masm.bind(&failurePopTemps);
     masm.pop(temp2);
     masm.pop(temp1);
 
@@ -8444,8 +8443,7 @@ JitRuntime::generateInterpreterStub(MacroAssembler& masm)
 }
 
 bool
-JitRuntime::generateTLEventVM(JSContext* cx, MacroAssembler& masm, const VMFunction& f,
-                              bool enter)
+JitRuntime::generateTLEventVM(MacroAssembler& masm, const VMFunction& f, bool enter)
 {
 #ifdef JS_TRACE_LOGGING
     bool vmEventEnabled = TraceLogTextIdEnabled(TraceLogger_VM);
@@ -9449,7 +9447,7 @@ static const VMFunction ArrayPushDenseInfo =
     FunctionInfo<ArrayPushDenseFn>(jit::ArrayPushDense, "ArrayPushDense");
 
 void
-CodeGenerator::emitArrayPush(LInstruction* lir, const MArrayPush* mir, Register obj,
+CodeGenerator::emitArrayPush(LInstruction* lir, Register obj,
                              const ConstantOrRegister& value, Register elementsTemp, Register length)
 {
     OutOfLineCode* ool = oolCallVM(ArrayPushDenseInfo, lir, ArgList(obj, value), StoreRegisterTo(length));
@@ -9487,7 +9485,7 @@ CodeGenerator::visitArrayPushV(LArrayPushV* lir)
     Register elementsTemp = ToRegister(lir->temp());
     Register length = ToRegister(lir->output());
     ConstantOrRegister value = TypedOrValueRegister(ToValue(lir, LArrayPushV::Value));
-    emitArrayPush(lir, lir->mir(), obj, value, elementsTemp, length);
+    emitArrayPush(lir, obj, value, elementsTemp, length);
 }
 
 void
@@ -9501,7 +9499,7 @@ CodeGenerator::visitArrayPushT(LArrayPushT* lir)
         value = ConstantOrRegister(lir->value()->toConstant()->toJSValue());
     else
         value = TypedOrValueRegister(lir->mir()->value()->type(), ToAnyRegister(lir->value()));
-    emitArrayPush(lir, lir->mir(), obj, value, elementsTemp, length);
+    emitArrayPush(lir, obj, value, elementsTemp, length);
 }
 
 typedef JSObject* (*ArraySliceDenseFn)(JSContext*, HandleObject, int32_t, int32_t, HandleObject);
@@ -10171,7 +10169,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
 
         // Add entry to the global table.
         JitcodeGlobalTable* globalTable = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
-        if (!globalTable->addEntry(entry, cx->runtime())) {
+        if (!globalTable->addEntry(entry)) {
             // Memory may have been allocated for the entry.
             entry.destroy();
             return false;
@@ -10186,7 +10184,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
 
         // Add entry to the global table.
         JitcodeGlobalTable* globalTable = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
-        if (!globalTable->addEntry(entry, cx->runtime())) {
+        if (!globalTable->addEntry(entry)) {
             // Memory may have been allocated for the entry.
             entry.destroy();
             return false;
@@ -10300,7 +10298,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
 
     // for marking during GC.
     if (safepointIndices_.length())
-        ionScript->copySafepointIndices(&safepointIndices_[0], masm);
+        ionScript->copySafepointIndices(&safepointIndices_[0]);
     if (safepoints_.size())
         ionScript->copySafepoints(&safepoints_);
 
@@ -10308,7 +10306,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
     if (bailouts_.length())
         ionScript->copyBailoutTable(&bailouts_[0]);
     if (osiIndices_.length())
-        ionScript->copyOsiIndices(&osiIndices_[0], masm);
+        ionScript->copyOsiIndices(&osiIndices_[0]);
     if (snapshots_.listSize())
         ionScript->copySnapshots(&snapshots_);
     MOZ_ASSERT_IF(snapshots_.listSize(), recovers_.size());
@@ -10573,8 +10571,7 @@ void
 CodeGenerator::addGetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs,
                                    TypedOrValueRegister value, const ConstantOrRegister& id,
                                    TypedOrValueRegister output, Register maybeTemp,
-                                   GetPropertyResultFlags resultFlags,
-                                   jsbytecode* profilerLeavePc)
+                                   GetPropertyResultFlags resultFlags)
 {
     CacheKind kind = CacheKind::GetElem;
     if (id.constant() && id.value().isString()) {
@@ -10593,7 +10590,7 @@ CodeGenerator::addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, 
                                    FloatRegister tempF32, const ConstantOrRegister& id,
                                    const ConstantOrRegister& value,
                                    bool strict, bool needsPostBarrier, bool needsTypeBarrier,
-                                   bool guardHoles, jsbytecode* profilerLeavePc)
+                                   bool guardHoles)
 {
     CacheKind kind = CacheKind::SetElem;
     if (id.constant() && id.value().isString()) {
@@ -10660,7 +10657,7 @@ CodeGenerator::visitGetPropertyCacheV(LGetPropertyCacheV* ins)
     Register maybeTemp = ins->temp()->isBogusTemp() ? InvalidReg : ToRegister(ins->temp());
 
     addGetPropertyCache(ins, liveRegs, value, id, output, maybeTemp,
-                        IonGetPropertyICFlags(ins->mir()), ins->mir()->profilerLeavePc());
+                        IonGetPropertyICFlags(ins->mir()));
 }
 
 void
@@ -10674,7 +10671,7 @@ CodeGenerator::visitGetPropertyCacheT(LGetPropertyCacheT* ins)
     Register maybeTemp = ins->temp()->isBogusTemp() ? InvalidReg : ToRegister(ins->temp());
 
     addGetPropertyCache(ins, liveRegs, value, id, output, maybeTemp,
-                        IonGetPropertyICFlags(ins->mir()), ins->mir()->profilerLeavePc());
+                        IonGetPropertyICFlags(ins->mir()));
 }
 
 void
@@ -10798,8 +10795,7 @@ CodeGenerator::visitSetPropertyCache(LSetPropertyCache* ins)
 
     addSetPropertyCache(ins, liveRegs, objReg, temp, tempDouble, tempF32,
                         id, value, ins->mir()->strict(), ins->mir()->needsPostBarrier(),
-                        ins->mir()->needsTypeBarrier(), ins->mir()->guardHoles(),
-                        ins->mir()->profilerLeavePc());
+                        ins->mir()->needsTypeBarrier(), ins->mir()->guardHoles());
 }
 
 typedef bool (*ThrowFn)(JSContext*, HandleValue);

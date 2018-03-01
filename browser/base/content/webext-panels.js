@@ -10,6 +10,7 @@
 ChromeUtils.defineModuleGetter(this, "ExtensionParent",
                                "resource://gre/modules/ExtensionParent.jsm");
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
@@ -88,18 +89,16 @@ var gBrowser = {
   },
 };
 
-function loadWebPanel() {
-  let sidebarURI = new URL(location);
+async function loadPanel(extensionId, extensionUrl, browserStyle) {
+  let policy = WebExtensionPolicy.getByID(extensionId);
   let sidebar = {
-    uri: sidebarURI.searchParams.get("panel"),
-    remote: sidebarURI.searchParams.get("remote"),
-    browserStyle: sidebarURI.searchParams.get("browser-style"),
+    uri: extensionUrl,
+    remote: policy.extension.remote,
+    browserStyle,
   };
   getBrowser(sidebar).then(browser => {
-    browser.loadURI(sidebar.uri);
+    let uri = Services.io.newURI(policy.getURL());
+    let triggeringPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+    browser.loadURIWithFlags(extensionUrl, {triggeringPrincipal});
   });
-}
-
-function load() {
-  this.loadWebPanel();
 }

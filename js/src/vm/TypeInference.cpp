@@ -4521,7 +4521,7 @@ TypeZone::~TypeZone()
 }
 
 void
-TypeZone::beginSweep(FreeOp* fop, bool releaseTypes, AutoClearTypeInferenceStateOnOOM& oom)
+TypeZone::beginSweep(bool releaseTypes, AutoClearTypeInferenceStateOnOOM& oom)
 {
     MOZ_ASSERT(zone()->isGCSweepingOrCompacting());
     MOZ_ASSERT(!sweepCompilerOutputs);

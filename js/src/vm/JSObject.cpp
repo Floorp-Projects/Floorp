@@ -1208,8 +1208,7 @@ js::CloneObject(JSContext* cx, HandleObject obj, Handle<js::TaggedProto> proto)
 }
 
 static bool
-GetScriptArrayObjectElements(JSContext* cx, HandleArrayObject arr,
-                             MutableHandle<GCVector<Value>> values)
+GetScriptArrayObjectElements(HandleArrayObject arr, MutableHandle<GCVector<Value>> values)
 {
     MOZ_ASSERT(!arr->isSingleton());
     MOZ_ASSERT(!arr->isIndexed());
@@ -1226,8 +1225,7 @@ GetScriptArrayObjectElements(JSContext* cx, HandleArrayObject arr,
 }
 
 static bool
-GetScriptPlainObjectProperties(JSContext* cx, HandleObject obj,
-                               MutableHandle<IdValueVector> properties)
+GetScriptPlainObjectProperties(HandleObject obj, MutableHandle<IdValueVector> properties)
 {
     if (obj->is<PlainObject>()) {
         PlainObject* nobj = &obj->as<PlainObject>();
@@ -1298,7 +1296,7 @@ js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj, NewObjectKind newKin
 
     if (obj->is<ArrayObject>()) {
         Rooted<GCVector<Value>> values(cx, GCVector<Value>(cx));
-        if (!GetScriptArrayObjectElements(cx, obj.as<ArrayObject>(), &values))
+        if (!GetScriptArrayObjectElements(obj.as<ArrayObject>(), &values))
             return nullptr;
 
         // Deep clone any elements.
@@ -1316,7 +1314,7 @@ js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj, NewObjectKind newKin
     }
 
     Rooted<IdValueVector> properties(cx, IdValueVector(cx));
-    if (!GetScriptPlainObjectProperties(cx, obj, &properties))
+    if (!GetScriptPlainObjectProperties(obj, &properties))
         return nullptr;
 
     for (size_t i = 0; i < properties.length(); i++) {
@@ -1428,7 +1426,7 @@ js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj)
         Rooted<GCVector<Value>> values(cx, GCVector<Value>(cx));
         if (mode == XDR_ENCODE) {
             RootedArrayObject arr(cx, &obj->as<ArrayObject>());
-            if (!GetScriptArrayObjectElements(cx, arr, &values))
+            if (!GetScriptArrayObjectElements(arr, &values))
                 return false;
         }
 
@@ -1468,7 +1466,7 @@ js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj)
 
     // Code the properties in the object.
     Rooted<IdValueVector> properties(cx, IdValueVector(cx));
-    if (mode == XDR_ENCODE && !GetScriptPlainObjectProperties(cx, obj, &properties))
+    if (mode == XDR_ENCODE && !GetScriptPlainObjectProperties(obj, &properties))
         return false;
 
     uint32_t nproperties = properties.length();
@@ -1789,7 +1787,7 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
 }
 
 static bool
-DefineStandardSlot(JSContext* cx, HandleObject obj, JSProtoKey key, JSAtom* atom,
+DefineStandardSlot(JSContext* cx, HandleObject obj, JSAtom* atom,
                    HandleValue v, uint32_t attrs, bool& named)
 {
     RootedId id(cx, AtomToId(atom));
@@ -1873,7 +1871,7 @@ DefineConstructorAndPrototype(JSContext* cx, HandleObject obj, JSProtoKey key, H
                            ? JSPROP_READONLY | JSPROP_PERMANENT
                            : 0;
             RootedValue value(cx, ObjectValue(*proto));
-            if (!DefineStandardSlot(cx, obj, key, atom, value, attrs, named))
+            if (!DefineStandardSlot(cx, obj, atom, value, attrs, named))
                 goto bad;
         }
 
@@ -1894,7 +1892,7 @@ DefineConstructorAndPrototype(JSContext* cx, HandleObject obj, JSProtoKey key, H
         }
 
         RootedValue value(cx, ObjectValue(*fun));
-        if (!DefineStandardSlot(cx, obj, key, atom, value, 0, named))
+        if (!DefineStandardSlot(cx, obj, atom, value, 0, named))
             goto bad;
 
         /*

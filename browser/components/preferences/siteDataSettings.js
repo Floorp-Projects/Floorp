@@ -93,7 +93,7 @@ let gSiteDataSettings = {
 
     let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
     let settingsDescription = document.getElementById("settingsDescription");
-    settingsDescription.textContent = this._prefStrBundle.getFormattedString("siteDataSettings2.description", [brandShortName]);
+    settingsDescription.textContent = this._prefStrBundle.getFormattedString("siteDataSettings3.description", [brandShortName]);
 
     setEventListener("sitesList", "select", this.onSelect);
     setEventListener("hostCol", "click", this.onClickTreeCol);

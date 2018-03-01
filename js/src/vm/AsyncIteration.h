@@ -217,7 +217,7 @@ class AsyncGeneratorObject : public NativeObject
     dequeueRequest(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj);
 
     static AsyncGeneratorRequest*
-    peekRequest(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj);
+    peekRequest(Handle<AsyncGeneratorObject*> asyncGenObj);
 
     bool isQueueEmpty() const {
         if (isSingleQueue())

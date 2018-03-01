@@ -118,7 +118,7 @@ AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
 //
 // This is possible when the AddI is only used by the LoadUnboxedScalar opcode.
 static void
-AnalyzeLoadUnboxedScalar(TempAllocator& alloc, MLoadUnboxedScalar* load)
+AnalyzeLoadUnboxedScalar(MLoadUnboxedScalar* load)
 {
     if (load->isRecoveredOnBailout())
         return;
@@ -269,7 +269,7 @@ EffectiveAddressAnalysis::analyze()
             if (i->isLsh())
                 AnalyzeLsh(graph_.alloc(), i->toLsh());
             else if (i->isLoadUnboxedScalar())
-                AnalyzeLoadUnboxedScalar(graph_.alloc(), i->toLoadUnboxedScalar());
+                AnalyzeLoadUnboxedScalar(i->toLoadUnboxedScalar());
             else if (i->isAsmJSLoadHeap())
                 analyzeAsmJSHeapAccess(i->toAsmJSLoadHeap());
             else if (i->isAsmJSStoreHeap())

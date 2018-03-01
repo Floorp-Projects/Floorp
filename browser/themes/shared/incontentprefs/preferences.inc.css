@@ -85,6 +85,12 @@ button > hbox > label {
   margin-inline-end: 10px;
 }
 
+/* Add a bit of space to the end of descriptions to
+ * leave margin with e.g. additional buttons on the side. */
+.description-with-side-element {
+  margin-inline-end: 10px !important;
+}
+
 .learnMore {
   margin-inline-start: 0px;
   font-weight: normal;
@@ -381,6 +387,10 @@ button > hbox > label {
 
 #historyPane {
   margin-top: 4px;
+}
+
+#acceptCookies {
+  margin-top: 1.5em;
 }
 
 /* Collapse the non-active vboxes in decks to use only the height the

@@ -1846,7 +1846,7 @@ DecodeDataSection(Decoder& d, ModuleEnvironment* env)
 }
 
 static bool
-DecodeModuleNameSubsection(Decoder& d, ModuleEnvironment* env)
+DecodeModuleNameSubsection(Decoder& d)
 {
     Maybe<uint32_t> endOffset;
     if (!d.startNameSubsection(NameType::Module, &endOffset))
@@ -1933,7 +1933,7 @@ DecodeNameSection(Decoder& d, ModuleEnvironment* env)
 
     // Once started, custom sections do not report validation errors.
 
-    if (!DecodeModuleNameSubsection(d, env))
+    if (!DecodeModuleNameSubsection(d))
         goto finish;
 
     if (!DecodeFunctionNameSubsection(d, env))

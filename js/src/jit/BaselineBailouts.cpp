@@ -627,8 +627,8 @@ IsPrologueBailout(const SnapshotIterator& iter, const ExceptionBailoutInfo* excI
 //                      +===============+
 //
 static bool
-InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
-                HandleFunction fun, HandleScript script, IonScript* ionScript,
+InitFromBailout(JSContext* cx, jsbytecode* callerPC,
+                HandleFunction fun, HandleScript script,
                 SnapshotIterator& iter, bool invalidate, BaselineStackBuilder& builder,
                 MutableHandle<GCVector<Value>> startFrameFormals, MutableHandleFunction nextCallee,
                 jsbytecode** callPC, const ExceptionBailoutInfo* excInfo)
@@ -1665,7 +1665,7 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
 
         jsbytecode* callPC = nullptr;
         RootedFunction nextCallee(cx, nullptr);
-        if (!InitFromBailout(cx, caller, callerPC, fun, scr, iter.ionScript(),
+        if (!InitFromBailout(cx, callerPC, fun, scr,
                              snapIter, invalidate, builder, &startFrameFormals,
                              &nextCallee, &callPC, passExcInfo ? excInfo : nullptr))
         {

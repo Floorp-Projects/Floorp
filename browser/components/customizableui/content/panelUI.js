@@ -410,7 +410,6 @@ const PanelUI = {
       multiView.setAttribute("id", "customizationui-widget-multiview");
       multiView.setAttribute("viewCacheId", "appMenu-viewCache");
       multiView.setAttribute("mainViewId", viewNode.id);
-      multiView.setAttribute("ephemeral", true);
       tempPanel.appendChild(multiView);
       viewNode.classList.add("cui-widget-panelview");
 

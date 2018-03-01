@@ -171,7 +171,7 @@ bool
 IteratorCloseForException(JSContext* cx, HandleObject obj);
 
 void
-UnwindIteratorForUncatchableException(JSContext* cx, JSObject* obj);
+UnwindIteratorForUncatchableException(JSObject* obj);
 
 extern bool
 SuppressDeletedProperty(JSContext* cx, HandleObject obj, jsid id);

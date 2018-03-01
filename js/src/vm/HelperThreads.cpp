@@ -176,8 +176,7 @@ js::CancelOffThreadWasmTier2Generator()
 }
 
 bool
-js::StartOffThreadIonCompile(JSContext* cx, jit::IonBuilder* builder,
-                             const AutoLockHelperThreadState& lock)
+js::StartOffThreadIonCompile(jit::IonBuilder* builder, const AutoLockHelperThreadState& lock)
 {
     if (!HelperThreadState().ionWorklist(lock).append(builder))
         return false;
@@ -691,8 +690,7 @@ class MOZ_RAII AutoSetCreatedForHelperThread
 };
 
 static JSObject*
-CreateGlobalForOffThreadParse(JSContext* cx, ParseTaskKind kind,
-                              const gc::AutoSuppressGC& nogc)
+CreateGlobalForOffThreadParse(JSContext* cx, const gc::AutoSuppressGC& nogc)
 {
     JSCompartment* currentCompartment = cx->compartment();
 
@@ -751,7 +749,7 @@ StartOffThreadParseTask(JSContext* cx, ParseTask* task, const ReadOnlyCompileOpt
     gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
     AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
 
-    JSObject* global = CreateGlobalForOffThreadParse(cx, task->kind, nogc);
+    JSObject* global = CreateGlobalForOffThreadParse(cx, nogc);
     if (!global)
         return false;
 
@@ -1531,13 +1529,12 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind, void
 
     // Make sure we have all the constructors we need for the prototype
     // remapping below, since we can't GC while that's happening.
-    Rooted<GlobalObject*> global(cx, &cx->global()->as<GlobalObject>());
     if (!EnsureParserCreatedClasses(cx, kind)) {
         LeaveParseTaskZone(cx->runtime(), parseTask);
         return false;
     }
 
-    mergeParseTaskCompartment(cx, parseTask, global, cx->compartment());
+    mergeParseTaskCompartment(cx, parseTask, cx->compartment());
 
     bool ok = finishCallback(parseTask);
 
@@ -1685,7 +1682,6 @@ GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind, void
 
 void
 GlobalHelperThreadState::mergeParseTaskCompartment(JSContext* cx, ParseTask* parseTask,
-                                                   Handle<GlobalObject*> global,
                                                    JSCompartment* dest)
 {
     // After we call LeaveParseTaskZone() it's not safe to GC until we have
