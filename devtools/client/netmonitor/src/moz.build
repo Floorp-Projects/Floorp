@@ -16,5 +16,4 @@ DIRS += [
 
 DevToolsModules(
     'constants.js',
-    'create-store.js',
 )
