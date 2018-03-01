@@ -9,6 +9,16 @@
 interface nsIFile;
 
 /**
+ * A helper function for reading access statistics for preferences.
+ * See nsIPrefService.readStats for more details.
+ */
+[function, scriptable, uuid(c3f0cedc-e244-4316-b33a-80306a1c35a1)]
+interface nsIPrefStatsCallback : nsISupports
+{
+  void visit(in string prefName, in unsigned long accessCount);
+};
+
+/**
  * The nsIPrefService interface is the main entry point into the back end
  * preferences management library. The preference service is directly
  * responsible for the management of the preferences files and also facilitates
@@ -117,6 +127,23 @@ interface nsIPrefService : nsISupports
    * Like readDefaultPrefsFromFile, but for a user prefs file.
    */
   void readUserPrefsFromFile(in nsIFile aFile);
+
+  /**
+   * Usage statistics for performance tests. This function takes a function
+   * that is passed (preferenceName, accessCount) as arguments for every
+   * recorded preference. You can use this function to build e.g. a JS object
+   * holding that data.
+   *
+   * This is not implemented in non-debug builds and will throw an error.
+   */
+  void readStats(in nsIPrefStatsCallback callback);
+
+  /**
+   * Reset usage statistics for performance tests.
+   *
+   * This is not implemented in non-debug builds and will throw an error.
+   */
+  void resetStats();
 };
 
 %{C++
