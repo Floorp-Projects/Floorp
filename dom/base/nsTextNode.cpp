@@ -273,8 +273,7 @@ nsAttributeTextNode::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 void
-nsAttributeTextNode::AttributeChanged(nsIDocument* aDocument,
-                                      Element* aElement,
+nsAttributeTextNode::AttributeChanged(Element* aElement,
                                       int32_t aNameSpaceID,
                                       nsAtom* aAttribute,
                                       int32_t aModType,
