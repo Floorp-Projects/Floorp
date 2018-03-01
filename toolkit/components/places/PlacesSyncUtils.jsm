@@ -984,7 +984,8 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
       // Incoming bookmarks are "NORMAL", since they already exist on the server.
       return PlacesUtils.bookmarks.SYNC_STATUS.NORMAL;
     }
-    if (source == PlacesUtils.bookmarks.SOURCES.IMPORT_REPLACE) {
+    if (source == PlacesUtils.bookmarks.SOURCES.RESTORE ||
+        source == PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP) {
       // If the user restores from a backup, or Places automatically recovers
       // from a corrupt database, all prior record tracking is lost. Setting the
       // status to "UNKNOWN" allows Record to reconcile restored bookmarks with

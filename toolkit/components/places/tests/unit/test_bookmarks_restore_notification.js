@@ -153,7 +153,7 @@ add_task(async function test_json_restore_normal() {
   await BookmarkJSONUtils.exportToFile(file);
   await PlacesUtils.bookmarks.eraseEverything();
   try {
-    await BookmarkJSONUtils.importFromFile(file, true);
+    await BookmarkJSONUtils.importFromFile(file, { replace: true });
   } catch (e) {
     do_throw("  Restore should not have failed" + e);
   }
@@ -172,7 +172,7 @@ add_task(async function test_json_restore_empty() {
   info("JSON restore: empty file should succeed");
   let file = await promiseFile("bookmarks-test_restoreNotification.json");
   try {
-    await BookmarkJSONUtils.importFromFile(file, true);
+    await BookmarkJSONUtils.importFromFile(file, { replace: true });
   } catch (e) {
     do_throw("  Restore should not have failed" + e);
   }
@@ -191,7 +191,7 @@ add_task(async function test_json_restore_nonexist() {
   info("JSON restore: nonexistent file should fail");
   let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("this file doesn't exist because nobody created it 1");
-  Assert.rejects(BookmarkJSONUtils.importFromFile(file.path, true),
+  Assert.rejects(BookmarkJSONUtils.importFromFile(file.path, { replace: true }),
     /Cannot restore from nonexisting json file/, "Restore should reject for a non-existent file.");
 
   await checkObservers(expectPromises, expectedData);
@@ -211,7 +211,7 @@ add_task(async function test_html_restore_normal() {
   await BookmarkHTMLUtils.exportToFile(file);
   await PlacesUtils.bookmarks.eraseEverything();
   try {
-    BookmarkHTMLUtils.importFromFile(file, false)
+    BookmarkHTMLUtils.importFromFile(file)
                      .catch(do_report_unexpected_exception);
   } catch (e) {
     do_throw("  Restore should not have failed");
@@ -231,7 +231,7 @@ add_task(async function test_html_restore_empty() {
   info("HTML restore: empty file should succeed");
   let file = await promiseFile("bookmarks-test_restoreNotification.init.html");
   try {
-    BookmarkHTMLUtils.importFromFile(file, false)
+    BookmarkHTMLUtils.importFromFile(file)
                      .catch(do_report_unexpected_exception);
   } catch (e) {
     do_throw("  Restore should not have failed");
@@ -251,7 +251,7 @@ add_task(async function test_html_restore_nonexist() {
   info("HTML restore: nonexistent file should fail");
   let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("this file doesn't exist because nobody created it 2");
-  Assert.rejects(BookmarkHTMLUtils.importFromFile(file.path, false),
+  Assert.rejects(BookmarkHTMLUtils.importFromFile(file.path),
     /Cannot import from nonexisting html file/, "Restore should reject for a non-existent file.");
 
   await checkObservers(expectPromises, expectedData);
@@ -271,7 +271,7 @@ add_task(async function test_html_init_restore_normal() {
   await BookmarkHTMLUtils.exportToFile(file);
   await PlacesUtils.bookmarks.eraseEverything();
   try {
-    BookmarkHTMLUtils.importFromFile(file, true)
+    BookmarkHTMLUtils.importFromFile(file, { replace: true })
                      .catch(do_report_unexpected_exception);
   } catch (e) {
     do_throw("  Restore should not have failed");
@@ -291,7 +291,7 @@ add_task(async function test_html_init_restore_empty() {
   info("HTML initial restore: empty file should succeed");
   let file = await promiseFile("bookmarks-test_restoreNotification.init.html");
   try {
-    BookmarkHTMLUtils.importFromFile(file, true)
+    BookmarkHTMLUtils.importFromFile(file, { replace: true })
                      .catch(do_report_unexpected_exception);
   } catch (e) {
     do_throw("  Restore should not have failed");
@@ -311,7 +311,7 @@ add_task(async function test_html_init_restore_nonexist() {
   info("HTML initial restore: nonexistent file should fail");
   let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("this file doesn't exist because nobody created it 3");
-  Assert.rejects(BookmarkHTMLUtils.importFromFile(file.path, true),
+  Assert.rejects(BookmarkHTMLUtils.importFromFile(file.path, { replace: true }),
     /Cannot import from nonexisting html file/, "Restore should reject for a non-existent file.");
 
   await checkObservers(expectPromises, expectedData);

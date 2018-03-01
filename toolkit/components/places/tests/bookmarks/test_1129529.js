@@ -59,7 +59,7 @@ add_task(async function() {
 
   let contentType = "application/json";
   let uri = "data:" + contentType + "," + JSON.stringify(aData);
-  await BookmarkJSONUtils.importFromURL(uri, false);
+  await BookmarkJSONUtils.importFromURL(uri);
 
   let [bookmarks] = await PlacesBackups.getBookmarksTree();
   let unsortedBookmarks = bookmarks.children[2].children;

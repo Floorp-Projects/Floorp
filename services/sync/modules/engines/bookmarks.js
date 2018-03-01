@@ -36,12 +36,6 @@ XPCOMUtils.defineLazyGetter(this, "ANNOS_TO_TRACK", () => [
 ]);
 
 const FOLDER_SORTINDEX = 1000000;
-const {
-  SOURCE_SYNC,
-  SOURCE_IMPORT,
-  SOURCE_IMPORT_REPLACE,
-  SOURCE_SYNC_REPARENT_REMOVED_FOLDER_CHILDREN,
-} = Ci.nsINavBookmarksService;
 
 // Roots that should be deleted from the server, instead of applied locally.
 // This matches `AndroidBrowserBookmarksRepositorySession::forbiddenGUID`,
@@ -54,12 +48,16 @@ const FORBIDDEN_INCOMING_IDS = ["pinned", "places", "readinglist"];
 // descendants of custom roots.
 const FORBIDDEN_INCOMING_PARENT_IDS = ["pinned", "readinglist"];
 
-// The tracker ignores changes made by bookmark import and restore, and
-// changes made by Sync. We don't need to exclude `SOURCE_IMPORT`, but both
-// import and restore fire `bookmarks-restore-*` observer notifications, and
-// the tracker doesn't currently distinguish between the two.
-const IGNORED_SOURCES = [SOURCE_SYNC, SOURCE_IMPORT, SOURCE_IMPORT_REPLACE,
-                         SOURCE_SYNC_REPARENT_REMOVED_FOLDER_CHILDREN];
+// The tracker ignores changes made by import and restore, to avoid bumping the
+// score and triggering syncs during the process, as well as changes made by
+// Sync.
+XPCOMUtils.defineLazyGetter(this, "IGNORED_SOURCES", () => [
+  PlacesUtils.bookmarks.SOURCES.SYNC,
+  PlacesUtils.bookmarks.SOURCES.IMPORT,
+  PlacesUtils.bookmarks.SOURCES.RESTORE,
+  PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP,
+  PlacesUtils.bookmarks.SOURCES.SYNC_REPARENT_REMOVED_FOLDER_CHILDREN,
+]);
 
 function isSyncedRootNode(node) {
   return node.root == "bookmarksMenuFolder" ||

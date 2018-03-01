@@ -10,7 +10,7 @@ var bookmarksExportedFile;
 add_task(async function test_import_bookmarks() {
   let bookmarksFile = OS.Path.join(do_get_cwd().path, "bookmarks_corrupt.json");
 
-  await BookmarkJSONUtils.importFromFile(bookmarksFile, true);
+  await BookmarkJSONUtils.importFromFile(bookmarksFile, { replace: true });
   await PlacesTestUtils.promiseAsyncUpdates();
 
   let bookmarks = await PlacesUtils.promiseBookmarksTree(PlacesUtils.bookmarks.menuGuid);
