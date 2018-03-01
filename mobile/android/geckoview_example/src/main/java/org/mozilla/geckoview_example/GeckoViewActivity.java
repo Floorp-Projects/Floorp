@@ -19,10 +19,8 @@ import android.view.WindowManager;
 import java.util.Locale;
 
 import org.mozilla.gecko.GeckoThread;
-import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
-import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource;
 import org.mozilla.geckoview.GeckoSession.Response;
 import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
 import org.mozilla.geckoview.GeckoView;
@@ -186,7 +184,7 @@ public class GeckoViewActivity extends Activity {
         @Override
         public void onCloseRequest(final GeckoSession session) {
             if (session != mGeckoSession) {
-                session.closeWindow();
+                session.close();
             }
         }
 

@@ -235,7 +235,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onNewSession(session: GeckoSession, uri: String, response: GeckoSession.Response<GeckoSession>) {
                 var newSession = GeckoSession(session.settings)
-                newSession.openWindow()
+                newSession.open()
                 response.respond(newSession)
             }
         })

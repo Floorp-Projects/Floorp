@@ -737,7 +737,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     }
 
     /**
-     * Call openWindow() on a session, and ensure it's ready for use by the test. In particular,
+     * Call open() on a session, and ensure it's ready for use by the test. In particular,
      * remove any extra calls recorded as part of opening the session.
      *
      * @param session Session to open.
@@ -751,7 +751,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             loopUntilIdle(/* timeout */ 0);
         }
 
-        session.openWindow(mInstrumentation.getTargetContext());
+        session.open(mInstrumentation.getTargetContext());
 
         if (!e10s) {
             return;
@@ -801,7 +801,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
     protected void cleanupSession(final GeckoSession session) {
         if (session.isOpen()) {
-            session.closeWindow();
+            session.close();
         }
     }
 

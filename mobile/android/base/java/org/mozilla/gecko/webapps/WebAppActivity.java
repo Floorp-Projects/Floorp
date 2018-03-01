@@ -5,29 +5,20 @@
 
 package org.mozilla.gecko.webapps;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
 import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.customtabs.CustomTabsIntent;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.mozilla.gecko.ActivityHandlerHelper;
@@ -214,7 +205,7 @@ public class WebAppActivity extends AppCompatActivity
 
     @Override
     public void onDestroy() {
-        mGeckoSession.closeWindow();
+        mGeckoSession.close();
         mTextSelection.destroy();
         mFormAssistPopup.destroy();
         mDoorHangerPopup.destroy();
