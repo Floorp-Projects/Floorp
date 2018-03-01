@@ -861,7 +861,7 @@ public:
   /**
    * Return true if the accessible is defunct.
    */
-  bool IsDefunct() const { return mStateFlags & eIsDefunct; }
+  bool IsDefunct() const;
 
   /**
    * Return false if the accessible is no longer in the document.

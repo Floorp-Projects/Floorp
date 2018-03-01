@@ -178,13 +178,13 @@ class JitRuntime
     JitCode* generateBaselineDebugModeOSRHandler(JSContext* cx, uint32_t* noFrameRegPopOffsetOut);
     bool generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunction& f);
 
-    bool generateTLEventVM(JSContext* cx, MacroAssembler& masm, const VMFunction& f, bool enter);
+    bool generateTLEventVM(MacroAssembler& masm, const VMFunction& f, bool enter);
 
-    inline bool generateTLEnterVM(JSContext* cx, MacroAssembler& masm, const VMFunction& f) {
-        return generateTLEventVM(cx, masm, f, /* enter = */ true);
+    inline bool generateTLEnterVM(MacroAssembler& masm, const VMFunction& f) {
+        return generateTLEventVM(masm, f, /* enter = */ true);
     }
-    inline bool generateTLExitVM(JSContext* cx, MacroAssembler& masm, const VMFunction& f) {
-        return generateTLEventVM(cx, masm, f, /* enter = */ false);
+    inline bool generateTLExitVM(MacroAssembler& masm, const VMFunction& f) {
+        return generateTLEventVM(masm, f, /* enter = */ false);
     }
 
     uint32_t startTrampolineCode(MacroAssembler& masm);
@@ -442,7 +442,7 @@ class JitZone
 
   public:
     MOZ_MUST_USE bool init(JSContext* cx);
-    void sweep(FreeOp* fop);
+    void sweep();
 
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 size_t* jitZone,
@@ -619,7 +619,7 @@ class JitCompartment
         return stubs_[StringConcat];
     }
 
-    void sweep(FreeOp* fop, JSCompartment* compartment);
+    void sweep(JSCompartment* compartment);
 
     JitCode* stringConcatStubNoBarrier(uint32_t* requiredBarriersOut) const {
         return getStubNoBarrier(StringConcat, requiredBarriersOut);

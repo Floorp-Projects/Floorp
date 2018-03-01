@@ -1372,7 +1372,7 @@ JSScript::releaseScriptCounts(ScriptCounts* counts)
 }
 
 void
-JSScript::destroyScriptCounts(FreeOp* fop)
+JSScript::destroyScriptCounts()
 {
     if (hasScriptCounts()) {
         ScriptCounts scriptCounts;
@@ -2939,8 +2939,7 @@ InitAtomMap(frontend::AtomIndexMap& indices, GCPtrAtom* atoms)
 }
 
 /* static */ void
-JSScript::initFromFunctionBox(JSContext* cx, HandleScript script,
-                              frontend::FunctionBox* funbox)
+JSScript::initFromFunctionBox(HandleScript script, frontend::FunctionBox* funbox)
 {
     JSFunction* fun = funbox->function();
     if (fun->isInterpretedLazy())
@@ -2982,8 +2981,7 @@ JSScript::initFromFunctionBox(JSContext* cx, HandleScript script,
 }
 
 /* static */ void
-JSScript::initFromModuleContext(JSContext* cx, HandleScript script,
-                                frontend::ModuleSharedContext* modulesc)
+JSScript::initFromModuleContext(HandleScript script)
 {
     script->funHasExtensibleScope_ = false;
     script->needsHomeObject_ = false;
@@ -3063,9 +3061,9 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, BytecodeEmitt
     script->hasNonSyntacticScope_ = bce->outermostScope()->hasOnChain(ScopeKind::NonSyntactic);
 
     if (bce->sc->isFunctionBox())
-        initFromFunctionBox(cx, script, bce->sc->asFunctionBox());
+        initFromFunctionBox(script, bce->sc->asFunctionBox());
     else if (bce->sc->isModuleContext())
-        initFromModuleContext(cx, script, bce->sc->asModuleContext());
+        initFromModuleContext(script);
 
     // Copy yield offsets last, as the generator kind is set in
     // initFromFunctionBox.
@@ -3190,7 +3188,7 @@ JSScript::finalize(FreeOp* fop)
 
     jit::DestroyJitScripts(fop, this);
 
-    destroyScriptCounts(fop);
+    destroyScriptCounts();
     destroyDebugScript(fop);
 
     if (data) {

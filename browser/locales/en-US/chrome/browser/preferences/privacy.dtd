@@ -38,8 +38,8 @@
 
 <!ENTITY  suggestionSettings2.label     "Change preferences for search engine suggestions">
 
-<!ENTITY  acceptCookies3.label          "Accept cookies and site data from websites">
-<!ENTITY  acceptCookies3.accesskey      "A">
+<!ENTITY  acceptCookies4.label          "Accept cookies and site data from websites (recommended)">
+<!ENTITY  acceptCookies4.accesskey      "A">
 
 <!ENTITY  blockCookies.label            "Block cookies and site data (may cause websites to break)">
 <!ENTITY  blockCookies.accesskey        "B">
@@ -66,7 +66,7 @@
 <!ENTITY  historyHeader.custom.label       "Use custom settings for history">
 <!ENTITY  historyHeader.post.label         "">
 
-<!ENTITY  rememberDescription.label      "&brandShortName; will remember your browsing, download, form and search history, and keep cookies from websites you visit.">
+<!ENTITY  rememberDescription1.label      "&brandShortName; will remember your browsing, download, form and search history.">
 
 <!ENTITY  dontrememberDescription.label  "&brandShortName; will use the same settings as private browsing, and will not remember any history as you browse the Web.">
 

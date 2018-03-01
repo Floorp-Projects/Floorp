@@ -1312,7 +1312,7 @@
         <parameter name="screenX"/>
         <parameter name="screenY"/>
         <body><![CDATA[
-            const POPUP_SIZE = 28;
+            const POPUP_SIZE = 32;
             if (!this._autoScrollPopup) {
               if (this.hasAttribute("autoscrollpopup")) {
                 // our creator provided a popup to share

@@ -502,7 +502,7 @@ JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(JSContext* cx, void* pc
 
     // Try initializing with sampler pc using native=>bytecode table.
     JitcodeGlobalTable* table = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
-    if (tryInitWithTable(table, pc, cx->runtime(), /* forLastCallSite = */ false))
+    if (tryInitWithTable(table, pc, /* forLastCallSite = */ false))
         return;
 
     // Try initializing with lastProfilingCallSite pc
@@ -512,7 +512,7 @@ JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(JSContext* cx, void* pc
             return;
 
         // Try initializing with lastProfilingCallSite pc using native=>bytecode table.
-        if (tryInitWithTable(table, lastCallSite, cx->runtime(), /* forLastCallSite = */ true))
+        if (tryInitWithTable(table, lastCallSite, /* forLastCallSite = */ true))
             return;
     }
 
@@ -560,7 +560,7 @@ JSJitProfilingFrameIterator::tryInitWithPC(void* pc)
 }
 
 bool
-JSJitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable* table, void* pc, JSRuntime* rt,
+JSJitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable* table, void* pc,
                                             bool forLastCallSite)
 {
     if (!pc)

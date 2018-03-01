@@ -85,8 +85,7 @@ struct IonOsrTempData
 };
 
 static IonOsrTempData*
-PrepareOsrTempData(JSContext* cx, ICWarmUpCounter_Fallback* stub, BaselineFrame* frame,
-                   HandleScript script, jsbytecode* pc, void* jitcode)
+PrepareOsrTempData(JSContext* cx, BaselineFrame* frame, void* jitcode)
 {
     size_t numLocalsAndStackVals = frame->numValueSlots();
 
@@ -163,7 +162,7 @@ DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame, ICWarmUpCounter_
 
     // Prepare the temporary heap copy of the fake InterpreterFrame and actual args list.
     JitSpew(JitSpew_BaselineOSR, "Got jitcode.  Preparing for OSR into ion.");
-    IonOsrTempData* info = PrepareOsrTempData(cx, stub, frame, script, pc, jitcode);
+    IonOsrTempData* info = PrepareOsrTempData(cx, frame, jitcode);
     if (!info)
         return false;
     *infoPtr = info;
@@ -1635,7 +1634,7 @@ ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     // This is the resume point used when bailout rewrites call stack to undo
     // Ion inlined frames. The return address pushed onto reconstructed stack
     // will point here.
-    assumeStubFrame(masm);
+    assumeStubFrame();
     bailoutReturnOffset_.bind(masm.currentOffset());
 
     leaveStubFrame(masm, true);
@@ -2327,7 +2326,7 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
     // Only bother to try optimizing JSOP_CALL with CacheIR if the chain is still
     // allowed to attach stubs.
     if (canAttachStub) {
-        CallIRGenerator gen(cx, script, pc, op, stub, stub->state().mode(), argc,
+        CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), argc,
                             callee, callArgs.thisv(),
                             HandleValueArray::fromMarkedLocation(argc, vp+2));
         if (gen.tryAttachStub()) {
@@ -2844,7 +2843,7 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     // This is the resume point used when bailout rewrites call stack to undo
     // Ion inlined frames. The return address pushed onto reconstructed stack
     // will point here.
-    assumeStubFrame(masm);
+    assumeStubFrame();
     bailoutReturnOffset_.bind(masm.currentOffset());
 
     // Load passed-in ThisV into R1 just in case it's needed.  Need to do this before

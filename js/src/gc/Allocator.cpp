@@ -143,7 +143,7 @@ GCRuntime::tryNewNurseryString(JSContext* cx, size_t thingSize, AllocKind kind)
     MOZ_ASSERT(!cx->isNurseryAllocSuppressed());
     MOZ_ASSERT(!IsAtomsCompartment(cx->compartment()));
 
-    Cell* cell = cx->nursery().allocateString(cx, cx->zone(), thingSize, kind);
+    Cell* cell = cx->nursery().allocateString(cx->zone(), thingSize, kind);
     if (cell)
         return static_cast<JSString*>(cell);
 
@@ -152,7 +152,7 @@ GCRuntime::tryNewNurseryString(JSContext* cx, size_t thingSize, AllocKind kind)
 
         // Exceeding gcMaxBytes while tenuring can disable the Nursery.
         if (cx->nursery().isEnabled()) {
-            cell = cx->nursery().allocateString(cx, cx->zone(), thingSize, kind);
+            cell = cx->nursery().allocateString(cx->zone(), thingSize, kind);
             MOZ_ASSERT(cell);
             return static_cast<JSString*>(cell);
         }
@@ -242,7 +242,7 @@ GCRuntime::tryNewTenuredThing(JSContext* cx, AllocKind kind, size_t thingSize)
         // Get the next available free list and allocate out of it. This may
         // acquire a new arena, which will lock the chunk list. If there are no
         // chunks available it may also allocate new memory directly.
-        t = reinterpret_cast<T*>(refillFreeListFromAnyThread(cx, kind, thingSize));
+        t = reinterpret_cast<T*>(refillFreeListFromAnyThread(cx, kind));
 
         if (MOZ_UNLIKELY(!t && allowGC && !cx->helperThread())) {
             // We have no memory available for a new chunk; perform an
@@ -362,18 +362,18 @@ GCRuntime::startBackgroundAllocTaskIfIdle()
 }
 
 /* static */ TenuredCell*
-GCRuntime::refillFreeListFromAnyThread(JSContext* cx, AllocKind thingKind, size_t thingSize)
+GCRuntime::refillFreeListFromAnyThread(JSContext* cx, AllocKind thingKind)
 {
     cx->arenas()->checkEmptyFreeList(thingKind);
 
     if (!cx->helperThread())
-        return refillFreeListFromActiveCooperatingThread(cx, thingKind, thingSize);
+        return refillFreeListFromActiveCooperatingThread(cx, thingKind);
 
     return refillFreeListFromHelperThread(cx, thingKind);
 }
 
 /* static */ TenuredCell*
-GCRuntime::refillFreeListFromActiveCooperatingThread(JSContext* cx, AllocKind thingKind, size_t thingSize)
+GCRuntime::refillFreeListFromActiveCooperatingThread(JSContext* cx, AllocKind thingKind)
 {
     // It should not be possible to allocate on the active thread while we are
     // inside a GC.
@@ -690,7 +690,7 @@ Chunk::init(JSRuntime* rt)
      * Decommit the arenas. We do this after poisoning so that if the OS does
      * not have to recycle the pages, we still get the benefit of poisoning.
      */
-    decommitAllArenas(rt);
+    decommitAllArenas();
 
     /* Initialize the chunk info. */
     info.init();
@@ -699,7 +699,7 @@ Chunk::init(JSRuntime* rt)
     /* The rest of info fields are initialized in pickChunk. */
 }
 
-void Chunk::decommitAllArenas(JSRuntime* rt)
+void Chunk::decommitAllArenas()
 {
     decommittedArenas.clear(true);
     MarkPagesUnused(&arenas[0], ArenasPerChunk * ArenaSize);

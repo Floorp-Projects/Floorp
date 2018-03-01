@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<style>
+  div {
+    width: 200px;
+    height: 200px;
+  }
+  #one {
+    background-color: green;
+    visibility: hidden;
+  }
+  #two {
+    background-color: red;
+  }
+  #three {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    top: 0px;
+    background-color: rgba(0,0,255,0.2);
+  }
+</style>
+</head>
+<body>
+  <div id="one"></div>
+  <div id="two"></div>
+  <div id="three"></div>
+  <script>
+    function doTest2() {
+      document.getElementById("three").style.backgroundColor = "rgba(255,0,255,0.2)";
+      document.documentElement.removeAttribute('class');
+    }
+    function doTest() {
+      document.getElementById("one").style.visibility = "visible";
+      window.requestAnimationFrame(function() { window.requestAnimationFrame(doTest2); });
+    }
+    window.addEventListener("MozReftestInvalidate", doTest);
+  </script>
+</body>
+</html>
