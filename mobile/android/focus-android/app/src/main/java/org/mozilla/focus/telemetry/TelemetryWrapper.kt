@@ -268,7 +268,7 @@ object TelemetryWrapper {
     fun endLoad(endTime: Long) {
         if (started) {
             numLoads++
-            averageTime = (averageTime + (endTime - startTime)) / numLoads
+            averageTime += ((endTime - startTime) - averageTime) / numLoads
             startTime = 0
             started = false
         }
