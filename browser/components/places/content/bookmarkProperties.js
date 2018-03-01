@@ -161,7 +161,7 @@ var BookmarkPropertiesPanel = {
         this._defaultInsertionPoint = dialogInfo.defaultInsertionPoint;
       } else {
         this._defaultInsertionPoint =
-          new InsertionPoint({
+          new PlacesInsertionPoint({
             parentId: PlacesUtils.bookmarksMenuFolderId,
             parentGuid: PlacesUtils.bookmarks.menuGuid
           });

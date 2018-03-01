@@ -69,7 +69,7 @@ async function simulateDrop(selectTargets, sourceBm, dropEffect, targetGuid,
 
     Assert.equal(dataTransfer.dropEffect, dropEffect);
 
-    let ip = new InsertionPoint({
+    let ip = new PlacesInsertionPoint({
       parentId: await PlacesUtils.promiseItemId(targetGuid),
       parentGuid: targetGuid,
       index: 0,
