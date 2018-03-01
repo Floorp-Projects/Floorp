@@ -43,7 +43,7 @@ require("./src/assets/styles/netmonitor.css");
 const EventEmitter = require("devtools-modules/src/utils/event-emitter");
 EventEmitter.decorate(window);
 
-const { configureStore } = require("./src/create-store");
+const { configureStore } = require("./src/utils/create-store");
 const App = require("./src/components/App");
 const { Connector } = require("./src/connector/index");
 const connector = new Connector();
