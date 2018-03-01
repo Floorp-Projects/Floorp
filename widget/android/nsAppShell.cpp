@@ -21,7 +21,6 @@
 #include "nsIGeolocationProvider.h"
 #include "nsCacheService.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMClientRectList.h"
 #include "nsIDOMClientRect.h"
 #include "nsIDOMWakeLockListener.h"
 #include "nsIPowerManagerService.h"
