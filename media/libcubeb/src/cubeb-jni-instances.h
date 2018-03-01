@@ -18,10 +18,10 @@
  * and application's Context object.
  * */
 
-JavaVM *
-cubeb_jni_get_java_vm()
+JNIEnv *
+cubeb_get_jni_env_for_thread()
 {
-  return mozilla::jni::GetVM();
+  return mozilla::jni::GetEnvForThread();
 }
 
 jobject

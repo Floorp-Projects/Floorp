@@ -4,21 +4,7 @@
 
 #define AUDIO_STREAM_TYPE_MUSIC 3
 
-JNIEnv *
-cubeb_jni_get_env_for_thread(JavaVM * java_vm)
-{
-    JNIEnv * env = nullptr;
-    if (!java_vm->AttachCurrentThread(&env, nullptr)) {
-        assert(env);
-        return env;
-    }
-
-    assert(false && "Failed to get JNIEnv for thread");
-    return nullptr; // unreachable
-}
-
 struct cubeb_jni {
-  JavaVM * s_java_vm = nullptr;
   jobject s_audio_manager_obj = nullptr;
   jclass s_audio_manager_class = nullptr;
   jmethodID s_get_output_latency_id = nullptr;
@@ -28,20 +14,14 @@ extern "C"
 cubeb_jni *
 cubeb_jni_init()
 {
-  JavaVM * javaVM = cubeb_jni_get_java_vm();
   jobject ctx_obj = cubeb_jni_get_context_instance();
-
-  if (!javaVM || !ctx_obj) {
+  JNIEnv * jni_env = cubeb_get_jni_env_for_thread();
+  if (!jni_env || !ctx_obj) {
     return nullptr;
   }
 
-  JNIEnv * jni_env = cubeb_jni_get_env_for_thread(javaVM);
-  assert(jni_env);
-
   cubeb_jni * cubeb_jni_ptr = new cubeb_jni;
   assert(cubeb_jni_ptr);
-
-  cubeb_jni_ptr->s_java_vm = javaVM;
 
   // Find the audio manager object and make it global to call it from another method
   jclass context_class = jni_env->FindClass("android/content/Context");
@@ -69,7 +49,7 @@ extern "C"
 int cubeb_get_output_latency_from_jni(cubeb_jni * cubeb_jni_ptr)
 {
   assert(cubeb_jni_ptr);
-  JNIEnv * jni_env = cubeb_jni_get_env_for_thread(cubeb_jni_ptr->s_java_vm);
+  JNIEnv * jni_env = cubeb_get_jni_env_for_thread();
   return jni_env->CallIntMethod(cubeb_jni_ptr->s_audio_manager_obj, cubeb_jni_ptr->s_get_output_latency_id, AUDIO_STREAM_TYPE_MUSIC); //param: AudioManager.STREAM_MUSIC
 }
 
@@ -78,7 +58,7 @@ void cubeb_jni_destroy(cubeb_jni * cubeb_jni_ptr)
 {
   assert(cubeb_jni_ptr);
 
-  JNIEnv * jni_env = cubeb_jni_get_env_for_thread(cubeb_jni_ptr->s_java_vm);
+  JNIEnv * jni_env = cubeb_get_jni_env_for_thread();
   assert(jni_env);
 
   jni_env->DeleteGlobalRef(cubeb_jni_ptr->s_audio_manager_obj);
