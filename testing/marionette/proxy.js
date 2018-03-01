@@ -19,6 +19,9 @@ this.EXPORTED_SYMBOLS = ["proxy"];
 
 XPCOMUtils.defineLazyServiceGetter(
     this, "uuidgen", "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
+XPCOMUtils.defineLazyServiceGetter(
+    this, "globalMessageManager", "@mozilla.org/globalmessagemanager;1",
+    "nsIMessageBroadcaster");
 
 const log = Log.repository.getLogger("Marionette");
 
@@ -286,7 +289,7 @@ proxy.AsyncMessageChannel = class {
       callback(msg);
     };
 
-    Services.mm.addMessageListener(path, autoRemover);
+    globalMessageManager.addMessageListener(path, autoRemover);
     this.listeners_.set(path, autoRemover);
   }
 
@@ -296,7 +299,7 @@ proxy.AsyncMessageChannel = class {
     }
 
     let l = this.listeners_.get(path);
-    Services.mm.removeMessageListener(path, l);
+    globalMessageManager.removeMessageListener(path, l[1]);
     return this.listeners_.delete(path);
   }
 

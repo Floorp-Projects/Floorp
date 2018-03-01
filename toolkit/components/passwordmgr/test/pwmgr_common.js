@@ -412,7 +412,8 @@ if (this.addMessageListener) {
     return rv;
   });
 
-  Services.mm.addMessageListener("RemoteLogins:onFormSubmit", function onFormSubmit(message) {
+  var globalMM = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
+  globalMM.addMessageListener("RemoteLogins:onFormSubmit", function onFormSubmit(message) {
     sendAsyncMessage("formSubmissionProcessed", message.data, message.objects);
   });
 } else {

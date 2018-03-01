@@ -43,8 +43,10 @@ function setDefault(dict, key, default_) {
 // with a given component.
 var NotificationTracker = {
   init() {
-    Services.cpmm.addMessageListener("Addons:ChangeNotification", this);
-    this._paths = Services.cpmm.initialProcessData.remoteAddonsNotificationPaths;
+    let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
+               .getService(Ci.nsISyncMessageSender);
+    cpmm.addMessageListener("Addons:ChangeNotification", this);
+    this._paths = cpmm.initialProcessData.remoteAddonsNotificationPaths;
     this._registered = new Map();
     this._watchers = {};
   },
@@ -246,7 +248,9 @@ var ContentPolicyChild = {
                                                   addons, {InitNode: node});
     cpows.node = node;
 
-    let rval = Services.cpmm.sendRpcMessage("Addons:ContentPolicy:Run", {
+    let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
+               .getService(Ci.nsISyncMessageSender);
+    let rval = cpmm.sendRpcMessage("Addons:ContentPolicy:Run", {
       contentType,
       contentLocation: contentLocation.spec,
       requestOrigin: requestOrigin ? requestOrigin.spec : null,
@@ -308,7 +312,9 @@ AboutProtocolChannel.prototype = {
 
   asyncOpen(listener, context) {
     // Ask the parent to synchronously read all the data from the channel.
-    let rval = Services.cpmm.sendRpcMessage("Addons:AboutProtocol:OpenChannel", {
+    let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
+               .getService(Ci.nsISyncMessageSender);
+    let rval = cpmm.sendRpcMessage("Addons:AboutProtocol:OpenChannel", {
       uri: this.URI.spec,
       contractID: this._contractID,
       loadingPrincipal: this._loadingPrincipal,
@@ -400,7 +406,10 @@ AboutProtocolInstance.prototype = {
       return this._uriFlags;
     }
 
-    let rval = Services.cpmm.sendRpcMessage("Addons:AboutProtocol:GetURIFlags", {
+    let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
+               .getService(Ci.nsISyncMessageSender);
+
+    let rval = cpmm.sendRpcMessage("Addons:AboutProtocol:GetURIFlags", {
       uri: uri.spec,
       contractID: this._contractID
     });
@@ -476,7 +485,9 @@ var ObserverChild = {
   },
 
   observe(subject, topic, data) {
-    Services.cpmm.sendRpcMessage("Addons:Observer:Run", {}, {
+    let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
+               .getService(Ci.nsISyncMessageSender);
+    cpmm.sendRpcMessage("Addons:Observer:Run", {}, {
       topic,
       subject,
       data
