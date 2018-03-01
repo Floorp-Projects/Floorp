@@ -23,7 +23,6 @@ class ServiceWorkerRegistrationInfo final
   nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> mListeners;
 
   uint32_t mControlledClientsCounter;
-  uint32_t mDelayMultiplier;
 
   enum
   {
@@ -95,7 +94,6 @@ public:
   StartControllingClient()
   {
     ++mControlledClientsCounter;
-    mDelayMultiplier = 0;
   }
 
   void
@@ -212,9 +210,6 @@ public:
 
   const ServiceWorkerRegistrationDescriptor&
   Descriptor() const;
-
-  uint32_t
-  GetUpdateDelay();
 
 private:
   // Roughly equivalent to [[Update Registration State algorithm]]. Make sure
