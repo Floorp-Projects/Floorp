@@ -426,11 +426,10 @@ ICTypeUpdate_ObjectGroup::Compiler::generateStubCode(MacroAssembler& masm)
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
     // Guard on the object's ObjectGroup.
-    Register obj = masm.extractObject(R0, R1.scratchReg());
-    masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), R1.scratchReg());
-
+    Register scratch = R1.scratchReg();
+    Register obj = masm.extractObject(R0, scratch);
     Address expectedGroup(ICStubReg, ICTypeUpdate_ObjectGroup::offsetOfGroup());
-    masm.branchPtr(Assembler::NotEqual, expectedGroup, R1.scratchReg(), &failure);
+    masm.branchTestObjGroup(Assembler::NotEqual, obj, expectedGroup, scratch, &failure);
 
     // Group matches, load true into R1.scratchReg() and return.
     masm.mov(ImmWord(1), R1.scratchReg());
@@ -775,9 +774,7 @@ LoadTypedThingLength(MacroAssembler& masm, TypedThingLayout layout, Register obj
         break;
       case Layout_OutlineTypedObject:
       case Layout_InlineTypedObject:
-        masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), result);
-        masm.loadPtr(Address(result, ObjectGroup::offsetOfAddendum()), result);
-        masm.unboxInt32(Address(result, ArrayTypeDescr::offsetOfLength()), result);
+        masm.loadTypedObjectLength(obj, result);
         break;
       default:
         MOZ_CRASH();

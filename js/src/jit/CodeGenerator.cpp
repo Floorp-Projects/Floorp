@@ -959,8 +959,7 @@ CodeGenerator::visitFunctionDispatch(LFunctionDispatch* lir)
         MOZ_ASSERT(i < mir->numCases());
         LBlock* target = skipTrivialBlocks(mir->getCaseBlock(i))->lir();
         if (ObjectGroup* funcGroup = mir->getCaseObjectGroup(i)) {
-            masm.branchPtr(Assembler::Equal, Address(input, JSObject::offsetOfGroup()),
-                           ImmGCPtr(funcGroup), target->label());
+            masm.branchTestObjGroup(Assembler::Equal, input, funcGroup, target->label());
         } else {
             JSFunction* func = mir->getCase(i);
             masm.branchPtr(Assembler::Equal, input, ImmGCPtr(func), target->label());
@@ -979,7 +978,7 @@ CodeGenerator::visitObjectGroupDispatch(LObjectGroupDispatch* lir)
     Register temp = ToRegister(lir->temp());
 
     // Load the incoming ObjectGroup in temp.
-    masm.loadPtr(Address(input, JSObject::offsetOfGroup()), temp);
+    masm.loadObjGroupUnsafe(input, temp);
 
     // Compare ObjectGroups.
     MacroAssembler::BranchGCPtr lastBranch;
@@ -2518,8 +2517,7 @@ CodeGenerator::visitRegExpPrototypeOptimizable(LRegExpPrototypeOptimizable* ins)
                     RegExpCompartment::offsetOfOptimizableRegExpPrototypeShape();
     masm.loadPtr(Address(temp, offset), temp);
 
-    masm.loadPtr(Address(object, ShapedObject::offsetOfShape()), output);
-    masm.branchPtr(Assembler::NotEqual, output, temp, ool->entry());
+    masm.branchTestObjShape(Assembler::NotEqual, object, temp, ool->entry());
     masm.move32(Imm32(0x1), output);
 
     masm.bind(ool->rejoin());
@@ -2579,8 +2577,7 @@ CodeGenerator::visitRegExpInstanceOptimizable(LRegExpInstanceOptimizable* ins)
                     RegExpCompartment::offsetOfOptimizableRegExpInstanceShape();
     masm.loadPtr(Address(temp, offset), temp);
 
-    masm.loadPtr(Address(object, ShapedObject::offsetOfShape()), output);
-    masm.branchPtr(Assembler::NotEqual, output, temp, ool->entry());
+    masm.branchTestObjShape(Assembler::NotEqual, object, temp, ool->entry());
     masm.move32(Imm32(0x1), output);
 
     masm.bind(ool->rejoin());
@@ -4302,17 +4299,8 @@ LoadDOMPrivate(MacroAssembler& masm, Register obj, Register priv, DOMObjectKind 
         masm.branchTestObjectIsProxy(true, obj, priv, &isProxy);
 
     if (kind != DOMObjectKind::Proxy) {
-#ifdef DEBUG
         // If it's a native object, the value must be in a fixed slot.
-        Label hasFixedSlots;
-        masm.loadPtr(Address(obj, ShapedObject::offsetOfShape()), priv);
-        masm.branchTest32(Assembler::NonZero,
-                          Address(priv, Shape::offsetOfSlotInfo()),
-                          Imm32(Shape::fixedSlotsMask()),
-                          &hasFixedSlots);
-        masm.assumeUnreachable("Expected a fixed slot");
-        masm.bind(&hasFixedSlots);
-#endif
+        masm.debugAssertObjHasFixedSlots(obj, priv);
         masm.loadPrivate(Address(obj, NativeObject::getFixedSlotOffset(0)), priv);
         if (kind == DOMObjectKind::Unknown)
             masm.jump(&done);
@@ -6378,38 +6366,7 @@ CodeGenerator::visitSimdUnbox(LSimdUnbox* lir)
     Register temp = ToRegister(lir->temp());
     Label bail;
 
-    // obj->group()
-    masm.loadPtr(Address(object, JSObject::offsetOfGroup()), temp);
-
-    // Guard that the object has the same representation as the one produced for
-    // SIMD value-type.
-    Address clasp(temp, ObjectGroup::offsetOfClasp());
-    static_assert(!SimdTypeDescr::Opaque, "SIMD objects are transparent");
-    masm.branchPtr(Assembler::NotEqual, clasp, ImmPtr(&InlineTransparentTypedObject::class_),
-                   &bail);
-
-    // obj->type()->typeDescr()
-    // The previous class pointer comparison implies that the addendumKind is
-    // Addendum_TypeDescr.
-    masm.loadPtr(Address(temp, ObjectGroup::offsetOfAddendum()), temp);
-
-    // Check for the /Kind/ reserved slot of the TypeDescr.  This is an Int32
-    // Value which is equivalent to the object class check.
-    static_assert(JS_DESCR_SLOT_KIND < NativeObject::MAX_FIXED_SLOTS, "Load from fixed slots");
-    Address typeDescrKind(temp, NativeObject::getFixedSlotOffset(JS_DESCR_SLOT_KIND));
-    masm.assertTestInt32(Assembler::Equal, typeDescrKind,
-      "MOZ_ASSERT(obj->type()->typeDescr()->getReservedSlot(JS_DESCR_SLOT_KIND).isInt32())");
-    masm.branch32(Assembler::NotEqual, masm.ToPayload(typeDescrKind), Imm32(js::type::Simd), &bail);
-
-    SimdType type = lir->mir()->simdType();
-
-    // Check if the SimdTypeDescr /Type/ match the specialization of this
-    // MSimdUnbox instruction.
-    static_assert(JS_DESCR_SLOT_TYPE < NativeObject::MAX_FIXED_SLOTS, "Load from fixed slots");
-    Address typeDescrType(temp, NativeObject::getFixedSlotOffset(JS_DESCR_SLOT_TYPE));
-    masm.assertTestInt32(Assembler::Equal, typeDescrType,
-      "MOZ_ASSERT(obj->type()->typeDescr()->getReservedSlot(JS_DESCR_SLOT_TYPE).isInt32())");
-    masm.branch32(Assembler::NotEqual, masm.ToPayload(typeDescrType), Imm32(int32_t(type)), &bail);
+    masm.branchIfNotSimdObject(object, temp, lir->mir()->simdType(), &bail);
 
     // Load the value from the data of the InlineTypedObject.
     Address objectData(object, InlineTypedObject::offsetOfDataStart());
@@ -7095,9 +7052,7 @@ CodeGenerator::visitTypedObjectDescr(LTypedObjectDescr* lir)
 {
     Register obj = ToRegister(lir->object());
     Register out = ToRegister(lir->output());
-
-    masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), out);
-    masm.loadPtr(Address(out, ObjectGroup::offsetOfAddendum()), out);
+    masm.loadTypedObjectDescr(obj, out);
 }
 
 void
@@ -9323,8 +9278,7 @@ CodeGenerator::visitConvertUnboxedObjectToNative(LConvertUnboxedObjectToNative* 
     OutOfLineCode* ool = oolCallVM(ConvertUnboxedPlainObjectToNativeInfo,
                                    lir, ArgList(object), StoreNothing());
 
-    masm.branchPtr(Assembler::Equal, Address(object, JSObject::offsetOfGroup()),
-                   ImmGCPtr(lir->mir()->group()), ool->entry());
+    masm.branchTestObjGroup(Assembler::Equal, object, lir->mir()->group(), ool->entry());
     masm.bind(ool->rejoin());
 }
 
@@ -9521,8 +9475,7 @@ CodeGenerator::visitArraySlice(LArraySlice* lir)
     masm.createGCObject(temp1, temp2, lir->mir()->templateObj(), lir->mir()->initialHeap(), &fail);
 
     // Fixup the group of the result in case it doesn't match the template object.
-    masm.loadPtr(Address(object, JSObject::offsetOfGroup()), temp2);
-    masm.storePtr(temp2, Address(temp1, JSObject::offsetOfGroup()));
+    masm.copyObjGroupNoPreBarrier(object, temp1, temp2);
 
     masm.jump(&call);
     {
