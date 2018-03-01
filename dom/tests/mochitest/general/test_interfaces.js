@@ -28,6 +28,7 @@
 
 const version = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].getService(SpecialPowers.Ci.nsIXULAppInfo).version;
 const isNightly = version.endsWith("a1");
+const isEarlyBetaOrEarlier = SpecialPowers.EARLY_BETA_OR_EARLIER;
 const isRelease = !version.includes("a");
 const isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
 const isMac = /Mac OS/.test(navigator.oscpu);
@@ -738,7 +739,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "OfflineAudioContext", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "OfflineResourceList", insecureContext: SpecialPowers.getBoolPref("browser.cache.offline.insecure.enable")},
+    {name: "OfflineResourceList", insecureContext: !isEarlyBetaOrEarlier},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Option", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
