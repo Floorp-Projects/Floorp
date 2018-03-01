@@ -2074,7 +2074,9 @@ ScriptLoader::FillCompileOptionsForRequest(const AutoJSAPI&jsapi,
     aOptions->setMutedErrors(!subsumes);
   }
 
-  if (!aRequest->IsModuleRequest()) {
+  if (aRequest->IsModuleRequest()) {
+    aOptions->hideScriptFromDebugger = true;
+  } else {
     JSContext* cx = jsapi.cx();
     JS::Rooted<JS::Value> elementVal(cx);
     MOZ_ASSERT(aRequest->mElement);
@@ -2245,6 +2247,10 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
         rv = nsJSUtils::InitModuleSourceElement(cx, module, aRequest->mElement);
         NS_ENSURE_SUCCESS(rv, rv);
         moduleScript->SetSourceElementAssociated();
+
+        // The script is now ready to be exposed to the debugger.
+        JS::Rooted<JSScript*> script(cx, JS::GetModuleScript(module));
+        JS::ExposeScriptToDebugger(cx, script);
       }
 
       rv = nsJSUtils::ModuleEvaluate(cx, module);

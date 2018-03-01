@@ -2732,6 +2732,8 @@ JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
     script->toStringStart_ = toStringStart;
     script->toStringEnd_ = toStringEnd;
 
+    script->hideScriptFromDebugger_ = options.hideScriptFromDebugger;
+
 #ifdef MOZ_VTUNE
     script->vtuneMethodId_ = vtune::GenerateUniqueMethodID();
 #endif
@@ -3625,6 +3627,7 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     dst->isAsync_ = src->isAsync_;
     dst->hasRest_ = src->hasRest_;
     dst->isExprBody_ = src->isExprBody_;
+    dst->hideScriptFromDebugger_ = src->hideScriptFromDebugger_;
 
     if (nconsts != 0) {
         GCPtrValue* vector = Rebase<GCPtrValue>(dst, src, src->consts()->vector);

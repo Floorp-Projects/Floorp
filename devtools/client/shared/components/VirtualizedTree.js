@@ -811,7 +811,7 @@ class TreeNodeClass extends Component {
         id: this.props.id,
         className: classList.join(" "),
         role: "treeitem",
-        "aria-level": this.props.depth,
+        "aria-level": this.props.depth + 1,
         onClick: this.props.onClick,
         "aria-expanded": ariaExpanded,
         "data-expanded": this.props.expanded ? "" : undefined,

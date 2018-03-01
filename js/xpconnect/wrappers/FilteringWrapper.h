@@ -12,10 +12,6 @@
 #include "js/CallNonGenericMethod.h"
 #include "js/Wrapper.h"
 
-namespace JS {
-class AutoIdVector;
-} // namespace JS
-
 namespace xpc {
 
 template <typename Base, typename Policy>

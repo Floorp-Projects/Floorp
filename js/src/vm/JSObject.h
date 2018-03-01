@@ -541,7 +541,15 @@ class JSObject : public js::gc::Cell
     void dump() const;
 #endif
 
-    /* JIT Accessors */
+    // Maximum size in bytes of a JSObject.
+    static const size_t MAX_BYTE_SIZE = 4 * sizeof(void*) + 16 * sizeof(JS::Value);
+
+  protected:
+    // JIT Accessors.
+    //
+    // To help avoid writing Spectre-unsafe code, we only allow MacroAssembler
+    // to call the method below.
+    friend class js::jit::MacroAssembler;
 
     static constexpr size_t offsetOfGroup() {
         return offsetof(JSObject, group_);
@@ -549,9 +557,6 @@ class JSObject : public js::gc::Cell
     static constexpr size_t offsetOfShapeOrExpando() {
         return offsetof(JSObject, shapeOrExpando_);
     }
-
-    // Maximum size in bytes of a JSObject.
-    static const size_t MAX_BYTE_SIZE = 4 * sizeof(void*) + 16 * sizeof(JS::Value);
 
   private:
     JSObject() = delete;
