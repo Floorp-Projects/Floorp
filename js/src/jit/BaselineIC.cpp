@@ -3429,11 +3429,9 @@ ICCall_ClassHook::Compiler::generateStubCode(MacroAssembler& masm)
     // Ensure the callee's class matches the one in this stub.
     Register callee = masm.extractObject(R1, ExtractTemp0);
     Register scratch = regs.takeAny();
-    masm.loadObjClass(callee, scratch);
-    masm.branchPtr(Assembler::NotEqual,
-                   Address(ICStubReg, ICCall_ClassHook::offsetOfClass()),
-                   scratch, &failure);
-
+    masm.branchTestObjClass(Assembler::NotEqual, callee, scratch,
+                            Address(ICStubReg, ICCall_ClassHook::offsetOfClass()),
+                            &failure);
     regs.add(R1);
     regs.takeUnchecked(callee);
 
