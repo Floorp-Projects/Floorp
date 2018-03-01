@@ -37,7 +37,7 @@ window.removeCookie = function(name, path) {
  * after the test is complete. this is so that the store-objects-cleared event
  * can be tested.
  */
-window.clear = function*() {
+window.clear = function() {
   localStorage.clear();
   dump("removed localStorage from " + document.location + "\n");
 
