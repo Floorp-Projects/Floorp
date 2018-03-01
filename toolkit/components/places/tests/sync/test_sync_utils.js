@@ -2025,7 +2025,7 @@ add_task(async function test_pullChanges_import_html() {
 
   info("Import new bookmarks from HTML");
   let { path } = do_get_file("./sync_utils_bookmarks.html");
-  await BookmarkHTMLUtils.importFromFile(path, false);
+  await BookmarkHTMLUtils.importFromFile(path);
 
   // Bookmarks.html doesn't store IDs, so we need to look these up.
   let mozBmk = await PlacesUtils.bookmarks.fetch({
@@ -2087,7 +2087,7 @@ add_task(async function test_pullChanges_import_json() {
 
   info("Import new bookmarks from JSON");
   let { path } = do_get_file("./sync_utils_bookmarks.json");
-  await BookmarkJSONUtils.importFromFile(path, false);
+  await BookmarkJSONUtils.importFromFile(path);
   {
     let fields = await PlacesTestUtils.fetchBookmarkSyncFields(
       syncedFolder.guid, "NnvGl3CRA4hC", "APzP8MupzA8l");
@@ -2154,7 +2154,7 @@ add_task(async function test_pullChanges_restore_json_tracked() {
 
   info("Restore from JSON, replacing existing items");
   let { path } = do_get_file("./sync_utils_bookmarks.json");
-  await BookmarkJSONUtils.importFromFile(path, true);
+  await BookmarkJSONUtils.importFromFile(path, { replace: true });
   {
     let fields = await PlacesTestUtils.fetchBookmarkSyncFields(
       "NnvGl3CRA4hC", "APzP8MupzA8l");

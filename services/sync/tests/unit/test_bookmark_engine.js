@@ -307,7 +307,7 @@ async function test_restoreOrImport(engine, { replace }) {
     Assert.equal(wbos[0], bmk2.guid);
 
     _(`Now ${verb} from a backup.`);
-    await bookmarkUtils.importFromFile(backupFilePath, replace);
+    await bookmarkUtils.importFromFile(backupFilePath, { replace });
     await engine._tracker.asyncObserver.promiseObserversComplete();
 
     let bookmarksCollection = server.user("foo").collection("bookmarks");
