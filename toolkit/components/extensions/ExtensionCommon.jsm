@@ -1002,7 +1002,7 @@ class SchemaAPIManager extends EventEmitter {
   onStartup(extension) {
     let promises = [];
     for (let apiName of this.eventModules.get("startup")) {
-      promises.push(this.asyncGetAPI(apiName, extension).then(api => {
+      promises.push(extension.apiManager.asyncGetAPI(apiName, extension).then(api => {
         if (api) {
           api.onStartup();
         }
@@ -1110,7 +1110,7 @@ class SchemaAPIManager extends EventEmitter {
   emitManifestEntry(extension, entry) {
     let apiName = this.manifestKeys.get(entry);
     if (apiName) {
-      let api = this.getAPI(apiName, extension);
+      let api = extension.apiManager.getAPI(apiName, extension);
       return api.onManifestEntry(entry);
     }
   }
@@ -1132,7 +1132,7 @@ class SchemaAPIManager extends EventEmitter {
   async asyncEmitManifestEntry(extension, entry) {
     let apiName = this.manifestKeys.get(entry);
     if (apiName) {
-      let api = await this.asyncGetAPI(apiName, extension);
+      let api = await extension.apiManager.asyncGetAPI(apiName, extension);
       return api.onManifestEntry(entry);
     }
   }

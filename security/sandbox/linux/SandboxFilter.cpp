@@ -690,11 +690,15 @@ public:
 #ifdef DESKTOP
   Maybe<ResultExpr> EvaluateIpcCall(int aCall) const override {
     switch(aCall) {
-      // These are a problem: SysV shared memory follows the Unix
-      // "same uid policy" and can't be restricted/brokered like file
-      // access.  But the graphics layer might not be using them
-      // anymore; this needs to be studied.
+      // These are a problem: SysV IPC follows the Unix "same uid
+      // policy" and can't be restricted/brokered like file access.
+      // We're not using it directly, but there are some library
+      // dependencies that do; see ContentNeedsSysVIPC() in
+      // SandboxLaunch.cpp.  Also, Cairo as used by GTK will sometimes
+      // try to use MIT-SHM, so shmget() is a non-fatal error.  See
+      // also bug 1376910 and bug 1438401.
     case SHMGET:
+      return Some(mAllowSysV ? Allow() : Error(EPERM));
     case SHMCTL:
     case SHMAT:
     case SHMDT:

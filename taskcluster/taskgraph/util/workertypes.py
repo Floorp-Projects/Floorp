@@ -40,7 +40,6 @@ WORKER_TYPES = {
     'buildbot-bridge/buildbot-bridge': ('buildbot-bridge', None),
     'invalid/invalid': ('invalid', None),
     'invalid/always-optimized': ('always-optimized', None),
-    'null-provisioner/human-breakpoint': ('push-apk-breakpoint', None),
     'releng-hardware/gecko-t-linux-talos': ('native-engine', 'linux'),
     'scriptworker-prov-v1/balrog-dev': ('balrog', None),
     'scriptworker-prov-v1/balrogworker-v1': ('balrog', None),

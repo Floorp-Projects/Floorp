@@ -387,7 +387,7 @@ CalculateToolbarButtonSpacing(WidgetNodeType aWidgetType,
         aMetrics->buttonMargin.top + aMetrics->buttonMargin.bottom;
 }
 
-static int
+int
 GetGtkHeaderBarButtonLayout(WidgetNodeType* aButtonLayout, int aMaxButtonNums)
 {
   NS_ASSERTION(aMaxButtonNums >= TOOLBAR_BUTTONS,
@@ -483,21 +483,6 @@ GetToolbarButtonMetrics(WidgetNodeType aWidgetType)
     return sToolbarMetrics.button + buttonIndex;
 }
 
-bool
-IsToolbarButtonEnabled(WidgetNodeType aWidgetType)
-{
-    WidgetNodeType aButtonLayout[TOOLBAR_BUTTONS];
-    int activeButtonNums =
-        GetGtkHeaderBarButtonLayout(aButtonLayout, TOOLBAR_BUTTONS);
-
-    for (int i = 0; i < activeButtonNums; i++) {
-        if (aButtonLayout[i] == aWidgetType) {
-            return true;
-        }
-    }
-    return false;
-}
-
 static gint
 moz_gtk_window_paint(cairo_t *cr, GdkRectangle* rect,
                      GtkTextDirection direction)
@@ -570,30 +555,35 @@ static gint
 moz_gtk_header_bar_button_paint(cairo_t *cr, GdkRectangle* rect,
                                 GtkWidgetState* state,
                                 GtkReliefStyle relief,
-                                WidgetNodeType aWidgetType,
+                                WidgetNodeType aIconWidgetType,
                                 GtkTextDirection direction)
 {
+    WidgetNodeType buttonWidgetType =
+      (aIconWidgetType == MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE_RESTORE) ?
+      MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE : aIconWidgetType;
+
     // We need to inset our calculated margin because it also
     // contains titlebar button spacing.
     const ToolbarButtonGTKMetrics* metrics =
-        GetToolbarButtonMetrics(aWidgetType);
+        GetToolbarButtonMetrics(buttonWidgetType);
     Inset(rect, metrics->buttonMargin);
 
-    GtkWidget *widget = GetWidget(aWidgetType);
-    moz_gtk_button_paint(cr, rect, state, relief, widget, direction);
+    GtkWidget *buttonWidget = GetWidget(buttonWidgetType);
+    moz_gtk_button_paint(cr, rect, state, relief, buttonWidget, direction);
 
-    GtkWidget* iconWidget = gtk_bin_get_child(GTK_BIN(widget));
+    GtkWidget* iconWidget =
+        gtk_bin_get_child(GTK_BIN(GetWidget(aIconWidgetType)));
     cairo_surface_t *surface = GetWidgetIconSurface(iconWidget, state->scale);
 
     if (surface) {
-        GtkStyleContext* style = gtk_widget_get_style_context(iconWidget);
+        GtkStyleContext* style = gtk_widget_get_style_context(buttonWidget);
         GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
 
         gtk_style_context_save(style);
         gtk_style_context_set_state(style, state_flags);
 
         const ToolbarButtonGTKMetrics *metrics =
-            GetToolbarButtonMetrics(aWidgetType);
+            GetToolbarButtonMetrics(buttonWidgetType);
 
         /* This is available since Gtk+ 3.10 as well as GtkHeaderBar */
         static auto sGtkRenderIconSurfacePtr =
@@ -2539,7 +2529,7 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
     case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:
     case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE:
-    case MOZ_GTK_HEADER_BAR_BUTTON_RESTORE:
+    case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE_RESTORE:
     /* These widgets have no borders.*/
     case MOZ_GTK_INNER_SPIN_BUTTON:
     case MOZ_GTK_SPINBUTTON:
@@ -3047,7 +3037,7 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
     case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
     case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:
     case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE:
-    case MOZ_GTK_HEADER_BAR_BUTTON_RESTORE:
+    case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE_RESTORE:
         return moz_gtk_header_bar_button_paint(cr, rect, state,
                                                (GtkReliefStyle) flags,
                                                widget,

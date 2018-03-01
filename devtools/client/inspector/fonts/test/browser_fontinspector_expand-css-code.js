@@ -12,11 +12,8 @@ add_task(function* () {
   let { view } = yield openFontInspectorForURL(TEST_URI);
   let viewDoc = view.document;
 
-  info("Expanding the details section of the first font");
-  let fontEl = getUsedFontsEls(viewDoc)[0];
-  yield expandFontDetails(fontEl);
-
   info("Checking that the css font-face rule is collapsed by default");
+  let fontEl = getUsedFontsEls(viewDoc)[0];
   let codeEl = fontEl.querySelector(".font-css-code");
   is(codeEl.textContent, "@font-face {}", "The font-face rule is collapsed");
 
@@ -33,4 +30,22 @@ add_task(function* () {
   yield onExpanded;
 
   ok(true, "Font-face rule is now expanded");
+
+  info("Expanding another rule by clicking on the [...] icon instead");
+  fontEl = getUsedFontsEls(viewDoc)[1];
+  codeEl = fontEl.querySelector(".font-css-code");
+
+  onExpanded = BrowserTestUtils.waitForCondition(() => {
+    return codeEl.textContent === `@font-face {
+  font-family: "bar";
+  font-weight: bold;
+  src: url("ostrich-black.ttf");
+}`;
+  }, "Waiting for the font-face rule");
+
+  expander = fontEl.querySelector(".font-css-code .font-css-code-expander");
+  expander.click();
+  yield onExpanded;
+
+  ok(true, "Font-face rule is now expanded too");
 });
