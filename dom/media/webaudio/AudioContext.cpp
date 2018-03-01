@@ -650,11 +650,15 @@ AudioContext::DestinationStream() const
 }
 
 double
-AudioContext::CurrentTime() const
+AudioContext::CurrentTime()
 {
   MediaStream* stream = Destination()->Stream();
+  // The value of a MediaStream's CurrentTime will always advance forward; it will never
+  // reset (even if one rewinds a video.) Therefore we can use a single Random Seed
+  // initialized at the same time as the object.
   return nsRFPService::ReduceTimePrecisionAsSecs(
-    stream->StreamTimeToSeconds(stream->GetCurrentTime()));
+    stream->StreamTimeToSeconds(stream->GetCurrentTime()),
+    GetRandomTimelineSeed());
 }
 
 void AudioContext::DisconnectFromOwner()
