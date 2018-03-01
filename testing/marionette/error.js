@@ -18,7 +18,7 @@ const ERRORS = new Set([
   "InvalidSessionIDError",
   "JavaScriptError",
   "MoveTargetOutOfBoundsError",
-  "NoSuchAlertError",
+  "NoAlertOpenError",
   "NoSuchElementError",
   "NoSuchFrameError",
   "NoSuchWindowError",
@@ -418,7 +418,7 @@ class MoveTargetOutOfBoundsError extends WebDriverError {
  * An attempt was made to operate on a modal dialog when one was
  * not open.
  */
-class NoSuchAlertError extends WebDriverError {
+class NoAlertOpenError extends WebDriverError {
   constructor(message) {
     super(message);
     this.status = "no such alert";
@@ -554,7 +554,7 @@ const STATUSES = new Map([
   ["invalid session id", InvalidSessionIDError],
   ["javascript error", JavaScriptError],
   ["move target out of bounds", MoveTargetOutOfBoundsError],
-  ["no such alert", NoSuchAlertError],
+  ["no alert open", NoAlertOpenError],
   ["no such element", NoSuchElementError],
   ["no such frame", NoSuchFrameError],
   ["no such window", NoSuchWindowError],
