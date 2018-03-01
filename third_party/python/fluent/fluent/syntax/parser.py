@@ -221,6 +221,8 @@ class FluentParser(object):
             if ps.is_peek_pattern_start():
                 ps.skip_indent()
                 pattern = self.get_pattern(ps)
+            else:
+                ps.skip_inline_ws()
 
         if id.name.startswith('-') and pattern is None:
             raise ParseError('E0006', id.name)
