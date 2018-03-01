@@ -911,6 +911,10 @@ nsGenericDOMDataNode::ThreadSafeTextIsOnlyWhitespace() const
   if (mText.Is2b()) {
     // The fragment contains non-8bit characters and such characters
     // are never considered whitespace.
+    //
+    // FIXME(emilio): This is not quite true in presence of the
+    // NS_MAYBE_MODIFIED_FREQUENTLY flag... But looks like we only set that on
+    // anonymous nodes, so should be fine...
     return false;
   }
 
@@ -924,6 +928,8 @@ nsGenericDOMDataNode::ThreadSafeTextIsOnlyWhitespace() const
   while (cp < end) {
     char ch = *cp;
 
+    // NOTE(emilio): If you ever change the definition of "whitespace" here, you
+    // need to change it too in RestyleManager::CharacterDataChanged.
     if (!dom::IsSpaceCharacter(ch)) {
       return false;
     }

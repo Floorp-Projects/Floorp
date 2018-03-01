@@ -30,34 +30,115 @@ use itertools::free::{
 
 use quickcheck::TestResult;
 
+/// Trait for size hint modifier types
+trait HintKind: Copy + Send + qc::Arbitrary {
+    fn loosen_bounds(&self, org_hint: (usize, Option<usize>)) -> (usize, Option<usize>);
+}
+
+/// Exact size hint variant that leaves hints unchanged
+#[derive(Clone, Copy, Debug)]
+struct Exact {}
+
+impl HintKind for Exact {
+    fn loosen_bounds(&self, org_hint: (usize, Option<usize>)) -> (usize, Option<usize>) {
+        org_hint
+    }
+}
+
+impl qc::Arbitrary for Exact {
+    fn arbitrary<G: qc::Gen>(_: &mut G) -> Self {
+        Exact {}
+    }
+}
+
+/// Inexact size hint variant to simulate imprecise (but valid) size hints
+///
+/// Will always decrease the lower bound and increase the upper bound
+/// of the size hint by set amounts.
+#[derive(Clone, Copy, Debug)]
+struct Inexact {
+    underestimate: usize,
+    overestimate: usize,
+}
+
+impl HintKind for Inexact {
+    fn loosen_bounds(&self, org_hint: (usize, Option<usize>)) -> (usize, Option<usize>) {
+        let (org_lower, org_upper) = org_hint;
+        (org_lower.saturating_sub(self.underestimate),
+         org_upper.and_then(move |x| x.checked_add(self.overestimate)))
+    }
+}
+
+impl qc::Arbitrary for Inexact {
+    fn arbitrary<G: qc::Gen>(g: &mut G) -> Self {
+        let ue_value = usize::arbitrary(g);
+        let oe_value = usize::arbitrary(g);
+        // Compensate for quickcheck using extreme values too rarely
+        let ue_choices = &[0, ue_value, usize::max_value()];
+        let oe_choices = &[0, oe_value, usize::max_value()];
+        Inexact {
+            underestimate: *g.choose(ue_choices).unwrap(),
+            overestimate: *g.choose(oe_choices).unwrap(),
+        }
+    }
+
+    fn shrink(&self) -> Box<Iterator<Item=Self>> {
+        let underestimate_value = self.underestimate;
+        let overestimate_value = self.overestimate;
+        Box::new(
+            underestimate_value.shrink().flat_map(move |ue_value|
+                overestimate_value.shrink().map(move |oe_value|
+                    Inexact {
+                        underestimate: ue_value,
+                        overestimate: oe_value,
+                    }
+                )
+            )
+        )
+    }
+}
+
 /// Our base iterator that we can impl Arbitrary for
+///
+/// By default we'll return inexact bounds estimates for size_hint
+/// to make tests harder to pass.
 ///
 /// NOTE: Iter is tricky and is not fused, to help catch bugs.
 /// At the end it will return None once, then return Some(0),
 /// then return None again.
 #[derive(Clone, Debug)]
-struct Iter<T>(Range<T>, i32); // with fuse/done flag
+struct Iter<T, SK: HintKind = Inexact> {
+    iterator: Range<T>,
+    // fuse/done flag
+    fuse_flag: i32,
+    hint_kind: SK,
+}
 
-impl<T> Iter<T>
+impl<T, HK> Iter<T, HK> where HK: HintKind
 {
-    fn new(it: Range<T>) -> Self
-    {
-        Iter(it, 0)
+    fn new(it: Range<T>, hint_kind: HK) -> Self {
+        Iter {
+            iterator: it,
+            fuse_flag: 0,
+            hint_kind: hint_kind
+        }
     }
 }
 
-impl<T> Iterator for Iter<T> where Range<T>: Iterator,
-    <Range<T> as Iterator>::Item: Default,
+impl<T, HK> Iterator for Iter<T, HK>
+    where Range<T>: Iterator,
+          <Range<T> as Iterator>::Item: Default,
+          HK: HintKind,
 {
     type Item = <Range<T> as Iterator>::Item;
 
     fn next(&mut self) -> Option<Self::Item>
     {
-        let elt = self.0.next();
+        let elt = self.iterator.next();
         if elt.is_none() {
-            self.1 += 1;
+            self.fuse_flag += 1;
             // check fuse flag
-            if self.1 == 2 {
+            if self.fuse_flag == 2 {
                 return Some(Default::default())
             }
         }
@@ -66,36 +147,101 @@ impl<T> Iterator for Iter<T> where Range<T>: Iterator,
 
     fn size_hint(&self) -> (usize, Option<usize>)
     {
-        self.0.size_hint()
+        let org_hint = self.iterator.size_hint();
+        self.hint_kind.loosen_bounds(org_hint)
     }
 }
 
-impl<T> DoubleEndedIterator for Iter<T> where Range<T>: DoubleEndedIterator,
-    <Range<T> as Iterator>::Item: Default,
+impl<T, HK> DoubleEndedIterator for Iter<T, HK>
+    where Range<T>: DoubleEndedIterator,
+          <Range<T> as Iterator>::Item: Default,
+          HK: HintKind
 {
-    fn next_back(&mut self) -> Option<Self::Item> { self.0.next_back() }
+    fn next_back(&mut self) -> Option<Self::Item> { self.iterator.next_back() }
 }
 
-impl<T> ExactSizeIterator for Iter<T> where Range<T>: ExactSizeIterator,
+impl<T> ExactSizeIterator for Iter<T, Exact> where Range<T>: ExactSizeIterator,
     <Range<T> as Iterator>::Item: Default,
 { }
 
-impl<T> qc::Arbitrary for Iter<T> where T: qc::Arbitrary
+impl<T, HK> qc::Arbitrary for Iter<T, HK>
+    where T: qc::Arbitrary,
+          HK: HintKind,
 {
     fn arbitrary<G: qc::Gen>(g: &mut G) -> Self
     {
-        Iter::new(T::arbitrary(g)..T::arbitrary(g))
+        Iter::new(T::arbitrary(g)..T::arbitrary(g), HK::arbitrary(g))
     }
 
-    fn shrink(&self) -> Box<Iterator<Item=Iter<T>>>
+    fn shrink(&self) -> Box<Iterator<Item=Iter<T, HK>>>
     {
-        let r = self.0.clone();
+        let r = self.iterator.clone();
+        let hint_kind = self.hint_kind;
         Box::new(
-            r.start.shrink().flat_map(move |x| {
-                r.end.shrink().map(move |y| (x.clone(), y))
-            })
-            .map(|(a, b)| Iter::new(a..b))
+            r.start.shrink().flat_map(move |a|
+                r.end.shrink().map(move |b|
+                    Iter::new(a.clone()..b, hint_kind)
+                )
+            )
         )
+    }
+}
+
+/// A meta-iterator which yields `Iter<i32>`s whose start/endpoints are
+/// increased or decreased linearly on each iteration.
+#[derive(Clone, Debug)]
+struct ShiftRange<HK = Inexact> {
+    range_start: i32,
+    range_end: i32,
+    start_step: i32,
+    end_step: i32,
+    iter_count: u32,
+    hint_kind: HK,
+}
+
+impl<HK> Iterator for ShiftRange<HK> where HK: HintKind {
+    type Item = Iter<i32, HK>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.iter_count == 0 {
+            return None;
+        }
+
+        let iter = Iter::new(self.range_start..self.range_end, self.hint_kind);
+
+        self.range_start += self.start_step;
+        self.range_end += self.end_step;
+        self.iter_count -= 1;
+
+        Some(iter)
+    }
+}
+
+impl ExactSizeIterator for ShiftRange<Exact> { }
+
+impl<HK> qc::Arbitrary for ShiftRange<HK>
+    where HK: HintKind
+{
+    fn arbitrary<G: qc::Gen>(g: &mut G) -> Self {
+        const MAX_STARTING_RANGE_DIFF: i32 = 32;
+        const MAX_STEP_MODULO: i32 = 8;
+        const MAX_ITER_COUNT: u32 = 3;
+
+        let range_start = qc::Arbitrary::arbitrary(g);
+        let range_end = range_start + g.gen_range(0, MAX_STARTING_RANGE_DIFF + 1);
+        let start_step = g.gen_range(-MAX_STEP_MODULO, MAX_STEP_MODULO + 1);
+        let end_step = g.gen_range(-MAX_STEP_MODULO, MAX_STEP_MODULO + 1);
+        let iter_count = g.gen_range(0, MAX_ITER_COUNT + 1);
+        let hint_kind = qc::Arbitrary::arbitrary(g);
+
+        ShiftRange {
+            range_start: range_start,
+            range_end: range_end,
+            start_step: start_step,
+            end_step: end_step,
+            iter_count: iter_count,
+            hint_kind: hint_kind
+        }
     }
 }
 
@@ -179,7 +325,6 @@ macro_rules! quickcheck {
     // The property functions can use pattern matching and `mut` as usual
     // in the function arguments, but the functions can not be generic.
     {$($(#$attr:tt)* fn $fn_name:ident($($arg:tt)*) -> $ret:ty { $($code:tt)* })*} => (
-        quickcheck!{@as_items
         $(
             #[test]
             $(#$attr)*
@@ -190,11 +335,10 @@ macro_rules! quickcheck {
                 ::quickcheck::quickcheck(quickcheck!(@fn prop [] $($arg)*));
             }
         )*
-        }
     );
     // parse argument list (with patterns allowed) into prop as fn(_, _) -> _
     (@fn $f:ident [$($t:tt)*]) => {
-        quickcheck!(@as_expr $f as fn($($t),*) -> _)
+        $f as fn($($t),*) -> _
     };
     (@fn $f:ident [$($p:tt)*] : $($tail:tt)*) => {
         quickcheck!(@fn $f [$($p)* _] $($tail)*)
@@ -202,8 +346,6 @@ macro_rules! quickcheck {
     (@fn $f:ident [$($p:tt)*] $t:tt $($tail:tt)*) => {
         quickcheck!(@fn $f [$($p)*] $($tail)*)
     };
-    (@as_items $($i:item)*) => ($($i)*);
-    (@as_expr $i:expr) => ($i);
 }
 
 quickcheck! {
@@ -215,7 +357,52 @@ quickcheck! {
         correct_size_hint(iproduct!(a, b, c))
     }
 
-    fn size_step(a: Iter<i16>, s: usize) -> bool {
+    fn correct_cartesian_product3(a: Iter<u16>, b: Iter<u16>, c: Iter<u16>,
+                                  take_manual: usize) -> ()
+    {
+        // test correctness of iproduct through regular iteration (take)
+        // and through fold.
+        let ac = a.clone();
+        let br = &b.clone();
+        let cr = &c.clone();
+        let answer: Vec<_> = ac.flat_map(move |ea| br.clone().flat_map(move |eb| cr.clone().map(move |ec| (ea, eb, ec)))).collect();
+        let mut product_iter = iproduct!(a, b, c);
+        let mut actual = Vec::new();
+
+        actual.extend((&mut product_iter).take(take_manual));
+        if actual.len() == take_manual {
+            product_iter.fold((), |(), elt| actual.push(elt));
+        }
+        assert_eq!(answer, actual);
+    }
+
+    fn size_multi_product(a: ShiftRange) -> bool {
+        correct_size_hint(a.multi_cartesian_product())
+    }
+    fn correct_multi_product3(a: ShiftRange, take_manual: usize) -> () {
+        // Fix no. of iterators at 3
+        let a = ShiftRange { iter_count: 3, ..a };
+
+        // test correctness of MultiProduct through regular iteration (take)
+        // and through fold.
+        let mut iters = a.clone();
+        let i0 = iters.next().unwrap();
+        let i1r = &iters.next().unwrap();
+        let i2r = &iters.next().unwrap();
+        let answer: Vec<_> = i0.flat_map(move |ei0| i1r.clone().flat_map(move |ei1| i2r.clone().map(move |ei2| vec![ei0, ei1, ei2]))).collect();
+        let mut multi_product = a.clone().multi_cartesian_product();
+        let mut actual = Vec::new();
+
+        actual.extend((&mut multi_product).take(take_manual));
+        if actual.len() == take_manual {
+            multi_product.fold((), |(), elt| actual.push(elt));
+        }
+        assert_eq!(answer, actual);
+
+        assert_eq!(answer.into_iter().last(), a.clone().multi_cartesian_product().last());
+    }
+
+    fn size_step(a: Iter<i16, Exact>, s: usize) -> bool {
         let mut s = s;
         if s == 0 {
             s += 1; // never zero
@@ -249,7 +436,7 @@ quickcheck! {
         }))
     }
 
-    fn size_multipeek(a: Iter<u16>, s: u8) -> bool {
+    fn size_multipeek(a: Iter<u16, Exact>, s: u8) -> bool {
         let mut it = multipeek(a);
         // peek a few times
         for _ in 0..s {
@@ -271,7 +458,7 @@ quickcheck! {
     fn size_merge(a: Iter<u16>, b: Iter<u16>) -> bool {
         correct_size_hint(a.merge(b))
     }
-    fn size_zip(a: Iter<i16>, b: Iter<i16>, c: Iter<i16>) -> bool {
+    fn size_zip(a: Iter<i16, Exact>, b: Iter<i16, Exact>, c: Iter<i16, Exact>) -> bool {
         let filt = a.clone().dedup();
         correct_size_hint(multizip((filt, b.clone(), c.clone()))) &&
             exact_size(multizip((a, b, c)))
@@ -281,6 +468,11 @@ quickcheck! {
         correct_size_hint(multizip((&rc, &rc, b)))
     }
 
+    fn size_zip_macro(a: Iter<i16, Exact>, b: Iter<i16, Exact>, c: Iter<i16, Exact>) -> bool {
+        let filt = a.clone().dedup();
+        correct_size_hint(izip!(filt, b.clone(), c.clone())) &&
+            exact_size(izip!(a, b, c))
+    }
     fn equal_kmerge(a: Vec<i16>, b: Vec<i16>, c: Vec<i16>) -> bool {
         use itertools::free::kmerge;
         let mut sa = a.clone();
@@ -355,7 +547,7 @@ quickcheck! {
         let b = &b[..len];
         itertools::equal(zip_eq(a, b), zip(a, b))
     }
-    fn size_zip_longest(a: Iter<i16>, b: Iter<i16>) -> bool {
+    fn size_zip_longest(a: Iter<i16, Exact>, b: Iter<i16, Exact>) -> bool {
         let filt = a.clone().dedup();
         let filt2 = b.clone().dedup();
         correct_size_hint(filt.zip_longest(b.clone())) &&
@@ -384,7 +576,7 @@ quickcheck! {
     fn size_interleave(a: Iter<i16>, b: Iter<i16>) -> bool {
         correct_size_hint(a.interleave(b))
     }
-    fn exact_interleave(a: Iter<i16>, b: Iter<i16>) -> bool {
+    fn exact_interleave(a: Iter<i16, Exact>, b: Iter<i16, Exact>) -> bool {
         exact_size_for_this(a.interleave(b))
     }
     fn size_interleave_shortest(a: Iter<i16>, b: Iter<i16>) -> bool {
@@ -420,19 +612,20 @@ quickcheck! {
         itertools::equal(a.iter().flatten(),
                          a.iter().flat_map(|x| x))
     }
-    fn equal_flatten_vec_rev(a: Vec<Vec<u8>>) -> bool {
-        itertools::equal(a.iter().flatten().rev(),
-                         a.iter().flat_map(|x| x).rev())
-    }
 
     fn equal_combinations_2(a: Vec<u8>) -> bool {
         let mut v = Vec::new();
-        for (i, &x) in enumerate(&a) {
-            for &y in &a[i + 1..] {
+        for (i, x) in enumerate(&a) {
+            for y in &a[i + 1..] {
                 v.push((x, y));
             }
         }
-        itertools::equal(cloned(&a).tuple_combinations::<(_, _)>(), cloned(&v))
+        itertools::equal(a.iter().tuple_combinations::<(_, _)>(), v)
+    }
+
+    fn collect_tuple_matches_size(a: Iter<i16>) -> bool {
+        let size = a.clone().count();
+        a.collect_tuple::<(_, _, _)>().is_some() == (size == 3)
     }
 }
 
@@ -548,7 +741,7 @@ quickcheck! {
 }
 
 quickcheck! {
-    fn size_pad_tail2(it: Iter<i8>, pad: u8) -> bool {
+    fn size_pad_tail2(it: Iter<i8, Exact>, pad: u8) -> bool {
         exact_size(it.pad_using(pad as usize, |_| 0))
     }
 }
@@ -556,6 +749,18 @@ quickcheck! {
 quickcheck! {
     fn size_unique(it: Iter<i8>) -> bool {
         correct_size_hint(it.unique())
+    }
+
+    fn count_unique(it: Vec<i8>, take_first: u8) -> () {
+        let answer = {
+            let mut v = it.clone();
+            v.sort(); v.dedup();
+            v.len()
+        };
+        let mut iter = cloned(&it).unique();
+        let first_count = (&mut iter).take(take_first as usize).count();
+        let rest_count = iter.count();
+        assert_eq!(answer, first_count + rest_count);
     }
 }
 
@@ -698,7 +903,7 @@ quickcheck! {
     fn with_position_exact_size_1(a: Vec<u8>) -> bool {
         exact_size_for_this(a.iter().with_position())
     }
-    fn with_position_exact_size_2(a: Iter<u8>) -> bool {
+    fn with_position_exact_size_2(a: Iter<u8, Exact>) -> bool {
         exact_size_for_this(a.with_position())
     }
 }

@@ -1205,8 +1205,10 @@ internal_JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
       // JS::ToUint32 will take arg[0] modulo 2^32 before returning it, which
       // may result in a smaller final value.
       value = UINT32_MAX;
+#ifdef DEBUG
       LogToBrowserConsole(nsIScriptError::errorFlag,
         NS_LITERAL_STRING("Clamped larged numeric value."));
+#endif
     } else if (!JS::ToUint32(cx, args[0], &value)) {
       LogToBrowserConsole(nsIScriptError::errorFlag, NS_LITERAL_STRING("Failed to convert argument"));
       return true;

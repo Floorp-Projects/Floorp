@@ -3032,6 +3032,12 @@ nsGlobalWindowInner::RegisterProtocolHandlerAllowedForContext(JSContext* aCx, JS
          Preferences::GetBool("dom.registerProtocolHandler.insecure.enabled");
 }
 
+/* static */ bool
+nsGlobalWindowInner::DeviceSensorsEnabled(JSContext* aCx, JSObject* aObj)
+{
+  return Preferences::GetBool("device.sensors.enabled");
+}
+
 nsIDOMOfflineResourceList*
 nsGlobalWindowInner::GetApplicationCache(ErrorResult& aError)
 {

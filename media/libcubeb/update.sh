@@ -20,6 +20,10 @@ cp $1/src/cubeb_log.h src
 cp $1/src/cubeb_mixer.cpp src
 cp $1/src/cubeb_mixer.h src
 cp $1/src/cubeb_opensl.c src
+cp $1/src/cubeb-jni.cpp src
+cp $1/src/cubeb-jni.h src
+cp $1/src/android/cubeb-output-latency.h src/android
+cp $1/src/android/cubeb_media_library.h src/android
 cp $1/src/cubeb_osx_run_loop.h src
 cp $1/src/cubeb_panner.cpp src
 cp $1/src/cubeb_panner.h src

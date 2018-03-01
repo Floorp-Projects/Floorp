@@ -1096,6 +1096,7 @@ public class Tabs implements BundleEventListener {
     /**
      * Opens a new tab and loads a page according to the user's preferences (by default about:home).
      */
+    @RobocopTarget
     public Tab addPrivateTab() {
         return addTab(Tabs.LOADURL_PRIVATE);
     }

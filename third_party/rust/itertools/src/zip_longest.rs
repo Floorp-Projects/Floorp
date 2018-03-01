@@ -1,7 +1,8 @@
 use std::cmp::Ordering::{Equal, Greater, Less};
 use super::size_hint;
 use std::iter::Fuse;
-use self::EitherOrBoth::{Right, Left, Both};
+
+use either_or_both::EitherOrBoth;
 
 // ZipLongest originally written by SimonSapin,
 // and dedicated to itertools https://github.com/rust-lang/rust/pull/19283
@@ -39,9 +40,9 @@ impl<T, U> Iterator for ZipLongest<T, U>
     fn next(&mut self) -> Option<Self::Item> {
         match (self.a.next(), self.b.next()) {
             (None, None) => None,
-            (Some(a), None) => Some(Left(a)),
-            (None, Some(b)) => Some(Right(b)),
-            (Some(a), Some(b)) => Some(Both(a, b)),
+            (Some(a), None) => Some(EitherOrBoth::Left(a)),
+            (None, Some(b)) => Some(EitherOrBoth::Right(b)),
+            (Some(a), Some(b)) => Some(EitherOrBoth::Both(a, b)),
         }
     }
 
@@ -60,13 +61,13 @@ impl<T, U> DoubleEndedIterator for ZipLongest<T, U>
         match self.a.len().cmp(&self.b.len()) {
             Equal => match (self.a.next_back(), self.b.next_back()) {
                 (None, None) => None,
-                (Some(a), Some(b)) => Some(Both(a, b)),
+                (Some(a), Some(b)) => Some(EitherOrBoth::Both(a, b)),
                 // These can only happen if .len() is inconsistent with .next_back()
-                (Some(a), None) => Some(Left(a)),
-                (None, Some(b)) => Some(Right(b)),
+                (Some(a), None) => Some(EitherOrBoth::Left(a)),
+                (None, Some(b)) => Some(EitherOrBoth::Right(b)),
             },
-            Greater => self.a.next_back().map(Left),
-            Less => self.b.next_back().map(Right),
+            Greater => self.a.next_back().map(EitherOrBoth::Left),
+            Less => self.b.next_back().map(EitherOrBoth::Right),
         }
     }
 }
@@ -75,20 +76,3 @@ impl<T, U> ExactSizeIterator for ZipLongest<T, U>
     where T: ExactSizeIterator,
           U: ExactSizeIterator
 {}
-
-
-/// A value yielded by `ZipLongest`.
-/// Contains one or two values, depending on which of the input iterators are exhausted.
-///
-/// See [`.zip_longest()`](trait.Itertools.html#method.zip_longest) for more information.
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub enum EitherOrBoth<A, B> {
-    /// Neither input iterator is exhausted yet, yielding two values.
-    Both(A, B),
-    /// The parameter iterator of `.zip_longest()` is exhausted,
-    /// only yielding a value from the `self` iterator.
-    Left(A),
-    /// The `self` iterator of `.zip_longest()` is exhausted,
-    /// only yielding a value from the parameter iterator.
-    Right(B),
-}

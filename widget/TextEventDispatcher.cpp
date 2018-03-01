@@ -45,7 +45,7 @@ TextEventDispatcher::TextEventDispatcher(nsIWidget* aWidget)
       &sDispatchKeyPressEventsOnlySystemGroupInContent,
       "dom.keyboardevent.keypress."
         "dispatch_non_printable_keys_only_system_group_in_content",
-      false);
+      true);
     sInitialized = true;
   }
 
