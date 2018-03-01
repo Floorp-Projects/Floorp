@@ -3,50 +3,74 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const {
+  custom,
   Front,
   FrontClassWithSpec,
-  preEvent,
-  types
+  preEvent
 } = require("devtools/shared/protocol.js");
 const {
   accessibleSpec,
   accessibleWalkerSpec,
   accessibilitySpec
 } = require("devtools/shared/specs/accessibility");
-
 const events = require("devtools/shared/event-emitter");
-const ACCESSIBLE_PROPERTIES = [
-  "role",
-  "name",
-  "value",
-  "description",
-  "help",
-  "keyboardShortcut",
-  "childCount",
-  "domNodeType"
-];
 
 const AccessibleFront = FrontClassWithSpec(accessibleSpec, {
   initialize(client, form) {
     Front.prototype.initialize.call(this, client, form);
-
-    // Define getters for accesible properties that are received from the actor.
-    // Note: we would like accessible properties to be iterable for a11y
-    // clients.
-    for (let key of ACCESSIBLE_PROPERTIES) {
-      Object.defineProperty(this, key, {
-        get() {
-          return this._form[key];
-        },
-        enumerable: true
-      });
-    }
   },
 
   marshallPool() {
-    return this.walker;
+    return this.parent();
+  },
+
+  get role() {
+    return this._form.role;
+  },
+
+  get name() {
+    return this._form.name;
+  },
+
+  get value() {
+    return this._form.value;
+  },
+
+  get description() {
+    return this._form.description;
+  },
+
+  get help() {
+    return this._form.help;
+  },
+
+  get keyboardShortcut() {
+    return this._form.keyboardShortcut;
+  },
+
+  get childCount() {
+    return this._form.childCount;
+  },
+
+  get domNodeType() {
+    return this._form.domNodeType;
+  },
+
+  get indexInParent() {
+    return this._form.indexInParent;
+  },
+
+  get states() {
+    return this._form.states;
+  },
+
+  get actions() {
+    return this._form.actions;
+  },
+
+  get attributes() {
+    return this._form.attributes;
   },
 
   form(form, detail) {
@@ -57,25 +81,14 @@ const AccessibleFront = FrontClassWithSpec(accessibleSpec, {
 
     this.actorID = form.actor;
     this._form = form;
-    DevToolsUtils.defineLazyGetter(this, "walker", () =>
-      types.getType("accessiblewalker").read(this._form.walker, this));
   },
 
-  /**
-   * Get a dom node front from accessible actor's raw accessible object's
-   * DONNode property.
-   */
-  getDOMNode(domWalker) {
-    return domWalker.getNodeFromActor(this.actorID,
-                                      ["rawAccessible", "DOMNode"]);
-  },
-
-  nameChange: preEvent("name-change", function (name, parent) {
+  nameChange: preEvent("name-change", function (name, parent, walker) {
     this._form.name = name;
     // Name change event affects the tree rendering, we fire this event on
     // accessibility walker as the point of interaction for UI.
-    if (this.walker) {
-      events.emit(this.walker, "name-change", this, parent);
+    if (walker) {
+      events.emit(walker, "name-change", this, parent);
     }
   }),
 
@@ -95,21 +108,37 @@ const AccessibleFront = FrontClassWithSpec(accessibleSpec, {
     this._form.keyboardShortcut = keyboardShortcut;
   }),
 
-  reorder: preEvent("reorder", function (childCount) {
+  reorder: preEvent("reorder", function (childCount, walker) {
     this._form.childCount = childCount;
     // Reorder event affects the tree rendering, we fire this event on
     // accessibility walker as the point of interaction for UI.
-    if (this.walker) {
-      events.emit(this.walker, "reorder", this);
+    if (walker) {
+      events.emit(walker, "reorder", this);
     }
   }),
 
-  textChange: preEvent("text-change", function () {
+  textChange: preEvent("text-change", function (walker) {
     // Text event affects the tree rendering, we fire this event on
     // accessibility walker as the point of interaction for UI.
-    if (this.walker) {
-      events.emit(this.walker, "text-change", this);
+    if (walker) {
+      events.emit(walker, "text-change", this);
     }
+  }),
+
+  indexInParentChange: preEvent("index-in-parent-change", function (indexInParent) {
+    this._form.indexInParent = indexInParent;
+  }),
+
+  statesChange: preEvent("states-change", function (states) {
+    this._form.states = states;
+  }),
+
+  actionsChange: preEvent("actions-change", function (actions) {
+    this._form.actions = actions;
+  }),
+
+  attributesChange: preEvent("attributes-change", function (attributes) {
+    this._form.attributes = attributes;
   })
 });
 
@@ -120,7 +149,17 @@ const AccessibleWalkerFront = FrontClassWithSpec(accessibleWalkerSpec, {
 
   form(json) {
     this.actorID = json.actor;
-  }
+  },
+
+  pick: custom(function (doFocus) {
+    if (doFocus) {
+      return this.pickAndFocus();
+    }
+
+    return this._pick();
+  }, {
+    impl: "_pick"
+  })
 });
 
 const AccessibilityFront = FrontClassWithSpec(accessibilitySpec, {
@@ -128,7 +167,33 @@ const AccessibilityFront = FrontClassWithSpec(accessibilitySpec, {
     Front.prototype.initialize.call(this, client, form);
     this.actorID = form.accessibilityActor;
     this.manage(this);
-  }
+  },
+
+  bootstrap: custom(function () {
+    return this._bootstrap().then(state => {
+      this.enabled = state.enabled;
+      this.canBeEnabled = state.canBeEnabled;
+      this.canBeDisabled = state.canBeDisabled;
+    });
+  }, {
+    impl: "_bootstrap"
+  }),
+
+  init: preEvent("init", function () {
+    this.enabled = true;
+  }),
+
+  shutdown: preEvent("shutdown", function () {
+    this.enabled = false;
+  }),
+
+  canBeEnabled: preEvent("can-be-enabled-change", function (canBeEnabled) {
+    this.canBeEnabled = canBeEnabled;
+  }),
+
+  canBeDisabled: preEvent("can-be-disabled-change", function (canBeDisabled) {
+    this.canBeDisabled = canBeDisabled;
+  })
 });
 
 exports.AccessibleFront = AccessibleFront;

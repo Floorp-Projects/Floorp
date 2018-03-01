@@ -621,6 +621,11 @@ class JitCompartment
 
     void sweep(JSCompartment* compartment);
 
+    void discardStubs() {
+        for (ReadBarrieredJitCode& stubRef : stubs_)
+            stubRef = nullptr;
+    }
+
     JitCode* stringConcatStubNoBarrier(uint32_t* requiredBarriersOut) const {
         return getStubNoBarrier(StringConcat, requiredBarriersOut);
     }

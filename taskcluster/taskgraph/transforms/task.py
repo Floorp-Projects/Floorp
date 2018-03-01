@@ -559,6 +559,13 @@ task_description_schema = Schema({
             Required('paths'): [basestring],
         }],
     }, {
+        Required('implementation'): 'bouncer-aliases',
+        Required('entries'): object,
+    }, {
+        Required('implementation'): 'bouncer-submission',
+        Required('locales'): [basestring],
+        Required('entries'): object,
+    }, {
         Required('implementation'): 'invalid',
         # an invalid task is one which should never actually be created; this is used in
         # release automation on branches where the task just doesn't make sense
@@ -1106,6 +1113,25 @@ def build_balrog_payload(config, task, task_def):
                 'publish_rules': worker['publish-rules'],
                 'release_eta': config.params.get('release_eta') or '',
             })
+
+
+@payload_builder('bouncer-aliases')
+def build_bouncer_aliases_payload(config, task, task_def):
+    worker = task['worker']
+
+    task_def['payload'] = {
+        'aliases_entries': worker['entries']
+    }
+
+
+@payload_builder('bouncer-submission')
+def build_bouncer_submission_payload(config, task, task_def):
+    worker = task['worker']
+
+    task_def['payload'] = {
+        'locales':  worker['locales'],
+        'submission_entries': worker['entries']
+    }
 
 
 @payload_builder('push-apk')
