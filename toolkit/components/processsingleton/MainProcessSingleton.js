@@ -31,10 +31,15 @@ MainProcessSingleton.prototype = {
       let isWeb = ["https", "http", "ftp"];
 
       if (!isWeb.includes(engineURL.scheme))
-        throw "Unsupported search engine URL: " + engineURL;
+        throw "Unsupported search engine URL: " + engineURL.spec;
 
       if (iconURL && !isWeb.includes(iconURL.scheme))
-        throw "Unsupported search icon URL: " + iconURL;
+        throw "Unsupported search icon URL: " + iconURL.spec;
+
+      if (Services.policies &&
+          !Services.policies.isAllowed("installSearchEngine")) {
+        throw "Search Engine installation blocked by the Enterprise Policy Manager.";
+      }
     } catch (ex) {
       Cu.reportError("Invalid argument passed to window.external.AddSearchProvider: " + ex);
 
