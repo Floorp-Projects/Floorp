@@ -577,24 +577,6 @@ CodeGeneratorARM64::storeElementTyped(const LAllocation* value, MIRType valueTyp
 }
 
 void
-CodeGeneratorARM64::visitGuardShape(LGuardShape* guard)
-{
-    MOZ_CRASH("visitGuardShape");
-}
-
-void
-CodeGeneratorARM64::visitGuardObjectGroup(LGuardObjectGroup* guard)
-{
-    MOZ_CRASH("visitGuardObjectGroup");
-}
-
-void
-CodeGeneratorARM64::visitGuardClass(LGuardClass* guard)
-{
-    MOZ_CRASH("CodeGeneratorARM64::visitGuardClass");
-}
-
-void
 CodeGeneratorARM64::visitInterruptCheck(LInterruptCheck* lir)
 {
     MOZ_CRASH("CodeGeneratorARM64::visitInterruptCheck");

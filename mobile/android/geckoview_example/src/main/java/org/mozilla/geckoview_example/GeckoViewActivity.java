@@ -291,28 +291,31 @@ public class GeckoViewActivity extends Activity {
             prompt.onPermissionPrompt(session, title, callback);
         }
 
-        private void normalizeMediaName(final MediaSource[] sources) {
+        private String[] normalizeMediaName(final MediaSource[] sources) {
             if (sources == null) {
-                return;
+                return null;
             }
-            for (final MediaSource source : sources) {
-                final int mediaSource = source.source;
-                String name = source.name;
+
+            String[] res = new String[sources.length];
+            for (int i = 0; i < sources.length; i++) {
+                final int mediaSource = sources[i].source;
+                final String name = sources[i].name;
                 if (MediaSource.SOURCE_CAMERA == mediaSource) {
                     if (name.toLowerCase(Locale.ENGLISH).contains("front")) {
-                        name = getString(R.string.media_front_camera);
+                        res[i] = getString(R.string.media_front_camera);
                     } else {
-                        name = getString(R.string.media_back_camera);
+                        res[i] = getString(R.string.media_back_camera);
                     }
                 } else if (!name.isEmpty()) {
-                    continue;
+                    res[i] = name;
                 } else if (MediaSource.SOURCE_MICROPHONE == mediaSource) {
-                    name = getString(R.string.media_microphone);
+                    res[i] = getString(R.string.media_microphone);
                 } else {
-                    name = getString(R.string.media_other);
+                    res[i] = getString(R.string.media_other);
                 }
-                source.name = name;
             }
+
+            return res;
         }
 
         @Override
@@ -329,12 +332,12 @@ public class GeckoViewActivity extends Activity {
                 title = getString(R.string.request_media, host);
             }
 
-            normalizeMediaName(video);
-            normalizeMediaName(audio);
+            String[] videoNames = normalizeMediaName(video);
+            String[] audioNames = normalizeMediaName(audio);
 
             final BasicGeckoViewPrompt prompt = (BasicGeckoViewPrompt)
                     mGeckoSession.getPromptDelegate();
-            prompt.onMediaPrompt(session, title, video, audio, callback);
+            prompt.onMediaPrompt(session, title, video, audio, videoNames, audioNames, callback);
         }
     }
 

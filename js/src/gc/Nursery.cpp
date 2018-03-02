@@ -1017,22 +1017,17 @@ js::Nursery::sweep(JSTracer* trc)
 void
 js::Nursery::clear()
 {
-#ifdef JS_GC_ZEAL
+#if defined(JS_GC_ZEAL) || defined(JS_CRASH_DIAGNOSTICS)
     /* Poison the nursery contents so touching a freed object will crash. */
-    for (unsigned i = 0; i < allocatedChunkCount(); i++)
+    for (unsigned i = currentStartChunk_; i < allocatedChunkCount(); ++i)
         chunk(i).poisonAndInit(runtime(), JS_SWEPT_NURSERY_PATTERN);
+#endif
 
     if (runtime()->hasZealMode(ZealMode::GenerationalGC)) {
         /* Only reset the alloc point when we are close to the end. */
         if (currentChunk_ + 1 == maxChunkCount())
             setCurrentChunk(0);
-    } else
-#endif
-    {
-#ifdef JS_CRASH_DIAGNOSTICS
-        for (unsigned i = 0; i < allocatedChunkCount(); ++i)
-            chunk(i).poisonAndInit(runtime(), JS_SWEPT_NURSERY_PATTERN);
-#endif
+    } else {
         setCurrentChunk(0);
     }
 

@@ -702,10 +702,10 @@ NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(DocAccessible)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(DocAccessible)
 
 void
-DocAccessible::AttributeWillChange(nsIDocument* aDocument,
-                                   dom::Element* aElement,
+DocAccessible::AttributeWillChange(dom::Element* aElement,
                                    int32_t aNameSpaceID,
-                                   nsAtom* aAttribute, int32_t aModType,
+                                   nsAtom* aAttribute,
+                                   int32_t aModType,
                                    const nsAttrValue* aNewValue)
 {
   Accessible* accessible = GetAccessible(aElement);
@@ -748,15 +748,13 @@ DocAccessible::AttributeWillChange(nsIDocument* aDocument,
 }
 
 void
-DocAccessible::NativeAnonymousChildListChange(nsIDocument* aDocument,
-                                              nsIContent* aContent,
+DocAccessible::NativeAnonymousChildListChange(nsIContent* aContent,
                                               bool aIsRemove)
 {
 }
 
 void
-DocAccessible::AttributeChanged(nsIDocument* aDocument,
-                                dom::Element* aElement,
+DocAccessible::AttributeChanged(dom::Element* aElement,
                                 int32_t aNameSpaceID, nsAtom* aAttribute,
                                 int32_t aModType,
                                 const nsAttrValue* aOldValue)
@@ -1086,9 +1084,7 @@ DocAccessible::ARIAActiveDescendantChanged(Accessible* aAccessible)
 }
 
 void
-DocAccessible::ContentAppended(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aFirstNewContent)
+DocAccessible::ContentAppended(nsIContent* aFirstNewContent)
 {
 }
 
@@ -1139,35 +1135,30 @@ DocAccessible::DocumentStatesChanged(nsIDocument* aDocument,
 }
 
 void
-DocAccessible::CharacterDataWillChange(nsIDocument* aDocument,
-                                       nsIContent* aContent,
+DocAccessible::CharacterDataWillChange(nsIContent* aContent,
                                        const CharacterDataChangeInfo&)
 {
 }
 
 void
-DocAccessible::CharacterDataChanged(nsIDocument* aDocument,
-                                    nsIContent* aContent,
+DocAccessible::CharacterDataChanged(nsIContent* aContent,
                                     const CharacterDataChangeInfo&)
 {
 }
 
 void
-DocAccessible::ContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
-                               nsIContent* aChild)
+DocAccessible::ContentInserted(nsIContent* aChild)
 {
 }
 
 void
-DocAccessible::ContentRemoved(nsIDocument* aDocument,
-                              nsIContent* aContainerNode,
-                              nsIContent* aChildNode,
+DocAccessible::ContentRemoved(nsIContent* aChildNode,
                               nsIContent* aPreviousSiblingNode)
 {
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eTree)) {
     logging::MsgBegin("TREE", "DOM content removed; doc: %p", this);
-    logging::Node("container node", aContainerNode);
+    logging::Node("container node", aChildNode->GetParent());
     logging::Node("content node", aChildNode);
     logging::MsgEnd();
   }
