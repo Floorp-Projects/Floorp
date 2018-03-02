@@ -263,34 +263,14 @@ macro_rules! option {
     };
 }
 
-macro_rules! take_until {
-    ($i:expr, $substr:expr) => {{
-        if $substr.len() > $i.len() {
-            Err(LexError)
+macro_rules! take_until_newline_or_eof {
+    ($i:expr,) => {{
+        if $i.len() == 0 {
+            Ok(($i, ""))
         } else {
-            let substr_vec: Vec<char> = $substr.chars().collect();
-            let mut window: Vec<char> = vec![];
-            let mut offset = $i.len();
-            let mut parsed = false;
-            for (o, c) in $i.char_indices() {
-                window.push(c);
-                if window.len() > substr_vec.len() {
-                    window.remove(0);
-                }
-                if window == substr_vec {
-                    parsed = true;
-                    window.pop();
-                    let window_len: usize = window.iter()
-                        .map(|x| x.len_utf8())
-                        .fold(0, |x, y| x + y);
-                    offset = o - window_len;
-                    break;
-                }
-            }
-            if parsed {
-                Ok(($i.advance(offset), &$i.rest[..offset]))
-            } else {
-                Err(LexError)
+            match $i.find('\n') {
+                Some(i) => Ok(($i.advance(i), &$i.rest[..i])),
+                None => Ok(($i.advance($i.len()), ""))
             }
         }
     }};
