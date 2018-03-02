@@ -21,7 +21,7 @@ var ExtensionPermissions = {
     }
 
     return {
-      header: strings.header || strings.text,
+      header: strings.header.replace("<>", info.addonName),
       message,
       acceptText: strings.acceptText,
       cancelText: strings.cancelText,
