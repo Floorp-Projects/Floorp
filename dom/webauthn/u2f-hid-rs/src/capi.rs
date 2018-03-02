@@ -53,7 +53,7 @@ pub unsafe extern "C" fn rust_u2f_app_ids_new() -> *mut U2FAppIds {
 pub unsafe extern "C" fn rust_u2f_app_ids_add(
     ids: *mut U2FAppIds,
     id_ptr: *const u8,
-    id_len: usize
+    id_len: usize,
 ) {
     (*ids).push(from_raw(id_ptr, id_len));
 }
@@ -177,7 +177,11 @@ pub unsafe extern "C" fn rust_u2f_mgr_register(
         },
     );
 
-    if res.is_ok() { tid } else { 0 }
+    if res.is_ok() {
+        tid
+    } else {
+        0
+    }
 }
 
 #[no_mangle]
@@ -211,26 +215,23 @@ pub unsafe extern "C" fn rust_u2f_mgr_sign(
     let key_handles = (*khs).clone();
 
     let tid = new_tid();
-    let res = (*mgr).sign(
-        flags,
-        timeout,
-        challenge,
-        app_ids,
-        key_handles,
-        move |rv| {
-            if let Ok((app_id, key_handle, signature)) = rv {
-                let mut result = U2FResult::new();
-                result.insert(RESBUF_ID_KEYHANDLE, key_handle);
-                result.insert(RESBUF_ID_SIGNATURE, signature);
-                result.insert(RESBUF_ID_APPID, app_id);
-                callback(tid, Box::into_raw(Box::new(result)));
-            } else {
-                callback(tid, ptr::null_mut());
-            };
-        },
-    );
+    let res = (*mgr).sign(flags, timeout, challenge, app_ids, key_handles, move |rv| {
+        if let Ok((app_id, key_handle, signature)) = rv {
+            let mut result = U2FResult::new();
+            result.insert(RESBUF_ID_KEYHANDLE, key_handle);
+            result.insert(RESBUF_ID_SIGNATURE, signature);
+            result.insert(RESBUF_ID_APPID, app_id);
+            callback(tid, Box::into_raw(Box::new(result)));
+        } else {
+            callback(tid, ptr::null_mut());
+        };
+    });
 
-    if res.is_ok() { tid } else { 0 }
+    if res.is_ok() {
+        tid
+    } else {
+        0
+    }
 }
 
 #[no_mangle]

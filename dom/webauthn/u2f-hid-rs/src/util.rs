@@ -64,7 +64,9 @@ impl<T> OnceCallback<T> {
         F: Send + 'static,
     {
         let cb = Some(SendBoxFnOnce::from(cb));
-        Self { callback: Arc::new(Mutex::new(cb)) }
+        Self {
+            callback: Arc::new(Mutex::new(cb)),
+        }
     }
 
     pub fn call(&self, rv: io::Result<T>) {
@@ -78,6 +80,8 @@ impl<T> OnceCallback<T> {
 
 impl<T> Clone for OnceCallback<T> {
     fn clone(&self) -> Self {
-        Self { callback: self.callback.clone() }
+        Self {
+            callback: self.callback.clone(),
+        }
     }
 }
