@@ -77,7 +77,7 @@ struct AncestorTransform;
  * This class manages the tree of AsyncPanZoomController instances. There is one
  * instance of this class owned by each CompositorBridgeParent, and it contains as
  * many AsyncPanZoomController instances as there are scrollable container layers.
- * This class generally lives on the compositor thread, although some functions
+ * This class generally lives on the sampler thread, although some functions
  * may be called from other threads as noted; thread safety is ensured internally.
  *
  * The bulk of the work of this class happens as part of the UpdateHitTestingTree
@@ -126,7 +126,7 @@ public:
    * some other compositor. That other compositor's APZCTreeManager is also
    * provided. This allows APZCTreeManager to transfer any necessary state
    * from the old APZCTreeManager related to that layers id.
-   * This function must be called on the compositor thread.
+   * This function must be called on the sampler thread.
    */
   void NotifyLayerTreeAdopted(uint64_t aLayersId,
                               const RefPtr<APZCTreeManager>& aOldTreeManager);
@@ -136,7 +136,7 @@ public:
    * associated compositor has been removed/destroyed. Note that this does
    * NOT get called during shutdown situations, when the root layer tree is
    * also getting destroyed.
-   * This function must be called on the compositor thread.
+   * This function must be called on the sampler thread.
    */
   void NotifyLayerTreeRemoved(uint64_t aLayersId);
 
@@ -158,7 +158,7 @@ public:
    * Preserve nodes and APZC instances where possible, but retire those whose
    * layers are no longer in the layer tree.
    *
-   * This must be called on the compositor thread as it walks the layer tree.
+   * This must be called on the sampler thread as it walks the layer tree.
    *
    * @param aRootLayerTreeId The layer tree ID of the root layer corresponding
    *                         to this APZCTreeManager
@@ -193,7 +193,7 @@ public:
                             uint32_t aPaintSequenceNumber);
 
   /**
-   * Called when webrender is enabled, from the compositor thread. This function
+   * Called when webrender is enabled, from the sampler thread. This function
    * walks through the tree of APZC instances and tells webrender about the
    * async scroll position. It also advances APZ animations to the specified
    * sample time. In effect it is the webrender equivalent of (part of) the
@@ -260,7 +260,7 @@ public:
 
   /**
    * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
-   * in. The actual animation is done on the compositor thread after being set
+   * in. The actual animation is done on the sampler thread after being set
    * up. |aRect| must be given in CSS pixels, relative to the document.
    * |aFlags| is a combination of the ZoomToRectBehavior enum values.
    */
