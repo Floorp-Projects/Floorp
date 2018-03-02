@@ -12,7 +12,7 @@
 
 [package]
 name = "bindgen"
-version = "0.32.2"
+version = "0.32.3"
 authors = ["Jyun-Yan You <jyyou.tw@gmail.com>", "Emilio Cobos Álvarez <emilio@crisal.io>", "Nick Fitzgerald <fitzgen@gmail.com>", "The Servo project developers"]
 build = "build.rs"
 include = ["Cargo.toml", "build.rs", "src/*.rs", "src/**/*.rs"]
@@ -58,8 +58,11 @@ optional = true
 [dependencies.peeking_take_while]
 version = "0.1.2"
 
+[dependencies.proc-macro2]
+version = "0.2"
+
 [dependencies.quote]
-version = "0.3.15"
+version = "0.4"
 
 [dependencies.regex]
 version = "0.2"
