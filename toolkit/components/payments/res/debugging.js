@@ -305,6 +305,12 @@ let buttonActions = {
       completionState: "fail",
     });
   },
+
+  setStateUnknown() {
+    requestStore.setState({
+      completionState: "unknown",
+    });
+  },
 };
 
 window.addEventListener("click", function onButtonClick(evt) {
