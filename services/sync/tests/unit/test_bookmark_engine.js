@@ -308,16 +308,11 @@ async function test_restoreOrImport(engine, { replace }) {
 
     _(`Now ${verb} from a backup.`);
     await bookmarkUtils.importFromFile(backupFilePath, { replace });
-    await engine._tracker.asyncObserver.promiseObserversComplete();
 
+    // If `replace` is `true`, we'll wipe the server on the next sync.
     let bookmarksCollection = server.user("foo").collection("bookmarks");
-    if (replace) {
-      _("Verify that we wiped the server.");
-      Assert.ok(!bookmarksCollection);
-    } else {
-      _("Verify that we didn't wipe the server.");
-      Assert.ok(!!bookmarksCollection);
-    }
+    _("Verify that we didn't wipe the server.");
+    Assert.ok(!!bookmarksCollection);
 
     _("Ensure we have the bookmarks we expect locally.");
     let recordIds = await fetchAllRecordIds();
@@ -1022,4 +1017,84 @@ add_task(async function test_resume_buffer() {
   } finally {
     await cleanup(engine, server);
   }
+});
+
+add_task(async function test_legacy_migrate_sync_metadata() {
+  let legacyEngine = new BookmarksEngine(Service);
+  await legacyEngine.initialize();
+  await legacyEngine.resetClient();
+
+  let syncID = Utils.makeGUID();
+  let lastSync = Date.now() / 1000;
+
+  Svc.Prefs.set(`${legacyEngine.name}.syncID`, syncID);
+  Svc.Prefs.set(`${legacyEngine.name}.lastSync`, lastSync.toString());
+
+  strictEqual(await legacyEngine.getSyncID(), "",
+    "Legacy engine should start with empty sync ID");
+  strictEqual(await legacyEngine.getLastSync(), 0,
+    "Legacy engine should start with empty last sync");
+
+  info("Migrate Sync metadata prefs");
+  await legacyEngine._migrateSyncMetadata();
+
+  equal(await legacyEngine.getSyncID(), syncID,
+    "Initializing legacy engine should migrate sync ID");
+  equal(await legacyEngine.getLastSync(), lastSync,
+    "Initializing legacy engine should migrate last sync time");
+
+  let newSyncID = Utils.makeGUID();
+  await legacyEngine.ensureCurrentSyncID(newSyncID);
+
+  equal(await legacyEngine.getSyncID(), newSyncID,
+    "Changing legacy engine sync ID should update Places");
+  strictEqual(await legacyEngine.getLastSync(), 0,
+    "Changing legacy engine sync ID should clear last sync in Places");
+
+  equal(Svc.Prefs.get(`${legacyEngine.name}.syncID`), newSyncID,
+    "Changing legacy engine sync ID should update prefs");
+  strictEqual(Svc.Prefs.get(`${legacyEngine.name}.lastSync`), "0",
+    "Changing legacy engine sync ID should clear last sync pref");
+
+  await legacyEngine.wipeClient();
+});
+
+add_task(async function test_buffered_migate_sync_metadata() {
+  let bufferedEngine = new BufferedBookmarksEngine(Service);
+  await bufferedEngine.initialize();
+  await bufferedEngine.resetClient();
+
+  let syncID = Utils.makeGUID();
+  let lastSync = Date.now() / 1000;
+
+  Svc.Prefs.set(`${bufferedEngine.name}.syncID`, syncID);
+  Svc.Prefs.set(`${bufferedEngine.name}.lastSync`, lastSync.toString());
+
+  strictEqual(await bufferedEngine.getSyncID(), "",
+    "Buffered engine should start with empty sync ID");
+  strictEqual(await bufferedEngine.getLastSync(), 0,
+    "Buffered engine should start with empty last sync");
+
+  info("Migrate Sync metadata prefs");
+  await bufferedEngine._migrateSyncMetadata({
+    migrateLastSync: false,
+  });
+
+  equal(await bufferedEngine.getSyncID(), syncID,
+    "Initializing buffered engine should migrate sync ID");
+  strictEqual(await bufferedEngine.getLastSync(), 0,
+    "Initializing buffered engine should not migrate last sync time");
+
+  let newSyncID = Utils.makeGUID();
+  await bufferedEngine.ensureCurrentSyncID(newSyncID);
+
+  equal(await bufferedEngine.getSyncID(), newSyncID,
+    "Changing buffered engine sync ID should update Places");
+
+  equal(Svc.Prefs.get(`${bufferedEngine.name}.syncID`), newSyncID,
+    "Changing buffered engine sync ID should update prefs");
+  strictEqual(Svc.Prefs.get(`${bufferedEngine.name}.lastSync`), "0",
+    "Changing buffered engine sync ID should clear last sync pref");
+
+  await bufferedEngine.wipeClient();
 });
