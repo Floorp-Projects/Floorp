@@ -200,6 +200,7 @@ add_task(async function test_smart_bookmarks_duped() {
 
     _("Verify that queries with the same anno and different URL dupe");
     {
+      let lastSync = await engine.getLastSync();
       let info = await newSmartBookmark(PlacesUtils.bookmarks.menuGuid,
                                         "place:bar", -1, title,
                                         "MostVisited");
@@ -207,7 +208,7 @@ add_task(async function test_smart_bookmarks_duped() {
 
       let record = await store.createRecord(info.guid);
       record.id = Utils.makeGUID();
-      collection.insert(record.id, encryptPayload(record.cleartext), engine.lastSync + 1);
+      collection.insert(record.id, encryptPayload(record.cleartext), lastSync + 1);
 
       collection.insert("menu", encryptPayload({
         id: "menu",
@@ -215,7 +216,7 @@ add_task(async function test_smart_bookmarks_duped() {
         type: "folder",
         title: "Bookmarks Menu",
         children: [record.id],
-      }), engine.lastSync + 1);
+      }), lastSync + 1);
 
       engine.lastModified = collection.timestamp;
       await sync_engine_and_validate_telem(engine, false);
@@ -226,6 +227,7 @@ add_task(async function test_smart_bookmarks_duped() {
 
     _("Verify that different annos don't dupe.");
     {
+      let lastSync = await engine.getLastSync();
       let info = await newSmartBookmark(PlacesUtils.bookmarks.unfiledGuid,
                                         "place:foo", -1, title, "LeastVisited");
       let idForOldGUID = await PlacesUtils.promiseItemId(info.guid);
@@ -233,7 +235,7 @@ add_task(async function test_smart_bookmarks_duped() {
       let other = await store.createRecord(info.guid);
       other.id = "abcdefabcdef";
       other.queryId = "MostVisited";
-      collection.insert(other.id, encryptPayload(other.cleartext), engine.lastSync + 1);
+      collection.insert(other.id, encryptPayload(other.cleartext), lastSync + 1);
 
       collection.insert("unfiled", encryptPayload({
         id: "unfiled",
@@ -241,7 +243,7 @@ add_task(async function test_smart_bookmarks_duped() {
         type: "folder",
         title: "Other Bookmarks",
         children: [other.id],
-      }), engine.lastSync + 1);
+      }), lastSync + 1);
 
       engine.lastModified = collection.timestamp;
       await sync_engine_and_validate_telem(engine, false);
@@ -252,6 +254,7 @@ add_task(async function test_smart_bookmarks_duped() {
 
     _("Handle records without a queryId entry.");
     {
+      let lastSync = await engine.getLastSync();
       let info = await newSmartBookmark(PlacesUtils.bookmarks.mobileGuid, url,
                                         -1, title, "MostVisited");
       let idForOldGUID = await PlacesUtils.promiseItemId(info.guid);
@@ -259,7 +262,7 @@ add_task(async function test_smart_bookmarks_duped() {
       let record = await store.createRecord(info.guid);
       record.id = Utils.makeGUID();
       delete record.queryId;
-      collection.insert(record.id, encryptPayload(record.cleartext), engine.lastSync + 1);
+      collection.insert(record.id, encryptPayload(record.cleartext), lastSync + 1);
 
       collection.insert("mobile", encryptPayload({
         id: "mobile",
@@ -267,7 +270,7 @@ add_task(async function test_smart_bookmarks_duped() {
         type: "folder",
         title: "Mobile Bookmarks",
         children: [record.id],
-      }), engine.lastSync + 1);
+      }), lastSync + 1);
 
       engine.lastModified = collection.timestamp;
       await sync_engine_and_validate_telem(engine, false);

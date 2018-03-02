@@ -523,7 +523,8 @@ BookmarksEngine.prototype = {
 
     try {
       // For first-syncs, make a backup for the user to restore
-      if (this.lastSync == 0) {
+      let lastSync = await this.getLastSync();
+      if (!lastSync) {
         this._log.debug("Bookmarks backup starting.");
         await PlacesBackups.create(null, true);
         this._log.debug("Bookmarks backup done.");
@@ -707,7 +708,7 @@ BufferedBookmarksEngine.prototype = {
     await mirror.setCollectionLastModified(lastSync);
     // Update the pref so that reverting to the original bookmarks engine
     // doesn't download records we've already applied.
-    super.lastSync = lastSync;
+    await super.setLastSync(lastSync);
   },
 
   get lastSync() {

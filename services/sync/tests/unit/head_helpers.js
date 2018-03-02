@@ -505,9 +505,10 @@ async function registerRotaryEngine() {
 
   await Service.engineManager.register(RotaryEngine);
   let engine = Service.engineManager.get("rotary");
+  let syncID = await engine.resetLocalSyncID();
   engine.enabled = true;
 
-  return { engine, tracker: engine._tracker };
+  return { engine, syncID, tracker: engine._tracker };
 }
 
 // Set the validation prefs to attempt validation every time to avoid non-determinism.
@@ -527,16 +528,13 @@ async function serverForEnginesWithKeys(users, engines, callback) {
 
   let allEngines = [Service.clientsEngine].concat(engines);
 
-  let globalEngines = allEngines.reduce((entries, engine) => {
-    let { name, version, syncID } = engine;
-    entries[name] = { version, syncID };
-    return entries;
-  }, {});
+  let globalEngines = {};
+  for (let engine of allEngines) {
+    let syncID = await engine.resetLocalSyncID();
+    globalEngines[engine.name] = { version: engine.version, syncID };
+  }
 
-  let contents = allEngines.reduce((collections, engine) => {
-    collections[engine.name] = {};
-    return collections;
-  }, {
+  let contents = {
     meta: {
       global: {
         syncID: Service.syncID,
@@ -547,7 +545,10 @@ async function serverForEnginesWithKeys(users, engines, callback) {
     crypto: {
       keys: encryptPayload(wbo.cleartext),
     },
-  });
+  };
+  for (let engine of allEngines) {
+    contents[engine.name] = {};
+  }
 
   return serverForUsers(users, contents, callback);
 }
