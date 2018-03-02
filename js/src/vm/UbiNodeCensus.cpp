@@ -6,7 +6,6 @@
 
 #include "js/UbiNodeCensus.h"
 
-#include "util/Text.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 

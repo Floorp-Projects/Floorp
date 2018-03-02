@@ -6,11 +6,11 @@
 
 #include "jit/EffectiveAddressAnalysis.h"
 
-#include "builtin/Number.h"
+#include "jsnum.h"
+
 #include "jit/IonAnalysis.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
-#include "util/PortableMath.h"
 
 using namespace js;
 using namespace jit;

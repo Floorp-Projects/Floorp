@@ -6,8 +6,6 @@
 
 #include "vm/TraceLoggingTypes.h"
 
-#include "vm/StringType.h"
-
 class JSLinearString;
 
 uint32_t

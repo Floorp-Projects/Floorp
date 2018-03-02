@@ -13,7 +13,7 @@
 
 #include "jsfriendapi.h"
 
-#include "builtin/Map.h"
+#include "builtin/MapObject.h"
 #include "builtin/TypedObject.h"
 #include "gc/Allocator.h"
 #include "gc/FreeOp.h"

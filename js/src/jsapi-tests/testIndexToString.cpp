@@ -5,13 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "builtin/Number.h"
-#include "builtin/String.h"
+#include "jsnum.h"
+#include "jsstr.h"
+
 #include "jsapi-tests/tests.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 
-#include "vm/StringType-inl.h"
+#include "vm/String-inl.h"
 
 using mozilla::ArrayLength;
 

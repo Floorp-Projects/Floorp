@@ -10,6 +10,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
 
+#include "jslibmath.h"
 #include "jstypes.h"
 
 #include "gc/Policy.h"
@@ -23,9 +24,7 @@
 # include "jit/PerfSpewer.h"
 #endif
 #include "jit/VMFunctions.h"
-#include "util/PortableMath.h"
 #include "vm/Interpreter.h"
-#include "vm/StringType.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"

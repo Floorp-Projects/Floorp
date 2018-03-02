@@ -14,10 +14,10 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Unused.h"
 
+#include "jsarray.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "builtin/Array.h"
 #include "ds/Sort.h"
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
@@ -37,7 +37,7 @@
 #include "vm/NativeObject-inl.h"
 #include "vm/ReceiverGuard-inl.h"
 #include "vm/Stack-inl.h"
-#include "vm/StringType-inl.h"
+#include "vm/String-inl.h"
 
 using namespace js;
 using namespace js::gc;

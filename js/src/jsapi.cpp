@@ -23,25 +23,25 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#include "jsarray.h"
+#include "jsbool.h"
+#include "jsdate.h"
 #include "jsexn.h"
 #include "jsfriendapi.h"
+#include "jsmath.h"
+#include "jsnum.h"
+#include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "builtin/Array.h"
-#include "builtin/Atomics.h"
-#include "builtin/Boolean.h"
-#include "builtin/Date.h"
+#include "builtin/AtomicsObject.h"
 #include "builtin/Eval.h"
 #include "builtin/JSON.h"
-#include "builtin/Map.h"
-#include "builtin/Math.h"
-#include "builtin/Number.h"
+#include "builtin/MapObject.h"
 #include "builtin/Promise.h"
 #include "builtin/RegExp.h"
 #include "builtin/Stream.h"
-#include "builtin/String.h"
-#include "builtin/Symbol.h"
+#include "builtin/SymbolObject.h"
 #ifdef ENABLE_SIMD
 # include "builtin/SIMD.h"
 #endif
@@ -66,8 +66,6 @@
 #include "js/StructuredClone.h"
 #include "js/Utility.h"
 #include "js/Wrapper.h"
-#include "util/StringBuffer.h"
-#include "util/Text.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/DateObject.h"
@@ -87,8 +85,9 @@
 #include "vm/SavedStacks.h"
 #include "vm/SelfHosting.h"
 #include "vm/Shape.h"
-#include "vm/StringType.h"
-#include "vm/SymbolType.h"
+#include "vm/String.h"
+#include "vm/StringBuffer.h"
+#include "vm/Symbol.h"
 #include "vm/WrapperObject.h"
 #include "vm/Xdr.h"
 #include "wasm/AsmJS.h"
@@ -100,7 +99,7 @@
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/SavedStacks-inl.h"
-#include "vm/StringType-inl.h"
+#include "vm/String-inl.h"
 
 using namespace js;
 using namespace js::gc;

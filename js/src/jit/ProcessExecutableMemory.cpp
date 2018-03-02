@@ -16,9 +16,9 @@
 #include <errno.h>
 
 #include "jsfriendapi.h"
+#include "jsmath.h"
 #include "jsutil.h"
 
-#include "builtin/Math.h"
 #include "gc/Memory.h"
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"

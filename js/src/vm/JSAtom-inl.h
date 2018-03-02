@@ -11,9 +11,10 @@
 
 #include "mozilla/RangedPtr.h"
 
-#include "builtin/Number.h"
+#include "jsnum.h"
+
 #include "vm/Runtime.h"
-#include "vm/StringType.h"
+#include "vm/String.h"
 
 namespace js {
 

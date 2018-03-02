@@ -21,12 +21,12 @@
 #include "mozilla/Atomics.h"
 
 #include "fdlibm.h"
+#include "jslibmath.h"
 
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
 #include "jit/MacroAssembler.h"
 #include "threading/Mutex.h"
-#include "util/PortableMath.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmStubs.h"
 

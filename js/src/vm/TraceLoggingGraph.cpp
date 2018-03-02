@@ -17,12 +17,11 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ScopeExit.h"
 
-#include "builtin/String.h"
+#include "jsstr.h"
 
 #include "js/UniquePtr.h"
 #include "threading/LockGuard.h"
 #include "threading/Thread.h"
-#include "util/Text.h"
 #include "vm/TraceLogging.h"
 
 #ifndef DEFAULT_TRACE_LOG_DIR

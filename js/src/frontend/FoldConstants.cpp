@@ -8,11 +8,11 @@
 
 #include "mozilla/FloatingPoint.h"
 
+#include "jslibmath.h"
+
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 #include "js/Conversions.h"
-#include "util/PortableMath.h"
-#include "vm/StringType.h"
 
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
@@ -1009,7 +1009,7 @@ ComputeBinary(ParseNodeKind kind, double left, double right)
         return left * right;
 
     if (kind == ParseNodeKind::Mod)
-        return NumberMod(left, right);
+        return right == 0 ? GenericNaN() : js_fmod(left, right);
 
     if (kind == ParseNodeKind::Ursh)
         return ToUint32(left) >> (ToUint32(right) & 31);

@@ -9,8 +9,9 @@
 
 #include "vm/Interpreter.h"
 
-#include "builtin/Number.h"
-#include "builtin/String.h"
+#include "jsnum.h"
+#include "jsstr.h"
+
 #include "jit/Ion.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/JSCompartment.h"
@@ -19,7 +20,7 @@
 #include "vm/JSAtom-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/Stack-inl.h"
-#include "vm/StringType-inl.h"
+#include "vm/String-inl.h"
 #include "vm/UnboxedObject-inl.h"
 
 namespace js {

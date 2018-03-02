@@ -13,7 +13,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
-#include "util/StringBuffer.h"
+#include "vm/StringBuffer.h"
 
 using namespace JS;
 
