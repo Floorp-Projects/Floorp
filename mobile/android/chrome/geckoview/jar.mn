@@ -5,6 +5,7 @@
 geckoview.jar:
 % content geckoview %content/
 
+  content/ErrorPageEventHandler.js
   content/geckoview.xul
   content/geckoview.js
   content/GeckoViewContent.js
