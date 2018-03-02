@@ -138,14 +138,11 @@ const TemporaryBlockedPermissions = {
  */
 var SitePermissions = {
   // Permission states.
-  // PROMPT_HIDE state is only used to show the "Hide Prompt" state in the identity panel
-  // for the "plugin:flash" permission and not in pageinfo.
   UNKNOWN: Services.perms.UNKNOWN_ACTION,
   ALLOW: Services.perms.ALLOW_ACTION,
   BLOCK: Services.perms.DENY_ACTION,
   PROMPT: Services.perms.PROMPT_ACTION,
   ALLOW_COOKIES_FOR_SESSION: Ci.nsICookiePermission.ACCESS_SESSION,
-  PROMPT_HIDE: Ci.nsIObjectLoadingContent.PLUGIN_PERMISSION_PROMPT_ACTION_QUIET,
 
   // Permission scopes.
   SCOPE_REQUEST: "{SitePermissions.SCOPE_REQUEST}",
@@ -541,21 +538,13 @@ var SitePermissions = {
    *
    * @param {SitePermissions state} state
    *        The state to get the label for.
-   * @param {string} id
-   *        The permission to get the state label for.
    * @param {SitePermissions scope} scope (optional)
    *        The scope to get the label for.
    *
    * @return {String|null} the localized label or null if an
    *         unknown state was passed.
    */
-  getCurrentStateLabel(state, id, scope = null) {
-    // We try to avoid a collision between SitePermissions.PROMPT_HIDE
-    // and SitePermissions.ALLOW_COOKIES_FOR_SESSION which share the same const value.
-    if (id.startsWith("plugin") && state == SitePermissions.PROMPT_HIDE) {
-      return gStringBundle.GetStringFromName("state.current.hide");
-    }
-
+  getCurrentStateLabel(state, scope = null) {
     switch (state) {
       case this.PROMPT:
         return gStringBundle.GetStringFromName("state.current.prompt");
@@ -596,8 +585,6 @@ var gPermissionObject = {
    *  - states
    *    Array of permission states to be exposed to the user.
    *    Defaults to ALLOW, BLOCK and the default state (see getDefault).
-   *    The PROMPT_HIDE state is deliberately excluded from "plugin:flash" since we
-   *    don't want to expose a "Hide Prompt" button to the user through pageinfo.
    */
 
   "image": {
@@ -668,11 +655,6 @@ var gPermissionObject = {
   },
 
   "canvas": {
-  },
-
-  "plugin:flash": {
-    labelID: "flash-plugin",
-    states: [ SitePermissions.UNKNOWN, SitePermissions.ALLOW, SitePermissions.BLOCK ],
   },
 
   "midi": {
