@@ -228,7 +228,6 @@ src:*/mozglue/misc/TimeStamp.h
 #
 src:*/dom/canvas/MurmurHash3.cpp
 src:*/gfx/skia/skia/include/private/SkChecksum.h
-src:*/HashFunctions.h
 src:*/intl/icu/source/common/unifiedcache.h
 src:*/mfbt/SHA1.cpp
 src:*/modules/zlib/src/adler32.c
