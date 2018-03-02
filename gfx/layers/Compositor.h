@@ -497,12 +497,6 @@ public:
 
   widget::CompositorWidget* GetWidget() const { return mWidget; }
 
-  /**
-   * Debug-build assertion that can be called to ensure code is running on the
-   * compositor thread.
-   */
-  static void AssertOnCompositorThread();
-
   // Return statistics for the most recent frame we computed statistics for.
   virtual void GetFrameStats(GPUStats* aStats);
 

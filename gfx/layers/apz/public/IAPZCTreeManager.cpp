@@ -9,7 +9,7 @@
 #include "gfxPrefs.h"                       // for gfxPrefs
 #include "InputData.h"                      // for InputData, etc
 #include "mozilla/EventStateManager.h"      // for WheelPrefs
-#include "mozilla/layers/APZThreadUtils.h"  // for AssertOnCompositorThread, etc
+#include "mozilla/layers/APZThreadUtils.h"  // for AssertOnControllerThread, etc
 #include "mozilla/MouseEvents.h"            // for WidgetMouseEvent
 #include "mozilla/TextEvents.h"             // for WidgetKeyboardEvent
 #include "mozilla/TouchEvents.h"            // for WidgetTouchEvent

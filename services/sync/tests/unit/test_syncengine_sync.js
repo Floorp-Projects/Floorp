@@ -479,7 +479,7 @@ add_task(async function test_processIncoming_reconcile_locally_deleted_dupe_new(
   Assert.equal(1, collection.count());
   wbo = collection.wbo("DUPE_INCOMING");
   Assert.notEqual(null, wbo);
-  let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
+  let payload = wbo.getCleartext();
   Assert.ok(payload.deleted);
 
   await cleanAndGo(engine, server);
@@ -518,7 +518,7 @@ add_task(async function test_processIncoming_reconcile_locally_deleted_dupe_old(
   let collection = server.getCollection(user, "rotary");
   Assert.equal(1, collection.count());
   wbo = collection.wbo("DUPE_INCOMING");
-  let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
+  let payload = wbo.getCleartext();
   Assert.equal("incoming", payload.denomination);
 
   await cleanAndGo(engine, server);
@@ -556,7 +556,7 @@ add_task(async function test_processIncoming_reconcile_changed_dupe() {
   Assert.equal(1, collection.count());
   wbo = collection.wbo("DUPE_INCOMING");
   Assert.notEqual(undefined, wbo);
-  let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
+  let payload = wbo.getCleartext();
   Assert.equal("local", payload.denomination);
 
   await cleanAndGo(engine, server);
@@ -595,7 +595,7 @@ add_task(async function test_processIncoming_reconcile_changed_dupe_new() {
   Assert.equal(1, collection.count());
   wbo = collection.wbo("DUPE_INCOMING");
   Assert.notEqual(undefined, wbo);
-  let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
+  let payload = wbo.getCleartext();
   Assert.equal("incoming", payload.denomination);
   await cleanAndGo(engine, server);
 });
@@ -1084,8 +1084,7 @@ add_task(async function test_uploadOutgoing_toEmptyServer() {
     // no longer marked.
     Assert.equal(collection.payload("flying"), undefined);
     Assert.ok(!!collection.payload("scotsman"));
-    Assert.equal(JSON.parse(collection.wbo("scotsman").data.ciphertext).id,
-                 "scotsman");
+    Assert.equal(collection.cleartext("scotsman").id, "scotsman");
     const changes = await engine._tracker.getChangedIDs();
     Assert.equal(changes.scotsman, undefined);
 

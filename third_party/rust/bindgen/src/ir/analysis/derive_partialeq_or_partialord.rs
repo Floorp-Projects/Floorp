@@ -236,6 +236,11 @@ impl<'ctx> CannotDerivePartialEqOrPartialOrd<'ctx> {
                     "The early ty.is_opaque check should have handled this case"
                 );
 
+                if info.is_forward_declaration() {
+                    trace!("    cannot derive for forward decls");
+                    return CanDerive::No;
+                }
+
                 if info.kind() == CompKind::Union {
                     if self.ctx.options().rust_features().untagged_union() {
                         trace!(

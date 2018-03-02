@@ -633,7 +633,7 @@ add_task(async function test_nonexistent_on_one_side() {
         id: "menu",
         type: "folder",
         parentid: "places",
-        hasDupe: false,
+        hasDupe: true,
         parentName: "",
         dateAdded: menuDateAdded.getTime(),
         title: BookmarksMenuTitle,

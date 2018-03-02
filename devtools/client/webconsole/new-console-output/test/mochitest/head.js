@@ -659,7 +659,7 @@ async function setFilterState(hud, settings) {
   const filterBar = await setFilterBarVisible(hud, true);
 
   for (let category in settings) {
-    let check = settings[category];
+    let setActive = settings[category];
     let button = filterBar.querySelector(`.${category}`);
 
     if (!button) {
@@ -667,23 +667,15 @@ async function setFilterState(hud, settings) {
                 `which doesn't exist.`);
     }
 
-    info(`Setting the ${category} category to ${check ? "checked" : "disabled"}`);
+    info(`Setting the ${category} category to ${setActive ? "checked" : "disabled"}`);
 
-    let checked = button.classList.contains("checked");
-    if (check) {
-      // Enable filter.
-      if (checked) {
-        return;
-      }
+    let isChecked = button.classList.contains("checked");
+
+    if (setActive !== isChecked) {
       button.click();
+
       await waitFor(() => {
-        return button.classList.contains("checked");
-      });
-    } else if (checked) {
-      // Disable filter.
-      button.click();
-      await waitFor(() => {
-        return !button.classList.contains("checked");
+        return button.classList.contains("checked") === setActive;
       });
     }
   }

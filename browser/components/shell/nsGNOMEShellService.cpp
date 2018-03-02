@@ -82,6 +82,12 @@ static const MimeTypeAssociation appTypes[] = {
 #define kDesktopDrawBGGSKey "draw-background"
 #define kDesktopColorGSKey "primary-color"
 
+static bool
+IsRunningAsASnap()
+{
+  return (PR_GetEnv("SNAP") != nullptr);
+}
+
 nsresult
 nsGNOMEShellService::Init()
 {
@@ -207,6 +213,28 @@ nsGNOMEShellService::IsDefaultBrowser(bool aStartupCheck,
 {
   *aIsDefaultBrowser = false;
 
+  if (IsRunningAsASnap()) {
+    const gchar *argv[] = { "xdg-settings", "check", "default-web-browser",
+                            "firefox_firefox.desktop", nullptr };
+    GSpawnFlags flags = static_cast<GSpawnFlags>(G_SPAWN_SEARCH_PATH |
+                                                 G_SPAWN_STDERR_TO_DEV_NULL);
+    gchar *output = nullptr;
+    gint exit_status = 0;
+    if (!g_spawn_sync(nullptr, (gchar **) argv, nullptr, flags, nullptr,
+                      nullptr, &output, nullptr, &exit_status, nullptr)) {
+      return NS_OK;
+    }
+    if (exit_status != 0) {
+      g_free(output);
+      return NS_OK;
+    }
+    if (strcmp(output, "yes\n") == 0) {
+      *aIsDefaultBrowser = true;
+    }
+    g_free(output);
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
   nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
 
@@ -256,6 +284,17 @@ nsGNOMEShellService::SetDefaultBrowser(bool aClaimAllTypes,
   if (aForAllUsers)
     NS_WARNING("Setting the default browser for all users is not yet supported");
 #endif
+
+  if (IsRunningAsASnap()) {
+    const gchar *argv[] = { "xdg-settings", "set", "default-web-browser",
+                            "firefox_firefox.desktop", nullptr };
+    GSpawnFlags flags = static_cast<GSpawnFlags>(G_SPAWN_SEARCH_PATH |
+                                                 G_SPAWN_STDOUT_TO_DEV_NULL |
+                                                 G_SPAWN_STDERR_TO_DEV_NULL);
+    g_spawn_sync(nullptr, (gchar **) argv, nullptr, flags, nullptr, nullptr,
+                 nullptr, nullptr, nullptr, nullptr);
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
   nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);

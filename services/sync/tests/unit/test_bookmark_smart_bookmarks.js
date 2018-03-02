@@ -107,7 +107,7 @@ add_task(async function test_annotation_uploaded() {
     Assert.equal(serverGUID, guid);
     let serverWBO = collection.wbo(serverGUID);
     Assert.ok(!!serverWBO);
-    let body = JSON.parse(JSON.parse(serverWBO.payload).ciphertext);
+    let body = serverWBO.getCleartext();
     Assert.equal(body.queryId, "MostVisited");
 
     _("We still have the right count.");
