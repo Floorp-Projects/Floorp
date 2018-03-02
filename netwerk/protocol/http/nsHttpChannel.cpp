@@ -3993,8 +3993,19 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     // Don't bother to validate if this is a fallback entry.
     if (!mApplicationCacheForWrite &&
         (appCache ||
-         (mCacheEntryIsReadOnly && !(mLoadFlags & nsIRequest::INHIBIT_CACHING)) ||
-         mFallbackChannel)) {
+         (mCacheEntryIsReadOnly && !(mLoadFlags & nsIRequest::INHIBIT_CACHING)))) {
+
+        if (!appCache) {
+            int64_t size, contentLength;
+            rv = CheckPartial(entry, &size, &contentLength);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            if (contentLength != int64_t(-1) && contentLength != size) {
+                *aResult = ENTRY_NOT_WANTED;
+                return NS_OK;
+            }
+        }
+
         rv = OpenCacheInputStream(entry, true, !!appCache);
         if (NS_SUCCEEDED(rv)) {
             mCachedContentIsValid = true;
