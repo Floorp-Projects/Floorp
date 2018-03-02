@@ -6,7 +6,7 @@ package org.mozilla.focus.search;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Parcel;
+import android.os.Bundle;
 import android.os.Parcelable;
 import android.preference.Preference;
 import android.support.design.widget.TextInputLayout;
@@ -23,6 +23,10 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.utils.UrlUtils;
 
 public class ManualAddSearchEnginePreference extends Preference {
+    private static final String SUPER_STATE_KEY = "super-state";
+    private static final String SEARCH_ENGINE_NAME_KEY = "search-engine-name";
+    private static final String SEARCH_QUERY_KEY = "search-query";
+
     private EditText engineNameEditText;
     private EditText searchQueryEditText;
     private TextInputLayout engineNameErrorLayout;
@@ -61,19 +65,20 @@ public class ManualAddSearchEnginePreference extends Preference {
 
     @Override
     protected void onRestoreInstanceState(Parcelable state) {
-        SavedState savedState = (SavedState) state;
-        super.onRestoreInstanceState(savedState.getSuperState());
-        savedSearchEngineName = savedState.searchEngineName;
-        savedSearchQuery = savedState.searchQuery;
+        Bundle bundle = (Bundle) state;
+        super.onRestoreInstanceState(bundle.getParcelable(SUPER_STATE_KEY));
+        savedSearchEngineName = bundle.getString(SEARCH_ENGINE_NAME_KEY);
+        savedSearchQuery = bundle.getString(SEARCH_QUERY_KEY);
     }
 
     @Override
     protected Parcelable onSaveInstanceState() {
         Parcelable superState = super.onSaveInstanceState();
-        SavedState savedState = new SavedState(superState);
-        savedState.searchEngineName = engineNameEditText.getText().toString();
-        savedState.searchQuery = searchQueryEditText.getText().toString();
-        return savedState;
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(SUPER_STATE_KEY, superState);
+        bundle.putString(SEARCH_ENGINE_NAME_KEY, engineNameEditText.getText().toString());
+        bundle.putString(SEARCH_QUERY_KEY, searchQueryEditText.getText().toString());
+        return bundle;
     }
 
     private void updateState() {
@@ -134,49 +139,5 @@ public class ManualAddSearchEnginePreference extends Preference {
 
     public void setProgressViewShown(final boolean isShown) {
         progressView.setVisibility(isShown ? View.VISIBLE : View.GONE);
-    }
-
-    static class SavedState extends BaseSavedState {
-        String searchEngineName;
-        String searchQuery;
-
-        SavedState(Parcel source) {
-            super(source);
-            searchEngineName = source.readString();
-            searchQuery = source.readString();
-        }
-
-        SavedState(Parcelable superState) {
-            super(superState);
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            super.writeToParcel(dest, flags);
-            dest.writeString(searchEngineName);
-            dest.writeString(searchQuery);
-        }
-
-        @Override
-        public String toString() {
-            return "ManualAddSearchEnginePreference.SavedState{"
-                    + Integer.toHexString(System.identityHashCode(this))
-                    + " search_engine_name=" + searchEngineName
-                    + " search_query=" + searchQuery
-                    + "}";
-        }
-
-        public static final Parcelable.Creator<SavedState> CREATOR =
-                new Parcelable.Creator<SavedState>() {
-                    @Override
-                    public SavedState createFromParcel(Parcel parcel) {
-                        return new SavedState(parcel);
-                    }
-
-                    @Override
-                    public SavedState[] newArray(int size) {
-                        return new SavedState[size];
-                    }
-                };
     }
 }
