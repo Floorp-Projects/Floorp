@@ -323,4 +323,16 @@ TEST(TArray, UnorderedRemoveElements)
   }
 }
 
+TEST(TArray, RemoveFromEnd)
+{
+  {
+    nsTArray<int> array{1,2,3,4};
+    ASSERT_EQ(array.PopLastElement(), 4);
+    array.RemoveLastElement();
+    ASSERT_EQ(array.PopLastElement(), 2);
+    array.RemoveLastElement();
+    ASSERT_TRUE(array.IsEmpty());
+  }
+}
+
 } // namespace TestTArray

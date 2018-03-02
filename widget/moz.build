@@ -173,7 +173,6 @@ UNIFIED_SOURCES += [
     'GfxDriverInfo.cpp',
     'GfxInfoBase.cpp',
     'GfxInfoCollector.cpp',
-    'GfxInfoWebGL.cpp',
     'InProcessCompositorWidget.cpp',
     'InputData.cpp',
     'nsAutoRollup.cpp',

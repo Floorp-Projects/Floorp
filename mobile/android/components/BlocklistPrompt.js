@@ -27,8 +27,7 @@ BlocklistPrompt.prototype = {
 
         // If nothing aborted, quit the app
         if (!cancelQuit.data) {
-          let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
-          appStartup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
+          Services.startup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
         }
       };
 
@@ -54,4 +53,3 @@ BlocklistPrompt.prototype = {
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([BlocklistPrompt]);
-
