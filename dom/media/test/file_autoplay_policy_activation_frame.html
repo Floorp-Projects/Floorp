@@ -3,6 +3,7 @@
   <head>
     <title>Autoplay policy frame</title>
     <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
     <style>
       video {
         width: 50%;
@@ -12,10 +13,16 @@
   </head>
   <body>
     <script>
-      nextWindowMessage().then(
+      window.addEventListener("message",
         (event) => {
-          playAndPostResult(event.data, event.source);
-        });
+          if (event.data == "click") {
+            synthesizeMouseAtCenter(document.body, {});
+          } else if (event.data == "play-audible") {
+            playAndPostResult(false, event.source);
+          } else if (event.data == "play-muted") {
+            playAndPostResult(true, event.source);
+          }
+        }, false);
     </script>
   </body>
 </html>

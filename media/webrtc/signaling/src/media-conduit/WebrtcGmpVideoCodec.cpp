@@ -4,7 +4,6 @@
 
 #include "WebrtcGmpVideoCodec.h"
 
-#include <iostream>
 #include <vector>
 
 #include "mozilla/CheckedInt.h"

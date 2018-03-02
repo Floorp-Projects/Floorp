@@ -1009,14 +1009,20 @@ impl Device {
     pub fn init_texture(
         &mut self,
         texture: &mut Texture,
-        width: u32,
-        height: u32,
+        mut width: u32,
+        mut height: u32,
         filter: TextureFilter,
         render_target: Option<RenderTargetInfo>,
         layer_count: i32,
         pixels: Option<&[u8]>,
     ) {
         debug_assert!(self.inside_frame);
+
+        if width > self.max_texture_size || height > self.max_texture_size {
+            error!("Attempting to allocate a texture of size {}x{} above the limit, trimming", width, height);
+            width = width.min(self.max_texture_size);
+            height = height.min(self.max_texture_size);
+        }
 
         let is_resized = texture.width != width || texture.height != height;
 

@@ -7,7 +7,7 @@
 const { Ci, Cu } = require("chrome");
 
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const protocol = require("devtools/shared/protocol");
 const Services = require("Services");
 const { highlighterSpec, customHighlighterSpec } = require("devtools/shared/specs/highlighters");
@@ -517,7 +517,7 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
   /**
    * Upon receiving an event from the highlighter, forward it to the client.
    */
-  _onHighlighterEvent: function (type, data) {
+  _onHighlighterEvent: function (data) {
     this.emit("highlighter-event", data);
   },
 

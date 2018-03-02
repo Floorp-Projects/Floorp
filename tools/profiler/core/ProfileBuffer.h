@@ -50,10 +50,26 @@ public:
   // Maximum size of a frameKey string that we'll handle.
   static const size_t kMaxFrameKeyLength = 512;
 
-  bool StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
-                           double aSinceTime, JSContext* cx,
+  // Add JIT frame information to aJITFrameInfo for any JitReturnAddr entries
+  // that are currently in the buffer at or after aRangeStart, in samples
+  // for the given thread.
+  void AddJITInfoForRange(uint64_t aRangeStart,
+                          int aThreadId, JSContext* aContext,
+                          JITFrameInfo& aJITFrameInfo) const;
+
+  // Stream JSON for samples in the buffer to aWriter, using the supplied
+  // UniqueStacks object.
+  // Only streams samples for the given thread ID and which were taken at or
+  // after aSinceTime.
+  // aUniqueStacks needs to contain information about any JIT frames that we
+  // might encounter in the buffer, before this method is called. In other
+  // words, you need to have called AddJITInfoForRange for every range that
+  // might contain JIT frame information before calling this method.
+  void StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
+                           double aSinceTime,
                            UniqueStacks& aUniqueStacks) const;
-  bool StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
+
+  void StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                            const mozilla::TimeStamp& aProcessStartTime,
                            double aSinceTime,
                            UniqueStacks& aUniqueStacks) const;
@@ -70,9 +86,8 @@ public:
 
   void AddStoredMarker(ProfilerMarker* aStoredMarker);
 
-  // The following two methods are not signal safe! They delete markers.
+  // The following method is not signal safe!
   void DeleteExpiredStoredMarkers();
-  void Reset();
 
   // Access an entry in the buffer.
   ProfileBufferEntry& GetEntry(uint64_t aPosition) const

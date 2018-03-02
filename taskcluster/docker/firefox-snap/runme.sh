@@ -11,6 +11,7 @@ test "$L10N_CHANGESETS"
 # Optional env variables
 : WORKSPACE                     "${WORKSPACE:=/home/worker/workspace}"
 : ARTIFACTS_DIR                 "${ARTIFACTS_DIR:=/home/worker/artifacts}"
+: PUSH_TO_CHANNEL               ""
 
 SCRIPT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -73,15 +74,12 @@ cat "$TARGET.checksums"
 cat signing_manifest.json
 
 
-# Upload Beta snaps to Ubuntu Snap Store (No channel)
-# TODO: Add a release channel once ready for broader audience
-# TODO: Don't filter out non-beta releases
-# TODO: Parametrize channel depending on beta vs release
+# Upload snaps to Ubuntu Snap Store
 # TODO: Make this part an independent task
-if [ "$PUSH_TO_CHANNEL" != "" ]; then
-  echo "Beta version detected. Uploading to Ubuntu Store (no channel)..."
+if [[ "$PUSH_TO_CHANNEL" =~ (^(edge|candidate)$)  ]]; then
+  echo "Uploading to Ubuntu Store on channel $PUSH_TO_CHANNEL"
   bash "$SCRIPT_DIRECTORY/fetch_macaroons.sh" "http://taskcluster/secrets/v1/secret/project/releng/snapcraft/firefox/$PUSH_TO_CHANNEL"
-  snapcraft push "$TARGET_FULL_PATH"
+  snapcraft push --release "$PUSH_TO_CHANNEL" "$TARGET_FULL_PATH"
 else
-  echo "Non-beta version detected. Nothing else to do."
+  echo "No upload done: PUSH_TO_CHANNEL value \"$PUSH_TO_CHANNEL\" doesn't match a known channel."
 fi

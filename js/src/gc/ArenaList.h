@@ -316,7 +316,7 @@ class ArenaLists
                         js::SliceBudget& sliceBudget, gcstats::Statistics& stats);
 
     void queueForegroundObjectsForSweep(FreeOp* fop);
-    void queueForegroundThingsForSweep(FreeOp* fop);
+    void queueForegroundThingsForSweep();
 
     void releaseForegroundSweptEmptyArenas();
 
@@ -334,8 +334,8 @@ class ArenaLists
   private:
     inline void queueForForegroundSweep(FreeOp* fop, const FinalizePhase& phase);
     inline void queueForBackgroundSweep(FreeOp* fop, const FinalizePhase& phase);
-    inline void queueForForegroundSweep(FreeOp* fop, AllocKind thingKind);
-    inline void queueForBackgroundSweep(FreeOp* fop, AllocKind thingKind);
+    inline void queueForForegroundSweep(AllocKind thingKind);
+    inline void queueForBackgroundSweep(AllocKind thingKind);
 
     TenuredCell* allocateFromArena(JS::Zone* zone, AllocKind thingKind,
                                    ShouldCheckThresholds checkThresholds);

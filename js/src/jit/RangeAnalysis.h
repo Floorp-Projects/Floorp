@@ -116,7 +116,7 @@ class RangeAnalysis
     MOZ_MUST_USE bool analyzeLoop(MBasicBlock* header);
     LoopIterationBound* analyzeLoopIterationCount(MBasicBlock* header,
                                                   MTest* test, BranchDirection direction);
-    void analyzeLoopPhi(MBasicBlock* header, LoopIterationBound* loopBound, MPhi* phi);
+    void analyzeLoopPhi(LoopIterationBound* loopBound, MPhi* phi);
     MOZ_MUST_USE bool tryHoistBoundsCheck(MBasicBlock* header, MBoundsCheck* ins);
 };
 

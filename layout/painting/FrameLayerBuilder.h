@@ -43,6 +43,7 @@ class FrameLayerBuilder;
 class LayerManagerData;
 class PaintedLayerData;
 class ContainerState;
+class PaintedDisplayItemLayerUserData;
 
 /**
   * Retained data storage:
@@ -68,6 +69,7 @@ public:
   uint32_t GetDisplayItemKey() { return mDisplayItemKey; }
   layers::Layer* GetLayer() const { return mLayer; }
   nsDisplayItemGeometry* GetGeometry() const { return mGeometry.get(); }
+  const DisplayItemClip& GetClip() const { return mClip; }
   void Invalidate() { mIsInvalid = true; }
   void ClearAnimationCompositorState();
 
@@ -154,6 +156,8 @@ private:
     */
   void BeginUpdate(layers::Layer* aLayer, LayerState aState,
                    nsDisplayItem* aItem = nullptr);
+  void BeginUpdate(layers::Layer* aLayer, LayerState aState,
+                   nsDisplayItem* aItem, bool aIsReused, bool aIsMerged);
 
   /**
     * Completes the update of this, and removes any references to data that won't live
@@ -210,17 +214,14 @@ struct AssignedDisplayItem
 {
   AssignedDisplayItem(nsDisplayItem* aItem,
                       const DisplayItemClip& aClip,
-                      LayerState aLayerState)
-    : mItem(aItem)
-    , mClip(aClip)
-    , mLayerState(aLayerState)
-  {}
-
+                      LayerState aLayerState,
+                      DisplayItemData* aData);
   ~AssignedDisplayItem();
 
   nsDisplayItem* mItem;
   DisplayItemClip mClip;
   LayerState mLayerState;
+  DisplayItemData* mDisplayItemData;
 
   /**
    * If the display item is being rendered as an inactive
@@ -228,6 +229,9 @@ struct AssignedDisplayItem
    * used for the inactive transaction.
    */
   RefPtr<layers::LayerManager> mInactiveLayerManager;
+
+  bool mReused;
+  bool mMerged;
 };
 
 
@@ -500,21 +504,6 @@ public:
    */
 
   /**
-   * Record aItem as a display item that is rendered by aLayer.
-   *
-   * @param aLayer Layer that the display item will be rendered into
-   * @param aItem Display item to be drawn.
-   * @param aLayerState What LayerState the item is using.
-   * @param aManager If the layer is in the LAYER_INACTIVE state,
-   * then this is the temporary layer manager to draw with.
-   */
-  void AddLayerDisplayItem(Layer* aLayer,
-                           nsDisplayItem* aItem,
-                           LayerState aLayerState,
-                           BasicLayerManager* aManager,
-                           DisplayItemData* aData);
-
-  /**
    * Record aItem as a display item that is rendered by the PaintedLayer
    * aLayer, with aClipRect, where aContainerLayerFrame is the frame
    * for the container layer this ThebesItem belongs to.
@@ -522,13 +511,9 @@ public:
    * @param aTopLeft offset from active scrolled root to reference frame
    */
   void AddPaintedDisplayItem(PaintedLayerData* aLayer,
-                            nsDisplayItem* aItem,
-                            const DisplayItemClip& aClip,
-                            ContainerState& aContainerState,
-                            LayerState aLayerState,
-                            const nsPoint& aTopLeft,
-                            DisplayItemData* aData,
-                            AssignedDisplayItem& aAssignedDisplayItem);
+                             AssignedDisplayItem& aAssignedDisplayItem,
+                             ContainerState& aContainerState,
+                             const nsPoint& aTopLeft);
 
   /**
    * Calls GetOldLayerForFrame on the underlying frame of the display item,
@@ -590,12 +575,6 @@ public:
   typedef void (*DisplayItemDataCallback)(nsIFrame *aFrame, DisplayItemData* aItem);
 
   /**
-   * Save transform that was in aLayer when we last painted, and the position
-   * of the active scrolled root frame. It must be an integer
-   * translation.
-   */
-  void SavePreviousDataForLayer(PaintedLayer* aLayer, uint32_t aClipCount);
-  /**
    * Get the translation transform that was in aLayer when we last painted. It's either
    * the transform saved by SaveLastPaintTransform, or else the transform
    * that's currently in the layer (which must be an integer translation).
@@ -631,10 +610,6 @@ public:
    */
   DisplayItemData* GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey, DisplayItemData* aOldData = nullptr);
 
-protected:
-
-  friend class LayerManagerData;
-
   /**
    * Stores DisplayItemData associated with aFrame, stores the data in
    * mNewDisplayItemData.
@@ -645,6 +620,9 @@ protected:
                          uint32_t aDisplayItemKey,
                          Layer* aLayer,
                          LayerState aState);
+
+protected:
+  friend class LayerManagerData;
 
   // Flash the area within the context clip if paint flashing is enabled.
   static void FlashPaint(gfxContext *aContext);
@@ -704,37 +682,11 @@ protected:
    * the paint process. This is the hashentry for that hashtable.
    */
 public:
-  class PaintedLayerItemsEntry : public nsPtrHashKey<PaintedLayer> {
-  public:
-    explicit PaintedLayerItemsEntry(const PaintedLayer *key);
-    PaintedLayerItemsEntry(const PaintedLayerItemsEntry&);
-    ~PaintedLayerItemsEntry();
-
-    nsTArray<AssignedDisplayItem> mItems;
-    nsIFrame* mContainerLayerFrame;
-    // The translation set on this PaintedLayer before we started updating the
-    // layer tree.
-    nsIntPoint mLastPaintOffset;
-    uint32_t mLastCommonClipCount;
-
-    bool mHasExplicitLastPaintOffset;
-    /**
-      * The first mCommonClipCount rounded rectangle clips are identical for
-      * all items in the layer. Computed in PaintedLayerData.
-      */
-    uint32_t mCommonClipCount;
-
-    enum { ALLOW_MEMMOVE = true };
-  };
-
   /**
-   * Get the PaintedLayerItemsEntry object associated with aLayer in this
-   * FrameLayerBuilder
+   * Add the PaintedDisplayItemLayerUserData object as being used in this
+   * transaction so that we clean it up afterwards.
    */
-  PaintedLayerItemsEntry* AddPaintedLayerItemsEntry(PaintedLayer* aLayer)
-  {
-    return mPaintedLayerItems.PutEntry(aLayer);
-  }
+  void AddPaintedLayerItemsEntry(PaintedDisplayItemLayerUserData* aData);
 
   PaintedLayerData* GetContainingPaintedLayerData()
   {
@@ -776,10 +728,12 @@ protected:
    */
   nsDisplayListBuilder*               mDisplayListBuilder;
   /**
-   * A map from PaintedLayers to the list of display items (plus
-   * clipping data) to be rendered in the layer.
+   * An array of PaintedLayer user data objects containing the
+   * list of display items (plus clipping data) to be rendered in the
+   * layer. We clean these up at the end of the transaction to
+   * remove references to display items.
    */
-  nsTHashtable<PaintedLayerItemsEntry> mPaintedLayerItems;
+  AutoTArray<RefPtr<PaintedDisplayItemLayerUserData>, 5> mPaintedLayerItems;
 
   /**
    * When building layers for an inactive layer, this is where the

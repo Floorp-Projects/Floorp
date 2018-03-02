@@ -408,7 +408,7 @@ struct BaselineScript
         return icEntries_;
     }
 
-    void copyICEntries(JSScript* script, const BaselineICEntry* entries, MacroAssembler& masm);
+    void copyICEntries(JSScript* script, const BaselineICEntry* entries);
     void adoptFallbackStubs(FallbackICStubSpace* stubSpace);
 
     void copyYieldAndAwaitEntries(JSScript* script, Vector<uint32_t>& yieldAndAwaitOffsets);
@@ -447,8 +447,8 @@ struct BaselineScript
     }
 
 #ifdef JS_TRACE_LOGGING
-    void initTraceLogger(JSRuntime* runtime, JSScript* script, const Vector<CodeOffset>& offsets);
-    void toggleTraceLoggerScripts(JSRuntime* runtime, JSScript* script, bool enable);
+    void initTraceLogger(JSScript* script, const Vector<CodeOffset>& offsets);
+    void toggleTraceLoggerScripts(JSScript* script, bool enable);
     void toggleTraceLoggerEngine(bool enable);
 
     static size_t offsetOfTraceLoggerScriptEvent() {
@@ -553,7 +553,7 @@ MethodStatus
 CanEnterBaselineMethod(JSContext* cx, RunState& state);
 
 MethodStatus
-CanEnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp, bool newType);
+CanEnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp);
 
 JitExecStatus
 EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc);

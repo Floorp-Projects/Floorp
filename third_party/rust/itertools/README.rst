@@ -2,7 +2,7 @@
 Itertools
 =========
 
-Extra iterator adaptors, functions and macros. Requires Rust 1.11 or later.
+Extra iterator adaptors, functions and macros.
 
 Please read the `API documentation here`__
 
@@ -21,7 +21,7 @@ How to use with cargo:
 .. code:: toml
 
     [dependencies]
-    itertools = "0.5.9"
+    itertools = "0.7.3"
 
 How to use in your crate:
 
@@ -40,6 +40,100 @@ How to contribute:
 
 Recent Changes
 --------------
+
+- 0.7.6
+
+  - Add new adaptor ``.multi_cartesian_product()`` which is an n-ary product
+    iterator by @tobz1000
+  - Add new method ``.sorted_by_key()`` by @Xion
+  - Provide simpler and faster ``.count()`` for ``.unique()`` and ``.unique_by()``
+
+- 0.7.5
+
+  - ``.multipeek()`` now implements ``PeekingNext``, by @nicopap.
+
+- 0.7.4
+
+  - Add new adaptor ``.update()`` by @lucasem; this adaptor is used
+    to modify an element before passing it on in an iterator chain.
+
+- 0.7.3
+
+  - Add new method ``.collect_tuple()`` by @matklad; it makes a tuple out of
+    the iterator's elements if the number of them matches **exactly**.
+  - Implement ``fold`` and ``collect`` for ``.map_results()`` which means
+    it reuses the code of the standard ``.map()`` for these methods.
+
+- 0.7.2
+
+  - Add new adaptor ``.merge_join_by`` by @srijs; a heterogeneous merge join
+    for two ordered sequences.
+
+- 0.7.1
+
+  - Iterator adaptors and iterators in itertools now use the same ``must_use``
+    reminder that the standard library adaptors do, by @matematikaedit and @bluss
+    *“iterator adaptors are lazy and do nothing unless consumed”*.
+
+- 0.7.0
+
+  - Faster ``izip!()`` by @krdln
+
+    - ``izip!()`` is now a wrapper for repeated regular ``.zip()`` and
+      a single ``.map()``. This means it optimizes as well as the standard
+      library ``.zip()`` it uses.
+      **Note:** ``multizip`` and ``izip!()`` are now different! The former
+      has a named type but the latter optimizes better.
+
+  - Faster ``.unique()``
+
+  - ``no_std`` support, which is opt-in!
+
+    - Many lovable features are still there without std, like ``izip!()``
+      or ``.format()`` or ``.merge()``, but not those that use collections.
+
+  - Trait bounds were required up front instead of just on the type:
+    ``group_by``'s ``PartialEq`` by @Phlosioneer and ``repeat_call``'s
+    ``FnMut``.
+  - Removed deprecated constructor ``Zip::new`` — use ``izip!()`` or ``multizip()``
+
+- 0.6.5
+
+  - Fix bug in ``.cartesian_product()``'s fold (which only was visible for
+    unfused iterators).
+
+- 0.6.4
+
+  - Add specific ``fold`` implementations for ``.cartesian_product()`` and
+    ``cons_tuples()``, which improves their performance in fold, foreach, and
+    iterator consumers derived from them.
+
+- 0.6.3
+
+  - Add iterator adaptor ``.positions(predicate)`` by @tmccombs
+
+- 0.6.2
+
+  - Add function ``process_results`` which can “lift” a function of the regular
+    values of an iterator so that it can process the ``Ok`` values from an
+    iterator of ``Results`` instead, by @shepmaster
+  - Add iterator method ``.concat()`` which combines all iterator elements
+    into a single collection using the ``Extend`` trait, by @srijs
+
+- 0.6.1
+
+  - Better size hint testing and subsequent size hint bugfixes by @rkarp.
+    Fixes bugs in product, interleave_shortest size hints.
+  - New iterator method ``.all_equal()`` by @phimuemue
+
+- 0.6.0
+
+  - Deprecated names were removed in favour of their replacements
+  - ``.flatten()`` does not implement double ended iteration anymore
+  - ``.fold_while()`` uses ``&mut self`` and returns ``FoldWhile<T>``, for
+    composability (#168)
+  - ``.foreach()`` and ``.fold1()`` use ``self``, like ``.fold()`` does.
+  - ``.combinations(0)`` now produces a single empty vector. (#174)
 
 - 0.5.10
 

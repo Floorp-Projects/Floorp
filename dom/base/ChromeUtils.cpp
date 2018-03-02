@@ -653,5 +653,94 @@ ChromeUtils::ClearRecentJSDevError(GlobalObject&)
 }
 #endif // NIGHTLY_BUILD
 
+constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
+
+/* static */ void
+ChromeUtils::GetCallerLocation(const GlobalObject& aGlobal, nsIPrincipal* aPrincipal,
+                               JS::MutableHandle<JSObject*> aRetval)
+{
+  JSContext* cx = aGlobal.Context();
+
+  auto* principals = nsJSPrincipals::get(aPrincipal);
+
+  JS::StackCapture captureMode(JS::FirstSubsumedFrame(cx, principals));
+
+  JS::RootedObject frame(cx);
+  if (!JS::CaptureCurrentStack(cx, &frame, mozilla::Move(captureMode))) {
+    JS_ClearPendingException(cx);
+    aRetval.set(nullptr);
+    return;
+  }
+
+  // FirstSubsumedFrame gets us a stack which stops at the first principal which
+  // is subsumed by the given principal. That means that we may have a lot of
+  // privileged frames that we don't care about at the top of the stack, though.
+  // We need to filter those out to get the frame we actually want.
+  aRetval.set(js::GetFirstSubsumedSavedFrame(cx, principals, frame, kSkipSelfHosted));
+}
+
+/* static */ void
+ChromeUtils::CreateError(const GlobalObject& aGlobal, const nsAString& aMessage,
+                         JS::Handle<JSObject*> aStack,
+                         JS::MutableHandle<JSObject*> aRetVal, ErrorResult& aRv)
+{
+  if (aStack && !JS::IsSavedFrame(aStack)) {
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
+
+  JSContext* cx = aGlobal.Context();
+
+  auto cleanup = MakeScopeExit([&]() {
+    aRv.NoteJSContextException(cx);
+  });
+
+  JS::RootedObject retVal(cx);
+  {
+    JS::RootedString fileName(cx, JS_GetEmptyString(cx));
+    uint32_t line = 0;
+    uint32_t column = 0;
+
+    Maybe<JSAutoCompartment> ac;
+    JS::RootedObject stack(cx);
+    if (aStack) {
+      stack = UncheckedUnwrap(aStack);
+      ac.emplace(cx, stack);
+
+      if (JS::GetSavedFrameLine(cx, stack, &line) != JS::SavedFrameResult::Ok ||
+          JS::GetSavedFrameColumn(cx, stack, &column) != JS::SavedFrameResult::Ok ||
+          JS::GetSavedFrameSource(cx, stack, &fileName) != JS::SavedFrameResult::Ok) {
+        return;
+      }
+    }
+
+    JS::RootedString message(cx);
+    {
+      JS::RootedValue msgVal(cx);
+      if (!xpc::NonVoidStringToJsval(cx, aMessage, &msgVal)) {
+        return;
+      }
+      message = msgVal.toString();
+    }
+
+    JS::Rooted<JS::Value> err(cx);
+    if (!JS::CreateError(cx, JSEXN_ERR, stack,
+                         fileName, line, column,
+                         nullptr, message, &err)) {
+      return;
+    }
+
+    MOZ_ASSERT(err.isObject());
+    retVal = &err.toObject();
+  }
+
+  if (aStack && !JS_WrapObject(cx, &retVal)) {
+    return;
+  }
+
+  cleanup.release();
+  aRetVal.set(retVal);
+}
+
 } // namespace dom
 } // namespace mozilla

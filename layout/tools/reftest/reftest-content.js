@@ -1087,7 +1087,9 @@ function SynchronizeForSnapshot(flags)
 
     if (flags & SYNC_ALLOW_DISABLE) {
         var docElt = content.document.documentElement;
-        if (docElt && docElt.hasAttribute("reftest-no-sync-layers")) {
+        if (docElt &&
+            (docElt.hasAttribute("reftest-no-sync-layers") ||
+             docElt.classList.contains("reftest-no-flush"))) {
             LogInfo("Test file chose to skip SynchronizeForSnapshot");
             return;
         }

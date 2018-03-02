@@ -721,7 +721,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     public void waitForPageStops(final int count) {
         final Method onPageStop;
         try {
-            onPageStop = GeckoSession.ProgressListener.class.getMethod(
+            onPageStop = GeckoSession.ProgressDelegate.class.getMethod(
                     "onPageStop", GeckoSession.class, boolean.class);
         } catch (final NoSuchMethodException e) {
             throw new RuntimeException(e);
@@ -731,7 +731,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         methodCalls.add(new MethodCall(onPageStop,
                 new CallRequirement(/* allowed */ true, count, null)));
 
-        waitUntilCalled(GeckoSession.ProgressListener.class, methodCalls);
+        waitUntilCalled(GeckoSession.ProgressDelegate.class, methodCalls);
     }
 
     /**
@@ -815,7 +815,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         forCallbacksDuringWait(callback);
     }
 
-    protected void waitUntilCalled(final @NonNull Class<?> listener,
+    protected void waitUntilCalled(final @NonNull Class<?> delegate,
                                    final @NonNull List<MethodCall> methodCalls) {
         // Make sure all handlers are set though #delegateUntilTestEnd or #delegateDuringNextWait,
         // instead of through GeckoSession directly, so that we can still record calls even with
@@ -840,7 +840,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             }
 
             final MethodCall recorded = mCallRecords.get(index).methodCall;
-            calledAny |= recorded.method.getDeclaringClass().isAssignableFrom(listener);
+            calledAny |= recorded.method.getDeclaringClass().isAssignableFrom(delegate);
             index++;
 
             final int i = methodCalls.indexOf(recorded);

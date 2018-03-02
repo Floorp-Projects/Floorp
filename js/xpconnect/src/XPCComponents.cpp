@@ -2056,7 +2056,7 @@ nsXPCComponents_Utils::GetSandbox(nsIXPCComponents_utils_Sandbox** aSandbox)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::ReportError(HandleValue error, JSContext* cx)
+nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack, JSContext* cx)
 {
     // This function shall never fail! Silently eat any failure conditions.
 
@@ -2082,19 +2082,44 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext* cx)
     }
 
     nsString fileName;
-    int32_t lineNo = 0;
+    uint32_t lineNo = 0;
 
     if (!scripterr) {
-        nsCOMPtr<nsIStackFrame> frame = dom::GetCurrentJSStack();
-        if (frame) {
-            frame->GetFilename(cx, fileName);
-            lineNo = frame->GetLineNumber(cx);
-            JS::Rooted<JS::Value> stack(cx);
-            nsresult rv = frame->GetNativeSavedFrame(&stack);
-            if (NS_SUCCEEDED(rv) && stack.isObject()) {
-              JS::Rooted<JSObject*> stackObj(cx, &stack.toObject());
-              scripterr = new nsScriptErrorWithStack(stackObj);
+        RootedObject stackObj(cx);
+        if (stack.isObject()) {
+            if (!JS::IsSavedFrame(&stack.toObject())) {
+                return NS_ERROR_INVALID_ARG;
             }
+
+            stackObj = &stack.toObject();
+
+            if (GetSavedFrameLine(cx, stackObj, &lineNo) != SavedFrameResult::Ok) {
+                JS_ClearPendingException(cx);
+            }
+
+            RootedString source(cx);
+            nsAutoJSString str;
+            if (GetSavedFrameSource(cx, stackObj, &source) == SavedFrameResult::Ok &&
+                str.init(cx, source)) {
+                fileName = str;
+            } else {
+                JS_ClearPendingException(cx);
+            }
+        } else {
+            nsCOMPtr<nsIStackFrame> frame = dom::GetCurrentJSStack();
+            if (frame) {
+                frame->GetFilename(cx, fileName);
+                lineNo = frame->GetLineNumber(cx);
+                JS::Rooted<JS::Value> stack(cx);
+                nsresult rv = frame->GetNativeSavedFrame(&stack);
+                if (NS_SUCCEEDED(rv) && stack.isObject()) {
+                  stackObj = &stack.toObject();
+                }
+            }
+        }
+
+        if (stackObj) {
+            scripterr = new nsScriptErrorWithStack(stackObj);
         }
     }
 

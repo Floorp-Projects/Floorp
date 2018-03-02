@@ -26,6 +26,7 @@
 #if defined(XP_WIN32)
 
 #include <windows.h>
+#include "mozilla/glue/WindowsDllServices.h"
 
 #elif defined(XP_UNIX) || defined(XP_MACOSX)
 
@@ -42,6 +43,12 @@
 #endif
 
 namespace CrashReporter {
+
+#if defined(XP_WIN)
+
+static mozilla::glue::BasicDllServices gDllServices;
+
+#endif
 
 using std::ios;
 using std::ios_base;
@@ -179,7 +186,7 @@ ConvertStackToJSON(const ProcessState& aProcessState,
 static int
 ConvertModulesToJSON(const ProcessState& aProcessState,
                      OrderedModulesMap& aOrderedModules,
-                     Json::Value& aNode)
+                     Json::Value& aNode, Json::Value& aCertSubjects)
 {
   const CodeModules* modules = aProcessState.modules();
 
@@ -217,6 +224,24 @@ ConvertModulesToJSON(const ProcessState& aProcessState,
       mainModuleIndex = moduleSequence;
     }
 
+#if defined(XP_WIN)
+    auto certSubject = gDllServices.GetBinaryOrgName(
+                         UTF8ToWide(module->code_file()).c_str());
+    if (certSubject) {
+      string strSubject(WideToUTF8(certSubject.get()));
+      // Json::Value::operator[] creates and returns a null member if the key
+      // does not exist.
+      Json::Value& subjectNode = aCertSubjects[strSubject];
+      if (!subjectNode) {
+        // If the member is null, we want to convert that to an array.
+        subjectNode = Json::Value(Json::arrayValue);
+      }
+
+      // Now we're guaranteed that subjectNode is an array. Add the new entry.
+      subjectNode.append(PathnameStripper::File(module->code_file()));
+    }
+#endif
+
     Json::Value moduleNode;
     moduleNode["filename"] = PathnameStripper::File(module->code_file());
     moduleNode["code_id"] = PathnameStripper::File(module->code_identifier());
@@ -236,8 +261,10 @@ ConvertModulesToJSON(const ProcessState& aProcessState,
 // crash, the module list and stack traces for every thread
 
 static void
-ConvertProcessStateToJSON(const ProcessState& aProcessState, Json::Value& aRoot,
-                          const bool aFullStacks)
+ConvertProcessStateToJSON(const ProcessState& aProcessState,
+                          Json::Value& aStackTraces,
+                          const bool aFullStacks,
+                          Json::Value& aCertSubjects)
 {
   // We use this map to get the index of a module when listed by address
   OrderedModulesMap orderedModules;
@@ -266,17 +293,18 @@ ConvertProcessStateToJSON(const ProcessState& aProcessState, Json::Value& aRoot,
     }
   }
 
-  aRoot["crash_info"] = crashInfo;
+  aStackTraces["crash_info"] = crashInfo;
 
   // Modules
   Json::Value modules(Json::arrayValue);
-  int mainModule = ConvertModulesToJSON(aProcessState, orderedModules, modules);
+  int mainModule = ConvertModulesToJSON(aProcessState, orderedModules,
+                                        modules, aCertSubjects);
 
   if (mainModule != -1) {
-    aRoot["main_module"] = mainModule;
+    aStackTraces["main_module"] = mainModule;
   }
 
-  aRoot["modules"] = modules;
+  aStackTraces["modules"] = modules;
 
   // Threads
   Json::Value threads(Json::arrayValue);
@@ -303,14 +331,17 @@ ConvertProcessStateToJSON(const ProcessState& aProcessState, Json::Value& aRoot,
     }
   }
 
-  aRoot["threads"] = threads;
+  aStackTraces["threads"] = threads;
 }
 
 // Process the minidump file and append the JSON-formatted stack traces to
-// the node specified in |aRoot|
-
+// the node specified in |aStackTraces|. We also populate |aCertSubjects| with
+// information about the certificates used to sign modules, when present and
+// supported by the underlying OS.
 static bool
-ProcessMinidump(Json::Value& aRoot, const string& aDumpFile, const bool aFullStacks) {
+ProcessMinidump(Json::Value& aStackTraces, Json::Value& aCertSubjects,
+                const string& aDumpFile, const bool aFullStacks)
+{
 #if XP_WIN && HAVE_64BIT_BUILD
   MozStackFrameSymbolizer symbolizer;
   MinidumpProcessor minidumpProcessor(&symbolizer, false);
@@ -334,18 +365,19 @@ ProcessMinidump(Json::Value& aRoot, const string& aDumpFile, const bool aFullSta
   ProcessResult rv;
   ProcessState processState;
   rv = minidumpProcessor.Process(&dump, &processState);
-  aRoot["status"] = ResultString(rv);
+  aStackTraces["status"] = ResultString(rv);
 
-  ConvertProcessStateToJSON(processState, aRoot, aFullStacks);
+  ConvertProcessStateToJSON(processState, aStackTraces, aFullStacks,
+                            aCertSubjects);
 
   return true;
 }
 
-// Update the extra data file by adding the StackTraces field holding the
-// JSON output of this program.
-
+// Update the extra data file by adding the StackTraces and ModuleSignatureInfo
+// fields that contain the JSON outputs of this program.
 static bool
-UpdateExtraDataFile(const string &aDumpPath, const Json::Value& aRoot)
+UpdateExtraDataFile(const string &aDumpPath, const Json::Value& aStackTraces,
+                    const Json::Value& aCertSubjects)
 {
   string extraDataPath(aDumpPath);
   int dot = extraDataPath.rfind('.');
@@ -370,8 +402,13 @@ UpdateExtraDataFile(const string &aDumpPath, const Json::Value& aRoot)
   if (f.is_open()) {
     Json::FastWriter writer;
 
-    f << "StackTraces=" << writer.write(aRoot);
+    f << "StackTraces=" << writer.write(aStackTraces);
     res = !f.fail();
+
+    if (!!aCertSubjects) {
+      f << "ModuleSignatureInfo=" << writer.write(aCertSubjects);
+      res &= !f.fail();
+    }
 
     f.close();
   }
@@ -381,13 +418,14 @@ UpdateExtraDataFile(const string &aDumpPath, const Json::Value& aRoot)
 
 bool
 GenerateStacks(const string& aDumpPath, const bool aFullStacks) {
-  Json::Value root;
+  Json::Value stackTraces;
+  Json::Value certSubjects;
 
-  if (!ProcessMinidump(root, aDumpPath, aFullStacks)) {
+  if (!ProcessMinidump(stackTraces, certSubjects, aDumpPath, aFullStacks)) {
     return false;
   }
 
-  return UpdateExtraDataFile(aDumpPath, root);
+  return UpdateExtraDataFile(aDumpPath, stackTraces, certSubjects);
 }
 
 } // namespace CrashReporter

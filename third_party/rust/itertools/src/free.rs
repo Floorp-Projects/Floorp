@@ -3,19 +3,26 @@
 //! The benefit of free functions is that they accept any `IntoIterator` as
 //! argument, so the resulting code may be easier to read.
 
+#[cfg(feature = "use_std")]
 use std::fmt::Display;
 use std::iter::{self, Zip};
+#[cfg(feature = "use_std")]
 use Itertools;
 
 pub use adaptors::{
     interleave,
     merge,
     put_back,
-    put_back_n,
 };
-pub use adaptors::multipeek::multipeek;
+#[cfg(feature = "use_std")]
+pub use put_back_n_impl::put_back_n;
+#[cfg(feature = "use_std")]
+pub use multipeek_impl::multipeek;
+#[cfg(feature = "use_std")]
 pub use kmerge_impl::kmerge;
 pub use zip_eq_impl::zip_eq;
+pub use merge_join::merge_join_by;
+#[cfg(feature = "use_std")]
 pub use rciter_impl::rciter;
 
 /// Iterate `iterable` with a running index.
@@ -196,6 +203,7 @@ pub fn min<I>(iterable: I) -> Option<I::Item>
 ///
 /// assert_eq!(join(&[1, 2, 3], ", "), "1, 2, 3");
 /// ```
+#[cfg(feature = "use_std")]
 pub fn join<I>(iterable: I, sep: &str) -> String
     where I: IntoIterator,
           I::Item: Display
@@ -213,6 +221,7 @@ pub fn join<I>(iterable: I, sep: &str) -> String
 ///
 /// assert_equal(sorted("rust".chars()), "rstu".chars());
 /// ```
+#[cfg(feature = "use_std")]
 pub fn sorted<I>(iterable: I) -> Vec<I::Item>
     where I: IntoIterator,
           I::Item: Ord

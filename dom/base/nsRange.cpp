@@ -517,8 +517,7 @@ nsRange::UnregisterCommonAncestor(nsINode* aNode, bool aIsUnlinking)
  * nsIMutationObserver implementation
  ******************************************************/
 void
-nsRange::CharacterDataChanged(nsIDocument* aDocument,
-                              nsIContent* aContent,
+nsRange::CharacterDataChanged(nsIContent* aContent,
                               const CharacterDataChangeInfo& aInfo)
 {
   MOZ_ASSERT(!mNextEndRef);
@@ -673,15 +672,12 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
 }
 
 void
-nsRange::ContentAppended(nsIDocument* aDocument,
-                         nsIContent*  aContainer,
-                         nsIContent*  aFirstNewContent)
+nsRange::ContentAppended(nsIContent*  aFirstNewContent)
 {
   NS_ASSERTION(mIsPositioned, "shouldn't be notified if not positioned");
 
-  nsINode* container = NODE_FROM(aContainer, aDocument);
+  nsINode* container = aFirstNewContent->GetParentNode();
   MOZ_ASSERT(container);
-  MOZ_ASSERT(aFirstNewContent->GetParentNode() == container);
   if (container->IsSelectionDescendant() && IsInSelection()) {
     nsINode* child = aFirstNewContent;
     while (child) {
@@ -711,14 +707,12 @@ nsRange::ContentAppended(nsIDocument* aDocument,
 }
 
 void
-nsRange::ContentInserted(nsIDocument* aDocument,
-                         nsIContent* aContainer,
-                         nsIContent* aChild)
+nsRange::ContentInserted(nsIContent* aChild)
 {
   MOZ_ASSERT(mIsPositioned, "shouldn't be notified if not positioned");
 
   bool updateBoundaries = false;
-  nsINode* container = NODE_FROM(aContainer, aDocument);
+  nsINode* container = aChild->GetParentNode();
   MOZ_ASSERT(container);
   RawRangeBoundary newStart(mStart);
   RawRangeBoundary newEnd(mEnd);
@@ -763,13 +757,12 @@ nsRange::ContentInserted(nsIDocument* aDocument,
 }
 
 void
-nsRange::ContentRemoved(nsIDocument* aDocument,
-                        nsIContent* aContainer,
-                        nsIContent* aChild,
-                        nsIContent* aPreviousSibling)
+nsRange::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling)
 {
   MOZ_ASSERT(mIsPositioned, "shouldn't be notified if not positioned");
-  nsINode* container = NODE_FROM(aContainer, aDocument);
+  nsINode* container = aChild->GetParentNode();
+  MOZ_ASSERT(container);
+
   RawRangeBoundary newStart;
   RawRangeBoundary newEnd;
   Maybe<bool> gravitateStart;

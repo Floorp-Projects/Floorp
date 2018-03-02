@@ -92,7 +92,6 @@ MediaEngineDefaultVideoSource::Allocate(const dom::MediaTrackConstraints &aConst
     return NS_ERROR_FAILURE;
   }
 
-
   // emulator debug is very, very slow; reduce load on it with smaller/slower fake video
   mOpts = aPrefs;
   mOpts.mWidth = c.mWidth.Get(aPrefs.mWidth ? aPrefs.mWidth :
@@ -485,8 +484,6 @@ MediaEngineDefaultAudioSource::Start(const RefPtr<const AllocationHandle>& aHand
     // generate sine wave (default 1KHz)
     mSineGenerator = new SineWaveGenerator(mStream->GraphRate(), mFreq);
   }
-
-  mLastNotify = 0;
 
   MutexAutoLock lock(mMutex);
   mState = kStarted;

@@ -925,8 +925,7 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
 }
 
 void
-IMEContentObserver::CharacterDataWillChange(nsIDocument* aDocument,
-                                            nsIContent* aContent,
+IMEContentObserver::CharacterDataWillChange(nsIContent* aContent,
                                             const CharacterDataChangeInfo& aInfo)
 {
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
@@ -958,8 +957,7 @@ IMEContentObserver::CharacterDataWillChange(nsIDocument* aDocument,
 }
 
 void
-IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
-                                         nsIContent* aContent,
+IMEContentObserver::CharacterDataChanged(nsIContent* aContent,
                                          const CharacterDataChangeInfo& aInfo)
 {
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
@@ -1107,28 +1105,22 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
 }
 
 void
-IMEContentObserver::ContentAppended(nsIDocument* aDocument,
-                                    nsIContent* aContainer,
-                                    nsIContent* aFirstNewContent)
+IMEContentObserver::ContentAppended(nsIContent* aFirstNewContent)
 {
-  NotifyContentAdded(NODE_FROM(aContainer, aDocument),
-                     aFirstNewContent, aContainer->GetLastChild());
+  nsIContent* parent = aFirstNewContent->GetParent();
+  MOZ_ASSERT(parent);
+  NotifyContentAdded(parent, aFirstNewContent, parent->GetLastChild());
 }
 
 void
-IMEContentObserver::ContentInserted(nsIDocument* aDocument,
-                                    nsIContent* aContainer,
-                                    nsIContent* aChild)
+IMEContentObserver::ContentInserted(nsIContent* aChild)
 {
   MOZ_ASSERT(aChild);
-  NotifyContentAdded(NODE_FROM(aContainer, aDocument),
-                     aChild, aChild);
+  NotifyContentAdded(aChild->GetParentNode(), aChild, aChild);
 }
 
 void
-IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
-                                   nsIContent* aContainer,
-                                   nsIContent* aChild,
+IMEContentObserver::ContentRemoved(nsIContent* aChild,
                                    nsIContent* aPreviousSibling)
 {
   if (!NeedsTextChangeNotification() ||
@@ -1139,8 +1131,7 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
   mEndOfAddedTextCache.Clear();
   MaybeNotifyIMEOfAddedTextDuringDocumentChange();
 
-  nsINode* containerNode = NODE_FROM(aContainer, aDocument);
-
+  nsINode* containerNode = aChild->GetParentNode();
   MOZ_ASSERT(containerNode);
 
   uint32_t offset = 0;
@@ -1191,8 +1182,7 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
 }
 
 void
-IMEContentObserver::AttributeWillChange(nsIDocument* aDocument,
-                                        dom::Element* aElement,
+IMEContentObserver::AttributeWillChange(dom::Element* aElement,
                                         int32_t aNameSpaceID,
                                         nsAtom* aAttribute,
                                         int32_t aModType,
@@ -1207,8 +1197,7 @@ IMEContentObserver::AttributeWillChange(nsIDocument* aDocument,
 }
 
 void
-IMEContentObserver::AttributeChanged(nsIDocument* aDocument,
-                                     dom::Element* aElement,
+IMEContentObserver::AttributeChanged(dom::Element* aElement,
                                      int32_t aNameSpaceID,
                                      nsAtom* aAttribute,
                                      int32_t aModType,

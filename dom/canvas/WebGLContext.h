@@ -44,7 +44,6 @@
 
 // Generated
 #include "nsIDOMEventListener.h"
-#include "nsIDOMWebGLRenderingContext.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsIObserver.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
@@ -274,8 +273,7 @@ struct TexImageSourceAdapter final : public TexImageSource
 ////////////////////////////////////////////////////////////////////////////////
 
 class WebGLContext
-    : public nsIDOMWebGLRenderingContext
-    , public nsICanvasRenderingContextInternal
+    : public nsICanvasRenderingContextInternal
     , public nsSupportsWeakReference
     , public WebGLContextUnchecked
     , public nsWrapperCache
@@ -332,11 +330,9 @@ public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(WebGLContext,
-                                                           nsIDOMWebGLRenderingContext)
+                                                           nsICanvasRenderingContextInternal)
 
     virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override = 0;
-
-    NS_DECL_NSIDOMWEBGLRENDERINGCONTEXT
 
     virtual void OnVisibilityChange() override;
     virtual void OnMemoryPressure() override;
@@ -2084,7 +2080,7 @@ public:
 inline nsISupports*
 ToSupports(WebGLContext* webgl)
 {
-    return static_cast<nsIDOMWebGLRenderingContext*>(webgl);
+    return static_cast<nsICanvasRenderingContextInternal*>(webgl);
 }
 
 // Returns `value` rounded to the next highest multiple of `multiple`.

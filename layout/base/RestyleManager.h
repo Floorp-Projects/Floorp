@@ -159,14 +159,13 @@ public:
                       nsIContent* aFollowingSibling);
 
   // Restyling for a ContentInserted (notification after insertion) or
-  // for a CharacterDataChanged.  |aContainer| must be non-null; when
+  // for some CharacterDataChanged.  |aContainer| must be non-null; when
   // the container is null, no work is needed.
   void RestyleForInsertOrChange(nsINode* aContainer, nsIContent* aChild);
 
-  // Restyling for a ContentAppended (notification after insertion) or
-  // for a CharacterDataChanged.  |aContainer| must be non-null; when
-  // the container is null, no work is needed.
-  void RestyleForAppend(nsIContent* aContainer, nsIContent* aFirstNewContent);
+  // Restyle for a CharacterDataChanged notification. In practice this can only
+  // affect :empty / :-moz-only-whitespace / :-moz-first-node / :-moz-last-node.
+  void CharacterDataChanged(nsIContent*, const CharacterDataChangeInfo&);
 
   MOZ_DECL_STYLO_METHODS(GeckoRestyleManager, ServoRestyleManager)
 
@@ -223,6 +222,7 @@ protected:
   }
 
   void RestyleForEmptyChange(Element* aContainer);
+  void MaybeRestyleForEdgeChildChange(Element* aContainer, nsIContent* aChangedChild);
 
   void ContentStateChangedInternal(Element* aElement,
                                    EventStates aStateMask,

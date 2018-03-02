@@ -249,8 +249,7 @@ var Addons = {
     outer.setAttribute("role", "button");
     outer.addEventListener("click", function(event) {
       try {
-        let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
-        openLink(formatter.formatURLPref("extensions.getAddons.browseAddons"));
+        openLink(Services.urlFormatter.formatURLPref("extensions.getAddons.browseAddons"));
       } catch (e) {
         Cu.reportError(e);
       }

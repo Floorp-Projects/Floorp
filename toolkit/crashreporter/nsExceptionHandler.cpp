@@ -200,7 +200,6 @@ static XP_CHAR* libraryPath; // Path where the NSS library is
 
 // Where crash events should go.
 static XP_CHAR* eventsDirectory;
-static char* eventsEnv = nullptr;
 
 // The current telemetry session ID to write to the event file
 static char* currentSessionId = nullptr;
@@ -232,7 +231,6 @@ static nsCString* crashEventAPIData = nullptr;
 static nsCString* notesField = nullptr;
 static bool isGarbageCollecting;
 static uint32_t eventloopNestingLevel = 0;
-static bool minidumpAnalysisAllThreads = false;
 
 // Avoid a race during application termination.
 static Mutex* dumpSafetyLock;
@@ -754,8 +752,7 @@ WriteGlobalMemoryStatus(PlatformWriter* apiData, PlatformWriter* eventFile)
  *        to the launched program
  */
 static bool
-LaunchProgram(const XP_CHAR* aProgramPath, const XP_CHAR* aMinidumpPath,
-              bool aAllThreads)
+LaunchProgram(const XP_CHAR* aProgramPath, const XP_CHAR* aMinidumpPath)
 {
 #ifdef XP_WIN
   XP_CHAR cmdLine[CMDLINE_SIZE];
@@ -764,11 +761,7 @@ LaunchProgram(const XP_CHAR* aProgramPath, const XP_CHAR* aMinidumpPath,
   size_t size = CMDLINE_SIZE;
   p = Concat(cmdLine, L"\"", &size);
   p = Concat(p, aProgramPath, &size);
-  p = Concat(p, L"\" ", &size);
-  if (aAllThreads) {
-    p = Concat(p, L"--full ", &size);
-  }
-  p = Concat(p, L"\"", &size);
+  p = Concat(p, L"\" \"", &size);
   p = Concat(p, aMinidumpPath, &size);
   Concat(p, L"\"", &size);
 
@@ -788,19 +781,11 @@ LaunchProgram(const XP_CHAR* aProgramPath, const XP_CHAR* aMinidumpPath,
   setenv("DYLD_LIBRARY_PATH", libraryPath, /* overwrite */ 1);
 
   pid_t pid = 0;
-  char* my_argv[] = {
+  char* const my_argv[] = {
     const_cast<char*>(aProgramPath),
     const_cast<char*>(aMinidumpPath),
-    nullptr,
     nullptr
   };
-
-  char fullArg[] = "--full";
-
-  if (aAllThreads) {
-    my_argv[2] = my_argv[1];
-    my_argv[1] = fullArg;
-  }
 
   char **env = nullptr;
   char ***nsEnv = _NSGetEnviron();
@@ -823,13 +808,8 @@ LaunchProgram(const XP_CHAR* aProgramPath, const XP_CHAR* aMinidumpPath,
     // and we want it to load the system NSS.
     unsetenv("LD_LIBRARY_PATH");
 
-    if (aAllThreads) {
-      Unused << execl(aProgramPath,
-                      aProgramPath, "--full", aMinidumpPath, (char*)0);
-    } else {
-      Unused << execl(aProgramPath,
-                      aProgramPath, aMinidumpPath, (char*)0);
-    }
+    Unused << execl(aProgramPath,
+                    aProgramPath, aMinidumpPath, nullptr);
     _exit(1);
   }
 #endif // XP_MACOSX
@@ -1145,8 +1125,7 @@ MinidumpCallback(
   returnValue = LaunchCrashReporterActivity(crashReporterPath, minidumpPath,
                                             succeeded);
 #else // Windows, Mac, Linux, etc...
-  returnValue = LaunchProgram(crashReporterPath, minidumpPath,
-                              minidumpAnalysisAllThreads);
+  returnValue = LaunchProgram(crashReporterPath, minidumpPath);
 #ifdef XP_WIN
   TerminateProcess(GetCurrentProcess(), 1);
 #endif
@@ -1872,27 +1851,19 @@ SetupCrashReporterDirectory(nsIFile* aAppDataDirectory,
   NS_ENSURE_SUCCESS(rv, rv);
 
   EnsureDirectoryExists(directory);
-
-  xpstring dirEnv(aEnvVarName);
-  dirEnv.append(XP_TEXT("="));
-
   xpstring* directoryPath = CreatePathFromFile(directory);
 
   if (!directoryPath) {
     return NS_ERROR_FAILURE;
   }
 
-  dirEnv.append(*directoryPath);
-  delete directoryPath;
-
 #if defined(XP_WIN32)
-  _wputenv(dirEnv.c_str());
+  SetEnvironmentVariableW(aEnvVarName, directoryPath->c_str());
 #else
-  XP_CHAR* str = new XP_CHAR[dirEnv.size() + 1];
-  strncpy(str, dirEnv.c_str(), dirEnv.size() + 1);
-  // |PR_SetEnv| requires str to leak.
-  PR_SetEnv(str);
+  setenv(aEnvVarName, directoryPath->c_str(), /* overwrite */ 1);
 #endif
+
+  delete directoryPath;
 
   if (aDirectory) {
     directory.forget(aDirectory);
@@ -2214,7 +2185,8 @@ void SetEventloopNestingLevel(uint32_t level)
 
 void SetMinidumpAnalysisAllThreads()
 {
-  minidumpAnalysisAllThreads = true;
+  char* env = strdup("MOZ_CRASHREPORTER_DUMP_ALL_THREADS=1");
+  PR_SetEnv(env);
 }
 
 nsresult AppendAppNotesToCrashReport(const nsACString& data)
@@ -2624,6 +2596,9 @@ nsresult SetSubmitReports(bool aSubmitReports)
 static void
 SetCrashEventsDir(nsIFile* aDir)
 {
+  static const XP_CHAR eventsDirectoryEnv[] =
+    XP_TEXT("MOZ_CRASHREPORTER_EVENTS_DIRECTORY");
+
   nsCOMPtr<nsIFile> eventsDir = aDir;
 
   const char *env = PR_GetEnv("CRASHES_EVENTS_DIR");
@@ -2637,34 +2612,20 @@ SetCrashEventsDir(nsIFile* aDir)
     free(eventsDirectory);
   }
 
-#ifdef XP_WIN
-  nsString path;
-  eventsDir->GetPath(path);
-  eventsDirectory = reinterpret_cast<wchar_t*>(ToNewUnicode(path));
-
-  // Save the path in the environment for the crash reporter application.
-  nsAutoString eventsDirEnv(NS_LITERAL_STRING("MOZ_CRASHREPORTER_EVENTS_DIRECTORY="));
-  eventsDirEnv.Append(path);
-  _wputenv(eventsDirEnv.get());
-#else
-  nsCString path;
-  eventsDir->GetNativePath(path);
-  eventsDirectory = ToNewCString(path);
-
-  // Save the path in the environment for the crash reporter application.
-  nsAutoCString eventsDirEnv("MOZ_CRASHREPORTER_EVENTS_DIRECTORY=");
-  eventsDirEnv.Append(path);
-
-  // PR_SetEnv() wants the string to be available for the lifetime
-  // of the app, so dup it here.
-  char* oldEventsEnv = eventsEnv;
-  eventsEnv = ToNewCString(eventsDirEnv);
-  PR_SetEnv(eventsEnv);
-
-  if (oldEventsEnv) {
-    free(oldEventsEnv);
+  xpstring* path = CreatePathFromFile(eventsDir);
+  if (!path) {
+    return; // There's no clean failure from this
   }
+
+#ifdef XP_WIN
+  eventsDirectory = wcsdup(path->c_str());
+  SetEnvironmentVariableW(eventsDirectoryEnv, path->c_str());
+#else
+  eventsDirectory = strdup(path->c_str());
+  setenv(eventsDirectoryEnv, path->c_str(), /* overwrite */ 1);
 #endif
+
+  delete path;
 }
 
 void

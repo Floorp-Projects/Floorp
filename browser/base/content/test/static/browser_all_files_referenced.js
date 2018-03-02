@@ -90,10 +90,6 @@ var whitelist = [
   // browser/extensions/pdfjs/content/web/viewer.js
   {file: "resource://pdf.js/build/pdf.worker.js"},
 
-  // browser/components/newtab bug 1355166
-  {file: "resource://app/modules/NewTabSearchProvider.jsm"},
-  {file: "resource://app/modules/NewTabWebChannel.jsm"},
-
   // layout/mathml/nsMathMLChar.cpp
   {file: "resource://gre/res/fonts/mathfontSTIXGeneral.properties"},
   {file: "resource://gre/res/fonts/mathfontUnicode.properties"},

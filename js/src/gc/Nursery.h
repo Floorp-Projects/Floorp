@@ -110,7 +110,7 @@ class TenuringTracer : public JSTracer
     JSString* moveToTenured(JSString* src);
 
     size_t moveElementsToTenured(NativeObject* dst, NativeObject* src, gc::AllocKind dstKind);
-    size_t moveSlotsToTenured(NativeObject* dst, NativeObject* src, gc::AllocKind dstKind);
+    size_t moveSlotsToTenured(NativeObject* dst, NativeObject* src);
     size_t moveStringToTenured(JSString* dst, JSString* src, gc::AllocKind dstKind);
 
     void traceSlots(JS::Value* vp, JS::Value* end);
@@ -200,7 +200,7 @@ class Nursery
      * Allocate and return a pointer to a new string. Returns nullptr if the
      * Nursery is full.
      */
-    gc::Cell* allocateString(JSContext* cx, JS::Zone* zone, size_t size, gc::AllocKind kind);
+    gc::Cell* allocateString(JS::Zone* zone, size_t size, gc::AllocKind kind);
 
     /*
      * String zones are stored just before the string in nursery memory.

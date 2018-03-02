@@ -173,7 +173,7 @@ protected:
   RefPtr<SourceMediaStream> mStream;
   TrackID mTrackID = TRACK_NONE;
 
-  // Accessed in ::Start(), then on Pull (from MSG thread)
+  // Accessed in Pull (from MSG thread)
   TrackTicks mLastNotify = 0;
   uint32_t mFreq = 1000; // ditto
 

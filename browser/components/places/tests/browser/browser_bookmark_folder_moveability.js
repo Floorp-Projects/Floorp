@@ -28,7 +28,7 @@ add_task(async function() {
     Assert.equal(tree.selectedNode.bookmarkGuid, folder.guid,
                  "Selected the expected node");
     Assert.equal(tree.selectedNode.type, 6, "node is a folder");
-    Assert.ok(PlacesControllerDragHelper.canMoveNode(tree.selectedNode, tree),
+    Assert.ok(tree.controller.canMoveNode(tree.selectedNode),
               "can move regular folder node");
 
     info("Test a folder shortcut");
@@ -43,7 +43,7 @@ add_task(async function() {
     Assert.equal(tree.selectedNode.type, 9, "node is a folder shortcut");
     Assert.equal(PlacesUtils.getConcreteItemGuid(tree.selectedNode),
                  folder.guid, "shortcut node guid and concrete guid match");
-    Assert.ok(PlacesControllerDragHelper.canMoveNode(tree.selectedNode, tree),
+    Assert.ok(tree.controller.canMoveNode(tree.selectedNode),
               "can move folder shortcut node");
 
     info("Test a query");
@@ -63,7 +63,7 @@ add_task(async function() {
     tree.selectItems([query.guid]);
     Assert.equal(tree.selectedNode.bookmarkGuid, query.guid,
                  "Selected the expected node");
-    Assert.ok(PlacesControllerDragHelper.canMoveNode(tree.selectedNode, tree),
+    Assert.ok(tree.controller.canMoveNode(tree.selectedNode),
               "can move query node");
 
 
@@ -79,7 +79,7 @@ add_task(async function() {
     PlacesUtils.asQuery(tree.selectedNode).containerOpen = true;
     Assert.equal(tree.selectedNode.childCount, 1, "has tags");
     let tagNode = tree.selectedNode.getChild(0);
-    Assert.ok(!PlacesControllerDragHelper.canMoveNode(tagNode, tree),
+    Assert.ok(!tree.controller.canMoveNode(tagNode),
               "should not be able to move tag container node");
     tree.selectedNode.containerOpen = false;
 
@@ -92,7 +92,7 @@ add_task(async function() {
 
     for (let guid of roots) {
       tree.selectItems([guid]);
-      Assert.ok(!PlacesControllerDragHelper.canMoveNode(tree.selectedNode, tree),
+      Assert.ok(!tree.controller.canMoveNode(tree.selectedNode),
                 "shouldn't be able to move default shortcuts to roots");
       let id = await PlacesUtils.promiseItemId(guid);
       let s = await PlacesUtils.bookmarks.insert({
@@ -103,7 +103,7 @@ add_task(async function() {
       tree.selectItems([s.guid]);
       Assert.equal(tree.selectedNode.bookmarkGuid, s.guid,
                    "Selected the expected node");
-      Assert.ok(PlacesControllerDragHelper.canMoveNode(tree.selectedNode, tree),
+      Assert.ok(tree.controller.canMoveNode(tree.selectedNode),
                 "should be able to move user-created shortcuts to roots");
     }
   });

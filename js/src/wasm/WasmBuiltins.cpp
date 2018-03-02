@@ -1069,7 +1069,7 @@ ToBuiltinABIFunctionType(const Sig& sig)
 }
 
 void*
-wasm::MaybeGetBuiltinThunk(HandleFunction f, const Sig& sig, JSContext* cx)
+wasm::MaybeGetBuiltinThunk(HandleFunction f, const Sig& sig)
 {
     MOZ_ASSERT(builtinThunks);
 

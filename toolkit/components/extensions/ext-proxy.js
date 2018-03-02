@@ -12,9 +12,44 @@
 
 ChromeUtils.defineModuleGetter(this, "ProxyScriptContext",
                                "resource://gre/modules/ProxyScriptContext.jsm");
+ChromeUtils.defineModuleGetter(this, "ProxyChannelFilter",
+                               "resource://gre/modules/ProxyScriptContext.jsm");
 
 // WeakMap[Extension -> ProxyScriptContext]
-let proxyScriptContextMap = new WeakMap();
+const proxyScriptContextMap = new WeakMap();
+
+// EventManager-like class specifically for Proxy filters. Inherits from
+// EventManager. Takes care of converting |details| parameter
+// when invoking listeners.
+class ProxyFilterEventManager extends EventManager {
+  constructor(context, eventName) {
+    let name = `proxy.${eventName}`;
+    let register = (fire, filterProps, extraInfoSpec = []) => {
+      let listener = (data) => {
+        return fire.sync(data);
+      };
+
+      let filter = {...filterProps};
+      if (filter.urls) {
+        let perms = new MatchPatternSet([...context.extension.whiteListedHosts.patterns,
+                                         ...context.extension.optionalOrigins.patterns]);
+
+        filter.urls = new MatchPatternSet(filter.urls);
+
+        if (!perms.overlapsAll(filter.urls)) {
+          throw new context.cloneScope.Error("The proxy.addListener filter doesn't overlap with host permissions.");
+        }
+      }
+
+      let proxyFilter = new ProxyChannelFilter(context, listener, filter, extraInfoSpec);
+      return () => {
+        proxyFilter.destroy();
+      };
+    };
+
+    super(context, name, register);
+  }
+}
 
 this.proxy = class extends ExtensionAPI {
   onShutdown() {
@@ -29,6 +64,17 @@ this.proxy = class extends ExtensionAPI {
 
   getAPI(context) {
     let {extension} = context;
+
+    let onError = new EventManager(context, "proxy.onError", fire => {
+      let listener = (name, error) => {
+        fire.async(error);
+      };
+      extension.on("proxy-error", listener);
+      return () => {
+        extension.off("proxy-error", listener);
+      };
+    }).api();
+
     return {
       proxy: {
         register(url) {
@@ -52,15 +98,12 @@ this.proxy = class extends ExtensionAPI {
           this.register(url);
         },
 
-        onProxyError: new EventManager(context, "proxy.onProxyError", fire => {
-          let listener = (name, error) => {
-            fire.async(error);
-          };
-          extension.on("proxy-error", listener);
-          return () => {
-            extension.off("proxy-error", listener);
-          };
-        }).api(),
+        onRequest: new ProxyFilterEventManager(context, "onRequest").api(),
+
+        onError,
+
+        // TODO Bug 1388619 deprecate onProxyError.
+        onProxyError: onError,
       },
     };
   }

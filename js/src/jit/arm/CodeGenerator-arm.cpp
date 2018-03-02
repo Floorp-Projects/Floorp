@@ -1743,48 +1743,6 @@ CodeGeneratorARM::visitNotF(LNotF* ins)
 }
 
 void
-CodeGeneratorARM::visitGuardShape(LGuardShape* guard)
-{
-    Register obj = ToRegister(guard->input());
-    Register tmp = ToRegister(guard->tempInt());
-
-    ScratchRegisterScope scratch(masm);
-    masm.ma_ldr(DTRAddr(obj, DtrOffImm(ShapedObject::offsetOfShape())), tmp);
-    masm.ma_cmp(tmp, ImmGCPtr(guard->mir()->shape()), scratch);
-
-    bailoutIf(Assembler::NotEqual, guard->snapshot());
-}
-
-void
-CodeGeneratorARM::visitGuardObjectGroup(LGuardObjectGroup* guard)
-{
-    Register obj = ToRegister(guard->input());
-    Register tmp = ToRegister(guard->tempInt());
-    MOZ_ASSERT(obj != tmp);
-
-    ScratchRegisterScope scratch(masm);
-    masm.ma_ldr(DTRAddr(obj, DtrOffImm(JSObject::offsetOfGroup())), tmp);
-    masm.ma_cmp(tmp, ImmGCPtr(guard->mir()->group()), scratch);
-
-    Assembler::Condition cond =
-        guard->mir()->bailOnEquality() ? Assembler::Equal : Assembler::NotEqual;
-    bailoutIf(cond, guard->snapshot());
-}
-
-void
-CodeGeneratorARM::visitGuardClass(LGuardClass* guard)
-{
-    Register obj = ToRegister(guard->input());
-    Register tmp = ToRegister(guard->tempInt());
-
-    ScratchRegisterScope scratch(masm);
-
-    masm.loadObjClass(obj, tmp);
-    masm.ma_cmp(tmp, Imm32((uint32_t)guard->mir()->getClass()), scratch);
-    bailoutIf(Assembler::NotEqual, guard->snapshot());
-}
-
-void
 CodeGeneratorARM::generateInvalidateEpilogue()
 {
     // Ensure that there is enough space in the buffer for the OsiPoint patching

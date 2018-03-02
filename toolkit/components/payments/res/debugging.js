@@ -272,6 +272,16 @@ let buttonActions = {
     requestStore.setState({request: REQUEST_CONTACT_NO_SHIPPING});
   },
 
+  setShippingError() {
+    let request = Object.assign({}, requestStore.getState().request);
+    request.paymentDetails = Object.assign({}, requestStore.getState().request.paymentDetails);
+    request.paymentDetails.error = "Error!";
+    request.paymentDetails.shippingOptions = [];
+    requestStore.setState({
+      request,
+    });
+  },
+
   setStateDefault() {
     requestStore.setState({
       completionState: "initial",
@@ -281,6 +291,18 @@ let buttonActions = {
   setStateProcessing() {
     requestStore.setState({
       completionState: "processing",
+    });
+  },
+
+  setStateSuccess() {
+    requestStore.setState({
+      completionState: "success",
+    });
+  },
+
+  setStateFail() {
+    requestStore.setState({
+      completionState: "fail",
     });
   },
 };

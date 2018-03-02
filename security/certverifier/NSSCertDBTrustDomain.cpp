@@ -853,7 +853,7 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
       // This chain is supposed to be complete, so this is an error. There
       // are no intermediates, so return before searching just as if the
       // search failed.
-      return Result::ERROR_POLICY_VALIDATION_FAILED;
+      return Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
     }
 
     bool foundRequiredIntermediate = false;
@@ -878,7 +878,7 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
     }
 
     if (!foundRequiredIntermediate) {
-      return Result::ERROR_POLICY_VALIDATION_FAILED;
+      return Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
     }
   }
 
@@ -913,7 +913,7 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }
     if (isDistrusted) {
-      return Result::ERROR_UNKNOWN_ISSUER;
+      return Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
     }
   }
 

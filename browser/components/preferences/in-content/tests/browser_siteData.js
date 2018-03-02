@@ -90,7 +90,7 @@ add_task(async function() {
                        .then(usage => {
                          actual = totalSiteDataSizeLabel.textContent;
                          expected = prefStrBundle.getFormattedString(
-                           "totalSiteDataSize1", DownloadUtils.convertByteUnits(usage + cacheSize));
+                           "totalSiteDataSize2", DownloadUtils.convertByteUnits(usage + cacheSize));
                           is(actual, expected, "Should show the right total site data size");
                        });
 
@@ -109,7 +109,7 @@ add_task(async function() {
                        .then(usage => {
                          actual = totalSiteDataSizeLabel.textContent;
                          expected = prefStrBundle.getFormattedString(
-                           "totalSiteDataSize1", DownloadUtils.convertByteUnits(usage + cacheSize));
+                           "totalSiteDataSize2", DownloadUtils.convertByteUnits(usage + cacheSize));
                           is(actual, expected, "Should show the right total site data size");
                        });
 

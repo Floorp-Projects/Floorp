@@ -10,7 +10,7 @@ window.gActivityStreamStrings = {
   "header_recommended_by": "{provider} īsaceitōs",
   "header_bookmarks_placeholder": "Tu vāļ naesi nikū saglobōjs.",
   "header_stories_from": "nu",
-  "context_menu_button_sr": "Open context menu for {title}",
+  "context_menu_button_sr": "Attaiseit konteksta izvielni {title}",
   "section_context_menu_button_sr": "Open the section context menu",
   "type_label_visited": "Apsavārtys lopys",
   "type_label_bookmarked": "Saglobōts grōmotzemēs",
@@ -111,5 +111,6 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Add Top Site",
   "section_menu_action_move_up": "Move Up",
   "section_menu_action_move_down": "Move Down",
-  "section_menu_action_privacy_notice": "Privacy Notice"
+  "section_menu_action_privacy_notice": "Privacy Notice",
+  "edit_topsites_add_button_tooltip": "Pīvīnōt pi popularōkōm lopom"
 };

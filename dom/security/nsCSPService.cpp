@@ -43,13 +43,17 @@ NS_IMPL_ISUPPORTS(CSPService, nsIContentPolicy, nsIChannelEventSink)
 // Helper function to identify protocols and content types not subject to CSP.
 bool
 subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
+
+  nsContentPolicyType contentType =
+    nsContentUtils::InternalContentPolicyTypeToExternal(aContentType);
+
   // These content types are not subject to CSP content policy checks:
   // TYPE_CSP_REPORT -- csp can't block csp reports
   // TYPE_REFRESH    -- never passed to ShouldLoad (see nsIContentPolicy.idl)
   // TYPE_DOCUMENT   -- used for frame-ancestors
-  if (aContentType == nsIContentPolicy::TYPE_CSP_REPORT ||
-      aContentType == nsIContentPolicy::TYPE_REFRESH ||
-      aContentType == nsIContentPolicy::TYPE_DOCUMENT) {
+  if (contentType == nsIContentPolicy::TYPE_CSP_REPORT ||
+      contentType == nsIContentPolicy::TYPE_REFRESH ||
+      contentType == nsIContentPolicy::TYPE_DOCUMENT) {
     return false;
   }
 
@@ -90,12 +94,16 @@ subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
   // hence we use protocol flags to accomplish that, but we also
   // want resource:, chrome: and moz-icon to be subject to CSP
   // (which also use URI_IS_LOCAL_RESOURCE).
+  // Exception to the rule are images and styles using a scheme
+  // of resource: or chrome:
+  bool isImgOrStyle = contentType == nsIContentPolicy::TYPE_IMAGE ||
+                      contentType == nsIContentPolicy::TYPE_STYLESHEET;
   rv = aURI->SchemeIs("resource", &match);
-  if (NS_SUCCEEDED(rv) && match) {
+  if (NS_SUCCEEDED(rv) && match && !isImgOrStyle) {
     return true;
   }
   rv = aURI->SchemeIs("chrome", &match);
-  if (NS_SUCCEEDED(rv) && match) {
+  if (NS_SUCCEEDED(rv) && match && !isImgOrStyle) {
     return true;
   }
   rv = aURI->SchemeIs("moz-icon", &match);

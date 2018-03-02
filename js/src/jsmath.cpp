@@ -14,6 +14,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Unused.h"
+#include "mozilla/WrappingOperations.h"
 
 #include <algorithm>  // for std::max
 #include <fcntl.h>
@@ -114,6 +115,7 @@ using mozilla::IsNegative;
 using mozilla::IsNegativeZero;
 using mozilla::PositiveInfinity;
 using mozilla::NegativeInfinity;
+using mozilla::WrappingMultiply;
 using JS::ToNumber;
 using JS::GenericNaN;
 
@@ -482,16 +484,13 @@ js::math_floor(JSContext* cx, unsigned argc, Value* vp)
 bool
 js::math_imul_handle(JSContext* cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
-    uint32_t a = 0, b = 0;
-    if (!lhs.isUndefined() && !ToUint32(cx, lhs, &a))
+    int32_t a = 0, b = 0;
+    if (!lhs.isUndefined() && !ToInt32(cx, lhs, &a))
         return false;
-    if (!rhs.isUndefined() && !ToUint32(cx, rhs, &b))
+    if (!rhs.isUndefined() && !ToInt32(cx, rhs, &b))
         return false;
 
-    uint32_t product = a * b;
-    res.setInt32(product > INT32_MAX
-                 ? int32_t(INT32_MIN + (product - INT32_MAX - 1))
-                 : int32_t(product));
+    res.setInt32(WrappingMultiply(a, b));
     return true;
 }
 

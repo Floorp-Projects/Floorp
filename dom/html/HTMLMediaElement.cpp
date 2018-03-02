@@ -1531,9 +1531,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLMediaElement, nsGenericHTMLElement)
 
 void
-HTMLMediaElement::ContentRemoved(nsIDocument* aDocument,
-                                 nsIContent* aContainer,
-                                 nsIContent* aChild,
+HTMLMediaElement::ContentRemoved(nsIContent* aChild,
                                  nsIContent* aPreviousSibling)
 {
   if (aChild == mSourcePointer) {
@@ -1645,11 +1643,10 @@ HTMLMediaElement::MozDumpDebugInfo()
 void
 HTMLMediaElement::SetVisible(bool aVisible)
 {
-  if (!mDecoder) {
-    return;
+  mForcedHidden = !aVisible;
+  if (mDecoder) {
+    mDecoder->SetForcedHidden(!aVisible);
   }
-
-  mDecoder->SetForcedHidden(!aVisible);
 }
 
 already_AddRefed<layers::Image>
@@ -3880,6 +3877,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mFirstFrameLoaded(false),
     mDefaultPlaybackStartPosition(0.0),
     mHasSuspendTaint(false),
+    mForcedHidden(false),
     mMediaTracksConstructed(false),
     mVisibilityState(Visibility::UNTRACKED),
     mErrorSink(new ErrorSink(this)),
@@ -7331,6 +7329,9 @@ HTMLMediaElement::SetDecoder(MediaDecoder* aDecoder)
   }
   mDecoder = aDecoder;
   DDLINKCHILD("decoder", mDecoder.get());
+  if (mDecoder && mForcedHidden) {
+    mDecoder->SetForcedHidden(mForcedHidden);
+  }
 }
 
 float

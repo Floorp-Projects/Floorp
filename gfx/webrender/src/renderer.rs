@@ -19,8 +19,9 @@ use api::ApiMsg;
 use api::DebugCommand;
 #[cfg(not(feature = "debugger"))]
 use api::channel::MsgSender;
+use api::channel::PayloadReceiverHelperMethods;
 use batch::{BatchKey, BatchKind, BatchTextures, BrushBatchKind};
-use batch::{BrushImageSourceKind, TransformBatchKind};
+use batch::{TransformBatchKind};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use debug_colors;
@@ -51,6 +52,7 @@ use query::{GpuProfiler, GpuTimer};
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use record::ApiRecordingReceiver;
 use render_backend::RenderBackend;
+use scene_builder::SceneBuilder;
 use render_task::{RenderTaskKind, RenderTaskTree};
 use resource_cache::ResourceCache;
 #[cfg(feature = "debugger")]
@@ -219,7 +221,7 @@ impl BatchKind {
             BatchKind::SplitComposite => "SplitComposite",
             BatchKind::Brush(kind) => {
                 match kind {
-                    BrushBatchKind::Picture(..) => "Brush (Picture)",
+                    BrushBatchKind::Picture => "Brush (Picture)",
                     BrushBatchKind::Solid => "Brush (Solid)",
                     BrushBatchKind::Line => "Brush (Line)",
                     BrushBatchKind::Image(..) => "Brush (Image)",
@@ -240,7 +242,7 @@ impl BatchKind {
             BatchKind::SplitComposite => GPU_TAG_PRIM_SPLIT_COMPOSITE,
             BatchKind::Brush(kind) => {
                 match kind {
-                    BrushBatchKind::Picture(..) => GPU_TAG_BRUSH_PICTURE,
+                    BrushBatchKind::Picture => GPU_TAG_BRUSH_PICTURE,
                     BrushBatchKind::Solid => GPU_TAG_BRUSH_SOLID,
                     BrushBatchKind::Line => GPU_TAG_BRUSH_LINE,
                     BrushBatchKind::Image(..) => GPU_TAG_BRUSH_IMAGE,
@@ -1600,11 +1602,8 @@ pub struct Renderer {
     cs_blur_rgba8: LazilyCompiledShader,
 
     // Brush shaders
-    brush_mask_corner: LazilyCompiledShader,
     brush_mask_rounded_rect: LazilyCompiledShader,
-    brush_picture_rgba8: BrushShader,
-    brush_picture_rgba8_alpha_mask: BrushShader,
-    brush_picture_a8: BrushShader,
+    brush_picture: BrushShader,
     brush_solid: BrushShader,
     brush_line: BrushShader,
     brush_image: Vec<Option<BrushShader>>,
@@ -1660,6 +1659,7 @@ pub struct Renderer {
     gpu_cache_texture: CacheTexture,
 
     gpu_cache_frame_id: FrameId,
+    gpu_cache_overflow: bool,
 
     pipeline_info: PipelineInfo,
 
@@ -1801,14 +1801,6 @@ impl Renderer {
                                       options.precache_shaders)
         };
 
-        let brush_mask_corner = try!{
-            LazilyCompiledShader::new(ShaderKind::Brush,
-                                      "brush_mask_corner",
-                                      &[],
-                                      &mut device,
-                                      options.precache_shaders)
-        };
-
         let brush_mask_rounded_rect = try!{
             LazilyCompiledShader::new(ShaderKind::Brush,
                                       "brush_mask_rounded_rect",
@@ -1845,24 +1837,10 @@ impl Renderer {
                              options.precache_shaders)
         };
 
-        let brush_picture_a8 = try!{
+        let brush_picture = try!{
             BrushShader::new("brush_picture",
                              &mut device,
-                             &["ALPHA_TARGET"],
-                             options.precache_shaders)
-        };
-
-        let brush_picture_rgba8 = try!{
-            BrushShader::new("brush_picture",
-                             &mut device,
-                             &["COLOR_TARGET"],
-                             options.precache_shaders)
-        };
-
-        let brush_picture_rgba8_alpha_mask = try!{
-            BrushShader::new("brush_picture",
-                             &mut device,
-                             &["COLOR_TARGET_ALPHA_MASK"],
+                             &[],
                              options.precache_shaders)
         };
 
@@ -2198,7 +2176,7 @@ impl Renderer {
         // First set the flags to default and later call set_debug_flags to ensure any
         // potential transition when enabling a flag is run.
         let debug_flags = DebugFlags::default();
-        let payload_tx_for_backend = payload_tx.clone();
+        let payload_rx_for_backend = payload_rx.to_mpsc_receiver();
         let recorder = options.recorder;
         let thread_listener = Arc::new(options.thread_listener);
         let thread_listener_for_rayon_start = thread_listener.clone();
@@ -2227,23 +2205,44 @@ impl Renderer {
 
         let blob_image_renderer = options.blob_image_renderer.take();
         let thread_listener_for_render_backend = thread_listener.clone();
-        let thread_name = format!("WRRenderBackend#{}", options.renderer_id.unwrap_or(0));
+        let thread_listener_for_scene_builder = thread_listener.clone();
+        let rb_thread_name = format!("WRRenderBackend#{}", options.renderer_id.unwrap_or(0));
+        let scene_thread_name = format!("WRSceneBuilder#{}", options.renderer_id.unwrap_or(0));
         let resource_cache = ResourceCache::new(
             texture_cache,
             workers,
             blob_image_renderer,
         )?;
+
+        let (scene_builder, scene_tx, scene_rx) = SceneBuilder::new(config, api_tx.clone());
+        try! {
+            thread::Builder::new().name(scene_thread_name.clone()).spawn(move || {
+                register_thread_with_profiler(scene_thread_name.clone());
+                if let Some(ref thread_listener) = *thread_listener_for_scene_builder {
+                    thread_listener.thread_started(&scene_thread_name);
+                }
+
+                let mut scene_builder = scene_builder;
+                scene_builder.run();
+
+                if let Some(ref thread_listener) = *thread_listener_for_scene_builder {
+                    thread_listener.thread_stopped(&scene_thread_name);
+                }
+            })
+        };
+
         try!{
-            thread::Builder::new().name(thread_name.clone()).spawn(move || {
-                register_thread_with_profiler(thread_name.clone());
+            thread::Builder::new().name(rb_thread_name.clone()).spawn(move || {
+                register_thread_with_profiler(rb_thread_name.clone());
                 if let Some(ref thread_listener) = *thread_listener_for_render_backend {
-                    thread_listener.thread_started(&thread_name);
+                    thread_listener.thread_started(&rb_thread_name);
                 }
                 let mut backend = RenderBackend::new(
                     api_rx,
-                    payload_rx,
-                    payload_tx_for_backend,
+                    payload_rx_for_backend,
                     result_tx,
+                    scene_tx,
+                    scene_rx,
                     device_pixel_ratio,
                     resource_cache,
                     backend_notifier,
@@ -2253,7 +2252,7 @@ impl Renderer {
                 );
                 backend.run(backend_profile_counters);
                 if let Some(ref thread_listener) = *thread_listener_for_render_backend {
-                    thread_listener.thread_stopped(&thread_name);
+                    thread_listener.thread_stopped(&rb_thread_name);
                 }
             })
         };
@@ -2273,11 +2272,8 @@ impl Renderer {
             cs_text_run,
             cs_blur_a8,
             cs_blur_rgba8,
-            brush_mask_corner,
             brush_mask_rounded_rect,
-            brush_picture_rgba8,
-            brush_picture_rgba8_alpha_mask,
-            brush_picture_a8,
+            brush_picture,
             brush_solid,
             brush_line,
             brush_image,
@@ -2322,6 +2318,7 @@ impl Renderer {
             gpu_profiles: VecDeque::new(),
             gpu_cache_texture,
             gpu_cache_frame_id: FrameId::new(0),
+            gpu_cache_overflow: false,
             texture_cache_upload_pbo,
             texture_resolver,
             renderer_errors: Vec::new(),
@@ -2435,7 +2432,7 @@ impl Renderer {
                     self.update_texture_cache();
                     self.device.end_frame();
                     // If we receive a `PublishDocument` message followed by this one
-                    // within the same update we need ot cancel the frame because we
+                    // within the same update we need to cancel the frame because we
                     // might have deleted the resources in use in the frame due to a
                     // memory pressure event.
                     if cancel_rendering {
@@ -2531,11 +2528,6 @@ impl Renderer {
             debug_server::BatchKind::Clip,
             "Rectangles",
             target.clip_batcher.rectangles.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Cache,
-            "Rectangle Brush (Corner)",
-            target.brush_mask_corners.len(),
         );
         debug_target.add(
             debug_server::BatchKind::Cache,
@@ -2975,6 +2967,11 @@ impl Renderer {
                 (count + list.blocks.len(), cmp::max(height, list.height))
             });
 
+        if max_requested_height > self.max_texture_size && !self.gpu_cache_overflow {
+            self.gpu_cache_overflow = true;
+            self.renderer_errors.push(RendererError::MaxTextureSize);
+        }
+
         //Note: if we decide to switch to scatter-style GPU cache update
         // permanently, we can have this code nicer with `BufferUploader` kind
         // of helper, similarly to how `TextureUploader` API is used.
@@ -3205,13 +3202,8 @@ impl Renderer {
                                 &mut self.renderer_errors,
                             );
                     }
-                    BrushBatchKind::Picture(target_kind) => {
-                        let shader = match target_kind {
-                            BrushImageSourceKind::Alpha => &mut self.brush_picture_a8,
-                            BrushImageSourceKind::Color => &mut self.brush_picture_rgba8,
-                            BrushImageSourceKind::ColorAlphaMask => &mut self.brush_picture_rgba8_alpha_mask,
-                        };
-                        shader.bind(
+                    BrushBatchKind::Picture => {
+                        self.brush_picture.bind(
                             &mut self.device,
                             key.blend_mode,
                             projection,
@@ -3985,20 +3977,6 @@ impl Renderer {
 
         self.handle_scaling(render_tasks, &target.scalings, SourceTexture::CacheA8);
 
-        if !target.brush_mask_corners.is_empty() {
-            self.device.set_blend(false);
-
-            let _timer = self.gpu_profile.start_timer(GPU_TAG_BRUSH_MASK);
-            self.brush_mask_corner
-                .bind(&mut self.device, projection, 0, &mut self.renderer_errors);
-            self.draw_instanced_batch(
-                &target.brush_mask_corners,
-                VertexArrayKind::Primitive,
-                &BatchTextures::no_texture(),
-                stats,
-            );
-        }
-
         if !target.brush_mask_rounded_rects.is_empty() {
             self.device.set_blend(false);
 
@@ -4706,10 +4684,7 @@ impl Renderer {
         self.cs_blur_a8.deinit(&mut self.device);
         self.cs_blur_rgba8.deinit(&mut self.device);
         self.brush_mask_rounded_rect.deinit(&mut self.device);
-        self.brush_mask_corner.deinit(&mut self.device);
-        self.brush_picture_rgba8.deinit(&mut self.device);
-        self.brush_picture_rgba8_alpha_mask.deinit(&mut self.device);
-        self.brush_picture_a8.deinit(&mut self.device);
+        self.brush_picture.deinit(&mut self.device);
         self.brush_solid.deinit(&mut self.device);
         self.brush_line.deinit(&mut self.device);
         self.brush_blend.deinit(&mut self.device);

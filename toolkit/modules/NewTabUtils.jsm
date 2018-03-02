@@ -1047,7 +1047,8 @@ var ActivityStreamProvider = {
                     preview_image_url: item.image && item.image.src,
                     title: item.resolved_title,
                     url: item.resolved_url,
-                    pocket_id: item.item_id
+                    pocket_id: item.item_id,
+                    open_url: item.open_url
                   }));
 
     return this._processHighlights(items, aOptions, "pocket");
@@ -1096,6 +1097,30 @@ var ActivityStreamProvider = {
         dateAddedThreshold: (Date.now() - options.bookmarkSecondsAgo * 1000) * 1000
       })
     }), options, "bookmark");
+  },
+
+  /**
+   * Get total count of all bookmarks.
+   * Note: this includes default bookmarks
+   *
+   * @return {int} The number bookmarks in the places DB.
+   */
+  async getTotalBookmarksCount() {
+    let sqlQuery = `
+      SELECT count(*) FROM moz_bookmarks b
+      JOIN moz_bookmarks t ON t.id = b.parent
+      AND t.parent <> :tags_folder
+     WHERE b.type = :type_bookmark
+    `;
+
+    const result = await this.executePlacesQuery(sqlQuery, {
+      params: {
+        tags_folder: PlacesUtils.tagsFolderId,
+        type_bookmark: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      }
+    });
+
+    return result[0][0];
   },
 
   /**

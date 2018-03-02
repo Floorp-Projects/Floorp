@@ -29,7 +29,8 @@ add_UITour_task(async function test_highlight_library_and_show_library_subview()
   libraryBtn.dispatchEvent(new Event("command"));
   await highlightHiddenPromise;
   await ViewShownPromise;
-  is(PanelUI.multiView.current.id, "appMenu-libraryView", "Should show the library subview");
+  let libView = document.getElementById("appMenu-libraryView");
+  ok(PanelView.forNode(libView).active, "Should show the library subview");
   is(appMenu.state, "open", "Should still open the app menu for the library subview");
 
   // Clean up

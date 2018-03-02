@@ -302,7 +302,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
    *   - when first attaching to a page
    *   - when swapping frame loaders (moving tabs, toggling RDM)
    */
-  _onWindowReady(e, {isTopLevel}) {
+  _onWindowReady({isTopLevel}) {
     if (isTopLevel) {
       this._removeAllListeners();
       this.elements.clear();

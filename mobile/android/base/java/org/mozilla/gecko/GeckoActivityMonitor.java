@@ -17,7 +17,6 @@ public class GeckoActivityMonitor implements Application.ActivityLifecycleCallba
 
     private static final GeckoActivityMonitor instance = new GeckoActivityMonitor();
 
-    private GeckoApplication appContext;
     private WeakReference<Activity> currentActivity = new WeakReference<>(null);
 
     public static GeckoActivityMonitor getInstance() {
@@ -31,6 +30,17 @@ public class GeckoActivityMonitor implements Application.ActivityLifecycleCallba
             ((GeckoApplication) activity.getApplication()).onApplicationForeground();
         }
         currentActivity = new WeakReference<>(activity);
+    }
+
+    private void checkAppGoingIntoBackground(final Activity activity) {
+        // For the previous activity, this is called after onStart/onResume for the
+        // new/resumed activity, so if we're switching activities within our app,
+        // currentActivity should already refer to the next activity at this point.
+        // If it doesn't, it means we've been backgrounded.
+        if (currentActivity.get() == activity) {
+            currentActivity.clear();
+            ((GeckoApplication) activity.getApplication()).onApplicationBackground();
+        }
     }
 
     public Activity getCurrentActivity() {
@@ -58,20 +68,14 @@ public class GeckoActivityMonitor implements Application.ActivityLifecycleCallba
     public void onActivityPaused(Activity activity) { }
 
     @Override
-    public void onActivityStopped(Activity activity) {
-        // onStop for the previous activity is called after onStart/onResume for
-        // the new/resumed activity, so if we're switching activities within our
-        // app, mCurrentActivity should already refer to the next activity at
-        // this point.
-        // If it doesn't, it means we've been backgrounded.
-        if (currentActivity.get() == activity) {
-            currentActivity.clear();
-            ((GeckoApplication) activity.getApplication()).onApplicationBackground();
-        }
+    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+        checkAppGoingIntoBackground(activity);
     }
 
     @Override
-    public void onActivitySaveInstanceState(Activity activity, Bundle outState) { }
+    public void onActivityStopped(Activity activity) {
+        checkAppGoingIntoBackground(activity);
+    }
 
     @Override
     public void onActivityDestroyed(Activity activity) { }

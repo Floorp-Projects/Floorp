@@ -3993,6 +3993,7 @@ JS::TransitiveCompileOptions::copyPODTransitiveOptions(const TransitiveCompileOp
     introductionOffset = rhs.introductionOffset;
     hasIntroductionInfo = rhs.hasIntroductionInfo;
     isProbablySystemOrAddonCode = rhs.isProbablySystemOrAddonCode;
+    hideScriptFromDebugger = rhs.hideScriptFromDebugger;
 };
 
 void
@@ -4676,6 +4677,17 @@ JS::InitScriptSourceElement(JSContext* cx, HandleScript script,
 
     RootedScriptSource sso(cx, &script->sourceObject()->as<ScriptSourceObject>());
     return ScriptSourceObject::initElementProperties(cx, sso, element, elementAttrName);
+}
+
+JS_PUBLIC_API(void)
+JS::ExposeScriptToDebugger(JSContext* cx, HandleScript script)
+{
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+
+    MOZ_ASSERT(script->hideScriptFromDebugger());
+    script->clearHideScriptFromDebugger();
+    Debugger::onNewScript(cx, script);
 }
 
 JS_PUBLIC_API(JSString*)

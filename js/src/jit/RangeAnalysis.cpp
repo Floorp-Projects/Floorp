@@ -1983,7 +1983,7 @@ RangeAnalysis::analyzeLoop(MBasicBlock* header)
     // loop, expressed in terms of the iteration bound just computed.
 
     for (MPhiIterator iter(header->phisBegin()); iter != header->phisEnd(); iter++)
-        analyzeLoopPhi(header, iterationBound, *iter);
+        analyzeLoopPhi(iterationBound, *iter);
 
     if (!mir->compilingWasm()) {
         // Try to hoist any bounds checks from the loop using symbolic bounds.
@@ -2158,7 +2158,7 @@ RangeAnalysis::analyzeLoopIterationCount(MBasicBlock* header,
 }
 
 void
-RangeAnalysis::analyzeLoopPhi(MBasicBlock* header, LoopIterationBound* loopBound, MPhi* phi)
+RangeAnalysis::analyzeLoopPhi(LoopIterationBound* loopBound, MPhi* phi)
 {
     // Given a bound on the number of backedges taken, compute an upper and
     // lower bound for a phi node that may change by a constant amount each

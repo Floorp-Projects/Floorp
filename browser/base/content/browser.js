@@ -34,6 +34,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   Log: "resource://gre/modules/Log.jsm",
   LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   OpenInTabsUtils: "resource:///modules/OpenInTabsUtils.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
@@ -1370,6 +1371,13 @@ var gBrowserInit = {
     this._boundDelayedStartup = this._delayedStartup.bind(this);
     window.addEventListener("MozAfterPaint", this._boundDelayedStartup);
 
+    if (!PrivateBrowsingUtils.enabled) {
+      document.getElementById("Tools:PrivateBrowsing").hidden = true;
+      // Setting disabled doesn't disable the shortcut, so we just remove
+      // the keybinding.
+      document.getElementById("key_privatebrowsing").remove();
+    }
+
     this._loadHandled = true;
   },
 
@@ -1970,6 +1978,9 @@ if (AppConstants.platform == "macosx") {
 
     if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
       document.getElementById("macDockMenuNewWindow").hidden = true;
+    }
+    if (!PrivateBrowsingUtils.enabled) {
+      document.getElementById("macDockMenuNewPrivateWindow").hidden = true;
     }
 
     this._delayedStartupTimeoutId = setTimeout(this.nonBrowserWindowDelayedStartup.bind(this), 0);
@@ -4139,7 +4150,7 @@ function OpenBrowserWindow(options) {
   var wintype = document.documentElement.getAttribute("windowtype");
 
   var extraFeatures = "";
-  if (options && options.private) {
+  if (options && options.private && PrivateBrowsingUtils.enabled) {
     extraFeatures = ",private";
     if (!PrivateBrowsingUtils.permanentPrivateBrowsing) {
       // Force the new window to load about:privatebrowsing instead of the default home page

@@ -102,6 +102,7 @@ EXPORTS.mozilla = [
     'Variant.h',
     'Vector.h',
     'WeakPtr.h',
+    'WrappingOperations.h',
     'XorShift128PlusRNG.h',
 ]
 

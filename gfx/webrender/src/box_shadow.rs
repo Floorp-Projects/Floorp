@@ -7,13 +7,13 @@ use api::{LayerPrimitiveInfo, LayerRect, LayerSize, LayerVector2D, LayoutSize, L
 use api::PipelineId;
 use app_units::Au;
 use clip::ClipSource;
-use frame_builder::FrameBuilder;
+use display_list_flattener::DisplayListFlattener;
 use gpu_types::BrushImageKind;
-use prim_store::{BrushKind, BrushMaskKind, BrushPrimitive, PrimitiveContainer};
+use prim_store::{BrushKind, BrushPrimitive, PrimitiveContainer};
 use prim_store::ScrollNodeAndClipChain;
 use picture::PicturePrimitive;
-use util::RectHelpers;
 use render_task::MAX_BLUR_STD_DEVIATION;
+use util::RectHelpers;
 
 // The blur shader samples BLUR_SAMPLE_SCALE * blur_radius surrounding texels.
 pub const BLUR_SAMPLE_SCALE: f32 = 3.0;
@@ -21,11 +21,6 @@ pub const BLUR_SAMPLE_SCALE: f32 = 3.0;
 // Maximum blur radius.
 // Taken from https://searchfox.org/mozilla-central/rev/c633ffa4c4611f202ca11270dcddb7b29edddff8/layout/painting/nsCSSRendering.cpp#4412
 pub const MAX_BLUR_RADIUS : f32 = 300.;
-
-// The amount of padding added to the border corner drawn in the box shadow
-// mask. This ensures that we get a few pixels past the corner that can be
-// blurred without being affected by the border radius.
-pub const MASK_CORNER_PADDING: f32 = 4.0;
 
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -48,7 +43,7 @@ pub struct BoxShadowCacheKey {
     pub clip_mode: BoxShadowClipMode,
 }
 
-impl FrameBuilder {
+impl<'a> DisplayListFlattener<'a> {
     pub fn add_box_shadow(
         &mut self,
         pipeline_id: PipelineId,
@@ -171,68 +166,50 @@ impl FrameBuilder {
                     let mut width;
                     let mut height;
                     let brush_prim;
-                    let corner_size = shadow_radius.is_uniform_size();
-                    let mut image_kind;
+                    let mut image_kind = BrushImageKind::NinePatch;
 
                     if !shadow_rect.is_well_formed_and_nonempty() {
                         return;
                     }
 
-                    // If the outset box shadow has a uniform corner side, we can
-                    // just blur the top left corner, and stretch / mirror that
-                    // across the primitive.
-                    if let Some(corner_size) = corner_size {
-                        image_kind = BrushImageKind::Mirror;
-                        width = MASK_CORNER_PADDING + corner_size.width.max(BLUR_SAMPLE_SCALE * blur_radius);
-                        height = MASK_CORNER_PADDING + corner_size.height.max(BLUR_SAMPLE_SCALE * blur_radius);
+                    // Create a minimal size primitive mask to blur. In this
+                    // case, we ensure the size of each corner is the same,
+                    // to simplify the shader logic that stretches the blurred
+                    // result across the primitive.
+                    let max_width = shadow_radius.top_left.width
+                                        .max(shadow_radius.bottom_left.width)
+                                        .max(shadow_radius.top_right.width)
+                                        .max(shadow_radius.bottom_right.width);
+                    let max_height = shadow_radius.top_left.height
+                                        .max(shadow_radius.bottom_left.height)
+                                        .max(shadow_radius.top_right.height)
+                                        .max(shadow_radius.bottom_right.height);
 
-                        brush_prim = BrushPrimitive::new(
-                            BrushKind::Mask {
-                                clip_mode: brush_clip_mode,
-                                kind: BrushMaskKind::Corner(corner_size),
-                            },
-                            None,
-                        );
-                    } else {
-                        // Create a minimal size primitive mask to blur. In this
-                        // case, we ensure the size of each corner is the same,
-                        // to simplify the shader logic that stretches the blurred
-                        // result across the primitive.
-                        image_kind = BrushImageKind::NinePatch;
-                        let max_width = shadow_radius.top_left.width
-                                            .max(shadow_radius.bottom_left.width)
-                                            .max(shadow_radius.top_right.width)
-                                            .max(shadow_radius.bottom_right.width);
-                        let max_height = shadow_radius.top_left.height
-                                            .max(shadow_radius.bottom_left.height)
-                                            .max(shadow_radius.top_right.height)
-                                            .max(shadow_radius.bottom_right.height);
+                    width = 2.0 * max_width + BLUR_SAMPLE_SCALE * blur_radius;
+                    height = 2.0 * max_height + BLUR_SAMPLE_SCALE * blur_radius;
 
-                        width = 2.0 * max_width + BLUR_SAMPLE_SCALE * blur_radius;
-                        height = 2.0 * max_height + BLUR_SAMPLE_SCALE * blur_radius;
+                    // If the width or height ends up being bigger than the original
+                    // primitive shadow rect, just blur the entire rect and draw that
+                    // as a simple blit.
+                    if width > prim_info.rect.size.width || height > prim_info.rect.size.height {
+                        image_kind = BrushImageKind::Simple;
+                        width = prim_info.rect.size.width + spread_amount * 2.0;
+                        height = prim_info.rect.size.height + spread_amount * 2.0;
+                    }
 
-                        // If the width or height ends up being bigger than the original
-                        // primitive shadow rect, just blur the entire rect and draw that
-                        // as a simple blit.
-                        if width > prim_info.rect.size.width || height > prim_info.rect.size.height {
-                            image_kind = BrushImageKind::Simple;
-                            width = prim_info.rect.size.width + spread_amount * 2.0;
-                            height = prim_info.rect.size.height + spread_amount * 2.0;
-                        }
+                    let clip_rect = LayerRect::new(
+                        LayerPoint::zero(),
+                        LayerSize::new(width, height)
+                    );
 
-                        let clip_rect = LayerRect::new(
-                            LayerPoint::zero(),
-                            LayerSize::new(width, height)
-                        );
-
-                        brush_prim = BrushPrimitive::new(
-                            BrushKind::Mask {
-                                clip_mode: brush_clip_mode,
-                                kind: BrushMaskKind::RoundedRect(clip_rect, shadow_radius),
-                            },
-                            None,
-                        );
-                    };
+                    brush_prim = BrushPrimitive::new(
+                        BrushKind::Mask {
+                            clip_mode: brush_clip_mode,
+                            rect: clip_rect,
+                            radii: shadow_radius,
+                        },
+                        None,
+                    );
 
                     // Construct a mask primitive to add to the picture.
                     let brush_rect = LayerRect::new(LayerPoint::zero(),
@@ -307,7 +284,8 @@ impl FrameBuilder {
                     let brush_prim = BrushPrimitive::new(
                         BrushKind::Mask {
                             clip_mode: brush_clip_mode,
-                            kind: BrushMaskKind::RoundedRect(clip_rect, shadow_radius),
+                            rect: clip_rect,
+                            radii: shadow_radius,
                         },
                         None,
                     );

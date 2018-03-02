@@ -110,7 +110,7 @@ add_task(async function test_invalid_FindProxyForURL_function() {
       return ";;;;;PROXY 1.2.3.4:8080";
     }
   }, {
-    message: "FindProxyForURL: Missing Proxy Rule",
+    message: "ProxyInfoData: Missing Proxy Rule",
   });
 
   // We take any valid proxy up to the error.
@@ -119,7 +119,7 @@ add_task(async function test_invalid_FindProxyForURL_function() {
       return "PROXY 1.2.3.4:8080; UNEXPECTED; SOCKS 1.2.3.4:8080";
     }
   }, {
-    message: "FindProxyForURL: Unrecognized proxy type: \"unexpected\"",
+    message: "ProxyInfoData: Unrecognized proxy type: \"unexpected\"",
     proxyInfo: {
       host: "1.2.3.4",
       port: "8080",

@@ -120,8 +120,7 @@ nsMutationReceiver::Disconnect(bool aRemoveFromObserver)
 }
 
 void
-nsMutationReceiver::NativeAnonymousChildListChange(nsIDocument* aDocument,
-                                                   nsIContent* aContent,
+nsMutationReceiver::NativeAnonymousChildListChange(nsIContent* aContent,
                                                    bool aIsRemove) {
   if (!NativeAnonymousChildList()) {
     return;
@@ -152,8 +151,7 @@ nsMutationReceiver::NativeAnonymousChildListChange(nsIDocument* aDocument,
 }
 
 void
-nsMutationReceiver::AttributeWillChange(nsIDocument* aDocument,
-                                        mozilla::dom::Element* aElement,
+nsMutationReceiver::AttributeWillChange(mozilla::dom::Element* aElement,
                                         int32_t aNameSpaceID,
                                         nsAtom* aAttribute,
                                         int32_t aModType,
@@ -190,8 +188,7 @@ nsMutationReceiver::AttributeWillChange(nsIDocument* aDocument,
 }
 
 void
-nsMutationReceiver::CharacterDataWillChange(nsIDocument* aDocument,
-                                            nsIContent* aContent,
+nsMutationReceiver::CharacterDataWillChange(nsIContent* aContent,
                                             const CharacterDataChangeInfo&)
 {
   if (nsAutoMutationBatch::IsBatching() ||
@@ -217,11 +214,9 @@ nsMutationReceiver::CharacterDataWillChange(nsIDocument* aDocument,
 }
 
 void
-nsMutationReceiver::ContentAppended(nsIDocument* aDocument,
-                                    nsIContent* aContainer,
-                                    nsIContent* aFirstNewContent)
+nsMutationReceiver::ContentAppended(nsIContent* aFirstNewContent)
 {
-  nsINode* parent = NODE_FROM(aContainer, aDocument);
+  nsINode* parent = aFirstNewContent->GetParentNode();
   bool wantsChildList =
     ChildList() &&
     ((Subtree() && RegisterTarget()->SubtreeRoot() == parent->SubtreeRoot()) ||
@@ -257,11 +252,9 @@ nsMutationReceiver::ContentAppended(nsIDocument* aDocument,
 }
 
 void
-nsMutationReceiver::ContentInserted(nsIDocument* aDocument,
-                                    nsIContent* aContainer,
-                                    nsIContent* aChild)
+nsMutationReceiver::ContentInserted(nsIContent* aChild)
 {
-  nsINode* parent = NODE_FROM(aContainer, aDocument);
+  nsINode* parent = aChild->GetParentNode();
   bool wantsChildList =
     ChildList() &&
     ((Subtree() && RegisterTarget()->SubtreeRoot() == parent->SubtreeRoot()) ||
@@ -291,16 +284,14 @@ nsMutationReceiver::ContentInserted(nsIDocument* aDocument,
 }
 
 void
-nsMutationReceiver::ContentRemoved(nsIDocument* aDocument,
-                                   nsIContent* aContainer,
-                                   nsIContent* aChild,
+nsMutationReceiver::ContentRemoved(nsIContent* aChild,
                                    nsIContent* aPreviousSibling)
 {
   if (!IsObservable(aChild)) {
     return;
   }
 
-  nsINode* parent = NODE_FROM(aContainer, aDocument);
+  nsINode* parent = aChild->GetParentNode();
   if (Subtree() && parent->SubtreeRoot() != RegisterTarget()->SubtreeRoot()) {
     return;
   }

@@ -395,6 +395,28 @@ nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(nsIURI* aURL) {
   return host.EqualsLiteral("127.0.0.1") || host.EqualsLiteral("::1");
 }
 
+/* Maybe we have a .onion URL. Treat it as whitelisted as well if
+ * `dom.securecontext.whitelist_onions` is `true`.
+ */
+bool
+nsMixedContentBlocker::IsPotentiallyTrustworthyOnion(nsIURI* aURL) {
+  static bool sInited = false;
+  static bool sWhiteListOnions = false;
+  if (!sInited) {
+    Preferences::AddBoolVarCache(&sWhiteListOnions,
+                                 "dom.securecontext.whitelist_onions");
+    sInited = true;
+  }
+  if (!sWhiteListOnions) {
+    return false;
+  }
+
+  nsAutoCString host;
+  nsresult rv = aURL->GetHost(host);
+  NS_ENSURE_SUCCESS(rv, false);
+  return StringEndsWith(host, NS_LITERAL_CSTRING(".onion"));
+}
+
 /* Static version of ShouldLoad() that contains all the Mixed Content Blocker
  * logic.  Called from non-static ShouldLoad().
  */
@@ -725,6 +747,13 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     return NS_OK;
   }
 
+  // .onion URLs are encrypted and authenticated. Don't treat them as mixed
+  // content if potentially trustworthy (i.e. whitelisted).
+  if (isHttpScheme && IsPotentiallyTrustworthyOnion(innerContentLocation)) {
+    *aDecision = ACCEPT;
+    return NS_OK;
+  }
+
   // The page might have set the CSP directive 'upgrade-insecure-requests'. In such
   // a case allow the http: load to succeed with the promise that the channel will
   // get upgraded to https before fetching any data from the netwerk.
@@ -907,6 +936,9 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
 
   // set hasMixedContentObjectSubrequest on this object if necessary
   if (aContentType == TYPE_OBJECT_SUBREQUEST) {
+    if (!sBlockMixedObjectSubrequest) {
+      rootDoc->WarnOnceAbout(nsIDocument::eMixedDisplayObjectSubrequest);
+    }
     rootDoc->SetHasMixedContentObjectSubrequest(true);
   }
 

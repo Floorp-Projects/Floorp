@@ -153,9 +153,6 @@ public:
             const ReflowInput& aChildRI,
             mozilla::LogicalAxis aLogicalAxis) const override;
 
-  // Flexbox-specific public methods
-  bool IsHorizontal();
-
   /**
    * Helper function to calculate packing space and initial offset of alignment
    * subjects in MainAxisPositionTracker() and CrossAxisPositionTracker() for

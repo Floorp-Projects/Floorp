@@ -1436,7 +1436,7 @@ PlacesTreeView.prototype = {
 
         // Avoid the potentially expensive call to getChildIndex
         // if we know this container doesn't allow insertion.
-        if (PlacesControllerDragHelper.disallowInsertion(container, this._tree.element))
+        if (this._controller.disallowInsertion(container))
           return null;
 
         let queryOptions = PlacesUtils.asQuery(this._result.root).queryOptions;
@@ -1459,7 +1459,7 @@ PlacesTreeView.prototype = {
       }
     }
 
-    if (PlacesControllerDragHelper.disallowInsertion(container, this._tree.element))
+    if (this._controller.disallowInsertion(container))
       return null;
 
     // TODO (Bug 1160193): properly support dropping on a tag root.
@@ -1470,7 +1470,7 @@ PlacesTreeView.prototype = {
         return null;
     }
 
-    return new InsertionPoint({
+    return new PlacesInsertionPoint({
       parentId: PlacesUtils.getConcreteItemId(container),
       parentGuid: PlacesUtils.getConcreteItemGuid(container),
       index, orientation, tagName, dropNearNode

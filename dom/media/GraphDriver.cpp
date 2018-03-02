@@ -295,7 +295,7 @@ ThreadedDriver::RunThread()
     }
 
     GraphTime nextStateComputedTime =
-      mGraphImpl->RoundUpToNextAudioBlock(
+      mGraphImpl->RoundUpToEndOfAudioBlock(
         mIterationEnd + mGraphImpl->MillisecondsToMediaTime(AUDIO_TARGET_MS));
     if (nextStateComputedTime < stateComputedTime) {
       // A previous driver may have been processing further ahead of
@@ -599,7 +599,6 @@ AudioCallbackDriver::Init()
 
   cubeb_stream_params output;
   cubeb_stream_params input;
-  uint32_t latency_frames;
   bool firstStream = CubebUtils::GetFirstStream();
 
   MOZ_ASSERT(!NS_IsMainThread(),
@@ -629,14 +628,7 @@ AudioCallbackDriver::Init()
   output.layout = CubebUtils::GetPreferredChannelLayoutOrSMPTE(cubebContext, mOutputChannels);
   output.prefs = CUBEB_STREAM_PREF_NONE;
 
-  Maybe<uint32_t> latencyPref = CubebUtils::GetCubebMSGLatencyInFrames();
-  if (latencyPref) {
-    latency_frames = latencyPref.value();
-  } else {
-    if (cubeb_get_min_latency(cubebContext, &output, &latency_frames) != CUBEB_OK) {
-      NS_WARNING("Could not get minimal latency from cubeb.");
-    }
-  }
+  uint32_t latency_frames = CubebUtils::GetCubebMSGLatencyInFrames(&output);
 
   // Macbook and MacBook air don't have enough CPU to run very low latency
   // MediaStreamGraphs, cap the minimal latency to 512 frames int this case.
@@ -931,7 +923,8 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   // compute the iteration start and end from there, trying to keep the amount
   // of buffering in the graph constant.
   GraphTime nextStateComputedTime =
-    mGraphImpl->RoundUpToNextAudioBlock(stateComputedTime + mBuffer.Available());
+    mGraphImpl->RoundUpToEndOfAudioBlock(
+      stateComputedTime + mBuffer.Available());
 
   mIterationStart = mIterationEnd;
   // inGraph is the number of audio frames there is between the state time and

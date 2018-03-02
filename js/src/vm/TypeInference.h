@@ -1430,7 +1430,7 @@ class TypeZone
         return typeLifoAlloc_.ref();
     }
 
-    void beginSweep(FreeOp* fop, bool releaseTypes, AutoClearTypeInferenceStateOnOOM& oom);
+    void beginSweep(bool releaseTypes, AutoClearTypeInferenceStateOnOOM& oom);
     void endSweep(JSRuntime* rt);
     void clearAllNewScriptsOnOOM();
 

@@ -721,7 +721,10 @@ PostWriteElementBarrier(JSRuntime* rt, JSObject* obj, int32_t index)
     if (InBounds == IndexInBounds::Yes) {
         MOZ_ASSERT(uint32_t(index) < obj->as<NativeObject>().getDenseInitializedLength());
     } else {
-        if (MOZ_UNLIKELY(!obj->is<NativeObject>() || index < 0)) {
+        if (MOZ_UNLIKELY(!obj->is<NativeObject>() ||
+                         index < 0 ||
+                         uint32_t(index) >= NativeObject::MAX_DENSE_ELEMENTS_COUNT))
+        {
             rt->gc.storeBuffer().putWholeCell(obj);
             return;
         }
@@ -923,10 +926,10 @@ NormalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame, jsbytecode*
 }
 
 bool
-FinalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame, jsbytecode* pc)
+FinalSuspend(JSContext* cx, HandleObject obj, jsbytecode* pc)
 {
     MOZ_ASSERT(*pc == JSOP_FINALYIELDRVAL);
-    GeneratorObject::finalSuspend(cx, obj);
+    GeneratorObject::finalSuspend(obj);
     return true;
 }
 

@@ -3998,10 +3998,31 @@ LIRGenerator::visitGuardObjectIdentity(MGuardObjectIdentity* ins)
 }
 
 void
+LIRGenerator::visitGuardShape(MGuardShape* ins)
+{
+    MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+    LGuardShape* guard = new(alloc()) LGuardShape(useRegisterAtStart(ins->object()));
+    assignSnapshot(guard, ins->bailoutKind());
+    add(guard, ins);
+    redefine(ins, ins->object());
+}
+
+void
+LIRGenerator::visitGuardObjectGroup(MGuardObjectGroup* ins)
+{
+    MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+    LGuardObjectGroup* guard = new(alloc()) LGuardObjectGroup(useRegisterAtStart(ins->object()));
+    assignSnapshot(guard, ins->bailoutKind());
+    add(guard, ins);
+    redefine(ins, ins->object());
+}
+
+void
 LIRGenerator::visitGuardClass(MGuardClass* ins)
 {
-    LDefinition t = temp();
-    LGuardClass* guard = new(alloc()) LGuardClass(useRegister(ins->object()), t);
+    LGuardClass* guard = new(alloc()) LGuardClass(useRegister(ins->object()), temp());
     assignSnapshot(guard, Bailout_ObjectIdentityOrTypeGuard);
     add(guard, ins);
 }

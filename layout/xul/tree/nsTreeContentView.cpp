@@ -895,8 +895,7 @@ nsTreeContentView::GetIndexOfItem(nsIDOMElement* aItem, int32_t* _retval)
 }
 
 void
-nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
-                                    dom::Element* aElement,
+nsTreeContentView::AttributeChanged(dom::Element* aElement,
                                     int32_t       aNameSpaceID,
                                     nsAtom*      aAttribute,
                                     int32_t       aModType,
@@ -1050,28 +1049,25 @@ nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
 }
 
 void
-nsTreeContentView::ContentAppended(nsIDocument *aDocument,
-                                   nsIContent* aContainer,
-                                   nsIContent* aFirstNewContent)
+nsTreeContentView::ContentAppended(nsIContent* aFirstNewContent)
 {
   for (nsIContent* cur = aFirstNewContent; cur; cur = cur->GetNextSibling()) {
     // Our contentinserted doesn't use the index
-    ContentInserted(aDocument, aContainer, cur);
+    ContentInserted(cur);
   }
 }
 
 void
-nsTreeContentView::ContentInserted(nsIDocument *aDocument,
-                                   nsIContent* aContainer,
-                                   nsIContent* aChild)
+nsTreeContentView::ContentInserted(nsIContent* aChild)
 {
   NS_ASSERTION(aChild, "null ptr");
+  nsIContent* container = aChild->GetParent();
 
   // Make sure this notification concerns us.
   // First check the tag to see if it's one that we care about.
 
   // Don't allow non-XUL nodes.
-  if (!aChild->IsXULElement() || !aContainer->IsXULElement())
+  if (!aChild->IsXULElement() || !container->IsXULElement())
     return;
 
   if (!aChild->IsAnyOfXULElements(nsGkAtoms::treeitem,
@@ -1085,7 +1081,7 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
   // If we have a legal tag, go up to the tree/select and make sure
   // that it's ours.
 
-  for (nsIContent* element = aContainer; element != mBody; element = element->GetParent()) {
+  for (nsIContent* element = container; element != mBody; element = element->GetParent()) {
     if (!element)
       return; // this is not for us
     if (element->IsXULElement(nsGkAtoms::tree))
@@ -1096,7 +1092,7 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
 
   if (aChild->IsXULElement(nsGkAtoms::treechildren)) {
-    int32_t index = FindContent(aContainer);
+    int32_t index = FindContent(container);
     if (index >= 0) {
       Row* row = mRows[index].get();
       row->SetEmpty(false);
@@ -1111,15 +1107,15 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
   }
   else if (aChild->IsAnyOfXULElements(nsGkAtoms::treeitem,
                                       nsGkAtoms::treeseparator)) {
-    InsertRowFor(aContainer, aChild);
+    InsertRowFor(container, aChild);
   }
   else if (aChild->IsXULElement(nsGkAtoms::treerow)) {
-    int32_t index = FindContent(aContainer);
+    int32_t index = FindContent(container);
     if (index >= 0 && mBoxObject)
       mBoxObject->InvalidateRow(index);
   }
   else if (aChild->IsXULElement(nsGkAtoms::treecell)) {
-    nsCOMPtr<nsIContent> parent = aContainer->GetParent();
+    nsCOMPtr<nsIContent> parent = container->GetParent();
     if (parent) {
       int32_t index = FindContent(parent);
       if (index >= 0 && mBoxObject)
@@ -1129,18 +1125,17 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
 }
 
 void
-nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
-                                  nsIContent* aContainer,
-                                  nsIContent* aChild,
+nsTreeContentView::ContentRemoved(nsIContent* aChild,
                                   nsIContent* aPreviousSibling)
 {
   NS_ASSERTION(aChild, "null ptr");
 
+  nsIContent* container = aChild->GetParent();
   // Make sure this notification concerns us.
   // First check the tag to see if it's one that we care about.
 
   // We don't consider non-XUL nodes.
-  if (!aChild->IsXULElement() || !aContainer->IsXULElement())
+  if (!aChild->IsXULElement() || !container->IsXULElement())
     return;
 
   if (!aChild->IsAnyOfXULElements(nsGkAtoms::treeitem,
@@ -1154,7 +1149,7 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
   // If we have a legal tag, go up to the tree/select and make sure
   // that it's ours.
 
-  for (nsIContent* element = aContainer; element != mBody; element = element->GetParent()) {
+  for (nsIContent* element = container; element != mBody; element = element->GetParent()) {
     if (!element)
       return; // this is not for us
     if (element->IsXULElement(nsGkAtoms::tree))
@@ -1165,7 +1160,7 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
 
   if (aChild->IsXULElement(nsGkAtoms::treechildren)) {
-    int32_t index = FindContent(aContainer);
+    int32_t index = FindContent(container);
     if (index >= 0) {
       Row* row = mRows[index].get();
       row->SetEmpty(true);
@@ -1187,12 +1182,12 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
     }
   }
   else if (aChild->IsXULElement(nsGkAtoms::treerow)) {
-    int32_t index = FindContent(aContainer);
+    int32_t index = FindContent(container);
     if (index >= 0 && mBoxObject)
       mBoxObject->InvalidateRow(index);
   }
   else if (aChild->IsXULElement(nsGkAtoms::treecell)) {
-    nsCOMPtr<nsIContent> parent = aContainer->GetParent();
+    nsCOMPtr<nsIContent> parent = container->GetParent();
     if (parent) {
       int32_t index = FindContent(parent);
       if (index >= 0 && mBoxObject)

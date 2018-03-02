@@ -585,7 +585,7 @@ ICStubCompiler::enterStubFrame(MacroAssembler& masm, Register scratch)
 }
 
 void
-ICStubCompiler::assumeStubFrame(MacroAssembler& masm)
+ICStubCompiler::assumeStubFrame()
 {
     MOZ_ASSERT(!inStubFrame_);
     inStubFrame_ = true;
@@ -2148,7 +2148,7 @@ ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     // This is the resume point used when bailout rewrites call stack to undo
     // Ion inlined frames. The return address pushed onto reconstructed stack
     // will point here.
-    assumeStubFrame(masm);
+    assumeStubFrame();
     bailoutReturnOffset_.bind(masm.currentOffset());
 
     leaveStubFrame(masm, true);
@@ -2540,10 +2540,9 @@ ICTypeMonitor_ObjectGroup::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Guard on the object's ObjectGroup.
     Register obj = masm.extractObject(R0, ExtractTemp0);
-    masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), R1.scratchReg());
-
     Address expectedGroup(ICStubReg, ICTypeMonitor_ObjectGroup::offsetOfGroup());
-    masm.branchPtr(Assembler::NotEqual, expectedGroup, R1.scratchReg(), &failure);
+    masm.branchTestObjGroup(Assembler::NotEqual, obj, expectedGroup, R1.scratchReg(),
+                            &failure);
     MaybeWorkAroundAmdBug(masm);
 
     EmitReturnFromIC(masm);
@@ -2765,9 +2764,7 @@ GenerateNewObjectWithTemplateCode(JSContext* cx, JSObject* templateObject)
     Label failure;
     Register objReg = R0.scratchReg();
     Register tempReg = R1.scratchReg();
-    masm.movePtr(ImmGCPtr(templateObject->group()), tempReg);
-    masm.branchTest32(Assembler::NonZero, Address(tempReg, ObjectGroup::offsetOfFlags()),
-                      Imm32(OBJECT_FLAG_PRE_TENURE), &failure);
+    masm.branchIfPretenuredGroup(templateObject->group(), tempReg, &failure);
     masm.branchPtr(Assembler::NotEqual, AbsoluteAddress(cx->compartment()->addressOfMetadataBuilder()),
                    ImmWord(0), &failure);
     masm.createGCObject(objReg, tempReg, templateObject, gc::DefaultHeap, &failure);

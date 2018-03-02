@@ -769,12 +769,12 @@ pub struct ClipChainId(pub u64, pub PipelineId);
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum ClipId {
-    Clip(u64, PipelineId),
+    Clip(usize, PipelineId),
     ClipChain(ClipChainId),
 }
 
-const ROOT_REFERENCE_FRAME_CLIP_ID: u64 = 0;
-const ROOT_SCROLL_NODE_CLIP_ID: u64 = 1;
+const ROOT_REFERENCE_FRAME_CLIP_ID: usize = 0;
+const ROOT_SCROLL_NODE_CLIP_ID: usize = 1;
 
 impl ClipId {
     pub fn root_scroll_node(pipeline_id: PipelineId) -> ClipId {

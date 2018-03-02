@@ -14,13 +14,13 @@ import org.mozilla.geckoview.GeckoSession;
 
 import android.util.Log;
 
-/* package */ abstract class GeckoSessionHandler<Listener>
+/* package */ abstract class GeckoSessionHandler<Delegate>
     implements BundleEventListener {
 
     private static final String LOGTAG = "GeckoSessionHandler";
     private static final boolean DEBUG = false;
 
-    private Listener mListener;
+    private Delegate mDelegate;
     private final boolean mAlwaysListen;
     private final String mModuleName;
     private final String[] mEvents;
@@ -45,23 +45,23 @@ import android.util.Log;
         }
     }
 
-    public Listener getListener() {
-        return mListener;
+    public Delegate getDelegate() {
+        return mDelegate;
     }
 
-    public void setListener(final Listener listener, final GeckoSession session) {
+    public void setDelegate(final Delegate delegate, final GeckoSession session) {
         final EventDispatcher eventDispatcher = session.getEventDispatcher();
-        if (mListener == listener) {
+        if (mDelegate == delegate) {
             return;
         }
 
-        if (!mAlwaysListen && mListener != null) {
+        if (!mAlwaysListen && mDelegate != null) {
             unregister(eventDispatcher);
         }
 
-        mListener = listener;
+        mDelegate = delegate;
 
-        if (!mAlwaysListen && mListener != null) {
+        if (!mAlwaysListen && mDelegate != null) {
             register(eventDispatcher);
         }
     }
@@ -87,14 +87,14 @@ import android.util.Log;
             Log.d(LOGTAG, mModuleName + " handleMessage: event = " + event);
         }
 
-        if (mListener != null) {
-            handleMessage(mListener, event, message, callback);
+        if (mDelegate != null) {
+            handleMessage(mDelegate, event, message, callback);
         } else {
             callback.sendError("No listener registered");
         }
     }
 
-    protected abstract void handleMessage(final Listener listener,
+    protected abstract void handleMessage(final Delegate delegate,
                                           final String event,
                                           final GeckoBundle message,
                                           final EventCallback callback);

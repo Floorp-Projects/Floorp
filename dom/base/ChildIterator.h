@@ -134,7 +134,6 @@ public:
   explicit FlattenedChildIterator(const nsIContent* aParent,
                                   bool aStartAtBeginning = true)
     : ExplicitChildIterator(aParent, aStartAtBeginning)
-    , mXBLInvolved(false)
     , mOriginalContent(aParent)
   {
     Init(false);
@@ -142,19 +141,29 @@ public:
 
   FlattenedChildIterator(FlattenedChildIterator&& aOther)
     : ExplicitChildIterator(Move(aOther))
-    , mXBLInvolved(aOther.mXBLInvolved)
     , mOriginalContent(aOther.mOriginalContent)
+    , mXBLInvolved(aOther.mXBLInvolved)
   {}
 
   FlattenedChildIterator(const FlattenedChildIterator& aOther)
     : ExplicitChildIterator(aOther)
-    , mXBLInvolved(aOther.mXBLInvolved)
     , mOriginalContent(aOther.mOriginalContent)
+    , mXBLInvolved(aOther.mXBLInvolved)
   {}
 
-  bool XBLInvolved() { return mXBLInvolved; }
+  bool XBLInvolved() {
+    if (mXBLInvolved.isNothing()) {
+      mXBLInvolved = Some(ComputeWhetherXBLIsInvolved());
+    }
+    return *mXBLInvolved;
+  }
 
   const nsIContent* Parent() const { return mOriginalContent; }
+
+private:
+  bool ComputeWhetherXBLIsInvolved() const;
+
+  void Init(bool aIgnoreXBL);
 
 protected:
   /**
@@ -164,20 +173,20 @@ protected:
   FlattenedChildIterator(const nsIContent* aParent, uint32_t aFlags,
                          bool aStartAtBeginning = true)
     : ExplicitChildIterator(aParent, aStartAtBeginning)
-    , mXBLInvolved(false)
     , mOriginalContent(aParent)
   {
     bool ignoreXBL = aFlags & nsIContent::eAllButXBL;
     Init(ignoreXBL);
   }
 
-  void Init(bool aIgnoreXBL);
-
-  // For certain optimizations, nsCSSFrameConstructor needs to know if the
-  // child list of the element that we're iterating matches its .childNodes.
-  bool mXBLInvolved;
-
   const nsIContent* mOriginalContent;
+
+private:
+  // For certain optimizations, nsCSSFrameConstructor needs to know if the child
+  // list of the element that we're iterating matches its .childNodes.
+  //
+  // This is lazily computed when asked for it.
+  Maybe<bool> mXBLInvolved;
 };
 
 /**

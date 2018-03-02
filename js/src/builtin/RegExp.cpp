@@ -120,7 +120,7 @@ CreateRegExpSearchResult(const MatchPairs& matches)
  */
 static RegExpRunStatus
 ExecuteRegExpImpl(JSContext* cx, RegExpStatics* res, MutableHandleRegExpShared re,
-                  HandleLinearString input, size_t searchIndex, MatchPairs* matches,
+                  HandleLinearString input, size_t searchIndex, VectorMatchPairs* matches,
                   size_t* endIndex)
 {
     RegExpRunStatus status = RegExpShared::execute(cx, re, input, searchIndex, matches, endIndex);
@@ -147,7 +147,7 @@ js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res, Handle<RegExpObject*>
     if (!shared)
         return false;
 
-    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+    VectorMatchPairs matches;
 
     RegExpRunStatus status = ExecuteRegExpImpl(cx, res, &shared, input, *lastIndex,
                                                &matches, nullptr);
@@ -904,7 +904,7 @@ IsTrailSurrogateWithLeadSurrogate(HandleLinearString input, int32_t index)
  */
 static RegExpRunStatus
 ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string, int32_t lastIndex,
-              MatchPairs* matches, size_t* endIndex)
+              VectorMatchPairs* matches, size_t* endIndex)
 {
     /*
      * WARNING: Despite the presence of spec step comment numbers, this
@@ -979,7 +979,7 @@ RegExpMatcherImpl(JSContext* cx, HandleObject regexp, HandleString string, int32
                   MutableHandleValue rval)
 {
     /* Execute regular expression and gather matches. */
-    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+    VectorMatchPairs matches;
 
     /* Steps 3, 9-14, except 12.a.i, 12.c.i.1. */
     RegExpRunStatus status = ExecuteRegExp(cx, regexp, string, lastIndex, &matches, nullptr);
@@ -1048,7 +1048,7 @@ RegExpSearcherImpl(JSContext* cx, HandleObject regexp, HandleString string, int3
                    int32_t* result)
 {
     /* Execute regular expression and gather matches. */
-    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+    VectorMatchPairs matches;
 
     /* Steps 3, 9-14, except 12.a.i, 12.c.i.1. */
     RegExpRunStatus status = ExecuteRegExp(cx, regexp, string, lastIndex, &matches, nullptr);

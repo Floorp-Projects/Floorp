@@ -458,7 +458,15 @@ pref("browser.link.open_newwindow.disabled_in_fullscreen", false);
 
 // Tabbed browser
 pref("browser.tabs.closeWindowWithLastTab", true);
+// Open related links to a tab, e.g., link in current tab, at next to the
+// current tab if |insertRelatedAfterCurrent| is true.  Otherwise, always
+// append new tab to the end.
 pref("browser.tabs.insertRelatedAfterCurrent", true);
+// Open all links, e.g., bookmarks, history items at next to current tab
+// if |insertAfterCurrent| is true.  Otherwise, append new tab to the end
+// for non-related links. Note that if this is set to true, it will trump
+// the value of browser.tabs.insertRelatedAfterCurrent.
+pref("browser.tabs.insertAfterCurrent", false);
 pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.warnOnCloseOtherTabs", true);
 pref("browser.tabs.warnOnOpen", true);
@@ -1047,11 +1055,7 @@ pref("dom.ipc.plugins.sandbox-level.flash", 0);
 // On windows these levels are:
 // See - security/sandbox/win/src/sandboxbroker/sandboxBroker.cpp
 // SetSecurityLevelForContentProcess() for what the different settings mean.
-#if defined(NIGHTLY_BUILD)
 pref("security.sandbox.content.level", 5);
-#else
-pref("security.sandbox.content.level", 4);
-#endif
 
 // This controls the depth of stack trace that is logged when Windows sandbox
 // logging is turned on.  This is only currently available for the content
@@ -1282,9 +1286,6 @@ pref("browser.newtabpage.rows", 3);
 
 // number of columns of newtab grid
 pref("browser.newtabpage.columns", 5);
-
-// directory tiles download URL
-pref("browser.newtabpage.directory.source", "https://tiles.services.mozilla.com/v3/links/fetch/%LOCALE%/%CHANNEL%");
 
 // Activity Stream prefs that control to which page to redirect
 pref("browser.newtabpage.activity-stream.prerender", true);
@@ -1659,17 +1660,9 @@ pref("extensions.pocket.enabled", true);
 
 pref("signon.schemeUpgrades", true);
 
-// "Simplify Page" feature in Print Preview. This feature is disabled by default
-// in toolkit.
-//
-// This feature is only enabled on Nightly for Linux until bug 1306295 is fixed.
-#ifdef UNIX_BUT_NOT_MAC
-#if defined(NIGHTLY_BUILD)
+// Enable the "Simplify Page" feature in Print Preview. This feature
+// is disabled by default in toolkit.
 pref("print.use_simplify_page", true);
-#endif
-#else
-pref("print.use_simplify_page", true);
-#endif
 
 // Space separated list of URLS that are allowed to send objects (instead of
 // only strings) through webchannels. This list is duplicated in mobile/android/app/mobile.js

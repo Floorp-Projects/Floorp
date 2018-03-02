@@ -77,6 +77,7 @@ if CONFIG['OS_TARGET'] == 'WINNT':
 if CONFIG['OS_TARGET'] == 'Android':
     SOURCES += ['cubeb_opensl.c']
     SOURCES += ['cubeb_resampler.cpp']
+    SOURCES += ['cubeb-jni.cpp']
     DEFINES['USE_OPENSL'] = True
     SOURCES += [
         'cubeb_audiotrack.c',

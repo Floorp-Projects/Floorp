@@ -26,7 +26,7 @@ const {
   changeMatrixBase,
   getBasis
 } = require("devtools/shared/layout/dom-matrix-2d");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const { getCSSStyleRules } = require("devtools/shared/inspector/css-logic");
 
 const BASE_MARKER_SIZE = 5;

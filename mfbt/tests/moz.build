@@ -58,6 +58,7 @@ CppUnitTests([
     'TestVariant',
     'TestVector',
     'TestWeakPtr',
+    'TestWrappingOperations',
     'TestXorShift128PlusRNG',
 ])
 

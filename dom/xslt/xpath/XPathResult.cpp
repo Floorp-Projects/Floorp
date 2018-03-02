@@ -122,16 +122,14 @@ XPathResult::NodeWillBeDestroyed(const nsINode* aNode)
 }
 
 void
-XPathResult::CharacterDataChanged(nsIDocument* aDocument,
-                                  nsIContent* aContent,
+XPathResult::CharacterDataChanged(nsIContent* aContent,
                                   const CharacterDataChangeInfo&)
 {
     Invalidate(aContent);
 }
 
 void
-XPathResult::AttributeChanged(nsIDocument* aDocument,
-                              Element* aElement,
+XPathResult::AttributeChanged(Element* aElement,
                               int32_t aNameSpaceID,
                               nsAtom* aAttribute,
                               int32_t aModType,
@@ -141,28 +139,21 @@ XPathResult::AttributeChanged(nsIDocument* aDocument,
 }
 
 void
-XPathResult::ContentAppended(nsIDocument* aDocument,
-                             nsIContent* aContainer,
-                             nsIContent* aFirstNewContent)
+XPathResult::ContentAppended(nsIContent* aFirstNewContent)
 {
-    Invalidate(aContainer);
+    Invalidate(aFirstNewContent->GetParent());
 }
 
 void
-XPathResult::ContentInserted(nsIDocument* aDocument,
-                             nsIContent* aContainer,
-                             nsIContent* aChild)
+XPathResult::ContentInserted(nsIContent* aChild)
 {
-    Invalidate(aContainer);
+    Invalidate(aChild->GetParent());
 }
 
 void
-XPathResult::ContentRemoved(nsIDocument* aDocument,
-                            nsIContent* aContainer,
-                            nsIContent* aChild,
-                            nsIContent* aPreviousSibling)
+XPathResult::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling)
 {
-    Invalidate(aContainer);
+    Invalidate(aChild->GetParent());
 }
 
 nsresult

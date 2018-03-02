@@ -224,12 +224,10 @@ NodeIterator::Detach()
  * nsIMutationObserver interface
  */
 
-void NodeIterator::ContentRemoved(nsIDocument *aDocument,
-                                  nsIContent *aContainer,
-                                  nsIContent *aChild,
-                                  nsIContent *aPreviousSibling)
+void NodeIterator::ContentRemoved(nsIContent* aChild,
+                                  nsIContent* aPreviousSibling)
 {
-    nsINode *container = NODE_FROM(aContainer, aDocument);
+    nsINode* container = aChild->GetParentNode();
 
     mPointer.AdjustAfterRemoval(mRoot, container, aChild, aPreviousSibling);
     mWorkingPointer.AdjustAfterRemoval(mRoot, container, aChild, aPreviousSibling);

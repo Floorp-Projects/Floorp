@@ -55,7 +55,6 @@ public:
   NS_IMETHOD GetIsGPU2Active(bool *aIsGPU2Active) override;
   using GfxInfoBase::GetFeatureStatus;
   using GfxInfoBase::GetFeatureSuggestedDriverVersion;
-  using GfxInfoBase::GetWebGLParameter;
 
 #ifdef DEBUG
   NS_DECL_ISUPPORTS_INHERITED

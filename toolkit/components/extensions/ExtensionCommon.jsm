@@ -272,11 +272,13 @@ class BaseContext {
     return this.applySafeWithoutClone(callback, args);
   }
 
-  applySafe(callback, args) {
+  applySafe(callback, args, caller) {
     if (this.unloaded) {
-      Cu.reportError("context.runSafe called after context unloaded");
+      Cu.reportError("context.runSafe called after context unloaded",
+                     caller);
     } else if (!this.active) {
-      Cu.reportError("context.runSafe called while context is inactive");
+      Cu.reportError("context.runSafe called while context is inactive",
+                     caller);
     } else {
       try {
         let {cloneScope} = this;
@@ -286,15 +288,17 @@ class BaseContext {
         dump(`runSafe failure: cloning into ${this.cloneScope}: ${e}\n\n${filterStack(Error())}`);
       }
 
-      return this.applySafeWithoutClone(callback, args);
+      return this.applySafeWithoutClone(callback, args, caller);
     }
   }
 
-  applySafeWithoutClone(callback, args) {
+  applySafeWithoutClone(callback, args, caller) {
     if (this.unloaded) {
-      Cu.reportError("context.runSafeWithoutClone called after context unloaded");
+      Cu.reportError("context.runSafeWithoutClone called after context unloaded",
+                     caller);
     } else if (!this.active) {
-      Cu.reportError("context.runSafeWithoutClone called while context is inactive");
+      Cu.reportError("context.runSafeWithoutClone called while context is inactive",
+                     caller);
     } else {
       try {
         return Reflect.apply(callback, null, args);
@@ -385,23 +389,36 @@ class BaseContext {
    * exception error.
    *
    * @param {Error|object} error
+   * @param {SavedFrame?} [caller]
    * @returns {Error}
    */
-  normalizeError(error) {
+  normalizeError(error, caller) {
     if (error instanceof this.cloneScope.Error) {
       return error;
     }
     let message, fileName;
-    if (error && typeof error === "object" &&
-        (ChromeUtils.getClassName(error) === "Object" ||
-         error instanceof ExtensionError ||
-         this.principal.subsumes(Cu.getObjectPrincipal(error)))) {
-      message = error.message;
-      fileName = error.fileName;
-    } else {
-      Cu.reportError(error);
+    if (error && typeof error === "object") {
+      const isPlain = ChromeUtils.getClassName(error) === "Object";
+      if (isPlain && error.mozWebExtLocation) {
+        caller = error.mozWebExtLocation;
+      }
+      if (isPlain && caller && (error.mozWebExtLocation || !error.fileName)) {
+        caller = Cu.cloneInto(caller, this.cloneScope);
+        return ChromeUtils.createError(error.message, caller);
+      }
+
+      if (isPlain ||
+          error instanceof ExtensionError ||
+          this.principal.subsumes(Cu.getObjectPrincipal(error))) {
+        message = error.message;
+        fileName = error.fileName;
+      }
     }
-    message = message || "An unexpected error occurred";
+
+    if (!message) {
+      Cu.reportError(error);
+      message = "An unexpected error occurred";
+    }
     return new this.cloneScope.Error(message, fileName);
   }
 
@@ -412,19 +429,31 @@ class BaseContext {
    *
    * @param {object} error An object with a `message` property. May
    *     optionally be an `Error` object belonging to the target scope.
+   * @param {SavedFrame?} caller
+   *        The optional caller frame which triggered this callback, to be used
+   *        in error reporting.
    * @param {function} callback The callback to call.
    * @returns {*} The return value of callback.
    */
-  withLastError(error, callback) {
+  withLastError(error, caller, callback) {
     this.lastError = this.normalizeError(error);
     try {
       return callback();
     } finally {
       if (!this.checkedLastError) {
-        Cu.reportError(`Unchecked lastError value: ${this.lastError}`);
+        Cu.reportError(`Unchecked lastError value: ${this.lastError}`, caller);
       }
       this.lastError = null;
     }
+  }
+
+  /**
+   * Captures the most recent stack frame which belongs to the extension.
+   *
+   * @returns {SavedFrame?}
+   */
+  getCaller() {
+    return ChromeUtils.getCallerLocation(this.principal);
   }
 
   /**
@@ -453,6 +482,7 @@ class BaseContext {
    *     belonging to the target scope. Otherwise, undefined.
    */
   wrapPromise(promise, callback = null) {
+    let caller = this.getCaller();
     let applySafe = this.applySafe.bind(this);
     if (Cu.getGlobalForObject(promise) === this.cloneScope) {
       applySafe = this.applySafeWithoutClone.bind(this);
@@ -462,25 +492,29 @@ class BaseContext {
       promise.then(
         args => {
           if (this.unloaded) {
-            dump(`Promise resolved after context unloaded\n`);
+            Cu.reportError(`Promise resolved after context unloaded\n`,
+                           caller);
           } else if (!this.active) {
-            dump(`Promise resolved while context is inactive\n`);
+            Cu.reportError(`Promise resolved while context is inactive\n`,
+                           caller);
           } else if (args instanceof NoCloneSpreadArgs) {
-            this.applySafeWithoutClone(callback, args.unwrappedValues);
+            this.applySafeWithoutClone(callback, args.unwrappedValues, caller);
           } else if (args instanceof SpreadArgs) {
-            applySafe(callback, args);
+            applySafe(callback, args, caller);
           } else {
-            applySafe(callback, [args]);
+            applySafe(callback, [args], caller);
           }
         },
         error => {
-          this.withLastError(error, () => {
+          this.withLastError(error, caller, () => {
             if (this.unloaded) {
-              dump(`Promise rejected after context unloaded\n`);
+              Cu.reportError(`Promise rejected after context unloaded\n`,
+                             caller);
             } else if (!this.active) {
-              dump(`Promise rejected while context is inactive\n`);
+              Cu.reportError(`Promise rejected while context is inactive\n`,
+                             caller);
             } else {
-              this.applySafeWithoutClone(callback, []);
+              this.applySafeWithoutClone(callback, [], caller);
             }
           });
         });
@@ -489,25 +523,32 @@ class BaseContext {
         promise.then(
           value => {
             if (this.unloaded) {
-              dump(`Promise resolved after context unloaded\n`);
+              Cu.reportError(`Promise resolved after context unloaded\n`,
+                             caller);
             } else if (!this.active) {
-              dump(`Promise resolved while context is inactive\n`);
+              Cu.reportError(`Promise resolved while context is inactive\n`,
+                             caller);
             } else if (value instanceof NoCloneSpreadArgs) {
               let values = value.unwrappedValues;
-              this.applySafeWithoutClone(resolve, values.length == 1 ? [values[0]] : [values]);
+              this.applySafeWithoutClone(resolve, values.length == 1 ? [values[0]] : [values],
+                                         caller);
             } else if (value instanceof SpreadArgs) {
-              applySafe(resolve, value.length == 1 ? value : [value]);
+              applySafe(resolve, value.length == 1 ? value : [value],
+                        caller);
             } else {
-              applySafe(resolve, [value]);
+              applySafe(resolve, [value], caller);
             }
           },
           value => {
             if (this.unloaded) {
-              dump(`Promise rejected after context unloaded: ${value && value.message}\n`);
+              Cu.reportError(`Promise rejected after context unloaded: ${value && value.message}\n`,
+                             caller);
             } else if (!this.active) {
-              dump(`Promise rejected while context is inactive: ${value && value.message}\n`);
+              Cu.reportError(`Promise rejected while context is inactive: ${value && value.message}\n`,
+                             caller);
             } else {
-              this.applySafeWithoutClone(reject, [this.normalizeError(value)]);
+              this.applySafeWithoutClone(reject, [this.normalizeError(value, caller)],
+                                         caller);
             }
           });
       });
@@ -1002,7 +1043,7 @@ class SchemaAPIManager extends EventEmitter {
   onStartup(extension) {
     let promises = [];
     for (let apiName of this.eventModules.get("startup")) {
-      promises.push(this.asyncGetAPI(apiName, extension).then(api => {
+      promises.push(extension.apiManager.asyncGetAPI(apiName, extension).then(api => {
         if (api) {
           api.onStartup();
         }
@@ -1110,7 +1151,7 @@ class SchemaAPIManager extends EventEmitter {
   emitManifestEntry(extension, entry) {
     let apiName = this.manifestKeys.get(entry);
     if (apiName) {
-      let api = this.getAPI(apiName, extension);
+      let api = extension.apiManager.getAPI(apiName, extension);
       return api.onManifestEntry(entry);
     }
   }
@@ -1132,7 +1173,7 @@ class SchemaAPIManager extends EventEmitter {
   async asyncEmitManifestEntry(extension, entry) {
     let apiName = this.manifestKeys.get(entry);
     if (apiName) {
-      let api = await this.asyncGetAPI(apiName, extension);
+      let api = await extension.apiManager.asyncGetAPI(apiName, extension);
       return api.onManifestEntry(entry);
     }
   }

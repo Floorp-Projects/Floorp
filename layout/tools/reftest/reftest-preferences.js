@@ -116,8 +116,6 @@ user_pref("browser.snippets.firstrunHomepage.enabled", false);
 user_pref("general.useragent.updates.enabled", false);
 // And for webapp updates.  Yes, it is supposed to be an integer.
 user_pref("browser.webapps.checkForUpdates", 0);
-// And for about:newtab content fetch.
-user_pref("browser.newtabpage.directory.source", "data:application/json,{\"reftest\":1}");
 // Only allow add-ons from the profile and app and allow foreign
 // injection
 user_pref("extensions.enabledScopes", 5);

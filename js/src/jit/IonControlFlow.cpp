@@ -1409,7 +1409,7 @@ ControlFlowGenerator::maybeLoop(JSOp op, jssrcnote* sn)
         if (sn) {
             // do { } while (cond)
             if (SN_TYPE(sn) == SRC_WHILE)
-                return processDoWhileLoop(op, sn);
+                return processDoWhileLoop(sn);
             // Build a mapping such that given a basic block, whose successor
             // has a phi
 
@@ -1523,7 +1523,7 @@ ControlFlowGenerator::processForLoop(JSOp op, jssrcnote* sn)
 }
 
 ControlFlowGenerator::ControlStatus
-ControlFlowGenerator::processDoWhileLoop(JSOp op, jssrcnote* sn)
+ControlFlowGenerator::processDoWhileLoop(jssrcnote* sn)
 {
     // do { } while() loops have the following structure:
     //    NOP         ; SRC_WHILE (offset to COND)

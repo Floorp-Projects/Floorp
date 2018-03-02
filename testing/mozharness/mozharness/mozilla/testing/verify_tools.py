@@ -177,6 +177,7 @@ class VerifyToolsMixin(object):
         mozinfo.update({"headless": headless})
         stylo = self.config.get('enable_stylo', False)
         mozinfo.update({'stylo': stylo})
+        mozinfo.update({'verify': True})
         self.info("Verification using mozinfo: %s" % str(mozinfo.info))
 
         # determine which files were changed on this push

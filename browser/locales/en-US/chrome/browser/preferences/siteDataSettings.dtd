@@ -4,7 +4,6 @@
 
 <!ENTITY     window1.title                 "Settings - Cookies and Site Data">
 <!ENTITY     hostCol.label                 "Site">
-<!ENTITY     statusCol.label               "Status">
 <!ENTITY     cookiesCol.label              "Cookies">
 <!ENTITY     usageCol.label                "Storage">
 <!ENTITY     lastAccessedCol.label                "Last Used">

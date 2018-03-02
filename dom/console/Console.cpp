@@ -2544,14 +2544,7 @@ Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
   }
 
   if (NS_IsMainThread()) {
-    double duration = (TimeStamp::Now() - mCreationTimeStamp).ToMilliseconds();
-
-    // Round down to the nearest 5us, because if the timer is too accurate
-    // people can do nasty timing attacks with it.  See similar code in the
-    // worker Performance implementation.
-    const double maxResolutionMs = 0.005;
-    *aTimeStamp = nsRFPService::ReduceTimePrecisionAsMSecs(
-      floor(duration / maxResolutionMs) * maxResolutionMs);
+    *aTimeStamp = (TimeStamp::Now() - mCreationTimeStamp).ToMilliseconds();
     return true;
   }
 

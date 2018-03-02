@@ -37,16 +37,20 @@ const USER_PREFS_ENCODING = {
 
 const PREF_IMPRESSION_ID = "impressionId";
 const TELEMETRY_PREF = "telemetry";
+const EVENTS_TELEMETRY_PREF = "telemetry.ut.events";
 
-var TelemetryFeed = class TelemetryFeed {
+this.TelemetryFeed = class TelemetryFeed {
   constructor(options) {
     this.sessions = new Map();
     this._prefs = new Prefs();
     this._impressionId = this.getOrCreateImpressionId();
     this.telemetryEnabled = this._prefs.get(TELEMETRY_PREF);
+    this.eventTelemetryEnabled = this._prefs.get(EVENTS_TELEMETRY_PREF);
     this._aboutHomeSeen = false;
     this._onTelemetryPrefChange = this._onTelemetryPrefChange.bind(this);
     this._prefs.observe(TELEMETRY_PREF, this._onTelemetryPrefChange);
+    this._onEventsTelemetryPrefChange = this._onEventsTelemetryPrefChange.bind(this);
+    this._prefs.observe(EVENTS_TELEMETRY_PREF, this._onEventsTelemetryPrefChange);
   }
 
   init() {
@@ -103,6 +107,10 @@ var TelemetryFeed = class TelemetryFeed {
 
   _onTelemetryPrefChange(prefVal) {
     this.telemetryEnabled = prefVal;
+  }
+
+  _onEventsTelemetryPrefChange(prefVal) {
+    this.eventTelemetryEnabled = prefVal;
   }
 
   /**
@@ -229,7 +237,7 @@ var TelemetryFeed = class TelemetryFeed {
 
     let sessionEndEvent = this.createSessionEndEvent(session);
     this.sendEvent(sessionEndEvent);
-    this.utEvents.sendSessionEndEvent(sessionEndEvent);
+    this.sendUTEvent(sessionEndEvent, this.utEvents.sendSessionEndEvent);
     this.sessions.delete(portID);
   }
 
@@ -351,6 +359,12 @@ var TelemetryFeed = class TelemetryFeed {
     }
   }
 
+  sendUTEvent(event_object, eventFunction) {
+    if (this.eventTelemetryEnabled) {
+      eventFunction(event_object);
+    }
+  }
+
   handleImpressionStats(action) {
     this.sendEvent(this.createImpressionStats(action));
   }
@@ -358,7 +372,7 @@ var TelemetryFeed = class TelemetryFeed {
   handleUserEvent(action) {
     let userEvent = this.createUserEvent(action);
     this.sendEvent(userEvent);
-    this.utEvents.sendUserEvent(userEvent);
+    this.sendUTEvent(userEvent, this.utEvents.sendUserEvent);
   }
 
   handleUndesiredEvent(action) {
@@ -450,6 +464,7 @@ var TelemetryFeed = class TelemetryFeed {
 
     try {
       this._prefs.ignore(TELEMETRY_PREF, this._onTelemetryPrefChange);
+      this._prefs.ignore(EVENTS_TELEMETRY_PREF, this._onEventsTelemetryPrefChange);
     } catch (e) {
       Cu.reportError(e);
     }
@@ -457,9 +472,10 @@ var TelemetryFeed = class TelemetryFeed {
   }
 };
 
-var EXPORTED_SYMBOLS = [
+const EXPORTED_SYMBOLS = [
   "TelemetryFeed",
   "USER_PREFS_ENCODING",
   "PREF_IMPRESSION_ID",
-  "TELEMETRY_PREF"
+  "TELEMETRY_PREF",
+  "EVENTS_TELEMETRY_PREF"
 ];

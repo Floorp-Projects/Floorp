@@ -1170,7 +1170,7 @@ ArrayMemoryView::initStartingState(BlockState** pState)
     arr_->block()->insertBefore(arr_, initLength);
 
     // Create a new block state and insert at it at the location of the new array.
-    BlockState* state = BlockState::New(alloc_, arr_, undefinedVal_, initLength);
+    BlockState* state = BlockState::New(alloc_, arr_, initLength);
     if (!state)
         return false;
 

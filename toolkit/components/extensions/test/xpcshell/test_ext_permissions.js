@@ -1,7 +1,9 @@
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
 ChromeUtils.import("resource://gre/modules/MessageChannel.jsm");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
 
@@ -434,4 +436,89 @@ add_task(function test_permissions_have_localization_strings() {
       }
     }
   }
+});
+
+// Check that optional permissions are not included in update prompts
+add_task(async function test_permissions_prompt() {
+  function background() {
+    browser.test.onMessage.addListener(async (msg, arg) => {
+      if (msg == "request") {
+        let result = await browser.permissions.request(arg);
+        browser.test.sendMessage("result", result);
+      }
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      name: "permissions test",
+      description: "permissions test",
+      manifest_version: 2,
+      version: "1.0",
+
+      permissions: ["tabs", "https://test1.example.com/*"],
+      optional_permissions: ["clipboardWrite", "<all_urls>"],
+
+      content_scripts: [
+        {
+          matches: ["https://test2.example.com/*"],
+          js: [],
+        },
+      ],
+    },
+    useAddonManager: "permanent",
+  });
+
+  await extension.startup();
+
+  await withHandlingUserInput(extension, async () => {
+    extension.sendMessage("request", {
+      permissions: ["clipboardWrite"],
+      origins: ["https://test2.example.com/*"],
+    });
+    let result = await extension.awaitMessage("result");
+    equal(result, true, "request() for optional permissions succeeded");
+  });
+
+  const PERMS = ["history", "tabs"];
+  const ORIGINS = ["https://test1.example.com/*", "https://test3.example.com/"];
+  let xpi = Extension.generateXPI({
+    background,
+    manifest: {
+      name: "permissions test",
+      description: "permissions test",
+      manifest_version: 2,
+      version: "2.0",
+
+      applications: {gecko: {id: extension.id}},
+
+      permissions: [...PERMS, ...ORIGINS],
+      optional_permissions: ["clipboardWrite", "<all_urls>"],
+    },
+  });
+
+  let install = await AddonManager.getInstallForFile(xpi);
+
+  Services.prefs.setBoolPref("extensions.webextPermissionPrompts", true);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("extensions.webextPermissionPrompts");
+  });
+
+  let perminfo;
+  install.promptHandler = info => {
+    perminfo = info;
+    return Promise.resolve();
+  };
+
+  await AddonTestUtils.promiseCompleteInstall(install);
+  await extension.awaitStartup();
+
+  notEqual(perminfo, undefined, "Permission handler was invoked");
+  let perms = perminfo.addon.userPermissions;
+  deepEqual(perms.permissions, PERMS, "Update details includes only manifest api permissions");
+  deepEqual(perms.origins, ORIGINS, "Update details includes only manifest origin permissions");
+
+  await extension.unload();
+  await OS.File.remove(xpi.path);
 });

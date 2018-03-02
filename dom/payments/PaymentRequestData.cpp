@@ -108,10 +108,12 @@ NS_IMPL_ISUPPORTS(PaymentItem,
 
 PaymentItem::PaymentItem(const nsAString& aLabel,
                          nsIPaymentCurrencyAmount* aAmount,
-                         const bool aPending)
+                         const bool aPending,
+                         const nsAString& aType)
   : mLabel(aLabel)
   , mAmount(aAmount)
   , mPending(aPending)
+  , mType(aType)
 {
 }
 
@@ -126,7 +128,7 @@ PaymentItem::Create(const IPCPaymentItem& aIPCItem, nsIPaymentItem** aItem)
     return rv;
   }
   nsCOMPtr<nsIPaymentItem> item =
-    new PaymentItem(aIPCItem.label(), amount, aIPCItem.pending());
+    new PaymentItem(aIPCItem.label(), amount, aIPCItem.pending(), aIPCItem.type());
   item.forget(aItem);
   return NS_OK;
 }
@@ -153,6 +155,13 @@ PaymentItem::GetPending(bool* aPending)
 {
   NS_ENSURE_ARG_POINTER(aPending);
   *aPending = mPending;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PaymentItem::GetType(nsAString& aType)
+{
+  aType = mType;
   return NS_OK;
 }
 

@@ -1466,7 +1466,6 @@ NS_IMPL_ISUPPORTS(nsTextControlFrame::nsAnonDivObserver, nsIMutationObserver)
 
 void
 nsTextControlFrame::nsAnonDivObserver::CharacterDataChanged(
-  nsIDocument* aDocument,
   nsIContent* aContent,
   const CharacterDataChangeInfo&)
 {
@@ -1475,26 +1474,19 @@ nsTextControlFrame::nsAnonDivObserver::CharacterDataChanged(
 
 void
 nsTextControlFrame::nsAnonDivObserver::ContentAppended(
-  nsIDocument* aDocument,
-  nsIContent* aContainer,
   nsIContent* aFirstNewContent)
 {
   mFrame.ClearCachedValue();
 }
 
 void
-nsTextControlFrame::nsAnonDivObserver::ContentInserted(
-  nsIDocument* aDocument,
-  nsIContent* aContainer,
-  nsIContent* aChild)
+nsTextControlFrame::nsAnonDivObserver::ContentInserted(nsIContent* aChild)
 {
   mFrame.ClearCachedValue();
 }
 
 void
 nsTextControlFrame::nsAnonDivObserver::ContentRemoved(
-  nsIDocument* aDocument,
-  nsIContent* aContainer,
   nsIContent* aChild,
   nsIContent* aPreviousSibling)
 {

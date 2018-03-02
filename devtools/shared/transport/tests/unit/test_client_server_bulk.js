@@ -179,7 +179,7 @@ var test_bulk_request_cs = async function (transportFactory, actorType, replyTyp
     });
   }).catch(do_throw);
 
-  DebuggerServer.on("connectionchange", (event, type) => {
+  DebuggerServer.on("connectionchange", type => {
     if (type === "closed") {
       serverDeferred.resolve();
     }
@@ -221,7 +221,7 @@ var test_json_request_cs = async function (transportFactory, actorType, replyTyp
     });
   }).catch(do_throw);
 
-  DebuggerServer.on("connectionchange", (event, type) => {
+  DebuggerServer.on("connectionchange", type => {
     if (type === "closed") {
       serverDeferred.resolve();
     }

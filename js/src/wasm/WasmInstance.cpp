@@ -424,7 +424,7 @@ Instance::Instance(JSContext* cx,
             import.code = calleeInstance.codeBase(calleeTier) + codeRange.funcNormalEntry();
             import.baselineScript = nullptr;
             import.obj = calleeInstanceObj;
-        } else if (void* thunk = MaybeGetBuiltinThunk(f, fi.sig(), cx)) {
+        } else if (void* thunk = MaybeGetBuiltinThunk(f, fi.sig())) {
             import.tls = tlsData();
             import.code = thunk;
             import.baselineScript = nullptr;

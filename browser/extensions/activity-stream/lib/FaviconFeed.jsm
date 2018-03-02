@@ -21,7 +21,7 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 const TIPPYTOP_UPDATE_TIME = ONE_DAY;
 const TIPPYTOP_RETRY_DELAY = FIVE_MINUTES;
 
-var FaviconFeed = class FaviconFeed {
+this.FaviconFeed = class FaviconFeed {
   constructor() {
     this.tippyTopNextUpdate = 0;
     this.cache = new PersistentCache("tippytop", true);
@@ -124,9 +124,7 @@ var FaviconFeed = class FaviconFeed {
     if (domain in sitesByDomain) {
       let iconUri = Services.io.newURI(sitesByDomain[domain].image_url);
       // The #tippytop is to be able to identify them for telemetry.
-      iconUri = iconUri.mutate()
-                       .setRef("tippytop")
-                       .finalize();
+      iconUri = iconUri.mutate().setRef("tippytop").finalize();
       PlacesUtils.favicons.setAndFetchFaviconForPage(
         Services.io.newURI(url),
         iconUri,
@@ -160,4 +158,4 @@ var FaviconFeed = class FaviconFeed {
   }
 };
 
-var EXPORTED_SYMBOLS = ["FaviconFeed"];
+const EXPORTED_SYMBOLS = ["FaviconFeed"];
