@@ -234,7 +234,8 @@ APZCTreeManager::APZCTreeManager(uint64_t aRootLayersId)
       mHitResultForInputBlock(CompositorHitTestInfo::eInvisibleToHitTest),
       mRetainedTouchIdentifier(-1),
       mInScrollbarTouchDrag(false),
-      mApzcTreeLog("apzctree")
+      mApzcTreeLog("apzctree"),
+      mTestDataLock("APZTestDataLock")
 {
   RefPtr<APZCTreeManager> self(this);
   NS_DispatchToMainThread(
@@ -270,6 +271,20 @@ APZCTreeManager::NotifyLayerTreeAdopted(uint64_t aLayersId,
   // While we could move the focus target information from the old APZC tree
   // manager into this one, it's safer to not do that, as we'll probably have
   // that information repopulated soon anyway (on the next layers update).
+
+  UniquePtr<APZTestData> adoptedData;
+  { // scope lock for removal on oldApzcTreeManager
+    MutexAutoLock lock(aOldApzcTreeManager->mTestDataLock);
+    auto it = aOldApzcTreeManager->mTestData.find(aLayersId);
+    if (it != aOldApzcTreeManager->mTestData.end()) {
+      adoptedData = Move(it->second);
+      aOldApzcTreeManager->mTestData.erase(it);
+    }
+  }
+  if (adoptedData) {
+    MutexAutoLock lock(mTestDataLock);
+    mTestData[aLayersId] = Move(adoptedData);
+  }
 }
 
 void
@@ -278,6 +293,11 @@ APZCTreeManager::NotifyLayerTreeRemoved(uint64_t aLayersId)
   APZThreadUtils::AssertOnCompositorThread();
 
   mFocusState.RemoveFocusTarget(aLayersId);
+
+  { // scope lock
+    MutexAutoLock lock(mTestDataLock);
+    mTestData.erase(aLayersId);
+  }
 }
 
 AsyncPanZoomController*
@@ -316,10 +336,11 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
   // the layers id that originated this update.
   APZTestData* testData = nullptr;
   if (gfxPrefs::APZTestLoggingEnabled()) {
-    if (LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(aOriginatingLayersId)) {
-      testData = &state->mApzTestData;
-      testData->StartNewPaint(aPaintSequenceNumber);
-    }
+    MutexAutoLock lock(mTestDataLock);
+    UniquePtr<APZTestData> ptr = MakeUnique<APZTestData>();
+    auto result = mTestData.insert(std::make_pair(aOriginatingLayersId, Move(ptr)));
+    testData = result.first->second.get();
+    testData->StartNewPaint(aPaintSequenceNumber);
   }
 
   const LayerTreeState* treeState =
@@ -1138,10 +1159,11 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       if (apzc) {
         if (gfxPrefs::APZTestLoggingEnabled() && mouseInput.mType == MouseInput::MOUSE_HITTEST) {
           ScrollableLayerGuid guid = apzc->GetGuid();
-          CompositorBridgeParent::CallWithIndirectShadowTree(guid.mLayersId,
-            [&](LayerTreeState& aState) -> void {
-              aState.mApzTestData.RecordHitResult(mouseInput.mOrigin, hitResult, guid.mScrollId);
-            });
+
+          MutexAutoLock lock(mTestDataLock);
+          auto it = mTestData.find(guid.mLayersId);
+          MOZ_ASSERT(it != mTestData.end());
+          it->second->RecordHitResult(mouseInput.mOrigin, hitResult, guid.mScrollId);
         }
 
         TargetConfirmationFlags confFlags{hitResult};
@@ -2940,6 +2962,20 @@ APZCTreeManager::GetContentController(uint64_t aLayersId) const
       controller = aState.mController;
     });
   return controller.forget();
+}
+
+bool
+APZCTreeManager::GetAPZTestData(uint64_t aLayersId,
+                                APZTestData* aOutData)
+{
+  APZThreadUtils::AssertOnCompositorThread();
+  MutexAutoLock lock(mTestDataLock);
+  auto it = mTestData.find(aLayersId);
+  if (it == mTestData.end()) {
+    return false;
+  }
+  *aOutData = *(it->second);
+  return true;
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
