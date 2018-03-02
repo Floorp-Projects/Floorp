@@ -733,6 +733,19 @@ protected:
   void BeginPlaceholderTransaction(nsAtom* aTransactionName);
   void EndPlaceholderTransaction();
 
+  /**
+   * InitializeSelectionAncestorLimit() is called by InitializeSelection().
+   * When this is called, each implementation has to call
+   * aSelection.SetAncestorLimiter() with aAnotherLimit.
+   *
+   * @param aSelection          The selection.
+   * @param aAncestorLimit      New ancestor limit of aSelection.  This always
+   *                            has parent node.  So, it's always safe to
+   *                            call SetAncestorLimit() with this node.
+   */
+  virtual void InitializeSelectionAncestorLimit(Selection& aSelection,
+                                                nsIContent& aAncestorLimit);
+
 public:
   /**
    * All editor operations which alter the doc should be prefaced

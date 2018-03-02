@@ -63,6 +63,9 @@ with Files("mozilla/meta/**"):
 with Files("mozilla/tests/dom/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
+with Files("mozilla/tests/editor/**"):
+    BUG_COMPONENT = ("Core", "Editor")
+
 with Files("mozilla/tests/fetch/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
