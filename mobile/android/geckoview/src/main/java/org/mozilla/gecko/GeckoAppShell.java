@@ -1836,7 +1836,7 @@ public class GeckoAppShell
         return sScreenSize;
     }
 
-    @WrapForJNI(calledFrom = "gecko")
+    @WrapForJNI(calledFrom = "any")
     public static int getAudioOutputFramesPerBuffer() {
         if (SysInfo.getVersion() < 17) {
             return 0;
@@ -1853,7 +1853,7 @@ public class GeckoAppShell
         return Integer.parseInt(prop);
     }
 
-    @WrapForJNI(calledFrom = "gecko")
+    @WrapForJNI(calledFrom = "any")
     public static int getAudioOutputSampleRate() {
         if (SysInfo.getVersion() < 17) {
             return 0;

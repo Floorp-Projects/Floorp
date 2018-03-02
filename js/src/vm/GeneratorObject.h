@@ -72,7 +72,7 @@ class GeneratorObject : public NativeObject
         return suspend(cx, obj, frame, pc, vp, nvalues);
     }
 
-    static void finalSuspend(JSContext* cx, HandleObject obj);
+    static void finalSuspend(HandleObject obj);
 
     JSFunction& callee() const {
         return getFixedSlot(CALLEE_SLOT).toObject().as<JSFunction>();

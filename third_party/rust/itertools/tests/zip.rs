@@ -5,12 +5,11 @@ use itertools::EitherOrBoth::{Both, Left, Right};
 use itertools::free::zip_eq;
 
 #[test]
-fn zip_longest_fused()
-{
+fn zip_longest_fused() {
     let a = [Some(1), None, Some(3), Some(4)];
     let b = [1, 2, 3];
 
-    let unfused = a.iter().batching(|mut it| *it.next().unwrap())
+    let unfused = a.iter().batching(|it| *it.next().unwrap())
         .zip_longest(b.iter().cloned());
     itertools::assert_equal(unfused,
                        vec![Both(1, 1), Right(2), Right(3)]);

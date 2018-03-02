@@ -21,6 +21,10 @@ class StubContext extends BaseContext {
   get cloneScope() {
     return this.sandbox;
   }
+
+  get principal() {
+    return Cu.getObjectPrincipal(this.sandbox);
+  }
 }
 
 

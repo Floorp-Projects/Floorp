@@ -54,6 +54,7 @@ class MacroAssemblerMIPSShared : public Assembler
     const MacroAssembler& asMasm() const;
 
     Condition ma_cmp(Register rd, Register lhs, Register rhs, Condition c);
+    Condition ma_cmp(Register rd, Register lhs, Imm32 imm, Condition c);
 
     void compareFloatingPoint(FloatFormat fmt, FloatRegister lhs, FloatRegister rhs,
                               DoubleCondition c, FloatTestKind* testKind,

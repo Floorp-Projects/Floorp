@@ -66,8 +66,8 @@ mod debug_render;
 #[cfg(feature = "debugger")]
 mod debug_server;
 mod device;
+mod display_list_flattener;
 mod ellipse;
-mod frame;
 mod frame_builder;
 mod freelist;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
@@ -90,6 +90,7 @@ mod render_task;
 mod renderer;
 mod resource_cache;
 mod scene;
+mod scene_builder;
 mod segment;
 mod spring;
 mod texture_allocator;

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_SPECIFIC_BRUSH 0
+#define VECS_PER_SPECIFIC_BRUSH 1
 
 #include shared,prim_shared,brush
 
@@ -12,8 +12,13 @@ varying vec2 vLocalPos;
 
 varying vec3 vUv;
 flat varying vec4 vUvBounds;
-
+flat varying vec4 vColor;
+flat varying vec2 vSelect;
 #ifdef WR_VERTEX_SHADER
+
+#define IMAGE_SOURCE_COLOR              0
+#define IMAGE_SOURCE_ALPHA              1
+#define IMAGE_SOURCE_MASK_FROM_COLOR    2
 
 void brush_vs(
     VertexInfo vi,
@@ -35,6 +40,7 @@ void brush_vs(
     vec2 uv1 = res.uv_rect.p1;
 
     vUv.z = res.layer;
+    vColor = res.color;
 
     vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
     vUv.xy = mix(uv0, uv1, f);
@@ -47,6 +53,18 @@ void brush_vs(
         max(uv0, uv1) - vec2(0.5)
     ) / texture_size.xyxy;
 
+    switch (user_data.y) {
+        case IMAGE_SOURCE_COLOR:
+            vSelect = vec2(0.0, 0.0);
+            break;
+        case IMAGE_SOURCE_ALPHA:
+            vSelect = vec2(0.0, 1.0);
+            break;
+        case IMAGE_SOURCE_MASK_FROM_COLOR:
+            vSelect = vec2(1.0, 1.0);
+            break;
+    }
+
 #ifdef WR_FEATURE_ALPHA_PASS
     vLocalPos = vi.local_pos;
 #endif
@@ -57,7 +75,9 @@ void brush_vs(
 vec4 brush_fs() {
     vec2 uv = clamp(vUv.xy, vUvBounds.xy, vUvBounds.zw);
 
-    vec4 color = TEX_SAMPLE(sColor0, vec3(uv, vUv.z));
+    vec4 texel = TEX_SAMPLE(sColor0, vec3(uv, vUv.z));
+    vec4 mask = mix(texel.rrrr, texel.aaaa, vSelect.x);
+    vec4 color = mix(texel, vColor * mask, vSelect.y);
 
 #ifdef WR_FEATURE_ALPHA_PASS
     color *= init_transform_fs(vLocalPos);

@@ -206,11 +206,6 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     void visitValue(LValue* value);
     void visitDouble(LDouble* ins);
     void visitFloat32(LFloat32* ins);
-
-    void visitGuardShape(LGuardShape* guard);
-    void visitGuardObjectGroup(LGuardObjectGroup* guard);
-    void visitGuardClass(LGuardClass* guard);
-
     void visitNegI(LNegI* lir);
     void visitNegD(LNegD* lir);
     void visitNegF(LNegF* lir);

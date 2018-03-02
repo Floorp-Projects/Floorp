@@ -2155,9 +2155,11 @@ private:
                         mozilla::StyleDisplay& aTargetContentDisplay);
 
   // Helper for the implementation of FindSibling.
+  //
+  // Beware that this function does mutate the iterator.
   template<SiblingDirection>
   nsIFrame* FindSiblingInternal(
-    mozilla::dom::FlattenedChildIterator,
+    mozilla::dom::FlattenedChildIterator&,
     nsIContent* aTargetContent,
     mozilla::StyleDisplay& aTargetContentDisplay);
 

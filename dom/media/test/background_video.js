@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* jshint esversion: 6, -W097 */
-/* globals SimpleTest, SpecialPowers, info, is, ok */
+/* globals SimpleTest, SpecialPowers, document, info, is, manager, ok */
 
 "use strict";
 
@@ -15,20 +15,52 @@ function startTest(test) {
 }
 
 /**
+ * @param {HTMLMediaElement} video target of interest.
+ * @param {string} eventName the event to wait on.
+ * @returns {Promise} A promise that is resolved when event happens.
+ */
+function nextEvent(video, eventName) {
+  return new Promise(function (resolve, reject) {
+    let f = function (event) {
+      ok(true, `${video.token} ${eventName}.`);
+      video.removeEventListener(eventName, f, false);
+      resolve(event);
+    };
+    video.addEventListener(eventName, f, false);
+  });
+}
+
+function nextVideoEnded(video) {
+  return nextEvent(video, 'ended');
+}
+
+function nextVideoPlaying(video) {
+  return nextEvent(video, 'playing');
+}
+
+function nextVideoResumes(video) {
+  return nextEvent(video, 'mozexitvideosuspend');
+}
+
+function nextVideoSuspends(video) {
+  return nextEvent(video, 'mozentervideosuspend');
+}
+
+/**
  * @param {string} url video src.
  * @returns {HTMLMediaElement} The created video element.
  */
 function appendVideoToDoc(url, token, width, height) {
   // Default size of (160, 120) is used by other media tests.
   if (width === undefined) { width = 160; }
-  if (height === undefined) { height = 3*width/4; }
+  if (height === undefined) { height = 3 * width / 4; }
 
   let v = document.createElement('video');
   v.token = token;
-  document.body.appendChild(v);
   v.width = width;
   v.height = height;
   v.src = url;
+  document.body.appendChild(v);
   return v;
 }
 
@@ -89,7 +121,7 @@ function testVideoSuspendsWhenHidden(video) {
  * @returns {Promise} Promise that is resolved when video decode resumes.
  */
 function testVideoResumesWhenShown(video) {
-  var p  = once(video, 'mozexitvideosuspend').then(() => {
+  var p = once(video, 'mozexitvideosuspend').then(() => {
     ok(true, `${video.token} resumes`);
   });
   Log(video.token, "Set visible");
@@ -102,7 +134,7 @@ function testVideoResumesWhenShown(video) {
  * @returns {Promise} Promise that is resolved when video decode resumes.
  */
 function testVideoOnlySeekCompletedWhenShown(video) {
-  var p  = once(video, 'mozvideoonlyseekcompleted').then(() => {
+  var p = once(video, 'mozvideoonlyseekcompleted').then(() => {
     ok(true, `${video.token} resumes`);
   });
   Log(video.token, "Set visible");
@@ -116,7 +148,7 @@ function testVideoOnlySeekCompletedWhenShown(video) {
  */
 function checkVideoDoesntSuspend(video) {
   let p = Promise.race([
-    waitUntilEnded(video).then(() => { ok(true, `${video.token} ended before decode was suspended`)}),
+    waitUntilEnded(video).then(() => { ok(true, `${video.token} ended before decode was suspended`) }),
     once(video, 'mozentervideosuspend', () => { Promise.reject(new Error(`${video.token} suspended`)) })
   ]);
   Log(video.token, "Set hidden.");

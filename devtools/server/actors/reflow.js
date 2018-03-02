@@ -27,7 +27,7 @@
 const {Ci} = require("chrome");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const protocol = require("devtools/shared/protocol");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {reflowSpec} = require("devtools/shared/specs/reflow");
 
 /**
@@ -76,7 +76,7 @@ exports.ReflowActor = protocol.ActorClassWithSpec(reflowSpec, {
     }
   },
 
-  _onReflow: function (event, reflows) {
+  _onReflow: function (reflows) {
     if (this._isStarted) {
       this.emit("reflows", reflows);
     }

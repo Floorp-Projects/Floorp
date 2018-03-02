@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["LinksCache"];
+const EXPORTED_SYMBOLS = ["LinksCache"];
 
 // This should be slightly less than SYSTEM_TICK_INTERVAL as timer
 // comparisons are too exact while the async/await functionality will make the
@@ -18,7 +18,7 @@ const EXPIRATION_TIME = 4.5 * 60 * 1000; // 4.5 minutes
  * amount of time has passed. Allows for migrating data from previously cached
  * links to the new links with the same url.
  */
-var LinksCache = class LinksCache {
+this.LinksCache = class LinksCache {
   /**
    * Create a links cache for a given object property.
    *

@@ -23,6 +23,7 @@
 #include "nsAccUtils.h"
 #include "nsArrayUtils.h"
 #include "nsAttrName.h"
+#include "nsDOMTokenList.h"
 #include "nsEventShell.h"
 #include "nsIURI.h"
 #include "nsTextFormatter.h"
@@ -142,6 +143,28 @@ MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument)
 
   return false;
 }
+
+/**
+ * Used by XULMap.h to map both menupopup and popup elements
+ */
+#ifdef MOZ_XUL
+Accessible*
+CreateMenupopupAccessible(nsIContent* aContent, Accessible* aContext)
+{
+#ifdef MOZ_ACCESSIBILITY_ATK
+    // ATK considers this node to be redundant when within menubars, and it makes menu
+    // navigation with assistive technologies more difficult
+    // XXX In the future we will should this for consistency across the nsIAccessible
+    // implementations on each platform for a consistent scripting environment, but
+    // then strip out redundant accessibles in the AccessibleWrap class for each platform.
+    nsIContent *parent = aContent->GetParent();
+    if (parent && parent->IsXULElement(nsGkAtoms::menu))
+      return nullptr;
+#endif
+
+    return new XULMenupopupAccessible(aContent, aContext->Document());
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible constructors
@@ -1449,48 +1472,20 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 {
   nsAutoString role;
   nsCoreUtils::XBLBindingRole(aContent, role);
-  if (role.IsEmpty() || role.EqualsLiteral("none"))
+  if (role.IsEmpty())
     return nullptr;
-
-  if (role.EqualsLiteral("outerdoc")) {
-    RefPtr<Accessible> accessible = new OuterDocAccessible(aContent, aDoc);
-    return accessible.forget();
-  }
 
   RefPtr<Accessible> accessible;
 #ifdef MOZ_XUL
   // XUL controls
-  if (role.EqualsLiteral("xul:button")) {
-    accessible = new XULButtonAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:colorpicker")) {
+  if (role.EqualsLiteral("xul:colorpicker")) {
     accessible = new XULColorPickerAccessible(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:colorpickertile")) {
     accessible = new XULColorPickerTileAccessible(aContent, aDoc);
 
-  } else if (role.EqualsLiteral("xul:combobox")) {
-    accessible = new XULComboboxAccessible(aContent, aDoc);
-
   } else if (role.EqualsLiteral("xul:link")) {
     accessible = new XULLinkAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:menupopup")) {
-#ifdef MOZ_ACCESSIBILITY_ATK
-    // ATK considers this node to be redundant when within menubars, and it makes menu
-    // navigation with assistive technologies more difficult
-    // XXX In the future we will should this for consistency across the nsIAccessible
-    // implementations on each platform for a consistent scripting environment, but
-    // then strip out redundant accessibles in the AccessibleWrap class for each platform.
-    nsIContent *parent = aContent->GetParent();
-    if (parent && parent->IsXULElement(nsGkAtoms::menu))
-      return nullptr;
-#endif
-
-    accessible = new XULMenupopupAccessible(aContent, aDoc);
-
-  } else if(role.EqualsLiteral("xul:pane")) {
-    accessible = new EnumRoleAccessible<roles::PANE>(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:panel")) {
     if (aContent->IsElement() &&
@@ -1501,20 +1496,8 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
     else
       accessible = new EnumRoleAccessible<roles::PANE>(aContent, aDoc);
 
-  } else if (role.EqualsLiteral("xul:scale")) {
-    accessible = new XULSliderAccessible(aContent, aDoc);
-
   } else if (role.EqualsLiteral("xul:text")) {
     accessible = new XULLabelAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:textbox")) {
-    accessible = new EnumRoleAccessible<roles::SECTION>(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:thumb")) {
-    accessible = new XULThumbAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:toolbarbutton")) {
-    accessible = new XULToolbarButtonAccessible(aContent, aDoc);
 
   }
 #endif // MOZ_XUL

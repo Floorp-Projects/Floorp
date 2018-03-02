@@ -39,14 +39,3 @@ WebGL1Context::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
 }
 
 } // namespace mozilla
-
-nsresult
-NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** out_result)
-{
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::CANVAS_WEBGL_USED, 1);
-
-    nsIDOMWebGLRenderingContext* ctx = mozilla::WebGL1Context::Create();
-
-    NS_ADDREF(*out_result = ctx);
-    return NS_OK;
-}

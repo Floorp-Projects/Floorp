@@ -535,6 +535,7 @@ Connection::Connection(Service *aService,
 , mAsyncExecutionThreadShuttingDown(false)
 , mConnectionClosed(false)
 , mTransactionInProgress(false)
+, mDestroying(false)
 , mProgressHandler(nullptr)
 , mFlags(aFlags)
 , mIgnoreLockingMode(aIgnoreLockingMode)
@@ -572,56 +573,51 @@ NS_IMETHODIMP_(MozExternalRefCountType) Connection::Release(void)
   nsrefcnt count = --mRefCnt;
   NS_LOG_RELEASE(this, count, "Connection");
   if (1 == count) {
-    // If the refcount is 1, the single reference must be from
-    // gService->mConnections (in class |Service|).  Which means we can
-    // perform our failsafe Close() and unregister...
+    // If the refcount went to 1, the single reference must be from
+    // gService->mConnections (in class |Service|).  And the code calling
+    // Release is either:
+    // - The "user" code that had created the connection, releasing on any
+    //   thread.
+    // - One of Service's getConnections() callers had acquired a strong
+    //   reference to the Connection that out-lived the last "user" reference,
+    //   and now that just got dropped.  Note that this reference could be
+    //   getting dropped on the main thread or Connection->threadOpenedOn
+    //   (because of the NewRunnableMethod used by minimizeMemory).
     //
-    // HOWEVER, there is an edge-case where our failsafe Close() may trigger
-    // a call to AsyncClose() which obtains a strong reference.  This reference
-    // will be released via NS_ReleaseOnMainThreadSystemGroup() before Close()
-    // returns, which can potentially result in reentrancy into this method and
-    // this branch a second time.  (It may also be deferred if we're not in
-    // that event target ourselves.)  To avoid reentrancy madness, we explicitly
-    // bump our refcount up to 2 without going through AddRef().
-    ++mRefCnt;
-    // Okay, now our refcount is 2, we trigger Close().
-    Unused << Close();
-    // Now our refcount should either be at 2 (because nothing happened, or the
-    // addref and release pair happened due to SpinningSynchronousClose) or
-    // 3 (because SpinningSynchronousClose happened but didn't release yet).
-    //
-    // We *really* want to avoid re-entrancy, and we have potentially two strong
-    // references remaining that will invoke Release() and potentially trigger
-    // a transition to 1 again.  Since the second reference would be just a
-    // proxy release of an already-closed connection, it's not a big deal for us
-    // to unregister the connection now.  We do need to take care to avoid a
-    // strong refcount transition to 1 from 2 because that would induce
-    // reentrancy.  Note that we do not have any concerns about other threads
-    // being involved here; we MUST be the main thread if AsyncClose() is
-    // involved.
-    //
-    // Note: While Close() potentially spins the nested event loop, it is
-    // conceivable that Service::CollectReports or Service::minimizeMemory might
-    // be invoked.  These call Service::getConnections() and will perform
-    // matching AddRef and Release calls but will definitely not retain any
-    // references.  (Because connectionReady() will return false so both loops
-    // will immediately "continue" to bypass the connection in question.)
-    // Because our refcount is at least 2 at the lowest point, these do not pose
-    // a problem.
-    if (mRefCnt == 3) {
-      // pending proxy release, strong release to 2
+    // Either way, we should now perform our failsafe Close() and unregister.
+    // However, we only want to do this once, and the reality is that our
+    // refcount could go back up above 1 and down again at any time if we are
+    // off the main thread and getConnections() gets called on the main thread,
+    // so we use an atomic here to do this exactly once.
+    if (mDestroying.compareExchange(false, true)) {
+      // Close the connection, dispatching to the opening thread if we're not
+      // on that thread already and that thread is still accepting runnables.
+      // We do this because it's possible we're on the main thread because of
+      // getConnections(), and we REALLY don't want to transfer I/O to the main
+      // thread if we can avoid it.
+      if (threadOpenedOn->IsOnCurrentThread()) {
+        // This could cause SpinningSynchronousClose() to be invoked and AddRef
+        // triggered for AsyncCloseConnection's strong ref if the conn was ever
+        // use for async purposes.  (Main-thread only, though.)
+        Unused << Close();
+      } else {
+        nsCOMPtr<nsIRunnable> event =
+          NewRunnableMethod("storage::Connection::Close",
+                            this, &Connection::Close);
+        if (NS_FAILED(threadOpenedOn->Dispatch(event.forget(),
+                                               NS_DISPATCH_NORMAL))) {
+          // The target thread was dead and so we've just leaked our runnable.
+          // This should not happen because our non-main-thread consumers should
+          // be explicitly closing their connections, not relying on us to close
+          // them for them.  (It's okay to let a statement go out of scope for
+          // automatic cleanup, but not a Connection.)
+          MOZ_ASSERT(false, "Leaked Connection::Close(), ownership fail.");
+          Unused << Close();
+        }
+      }
+
+      // This will drop its strong reference right here, right now.
       mStorageService->unregisterConnection(this);
-      // now weak release to 1, the outstanding refcount will strong release to
-      // 0 and result in destruction later.
-      --mRefCnt;
-    } else if (mRefCnt == 2) {
-      // weak release to 1
-      --mRefCnt;
-      // strong release to 0, destruction will happen, we must NOT touch
-      // `this` after this point.
-      mStorageService->unregisterConnection(this);
-    } else {
-      MOZ_ASSERT(false, "Connection refcount invariant violated.");
     }
   } else if (0 == count) {
     mRefCnt = 1; /* stabilize */

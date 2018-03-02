@@ -9,7 +9,6 @@
 
 #include "GfxInfoBase.h"
 
-#include "GfxInfoWebGL.h"
 #include "GfxDriverInfo.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
@@ -972,14 +971,6 @@ GfxInfoBase::GetFeatureSuggestedDriverVersion(int32_t aFeature,
   nsCString discardFailureId;
   nsTArray<GfxDriverInfo> driverInfo;
   return GetFeatureStatusImpl(aFeature, &status, aVersion, driverInfo, discardFailureId);
-}
-
-
-NS_IMETHODIMP
-GfxInfoBase::GetWebGLParameter(const nsAString& aParam,
-                               nsAString& aResult)
-{
-  return GfxInfoWebGL::GetWebGLParameter(aParam, aResult);
 }
 
 void

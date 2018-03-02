@@ -291,6 +291,27 @@ describe("Reducers", () => {
       const updatedSection = newState.find(section => section.id === "foo_bar_2");
       assert.propertyVal(updatedSection, "initialized", true);
     });
+    it("should retain pinned cards on SECTION_UPDATE", () => {
+      const ROW = {id: "row"};
+      let newState = Sections(oldState, {type: at.SECTION_UPDATE, data: Object.assign({rows: [ROW]}, {id: "foo_bar_2"})});
+      let updatedSection = newState.find(section => section.id === "foo_bar_2");
+      assert.deepEqual(updatedSection.rows, [ROW]);
+
+      const PINNED_ROW = {id: "pinned", pinned: true};
+      newState = Sections(newState, {type: at.SECTION_UPDATE, data: Object.assign({rows: [PINNED_ROW]}, {id: "foo_bar_2"})});
+      updatedSection = newState.find(section => section.id === "foo_bar_2");
+      assert.deepEqual(updatedSection.rows, [PINNED_ROW]);
+
+      // Updating the section should retain pinned card at its index
+      newState = Sections(newState, {type: at.SECTION_UPDATE, data: Object.assign({rows: [ROW]}, {id: "foo_bar_2"})});
+      updatedSection = newState.find(section => section.id === "foo_bar_2");
+      assert.deepEqual(updatedSection.rows, [PINNED_ROW, ROW]);
+
+      // Clearing/Resetting the section should clear pinned cards
+      newState = Sections(newState, {type: at.SECTION_UPDATE, data: Object.assign({rows: []}, {id: "foo_bar_2"})});
+      updatedSection = newState.find(section => section.id === "foo_bar_2");
+      assert.deepEqual(updatedSection.rows, []);
+    });
     it("should have no effect on SECTION_UPDATE_CARD if the id or url doesn't exist", () => {
       const noIdAction = {type: at.SECTION_UPDATE_CARD, data: {id: "non-existent", url: "www.foo.bar", options: {title: "New title"}}};
       const noIdState = Sections(oldState, noIdAction);

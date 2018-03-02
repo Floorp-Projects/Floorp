@@ -2,6 +2,7 @@
   "title": "Console",
   "environment": "development",
   "baseWorkerURL": "http://localhost:8000/public/build/",
+  "defaultURL": "https://nchevobbe.github.io/demo/console-test-app.html",
   "host": "",
   "theme": "light",
   "dir": "ltr",

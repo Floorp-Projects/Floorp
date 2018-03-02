@@ -85,8 +85,7 @@ struct IonOsrTempData
 };
 
 static IonOsrTempData*
-PrepareOsrTempData(JSContext* cx, ICWarmUpCounter_Fallback* stub, BaselineFrame* frame,
-                   HandleScript script, jsbytecode* pc, void* jitcode)
+PrepareOsrTempData(JSContext* cx, BaselineFrame* frame, void* jitcode)
 {
     size_t numLocalsAndStackVals = frame->numValueSlots();
 
@@ -163,7 +162,7 @@ DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame, ICWarmUpCounter_
 
     // Prepare the temporary heap copy of the fake InterpreterFrame and actual args list.
     JitSpew(JitSpew_BaselineOSR, "Got jitcode.  Preparing for OSR into ion.");
-    IonOsrTempData* info = PrepareOsrTempData(cx, stub, frame, script, pc, jitcode);
+    IonOsrTempData* info = PrepareOsrTempData(cx, frame, jitcode);
     if (!info)
         return false;
     *infoPtr = info;
@@ -427,11 +426,10 @@ ICTypeUpdate_ObjectGroup::Compiler::generateStubCode(MacroAssembler& masm)
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
     // Guard on the object's ObjectGroup.
-    Register obj = masm.extractObject(R0, R1.scratchReg());
-    masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), R1.scratchReg());
-
+    Register scratch = R1.scratchReg();
+    Register obj = masm.extractObject(R0, scratch);
     Address expectedGroup(ICStubReg, ICTypeUpdate_ObjectGroup::offsetOfGroup());
-    masm.branchPtr(Assembler::NotEqual, expectedGroup, R1.scratchReg(), &failure);
+    masm.branchTestObjGroup(Assembler::NotEqual, obj, expectedGroup, scratch, &failure);
 
     // Group matches, load true into R1.scratchReg() and return.
     masm.mov(ImmWord(1), R1.scratchReg());
@@ -776,9 +774,7 @@ LoadTypedThingLength(MacroAssembler& masm, TypedThingLayout layout, Register obj
         break;
       case Layout_OutlineTypedObject:
       case Layout_InlineTypedObject:
-        masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), result);
-        masm.loadPtr(Address(result, ObjectGroup::offsetOfAddendum()), result);
-        masm.unboxInt32(Address(result, ArrayTypeDescr::offsetOfLength()), result);
+        masm.loadTypedObjectLength(obj, result);
         break;
       default:
         MOZ_CRASH();
@@ -1635,7 +1631,7 @@ ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     // This is the resume point used when bailout rewrites call stack to undo
     // Ion inlined frames. The return address pushed onto reconstructed stack
     // will point here.
-    assumeStubFrame(masm);
+    assumeStubFrame();
     bailoutReturnOffset_.bind(masm.currentOffset());
 
     leaveStubFrame(masm, true);
@@ -2327,7 +2323,7 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
     // Only bother to try optimizing JSOP_CALL with CacheIR if the chain is still
     // allowed to attach stubs.
     if (canAttachStub) {
-        CallIRGenerator gen(cx, script, pc, op, stub, stub->state().mode(), argc,
+        CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), argc,
                             callee, callArgs.thisv(),
                             HandleValueArray::fromMarkedLocation(argc, vp+2));
         if (gen.tryAttachStub()) {
@@ -2844,7 +2840,7 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     // This is the resume point used when bailout rewrites call stack to undo
     // Ion inlined frames. The return address pushed onto reconstructed stack
     // will point here.
-    assumeStubFrame(masm);
+    assumeStubFrame();
     bailoutReturnOffset_.bind(masm.currentOffset());
 
     // Load passed-in ThisV into R1 just in case it's needed.  Need to do this before
@@ -3433,11 +3429,9 @@ ICCall_ClassHook::Compiler::generateStubCode(MacroAssembler& masm)
     // Ensure the callee's class matches the one in this stub.
     Register callee = masm.extractObject(R1, ExtractTemp0);
     Register scratch = regs.takeAny();
-    masm.loadObjClass(callee, scratch);
-    masm.branchPtr(Assembler::NotEqual,
-                   Address(ICStubReg, ICCall_ClassHook::offsetOfClass()),
-                   scratch, &failure);
-
+    masm.branchTestObjClass(Assembler::NotEqual, callee, scratch,
+                            Address(ICStubReg, ICCall_ClassHook::offsetOfClass()),
+                            &failure);
     regs.add(R1);
     regs.takeUnchecked(callee);
 

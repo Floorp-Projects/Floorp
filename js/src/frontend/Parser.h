@@ -941,7 +941,7 @@ class GeneralParser
     bool addExprAndGetNextTemplStrToken(YieldHandling yieldHandling, Node nodeList,
                                         TokenKind* ttp);
 
-    inline bool trySyntaxParseInnerFunction(Node funcNode, HandleFunction fun,
+    inline bool trySyntaxParseInnerFunction(Node* funcNode, HandleFunction fun,
                                             uint32_t toStringStart, InHandling inHandling,
                                             YieldHandling yieldHandling, FunctionSyntaxKind kind,
                                             GeneratorKind generatorKind,
@@ -958,14 +958,15 @@ class GeneralParser
 
     // Parse an inner function given an enclosing ParseContext and a
     // FunctionBox for the inner function.
-    bool innerFunctionForFunctionBox(Node funcNode, ParseContext* outerpc, FunctionBox* funbox,
-                                     InHandling inHandling, YieldHandling yieldHandling,
-                                     FunctionSyntaxKind kind, Directives* newDirectives);
+    MOZ_MUST_USE Node
+    innerFunctionForFunctionBox(Node funcNode, ParseContext* outerpc, FunctionBox* funbox,
+                                InHandling inHandling, YieldHandling yieldHandling,
+                                FunctionSyntaxKind kind, Directives* newDirectives);
 
     // Parse a function's formal parameters and its body assuming its function
     // ParseContext is already on the stack.
     bool functionFormalParametersAndBody(InHandling inHandling, YieldHandling yieldHandling,
-                                         Node pn, FunctionSyntaxKind kind,
+                                         Node* pn, FunctionSyntaxKind kind,
                                          const mozilla::Maybe<uint32_t>& parameterListEnd = mozilla::Nothing(),
                                          bool isStandaloneFunction = false);
 
@@ -1246,11 +1247,12 @@ class GeneralParser
 
     Node statementList(YieldHandling yieldHandling);
 
-    bool innerFunction(Node funcNode, ParseContext* outerpc, HandleFunction fun,
-                       uint32_t toStringStart, InHandling inHandling, YieldHandling yieldHandling,
-                       FunctionSyntaxKind kind, GeneratorKind generatorKind,
-                       FunctionAsyncKind asyncKind, bool tryAnnexB, Directives inheritedDirectives,
-                       Directives* newDirectives);
+    MOZ_MUST_USE Node
+    innerFunction(Node funcNode, ParseContext* outerpc, HandleFunction fun,
+                  uint32_t toStringStart, InHandling inHandling, YieldHandling yieldHandling,
+                  FunctionSyntaxKind kind, GeneratorKind generatorKind,
+                  FunctionAsyncKind asyncKind, bool tryAnnexB, Directives inheritedDirectives,
+                  Directives* newDirectives);
 
     bool matchOrInsertSemicolon();
 
@@ -1353,7 +1355,7 @@ class Parser<SyntaxParseHandler, CharT> final
     inline bool checkExportedNameForClass(Node node);
     inline bool checkExportedNameForClause(Node node);
 
-    bool trySyntaxParseInnerFunction(Node funcNode, HandleFunction fun, uint32_t toStringStart,
+    bool trySyntaxParseInnerFunction(Node* funcNode, HandleFunction fun, uint32_t toStringStart,
                                      InHandling inHandling, YieldHandling yieldHandling,
                                      FunctionSyntaxKind kind, GeneratorKind generatorKind,
                                      FunctionAsyncKind asyncKind, bool tryAnnexB,
@@ -1469,7 +1471,7 @@ class Parser<FullParseHandler, CharT> final
     bool checkExportedNameForClass(Node node);
     inline bool checkExportedNameForClause(Node node);
 
-    bool trySyntaxParseInnerFunction(Node funcNode, HandleFunction fun, uint32_t toStringStart,
+    bool trySyntaxParseInnerFunction(Node* funcNode, HandleFunction fun, uint32_t toStringStart,
                                      InHandling inHandling, YieldHandling yieldHandling,
                                      FunctionSyntaxKind kind, GeneratorKind generatorKind,
                                      FunctionAsyncKind asyncKind, bool tryAnnexB,

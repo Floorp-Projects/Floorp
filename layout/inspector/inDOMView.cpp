@@ -618,7 +618,7 @@ inDOMView::NodeWillBeDestroyed(const nsINode* aNode)
 }
 
 void
-inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
+inDOMView::AttributeChanged(dom::Element* aElement,
                             int32_t aNameSpaceID, nsAtom* aAttribute,
                             int32_t aModType,
                             const nsAttrValue* aOldValue)
@@ -747,17 +747,14 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
 }
 
 void
-inDOMView::ContentAppended(nsIDocument *aDocument,
-                           nsIContent* aContainer,
-                           nsIContent* aFirstNewContent)
+inDOMView::ContentAppended(nsIContent* aFirstNewContent)
 {
   if (!mTree) {
     return;
   }
 
   for (nsIContent* cur = aFirstNewContent; cur; cur = cur->GetNextSibling()) {
-    // Our ContentInserted impl doesn't use the index
-    ContentInserted(aDocument, aContainer, cur);
+    ContentInserted(cur);
   }
 }
 
@@ -772,8 +769,7 @@ GetParentForNode(nsINode* aChild, bool aShowAnonymous)
 }
 
 void
-inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
-                           nsIContent* aChild)
+inDOMView::ContentInserted(nsIContent* aChild)
 {
   if (!mTree)
     return;
@@ -845,8 +841,7 @@ inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
 }
 
 void
-inDOMView::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
-                          nsIContent* aChild, nsIContent* aPreviousSibling)
+inDOMView::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling)
 {
   if (!mTree)
     return;

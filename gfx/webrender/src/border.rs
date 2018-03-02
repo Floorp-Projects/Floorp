@@ -6,7 +6,7 @@ use api::{BorderRadius, BorderSide, BorderStyle, BorderWidths, ColorF, LayerPoin
 use api::{LayerPrimitiveInfo, LayerRect, LayerSize, NormalBorder, RepeatMode, TexelRect};
 use clip::ClipSource;
 use ellipse::Ellipse;
-use frame_builder::FrameBuilder;
+use display_list_flattener::DisplayListFlattener;
 use gpu_cache::GpuDataRequest;
 use prim_store::{BorderPrimitiveCpu, BrushClipMaskKind, BrushSegment, BrushSegmentDescriptor};
 use prim_store::{EdgeAaSegmentMask, PrimitiveContainer, ScrollNodeAndClipChain};
@@ -279,7 +279,7 @@ pub fn ensure_no_corner_overlap(
     }
 }
 
-impl FrameBuilder {
+impl<'a> DisplayListFlattener<'a> {
     fn add_normal_border_primitive(
         &mut self,
         info: &LayerPrimitiveInfo,

@@ -2777,18 +2777,21 @@ js::gc::StoreBuffer::SlotsEdge::trace(TenuringTracer& mover) const
         return;
 
     if (kind() == ElementKind) {
-        int32_t initLen = obj->getDenseInitializedLength();
-        int32_t numShifted = obj->getElementsHeader()->numShiftedElements();
-        int32_t clampedStart = Min(Max(0, start_ - numShifted), initLen);
-        int32_t clampedEnd = Min(Max(0, start_ + count_ - numShifted), initLen);
-        MOZ_ASSERT(clampedStart >= 0);
+        uint32_t initLen = obj->getDenseInitializedLength();
+        uint32_t numShifted = obj->getElementsHeader()->numShiftedElements();
+        uint32_t clampedStart = start_;
+        clampedStart = numShifted < clampedStart ? clampedStart - numShifted : 0;
+        clampedStart = Min(clampedStart, initLen);
+        uint32_t clampedEnd = start_ + count_;
+        clampedEnd = numShifted < clampedEnd ? clampedEnd - numShifted : 0;
+        clampedEnd = Min(clampedEnd, initLen);
         MOZ_ASSERT(clampedStart <= clampedEnd);
         mover.traceSlots(static_cast<HeapSlot*>(obj->getDenseElements() + clampedStart)
                             ->unsafeUnbarrieredForTracing(), clampedEnd - clampedStart);
     } else {
-        int32_t start = Min(uint32_t(start_), obj->slotSpan());
-        int32_t end = Min(uint32_t(start_) + count_, obj->slotSpan());
-        MOZ_ASSERT(end >= start);
+        uint32_t start = Min(start_, obj->slotSpan());
+        uint32_t end = Min(start_ + count_, obj->slotSpan());
+        MOZ_ASSERT(start <= end);
         mover.traceObjectSlots(obj, start, end - start);
     }
 }
@@ -3049,7 +3052,7 @@ js::TenuringTracer::moveToTenuredSlow(JSObject* src)
     if (src->isNative()) {
         NativeObject* ndst = &dst->as<NativeObject>();
         NativeObject* nsrc = &src->as<NativeObject>();
-        tenuredSize += moveSlotsToTenured(ndst, nsrc, dstKind);
+        tenuredSize += moveSlotsToTenured(ndst, nsrc);
         tenuredSize += moveElementsToTenured(ndst, nsrc, dstKind);
 
         // There is a pointer into a dictionary mode object from the head of its
@@ -3094,7 +3097,7 @@ js::TenuringTracer::movePlainObjectToTenured(PlainObject* src)
     js_memcpy(dst, src, srcSize);
 
     // Move the slots and elements.
-    tenuredSize += moveSlotsToTenured(dst, src, dstKind);
+    tenuredSize += moveSlotsToTenured(dst, src);
     tenuredSize += moveElementsToTenured(dst, src, dstKind);
 
     MOZ_ASSERT(!dst->getClass()->extObjectMovedOp());
@@ -3108,7 +3111,7 @@ js::TenuringTracer::movePlainObjectToTenured(PlainObject* src)
 }
 
 size_t
-js::TenuringTracer::moveSlotsToTenured(NativeObject* dst, NativeObject* src, AllocKind dstKind)
+js::TenuringTracer::moveSlotsToTenured(NativeObject* dst, NativeObject* src)
 {
     /* Fixed slots have already been copied over. */
     if (!src->hasDynamicSlots())
@@ -3200,6 +3203,7 @@ js::TenuringTracer::moveToTenured(JSString* src)
 
     AllocKind dstKind = src->getAllocKind();
     Zone* zone = src->zone();
+    zone->tenuredStrings++;
 
     TenuredCell* t = zone->arenas.allocateFromFreeList(dstKind, Arena::thingSize(dstKind));
     if (!t) {

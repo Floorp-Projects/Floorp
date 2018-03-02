@@ -51,7 +51,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     Services.prefs.setIntPref("network.proxy.type", 0);
 
     // Clear network cache.
-    Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(Ci.nsICacheStorageService).clear();
+    Services.cache2.clear();
 
     chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
     let BrowserApp = chromeWin.BrowserApp;

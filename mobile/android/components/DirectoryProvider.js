@@ -35,15 +35,13 @@ DirectoryProvider.prototype = {
 
   getFile: function(prop, persistent) {
     if (prop == NS_APP_CACHE_PARENT_DIR) {
-      let dirsvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-      let profile = dirsvc.get("ProfD", Ci.nsIFile);
+      let profile = Services.dirsvc.get("ProfD", Ci.nsIFile);
       return profile;
     } else if (prop == WEBAPPS_DIR) {
       // returns the folder that should hold the webapps database file
       // For fennec we will store that in the root profile folder so that all
       // webapps can easily access it
-      let dirsvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-      let profile = dirsvc.get("ProfD", Ci.nsIFile);
+      let profile = Services.dirsvc.get("ProfD", Ci.nsIFile);
       return profile.parent;
     } else if (prop == XRE_APP_DISTRIBUTION_DIR) {
       let distributionDirectories =  this._getDistributionDirectories();

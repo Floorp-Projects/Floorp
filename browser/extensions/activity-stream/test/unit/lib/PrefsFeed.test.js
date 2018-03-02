@@ -1,10 +1,13 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
+import {GlobalOverrider} from "test/unit/utils";
 import {PrefsFeed} from "lib/PrefsFeed.jsm";
 import {PrerenderData} from "common/PrerenderData.jsm";
 const {initialPrefs} = PrerenderData;
 
 const PRERENDER_PREF_NAME = "prerender";
 const ONBOARDING_FINISHED_PREF = "browser.onboarding.notification.finished";
+
+let overrider = new GlobalOverrider();
 
 describe("PrefsFeed", () => {
   let feed;
@@ -21,16 +24,23 @@ describe("PrefsFeed", () => {
       ignore: sinon.spy(),
       ignoreBranch: sinon.spy()
     };
+    overrider.set({PrivateBrowsingUtils: {enabled: true}});
+  });
+  afterEach(() => {
+    overrider.restore();
   });
   it("should set a pref when a SET_PREF action is received", () => {
     feed.onAction(ac.SetPref("foo", 2));
     assert.calledWith(feed._prefs.set, "foo", 2);
   });
-  it("should dispatch PREFS_INITIAL_VALUES on init", () => {
+  it("should dispatch PREFS_INITIAL_VALUES on init with pref values and .isPrivateBrowsingEnabled", () => {
     feed.onAction({type: at.INIT});
     assert.calledOnce(feed.store.dispatch);
     assert.equal(feed.store.dispatch.firstCall.args[0].type, at.PREFS_INITIAL_VALUES);
-    assert.deepEqual(feed.store.dispatch.firstCall.args[0].data, {foo: 1, bar: 2});
+    const [{data}] = feed.store.dispatch.firstCall.args;
+    assert.equal(data.foo, 1);
+    assert.equal(data.bar, 2);
+    assert.isTrue(data.isPrivateBrowsingEnabled);
   });
   it("should add one branch observer on init", () => {
     feed.onAction({type: at.INIT});

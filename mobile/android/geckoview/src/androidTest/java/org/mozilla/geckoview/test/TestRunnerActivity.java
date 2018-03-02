@@ -23,7 +23,7 @@ public class TestRunnerActivity extends Activity {
     GeckoSession mSession;
     GeckoView mView;
 
-    private GeckoSession.NavigationListener mNavigationListener = new GeckoSession.NavigationListener() {
+    private GeckoSession.NavigationDelegate mNavigationDelegate = new GeckoSession.NavigationDelegate() {
         @Override
         public void onLocationChange(GeckoSession session, String url) {
             getActionBar().setSubtitle(url);
@@ -51,7 +51,7 @@ public class TestRunnerActivity extends Activity {
         }
     };
 
-    private GeckoSession.ContentListener mContentListener = new GeckoSession.ContentListener() {
+    private GeckoSession.ContentDelegate mContentDelegate = new GeckoSession.ContentDelegate() {
         @Override
         public void onTitleChange(GeckoSession session, String title) {
 
@@ -92,7 +92,7 @@ public class TestRunnerActivity extends Activity {
         }
 
         final GeckoSession session = new GeckoSession(settings);
-        session.setNavigationListener(mNavigationListener);
+        session.setNavigationDelegate(mNavigationDelegate);
         session.openWindow(this);
         return session;
     }

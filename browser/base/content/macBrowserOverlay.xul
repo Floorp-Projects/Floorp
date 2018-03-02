@@ -58,7 +58,8 @@
          the application. -->
     <menuitem label="&newNavigatorCmd.label;" oncommand="OpenBrowserWindowFromDockMenu();"
               id="macDockMenuNewWindow" />
-    <menuitem label="&newPrivateWindow.label;" oncommand="OpenBrowserWindowFromDockMenu({private: true});" />
+    <menuitem label="&newPrivateWindow.label;" oncommand="OpenBrowserWindowFromDockMenu({private: true});"
+              id="macDockMenuNewPrivateWindow" />
   </menupopup>
 </popupset>
 

@@ -234,7 +234,7 @@ BaselineCompiler::compile()
 
     // Copy IC entries
     if (icEntries_.length())
-        baselineScript->copyICEntries(script, &icEntries_[0], masm);
+        baselineScript->copyICEntries(script, &icEntries_[0]);
 
     // Adopt fallback stubs from the compiler into the baseline script.
     baselineScript->adoptFallbackStubs(&stubSpace_);
@@ -260,7 +260,7 @@ BaselineCompiler::compile()
 
 #ifdef JS_TRACE_LOGGING
     // Initialize the tracelogger instrumentation.
-    baselineScript->initTraceLogger(cx->runtime(), script, traceLoggerToggleOffsets_);
+    baselineScript->initTraceLogger(script, traceLoggerToggleOffsets_);
 #endif
 
     uint32_t* bytecodeMap = baselineScript->bytecodeTypeMap();
@@ -290,7 +290,7 @@ BaselineCompiler::compile()
         entry.init(code, code->raw(), code->rawEnd(), script, str);
 
         JitcodeGlobalTable* globalTable = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
-        if (!globalTable->addEntry(entry, cx->runtime())) {
+        if (!globalTable->addEntry(entry)) {
             entry.destroy();
             ReportOutOfMemory(cx);
             return Method_Error;
@@ -4636,21 +4636,19 @@ BaselineCompiler::emit_JSOP_DEBUGAFTERYIELD()
     return callVM(DebugAfterYieldInfo);
 }
 
-typedef bool (*FinalSuspendFn)(JSContext*, HandleObject, BaselineFrame*, jsbytecode*);
+typedef bool (*FinalSuspendFn)(JSContext*, HandleObject, jsbytecode*);
 static const VMFunction FinalSuspendInfo =
     FunctionInfo<FinalSuspendFn>(jit::FinalSuspend, "FinalSuspend");
 
 bool
 BaselineCompiler::emit_JSOP_FINALYIELDRVAL()
 {
-    // Store generator in R0, BaselineFrame pointer in R1.
+    // Store generator in R0.
     frame.popRegsAndSync(1);
     masm.unboxObject(R0, R0.scratchReg());
-    masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
 
     prepareVMCall();
     pushArg(ImmPtr(pc));
-    pushArg(R1.scratchReg());
     pushArg(R0.scratchReg());
 
     if (!callVM(FinalSuspendInfo))

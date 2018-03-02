@@ -286,13 +286,8 @@ WritePing(const string& aPath, const string& aPing)
 
   if (f->is_open()) {
     *f << aPing;
-    f->flush();
-
-    if (f->good()) {
-      success = true;
-    }
-
     f->close();
+    success = f->good();
   }
 
   delete f;

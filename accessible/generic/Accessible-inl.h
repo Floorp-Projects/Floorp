@@ -104,6 +104,15 @@ Accessible::HasNumericValue() const
   return true;
 }
 
+inline bool
+Accessible::IsDefunct() const
+{
+  MOZ_ASSERT(mStateFlags & eIsDefunct || IsApplication() || IsDoc() ||
+             mStateFlags & eSharedNode || mContent,
+             "No content");
+  return mStateFlags & eIsDefunct;
+}
+
 inline void
 Accessible::ScrollTo(uint32_t aHow) const
 {

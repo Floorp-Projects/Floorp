@@ -61,12 +61,13 @@ async function openPopup(panelIndex, viewIndex) {
   gPanelMultiViews[panelIndex].setAttribute("mainViewId",
                                             gPanelViews[viewIndex].id);
 
-  let promiseShown = BrowserTestUtils.waitForEvent(gPanels[panelIndex],
-                                                   "popupshown");
+  let promiseShown = BrowserTestUtils.waitForEvent(gPanelViews[viewIndex],
+                                                   "ViewShown");
   PanelMultiView.openPopup(gPanels[panelIndex], gPanelAnchors[panelIndex],
                            "bottomcenter topright");
   await promiseShown;
 
+  Assert.ok(PanelView.forNode(gPanelViews[viewIndex]).active);
   assertLabelVisible(viewIndex, true);
 }
 
@@ -92,6 +93,7 @@ async function showSubView(panelIndex, viewIndex) {
   gPanelMultiViews[panelIndex].showSubView(gPanelViews[viewIndex]);
   await promiseShown;
 
+  Assert.ok(PanelView.forNode(gPanelViews[viewIndex]).active);
   assertLabelVisible(viewIndex, true);
 }
 
@@ -104,6 +106,7 @@ async function goBack(panelIndex, viewIndex) {
   gPanelMultiViews[panelIndex].goBack();
   await promiseShown;
 
+  Assert.ok(PanelView.forNode(gPanelViews[viewIndex]).active);
   assertLabelVisible(viewIndex, true);
 }
 
@@ -276,6 +279,38 @@ add_task(async function test_simple_event_sequence() {
     "panelmultiview-0: PanelMultiViewHidden",
     "panel-0: popuphidden",
   ]);
+});
+
+/**
+ * Tests that further navigation is suppressed until the new view is shown.
+ */
+add_task(async function test_navigation_suppression() {
+  await openPopup(0, 0);
+
+  // Test re-entering the "showSubView" method.
+  let promiseShown = BrowserTestUtils.waitForEvent(gPanelViews[1], "ViewShown");
+  gPanelMultiViews[0].showSubView(gPanelViews[1]);
+  Assert.ok(!PanelView.forNode(gPanelViews[0]).active,
+            "The previous view should become inactive synchronously.");
+
+  // The following call will have no effect.
+  gPanelMultiViews[0].showSubView(gPanelViews[2]);
+  await promiseShown;
+
+  // Test re-entering the "goBack" method.
+  promiseShown = BrowserTestUtils.waitForEvent(gPanelViews[0], "ViewShown");
+  gPanelMultiViews[0].goBack();
+  Assert.ok(!PanelView.forNode(gPanelViews[1]).active,
+            "The previous view should become inactive synchronously.");
+
+  // The following call will have no effect.
+  gPanelMultiViews[0].goBack();
+  await promiseShown;
+
+  // Main view 0 should be displayed.
+  assertLabelVisible(0, true);
+
+  await hidePopup(0);
 });
 
 /**

@@ -447,7 +447,7 @@ MP3TrackDemuxer::FindFirstFrame()
           " Length()=%" PRIu64,
           candidateFrame.mStart, candidateFrame.Length());
 
-  while (candidateFrame.Length() && numSuccFrames < MIN_SUCCESSIVE_FRAMES) {
+  while (candidateFrame.Length()) {
     mParser.EndFrameSession();
     mOffset = currentFrame.mEnd;
     const MediaByteRange prevFrame = currentFrame;
@@ -473,16 +473,26 @@ MP3TrackDemuxer::FindFirstFrame()
       MP3LOGV("FindFirst() new candidate frame: mOffset=%" PRIu64
               " Length()=%" PRIu64,
               candidateFrame.mStart, candidateFrame.Length());
+    } else if (numSuccFrames >= MIN_SUCCESSIVE_FRAMES) {
+      MP3LOG("FindFirst() accepting candidate frame: "
+             "successiveFrames=%d", numSuccFrames);
+      mFrameLock = true;
+      return candidateFrame;
+    } else if (prevFrame.mStart == mParser.ID3Header().TotalTagSize() &&
+               currentFrame.mEnd == StreamLength()) {
+      // We accept streams with only two frames if both frames are valid. This
+      // is to handle very short files and provide parity with Chrome. See
+      // bug 1432195 for more information. This will not handle short files
+      // with a trailing tag, but as of writing we lack infrastructure to
+      // handle such tags.
+      MP3LOG("FindFirst() accepting candidate frame for short stream: "
+             "successiveFrames=%d", numSuccFrames);
+      mFrameLock = true;
+      return candidateFrame;
     }
   }
 
-  if (numSuccFrames >= MIN_SUCCESSIVE_FRAMES) {
-    MP3LOG("FindFirst() accepting candidate frame: "
-           "successiveFrames=%d", numSuccFrames);
-    mFrameLock = true;
-  } else {
-    MP3LOG("FindFirst() no suitable first frame found");
-  }
+  MP3LOG("FindFirst() no suitable first frame found");
   return candidateFrame;
 }
 

@@ -64,33 +64,26 @@ HTMLStyleElement::SetDisabled(bool aDisabled)
 }
 
 void
-HTMLStyleElement::CharacterDataChanged(nsIDocument* aDocument,
-                                       nsIContent* aContent,
+HTMLStyleElement::CharacterDataChanged(nsIContent* aContent,
                                        const CharacterDataChangeInfo&)
 {
   ContentChanged(aContent);
 }
 
 void
-HTMLStyleElement::ContentAppended(nsIDocument* aDocument,
-                                  nsIContent* aContainer,
-                                  nsIContent* aFirstNewContent)
+HTMLStyleElement::ContentAppended(nsIContent* aFirstNewContent)
 {
-  ContentChanged(aContainer);
+  ContentChanged(aFirstNewContent->GetParent());
 }
 
 void
-HTMLStyleElement::ContentInserted(nsIDocument* aDocument,
-                                  nsIContent* aContainer,
-                                  nsIContent* aChild)
+HTMLStyleElement::ContentInserted(nsIContent* aChild)
 {
   ContentChanged(aChild);
 }
 
 void
-HTMLStyleElement::ContentRemoved(nsIDocument* aDocument,
-                                 nsIContent* aContainer,
-                                 nsIContent* aChild,
+HTMLStyleElement::ContentRemoved(nsIContent* aChild,
                                  nsIContent* aPreviousSibling)
 {
   ContentChanged(aChild);

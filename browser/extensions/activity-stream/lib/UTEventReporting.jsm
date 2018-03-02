@@ -13,7 +13,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
   */
 const EXTRAS_FIELD_NAMES = ["addon_version", "session_id", "page", "user_prefs", "action_position"];
 
-var UTEventReporting = class UTEventReporting {
+this.UTEventReporting = class UTEventReporting {
   constructor() {
     Services.telemetry.setEventRecordingEnabled("activity_stream", true);
   }
@@ -56,4 +56,4 @@ var UTEventReporting = class UTEventReporting {
   }
 };
 
-var EXPORTED_SYMBOLS = ["UTEventReporting"];
+const EXPORTED_SYMBOLS = ["UTEventReporting"];

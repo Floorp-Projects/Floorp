@@ -18,7 +18,7 @@ function getDomain(url) {
   return domain;
 }
 
-var TippyTopProvider = class TippyTopProvider {
+this.TippyTopProvider = class TippyTopProvider {
   constructor() {
     this._sitesByDomain = new Map();
     this.initialized = false;
@@ -50,4 +50,4 @@ var TippyTopProvider = class TippyTopProvider {
   }
 };
 
-var EXPORTED_SYMBOLS = ["TippyTopProvider", "getDomain"];
+const EXPORTED_SYMBOLS = ["TippyTopProvider", "getDomain"];

@@ -844,7 +844,7 @@ GlobalObject::getRegExpStatics(JSContext* cx, Handle<GlobalObject*> global)
     const Value& val = global->getSlot(REGEXP_STATICS);
     if (!val.isObject()) {
         MOZ_ASSERT(val.isUndefined());
-        resObj = RegExpStatics::create(cx, global);
+        resObj = RegExpStatics::create(cx);
         if (!resObj)
             return nullptr;
 

@@ -46,6 +46,8 @@ JS::Zone::Zone(JSRuntime* rt, ZoneGroup* group)
     usage(&rt->gc.usage),
     threshold(),
     gcDelayBytes(0),
+    tenuredStrings(group, 0),
+    allocNurseryStrings(group, true),
     propertyTree_(group, this),
     baseShapes_(group, this),
     initialShapes_(group, this),
@@ -112,10 +114,10 @@ Zone::setNeedsIncrementalBarrier(bool needs)
 }
 
 void
-Zone::beginSweepTypes(FreeOp* fop, bool releaseTypes)
+Zone::beginSweepTypes(bool releaseTypes)
 {
     AutoClearTypeInferenceStateOnOOM oom(this);
-    types.beginSweep(fop, releaseTypes, oom);
+    types.beginSweep(releaseTypes, oom);
 }
 
 Zone::DebuggerVector*

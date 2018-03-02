@@ -1151,11 +1151,6 @@ def build_push_apk_payload(config, task, task_def):
         task_def['payload']['rollout_percentage'] = worker['rollout-percentage']
 
 
-@payload_builder('push-apk-breakpoint')
-def build_push_apk_breakpoint_payload(config, task, task_def):
-    task_def['payload'] = task['worker']['payload']
-
-
 @payload_builder('shipit')
 def build_ship_it_payload(config, task, task_def):
     worker = task['worker']

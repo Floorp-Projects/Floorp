@@ -8,7 +8,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/PageThumbs.jsm");
 ChromeUtils.import("resource://gre/modules/BackgroundPageThumbs.jsm");
-ChromeUtils.import("resource:///modules/DirectoryLinksProvider.jsm");
 ChromeUtils.import("resource://gre/modules/NewTabUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "Rect",

@@ -14,7 +14,6 @@ ChromeUtils.import("resource://gre/modules/PlacesBackups.jsm");
 ChromeUtils.import("resource://gre/modules/PlacesSyncUtils.jsm");
 ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://services-common/async.js");
 ChromeUtils.import("resource://tps/logger.jsm");
 
 async function DumpBookmarks() {

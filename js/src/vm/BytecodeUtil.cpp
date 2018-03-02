@@ -1252,8 +1252,7 @@ ToDisassemblySource(JSContext* cx, HandleScope scope, JSAutoByteString* bytes)
 }
 
 static bool
-DumpJumpOrigins(JSContext* cx, HandleScript script, jsbytecode* pc,
-                BytecodeParser* parser, Sprinter* sp)
+DumpJumpOrigins(HandleScript script, jsbytecode* pc, BytecodeParser* parser, Sprinter* sp)
 {
     bool called = false;
     auto callback = [&script, &sp, &called](jsbytecode* pc, BytecodeParser::JumpKind kind) {
@@ -1315,7 +1314,7 @@ Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
              unsigned loc, bool lines, BytecodeParser* parser, Sprinter* sp)
 {
     if (parser && parser->isReachable(pc)) {
-        if (!DumpJumpOrigins(cx, script, pc, parser, sp))
+        if (!DumpJumpOrigins(script, pc, parser, sp))
             return 0;
     }
 

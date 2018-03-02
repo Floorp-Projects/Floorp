@@ -15,6 +15,7 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WrappingOperations.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -697,7 +698,7 @@ ScrambleHashCode(HashNumber h)
      * are stored in a hash table; see Knuth for details.
      */
     static const HashNumber goldenRatio = 0x9E3779B9U;
-    return h * goldenRatio;
+    return mozilla::WrappingMultiply(h, goldenRatio);
 }
 
 } /* namespace detail */

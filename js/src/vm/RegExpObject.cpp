@@ -70,7 +70,7 @@ js::RegExpAlloc(JSContext* cx, NewObjectKind newKind, HandleObject proto /* = nu
 /* MatchPairs */
 
 bool
-MatchPairs::initArrayFrom(MatchPairs& copyFrom)
+VectorMatchPairs::initArrayFrom(VectorMatchPairs& copyFrom)
 {
     MOZ_ASSERT(copyFrom.pairCount() > 0);
 
@@ -83,28 +83,9 @@ MatchPairs::initArrayFrom(MatchPairs& copyFrom)
 }
 
 bool
-ScopedMatchPairs::allocOrExpandArray(size_t pairCount)
-{
-    /* Array expansion is forbidden, but array reuse is acceptable. */
-    if (pairCount_) {
-        MOZ_ASSERT(pairs_);
-        MOZ_ASSERT(pairCount_ == pairCount);
-        return true;
-    }
-
-    MOZ_ASSERT(!pairs_);
-    pairs_ = (MatchPair*)lifoScope_.alloc().alloc(sizeof(MatchPair) * pairCount);
-    if (!pairs_)
-        return false;
-
-    pairCount_ = pairCount;
-    return true;
-}
-
-bool
 VectorMatchPairs::allocOrExpandArray(size_t pairCount)
 {
-    if (!vec_.resizeUninitialized(sizeof(MatchPair) * pairCount))
+    if (!vec_.resizeUninitialized(pairCount))
         return false;
 
     pairs_ = &vec_[0];
@@ -1082,7 +1063,7 @@ RegExpShared::compileIfNecessary(JSContext* cx, MutableHandleRegExpShared re,
 
 /* static */ RegExpRunStatus
 RegExpShared::execute(JSContext* cx, MutableHandleRegExpShared re, HandleLinearString input,
-                      size_t start, MatchPairs* matches, size_t* endIndex)
+                      size_t start, VectorMatchPairs* matches, size_t* endIndex)
 {
     MOZ_ASSERT_IF(matches, !endIndex);
     MOZ_ASSERT_IF(!matches, endIndex);

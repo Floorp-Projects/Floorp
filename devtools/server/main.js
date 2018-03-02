@@ -17,7 +17,6 @@ var { LocalDebuggerTransport, ChildDebuggerTransport, WorkerDebuggerTransport } 
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
 var flags = require("devtools/shared/flags");
-var OldEventEmitter = require("devtools/shared/old-event-emitter");
 var SyncPromise = require("devtools/shared/deprecated-sync-thenables");
 
 DevToolsUtils.defineLazyGetter(this, "DebuggerSocket", () => {
@@ -578,7 +577,7 @@ var DebuggerServer = {
       promises.push(this._connections[connID].setAddonOptions(id, options));
     }
 
-    return SyncPromise.all(promises);
+    return Promise.all(promises);
   },
 
   get listeningSockets() {
@@ -702,81 +701,79 @@ var DebuggerServer = {
   },
 
   connectToContent(connection, mm, onDestroy) {
-    let deferred = SyncPromise.defer();
+    return new Promise(resolve => {
+      let prefix = connection.allocID("content-process");
+      let actor, childTransport;
 
-    let prefix = connection.allocID("content-process");
-    let actor, childTransport;
+      mm.addMessageListener("debug:content-process-actor", function listener(msg) {
+        // Arbitrarily choose the first content process to reply
+        // XXX: This code needs to be updated if we use more than one content process
+        mm.removeMessageListener("debug:content-process-actor", listener);
 
-    mm.addMessageListener("debug:content-process-actor", function listener(msg) {
-      // Arbitrarily choose the first content process to reply
-      // XXX: This code needs to be updated if we use more than one content process
-      mm.removeMessageListener("debug:content-process-actor", listener);
+        // Pipe Debugger message from/to parent/child via the message manager
+        childTransport = new ChildDebuggerTransport(mm, prefix);
+        childTransport.hooks = {
+          onPacket: connection.send.bind(connection),
+          onClosed() {}
+        };
+        childTransport.ready();
 
-      // Pipe Debugger message from/to parent/child via the message manager
-      childTransport = new ChildDebuggerTransport(mm, prefix);
-      childTransport.hooks = {
-        onPacket: connection.send.bind(connection),
-        onClosed() {}
-      };
-      childTransport.ready();
+        connection.setForwarding(prefix, childTransport);
 
-      connection.setForwarding(prefix, childTransport);
+        dumpn("establishing forwarding for process with prefix " + prefix);
 
-      dumpn("establishing forwarding for process with prefix " + prefix);
+        actor = msg.json.actor;
 
-      actor = msg.json.actor;
+        resolve(actor);
+      });
 
-      deferred.resolve(actor);
-    });
+      // Load the content process debugger server script only once.
+      if (!this._contentProcessScriptLoaded) {
+        // Load the process script that will receive the debug:init-content-server message
+        Services.ppmm.loadProcessScript(CONTENT_PROCESS_DBG_SERVER_SCRIPT, true);
+        this._contentProcessScriptLoaded = true;
+      }
 
-    // Load the content process debugger server script only once.
-    if (!this._contentProcessScriptLoaded) {
-      // Load the process script that will receive the debug:init-content-server message
-      Services.ppmm.loadProcessScript(CONTENT_PROCESS_DBG_SERVER_SCRIPT, true);
-      this._contentProcessScriptLoaded = true;
-    }
+      // Send a message to the content process debugger server script to forward it the
+      // prefix.
+      mm.sendAsyncMessage("debug:init-content-server", {
+        prefix: prefix
+      });
 
-    // Send a message to the content process debugger server script to forward it the
-    // prefix.
-    mm.sendAsyncMessage("debug:init-content-server", {
-      prefix: prefix
-    });
+      function onClose() {
+        Services.obs.removeObserver(onMessageManagerClose, "message-manager-close");
+        EventEmitter.off(connection, "closed", onClose);
+        if (childTransport) {
+          // If we have a child transport, the actor has already
+          // been created. We need to stop using this message manager.
+          childTransport.close();
+          childTransport = null;
+          connection.cancelForwarding(prefix);
 
-    function onClose() {
-      Services.obs.removeObserver(onMessageManagerClose, "message-manager-close");
-      EventEmitter.off(connection, "closed", onClose);
-      if (childTransport) {
-        // If we have a child transport, the actor has already
-        // been created. We need to stop using this message manager.
-        childTransport.close();
-        childTransport = null;
-        connection.cancelForwarding(prefix);
+          // ... and notify the child process to clean the tab actors.
+          try {
+            mm.sendAsyncMessage("debug:content-process-destroy");
+          } catch (e) {
+            // Nothing to do
+          }
+        }
 
-        // ... and notify the child process to clean the tab actors.
-        try {
-          mm.sendAsyncMessage("debug:content-process-destroy");
-        } catch (e) {
-          // Nothing to do
+        if (onDestroy) {
+          onDestroy(mm);
         }
       }
 
-      if (onDestroy) {
-        onDestroy(mm);
-      }
-    }
+      let onMessageManagerClose = DevToolsUtils.makeInfallible((subject, topic, data) => {
+        if (subject == mm) {
+          onClose();
+          connection.send({ from: actor.actor, type: "tabDetached" });
+        }
+      });
+      Services.obs.addObserver(onMessageManagerClose,
+                               "message-manager-close");
 
-    let onMessageManagerClose = DevToolsUtils.makeInfallible((subject, topic, data) => {
-      if (subject == mm) {
-        onClose();
-        connection.send({ from: actor.actor, type: "tabDetached" });
-      }
+      EventEmitter.on(connection, "closed", onClose);
     });
-    Services.obs.addObserver(onMessageManagerClose,
-                             "message-manager-close");
-
-    EventEmitter.on(connection, "closed", onClose);
-
-    return deferred.promise;
   },
 
   connectToWorker(connection, dbg, id, options) {
@@ -992,188 +989,186 @@ var DebuggerServer = {
    *         established.
    */
   connectToChild(connection, frame, onDestroy, {addonId} = {}) {
-    let deferred = SyncPromise.defer();
+    return new Promise(resolve => {
+      // Get messageManager from XUL browser (which might be a specialized tunnel for RDM)
+      // or else fallback to asking the frameLoader itself.
+      let mm = frame.messageManager || frame.frameLoader.messageManager;
+      mm.loadFrameScript("resource://devtools/server/child.js", false);
 
-    // Get messageManager from XUL browser (which might be a specialized tunnel for RDM)
-    // or else fallback to asking the frameLoader itself.
-    let mm = frame.messageManager || frame.frameLoader.messageManager;
-    mm.loadFrameScript("resource://devtools/server/child.js", false);
+      let trackMessageManager = () => {
+        frame.addEventListener("DevTools:BrowserSwap", onBrowserSwap);
+        mm.addMessageListener("debug:setup-in-parent", onSetupInParent);
+        if (!actor) {
+          mm.addMessageListener("debug:actor", onActorCreated);
+        }
+        DebuggerServer._childMessageManagers.add(mm);
+      };
 
-    let trackMessageManager = () => {
-      frame.addEventListener("DevTools:BrowserSwap", onBrowserSwap);
-      mm.addMessageListener("debug:setup-in-parent", onSetupInParent);
-      if (!actor) {
-        mm.addMessageListener("debug:actor", onActorCreated);
-      }
-      DebuggerServer._childMessageManagers.add(mm);
-    };
+      let untrackMessageManager = () => {
+        frame.removeEventListener("DevTools:BrowserSwap", onBrowserSwap);
+        mm.removeMessageListener("debug:setup-in-parent", onSetupInParent);
+        if (!actor) {
+          mm.removeMessageListener("debug:actor", onActorCreated);
+        }
+        DebuggerServer._childMessageManagers.delete(mm);
+      };
 
-    let untrackMessageManager = () => {
-      frame.removeEventListener("DevTools:BrowserSwap", onBrowserSwap);
-      mm.removeMessageListener("debug:setup-in-parent", onSetupInParent);
-      if (!actor) {
-        mm.removeMessageListener("debug:actor", onActorCreated);
-      }
-      DebuggerServer._childMessageManagers.delete(mm);
-    };
+      let actor, childTransport;
+      let prefix = connection.allocID("child");
+      // Compute the same prefix that's used by DebuggerServerConnection
+      let connPrefix = prefix + "/";
 
-    let actor, childTransport;
-    let prefix = connection.allocID("child");
-    // Compute the same prefix that's used by DebuggerServerConnection
-    let connPrefix = prefix + "/";
-
-    // provides hook to actor modules that need to exchange messages
-    // between e10s parent and child processes
-    let parentModules = [];
-    let onSetupInParent = function (msg) {
-      // We may have multiple connectToChild instance running for the same tab
-      // and need to filter the messages.
-      if (msg.json.prefix != connPrefix) {
-        return false;
-      }
-
-      let { module, setupParent } = msg.json;
-      let m;
-
-      try {
-        m = require(module);
-
-        if (!(setupParent in m)) {
-          dumpn(`ERROR: module '${module}' does not export '${setupParent}'`);
+      // provides hook to actor modules that need to exchange messages
+      // between e10s parent and child processes
+      let parentModules = [];
+      let onSetupInParent = function (msg) {
+        // We may have multiple connectToChild instance running for the same tab
+        // and need to filter the messages.
+        if (msg.json.prefix != connPrefix) {
           return false;
         }
 
-        parentModules.push(m[setupParent]({ mm, prefix: connPrefix }));
+        let { module, setupParent } = msg.json;
+        let m;
 
-        return true;
-      } catch (e) {
-        let errorMessage =
-          "Exception during actor module setup running in the parent process: ";
-        DevToolsUtils.reportException(errorMessage + e);
-        dumpn(`ERROR: ${errorMessage}\n\t module: '${module}'\n\t ` +
-              `setupParent: '${setupParent}'\n${DevToolsUtils.safeErrorString(e)}`);
-        return false;
-      }
-    };
+        try {
+          m = require(module);
 
-    let onActorCreated = DevToolsUtils.makeInfallible(function (msg) {
-      if (msg.json.prefix != prefix) {
-        return;
-      }
-      mm.removeMessageListener("debug:actor", onActorCreated);
+          if (!(setupParent in m)) {
+            dumpn(`ERROR: module '${module}' does not export '${setupParent}'`);
+            return false;
+          }
 
-      // Pipe Debugger message from/to parent/child via the message manager
-      childTransport = new ChildDebuggerTransport(mm, prefix);
-      childTransport.hooks = {
-        onPacket: connection.send.bind(connection),
-        onClosed() {}
+          parentModules.push(m[setupParent]({ mm, prefix: connPrefix }));
+
+          return true;
+        } catch (e) {
+          let errorMessage =
+            "Exception during actor module setup running in the parent process: ";
+          DevToolsUtils.reportException(errorMessage + e);
+          dumpn(`ERROR: ${errorMessage}\n\t module: '${module}'\n\t ` +
+                `setupParent: '${setupParent}'\n${DevToolsUtils.safeErrorString(e)}`);
+          return false;
+        }
       };
-      childTransport.ready();
 
-      connection.setForwarding(prefix, childTransport);
+      let onActorCreated = DevToolsUtils.makeInfallible(function (msg) {
+        if (msg.json.prefix != prefix) {
+          return;
+        }
+        mm.removeMessageListener("debug:actor", onActorCreated);
 
-      dumpn("establishing forwarding for app with prefix " + prefix);
+        // Pipe Debugger message from/to parent/child via the message manager
+        childTransport = new ChildDebuggerTransport(mm, prefix);
+        childTransport.hooks = {
+          onPacket: connection.send.bind(connection),
+          onClosed() {}
+        };
+        childTransport.ready();
 
-      actor = msg.json.actor;
-      deferred.resolve(actor);
-    }).bind(this);
+        connection.setForwarding(prefix, childTransport);
 
-    // Listen for browser frame swap
-    let onBrowserSwap = ({ detail: newFrame }) => {
-      // Remove listeners from old frame and mm
-      untrackMessageManager();
-      // Update frame and mm to point to the new browser frame
-      frame = newFrame;
-      // Get messageManager from XUL browser (which might be a specialized tunnel for RDM)
-      // or else fallback to asking the frameLoader itself.
-      mm = frame.messageManager || frame.frameLoader.messageManager;
-      // Add listeners to new frame and mm
+        dumpn("establishing forwarding for app with prefix " + prefix);
+
+        actor = msg.json.actor;
+        resolve(actor);
+      }).bind(this);
+
+      // Listen for browser frame swap
+      let onBrowserSwap = ({ detail: newFrame }) => {
+        // Remove listeners from old frame and mm
+        untrackMessageManager();
+        // Update frame and mm to point to the new browser frame
+        frame = newFrame;
+        // Get messageManager from XUL browser (which might be a specialized tunnel for
+        // RDM) or else fallback to asking the frameLoader itself.
+        mm = frame.messageManager || frame.frameLoader.messageManager;
+        // Add listeners to new frame and mm
+        trackMessageManager();
+
+        // provides hook to actor modules that need to exchange messages
+        // between e10s parent and child processes
+        parentModules.forEach(mod => {
+          if (mod.onBrowserSwap) {
+            mod.onBrowserSwap(mm);
+          }
+        });
+
+        if (childTransport) {
+          childTransport.swapBrowser(mm);
+        }
+      };
+
+      let destroy = DevToolsUtils.makeInfallible(function () {
+        EventEmitter.off(connection, "closed", destroy);
+        Services.obs.removeObserver(onMessageManagerClose, "message-manager-close");
+
+        // provides hook to actor modules that need to exchange messages
+        // between e10s parent and child processes
+        parentModules.forEach(mod => {
+          if (mod.onDisconnected) {
+            mod.onDisconnected();
+          }
+        });
+        // TODO: Remove this deprecated path once it's no longer needed by add-ons.
+        DebuggerServer.emit("disconnected-from-child:" + connPrefix,
+                            { mm, prefix: connPrefix });
+
+        if (childTransport) {
+          // If we have a child transport, the actor has already
+          // been created. We need to stop using this message manager.
+          childTransport.close();
+          childTransport = null;
+          connection.cancelForwarding(prefix);
+
+          // ... and notify the child process to clean the tab actors.
+          try {
+            // Bug 1169643: Ignore any exception as the child process
+            // may already be destroyed by now.
+            mm.sendAsyncMessage("debug:disconnect", { prefix });
+          } catch (e) {
+            // Nothing to do
+          }
+        } else {
+          // Otherwise, the app has been closed before the actor
+          // had a chance to be created, so we are not able to create
+          // the actor.
+          resolve(null);
+        }
+        if (actor) {
+          // The ContentActor within the child process doesn't necessary
+          // have time to uninitialize itself when the app is closed/killed.
+          // So ensure telling the client that the related actor is detached.
+          connection.send({ from: actor.actor, type: "tabDetached" });
+          actor = null;
+        }
+
+        if (onDestroy) {
+          onDestroy(mm);
+        }
+
+        // Cleanup all listeners
+        untrackMessageManager();
+      });
+
+      // Listen for various messages and frame events
       trackMessageManager();
 
-      // provides hook to actor modules that need to exchange messages
-      // between e10s parent and child processes
-      parentModules.forEach(mod => {
-        if (mod.onBrowserSwap) {
-          mod.onBrowserSwap(mm);
+      // Listen for app process exit
+      let onMessageManagerClose = function (subject, topic, data) {
+        if (subject == mm) {
+          destroy();
         }
-      });
+      };
+      Services.obs.addObserver(onMessageManagerClose,
+                               "message-manager-close");
 
-      if (childTransport) {
-        childTransport.swapBrowser(mm);
-      }
-    };
+      // Listen for connection close to cleanup things
+      // when user unplug the device or we lose the connection somehow.
+      EventEmitter.on(connection, "closed", destroy);
 
-    let destroy = DevToolsUtils.makeInfallible(function () {
-      EventEmitter.off(connection, "closed", destroy);
-      Services.obs.removeObserver(onMessageManagerClose, "message-manager-close");
-
-      // provides hook to actor modules that need to exchange messages
-      // between e10s parent and child processes
-      parentModules.forEach(mod => {
-        if (mod.onDisconnected) {
-          mod.onDisconnected();
-        }
-      });
-      // TODO: Remove this deprecated path once it's no longer needed by add-ons.
-      DebuggerServer.emit("disconnected-from-child:" + connPrefix,
-                          { mm, prefix: connPrefix });
-
-      if (childTransport) {
-        // If we have a child transport, the actor has already
-        // been created. We need to stop using this message manager.
-        childTransport.close();
-        childTransport = null;
-        connection.cancelForwarding(prefix);
-
-        // ... and notify the child process to clean the tab actors.
-        try {
-          // Bug 1169643: Ignore any exception as the child process
-          // may already be destroyed by now.
-          mm.sendAsyncMessage("debug:disconnect", { prefix });
-        } catch (e) {
-          // Nothing to do
-        }
-      } else {
-        // Otherwise, the app has been closed before the actor
-        // had a chance to be created, so we are not able to create
-        // the actor.
-        deferred.resolve(null);
-      }
-      if (actor) {
-        // The ContentActor within the child process doesn't necessary
-        // have time to uninitialize itself when the app is closed/killed.
-        // So ensure telling the client that the related actor is detached.
-        connection.send({ from: actor.actor, type: "tabDetached" });
-        actor = null;
-      }
-
-      if (onDestroy) {
-        onDestroy(mm);
-      }
-
-      // Cleanup all listeners
-      untrackMessageManager();
+      mm.sendAsyncMessage("debug:connect", { prefix, addonId });
     });
-
-    // Listen for various messages and frame events
-    trackMessageManager();
-
-    // Listen for app process exit
-    let onMessageManagerClose = function (subject, topic, data) {
-      if (subject == mm) {
-        destroy();
-      }
-    };
-    Services.obs.addObserver(onMessageManagerClose,
-                             "message-manager-close");
-
-    // Listen for connection close to cleanup things
-    // when user unplug the device or we lose the connection somehow.
-    EventEmitter.on(connection, "closed", destroy);
-
-    mm.sendAsyncMessage("debug:connect", { prefix, addonId });
-
-    return deferred.promise;
   },
 
   /**
@@ -1399,7 +1394,7 @@ DevToolsUtils.defineLazyGetter(DebuggerServer, "AuthenticationResult", () => {
   return Authentication.AuthenticationResult;
 });
 
-OldEventEmitter.decorate(DebuggerServer);
+EventEmitter.decorate(DebuggerServer);
 
 if (this.exports) {
   exports.DebuggerServer = DebuggerServer;

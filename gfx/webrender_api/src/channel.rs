@@ -6,6 +6,7 @@ use api::{Epoch, PipelineId};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use std::io::{Cursor, Read};
 use std::mem;
+use std::sync::mpsc::Receiver;
 
 #[derive(Clone)]
 pub struct Payload {
@@ -74,6 +75,10 @@ pub trait PayloadSenderHelperMethods {
 
 pub trait PayloadReceiverHelperMethods {
     fn recv_payload(&self) -> Result<Payload, Error>;
+
+    // For an MPSC receiver, this is the identity function,
+    // for an IPC receiver, it routes to a new mpsc receiver
+    fn to_mpsc_receiver(self) -> Receiver<Payload>;
 }
 
 #[cfg(not(feature = "ipc"))]

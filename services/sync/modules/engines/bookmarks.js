@@ -727,7 +727,9 @@ BufferedBookmarksEngine.prototype = {
     let buf = await this._store.ensureOpenMirror();
     let recordsToUpload = await buf.apply({
       remoteTimeSeconds: Resource.serverTime,
+      weakUpload: [...this._needWeakUpload.keys()],
     });
+    this._needWeakUpload.clear();
     this._modified.replace(recordsToUpload);
   },
 
@@ -736,9 +738,6 @@ BufferedBookmarksEngine.prototype = {
   },
 
   async _createRecord(id) {
-    if (this._needWeakUpload.has(id)) {
-      return this._store.createRecord(id, this.name);
-    }
     let change = this._modified.changes[id];
     if (!change) {
       this._log.error("Creating record for item ${id} not in strong " +

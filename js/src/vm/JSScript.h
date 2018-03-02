@@ -1142,6 +1142,9 @@ class JSScript : public js::gc::TenuredCell
     bool hasRest_:1;
     bool isExprBody_:1;
 
+    // True if the debugger's onNewScript hook has not yet been called.
+    bool hideScriptFromDebugger_:1;
+
     // Add padding so JSScript is gc::Cell aligned. Make padding protected
     // instead of private to suppress -Wunused-private-field compiler warnings.
   protected:
@@ -1172,10 +1175,8 @@ class JSScript : public js::gc::TenuredCell
                               uint32_t nTypeSets);
 
   private:
-    static void initFromFunctionBox(JSContext* cx, js::HandleScript script,
-                                    js::frontend::FunctionBox* funbox);
-    static void initFromModuleContext(JSContext* cx, js::HandleScript script,
-                                      js::frontend::ModuleSharedContext* modulesc);
+    static void initFromFunctionBox(js::HandleScript script, js::frontend::FunctionBox* funbox);
+    static void initFromModuleContext(js::HandleScript script);
 
   public:
     static bool fullyInitFromEmitter(JSContext* cx, js::HandleScript script,
@@ -1463,6 +1464,13 @@ class JSScript : public js::gc::TenuredCell
     }
     void setIsExprBody() {
         isExprBody_ = true;
+    }
+
+    bool hideScriptFromDebugger() const {
+        return hideScriptFromDebugger_;
+    }
+    void clearHideScriptFromDebugger() {
+        hideScriptFromDebugger_ = false;
     }
 
     void setNeedsHomeObject() {
@@ -1787,7 +1795,7 @@ class JSScript : public js::gc::TenuredCell
     void addIonCounts(js::jit::IonScriptCounts* ionCounts);
     js::jit::IonScriptCounts* getIonCounts();
     void releaseScriptCounts(js::ScriptCounts* counts);
-    void destroyScriptCounts(js::FreeOp* fop);
+    void destroyScriptCounts();
     void destroyScriptName();
     // The entry should be removed after using this function.
     void takeOverScriptCountsMapEntry(js::ScriptCounts* entryValue);

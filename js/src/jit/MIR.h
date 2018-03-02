@@ -4003,8 +4003,7 @@ class MArrayState
     INSTRUCTION_HEADER(ArrayState)
     NAMED_OPERANDS((0, array), (1, initializedLength))
 
-    static MArrayState* New(TempAllocator& alloc, MDefinition* arr, MDefinition* undefinedVal,
-                            MDefinition* initLength);
+    static MArrayState* New(TempAllocator& alloc, MDefinition* arr, MDefinition* initLength);
     static MArrayState* Copy(TempAllocator& alloc, MArrayState* state);
 
     // Initialize values from CopyOnWrite arrays.

@@ -14,7 +14,7 @@ use prim_store::{ClipData, ImageMaskData};
 use resource_cache::{ImageRequest, ResourceCache};
 use util::{LayerToWorldFastTransform, MaxRect, calculate_screen_bounding_rect};
 use util::extract_inner_rect_safe;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub type ClipStore = FreeList<ClipSources>;
 pub type ClipSourcesHandle = FreeListHandle<ClipSources>;
@@ -353,7 +353,7 @@ pub fn rounded_rectangle_contains_point(point: &LayoutPoint,
     true
 }
 
-pub type ClipChainNodeRef = Option<Rc<ClipChainNode>>;
+pub type ClipChainNodeRef = Option<Arc<ClipChainNode>>;
 
 #[derive(Debug, Clone)]
 pub struct ClipChainNode {
@@ -382,29 +382,15 @@ impl ClipChain {
         }
     }
 
-    pub fn new_with_added_node(
-        &self,
-        work_item: ClipWorkItem,
-        local_clip_rect: LayerRect,
-        screen_outer_rect: DeviceIntRect,
-        screen_inner_rect: DeviceIntRect,
-    ) -> ClipChain {
+    pub fn new_with_added_node(&self, new_node: &ClipChainNode) -> ClipChain {
         // If the new node's inner rectangle completely surrounds our outer rectangle,
         // we can discard the new node entirely since it isn't going to affect anything.
-        if screen_inner_rect.contains_rect(&self.combined_outer_screen_rect) {
+        if new_node.screen_inner_rect.contains_rect(&self.combined_outer_screen_rect) {
             return self.clone();
         }
 
-        let new_node = ClipChainNode {
-            work_item,
-            local_clip_rect,
-            screen_outer_rect,
-            screen_inner_rect,
-            prev: None,
-        };
-
         let mut new_chain = self.clone();
-        new_chain.add_node(new_node);
+        new_chain.add_node(new_node.clone());
         new_chain
     }
 
@@ -425,7 +411,7 @@ impl ClipChain {
             self.combined_inner_screen_rect.intersection(&new_node.screen_inner_rect)
             .unwrap_or_else(DeviceIntRect::zero);
 
-        self.nodes = Some(Rc::new(new_node));
+        self.nodes = Some(Arc::new(new_node));
     }
 }
 
@@ -434,7 +420,7 @@ pub struct ClipChainNodeIter {
 }
 
 impl Iterator for ClipChainNodeIter {
-    type Item = Rc<ClipChainNode>;
+    type Item = Arc<ClipChainNode>;
 
     fn next(&mut self) -> ClipChainNodeRef {
         let previous = self.current.clone();

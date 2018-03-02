@@ -606,7 +606,7 @@ class JSString : public js::gc::Cell
     void dumpNoNewline(js::GenericPrinter& out);
     void dumpCharsNoNewline(js::GenericPrinter& out);
     void dumpRepresentation(js::GenericPrinter& out, int indent) const;
-    void dumpRepresentationHeader(js::GenericPrinter& out, int indent, const char* subclass) const;
+    void dumpRepresentationHeader(js::GenericPrinter& out, const char* subclass) const;
 
     template <typename CharT>
     static void dumpChars(const CharT* s, size_t len, js::GenericPrinter& out);

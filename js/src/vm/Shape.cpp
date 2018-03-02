@@ -1800,12 +1800,12 @@ Shape::fixupDictionaryShapeAfterMovingGC()
 
     if (listpPointsIntoShape) {
         // listp points to the parent field of the next shape.
-        Shape* next = reinterpret_cast<Shape*>(uintptr_t(listp) - offsetof(Shape, parent));
+        Shape* next = Shape::fromParentFieldPointer(uintptr_t(listp));
         if (gc::IsForwarded(next))
             listp = &gc::Forwarded(next)->parent;
     } else {
         // listp points to the shape_ field of an object.
-        JSObject* last = reinterpret_cast<JSObject*>(uintptr_t(listp) - ShapedObject::offsetOfShape());
+        JSObject* last = ShapedObject::fromShapeFieldPointer(uintptr_t(listp));
         if (gc::IsForwarded(last))
             listp = gc::Forwarded(last)->as<NativeObject>().shapePtr();
     }

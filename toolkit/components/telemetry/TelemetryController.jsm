@@ -638,8 +638,12 @@ var Impl = {
       }
       const isPrereleaseChannel =
         prereleaseChannels.includes(AppConstants.MOZ_UPDATE_CHANNEL);
+      const isReleaseCandidateOnBeta =
+        AppConstants.MOZ_UPDATE_CHANNEL === "release" &&
+        Services.prefs.getCharPref("app.update.channel", null) === "beta";
       Telemetry.canRecordBase = true;
       Telemetry.canRecordExtended = isPrereleaseChannel ||
+        isReleaseCandidateOnBeta ||
         Services.prefs.getBoolPref(TelemetryUtils.Preferences.OverridePreRelease, false);
     } else {
       // We're not on unified Telemetry, stick to the old behaviour for

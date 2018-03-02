@@ -25,6 +25,10 @@ impl PayloadReceiverHelperMethods for PayloadReceiver {
     fn recv_payload(&self) -> Result<Payload, Error> {
         self.recv()
     }
+
+    fn to_mpsc_receiver(self) -> Receiver<Payload> {
+        self.rx
+    }
 }
 
 pub struct MsgReceiver<T> {

@@ -29,7 +29,7 @@ const MIN_FAVICON_SIZE = 96;
 const CACHED_LINK_PROPS_TO_MIGRATE = ["screenshot"];
 const PINNED_FAVICON_PROPS_TO_MIGRATE = ["favicon", "faviconRef", "faviconSize"];
 
-var TopSitesFeed = class TopSitesFeed {
+this.TopSitesFeed = class TopSitesFeed {
   constructor() {
     this._tippyTopProvider = new TippyTopProvider();
     this.dedupe = new Dedupe(this._dedupeKey);
@@ -347,4 +347,4 @@ var TopSitesFeed = class TopSitesFeed {
 };
 
 this.DEFAULT_TOP_SITES = DEFAULT_TOP_SITES;
-var EXPORTED_SYMBOLS = ["TopSitesFeed", "DEFAULT_TOP_SITES"];
+const EXPORTED_SYMBOLS = ["TopSitesFeed", "DEFAULT_TOP_SITES"];

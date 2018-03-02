@@ -67,26 +67,22 @@ nsresult nsMenuGroupOwnerX::Create(mozilla::dom::Element* aContent)
 //
 
 
-void nsMenuGroupOwnerX::CharacterDataWillChange(nsIDocument* aDocument,
-                                                nsIContent* aContent,
+void nsMenuGroupOwnerX::CharacterDataWillChange(nsIContent* aContent,
                                                 const CharacterDataChangeInfo&)
 {
 }
 
 
-void nsMenuGroupOwnerX::CharacterDataChanged(nsIDocument* aDocument,
-                                             nsIContent* aContent,
+void nsMenuGroupOwnerX::CharacterDataChanged(nsIContent* aContent,
                                              const CharacterDataChangeInfo&)
 {
 }
 
 
-void nsMenuGroupOwnerX::ContentAppended(nsIDocument* aDocument,
-                                        nsIContent* aContainer,
-                                        nsIContent* aFirstNewContent)
+void nsMenuGroupOwnerX::ContentAppended(nsIContent* aFirstNewContent)
 {
   for (nsIContent* cur = aFirstNewContent; cur; cur = cur->GetNextSibling()) {
-    ContentInserted(aDocument, aContainer, cur);
+    ContentInserted(cur);
   }
 }
 
@@ -96,8 +92,7 @@ void nsMenuGroupOwnerX::NodeWillBeDestroyed(const nsINode * aNode)
 }
 
 
-void nsMenuGroupOwnerX::AttributeWillChange(nsIDocument* aDocument,
-                                            dom::Element* aContent,
+void nsMenuGroupOwnerX::AttributeWillChange(dom::Element* aContent,
                                             int32_t aNameSpaceID,
                                             nsAtom* aAttribute,
                                             int32_t aModType,
@@ -105,14 +100,12 @@ void nsMenuGroupOwnerX::AttributeWillChange(nsIDocument* aDocument,
 {
 }
 
-void nsMenuGroupOwnerX::NativeAnonymousChildListChange(nsIDocument* aDocument,
-                                                       nsIContent* aContent,
+void nsMenuGroupOwnerX::NativeAnonymousChildListChange(nsIContent* aContent,
                                                        bool aIsRemove)
 {
 }
 
-void nsMenuGroupOwnerX::AttributeChanged(nsIDocument* aDocument,
-                                         dom::Element* aElement,
+void nsMenuGroupOwnerX::AttributeChanged(dom::Element* aElement,
                                          int32_t aNameSpaceID,
                                          nsAtom* aAttribute,
                                          int32_t aModType,
@@ -121,58 +114,58 @@ void nsMenuGroupOwnerX::AttributeChanged(nsIDocument* aDocument,
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   nsChangeObserver* obs = LookupContentChangeObserver(aElement);
   if (obs)
-    obs->ObserveAttributeChanged(aDocument, aElement, aAttribute);
+    obs->ObserveAttributeChanged(aElement->OwnerDoc(), aElement, aAttribute);
 }
 
 
-void nsMenuGroupOwnerX::ContentRemoved(nsIDocument * aDocument,
-                                       nsIContent * aContainer,
-                                       nsIContent * aChild,
-                                       nsIContent * aPreviousSibling)
+void nsMenuGroupOwnerX::ContentRemoved(nsIContent* aChild,
+                                       nsIContent* aPreviousSibling)
 {
-  if (!aContainer) {
+  nsIContent* container = aChild->GetParent();
+  if (!container) {
     return;
   }
 
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
-  nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
+  nsChangeObserver* obs = LookupContentChangeObserver(container);
   if (obs)
-    obs->ObserveContentRemoved(aDocument, aContainer, aChild, aPreviousSibling);
-  else if (aContainer != mContent) {
+    obs->ObserveContentRemoved(aChild->OwnerDoc(), container, aChild,
+                               aPreviousSibling);
+  else if (container != mContent) {
     // We do a lookup on the parent container in case things were removed
     // under a "menupopup" item. That is basically a wrapper for the contents
     // of a "menu" node.
-    nsCOMPtr<nsIContent> parent = aContainer->GetParent();
+    nsCOMPtr<nsIContent> parent = container->GetParent();
     if (parent) {
       obs = LookupContentChangeObserver(parent);
       if (obs)
-        obs->ObserveContentRemoved(aDocument, aContainer, aChild, aPreviousSibling);
+        obs->ObserveContentRemoved(aChild->OwnerDoc(), aChild->GetParent(),
+                                   aChild, aPreviousSibling);
     }
   }
 }
 
 
-void nsMenuGroupOwnerX::ContentInserted(nsIDocument * aDocument,
-                                        nsIContent * aContainer,
-                                        nsIContent * aChild)
+void nsMenuGroupOwnerX::ContentInserted(nsIContent* aChild)
 {
-  if (!aContainer) {
+  nsIContent* container = aChild->GetParent();
+  if (!container) {
     return;
   }
 
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
-  nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
+  nsChangeObserver* obs = LookupContentChangeObserver(container);
   if (obs)
-    obs->ObserveContentInserted(aDocument, aContainer, aChild);
-  else if (aContainer != mContent) {
+    obs->ObserveContentInserted(aChild->OwnerDoc(), container, aChild);
+  else if (container != mContent) {
     // We do a lookup on the parent container in case things were removed
     // under a "menupopup" item. That is basically a wrapper for the contents
     // of a "menu" node.
-    nsCOMPtr<nsIContent> parent = aContainer->GetParent();
+    nsCOMPtr<nsIContent> parent = container->GetParent();
     if (parent) {
       obs = LookupContentChangeObserver(parent);
       if (obs)
-        obs->ObserveContentInserted(aDocument, aContainer, aChild);
+        obs->ObserveContentInserted(aChild->OwnerDoc(), container, aChild);
     }
   }
 }

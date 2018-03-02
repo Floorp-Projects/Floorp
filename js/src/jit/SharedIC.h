@@ -1077,7 +1077,7 @@ class ICStubCompiler
     // performing a tail call. This is required for the return address
     // to pc mapping to work.
     void enterStubFrame(MacroAssembler& masm, Register scratch);
-    void assumeStubFrame(MacroAssembler& masm);
+    void assumeStubFrame();
     void leaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false);
 
     // Some stubs need to emit Gecko Profiler updates.  This emits the guarding

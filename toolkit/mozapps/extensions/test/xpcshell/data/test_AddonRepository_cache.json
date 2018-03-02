@@ -39,7 +39,8 @@
               "32": "http://localhost/repo/1/icon.png"
             },
             "ratings": {
-                "count": 1111,
+                "count": 1234,
+                "text_count": 1111,
                 "average": 1
             },
             "homepage": "http://localhost/repo/1/homepage.html",
@@ -95,7 +96,8 @@
                 }
             ],
             "ratings": {
-                "count": 1112,
+                "count": 2223,
+                "text_count": 1112,
                 "average": 2
             },
             "homepage": "http://localhost/repo/2/homepage.html",

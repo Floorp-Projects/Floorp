@@ -300,7 +300,7 @@ class JSJitProfilingFrameIterator
     inline JitFrameLayout* framePtr();
     inline JSScript* frameScript();
     MOZ_MUST_USE bool tryInitWithPC(void* pc);
-    MOZ_MUST_USE bool tryInitWithTable(JitcodeGlobalTable* table, void* pc, JSRuntime* rt,
+    MOZ_MUST_USE bool tryInitWithTable(JitcodeGlobalTable* table, void* pc,
                                        bool forLastCallSite);
     void fixBaselineReturnAddress();
 

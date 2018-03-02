@@ -1804,18 +1804,6 @@ MacroAssemblerARMCompat::buildOOLFakeExitFrame(void* fakeReturnAddr)
 }
 
 void
-MacroAssembler::alignFrameForICArguments(AfterICSaveLive& aic)
-{
-    // Exists for MIPS compatibility.
-}
-
-void
-MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive& aic)
-{
-    // Exists for MIPS compatibility.
-}
-
-void
 MacroAssemblerARMCompat::move32(Imm32 imm, Register dest)
 {
     ma_mov(imm, dest);

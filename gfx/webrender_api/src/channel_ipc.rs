@@ -5,6 +5,8 @@
 use ipc_channel::ipc::{self, IpcBytesReceiver, IpcBytesSender, IpcReceiver, IpcSender};
 use serde::{Deserialize, Serialize};
 use std::io::{Error, ErrorKind};
+use std::sync::mpsc;
+use std::thread;
 use std::{error, io};
 
 ///
@@ -29,6 +31,20 @@ impl PayloadReceiverHelperMethods for PayloadReceiver {
     fn recv_payload(&self) -> Result<Payload, Error> {
         self.recv().map(|data| Payload::from_data(&data) )
                    .map_err(|e| io::Error::new(ErrorKind::Other, error::Error::description(&e)))
+    }
+
+    fn to_mpsc_receiver(self) -> Receiver<Payload> {
+        // It would be nice to use the IPC router for this,
+        // but that requires an IpcReceiver, not an IpcBytesReceiver.
+        let (tx, rx) = mpsc::channel();
+        thread::spawn(move || {
+            while let Ok(payload) = self.recv_payload() {
+                if tx.send(payload).is_err() {
+                    break;
+                }
+            }
+        });
+        rx
     }
 }
 

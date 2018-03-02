@@ -138,8 +138,7 @@ nsFormFillController::~nsFormFillController()
 //
 
 void
-nsFormFillController::AttributeChanged(nsIDocument* aDocument,
-                                       mozilla::dom::Element* aElement,
+nsFormFillController::AttributeChanged(mozilla::dom::Element* aElement,
                                        int32_t aNameSpaceID,
                                        nsAtom* aAttribute, int32_t aModType,
                                        const nsAttrValue* aOldValue)
@@ -159,7 +158,7 @@ nsFormFillController::AttributeChanged(nsIDocument* aDocument,
         this,
         &nsFormFillController::MaybeStartControllingInput,
         focusedInput);
-    aDocument->Dispatch(TaskCategory::Other, event.forget());
+    aElement->OwnerDoc()->Dispatch(TaskCategory::Other, event.forget());
   }
 
   if (mListNode && mListNode->Contains(aElement)) {
@@ -168,53 +167,44 @@ nsFormFillController::AttributeChanged(nsIDocument* aDocument,
 }
 
 void
-nsFormFillController::ContentAppended(nsIDocument* aDocument,
-                                      nsIContent* aContainer,
-                                      nsIContent* aChild)
+nsFormFillController::ContentAppended(nsIContent* aChild)
 {
-  if (mListNode && mListNode->Contains(aContainer)) {
+  if (mListNode && mListNode->Contains(aChild->GetParent())) {
     RevalidateDataList();
   }
 }
 
 void
-nsFormFillController::ContentInserted(nsIDocument* aDocument,
-                                      nsIContent* aContainer,
-                                      nsIContent* aChild)
+nsFormFillController::ContentInserted(nsIContent* aChild)
 {
-  if (mListNode && mListNode->Contains(aContainer)) {
+  if (mListNode && mListNode->Contains(aChild->GetParent())) {
     RevalidateDataList();
   }
 }
 
 void
-nsFormFillController::ContentRemoved(nsIDocument* aDocument,
-                                     nsIContent* aContainer,
-                                     nsIContent* aChild,
+nsFormFillController::ContentRemoved(nsIContent* aChild,
                                      nsIContent* aPreviousSibling)
 {
-  if (mListNode && mListNode->Contains(aContainer)) {
+  if (mListNode && mListNode->Contains(aChild->GetParent())) {
     RevalidateDataList();
   }
 }
 
 void
-nsFormFillController::CharacterDataWillChange(nsIDocument* aDocument,
-                                              nsIContent* aContent,
+nsFormFillController::CharacterDataWillChange(nsIContent* aContent,
                                               const CharacterDataChangeInfo&)
 {
 }
 
 void
-nsFormFillController::CharacterDataChanged(nsIDocument* aDocument,
-                                           nsIContent* aContent,
+nsFormFillController::CharacterDataChanged(nsIContent* aContent,
                                            const CharacterDataChangeInfo&)
 {
 }
 
 void
-nsFormFillController::AttributeWillChange(nsIDocument* aDocument,
-                                          mozilla::dom::Element* aElement,
+nsFormFillController::AttributeWillChange(mozilla::dom::Element* aElement,
                                           int32_t aNameSpaceID,
                                           nsAtom* aAttribute, int32_t aModType,
                                           const nsAttrValue* aNewValue)
@@ -222,8 +212,7 @@ nsFormFillController::AttributeWillChange(nsIDocument* aDocument,
 }
 
 void
-nsFormFillController::NativeAnonymousChildListChange(nsIDocument* aDocument,
-                                                     nsIContent* aContent,
+nsFormFillController::NativeAnonymousChildListChange(nsIContent* aContent,
                                                      bool aIsRemove)
 {
 }

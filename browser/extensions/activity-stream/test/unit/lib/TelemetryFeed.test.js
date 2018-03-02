@@ -37,7 +37,8 @@ describe("TelemetryFeed", () => {
     TelemetryFeed,
     USER_PREFS_ENCODING,
     PREF_IMPRESSION_ID,
-    TELEMETRY_PREF
+    TELEMETRY_PREF,
+    EVENTS_TELEMETRY_PREF
   } = injector({
     "common/PerfService.jsm": {perfService},
     "lib/UTEventReporting.jsm": {UTEventReporting}
@@ -96,6 +97,21 @@ describe("TelemetryFeed", () => {
         instance._prefs.set(TELEMETRY_PREF, true);
 
         assert.propertyVal(instance, "telemetryEnabled", true);
+      });
+    });
+    describe("events telemetry pref changes from false to true", () => {
+      beforeEach(() => {
+        FakePrefs.prototype.prefs = {};
+        FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = false;
+        instance = new TelemetryFeed();
+
+        assert.propertyVal(instance, "eventTelemetryEnabled", false);
+      });
+
+      it("should set the enabled property to true", () => {
+        instance._prefs.set(EVENTS_TELEMETRY_PREF, true);
+
+        assert.propertyVal(instance, "eventTelemetryEnabled", true);
       });
     });
   });
@@ -240,8 +256,8 @@ describe("TelemetryFeed", () => {
     });
     it("should call createSessionSendEvent and sendEvent with the sesssion", () => {
       sandbox.stub(instance, "sendEvent");
+      sandbox.stub(instance, "sendUTEvent");
       sandbox.stub(instance, "createSessionEndEvent");
-      sandbox.stub(instance.utEvents, "sendSessionEndEvent");
       const session = instance.addSession("foo");
 
       instance.endSession("foo");
@@ -251,7 +267,7 @@ describe("TelemetryFeed", () => {
 
       let sessionEndEvent = instance.createSessionEndEvent.firstCall.returnValue;
       assert.calledWith(instance.sendEvent, sessionEndEvent);
-      assert.calledWith(instance.utEvents.sendSessionEndEvent, sessionEndEvent);
+      assert.calledWith(instance.sendUTEvent, sessionEndEvent, instance.utEvents.sendSessionEndEvent);
     });
   });
   describe("ping creators", () => {
@@ -460,6 +476,18 @@ describe("TelemetryFeed", () => {
       assert.calledWith(instance.pingCentre.sendPing, event);
     });
   });
+  describe("#sendUTEvent", () => {
+    it("should call the UT event function passed in", async () => {
+      FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = true;
+      const event = {};
+      instance = new TelemetryFeed();
+      sandbox.stub(instance.utEvents, "sendUserEvent");
+
+      await instance.sendUTEvent(event, instance.utEvents.sendUserEvent);
+
+      assert.calledWith(instance.utEvents.sendUserEvent, event);
+    });
+  });
 
   describe("#setLoadTriggerInfo", () => {
     it("should call saveSessionPerfData w/load_trigger_{ts,type} data", () => {
@@ -553,6 +581,16 @@ describe("TelemetryFeed", () => {
 
       assert.notProperty(instance._prefs.observers, TELEMETRY_PREF);
     });
+    it("should remove the a-s ut telemetry pref listener", () => {
+      FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = true;
+      instance = new TelemetryFeed();
+
+      assert.property(instance._prefs.observers, EVENTS_TELEMETRY_PREF);
+
+      instance.uninit();
+
+      assert.notProperty(instance._prefs.observers, EVENTS_TELEMETRY_PREF);
+    });
     it("should call Cu.reportError if this._prefs.ignore throws", () => {
       globals.sandbox.stub(FakePrefs.prototype, "ignore").throws("Some Error");
       instance = new TelemetryFeed();
@@ -641,15 +679,15 @@ describe("TelemetryFeed", () => {
     });
     it("should send an event on a TELEMETRY_USER_EVENT action", () => {
       const sendEvent = sandbox.stub(instance, "sendEvent");
+      const sendUTEvent = sandbox.stub(instance, "sendUTEvent");
       const eventCreator = sandbox.stub(instance, "createUserEvent");
-      const sendUserEvent = sandbox.stub(instance.utEvents, "sendUserEvent");
       const action = {type: at.TELEMETRY_USER_EVENT};
 
       instance.onAction(action);
 
       assert.calledWith(eventCreator, action);
       assert.calledWith(sendEvent, eventCreator.returnValue);
-      assert.calledWith(sendUserEvent, eventCreator.returnValue);
+      assert.calledWith(sendUTEvent, eventCreator.returnValue, instance.utEvents.sendUserEvent);
     });
     it("should send an event on a TELEMETRY_PERFORMANCE_EVENT action", () => {
       const sendEvent = sandbox.stub(instance, "sendEvent");

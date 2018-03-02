@@ -481,7 +481,7 @@ var PlacesCommandHook = {
     let parentGuid = parentId == PlacesUtils.bookmarksMenuFolderId ?
                        PlacesUtils.bookmarks.menuGuid :
                        await PlacesUtils.promiseItemGuid(parentId);
-    let defaultInsertionPoint = new InsertionPoint({ parentId, parentGuid });
+    let defaultInsertionPoint = new PlacesInsertionPoint({ parentId, parentGuid });
     PlacesUIUtils.showBookmarkDialog({ action: "add",
                                        type: "bookmark",
                                        uri: makeURI(url),
@@ -557,7 +557,7 @@ var PlacesCommandHook = {
    *            A short description of the feed. Optional.
    */
   async addLiveBookmark(url, feedTitle, feedSubtitle) {
-    let toolbarIP = new InsertionPoint({
+    let toolbarIP = new PlacesInsertionPoint({
       parentId: PlacesUtils.toolbarFolderId,
       parentGuid: PlacesUtils.bookmarks.toolbarGuid
     });
@@ -993,7 +993,7 @@ var PlacesMenuDNDHandler = {
    *          The DragOver event.
    */
   onDragOver: function PMDH_onDragOver(event) {
-    let ip = new InsertionPoint({
+    let ip = new PlacesInsertionPoint({
       parentId: PlacesUtils.bookmarksMenuFolderId,
       parentGuid: PlacesUtils.bookmarks.menuGuid
     });
@@ -1010,7 +1010,7 @@ var PlacesMenuDNDHandler = {
    */
   onDrop: function PMDH_onDrop(event) {
     // Put the item at the end of bookmark menu.
-    let ip = new InsertionPoint({
+    let ip = new PlacesInsertionPoint({
       parentId: PlacesUtils.bookmarksMenuFolderId,
       parentGuid: PlacesUtils.bookmarks.menuGuid
     });

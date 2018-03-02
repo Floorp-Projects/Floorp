@@ -2373,38 +2373,6 @@ CodeGeneratorX86Shared::visitNearbyIntF(LNearbyIntF* lir)
 }
 
 void
-CodeGeneratorX86Shared::visitGuardShape(LGuardShape* guard)
-{
-    Register obj = ToRegister(guard->input());
-    masm.cmpPtr(Operand(obj, ShapedObject::offsetOfShape()), ImmGCPtr(guard->mir()->shape()));
-
-    bailoutIf(Assembler::NotEqual, guard->snapshot());
-}
-
-void
-CodeGeneratorX86Shared::visitGuardObjectGroup(LGuardObjectGroup* guard)
-{
-    Register obj = ToRegister(guard->input());
-
-    masm.cmpPtr(Operand(obj, JSObject::offsetOfGroup()), ImmGCPtr(guard->mir()->group()));
-
-    Assembler::Condition cond =
-        guard->mir()->bailOnEquality() ? Assembler::Equal : Assembler::NotEqual;
-    bailoutIf(cond, guard->snapshot());
-}
-
-void
-CodeGeneratorX86Shared::visitGuardClass(LGuardClass* guard)
-{
-    Register obj = ToRegister(guard->input());
-    Register tmp = ToRegister(guard->tempInt());
-
-    masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), tmp);
-    masm.cmpPtr(Operand(tmp, ObjectGroup::offsetOfClasp()), ImmPtr(guard->mir()->getClass()));
-    bailoutIf(Assembler::NotEqual, guard->snapshot());
-}
-
-void
 CodeGeneratorX86Shared::visitEffectiveAddress(LEffectiveAddress* ins)
 {
     const MEffectiveAddress* mir = ins->mir();

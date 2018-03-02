@@ -500,7 +500,7 @@ class SyncTelemetryImpl {
     if (record.syncs.length || numEvents) {
       log.trace(`submitting ${record.syncs.length} sync record(s) and ` +
                 `${numEvents} event(s) to telemetry`);
-      TelemetryController.submitExternalPing("sync", record);
+      TelemetryController.submitExternalPing("sync", record, { usePingSender: true });
       return true;
     }
     return false;

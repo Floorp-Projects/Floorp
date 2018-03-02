@@ -397,11 +397,8 @@ DevToolsStartup.prototype = {
         itemsToDisplay.push(doc.getElementById("goOfflineMenuitem"));
 
         let developerItems = doc.getElementById("PanelUI-developerItems");
-        // Import private helpers from CustomizableWidgets
-        let { clearSubview, fillSubviewFromMenuItems } =
-          ChromeUtils.import("resource:///modules/CustomizableWidgets.jsm", {});
-        clearSubview(developerItems);
-        fillSubviewFromMenuItems(itemsToDisplay, developerItems);
+        CustomizableUI.clearSubview(developerItems);
+        CustomizableUI.fillSubviewFromMenuItems(itemsToDisplay, developerItems);
       },
       onInit(anchor) {
         // Since onBeforeCreated already bails out when initialized, we can call

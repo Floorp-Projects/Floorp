@@ -13,6 +13,8 @@
   <!ENTITY cancelPaymentButton.label   "Cancel">
   <!ENTITY approvePaymentButton.label  "Pay">
   <!ENTITY processingPaymentButton.label "Processing">
+  <!ENTITY successPaymentButton.label    "Done">
+  <!ENTITY failPaymentButton.label       "Fail">
   <!ENTITY orderDetailsLabel          "Order Details">
   <!ENTITY orderTotalLabel            "Total">
 ]>
@@ -67,24 +69,29 @@
         <h1>&paymentSummaryTitle;</h1>
 
         <section>
+          <div id="error-text"></div>
+
           <div class="shipping-related"
                id="shipping-type-label"
                data-shipping-address-label="&shippingAddressLabel;"
                data-delivery-address-label="&deliveryAddressLabel;"
                data-pickup-address-label="&pickupAddressLabel;"><label></label></div>
           <address-picker class="shipping-related" selected-state-key="selectedShippingAddress"></address-picker>
+
           <div class="shipping-related"><label>&shippingOptionsLabel;</label></div>
           <shipping-option-picker class="shipping-related"></shipping-option-picker>
+
           <div><label>&paymentMethodsLabel;</label></div>
           <payment-method-picker selected-state-key="selectedPaymentCard"></payment-method-picker>
-          <div id="error-text"></div>
         </section>
 
         <footer id="controls-container">
           <button id="cancel">&cancelPaymentButton.label;</button>
           <button id="pay"
                   data-initial-label="&approvePaymentButton.label;"
-                  data-processing-label="&processingPaymentButton.label;"></button>
+                  data-processing-label="&processingPaymentButton.label;"
+                  data-fail-label="&failPaymentButton.label;"
+                  data-success-label="&successPaymentButton.label;"></button>
         </footer>
       </section>
       <section id="order-details-overlay" hidden="hidden">

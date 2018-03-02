@@ -75,8 +75,6 @@ class LIRGeneratorNone : public LIRGeneratorShared
     void visitReturn(MReturn* ret) override { MOZ_CRASH(); }
     void visitPowHalf(MPowHalf*) override { MOZ_CRASH(); }
     void visitWasmNeg(MWasmNeg*) override { MOZ_CRASH(); }
-    void visitGuardShape(MGuardShape* ins) override { MOZ_CRASH(); }
-    void visitGuardObjectGroup(MGuardObjectGroup* ins) override { MOZ_CRASH(); }
     void visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins) override { MOZ_CRASH(); }
     void visitWasmUnsignedToFloat32(MWasmUnsignedToFloat32* ins) override { MOZ_CRASH(); }
     void visitAsmJSLoadHeap(MAsmJSLoadHeap* ins) override { MOZ_CRASH(); }

@@ -212,6 +212,7 @@
                               observes="viewHistorySidebar"
                               label="&historyButton.label;"/>
                     <menuitem id="menu_tabsSidebar"
+                              class="sync-ui-item"
                               observes="viewTabsSidebar"
                               label="&syncedTabs.sidebar.label;"/>
                   </menupopup>

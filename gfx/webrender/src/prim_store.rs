@@ -2,17 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, BorderRadius, BuiltDisplayList, ClipId, ClipMode, ColorF, ComplexClipRegion};
+use api::{AlphaType, BorderRadius, BuiltDisplayList, ClipMode, ColorF, ComplexClipRegion};
 use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, Epoch, ExtendMode, FontRenderMode};
 use api::{GlyphInstance, GlyphKey, GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag};
 use api::{LayerPoint, LayerRect, LayerSize, LayerToWorldTransform, LayerVector2D, LineOrientation};
 use api::{LineStyle, PremultipliedColorF, YuvColorSpace, YuvFormat};
 use border::{BorderCornerInstance, BorderEdgeKind};
-use clip_scroll_tree::{ClipChainIndex, CoordinateSystemId};
+use clip_scroll_tree::{ClipChainIndex, ClipScrollNodeIndex, CoordinateSystemId};
 use clip_scroll_node::ClipScrollNode;
 use clip::{ClipChain, ClipChainNode, ClipChainNodeIter, ClipChainNodeRef, ClipSource};
 use clip::{ClipSourcesHandle, ClipWorkItem};
-use frame_builder::{FrameContext, FrameState, PictureContext, PictureState, PrimitiveRunContext};
+use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
+use frame_builder::PrimitiveRunContext;
 use glyph_rasterizer::{FontInstance, FontTransform};
 use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest,
                 ToGpuBlocks};
@@ -24,7 +25,7 @@ use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use resource_cache::{CacheItem, ImageProperties, ImageRequest, ResourceCache};
 use segment::SegmentBuilder;
 use std::{mem, usize};
-use std::rc::Rc;
+use std::sync::Arc;
 use util::{MatrixHelpers, WorldToLayerFastTransform, calculate_screen_bounding_rect};
 use util::{pack_as_float, recycle_vec};
 
@@ -33,12 +34,15 @@ const MIN_BRUSH_SPLIT_AREA: f32 = 256.0 * 256.0;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct ScrollNodeAndClipChain {
-    pub scroll_node_id: ClipId,
+    pub scroll_node_id: ClipScrollNodeIndex,
     pub clip_chain_index: ClipChainIndex,
 }
 
 impl ScrollNodeAndClipChain {
-    pub fn new(scroll_node_id: ClipId, clip_chain_index: ClipChainIndex) -> ScrollNodeAndClipChain {
+    pub fn new(
+        scroll_node_id: ClipScrollNodeIndex,
+        clip_chain_index: ClipChainIndex
+    ) -> ScrollNodeAndClipChain {
         ScrollNodeAndClipChain { scroll_node_id, clip_chain_index }
     }
 }
@@ -185,17 +189,11 @@ pub struct PrimitiveMetadata {
 }
 
 #[derive(Debug)]
-pub enum BrushMaskKind {
-    //Rect,         // TODO(gw): Optimization opportunity for masks with 0 border radii.
-    Corner(LayerSize),
-    RoundedRect(LayerRect, BorderRadius),
-}
-
-#[derive(Debug)]
 pub enum BrushKind {
     Mask {
         clip_mode: ClipMode,
-        kind: BrushMaskKind,
+        rect: LayerRect,
+        radii: BorderRadius,
     },
     Solid {
         color: ColorF,
@@ -330,8 +328,10 @@ impl BrushPrimitive {
         // has to match VECS_PER_SPECIFIC_BRUSH
         match self.kind {
             BrushKind::Picture |
-            BrushKind::Image { .. } |
             BrushKind::YuvImage { .. } => {
+            }
+            BrushKind::Image { .. } => {
+                request.push([0.0; 4]);
             }
             BrushKind::Solid { color } => {
                 request.push(color.premultiplied());
@@ -340,15 +340,7 @@ impl BrushPrimitive {
                 // Opaque black with operator dest out
                 request.push(PremultipliedColorF::BLACK);
             }
-            BrushKind::Mask { clip_mode, kind: BrushMaskKind::Corner(radius) } => {
-                request.push([
-                    radius.width,
-                    radius.height,
-                    clip_mode as u32 as f32,
-                    0.0,
-                ]);
-            }
-            BrushKind::Mask { clip_mode, kind: BrushMaskKind::RoundedRect(rect, radii) } => {
+            BrushKind::Mask { clip_mode, rect, radii } => {
                 request.push([
                     clip_mode as u32 as f32,
                     0.0,
@@ -1088,8 +1080,8 @@ impl PrimitiveStore {
         pic_state_for_children: PictureState,
         pic_context: &PictureContext,
         pic_state: &mut PictureState,
-        frame_context: &FrameContext,
-        frame_state: &mut FrameState,
+        frame_context: &FrameBuildingContext,
+        frame_state: &mut FrameBuildingState,
     ) {
         let metadata = &mut self.cpu_metadata[prim_index.0];
         match metadata.prim_kind {
@@ -1367,8 +1359,8 @@ impl PrimitiveStore {
         prim_run_context: &PrimitiveRunContext,
         clips: &Vec<ClipWorkItem>,
         has_clips_from_other_coordinate_systems: bool,
-        frame_context: &FrameContext,
-        frame_state: &mut FrameState,
+        frame_context: &FrameBuildingContext,
+        frame_state: &mut FrameBuildingState,
     ) {
         match brush.segment_desc {
             Some(ref segment_desc) => {
@@ -1489,8 +1481,8 @@ impl PrimitiveStore {
         combined_outer_rect: &DeviceIntRect,
         has_clips_from_other_coordinate_systems: bool,
         pic_state: &mut PictureState,
-        frame_context: &FrameContext,
-        frame_state: &mut FrameState,
+        frame_context: &FrameBuildingContext,
+        frame_state: &mut FrameBuildingState,
     ) -> bool {
         let metadata = &self.cpu_metadata[prim_index.0];
         let brush = match metadata.prim_kind {
@@ -1557,8 +1549,8 @@ impl PrimitiveStore {
         prim_run_context: &PrimitiveRunContext,
         prim_screen_rect: &DeviceIntRect,
         pic_state: &mut PictureState,
-        frame_context: &FrameContext,
-        frame_state: &mut FrameState,
+        frame_context: &FrameBuildingContext,
+        frame_state: &mut FrameBuildingState,
     ) -> bool {
         self.cpu_metadata[prim_index.0].clip_task_id = None;
 
@@ -1591,7 +1583,7 @@ impl PrimitiveStore {
                     combined_outer_rect = combined_outer_rect.and_then(|r| r.intersection(&outer));
                 }
 
-                Some(Rc::new(ClipChainNode {
+                Some(Arc::new(ClipChainNode {
                     work_item: ClipWorkItem {
                         scroll_node_data_index: prim_run_context.scroll_node.node_data_index,
                         clip_sources: metadata.clip_sources.weak(),
@@ -1688,8 +1680,8 @@ impl PrimitiveStore {
         prim_run_context: &PrimitiveRunContext,
         pic_context: &PictureContext,
         pic_state: &mut PictureState,
-        frame_context: &FrameContext,
-        frame_state: &mut FrameState,
+        frame_context: &FrameBuildingContext,
+        frame_state: &mut FrameBuildingState,
     ) -> Option<LayerRect> {
         let mut may_need_clip_mask = true;
         let mut pic_state_for_children = PictureState::new();
@@ -1721,10 +1713,10 @@ impl PrimitiveStore {
                     return None;
                 }
 
-                let (draw_text_transformed, original_reference_frame_id) = match pic.kind {
-                    PictureKind::Image { reference_frame_id, .. } => {
-                        may_need_clip_mask = false;
-                        (true, Some(reference_frame_id))
+                let (draw_text_transformed, original_reference_frame_index) = match pic.kind {
+                    PictureKind::Image { reference_frame_index, composite_mode, .. } => {
+                        may_need_clip_mask = composite_mode.is_some();
+                        (true, Some(reference_frame_index))
                     }
                     PictureKind::BoxShadow { .. } |
                     PictureKind::TextShadow { .. } => {
@@ -1747,7 +1739,7 @@ impl PrimitiveStore {
                     pipeline_id: pic.pipeline_id,
                     perform_culling: pic.cull_children,
                     prim_runs: mem::replace(&mut pic.runs, Vec::new()),
-                    original_reference_frame_id,
+                    original_reference_frame_index,
                     display_list,
                     draw_text_transformed,
                     inv_world_transform,
@@ -1847,8 +1839,8 @@ impl PrimitiveStore {
         &mut self,
         pic_context: &PictureContext,
         pic_state: &mut PictureState,
-        frame_context: &FrameContext,
-        frame_state: &mut FrameState,
+        frame_context: &FrameBuildingContext,
+        frame_state: &mut FrameBuildingState,
     ) -> PrimitiveRunLocalRect {
         let mut result = PrimitiveRunLocalRect {
             local_rect_in_actual_parent_space: LayerRect::zero(),
@@ -1861,7 +1853,7 @@ impl PrimitiveStore {
             //           lookups ever show up in a profile).
             let scroll_node = &frame_context
                 .clip_scroll_tree
-                .nodes[&run.clip_and_scroll.scroll_node_id];
+                .nodes[run.clip_and_scroll.scroll_node_id.0];
             let clip_chain = frame_context
                 .clip_scroll_tree
                 .get_clip_chain(run.clip_and_scroll.clip_chain_index);
@@ -1884,11 +1876,11 @@ impl PrimitiveStore {
                     inv_parent.pre_mul(&scroll_node.world_content_transform)
                 });
 
-            let original_relative_transform = pic_context.original_reference_frame_id
-                .and_then(|original_reference_frame_id| {
+            let original_relative_transform = pic_context.original_reference_frame_index
+                .and_then(|original_reference_frame_index| {
                     let parent = frame_context
                         .clip_scroll_tree
-                        .nodes[&original_reference_frame_id]
+                        .nodes[original_reference_frame_index.0]
                         .world_content_transform;
                     parent.inverse()
                         .map(|inv_parent| {

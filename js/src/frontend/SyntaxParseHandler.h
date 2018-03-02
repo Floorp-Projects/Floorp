@@ -360,6 +360,10 @@ class SyntaxParseHandler
         return node == NodeFunctionExpressionClosure;
     }
 
+    void noteExpressionClosure(Node* funcNode) const {
+        *funcNode = NodeFunctionExpressionClosure;
+    }
+
     void setFunctionFormalParametersAndBody(Node funcNode, Node kid) {}
     void setFunctionBody(Node pn, Node kid) {}
     void setFunctionBox(Node pn, FunctionBox* funbox) {}

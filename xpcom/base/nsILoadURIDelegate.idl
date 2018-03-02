@@ -27,7 +27,7 @@ interface nsILoadURIDelegate : nsISupports
    * @param aFlags Flags which control the behavior of the load.
    * @param aTriggeringPrincipal The principal that triggered the load of aURI.
   */
-  void
+  boolean
   loadURI(in nsIURI aURI, in short aWhere, in long aFlags,
           in nsIPrincipal aTriggeringPrincipal);
 };

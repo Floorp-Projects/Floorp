@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <cstdio>
-#include <iostream>
 #include <queue>
 
 #include "CSFLog.h"

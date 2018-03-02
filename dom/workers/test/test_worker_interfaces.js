@@ -18,6 +18,12 @@
 // ];
 //
 // See createInterfaceMap() below for a complete list of properties.
+//
+// The values of the properties need to be literal true/false
+// (e.g. indicating whether something is enabled on a particular
+// channel/OS).  If we ever end up in a situation where a propert
+// value needs to depend on channel or OS, we will need to make sure
+// we have that information before setting up the property lists.
 
 // IMPORTANT: Do not change this list without review from
 //            a JavaScript Engine peer!
@@ -27,8 +33,8 @@ var ecmaGlobals =
     {name: "ArrayBuffer", insecureContext: true},
     {name: "Atomics", insecureContext: true, disabled: true},
     {name: "Boolean", insecureContext: true},
-    {name: "ByteLengthQueuingStrategy", insecureContext: true, optional: true},
-    {name: "CountQueuingStrategy", insecureContext: true, optional: true},
+    {name: "ByteLengthQueuingStrategy", insecureContext: true, disabled: true},
+    {name: "CountQueuingStrategy", insecureContext: true, disabled: true},
     {name: "DataView", insecureContext: true},
     {name: "Date", insecureContext: true},
     {name: "Error", insecureContext: true},
@@ -51,7 +57,7 @@ var ecmaGlobals =
     {name: "Promise", insecureContext: true},
     {name: "Proxy", insecureContext: true},
     {name: "RangeError", insecureContext: true},
-    {name: "ReadableStream", insecureContext: true, optional: true},
+    {name: "ReadableStream", insecureContext: true, disabled: true},
     {name: "ReferenceError", insecureContext: true},
     {name: "Reflect", insecureContext: true},
     {name: "RegExp", insecureContext: true},
@@ -70,7 +76,7 @@ var ecmaGlobals =
     {name: "URIError", insecureContext: true},
     {name: "WeakMap", insecureContext: true},
     {name: "WeakSet", insecureContext: true},
-    {name: "WebAssembly", insecureContext: true, optional: true}
+    {name: "WebAssembly", insecureContext: true, disabled: !getJSTestingFunctions().wasmIsSupportedByHardware()},
   ];
 // IMPORTANT: Do not change the list above without review from
 //            a JavaScript Engine peer!
@@ -281,8 +287,6 @@ function createInterfaceMap(version, userAgent) {
             (isInsecureContext && !Boolean(entry.insecureContext)) ||
             entry.disabled) {
           interfaceMap[entry.name] = false;
-        } else if (entry.optional) {
-          interfaceMap[entry.name] = "optional";
         } else {
           interfaceMap[entry.name] = true;
         }
@@ -303,21 +307,17 @@ function runTest(version, userAgent) {
     if (!/^[A-Z]/.test(name)) {
       continue;
     }
-    ok(interfaceMap[name] === "optional" || interfaceMap[name],
+    ok(interfaceMap[name],
        "If this is failing: DANGER, are you sure you want to expose the new interface " + name +
        " to all webpages as a property on the worker? Do not make a change to this file without a " +
        " review from a DOM peer for that specific change!!! (or a JS peer for changes to ecmaGlobals)");
     delete interfaceMap[name];
   }
   for (var name of Object.keys(interfaceMap)) {
-    if (interfaceMap[name] === "optional") {
+    ok(name in self === interfaceMap[name],
+       name + " should " + (interfaceMap[name] ? "" : " NOT") + " be defined on the global scope");
+    if (!interfaceMap[name]) {
       delete interfaceMap[name];
-    } else {
-      ok(name in self === interfaceMap[name],
-         name + " should " + (interfaceMap[name] ? "" : " NOT") + " be defined on the global scope");
-      if (!interfaceMap[name]) {
-        delete interfaceMap[name];
-      }
     }
   }
   is(Object.keys(interfaceMap).length, 0,

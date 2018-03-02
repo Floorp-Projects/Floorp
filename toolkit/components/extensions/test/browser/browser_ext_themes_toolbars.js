@@ -61,7 +61,7 @@ add_task(async function test_bookmark_text_property() {
       "theme": {
         "colors": {
           "frame": ACCENT_COLOR,
-          "background_tab_text": TEXT_COLOR,
+          "tab_background_text": TEXT_COLOR,
           "toolbar": TOOLBAR_COLOR,
           "bookmark_text": TOOLBAR_TEXT_COLOR,
         },

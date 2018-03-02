@@ -147,8 +147,7 @@ SVGUseElement::Height()
 // nsIMutationObserver methods
 
 void
-SVGUseElement::CharacterDataChanged(nsIDocument* aDocument,
-                                    nsIContent* aContent,
+SVGUseElement::CharacterDataChanged(nsIContent* aContent,
                                     const CharacterDataChangeInfo&)
 {
   if (nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
@@ -157,8 +156,7 @@ SVGUseElement::CharacterDataChanged(nsIDocument* aDocument,
 }
 
 void
-SVGUseElement::AttributeChanged(nsIDocument* aDocument,
-                                Element* aElement,
+SVGUseElement::AttributeChanged(Element* aElement,
                                 int32_t aNameSpaceID,
                                 nsAtom* aAttribute,
                                 int32_t aModType,
@@ -170,30 +168,27 @@ SVGUseElement::AttributeChanged(nsIDocument* aDocument,
 }
 
 void
-SVGUseElement::ContentAppended(nsIDocument *aDocument,
-                               nsIContent *aContainer,
-                               nsIContent *aFirstNewContent)
+SVGUseElement::ContentAppended(nsIContent* aFirstNewContent)
 {
-  if (nsContentUtils::IsInSameAnonymousTree(this, aContainer)) {
+  // FIXME(emilio, bug 1442336): Why does this check the parent but
+  // ContentInserted the child?
+  if (nsContentUtils::IsInSameAnonymousTree(this, aFirstNewContent->GetParent())) {
     TriggerReclone();
   }
 }
 
 void
-SVGUseElement::ContentInserted(nsIDocument *aDocument,
-                               nsIContent *aContainer,
-                               nsIContent *aChild)
+SVGUseElement::ContentInserted(nsIContent* aChild)
 {
+  // FIXME(emilio, bug 1442336): Why does this check the child but
+  // ContentAppended the parent?
   if (nsContentUtils::IsInSameAnonymousTree(this, aChild)) {
     TriggerReclone();
   }
 }
 
 void
-SVGUseElement::ContentRemoved(nsIDocument *aDocument,
-                              nsIContent *aContainer,
-                              nsIContent *aChild,
-                              nsIContent *aPreviousSibling)
+SVGUseElement::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling)
 {
   if (nsContentUtils::IsInSameAnonymousTree(this, aChild)) {
     TriggerReclone();

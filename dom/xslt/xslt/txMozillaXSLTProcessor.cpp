@@ -1235,16 +1235,14 @@ txMozillaXSLTProcessor::NodeWillBeDestroyed(const nsINode* aNode)
 }
 
 void
-txMozillaXSLTProcessor::CharacterDataChanged(nsIDocument* aDocument,
-                                             nsIContent* aContent,
+txMozillaXSLTProcessor::CharacterDataChanged(nsIContent* aContent,
                                              const CharacterDataChangeInfo&)
 {
     mStylesheet = nullptr;
 }
 
 void
-txMozillaXSLTProcessor::AttributeChanged(nsIDocument* aDocument,
-                                         Element* aElement,
+txMozillaXSLTProcessor::AttributeChanged(Element* aElement,
                                          int32_t aNameSpaceID,
                                          nsAtom* aAttribute,
                                          int32_t aModType,
@@ -1254,25 +1252,19 @@ txMozillaXSLTProcessor::AttributeChanged(nsIDocument* aDocument,
 }
 
 void
-txMozillaXSLTProcessor::ContentAppended(nsIDocument* aDocument,
-                                        nsIContent* aContainer,
-                                        nsIContent* aFirstNewContent)
+txMozillaXSLTProcessor::ContentAppended(nsIContent* aFirstNewContent)
 {
     mStylesheet = nullptr;
 }
 
 void
-txMozillaXSLTProcessor::ContentInserted(nsIDocument* aDocument,
-                                        nsIContent* aContainer,
-                                        nsIContent* aChild)
+txMozillaXSLTProcessor::ContentInserted(nsIContent* aChild)
 {
     mStylesheet = nullptr;
 }
 
 void
-txMozillaXSLTProcessor::ContentRemoved(nsIDocument* aDocument,
-                                       nsIContent* aContainer,
-                                       nsIContent* aChild,
+txMozillaXSLTProcessor::ContentRemoved(nsIContent* aChild,
                                        nsIContent* aPreviousSibling)
 {
     mStylesheet = nullptr;

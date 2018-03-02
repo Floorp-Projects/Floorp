@@ -10,6 +10,7 @@ extern crate time;
 extern crate url;
 
 #[macro_use] pub mod macros;
+pub mod actions;
 pub mod httpapi;
 pub mod capabilities;
 pub mod command;

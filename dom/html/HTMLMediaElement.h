@@ -1821,6 +1821,10 @@ private:
   // participate in video decoder suspending.
   bool mHasSuspendTaint;
 
+  // True if media element has been forced into being considered 'hidden'.
+  // For use by mochitests. Enabling pref "media.test.video-suspend"
+  bool mForcedHidden;
+
   // True if audio tracks and video tracks are constructed and added into the
   // track list, false if all tracks are removed from the track list.
   bool mMediaTracksConstructed;

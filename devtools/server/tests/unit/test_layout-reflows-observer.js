@@ -132,7 +132,7 @@ function eventsAreBatched() {
   let observer = getLayoutChangesObserver(tabActor);
 
   let reflowsEvents = [];
-  let onReflows = (event, reflows) => reflowsEvents.push(reflows);
+  let onReflows = reflows => reflowsEvents.push(reflows);
   observer.on("reflows", onReflows);
 
   let resizeEvents = [];
@@ -175,7 +175,7 @@ function noEventsAreSentWhenThereAreNoReflowsAndLoopTimeouts() {
   let observer = getLayoutChangesObserver(tabActor);
 
   let reflowsEvents = [];
-  let onReflows = (event, reflows) => reflowsEvents.push(reflows);
+  let onReflows = (reflows) => reflowsEvents.push(reflows);
   observer.on("reflows", onReflows);
 
   info("Faking timeout expiration and checking for reflows");
