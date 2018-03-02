@@ -6,8 +6,6 @@
 
 #include "InProcessCompositorSession.h"
 
-// so we can cast an APZCTreeManager to an IAPZCTreeManager
-#include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "nsBaseWidget.h"
 

@@ -78,13 +78,9 @@ public:
   //VoiceEngine defined constant for Payload Name Size.
   static const unsigned int CODEC_PLNAME_SIZE;
 
-  /**
-  * Add rtp extensions to the the VideoSendStream
-  */
-  void
-  SetLocalRTPExtensions(bool aIsSend, const RtpExtList& extensions) override;
-
-  RtpExtList GetLocalRTPExtensions(bool aIsSend) const override;
+  MediaConduitErrorCode
+  SetLocalRTPExtensions(MediaSessionConduitLocalDirection aDirection,
+                        const RtpExtList& aExtensions) override;
 
   /**
    * Set up A/V sync between this (incoming) VideoConduit and an audio conduit.

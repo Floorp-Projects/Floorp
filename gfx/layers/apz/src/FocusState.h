@@ -107,11 +107,6 @@ public:
               const FocusTarget& aTarget);
 
   /**
-   * Collects a set of the layer tree IDs that we have a focus target for.
-   */
-  std::unordered_set<uint64_t> GetFocusTargetLayerIds() const;
-
-  /**
    * Removes a focus target by its layer tree ID.
    */
   void RemoveFocusTarget(uint64_t aLayersId);

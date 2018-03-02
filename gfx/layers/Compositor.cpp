@@ -61,14 +61,6 @@ Compositor::EndFrame()
   mLastCompositionEndTime = TimeStamp::Now();
 }
 
-/* static */ void
-Compositor::AssertOnCompositorThread()
-{
-  MOZ_ASSERT(!CompositorThreadHolder::Loop() ||
-             CompositorThreadHolder::Loop() == MessageLoop::current(),
-             "Can only call this from the compositor thread!");
-}
-
 bool
 Compositor::ShouldDrawDiagnostics(DiagnosticFlags aFlags)
 {

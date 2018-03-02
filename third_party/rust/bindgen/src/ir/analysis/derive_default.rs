@@ -265,6 +265,11 @@ impl<'ctx> MonotoneFramework for CannotDeriveDefault<'ctx> {
                     "The early ty.is_opaque check should have handled this case"
                 );
 
+                if info.is_forward_declaration() {
+                    trace!("    cannot derive Default for forward decls");
+                    return self.insert(id);
+                }
+
                 if info.kind() == CompKind::Union {
                     if self.ctx.options().rust_features().untagged_union() {
                         trace!("    cannot derive Default for Rust unions");

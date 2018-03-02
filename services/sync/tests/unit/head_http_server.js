@@ -8,6 +8,8 @@ var Cm = Components.manager;
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://services-common/utils.js");
 ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+ChromeUtils.import("resource://testing-common/services/sync/utils.js");
+
 const SYNC_HTTP_LOGGER = "Sync.Test.Server";
 
 // While the sync code itself uses 1.5, the tests hard-code 1.1,
@@ -145,7 +147,27 @@ ServerWBO.prototype = {
       response.setStatusLine(request.httpVersion, statusCode, status);
       response.bodyOutputStream.write(body, body.length);
     };
-  }
+  },
+
+  /**
+   * Get the cleartext data stored in the payload.
+   *
+   * This isn't `get cleartext`, because `x.cleartext.blah = 3;` wouldn't work,
+   * which seems like a footgun.
+   */
+  getCleartext() {
+    return JSON.parse(JSON.parse(this.payload).ciphertext);
+  },
+
+  /**
+   * Setter for getCleartext(), but lets you adjust the modified timestamp too.
+   * Returns this ServerWBO object.
+   */
+  setCleartext(cleartext, modifiedTimestamp = this.modified) {
+    this.payload = JSON.stringify(encryptPayload(cleartext));
+    this.modified = modifiedTimestamp;
+    return this;
+  },
 
 };
 
@@ -234,9 +256,7 @@ ServerCollection.prototype = {
    * @return an array of the payloads of each stored WBO.
    */
   payloads() {
-    return this.wbos().map(function(wbo) {
-      return JSON.parse(JSON.parse(wbo.payload).ciphertext);
-    });
+    return this.wbos().map(wbo => wbo.getCleartext());
   },
 
   // Just for syntactic elegance.
@@ -248,6 +268,10 @@ ServerCollection.prototype = {
     return this.wbo(id).payload;
   },
 
+  cleartext(id) {
+    return this.wbo(id).getCleartext();
+  },
+
   /**
    * Insert the provided WBO under its ID.
    *
@@ -256,6 +280,40 @@ ServerCollection.prototype = {
   insertWBO: function insertWBO(wbo) {
     this.timestamp = Math.max(this.timestamp, wbo.modified);
     return this._wbos[wbo.id] = wbo;
+  },
+
+  /**
+   * Update an existing WBO's cleartext using a callback function that modifies
+   * the record in place, or returns a new record.
+   */
+  updateRecord(id, updateCallback, optTimestamp) {
+    let wbo = this.wbo(id);
+    if (!wbo) {
+      throw new Error("No record with provided ID");
+    }
+    let curCleartext = wbo.getCleartext();
+    // Allow update callback to either return a new cleartext, or modify in place.
+    let newCleartext = updateCallback(curCleartext) || curCleartext;
+    wbo.setCleartext(newCleartext, optTimestamp);
+    // It is already inserted, but we might need to update our timestamp based
+    // on it's `modified` value, if `optTimestamp` was provided.
+    return this.insertWBO(wbo);
+  },
+
+  /**
+   * Insert a record, which may either an object with a cleartext property, or
+   * the cleartext property itself.
+   */
+  insertRecord(record, timestamp = Date.now() / 1000) {
+    if (typeof timestamp != "number") {
+      throw new TypeError("insertRecord: Timestamp is not a number.");
+    }
+    if (!record.id) {
+      throw new Error("Attempt to insert record with no id");
+    }
+    // Allow providing either the cleartext directly, or the CryptoWrapper-like.
+    let cleartext = record.cleartext || record;
+    return this.insert(record.id, encryptPayload(cleartext), timestamp);
   },
 
   /**
