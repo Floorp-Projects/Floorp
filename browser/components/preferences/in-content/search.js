@@ -40,10 +40,15 @@ var gSearchPane = {
     document.getElementById("engineList").view = gEngineView;
     this.buildDefaultEngineDropDown();
 
-    let addEnginesLink = document.getElementById("addEngines");
-    let searchEnginesURL = Services.wm.getMostRecentWindow("navigator:browser")
-                                      .BrowserSearch.searchEnginesURL;
-    addEnginesLink.setAttribute("href", searchEnginesURL);
+    if (Services.policies &&
+        !Services.policies.isAllowed("installSearchEngine")) {
+      document.getElementById("addEnginesBox").hidden = true;
+    } else {
+      let addEnginesLink = document.getElementById("addEngines");
+      let searchEnginesURL = Services.wm.getMostRecentWindow("navigator:browser")
+                                        .BrowserSearch.searchEnginesURL;
+      addEnginesLink.setAttribute("href", searchEnginesURL);
+    }
 
     window.addEventListener("click", this);
     window.addEventListener("command", this);
