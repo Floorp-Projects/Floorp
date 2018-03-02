@@ -2906,7 +2906,7 @@ css::URLValueData::GetUTF16String() const
     nsDependentCSubstring rust = GetRustString();
     nsString converted = NS_ConvertUTF8toUTF16(rust);
     Servo_ReleaseArcStringData(&mStrings.mRustString);
-    mStrings.mString = converted;
+    new (&mStrings) RustOrGeckoString(converted);
     mUsingRustString = false;
   }
   return mStrings.mString;
