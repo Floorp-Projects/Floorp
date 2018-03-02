@@ -219,6 +219,12 @@ ReadPrincipalInfo(JSStructuredCloneReader* aReader,
             return false;
         }
 
+#ifdef FUZZING
+        if (originNoSuffix.IsEmpty()) {
+          return false;
+        }
+#endif
+
         MOZ_DIAGNOSTIC_ASSERT(!originNoSuffix.IsEmpty());
 
         aInfo = ContentPrincipalInfo(attrs, originNoSuffix, spec);
