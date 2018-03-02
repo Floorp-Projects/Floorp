@@ -43,6 +43,18 @@ XULMAP_TYPE(toolbarbutton, XULToolbarButtonAccessible)
 XULMAP_TYPE(tooltip, XULTooltipAccessible)
 
 XULMAP(
+  colorpicker,
+  [](nsIContent* aContent, Accessible* aContext) -> Accessible* {
+    if (aContent->IsElement() &&
+        aContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                           nsGkAtoms::button, eIgnoreCase)) {
+      return new XULColorPickerAccessible(aContent, aContext->Document());
+    }
+    return nullptr;
+  }
+)
+
+XULMAP(
   label,
   [](nsIContent* aContent, Accessible* aContext) -> Accessible* {
     if (aContent->IsElement() &&
@@ -56,14 +68,20 @@ XULMAP(
 XULMAP(
   image,
   [](nsIContent* aContent, Accessible* aContext) -> Accessible* {
-    if (aContent->IsElement() &&
-        aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::onclick)) {
+    if (!aContent->IsElement()) {
+      return nullptr;
+    }
+
+    if (aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::onclick)) {
       return new XULToolbarButtonAccessible(aContent, aContext->Document());
     }
 
+    if (aContent->AsElement()->ClassList()->Contains(NS_LITERAL_STRING("colorpickertile"))) {
+      return new XULColorPickerTileAccessible(aContent, aContext->Document());
+    }
+
     // Don't include nameless images in accessible tree.
-    if (!aContent->IsElement() ||
-        !aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext)) {
+    if (!aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext)) {
       return nullptr;
     }
 
