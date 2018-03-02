@@ -23,4 +23,5 @@ const ThemeVariableMap = [
   ["--lwt-toolbarbutton-icon-fill-attention", "icon_attention_color"],
   ["--lwt-toolbarbutton-hover-background", "button_background_hover"],
   ["--lwt-toolbarbutton-active-background", "button_background_active"],
+  ["--lwt-selected-tab-background-color", "tab_selected"],
 ];
