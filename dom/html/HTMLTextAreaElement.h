@@ -25,13 +25,13 @@
 class nsIControllers;
 class nsIDocument;
 class nsPresContext;
-class nsPresState;
 
 namespace mozilla {
 
 class EventChainPostVisitor;
 class EventChainPreVisitor;
 class EventStates;
+class PresState;
 
 namespace dom {
 
@@ -75,7 +75,7 @@ public:
   NS_IMETHOD Reset() override;
   NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override;
   NS_IMETHOD SaveState() override;
-  virtual bool RestoreState(nsPresState* aState) override;
+  virtual bool RestoreState(PresState* aState) override;
   virtual bool IsDisabledForEvents(EventMessage aMessage) override;
 
   virtual void FieldSetDisabledChanged(bool aNotify) override;
