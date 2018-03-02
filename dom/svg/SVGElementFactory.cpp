@@ -17,15 +17,9 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-// Hash table that maps nsAtom* SVG tags to an offset index
-// within the array sSVGContentCreatorFunctions (offset by TABLE_VALUE_OFFSET)
-using TagAtomTable = nsDataHashtable<nsPtrHashKey<nsAtom>, int32_t>;
+// Hash table that maps nsAtom* SVG tags to a SVGContentCreatorFunction.
+using TagAtomTable = nsDataHashtable<nsPtrHashKey<nsAtom>, SVGContentCreatorFunction>;
 StaticAutoPtr<TagAtomTable> sTagAtomTable;
-
-// We don't want to store 0 in the hash table as a return value of 0 from
-// PL_HashTableLookupConst indicates that the value is not found
-// TODO(erahm): get rid of this insanity
-#define TABLE_VALUE_OFFSET 1
 
 #define SVG_TAG(_tag, _classname)                                              \
   nsresult NS_NewSVG##_classname##Element(                                     \
@@ -50,14 +44,6 @@ nsresult
 NS_NewSVGElement(Element** aResult,
                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-static const SVGContentCreatorFunction sSVGContentCreatorFunctions[] = {
-#define SVG_TAG(_tag, _classname) NS_NewSVG##_classname##Element,
-#define SVG_FROM_PARSER_TAG(_tag, _classname)  NS_NewSVG##_classname##Element,
-#include "SVGTagList.h"
-#undef SVG_TAG
-#undef SVG_FROM_PARSER_TAG
-};
-
 enum SVGTag {
 #define SVG_TAG(_tag, _classname) eSVGTag_##_tag,
 #define SVG_FROM_PARSER_TAG(_tag, _classname) eSVGTag_##_tag,
@@ -73,11 +59,9 @@ SVGElementFactory::Init()
   sTagAtomTable = new TagAtomTable(64);
 
 #define SVG_TAG(_tag, _classname) \
-  sTagAtomTable->Put(nsGkAtoms::_tag,\
-                  static_cast<int32_t>(eSVGTag_##_tag) + TABLE_VALUE_OFFSET);
+  sTagAtomTable->Put(nsGkAtoms::_tag, NS_NewSVG##_classname##Element);
 #define SVG_FROM_PARSER_TAG(_tag, _classname) \
-  sTagAtomTable->Put(nsGkAtoms::_tag,\
-                  static_cast<int32_t>(eSVGTag_##_tag) + TABLE_VALUE_OFFSET);
+  sTagAtomTable->Put(nsGkAtoms::_tag, NS_NewSVG##_classname##Element);
 #include "SVGTagList.h"
 #undef SVG_TAG
 #undef SVG_FROM_PARSER_TAG
@@ -101,16 +85,8 @@ NS_NewSVGElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& a
   NS_ASSERTION(ni->NamespaceEquals(kNameSpaceID_SVG),
                "Trying to create SVG elements that aren't in the SVG namespace");
 
-  auto tag = sTagAtomTable->Lookup(name);
-  if (tag) {
-    int32_t index = tag.Data() - TABLE_VALUE_OFFSET;
-    if (index < 0 || index >= eSVGTag_Count) {
-      NS_WARNING("About to index out of array bounds - crashing instead");
-      MOZ_CRASH();
-    }
-
-    SVGContentCreatorFunction cb = sSVGContentCreatorFunctions[index];
-
+  SVGContentCreatorFunction cb = sTagAtomTable->Get(name);
+  if (cb) {
     nsCOMPtr<nsIContent> content;
     nsresult rv = cb(getter_AddRefs(content), ni.forget(), aFromParser);
     *aResult = content.forget().take()->AsElement();
