@@ -9,6 +9,10 @@
 <!DOCTYPE window [
   <!ENTITY % pageInfoDTD SYSTEM "chrome://browser/locale/pageInfo.dtd">
   %pageInfoDTD;
+#ifdef XP_MACOSX
+  <!ENTITY % baseMenuOverlayDTD SYSTEM "chrome://browser/locale/baseMenuOverlay.dtd">
+  %baseMenuOverlayDTD;
+#endif
 ]>
 
 #ifdef XP_MACOSX

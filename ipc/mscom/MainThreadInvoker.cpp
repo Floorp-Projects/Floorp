@@ -16,9 +16,11 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/SystemGroup.h"
 #include "private/prpriv.h" // For PR_GetThreadID
-#include "WinUtils.h"
+#include <winternl.h> // For NTSTATUS and NTAPI
 
 namespace {
+
+typedef NTSTATUS (NTAPI* NtTestAlertPtr)(VOID);
 
 /**
  * SyncRunnable implements different code paths depending on whether or not
@@ -33,15 +35,29 @@ public:
   explicit SyncRunnable(already_AddRefed<nsIRunnable> aRunnable)
     : mozilla::Runnable("MainThreadInvoker")
     , mRunnable(aRunnable)
-  {}
+  {
+    static const bool gotStatics = InitStatics();
+    MOZ_ASSERT(gotStatics);
+  }
 
   ~SyncRunnable() = default;
 
   NS_IMETHOD Run() override
   {
     if (mHasRun) {
+      // The APC already ran, so we have nothing to do.
       return NS_OK;
     }
+
+    // Run the pending APC in the queue.
+    MOZ_ASSERT(sNtTestAlert);
+    sNtTestAlert();
+    return NS_OK;
+  }
+
+  // This is called by MainThreadInvoker::MainThreadAPC.
+  void APCRun()
+  {
     mHasRun = true;
 
     TimeStamp runStart(TimeStamp::Now());
@@ -51,7 +67,6 @@ public:
     mDuration = runEnd - runStart;
 
     mEvent.Signal();
-    return NS_OK;
   }
 
   bool WaitUntilComplete()
@@ -69,7 +84,20 @@ private:
   nsCOMPtr<nsIRunnable>     mRunnable;
   mozilla::mscom::SpinEvent mEvent;
   mozilla::TimeDuration     mDuration;
+
+  static NtTestAlertPtr sNtTestAlert;
+
+  static bool InitStatics()
+  {
+    sNtTestAlert = reinterpret_cast<NtTestAlertPtr>(
+      ::GetProcAddress(::GetModuleHandleW(L"ntdll.dll"), "NtTestAlert"));
+    MOZ_ASSERT(sNtTestAlert);
+    return sNtTestAlert;
+  }
+
 };
+
+NtTestAlertPtr SyncRunnable::sNtTestAlert = nullptr;
 
 } // anonymous namespace
 
@@ -120,16 +148,27 @@ MainThreadInvoker::Invoke(already_AddRefed<nsIRunnable>&& aRunnable)
 
   RefPtr<SyncRunnable> syncRunnable = new SyncRunnable(runnable.forget());
 
-  if (NS_FAILED(SystemGroup::Dispatch(
-                  TaskCategory::Other, do_AddRef(syncRunnable)))) {
-    return false;
-  }
-
+  // The main thread could be either blocked on a condition variable waiting
+  // for a Gecko event, or it could be blocked waiting on a Windows HANDLE in
+  // IPC code (doing a sync message send). In the former case, we wake it by
+  // posting a Gecko runnable to the main thread. In the latter case, we wake
+  // it using an APC. However, the latter case doesn't happen very often now
+  // and APCs aren't otherwise run by the main thread. To ensure the
+  // SyncRunnable is cleaned up, we need both to run consistently.
+  // To do this, we:
+  // 1. Queue an APC which does the actual work.
   // This ref gets released in MainThreadAPC when it runs.
   SyncRunnable* syncRunnableRef = syncRunnable.get();
   NS_ADDREF(syncRunnableRef);
   if (!::QueueUserAPC(&MainThreadAPC, sMainThread,
                       reinterpret_cast<UINT_PTR>(syncRunnableRef))) {
+    return false;
+  }
+
+  // 2. Post a Gecko runnable (which always runs). If the APC hasn't run, the
+  // Gecko runnable runs it. Otherwise, it does nothing.
+  if (NS_FAILED(SystemGroup::Dispatch(
+                  TaskCategory::Other, do_AddRef(syncRunnable)))) {
     return false;
   }
 
@@ -145,7 +184,7 @@ MainThreadInvoker::MainThreadAPC(ULONG_PTR aParam)
   mozilla::HangMonitor::NotifyActivity(mozilla::HangMonitor::kGeneralActivity);
   MOZ_ASSERT(NS_IsMainThread());
   auto runnable = reinterpret_cast<SyncRunnable*>(aParam);
-  runnable->Run();
+  runnable->APCRun();
   NS_RELEASE(runnable);
 }
 

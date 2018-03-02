@@ -1669,8 +1669,12 @@ class SyncedBookmarksMirror {
               // iOS is stricter and requires both `children` and `parentid` to
               // match.
               parentid: parentRecordId,
-              // Older Desktops use `hasDupe` and `parentName` for deduping.
-              hasDupe: false,
+              // Older Desktops use `hasDupe` (along with `parentName` for
+              // deduping), if hasDupe is true, then they won't attempt deduping
+              // (since they believe that a duplicate for this record should
+              // exist). We set it to true to prevent them from applying their
+              // deduping logic.
+              hasDupe: true,
               parentName: row.getResultByName("parentTitle"),
               dateAdded,
               bmkUri: row.getResultByName("url"),
@@ -1691,7 +1695,7 @@ class SyncedBookmarksMirror {
             id: recordId,
             type: "bookmark",
             parentid: parentRecordId,
-            hasDupe: false,
+            hasDupe: true,
             parentName: row.getResultByName("parentTitle"),
             dateAdded,
             bmkUri: row.getResultByName("url"),
@@ -1727,7 +1731,7 @@ class SyncedBookmarksMirror {
               id: recordId,
               type: "livemark",
               parentid: parentRecordId,
-              hasDupe: false,
+              hasDupe: true,
               parentName: row.getResultByName("parentTitle"),
               dateAdded,
               title: row.getResultByName("title"),
@@ -1750,7 +1754,7 @@ class SyncedBookmarksMirror {
             id: recordId,
             type: "folder",
             parentid: parentRecordId,
-            hasDupe: false,
+            hasDupe: true,
             parentName: row.getResultByName("parentTitle"),
             dateAdded,
             title: row.getResultByName("title"),
@@ -1778,7 +1782,7 @@ class SyncedBookmarksMirror {
             id: recordId,
             type: "separator",
             parentid: parentRecordId,
-            hasDupe: false,
+            hasDupe: true,
             parentName: row.getResultByName("parentTitle"),
             dateAdded,
             // Older Desktops use `pos` for deduping.

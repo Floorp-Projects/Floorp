@@ -135,4 +135,4 @@ pref("security.cert_pinning.max_max_age_seconds", 5184000);
 // 0: No distrust policies enforced
 // 1: Symantec root distrust policy enforced
 // See https://wiki.mozilla.org/CA/Upcoming_Distrust_Actions for more details.
-pref("security.pki.distrust_ca_policy", 0);
+pref("security.pki.distrust_ca_policy", 1);

@@ -32,6 +32,8 @@ namespace mozilla {
 
 MOZ_MTLOG_MODULE("transceiverimpl")
 
+using LocalDirection = MediaSessionConduitLocalDirection;
+
 TransceiverImpl::TransceiverImpl(
     const std::string& aPCHandle,
     JsepTransceiver* aJsepTransceiver,
@@ -727,36 +729,7 @@ TransceiverImpl::UpdateAudioConduit()
                           " ConfigureRecvMediaCodecs failed: " << error);
       return NS_ERROR_FAILURE;
     }
-
-    const SdpExtmapAttributeList::Extmap* audioLevelExt =
-        details.GetExt(webrtc::RtpExtension::kAudioLevelUri);
-    if (audioLevelExt) {
-      MOZ_MTLOG(ML_DEBUG, "Calling EnableAudioLevelExtension");
-      error = conduit->EnableAudioLevelExtension(true,
-                                                 audioLevelExt->entry,
-                                                 false);
-
-      if (error) {
-        MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
-                            " EnableAudioLevelExtension failed: " << error);
-        return NS_ERROR_FAILURE;
-      }
-    }
-
-    const SdpExtmapAttributeList::Extmap* csrcAudioLevelExt =
-        details.GetExt(webrtc::RtpExtension::kCsrcAudioLevelUri);
-    if (csrcAudioLevelExt) {
-      MOZ_MTLOG(ML_DEBUG, "Calling EnableAudioLevelExtension for CSRCs");
-      error = conduit->EnableAudioLevelExtension(true,
-                                                 csrcAudioLevelExt->entry,
-                                                 false,
-                                                 false);
-      if (error) {
-        MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
-                  " EnableAudioLevelExtension for CSRCs failed: " << error);
-        return NS_ERROR_FAILURE;
-      }
-    }
+    UpdateConduitRtpExtmap(details, LocalDirection::kRecv);
   }
 
   if (mJsepTransceiver->mSendTrack.GetNegotiatedDetails() &&
@@ -787,36 +760,7 @@ TransceiverImpl::UpdateAudioConduit()
                           " ConfigureSendMediaCodec failed: " << error);
       return NS_ERROR_FAILURE;
     }
-
-    // Should these be genericized like they are in the video conduit case?
-    const SdpExtmapAttributeList::Extmap* audioLevelExt =
-        details.GetExt(webrtc::RtpExtension::kAudioLevelUri);
-
-    if (audioLevelExt) {
-      MOZ_MTLOG(ML_DEBUG, "Calling EnableAudioLevelExtension");
-      error = conduit->EnableAudioLevelExtension(true,
-                                                 audioLevelExt->entry,
-                                                 true);
-
-      if (error) {
-        MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
-                            " EnableAudioLevelExtension failed: " << error);
-        return NS_ERROR_FAILURE;
-      }
-    }
-
-    const SdpExtmapAttributeList::Extmap* midExt =
-        details.GetExt(webrtc::RtpExtension::kMIdUri);
-
-    if (midExt) {
-      MOZ_MTLOG(ML_DEBUG, "Calling EnableMIDExtension");
-      error = conduit->EnableMIDExtension(true, midExt->entry);
-
-      if (error) {
-        MOZ_MTLOG(ML_ERROR, "EnableMIDExtension failed: " << error);
-        return NS_ERROR_FAILURE;
-      }
-    }
+    UpdateConduitRtpExtmap(details, LocalDirection::kSend);
   }
 
   return NS_OK;
@@ -923,7 +867,7 @@ TransceiverImpl::UpdateVideoConduit()
       mJsepTransceiver->mRecvTrack.GetActive()) {
     const auto& details(*mJsepTransceiver->mRecvTrack.GetNegotiatedDetails());
 
-    UpdateVideoExtmap(details, false);
+    UpdateConduitRtpExtmap(details, LocalDirection::kRecv);
 
     PtrVector<VideoCodecConfig> configs;
     nsresult rv = NegotiatedDetailsToVideoCodecConfigs(details, &configs);
@@ -952,7 +896,7 @@ TransceiverImpl::UpdateVideoConduit()
       mSendTrack) {
     const auto& details(*mJsepTransceiver->mSendTrack.GetNegotiatedDetails());
 
-    UpdateVideoExtmap(details, true);
+    UpdateConduitRtpExtmap(details, LocalDirection::kSend);
 
     nsresult rv = ConfigureVideoCodecMode(*conduit);
     if (NS_FAILED(rv)) {
@@ -1020,8 +964,8 @@ TransceiverImpl::ConfigureVideoCodecMode(VideoSessionConduit& aConduit)
 }
 
 void
-TransceiverImpl::UpdateVideoExtmap(const JsepTrackNegotiatedDetails& aDetails,
-                                   bool aSending)
+TransceiverImpl::UpdateConduitRtpExtmap(const JsepTrackNegotiatedDetails& aDetails,
+                                        const LocalDirection aDirection)
 {
   std::vector<webrtc::RtpExtension> extmaps;
   // @@NG read extmap from track
@@ -1035,7 +979,7 @@ TransceiverImpl::UpdateVideoExtmap(const JsepTrackNegotiatedDetails& aDetails,
       mConduit.get());
 
   if (!extmaps.empty()) {
-    conduit->SetLocalRTPExtensions(aSending, extmaps);
+    conduit->SetLocalRTPExtensions(aDirection, extmaps);
   }
 }
 
