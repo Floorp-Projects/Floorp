@@ -157,6 +157,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         '/widget/android',
     ]
 
+IPDL_SOURCES += [
+    'PresState.ipdlh',
+]
+
 FINAL_LIBRARY = 'xul'
 
 BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']

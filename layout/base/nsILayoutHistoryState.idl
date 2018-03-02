@@ -18,6 +18,11 @@ native constBool(const bool);
 
 %{C++
 #include "nsStringFwd.h"
+#include "mozilla/UniquePtr.h"
+
+namespace mozilla {
+class PresState;
+} // namespace mozilla
 
 template<typename> struct already_AddRefed;
 %}
@@ -93,8 +98,13 @@ interface nsILayoutHistoryState : nsISupports
 };
 
 %{C++
+/* Defined in nsLayoutHistoryState.cpp */
 already_AddRefed<nsILayoutHistoryState>
 NS_NewLayoutHistoryState();
+
+namespace mozilla {
+mozilla::UniquePtr<mozilla::PresState> NewPresState();
+} // namespace mozilla
 %}
 
 
