@@ -166,7 +166,8 @@ ServiceWorkerRegistration::UpdateState(const ServiceWorkerRegistrationDescriptor
 bool
 ServiceWorkerRegistration::MatchesDescriptor(const ServiceWorkerRegistrationDescriptor& aDescriptor) const
 {
-  return aDescriptor.PrincipalInfo() == mDescriptor.PrincipalInfo() &&
+  return aDescriptor.Id() == mDescriptor.Id() &&
+         aDescriptor.PrincipalInfo() == mDescriptor.PrincipalInfo() &&
          aDescriptor.Scope() == mDescriptor.Scope();
 }
 
