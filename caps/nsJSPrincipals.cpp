@@ -223,7 +223,11 @@ ReadPrincipalInfo(JSStructuredCloneReader* aReader,
 
         aInfo = ContentPrincipalInfo(attrs, originNoSuffix, spec);
     } else {
+#ifdef FUZZING
+        return false;
+#else
         MOZ_CRASH("unexpected principal structured clone tag");
+#endif
     }
 
     return true;
