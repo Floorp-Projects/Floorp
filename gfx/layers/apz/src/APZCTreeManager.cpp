@@ -93,11 +93,6 @@ struct APZCTreeManager::TreeBuildingState {
   // This is initialized with all nodes in the old tree, and nodes are removed
   // from it as we reuse them in the new tree.
   nsTArray<RefPtr<HitTestingTreeNode>> mNodesToDestroy;
-  // A set of layer trees that are no longer in the hit testing tree. This is
-  // used to destroy unneeded focus targets at the end of tree building. This
-  // is needed in addition to mNodesToDestroy because a hit testing node for a
-  // layer tree can be removed without the whole layer tree being removed.
-  std::unordered_set<uint64_t> mLayersIdsToDestroy;
 
   // This map is populated as we place APZCs into the new tree. Its purpose is
   // to facilitate re-using the same APZC for different layers that scroll
@@ -269,12 +264,20 @@ APZCTreeManager::NotifyLayerTreeAdopted(uint64_t aLayersId,
                                         const RefPtr<APZCTreeManager>& aOldApzcTreeManager)
 {
   APZThreadUtils::AssertOnCompositorThread();
+
+  MOZ_ASSERT(aOldApzcTreeManager);
+  aOldApzcTreeManager->mFocusState.RemoveFocusTarget(aLayersId);
+  // While we could move the focus target information from the old APZC tree
+  // manager into this one, it's safer to not do that, as we'll probably have
+  // that information repopulated soon anyway (on the next layers update).
 }
 
 void
 APZCTreeManager::NotifyLayerTreeRemoved(uint64_t aLayersId)
 {
   APZThreadUtils::AssertOnCompositorThread();
+
+  mFocusState.RemoveFocusTarget(aLayersId);
 }
 
 AsyncPanZoomController*
@@ -342,7 +345,6 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
       {
         state.mNodesToDestroy.AppendElement(aNode);
       });
-  state.mLayersIdsToDestroy = mFocusState.GetFocusTargetLayerIds();
   mRootNode = nullptr;
 
   if (aRoot) {
@@ -353,8 +355,6 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
     uint64_t layersId = aRootLayerTreeId;
     ancestorTransforms.push(AncestorTransform());
     state.mParentHasPerspective.push(false);
-
-    state.mLayersIdsToDestroy.erase(aRootLayerTreeId);
 
     mApzcTreeLog << "[start]\n";
     mTreeLock.AssertCurrentThreadIn();
@@ -396,9 +396,6 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
           // Update the layersId if we have a new one
           if (Maybe<uint64_t> newLayersId = aLayerMetrics.GetReferentId()) {
             layersId = *newLayersId;
-
-            // Mark that this layer tree is being used
-            state.mLayersIdsToDestroy.erase(layersId);
           }
 
           indents.push(gfx::TreeAutoIndent(mApzcTreeLog));
@@ -456,11 +453,6 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
         state.mNodesToDestroy[i].get(),
         state.mNodesToDestroy[i]->GetApzc());
     state.mNodesToDestroy[i]->Destroy();
-  }
-
-  // Clear out any focus targets that are no longer needed
-  for (auto layersId : state.mLayersIdsToDestroy) {
-    mFocusState.RemoveFocusTarget(layersId);
   }
 
 #if ENABLE_APZCTM_LOGGING
