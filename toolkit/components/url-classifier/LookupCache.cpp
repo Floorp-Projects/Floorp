@@ -630,7 +630,6 @@ LookupCacheV2::Build(AddPrefixArray& aAddPrefixes,
 
   nsresult rv = ConstructPrefixSet(aAddPrefixes);
   NS_ENSURE_SUCCESS(rv, rv);
-  mPrimed = true;
 
   return NS_OK;
 }
