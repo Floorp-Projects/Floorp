@@ -202,7 +202,7 @@ talos-g4:
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time:
         by-test-platform:
-            linux64.*: 900
+            linux64.*: 1500
             default: 1800
     mozharness:
         extra-options:
@@ -223,7 +223,7 @@ talos-g4-profiling:
             - --webServer,localhost
     max-run-time:
         by-test-platform:
-            linux64.*: 900
+            linux64.*: 1500
             default: 1800
 
 talos-g5:

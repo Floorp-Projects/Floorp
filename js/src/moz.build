@@ -519,6 +519,7 @@ elif CONFIG['JS_CODEGEN_ARM64']:
         'jit/arm64/Bailouts-arm64.cpp',
         'jit/arm64/BaselineIC-arm64.cpp',
         'jit/arm64/CodeGenerator-arm64.cpp',
+        'jit/arm64/Disassembler-arm64.cpp',
         'jit/arm64/Lowering-arm64.cpp',
         'jit/arm64/MacroAssembler-arm64.cpp',
         'jit/arm64/MoveEmitter-arm64.cpp',
@@ -652,11 +653,13 @@ if CONFIG['NIGHTLY_BUILD']:
     DEFINES['ENABLE_WASM_SATURATING_TRUNC_OPS'] = True
     DEFINES['ENABLE_WASM_SIGNEXTEND_OPS'] = True
     DEFINES['ENABLE_WASM_THREAD_OPS'] = True
-    # An experiment we want to run on Nightly: Can we change the JS
-    # representation of an exported global from the global's value
-    # to an instance of WebAssembly.Global without breaking existing
-    # wasm content?
-    DEFINES['ENABLE_WASM_GLOBAL'] = True
+
+# An experiment we want to run on Nightly and early Beta: Can we change the JS
+# representation of an exported global from the global's value to an instance
+# of WebAssembly.Global without breaking existing wasm content?
+#
+# Additionally guarded by EARLY_BETA_OR_EARLIER in the code.
+DEFINES['ENABLE_WASM_GLOBAL'] = True
 
 if CONFIG['JS_BUILD_BINAST']:
     # Using SOURCES as UNIFIED_SOURCES causes mysterious bugs on 32-bit platforms.
@@ -679,7 +682,7 @@ if CONFIG['JS_BUILD_BINAST']:
 # so that it is easy to use the huge-mapping optimization for other
 # 64-bit platforms in the future.
 
-if CONFIG['JS_CODEGEN_X64']:
+if CONFIG['JS_CODEGEN_X64'] or CONFIG['JS_CODEGEN_ARM64']:
     DEFINES['WASM_HUGE_MEMORY'] = True
 
 if CONFIG['MOZ_DEBUG'] or CONFIG['NIGHTLY_BUILD']:

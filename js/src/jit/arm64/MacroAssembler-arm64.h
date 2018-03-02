@@ -2027,29 +2027,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         store32(scratch32.asUnsized(), addr);
     }
 
-    void BoundsCheck(Register ptrReg, Label* onFail, vixl::CPURegister zeroMe = vixl::NoReg) {
-        // use tst rather than Tst to *ensure* that a single instrution is generated.
-        Cmp(ARMRegister(ptrReg, 32), ARMRegister(HeapLenReg, 32));
-        if (!zeroMe.IsNone()) {
-            if (zeroMe.IsRegister()) {
-                Csel(ARMRegister(zeroMe),
-                     ARMRegister(zeroMe),
-                     Operand(zeroMe.Is32Bits() ? vixl::wzr : vixl::xzr),
-                     Assembler::Below);
-            } else if (zeroMe.Is32Bits()) {
-                vixl::UseScratchRegisterScope temps(this);
-                const ARMFPRegister scratchFloat = temps.AcquireS();
-                Fmov(scratchFloat, JS::GenericNaN());
-                Fcsel(ARMFPRegister(zeroMe), ARMFPRegister(zeroMe), scratchFloat, Assembler::Below);
-            } else {
-                vixl::UseScratchRegisterScope temps(this);
-                const ARMFPRegister scratchDouble = temps.AcquireD();
-                Fmov(scratchDouble, JS::GenericNaN());
-                Fcsel(ARMFPRegister(zeroMe), ARMFPRegister(zeroMe), scratchDouble, Assembler::Below);
-            }
-        }
-        B(onFail, Assembler::AboveOrEqual);
-    }
     void breakpoint();
 
     // Emits a simulator directive to save the current sp on an internal stack.

@@ -65,8 +65,10 @@ where
         let path = path.clone();
         let key = path.clone();
 
-        let runloop = RunLoop::new(move |alive| if alive() {
-            f(path, alive);
+        let runloop = RunLoop::new(move |alive| {
+            if alive() {
+                f(path, alive);
+            }
         });
 
         if let Ok(runloop) = runloop {

@@ -24,16 +24,16 @@ where
 {
     // Try all given app_ids in order.
     for app_id in app_ids {
-      // Find all valid key handles for the current app_id.
-      let valid_handles = key_handles
-          .iter()
-          .filter(|key_handle| is_valid(app_id, key_handle))
-          .collect::<Vec<_>>();
+        // Find all valid key handles for the current app_id.
+        let valid_handles = key_handles
+            .iter()
+            .filter(|key_handle| is_valid(app_id, key_handle))
+            .collect::<Vec<_>>();
 
-       // If there's at least one, stop.
-       if valid_handles.len() > 0 {
-           return (app_id, valid_handles);
-       }
+        // If there's at least one, stop.
+        if valid_handles.len() > 0 {
+            return (app_id, valid_handles);
+        }
     }
 
     return (&app_ids[0], vec![]);
@@ -87,20 +87,26 @@ impl StateMachine {
             }
 
             // Iterate the exclude list and see if there are any matches.
-            // Abort the state machine if we found a valid key handle.
-            if key_handles.iter().any(|key_handle| {
-                is_valid_transport(key_handle.transports) &&
-                    u2f_is_keyhandle_valid(dev, &challenge, &application, &key_handle.credential)
+            // If so, we'll keep polling the device anyway to test for user
+            // consent, to be consistent with CTAP2 device behavior.
+            let excluded = key_handles.iter().any(|key_handle| {
+                is_valid_transport(key_handle.transports)
+                    && u2f_is_keyhandle_valid(dev, &challenge, &application, &key_handle.credential)
                         .unwrap_or(false) /* no match on failure */
-            })
-            {
-                return;
-            }
+            });
 
             while alive() {
-                if let Ok(bytes) = u2f_register(dev, &challenge, &application) {
-                    callback.call(Ok(bytes));
-                    break;
+                if excluded {
+                    let blank = vec![0u8; PARAMETER_SIZE];
+                    if let Ok(_) = u2f_register(dev, &blank, &blank) {
+                        callback.call(Err(io_err("duplicate registration")));
+                        break;
+                    }
+                } else {
+                    if let Ok(bytes) = u2f_register(dev, &challenge, &application) {
+                        callback.call(Ok(bytes));
+                        break;
+                    }
                 }
 
                 // Sleep a bit before trying again.
@@ -108,9 +114,9 @@ impl StateMachine {
             }
         });
 
-        self.transaction = Some(try_or!(transaction, |_| {
-            cbc.call(Err(io_err("couldn't create transaction")))
-        }));
+        self.transaction = Some(try_or!(transaction, |_| cbc.call(Err(io_err(
+            "couldn't create transaction"
+        )))));
     }
 
     pub fn sign(
@@ -153,18 +159,17 @@ impl StateMachine {
             // For each appId, try all key handles. If there's at least one
             // valid key handle for an appId, we'll use that appId below.
             let (app_id, valid_handles) =
-                find_valid_key_handles(&app_ids, &key_handles,
-                    |app_id, key_handle| {
-                        u2f_is_keyhandle_valid(dev, &challenge, app_id,
-                                               &key_handle.credential)
-                            .unwrap_or(false) /* no match on failure */
-                    });
+                find_valid_key_handles(&app_ids, &key_handles, |app_id, key_handle| {
+                    u2f_is_keyhandle_valid(dev, &challenge, app_id, &key_handle.credential)
+                        .unwrap_or(false) /* no match on failure */
+                });
 
             // Aggregate distinct transports from all given credentials.
-            let transports = key_handles.iter().fold(
-                ::AuthenticatorTransports::empty(),
-                |t, k| t | k.transports,
-            );
+            let transports = key_handles
+                .iter()
+                .fold(::AuthenticatorTransports::empty(), |t, k| {
+                    t | k.transports
+                });
 
             // We currently only support USB. If the RP specifies transports
             // and doesn't include USB it's probably lying.
@@ -184,16 +189,13 @@ impl StateMachine {
                 } else {
                     // Otherwise, try to sign.
                     for key_handle in &valid_handles {
-                        if let Ok(bytes) = u2f_sign(
-                            dev,
-                            &challenge,
-                            app_id,
-                            &key_handle.credential,
-                        )
+                        if let Ok(bytes) = u2f_sign(dev, &challenge, app_id, &key_handle.credential)
                         {
-                            callback.call(Ok((app_id.clone(),
-                                              key_handle.credential.clone(),
-                                              bytes)));
+                            callback.call(Ok((
+                                app_id.clone(),
+                                key_handle.credential.clone(),
+                                bytes,
+                            )));
                             break;
                         }
                     }
@@ -204,9 +206,9 @@ impl StateMachine {
             }
         });
 
-        self.transaction = Some(try_or!(transaction, |_| {
-            cbc.call(Err(io_err("couldn't create transaction")))
-        }));
+        self.transaction = Some(try_or!(transaction, |_| cbc.call(Err(io_err(
+            "couldn't create transaction"
+        )))));
     }
 
     // This blocks.
