@@ -26,6 +26,9 @@ class PushManager;
 class WorkerPrivate;
 class ServiceWorker;
 
+#define NS_DOM_SERVICEWORKERREGISTRATION_IID \
+  {0x4578a90e, 0xa427, 0x4237, {0x98, 0x4a, 0xbd, 0x98, 0xe4, 0xcd, 0x5f, 0x3a}}
+
 class ServiceWorkerRegistration final : public DOMEventTargetHelper
 {
 public:
@@ -60,6 +63,7 @@ public:
     GetPushManager(JSContext* aCx, ErrorResult& aRv) = 0;
   };
 
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_SERVICEWORKERREGISTRATION_IID)
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerRegistration, DOMEventTargetHelper)
 
@@ -133,6 +137,7 @@ private:
   RefPtr<PushManager> mPushManager;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(ServiceWorkerRegistration, NS_DOM_SERVICEWORKERREGISTRATION_IID)
 
 } // namespace dom
 } // namespace mozilla

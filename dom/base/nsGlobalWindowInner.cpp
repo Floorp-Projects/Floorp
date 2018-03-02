@@ -6435,6 +6435,28 @@ nsGlobalWindowInner::GetOrCreateServiceWorker(const ServiceWorkerDescriptor& aDe
   return ref.forget();
 }
 
+RefPtr<ServiceWorkerRegistration>
+nsGlobalWindowInner::GetOrCreateServiceWorkerRegistration(const ServiceWorkerRegistrationDescriptor& aDescriptor)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  RefPtr<ServiceWorkerRegistration> ref;
+  ForEachEventTargetObject([&] (DOMEventTargetHelper* aTarget, bool* aDoneOut) {
+    RefPtr<ServiceWorkerRegistration> swr = do_QueryObject(aTarget);
+    if (!swr || !swr->MatchesDescriptor(aDescriptor)) {
+      return;
+    }
+
+    ref = swr.forget();
+    *aDoneOut = true;
+  });
+
+  if (!ref) {
+    ref = ServiceWorkerRegistration::CreateForMainThread(this, aDescriptor);
+  }
+
+  return ref.forget();
+}
+
 nsresult
 nsGlobalWindowInner::FireDelayedDOMEvents()
 {
