@@ -87,12 +87,7 @@ void
 ServiceWorkerRegistrationMainThread::RegistrationRemovedInternal()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  // If the registration is being removed completely, remove it from the
-  // window registration hash table so that a new registration would get a new
-  // wrapper JS object.
-  if (mOuter && mOuter->GetOwner()) {
-    mOuter->GetOwner()->InvalidateServiceWorkerRegistration(mScope);
-  }
+
   StopListeningForEvents();
 
   // Since the registration is effectively dead in the SWM we can break
