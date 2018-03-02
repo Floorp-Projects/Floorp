@@ -5,6 +5,8 @@
 #ifndef SINEWAVEGENERATOR_H_
 #define SINEWAVEGENERATOR_H_
 
+#include "MediaSegment.h"
+
 namespace mozilla {
 
 // generate 1k sine wave per second
@@ -28,11 +30,11 @@ public:
   }
 
   // NOTE: only safely called from a single thread (MSG callback)
-  void generate(int16_t* aBuffer, int16_t aLengthInSamples) {
-    int16_t remaining = aLengthInSamples;
+  void generate(int16_t* aBuffer, TrackTicks aLengthInSamples) {
+    TrackTicks remaining = aLengthInSamples;
 
     while (remaining) {
-      int16_t processSamples = 0;
+      TrackTicks processSamples = 0;
 
       if (mTotalLength - mReadLength >= remaining) {
         processSamples = remaining;
@@ -51,8 +53,8 @@ public:
 
 private:
   UniquePtr<int16_t[]> mAudioBuffer;
-  int16_t mTotalLength;
-  int16_t mReadLength;
+  TrackTicks mTotalLength;
+  TrackTicks mReadLength;
 };
 
 } // namespace mozilla
