@@ -190,7 +190,7 @@ public:
 
   /**
    * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
-   * in. The actual animation is done on the compositor thread after being set
+   * in. The actual animation is done on the sampler thread after being set
    * up.
    */
   void ZoomToRect(CSSRect aRect, const uint32_t aFlags);
@@ -213,7 +213,7 @@ public:
   void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs);
 
   // --------------------------------------------------------------------------
-  // These methods must only be called on the compositor thread.
+  // These methods must only be called on the sampler thread.
   //
 
   /**
@@ -776,7 +776,7 @@ protected:
 
   /* Access to the following two fields is protected by the mRefPtrMonitor,
      since they are accessed on the UI thread but can be cleared on the
-     compositor thread. */
+     sampler thread. */
   RefPtr<GeckoContentController> mGeckoContentController;
   RefPtr<GestureEventListener> mGestureEventListener;
   mutable Monitor mRefPtrMonitor;
