@@ -3,29 +3,27 @@
 use ir::context::BindgenContext;
 use ir::layout::Layout;
 use quote;
-use proc_macro2;
 use std::mem;
 
 pub mod attributes {
     use quote;
-    use proc_macro2;
 
     pub fn repr(which: &str) -> quote::Tokens {
-        let which = proc_macro2::Term::intern(which);
+        let which = quote::Ident::new(which);
         quote! {
             #[repr( #which )]
         }
     }
 
     pub fn repr_list(which_ones: &[&str]) -> quote::Tokens {
-        let which_ones = which_ones.iter().cloned().map(proc_macro2::Term::intern);
+        let which_ones = which_ones.iter().cloned().map(quote::Ident::new);
         quote! {
             #[repr( #( #which_ones ),* )]
         }
     }
 
     pub fn derives(which_ones: &[&str]) -> quote::Tokens {
-        let which_ones = which_ones.iter().cloned().map(proc_macro2::Term::intern);
+        let which_ones = which_ones.iter().cloned().map(quote::Ident::new);
         quote! {
             #[derive( #( #which_ones ),* )]
         }
@@ -41,8 +39,11 @@ pub mod attributes {
         // Doc comments are already preprocessed into nice `///` formats by the
         // time they get here. Just make sure that we have newlines around it so
         // that nothing else gets wrapped into the comment.
-        let comment = proc_macro2::Literal::doccomment(&comment);
-        quote! {#comment}
+        let mut tokens = quote! {};
+        tokens.append("\n");
+        tokens.append(comment);
+        tokens.append("\n");
+        tokens
     }
 
     pub fn link_name(name: &str) -> quote::Tokens {
@@ -72,7 +73,7 @@ pub fn blob(layout: Layout) -> quote::Tokens {
         }
     };
 
-    let ty_name = proc_macro2::Term::intern(ty_name);
+    let ty_name = quote::Ident::new(ty_name);
 
     let data_len = opaque.array_size().unwrap_or(layout.size);
 
@@ -102,7 +103,7 @@ pub fn bitfield_unit(ctx: &BindgenContext, layout: Layout) -> quote::Tokens {
     let mut tokens = quote! {};
 
     if ctx.options().enable_cxx_namespaces {
-        tokens.append_all(quote! { root:: });
+        tokens.append(quote! { root:: });
     }
 
     let align = match layout.align {
@@ -113,7 +114,7 @@ pub fn bitfield_unit(ctx: &BindgenContext, layout: Layout) -> quote::Tokens {
     };
 
     let size = layout.size;
-    tokens.append_all(quote! {
+    tokens.append(quote! {
         __BindgenBitfieldUnit<[u8; #size], #align>
     });
 
@@ -125,7 +126,6 @@ pub mod ast_ty {
     use ir::function::FunctionSig;
     use ir::ty::FloatKind;
     use quote;
-    use proc_macro2;
 
     pub fn raw_type(ctx: &BindgenContext, name: &str) -> quote::Tokens {
         let ident = ctx.rust_ident_raw(name);
@@ -166,25 +166,29 @@ pub mod ast_ty {
 
     pub fn int_expr(val: i64) -> quote::Tokens {
         // Don't use quote! { #val } because that adds the type suffix.
-        let val = proc_macro2::Literal::integer(val);
-        quote!(#val)
+        let mut tokens = quote! {};
+        tokens.append(val.to_string());
+        tokens
     }
 
     pub fn uint_expr(val: u64) -> quote::Tokens {
         // Don't use quote! { #val } because that adds the type suffix.
-        let val = proc_macro2::Term::intern(&val.to_string());
-        quote!(#val)
+        let mut tokens = quote! {};
+        tokens.append(val.to_string());
+        tokens
     }
 
     pub fn byte_array_expr(bytes: &[u8]) -> quote::Tokens {
         let mut bytes: Vec<_> = bytes.iter().cloned().collect();
         bytes.push(0);
-        quote! { [ #(#bytes),* ] }
+        quote! {
+            #bytes
+        }
     }
 
     pub fn cstr_expr(mut string: String) -> quote::Tokens {
         string.push('\0');
-        let b = proc_macro2::Literal::byte_string(&string.as_bytes());
+        let b = quote::ByteStr(&string);
         quote! {
             #b
         }
@@ -195,9 +199,16 @@ pub mod ast_ty {
         f: f64,
     ) -> Result<quote::Tokens, ()> {
         if f.is_finite() {
-            let val = proc_macro2::Literal::float(f);
+            let mut string = f.to_string();
 
-            return Ok(quote!(#val));
+            // So it gets properly recognised as a floating point constant.
+            if !string.contains('.') {
+                string.push('.');
+            }
+
+            let mut tokens = quote! {};
+            tokens.append(string);
+            return Ok(tokens);
         }
 
         let prefix = ctx.trait_prefix();

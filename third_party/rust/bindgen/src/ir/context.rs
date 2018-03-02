@@ -24,7 +24,7 @@ use cexpr;
 use clang::{self, Cursor};
 use clang_sys;
 use parse::ClangItemParser;
-use proc_macro2;
+use quote;
 use std::borrow::Cow;
 use std::cell::Cell;
 use std::collections::{HashMap, HashSet, hash_map};
@@ -222,8 +222,7 @@ where
     T: Copy + Into<ItemId>
 {
     fn can_derive_default(&self, ctx: &BindgenContext) -> bool {
-        ctx.options().derive_default &&
-            ctx.lookup_can_derive_default(*self)
+        ctx.options().derive_default && ctx.lookup_can_derive_default(*self)
     }
 }
 
@@ -232,7 +231,7 @@ where
     T: Copy + Into<ItemId>
 {
     fn can_derive_copy(&self, ctx: &BindgenContext) -> bool {
-        ctx.lookup_can_derive_copy(*self)
+        ctx.options().derive_copy && ctx.lookup_can_derive_copy(*self)
     }
 }
 
@@ -881,7 +880,7 @@ impl BindgenContext {
     }
 
     /// Returns a mangled name as a rust identifier.
-    pub fn rust_ident<S>(&self, name: S) -> proc_macro2::Term
+    pub fn rust_ident<S>(&self, name: S) -> quote::Ident
     where
         S: AsRef<str>
     {
@@ -889,11 +888,11 @@ impl BindgenContext {
     }
 
     /// Returns a mangled name as a rust identifier.
-    pub fn rust_ident_raw<T>(&self, name: T) -> proc_macro2::Term
+    pub fn rust_ident_raw<T>(&self, name: T) -> quote::Ident
     where
-        T: AsRef<str>
+        T: Into<quote::Ident>
     {
-        proc_macro2::Term::intern(name.as_ref())
+        name.into()
     }
 
     /// Iterate over all items that have been defined.
@@ -2321,7 +2320,7 @@ impl BindgenContext {
 
     /// Convenient method for getting the prefix to use for most traits in
     /// codegen depending on the `use_core` option.
-    pub fn trait_prefix(&self) -> proc_macro2::Term {
+    pub fn trait_prefix(&self) -> quote::Ident {
         if self.options().use_core {
             self.rust_ident_raw("core")
         } else {
@@ -2452,6 +2451,7 @@ impl BindgenContext {
         // Look up the computed value for whether the item with `id` can
         // derive `Copy` or not.
         let id = id.into();
+
         !self.lookup_has_type_param_in_array(id) &&
             !self.cannot_derive_copy.as_ref().unwrap().contains(&id)
     }
