@@ -575,7 +575,8 @@ WorkerGlobalScope::GetOrCreateServiceWorkerRegistration(const ServiceWorkerRegis
   });
 
   if (!ref) {
-    ref = ServiceWorkerRegistration::CreateForWorker(mWorkerPrivate, aDescriptor);
+    ref = ServiceWorkerRegistration::CreateForWorker(mWorkerPrivate, this,
+                                                     aDescriptor);
   }
 
   return ref.forget();
@@ -685,6 +686,7 @@ ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WorkerPrivate* aWorkerPrivate
   // about the state of the registration.  We can't wait until first access
   // to start receiving these.
   , mRegistration(ServiceWorkerRegistration::CreateForWorker(aWorkerPrivate,
+                                                             this,
                                                              aRegistrationDescriptor))
 {
 }

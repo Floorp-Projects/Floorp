@@ -75,6 +75,7 @@ public:
 
   static already_AddRefed<ServiceWorkerRegistration>
   CreateForWorker(WorkerPrivate* aWorkerPrivate,
+                  nsIGlobalObject* aGlobal,
                   const ServiceWorkerRegistrationDescriptor& aDescriptor);
 
   JSObject*
