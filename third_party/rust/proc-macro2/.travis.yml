@@ -12,6 +12,7 @@ matrix:
       script:
         - cargo test
         - cargo build --features nightly
+        - cargo build --no-default-features
         - RUSTFLAGS='--cfg procmacro2_semver_exempt' cargo test
         - RUSTFLAGS='--cfg procmacro2_semver_exempt' cargo build --features nightly
         - RUSTFLAGS='--cfg procmacro2_semver_exempt' cargo doc --no-deps
