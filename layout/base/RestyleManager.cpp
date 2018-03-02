@@ -207,7 +207,7 @@ WhitespaceOnlyChangedOnAppend(const CharT* aBuffer,
                               size_t aOldLength,
                               size_t aNewLength)
 {
-  MOZ_ASSERT(aOldLength < aNewLength);
+  MOZ_ASSERT(aOldLength <= aNewLength);
   if (!WhitespaceOnly(aBuffer, aOldLength)) {
     // The old text was already not whitespace-only.
     return false;
