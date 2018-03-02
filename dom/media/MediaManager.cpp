@@ -2196,21 +2196,6 @@ int MediaManager::AddDeviceChangeCallback(DeviceChangeCallback* aCallback)
   return DeviceChangeCallback::AddDeviceChangeCallback(aCallback);
 }
 
-static void
-StopRawIDCallback(MediaManager *aThis,
-                   uint64_t aWindowID,
-                   GetUserMediaWindowListener *aListener,
-                   void *aData)
-{
-  if (!aListener || !aData) {
-    return;
-  }
-
-  nsString* removedDeviceID = static_cast<nsString*>(aData);
-  aListener->StopRawID(*removedDeviceID);
-}
-
-
 void MediaManager::OnDeviceChange() {
   RefPtr<MediaManager> self(this);
   NS_DispatchToMainThread(media::NewRunnableFrom([self]() mutable {
@@ -2238,16 +2223,24 @@ void MediaManager::OnDeviceChange() {
       }
 
       for (auto& id : self->mDeviceIDs) {
-        if (!deviceIDs.Contains(id)) {
-          // Stop the coresponding SourceListener
-          nsGlobalWindowInner::InnerWindowByIdTable* windowsById =
-            nsGlobalWindowInner::GetWindowsTable();
-          if (windowsById) {
-            for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
-              nsGlobalWindowInner* window = iter.Data();
-              self->IterateWindowListeners(window->AsInner(), StopRawIDCallback, &id);
-            }
-          }
+        if (deviceIDs.Contains(id)) {
+          continue;
+        }
+
+        // Stop the coresponding SourceListener
+        nsGlobalWindowInner::InnerWindowByIdTable* windowsById =
+          nsGlobalWindowInner::GetWindowsTable();
+        if (!windowsById) {
+          continue;
+        }
+
+        for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
+          nsGlobalWindowInner* window = iter.Data();
+          self->IterateWindowListeners(window->AsInner(),
+              [&id](GetUserMediaWindowListener* aListener)
+              {
+                aListener->StopRawID(id);
+              });
         }
       }
 
@@ -3094,27 +3087,6 @@ MediaManager::GetBackend(uint64_t aWindowId)
   return mBackend;
 }
 
-static void
-StopSharingCallback(MediaManager *aThis,
-                    uint64_t aWindowID,
-                    GetUserMediaWindowListener *aListener,
-                    void *aData)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // Grab a strong ref since RemoveAll() might destroy the listener mid-way
-  // when clearing the mActiveWindows reference.
-  RefPtr<GetUserMediaWindowListener> listener(aListener);
-  if (!listener) {
-    return;
-  }
-
-  listener->Stop();
-  listener->RemoveAll();
-  MOZ_ASSERT(!aThis->GetWindowListener(aWindowID));
-}
-
-
 void
 MediaManager::OnNavigation(uint64_t aWindowID)
 {
@@ -3136,7 +3108,19 @@ MediaManager::OnNavigation(uint64_t aWindowID)
   // be added to from the main-thread
   auto* window = nsGlobalWindowInner::GetInnerWindowWithId(aWindowID);
   if (window) {
-    IterateWindowListeners(window->AsInner(), StopSharingCallback, nullptr);
+    IterateWindowListeners(window->AsInner(),
+        [self = RefPtr<MediaManager>(this),
+         windowID = DebugOnly<decltype(aWindowID)>(aWindowID)]
+        (GetUserMediaWindowListener* aListener)
+        {
+          // Grab a strong ref since RemoveAll() might destroy the listener
+          // mid-way when clearing the mActiveWindows reference.
+          RefPtr<GetUserMediaWindowListener> listener(aListener);
+
+          listener->Stop();
+          listener->RemoveAll();
+          MOZ_ASSERT(!self->GetWindowListener(windowID));
+        });
   } else {
     RemoveWindowID(aWindowID);
   }
@@ -3591,63 +3575,52 @@ struct CaptureWindowStateData {
   uint16_t* mBrowserShare;
 };
 
-static void
-CaptureWindowStateCallback(MediaManager *aThis,
-                           uint64_t aWindowID,
-                           GetUserMediaWindowListener *aListener,
-                           void *aData)
-{
-  MOZ_ASSERT(aData);
-
-  auto& data = *static_cast<CaptureWindowStateData*>(aData);
-
-  if (!aListener) {
-    return;
-  }
-
-  *data.mCamera =
-    FromCaptureState(aListener->CapturingSource(MediaSourceEnum::Camera));
-  *data.mMicrophone =
-    FromCaptureState(aListener->CapturingSource(MediaSourceEnum::Microphone));
-  *data.mScreenShare =
-    FromCaptureState(aListener->CapturingSource(MediaSourceEnum::Screen));
-  *data.mWindowShare =
-    FromCaptureState(aListener->CapturingSource(MediaSourceEnum::Window));
-  *data.mAppShare =
-    FromCaptureState(aListener->CapturingSource(MediaSourceEnum::Application));
-  *data.mBrowserShare =
-    FromCaptureState(aListener->CapturingSource(MediaSourceEnum::Browser));
-}
-
 NS_IMETHODIMP
-MediaManager::MediaCaptureWindowState(nsIDOMWindow* aWindow,
+MediaManager::MediaCaptureWindowState(nsIDOMWindow* aCapturedWindow,
                                       uint16_t* aCamera,
                                       uint16_t* aMicrophone,
-                                      uint16_t* aScreenShare,
-                                      uint16_t* aWindowShare,
-                                      uint16_t* aAppShare,
-                                      uint16_t* aBrowserShare)
+                                      uint16_t* aScreen,
+                                      uint16_t* aWindow,
+                                      uint16_t* aApplication,
+                                      uint16_t* aBrowser)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  struct CaptureWindowStateData data;
-  data.mCamera = aCamera;
-  data.mMicrophone = aMicrophone;
-  data.mScreenShare = aScreenShare;
-  data.mWindowShare = aWindowShare;
-  data.mAppShare = aAppShare;
-  data.mBrowserShare = aBrowserShare;
 
-  *aCamera = nsIMediaManagerService::STATE_NOCAPTURE;
-  *aMicrophone = nsIMediaManagerService::STATE_NOCAPTURE;
-  *aScreenShare = nsIMediaManagerService::STATE_NOCAPTURE;
-  *aWindowShare = nsIMediaManagerService::STATE_NOCAPTURE;
-  *aAppShare = nsIMediaManagerService::STATE_NOCAPTURE;
-  *aBrowserShare = nsIMediaManagerService::STATE_NOCAPTURE;
+  CaptureState camera = CaptureState::Off;
+  CaptureState microphone = CaptureState::Off;
+  CaptureState screen = CaptureState::Off;
+  CaptureState window = CaptureState::Off;
+  CaptureState application = CaptureState::Off;
+  CaptureState browser = CaptureState::Off;
 
-  nsCOMPtr<nsPIDOMWindowInner> piWin = do_QueryInterface(aWindow);
+  nsCOMPtr<nsPIDOMWindowInner> piWin = do_QueryInterface(aCapturedWindow);
   if (piWin) {
-    IterateWindowListeners(piWin, CaptureWindowStateCallback, &data);
+    IterateWindowListeners(piWin,
+      [&camera, &microphone, &screen, &window, &application, &browser]
+      (GetUserMediaWindowListener* aListener)
+      {
+        camera = CombineCaptureState(
+            camera, aListener->CapturingSource(MediaSourceEnum::Camera));
+        microphone = CombineCaptureState(
+            microphone, aListener->CapturingSource(MediaSourceEnum::Microphone));
+        screen = CombineCaptureState(
+            screen, aListener->CapturingSource(MediaSourceEnum::Screen));
+        window = CombineCaptureState(
+            window, aListener->CapturingSource(MediaSourceEnum::Window));
+        application = CombineCaptureState(
+            application, aListener->CapturingSource(MediaSourceEnum::Application));
+        browser = CombineCaptureState(
+            browser, aListener->CapturingSource(MediaSourceEnum::Browser));
+      });
   }
+
+  *aCamera = FromCaptureState(camera);
+  *aMicrophone= FromCaptureState(microphone);
+  *aScreen = FromCaptureState(screen);
+  *aWindow = FromCaptureState(window);
+  *aApplication = FromCaptureState(application);
+  *aBrowser = FromCaptureState(browser);
+
 #ifdef DEBUG
   LOG(("%s: window %" PRIu64 " capturing %s %s %s %s %s %s", __FUNCTION__, piWin ? piWin->WindowID() : -1,
        *aCamera == nsIMediaManagerService::STATE_CAPTURE_ENABLED
@@ -3658,10 +3631,10 @@ MediaManager::MediaCaptureWindowState(nsIDOMWindow* aWindow,
          ? "microphone (enabled)"
          : (*aMicrophone == nsIMediaManagerService::STATE_CAPTURE_DISABLED
             ? "microphone (disabled)" : ""),
-       *aScreenShare ? "screenshare" : "",
-       *aWindowShare ? "windowshare" : "",
-       *aAppShare ? "appshare" : "",
-       *aBrowserShare ? "browsershare" : ""));
+       *aScreen ? "screenshare" : "",
+       *aWindow ? "windowshare" : "",
+       *aApplication ? "appshare" : "",
+       *aBrowser ? "browsershare" : ""));
 #endif
   return NS_OK;
 }
@@ -3676,19 +3649,6 @@ MediaManager::SanitizeDeviceIds(int64_t aSinceWhen)
   return NS_OK;
 }
 
-static void
-StopScreensharingCallback(MediaManager *aThis,
-                          uint64_t aWindowID,
-                          GetUserMediaWindowListener *aListener,
-                          void *aData)
-{
-  if (!aListener) {
-    return;
-  }
-
-  aListener->StopSharing();
-}
-
 void
 MediaManager::StopScreensharing(uint64_t aWindowID)
 {
@@ -3699,14 +3659,17 @@ MediaManager::StopScreensharing(uint64_t aWindowID)
   if (!window) {
     return;
   }
-  IterateWindowListeners(window->AsInner(), &StopScreensharingCallback, nullptr);
+  IterateWindowListeners(window->AsInner(),
+    [](GetUserMediaWindowListener* aListener)
+    {
+      aListener->StopSharing();
+    });
 }
 
-// lets us do all sorts of things to the listeners
+template<typename FunctionType>
 void
 MediaManager::IterateWindowListeners(nsPIDOMWindowInner* aWindow,
-                                     WindowListenerCallback aCallback,
-                                     void *aData)
+                                     const FunctionType& aCallback)
 {
   // Iterate the docshell tree to find all the child windows, and for each
   // invoke the callback
@@ -3714,7 +3677,9 @@ MediaManager::IterateWindowListeners(nsPIDOMWindowInner* aWindow,
     {
       uint64_t windowID = aWindow->WindowID();
       GetUserMediaWindowListener* listener = GetWindowListener(windowID);
-      (*aCallback)(this, windowID, listener, aData);
+      if (listener) {
+        aCallback(listener);
+      }
       // NB: `listener` might have been destroyed.
     }
 
@@ -3729,8 +3694,7 @@ MediaManager::IterateWindowListeners(nsPIDOMWindowInner* aWindow,
         nsCOMPtr<nsPIDOMWindowOuter> winOuter = item ? item->GetWindow() : nullptr;
 
         if (winOuter) {
-          IterateWindowListeners(winOuter->GetCurrentInnerWindow(),
-                                 aCallback, aData);
+          IterateWindowListeners(winOuter->GetCurrentInnerWindow(), aCallback);
         }
       }
     }

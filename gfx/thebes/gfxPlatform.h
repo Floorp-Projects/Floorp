@@ -722,6 +722,7 @@ protected:
     virtual ~gfxPlatform();
 
     virtual void InitAcceleration();
+    virtual void InitWebRenderConfig();
 
     /**
      * Called immediately before deleting the gfxPlatform object.
@@ -839,7 +840,6 @@ private:
 
     void InitCompositorAccelerationPrefs();
     void InitGPUProcessPrefs();
-    void InitWebRenderConfig();
     void InitOMTPConfig();
 
     static bool IsDXInterop2Blocked();

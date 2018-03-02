@@ -2484,18 +2484,19 @@ class TabBrowser {
     if ((openerTab &&
          Services.prefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")) ||
          Services.prefs.getBoolPref("browser.tabs.insertAfterCurrent")) {
+      let lastRelatedTab = openerTab && this._lastRelatedTabMap.get(openerTab);
+      let newTabPos = (lastRelatedTab || openerTab || this.mCurrentTab)._tPos + 1;
 
-    let lastRelatedTab = openerTab && this._lastRelatedTabMap.get(openerTab);
-    let newTabPos = (lastRelatedTab || openerTab || this.mCurrentTab)._tPos + 1;
-
-    if (lastRelatedTab)
-      lastRelatedTab.owner = null;
-    else if (openerTab)
-      t.owner = openerTab;
-    this.moveTabTo(t, newTabPos, true);
-    if (openerTab)
-      this._lastRelatedTabMap.set(openerTab, t);
-  }
+      if (lastRelatedTab) {
+        lastRelatedTab.owner = null;
+      } else if (openerTab) {
+        t.owner = openerTab;
+      }
+      this.moveTabTo(t, newTabPos, true);
+      if (openerTab) {
+        this._lastRelatedTabMap.set(openerTab, t);
+      }
+    }
 
     // This field is updated regardless if we actually animate
     // since it's important that we keep this count correct in all cases.

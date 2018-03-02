@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use std::io;
-use std::sync::mpsc::{channel, Sender, RecvTimeoutError};
+use std::sync::mpsc::{channel, RecvTimeoutError, Sender};
 use std::time::Duration;
 
 use consts::PARAMETER_SIZE;
@@ -47,13 +47,13 @@ impl U2FManager {
             while alive() {
                 match rx.recv_timeout(Duration::from_millis(50)) {
                     Ok(QueueAction::Register {
-                           flags,
-                           timeout,
-                           challenge,
-                           application,
-                           key_handles,
-                           callback,
-                       }) => {
+                        flags,
+                        timeout,
+                        challenge,
+                        application,
+                        key_handles,
+                        callback,
+                    }) => {
                         // This must not block, otherwise we can't cancel.
                         sm.register(
                             flags,
@@ -65,22 +65,15 @@ impl U2FManager {
                         );
                     }
                     Ok(QueueAction::Sign {
-                           flags,
-                           timeout,
-                           challenge,
-                           app_ids,
-                           key_handles,
-                           callback,
-                       }) => {
+                        flags,
+                        timeout,
+                        challenge,
+                        app_ids,
+                        key_handles,
+                        callback,
+                    }) => {
                         // This must not block, otherwise we can't cancel.
-                        sm.sign(
-                            flags,
-                            timeout,
-                            challenge,
-                            app_ids,
-                            key_handles,
-                            callback,
-                        );
+                        sm.sign(flags, timeout, challenge, app_ids, key_handles, callback);
                     }
                     Ok(QueueAction::Cancel) => {
                         // Cancelling must block so that we don't start a new
@@ -173,12 +166,12 @@ impl U2FManager {
         }
 
         for app_id in &app_ids {
-          if app_id.len() != PARAMETER_SIZE {
-              return Err(io::Error::new(
-                  io::ErrorKind::InvalidInput,
-                  "Invalid app_id size",
-              ));
-          }
+            if app_id.len() != PARAMETER_SIZE {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "Invalid app_id size",
+                ));
+            }
         }
 
         for key_handle in &key_handles {
