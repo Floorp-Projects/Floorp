@@ -7,7 +7,7 @@
 extern crate core_foundation_sys;
 extern crate libc;
 
-use consts::{FIDO_USAGE_PAGE, FIDO_USAGE_U2FHID};
+use consts::{FIDO_USAGE_U2FHID, FIDO_USAGE_PAGE};
 use core_foundation_sys::base::*;
 use core_foundation_sys::dictionary::*;
 use core_foundation_sys::number::*;
@@ -23,19 +23,23 @@ pub type IOReturn = libc::c_int;
 pub type IOHIDManagerRef = *mut __IOHIDManager;
 pub type IOHIDManagerOptions = IOOptionBits;
 
-pub type IOHIDDeviceCallback = extern "C" fn(context: *mut c_void,
-                                             result: IOReturn,
-                                             sender: *mut c_void,
-                                             device: IOHIDDeviceRef);
+pub type IOHIDDeviceCallback = extern "C" fn(
+    context: *mut c_void,
+    result: IOReturn,
+    sender: *mut c_void,
+    device: IOHIDDeviceRef,
+);
 
 pub type IOHIDReportType = IOOptionBits;
-pub type IOHIDReportCallback = extern "C" fn(context: *mut c_void,
-                                             result: IOReturn,
-                                             sender: IOHIDDeviceRef,
-                                             report_type: IOHIDReportType,
-                                             report_id: u32,
-                                             report: *mut u8,
-                                             report_len: CFIndex);
+pub type IOHIDReportCallback = extern "C" fn(
+    context: *mut c_void,
+    result: IOReturn,
+    sender: IOHIDDeviceRef,
+    report_type: IOHIDReportType,
+    report_id: u32,
+    report: *mut u8,
+    report_len: CFIndex,
+);
 
 pub const kIOHIDManagerOptionNone: IOHIDManagerOptions = 0;
 

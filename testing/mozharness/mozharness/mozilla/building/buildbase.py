@@ -1581,46 +1581,45 @@ or run without that action (ie: --no-{action})"
         else:
             self.fatal("could not determine packageName")
 
-        interests = ['libxul.so', 'classes.dex', 'omni.ja']
-        installer = os.path.join(dirs['abs_obj_dir'], 'dist', packageName)
+        interests = ['libxul.so', 'classes.dex', 'omni.ja', 'xul.dll']
+        installer = os.path.join(dist_dir, packageName)
         installer_size = 0
         size_measurements = []
+
+        def paths_with_sizes(installer):
+            if zipfile.is_zipfile(installer):
+                with zipfile.ZipFile(installer, 'r') as zf:
+                    for zi in zf.infolist():
+                        yield zi.filename, zi.file_size
+            elif tarfile.is_tarfile(installer):
+                with tarfile.open(installer, 'r:*') as tf:
+                    for ti in tf:
+                        yield ti.name, ti.size
 
         if os.path.exists(installer):
             installer_size = self.query_filesize(installer)
             self.info('Size of %s: %s bytes' % (packageName, installer_size))
             try:
                 subtests = {}
-                if zipfile.is_zipfile(installer):
-                    with zipfile.ZipFile(installer, 'r') as zf:
-                        for zi in zf.infolist():
-                            name = os.path.basename(zi.filename)
-                            size = zi.file_size
-                            if name in interests:
-                                if name in subtests:
-                                    # File seen twice in same archive;
-                                    # ignore to avoid confusion.
-                                    subtests[name] = None
-                                else:
-                                    subtests[name] = size
-                elif tarfile.is_tarfile(installer):
-                    with tarfile.open(installer, 'r:*') as tf:
-                        for ti in tf:
-                            name = os.path.basename(ti.name)
-                            size = ti.size
-                            if name in interests:
-                                if name in subtests:
-                                    # File seen twice in same archive;
-                                    # ignore to avoid confusion.
-                                    subtests[name] = None
-                                else:
-                                    subtests[name] = size
+                for path, size in paths_with_sizes(installer):
+                    name = os.path.basename(path)
+                    if name in interests:
+                        # We have to be careful here: desktop Firefox installers
+                        # contain two omni.ja files: one for the general runtime,
+                        # and one for the browser proper.
+                        if name == 'omni.ja':
+                            containing_dir = os.path.basename(os.path.dirname(path))
+                            if containing_dir == 'browser':
+                                name = 'browser-omni.ja'
+                        if name in subtests:
+                            self.fatal('should not see %s (%s) multiple times!'
+                                       % (name, path))
+                        subtests[name] = size
                 for name in subtests:
-                    if subtests[name] is not None:
-                        self.info('Size of %s: %s bytes' % (name,
-                                                            subtests[name]))
-                        size_measurements.append(
-                            {'name': name, 'value': subtests[name]})
+                    self.info('Size of %s: %s bytes' % (name,
+                                                        subtests[name]))
+                    size_measurements.append(
+                        {'name': name, 'value': subtests[name]})
             except:
                 self.info('Unable to search %s for component sizes.' % installer)
                 size_measurements = []

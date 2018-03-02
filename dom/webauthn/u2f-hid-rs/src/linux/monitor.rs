@@ -89,9 +89,10 @@ where
     }
 
     fn process_event(&mut self, event: libudev::Event) {
-        let path = event.device().devnode().map(
-            |dn| dn.to_owned().into_os_string(),
-        );
+        let path = event
+            .device()
+            .devnode()
+            .map(|dn| dn.to_owned().into_os_string());
 
         match (event.event_type(), path) {
             (EventType::Add, Some(path)) => {
@@ -108,8 +109,10 @@ where
         let f = self.new_device_cb.clone();
         let key = path.clone();
 
-        let runloop = RunLoop::new(move |alive| if alive() {
-            f(path, alive);
+        let runloop = RunLoop::new(move |alive| {
+            if alive() {
+                f(path, alive);
+            }
         });
 
         if let Ok(runloop) = runloop {
