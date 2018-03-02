@@ -33,7 +33,6 @@ function getETLD(host) {
   }
 }
 
-
 /**
  * shortURL - Creates a short version of a link's url, used for display purposes
  *            e.g. {url: http://www.foosite.com}  =>  "foosite"
@@ -68,4 +67,4 @@ function shortURL({url}) {
     parsed.pathname || parsed.href;
 }
 
-var EXPORTED_SYMBOLS = ["shortURL", "getETLD"];
+const EXPORTED_SYMBOLS = ["shortURL", "getETLD"];

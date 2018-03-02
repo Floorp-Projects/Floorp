@@ -359,7 +359,7 @@ nsContextMenu.prototype = {
     var isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
     var showContainers = Services.prefs.getBoolPref("privacy.userContext.enabled");
     this.showItem("context-openlink", shouldShow && !isWindowPrivate);
-    this.showItem("context-openlinkprivate", shouldShow);
+    this.showItem("context-openlinkprivate", shouldShow && PrivateBrowsingUtils.enabled);
     this.showItem("context-openlinkintab", shouldShow && !inContainer);
     this.showItem("context-openlinkincontainertab", shouldShow && inContainer);
     this.showItem("context-openlinkinusercontext-menu", shouldShow && !isWindowPrivate && showContainers);

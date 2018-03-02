@@ -6,12 +6,14 @@ use api::{BuiltDisplayList, ColorF, DynamicProperties, Epoch, LayerSize, LayoutS
 use api::{FilterOp, LayoutTransform, PipelineId, PropertyBinding, PropertyBindingId};
 use api::{ItemRange, MixBlendMode, StackingContext};
 use internal_types::FastHashMap;
+use std::sync::Arc;
 
 /// Stores a map of the animated property bindings for the current display list. These
 /// can be used to animate the transform and/or opacity of a display list without
 /// re-submitting the display list itself.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Clone)]
 pub struct SceneProperties {
     transform_properties: FastHashMap<PropertyBindingId, LayoutTransform>,
     float_properties: FastHashMap<PropertyBindingId, f32>,
@@ -86,9 +88,9 @@ impl SceneProperties {
 /// A representation of the layout within the display port for a given document or iframe.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Clone)]
 pub struct ScenePipeline {
     pub pipeline_id: PipelineId,
-    pub epoch: Epoch,
     pub viewport_size: LayerSize,
     pub content_size: LayoutSize,
     pub background_color: Option<ColorF>,
@@ -98,11 +100,11 @@ pub struct ScenePipeline {
 /// A complete representation of the layout bundling visible pipelines together.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Clone)]
 pub struct Scene {
     pub root_pipeline_id: Option<PipelineId>,
-    pub pipelines: FastHashMap<PipelineId, ScenePipeline>,
-    pub removed_pipelines: Vec<PipelineId>,
-    pub properties: SceneProperties,
+    pub pipelines: FastHashMap<PipelineId, Arc<ScenePipeline>>,
+    pub pipeline_epochs: FastHashMap<PipelineId, Epoch>,
 }
 
 impl Scene {
@@ -110,8 +112,7 @@ impl Scene {
         Scene {
             root_pipeline_id: None,
             pipelines: FastHashMap::default(),
-            removed_pipelines: Vec::new(),
-            properties: SceneProperties::new(),
+            pipeline_epochs: FastHashMap::default(),
         }
     }
 
@@ -130,14 +131,14 @@ impl Scene {
     ) {
         let new_pipeline = ScenePipeline {
             pipeline_id,
-            epoch,
             viewport_size,
             content_size,
             background_color,
             display_list,
         };
 
-        self.pipelines.insert(pipeline_id, new_pipeline);
+        self.pipelines.insert(pipeline_id, Arc::new(new_pipeline));
+        self.pipeline_epochs.insert(pipeline_id, epoch);
     }
 
     pub fn remove_pipeline(&mut self, pipeline_id: PipelineId) {
@@ -145,13 +146,10 @@ impl Scene {
             self.root_pipeline_id = None;
         }
         self.pipelines.remove(&pipeline_id);
-        self.removed_pipelines.push(pipeline_id);
     }
 
     pub fn update_epoch(&mut self, pipeline_id: PipelineId, epoch: Epoch) {
-        if let Some(pipeline) = self.pipelines.get_mut(&pipeline_id) {
-            pipeline.epoch = epoch;
-        }
+        self.pipeline_epochs.insert(pipeline_id, epoch);
     }
 }
 

@@ -153,6 +153,14 @@
       "enum": [true]
     },
 
+    "DisablePrivateBrowsing": {
+      "description": "Disables private browsing.",
+      "first_available": "60.0",
+
+      "type": "boolean",
+      "enum": [true]
+    },
+
     "DisplayBookmarksToolbar": {
       "description": "Causes the bookmarks toolbar to be displayed by default.",
       "first_available": "60.0",
@@ -197,6 +205,29 @@
           }
         }
       }
+    },
+
+    "Homepage": {
+      "description": "Set and optionally lock the homepage.",
+      "first_available": "60.0",
+      "enterprise_only": true,
+
+      "type": "object",
+      "properties": {
+        "URL": {
+          "type": "URL"
+        },
+        "Locked": {
+          "type": "boolean"
+        },
+        "Additional": {
+          "type": "array",
+          "items": {
+            "type": "URL"
+          }
+        }
+      },
+      "required": ["URL"]
     },
 
     "InstallAddons": {

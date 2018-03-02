@@ -467,16 +467,20 @@ private:
     ~Allocation();
 
 #ifdef DEBUG
-    /**
-     * We call this every time we append data to the track for this Allocation.
-     * It asserts that we only append once per iteration at most.
-     */
-    void RegisterLastAppendTime(MediaStreamGraphImpl* aGraph);
-
-    // The MSGImpl::IterationEnd() of the last time we appended data.
-    // Graph thread only.
-    GraphTime mLastAppendTime = 0;
+    // The MSGImpl::IterationEnd() of the last time we appended data from an
+    // audio callback.
+    // Guarded by MediaEngineWebRTCMicrophoneSource::mMutex.
+    GraphTime mLastCallbackAppendTime = 0;
 #endif
+    // Set to false by Start(). Becomes true after the first time we append real
+    // audio frames from the audio callback.
+    // Guarded by MediaEngineWebRTCMicrophoneSource::mMutex.
+    bool mLiveFramesAppended = false;
+
+    // Set to false by Start(). Becomes true after the first time we append
+    // silence *after* the first audio callback has appended real frames.
+    // Guarded by MediaEngineWebRTCMicrophoneSource::mMutex.
+    bool mLiveSilenceAppended = false;
 
     const RefPtr<AllocationHandle> mHandle;
     RefPtr<SourceMediaStream> mStream;
@@ -527,7 +531,7 @@ private:
   void UpdateAGCSettingsIfNeeded(bool aEnable, webrtc::AgcModes aMode);
   void UpdateNSSettingsIfNeeded(bool aEnable, webrtc::NsModes aMode);
 
-  void SetLastPrefs(const MediaEnginePrefs& aPrefs);
+  void ApplySettings(const MediaEnginePrefs& aPrefs);
 
   bool HasEnabledTrack() const;
 

@@ -121,5 +121,5 @@ _PerfService.prototype = {
   }
 };
 
-var perfService = new _PerfService();
-var EXPORTED_SYMBOLS = ["_PerfService", "perfService"];
+this.perfService = new _PerfService();
+const EXPORTED_SYMBOLS = ["_PerfService", "perfService"];

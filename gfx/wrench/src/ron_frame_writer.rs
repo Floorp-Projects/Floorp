@@ -156,13 +156,11 @@ impl webrender::ApiRecordingReceiver for RonFrameWriter {
     fn write_msg(&mut self, _: u32, msg: &ApiMsg) {
         match *msg {
             ApiMsg::UpdateResources(ref updates) => self.update_resources(updates),
-            ApiMsg::UpdateDocument(_, ref doc_msgs) => {
-                for doc_msg in doc_msgs {
+            ApiMsg::UpdateDocument(_, ref txn) => {
+                self.update_resources(&txn.resource_updates);
+                for doc_msg in &txn.scene_ops {
                     match *doc_msg {
-                        DocumentMsg::UpdateResources(ref resources) => {
-                            self.update_resources(resources);
-                        }
-                        DocumentMsg::SetDisplayList {
+                        SceneMsg::SetDisplayList {
                             ref epoch,
                             ref pipeline_id,
                             ref background,
