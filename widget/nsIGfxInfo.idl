@@ -169,13 +169,6 @@ interface nsIGfxInfo : nsISupports
    */
   DOMString getFeatureSuggestedDriverVersion(in long aFeature);
 
-  /**
-   * WebGL info; valid params are "full-renderer", "vendor", "renderer", "version",
-   * "shading_language_version", "extensions".  These return info from
-   * underlying GL impl that's used to implement WebGL.
-   */
-  DOMString getWebGLParameter(in DOMString aParam);
-
   // only useful on X11
   [noscript, notxpcom] void GetData();
 
