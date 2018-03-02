@@ -8,7 +8,6 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/Mutex.h"
 #include "nsIDocument.h"
 #include "nsIObserver.h"
 
@@ -47,9 +46,6 @@
 
 #define SPOOFED_APPNAME    "Netscape"
 #define LEGACY_BUILD_ID    "20100101"
-
-// Forward declare LRUCache, defined in nsRFPService.cpp
-class LRUCache;
 
 namespace mozilla {
 
@@ -179,21 +175,13 @@ public:
   static double ReduceTimePrecisionAsSecs(
     double aTime,
     TimerPrecisionType aType = TimerPrecisionType::All);
-
-  // Used by the JS Engine, as it doesn't know about the TimerPrecisionType enum
-  static double ReduceTimePrecisionAsUSecsWrapper(
-    double aTime);
-
   // Public only for testing purposes
   static double ReduceTimePrecisionImpl(
     double aTime,
     TimeScale aTimeScale,
     double aResolutionUSec,
     TimerPrecisionType aType);
-  static nsresult RandomMidpoint(long long aClampedTimeUSec,
-                                 long long aResolutionUSec,
-                                 long long* aMidpointOut,
-                                 uint8_t * aSecretSeed = nullptr);
+
 
   // This method calculates the video resolution (i.e. height x width) based
   // on the video quality (480p, 720p, etc).

@@ -13,7 +13,6 @@
 
      async function runTests() {
        await MIDITestUtils.permissionSetup(true);
-       await SpecialPowers.pushPrefEnv({"set": [["privacy.resistFingerprinting.reduceTimerPrecision.jitter", false]]});
        var checkCount = 0;
        var lastTime = 0;
        var reopened = false;
