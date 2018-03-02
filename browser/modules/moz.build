@@ -31,9 +31,6 @@ with Files("test/browser/browser_urlBar_zoom.js"):
 with Files("test/unit/test_AttributionCode.js"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")
 
-with Files("test/unit/test_DirectoryLinksProvider.js"):
-    BUG_COMPONENT = ("Firefox", "New Tab Page")
-
 with Files("test/unit/test_E10SUtils_nested_URIs.js"):
     BUG_COMPONENT = ("Core", "Security: Process Sandboxing")
 
@@ -60,9 +57,6 @@ with Files("ContentSearch.jsm"):
 
 with Files("ContentWebRTC.jsm"):
     BUG_COMPONENT = ("Firefox", "Device Permissions")
-
-with Files("DirectoryLinksProvider.jsm"):
-    BUG_COMPONENT = ("Firefox", "New Tab Page")
 
 with Files("ExtensionsUI.jsm"):
     BUG_COMPONENT = ("Toolkit", "WebExtensions: General")
@@ -140,7 +134,6 @@ EXTRA_JS_MODULES += [
     'ContentSearch.jsm',
     'ContentWebRTC.jsm',
     'ContextMenu.jsm',
-    'DirectoryLinksProvider.jsm',
     'ExtensionsUI.jsm',
     'Feeds.jsm',
     'FormSubmitObserver.jsm',

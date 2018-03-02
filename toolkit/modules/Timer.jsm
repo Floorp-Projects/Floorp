@@ -18,6 +18,9 @@ var gNextId = 1; // setTimeout and setInterval must return a positive integer
 
 var gTimerTable = new Map(); // int -> nsITimer
 
+// Don't generate this for every timer.
+var setTimeout_timerCallbackQI = XPCOMUtils.generateQI([Ci.nsITimerCallback, Ci.nsINamed]);
+
 function _setTimeoutOrIsInterval(aCallback, aMilliseconds, aIsInterval,
                                  aTarget, aArgs) {
   if (typeof aCallback !== "function") {
@@ -31,8 +34,7 @@ function _setTimeoutOrIsInterval(aCallback, aMilliseconds, aIsInterval,
   }
 
   let callback = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback,
-                                           Ci.nsINamed]),
+    QueryInterface: setTimeout_timerCallbackQI,
 
     // nsITimerCallback
     notify() {

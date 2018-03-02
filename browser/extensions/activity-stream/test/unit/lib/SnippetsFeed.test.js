@@ -5,6 +5,26 @@ import {SnippetsFeed} from "lib/SnippetsFeed.jsm";
 const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
 const searchData = {searchEngineIdentifier: "google", engines: ["searchEngine-google", "searchEngine-bing"]};
 const signUpUrl = "https://accounts.firefox.com/signup?service=sync&context=fx_desktop_v3&entrypoint=snippets";
+const FAKE_ADDONS = {
+  foo: {
+    name: "Foo",
+    version: "0.1.0",
+    type: "foo",
+    isSystem: false,
+    isWebExtension: true,
+    userDisabled: false,
+    installDate: 1231921
+  },
+  bar: {
+    name: "Bar",
+    version: "0.2.0",
+    type: "bar",
+    isSystem: false,
+    isWebExtension: false,
+    userDisabled: false,
+    installDate: 1231921
+  }
+};
 
 let overrider = new GlobalOverrider();
 
@@ -21,7 +41,8 @@ describe("SnippetsFeed", () => {
           this.reset = Promise.resolve(WEEK_IN_MS);
         }
       },
-      FxAccounts: {config: {promiseSignUpURI: sandbox.stub().returns(Promise.resolve(signUpUrl))}}
+      FxAccounts: {config: {promiseSignUpURI: sandbox.stub().returns(Promise.resolve(signUpUrl))}},
+      NewTabUtils: {activityStreamProvider: {getTotalBookmarksCount: () => Promise.resolve(42)}}
     });
   });
   afterEach(() => {
@@ -40,6 +61,17 @@ describe("SnippetsFeed", () => {
     sandbox.stub(global.Services.prefs, "prefHasUserValue")
       .withArgs("services.sync.username")
       .returns(true);
+    sandbox.stub(global.Services.prefs, "getIntPref")
+      .withArgs("devtools.selfxss.count")
+      .returns(5);
+    sandbox.stub(global.AddonManager, "getActiveAddons")
+      .returns(Promise.resolve({
+        addons: [
+          Object.assign({id: "foo"}, FAKE_ADDONS.foo),
+          Object.assign({id: "bar"}, FAKE_ADDONS.bar)
+        ],
+        fullData: true
+      }));
 
     const feed = new SnippetsFeed();
     feed.store = {dispatch: sandbox.stub()};
@@ -63,6 +95,8 @@ describe("SnippetsFeed", () => {
     assert.property(action.data, "selectedSearchEngine");
     assert.deepEqual(action.data.selectedSearchEngine, searchData);
     assert.propertyVal(action.data, "defaultBrowser", true);
+    assert.propertyVal(action.data, "isDevtoolsUser", true);
+    assert.deepEqual(action.data.addonInfo, FAKE_ADDONS);
   });
   it("should call .init on an INIT action", () => {
     const feed = new SnippetsFeed();
@@ -122,5 +156,50 @@ describe("SnippetsFeed", () => {
     const browser = {loadURI: sinon.spy()};
     await feed.showFirefoxAccounts(browser);
     assert.calledWith(browser.loadURI, signUpUrl);
+  });
+  it("should call .getTotalBookmarksCount when TOTAL_BOOKMARKS_REQUEST is received", async () => {
+    const feed = new SnippetsFeed();
+    const browser = {};
+    sandbox.spy(feed, "getTotalBookmarksCount");
+    feed.onAction({type: at.TOTAL_BOOKMARKS_REQUEST, _target: {browser}});
+    assert.calledWith(feed.getTotalBookmarksCount, browser);
+  });
+  it("should dispatch a TOTAL_BOOKMARKS_RESPONSE action when .getTotalBookmarksCount is called", async () => {
+    const feed = new SnippetsFeed();
+    feed.store = {dispatch: sandbox.stub()};
+    const browser = {};
+    const action = {type: at.TOTAL_BOOKMARKS_RESPONSE, data: 42};
+
+    await feed.getTotalBookmarksCount(browser);
+
+    assert.calledWith(feed.store.dispatch, ac.OnlyToOneContent(action, browser));
+  });
+  it("should still dispatch if .getTotalBookmarksCount results in an error", async () => {
+    sandbox.stub(global.NewTabUtils.activityStreamProvider, "getTotalBookmarksCount")
+      .throws(new Error("test error"));
+    const feed = new SnippetsFeed();
+    feed.store = {dispatch: sandbox.stub()};
+    const browser = {};
+    const action = {type: at.TOTAL_BOOKMARKS_RESPONSE, data: null};
+
+    await feed.getTotalBookmarksCount(browser);
+
+    assert.calledWith(feed.store.dispatch, ac.OnlyToOneContent(action, browser));
+  });
+  it("should return true for isDevtoolsUser is devtools.selfxss.count is 5", async () => {
+    sandbox.stub(global.Services.prefs, "getIntPref")
+      .withArgs("devtools.selfxss.count")
+      .returns(5);
+    const feed = new SnippetsFeed();
+    const result = feed.isDevtoolsUser();
+    assert.isTrue(result);
+  });
+  it("should return false for isDevtoolsUser is devtools.selfxss.count is less than 5", async () => {
+    sandbox.stub(global.Services.prefs, "getIntPref")
+      .withArgs("devtools.selfxss.count")
+      .returns(4);
+    const feed = new SnippetsFeed();
+    const result = feed.isDevtoolsUser();
+    assert.isFalse(result);
   });
 });

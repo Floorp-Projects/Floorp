@@ -72,7 +72,7 @@ function merge(...args) {
  * needs to be calculated every time the feed updates. Therefore allowing cache
  * lookups of scores[domain][parameterSet] is beneficial
  */
-var UserDomainAffinityProvider = class UserDomainAffinityProvider {
+this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
   constructor(
     timeSegments = DEFAULT_TIME_SEGMENTS,
     parameterSets = DEFAULT_PARAMETER_SETS,
@@ -326,4 +326,4 @@ var UserDomainAffinityProvider = class UserDomainAffinityProvider {
   }
 };
 
-var EXPORTED_SYMBOLS = ["UserDomainAffinityProvider"];
+const EXPORTED_SYMBOLS = ["UserDomainAffinityProvider"];

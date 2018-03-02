@@ -170,6 +170,31 @@ add_task(async function() {
   await extension.awaitFinish("tabs.query");
   await extension.unload();
 
+  // match highlighted
+  extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+
+    background: async function() {
+      let tabs1 = await browser.tabs.query({highlighted: false});
+      browser.test.assertEq(3, tabs1.length, "should have three non-highlighted tabs");
+
+      let tabs2 = await browser.tabs.query({highlighted: true});
+      browser.test.assertEq(1, tabs2.length, "should have one highlighted tab");
+
+      for (let tab of [...tabs1, ...tabs2]) {
+        browser.test.assertEq(tab.active, tab.highlighted, "highlighted and active are equal in tab " + tab.index);
+      }
+
+      browser.test.notifyPass("tabs.query");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("tabs.query");
+  await extension.unload();
+
   // test width and height
   extension = ExtensionTestUtils.loadExtension({
     manifest: {

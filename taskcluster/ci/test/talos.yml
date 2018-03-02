@@ -34,7 +34,7 @@ talos-chrome:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
-    max-run-time: 900
+    max-run-time: 1200
     mozharness:
         extra-options:
             - --suite=chromez
@@ -46,7 +46,7 @@ talos-chrome-profiling:
     try-name: chromez-profiling
     treeherder-symbol: T-P(c)
     run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 900
+    max-run-time: 1200
     mozharness:
         extra-options:
             - --suite=chromez
@@ -62,7 +62,7 @@ talos-dromaeojs:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
-    max-run-time: 1800
+    max-run-time: 2100
     mozharness:
         extra-options:
             - --suite=dromaeojs
@@ -74,7 +74,7 @@ talos-dromaeojs-profiling:
     try-name: dromaeojs-profiling
     treeherder-symbol: T-P(d)
     run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 1800
+    max-run-time: 2100
     mozharness:
         extra-options:
             - --suite=dromaeojs
@@ -333,7 +333,7 @@ talos-other:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
-    max-run-time: 1200
+    max-run-time: 1500
     mozharness:
         extra-options:
             - --suite=other
@@ -345,7 +345,7 @@ talos-other-profiling:
     try-name: other-profiling
     treeherder-symbol: T-P(o)
     run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 1200
+    max-run-time: 1500
     mozharness:
         extra-options:
             - --suite=other
@@ -409,7 +409,7 @@ talos-speedometer:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
-    max-run-time: 1200
+    max-run-time: 1500
     mozharness:
         extra-options:
             - --suite=speedometer
@@ -421,7 +421,7 @@ talos-speedometer-profiling:
     try-name: speedometer-profiling
     treeherder-symbol: T-P(sp)
     run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 1200
+    max-run-time: 1500
     mozharness:
         extra-options:
             - --suite=speedometer

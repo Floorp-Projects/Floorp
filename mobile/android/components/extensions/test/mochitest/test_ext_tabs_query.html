@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tabs create Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+var {Services} = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm", {});
+
+add_task(async function test_query_highlighted() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+
+    background: async function() {
+      let tabs1 = await browser.tabs.query({highlighted: false});
+      browser.test.assertEq(3, tabs1.length, "should have three non-highlighted tabs");
+
+      let tabs2 = await browser.tabs.query({highlighted: true});
+      browser.test.assertEq(1, tabs2.length, "should have one highlighted tab");
+
+      for (let tab of [...tabs1, ...tabs2]) {
+        browser.test.assertEq(tab.active, tab.highlighted, "highlighted and active are equal in tab " + tab.index);
+      }
+
+      browser.test.notifyPass("tabs.query");
+    },
+  });
+
+  const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
+  let tabs = [];
+  for (let url of ["http://example.com/", "http://example.net/", "http://test1.example.org/MochiKit/"]) {
+    tabs.push(BrowserApp.addTab(url));
+  }
+
+  await extension.startup();
+  await extension.awaitFinish("tabs.query");
+  await extension.unload();
+
+  for (let tab of tabs) {
+    BrowserApp.closeTab(tab);
+  }
+});
+</script>
+
+</body>
+</html>

@@ -90,6 +90,7 @@ class HistoryObserver extends Observer {
 class BookmarksObserver extends Observer {
   constructor(dispatch) {
     super(dispatch, Ci.nsINavBookmarkObserver);
+    this.skipTags = true;
   }
 
   /**
@@ -147,48 +148,6 @@ class BookmarksObserver extends Observer {
     }
   }
 
-  /**
-   * onItemChanged - Called when a bookmark is modified
-   *
-   * @param  {str} id           description
-   * @param  {str} property     The property that was modified (e.g. uri, title)
-   * @param  {bool} isAnnotation
-   * @param  {any} value
-   * @param  {int} lastModified
-   * @param  {int} type         Indicates if the bookmark is an actual bookmark,
-   *                             a folder, or a separator.
-   * @param  {int} parent
-   * @param  {str} guid         The unique id of the bookmark
-   */
-  async onItemChanged(...args) {
-
-    /*
-    // Disabled due to performance cost, see Issue 3203 /
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1392267.
-    //
-    // If this is used, please consider avoiding the call to
-    // NewTabUtils.activityStreamProvider.getBookmark which performs an additional
-    // fetch to the database.
-    // If you need more fields, please talk to the places team.
-
-    const property = args[1];
-    const type = args[5];
-    const guid = args[7];
-
-    // Only process this event if it is a TYPE_BOOKMARK, and uri or title was the property changed.
-    if (type !== PlacesUtils.bookmarks.TYPE_BOOKMARK || !["uri", "title"].includes(property)) {
-      return;
-    }
-    try {
-      // bookmark: {bookmarkGuid, bookmarkTitle, lastModified, url}
-      const bookmark = await NewTabUtils.activityStreamProvider.getBookmark(guid);
-      this.dispatch({type: at.PLACES_BOOKMARK_CHANGED, data: bookmark});
-    } catch (e) {
-      Cu.reportError(e);
-    }
-    */
-  }
-
   // Empty functions to make xpconnect happy
   onBeginUpdateBatch() {}
 
@@ -197,6 +156,10 @@ class BookmarksObserver extends Observer {
   onItemVisited() {}
 
   onItemMoved() {}
+
+  // Disabled due to performance cost, see Issue 3203 /
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1392267.
+  onItemChanged() {}
 }
 
 class PlacesFeed {
@@ -257,7 +220,10 @@ class PlacesFeed {
     }
 
     const win = action._target.browser.ownerGlobal;
-    win.openLinkIn(action.data.url, where || win.whereToOpenLink(event), params);
+
+    // Pocket gives us a special reader URL to open their stories in
+    const urlToOpen = action.data.type === "pocket" ? action.data.open_url : action.data.url;
+    win.openLinkIn(urlToOpen, where || win.whereToOpenLink(event), params);
   }
 
   async saveToPocket(site, browser) {
@@ -267,7 +233,7 @@ class PlacesFeed {
       if (data) {
         this.store.dispatch(ac.BroadcastToContent({
           type: at.PLACES_SAVED_TO_POCKET,
-          data: {url, title, pocket_id: data.item.item_id}
+          data: {url, open_url: data.item.open_url, title, pocket_id: data.item.item_id}
         }));
       }
     } catch (err) {
@@ -326,4 +292,4 @@ this.PlacesFeed = PlacesFeed;
 PlacesFeed.HistoryObserver = HistoryObserver;
 PlacesFeed.BookmarksObserver = BookmarksObserver;
 
-var EXPORTED_SYMBOLS = ["PlacesFeed"];
+const EXPORTED_SYMBOLS = ["PlacesFeed"];

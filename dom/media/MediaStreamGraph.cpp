@@ -1052,13 +1052,21 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
 }
 
 GraphTime
+MediaStreamGraphImpl::RoundUpToEndOfAudioBlock(GraphTime aTime)
+{
+  if (aTime % WEBAUDIO_BLOCK_SIZE == 0) {
+    return aTime;
+  }
+  return RoundUpToNextAudioBlock(aTime);
+}
+
+GraphTime
 MediaStreamGraphImpl::RoundUpToNextAudioBlock(GraphTime aTime)
 {
-  StreamTime ticks = aTime;
-  uint64_t block = ticks >> WEBAUDIO_BLOCK_SIZE_BITS;
+  uint64_t block = aTime >> WEBAUDIO_BLOCK_SIZE_BITS;
   uint64_t nextBlock = block + 1;
-  StreamTime nextTicks = nextBlock << WEBAUDIO_BLOCK_SIZE_BITS;
-  return nextTicks;
+  GraphTime nextTime = nextBlock << WEBAUDIO_BLOCK_SIZE_BITS;
+  return nextTime;
 }
 
 void
@@ -4243,8 +4251,8 @@ MediaStreamGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess)
     return;
 
   graph->mEndTime =
-    graph->RoundUpToNextAudioBlock(graph->mStateComputedTime +
-                                   aTicksToProcess - 1);
+    graph->RoundUpToEndOfAudioBlock(graph->mStateComputedTime +
+                                    aTicksToProcess);
   graph->mNonRealtimeProcessing = true;
   graph->EnsureRunInStableState();
 }
