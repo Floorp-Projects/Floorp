@@ -13,7 +13,6 @@ use clang_sys::CXCursor_ObjCInstanceMethodDecl;
 use clang_sys::CXCursor_ObjCProtocolDecl;
 use clang_sys::CXCursor_ObjCProtocolRef;
 use quote;
-use proc_macro2;
 
 /// Objective C interface as used in TypeKind
 ///
@@ -217,7 +216,7 @@ impl ObjCMethod {
         let split_name: Vec<_> = self.name
             .split(':')
             .filter(|p| !p.is_empty())
-            .map(proc_macro2::Term::intern)
+            .map(quote::Ident::new)
             .collect();
 
         // No arguments
@@ -240,10 +239,9 @@ impl ObjCMethod {
         // Get arguments without type signatures to pass to `msg_send!`
         let mut args_without_types = vec![];
         for arg in args.iter() {
-            let arg = arg.to_string();
-            let name_and_sig: Vec<&str> = arg.split(' ').collect();
+            let name_and_sig: Vec<&str> = arg.as_str().split(' ').collect();
             let name = name_and_sig[0];
-            args_without_types.push(proc_macro2::Term::intern(name))
+            args_without_types.push(quote::Ident::new(name))
         };
 
         let args = split_name
