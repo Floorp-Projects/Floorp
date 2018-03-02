@@ -389,23 +389,36 @@ class BaseContext {
    * exception error.
    *
    * @param {Error|object} error
+   * @param {SavedFrame?} [caller]
    * @returns {Error}
    */
-  normalizeError(error) {
+  normalizeError(error, caller) {
     if (error instanceof this.cloneScope.Error) {
       return error;
     }
     let message, fileName;
-    if (error && typeof error === "object" &&
-        (ChromeUtils.getClassName(error) === "Object" ||
-         error instanceof ExtensionError ||
-         this.principal.subsumes(Cu.getObjectPrincipal(error)))) {
-      message = error.message;
-      fileName = error.fileName;
-    } else {
-      Cu.reportError(error);
+    if (error && typeof error === "object") {
+      const isPlain = ChromeUtils.getClassName(error) === "Object";
+      if (isPlain && error.mozWebExtLocation) {
+        caller = error.mozWebExtLocation;
+      }
+      if (isPlain && caller && (error.mozWebExtLocation || !error.fileName)) {
+        caller = Cu.cloneInto(caller, this.cloneScope);
+        return ChromeUtils.createError(error.message, caller);
+      }
+
+      if (isPlain ||
+          error instanceof ExtensionError ||
+          this.principal.subsumes(Cu.getObjectPrincipal(error))) {
+        message = error.message;
+        fileName = error.fileName;
+      }
     }
-    message = message || "An unexpected error occurred";
+
+    if (!message) {
+      Cu.reportError(error);
+      message = "An unexpected error occurred";
+    }
     return new this.cloneScope.Error(message, fileName);
   }
 
@@ -534,7 +547,7 @@ class BaseContext {
               Cu.reportError(`Promise rejected while context is inactive: ${value && value.message}\n`,
                              caller);
             } else {
-              this.applySafeWithoutClone(reject, [this.normalizeError(value)],
+              this.applySafeWithoutClone(reject, [this.normalizeError(value, caller)],
                                          caller);
             }
           });
