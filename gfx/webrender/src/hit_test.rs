@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ClipId, ClipMode, HitTestFlags, HitTestItem, HitTestResult, ItemTag};
-use api::{LayerPoint, LayerPrimitiveInfo, LayerRect, LocalClip, PipelineId, WorldPoint};
+use api::{BorderRadius, ClipMode, HitTestFlags, HitTestItem, HitTestResult, ItemTag, LayerPoint};
+use api::{LayerPrimitiveInfo, LayerRect, LocalClip, PipelineId, WorldPoint};
 use clip::{ClipSource, ClipStore, Contains, rounded_rectangle_contains_point};
 use clip_scroll_node::{ClipScrollNode, NodeType};
-use clip_scroll_tree::{ClipChainIndex, ClipScrollTree};
+use clip_scroll_tree::{ClipChainIndex, ClipScrollNodeIndex, ClipScrollTree};
 use internal_types::FastHashMap;
 use prim_store::ScrollNodeAndClipChain;
 use util::LayerToWorldFastTransform;
@@ -15,6 +15,9 @@ use util::LayerToWorldFastTransform;
 /// data from the ClipScrollTree that will persist as a new frame is under construction,
 /// allowing hit tests consistent with the currently rendered frame.
 pub struct HitTestClipScrollNode {
+    /// The pipeline id of this node.
+    pipeline_id: PipelineId,
+
     /// A particular point must be inside all of these regions to be considered clipped in
     /// for the purposes of a hit test.
     regions: Vec<HitTestRegion>,
@@ -37,7 +40,7 @@ pub struct HitTestClipScrollNode {
 #[derive(Clone)]
 struct HitTestClipChainDescriptor {
     parent: Option<ClipChainIndex>,
-    clips: Vec<ClipId>,
+    clips: Vec<ClipScrollNodeIndex>,
 }
 
 impl HitTestClipChainDescriptor {
@@ -88,8 +91,9 @@ impl HitTestRegion {
 
 pub struct HitTester {
     runs: Vec<HitTestingRun>,
-    nodes: FastHashMap<ClipId, HitTestClipScrollNode>,
+    nodes: Vec<HitTestClipScrollNode>,
     clip_chains: Vec<HitTestClipChainDescriptor>,
+    pipeline_root_nodes: FastHashMap<PipelineId, ClipScrollNodeIndex>,
 }
 
 impl HitTester {
@@ -100,8 +104,9 @@ impl HitTester {
     ) -> HitTester {
         let mut hit_tester = HitTester {
             runs: runs.clone(),
-            nodes: FastHashMap::default(),
+            nodes: Vec::new(),
             clip_chains: Vec::new(),
+            pipeline_root_nodes: FastHashMap::default(),
         };
         hit_tester.read_clip_scroll_tree(clip_scroll_tree, clip_store);
         hit_tester
@@ -119,8 +124,15 @@ impl HitTester {
             HitTestClipChainDescriptor::empty()
         );
 
-        for (id, node) in &clip_scroll_tree.nodes {
-            self.nodes.insert(*id, HitTestClipScrollNode {
+        for (index, node) in clip_scroll_tree.nodes.iter().enumerate() {
+            let index = ClipScrollNodeIndex(index);
+
+            // If we haven't already seen a node for this pipeline, record this one as the root
+            // node.
+            self.pipeline_root_nodes.entry(node.pipeline_id).or_insert(index);
+
+            self.nodes.push(HitTestClipScrollNode {
+                pipeline_id: node.pipeline_id,
                 regions: get_regions_for_clip_scroll_node(node, clip_store),
                 world_content_transform: node.world_content_transform,
                 world_viewport_transform: node.world_viewport_transform,
@@ -131,7 +143,7 @@ impl HitTester {
               let clip_chain = self.clip_chains.get_mut(clip_chain_index.0).unwrap();
               clip_chain.parent =
                   clip_scroll_tree.get_clip_chain(clip_chain_index).parent_index;
-              clip_chain.clips = vec![*id];
+              clip_chain.clips = vec![index];
             }
         }
 
@@ -163,8 +175,8 @@ impl HitTester {
             return false;
         }
 
-        for clip_node in &descriptor.clips {
-            if !self.is_point_clipped_in_for_node(point, clip_node, test) {
+        for clip_node_index in &descriptor.clips {
+            if !self.is_point_clipped_in_for_node(point, *clip_node_index, test) {
                 test.set_in_clip_chain_cache(clip_chain_index, false);
                 return false;
             }
@@ -177,19 +189,19 @@ impl HitTester {
     fn is_point_clipped_in_for_node(
         &self,
         point: WorldPoint,
-        node_id: &ClipId,
+        node_index: ClipScrollNodeIndex,
         test: &mut HitTest
     ) -> bool {
-        if let Some(point) = test.node_cache.get(node_id) {
+        if let Some(point) = test.node_cache.get(&node_index) {
             return point.is_some();
         }
 
-        let node = self.nodes.get(node_id).unwrap();
+        let node = &self.nodes[node_index.0];
         let transform = node.world_viewport_transform;
         let transformed_point = match transform.inverse() {
             Some(inverted) => inverted.transform_point2d(&point),
             None => {
-                test.node_cache.insert(*node_id, None);
+                test.node_cache.insert(node_index, None);
                 return false;
             }
         };
@@ -197,12 +209,12 @@ impl HitTester {
         let point_in_layer = transformed_point - node.node_origin.to_vector();
         for region in &node.regions {
             if !region.contains(&transformed_point) {
-                test.node_cache.insert(*node_id, None);
+                test.node_cache.insert(node_index, None);
                 return false;
             }
         }
 
-        test.node_cache.insert(*node_id, Some(point_in_layer));
+        test.node_cache.insert(node_index, Some(point_in_layer));
         true
     }
 
@@ -212,9 +224,9 @@ impl HitTester {
         let mut result = HitTestResult::default();
         for &HitTestingRun(ref items, ref clip_and_scroll) in self.runs.iter().rev() {
             let scroll_node_id = clip_and_scroll.scroll_node_id;
-            let scroll_node = &self.nodes[&scroll_node_id];
-            let pipeline_id = scroll_node_id.pipeline_id();
-            match (test.pipeline_id, clip_and_scroll.scroll_node_id.pipeline_id()) {
+            let scroll_node = &self.nodes[scroll_node_id.0];
+            let pipeline_id = scroll_node.pipeline_id;
+            match (test.pipeline_id, pipeline_id) {
                 (Some(id), node_id) if node_id != id => continue,
                 _ => {},
             }
@@ -243,11 +255,11 @@ impl HitTester {
                 // hierarchy. If we don't have a valid point for this test, we are likely
                 // in a situation where the reference frame has an univertible transform, but the
                 // item's clip does not.
-                let root_reference_frame = ClipId::root_reference_frame(pipeline_id);
-                if !self.is_point_clipped_in_for_node(point, &root_reference_frame, &mut test) {
+                let root_node_index = self.pipeline_root_nodes[&pipeline_id];
+                if !self.is_point_clipped_in_for_node(point, root_node_index, &mut test) {
                     continue;
                 }
-                let point_in_viewport = match test.node_cache[&root_reference_frame] {
+                let point_in_viewport = match test.node_cache[&root_node_index] {
                     Some(point) => point,
                     None => continue,
                 };
@@ -266,6 +278,10 @@ impl HitTester {
 
         result.items.dedup();
         result
+    }
+
+    pub fn get_pipeline_root(&self, pipeline_id: PipelineId) -> &HitTestClipScrollNode {
+        &self.nodes[self.pipeline_root_nodes[&pipeline_id].0]
     }
 }
 
@@ -294,7 +310,7 @@ pub struct HitTest {
     pipeline_id: Option<PipelineId>,
     point: WorldPoint,
     flags: HitTestFlags,
-    node_cache: FastHashMap<ClipId, Option<LayerPoint>>,
+    node_cache: FastHashMap<ClipScrollNodeIndex, Option<LayerPoint>>,
     clip_chain_cache: Vec<Option<bool>>,
 }
 
@@ -334,8 +350,8 @@ impl HitTest {
         }
 
         let point =  &LayerPoint::new(self.point.x, self.point.y);
-        self.pipeline_id.and_then(|id| hit_tester.nodes.get(&ClipId::root_reference_frame(id)))
-                   .map(|node| node.world_viewport_transform.transform_point2d(&point))
-                   .unwrap_or_else(|| WorldPoint::new(self.point.x, self.point.y))
+        self.pipeline_id.map(|id|
+            hit_tester.get_pipeline_root(id).world_viewport_transform.transform_point2d(&point)
+        ).unwrap_or_else(|| WorldPoint::new(self.point.x, self.point.y))
     }
 }

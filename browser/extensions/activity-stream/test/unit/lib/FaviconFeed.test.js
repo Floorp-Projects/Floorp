@@ -207,7 +207,7 @@ describe("FaviconFeed", () => {
 
       assert.calledOnce(global.PlacesUtils.favicons.setAndFetchFaviconForPage);
       assert.calledWith(global.PlacesUtils.favicons.setAndFetchFaviconForPage,
-        {spec: url},
+        sinon.match({spec: url}),
         {ref: "tippytop", spec: `${url}/icon.png`},
         false,
         global.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,

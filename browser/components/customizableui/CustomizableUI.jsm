@@ -3884,6 +3884,86 @@ var CustomizableUI = {
   createSpecialWidget(aId, aDocument) {
     return CustomizableUIInternal.createSpecialWidget(aId, aDocument);
   },
+
+  /**
+   * Fills a submenu with menu items.
+   * @param aMenuItems the menu items to display.
+   * @param aSubview   the subview to fill.
+   */
+  fillSubviewFromMenuItems(aMenuItems, aSubview) {
+    let attrs = ["oncommand", "onclick", "label", "key", "disabled",
+                 "command", "observes", "hidden", "class", "origin",
+                 "image", "checked", "style"];
+
+    let doc = aSubview.ownerDocument;
+    let fragment = doc.createDocumentFragment();
+    for (let menuChild of aMenuItems) {
+      if (menuChild.hidden)
+        continue;
+
+      let subviewItem;
+      if (menuChild.localName == "menuseparator") {
+        // Don't insert duplicate or leading separators. This can happen if there are
+        // menus (which we don't copy) above the separator.
+        if (!fragment.lastChild || fragment.lastChild.localName == "menuseparator") {
+          continue;
+        }
+        subviewItem = doc.createElementNS(kNSXUL, "menuseparator");
+      } else if (menuChild.localName == "menuitem") {
+        subviewItem = doc.createElementNS(kNSXUL, "toolbarbutton");
+        CustomizableUI.addShortcut(menuChild, subviewItem);
+
+        let item = menuChild;
+        if (!item.hasAttribute("onclick")) {
+          subviewItem.addEventListener("click", event => {
+            let newEvent = new doc.defaultView.MouseEvent(event.type, event);
+            item.dispatchEvent(newEvent);
+          });
+        }
+
+        if (!item.hasAttribute("oncommand")) {
+          subviewItem.addEventListener("command", event => {
+            let newEvent = doc.createEvent("XULCommandEvent");
+            newEvent.initCommandEvent(
+              event.type, event.bubbles, event.cancelable, event.view,
+              event.detail, event.ctrlKey, event.altKey, event.shiftKey,
+              event.metaKey, event.sourceEvent, 0);
+            item.dispatchEvent(newEvent);
+          });
+        }
+      } else {
+        continue;
+      }
+      for (let attr of attrs) {
+        let attrVal = menuChild.getAttribute(attr);
+        if (attrVal)
+          subviewItem.setAttribute(attr, attrVal);
+      }
+      // We do this after so the .subviewbutton class doesn't get overriden.
+      if (menuChild.localName == "menuitem") {
+        subviewItem.classList.add("subviewbutton");
+      }
+      fragment.appendChild(subviewItem);
+    }
+    aSubview.appendChild(fragment);
+  },
+
+  /**
+   * A helper function for clearing subviews.
+   * @param aSubview the subview to clear.
+   */
+  clearSubview(aSubview) {
+    let parent = aSubview.parentNode;
+    // We'll take the container out of the document before cleaning it out
+    // to avoid reflowing each time we remove something.
+    parent.removeChild(aSubview);
+
+    while (aSubview.firstChild) {
+      aSubview.firstChild.remove();
+    }
+
+    parent.appendChild(aSubview);
+  },
 };
 Object.freeze(this.CustomizableUI);
 Object.freeze(this.CustomizableUI.windows);

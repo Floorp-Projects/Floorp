@@ -335,6 +335,11 @@ public:
 
   /**
    * Returns smallest value of t such that t is a multiple of
+   * WEBAUDIO_BLOCK_SIZE and t >= aTime.
+   */
+  GraphTime RoundUpToEndOfAudioBlock(GraphTime aTime);
+  /**
+   * Returns smallest value of t such that t is a multiple of
    * WEBAUDIO_BLOCK_SIZE and t > aTime.
    */
   GraphTime RoundUpToNextAudioBlock(GraphTime aTime);

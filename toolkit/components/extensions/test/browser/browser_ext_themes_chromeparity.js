@@ -17,7 +17,7 @@ add_task(async function test_support_theme_frame() {
         },
         "colors": {
           "frame": FRAME_COLOR,
-          "background_tab_text": TAB_TEXT_COLOR,
+          "tab_background_text": TAB_TEXT_COLOR,
         },
       },
     },
@@ -60,7 +60,7 @@ add_task(async function test_support_theme_frame_inactive() {
         "colors": {
           "frame": FRAME_COLOR,
           "frame_inactive": FRAME_COLOR_INACTIVE,
-          "background_tab_text": TAB_TEXT_COLOR,
+          "tab_background_text": TAB_TEXT_COLOR,
         },
       },
     },
@@ -100,7 +100,7 @@ add_task(async function test_lack_of_theme_frame_inactive() {
         },
         "colors": {
           "frame": FRAME_COLOR,
-          "background_tab_text": TAB_TEXT_COLOR,
+          "tab_background_text": TAB_TEXT_COLOR,
         },
       },
     },

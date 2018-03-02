@@ -1196,7 +1196,7 @@ main {
       background: url("chrome://browser/skin/page-action.svg") no-repeat right center;
       border: 0;
       cursor: pointer;
-      fill: #D7D7DB;
+      fill: #737373;
       height: 27px;
       offset-inline-end: 0;
       opacity: 0;
@@ -1206,21 +1206,22 @@ main {
       transition-property: opacity;
       width: 27px; }
       .collapsible-section .section-top-bar .context-menu-button:-moz-any(:active, :focus, :hover) {
-        fill: rgba(12, 12, 13, 0.8); }
+        fill: #0C0C0D; }
     .collapsible-section .section-top-bar .context-menu {
       top: 16px; }
+    @media (max-width: 1458px) {
+      .collapsible-section .section-top-bar .context-menu {
+        margin-inline-end: 5px;
+        margin-inline-start: auto;
+        offset-inline-end: 0;
+        offset-inline-start: auto; } }
   .collapsible-section:hover .section-top-bar .context-menu-button, .collapsible-section.active .section-top-bar .context-menu-button {
     opacity: 1; }
   .collapsible-section.active {
-    background: rgba(237, 237, 240, 0.2); }
+    background: rgba(237, 237, 240, 0.6);
+    border-radius: 4px; }
     .collapsible-section.active .section-top-bar .context-menu-button {
-      fill: rgba(12, 12, 13, 0.8); }
-  @media (max-width: 1458px) {
-    .collapsible-section .context-menu {
-      margin-inline-end: 5px;
-      margin-inline-start: auto;
-      offset-inline-end: 0;
-      offset-inline-start: auto; } }
+      fill: #0C0C0D; }
   .collapsible-section .section-disclaimer {
     color: #4A4A4F;
     font-size: 13px;
