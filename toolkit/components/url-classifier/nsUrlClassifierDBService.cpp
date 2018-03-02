@@ -865,6 +865,16 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
   nsTArray<nsCString> tables;
   nsresult rv = mClassifier->ActiveTables(tables);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (LOG_ENABLED()) {
+    nsCString s;
+    for (size_t i=0; i < tables.Length(); i++) {
+      if (!s.IsEmpty()) {
+        s += ",";
+      }
+      s += tables[i];
+    }
+    LOG(("Active tables: %s", s.get()));
+  }
 
   nsTArray<TableUpdate*> updates;
 
@@ -895,7 +905,8 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
       updates.AppendElement(tu);
       pParse->ForgetTableUpdates();
     } else {
-      LOG(("Completion received, but table is not active, so not caching."));
+      LOG(("Completion received, but table %s is not active, so not caching.",
+           result->table.get()));
     }
    }
 
