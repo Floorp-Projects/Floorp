@@ -685,9 +685,7 @@ ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WorkerPrivate* aWorkerPrivate
   // Eagerly create the registration because we will need to receive updates
   // about the state of the registration.  We can't wait until first access
   // to start receiving these.
-  , mRegistration(ServiceWorkerRegistration::CreateForWorker(aWorkerPrivate,
-                                                             this,
-                                                             aRegistrationDescriptor))
+  , mRegistration(GetOrCreateServiceWorkerRegistration(aRegistrationDescriptor))
 {
 }
 
