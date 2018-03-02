@@ -7,7 +7,9 @@
 #ifndef mozilla_dom_IPCBlobUtils_h
 #define mozilla_dom_IPCBlobUtils_h
 
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/ipc/IPDLParamTraits.h"
 
 /*
  * Blobs and IPC
@@ -212,6 +214,7 @@
 namespace mozilla {
 
 namespace ipc {
+class IProtocol;
 class PBackgroundChild;
 class PBackgroundParent;
 }
@@ -223,6 +226,10 @@ class nsIContentChild;
 class nsIContentParent;
 
 namespace IPCBlobUtils {
+
+// Typedef for use within ipdl files, as the full type cannot be written
+// currently.
+typedef RefPtr<BlobImpl> BlobImplPtr;
 
 already_AddRefed<BlobImpl>
 Deserialize(const IPCBlob& aIPCBlob);
@@ -243,8 +250,28 @@ nsresult
 Serialize(BlobImpl* aBlobImpl, mozilla::ipc::PBackgroundParent* aManager,
           IPCBlob& aIPCBlob);
 
+// WARNING: If you pass any actor which does not have P{Content,Background} as
+// its toplevel protocol, this method will MOZ_CRASH.
+nsresult
+SerializeUntyped(BlobImpl* aBlobImpl, mozilla::ipc::IProtocol* aActor, IPCBlob& aIPCBlob);
+
 } // IPCBlobUtils
 } // dom namespace
+
+namespace ipc {
+// ParamTraits implementation for BlobImpl. N.B: If the original BlobImpl cannot
+// be successfully serialized, a warning will be produced and a nullptr will be
+// sent over the wire. When Read()-ing a BlobImpl,
+// __always make sure to handle null!__
+template<>
+struct IPDLParamTraits<RefPtr<mozilla::dom::BlobImpl>>
+{
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    const RefPtr<mozilla::dom::BlobImpl>& aParam);
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, RefPtr<mozilla::dom::BlobImpl>* aResult);
+};
+} // ipc namespace
 } // mozilla namespace
 
 #endif // mozilla_dom_IPCBlobUtils_h
