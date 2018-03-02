@@ -725,8 +725,14 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
     {
         JitActivation activation(cx);
 
+        void* callee;
+        if (func.hasEagerStubs())
+            callee = codeBase(tier) + func.eagerInterpEntryOffset();
+        else
+            callee = code(tier).lazyStubs().lock()->lookupInterpEntry(funcIndex);
+
         // Call the per-exported-function trampoline created by GenerateEntry.
-        auto funcPtr = JS_DATA_TO_FUNC_PTR(ExportFuncPtr, codeBase(tier) + func.interpEntryOffset());
+        auto funcPtr = JS_DATA_TO_FUNC_PTR(ExportFuncPtr, callee);
         if (!CALL_GENERATED_2(funcPtr, exportArgs.begin(), tlsData()))
             return false;
     }
