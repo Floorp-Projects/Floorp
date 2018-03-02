@@ -33,6 +33,9 @@
 #define PREF_CUBEB_BACKEND "media.cubeb.backend"
 #define PREF_CUBEB_LATENCY_PLAYBACK "media.cubeb_latency_playback_ms"
 #define PREF_CUBEB_LATENCY_MSG "media.cubeb_latency_msg_frames"
+// Allows to get something non-default for the preferred sample-rate, to allow
+// troubleshooting in the field and testing.
+#define PREF_CUBEB_FORCE_SAMPLE_RATE "media.cubeb.force_sample_rate"
 #define PREF_CUBEB_LOGGING_LEVEL "media.cubeb.logging_level"
 #define PREF_CUBEB_SANDBOX "media.cubeb.sandbox"
 
@@ -122,6 +125,10 @@ cubeb* sCubebContext;
 double sVolumeScale = 1.0;
 uint32_t sCubebPlaybackLatencyInMilliseconds = 100;
 uint32_t sCubebMSGLatencyInFrames = 512;
+// If sCubebForcedSampleRate is zero, PreferredSampleRate will return the
+// preferred sample-rate for the audio backend in use. Otherwise, it will be
+// used as the preferred sample-rate.
+uint32_t sCubebForcedSampleRate = 0;
 bool sCubebPlaybackLatencyPrefSet = false;
 bool sCubebMSGLatencyPrefSet = false;
 bool sAudioStreamInitEverSucceeded = false;
@@ -237,6 +244,9 @@ void PrefChanged(const char* aPref, void* aClosure)
     // We don't want to limit the upper limit too much, so that people can
     // experiment.
     sCubebMSGLatencyInFrames = std::min<uint32_t>(std::max<uint32_t>(value, 128), 1e6);
+  } else if (strcmp(aPref, PREF_CUBEB_FORCE_SAMPLE_RATE) == 0) {
+    StaticMutexAutoLock lock(sMutex);
+    sCubebForcedSampleRate = Preferences::GetUint(aPref);
   } else if (strcmp(aPref, PREF_CUBEB_LOGGING_LEVEL) == 0) {
     nsAutoCString value;
     Preferences::GetCString(aPref, value);
@@ -323,6 +333,9 @@ bool InitPreferredSampleRate()
 
 uint32_t PreferredSampleRate()
 {
+  if (sCubebForcedSampleRate) {
+    return sCubebForcedSampleRate;
+  }
   if (!InitPreferredSampleRate()) {
     return 44100;
   }
@@ -563,6 +576,7 @@ void InitLibrary()
   Preferences::RegisterCallbackAndCall(PrefChanged, PREF_VOLUME_SCALE);
   Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_LATENCY_PLAYBACK);
   Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_LATENCY_MSG);
+  Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_FORCE_SAMPLE_RATE);
   Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_BACKEND);
   Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_SANDBOX);
   if (MOZ_LOG_TEST(gCubebLog, LogLevel::Verbose)) {
@@ -592,6 +606,7 @@ void ShutdownLibrary()
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_SANDBOX);
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_BACKEND);
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY_PLAYBACK);
+  Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_FORCE_SAMPLE_RATE);
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY_MSG);
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LOGGING_LEVEL);
 
