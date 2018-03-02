@@ -175,5 +175,13 @@ fn tricky_doc_commaent() {
     let stream = "/**/".parse::<proc_macro2::TokenStream>().unwrap();
     let tokens = stream.into_iter().collect::<Vec<_>>();
     assert!(tokens.is_empty(), "not empty -- {:?}", tokens);
+
+    let stream = "/// doc".parse::<proc_macro2::TokenStream>().unwrap();
+    let tokens = stream.into_iter().collect::<Vec<_>>();
+    assert!(tokens.len() == 1, "not length 1 -- {:?}", tokens);
+    match tokens[0].kind {
+        proc_macro2::TokenNode::Literal(_) => {}
+        _ => panic!("wrong token {:?}", tokens[0]),
+    }
 }
 
