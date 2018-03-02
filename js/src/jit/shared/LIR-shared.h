@@ -8041,6 +8041,32 @@ class LGuardObjectIdentity : public LInstructionHelper<0, 2, 0>
     }
 };
 
+class LGuardShape : public LInstructionHelper<0, 1, 0>
+{
+  public:
+    LIR_HEADER(GuardShape)
+
+    explicit LGuardShape(const LAllocation& in) {
+        setOperand(0, in);
+    }
+    const MGuardShape* mir() const {
+        return mir_->toGuardShape();
+    }
+};
+
+class LGuardObjectGroup : public LInstructionHelper<0, 1, 0>
+{
+  public:
+    LIR_HEADER(GuardObjectGroup)
+
+    explicit LGuardObjectGroup(const LAllocation& in) {
+        setOperand(0, in);
+    }
+    const MGuardObjectGroup* mir() const {
+        return mir_->toGuardObjectGroup();
+    }
+};
+
 // Guard against an object's class.
 class LGuardClass : public LInstructionHelper<0, 1, 1>
 {

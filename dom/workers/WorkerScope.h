@@ -161,6 +161,11 @@ public:
     return mPerformance;
   }
 
+  static bool IsInAutomation(JSContext* aCx, JSObject* /* unused */);
+  void GetJSTestingFunctions(JSContext* aCx,
+                             JS::MutableHandle<JSObject*> aFunctions,
+                             ErrorResult& aRv);
+
   already_AddRefed<Promise>
   Fetch(const RequestOrUSVString& aInput, const RequestInit& aInit,
         CallerType aCallerType, ErrorResult& aRv);

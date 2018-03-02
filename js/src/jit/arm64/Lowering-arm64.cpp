@@ -198,18 +198,6 @@ LIRGeneratorARM64::newLTableSwitchV(MTableSwitch* tableswitch)
 }
 
 void
-LIRGeneratorARM64::visitGuardShape(MGuardShape* ins)
-{
-    MOZ_CRASH("visitGuardShape");
-}
-
-void
-LIRGeneratorARM64::visitGuardObjectGroup(MGuardObjectGroup* ins)
-{
-    MOZ_CRASH("visitGuardObjectGroup");
-}
-
-void
 LIRGeneratorARM64::lowerUrshD(MUrsh* mir)
 {
     MOZ_CRASH("lowerUrshD");

@@ -260,19 +260,36 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
         createStandardDialog(addCheckbox(builder, container, callback), callback).show();
     }
 
-    private void addChoiceItems(final int type, final ArrayAdapter<Choice> list,
+    private static class ModifiableChoice {
+        public boolean modifiableSelected;
+        public String modifiableLabel;
+        public final Choice choice;
+
+        public ModifiableChoice(Choice c) {
+            choice = c;
+            modifiableSelected = choice.selected;
+            modifiableLabel = choice.label;
+        }
+    }
+
+    private void addChoiceItems(final int type, final ArrayAdapter<ModifiableChoice> list,
                                 final Choice[] items, final String indent) {
         if (type == Choice.CHOICE_TYPE_MENU) {
-            list.addAll(items);
+            for (final Choice item : items) {
+                list.add(new ModifiableChoice(item));
+            }
             return;
         }
 
         for (final Choice item : items) {
+            final ModifiableChoice modItem = new ModifiableChoice(item);
+
             final Choice[] children = item.items;
+
             if (indent != null && children == null) {
-                item.label = indent + item.label;
+                modItem.modifiableLabel = indent + modItem.modifiableLabel;
             }
-            list.add(item);
+            list.add(modItem);
 
             if (children != null) {
                 final String newIndent;
@@ -302,7 +319,7 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
             list.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         }
 
-        final ArrayAdapter<Choice> adapter = new ArrayAdapter<Choice>(
+        final ArrayAdapter<ModifiableChoice> adapter = new ArrayAdapter<ModifiableChoice>(
                 builder.getContext(), android.R.layout.simple_list_item_1) {
             private static final int TYPE_MENU_ITEM = 0;
             private static final int TYPE_MENU_CHECK = 1;
@@ -322,12 +339,12 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
 
             @Override
             public int getItemViewType(final int position) {
-                final Choice item = getItem(position);
-                if (item.separator) {
+                final ModifiableChoice item = getItem(position);
+                if (item.choice.separator) {
                     return TYPE_SEPARATOR;
                 } else if (type == Choice.CHOICE_TYPE_MENU) {
-                    return item.selected ? TYPE_MENU_CHECK : TYPE_MENU_ITEM;
-                } else if (item.items != null) {
+                    return item.modifiableSelected ? TYPE_MENU_CHECK : TYPE_MENU_ITEM;
+                } else if (item.choice.items != null) {
                     return TYPE_GROUP;
                 } else if (type == Choice.CHOICE_TYPE_SINGLE) {
                     return TYPE_SINGLE;
@@ -340,10 +357,10 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
 
             @Override
             public boolean isEnabled(final int position) {
-                final Choice item = getItem(position);
-                return !item.separator && !item.disabled &&
+                final ModifiableChoice item = getItem(position);
+                return !item.choice.separator && !item.choice.disabled &&
                         ((type != Choice.CHOICE_TYPE_SINGLE && type != Choice.CHOICE_TYPE_MULTIPLE) ||
-                         item.items != null);
+                         item.choice.items != null);
             }
 
             @Override
@@ -383,12 +400,12 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
                     view = mInflater.inflate(layoutId, parent, false);
                 }
 
-                final Choice item = getItem(position);
+                final ModifiableChoice item = getItem(position);
                 final TextView text = (TextView) view;
-                text.setEnabled(!item.disabled);
-                text.setText(item.label);
+                text.setEnabled(!item.choice.disabled);
+                text.setText(item.modifiableLabel);
                 if (view instanceof CheckedTextView) {
-                    final boolean selected = item.selected;
+                    final boolean selected = item.modifiableSelected;
                     if (itemType == TYPE_MULTIPLE) {
                         list.setItemChecked(position, selected);
                     } else {
@@ -410,19 +427,19 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
                 @Override
                 public void onItemClick(final AdapterView<?> parent, final View v,
                                         final int position, final long id) {
-                    final Choice item = adapter.getItem(position);
+                    final ModifiableChoice item = adapter.getItem(position);
                     if (type == Choice.CHOICE_TYPE_MENU) {
-                        final Choice[] children = item.items;
+                        final Choice[] children = item.choice.items;
                         if (children != null) {
                             // Show sub-menu.
                             dialog.setOnDismissListener(null);
                             dialog.dismiss();
-                            onChoicePrompt(session, item.label, /* msg */ null,
+                            onChoicePrompt(session, item.modifiableLabel, /* msg */ null,
                                             type, children, callback);
                             return;
                         }
                     }
-                    callback.confirm(item);
+                    callback.confirm(item.choice);
                     dialog.dismiss();
                 }
             });
@@ -431,8 +448,8 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
                 @Override
                 public void onItemClick(final AdapterView<?> parent, final View v,
                                         final int position, final long id) {
-                    final Choice item = adapter.getItem(position);
-                    item.selected = ((CheckedTextView) v).isChecked();
+                    final ModifiableChoice item = adapter.getItem(position);
+                    item.modifiableSelected = ((CheckedTextView) v).isChecked();
                 }
             });
             builder.setNegativeButton(android.R.string.cancel, /* listener */ null)
@@ -444,9 +461,9 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
                     final int len = adapter.getCount();
                     ArrayList<String> items = new ArrayList<>(len);
                     for (int i = 0; i < len; i++) {
-                        final Choice item = adapter.getItem(i);
-                        if (item.selected) {
-                            items.add(item.id);
+                        final ModifiableChoice item = adapter.getItem(i);
+                        if (item.modifiableSelected) {
+                            items.add(item.choice.id);
                         }
                     }
                     callback.confirm(items.toArray(new String[items.size()]));
@@ -809,13 +826,13 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
     }
 
     private Spinner addMediaSpinner(final Context context, final ViewGroup container,
-                                    final MediaSource[] sources) {
+                                    final MediaSource[] sources, final String[] sourceNames) {
         final ArrayAdapter<MediaSource> adapter = new ArrayAdapter<MediaSource>(
                 context, android.R.layout.simple_spinner_item) {
             private View convertView(final int position, final View view) {
                 if (view != null) {
                     final MediaSource item = getItem(position);
-                    ((TextView) view).setText(item.name);
+                    ((TextView) view).setText(sourceNames != null ? sourceNames[position] : item.name);
                 }
                 return view;
             }
@@ -844,6 +861,7 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
 
     public void onMediaPrompt(final GeckoSession session, final String title,
                                final MediaSource[] video, final MediaSource[] audio,
+                               final String[] videoNames, final String[] audioNames,
                                final GeckoSession.PermissionDelegate.MediaCallback callback) {
         final Activity activity = mActivity;
         if (activity == null || (video == null && audio == null)) {
@@ -855,14 +873,14 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
 
         final Spinner videoSpinner;
         if (video != null) {
-            videoSpinner = addMediaSpinner(builder.getContext(), container, video);
+            videoSpinner = addMediaSpinner(builder.getContext(), container, video, videoNames);
         } else {
             videoSpinner = null;
         }
 
         final Spinner audioSpinner;
         if (audio != null) {
-            audioSpinner = addMediaSpinner(builder.getContext(), container, audio);
+            audioSpinner = addMediaSpinner(builder.getContext(), container, audio, audioNames);
         } else {
             audioSpinner = null;
         }
@@ -888,5 +906,11 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
                     }
                 });
         dialog.show();
+    }
+
+    public void onMediaPrompt(final GeckoSession session, final String title,
+                               final MediaSource[] video, final MediaSource[] audio,
+                               final GeckoSession.PermissionDelegate.MediaCallback callback) {
+        onMediaPrompt(session, title, video, audio, null, null, callback);
     }
 }

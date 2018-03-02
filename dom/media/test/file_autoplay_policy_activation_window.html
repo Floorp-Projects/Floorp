@@ -19,7 +19,7 @@
 
         function testAutoplayInWindow(test_case, parent_window) {
           log("testAutoplayInWindow: " + test_case.name);
-          playAndPostResult(test_case, parent_window);
+          playAndPostResult(test_case.muted, parent_window);
         }
 
         async function testAutoplayInChildFrame(test_case, parent_window) {
@@ -34,10 +34,11 @@
           await once(frame, "load");
           // Click the iframe to activate if appropriate.
           if (test_case.activated_child) {
-            synthesizeMouseAtCenter(frame, {});
+            frame.contentWindow.postMessage("click", "*");
           }
           // Ask the child iframe to try to play video.
-          frame.contentWindow.postMessage(test_case, "*");
+          let play_message = test_case.muted ? "play-muted" : "play-audible";
+          frame.contentWindow.postMessage(play_message, "*");
           // Wait for the iframe to tell us whether it could play video.
           let result = await nextWindowMessage();
           // Report whether the iframe could play to the parent.

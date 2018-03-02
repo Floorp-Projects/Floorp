@@ -428,7 +428,6 @@ Interceptor::ReleaseMarshalData(IStream* pStm)
 HRESULT
 Interceptor::DisconnectObject(DWORD dwReserved)
 {
-  mEventSink->DisconnectHandlerRemotes();
   return mStdMarshal->DisconnectObject(dwReserved);
 }
 
@@ -829,31 +828,6 @@ ULONG
 Interceptor::Release()
 {
   return WeakReferenceSupport::Release();
-}
-
-/* static */ HRESULT
-Interceptor::DisconnectRemotesForTarget(IUnknown* aTarget)
-{
-  MOZ_ASSERT(aTarget);
-
-  detail::LiveSetAutoLock lock(GetLiveSet());
-
-  // It is not an error if the interceptor doesn't exist, so we return
-  // S_FALSE instead of an error in that case.
-  RefPtr<IWeakReference> existingWeak(Move(GetLiveSet().Get(aTarget)));
-  if (!existingWeak) {
-    return S_FALSE;
-  }
-
-  RefPtr<IWeakReferenceSource> existingStrong;
-  if (FAILED(existingWeak->ToStrongRef(getter_AddRefs(existingStrong)))) {
-    return S_FALSE;
-  }
-  // Since we now hold a strong ref on the interceptor, we may now release the
-  // lock.
-  lock.Unlock();
-
-  return ::CoDisconnectObject(existingStrong, 0);
 }
 
 } // namespace mscom

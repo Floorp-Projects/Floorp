@@ -279,7 +279,7 @@ public:
   // nsWrapperCache
   virtual JSObject *WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return GetWrapper();
+    MOZ_CRASH("We should never get here!");
   }
 
   // nsIGlobalJSObjectHolder

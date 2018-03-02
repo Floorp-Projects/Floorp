@@ -3136,25 +3136,19 @@ HTMLEditor::InsertTextImpl(nsIDocument& aDocument,
 }
 
 void
-HTMLEditor::ContentAppended(nsIDocument* aDocument,
-                            nsIContent* aContainer,
-                            nsIContent* aFirstNewContent)
+HTMLEditor::ContentAppended(nsIContent* aFirstNewContent)
 {
-  DoContentInserted(aDocument, aContainer, aFirstNewContent, eAppended);
+  DoContentInserted(aFirstNewContent, eAppended);
 }
 
 void
-HTMLEditor::ContentInserted(nsIDocument* aDocument,
-                            nsIContent* aContainer,
-                            nsIContent* aChild)
+HTMLEditor::ContentInserted(nsIContent* aChild)
 {
-  DoContentInserted(aDocument, aContainer, aChild, eInserted);
+  DoContentInserted(aChild, eInserted);
 }
 
 bool
-HTMLEditor::IsInObservedSubtree(nsIDocument* aDocument,
-                                nsIContent* aContainer,
-                                nsIContent* aChild)
+HTMLEditor::IsInObservedSubtree(nsIContent* aChild)
 {
   if (!aChild) {
     return false;
@@ -3173,16 +3167,14 @@ HTMLEditor::IsInObservedSubtree(nsIDocument* aDocument,
 }
 
 void
-HTMLEditor::DoContentInserted(nsIDocument* aDocument,
-                              nsIContent* aContainer,
-                              nsIContent* aChild,
+HTMLEditor::DoContentInserted(nsIContent* aChild,
                               InsertedOrAppended aInsertedOrAppended)
 {
   MOZ_ASSERT(aChild);
-  nsINode* container = NODE_FROM(aContainer, aDocument);
+  nsINode* container = aChild->GetParentNode();
   MOZ_ASSERT(container);
 
-  if (!IsInObservedSubtree(aDocument, aContainer, aChild)) {
+  if (!IsInObservedSubtree(aChild)) {
     return;
   }
 
@@ -3223,12 +3215,10 @@ HTMLEditor::DoContentInserted(nsIDocument* aDocument,
 }
 
 void
-HTMLEditor::ContentRemoved(nsIDocument* aDocument,
-                           nsIContent* aContainer,
-                           nsIContent* aChild,
+HTMLEditor::ContentRemoved(nsIContent* aChild,
                            nsIContent* aPreviousSibling)
 {
-  if (!IsInObservedSubtree(aDocument, aContainer, aChild)) {
+  if (!IsInObservedSubtree(aChild)) {
     return;
   }
 
@@ -3243,9 +3233,8 @@ HTMLEditor::ContentRemoved(nsIDocument* aDocument,
       NewRunnableMethod("HTMLEditor::NotifyRootChanged",
                         this,
                         &HTMLEditor::NotifyRootChanged));
-  }
   // We don't need to handle our own modifications
-  else if (!mAction && (aContainer ? aContainer->IsEditable() : aDocument->IsEditable())) {
+  } else if (!mAction && aChild->GetParentNode()->IsEditable()) {
     if (aChild && IsMozEditorBogusNode(aChild)) {
       // Ignore removal of the bogus node
       return;

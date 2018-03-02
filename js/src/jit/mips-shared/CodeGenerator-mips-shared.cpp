@@ -1769,36 +1769,6 @@ CodeGeneratorMIPSShared::visitNotF(LNotF* ins)
 }
 
 void
-CodeGeneratorMIPSShared::visitGuardShape(LGuardShape* guard)
-{
-    Register obj = ToRegister(guard->input());
-    Label bail;
-    masm.branchTestObjShape(Assembler::NotEqual, obj, guard->mir()->shape(), &bail);
-    bailoutFrom(&bail, guard->snapshot());
-}
-
-void
-CodeGeneratorMIPSShared::visitGuardObjectGroup(LGuardObjectGroup* guard)
-{
-    Register obj = ToRegister(guard->input());
-    Assembler::Condition cond =
-        guard->mir()->bailOnEquality() ? Assembler::Equal : Assembler::NotEqual;
-    Label bail;
-    masm.branchTestObjGroup(cond, obj, guard->mir()->group(), &bail);
-    bailoutFrom(&bail, guard->snapshot());
-}
-
-void
-CodeGeneratorMIPSShared::visitGuardClass(LGuardClass* guard)
-{
-    Register obj = ToRegister(guard->input());
-    Register tmp = ToRegister(guard->tempInt());
-    Label bail;
-    masm.branchTestObjClass(Assembler::NotEqual, obj, tmp, guard->mir()->getClass(), &bail);
-    bailoutFrom(&bail, guard->snapshot());
-}
-
-void
 CodeGeneratorMIPSShared::visitMemoryBarrier(LMemoryBarrier* ins)
 {
     masm.memoryBarrier(ins->type());
