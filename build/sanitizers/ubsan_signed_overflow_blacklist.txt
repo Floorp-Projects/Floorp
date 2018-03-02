@@ -253,9 +253,6 @@ fun:*_hash_mix_bits*
 fun:*_cairo_hash_string*
 fun:*_cairo_hash_bytes*
 
-# Hash function in modules/libjar/nsZipArchive.cpp
-fun:*HashName*
-
 # intl code hashing functions
 fun:*ustr_hash*CharsN*
 fun:*hashEntry*
