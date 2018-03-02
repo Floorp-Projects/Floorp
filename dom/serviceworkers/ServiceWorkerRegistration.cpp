@@ -76,17 +76,18 @@ ServiceWorkerRegistration::CreateForMainThread(nsPIDOMWindowInner* aWindow,
 
 /* static */ already_AddRefed<ServiceWorkerRegistration>
 ServiceWorkerRegistration::CreateForWorker(WorkerPrivate* aWorkerPrivate,
+                                           nsIGlobalObject* aGlobal,
                                            const ServiceWorkerRegistrationDescriptor& aDescriptor)
 {
-  MOZ_ASSERT(aWorkerPrivate);
+  MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate);
+  MOZ_DIAGNOSTIC_ASSERT(aGlobal);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
   RefPtr<Inner> inner =
     new ServiceWorkerRegistrationWorkerThread(aWorkerPrivate, aDescriptor);
 
   RefPtr<ServiceWorkerRegistration> registration =
-    new ServiceWorkerRegistration(aWorkerPrivate->GlobalScope(), aDescriptor,
-                                  inner);
+    new ServiceWorkerRegistration(aGlobal, aDescriptor, inner);
 
   return registration.forget();
 }
@@ -128,7 +129,12 @@ ServiceWorkerRegistration::UpdateState(const ServiceWorkerRegistrationDescriptor
   mDescriptor = aDescriptor;
 
   nsCOMPtr<nsIGlobalObject> global = GetParentObject();
-  if (!global) {
+
+  // Clear all workers if the registration has been detached from the global.
+  // Also, we cannot expose ServiceWorker objects on worker threads yet, so
+  // do the same on when off-main-thread.  This main thread check should be
+  // removed as part of bug 1113522.
+  if (!global || !NS_IsMainThread()) {
     mInstallingWorker = nullptr;
     mWaitingWorker = nullptr;
     mActiveWorker = nullptr;
