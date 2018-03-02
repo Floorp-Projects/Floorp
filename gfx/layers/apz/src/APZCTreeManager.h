@@ -118,6 +118,26 @@ public:
   static void InitializeGlobalState();
 
   /**
+   * Notifies this APZCTreeManager that the associated compositor is now
+   * responsible for managing another layers id, which got moved over from
+   * some other compositor. That other compositor's APZCTreeManager is also
+   * provided. This allows APZCTreeManager to transfer any necessary state
+   * from the old APZCTreeManager related to that layers id.
+   * This function must be called on the compositor thread.
+   */
+  void NotifyLayerTreeAdopted(uint64_t aLayersId,
+                              const RefPtr<APZCTreeManager>& aOldTreeManager);
+
+  /**
+   * Notifies this APZCTreeManager that a layer tree being managed by the
+   * associated compositor has been removed/destroyed. Note that this does
+   * NOT get called during shutdown situations, when the root layer tree is
+   * also getting destroyed.
+   * This function must be called on the compositor thread.
+   */
+  void NotifyLayerTreeRemoved(uint64_t aLayersId);
+
+  /**
    * Rebuild the focus state based on the focus target from the layer tree update
    * that just occurred.
    *
