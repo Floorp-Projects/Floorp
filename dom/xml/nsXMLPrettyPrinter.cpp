@@ -221,8 +221,7 @@ nsXMLPrettyPrinter::Unhook()
 }
 
 void
-nsXMLPrettyPrinter::AttributeChanged(nsIDocument* aDocument,
-                                     Element* aElement,
+nsXMLPrettyPrinter::AttributeChanged(Element* aElement,
                                      int32_t aNameSpaceID,
                                      nsAtom* aAttribute,
                                      int32_t aModType,
@@ -232,28 +231,22 @@ nsXMLPrettyPrinter::AttributeChanged(nsIDocument* aDocument,
 }
 
 void
-nsXMLPrettyPrinter::ContentAppended(nsIDocument* aDocument,
-                                    nsIContent* aContainer,
-                                    nsIContent* aFirstNewContent)
+nsXMLPrettyPrinter::ContentAppended(nsIContent* aFirstNewContent)
 {
-    MaybeUnhook(aContainer);
+    MaybeUnhook(aFirstNewContent->GetParent());
 }
 
 void
-nsXMLPrettyPrinter::ContentInserted(nsIDocument* aDocument,
-                                    nsIContent* aContainer,
-                                    nsIContent* aChild)
+nsXMLPrettyPrinter::ContentInserted(nsIContent* aChild)
 {
-    MaybeUnhook(aContainer);
+    MaybeUnhook(aChild->GetParent());
 }
 
 void
-nsXMLPrettyPrinter::ContentRemoved(nsIDocument* aDocument,
-                                   nsIContent* aContainer,
-                                   nsIContent* aChild,
+nsXMLPrettyPrinter::ContentRemoved(nsIContent* aChild,
                                    nsIContent* aPreviousSibling)
 {
-    MaybeUnhook(aContainer);
+    MaybeUnhook(aChild->GetParent());
 }
 
 void

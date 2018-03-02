@@ -229,10 +229,16 @@ DecoderFactory::CreateAnimationDecoder(DecoderType aType,
 DecoderFactory::CloneAnimationDecoder(Decoder* aDecoder)
 {
   MOZ_ASSERT(aDecoder);
-  MOZ_ASSERT(aDecoder->HasAnimation());
 
-  RefPtr<Decoder> decoder = GetDecoder(aDecoder->GetType(), nullptr,
-                                       /* aIsRedecode = */ true);
+  // In an ideal world, we would assert aDecoder->HasAnimation() but we cannot.
+  // The decoder may not have detected it is animated yet (e.g. it did not even
+  // get scheduled yet, or it has only decoded the first frame and has yet to
+  // rediscover it is animated).
+  DecoderType type = aDecoder->GetType();
+  MOZ_ASSERT(type == DecoderType::GIF || type == DecoderType::PNG,
+             "Calling CloneAnimationDecoder for non-animating DecoderType");
+
+  RefPtr<Decoder> decoder = GetDecoder(type, nullptr, /* aIsRedecode = */ true);
   MOZ_ASSERT(decoder, "Should have a decoder now");
 
   // Initialize the decoder.

@@ -620,6 +620,9 @@ OmxDataDecoder::FillCodecConfigDataToOmx()
 
   // Some codecs like h264, its codec specific data is at the first packet, not in container.
   if (csc->Length()) {
+    // Buffer size should large enough for raw data.
+    MOZ_RELEASE_ASSERT(inbuf->mBuffer->nAllocLen >= csc->Length());
+
     memcpy(inbuf->mBuffer->pBuffer,
            csc->Elements(),
            csc->Length());

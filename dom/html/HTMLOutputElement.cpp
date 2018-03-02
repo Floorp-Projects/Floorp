@@ -179,30 +179,23 @@ void HTMLOutputElement::DescendantsChanged()
 
 // nsIMutationObserver
 
-void HTMLOutputElement::CharacterDataChanged(nsIDocument* aDocument,
-                                             nsIContent* aContent,
+void HTMLOutputElement::CharacterDataChanged(nsIContent* aContent,
                                              const CharacterDataChangeInfo&)
 {
   DescendantsChanged();
 }
 
-void HTMLOutputElement::ContentAppended(nsIDocument* aDocument,
-                                        nsIContent* aContainer,
-                                        nsIContent* aFirstNewContent)
+void HTMLOutputElement::ContentAppended(nsIContent* aFirstNewContent)
 {
   DescendantsChanged();
 }
 
-void HTMLOutputElement::ContentInserted(nsIDocument* aDocument,
-                                        nsIContent* aContainer,
-                                        nsIContent* aChild)
+void HTMLOutputElement::ContentInserted(nsIContent* aChild)
 {
   DescendantsChanged();
 }
 
-void HTMLOutputElement::ContentRemoved(nsIDocument* aDocument,
-                                       nsIContent* aContainer,
-                                       nsIContent* aChild,
+void HTMLOutputElement::ContentRemoved(nsIContent* aChild,
                                        nsIContent* aPreviousSibling)
 {
   DescendantsChanged();

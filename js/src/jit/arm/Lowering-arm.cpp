@@ -481,28 +481,6 @@ LIRGeneratorARM::newLTableSwitchV(MTableSwitch* tableswitch)
 }
 
 void
-LIRGeneratorARM::visitGuardShape(MGuardShape* ins)
-{
-    MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-
-    LGuardShape* guard = new(alloc()) LGuardShape(useRegister(ins->object()));
-    assignSnapshot(guard, ins->bailoutKind());
-    add(guard, ins);
-    redefine(ins, ins->object());
-}
-
-void
-LIRGeneratorARM::visitGuardObjectGroup(MGuardObjectGroup* ins)
-{
-    MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-
-    LGuardObjectGroup* guard = new(alloc()) LGuardObjectGroup(useRegister(ins->object()));
-    assignSnapshot(guard, ins->bailoutKind());
-    add(guard, ins);
-    redefine(ins, ins->object());
-}
-
-void
 LIRGeneratorARM::lowerUrshD(MUrsh* mir)
 {
     MDefinition* lhs = mir->lhs();

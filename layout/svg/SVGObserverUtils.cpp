@@ -113,8 +113,7 @@ nsSVGRenderingObserver::NotifyEvictedFromRenderingObserverList()
 }
 
 void
-nsSVGRenderingObserver::AttributeChanged(nsIDocument* aDocument,
-                                         dom::Element* aElement,
+nsSVGRenderingObserver::AttributeChanged(dom::Element* aElement,
                                          int32_t aNameSpaceID,
                                          nsAtom* aAttribute,
                                          int32_t aModType,
@@ -137,25 +136,19 @@ nsSVGRenderingObserver::AttributeChanged(nsIDocument* aDocument,
 }
 
 void
-nsSVGRenderingObserver::ContentAppended(nsIDocument* aDocument,
-                                        nsIContent* aContainer,
-                                        nsIContent* aFirstNewContent)
+nsSVGRenderingObserver::ContentAppended(nsIContent* aFirstNewContent)
 {
   OnRenderingChange();
 }
 
 void
-nsSVGRenderingObserver::ContentInserted(nsIDocument* aDocument,
-                                        nsIContent* aContainer,
-                                        nsIContent* aChild)
+nsSVGRenderingObserver::ContentInserted(nsIContent* aChild)
 {
   OnRenderingChange();
 }
 
 void
-nsSVGRenderingObserver::ContentRemoved(nsIDocument* aDocument,
-                                       nsIContent* aContainer,
-                                       nsIContent* aChild,
+nsSVGRenderingObserver::ContentRemoved(nsIContent* aChild,
                                        nsIContent* aPreviousSibling)
 {
   OnRenderingChange();
