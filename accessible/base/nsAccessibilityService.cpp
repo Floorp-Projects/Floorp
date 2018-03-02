@@ -1484,12 +1484,6 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
   } else if (role.EqualsLiteral("xul:colorpickertile")) {
     accessible = new XULColorPickerTileAccessible(aContent, aDoc);
 
-  } else if (role.EqualsLiteral("xul:link")) {
-    accessible = new XULLinkAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:text")) {
-    accessible = new XULLabelAccessible(aContent, aDoc);
-
   }
 #endif // MOZ_XUL
 
