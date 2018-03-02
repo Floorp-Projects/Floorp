@@ -159,3 +159,19 @@ nsLayoutHistoryState::ResetScrollState()
     }
   }
 }
+
+namespace mozilla {
+UniquePtr<PresState>
+NewPresState()
+{
+  return MakeUnique<PresState>(
+      /* contentData */ mozilla::void_t(),
+      /* scrollState */ nsPoint(0, 0),
+      /* allowScrollOriginDowngrade */ true,
+      /* resolution */ 1.0,
+      /* scaleToResolution */ false,
+      /* disabledSet */ false,
+      /* disabled */ false,
+      /* droppedDown */ false);
+}
+} // namespace mozilla
