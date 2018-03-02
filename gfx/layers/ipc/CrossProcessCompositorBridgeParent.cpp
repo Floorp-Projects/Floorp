@@ -486,8 +486,13 @@ CrossProcessCompositorBridgeParent::GetAPZTestData(
   APZTestData* aOutData)
 {
   MOZ_ASSERT(aLayersId != 0);
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  *aOutData = sIndirectLayerTrees[aLayersId].mApzTestData;
+  const CompositorBridgeParent::LayerTreeState* state =
+    CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
+  if (!state || !state->mParent) {
+    return;
+  }
+
+  state->mParent->GetAPZTestData(aLayersId, aOutData);
 }
 
 void

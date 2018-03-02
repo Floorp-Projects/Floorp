@@ -1376,9 +1376,10 @@ void
 CompositorBridgeParent::GetAPZTestData(const uint64_t& aLayersId,
                                        APZTestData* aOutData)
 {
-  MOZ_ASSERT(aLayersId == 0 || aLayersId == mRootLayerTreeID);
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  *aOutData = sIndirectLayerTrees[mRootLayerTreeID].mApzTestData;
+  uint64_t layersId = (aLayersId == 0 ? mRootLayerTreeID : aLayersId);
+  if (mApzcTreeManager) {
+    mApzcTreeManager->GetAPZTestData(layersId, aOutData);
+  }
 }
 
 void

@@ -14,13 +14,15 @@
 #include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
-#include "mozilla/layers/TouchCounter.h"// for TouchCounter
+#include "mozilla/layers/APZTestData.h" // for APZTestData
+#include "mozilla/layers/FocusState.h"  // for FocusState
 #include "mozilla/layers/IAPZCTreeManager.h" // for IAPZCTreeManager
 #include "mozilla/layers/KeyboardMap.h" // for KeyboardMap
-#include "mozilla/layers/FocusState.h"  // for FocusState
+#include "mozilla/layers/TouchCounter.h"// for TouchCounter
 #include "mozilla/RecursiveMutex.h"     // for RecursiveMutex
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/TimeStamp.h"          // for mozilla::TimeStamp
+#include "mozilla/UniquePtr.h"          // for UniquePtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 
 #if defined(MOZ_WIDGET_ANDROID)
@@ -57,12 +59,13 @@ struct AncestorTransform;
 /**
  * ****************** NOTE ON LOCK ORDERING IN APZ **************************
  *
- * There are two kinds of locks used by APZ: APZCTreeManager::mTreeLock
+ * There are two main kinds of locks used by APZ: APZCTreeManager::mTreeLock
  * ("the tree lock") and AsyncPanZoomController::mRecursiveMutex ("APZC locks").
+ * There is also the APZCTreeManager::mTestDataLock ("test lock").
  *
  * To avoid deadlock, we impose a lock ordering between these locks, which is:
  *
- *      tree lock -> APZC locks
+ *      tree lock -> APZC locks -> test lock
  *
  * The interpretation of the lock ordering is that if lock A precedes lock B
  * in the ordering sequence, then you must NOT wait on A while holding B.
@@ -494,6 +497,8 @@ public:
       LayoutDeviceIntPoint aRefPoint,
       EventMessage aEventMessage) override;
 
+  bool GetAPZTestData(uint64_t aLayersId, APZTestData* aOutData);
+
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~APZCTreeManager();
@@ -717,6 +722,11 @@ private:
   class CheckerboardFlushObserver;
   friend class CheckerboardFlushObserver;
   RefPtr<CheckerboardFlushObserver> mFlushObserver;
+
+  // Map from layers id to APZTestData. Accesses and mutations must be
+  // protected by the mTestDataLock.
+  std::unordered_map<uint64_t, UniquePtr<APZTestData>> mTestData;
+  mutable mozilla::Mutex mTestDataLock;
 
   static float sDPI;
 
