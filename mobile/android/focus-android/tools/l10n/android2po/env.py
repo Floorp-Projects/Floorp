@@ -116,6 +116,12 @@ MISSING_LOCALES = {
         'plural_rule': 'fi',
         'team': 'tt <LL@li.org>\n'
     },
+    'anp': {
+        'name': 'Angika',
+        'local_name': 'अंगिका',
+        'plural_rule': 'bg',
+        'team': 'anp <LL@li.org>\n'
+    },
 }
 
 

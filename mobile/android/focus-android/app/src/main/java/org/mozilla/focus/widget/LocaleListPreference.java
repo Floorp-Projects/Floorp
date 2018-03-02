@@ -49,6 +49,7 @@ public class LocaleListPreference extends ListPreference {
         languageCodeToNameMap.put("an", "Aragonés");
         languageCodeToNameMap.put("tt", "татарча");
         languageCodeToNameMap.put("wo", "Wolof");
+        languageCodeToNameMap.put("anp", "अंगिका");
     }
 
     /**
