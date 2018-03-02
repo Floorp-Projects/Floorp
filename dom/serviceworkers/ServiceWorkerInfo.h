@@ -54,11 +54,16 @@ private:
   PRTime mActivatedTime;
   PRTime mRedundantTime;
 
-  // We hold rawptrs since the ServiceWorker constructor and destructor ensure
-  // addition and removal.
+  // Track the list of known binding objects so we can fire events on them
+  // when appropriate.  These are held using strong references so that they
+  // are not GC'd while an event handler is registered and could observe an
+  // event.  This reference will create a cycle with the binding object.  The
+  // cycle is broken when either the global is detached or the service worker
+  // transitions to the redundant state.
+  //
   // There is a high chance of there being at least one ServiceWorker
   // associated with this all the time.
-  AutoTArray<ServiceWorker*, 1> mInstances;
+  AutoTArray<RefPtr<ServiceWorker>, 1> mInstances;
 
   RefPtr<ServiceWorkerPrivate> mServiceWorkerPrivate;
   bool mSkipWaitingFlag;
