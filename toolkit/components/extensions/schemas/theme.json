@@ -69,6 +69,10 @@
             "type": "object",
             "optional": true,
             "properties": {
+              "tab_selected": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
               "accentcolor": {
                 "$ref": "ThemeColor",
                 "optional": true
