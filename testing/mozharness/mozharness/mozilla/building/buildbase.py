@@ -1612,17 +1612,14 @@ or run without that action (ie: --no-{action})"
                             if containing_dir == 'browser':
                                 name = 'browser-omni.ja'
                         if name in subtests:
-                            # File seen twice in same archive;
-                            # ignore to avoid confusion.
-                            subtests[name] = None
-                        else:
-                            subtests[name] = size
+                            self.fatal('should not see %s (%s) multiple times!'
+                                       % (name, path))
+                        subtests[name] = size
                 for name in subtests:
-                    if subtests[name] is not None:
-                        self.info('Size of %s: %s bytes' % (name,
-                                                            subtests[name]))
-                        size_measurements.append(
-                            {'name': name, 'value': subtests[name]})
+                    self.info('Size of %s: %s bytes' % (name,
+                                                        subtests[name]))
+                    size_measurements.append(
+                        {'name': name, 'value': subtests[name]})
             except:
                 self.info('Unable to search %s for component sizes.' % installer)
                 size_measurements = []
