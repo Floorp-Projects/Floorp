@@ -3338,44 +3338,33 @@ SVGTextFrame::ScheduleReflowSVGNonDisplayText(nsIPresShell::IntrinsicDirty aReas
 NS_IMPL_ISUPPORTS(SVGTextFrame::MutationObserver, nsIMutationObserver)
 
 void
-SVGTextFrame::MutationObserver::ContentAppended(nsIDocument* aDocument,
-                                                nsIContent* aContainer,
-                                                nsIContent* aFirstNewContent)
+SVGTextFrame::MutationObserver::ContentAppended(nsIContent* aFirstNewContent)
 {
   mFrame->NotifyGlyphMetricsChange();
 }
 
 void
-SVGTextFrame::MutationObserver::ContentInserted(
-                                        nsIDocument* aDocument,
-                                        nsIContent* aContainer,
-                                        nsIContent* aChild)
+SVGTextFrame::MutationObserver::ContentInserted(nsIContent* aChild)
 {
   mFrame->NotifyGlyphMetricsChange();
 }
 
 void
-SVGTextFrame::MutationObserver::ContentRemoved(
-                                       nsIDocument *aDocument,
-                                       nsIContent* aContainer,
-                                       nsIContent* aChild,
-                                       nsIContent* aPreviousSibling)
+SVGTextFrame::MutationObserver::ContentRemoved(nsIContent* aChild,
+                                               nsIContent* aPreviousSibling)
 {
   mFrame->NotifyGlyphMetricsChange();
 }
 
 void
-SVGTextFrame::MutationObserver::CharacterDataChanged(
-                                                 nsIDocument* aDocument,
-                                                 nsIContent* aContent,
-                                                 const CharacterDataChangeInfo&)
+SVGTextFrame::MutationObserver::CharacterDataChanged(nsIContent* aContent,
+                                                     const CharacterDataChangeInfo&)
 {
   mFrame->NotifyGlyphMetricsChange();
 }
 
 void
 SVGTextFrame::MutationObserver::AttributeChanged(
-                                                nsIDocument* aDocument,
                                                 mozilla::dom::Element* aElement,
                                                 int32_t aNameSpaceID,
                                                 nsAtom* aAttribute,

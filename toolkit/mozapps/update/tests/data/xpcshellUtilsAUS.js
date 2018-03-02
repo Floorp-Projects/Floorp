@@ -148,7 +148,6 @@ var gUpdates;
 var gStatusCode;
 var gStatusText;
 var gStatusResult;
-var gSlowDownloadContinue = false;
 
 var gProcess;
 var gAppTimer;
@@ -3789,13 +3788,8 @@ const downloadListener = {
 
 /**
  * Helper for starting the http server used by the tests
- *
- * @param options.slowDownload
- *        When serving FILE_SIMPLE_MAR, hang until gSlowDownloadContinue is true
- * @param options.errorDownload
- *        When serving FILE_SIMPLE_MAR, return a 500 error instead of the file
  */
-function start_httpserver(options) {
+function start_httpserver() {
   let dir = getTestDirFile();
   debugDump("http server directory path: " + dir.path);
 
@@ -3808,11 +3802,6 @@ function start_httpserver(options) {
   gTestserver = new HttpServer();
   gTestserver.registerDirectory("/", dir);
   gTestserver.registerPathHandler("/" + gHTTPHandlerPath, pathHandler);
-  if (options && options.slowDownload) {
-    gTestserver.registerPathHandler("/" + FILE_SIMPLE_MAR, marPathHandler);
-  } else if (options && options.errorDownload) {
-    gTestserver.registerPathHandler("/" + FILE_SIMPLE_MAR, marErrorPathHandler);
-  }
   gTestserver.start(-1);
   let testserverPort = gTestserver.identity.primaryPort;
   gURLData = URL_HOST + ":" + testserverPort + "/";
@@ -3831,34 +3820,6 @@ function pathHandler(aMetadata, aResponse) {
   aResponse.setHeader("Content-Type", "text/xml", false);
   aResponse.setStatusLine(aMetadata.httpVersion, gResponseStatusCode, "OK");
   aResponse.bodyOutputStream.write(gResponseBody, gResponseBody.length);
-}
-
-/**
- * Custom path handlers for MAR files served by the HTTP server.
- * Only used if start_httpserver was called with the appropriate options.
- *
- * @param   aRequest
- *          The http metadata for the request.
- * @param   aResponse
- *          The http response for the request.
- */
-function marPathHandler(aRequest, aResponse) {
-  aResponse.processAsync();
-  aResponse.setHeader("Content-Type", "binary/octet-stream");
-  aResponse.setHeader("Content-Length", SIZE_SIMPLE_MAR);
-
-  (function marPathHandlerTimeout() {
-    if (gSlowDownloadContinue) {
-      let content = readFileBytes(getTestDirFile(FILE_SIMPLE_MAR));
-      aResponse.bodyOutputStream.write(content, SIZE_SIMPLE_MAR);
-      aResponse.finish();
-    } else {
-      do_timeout(100, marPathHandlerTimeout);
-    }
-  })();
-}
-function marErrorPathHandler(aRequest, aResponse) {
-  aResponse.setStatusLine(aMetadata.httpVersion, 500, "Internal server error");
 }
 
 /**
@@ -4208,6 +4169,128 @@ function runUpdateUsingApp(aExpectedStatus) {
 
   debugDump("finish - launching application to apply update");
 }
+
+/* This Mock incremental downloader is used to verify that connection interrupts
+ * work correctly in updater code. The implementation of the mock incremental
+ * downloader is very simple, it simply copies the file to the destination
+ * location.
+ */
+function initMockIncrementalDownload() {
+  const INC_CONTRACT_ID = "@mozilla.org/network/incremental-download;1";
+  let incrementalDownloadCID =
+    MockRegistrar.register(INC_CONTRACT_ID, IncrementalDownload);
+  registerCleanupFunction(() => {
+    MockRegistrar.unregister(incrementalDownloadCID);
+  });
+}
+
+function IncrementalDownload() {
+  this.wrappedJSObject = this;
+}
+
+IncrementalDownload.prototype = {
+  /* nsIIncrementalDownload */
+  init(uri, file, chunkSize, intervalInSeconds) {
+    this._destination = file;
+    this._URI = uri;
+    this._finalURI = uri;
+  },
+
+  start(observer, ctxt) {
+    // Do the actual operation async to give a chance for observers to add
+    // themselves.
+    Services.tm.dispatchToMainThread(() => {
+      this._observer = observer.QueryInterface(Ci.nsIRequestObserver);
+      this._ctxt = ctxt;
+      this._observer.onStartRequest(this, this._ctxt);
+      let mar = getTestDirFile(FILE_SIMPLE_MAR);
+      mar.copyTo(this._destination.parent, this._destination.leafName);
+      let status = Cr.NS_OK;
+      switch (gIncrementalDownloadErrorType++) {
+        case 0:
+          status = Cr.NS_ERROR_NET_RESET;
+          break;
+        case 1:
+          status = Cr.NS_ERROR_CONNECTION_REFUSED;
+          break;
+        case 2:
+          status = Cr.NS_ERROR_NET_RESET;
+          break;
+        case 3:
+          status = Cr.NS_OK;
+          break;
+        case 4:
+          status = Cr.NS_ERROR_OFFLINE;
+          // After we report offline, we want to eventually show offline
+          // status being changed to online.
+          Services.tm.dispatchToMainThread(function() {
+            Services.obs.notifyObservers(gAUS,
+                                         "network:offline-status-changed",
+                                         "online");
+          });
+          break;
+      }
+      this._observer.onStopRequest(this, this._ctxt, status);
+    });
+  },
+
+  get URI() {
+    return this._URI;
+  },
+
+  get currentSize() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  get destination() {
+    return this._destination;
+  },
+
+  get finalURI() {
+    return this._finalURI;
+  },
+
+  get totalSize() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  /* nsIRequest */
+  cancel(aStatus) {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  suspend() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  isPending() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  _loadFlags: 0,
+  get loadFlags() {
+    return this._loadFlags;
+  },
+  set loadFlags(val) {
+    this._loadFlags = val;
+  },
+
+  _loadGroup: null,
+  get loadGroup() {
+    return this._loadGroup;
+  },
+  set loadGroup(val) {
+    this._loadGroup = val;
+  },
+
+  _name: "",
+  get name() {
+    return this._name;
+  },
+
+  _status: 0,
+  get status() {
+    return this._status;
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIIncrementalDownload])
+};
 
 /**
  * Sets the environment that will be used by the application process when it is

@@ -880,11 +880,10 @@ nsImageMap::MaybeUpdateAreas(nsIContent* aContent)
 }
 
 void
-nsImageMap::AttributeChanged(nsIDocument*  aDocument,
-                             dom::Element* aElement,
-                             int32_t       aNameSpaceID,
-                             nsAtom*      aAttribute,
-                             int32_t       aModType,
+nsImageMap::AttributeChanged(dom::Element* aElement,
+                             int32_t aNameSpaceID,
+                             nsAtom* aAttribute,
+                             int32_t aModType,
                              const nsAttrValue* aOldValue)
 {
   // If the parent of the changing content node is our map then update
@@ -909,19 +908,15 @@ nsImageMap::AttributeChanged(nsIDocument*  aDocument,
 }
 
 void
-nsImageMap::ContentAppended(nsIDocument *aDocument,
-                            nsIContent* aContainer,
-                            nsIContent* aFirstNewContent)
+nsImageMap::ContentAppended(nsIContent* aFirstNewContent)
 {
-  MaybeUpdateAreas(aContainer);
+  MaybeUpdateAreas(aFirstNewContent->GetParent());
 }
 
 void
-nsImageMap::ContentInserted(nsIDocument *aDocument,
-                            nsIContent* aContainer,
-                            nsIContent* aChild)
+nsImageMap::ContentInserted(nsIContent* aChild)
 {
-  MaybeUpdateAreas(aContainer);
+  MaybeUpdateAreas(aChild->GetParent());
 }
 
 static UniquePtr<Area>
@@ -945,12 +940,10 @@ TakeArea(nsImageMap::AreaList& aAreas, HTMLAreaElement* aArea)
 }
 
 void
-nsImageMap::ContentRemoved(nsIDocument *aDocument,
-                           nsIContent* aContainer,
-                           nsIContent* aChild,
+nsImageMap::ContentRemoved(nsIContent* aChild,
                            nsIContent* aPreviousSibling)
 {
-  if (aContainer != mMap && !mConsiderWholeSubtree) {
+  if (aChild->GetParent() != mMap && !mConsiderWholeSubtree) {
     return;
   }
 

@@ -101,8 +101,6 @@ class LModPowTwoI : public LInstructionHelper<1, 1, 0>
     MMod* mir() const { MOZ_CRASH(); }
 };
 
-class LGuardShape : public LInstruction {};
-class LGuardObjectGroup : public LInstruction {};
 class LMulI : public LInstruction {};
 
 } // namespace jit

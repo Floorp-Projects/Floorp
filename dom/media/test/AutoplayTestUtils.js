@@ -1,9 +1,7 @@
-function playAndPostResult(test_case, parent_window) {
-  log("runTest " + test_case.name);
-
+function playAndPostResult(muted, parent_window) {
   let element = document.createElement("video");
   element.preload = "auto";
-  element.muted = test_case.muted;
+  element.muted = muted;
   element.src = "short.mp4";
   element.id = "video";
   document.body.appendChild(element);
