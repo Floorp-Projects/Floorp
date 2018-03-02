@@ -93,6 +93,8 @@ bool WebGLContext::IsExtensionSupported(dom::CallerType callerType,
 
     if (allowPrivilegedExts) {
         switch (ext) {
+        case WebGLExtensionID::EXT_disjoint_timer_query:
+            return WebGLExtensionDisjointTimerQuery::IsSupported(this);
         case WebGLExtensionID::MOZ_debug:
             return true;
         case WebGLExtensionID::WEBGL_debug_renderer_info:
@@ -118,8 +120,6 @@ WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
     switch (ext) {
     // In alphabetical order
     // EXT_
-    case WebGLExtensionID::EXT_disjoint_timer_query:
-        return WebGLExtensionDisjointTimerQuery::IsSupported(this);
     case WebGLExtensionID::EXT_texture_filter_anisotropic:
         return gl->IsExtensionSupported(gl::GLContext::EXT_texture_filter_anisotropic);
 
