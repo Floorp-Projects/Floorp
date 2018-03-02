@@ -10,7 +10,6 @@
 #include "gfxConfig.h"
 #include "gfxWindowsPlatform.h"
 #include "GfxInfo.h"
-#include "GfxInfoWebGL.h"
 #include "nsUnicharUtils.h"
 #include "prenv.h"
 #include "prprf.h"
