@@ -143,6 +143,7 @@ public:
   /**
    * Rebuild the focus state based on the focus target from the layer tree update
    * that just occurred.
+   * This must be called on the sampler thread.
    *
    * @param aRootLayerTreeId The layer tree ID of the root layer corresponding
    *                         to this APZCTreeManager
@@ -336,6 +337,7 @@ public:
    * lifetime of this APZCTreeManager, when this APZCTreeManager is no longer
    * needed. Failing to call this function may prevent objects from being freed
    * properly.
+   * This must be called on the sampler thread.
    */
   void ClearTree();
 
