@@ -8,7 +8,6 @@
 #include "Accessible-inl.h"
 #include "HTMLFormControlAccessible.h"
 #include "nsAccUtils.h"
-#include "nsCoreUtils.h"
 #include "DocAccessible.h"
 #include "nsIAccessibleRelation.h"
 #include "Relation.h"
