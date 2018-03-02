@@ -333,8 +333,6 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
                                           uint64_t aOriginatingLayersId,
                                           uint32_t aPaintSequenceNumber)
 {
-  APZThreadUtils::AssertOnSamplerThread();
-
   RecursiveMutexAutoLock lock(mTreeLock);
 
   // For testing purposes, we log some data to the APZTestData associated with
@@ -490,6 +488,8 @@ APZCTreeManager::UpdateFocusState(uint64_t aRootLayerTreeId,
                                   uint64_t aOriginatingLayersId,
                                   const FocusTarget& aFocusTarget)
 {
+  APZThreadUtils::AssertOnSamplerThread();
+
   if (!gfxPrefs::APZKeyboardEnabled()) {
     return;
   }
@@ -506,6 +506,8 @@ APZCTreeManager::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
                                       uint64_t aOriginatingLayersId,
                                       uint32_t aPaintSequenceNumber)
 {
+  APZThreadUtils::AssertOnSamplerThread();
+
   LayerMetricsWrapper root(aRoot);
   UpdateHitTestingTreeImpl(aRootLayerTreeId, root, aIsFirstPaint,
                            aOriginatingLayersId, aPaintSequenceNumber);
@@ -518,6 +520,8 @@ APZCTreeManager::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
                                       uint64_t aOriginatingLayersId,
                                       uint32_t aPaintSequenceNumber)
 {
+  APZThreadUtils::AssertOnSamplerThread();
+
   WebRenderScrollDataWrapper wrapper(&aScrollData);
   UpdateHitTestingTreeImpl(aRootLayerTreeId, wrapper, aIsFirstPaint,
                            aOriginatingLayersId, aPaintSequenceNumber);
@@ -2035,6 +2039,8 @@ APZCTreeManager::AdjustScrollForSurfaceShift(const ScreenPoint& aShift)
 void
 APZCTreeManager::ClearTree()
 {
+  APZThreadUtils::AssertOnSamplerThread();
+
   // Ensure that no references to APZCs are alive in any lingering input
   // blocks. This breaks cycles from InputBlockState::mTargetApzc back to
   // the InputQueue.

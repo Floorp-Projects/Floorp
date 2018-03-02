@@ -64,6 +64,7 @@ namespace layers {
 
 class APZCTreeManager;
 class APZCTreeManagerParent;
+class APZSampler;
 class AsyncCompositionManager;
 class AsyncImagePipelineManager;
 class Compositor;
@@ -446,6 +447,7 @@ public:
   bool DeallocPAPZParent(PAPZParent* aActor) override;
 
   RefPtr<APZCTreeManager> GetAPZCTreeManager();
+  RefPtr<APZSampler> GetAPZSampler();
 
   CompositorOptions GetOptions() const {
     return mOptions;
@@ -611,6 +613,7 @@ protected:
   RefPtr<CancelableRunnable> mForceCompositionTask;
 
   RefPtr<APZCTreeManager> mApzcTreeManager;
+  RefPtr<APZSampler> mApzSampler;
 
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   // This makes sure the compositorParent is not destroyed before receiving
