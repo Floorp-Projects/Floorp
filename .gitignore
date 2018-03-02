@@ -105,7 +105,7 @@ embedding/ios/GeckoEmbed/GeckoEmbed.xcodeproj/project.xcworkspace/xcuserdata
 embedding/ios/GeckoEmbed/GeckoEmbed.xcodeproj/xcuserdata
 
 # Rust/Cargo output from running `cargo` directly
-^target/
+/target/
 
 # Ignore mozharness execution files
 testing/mozharness/.tox/
