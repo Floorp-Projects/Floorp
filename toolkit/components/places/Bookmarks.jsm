@@ -169,7 +169,8 @@ var Bookmarks = Object.freeze({
   isVirtualRootItem(guid) {
     return guid == PlacesUtils.bookmarks.virtualMenuGuid ||
            guid == PlacesUtils.bookmarks.virtualToolbarGuid ||
-           guid == PlacesUtils.bookmarks.virtualUnfiledGuid;
+           guid == PlacesUtils.bookmarks.virtualUnfiledGuid ||
+           guid == PlacesUtils.bookmarks.virtualMobileGuid;
   },
 
   /**

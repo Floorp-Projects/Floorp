@@ -589,19 +589,19 @@ where
 
     if let Some(no_partialeq) = matches.values_of("no-partialeq") {
         for regex in no_partialeq {
-            builder = builder.no_partialeq(String::from(regex));
+            builder = builder.no_partialeq(regex);
         }
     }
 
     if let Some(no_copy) = matches.values_of("no-copy") {
         for regex in no_copy {
-            builder = builder.no_copy(String::from(regex));
+            builder = builder.no_copy(regex);
         }
     }
 
     if let Some(no_hash) = matches.values_of("no-hash") {
         for regex in no_hash {
-            builder = builder.no_hash(String::from(regex));
+            builder = builder.no_hash(regex);
         }
     }
 

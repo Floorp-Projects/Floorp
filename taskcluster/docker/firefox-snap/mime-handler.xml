@@ -1,0 +1,7 @@
+<mime-info
+    xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/octet-stream">
+    <comment>Unknown</comment>
+    <glob pattern="*"/>
+  </mime-type>
+</mime-info>

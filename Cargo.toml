@@ -1,0 +1,55 @@
+[workspace]
+
+# These are the "root" crates, which we build and test as top-level targets.
+# Their transitive dependencies and dev-dependencies are included automatically
+# and do not need to be listed here. Their external dependencies are vendored
+# into `third_party/rust` by `mach vendor rust`.
+members = [
+  "js/src",
+  "js/rust",
+  "testing/geckodriver",
+  "toolkit/library/gtest/rust",
+  "toolkit/library/rust/",
+]
+
+# Excluded crates may be built as dependencies, but won't be considered members
+# of the workspace and their dev-dependencies won't be included.
+exclude = [
+  # Exclude third-party code vendored into mozilla-central.
+  "gfx/webrender",
+  "gfx/webrender_api",
+  "gfx/webrender_bindings",
+  "servo",
+  "third_party/rust",
+
+  # Excluded because these crates have their own Cargo workspaces so they can't
+  # be included in the top-level one.
+  "media/audioipc",
+  "media/cubeb-rs",
+
+  # Excluded because they are used only as dependencies, not top-level targets,
+  # so we don't need to vendor their dev-dependencies.
+  "dom/webauthn/u2f-hid-rs",
+  "media/mp4parse-rust/mp4parse",
+  "media/mp4parse-rust/mp4parse_capi",
+  "media/mp4parse-rust/mp4parse_fallible",
+]
+
+# Explicitly specify what our profiles use.
+[profile.dev]
+opt-level = 1
+rpath = false
+lto = false
+debug-assertions = true
+panic = "abort"
+
+[profile.release]
+opt-level = 2
+rpath = false
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+
+[patch.crates-io]
+libudev-sys = { path = "dom/webauthn/libudev-sys" }
+serde_derive = { git = "https://github.com/gankro/serde", branch = "deserialize_from_enums4" }
