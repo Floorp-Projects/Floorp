@@ -1582,7 +1582,7 @@ or run without that action (ie: --no-{action})"
             self.fatal("could not determine packageName")
 
         interests = ['libxul.so', 'classes.dex', 'omni.ja', 'xul.dll']
-        installer = os.path.join(dirs['abs_obj_dir'], 'dist', packageName)
+        installer = os.path.join(dist_dir, packageName)
         installer_size = 0
         size_measurements = []
 
