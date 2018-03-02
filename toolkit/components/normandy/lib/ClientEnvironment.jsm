@@ -77,11 +77,11 @@ var ClientEnvironment = {
     const environment = {};
 
     XPCOMUtils.defineLazyGetter(environment, "userId", () => {
-      let id = Preferences.get("extensions.shield-recipe-client.user_id", "");
+      let id = Preferences.get("app.normandy.user_id", "");
       if (!id) {
         // generateUUID adds leading and trailing "{" and "}". strip them off.
         id = generateUUID().toString().slice(1, -1);
-        Preferences.set("extensions.shield-recipe-client.user_id", id);
+        Preferences.set("app.normandy.user_id", id);
       }
       return id;
     });
@@ -204,7 +204,7 @@ var ClientEnvironment = {
     });
 
     XPCOMUtils.defineLazyGetter(environment, "isFirstRun", () => {
-      return Preferences.get("extensions.shield-recipe-client.first_run");
+      return Preferences.get("app.normandy.first_run");
     });
 
     return environment;

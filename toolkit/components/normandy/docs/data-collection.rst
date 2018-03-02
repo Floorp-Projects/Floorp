@@ -1,22 +1,22 @@
 Data Collection
 ===============
-This document describes the types of data that Shield collects.
+This document describes the types of data that Normandy collects.
 
 Uptake
 ------
-Shield monitors the execution of recipes and reports to
+Normandy monitors the execution of recipes and reports to
 :ref:`telemetry` the amount of successful and failed runs. This data
 is reported using :ref:`telemetry/collection/uptake` under the
-``shield-recipe-client`` namespace.
+``normandy`` namespace.
 
 Runner Status
 ^^^^^^^^^^^^^
 Once per-fetch and execution of recipes, one of the following statuses is
-reported under the key ``shield-recipe-client/runner``:
+reported under the key ``normandy/runner``:
 
 .. data:: RUNNER_INVALID_SIGNATURE
 
-   Shield failed to verify the signature of the fetched recipes.
+   Normandy failed to verify the signature of the fetched recipes.
 
 .. data:: RUNNER_NETWORK_ERROR
 
@@ -34,9 +34,9 @@ reported under the key ``shield-recipe-client/runner``:
 
 Action Status
 ^^^^^^^^^^^^^
-For each action available from the Shield service, one of the
+For each action available from the Normandy service, one of the
 following statuses is reported under the key
-``shield-recipe-client/action/<action name>``:
+``normandy/action/<action name>``:
 
 .. data:: ACTION_NETWORK_ERROR
 
@@ -63,7 +63,7 @@ following statuses is reported under the key
 Recipe Status
 ^^^^^^^^^^^^^
 For each recipe that is fetched and executed, one of the following statuses is
-reported under the key ``shield-recipe-client/recipe/<recipe id>``:
+reported under the key ``normandy/recipe/<recipe id>``:
 
 .. data:: RECIPE_ACTION_DISABLED
 
@@ -85,7 +85,7 @@ reported under the key ``shield-recipe-client/recipe/<recipe id>``:
 
 Enrollment
 -----------
-Shield records enrollment and unenrollment of users into studies, and
+Normandy records enrollment and unenrollment of users into studies, and
 records that data using `Telemetry Events`_. All data is stored in the
 ``normandy`` category.
 
@@ -134,7 +134,7 @@ Unenrollment
            changed the preference, or that some other mechanism set a
            non-default value for the preference.
          * ``"user-preference-changed-sideload"``: The study
-           preference was changed on the user branch while Shield was
+           preference was changed on the user branch while Normandy was
            inactive. This could mean that the value was manually
            changed in a profile while Firefox was not running.
          * ``"unknown"``: A reason was not specificied. This should be
@@ -196,7 +196,7 @@ Unenrollment
            mechanism. For example, this could be a user action or the
            add-on self-uninstalling.
          * ``"uninstalled-sideload"``: The study's add-on was
-           uninstalled while Shield was inactive. This could be that
+           uninstalled while Normandy was inactive. This could be that
            the add-on is no longer compatible, or was manually removed
            from a profile.
          * ``"unknown"``: A reason was not specified. This should be

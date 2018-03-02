@@ -8,7 +8,7 @@ ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 var EXPORTED_SYMBOLS = ["LogManager"];
 
-const ROOT_LOGGER_NAME = "extensions.shield-recipe-client";
+const ROOT_LOGGER_NAME = "app.normandy";
 let rootLogger = null;
 
 var LogManager = {

@@ -19,7 +19,7 @@ ChromeUtils.defineModuleGetter(
 
 var EXPORTED_SYMBOLS = ["AboutPages"];
 
-const SHIELD_LEARN_MORE_URL_PREF = "extensions.shield-recipe-client.shieldLearnMoreUrl";
+const SHIELD_LEARN_MORE_URL_PREF = "app.normandy.shieldLearnMoreUrl";
 
 // Due to bug 1051238 frame scripts are cached forever, so we can't update them
 // as a restartless add-on. The Math.random() is the work around for this.
