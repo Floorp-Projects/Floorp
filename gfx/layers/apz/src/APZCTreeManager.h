@@ -524,7 +524,7 @@ public:
       const gfx::Matrix4x4& aScrollableContentTransform,
       AsyncPanZoomController* aApzc,
       const FrameMetrics& aMetrics,
-      const ScrollThumbData& aThumbData,
+      const ScrollbarData& aScrollbarData,
       bool aScrollbarIsDescendant,
       AsyncTransformComponentMatrix* aOutClipTransform);
 

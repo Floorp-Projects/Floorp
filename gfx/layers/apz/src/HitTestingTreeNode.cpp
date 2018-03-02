@@ -96,43 +96,39 @@ HitTestingTreeNode::SetLastChild(HitTestingTreeNode* aChild)
 void
 HitTestingTreeNode::SetScrollbarData(FrameMetrics::ViewID aScrollViewId,
                                      const uint64_t& aScrollbarAnimationId,
-                                     const ScrollThumbData& aThumbData,
-                                     const Maybe<ScrollDirection>& aScrollContainerDirection)
+                                     const ScrollbarData& aScrollbarData)
 {
   mScrollViewId = aScrollViewId;
   mScrollbarAnimationId = aScrollbarAnimationId;
-  mScrollThumbData = aThumbData;
-  mScrollbarContainerDirection = aScrollContainerDirection;
+  mScrollbarData = aScrollbarData;
 }
 
 bool
 HitTestingTreeNode::MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetrics) const
 {
   return IsScrollThumbNode() &&
-         mScrollThumbData.mDirection == aDragMetrics.mDirection &&
+         mScrollbarData.mDirection == aDragMetrics.mDirection &&
          mScrollViewId == aDragMetrics.mViewId;
 }
 
 bool
 HitTestingTreeNode::IsScrollThumbNode() const
 {
-  return mScrollThumbData.mDirection.isSome();
+  return mScrollbarData.mScrollbarLayerType == layers::ScrollbarLayerType::Thumb;
 }
 
 bool
 HitTestingTreeNode::IsScrollbarNode() const
 {
-  return mScrollbarContainerDirection.isSome() || IsScrollThumbNode();
+  return mScrollbarData.mScrollbarLayerType != layers::ScrollbarLayerType::None;
 }
 
 ScrollDirection
 HitTestingTreeNode::GetScrollbarDirection() const
 {
   MOZ_ASSERT(IsScrollbarNode());
-  if (mScrollThumbData.mDirection.isSome()) {
-    return *(mScrollThumbData.mDirection);
-  }
-  return *mScrollbarContainerDirection;
+  MOZ_ASSERT(mScrollbarData.mDirection.isSome());
+  return *mScrollbarData.mDirection;
 }
 
 FrameMetrics::ViewID
@@ -147,10 +143,10 @@ HitTestingTreeNode::GetScrollbarAnimationId() const
   return mScrollbarAnimationId;
 }
 
-const ScrollThumbData&
-HitTestingTreeNode::GetScrollThumbData() const
+const ScrollbarData&
+HitTestingTreeNode::GetScrollbarData() const
 {
-  return mScrollThumbData;
+  return mScrollbarData;
 }
 
 void
@@ -391,7 +387,7 @@ HitTestingTreeNode::Dump(const char* aPrefix) const
     (mFixedPosTarget != FrameMetrics::NULL_SCROLL_ID) ? nsPrintfCString("fixed=%" PRIu64 " ", mFixedPosTarget).get() : "",
     Stringify(mEventRegions).c_str(), Stringify(mTransform).c_str(),
     mClipRegion ? Stringify(mClipRegion.ref()).c_str() : "none",
-    mScrollbarContainerDirection.isSome() ? " scrollbar" : "",
+    mScrollbarData.mDirection.isSome() ? " scrollbar" : "",
     IsScrollThumbNode() ? " scrollthumb" : "");
   if (mLastChild) {
     mLastChild->Dump(nsPrintfCString("%s  ", aPrefix).get());
