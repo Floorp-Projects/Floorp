@@ -1228,6 +1228,13 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
       // Firefox 60 uses schema version 43.
 
+      if (currentSchemaVersion < 44) {
+        rv = MigrateV44Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 61 uses schema version 44.
+
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
       // NEVER MIX UP SYNC AND ASYNC EXECUTION IN MIGRATORS, YOU MAY LOCK THE
@@ -1940,6 +1947,130 @@ Database::MigrateV43Up() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+nsresult
+Database::MigrateV44Up() {
+  // We need to remove any non-builtin roots and their descendants.
+
+  // Install a temp trigger to clean up linked tables when the main
+  // bookmarks are deleted.
+  nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TEMP TRIGGER moz_migrate_bookmarks_trigger "
+    "AFTER DELETE ON moz_bookmarks FOR EACH ROW "
+    "BEGIN "
+      // Insert tombstones.
+      "INSERT OR IGNORE INTO moz_bookmarks_deleted (guid, dateRemoved) "
+        "VALUES (OLD.guid, strftime('%s', 'now', 'localtime', 'utc') * 1000); "
+      // Remove old annotations for the bookmarks.
+      "DELETE FROM moz_items_annos "
+        "WHERE item_id = OLD.id; "
+      // Decrease the foreign_count in moz_places.
+      "UPDATE moz_places "
+        "SET foreign_count = foreign_count - 1 "
+        "WHERE id = OLD.fk; "
+    "END "
+  ));
+  if (NS_FAILED(rv)) return rv;
+
+  // This trigger listens for moz_places deletes, and updates moz_annos and
+  // moz_keywords accordingly.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TEMP TRIGGER moz_migrate_annos_trigger "
+    "AFTER UPDATE ON moz_places FOR EACH ROW "
+    // Only remove from moz_places if we don't have any remaining keywords pointing to
+    // this place, and it hasn't been visited. Note: orphan keywords are tidied up below.
+    "WHEN NEW.visit_count = 0 AND "
+      " NEW.foreign_count = (SELECT COUNT(*) FROM moz_keywords WHERE place_id = NEW.id) "
+    "BEGIN "
+      // No more references to the place, so we can delete the place itself.
+      "DELETE FROM moz_places "
+        "WHERE id = NEW.id; "
+      // Delete annotations relating to the place.
+      "DELETE FROM moz_annos "
+        "WHERE place_id = NEW.id; "
+      // Delete keywords relating to the place.
+      "DELETE FROM moz_keywords "
+        "WHERE place_id = NEW.id; "
+    "END "
+  ));
+  if (NS_FAILED(rv)) return rv;
+
+  // Listens to moz_keyword deletions, to ensure moz_places gets the
+  // foreign_count updated corrrectly.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TEMP TRIGGER moz_migrate_keyword_trigger "
+    "AFTER DELETE ON moz_keywords FOR EACH ROW "
+    "BEGIN "
+      // If we remove a keyword, then reduce the foreign_count.
+      "UPDATE moz_places "
+        "SET foreign_count = foreign_count - 1 "
+          "WHERE id = OLD.place_id; "
+    "END "
+  ));
+  if (NS_FAILED(rv)) return rv;
+
+  // First of all, find the non-builtin roots.
+  nsCOMPtr<mozIStorageStatement> deleteStmt;
+  rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "WITH RECURSIVE "
+    "itemsToRemove(id, guid) AS ( "
+      "SELECT b.id, b.guid FROM moz_bookmarks b "
+      "JOIN moz_bookmarks p ON b.parent = p.id "
+      "WHERE p.guid = 'root________' AND "
+        "b.guid NOT IN ('menu________', 'toolbar_____', 'tags________', 'unfiled_____', 'mobile______') "
+      "UNION ALL "
+      "SELECT b.id, b.guid FROM moz_bookmarks b "
+      "JOIN itemsToRemove d ON d.id = b.parent "
+    ") "
+    "DELETE FROM moz_bookmarks "
+      "WHERE id IN (SELECT id FROM itemsToRemove) "
+  ), getter_AddRefs(deleteStmt));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = deleteStmt->Execute();
+  if (NS_FAILED(rv)) return rv;
+
+  // Before we remove the triggers, check for keywords attached to places which
+  // no longer have a bookmark to them. We do this before removing the triggers,
+  // so that we can make use of the keyword trigger to update the counts in
+  // moz_places.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_keywords WHERE place_id IN ( "
+      "SELECT h.id FROM moz_keywords k "
+      "JOIN moz_places h ON h.id = k.place_id "
+      "GROUP BY place_id HAVING h.foreign_count = count(*) "
+    ")"
+  ));
+  if (NS_FAILED(rv)) return rv;
+
+  // Now remove the temp triggers.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TRIGGER moz_migrate_bookmarks_trigger "
+  ));
+  if (NS_FAILED(rv)) return rv;
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TRIGGER moz_migrate_annos_trigger "
+  ));
+  if (NS_FAILED(rv)) return rv;
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TRIGGER moz_migrate_keyword_trigger "
+  ));
+  if (NS_FAILED(rv)) return rv;
+
+  // Cleanup any orphan annotation attributes.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_anno_attributes WHERE id IN ( "
+      "SELECT id FROM moz_anno_attributes n "
+      "EXCEPT "
+      "SELECT DISTINCT anno_attribute_id FROM moz_annos "
+      "EXCEPT "
+      "SELECT DISTINCT anno_attribute_id FROM moz_items_annos "
+    ")"
+  ));
+  if (NS_FAILED(rv)) return rv;
+
+  return rv;
 }
 
 nsresult
