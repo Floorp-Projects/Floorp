@@ -327,6 +327,10 @@ protected:
   using EditorBase::IsBlockNode;
   virtual bool IsBlockNode(nsINode *aNode) override;
 
+  virtual void
+  InitializeSelectionAncestorLimit(Selection& aSelection,
+                                   nsIContent& aAncestorLimit) override;
+
 public:
   // XXX Why don't we move following methods above for grouping by the origins?
   NS_IMETHOD SetFlags(uint32_t aFlags) override;
@@ -539,6 +543,32 @@ public:
    * @param aUIAnonymousElement [IN] the inline table editing UI element
    */
   nsresult DoInlineTableEditingAction(const Element& aUIAnonymousElement);
+
+  /**
+   * MaybeCollapseSelectionAtFirstEditableNode() may collapse selection at
+   * proper position to staring to edit.  If there is a non-editable node
+   * before any editable text nodes or inline elements which can have text
+   * nodes as their children, collapse selection at start of the editing
+   * host.  If there is an editable text node which is not collapsed, collapses
+   * selection at the start of the text node.  If there is an editable inline
+   * element which cannot have text nodes as its child, collapses selection at
+   * before the element node.  Otherwise, collapses selection at start of the
+   * editing host.
+   *
+   * @param aIgnoreIfSelectionInEditingHost
+   *                        This method does nothing if selection is in the
+   *                        editing host except if it's collapsed at start of
+   *                        the editing host.
+   *                        Note that if selection ranges were outside of
+   *                        current selection limiter, selection was collapsed
+   *                        at the start of the editing host therefore, if
+   *                        you call this with setting this to true, you can
+   *                        keep selection ranges if user has already been
+   *                        changed.
+   */
+  nsresult
+  MaybeCollapseSelectionAtFirstEditableNode(
+    bool aIgnoreIfSelectionInEditingHost);
 
 protected:
   class BlobReader final : public nsIEditorBlobListener
