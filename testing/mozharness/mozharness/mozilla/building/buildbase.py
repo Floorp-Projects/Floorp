@@ -1604,6 +1604,13 @@ or run without that action (ie: --no-{action})"
                 for path, size in paths_with_sizes(installer):
                     name = os.path.basename(path)
                     if name in interests:
+                        # We have to be careful here: desktop Firefox installers
+                        # contain two omni.ja files: one for the general runtime,
+                        # and one for the browser proper.
+                        if name == 'omni.ja':
+                            containing_dir = os.path.basename(os.path.dirname(path))
+                            if containing_dir == 'browser':
+                                name = 'browser-omni.ja'
                         if name in subtests:
                             # File seen twice in same archive;
                             # ignore to avoid confusion.
