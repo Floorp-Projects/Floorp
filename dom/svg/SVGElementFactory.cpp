@@ -10,17 +10,21 @@
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FromParser.h"
-#include "plhash.h"
+#include "mozilla/StaticPtr.h"
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
 // Hash table that maps nsAtom* SVG tags to an offset index
 // within the array sSVGContentCreatorFunctions (offset by TABLE_VALUE_OFFSET)
-static PLHashTable* sTagAtomTable = nullptr;
+using TagAtomTable = nsDataHashtable<nsPtrHashKey<nsAtom>, int32_t>;
+StaticAutoPtr<TagAtomTable> sTagAtomTable;
 
 // We don't want to store 0 in the hash table as a return value of 0 from
 // PL_HashTableLookupConst indicates that the value is not found
+// TODO(erahm): get rid of this insanity
 #define TABLE_VALUE_OFFSET 1
 
 #define SVG_TAG(_tag, _classname)                                              \
@@ -63,26 +67,17 @@ enum SVGTag {
   eSVGTag_Count
 };
 
-// nsAtom* -> id hash
-static PLHashNumber
-SVGTagsHashCodeAtom(const void* key)
-{
-  return NS_PTR_TO_INT32(key) >> 2;
-}
-
 void
 SVGElementFactory::Init()
 {
-  sTagAtomTable = PL_NewHashTable(64, SVGTagsHashCodeAtom,
-                                  PL_CompareValues, PL_CompareValues,
-                                  nullptr, nullptr);
+  sTagAtomTable = new TagAtomTable(64);
 
 #define SVG_TAG(_tag, _classname) \
-  PL_HashTableAdd(sTagAtomTable, nsGkAtoms::_tag,\
-                  NS_INT32_TO_PTR(eSVGTag_##_tag + TABLE_VALUE_OFFSET));
+  sTagAtomTable->Put(nsGkAtoms::_tag,\
+                  static_cast<int32_t>(eSVGTag_##_tag) + TABLE_VALUE_OFFSET);
 #define SVG_FROM_PARSER_TAG(_tag, _classname) \
-  PL_HashTableAdd(sTagAtomTable, nsGkAtoms::_tag,\
-                  NS_INT32_TO_PTR(eSVGTag_##_tag + TABLE_VALUE_OFFSET));
+  sTagAtomTable->Put(nsGkAtoms::_tag,\
+                  static_cast<int32_t>(eSVGTag_##_tag) + TABLE_VALUE_OFFSET);
 #include "SVGTagList.h"
 #undef SVG_TAG
 #undef SVG_FROM_PARSER_TAG
@@ -91,10 +86,7 @@ SVGElementFactory::Init()
 void
 SVGElementFactory::Shutdown()
 {
-  if (sTagAtomTable) {
-    PL_HashTableDestroy(sTagAtomTable);
-    sTagAtomTable = nullptr;
-  }
+  sTagAtomTable = nullptr;
 }
 
 nsresult
@@ -109,9 +101,9 @@ NS_NewSVGElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& a
   NS_ASSERTION(ni->NamespaceEquals(kNameSpaceID_SVG),
                "Trying to create SVG elements that aren't in the SVG namespace");
 
-  void* tag = PL_HashTableLookupConst(sTagAtomTable, name);
+  auto tag = sTagAtomTable->Lookup(name);
   if (tag) {
-    int32_t index = NS_PTR_TO_INT32(tag) - TABLE_VALUE_OFFSET;
+    int32_t index = tag.Data() - TABLE_VALUE_OFFSET;
     if (index < 0 || index >= eSVGTag_Count) {
       NS_WARNING("About to index out of array bounds - crashing instead");
       MOZ_CRASH();
