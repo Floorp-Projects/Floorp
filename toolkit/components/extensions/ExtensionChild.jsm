@@ -90,25 +90,33 @@ function injectAPI(source, dest) {
  * wrapped promise from being garbage collected.
  */
 const StrongPromise = {
+  locations: new Map(),
+
   wrap(promise, channelId, location) {
     return new Promise((resolve, reject) => {
-      const tag = `${channelId}|${location}`;
-      const witness = finalizationService.make("extensions-sendMessage-witness", tag);
+      this.locations.set(channelId, location);
+
+      const witness = finalizationService.make("extensions-sendMessage-witness", channelId);
       promise.then(value => {
+        this.locations.delete(channelId);
         witness.forget();
         resolve(value);
       }, error => {
+        this.locations.delete(channelId);
         witness.forget();
         reject(error);
       });
     });
   },
-  observe(subject, topic, tag) {
-    const pos = tag.indexOf("|");
-    const channel = Number(tag.substr(0, pos));
-    const location = tag.substr(pos + 1);
-    const message = `Promised response from onMessage listener at ${location} went out of scope`;
-    MessageChannel.abortChannel(channel, {message});
+  observe(subject, topic, channelId) {
+    channelId = Number(channelId);
+    let location = this.locations.get(channelId);
+    this.locations.delete(channelId);
+
+    const message = `Promised response from onMessage listener went out of scope`;
+    const error = ChromeUtils.createError(message, location);
+    error.mozWebExtLocation = location;
+    MessageChannel.abortChannel(channelId, error);
   },
 };
 Services.obs.addObserver(StrongPromise, "extensions-sendMessage-witness");
@@ -396,7 +404,7 @@ class Messenger {
 
   _onMessage(name, filter) {
     return new EventManager(this.context, name, fire => {
-      const [location] = new this.context.cloneScope.Error().stack.split("\n", 1);
+      const caller = this.context.getCaller();
 
       let listener = {
         messageFilterPermissive: this.optionalFilter,
@@ -440,9 +448,9 @@ class Messenger {
           message = null;
 
           if (result instanceof this.context.cloneScope.Promise) {
-            return StrongPromise.wrap(result, channelId, location);
+            return StrongPromise.wrap(result, channelId, caller);
           } else if (result === true) {
-            return StrongPromise.wrap(promise, channelId, location);
+            return StrongPromise.wrap(promise, channelId, caller);
           }
           return response;
         },
