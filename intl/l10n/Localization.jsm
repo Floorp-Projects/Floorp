@@ -357,13 +357,10 @@ function messageFromContext(ctx, errors, id, args) {
 
   if (msg.attrs) {
     formatted.attrs = [];
-    for (const attrName in msg.attrs) {
-      const formattedAttr = ctx.format(msg.attrs[attrName], args, errors);
-      if (formattedAttr !== null) {
-        formatted.attrs.push([
-          attrName,
-          formattedAttr
-        ]);
+    for (const name in msg.attrs) {
+      const value = ctx.format(msg.attrs[name], args, errors);
+      if (value !== null) {
+        formatted.attrs.push({ name, value });
       }
     }
   }
