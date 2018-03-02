@@ -161,20 +161,19 @@ add_task(async function test_history_visit_roundtrip() {
   // Sync the visit up to the server.
   await sync_engine_and_validate_telem(engine, false);
 
-  let wbo = collection.wbo(id);
-  let data = JSON.parse(JSON.parse(wbo.payload).ciphertext);
-  // Double-check that we didn't round the visit's timestamp to the nearest
-  // millisecond when uploading.
-  equal(data.visits[0].date, time);
-
-  // Add a remote visit so that we get past the deepEquals check in reconcile
-  // (otherwise the history engine will skip applying this record). The contents
-  // of this visit don't matter, beyond the fact that it needs to exist.
-  data.visits.push({
-    date: (Date.now() - oneHourMS / 2) * 1000,
-    type: PlacesUtils.history.TRANSITIONS.LINK
-  });
-  collection.insertWBO(new ServerWBO(id, encryptPayload(data), Date.now() / 1000 + 10));
+  collection.updateRecord(id, cleartext => {
+    // Double-check that we didn't round the visit's timestamp to the nearest
+    // millisecond when uploading.
+    equal(cleartext.visits[0].date, time);
+    // Add a remote visit so that we get past the deepEquals check in reconcile
+    // (otherwise the history engine will skip applying this record). The
+    // contents of this visit don't matter, beyond the fact that it needs to
+    // exist.
+    cleartext.visits.push({
+      date: (Date.now() - oneHourMS / 2) * 1000,
+      type: PlacesUtils.history.TRANSITIONS.LINK
+    });
+  }, Date.now() / 1000 + 10);
 
   // Force a remote sync.
   engine.lastSync = Date.now() / 1000 - 30;
@@ -220,29 +219,27 @@ add_task(async function test_history_visit_dedupe_old() {
 
   await sync_engine_and_validate_telem(engine, false);
 
-  let wbo = collection.wbo(guid);
-  let data = JSON.parse(JSON.parse(wbo.payload).ciphertext);
+  collection.updateRecord(guid, data => {
+    data.visits.push(
+      // Add a couple remote visit equivalent to some old visits we have already
+      {
+        date: Date.UTC(2017, 10, 1) * 1000, // Nov 1, 2017
+        type: PlacesUtils.history.TRANSITIONS.LINK
+      }, {
+        date: Date.UTC(2017, 10, 2) * 1000, // Nov 2, 2017
+        type: PlacesUtils.history.TRANSITIONS.LINK
+      },
+      // Add a couple new visits to make sure we are still applying them.
+      {
+        date: Date.UTC(2017, 11, 4) * 1000, // Dec 4, 2017
+        type: PlacesUtils.history.TRANSITIONS.LINK
+      }, {
+        date: Date.UTC(2017, 11, 5) * 1000, // Dec 5, 2017
+        type: PlacesUtils.history.TRANSITIONS.LINK
+      }
+    );
+  }, Date.now() / 1000 + 10);
 
-  data.visits.push(
-    // Add a couple remote visit equivalent to some old visits we have already
-    {
-      date: Date.UTC(2017, 10, 1) * 1000, // Nov 1, 2017
-      type: PlacesUtils.history.TRANSITIONS.LINK
-    }, {
-      date: Date.UTC(2017, 10, 2) * 1000, // Nov 2, 2017
-      type: PlacesUtils.history.TRANSITIONS.LINK
-    },
-    // Add a couple new visits to make sure we are still applying them.
-    {
-      date: Date.UTC(2017, 11, 4) * 1000, // Dec 4, 2017
-      type: PlacesUtils.history.TRANSITIONS.LINK
-    }, {
-      date: Date.UTC(2017, 11, 5) * 1000, // Dec 5, 2017
-      type: PlacesUtils.history.TRANSITIONS.LINK
-    }
-  );
-
-  collection.insertWBO(new ServerWBO(guid, encryptPayload(data), Date.now() / 1000 + 10));
   engine.lastSync = Date.now() / 1000 - 30;
   await sync_engine_and_validate_telem(engine, false);
 

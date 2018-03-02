@@ -231,9 +231,9 @@
       <hbox>
         <button id="siteDataSettings"
                 class="accessory-button"
-                label="&siteDataSettings.label;"
-                accesskey="&siteDataSettings.accesskey;"
-                searchkeywords="&window1.title;
+                label="&siteDataSettings1.label;"
+                accesskey="&siteDataSettings1.accesskey;"
+                searchkeywords="&window2.title;
                                 &hostCol.label;
                                 &cookiesCol.label;
                                 &usageCol.label;"/>
