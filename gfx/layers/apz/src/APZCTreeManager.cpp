@@ -69,20 +69,25 @@ typedef CompositorBridgeParent::LayerTreeState LayerTreeState;
 float APZCTreeManager::sDPI = 160.0;
 
 struct APZCTreeManager::TreeBuildingState {
-  TreeBuildingState(const LayerTreeState* const aLayerTreeState,
+  TreeBuildingState(uint64_t aRootLayersId,
                     bool aIsFirstPaint, uint64_t aOriginatingLayersId,
                     APZTestData* aTestData, uint32_t aPaintSequence)
-    : mLayerTreeState(aLayerTreeState)
-    , mIsFirstPaint(aIsFirstPaint)
+    : mIsFirstPaint(aIsFirstPaint)
     , mOriginatingLayersId(aOriginatingLayersId)
     , mPaintLogger(aTestData, aPaintSequence)
   {
+    CompositorBridgeParent::CallWithIndirectShadowTree(aRootLayersId,
+        [this](LayerTreeState& aState) -> void {
+          mCompositorController = aState.GetCompositorController();
+          mInProcessSharingController = aState.InProcessSharingController();
+        });
   }
 
   typedef std::unordered_map<AsyncPanZoomController*, gfx::Matrix4x4> DeferredTransformMap;
 
   // State that doesn't change as we recurse in the tree building
-  const LayerTreeState* const mLayerTreeState;
+  RefPtr<CompositorController> mCompositorController;
+  RefPtr<MetricsSharingController> mInProcessSharingController;
   const bool mIsFirstPaint;
   const uint64_t mOriginatingLayersId;
   const APZPaintLogHelper mPaintLogger;
@@ -343,10 +348,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
     testData->StartNewPaint(aPaintSequenceNumber);
   }
 
-  const LayerTreeState* treeState =
-    CompositorBridgeParent::GetIndirectShadowTree(aRootLayerTreeId);
-  MOZ_ASSERT(treeState);
-  TreeBuildingState state(treeState, aIsFirstPaint, aOriginatingLayersId,
+  TreeBuildingState state(aRootLayerTreeId, aIsFirstPaint, aOriginatingLayersId,
                           testData, aPaintSequenceNumber);
 
   // We do this business with collecting the entire tree into an array because otherwise
@@ -559,14 +561,18 @@ APZCTreeManager::PushStateToWR(wr::TransactionBuilder& aTxn,
         if (aNode->GetLayersId() != lastLayersId) {
           // If we walked into or out of a subtree, we need to get the new
           // pipeline id.
-          const LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(aNode->GetLayersId());
-          if (!(state && state->mWrBridge)) {
+          RefPtr<WebRenderBridgeParent> wrBridge;
+          CompositorBridgeParent::CallWithIndirectShadowTree(aNode->GetLayersId(),
+              [&wrBridge](LayerTreeState& aState) -> void {
+                wrBridge = aState.mWrBridge;
+              });
+          if (!wrBridge) {
             // During shutdown we might have layer tree information for stuff
             // that has already been torn down. In that case just skip over
             // those layers.
             return;
           }
-          lastPipelineId = state->mWrBridge->PipelineId();
+          lastPipelineId = wrBridge->PipelineId();
           lastLayersId = aNode->GetLayersId();
         }
 
@@ -635,8 +641,7 @@ APZCTreeManager::PushStateToWR(wr::TransactionBuilder& aTxn,
 // Compute the clip region to be used for a layer with an APZC. This function
 // is only called for layers which actually have scrollable metrics and an APZC.
 template<class ScrollNode> static ParentLayerIntRegion
-ComputeClipRegion(GeckoContentController* aController,
-                  const ScrollNode& aLayer)
+ComputeClipRegion(const ScrollNode& aLayer)
 {
   ParentLayerIntRegion clipRegion;
   if (aLayer.GetClipRect()) {
@@ -811,8 +816,18 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
     needsApzc = false;
   }
 
-  const LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
-  if (!(state && state->mController.get())) {
+  // XXX: As a future optimization we can probably stick these things on the
+  // TreeBuildingState, and update them as we change layers id during the
+  // traversal
+  RefPtr<GeckoContentController> geckoContentController;
+  RefPtr<MetricsSharingController> crossProcessSharingController;
+  CompositorBridgeParent::CallWithIndirectShadowTree(aLayersId,
+      [&](LayerTreeState& lts) -> void {
+        geckoContentController = lts.mController;
+        crossProcessSharingController = lts.CrossProcessSharingController();
+      });
+
+  if (!geckoContentController) {
     needsApzc = false;
   }
 
@@ -907,13 +922,12 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
     // a destroyed APZC and so we need to throw that out and make a new one.
     bool newApzc = (apzc == nullptr || apzc->IsDestroyed());
     if (newApzc) {
-      MOZ_ASSERT(aState.mLayerTreeState);
-      apzc = NewAPZCInstance(aLayersId, state->mController);
-      apzc->SetCompositorController(aState.mLayerTreeState->GetCompositorController());
-      if (state->mCrossProcessParent) {
-        apzc->SetMetricsSharingController(state->CrossProcessSharingController());
+      apzc = NewAPZCInstance(aLayersId, geckoContentController);
+      apzc->SetCompositorController(aState.mCompositorController.get());
+      if (crossProcessSharingController) {
+        apzc->SetMetricsSharingController(crossProcessSharingController);
       } else {
-        apzc->SetMetricsSharingController(aState.mLayerTreeState->InProcessSharingController());
+        apzc->SetMetricsSharingController(aState.mInProcessSharingController.get());
       }
       MOZ_ASSERT(node == nullptr);
       node = new HitTestingTreeNode(apzc, true, aLayersId);
@@ -940,7 +954,7 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
 
     Maybe<ParentLayerIntRegion> clipRegion = parentHasPerspective
       ? Nothing()
-      : Some(ComputeClipRegion(state->mController, aLayer));
+      : Some(ComputeClipRegion(aLayer));
     node->SetHitTestData(
         GetEventRegions(aLayer),
         aLayer.GetVisibleRegion(),
@@ -1039,7 +1053,7 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
 
     Maybe<ParentLayerIntRegion> clipRegion = parentHasPerspective
       ? Nothing()
-      : Some(ComputeClipRegion(state->mController, aLayer));
+      : Some(ComputeClipRegion(aLayer));
     node->SetHitTestData(
         GetEventRegions(aLayer),
         aLayer.GetVisibleRegion(),
