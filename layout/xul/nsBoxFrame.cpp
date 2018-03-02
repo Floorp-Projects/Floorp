@@ -1391,7 +1391,7 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       MakeDisplayItem<nsDisplayOwnLayer>(aBuilder, this, &masterList, ownLayerASR,
                                          nsDisplayOwnLayerFlags::eNone,
                                          mozilla::layers::FrameMetrics::NULL_SCROLL_ID,
-                                         mozilla::layers::ScrollThumbData{}, true, true));
+                                         mozilla::layers::ScrollbarData{}, true, true));
   }
 }
 

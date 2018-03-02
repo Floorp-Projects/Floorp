@@ -6886,7 +6886,7 @@ nsDisplayOwnLayer::nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayList* aList,
                                      const ActiveScrolledRoot* aActiveScrolledRoot,
                                      nsDisplayOwnLayerFlags aFlags, ViewID aScrollTarget,
-                                     const ScrollThumbData& aThumbData,
+                                     const ScrollbarData& aThumbData,
                                      bool aForceActive,
                                      bool aClearClipChain)
     : nsDisplayWrapList(aBuilder, aFrame, aList, aActiveScrolledRoot, aClearClipChain)
@@ -6928,7 +6928,7 @@ nsDisplayOwnLayer::GetLayerState(nsDisplayListBuilder* aBuilder,
 bool
 nsDisplayOwnLayer::IsScrollThumbLayer() const
 {
-  return mThumbData.mDirection.isSome();
+  return mThumbData.mScrollbarLayerType == layers::ScrollbarLayerType::Thumb;
 }
 
 bool
@@ -6950,7 +6950,8 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                            aContainerParameters, nullptr,
                            FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR);
   if (IsScrollThumbLayer()) {
-    layer->SetScrollThumbData(mScrollTarget, mThumbData);
+    mThumbData.mTargetViewId = mScrollTarget;
+    layer->SetScrollbarData(mThumbData);
   }
   if (mFlags & nsDisplayOwnLayerFlags::eScrollbarContainer) {
     ScrollDirection dir = (mFlags & nsDisplayOwnLayerFlags::eVerticalScrollbar)
@@ -7006,7 +7007,7 @@ nsDisplayOwnLayer::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
   if (IsScrollThumbLayer()) {
     ret = true;
     if (aLayerData) {
-      aLayerData->SetScrollThumbData(mThumbData);
+      aLayerData->SetScrollbarData(mThumbData);
       aLayerData->SetScrollbarAnimationId(mWrAnimationId);
       aLayerData->SetScrollbarTargetContainerId(mScrollTarget);
     }

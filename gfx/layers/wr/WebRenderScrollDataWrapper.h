@@ -285,10 +285,10 @@ public:
     return mLayer->GetEventRegionsOverride();
   }
 
-  const ScrollThumbData& GetScrollThumbData() const
+  const ScrollbarData& GetScrollbarData() const
   {
     MOZ_ASSERT(IsValid());
-    return mLayer->GetScrollThumbData();
+    return mLayer->GetScrollbarData();
   }
 
   uint64_t GetScrollbarAnimationId() const

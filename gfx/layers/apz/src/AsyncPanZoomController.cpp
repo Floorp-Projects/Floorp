@@ -981,9 +981,10 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
     return nsEventStatus_eConsumeNoDefault;
   }
 
-  const ScrollThumbData& thumbData = node->GetScrollThumbData();
-  MOZ_ASSERT(thumbData.mDirection.isSome());
-  ScrollDirection direction = *thumbData.mDirection;
+  const ScrollbarData& scrollbarData = node->GetScrollbarData();
+  MOZ_ASSERT(scrollbarData.mScrollbarLayerType == layers::ScrollbarLayerType::Thumb);
+  MOZ_ASSERT(scrollbarData.mDirection.isSome());
+  ScrollDirection direction = *scrollbarData.mDirection;
 
   bool isMouseAwayFromThumb = false;
   if (int snapMultiplier = gfxPrefs::SliderSnapMultiplier()) {
@@ -1009,12 +1010,12 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
   if (isMouseAwayFromThumb) {
     thumbPosition = aInitialThumbPos;
   } else {
-    thumbPosition = ConvertScrollbarPoint(aEvent.mLocalOrigin, thumbData) -
+    thumbPosition = ConvertScrollbarPoint(aEvent.mLocalOrigin, scrollbarData) -
                     aDragMetrics.mScrollbarDragOffset;
   }
 
-  CSSCoord maxThumbPos = thumbData.mScrollTrackLength;
-  maxThumbPos -= thumbData.mThumbLength;
+  CSSCoord maxThumbPos = scrollbarData.mScrollTrackLength;
+  maxThumbPos -= scrollbarData.mThumbLength;
 
   float scrollPercent = thumbPosition / maxThumbPos;
 
@@ -1704,7 +1705,7 @@ AsyncPanZoomController::ConvertToGecko(const ScreenIntPoint& aPoint, LayoutDevic
 
 CSSCoord
 AsyncPanZoomController::ConvertScrollbarPoint(const ParentLayerPoint& aScrollbarPoint,
-                                              const ScrollThumbData& aThumbData) const
+                                              const ScrollbarData& aThumbData) const
 {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
 

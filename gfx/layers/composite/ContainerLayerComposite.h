@@ -108,15 +108,15 @@ public:
   // post-scales.
   virtual float GetPostXScale() const override {
     if (mScaleToResolution) {
-      return mSimpleAttrs.PostXScale() * mPresShellResolution;
+      return mSimpleAttrs.GetPostXScale() * mPresShellResolution;
     }
-    return mSimpleAttrs.PostXScale();
+    return mSimpleAttrs.GetPostXScale();
   }
   virtual float GetPostYScale() const override {
     if (mScaleToResolution) {
-      return mSimpleAttrs.PostYScale() * mPresShellResolution;
+      return mSimpleAttrs.GetPostYScale() * mPresShellResolution;
     }
-    return mSimpleAttrs.PostYScale();
+    return mSimpleAttrs.GetPostYScale();
   }
 
   virtual const char* Name() const override { return "ContainerLayerComposite"; }
