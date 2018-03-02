@@ -467,7 +467,7 @@ class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public Service
     RefPtr<ServiceWorkerRegistrationInfo> reg = registerJob->GetRegistration();
 
     RefPtr<ServiceWorkerRegistration> swr =
-      window->GetServiceWorkerRegistration(reg->Descriptor());
+      window->AsGlobal()->GetOrCreateServiceWorkerRegistration(reg->Descriptor());
 
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       "ServiceWorkerResolveWindowPromiseOnRegisterCallback::JobFinished",
@@ -1031,7 +1031,7 @@ public:
       }
 
       RefPtr<ServiceWorkerRegistration> swr =
-        mWindow->GetServiceWorkerRegistration(info->Descriptor());
+        mWindow->AsGlobal()->GetOrCreateServiceWorkerRegistration(info->Descriptor());
 
       array.AppendElement(swr);
     }
@@ -1154,7 +1154,7 @@ public:
     }
 
     RefPtr<ServiceWorkerRegistration> swr =
-      mWindow->GetServiceWorkerRegistration(registration->Descriptor());
+      mWindow->AsGlobal()->GetOrCreateServiceWorkerRegistration(registration->Descriptor());
     mPromise->MaybeResolve(swr);
 
     return NS_OK;
@@ -1468,7 +1468,7 @@ ServiceWorkerManager::CheckReadyPromise(nsPIDOMWindowInner* aWindow,
 
   if (registration && registration->GetActive()) {
     RefPtr<ServiceWorkerRegistration> swr =
-      aWindow->GetServiceWorkerRegistration(registration->Descriptor());
+      aWindow->AsGlobal()->GetOrCreateServiceWorkerRegistration(registration->Descriptor());
     aPromise->MaybeResolve(swr);
     return true;
   }
