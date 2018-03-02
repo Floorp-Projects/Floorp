@@ -49,10 +49,15 @@ KeyboardEvent::AltKey(CallerType aCallerType)
 bool
 KeyboardEvent::CtrlKey(CallerType aCallerType)
 {
-  // We don't spoof this key when privacy.resistFingerprinting
-  // is enabled, because it is often used for command key
-  // combinations in web apps.
-  return mEvent->AsKeyboardEvent()->IsControl();
+  bool ctrlState = mEvent->AsKeyboardEvent()->IsControl();
+
+  if (!ShouldResistFingerprinting(aCallerType)) {
+    return ctrlState;
+  }
+
+  // We need to give a spoofed state for Control key since it could be used as a
+  // modifier key in certain asian keyboard layouts.
+  return GetSpoofedModifierStates(Modifier::MODIFIER_CONTROL, ctrlState);
 }
 
 bool
@@ -70,9 +75,6 @@ KeyboardEvent::ShiftKey(CallerType aCallerType)
 bool
 KeyboardEvent::MetaKey()
 {
-  // We don't spoof this key when privacy.resistFingerprinting
-  // is enabled, because it is often used for command key
-  // combinations in web apps.
   return mEvent->AsKeyboardEvent()->IsMeta();
 }
 
