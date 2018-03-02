@@ -8,7 +8,7 @@
 
 #include "jsexn.h"
 
-#include "builtin/DataView.h"
+#include "builtin/DataViewObject.h"
 #include "gc/FreeOp.h"
 #include "gc/HashUtil.h"
 #include "gc/Policy.h"

@@ -19,19 +19,19 @@
 #include <string.h>
 
 #include "jsexn.h"
+#include "jsnum.h"
 
-#include "builtin/Number.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
 #include "frontend/ReservedWords.h"
 #include "js/CharacterEncoding.h"
 #include "js/UniquePtr.h"
-#include "util/StringBuffer.h"
-#include "util/Unicode.h"
 #include "vm/HelperThreads.h"
 #include "vm/JSAtom.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
+#include "vm/StringBuffer.h"
+#include "vm/Unicode.h"
 
 using mozilla::ArrayLength;
 using mozilla::MakeScopeExit;

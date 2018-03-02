@@ -15,15 +15,14 @@
 #include <string.h>
 
 #include "jsapi.h"
+#include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "builtin/Number.h"
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "js/CharacterEncoding.h"
 #include "js/Wrapper.h"
-#include "util/StringBuffer.h"
 #include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
@@ -32,7 +31,7 @@
 #include "vm/JSScript.h"
 #include "vm/SavedStacks.h"
 #include "vm/SelfHosting.h"
-#include "vm/StringType.h"
+#include "vm/StringBuffer.h"
 
 #include "vm/ErrorObject-inl.h"
 #include "vm/JSObject-inl.h"

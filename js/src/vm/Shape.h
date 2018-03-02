@@ -30,8 +30,8 @@
 #include "vm/JSAtom.h"
 #include "vm/ObjectGroup.h"
 #include "vm/Printer.h"
-#include "vm/StringType.h"
-#include "vm/SymbolType.h"
+#include "vm/String.h"
+#include "vm/Symbol.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)

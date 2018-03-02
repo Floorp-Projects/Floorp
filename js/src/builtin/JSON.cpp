@@ -10,21 +10,22 @@
 #include "mozilla/Range.h"
 #include "mozilla/ScopeExit.h"
 
+#include "jsarray.h"
+#include "jsnum.h"
+#include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "builtin/Array.h"
-#include "builtin/Number.h"
-#include "builtin/String.h"
-#include "util/StringBuffer.h"
 #include "vm/Interpreter.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/JSONParser.h"
+#include "vm/StringBuffer.h"
 
-#include "builtin/Array-inl.h"
-#include "builtin/Boolean-inl.h"
+#include "jsarrayinlines.h"
+#include "jsboolinlines.h"
+
 #include "vm/JSAtom-inl.h"
 #include "vm/NativeObject-inl.h"
 

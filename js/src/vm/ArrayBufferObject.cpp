@@ -23,13 +23,13 @@
 #endif
 
 #include "jsapi.h"
+#include "jsarray.h"
 #include "jsfriendapi.h"
+#include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "builtin/Array.h"
-#include "builtin/DataView.h"
-#include "builtin/Number.h"
+#include "builtin/DataViewObject.h"
 #include "gc/Barrier.h"
 #include "gc/FreeOp.h"
 #include "gc/Memory.h"

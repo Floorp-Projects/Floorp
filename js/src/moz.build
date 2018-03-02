@@ -32,6 +32,10 @@ for gcfile in ['devtools/rootAnalysis', 'devtools/gc-ubench', 'devtools/gctrace'
     with Files(gcfile):
         BUG_COMPONENT = component_gc
 
+for stlfile in ['jsarray.*', 'jsbool*', 'jsdate.*', 'jsnum.*', 'jsstr.*']:
+    with Files(stlfile):
+        BUG_COMPONENT = component_stl
+
 with Files('builtin/intl/*'):
     BUG_COMPONENT = component_intl
 
@@ -143,23 +147,20 @@ EXPORTS.js += [
 ]
 
 UNIFIED_SOURCES += [
-    'builtin/Atomics.cpp',
-    'builtin/Boolean.cpp',
-    'builtin/DataView.cpp',
-    'builtin/Date.cpp',
+    'builtin/AtomicsObject.cpp',
+    'builtin/DataViewObject.cpp',
     'builtin/Eval.cpp',
     'builtin/intl/Collator.cpp',
     'builtin/intl/CommonFunctions.cpp',
     'builtin/intl/DateTimeFormat.cpp',
-    'builtin/intl/Intl.cpp',
+    'builtin/intl/IntlObject.cpp',
     'builtin/intl/NumberFormat.cpp',
     'builtin/intl/PluralRules.cpp',
     'builtin/intl/RelativeTimeFormat.cpp',
     'builtin/intl/SharedIntlData.cpp',
     'builtin/JSON.cpp',
-    'builtin/Map.cpp',
+    'builtin/MapObject.cpp',
     'builtin/ModuleObject.cpp',
-    'builtin/Number.cpp',
     'builtin/Object.cpp',
     'builtin/Profilers.cpp',
     'builtin/Promise.cpp',
@@ -167,12 +168,11 @@ UNIFIED_SOURCES += [
     'builtin/ReflectParse.cpp',
     'builtin/SIMD.cpp',
     'builtin/Stream.cpp',
-    'builtin/String.cpp',
-    'builtin/Symbol.cpp',
+    'builtin/SymbolObject.cpp',
     'builtin/TestingFunctions.cpp',
     'builtin/TypedObject.cpp',
-    'builtin/WeakMap.cpp',
-    'builtin/WeakSet.cpp',
+    'builtin/WeakMapObject.cpp',
+    'builtin/WeakSetObject.cpp',
     'devtools/sharkctl.cpp',
     'ds/Bitmap.cpp',
     'ds/LifoAlloc.cpp',
@@ -286,8 +286,12 @@ UNIFIED_SOURCES += [
     'jit/VMFunctions.cpp',
     'jit/WasmBCE.cpp',
     'jsapi.cpp',
+    'jsbool.cpp',
+    'jsdate.cpp',
     'jsexn.cpp',
     'jsfriendapi.cpp',
+    'jsnum.cpp',
+    'jsstr.cpp',
     'perf/jsperf.cpp',
     'proxy/BaseProxyHandler.cpp',
     'proxy/CrossCompartmentWrapper.cpp',
@@ -302,9 +306,6 @@ UNIFIED_SOURCES += [
     'util/AllocPolicy.cpp',
     'util/NativeStack.cpp',
     'util/Printf.cpp',
-    'util/StringBuffer.cpp',
-    'util/Text.cpp',
-    'util/Unicode.cpp',
     'vm/ArgumentsObject.cpp',
     'vm/ArrayBufferObject.cpp',
     'vm/AsyncFunction.cpp',
@@ -356,9 +357,10 @@ UNIFIED_SOURCES += [
     'vm/SharedImmutableStringsCache.cpp',
     'vm/Stack.cpp',
     'vm/Stopwatch.cpp',
-    'vm/StringType.cpp',
+    'vm/String.cpp',
+    'vm/StringBuffer.cpp',
     'vm/StructuredClone.cpp',
-    'vm/SymbolType.cpp',
+    'vm/Symbol.cpp',
     'vm/TaggedProto.cpp',
     'vm/Time.cpp',
     'vm/TypedArrayObject.cpp',
@@ -367,6 +369,7 @@ UNIFIED_SOURCES += [
     'vm/UbiNodeCensus.cpp',
     'vm/UbiNodeShortestPaths.cpp',
     'vm/UnboxedObject.cpp',
+    'vm/Unicode.cpp',
     'vm/Value.cpp',
     'vm/Xdr.cpp',
     'wasm/AsmJS.cpp',
@@ -395,14 +398,14 @@ UNIFIED_SOURCES += [
     'wasm/WasmValidate.cpp'
 ]
 
-# builtin/Array.cpp and vm/JSAtom.cpp cannot be built in unified mode because
+# jsarray.cpp and vm/JSAtom.cpp cannot be built in unified mode because
 #   xpcshell is broken during packaging when compiled with gcc-4.8.2
-# builtin/Math.cpp cannot be built in unified mode because it needs to re-#define the
-#   RtlGenRandom declaration's calling convention in <ntsecapi.h> on Windows.
 # builtin/RegExp.cpp cannot be built in unified mode because it is built
 #   without PGO
 # frontend/Parser.cpp cannot be built in unified mode because of explicit
 #   template instantiations.
+# jsmath.cpp cannot be built in unified mode because it needs to re-#define the
+#   RtlGenRandom declaration's calling convention in <ntsecapi.h> on Windows.
 # jsutil.cpp cannot be built in unified mode because it is needed for
 #   check-vanilla-allocations.
 # StoreBuffer.cpp cannot be built in unified because its template
@@ -413,11 +416,11 @@ UNIFIED_SOURCES += [
 # vm/Interpreter.cpp is gigantic and destroys incremental build times for any
 #   files unlucky enough to be unified with it.
 SOURCES += [
-    'builtin/Array.cpp',
-    'builtin/Math.cpp',
     'builtin/RegExp.cpp',
     'frontend/Parser.cpp',
     'gc/StoreBuffer.cpp',
+    'jsarray.cpp',
+    'jsmath.cpp',
     'jsutil.cpp',
     'util/DoubleToString.cpp',
     'vm/Interpreter.cpp',
@@ -747,7 +750,7 @@ selfhosted.inputs = [
     'builtin/intl/CommonFunctions.js',
     'builtin/intl/CurrencyDataGenerated.js',
     'builtin/intl/DateTimeFormat.js',
-    'builtin/intl/Intl.js',
+    'builtin/intl/IntlObject.js',
     'builtin/intl/LangTagMappingsGenerated.js',
     'builtin/intl/NumberFormat.js',
     'builtin/intl/PluralRules.js',

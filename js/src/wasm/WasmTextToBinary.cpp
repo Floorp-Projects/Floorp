@@ -22,8 +22,9 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 
-#include "builtin/Number.h"
-#include "builtin/String.h"
+#include "jsnum.h"
+#include "jsstr.h"
+
 #include "ds/LifoAlloc.h"
 #include "js/CharacterEncoding.h"
 #include "js/HashTable.h"

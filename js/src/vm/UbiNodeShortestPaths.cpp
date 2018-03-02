@@ -9,8 +9,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 
-#include "builtin/String.h"
-#include "util/Text.h"
+#include "jsstr.h"
 
 namespace JS {
 namespace ubi {

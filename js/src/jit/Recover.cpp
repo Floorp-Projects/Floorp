@@ -7,11 +7,11 @@
 #include "jit/Recover.h"
 
 #include "jsapi.h"
+#include "jsmath.h"
+#include "jsstr.h"
 
-#include "builtin/Math.h"
 #include "builtin/RegExp.h"
 #include "builtin/SIMD.h"
-#include "builtin/String.h"
 #include "builtin/TypedObject.h"
 #include "gc/Heap.h"
 #include "jit/JitSpewer.h"
@@ -23,7 +23,7 @@
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
-#include "vm/StringType.h"
+#include "vm/String.h"
 
 #include "vm/Interpreter-inl.h"
 #include "vm/NativeObject-inl.h"

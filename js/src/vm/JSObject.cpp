@@ -18,17 +18,17 @@
 #include <string.h>
 
 #include "jsapi.h"
+#include "jsarray.h"
 #include "jsexn.h"
 #include "jsfriendapi.h"
+#include "jsnum.h"
+#include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "builtin/Array.h"
 #include "builtin/Eval.h"
-#include "builtin/Number.h"
 #include "builtin/Object.h"
-#include "builtin/String.h"
-#include "builtin/Symbol.h"
+#include "builtin/SymbolObject.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Policy.h"
 #include "jit/BaselineJIT.h"
@@ -37,7 +37,6 @@
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
 #include "js/Wrapper.h"
-#include "util/Text.h"
 #include "util/Windows.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/BytecodeUtil.h"
@@ -52,7 +51,8 @@
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 
-#include "builtin/Boolean-inl.h"
+#include "jsboolinlines.h"
+
 #include "builtin/TypedObject-inl.h"
 #include "gc/Marking-inl.h"
 #include "vm/ArrayObject-inl.h"

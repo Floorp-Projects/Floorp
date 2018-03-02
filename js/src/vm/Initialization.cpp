@@ -14,7 +14,7 @@
 
 #include "jstypes.h"
 
-#include "builtin/Atomics.h"
+#include "builtin/AtomicsObject.h"
 #include "ds/MemoryProtectionExceptionHandler.h"
 #include "gc/Statistics.h"
 #include "jit/ExecutableAllocator.h"
