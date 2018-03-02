@@ -101,48 +101,59 @@ LiveSavedFrameCache::find(JSContext* cx, FramePtr& framePtr, const jsbytecode* p
     MOZ_ASSERT(initialized());
     MOZ_ASSERT(framePtr.hasCachedSavedFrame());
 
-    if (frames->empty())
-        // This early return supports the assertion below.
+    // If we flushed the cache due to a compartment mismatch, then we shouldn't
+    // expect to find any frames in the cache.
+    if (frames->empty()) {
+        frame.set(nullptr);
         return;
-
-    Key key(framePtr);
-
-    auto *p = frames->begin();
-    for (; p < frames->end(); p++) {
-        if (key == p->key) {
-            frame.set(p->savedFrame);
-            break;
-        }
     }
 
-    // If the frame's bit was set, the frame should always have an entry in the
-    // cache. (If we purged the entire cache because its SavedFrames had been
-    // captured for a different compartment, then we would have returned early
-    // above.)
-    MOZ_ASSERT(frame);
-
-    // Now that we have a SavedFrame to look at, check whether its compartment
-    // matches cx's. If our SavedFrames were captured for a different
-    // compartment, purge the whole cache.
-    if (frame->compartment() != cx->compartment()) {
-        frame.set(nullptr);
+    // All our SavedFrames should be in the same compartment. If the last
+    // entry's SavedFrame's compartment doesn't match cx's, flush the cache.
+    if (frames->back().savedFrame->compartment() != cx->compartment()) {
+#ifdef DEBUG
+        // Check that they are, indeed, all in the same compartment.
+        auto compartment = frames->back().savedFrame->compartment();
+        for (const auto& f : (*frames))
+            MOZ_ASSERT(compartment == f.savedFrame->compartment());
+#endif
         frames->clear();
+        frame.set(nullptr);
         return;
+    }
+
+    Key key(framePtr);
+    while (key != frames->back().key) {
+        MOZ_ASSERT(frames->back().savedFrame->compartment() == cx->compartment());
+
+        // We know that the cache does contain an entry for frameIter's frame,
+        // since its bit is set. That entry must be below this one in the stack,
+        // so frames->back() must correspond to a frame younger than
+        // frameIter's. If frameIter is the youngest frame with its bit set,
+        // then its entry is the youngest that is valid, and we can pop this
+        // entry. Even if frameIter is not the youngest frame with its bit set,
+        // since we're going to push new cache entries for all frames younger
+        // than frameIter, we must pop it anyway.
+        frames->popBack();
+
+        // If the frame's bit was set, the frame should always have an entry in
+        // the cache. (If we purged the entire cache because its SavedFrames had
+        // been captured for a different compartment, then we would have
+        // returned early above.)
+        MOZ_ASSERT(!frames->empty());
     }
 
     // The youngest valid frame may have run some code, so its current pc may
     // not match its cache entry's pc. In this case, just treat it as a miss. No
     // older frame has executed any code; it would have been necessary to pop
     // this frame for that to happen, but this frame's bit is set.
-    if (pc != p->pc) {
+    if (pc != frames->back().pc) {
+        frames->popBack();
         frame.set(nullptr);
-        p--;
+        return;
     }
 
-    // All entries after the one we just matched are stale younger frames that
-    // have since been popped.
-    p++;
-    frames->shrinkBy(frames->end() - p);
+    frame.set(frames->back().savedFrame);
 }
 
 struct SavedFrame::Lookup {
