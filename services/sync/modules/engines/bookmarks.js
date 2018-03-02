@@ -321,6 +321,73 @@ BaseBookmarksEngine.prototype = {
   syncPriority: 4,
   allowSkippedRecord: false,
 
+  _migratedSyncMetadata: false,
+  async _migrateSyncMetadata({ migrateLastSync = true } = {}) {
+    if (this._migratedSyncMetadata) {
+      return;
+    }
+    let shouldWipeRemote = await PlacesSyncUtils.bookmarks.shouldWipeRemote();
+    if (!shouldWipeRemote) {
+      // Migrate the bookmarks sync ID and last sync time from prefs, to avoid
+      // triggering a full sync on upgrade. This can be removed in bug 1443021.
+      let existingSyncID = await super.getSyncID();
+      if (existingSyncID) {
+        this._log.debug("Migrating existing sync ID ${existingSyncID} from " +
+                        "prefs", { existingSyncID });
+        await PlacesSyncUtils.bookmarks.ensureCurrentSyncId(existingSyncID);
+      }
+      if (migrateLastSync) {
+        let existingLastSync = await super.getLastSync();
+        if (existingLastSync) {
+          this._log.debug("Migrating existing last sync time " +
+                          "${existingLastSync} from prefs",
+                          { existingLastSync });
+          await PlacesSyncUtils.bookmarks.setLastSync(existingLastSync);
+        }
+      }
+    }
+    this._migratedSyncMetadata = true;
+  },
+
+  async ensureCurrentSyncID(newSyncID) {
+    let shouldWipeRemote = await PlacesSyncUtils.bookmarks.shouldWipeRemote();
+    if (!shouldWipeRemote) {
+      this._log.debug("Checking if server sync ID ${newSyncID} matches " +
+                      "existing", { newSyncID });
+      await PlacesSyncUtils.bookmarks.ensureCurrentSyncId(newSyncID);
+      // Update the sync ID in prefs to allow downgrading to older Firefox
+      // releases that don't store Sync metadata in Places. This can be removed
+      // in bug 1443021.
+      super.setSyncIDPref(newSyncID);
+      return newSyncID;
+    }
+    // We didn't take the new sync ID because we need to wipe the server
+    // and other clients after a restore. Send the command, wipe the
+    // server, and reset our sync ID to reupload everything.
+    this._log.debug("Ignoring server sync ID ${newSyncID} after restore; " +
+                    "wiping server and resetting sync ID", { newSyncID });
+    await this.service.clientsEngine.sendCommand("wipeEngine", [this.name],
+                                                 null, { reason: "bookmark-restore" });
+    let assignedSyncID = await this.resetSyncID();
+    return assignedSyncID;
+  },
+
+  async resetSyncID() {
+    await this._deleteServerCollection();
+    return this.resetLocalSyncID();
+  },
+
+  async resetLocalSyncID() {
+    let newSyncID = await PlacesSyncUtils.bookmarks.resetSyncId();
+    this._log.debug("Assigned new sync ID ${newSyncID}", { newSyncID });
+    super.setSyncIDPref(newSyncID); // Remove in bug 1443021.
+    return newSyncID;
+  },
+
+  setSyncIDPref(syncID) {
+    throw new Error("Use ensureCurrentSyncID or resetLocalSyncID");
+  },
+
   async _syncFinish() {
     await SyncEngine.prototype._syncFinish.call(this);
     await PlacesSyncUtils.bookmarks.ensureMobileQuery();
@@ -384,6 +451,20 @@ function BookmarksEngine(service) {
 BookmarksEngine.prototype = {
   __proto__: BaseBookmarksEngine.prototype,
   _storeObj: BookmarksStore,
+
+  async getSyncID() {
+    return PlacesSyncUtils.bookmarks.getSyncId();
+  },
+
+  async getLastSync() {
+    let lastSync = await PlacesSyncUtils.bookmarks.getLastSync();
+    return lastSync;
+  },
+
+  async setLastSync(lastSync) {
+    await PlacesSyncUtils.bookmarks.setLastSync(lastSync);
+    await super.setLastSync(lastSync); // Remove in bug 1443021.
+  },
 
   emptyChangeset() {
     return new BookmarksChangeset();
@@ -517,6 +598,7 @@ BookmarksEngine.prototype = {
   },
 
   async _syncStartup() {
+    await this._migrateSyncMetadata();
     await SyncEngine.prototype._syncStartup.call(this);
 
     try {
@@ -696,6 +778,24 @@ BufferedBookmarksEngine.prototype = {
   // aborted early.
   _defaultSort: "oldest",
 
+  async _syncStartup() {
+    await this._migrateSyncMetadata({
+      migrateLastSync: false,
+    });
+    await super._syncStartup();
+  },
+
+  async getSyncID() {
+    return PlacesSyncUtils.bookmarks.getSyncId();
+  },
+
+  async resetLocalSyncID() {
+    let buf = await this._store.ensureOpenMirror();
+    await buf.reset();
+    let newSyncID = await super.resetLocalSyncID();
+    return newSyncID;
+  },
+
   async getLastSync() {
     let mirror = await this._store.ensureOpenMirror();
     return mirror.getCollectionHighWaterMark();
@@ -704,17 +804,10 @@ BufferedBookmarksEngine.prototype = {
   async setLastSync(lastSync) {
     let mirror = await this._store.ensureOpenMirror();
     await mirror.setCollectionLastModified(lastSync);
-    // Update the pref so that reverting to the original bookmarks engine
-    // doesn't download records we've already applied.
-    await super.setLastSync(lastSync);
-  },
-
-  get lastSync() {
-    throw new TypeError("Use getLastSync");
-  },
-
-  set lastSync(value) {
-    throw new TypeError("Use setLastSync");
+    // Update the last sync time in Places so that reverting to the original
+    // bookmarks engine doesn't download records we've already applied.
+    await PlacesSyncUtils.bookmarks.setLastSync(lastSync);
+    await super.setLastSync(lastSync); // Remove in bug 1443021.
   },
 
   emptyChangeset() {
@@ -1175,16 +1268,16 @@ BookmarksTracker.prototype = {
 
   onStart() {
     PlacesUtils.bookmarks.addObserver(this, true);
-    Svc.Obs.add("bookmarks-restore-begin", this.asyncObserver);
-    Svc.Obs.add("bookmarks-restore-success", this.asyncObserver);
-    Svc.Obs.add("bookmarks-restore-failed", this.asyncObserver);
+    Svc.Obs.add("bookmarks-restore-begin", this);
+    Svc.Obs.add("bookmarks-restore-success", this);
+    Svc.Obs.add("bookmarks-restore-failed", this);
   },
 
   onStop() {
     PlacesUtils.bookmarks.removeObserver(this);
-    Svc.Obs.remove("bookmarks-restore-begin", this.asyncObserver);
-    Svc.Obs.remove("bookmarks-restore-success", this.asyncObserver);
-    Svc.Obs.remove("bookmarks-restore-failed", this.asyncObserver);
+    Svc.Obs.remove("bookmarks-restore-begin", this);
+    Svc.Obs.remove("bookmarks-restore-success", this);
+    Svc.Obs.remove("bookmarks-restore-failed", this);
   },
 
   // Ensure we aren't accidentally using the base persistence.
@@ -1208,7 +1301,7 @@ BookmarksTracker.prototype = {
     throw new Error("Don't set initial changed bookmark IDs");
   },
 
-  async observe(subject, topic, data) {
+  observe(subject, topic, data) {
     switch (topic) {
       case "bookmarks-restore-begin":
         this._log.debug("Ignoring changes from importing bookmarks.");
@@ -1218,10 +1311,10 @@ BookmarksTracker.prototype = {
 
         if (data == "json") {
           this._log.debug("Restore succeeded: wiping server and other clients.");
-          await this.engine.service.resetClient([this.name]);
-          await this.engine.service.wipeServer([this.name]);
-          await this.engine.service.clientsEngine.sendCommand("wipeEngine", [this.name],
-                                                              null, { reason: "bookmark-restore" });
+          // Trigger an immediate sync. `ensureCurrentSyncID` will notice we
+          // restored, wipe the server and other clients, reset the sync ID, and
+          // upload the restored tree.
+          this.score += SCORE_INCREMENT_XLARGE;
         } else {
           // "html", "html-initial", or "json-append"
           this._log.debug("Import succeeded.");
