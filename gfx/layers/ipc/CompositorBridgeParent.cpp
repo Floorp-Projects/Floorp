@@ -1858,7 +1858,7 @@ CompositorBridgeParent::SetControllerForLayerTree(uint64_t aLayersId,
                                                  aController));
 }
 
-/*static*/ already_AddRefed<APZCTreeManager>
+/*static*/ already_AddRefed<IAPZCTreeManager>
 CompositorBridgeParent::GetAPZCTreeManager(uint64_t aLayersId)
 {
   EnsureLayerTreeMapReady();
@@ -1869,7 +1869,7 @@ CompositorBridgeParent::GetAPZCTreeManager(uint64_t aLayersId)
   }
   LayerTreeState* lts = &cit->second;
 
-  RefPtr<APZCTreeManager> apzctm = lts->mParent
+  RefPtr<IAPZCTreeManager> apzctm = lts->mParent
                                    ? lts->mParent->mApzcTreeManager.get()
                                    : nullptr;
   return apzctm.forget();
