@@ -153,9 +153,7 @@ struct MediumFeaturesChangedResult {
   bool mUsesViewportUnits;
 };
 
-bool Gecko_IsSignificantChild(RawGeckoNodeBorrowed node,
-                              bool text_is_significant,
-                              bool whitespace_is_significant);
+bool Gecko_IsSignificantChild(RawGeckoNodeBorrowed node, bool whitespace_is_significant);
 RawGeckoNodeBorrowedOrNull Gecko_GetLastChild(RawGeckoNodeBorrowed node);
 RawGeckoNodeBorrowedOrNull Gecko_GetFlattenedTreeParentNode(RawGeckoNodeBorrowed node);
 RawGeckoElementBorrowedOrNull Gecko_GetBeforeOrAfterPseudo(RawGeckoElementBorrowed element, bool is_before);

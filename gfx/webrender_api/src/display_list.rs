@@ -29,8 +29,8 @@ use {TextDisplayItem, TransformStyle, YuvColorSpace, YuvData, YuvImageDisplayIte
 // This needs to be set to (renderer::MAX_VERTEX_TEXTURE_WIDTH - VECS_PER_PRIM_HEADER - VECS_PER_TEXT_RUN) * 2
 pub const MAX_TEXT_RUN_LENGTH: usize = 2038;
 
-// We start at 2 , because the root reference is always 0 and the root scroll node is always 1.
-const FIRST_CLIP_ID: u64 = 2;
+// We start at 2, because the root reference is always 0 and the root scroll node is always 1.
+const FIRST_CLIP_ID: usize = 2;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -78,6 +78,8 @@ pub struct BuiltDisplayListDescriptor {
     builder_finish_time: u64,
     /// The third IPC time stamp: just before sending
     send_start_time: u64,
+    /// The amount of clips ids assigned while building this display list.
+    total_clip_ids: usize,
 }
 
 pub struct BuiltDisplayListIter<'a> {
@@ -141,6 +143,10 @@ impl BuiltDisplayList {
             self.descriptor.builder_finish_time,
             self.descriptor.send_start_time,
         )
+    }
+
+    pub fn total_clip_ids(&self) -> usize {
+        self.descriptor.total_clip_ids
     }
 
     pub fn iter(&self) -> BuiltDisplayListIter {
@@ -499,10 +505,12 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
 
         let mut data = Vec::new();
         let mut temp = Vec::new();
+        let mut total_clip_ids = FIRST_CLIP_ID;
         for complete in list {
             let item = DisplayItem {
                 item: match complete.item {
                     Clip(specific_item, complex_clips) => {
+                        total_clip_ids += 1;
                         DisplayListBuilder::push_iter_impl(&mut temp, complex_clips);
                         SpecificDisplayItem::Clip(specific_item)
                     },
@@ -511,10 +519,14 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                         SpecificDisplayItem::ClipChain(specific_item)
                     }
                     ScrollFrame(specific_item, complex_clips) => {
+                        total_clip_ids += 2;
                         DisplayListBuilder::push_iter_impl(&mut temp, complex_clips);
                         SpecificDisplayItem::ScrollFrame(specific_item)
                     },
-                    StickyFrame(specific_item) => SpecificDisplayItem::StickyFrame(specific_item),
+                    StickyFrame(specific_item) => {
+                        total_clip_ids += 1;
+                        SpecificDisplayItem::StickyFrame(specific_item)
+                    }
                     Rectangle(specific_item) => SpecificDisplayItem::Rectangle(specific_item),
                     ClearRectangle => SpecificDisplayItem::ClearRectangle,
                     Line(specific_item) => SpecificDisplayItem::Line(specific_item),
@@ -529,8 +541,14 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                     Gradient(specific_item) => SpecificDisplayItem::Gradient(specific_item),
                     RadialGradient(specific_item) =>
                         SpecificDisplayItem::RadialGradient(specific_item),
-                    Iframe(specific_item) => SpecificDisplayItem::Iframe(specific_item),
+                    Iframe(specific_item) => {
+                        total_clip_ids += 1;
+                        SpecificDisplayItem::Iframe(specific_item)
+                    }
                     PushStackingContext(specific_item, filters) => {
+                        if specific_item.stacking_context.reference_frame_id.is_some() {
+                            total_clip_ids += 1;
+                        }
                         DisplayListBuilder::push_iter_impl(&mut temp, filters);
                         SpecificDisplayItem::PushStackingContext(specific_item)
                     },
@@ -556,6 +574,7 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                 builder_start_time: 0,
                 builder_finish_time: 1,
                 send_start_time: 0,
+                total_clip_ids,
             },
         })
     }
@@ -780,7 +799,7 @@ impl<'a, 'b> Read for UnsafeReader<'a, 'b> {
 pub struct SaveState {
     dl_len: usize,
     clip_stack_len: usize,
-    next_clip_id: u64,
+    next_clip_id: usize,
     next_clip_chain_id: u64,
 }
 
@@ -789,7 +808,7 @@ pub struct DisplayListBuilder {
     pub data: Vec<u8>,
     pub pipeline_id: PipelineId,
     clip_stack: Vec<ClipAndScrollInfo>,
-    next_clip_id: u64,
+    next_clip_id: usize,
     next_clip_chain_id: u64,
     builder_start_time: u64,
 
@@ -1541,6 +1560,7 @@ impl DisplayListBuilder {
                     builder_start_time: self.builder_start_time,
                     builder_finish_time: end_time,
                     send_start_time: 0,
+                    total_clip_ids: self.next_clip_id,
                 },
                 data: self.data,
             },

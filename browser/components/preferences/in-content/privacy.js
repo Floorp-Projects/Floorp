@@ -459,6 +459,11 @@ var gPrivacyPane = {
       bundlePrefs.getString("removeSelectedCookies.label"),
     ]);
 
+    if (!PrivateBrowsingUtils.enabled) {
+      document.getElementById("privateBrowsingAutoStart").hidden = true;
+      document.querySelector("menuitem[value='dontremember']").hidden = true;
+    }
+
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "privacy-pane-loaded");
   },
