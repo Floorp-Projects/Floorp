@@ -452,13 +452,15 @@ CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot, MDefinition* mir,
         JSValueType valueType =
             (type == MIRType::ObjectOrNull) ? JSVAL_TYPE_OBJECT : ValueTypeFromMIRType(type);
 
-        MOZ_ASSERT(payload->isMemory() || payload->isRegister());
+        MOZ_DIAGNOSTIC_ASSERT(payload->isMemory() || payload->isRegister());
         if (payload->isMemory())
             alloc = RValueAllocation::Typed(valueType, ToStackIndex(payload));
         else if (payload->isGeneralReg())
             alloc = RValueAllocation::Typed(valueType, ToRegister(payload));
         else if (payload->isFloatReg())
             alloc = RValueAllocation::Double(ToFloatRegister(payload));
+        else
+            MOZ_CRASH("Unexpected payload type.");
         break;
       }
       case MIRType::Float32:
@@ -541,6 +543,7 @@ CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot, MDefinition* mir,
         break;
       }
     }
+    MOZ_DIAGNOSTIC_ASSERT(alloc.valid());
 
     // This set an extra bit as part of the RValueAllocation, such that we know
     // that recover instruction have to be executed without wrapping the
