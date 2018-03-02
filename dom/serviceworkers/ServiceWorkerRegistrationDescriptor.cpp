@@ -28,6 +28,7 @@ ServiceWorkerRegistrationDescriptor::NewestInternal() const
 }
 
 ServiceWorkerRegistrationDescriptor::ServiceWorkerRegistrationDescriptor(
+                                    uint64_t aId,
                                     nsIPrincipal* aPrincipal,
                                     const nsACString& aScope,
                                     ServiceWorkerUpdateViaCache aUpdateViaCache)
@@ -36,6 +37,7 @@ ServiceWorkerRegistrationDescriptor::ServiceWorkerRegistrationDescriptor(
   MOZ_ALWAYS_SUCCEEDS(
     PrincipalToPrincipalInfo(aPrincipal, &mData->principalInfo()));
 
+  mData->id() = aId;
   mData->scope() = aScope;
   mData->updateViaCache() = aUpdateViaCache;
   mData->installing() = void_t();
@@ -44,10 +46,12 @@ ServiceWorkerRegistrationDescriptor::ServiceWorkerRegistrationDescriptor(
 }
 
 ServiceWorkerRegistrationDescriptor::ServiceWorkerRegistrationDescriptor(
+                                    uint64_t aId,
                                     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                                     const nsACString& aScope,
                                     ServiceWorkerUpdateViaCache aUpdateViaCache)
-  : mData(MakeUnique<IPCServiceWorkerRegistrationDescriptor>(aPrincipalInfo,
+  : mData(MakeUnique<IPCServiceWorkerRegistrationDescriptor>(aId,
+                                                             aPrincipalInfo,
                                                              nsCString(aScope),
                                                              aUpdateViaCache,
                                                              void_t(),
@@ -106,6 +110,12 @@ bool
 ServiceWorkerRegistrationDescriptor::operator==(const ServiceWorkerRegistrationDescriptor& aRight) const
 {
   return *mData == *aRight.mData;
+}
+
+uint64_t
+ServiceWorkerRegistrationDescriptor::Id() const
+{
+  return mData->id();
 }
 
 ServiceWorkerUpdateViaCache

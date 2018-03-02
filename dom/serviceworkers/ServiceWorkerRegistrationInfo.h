@@ -229,6 +229,9 @@ private:
   // |mWaitingWorker| or |mActiveWorker|.
   void
   NotifyChromeRegistrationListeners();
+
+  static uint64_t
+  GetNextId();
 };
 
 } // namespace dom
