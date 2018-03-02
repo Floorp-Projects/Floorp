@@ -32,9 +32,10 @@
 #include "nsINode.h"
 #include "nsPIDOMWindow.h" //needed for notify selection changed to update the menus ect.
 #include "nsQueryObject.h"
+#include "nsILayoutHistoryState.h"
 
 #include "nsFocusManager.h"
-#include "nsPresState.h"
+#include "mozilla/PresState.h"
 #include "nsAttrValueInlines.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/TextEditRules.h"
@@ -1233,9 +1234,9 @@ nsTextControlFrame::SetInitialChildList(ChildListID     aListID,
       // div, do it here!
       nsIStatefulFrame* statefulFrame = do_QueryFrame(first);
       NS_ASSERTION(statefulFrame, "unexpected type of frame for the anonymous div");
-      nsPresState fakePresState;
-      fakePresState.SetScrollState(*contentScrollPos);
-      statefulFrame->RestoreState(&fakePresState);
+      UniquePtr<PresState> fakePresState = NewPresState();
+      fakePresState->scrollState() = *contentScrollPos;
+      statefulFrame->RestoreState(fakePresState.get());
       RemoveProperty(ContentScrollPos());
       delete contentScrollPos;
     }
@@ -1348,13 +1349,9 @@ nsTextControlFrame::GetOwnedFrameSelection()
   return txtCtrl->GetConstFrameSelection();
 }
 
-NS_IMETHODIMP
-nsTextControlFrame::SaveState(nsPresState** aState)
+UniquePtr<PresState>
+nsTextControlFrame::SaveState()
 {
-  NS_ENSURE_ARG_POINTER(aState);
-
-  *aState = nullptr;
-
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
   NS_ASSERTION(txtCtrl, "Content not a text control element");
 
@@ -1363,15 +1360,15 @@ nsTextControlFrame::SaveState(nsPresState** aState)
     // Query the nsIStatefulFrame from the HTMLScrollFrame
     nsIStatefulFrame* scrollStateFrame = do_QueryFrame(rootNode->GetPrimaryFrame());
     if (scrollStateFrame) {
-      return scrollStateFrame->SaveState(aState);
+      return scrollStateFrame->SaveState();
     }
   }
 
-  return NS_OK;
+  return nullptr;
 }
 
 NS_IMETHODIMP
-nsTextControlFrame::RestoreState(nsPresState* aState)
+nsTextControlFrame::RestoreState(PresState* aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
@@ -1390,7 +1387,7 @@ nsTextControlFrame::RestoreState(nsPresState* aState)
   // Most likely, we don't have our anonymous content constructed yet, which
   // would cause us to end up here.  In this case, we'll just store the scroll
   // pos ourselves, and forward it to the scroll frame later when it's created.
-  SetProperty(ContentScrollPos(), new nsPoint(aState->GetScrollPosition()));
+  SetProperty(ContentScrollPos(), new nsPoint(aState->scrollState()));
   return NS_OK;
 }
 

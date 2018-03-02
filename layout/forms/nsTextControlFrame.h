@@ -158,8 +158,8 @@ public:
 
 //==== NSISTATEFULFRAME
 
-  NS_IMETHOD SaveState(nsPresState** aState) override;
-  NS_IMETHOD RestoreState(nsPresState* aState) override;
+  UniquePtr<PresState> SaveState() override;
+  NS_IMETHOD RestoreState(PresState* aState) override;
 
 //=== END NSISTATEFULFRAME
 

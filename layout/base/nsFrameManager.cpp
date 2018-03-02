@@ -15,7 +15,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsGkAtoms.h"
 #include "nsILayoutHistoryState.h"
-#include "nsPresState.h"
+#include "mozilla/PresState.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/UndisplayedNode.h"
@@ -152,8 +152,7 @@ nsFrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
   }
 
   // Capture the state, exit early if we get null (nothing to save)
-  nsAutoPtr<nsPresState> frameState;
-  nsresult rv = statefulFrame->SaveState(getter_Transfers(frameState));
+  UniquePtr<PresState> frameState = statefulFrame->SaveState();
   if (!frameState) {
     return;
   }
@@ -163,13 +162,13 @@ nsFrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
   nsAutoCString stateKey;
   nsIContent* content = aFrame->GetContent();
   nsIDocument* doc = content ? content->GetUncomposedDoc() : nullptr;
-  rv = statefulFrame->GenerateStateKey(content, doc, stateKey);
+  nsresult rv = statefulFrame->GenerateStateKey(content, doc, stateKey);
   if(NS_FAILED(rv) || stateKey.IsEmpty()) {
     return;
   }
 
   // Store the state. aState owns frameState now.
-  aState->AddState(stateKey, frameState.forget());
+  aState->AddState(stateKey, Move(frameState));
 }
 
 void
@@ -232,7 +231,7 @@ nsFrameManager::RestoreFrameStateFor(nsIFrame* aFrame,
   }
 
   // Get the state from the hash
-  nsPresState* frameState = aState->GetState(stateKey);
+  PresState* frameState = aState->GetState(stateKey);
   if (!frameState) {
     return;
   }

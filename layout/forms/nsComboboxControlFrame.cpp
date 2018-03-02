@@ -21,7 +21,7 @@
 #include "nsIListControlFrame.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPresShell.h"
-#include "nsPresState.h"
+#include "mozilla/PresState.h"
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsIContentInlines.h"
@@ -50,6 +50,7 @@
 #include "mozilla/Unused.h"
 #include "gfx2DGlue.h"
 #include "mozilla/widget/nsAutoRollup.h"
+#include "nsILayoutHistoryState.h"
 
 #ifdef XP_WIN
 #define COMBOBOX_ROLLUP_CONSUME_EVENT 0
@@ -68,7 +69,6 @@ nsComboboxControlFrame::RedisplayTextEvent::Run()
   return NS_OK;
 }
 
-class nsPresState;
 
 #define FIX_FOR_BUG_53259
 
@@ -1694,22 +1694,21 @@ nsComboboxControlFrame::OnContentReset()
 //--------------------------------------------------------
 // nsIStatefulFrame
 //--------------------------------------------------------
-NS_IMETHODIMP
-nsComboboxControlFrame::SaveState(nsPresState** aState)
+UniquePtr<PresState>
+nsComboboxControlFrame::SaveState()
 {
-  MOZ_ASSERT(!(*aState));
-  (*aState) = new nsPresState();
-  (*aState)->SetDroppedDown(mDroppedDown);
-  return NS_OK;
+  UniquePtr<PresState> state = NewPresState();
+  state->droppedDown() = mDroppedDown;
+  return state;
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::RestoreState(nsPresState* aState)
+nsComboboxControlFrame::RestoreState(PresState* aState)
 {
   if (!aState) {
     return NS_ERROR_FAILURE;
   }
-  ShowList(aState->GetDroppedDown()); // might destroy us
+  ShowList(aState->droppedDown()); // might destroy us
   return NS_OK;
 }
 
