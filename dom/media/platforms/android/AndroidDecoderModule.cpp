@@ -104,6 +104,13 @@ AndroidDecoderModule::SupportsMimeType(
     return false;
   }
 
+  // Prefer the gecko decoder for Theora.
+  // Not all android devices support Theora even when they say they do.
+  if (TheoraDecoder::IsTheora(aMimeType)) {
+    LOG("Rejecting video of type %s", aMimeType.Data());
+    return false;
+  }
+
   return java::HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType(
     nsCString(TranslateMimeType(aMimeType)));
 }
