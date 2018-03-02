@@ -1,0 +1,48 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+using mozilla::void_t from "ipc/IPCMessageUtils.h";
+using nsPoint from "mozilla/GfxMessageUtils.h";
+using mozilla::dom::IPCBlobUtils::BlobImplPtr from "mozilla/dom/IPCBlobUtils.h";
+
+namespace mozilla {
+
+struct SelectContentData {
+  uint32_t[] indices;
+  nsString[] values;
+};
+
+struct CheckedContentData {
+  bool checked;
+};
+
+union FileContentData {
+  BlobImplPtr;
+  nsString;
+};
+
+union PresContentData {
+  void_t;
+  nsString;
+  SelectContentData;
+  CheckedContentData;
+  // We can need to serialize blobs in order to transmit this type, so we need
+  // to handle that in a custom handler.
+  FileContentData[];
+};
+
+struct PresState {
+  PresContentData contentData;
+  nsPoint scrollState;
+  bool allowScrollOriginDowngrade;
+  float resolution;
+  bool scaleToResolution;
+  bool disabledSet;
+  bool disabled;
+  bool droppedDown;
+};
+
+} // namespace mozilla
