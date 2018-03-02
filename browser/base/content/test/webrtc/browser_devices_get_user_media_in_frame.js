@@ -128,6 +128,67 @@ var gTests = [
 },
 
 {
+  desc: "getUserMedia audio+video: with two frames sharing at the same time, sharing UI shows all shared devices",
+  run: async function checkFrameOverridingSharingUI() {
+    // This tests an edge case discovered in bug 1440356 that works like this
+    // - Share audio and video in iframe 1.
+    // - Share only video in iframe 2.
+    // The WebRTC UI should still show both video and audio indicators.
+
+    let promise = promisePopupNotificationShown("webRTC-shareDevices");
+    await promiseRequestDevice(true, true, "frame1");
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
+    checkDeviceSelectors(true, true);
+
+    let indicator = promiseIndicatorWindow();
+    await promiseMessage("ok", () => {
+      PopupNotifications.panel.firstChild.button.click();
+    });
+    await expectObserverCalled("getUserMedia:response:allow");
+    await expectObserverCalled("recording-device-events");
+    Assert.deepEqual((await getMediaCaptureState()), {audio: true, video: true},
+                     "expected camera and microphone to be shared");
+
+    await indicator;
+    await checkSharingUI({video: true, audio: true});
+    await expectNoObserverCalled();
+
+    // Check that requesting a new device from a different frame
+    // doesn't override sharing UI.
+    promise = promisePopupNotificationShown("webRTC-shareDevices");
+    await promiseRequestDevice(false, true, "frame2");
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
+    checkDeviceSelectors(false, true);
+
+    await promiseMessage("ok", () => {
+      PopupNotifications.panel.firstChild.button.click();
+    });
+    await expectObserverCalled("getUserMedia:response:allow");
+    await expectObserverCalled("recording-device-events");
+    Assert.deepEqual((await getMediaCaptureState()), {audio: true, video: true},
+                     "expected camera and microphone to be shared");
+
+    await checkSharingUI({video: true, audio: true});
+
+    // Check that ending the stream with the other frame
+    // doesn't override sharing UI.
+    promise = promiseObserverCalled("recording-device-events");
+    await promiseReloadFrame("frame2");
+    await promise;
+
+    await expectObserverCalled("recording-window-ended");
+    await checkSharingUI({video: true, audio: true});
+    await expectNoObserverCalled();
+
+    await closeStream(false, "frame1");
+    await expectNoObserverCalled();
+    await checkNotSharing();
+  }
+},
+
+{
   desc: "getUserMedia audio+video: reloading a frame updates the sharing UI",
   run: async function checkUpdateWhenReloading() {
     // We'll share only the cam in the first frame, then share both in the

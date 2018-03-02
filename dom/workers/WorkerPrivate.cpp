@@ -2617,6 +2617,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mParentFrozen(false)
   , mIsSecureContext(false)
   , mDebuggerRegistered(false)
+  , mIsInAutomation(false)
 {
   MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
   mLoadInfo.StealFrom(aLoadInfo);
@@ -2631,6 +2632,8 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
     // dedicated workers...
     mIsSecureContext = aParent->IsSecureContext();
     MOZ_ASSERT_IF(mIsChromeWorker, mIsSecureContext);
+
+    mIsInAutomation = aParent->IsInAutomation();
 
     MOZ_ASSERT(IsDedicatedWorker());
 
@@ -2664,6 +2667,8 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
       mJSSettings.content.compartmentOptions
                  .creationOptions().setSecureContext(true);
     }
+
+    mIsInAutomation = xpc::IsInAutomation();
 
     // Our parent can get suspended after it initiates the async creation
     // of a new worker thread.  In this case suspend the new worker as well.

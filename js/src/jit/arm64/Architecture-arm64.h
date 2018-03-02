@@ -491,6 +491,8 @@ hasMultiAlias()
     return false;
 }
 
+uint32_t GetARM64Flags();
+
 } // namespace jit
 } // namespace js
 
