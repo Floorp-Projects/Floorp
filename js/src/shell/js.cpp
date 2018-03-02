@@ -719,7 +719,7 @@ GetLine(FILE* file, const char * prompt)
         if (*t == '\n') {
             /* Line was read. We remove '\n' and exit. */
             *t = '\0';
-            return buffer;
+            break;
         }
 
         if (len + 1 == size) {
@@ -733,7 +733,7 @@ GetLine(FILE* file, const char * prompt)
         }
         current = buffer + len;
     } while (true);
-    return nullptr;
+    return buffer;
 }
 
 static bool
@@ -7222,7 +7222,9 @@ WasmLoop(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
+#ifdef __AFL_HAVE_MANUAL_CONTROL  // to silence unreachable code warning
     return true;
+#endif
 }
 
 static const JSFunctionSpecWithHelp shell_functions[] = {
