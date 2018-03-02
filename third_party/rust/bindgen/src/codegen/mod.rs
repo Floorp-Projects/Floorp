@@ -38,6 +38,7 @@ use ir::ty::{Type, TypeKind};
 use ir::var::Var;
 
 use quote;
+use proc_macro2;
 
 use std::borrow::Cow;
 use std::cell::Cell;
@@ -75,7 +76,7 @@ fn root_import(ctx: &BindgenContext, module: &Item) -> quote::Tokens {
 
 
     let mut tokens = quote! {};
-    tokens.append_separated(path, "::");
+    tokens.append_separated(path, proc_macro2::Term::intern("::"));
 
     quote! {
         #[allow(unused_imports)]
@@ -309,7 +310,7 @@ impl AppendImplicitTemplateParams for quote::Tokens {
                     .expect("template params cannot fail to be a rust type")
             });
 
-            self.append(quote! {
+            self.append_all(quote! {
                 < #( #params ),* >
             });
         }
@@ -560,19 +561,12 @@ impl CodeGenerator for Var {
                 attrs.push(attributes::link_name(self.name()));
             }
 
-            let mut tokens = quote! {
-                extern "C"
-            };
-            tokens.append("{\n");
-            if !attrs.is_empty() {
-                tokens.append_separated(attrs, "\n");
-                tokens.append("\n");
-            }
-            tokens.append("pub static mut ");
-            tokens.append(quote! { #canonical_ident });
-            tokens.append(" : ");
-            tokens.append(quote! { #ty });
-            tokens.append(";\n}");
+            let mut tokens = quote!(
+                extern "C" {
+                    #(#attrs)*
+                    pub static mut #canonical_ident: #ty;
+                }
+            );
 
             result.push(tokens);
         }
@@ -692,7 +686,7 @@ impl CodeGenerator for Type {
 
                 // We prefer using `pub use` over `pub type` because of:
                 // https://github.com/rust-lang/rust/issues/26264
-                if inner_rust_type.as_str()
+                if inner_rust_type.to_string()
                     .chars()
                     .all(|c| match c {
                         // These are the only characters allowed in simple
@@ -703,19 +697,19 @@ impl CodeGenerator for Type {
                     outer_params.is_none() &&
                     inner_item.expect_type().canonical_type(ctx).is_enum()
                 {
-                    tokens.append(quote! {
+                    tokens.append_all(quote! {
                         pub use
                     });
                     let path = top_level_path(ctx, item);
-                    tokens.append_separated(path, "::");
-                    tokens.append(quote! {
+                    tokens.append_separated(path, proc_macro2::Term::intern("::"));
+                    tokens.append_all(quote! {
                         :: #inner_rust_type  as #rust_name ;
                     });
                     result.push(tokens);
                     return;
                 }
 
-                tokens.append(quote! {
+                tokens.append_all(quote! {
                     pub type #rust_name
                 });
 
@@ -738,12 +732,12 @@ impl CodeGenerator for Type {
                                 .expect("type parameters can always convert to rust ty OK")
                         });
 
-                    tokens.append(quote! {
+                    tokens.append_all(quote! {
                         < #( #params ),* >
                     });
                 }
 
-                tokens.append(quote! {
+                tokens.append_all(quote! {
                     = #inner_rust_type ;
                 });
 
@@ -1060,11 +1054,11 @@ impl<'a> FieldCodegen<'a> for FieldData {
             self.annotations().accessor_kind().unwrap_or(accessor_kind);
 
         if is_private {
-            field.append(quote! {
+            field.append_all(quote! {
                 #field_ident : #ty ,
             });
         } else {
-            field.append(quote! {
+            field.append_all(quote! {
                 pub #field_ident : #ty ,
             });
         }
@@ -1124,7 +1118,7 @@ impl<'a> FieldCodegen<'a> for FieldData {
 impl BitfieldUnit {
     /// Get the constructor name for this bitfield unit.
     fn ctor_name(&self) -> quote::Tokens {
-        let ctor_name = quote::Ident::new(format!("new_bitfield_{}", self.nth()));
+        let ctor_name = proc_macro2::Term::intern(&format!("new_bitfield_{}", self.nth()));
         quote! {
             #ctor_name
         }
@@ -1155,7 +1149,7 @@ impl Bitfield {
         let width = self.width() as u8;
         let prefix = ctx.trait_prefix();
 
-        ctor_impl.append(quote! {
+        ctor_impl.append_all(quote! {
             __bindgen_bitfield_unit.set(
                 #offset,
                 #width,
@@ -1323,7 +1317,7 @@ impl<'a> FieldCodegen<'a> for Bitfield {
         let prefix = ctx.trait_prefix();
         let getter_name = bitfield_getter_name(ctx, self);
         let setter_name = bitfield_setter_name(ctx, self);
-        let unit_field_ident = quote::Ident::new(unit_field_name);
+        let unit_field_ident = proc_macro2::Term::intern(unit_field_name);
 
         let bitfield_ty_item = ctx.resolve_item(self.ty());
         let bitfield_ty = bitfield_ty_item.expect_type();
@@ -1728,7 +1722,7 @@ impl CodeGenerator for CompInfo {
             }
         };
 
-        tokens.append(quote! {
+        tokens.append_all(quote! {
             #generics {
                 #( #fields )*
             }
@@ -1751,7 +1745,7 @@ impl CodeGenerator for CompInfo {
         if self.found_unknown_attr() {
             warn!(
                 "Type {} has an unkown attribute that may affect layout",
-                canonical_ident
+                canonical_ident.as_str()
             );
         }
 
@@ -1765,7 +1759,7 @@ impl CodeGenerator for CompInfo {
             if ctx.options().layout_tests {
                 if let Some(layout) = layout {
                     let fn_name =
-                        format!("bindgen_test_layout_{}", canonical_ident);
+                        format!("bindgen_test_layout_{}", canonical_ident.as_str());
                     let fn_name = ctx.rust_ident_raw(fn_name);
                     let prefix = ctx.trait_prefix();
                     let size_of_expr = quote! {
@@ -2144,6 +2138,8 @@ impl EnumVariation {
 /// A helper type to construct different enum variations.
 enum EnumBuilder<'a> {
     Rust {
+        attrs: Vec<quote::Tokens>,
+        ident: proc_macro2::Term,
         tokens: quote::Tokens,
         emitted_any_variants: bool,
     },
@@ -2167,7 +2163,7 @@ impl<'a> EnumBuilder<'a> {
         repr: quote::Tokens,
         enum_variation: EnumVariation
     ) -> Self {
-        let ident = quote::Ident::new(name);
+        let ident = proc_macro2::Term::intern(name);
 
         match enum_variation {
             EnumVariation::Bitfield => {
@@ -2181,12 +2177,10 @@ impl<'a> EnumBuilder<'a> {
             }
 
             EnumVariation::Rust => {
-                let mut tokens = quote! {
-                    #( #attrs )*
-                    pub enum #ident
-                };
-                tokens.append("{");
+                let tokens = quote!();
                 EnumBuilder::Rust {
+                    attrs,
+                    ident,
                     tokens,
                     emitted_any_variants: false,
                 }
@@ -2201,7 +2195,7 @@ impl<'a> EnumBuilder<'a> {
             }
 
             EnumVariation::ModuleConsts => {
-                let ident = quote::Ident::new(CONSTIFIED_ENUM_MODULE_REPR_NAME);
+                let ident = proc_macro2::Term::intern(CONSTIFIED_ENUM_MODULE_REPR_NAME);
                 let type_definition = quote! {
                     pub type #ident = #repr;
                 };
@@ -2230,9 +2224,11 @@ impl<'a> EnumBuilder<'a> {
         };
 
         match self {
-            EnumBuilder::Rust { tokens, emitted_any_variants: _ } => {
+            EnumBuilder::Rust { attrs, ident, tokens, emitted_any_variants: _ } => {
                 let name = ctx.rust_ident(variant_name);
                 EnumBuilder::Rust {
+                    attrs,
+                    ident,
                     tokens: quote! {
                         #tokens
                         #name = #expr,
@@ -2299,12 +2295,19 @@ impl<'a> EnumBuilder<'a> {
         result: &mut CodegenResult<'b>,
     ) -> quote::Tokens {
         match self {
-            EnumBuilder::Rust { mut tokens, emitted_any_variants } => {
-                if !emitted_any_variants {
-                    tokens.append(quote! { __bindgen_cannot_repr_c_on_empty_enum = 0 });
-                }
-                tokens.append("}");
-                tokens
+            EnumBuilder::Rust { attrs, ident, tokens, emitted_any_variants } => {
+                let variants = if !emitted_any_variants {
+                    quote!(__bindgen_cannot_repr_c_on_empty_enum = 0)
+                } else {
+                    tokens
+                };
+
+                quote! (
+                    #( #attrs )*
+                    pub enum #ident {
+                        #variants
+                    }
+                )
             }
             EnumBuilder::Bitfield {
                 canonical_name,
@@ -2460,18 +2463,18 @@ impl CodeGenerator for Enum {
             ctx: &BindgenContext,
             enum_: &Type,
             // Only to avoid recomputing every time.
-            enum_canonical_name: &quote::Ident,
+            enum_canonical_name: &proc_macro2::Term,
             // May be the same as "variant" if it's because the
             // enum is unnamed and we still haven't seen the
             // value.
             variant_name: &str,
-            referenced_name: &quote::Ident,
+            referenced_name: &proc_macro2::Term,
             enum_rust_ty: quote::Tokens,
             result: &mut CodegenResult<'a>,
         ) {
             let constant_name = if enum_.name().is_some() {
                 if ctx.options().prepend_enum_name {
-                    format!("{}_{}", enum_canonical_name, variant_name)
+                    format!("{}_{}", enum_canonical_name.as_str(), variant_name)
                 } else {
                     variant_name.into()
                 }
@@ -2499,7 +2502,7 @@ impl CodeGenerator for Enum {
         );
 
         // A map where we keep a value -> variant relation.
-        let mut seen_values = HashMap::<_, quote::Ident>::new();
+        let mut seen_values = HashMap::<_, proc_macro2::Term>::new();
         let enum_rust_ty = item.to_rust_ty_or_opaque(ctx, &());
         let is_toplevel = item.is_toplevel(ctx);
 
@@ -2598,11 +2601,11 @@ impl CodeGenerator for Enum {
                             let parent_name =
                                 parent_canonical_name.as_ref().unwrap();
 
-                            quote::Ident::new(
-                                format!(
+                            proc_macro2::Term::intern(
+                                &format!(
                                     "{}_{}",
                                     parent_name,
-                                    variant_name
+                                    variant_name.as_str()
                                 )
                             )
                         };
@@ -2611,14 +2614,14 @@ impl CodeGenerator for Enum {
                             ctx,
                             enum_ty,
                             &ident,
-                            mangled_name.as_ref(),
+                            mangled_name.as_str(),
                             &variant_name,
                             enum_rust_ty.clone(),
                             result,
                         );
                     }
 
-                    entry.insert(quote::Ident::new(variant_name));
+                    entry.insert(variant_name);
                 }
             }
         }
@@ -2946,10 +2949,9 @@ impl TryToRustTy for Type {
                 })
             }
             TypeKind::Enum(..) => {
-                let mut tokens = quote! {};
                 let path = item.namespace_aware_canonical_path(ctx);
-                tokens.append_separated(path.into_iter().map(quote::Ident::new), "::");
-                Ok(tokens)
+                let path = proc_macro2::Term::intern(&path.join("::"));
+                Ok(quote!(#path))
             }
             TypeKind::TemplateInstantiation(ref inst) => {
                 inst.try_to_rust_ty(ctx, item)
@@ -3071,7 +3073,7 @@ impl TryToRustTy for TemplateInstantiation {
 
         let mut ty = quote! {};
         let def_path = def.namespace_aware_canonical_path(ctx);
-        ty.append_separated(def_path.into_iter().map(|p| ctx.rust_ident(p)), "::");
+        ty.append_separated(def_path.into_iter().map(|p| ctx.rust_ident(p)), proc_macro2::Term::intern("::"));
 
         let def_params = match def.self_template_params(ctx) {
             Some(params) => params,
@@ -3245,16 +3247,10 @@ impl CodeGenerator for Function {
         };
 
         let ident = ctx.rust_ident(canonical_name);
-        let mut tokens = quote! { extern #abi };
-        tokens.append("{\n");
-        if !attributes.is_empty() {
-            tokens.append_separated(attributes, "\n");
-            tokens.append("\n");
-        }
-        tokens.append(quote! {
+        let tokens = quote!( extern #abi {
+            #(#attributes)*
             pub fn #ident ( #( #args ),* ) #ret;
         });
-        tokens.append("\n}");
         result.push(tokens);
     }
 }
@@ -3290,7 +3286,7 @@ fn objc_method_codegen(
         let class_name = class_name
             .expect("Generating a class method without class name?")
             .to_owned();
-        let expect_msg = format!("Couldn't find {}", class_name);
+        let expect_msg = proc_macro2::Literal::string(&format!("Couldn't find {}", class_name));
         quote! {
             msg_send!(objc::runtime::Class::get(#class_name).expect(#expect_msg), #methods_and_args)
         }
@@ -3416,11 +3412,12 @@ mod utils {
     use ir::item::{Item, ItemCanonicalPath};
     use ir::ty::TypeKind;
     use quote;
+    use proc_macro2;
     use std::mem;
 
     pub fn prepend_bitfield_unit_type(result: &mut Vec<quote::Tokens>) {
-        let mut bitfield_unit_type = quote! {};
-        bitfield_unit_type.append(include_str!("./bitfield_unit.rs"));
+        let bitfield_unit_type = proc_macro2::Term::intern(include_str!("./bitfield_unit.rs"));
+        let bitfield_unit_type = quote!(#bitfield_unit_type);
 
         let items = vec![bitfield_unit_type];
         let old_items = mem::replace(result, items);
@@ -3646,10 +3643,11 @@ mod utils {
         item: &Item,
         ctx: &BindgenContext,
     ) -> error::Result<quote::Tokens> {
+        use proc_macro2;
         let path = item.namespace_aware_canonical_path(ctx);
-
-        let mut tokens = quote! {};
-        tokens.append_separated(path.into_iter().map(quote::Ident::new), "::");
+        let path = proc_macro2::Term::intern(&path.join("::"));
+        let tokens = quote! {#path};
+        //tokens.append_separated(path, "::");
 
         Ok(tokens)
     }
