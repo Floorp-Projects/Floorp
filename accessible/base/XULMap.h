@@ -5,6 +5,7 @@
 XULMAP_TYPE(browser, OuterDocAccessible)
 XULMAP_TYPE(button, XULButtonAccessible)
 XULMAP_TYPE(checkbox, XULCheckboxAccessible)
+XULMAP_TYPE(description, XULLabelAccessible)
 XULMAP_TYPE(dropMarker, XULDropmarkerAccessible)
 XULMAP_TYPE(editor, OuterDocAccessible)
 XULMAP_TYPE(findbar, XULToolbarAccessible)
@@ -40,6 +41,17 @@ XULMAP_TYPE(treecols, XULTreeColumAccessible)
 XULMAP_TYPE(toolbar, XULToolbarAccessible)
 XULMAP_TYPE(toolbarbutton, XULToolbarButtonAccessible)
 XULMAP_TYPE(tooltip, XULTooltipAccessible)
+
+XULMAP(
+  label,
+  [](nsIContent* aContent, Accessible* aContext) -> Accessible* {
+    if (aContent->IsElement() &&
+        aContent->AsElement()->ClassList()->Contains(NS_LITERAL_STRING("text-link"))) {
+      return new XULLinkAccessible(aContent, aContext->Document());
+    }
+    return new XULLabelAccessible(aContent, aContext->Document());
+  }
+)
 
 XULMAP(
   image,
