@@ -168,6 +168,7 @@
     "browser/base/content/test/plugins/browser_blocklist_content.js": 3470,
     "browser/base/content/test/plugins/browser_clearplugindata.js": 2972,
     "browser/base/content/test/plugins/browser_iterate_hidden_plugins.js": 3683,
+    "browser/base/content/test/plugins/browser_pageInfo_plugins.js": 3850,
     "browser/base/content/test/plugins/browser_pluginCrashCommentAndURL.js": 4903,
     "browser/base/content/test/plugins/browser_pluginnotification.js": 10941,
     "browser/base/content/test/plugins/browser_plugins_added_dynamically.js": 2627,

@@ -8072,19 +8072,14 @@ var gIdentityHandler = {
     container.setAttribute("align", "center");
 
     let img = document.createElement("image");
-    img.classList.add("identity-popup-permission-icon");
-    if (aPermission.id == "plugin:flash") {
-      img.classList.add("plugin-icon");
-    } else {
-      img.classList.add(aPermission.id + "-icon");
-    }
+    let classes = "identity-popup-permission-icon " + aPermission.id + "-icon";
     if (aPermission.state == SitePermissions.BLOCK)
-      img.classList.add("blocked-permission-icon");
+      classes += " blocked-permission-icon";
 
     if (aPermission.sharingState == Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED ||
        (aPermission.id == "screen" && aPermission.sharingState &&
         !aPermission.sharingState.includes("Paused"))) {
-      img.classList.add("in-use");
+      classes += " in-use";
 
       // Synchronize control center and identity block blinking animations.
       window.promiseDocumentFlushed(() => {}).then(() => {
@@ -8102,6 +8097,7 @@ var gIdentityHandler = {
         }
       });
     }
+    img.setAttribute("class", classes);
 
     let nameLabel = document.createElement("label");
     nameLabel.setAttribute("flex", "1");
@@ -8163,7 +8159,7 @@ var gIdentityHandler = {
       state = SitePermissions.ALLOW;
       scope = SitePermissions.SCOPE_REQUEST;
     }
-    stateLabel.textContent = SitePermissions.getCurrentStateLabel(state, aPermission.id, scope);
+    stateLabel.textContent = SitePermissions.getCurrentStateLabel(state, scope);
 
     container.appendChild(img);
     container.appendChild(nameLabel);
