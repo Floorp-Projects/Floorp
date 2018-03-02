@@ -264,6 +264,19 @@ APZCTreeManager::InitializeGlobalState()
   AsyncPanZoomController::InitializeGlobalState();
 }
 
+void
+APZCTreeManager::NotifyLayerTreeAdopted(uint64_t aLayersId,
+                                        const RefPtr<APZCTreeManager>& aOldApzcTreeManager)
+{
+  APZThreadUtils::AssertOnCompositorThread();
+}
+
+void
+APZCTreeManager::NotifyLayerTreeRemoved(uint64_t aLayersId)
+{
+  APZThreadUtils::AssertOnCompositorThread();
+}
+
 AsyncPanZoomController*
 APZCTreeManager::NewAPZCInstance(uint64_t aLayersId,
                                  GeckoContentController* aController)
