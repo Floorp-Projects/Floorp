@@ -58,8 +58,8 @@ var loadListener = function(evt) {
                   .get("CurWorkD", Ci.nsIFile);
       dir.append("tests");
       dir.append("editor");
-      dir.append("composer");
-      dir.append("test");
+      dir.append("spellchecker");
+      dir.append("tests");
 
       var hunspell = Cc["@mozilla.org/spellchecker/engine;1"]
                        .getService(Ci.mozISpellCheckingEngine);
@@ -119,7 +119,7 @@ function continueTest(evt) {
     loadCount++;
     if (loadCount < tests.length) {
       // Load the iframe again.
-      content.src = 'http://mochi.test:8888/tests/editor/composer/test/bug1200533_subframe.html?firstload=false';
+      content.src = 'http://mochi.test:8888/tests/editor/spellchecker/tests/bug1200533_subframe.html?firstload=false';
     } else {
       // Remove the fake  dictionaries again, since it's otherwise picked up by later tests.
       script.sendSyncMessage("destroy");
@@ -132,7 +132,7 @@ function continueTest(evt) {
 
 content.addEventListener('load', loadListener);
 
-content.src = 'http://mochi.test:8888/tests/editor/composer/test/bug1200533_subframe.html?firstload=true';
+content.src = 'http://mochi.test:8888/tests/editor/spellchecker/tests/bug1200533_subframe.html?firstload=true';
 
 </script>
 </pre>
