@@ -514,7 +514,7 @@ protected:
 
   // Called by MediaResource when the principal of the resource has
   // changed. Called on main thread only.
-  void NotifyPrincipalChanged();
+  virtual void NotifyPrincipalChanged();
 
   MozPromiseRequestHolder<SeekPromise> mSeekRequest;
 

@@ -449,6 +449,9 @@ task_description_schema = Schema({
         Required('implementation'): 'native-engine',
         Required('os'): Any('macosx', 'linux'),
 
+        # the maximum time to run, in seconds
+        Required('max-run-time'): int,
+
         # A link for an executable to download
         Optional('context'): basestring,
 
@@ -1221,6 +1224,7 @@ def build_macosx_engine_payload(config, task, task_def):
         'command': worker['command'],
         'env': worker['env'],
         'artifacts': artifacts,
+        'maxRunTime': worker['max-run-time'],
     }
     if worker.get('reboot'):
         task_def['payload'] = worker['reboot']
