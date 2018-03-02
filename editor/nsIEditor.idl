@@ -330,7 +330,18 @@ interface nsIEditor  : nsISupports
   /** sets the document selection to the entire contents of the document */
   void selectAll();
 
-  /** sets the document selection to the beginning of the document */
+  /**
+   * Collapses selection at start of the document.  If it's an HTML editor,
+   * collapses selection at start of current editing host (<body> element if
+   * it's in designMode) instead.  If there is a non-editable node before any
+   * editable text nodes or inline elements which can have text nodes as their
+   * children, collapses selection at start of the editing host.  If there is
+   * an editable text node which is not collapsed, collapses selection at
+   * start of the text node.  If there is an editable inline element which
+   * cannot have text nodes as its child, collapses selection at before the
+   * element node.  Otherwise, collapses selection at start of the editing
+   * host.
+   */
   void beginningOfDocument();
 
   /** sets the document selection to the end of the document */
