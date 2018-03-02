@@ -677,16 +677,10 @@ AreNonLocalConnectionsDisabled()
 inline bool
 IsInAutomation()
 {
-    static bool sAutomationPrefIsSet;
-    static bool sPrefCacheAdded = false;
-    if (!sPrefCacheAdded) {
-        mozilla::Preferences::AddBoolVarCache(
-          &sAutomationPrefIsSet,
-          "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
-          false);
-        sPrefCacheAdded = true;
-    }
-    return sAutomationPrefIsSet && AreNonLocalConnectionsDisabled();
+    const char* prefName =
+      "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
+    return mozilla::Preferences::GetBool(prefName) &&
+        AreNonLocalConnectionsDisabled();
 }
 
 void
