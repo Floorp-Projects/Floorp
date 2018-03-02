@@ -8,8 +8,8 @@ use box_shadow::BoxShadowCacheKey;
 use clip::ClipWorkItem;
 use clip_scroll_tree::CoordinateSystemId;
 use device::TextureFilter;
-use gpu_cache::GpuCache;
-use gpu_types::PictureType;
+use gpu_cache::{GpuCache, GpuCacheHandle};
+use gpu_types::{ImageSource, PictureType};
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 use picture::ContentOrigin;
 use prim_store::{PrimitiveIndex, ImageCacheKey};
@@ -163,6 +163,7 @@ pub struct PictureTask {
     pub content_origin: ContentOrigin,
     pub color: PremultipliedColorF,
     pub pic_type: PictureType,
+    pub uv_rect_handle: GpuCacheHandle,
 }
 
 #[derive(Debug)]
@@ -173,6 +174,7 @@ pub struct BlurTask {
     pub target_kind: RenderTargetKind,
     pub color: PremultipliedColorF,
     pub scale_factor: f32,
+    pub uv_rect_handle: GpuCacheHandle,
 }
 
 impl BlurTask {
@@ -267,6 +269,7 @@ impl RenderTask {
                 content_origin,
                 color,
                 pic_type,
+                uv_rect_handle: GpuCacheHandle::new(),
             }),
             clear_mode,
             saved_index: None,
@@ -384,6 +387,7 @@ impl RenderTask {
                 target_kind,
                 color,
                 scale_factor,
+                uv_rect_handle: GpuCacheHandle::new(),
             }),
             clear_mode,
             saved_index: None,
@@ -399,6 +403,7 @@ impl RenderTask {
                 target_kind,
                 color,
                 scale_factor,
+                uv_rect_handle: GpuCacheHandle::new(),
             }),
             clear_mode,
             saved_index: None,
@@ -507,6 +512,24 @@ impl RenderTask {
         }
     }
 
+    pub fn get_texture_handle(&self) -> &GpuCacheHandle {
+        match self.kind {
+            RenderTaskKind::Picture(ref info) => {
+                &info.uv_rect_handle
+            }
+            RenderTaskKind::VerticalBlur(ref info) |
+            RenderTaskKind::HorizontalBlur(ref info) => {
+                &info.uv_rect_handle
+            }
+            RenderTaskKind::Readback(..) |
+            RenderTaskKind::Scaling(..) |
+            RenderTaskKind::Blit(..) |
+            RenderTaskKind::CacheMask(..) => {
+                panic!("texture handle not supported for this task kind");
+            }
+        }
+    }
+
     pub fn get_dynamic_size(&self) -> DeviceIntSize {
         match self.location {
             RenderTaskLocation::Fixed(..) => DeviceIntSize::zero(),
@@ -588,6 +611,40 @@ impl RenderTask {
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::Blit(..) => false,
             RenderTaskKind::CacheMask(..) => true,
+        }
+    }
+
+    pub fn prepare_for_render(
+        &mut self,
+        gpu_cache: &mut GpuCache,
+    ) {
+        let (target_rect, target_index) = self.get_target_rect();
+
+        let (cache_handle, color) = match self.kind {
+            RenderTaskKind::HorizontalBlur(ref mut info) |
+            RenderTaskKind::VerticalBlur(ref mut info) => {
+                (&mut info.uv_rect_handle, info.color)
+            }
+            RenderTaskKind::Picture(ref mut info) => {
+                (&mut info.uv_rect_handle, info.color)
+            }
+            RenderTaskKind::Readback(..) |
+            RenderTaskKind::Scaling(..) |
+            RenderTaskKind::Blit(..) |
+            RenderTaskKind::CacheMask(..) => {
+                return;
+            }
+        };
+
+        if let Some(mut request) = gpu_cache.request(cache_handle) {
+            let image_source = ImageSource {
+                p0: target_rect.origin.to_f32(),
+                p1: target_rect.bottom_right().to_f32(),
+                color,
+                texture_layer: target_index.0 as f32,
+                user_data: [0.0; 3],
+            };
+            image_source.write_gpu_blocks(&mut request);
         }
     }
 

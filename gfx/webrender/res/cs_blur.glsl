@@ -21,6 +21,26 @@ in int aBlurRenderTaskAddress;
 in int aBlurSourceTaskAddress;
 in int aBlurDirection;
 
+struct BlurTask {
+    RenderTaskCommonData common_data;
+    float blur_radius;
+    float scale_factor;
+    vec4 color;
+};
+
+BlurTask fetch_blur_task(int address) {
+    RenderTaskData task_data = fetch_render_task_data(address);
+
+    BlurTask task = BlurTask(
+        task_data.common_data,
+        task_data.data1.x,
+        task_data.data1.y,
+        task_data.data2
+    );
+
+    return task;
+}
+
 void main(void) {
     BlurTask blur_task = fetch_blur_task(aBlurRenderTaskAddress);
     RenderTaskCommonData src_task = fetch_render_task_common_data(aBlurSourceTaskAddress);

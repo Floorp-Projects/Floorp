@@ -38,6 +38,31 @@ async function resetTracker() {
   tracker.resetScore();
 }
 
+// We have some tests that uses Places "batch mode", which isn't async aware,
+// so a couple of these tests spin an event loop waiting for a promise.
+function promiseSpinningly(promise) {
+  let resolved = false;
+  let rv, rerror;
+  promise.then(result => {
+    rv = result;
+  }, err => {
+    rerror = err || new Error("Promise rejected without explicit error");
+  }).finally(() => {
+    resolved = true;
+  });
+  let tm = Cc["@mozilla.org/thread-manager;1"].getService();
+
+  // Keep waiting until the promise resolves.
+  tm.spinEventLoopUntil(() => resolved);
+  if (rerror) {
+    throw rerror;
+  }
+  return rv;
+}
+
+
+
+
 async function cleanup() {
   engine.lastSync = 0;
   engine._needWeakUpload.clear();
@@ -354,7 +379,7 @@ add_task(async function test_batch_tracking() {
         "Test Folder", PlacesUtils.bookmarks.DEFAULT_INDEX);
       // We should be tracking the new folder and its parent (and need to jump
       // through blocking hoops...)
-      Async.promiseSpinningly(verifyTrackedCount(2));
+      promiseSpinningly(verifyTrackedCount(2));
       // But not have bumped the score.
       Assert.equal(tracker.score, 0);
     }
@@ -381,14 +406,14 @@ add_task(async function test_nested_batch_tracking() {
             "Test Folder", PlacesUtils.bookmarks.DEFAULT_INDEX);
           // We should be tracking the new folder and its parent (and need to jump
           // through blocking hoops...)
-          Async.promiseSpinningly(verifyTrackedCount(2));
+          promiseSpinningly(verifyTrackedCount(2));
           // But not have bumped the score.
           Assert.equal(tracker.score, 0);
         }
       }, null);
       _("inner batch complete.");
       // should still not have a score as the outer batch is pending.
-      Async.promiseSpinningly(verifyTrackedCount(2));
+      promiseSpinningly(verifyTrackedCount(2));
       Assert.equal(tracker.score, 0);
     }
   }, null);

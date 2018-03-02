@@ -15,7 +15,7 @@ const {redux} = ChromeUtils.import("resource://activity-stream/vendor/Redux.jsm"
  *         It also accepts an array of "Feeds" on inititalization, which
  *         can listen for any action that is dispatched through the store.
  */
-var Store = class Store {
+this.Store = class Store {
   /**
    * constructor - The redux store and message manager are created here,
    *               but no listeners are added until "init" is called.
@@ -157,4 +157,4 @@ var Store = class Store {
   }
 };
 
-var EXPORTED_SYMBOLS = ["Store"];
+const EXPORTED_SYMBOLS = ["Store"];

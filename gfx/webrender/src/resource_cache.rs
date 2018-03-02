@@ -19,7 +19,6 @@ use capture::PlainExternalImage;
 #[cfg(any(feature = "replay", feature = "png"))]
 use capture::CaptureConfig;
 use device::TextureFilter;
-use frame::FrameId;
 use glyph_cache::GlyphCache;
 #[cfg(feature = "capture")]
 use glyph_cache::{PlainGlyphCacheRef, PlainCachedGlyphInfo};
@@ -30,6 +29,7 @@ use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use internal_types::{FastHashMap, FastHashSet, ResourceCacheError, SourceTexture, TextureUpdateList};
 use profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
 use rayon::ThreadPool;
+use render_backend::FrameId;
 use render_task::{RenderTaskCache, RenderTaskCacheKey, RenderTaskId, RenderTaskTree};
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
 use std::cmp;

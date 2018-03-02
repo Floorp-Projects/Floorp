@@ -149,14 +149,12 @@ public:
    * Does this child count as significant for selector matching?
    */
   static bool IsSignificantChild(nsIContent* aChild,
-                                   bool aTextIsSignificant,
-                                   bool aWhitespaceIsSignificant);
+                                 bool aWhitespaceIsSignificant);
 
   /*
    * Thread-safe version of IsSignificantChild()
    */
   static bool ThreadSafeIsSignificantChild(const nsIContent* aChild,
-                                           bool aTextIsSignificant,
                                            bool aWhitespaceIsSignificant);
   /**
    * Returns true if our object-fit & object-position properties might cause

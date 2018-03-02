@@ -348,4 +348,4 @@ class SectionsFeed {
 
 this.SectionsFeed = SectionsFeed;
 this.SectionsManager = SectionsManager;
-var EXPORTED_SYMBOLS = ["SectionsFeed", "SectionsManager"];
+const EXPORTED_SYMBOLS = ["SectionsFeed", "SectionsManager"];

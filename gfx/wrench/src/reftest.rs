@@ -299,7 +299,7 @@ impl<'a> ReftestHarness<'a> {
         ReftestHarness { wrench, window, rx }
     }
 
-    pub fn run(mut self, base_manifest: &Path, reftests: Option<&Path>, options: &ReftestOptions) {
+    pub fn run(mut self, base_manifest: &Path, reftests: Option<&Path>, options: &ReftestOptions) -> usize {
         let manifest = ReftestManifest::new(base_manifest, options);
         let reftests = manifest.find(reftests.unwrap_or(&PathBuf::new()));
 
@@ -328,8 +328,7 @@ impl<'a> ReftestHarness<'a> {
             }
         }
 
-        // panic here so that we fail CI
-        assert!(failing.is_empty());
+        failing.len()
     }
 
     fn run_reftest(&mut self, t: &Reftest) -> bool {

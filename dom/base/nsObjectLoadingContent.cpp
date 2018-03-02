@@ -2969,7 +2969,7 @@ nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
       bool skipChildDescendants = false;
       if (aType != eFallbackAlternate &&
           !child->IsHTMLElement(nsGkAtoms::param) &&
-          nsStyleUtil::IsSignificantChild(child, true, false)) {
+          nsStyleUtil::IsSignificantChild(child, false)) {
         aType = eFallbackAlternate;
       }
       if (thisIsObject) {

@@ -207,6 +207,19 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           // If the action is updating rows, we should consider initialized to be true.
           // This can be overridden if initialized is defined in the action.data
           const initialized = action.data.rows ? {initialized: true} : {};
+
+          // Make sure pinned cards stay at their current position when rows are updated.
+          // Disabling a section (SECTION_UPDATE with empty rows) does not retain pinned cards.
+          if (action.data.rows && action.data.rows.length > 0 && section.rows.find(card => card.pinned)) {
+            const rows = Array.from(action.data.rows);
+            section.rows.forEach((card, index) => {
+              if (card.pinned) {
+                rows.splice(index, 0, card);
+              }
+            });
+            return Object.assign({}, section, initialized, Object.assign({}, action.data, {rows}));
+          }
+
           return Object.assign({}, section, initialized, action.data);
         }
         return section;
@@ -273,6 +286,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         rows: section.rows.map(item => {
           if (item.url === action.data.url) {
             return Object.assign({}, item, {
+              open_url: action.data.open_url,
               pocket_id: action.data.pocket_id,
               title: action.data.title,
               type: "pocket"
@@ -342,6 +356,6 @@ this.INITIAL_STATE = INITIAL_STATE;
 this.TOP_SITES_DEFAULT_ROWS = TOP_SITES_DEFAULT_ROWS;
 this.TOP_SITES_MAX_SITES_PER_ROW = TOP_SITES_MAX_SITES_PER_ROW;
 
-var reducers = {TopSites, App, Snippets, Prefs, Dialog, Sections, PreferencesPane};
+this.reducers = {TopSites, App, Snippets, Prefs, Dialog, Sections, PreferencesPane};
 
-var EXPORTED_SYMBOLS = ["reducers", "INITIAL_STATE", "insertPinned", "TOP_SITES_DEFAULT_ROWS", "TOP_SITES_MAX_SITES_PER_ROW"];
+const EXPORTED_SYMBOLS = ["reducers", "INITIAL_STATE", "insertPinned", "TOP_SITES_DEFAULT_ROWS", "TOP_SITES_MAX_SITES_PER_ROW"];

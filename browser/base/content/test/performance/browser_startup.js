@@ -68,7 +68,6 @@ const startupPhases = {
       "resource:///modules/BrowserUITelemetry.jsm",
       "resource:///modules/BrowserUsageTelemetry.jsm",
       "resource:///modules/ContentCrashHandlers.jsm",
-      "resource:///modules/DirectoryLinksProvider.jsm",
       "resource://gre/modules/NewTabUtils.jsm",
       "resource://gre/modules/PageThumbs.jsm",
       "resource://gre/modules/PlacesUtils.jsm",

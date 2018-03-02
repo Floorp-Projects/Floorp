@@ -741,12 +741,9 @@ nsStyleUtil::ColorComponentToFloat(uint8_t aAlpha)
 }
 
 /* static */ bool
-nsStyleUtil::IsSignificantChild(nsIContent* aChild, bool aTextIsSignificant,
+nsStyleUtil::IsSignificantChild(nsIContent* aChild,
                                 bool aWhitespaceIsSignificant)
 {
-  NS_ASSERTION(!aWhitespaceIsSignificant || aTextIsSignificant,
-               "Nonsensical arguments");
-
   bool isText = aChild->IsNodeOfType(nsINode::eTEXT);
 
   if (!isText && !aChild->IsNodeOfType(nsINode::eCOMMENT) &&
@@ -754,19 +751,15 @@ nsStyleUtil::IsSignificantChild(nsIContent* aChild, bool aTextIsSignificant,
     return true;
   }
 
-  return aTextIsSignificant && isText && aChild->TextLength() != 0 &&
+  return isText && aChild->TextLength() != 0 &&
          (aWhitespaceIsSignificant ||
           !aChild->TextIsOnlyWhitespace());
 }
 
 /* static */ bool
 nsStyleUtil::ThreadSafeIsSignificantChild(const nsIContent* aChild,
-                                          bool aTextIsSignificant,
                                           bool aWhitespaceIsSignificant)
 {
-  NS_ASSERTION(!aWhitespaceIsSignificant || aTextIsSignificant,
-               "Nonsensical arguments");
-
   bool isText = aChild->IsNodeOfType(nsINode::eTEXT);
 
   if (!isText && !aChild->IsNodeOfType(nsINode::eCOMMENT) &&
@@ -774,7 +767,7 @@ nsStyleUtil::ThreadSafeIsSignificantChild(const nsIContent* aChild,
     return true;
   }
 
-  return aTextIsSignificant && isText && aChild->TextLength() != 0 &&
+  return isText && aChild->TextLength() != 0 &&
          (aWhitespaceIsSignificant ||
           !aChild->ThreadSafeTextIsOnlyWhitespace());
 }

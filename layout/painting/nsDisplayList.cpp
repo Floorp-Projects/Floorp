@@ -3296,7 +3296,7 @@ nsDisplayItem::IntersectClip(nsDisplayListBuilder* aBuilder,
                              const DisplayItemClipChain* aOther,
                              bool aStore)
 {
-  if (!aOther) {
+  if (!aOther || mClipChain == aOther) {
     return;
   }
 
@@ -6713,21 +6713,8 @@ nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
     }
   }
 
-  // When intersecting the children's clip, only intersect with the clip for
-  // our ASR and not with the whole clip chain, because the rest of the clip
-  // chain is usually already set on the children. In fact, opacity items
-  // usually never have their own clip because during display item creation
-  // time we propagated the clip to our contents, so maybe we should just
-  // remove the clip parameter from ApplyOpacity completely.
-  const DisplayItemClipChain* clip = nullptr;
-
-  if (mClip) {
-    clip = aBuilder->AllocateDisplayItemClipChain(*mClip, mActiveScrolledRoot,
-                                                  nullptr);
-  }
-
   for (uint32_t i = 0; i < childCount; i++) {
-    children[i].item->ApplyOpacity(aBuilder, mOpacity, clip);
+    children[i].item->ApplyOpacity(aBuilder, mOpacity, mClipChain);
   }
 
   return true;

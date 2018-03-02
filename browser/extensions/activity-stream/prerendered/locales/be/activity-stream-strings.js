@@ -16,7 +16,7 @@ window.gActivityStreamStrings = {
   "type_label_bookmarked": "У закладках",
   "type_label_synced": "Сінхранізаванае з іншай прылады",
   "type_label_recommended": "Тэндэнцыі",
-  "type_label_pocket": "Saved to Pocket",
+  "type_label_pocket": "Захавана ў Pocket",
   "type_label_open": "Адкрыта",
   "type_label_topic": "Тэма",
   "type_label_now": "Зараз",
@@ -33,7 +33,7 @@ window.gActivityStreamStrings = {
   "confirm_history_delete_p1": "Вы сапраўды жадаеце выдаліць усе запісы аб гэтай старонцы з гісторыі?",
   "confirm_history_delete_notice_p2": "Гэта дзеянне немагчыма адмяніць.",
   "menu_action_save_to_pocket": "Захаваць у Pocket",
-  "menu_action_delete_pocket": "Delete from Pocket",
+  "menu_action_delete_pocket": "Выдаліць з Pocket",
   "menu_action_archive_pocket": "Archive in Pocket",
   "search_for_something_with": "Шукаць {search_term} у:",
   "search_button": "Шукаць",
@@ -85,7 +85,7 @@ window.gActivityStreamStrings = {
   "edit_topsites_add_button": "Дадаць",
   "topsites_form_add_header": "Новы папулярны сайт",
   "topsites_form_edit_header": "Рэдагаваць папулярны сайт",
-  "topsites_form_title_label": "Title",
+  "topsites_form_title_label": "Загаловак",
   "topsites_form_title_placeholder": "Увядзіце назву",
   "topsites_form_url_label": "URL",
   "topsites_form_url_placeholder": "Увядзіце або ўстаўце URL",
@@ -111,6 +111,5 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Add Top Site",
   "section_menu_action_move_up": "Move Up",
   "section_menu_action_move_down": "Move Down",
-  "section_menu_action_privacy_notice": "Privacy Notice",
-  "edit_topsites_add_button_tooltip": "Дадаць папулярны сайт"
+  "section_menu_action_privacy_notice": "Паведамленне аб прыватнасці"
 };
