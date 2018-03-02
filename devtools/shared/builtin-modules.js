@@ -32,6 +32,7 @@ const {
   CSS,
   CSSRule,
   FileReader,
+  FormData,
   indexedDB,
   InspectorUtils,
   TextDecoder,
@@ -46,6 +47,7 @@ const {
     "CSS",
     "CSSRule",
     "FileReader",
+    "FormData",
     "indexedDB",
     "TextDecoder",
     "TextEncoder",
@@ -261,6 +263,7 @@ exports.globals = {
   },
   DocumentFragment: Ci.nsIDOMDocumentFragment,
   Element: Ci.nsIDOMElement,
+  FormData,
   isWorker: false,
   loader: {
     lazyGetter: defineLazyGetter,
