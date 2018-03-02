@@ -213,7 +213,7 @@ class Module : public JS::WasmModule
     // and made visible.
 
     void startTier2(const CompileArgs& args);
-    void finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2, ModuleEnvironment* env2);
+    bool finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2, ModuleEnvironment* env2);
     void blockOnTier2Complete() const;
 
     // JS API and JS::WasmModule implementation:
