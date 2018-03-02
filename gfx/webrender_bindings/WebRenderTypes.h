@@ -756,7 +756,7 @@ static inline wr::WrFilterOpType ToWrFilterOpType(uint32_t type) {
 // by scroll and position:sticky nodes  and the compiler will catch accidental
 // conversions between them.
 struct WrClipId {
-  uint64_t id;
+  size_t id;
 
   bool operator==(const WrClipId& other) const {
     return id == other.id;
@@ -766,7 +766,7 @@ struct WrClipId {
 // Corresponds to a clip id for for a scroll frame in webrender. Similar
 // to WrClipId but a separate struct so we don't get them mixed up in C++.
 struct WrScrollId {
-  uint64_t id;
+  size_t id;
 
   bool operator==(const WrScrollId& other) const {
     return id == other.id;
@@ -780,7 +780,7 @@ struct WrScrollId {
 // Corresponds to a clip id for a position:sticky clip in webrender. Similar
 // to WrClipId but a separate struct so we don't get them mixed up in C++.
 struct WrStickyId {
-  uint64_t id;
+  size_t id;
 
   bool operator==(const WrStickyId& other) const {
     return id == other.id;

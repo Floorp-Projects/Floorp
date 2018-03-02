@@ -544,6 +544,10 @@ class Tab extends TabBase {
     return this.nativeTab.getActive();
   }
 
+  get highlighted() {
+    return this.nativeTab.getActive();
+  }
+
   get selected() {
     return this.nativeTab.getActive();
   }

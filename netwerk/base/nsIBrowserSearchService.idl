@@ -349,8 +349,10 @@ interface nsIBrowserSearchService : nsISupports
    *        Case insensitive value of either "get" or "post".
    *        Defaults to "get".
    *
-   * @param url
-   *        The URL to which search queries should be sent.
+   * @param template
+   *        The template for the URL to which search queries should be sent. The
+   *        template will be subjected to OpenSearch parameter substitution.
+   *        See http://www.opensearch.org/Specifications/OpenSearch
    *        Must not be null.
    *
    * @param extensionID [optional]

@@ -1480,13 +1480,13 @@ pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState) {
 }
 
 fn make_scroll_info(state: &mut WrState,
-                    scroll_id: Option<&u64>,
-                    clip_id: Option<&u64>)
+                    scroll_id: Option<&usize>,
+                    clip_id: Option<&usize>)
                     -> Option<ClipAndScrollInfo> {
     if let Some(&sid) = scroll_id {
         if let Some(&cid) = clip_id {
             Some(ClipAndScrollInfo::new(
-                ClipId::Clip(sid, state.pipeline_id),
+                ClipId::Clip(sid , state.pipeline_id),
                 ClipId::Clip(cid, state.pipeline_id)))
         } else {
             Some(ClipAndScrollInfo::simple(
@@ -1502,13 +1502,13 @@ fn make_scroll_info(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_define_clip(state: &mut WrState,
-                                    ancestor_scroll_id: *const u64,
-                                    ancestor_clip_id: *const u64,
+                                    ancestor_scroll_id: *const usize,
+                                    ancestor_clip_id: *const usize,
                                     clip_rect: LayoutRect,
                                     complex: *const ComplexClipRegion,
                                     complex_count: usize,
                                     mask: *const WrImageMask)
-                                    -> u64 {
+                                    -> usize {
     debug_assert!(unsafe { is_in_main_thread() });
 
     let info = make_scroll_info(state,
@@ -1525,7 +1525,7 @@ pub extern "C" fn wr_dp_define_clip(state: &mut WrState,
     } else {
         state.frame_builder.dl_builder.define_clip(clip_rect, complex_iter, mask)
     };
-    // return the u64 id value from inside the ClipId::Clip(..)
+    // return the usize id value from inside the ClipId::Clip(..)
     match clip_id {
         ClipId::Clip(id, pipeline_id) => {
             assert!(pipeline_id == state.pipeline_id);
@@ -1537,7 +1537,7 @@ pub extern "C" fn wr_dp_define_clip(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
-                                  clip_id: u64) {
+                                  clip_id: usize) {
     debug_assert!(unsafe { is_in_main_thread() });
     state.frame_builder.dl_builder.push_clip_id(ClipId::Clip(clip_id, state.pipeline_id));
 }
@@ -1558,7 +1558,7 @@ pub extern "C" fn wr_dp_define_sticky_frame(state: &mut WrState,
                                             vertical_bounds: StickyOffsetBounds,
                                             horizontal_bounds: StickyOffsetBounds,
                                             applied_offset: LayoutVector2D)
-                                            -> u64 {
+                                            -> usize {
     assert!(unsafe { is_in_main_thread() });
     let clip_id = state.frame_builder.dl_builder.define_sticky_frame(
         content_rect, SideOffsets2D::new(
@@ -1580,11 +1580,11 @@ pub extern "C" fn wr_dp_define_sticky_frame(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_define_scroll_layer(state: &mut WrState,
                                             scroll_id: u64,
-                                            ancestor_scroll_id: *const u64,
-                                            ancestor_clip_id: *const u64,
+                                            ancestor_scroll_id: *const usize,
+                                            ancestor_clip_id: *const usize,
                                             content_rect: LayoutRect,
                                             clip_rect: LayoutRect)
-                                            -> u64 {
+                                            -> usize {
     assert!(unsafe { is_in_main_thread() });
 
     let info = make_scroll_info(state,
@@ -1623,7 +1623,7 @@ pub extern "C" fn wr_dp_define_scroll_layer(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
-                                          scroll_id: u64) {
+                                          scroll_id: usize) {
     debug_assert!(unsafe { is_in_main_thread() });
     let clip_id = ClipId::Clip(scroll_id, state.pipeline_id);
     state.frame_builder.dl_builder.push_clip_id(clip_id);
@@ -1637,8 +1637,8 @@ pub extern "C" fn wr_dp_pop_scroll_layer(state: &mut WrState) {
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_clip_and_scroll_info(state: &mut WrState,
-                                                  scroll_id: u64,
-                                                  clip_id: *const u64) {
+                                                  scroll_id: usize,
+                                                  clip_id: *const usize) {
     debug_assert!(unsafe { is_in_main_thread() });
     let info = make_scroll_info(state, Some(&scroll_id), unsafe { clip_id.as_ref() });
     debug_assert!(info.is_some());
