@@ -159,7 +159,8 @@ add_task(async function test_dupe_bookmark() {
     PlacesUtils.bookmarks.addObserver(obs, false);
 
     _("Syncing so new dupe record is processed");
-    engine.lastSync = engine.lastSync - 5;
+    let lastSync = await engine.getLastSync();
+    await engine.setLastSync(lastSync - 5);
     await engine.sync();
 
     // We should have logically deleted the dupe record.
@@ -220,7 +221,8 @@ add_task(async function test_dupe_reparented_bookmark() {
     collection.insert(newGUID, encryptPayload(to_apply), Date.now() / 1000 + 500);
 
     _("Syncing so new dupe record is processed");
-    engine.lastSync = engine.lastSync - 5;
+    let lastSync = await engine.getLastSync();
+    await engine.setLastSync(lastSync - 5);
     await engine.sync();
 
     // We should have logically deleted the dupe record.
@@ -300,7 +302,7 @@ add_task(async function test_dupe_reparented_locally_changed_bookmark() {
     _("Syncing so new dupe record is processed");
     // We need to take care to only sync the one new record - if we also see
     // our local item as incoming the test fails - bug 1368608.
-    engine.lastSync = newWBO.modified - 0.000001;
+    await engine.setLastSync(newWBO.modified - 0.000001);
     engine.lastModified = null;
     await engine.sync();
 
@@ -392,7 +394,8 @@ add_task(async function test_dupe_reparented_to_earlier_appearing_parent_bookmar
 
 
     _("Syncing so new records are processed.");
-    engine.lastSync = engine.lastSync - 5;
+    let lastSync = await engine.getLastSync();
+    await engine.setLastSync(lastSync - 5);
     await engine.sync();
 
     // Everything should be parented correctly.
@@ -468,7 +471,8 @@ add_task(async function test_dupe_reparented_to_later_appearing_parent_bookmark(
     }), Date.now() / 1000 + 500);
 
     _("Syncing so out-of-order records are processed.");
-    engine.lastSync = engine.lastSync - 5;
+    let lastSync = await engine.getLastSync();
+    await engine.setLastSync(lastSync - 5);
     await engine.sync();
 
     // The intended parent did end up existing, so it should be parented
@@ -524,7 +528,10 @@ add_task(async function test_dupe_reparented_to_future_arriving_parent_bookmark(
     }), Date.now() / 1000 + 500);
 
     _("Syncing so new dupe record is processed");
-    engine.lastSync = engine.lastSync - 5;
+    {
+      let lastSync = await engine.getLastSync();
+      await engine.setLastSync(lastSync - 5);
+    }
     await engine.sync();
 
     // We should have logically deleted the dupe record.
@@ -582,7 +589,10 @@ add_task(async function test_dupe_reparented_to_future_arriving_parent_bookmark(
 
 
     _("Syncing so missing parent appears");
-    engine.lastSync = engine.lastSync - 5;
+    {
+      let lastSync = await engine.getLastSync();
+      await engine.setLastSync(lastSync - 5);
+    }
     await engine.sync();
 
     // The intended parent now does exist, so it should have been reparented.
@@ -639,7 +649,8 @@ add_task(async function test_dupe_empty_folder() {
     }), Date.now() / 1000 + 500);
 
     _("Syncing so new dupe records are processed");
-    engine.lastSync = engine.lastSync - 5;
+    let lastSync = await engine.getLastSync();
+    await engine.setLastSync(lastSync - 5);
     await engine.sync();
 
     await validate(collection);

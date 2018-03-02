@@ -19,6 +19,7 @@ prefs.set("extensions.getAddons.get.url",
 prefs.set("extensions.install.requireSecureOrigin", false);
 
 let engine;
+let syncID;
 let reconciler;
 let tracker;
 
@@ -37,6 +38,7 @@ add_task(async function setup() {
 
   await Service.engineManager.register(AddonsEngine);
   engine = Service.engineManager.get("addons");
+  syncID = await engine.resetLocalSyncID();
   reconciler = engine._reconciler;
   tracker = engine._tracker;
 
@@ -177,8 +179,7 @@ add_task(async function test_disabled_install_semantics() {
   await generateNewKeys(Service.collectionKeys);
 
   let contents = {
-    meta: {global: {engines: {addons: {version: engine.version,
-                                      syncID:  engine.syncID}}}},
+    meta: {global: {engines: {addons: {version: engine.version, syncID}}}},
     crypto: {},
     addons: {}
   };
