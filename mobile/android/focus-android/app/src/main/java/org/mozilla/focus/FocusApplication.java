@@ -61,7 +61,7 @@ public class FocusApplication extends LocaleAwareApplication {
         final StrictMode.ThreadPolicy.Builder threadPolicyBuilder = new StrictMode.ThreadPolicy.Builder().detectAll();
         final StrictMode.VmPolicy.Builder vmPolicyBuilder = new StrictMode.VmPolicy.Builder().detectAll();
 
-        threadPolicyBuilder.penaltyDialog();
+        threadPolicyBuilder.penaltyLog();
         vmPolicyBuilder.penaltyLog();
 
         StrictMode.setThreadPolicy(threadPolicyBuilder.build());
