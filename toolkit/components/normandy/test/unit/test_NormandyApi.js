@@ -26,7 +26,7 @@ class MockResponse {
 function withServer(server, task) {
   return withMockPreferences(async function inner(preferences) {
     const serverUrl = `http://localhost:${server.identity.primaryPort}`;
-    preferences.set("extensions.shield-recipe-client.api_url", `${serverUrl}/api/v1`);
+    preferences.set("app.normandy.api_url", `${serverUrl}/api/v1`);
     preferences.set(
       "security.content.signature.root_hash",
       // Hash of the key that signs the normandy dev certificates
@@ -111,7 +111,7 @@ add_task(withMockApiServer(async function test_getApiUrlSlashes(serverUrl, prefe
   // without slash
   {
     NormandyApi.clearIndexCache();
-    preferences.set("extensions.shield-recipe-client.api_url", `${serverUrl}/api/v1`);
+    preferences.set("app.normandy.api_url", `${serverUrl}/api/v1`);
     const endpoint = await NormandyApi.getApiUrl("test-endpoint");
     equal(endpoint, `${serverUrl}/test/`);
     ok(mockGet.calledWithExactly(`${serverUrl}/api/v1/`), "trailing slash was added");
@@ -121,7 +121,7 @@ add_task(withMockApiServer(async function test_getApiUrlSlashes(serverUrl, prefe
   // with slash
   {
     NormandyApi.clearIndexCache();
-    preferences.set("extensions.shield-recipe-client.api_url", `${serverUrl}/api/v1/`);
+    preferences.set("app.normandy.api_url", `${serverUrl}/api/v1/`);
     const endpoint = await NormandyApi.getApiUrl("test-endpoint");
     equal(endpoint, `${serverUrl}/test/`);
     ok(mockGet.calledWithExactly(`${serverUrl}/api/v1/`), "existing trailing slash was preserved");

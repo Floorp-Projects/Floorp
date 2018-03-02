@@ -16,7 +16,7 @@ Cu.importGlobalProperties(["fetch", "URL"]); /* globals fetch, URL */
 var EXPORTED_SYMBOLS = ["NormandyApi"];
 
 const log = LogManager.getLogger("normandy-api");
-const prefs = Services.prefs.getBranch("extensions.shield-recipe-client.");
+const prefs = Services.prefs.getBranch("app.normandy.");
 
 let indexPromise = null;
 

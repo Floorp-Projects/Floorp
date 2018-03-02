@@ -33,7 +33,7 @@ add_task(async function testUserId() {
   ok(UUID_REGEX.test(environment.userId), "userId available");
 
   // test that it pulls from the right preference
-  await SpecialPowers.pushPrefEnv({set: [["extensions.shield-recipe-client.user_id", "fake id"]]});
+  await SpecialPowers.pushPrefEnv({set: [["app.normandy.user_id", "fake id"]]});
   environment = ClientEnvironment.getEnvironment();
   is(environment.userId, "fake id", "userId is pulled from preferences");
 });
@@ -138,7 +138,7 @@ add_task(withDriver(Assert, async function testAddonsInContext(driver) {
 }));
 
 add_task(async function isFirstRun() {
-  await SpecialPowers.pushPrefEnv({set: [["extensions.shield-recipe-client.first_run", true]]});
+  await SpecialPowers.pushPrefEnv({set: [["app.normandy.first_run", true]]});
   const environment = ClientEnvironment.getEnvironment();
   ok(environment.isFirstRun, "isFirstRun is read from preferences");
 });

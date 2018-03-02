@@ -22,7 +22,7 @@ decorate_task(
 
 decorate_task(
   withPrefEnv({
-    set: [["extensions.shield-recipe-client.shieldLearnMoreUrl", "http://test/%OS%/"]],
+    set: [["app.normandy.shieldLearnMoreUrl", "http://test/%OS%/"]],
   }),
   withAboutStudies,
   async function testLearnMore(browser) {

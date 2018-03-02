@@ -73,13 +73,13 @@ decorate_task(
     getStub.returns(Promise.resolve(false));
 
     await SpecialPowers.pushPrefEnv({set: [
-      ["extensions.shield-recipe-client.api_url",
+      ["app.normandy.api_url",
        "https://example.com/selfsupport-dummy"],
     ]});
 
     // When the experiment pref is false, eagerly call getClientClassification.
     await SpecialPowers.pushPrefEnv({set: [
-      ["extensions.shield-recipe-client.experiments.lazy_classify", false],
+      ["app.normandy.experiments.lazy_classify", false],
     ]});
     ok(!getStub.called, "getClientClassification hasn't been called");
     await RecipeRunner.run();
@@ -87,7 +87,7 @@ decorate_task(
 
     // When the experiment pref is true, do not eagerly call getClientClassification.
     await SpecialPowers.pushPrefEnv({set: [
-      ["extensions.shield-recipe-client.experiments.lazy_classify", true],
+      ["app.normandy.experiments.lazy_classify", true],
     ]});
     getStub.reset();
     ok(!getStub.called, "getClientClassification hasn't been called");
@@ -342,8 +342,8 @@ decorate_task(
   withPrefEnv({
     set: [
       ["datareporting.healthreport.uploadEnabled", true],  // telemetry enabled
-      ["extensions.shield-recipe-client.dev_mode", true],
-      ["extensions.shield-recipe-client.first_run", false],
+      ["app.normandy.dev_mode", true],
+      ["app.normandy.first_run", false],
     ],
   }),
   withStub(RecipeRunner, "run"),
@@ -360,8 +360,8 @@ decorate_task(
   withPrefEnv({
     set: [
       ["datareporting.healthreport.uploadEnabled", true],  // telemetry enabled
-      ["extensions.shield-recipe-client.dev_mode", false],
-      ["extensions.shield-recipe-client.first_run", false],
+      ["app.normandy.dev_mode", false],
+      ["app.normandy.first_run", false],
     ],
   }),
   withStub(RecipeRunner, "run"),
@@ -378,9 +378,9 @@ decorate_task(
   withPrefEnv({
     set: [
       ["datareporting.healthreport.uploadEnabled", true],  // telemetry enabled
-      ["extensions.shield-recipe-client.dev_mode", false],
-      ["extensions.shield-recipe-client.first_run", true],
-      ["extensions.shield-recipe-client.api_url", "https://example.com"],
+      ["app.normandy.dev_mode", false],
+      ["app.normandy.first_run", true],
+      ["app.normandy.api_url", "https://example.com"],
     ],
   }),
   withStub(RecipeRunner, "run"),
@@ -390,7 +390,7 @@ decorate_task(
     await RecipeRunner.init();
     ok(runStub.called, "RecipeRunner.run is called immediately on first run");
     ok(
-      !Services.prefs.getBoolPref("extensions.shield-recipe-client.first_run"),
+      !Services.prefs.getBoolPref("app.normandy.first_run"),
       "On first run, the first run pref is set to false"
     );
     ok(registerTimerStub.called, "RecipeRunner.registerTimer registers a timer");
@@ -399,7 +399,7 @@ decorate_task(
     // relies on the preferences it manages to actually change when it
     // tries to change them. Settings this back to true here allows
     // that to happen. Not doing this causes popPrefEnv to hang forever.
-    Services.prefs.setBoolPref("extensions.shield-recipe-client.first_run", true);
+    Services.prefs.setBoolPref("app.normandy.first_run", true);
   }
 );
 
@@ -408,10 +408,10 @@ decorate_task(
   withPrefEnv({
     set: [
       ["datareporting.healthreport.uploadEnabled", true],  // telemetry enabled
-      ["extensions.shield-recipe-client.dev_mode", false],
-      ["extensions.shield-recipe-client.first_run", false],
-      ["extensions.shield-recipe-client.enabled", true],
-      ["extensions.shield-recipe-client.api_url", "https://example.com"], // starts with "https://"
+      ["app.normandy.dev_mode", false],
+      ["app.normandy.first_run", false],
+      ["app.normandy.enabled", true],
+      ["app.normandy.api_url", "https://example.com"], // starts with "https://"
     ],
   }),
   withStub(RecipeRunner, "run"),
@@ -425,19 +425,19 @@ decorate_task(
     is(enableStub.callCount, 1, "Enable should be called initially");
     is(disableStub.callCount, 0, "Disable should not be called initially");
 
-    await SpecialPowers.pushPrefEnv({ set: [["extensions.shield-recipe-client.enabled", false]] });
+    await SpecialPowers.pushPrefEnv({ set: [["app.normandy.enabled", false]] });
     is(enableStub.callCount, 1, "Enable should not be called again");
     is(disableStub.callCount, 1, "RecipeRunner should disable when Shield is disabled");
 
-    await SpecialPowers.pushPrefEnv({ set: [["extensions.shield-recipe-client.enabled", true]] });
+    await SpecialPowers.pushPrefEnv({ set: [["app.normandy.enabled", true]] });
     is(enableStub.callCount, 2, "RecipeRunner should re-enable when Shield is enabled");
     is(disableStub.callCount, 1, "Disable should not be called again");
 
-    await SpecialPowers.pushPrefEnv({ set: [["extensions.shield-recipe-client.api_url", "http://example.com"]] }); // does not start with https://
+    await SpecialPowers.pushPrefEnv({ set: [["app.normandy.api_url", "http://example.com"]] }); // does not start with https://
     is(enableStub.callCount, 2, "Enable should not be called again");
     is(disableStub.callCount, 2, "RecipeRunner should disable when an invalid api url is given");
 
-    await SpecialPowers.pushPrefEnv({ set: [["extensions.shield-recipe-client.api_url", "https://example.com"]] }); // ends with https://
+    await SpecialPowers.pushPrefEnv({ set: [["app.normandy.api_url", "https://example.com"]] }); // ends with https://
     is(enableStub.callCount, 3, "RecipeRunner should re-enable when a valid api url is given");
     is(disableStub.callCount, 2, "Disable should not be called again");
 

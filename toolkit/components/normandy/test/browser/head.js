@@ -174,10 +174,16 @@ class MockPreferences {
   preserve(name, branch) {
     if (!(name in this.oldValues[branch])) {
       const preferenceBranch = preferenceBranches[branch];
-      this.oldValues[branch][name] = {
-        oldValue: preferenceBranch.get(name),
-        existed: preferenceBranch.has(name),
-      };
+      let oldValue;
+      let existed;
+      try {
+        oldValue = preferenceBranch.get(name);
+        existed = preferenceBranch.has(name);
+      } catch (e) {
+        oldValue = null;
+        existed = false;
+      }
+      this.oldValues[branch][name] = {oldValue, existed};
     }
   }
 
