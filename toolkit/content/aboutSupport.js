@@ -101,6 +101,26 @@ var snapshotFormatters = {
       `content = ${data.styloResult} (${styloReason}), ` +
       `chrome = ${data.styloChromeResult} (${styloChromeReason})`;
 
+    if (Services.policies) {
+      let policiesText = "";
+      switch (data.policiesStatus) {
+        case Services.policies.INACTIVE:
+          policiesText = strings.GetStringFromName("policies.inactive");
+          break;
+
+        case Services.policies.ACTIVE:
+          policiesText = strings.GetStringFromName("policies.active");
+          break;
+
+        default:
+          policiesText = strings.GetStringFromName("policies.error");
+          break;
+      }
+      $("policies-status").textContent = policiesText;
+    } else {
+      $("policies-status-row").hidden = true;
+    }
+
     let keyGoogleFound = data.keyGoogleFound ? "found" : "missing";
     $("key-google-box").textContent = strings.GetStringFromName(keyGoogleFound);
 
