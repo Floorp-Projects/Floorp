@@ -43,7 +43,4 @@ partial interface WorkerGlobalScope {
   // XXXbz no spec for this yet, because the webperf WG is a bit dysfunctional
   [Constant, Cached]
   readonly attribute Performance performance;
-
-  [Func="WorkerGlobalScope::IsInAutomation", Throws]
-  object getJSTestingFunctions();
 };
