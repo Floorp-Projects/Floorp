@@ -559,6 +559,28 @@ WorkerGlobalScope::GetController() const
   return mWorkerPrivate->GetController();
 }
 
+RefPtr<ServiceWorkerRegistration>
+WorkerGlobalScope::GetOrCreateServiceWorkerRegistration(const ServiceWorkerRegistrationDescriptor& aDescriptor)
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  RefPtr<ServiceWorkerRegistration> ref;
+  ForEachEventTargetObject([&] (DOMEventTargetHelper* aTarget, bool* aDoneOut) {
+    RefPtr<ServiceWorkerRegistration> swr = do_QueryObject(aTarget);
+    if (!swr || !swr->MatchesDescriptor(aDescriptor)) {
+      return;
+    }
+
+    ref = swr.forget();
+    *aDoneOut = true;
+  });
+
+  if (!ref) {
+    ref = ServiceWorkerRegistration::CreateForWorker(mWorkerPrivate, aDescriptor);
+  }
+
+  return ref.forget();
+}
+
 DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
                                                        const nsString& aName)
   : WorkerGlobalScope(aWorkerPrivate)
