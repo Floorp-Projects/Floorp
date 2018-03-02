@@ -20,7 +20,7 @@
 # shipping in previous releases. Ping :delphine in case you want
 # to add or remove locales from releases.
 RELEASE_LOCALES = [
-	"am"
+	"am",
 	"ar",
 	"ast",
 	"az",
@@ -97,8 +97,13 @@ RELEASE_LOCALES = [
 # of other locales so that translators of not yet completed locales can
 # verify their work in progress.
 ADDITIONAL_SCREENSHOT_LOCALES = [
+	"an",
+	"anp",
+	"gu-IN",
 	"lt",
-	"gu-IN"
+	"oc",
+	"tt",
+	"wo"
 ]
 
 # Those are locales that we take automated screenshots of.
