@@ -2,7 +2,7 @@
 
 #include "jsapi-tests/tests.h"
 
-#include "util/StringBuffer.h"
+#include "vm/StringBuffer.h"
 
 // Tests for JS_GetErrorInterceptorCallback and JS_SetErrorInterceptorCallback.
 

@@ -18,13 +18,13 @@
 #include <string.h>
 
 #include "jsapi.h"
+#include "jsarray.h"
+#include "jsstr.h"
 #include "jstypes.h"
 
-#include "builtin/Array.h"
 #include "builtin/Eval.h"
 #include "builtin/Object.h"
 #include "builtin/SelfHostingDefines.h"
-#include "builtin/String.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
@@ -34,7 +34,6 @@
 #include "js/CallNonGenericMethod.h"
 #include "js/Proxy.h"
 #include "js/Wrapper.h"
-#include "util/StringBuffer.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/Debugger.h"
@@ -47,6 +46,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
+#include "vm/StringBuffer.h"
 #include "vm/WrapperObject.h"
 #include "vm/Xdr.h"
 #include "wasm/AsmJS.h"

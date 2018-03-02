@@ -8,15 +8,16 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "builtin/Number.h"
+#include "jsnum.h"
+
 #include "gc/PublicIterators.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitFrames.h"
 #include "jit/JSJitFrameIter.h"
-#include "util/StringBuffer.h"
 #include "vm/JSScript.h"
+#include "vm/StringBuffer.h"
 
 #include "gc/Marking-inl.h"
 

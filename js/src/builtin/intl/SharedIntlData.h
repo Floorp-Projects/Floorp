@@ -17,7 +17,7 @@
 #include "js/GCHashTable.h"
 #include "js/RootingAPI.h"
 #include "js/Utility.h"
-#include "vm/StringType.h"
+#include "vm/String.h"
 
 namespace js {
 

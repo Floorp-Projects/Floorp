@@ -9,7 +9,6 @@
 #include "js/Vector.h"
 #include "jsapi-tests/tests.h"
 #include "threading/Thread.h"
-#include "util/Text.h"
 #include "vm/SharedImmutableStringsCache.h"
 
 const int NUM_THREADS = 256;

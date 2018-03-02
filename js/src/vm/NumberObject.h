@@ -7,7 +7,7 @@
 #ifndef vm_NumberObject_h
 #define vm_NumberObject_h
 
-#include "builtin/Number.h"
+#include "jsnum.h"
 
 namespace js {
 

@@ -17,7 +17,7 @@
 #include "builtin/intl/ICUStubs.h"
 #include "js/RootingAPI.h"
 #include "js/Vector.h"
-#include "vm/StringType.h"
+#include "vm/String.h"
 
 namespace js {
 

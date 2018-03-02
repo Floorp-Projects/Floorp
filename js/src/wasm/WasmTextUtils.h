@@ -21,7 +21,7 @@
 
 #include "NamespaceImports.h"
 
-#include "util/StringBuffer.h"
+#include "vm/StringBuffer.h"
 
 namespace js {
 namespace wasm {

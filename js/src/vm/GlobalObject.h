@@ -7,11 +7,11 @@
 #ifndef vm_GlobalObject_h
 #define vm_GlobalObject_h
 
+#include "jsarray.h"
+#include "jsbool.h"
 #include "jsexn.h"
+#include "jsnum.h"
 
-#include "builtin/Array.h"
-#include "builtin/Boolean.h"
-#include "builtin/Number.h"
 #include "js/Vector.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/ErrorObject.h"
@@ -776,11 +776,11 @@ class GlobalObject : public NativeObject
 
     static bool initAsyncGenerators(JSContext* cx, Handle<GlobalObject*> global);
 
-    // Implemented in builtin/Map.cpp.
+    // Implemented in builtin/MapObject.cpp.
     static bool initMapIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initSetIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
 
-    // Implemented in builtin/intl/Intl.cpp.
+    // Implemented in builtin/intl/IntlObject.cpp.
     static bool initIntlObject(JSContext* cx, Handle<GlobalObject*> global);
 
     // Implemented in builtin/intl/RelativeTimeFormat.cpp.

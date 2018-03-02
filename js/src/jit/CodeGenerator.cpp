@@ -18,12 +18,14 @@
 
 #include <type_traits>
 
+#include "jslibmath.h"
+#include "jsmath.h"
+#include "jsnum.h"
+#include "jsstr.h"
+
 #include "builtin/Eval.h"
-#include "builtin/Math.h"
-#include "builtin/Number.h"
 #include "builtin/RegExp.h"
 #include "builtin/SelfHostingDefines.h"
-#include "builtin/String.h"
 #include "builtin/TypedObject.h"
 #include "gc/Nursery.h"
 #include "irregexp/NativeRegExpMacroAssembler.h"
@@ -41,19 +43,18 @@
 #include "jit/RangeAnalysis.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/StackSlotAllocator.h"
-#include "util/PortableMath.h"
-#include "util/Unicode.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
-#include "vm/StringType.h"
 #include "vm/TraceLogging.h"
 #include "vm/TypedArrayObject.h"
+#include "vm/Unicode.h"
 #include "vtune/VTuneWrapper.h"
 
-#include "builtin/Boolean-inl.h"
+#include "jsboolinlines.h"
+
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/CodeGenerator-shared-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"

@@ -15,11 +15,10 @@
 #include "gc/Marking.h"
 #include "gc/PublicIterators.h"
 #include "gc/Zone.h"
-#include "util/Text.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 #include "vm/Shape.h"
-#include "vm/SymbolType.h"
+#include "vm/Symbol.h"
 
 #include "gc/GC-inl.h"
 #include "vm/JSCompartment-inl.h"

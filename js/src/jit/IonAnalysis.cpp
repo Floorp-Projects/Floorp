@@ -16,7 +16,6 @@
 #include "jit/LIR.h"
 #include "jit/Lowering.h"
 #include "jit/MIRGraph.h"
-#include "util/PortableMath.h"
 #include "vm/RegExpObject.h"
 #include "vm/SelfHosting.h"
 

@@ -17,17 +17,17 @@
 
 #include <string.h>
 
-#include "builtin/Array.h"
+#include "jsarray.h"
+#include "jslibmath.h"
+#include "jsnum.h"
+#include "jsstr.h"
+
 #include "builtin/Eval.h"
-#include "builtin/Number.h"
-#include "builtin/String.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
 #include "jit/Jit.h"
-#include "util/PortableMath.h"
-#include "util/StringBuffer.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/BytecodeUtil.h"
@@ -43,10 +43,11 @@
 #include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/Stopwatch.h"
-#include "vm/StringType.h"
+#include "vm/StringBuffer.h"
 #include "vm/TraceLogging.h"
 
-#include "builtin/Boolean-inl.h"
+#include "jsboolinlines.h"
+
 #include "jit/JitFrames-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/EnvironmentObject-inl.h"

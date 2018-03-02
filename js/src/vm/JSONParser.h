@@ -13,7 +13,7 @@
 #include "jspubtd.h"
 
 #include "ds/IdValuePair.h"
-#include "vm/StringType.h"
+#include "vm/String.h"
 
 namespace js {
 

@@ -38,7 +38,6 @@
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 #include "vm/RegExpObject.h"
-#include "vm/StringType.h"
 #include "wasm/AsmJS.h"
 
 #include "frontend/ParseContext-inl.h"
