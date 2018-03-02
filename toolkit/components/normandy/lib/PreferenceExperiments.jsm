@@ -65,7 +65,7 @@ ChromeUtils.defineModuleGetter(this, "TelemetryEvents", "resource://normandy/lib
 var EXPORTED_SYMBOLS = ["PreferenceExperiments"];
 
 const EXPERIMENT_FILE = "shield-preference-experiments.json";
-const STARTUP_EXPERIMENT_PREFS_BRANCH = "extensions.shield-recipe-client.startupExperimentPrefs.";
+const STARTUP_EXPERIMENT_PREFS_BRANCH = "app.normandy.startupExperimentPrefs.";
 
 const MAX_EXPERIMENT_TYPE_LENGTH = 20; // enforced by TelemetryEnvironment
 const EXPERIMENT_TYPE_PREFIX = "normandy-";

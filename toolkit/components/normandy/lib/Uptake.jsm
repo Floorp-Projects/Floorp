@@ -11,7 +11,7 @@ ChromeUtils.defineModuleGetter(
 
 var EXPORTED_SYMBOLS = ["Uptake"];
 
-const SOURCE_PREFIX = "shield-recipe-client";
+const SOURCE_PREFIX = "normandy";
 
 var Uptake = {
   // Action uptake

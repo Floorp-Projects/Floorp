@@ -9,7 +9,7 @@ ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
 // Save ourselves some typing
 const {withMockExperiments} = PreferenceExperiments;
 const DefaultPreferences = new Preferences({defaultBranch: true});
-const startupPrefs = "extensions.shield-recipe-client.startupExperimentPrefs";
+const startupPrefs = "app.normandy.startupExperimentPrefs";
 
 function experimentFactory(attrs) {
   return Object.assign({
@@ -1049,17 +1049,20 @@ decorate_task(
 decorate_task(
   withMockPreferences,
   withStub(TelemetryEvents, "sendEvent"),
-  async function testPrefChangeEventTelemetry(mockPreferences, sendEventStub) {
+  withMockExperiments,
+  async function testPrefChangeEventTelemetry(mockPreferences, sendEventStub, mockExperiments) {
     is(Preferences.get("fake.preference"), null, "preference should start unset");
-
-    await PreferenceExperiments.start({
+    mockPreferences.set("fake.preference", "oldvalue", "default");
+    mockExperiments.test = experimentFactory({
       name: "test",
-      branch: "branch",
+      expired: false,
       preferenceName: "fake.preference",
       preferenceValue: "experimentvalue",
-      preferenceBranchType: "default",
       preferenceType: "string",
+      previousPreferenceValue: "oldvalue",
+      preferenceBranchType: "default",
     });
+    PreferenceExperiments.startObserver("test", "fake.preference", "string", "experimentvalue");
 
     // setting the preference on the user branch should trigger the observer to stop the experiment
     mockPreferences.set("fake.preference", "uservalue", "user");
@@ -1067,9 +1070,8 @@ decorate_task(
     // let the event loop tick to run the observer
     await Promise.resolve();
 
-    is(sendEventStub.getCall(0).args[0], "enroll", "There is an enrollment event from start()");
     Assert.deepEqual(
-      sendEventStub.getCall(1).args,
+      sendEventStub.getCall(0).args,
       ["unenroll", "preference_study", "test", {
         didResetValue: "false",
         reason: "user-preference-changed",

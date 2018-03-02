@@ -8,33 +8,27 @@ ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "LogManager",
-  "resource://normandy/lib/LogManager.jsm");
-ChromeUtils.defineModuleGetter(this, "ShieldRecipeClient",
-  "resource://normandy/lib/ShieldRecipeClient.jsm");
-ChromeUtils.defineModuleGetter(this, "PreferenceExperiments",
-  "resource://normandy/lib/PreferenceExperiments.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AboutPages: "resource://normandy-content/AboutPages.jsm",
+  AddonStudies: "resource://normandy/lib/AddonStudies.jsm",
+  CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
+  LogManager: "resource://normandy/lib/LogManager.jsm",
+  PreferenceExperiments: "resource://normandy/lib/PreferenceExperiments.jsm",
+  RecipeRunner: "resource://normandy/lib/RecipeRunner.jsm",
+  ShieldPreferences: "resource://normandy/lib/ShieldPreferences.jsm",
+  TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
+});
 
 var EXPORTED_SYMBOLS = ["Normandy"];
 
 const UI_AVAILABLE_NOTIFICATION = "sessionstore-windows-restored";
-const STARTUP_EXPERIMENT_PREFS_BRANCH = "extensions.shield-recipe-client.startupExperimentPrefs.";
-const PREF_LOGGING_LEVEL = "extensions.shield-recipe-client.logging.level";
-const BOOTSTRAP_LOGGER_NAME = "extensions.shield-recipe-client.bootstrap";
-const DEFAULT_PREFS = {
-  "extensions.shield-recipe-client.api_url": "https://normandy.cdn.mozilla.net/api/v1",
-  "extensions.shield-recipe-client.dev_mode": false,
-  "extensions.shield-recipe-client.enabled": true,
-  "extensions.shield-recipe-client.startup_delay_seconds": 300,
-  "extensions.shield-recipe-client.logging.level": Log.Level.Warn,
-  "extensions.shield-recipe-client.user_id": "",
-  "extensions.shield-recipe-client.run_interval_seconds": 86400, // 24 hours
-  "extensions.shield-recipe-client.first_run": true,
-  "extensions.shield-recipe-client.shieldLearnMoreUrl": (
-    "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/shield"
-  ),
-  "app.shield.optoutstudies.enabled": AppConstants.MOZ_DATA_REPORTING,
-};
+const BOOTSTRAP_LOGGER_NAME = "app.normandy.bootstrap";
+const SHIELD_INIT_NOTIFICATION = "shield-init-complete";
+
+const PREF_PREFIX = "app.normandy";
+const LEGACY_PREF_PREFIX = "extensions.shield-recipe-client";
+const STARTUP_EXPERIMENT_PREFS_BRANCH = `${PREF_PREFIX}.startupExperimentPrefs.`;
+const PREF_LOGGING_LEVEL = `${PREF_PREFIX}.logging.level`;
 
 // Logging
 const log = Log.repository.getLogger(BOOTSTRAP_LOGGER_NAME);
@@ -46,7 +40,7 @@ let studyPrefsChanged = {};
 var Normandy = {
   init() {
     // Initialization that needs to happen before the first paint on startup.
-    this.initShieldPrefs(DEFAULT_PREFS);
+    this.migrateShieldPrefs();
     this.initExperimentPrefs();
 
     // Wait until the UI is available before finishing initialization.
@@ -62,12 +56,51 @@ var Normandy = {
 
   async finishInit() {
     await PreferenceExperiments.recordOriginalValues(studyPrefsChanged);
-    ShieldRecipeClient.startup();
+
+    // Setup logging and listen for changes to logging prefs
+    LogManager.configure(Services.prefs.getIntPref(PREF_LOGGING_LEVEL, Log.Level.Warn));
+    Services.prefs.addObserver(PREF_LOGGING_LEVEL, LogManager.configure);
+    CleanupManager.addCleanupHandler(
+      () => Services.prefs.removeObserver(PREF_LOGGING_LEVEL, LogManager.configure),
+    );
+
+    try {
+      TelemetryEvents.init();
+    } catch (err) {
+      log.error("Failed to initialize telemetry events:", err);
+    }
+
+    try {
+      await AboutPages.init();
+    } catch (err) {
+      log.error("Failed to initialize about pages:", err);
+    }
+
+    try {
+      await AddonStudies.init();
+    } catch (err) {
+      log.error("Failed to initialize addon studies:", err);
+    }
+
+    try {
+      await PreferenceExperiments.init();
+    } catch (err) {
+      log.error("Failed to initialize preference experiments:", err);
+    }
+
+    try {
+      ShieldPreferences.init();
+    } catch (err) {
+      log.error("Failed to initialize preferences UI:", err);
+    }
+
+    await RecipeRunner.init();
+    Services.obs.notifyObservers(null, SHIELD_INIT_NOTIFICATION);
   },
 
   async uninit() {
-    // Wait for async write operations during shutdown before unloading modules.
-    await ShieldRecipeClient.shutdown();
+    await CleanupManager.cleanup();
+    Services.prefs.removeObserver(PREF_LOGGING_LEVEL, LogManager.configure);
 
     // In case the observer didn't run, clean it up.
     try {
@@ -77,22 +110,45 @@ var Normandy = {
     }
   },
 
-  initShieldPrefs(defaultPrefs) {
-    const prefBranch = Services.prefs.getDefaultBranch("");
-    for (const [name, value] of Object.entries(defaultPrefs)) {
-      switch (typeof value) {
-        case "string":
-          prefBranch.setCharPref(name, value);
-          break;
-        case "number":
-          prefBranch.setIntPref(name, value);
-          break;
-        case "boolean":
-          prefBranch.setBoolPref(name, value);
-          break;
-        default:
-          throw new Error(`Invalid default preference type ${typeof value}`);
+  migrateShieldPrefs() {
+    const legacyBranch = Services.prefs.getBranch(LEGACY_PREF_PREFIX + ".");
+    const newBranch = Services.prefs.getBranch(PREF_PREFIX + ".");
+
+    for (const prefName of legacyBranch.getChildList("")) {
+      const legacyPrefType = legacyBranch.getPrefType(prefName);
+      const newPrefType = newBranch.getPrefType(prefName);
+
+      // If new preference exists and is not the same as the legacy pref, skip it
+      if (newPrefType !== Services.prefs.PREF_INVALID && newPrefType !== legacyPrefType) {
+        log.error(`Error migrating normandy pref ${prefName}; pref type does not match.`);
+        continue;
       }
+
+      // Now move the value over. If it matches the default, this will be a no-op
+      switch (legacyPrefType) {
+        case Services.prefs.PREF_STRING:
+          newBranch.setCharPref(prefName, legacyBranch.getCharPref(prefName));
+          break;
+
+        case Services.prefs.PREF_INT:
+          newBranch.setIntPref(prefName, legacyBranch.getIntPref(prefName));
+          break;
+
+        case Services.prefs.PREF_BOOL:
+          newBranch.setBoolPref(prefName, legacyBranch.getBoolPref(prefName));
+          break;
+
+        case Services.prefs.PREF_INVALID:
+          // This should never happen.
+          log.error(`Error migrating pref ${prefName}; pref type is invalid (${legacyPrefType}).`);
+          break;
+
+        default:
+          // This should never happen either.
+          log.error(`Error getting startup pref ${prefName}; unknown value type ${legacyPrefType}.`);
+      }
+
+      legacyBranch.clearUserPref(prefName);
     }
   },
 

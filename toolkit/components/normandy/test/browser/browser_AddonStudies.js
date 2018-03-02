@@ -347,7 +347,7 @@ decorate_task(
     );
 
     // Only activeUninstalledStudy should have generated any events
-    ok(sendEventStub.calledOnce);
+    ok(sendEventStub.calledOnce, "no extra events should be generated");
   }
 );
 
