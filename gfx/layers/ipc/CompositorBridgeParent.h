@@ -72,6 +72,7 @@ class CompositorBridgeParent;
 class CompositorManagerParent;
 class CompositorVsyncScheduler;
 class HostLayerManager;
+class IAPZCTreeManager;
 class LayerTransactionParent;
 class PAPZParent;
 class CrossProcessCompositorBridgeParent;
@@ -485,10 +486,11 @@ private:
   void StopAndClearResources();
 
   /**
-   * This returns a reference to the APZCTreeManager to which
-   * pan/zoom-related events can be sent.
+   * This returns a reference to the IAPZCTreeManager "controller subinterface"
+   * to which pan/zoom-related events can be sent. The controller subinterface
+   * doesn't expose any sampler-thread APZCTreeManager methods.
    */
-  static already_AddRefed<APZCTreeManager> GetAPZCTreeManager(uint64_t aLayersId);
+  static already_AddRefed<IAPZCTreeManager> GetAPZCTreeManager(uint64_t aLayersId);
 
   /**
    * Release compositor-thread resources referred to by |aID|.
