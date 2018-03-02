@@ -143,7 +143,7 @@ CloseLiveIteratorIon(JSContext* cx, const InlineFrameIterator& frame, JSTryNote*
         else
             IteratorCloseForException(cx, iterObject);
     } else {
-        UnwindIteratorForUncatchableException(cx, iterObject);
+        UnwindIteratorForUncatchableException(iterObject);
     }
 }
 
@@ -369,7 +369,7 @@ CloseLiveIteratorsBaselineForUncatchableException(JSContext* cx, const JSJitFram
             BaselineFrameAndStackPointersFromTryNote(tn, frame, &framePointer, &stackPointer);
             Value iterValue(*(Value*) stackPointer);
             RootedObject iterObject(cx, &iterValue.toObject());
-            UnwindIteratorForUncatchableException(cx, iterObject);
+            UnwindIteratorForUncatchableException(iterObject);
         }
     }
 }
@@ -974,8 +974,8 @@ TraceBailoutFrame(JSTracer* trc, const JSJitFrameIter& frame)
 
 }
 
-void
-UpdateIonJSFrameForMinorGC(JSTracer* trc, const JSJitFrameIter& frame)
+static void
+UpdateIonJSFrameForMinorGC(const JSJitFrameIter& frame)
 {
     // Minor GCs may move slots/elements allocated in the nursery. Update
     // any slots/elements pointers stored in this frame.
@@ -1308,7 +1308,7 @@ TraceJitActivations(JSContext* cx, const CooperatingContext& target, JSTracer* t
 }
 
 void
-UpdateJitActivationsForMinorGC(JSRuntime* rt, JSTracer* trc)
+UpdateJitActivationsForMinorGC(JSRuntime* rt)
 {
     MOZ_ASSERT(JS::CurrentThreadIsHeapMinorCollecting());
     JSContext* cx = TlsContext.get();
@@ -1316,7 +1316,7 @@ UpdateJitActivationsForMinorGC(JSRuntime* rt, JSTracer* trc)
         for (JitActivationIterator activations(cx, target); !activations.done(); ++activations) {
             for (OnlyJSJitFrameIter iter(activations); !iter.done(); ++iter) {
                 if (iter.frame().type() == JitFrame_IonJS)
-                    UpdateIonJSFrameForMinorGC(trc, iter.frame());
+                    UpdateIonJSFrameForMinorGC(iter.frame());
             }
         }
     }

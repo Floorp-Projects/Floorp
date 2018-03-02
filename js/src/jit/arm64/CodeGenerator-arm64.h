@@ -184,10 +184,6 @@ class CodeGeneratorARM64 : public CodeGeneratorShared
 
     void visitLoadElementT(LLoadElementT* load);
 
-    void visitGuardShape(LGuardShape* guard);
-    void visitGuardObjectGroup(LGuardObjectGroup* guard);
-    void visitGuardClass(LGuardClass* guard);
-
     void visitInterruptCheck(LInterruptCheck* lir);
 
     void visitNegI(LNegI* lir);

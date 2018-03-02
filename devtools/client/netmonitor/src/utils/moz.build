@@ -8,7 +8,6 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'create-store.js',
     'filter-autocomplete-provider.js',
     'filter-predicates.js',
     'filter-text-utils.js',
@@ -19,6 +18,7 @@ DevToolsModules(
     'menu.js',
     'open-request-in-tab.js',
     'prefs.js',
+    'redux-connect.js',
     'request-utils.js',
     'sort-predicates.js',
     'sort-utils.js'

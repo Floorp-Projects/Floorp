@@ -298,7 +298,7 @@
       </toolbarbutton>
       <toolbarbutton id="sidebar-switcher-tabs"
                      label="&syncedTabs.sidebar.label;"
-                     class="subviewbutton subviewbutton-iconic"
+                     class="subviewbutton subviewbutton-iconic sync-ui-item"
                      observes="viewTabsSidebar"
                      oncommand="SidebarUI.show('viewTabsSidebar');">
         <observes element="viewTabsSidebar" attribute="checked"/>

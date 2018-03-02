@@ -6,6 +6,7 @@
 
 #include "sdnDocAccessible.h"
 
+#include "Accessible-inl.h"
 #include "ISimpleDOM.h"
 
 #include "nsNameSpaceManager.h"

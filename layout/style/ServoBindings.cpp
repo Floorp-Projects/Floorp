@@ -135,11 +135,10 @@ AssertIsMainThreadOrServoLangFontPrefsCacheLocked()
  * See nsStyleUtil::IsSignificantChild for details.
  */
 bool
-Gecko_IsSignificantChild(RawGeckoNodeBorrowed aNode, bool aTextIsSignificant,
+Gecko_IsSignificantChild(RawGeckoNodeBorrowed aNode,
                          bool aWhitespaceIsSignificant)
 {
   return nsStyleUtil::ThreadSafeIsSignificantChild(aNode->AsContent(),
-                                                   aTextIsSignificant,
                                                    aWhitespaceIsSignificant);
 }
 

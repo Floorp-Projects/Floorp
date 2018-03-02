@@ -21,6 +21,8 @@ def loader(kind, path, config, params, loaded_tasks):
             continue
 
         job['dependent-tasks'] = dependent_tasks
+        job['label'] = job['name']
+
         yield job
 
 

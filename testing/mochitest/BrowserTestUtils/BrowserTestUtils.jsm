@@ -1128,10 +1128,13 @@ var BrowserTestUtils = {
   tabRemoved(tab) {
     return new Promise(resolve => {
       let {messageManager: mm, frameLoader} = tab.linkedBrowser;
+      // FIXME! We shouldn't use "SessionStore:update" to know the tab was
+      // removed.  It will be processed before other "SessionStore:update"
+      // listeners hasn't been processed.
       mm.addMessageListener("SessionStore:update", function onMessage(msg) {
         if (msg.targetFrameLoader == frameLoader && msg.data.isFinal) {
           mm.removeMessageListener("SessionStore:update", onMessage);
-          resolve();
+          TestUtils.executeSoon(() => resolve());
         }
       }, true);
     });

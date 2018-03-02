@@ -28,10 +28,10 @@
 namespace js {
 
 class ArrayObject;
-class MatchPairs;
 class RegExpCompartment;
 class RegExpShared;
 class RegExpStatics;
+class VectorMatchPairs;
 
 using RootedRegExpShared = JS::Rooted<RegExpShared*>;
 using HandleRegExpShared = JS::Handle<RegExpShared*>;
@@ -159,7 +159,7 @@ class RegExpShared : public gc::TenuredCell
     // matches if specified and otherwise only determining if there is a match.
     static RegExpRunStatus execute(JSContext* cx, MutableHandleRegExpShared res,
                                    HandleLinearString input, size_t searchIndex,
-                                   MatchPairs* matches, size_t* endIndex);
+                                   VectorMatchPairs* matches, size_t* endIndex);
 
     // Register a table with this RegExpShared, and take ownership.
     bool addTable(JitCodeTable table) {

@@ -176,8 +176,7 @@ js::CancelOffThreadWasmTier2Generator()
 }
 
 bool
-js::StartOffThreadIonCompile(JSContext* cx, jit::IonBuilder* builder,
-                             const AutoLockHelperThreadState& lock)
+js::StartOffThreadIonCompile(jit::IonBuilder* builder, const AutoLockHelperThreadState& lock)
 {
     if (!HelperThreadState().ionWorklist(lock).append(builder))
         return false;
@@ -219,6 +218,7 @@ GetSelectorRuntime(const CompilationSelector& selector)
     {
         JSRuntime* match(JSScript* script)    { return script->runtimeFromActiveCooperatingThread(); }
         JSRuntime* match(JSCompartment* comp) { return comp->runtimeFromActiveCooperatingThread(); }
+        JSRuntime* match(Zone* zone)          { return zone->runtimeFromActiveCooperatingThread(); }
         JSRuntime* match(ZonesInState zbs)    { return zbs.runtime; }
         JSRuntime* match(JSRuntime* runtime)  { return runtime; }
         JSRuntime* match(AllCompilations all) { return nullptr; }
@@ -235,6 +235,7 @@ JitDataStructuresExist(const CompilationSelector& selector)
     {
         bool match(JSScript* script)    { return !!script->compartment()->jitCompartment(); }
         bool match(JSCompartment* comp) { return !!comp->jitCompartment(); }
+        bool match(Zone* zone)          { return !!zone->jitZone(); }
         bool match(ZonesInState zbs)    { return zbs.runtime->hasJitRuntime(); }
         bool match(JSRuntime* runtime)  { return runtime->hasJitRuntime(); }
         bool match(AllCompilations all) { return true; }
@@ -253,6 +254,7 @@ IonBuilderMatches(const CompilationSelector& selector, jit::IonBuilder* builder)
 
         bool match(JSScript* script)    { return script == builder_->script(); }
         bool match(JSCompartment* comp) { return comp == builder_->script()->compartment(); }
+        bool match(Zone* zone)          { return zone == builder_->script()->zone(); }
         bool match(JSRuntime* runtime)  { return runtime == builder_->script()->runtimeFromAnyThread(); }
         bool match(AllCompilations all) { return true; }
         bool match(ZonesInState zbs)    {
@@ -691,8 +693,7 @@ class MOZ_RAII AutoSetCreatedForHelperThread
 };
 
 static JSObject*
-CreateGlobalForOffThreadParse(JSContext* cx, ParseTaskKind kind,
-                              const gc::AutoSuppressGC& nogc)
+CreateGlobalForOffThreadParse(JSContext* cx, const gc::AutoSuppressGC& nogc)
 {
     JSCompartment* currentCompartment = cx->compartment();
 
@@ -751,7 +752,7 @@ StartOffThreadParseTask(JSContext* cx, ParseTask* task, const ReadOnlyCompileOpt
     gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
     AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
 
-    JSObject* global = CreateGlobalForOffThreadParse(cx, task->kind, nogc);
+    JSObject* global = CreateGlobalForOffThreadParse(cx, nogc);
     if (!global)
         return false;
 
@@ -1531,13 +1532,12 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind, void
 
     // Make sure we have all the constructors we need for the prototype
     // remapping below, since we can't GC while that's happening.
-    Rooted<GlobalObject*> global(cx, &cx->global()->as<GlobalObject>());
     if (!EnsureParserCreatedClasses(cx, kind)) {
         LeaveParseTaskZone(cx->runtime(), parseTask);
         return false;
     }
 
-    mergeParseTaskCompartment(cx, parseTask, global, cx->compartment());
+    mergeParseTaskCompartment(cx, parseTask, cx->compartment());
 
     bool ok = finishCallback(parseTask);
 
@@ -1685,7 +1685,6 @@ GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind, void
 
 void
 GlobalHelperThreadState::mergeParseTaskCompartment(JSContext* cx, ParseTask* parseTask,
-                                                   Handle<GlobalObject*> global,
                                                    JSCompartment* dest)
 {
     // After we call LeaveParseTaskZone() it's not safe to GC until we have

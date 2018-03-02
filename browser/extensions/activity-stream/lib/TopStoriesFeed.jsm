@@ -27,7 +27,7 @@ const SPOC_IMPRESSION_TRACKING_PREF = "feeds.section.topstories.spoc.impressions
 const REC_IMPRESSION_TRACKING_PREF = "feeds.section.topstories.rec.impressions";
 const MAX_LIFETIME_CAP = 100; // Guard against misconfiguration on the server
 
-var TopStoriesFeed = class TopStoriesFeed {
+this.TopStoriesFeed = class TopStoriesFeed {
   constructor() {
     this.spocCampaignMap = new Map();
     this.contentUpdateQueue = [];
@@ -311,7 +311,7 @@ var TopStoriesFeed = class TopStoriesFeed {
         // Create a new array with a spoc inserted at index 2
         const position = SectionsManager.sections.get(SECTION_ID).order;
         let rows = this.store.getState().Sections[position].rows.slice(0, this.stories.length);
-        rows.splice(2, 0, spocs[0]);
+        rows.splice(2, 0, Object.assign(spocs[0], {pinned: true}));
 
         // Send a content update to the target tab
         const action = {type: at.SECTION_UPDATE, data: Object.assign({rows}, {id: SECTION_ID})};
@@ -506,4 +506,4 @@ this.SPOC_IMPRESSION_TRACKING_PREF = SPOC_IMPRESSION_TRACKING_PREF;
 this.REC_IMPRESSION_TRACKING_PREF = REC_IMPRESSION_TRACKING_PREF;
 this.MIN_DOMAIN_AFFINITIES_UPDATE_TIME = MIN_DOMAIN_AFFINITIES_UPDATE_TIME;
 this.DEFAULT_RECS_EXPIRE_TIME = DEFAULT_RECS_EXPIRE_TIME;
-var EXPORTED_SYMBOLS = ["TopStoriesFeed", "STORIES_UPDATE_TIME", "TOPICS_UPDATE_TIME", "SECTION_ID", "SPOC_IMPRESSION_TRACKING_PREF", "MIN_DOMAIN_AFFINITIES_UPDATE_TIME", "REC_IMPRESSION_TRACKING_PREF", "DEFAULT_RECS_EXPIRE_TIME"];
+const EXPORTED_SYMBOLS = ["TopStoriesFeed", "STORIES_UPDATE_TIME", "TOPICS_UPDATE_TIME", "SECTION_ID", "SPOC_IMPRESSION_TRACKING_PREF", "MIN_DOMAIN_AFFINITIES_UPDATE_TIME", "REC_IMPRESSION_TRACKING_PREF", "DEFAULT_RECS_EXPIRE_TIME"];

@@ -973,7 +973,8 @@ this.MessageChannel = {
           // Error objects are not structured-clonable, so just copy
           // over the important properties.
           for (let key of ["fileName", "filename", "lineNumber",
-                           "columnNumber", "message", "stack", "result"]) {
+                           "columnNumber", "message", "stack", "result",
+                           "mozWebExtLocation"]) {
             if (key in error) {
               response.error[key] = error[key];
             }

@@ -782,9 +782,8 @@ inline void
 MacroAssembler::cmpPtrSet(Assembler::Condition cond, Address lhs, ImmPtr rhs,
                           Register dest)
 {
-    loadPtr(lhs, ScratchRegister);
-    movePtr(rhs, SecondScratchReg);
-    cmpPtrSet(cond, ScratchRegister, SecondScratchReg, dest);
+    loadPtr(lhs, SecondScratchReg);
+    cmpPtrSet(cond, SecondScratchReg, rhs, dest);
 }
 
 template<>

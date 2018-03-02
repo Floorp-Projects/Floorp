@@ -8,7 +8,7 @@ const Services = require("Services");
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
+const { connect } = require("../utils/redux-connect");
 
 const Actions = require("../actions/index");
 const { FILTER_SEARCH_DELAY, FILTER_TAGS } = require("../constants");

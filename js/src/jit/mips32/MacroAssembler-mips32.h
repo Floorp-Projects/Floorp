@@ -131,7 +131,7 @@ class MacroAssemblerMIPS : public MacroAssemblerMIPSShared
     void ma_b(Address addr, ImmGCPtr imm, Label* l, Condition c, JumpKind jumpKind = LongJump);
     void ma_b(Address addr, Register rhs, Label* l, Condition c, JumpKind jumpKind = LongJump) {
         MOZ_ASSERT(rhs != ScratchRegister);
-        ma_load(ScratchRegister, addr, SizeWord);
+        ma_lw(ScratchRegister, addr);
         ma_b(ScratchRegister, rhs, l, c, jumpKind);
     }
 
@@ -157,12 +157,19 @@ class MacroAssemblerMIPS : public MacroAssemblerMIPSShared
     void ma_cmp_set(Register dst, Register lhs, ImmPtr imm, Condition c) {
         ma_cmp_set(dst, lhs, Imm32(uint32_t(imm.value)), c);
     }
-    void ma_cmp_set(Register rd, Register rs, Address addr, Condition c);
-    void ma_cmp_set(Register dst, Address lhs, Register rhs, Condition c);
-    void ma_cmp_set(Register dst, Address lhs, ImmPtr imm, Condition c) {
+    void ma_cmp_set(Register dst, Register lhs, Address addr, Condition c) {
+        MOZ_ASSERT(lhs != ScratchRegister);
+        ma_lw(ScratchRegister, addr);
+        ma_cmp_set(dst, lhs, ScratchRegister, c);
+    }
+    void ma_cmp_set(Register dst, Address lhs, Register rhs, Condition c) {
+        MOZ_ASSERT(rhs != ScratchRegister);
         ma_lw(ScratchRegister, lhs);
-        ma_li(SecondScratchReg, Imm32(uint32_t(imm.value)));
-        ma_cmp_set(dst, ScratchRegister, SecondScratchReg, c);
+        ma_cmp_set(dst, ScratchRegister, rhs, c);
+    }
+    void ma_cmp_set(Register dst, Address lhs, ImmPtr imm, Condition c) {
+        ma_lw(SecondScratchReg, lhs);
+        ma_cmp_set(dst, SecondScratchReg, imm, c);
     }
 
     // These fuctions abstract the access to high part of the double precision

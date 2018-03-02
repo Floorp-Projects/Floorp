@@ -110,17 +110,6 @@ ProfileBuffer::DeleteExpiredStoredMarkers()
   }
 }
 
-void
-ProfileBuffer::Reset()
-{
-  // Empty the buffer (make sure that mRangeEnd - mRangeStart == 0) and
-  // increase the positions by twice the buffer size for good measure.
-  // This method isn't really intended to stay around for long; the only user
-  // wants to flush only one thread's data and ends up accidentally flushing
-  // the whole buffer which holds data for all threads, see bug 1429904.
-  mRangeStart = mRangeEnd = mRangeEnd + 2 * mEntrySize;
-}
-
 size_t
 ProfileBuffer::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {

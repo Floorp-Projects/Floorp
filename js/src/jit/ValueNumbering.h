@@ -97,9 +97,9 @@ class ValueNumberer
     bool loopHasOptimizablePhi(MBasicBlock* header) const;
 
     MOZ_MUST_USE bool visitDefinition(MDefinition* def);
-    MOZ_MUST_USE bool visitControlInstruction(MBasicBlock* block, const MBasicBlock* root);
+    MOZ_MUST_USE bool visitControlInstruction(MBasicBlock* block);
     MOZ_MUST_USE bool visitUnreachableBlock(MBasicBlock* block);
-    MOZ_MUST_USE bool visitBlock(MBasicBlock* block, const MBasicBlock* root);
+    MOZ_MUST_USE bool visitBlock(MBasicBlock* block);
     MOZ_MUST_USE bool visitDominatorTree(MBasicBlock* root);
     MOZ_MUST_USE bool visitGraph();
 

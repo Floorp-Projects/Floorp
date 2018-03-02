@@ -163,6 +163,7 @@
     "url": "chrome://browser/content/ext-tabs.js",
     "schema": "chrome://browser/content/schemas/tabs.json",
     "scopes": ["addon_parent"],
+    "events": ["update", "disable"],
     "paths": [
       ["tabs"]
     ]

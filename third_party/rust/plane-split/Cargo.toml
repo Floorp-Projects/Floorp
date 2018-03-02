@@ -12,21 +12,21 @@
 
 [package]
 name = "plane-split"
-version = "0.7.0"
+version = "0.8.0"
 authors = ["Dzmitry Malyshau <kvark@mozilla.com>"]
 description = "Plane splitting"
 documentation = "https://docs.rs/plane-split"
 keywords = ["geometry", "math"]
 license = "MPL-2.0"
-repository = "https://github.com/kvark/plane-split"
+repository = "https://github.com/servo/plane-split"
 [dependencies.binary-space-partition]
 version = "0.1.2"
 
 [dependencies.euclid]
-version = "0.16"
+version = "0.17"
 
 [dependencies.log]
-version = "0.3"
+version = "0.4"
 
 [dependencies.num-traits]
 version = "0.1.37"

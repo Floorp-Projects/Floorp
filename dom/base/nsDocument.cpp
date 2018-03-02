@@ -1445,8 +1445,8 @@ nsIDocument::nsIDocument()
     mHasHadScriptHandlingObject(false),
     mIsBeingUsedAsImage(false),
     mIsSyntheticDocument(false),
-    mHasLinksToUpdate(false),
     mHasLinksToUpdateRunnable(false),
+    mFlushingPendingLinkUpdates(false),
     mMayHaveDOMMutationObservers(false),
     mMayHaveAnimationObservers(false),
     mHasMixedActiveContentLoaded(false),
@@ -1491,7 +1491,6 @@ nsIDocument::nsIDocument()
     mType(eUnknown),
     mDefaultElementType(0),
     mAllowXULXBL(eTriUnset),
-    mIsLinkUpdateRegistrationsForbidden(false),
     mBidiOptions(IBMBIDI_DEFAULT_BIDI_OPTIONS),
     mSandboxFlags(0),
     mPartID(0),
@@ -9612,15 +9611,13 @@ nsIDocument::EnumerateActivityObservers(ActivityObserverEnumerator aEnumerator,
 void
 nsIDocument::RegisterPendingLinkUpdate(Link* aLink)
 {
-  MOZ_RELEASE_ASSERT(!mIsLinkUpdateRegistrationsForbidden);
-
   if (aLink->HasPendingLinkUpdate()) {
     return;
   }
 
   aLink->SetHasPendingLinkUpdate();
 
-  if (!mHasLinksToUpdateRunnable) {
+  if (!mHasLinksToUpdateRunnable && !mFlushingPendingLinkUpdates) {
     nsCOMPtr<nsIRunnable> event =
       NewRunnableMethod("nsIDocument::FlushPendingLinkUpdatesFromRunnable",
                         this,
@@ -9637,7 +9634,6 @@ nsIDocument::RegisterPendingLinkUpdate(Link* aLink)
   }
 
   mLinksToUpdate.InfallibleAppend(aLink);
-  mHasLinksToUpdate = true;
 }
 
 void
@@ -9651,24 +9647,26 @@ nsIDocument::FlushPendingLinkUpdatesFromRunnable()
 void
 nsIDocument::FlushPendingLinkUpdates()
 {
-  MOZ_RELEASE_ASSERT(!mIsLinkUpdateRegistrationsForbidden);
-  if (!mHasLinksToUpdate)
+  if (mFlushingPendingLinkUpdates) {
     return;
+  }
 
-  AutoRestore<bool> saved(mIsLinkUpdateRegistrationsForbidden);
-  mIsLinkUpdateRegistrationsForbidden = true;
-  for (auto iter = mLinksToUpdate.Iter(); !iter.Done(); iter.Next()) {
-    Link* link = iter.Get();
-    Element* element = link->GetElement();
-    if (element->OwnerDoc() == this) {
-      link->ClearHasPendingLinkUpdate();
-      if (element->IsInComposedDoc()) {
-        element->UpdateLinkState(link->LinkState());
+  auto restore = MakeScopeExit([&] { mFlushingPendingLinkUpdates = false; });
+  mFlushingPendingLinkUpdates = true;
+
+  while (!mLinksToUpdate.IsEmpty()) {
+    LinksToUpdateList links(Move(mLinksToUpdate));
+    for (auto iter = links.Iter(); !iter.Done(); iter.Next()) {
+      Link* link = iter.Get();
+      Element* element = link->GetElement();
+      if (element->OwnerDoc() == this) {
+        link->ClearHasPendingLinkUpdate();
+        if (element->IsInComposedDoc()) {
+          element->UpdateLinkState(link->LinkState());
+        }
       }
     }
   }
-  mLinksToUpdate.Clear();
-  mHasLinksToUpdate = false;
 }
 
 already_AddRefed<nsIDocument>

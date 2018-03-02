@@ -2,6 +2,7 @@
   "title": "Netmonitor",
   "environment": "development",
   "baseWorkerURL": "http://localhost:8000/public/build/",
+  "defaultURL": "http://softwareishard.com/test/harexporttrigger/",
   "host": "",
   "theme": "light",
   "dir": "ltr",

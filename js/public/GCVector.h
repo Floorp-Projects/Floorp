@@ -99,14 +99,14 @@ class GCVector
         return vector.infallibleAppend(aBegin, aLength);
     }
 
-    template<typename U, size_t O, class BP>
-    MOZ_MUST_USE bool appendAll(const mozilla::Vector<U, O, BP>& aU) { return vector.appendAll(aU); }
-    template<typename U, size_t O, class BP>
-    MOZ_MUST_USE bool appendAll(const GCVector<U, O, BP>& aU) {
-        return vector.append(aU.begin(), aU.length());
+    template<typename U>
+    MOZ_MUST_USE bool appendAll(const U& aU) {
+        return vector.append(aU.begin(), aU.end());
     }
 
-    MOZ_MUST_USE bool appendN(const T& val, size_t count) { return vector.appendN(val, count); }
+    MOZ_MUST_USE bool appendN(const T& val, size_t count) {
+        return vector.appendN(val, count);
+    }
 
     template<typename U>
     MOZ_MUST_USE bool append(const U* aBegin, const U* aEnd) {
@@ -219,10 +219,8 @@ class MutableWrappedPtrOperations<JS::GCVector<T, Capacity, AllocPolicy>, Wrappe
     MOZ_MUST_USE bool emplaceBack(Args&&... aArgs) {
         return vec().emplaceBack(mozilla::Forward<Args...>(aArgs...));
     }
-    template<typename U, size_t O, class BP>
-    MOZ_MUST_USE bool appendAll(const mozilla::Vector<U, O, BP>& aU) { return vec().appendAll(aU); }
-    template<typename U, size_t O, class BP>
-    MOZ_MUST_USE bool appendAll(const JS::GCVector<U, O, BP>& aU) { return vec().appendAll(aU); }
+    template<typename U>
+    MOZ_MUST_USE bool appendAll(const U& aU) { return vec().appendAll(aU); }
     MOZ_MUST_USE bool appendN(const T& aT, size_t aN) { return vec().appendN(aT, aN); }
     template<typename U>
     MOZ_MUST_USE bool append(const U* aBegin, const U* aEnd) {
@@ -252,5 +250,18 @@ class MutableWrappedPtrOperations<JS::GCVector<T, Capacity, AllocPolicy>, Wrappe
 };
 
 } // namespace js
+
+namespace JS {
+
+// An automatically rooted vector for stack use.
+template <typename T>
+class AutoVector : public Rooted<GCVector<T, 8>> {
+    using Vec = GCVector<T, 8>;
+    using Base = Rooted<Vec>;
+  public:
+    explicit AutoVector(JSContext* cx) : Base(cx, Vec(cx)) {}
+};
+
+} // namespace JS
 
 #endif // js_GCVector_h

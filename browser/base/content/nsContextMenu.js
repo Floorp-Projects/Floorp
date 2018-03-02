@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
   DevToolsShim: "chrome://devtools-shim/content/DevToolsShim.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 
 var gContextMenuContentData = null;
@@ -358,7 +359,7 @@ nsContextMenu.prototype = {
     var isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
     var showContainers = Services.prefs.getBoolPref("privacy.userContext.enabled");
     this.showItem("context-openlink", shouldShow && !isWindowPrivate);
-    this.showItem("context-openlinkprivate", shouldShow);
+    this.showItem("context-openlinkprivate", shouldShow && PrivateBrowsingUtils.enabled);
     this.showItem("context-openlinkintab", shouldShow && !inContainer);
     this.showItem("context-openlinkincontainertab", shouldShow && inContainer);
     this.showItem("context-openlinkinusercontext-menu", shouldShow && !isWindowPrivate && showContainers);

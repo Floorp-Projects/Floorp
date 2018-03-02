@@ -18,10 +18,15 @@ dictionary PaymentCurrencyAmount {
            DOMString currencySystem = "urn:iso:std:iso:4217";
 };
 
+enum PaymentItemType {
+  "tax"
+};
+
 dictionary PaymentItem {
   required DOMString             label;
   required PaymentCurrencyAmount amount;
            boolean               pending = false;
+           PaymentItemType       type;
 };
 
 dictionary PaymentShippingOption {

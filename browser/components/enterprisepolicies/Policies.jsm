@@ -172,6 +172,17 @@ var Policies = {
     }
   },
 
+  "DisablePrivateBrowsing": {
+    onBeforeAddons(manager, param) {
+      if (param) {
+        manager.disallowFeature("privatebrowsing");
+        manager.disallowFeature("about:privatebrowsing", true);
+        setAndLockPref("browser.privatebrowsing.autostart", false);
+      }
+    }
+  },
+
+
   "DisplayBookmarksToolbar": {
     onBeforeUIStartup(manager, param) {
       if (param) {
@@ -207,6 +218,30 @@ var Policies = {
   "FlashPlugin": {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("plugin:flash", param.Allow, param.Block);
+    }
+  },
+
+  "Homepage": {
+    onBeforeUIStartup(manager, param) {
+      // |homepages| will be a string containing a pipe-separated ('|') list of
+      // URLs because that is what the "Home page" section of about:preferences
+      // (and therefore what the pref |browser.startup.homepage|) accepts.
+      let homepages = param.URL.spec;
+      if (param.Additional && param.Additional.length > 0) {
+        homepages += "|" + param.Additional.map(url => url.spec).join("|");
+      }
+      if (param.Locked) {
+        setAndLockPref("browser.startup.homepage", homepages);
+        setAndLockPref("browser.startup.page", 1);
+        setAndLockPref("pref.browser.homepage.disable_button.current_page", true);
+        setAndLockPref("pref.browser.homepage.disable_button.bookmark_page", true);
+        setAndLockPref("pref.browser.homepage.disable_button.restore_default", true);
+      } else {
+        runOncePerModification("setHomepage", homepages, () => {
+          Services.prefs.setStringPref("browser.startup.homepage", homepages);
+          Services.prefs.setIntPref("browser.startup.page", 1);
+        });
+      }
     }
   },
 
@@ -326,6 +361,36 @@ function runOnce(actionName, callback) {
     log.debug(`Not running action ${actionName} again because it has already run.`);
     return;
   }
-  callback();
   Services.prefs.setBoolPref(prefName, true);
+  callback();
+}
+
+/**
+ * runOncePerModification
+ *
+ * Helper function similar to runOnce. The difference is that runOnce runs the
+ * callback once when the policy is set, then never again.
+ * runOncePerModification runs the callback once each time the policy value
+ * changes from its previous value.
+ *
+ * @param {string} actionName
+ *        A given name which will be used to track if this callback has run.
+ *        This string will be part of a pref name.
+ * @param {string} policyValue
+ *        The current value of the policy. This will be compared to previous
+ *        values given to this function to determine if the policy value has
+ *        changed. Regardless of the data type of the policy, this must be a
+ *        string.
+ * @param {Function} callback
+ *        The callback to be run when the pref value changes
+ */
+function runOncePerModification(actionName, policyValue, callback) {
+  let prefName = `browser.policies.runOncePerModification.${actionName}`;
+  let oldPolicyValue = Services.prefs.getStringPref(prefName, undefined);
+  if (policyValue === oldPolicyValue) {
+    log.debug(`Not running action ${actionName} again because the policy's value is unchanged`);
+    return;
+  }
+  Services.prefs.setStringPref(prefName, policyValue);
+  callback();
 }

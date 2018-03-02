@@ -46,3 +46,8 @@ bool rect_inside_rect(RectWithSize little, RectWithSize big) {
     return all(lessThanEqual(vec4(big.p0, little.p0 + little.size),
                              vec4(little.p0, big.p0 + big.size)));
 }
+
+float point_inside_rect(vec2 p, vec2 p0, vec2 p1) {
+    vec2 s = step(p0, p) - step(p1, p);
+    return s.x * s.y;
+}

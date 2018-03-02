@@ -209,7 +209,7 @@ function handleError(aError) {
 
 function waitForConnectionChange(expectedState, count = 1) {
   return new Promise(resolve => {
-    let onConnectionChange = (_, state) => {
+    let onConnectionChange = state => {
       if (state != expectedState) {
         return;
       }

@@ -287,7 +287,7 @@ void EnsureBareExitFrame(JitActivation* act, JitFrameLayout* frame);
 
 void TraceJitActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc);
 
-void UpdateJitActivationsForMinorGC(JSRuntime* rt, JSTracer* trc);
+void UpdateJitActivationsForMinorGC(JSRuntime* rt);
 
 static inline uint32_t
 EncodeFrameHeaderSize(size_t headerSize)

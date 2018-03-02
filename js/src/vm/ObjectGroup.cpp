@@ -1762,7 +1762,7 @@ ObjectGroupCompartment::PlainObjectTableSweepPolicy::needsSweep(PlainObjectKey* 
 }
 
 void
-ObjectGroupCompartment::sweep(FreeOp* fop)
+ObjectGroupCompartment::sweep()
 {
     /*
      * Iterate through the array/object group tables and remove all entries

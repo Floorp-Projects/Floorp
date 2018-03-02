@@ -39,34 +39,27 @@ SVGTitleElement::~SVGTitleElement()
 }
 
 void
-SVGTitleElement::CharacterDataChanged(nsIDocument* aDocument,
-                                      nsIContent* aContent,
+SVGTitleElement::CharacterDataChanged(nsIContent* aContent,
                                       const CharacterDataChangeInfo&)
 {
   SendTitleChangeEvent(false);
 }
 
 void
-SVGTitleElement::ContentAppended(nsIDocument *aDocument,
-                                 nsIContent *aContainer,
-                                 nsIContent *aFirstNewContent)
+SVGTitleElement::ContentAppended(nsIContent* aFirstNewContent)
 {
   SendTitleChangeEvent(false);
 }
 
 void
-SVGTitleElement::ContentInserted(nsIDocument *aDocument,
-                                 nsIContent *aContainer,
-                                 nsIContent *aChild)
+SVGTitleElement::ContentInserted(nsIContent* aChild)
 {
   SendTitleChangeEvent(false);
 }
 
 void
-SVGTitleElement::ContentRemoved(nsIDocument *aDocument,
-                                nsIContent *aContainer,
-                                nsIContent *aChild,
-                                nsIContent *aPreviousSibling)
+SVGTitleElement::ContentRemoved(nsIContent* aChild,
+                                nsIContent* aPreviousSibling)
 {
   SendTitleChangeEvent(false);
 }

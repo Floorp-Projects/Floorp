@@ -107,6 +107,24 @@ protected:
   virtual void NotifyDllLoad(const bool aIsMainThread, const nsString& aDllName) = 0;
 };
 
+#else
+
+class BasicDllServices : public detail::DllServicesBase
+{
+public:
+  BasicDllServices()
+  {
+    Enable();
+  }
+
+  ~BasicDllServices()
+  {
+    Disable();
+  }
+
+  virtual void DispatchDllLoadNotification(PCUNICODE_STRING aDllName) override {}
+};
+
 #endif // defined(MOZILLA_INTERNAL_API)
 
 } // namespace glue

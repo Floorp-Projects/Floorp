@@ -33,7 +33,7 @@ window.gActivityStreamStrings = {
   "confirm_history_delete_p1": "คุณแน่ใจหรือไม่ว่าต้องการลบทุกอินสแตนซ์ของหน้านี้ออกจากประวัติของคุณ?",
   "confirm_history_delete_notice_p2": "การกระทำนี้ไม่สามารถเลิกทำได้",
   "menu_action_save_to_pocket": "บันทึกไปยัง Pocket",
-  "menu_action_delete_pocket": "Delete from Pocket",
+  "menu_action_delete_pocket": "ลบจาก Pocket",
   "menu_action_archive_pocket": "Archive in Pocket",
   "search_for_something_with": "ค้นหา {search_term} ด้วย:",
   "search_button": "ค้นหา",
@@ -85,7 +85,7 @@ window.gActivityStreamStrings = {
   "edit_topsites_add_button": "เพิ่ม",
   "topsites_form_add_header": "ไซต์เด่นใหม่",
   "topsites_form_edit_header": "แก้ไขไซต์เด่น",
-  "topsites_form_title_label": "Title",
+  "topsites_form_title_label": "ชื่อเรื่อง",
   "topsites_form_title_placeholder": "ป้อนชื่อเรื่อง",
   "topsites_form_url_label": "URL",
   "topsites_form_url_placeholder": "พิมพ์หรือวาง URL",
@@ -108,9 +108,8 @@ window.gActivityStreamStrings = {
   "section_menu_action_collapse_section": "Collapse Section",
   "section_menu_action_expand_section": "Expand Section",
   "section_menu_action_manage_section": "Manage Section",
-  "section_menu_action_add_topsite": "Add Top Site",
+  "section_menu_action_add_topsite": "เพิ่มไซต์เด่น",
   "section_menu_action_move_up": "Move Up",
   "section_menu_action_move_down": "Move Down",
-  "section_menu_action_privacy_notice": "Privacy Notice",
-  "edit_topsites_add_button_tooltip": "เพิ่มไซต์เด่น"
+  "section_menu_action_privacy_notice": "ประกาศความเป็นส่วนตัว"
 };

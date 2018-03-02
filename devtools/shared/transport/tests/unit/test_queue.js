@@ -112,7 +112,7 @@ var test_transport = async function (transportFactory) {
         DebuggerServer._connections[connId].onBulkPacket = on_bulk_packet;
       }
 
-      DebuggerServer.on("connectionchange", (event, type) => {
+      DebuggerServer.on("connectionchange", type => {
         if (type === "closed") {
           serverDeferred.resolve();
         }

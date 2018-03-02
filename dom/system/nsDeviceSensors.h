@@ -69,13 +69,11 @@ private:
                           double y,
                           double z);
 
-  bool mEnabled;
-
   inline bool IsSensorEnabled(uint32_t aType) {
     return mWindowListeners[aType]->Length() > 0;
   }
 
-  bool AreSensorEventsDisabled(nsIDOMWindow* aWindow);
+  bool IsSensorAllowedByPref(uint32_t aType, nsIDOMWindow* aWindow);
 
   mozilla::TimeStamp mLastDOMMotionEventTime;
   bool mIsUserProximityNear;

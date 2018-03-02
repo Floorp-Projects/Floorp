@@ -632,7 +632,7 @@ NativeIterator::initProperties(JSContext* cx, Handle<PropertyIteratorObject*> ob
 }
 
 static inline void
-RegisterEnumerator(JSContext* cx, PropertyIteratorObject* iterobj, NativeIterator* ni)
+RegisterEnumerator(JSContext* cx, NativeIterator* ni)
 {
     /* Register non-escaping native enumerators (for-in) with the current context. */
     ni->link(cx->compartment()->enumerators);
@@ -683,7 +683,7 @@ VectorToKeyIterator(JSContext* cx, HandleObject obj, AutoIdVector& keys, uint32_
         MOZ_ASSERT(ind == numGuards);
     }
 
-    RegisterEnumerator(cx, iterobj, ni);
+    RegisterEnumerator(cx, ni);
     return iterobj;
 }
 
@@ -712,7 +712,7 @@ js::NewEmptyPropertyIterator(JSContext* cx)
     if (!ni->initProperties(cx, iterobj, keys))
         return nullptr;
 
-    RegisterEnumerator(cx, iterobj, ni);
+    RegisterEnumerator(cx, ni);
     return iterobj;
 }
 
@@ -792,7 +792,7 @@ LookupInIteratorCache(JSContext* cx, JSObject* obj, uint32_t* numGuards)
 }
 
 static bool
-CanStoreInIteratorCache(JSContext* cx, JSObject* obj)
+CanStoreInIteratorCache(JSObject* obj)
 {
     do {
         if (obj->isNative()) {
@@ -818,7 +818,7 @@ CanStoreInIteratorCache(JSContext* cx, JSObject* obj)
 static MOZ_MUST_USE bool
 StoreInIteratorCache(JSContext* cx, JSObject* obj, PropertyIteratorObject* iterobj)
 {
-    MOZ_ASSERT(CanStoreInIteratorCache(cx, obj));
+    MOZ_ASSERT(CanStoreInIteratorCache(obj));
 
     NativeIterator* ni = iterobj->getNativeIterator();
     MOZ_ASSERT(ni->guard_length > 0);
@@ -852,11 +852,11 @@ js::GetIterator(JSContext* cx, HandleObject obj)
     if (PropertyIteratorObject* iterobj = LookupInIteratorCache(cx, obj, &numGuards)) {
         NativeIterator* ni = iterobj->getNativeIterator();
         UpdateNativeIterator(ni, obj);
-        RegisterEnumerator(cx, iterobj, ni);
+        RegisterEnumerator(cx, ni);
         return iterobj;
     }
 
-    if (numGuards > 0 && !CanStoreInIteratorCache(cx, obj))
+    if (numGuards > 0 && !CanStoreInIteratorCache(obj))
         numGuards = 0;
 
     MOZ_ASSERT(!obj->is<PropertyIteratorObject>());
@@ -1190,7 +1190,7 @@ js::IteratorCloseForException(JSContext* cx, HandleObject obj)
 }
 
 void
-js::UnwindIteratorForUncatchableException(JSContext* cx, JSObject* obj)
+js::UnwindIteratorForUncatchableException(JSObject* obj)
 {
     if (obj->is<PropertyIteratorObject>()) {
         NativeIterator* ni = obj->as<PropertyIteratorObject>().getNativeIterator();

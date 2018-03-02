@@ -867,6 +867,10 @@ HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
     return NS_OK;
   }
 
+  if (nsMixedContentBlocker::IsPotentiallyTrustworthyOnion(aActionURL)) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsPIDOMWindowOuter> window = OwnerDoc()->GetWindow();
   if (!window) {
     return NS_ERROR_FAILURE;

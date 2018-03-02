@@ -210,10 +210,6 @@ user_pref("browser.pagethumbnails.capturing_disabled", true);
 // download test runs first doesn't show the popup inconsistently.
 user_pref("browser.download.panel.shown", true);
 
-// Assume the about:newtab page's intro panels have been shown to not depend on
-// which test runs first and happens to open about:newtab
-user_pref("browser.newtabpage.introShown", true);
-
 // Enable webapps testing mode, which bypasses native installation.
 user_pref("browser.webapps.testing", true);
 

@@ -105,87 +105,87 @@ add_task(async function test_pac_results() {
     {
       proxy: undefined,
       expected: {
-        error: "FindProxyForURL: Return type must be a string or array of objects",
+        error: "ProxyInfoData: proxyData must be a string or array of objects",
       },
     },
     {
       proxy: 5,
       expected: {
-        error: "FindProxyForURL: Return type must be a string or array of objects",
+        error: "ProxyInfoData: proxyData must be a string or array of objects",
       },
     },
     {
       proxy: "INVALID",
       expected: {
-        error: "FindProxyForURL: Unrecognized proxy type: \"invalid\"",
+        error: "ProxyInfoData: Unrecognized proxy type: \"invalid\"",
       },
     },
     {
       proxy: "SOCKS",
       expected: {
-        error: "FindProxyForURL: Invalid host or port from proxy rule: \"SOCKS\"",
+        error: "ProxyInfoData: Invalid host or port from proxy rule: \"SOCKS\"",
       },
     },
     {
       proxy: "PROXY 1.2.3.4:8080 EXTRA",
       expected: {
-        error: "FindProxyForURL: Invalid arguments passed for proxy rule: \"PROXY 1.2.3.4:8080 EXTRA\"",
+        error: "ProxyInfoData: Invalid arguments passed for proxy rule: \"PROXY 1.2.3.4:8080 EXTRA\"",
       },
     },
     {
       proxy: "PROXY :",
       expected: {
-        error: "FindProxyForURL: Invalid host or port from proxy rule: \"PROXY :\"",
+        error: "ProxyInfoData: Invalid host or port from proxy rule: \"PROXY :\"",
       },
     },
     {
       proxy: "PROXY :8080",
       expected: {
-        error: "FindProxyForURL: Invalid host or port from proxy rule: \"PROXY :8080\"",
+        error: "ProxyInfoData: Invalid host or port from proxy rule: \"PROXY :8080\"",
       },
     },
     {
       proxy: "PROXY ::",
       expected: {
-        error: "FindProxyForURL: Invalid host or port from proxy rule: \"PROXY ::\"",
+        error: "ProxyInfoData: Invalid host or port from proxy rule: \"PROXY ::\"",
       },
     },
     {
       proxy: "PROXY 1.2.3.4:",
       expected: {
-        error: "FindProxyForURL: Invalid host or port from proxy rule: \"PROXY 1.2.3.4:\"",
+        error: "ProxyInfoData: Invalid host or port from proxy rule: \"PROXY 1.2.3.4:\"",
       },
     },
     {
       proxy: "DIRECT 1.2.3.4:8080",
       expected: {
-        error: "FindProxyForURL: Invalid argument for proxy type: \"direct\"",
+        error: "ProxyInfoData: Invalid argument for proxy type: \"direct\"",
       },
     },
     {
       proxy: ["SOCKS foo.bar:1080", {type: "http", host: "foo.bar", port: 3128}],
       expected: {
-        error: "FindProxyForURL: Invalid proxy server type: \"undefined\"",
+        error: "ProxyInfoData: Invalid proxy server type: \"undefined\"",
       },
     },
     {
       proxy: {type: "socks", host: "foo.bar", port: 1080, username: "mungosantamaria", password: "pass123"},
       expected: {
-        error: "FindProxyForURL: Return type must be a string or array of objects",
+        error: "ProxyInfoData: proxyData must be a string or array of objects",
       },
     },
     {
       proxy: [{type: "pptp", host: "foo.bar", port: 1080, username: "mungosantamaria", password: "pass123", proxyDNS: true, failoverTimeout: 3},
               {type: "http", host: "192.168.1.1", port: 1128, username: "mungosantamaria", password: "word321"}],
       expected: {
-        error: "FindProxyForURL: Invalid proxy server type: \"pptp\"",
+        error: "ProxyInfoData: Invalid proxy server type: \"pptp\"",
       },
     },
     {
       proxy: [{type: "http", host: "foo.bar", port: 65536, username: "mungosantamaria", password: "pass123", proxyDNS: true, failoverTimeout: 3},
               {type: "http", host: "192.168.1.1", port: 3128, username: "mungosantamaria", password: "word321"}],
       expected: {
-        error: "FindProxyForURL: Proxy server port 65536 outside range 1 to 65535",
+        error: "ProxyInfoData: Proxy server port 65536 outside range 1 to 65535",
       },
     },
     {

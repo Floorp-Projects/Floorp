@@ -18,7 +18,7 @@ replay = ["webrender_api/deserialize", "ron", "serde"]
 app_units = "0.6"
 bincode = "0.9"
 byteorder = "1.0"
-euclid = "0.16"
+euclid = "0.17"
 fxhash = "0.2.1"
 gleam = "0.4.20"
 lazy_static = "1"
@@ -29,7 +29,7 @@ rayon = "1"
 webrender_api = {path = "../webrender_api"}
 bitflags = "1.0"
 thread_profiler = "0.1.1"
-plane-split = "0.7"
+plane-split = "0.8"
 png = { optional = true, version = "0.11" }
 smallvec = "0.6"
 ws = { optional = true, version = "0.7.3" }

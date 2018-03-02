@@ -83,6 +83,7 @@ class ToggleMenu extends PureComponent {
       return dom.div(
         {
           className: "devtools-menu-item",
+          key: id,
         },
         dom.input({
           type: "checkbox",

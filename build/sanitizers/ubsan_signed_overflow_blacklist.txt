@@ -248,9 +248,6 @@ src:*/xpcom/ds/PLDHashTable.cpp
 # Hash/Cache function in Skia
 fun:*GradientShaderCache*Build32bitCache*
 
-# Hash function in js/public/Utility.h
-fun:ScrambleHashCode*
-
 # Hashing functions in Cairo
 fun:*_hash_matrix_fnv*
 fun:*_hash_mix_bits*

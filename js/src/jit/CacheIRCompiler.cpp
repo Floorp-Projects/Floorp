@@ -1472,9 +1472,7 @@ CacheIRCompiler::emitGuardIsNativeObject()
     if (!addFailurePath(&failure))
         return false;
 
-    masm.loadObjClass(obj, scratch);
-    masm.branchTest32(Assembler::NonZero, Address(scratch, Class::offsetOfFlags()),
-                      Imm32(Class::NON_NATIVE), failure->label());
+    masm.branchIfNonNativeObj(obj, scratch, failure->label());
     return true;
 }
 
@@ -1662,6 +1660,18 @@ CacheIRCompiler::emitLoadWrapperTarget()
 
     masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), reg);
     masm.unboxObject(Address(reg, detail::ProxyReservedSlots::offsetOfPrivateSlot()), reg);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadValueTag()
+{
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    Register res = allocator.defineRegister(masm, reader.valueTagOperandId());
+
+    Register tag = masm.extractTag(val, res);
+    if (tag != res)
+        masm.mov(tag, res);
     return true;
 }
 
@@ -1972,6 +1982,28 @@ CacheIRCompiler::emitGuardIndexIsNonNegative()
         return false;
 
     masm.branch32(Assembler::LessThan, index, Imm32(0), failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardTagNotEqual()
+{
+    Register lhs = allocator.useRegister(masm, reader.valueTagOperandId());
+    Register rhs = allocator.useRegister(masm, reader.valueTagOperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Label done;
+    masm.branch32(Assembler::Equal, lhs, rhs, failure->label());
+
+    // If both lhs and rhs are numbers, can't use tag comparison to do inequality comparison
+    masm.branchTestNumber(Assembler::NotEqual, lhs, &done);
+    masm.branchTestNumber(Assembler::NotEqual, rhs, &done);
+    masm.jump(failure->label());
+
+    masm.bind(&done);
     return true;
 }
 
@@ -2634,9 +2666,7 @@ CacheIRCompiler::emitMegamorphicLoadSlotByValueResult()
         return false;
 
     // The object must be Native.
-    masm.loadObjClass(obj, scratch);
-    masm.branchTest32(Assembler::NonZero, Address(scratch, Class::offsetOfFlags()),
-                      Imm32(Class::NON_NATIVE), failure->label());
+    masm.branchIfNonNativeObj(obj, scratch, failure->label());
 
     // idVal will be in vp[0], result will be stored in vp[1].
     masm.reserveStack(sizeof(Value));

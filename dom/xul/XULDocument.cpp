@@ -855,12 +855,11 @@ ShouldPersistAttribute(Element* aElement, nsAtom* aAttribute)
 }
 
 void
-XULDocument::AttributeChanged(nsIDocument* aDocument,
-                              Element* aElement, int32_t aNameSpaceID,
+XULDocument::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
                               nsAtom* aAttribute, int32_t aModType,
                               const nsAttrValue* aOldValue)
 {
-    NS_ASSERTION(aDocument == this, "unexpected doc");
+    NS_ASSERTION(aElement->OwnerDoc() == this, "unexpected doc");
 
     // Might not need this, but be safe for now.
     nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
@@ -943,11 +942,9 @@ XULDocument::AttributeChanged(nsIDocument* aDocument,
 }
 
 void
-XULDocument::ContentAppended(nsIDocument* aDocument,
-                             nsIContent* aContainer,
-                             nsIContent* aFirstNewContent)
+XULDocument::ContentAppended(nsIContent* aFirstNewContent)
 {
-    NS_ASSERTION(aDocument == this, "unexpected doc");
+    NS_ASSERTION(aFirstNewContent->OwnerDoc() == this, "unexpected doc");
 
     // Might not need this, but be safe for now.
     nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
@@ -961,11 +958,9 @@ XULDocument::ContentAppended(nsIDocument* aDocument,
 }
 
 void
-XULDocument::ContentInserted(nsIDocument* aDocument,
-                             nsIContent* aContainer,
-                             nsIContent* aChild)
+XULDocument::ContentInserted(nsIContent* aChild)
 {
-    NS_ASSERTION(aDocument == this, "unexpected doc");
+    NS_ASSERTION(aChild->OwnerDoc() == this, "unexpected doc");
 
     // Might not need this, but be safe for now.
     nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
@@ -974,12 +969,9 @@ XULDocument::ContentInserted(nsIDocument* aDocument,
 }
 
 void
-XULDocument::ContentRemoved(nsIDocument* aDocument,
-                            nsIContent* aContainer,
-                            nsIContent* aChild,
-                            nsIContent* aPreviousSibling)
+XULDocument::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling)
 {
-    NS_ASSERTION(aDocument == this, "unexpected doc");
+    NS_ASSERTION(aChild->OwnerDoc() == this, "unexpected doc");
 
     // Might not need this, but be safe for now.
     nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
@@ -1073,11 +1065,11 @@ XULDocument::GetElementsByAttribute(const nsAString& aAttribute,
                                     const nsAString& aValue)
 {
     RefPtr<nsAtom> attrAtom(NS_Atomize(aAttribute));
-    void* attrValue = new nsString(aValue);
+    nsAutoPtr<nsString> attrValue(new nsString(aValue));
     RefPtr<nsContentList> list = new nsContentList(this,
                                             MatchAttribute,
                                             nsContentUtils::DestroyMatchString,
-                                            attrValue,
+                                            attrValue.forget(),
                                             true,
                                             attrAtom,
                                             kNameSpaceID_Unknown);
@@ -1092,7 +1084,7 @@ XULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
                                       ErrorResult& aRv)
 {
     RefPtr<nsAtom> attrAtom(NS_Atomize(aAttribute));
-    void* attrValue = new nsString(aValue);
+    nsAutoPtr<nsString> attrValue(new nsString(aValue));
 
     int32_t nameSpaceId = kNameSpaceID_Wildcard;
     if (!aNamespaceURI.EqualsLiteral("*")) {
@@ -1108,7 +1100,7 @@ XULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
     RefPtr<nsContentList> list = new nsContentList(this,
                                             MatchAttribute,
                                             nsContentUtils::DestroyMatchString,
-                                            attrValue,
+                                            attrValue.forget(),
                                             true,
                                             attrAtom,
                                             nameSpaceId);

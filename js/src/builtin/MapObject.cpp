@@ -549,7 +549,7 @@ class js::OrderedHashTableRef : public gc::BufferableRef
 
 template <typename ObjectT>
 inline static MOZ_MUST_USE bool
-WriteBarrierPostImpl(JSRuntime* rt, ObjectT* obj, const Value& keyValue)
+WriteBarrierPostImpl(ObjectT* obj, const Value& keyValue)
 {
     if (MOZ_LIKELY(!keyValue.isObject()))
         return true;
@@ -577,15 +577,15 @@ WriteBarrierPostImpl(JSRuntime* rt, ObjectT* obj, const Value& keyValue)
 }
 
 inline static MOZ_MUST_USE bool
-WriteBarrierPost(JSRuntime* rt, MapObject* map, const Value& key)
+WriteBarrierPost(MapObject* map, const Value& key)
 {
-    return WriteBarrierPostImpl(rt, map, key);
+    return WriteBarrierPostImpl(map, key);
 }
 
 inline static MOZ_MUST_USE bool
-WriteBarrierPost(JSRuntime* rt, SetObject* set, const Value& key)
+WriteBarrierPost(SetObject* set, const Value& key)
 {
-    return WriteBarrierPostImpl(rt, set, key);
+    return WriteBarrierPostImpl(set, key);
 }
 
 bool
@@ -618,7 +618,7 @@ MapObject::set(JSContext* cx, HandleObject obj, HandleValue k, HandleValue v)
     if (!key.setValue(cx, k))
         return false;
 
-    if (!WriteBarrierPost(cx->runtime(), &obj->as<MapObject>(), key.value()) ||
+    if (!WriteBarrierPost(&obj->as<MapObject>(), key.value()) ||
         !map->put(key, v))
     {
         ReportOutOfMemory(cx);
@@ -831,7 +831,7 @@ MapObject::set_impl(JSContext* cx, const CallArgs& args)
 
     ValueMap& map = extract(args);
     ARG0_KEY(cx, args, key);
-    if (!WriteBarrierPost(cx->runtime(), &args.thisv().toObject().as<MapObject>(), key.value()) ||
+    if (!WriteBarrierPost(&args.thisv().toObject().as<MapObject>(), key.value()) ||
         !map.put(key, args.get(1)))
     {
         ReportOutOfMemory(cx);
@@ -1302,7 +1302,7 @@ SetObject::add(JSContext* cx, HandleObject obj, HandleValue k)
     if (!key.setValue(cx, k))
         return false;
 
-    if (!WriteBarrierPost(cx->runtime(), &obj->as<SetObject>(), key.value()) ||
+    if (!WriteBarrierPost(&obj->as<SetObject>(), key.value()) ||
         !set->put(key))
     {
         ReportOutOfMemory(cx);
@@ -1408,7 +1408,7 @@ SetObject::construct(JSContext* cx, unsigned argc, Value* vp)
 
                 if (!key.setValue(cx, keyVal))
                     return false;
-                if (!WriteBarrierPost(cx->runtime(), obj, keyVal) ||
+                if (!WriteBarrierPost(obj, keyVal) ||
                     !set->put(key))
                 {
                     ReportOutOfMemory(cx);
@@ -1525,7 +1525,7 @@ SetObject::add_impl(JSContext* cx, const CallArgs& args)
 
     ValueSet& set = extract(args);
     ARG0_KEY(cx, args, key);
-    if (!WriteBarrierPost(cx->runtime(), &args.thisv().toObject().as<SetObject>(), key.value()) ||
+    if (!WriteBarrierPost(&args.thisv().toObject().as<SetObject>(), key.value()) ||
         !set.put(key))
     {
         ReportOutOfMemory(cx);

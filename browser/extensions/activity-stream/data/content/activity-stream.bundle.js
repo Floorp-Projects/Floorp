@@ -106,7 +106,7 @@ const actionTypes = {};
 /* harmony export (immutable) */ __webpack_exports__["b"] = actionTypes;
 
 
-for (const type of ["ARCHIVE_FROM_POCKET", "BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PLACES_SAVED_TO_POCKET", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
+for (const type of ["ARCHIVE_FROM_POCKET", "BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PLACES_SAVED_TO_POCKET", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
   actionTypes[type] = type;
 }
 
@@ -679,6 +679,19 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           // If the action is updating rows, we should consider initialized to be true.
           // This can be overridden if initialized is defined in the action.data
           const initialized = action.data.rows ? { initialized: true } : {};
+
+          // Make sure pinned cards stay at their current position when rows are updated.
+          // Disabling a section (SECTION_UPDATE with empty rows) does not retain pinned cards.
+          if (action.data.rows && action.data.rows.length > 0 && section.rows.find(card => card.pinned)) {
+            const rows = Array.from(action.data.rows);
+            section.rows.forEach((card, index) => {
+              if (card.pinned) {
+                rows.splice(index, 0, card);
+              }
+            });
+            return Object.assign({}, section, initialized, Object.assign({}, action.data, { rows }));
+          }
+
           return Object.assign({}, section, initialized, action.data);
         }
         return section;
@@ -745,6 +758,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         rows: section.rows.map(item => {
           if (item.url === action.data.url) {
             return Object.assign({}, item, {
+              open_url: action.data.open_url,
               pocket_id: action.data.pocket_id,
               title: action.data.title,
               type: "pocket"
@@ -906,6 +920,10 @@ ErrorBoundary.defaultProps = { FallbackComponent: ErrorBoundaryFallback };
 // EXTERNAL MODULE: ./system-addon/common/Actions.jsm
 var Actions = __webpack_require__(0);
 
+// EXTERNAL MODULE: external "ReactRedux"
+var external__ReactRedux_ = __webpack_require__(4);
+var external__ReactRedux__default = /*#__PURE__*/__webpack_require__.n(external__ReactRedux_);
+
 // EXTERNAL MODULE: ./system-addon/content-src/components/ContextMenu/ContextMenu.jsx
 var ContextMenu = __webpack_require__(9);
 
@@ -915,6 +933,16 @@ var external__ReactIntl__default = /*#__PURE__*/__webpack_require__.n(external__
 
 // CONCATENATED MODULE: ./system-addon/content-src/lib/link-menu-options.js
 
+
+const _OpenInPrivateWindow = site => ({
+  id: "menu_action_open_private_window",
+  icon: "new-window-private",
+  action: Actions["a" /* actionCreators */].OnlyToMain({
+    type: Actions["b" /* actionTypes */].OPEN_PRIVATE_WINDOW,
+    data: { url: site.url, referrer: site.referrer }
+  }),
+  userEvent: "OPEN_PRIVATE_WINDOW"
+});
 
 /**
  * List of functions that return items that can be included as menu options in a
@@ -950,15 +978,6 @@ const LinkMenuOptions = {
       data: { url: site.url, referrer: site.referrer }
     }),
     userEvent: "OPEN_NEW_WINDOW"
-  }),
-  OpenInPrivateWindow: site => ({
-    id: "menu_action_open_private_window",
-    icon: "new-window-private",
-    action: Actions["a" /* actionCreators */].AlsoToMain({
-      type: Actions["b" /* actionTypes */].OPEN_PRIVATE_WINDOW,
-      data: { url: site.url, referrer: site.referrer }
-    }),
-    userEvent: "OPEN_PRIVATE_WINDOW"
   }),
   BlockUrl: (site, index, eventSource) => ({
     id: "menu_action_dismiss",
@@ -1065,7 +1084,8 @@ const LinkMenuOptions = {
   CheckPinTopSite: (site, index) => site.isPinned ? LinkMenuOptions.UnpinTopSite(site) : LinkMenuOptions.PinTopSite(site, index),
   CheckSavedToPocket: (site, index) => site.pocket_id ? LinkMenuOptions.DeleteFromPocket(site) : LinkMenuOptions.SaveToPocket(site, index),
   CheckBookmarkOrArchive: site => site.pocket_id ? LinkMenuOptions.ArchiveFromPocket(site) : LinkMenuOptions.CheckBookmark(site),
-  CheckDeleteHistoryOrEmpty: (site, index, eventSource) => site.pocket_id ? LinkMenuOptions.EmptyItem() : LinkMenuOptions.DeleteUrl(site, index, eventSource)
+  CheckDeleteHistoryOrEmpty: (site, index, eventSource) => site.pocket_id ? LinkMenuOptions.EmptyItem() : LinkMenuOptions.DeleteUrl(site, index, eventSource),
+  OpenInPrivateWindow: (site, index, eventSource, isEnabled) => isEnabled ? _OpenInPrivateWindow(site) : LinkMenuOptions.EmptyItem()
 };
 // EXTERNAL MODULE: external "React"
 var external__React_ = __webpack_require__(1);
@@ -1078,17 +1098,18 @@ var external__React__default = /*#__PURE__*/__webpack_require__.n(external__Reac
 
 
 
+
 const DEFAULT_SITE_MENU_OPTIONS = ["CheckPinTopSite", "EditTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"];
 
 class LinkMenu__LinkMenu extends external__React__default.a.PureComponent {
   getOptions() {
     const { props } = this;
-    const { site, index, source } = props;
+    const { site, index, source, isPrivateBrowsingEnabled } = props;
 
     // Handle special case of default site
     const propOptions = !site.isDefault ? props.options : DEFAULT_SITE_MENU_OPTIONS;
 
-    const options = propOptions.map(o => LinkMenuOptions[o](site, index, source)).map(option => {
+    const options = propOptions.map(o => LinkMenuOptions[o](site, index, source, isPrivateBrowsingEnabled)).map(option => {
       const { action, impression, id, string_id, type, userEvent } = option;
       if (!type && id) {
         option.label = props.intl.formatMessage({ id: string_id || id });
@@ -1119,7 +1140,6 @@ class LinkMenu__LinkMenu extends external__React__default.a.PureComponent {
 
   render() {
     return external__React__default.a.createElement(ContextMenu["a" /* ContextMenu */], {
-      visible: this.props.visible,
       onUpdate: this.props.onUpdate,
       options: this.getOptions() });
   }
@@ -1127,7 +1147,8 @@ class LinkMenu__LinkMenu extends external__React__default.a.PureComponent {
 /* unused harmony export _LinkMenu */
 
 
-const LinkMenu = Object(external__ReactIntl_["injectIntl"])(LinkMenu__LinkMenu);
+const getState = state => ({ isPrivateBrowsingEnabled: state.Prefs.values.isPrivateBrowsingEnabled });
+const LinkMenu = Object(external__ReactRedux_["connect"])(getState)(Object(external__ReactIntl_["injectIntl"])(LinkMenu__LinkMenu));
 /* harmony export (immutable) */ __webpack_exports__["a"] = LinkMenu;
 
 
@@ -1136,7 +1157,7 @@ const LinkMenu = Object(external__ReactIntl_["injectIntl"])(LinkMenu__LinkMenu);
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react__ = __webpack_require__(1);
+/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_react__);
 
 
@@ -1150,29 +1171,20 @@ class ContextMenu extends __WEBPACK_IMPORTED_MODULE_0_react___default.a.PureComp
     this.props.onUpdate(false);
   }
 
-  componentWillMount() {
-    this.hideContext();
-  }
-
-  componentDidUpdate(prevProps) {
-    if (this.props.visible && !prevProps.visible) {
-      setTimeout(() => {
-        window.addEventListener("click", this.hideContext);
-      }, 0);
-    }
-    if (!this.props.visible && prevProps.visible) {
-      window.removeEventListener("click", this.hideContext);
-    }
+  componentDidMount() {
+    setTimeout(() => {
+      global.addEventListener("click", this.hideContext);
+    }, 0);
   }
 
   componentWillUnmount() {
-    window.removeEventListener("click", this.hideContext);
+    global.removeEventListener("click", this.hideContext);
   }
 
   render() {
     return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
       "span",
-      { hidden: !this.props.visible, className: "context-menu" },
+      { className: "context-menu" },
       __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
         "ul",
         { role: "menu", className: "context-menu-list" },
@@ -1230,6 +1242,7 @@ class ContextMenuItem extends __WEBPACK_IMPORTED_MODULE_0_react___default.a.Pure
 }
 /* unused harmony export ContextMenuItem */
 
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
 /* 10 */
@@ -1439,7 +1452,7 @@ class _CollapsibleSection extends __WEBPACK_IMPORTED_MODULE_3_react___default.a.
               __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0_react_intl__["FormattedMessage"], { id: "section_context_menu_button_sr" })
             )
           ),
-          __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_4_content_src_components_SectionMenu_SectionMenu__["a" /* SectionMenu */], {
+          showContextMenu && __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_4_content_src_components_SectionMenu_SectionMenu__["a" /* SectionMenu */], {
             extraOptions: extraMenuOptions,
             eventSource: eventSource,
             showPrefName: showPrefName,
@@ -1447,7 +1460,6 @@ class _CollapsibleSection extends __WEBPACK_IMPORTED_MODULE_3_react___default.a.
             privacyNoticeURL: privacyNoticeURL,
             isCollapsed: isCollapsed,
             onUpdate: this.onMenuUpdate,
-            visible: showContextMenu,
             dispatch: dispatch })
         )
       ),
@@ -1997,14 +2009,13 @@ class TopSite extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.PureComponen
             __WEBPACK_IMPORTED_MODULE_4_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_1_react_intl__["FormattedMessage"], { id: "context_menu_button_sr", values: { title } })
           )
         ),
-        __WEBPACK_IMPORTED_MODULE_4_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_3_content_src_components_LinkMenu_LinkMenu__["a" /* LinkMenu */], {
+        isContextMenuOpen && __WEBPACK_IMPORTED_MODULE_4_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_3_content_src_components_LinkMenu_LinkMenu__["a" /* LinkMenu */], {
           dispatch: props.dispatch,
           index: props.index,
           onUpdate: this.onMenuUpdate,
           options: __WEBPACK_IMPORTED_MODULE_2__TopSitesConstants__["c" /* TOP_SITES_CONTEXT_MENU_OPTIONS */],
           site: link,
-          source: __WEBPACK_IMPORTED_MODULE_2__TopSitesConstants__["d" /* TOP_SITES_SOURCE */],
-          visible: isContextMenuOpen })
+          source: __WEBPACK_IMPORTED_MODULE_2__TopSitesConstants__["d" /* TOP_SITES_SOURCE */] })
       )
     );
   }
@@ -2344,6 +2355,18 @@ class SnippetsMap extends Map {
 
   showFirefoxAccounts() {
     this._dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SHOW_FIREFOX_ACCOUNTS }));
+  }
+
+  getTotalBookmarksCount() {
+    return new Promise(resolve => {
+      this._dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].OnlyToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].TOTAL_BOOKMARKS_REQUEST }));
+      global.addMessageListener("ActivityStream:MainToContent", function onMessage({ data: action }) {
+        if (action.type === __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].TOTAL_BOOKMARKS_RESPONSE) {
+          resolve(action.data);
+          global.removeMessageListener("ActivityStream:MainToContent", onMessage);
+        }
+      });
+    });
   }
 
   /**
@@ -3776,7 +3799,7 @@ class Card_Card extends external__React__default.a.PureComponent {
       { className: `card-outer${isContextMenuOpen ? " active" : ""}${props.placeholder ? " placeholder" : ""}` },
       external__React__default.a.createElement(
         "a",
-        { href: link.url, onClick: !props.placeholder ? this.onLinkClick : undefined },
+        { href: link.type === "pocket" ? link.open_url : link.url, onClick: !props.placeholder ? this.onLinkClick : undefined },
         external__React__default.a.createElement(
           "div",
           { className: "card" },
@@ -3836,14 +3859,13 @@ class Card_Card extends external__React__default.a.PureComponent {
           `Open context menu for ${link.title}`
         )
       ),
-      !props.placeholder && external__React__default.a.createElement(LinkMenu["a" /* LinkMenu */], {
+      isContextMenuOpen && external__React__default.a.createElement(LinkMenu["a" /* LinkMenu */], {
         dispatch: dispatch,
         index: index,
         source: eventSource,
         onUpdate: this.onMenuUpdate,
         options: link.contextMenuOptions || contextMenuOptions,
         site: link,
-        visible: isContextMenuOpen,
         shouldSendImpressionStats: shouldSendImpressionStats })
     );
   }
@@ -3976,7 +3998,6 @@ class SectionMenu__SectionMenu extends external__React__default.a.PureComponent 
 
   render() {
     return external__React__default.a.createElement(ContextMenu["a" /* ContextMenu */], {
-      visible: this.props.visible,
       onUpdate: this.props.onUpdate,
       options: this.getOptions() });
   }

@@ -149,8 +149,12 @@ interface nsIXPCComponents_Utils : nsISupports
      * It must be called with one param, usually an object which was caught by
      * an exception handler.  If it is not a JS error object, the parameter
      * is converted to a string and reported as a new error.
+     *
+     * If called with two parameters, and the first parameter is not an
+     * object, the second parameter is used as the stack for the error report.
      */
-    [implicit_jscontext] void reportError(in jsval error);
+    [implicit_jscontext]
+    void reportError(in jsval error, [optional] in jsval stack);
 
     readonly attribute nsIXPCComponents_utils_Sandbox Sandbox;
 

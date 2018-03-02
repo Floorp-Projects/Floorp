@@ -24,6 +24,23 @@ var {
 
 const TABHIDE_PREFNAME = "extensions.webextensions.tabhide.enabled";
 
+function showHiddenTabs(id) {
+  let windowsEnum = Services.wm.getEnumerator("navigator:browser");
+  while (windowsEnum.hasMoreElements()) {
+    let win = windowsEnum.getNext();
+    if (win.closed || !win.gBrowser) {
+      continue;
+    }
+
+    for (let tab of win.gBrowser.tabs) {
+      if (tab.hidden && tab.ownerGlobal &&
+          SessionStore.getTabValue(tab, "hiddenBy") === id) {
+        win.gBrowser.showTab(tab);
+      }
+    }
+  }
+}
+
 let tabListener = {
   tabReadyInitialized: false,
   tabReadyPromises: new WeakMap(),
@@ -81,23 +98,14 @@ let tabListener = {
 };
 
 this.tabs = class extends ExtensionAPI {
-  onShutdown(reason) {
-    if (!this.extension.hasPermission("tabHide")) {
-      return;
+  static onUpdate(id, manifest) {
+    if (!manifest.permissions || !manifest.permissions.includes("tabHide")) {
+      showHiddenTabs(id);
     }
-    if (reason == "ADDON_DISABLE" ||
-        reason == "ADDON_UNINSTALL") {
-      // Show all hidden tabs if a tab managing extension is uninstalled or
-      // disabled.  If a user has more than one, the extensions will need to
-      // self-manage re-hiding tabs.
-      for (let tab of this.extension.tabManager.query()) {
-        let nativeTab = tabTracker.getTab(tab.id);
-        if (nativeTab.hidden && nativeTab.ownerGlobal &&
-            SessionStore.getTabValue(nativeTab, "hiddenBy") === this.extension.id) {
-          nativeTab.ownerGlobal.gBrowser.showTab(nativeTab);
-        }
-      }
-    }
+  }
+
+  static onDisable(id) {
+    showHiddenTabs(id);
   }
 
   getAPI(context) {
@@ -507,10 +515,13 @@ this.tabs = class extends ExtensionAPI {
               return Promise.reject({message: `Illegal URL: ${url}`});
             }
 
-            let flags = updateProperties.loadReplace
-              ? Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY
-              : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-            nativeTab.linkedBrowser.loadURIWithFlags(url, {flags});
+            let options = {
+              flags: updateProperties.loadReplace
+                      ? Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY
+                      : Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
+              triggeringPrincipal: context.principal,
+            };
+            nativeTab.linkedBrowser.loadURIWithFlags(url, options);
           }
 
           if (updateProperties.active !== null) {

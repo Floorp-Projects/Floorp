@@ -10,12 +10,6 @@ toolbarbutton {
   margin: 0 2px;
   padding: 3px 2px;
   background-color: transparent;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-
-toolbarbutton[open="true"],
-toolbarbutton:not([disabled="true"]):active:hover {
-  text-shadow: none;
 }
 
 .toolbarbutton-text {

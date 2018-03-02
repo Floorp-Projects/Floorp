@@ -845,7 +845,7 @@ class ControlFlowGenerator
     ControlStatus processIfEnd(CFGState& state);
     ControlStatus processIfElseTrueEnd(CFGState& state);
     ControlStatus processIfElseFalseEnd(CFGState& state);
-    ControlStatus processDoWhileLoop(JSOp op, jssrcnote* sn);
+    ControlStatus processDoWhileLoop(jssrcnote* sn);
     ControlStatus processDoWhileBodyEnd(CFGState& state);
     ControlStatus processDoWhileCondEnd(CFGState& state);
     ControlStatus processWhileCondEnd(CFGState& state);

@@ -60,13 +60,14 @@ struct GroupInner<K, I, F>
     /// flag set if iterator is exhausted
     done: bool,
     /// Index of group we are currently buffering or visiting
-    top: usize,
+    top_group: usize,
     /// Least index for which we still have elements buffered
-    bot: usize,
-    /// Group index for `buffer[0]` -- the slots bufbot..bot are unused
-    /// and will be erased when that range is large enough.
-    bufbot: usize,
-    /// Buffered groups, from `bufbot` (index 0) to `top`.
+    oldest_buffered_group: usize,
+    /// Group index for `buffer[0]` -- the slots
+    /// bottom_group..oldest_buffered_group are unused and will be erased when
+    /// that range is large enough.
+    bottom_group: usize,
+    /// Buffered groups, from `bottom_group` (index 0) to `top_group`.
     buffer: Vec<vec::IntoIter<I::Item>>,
     /// index of last group iter that was dropped, usize::MAX == none
     dropped_group: usize,
@@ -81,19 +82,21 @@ impl<K, I, F> GroupInner<K, I, F>
     #[inline(always)]
     fn step(&mut self, client: usize) -> Option<I::Item> {
         /*
-        println!("client={}, bufbot={}, bot={}, top={}, buffers=[{}]",
-                 client, self.bufbot, self.bot, self.top,
+        println!("client={}, bottom_group={}, oldest_buffered_group={}, top_group={}, buffers=[{}]",
+                 client, self.bottom_group, self.oldest_buffered_group,
+                 self.top_group,
                  self.buffer.iter().map(|elt| elt.len()).format(", "));
-         */
-        if client < self.bot {
+        */
+        if client < self.oldest_buffered_group {
             None
-        } else if client < self.top ||
-            (client == self.top && self.buffer.len() > self.top - self.bufbot)
+        } else if client < self.top_group ||
+            (client == self.top_group &&
+             self.buffer.len() > self.top_group - self.bottom_group)
         {
             self.lookup_buffer(client)
         } else if self.done {
             None
-        } else if self.top == client {
+        } else if self.top_group == client {
             self.step_current()
         } else {
             self.step_buffering(client)
@@ -103,24 +106,24 @@ impl<K, I, F> GroupInner<K, I, F>
     #[inline(never)]
     fn lookup_buffer(&mut self, client: usize) -> Option<I::Item> {
         // if `bufidx` doesn't exist in self.buffer, it might be empty
-        let bufidx = client - self.bufbot;
-        if client < self.bot {
+        let bufidx = client - self.bottom_group;
+        if client < self.oldest_buffered_group {
             return None;
         }
         let elt = self.buffer.get_mut(bufidx).and_then(|queue| queue.next());
-        if elt.is_none() && client == self.bot {
+        if elt.is_none() && client == self.oldest_buffered_group {
             // FIXME: VecDeque is unfortunately not zero allocation when empty,
             // so we do this job manually.
-            // `bufbot..bot` is unused, and if it's large enough, erase it.
-            self.bot += 1;
+            // `bottom_group..oldest_buffered_group` is unused, and if it's large enough, erase it.
+            self.oldest_buffered_group += 1;
             // skip forward further empty queues too
-            while self.buffer.get(self.bot - self.bufbot)
+            while self.buffer.get(self.oldest_buffered_group - self.bottom_group)
                              .map_or(false, |buf| buf.len() == 0)
             {
-                self.bot += 1;
+                self.oldest_buffered_group += 1;
             }
 
-            let nclear = self.bot - self.bufbot;
+            let nclear = self.oldest_buffered_group - self.bottom_group;
             if nclear > 0 && nclear >= self.buffer.len() / 2 {
                 let mut i = 0;
                 self.buffer.retain(|buf| {
@@ -128,7 +131,7 @@ impl<K, I, F> GroupInner<K, I, F>
                     debug_assert!(buf.len() == 0 || i > nclear);
                     i > nclear
                 });
-                self.bufbot = self.bot;
+                self.bottom_group = self.oldest_buffered_group;
             }
         }
         elt
@@ -152,12 +155,12 @@ impl<K, I, F> GroupInner<K, I, F>
         // the requested group index, and buffer the elements (unless
         // the group is marked as dropped).
         // Because the `Groups` iterator is always the first to request
-        // each group index, client is the next index efter top.
-        debug_assert!(self.top + 1 == client);
+        // each group index, client is the next index efter top_group.
+        debug_assert!(self.top_group + 1 == client);
         let mut group = Vec::new();
 
         if let Some(elt) = self.current_elt.take() {
-            if self.top != self.dropped_group {
+            if self.top_group != self.dropped_group {
                 group.push(elt);
             }
         }
@@ -174,33 +177,33 @@ impl<K, I, F> GroupInner<K, I, F>
                 },
             }
             self.current_key = Some(key);
-            if self.top != self.dropped_group {
+            if self.top_group != self.dropped_group {
                 group.push(elt);
             }
         }
 
-        if self.top != self.dropped_group {
+        if self.top_group != self.dropped_group {
             self.push_next_group(group);
         }
         if first_elt.is_some() {
-            self.top += 1;
-            debug_assert!(self.top == client);
+            self.top_group += 1;
+            debug_assert!(self.top_group == client);
         }
         first_elt
     }
 
     fn push_next_group(&mut self, group: Vec<I::Item>) {
-        // When we add a new buffered group, fill up slots between bot and top
-        while self.top - self.bufbot > self.buffer.len() {
+        // When we add a new buffered group, fill up slots between oldest_buffered_group and top_group
+        while self.top_group - self.bottom_group > self.buffer.len() {
             if self.buffer.is_empty() {
-                self.bufbot += 1;
-                self.bot += 1;
+                self.bottom_group += 1;
+                self.oldest_buffered_group += 1;
             } else {
                 self.buffer.push(Vec::new().into_iter());
             }
         }
         self.buffer.push(group.into_iter());
-        debug_assert!(self.top + 1 - self.bufbot == self.buffer.len());
+        debug_assert!(self.top_group + 1 - self.bottom_group == self.buffer.len());
     }
 
     /// This is the immediate case, where we use no buffering
@@ -219,7 +222,7 @@ impl<K, I, F> GroupInner<K, I, F>
                     Some(old_key) => if old_key != key {
                         self.current_key = Some(key);
                         self.current_elt = Some(elt);
-                        self.top += 1;
+                        self.top_group += 1;
                         return None;
                     },
                 }
@@ -240,14 +243,14 @@ impl<K, I, F> GroupInner<K, I, F>
         // Perform this by simply buffering one more element, grabbing the
         // next key.
         debug_assert!(!self.done);
-        debug_assert!(client == self.top);
+        debug_assert!(client == self.top_group);
         debug_assert!(self.current_key.is_some());
         debug_assert!(self.current_elt.is_none());
         let old_key = self.current_key.take().unwrap();
         if let Some(elt) = self.next_element() {
             let key = self.key.call_mut(&elt);
             if old_key != key {
-                self.top += 1;
+                self.top_group += 1;
             }
             self.current_key = Some(key);
             self.current_elt = Some(elt);
@@ -281,6 +284,7 @@ impl<K, I, F> GroupInner<K, I, F>
 /// iterated.
 ///
 /// See [`.group_by()`](../trait.Itertools.html#method.group_by) for more information.
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct GroupBy<K, I, F>
     where I: Iterator,
 {
@@ -302,9 +306,9 @@ pub fn new<K, J, F>(iter: J, f: F) -> GroupBy<K, J::IntoIter, F>
             current_key: None,
             current_elt: None,
             done: false,
-            top: 0,
-            bot: 0,
-            bufbot: 0,
+            top_group: 0,
+            oldest_buffered_group: 0,
+            bottom_group: 0,
             buffer: Vec::new(),
             dropped_group: !0,
         }),
@@ -350,6 +354,7 @@ impl<'a, K, I, F> IntoIterator for &'a GroupBy<K, I, F>
 /// the group's key `K` and the group's iterator.
 ///
 /// See [`.group_by()`](../trait.Itertools.html#method.group_by) for more information.
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct Groups<'a, K: 'a, I: 'a, F: 'a>
     where I: Iterator,
           I::Item: 'a
@@ -431,9 +436,9 @@ pub fn new_chunks<J>(iter: J, size: usize) -> IntoChunks<J::IntoIter>
             current_key: None,
             current_elt: None,
             done: false,
-            top: 0,
-            bot: 0,
-            bufbot: 0,
+            top_group: 0,
+            oldest_buffered_group: 0,
+            bottom_group: 0,
             buffer: Vec::new(),
             dropped_group: !0,
         }),
@@ -455,6 +460,7 @@ pub fn new_chunks<J>(iter: J, size: usize) -> IntoChunks<J::IntoIter>
 /// Iterator element type is `Chunk`, each chunk's iterator.
 ///
 /// See [`.chunks()`](../trait.Itertools.html#method.chunks) for more information.
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct IntoChunks<I>
     where I: Iterator,
 {
@@ -499,6 +505,7 @@ impl<'a, I> IntoIterator for &'a IntoChunks<I>
 /// Iterator element type is `Chunk`.
 ///
 /// See [`.chunks()`](../trait.Itertools.html#method.chunks) for more information.
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct Chunks<'a, I: 'a>
     where I: Iterator,
           I::Item: 'a,

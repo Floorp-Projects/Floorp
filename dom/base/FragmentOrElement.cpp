@@ -1102,7 +1102,12 @@ nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor)
             nsContentUtils::Retarget(relatedTargetAsNode, this);
           nsCOMPtr<nsINode> targetInKnownToBeHandledScope =
             FindChromeAccessOnlySubtreeOwner(aVisitor.mTargetInKnownToBeHandledScope);
-          if (nsContentUtils::ContentIsShadowIncludingDescendantOf(
+          // If aVisitor.mTargetInKnownToBeHandledScope wasn't nsINode,
+          // targetInKnownToBeHandledScope will be null. This may happen when
+          // dispatching event to Window object in a content page and
+          // propagating the event to a chrome Element.
+          if (targetInKnownToBeHandledScope &&
+              nsContentUtils::ContentIsShadowIncludingDescendantOf(
                 this, targetInKnownToBeHandledScope->SubtreeRoot())) {
             // Part of step 11.4.
             // "If target's root is a shadow-including inclusive ancestor of

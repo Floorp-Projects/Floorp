@@ -49,6 +49,7 @@ const PREFS_MAX_CRASH_RESUMES = "browser.sessionstore.max_resumed_crashes";
 const PREFS_MAX_TABS_UNDO = "browser.sessionstore.max_tabs_undo";
 
 const MINIMUM_SAVE_DELAY = 2000;
+const SAVE_INTERVAL_PRIVATE_TABS = 500;
 
 function SessionStore() { }
 
@@ -62,11 +63,13 @@ SessionStore.prototype = {
 
   _windows: {},
   _lastSaveTime: 0,
+  _lastQueuedSaveTime: 0,
   _lastBackupTime: 0,
   _interval: 10000,
   _backupInterval: 120000, // 2 minutes
   _maxTabsUndo: 5,
   _pendingWrite: 0,
+  _pendingWritePrivateOnly: 0,
   _scrollSavePending: null,
   _writeInProgress: false,
 
@@ -202,6 +205,23 @@ SessionStore.prototype = {
         log("ClosedTabs:StopNotifications");
         break;
 
+      case "Session:FlushTabs":
+        // We receive this notification when the activity or application is going into
+        // the background. If the application is backgrounded, it may be terminated at
+        // any point without notice; therefore, we must synchronously write out any
+        // pending save state to ensure that this data does not get lost.
+        log("Session:FlushTabs");
+        if (!this._loadState == STATE_RUNNING || !this.flushPendingState()) {
+          let window = Services.wm.getMostRecentWindow("navigator:browser");
+          if (window) { // can be null if we're restarting
+            window.WindowEventDispatcher.sendRequest({
+              type: "PrivateBrowsing:Data",
+              noChange: true
+            });
+          }
+        }
+        break;
+
       case "Session:Restore": {
         EventDispatcher.instance.unregisterListener(this, "Session:Restore");
         if (data) {
@@ -266,6 +286,7 @@ SessionStore.prototype = {
         EventDispatcher.instance.registerListener(this, [
           "ClosedTabs:StartNotifications",
           "ClosedTabs:StopNotifications",
+          "Session:FlushTabs",
           "Session:Restore",
           "Session:RestoreRecentTabs",
           "Tab:KeepZombified",
@@ -281,7 +302,6 @@ SessionStore.prototype = {
         observerService.addObserver(this, "quit-application", true);
         observerService.addObserver(this, "Session:NotifyLocationChange", true);
         observerService.addObserver(this, "Content:HistoryChange", true);
-        observerService.addObserver(this, "application-background", true);
         observerService.addObserver(this, "application-foreground", true);
         observerService.addObserver(this, "last-pb-context-exited", true);
         break;
@@ -334,9 +354,10 @@ SessionStore.prototype = {
         if (this._loadState == STATE_RUNNING) {
           // Timer call back for delayed saving
           this._saveTimer = null;
-          log("timer-callback, pendingWrite = " + this._pendingWrite);
+          log("timer-callback, pendingWrite = " + this._pendingWritePrivateOnly +
+              "/" + this._pendingWrite);
           if (this._pendingWrite) {
-            this.saveState();
+            this._saveState(true);
           }
         }
         break;
@@ -375,16 +396,6 @@ SessionStore.prototype = {
         }
         break;
       }
-      case "application-background":
-        // We receive this notification when Android's onPause callback is
-        // executed. After onPause, the application may be terminated at any
-        // point without notice; therefore, we must synchronously write out any
-        // pending save state to ensure that this data does not get lost.
-        log("application-background");
-        if (this._loadState == STATE_RUNNING) {
-          this.flushPendingState();
-        }
-        break;
       case "application-foreground":
         log("application-foreground");
         // If we skipped restoring a zombified tab before backgrounding,
@@ -656,7 +667,8 @@ SessionStore.prototype = {
     log("onTabRemove() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id +
         ", aNoNotification = " + aNoNotification);
     if (!aNoNotification) {
-      this.saveStateDelayed();
+      let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(aBrowser);
+      this.saveStateDelayed(isPrivate);
     }
   },
 
@@ -963,50 +975,82 @@ SessionStore.prototype = {
     return displaySize;
   },
 
-  saveStateDelayed: function ss_saveStateDelayed() {
+  saveStateDelayed: function ss_saveStateDelayed(aPrivateTabsOnly = false) {
+    this._pendingWrite++;
+    if (aPrivateTabsOnly) {
+      this._pendingWritePrivateOnly++;
+    }
+    log("incrementing _pendingWrite to " + this._pendingWritePrivateOnly +
+        "/" + this._pendingWrite);
+
     if (!this._saveTimer) {
       // Interval until the next disk operation is allowed
       let currentDelay = this._lastSaveTime + this._interval - Date.now();
 
       // If we have to wait, set a timer, otherwise saveState directly
-      let delay = Math.max(currentDelay, MINIMUM_SAVE_DELAY);
+      let delay = aPrivateTabsOnly
+                    ? SAVE_INTERVAL_PRIVATE_TABS
+                    : Math.max(currentDelay, MINIMUM_SAVE_DELAY);
       if (delay > 0) {
-        this._pendingWrite++;
-        this._saveTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-        this._saveTimer.init(this, delay, Ci.nsITimer.TYPE_ONE_SHOT);
-        log("saveStateDelayed() timer delay = " + delay +
-             ", incrementing _pendingWrite to " + this._pendingWrite);
+        this._createTimer(delay);
       } else {
         log("saveStateDelayed() no delay");
         this.saveState();
       }
+    } else if (aPrivateTabsOnly &&
+               // How long until the current timer would fire?
+               this._saveTimer.delay - (Date.now() - this._lastQueuedSaveTime)
+                 > SAVE_INTERVAL_PRIVATE_TABS) {
+      this._killTimer();
+      this._createTimer(SAVE_INTERVAL_PRIVATE_TABS);
     } else {
       log("saveStateDelayed() timer already running, taking no action");
     }
   },
 
-  saveState: function ss_saveState() {
+  saveState: function ss_saveState(aPrivateTabsOnly = false) {
     this._pendingWrite++;
-    log("saveState(), incrementing _pendingWrite to " + this._pendingWrite);
+    if (aPrivateTabsOnly) {
+      this._pendingWritePrivateOnly++;
+    }
+    log("saveState(), incrementing _pendingWrite to " + this._pendingWritePrivateOnly +
+        "/" + this._pendingWrite);
     this._saveState(true);
   },
 
-  // Immediately and synchronously writes any pending state to disk.
+  /**
+   * Immediately and synchronously writes any pending state to disk.
+   *
+   * @return True if data was written, false if no pending file writes were present.
+   */
   flushPendingState: function ss_flushPendingState() {
     log("flushPendingState(), _pendingWrite = " + this._pendingWrite);
     if (this._pendingWrite) {
       this._saveState(false);
+      return true;
+    }
+    return false;
+  },
+
+  _createTimer: function ss_createTimer(aDelay) {
+    this._lastQueuedSaveTime = Date.now();
+    this._saveTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._saveTimer.init(this, aDelay, Ci.nsITimer.TYPE_ONE_SHOT);
+    log("saveTimer delay = " + aDelay);
+  },
+
+  _killTimer: function ss_killTimer() {
+    if (this._saveTimer) {
+      this._saveTimer.cancel();
+      this._saveTimer = null;
+      log("killed queued saveTimer");
     }
   },
 
   _saveState: function ss_saveState(aAsync) {
     log("_saveState(aAsync = " + aAsync + ")");
     // Kill any queued timer and save immediately
-    if (this._saveTimer) {
-      this._saveTimer.cancel();
-      this._saveTimer = null;
-      log("_saveState() killed queued timer");
-    }
+    this._killTimer();
 
     // Periodically save a "known good" copy of the session store data.
     if (!this._writeInProgress && Date.now() - this._lastBackupTime > this._backupInterval &&
@@ -1055,15 +1099,6 @@ SessionStore.prototype = {
       }
     }
 
-    // Write only non-private data to disk
-    if (normalData.windows[0] && normalData.windows[0].tabs) {
-      log("_saveState() writing normal data, " +
-           normalData.windows[0].tabs.length + " tabs in window[0]");
-    } else {
-      log("_saveState() writing empty normal data");
-    }
-    this._writeFile(this._sessionFile, this._sessionFileTemp, normalData, aAsync);
-
     // If we have private data, send it to Java; otherwise, send null to
     // indicate that there is no private data
     let window = Services.wm.getMostRecentWindow("navigator:browser");
@@ -1073,6 +1108,23 @@ SessionStore.prototype = {
         session: (privateData.windows.length > 0 && privateData.windows[0].tabs.length > 0) ? JSON.stringify(privateData) : null
       });
     }
+
+    // If all queued writes were for private tabs only, we can stop here.
+    if (this._pendingWrite === this._pendingWritePrivateOnly) {
+      this._pendingWrite = 0;
+      this._pendingWritePrivateOnly = 0;
+      this._lastSaveTime = Date.now();
+      return;
+    }
+
+    // Write only non-private data to disk
+    if (normalData.windows[0] && normalData.windows[0].tabs) {
+      log("_saveState() writing normal data, " +
+           normalData.windows[0].tabs.length + " tabs in window[0]");
+    } else {
+      log("_saveState() writing empty normal data");
+    }
+    this._writeFile(this._sessionFile, this._sessionFileTemp, normalData, aAsync);
 
     this._lastSaveTime = Date.now();
   },
@@ -1102,7 +1154,7 @@ SessionStore.prototype = {
     tabData.index = aHistory.index;
     tabData.attributes = { image: aBrowser.mIconURL };
     tabData.desktopMode = tab.desktopMode;
-    tabData.isPrivate = aBrowser.docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing;
+    tabData.isPrivate = PrivateBrowsingUtils.isBrowserPrivate(aBrowser);
     tabData.tabId = tab.id;
     tabData.parentId = tab.parentId;
 
@@ -1178,6 +1230,7 @@ SessionStore.prototype = {
       // is pending, so we shouldn't reset this._pendingWrite yet.
       if (pendingWrite === this._pendingWrite) {
         this._pendingWrite = 0;
+        this._pendingWritePrivateOnly = 0;
         this._writeInProgress = false;
       }
 

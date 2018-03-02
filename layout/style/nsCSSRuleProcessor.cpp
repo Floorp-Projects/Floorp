@@ -1221,11 +1221,9 @@ static inline bool ActiveHoverQuirkMatches(nsCSSSelector* aSelector,
 
 
 static inline bool
-IsSignificantChild(nsIContent* aChild, bool aTextIsSignificant,
-                   bool aWhitespaceIsSignificant)
+IsSignificantChild(nsIContent* aChild, bool aWhitespaceIsSignificant)
 {
-  return nsStyleUtil::IsSignificantChild(aChild, aTextIsSignificant,
-                                         aWhitespaceIsSignificant);
+  return nsStyleUtil::IsSignificantChild(aChild, aWhitespaceIsSignificant);
 }
 
 // This function is to be called once we have fetched a value for an attribute
@@ -1360,7 +1358,7 @@ checkGenericEmptyMatches(Element* aElement,
   // stop at first non-comment (and non-whitespace for :-moz-only-whitespace)
   // node
   for (child = aElement->GetFirstChild();
-       child && !IsSignificantChild(child, true, isWhitespaceSignificant);
+       child && !IsSignificantChild(child, isWhitespaceSignificant);
        child = child->GetNextSibling());
   return (child == nullptr);
 }
@@ -1632,7 +1630,7 @@ static bool SelectorMatches(Element* aElement,
 
           // stop at first non-comment and non-whitespace node
           for (firstNode = parent->GetFirstChild();
-               firstNode && !IsSignificantChild(firstNode, true, false);
+               firstNode && !IsSignificantChild(firstNode, false);
                firstNode = firstNode->GetNextSibling());
         }
         if (aElement != firstNode) {
@@ -1657,7 +1655,7 @@ static bool SelectorMatches(Element* aElement,
 
           // stop at first non-comment and non-whitespace node
           for (lastNode = parent->GetLastChild();
-               lastNode && !IsSignificantChild(lastNode, true, false);
+               lastNode && !IsSignificantChild(lastNode, false);
                lastNode = lastNode->GetPreviousSibling());
         }
         if (aElement != lastNode) {

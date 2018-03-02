@@ -109,7 +109,7 @@ GeckoProfilerRuntime::enable(bool enabled)
     // (and thus, a new circular buffer). Set all current entries in the
     // JitcodeGlobalTable as expired and reset the buffer range start.
     if (rt->hasJitRuntime() && rt->jitRuntime()->hasJitcodeGlobalTable())
-        rt->jitRuntime()->getJitcodeGlobalTable()->setAllEntriesAsExpired(rt);
+        rt->jitRuntime()->getJitcodeGlobalTable()->setAllEntriesAsExpired();
     rt->setProfilerSampleBufferRangeStart(0);
 
     // Ensure that lastProfilingFrame is null for all threads before 'enabled' becomes true.

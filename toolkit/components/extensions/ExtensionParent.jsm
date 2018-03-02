@@ -653,6 +653,14 @@ ParentAPIManager = {
   shutdownExtension(extensionId) {
     for (let [childId, context] of this.proxyContexts) {
       if (context.extension.id == extensionId) {
+        if (["ADDON_DISABLE", "ADDON_UNINSTALL"].includes(context.extension.shutdownReason)) {
+          let modules = apiManager.eventModules.get("disable");
+          Array.from(modules).map(async apiName => {
+            let module = await apiManager.asyncLoadModule(apiName);
+            module.onDisable(extensionId);
+          });
+        }
+
         context.shutdown();
         this.proxyContexts.delete(childId);
       }

@@ -527,6 +527,7 @@ add_task(async function getHighlightsWithPocketSuccess() {
         resolved_title: "A title for foo",
         resolved_url: "http://www.foo.com",
         item_id: "123",
+        open_url: "getpocket.com/itemID",
         status: "0"
       },
       "456": {
@@ -563,6 +564,7 @@ add_task(async function getHighlightsWithPocketSuccess() {
   Assert.equal(currentLink.title, pocketItem.resolved_title, "Correct title was added");
   Assert.equal(currentLink.description, pocketItem.excerpt, "Correct description was added");
   Assert.equal(currentLink.pocket_id, pocketItem.item_id, "item_id was preserved");
+  Assert.equal(currentLink.open_url, pocketItem.open_url, "open_url was preserved");
 
   NewTabUtils.activityStreamLinks._savedPocketStories = null;
 });
@@ -578,6 +580,7 @@ add_task(async function getHighlightsWithPocketCached() {
         resolved_title: "A title for foo",
         resolved_url: "http://www.foo.com",
         item_id: "123",
+        open_url: "getpocket.com/itemID",
         status: "0"
       },
       "456": {
@@ -601,6 +604,7 @@ add_task(async function getHighlightsWithPocketCached() {
     resolved_title: "A title for bar",
     resolved_url: "http://www.bar.com",
     item_id: "789",
+    open_url: "getpocket.com/itemID",
     status: "0"
   };
 
@@ -918,6 +922,26 @@ add_task(async function activityStream_blockedURLs() {
   // bookmarks
   sizeQueryResult = await getBookmarksSize();
   Assert.equal(sizeQueryResult, 1, "got the correct bookmark size");
+});
+
+add_task(async function activityStream_getTotalBookmarksCount() {
+  await setUpActivityStreamTest();
+
+  let provider = NewTabUtils.activityStreamProvider;
+  let bookmarks = [
+    {url: "https://mozilla1.com/0", parentGuid: PlacesUtils.bookmarks.unfiledGuid},
+    {url: "https://mozilla1.com/1", parentGuid: PlacesUtils.bookmarks.unfiledGuid}
+  ];
+
+  let bookmarksSize = await provider.getTotalBookmarksCount();
+  Assert.equal(bookmarksSize, 0, ".getTotalBookmarksCount() returns 0 for an empty bookmarks table");
+
+  for (const bookmark of bookmarks) {
+    await PlacesUtils.bookmarks.insert(bookmark);
+  }
+
+  bookmarksSize = await provider.getTotalBookmarksCount();
+  Assert.equal(bookmarksSize, 2, ".getTotalBookmarksCount() returns 2 after 2 bookmarks are inserted");
 });
 
 function TestProvider(getLinksFn) {

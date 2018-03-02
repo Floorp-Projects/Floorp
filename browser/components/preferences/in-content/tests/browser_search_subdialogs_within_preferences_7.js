@@ -30,11 +30,3 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
-/**
- * Test for searching for the "Settings - Site Data" subdialog.
- */
-add_task(async function() {
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  await evaluateSearchResults("store site data on your computer", "siteDataGroup");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-});

@@ -155,6 +155,9 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitConvertElementsToDoubles(LConvertElementsToDoubles* lir);
     void visitMaybeToDoubleElement(LMaybeToDoubleElement* lir);
     void visitMaybeCopyElementsForWrite(LMaybeCopyElementsForWrite* lir);
+    void visitGuardShape(LGuardShape* guard);
+    void visitGuardObjectGroup(LGuardObjectGroup* guard);
+    void visitGuardClass(LGuardClass* guard);
     void visitGuardObjectIdentity(LGuardObjectIdentity* guard);
     void visitGuardReceiverPolymorphic(LGuardReceiverPolymorphic* lir);
     void visitGuardUnboxedExpando(LGuardUnboxedExpando* lir);
@@ -339,7 +342,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
                            Register elementsTemp, Register lengthTemp, TypedOrValueRegister out);
     void visitArrayPopShiftV(LArrayPopShiftV* lir);
     void visitArrayPopShiftT(LArrayPopShiftT* lir);
-    void emitArrayPush(LInstruction* lir, const MArrayPush* mir, Register obj,
+    void emitArrayPush(LInstruction* lir, Register obj,
                        const ConstantOrRegister& value, Register elementsTemp, Register length);
     void visitArrayPushV(LArrayPushV* lir);
     void visitArrayPushT(LArrayPushT* lir);
@@ -486,13 +489,13 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void addGetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs,
                              TypedOrValueRegister value, const ConstantOrRegister& id,
                              TypedOrValueRegister output, Register maybeTemp,
-                             GetPropertyResultFlags flags, jsbytecode* profilerLeavePc);
+                             GetPropertyResultFlags flags);
     void addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
                              Register temp, FloatRegister tempDouble,
                              FloatRegister tempF32, const ConstantOrRegister& id,
                              const ConstantOrRegister& value,
                              bool strict, bool needsPostBarrier, bool needsTypeBarrier,
-                             bool guardHoles, jsbytecode* profilerLeavePc);
+                             bool guardHoles);
 
     MOZ_MUST_USE bool generateBranchV(const ValueOperand& value, Label* ifTrue, Label* ifFalse,
                                       FloatRegister fr);

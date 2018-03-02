@@ -93,6 +93,11 @@ elif CONFIG['HAVE_64BIT_BUILD']:
     # On 64bit platforms default to a MEMORY temp store for performance.
     DEFINES['SQLITE_TEMP_STORE'] = 2
 
+# Change the default temp files prefix, to easily distinguish files we created
+# vs files created by other Sqlite instances in the system.
+# This has obviously no effect in case of System Sqlite.
+DEFINES['SQLITE_TEMP_FILE_PREFIX'] = '"mz_etilqs_"'
+
 # Suppress warnings in third-party code.
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += [

@@ -26,6 +26,11 @@ chai.use(chaiAssertions);
 let overrider = new GlobalOverrider();
 
 overrider.set({
+  AddonManager: {
+    getActiveAddons() {
+      return Promise.resolve({addons: [], fullData: false});
+    }
+  },
   AppConstants: {MOZILLA_OFFICIAL: true},
   ChromeUtils: {
     defineModuleGetter() {},
@@ -72,6 +77,7 @@ overrider.set({
       prefHasUserValue() {},
       removeObserver() {},
       getStringPref() {},
+      getIntPref() {},
       getBoolPref() {},
       getBranch() {},
       getDefaultBranch() {
@@ -88,7 +94,19 @@ overrider.set({
       getBaseDomain({spec}) { return spec.match(/\/([^/]+)/)[1]; },
       getPublicSuffix() {}
     },
-    io: {newURI(url) { return {spec: url}; }},
+    io: {
+      newURI: spec => ({
+        mutate: () => ({
+          setRef: ref => ({
+            finalize: () => ({
+              ref,
+              spec
+            })
+          })
+        }),
+        spec
+      })
+    },
     search: {
       init(cb) { cb(); },
       getVisibleEngines: () => [{identifier: "google"}, {identifier: "bing"}],

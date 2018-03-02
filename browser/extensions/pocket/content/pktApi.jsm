@@ -622,7 +622,7 @@ var pktApi = (function() {
     function retrieve(data = {}, options = {}) {
         const requestData = Object.assign({}, data, {access_token: getAccessToken()});
         return apiRequest({
-            path: "/get",
+            path: "/firefox/get",
             data: requestData,
             success: options.success,
             error: options.error

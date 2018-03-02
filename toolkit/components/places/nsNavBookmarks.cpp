@@ -1286,7 +1286,8 @@ nsNavBookmarks::SetItemLastModified(int64_t aItemId, PRTime aLastModified,
   }
 
   // Note: mDBSetItemDateAdded also sets lastModified to aDateAdded.
-  NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavBookmarkObserver,
+  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers,
+                   SKIP_TAGS(isTagging || bookmark.parentId == tagsRootId),
                    OnItemChanged(bookmark.id,
                                  NS_LITERAL_CSTRING("lastModified"),
                                  false,

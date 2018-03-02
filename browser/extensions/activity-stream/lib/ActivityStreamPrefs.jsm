@@ -9,7 +9,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const ACTIVITY_STREAM_PREF_BRANCH = "browser.newtabpage.activity-stream.";
 
-var Prefs = class Prefs extends Preferences {
+this.Prefs = class Prefs extends Preferences {
   /**
    * Prefs - A wrapper around Preferences that always sets the branch to
    *         ACTIVITY_STREAM_PREF_BRANCH
@@ -39,7 +39,7 @@ var Prefs = class Prefs extends Preferences {
   }
 };
 
-var DefaultPrefs = class DefaultPrefs {
+this.DefaultPrefs = class DefaultPrefs {
   /**
    * DefaultPrefs - A helper for setting and resetting default prefs for the add-on
    *
@@ -103,4 +103,4 @@ var DefaultPrefs = class DefaultPrefs {
   }
 };
 
-var EXPORTED_SYMBOLS = ["DefaultPrefs", "Prefs"];
+const EXPORTED_SYMBOLS = ["DefaultPrefs", "Prefs"];

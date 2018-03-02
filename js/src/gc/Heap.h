@@ -766,14 +766,14 @@ struct Chunk
     void init(JSRuntime* rt);
 
   private:
-    void decommitAllArenas(JSRuntime* rt);
+    void decommitAllArenas();
 
     /* Search for a decommitted arena to allocate. */
     unsigned findDecommittedArenaOffset();
     Arena* fetchNextDecommittedArena();
 
     void addArenaToFreeList(JSRuntime* rt, Arena* arena);
-    void addArenaToDecommittedList(JSRuntime* rt, const Arena* arena);
+    void addArenaToDecommittedList(const Arena* arena);
 
     void updateChunkListAfterAlloc(JSRuntime* rt, const AutoLockGC& lock);
     void updateChunkListAfterFree(JSRuntime* rt, const AutoLockGC& lock);

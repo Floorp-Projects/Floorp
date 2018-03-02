@@ -200,12 +200,6 @@ IsReversedDirectionFrame(nsIFrame* aFrame)
 }
 
 #include "nsILineIterator.h"
-
-//non Hack prototypes
-#if 0
-static void RefreshContentFrames(nsPresContext* aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
-#endif
-
 #include "prenv.h"
 
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(BoxMetricsProperty, nsBoxLayoutMetrics)
@@ -2826,6 +2820,16 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       dirtyRect = visibleRect;
       aBuilder->MarkFrameModifiedDuringBuilding(this);
     }
+  }
+
+  // nsDisplayPerspective items use an index to keep their PerFrameKey unique.
+  // We need to make sure we build all of them for them to be consistent, so
+  // rebuild all items if we have perspective. Bug 1431249 should remove
+  // this requirement.
+  if (aBuilder->IsRetainingDisplayList() &&
+      ChildrenHavePerspective(disp)) {
+    dirtyRect = visibleRect;
+    aBuilder->MarkFrameModifiedDuringBuilding(this);
   }
 
   bool inTransform = aBuilder->IsInTransform();

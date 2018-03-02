@@ -76,9 +76,13 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.expectAssertions(0, 34);
 
+const kStrictKeyPressEvents =
+  SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
+
 const kIsMac = (navigator.platform.indexOf("Mac") == 0);
 const kIsWin = (navigator.platform.indexOf("Win") == 0);
 
+var gDescription = "";
 var gEvent = null;
 var gCopiedEvent = [];
 var gCallback = null;
@@ -89,6 +93,7 @@ function onEvent(aEvent)
   if (gCallPreventDefault) {
     aEvent.preventDefault();
   }
+  ok(gEvent === null, gDescription + `: We should receive only one event to check per test: already got: ${gEvent ? gEvent.type : "null"}, got: ${aEvent.type}`);
   gEvent = aEvent;
   for (var attr in aEvent) {
     if (!attr.match(/^[A-Z0-9_]+$/) && // ignore const attributes
@@ -190,7 +195,12 @@ const kTests = [
       document.getElementById(this.targetID).focus();
       synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, kIsWin ? WIN_VK_B : MAC_VK_ANSI_B,
                           { shiftKey: true }, "B", "B");
-      observeKeyUpOnContent(KeyboardEvent.DOM_VK_B, runNextTest);
+
+      // On Windows, synthesizeNativeKey will also fire keyup for shiftKey.
+      // We have to wait for it to prevent the key event break the next test case.
+      let waitKeyCode = _EU_isWin(window) ? KeyboardEvent.DOM_VK_SHIFT :
+                                            KeyboardEvent.DOM_VK_B;
+      observeKeyUpOnContent(waitKeyCode, runNextTest);
       return true;
     },
     canRun: function () {
@@ -215,7 +225,7 @@ const kTests = [
       return true;
     },
     canRun: function () {
-      return (kIsMac || kIsWin);
+      return !kStrictKeyPressEvents && (kIsMac || kIsWin);
     },
     todoMismatch: [],
   },
@@ -676,28 +686,28 @@ function doTest(aTest)
   }
   gEvent = null;
   gCopiedEvent = [];
+  gDescription = aTest.description + " (gCallPreventDefault=" + gCallPreventDefault + ")";
   var target = aTest.target ? aTest.target() : document.getElementById(aTest.targetID);
   target.addEventListener(aTest.eventType, onEvent, true);
   gCallback = function () {
-    var description = aTest.description + " (gCallPreventDefault=" + gCallPreventDefault + ")";
     target.removeEventListener(aTest.eventType, onEvent, true);
-    ok(gEvent !== null, description + ": failed to get duplicated event");
-    ok(gCopiedEvent.length > 0, description + ": count of attribute of the event must be larger than 0");
+    ok(gEvent !== null, gDescription + ": failed to get duplicated event");
+    ok(gCopiedEvent.length > 0, gDescription + ": count of attribute of the event must be larger than 0");
     for (var i = 0; i < gCopiedEvent.length; ++i) {
       var name = gCopiedEvent[i].name;
       if (name == "rangeOffset") {
-        todo(false, description + ": " + name + " attribute value is never reset (" + gEvent[name] + ")");
+        todo(false, gDescription + ": " + name + " attribute value is never reset (" + gEvent[name] + ")");
       } else if (name == "eventPhase") {
-        is(gEvent[name], 0, description + ": mismatch with fixed value (" + name + ")");
+        is(gEvent[name], 0, gDescription + ": mismatch with fixed value (" + name + ")");
       } else if (name == "rangeParent" || name == "currentTarget") {
-        is(gEvent[name], null, description + ": mismatch with fixed value (" + name + ")");
+        is(gEvent[name], null, gDescription + ": mismatch with fixed value (" + name + ")");
       } else if (aTest.todoMismatch.includes(name)) {
-        todo_is(gEvent[name], gCopiedEvent[i].value, description + ": mismatch (" + name + ")");
+        todo_is(gEvent[name], gCopiedEvent[i].value, gDescription + ": mismatch (" + name + ")");
       } else if (name == "offsetX" || name == "offsetY") {
         // do nothing; these are defined to return different values during event dispatch
         // vs not during event dispatch
       } else {
-        is(gEvent[name], gCopiedEvent[i].value, description + ": mismatch (" + name + ")");
+        is(gEvent[name], gCopiedEvent[i].value, gDescription + ": mismatch (" + name + ")");
       }
     }
     if (!testWillCallRunNextTest) {

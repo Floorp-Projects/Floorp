@@ -402,7 +402,7 @@ impl GlyphRasterizer {
                     if let Ok(Some(ref mut glyph_info)) = *entry.get_mut() {
                         if texture_cache.request(&mut glyph_info.texture_cache_handle, gpu_cache) {
                             // This case gets hit when we have already rasterized
-                            // the glyph and stored it in CPU memory, the the glyph
+                            // the glyph and stored it in CPU memory, but the glyph
                             // has been evicted from the texture cache. In which case
                             // we need to re-upload it to the GPU.
                             texture_cache.update(

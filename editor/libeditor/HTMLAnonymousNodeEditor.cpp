@@ -314,8 +314,7 @@ HTMLEditor::DeleteRefToAnonymousNode(ManualNACPtr aContent,
 
     // FIXME(emilio): This is the only caller to PresShell::ContentRemoved that
     // passes NAC into it. This is not great!
-    aShell->ContentRemoved(
-      aContent->GetComposedDoc(), parentContent, aContent, nullptr);
+    aShell->ContentRemoved(aContent, nullptr);
 
     if (document) {
       aShell->EndUpdate(document, UPDATE_CONTENT_MODEL);

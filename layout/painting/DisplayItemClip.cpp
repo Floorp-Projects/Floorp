@@ -410,7 +410,7 @@ DisplayItemClip::AppendRoundedRects(nsTArray<RoundedRect>* aArray, uint32_t aCou
 }
 
 bool
-DisplayItemClip::ComputeRegionInClips(DisplayItemClip* aOldClip,
+DisplayItemClip::ComputeRegionInClips(const DisplayItemClip* aOldClip,
                                       const nsPoint& aShift,
                                       nsRegion* aCombined) const
 {

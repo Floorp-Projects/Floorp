@@ -565,8 +565,7 @@ var PromptUtils = {
   },
 
   get pwmgr() {
-    delete this.pwmgr;
-    return this.pwmgr = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+    return Services.logins;
   },
 
   getHostnameAndRealm: function pu_getHostnameAndRealm(aRealmString) {

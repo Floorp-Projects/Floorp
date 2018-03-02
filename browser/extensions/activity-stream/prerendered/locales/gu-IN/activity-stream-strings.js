@@ -10,7 +10,7 @@ window.gActivityStreamStrings = {
   "header_recommended_by": "દ્વારા ભલામણ",
   "header_bookmarks_placeholder": "તમારી પાસે હજી સુધી કોઈ બુકમાર્ક્સ નથી.",
   "header_stories_from": "થી",
-  "context_menu_button_sr": "Open context menu for {title}",
+  "context_menu_button_sr": "{title} માટે સંદર્ભ મેનૂ ખોલો",
   "section_context_menu_button_sr": "Open the section context menu",
   "type_label_visited": "જોવામા આવેલ:",
   "type_label_bookmarked": "બુકમાર્ક્સ",
@@ -111,5 +111,6 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Add Top Site",
   "section_menu_action_move_up": "Move Up",
   "section_menu_action_move_down": "Move Down",
-  "section_menu_action_privacy_notice": "Privacy Notice"
+  "section_menu_action_privacy_notice": "Privacy Notice",
+  "edit_topsites_add_button_tooltip": "ટોચની સાઇટ ઉમેરો"
 };

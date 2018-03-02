@@ -13,6 +13,10 @@ const kAutoStartPref = "browser.privatebrowsing.autostart";
 var gTemporaryAutoStartMode = false;
 
 var PrivateBrowsingUtils = {
+  get enabled() {
+    return Services.policies.isAllowed("privatebrowsing");
+  },
+
   // Rather than passing content windows to this function, please use
   // isBrowserPrivate since it works with e10s.
   isWindowPrivate: function pbu_isWindowPrivate(aWindow) {

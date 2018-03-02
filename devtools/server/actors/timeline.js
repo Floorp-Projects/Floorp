@@ -34,15 +34,28 @@ exports.TimelineActor = protocol.ActorClassWithSpec(timelineSpec, {
     this.tabActor = tabActor;
     this.bridge = new Timeline(tabActor);
 
-    this._onTimelineEvent = this._onTimelineEvent.bind(this);
-    this.bridge.on("*", this._onTimelineEvent);
+    this._onTimelineDocLoading = this._onTimelineDocLoading.bind(this);
+    this._onTimelineMarkers = this._onTimelineMarkers.bind(this);
+    this._onTimelineTicks = this._onTimelineTicks.bind(this);
+    this._onTimelineMemory = this._onTimelineMemory.bind(this);
+    this._onTimelineFrames = this._onTimelineFrames.bind(this);
+
+    this.bridge.on("doc-loading", this._onTimelineDocLoading);
+    this.bridge.on("markers", this._onTimelineMarkers);
+    this.bridge.on("ticks", this._onTimelineTicks);
+    this.bridge.on("memory", this._onTimelineMemory);
+    this.bridge.on("frames", this._onTimelineFrames);
   },
 
   /**
    * Destroys this actor, stopping recording first.
    */
   destroy: function () {
-    this.bridge.off("*", this._onTimelineEvent);
+    this.bridge.off("doc-loading", this._onTimelineDocLoading);
+    this.bridge.off("markers", this._onTimelineMarkers);
+    this.bridge.off("ticks", this._onTimelineTicks);
+    this.bridge.off("memory", this._onTimelineMemory);
+    this.bridge.off("frames", this._onTimelineFrames);
     this.bridge.destroy();
     this.bridge = null;
     this.tabActor = null;
@@ -50,11 +63,22 @@ exports.TimelineActor = protocol.ActorClassWithSpec(timelineSpec, {
   },
 
   /**
-   * Propagate events from the Timeline module over RDP if the event is defined
-   * here.
+   * Propagate events from the Timeline module over RDP if the event is defined here.
    */
-  _onTimelineEvent: function (eventName, ...args) {
-    this.emit(eventName, ...args);
+  _onTimelineDocLoading: function (...args) {
+    this.emit("doc-loading", ...args);
+  },
+  _onTimelineMarkers: function (...args) {
+    this.emit("markers", ...args);
+  },
+  _onTimelineTicks: function (...args) {
+    this.emit("ticks", ...args);
+  },
+  _onTimelineMemory: function (...args) {
+    this.emit("memory", ...args);
+  },
+  _onTimelineFrames: function (...args) {
+    this.emit("frames", ...args);
   },
 
   isRecording: actorBridgeWithSpec("isRecording", {
