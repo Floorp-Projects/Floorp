@@ -46,7 +46,6 @@ public:
 
   using GfxInfoBase::GetFeatureStatus;
   using GfxInfoBase::GetFeatureSuggestedDriverVersion;
-  using GfxInfoBase::GetWebGLParameter;
 
   virtual nsresult Init() override;
 
