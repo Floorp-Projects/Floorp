@@ -66,7 +66,6 @@ public:
   STDMETHODIMP WriteHandlerPayload(NotNull<IInterceptor*> aInterceptor,
                                    NotNull<IStream*> aStream) override;
   STDMETHODIMP_(REFIID) MarshalAs(REFIID aIid) override;
-  STDMETHODIMP DisconnectHandlerRemotes() override;
 
   // ICallFrameWalker
   STDMETHODIMP OnWalkInterface(REFIID aIid, PVOID* aInterface, BOOL aIsInParam,
