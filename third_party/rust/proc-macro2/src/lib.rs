@@ -1,14 +1,13 @@
-//! A "shim crate" intended to multiplex the [`proc_macro`] API on to stable
-//! Rust.
+//! A "shim crate" intended to multiplex the `proc_macro` API on to stable Rust.
 //!
 //! Procedural macros in Rust operate over the upstream
-//! [`proc_macro::TokenStream`][ts] type. This type currently is quite
-//! conservative and exposed no internal implementation details. Nightly
-//! compilers, however, contain a much richer interface. This richer interface
-//! allows fine-grained inspection of the token stream which avoids
-//! stringification/re-lexing and also preserves span information.
+//! `proc_macro::TokenStream` type. This type currently is quite conservative
+//! and exposed no internal implementation details. Nightly compilers, however,
+//! contain a much richer interface. This richer interface allows fine-grained
+//! inspection of the token stream which avoids stringification/re-lexing and
+//! also preserves span information.
 //!
-//! The upcoming APIs added to [`proc_macro`] upstream are the foundation for
+//! The upcoming APIs added to `proc_macro` upstream are the foundation for
 //! productive procedural macros in the ecosystem. To help prepare the ecosystem
 //! for using them this crate serves to both compile on stable and nightly and
 //! mirrors the API-to-be. The intention is that procedural macros which switch
@@ -16,19 +15,15 @@
 //! `proc_macro` crate once its API stabilizes.
 //!
 //! In the meantime this crate also has a `nightly` Cargo feature which
-//! enables it to reimplement itself with the unstable API of [`proc_macro`].
+//! enables it to reimplement itself with the unstable API of `proc_macro`.
 //! This'll allow immediate usage of the beneficial upstream API, particularly
 //! around preserving span information.
-//!
-//! [`proc_macro`]: https://doc.rust-lang.org/proc_macro/
-//! [ts]: https://doc.rust-lang.org/proc_macro/struct.TokenStream.html
 
 // Proc-macro2 types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/proc-macro2/0.2.3")]
+#![doc(html_root_url = "https://docs.rs/proc-macro2/0.2.2")]
 
 #![cfg_attr(feature = "nightly", feature(proc_macro))]
 
-#[cfg(feature = "proc-macro")]
 extern crate proc_macro;
 
 #[cfg(not(feature = "nightly"))]
@@ -68,14 +63,12 @@ impl FromStr for TokenStream {
     }
 }
 
-#[cfg(feature = "proc-macro")]
 impl From<proc_macro::TokenStream> for TokenStream {
     fn from(inner: proc_macro::TokenStream) -> TokenStream {
         TokenStream(inner.into())
     }
 }
 
-#[cfg(feature = "proc-macro")]
 impl From<TokenStream> for proc_macro::TokenStream {
     fn from(inner: TokenStream) -> proc_macro::TokenStream {
         inner.0.into()
@@ -178,7 +171,7 @@ impl Span {
     }
 
     /// This method is only available when the `"nightly"` feature is enabled.
-    #[cfg(all(feature = "nightly", feature = "proc-macro"))]
+    #[cfg(feature = "nightly")]
     pub fn unstable(self) -> proc_macro::Span {
         self.0.unstable()
     }
