@@ -734,7 +734,6 @@ class LNode
 
     // Returns information about operands.
     virtual LAllocation* getOperand(size_t index) = 0;
-    virtual void setOperand(size_t index, const LAllocation& a) = 0;
 
     bool isCall() const {
         return isCall_;
@@ -829,6 +828,9 @@ class LInstruction
 
     void setDef(size_t index, const LDefinition& def) {
         *getDef(index) = def;
+    }
+    void setOperand(size_t index, const LAllocation& a) {
+        *getOperand(index) = a;
     }
 
     // Returns information about temporary registers needed. Each temporary
@@ -969,7 +971,7 @@ class LPhi final : public LNode
         MOZ_ASSERT(index < numOperands());
         return &inputs_[index];
     }
-    void setOperand(size_t index, const LAllocation& a) override {
+    void setOperand(size_t index, const LAllocation& a) {
         MOZ_ASSERT(index < numOperands());
         inputs_[index] = a;
     }
@@ -1166,7 +1168,7 @@ class LInstructionHelper : public details::LInstructionFixedDefsTempsHelper<Defs
     LAllocation* getOperand(size_t index) final {
         return &operands_[index];
     }
-    void setOperand(size_t index, const LAllocation& a) final {
+    void setOperand(size_t index, const LAllocation& a) {
         operands_[index] = a;
     }
     void setBoxOperand(size_t index, const LBoxAllocation& alloc) {
@@ -1212,7 +1214,7 @@ class LVariadicInstruction : public details::LInstructionFixedDefsTempsHelper<De
     LAllocation* getOperand(size_t index) final {
         return &operands_[index];
     }
-    void setOperand(size_t index, const LAllocation& a) final {
+    void setOperand(size_t index, const LAllocation& a) {
         operands_[index] = a;
     }
     void setBoxOperand(size_t index, const LBoxAllocation& a) {
