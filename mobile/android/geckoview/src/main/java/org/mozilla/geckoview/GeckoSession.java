@@ -1680,47 +1680,47 @@ public class GeckoSession extends LayerSession
              * A boolean indicating if the item is disabled. Item should not be
              * selectable if this is true.
              */
-            public boolean disabled;
+            public final boolean disabled;
 
             /**
              * A String giving the URI of the item icon, or null if none exists
              * (only valid for menus)
              */
-            public String icon;
+            public final String icon;
 
             /**
              * A String giving the ID of the item or group
              */
-            public String id;
+            public final String id;
 
             /**
              * A Choice array of sub-items in a group, or null if not a group
              */
-            public Choice[] items;
+            public final Choice[] items;
 
             /**
              * A string giving the label for displaying the item or group
              */
-            public String label;
+            public final String label;
 
             /**
              * A boolean indicating if the item should be pre-selected
              * (pre-checked for menu items)
              */
-            public boolean selected;
+            public final boolean selected;
 
             /**
              * A boolean indicating if the item should be a menu separator
              * (only valid for menus)
              */
-            public boolean separator;
+            public final boolean separator;
 
             /* package */ Choice(GeckoBundle choice) {
                 disabled = choice.getBoolean("disabled");
                 icon = choice.getString("icon");
                 id = choice.getString("id");
                 label = choice.getString("label");
-                selected = choice.getBoolean("label");
+                selected = choice.getBoolean("selected");
                 separator = choice.getBoolean("separator");
 
                 GeckoBundle[] choices = choice.getBundleArray("items");
@@ -2058,19 +2058,19 @@ public class GeckoSession extends LayerSession
             /**
              * A string giving the origin-specific source identifier.
              */
-            public String id;
+            public final String id;
 
             /**
              * A string giving the non-origin-specific source identifier.
              */
-            public String rawId;
+            public final String rawId;
 
             /**
              * A string giving the name of the video source from the system
              * (for example, "Camera 0, Facing back, Orientation 90").
              * May be empty.
              */
-            public String name;
+            public final String name;
 
             /**
              * An int giving the media source type.
@@ -2079,12 +2079,12 @@ public class GeckoSession extends LayerSession
              * Possible values for an audio source are:
              * SOURCE_MICROPHONE, SOURCE_AUDIOCAPTURE, and SOURCE_OTHER.
              */
-            public int source;
+            public final int source;
 
             /**
              * An int giving the type of media, must be either TYPE_VIDEO or TYPE_AUDIO.
              */
-            public int type;
+            public final int type;
 
             private static int getSourceFromString(String src) {
                 // The strings here should match those in MediaSourceEnum in MediaStreamTrack.webidl
@@ -2120,9 +2120,9 @@ public class GeckoSession extends LayerSession
                 }
             }
 
-            public MediaSource(GeckoBundle media) {
+            /* package */ MediaSource(GeckoBundle media) {
                 id = media.getString("id");
-                rawId = media.getString("id");
+                rawId = media.getString("rawId");
                 name = media.getString("name");
                 source = getSourceFromString(media.getString("source"));
                 type = getTypeFromString(media.getString("type"));

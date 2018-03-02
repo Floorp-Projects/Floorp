@@ -1531,9 +1531,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLMediaElement, nsGenericHTMLElement)
 
 void
-HTMLMediaElement::ContentRemoved(nsIDocument* aDocument,
-                                 nsIContent* aContainer,
-                                 nsIContent* aChild,
+HTMLMediaElement::ContentRemoved(nsIContent* aChild,
                                  nsIContent* aPreviousSibling)
 {
   if (aChild == mSourcePointer) {

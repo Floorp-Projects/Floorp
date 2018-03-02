@@ -294,6 +294,22 @@ partial namespace ChromeUtils {
    */
   [Throws]
   void defineModuleGetter(object target, DOMString id, DOMString resourceURI);
+
+  /**
+   * Returns the scripted location of the first ancestor stack frame with a
+   * principal which is subsumed by the given principal. If no such frame
+   * exists on the call stack, returns null.
+   */
+  object? getCallerLocation(Principal principal);
+
+  /**
+   * Creates a JS Error object with the given message and stack.
+   *
+   * If a stack object is provided, the error object is created in the global
+   * that it belongs to.
+   */
+  [Throws]
+  object createError(DOMString message, optional object? stack = null);
 };
 
 /**

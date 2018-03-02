@@ -4291,12 +4291,11 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 }
 
 void
-PresShell::CharacterDataChanged(nsIDocument* aDocument,
-                                nsIContent* aContent,
+PresShell::CharacterDataChanged(nsIContent* aContent,
                                 const CharacterDataChangeInfo& aInfo)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected CharacterDataChanged");
-  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+  NS_PRECONDITION(aContent->OwnerDoc() == mDocument, "Unexpected document");
 
   nsAutoCauseReflowNotifier crNotifier(this);
 
@@ -4357,15 +4356,14 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument, EventStates aStateMask)
 }
 
 void
-PresShell::AttributeWillChange(nsIDocument* aDocument,
-                               Element*     aElement,
-                               int32_t      aNameSpaceID,
-                               nsAtom*     aAttribute,
-                               int32_t      aModType,
+PresShell::AttributeWillChange(Element* aElement,
+                               int32_t aNameSpaceID,
+                               nsAtom* aAttribute,
+                               int32_t aModType,
                                const nsAttrValue* aNewValue)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected AttributeWillChange");
-  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+  NS_PRECONDITION(aElement->OwnerDoc() == mDocument, "Unexpected document");
 
   // XXXwaterson it might be more elegant to wait until after the
   // initial reflow to begin observing the document. That would
@@ -4380,15 +4378,14 @@ PresShell::AttributeWillChange(nsIDocument* aDocument,
 }
 
 void
-PresShell::AttributeChanged(nsIDocument* aDocument,
-                            Element*     aElement,
-                            int32_t      aNameSpaceID,
-                            nsAtom*     aAttribute,
-                            int32_t      aModType,
+PresShell::AttributeChanged(Element* aElement,
+                            int32_t aNameSpaceID,
+                            nsAtom* aAttribute,
+                            int32_t aModType,
                             const nsAttrValue* aOldValue)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected AttributeChanged");
-  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+  NS_PRECONDITION(aElement->OwnerDoc() == mDocument, "Unexpected document");
 
   // XXXwaterson it might be more elegant to wait until after the
   // initial reflow to begin observing the document. That would
@@ -4402,39 +4399,18 @@ PresShell::AttributeChanged(nsIDocument* aDocument,
   }
 }
 
-// nsIMutationObserver callbacks have this terrible API where aContainer is
-// null in the case that the container is the document (since nsIDocument is
-// not an nsIContent), and callees are supposed to figure this out and use the
-// document instead. It would be nice to fix that API to just pass a single
-// nsINode* parameter in place of the nsIDocument*, nsIContent* pair, but
-// there are quite a lot of consumers. So we fix things up locally with this
-// routine for now.
-static inline nsINode*
-RealContainer(nsIDocument* aDocument, nsIContent* aContainer, nsIContent* aContent)
-{
-  MOZ_ASSERT(aDocument);
-  MOZ_ASSERT(!aContainer || aContainer->OwnerDoc() == aDocument);
-  MOZ_ASSERT(aContent->OwnerDoc() == aDocument);
-  MOZ_ASSERT(aContainer || aContent->GetParentNode() == aDocument);
-  if (!aContainer) {
-    return aDocument;
-  }
-  return aContainer;
-}
-
 void
-PresShell::ContentAppended(nsIDocument *aDocument,
-                           nsIContent* aContainer,
-                           nsIContent* aFirstNewContent)
+PresShell::ContentAppended(nsIContent* aFirstNewContent)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentAppended");
-  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+  NS_PRECONDITION(aFirstNewContent->OwnerDoc() == mDocument,
+                  "Unexpected document");
 
   // We never call ContentAppended with a document as the container, so we can
   // assert that we have an nsIContent container.
-  MOZ_ASSERT(aContainer);
-  MOZ_ASSERT(aContainer->IsElement() ||
-             aContainer->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT));
+  nsIContent* container = aFirstNewContent->GetParent();
+  MOZ_ASSERT(container);
+  MOZ_ASSERT(container->IsElement() || container->IsShadowRoot());
   if (!mDidInitialize) {
     return;
   }
@@ -4444,10 +4420,10 @@ PresShell::ContentAppended(nsIDocument *aDocument,
   // Call this here so it only happens for real content mutations and
   // not cases when the frame constructor calls its own methods to force
   // frame reconstruction.
-  mPresContext->RestyleManager()->ContentAppended(aContainer, aFirstNewContent);
+  mPresContext->RestyleManager()->ContentAppended(container, aFirstNewContent);
 
   mFrameConstructor->ContentAppended(
-      aContainer,
+      container,
       aFirstNewContent,
       nsCSSFrameConstructor::InsertionKind::Async);
 
@@ -4455,13 +4431,11 @@ PresShell::ContentAppended(nsIDocument *aDocument,
 }
 
 void
-PresShell::ContentInserted(nsIDocument* aDocument,
-                           nsIContent*  aMaybeContainer,
-                           nsIContent*  aChild)
+PresShell::ContentInserted(nsIContent* aChild)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentInserted");
-  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
-  nsINode* container = RealContainer(aDocument, aMaybeContainer, aChild);
+  NS_PRECONDITION(aChild->OwnerDoc() == mDocument, "Unexpected document");
+  nsINode* container = aChild->GetParentNode();
 
   if (!mDidInitialize) {
     return;
@@ -4475,7 +4449,7 @@ PresShell::ContentInserted(nsIDocument* aDocument,
   mPresContext->RestyleManager()->ContentInserted(container, aChild);
 
   mFrameConstructor->ContentInserted(
-      aMaybeContainer,
+      aChild->GetParent(),
       aChild,
       nullptr,
       nsCSSFrameConstructor::InsertionKind::Async);
@@ -4484,25 +4458,17 @@ PresShell::ContentInserted(nsIDocument* aDocument,
 }
 
 void
-PresShell::ContentRemoved(nsIDocument* aDocument,
-                          nsIContent* aMaybeContainer,
-                          nsIContent* aChild,
-                          nsIContent* aPreviousSibling)
+PresShell::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentRemoved");
-  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
-  nsINode* container = RealContainer(aDocument, aMaybeContainer, aChild);
+  NS_PRECONDITION(aChild->OwnerDoc() == mDocument, "Unexpected document");
+  nsINode* container = aChild->GetParentNode();
 
   // Notify the ESM that the content has been removed, so that
   // it can clean up any state related to the content.
 
-  // XXX_jwir3: There is no null check for aDocument necessary, since, even
-  //            though by nsIMutationObserver, aDocument could be null, the
-  //            precondition check that mDocument == aDocument ensures that
-  //            aDocument will not be null (since mDocument can't be null unless
-  //            we're still intializing).
   mPresContext->EventStateManager()
-    ->ContentRemoved(aDocument, aMaybeContainer, aChild);
+    ->ContentRemoved(mDocument, aChild->GetParent(), aChild);
 
   nsAutoCauseReflowNotifier crNotifier(this);
 
@@ -4524,11 +4490,12 @@ PresShell::ContentRemoved(nsIDocument* aDocument,
   // After removing aChild from tree we should save information about live ancestor
   if (mPointerEventTarget &&
       nsContentUtils::ContentIsDescendantOf(mPointerEventTarget, aChild)) {
-    mPointerEventTarget = aMaybeContainer;
+    mPointerEventTarget = aChild->GetParent();
   }
 
-  mFrameConstructor->ContentRemoved(aMaybeContainer, aChild, oldNextSibling,
-                                    nsCSSFrameConstructor::REMOVE_CONTENT);
+  mFrameConstructor->ContentRemoved(
+      aChild->GetParent(), aChild, oldNextSibling,
+      nsCSSFrameConstructor::REMOVE_CONTENT);
 
   VERIFY_STYLE_TREE;
 }
@@ -6787,7 +6754,7 @@ nsIFrame* GetNearestFrameContainingPresShell(nsIPresShell* aPresShell)
 }
 
 static bool
-FlushThrottledStyles(nsIDocument *aDocument, void *aData)
+FlushThrottledStyles(nsIDocument* aDocument, void *aData)
 {
   nsIPresShell* shell = aDocument->GetShell();
   if (shell && shell->IsVisible()) {
