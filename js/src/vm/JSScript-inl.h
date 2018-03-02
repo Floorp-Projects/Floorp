@@ -111,7 +111,9 @@ JSScript::ensureNonLazyCanonicalFunction()
 inline JSFunction*
 JSScript::getFunction(size_t index)
 {
-    JSFunction* fun = &getObject(index)->as<JSFunction>();
+    JSObject* obj = getObject(index);
+    MOZ_RELEASE_ASSERT(obj->is<JSFunction>(), "Script object is not JSFunction");
+    JSFunction* fun = &obj->as<JSFunction>();
     MOZ_ASSERT_IF(fun->isNative(), IsAsmJSModuleNative(fun->native()));
     return fun;
 }
@@ -119,13 +121,17 @@ JSScript::getFunction(size_t index)
 inline js::RegExpObject*
 JSScript::getRegExp(size_t index)
 {
-    return &getObject(index)->as<js::RegExpObject>();
+    JSObject* obj = getObject(index);
+    MOZ_RELEASE_ASSERT(obj->is<js::RegExpObject>(), "Script object is not RegExpObject");
+    return &obj->as<js::RegExpObject>();
 }
 
 inline js::RegExpObject*
 JSScript::getRegExp(jsbytecode* pc)
 {
-    return &getObject(pc)->as<js::RegExpObject>();
+    JSObject* obj = getObject(pc);
+    MOZ_RELEASE_ASSERT(obj->is<js::RegExpObject>(), "Script object is not RegExpObject");
+    return &obj->as<js::RegExpObject>();
 }
 
 inline js::GlobalObject&
