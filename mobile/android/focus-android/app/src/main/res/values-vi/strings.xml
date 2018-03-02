@@ -8,8 +8,6 @@
   <string name="feedback_erase">Lịch sử duyệt web của bạn đã bị xóa.</string>
   <string name="search_hint">Tìm kiếm %1$s</string>
   <string name="menu_share">Chia sẻ…</string>
-  <string name="menu_open_with_default_browser">Mở với %1$s</string>
-  <string name="menu_open_with_a_browser">Mở với…</string>
   <string name="menu_add_to_home_screen">Thêm vào màn hình chính</string>
   <string name="menu_whats_new">Có gì mới</string>
   <string name="menu_settings">Cài đặt</string>

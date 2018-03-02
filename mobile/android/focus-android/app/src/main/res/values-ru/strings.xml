@@ -8,8 +8,6 @@
   <string name="feedback_erase">Ваша история посещения сайтов была стёрта.</string>
   <string name="search_hint">Поиск %1$s</string>
   <string name="menu_share">Поделиться…</string>
-  <string name="menu_open_with_default_browser">Открыть в %1$s</string>
-  <string name="menu_open_with_a_browser">Открыть в…</string>
   <string name="menu_add_to_home_screen">Добавить на домашний экран</string>
   <string name="menu_whats_new">Что нового</string>
   <string name="menu_settings">Параметры</string>

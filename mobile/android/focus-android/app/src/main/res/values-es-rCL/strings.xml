@@ -8,8 +8,6 @@
   <string name="feedback_erase">Tu historial de navegación ha sido limpiado.</string>
   <string name="search_hint">Buscar por %1$s</string>
   <string name="menu_share">Compartir…</string>
-  <string name="menu_open_with_default_browser">Abrir con %1$s</string>
-  <string name="menu_open_with_a_browser">Abrir con…</string>
   <string name="menu_add_to_home_screen">Añadir a la pantalla de inicio</string>
   <string name="menu_whats_new">Qué hay de nuevo</string>
   <string name="menu_settings">Ajustes</string>

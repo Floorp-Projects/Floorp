@@ -8,8 +8,6 @@
   <string name="feedback_erase">S\'ha esborrat l\'historial de navegació.</string>
   <string name="search_hint">Cerca %1$s</string>
   <string name="menu_share">Comparteix…</string>
-  <string name="menu_open_with_default_browser">Obre amb el %1$s</string>
-  <string name="menu_open_with_a_browser">Obre amb…</string>
   <string name="menu_add_to_home_screen">Afegeix a la pantalla d\'inici</string>
   <string name="menu_whats_new">Novetats</string>
   <string name="menu_settings">Paràmetres</string>

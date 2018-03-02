@@ -1,0 +1,184 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Cancelar</string>
+  <string name="action_ok">OK</string>
+  <string name="action_save">Alzar</string>
+  <string name="urlbar_hint">Buscar u escribir adreza</string>
+  <string name="teaser">Navegación privada automatica.\nNavegar. Borrar. Repetir.</string>
+  <string name="feedback_erase">S\'ha borrau lo suyo historial de navegación.</string>
+  <string name="search_hint">Buscar %1$s</string>
+  <string name="menu_share">Compartir…</string>
+  <string name="menu_add_to_home_screen">Anyader a la pantalla d\'inicio</string>
+  <string name="menu_whats_new">Novedatz</string>
+  <string name="menu_settings">Achustes</string>
+  <string name="menu_about">Quanto a</string>
+  <string name="menu_help">Aduyar</string>
+  <string name="menu_rights">Los tuyos dreitos</string>
+  <string name="menu_trackers_blocked_title">Trazadors blocaus</string>
+  <string name="share_dialog_title">Compartir vía</string>
+  <string name="notification_erase_text">Borrar l\'historial de navegación</string>
+  <string name="notification_action_open">Ubrir</string>
+  <string name="notification_action_erase_and_open">Borrar y ubrir</string>
+  <string name="shortcut_erase_short_label">Borrar</string>
+  <string name="shortcut_erase_long_label">Borrar l\'historial de navegación</string>
+  <string name="text_selection_search_action">Buscar en privau</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s te da lo control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Usa-lo como un navegador privau:\n  "<ul>"\n    "<li>Busca y navega directament en l\'app</li>"\n    "<li>Bloca los trazadors (u modifica los achustes pa permitir trackers)</li>"\n    "<li>Borra cookies, asinas como los historials de busqueda y de navegaci&#243;n</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.<br/>\n<a href="%2$s">Learn more</a></p>]]></string>
+  <string name="preference_category_search">Buscar</string>
+  <string name="preference_search_engine_default">Per defecto</string>
+  <string name="preference_state_on">Activau</string>
+  <string name="preference_state_off">Desactivau</string>
+  <string name="preference_subitem_autocomplete">Autocompletar URL</string>
+  <string name="preference_switch_autocomplete">Autocompletar</string>
+  <string name="preference_category_autocomplete_preinstalled">Lista URL per defecto</string>
+  <string name="preference_autocomplete_preinstalled_summary">Activar pa tener autocompletau de %1$s con 450 URLs populars en a barra d\'adrezas.</string>
+  <string name="preference_category_autocomplete_custom">URL personalizada</string>
+  <string name="preference_autocomplete_subitem_customlist">URLs personalizadas</string>
+  <string name="preference_autocomplete_action_add">+ Anyader URL personalizada</string>
+  <string name="preference_autocomplete_title_add">Anyader URL personalizada</string>
+  <string name="preference_autocomplete_title_remove">Borrar URLs personalizadas</string>
+  <string name="preference_autocomplete_learn_more">Saber-ne mas</string>
+  <string name="preference_autocomplete_custom_summary">Anyader y chestionar l\'autocompletau personalizau d\'URLs.</string>
+  <string name="preference_autocomplete_add_title">URL a anyader</string>
+  <string name="preference_autocomplete_add_hint">Apegar u escribir URL</string>
+  <string name="preference_autocomplete_add_example">Eixemplo: eixemplo.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Nueva URL personalizada anyadida.</string>
+  <string name="preference_autocomplete_menu_remove">Borrar</string>
+  <string name="preference_autocomplete_action_remove_content_description">Borrar</string>
+  <string name="preference_autocomplete_add_error">Compreba la URL que has escrito.</string>
+  <string name="preference_language">Idioma</string>
+  <string name="preference_language_systemdefault">Predeterminau d\'o sistema</string>
+  <string name="preference_dialog_title_search_engine">Busqueda predeterminada</string>
+  <string name="preference_category_privacy">Privacidat</string>
+  <string name="preference_privacy_block_ads">Blocar los trazadors publicitarios</string>
+  <string name="preference_privacy_block_ads_summary">Bells anuncios fan seguimiento d\'as visitas alo puesto, mesmo si no fas clic en os anuncios</string>
+  <string name="preference_privacy_block_analytics">Bloca los trazadors analiticos</string>
+  <string name="preference_privacy_block_analytics_summary">Usaus pa replegar, analisar y medir actividatz como toques a la pantalla y desplazamientos de pantalles</string>
+  <string name="preference_privacy_block_social">Bloca los trazadors socials</string>
+  <string name="preference_privacy_block_social_summary">Incrustaus en puestos web pa trazar las tuyas visitas y amostrar funcionalidatz coo los botons de compartición</string>
+  <string name="preference_privacy_block_content">Bloca los trazadors d\'atro conteniu</string>
+  <string name="preference_privacy_block_content_summary2">Activar esta opción puede provocar problemas en bellas pachinas</string>
+  <string name="preference_privacy_secure_mode">Indetectable</string>
+  <string name="preference_privacy_stealth_summary">Amagar pachinas web quan se cambie d\'aplicación</string>
+  <string name="preference_category_performance">Rendimiento</string>
+  <string name="preference_performance_block_webfonts">Blocar fuents de Web</string>
+  <string name="preference_performance_block_webfonts_summary">Puede fer que no se veigan iconos u imachens</string>
+  <string name="preference_performance_block_images">Blocar imachens</string>
+  <string name="preference_default_browser2">Fer que %1$s siga lo navegador per defecto</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Ninviar datos d\'uso</string>
+  <string name="preference_mozilla_telemetry_summary">Saber-ne mas</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla s\'esfuerza per replegar nomás lo necesario pa fornir y amillorar %1$s pa totz.</string>
+  <string name="preference_privacy_notice">Politica de privacidat</string>
+  <string name="preference_about">Quanto a %1$s</string>
+  <string name="preference_search_installed_search_engines">Motors de busqueda instalaus</string>
+  <string name="preference_search_restore">Restaurar los motors de busqueda per defecto</string>
+  <string name="preference_search_add2">+ Anyader belatro motor de busqueda</string>
+  <string name="preference_search_remove_title">Sacar motors de busqueda</string>
+  <string name="preference_search_remove">Eliminar</string>
+  <string name="tutorial_search_manually_add">Anyader manualment</string>
+  <string name="tutorial_search_title">Anyader motor de busqueda</string>
+  <string name="tutorial_search_step1">1. Ves ta la pachina web d\'o motor de busqueda.</string>
+  <string name="tutorial_search_step2">2. Toca en o campo de busqueda d\'o motor.</string>
+  <string name="tutorial_search_step2_alternative">2. Mantiene pretau lo campo de busqueda d\'o motor.</string>
+  <string name="tutorial_search_step3">3. Toca l\'icono d\'a lupa dencima d\'o teclau pa anyader lo motor de busqueda.</string>
+  <string name="action_option_add_search_engine">Anyader motor de busqueda</string>
+  <string name="tutorial_search_step3_alternative">3. Toca %1$s</string>
+  <string name="tutorial_search_step4">4. Si no veyes la lupa, preba d\'anyader manualment lo motor de busqueda.</string>
+  <string name="tutorial_search_step4_alternative">4. Si no veyes %1$s, mira d\'anyader manualment lo motor de busqueda.</string>
+  <string name="tutorial_search_finish">PRIMERS PASOS</string>
+  <string name="search_add_hint">Toca l\'icono d\'a lupa dencima d\'o teclau pa anyader este motor de busqueda.</string>
+  <string name="search_add_manually_name">Nombre a amostrar</string>
+  <string name="search_add_manually_name_hint">Nombre d\'o motor de busqueda</string>
+  <string name="search_add_manually_string">Cadena de busqueda a emplegar</string>
+  <string name="search_add_manually_save">Alzar</string>
+  <string name="search_add_manually_string_hint">Apega u escribe la cadena de busqueda. Si cal, substituye lo termen de busqueda per: %s.</string>
+  <string name="search_add_manually_example">Eixemplo: eixemplo.com/search/?q=%s</string>
+  <string name="accessibility_announcement_search">Anyader motor de busqueda</string>
+  <string name="search_add_confirmation">Nuevo motor de busqueda anyadiu.</string>
+  <string name="search_add_error_empty_name">Escribir lo nombre d\'o motor de busqueda</string>
+  <string name="search_add_error_duplicate_name">Un motor de busqueda instalau ye emplegando ya ixe nombre.</string>
+  <string name="search_add_error_empty_search">Escribe la cadena de busqueda</string>
+  <string name="search_add_error_format">Compreba que la cadena de busqueda concuerda con lo formato d\'eixemplo</string>
+  <string name="content_description_clear_input">Borrar lo texto</string>
+  <string name="content_description_dismiss_input">Descartar</string>
+  <string name="content_description_erase">Borrar l\'historial de navegación</string>
+  <string name="content_description_fab_expand">Expandir</string>
+  <string name="content_description_tab_counter">Pestanyas ubiertas: %1$s</string>
+  <string name="content_description_open_tab">Ubrir una pestanya</string>
+  <string name="content_description_close_tab">Zarrar la pestanya</string>
+  <string name="content_description_lock">Connexión segura</string>
+  <string name="accessibility_announcement_loading">Se ye cargando</string>
+  <string name="accessibility_announcement_loading_finished">Puesto web cargau</string>
+  <string name="content_description_menu">Mas opcions</string>
+  <string name="content_description_forward">Abanzar en l\'historial</string>
+  <string name="content_description_reload">Esviellar la pachina</string>
+  <string name="content_description_back">Ir enta zaga en l\'historial</string>
+  <string name="content_description_stop">Aturar la carga d\'a pachina</string>
+  <string name="content_description_customtab_exit">Tornar ta l\'aplicación anterior</string>
+  <string name="content_description_blocking_switch">Blocar trazadors</string>
+  <string name="context_menu_paste_go">Apegar y ubrir</string>
+  <string name="your_rights">Los tuyos dreitos</string>
+  <string name="external_app_prompt_title">Ubrir lo vinclo en belatra aplicación</string>
+  <string name="external_app_prompt">Puetz salir d\'o %1$s pa ubrir este vinclo en %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Trobar una aplicación que pueda ubrir lo vinclo</string>
+  <string name="external_app_prompt_no_app">Garra d\'as aplicacions d\'o tuyo dispositivo ha estau capable d\'ubrir este vinclo. Puetz zarrar lo %1$s pa mirar en %2$s una aplicación que lo pueda ubrir.</string>
+  <string name="external_multiple_apps_matched_exit">Salir d\'a Navegación Privada?</string>
+  <string name="download_snackbar_finished">%1$s ha rematau</string>
+  <string name="download_snackbar_open">Ubrir</string>
+  <string name="download_dialog_warning"><![CDATA["Los fichers descargaus "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no se detectar&#225;n</b>" quan borres l\'historial de %1$s."]]></string>
+  <string name="download_dialog_title">Descargar lo fichero</string>
+  <string name="download_dialog_action_cancel">Cancelar</string>
+  <string name="download_dialog_action_download">Descargar</string>
+  <string name="errorpage_title">Problema en cargar la pachina</string>
+  <string name="errorpage_refresh">Tornar a intentar-lo</string>
+  <string name="error_connectionfailure_title">Imposible de connectar-se</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Lo puesto ye temporalment inaccesible u masiau acupau. Torna a prebar-lo en un ratet.</li>"\n        "<li>Si no yes capable de cargar garra pachina, compreba la connexi&#243;n de datos u Wi-Fi d\'o tuyo dispositivo.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">La connexión ha caducau</string>
+  <string name="error_hostLookup_title">No s\'ha trobau lo servidor</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Compreba l\'adreza, no cosa que tiengas errors como\n          "<strong>ww</strong>".eixemplo.com engu&#237;s de\n          "<strong>www</strong>.eixemplo.com</li>"\n        "<li>Si no puetz cargar garra pachina, compreba la tuya connexi&#243;n de datos u Wi-Fi.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">L\'adreza no ye valida</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Per un regular las adrezas web s\'escriben asinas: "<strong>http://www.example.com/</strong></li>"\n  "<li>"Asegura-te de que yes usando barras abocadas enta debant (i.e. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">Esta pachina no ye correctament redireccionada</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Este problema puede deber-se a haber desactivau u refusau los cookies.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">No s\'ha reconoixiu l\'adreza</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Igual te cal instalar belatro software pa ubrir esta adreza.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">La connexión segura ha fallau</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Talment siga un problema d\'a configuraci&#243;n d\'o servidor, u podr&#237;a \nestar que bel&#250;n siga mirando de fer-se pasar per lo servidor.</li>"\n  "<li>Si t\'hebas connectau en o pasau a este servidor, talment se tracte \nd\'una error temporal, torna a intentar-lo dimpu&#233;s.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Ui</string>
+  <string name="error_generic_message">Per bell razón no s\'ha puesto cargar esta pachina.</string>
+  <string name="contextmenu_link_share">Compartir lo vinclo</string>
+  <string name="contextmenu_link_copy">Copiar l\'adreza d\'o vinclo</string>
+  <string name="contextmenu_image_share">Compartir la imachen</string>
+  <string name="contextmenu_image_copy">Copiar l\'adreza d\'a imachen</string>
+  <string name="contextmenu_image_save">Alzar la imachen</string>
+  <string name="contextmenu_open_in_new_tab">Ubrir lo vinclo en una nueva pestanya</string>
+  <string name="contextmenu_image_warning"><![CDATA["Las imachens alzadas y compartidas "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no se borrar&#225;n</b>" quan borres l\'historial de %1$s."]]></string>
+  <string name="firstrun_defaultbrowser_title">Refuerza la tuya privacidat</string>
+  <string name="firstrun_defaultbrowser_text2">Leva la navegación privada ta lo siguient nivel. Bloca anuncios y atros contenius que puedan seguir-te a través d\'a web y enlenteixen la carga d\'as pachinas.</string>
+  <string name="firstrun_search_title">Busca a la tuya traza</string>
+  <string name="firstrun_search_text">Yes mirando bella cosa diferent? Triga belatro motor de busqueda en os Achustes.</string>
+  <string name="firstrun_shortcut_title">Anyade alcorces a la tuya pantalla d\'inicio</string>
+  <string name="firstrun_shortcut_text">Torna rapidament ta los tuyos puestos favoritos en %1$s. Triga simplement \"Anyader en a pantalla d\'inicio\" dende lo menú %1$s.</string>
+  <string name="firstrun_privacy_title">Fe d\'a privacidat un costumbre</string>
+  <string name="firstrun_privacy_text">Fe de %1$s lo tuyo navegador per defecto y aconsigue los beneficios d\'a navegación privada quan ubres pachinas web dende atras aplicacions.</string>
+  <string name="firstrun_close_button">Entendiu!</string>
+  <string name="firstrun_skip_button">Blincar</string>
+  <string name="firstrun_next_button">Siguient</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Anyader en a pantalla d\'inicio</string>
+  <string name="dialog_addtohomescreen_action_add">Anyader</string>
+  <string name="dialog_addtohomescreen_action_cancel">Cancelar</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Este alcorce s\'ubrirá quan la protección contra seguimiento siga desactivada</string>
+  <string name="dialog_opentab_title">Ubrir lo vinclo en a pestanya seleccionada</string>
+  <string name="dialog_opentab_action_open">Ubrir</string>
+  <string name="notification_browsing_session_channel_name">Sesión de navegación privada</string>
+  <string name="notification_browsing_session_channel_description">Las notificacions te deixar borrar la tuya sesión de %1$s d\'un toque. No te cal ubrir l\'aplicación ni amostrar lo conteniu d\'o navegador.</string>
+  <string name="tabs_tray_action_erase">Borra l\'historial de navegación</string>
+  <string name="download_firefox">Baixa-te lo Firefox</string>
+  <string name="your_rights_content1">%1$s ye software libre y de codigo ubierto, feito per Mozilla y atros colaboradors.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s s\'ofreix baixo los termens d\'a "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licencia Publica de Mozilla</a>" y atras licencias de codigo ubierto."]]></string>
+  <string name="your_rights_content3"><![CDATA["No tiens atorgau garra dreito u licencia sobre las marcas rechistradas d\'a Fundación Mozilla u de garra atra parte, incluyindo los nombres u logos de Mozilla, Firefox u %1$s. Puetz trobar mas información "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aqu&#237;</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Lo codigo fuent adicional pa %1$s ye disponible baixo atras "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencias</a>" libres y de codigo ubierto."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s tamién fa servir listas de blocache fornidas per Disconnect, Inc. como un treballo deseparau y independient, baixo la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", y disponible "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aqu&#237;</a>.]]></string>
+</resources>

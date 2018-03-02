@@ -8,8 +8,6 @@
   <string name="feedback_erase">Seu histórico de navegação foi apagado.</string>
   <string name="search_hint">Pesquisar por %1$s</string>
   <string name="menu_share">Compartilhar…</string>
-  <string name="menu_open_with_default_browser">Abrir com %1$s</string>
-  <string name="menu_open_with_a_browser">Abrir com…</string>
   <string name="menu_add_to_home_screen">Adicionar à tela inicial</string>
   <string name="menu_whats_new">Novidades</string>
   <string name="menu_settings">Configurações</string>

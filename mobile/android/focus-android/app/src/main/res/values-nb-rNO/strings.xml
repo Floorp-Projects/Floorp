@@ -8,8 +8,6 @@
   <string name="feedback_erase">Din nettleserhistorikk har blitt slettet.</string>
   <string name="search_hint">Søk etter %1$s</string>
   <string name="menu_share">Del …</string>
-  <string name="menu_open_with_default_browser">Åpne med %1$s</string>
-  <string name="menu_open_with_a_browser">Åpne med …</string>
   <string name="menu_add_to_home_screen">Legg til på startskjermen</string>
   <string name="menu_whats_new">Hva er nytt</string>
   <string name="menu_settings">Innstillinger</string>

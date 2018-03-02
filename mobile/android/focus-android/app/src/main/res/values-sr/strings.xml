@@ -8,8 +8,6 @@
   <string name="feedback_erase">Ваш историјат прегледања је обрисан.</string>
   <string name="search_hint">Претражи %1$s</string>
   <string name="menu_share">Подели…</string>
-  <string name="menu_open_with_default_browser">Отвори у %1$s-у</string>
-  <string name="menu_open_with_a_browser">Отвори у…</string>
   <string name="menu_add_to_home_screen">Додај на почетни екран</string>
   <string name="menu_whats_new">Шта је ново</string>
   <string name="menu_settings">Поставке</string>

@@ -7,8 +7,6 @@
   <string name="feedback_erase">ປະຫວັດການທ່ອງເວັບຂອງທ່ານໄດ້ຖືກລຶບອອກແລ້ວ.</string>
   <string name="search_hint">ຄົ້ນຫາສຳລັບ %1$s</string>
   <string name="menu_share">ແບ່ງປັນ…</string>
-  <string name="menu_open_with_default_browser">ເປີດດ້ວຍ %1$s</string>
-  <string name="menu_open_with_a_browser">ເປີດ​ດ້ວຍ …</string>
   <string name="menu_add_to_home_screen">ເພີ່ມເຂົ້າໄປຫນ້າຈໍຫລັກ</string>
   <string name="menu_whats_new">ສິ່ງໃຫມ່ໆ</string>
   <string name="menu_settings">ການຕັ້ງຄ່າ</string>

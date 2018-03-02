@@ -8,8 +8,6 @@
   <string name="feedback_erase">Vaše historie prohlížení byla vymazána.</string>
   <string name="search_hint">Hledat %1$s</string>
   <string name="menu_share">Sdílet…</string>
-  <string name="menu_open_with_default_browser">Otevřít pomocí %1$s</string>
-  <string name="menu_open_with_a_browser">Otevřít pomocí…</string>
   <string name="menu_add_to_home_screen">Přidat na domovskou obrazovku</string>
   <string name="menu_whats_new">Co je nového</string>
   <string name="menu_settings">Nastavení</string>

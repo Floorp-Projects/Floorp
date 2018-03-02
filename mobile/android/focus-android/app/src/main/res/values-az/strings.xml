@@ -8,8 +8,6 @@
   <string name="feedback_erase">Səyahət tarixçəniz silindi.</string>
   <string name="search_hint">%1$s üçün axtar</string>
   <string name="menu_share">Paylaş…</string>
-  <string name="menu_open_with_default_browser">%1$s ilə aç</string>
-  <string name="menu_open_with_a_browser">Bununla aç…</string>
   <string name="menu_add_to_home_screen">Ana ekrana əlavə et</string>
   <string name="menu_whats_new">Yeniliklər</string>
   <string name="menu_settings">Tənzimləmələr</string>

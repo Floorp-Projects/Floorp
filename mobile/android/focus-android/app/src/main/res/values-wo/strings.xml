@@ -1,0 +1,183 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Neenal</string>
+  <string name="action_ok">OK</string>
+  <string name="action_save">Denc</string>
+  <string name="urlbar_hint">Seet walla dugal ag màkkaan</string>
+  <string name="teaser">Njoow ci sutura doxal boppam.\nJoow. Far. Tambaliwaat.</string>
+  <string name="feedback_erase">Farees na jaar-jaaru sag njoow.</string>
+  <string name="search_hint">Seet %1$s</string>
+  <string name="menu_share">Séddoo…</string>
+  <string name="menu_add_to_home_screen">Yokk ci njëlbéenu sa xoolu</string>
+  <string name="menu_whats_new">Lou bees</string>
+  <string name="menu_settings">Jekk-jekkal</string>
+  <string name="menu_about">Ñeel</string>
+  <string name="menu_help">Ndimbal</string>
+  <string name="menu_rights">Say yelleef</string>
+  <string name="menu_trackers_blocked_title">Téyees na toppaatekat yi</string>
+  <string name="share_dialog_title">Séddoo ci</string>
+  <string name="notification_erase_text">Far jaar-jaaru njoow gi</string>
+  <string name="notification_action_open">Ubbi</string>
+  <string name="notification_action_erase_and_open">Far te Ubbi</string>
+  <string name="shortcut_erase_short_label">Far</string>
+  <string name="shortcut_erase_long_label">Far jaar-jaaru njoow gi</string>
+  <string name="text_selection_search_action">Seet ci sutura</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Doonal kiy dogal ak %1$s.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"J&#235;fandikoo ko soo nammee joow ci sutura:\n  "<ul>"\n    "<li>Man ngaa seet ak di joow ci biir j&#235;fekaay bi</li>"\n    "<li>T&#233;ye toppaatekat yi (walla yeesal say jekk-jekkal ngir sa&#241;al leen)</li>"\n    "<li>Far cookies yeek jaar-jaari say ceet ak njoow</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Mozilla moo defar %1$s. Sunu y&#233;ene mooy s&#224;mm w&#233;r-gi-yaram ak ubbeekug Internet.<br/>\n<a href="%2$s">G&#235;n cee xam</a></p>]]></string>
+  <string name="preference_category_search">Seet</string>
+  <string name="preference_search_engine_default">Wàccaale</string>
+  <string name="preference_state_on">Taalees</string>
+  <string name="preference_state_off">Fayees</string>
+  <string name="preference_subitem_autocomplete">Àggale mbindum màkkaan gu boppu</string>
+  <string name="preference_switch_autocomplete">Àggale mbind gu boppu</string>
+  <string name="preference_category_autocomplete_preinstalled">Limu màkkaan yim wàccaale</string>
+  <string name="preference_autocomplete_preinstalled_summary">Doxalal ngir %1$s man di la mottalil lu romb 450 màkkaani web yu siiw ci bànqaasu màkkaan bi.</string>
+  <string name="preference_category_autocomplete_custom">Màkkaan gees jëmmal</string>
+  <string name="preference_autocomplete_subitem_customlist">Màkkaan yees jëmmal</string>
+  <string name="preference_autocomplete_action_add">+ Yokkal ag màkkaan gees jëmmal</string>
+  <string name="preference_autocomplete_title_add">Yokkal ag màkkaan gees jëmmal</string>
+  <string name="preference_autocomplete_title_remove">Dindi màkkaan gees Jëmmal</string>
+  <string name="preference_autocomplete_learn_more">Gën a xam</string>
+  <string name="preference_autocomplete_custom_summary">Yokkal te yor mottali gu boppu yu màkkaan yees jëmmal.</string>
+  <string name="preference_autocomplete_add_title">Màkkaan gees war a yokk</string>
+  <string name="preference_autocomplete_add_hint">Tafal wala bind ag màkkaan</string>
+  <string name="preference_autocomplete_add_example">Misaal: misaal.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Yokkees na màkkaan gees jëmmal gu bees.</string>
+  <string name="preference_autocomplete_menu_remove">Far</string>
+  <string name="preference_autocomplete_action_remove_content_description">Far</string>
+  <string name="preference_autocomplete_add_error">Xoolaatal màkkaan gi nga bind.</string>
+  <string name="preference_language">Làkk</string>
+  <string name="preference_language_systemdefault">Wàccaaleeg noste gi</string>
+  <string name="preference_dialog_title_search_engine">Seetukaay bim wàccaale</string>
+  <string name="preference_category_privacy">Sutura</string>
+  <string name="preference_privacy_block_ads">Téye toppkati siiwal</string>
+  <string name="preference_privacy_block_ads_summary">Yenn siiwal yi, donte bësoo ci, man nañoo topp dal yi ngay ubbi</string>
+  <string name="preference_privacy_block_analytics">Téye toppkati xayma</string>
+  <string name="preference_privacy_block_analytics_summary">Dees leen di jëfandikoo ngir dajale, saytu ak natt yëngu-yëngu yu mel ni bës walla yéegal-wàcce aw xët</string>
+  <string name="preference_privacy_block_social">Téye toppkati mbaali mboolaay</string>
+  <string name="preference_privacy_block_social_summary">Dees leen di dugalaale ci dali web yi ngir topp sag njoow ak di wone ay solo niki bësu ngir séddoo</string>
+  <string name="preference_privacy_block_content">Téye yaneen toppkati ëmbéef</string>
+  <string name="preference_privacy_block_content_summary2">Doxal gi man naa jur yenn xëti web yi am doxaliin gees foogulwoon</string>
+  <string name="preference_privacy_secure_mode">Nëbbu</string>
+  <string name="preference_privacy_stealth_summary">Nëbb xëti web yi sooy jàll ci beneen jëfekaay</string>
+  <string name="preference_category_performance">Gaawaay</string>
+  <string name="preference_performance_block_webfonts">Téye loyi web yi</string>
+  <string name="preference_performance_block_webfonts_summary">Man naa jur njunj walla péeñ yu dul feeñ</string>
+  <string name="preference_performance_block_images">Téye péeñ yi</string>
+  <string name="preference_default_browser2">Def %1$s muy sa joowukaay bu njëkk</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Yónneey njoxe ci njëfandikoo gi</string>
+  <string name="preference_mozilla_telemetry_summary">Gën ce xam</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla li mu soxla rekk, te manul ñàkk, lay jéem a dajale ngir man a gënal %1$s ngir nun ñépp.</string>
+  <string name="preference_privacy_notice">Sàrti Sutura</string>
+  <string name="preference_about">Ñeel %1$s</string>
+  <string name="preference_search_installed_search_engines">Seetukaay yiñ fi sàmp</string>
+  <string name="preference_search_restore">Delloo seetukaay yi na ñu meloon</string>
+  <string name="preference_search_add2">+ Yokk ab seetukaay</string>
+  <string name="preference_search_remove_title">Far ay seetukaay</string>
+  <string name="preference_search_remove">Far</string>
+  <string name="tutorial_search_manually_add">Yokk ak-sa-loxo</string>
+  <string name="tutorial_search_title">Yokk ab seetukaay</string>
+  <string name="tutorial_search_step1">1. Dem ci xët-wu-njëkk wu seetukaay bi.</string>
+  <string name="tutorial_search_step2">2. Bës ci binduwaayu seetukaay bi.</string>
+  <string name="tutorial_search_step2_alternative">2. Bësal te téye lu yàgg ci binduwaayu seetukaay bi.</string>
+  <string name="tutorial_search_step3">3. Bësal ci njunj biy rëyal bu sa arafukaay ngir yokk seetukaay bi.</string>
+  <string name="action_option_add_search_engine">Yokk ab seetukaay</string>
+  <string name="tutorial_search_step3_alternative">3. Bësal %1$s</string>
+  <string name="tutorial_search_step4">4. Soo gisul rëyalukaay bi, jéemal a yokk seetukaay bi ak-sa-loxo.</string>
+  <string name="tutorial_search_step4_alternative">4. Soo gisul %1$s, jéemal a yokk seetukaay bi ak-sa-loxo.</string>
+  <string name="tutorial_search_finish">TAMBALIL</string>
+  <string name="search_add_hint">Bësal ci njunj biy rëyal bu sa arafukaay ngir yokk seetukaay bii.</string>
+  <string name="search_add_manually_name">Tur bi ñuy wone</string>
+  <string name="search_add_manually_name_hint">Turu seetukaay bi</string>
+  <string name="search_add_manually_string">Mbindum seet mees di jëfandikoo</string>
+  <string name="search_add_manually_save">Denc</string>
+  <string name="search_add_manually_string_hint">Tafal walla bind li ngay seet. Su ko laajee, wuutaleel mbind mi ngay seet ak : %s.</string>
+  <string name="search_add_manually_example">Misaal: misaal.com//search/?q=%s</string>
+  <string name="accessibility_announcement_search">Yokk ab seetukaay</string>
+  <string name="search_add_confirmation">Yokkees na seetukaay bu bees.</string>
+  <string name="search_add_error_empty_name">Duggalal turu seetukaay bi</string>
+  <string name="search_add_error_empty_search">Duggalal mbind mi ngay seet</string>
+  <string name="search_add_error_format">Seetal ndax mbindum sa ceet méngoo naak melokaanu Misaal mi</string>
+  <string name="content_description_clear_input">Far mbind mi</string>
+  <string name="content_description_dismiss_input">Tëj</string>
+  <string name="content_description_erase">Far jaar-jaaru njoow gi</string>
+  <string name="content_description_fab_expand">Lemmi</string>
+  <string name="content_description_tab_counter">Làcc yi ubbeeku: %1$s</string>
+  <string name="content_description_open_tab">Ubbi aw làcc</string>
+  <string name="content_description_close_tab">Tëj làcc wi</string>
+  <string name="content_description_lock">Lonkoo gu wóor</string>
+  <string name="accessibility_announcement_loading">Mi ngi yeb</string>
+  <string name="accessibility_announcement_loading_finished">Yebees na dalu web bi</string>
+  <string name="content_description_menu">Yeneen tànnéef</string>
+  <string name="content_description_forward">Dem ci kanam</string>
+  <string name="content_description_reload">Yebaat dalu web bi</string>
+  <string name="content_description_back">Dellu ginnaaw</string>
+  <string name="content_description_stop">Dag dali web biy yeebu</string>
+  <string name="content_description_customtab_exit">Déllu ci app bi kë jiitu</string>
+  <string name="content_description_blocking_switch">Tëyyé trackers yi</string>
+  <string name="context_menu_paste_go">-</string>
+  <string name="your_rights">Sa wareef</string>
+  <string name="external_app_prompt_title">Ubbil lëkkalekaay bi ci beneen jëfekaay</string>
+  <string name="external_app_prompt">Man ngaa génn %1$s ngir ubbi bii lëkkalekaay ci %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Seet ab jëfekaay bu man a ubbu lëkkalekaay bi</string>
+  <string name="external_app_prompt_no_app">Amul benn jëfekaay ci sa jumtukaay bu man a ubbi bii lëkkalekaay. Man ngaa génn %1$s ngir seet ci %2$s ab jëfekaay bu ko man.</string>
+  <string name="external_multiple_apps_matched_exit">Génn ci Njoow gu Suturloo gi?</string>
+  <string name="download_snackbar_finished">%1$s mat na</string>
+  <string name="download_snackbar_open">Ubbi</string>
+  <string name="download_dialog_warning"><![CDATA["Dencukaay yees fi yebbi "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">deesu leen far</b>" soo fare jaar-jaaru %1$s."]]></string>
+  <string name="download_dialog_title">Yebbi dencukaay bi</string>
+  <string name="download_dialog_action_cancel">Neenal</string>
+  <string name="download_dialog_action_download">Yebbi</string>
+  <string name="errorpage_title">Njuumte ci yebug xët wi</string>
+  <string name="errorpage_refresh">Jéemaatal</string>
+  <string name="error_connectionfailure_title">Lonkoo gi antuwul</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Dal bi man naa ba&#241; a j&#224;ppandi walla mu yebu lu &#235;pp. J&#233;emaatal bu ci kanamee</li>"\n        "<li>So manul a yeb wenn x&#235;t xoolaatal lonkoo gu sa jumtukaay.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Àppu lonkoo gi romb na</string>
+  <string name="error_hostLookup_title">Giseesul joxekaay bi</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Xoolaatal m&#224;kkaan gi ndax amul njuumtey mbind niki\n          "<strong>ww</strong>".misaal.com te waroon doon\n          "<strong>www</strong>.misaal.com</li>"\n        "<li>Soo manul yeb wenn x&#235;t, xoolaatal lonkoo gu sa jumtukaay.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">Màkkaan gi baxul</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Naka-jekk m&#224;kkaani web yi nii lees di binde "<strong>http://www.misaal.com/</strong></li>"\n  "<li>"W&#243;orlul ni yaa ngi j&#235;fandikoo galan yi war (c.m. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">Xët wii ni muy jubluwaatalee baaxul</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>Liy indi jafe-jafe gii man naa nekk ag doxadil mbaa ba&#241; a nangu cookies yi.</li>" \n"</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Màkkaan gi kenn xamuko</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n"<li>X&#233;j-na dafa laaj nga samp beneen j&#235;fekaay ngir man a ubbi gi m&#224;kkaan.</li>" \n"</ul>]]></string>
+  <string name="error_sslhandshake_title">Lonkoo gu wóor gi antuwul</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Lii man naa nekk jafe-jafe ci jekk-jekkalu joxekaay bi, walla it kenn kuy j&#233;em a dugg ci sa diggante ak joxekaay bi ci boppam.</li>"\n  "<li>Su fekkee mas ngaa lonku ci bii joxekaay jamono ci ginnaaw, Njuumte gi man naa doon lu jamonowe, kon di la digal nga j&#233;emaat ci kanam.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Oo!</string>
+  <string name="error_generic_message">Lenn tere na yebug xët wii antu.</string>
+  <string name="contextmenu_link_share">Séddoo lëkkalekaay bi</string>
+  <string name="contextmenu_link_copy">Duppi màkkaanu lëkkalekaay bi</string>
+  <string name="contextmenu_image_share">Séddoo nataal bi</string>
+  <string name="contextmenu_image_copy">Duppi màkkaanu nataal bi</string>
+  <string name="contextmenu_image_save">Denc nataal bi</string>
+  <string name="contextmenu_open_in_new_tab">Ubbi lëkkalekaay bi ci làcc wu wees</string>
+  <string name="contextmenu_image_warning"><![CDATA["Péeñ yiñ nga séddoo ak yi nga denc "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">deesu leen far</b>" soo fare jaar-jaaru %1$s."]]></string>
+  <string name="firstrun_defaultbrowser_title">Dooleel sa sutura</string>
+  <string name="firstrun_defaultbrowser_text2">Yóbbul njoow ci sutura ci geneen tolluwaay. Téyeel siiwal yeek yeneen ëmbeef yi lay man topp ci yeneen dal yi te di yeexal yebug xët yi.</string>
+  <string name="firstrun_search_title">Seet ak noo ko bëggee</string>
+  <string name="firstrun_search_text">Leneen ngay seet? Tànnal beneen seetukaay ci jekk-jekkal yi.</string>
+  <string name="firstrun_shortcut_title">Yokki lëkkalekaay ci njëlbeenu sa xoolu</string>
+  <string name="firstrun_shortcut_text">Dellu ci say dal yi nga taamu ci %1$s ci lu gaaw. Doy na nga bës ci \"Yokk ci njëlbeenu xoolu bi\" ci njëlu %1$s.</string>
+  <string name="firstrun_privacy_title">Def joow ci sutura doon jikko</string>
+  <string name="firstrun_privacy_text">Def %1$s sa joowukaay bu njëkk te jariñoo mbaaxi njoow ci sutura sooy ubbi xëti web ci yeneen jëfekaay.</string>
+  <string name="firstrun_close_button">OK, Dégg naa la!</string>
+  <string name="firstrun_skip_button">Tëb</string>
+  <string name="firstrun_next_button">Toftal</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Yokk ci njëlbéenu sa xoolu</string>
+  <string name="dialog_addtohomescreen_action_add">Yokk</string>
+  <string name="dialog_addtohomescreen_action_cancel">Neenal</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Wii ñall suy ubbeeku kaaraange lank-toppaate gi du dox</string>
+  <string name="dialog_opentab_title">Ubbi lëkkalekaay bi làcc wi nga tànn</string>
+  <string name="dialog_opentab_action_open">Ubbi</string>
+  <string name="notification_browsing_session_channel_name">Ubbig njoow ci sutura</string>
+  <string name="notification_browsing_session_channel_description">Yëgle yi di nañ la may ngay man di far njoxéef yi ci sa %1$s ci benn bës rek. Soxlawoo ubbi jëfekaay walla xool liy dox ci sa joowukaay.</string>
+  <string name="tabs_tray_action_erase">Far jaar-jaaru njoow gi</string>
+  <string name="download_firefox">Yebbi Firefox</string>
+  <string name="your_rights_content1">%1$s jëfekaay bu amul-fay te ubbeeku la bu Mozilla ak yeneen aji-barkeelu defar.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s moo ngi jàppandi sukkandiku ci "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" ak yeneen sañali gongikuwaay yu ubbeeku."]]></string>
+  <string name="your_rights_content3"><![CDATA["Joxuñula genn yelleef walla sañal ci jëfandikoo turu Mozilla Foundation walla yu ñeneen, bokk nañ ci tur walla màndargay Mozilla, Firefox walla %1$s. Manees naa fekk yeneeni xibaar "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">fii</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Yeneen gongikuwaayu yoon yu %1$s jàppandi nañ ci ron yeneen "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">sa&#241;al</a>.]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s dafay jëfandikoo ay limi téye yu Disconnect, Inc. di jébbale ci liggéeyu boppam ci ron "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", te jàppandi "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">fii</a>.]]></string>
+</resources>

@@ -8,8 +8,6 @@
   <string name="feedback_erase">لقد مسح تأريخ تصفحك.</string>
   <string name="search_hint">ابحث عن %1$s</string>
   <string name="menu_share">شارك…</string>
-  <string name="menu_open_with_default_browser">افتح في %1$s</string>
-  <string name="menu_open_with_a_browser">افتح في…</string>
   <string name="menu_add_to_home_screen">أضِف إلى شاشة البداية</string>
   <string name="menu_whats_new">ما الجديد</string>
   <string name="menu_settings">الإعدادات</string>

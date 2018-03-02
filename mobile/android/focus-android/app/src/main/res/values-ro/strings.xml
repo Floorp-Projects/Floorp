@@ -8,8 +8,6 @@
   <string name="feedback_erase">Istoricul de navigare a fost șters.</string>
   <string name="search_hint">Caută %1$s</string>
   <string name="menu_share">Partajează…</string>
-  <string name="menu_open_with_default_browser">Deschide cu %1$s</string>
-  <string name="menu_open_with_a_browser">Deschide cu…</string>
   <string name="menu_add_to_home_screen">Adaugă la ecranul principal</string>
   <string name="menu_whats_new">Ce este nou</string>
   <string name="menu_settings">Setări</string>

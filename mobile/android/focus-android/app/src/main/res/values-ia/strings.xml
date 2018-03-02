@@ -8,8 +8,6 @@
   <string name="feedback_erase">Tu chronologia de navigation ha essite eliminate.</string>
   <string name="search_hint">Cercar %1$s</string>
   <string name="menu_share">Compartir…</string>
-  <string name="menu_open_with_default_browser">Aperir con %1$s</string>
-  <string name="menu_open_with_a_browser">Aperir con…</string>
   <string name="menu_add_to_home_screen">Adder al pagina initial</string>
   <string name="menu_whats_new">Novitates</string>
   <string name="menu_settings">Parametros</string>

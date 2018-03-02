@@ -8,8 +8,6 @@
   <string name="feedback_erase">Mae eich hanes pori wedi cael ei ddileu.</string>
   <string name="search_hint">Chwilio am %1$s</string>
   <string name="menu_share">Rhannu…</string>
-  <string name="menu_open_with_default_browser">Agor gyda %1$s</string>
-  <string name="menu_open_with_a_browser">Agor gyda…</string>
   <string name="menu_add_to_home_screen">Ychwanegu i\'r sgrin Cartref</string>
   <string name="menu_whats_new">Be sy\'n Newydd</string>
   <string name="menu_settings">Gosodiadau</string>

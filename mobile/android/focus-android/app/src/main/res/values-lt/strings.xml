@@ -7,8 +7,6 @@
   <string name="feedback_erase">Jūsų naršymo žurnalas buvo išvalytas.</string>
   <string name="search_hint">Ieškoti „%1$s“</string>
   <string name="menu_share">Dalintis…</string>
-  <string name="menu_open_with_default_browser">Atverti naudojant „%1$s“</string>
-  <string name="menu_open_with_a_browser">Atverti naudojant…</string>
   <string name="menu_add_to_home_screen">Įtraukti į pradžios ekraną</string>
   <string name="menu_whats_new">Kas naujo</string>
   <string name="menu_settings">Nuostatos</string>

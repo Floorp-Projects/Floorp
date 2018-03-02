@@ -8,8 +8,6 @@
   <string name="feedback_erase">Историята на разглеждане е изчистена</string>
   <string name="search_hint">Търсене на %1$s</string>
   <string name="menu_share">Споделяне…</string>
-  <string name="menu_open_with_default_browser">Отваряне с %1$s</string>
-  <string name="menu_open_with_a_browser">Отваряне с…</string>
   <string name="menu_add_to_home_screen">Добавяне към екрана</string>
   <string name="menu_whats_new">Новото в това издание</string>
   <string name="menu_settings">Настройки</string>

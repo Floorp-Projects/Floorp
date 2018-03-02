@@ -8,8 +8,6 @@
   <string name="feedback_erase">તમારો બ્રાઉઝિંગ ઇતિહાસ કાઢી નાખવામાં આવ્યો છે.</string>
   <string name="search_hint">%1$s ની શોધ માં</string>
   <string name="menu_share">વહેંચો…</string>
-  <string name="menu_open_with_default_browser">%1$s સાથે ખોલો</string>
-  <string name="menu_open_with_a_browser">સાથે ખોલો…</string>
   <string name="menu_add_to_home_screen">મુખ્ય સ્ક્રીન પર ઉમેરો</string>
   <string name="menu_whats_new">નવું શું છે</string>
   <string name="menu_settings">સેટિંગ્સ</string>

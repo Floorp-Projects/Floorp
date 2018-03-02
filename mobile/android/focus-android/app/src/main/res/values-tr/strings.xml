@@ -8,8 +8,6 @@
   <string name="feedback_erase">Gezinti geçmişiniz silinmiştir.</string>
   <string name="search_hint">%1$s terimini ara</string>
   <string name="menu_share">Paylaş…</string>
-  <string name="menu_open_with_default_browser">%1$s ile aç</string>
-  <string name="menu_open_with_a_browser">Birlikte aç…</string>
   <string name="menu_add_to_home_screen">Ana ekrana ekle</string>
   <string name="menu_whats_new">Yeni neler var?</string>
   <string name="menu_settings">Ayarlar</string>

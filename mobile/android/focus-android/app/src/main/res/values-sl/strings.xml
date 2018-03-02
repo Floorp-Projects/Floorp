@@ -8,8 +8,6 @@
   <string name="feedback_erase">Vaša zgodovina brskanja je bila izbrisana.</string>
   <string name="search_hint">Išči %1$s</string>
   <string name="menu_share">Deli …</string>
-  <string name="menu_open_with_default_browser">Za odpiranje uporabi %1$s</string>
-  <string name="menu_open_with_a_browser">Za odpiranje uporabi ...</string>
   <string name="menu_add_to_home_screen">Dodaj na domač zaslon</string>
   <string name="menu_whats_new">Kaj je novega</string>
   <string name="menu_settings">Nastavitve</string>

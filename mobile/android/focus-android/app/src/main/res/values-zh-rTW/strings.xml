@@ -8,8 +8,6 @@
   <string name="feedback_erase">已清除您的瀏覽紀錄。</string>
   <string name="search_hint">搜尋 %1$s</string>
   <string name="menu_share">分享…</string>
-  <string name="menu_open_with_default_browser">使用 %1$s 開啟</string>
-  <string name="menu_open_with_a_browser">使用其他程式開啟…</string>
   <string name="menu_add_to_home_screen">新增至裝置主畫面</string>
   <string name="menu_whats_new">有什麼新鮮事</string>
   <string name="menu_settings">選項</string>

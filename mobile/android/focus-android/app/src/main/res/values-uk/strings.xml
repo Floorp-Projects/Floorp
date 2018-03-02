@@ -8,8 +8,6 @@
   <string name="feedback_erase">Ваша історія перегляду була очищена.</string>
   <string name="search_hint">Шукати %1$s</string>
   <string name="menu_share">Поділитися…</string>
-  <string name="menu_open_with_default_browser">Відкрити в %1$s</string>
-  <string name="menu_open_with_a_browser">Відкрити в…</string>
   <string name="menu_add_to_home_screen">Додати на головний екран</string>
   <string name="menu_whats_new">Що нового</string>
   <string name="menu_settings">Налаштування</string>

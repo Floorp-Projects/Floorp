@@ -8,8 +8,6 @@
   <string name="feedback_erase">Die Surf-Chronik wurde gelöscht.</string>
   <string name="search_hint">Suchen nach %1$s</string>
   <string name="menu_share">Teilen …</string>
-  <string name="menu_open_with_default_browser">Öffnen mit %1$s</string>
-  <string name="menu_open_with_a_browser">Öffnen mit …</string>
   <string name="menu_add_to_home_screen">Zum Startbildschirm hinzufügen</string>
   <string name="menu_whats_new">Was ist neu</string>
   <string name="menu_settings">Einstellungen</string>

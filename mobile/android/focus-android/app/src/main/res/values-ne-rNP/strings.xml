@@ -8,8 +8,6 @@
   <string name="feedback_erase">तपाईंको ब्राउजिङ इतिहास मेटाईयो ।</string>
   <string name="search_hint">%1$s खोज्नुहोस्</string>
   <string name="menu_share">साझेदारी…</string>
-  <string name="menu_open_with_default_browser">%1$s को साथ खोल्नुहोस्</string>
-  <string name="menu_open_with_a_browser">यससँग खोल्नुहोस्...</string>
   <string name="menu_add_to_home_screen">गृह स्क्रिनमा थप्नुहोस्</string>
   <string name="menu_whats_new">नयाँ के छ</string>
   <string name="menu_settings">सेटिङ्हरू</string>

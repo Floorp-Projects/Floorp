@@ -7,8 +7,6 @@
   <string name="feedback_erase">Bánaíodh do stair bhrabhsála.</string>
   <string name="search_hint">Cuardaigh %1$s</string>
   <string name="menu_share">Comhroinn…</string>
-  <string name="menu_open_with_default_browser">Oscail le %1$s</string>
-  <string name="menu_open_with_a_browser">Oscail le…</string>
   <string name="menu_add_to_home_screen">Cuir leis an scáileán Baile</string>
   <string name="menu_settings">Socruithe</string>
   <string name="menu_about">Maidir leis</string>

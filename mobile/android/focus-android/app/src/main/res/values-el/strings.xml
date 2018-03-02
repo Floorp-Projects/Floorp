@@ -8,8 +8,6 @@
   <string name="feedback_erase">Το ιστορικό περιήγησής έχει εκκαθαριστεί.</string>
   <string name="search_hint">Αναζήτηση για %1$s</string>
   <string name="menu_share">Κοινή χρήση…</string>
-  <string name="menu_open_with_default_browser">Άνοιγμα με %1$s</string>
-  <string name="menu_open_with_a_browser">Άνοιγμα με…</string>
   <string name="menu_add_to_home_screen">Προσθήκη στην Αρχική οθόνη</string>
   <string name="menu_whats_new">Τι νέο υπάρχει</string>
   <string name="menu_settings">Ρυθμίσεις</string>

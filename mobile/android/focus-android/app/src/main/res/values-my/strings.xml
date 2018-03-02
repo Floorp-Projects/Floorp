@@ -7,8 +7,6 @@
   <string name="feedback_erase">သင့် ဘယောက်ဆာသုံး မှတ်တမ်းဖျက်ပြီး</string>
   <string name="search_hint">%1$s ကိုရှာမယ်</string>
   <string name="menu_share">မျှဝေပါ…</string>
-  <string name="menu_open_with_default_browser">%1$s ဖြင့်ဖွင့်</string>
-  <string name="menu_open_with_a_browser">…တွင် ဖွင့်ရန်</string>
   <string name="menu_add_to_home_screen">ပင်မစာမျက်နှာသို့ ထည့်ပါ</string>
   <string name="menu_whats_new">ဘာအသစ်တွေ ပါဝင်ပါသလဲ။</string>
   <string name="menu_settings">အပြင်အဆင်များ</string>

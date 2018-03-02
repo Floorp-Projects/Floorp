@@ -8,8 +8,6 @@
   <string name="feedback_erase">Din webbhistorik har raderats.</string>
   <string name="search_hint">Sök efter %1$s</string>
   <string name="menu_share">Dela…</string>
-  <string name="menu_open_with_default_browser">Öppna med %1$s</string>
-  <string name="menu_open_with_a_browser">Öppna med…</string>
   <string name="menu_add_to_home_screen">Lägg till på startskärmen</string>
   <string name="menu_whats_new">Vad är nytt</string>
   <string name="menu_settings">Inställningar</string>

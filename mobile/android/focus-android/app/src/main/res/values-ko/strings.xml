@@ -8,8 +8,6 @@
   <string name="feedback_erase">페이지 탐색 기록이 삭제되었습니다.</string>
   <string name="search_hint">%1$s 검색</string>
   <string name="menu_share">공유…</string>
-  <string name="menu_open_with_default_browser">%1$s로 열기</string>
-  <string name="menu_open_with_a_browser">다른 브라우저로 열기…</string>
   <string name="menu_add_to_home_screen">초기 화면에 추가하기</string>
   <string name="menu_whats_new">새로운 기능</string>
   <string name="menu_settings">설정</string>

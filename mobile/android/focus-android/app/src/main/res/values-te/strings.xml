@@ -8,8 +8,6 @@
   <string name="feedback_erase">మీ విహారణ చరిత్ర తుడిచివెయ్యబడింది.</string>
   <string name="search_hint">%1$s కొరకు వెతకండి</string>
   <string name="menu_share">పంచుకోండి…</string>
-  <string name="menu_open_with_default_browser">%1$s తో తెరవండి</string>
-  <string name="menu_open_with_a_browser">దీనితో తెరువు…</string>
   <string name="menu_add_to_home_screen">ముంగిలి తెరకు చేర్చు</string>
   <string name="menu_whats_new">కొత్తది ఏమిటి</string>
   <string name="menu_settings">అమరికలు</string>

@@ -8,8 +8,6 @@
   <string name="feedback_erase">Сіздің шолу тарихыңыз өшірілді.</string>
   <string name="search_hint">%1$s іздеу</string>
   <string name="menu_share">Бөлісу…</string>
-  <string name="menu_open_with_default_browser">%1$s көмегімен ашу</string>
-  <string name="menu_open_with_a_browser">Көмегімен ашу…</string>
   <string name="menu_add_to_home_screen">Үй экранына қосу</string>
   <string name="menu_whats_new">Не жаңалық</string>
   <string name="menu_settings">Баптаулар</string>

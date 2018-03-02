@@ -8,8 +8,6 @@
   <string name="feedback_erase">Se ha eliminado tu historial de búsqueda.</string>
   <string name="search_hint">Buscar %1$s</string>
   <string name="menu_share">Compartir…</string>
-  <string name="menu_open_with_default_browser">Abrir con %1$s</string>
-  <string name="menu_open_with_a_browser">Abrir con…</string>
   <string name="menu_add_to_home_screen">Añadir a pantalla de inicio</string>
   <string name="menu_whats_new">Novedades</string>
   <string name="menu_settings">Ajustes</string>

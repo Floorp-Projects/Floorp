@@ -8,8 +8,6 @@
   <string name="feedback_erase">Selaushistoria tyhjennetty.</string>
   <string name="search_hint">Hae %1$s</string>
   <string name="menu_share">Jaa…</string>
-  <string name="menu_open_with_default_browser">Avaa sovelluksella %1$s</string>
-  <string name="menu_open_with_a_browser">Avaa sovelluksella…</string>
   <string name="menu_add_to_home_screen">Lisää linkki kotinäkymään</string>
   <string name="menu_whats_new">Mitä uutta</string>
   <string name="menu_settings">Asetukset</string>

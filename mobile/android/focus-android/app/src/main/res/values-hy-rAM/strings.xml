@@ -8,8 +8,6 @@
   <string name="feedback_erase">Դիտարկումների պատմությունը ջնջվել է:</string>
   <string name="search_hint">Որոնել %1$s-ի համար</string>
   <string name="menu_share">Համօգտագործել</string>
-  <string name="menu_open_with_default_browser">Բացել %1$s-ով</string>
-  <string name="menu_open_with_a_browser">Բացել այլ հավելվածով՝</string>
   <string name="menu_add_to_home_screen">Ավելացնել Տուն էկրանին</string>
   <string name="menu_whats_new">Ինչն է նոր</string>
   <string name="menu_settings">Կարգավորումներ</string>

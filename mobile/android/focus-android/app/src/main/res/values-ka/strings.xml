@@ -8,8 +8,6 @@
   <string name="feedback_erase">მონახულებული გვერდების ისტორია წაიშალა.</string>
   <string name="search_hint">მოძებნა: %1$s</string>
   <string name="menu_share">გვერდის გაზიარება…</string>
-  <string name="menu_open_with_default_browser">გვერდის გახსნა %1$s-ით</string>
-  <string name="menu_open_with_a_browser">გვერდის სხვა ბრაუზერში გახსნა…</string>
   <string name="menu_add_to_home_screen">მთავარ ეკრანზე დამატება</string>
   <string name="menu_whats_new">რა სიახლეებია</string>
   <string name="menu_settings">პარამეტრები</string>

@@ -5,8 +5,6 @@
   <string name="action_save">Spremi</string>
   <string name="urlbar_hint">Pretražite ili upišite adresu</string>
   <string name="menu_share">Dijeli…</string>
-  <string name="menu_open_with_default_browser">Otvori s %1$s</string>
-  <string name="menu_open_with_a_browser">Otvori s…</string>
   <string name="menu_add_to_home_screen">Dodaj na početni zaslon</string>
   <string name="menu_whats_new">Što je novo</string>
   <string name="menu_settings">Postavke</string>

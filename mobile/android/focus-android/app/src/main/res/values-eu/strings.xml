@@ -8,8 +8,6 @@
   <string name="feedback_erase">Zure nabigatze-historia ezabatu egin da.</string>
   <string name="search_hint">Bilatu %1$s</string>
   <string name="menu_share">Partekatu…</string>
-  <string name="menu_open_with_default_browser">Ireki %1$s(r)ekin</string>
-  <string name="menu_open_with_a_browser">Ireki honekin…</string>
   <string name="menu_add_to_home_screen">Gehitu hasierako pantailan</string>
   <string name="menu_whats_new">Nobedadeak</string>
   <string name="menu_settings">Ezarpenak</string>

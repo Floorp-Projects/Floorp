@@ -8,8 +8,6 @@
   <string name="feedback_erase">Votre historique de navigation a été effacé.</string>
   <string name="search_hint">Rechercher %1$s</string>
   <string name="menu_share">Partager…</string>
-  <string name="menu_open_with_default_browser">Ouvrir avec %1$s</string>
-  <string name="menu_open_with_a_browser">Ouvrir avec…</string>
   <string name="menu_add_to_home_screen">Ajouter à l’écran d’accueil</string>
   <string name="menu_whats_new">Nouveautés</string>
   <string name="menu_settings">Paramètres</string>

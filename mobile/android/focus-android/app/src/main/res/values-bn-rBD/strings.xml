@@ -8,8 +8,6 @@
   <string name="feedback_erase">আপনার ব্রাউজিংয়ের পূর্ববর্তী তথ্য মুছে ফেলা হয়েছে।</string>
   <string name="search_hint">%1$s এর জন্যে অনুসন্ধান করুন</string>
   <string name="menu_share">শেয়ার…</string>
-  <string name="menu_open_with_default_browser">%1$s ব্যবহার করে খোলা হবে</string>
-  <string name="menu_open_with_a_browser">এটির সাহায্যে খুলুন…</string>
   <string name="menu_add_to_home_screen">নীড় স্ক্রিনে যোগ</string>
   <string name="menu_whats_new">নতুন কি আছে</string>
   <string name="menu_settings">সেটিং</string>

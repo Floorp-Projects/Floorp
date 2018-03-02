@@ -8,8 +8,6 @@
   <string name="feedback_erase">உங்கள் உலாவல் வரலாறு அழிக்கப்பட்டது.</string>
   <string name="search_hint">%1$s சொல்லைத் தேடு</string>
   <string name="menu_share">பகிர்…</string>
-  <string name="menu_open_with_default_browser">%1$s மூலம் திற</string>
-  <string name="menu_open_with_a_browser">செயலிகள் மூலம் திற…</string>
   <string name="menu_add_to_home_screen">முகப்பு திரைக்கு சேர்</string>
   <string name="menu_whats_new">புதிதாய் என்ன</string>
   <string name="menu_settings">அமைவுகள்</string>

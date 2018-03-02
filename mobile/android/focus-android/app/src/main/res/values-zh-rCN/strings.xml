@@ -8,8 +8,6 @@
   <string name="feedback_erase">您的浏览记录已清除。</string>
   <string name="search_hint">搜索 %1$s</string>
   <string name="menu_share">分享…</string>
-  <string name="menu_open_with_default_browser">用 %1$s 打开</string>
-  <string name="menu_open_with_a_browser">用其他应用打开…</string>
   <string name="menu_add_to_home_screen">添加到主屏幕</string>
   <string name="menu_whats_new">新版变化</string>
   <string name="menu_settings">设置</string>

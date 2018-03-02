@@ -8,8 +8,6 @@
   <string name="feedback_erase">የአሰሳ ታሪክዎ ተደምስሷል</string>
   <string name="search_hint">ምፈልገው %1$s</string>
   <string name="menu_share">ያጋሩ…\n\n</string>
-  <string name="menu_open_with_default_browser">ይክፈቱ በ %1$s</string>
-  <string name="menu_open_with_a_browser">ይክፈቱ በ…</string>
   <string name="menu_add_to_home_screen">ወደ መነሻ ማያ ገጽ ማከል\n</string>
   <string name="menu_whats_new">አዲስ ምን አለ</string>
   <string name="menu_settings">ቅንብሮች</string>

@@ -8,8 +8,6 @@
   <string name="feedback_erase">היסטוריית הגלישה שלך נמחקה.</string>
   <string name="search_hint">חיפוש עבור %1$s</string>
   <string name="menu_share">שיתוף…</string>
-  <string name="menu_open_with_default_browser">פתיחה באמצעות %1$s</string>
-  <string name="menu_open_with_a_browser">פתיחה באמצעות…</string>
   <string name="menu_add_to_home_screen">הוספה למסך הבית</string>
   <string name="menu_whats_new">מה חדש</string>
   <string name="menu_settings">הגדרות</string>
