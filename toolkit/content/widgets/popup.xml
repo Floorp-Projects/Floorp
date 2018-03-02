@@ -289,7 +289,7 @@
     </handlers>
   </binding>
 
-  <binding id="panel" role="xul:panel"
+  <binding id="panel"
            extends="chrome://global/content/bindings/popup.xml#popup-base">
     <implementation>
       <field name="_prevFocus">0</field>

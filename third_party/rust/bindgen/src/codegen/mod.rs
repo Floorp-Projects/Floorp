@@ -560,19 +560,12 @@ impl CodeGenerator for Var {
                 attrs.push(attributes::link_name(self.name()));
             }
 
-            let mut tokens = quote! {
-                extern "C"
-            };
-            tokens.append("{\n");
-            if !attrs.is_empty() {
-                tokens.append_separated(attrs, "\n");
-                tokens.append("\n");
-            }
-            tokens.append("pub static mut ");
-            tokens.append(quote! { #canonical_ident });
-            tokens.append(" : ");
-            tokens.append(quote! { #ty });
-            tokens.append(";\n}");
+            let mut tokens = quote!(
+                extern "C" {
+                    #(#attrs)*
+                    pub static mut #canonical_ident: #ty;
+                }
+            );
 
             result.push(tokens);
         }
@@ -620,14 +613,20 @@ impl CodeGenerator for Type {
                     .resolve(ctx);
                 let name = item.canonical_name(ctx);
 
-                // Try to catch the common pattern:
-                //
-                // typedef struct foo { ... } foo;
-                //
-                // here.
-                //
-                if inner_item.canonical_name(ctx) == name {
-                    return;
+                {
+                    let through_type_aliases = inner.into_resolver()
+                        .through_type_refs()
+                        .through_type_aliases()
+                        .resolve(ctx);
+
+                    // Try to catch the common pattern:
+                    //
+                    // typedef struct foo { ... } foo;
+                    //
+                    // here, and also other more complex cases like #946.
+                    if through_type_aliases.canonical_name(ctx) == name {
+                        return;
+                    }
                 }
 
                 // If this is a known named type, disallow generating anything
@@ -1425,23 +1424,6 @@ impl CodeGenerator for CompInfo {
         let layout = ty.layout(ctx);
         let mut packed = self.is_packed(ctx, &layout);
 
-        // generate tuple struct if struct or union is a forward declaration,
-        // skip for now if template parameters are needed.
-        //
-        // NB: We generate a proper struct to avoid struct/function name
-        // collisions.
-        if self.is_forward_declaration() && used_template_params.is_none() {
-            let struct_name = item.canonical_name(ctx);
-            let struct_name = ctx.rust_ident_raw(struct_name);
-            let tuple_struct = quote! {
-                #[repr(C)]
-                #[derive(Debug, Copy, Clone)]
-                pub struct #struct_name { _unused: [u8; 0] }
-            };
-            result.push(tuple_struct);
-            return;
-        }
-
         let canonical_name = item.canonical_name(ctx);
         let canonical_ident = ctx.rust_ident(&canonical_name);
 
@@ -1497,14 +1479,6 @@ impl CodeGenerator for CompInfo {
             }
         }
 
-        let is_union = self.kind() == CompKind::Union;
-        if is_union {
-            result.saw_union();
-            if !self.can_be_rust_union(ctx) {
-                result.saw_bindgen_union();
-            }
-        }
-
         let mut methods = vec![];
         if !is_opaque {
             let codegen_depth = item.codegen_depth(ctx);
@@ -1529,8 +1503,14 @@ impl CodeGenerator for CompInfo {
             }
         }
 
+        let is_union = self.kind() == CompKind::Union;
         let layout = item.kind().expect_type().layout(ctx);
-        if is_union && !is_opaque {
+        if is_union && !is_opaque && !self.is_forward_declaration() {
+            result.saw_union();
+            if !self.can_be_rust_union(ctx) {
+                result.saw_bindgen_union();
+            }
+
             let layout = layout.expect("Unable to get layout information?");
             let ty = helpers::blob(layout);
 
@@ -1594,7 +1574,11 @@ impl CodeGenerator for CompInfo {
         //
         // NOTE: This check is conveniently here to avoid the dummy fields we
         // may add for unused template parameters.
-        if item.is_zero_sized(ctx) {
+        if self.is_forward_declaration() {
+            fields.push(quote! {
+                _unused: [u8; 0],
+            });
+        } else if item.is_zero_sized(ctx) {
             let has_address = if is_opaque {
                 // Generate the address field if it's an opaque type and
                 // couldn't determine the layout of the blob.
@@ -1664,12 +1648,11 @@ impl CodeGenerator for CompInfo {
         if item.can_derive_default(ctx) {
             derives.push("Default");
         } else {
-            needs_default_impl = ctx.options().derive_default;
+            needs_default_impl =
+                ctx.options().derive_default && !self.is_forward_declaration();
         }
 
-        if item.can_derive_copy(ctx) && !item.annotations().disallow_copy() &&
-            ctx.options().derive_copy
-        {
+        if item.can_derive_copy(ctx) && !item.annotations().disallow_copy() {
             derives.push("Copy");
 
             if ctx.options().rust_features().builtin_clone_impls() ||
@@ -1762,7 +1745,7 @@ impl CodeGenerator for CompInfo {
                 }
             }
 
-            if ctx.options().layout_tests {
+            if ctx.options().layout_tests && !self.is_forward_declaration() {
                 if let Some(layout) = layout {
                     let fn_name =
                         format!("bindgen_test_layout_{}", canonical_ident);
@@ -1991,6 +1974,7 @@ impl MethodCodegen for Method {
             }
         });
 
+        // TODO(emilio): We could generate final stuff at least.
         if self.is_virtual() {
             return; // FIXME
         }
@@ -2144,34 +2128,54 @@ impl EnumVariation {
 /// A helper type to construct different enum variations.
 enum EnumBuilder<'a> {
     Rust {
+        codegen_depth: usize,
+        attrs: Vec<quote::Tokens>,
+        ident: quote::Ident,
         tokens: quote::Tokens,
         emitted_any_variants: bool,
     },
     Bitfield {
+        codegen_depth: usize,
         canonical_name: &'a str,
         tokens: quote::Tokens,
     },
-    Consts(Vec<quote::Tokens>),
+    Consts {
+        variants: Vec<quote::Tokens>,
+        codegen_depth: usize,
+    },
     ModuleConsts {
+        codegen_depth: usize,
         module_name: &'a str,
         module_items: Vec<quote::Tokens>,
     },
 }
 
 impl<'a> EnumBuilder<'a> {
+    /// Returns the depth of the code generation for a variant of this enum.
+    fn codegen_depth(&self) -> usize {
+        match *self {
+            EnumBuilder::Rust { codegen_depth, .. } |
+            EnumBuilder::Bitfield { codegen_depth, .. } |
+            EnumBuilder::ModuleConsts { codegen_depth, .. } |
+            EnumBuilder::Consts { codegen_depth, .. } => codegen_depth,
+        }
+    }
+
     /// Create a new enum given an item builder, a canonical name, a name for
     /// the representation, and which variation it should be generated as.
     fn new(
         name: &'a str,
         attrs: Vec<quote::Tokens>,
         repr: quote::Tokens,
-        enum_variation: EnumVariation
+        enum_variation: EnumVariation,
+        enum_codegen_depth: usize,
     ) -> Self {
         let ident = quote::Ident::new(name);
 
         match enum_variation {
             EnumVariation::Bitfield => {
                 EnumBuilder::Bitfield {
+                    codegen_depth: enum_codegen_depth,
                     canonical_name: name,
                     tokens: quote! {
                         #( #attrs )*
@@ -2181,32 +2185,37 @@ impl<'a> EnumBuilder<'a> {
             }
 
             EnumVariation::Rust => {
-                let mut tokens = quote! {
-                    #( #attrs )*
-                    pub enum #ident
-                };
-                tokens.append("{");
+                let tokens = quote!{};
                 EnumBuilder::Rust {
+                    codegen_depth: enum_codegen_depth + 1,
+                    attrs,
+                    ident,
                     tokens,
                     emitted_any_variants: false,
                 }
             }
 
             EnumVariation::Consts => {
-                EnumBuilder::Consts(vec![
-                    quote! {
-                        pub type #ident = #repr;
-                    }
-                ])
+                EnumBuilder::Consts {
+                    variants: vec![
+                        quote! {
+                            #( #attrs )*
+                            pub type #ident = #repr;
+                        }
+                    ],
+                    codegen_depth: enum_codegen_depth,
+                }
             }
 
             EnumVariation::ModuleConsts => {
                 let ident = quote::Ident::new(CONSTIFIED_ENUM_MODULE_REPR_NAME);
                 let type_definition = quote! {
+                    #( #attrs )*
                     pub type #ident = #repr;
                 };
 
                 EnumBuilder::ModuleConsts {
+                    codegen_depth: enum_codegen_depth + 1,
                     module_name: name,
                     module_items: vec![type_definition],
                 }
@@ -2229,12 +2238,24 @@ impl<'a> EnumBuilder<'a> {
             EnumVariantValue::Unsigned(v) => helpers::ast_ty::uint_expr(v),
         };
 
+        let mut doc = quote! {};
+        if ctx.options().generate_comments {
+            if let Some(raw_comment) = variant.comment() {
+                let comment = comment::preprocess(raw_comment, self.codegen_depth());
+                doc = attributes::doc(comment);
+            }
+        }
+
         match self {
-            EnumBuilder::Rust { tokens, emitted_any_variants: _ } => {
+            EnumBuilder::Rust { attrs, ident, tokens, emitted_any_variants: _, codegen_depth } => {
                 let name = ctx.rust_ident(variant_name);
                 EnumBuilder::Rust {
+                    attrs,
+                    ident,
+                    codegen_depth,
                     tokens: quote! {
                         #tokens
+                        #doc
                         #name = #expr,
                     },
                     emitted_any_variants: true,
@@ -2251,6 +2272,7 @@ impl<'a> EnumBuilder<'a> {
 
                 let ident = ctx.rust_ident(constant_name);
                 result.push(quote! {
+                    #doc
                     pub const #ident : #rust_ty = #rust_ty ( #expr );
                 });
 
@@ -2269,24 +2291,28 @@ impl<'a> EnumBuilder<'a> {
 
                 let ident = ctx.rust_ident(constant_name);
                 result.push(quote! {
+                    #doc
                     pub const #ident : #rust_ty = #expr ;
                 });
 
                 self
             }
             EnumBuilder::ModuleConsts {
+                codegen_depth,
                 module_name,
                 mut module_items,
             } => {
                 let name = ctx.rust_ident(variant_name);
                 let ty = ctx.rust_ident(CONSTIFIED_ENUM_MODULE_REPR_NAME);
                 module_items.push(quote! {
+                    #doc
                     pub const #name : #ty = #expr ;
                 });
 
                 EnumBuilder::ModuleConsts {
                     module_name,
                     module_items,
+                    codegen_depth,
                 }
             }
         }
@@ -2299,16 +2325,24 @@ impl<'a> EnumBuilder<'a> {
         result: &mut CodegenResult<'b>,
     ) -> quote::Tokens {
         match self {
-            EnumBuilder::Rust { mut tokens, emitted_any_variants } => {
-                if !emitted_any_variants {
-                    tokens.append(quote! { __bindgen_cannot_repr_c_on_empty_enum = 0 });
+            EnumBuilder::Rust { attrs, ident, tokens, emitted_any_variants, .. } => {
+                let variants = if !emitted_any_variants {
+                    quote!(__bindgen_cannot_repr_c_on_empty_enum = 0)
+                } else {
+                    tokens
+                };
+
+                quote! {
+                    #( #attrs )*
+                    pub enum #ident {
+                        #variants
+                    }
                 }
-                tokens.append("}");
-                tokens
             }
             EnumBuilder::Bitfield {
                 canonical_name,
                 tokens,
+                ..
             } => {
                 let rust_ty_name = ctx.rust_ident_raw(canonical_name);
                 let prefix = ctx.trait_prefix();
@@ -2355,10 +2389,11 @@ impl<'a> EnumBuilder<'a> {
 
                 tokens
             }
-            EnumBuilder::Consts(tokens) => quote! { #( #tokens )* },
+            EnumBuilder::Consts { variants, .. } => quote! { #( #variants )* },
             EnumBuilder::ModuleConsts {
                 module_items,
                 module_name,
+                ..
             } => {
                 let ident = ctx.rust_ident(module_name);
                 quote! {
@@ -2495,7 +2530,8 @@ impl CodeGenerator for Enum {
             &name,
             attrs,
             repr,
-            variation
+            variation,
+            item.codegen_depth(ctx),
         );
 
         // A map where we keep a value -> variant relation.
@@ -2528,8 +2564,7 @@ impl CodeGenerator for Enum {
         let mut iter = self.variants().iter().peekable();
         while let Some(variant) = iter.next().or_else(|| {
             constified_variants.pop_front()
-        })
-        {
+        }) {
             if variant.hidden() {
                 continue;
             }
@@ -3245,16 +3280,10 @@ impl CodeGenerator for Function {
         };
 
         let ident = ctx.rust_ident(canonical_name);
-        let mut tokens = quote! { extern #abi };
-        tokens.append("{\n");
-        if !attributes.is_empty() {
-            tokens.append_separated(attributes, "\n");
-            tokens.append("\n");
-        }
-        tokens.append(quote! {
+        let tokens = quote!( extern #abi {
+            #(#attributes)*
             pub fn #ident ( #( #args ),* ) #ret;
         });
-        tokens.append("\n}");
         result.push(tokens);
     }
 }

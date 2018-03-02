@@ -7,6 +7,7 @@
 #include "WorkerScope.h"
 
 #include "jsapi.h"
+#include "jsfriendapi.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Clients.h"
@@ -398,6 +399,26 @@ WorkerGlobalScope::GetPerformance()
   }
 
   return mPerformance;
+}
+
+bool
+WorkerGlobalScope::IsInAutomation(JSContext* aCx, JSObject* /* unused */)
+{
+  return GetWorkerPrivateFromContext(aCx)->IsInAutomation();
+}
+
+void
+WorkerGlobalScope::GetJSTestingFunctions(JSContext* aCx,
+                                         JS::MutableHandle<JSObject*> aFunctions,
+                                         ErrorResult& aRv)
+{
+  JSObject* obj = js::GetTestingFunctions(aCx);
+  if (!obj) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  aFunctions.set(obj);
 }
 
 already_AddRefed<Promise>
