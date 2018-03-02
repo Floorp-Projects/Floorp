@@ -15,7 +15,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
-  CastingApps: "resource:///modules/CastingApps.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   findCssSelector: "resource://gre/modules/css-selector.js",
