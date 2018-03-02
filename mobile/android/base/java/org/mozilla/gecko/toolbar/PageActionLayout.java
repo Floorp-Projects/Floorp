@@ -126,7 +126,7 @@ public class PageActionLayout extends ThemedLinearLayout
         for (int i = 0; i < getChildCount(); i++) {
             View child = getChildAt(i);
             if (child instanceof ThemedImageButton) {
-                ((ThemedImageButton) child).setPrivateMode(true);
+                ((ThemedImageButton) child).setPrivateMode(isPrivate);
             }
         }
     }
