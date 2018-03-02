@@ -52,8 +52,10 @@ add_task(async function() {
     Cu.reportError("Meh", frame);
   });
 
-  equal(messages[0].stack, frame, "reportError stack frame");
-  equal(messages[0].message, '[JavaScript Error: "Meh" {file: "thing.js" line: 5}]\nit@thing.js:5:14\n');
+  let [msg] = messages.filter(m => m.message.includes("Meh"));
+
+  equal(msg.stack, frame, "reportError stack frame");
+  equal(msg.message, '[JavaScript Error: "Meh" {file: "thing.js" line: 5}]\nit@thing.js:5:14\n');
 
   Assert.throws(() => { Cu.reportError("Meh", {}); },
                 err => err.result == Cr.NS_ERROR_INVALID_ARG,
