@@ -189,7 +189,8 @@
 #include "mozilla/dom/ImageTracker.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsBindingManager.h"
-#include "plhash.h"
+#include "nsClassHashtable.h"
+#include "nsHashKeys.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -370,8 +371,6 @@ public:
 
   FILE * GetOutFile() { return mFD; }
 
-  PLHashTable * GetIndiFrameHT() { return mIndiFrameCounts; }
-
   void SetPresContext(nsPresContext * aPresContext) { mPresContext = aPresContext; } // weak reference
   void SetPresShell(nsIPresShell* aPresShell) { mPresShell= aPresShell; } // weak reference
 
@@ -385,29 +384,14 @@ protected:
   void DisplayTotals(uint32_t aTotal, uint32_t * aDupArray, char * aTitle);
   void DisplayHTMLTotals(uint32_t aTotal, uint32_t * aDupArray, char * aTitle);
 
-  static int RemoveItems(PLHashEntry *he, int i, void *arg);
-  static int RemoveIndiItems(PLHashEntry *he, int i, void *arg);
-  void CleanUp();
-
-  // stdout Output Methods
-  static int DoSingleTotal(PLHashEntry *he, int i, void *arg);
-  static int DoSingleIndi(PLHashEntry *he, int i, void *arg);
-
   void DoGrandTotals();
   void DoIndiTotalsTree();
 
   // HTML Output Methods
-  static int DoSingleHTMLTotal(PLHashEntry *he, int i, void *arg);
   void DoGrandHTMLTotals();
 
-  // Zero Out the Totals
-  static int DoClearTotals(PLHashEntry *he, int i, void *arg);
-
-  // Displays the Diff Totals
-  static int DoDisplayDiffTotals(PLHashEntry *he, int i, void *arg);
-
-  PLHashTable * mCounts;
-  PLHashTable * mIndiFrameCounts;
+  nsClassHashtable<nsCharPtrHashKey, ReflowCounter> mCounts;
+  nsClassHashtable<nsCharPtrHashKey, IndiReflowCounter> mIndiFrameCounts;
   FILE * mFD;
 
   bool mDumpFrameCounts;
@@ -10030,11 +10014,9 @@ void ReflowCounter::DisplayHTMLTotals(uint32_t aTotal, const char * aTitle)
 #define KEY_BUF_SIZE_FOR_PTR  24 // adequate char[] buffer to sprintf a pointer
 
 ReflowCountMgr::ReflowCountMgr()
+  : mCounts(10)
+  , mIndiFrameCounts(10)
 {
-  mCounts = PL_NewHashTable(10, PL_HashString, PL_CompareStrings,
-                                PL_CompareValues, nullptr, nullptr);
-  mIndiFrameCounts = PL_NewHashTable(10, PL_HashString, PL_CompareStrings,
-                                     PL_CompareValues, nullptr, nullptr);
   mCycledOnce              = false;
   mDumpFrameCounts         = false;
   mDumpFrameByFrameCounts  = false;
@@ -10044,18 +10026,12 @@ ReflowCountMgr::ReflowCountMgr()
 //------------------------------------------------------------------
 ReflowCountMgr::~ReflowCountMgr()
 {
-  CleanUp();
 }
 
 //------------------------------------------------------------------
 ReflowCounter * ReflowCountMgr::LookUp(const char * aName)
 {
-  if (nullptr != mCounts) {
-    ReflowCounter * counter = (ReflowCounter *)PL_HashTableLookup(mCounts, aName);
-    return counter;
-  }
-  return nullptr;
-
+  return mCounts.Get(aName);
 }
 
 //------------------------------------------------------------------
@@ -10063,29 +10039,24 @@ void ReflowCountMgr::Add(const char * aName, nsIFrame * aFrame)
 {
   NS_ASSERTION(aName != nullptr, "Name shouldn't be null!");
 
-  if (mDumpFrameCounts && nullptr != mCounts) {
-    ReflowCounter * counter = (ReflowCounter *)PL_HashTableLookup(mCounts, aName);
-    if (counter == nullptr) {
-      counter = new ReflowCounter(this);
-      char * name = NS_strdup(aName);
-      NS_ASSERTION(name != nullptr, "null ptr");
-      PL_HashTableAdd(mCounts, name, counter);
-    }
+  if (mDumpFrameCounts) {
+    ReflowCounter * counter = mCounts.LookupForAdd(aName).OrInsert([this]() {
+      return new ReflowCounter(this);
+    });
     counter->Add();
   }
 
   if ((mDumpFrameByFrameCounts || mPaintFrameByFrameCounts) &&
-      nullptr != mIndiFrameCounts &&
       aFrame != nullptr) {
     char key[KEY_BUF_SIZE_FOR_PTR];
     SprintfLiteral(key, "%p", (void*)aFrame);
-    IndiReflowCounter * counter = (IndiReflowCounter *)PL_HashTableLookup(mIndiFrameCounts, key);
-    if (counter == nullptr) {
-      counter = new IndiReflowCounter(this);
-      counter->mFrame = aFrame;
-      counter->mName.AssignASCII(aName);
-      PL_HashTableAdd(mIndiFrameCounts, NS_strdup(key), counter);
-    }
+    IndiReflowCounter * counter =
+      mIndiFrameCounts.LookupForAdd(key).OrInsert([&aName, &aFrame, this]() {
+        auto counter = new IndiReflowCounter(this);
+        counter->mFrame = aFrame;
+        counter->mName.AssignASCII(aName);
+        return counter;
+      });
     // this eliminates extra counts from super classes
     if (counter != nullptr && counter->mName.EqualsASCII(aName)) {
       counter->mCount++;
@@ -10103,12 +10074,10 @@ void ReflowCountMgr::PaintCount(const char*     aName,
                                 uint32_t        aColor)
 {
   if (mPaintFrameByFrameCounts &&
-      nullptr != mIndiFrameCounts &&
       aFrame != nullptr) {
     char key[KEY_BUF_SIZE_FOR_PTR];
     SprintfLiteral(key, "%p", (void*)aFrame);
-    IndiReflowCounter * counter =
-      (IndiReflowCounter *)PL_HashTableLookup(mIndiFrameCounts, key);
+    IndiReflowCounter * counter = mIndiFrameCounts.Get(key);
     if (counter != nullptr && counter->mName.EqualsASCII(aName)) {
       DrawTarget* drawTarget = aRenderingContext->GetDrawTarget();
       int32_t appUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
@@ -10171,77 +10140,28 @@ void ReflowCountMgr::PaintCount(const char*     aName,
 }
 
 //------------------------------------------------------------------
-int ReflowCountMgr::RemoveItems(PLHashEntry *he, int i, void *arg)
-{
-  char *str = (char *)he->key;
-  ReflowCounter * counter = (ReflowCounter *)he->value;
-  delete counter;
-  free(str);
-
-  return HT_ENUMERATE_REMOVE;
-}
-
-//------------------------------------------------------------------
-int ReflowCountMgr::RemoveIndiItems(PLHashEntry *he, int i, void *arg)
-{
-  char *str = (char *)he->key;
-  IndiReflowCounter * counter = (IndiReflowCounter *)he->value;
-  delete counter;
-  free(str);
-
-  return HT_ENUMERATE_REMOVE;
-}
-
-//------------------------------------------------------------------
-void ReflowCountMgr::CleanUp()
-{
-  if (nullptr != mCounts) {
-    PL_HashTableEnumerateEntries(mCounts, RemoveItems, nullptr);
-    PL_HashTableDestroy(mCounts);
-    mCounts = nullptr;
-  }
-
-  if (nullptr != mIndiFrameCounts) {
-    PL_HashTableEnumerateEntries(mIndiFrameCounts, RemoveIndiItems, nullptr);
-    PL_HashTableDestroy(mIndiFrameCounts);
-    mIndiFrameCounts = nullptr;
-  }
-}
-
-//------------------------------------------------------------------
-int ReflowCountMgr::DoSingleTotal(PLHashEntry *he, int i, void *arg)
-{
-  char *str = (char *)he->key;
-  ReflowCounter * counter = (ReflowCounter *)he->value;
-
-  counter->DisplayTotals(str);
-
-  return HT_ENUMERATE_NEXT;
-}
-
-//------------------------------------------------------------------
 void ReflowCountMgr::DoGrandTotals()
 {
-  if (nullptr != mCounts) {
-    ReflowCounter * gTots = (ReflowCounter *)PL_HashTableLookup(mCounts, kGrandTotalsStr);
-    if (gTots == nullptr) {
-      gTots = new ReflowCounter(this);
-      PL_HashTableAdd(mCounts, NS_strdup(kGrandTotalsStr), gTots);
-    } else {
-      gTots->ClearTotals();
-    }
+  auto entry = mCounts.LookupForAdd(kGrandTotalsStr);
+  if (!entry) {
+    entry.OrInsert([this]() { return new ReflowCounter(this); });
+  } else {
+    entry.Data()->ClearTotals();
+  }
 
-    printf("\t\t\t\tTotal\n");
-    for (uint32_t i=0;i<78;i++) {
-      printf("-");
-    }
-    printf("\n");
-    PL_HashTableEnumerateEntries(mCounts, DoSingleTotal, this);
+  printf("\t\t\t\tTotal\n");
+  for (uint32_t i=0;i<78;i++) {
+    printf("-");
+  }
+  printf("\n");
+  for (auto iter = mCounts.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->DisplayTotals(iter.Key());
   }
 }
 
 static void RecurseIndiTotals(nsPresContext* aPresContext,
-                              PLHashTable *   aHT,
+                              nsClassHashtable<nsCharPtrHashKey,
+                                               IndiReflowCounter>& aHT,
                               nsIFrame *      aParentFrame,
                               int32_t         aLevel)
 {
@@ -10251,7 +10171,7 @@ static void RecurseIndiTotals(nsPresContext* aPresContext,
 
   char key[KEY_BUF_SIZE_FOR_PTR];
   SprintfLiteral(key, "%p", (void*)aParentFrame);
-  IndiReflowCounter * counter = (IndiReflowCounter *)PL_HashTableLookup(aHT, key);
+  IndiReflowCounter * counter = aHT.Get(key);
   if (counter) {
     counter->mHasBeenOutput = true;
     char * name = ToNewCString(counter->mName);
@@ -10269,68 +10189,50 @@ static void RecurseIndiTotals(nsPresContext* aPresContext,
 }
 
 //------------------------------------------------------------------
-int ReflowCountMgr::DoSingleIndi(PLHashEntry *he, int i, void *arg)
-{
-  IndiReflowCounter * counter = (IndiReflowCounter *)he->value;
-  if (counter && !counter->mHasBeenOutput) {
-    char * name = ToNewCString(counter->mName);
-    printf("%s - %p   [%d][", name, (void*)counter->mFrame, counter->mCount);
-    printf("%d", counter->mCounter.GetTotal());
-    printf("]\n");
-    free(name);
-  }
-  return HT_ENUMERATE_NEXT;
-}
-
-//------------------------------------------------------------------
 void ReflowCountMgr::DoIndiTotalsTree()
 {
-  if (nullptr != mCounts) {
-    printf("\n------------------------------------------------\n");
-    printf("-- Individual Frame Counts\n");
-    printf("------------------------------------------------\n");
+  printf("\n------------------------------------------------\n");
+  printf("-- Individual Frame Counts\n");
+  printf("------------------------------------------------\n");
 
-    if (mPresShell) {
-      nsIFrame* rootFrame = mPresShell->GetRootFrame();
-      RecurseIndiTotals(mPresContext, mIndiFrameCounts, rootFrame, 0);
-      printf("------------------------------------------------\n");
-      printf("-- Individual Counts of Frames not in Root Tree\n");
-      printf("------------------------------------------------\n");
-      PL_HashTableEnumerateEntries(mIndiFrameCounts, DoSingleIndi, this);
+  if (mPresShell) {
+    nsIFrame* rootFrame = mPresShell->GetRootFrame();
+    RecurseIndiTotals(mPresContext, mIndiFrameCounts, rootFrame, 0);
+    printf("------------------------------------------------\n");
+    printf("-- Individual Counts of Frames not in Root Tree\n");
+    printf("------------------------------------------------\n");
+    for (auto iter = mIndiFrameCounts.Iter(); !iter.Done(); iter.Next()) {
+      IndiReflowCounter* counter = iter.Data();
+      if (!counter->mHasBeenOutput) {
+        char * name = ToNewCString(counter->mName);
+        printf("%s - %p   [%d][", name, (void*)counter->mFrame, counter->mCount);
+        printf("%d", counter->mCounter.GetTotal());
+        printf("]\n");
+        free(name);
+      }
     }
   }
-}
-
-//------------------------------------------------------------------
-int ReflowCountMgr::DoSingleHTMLTotal(PLHashEntry *he, int i, void *arg)
-{
-  char *str = (char *)he->key;
-  ReflowCounter * counter = (ReflowCounter *)he->value;
-
-  counter->DisplayHTMLTotals(str);
-
-  return HT_ENUMERATE_NEXT;
 }
 
 //------------------------------------------------------------------
 void ReflowCountMgr::DoGrandHTMLTotals()
 {
-  if (nullptr != mCounts) {
-    ReflowCounter * gTots = (ReflowCounter *)PL_HashTableLookup(mCounts, kGrandTotalsStr);
-    if (gTots == nullptr) {
-      gTots = new ReflowCounter(this);
-      PL_HashTableAdd(mCounts, NS_strdup(kGrandTotalsStr), gTots);
-    } else {
-      gTots->ClearTotals();
-    }
+  auto entry = mCounts.LookupForAdd(kGrandTotalsStr);
+  if (!entry) {
+    entry.OrInsert([this]() { return new ReflowCounter(this); });
+  } else {
+    entry.Data()->ClearTotals();
+  }
 
-    static const char * title[] = {"Class", "Reflows"};
-    fprintf(mFD, "<tr>");
-    for (uint32_t i=0; i < ArrayLength(title); i++) {
-      fprintf(mFD, "<td><center><b>%s<b></center></td>", title[i]);
-    }
-    fprintf(mFD, "</tr>\n");
-    PL_HashTableEnumerateEntries(mCounts, DoSingleHTMLTotal, this);
+  static const char * title[] = {"Class", "Reflows"};
+  fprintf(mFD, "<tr>");
+  for (uint32_t i=0; i < ArrayLength(title); i++) {
+    fprintf(mFD, "<td><center><b>%s<b></center></td>", title[i]);
+  }
+  fprintf(mFD, "</tr>\n");
+
+  for (auto iter = mCounts.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->DisplayHTMLTotals(iter.Key());
   }
 }
 
@@ -10379,50 +10281,23 @@ void ReflowCountMgr::DisplayHTMLTotals(const char * aStr)
 }
 
 //------------------------------------------------------------------
-int ReflowCountMgr::DoClearTotals(PLHashEntry *he, int i, void *arg)
-{
-  ReflowCounter * counter = (ReflowCounter *)he->value;
-  counter->ClearTotals();
-
-  return HT_ENUMERATE_NEXT;
-}
-
-//------------------------------------------------------------------
 void ReflowCountMgr::ClearTotals()
 {
-  PL_HashTableEnumerateEntries(mCounts, DoClearTotals, this);
+  for (auto iter = mCounts.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->ClearTotals();
+  }
 }
 
 //------------------------------------------------------------------
 void ReflowCountMgr::ClearGrandTotals()
 {
-  if (nullptr != mCounts) {
-    ReflowCounter * gTots = (ReflowCounter *)PL_HashTableLookup(mCounts, kGrandTotalsStr);
-    if (gTots == nullptr) {
-      gTots = new ReflowCounter(this);
-      PL_HashTableAdd(mCounts, NS_strdup(kGrandTotalsStr), gTots);
-    } else {
-      gTots->ClearTotals();
-      gTots->SetTotalsCache();
-    }
+  auto entry = mCounts.LookupForAdd(kGrandTotalsStr);
+  if (!entry) {
+    entry.OrInsert([this]() { return new ReflowCounter(this); });
+  } else {
+    entry.Data()->ClearTotals();
+    entry.Data()->SetTotalsCache();
   }
-}
-
-//------------------------------------------------------------------
-int ReflowCountMgr::DoDisplayDiffTotals(PLHashEntry *he, int i, void *arg)
-{
-  bool cycledOnce = (arg != 0);
-
-  char *str = (char *)he->key;
-  ReflowCounter * counter = (ReflowCounter *)he->value;
-
-  if (cycledOnce) {
-    counter->CalcDiffInTotals();
-    counter->DisplayDiffTotals(str);
-  }
-  counter->SetTotalsCache();
-
-  return HT_ENUMERATE_NEXT;
 }
 
 //------------------------------------------------------------------
@@ -10436,7 +10311,14 @@ void ReflowCountMgr::DisplayDiffsInTotals()
     printf("\n");
     ClearGrandTotals();
   }
-  PL_HashTableEnumerateEntries(mCounts, DoDisplayDiffTotals, (void *)mCycledOnce);
+
+  for (auto iter = mCounts.Iter(); !iter.Done(); iter.Next()) {
+    if (mCycledOnce) {
+      iter.Data()->CalcDiffInTotals();
+      iter.Data()->DisplayDiffTotals(iter.Key());
+    }
+    iter.Data()->SetTotalsCache();
+  }
 
   mCycledOnce = true;
 }
