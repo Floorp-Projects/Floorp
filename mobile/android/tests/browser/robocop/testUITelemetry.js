@@ -56,9 +56,7 @@ function do_check_measurement_eq(m1, m2) {
 }
 
 function getObserver() {
-  let bridge = Cc["@mozilla.org/android/bridge;1"]
-                 .getService(Ci.nsIAndroidBridge);
-  let obsXPCOM = bridge.browserApp.getUITelemetryObserver();
+  let obsXPCOM = Services.androidBridge.browserApp.getUITelemetryObserver();
   do_check_true(!!obsXPCOM);
   return obsXPCOM.wrappedJSObject;
 }

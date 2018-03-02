@@ -30,14 +30,11 @@ var windowListener = {
 };
 
 function startup(aData, aReason) {
-  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-
   // Load into any new windows
-  wm.addListener(windowListener);
+  Services.wm.addListener(windowListener);
   EventDispatcher.instance.registerListener(function(event, data, callback) {
       dump("Robocop:Quit received -- requesting quit");
-      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
-      appStartup.quit(Ci.nsIAppStartup.eForceQuit);
+      Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
   }, "Robocop:Quit");
 }
 
@@ -45,12 +42,9 @@ function shutdown(aData, aReason) {
   // When the application is shutting down we normally don't have to clean up any UI changes
   if (aReason == APP_SHUTDOWN) return;
 
-  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-
   // Stop watching for new windows
-  wm.removeListener(windowListener);
+  Services.wm.removeListener(windowListener);
 }
 
 function install(aData, aReason) { }
 function uninstall(aData, aReason) { }
-

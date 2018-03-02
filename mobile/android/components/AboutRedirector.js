@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var modules = {
   fennec: {
@@ -91,12 +92,9 @@ AboutRedirector.prototype = {
   newChannel: function(aURI, aLoadInfo) {
     let moduleInfo = this._getModuleInfo(aURI);
 
-    var ios = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
+    var newURI = Services.io.newURI(moduleInfo.uri);
 
-    var newURI = ios.newURI(moduleInfo.uri);
-
-    var channel = ios.newChannelFromURIWithLoadInfo(newURI, aLoadInfo);
+    var channel = Services.io.newChannelFromURIWithLoadInfo(newURI, aLoadInfo);
 
     if (!moduleInfo.privileged) {
       // Setting the owner to null means that we'll go through the normal
