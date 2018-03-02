@@ -404,13 +404,12 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
-  virtual void AttributeSetToCurrentValue(nsIDocument* aDocument,
-                                          mozilla::dom::Element* aElement,
+  virtual void AttributeSetToCurrentValue(mozilla::dom::Element* aElement,
                                           int32_t aNameSpaceID,
                                           nsAtom* aAttribute) override
   {
     // We can reuse AttributeWillChange implementation.
-    AttributeWillChange(aDocument, aElement, aNameSpaceID, aAttribute,
+    AttributeWillChange(aElement, aNameSpaceID, aAttribute,
                         mozilla::dom::MutationEventBinding::MODIFICATION, nullptr);
   }
 

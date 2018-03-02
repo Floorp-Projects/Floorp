@@ -210,38 +210,6 @@ class LTableSwitchV : public LInstructionHelper<0, BOX_PIECES, 3>
     }
 };
 
-class LGuardShape : public LInstructionHelper<0, 1, 0>
-{
-  public:
-    LIR_HEADER(GuardShape);
-
-    explicit LGuardShape(const LAllocation& in) {
-        setOperand(0, in);
-    }
-    const MGuardShape* mir() const {
-        return mir_->toGuardShape();
-    }
-    const LDefinition* tempInt() {
-        return getTemp(0);
-    }
-};
-
-class LGuardObjectGroup : public LInstructionHelper<0, 1, 0>
-{
-  public:
-    LIR_HEADER(GuardObjectGroup);
-
-    explicit LGuardObjectGroup(const LAllocation& in) {
-        setOperand(0, in);
-    }
-    const MGuardObjectGroup* mir() const {
-        return mir_->toGuardObjectGroup();
-    }
-    const LDefinition* tempInt() {
-        return getTemp(0);
-    }
-};
-
 class LMulI : public LBinaryMath<0>
 {
   public:

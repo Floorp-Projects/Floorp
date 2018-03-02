@@ -78,16 +78,14 @@ ScriptElement::ScriptEvaluated(nsresult aResult,
 }
 
 void
-ScriptElement::CharacterDataChanged(nsIDocument* aDocument,
-                                    nsIContent* aContent,
+ScriptElement::CharacterDataChanged(nsIContent* aContent,
                                     const CharacterDataChangeInfo&)
 {
   MaybeProcessScript();
 }
 
 void
-ScriptElement::AttributeChanged(nsIDocument* aDocument,
-                                Element* aElement,
+ScriptElement::AttributeChanged(Element* aElement,
                                 int32_t aNameSpaceID,
                                 nsAtom* aAttribute,
                                 int32_t aModType,
@@ -97,17 +95,13 @@ ScriptElement::AttributeChanged(nsIDocument* aDocument,
 }
 
 void
-ScriptElement::ContentAppended(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aFirstNewContent)
+ScriptElement::ContentAppended(nsIContent* aFirstNewContent)
 {
   MaybeProcessScript();
 }
 
 void
-ScriptElement::ContentInserted(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aChild)
+ScriptElement::ContentInserted(nsIContent* aChild)
 {
   MaybeProcessScript();
 }

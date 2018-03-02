@@ -133,33 +133,26 @@ SVGStyleElement::ParseAttribute(int32_t aNamespaceID,
 // nsIMutationObserver methods
 
 void
-SVGStyleElement::CharacterDataChanged(nsIDocument* aDocument,
-                                      nsIContent* aContent,
+SVGStyleElement::CharacterDataChanged(nsIContent* aContent,
                                       const CharacterDataChangeInfo&)
 {
   ContentChanged(aContent);
 }
 
 void
-SVGStyleElement::ContentAppended(nsIDocument* aDocument,
-                                 nsIContent* aContainer,
-                                 nsIContent* aFirstNewContent)
+SVGStyleElement::ContentAppended(nsIContent* aFirstNewContent)
 {
-  ContentChanged(aContainer);
+  ContentChanged(aFirstNewContent->GetParent());
 }
 
 void
-SVGStyleElement::ContentInserted(nsIDocument* aDocument,
-                                 nsIContent* aContainer,
-                                 nsIContent* aChild)
+SVGStyleElement::ContentInserted(nsIContent* aChild)
 {
   ContentChanged(aChild);
 }
 
 void
-SVGStyleElement::ContentRemoved(nsIDocument* aDocument,
-                                nsIContent* aContainer,
-                                nsIContent* aChild,
+SVGStyleElement::ContentRemoved(nsIContent* aChild,
                                 nsIContent* aPreviousSibling)
 {
   ContentChanged(aChild);

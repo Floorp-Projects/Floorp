@@ -988,33 +988,26 @@ HTMLTextAreaElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 }
 
 void
-HTMLTextAreaElement::CharacterDataChanged(nsIDocument* aDocument,
-                                          nsIContent* aContent,
+HTMLTextAreaElement::CharacterDataChanged(nsIContent* aContent,
                                           const CharacterDataChangeInfo&)
 {
   ContentChanged(aContent);
 }
 
 void
-HTMLTextAreaElement::ContentAppended(nsIDocument* aDocument,
-                                     nsIContent* aContainer,
-                                     nsIContent* aFirstNewContent)
+HTMLTextAreaElement::ContentAppended(nsIContent* aFirstNewContent)
 {
   ContentChanged(aFirstNewContent);
 }
 
 void
-HTMLTextAreaElement::ContentInserted(nsIDocument* aDocument,
-                                     nsIContent* aContainer,
-                                     nsIContent* aChild)
+HTMLTextAreaElement::ContentInserted(nsIContent* aChild)
 {
   ContentChanged(aChild);
 }
 
 void
-HTMLTextAreaElement::ContentRemoved(nsIDocument* aDocument,
-                                    nsIContent* aContainer,
-                                    nsIContent* aChild,
+HTMLTextAreaElement::ContentRemoved(nsIContent* aChild,
                                     nsIContent* aPreviousSibling)
 {
   ContentChanged(aChild);
