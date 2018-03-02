@@ -85,6 +85,7 @@ var promiseConsoleOutput = async function(task) {
         resolve();
       } else {
         void (msg instanceof Ci.nsIConsoleMessage);
+        void (msg instanceof Ci.nsIScriptError);
         messages.push(msg);
       }
     };

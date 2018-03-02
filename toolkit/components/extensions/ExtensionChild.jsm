@@ -381,7 +381,7 @@ class Messenger {
         if (error.result == MessageChannel.RESULT_NO_HANDLER) {
           return Promise.reject({message: "Could not establish connection. Receiving end does not exist."});
         } else if (error.result != MessageChannel.RESULT_NO_RESPONSE) {
-          return Promise.reject({message: error.message});
+          return Promise.reject(error);
         }
       });
     holder = null;
