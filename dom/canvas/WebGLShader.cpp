@@ -5,7 +5,7 @@
 
 #include "WebGLShader.h"
 
-#include "angle/ShaderLang.h"
+#include "GLSLANG/ShaderLang.h"
 #include "GLContext.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/MemoryReporting.h"

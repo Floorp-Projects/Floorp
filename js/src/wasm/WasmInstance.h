@@ -82,6 +82,7 @@ class Instance
 
     JSCompartment* compartment() const { return compartment_; }
     const Code& code() const { return *code_; }
+    const CodeTier& code(Tier t) const { return code_->codeTier(t); }
     DebugState& debug() { return *debug_; }
     const DebugState& debug() const { return *debug_; }
     const ModuleSegment& moduleSegment(Tier t) const { return code_->segment(t); }
