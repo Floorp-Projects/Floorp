@@ -6,7 +6,7 @@
 "use strict";
 
 // shared-head.js handles imports, constants, and utility functions
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js", this);
+Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js", this);
 
 // Disable logging for faster test runs. Set this pref to true if you want to
 // debug a test in your try runs. Both the debugger server and frontend will
