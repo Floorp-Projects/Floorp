@@ -224,8 +224,8 @@ class SyncedBookmarksMirror {
    *        The collection last modified time, in seconds.
    */
   async setCollectionLastModified(lastModifiedSeconds) {
-    let lastModified = lastModifiedSeconds * 1000;
-    if (!Number.isFinite(lastModified)) {
+    let lastModified = Math.floor(lastModifiedSeconds * 1000);
+    if (!Number.isInteger(lastModified)) {
       throw new TypeError("Invalid collection last modified time");
     }
     await this.db.executeBeforeShutdown(
