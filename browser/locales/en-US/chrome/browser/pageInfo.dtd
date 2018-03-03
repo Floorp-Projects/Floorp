@@ -49,14 +49,7 @@
 
 <!ENTITY  permTab               "Permissions">
 <!ENTITY  permTab.accesskey     "P">
-<!ENTITY  permUseDefault        "Use Default">
-<!ENTITY  permAskAlways         "Always ask">
-<!ENTITY  permAllow             "Allow">
-<!ENTITY  permAllowSession      "Allow for Session">
-<!ENTITY  permHide              "Hide">
-<!ENTITY  permBlock             "Block">
 <!ENTITY  permissionsFor        "Permissions for:">
-<!ENTITY  permPlugins           "Activate Plugins">
 
 <!ENTITY  securityTab           "Security">
 <!ENTITY  securityTab.accesskey "S">
