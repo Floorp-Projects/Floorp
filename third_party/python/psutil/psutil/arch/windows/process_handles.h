@@ -48,7 +48,8 @@ typedef NTSTATUS (NTAPI *_NtQueryObject)(
 // Undocumented FILE_INFORMATION_CLASS: FileNameInformation
 static const SYSTEM_INFORMATION_CLASS SystemExtendedHandleInformation = (SYSTEM_INFORMATION_CLASS)64;
 
-typedef struct _SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX {
+typedef struct _SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX
+{
     PVOID Object;
     HANDLE UniqueProcessId;
     HANDLE HandleValue;
@@ -59,7 +60,8 @@ typedef struct _SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX {
     ULONG Reserved;
 } SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX, *PSYSTEM_HANDLE_TABLE_ENTRY_INFO_EX;
 
-typedef struct _SYSTEM_HANDLE_INFORMATION_EX {
+typedef struct _SYSTEM_HANDLE_INFORMATION_EX
+{
     ULONG_PTR NumberOfHandles;
     ULONG_PTR Reserved;
     SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX Handles[1];
@@ -106,6 +108,6 @@ PyObject* psutil_get_open_files(long pid, HANDLE processHandle);
 PyObject* psutil_get_open_files_ntqueryobject(long dwPid, HANDLE hProcess);
 PyObject* psutil_get_open_files_getmappedfilename(long dwPid, HANDLE hProcess);
 DWORD psutil_NtQueryObject(void);
-DWORD WINAPI psutil_NtQueryObjectThread(LPVOID lpvParam);
+void psutil_NtQueryObjectThread(void);
 
 #endif // __PROCESS_HANDLES_H__

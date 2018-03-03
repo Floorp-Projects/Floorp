@@ -6,7 +6,7 @@
 #ifndef WEBGL_SHADER_VALIDATOR_H_
 #define WEBGL_SHADER_VALIDATOR_H_
 
-#include "angle/ShaderLang.h"
+#include "GLSLANG/ShaderLang.h"
 #include "GLDefs.h"
 #include "nsString.h"
 #include <string>
