@@ -171,20 +171,20 @@ impl CubebServer {
                 ClientMessage::StreamDestroyed
             }
 
-            ServerMessage::StreamStart(stm_tok) => {
-                let _ = self.streams[stm_tok].start();
-                ClientMessage::StreamStarted
-            }
+            ServerMessage::StreamStart(stm_tok) => self.streams[stm_tok]
+                .start()
+                .map(|_| ClientMessage::StreamStarted)
+                .unwrap_or_else(error),
 
-            ServerMessage::StreamStop(stm_tok) => {
-                let _ = self.streams[stm_tok].stop();
-                ClientMessage::StreamStopped
-            }
+            ServerMessage::StreamStop(stm_tok) => self.streams[stm_tok]
+                .stop()
+                .map(|_| ClientMessage::StreamStopped)
+                .unwrap_or_else(error),
 
-            ServerMessage::StreamResetDefaultDevice(stm_tok) => {
-                let _ = self.streams[stm_tok].reset_default_device();
-                ClientMessage::StreamDefaultDeviceReset
-            }
+            ServerMessage::StreamResetDefaultDevice(stm_tok) => self.streams[stm_tok]
+                .reset_default_device()
+                .map(|_| ClientMessage::StreamDefaultDeviceReset)
+                .unwrap_or_else(error),
 
             ServerMessage::StreamGetPosition(stm_tok) => self.streams[stm_tok]
                 .position()
