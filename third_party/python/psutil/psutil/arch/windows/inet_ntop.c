@@ -1,40 +1,45 @@
+/*
+ * Copyright (c) 2009, Giampaolo Rodola', Jeff Tang. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+#include <Python.h>
 #include "inet_ntop.h"
 
 // From: https://memset.wordpress.com/2010/10/09/inet_ntop-for-win32/
-PCSTR
-WSAAPI
-inet_ntop(
-    __in                                INT             Family,
-    __in                                PVOID           pAddr,
-    __out_ecount(StringBufSize)         PSTR            pStringBuf,
-    __in                                size_t          StringBufSize
-    )
-{
+PCSTR WSAAPI
+inet_ntop(__in INT family,
+          __in PVOID pAddr,
+          __out_ecount(StringBufSize) PSTR pStringBuf,
+          __in size_t StringBufSize) {
     DWORD dwAddressLength = 0;
     struct sockaddr_storage srcaddr;
     struct sockaddr_in *srcaddr4 = (struct sockaddr_in*) &srcaddr;
     struct sockaddr_in6 *srcaddr6 = (struct sockaddr_in6*) &srcaddr;
 
     memset(&srcaddr, 0, sizeof(struct sockaddr_storage));
-    srcaddr.ss_family = Family;
+    srcaddr.ss_family = family;
 
-    if (Family == AF_INET)
-    {
+    if (family == AF_INET) {
         dwAddressLength = sizeof(struct sockaddr_in);
         memcpy(&(srcaddr4->sin_addr), pAddr, sizeof(struct in_addr));
-    } else if (Family == AF_INET6)
-    {
+    }
+    else if (family == AF_INET6) {
         dwAddressLength = sizeof(struct sockaddr_in6);
         memcpy(&(srcaddr6->sin6_addr), pAddr, sizeof(struct in6_addr));
-    } else {
+    }
+    else {
+        PyErr_SetString(PyExc_ValueError, "invalid family");
         return NULL;
     }
 
     if (WSAAddressToString((LPSOCKADDR) &srcaddr,
-                           dwAddressLength,                           
-                           0, 
-                           pStringBuf, 
+                           dwAddressLength,
+                           0,
+                           pStringBuf,
                            (LPDWORD) &StringBufSize) != 0) {
+        PyErr_SetExcFromWindowsErr(PyExc_OSError, WSAGetLastError());
         return NULL;
     }
     return pStringBuf;
