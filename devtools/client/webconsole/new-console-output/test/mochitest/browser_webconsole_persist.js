@@ -3,11 +3,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Check that message persistence works - bug 705921 / bug 1307881
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/mochitest/test-console.html";
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
+                 "new-console-output/test/mochitest/test-console.html";
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webconsole.persistlog");

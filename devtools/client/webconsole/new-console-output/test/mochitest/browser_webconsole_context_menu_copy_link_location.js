@@ -3,16 +3,19 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Test the Copy Link Location menu item of the webconsole is displayed for network
 // messages and copies the expected URL.
 
 "use strict";
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-  "new-console-output/test/mochitest/test-console.html?_date=" + Date.now();
+                 "new-console-output/test/mochitest/test-console.html?_date=" +
+                 Date.now();
 const CONTEXT_MENU_ID = "#console-menu-copy-url";
 
-add_task(async function() {
+add_task(async function () {
   // Enable net messages in the console for this test.
   await pushPref("devtools.webconsole.filter.net", true);
 

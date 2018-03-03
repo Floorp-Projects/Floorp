@@ -45,7 +45,7 @@ add_task(async function () {
     store.subscribe(() => {
       const messages = store.getState().messages.messagesById.size;
       // Also consider the "in-console log" message
-      if (messages == MESSAGES_COUNT+1) {
+      if (messages == MESSAGES_COUNT + 1) {
         done();
       }
     });

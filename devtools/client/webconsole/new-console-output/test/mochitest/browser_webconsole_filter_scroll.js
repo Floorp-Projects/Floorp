@@ -61,7 +61,6 @@ add_task(async function () {
   await onMessagesUnFiltered;
   is(outputContainer.scrollTop, 0,
     "The console is still scrolled to the top after clearing the filter");
-
 });
 
 function hasVerticalOverflow(container) {
