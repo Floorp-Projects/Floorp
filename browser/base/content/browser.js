@@ -8277,7 +8277,7 @@ var gIdentityHandler = {
     let messageBase = gNavigatorBundle.getString("popupShowBlockedPopupsIndicatorText");
     let message = PluralForm.get(popupCount, messageBase)
                                  .replace("#1", popupCount);
-    text.setAttribute("value", message);
+    text.textContent = message;
 
     text.addEventListener("click", () => {
       gPopupBlockerObserver.showAllBlockedPopups(gBrowser.selectedBrowser);
