@@ -3312,3 +3312,55 @@ add_task(async function test_bookmarks_ensureCurrentSyncId() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
+
+add_task(async function test_history_resetSyncId() {
+  let syncId = await PlacesSyncUtils.history.getSyncId();
+  strictEqual(syncId, "", "Should start with empty history sync ID");
+
+  info("Assign new history sync ID for first time");
+  let newSyncId = await PlacesSyncUtils.history.resetSyncId();
+  syncId = await PlacesSyncUtils.history.getSyncId();
+  equal(newSyncId, syncId,
+    "Should assign new history sync ID for first time");
+
+  info("Set history last sync time");
+  let lastSync = Date.now() / 1000;
+  await PlacesSyncUtils.history.setLastSync(lastSync);
+  equal(await PlacesSyncUtils.history.getLastSync(), lastSync,
+    "Should record history last sync time");
+
+  newSyncId = await PlacesSyncUtils.history.resetSyncId();
+  notEqual(newSyncId, syncId,
+    "Should set new history sync ID if one already exists");
+  strictEqual(await PlacesSyncUtils.history.getLastSync(), 0,
+    "Should reset history last sync time after resetting sync ID");
+
+  await PlacesSyncUtils.history.reset();
+});
+
+add_task(async function test_history_ensureCurrentSyncId() {
+  info("Assign new history sync ID");
+  await PlacesSyncUtils.history.ensureCurrentSyncId("syncIdAAAAAA");
+  equal(await PlacesSyncUtils.history.getSyncId(), "syncIdAAAAAA",
+    "Should assign history sync ID if one doesn't exist");
+
+  info("Ensure existing history sync ID matches");
+  let lastSync = Date.now() / 1000;
+  await PlacesSyncUtils.history.setLastSync(lastSync);
+  await PlacesSyncUtils.history.ensureCurrentSyncId("syncIdAAAAAA");
+
+  equal(await PlacesSyncUtils.history.getSyncId(), "syncIdAAAAAA",
+    "Should keep existing history sync ID on match");
+  equal(await PlacesSyncUtils.history.getLastSync(), lastSync,
+    "Should keep existing history last sync time on sync ID match");
+
+  info("Replace existing history sync ID with new ID");
+  await PlacesSyncUtils.history.ensureCurrentSyncId("syncIdBBBBBB");
+
+  equal(await PlacesSyncUtils.history.getSyncId(), "syncIdBBBBBB",
+    "Should replace existing history sync ID on mismatch");
+  strictEqual(await PlacesSyncUtils.history.getLastSync(), 0,
+    "Should reset history last sync time on sync ID mismatch");
+
+  await PlacesSyncUtils.history.reset();
+});
