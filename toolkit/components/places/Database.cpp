@@ -1233,7 +1233,12 @@ Database::InitSchema(bool* aDatabaseMigrated)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 61 uses schema version 44.
+      if (currentSchemaVersion < 45) {
+        rv = MigrateV45Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 61 uses schema version 45.
 
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
@@ -1316,6 +1321,10 @@ Database::InitSchema(bool* aDatabaseMigrated)
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_ITEMS_ANNOS);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_ITEMSANNOS_PLACEATTRIBUTE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // moz_meta.
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_META);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Initialize the bookmark roots in the new DB.
@@ -2071,6 +2080,20 @@ Database::MigrateV44Up() {
   if (NS_FAILED(rv)) return rv;
 
   return rv;
+}
+
+nsresult
+Database::MigrateV45Up() {
+  nsCOMPtr<mozIStorageStatement> metaTableStmt;
+  nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT 1 FROM moz_meta"
+  ), getter_AddRefs(metaTableStmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_META);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
 }
 
 nsresult
