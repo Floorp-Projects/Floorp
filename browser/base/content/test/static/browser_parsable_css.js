@@ -155,6 +155,12 @@ let allowedImageReferences = [
 // test multiple times, it would be unlikely to affect each other.
 const kPathSuffix = "?always-parse-css-" + Math.random();
 
+function dumpWhitelistItem(item) {
+  return JSON.stringify(item, (key, value) => {
+    return value instanceof RegExp ? value.toString() : value;
+  });
+}
+
 /**
  * Check if an error should be ignored due to matching one of the whitelist
  * objects defined in whitelist
@@ -174,6 +180,9 @@ function ignoredError(aErrorObject) {
     }
     if (matches) {
       whitelistItem.used = true;
+      let {sourceName, errorMessage} = aErrorObject;
+      info(`Ignored error "${errorMessage}" on ${sourceName} ` +
+           "because of whitelist item " + dumpWhitelistItem(whitelistItem));
       return true;
     }
   }
@@ -248,7 +257,6 @@ function messageIsCSSError(msg) {
       ok(false, `Got error message for ${sourceName}: ${msg.errorMessage}`);
       return true;
     }
-    info(`Ignored error for ${sourceName} because of filter.`);
   }
   return false;
 }
@@ -458,10 +466,7 @@ add_task(async function checkAllTheCSS() {
         (!item.platforms || item.platforms.includes(AppConstants.platform)) &&
         isDevtools == item.isFromDevTools &&
         !item.intermittent) {
-      ok(false, "Unused whitelist item. " +
-                (item.propName ? " propName: " + item.propName : "") +
-                (item.sourceName ? " sourceName: " + item.sourceName : "") +
-                (item.errorMessage ? " errorMessage: " + item.errorMessage : ""));
+      ok(false, "Unused whitelist item. " + dumpWhitelistItem(item));
     }
   }
 
