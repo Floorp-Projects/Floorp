@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Tests that we report JS exceptions in event handlers coming from
 // network requests, like onreadystate for XHR. See bug 618078.
 

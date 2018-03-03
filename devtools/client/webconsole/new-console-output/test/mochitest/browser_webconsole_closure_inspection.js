@@ -38,7 +38,8 @@ function test() {
         let deferred = defer();
         fetchScopes(hud, toolbox, panelWin, deferred);
 
-        ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+        // eslint-disable-next-line
+        ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
           let button = content.document.querySelector("button");
           ok(button, "button element found");
           button.click();

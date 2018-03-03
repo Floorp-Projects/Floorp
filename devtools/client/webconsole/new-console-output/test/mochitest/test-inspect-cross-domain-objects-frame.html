@@ -5,14 +5,15 @@
     <title>Web Console test for bug 869003</title>
     <!-- Any copyright is dedicated to the Public Domain.
        - http://creativecommons.org/publicdomain/zero/1.0/ -->
-    <script type="text/javascript"><!--
+    <script type="text/javascript">
+      /* eslint-disable */
       window.onload = function testConsoleLogging()
       {
         var obj1 = { hello: "world!", bug: 869003 };
         var obj2 = Object.assign(function func(arg){}, obj1);
         console.log("foobar", obj1, obj2);
       };
-    // --></script>
+    </script>
   </head>
   <body>
     <p>Make sure users can inspect objects from cross-domain iframes.</p>
