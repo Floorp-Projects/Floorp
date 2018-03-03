@@ -657,7 +657,6 @@ var TelemetrySession = Object.freeze({
 });
 
 var Impl = {
-  _histograms: {},
   _initialized: false,
   _logger: null,
   _prevValues: {},
@@ -1188,21 +1187,11 @@ var Impl = {
       return;
     }
 
-    let h = this._histograms[id];
-    if (!h) {
-      if (key) {
-        h = Telemetry.getKeyedHistogramById(id);
-      } else {
-        h = Telemetry.getHistogramById(id);
-      }
-      this._histograms[id] = h;
+    if (key) {
+      return Telemetry.getKeyedHistogramById(id).add(key, val);
     }
 
-    if (key) {
-      h.add(key, val);
-    } else {
-      h.add(val);
-    }
+    Telemetry.getHistogramById(id).add(val);
   },
 
   getChildPayloads: function getChildPayloads() {
