@@ -75,7 +75,120 @@ XPCOMUtils.defineLazyGetter(this, "ROOTS", () =>
   Object.keys(ROOT_RECORD_ID_TO_GUID)
 );
 
-PlacesSyncUtils.history = Object.freeze({
+const HistorySyncUtils = PlacesSyncUtils.history = Object.freeze({
+  SYNC_ID_META_KEY: "sync/history/syncId",
+  LAST_SYNC_META_KEY: "sync/history/lastSync",
+
+  /**
+   * Returns the current history sync ID, or `""` if one isn't set.
+   */
+  async getSyncId() {
+    let syncId = await PlacesUtils.metadata.get(
+      HistorySyncUtils.SYNC_ID_META_KEY);
+    return syncId || "";
+  },
+
+  /**
+   * Assigns a new sync ID. This is called when we sync for the first time with
+   * a new account, and when we're the first to sync after a node reassignment.
+   *
+   * @return {Promise} resolved once the ID has been updated.
+   * @resolves to the new sync ID.
+   */
+  resetSyncId() {
+    return PlacesUtils.withConnectionWrapper(
+      "HistorySyncUtils: resetSyncId",
+      function(db) {
+        let newSyncId = PlacesUtils.history.makeGuid();
+        return db.executeTransaction(async function() {
+          await setHistorySyncId(db, newSyncId);
+          return newSyncId;
+        });
+      }
+    );
+  },
+
+  /**
+   * Ensures that the existing local sync ID, if any, is up-to-date with the
+   * server. This is called when we sync with an existing account.
+   *
+   * @param newSyncId
+   *        The server's sync ID.
+   * @return {Promise} resolved once the ID has been updated.
+   */
+  async ensureCurrentSyncId(newSyncId) {
+    if (!newSyncId || typeof newSyncId != "string") {
+      throw new TypeError("Invalid new history sync ID");
+    }
+    await PlacesUtils.withConnectionWrapper(
+      "HistorySyncUtils: ensureCurrentSyncId",
+      async function(db) {
+        let existingSyncId = await PlacesUtils.metadata.getWithConnection(
+          db, HistorySyncUtils.SYNC_ID_META_KEY);
+
+        if (existingSyncId == newSyncId) {
+          HistorySyncLog.debug("History sync ID up-to-date",
+                               { existingSyncId });
+          return;
+        }
+
+        HistorySyncLog.debug("History sync ID changed; resetting metadata",
+                             { existingSyncId, newSyncId });
+        await db.executeTransaction(function() {
+          return setHistorySyncId(db, newSyncId);
+        });
+      }
+    );
+  },
+
+  /**
+   * Returns the last sync time, in seconds, for the history collection, or 0
+   * if history has never synced before.
+   */
+  async getLastSync() {
+    let lastSync = await PlacesUtils.metadata.get(
+      HistorySyncUtils.LAST_SYNC_META_KEY);
+    return lastSync ? lastSync / 1000 : 0;
+  },
+
+  /**
+   * Updates the history collection last sync time.
+   *
+   * @param lastSyncSeconds
+   *        The collection last sync time, in seconds, as a number or string.
+   */
+  async setLastSync(lastSyncSeconds) {
+    let lastSync = Math.floor(lastSyncSeconds * 1000);
+    if (!Number.isInteger(lastSync)) {
+      throw new TypeError("Invalid history last sync timestamp");
+    }
+    await PlacesUtils.metadata.set(HistorySyncUtils.LAST_SYNC_META_KEY,
+                                   lastSync);
+  },
+
+  /**
+   * Removes all history visits and pages from the database. Sync calls this
+   * method when it receives a command from a remote client to wipe all stored
+   * data.
+   *
+   * @return {Promise} resolved once all pages and visits have been removed.
+   */
+  async wipe() {
+    await PlacesUtils.history.clear();
+    await HistorySyncUtils.reset();
+  },
+
+  /**
+   * Removes the sync ID and last sync time for the history collection. Unlike
+   * `wipe`, this keeps all existing history pages and visits.
+   *
+   * @return {Promise} resolved once the metadata have been removed.
+   */
+  reset() {
+    return PlacesUtils.metadata.delete(HistorySyncUtils.SYNC_ID_META_KEY,
+      HistorySyncUtils.LAST_SYNC_META_KEY);
+  },
+
   /**
    * Clamps a history visit date between the current date and the earliest
    * sensible date.
@@ -1229,6 +1342,10 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
     let db = await PlacesUtils.promiseDBConnection();
     return fetchGuidsWithAnno(db, anno, val);
   },
+});
+
+XPCOMUtils.defineLazyGetter(this, "HistorySyncLog", () => {
+  return Log.repository.getLogger("Sync.Engine.History.HistorySyncUtils");
 });
 
 XPCOMUtils.defineLazyGetter(this, "BookmarkSyncLog", () => {
@@ -2436,6 +2553,15 @@ function notify(observers, notification, args = []) {
       observer[notification](...args);
     } catch (ex) {}
   }
+}
+
+// Sets the history sync ID and clears the last sync time.
+async function setHistorySyncId(db, newSyncId) {
+  await PlacesUtils.metadata.setWithConnection(db,
+    HistorySyncUtils.SYNC_ID_META_KEY, newSyncId);
+
+  await PlacesUtils.metadata.deleteWithConnection(db,
+    HistorySyncUtils.LAST_SYNC_META_KEY);
 }
 
 // Sets the bookmarks sync ID and clears the last sync time.
