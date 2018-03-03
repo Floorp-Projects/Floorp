@@ -173,12 +173,20 @@ function dumpWhitelistItem(item) {
 function ignoredError(aErrorObject) {
   for (let whitelistItem of whitelist) {
     let matches = true;
+    let catchAll = true;
     for (let prop of ["sourceName", "errorMessage"]) {
-      if (whitelistItem.hasOwnProperty(prop) &&
-          !whitelistItem[prop].test(aErrorObject[prop] || "")) {
-        matches = false;
-        break;
+      if (whitelistItem.hasOwnProperty(prop)) {
+        catchAll = false;
+        if (!whitelistItem[prop].test(aErrorObject[prop] || "")) {
+          matches = false;
+          break;
+        }
       }
+    }
+    if (catchAll) {
+      ok(false, "A whitelist item is catching all errors. " +
+         dumpWhitelistItem(whitelistItem));
+      continue;
     }
     if (matches) {
       whitelistItem.used = true;
