@@ -3,12 +3,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Test that the cd() jsterm helper function works as expected. See bug 609872.
 
 "use strict";
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-  "new-console-output/test/mochitest/test-cd-iframe-parent.html";
+                 "new-console-output/test/mochitest/test-cd-iframe-parent.html";
 
 add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);

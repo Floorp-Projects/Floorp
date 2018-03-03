@@ -7,10 +7,11 @@
 
 // Check adding console calls as batch keep the order of the message.
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/mochitest/test-batching.html";
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
+                 "new-console-output/test/mochitest/test-batching.html";
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 
-add_task(async function() {
+add_task(async function () {
   let hud = await openNewTabAndConsole(TEST_URI);
   const messageNumber = 100;
   await testSimpleBatchLogging(hud, messageNumber);
