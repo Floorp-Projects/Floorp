@@ -251,7 +251,9 @@ var dataProviders = {
       data.styloChromeResult = winUtils.isStyledByServo;
     }
 
-    data.policiesStatus = Services.policies.status;
+    if (Services.policies) {
+      data.policiesStatus = Services.policies.status;
+    }
 
     const keyGoogle = Services.urlFormatter.formatURL("%GOOGLE_API_KEY%").trim();
     data.keyGoogleFound = keyGoogle != "no-google-api-key" && keyGoogle.length > 0;
