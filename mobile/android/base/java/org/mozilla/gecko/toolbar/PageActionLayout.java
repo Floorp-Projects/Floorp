@@ -37,6 +37,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -248,14 +249,8 @@ public class PageActionLayout extends ThemedLinearLayout
     private void removePageAction(String id) {
         ThreadUtils.assertOnUiThread();
 
-        final Iterator<PageAction> iter = mPageActionList.iterator();
-        while (iter.hasNext()) {
-            final PageAction pageAction = iter.next();
-            if (pageAction.getID().equals(id)) {
-                iter.remove();
-                refreshPageActionIcons();
-                return;
-            }
+        if (PageAction.removeFromList(mPageActionList, id)) {
+            refreshPageActionIcons();
         }
     }
 
@@ -478,6 +473,19 @@ public class PageActionLayout extends ThemedLinearLayout
             return false;
         }
 
-
+        /**
+         * @return True if any PageAction was actually removed, false otherwise.
+         */
+        public static boolean removeFromList(Collection<PageAction> pageActionCollection, String id) {
+            final Iterator<PageAction> iter = pageActionCollection.iterator();
+            while (iter.hasNext()) {
+                final PageAction action = iter.next();
+                if (action.getID().equals(id)) {
+                    iter.remove();
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

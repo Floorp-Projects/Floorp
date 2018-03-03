@@ -157,7 +157,11 @@ public class AddonUICache implements BundleEventListener {
                 if (mPageActionDelegate != null) {
                     mPageActionDelegate.removePageAction(message);
                 } else {
-                    mPendingPageActionQueue.remove(message.getString("id"));
+                    final String id = message.getString("id");
+                    mPendingPageActionQueue.remove(id);
+                    if (mResolvedPageActionCache != null) {
+                        PageAction.removeFromList(mResolvedPageActionCache, id);
+                    }
                 }
                 break;
         }
