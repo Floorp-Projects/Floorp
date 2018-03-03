@@ -798,6 +798,7 @@ public:
   static const KTableEntry kFontDisplayKTable[];
   static const KTableEntry kFontKTable[];
   static const KTableEntry kFontKerningKTable[];
+  static const KTableEntry kFontOpticalSizingKTable[];
   static const KTableEntry kFontSizeKTable[];
   static const KTableEntry kFontSmoothingKTable[];
   static const KTableEntry kFontStretchKTable[];

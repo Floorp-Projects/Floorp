@@ -1876,6 +1876,18 @@ CSS_PROP_FONT(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Discrete)
 CSS_PROP_FONT(
+    font-optical-sizing,
+    font_optical_sizing,
+    FontOpticalSizing,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
+    "layout.css.font-variations.enabled",
+    VARIANT_HK,
+    kFontOpticalSizingKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_FONT(
     font-size,
     font_size,
     FontSize,
