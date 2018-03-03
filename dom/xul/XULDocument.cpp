@@ -2219,7 +2219,8 @@ XULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
     // document is chrome otherwise it may not have a system principal and
     // the cached document will, see bug 565610.
     bool overlayIsChrome = IsChromeURI(aURI);
-    bool documentIsChrome = IsChromeURI(mDocumentURI);
+    bool documentIsChrome = mDocumentURI ?
+        IsChromeURI(mDocumentURI) : false;
     mCurrentPrototype = overlayIsChrome && documentIsChrome ?
         nsXULPrototypeCache::GetInstance()->GetPrototype(aURI) : nullptr;
 
