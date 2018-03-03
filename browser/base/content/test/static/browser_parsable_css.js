@@ -117,9 +117,6 @@ let whitelist = [
   // Bug 1442300
   {propName: "--in-content-category-background",
    isFromDevTools: false},
-  // Bug 1442314
-  {propName: "--separator-border-image",
-   isFromDevTools: true},
 
   // Used on Linux
   {propName: "--in-content-box-background-odd",

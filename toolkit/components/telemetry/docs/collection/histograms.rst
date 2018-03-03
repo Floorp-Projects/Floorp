@@ -212,7 +212,7 @@ The one exception is categorical histograms which can only be changed by adding 
 Histogram values
 ================
 
-The values you can accumulate to Histograms are limited by their internal represenation.
+The values you can accumulate to Histograms are limited by their internal representation.
 
 Telemetry Histograms do not record negative values, instead clamping them to 0 before recording.
 

@@ -21,28 +21,7 @@
 
 #include "process_info.h"
 #include "../../_psutil_common.h"
-
-
-/*
- * Return 1 if PID exists in the current process list, else 0.
- */
-int
-psutil_pid_exists(long pid)
-{
-    int kill_ret;
-
-    // save some time if it's an invalid PID
-    if (pid < 0)
-        return 0;
-    // if kill returns success of permission denied we know it's a valid PID
-    kill_ret = kill(pid , 0);
-    if ( (0 == kill_ret) || (EPERM == errno))
-        return 1;
-
-    // otherwise return 0 for PID not found
-    return 0;
-}
-
+#include "../../_psutil_posix.h"
 
 /*
  * Returns a list of all BSD processes on the system.  This routine
@@ -53,14 +32,12 @@ psutil_pid_exists(long pid)
  * On error, the function returns a BSD errno value.
  */
 int
-psutil_get_proc_list(kinfo_proc **procList, size_t *procCount)
-{
-    // Declaring mib as const requires use of a cast since the
-    // sysctl prototype doesn't include the const modifier.
-    static const int mib3[3] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL };
-    size_t           size, size2;
-    void            *ptr;
-    int              err, lim = 8;  // some limit
+psutil_get_proc_list(kinfo_proc **procList, size_t *procCount) {
+    int mib3[3] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL };
+    size_t size, size2;
+    void *ptr;
+    int err;
+    int lim = 8;  // some limit
 
     assert( procList != NULL);
     assert(*procList == NULL);
@@ -116,8 +93,7 @@ psutil_get_proc_list(kinfo_proc **procList, size_t *procCount)
 
 // Read the maximum argument size for processes
 int
-psutil_get_argmax()
-{
+psutil_get_argmax() {
     int argmax;
     int mib[] = { CTL_KERN, KERN_ARGMAX };
     size_t size = sizeof(argmax);
@@ -130,18 +106,18 @@ psutil_get_argmax()
 
 // return process args as a python list
 PyObject *
-psutil_get_arg_list(long pid)
-{
+psutil_get_cmdline(long pid) {
     int mib[3];
     int nargs;
-    int len;
+    size_t len;
     char *procargs = NULL;
     char *arg_ptr;
     char *arg_end;
     char *curr_arg;
     size_t argmax;
-    PyObject *arg = NULL;
-    PyObject *arglist = NULL;
+
+    PyObject *py_arg = NULL;
+    PyObject *py_retlist = NULL;
 
     // special case for PID 0 (kernel_task) where cmdline cannot be fetched
     if (pid == 0)
@@ -163,15 +139,14 @@ psutil_get_arg_list(long pid)
     // read argument space
     mib[0] = CTL_KERN;
     mib[1] = KERN_PROCARGS2;
-    mib[2] = pid;
+    mib[2] = (pid_t)pid;
     if (sysctl(mib, 3, procargs, &argmax, NULL, 0) < 0) {
-        if (EINVAL == errno) {
-            // EINVAL == access denied OR nonexistent PID
-            if (psutil_pid_exists(pid))
-                AccessDenied();
-            else
-                NoSuchProcess();
-        }
+        // In case of zombie process we'll get EINVAL. We translate it
+        // to NSP and _psosx.py will translate it to ZP.
+        if ((errno == EINVAL) && (psutil_pid_exists(pid)))
+            NoSuchProcess("");
+        else
+            PyErr_SetFromErrno(PyExc_OSError);
         goto error;
     }
 
@@ -196,17 +171,17 @@ psutil_get_arg_list(long pid)
 
     // iterate through arguments
     curr_arg = arg_ptr;
-    arglist = Py_BuildValue("[]");
-    if (!arglist)
+    py_retlist = Py_BuildValue("[]");
+    if (!py_retlist)
         goto error;
     while (arg_ptr < arg_end && nargs > 0) {
         if (*arg_ptr++ == '\0') {
-            arg = Py_BuildValue("s", curr_arg);
-            if (!arg)
+            py_arg = PyUnicode_DecodeFSDefault(curr_arg);
+            if (! py_arg)
                 goto error;
-            if (PyList_Append(arglist, arg))
+            if (PyList_Append(py_retlist, py_arg))
                 goto error;
-            Py_DECREF(arg);
+            Py_DECREF(py_arg);
             // iterate to next arg and decrement # of args
             curr_arg = arg_ptr;
             nargs--;
@@ -214,26 +189,142 @@ psutil_get_arg_list(long pid)
     }
 
     free(procargs);
-    return arglist;
+    return py_retlist;
 
 error:
-    Py_XDECREF(arg);
-    Py_XDECREF(arglist);
+    Py_XDECREF(py_arg);
+    Py_XDECREF(py_retlist);
     if (procargs != NULL)
         free(procargs);
     return NULL;
 }
 
 
+// return process environment as a python string
+PyObject *
+psutil_get_environ(long pid) {
+    int mib[3];
+    int nargs;
+    char *procargs = NULL;
+    char *procenv = NULL;
+    char *arg_ptr;
+    char *arg_end;
+    char *env_start;
+    size_t argmax;
+    PyObject *py_ret = NULL;
+
+    // special case for PID 0 (kernel_task) where cmdline cannot be fetched
+    if (pid == 0)
+        goto empty;
+
+    // read argmax and allocate memory for argument space.
+    argmax = psutil_get_argmax();
+    if (! argmax) {
+        PyErr_SetFromErrno(PyExc_OSError);
+        goto error;
+    }
+
+    procargs = (char *)malloc(argmax);
+    if (NULL == procargs) {
+        PyErr_SetFromErrno(PyExc_OSError);
+        goto error;
+    }
+
+    // read argument space
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROCARGS2;
+    mib[2] = (pid_t)pid;
+    if (sysctl(mib, 3, procargs, &argmax, NULL, 0) < 0) {
+        // In case of zombie process we'll get EINVAL. We translate it
+        // to NSP and _psosx.py will translate it to ZP.
+        if ((errno == EINVAL) && (psutil_pid_exists(pid)))
+            NoSuchProcess("");
+        else
+            PyErr_SetFromErrno(PyExc_OSError);
+        goto error;
+    }
+
+    arg_end = &procargs[argmax];
+    // copy the number of arguments to nargs
+    memcpy(&nargs, procargs, sizeof(nargs));
+
+    // skip executable path
+    arg_ptr = procargs + sizeof(nargs);
+    arg_ptr = memchr(arg_ptr, '\0', arg_end - arg_ptr);
+
+    if (arg_ptr == NULL || arg_ptr == arg_end)
+        goto empty;
+
+    // skip ahead to the first argument
+    for (; arg_ptr < arg_end; arg_ptr++) {
+        if (*arg_ptr != '\0')
+            break;
+    }
+
+    // iterate through arguments
+    while (arg_ptr < arg_end && nargs > 0) {
+        if (*arg_ptr++ == '\0')
+            nargs--;
+    }
+
+    // build an environment variable block
+    env_start = arg_ptr;
+
+    procenv = calloc(1, arg_end - arg_ptr);
+    if (procenv == NULL) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    while (*arg_ptr != '\0' && arg_ptr < arg_end) {
+        char *s = memchr(arg_ptr + 1, '\0', arg_end - arg_ptr);
+
+        if (s == NULL)
+            break;
+
+        memcpy(procenv + (arg_ptr - env_start), arg_ptr, s - arg_ptr);
+
+        arg_ptr = s + 1;
+    }
+
+    py_ret = PyUnicode_DecodeFSDefaultAndSize(
+        procenv, arg_ptr - env_start + 1);
+    if (!py_ret) {
+        // XXX: don't want to free() this as per:
+        // https://github.com/giampaolo/psutil/issues/926
+        // It sucks but not sure what else to do.
+        procargs = NULL;
+        goto error;
+    }
+
+    free(procargs);
+    free(procenv);
+
+    return py_ret;
+
+empty:
+    if (procargs != NULL)
+        free(procargs);
+    return Py_BuildValue("s", "");
+
+error:
+    Py_XDECREF(py_ret);
+    if (procargs != NULL)
+        free(procargs);
+    if (procenv != NULL)
+        free(procargs);
+    return NULL;
+}
+
+
 int
-psutil_get_kinfo_proc(pid_t pid, struct kinfo_proc *kp)
-{
+psutil_get_kinfo_proc(long pid, struct kinfo_proc *kp) {
     int mib[4];
     size_t len;
     mib[0] = CTL_KERN;
     mib[1] = KERN_PROC;
     mib[2] = KERN_PROC_PID;
-    mib[3] = pid;
+    mib[3] = (pid_t)pid;
 
     // fetch the info with sysctl()
     len = sizeof(struct kinfo_proc);
@@ -247,7 +338,7 @@ psutil_get_kinfo_proc(pid_t pid, struct kinfo_proc *kp)
 
     // sysctl succeeds but len is zero, happens when process has gone away
     if (len == 0) {
-        NoSuchProcess();
+        NoSuchProcess("");
         return -1;
     }
     return 0;
@@ -255,27 +346,16 @@ psutil_get_kinfo_proc(pid_t pid, struct kinfo_proc *kp)
 
 
 /*
- * A thin wrapper around proc_pidinfo()
+ * A wrapper around proc_pidinfo().
+ * Returns 0 on failure (and Python exception gets already set).
  */
 int
-psutil_proc_pidinfo(long pid, int flavor, void *pti, int size)
-{
-    int ret = proc_pidinfo((int)pid, flavor, 0, pti, size);
-    if (ret == 0) {
-        if (! psutil_pid_exists(pid)) {
-            NoSuchProcess();
-            return 0;
-        }
-        else {
-            AccessDenied();
-            return 0;
-        }
-    }
-    else if (ret != size) {
-        AccessDenied();
+psutil_proc_pidinfo(long pid, int flavor, uint64_t arg, void *pti, int size) {
+    errno = 0;
+    int ret = proc_pidinfo((int)pid, flavor, arg, pti, size);
+    if ((ret <= 0) || ((unsigned long)ret < sizeof(pti))) {
+        psutil_raise_for_pid(pid, "proc_pidinfo()");
         return 0;
     }
-    else {
-        return 1;
-    }
+    return ret;
 }

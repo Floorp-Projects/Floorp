@@ -125,20 +125,6 @@ ExtensionPreferencesManager.addSetting("imageAnimationBehavior", {
   },
 });
 
-ExtensionPreferencesManager.addSetting("newTabPosition", {
-  prefNames: [
-    "browser.tabs.insertRelatedAfterCurrent",
-    "browser.tabs.insertAfterCurrent",
-  ],
-
-  setCallback(value) {
-    return {
-      "browser.tabs.insertAfterCurrent": value === "afterCurrent",
-      "browser.tabs.insertRelatedAfterCurrent": value === "relatedAfterCurrent",
-    };
-  },
-});
-
 ExtensionPreferencesManager.addSetting("openBookmarksInNewTabs", {
   prefNames: [
     "browser.tabs.loadBookmarksInTabs",
@@ -273,17 +259,6 @@ this.browserSettings = class extends ExtensionAPI {
           extension, "imageAnimationBehavior",
           () => {
             return Services.prefs.getCharPref("image.animation_mode");
-          }),
-        newTabPosition: getSettingsAPI(
-          extension, "newTabPosition",
-          () => {
-            if (Services.prefs.getBoolPref("browser.tabs.insertAfterCurrent")) {
-              return "afterCurrent";
-            }
-            if (Services.prefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")) {
-              return "relatedAfterCurrent";
-            }
-            return "atEnd";
           }),
         newTabPageOverride: getSettingsAPI(
           extension, NEW_TAB_OVERRIDE_SETTING,
