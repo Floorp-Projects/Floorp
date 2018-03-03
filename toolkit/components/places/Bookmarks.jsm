@@ -922,6 +922,8 @@ var Bookmarks = Object.freeze({
                WHERE id IN (SELECT id FROM moz_bookmarks WHERE guid = :folderGuid )
               `, { folderGuid, time, syncChangeDelta });
           }
+
+          await PlacesSyncUtils.bookmarks.resetSyncMetadata(db, options.source);
         });
 
         // We don't wait for the frecency calculation.

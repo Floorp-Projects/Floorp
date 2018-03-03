@@ -271,6 +271,10 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   SYNC_PARENT_ANNO: "sync/parent",
   SYNC_MOBILE_ROOT_ANNO: "mobile/bookmarksRoot",
 
+  SYNC_ID_META_KEY: "sync/bookmarks/syncId",
+  LAST_SYNC_META_KEY: "sync/bookmarks/lastSync",
+  WIPE_REMOTE_META_KEY: "sync/bookmarks/wipeRemote",
+
   // Jan 23, 1993 in milliseconds since 1970. Corresponds roughly to the release
   // of the original NCSA Mosiac. We can safely assume that any dates before
   // this time are invalid.
@@ -286,6 +290,185 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
 
   get ROOTS() {
     return ROOTS;
+  },
+
+  /**
+   * Returns the current bookmarks sync ID, or `""` if one isn't set.
+   */
+  async getSyncId() {
+    let syncId = await PlacesUtils.metadata.get(
+      BookmarkSyncUtils.SYNC_ID_META_KEY);
+    return syncId || "";
+  },
+
+  /**
+   * Indicates if the bookmarks engine should erase all bookmarks on the server
+   * and all other clients, because the user manually restored their bookmarks
+   * from a backup on this client.
+   */
+  async shouldWipeRemote() {
+    let shouldWipeRemote = await PlacesUtils.metadata.get(
+      BookmarkSyncUtils.WIPE_REMOTE_META_KEY);
+    return !!shouldWipeRemote;
+  },
+
+  /**
+   * Assigns a new sync ID, bumps the change counter, and flags all items as
+   * "NEW" for upload. This is called when we sync for the first time with a
+   * new account, when we're the first to sync after a node reassignment, and
+   * on the first sync after a manual restore.
+   *
+   * @return {Promise} resolved once the ID and all items have been updated.
+   * @resolves to the new sync ID.
+   */
+  resetSyncId() {
+    return PlacesUtils.withConnectionWrapper(
+      "BookmarkSyncUtils: resetSyncId",
+      function(db) {
+        let newSyncId = PlacesUtils.history.makeGuid();
+        return db.executeTransaction(async function() {
+          await setBookmarksSyncId(db, newSyncId);
+          await resetAllSyncStatuses(db,
+            PlacesUtils.bookmarks.SYNC_STATUS.NEW);
+          return newSyncId;
+        });
+      }
+    );
+  },
+
+  /**
+   * Ensures that the existing local sync ID, if any, is up-to-date with the
+   * server. This is called when we sync with an existing account.
+   *
+   * We always take the server's sync ID. If we don't have an existing ID,
+   * we're either syncing for the first time with an existing account, or Places
+   * has automatically restored from a backup. If the sync IDs don't match,
+   * we're likely syncing after a node reassignment, where another client
+   * uploaded their bookmarks first.
+   *
+   * @param newSyncId
+   *        The server's sync ID.
+   * @return {Promise} resolved once the ID and all items have been updated.
+   */
+  async ensureCurrentSyncId(newSyncId) {
+    if (!newSyncId || typeof newSyncId != "string") {
+      throw new TypeError("Invalid new bookmarks sync ID");
+    }
+    await PlacesUtils.withConnectionWrapper(
+      "BookmarkSyncUtils: ensureCurrentSyncId",
+      async function(db) {
+        let existingSyncId = await PlacesUtils.metadata.getWithConnection(
+          db, BookmarkSyncUtils.SYNC_ID_META_KEY);
+
+        // If we don't have a sync ID, take the server's without resetting
+        // sync statuses.
+        if (!existingSyncId) {
+          BookmarkSyncLog.debug("Taking new bookmarks sync ID", { newSyncId });
+          await db.executeTransaction(() => setBookmarksSyncId(db, newSyncId));
+          return;
+        }
+
+        // If the existing sync ID matches the server, great!
+        if (existingSyncId == newSyncId) {
+          BookmarkSyncLog.debug("Bookmarks sync ID up-to-date",
+                                { existingSyncId });
+          return;
+        }
+
+        // Otherwise, we have a sync ID, but it doesn't match, so we were likely
+        // node reassigned. Take the server's sync ID and reset all items to
+        // "UNKNOWN" so that we can merge.
+        BookmarkSyncLog.debug("Bookmarks sync ID changed; resetting sync " +
+                              "statuses", { existingSyncId, newSyncId });
+        await db.executeTransaction(async function() {
+          await setBookmarksSyncId(db, newSyncId);
+          await resetAllSyncStatuses(db,
+            PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN);
+        });
+      }
+    );
+  },
+
+  /**
+   * Returns the last sync time, in seconds, for the bookmarks collection, or 0
+   * if bookmarks have never synced before.
+   */
+  async getLastSync() {
+    let lastSync = await PlacesUtils.metadata.get(
+      BookmarkSyncUtils.LAST_SYNC_META_KEY);
+    return lastSync ? lastSync / 1000 : 0;
+  },
+
+  /**
+   * Updates the bookmarks collection last sync time.
+   *
+   * @param lastSyncSeconds
+   *        The collection last sync time, in seconds, as a number or string.
+   */
+  async setLastSync(lastSyncSeconds) {
+    let lastSync = Math.floor(lastSyncSeconds * 1000);
+    if (!Number.isInteger(lastSync)) {
+      throw new TypeError("Invalid bookmarks last sync timestamp");
+    }
+    await PlacesUtils.metadata.set(BookmarkSyncUtils.LAST_SYNC_META_KEY,
+                                   lastSync);
+  },
+
+  /**
+   * Resets Sync metadata for bookmarks in Places. This function behaves
+   * differently depending on the change source, and may be called from
+   * `PlacesSyncUtils.bookmarks.reset` or
+   * `PlacesUtils.bookmarks.eraseEverything`.
+   *
+   * - RESTORE: The user is restoring from a backup. Drop the sync ID, last
+   *   sync time, and tombstones; reset sync statuses for remaining items to
+   *   "NEW"; then set a flag to wipe the server and all other clients. On the
+   *   next sync, we'll replace their bookmarks with ours.
+   *
+   * - RESTORE_ON_STARTUP: Places is automatically restoring from a backup to
+   *   recover from a corrupt database. The sync ID, last sync time, and
+   *   tombstones don't exist, since we don't back them up; reset sync statuses
+   *   for the roots to "UNKNOWN"; but don't wipe the server. On the next sync,
+   *   we'll merge the restored bookmarks with the ones on the server.
+   *
+   * - SYNC: Either another client told us to erase our bookmarks
+   *   (`PlacesSyncUtils.bookmarks.wipe`), or the user disconnected Sync
+   *   (`PlacesSyncUtils.bookmarks.reset`). In both cases, drop the existing
+   *   sync ID, last sync time, and tombstones; reset sync statuses for
+   *   remaining items to "NEW"; and don't wipe the server.
+   *
+   * @param db
+   *        the Sqlite.jsm connection handle.
+   * @param source
+   *        the change source constant.
+   */
+  async resetSyncMetadata(db, source) {
+    if (![ PlacesUtils.bookmarks.SOURCES.RESTORE,
+           PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP,
+           PlacesUtils.bookmarks.SOURCES.SYNC ].includes(source)) {
+      return;
+    }
+
+    // Remove the sync ID and last sync time in all cases.
+    await PlacesUtils.metadata.deleteWithConnection(db,
+      BookmarkSyncUtils.SYNC_ID_META_KEY,
+      BookmarkSyncUtils.LAST_SYNC_META_KEY);
+
+    // If we're manually restoring from a backup, wipe the server and other
+    // clients, so that we replace their bookmarks with the restored tree. If
+    // we're automatically restoring to recover from a corrupt database, don't
+    // wipe; we want to merge the restored tree with the one on the server.
+    await PlacesUtils.metadata.setWithConnection(db,
+      BookmarkSyncUtils.WIPE_REMOTE_META_KEY,
+      source == PlacesUtils.bookmarks.SOURCES.RESTORE);
+
+    // Reset change counters and Sync statuses for roots and remaining
+    // items, and drop tombstones.
+    let syncStatus =
+      source == PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP ?
+      PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN :
+      PlacesUtils.bookmarks.SYNC_STATUS.NEW;
+    await resetAllSyncStatuses(db, syncStatus);
   },
 
   /**
@@ -742,17 +925,14 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   /**
    * Removes all bookmarks and tombstones from the database. Sync calls this
    * method when it receives a command from a remote client to wipe all stored
-   * data, or when replacing stored data with remote data on a first sync.
+   * data.
    *
    * @return {Promise} resolved once all items have been removed.
    */
-  async wipe() {
-    // Remove all children from all roots.
-    await PlacesUtils.bookmarks.eraseEverything({
+  wipe() {
+    return PlacesUtils.bookmarks.eraseEverything({
       source: SOURCE_SYNC,
     });
-    // Remove tombstones and reset change tracking info for the roots.
-    await BookmarkSyncUtils.reset();
   },
 
   /**
@@ -766,22 +946,7 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
     return PlacesUtils.withConnectionWrapper(
       "BookmarkSyncUtils: reset", function(db) {
         return db.executeTransaction(async function() {
-          // Reset change counters and statuses for all bookmarks.
-          await db.executeCached(`
-            UPDATE moz_bookmarks
-            SET syncChangeCounter = 1,
-                syncStatus = :syncStatus`,
-            { syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW });
-
-          // The orphan anno isn't meaningful when Sync is disconnected.
-          await db.execute(`
-            DELETE FROM moz_items_annos
-            WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes
-                                       WHERE name = :orphanAnno)`,
-            { orphanAnno: BookmarkSyncUtils.SYNC_PARENT_ANNO });
-
-          // Drop stale tombstones.
-          await db.executeCached("DELETE FROM moz_bookmarks_deleted");
+          await BookmarkSyncUtils.resetSyncMetadata(db, SOURCE_SYNC);
         });
       }
     );
@@ -984,8 +1149,7 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
       // Incoming bookmarks are "NORMAL", since they already exist on the server.
       return PlacesUtils.bookmarks.SYNC_STATUS.NORMAL;
     }
-    if (source == PlacesUtils.bookmarks.SOURCES.RESTORE ||
-        source == PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP) {
+    if (source == PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP) {
       // If the user restores from a backup, or Places automatically recovers
       // from a corrupt database, all prior record tracking is lost. Setting the
       // status to "UNKNOWN" allows Record to reconcile restored bookmarks with
@@ -2272,4 +2436,35 @@ function notify(observers, notification, args = []) {
       observer[notification](...args);
     } catch (ex) {}
   }
+}
+
+// Sets the bookmarks sync ID and clears the last sync time.
+async function setBookmarksSyncId(db, newSyncId) {
+  await PlacesUtils.metadata.setWithConnection(db,
+    BookmarkSyncUtils.SYNC_ID_META_KEY, newSyncId);
+
+  await PlacesUtils.metadata.deleteWithConnection(db,
+    BookmarkSyncUtils.LAST_SYNC_META_KEY,
+    BookmarkSyncUtils.WIPE_REMOTE_META_KEY);
+}
+
+// Bumps the change counter and sets the given sync status for all bookmarks,
+// removes all orphan annos, and drops stale tombstones.
+async function resetAllSyncStatuses(db, syncStatus) {
+  await db.execute(`
+    UPDATE moz_bookmarks
+    SET syncChangeCounter = 1,
+        syncStatus = :syncStatus`,
+    { syncStatus });
+
+  // The orphan anno isn't meaningful after a restore, disconnect, or node
+  // reassignment.
+  await db.execute(`
+    DELETE FROM moz_items_annos
+    WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes
+                               WHERE name = :orphanAnno)`,
+    { orphanAnno: BookmarkSyncUtils.SYNC_PARENT_ANNO });
+
+  // Drop stale tombstones.
+  await db.execute("DELETE FROM moz_bookmarks_deleted");
 }
