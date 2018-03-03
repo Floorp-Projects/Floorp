@@ -2480,22 +2480,19 @@ class TabBrowser {
       }
     }
 
-    // Move the new tab after another tab if needed.
-    if ((openerTab &&
-         Services.prefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")) ||
-         Services.prefs.getBoolPref("browser.tabs.insertAfterCurrent")) {
-      let lastRelatedTab = openerTab && this._lastRelatedTabMap.get(openerTab);
-      let newTabPos = (lastRelatedTab || openerTab || this.mCurrentTab)._tPos + 1;
+    // If we're opening a tab related to the an existing tab, move it
+    // to a position after that tab.
+    if (openerTab &&
+        Services.prefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")) {
 
-      if (lastRelatedTab) {
+      let lastRelatedTab = this._lastRelatedTabMap.get(openerTab);
+      let newTabPos = (lastRelatedTab || openerTab)._tPos + 1;
+      if (lastRelatedTab)
         lastRelatedTab.owner = null;
-      } else if (openerTab) {
+      else
         t.owner = openerTab;
-      }
       this.moveTabTo(t, newTabPos, true);
-      if (openerTab) {
-        this._lastRelatedTabMap.set(openerTab, t);
-      }
+      this._lastRelatedTabMap.set(openerTab, t);
     }
 
     // This field is updated regardless if we actually animate
