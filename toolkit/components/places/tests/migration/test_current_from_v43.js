@@ -208,3 +208,8 @@ add_task(async function test_no_orphan_keywords() {
   Assert.equal(rows.length, 0,
     `Should have no orphan keywords.`);
 });
+
+add_task(async function test_meta_exists() {
+  let db = await PlacesUtils.promiseDBConnection();
+  await db.execute(`SELECT 1 FROM moz_meta`);
+});
