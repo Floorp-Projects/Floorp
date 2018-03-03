@@ -70,10 +70,10 @@ RenderDXGITextureHostOGL::EnsureLockable()
   const auto& egl = &gl::sEGLLibrary;
 
   // We use EGLStream to get the converted gl handle from d3d texture. The
-  // NV_stream_consumer_gltexture_yuv and ANGLE_stream_producer_d3d_texture_nv12
+  // NV_stream_consumer_gltexture_yuv and ANGLE_stream_producer_d3d_texture
   // could support nv12 and rgb d3d texture format.
   if (!egl->IsExtensionSupported(gl::GLLibraryEGL::NV_stream_consumer_gltexture_yuv) ||
-      !egl->IsExtensionSupported(gl::GLLibraryEGL::ANGLE_stream_producer_d3d_texture_nv12)) {
+      !egl->IsExtensionSupported(gl::GLLibraryEGL::ANGLE_stream_producer_d3d_texture)) {
     return false;
   }
 
@@ -111,7 +111,7 @@ RenderDXGITextureHostOGL::EnsureLockable()
     mGL->fTexParameteri(LOCAL_GL_TEXTURE_EXTERNAL_OES, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
 
     MOZ_ALWAYS_TRUE(egl->fStreamConsumerGLTextureExternalAttribsNV(egl->Display(), mStream, nullptr));
-    MOZ_ALWAYS_TRUE(egl->fCreateStreamProducerD3DTextureNV12ANGLE(egl->Display(), mStream, nullptr));
+    MOZ_ALWAYS_TRUE(egl->fCreateStreamProducerD3DTextureANGLE(egl->Display(), mStream, nullptr));
   } else {
     // The nv12 format.
 
@@ -135,11 +135,11 @@ RenderDXGITextureHostOGL::EnsureLockable()
     mGL->fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL_OES, mTextureHandle[1]);
     mGL->fTexParameteri(LOCAL_GL_TEXTURE_EXTERNAL_OES, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
     MOZ_ALWAYS_TRUE(egl->fStreamConsumerGLTextureExternalAttribsNV(egl->Display(), mStream, consumerAttributes));
-    MOZ_ALWAYS_TRUE(egl->fCreateStreamProducerD3DTextureNV12ANGLE(egl->Display(), mStream, nullptr));
+    MOZ_ALWAYS_TRUE(egl->fCreateStreamProducerD3DTextureANGLE(egl->Display(), mStream, nullptr));
   }
 
   // Insert the d3d texture.
-  MOZ_ALWAYS_TRUE(egl->fStreamPostD3DTextureNV12ANGLE(egl->Display(), mStream, (void*)mTexture.get(), nullptr));
+  MOZ_ALWAYS_TRUE(egl->fStreamPostD3DTextureANGLE(egl->Display(), mStream, (void*)mTexture.get(), nullptr));
 
   // Now, we could get the gl handle from the stream.
   egl->fStreamConsumerAcquireKHR(egl->Display(), mStream);
@@ -277,7 +277,7 @@ RenderDXGIYCbCrTextureHostOGL::EnsureLockable()
   // use EGLStream to get the converted gl handle from d3d R8 texture.
 
   if (!egl->IsExtensionSupported(gl::GLLibraryEGL::NV_stream_consumer_gltexture_yuv) ||
-      !egl->IsExtensionSupported(gl::GLLibraryEGL::ANGLE_stream_producer_d3d_texture_nv12))
+      !egl->IsExtensionSupported(gl::GLLibraryEGL::ANGLE_stream_producer_d3d_texture))
   {
       return false;
   }
@@ -318,10 +318,10 @@ RenderDXGIYCbCrTextureHostOGL::EnsureLockable()
     MOZ_ASSERT(mStreams[i]);
 
     MOZ_ALWAYS_TRUE(egl->fStreamConsumerGLTextureExternalAttribsNV(egl->Display(), mStreams[i], nullptr));
-    MOZ_ALWAYS_TRUE(egl->fCreateStreamProducerD3DTextureNV12ANGLE(egl->Display(), mStreams[i], nullptr));
+    MOZ_ALWAYS_TRUE(egl->fCreateStreamProducerD3DTextureANGLE(egl->Display(), mStreams[i], nullptr));
 
     // Insert the R8 texture.
-    MOZ_ALWAYS_TRUE(egl->fStreamPostD3DTextureNV12ANGLE(egl->Display(), mStreams[i], (void*)mTextures[i].get(), nullptr));
+    MOZ_ALWAYS_TRUE(egl->fStreamPostD3DTextureANGLE(egl->Display(), mStreams[i], (void*)mTextures[i].get(), nullptr));
 
     // Now, we could get the R8 gl handle from the stream.
     egl->fStreamConsumerAcquireKHR(egl->Display(), mStreams[i]);

@@ -29,6 +29,9 @@
                                       \
   _(WasmInitBuiltinThunks,       450) \
                                       \
+  _(WasmLazyStubsTier1,          475) \
+  _(WasmLazyStubsTier2,          476) \
+                                      \
   _(SharedImmutableStringsCache, 500) \
   _(FutexThread,                 500) \
   _(GeckoProfilerStrings,        500) \

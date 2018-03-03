@@ -108,7 +108,8 @@ psutil_has_system_privilege(HANDLE hProcess) {
 
 
 BOOL
-psutil_set_privilege(HANDLE hToken, LPCTSTR Privilege, BOOL bEnablePrivilege) {
+psutil_set_privilege(HANDLE hToken, LPCTSTR Privilege, BOOL bEnablePrivilege)
+{
     TOKEN_PRIVILEGES tp;
     LUID luid;
     TOKEN_PRIVILEGES tpPrevious;
@@ -158,7 +159,8 @@ psutil_set_privilege(HANDLE hToken, LPCTSTR Privilege, BOOL bEnablePrivilege) {
 
 
 int
-psutil_set_se_debug() {
+psutil_set_se_debug()
+{
     HANDLE hToken;
     if (! OpenThreadToken(GetCurrentThread(),
                           TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
@@ -196,7 +198,8 @@ psutil_set_se_debug() {
 
 
 int
-psutil_unset_se_debug() {
+psutil_unset_se_debug()
+{
     HANDLE hToken;
     if (! OpenThreadToken(GetCurrentThread(),
                           TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,

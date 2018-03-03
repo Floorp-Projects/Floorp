@@ -105,9 +105,6 @@ let whitelist = [
   // Bug 1441857
   {propName: "--positionDurationBox-width-long",
    isFromDevTools: false},
-  // Bug 1441860
-  {propName: "--rule-flex-toggle-color",
-   isFromDevTools: true},
   // Bug 1441929
   {propName: "--theme-search-overlays-semitransparent",
    isFromDevTools: true},
