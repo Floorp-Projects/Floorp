@@ -1175,11 +1175,11 @@ class LiveSavedFrameCache
   private:
     struct Entry
     {
-        FramePtr             framePtr;
-        jsbytecode*          pc;
+        const FramePtr       framePtr;
+        const jsbytecode*    pc;
         HeapPtr<SavedFrame*> savedFrame;
 
-        Entry(FramePtr& framePtr, jsbytecode* pc, SavedFrame* savedFrame)
+        Entry(const FramePtr& framePtr, const jsbytecode* pc, SavedFrame* savedFrame)
           : framePtr(framePtr)
           , pc(pc)
           , savedFrame(savedFrame)
@@ -1223,7 +1223,8 @@ class LiveSavedFrameCache
     void trace(JSTracer* trc);
 
     void find(JSContext* cx, FrameIter& frameIter, MutableHandleSavedFrame frame) const;
-    bool insert(JSContext* cx, FramePtr& framePtr, jsbytecode* pc, HandleSavedFrame savedFrame);
+    bool insert(JSContext* cx, FramePtr& framePtr, const jsbytecode* pc,
+                HandleSavedFrame savedFrame);
 };
 
 static_assert(sizeof(LiveSavedFrameCache) == sizeof(uintptr_t),
