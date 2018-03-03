@@ -69,7 +69,28 @@ let whitelist = [
    intermittent: true,
    errorMessage: /Property contained reference to invalid variable.*color/i,
    isFromDevTools: true},
+];
 
+if (!Services.prefs.getBoolPref("full-screen-api.unprefix.enabled")) {
+  whitelist.push({
+    sourceName: /(?:res|gre-resources)\/(ua|html)\.css$/i,
+    errorMessage: /Unknown pseudo-class .*\bfullscreen\b/i,
+    isFromDevTools: false
+  });
+}
+
+// Platform can be "linux", "macosx" or "win". If omitted, the exception applies to all platforms.
+let allowedImageReferences = [
+  // Bug 1302691
+  {file: "chrome://devtools/skin/images/dock-bottom-minimize@2x.png",
+   from: "chrome://devtools/skin/toolbox.css",
+   isFromDevTools: true},
+  {file: "chrome://devtools/skin/images/dock-bottom-maximize@2x.png",
+   from: "chrome://devtools/skin/toolbox.css",
+   isFromDevTools: true},
+];
+
+let propNameWhitelist = [
   // These are CSS custom properties that we found a definition of but
   // no reference to.
   // Bug 1441837
@@ -128,25 +149,6 @@ let whitelist = [
   {propName: "--bezier-diagonal-color",
    isFromDevTools: true},
   {propName: "--bezier-grid-color",
-   isFromDevTools: true},
-];
-
-if (!Services.prefs.getBoolPref("full-screen-api.unprefix.enabled")) {
-  whitelist.push({
-    sourceName: /(?:res|gre-resources)\/(ua|html)\.css$/i,
-    errorMessage: /Unknown pseudo-class .*\bfullscreen\b/i,
-    isFromDevTools: false
-  });
-}
-
-// Platform can be "linux", "macosx" or "win". If omitted, the exception applies to all platforms.
-let allowedImageReferences = [
-  // Bug 1302691
-  {file: "chrome://devtools/skin/images/dock-bottom-minimize@2x.png",
-   from: "chrome://devtools/skin/toolbox.css",
-   isFromDevTools: true},
-  {file: "chrome://devtools/skin/images/dock-bottom-maximize@2x.png",
-   from: "chrome://devtools/skin/toolbox.css",
    isFromDevTools: true},
 ];
 
@@ -438,7 +440,7 @@ add_task(async function checkAllTheCSS() {
   for (let [prop, refCount] of customPropsToReferencesMap) {
     if (!refCount) {
       let ignored = false;
-      for (let item of whitelist) {
+      for (let item of propNameWhitelist) {
         if (item.propName == prop &&
             isDevtools == item.isFromDevTools) {
           item.used = true;
@@ -461,24 +463,18 @@ add_task(async function checkAllTheCSS() {
   is(errors.length, 0, "All the styles (" + allPromises.length + ") loaded without errors.");
 
   // Confirm that all whitelist rules have been used.
-  for (let item of whitelist) {
-    if (!item.used &&
-        (!item.platforms || item.platforms.includes(AppConstants.platform)) &&
-        isDevtools == item.isFromDevTools &&
-        !item.intermittent) {
-      ok(false, "Unused whitelist item. " + dumpWhitelistItem(item));
+  function checkWhitelist(whitelist) {
+    for (let item of whitelist) {
+      if (!item.used && isDevtools == item.isFromDevTools &&
+          (!item.platforms || item.platforms.includes(AppConstants.platform)) &&
+          !item.intermittent) {
+        ok(false, "Unused whitelist item: " + dumpWhitelistItem(item));
+      }
     }
   }
-
-  // Confirm that all file whitelist rules have been used.
-  for (let item of allowedImageReferences) {
-    if (!item.used && isDevtools == item.isFromDevTools &&
-        (!item.platforms || item.platforms.includes(AppConstants.platform))) {
-      ok(false, "Unused file whitelist item. " +
-                " file: " + item.file +
-                " from: " + item.from);
-    }
-  }
+  checkWhitelist(whitelist);
+  checkWhitelist(allowedImageReferences);
+  checkWhitelist(propNameWhitelist);
 
   // Clean up to avoid leaks:
   iframe.remove();
