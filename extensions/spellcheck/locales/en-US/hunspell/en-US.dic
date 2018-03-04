@@ -1,4 +1,4 @@
-52537
+52547
 0/nm
 0th/pt
 1/n1
@@ -23236,8 +23236,10 @@ distinguishable/I
 distinguished/U
 distort/GDR
 distortion/MS
-distract/DG
+distract/DGB
+distractability
 distracted/Y
+distractible
 distraction/S
 distrait
 distraught
@@ -29829,6 +29831,7 @@ horizontal/SMY
 hormonal
 hormone/SM
 horn/MDS
+hornbeam/S
 hornblende/M
 hornet/MS
 hornless
@@ -30504,6 +30507,7 @@ immutable
 immutably
 imp/SMR
 impact/SMDG
+impactful
 impair/SDGL
 impaired/U
 impairment/MS
@@ -32194,6 +32198,8 @@ keratitis
 kerbside
 kerchief/SM
 kerfuffle/S
+kern/G
+kerne
 kernel/SM
 kerosene/M
 kestrel/MS
@@ -36058,6 +36064,7 @@ neat/NRYPXT
 neaten/GD
 neath
 neatness/M
+neato
 nebula/M
 nebulae
 nebular
@@ -41860,6 +41867,7 @@ recognizably
 recognize/DRSGB
 recognized/U
 recombination
+recommender/S
 recompense/DSMG
 recompile/GD
 recon/S
@@ -42321,6 +42329,7 @@ repurchase/GDS
 reputability/M
 reputably/E
 reputation/MS
+reputational
 repute/DSMGB
 reputed/Y
 request/GDR
@@ -51994,6 +52003,7 @@ wizardry/M
 wizened
 wk/Y
 woad/M
+woah
 wobble/MGDS
 wobbliness/M
 wobbly/RTP
