@@ -102,12 +102,21 @@ PrintProgressDialogParent::Observe(nsISupports *aSubject, const char *aTopic,
     if (aTopic) {
       if (!strcmp(aTopic, "cancelled")) {
         Unused << SendCancelledCurrentJob();
+        if (!mDialogOpenedSent) {
+          // We haven't already called SendDialogOpened, so call it now or it
+          // might never get sent and block the child from new printing requests.
+          // Also set mActive to false because we don't want to send it twice
+          // and our PrintProgressDialogChild will get deleted anyway.
+          Unused << SendDialogOpened();
+          mActive = false;
+        }
       } else if (!strcmp(aTopic, "completed")) {
         // Once printing is complete don't send any messages to the child.
         mActive = false;
       }
     } else {
       Unused << SendDialogOpened();
+      mDialogOpenedSent = true;
     }
   } else {
     NS_WARNING("The print progress dialog finished opening, but communications "
