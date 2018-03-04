@@ -7265,27 +7265,57 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         kHttpsNetEarlyFail = 11,
         kHttpsNetLateFail = 12
     } chanDisposition = kHttpCanceled;
+    // HTTP_CHANNEL_DISPOSITION_UPGRADE TELEMETRY
+    Telemetry::LABELS_HTTP_CHANNEL_DISPOSITION_UPGRADE upgradeChanDisposition = Telemetry::LABELS_HTTP_CHANNEL_DISPOSITION_UPGRADE::cancel;
 
     // HTTP 0.9 is more likely to be an error than really 0.9, so count it that way
     if (mCanceled) {
         chanDisposition  = kHttpCanceled;
+        upgradeChanDisposition = Telemetry::LABELS_HTTP_CHANNEL_DISPOSITION_UPGRADE::cancel;
     } else if (!mUsedNetwork ||
                (mRaceCacheWithNetwork &&
                 mFirstResponseSource == RESPONSE_FROM_CACHE)) {
         chanDisposition = kHttpDisk;
+        upgradeChanDisposition = Telemetry::LABELS_HTTP_CHANNEL_DISPOSITION_UPGRADE::disk;
     } else if (NS_SUCCEEDED(status) &&
                mResponseHead &&
                mResponseHead->Version() != NS_HTTP_VERSION_0_9) {
         chanDisposition = kHttpNetOK;
+        upgradeChanDisposition = Telemetry::LABELS_HTTP_CHANNEL_DISPOSITION_UPGRADE::netOk;
     } else if (!mTransferSize) {
         chanDisposition = kHttpNetEarlyFail;
+        upgradeChanDisposition = Telemetry::LABELS_HTTP_CHANNEL_DISPOSITION_UPGRADE::netEarlyFail;
     } else {
         chanDisposition = kHttpNetLateFail;
+        upgradeChanDisposition = Telemetry::LABELS_HTTP_CHANNEL_DISPOSITION_UPGRADE::netLateFail;
     }
+    // Browser upgrading only happens on HTTPS pages for mixed passive content when upgrading is enabled.
+    nsCString upgradeKey;
     if (IsHTTPS()) {
+        // Browser upgrading is disabled and the content is already HTTPS
+        upgradeKey = NS_LITERAL_CSTRING("disabledNoReason");
+        // Checks "security.mixed_content.upgrade_display_content" is true
+        if (nsMixedContentBlocker::ShouldUpgradeMixedDisplayContent()) {
+            if (mLoadInfo && mLoadInfo->GetBrowserUpgradeInsecureRequests()) {
+                // HTTP content the browser has upgraded to HTTPS
+                upgradeKey = NS_LITERAL_CSTRING("enabledUpgrade");
+            } else {
+                // Content wasn't upgraded but is already HTTPS
+                upgradeKey = NS_LITERAL_CSTRING("enabledNoReason");
+            }
+        }
         // shift http to https disposition enums
         chanDisposition = static_cast<ChannelDisposition>(chanDisposition + kHttpsCanceled);
+    } else if (mLoadInfo->GetBrowserWouldUpgradeInsecureRequests()) {
+        // HTTP content the browser would upgrade to HTTPS if upgrading was enabled
+        upgradeKey = NS_LITERAL_CSTRING("disabledUpgrade");
+    } else {
+        // HTTP content that wouldn't upgrade
+        upgradeKey = nsMixedContentBlocker::ShouldUpgradeMixedDisplayContent() ?
+                     NS_LITERAL_CSTRING("enabledWont") :
+                     NS_LITERAL_CSTRING("disabledWont");
     }
+    Telemetry::AccumulateCategoricalKeyed(upgradeKey, upgradeChanDisposition);
     LOG(("  nsHttpChannel::OnStopRequest ChannelDisposition %d\n", chanDisposition));
     Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_DISPOSITION, chanDisposition);
 
