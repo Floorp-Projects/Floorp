@@ -8,13 +8,17 @@
 #include "nsPrintfCString.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIURIMutator.h"
+#define protected public // hack to access setter methods
+#include "../../base/nsStandardURL.h"
+#undef protected
+using mozilla::net::nsStandardURL;
 
 // In nsStandardURL.cpp
 extern nsresult Test_NormalizeIPv4(const nsACString& host, nsCString& result);
 
 
 TEST(TestStandardURL, Simple) {
-    nsCOMPtr<nsIURL> url( do_CreateInstance(NS_STANDARDURL_CONTRACTID) );
+    RefPtr<nsStandardURL> url = new nsStandardURL();
     ASSERT_TRUE(url);
     ASSERT_EQ(url->SetSpecInternal(NS_LITERAL_CSTRING("http://example.com")), NS_OK);
 
@@ -178,7 +182,7 @@ TEST(TestStandardURL, From_test_standardurldotjs)
 #define COUNT 10000
 
 MOZ_GTEST_BENCH(TestStandardURL, DISABLED_Perf, [] {
-    nsCOMPtr<nsIURL> url( do_CreateInstance(NS_STANDARDURL_CONTRACTID) );
+    RefPtr<nsStandardURL> url = new nsStandardURL();
     ASSERT_TRUE(url);
     nsAutoCString out;
 
