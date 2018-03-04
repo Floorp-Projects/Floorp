@@ -264,7 +264,7 @@ var AssociatedToNode = class {
 /**
  * This is associated to <panelmultiview> elements.
  */
-var PanelMultiView = class extends this.AssociatedToNode {
+var PanelMultiView = class extends AssociatedToNode {
   /**
    * Tries to open the specified <panel> and displays the main view specified
    * with the "mainViewId" attribute on the <panelmultiview> node it contains.
@@ -1138,7 +1138,7 @@ var PanelMultiView = class extends this.AssociatedToNode {
 /**
  * This is associated to <panelview> elements.
  */
-var PanelView = class extends this.AssociatedToNode {
+var PanelView = class extends AssociatedToNode {
   constructor(node) {
     super(node);
 
