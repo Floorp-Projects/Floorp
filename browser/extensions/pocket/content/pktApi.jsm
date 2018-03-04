@@ -42,7 +42,6 @@
  *      usedTags:         All used tags from within the extension sorted by recency
  */
 
-const Cm = Components.manager;
 var EXPORTED_SYMBOLS = ["pktApi"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

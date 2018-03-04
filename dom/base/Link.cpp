@@ -864,6 +864,7 @@ Link::UnregisterFromHistory()
 already_AddRefed<nsIURI>
 Link::GetURIToMutate()
 {
+  MOZ_ASSERT(false, "TODO: REMOVE THIS METHOD");
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     return nullptr;
