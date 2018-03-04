@@ -129,9 +129,11 @@ extern "C" {
 class ServoBundledURI
 {
 public:
+  // NOTE(emilio): Not calling IntoCssUrl or IntoCssImage will cause to leak the
+  // string, so don't do that :)
   already_AddRefed<mozilla::css::URLValue> IntoCssUrl();
-  const uint8_t* mURLString;
-  uint32_t mURLStringLength;
+  already_AddRefed<mozilla::css::ImageValue> IntoCssImage(mozilla::CORSMode);
+  mozilla::ServoRawOffsetArc<RustString> mURLString;
   mozilla::URLExtraData* mExtraData;
 };
 
@@ -351,8 +353,7 @@ Gecko_CounterStyle_GetAnonymous(const mozilla::CounterStylePtr* ptr);
 void Gecko_SetNullImageValue(nsStyleImage* image);
 void Gecko_SetGradientImageValue(nsStyleImage* image, nsStyleGradient* gradient);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::ImageValue, ImageValue);
-mozilla::css::ImageValue* Gecko_ImageValue_Create(ServoBundledURI aURI,
-                                                  mozilla::ServoRawOffsetArc<RustString> aURIString);
+mozilla::css::ImageValue* Gecko_ImageValue_Create(ServoBundledURI aURI);
 size_t Gecko_ImageValue_SizeOfIncludingThis(mozilla::css::ImageValue* aImageValue);
 void Gecko_SetLayerImageImageValue(nsStyleImage* image,
                                    mozilla::css::ImageValue* aImageValue);
