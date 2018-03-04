@@ -72,8 +72,6 @@ const kDownloadsStringsRequiringPluralForm = {
   otherDownloads3: true
 };
 
-const kPartialDownloadSuffix = ".part";
-
 const kMaxHistoryResultsForLimitedView = 42;
 
 const kPrefBranch = Services.prefs.getBranch("browser.download.");
