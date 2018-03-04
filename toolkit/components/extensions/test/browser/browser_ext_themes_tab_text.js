@@ -1,7 +1,7 @@
 "use strict";
 
 // This test checks whether applied WebExtension themes that attempt to change
-// the background color of toolbars are applied properly.
+// the text color of the selected tab are applied properly.
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
