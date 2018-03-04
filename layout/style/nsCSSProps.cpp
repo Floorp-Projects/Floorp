@@ -1545,6 +1545,12 @@ const KTableEntry nsCSSProps::kFontKerningKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
+const KTableEntry nsCSSProps::kFontOpticalSizingKTable[] = {
+  { eCSSKeyword_auto, NS_FONT_OPTICAL_SIZING_AUTO },
+  { eCSSKeyword_none, NS_FONT_OPTICAL_SIZING_NONE },
+  { eCSSKeyword_UNKNOWN, -1 }
+};
+
 const KTableEntry nsCSSProps::kFontSizeKTable[] = {
   { eCSSKeyword_xx_small, NS_STYLE_FONT_SIZE_XXSMALL },
   { eCSSKeyword_x_small, NS_STYLE_FONT_SIZE_XSMALL },
@@ -2793,6 +2799,7 @@ static const nsCSSPropertyID gFontSubpropTable[] = {
   eCSSProperty_font_feature_settings,
   eCSSProperty_font_language_override,
   eCSSProperty_font_kerning,
+  eCSSProperty_font_optical_sizing,
   eCSSProperty_font_variant_alternates,
   eCSSProperty_font_variant_caps,
   eCSSProperty_font_variant_east_asian,
