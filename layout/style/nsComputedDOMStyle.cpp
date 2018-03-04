@@ -2278,6 +2278,16 @@ nsComputedDOMStyle::DoGetFontLanguageOverride()
 }
 
 already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetFontOpticalSizing()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StyleFont()->mFont.opticalSizing,
+                                   nsCSSProps::kFontOpticalSizingKTable));
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetFontSynthesis()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
