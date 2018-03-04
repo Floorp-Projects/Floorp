@@ -88,6 +88,10 @@ struct nsFont {
   // Kerning
   uint8_t kerning = NS_FONT_KERNING_AUTO;
 
+  // Whether automatic optical sizing should be applied to variation fonts
+  // that include an 'opsz' axis
+  uint8_t opticalSizing = NS_FONT_OPTICAL_SIZING_AUTO;
+
   // Synthesis setting, controls use of fake bolding/italics
   uint8_t synthesis = NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE;
 

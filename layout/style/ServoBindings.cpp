@@ -1458,18 +1458,19 @@ Gecko_CounterStyle_GetAnonymous(const CounterStylePtr* aPtr)
 already_AddRefed<css::URLValue>
 ServoBundledURI::IntoCssUrl()
 {
-  if (!mURLString) {
-    return nullptr;
-  }
-
   MOZ_ASSERT(mExtraData->GetReferrer());
   MOZ_ASSERT(mExtraData->GetPrincipal());
 
-  NS_ConvertUTF8toUTF16 url(reinterpret_cast<const char*>(mURLString),
-                            mURLStringLength);
-
   RefPtr<css::URLValue> urlValue =
-    new css::URLValue(url, do_AddRef(mExtraData));
+    new css::URLValue(mURLString, do_AddRef(mExtraData));
+  return urlValue.forget();
+}
+
+already_AddRefed<css::ImageValue>
+ServoBundledURI::IntoCssImage(mozilla::CORSMode aCorsMode)
+{
+  RefPtr<css::ImageValue> urlValue =
+    new css::ImageValue(mURLString, do_AddRef(mExtraData), aCorsMode);
   return urlValue.forget();
 }
 
@@ -1499,14 +1500,10 @@ CreateStyleImageRequest(nsStyleImageRequest::Mode aModeFlags,
 }
 
 mozilla::css::ImageValue*
-Gecko_ImageValue_Create(ServoBundledURI aURI, ServoRawOffsetArc<RustString> aURIString)
+Gecko_ImageValue_Create(ServoBundledURI aURI)
 {
   // Bug 1434963: Change this to accept a CORS mode from the caller.
-  RefPtr<css::ImageValue> value(
-    new css::ImageValue(aURIString,
-                        do_AddRef(aURI.mExtraData),
-                        mozilla::CORSMode::CORS_NONE));
-  return value.forget().take();
+  return aURI.IntoCssImage(mozilla::CORSMode::CORS_NONE).take();
 }
 
 MOZ_DEFINE_MALLOC_SIZE_OF(GeckoImageValueMallocSizeOf)
