@@ -25,6 +25,7 @@
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsGlobalWindow.h"
+#include "nsMixedContentBlocker.h"
 #include "NullPrincipal.h"
 #include "nsRedirectHistoryEntry.h"
 #include "LoadInfo.h"
@@ -65,6 +66,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mTainting(LoadTainting::Basic)
   , mUpgradeInsecureRequests(false)
   , mBrowserUpgradeInsecureRequests(false)
+  , mBrowserWouldUpgradeInsecureRequests(false)
   , mVerifySignedContent(false)
   , mEnforceSRI(false)
   , mAllowDocumentToBeAgnosticToCSP(false)
@@ -195,7 +197,11 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
         bool isHttpsScheme;
         nsresult rv = uri->SchemeIs("https", &isHttpsScheme);
         if (NS_SUCCEEDED(rv) && isHttpsScheme) {
-          mBrowserUpgradeInsecureRequests = true;
+          if (nsMixedContentBlocker::ShouldUpgradeMixedDisplayContent()) {
+            mBrowserUpgradeInsecureRequests = true;
+          } else {
+            mBrowserWouldUpgradeInsecureRequests = true;
+          }
         }
       }
     }
@@ -286,6 +292,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mTainting(LoadTainting::Basic)
   , mUpgradeInsecureRequests(false)
   , mBrowserUpgradeInsecureRequests(false)
+  , mBrowserWouldUpgradeInsecureRequests(false)
   , mVerifySignedContent(false)
   , mEnforceSRI(false)
   , mAllowDocumentToBeAgnosticToCSP(false)
@@ -363,6 +370,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mTainting(rhs.mTainting)
   , mUpgradeInsecureRequests(rhs.mUpgradeInsecureRequests)
   , mBrowserUpgradeInsecureRequests(rhs.mBrowserUpgradeInsecureRequests)
+  , mBrowserWouldUpgradeInsecureRequests(rhs.mBrowserWouldUpgradeInsecureRequests)
   , mVerifySignedContent(rhs.mVerifySignedContent)
   , mEnforceSRI(rhs.mEnforceSRI)
   , mAllowDocumentToBeAgnosticToCSP(rhs.mAllowDocumentToBeAgnosticToCSP)
@@ -407,6 +415,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    LoadTainting aTainting,
                    bool aUpgradeInsecureRequests,
                    bool aBrowserUpgradeInsecureRequests,
+                   bool aBrowserWouldUpgradeInsecureRequests,
                    bool aVerifySignedContent,
                    bool aEnforceSRI,
                    bool aAllowDocumentToBeAgnosticToCSP,
@@ -445,6 +454,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mTainting(aTainting)
   , mUpgradeInsecureRequests(aUpgradeInsecureRequests)
   , mBrowserUpgradeInsecureRequests(aBrowserUpgradeInsecureRequests)
+  , mBrowserWouldUpgradeInsecureRequests(aBrowserWouldUpgradeInsecureRequests)
   , mVerifySignedContent(aVerifySignedContent)
   , mEnforceSRI(aEnforceSRI)
   , mAllowDocumentToBeAgnosticToCSP(aAllowDocumentToBeAgnosticToCSP)
@@ -810,6 +820,13 @@ LoadInfo::GetBrowserUpgradeInsecureRequests(bool* aResult)
 }
 
 NS_IMETHODIMP
+LoadInfo::GetBrowserWouldUpgradeInsecureRequests(bool* aResult)
+{
+  *aResult = mBrowserWouldUpgradeInsecureRequests;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 LoadInfo::SetVerifySignedContent(bool aVerifySignedContent)
 {
   MOZ_ASSERT(mInternalContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT,
@@ -1157,6 +1174,12 @@ void
 LoadInfo::SetBrowserUpgradeInsecureRequests()
 {
   mBrowserUpgradeInsecureRequests = true;
+}
+
+void
+LoadInfo::SetBrowserWouldUpgradeInsecureRequests()
+{
+  mBrowserWouldUpgradeInsecureRequests = true;
 }
 
 NS_IMETHODIMP
