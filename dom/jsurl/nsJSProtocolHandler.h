@@ -120,6 +120,8 @@ public:
 
         friend class nsJSURI;
     };
+
+    friend BaseURIMutator<nsJSURI>;
 };
 
 #endif /* nsJSProtocolHandler_h___ */
