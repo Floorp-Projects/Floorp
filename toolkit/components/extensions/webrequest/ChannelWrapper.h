@@ -209,7 +209,11 @@ public:
   already_AddRefed<nsIDOMElement> GetBrowserElement() const;
 
 
-  bool GetCanModify(ErrorResult& aRv) const;
+  bool CanModify() const;
+  bool GetCanModify(ErrorResult& aRv) const
+  {
+    return CanModify();
+  }
 
 
   void GetProxyInfo(dom::Nullable<dom::MozProxyInfo>& aRetVal, ErrorResult& aRv) const;

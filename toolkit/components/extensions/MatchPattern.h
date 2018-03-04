@@ -155,6 +155,7 @@ public:
 
   nsAtom* Scheme() const;
   const nsCString& Host() const;
+  const nsAtom* HostAtom() const;
   const nsString& Path() const;
   const nsString& FilePath() const;
   const nsString& Spec() const;
@@ -170,6 +171,7 @@ private:
 
   mutable RefPtr<nsAtom> mScheme;
   mutable nsCString mHost;
+  mutable RefPtr<nsAtom> mHostAtom;
 
   mutable nsString mPath;
   mutable nsString mFilePath;
