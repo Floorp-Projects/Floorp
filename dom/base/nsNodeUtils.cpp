@@ -657,14 +657,42 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
     }
   }
 
-  if (aDeep && !aClone && aNode->IsElement()) {
-    if (ShadowRoot* shadowRoot = aNode->AsElement()->GetShadowRoot()) {
-      nsCOMPtr<nsINode> child =
-        CloneAndAdopt(shadowRoot, aClone, aDeep, nodeInfoManager,
-                      aReparentScope, aNodesWithProperties, clone,
-                      aError);
-      if (NS_WARN_IF(aError.Failed())) {
-        return nullptr;
+  if (aDeep && aNode->IsElement()) {
+    if (aClone) {
+      if (clone->OwnerDoc()->IsStaticDocument()) {
+        ShadowRoot* originalShadowRoot = aNode->AsElement()->GetShadowRoot();
+        if (originalShadowRoot) {
+          ShadowRootInit init;
+          init.mMode = originalShadowRoot->Mode();
+          RefPtr<ShadowRoot> newShadowRoot =
+            clone->AsElement()->AttachShadow(init, aError);
+          if (NS_WARN_IF(aError.Failed())) {
+            return nullptr;
+          }
+
+          newShadowRoot->CloneInternalDataFrom(originalShadowRoot);
+          for (nsIContent* origChild = originalShadowRoot->GetFirstChild();
+               origChild;
+               origChild = origChild->GetNextSibling()) {
+            nsCOMPtr<nsINode> child =
+              CloneAndAdopt(origChild, aClone, aDeep, nodeInfoManager,
+                            aReparentScope, aNodesWithProperties, newShadowRoot,
+                            aError);
+            if (NS_WARN_IF(aError.Failed())) {
+              return nullptr;
+            }
+          }
+        }
+      }
+    } else {
+      if (ShadowRoot* shadowRoot = aNode->AsElement()->GetShadowRoot()) {
+        nsCOMPtr<nsINode> child =
+          CloneAndAdopt(shadowRoot, aClone, aDeep, nodeInfoManager,
+                        aReparentScope, aNodesWithProperties, clone,
+                        aError);
+        if (NS_WARN_IF(aError.Failed())) {
+          return nullptr;
+        }
       }
     }
   }
