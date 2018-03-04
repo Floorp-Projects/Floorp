@@ -2963,6 +2963,7 @@ exports.CSS_PROPERTIES = {
       "font-feature-settings",
       "font-kerning",
       "font-language-override",
+      "font-optical-sizing",
       "font-size",
       "font-size-adjust",
       "-moz-font-smoothing-background-color",
@@ -5717,6 +5718,7 @@ exports.CSS_PROPERTIES = {
       "font-feature-settings",
       "font-language-override",
       "font-kerning",
+      "font-optical-sizing",
       "font-variant-alternates",
       "font-variant-caps",
       "font-variant-east-asian",
@@ -9469,6 +9471,10 @@ exports.PREFERENCES = [
   [
     "contain",
     "layout.css.contain.enabled"
+  ],
+  [
+    "font-optical-sizing",
+    "layout.css.font-variations.enabled"
   ],
   [
     "font-variation-settings",

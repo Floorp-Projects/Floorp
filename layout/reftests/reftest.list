@@ -208,6 +208,9 @@ include font-loading-api/reftest.list
 # font matching
 include font-matching/reftest.list
 
+# font variations
+include font-variations/reftest.list
+
 # forms
 include forms/reftest.list
 
