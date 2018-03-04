@@ -101,6 +101,10 @@
                 "$ref": "ThemeColor",
                 "optional": true
               },
+              "tab_line": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
               "toolbar": {
                 "$ref": "ThemeColor",
                 "optional": true
