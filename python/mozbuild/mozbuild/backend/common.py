@@ -58,8 +58,6 @@ class XPIDLManager(object):
 
         self.idls = {}
         self.modules = {}
-        self.interface_manifests = {}
-        self.chrome_manifests = set()
 
     def register_idl(self, idl, allow_existing=False):
         """Registers an IDL file with this instance.
@@ -69,15 +67,12 @@ class XPIDLManager(object):
         basename = mozpath.basename(idl.source_path)
         root = mozpath.splitext(basename)[0]
         xpt = '%s.xpt' % idl.module
-        manifest = mozpath.join(idl.install_target, 'components', 'interfaces.manifest')
-        chrome_manifest = mozpath.join(idl.install_target, 'chrome.manifest')
 
         entry = {
             'source': idl.source_path,
             'module': idl.module,
             'basename': basename,
             'root': root,
-            'manifest': manifest,
         }
 
         if not allow_existing and entry['basename'] in self.idls:
@@ -86,11 +81,6 @@ class XPIDLManager(object):
         self.idls[entry['basename']] = entry
         t = self.modules.setdefault(entry['module'], (idl.install_target, set()))
         t[1].add(entry['root'])
-
-        if idl.add_to_manifest:
-            self.interface_manifests.setdefault(manifest, set()).add(xpt)
-            self.chrome_manifests.add(chrome_manifest)
-
 
 class BinariesCollection(object):
     """Tracks state of binaries produced by the build."""
