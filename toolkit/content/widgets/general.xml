@@ -123,23 +123,4 @@
     </content>
   </binding>
 
-  <binding id="windowdragbox">
-    <implementation>
-      <field name="_dragBindingAlive">true</field>
-      <constructor>
-        if (!this._draggableStarted) {
-          this._draggableStarted = true;
-          try {
-            let tmp = {};
-            ChromeUtils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
-            let draghandle = new tmp.WindowDraggingElement(this);
-            draghandle.mouseDownCheck = function() {
-              return this._dragBindingAlive;
-            };
-          } catch (e) {}
-        }
-      </constructor>
-    </implementation>
-  </binding>
-
 </bindings>
