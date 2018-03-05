@@ -275,7 +275,6 @@ pref("browser.search.geoSpecificDefaults.url", "https://search.services.mozilla.
 pref("browser.search.defaultenginename.US", "chrome://browser/locale/region.properties");
 pref("browser.search.order.US.1", "chrome://browser/locale/region.properties");
 pref("browser.search.order.US.2", "chrome://browser/locale/region.properties");
-pref("browser.search.order.US.3", "chrome://browser/locale/region.properties");
 
 // disable updating
 pref("browser.search.update", false);

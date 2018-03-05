@@ -47,7 +47,8 @@ const SEARCH_ENGINE_DETAILS = [{
     submission: "",
   },
   name: "eBay",
-}, {
+},
+// {
 // TODO: Google is tested in browser_google_behaviors.js - we can't test it here
 // yet because of bug 1315953.
 //   alias: "g",
@@ -59,17 +60,8 @@ const SEARCH_ENGINE_DETAILS = [{
 //     submission: "",
 //   },
 //   name: "Google",
-// }, {
-  alias: "y",
-  baseURL: "https://search.yahoo.com/yhs/search?p=foo&ei=UTF-8&hspart=mozilla",
-  codes: {
-    context: "&hsimp=yhs-005",
-    keyword: "&hsimp=yhs-002",
-    newTab: "&hsimp=yhs-004",
-    submission: "&hsimp=yhs-001",
-  },
-  name: "Yahoo",
-}];
+// },
+];
 
 function promiseStateChangeURI() {
   return new Promise(resolve => {
