@@ -148,6 +148,8 @@ public:
     mutator.forget(aMutator);
     return NS_OK;
   }
+
+  friend BaseURIMutator<SubstitutingURL>;
 };
 
 } // namespace net

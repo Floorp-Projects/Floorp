@@ -1,0 +1,4 @@
+[Default Applications]
+application/octet-stream=xdg-open.desktop
+text/plain=xdg-open.desktop
+inode/directory=xdg-open.desktop

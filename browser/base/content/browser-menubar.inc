@@ -540,11 +540,96 @@
                         oncommand="toOpenWindowByType('mozapp:layoutdebug',
                                           'chrome://layoutdebug/content/');"/>
 #endif
+#ifdef XP_MACOSX
+<!-- nsMenuBarX hides these and uses them to build the Application menu. -->
+              <menuitem id="menu_preferences" label="&preferencesCmdMac.label;" key="key_preferencesCmdMac" oncommand="openPreferences(undefined, {origin: 'commandLineLegacy'});"/>
+              <menuitem id="menu_mac_services" label="&servicesMenuMac.label;"/>
+              <menuitem id="menu_mac_hide_app" label="&hideThisAppCmdMac2.label;" key="key_hideThisAppCmdMac"/>
+              <menuitem id="menu_mac_hide_others" label="&hideOtherAppsCmdMac.label;" key="key_hideOtherAppsCmdMac"/>
+              <menuitem id="menu_mac_show_all" label="&showAllAppsCmdMac.label;"/>
+#endif
               </menupopup>
             </menu>
-
 #ifdef XP_MACOSX
-          <menu id="windowMenu" />
+            <menu id="windowMenu"
+                  label="&windowMenu.label;"
+                  onpopupshowing="macWindowMenuDidShow();"
+                  onpopuphidden="macWindowMenuDidHide();"
+                  >
+                <menupopup id="windowPopup">
+                    <menuitem command="minimizeWindow" key="key_minimizeWindow"/>
+                    <menuitem command="zoomWindow"/>
+                    <!-- decomment when "BringAllToFront" is implemented
+                        <menuseparator/>
+                        <menuitem label="&bringAllToFront.label;" disabled="true"/> -->
+                    <menuseparator id="sep-window-list"/>
+                </menupopup>
+            </menu>
 #endif
-          <menu id="helpMenu" />
+            <menu id="helpMenu"
+#ifdef XP_WIN
+                  label="&helpMenuWin.label;"
+                  accesskey="&helpMenuWin.accesskey;"
+#else
+                  label="&helpMenu.label;"
+                  accesskey="&helpMenu.accesskey;"
+#endif
+                  >
+              <menupopup id="menu_HelpPopup" onpopupshowing="buildHelpMenu();">
+                <menuitem id="menu_openHelp"
+                          oncommand="openHelpLink('firefox-help')"
+                          onclick="checkForMiddleClick(this, event);"
+                          label="&productHelp2.label;"
+                          accesskey="&productHelp2.accesskey;"
+#ifdef XP_MACOSX
+                          key="key_openHelpMac"/>
+#else
+                          />
+#endif
+                <menuitem id="menu_openTour"
+                          oncommand="openTourPage();"
+                          label="&helpShowTour2.label;"
+                          accesskey="&helpShowTour2.accesskey;"/>
+                <menuitem id="menu_keyboardShortcuts"
+                          oncommand="openHelpLink('keyboard-shortcuts')"
+                          onclick="checkForMiddleClick(this, event);"
+                          label="&helpKeyboardShortcuts.label;"
+                          accesskey="&helpKeyboardShortcuts.accesskey;"/>
+                <menuitem id="troubleShooting"
+                          accesskey="&helpTroubleshootingInfo.accesskey;"
+                          label="&helpTroubleshootingInfo.label;"
+                          oncommand="openTroubleshootingPage()"
+                          onclick="checkForMiddleClick(this, event);"/>
+                <menuitem id="feedbackPage"
+                          accesskey="&helpFeedbackPage.accesskey;"
+                          label="&helpFeedbackPage.label;"
+                          oncommand="openFeedbackPage()"
+                          onclick="checkForMiddleClick(this, event);"/>
+                <menuitem id="helpSafeMode"
+                          accesskey="&helpSafeMode.accesskey;"
+                          label="&helpSafeMode.label;"
+                          stopaccesskey="&helpSafeMode.stop.accesskey;"
+                          stoplabel="&helpSafeMode.stop.label;"
+                          oncommand="safeModeRestart();"/>
+                <menuitem id="menu_HelpPopup_reportPhishingtoolmenu"
+                          label="&reportDeceptiveSiteMenu.title;"
+                          accesskey="&reportDeceptiveSiteMenu.accesskey;"
+                          observes="reportPhishingBroadcaster"
+                          oncommand="openUILink(gSafeBrowsing.getReportURL('Phish'), event);"
+                          onclick="checkForMiddleClick(this, event);"
+                          hidden="true"/>
+                <menuitem id="menu_HelpPopup_reportPhishingErrortoolmenu"
+                          label="&safeb.palm.notdeceptive.label;"
+                          accesskey="&safeb.palm.notdeceptive.accesskey;"
+                          observes="reportPhishingErrorBroadcaster"
+                          oncommand="ReportFalseDeceptiveSite();"
+                          onclick="checkForMiddleClick(this, event);"
+                          hidden="true"/>
+                <menuseparator id="aboutSeparator"/>
+                <menuitem id="aboutName"
+                          accesskey="&aboutProduct2.accesskey;"
+                          label="&aboutProduct2.label;"
+                          oncommand="openAboutDialog();"/>
+              </menupopup>
+          </menu>
         </menubar>

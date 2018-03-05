@@ -7,7 +7,8 @@
 
 /**
  * URIs are essentially structured names for things -- anything. This interface
- * provides accessors to set and query the most basic components of an URI.
+ * provides accessors to get the most basic components of an URI.
+ * If you need to change some parts of the URI use nsIURIMutator.
  * Subclasses, including nsIURL, impose greater structure on the URI.
  *
  * This interface follows Tim Berners-Lee's URI spec (RFC3986) [1], where the
@@ -86,21 +87,6 @@ interface nsIURI : nsISupports
      */
     readonly attribute AUTF8String spec;
 
-    /*
-     * This method should only be called by nsIURIMutator or C++ unit tests.
-     *
-     * Setting the spec causes
-     * the new spec to be parsed per the rules for the scheme the URI
-     * currently has.  In particular, setting the spec to a URI string with a
-     * different scheme will generally produce incorrect results; no one
-     * outside of a protocol handler implementation should be doing that.  If
-     * the URI stores information from the nsIIOService.newURI call used to
-     * create it other than just the parsed string, then behavior of this
-     * information on setting the spec attribute is undefined.
-     */
-    [noscript,notxpcom,nostdcall]
-    nsresult setSpecInternal(in ACString aSpec);
-
 %{ C++
     // An infallible wrapper for GetSpec() that returns a failure indication
     // string if GetSpec() fails. It is most useful for creating
@@ -127,18 +113,16 @@ interface nsIURI : nsISupports
 
     /**
      * The Scheme is the protocol to which this URI refers.  The scheme is
-     * restricted to the US-ASCII charset per RFC3986.  Setting this is
-     * highly discouraged outside of a protocol handler implementation, since
-     * that will generally lead to incorrect results.
+     * restricted to the US-ASCII charset per RFC3986.
      */
-    attribute ACString scheme;
+    readonly attribute ACString scheme;
 
     /**
      * The username:password (or username only if value doesn't contain a ':')
      *
      * Some characters may be escaped.
      */
-    attribute AUTF8String userPass;
+    readonly attribute AUTF8String userPass;
 
     /**
      * The optional username and password, assuming the preHost consists of
@@ -146,37 +130,26 @@ interface nsIURI : nsISupports
      *
      * Some characters may be escaped.
      */
-    attribute AUTF8String username;
-    attribute AUTF8String password;
+    readonly attribute AUTF8String username;
+    readonly attribute AUTF8String password;
 
     /**
      * The host:port (or simply the host, if port == -1).
-     *
-     * If this attribute is set to a value that only has a host part, the port
-     * will not be reset. To reset the port as well use setHostAndPort.
-     * If setting the host succeeds, this method will return NS_OK, even if
-     * setting the port fails (error in parsing the port, or value out of range)
      */
-    attribute AUTF8String hostPort;
-
-    /**
-     * This function will always set a host and a port. If the port part is
-     * empty, the value of the port will be set to the default value.
-     */
-    void setHostAndPort(in AUTF8String hostport);
+    readonly attribute AUTF8String hostPort;
 
     /**
      * The host is the internet domain name to which this URI refers.  It could
      * be an IPv4 (or IPv6) address literal. Otherwise it is an ASCII or punycode
      * encoded string.
      */
-    attribute AUTF8String host;
+    readonly attribute AUTF8String host;
 
     /**
      * A port value of -1 corresponds to the protocol's default port (eg. -1
      * implies port 80 for http URIs).
      */
-    attribute long port;
+    readonly attribute long port;
 
     /**
      * The path, typically including at least a leading '/' (but may also be
@@ -187,7 +160,7 @@ interface nsIURI : nsISupports
      * This attribute contains query and ref parts for historical reasons.
      * Use the 'filePath' attribute if you do not want those parts included.
      */
-    attribute AUTF8String pathQueryRef;
+    readonly attribute AUTF8String pathQueryRef;
 
 
     /************************************************************************
@@ -257,7 +230,7 @@ interface nsIURI : nsISupports
      *
      * Some characters may be escaped.
      */
-    attribute AUTF8String ref;
+    readonly attribute AUTF8String ref;
 
     /**
      * URI equivalence test (not a strict string comparison), ignoring
@@ -300,7 +273,7 @@ interface nsIURI : nsISupports
      *
      * Some characters may be escaped.
      */
-    attribute AUTF8String filePath;
+    readonly attribute AUTF8String filePath;
 
     /**
      * Returns the query portion (the part after the "?") of the URL.
@@ -308,9 +281,7 @@ interface nsIURI : nsISupports
      *
      * Some characters may be escaped.
      */
-    attribute AUTF8String query;
-    [noscript]
-    void setQueryWithEncoding(in AUTF8String query, in Encoding encoding);
+    readonly attribute AUTF8String query;
 
     /**
      * If the URI has a punycode encoded hostname, this will hold the UTF8

@@ -245,6 +245,7 @@ pub fn cursor_mangling(
     cursor: &clang::Cursor,
 ) -> Option<String> {
     use clang_sys;
+
     if !ctx.options().enable_mangling {
         return None;
     }
@@ -256,8 +257,14 @@ pub fn cursor_mangling(
         return None;
     }
 
+    let is_destructor = cursor.kind() == clang_sys::CXCursor_Destructor;
     if let Ok(mut manglings) = cursor.cxx_manglings() {
-        if let Some(m) = manglings.pop() {
+        while let Some(m) = manglings.pop() {
+            // Only generate the destructor group 1, see below.
+            if is_destructor && !m.ends_with("D1Ev") {
+                continue;
+            }
+
             return Some(m);
         }
     }
@@ -267,7 +274,7 @@ pub fn cursor_mangling(
         return None;
     }
 
-    if cursor.kind() == clang_sys::CXCursor_Destructor {
+    if is_destructor {
         // With old (3.8-) libclang versions, and the Itanium ABI, clang returns
         // the "destructor group 0" symbol, which means that it'll try to free
         // memory, which definitely isn't what we want.

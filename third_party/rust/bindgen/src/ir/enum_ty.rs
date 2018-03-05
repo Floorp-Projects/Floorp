@@ -221,6 +221,11 @@ impl EnumVariant {
         self.val
     }
 
+    /// Get this variant's documentation.
+    pub fn comment(&self) -> Option<&str> {
+        self.comment.as_ref().map(|s| &**s)
+    }
+
     /// Returns whether this variant should be enforced to be a constant by code
     /// generation.
     pub fn force_constification(&self) -> bool {

@@ -140,19 +140,6 @@ FocusState::Update(uint64_t aRootLayerTreeId,
   }
 }
 
-std::unordered_set<uint64_t>
-FocusState::GetFocusTargetLayerIds() const
-{
-  std::unordered_set<uint64_t> layersIds;
-  layersIds.reserve(mFocusTree.size());
-
-  for (const auto& focusNode : mFocusTree) {
-    layersIds.insert(focusNode.first);
-  }
-
-  return layersIds;
-}
-
 void
 FocusState::RemoveFocusTarget(uint64_t aLayersId)
 {

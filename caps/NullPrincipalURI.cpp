@@ -109,7 +109,7 @@ NullPrincipalURI::GetHost(nsACString& _host)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 NullPrincipalURI::SetHost(const nsACString& aHost)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -121,14 +121,8 @@ NullPrincipalURI::GetHostPort(nsACString& _host)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
+nsresult
 NullPrincipalURI::SetHostPort(const nsACString& aHost)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullPrincipalURI::SetHostAndPort(const nsACString& aHost)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -139,7 +133,7 @@ NullPrincipalURI::GetPassword(nsACString& _password)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
+nsresult
 NullPrincipalURI::SetPassword(const nsACString& aPassword)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -152,7 +146,7 @@ NullPrincipalURI::GetPathQueryRef(nsACString& _path)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 NullPrincipalURI::SetPathQueryRef(const nsACString& aPath)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -165,7 +159,7 @@ NullPrincipalURI::GetFilePath(nsACString& aFilePath)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
+nsresult
 NullPrincipalURI::SetFilePath(const nsACString& aFilePath)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -178,13 +172,13 @@ NullPrincipalURI::GetQuery(nsACString& aQuery)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
+nsresult
 NullPrincipalURI::SetQuery(const nsACString& aQuery)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
+nsresult
 NullPrincipalURI::SetQueryWithEncoding(const nsACString& aQuery,
                                        const Encoding* aEncoding)
 {
@@ -198,7 +192,7 @@ NullPrincipalURI::GetRef(nsACString& _ref)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
+nsresult
 NullPrincipalURI::SetRef(const nsACString& aRef)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -217,7 +211,7 @@ NullPrincipalURI::GetPort(int32_t* _port)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
+nsresult
 NullPrincipalURI::SetPort(int32_t aPort)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -230,7 +224,7 @@ NullPrincipalURI::GetScheme(nsACString& _scheme)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 NullPrincipalURI::SetScheme(const nsACString& aScheme)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -269,7 +263,7 @@ NullPrincipalURI::GetUsername(nsACString& _username)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
+nsresult
 NullPrincipalURI::SetUsername(const nsACString& aUsername)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -281,7 +275,7 @@ NullPrincipalURI::GetUserPass(nsACString& _userPass)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
+nsresult
 NullPrincipalURI::SetUserPass(const nsACString& aUserPass)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

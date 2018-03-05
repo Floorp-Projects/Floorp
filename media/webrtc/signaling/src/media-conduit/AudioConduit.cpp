@@ -42,6 +42,7 @@ static const char* acLogTag ="WebrtcAudioSessionConduit";
 // 32 bytes is what WebRTC CodecInst expects
 const unsigned int WebrtcAudioConduit::CODEC_PLNAME_SIZE = 32;
 
+using LocalDirection = MediaSessionConduitLocalDirection;
 /**
  * Factory Method for AudioConduit
  */
@@ -612,49 +613,56 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
 }
 
 MediaConduitErrorCode
-WebrtcAudioConduit::EnableAudioLevelExtension(bool aEnabled,
-                                              uint8_t aId,
-                                              bool aDirectionIsSend,
-                                              bool aLevelIsSsrc)
+WebrtcAudioConduit::SetLocalRTPExtensions(LocalDirection aDirection,
+                                          const RtpExtList& extensions)
 {
-  CSFLogDebug(LOGTAG,  "%s %d %d %d", __FUNCTION__, aEnabled, aId,
-              aDirectionIsSend);
-
-  bool ret;
-  if (aDirectionIsSend) {
-    if (!aLevelIsSsrc) {
-      CSFLogError(LOGTAG,
-                  "%s SetSendAudioLevelIndicationStatus Failed"
-                  " can not send CSRC audio levels.", __FUNCTION__);
-      return kMediaConduitMalformedArgument;
+  CSFLogDebug(LOGTAG, "%s direction: %s", __FUNCTION__,
+              MediaSessionConduit::LocalDirectionToString(aDirection).c_str());
+  bool isSend = aDirection == LocalDirection::kSend;
+  constexpr bool kEnableExt = true;
+  constexpr bool kSsrcLevel = true;
+  constexpr bool kCsrcLevel = false;
+  for(const auto& extension : extensions) {
+    int ret = 0;
+    // ssrc-audio-level RTP header extension
+    if (extension.uri == webrtc::RtpExtension::kAudioLevelUri) {
+      if (isSend) {
+        ret = mPtrVoERTP_RTCP->SetSendAudioLevelIndicationStatus(mChannel,
+                                                                 kEnableExt,
+                                                                 extension.id);
+      } else {
+        ret = mPtrRTP->SetReceiveAudioLevelIndicationStatus(mChannel,
+                                                            kEnableExt,
+                                                            extension.id,
+                                                            kSsrcLevel);
+      }
     }
-    ret = mPtrVoERTP_RTCP->SetSendAudioLevelIndicationStatus(mChannel,
-                                                             aEnabled,
-                                                             aId) == -1;
-  } else {
-    ret = mPtrRTP->SetReceiveAudioLevelIndicationStatus(mChannel,
-                                                        aEnabled,
-                                                        aId,
-                                                        aLevelIsSsrc) == -1;
+    // csrc-audio-level RTP header extension
+    if (extension.uri == webrtc::RtpExtension::kCsrcAudioLevelUri) {
+      if (isSend) {
+        CSFLogError(LOGTAG, "%s SetSendAudioLevelIndicationStatus Failed"
+                    " can not send CSRC audio levels.", __FUNCTION__);
+        return kMediaConduitMalformedArgument;
+      }
+      ret = mPtrRTP->SetReceiveAudioLevelIndicationStatus(mChannel,
+                                                          kEnableExt,
+                                                          extension.id,
+                                                          kCsrcLevel);
+    }
+    // MID RTP header extension
+    if (aDirection == LocalDirection::kSend &&
+        extension.uri == webrtc::RtpExtension::kMIdUri) {
+      ret = mPtrVoERTP_RTCP->SetSendMIDStatus(mChannel, kEnableExt,
+                                              extension.id);
+    }
+    // Handle errors
+    if (ret == -1) {
+      CSFLogError(LOGTAG, "Failed %s setting extension %s with id %d",
+                  __FUNCTION__, extension.uri.c_str(),
+                  static_cast<int>(extension.id));
+      return kMediaConduitUnknownError;
+    }
   }
-  if (ret) {
-    CSFLogError(LOGTAG, "%s SetSendAudioLevelIndicationStatus Failed", __FUNCTION__);
-    return kMediaConduitUnknownError;
-  }
-  return kMediaConduitNoError;
-}
-
-MediaConduitErrorCode
-WebrtcAudioConduit::EnableMIDExtension(bool enabled, uint8_t id)
-{
-  CSFLogDebug(LOGTAG,  "%s %d %d ", __FUNCTION__, enabled, id);
-
-  if (mPtrVoERTP_RTCP->SetSendMIDStatus(mChannel, enabled, id) == -1)
-  {
-    CSFLogError(LOGTAG, "%s SetSendMIDStatus Failed", __FUNCTION__);
-    return kMediaConduitUnknownError;
-  }
-
   return kMediaConduitNoError;
 }
 

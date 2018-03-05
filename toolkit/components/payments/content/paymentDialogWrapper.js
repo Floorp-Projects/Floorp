@@ -258,11 +258,8 @@ var paymentDialogWrapper = {
     // and will automatically get updated if event.updateWith is used.
     let requestSerialized = this._serializeRequest(this.request);
 
-    this.mm.sendAsyncMessage("paymentChromeToContent", {
-      messageType: "updateState",
-      data: {
-        request: requestSerialized,
-      },
+    this.sendMessageToContent("updateState", {
+      request: requestSerialized,
     });
   },
 

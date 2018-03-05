@@ -150,6 +150,8 @@ class Theme {
           break;
         case "tab_loading":
         case "tab_text":
+        case "tab_line":
+        case "tab_selected":
         case "toolbar_field":
         case "toolbar_field_text":
         case "toolbar_field_border":

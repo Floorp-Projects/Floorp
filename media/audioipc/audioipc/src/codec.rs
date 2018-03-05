@@ -102,7 +102,7 @@ impl<In, Out> LengthDelimitedCodec<In, Out> {
 
         trace!("Attempting to decode");
         let msg = try!(deserialize::<Out>(buf.as_ref()).map_err(|e| match *e {
-            bincode::ErrorKind::IoError(e) => e,
+            bincode::ErrorKind::Io(e) => e,
             _ => io::Error::new(io::ErrorKind::Other, *e),
         }));
 
@@ -170,7 +170,7 @@ where
             serialize_into::<_, Self::In, _>(&mut buf.writer(), &item, Bounded(encoded_len))
         {
             match *e {
-                bincode::ErrorKind::IoError(e) => return Err(e),
+                bincode::ErrorKind::Io(e) => return Err(e),
                 _ => return Err(io::Error::new(io::ErrorKind::Other, *e)),
             }
         }

@@ -287,23 +287,37 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
     // Metadata needs to be sorted (to allow O(log(n)) lookup at runtime) and
     // deduplicated, so use an intermediate vector to sort and de-duplicate.
 
-    Uint32Vector exportedFuncs;
+    static_assert((uint64_t(MaxFuncs) << 1) < uint64_t(UINT32_MAX), "bit packing won't work");
+
+    class ExportedFunc {
+        uint32_t value;
+      public:
+        ExportedFunc(uint32_t index, bool isExplicit) : value((index << 1) | (isExplicit?1:0)) {}
+        uint32_t index() const { return value >> 1; }
+        bool isExplicit() const { return value & 0x1; }
+        bool operator<(const ExportedFunc& other) const { return index() < other.index(); }
+        bool operator==(const ExportedFunc& other) const { return index() == other.index(); }
+    };
+
+    Vector<ExportedFunc, 8, SystemAllocPolicy> exportedFuncs;
 
     for (const Export& exp : env_->exports) {
         if (exp.kind() == DefinitionKind::Function) {
-            if (!exportedFuncs.append(exp.funcIndex()))
+            if (!exportedFuncs.emplaceBack(exp.funcIndex(), true))
                 return false;
         }
     }
 
     for (ElemSegment& elems : env_->elemSegments) {
         if (env_->tables[elems.tableIndex].external) {
-            if (!exportedFuncs.appendAll(elems.elemFuncIndices))
+            if (!exportedFuncs.reserve(exportedFuncs.length() + elems.elemFuncIndices.length()))
                 return false;
+            for (uint32_t funcIndex : elems.elemFuncIndices)
+                exportedFuncs.infallibleEmplaceBack(funcIndex, false);
         }
     }
 
-    if (env_->startFuncIndex && !exportedFuncs.append(*env_->startFuncIndex))
+    if (env_->startFuncIndex && !exportedFuncs.emplaceBack(*env_->startFuncIndex, true))
         return false;
 
     std::sort(exportedFuncs.begin(), exportedFuncs.end());
@@ -313,11 +327,12 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
     if (!metadataTier_->funcExports.reserve(exportedFuncs.length()))
         return false;
 
-    for (uint32_t funcIndex : exportedFuncs) {
+    for (const ExportedFunc& funcIndex : exportedFuncs) {
         Sig sig;
-        if (!sig.clone(*env_->funcSigs[funcIndex]))
+        if (!sig.clone(*env_->funcSigs[funcIndex.index()]))
             return false;
-        metadataTier_->funcExports.infallibleEmplaceBack(Move(sig), funcIndex);
+        metadataTier_->funcExports.infallibleEmplaceBack(Move(sig), funcIndex.index(),
+                                                         funcIndex.isExplicit());
     }
 
     // Determine whether parallel or sequential compilation is to be used and
@@ -505,7 +520,8 @@ ModuleGenerator::noteCodeRange(uint32_t codeRangeIndex, const CodeRange& codeRan
         funcToCodeRange_[codeRange.funcIndex()] = codeRangeIndex;
         break;
       case CodeRange::InterpEntry:
-        metadataTier_->lookupFuncExport(codeRange.funcIndex()).initInterpEntryOffset(codeRange.begin());
+        metadataTier_->lookupFuncExport(codeRange.funcIndex())
+            .initEagerInterpEntryOffset(codeRange.begin());
         break;
       case CodeRange::JitEntry:
         // Nothing to do: jit entries are linked in the jump tables.
@@ -897,7 +913,7 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
     // now that every function has a code range.
 
     for (FuncExport& fe : metadataTier_->funcExports)
-        fe.initCodeRangeIndex(funcToCodeRange_[fe.funcIndex()]);
+        fe.initInterpCodeRangeIndex(funcToCodeRange_[fe.funcIndex()]);
 
     for (ElemSegment& elems : env_->elemSegments) {
         Uint32Vector& codeRangeIndices = elems.elemCodeRangeIndices(tier());
@@ -1045,6 +1061,5 @@ ModuleGenerator::finishTier2(Module& module)
     if (!tier2)
         return false;
 
-    module.finishTier2(Move(linkDataTier_), Move(tier2), env_);
-    return true;
+    return module.finishTier2(Move(linkDataTier_), Move(tier2), env_);
 }

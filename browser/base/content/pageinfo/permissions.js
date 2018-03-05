@@ -17,17 +17,13 @@ var gPermissions = SitePermissions.listPermissions().sort((a, b) => {
   let secondLabel = SitePermissions.getPermissionLabel(b);
   return firstLabel.localeCompare(secondLabel);
 });
-gPermissions.push("plugins");
 
 var permissionObserver = {
   observe(aSubject, aTopic, aData) {
     if (aTopic == "perm-changed") {
       var permission = aSubject.QueryInterface(Ci.nsIPermission);
-      if (permission.matchesURI(gPermURI, true)) {
-        if (gPermissions.indexOf(permission.type) > -1)
+      if (permission.matchesURI(gPermURI, true) && gPermissions.includes(permission.type)) {
           initRow(permission.type);
-        else if (permission.type.startsWith("plugin"))
-          setPluginsRadioState();
       }
     }
   }
@@ -60,17 +56,17 @@ function onUnloadPermission() {
 }
 
 function initRow(aPartId) {
-  if (aPartId == "plugins") {
-    initPluginsRow();
-    return;
-  }
-
   createRow(aPartId);
 
   var checkbox = document.getElementById(aPartId + "Def");
   var command  = document.getElementById("cmd_" + aPartId + "Toggle");
   var {state, scope} = SitePermissions.get(gPermURI, aPartId);
   let defaultState = SitePermissions.getDefault(aPartId);
+
+  // When flash permission state is "Hide", we show it as "Always Ask" in page info.
+  if (aPartId.startsWith("plugin") && state == SitePermissions.PROMPT_HIDE) {
+    defaultState == SitePermissions.UNKNOWN ? state = defaultState : state = SitePermissions.PROMPT;
+  }
 
   if (state != defaultState) {
     checkbox.checked = false;
@@ -158,10 +154,6 @@ function onCheckboxClick(aPartId) {
   }
 }
 
-function onPluginRadioClick(aEvent) {
-  onRadioClick(aEvent.originalTarget.getAttribute("id").split("#")[0]);
-}
-
 function onRadioClick(aPartId) {
   var radioGroup = document.getElementById(aPartId + "RadioGroup");
   var id = radioGroup.selectedItem.id;
@@ -173,92 +165,5 @@ function setRadioState(aPartId, aValue) {
   var radio = document.getElementById(aPartId + "#" + aValue);
   if (radio) {
     radio.radioGroup.selectedItem = radio;
-  }
-}
-
-function fillInPluginPermissionTemplate(aPluginName, aPermissionString) {
-  let permPluginTemplate = document.getElementById("permPluginTemplate").cloneNode(true);
-  permPluginTemplate.setAttribute("permString", aPermissionString);
-  let attrs = [
-    [ ".permPluginTemplateLabel", "value", aPluginName ],
-    [ ".permPluginTemplateRadioGroup", "id", aPermissionString + "RadioGroup" ],
-    [ ".permPluginTemplateRadioDefault", "id", aPermissionString + "#0" ],
-    [ ".permPluginTemplateRadioAsk", "id", aPermissionString + "#3" ],
-    [ ".permPluginTemplateRadioAllow", "id", aPermissionString + "#1" ],
-    // #8 comes from Ci.nsIObjectLoadingContent.PLUGIN_PERMISSION_PROMPT_ACTION_QUIET
-    [ ".permPluginTemplateRadioHide", "id", aPermissionString + "#8"],
-    [ ".permPluginTemplateRadioBlock", "id", aPermissionString + "#2" ]
-  ];
-
-  for (let attr of attrs) {
-    permPluginTemplate.querySelector(attr[0]).setAttribute(attr[1], attr[2]);
-  }
-
-  return permPluginTemplate;
-}
-
-function clearPluginPermissionTemplate() {
-  let permPluginTemplate = document.getElementById("permPluginTemplate");
-  permPluginTemplate.hidden = true;
-  permPluginTemplate.removeAttribute("permString");
-  document.querySelector(".permPluginTemplateLabel").removeAttribute("value");
-  document.querySelector(".permPluginTemplateRadioGroup").removeAttribute("id");
-  document.querySelector(".permPluginTemplateRadioAsk").removeAttribute("id");
-  document.querySelector(".permPluginTemplateRadioAllow").removeAttribute("id");
-  document.querySelector(".permPluginTemplateRadioBlock").removeAttribute("id");
-}
-
-function initPluginsRow() {
-  let vulnerableLabel = document.getElementById("browserBundle").getString("pluginActivateVulnerable.label");
-  let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-
-  let permissionMap = new Map();
-
-  for (let plugin of pluginHost.getPluginTags()) {
-    if (plugin.disabled) {
-      continue;
-    }
-    for (let mimeType of plugin.getMimeTypes()) {
-      let permString = pluginHost.getPermissionStringForType(mimeType);
-      if (!permissionMap.has(permString)) {
-        let name = BrowserUtils.makeNicePluginName(plugin.name);
-        if (permString.startsWith("plugin-vulnerable:")) {
-          name += " \u2014 " + vulnerableLabel;
-        }
-        permissionMap.set(permString, name);
-      }
-    }
-  }
-
-  let entries = Array.from(permissionMap, item => ({ name: item[1], permission: item[0] }));
-
-  entries.sort(function(a, b) {
-    return a.name.localeCompare(b.name);
-  });
-
-  let permissionEntries = entries.map(p => fillInPluginPermissionTemplate(p.name, p.permission));
-
-  let permPluginsRow = document.getElementById("perm-plugins-row");
-  clearPluginPermissionTemplate();
-  if (permissionEntries.length < 1) {
-    permPluginsRow.hidden = true;
-    return;
-  }
-
-  for (let permissionEntry of permissionEntries) {
-    permPluginsRow.appendChild(permissionEntry);
-  }
-
-  setPluginsRadioState();
-}
-
-function setPluginsRadioState() {
-  let box = document.getElementById("perm-plugins-row");
-  for (let permissionEntry of box.childNodes) {
-    if (permissionEntry.hasAttribute("permString")) {
-      let permString = permissionEntry.getAttribute("permString");
-      let permission = SitePermissions.get(gPermURI, permString);
-      setRadioState(permString, permission.state);
-    }
   }
 }

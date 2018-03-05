@@ -1,5 +1,6 @@
 //! Intermediate representation of variables.
 
+use callbacks::MacroParsingBehavior;
 use super::context::{BindgenContext, TypeId};
 use super::dot::DotAttributes;
 use super::function::cursor_mangling;
@@ -112,6 +113,21 @@ impl DotAttributes for Var {
     }
 }
 
+// TODO(emilio): we could make this more (or less) granular, I guess.
+fn default_macro_constant_type(value: i64) -> IntKind {
+    if value < 0 {
+        if value < i32::min_value() as i64 {
+            IntKind::I64
+        } else {
+            IntKind::I32
+        }
+    } else if value > u32::max_value() as i64 {
+        IntKind::U64
+    } else {
+        IntKind::U32
+    }
+}
+
 impl ClangSubItemParser for Var {
     fn parse(
         cursor: clang::Cursor,
@@ -122,9 +138,13 @@ impl ClangSubItemParser for Var {
         use cexpr::literal::CChar;
         match cursor.kind() {
             CXCursor_MacroDefinition => {
-
-                if let Some(visitor) = ctx.parse_callbacks() {
-                    visitor.parsed_macro(&cursor.spelling());
+                if let Some(callbacks) = ctx.parse_callbacks() {
+                    match callbacks.will_parse_macro(&cursor.spelling()) {
+                        MacroParsingBehavior::Ignore => {
+                            return Err(ParseError::Continue);
+                        }
+                        MacroParsingBehavior::Default => {}
+                    }
                 }
 
                 let value = parse_macro(ctx, &cursor);
@@ -184,17 +204,7 @@ impl ClangSubItemParser for Var {
                     EvalResult::Int(Wrapping(value)) => {
                         let kind = ctx.parse_callbacks()
                             .and_then(|c| c.int_macro(&name, value))
-                            .unwrap_or_else(|| if value < 0 {
-                                if value < i32::min_value() as i64 {
-                                    IntKind::LongLong
-                                } else {
-                                    IntKind::Int
-                                }
-                            } else if value > u32::max_value() as i64 {
-                                IntKind::ULongLong
-                            } else {
-                                IntKind::UInt
-                            });
+                            .unwrap_or_else(|| default_macro_constant_type(value));
 
                         (TypeKind::Int(kind), VarType::Int(value))
                     }

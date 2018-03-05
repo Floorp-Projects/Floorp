@@ -152,7 +152,7 @@ lazy_static! {
         ("extensions.installDistroAddons", Pref::new(false)),
 
         // Make sure Shield doesn't hit the network.
-        ("extensions.shield-recipe-client.api_url", Pref::new("")),
+        ("app.normandy.api_url", Pref::new("")),
 
         ("extensions.showMismatchUI", Pref::new(false)),
 

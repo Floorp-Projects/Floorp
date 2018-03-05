@@ -97,12 +97,8 @@ public:
     const std::vector<AudioCodecConfig* >& codecConfigList) override;
 
   MediaConduitErrorCode
-  EnableAudioLevelExtension(bool aEnabled,
-                            uint8_t aId,
-                            bool aDirectionIsSend,
-                            bool aLevelIsSsrc = true) override;
-
-  virtual MediaConduitErrorCode EnableMIDExtension(bool enabled, uint8_t id) override;
+  SetLocalRTPExtensions(MediaSessionConduitLocalDirection aDirection,
+                        const RtpExtList& extensions) override;
 
   /**
    * Register External Transport to this Conduit. RTP and RTCP frames from the VoiceEngine

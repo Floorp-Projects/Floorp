@@ -8890,7 +8890,10 @@ class AutoLibraryLoader {
     }
 
     PRLibrary* load(const char* path) {
-        PRLibrary* dll = PR_LoadLibrary(path);
+        PRLibSpec libSpec;
+        libSpec.type = PR_LibSpec_Pathname;
+        libSpec.value.pathname = path;
+        PRLibrary* dll = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW | PR_LD_GLOBAL);
         if (!dll) {
 #ifdef JS_POSIX_NSPR
             fprintf(stderr, "LoadLibrary '%s' failed: %s\n", path, dlerror());

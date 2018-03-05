@@ -89,6 +89,10 @@ public:
     return &DocumentOrShadowRoot::EnsureDOMStyleSheets();
   }
 
+  /**
+   * Clones internal state, for example stylesheets, of aOther to 'this'.
+   */
+  void CloneInternalDataFrom(ShadowRoot* aOther);
 private:
 
   /**

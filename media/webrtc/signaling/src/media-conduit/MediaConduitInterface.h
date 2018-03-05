@@ -34,6 +34,11 @@ class VideoFrame;
 
 namespace mozilla {
 
+enum class MediaSessionConduitLocalDirection : int {
+  kSend,
+  kRecv
+};
+
 using RtpExtList = std::vector<webrtc::RtpExtension>;
 
 // Wrap the webrtc.org Call class adding mozilla add/ref support.
@@ -182,6 +187,12 @@ protected:
 public:
   enum Type { AUDIO, VIDEO } ;
 
+  static std::string
+  LocalDirectionToString(const MediaSessionConduitLocalDirection aDirection) {
+    return aDirection == MediaSessionConduitLocalDirection::kSend ?
+                            "send" : "receive";
+  }
+
   virtual Type type() const = 0;
 
   /**
@@ -241,15 +252,17 @@ public:
   virtual std::vector<unsigned int> GetLocalSSRCs() const = 0;
 
   /**
-  * Adds negotiated RTP extensions
-  * XXX Move to MediaSessionConduit
+  * Adds negotiated RTP header extensions to the the conduit. Unknown extensions
+  * are ignored.
+  * @param aDirection the local direction to set the RTP header extensions for
+  * @param aExtensions the RTP header extensions to set
+  * @return if all extensions were set it returns a success code,
+  *         if an extension fails to set it may immediately return an error code
+  * TODO webrtc.org 64 update: make return type void again
   */
-  virtual void
-  SetLocalRTPExtensions(bool aIsSend, const RtpExtList& extensions) = 0;
-  /**
-  * Returns the negotiated RTP extensions
-  */
-  virtual RtpExtList GetLocalRTPExtensions(bool aIsSend) const = 0;
+  virtual MediaConduitErrorCode
+  SetLocalRTPExtensions(MediaSessionConduitLocalDirection aDirection,
+                        const RtpExtList& aExtensions) = 0;
 
   virtual bool GetRemoteSSRC(unsigned int* ssrc) = 0;
   virtual bool SetRemoteSSRC(unsigned int ssrc) = 0;
@@ -357,12 +370,9 @@ public:
 
   Type type() const override { return VIDEO; }
 
-  void
-  SetLocalRTPExtensions(bool aIsSend,
+  MediaConduitErrorCode
+  SetLocalRTPExtensions(MediaSessionConduitLocalDirection aDirection,
                         const RtpExtList& extensions) override = 0;
-
-  RtpExtList GetLocalRTPExtensions(bool aIsSend) const override = 0;
-
   /**
    * Function to attach Renderer end-point of the Media-Video conduit.
    * @param aRenderer : Reference to the concrete Video renderer implementation
@@ -461,12 +471,9 @@ public:
 
   Type type() const override { return AUDIO; }
 
-  void
-  SetLocalRTPExtensions(bool aIsSend,
-                        const RtpExtList& extensions) override {};
-
-  RtpExtList
-  GetLocalRTPExtensions(bool aIsSend) const override {return RtpExtList();}
+  MediaConduitErrorCode
+  SetLocalRTPExtensions(MediaSessionConduitLocalDirection aDirection,
+                        const RtpExtList& extensions) override = 0;
   /**
    * Function to deliver externally captured audio sample for encoding and transport
    * @param audioData [in]: Pointer to array containing a frame of audio
@@ -531,21 +538,6 @@ public:
     */
   virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
                                 const std::vector<AudioCodecConfig* >& recvCodecConfigList) = 0;
-   /**
-    * Function to enable the audio level extension
-    * @param aEnabled: enable extension
-    * @param aId: the RTP extension header ID to use
-    * @param aDirectionIsSend: indicates whether to set the extension on the
-    *                          sender or the receiver side
-    * returns an error if the extension could not be set
-    */
-  virtual MediaConduitErrorCode
-  EnableAudioLevelExtension(bool aEnabled,
-                            uint8_t aId,
-                            bool aDirectionIsSend,
-                            bool aLevelIsSsrc = true) = 0;
-  virtual MediaConduitErrorCode
-  EnableMIDExtension(bool enabled, uint8_t id) = 0;
 
   virtual bool SetDtmfPayloadType(unsigned char type, int freq) = 0;
 

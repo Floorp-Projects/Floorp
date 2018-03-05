@@ -19,7 +19,7 @@ There's only a simple example function that tries to register and sign right now
 configure with the `RUST_LOG` environment variable:
 
 ```
-cargo build
+cargo build --example main
 RUST_LOG=debug cargo run --example main
 ```
 
@@ -45,6 +45,6 @@ To fuzz, you will need cargo-fuzz (the latest version from GitHub) as well as Ru
 rustup install nightly
 cargo install --git https://github.com/rust-fuzz/cargo-fuzz/
 
-rustup run nightly cargo fuzz run u2f_read -- -max_len=512
-rustup run nightly cargo fuzz run u2f_read_write -- -max_len=512
+cargo +nightly fuzz run u2f_read -- -max_len=512
+cargo +nightly fuzz run u2f_read_write -- -max_len=512
 ```

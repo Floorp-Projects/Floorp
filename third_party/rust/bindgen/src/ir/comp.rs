@@ -1543,13 +1543,20 @@ impl CompInfo {
     ///     1. Current RustTarget allows for `untagged_union`
     ///     2. Each field can derive `Copy`
     pub fn can_be_rust_union(&self, ctx: &BindgenContext) -> bool {
-        ctx.options().rust_features().untagged_union() &&
-            self.fields().iter().all(|f| match *f {
-                Field::DataMember(ref field_data) => {
-                    field_data.ty().can_derive_copy(ctx)
-                }
-                Field::Bitfields(_) => true,
-            })
+        if !ctx.options().rust_features().untagged_union() {
+            return false;
+        }
+
+        if self.is_forward_declaration() {
+            return false;
+        }
+
+        self.fields().iter().all(|f| match *f {
+            Field::DataMember(ref field_data) => {
+                field_data.ty().can_derive_copy(ctx)
+            }
+            Field::Bitfields(_) => true,
+        })
     }
 }
 

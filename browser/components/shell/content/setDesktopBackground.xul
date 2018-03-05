@@ -7,7 +7,15 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://browser/skin/setDesktopBackground.css" type="text/css"?>
 
-<!DOCTYPE dialog SYSTEM "chrome://browser/locale/setDesktopBackground.dtd">
+
+<!DOCTYPE dialog [
+<!ENTITY % setDesktopBackgroundDTD SYSTEM "chrome://browser/locale/setDesktopBackground.dtd">
+%setDesktopBackgroundDTD;
+#ifdef XP_MACOSX
+<!ENTITY % baseMenuOverlayDTD SYSTEM "chrome://browser/locale/baseMenuOverlay.dtd">
+%baseMenuOverlayDTD;
+#endif
+]>
 
 #ifdef XP_MACOSX
 <?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>

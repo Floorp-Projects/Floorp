@@ -1560,7 +1560,7 @@ void NrUdpSocketIpc::create_i(const nsACString &host, const uint16_t port) {
 #endif
   // XXX bug 1126232 - don't use null Principal!
   if (NS_FAILED(socket_child_->Bind(proxy, nullptr, host, port,
-                                    /* reuse = */ false,
+                                    /* addressReuse = */ false,
                                     /* loopback = */ false,
                                     /* recv buffer size */ minBuffSize,
                                     /* send buffer size */ minBuffSize,

@@ -9,11 +9,11 @@ Unreleased
 ### Added
 
 - New `--jsdebugger` flag to open the Browser Toolbox when Firefox
-  launches.  This is useful for debugging Marionette internals
+  launches.  This is useful for debugging Marionette internals.
 
 - Introduced the temporary, boolean capability
   `moz:useNonSpecCompliantPointerOrigin` to disable the WebDriver
-  conforming behavior of calculating the Pointer Origin
+  conforming behavior of calculating the Pointer Origin.
 
 ### Changed
 
@@ -25,6 +25,8 @@ Unreleased
 
 - `Delete Session` now allows Firefox to safely shutdown within 70s before
   force-killing the process
+
+- Changed preference used to disable shield studies to `app.normandy.api_url`.
 
 ### Fixed
 

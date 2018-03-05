@@ -1648,7 +1648,7 @@ nsStandardURL::SetSpecWithEncoding(const nsACString &input,
     return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsStandardURL::SetScheme(const nsACString &input)
 {
     ENSURE_MUTABLE();
@@ -1692,7 +1692,7 @@ nsStandardURL::SetScheme(const nsACString &input)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsStandardURL::SetUserPass(const nsACString &input)
 {
     ENSURE_MUTABLE();
@@ -1802,7 +1802,7 @@ nsStandardURL::SetUserPass(const nsACString &input)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsStandardURL::SetUsername(const nsACString &input)
 {
     ENSURE_MUTABLE();
@@ -1852,7 +1852,7 @@ nsStandardURL::SetUsername(const nsACString &input)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsStandardURL::SetPassword(const nsACString &input)
 {
     ENSURE_MUTABLE();
@@ -1931,7 +1931,7 @@ nsStandardURL::FindHostLimit(nsACString::const_iterator& aStart,
 
 // If aValue only has a host part and no port number, the port
 // will not be reset!!!
-NS_IMETHODIMP
+nsresult
 nsStandardURL::SetHostPort(const nsACString &aValue)
 {
     ENSURE_MUTABLE();
@@ -2000,19 +2000,7 @@ nsStandardURL::SetHostPort(const nsACString &aValue)
     return NS_OK;
 }
 
-// This function is different than SetHostPort in that the port number will be
-// reset as well if aValue parameter does not contain a port port number.
-NS_IMETHODIMP
-nsStandardURL::SetHostAndPort(const nsACString &aValue)
-{
-  // Reset the port and than call SetHostPort. SetHostPort does not reset
-  // the port number.
-  nsresult rv = SetPort(-1);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return SetHostPort(aValue);
-}
-
-NS_IMETHODIMP
+nsresult
 nsStandardURL::SetHost(const nsACString &input)
 {
     ENSURE_MUTABLE();
@@ -2121,7 +2109,7 @@ nsStandardURL::SetHost(const nsACString &input)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsStandardURL::SetPort(int32_t port)
 {
     ENSURE_MUTABLE();
@@ -2195,7 +2183,7 @@ nsStandardURL::ReplacePortInSpec(int32_t aNewPort)
     ShiftFromPath(shift);
 }
 
-NS_IMETHODIMP
+nsresult
 nsStandardURL::SetPathQueryRef(const nsACString &input)
 {
     ENSURE_MUTABLE();
@@ -2842,7 +2830,7 @@ nsStandardURL::GetFileExtension(nsACString &result)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsStandardURL::SetFilePath(const nsACString &input)
 {
     ENSURE_MUTABLE();
@@ -2928,13 +2916,13 @@ IsUTFEncoding(const Encoding* aEncoding)
            aEncoding == UTF_16LE_ENCODING;
 }
 
-NS_IMETHODIMP
+nsresult
 nsStandardURL::SetQuery(const nsACString &input)
 {
     return SetQueryWithEncoding(input, nullptr);
 }
 
-NS_IMETHODIMP
+nsresult
 nsStandardURL::SetQueryWithEncoding(const nsACString &input,
                                     const Encoding* encoding)
 {
@@ -3011,7 +2999,7 @@ nsStandardURL::SetQueryWithEncoding(const nsACString &input,
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsStandardURL::SetRef(const nsACString &input)
 {
     ENSURE_MUTABLE();

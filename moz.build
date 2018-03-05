@@ -16,6 +16,9 @@ with Files('LEGAL'):
 with Files('aclocal.m4'):
     BUG_COMPONENT = ('Core', 'Build Config')
 
+with Files('Cargo.*'):
+    BUG_COMPONENT = ('Core', 'Build Config')
+
 with Files('client.*'):
     BUG_COMPONENT = ('Core', 'Build Config')
 

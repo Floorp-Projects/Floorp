@@ -322,8 +322,8 @@ static const HTMLMarkupMapInfo sHTMLMarkupMapList[] = {
 #undef MARKUPMAP
 
 #ifdef MOZ_XUL
-#define XULMAP(atom, new_func) \
-  { &nsGkAtoms::atom, new_func },
+#define XULMAP(atom, ...) \
+  { &nsGkAtoms::atom, __VA_ARGS__ },
 
 #define XULMAP_TYPE(atom, new_type) \
 XULMAP( \
@@ -1486,15 +1486,6 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 
   } else if (role.EqualsLiteral("xul:link")) {
     accessible = new XULLinkAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:panel")) {
-    if (aContent->IsElement() &&
-        aContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                           nsGkAtoms::noautofocus,
-                                           nsGkAtoms::_true, eCaseMatters))
-      accessible = new XULAlertAccessible(aContent, aDoc);
-    else
-      accessible = new EnumRoleAccessible<roles::PANE>(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:text")) {
     accessible = new XULLabelAccessible(aContent, aDoc);

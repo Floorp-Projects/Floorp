@@ -87,7 +87,6 @@ static constexpr Register IntArgReg5 { Registers::x5 };
 static constexpr Register IntArgReg6 { Registers::x6 };
 static constexpr Register IntArgReg7 { Registers::x7 };
 static constexpr Register HeapReg { Registers::x21 };
-static constexpr Register HeapLenReg { Registers::x22 };
 
 // Define unsized Registers.
 #define DEFINE_UNSIZED_REGISTERS(N)  \

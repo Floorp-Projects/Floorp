@@ -207,6 +207,13 @@ int32_t VideoCaptureImpl::IncomingFrame(
             !apply_rotation ? _rotateFrame : kVideoRotation_0);
         captureFrame.set_ntp_time_ms(captureTime);
 
+        // This is one ugly hack to let CamerasParent know what rotation
+        // the frame was captured at. Note that this goes against the intended
+        // meaning of rotation of the frame (how to rotate it before rendering).
+        // We do this so CamerasChild can scale to the proper dimensions
+        // later on in the pipe.
+        captureFrame.set_rotation(_rotateFrame);
+
         DeliverCapturedFrame(captureFrame);
     }
     else // Encoded format

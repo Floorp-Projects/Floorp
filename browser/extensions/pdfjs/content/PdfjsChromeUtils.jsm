@@ -68,8 +68,7 @@ var PdfjsChromeUtils = {
     this._browsers = new WeakSet();
     if (!this._ppmm) {
       // global parent process message manager (PPMM)
-      this._ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"].
-        getService(Ci.nsIMessageBroadcaster);
+      this._ppmm = Services.ppmm;
       this._ppmm.addMessageListener("PDFJS:Parent:clearUserPref", this);
       this._ppmm.addMessageListener("PDFJS:Parent:setIntPref", this);
       this._ppmm.addMessageListener("PDFJS:Parent:setBoolPref", this);
@@ -78,8 +77,7 @@ var PdfjsChromeUtils = {
       this._ppmm.addMessageListener("PDFJS:Parent:isDefaultHandlerApp", this);
 
       // global dom message manager (MMg)
-      this._mmg = Cc["@mozilla.org/globalmessagemanager;1"].
-        getService(Ci.nsIMessageListenerManager);
+      this._mmg = Services.mm;
       this._mmg.addMessageListener("PDFJS:Parent:displayWarning", this);
 
       this._mmg.addMessageListener("PDFJS:Parent:addEventListener", this);

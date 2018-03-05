@@ -94,7 +94,7 @@ public:
         KHR_stream_consumer_gltexture,
         EXT_device_query,
         NV_stream_consumer_gltexture_yuv,
-        ANGLE_stream_producer_d3d_texture_nv12,
+        ANGLE_stream_producer_d3d_texture,
         ANGLE_device_creation,
         ANGLE_device_creation_d3d11,
         Extensions_Max
@@ -307,12 +307,12 @@ public:
     EGLBoolean  fStreamConsumerGLTextureExternalAttribsNV(EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib* attrib_list) const
         WRAP(   fStreamConsumerGLTextureExternalAttribsNV(dpy, stream, attrib_list) )
 
-    // ANGLE_stream_producer_d3d_texture_nv12
-    EGLBoolean  fCreateStreamProducerD3DTextureNV12ANGLE(EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib* attrib_list) const
-        WRAP(   fCreateStreamProducerD3DTextureNV12ANGLE(dpy, stream, attrib_list) )
+    // ANGLE_stream_producer_d3d_texture
+    EGLBoolean  fCreateStreamProducerD3DTextureANGLE(EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib* attrib_list) const
+        WRAP(   fCreateStreamProducerD3DTextureANGLE(dpy, stream, attrib_list) )
 
-    EGLBoolean  fStreamPostD3DTextureNV12ANGLE(EGLDisplay dpy, EGLStreamKHR stream, void* texture, const EGLAttrib* attrib_list) const
-        WRAP(   fStreamPostD3DTextureNV12ANGLE(dpy, stream, texture, attrib_list) )
+    EGLBoolean  fStreamPostD3DTextureANGLE(EGLDisplay dpy, EGLStreamKHR stream, void* texture, const EGLAttrib* attrib_list) const
+        WRAP(   fStreamPostD3DTextureANGLE(dpy, stream, texture, attrib_list) )
 
     // ANGLE_device_creation
     EGLDeviceEXT fCreateDeviceANGLE(EGLint device_type, void* native_device, const EGLAttrib* attrib_list) const
@@ -469,14 +469,14 @@ private:
         EGLBoolean (GLAPIENTRY * fStreamConsumerGLTextureExternalAttribsNV)(EGLDisplay dpy,
                                                                             EGLStreamKHR stream,
                                                                             const EGLAttrib* attrib_list);
-        // ANGLE_stream_producer_d3d_texture_nv12
-        EGLBoolean (GLAPIENTRY * fCreateStreamProducerD3DTextureNV12ANGLE)(EGLDisplay dpy,
-                                                                           EGLStreamKHR stream,
-                                                                           const EGLAttrib* attrib_list);
-        EGLBoolean (GLAPIENTRY * fStreamPostD3DTextureNV12ANGLE)(EGLDisplay dpy,
-                                                                 EGLStreamKHR stream,
-                                                                 void* texture,
-                                                                 const EGLAttrib* attrib_list);
+        // ANGLE_stream_producer_d3d_texture
+        EGLBoolean (GLAPIENTRY * fCreateStreamProducerD3DTextureANGLE)(EGLDisplay dpy,
+                                                                       EGLStreamKHR stream,
+                                                                       const EGLAttrib* attrib_list);
+        EGLBoolean (GLAPIENTRY * fStreamPostD3DTextureANGLE)(EGLDisplay dpy,
+                                                             EGLStreamKHR stream,
+                                                             void* texture,
+                                                             const EGLAttrib* attrib_list);
         // ANGLE_device_creation
         EGLDeviceEXT (GLAPIENTRY * fCreateDeviceANGLE) (EGLint device_type,
                                                         void* native_device,

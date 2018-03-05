@@ -14056,6 +14056,9 @@ CSSParserImpl::ParseFont()
       AppendValue(eCSSProperty_font_variant_ligatures, family);
       AppendValue(eCSSProperty_font_variant_numeric, family);
       AppendValue(eCSSProperty_font_variant_position, family);
+      if (StylePrefs::sFontVariationsEnabled) {
+        AppendValue(eCSSProperty_font_optical_sizing, family);
+      }
     }
     else {
       AppendValue(eCSSProperty__x_system_font, family);
@@ -14076,6 +14079,9 @@ CSSParserImpl::ParseFont()
       AppendValue(eCSSProperty_font_variant_ligatures, systemFont);
       AppendValue(eCSSProperty_font_variant_numeric, systemFont);
       AppendValue(eCSSProperty_font_variant_position, systemFont);
+      if (StylePrefs::sFontVariationsEnabled) {
+        AppendValue(eCSSProperty_font_optical_sizing, systemFont);
+      }
     }
     return true;
   }
@@ -14186,6 +14192,10 @@ CSSParserImpl::ParseFont()
                   nsCSSValue(eCSSUnit_Normal));
       AppendValue(eCSSProperty_font_variant_position,
                   nsCSSValue(eCSSUnit_Normal));
+      if (StylePrefs::sFontVariationsEnabled) {
+        AppendValue(eCSSProperty_font_optical_sizing,
+                    nsCSSValue(NS_FONT_OPTICAL_SIZING_AUTO, eCSSUnit_Enumerated));
+      }
       return true;
     }
   }

@@ -28,15 +28,13 @@ const MAX_REQUEST_CHUNKS = 1000; // Documentation says 2000.
 // is MAX_REQUESTS * MAX_REQUEST_DATA.
 const MAX_REQUESTS = 15;
 
-const YANDEX_RETURN_CODE_OK = 200;
-
 const YANDEX_ERR_KEY_INVALID               = 401; // Invalid API key
 const YANDEX_ERR_KEY_BLOCKED               = 402; // This API key has been blocked
 const YANDEX_ERR_DAILY_REQ_LIMIT_EXCEEDED  = 403; // Daily limit for requests reached
 const YANDEX_ERR_DAILY_CHAR_LIMIT_EXCEEDED = 404; // Daily limit of chars reached
-const YANDEX_ERR_TEXT_TOO_LONG             = 413; // The text size exceeds the maximum
-const YANDEX_ERR_UNPROCESSABLE_TEXT        = 422; // The text could not be translated
-const YANDEX_ERR_LANG_NOT_SUPPORTED        = 501; // The specified translation direction is not supported
+// const YANDEX_ERR_TEXT_TOO_LONG             = 413; // The text size exceeds the maximum
+// const YANDEX_ERR_UNPROCESSABLE_TEXT        = 422; // The text could not be translated
+// const YANDEX_ERR_LANG_NOT_SUPPORTED        = 501; // The specified translation direction is not supported
 
 // Errors that should activate the service unavailable handling
 const YANDEX_PERMANENT_ERRORS = [
