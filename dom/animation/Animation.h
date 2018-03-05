@@ -11,6 +11,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EffectCompositor.h" // For EffectCompositor::CascadeLevel
 #include "mozilla/LinkedList.h"
@@ -44,6 +45,7 @@ struct AnimationRule;
 
 namespace dom {
 
+class AsyncFinishNotification;
 class CSSAnimation;
 class CSSTransition;
 
@@ -449,7 +451,8 @@ protected:
   void ResetFinishedPromise();
   void MaybeResolveFinishedPromise();
   void DoFinishNotification(SyncNotifyFlag aSyncNotifyFlag);
-  void DoFinishNotificationImmediately();
+  friend class AsyncFinishNotification;
+  void DoFinishNotificationImmediately(MicroTaskRunnable* aAsync = nullptr);
   void DispatchPlaybackEvent(const nsAString& aName);
 
   /**
@@ -542,7 +545,7 @@ protected:
   // getAnimations() list.
   bool mIsRelevant;
 
-  nsRevocableEventPtr<nsRunnableMethod<Animation>> mFinishNotificationTask;
+  RefPtr<MicroTaskRunnable> mFinishNotificationTask;
   // True if mFinished is resolved or would be resolved if mFinished has
   // yet to be created. This is not set when mFinished is rejected since
   // in that case mFinished is immediately reset to represent a new current

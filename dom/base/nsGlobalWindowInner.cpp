@@ -6721,12 +6721,6 @@ nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
   // point anyway, and the script context should have already reported
   // the script error in the usual way - so we just drop it.
 
-  // Since we might be processing more timeouts, go ahead and flush the promise
-  // queue now before we do that.  We need to do that while we're still in our
-  // "running JS is safe" state (e.g. mRunningTimeout is set, timeout->mRunning
-  // is false).
-  Promise::PerformMicroTaskCheckpoint();
-
   if (trackNestingLevel) {
     TimeoutManager::SetNestingLevel(nestingLevel);
   }
