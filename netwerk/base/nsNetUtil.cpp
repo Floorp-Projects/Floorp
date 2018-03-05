@@ -1677,7 +1677,8 @@ private:
         nsresult rv = mTaskQueue->Dispatch(runnable.forget());
         NS_ENSURE_SUCCESS(rv, rv);
 
-        lock.Wait();
+        rv = lock.Wait();
+        NS_ENSURE_SUCCESS(rv, rv);
 
         mCompleted = true;
         return mAsyncResult;

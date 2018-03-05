@@ -163,7 +163,7 @@ nsThreadPool::Run()
   bool shutdownThreadOnExit = false;
   bool exitThread = false;
   bool wasIdle = false;
-  TimeStamp idleSince;
+  PRIntervalTime idleSince;
 
   nsCOMPtr<nsIThreadPoolListener> listener;
   {
@@ -182,8 +182,8 @@ nsThreadPool::Run()
 
       event = mEvents.GetEvent(nullptr, lock);
       if (!event) {
-        TimeStamp now = TimeStamp::Now();
-        TimeDuration timeout = TimeDuration::FromMilliseconds(mIdleThreadTimeout);
+        PRIntervalTime now     = PR_IntervalNow();
+        PRIntervalTime timeout = PR_MillisecondsToInterval(mIdleThreadTimeout);
 
         // If we are shutting down, then don't keep any idle threads
         if (mShutdown) {
@@ -213,9 +213,8 @@ nsThreadPool::Run()
           }
           shutdownThreadOnExit = mThreads.RemoveObject(current);
         } else {
-          TimeDuration delta = timeout - (now - idleSince);
-          LOG(("THRD-P(%p) %s waiting [%f]\n", this, mName.BeginReading(),
-               delta.ToMilliseconds()));
+          PRIntervalTime delta = timeout - (now - idleSince);
+          LOG(("THRD-P(%p) %s waiting [%d]\n", this, mName.BeginReading(), delta));
           mEventsAvailable.Wait(delta);
           LOG(("THRD-P(%p) done waiting\n", this));
         }

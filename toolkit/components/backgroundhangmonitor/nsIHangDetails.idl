@@ -21,9 +21,9 @@ class HangDetails;
 interface nsIHangDetails : nsISupports
 {
   /**
-   * The detected duration of the hang in milliseconds.
+   * The detected duration of the hang.
    */
-  readonly attribute double duration;
+  readonly attribute uint32_t duration;
 
   /**
    * The name of the thread which hung.

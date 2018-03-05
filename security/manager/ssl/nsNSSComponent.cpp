@@ -1102,7 +1102,10 @@ nsNSSComponent::BlockUntilLoadableRootsLoaded()
 {
   MonitorAutoLock rootsLoadedLock(mLoadableRootsLoadedMonitor);
   while (!mLoadableRootsLoaded) {
-    rootsLoadedLock.Wait();
+    nsresult rv = rootsLoadedLock.Wait();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
   MOZ_ASSERT(mLoadableRootsLoaded);
 

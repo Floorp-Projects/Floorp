@@ -53,31 +53,27 @@ public:
     MOZ_COUNT_DTOR(CondVar);
   }
 
+#ifndef DEBUG
   /**
    * Wait
    * @see prcvar.h
    **/
-#ifndef DEBUG
-  void Wait()
+  nsresult Wait(PRIntervalTime aInterval = PR_INTERVAL_NO_TIMEOUT)
   {
-#ifdef MOZILLA_INTERNAL_API
-    AUTO_PROFILER_THREAD_SLEEP;
-#endif //MOZILLA_INTERNAL_API
-    mImpl.wait(*mLock);
-  }
 
-  CVStatus Wait(TimeDuration aDuration)
-  {
 #ifdef MOZILLA_INTERNAL_API
     AUTO_PROFILER_THREAD_SLEEP;
 #endif //MOZILLA_INTERNAL_API
-    return mImpl.wait_for(*mLock, aDuration);
+    if (aInterval == PR_INTERVAL_NO_TIMEOUT) {
+      mImpl.wait(*mLock);
+    } else {
+      mImpl.wait_for(*mLock, TimeDuration::FromMilliseconds(double(aInterval)));
+    }
+    return NS_OK;
   }
 #else
-  // NOTE: debug impl is in BlockingResourceBase.cpp
-  void Wait();
-  CVStatus Wait(TimeDuration aDuration);
-#endif
+  nsresult Wait(PRIntervalTime aInterval = PR_INTERVAL_NO_TIMEOUT);
+#endif // ifndef DEBUG
 
   /**
    * Notify
@@ -132,6 +128,7 @@ private:
   Mutex* mLock;
   detail::ConditionVariableImpl mImpl;
 };
+
 
 } // namespace mozilla
 

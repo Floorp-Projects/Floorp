@@ -695,7 +695,7 @@ ScriptPreloader::Run()
     // since that can trigger a new write during shutdown, and we don't want to
     // cause shutdown hangs.
     if (!mCacheInvalidated) {
-        mal.Wait(TimeDuration::FromSeconds(10));
+        mal.Wait(10000);
     }
 
     auto result = URLPreloader::GetSingleton().WriteCache();

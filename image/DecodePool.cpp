@@ -10,7 +10,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"
 #include "nsIThreadPool.h"
@@ -59,7 +58,7 @@ public:
 
   DecodePoolImpl(uint8_t aMaxThreads,
                  uint8_t aMaxIdleThreads,
-                 TimeDuration aIdleTimeout)
+                 PRIntervalTime aIdleTimeout)
     : mMonitor("DecodePoolImpl")
     , mThreads(aMaxThreads)
     , mIdleTimeout(aIdleTimeout)
@@ -173,7 +172,7 @@ private:
   {
     mMonitor.AssertCurrentThreadOwns();
 
-    TimeDuration timeout = mIdleTimeout;
+    PRIntervalTime timeout = mIdleTimeout;
     do {
       if (!mHighPriorityQueue.IsEmpty()) {
         return PopWorkFromQueue(mHighPriorityQueue);
@@ -198,19 +197,19 @@ private:
         // This thread should shutdown if it is idle. If we have waited longer
         // than the timeout period without having done any work, then we should
         // shutdown the thread.
-        if (timeout.IsZero()) {
+        if (timeout == 0) {
           return CreateShutdownWork();
         }
 
         ++mIdleThreads;
         MOZ_ASSERT(mIdleThreads <= mThreads.Capacity());
 
-        TimeStamp now = TimeStamp::Now();
+        PRIntervalTime now = PR_IntervalNow();
         mMonitor.Wait(timeout);
-        TimeDuration delta = TimeStamp::Now() - now;
+        PRIntervalTime delta = PR_IntervalNow() - now;
         if (delta > timeout) {
           timeout = 0;
-        } else if (timeout != TimeDuration::Forever()) {
+        } else {
           timeout -= delta;
         }
       }
@@ -248,7 +247,7 @@ private:
   nsTArray<RefPtr<IDecodingTask>> mHighPriorityQueue;
   nsTArray<RefPtr<IDecodingTask>> mLowPriorityQueue;
   nsTArray<nsCOMPtr<nsIThread>> mThreads;
-  TimeDuration mIdleTimeout;
+  PRIntervalTime mIdleTimeout;
   uint8_t mMaxIdleThreads;   // Maximum number of workers when idle.
   uint8_t mAvailableThreads; // How many new threads can be created.
   uint8_t mIdleThreads; // How many created threads are waiting.
@@ -384,12 +383,12 @@ DecodePool::DecodePool()
 
   // The timeout period before shutting down idle threads.
   int32_t prefIdleTimeout = gfxPrefs::ImageMTDecodingIdleTimeout();
-  TimeDuration idleTimeout;
+  PRIntervalTime idleTimeout;
   if (prefIdleTimeout <= 0) {
-    idleTimeout = TimeDuration::Forever();
+    idleTimeout = PR_INTERVAL_NO_TIMEOUT;
     idleLimit = limit;
   } else {
-    idleTimeout = TimeDuration::FromMilliseconds(prefIdleTimeout);
+    idleTimeout = PR_MillisecondsToInterval(static_cast<uint32_t>(prefIdleTimeout));
     idleLimit = (limit + 1) / 2;
   }
 

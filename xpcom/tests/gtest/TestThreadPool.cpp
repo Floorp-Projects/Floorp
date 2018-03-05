@@ -87,7 +87,7 @@ TEST(ThreadPool, Parallelism)
       if (!mDone) {
         // Wait for a reasonable timeout since we don't want to block gtests
         // forever should any regression happen.
-        mon.Wait(TimeDuration::FromSeconds(300));
+        mon.Wait(PR_SecondsToInterval(300));
       }
       EXPECT_TRUE(mDone);
       return NS_OK;
