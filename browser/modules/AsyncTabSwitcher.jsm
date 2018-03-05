@@ -383,7 +383,7 @@ class AsyncTabSwitcher {
 
     if (!needSpinner && this.spinnerTab) {
       this.spinnerHidden();
-      this.tabbrowser.removeAttribute("pendingpaint");
+      this.tabbrowser.mPanelContainer.removeAttribute("pendingpaint");
       this.spinnerTab.linkedBrowser.removeAttribute("pendingpaint");
       this.spinnerTab = null;
     } else if (needSpinner && this.spinnerTab !== showTab) {
@@ -393,7 +393,7 @@ class AsyncTabSwitcher {
         this.spinnerDisplayed();
       }
       this.spinnerTab = showTab;
-      this.tabbrowser.setAttribute("pendingpaint", "true");
+      this.tabbrowser.mPanelContainer.setAttribute("pendingpaint", "true");
       this.spinnerTab.linkedBrowser.setAttribute("pendingpaint", "true");
     }
 

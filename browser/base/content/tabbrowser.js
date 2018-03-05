@@ -6,24 +6,8 @@
 /* eslint-env mozilla/browser-window */
 
 class TabBrowser {
-  constructor(container) {
-    this.container = container;
+  constructor() {
     this.requiresAddonInterpositions = true;
-
-    // Pass along any used DOM methods to the container node. When this object turns
-    // into a custom element this won't be needed anymore.
-    this.addEventListener = this.container.addEventListener.bind(this.container);
-    this.removeEventListener = this.container.removeEventListener.bind(this.container);
-    this.dispatchEvent = this.container.dispatchEvent.bind(this.container);
-    this.getAttribute = this.container.getAttribute.bind(this.container);
-    this.hasAttribute = this.container.hasAttribute.bind(this.container);
-    this.setAttribute = this.container.setAttribute.bind(this.container);
-    this.removeAttribute = this.container.removeAttribute.bind(this.container);
-    this.appendChild = this.container.appendChild.bind(this.container);
-    this.ownerGlobal = this.container.ownerGlobal;
-    this.ownerDocument = this.container.ownerDocument;
-    this.namespaceURI = this.container.namespaceURI;
-    this.style = this.container.style;
 
     ChromeUtils.defineModuleGetter(this, "AsyncTabSwitcher",
       "resource:///modules/AsyncTabSwitcher.jsm");
@@ -34,21 +18,21 @@ class TabBrowser {
       mURIFixup: ["@mozilla.org/docshell/urifixup;1", "nsIURIFixup"],
     });
 
-    XPCOMUtils.defineLazyGetter(this, "initialBrowser", () => {
-      return document.getAnonymousElementByAttribute(this.container, "anonid", "initialBrowser");
-    });
-    XPCOMUtils.defineLazyGetter(this, "tabContainer", () => {
-      return document.getElementById(this.getAttribute("tabcontainer"));
-    });
-    XPCOMUtils.defineLazyGetter(this, "tabs", () => {
-      return this.tabContainer.childNodes;
-    });
-    XPCOMUtils.defineLazyGetter(this, "tabbox", () => {
-      return document.getAnonymousElementByAttribute(this.container, "anonid", "tabbox");
-    });
-    XPCOMUtils.defineLazyGetter(this, "mPanelContainer", () => {
-      return document.getAnonymousElementByAttribute(this.container, "anonid", "panelcontainer");
-    });
+    this.ownerGlobal = window;
+    this.ownerDocument = document;
+
+    this.mPanelContainer = document.getElementById("tabbrowser-tabpanels");
+    this.addEventListener = this.mPanelContainer.addEventListener.bind(this.mPanelContainer);
+    this.removeEventListener = this.mPanelContainer.removeEventListener.bind(this.mPanelContainer);
+    this.dispatchEvent = this.mPanelContainer.dispatchEvent.bind(this.mPanelContainer);
+
+    this.initialBrowser = document.getElementById("tabbrowser-initialBrowser");
+
+    this.tabContainer = document.getElementById("tabbrowser-tabs");
+
+    this.tabs = this.tabContainer.childNodes;
+
+    this.tabbox = document.getElementById("tabbrowser-tabbox");
 
     this.closingTabsEnum = { ALL: 0, OTHER: 1, TO_END: 2 };
 
@@ -83,6 +67,8 @@ class TabBrowser {
     this._contentWaitingCount = 0;
 
     this.tabAnimationsInProgress = 0;
+
+    this._XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
     /**
      * Binding from browser to tab
@@ -167,7 +153,7 @@ class TabBrowser {
 
     this._hoverTabTimer = null;
 
-    this.mCurrentBrowser = document.getAnonymousElementByAttribute(this.container, "anonid", "initialBrowser");
+    this.mCurrentBrowser = this.initialBrowser;
     this.mCurrentBrowser.permanentKey = {};
 
     CustomizableUI.addListener(this);
@@ -199,7 +185,7 @@ class TabBrowser {
     // set up the shared autoscroll popup
     this._autoScrollPopup = this.mCurrentBrowser._createAutoScrollPopup();
     this._autoScrollPopup.id = "autoscroller";
-    this.appendChild(this._autoScrollPopup);
+    document.getElementById("mainPopupSet").appendChild(this._autoScrollPopup);
     this.mCurrentBrowser.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
     this.mCurrentBrowser.droppedLinkHandler = handleDroppedLink;
 
@@ -213,10 +199,12 @@ class TabBrowser {
     this._tabFilters.set(this.mCurrentTab, filter);
     this.webProgress.addProgressListener(filter, nsIWebProgress.NOTIFY_ALL);
 
-    if (Services.prefs.getBoolPref("browser.display.use_system_colors"))
-      this.style.backgroundColor = "-moz-default-background-color";
-    else if (Services.prefs.getIntPref("browser.display.document_color_use") == 2)
-      this.style.backgroundColor = Services.prefs.getCharPref("browser.display.background_color");
+    if (Services.prefs.getBoolPref("browser.display.use_system_colors")) {
+      this.mPanelContainer.style.backgroundColor = "-moz-default-background-color";
+    } else if (Services.prefs.getIntPref("browser.display.document_color_use") == 2) {
+      this.mPanelContainer.style.backgroundColor =
+        Services.prefs.getCharPref("browser.display.background_color");
+    }
 
     let messageManager = window.getGroupMessageManager("browsers");
 
@@ -293,8 +281,7 @@ class TabBrowser {
     }
     let stack = this.mCurrentBrowser.parentNode;
     // Create an anchor for the popup
-    const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    let popupAnchor = document.createElementNS(NS_XUL, "hbox");
+    let popupAnchor = document.createElementNS(this._XUL_NS, "hbox");
     popupAnchor.className = "popup-anchor";
     popupAnchor.hidden = true;
     stack.appendChild(popupAnchor);
@@ -490,7 +477,7 @@ class TabBrowser {
     if (aTab._findBar)
       return aTab._findBar;
 
-    let findBar = document.createElementNS(this.namespaceURI, "findbar");
+    let findBar = document.createElementNS(this._XUL_NS, "findbar");
     let browser = this.getBrowserForTab(aTab);
     let browserContainer = this.getBrowserContainer(browser);
     browserContainer.appendChild(findBar);
@@ -512,7 +499,7 @@ class TabBrowser {
 
   getStatusPanel() {
     if (!this._statusPanel) {
-      this._statusPanel = document.createElementNS(this.namespaceURI, "statuspanel");
+      this._statusPanel = document.createElementNS(this._XUL_NS, "statuspanel");
       this._statusPanel.setAttribute("inactive", "true");
       this._statusPanel.setAttribute("layer", "true");
       this._appendStatusPanel();
@@ -865,7 +852,7 @@ class TabBrowser {
 
   getWindowTitleForBrowser(aBrowser) {
     var newTitle = "";
-    var docElement = this.ownerDocument.documentElement;
+    var docElement = document.documentElement;
     var sep = docElement.getAttribute("titlemenuseparator");
     let tab = this.getTabForBrowser(aBrowser);
     let docTitle;
@@ -907,7 +894,7 @@ class TabBrowser {
   }
 
   updateTitlebar() {
-    this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
+    document.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
   }
 
   updateCurrentBrowser(aForceUpdate) {
@@ -1180,8 +1167,7 @@ class TabBrowser {
 
     // If there's a tabmodal prompt showing, focus it.
     if (newBrowser.hasAttribute("tabmodalPromptShowing")) {
-      let XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-      let prompts = newBrowser.parentNode.getElementsByTagNameNS(XUL_NS, "tabmodalprompt");
+      let prompts = newBrowser.parentNode.getElementsByTagNameNS(this._XUL_NS, "tabmodalprompt");
       let prompt = prompts[prompts.length - 1];
       prompt.Dialog.setDefaultFocus();
       return;
@@ -1787,9 +1773,7 @@ class TabBrowser {
     // care of that themselves.
     if (browser) {
       browser.setAttribute("preloadedState", "consumed");
-      if (this.hasAttribute("autocompletepopup")) {
-        browser.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
-      }
+      browser.setAttribute("autocompletepopup", "PopupAutoComplete");
     }
 
     return browser;
@@ -1839,15 +1823,13 @@ class TabBrowser {
     // userContextId, remote, remoteType, isPreloadBrowser,
     // uriIsAboutBlank, sameProcessAsFrameLoader
 
-    const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-    let b = document.createElementNS(NS_XUL, "browser");
+    let b = document.createElementNS(this._XUL_NS, "browser");
     b.permanentKey = {};
     b.setAttribute("type", "content");
     b.setAttribute("message", "true");
     b.setAttribute("messagemanagergroup", "browsers");
-    b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
-    b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
+    b.setAttribute("contextmenu", "contentAreaContextMenu");
+    b.setAttribute("tooltip", "aHTMLTooltip");
 
     if (aParams.userContextId) {
       b.setAttribute("usercontextid", aParams.userContextId);
@@ -1870,8 +1852,8 @@ class TabBrowser {
       b.presetOpenerWindow(aParams.openerWindow);
     }
 
-    if (!aParams.isPreloadBrowser && this.hasAttribute("autocompletepopup")) {
-      b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
+    if (!aParams.isPreloadBrowser) {
+      b.setAttribute("autocompletepopup", "PopupAutoComplete");
     }
 
     /*
@@ -1893,12 +1875,9 @@ class TabBrowser {
       b.setAttribute("preloadedState", "preloaded");
     }
 
-    if (this.hasAttribute("selectmenulist"))
-      b.setAttribute("selectmenulist", this.getAttribute("selectmenulist"));
+    b.setAttribute("selectmenulist", "ContentSelectDropdown");
 
-    if (this.hasAttribute("datetimepicker")) {
-      b.setAttribute("datetimepicker", this.getAttribute("datetimepicker"));
-    }
+    b.setAttribute("datetimepicker", "DateTimePickerPanel");
 
     b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
 
@@ -1923,27 +1902,25 @@ class TabBrowser {
     }
 
     // Create the browserStack container
-    var stack = document.createElementNS(NS_XUL, "stack");
+    let stack = document.createElementNS(this._XUL_NS, "stack");
     stack.className = "browserStack";
     stack.appendChild(b);
     stack.setAttribute("flex", "1");
 
     // Create the browserContainer
-    var browserContainer = document.createElementNS(NS_XUL, "vbox");
+    let browserContainer = document.createElementNS(this._XUL_NS, "vbox");
     browserContainer.className = "browserContainer";
     browserContainer.appendChild(stack);
     browserContainer.setAttribute("flex", "1");
 
     // Create the sidebar container
-    var browserSidebarContainer = document.createElementNS(NS_XUL,
-      "hbox");
+    let browserSidebarContainer = document.createElementNS(this._XUL_NS, "hbox");
     browserSidebarContainer.className = "browserSidebarContainer";
     browserSidebarContainer.appendChild(browserContainer);
     browserSidebarContainer.setAttribute("flex", "1");
 
     // Add the Message and the Browser to the box
-    var notificationbox = document.createElementNS(NS_XUL,
-      "notificationbox");
+    let notificationbox = document.createElementNS(this._XUL_NS, "notificationbox");
     notificationbox.setAttribute("flex", "1");
     notificationbox.setAttribute("notificationside", "top");
     notificationbox.appendChild(browserSidebarContainer);
@@ -2178,7 +2155,6 @@ class TabBrowser {
   addTab(aURI, aReferrerURI, aCharset, aPostData, aOwner, aAllowThirdPartyFixup) {
     "use strict";
 
-    const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     var aTriggeringPrincipal;
     var aReferrerPolicy;
     var aFromExternal;
@@ -2256,7 +2232,7 @@ class TabBrowser {
     let openerTab = ((aOpenerBrowser && this.getTabForBrowser(aOpenerBrowser)) ||
       (relatedToCurrent && this.selectedTab));
 
-    var t = document.createElementNS(NS_XUL, "tab");
+    var t = document.createElementNS(this._XUL_NS, "tab");
 
     t.openerTab = openerTab;
 
@@ -3557,12 +3533,13 @@ class TabBrowser {
   }
 
   moveTabOver(aEvent) {
-    var direction = window.getComputedStyle(this.container.parentNode).direction;
+    let direction = window.getComputedStyle(document.documentElement).direction;
     if ((direction == "ltr" && aEvent.keyCode == KeyEvent.DOM_VK_RIGHT) ||
-      (direction == "rtl" && aEvent.keyCode == KeyEvent.DOM_VK_LEFT))
+        (direction == "rtl" && aEvent.keyCode == KeyEvent.DOM_VK_LEFT)) {
       this.moveTabForward();
-    else
+    } else {
       this.moveTabBackward();
+    }
   }
 
   /**
@@ -3670,7 +3647,7 @@ class TabBrowser {
         case "}".charCodeAt(0):
           offset = -1;
         case "{".charCodeAt(0):
-          if (window.getComputedStyle(this.container).direction == "ltr")
+          if (window.getComputedStyle(document.documentElement).direction == "ltr")
             offset *= -1;
           this.tabContainer.advanceSelectedTab(offset, true);
           aEvent.preventDefault();
@@ -3973,7 +3950,7 @@ class TabBrowser {
     return "panel-" + outerID + "-" + (++this._uniquePanelIDCounter);
   }
 
-  disconnectedCallback() {
+  destroy() {
     Services.obs.removeObserver(this, "contextual-identity-updated");
 
     CustomizableUI.removeListener(this);
