@@ -2272,6 +2272,34 @@ BrowserGlue.prototype = {
       }
     }
 
+    if (currentUIVersion < 63 &&
+        Services.prefs.getCharPref("general.config.filename", "") == "dsengine.cfg") {
+      let searchInitializedPromise = new Promise(resolve => {
+        if (Services.search.isInitialized) {
+          resolve();
+        }
+        const SEARCH_SERVICE_TOPIC = "browser-search-service";
+        Services.obs.addObserver(function observer(subject, topic, data) {
+          if (data != "init-complete") {
+            return;
+          }
+          Services.obs.removeObserver(observer, SEARCH_SERVICE_TOPIC);
+          resolve();
+        }, SEARCH_SERVICE_TOPIC);
+      });
+      searchInitializedPromise.then(() => {
+        let engineNames = ["Bing Search Engine",
+                           "Yahoo Search Engine",
+                           "Yandex Search Engine"];
+        for (let engineName of engineNames) {
+          let engine = Services.search.getEngineByName(engineName);
+          if (engine) {
+            Services.search.removeEngine(engine);
+          }
+        }
+      });
+    }
+
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
