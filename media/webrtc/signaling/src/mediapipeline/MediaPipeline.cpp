@@ -1965,14 +1965,24 @@ public:
     , mMaybeTrackNeedsUnmute(true)
   {
     MOZ_RELEASE_ASSERT(mSource, "Must be used with a SourceMediaStream");
+  }
+
+  virtual ~GenericReceiveListener()
+  {
+    NS_ReleaseOnMainThreadSystemGroup(
+      "GenericReceiveListener::track_", mTrack.forget());
+  }
+
+  void AddTrackToSource(uint32_t aRate = 0)
+  {
+    MOZ_ASSERT((aRate != 0 && mTrack->AsAudioStreamTrack()) ||
+               mTrack->AsVideoStreamTrack());
 
     if (mTrack->AsAudioStreamTrack()) {
       mSource->AddAudioTrack(
-          mTrackId, mSource->GraphRate(), 0, new AudioSegment());
+          mTrackId, aRate, 0, new AudioSegment());
     } else if (mTrack->AsVideoStreamTrack()) {
       mSource->AddTrack(mTrackId, 0, new VideoSegment());
-    } else {
-      MOZ_ASSERT_UNREACHABLE("Unknown track type");
     }
     CSFLogDebug(
       LOGTAG,
@@ -1984,12 +1994,6 @@ public:
 
     mSource->AdvanceKnownTracksTime(STREAM_TIME_MAX);
     mSource->AddListener(this);
-  }
-
-  virtual ~GenericReceiveListener()
-  {
-    NS_ReleaseOnMainThreadSystemGroup(
-      "GenericReceiveListener::track_", mTrack.forget());
   }
 
   void AddSelf()
@@ -2115,6 +2119,7 @@ public:
                           "AudioPipelineListener"))
     , mLastLog(0)
   {
+    AddTrackToSource(mRate);
   }
 
   // Implement MediaStreamListener
@@ -2146,10 +2151,13 @@ private:
   void NotifyPullImpl(StreamTime aDesiredTime)
   {
     uint32_t samplesPer10ms = mRate / 100;
-    // Determine how many frames we need.
-    // As we get frames from conduit_ at the same rate as the graph's rate,
-    // the number of frames needed straightfully determined.
-    TrackTicks framesNeeded = aDesiredTime - mPlayedTicks;
+
+    // mSource's rate is not necessarily the same as the graph rate, since there
+    // are sample-rate constraints on the inbound audio: only 16, 32, 44.1 and
+    // 48kHz are supported. The audio frames we get here is going to be
+    // resampled when inserted into the graph.
+    TrackTicks desired = mSource->TimeToTicksRoundUp(mRate, aDesiredTime);
+    TrackTicks framesNeeded = desired - mPlayedTicks;
 
     while (framesNeeded >= 0) {
       const int scratchBufferLength =
@@ -2313,6 +2321,7 @@ public:
         LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS))
     , mMutex("Video PipelineListener")
   {
+    AddTrackToSource();
   }
 
   // Implement MediaStreamListener
