@@ -397,8 +397,7 @@ pref("browser.search.geoSpecificDefaults.url", "https://search.services.mozilla.
 // US specific default (used as a fallback if the geoSpecificDefaults request fails).
 pref("browser.search.defaultenginename.US",      "data:text/plain,browser.search.defaultenginename.US=Google");
 pref("browser.search.order.US.1",                "data:text/plain,browser.search.order.US.1=Google");
-pref("browser.search.order.US.2",                "data:text/plain,browser.search.order.US.2=Yahoo");
-pref("browser.search.order.US.3",                "data:text/plain,browser.search.order.US.3=Bing");
+pref("browser.search.order.US.2",                "data:text/plain,browser.search.order.US.2=Bing");
 
 // search bar results always open in a new tab
 pref("browser.search.openintab", false);
