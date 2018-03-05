@@ -6360,6 +6360,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
       "'wdth\" 1", "\"wdth' 1" // mismatched quotes
     ]
   };
+  gCSSProperties["font"].subproperties.push("font-variation-settings");
   gCSSProperties["font-optical-sizing"] = {
     domProp: "fontOpticalSizing",
     inherited: true,

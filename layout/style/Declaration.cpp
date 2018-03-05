@@ -828,6 +828,8 @@ Declaration::GetPropertyValueInternal(
         data->ValueFor(eCSSProperty_font_optical_sizing); // may be missing!
       const nsCSSValue *fontKerning =
         data->ValueFor(eCSSProperty_font_kerning);
+      const nsCSSValue *variationSettings =
+        data->ValueFor(eCSSProperty_font_variation_settings); // may be missing!
       const nsCSSValue *fontVariantAlternates =
         data->ValueFor(eCSSProperty_font_variant_alternates);
       const nsCSSValue *fontVariantCaps =
@@ -855,6 +857,7 @@ Declaration::GetPropertyValueInternal(
             languageOverride->GetUnit() != eCSSUnit_System_Font ||
             (opticalSizing && opticalSizing->GetUnit() != eCSSUnit_System_Font) ||
             fontKerning->GetUnit() != eCSSUnit_System_Font ||
+            (variationSettings && variationSettings->GetUnit() != eCSSUnit_System_Font) ||
             fontVariantAlternates->GetUnit() != eCSSUnit_System_Font ||
             fontVariantCaps->GetUnit() != eCSSUnit_System_Font ||
             fontVariantEastAsian->GetUnit() != eCSSUnit_System_Font ||
@@ -873,6 +876,7 @@ Declaration::GetPropertyValueInternal(
             languageOverride->GetUnit() != eCSSUnit_Normal ||
             (opticalSizing && opticalSizing->GetIntValue() != NS_FONT_OPTICAL_SIZING_AUTO) ||
             fontKerning->GetIntValue() != NS_FONT_KERNING_AUTO ||
+            (variationSettings && variationSettings->GetUnit() != eCSSUnit_Normal) ||
             fontVariantAlternates->GetUnit() != eCSSUnit_Normal ||
             fontVariantEastAsian->GetUnit() != eCSSUnit_Normal ||
             fontVariantLigatures->GetUnit() != eCSSUnit_Normal ||
