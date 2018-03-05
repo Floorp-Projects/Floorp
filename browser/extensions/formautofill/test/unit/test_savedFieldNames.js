@@ -12,7 +12,7 @@ add_task(async function test_profileSavedFieldNames_init() {
   sinon.stub(formAutofillParent, "_updateSavedFieldNames");
 
   await formAutofillParent.init();
-  await formAutofillParent.formAutofillStorage.initialize();
+  await formAutofillParent.profileStorage.initialize();
   Assert.equal(formAutofillParent._updateSavedFieldNames.called, true);
 
   formAutofillParent._uninit();
@@ -43,8 +43,8 @@ add_task(async function test_profileSavedFieldNames_update() {
     Services.prefs.clearUserPref("extensions.formautofill.addresses.enabled");
   });
 
-  sinon.stub(formAutofillParent.formAutofillStorage.addresses, "getAll");
-  formAutofillParent.formAutofillStorage.addresses.getAll.returns([]);
+  sinon.stub(profileStorage.addresses, "getAll");
+  profileStorage.addresses.getAll.returns([]);
 
   // The set is empty if there's no profile in the store.
   formAutofillParent._updateSavedFieldNames();
@@ -72,7 +72,7 @@ add_task(async function test_profileSavedFieldNames_update() {
     timeLastModified: 0,
     timesUsed: 0,
   }];
-  formAutofillParent.formAutofillStorage.addresses.getAll.returns(fakeStorage);
+  profileStorage.addresses.getAll.returns(fakeStorage);
   formAutofillParent._updateSavedFieldNames();
 
   let autofillSavedFieldNames = Services.ppmm.initialProcessData.autofillSavedFieldNames;

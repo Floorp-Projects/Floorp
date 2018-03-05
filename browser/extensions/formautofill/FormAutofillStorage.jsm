@@ -121,7 +121,7 @@
 
 // We expose a singleton from this module. Some tests may import the
 // constructor via a backstage pass.
-this.EXPORTED_SYMBOLS = ["formAutofillStorage"];
+var EXPORTED_SYMBOLS = ["profileStorage"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -1802,5 +1802,5 @@ FormAutofillStorage.prototype = {
 };
 
 // The singleton exposed by this module.
-this.formAutofillStorage = new FormAutofillStorage(
+var profileStorage = new FormAutofillStorage(
   OS.Path.join(OS.Constants.Path.profileDir, PROFILE_JSON_FILE_NAME));

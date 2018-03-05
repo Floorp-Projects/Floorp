@@ -22,7 +22,7 @@ add_task(async function test_activeStatus_init() {
   Assert.equal(Services.ppmm.initialProcessData.autofillEnabled, undefined);
 
   // Initialize profile storage
-  await formAutofillParent.formAutofillStorage.initialize();
+  await formAutofillParent.profileStorage.initialize();
   // Upon first initializing profile storage, status should be computed.
   Assert.equal(formAutofillParent._updateStatus.called, true);
   Assert.equal(Services.ppmm.initialProcessData.autofillEnabled, false);
@@ -71,8 +71,8 @@ add_task(async function test_activeStatus_computeStatus() {
     Services.prefs.clearUserPref("extensions.formautofill.creditCards.enabled");
   });
 
-  sinon.stub(formAutofillParent.formAutofillStorage.addresses, "getAll");
-  formAutofillParent.formAutofillStorage.addresses.getAll.returns([]);
+  sinon.stub(profileStorage.addresses, "getAll");
+  profileStorage.addresses.getAll.returns([]);
 
   // pref is enabled and profile is empty.
   Services.prefs.setBoolPref("extensions.formautofill.addresses.enabled", true);
@@ -84,7 +84,7 @@ add_task(async function test_activeStatus_computeStatus() {
   Services.prefs.setBoolPref("extensions.formautofill.creditCards.enabled", false);
   Assert.equal(formAutofillParent._computeStatus(), false);
 
-  formAutofillParent.formAutofillStorage.addresses.getAll.returns([{"given-name": "John"}]);
+  profileStorage.addresses.getAll.returns([{"given-name": "John"}]);
   formAutofillParent.observe(null, "formautofill-storage-changed", "add");
   // pref is enabled and profile is not empty.
   Services.prefs.setBoolPref("extensions.formautofill.addresses.enabled", true);
