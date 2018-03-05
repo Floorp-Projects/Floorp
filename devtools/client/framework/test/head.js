@@ -156,14 +156,16 @@ function checkHostType(toolbox, hostType, previousHostType) {
  */
 function createScript(url) {
   info(`Creating script: ${url}`);
-  let mm = getFrameScript();
+  // This is not ideal if called multiple times, as it loads the frame script
+  // separately each time.  See bug 1443680.
+  loadFrameScriptUtils();
   let command = `
     let script = document.createElement("script");
     script.setAttribute("src", "${url}");
     document.body.appendChild(script);
     null;
   `;
-  return evalInDebuggee(mm, command);
+  return evalInDebuggee(command);
 }
 
 /**

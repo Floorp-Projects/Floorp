@@ -166,7 +166,7 @@ add_task(async function () {
   info("Starting test... ");
 
   let waitNetwork = waitForNetworkEvents(monitor, REQUESTS.length);
-  loadCommonFrameScript();
+  loadFrameScriptUtils();
   await performRequestsInContent(REQUESTS);
   await waitNetwork;
 

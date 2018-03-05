@@ -208,7 +208,10 @@ function attachThreadActorForUrl(aClient, aUrl) {
   return deferred.promise;
 }
 
-function once(aTarget, aEventName, aUseCapture = false) {
+// Override once from shared-head, as some tests depend on trying native DOM listeners
+// before EventEmitter.  Since this directory is deprecated, there's little value in
+// resolving the descrepency here.
+this.once = function (aTarget, aEventName, aUseCapture = false) {
   info("Waiting for event: '" + aEventName + "' on " + aTarget + ".");
 
   let deferred = promise.defer();
@@ -228,7 +231,7 @@ function once(aTarget, aEventName, aUseCapture = false) {
   }
 
   return deferred.promise;
-}
+};
 
 function waitForTick() {
   let deferred = promise.defer();
