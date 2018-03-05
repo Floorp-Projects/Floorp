@@ -195,7 +195,7 @@ gr_uint32 gr_face_lang_by_index(const gr_face* pFace, gr_uint16 i)
 
 void gr_face_destroy(gr_face *face)
 {
-    delete face;
+    delete static_cast<Face*>(face);
 }
 
 
