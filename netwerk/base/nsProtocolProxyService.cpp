@@ -1614,7 +1614,7 @@ class nsAsyncBridgeRequest final  : public nsPACManCallback
 
     void Lock()   { mMutex.Lock(); }
     void Unlock() { mMutex.Unlock(); }
-    void Wait()   { mCondVar.Wait(TimeDuration::FromSeconds(3)); }
+    void Wait()   { mCondVar.Wait(PR_SecondsToInterval(3)); }
 
 private:
     ~nsAsyncBridgeRequest()

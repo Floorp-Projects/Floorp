@@ -181,6 +181,7 @@ StorageDBThread::StorageDBThread()
   , mStatus(NS_OK)
   , mWorkerStatements(mWorkerConnection)
   , mReaderStatements(mReaderConnection)
+  , mDirtyEpoch(0)
   , mFlushImmediately(false)
   , mPriorityCounter(0)
 {
@@ -530,8 +531,7 @@ StorageDBThread::ThreadFunc()
       } while (NS_SUCCEEDED(rv) && processedEvent);
     }
 
-    TimeDuration timeUntilFlush = TimeUntilFlush();
-    if (MOZ_UNLIKELY(timeUntilFlush.IsZero())) {
+    if (MOZ_UNLIKELY(TimeUntilFlush() == 0)) {
       // Flush time is up or flush has been forced, do it now.
       UnscheduleFlush();
       if (mPendingTasks.Prepare()) {
@@ -558,7 +558,7 @@ StorageDBThread::ThreadFunc()
         SetDefaultPriority(); // urgent preload unscheduled
       }
     } else if (MOZ_UNLIKELY(!mStopIOThread)) {
-      lockMonitor.Wait(timeUntilFlush);
+      lockMonitor.Wait(TimeUntilFlush());
     }
   } // thread loop
 
@@ -825,7 +825,7 @@ StorageDBThread::ScheduleFlush()
   }
 
   // Must be non-zero to indicate we are scheduled
-  mDirtyEpoch = TimeStamp::Now();
+  mDirtyEpoch = PR_IntervalNow() | 1;
 
   // Wake the monitor from indefinite sleep...
   (mThreadObserver->GetMonitor()).Notify();
@@ -836,28 +836,32 @@ StorageDBThread::UnscheduleFlush()
 {
   // We are just about to do the flush, drop flags
   mFlushImmediately = false;
-  mDirtyEpoch = TimeStamp();
+  mDirtyEpoch = 0;
 }
 
-TimeDuration
+PRIntervalTime
 StorageDBThread::TimeUntilFlush()
 {
   if (mFlushImmediately) {
     return 0; // Do it now regardless the timeout.
   }
 
+  static_assert(PR_INTERVAL_NO_TIMEOUT != 0,
+      "PR_INTERVAL_NO_TIMEOUT must be non-zero");
+
   if (!mDirtyEpoch) {
-    return TimeDuration::Forever(); // No pending task...
+    return PR_INTERVAL_NO_TIMEOUT; // No pending task...
   }
 
-  TimeStamp now = TimeStamp::Now();
-  TimeDuration age = now - mDirtyEpoch;
-  static const TimeDuration kMaxAge = TimeDuration::FromMilliseconds(FLUSHING_INTERVAL_MS);
+  static const PRIntervalTime kMaxAge = PR_MillisecondsToInterval(FLUSHING_INTERVAL_MS);
+
+  PRIntervalTime now = PR_IntervalNow() | 1;
+  PRIntervalTime age = now - mDirtyEpoch;
   if (age > kMaxAge) {
     return 0; // It is time.
   }
 
-  return kMaxAge - age; // Time left. This is used to sleep the monitor.
+  return kMaxAge - age; // Time left, this is used to sleep the monitor
 }
 
 void

@@ -1274,7 +1274,7 @@ private:
   DisableMemoryReporter();
 
   void
-  WaitForWorkerEvents();
+  WaitForWorkerEvents(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT);
 
   void
   PostMessageToParentInternal(JSContext* aCx,

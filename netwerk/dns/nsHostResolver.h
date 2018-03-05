@@ -444,8 +444,8 @@ private:
     mozilla::LinkedList<RefPtr<nsHostRecord>> mEvictionQ;
     uint32_t      mEvictionQSize;
     PRTime        mCreationTime;
-    mozilla::TimeDuration mLongIdleTimeout;
-    mozilla::TimeDuration mShortIdleTimeout;
+    PRIntervalTime mLongIdleTimeout;
+    PRIntervalTime mShortIdleTimeout;
 
     mozilla::Atomic<bool>     mShutdown;
     mozilla::Atomic<uint32_t> mNumIdleThreads;
