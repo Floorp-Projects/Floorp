@@ -136,12 +136,25 @@ using mozilla::TimeStamp;
 
 // Avoid an unnecessary NSPR dependency on Linux and OS X just for the shell.
 #ifdef JS_POSIX_NSPR
+
+enum PRLibSpecType { PR_LibSpec_Pathname };
+
+struct PRLibSpec {
+    PRLibSpecType type;
+    union {
+        const char *pathname;
+    } value;
+};
+
 typedef void PRLibrary;
 
-static PRLibrary*
-PR_LoadLibrary(const char* path)
+#define PR_LD_NOW    RTLD_NOW
+#define PR_LD_GLOBAL RTLD_GLOBAL
+
+static PRLibrary *
+PR_LoadLibraryWithFlags(PRLibSpec libSpec, int flags)
 {
-    return dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
+    return dlopen(libSpec.value.pathname, flags);
 }
 
 static void
