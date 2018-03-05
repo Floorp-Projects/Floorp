@@ -79,7 +79,7 @@ private:
     void RemoveObjectIfTracked(nsCSSRuleProcessor* aRuleProcessor);
 
     virtual void NotifyExpired(nsCSSRuleProcessor* aRuleProcessor) override {
-      mCache->RemoveRuleProcessor(aRuleProcessor);
+      mozilla::RuleProcessorCache::RemoveRuleProcessor(aRuleProcessor);
     }
 
   private:

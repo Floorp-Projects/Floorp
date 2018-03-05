@@ -931,7 +931,7 @@ BaselineCompiler::emitProfilerEnterFrame()
     // Starts off initially disabled.
     Label noInstrument;
     CodeOffset toggleOffset = masm.toggledJump(&noInstrument);
-    masm.profilerEnterFrame(masm.getStackPointer(), R0.scratchReg());
+    masm.profilerEnterFrame(MacroAssembler::getStackPointer(), R0.scratchReg());
     masm.bind(&noInstrument);
 
     // Store the start offset in the appropriate location.
@@ -4907,7 +4907,7 @@ BaselineCompiler::emit_JSOP_RESUME()
     // After the generator returns, we restore the stack pointer, push the
     // return value and we're done.
     masm.bind(&returnTarget);
-    masm.computeEffectiveAddress(frame.addressOfStackValue(frame.peek(-1)), masm.getStackPointer());
+    masm.computeEffectiveAddress(frame.addressOfStackValue(frame.peek(-1)), MacroAssembler::getStackPointer());
     frame.popn(2);
     frame.push(R0);
     return true;

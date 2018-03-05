@@ -6156,7 +6156,7 @@ nsGlobalWindowOuter::EnterModalState()
         nsContentUtils::ContentIsCrossDocDescendantOf(mDoc, activeShell->GetDocument()))) {
       EventStateManager::ClearGlobalActiveContent(activeESM);
 
-      activeShell->SetCapturingContent(nullptr, 0);
+      nsIPresShell::SetCapturingContent(nullptr, 0);
 
       if (activeShell) {
         RefPtr<nsFrameSelection> frameSelection = activeShell->FrameSelection();
