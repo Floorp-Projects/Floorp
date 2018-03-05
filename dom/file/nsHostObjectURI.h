@@ -77,6 +77,7 @@ protected:
   virtual ~nsHostObjectURI() {}
 
   nsresult SetScheme(const nsACString &aProtocol) override;
+  bool Deserialize(const mozilla::ipc::URIParams&);
 
 public:
   class Mutator final
