@@ -268,6 +268,7 @@ var TPS = {
    * directly called via TPS.Sync()!
    */
   delayAutoSync: function TPS_delayAutoSync() {
+    Weave.Svc.Prefs.set("scheduler.eolInterval", 7200);
     Weave.Svc.Prefs.set("scheduler.immediateInterval", 7200);
     Weave.Svc.Prefs.set("scheduler.idleInterval", 7200);
     Weave.Svc.Prefs.set("scheduler.activeInterval", 7200);
