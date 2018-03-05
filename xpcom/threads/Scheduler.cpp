@@ -443,7 +443,7 @@ SchedulerImpl::Switcher()
       }
     }
 
-    mShutdownCondVar.Wait(TimeDuration::FromMicroseconds(50));
+    mShutdownCondVar.Wait(PR_MicrosecondsToInterval(50));
   }
 }
 

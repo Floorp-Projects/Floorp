@@ -519,7 +519,7 @@ loopStart:
         break;
       }
 
-      lock.Wait();
+      lock.Wait(PR_INTERVAL_NO_TIMEOUT);
 
     } while (true);
 

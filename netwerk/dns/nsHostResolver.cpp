@@ -524,8 +524,8 @@ nsHostResolver::nsHostResolver(uint32_t maxCacheEntries,
 {
     mCreationTime = PR_Now();
 
-    mLongIdleTimeout  = TimeDuration::FromSeconds(LongIdleTimeoutSeconds);
-    mShortIdleTimeout = TimeDuration::FromSeconds(ShortIdleTimeoutSeconds);
+    mLongIdleTimeout  = PR_SecondsToInterval(LongIdleTimeoutSeconds);
+    mShortIdleTimeout = PR_SecondsToInterval(ShortIdleTimeoutSeconds);
 }
 
 nsHostResolver::~nsHostResolver() = default;
@@ -1297,13 +1297,12 @@ bool
 nsHostResolver::GetHostToLookup(nsHostRecord **result)
 {
     bool timedOut = false;
-    TimeDuration timeout;
-    TimeStamp epoch, now;
+    PRIntervalTime epoch, now, timeout;
 
     MutexAutoLock lock(mLock);
 
     timeout = (mNumIdleThreads >= HighThreadThreshold) ? mShortIdleTimeout : mLongIdleTimeout;
-    epoch = TimeStamp::Now();
+    epoch = PR_IntervalNow();
 
     while (!mShutdown) {
         // remove next record from Q; hand over owning reference. Check high, then med, then low
@@ -1348,16 +1347,15 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
         mIdleThreadCV.Wait(timeout);
         mNumIdleThreads--;
 
-        now = TimeStamp::Now();
+        now = PR_IntervalNow();
 
-        if (now - epoch >= timeout) {
+        if ((PRIntervalTime)(now - epoch) >= timeout)
             timedOut = true;
-        } else {
-            // It is possible that CondVar::Wait() was interrupted and returned
-            // early, in which case we will loop back and re-enter it. In that
-            // case we want to do so with the new timeout reduced to reflect
-            // time already spent waiting.
-            timeout -= now - epoch;
+        else {
+            // It is possible that PR_WaitCondVar() was interrupted and returned early,
+            // in which case we will loop back and re-enter it. In that case we want to
+            // do so with the new timeout reduced to reflect time already spent waiting.
+            timeout -= (PRIntervalTime)(now - epoch);
             epoch = now;
         }
     }

@@ -417,7 +417,7 @@ TimerThread::Run()
 
   while (!mShutdown) {
     // Have to use PRIntervalTime here, since PR_WaitCondVar takes it
-    TimeDuration waitFor;
+    PRIntervalTime waitFor;
     bool forceRunThisTimer = forceRunNextTimer;
     forceRunNextTimer = false;
 
@@ -427,9 +427,9 @@ TimerThread::Run()
       if (ChaosMode::isActive(ChaosFeature::TimerScheduling)) {
         milliseconds = ChaosMode::randomUint32LessThan(200);
       }
-      waitFor = TimeDuration::FromMilliseconds(milliseconds);
+      waitFor = PR_MillisecondsToInterval(milliseconds);
     } else {
-      waitFor = TimeDuration::Forever();
+      waitFor = PR_INTERVAL_NO_TIMEOUT;
       TimeStamp now = TimeStamp::Now();
 
       RemoveLeadingCanceledTimersInternal();
@@ -516,20 +516,20 @@ TimerThread::Run()
           forceRunNextTimer = false;
           goto next; // round down; execute event now
         }
-        waitFor = TimeDuration::FromMicroseconds(microseconds);
-        if (waitFor.IsZero()) {
-          // round up, wait the minimum time we can wait
-          waitFor = TimeDuration::FromMicroseconds(1);
+        waitFor = PR_MicrosecondsToInterval(
+          static_cast<uint32_t>(microseconds)); // Floor is accurate enough.
+        if (waitFor == 0) {
+          waitFor = 1;  // round up, wait the minimum time we can wait
         }
       }
 
       if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
-        if (waitFor == TimeDuration::Forever())
+        if (waitFor == PR_INTERVAL_NO_TIMEOUT)
           MOZ_LOG(GetTimerLog(), LogLevel::Debug,
-                 ("waiting forever\n"));
+                 ("waiting for PR_INTERVAL_NO_TIMEOUT\n"));
         else
           MOZ_LOG(GetTimerLog(), LogLevel::Debug,
-                 ("waiting for %f\n", waitFor.ToMilliseconds()));
+                 ("waiting for %u\n", PR_IntervalToMilliseconds(waitFor)));
       }
     }
 

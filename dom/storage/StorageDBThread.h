@@ -14,7 +14,6 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/storage/StatementCache.h"
-#include "mozilla/TimeStamp.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -441,7 +440,7 @@ private:
 
   // Time the first pending operation has been added to the pending operations
   // list
-  TimeStamp mDirtyEpoch;
+  PRIntervalTime mDirtyEpoch;
 
   // Flag to force immediate flush of all pending operations
   bool mFlushImmediately;
@@ -487,12 +486,12 @@ private:
   // 2. as in indicator that flush has to be performed
   //
   // Return:
-  // - TimeDuration::Forever() when no pending tasks are scheduled
-  // - Non-zero TimeDuration when tasks have been scheduled, but it
-  //   is still not time to perform the flush ; it is actual time to
-  //   wait until the flush has to happen.
-  // - 0 TimeDuration when it is time to do the flush
-  TimeDuration TimeUntilFlush();
+  // - PR_INTERVAL_NO_TIMEOUT when no pending tasks are scheduled
+  // - larger then zero when tasks have been scheduled, but it is
+  //   still not time to perform the flush ; it is actual interval
+  //   time to wait until the flush has to happen
+  // - 0 when it is time to do the flush
+  PRIntervalTime TimeUntilFlush();
 
   // Notifies to the main thread that flush has completed
   void NotifyFlushCompletion();
