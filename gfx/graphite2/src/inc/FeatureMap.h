@@ -56,6 +56,7 @@ class FeatureRef
     static const uint8  SIZEOF_CHUNK = sizeof(chunk_t)*8;
 
 public:
+    FeatureRef();
     FeatureRef(const Face & face, unsigned short & bits_offset, uint32 max_val,
                uint32 name, uint16 uiName, uint16 flags,
                FeatureSetting *settings, uint16 num_set) throw();
@@ -75,14 +76,14 @@ public:
     uint16 getSettingName(uint16 index) const { return m_nameValues[index].label(); }
     int16  getSettingValue(uint16 index) const { return m_nameValues[index].value(); }
     uint32 maxVal() const { return m_max; }
-    const Face & getFace() const { return m_face;}
+    const Face* getFace() const { return m_pFace;}
     const FeatureMap* getFeatureMap() const;// { return m_pFace;}
 
     CLASS_NEW_DELETE;
 private:
     FeatureRef(const FeatureRef & rhs);
 
-    const Face     & m_face;
+    const Face     * m_pFace;   //not NULL
     FeatureSetting * m_nameValues; // array of name table ids for feature values
     chunk_t m_mask,             // bit mask to get the value from the vector
             m_max;              // max value the value can take
@@ -98,18 +99,27 @@ private:        //unimplemented
 };
 
 
+inline
+FeatureRef::FeatureRef()
+: m_pFace(0), m_nameValues(0),
+  m_mask(0), m_max(0), m_id(0),
+  m_nameid(0), m_flags(0), m_numSet(0),
+  m_bits(0), m_index(0)
+{
+}
+
 
 class NameAndFeatureRef
 {
   public:
     NameAndFeatureRef(uint32 name = 0) : m_name(name) , m_pFRef(NULL){}
-    NameAndFeatureRef(FeatureRef const & p) : m_name(p.getId()), m_pFRef(&p) {}
+    NameAndFeatureRef(const FeatureRef* p/*not NULL*/) : m_name(p->getId()), m_pFRef(p) {}
 
     bool operator<(const NameAndFeatureRef& rhs) const //orders by m_name
         {   return m_name<rhs.m_name; }
 
     CLASS_NEW_DELETE
-
+ 
     uint32 m_name;
     const FeatureRef* m_pFRef;
 };
@@ -118,7 +128,7 @@ class FeatureMap
 {
 public:
     FeatureMap() : m_numFeats(0), m_feats(NULL), m_pNamedFeats(NULL) {}
-    ~FeatureMap() { free(m_feats); delete[] m_pNamedFeats; }
+    ~FeatureMap() { delete [] m_feats; delete[] m_pNamedFeats; }
 
     bool readFeats(const Face & face);
     const FeatureRef *findFeatureRef(uint32 name) const;
