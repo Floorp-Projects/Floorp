@@ -127,6 +127,9 @@ add_task(async function() {
   let popupPromise = promisePopupNotificationShown("addon-webext-permissions");
   addons.children[0].click();
 
+  // The click should hide the main menu. This is currently synchronous.
+  ok(PanelUI.panel.state != "open", "Main menu is closed or closing.");
+
   // When we get the permissions prompt, we should be at the extensions
   // list in about:addons
   let panel = await popupPromise;
