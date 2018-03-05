@@ -125,8 +125,8 @@ class TestFirefoxRefresh(MarionetteTestCase):
             tel: "+15195555555",
             email: "user@example.com",
           };
-          return global.formAutofillStorage.initialize().then(() => {
-            return global.formAutofillStorage.addresses.add(TEST_ADDRESS_1);
+          return global.profileStorage.initialize().then(() => {
+            return global.profileStorage.addresses.add(TEST_ADDRESS_1);
           }).then(marionetteScriptFinished);
         """)
 
@@ -281,8 +281,8 @@ class TestFirefoxRefresh(MarionetteTestCase):
             return
 
         formAutofillResults = self.runAsyncCode("""
-          return global.formAutofillStorage.initialize().then(() => {
-            return global.formAutofillStorage.addresses.getAll()
+          return global.profileStorage.initialize().then(() => {
+            return global.profileStorage.addresses.getAll()
           }).then(marionetteScriptFinished);
         """,)
         if type(formAutofillResults) == str:
@@ -424,7 +424,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
         """)
         self._formAutofillAvailable = self.runCode("""
           try {
-            global.formAutofillStorage = Cu.import("resource://formautofill/FormAutofillStorage.jsm", {}).formAutofillStorage;
+            global.profileStorage = Cu.import("resource://formautofill/FormAutofillStorage.jsm", {}).profileStorage;
           } catch(e) {
             return false;
           }
