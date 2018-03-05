@@ -41,28 +41,28 @@ js::Debugger::checkNoExecute(JSContext* cx, HandleScript script)
     return slowPathCheckNoExecute(cx, script);
 }
 
-/* static */ JSTrapStatus
+/* static */ js::ResumeMode
 js::Debugger::onEnterFrame(JSContext* cx, AbstractFramePtr frame)
 {
     MOZ_ASSERT_IF(frame.hasScript() && frame.script()->isDebuggee(), frame.isDebuggee());
     if (!frame.isDebuggee())
-        return JSTRAP_CONTINUE;
+        return ResumeMode::Continue;
     return slowPathOnEnterFrame(cx, frame);
 }
 
-/* static */ JSTrapStatus
+/* static */ js::ResumeMode
 js::Debugger::onDebuggerStatement(JSContext* cx, AbstractFramePtr frame)
 {
     if (!cx->compartment()->isDebuggee())
-        return JSTRAP_CONTINUE;
+        return ResumeMode::Continue;
     return slowPathOnDebuggerStatement(cx, frame);
 }
 
-/* static */ JSTrapStatus
+/* static */ js::ResumeMode
 js::Debugger::onExceptionUnwind(JSContext* cx, AbstractFramePtr frame)
 {
     if (!cx->compartment()->isDebuggee())
-        return JSTRAP_CONTINUE;
+        return ResumeMode::Continue;
     return slowPathOnExceptionUnwind(cx, frame);
 }
 
