@@ -3,13 +3,15 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Check that inspecting a closure in the variables view sidebar works when
 // execution is paused.
 
 "use strict";
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-closures.html";
+                 "new-console-output/test/mochitest/test-closures.html";
 
 var gWebConsole, gJSTerm, gVariablesView;
 
@@ -38,7 +40,8 @@ function test() {
         let deferred = defer();
         fetchScopes(hud, toolbox, panelWin, deferred);
 
-        ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+        // eslint-disable-next-line
+        ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
           let button = content.document.querySelector("button");
           ok(button, "button element found");
           button.click();

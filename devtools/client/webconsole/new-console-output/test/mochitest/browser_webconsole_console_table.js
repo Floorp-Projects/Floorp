@@ -8,7 +8,8 @@
 // Check console.table calls with all the test cases shown
 // in the MDN doc (https://developer.mozilla.org/en-US/docs/Web/API/Console/table)
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/mochitest/test-console-table.html";
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
+                 "new-console-output/test/mochitest/test-console-table.html";
 
 add_task(function* () {
   let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");

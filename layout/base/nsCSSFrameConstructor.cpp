@@ -11436,9 +11436,8 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   nsFirstLetterFrame* letterFrame =
     NS_NewFirstLetterFrame(mPresShell, aStyleContext);
   // We don't want to use a text content for a non-text frame (because we want
-  // its primary frame to be a text frame).  So use its parent for the
-  // first-letter.
-  nsIContent* letterContent = aTextContent->GetParent();
+  // its primary frame to be a text frame).
+  nsIContent* letterContent = aParentFrame->GetContent();
   nsContainerFrame* containingBlock = aState.GetGeometricParent(
     aStyleContext->StyleDisplay(), aParentFrame);
   InitAndRestoreFrame(aState, letterContent, containingBlock, letterFrame);
@@ -11573,8 +11572,8 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
 
       // Initialize the first-letter-frame.  We don't want to use a text
       // content for a non-text frame (because we want its primary frame to
-      // be a text frame).  So use its parent for the first-letter.
-      nsIContent* letterContent = aTextContent->GetParent();
+      // be a text frame).
+      nsIContent* letterContent = aParentFrame->GetContent();
       letterFrame->Init(letterContent, aParentFrame, nullptr);
 
       InitAndRestoreFrame(state, aTextContent, letterFrame, textFrame);

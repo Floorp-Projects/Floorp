@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Tests that warnings about ineffective iframe sandboxing are logged to the
 // web console when necessary (and not otherwise). See Bug 752559.
 
@@ -47,5 +49,5 @@ async function testWarningMessageVisibility(uri, visible) {
 
   const warning = findMessage(hud, INEFFECTIVE_IFRAME_SANDBOXING_MSG, ".message.warn");
   is(!!warning, visible,
-    `The warning message is${visible ? "": " not"} visible on ${uri}`);
+    `The warning message is${visible ? "" : " not"} visible on ${uri}`);
 }
