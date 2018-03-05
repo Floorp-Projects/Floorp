@@ -127,12 +127,6 @@ public:
 
 typedef nsRefPtrHashtable<nsUint64HashKey, GetUserMediaWindowListener> WindowTable;
 
-// we could add MediaManager if needed
-typedef void (*WindowListenerCallback)(MediaManager *aThis,
-                                       uint64_t aWindowID,
-                                       GetUserMediaWindowListener *aListener,
-                                       void *aData);
-
 class MediaManager final : public nsIMediaManagerService,
                            public nsIObserver
                           ,public DeviceChangeCallback
@@ -253,9 +247,14 @@ private:
   void Shutdown();
 
   void StopScreensharing(uint64_t aWindowID);
+
+  /**
+   * Calls aCallback with a GetUserMediaWindowListener argument once for
+   * each window listener associated with aWindow and its child windows.
+   */
+  template<typename FunctionType>
   void IterateWindowListeners(nsPIDOMWindowInner *aWindow,
-                              WindowListenerCallback aCallback,
-                              void *aData);
+                              const FunctionType& aCallback);
 
   void StopMediaStreams();
   void RemoveMediaDevicesCallback(uint64_t aWindowID);

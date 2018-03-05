@@ -39,7 +39,8 @@
 #include "mozilla/layers/AnimationHelper.h" // for CompositorAnimationStorage
 #include "mozilla/layers/APZCTreeManager.h"  // for APZCTreeManager
 #include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
-#include "mozilla/layers/APZThreadUtils.h"  // for APZCTreeManager
+#include "mozilla/layers/APZSampler.h"  // for APZSampler
+#include "mozilla/layers/APZThreadUtils.h"  // for APZThreadUtils
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/BasicCompositor.h"  // for BasicCompositor
 #include "mozilla/layers/Compositor.h"  // for Compositor
@@ -356,6 +357,7 @@ CompositorBridgeParent::InitSameProcess(widget::CompositorWidget* aWidget,
   mRootLayerTreeID = aLayerTreeId;
   if (mOptions.UseAPZ()) {
     mApzcTreeManager = new APZCTreeManager(mRootLayerTreeID);
+    mApzSampler = new APZSampler(mApzcTreeManager);
   }
 
   Initialize();
@@ -656,8 +658,10 @@ CompositorBridgeParent::ActorDestroy(ActorDestroyReason why)
 
   mCompositionManager = nullptr;
 
-  if (mApzcTreeManager) {
-    mApzcTreeManager->ClearTree();
+  MOZ_ASSERT((mApzSampler != nullptr) == (mApzcTreeManager != nullptr));
+  if (mApzSampler) {
+    mApzSampler->ClearTree();
+    mApzSampler = nullptr;
     mApzcTreeManager = nullptr;
   }
 
@@ -881,11 +885,10 @@ CompositorBridgeParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstP
     }
 #endif
 
-    if (mApzcTreeManager) {
-      mApzcTreeManager->UpdateFocusState(mRootLayerTreeID, aId,
-                                         aFocusTarget);
+    if (mApzSampler) {
+      mApzSampler->UpdateFocusState(mRootLayerTreeID, aId, aFocusTarget);
       if (aHitTestUpdate) {
-        mApzcTreeManager->UpdateHitTestingTree(mRootLayerTreeID,
+        mApzSampler->UpdateHitTestingTree(mRootLayerTreeID,
             mLayerManager->GetRoot(), aIsFirstPaint, aId, aPaintSequenceNumber);
       }
     }
@@ -1123,13 +1126,15 @@ CompositorBridgeParent::AllocPAPZCTreeManagerParent(const uint64_t& aLayersId)
 
   // This message doubles as initialization
   MOZ_ASSERT(!mApzcTreeManager);
+
   mApzcTreeManager = new APZCTreeManager(mRootLayerTreeID);
+  mApzSampler = new APZSampler(mApzcTreeManager);
 
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   CompositorBridgeParent::LayerTreeState& state = sIndirectLayerTrees[mRootLayerTreeID];
-  MOZ_ASSERT(state.mParent);
+  MOZ_ASSERT(state.mParent.get() == this);
   MOZ_ASSERT(!state.mApzcTreeManagerParent);
-  state.mApzcTreeManagerParent = new APZCTreeManagerParent(mRootLayerTreeID, state.mParent->GetAPZCTreeManager());
+  state.mApzcTreeManagerParent = new APZCTreeManagerParent(mRootLayerTreeID, mApzcTreeManager);
 
   return state.mApzcTreeManagerParent;
 }
@@ -1173,6 +1178,12 @@ RefPtr<APZCTreeManager>
 CompositorBridgeParent::GetAPZCTreeManager()
 {
   return mApzcTreeManager;
+}
+
+RefPtr<APZSampler>
+CompositorBridgeParent::GetAPZSampler()
+{
+  return mApzSampler;
 }
 
 CompositorBridgeParent*
@@ -1233,15 +1244,15 @@ CompositorBridgeParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
   Layer* root = aLayerTree->GetRoot();
   mLayerManager->SetRoot(root);
 
-  if (mApzcTreeManager && !aInfo.isRepeatTransaction()) {
-    mApzcTreeManager->UpdateFocusState(mRootLayerTreeID,
-                                       mRootLayerTreeID,
-                                       aInfo.focusTarget());
+  if (mApzSampler && !aInfo.isRepeatTransaction()) {
+    mApzSampler->UpdateFocusState(mRootLayerTreeID,
+                                  mRootLayerTreeID,
+                                  aInfo.focusTarget());
 
     if (aHitTestUpdate) {
       AutoResolveRefLayers resolve(mCompositionManager);
 
-      mApzcTreeManager->UpdateHitTestingTree(
+      mApzSampler->UpdateHitTestingTree(
         mRootLayerTreeID, root, aInfo.isFirstPaint(),
         mRootLayerTreeID, aInfo.paintSequenceNumber());
     }
@@ -1376,9 +1387,10 @@ void
 CompositorBridgeParent::GetAPZTestData(const uint64_t& aLayersId,
                                        APZTestData* aOutData)
 {
-  MOZ_ASSERT(aLayersId == 0 || aLayersId == mRootLayerTreeID);
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  *aOutData = sIndirectLayerTrees[mRootLayerTreeID].mApzTestData;
+  uint64_t layersId = (aLayersId == 0 ? mRootLayerTreeID : aLayersId);
+  if (mApzSampler) {
+    mApzSampler->GetAPZTestData(layersId, aOutData);
+  }
 }
 
 void
@@ -1660,12 +1672,14 @@ CompositorBridgeParent::RecvMapAndNotifyChildCreated(const uint64_t& aChild,
 mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
 {
+  RefPtr<APZSampler> oldApzSampler;
   APZCTreeManagerParent* parent;
   {
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
     // We currently don't support adopting children from one compositor to
     // another if the two compositors don't have the same options.
     MOZ_ASSERT(sIndirectLayerTrees[child].mParent->mOptions == mOptions);
+    oldApzSampler = sIndirectLayerTrees[child].mParent->mApzSampler;
     NotifyChildCreated(child);
     if (sIndirectLayerTrees[child].mLayerTree) {
       sIndirectLayerTrees[child].mLayerTree->SetLayerManager(mLayerManager, GetAnimationStorage());
@@ -1690,8 +1704,16 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
     parent = sIndirectLayerTrees[child].mApzcTreeManagerParent;
   }
 
-  if (mApzcTreeManager && parent) {
-    parent->ChildAdopted(mApzcTreeManager);
+  // We don't support moving a child from a APZ-enabled compositor to a
+  // APZ-disabled compostior. The mOptions assertion above should already
+  // ensure this, since APZ-ness is one of the things in mOptions.
+  MOZ_ASSERT((oldApzSampler != nullptr) == (mApzSampler != nullptr));
+  if (mApzSampler) {
+    if (parent) {
+      MOZ_ASSERT(mApzcTreeManager);
+      parent->ChildAdopted(mApzcTreeManager);
+    }
+    mApzSampler->NotifyLayerTreeAdopted(child, oldApzSampler);
   }
   return IPC_OK();
 }
@@ -1784,6 +1806,9 @@ EraseLayerState(uint64_t aId)
     CompositorBridgeParent* parent = iter->second.mParent;
     if (parent) {
       parent->ClearApproximatelyVisibleRegions(aId, Nothing());
+      if (RefPtr<APZSampler> apz = parent->GetAPZSampler()) {
+        apz->NotifyLayerTreeRemoved(aId);
+      }
     }
 
     sIndirectLayerTrees.erase(iter);
@@ -1845,7 +1870,7 @@ CompositorBridgeParent::SetControllerForLayerTree(uint64_t aLayersId,
                                                  aController));
 }
 
-/*static*/ already_AddRefed<APZCTreeManager>
+/*static*/ already_AddRefed<IAPZCTreeManager>
 CompositorBridgeParent::GetAPZCTreeManager(uint64_t aLayersId)
 {
   EnsureLayerTreeMapReady();
@@ -1856,7 +1881,7 @@ CompositorBridgeParent::GetAPZCTreeManager(uint64_t aLayersId)
   }
   LayerTreeState* lts = &cit->second;
 
-  RefPtr<APZCTreeManager> apzctm = lts->mParent
+  RefPtr<IAPZCTreeManager> apzctm = lts->mParent
                                    ? lts->mParent->mApzcTreeManager.get()
                                    : nullptr;
   return apzctm.forget();
@@ -2083,9 +2108,8 @@ UpdateIndirectTree(uint64_t aId, Layer* aRoot, const TargetConfig& aTargetConfig
 /* static */ CompositorBridgeParent::LayerTreeState*
 CompositorBridgeParent::GetIndirectShadowTree(uint64_t aId)
 {
-  // Only the compositor thread should use this method variant, however it is
-  // safe to be called on the main thread during APZ gtests.
-  APZThreadUtils::AssertOnCompositorThread();
+  // Only the compositor thread should use this method variant
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
 
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   LayerTreeMap::iterator cit = sIndirectLayerTrees.find(aId);

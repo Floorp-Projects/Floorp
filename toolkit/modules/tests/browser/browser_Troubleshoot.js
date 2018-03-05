@@ -159,6 +159,9 @@ const SNAPSHOT_SCHEMA = {
         styloChromeResult: {
           type: "boolean",
         },
+        policiesStatus: {
+          type: "number",
+        },
         keyGoogleFound: {
           type: "boolean",
         },

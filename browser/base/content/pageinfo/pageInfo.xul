@@ -9,6 +9,10 @@
 <!DOCTYPE window [
   <!ENTITY % pageInfoDTD SYSTEM "chrome://browser/locale/pageInfo.dtd">
   %pageInfoDTD;
+#ifdef XP_MACOSX
+  <!ENTITY % baseMenuOverlayDTD SYSTEM "chrome://browser/locale/baseMenuOverlay.dtd">
+  %baseMenuOverlayDTD;
+#endif
 ]>
 
 #ifdef XP_MACOSX
@@ -45,10 +49,6 @@
     <command id="cmd_help"      oncommand="doHelpButton();"/>
     <command id="cmd_copy"      oncommand="doCopy();"/>
     <command id="cmd_selectall" oncommand="doSelectAll();"/>
-
-    <!-- permissions tab -->
-    <command id="cmd_pluginsDef"    oncommand="onCheckboxClick('plugins');"/>
-    <command id="cmd_pluginsToggle" oncommand="onPluginRadioClick(event);"/>
   </commandset>
 
   <keyset id="pageInfoKeySet">
@@ -278,23 +278,7 @@
                  crop="end" flex="1"/>
       </hbox>
 
-      <vbox id="permList" flex="1">
-        <vbox class="permission" id="perm-plugins-row">
-          <label class="permissionLabel" id="permPluginsLabel"
-                 value="&permPlugins;" control="pluginsRadioGroup"/>
-          <hbox id="permPluginTemplate" role="group" aria-labelledby="permPluginsLabel" align="baseline">
-            <label class="permPluginTemplateLabel"/>
-            <spacer flex="1"/>
-            <radiogroup class="permPluginTemplateRadioGroup" orient="horizontal" command="cmd_pluginsToggle">
-              <radio class="permPluginTemplateRadioDefault" label="&permUseDefault;"/>
-              <radio class="permPluginTemplateRadioAsk" label="&permAskAlways;"/>
-              <radio class="permPluginTemplateRadioAllow" label="&permAllow;"/>
-              <radio class="permPluginTemplateRadioHide" label="&permHide;"/>
-              <radio class="permPluginTemplateRadioBlock" label="&permBlock;"/>
-            </radiogroup>
-          </hbox>
-        </vbox>
-      </vbox>
+      <vbox id="permList" flex="1"/>
       <hbox pack="end">
         <button command="cmd_help" label="&helpButton.label;" dlgtype="help"/>
       </hbox>

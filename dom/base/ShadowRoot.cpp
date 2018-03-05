@@ -95,6 +95,24 @@ ShadowRoot::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 void
+ShadowRoot::CloneInternalDataFrom(ShadowRoot* aOther)
+{
+  size_t sheetCount = aOther->SheetCount();
+  for (size_t i = 0; i < sheetCount; ++i) {
+    StyleSheet* sheet = aOther->SheetAt(i);
+    if (sheet->IsApplicable()) {
+      RefPtr<StyleSheet> clonedSheet =
+        sheet->Clone(nullptr, nullptr, nullptr, nullptr);
+      if (clonedSheet) {
+        AppendStyleSheet(*clonedSheet.get());
+        Servo_AuthorStyles_AppendStyleSheet(mServoStyles.get(),
+                                            clonedSheet->AsServo());
+      }
+    }
+  }
+}
+
+void
 ShadowRoot::AddSlot(HTMLSlotElement* aSlot)
 {
   MOZ_ASSERT(aSlot);

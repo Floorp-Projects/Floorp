@@ -229,8 +229,11 @@ const CodeSegment*
 wasm::LookupCodeSegment(const void* pc, const CodeRange** cr /*= nullptr */)
 {
     if (const CodeSegment* found = processCodeSegmentMap.lookup(pc)) {
-        if (cr)
-            *cr = found->codeTier().lookupRange(pc);
+        if (cr) {
+            *cr = found->isModule()
+                  ? found->asModule()->lookupRange(pc)
+                  : found->asLazyStub()->lookupRange(pc);
+        }
         return found;
     }
     return nullptr;

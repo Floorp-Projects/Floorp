@@ -8072,32 +8072,31 @@ var gIdentityHandler = {
     container.setAttribute("align", "center");
 
     let img = document.createElement("image");
-    let classes = "identity-popup-permission-icon " + aPermission.id + "-icon";
+    img.classList.add("identity-popup-permission-icon");
+    if (aPermission.id == "plugin:flash") {
+      img.classList.add("plugin-icon");
+    } else {
+      img.classList.add(aPermission.id + "-icon");
+    }
     if (aPermission.state == SitePermissions.BLOCK)
-      classes += " blocked-permission-icon";
+      img.classList.add("blocked-permission-icon");
 
     if (aPermission.sharingState == Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED ||
        (aPermission.id == "screen" && aPermission.sharingState &&
         !aPermission.sharingState.includes("Paused"))) {
-      classes += " in-use";
+      img.classList.add("in-use");
 
       // Synchronize control center and identity block blinking animations.
-      window.promiseDocumentFlushed(() => {}).then(() => {
+      window.promiseDocumentFlushed(() => {
         let sharingIconBlink = document.getElementById("sharing-icon").getAnimations()[0];
-        if (sharingIconBlink) {
-          let startTime = sharingIconBlink.startTime;
-          window.requestAnimationFrame(() => {
-            // TODO(Bug 1440607): This could cause a style flush, but putting
-            // the getAnimations() call outside of rAF causes a leak.
-            let imgBlink = img.getAnimations()[0];
-            if (imgBlink) {
-              imgBlink.startTime = startTime;
-            }
-          });
+        let imgBlink = img.getAnimations()[0];
+        return [sharingIconBlink, imgBlink];
+      }).then(([sharingIconBlink, imgBlink]) => {
+        if (sharingIconBlink && imgBlink) {
+          imgBlink.startTime = sharingIconBlink.startTime;
         }
       });
     }
-    img.setAttribute("class", classes);
 
     let nameLabel = document.createElement("label");
     nameLabel.setAttribute("flex", "1");
@@ -8159,7 +8158,7 @@ var gIdentityHandler = {
       state = SitePermissions.ALLOW;
       scope = SitePermissions.SCOPE_REQUEST;
     }
-    stateLabel.textContent = SitePermissions.getCurrentStateLabel(state, scope);
+    stateLabel.textContent = SitePermissions.getCurrentStateLabel(state, aPermission.id, scope);
 
     container.appendChild(img);
     container.appendChild(nameLabel);

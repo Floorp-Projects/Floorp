@@ -212,6 +212,13 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
     return this.threadActor.prettyPrintWorker;
   },
 
+  get isCacheEnabled() {
+    if (this.threadActor._parent._getCacheDisabled) {
+      return !this.threadActor._parent._getCacheDisabled();
+    }
+    return true;
+  },
+
   form: function () {
     let source = this.source || this.generatedSource;
     // This might not have a source or a generatedSource because we
@@ -376,7 +383,10 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
       // fetching the original text for sourcemapped code, and the
       // page hasn't requested it before (if it has, it was a
       // previous debugging session).
-      let loadFromCache = this.isInlineSource;
+      // Additionally, we should only try the cache if it is currently enabled
+      // for the document.  Without this check, the cache may return stale data
+      // that doesn't match the document shown in the browser.
+      let loadFromCache = this.isInlineSource && this.isCacheEnabled;
 
       // Fetch the sources with the same principal as the original document
       let win = this.threadActor._parent.window;

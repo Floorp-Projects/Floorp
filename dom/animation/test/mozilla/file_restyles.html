@@ -1437,6 +1437,29 @@ waitForAllPaints(() => {
     await ensureElementRemoval(div);
   });
 
+  add_task(async function no_throttling_animations_in_transformed_parent() {
+    var div = addDiv(null, { style: 'overflow: scroll;' +
+                                    'transform: translateX(50px);' });
+    var svg = addSVGElement(div, 'svg', { viewBox: '0 0 1250 1250',
+                                          width:   '40px',
+                                          height:  '40px' });
+    var rect = addSVGElement(svg, 'rect', { x:      '0',
+                                            y:      '0',
+                                            width:  '1250',
+                                            height: '1250',
+                                            fill:   'red' });
+    var animation = rect.animate({ fill: ['blue', 'lime'] }, 100 * MS_PER_SEC);
+    await animation.ready;
+
+    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
+    var markers = await observeStyling(5);
+    is(markers.length, expectedRestyleCount,
+       'CSS animations on an in-view svg element which is inside transformed ' +
+       'parent should not be throttled.');
+
+    await ensureElementRemoval(div);
+  });
+
   add_task(async function throttling_animations_out_of_view_svg() {
     var div = addDiv(null, { style: 'overflow: scroll;' +
                                     'height: 100px; width: 100px;' });

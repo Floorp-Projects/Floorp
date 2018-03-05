@@ -31,7 +31,42 @@ add_task(async function copy_toolbar_shortcut() {
      Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT,
      "copy is still a folder shortcut");
 
-  PlacesUtils.bookmarks.removeItem(toolbarCopyNode.itemId);
+  await PlacesUtils.bookmarks.remove(toolbarCopyNode.bookmarkGuid);
+  library.PlacesOrganizer.selectLeftPaneBuiltIn("BookmarksToolbar");
+  is(library.PlacesOrganizer._places.selectedNode.type,
+     Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT,
+     "original is still a folder shortcut");
+});
+
+add_task(async function copy_mobile_shortcut() {
+  SpecialPowers.pushPrefEnv({ set: [["browser.bookmarks.showMobileBookmarks", true]]});
+  await promisePlacesInitComplete();
+
+  let library = await promiseLibrary();
+
+  registerCleanupFunction(async () => {
+    library.close();
+    await PlacesUtils.bookmarks.eraseEverything();
+  });
+
+  library.PlacesOrganizer.selectLeftPaneContainerByHierarchy([
+    PlacesUIUtils.leftPaneQueries.AllBookmarks,
+    PlacesUtils.bookmarks.virtualMobileGuid,
+  ]);
+
+  await promiseClipboard(function() { library.PlacesOrganizer._places.controller.copy(); },
+                         PlacesUtils.TYPE_X_MOZ_PLACE);
+
+  library.PlacesOrganizer.selectLeftPaneBuiltIn("UnfiledBookmarks");
+
+  await library.ContentTree.view.controller.paste();
+
+  let mobileCopyNode = library.ContentTree.view.view.nodeForTreeIndex(0);
+  is(mobileCopyNode.type,
+     Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT,
+     "copy is still a folder shortcut");
+
+  await PlacesUtils.bookmarks.remove(mobileCopyNode.bookmarkGuid);
   library.PlacesOrganizer.selectLeftPaneBuiltIn("BookmarksToolbar");
   is(library.PlacesOrganizer._places.selectedNode.type,
      Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT,
@@ -54,7 +89,7 @@ add_task(async function copy_history_query() {
      Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY,
      "copy is still a query");
 
-  PlacesUtils.bookmarks.removeItem(historyCopyNode.itemId);
+  await PlacesUtils.bookmarks.remove(historyCopyNode.bookmarkGuid);
   library.PlacesOrganizer.selectLeftPaneBuiltIn("History");
   is(library.PlacesOrganizer._places.selectedNode.type,
      Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY,

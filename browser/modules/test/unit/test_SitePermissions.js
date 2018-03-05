@@ -12,7 +12,7 @@ const MIDI_ENABLED = Services.prefs.getBoolPref("dom.webmidi.enabled");
 
 add_task(async function testPermissionsListing() {
   let expectedPermissions = ["camera", "cookie", "desktop-notification", "focus-tab-by-prompt",
-     "geo", "image", "install", "microphone", "popup", "screen", "shortcuts"];
+     "geo", "image", "install", "microphone", "plugin:flash", "popup", "screen", "shortcuts"];
   if (STORAGE_MANAGER_ENABLED) {
     // The persistent-storage permission is still only pref-on on Nightly
     // so we add it only when it's pref-on.
@@ -131,7 +131,7 @@ add_task(async function testExactHostMatch() {
     exactHostMatched.push("midi");
     exactHostMatched.push("midi-sysex");
   }
-  let nonExactHostMatched = ["image", "cookie", "popup", "install", "shortcuts"];
+  let nonExactHostMatched = ["image", "cookie", "plugin:flash", "popup", "install", "shortcuts"];
 
   let permissions = SitePermissions.listPermissions();
   for (let permission of permissions) {

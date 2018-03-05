@@ -4719,16 +4719,15 @@ fn static_assert() {
 
     pub fn set_text_emphasis_style(&mut self, v: longhands::text_emphasis_style::computed_value::T) {
         use properties::longhands::text_emphasis_style::computed_value::T;
-        use properties::longhands::text_emphasis_style::ShapeKeyword;
+        use properties::longhands::text_emphasis_style::{FillMode, ShapeKeyword};
 
         self.clear_text_emphasis_style_if_string();
         let (te, s) = match v {
             T::None => (structs::NS_STYLE_TEXT_EMPHASIS_STYLE_NONE, ""),
             T::Keyword(ref keyword) => {
-                let fill = if keyword.fill {
-                    structs::NS_STYLE_TEXT_EMPHASIS_STYLE_FILLED
-                } else {
-                    structs::NS_STYLE_TEXT_EMPHASIS_STYLE_OPEN
+                let fill = match keyword.fill {
+                    FillMode::Filled => structs::NS_STYLE_TEXT_EMPHASIS_STYLE_FILLED,
+                    FillMode::Open => structs::NS_STYLE_TEXT_EMPHASIS_STYLE_OPEN,
                 };
                 let shape = match keyword.shape {
                     ShapeKeyword::Dot => structs::NS_STYLE_TEXT_EMPHASIS_STYLE_DOT,
@@ -4763,15 +4762,21 @@ fn static_assert() {
 
     pub fn clone_text_emphasis_style(&self) -> longhands::text_emphasis_style::computed_value::T {
         use properties::longhands::text_emphasis_style::computed_value::{T, KeywordValue};
-        use properties::longhands::text_emphasis_style::ShapeKeyword;
+        use properties::longhands::text_emphasis_style::{FillMode, ShapeKeyword};
 
         if self.gecko.mTextEmphasisStyle == structs::NS_STYLE_TEXT_EMPHASIS_STYLE_NONE as u8 {
             return T::None;
-        } else if self.gecko.mTextEmphasisStyle == structs::NS_STYLE_TEXT_EMPHASIS_STYLE_STRING as u8 {
+        }
+
+        if self.gecko.mTextEmphasisStyle == structs::NS_STYLE_TEXT_EMPHASIS_STYLE_STRING as u8 {
             return T::String(self.gecko.mTextEmphasisStyleString.to_string());
         }
 
-        let fill = self.gecko.mTextEmphasisStyle & structs::NS_STYLE_TEXT_EMPHASIS_STYLE_OPEN as u8 == 0;
+        let fill =
+            self.gecko.mTextEmphasisStyle & structs::NS_STYLE_TEXT_EMPHASIS_STYLE_OPEN as u8 == 0;
+
+        let fill = if fill { FillMode::Filled } else { FillMode::Open };
+
         let shape =
             match self.gecko.mTextEmphasisStyle as u32 & !structs::NS_STYLE_TEXT_EMPHASIS_STYLE_OPEN {
                 structs::NS_STYLE_TEXT_EMPHASIS_STYLE_DOT => ShapeKeyword::Dot,
@@ -4782,10 +4787,7 @@ fn static_assert() {
                 _ => panic!("Unexpected value in style struct for text-emphasis-style property")
             };
 
-        T::Keyword(KeywordValue {
-            fill: fill,
-            shape: shape
-        })
+        T::Keyword(KeywordValue { fill, shape })
     }
 
     ${impl_non_negative_length('_webkit_text_stroke_width',
@@ -5428,6 +5430,7 @@ clip-path
     }
 
     pub fn set_content(&mut self, v: longhands::content::computed_value::T, device: &Device) {
+        use values::CustomIdent;
         use values::computed::counters::{Content, ContentItem};
         use values::generics::CounterStyleOrNone;
         use gecko_bindings::structs::nsStyleContentData;
@@ -5445,16 +5448,20 @@ clip-path
             ptr
         }
 
-        fn set_counter_function(data: &mut nsStyleContentData,
-                                content_type: nsStyleContentType,
-                                name: &str, sep: &str,
-                                style: CounterStyleOrNone, device: &Device) {
+        fn set_counter_function(
+            data: &mut nsStyleContentData,
+            content_type: nsStyleContentType,
+            name: &CustomIdent,
+            sep: &str,
+            style: CounterStyleOrNone,
+            device: &Device,
+        ) {
             debug_assert!(content_type == eStyleContentType_Counter ||
                           content_type == eStyleContentType_Counters);
             let counter_func = unsafe {
                 bindings::Gecko_SetCounterFunction(data, content_type).as_mut().unwrap()
             };
-            counter_func.mIdent.assign_utf8(name);
+            counter_func.mIdent.assign(name.0.as_slice());
             if content_type == eStyleContentType_Counters {
                 counter_func.mSeparator.assign_utf8(sep);
             }
@@ -5522,12 +5529,24 @@ clip-path
                         ContentItem::NoCloseQuote
                             => self.gecko.mContents[i].mType = eStyleContentType_NoCloseQuote,
                         ContentItem::Counter(ref name, ref style) => {
-                            set_counter_function(&mut self.gecko.mContents[i],
-                                                 eStyleContentType_Counter, &name, "", style.clone(), device);
+                            set_counter_function(
+                                &mut self.gecko.mContents[i],
+                                eStyleContentType_Counter,
+                                &name,
+                                "",
+                                style.clone(),
+                                device,
+                            );
                         }
                         ContentItem::Counters(ref name, ref sep, ref style) => {
-                            set_counter_function(&mut self.gecko.mContents[i],
-                                                 eStyleContentType_Counters, &name, &sep, style.clone(), device);
+                            set_counter_function(
+                                &mut self.gecko.mContents[i],
+                                eStyleContentType_Counters,
+                                &name,
+                                &sep,
+                                style.clone(),
+                                device,
+                            );
                         }
                         ContentItem::Url(ref url) => {
                             unsafe {
@@ -5553,10 +5572,11 @@ clip-path
     }
 
     pub fn clone_content(&self) -> longhands::content::computed_value::T {
+        use Atom;
         use gecko::conversions::string_from_chars_pointer;
         use gecko_bindings::structs::nsStyleContentType::*;
         use values::computed::counters::{Content, ContentItem};
-        use values::Either;
+        use values::{CustomIdent, Either};
         use values::generics::CounterStyleOrNone;
         use values::specified::url::SpecifiedUrl;
         use values::specified::Attr;
@@ -5601,7 +5621,7 @@ clip-path
                     eStyleContentType_Counter | eStyleContentType_Counters => {
                         let gecko_function =
                             unsafe { &**gecko_content.mContent.mCounters.as_ref() };
-                        let ident = gecko_function.mIdent.to_string();
+                        let ident = CustomIdent(Atom::from(&*gecko_function.mIdent));
                         let style =
                             CounterStyleOrNone::from_gecko_value(&gecko_function.mCounterStyle);
                         let style = match style {
@@ -5610,10 +5630,10 @@ clip-path
                                 unreachable!("counter function shouldn't have single string type"),
                         };
                         if gecko_content.mType == eStyleContentType_Counter {
-                            ContentItem::Counter(ident.into_boxed_str(), style)
+                            ContentItem::Counter(ident, style)
                         } else {
                             let separator = gecko_function.mSeparator.to_string();
-                            ContentItem::Counters(ident.into_boxed_str(), separator.into_boxed_str(), style)
+                            ContentItem::Counters(ident, separator.into_boxed_str(), style)
                         }
                     },
                     eStyleContentType_Image => {

@@ -368,6 +368,9 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
     if test['reboot']:
         worker['reboot'] = test['reboot']
 
+    if test['max-run-time']:
+        worker['max-run-time'] = test['max-run-time']
+
     worker['env'] = env = {
         'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
         'GECKO_HEAD_REV': config.params['head_rev'],

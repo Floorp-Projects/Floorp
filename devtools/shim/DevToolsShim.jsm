@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyGetter(this, "DevtoolsStartup", () => {
 });
 
 const DEVTOOLS_ENABLED_PREF = "devtools.enabled";
+const DEVTOOLS_POLICY_DISABLED_PREF = "devtools.policy.disabled";
 
 this.EXPORTED_SYMBOLS = [
   "DevToolsShim",
@@ -61,7 +62,16 @@ this.DevToolsShim = {
    * should no-op in this case.
    */
   isEnabled: function () {
-    return Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF);
+    let enabled = Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF);
+    return enabled && !this.isDisabledByPolicy();
+  },
+
+  /**
+   * Returns true if the devtools are completely disabled and can not be enabled. All
+   * entry points should return without throwing, initDevTools should never be called.
+   */
+  isDisabledByPolicy: function () {
+    return Services.prefs.getBoolPref(DEVTOOLS_POLICY_DISABLED_PREF, false);
   },
 
   /**
@@ -179,7 +189,9 @@ this.DevToolsShim = {
    */
   inspectNode: function (tab, selectors) {
     if (!this.isEnabled()) {
-      DevtoolsStartup.openInstallPage("ContextMenu");
+      if (!this.isDisabledByPolicy()) {
+        DevtoolsStartup.openInstallPage("ContextMenu");
+      }
       return Promise.resolve();
     }
 

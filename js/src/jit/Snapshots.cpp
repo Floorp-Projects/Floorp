@@ -264,7 +264,7 @@ RValueAllocation::layoutFromMode(Mode mode)
       }
     }
 
-    MOZ_CRASH("Wrong mode type?");
+    MOZ_CRASH_UNSAFE_PRINTF("Unexpected mode: 0x%x", mode);
 }
 
 // Pad serialized RValueAllocations by a multiple of X bytes in the allocation

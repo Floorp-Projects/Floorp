@@ -472,7 +472,7 @@
 .ruleview-flex {
   background: url("chrome://devtools/skin/images/command-frames.svg");
   -moz-context-properties: fill;
-  fill: var(--rule-shape-toggle-color);
+  fill: var(--rule-flex-toggle-color);
   border-radius: 0;
   background-size: 1em;
 }

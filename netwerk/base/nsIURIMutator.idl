@@ -144,10 +144,21 @@ interface nsIURISetSpec : nsISupports
 [scriptable, builtinclass, uuid(5403a6ec-99d7-405e-8b45-9f805bbdfcef)]
 interface nsIURISetters : nsIURISetSpec
 {
+  /**
+   * Setting the scheme outside of a protocol handler implementation is highly
+   * discouraged since that will generally lead to incorrect results.
+   */
   [must_use] nsIURIMutator setScheme(in AUTF8String aScheme);
   [must_use] nsIURIMutator setUserPass(in AUTF8String aUserPass);
   [must_use] nsIURIMutator setUsername(in AUTF8String aUsername);
   [must_use] nsIURIMutator setPassword(in AUTF8String aPassword);
+
+  /**
+   * If you setHostPort to a value that only has a host part, the port
+   * will not be reset. To reset the port set it to -1 beforehand.
+   * If setting the host succeeds, this method will return NS_OK, even if
+   * setting the port fails (error in parsing the port, or value out of range)
+   */
   [must_use] nsIURIMutator setHostPort(in AUTF8String aHostPort);
   [must_use] nsIURIMutator setHost(in AUTF8String aHost);
   [must_use] nsIURIMutator setPort(in long aPort);

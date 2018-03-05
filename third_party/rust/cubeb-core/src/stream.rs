@@ -131,17 +131,17 @@ ffi_type_heap! {
 impl StreamRef {
     /// Start playback.
     pub fn start(&self) -> Result<()> {
-        unsafe { try_call!(ffi::cubeb_stream_start(self.as_ptr())) }
+        unsafe { call!(ffi::cubeb_stream_start(self.as_ptr())) }
     }
 
     /// Stop playback.
     pub fn stop(&self) -> Result<()> {
-        unsafe { try_call!(ffi::cubeb_stream_stop(self.as_ptr())) }
+        unsafe { call!(ffi::cubeb_stream_stop(self.as_ptr())) }
     }
 
     /// Reset stream to the default device.
     pub fn reset_default_device(&self) -> Result<()> {
-        unsafe { try_call!(ffi::cubeb_stream_reset_default_device(self.as_ptr())) }
+        unsafe { call!(ffi::cubeb_stream_reset_default_device(self.as_ptr())) }
     }
 
     /// Get the current stream playback position.
@@ -166,7 +166,7 @@ impl StreamRef {
 
     /// Set the volume for a stream.
     pub fn set_volume(&self, volume: f32) -> Result<()> {
-        unsafe { try_call!(ffi::cubeb_stream_set_volume(self.as_ptr(), volume)) }
+        unsafe { call!(ffi::cubeb_stream_set_volume(self.as_ptr(), volume)) }
     }
 
     /// If the stream is stereo, set the left/right panning. If the stream is mono,
@@ -177,7 +177,7 @@ impl StreamRef {
     /// mixed in the right channel. 0.0 is equal power in the right
     /// and left channel (default).
     pub fn set_panning(&self, panning: f32) -> Result<()> {
-        unsafe { try_call!(ffi::cubeb_stream_set_panning(self.as_ptr(), panning)) }
+        unsafe { call!(ffi::cubeb_stream_set_panning(self.as_ptr(), panning)) }
     }
 
     /// Get the current output device for this stream.
@@ -195,7 +195,7 @@ impl StreamRef {
     /// Destroy a cubeb_device structure.
     pub fn device_destroy(&self, device: DeviceRef) -> Result<()> {
         unsafe {
-            try_call!(ffi::cubeb_stream_device_destroy(
+            call!(ffi::cubeb_stream_device_destroy(
                 self.as_ptr(),
                 device.as_ptr()
             ))
@@ -208,7 +208,7 @@ impl StreamRef {
         callback: ffi::cubeb_device_changed_callback,
     ) -> Result<()> {
         unsafe {
-            try_call!(ffi::cubeb_stream_register_device_changed_callback(
+            call!(ffi::cubeb_stream_register_device_changed_callback(
                 self.as_ptr(),
                 callback
             ))

@@ -129,12 +129,21 @@ LookupCacheV4::Build(PrefixStringMap& aPrefixMap)
 {
   Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_VLPS_CONSTRUCT_TIME> timer;
 
-  return mVLPrefixSet->SetPrefixes(aPrefixMap);
+  nsresult rv = mVLPrefixSet->SetPrefixes(aPrefixMap);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mPrimed = true;
+
+  return rv;
 }
 
 nsresult
 LookupCacheV4::GetPrefixes(PrefixStringMap& aPrefixMap)
 {
+  if (!mPrimed) {
+    // This can happen if its a new table, so no error.
+    LOG(("GetPrefixes from empty LookupCache"));
+    return NS_OK;
+  }
   return mVLPrefixSet->GetPrefixes(aPrefixMap);
 }
 

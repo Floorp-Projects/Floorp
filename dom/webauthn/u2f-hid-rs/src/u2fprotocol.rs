@@ -235,8 +235,8 @@ where
 mod tests {
     use rand::{thread_rng, Rng};
 
-    use super::{U2FDevice, init_device, ping_device, sendrecv, send_apdu};
-    use consts::{CID_BROADCAST, U2FHID_INIT, U2FHID_PING, U2FHID_MSG, SW_NO_ERROR};
+    use super::{init_device, ping_device, send_apdu, sendrecv, U2FDevice};
+    use consts::{U2FHID_INIT, U2FHID_MSG, U2FHID_PING, CID_BROADCAST, SW_NO_ERROR};
 
     mod platform {
         use std::io;
@@ -358,21 +358,21 @@ mod tests {
         // init packet
         let mut msg = cid.to_vec();
         msg.extend(vec![U2FHID_PING, 0x00, 0xe4]); // cmd + length = 228
-        // write msg, append [1u8; 57], 171 bytes remaining
+                                                   // write msg, append [1u8; 57], 171 bytes remain
         device.add_write(&msg, 1);
         device.add_read(&msg, 1);
 
         // cont packet
         let mut msg = cid.to_vec();
         msg.push(0x00); // seq = 0
-        // write msg, append [1u8; 59], 112 bytes remaining
+                        // write msg, append [1u8; 59], 112 bytes remaining
         device.add_write(&msg, 1);
         device.add_read(&msg, 1);
 
         // cont packet
         let mut msg = cid.to_vec();
         msg.push(0x01); // seq = 1
-        // write msg, append [1u8; 59], 53 bytes remaining
+                        // write msg, append [1u8; 59], 53 bytes remaining
         device.add_write(&msg, 1);
         device.add_read(&msg, 1);
 
@@ -400,7 +400,7 @@ mod tests {
         let mut msg = cid.to_vec();
         // sendrecv header
         msg.extend(vec![U2FHID_MSG, 0x00, 0x0e]); // len = 14
-        // apdu header
+                                                  // apdu header
         msg.extend(vec![0x00, U2FHID_PING, 0xaa, 0x00, 0x00, 0x00, 0x05]);
         // apdu data
         msg.extend_from_slice(&data);

@@ -187,7 +187,7 @@ var Log = {
         }
         frame = frame.caller;
       }
-      return "Stack trace: " + output.join(" < ");
+      return "Stack trace: " + output.join("\n");
     }
     // Standard JS exception
     if (e.stack) {
@@ -196,7 +196,7 @@ var Log = {
       if (stack.includes("/Task.jsm:"))
         stack = Task.Debugging.generateReadableStack(stack);
       return "JS Stack trace: " + stack.trim()
-        .replace(/\n/g, " < ").replace(/@[^@]*?([^\/\.]+\.\w+:)/g, "@$1");
+        .replace(/@[^@]*?([^\/\.]+\.\w+:)/g, "@$1");
     }
 
     return "No traceback available";

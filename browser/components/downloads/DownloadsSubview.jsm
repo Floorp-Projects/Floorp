@@ -22,7 +22,6 @@ ChromeUtils.defineModuleGetter(this, "FileUtils",
                                "resource://gre/modules/FileUtils.jsm");
 
 let gPanelViewInstances = new WeakMap();
-const kEvents = ["ViewShowing", "ViewHiding", "click", "command"];
 const kRefreshBatchSize = 10;
 const kMaxWaitForIdleMs = 200;
 XPCOMUtils.defineLazyGetter(this, "kButtonLabels", () => {

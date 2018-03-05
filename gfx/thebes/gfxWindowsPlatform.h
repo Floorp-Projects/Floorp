@@ -237,6 +237,7 @@ protected:
 private:
     void Init();
     void InitAcceleration() override;
+    void InitWebRenderConfig() override;
 
     void InitializeDevices();
     void InitializeD3D11();

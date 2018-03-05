@@ -7,10 +7,10 @@
 [scriptable, uuid(6a568972-cc91-4bf5-963e-3768f3319b8a)]
 interface nsIEnterprisePolicies : nsISupports
 {
-  const unsigned short UNINITIALIZED = 0;
-  const unsigned short INACTIVE      = 1;
-  const unsigned short ACTIVE        = 2;
-  const unsigned short FAILED        = 3;
+  const short UNINITIALIZED = -1;
+  const short INACTIVE      = 0;
+  const short ACTIVE        = 1;
+  const short FAILED        = 2;
 
   readonly attribute short status;
 

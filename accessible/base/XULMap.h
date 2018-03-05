@@ -87,6 +87,28 @@ XULMAP(
 )
 
 XULMAP(
+  panel,
+  [](nsIContent* aContent, Accessible* aContext) -> Accessible* {
+    static const Element::AttrValuesArray sIgnoreTypeVals[] =
+      { &nsGkAtoms::autocomplete_richlistbox, &nsGkAtoms::autocomplete, nullptr };
+
+    if (!aContent->IsElement() ||
+        aContent->AsElement()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
+                                               sIgnoreTypeVals, eIgnoreCase) >= 0) {
+      return nullptr;
+    }
+
+    if (aContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                           nsGkAtoms::noautofocus,
+                                           nsGkAtoms::_true, eCaseMatters)) {
+      return new XULAlertAccessible(aContent, aContext->Document());
+    }
+
+    return new EnumRoleAccessible<roles::PANE>(aContent, aContext->Document());
+  }
+)
+
+XULMAP(
   popup,
   [](nsIContent* aContent, Accessible* aContext) {
     return CreateMenupopupAccessible(aContent, aContext);

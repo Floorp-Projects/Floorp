@@ -49,21 +49,6 @@ module.exports = {
       "mozilla/use-services": "off",
     }
   }, {
-    // XXX Bug 1434446. These directories have jsm files still being fixed, so
-    // turn off global no-unused-vars checking for them.
-    "files": [
-      "browser/components/**/*.jsm",
-      "browser/extensions/**/*.jsm",
-    ],
-    "rules": {
-      "mozilla/mark-exported-symbols-as-used": "error",
-      "no-unused-vars": ["error", {
-        "args": "none",
-        "vars": "local",
-        "varsIgnorePattern": "^EXPORTED_SYMBOLS$"
-      }]
-    }
-  }, {
     // XXX Bug 1436303. These directories are still being fixed, so turn off
     // mozilla/no-cc-etc for now.
     "files": [

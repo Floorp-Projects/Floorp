@@ -84,7 +84,7 @@ class ParentDevToolsPanel {
 
     this.toolbox.addAdditionalTool({
       id: this.id,
-      url: "about:blank",
+      url: "chrome://browser/content/webext-panels.xul",
       icon: icon,
       label: title,
       tooltip: `DevTools Panel added by "${extensionName}" add-on.`,
@@ -216,14 +216,29 @@ class ParentDevToolsPanel {
     const {url} = this.panelOptions;
     const {document} = window;
 
+    // TODO Bug 1442601: Refactor ext-devtools-panels.js to reuse the helpers
+    // functions defined in webext-panels.xul (e.g. create the browser element
+    // using an helper function defined in webext-panels.js and shared with the
+    // extension sidebar pages).
+    let stack = document.getElementById("webext-panels-stack");
+    if (!stack) {
+      stack = document.createElementNS(XUL_NS, "stack");
+      stack.setAttribute("flex", "1");
+      stack.setAttribute("id", "webext-panels-stack");
+      document.documentElement.appendChild(stack);
+    }
+
     const browser = document.createElementNS(XUL_NS, "browser");
+    browser.setAttribute("id", "webext-panels-browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
-    browser.setAttribute("style", "width: 100%; height: 100%;");
-    browser.setAttribute("transparent", "true");
+    browser.setAttribute("flex", "1");
     browser.setAttribute("class", "webextension-devtoolsPanel-browser");
     browser.setAttribute("webextension-view-type", "devtools_panel");
-    browser.setAttribute("flex", "1");
+    // TODO Bug 1442604: Add additional tests for the select and autocompletion
+    // popups used in an extension devtools panels (in oop and non-oop mode).
+    browser.setAttribute("selectmenulist", "ContentSelectDropdown");
+    browser.setAttribute("autocompletepopup", "PopupAutoComplete");
 
     // Ensure that the devtools panel browser is going to run in the same
     // process of the other extension pages from the same addon.
@@ -254,8 +269,7 @@ class ParentDevToolsPanel {
       }
     });
 
-    document.body.setAttribute("style", "margin: 0; padding: 0;");
-    document.body.appendChild(browser);
+    stack.appendChild(browser);
 
     extensions.emit("extension-browser-inserted", browser, {
       devtoolsToolboxInfo: {

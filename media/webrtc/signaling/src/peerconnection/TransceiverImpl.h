@@ -21,8 +21,10 @@ namespace mozilla {
 class PeerIdentity;
 class PeerConnectionMedia;
 class JsepTransceiver;
+enum class MediaSessionConduitLocalDirection : int;
 class MediaSessionConduit;
 class VideoSessionConduit;
+class AudioSessionConduit;
 class MediaPipelineReceive;
 class MediaPipelineTransmit;
 class MediaPipeline;
@@ -132,9 +134,8 @@ private:
   nsresult UpdateAudioConduit();
   nsresult UpdateVideoConduit();
   nsresult ConfigureVideoCodecMode(VideoSessionConduit& aConduit);
-  // This will eventually update audio extmap too
-  void UpdateVideoExtmap(const JsepTrackNegotiatedDetails& aDetails,
-                         bool aSending);
+  void UpdateConduitRtpExtmap(const JsepTrackNegotiatedDetails& aDetails,
+                              const MediaSessionConduitLocalDirection aDir);
   void Stop();
 
   const std::string mPCHandle;

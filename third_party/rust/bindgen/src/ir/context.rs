@@ -222,8 +222,7 @@ where
     T: Copy + Into<ItemId>
 {
     fn can_derive_default(&self, ctx: &BindgenContext) -> bool {
-        ctx.options().derive_default &&
-            ctx.lookup_can_derive_default(*self)
+        ctx.options().derive_default && ctx.lookup_can_derive_default(*self)
     }
 }
 
@@ -232,7 +231,7 @@ where
     T: Copy + Into<ItemId>
 {
     fn can_derive_copy(&self, ctx: &BindgenContext) -> bool {
-        ctx.lookup_can_derive_copy(*self)
+        ctx.options().derive_copy && ctx.lookup_can_derive_copy(*self)
     }
 }
 
@@ -2452,6 +2451,7 @@ impl BindgenContext {
         // Look up the computed value for whether the item with `id` can
         // derive `Copy` or not.
         let id = id.into();
+
         !self.lookup_has_type_param_in_array(id) &&
             !self.cannot_derive_copy.as_ref().unwrap().contains(&id)
     }

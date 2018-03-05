@@ -242,27 +242,66 @@ Module::notifyCompilationListeners()
         listener->onCompilationComplete();
 }
 
-void
+bool
 Module::finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2, ModuleEnvironment* env2)
 {
-    // Install the data in the data structures. They will not be visible yet.
+    MOZ_ASSERT(code().bestTier() == Tier::Baseline && tier2->tier() == Tier::Ion);
 
-    MOZ_ASSERT(!code().hasTier2());
-    linkData().setTier2(Move(linkData2));
-    code().setTier2(Move(tier2));
-    for (uint32_t i = 0; i < elemSegments_.length(); i++)
-        elemSegments_[i].setTier2(Move(env2->elemSegments[i].elemCodeRangeIndices(Tier::Ion)));
+    {
+        // We need to prevent new tier1 stubs generation until we've committed
+        // the newer tier2 stubs, otherwise we might not generate one tier2
+        // stub that has been generated for tier1 before we committed.
 
-    // Now that all the code and metadata is valid, make tier 2 code visible and
-    // unblock anyone waiting on it.
+        const MetadataTier& metadataTier1 = metadata(Tier::Baseline);
 
-    code().commitTier2();
+        auto stubs1 = code().codeTier(Tier::Baseline).lazyStubs().lock();
+        auto stubs2 = tier2->lazyStubs().lock();
+
+        MOZ_ASSERT(stubs2->empty());
+
+        Uint32Vector funcExportIndices;
+        for (size_t i = 0; i < metadataTier1.funcExports.length(); i++) {
+            const FuncExport& fe = metadataTier1.funcExports[i];
+            if (fe.hasEagerStubs())
+                continue;
+            MOZ_ASSERT(!env2->isAsmJS(), "only wasm functions are lazily exported");
+            if (!stubs1->hasStub(fe.funcIndex()))
+                continue;
+            if (!funcExportIndices.emplaceBack(i))
+                return false;
+        }
+
+        Maybe<size_t> stub2Index;
+        if (!stubs2->createTier2(funcExportIndices, *tier2, &stub2Index))
+            return false;
+
+        // Install the data in the data structures. They will not be visible
+        // yet.
+
+        MOZ_ASSERT(!code().hasTier2());
+        linkData().setTier2(Move(linkData2));
+        code().setTier2(Move(tier2));
+        for (uint32_t i = 0; i < elemSegments_.length(); i++)
+            elemSegments_[i].setTier2(Move(env2->elemSegments[i].elemCodeRangeIndices(Tier::Ion)));
+
+        // Now that all the code and metadata is valid, make tier 2 code
+        // visible and unblock anyone waiting on it.
+
+        code().commitTier2();
+
+        // Now tier2 is committed and we can update jump tables entries to
+        // start making tier2 live.  Because lazy stubs are protected by a lock
+        // and notifyCompilationListeners should be called without any lock
+        // held, do it before.
+
+        stubs2->setJitEntries(stub2Index, code());
+    }
     notifyCompilationListeners();
 
     // And we update the jump vector.
 
     uint8_t* base = code().segment(Tier::Ion).base();
-    for (auto cr : metadata(Tier::Ion).codeRanges) {
+    for (const CodeRange& cr : metadata(Tier::Ion).codeRanges) {
         // These are racy writes that we just want to be visible, atomically,
         // eventually.  All hardware we care about will do this right.  But
         // we depend on the compiler not splitting the stores hidden inside the
@@ -272,6 +311,8 @@ Module::finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2, ModuleEn
         else if (cr.isJitEntry())
             code().setJitEntry(cr.funcIndex(), base + cr.begin());
     }
+
+    return true;
 }
 
 void
@@ -1016,7 +1057,7 @@ GetGlobalExport(JSContext* cx, const GlobalDescVector& globals, uint32_t globalI
 
     ToJSValue(val, jsval);
 
-#ifdef ENABLE_WASM_GLOBAL
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
     Rooted<WasmGlobalObject*> go(cx, WasmGlobalObject::create(cx, ValType::I32, false, jsval));
     if (!go)
         return false;

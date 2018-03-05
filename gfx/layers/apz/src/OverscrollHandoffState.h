@@ -35,7 +35,7 @@ protected:
   // Reference-counted classes cannot have public destructors.
   ~OverscrollHandoffChain();
 public:
-  // Threadsafe so that the controller and compositor threads can both maintain
+  // Threadsafe so that the controller and sampler threads can both maintain
   // nsRefPtrs to the same handoff chain.
   // Mutable so that we can pass around the class by
   // RefPtr<const OverscrollHandoffChain> and thus enforce that, once built,

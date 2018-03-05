@@ -253,7 +253,7 @@ GetImports(JSContext* cx,
             MOZ_ASSERT(global.importIndex() == globalIndex - 1);
             MOZ_ASSERT(!global.isMutable());
 
-#ifdef ENABLE_WASM_GLOBAL
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
             if (v.isObject() && v.toObject().is<WasmGlobalObject>())
                 v.set(v.toObject().as<WasmGlobalObject>().value());
 #endif
@@ -1147,6 +1147,54 @@ WasmCall(JSContext* cx, unsigned argc, Value* vp)
     return instance.callExport(cx, funcIndex, args);
 }
 
+static bool
+EnsureLazyEntryStub(const Instance& instance, size_t funcExportIndex, const FuncExport& fe)
+{
+    if (fe.hasEagerStubs())
+        return true;
+
+    MOZ_ASSERT(!instance.isAsmJS(), "only wasm can lazily export functions");
+
+    // If the best tier is Ion, life is simple: background compilation has
+    // already completed and has been committed, so there's no risk of race
+    // conditions here.
+    //
+    // If the best tier is Baseline, there could be a background compilation
+    // happening at the same time. The background compilation will lock the
+    // first tier lazy stubs first to stop new baseline stubs from being
+    // generated, then the second tier stubs to generate them.
+    //
+    // - either we take the tier1 lazy stub lock before the background
+    // compilation gets it, then we generate the lazy stub for tier1. When the
+    // background thread gets the tier1 lazy stub lock, it will see it has a
+    // lazy stub and will recompile it for tier2.
+    // - or we don't take the lock here first. Background compilation won't
+    // find a lazy stub for this function, thus won't generate it. So we'll do
+    // it ourselves after taking the tier2 lock.
+
+    Tier prevTier = instance.code().bestTier();
+
+    auto stubs = instance.code(prevTier).lazyStubs().lock();
+    if (stubs->hasStub(fe.funcIndex()))
+        return true;
+
+    // The best tier might have changed after we've taken the lock.
+    Tier tier = instance.code().bestTier();
+    const CodeTier& codeTier = instance.code(tier);
+    if (tier == prevTier)
+        return stubs->createOne(funcExportIndex, codeTier);
+
+    MOZ_ASSERT(prevTier == Tier::Baseline && tier == Tier::Ion);
+
+    auto stubs2 = instance.code(tier).lazyStubs().lock();
+
+    // If it didn't have a stub in the first tier, background compilation
+    // shouldn't have made one in the second tier.
+    MOZ_ASSERT(!stubs2->hasStub(fe.funcIndex()));
+
+    return stubs2->createOne(funcExportIndex, codeTier);
+}
+
 /* static */ bool
 WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject instanceObj,
                                         uint32_t funcIndex, MutableHandleFunction fun)
@@ -1157,8 +1205,15 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
     }
 
     const Instance& instance = instanceObj->instance();
-    auto tier = instance.code().stableTier();
-    const Sig& sig = instance.metadata(tier).lookupFuncExport(funcIndex).sig();
+    const MetadataTier& metadata = instance.metadata(instance.code().bestTier());
+
+    size_t funcExportIndex;
+    const FuncExport& funcExport = metadata.lookupFuncExport(funcIndex, &funcExportIndex);
+
+    if (!EnsureLazyEntryStub(instance, funcExportIndex, funcExport))
+        return false;
+
+    const Sig& sig = funcExport.sig();
     unsigned numArgs = sig.args().length();
 
     if (instance.isAsmJS()) {
@@ -1202,7 +1257,7 @@ WasmInstanceObject::getExportedFunctionCodeRange(HandleFunction fun, Tier tier)
     uint32_t funcIndex = ExportedFunctionToFuncIndex(fun);
     MOZ_ASSERT(exports().lookup(funcIndex)->value() == fun);
     const FuncExport& funcExport = instance().metadata(tier).lookupFuncExport(funcIndex);
-    return instance().metadata(tier).codeRanges[funcExport.codeRangeIndex()];
+    return instance().metadata(tier).codeRanges[funcExport.interpCodeRangeIndex()];
 }
 
 /* static */ WasmInstanceScope*
@@ -1869,8 +1924,9 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
 
         Instance& instance = instanceObj->instance();
         Tier tier = instance.code().bestTier();
-        const FuncExport& funcExport = instance.metadata(tier).lookupFuncExport(funcIndex);
-        const CodeRange& codeRange = instance.metadata(tier).codeRanges[funcExport.codeRangeIndex()];
+        const MetadataTier& metadata = instance.metadata(tier);
+        const FuncExport& funcExport = metadata.lookupFuncExport(funcIndex);
+        const CodeRange& codeRange = metadata.codeRanges[funcExport.interpCodeRangeIndex()];
         void* code = instance.codeBase(tier) + codeRange.funcTableEntry();
         table.set(index, code, instance);
     } else {
@@ -1935,7 +1991,7 @@ WasmTableObject::table() const
 // ============================================================================
 // WebAssembly.global class and methods
 
-#ifdef ENABLE_WASM_GLOBAL
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
 
 const ClassOps WasmGlobalObject::classOps_ =
 {
@@ -2128,7 +2184,7 @@ WasmGlobalObject::value() const
     return getReservedSlot(VALUE_SLOT);
 }
 
-#endif // ENABLE_WASM_GLOBAL
+#endif // ENABLE_WASM_GLOBAL && EARLY_BETA_OR_EARLIER
 
 // ============================================================================
 // WebAssembly class and static methods
@@ -2968,7 +3024,7 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
         return nullptr;
 
     RootedObject moduleProto(cx), instanceProto(cx), memoryProto(cx), tableProto(cx);
-#ifdef ENABLE_WASM_GLOBAL
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
     RootedObject globalProto(cx);
 #endif
     if (!InitConstructor<WasmModuleObject>(cx, wasm, "Module", &moduleProto))
@@ -2979,7 +3035,7 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
         return nullptr;
     if (!InitConstructor<WasmTableObject>(cx, wasm, "Table", &tableProto))
         return nullptr;
-#ifdef ENABLE_WASM_GLOBAL
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
     if (!InitConstructor<WasmGlobalObject>(cx, wasm, "Global", &globalProto))
         return nullptr;
 #endif
@@ -3002,7 +3058,7 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
     global->setPrototype(JSProto_WasmInstance, ObjectValue(*instanceProto));
     global->setPrototype(JSProto_WasmMemory, ObjectValue(*memoryProto));
     global->setPrototype(JSProto_WasmTable, ObjectValue(*tableProto));
-#ifdef ENABLE_WASM_GLOBAL
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
     global->setPrototype(JSProto_WasmGlobal, ObjectValue(*globalProto));
 #endif
     global->setConstructor(JSProto_WebAssembly, ObjectValue(*wasm));

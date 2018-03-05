@@ -10,6 +10,7 @@ const ThemeVariableMap = [
   ["--lwt-background-tiling", "backgroundsTiling"],
   ["--tab-loading-fill", "tab_loading", "tabbrowser-tabs"],
   ["--lwt-tab-text", "tab_text"],
+  ["--tab-line-color", "tab_line", "tabbrowser-tabs"],
   ["--toolbar-bgcolor", "toolbarColor"],
   ["--toolbar-color", "toolbar_text"],
   ["--url-and-searchbar-background-color", "toolbar_field"],
@@ -23,4 +24,5 @@ const ThemeVariableMap = [
   ["--lwt-toolbarbutton-icon-fill-attention", "icon_attention_color"],
   ["--lwt-toolbarbutton-hover-background", "button_background_hover"],
   ["--lwt-toolbarbutton-active-background", "button_background_active"],
+  ["--lwt-selected-tab-background-color", "tab_selected"],
 ];

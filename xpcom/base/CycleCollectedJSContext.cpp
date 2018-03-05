@@ -52,7 +52,7 @@ CycleCollectedJSContext::CycleCollectedJSContext()
   , mRuntime(nullptr)
   , mJSContext(nullptr)
   , mDoingStableStates(false)
-  , mDisableMicroTaskCheckpoint(false)
+  , mTargetedMicroTaskRecursionDepth(0)
   , mMicroTaskLevel(0)
   , mMicroTaskRecursionDepth(0)
 {
@@ -77,8 +77,8 @@ CycleCollectedJSContext::~CycleCollectedJSContext()
   }
 
   // Last chance to process any events.
-  ProcessMetastableStateQueue(mBaseRecursionDepth);
-  MOZ_ASSERT(mMetastableStateEvents.IsEmpty());
+  CleanupIDBTransactions(mBaseRecursionDepth);
+  MOZ_ASSERT(mPendingIDBTransactions.IsEmpty());
 
   ProcessStableStateQueue();
   MOZ_ASSERT(mStableStateEvents.IsEmpty());
@@ -86,8 +86,8 @@ CycleCollectedJSContext::~CycleCollectedJSContext()
   // Clear mPendingException first, since it might be cycle collected.
   mPendingException = nullptr;
 
-  MOZ_ASSERT(mDebuggerPromiseMicroTaskQueue.empty());
-  MOZ_ASSERT(mPromiseMicroTaskQueue.empty());
+  MOZ_ASSERT(mDebuggerMicroTaskQueue.empty());
+  MOZ_ASSERT(mPendingMicroTaskRunnables.empty());
 
   mUncaughtRejections.reset();
   mConsumedRejections.reset();
@@ -181,15 +181,14 @@ CycleCollectedJSContext::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   return 0;
 }
 
-class PromiseJobRunnable final : public Runnable
+class PromiseJobRunnable final : public MicroTaskRunnable
 {
 public:
   PromiseJobRunnable(JS::HandleObject aCallback,
                      JS::HandleObject aAllocationSite,
                      nsIGlobalObject* aIncumbentGlobal)
-    : Runnable("PromiseJobRunnable")
-    , mCallback(
-        new PromiseJobCallback(aCallback, aAllocationSite, aIncumbentGlobal))
+    :mCallback(
+       new PromiseJobCallback(aCallback, aAllocationSite, aIncumbentGlobal))
   {
   }
 
@@ -198,15 +197,21 @@ public:
   }
 
 protected:
-  NS_IMETHOD
-  Run() override
+  virtual void Run(AutoSlowOperation& aAso) override
   {
     JSObject* callback = mCallback->CallbackPreserveColor();
     nsIGlobalObject* global = callback ? xpc::NativeGlobal(callback) : nullptr;
     if (global && !global->IsDying()) {
       mCallback->Call("promise callback");
+      aAso.CheckForInterrupt();
     }
-    return NS_OK;
+  }
+
+  virtual bool Suppressed() override
+  {
+    nsIGlobalObject* global =
+      xpc::NativeGlobal(mCallback->CallbackPreserveColor());
+    return global && global->IsInSyncOperation();
   }
 
 private:
@@ -240,7 +245,7 @@ CycleCollectedJSContext::EnqueuePromiseJobCallback(JSContext* aCx,
   if (aIncumbentGlobal) {
     global = xpc::NativeGlobal(aIncumbentGlobal);
   }
-  nsCOMPtr<nsIRunnable> runnable = new PromiseJobRunnable(aJob, aAllocationSite, global);
+  RefPtr<MicroTaskRunnable> runnable = new PromiseJobRunnable(aJob, aAllocationSite, global);
   self->DispatchToMicroTask(runnable.forget());
   return true;
 }
@@ -281,18 +286,18 @@ CycleCollectedJSContext::SetPendingException(Exception* aException)
   mPendingException = aException;
 }
 
-std::queue<nsCOMPtr<nsIRunnable>>&
-CycleCollectedJSContext::GetPromiseMicroTaskQueue()
+std::queue<RefPtr<MicroTaskRunnable>>&
+CycleCollectedJSContext::GetMicroTaskQueue()
 {
   MOZ_ASSERT(mJSContext);
-  return mPromiseMicroTaskQueue;
+  return mPendingMicroTaskRunnables;
 }
 
-std::queue<nsCOMPtr<nsIRunnable>>&
-CycleCollectedJSContext::GetDebuggerPromiseMicroTaskQueue()
+std::queue<RefPtr<MicroTaskRunnable>>&
+CycleCollectedJSContext::GetDebuggerMicroTaskQueue()
 {
   MOZ_ASSERT(mJSContext);
-  return mDebuggerPromiseMicroTaskQueue;
+  return mDebuggerMicroTaskQueue;
 }
 
 void
@@ -312,24 +317,24 @@ CycleCollectedJSContext::ProcessStableStateQueue()
 }
 
 void
-CycleCollectedJSContext::ProcessMetastableStateQueue(uint32_t aRecursionDepth)
+CycleCollectedJSContext::CleanupIDBTransactions(uint32_t aRecursionDepth)
 {
   MOZ_ASSERT(mJSContext);
   MOZ_RELEASE_ASSERT(!mDoingStableStates);
   mDoingStableStates = true;
 
-  nsTArray<RunInMetastableStateData> localQueue = Move(mMetastableStateEvents);
+  nsTArray<PendingIDBTransactionData> localQueue = Move(mPendingIDBTransactions);
 
   for (uint32_t i = 0; i < localQueue.Length(); ++i)
   {
-    RunInMetastableStateData& data = localQueue[i];
+    PendingIDBTransactionData& data = localQueue[i];
     if (data.mRecursionDepth != aRecursionDepth) {
       continue;
     }
 
     {
-      nsCOMPtr<nsIRunnable> runnable = data.mRunnable.forget();
-      runnable->Run();
+      nsCOMPtr<nsIRunnable> transaction = data.mTransaction.forget();
+      transaction->Run();
     }
 
     localQueue.RemoveElementAt(i--);
@@ -337,9 +342,25 @@ CycleCollectedJSContext::ProcessMetastableStateQueue(uint32_t aRecursionDepth)
 
   // If the queue has events in it now, they were added from something we called,
   // so they belong at the end of the queue.
-  localQueue.AppendElements(mMetastableStateEvents);
-  localQueue.SwapElements(mMetastableStateEvents);
+  localQueue.AppendElements(mPendingIDBTransactions);
+  localQueue.SwapElements(mPendingIDBTransactions);
   mDoingStableStates = false;
+}
+
+void
+CycleCollectedJSContext::BeforeProcessTask(bool aMightBlock)
+{
+  // If ProcessNextEvent was called during a microtask callback, we
+  // must process any pending microtasks before blocking in the event loop,
+  // otherwise we may deadlock until an event enters the queue later.
+  if (aMightBlock && PerformMicroTaskCheckPoint()) {
+    // If any microtask was processed, we post a dummy event in order to
+    // force the ProcessNextEvent call not to block.  This is required
+    // to support nested event loops implemented using a pattern like
+    // "while (condition) thread.processNextEvent(true)", in case the
+    // condition is triggered here by a Promise "then" callback.
+    NS_DispatchToMainThread(new Runnable("BeforeProcessTask"));
+  }
 }
 
 void
@@ -349,19 +370,8 @@ CycleCollectedJSContext::AfterProcessTask(uint32_t aRecursionDepth)
 
   // See HTML 6.1.4.2 Processing model
 
-  // Execute any events that were waiting for a microtask to complete.
-  // This is not (yet) in the spec.
-  ProcessMetastableStateQueue(aRecursionDepth);
-
   // Step 4.1: Execute microtasks.
-  if (!mDisableMicroTaskCheckpoint) {
-    PerformMicroTaskCheckPoint();
-    if (NS_IsMainThread()) {
-      Promise::PerformMicroTaskCheckpoint();
-    } else {
-      Promise::PerformWorkerMicroTaskCheckpoint();
-    }
-  }
+  PerformMicroTaskCheckPoint();
 
   // Step 4.2 Execute any events that were waiting for a stable state.
   ProcessStableStateQueue();
@@ -371,10 +381,12 @@ CycleCollectedJSContext::AfterProcessTask(uint32_t aRecursionDepth)
 }
 
 void
-CycleCollectedJSContext::AfterProcessMicrotask()
+CycleCollectedJSContext::AfterProcessMicrotasks()
 {
   MOZ_ASSERT(mJSContext);
-  AfterProcessMicrotask(RecursionDepth());
+  // Cleanup Indexed Database transactions:
+  // https://html.spec.whatwg.org/multipage/webappapis.html#perform-a-microtask-checkpoint
+  CleanupIDBTransactions(RecursionDepth());
 }
 
 void CycleCollectedJSContext::IsIdleGCTaskNeeded()
@@ -407,16 +419,6 @@ void CycleCollectedJSContext::IsIdleGCTaskNeeded()
   }
 }
 
-void
-CycleCollectedJSContext::AfterProcessMicrotask(uint32_t aRecursionDepth)
-{
-  MOZ_ASSERT(mJSContext);
-
-  // Between microtasks, execute any events that were waiting for a microtask
-  // to complete.
-  ProcessMetastableStateQueue(aRecursionDepth);
-}
-
 uint32_t
 CycleCollectedJSContext::RecursionDepth()
 {
@@ -431,12 +433,12 @@ CycleCollectedJSContext::RunInStableState(already_AddRefed<nsIRunnable>&& aRunna
 }
 
 void
-CycleCollectedJSContext::RunInMetastableState(already_AddRefed<nsIRunnable>&& aRunnable)
+CycleCollectedJSContext::AddPendingIDBTransaction(already_AddRefed<nsIRunnable>&& aTransaction)
 {
   MOZ_ASSERT(mJSContext);
 
-  RunInMetastableStateData data;
-  data.mRunnable = aRunnable;
+  PendingIDBTransactionData data;
+  data.mTransaction = aTransaction;
 
   MOZ_ASSERT(mOwningThread);
   data.mRecursionDepth = RecursionDepth();
@@ -453,18 +455,19 @@ CycleCollectedJSContext::RunInMetastableState(already_AddRefed<nsIRunnable>&& aR
   }
 #endif
 
-  mMetastableStateEvents.AppendElement(Move(data));
+  mPendingIDBTransactions.AppendElement(Move(data));
 }
 
 void
-CycleCollectedJSContext::DispatchToMicroTask(already_AddRefed<nsIRunnable> aRunnable)
+CycleCollectedJSContext::DispatchToMicroTask(
+    already_AddRefed<MicroTaskRunnable> aRunnable)
 {
-  RefPtr<nsIRunnable> runnable(aRunnable);
+  RefPtr<MicroTaskRunnable> runnable(aRunnable);
 
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(runnable);
 
-  mPromiseMicroTaskQueue.push(runnable.forget());
+  mPendingMicroTaskRunnables.push(runnable.forget());
 }
 
 class AsyncMutationHandler final : public mozilla::Runnable
@@ -482,41 +485,61 @@ public:
   }
 };
 
-void
+bool
 CycleCollectedJSContext::PerformMicroTaskCheckPoint()
 {
-  if (mPendingMicroTaskRunnables.empty()) {
+  if (mPendingMicroTaskRunnables.empty() && mDebuggerMicroTaskQueue.empty()) {
+    AfterProcessMicrotasks();
     // Nothing to do, return early.
-    return;
+    return false;
   }
 
   uint32_t currentDepth = RecursionDepth();
   if (mMicroTaskRecursionDepth >= currentDepth) {
     // We are already executing microtasks for the current recursion depth.
-    return;
+    return false;
+  }
+
+  if (mTargetedMicroTaskRecursionDepth != 0 &&
+      mTargetedMicroTaskRecursionDepth != currentDepth) {
+    return false;
   }
 
   if (NS_IsMainThread() && !nsContentUtils::IsSafeToRunScript()) {
     // Special case for main thread where DOM mutations may happen when
     // it is not safe to run scripts.
     nsContentUtils::AddScriptRunner(new AsyncMutationHandler());
-    return;
+    return false;
   }
 
   mozilla::AutoRestore<uint32_t> restore(mMicroTaskRecursionDepth);
   MOZ_ASSERT(currentDepth > 0);
   mMicroTaskRecursionDepth = currentDepth;
 
+  bool didProcess = false;
   AutoSlowOperation aso;
 
   std::queue<RefPtr<MicroTaskRunnable>> suppressed;
-  while (!mPendingMicroTaskRunnables.empty()) {
-    RefPtr<MicroTaskRunnable> runnable =
-      mPendingMicroTaskRunnables.front().forget();
-    mPendingMicroTaskRunnables.pop();
+  for (;;) {
+    RefPtr<MicroTaskRunnable> runnable;
+    if (!mDebuggerMicroTaskQueue.empty()) {
+      runnable = mDebuggerMicroTaskQueue.front().forget();
+      mDebuggerMicroTaskQueue.pop();
+    } else if (!mPendingMicroTaskRunnables.empty()) {
+      runnable = mPendingMicroTaskRunnables.front().forget();
+      mPendingMicroTaskRunnables.pop();
+    } else {
+      break;
+    }
+
     if (runnable->Suppressed()) {
+      // Microtasks in worker shall never be suppressed.
+      // Otherwise, mPendingMicroTaskRunnables will be replaced later with
+      // all suppressed tasks in mDebuggerMicroTaskQueue unexpectedly.
+      MOZ_ASSERT(NS_IsMainThread());
       suppressed.push(runnable);
     } else {
+      didProcess = true;
       runnable->Run(aso);
     }
   }
@@ -526,13 +549,37 @@ CycleCollectedJSContext::PerformMicroTaskCheckPoint()
   // for some time, but no longer than spinning the event loop nestedly
   // (sync XHR, alert, etc.)
   mPendingMicroTaskRunnables.swap(suppressed);
+
+  AfterProcessMicrotasks();
+
+  return didProcess;
 }
 
 void
-CycleCollectedJSContext::DispatchMicroTaskRunnable(
-  already_AddRefed<MicroTaskRunnable> aRunnable)
-{
-  mPendingMicroTaskRunnables.push(aRunnable);
-}
+CycleCollectedJSContext::PerformDebuggerMicroTaskCheckpoint()
+ {
+  // Don't do normal microtask handling checks here, since whoever is calling
+  // this method is supposed to know what they are doing.
 
+  AutoSlowOperation aso;
+  for (;;) {
+    // For a debugger microtask checkpoint, we always use the debugger microtask
+    // queue.
+    std::queue<RefPtr<MicroTaskRunnable>>* microtaskQueue =
+      &GetDebuggerMicroTaskQueue();
+
+    if (microtaskQueue->empty()) {
+      break;
+    }
+
+    RefPtr<MicroTaskRunnable> runnable = microtaskQueue->front().forget();
+    MOZ_ASSERT(runnable);
+
+    // This function can re-enter, so we remove the element before calling.
+    microtaskQueue->pop();
+    runnable->Run(aso);
+  }
+
+  AfterProcessMicrotasks();
+}
 } // namespace mozilla

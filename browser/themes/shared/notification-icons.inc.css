@@ -239,9 +239,8 @@ html|*#webRTC-previewVideo {
   transition: fill 1.5s;
 }
 
-.plugin-blocked-icon {
+.plugin-icon.blocked-permission-icon {
   list-style-image: url(chrome://mozapps/skin/plugins/plugin-blocked.svg);
-  transition: fill 1.5s;
 }
 
 #plugin-icon-badge {

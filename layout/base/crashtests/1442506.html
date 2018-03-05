@@ -1,0 +1,10 @@
+<script>
+function go() {
+  var b = window.getSelection();
+  var c = document.getSelection();
+  b.setBaseAndExtent(document.getElementById("a"), 0, document.body.firstChild, 1);
+  c.deleteFromDocument();
+}
+</script>
+<body onload=go()>
+<p id="a">

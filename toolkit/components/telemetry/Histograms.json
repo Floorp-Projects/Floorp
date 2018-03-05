@@ -1436,16 +1436,6 @@
     "n_buckets": 200,
     "description": "Heap memory allocated (KB)"
   },
-  "MEMORY_HEAP_COMMITTED_UNUSED": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 1024,
-    "high": 524288,
-    "n_buckets": 50,
-    "description": "Committed, unused heap memory (KB)"
-  },
   "MEMORY_HEAP_OVERHEAD_FRACTION": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],

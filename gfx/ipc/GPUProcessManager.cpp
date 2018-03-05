@@ -999,12 +999,6 @@ GPUProcessManager::CreateContentVideoDecoderManager(base::ProcessId aOtherProces
   *aOutEndpoint = Move(childPipe);
 }
 
-already_AddRefed<IAPZCTreeManager>
-GPUProcessManager::GetAPZCTreeManagerForLayers(uint64_t aLayersId)
-{
-  return CompositorBridgeParent::GetAPZCTreeManager(aLayersId);
-}
-
 void
 GPUProcessManager::MapLayerTreeId(uint64_t aLayersId, base::ProcessId aOwningId)
 {

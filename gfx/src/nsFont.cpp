@@ -56,6 +56,7 @@ nsFont::CalcDifference(const nsFont& aOther) const
       (sizeAdjust != aOther.sizeAdjust) ||
       (fontlist != aOther.fontlist) ||
       (kerning != aOther.kerning) ||
+      (opticalSizing != aOther.opticalSizing) ||
       (synthesis != aOther.synthesis) ||
       (fontFeatureSettings != aOther.fontFeatureSettings) ||
       (fontVariationSettings != aOther.fontVariationSettings) ||
@@ -292,7 +293,26 @@ void nsFont::AddFontFeaturesToStyle(gfxFontStyle *aStyle,
 void nsFont::AddFontVariationsToStyle(gfxFontStyle *aStyle) const
 {
   // TODO: add variation settings from specific CSS properties
-  // such as weight, width, optical-size
+  // such as weight, width, stretch
+
+  // If auto optical sizing is enabled, and if there's no 'opsz' axis in
+  // fontVariationSettings, then set the automatic value on the style.
+  class VariationTagComparator {
+  public:
+    bool Equals(const gfxFontVariation& aVariation, uint32_t aTag) const {
+      return aVariation.mTag == aTag;
+    }
+  };
+  const uint32_t kTagOpsz = TRUETYPE_TAG('o','p','s','z');
+  if (opticalSizing == NS_FONT_OPTICAL_SIZING_AUTO &&
+    !fontVariationSettings.Contains(kTagOpsz, VariationTagComparator())) {
+    gfxFontVariation opsz = {
+      kTagOpsz,
+      // size is in app units, but we want a floating-point px size
+      float(size) / float(AppUnitsPerCSSPixel())
+    };
+    aStyle->variationSettings.AppendElement(opsz);
+  }
 
   // Add in arbitrary values from font-variation-settings
   aStyle->variationSettings.AppendElements(fontVariationSettings);

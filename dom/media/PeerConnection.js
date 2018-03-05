@@ -443,7 +443,6 @@ class RTCPeerConnection {
     this.makeGetterSetterEH("onicecandidate");
     this.makeGetterSetterEH("onnegotiationneeded");
     this.makeGetterSetterEH("onsignalingstatechange");
-    this.makeGetterSetterEH("onremovestream");
     this.makeGetterSetterEH("ondatachannel");
     this.makeGetterSetterEH("oniceconnectionstatechange");
     this.makeGetterSetterEH("onicegatheringstatechange");
@@ -1832,11 +1831,6 @@ class PeerConnectionObserver {
 
   onGetStatsError(code, message) {
     this._dompc._onGetStatsFailure(this.newError(message, code));
-  }
-
-  onRemoveStream(stream) {
-    this.dispatchEvent(new this._dompc._win.MediaStreamEvent("removestream",
-                                                             { stream }));
   }
 
   _getTransceiverWithRecvTrack(webrtcTrackId) {
