@@ -18,6 +18,18 @@ add_task(async function test_no_changes() {
     type: "folder",
     children: ["mozBmk______"],
   }, {
+    id: "toolbar",
+    type: "folder",
+    children: [],
+  }, {
+    id: "unfiled",
+    type: "folder",
+    children: [],
+  }, {
+    id: "mobile",
+    type: "folder",
+    children: [],
+  }, {
     id: "mozBmk______",
     type: "bookmark",
     title: "Mozilla",
