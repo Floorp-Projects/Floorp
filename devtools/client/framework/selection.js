@@ -56,6 +56,11 @@ var EventEmitter = require("devtools/shared/event-emitter");
 function Selection(walker) {
   EventEmitter.decorate(this);
 
+  // A single node front can be represented twice on the client when the node is a slotted
+  // element. It will be displayed once as a direct child of the host element, and once as
+  // a child of a slot in the "shadow DOM". The latter is called the slotted version.
+  this._isSlotted = false;
+
   this._onMutations = this._onMutations.bind(this);
   this.setNodeFront = this.setNodeFront.bind(this);
   this.setWalker(walker);
@@ -115,8 +120,20 @@ Selection.prototype = {
     }
   },
 
-  setNodeFront: function(value, reason = "unknown") {
+  /**
+   * Update the currently selected node-front.
+   *
+   * @param {NodeFront} nodeFront
+   *        The NodeFront being selected.
+   * @param {String} reason
+   *        Reason that triggered the selection, will be fired with the "new-node-front"
+   *        event.
+   * @param {Boolean} isSlotted
+   *        Is the selection representing the slotted version of the node.
+   */
+  setNodeFront: function(value, reason = "unknown", isSlotted = false) {
     this.reason = reason;
+    this._isSlotted = isSlotted;
 
     // If an inlineTextChild text node is being set, then set it's parent instead.
     let parentNode = value && value.parentNode();
@@ -244,5 +261,9 @@ Selection.prototype = {
 
   isNotationNode: function() {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.NOTATION_NODE;
+  },
+
+  isSlotted: function() {
+    return this._isSlotted;
   },
 };
