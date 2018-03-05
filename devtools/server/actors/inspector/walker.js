@@ -307,10 +307,11 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this._refMap.set(node, actor);
 
     if (node.nodeType === Ci.nsIDOMNode.DOCUMENT_NODE) {
-      actor.watchDocument(this.onMutations);
+      actor.watchDocument(node, this.onMutations);
     }
 
     if (actor.isShadowRoot) {
+      actor.watchDocument(node.ownerDocument, this.onMutations);
       actor.watchSlotchange(this.onSlotchange);
     }
 
