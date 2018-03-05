@@ -2411,7 +2411,6 @@ nsMenuPopupFrame::MoveTo(const CSSIntPoint& aPos, bool aUpdateAttrs)
                      LookAndFeel::eIntID_ContextMenuOffsetVertical));
   }
 
-  nsPresContext* presContext = PresContext();
   mAnchorType = MenuPopupAnchorType_Point;
   mScreenRect.x = aPos.x - nsPresContext::AppUnitsToIntCSSPixels(margin.left);
   mScreenRect.y = aPos.y - nsPresContext::AppUnitsToIntCSSPixels(margin.top);
