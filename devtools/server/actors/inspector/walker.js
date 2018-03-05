@@ -426,11 +426,25 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   parentNode: function(node) {
-    let walker = this.getDocumentWalker(node.rawNode);
-    let parent = walker.parentNode();
+    let parent;
+    try {
+      // If the node is the child of a shadow host, we can not use an anonymous walker to
+      // get the shadow host parent.
+      let walker = node.isDirectShadowHostChild ? this.getNonAnonymousWalker(node.rawNode)
+                                                : this.getDocumentWalker(node.rawNode);
+      parent = walker.parentNode();
+    } catch (e) {
+      // When getting the parent node for a child of a non-slotted shadow host child,
+      // walker.parentNode() will throw if the walker is anonymous, because non-slotted
+      // shadow host children are not accessible anywhere in the anonymous tree.
+      let walker = this.getNonAnonymousWalker(node.rawNode);
+      parent = walker.parentNode();
+    }
+
     if (parent) {
       return this._ref(parent);
     }
+
     return null;
   },
 
@@ -449,15 +463,16 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       return undefined;
     }
 
-    let docWalker = this.getDocumentWalker(node.rawNode);
-    let firstChild = docWalker.firstChild();
+    let walker = node.isDirectShadowHostChild ? this.getNonAnonymousWalker(node.rawNode)
+                                              : this.getDocumentWalker(node.rawNode);
+    let firstChild = walker.firstChild();
 
     // Bail out if:
     // - more than one child
     // - unique child is not a text node
     // - unique child is a text node, but is too long to be inlined
     if (!firstChild ||
-        docWalker.nextSibling() ||
+        walker.nextSibling() ||
         firstChild.nodeType !== Ci.nsIDOMNode.TEXT_NODE ||
         firstChild.nodeValue.length > gValueSummaryLength
         ) {
@@ -593,32 +608,43 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
 
     let isShadowHost = !!node.rawNode.shadowRoot;
+    let isShadowRoot = !!node.rawNode.host;
 
-    if (isShadowHost) {
-      let shadowRoot = this._ref(node.rawNode.shadowRoot);
-      return {
-        hasFirst: true,
-        hasLast: true,
-        nodes: [shadowRoot],
-      };
+    // Detect special case of unslotted shadow host children that cannot rely on a
+    // regular anonymous walker.
+    let isUnslottedHostChild = false;
+    if (node.isDirectShadowHostChild) {
+      try {
+        this.getDocumentWalker(node.rawNode, options.whatToShow, SKIP_TO_SIBLING);
+      } catch (e) {
+        isUnslottedHostChild = true;
+      }
     }
 
-    let isShadowRoot = !!node.rawNode.host;
     // We're going to create a few document walkers with the same filter,
     // make it easier.
     let getFilteredWalker = documentWalkerNode => {
       let { whatToShow } = options;
+
       // Use SKIP_TO_SIBLING to force the walker to use a sibling of the provided node
       // in case this one is incompatible with the walker's filter function.
-      if (isShadowRoot) {
-        // Do not fetch anonymous children for shadow roots. If the host element has an
-        // ::after pseudo element, a walker on the last child of the shadow root will
-        // jump to the ::after element, which is not a child of the shadow root.
-        // TODO: Should rather use an anonymous walker with a new dedicated filter.
-        return this.getNonAnonymousWalker(documentWalkerNode, whatToShow,
-          SKIP_TO_SIBLING);
+      let skipTo = SKIP_TO_SIBLING;
+
+      let useAnonymousWalker = !(isShadowRoot || isShadowHost || isUnslottedHostChild);
+      if (!useAnonymousWalker) {
+        // Do not use an anonymous walker for :
+        // - shadow roots: if the host element has an ::after pseudo element, a walker on
+        //   the last child of the shadow root will jump to the ::after element, which is
+        //   not a child of the shadow root.
+        //   TODO: For this case, should rather use an anonymous walker with a new
+        //         dedicated filter.
+        // - shadow hosts: anonymous children of host elements make up the shadow dom,
+        //   while we want to return the direct children of the shadow host.
+        // - unslotted host child: if a shadow host child is not slotted, it is not part
+        //   of any anonymous tree and cannot be used with anonymous tree walkers.
+        return this.getNonAnonymousWalker(documentWalkerNode, whatToShow, skipTo);
       }
-      return this.getDocumentWalker(documentWalkerNode, whatToShow, SKIP_TO_SIBLING);
+      return this.getDocumentWalker(documentWalkerNode, whatToShow, skipTo);
     };
 
     // Need to know the first and last child.
@@ -626,51 +652,76 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     let firstChild = getFilteredWalker(rawNode).firstChild();
     let lastChild = getFilteredWalker(rawNode).lastChild();
 
-    if (!firstChild) {
+    if (!firstChild && !isShadowHost) {
       // No children, we're done.
       return { hasFirst: true, hasLast: true, nodes: [] };
     }
 
-    let start;
-    if (options.center) {
-      start = options.center.rawNode;
-    } else if (options.start) {
-      start = options.start.rawNode;
-    } else {
-      start = firstChild;
-    }
-
     let nodes = [];
 
-    // Start by reading backward from the starting point if we're centering...
-    let backwardWalker = getFilteredWalker(start);
-    if (backwardWalker.currentNode != firstChild && options.center) {
-      backwardWalker.previousSibling();
-      let backwardCount = Math.floor(maxNodes / 2);
-      let backwardNodes = this._readBackward(backwardWalker, backwardCount);
-      nodes = backwardNodes;
+    if (firstChild) {
+      let start;
+      if (options.center) {
+        start = options.center.rawNode;
+      } else if (options.start) {
+        start = options.start.rawNode;
+      } else {
+        start = firstChild;
+      }
+
+      // Start by reading backward from the starting point if we're centering...
+      let backwardWalker = getFilteredWalker(start);
+      if (backwardWalker.currentNode != firstChild && options.center) {
+        backwardWalker.previousSibling();
+        let backwardCount = Math.floor(maxNodes / 2);
+        let backwardNodes = this._readBackward(backwardWalker, backwardCount);
+        nodes = backwardNodes;
+      }
+
+      // Then read forward by any slack left in the max children...
+      let forwardWalker = getFilteredWalker(start);
+      let forwardCount = maxNodes - nodes.length;
+      nodes = nodes.concat(this._readForward(forwardWalker, forwardCount));
+
+      // If there's any room left, it means we've run all the way to the end.
+      // If we're centering, check if there are more items to read at the front.
+      let remaining = maxNodes - nodes.length;
+      if (options.center && remaining > 0 && nodes[0].rawNode != firstChild) {
+        let firstNodes = this._readBackward(backwardWalker, remaining);
+
+        // Then put it all back together.
+        nodes = firstNodes.concat(nodes);
+      }
     }
 
-    // Then read forward by any slack left in the max children...
-    let forwardWalker = getFilteredWalker(start);
-    let forwardCount = maxNodes - nodes.length;
-    nodes = nodes.concat(this._readForward(forwardWalker, forwardCount));
-
-    // If there's any room left, it means we've run all the way to the end.
-    // If we're centering, check if there are more items to read at the front.
-    let remaining = maxNodes - nodes.length;
-    if (options.center && remaining > 0 && nodes[0].rawNode != firstChild) {
-      let firstNodes = this._readBackward(backwardWalker, remaining);
-
-      // Then put it all back together.
-      nodes = firstNodes.concat(nodes);
+    // Temporarily filter out shadow host children when a walker returns them in a <slot>.
+    if (!isShadowHost) {
+      // Shadow host children should only be displayed under the host.
+      nodes = nodes.filter(n => !n.isDirectShadowHostChild);
     }
 
-    return {
-      hasFirst: nodes[0].rawNode == firstChild,
-      hasLast: nodes[nodes.length - 1].rawNode == lastChild,
-      nodes: nodes
-    };
+    let hasFirst, hasLast;
+    if (nodes.length > 0) {
+      // Compare first/last with expected nodes before modifying the nodes array in case
+      // this is a shadow host.
+      hasFirst = nodes[0].rawNode == firstChild;
+      hasLast = nodes[nodes.length - 1].rawNode == lastChild;
+    } else {
+      // If nodes is still an empty array, we are on a host element with a shadow root but
+      // no direct children.
+      hasFirst = hasLast = true;
+    }
+
+    if (isShadowHost) {
+      nodes = [
+        // #shadow-root
+        this._ref(node.rawNode.shadowRoot),
+        // shadow host direct children
+        ...nodes,
+      ];
+    }
+
+    return { hasFirst, hasLast, nodes };
   },
 
   /**
