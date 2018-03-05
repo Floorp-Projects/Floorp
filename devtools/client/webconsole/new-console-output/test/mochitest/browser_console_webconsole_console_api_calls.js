@@ -6,10 +6,9 @@
 
 "use strict";
 
+const TEST_URI = `data:text/html,<meta charset=utf8>console API calls`;
 
-const TEST_URI = `data:text/html,<meta charset=utf8>console API calls`
-
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const hud = await HUDService.toggleBrowserConsole();
 

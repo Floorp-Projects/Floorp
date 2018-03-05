@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Test for the message timestamps option: check if the preference toggles the
 // display of messages in the console output. See bug 722267.
 
@@ -19,7 +21,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
   </script>`;
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
 
-add_task(async function() {
+add_task(async function () {
   let hud = await openNewTabAndConsole(TEST_URI);
 
   info("Call the log function defined in the test page");

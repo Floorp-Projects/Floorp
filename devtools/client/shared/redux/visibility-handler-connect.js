@@ -14,7 +14,7 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
  * originally passed in. The HOC is responsible for not causing
  * rendering if the owner panel runs in the background.
  */
-function connectWrapper() {
+function visibilityHandlerConnect() {
   let args = [].slice.call(arguments);
   return component => {
     return connect(...args)(props => {
@@ -24,5 +24,5 @@ function connectWrapper() {
 }
 
 module.exports = {
-  connect: connectWrapper
+  connect: visibilityHandlerConnect
 };

@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Test navigation of webconsole contents via ctrl-a, ctrl-e, ctrl-p, ctrl-n
 // see https://bugzilla.mozilla.org/show_bug.cgi?id=804845
 //

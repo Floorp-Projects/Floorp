@@ -31,7 +31,6 @@ add_task(async function () {
   const {
     autocompletePopup: popup,
     completeNode,
-    inputNode,
   } = jsterm;
 
   ok(!popup.isOpen, "popup is not open");
