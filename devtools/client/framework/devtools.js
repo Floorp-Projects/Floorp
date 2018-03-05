@@ -650,7 +650,7 @@ DevTools.prototype = {
     let nodeFront = await inspector.walker.getRootNode();
     nodeFront = await querySelectors(nodeFront);
     // Select the final node
-    inspector.selection.setNodeFront(nodeFront, "browser-context-menu");
+    inspector.selection.setNodeFront(nodeFront, { reason: "browser-context-menu" });
 
     await onNewNode;
     // Now that the node has been selected, wait until the inspector is

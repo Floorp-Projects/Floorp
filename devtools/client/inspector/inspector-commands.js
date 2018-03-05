@@ -34,7 +34,7 @@ exports.items = [{
     let walker = toolbox.getCurrentPanel().walker;
     let rootNode = await walker.getRootNode();
     let nodeFront = await walker.querySelector(rootNode, args.selector);
-    toolbox.getCurrentPanel().selection.setNodeFront(nodeFront, "gcli");
+    toolbox.getCurrentPanel().selection.setNodeFront(nodeFront, { reason: "gcli" });
   },
 }, {
   item: "command",

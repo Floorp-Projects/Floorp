@@ -1498,7 +1498,7 @@ MarkupView.prototype = {
    * @return {Boolean} False if the node is already marked as selected, true
    *         otherwise.
    */
-  markNodeAsSelected: function(node, reason) {
+  markNodeAsSelected: function(node, reason = "nodeselected") {
     let container = this.getContainer(node);
 
     if (this._selectedContainer === container) {
@@ -1519,7 +1519,7 @@ MarkupView.prototype = {
 
     // Change the current selection if needed.
     if (this.inspector.selection.nodeFront !== node) {
-      this.inspector.selection.setNodeFront(node, reason || "nodeselected");
+      this.inspector.selection.setNodeFront(node, { reason });
     }
 
     return true;

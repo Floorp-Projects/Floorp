@@ -280,7 +280,7 @@ Inspector.prototype = {
     // All the components are initialized. Let's select a node.
     if (defaultSelection) {
       let onAllPanelsUpdated = this.once("inspector-updated");
-      this.selection.setNodeFront(defaultSelection, "inspector-open");
+      this.selection.setNodeFront(defaultSelection, { reason: "inspector-open" });
       await onAllPanelsUpdated;
       await this.markup.expandNode(this.selection.nodeFront);
     }
@@ -1049,7 +1049,7 @@ Inspector.prototype = {
         return;
       }
       this._pendingSelection = null;
-      this.selection.setNodeFront(defaultNode, "navigateaway");
+      this.selection.setNodeFront(defaultNode, { reason: "navigateaway" });
 
       this._initMarkup();
       this.once("markuploaded", this.onMarkupLoaded);
@@ -1253,7 +1253,8 @@ Inspector.prototype = {
    */
   onDetached: function(parentNode) {
     this.breadcrumbs.cutAfter(this.breadcrumbs.indexOf(parentNode));
-    this.selection.setNodeFront(parentNode ? parentNode : this._defaultNode, "detached");
+    let nodeFront = parentNode ? parentNode : this._defaultNode;
+    this.selection.setNodeFront(nodeFront, { reason: "detached" });
   },
 
   /**
@@ -2325,7 +2326,7 @@ Inspector.prototype = {
       return false;
     }
 
-    await this.selection.setNodeFront(nodeFront, inspectFromAnnotation);
+    await this.selection.setNodeFront(nodeFront, { reason: inspectFromAnnotation });
     return true;
   },
 };

@@ -98,7 +98,8 @@ class AnimationTarget extends PureComponent {
           object: translateNodeFrontToGrip(nodeFront),
           onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
           onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
-          onInspectIconClick: () => setSelectedNode(nodeFront, "animation-panel"),
+          onInspectIconClick: () => setSelectedNode(nodeFront,
+            { reason: "animation-panel" }),
         }
       )
     );

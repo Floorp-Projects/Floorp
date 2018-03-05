@@ -205,7 +205,7 @@ var selectNode = async function(selector, inspector, reason = "test") {
   info("Selecting the node for '" + selector + "'");
   let nodeFront = await getNodeFront(selector, inspector);
   let updated = inspector.once("inspector-updated");
-  inspector.selection.setNodeFront(nodeFront, reason);
+  inspector.selection.setNodeFront(nodeFront, { reason });
   await updated;
 };
 

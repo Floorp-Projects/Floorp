@@ -22,7 +22,7 @@ add_task(async function () {
   let onSelectionChanged = toolbox.once("selection-changed");
 
   info("Select the div and wait for the selection-changed event to be fired.");
-  inspector.selection.setNodeFront(node, "browser-context-menu");
+  inspector.selection.setNodeFront(node, { reason: "browser-context-menu" });
 
   await onSelectionChanged;
 
@@ -32,7 +32,7 @@ add_task(async function () {
   let onClearSelectionChanged = toolbox.once("selection-changed");
 
   info("Clear the selection and wait for the selection-changed event to be fired.");
-  inspector.selection.setNodeFront(undefined, "browser-context-menu");
+  inspector.selection.setNodeFront(undefined, { reason: "browser-context-menu" });
 
   await onClearSelectionChanged;
 
