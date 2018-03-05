@@ -182,6 +182,7 @@ IMContextWrapper::IMContextWrapper(nsWindow* aOwnerWindow)
     , mSetCursorPositionOnKeyEvent(true)
     , mPendingResettingIMContext(false)
     , mRetrieveSurroundingSignalReceived(false)
+    , mMaybeInDeadKeySequence(false)
 {
     static bool sFirstInstance = true;
     if (sFirstInstance) {
@@ -496,13 +497,17 @@ IMContextWrapper::OnKeyEvent(nsWindow* aCaller,
     }
 
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
-        ("0x%p OnKeyEvent(aCaller=0x%p, aKeyboardEventWasDispatched=%s), "
-         "mCompositionState=%s, current context=0x%p, active context=0x%p, "
-         "aEvent(0x%p): { type=%s, keyval=%s, unicode=0x%X }",
-         this, aCaller, ToChar(aKeyboardEventWasDispatched),
-         GetCompositionStateName(), GetCurrentContext(), GetActiveContext(),
-         aEvent, GetEventType(aEvent), gdk_keyval_name(aEvent->keyval),
-         gdk_keyval_to_unicode(aEvent->keyval)));
+        ("0x%p OnKeyEvent(aCaller=0x%p, "
+         "aEvent(0x%p): { type=%s, keyval=%s, unicode=0x%X }, "
+         "aKeyboardEventWasDispatched=%s), "
+         "mMaybeInDeadKeySequence=%s, "
+         "mCompositionState=%s, current context=0x%p, active context=0x%p, ",
+         this, aCaller, aEvent, GetEventType(aEvent),
+         gdk_keyval_name(aEvent->keyval),
+         gdk_keyval_to_unicode(aEvent->keyval),
+         ToChar(aKeyboardEventWasDispatched),
+         ToChar(mMaybeInDeadKeySequence),
+         GetCompositionStateName(), GetCurrentContext(), GetActiveContext()));
 
     if (aCaller != mLastFocusedWindow) {
         MOZ_LOG(gGtkIMLog, LogLevel::Error,
@@ -526,6 +531,12 @@ IMContextWrapper::OnKeyEvent(nsWindow* aCaller,
         SetCursorPosition(currentContext);
         mSetCursorPositionOnKeyEvent = false;
     }
+
+    // Let's support dead key event even if active keyboard layout also
+    // supports complicated composition like CJK IME.
+    bool isDeadKey =
+        KeymapWrapper::ComputeDOMKeyNameIndex(aEvent) == KEY_NAME_INDEX_Dead;
+    mMaybeInDeadKeySequence |= isDeadKey;
 
     mKeyboardEventWasDispatched = aKeyboardEventWasDispatched;
     mFallbackToKeyEvent = false;
@@ -567,11 +578,22 @@ IMContextWrapper::OnKeyEvent(nsWindow* aCaller,
 
     mProcessingKeyEvent = nullptr;
 
+    if (aEvent->type == GDK_KEY_PRESS && !filterThisEvent) {
+        // If the key event hasn't been handled by active IME nor keyboard
+        // layout, we can assume that the dead key sequence has been or was
+        // ended.  Note that we should not reset it when the key event is
+        // GDK_KEY_RELEASE since it may not be filtered by active keyboard
+        // layout even in composition.
+        mMaybeInDeadKeySequence = false;
+    }
+
     MOZ_LOG(gGtkIMLog, LogLevel::Debug,
         ("0x%p   OnKeyEvent(), succeeded, filterThisEvent=%s "
-         "(isFiltered=%s, mFallbackToKeyEvent=%s), mCompositionState=%s",
+         "(isFiltered=%s, mFallbackToKeyEvent=%s), mCompositionState=%s, "
+         "mMaybeInDeadKeySequence=%s",
          this, ToChar(filterThisEvent), ToChar(isFiltered),
-         ToChar(mFallbackToKeyEvent), GetCompositionStateName()));
+         ToChar(mFallbackToKeyEvent), GetCompositionStateName(),
+         ToChar(mMaybeInDeadKeySequence)));
 
     return filterThisEvent;
 }
@@ -1275,6 +1297,7 @@ IMContextWrapper::OnCommitCompositionNative(GtkIMContext* aContext,
 {
     const gchar emptyStr = 0;
     const gchar *commitString = aUTF8Char ? aUTF8Char : &emptyStr;
+    NS_ConvertUTF8toUTF16 utf16CommitString(commitString);
 
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
         ("0x%p OnCommitCompositionNative(aContext=0x%p), "
@@ -1297,7 +1320,7 @@ IMContextWrapper::OnCommitCompositionNative(GtkIMContext* aContext,
     // signal, we would dispatch compositionstart, text, compositionend
     // events with empty string.  Of course, they are unnecessary events
     // for Web applications and our editor.
-    if (!IsComposingOn(aContext) && !commitString[0]) {
+    if (!IsComposingOn(aContext) && utf16CommitString.IsEmpty()) {
         MOZ_LOG(gGtkIMLog, LogLevel::Warning,
             ("0x%p   OnCommitCompositionNative(), Warning, does nothing "
              "because has not started composition and commit string is empty",
@@ -1323,14 +1346,80 @@ IMContextWrapper::OnCommitCompositionNative(GtkIMContext* aContext,
         keyval_utf8_len = g_unichar_to_utf8(keyval_unicode, keyval_utf8);
         keyval_utf8[keyval_utf8_len] = '\0';
 
+        // If committing string is exactly same as a character which is
+        // produced by the key, eKeyDown and eKeyPress event should be
+        // dispatched by the caller of OnKeyEvent() normally.  Note that
+        // mMaybeInDeadKeySequence will be set to false by OnKeyEvent()
+        // since we set mFallbackToKeyEvent to true here.
         if (!strcmp(commitString, keyval_utf8)) {
             MOZ_LOG(gGtkIMLog, LogLevel::Info,
                 ("0x%p   OnCommitCompositionNative(), "
                  "we'll send normal key event",
                  this));
-            // In this case, eKeyDown and eKeyPress event should be dispatched
-            // by the caller of OnKeyEvent().
             mFallbackToKeyEvent = true;
+            return;
+        }
+
+        // If we're in a dead key sequence, commit string is a character in
+        // the BMP and mProcessingKeyEvent produces some characters but it's
+        // not same as committing string, we should dispatch an eKeyPress
+        // event from here.
+        WidgetKeyboardEvent keyDownEvent(true, eKeyDown,
+                                         mLastFocusedWindow);
+        KeymapWrapper::InitKeyEvent(keyDownEvent, mProcessingKeyEvent, false);
+        if (mMaybeInDeadKeySequence &&
+            utf16CommitString.Length() == 1 &&
+            keyDownEvent.mKeyNameIndex == KEY_NAME_INDEX_USE_STRING) {
+            mKeyboardEventWasDispatched = true;
+            // Anyway, we're not in dead key sequence anymore.
+            mMaybeInDeadKeySequence = false;
+
+            RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher();
+            nsresult rv = dispatcher->BeginNativeInputTransaction();
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+                MOZ_LOG(gGtkIMLog, LogLevel::Error,
+                    ("0x%p   OnCommitCompositionNative(), FAILED, "
+                     "due to BeginNativeInputTransaction() failure",
+                     this));
+                return;
+            }
+
+            // First, dispatch eKeyDown event.
+            keyDownEvent.mKeyValue = utf16CommitString;
+            nsEventStatus status = nsEventStatus_eIgnore;
+            bool dispatched =
+                dispatcher->DispatchKeyboardEvent(eKeyDown, keyDownEvent,
+                                                  status, mProcessingKeyEvent);
+            if (!dispatched || status == nsEventStatus_eConsumeNoDefault) {
+                MOZ_LOG(gGtkIMLog, LogLevel::Info,
+                    ("0x%p   OnCommitCompositionNative(), "
+                     "doesn't dispatch eKeyPress event because the preceding "
+                     "eKeyDown event was not dispatched or was consumed",
+                     this));
+                return;
+            }
+            if (mLastFocusedWindow != keyDownEvent.mWidget ||
+                mLastFocusedWindow->Destroyed()) {
+                MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+                    ("0x%p   OnCommitCompositionNative(), Warning, "
+                     "stop dispatching eKeyPress event because the preceding "
+                     "eKeyDown event caused changing focused widget or "
+                     "destroyed",
+                     this));
+                return;
+            }
+            MOZ_LOG(gGtkIMLog, LogLevel::Info,
+                ("0x%p   OnCommitCompositionNative(), "
+                 "dispatched eKeyDown event for the committed character",
+                 this));
+
+            // Next, dispatch eKeyPress event.
+            dispatcher->MaybeDispatchKeypressEvents(keyDownEvent, status,
+                                                    mProcessingKeyEvent);
+            MOZ_LOG(gGtkIMLog, LogLevel::Info,
+                ("0x%p   OnCommitCompositionNative(), "
+                 "dispatched eKeyPress event for the committed character",
+                 this));
             return;
         }
     }
@@ -1384,12 +1473,18 @@ IMContextWrapper::MaybeDispatchKeyEventAsProcessedByIME()
     RefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
     mKeyboardEventWasDispatched = true;
 
+    // Let's dispatch eKeyDown event or eKeyUp event now.  Note that only when
+    // we're not in a dead key composition, we should mark the eKeyDown and
+    // eKeyUp event as "processed by IME" since we should expose raw keyCode
+    // and key value to web apps the key event is a part of a dead key
+    // sequence.
     // FYI: We should ignore if default of preceding keydown or keyup event is
     //      prevented since even on the other browsers, web applications
     //      cannot cancel the following composition event.
     //      Spec bug: https://github.com/w3c/uievents/issues/180
     bool isCancelled;
-    lastFocusedWindow->DispatchKeyDownOrKeyUpEvent(mProcessingKeyEvent, true,
+    lastFocusedWindow->DispatchKeyDownOrKeyUpEvent(mProcessingKeyEvent,
+                                                   !mMaybeInDeadKeySequence,
                                                    &isCancelled);
     MOZ_LOG(gGtkIMLog, LogLevel::Debug,
         ("0x%p   MaybeDispatchKeyEventAsProcessedByIME(), keydown or keyup "
@@ -1687,6 +1782,11 @@ IMContextWrapper::DispatchCompositionCommitEvent(
         mSelection.mWritingMode);
 
     mCompositionState = eCompositionState_NotComposing;
+    // Reset dead key sequence too because GTK doesn't support dead key chain
+    // (i.e., a key press doesn't cause both producing some characters and
+    // restarting new dead key sequence at one time).  So, committing
+    // composition means end of a dead key sequence.
+    mMaybeInDeadKeySequence = false;
     mCompositionStart = UINT32_MAX;
     mCompositionTargetRange.Clear();
     mDispatchedCompositionString.Truncate();
