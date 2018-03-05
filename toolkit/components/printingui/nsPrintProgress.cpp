@@ -181,6 +181,14 @@ NS_IMETHODIMP nsPrintProgress::DoneIniting()
 
 NS_IMETHODIMP nsPrintProgress::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, uint32_t aStateFlags, nsresult aStatus)
 {
+  if (XRE_IsE10sParentProcess() &&
+      aStateFlags & nsIWebProgressListener::STATE_STOP) {
+    // If we're in an e10s parent, m_observer is a PrintProgressDialogParent,
+    // so we let it know that printing has completed, because it might mean that
+    // its PrintProgressDialogChild has already been deleted.
+    m_observer->Observe(nullptr, "completed", nullptr);
+  }
+
   m_pendingStateFlags = aStateFlags;
   m_pendingStateValue = aStatus;
 
@@ -197,6 +205,14 @@ NS_IMETHODIMP nsPrintProgress::OnStateChange(nsIWebProgress *aWebProgress, nsIRe
 
 NS_IMETHODIMP nsPrintProgress::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, int32_t aCurSelfProgress, int32_t aMaxSelfProgress, int32_t aCurTotalProgress, int32_t aMaxTotalProgress)
 {
+  if (XRE_IsE10sParentProcess() && aCurSelfProgress &&
+      aCurSelfProgress >= aMaxSelfProgress) {
+    // If we're in an e10s parent, m_observer is a PrintProgressDialogParent,
+    // so we let it know that printing has completed, because it might mean that
+    // its PrintProgressDialogChild has already been deleted.
+    m_observer->Observe(nullptr, "completed", nullptr);
+  }
+
   uint32_t count = m_listenerList.Count();
   for (uint32_t i = count - 1; i < count; i --)
   {

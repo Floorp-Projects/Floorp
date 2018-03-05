@@ -489,6 +489,11 @@ var PrintUtils = {
   _obsPP:
   {
     observe(aSubject, aTopic, aData) {
+      // Only process a null topic which means the progress dialog is open.
+      if (aTopic) {
+        return;
+      }
+
       // delay the print preview to show the content of the progress dialog
       setTimeout(function() { PrintUtils.enterPrintPreview(); }, 0);
     },

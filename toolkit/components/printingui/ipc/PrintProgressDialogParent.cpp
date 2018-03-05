@@ -99,8 +99,13 @@ PrintProgressDialogParent::Observe(nsISupports *aSubject, const char *aTopic,
                                    const char16_t *aData)
 {
   if (mActive) {
-    if (aTopic && !strcmp(aTopic, "cancelled")) {
-      Unused << SendCancelledCurrentJob();
+    if (aTopic) {
+      if (!strcmp(aTopic, "cancelled")) {
+        Unused << SendCancelledCurrentJob();
+      } else if (!strcmp(aTopic, "completed")) {
+        // Once printing is complete don't send any messages to the child.
+        mActive = false;
+      }
     } else {
       Unused << SendDialogOpened();
     }
