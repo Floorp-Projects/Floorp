@@ -1334,23 +1334,23 @@ HandleError(JSContext* cx, InterpreterRegs& regs)
     if (cx->isExceptionPending()) {
         /* Call debugger throw hooks. */
         if (!cx->isClosingGenerator()) {
-            JSTrapStatus status = Debugger::onExceptionUnwind(cx, regs.fp());
-            switch (status) {
-              case JSTRAP_ERROR:
+            ResumeMode mode = Debugger::onExceptionUnwind(cx, regs.fp());
+            switch (mode) {
+              case ResumeMode::Terminate:
                 goto again;
 
-              case JSTRAP_CONTINUE:
-              case JSTRAP_THROW:
+              case ResumeMode::Continue:
+              case ResumeMode::Throw:
                 break;
 
-              case JSTRAP_RETURN:
+              case ResumeMode::Return:
                 UnwindIteratorsForUncatchableException(cx, regs);
                 if (!ForcedReturn(cx, regs))
                     return ErrorReturnContinuation;
                 return SuccessfulReturnContinuation;
 
               default:
-                MOZ_CRASH("Bad Debugger::onExceptionUnwind status");
+                MOZ_CRASH("bad Debugger::onExceptionUnwind resume mode");
             }
         }
 
@@ -1908,17 +1908,17 @@ Interpret(JSContext* cx, RunState& state)
         goto prologue_error;
 
     switch (Debugger::onEnterFrame(cx, activation.entryFrame())) {
-      case JSTRAP_CONTINUE:
+      case ResumeMode::Continue:
         break;
-      case JSTRAP_RETURN:
+      case ResumeMode::Return:
         if (!ForcedReturn(cx, REGS))
             goto error;
         goto successful_return_continuation;
-      case JSTRAP_THROW:
-      case JSTRAP_ERROR:
+      case ResumeMode::Throw:
+      case ResumeMode::Terminate:
         goto error;
       default:
-        MOZ_CRASH("bad Debugger::onEnterFrame status");
+        MOZ_CRASH("bad Debugger::onEnterFrame resume mode");
     }
 
     // Increment the coverage for the main entry point.
@@ -1943,19 +1943,18 @@ CASE(EnableInterruptsPseudoOpcode)
     if (script->isDebuggee()) {
         if (script->stepModeEnabled()) {
             RootedValue rval(cx);
-            JSTrapStatus status = JSTRAP_CONTINUE;
-            status = Debugger::onSingleStep(cx, &rval);
-            switch (status) {
-              case JSTRAP_ERROR:
+            ResumeMode mode = Debugger::onSingleStep(cx, &rval);
+            switch (mode) {
+              case ResumeMode::Terminate:
                 goto error;
-              case JSTRAP_CONTINUE:
+              case ResumeMode::Continue:
                 break;
-              case JSTRAP_RETURN:
+              case ResumeMode::Return:
                 REGS.fp()->setReturnValue(rval);
                 if (!ForcedReturn(cx, REGS))
                     goto error;
                 goto successful_return_continuation;
-              case JSTRAP_THROW:
+              case ResumeMode::Throw:
                 cx->setPendingException(rval);
                 goto error;
               default:;
@@ -1968,22 +1967,22 @@ CASE(EnableInterruptsPseudoOpcode)
 
         if (script->hasBreakpointsAt(REGS.pc)) {
             RootedValue rval(cx);
-            JSTrapStatus status = Debugger::onTrap(cx, &rval);
-            switch (status) {
-              case JSTRAP_ERROR:
+            ResumeMode mode = Debugger::onTrap(cx, &rval);
+            switch (mode) {
+              case ResumeMode::Terminate:
                 goto error;
-              case JSTRAP_RETURN:
+              case ResumeMode::Return:
                 REGS.fp()->setReturnValue(rval);
                 if (!ForcedReturn(cx, REGS))
                     goto error;
                 goto successful_return_continuation;
-              case JSTRAP_THROW:
+              case ResumeMode::Throw:
                 cx->setPendingException(rval);
                 goto error;
               default:
                 break;
             }
-            MOZ_ASSERT(status == JSTRAP_CONTINUE);
+            MOZ_ASSERT(mode == ResumeMode::Continue);
             MOZ_ASSERT(rval.isInt32() && rval.toInt32() == op);
         }
     }
@@ -3143,17 +3142,17 @@ CASE(JSOP_FUNCALL)
         goto prologue_error;
 
     switch (Debugger::onEnterFrame(cx, REGS.fp())) {
-      case JSTRAP_CONTINUE:
+      case ResumeMode::Continue:
         break;
-      case JSTRAP_RETURN:
+      case ResumeMode::Return:
         if (!ForcedReturn(cx, REGS))
             goto error;
         goto successful_return_continuation;
-      case JSTRAP_THROW:
-      case JSTRAP_ERROR:
+      case ResumeMode::Throw:
+      case ResumeMode::Terminate:
         goto error;
       default:
-        MOZ_CRASH("bad Debugger::onEnterFrame status");
+        MOZ_CRASH("bad Debugger::onEnterFrame resume mode");
     }
 
     // Increment the coverage for the main entry point.
@@ -3944,15 +3943,15 @@ CASE(JSOP_DEBUGGER)
 {
     RootedValue rval(cx);
     switch (Debugger::onDebuggerStatement(cx, REGS.fp())) {
-      case JSTRAP_ERROR:
+      case ResumeMode::Terminate:
         goto error;
-      case JSTRAP_CONTINUE:
+      case ResumeMode::Continue:
         break;
-      case JSTRAP_RETURN:
+      case ResumeMode::Return:
         if (!ForcedReturn(cx, REGS))
             goto error;
         goto successful_return_continuation;
-      case JSTRAP_THROW:
+      case ResumeMode::Throw:
         goto error;
       default:;
     }

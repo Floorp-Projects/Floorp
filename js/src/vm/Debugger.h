@@ -28,16 +28,54 @@
 #include "vm/SavedStacks.h"
 #include "wasm/WasmJS.h"
 
-enum JSTrapStatus {
-    JSTRAP_ERROR,
-    JSTRAP_CONTINUE,
-    JSTRAP_RETURN,
-    JSTRAP_THROW,
-    JSTRAP_LIMIT
-};
-
-
 namespace js {
+
+/**
+ * Tells how the JS engine should resume debuggee execution after firing a
+ * debugger hook.  Most debugger hooks get to choose how the debuggee proceeds;
+ * see js/src/doc/Debugger/Conventions.md under "Resumption Values".
+ *
+ * Debugger::processHandlerResult() translates between JavaScript values and
+ * this enum.
+ *
+ * The values `ResumeMode::Throw` and `ResumeMode::Return` are always
+ * associated with a value (the exception value or return value). Sometimes
+ * this is represented as an explicit `JS::Value` variable or parameter,
+ * declared alongside the `ResumeMode`. In other cases, especially when
+ * ResumeMode is used as a return type (as in Debugger::onEnterFrame), the
+ * value is stashed in `cx`'s pending exception slot or the topmost frame's
+ * return value slot.
+ */
+enum class ResumeMode {
+    /**
+     * The debuggee should continue unchanged.
+     *
+     * This corresponds to a resumption value of `undefined`.
+     */
+    Continue,
+
+    /**
+     * Throw an exception in the debuggee.
+     *
+     * This corresponds to a resumption value of `{throw: <value>}`.
+     */
+    Throw,
+
+    /**
+     * Terminate the debuggee, as if it had been cancelled via the "slow
+     * script" ribbon.
+     *
+     * This corresponds to a resumption value of `null`.
+     */
+    Terminate,
+
+    /**
+     * Force the debuggee to return from the current frame.
+     *
+     * This corresponds to a resumption value of `{return: <value>}`.
+     */
+    Return,
+};
 
 class Breakpoint;
 class DebuggerMemory;
@@ -526,9 +564,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
     /*
      * Report and clear the pending exception on ac.context, if any, and return
-     * JSTRAP_ERROR.
+     * ResumeMode::Terminate.
      */
-    JSTrapStatus reportUncaughtException(mozilla::Maybe<AutoCompartment>& ac);
+    ResumeMode reportUncaughtException(mozilla::Maybe<AutoCompartment>& ac);
 
     /*
      * Cope with an error or exception in a debugger hook.
@@ -538,65 +576,71 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * uncaughtExceptionHook as a resumption value.
      *
      * If there is no uncaughtExceptionHook, or if it fails, report and clear
-     * the pending exception on ac.context and return JSTRAP_ERROR.
+     * the pending exception on ac.context and return ResumeMode::Terminate.
      *
      * This always calls ac.leave(); ac is a parameter because this method must
      * do some things in the debugger compartment and some things in the
      * debuggee compartment.
      */
-    JSTrapStatus handleUncaughtException(mozilla::Maybe<AutoCompartment>& ac);
-    JSTrapStatus handleUncaughtException(mozilla::Maybe<AutoCompartment>& ac,
-                                         MutableHandleValue vp,
-                                         const mozilla::Maybe<HandleValue>& thisVForCheck = mozilla::Nothing(),
-                                         AbstractFramePtr frame = NullFramePtr());
+    ResumeMode handleUncaughtException(mozilla::Maybe<AutoCompartment>& ac);
+    ResumeMode handleUncaughtException(mozilla::Maybe<AutoCompartment>& ac,
+                                       MutableHandleValue vp,
+                                       const mozilla::Maybe<HandleValue>& thisVForCheck = mozilla::Nothing(),
+                                       AbstractFramePtr frame = NullFramePtr());
 
-    JSTrapStatus handleUncaughtExceptionHelper(mozilla::Maybe<AutoCompartment>& ac,
-                                               MutableHandleValue* vp,
-                                               const mozilla::Maybe<HandleValue>& thisVForCheck,
-                                               AbstractFramePtr frame);
+    ResumeMode handleUncaughtExceptionHelper(mozilla::Maybe<AutoCompartment>& ac,
+                                             MutableHandleValue* vp,
+                                             const mozilla::Maybe<HandleValue>& thisVForCheck,
+                                             AbstractFramePtr frame);
 
     /*
      * Handle the result of a hook that is expected to return a resumption
-     * value <https://wiki.mozilla.org/Debugger#Resumption_Values>. This is called
-     * when we return from a debugging hook to debuggee code. The interpreter wants
-     * a (JSTrapStatus, Value) pair telling it how to proceed.
+     * value <https://wiki.mozilla.org/Debugger#Resumption_Values>. This is
+     * called when we return from a debugging hook to debuggee code. The
+     * interpreter wants a (ResumeMode, Value) pair telling it how to proceed.
      *
      * Precondition: ac is entered. We are in the debugger compartment.
      *
      * Postcondition: This called ac.leave(). See handleUncaughtException.
      *
-     * If ok is false, the hook failed. If an exception is pending in
+     * If `success` is false, the hook failed. If an exception is pending in
      * ac.context(), return handleUncaughtException(ac, vp, callhook).
-     * Otherwise just return JSTRAP_ERROR.
+     * Otherwise just return ResumeMode::Terminate.
      *
-     * If ok is true, there must be no exception pending in ac.context(). rv may be:
-     *     undefined - Return JSTRAP_CONTINUE to continue execution normally.
+     * If `success` is true, there must be no exception pending in ac.context().
+     * `rv` may be:
+     *
+     *     undefined - Return `ResumeMode::Continue` to continue execution
+     *         normally.
+     *
      *     {return: value} or {throw: value} - Call unwrapDebuggeeValue to
-     *         unwrap value. Store the result in *vp and return JSTRAP_RETURN
-     *         or JSTRAP_THROW. The interpreter will force the current frame to
-     *         return or throw an exception.
-     *     null - Return JSTRAP_ERROR to terminate the debuggee with an
-     *         uncatchable error.
+     *         unwrap `value`. Store the result in `*vp` and return
+     *         `ResumeMode::Return` or `ResumeMode::Throw`. The interpreter
+     *         will force the current frame to return or throw an exception.
+     *
+     *     null - Return `ResumeMode::Terminate` to terminate the debuggee with
+     *         an uncatchable error.
+     *
      *     anything else - Make a new TypeError the pending exception and
      *         return handleUncaughtException(ac, vp, callHook).
      */
-    JSTrapStatus processHandlerResult(mozilla::Maybe<AutoCompartment>& ac, bool OK, const Value& rv,
-                                      AbstractFramePtr frame, jsbytecode* pc, MutableHandleValue vp);
+    ResumeMode processHandlerResult(mozilla::Maybe<AutoCompartment>& ac, bool success, const Value& rv,
+                                    AbstractFramePtr frame, jsbytecode* pc, MutableHandleValue vp);
 
-    JSTrapStatus processParsedHandlerResult(mozilla::Maybe<AutoCompartment>& ac,
-                                            AbstractFramePtr frame, jsbytecode* pc,
-                                            bool success, JSTrapStatus status,
-                                            MutableHandleValue vp);
+    ResumeMode processParsedHandlerResult(mozilla::Maybe<AutoCompartment>& ac,
+                                          AbstractFramePtr frame, jsbytecode* pc,
+                                          bool success, ResumeMode resumeMode,
+                                          MutableHandleValue vp);
 
-    JSTrapStatus processParsedHandlerResultHelper(mozilla::Maybe<AutoCompartment>& ac,
-                                                  AbstractFramePtr frame,
-                                                  const mozilla::Maybe<HandleValue>& maybeThisv,
-                                                  bool success, JSTrapStatus status,
-                                                  MutableHandleValue vp);
+    ResumeMode processParsedHandlerResultHelper(mozilla::Maybe<AutoCompartment>& ac,
+                                                AbstractFramePtr frame,
+                                                const mozilla::Maybe<HandleValue>& maybeThisv,
+                                                bool success, ResumeMode resumeMode,
+                                                MutableHandleValue vp);
 
     bool processResumptionValue(mozilla::Maybe<AutoCompartment>& ac, AbstractFramePtr frame,
                                 const mozilla::Maybe<HandleValue>& maybeThis, HandleValue rval,
-                                JSTrapStatus& statusp, MutableHandleValue vp);
+                                ResumeMode& resumeMode, MutableHandleValue vp);
 
     GlobalObject* unwrapDebuggeeArgument(JSContext* cx, const Value& v);
 
@@ -727,11 +771,11 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     bool hasAnyLiveHooks(JSRuntime* rt) const;
 
     static MOZ_MUST_USE bool slowPathCheckNoExecute(JSContext* cx, HandleScript script);
-    static JSTrapStatus slowPathOnEnterFrame(JSContext* cx, AbstractFramePtr frame);
+    static ResumeMode slowPathOnEnterFrame(JSContext* cx, AbstractFramePtr frame);
     static MOZ_MUST_USE bool slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
                                                   jsbytecode* pc, bool ok);
-    static JSTrapStatus slowPathOnDebuggerStatement(JSContext* cx, AbstractFramePtr frame);
-    static JSTrapStatus slowPathOnExceptionUnwind(JSContext* cx, AbstractFramePtr frame);
+    static ResumeMode slowPathOnDebuggerStatement(JSContext* cx, AbstractFramePtr frame);
+    static ResumeMode slowPathOnExceptionUnwind(JSContext* cx, AbstractFramePtr frame);
     static void slowPathOnNewScript(JSContext* cx, HandleScript script);
     static void slowPathOnNewWasmInstance(JSContext* cx, Handle<WasmInstanceObject*> wasmInstance);
     static void slowPathOnNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global);
@@ -742,15 +786,15 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static void slowPathPromiseHook(JSContext* cx, Hook hook, Handle<PromiseObject*> promise);
 
     template <typename HookIsEnabledFun /* bool (Debugger*) */,
-              typename FireHookFun /* JSTrapStatus (Debugger*) */>
-    static JSTrapStatus dispatchHook(JSContext* cx, HookIsEnabledFun hookIsEnabled,
-                                     FireHookFun fireHook);
+              typename FireHookFun /* ResumeMode (Debugger*) */>
+    static ResumeMode dispatchHook(JSContext* cx, HookIsEnabledFun hookIsEnabled,
+                                   FireHookFun fireHook);
 
-    JSTrapStatus fireDebuggerStatement(JSContext* cx, MutableHandleValue vp);
-    JSTrapStatus fireExceptionUnwind(JSContext* cx, MutableHandleValue vp);
-    JSTrapStatus fireEnterFrame(JSContext* cx, MutableHandleValue vp);
-    JSTrapStatus fireNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global, MutableHandleValue vp);
-    JSTrapStatus firePromiseHook(JSContext* cx, Hook hook, HandleObject promise, MutableHandleValue vp);
+    ResumeMode fireDebuggerStatement(JSContext* cx, MutableHandleValue vp);
+    ResumeMode fireExceptionUnwind(JSContext* cx, MutableHandleValue vp);
+    ResumeMode fireEnterFrame(JSContext* cx, MutableHandleValue vp);
+    ResumeMode fireNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global, MutableHandleValue vp);
+    ResumeMode firePromiseHook(JSContext* cx, Hook hook, HandleObject promise, MutableHandleValue vp);
 
     NativeObject* newVariantWrapper(JSContext* cx, Handle<DebuggerScriptReferent> referent) {
         return newDebuggerScript(cx, referent);
@@ -863,32 +907,11 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static inline MOZ_MUST_USE bool checkNoExecute(JSContext* cx, HandleScript script);
 
     /*
-     * JSTrapStatus Overview
-     * ---------------------
-     *
-     * The |onEnterFrame|, |onDebuggerStatement|, and |onExceptionUnwind|
-     * methods below return a JSTrapStatus code that indicates how execution
-     * should proceed:
-     *
-     * - JSTRAP_CONTINUE: Continue execution normally.
-     *
-     * - JSTRAP_THROW: Throw an exception. The method has set |cx|'s
-     *   pending exception to the value to be thrown.
-     *
-     * - JSTRAP_ERROR: Terminate execution (as is done when a script is terminated
-     *   for running too long). The method has cleared |cx|'s pending
-     *   exception.
-     *
-     * - JSTRAP_RETURN: Return from the new frame immediately. The method has
-     *   set the youngest JS frame's return value appropriately.
-     */
-
-    /*
      * Announce to the debugger that the context has entered a new JavaScript
      * frame, |frame|. Call whatever hooks have been registered to observe new
      * frames.
      */
-    static inline JSTrapStatus onEnterFrame(JSContext* cx, AbstractFramePtr frame);
+    static inline ResumeMode onEnterFrame(JSContext* cx, AbstractFramePtr frame);
 
     /*
      * Announce to the debugger a |debugger;| statement on has been
@@ -898,13 +921,13 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * Note that this method is called for all |debugger;| statements,
      * regardless of the frame's debuggee-ness.
      */
-    static inline JSTrapStatus onDebuggerStatement(JSContext* cx, AbstractFramePtr frame);
+    static inline ResumeMode onDebuggerStatement(JSContext* cx, AbstractFramePtr frame);
 
     /*
      * Announce to the debugger that an exception has been thrown and propagated
      * to |frame|. Call whatever hooks have been registered to observe this.
      */
-    static inline JSTrapStatus onExceptionUnwind(JSContext* cx, AbstractFramePtr frame);
+    static inline ResumeMode onExceptionUnwind(JSContext* cx, AbstractFramePtr frame);
 
     /*
      * Announce to the debugger that the thread has exited a JavaScript frame, |frame|.
@@ -928,8 +951,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static inline void onNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global);
     static inline MOZ_MUST_USE bool onLogAllocationSite(JSContext* cx, JSObject* obj,
                                                         HandleSavedFrame frame, mozilla::TimeStamp when);
-    static JSTrapStatus onTrap(JSContext* cx, MutableHandleValue vp);
-    static JSTrapStatus onSingleStep(JSContext* cx, MutableHandleValue vp);
+    static ResumeMode onTrap(JSContext* cx, MutableHandleValue vp);
+    static ResumeMode onSingleStep(JSContext* cx, MutableHandleValue vp);
     static MOZ_MUST_USE bool handleBaselineOsr(JSContext* cx, InterpreterFrame* from,
                                                jit::BaselineFrame* to);
     static MOZ_MUST_USE bool handleIonBailout(JSContext* cx, jit::RematerializedFrame* from,
@@ -1056,21 +1079,21 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
 
     /*
-     * Set |*status| and |*value| to a (JSTrapStatus, Value) pair reflecting a
+     * Set |*resumeMode| and |*value| to a (ResumeMode, Value) pair reflecting a
      * standard SpiderMonkey call state: a boolean success value |ok|, a return
      * value |rv|, and a context |cx| that may or may not have an exception set.
      * If an exception was pending on |cx|, it is cleared (and |ok| is asserted
      * to be false).
      */
     static void resultToCompletion(JSContext* cx, bool ok, const Value& rv,
-                                   JSTrapStatus* status, MutableHandleValue value);
+                                   ResumeMode* resumeMode, MutableHandleValue value);
 
     /*
-     * Set |*result| to a JavaScript completion value corresponding to |status|
+     * Set |*result| to a JavaScript completion value corresponding to |resumeMode|
      * and |value|. |value| should be the return value or exception value, not
      * wrapped as a debuggee value. |cx| must be in the debugger compartment.
      */
-    MOZ_MUST_USE bool newCompletionValue(JSContext* cx, JSTrapStatus status, const Value& value,
+    MOZ_MUST_USE bool newCompletionValue(JSContext* cx, ResumeMode resumeMode, const Value& value,
                                          MutableHandleValue result);
 
     /*
@@ -1266,10 +1289,10 @@ struct OnStepHandler : Handler {
     /*
      * If we have made a small amount of progress in a frame, this method is
      * called with the frame as argument. If succesful, this method should
-     * return true, with `statusp` and `vp` set to a resumption value
+     * return true, with `resumeMode` and `vp` set to a resumption value
      * specifiying how execution should continue.
      */
-    virtual bool onStep(JSContext* cx, HandleDebuggerFrame frame, JSTrapStatus& statusp,
+    virtual bool onStep(JSContext* cx, HandleDebuggerFrame frame, ResumeMode& resumeMode,
                         MutableHandleValue vp) = 0;
 };
 
@@ -1279,7 +1302,7 @@ class ScriptedOnStepHandler final : public OnStepHandler {
     virtual JSObject* object() const override;
     virtual void drop() override;
     virtual void trace(JSTracer* tracer) override;
-    virtual bool onStep(JSContext* cx, HandleDebuggerFrame frame, JSTrapStatus& statusp,
+    virtual bool onStep(JSContext* cx, HandleDebuggerFrame frame, ResumeMode& resumeMode,
                         MutableHandleValue vp) override;
 
   private:
@@ -1293,12 +1316,12 @@ class ScriptedOnStepHandler final : public OnStepHandler {
 struct OnPopHandler : Handler {
     /*
      * If a frame is about the be popped, this method is called with the frame
-     * as argument, and `statusp` and `vp` set to a completion value specifying
+     * as argument, and `resumeMode` and `vp` set to a completion value specifying
      * how this frame's execution completed. If successful, this method should
-     * return true, with `statusp` and `vp` set to a resumption value specifying
+     * return true, with `resumeMode` and `vp` set to a resumption value specifying
      * how execution should continue.
      */
-    virtual bool onPop(JSContext* cx, HandleDebuggerFrame frame, JSTrapStatus& statusp,
+    virtual bool onPop(JSContext* cx, HandleDebuggerFrame frame, ResumeMode& resumeMode,
                        MutableHandleValue vp) = 0;
 };
 
@@ -1308,7 +1331,7 @@ class ScriptedOnPopHandler final : public OnPopHandler {
     virtual JSObject* object() const override;
     virtual void drop() override;
     virtual void trace(JSTracer* tracer) override;
-    virtual bool onPop(JSContext* cx, HandleDebuggerFrame frame, JSTrapStatus& statusp,
+    virtual bool onPop(JSContext* cx, HandleDebuggerFrame frame, ResumeMode& resumeMode,
                        MutableHandleValue vp) override;
 
   private:
@@ -1355,7 +1378,7 @@ class DebuggerFrame : public NativeObject
 
     static MOZ_MUST_USE bool eval(JSContext* cx, HandleDebuggerFrame frame,
                                   mozilla::Range<const char16_t> chars, HandleObject bindings,
-                                  const EvalOptions& options, JSTrapStatus& status,
+                                  const EvalOptions& options, ResumeMode& resumeMode,
                                   MutableHandleValue value);
 
     bool isLive() const;
@@ -1471,7 +1494,7 @@ class DebuggerObject : public NativeObject
     static MOZ_MUST_USE bool executeInGlobal(JSContext* cx, HandleDebuggerObject object,
                                              mozilla::Range<const char16_t> chars,
                                              HandleObject bindings, const EvalOptions& options,
-                                             JSTrapStatus& status, MutableHandleValue value);
+                                             ResumeMode& resumeMode, MutableHandleValue value);
     static MOZ_MUST_USE bool makeDebuggeeValue(JSContext* cx, HandleDebuggerObject object,
                                                HandleValue value, MutableHandleValue result);
     static MOZ_MUST_USE bool unsafeDereference(JSContext* cx, HandleDebuggerObject object,
