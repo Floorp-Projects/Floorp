@@ -310,6 +310,17 @@ protected:
     // mRetrieveSurroundingSignalReceived is true after "retrieve_surrounding"
     // signal is received until selection is changed in Gecko.
     bool mRetrieveSurroundingSignalReceived;
+    // mMaybeInDeadKeySequence is set to true when we detect a dead key press
+    // and set to false when we're sure dead key sequence has been finished.
+    // Note that we cannot detect which key event causes ending a dead key
+    // sequence.  For example, when you press dead key grave with ibus Spanish
+    // keyboard layout, it just consumes the key event when we call
+    // gtk_im_context_filter_keypress().  Then, pressing "Escape" key cancels
+    // the dead key sequence but we don't receive any signal and it's consumed
+    // by gtk_im_context_filter_keypress() normally.  On the other hand, when
+    // pressing "Shift" key causes exactly same behavior but dead key sequence
+    // isn't finished yet.
+    bool mMaybeInDeadKeySequence;
 
     // sLastFocusedContext is a pointer to the last focused instance of this
     // class.  When a instance is destroyed and sLastFocusedContext refers it,
@@ -469,9 +480,9 @@ protected:
     /**
      * Dispatch an eKeyDown or eKeyUp event whose mKeyCode value is
      * NS_VK_PROCESSKEY and mKeyNameIndex is KEY_NAME_INDEX_Process if
-     * mProcessingKeyEvent is not nullptr and mKeyboardEventWasDispatched is
-     * still false.  If this dispatches a keyboard event, this sets
-     * mKeyboardEventWasDispatched to true.
+     * we're not in a dead key sequence, mProcessingKeyEvent is not nullptr
+     * and mKeyboardEventWasDispatched is still false.  If this dispatches
+     * a keyboard event, this sets mKeyboardEventWasDispatched to true.
      *
      * @return                      If the caller can continue to handle
      *                              composition, returns true.  Otherwise,
