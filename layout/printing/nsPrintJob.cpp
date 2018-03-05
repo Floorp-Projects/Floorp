@@ -3524,16 +3524,18 @@ nsPrintJob::StartPagePrintTimer(const UniquePtr<nsPrintObject>& aPO)
 NS_IMETHODIMP
 nsPrintJob::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
 {
-  nsresult rv = NS_ERROR_FAILURE;
+  // Only process a null topic which means the progress dialog is open.
+  if (aTopic) {
+    return NS_OK;
+  }
 
-  rv = InitPrintDocConstruction(true);
+  nsresult rv = InitPrintDocConstruction(true);
   if (!mIsDoingPrinting && mPrtPreview) {
     RefPtr<nsPrintData> printDataOfPrintPreview = mPrtPreview;
     printDataOfPrintPreview->OnEndPrinting();
   }
 
   return rv;
-
 }
 
 //---------------------------------------------------------------
