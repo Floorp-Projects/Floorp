@@ -543,9 +543,18 @@
       // HTML:form
 
       obj = {
-        role: ROLE_FORM
+        role: ROLE_FORM,
+        absentAttributes: { "xml-roles": "form" }
       };
       testElm("form", obj);
+
+      // HTML:form with an accessible name
+
+      obj = {
+        role: ROLE_FORM,
+        attributes: { "xml-roles": "form" }
+      };
+      testElm("named_form", obj);
 
       // ////////////////////////////////////////////////////////////////////////
       // // HTML:frameset, HTML:frame and HTML:iframe
@@ -1549,6 +1558,7 @@
   </td></tr></table>
 
   <form id="form"></form>
+  <form id="named_form" aria-label="New form"></form>
 
   <iframe id="frameset_container"
           src="data:text/html,<html><frameset><frame src='data:text/html,hi'></frame></frameset></html>">
