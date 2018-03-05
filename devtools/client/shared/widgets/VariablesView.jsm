@@ -2788,7 +2788,7 @@ Variable.prototype = extend(Scope.prototype, {
 
         let inspectorReady = defer();
         this.toolbox.getPanel("inspector").once("inspector-updated", inspectorReady.resolve);
-        await this.toolbox.selection.setNodeFront(nodeFront, "variables-view");
+        await this.toolbox.selection.setNodeFront(nodeFront, { reason: "variables-view" });
         await inspectorReady.promise;
       }
     }.bind(this))();

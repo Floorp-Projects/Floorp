@@ -602,7 +602,7 @@ HTMLBreadcrumbs.prototype = {
       }
 
       this.outer.setAttribute("aria-activedescendant", currentnode.button.id);
-      return this.selection.setNodeFront(currentnode.node, "breadcrumbs");
+      return this.selection.setNodeFront(currentnode.node, { reason: "breadcrumbs" });
     });
   },
 
@@ -706,7 +706,7 @@ HTMLBreadcrumbs.prototype = {
     };
 
     button.onBreadcrumbsClick = () => {
-      this.selection.setNodeFront(node, "breadcrumbs");
+      this.selection.setNodeFront(node, { reason: "breadcrumbs" });
     };
 
     button.onBreadcrumbsHover = () => {
