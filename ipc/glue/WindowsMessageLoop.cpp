@@ -1037,7 +1037,7 @@ MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages)
 
     // If the timeout didn't expire, we know we received an event. The
     // converse is not true.
-    return WaitResponse(status == CVStaus::Timeout);
+    return WaitResponse(status == CVStatus::Timeout);
   }
 
   NS_ASSERTION(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION,
