@@ -115,6 +115,13 @@
       "type": "boolean"
     },
 
+    "DisableFirefoxAccounts": {
+      "description": "Disables Firefox Account based services, including Sync.",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
     "DisableFirefoxScreenshots": {
       "description": "Prevents usage of the Firefox Screenshots feature.",
       "first_available": "60.0",
