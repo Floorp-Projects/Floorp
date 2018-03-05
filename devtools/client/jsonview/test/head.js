@@ -66,7 +66,7 @@ async function addJsonViewTab(url, {
   })]);
 
   // Load devtools/shared/frame-script-utils.js
-  getFrameScript();
+  loadFrameScriptUtils();
   let rootDir = getRootDirectory(gTestPath);
 
   // Catch RequireJS errors (usually timeouts)

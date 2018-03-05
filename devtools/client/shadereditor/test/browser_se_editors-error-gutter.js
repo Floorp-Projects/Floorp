@@ -93,12 +93,14 @@ function* ifWebGLSupported() {
     if (bool) {
       is(parsed[0].line, line,
         "The correct line was parsed.");
-      is(parsed[0].messages.length, 2,
-        "There are 2 parsed messages.");
+      is(parsed[0].messages.length, 3,
+        "There are 3 parsed messages.");
       ok(parsed[0].messages[0].includes("'constructor' : too many arguments"),
         "The correct first message was parsed.");
-      ok(parsed[0].messages[1].includes("'assign' : cannot convert from"),
+      ok(parsed[0].messages[1].includes("'=' : dimension mismatch"),
         "The correct second message was parsed.");
+      ok(parsed[0].messages[2].includes("'assign' : cannot convert from"),
+        "The correct third message was parsed.");
     }
   }
 
@@ -121,10 +123,12 @@ function* ifWebGLSupported() {
     if (bool) {
       is(parsed[1].line, line,
         "The correct line was parsed.");
-      is(parsed[1].messages.length, 1,
-        "There is 1 parsed message.");
-      ok(parsed[1].messages[0].includes("'assign' : cannot convert from"),
-        "The correct message was parsed.");
+      is(parsed[1].messages.length, 2,
+        "There is 2 parsed messages.");
+      ok(parsed[1].messages[0].includes("'=' : dimension mismatch"),
+        "The correct first message was parsed.");
+      ok(parsed[1].messages[1].includes("'assign' : cannot convert from"),
+        "The correct second message was parsed.");
     }
   }
 
