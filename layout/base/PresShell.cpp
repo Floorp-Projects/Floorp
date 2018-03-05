@@ -4235,10 +4235,12 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 #endif
 
       mPresContext->RestyleManager()->ProcessPendingRestyles();
+      // Clear mNeedStyleFlush here agagin to make this flag work properly for
+      // optimization since the flag might have set in ProcessPendingRestyles().
+      mNeedStyleFlush = false;
     }
 
     didStyleFlush = true;
-
 
     // There might be more pending constructors now, but we're not going to
     // worry about them.  They can't be triggered during reflow, so we should
