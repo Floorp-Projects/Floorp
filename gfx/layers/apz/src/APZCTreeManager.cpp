@@ -2390,9 +2390,12 @@ APZCTreeManager::GetAPZCAtPointWR(const ScreenPoint& aHitTestPoint,
   result = node ? node->GetApzc() : nullptr;
   if (!result) {
     // It falls back to the root
-    MOZ_ASSERT(scrollId == FrameMetrics::NULL_SCROLL_ID);
+    // Re-enable these assertions once bug 1391318 is fixed. For now there are
+    // race conditions with the WR hit-testing code that make these assertions
+    // fail.
+    //MOZ_ASSERT(scrollId == FrameMetrics::NULL_SCROLL_ID);
     result = FindRootApzcForLayersId(layersId);
-    MOZ_ASSERT(result);
+    //MOZ_ASSERT(result);
   }
 
   bool isScrollbar = bool(hitInfo & gfx::CompositorHitTestInfo::eScrollbar);
