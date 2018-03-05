@@ -183,8 +183,6 @@ var Authentication = {
       if (Weave.Status.login !== Weave.LOGIN_SUCCEEDED) {
         Logger.logInfo("Logging into Weave.");
         await Weave.Service.login();
-        Logger.AssertEqual(Weave.Status.login, Weave.LOGIN_SUCCEEDED,
-                           "Weave logged in");
       }
       return true;
     } catch (error) {
