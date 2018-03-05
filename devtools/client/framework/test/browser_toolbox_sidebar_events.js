@@ -39,23 +39,23 @@ function test() {
       let panel = toolbox.getPanel(toolDefinition.id);
       ok(true, "Tool open");
 
-      panel.once("sidebar-created", function (event, id) {
-        collectedEvents.push(event);
+      panel.once("sidebar-created", function () {
+        collectedEvents.push("sidebar-created");
       });
 
-      panel.once("sidebar-destroyed", function (event, id) {
-        collectedEvents.push(event);
+      panel.once("sidebar-destroyed", function () {
+        collectedEvents.push("sidebar-destroyed");
       });
 
       let tabbox = panel.panelDoc.getElementById("sidebar");
       panel.sidebar = new ToolSidebar(tabbox, panel, "testbug1072208", true);
 
-      panel.sidebar.once("show", function (event, id) {
-        collectedEvents.push(event);
+      panel.sidebar.once("show", function () {
+        collectedEvents.push("show");
       });
 
-      panel.sidebar.once("hide", function (event, id) {
-        collectedEvents.push(event);
+      panel.sidebar.once("hide", function () {
+        collectedEvents.push("hide");
       });
 
       panel.sidebar.once("tab1-selected", () => finishUp(panel));
