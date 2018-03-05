@@ -185,9 +185,6 @@ class NoPkgFilesRemover(object):
     def add_manifest(self, entry):
         self._formatter.add_manifest(entry)
 
-    def add_interfaces(self, path, content):
-        self._formatter.add_interfaces(path, content)
-
     def contains(self, path):
         return self._formatter.contains(path)
 
