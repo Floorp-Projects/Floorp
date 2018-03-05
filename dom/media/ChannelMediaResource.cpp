@@ -285,6 +285,11 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
   // This is important, we want to make sure all principals are updated before
   // any consumer can see the new data.
   UpdatePrincipal();
+  if (owner->HasError()) {
+    // Updating the principal resulted in an error. Abort the load.
+    CloseChannel();
+    return NS_OK;
+  }
 
   mCacheStream.NotifyDataStarted(mLoadID, startOffset, seekable, length);
   mIsTransportSeekable = seekable;
