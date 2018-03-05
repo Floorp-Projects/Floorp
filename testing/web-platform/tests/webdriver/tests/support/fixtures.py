@@ -1,10 +1,11 @@
+from __future__ import print_function
+
 import json
 import os
 import urlparse
 import re
 
 import webdriver
-import mozlog
 
 from tests.support.http_request import HTTPRequest
 from tests.support.wait import wait
@@ -12,15 +13,13 @@ from tests.support.wait import wait
 default_host = "http://127.0.0.1"
 default_port = "4444"
 
-logger = mozlog.get_default_logger()
-
 
 def ignore_exceptions(f):
     def inner(*args, **kwargs):
         try:
             return f(*args, **kwargs)
         except webdriver.error.WebDriverException as e:
-            logger.warning("Ignored exception %s" % e)
+            print("Ignored exception %s" % e, file=sys.stderr)
     inner.__name__ = f.__name__
     return inner
 
