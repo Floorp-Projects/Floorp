@@ -434,14 +434,15 @@ var EventTargetParent = {
       }
 
       // Check if |target| is somewhere on the path from the
-      // <tabbrowser> up to the root element.
+      // tabbrowser tabbox.
       let window = target.ownerGlobal;
 
       // Some non-browser windows define gBrowser globals which are not elements
       // and can't be passed to target.contains().
-      if (window && window.gBrowser &&
-          window.gBrowser.container instanceof Ci.nsIDOMXULElement &&
-          target.contains(window.gBrowser.container)) {
+      if (window &&
+          window.gBrowser &&
+          window.gBrowser.tabbox &&
+          target.contains(window.gBrowser.tabbox)) {
         return window;
       }
     }

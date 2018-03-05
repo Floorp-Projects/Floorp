@@ -116,14 +116,6 @@ panelview[mainview] > .panel-header {
   transition: height var(--panelui-subview-transition-duration);
 }
 
-#navigator-toolbox {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#empty");
-}
-
-tabbrowser {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser");
-}
-
 #tabbrowser-tabs {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tabs");
 }
