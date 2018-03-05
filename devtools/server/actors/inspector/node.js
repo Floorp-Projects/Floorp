@@ -115,6 +115,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       isNativeAnonymous: isNativeAnonymous(this.rawNode),
       isXBLAnonymous: isXBLAnonymous(this.rawNode),
       isShadowAnonymous: isShadowAnonymous(this.rawNode),
+      isShadowRoot: this.isShadowRoot,
       pseudoClassLocks: this.writePseudoClassLocks(),
 
       isDisplayed: this.isDisplayed,
@@ -173,6 +174,11 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 
   get isAfterPseudoElement() {
     return this.rawNode.nodeName === "_moz_generated_content_after";
+  },
+
+  get isShadowRoot() {
+    let isFragment = this.rawNode.nodeType === Ci.nsIDOMNode.DOCUMENT_FRAGMENT_NODE;
+    return isFragment && this.rawNode.host;
   },
 
   // Estimate the number of children that the walker will return without making
