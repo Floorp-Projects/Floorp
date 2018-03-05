@@ -418,6 +418,7 @@ public:
 
   virtual bool GetAllowPlugins() override;
 
+  static bool CallerIsTrustedAboutPage(JSContext* aCx, JSObject* aObject);
   static bool IsElementAnimateEnabled(JSContext* aCx, JSObject* aObject);
   static bool IsWebAnimationsEnabled(JSContext* aCx, JSObject* aObject);
   static bool IsWebAnimationsEnabled(mozilla::dom::CallerType aCallerType);
