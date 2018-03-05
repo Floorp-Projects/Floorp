@@ -48,7 +48,7 @@ class ProcessHangMonitor final
   static void ForcePaint(PProcessHangMonitorParent* aParent,
                          dom::TabParent* aTab,
                          uint64_t aLayerObserverEpoch);
-  static void ClearForcePaint();
+  static void ClearForcePaint(uint64_t aLayerObserverEpoch);
 
   enum SlowScriptAction {
     Continue,
