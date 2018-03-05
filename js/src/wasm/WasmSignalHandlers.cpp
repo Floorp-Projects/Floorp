@@ -625,6 +625,7 @@ StoreValueFromGPImm(SharedMem<void*> addr, size_t size, int32_t imm)
     AtomicOperations::memcpySafeWhenRacy(addr, static_cast<void*>(&imm), size);
 }
 
+#if defined(JS_CODEGEN_X64)
 # if !defined(XP_DARWIN)
 MOZ_COLD static void*
 AddressOfFPRegisterSlot(CONTEXT* context, FloatRegisters::Encoding encoding)
@@ -726,6 +727,19 @@ AddressOfGPRegisterSlot(EMULATOR_CONTEXT* context, Registers::Code code)
     MOZ_CRASH();
 }
 # endif  // !XP_DARWIN
+#elif defined(JS_CODEGEN_ARM64)
+MOZ_COLD static void*
+AddressOfFPRegisterSlot(EMULATOR_CONTEXT* context, FloatRegisters::Encoding encoding)
+{
+    MOZ_CRASH("NYI - asm.js not supported yet on this platform");
+}
+
+MOZ_COLD static void*
+AddressOfGPRegisterSlot(EMULATOR_CONTEXT* context, Registers::Code code)
+{
+    MOZ_CRASH("NYI - asm.js not supported yet on this platform");
+}
+#endif
 
 MOZ_COLD static void
 SetRegisterToCoercedUndefined(EMULATOR_CONTEXT* context, size_t size,

@@ -8,7 +8,7 @@ use std::io;
 use std::mem;
 use std::os::unix::io::RawFd;
 
-use consts::{FIDO_USAGE_PAGE, FIDO_USAGE_U2FHID};
+use consts::{FIDO_USAGE_U2FHID, FIDO_USAGE_PAGE};
 use util::{from_unix_result, io_err};
 
 #[allow(non_camel_case_types)]

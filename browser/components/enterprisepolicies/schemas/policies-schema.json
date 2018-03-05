@@ -6,40 +6,35 @@
       "description": "Block access to the Add-ons Mananger (about:addons).",
       "first_available": "60.0",
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "BlockAboutConfig": {
       "description": "Blocks access to the about:config page.",
       "first_available": "60.0",
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "BlockAboutProfiles": {
       "description": "Blocks access to the about:profiles page.",
       "first_available": "60.0",
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "BlockAboutSupport": {
       "description": "Blocks access to the about:support page.",
       "first_available": "60.0",
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "BlockSetDesktopBackground": {
       "description": "Prevents usage of the \"Set Image as Desktop Background\" feature.",
       "first_available": "60.0",
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "Bookmarks": {
@@ -110,8 +105,7 @@
       "first_available": "60.0",
       "enterprise_only": true,
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "DisableDeveloperTools": {
@@ -121,36 +115,39 @@
       "type": "boolean"
     },
 
+    "DisableFirefoxAccounts": {
+      "description": "Disables Firefox Account based services, including Sync.",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
     "DisableFirefoxScreenshots": {
       "description": "Prevents usage of the Firefox Screenshots feature.",
       "first_available": "60.0",
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "DisableFirefoxStudies": {
       "description": "Prevents Firefox from running studies.",
       "first_available": "60.0",
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "DisableFormHistory": {
       "description": "Don't remember search and form history.",
       "first_available": "60.0",
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "DisablePocket": {
       "description": "Prevents ability to save webpages to Pocket.",
       "first_available": "60.0",
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "DisablePrivateBrowsing": {
@@ -165,24 +162,21 @@
       "description": "Causes the bookmarks toolbar to be displayed by default.",
       "first_available": "60.0",
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "DisplayMenuBar": {
       "description": "Causes the menu bar to be displayed by default.",
       "first_available": "60.0",
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "DontCheckDefaultBrowser": {
       "description": "Don't check for the default browser on startup.",
       "first_available": "60.0",
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "FlashPlugin": {

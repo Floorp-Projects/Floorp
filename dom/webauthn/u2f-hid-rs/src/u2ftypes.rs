@@ -135,7 +135,6 @@ impl U2FHIDCont {
     }
 }
 
-
 // Reply sent after initialization command. Contains information about U2F USB
 // Key versioning, as well as the communication channel to be used for all
 // further requests.

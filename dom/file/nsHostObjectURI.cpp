@@ -156,7 +156,7 @@ nsHostObjectURI::Deserialize(const mozilla::ipc::URIParams& aParams)
   return true;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHostObjectURI::SetScheme(const nsACString& aScheme)
 {
   // Disallow setting the scheme, since that could cause us to be associated

@@ -81,8 +81,7 @@
 
 .devtools-separator {
   border-inline-start: 1px solid;
-  border-image: var(--separator-border-image);
-  border-image-slice: 1;
+  border-image: var(--separator-border-image) 1 1;
   height: inherit;
 }
 

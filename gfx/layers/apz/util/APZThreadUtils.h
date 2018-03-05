@@ -42,10 +42,10 @@ public:
 
   /**
    * This can be used to assert that the current thread is the
-   * compositor thread (which applies the async transform).
+   * sampler thread (which samples the async transform).
    * This does nothing if thread assertions are disabled.
    */
-  static void AssertOnCompositorThread();
+  static void AssertOnSamplerThread();
 
   /**
    * Run the given task on the APZ "controller thread" for this platform. If

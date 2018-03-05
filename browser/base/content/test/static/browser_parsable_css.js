@@ -69,7 +69,28 @@ let whitelist = [
    intermittent: true,
    errorMessage: /Property contained reference to invalid variable.*color/i,
    isFromDevTools: true},
+];
 
+if (!Services.prefs.getBoolPref("full-screen-api.unprefix.enabled")) {
+  whitelist.push({
+    sourceName: /(?:res|gre-resources)\/(ua|html)\.css$/i,
+    errorMessage: /Unknown pseudo-class .*\bfullscreen\b/i,
+    isFromDevTools: false
+  });
+}
+
+// Platform can be "linux", "macosx" or "win". If omitted, the exception applies to all platforms.
+let allowedImageReferences = [
+  // Bug 1302691
+  {file: "chrome://devtools/skin/images/dock-bottom-minimize@2x.png",
+   from: "chrome://devtools/skin/toolbox.css",
+   isFromDevTools: true},
+  {file: "chrome://devtools/skin/images/dock-bottom-maximize@2x.png",
+   from: "chrome://devtools/skin/toolbox.css",
+   isFromDevTools: true},
+];
+
+let propNameWhitelist = [
   // These are CSS custom properties that we found a definition of but
   // no reference to.
   // Bug 1441837
@@ -105,9 +126,6 @@ let whitelist = [
   // Bug 1441857
   {propName: "--positionDurationBox-width-long",
    isFromDevTools: false},
-  // Bug 1441860
-  {propName: "--rule-flex-toggle-color",
-   isFromDevTools: true},
   // Bug 1441929
   {propName: "--theme-search-overlays-semitransparent",
    isFromDevTools: true},
@@ -120,9 +138,6 @@ let whitelist = [
   // Bug 1442300
   {propName: "--in-content-category-background",
    isFromDevTools: false},
-  // Bug 1442314
-  {propName: "--separator-border-image",
-   isFromDevTools: true},
 
   // Used on Linux
   {propName: "--in-content-box-background-odd",
@@ -137,29 +152,16 @@ let whitelist = [
    isFromDevTools: true},
 ];
 
-if (!Services.prefs.getBoolPref("full-screen-api.unprefix.enabled")) {
-  whitelist.push({
-    sourceName: /(?:res|gre-resources)\/(ua|html)\.css$/i,
-    errorMessage: /Unknown pseudo-class .*\bfullscreen\b/i,
-    isFromDevTools: false
-  });
-}
-
-// Platform can be "linux", "macosx" or "win". If omitted, the exception applies to all platforms.
-let allowedImageReferences = [
-  // Bug 1302691
-  {file: "chrome://devtools/skin/images/dock-bottom-minimize@2x.png",
-   from: "chrome://devtools/skin/toolbox.css",
-   isFromDevTools: true},
-  {file: "chrome://devtools/skin/images/dock-bottom-maximize@2x.png",
-   from: "chrome://devtools/skin/toolbox.css",
-   isFromDevTools: true},
-];
-
 // Add suffix to stylesheets' URI so that we always load them here and
 // have them parsed. Add a random number so that even if we run this
 // test multiple times, it would be unlikely to affect each other.
 const kPathSuffix = "?always-parse-css-" + Math.random();
+
+function dumpWhitelistItem(item) {
+  return JSON.stringify(item, (key, value) => {
+    return value instanceof RegExp ? value.toString() : value;
+  });
+}
 
 /**
  * Check if an error should be ignored due to matching one of the whitelist
@@ -171,15 +173,26 @@ const kPathSuffix = "?always-parse-css-" + Math.random();
 function ignoredError(aErrorObject) {
   for (let whitelistItem of whitelist) {
     let matches = true;
+    let catchAll = true;
     for (let prop of ["sourceName", "errorMessage"]) {
-      if (whitelistItem.hasOwnProperty(prop) &&
-          !whitelistItem[prop].test(aErrorObject[prop] || "")) {
-        matches = false;
-        break;
+      if (whitelistItem.hasOwnProperty(prop)) {
+        catchAll = false;
+        if (!whitelistItem[prop].test(aErrorObject[prop] || "")) {
+          matches = false;
+          break;
+        }
       }
+    }
+    if (catchAll) {
+      ok(false, "A whitelist item is catching all errors. " +
+         dumpWhitelistItem(whitelistItem));
+      continue;
     }
     if (matches) {
       whitelistItem.used = true;
+      let {sourceName, errorMessage} = aErrorObject;
+      info(`Ignored error "${errorMessage}" on ${sourceName} ` +
+           "because of whitelist item " + dumpWhitelistItem(whitelistItem));
       return true;
     }
   }
@@ -254,7 +267,6 @@ function messageIsCSSError(msg) {
       ok(false, `Got error message for ${sourceName}: ${msg.errorMessage}`);
       return true;
     }
-    info(`Ignored error for ${sourceName} because of filter.`);
   }
   return false;
 }
@@ -436,7 +448,7 @@ add_task(async function checkAllTheCSS() {
   for (let [prop, refCount] of customPropsToReferencesMap) {
     if (!refCount) {
       let ignored = false;
-      for (let item of whitelist) {
+      for (let item of propNameWhitelist) {
         if (item.propName == prop &&
             isDevtools == item.isFromDevTools) {
           item.used = true;
@@ -459,27 +471,18 @@ add_task(async function checkAllTheCSS() {
   is(errors.length, 0, "All the styles (" + allPromises.length + ") loaded without errors.");
 
   // Confirm that all whitelist rules have been used.
-  for (let item of whitelist) {
-    if (!item.used &&
-        (!item.platforms || item.platforms.includes(AppConstants.platform)) &&
-        isDevtools == item.isFromDevTools &&
-        !item.intermittent) {
-      ok(false, "Unused whitelist item. " +
-                (item.propName ? " propName: " + item.propName : "") +
-                (item.sourceName ? " sourceName: " + item.sourceName : "") +
-                (item.errorMessage ? " errorMessage: " + item.errorMessage : ""));
+  function checkWhitelist(list) {
+    for (let item of list) {
+      if (!item.used && isDevtools == item.isFromDevTools &&
+          (!item.platforms || item.platforms.includes(AppConstants.platform)) &&
+          !item.intermittent) {
+        ok(false, "Unused whitelist item: " + dumpWhitelistItem(item));
+      }
     }
   }
-
-  // Confirm that all file whitelist rules have been used.
-  for (let item of allowedImageReferences) {
-    if (!item.used && isDevtools == item.isFromDevTools &&
-        (!item.platforms || item.platforms.includes(AppConstants.platform))) {
-      ok(false, "Unused file whitelist item. " +
-                " file: " + item.file +
-                " from: " + item.from);
-    }
-  }
+  checkWhitelist(whitelist);
+  checkWhitelist(allowedImageReferences);
+  checkWhitelist(propNameWhitelist);
 
   // Clean up to avoid leaks:
   iframe.remove();

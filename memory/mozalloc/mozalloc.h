@@ -134,15 +134,12 @@ MOZ_END_EXTERN_C
 #define MOZALLOC_THROW_IF_HAS_EXCEPTIONS throw()
 #endif
 #define MOZALLOC_THROW_BAD_ALLOC_IF_HAS_EXCEPTIONS
-#elif __cplusplus >= 201103
+#else
 /*
  * C++11 has deprecated exception-specifications in favour of |noexcept|.
  */
 #define MOZALLOC_THROW_IF_HAS_EXCEPTIONS noexcept(true)
 #define MOZALLOC_THROW_BAD_ALLOC_IF_HAS_EXCEPTIONS noexcept(false)
-#else
-#define MOZALLOC_THROW_IF_HAS_EXCEPTIONS throw()
-#define MOZALLOC_THROW_BAD_ALLOC_IF_HAS_EXCEPTIONS throw(std::bad_alloc)
 #endif
 
 #define MOZALLOC_THROW_BAD_ALLOC MOZALLOC_THROW_BAD_ALLOC_IF_HAS_EXCEPTIONS

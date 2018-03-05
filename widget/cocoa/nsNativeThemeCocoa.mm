@@ -2057,31 +2057,6 @@ nsNativeThemeCocoa::DrawSegment(CGContextRef cgContext, const HIRect& inBoxRect,
             nil]);
 }
 
-void
-nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame* aFrame,
-                                            EventStates aButtonStates[])
-{
-  static Element::AttrValuesArray attributeValues[] = {
-    &nsGkAtoms::scrollbarUpTop,
-    &nsGkAtoms::scrollbarDownTop,
-    &nsGkAtoms::scrollbarUpBottom,
-    &nsGkAtoms::scrollbarDownBottom,
-    nullptr
-  };
-
-  // Get the state of any scrollbar buttons in our child frames
-  for (nsIFrame *childFrame : aFrame->PrincipalChildList()) {
-    nsIContent *childContent = childFrame->GetContent();
-    if (!childContent || !childContent->IsElement()) continue;
-    int32_t attrIndex =
-      childContent->AsElement()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::sbattr,
-                                                 attributeValues, eCaseMatters);
-    if (attrIndex < 0) continue;
-
-    aButtonStates[attrIndex] = GetContentState(childFrame, NS_THEME_BUTTON);
-  }
-}
-
 nsIFrame*
 nsNativeThemeCocoa::GetParentScrollbarFrame(nsIFrame *aFrame)
 {

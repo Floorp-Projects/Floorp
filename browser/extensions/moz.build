@@ -13,7 +13,6 @@ DIRS += [
     'pdfjs',
     'pocket',
     'screenshots',
-    'shield-recipe-client',
     'webcompat',
 ]
 

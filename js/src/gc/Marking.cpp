@@ -352,7 +352,7 @@ static void
 AssertShouldMarkInZone(JSString* str)
 {
 #ifdef DEBUG
-    Zone* zone = str->asTenured().zone();
+    Zone* zone = str->zone();
     MOZ_ASSERT(zone->shouldMarkInZone() || zone->isAtomsZone());
 #endif
 }

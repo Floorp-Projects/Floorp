@@ -13,6 +13,10 @@
 %brandDTD;
 <!ENTITY % aboutDialogDTD SYSTEM "chrome://browser/locale/aboutDialog.dtd" >
 %aboutDialogDTD;
+#ifdef XP_MACOSX
+<!ENTITY % baseMenuOverlayDTD SYSTEM "chrome://browser/locale/baseMenuOverlay.dtd">
+%baseMenuOverlayDTD;
+#endif
 ]>
 
 #ifdef XP_MACOSX

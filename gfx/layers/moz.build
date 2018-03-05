@@ -92,6 +92,7 @@ EXPORTS.mozilla.dom += [
 EXPORTS.mozilla.layers += [
     'AnimationHelper.h',
     'AnimationInfo.h',
+    'apz/public/APZSampler.h',
     'apz/public/CompositorController.h',
     'apz/public/GeckoContentController.h',
     'apz/public/IAPZCTreeManager.h',
@@ -297,6 +298,7 @@ UNIFIED_SOURCES += [
     'AnimationInfo.cpp',
     'apz/public/IAPZCTreeManager.cpp',
     'apz/src/APZCTreeManager.cpp',
+    'apz/src/APZSampler.cpp',
     'apz/src/AsyncPanZoomController.cpp',
     'apz/src/AutoscrollAnimation.cpp',
     'apz/src/Axis.cpp',

@@ -6,7 +6,7 @@
 #include "WebGLContext.h"
 
 #include <algorithm>
-#include "angle/ShaderLang.h"
+#include "GLSLANG/ShaderLang.h"
 #include "CanvasUtils.h"
 #include "gfxPrefs.h"
 #include "GLContext.h"

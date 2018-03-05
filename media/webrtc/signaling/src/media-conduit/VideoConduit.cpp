@@ -76,6 +76,8 @@ static const char* vcLogTag = "WebrtcVideoSessionConduit";
 #endif
 #define LOGTAG vcLogTag
 
+using LocalDirection = MediaSessionConduitLocalDirection;
+
 static const int kNullPayloadType = -1;
 static const char* kUlpFecPayloadName = "ulpfec";
 static const char* kRedPayloadName = "red";
@@ -320,20 +322,15 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
   Destroy();
 }
 
-void
-WebrtcVideoConduit::SetLocalRTPExtensions(bool aIsSend,
-                                          const RtpExtList & aExtensions)
+MediaConduitErrorCode
+WebrtcVideoConduit::SetLocalRTPExtensions(LocalDirection aDirection,
+                                          const RtpExtList& aExtensions)
 {
-  auto& extList = aIsSend ? mSendStreamConfig.rtp.extensions :
-                  mRecvStreamConfig.rtp.extensions;
+  auto& extList = aDirection == LocalDirection::kSend ?
+                                    mSendStreamConfig.rtp.extensions :
+                                    mRecvStreamConfig.rtp.extensions;
   extList = aExtensions;
-}
-
-RtpExtList
-WebrtcVideoConduit::GetLocalRTPExtensions(bool aIsSend) const
-{
-  return aIsSend ? mSendStreamConfig.rtp.extensions :
-                   mRecvStreamConfig.rtp.extensions;
+  return kMediaConduitNoError;
 }
 
 bool WebrtcVideoConduit::SetLocalSSRCs(const std::vector<unsigned int> & aSSRCs)

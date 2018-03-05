@@ -18,6 +18,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/mozalloc.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Span.h"

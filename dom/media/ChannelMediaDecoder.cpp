@@ -154,6 +154,29 @@ ChannelMediaDecoder::ResourceCallback::NotifyPrincipalChanged()
 }
 
 void
+ChannelMediaDecoder::NotifyPrincipalChanged()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MediaDecoder::NotifyPrincipalChanged();
+  if (!mInitialChannelPrincipalKnown) {
+    // We'll receive one notification when the channel's initial principal
+    // is known, after all HTTP redirects have resolved. This isn't really a
+    // principal change, so return here to avoid the mSameOriginMedia check
+    // below.
+    mInitialChannelPrincipalKnown = true;
+    return;
+  }
+  if (!mSameOriginMedia &&
+      DecoderTraits::CrossOriginRedirectsProhibited(ContainerType())) {
+    // For some content types we block mid-flight channel redirects to cross
+    // origin destinations due to security constraints. See bug 1441153.
+    LOG("ChannnelMediaDecoder prohibited cross origin redirect blocked.");
+    NetworkError(MediaResult(NS_ERROR_DOM_BAD_URI,
+                             "Prohibited cross origin redirect blocked"));
+  }
+}
+
+void
 ChannelMediaDecoder::ResourceCallback::NotifySuspendedStatusChanged(
   bool aSuspendedByCache)
 {

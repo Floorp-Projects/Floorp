@@ -14,12 +14,20 @@ Linking Rust Crates into libxul
 
 Rust crates that you want to link into libxul should be listed in the
 ``dependencies`` section of `toolkit/library/rust/shared/Cargo.toml <https://dxr.mozilla.org/mozilla-central/source/toolkit/library/rust/shared/Cargo.toml>`_.
-After adding your crate, execute ``cargo update -p gkrust-shared`` in
-``toolkit/library/rust`` to update the Cargo.lock file.  You'll also
+After adding your crate, execute ``cargo update -p gkrust-shared``
+to update the ``Cargo.lock`` file.  You'll also
 need to add an ``extern crate`` reference to
 `toolkit/library/rust/shared/lib.rs <https://dxr.mozilla.org/mozilla-central/source/toolkit/library/rust/shared/lib.rs>`_.
 This ensures that the Rust code will be linked properly into libxul as well
 as the copy of libxul used for gtests.
+
+By default, all Cargo packages in the mozilla-central repository are part of
+the same `workspace <https://dxr.mozilla.org/mozilla-central/source/toolkit/library/rust/shared/lib.rs>`_
+and will share the ``Cargo.lock`` file and ``target`` directory in the root of
+the repository.  You can change this behavior by adding a path to the
+``excludes`` list in the top-level ``Cargo.toml`` file.  You may want to do
+this if your package's development workflow includes dev-dependencies that
+aren't needed by general Firefox developers or test infrastructure.
 
 Linking Rust Crates into something else
 =======================================

@@ -140,6 +140,14 @@ var Policies = {
     }
   },
 
+  "DisableFirefoxAccounts": {
+    onBeforeAddons(manager, param) {
+      if (param) {
+        setAndLockPref("identity.fxaccounts.enabled", false);
+      }
+    }
+  },
+
   "DisableFirefoxScreenshots": {
     onBeforeAddons(manager, param) {
       if (param) {
@@ -181,7 +189,6 @@ var Policies = {
       }
     }
   },
-
 
   "DisplayBookmarksToolbar": {
     onBeforeUIStartup(manager, param) {

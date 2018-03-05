@@ -27,7 +27,7 @@ impl<'ctx> DeviceCollection<'ctx> {
 impl<'ctx> Drop for DeviceCollection<'ctx> {
     fn drop(&mut self) {
         unsafe {
-            let _ = try_call!(ffi::cubeb_device_collection_destroy(
+            let _ = call!(ffi::cubeb_device_collection_destroy(
                 self.1.as_ptr(),
                 &mut self.0
             ));

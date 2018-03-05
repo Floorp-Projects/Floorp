@@ -4373,7 +4373,10 @@ OverflowableToolbar.prototype = {
       this._panel.addEventListener("popupshown", () => {
         this._panel.addEventListener("dragover", this);
         this._panel.addEventListener("dragend", this);
-        resolve();
+        // Wait until the next tick to resolve so all popupshown
+        // handlers have a chance to run before our promise resolution
+        // handlers do.
+        Services.tm.dispatchToMainThread(resolve);
       }, {once: true});
     });
   },

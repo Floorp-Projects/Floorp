@@ -3685,9 +3685,9 @@ class AssemblerX86Shared : public AssemblerShared
     static void PatchDataWithValueCheck(CodeLocationLabel data, PatchedImmPtr newData,
                                         PatchedImmPtr expectedData) {
         // The pointer given is a pointer to *after* the data.
-        uintptr_t* ptr = ((uintptr_t*) data.raw()) - 1;
-        MOZ_ASSERT(*ptr == (uintptr_t)expectedData.value);
-        *ptr = (uintptr_t)newData.value;
+        uint8_t* ptr = data.raw() - sizeof(uintptr_t);
+        MOZ_ASSERT(mozilla::LittleEndian::readUintptr(ptr) == uintptr_t(expectedData.value));
+        mozilla::LittleEndian::writeUintptr(ptr, uintptr_t(newData.value));
     }
     static void PatchDataWithValueCheck(CodeLocationLabel data, ImmPtr newData, ImmPtr expectedData) {
         PatchDataWithValueCheck(data, PatchedImmPtr(newData.value), PatchedImmPtr(expectedData.value));

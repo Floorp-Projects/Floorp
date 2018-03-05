@@ -27,8 +27,7 @@ public:
   virtual void
   Serialize(mozilla::ipc::URIParams& aParams) = 0;
 
-  virtual bool
-  Deserialize(const mozilla::ipc::URIParams& aParams) = 0;
+  // For deserialization, see nsIURIMutator
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableURI,
@@ -36,24 +35,16 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableURI,
 
 #define NS_DECL_NSIIPCSERIALIZABLEURI \
   virtual void \
-  Serialize(mozilla::ipc::URIParams&) override; \
-  virtual bool \
-  Deserialize(const mozilla::ipc::URIParams&) override;
+  Serialize(mozilla::ipc::URIParams&) override;
 
 #define NS_FORWARD_NSIIPCSERIALIZABLEURI(_to) \
   virtual void \
   Serialize(mozilla::ipc::URIParams& aParams) override \
-  { _to Serialize(aParams); } \
-  virtual bool \
-  Deserialize(const mozilla::ipc::URIParams& aParams) override \
-  { return _to Deserialize(aParams); }
+  { _to Serialize(aParams); }
 
 #define NS_FORWARD_SAFE_NSIIPCSERIALIZABLEURI(_to) \
   virtual void \
   Serialize(mozilla::ipc::URIParams& aParams) override \
-  { if (_to) { _to->Serialize(aParams); } } \
-  virtual bool \
-  Deserialize(const mozilla::ipc::URIParams& aParams) override \
-  { if (_to) { return _to->Deserialize(aParams); } return false; }
+  { if (_to) { _to->Serialize(aParams); } }
 
 #endif // mozilla_ipc_nsIIPCSerializableURI_h

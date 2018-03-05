@@ -7,6 +7,7 @@
 #include "MainThreadUtils.h"
 #include "nsThreadUtils.h"
 #include "CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/media/MediaSystemResourceService.h"
 

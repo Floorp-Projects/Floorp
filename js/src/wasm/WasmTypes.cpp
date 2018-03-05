@@ -32,11 +32,18 @@ using namespace js::wasm;
 using mozilla::IsPowerOfTwo;
 using mozilla::MakeEnumeratedRange;
 
-// A sanity check.  We have only tested WASM_HUGE_MEMORY on x64, and only tested
-// x64 with WASM_HUGE_MEMORY.
+// We have only tested x64 with WASM_HUGE_MEMORY.
 
-#if defined(WASM_HUGE_MEMORY) != defined(JS_CODEGEN_X64)
-#  error "Not an expected configuration"
+#if defined(JS_CODEGEN_X64) && !defined(WASM_HUGE_MEMORY)
+#    error "Not an expected configuration"
+#endif
+
+// We have only tested WASM_HUGE_MEMORY on x64 and arm64.
+
+#if defined(WASM_HUGE_MEMORY)
+#  if !(defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64))
+#    error "Not an expected configuration"
+#  endif
 #endif
 
 // Another sanity check.
@@ -102,6 +109,7 @@ GetCPUID()
         ARM = 0x3,
         MIPS = 0x4,
         MIPS64 = 0x5,
+        ARM64 = 0x6,
         ARCH_BITS = 3
     };
 
@@ -115,7 +123,8 @@ GetCPUID()
     MOZ_ASSERT(jit::GetARMFlags() <= (UINT32_MAX >> ARCH_BITS));
     return ARM | (jit::GetARMFlags() << ARCH_BITS);
 #elif defined(JS_CODEGEN_ARM64)
-    MOZ_CRASH("not enabled");
+    MOZ_ASSERT(jit::GetARM64Flags() <= (UINT32_MAX >> ARCH_BITS));
+    return ARM64 | (jit::GetARM64Flags() << ARCH_BITS);
 #elif defined(JS_CODEGEN_MIPS32)
     MOZ_ASSERT(jit::GetMIPSFlags() <= (UINT32_MAX >> ARCH_BITS));
     return MIPS | (jit::GetMIPSFlags() << ARCH_BITS);

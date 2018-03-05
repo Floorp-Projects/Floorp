@@ -53,7 +53,7 @@ class GeckoInstance(object):
         # Disable intalling any distribution add-ons
         "extensions.installDistroAddons": False,
         # Make sure Shield doesn't hit the network.
-        "extensions.shield-recipe-client.api_url": "",
+        "app.normandy.api_url": "",
         "extensions.showMismatchUI": False,
         # Turn off extension updates so they don't bother tests
         "extensions.update.enabled": False,

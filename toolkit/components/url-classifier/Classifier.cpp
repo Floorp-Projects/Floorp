@@ -932,10 +932,12 @@ Classifier::RegenActiveTables()
 
     LookupCache *lookupCache = GetLookupCache(table);
     if (!lookupCache) {
+      LOG(("Inactive table (no cache): %s", table.get()));
       continue;
     }
 
     if (!lookupCache->IsPrimed()) {
+      LOG(("Inactive table (cache not primed): %s", table.get()));
       continue;
     }
 

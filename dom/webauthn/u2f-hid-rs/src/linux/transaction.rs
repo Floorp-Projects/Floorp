@@ -33,7 +33,9 @@ impl Transaction {
             timeout,
         )?;
 
-        Ok(Self { thread: Some(thread) })
+        Ok(Self {
+            thread: Some(thread),
+        })
     }
 
     pub fn cancel(&mut self) {

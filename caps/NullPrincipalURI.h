@@ -26,6 +26,10 @@
   {0x51fcd543, 0x3b52, 0x41f7, \
     {0xb9, 0x1b, 0x6b, 0x54, 0x10, 0x22, 0x36, 0xe6} }
 
+namespace mozilla {
+class Encoding;
+}
+
 class NullPrincipalURI final : public nsIURI
                              , public nsISizeOf
                              , public nsIIPCSerializableURI
@@ -51,6 +55,21 @@ private:
   nsresult Init();
 
   nsAutoCStringN<NSID_LENGTH> mPath;
+
+  nsresult SetSpecInternal(const nsACString &input);
+  nsresult SetScheme(const nsACString &input);
+  nsresult SetUserPass(const nsACString &input);
+  nsresult SetUsername(const nsACString &input);
+  nsresult SetPassword(const nsACString &input);
+  nsresult SetHostPort(const nsACString &aValue);
+  nsresult SetHost(const nsACString &input);
+  nsresult SetPort(int32_t port);
+  nsresult SetPathQueryRef(const nsACString &input);
+  nsresult SetRef(const nsACString &input);
+  nsresult SetFilePath(const nsACString &input);
+  nsresult SetQuery(const nsACString &input);
+  nsresult SetQueryWithEncoding(const nsACString &input, const mozilla::Encoding* encoding);
+  bool Deserialize(const mozilla::ipc::URIParams&);
 
 public:
   class Mutator final

@@ -9,7 +9,7 @@ description = "Remote Cubeb IPC"
 
 [dependencies]
 cubeb = "0.4"
-bincode = "0.8"
+bincode = "0.9"
 bytes = "0.4"
 # rayon-core in Gecko uses futures 0.1.13
 futures = "=0.1.13"

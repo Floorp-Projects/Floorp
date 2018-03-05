@@ -123,7 +123,12 @@ class Frame extends Component {
       frame = this.props.frame;
     }
 
-    let source = frame.source ? String(frame.source) : "";
+    // If the resource was loaded by browser-loader.js, `frame.source` looks like:
+    // resource://devtools/shared/base-loader.js -> resource://devtools/path/to/file.js .
+    // What's needed is only the last part after " -> ".
+    let source = frame.source
+      ? String(frame.source).split(" -> ").pop()
+      : "";
     let line = frame.line != void 0 ? Number(frame.line) : null;
     let column = frame.column != void 0 ? Number(frame.column) : null;
 
@@ -139,7 +144,6 @@ class Frame extends Component {
     const elements = [];
     const sourceElements = [];
     let sourceEl;
-
     let tooltip = long;
 
     // Exclude all falsy values, including `0`, as line numbers start with 1.
@@ -220,7 +224,7 @@ class Frame extends Component {
         onClick: e => {
           e.preventDefault();
           e.stopPropagation();
-          onClick(this.getSourceForClick(frame));
+          onClick(this.getSourceForClick({...frame, source}));
         },
         href: source,
         className: "frame-link-source",

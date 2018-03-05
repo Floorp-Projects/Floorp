@@ -64,6 +64,7 @@ namespace layers {
 
 class APZCTreeManager;
 class APZCTreeManagerParent;
+class APZSampler;
 class AsyncCompositionManager;
 class AsyncImagePipelineManager;
 class Compositor;
@@ -72,6 +73,7 @@ class CompositorBridgeParent;
 class CompositorManagerParent;
 class CompositorVsyncScheduler;
 class HostLayerManager;
+class IAPZCTreeManager;
 class LayerTransactionParent;
 class PAPZParent;
 class CrossProcessCompositorBridgeParent;
@@ -360,7 +362,6 @@ public:
     // the PCompositorBridgeChild
     CrossProcessCompositorBridgeParent* mCrossProcessParent;
     TargetConfig mTargetConfig;
-    APZTestData mApzTestData;
     LayerTransactionParent* mLayerTree;
     nsTArray<PluginWindowData> mPluginData;
     bool mUpdatedPluginDataAvailable;
@@ -446,6 +447,7 @@ public:
   bool DeallocPAPZParent(PAPZParent* aActor) override;
 
   RefPtr<APZCTreeManager> GetAPZCTreeManager();
+  RefPtr<APZSampler> GetAPZSampler();
 
   CompositorOptions GetOptions() const {
     return mOptions;
@@ -486,10 +488,11 @@ private:
   void StopAndClearResources();
 
   /**
-   * This returns a reference to the APZCTreeManager to which
-   * pan/zoom-related events can be sent.
+   * This returns a reference to the IAPZCTreeManager "controller subinterface"
+   * to which pan/zoom-related events can be sent. The controller subinterface
+   * doesn't expose any sampler-thread APZCTreeManager methods.
    */
-  static already_AddRefed<APZCTreeManager> GetAPZCTreeManager(uint64_t aLayersId);
+  static already_AddRefed<IAPZCTreeManager> GetAPZCTreeManager(uint64_t aLayersId);
 
   /**
    * Release compositor-thread resources referred to by |aID|.
@@ -610,6 +613,7 @@ protected:
   RefPtr<CancelableRunnable> mForceCompositionTask;
 
   RefPtr<APZCTreeManager> mApzcTreeManager;
+  RefPtr<APZSampler> mApzSampler;
 
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   // This makes sure the compositorParent is not destroyed before receiving

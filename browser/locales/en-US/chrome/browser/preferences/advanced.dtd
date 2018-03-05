@@ -35,8 +35,8 @@ available. -->
 <!ENTITY siteData1.label                 "Cookies and Site Data">
 <!ENTITY clearSiteData1.label            "Clear Data…">
 <!ENTITY clearSiteData1.accesskey        "l">
-<!ENTITY siteDataSettings.label          "Settings…">
-<!ENTITY siteDataSettings.accesskey      "i">
+<!ENTITY siteDataSettings1.label         "Manage Data…">
+<!ENTITY siteDataSettings1.accesskey     "M">
 <!ENTITY siteDataLearnMoreLink.label     "Learn more">
 
 <!ENTITY updateTab.label                 "Update">

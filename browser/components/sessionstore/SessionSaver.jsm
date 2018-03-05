@@ -57,7 +57,6 @@ function stopWatch(method) {
 }
 
 var stopWatchStart = stopWatch("start");
-var stopWatchCancel = stopWatch("cancel");
 var stopWatchFinish = stopWatch("finish");
 
 /**
@@ -390,4 +389,3 @@ XPCOMUtils.defineLazyPreferenceGetter(SessionSaverInternal, "_idleDelay", PREF_I
 
 var idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(Ci.nsIIdleService);
 idleService.addIdleObserver(SessionSaverInternal, SessionSaverInternal._idleDelay);
-

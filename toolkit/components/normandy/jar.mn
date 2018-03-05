@@ -1,0 +1,15 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit.jar:
+% resource normandy %res/normandy/
+  res/normandy/Normandy.jsm (./Normandy.jsm)
+  res/normandy/lib/ (./lib/*)
+  res/normandy/skin/  (./skin/*)
+
+% resource normandy-content %res/normandy/content/ contentaccessible=yes
+  res/normandy/content/ (./content/*)
+
+% resource normandy-vendor %res/normandy/vendor/ contentaccessible=yes
+  res/normandy/vendor/ (./vendor/*)

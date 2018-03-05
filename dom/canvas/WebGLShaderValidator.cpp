@@ -5,7 +5,6 @@
 
 #include "WebGLShaderValidator.h"
 
-#include "angle/ShaderLang.h"
 #include "gfxPrefs.h"
 #include "GLContext.h"
 #include "mozilla/Preferences.h"
@@ -438,7 +437,7 @@ ShaderValidator::CalcNumSamplerUniforms() const
         if (type == LOCAL_GL_SAMPLER_2D ||
             type == LOCAL_GL_SAMPLER_CUBE)
         {
-            accum += itr->arraySize;
+            accum += itr->getArraySizeProduct();
         }
     }
 

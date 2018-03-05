@@ -12,7 +12,7 @@
 <!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/siteDataSettings.dtd" >
 
 <window id="SiteDataSettingsDialog" windowtype="Browser:SiteDataSettings"
-        class="windowDialog" title="&window1.title;"
+        class="windowDialog" title="&window2.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 45em;"
         onload="gSiteDataSettings.init();"

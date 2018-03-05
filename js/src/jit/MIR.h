@@ -8798,7 +8798,10 @@ struct LambdaFunctionInfo
     // The functions used in lambdas are the canonical original function in
     // the script, and are immutable except for delazification. Record this
     // information while still on the active thread to avoid races.
-    CompilerFunction fun;
+  private:
+    CompilerFunction fun_;
+
+  public:
     uint16_t flags;
     uint16_t nargs;
     gc::Cell* scriptOrLazyScript;
@@ -8806,20 +8809,37 @@ struct LambdaFunctionInfo
     bool useSingletonForClone;
 
     explicit LambdaFunctionInfo(JSFunction* fun)
-      : fun(fun), flags(fun->flags()), nargs(fun->nargs()),
+      : fun_(fun), flags(fun->flags()), nargs(fun->nargs()),
         scriptOrLazyScript(fun->hasScript()
                            ? (gc::Cell*) fun->nonLazyScript()
                            : (gc::Cell*) fun->lazyScript()),
         singletonType(fun->isSingleton()),
         useSingletonForClone(ObjectGroup::useSingletonForClone(fun))
-    {}
+    {
+        // If this assert fails, make sure CodeGenerator::visitLambda does the
+        // right thing. We can't assert this off-thread in CodeGenerator,
+        // because fun->isAsync() accesses the script/lazyScript and can race
+        // with delazification on the main thread.
+        MOZ_ASSERT_IF(flags & JSFunction::EXTENDED,
+                      fun->isArrow() ||
+                      fun->allowSuperProperty() ||
+                      fun->isSelfHostedBuiltin() ||
+                      fun->isAsync());
+    }
+
+    // Be careful when calling this off-thread. Don't call any JSFunction*
+    // methods that depend on script/lazyScript - this can race with
+    // delazification on the main thread.
+    JSFunction* funUnsafe() const {
+        return fun_;
+    }
 
     bool appendRoots(MRootList& roots) const {
-        if (!roots.append(fun))
+        if (!roots.append(fun_))
             return false;
-        if (fun->hasScript())
-            return roots.append(fun->nonLazyScript());
-        return roots.append(fun->lazyScript());
+        if (fun_->hasScript())
+            return roots.append(fun_->nonLazyScript());
+        return roots.append(fun_->lazyScript());
     }
 
   private:
@@ -8839,8 +8859,9 @@ class MLambda
         info_(&cst->toObject().as<JSFunction>())
     {
         setResultType(MIRType::Object);
-        if (!info().fun->isSingleton() && !ObjectGroup::useSingletonForClone(info().fun))
-            setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, info().fun));
+        JSFunction* fun = info().funUnsafe();
+        if (!fun->isSingleton() && !ObjectGroup::useSingletonForClone(fun))
+            setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, fun));
     }
 
   public:
@@ -8875,9 +8896,10 @@ class MLambdaArrow
         info_(&cst->toObject().as<JSFunction>())
     {
         setResultType(MIRType::Object);
-        MOZ_ASSERT(!ObjectGroup::useSingletonForClone(info().fun));
-        if (!info().fun->isSingleton())
-            setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, info().fun));
+        JSFunction* fun = info().funUnsafe();
+        MOZ_ASSERT(!ObjectGroup::useSingletonForClone(fun));
+        if (!fun->isSingleton())
+            setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, fun));
     }
 
   public:

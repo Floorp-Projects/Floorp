@@ -3751,6 +3751,14 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, GeckoStyleContext* aContext,
            defaultVariableFont->synthesis,
            Unused, /* none */ 0, Unused, Unused);
 
+  // font-optical-sizing: none, enum, inherit, initial, -moz-system-font
+  SetValue(*aRuleData->ValueForFontOpticalSizing(),
+           aFont->mFont.opticalSizing, aConditions,
+           SETVAL_ENUMERATED | SETVAL_UNSET_INHERIT,
+           aParentFont->mFont.opticalSizing,
+           defaultVariableFont->opticalSizing,
+           Unused, Unused, Unused, systemFont.opticalSizing);
+
   // font-variant-alternates: normal, enum (bit field) + functions, inherit,
   //                          initial, -moz-system-font
   const nsCSSValue* variantAlternatesValue =
