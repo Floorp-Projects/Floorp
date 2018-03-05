@@ -82,8 +82,12 @@ TEST_F(APZCSnappingTester, Snap_After_Pinch)
   snap.mScrollSnapTypeY = NS_STYLE_SCROLL_SNAP_TYPE_MANDATORY;
   snap.mScrollSnapIntervalY = Some(100 * AppUnitsPerCSSPixel());
 
+  // Save the scroll snap info on the root APZC.
+  // Also mark the root APZC as "root content", since APZC only allows
+  // zooming on the root content APZC.
   ScrollMetadata metadata = root->GetScrollMetadata(0);
   metadata.SetSnapInfo(ScrollSnapInfo(snap));
+  metadata.GetMetrics().SetIsRootContent(true);
   root->SetScrollMetadata(metadata);
 
   UniquePtr<ScopedLayerTreeRegistration> registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
