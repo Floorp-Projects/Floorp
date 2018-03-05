@@ -70,6 +70,7 @@ public:
 protected:
     nsCOMPtr<nsIURI> mInnerURI;
 
+    bool Deserialize(const mozilla::ipc::URIParams&);
 
 public:
     class Mutator final

@@ -113,6 +113,7 @@ private:
     nsresult SetFilePath(const nsACString &input);
     nsresult SetQuery(const nsACString &input);
     nsresult SetQueryWithEncoding(const nsACString &input, const Encoding* encoding);
+    bool Deserialize(const mozilla::ipc::URIParams&);
 
     nsresult SetFileNameInternal(const nsACString& fileName);
     nsresult SetFileBaseNameInternal(const nsACString& fileBaseName);
