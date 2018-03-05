@@ -16,7 +16,7 @@ promise_test(async () => {
 
   // typedef EventHandler from HTML
   // https://html.spec.whatwg.org/#eventhandler
-  idlArray.add_idls(`
+  idlArray.add_untested_idls(`
     [TreatNonObjectAsNull]
     callback EventHandlerNonNull = any (Event event);
     typedef EventHandlerNonNull? EventHandler;
