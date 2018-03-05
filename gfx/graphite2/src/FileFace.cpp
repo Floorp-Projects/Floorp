@@ -92,7 +92,7 @@ const void *FileFace::get_table_fn(const void* appFaceHandle, unsigned int name,
         return 0;
 
     tbl = malloc(tbl_len);
-    if (fread(tbl, 1, tbl_len, file_face._file) != tbl_len)
+    if (!tbl || fread(tbl, 1, tbl_len, file_face._file) != tbl_len)
     {
         free(tbl);
         return 0;
