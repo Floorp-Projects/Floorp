@@ -38,13 +38,14 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
                                       "extensions.webextPermissionPrompts", false);
 XPCOMUtils.defineLazyPreferenceGetter(this, "ALLOW_NON_MPC",
                                       "extensions.allow-non-mpc-extensions", true);
+XPCOMUtils.defineLazyPreferenceGetter(this, "XPINSTALL_ENABLED",
+                                      "xpinstall.enabled", true);
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "SUPPORT_URL", "app.support.baseURL",
                                       "", null, val => Services.urlFormatter.formatURL(val));
 
 const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 const PREF_DISCOVER_ENABLED = "extensions.getAddons.showPane";
-const PREF_XPI_ENABLED = "xpinstall.enabled";
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_CACHE_ID_ENABLED = "extensions.%ID%.getAddons.cache.enabled";
 const PREF_UI_TYPE_HIDDEN = "extensions.ui.%TYPE%.hidden";
@@ -164,6 +165,10 @@ function initialize(event) {
   Services.obs.addObserver(sendEMPong, "EM-ping");
   Services.obs.notifyObservers(window, "EM-loaded");
 
+  if (!XPINSTALL_ENABLED) {
+    document.getElementById("cmd_installFromFile").hidden = true;
+  }
+
   // If the initial view has already been selected (by a call to loadView from
   // the above notifications) then bail out now
   if (gViewController.initialViewSelected)
@@ -270,10 +275,9 @@ function isDiscoverEnabled() {
       return false;
   } catch (e) {}
 
-  try {
-    if (!Services.prefs.getBoolPref(PREF_XPI_ENABLED))
-      return false;
-  } catch (e) {}
+  if (!XPINSTALL_ENABLED) {
+    return false;
+  }
 
   return true;
 }
@@ -1315,7 +1319,7 @@ var gViewController = {
 
     cmd_installFromFile: {
       isEnabled() {
-        return true;
+        return XPINSTALL_ENABLED;
       },
       doCommand() {
         const nsIFilePicker = Ci.nsIFilePicker;
@@ -3620,6 +3624,10 @@ var gUpdatesView = {
 
 var gDragDrop = {
   onDragOver(aEvent) {
+    if (!XPINSTALL_ENABLED) {
+      aEvent.dataTransfer.effectAllowed = "none";
+      return;
+    }
     var types = aEvent.dataTransfer.types;
     if (types.includes("text/uri-list") ||
         types.includes("text/x-moz-url") ||
