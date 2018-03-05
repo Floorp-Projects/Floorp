@@ -232,7 +232,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
         setBlockingEnabled(session.isBlockingEnabled());
 
-        session.getLoading().observe(this, new AverageLoadTimeObserver());
+        session.getLoading().observe(this, new AverageLoadTimeObserver(session));
 
         session.getLoading().observe(this, new NonNullObserver<Boolean>() {
             @Override
