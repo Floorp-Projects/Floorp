@@ -14528,3 +14528,26 @@ nsDocShell::SetColorMatrix(float* aMatrix, uint32_t aMatrixLen)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDocShell::GetColorMatrix(uint32_t* aMatrixLen, float** aMatrix)
+{
+  NS_ENSURE_ARG_POINTER(aMatrixLen);
+  *aMatrixLen = 0;
+
+  NS_ENSURE_ARG_POINTER(aMatrix);
+  *aMatrix = nullptr;
+
+  if (mColorMatrix) {
+    *aMatrix = (float*)moz_xmalloc(20 * sizeof(float));
+    if (!*aMatrix) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    MOZ_ASSERT(20 * sizeof(float) == sizeof(mColorMatrix->components));
+    *aMatrixLen = 20;
+    memcpy(*aMatrix, mColorMatrix->components, 20 * sizeof(float));
+  }
+
+  return NS_OK;
+}
