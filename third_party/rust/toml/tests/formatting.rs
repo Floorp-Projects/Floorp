@@ -1,22 +1,19 @@
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
+extern crate rustc_serialize;
 extern crate toml;
+use toml::encode_str;
 
-use toml::to_string;
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, RustcEncodable, RustcDecodable)]
 struct User {
     pub name: String,
     pub surname: String,
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, RustcEncodable, RustcDecodable)]
 struct Users {
     pub user: Vec<User>,
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, RustcEncodable, RustcDecodable)]
 struct TwoUsers {
     pub user0: User,
     pub user1: User,
@@ -24,7 +21,7 @@ struct TwoUsers {
 
 #[test]
 fn no_unnecessary_newlines_array() {
-    assert!(!to_string(&Users {
+    assert!(!encode_str(&Users {
             user: vec![
                     User {
                         name: "John".to_string(),
@@ -35,13 +32,13 @@ fn no_unnecessary_newlines_array() {
                         surname: "Dough".to_string(),
                     },
                 ],
-        }).unwrap()
+        })
         .starts_with("\n"));
 }
 
 #[test]
 fn no_unnecessary_newlines_table() {
-    assert!(!to_string(&TwoUsers {
+    assert!(!encode_str(&TwoUsers {
             user0: User {
                 name: "John".to_string(),
                 surname: "Doe".to_string(),
@@ -50,6 +47,6 @@ fn no_unnecessary_newlines_table() {
                 name: "Jane".to_string(),
                 surname: "Dough".to_string(),
             },
-        }).unwrap()
+        })
         .starts_with("\n"));
 }
