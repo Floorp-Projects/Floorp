@@ -38,12 +38,6 @@ public:
     return Equals(aString.BeginReading(), aString.Length());
   }
 
-  void SetKind(AtomKind aKind)
-  {
-    mKind = static_cast<uint32_t>(aKind);
-    MOZ_ASSERT(Kind() == aKind);
-  }
-
   AtomKind Kind() const { return static_cast<AtomKind>(mKind); }
 
   bool IsDynamicAtom() const { return Kind() == AtomKind::DynamicAtom; }
@@ -97,9 +91,9 @@ protected:
 
   ~nsAtom();
 
-  uint32_t mLength: 30;
-  uint32_t mKind: 2; // nsAtom::AtomKind
-  uint32_t mHash;
+  const uint32_t mLength:30;
+  const uint32_t mKind:2; // nsAtom::AtomKind
+  const uint32_t mHash;
   // WARNING! For static atoms, this is a pointer to a static char buffer. For
   // non-static atoms it points to the chars in an nsStringBuffer. This means
   // that nsStringBuffer::FromData(mString) calls are only valid for non-static
