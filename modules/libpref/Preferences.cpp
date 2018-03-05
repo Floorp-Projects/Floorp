@@ -305,7 +305,8 @@ struct PrefsSizes
     , mCacheData(0)
     , mRootBranches(0)
     , mPrefNameArena(0)
-    , mCallbacks(0)
+    , mCallbacksObjects(0)
+    , mCallbacksDomains(0)
     , mMisc(0)
   {
   }
@@ -316,7 +317,8 @@ struct PrefsSizes
   size_t mCacheData;
   size_t mRootBranches;
   size_t mPrefNameArena;
-  size_t mCallbacks;
+  size_t mCallbacksObjects;
+  size_t mCallbacksDomains;
   size_t mMisc;
 };
 }
@@ -717,7 +719,7 @@ private:
 class PrefEntry : public PLDHashEntryHdr
 {
 public:
-  Pref* mPref;  // Note: this is never null in a live entry.
+  Pref* mPref; // Note: this is never null in a live entry.
 
   static bool MatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
   {
@@ -744,8 +746,9 @@ public:
   }
 };
 
-struct CallbackNode
+class CallbackNode
 {
+public:
   CallbackNode(const char* aDomain,
                PrefChangedFunc aFunc,
                void* aData,
@@ -753,10 +756,47 @@ struct CallbackNode
     : mDomain(moz_xstrdup(aDomain))
     , mFunc(aFunc)
     , mData(aData)
-    , mMatchKind(aMatchKind)
-    , mNext(nullptr)
+    , mNextAndMatchKind(aMatchKind)
   {
   }
+
+  // mDomain is a UniquePtr<>, so any uses of Domain() should only be temporary
+  // borrows.
+  const char* Domain() const { return mDomain.get(); }
+
+  PrefChangedFunc Func() const { return mFunc; }
+  void ClearFunc() { mFunc = nullptr; }
+
+  void* Data() const { return mData; }
+
+  Preferences::MatchKind MatchKind() const
+  {
+    return static_cast<Preferences::MatchKind>(mNextAndMatchKind &
+                                               kMatchKindMask);
+  }
+
+  CallbackNode* Next() const
+  {
+    return reinterpret_cast<CallbackNode*>(mNextAndMatchKind & kNextMask);
+  }
+
+  void SetNext(CallbackNode* aNext)
+  {
+    uintptr_t matchKind = mNextAndMatchKind & kMatchKindMask;
+    mNextAndMatchKind = reinterpret_cast<uintptr_t>(aNext);
+    MOZ_ASSERT((mNextAndMatchKind & kMatchKindMask) == 0);
+    mNextAndMatchKind |= matchKind;
+  }
+
+  void AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf, PrefsSizes& aSizes)
+  {
+    aSizes.mCallbacksObjects += aMallocSizeOf(this);
+    aSizes.mCallbacksDomains += aMallocSizeOf(mDomain.get());
+  }
+
+private:
+  static const uintptr_t kMatchKindMask = uintptr_t(0x1);
+  static const uintptr_t kNextMask = ~kMatchKindMask;
 
   UniqueFreePtr<const char> mDomain;
 
@@ -765,8 +805,12 @@ struct CallbackNode
   // be removed at the end of NotifyCallbacks().
   PrefChangedFunc mFunc;
   void* mData;
-  Preferences::MatchKind mMatchKind;
-  CallbackNode* mNext;
+
+  // Conceptually this is two fields:
+  // - CallbackNode* mNext;
+  // - Preferences::MatchKind mMatchKind;
+  // They are combined into a tagged pointer to save memory.
+  uintptr_t mNextAndMatchKind;
 };
 
 static PLDHashTable* gHashTable;
@@ -783,10 +827,8 @@ static bool gCallbacksInProgress = false;
 static bool gShouldCleanupDeadNodes = false;
 
 static PLDHashTableOps pref_HashTableOps = {
-  PLDHashTable::HashStringKey,
-  PrefEntry::MatchEntry,
-  PLDHashTable::MoveEntryStub,
-  PrefEntry::ClearEntry,
+  PLDHashTable::HashStringKey, PrefEntry::MatchEntry,
+  PLDHashTable::MoveEntryStub, PrefEntry::ClearEntry,
   PrefEntry::InitEntry,
 };
 
@@ -958,16 +1000,13 @@ pref_SetPref(const char* aPrefName,
 static CallbackNode*
 pref_RemoveCallbackNode(CallbackNode* aNode, CallbackNode* aPrevNode)
 {
-  NS_PRECONDITION(!aPrevNode || aPrevNode->mNext == aNode, "invalid params");
-  NS_PRECONDITION(aPrevNode || gFirstCallback == aNode, "invalid params");
+  MOZ_ASSERT(!aPrevNode || aPrevNode->Next() == aNode);
+  MOZ_ASSERT(aPrevNode || gFirstCallback == aNode);
+  MOZ_ASSERT(!gCallbacksInProgress);
 
-  NS_ASSERTION(
-    !gCallbacksInProgress,
-    "modifying the callback list while gCallbacksInProgress is true");
-
-  CallbackNode* next_node = aNode->mNext;
+  CallbackNode* next_node = aNode->Next();
   if (aPrevNode) {
-    aPrevNode->mNext = next_node;
+    aPrevNode->SetNext(next_node);
   } else {
     gFirstCallback = next_node;
   }
@@ -989,15 +1028,14 @@ NotifyCallbacks(const char* aPrefName)
   // if we haven't reentered.
   gCallbacksInProgress = true;
 
-  for (CallbackNode* node = gFirstCallback; node; node = node->mNext) {
-    if (node->mFunc) {
-      bool matches = node->mMatchKind == Preferences::ExactMatch
-                       ? strcmp(node->mDomain.get(), aPrefName) == 0
-                       : strncmp(node->mDomain.get(),
-                                 aPrefName,
-                                 strlen(node->mDomain.get())) == 0;
+  for (CallbackNode* node = gFirstCallback; node; node = node->Next()) {
+    if (node->Func()) {
+      bool matches =
+        node->MatchKind() == Preferences::ExactMatch
+          ? strcmp(node->Domain(), aPrefName) == 0
+          : strncmp(node->Domain(), aPrefName, strlen(node->Domain())) == 0;
       if (matches) {
-        (node->mFunc)(aPrefName, node->mData);
+        (node->Func())(aPrefName, node->Data());
       }
     }
   }
@@ -1009,11 +1047,11 @@ NotifyCallbacks(const char* aPrefName)
     CallbackNode* node = gFirstCallback;
 
     while (node) {
-      if (!node->mFunc) {
+      if (!node->Func()) {
         node = pref_RemoveCallbackNode(node, prev_node);
       } else {
         prev_node = node;
-        node = node->mNext;
+        node = node->Next();
       }
     }
     gShouldCleanupDeadNodes = false;
@@ -2265,7 +2303,7 @@ nsPrefBranch::FreeObserverList()
 void
 nsPrefBranch::RemoveExpiredCallback(PrefCallback* aCallback)
 {
-  NS_PRECONDITION(aCallback->IsExpired(), "Callback should be expired.");
+  MOZ_ASSERT(aCallback->IsExpired());
   mObservers.Remove(aCallback);
 }
 
@@ -2301,7 +2339,7 @@ nsPrefBranch::GetDefaultFromPropertiesFile(const char* aPrefName,
 nsPrefBranch::PrefName
 nsPrefBranch::GetPrefName(const char* aPrefName) const
 {
-  NS_ASSERTION(aPrefName, "null pref name!");
+  MOZ_ASSERT(aPrefName);
 
   // For speed, avoid strcpy if we can.
   if (mPrefRoot.IsEmpty()) {
@@ -2503,7 +2541,7 @@ public:
     // Tell the safe output stream to overwrite the real prefs file.
     // (It'll abort if there were any errors during writing.)
     nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(outStream);
-    NS_ASSERTION(safeStream, "expected a safe output stream!");
+    MOZ_ASSERT(safeStream, "expected a safe output stream!");
     if (safeStream) {
       rv = safeStream->Finish();
     }
@@ -2699,9 +2737,8 @@ PreferenceServiceReporter::CollectReports(
 
   sizes.mPrefNameArena += gPrefNameArena.SizeOfExcludingThis(mallocSizeOf);
 
-  for (CallbackNode* node = gFirstCallback; node; node = node->mNext) {
-    sizes.mCallbacks += mallocSizeOf(node);
-    sizes.mCallbacks += mallocSizeOf(node->mDomain.get());
+  for (CallbackNode* node = gFirstCallback; node; node = node->Next()) {
+    node->AddSizeOfIncludingThis(mallocSizeOf, sizes);
   }
 
   MOZ_COLLECT_REPORT("explicit/preferences/hash-table",
@@ -2740,12 +2777,18 @@ PreferenceServiceReporter::CollectReports(
                      sizes.mPrefNameArena,
                      "Memory used by libpref's arena for pref names.");
 
-  MOZ_COLLECT_REPORT("explicit/preferences/callbacks",
+  MOZ_COLLECT_REPORT("explicit/preferences/callbacks/objects",
                      KIND_HEAP,
                      UNITS_BYTES,
-                     sizes.mCallbacks,
-                     "Memory used by libpref's callbacks list, including "
-                     "pref names and prefixes.");
+                     sizes.mCallbacksObjects,
+                     "Memory used by pref callback objects.");
+
+  MOZ_COLLECT_REPORT("explicit/preferences/callbacks/domains",
+                     KIND_HEAP,
+                     UNITS_BYTES,
+                     sizes.mCallbacksDomains,
+                     "Memory used by pref callback domains (pref names and "
+                     "prefixes).");
 
   MOZ_COLLECT_REPORT("explicit/preferences/misc",
                      KIND_HEAP,
@@ -2995,12 +3038,11 @@ Preferences::~Preferences()
   delete gCacheData;
   gCacheData = nullptr;
 
-  NS_ASSERTION(!gCallbacksInProgress,
-               "~Preferences was called while gCallbacksInProgress is true!");
+  MOZ_ASSERT(!gCallbacksInProgress);
 
   CallbackNode* node = gFirstCallback;
   while (node) {
-    CallbackNode* next_node = node->mNext;
+    CallbackNode* next_node = node->Next();
     delete node;
     node = next_node;
   }
@@ -3620,7 +3662,7 @@ pref_LoadPrefsInDir(nsIFile* aDir,
 
     nsAutoCString leafName;
     prefFile->GetNativeLeafName(leafName);
-    NS_ASSERTION(
+    MOZ_ASSERT(
       !leafName.IsEmpty(),
       "Failure in default prefs: directory enumerator returned empty file?");
 
@@ -3939,7 +3981,7 @@ Preferences::InitInitialObjects()
 /* static */ nsresult
 Preferences::GetBool(const char* aPrefName, bool* aResult, PrefValueKind aKind)
 {
-  NS_PRECONDITION(aResult, "aResult must not be NULL");
+  MOZ_ASSERT(aResult);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
   Pref* pref = pref_HashTableLookup(aPrefName);
@@ -3951,7 +3993,7 @@ Preferences::GetInt(const char* aPrefName,
                     int32_t* aResult,
                     PrefValueKind aKind)
 {
-  NS_PRECONDITION(aResult, "aResult must not be NULL");
+  MOZ_ASSERT(aResult);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
   Pref* pref = pref_HashTableLookup(aPrefName);
@@ -3963,7 +4005,7 @@ Preferences::GetFloat(const char* aPrefName,
                       float* aResult,
                       PrefValueKind aKind)
 {
-  NS_PRECONDITION(aResult, "aResult must not be NULL");
+  MOZ_ASSERT(aResult);
 
   nsAutoCString result;
   nsresult rv = Preferences::GetCString(aPrefName, result, aKind);
@@ -4024,7 +4066,7 @@ Preferences::GetLocalizedString(const char* aPrefName,
                                           NS_GET_IID(nsIPrefLocalizedString),
                                           getter_AddRefs(prefLocalString));
   if (NS_SUCCEEDED(rv)) {
-    NS_ASSERTION(prefLocalString, "Succeeded but the result is NULL");
+    MOZ_ASSERT(prefLocalString, "Succeeded but the result is NULL");
     prefLocalString->GetData(aResult);
   }
   return rv;
@@ -4344,7 +4386,7 @@ Preferences::RegisterCallback(PrefChangedFunc aCallback,
 
   if (aIsPriority) {
     // Add to the start of the list.
-    node->mNext = gFirstCallback;
+    node->SetNext(gFirstCallback);
     gFirstCallback = node;
     if (!gLastPriorityNode) {
       gLastPriorityNode = node;
@@ -4352,10 +4394,10 @@ Preferences::RegisterCallback(PrefChangedFunc aCallback,
   } else {
     // Add to the start of the non-priority part of the list.
     if (gLastPriorityNode) {
-      node->mNext = gLastPriorityNode->mNext;
-      gLastPriorityNode->mNext = node;
+      node->SetNext(gLastPriorityNode->Next());
+      gLastPriorityNode->SetNext(node);
     } else {
-      node->mNext = gFirstCallback;
+      node->SetNext(gFirstCallback);
       gFirstCallback = node;
     }
   }
@@ -4395,23 +4437,23 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
   CallbackNode* prev_node = nullptr;
 
   while (node) {
-    if (node->mFunc == aCallback && node->mData == aData &&
-        node->mMatchKind == aMatchKind &&
-        strcmp(node->mDomain.get(), aPrefNode) == 0) {
+    if (node->Func() == aCallback && node->Data() == aData &&
+        node->MatchKind() == aMatchKind &&
+        strcmp(node->Domain(), aPrefNode) == 0) {
       if (gCallbacksInProgress) {
-        // postpone the node removal until after
-        // callbacks enumeration is finished.
-        node->mFunc = nullptr;
+        // Postpone the node removal until after callbacks enumeration is
+        // finished.
+        node->ClearFunc();
         gShouldCleanupDeadNodes = true;
         prev_node = node;
-        node = node->mNext;
+        node = node->Next();
       } else {
         node = pref_RemoveCallbackNode(node, prev_node);
       }
       rv = NS_OK;
     } else {
       prev_node = node;
-      node = node->mNext;
+      node = node->Next();
     }
   }
   return rv;
@@ -4437,7 +4479,7 @@ BoolVarChanged(const char* aPref, void* aClosure)
 /* static */ nsresult
 Preferences::AddBoolVarCache(bool* aCache, const char* aPref, bool aDefault)
 {
-  NS_ASSERTION(aCache, "aCache must not be NULL");
+  MOZ_ASSERT(aCache);
 #ifdef DEBUG
   AssertNotAlreadyCached("bool", aPref, aCache);
 #endif
@@ -4469,7 +4511,7 @@ Preferences::AddAtomicBoolVarCache(Atomic<bool, Order>* aCache,
                                    const char* aPref,
                                    bool aDefault)
 {
-  NS_ASSERTION(aCache, "aCache must not be NULL");
+  MOZ_ASSERT(aCache);
 #ifdef DEBUG
   AssertNotAlreadyCached("bool", aPref, aCache);
 #endif
@@ -4499,7 +4541,7 @@ Preferences::AddIntVarCache(int32_t* aCache,
                             const char* aPref,
                             int32_t aDefault)
 {
-  NS_ASSERTION(aCache, "aCache must not be NULL");
+  MOZ_ASSERT(aCache);
 #ifdef DEBUG
   AssertNotAlreadyCached("int", aPref, aCache);
 #endif
@@ -4528,7 +4570,7 @@ Preferences::AddAtomicIntVarCache(Atomic<int32_t, Order>* aCache,
                                   const char* aPref,
                                   int32_t aDefault)
 {
-  NS_ASSERTION(aCache, "aCache must not be NULL");
+  MOZ_ASSERT(aCache);
 #ifdef DEBUG
   AssertNotAlreadyCached("int", aPref, aCache);
 #endif
@@ -4558,7 +4600,7 @@ Preferences::AddUintVarCache(uint32_t* aCache,
                              const char* aPref,
                              uint32_t aDefault)
 {
-  NS_ASSERTION(aCache, "aCache must not be NULL");
+  MOZ_ASSERT(aCache);
 #ifdef DEBUG
   AssertNotAlreadyCached("uint", aPref, aCache);
 #endif
@@ -4590,7 +4632,7 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
                                    const char* aPref,
                                    uint32_t aDefault)
 {
-  NS_ASSERTION(aCache, "aCache must not be NULL");
+  MOZ_ASSERT(aCache);
 #ifdef DEBUG
   AssertNotAlreadyCached("uint", aPref, aCache);
 #endif
@@ -4649,7 +4691,7 @@ FloatVarChanged(const char* aPref, void* aClosure)
 /* static */ nsresult
 Preferences::AddFloatVarCache(float* aCache, const char* aPref, float aDefault)
 {
-  NS_ASSERTION(aCache, "aCache must not be NULL");
+  MOZ_ASSERT(aCache);
 #ifdef DEBUG
   AssertNotAlreadyCached("float", aPref, aCache);
 #endif
