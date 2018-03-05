@@ -193,6 +193,7 @@ protected:
     virtual nsresult SetFilePath(const nsACString &input);
     virtual nsresult SetQuery(const nsACString &input);
     virtual nsresult SetQueryWithEncoding(const nsACString &input, const Encoding* encoding);
+    bool Deserialize(const mozilla::ipc::URIParams&);
 
 private:
     nsresult Init(uint32_t urlType, int32_t defaultPort, const nsACString &spec,

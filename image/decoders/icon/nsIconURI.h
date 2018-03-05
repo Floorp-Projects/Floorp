@@ -62,6 +62,7 @@ private:
   nsresult SetFilePath(const nsACString &input);
   nsresult SetQuery(const nsACString &input);
   nsresult SetQueryWithEncoding(const nsACString &input, const mozilla::Encoding* encoding);
+  bool Deserialize(const mozilla::ipc::URIParams&);
 
 public:
   class Mutator final

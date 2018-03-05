@@ -102,6 +102,8 @@ protected:
     virtual nsresult EqualsInternal(nsIURI* other,
                                     RefHandlingEnum refHandlingMode,
                                     bool* result) override;
+    bool Deserialize(const mozilla::ipc::URIParams&);
+
 private:
     nsCOMPtr<nsIURI> mBaseURI;
 
