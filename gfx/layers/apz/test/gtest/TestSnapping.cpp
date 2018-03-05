@@ -94,7 +94,7 @@ TEST_F(APZCSnappingTester, Snap_After_Pinch)
   // Allow zooming
   apzc->UpdateZoomConstraints(ZoomConstraints(true, true, CSSToParentLayerScale(0.25f), CSSToParentLayerScale(4.0f)));
 
-  PinchWithPinchInput(apzc, ScreenIntPoint(50, 50), ScreenIntPoint(50, 50), 1.2);
+  PinchWithPinchInput(apzc, ScreenIntPoint(50, 50), ScreenIntPoint(50, 50), 1.2f);
 
   apzc->AssertStateIsSmoothScroll();
 }
