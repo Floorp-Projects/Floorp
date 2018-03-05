@@ -197,6 +197,16 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     return isFragment && this.rawNode.host;
   },
 
+  get isDirectShadowHostChild() {
+    // Pseudo elements are always part of the anonymous tree.
+    if (this.isBeforePseudoElement || this.isAfterPseudoElement) {
+      return false;
+    }
+
+    let parentNode = this.rawNode.parentNode;
+    return parentNode && parentNode.shadowRoot;
+  },
+
   // Estimate the number of children that the walker will return without making
   // a call to children() if possible.
   get numChildren() {
@@ -220,7 +230,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 
     // Normal counting misses ::before/::after.  Also, some anonymous children
     // may ultimately be skipped, so we have to consult with the walker.
-    if (numChildren === 0 || hasAnonChildren) {
+    if (numChildren === 0 || hasAnonChildren || this.isShadowHost) {
       numChildren = this.walker.children(this).nodes.length;
     }
 
