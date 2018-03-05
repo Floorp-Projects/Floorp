@@ -869,6 +869,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                         .beginTransaction()
                         .replace(R.id.container, BrowserFragment.createForSession(session), BrowserFragment.FRAGMENT_TAG)
                         .commit();
+
+                TelemetryWrapper.openFullBrowser();
+
                 break;
             }
 
