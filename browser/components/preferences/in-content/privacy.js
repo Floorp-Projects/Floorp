@@ -125,11 +125,6 @@ var gPrivacyPane = {
   _pane: null,
 
   /**
-   * Whether the use has selected the auto-start private browsing mode in the UI.
-   */
-  _autoStartPrivateBrowsing: false,
-
-  /**
    * Whether the prompt to restart Firefox should appear when changing the autostart pref.
    */
   _shouldPromptForRestart: true,
@@ -531,8 +526,6 @@ var gPrivacyPane = {
   prefsForKeepingHistory: {
     "places.history.enabled": true, // History is enabled
     "browser.formfill.enable": true, // Form information is saved
-    "network.cookie.cookieBehavior": 0, // All cookies are enabled
-    "network.cookie.lifetimePolicy": 0, // Cookies use supplied lifetime
     "privacy.sanitize.sanitizeOnShutdown": false, // Private date is NOT cleared on shutdown
   },
 
@@ -546,8 +539,6 @@ var gPrivacyPane = {
   dependentControls: [
     "rememberHistory",
     "rememberForms",
-    "keepUntil",
-    "keepCookiesUntil",
     "alwaysClear",
     "clearDataSettings"
   ],
@@ -624,11 +615,6 @@ var gPrivacyPane = {
         // select the remember forms history option
         Preferences.get("browser.formfill.enable").value = true;
 
-        // select the allow cookies option
-        Preferences.get("network.cookie.cookieBehavior").value = 0;
-        // select the cookie lifetime policy option
-        Preferences.get("network.cookie.lifetimePolicy").value = 0;
-
         // select the clear on close option
         Preferences.get("privacy.sanitize.sanitizeOnShutdown").value = false;
         break;
@@ -641,12 +627,16 @@ var gPrivacyPane = {
 
   /**
    * Update the privacy micro-management controls based on the
-   * value of the private browsing auto-start checkbox.
+   * value of the private browsing auto-start preference.
    */
   updatePrivacyMicroControls() {
+    // Set "Keep cookies until..." to "I close Nightly" and disable the setting
+    // when we're in auto private mode (or reset it back otherwise).
+    document.getElementById("keepCookiesUntil").value = this.readKeepCookiesUntil();
+    this.readAcceptCookies();
+
     if (document.getElementById("historyMode").value == "custom") {
-      let disabled = this._autoStartPrivateBrowsing =
-        Preferences.get("browser.privatebrowsing.autostart").value;
+      let disabled = Preferences.get("browser.privatebrowsing.autostart").value;
       this.dependentControls.forEach(function(aElement) {
         let control = document.getElementById(aElement);
         let preferenceId = control.getAttribute("preference");
@@ -661,16 +651,6 @@ var gPrivacyPane = {
         let preference = preferenceId ? Preferences.get(preferenceId) : {};
         control.disabled = disabled || preference.locked;
       });
-
-      // adjust the cookie controls status
-      this.readAcceptCookies();
-      let lifetimePolicy = Preferences.get("network.cookie.lifetimePolicy").value;
-      if (lifetimePolicy != Ci.nsICookieService.ACCEPT_NORMALLY &&
-        lifetimePolicy != Ci.nsICookieService.ACCEPT_SESSION &&
-        lifetimePolicy != Ci.nsICookieService.ACCEPT_FOR_N_DAYS) {
-        lifetimePolicy = Ci.nsICookieService.ACCEPT_NORMALLY;
-      }
-      document.getElementById("keepCookiesUntil").value = disabled ? 2 : lifetimePolicy;
 
       // adjust the checked state of the sanitizeOnShutdown checkbox
       document.getElementById("alwaysClear").checked = disabled ? false :
@@ -687,6 +667,61 @@ var gPrivacyPane = {
         this._updateSanitizeSettingsButton();
       }
     }
+  },
+
+  // CLEAR PRIVATE DATA
+
+  /*
+   * Preferences:
+   *
+   * privacy.sanitize.sanitizeOnShutdown
+   * - true if the user's private data is cleared on startup according to the
+   *   Clear Private Data settings, false otherwise
+   */
+
+  /**
+   * Displays the Clear Private Data settings dialog.
+   */
+  showClearPrivateDataSettings() {
+    gSubDialog.open("chrome://browser/content/preferences/sanitize.xul", "resizable=no");
+  },
+
+
+  /**
+   * Displays a dialog from which individual parts of private data may be
+   * cleared.
+   */
+  clearPrivateDataNow(aClearEverything) {
+    var ts = Preferences.get("privacy.sanitize.timeSpan");
+    var timeSpanOrig = ts.value;
+
+    if (aClearEverything) {
+      ts.value = 0;
+    }
+
+    gSubDialog.open("chrome://browser/content/sanitize.xul", "resizable=no", null, () => {
+      // reset the timeSpan pref
+      if (aClearEverything) {
+        ts.value = timeSpanOrig;
+      }
+
+      Services.obs.notifyObservers(null, "clear-private-data");
+    });
+  },
+
+  /**
+   * Enables or disables the "Settings..." button depending
+   * on the privacy.sanitize.sanitizeOnShutdown preference value
+   */
+  _updateSanitizeSettingsButton() {
+    var settingsButton = document.getElementById("clearDataSettings");
+    var sanitizeOnShutdownPref = Preferences.get("privacy.sanitize.sanitizeOnShutdown");
+
+    settingsButton.disabled = !sanitizeOnShutdownPref.value;
+  },
+
+  toggleDoNotDisturbNotifications(event) {
+    AlertsServiceDND.manualDoNotDisturb = event.target.checked;
   },
 
   // PRIVATE BROWSING
@@ -774,19 +809,7 @@ var gPrivacyPane = {
       null, params);
   },
 
-  // HISTORY
-
-  /*
-   * Preferences:
-   *
-   * places.history.enabled
-   * - whether history is enabled or not
-   * browser.formfill.enable
-   * - true if entries in forms and the search bar should be saved, false
-   *   otherwise
-   */
-
-  // COOKIES
+  // COOKIES AND SITE DATA
 
   /*
    * Preferences:
@@ -804,6 +827,22 @@ var gPrivacyPane = {
    *     2   means keep cookies until the browser is closed
    */
 
+  readKeepCookiesUntil() {
+    let privateBrowsing = Preferences.get("browser.privatebrowsing.autostart").value;
+    if (privateBrowsing) {
+      return "2";
+    }
+
+    let lifetimePolicy = Preferences.get("network.cookie.lifetimePolicy").value;
+    if (lifetimePolicy != Ci.nsICookieService.ACCEPT_NORMALLY &&
+      lifetimePolicy != Ci.nsICookieService.ACCEPT_SESSION &&
+      lifetimePolicy != Ci.nsICookieService.ACCEPT_FOR_N_DAYS) {
+      return Ci.nsICookieService.ACCEPT_NORMALLY;
+    }
+
+    return lifetimePolicy;
+  },
+
   /**
    * Reads the network.cookie.cookieBehavior preference value and
    * enables/disables the rest of the cookie UI accordingly, returning true
@@ -820,7 +859,9 @@ var gPrivacyPane = {
     var acceptCookies = (pref.value != 2);
 
     acceptThirdPartyLabel.disabled = acceptThirdPartyMenu.disabled = !acceptCookies;
-    keepUntil.disabled = menu.disabled = this._autoStartPrivateBrowsing || !acceptCookies;
+
+    let privateBrowsing = Preferences.get("browser.privatebrowsing.autostart").value;
+    keepUntil.disabled = menu.disabled = privateBrowsing || !acceptCookies;
 
     // Our top-level setting is a radiogroup that only sets "enable all"
     // and "disable all", so convert the pref value accordingly.
@@ -893,59 +934,35 @@ var gPrivacyPane = {
       null, params);
   },
 
-  // CLEAR PRIVATE DATA
-
-  /*
-   * Preferences:
-   *
-   * privacy.sanitize.sanitizeOnShutdown
-   * - true if the user's private data is cleared on startup according to the
-   *   Clear Private Data settings, false otherwise
-   */
-
-  /**
-   * Displays the Clear Private Data settings dialog.
-   */
-  showClearPrivateDataSettings() {
-    gSubDialog.open("chrome://browser/content/preferences/sanitize.xul", "resizable=no");
+  showSiteDataSettings() {
+    gSubDialog.open("chrome://browser/content/preferences/siteDataSettings.xul");
   },
 
+  toggleSiteData(shouldShow) {
+    let clearButton = document.getElementById("clearSiteDataButton");
+    let settingsButton = document.getElementById("siteDataSettings");
+    clearButton.disabled = !shouldShow;
+    settingsButton.disabled = !shouldShow;
+  },
 
-  /**
-   * Displays a dialog from which individual parts of private data may be
-   * cleared.
-   */
-  clearPrivateDataNow(aClearEverything) {
-    var ts = Preferences.get("privacy.sanitize.timeSpan");
-    var timeSpanOrig = ts.value;
+  showSiteDataLoading() {
+    let totalSiteDataSizeLabel = document.getElementById("totalSiteDataSize");
+    let prefStrBundle = document.getElementById("bundlePreferences");
+    totalSiteDataSizeLabel.textContent = prefStrBundle.getString("loadingSiteDataSize1");
+  },
 
-    if (aClearEverything) {
-      ts.value = 0;
-    }
-
-    gSubDialog.open("chrome://browser/content/sanitize.xul", "resizable=no", null, () => {
-      // reset the timeSpan pref
-      if (aClearEverything) {
-        ts.value = timeSpanOrig;
-      }
-
-      Services.obs.notifyObservers(null, "clear-private-data");
+  updateTotalDataSizeLabel(siteDataUsage) {
+    SiteDataManager.getCacheSize().then(function(cacheUsage) {
+      let prefStrBundle = document.getElementById("bundlePreferences");
+      let totalSiteDataSizeLabel = document.getElementById("totalSiteDataSize");
+      let totalUsage = siteDataUsage + cacheUsage;
+      let size = DownloadUtils.convertByteUnits(totalUsage);
+      totalSiteDataSizeLabel.textContent = prefStrBundle.getFormattedString("totalSiteDataSize2", size);
     });
   },
 
-  /**
-   * Enables or disables the "Settings..." button depending
-   * on the privacy.sanitize.sanitizeOnShutdown preference value
-   */
-  _updateSanitizeSettingsButton() {
-    var settingsButton = document.getElementById("clearDataSettings");
-    var sanitizeOnShutdownPref = Preferences.get("privacy.sanitize.sanitizeOnShutdown");
-
-    settingsButton.disabled = !sanitizeOnShutdownPref.value;
-  },
-
-  toggleDoNotDisturbNotifications(event) {
-    AlertsServiceDND.manualDoNotDisturb = event.target.checked;
+  clearSiteData() {
+    gSubDialog.open("chrome://browser/content/preferences/clearSiteData.xul");
   },
 
   // GEOLOCATION
@@ -1385,37 +1402,6 @@ var gPrivacyPane = {
    */
   showSecurityDevices() {
     gSubDialog.open("chrome://pippki/content/device_manager.xul");
-  },
-
-  showSiteDataSettings() {
-    gSubDialog.open("chrome://browser/content/preferences/siteDataSettings.xul");
-  },
-
-  toggleSiteData(shouldShow) {
-    let clearButton = document.getElementById("clearSiteDataButton");
-    let settingsButton = document.getElementById("siteDataSettings");
-    clearButton.disabled = !shouldShow;
-    settingsButton.disabled = !shouldShow;
-  },
-
-  showSiteDataLoading() {
-    let totalSiteDataSizeLabel = document.getElementById("totalSiteDataSize");
-    let prefStrBundle = document.getElementById("bundlePreferences");
-    totalSiteDataSizeLabel.textContent = prefStrBundle.getString("loadingSiteDataSize1");
-  },
-
-  updateTotalDataSizeLabel(siteDataUsage) {
-    SiteDataManager.getCacheSize().then(function(cacheUsage) {
-      let prefStrBundle = document.getElementById("bundlePreferences");
-      let totalSiteDataSizeLabel = document.getElementById("totalSiteDataSize");
-      let totalUsage = siteDataUsage + cacheUsage;
-      let size = DownloadUtils.convertByteUnits(totalUsage);
-      totalSiteDataSizeLabel.textContent = prefStrBundle.getFormattedString("totalSiteDataSize2", size);
-    });
-  },
-
-  clearSiteData() {
-    gSubDialog.open("chrome://browser/content/preferences/clearSiteData.xul");
   },
 
   initDataCollection() {
