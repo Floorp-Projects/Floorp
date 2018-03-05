@@ -49,8 +49,8 @@ job-defaults:
             default: null
       last-watershed:
          by-project:
-            birch: "57.0"
-            mozilla-release: "57.0"
+            birch: "56.0b3"
+            mozilla-release: "56.0b3"
             default: null
       mar-channel-id-override:
          by-project:
