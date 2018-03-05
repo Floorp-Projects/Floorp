@@ -32,8 +32,12 @@ public:
     dom::Nullable<double> result;
 
     if (!aTime.IsNull()) {
+      // 0 is an inappropriate mixin for this this area; however CSS Animations needs to
+      // have it's Time Reduction Logic refactored, so it's currently only clamping for
+      // RFP mode. RFP mode gives a much lower time precision, so we accept the security
+      // leak here for now
       result.SetValue(
-        nsRFPService::ReduceTimePrecisionAsMSecs(aTime.Value().ToMilliseconds(), TimerPrecisionType::RFPOnly)
+        nsRFPService::ReduceTimePrecisionAsMSecs(aTime.Value().ToMilliseconds(), 0, TimerPrecisionType::RFPOnly)
       );
     }
 
