@@ -34,7 +34,6 @@ of the License or (at your option) any later version.
 #include <cstdlib>
 #include <new>
 
-#include "Main.h"
 
 namespace graphite2 {
 
@@ -105,9 +104,7 @@ void Vector<T>::reserve(size_t n)
     if (n > capacity()) 
     {
         const ptrdiff_t sz = size();
-        size_t requested;
-        if (checked_mul(n,sizeof(T), requested))  std::abort();
-        m_first = static_cast<T*>(realloc(m_first, requested));
+        m_first = static_cast<T*>(realloc(m_first, n*sizeof(T)));
         if (!m_first)   std::abort();
         m_last  = m_first + sz;
         m_end   = m_first + n;

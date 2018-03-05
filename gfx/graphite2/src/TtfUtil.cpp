@@ -341,11 +341,6 @@ bool CheckTable(const Tag TableId, const void * pTable, size_t lTableSize)
         return be::swap(pName->format) == 0;
     }
 
-    case Tag::glyf:
-    {
-        return (lTableSize >= sizeof(Sfnt::Glyph));
-    }
-
     default:
         break;
     }
@@ -469,7 +464,7 @@ void HeadTableModifyTime(const void * pHead,
 {
     const Sfnt::FontHeader * pTable = 
             reinterpret_cast<const Sfnt::FontHeader *>(pHead);
-   ; 
+    
     *pnDateBC = be::swap(pTable->modified[0]);
     *pnDateAD = be::swap(pTable->modified[1]);
 }
@@ -1252,7 +1247,7 @@ size_t LocaLookup(gid16 nGlyphId,
 void * GlyfLookup(const void * pGlyf, size_t nGlyfOffset, size_t nTableLen)
 {
     const uint8 * pByte = reinterpret_cast<const uint8 *>(pGlyf);
-        if (nGlyfOffset + pByte < pByte || nGlyfOffset >= nTableLen - sizeof(Sfnt::Glyph))
+        if (nGlyfOffset + pByte < pByte || nGlyfOffset + sizeof(Sfnt::Glyph) >= nTableLen)
             return NULL;
     return const_cast<uint8 *>(pByte + nGlyfOffset);
 }

@@ -44,7 +44,6 @@ public:
     float scale() const;
     bool isHinted() const;
     const Face & face() const;
-    operator bool () const throw()  { return m_advances; }
 
     CLASS_NEW_DELETE;
 private:

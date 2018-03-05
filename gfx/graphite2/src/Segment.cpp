@@ -59,9 +59,7 @@ Segment::Segment(unsigned int numchars, const Face* face, uint32 script, int tex
   m_dir(textDir),
   m_flags(((m_silf->flags() & 0x20) != 0) << 1)
 {
-    Slot *s = newSlot();
-    if (s)
-        freeSlot(s);
+    freeSlot(newSlot());
     m_bufSize = log_binary(numchars)+1;
 }
 
