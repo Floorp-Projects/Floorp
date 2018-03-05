@@ -77,6 +77,14 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       }
       this.mutationObserver = null;
     }
+
+    if (this.slotchangeListener) {
+      if (!InspectorActorUtils.isNodeDead(this)) {
+        this.rawNode.removeEventListener("slotchange", this.slotchangeListener);
+      }
+      this.slotchangeListener = null;
+    }
+
     this.rawNode = null;
     this.walker = null;
   },
@@ -166,6 +174,14 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       subtree: true
     });
     this.mutationObserver = observer;
+  },
+
+  /**
+   * Watch for all "slotchange" events on the node.
+   */
+  watchSlotchange: function(callback) {
+    this.slotchangeListener = callback;
+    this.rawNode.addEventListener("slotchange", this.slotchangeListener);
   },
 
   get isBeforePseudoElement() {
