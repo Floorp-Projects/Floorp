@@ -477,6 +477,11 @@ partial interface Document {
   readonly attribute FlashClassification documentFlashClassification;
 };
 
+// Allows about: pages to query aboutCapabilities
+partial interface Document {
+  [Throws, Func="nsDocument::CallerIsTrustedAboutPage"] readonly attribute AboutCapabilities aboutCapabilities;
+};
+
 Document implements XPathEvaluator;
 Document implements GlobalEventHandlers;
 Document implements DocumentAndElementEventHandlers;
