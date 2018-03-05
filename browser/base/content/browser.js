@@ -1286,7 +1286,7 @@ var gBrowserInit = {
     BrowserOnClick.init();
     FeedHandler.init();
     CompactTheme.init();
-    AboutPrivateBrowsingListener.init();
+    AboutCapabilitiesListener.init();
     TrackingProtection.init();
     CaptivePortalWatcher.init();
     ZoomUI.init(window);
@@ -1857,6 +1857,8 @@ var gBrowserInit = {
     FeedHandler.uninit();
 
     CompactTheme.uninit();
+
+    AboutCapabilitiesListener.uninit();
 
     TrackingProtection.uninit();
 
@@ -9033,25 +9035,37 @@ var PanicButtonNotifier = {
   },
 };
 
-var AboutPrivateBrowsingListener = {
+var AboutCapabilitiesListener = {
+  _topics: [
+    "AboutCapabilities:OpenPrivateWindow",
+    "AboutCapabilities:DontShowIntroPanelAgain",
+  ],
+
   init() {
-    window.messageManager.addMessageListener(
-      "AboutPrivateBrowsing:OpenPrivateWindow",
-      msg => {
+    let mm = window.messageManager;
+    for (let topic of this._topics) {
+      mm.addMessageListener(topic, this);
+    }
+  },
+
+  uninit() {
+    let mm = window.messageManager;
+    for (let topic of this._topics) {
+      mm.removeMessageListener(topic, this);
+    }
+  },
+
+  receiveMessage(aMsg) {
+    switch (aMsg.name) {
+      case "AboutCapabilities:OpenPrivateWindow":
         OpenBrowserWindow({private: true});
-    });
-    window.messageManager.addMessageListener(
-      "AboutPrivateBrowsing:ToggleTrackingProtection",
-      msg => {
-        const PREF = "privacy.trackingprotection.pbmode.enabled";
-        Services.prefs.setBoolPref(PREF, !Services.prefs.getBoolPref(PREF));
-    });
-    window.messageManager.addMessageListener(
-      "AboutPrivateBrowsing:DontShowIntroPanelAgain",
-      msg => {
+        break;
+
+      case "AboutCapabilities:DontShowIntroPanelAgain":
         TrackingProtection.dontShowIntroPanelAgain();
-    });
-  }
+        break;
+    }
+  },
 };
 
 const SafeBrowsingNotificationBox = {
