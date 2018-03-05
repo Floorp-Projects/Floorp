@@ -49,6 +49,7 @@ done
 
 # Generate snapcraft manifest
 sed -e "s/@VERSION@/${VERSION}/g" -e "s/@BUILD_NUMBER@/${BUILD_NUMBER}/g" snapcraft.yaml.in > "${WORKSPACE}/snapcraft.yaml"
+cp -v "$SCRIPT_DIRECTORY/mime{-handler.xml,apps.list}" "$WORKSPACE"
 cd "${WORKSPACE}"
 snapcraft
 
