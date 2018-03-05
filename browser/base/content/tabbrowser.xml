@@ -1862,7 +1862,7 @@
           } else {
             if (browser.audioMuted) {
               if (this.linkedPanel) {
-+               //"Lazy Browser" should not invoke its unmute method
+                // "Lazy Browser" should not invoke its unmute method
                 browser.unmute();
               }
               this.removeAttribute("muted");
@@ -1870,7 +1870,7 @@
               hist.add(1 /* unmute */);
             } else {
               if (this.linkedPanel) {
-+               //"Lazy Browser" should not invoke its unmute method
+                // "Lazy Browser" should not invoke its unmute method
                 browser.mute();
               }
               this.setAttribute("muted", "true");
