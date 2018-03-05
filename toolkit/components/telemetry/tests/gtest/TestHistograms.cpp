@@ -722,3 +722,88 @@ TEST_F(TelemetryTestFixture, AccumulateKeyedCategoricalHistogram_MultipleEnumVal
         << "The sampleKey histogram did not accumulate the correct number of Label2 samples";
 }
 
+TEST_F(TelemetryTestFixture, AccumulateTimeDelta)
+{
+  const uint32_t kExpectedValue = 100;
+  const TimeStamp start = TimeStamp::Now();
+  const TimeDuration delta = TimeDuration::FromMilliseconds(50);
+
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  GetAndClearHistogram(cx.GetJSContext(), mTelemetry, NS_LITERAL_CSTRING("TELEMETRY_TEST_COUNT"),
+                       false);
+
+  // Accumulate in the histogram
+  Telemetry::AccumulateTimeDelta(Telemetry::TELEMETRY_TEST_COUNT, start - delta, start);
+
+  Telemetry::AccumulateTimeDelta(Telemetry::TELEMETRY_TEST_COUNT, start - delta, start);
+
+  Telemetry::AccumulateTimeDelta(Telemetry::TELEMETRY_TEST_COUNT, start, start);
+
+  // end > start timestamp gives zero contribution
+  Telemetry::AccumulateTimeDelta(Telemetry::TELEMETRY_TEST_COUNT, start + delta, start);
+
+  // Get a snapshot for all the histograms
+  JS::RootedValue snapshot(cx.GetJSContext());
+  GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_COUNT", &snapshot, false);
+
+  // Get the histogram from the snapshot
+  JS::RootedValue histogram(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_COUNT", snapshot, &histogram);
+
+  // Get "sum" property from histogram
+  JS::RootedValue sum(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "sum", histogram,  &sum);
+
+  // Check that the "sum" stored in the histogram matches with |kExpectedValue|
+  uint32_t uSum = 0;
+  JS::ToUint32(cx.GetJSContext(), sum, &uSum);
+  ASSERT_EQ(uSum, kExpectedValue) << "The histogram is not returning expected value";
+}
+
+TEST_F(TelemetryTestFixture, AccumulateKeyedTimeDelta)
+{
+  const uint32_t kExpectedValue = 100;
+  const TimeStamp start = TimeStamp::Now();
+  const TimeDuration delta = TimeDuration::FromMilliseconds(50);
+
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  GetAndClearHistogram(cx.GetJSContext(), mTelemetry,
+                       NS_LITERAL_CSTRING("TELEMETRY_TEST_KEYED_COUNT"), true);
+
+  // Accumulate time delta in the provided key within the histogram
+  Telemetry::AccumulateTimeDelta(Telemetry::TELEMETRY_TEST_KEYED_COUNT, NS_LITERAL_CSTRING("sample"),
+                                 start - delta, start);
+
+  Telemetry::AccumulateTimeDelta(Telemetry::TELEMETRY_TEST_KEYED_COUNT, NS_LITERAL_CSTRING("sample"),
+                                 start - delta, start);
+
+  // end > start timestamp gives zero contribution
+  Telemetry::AccumulateTimeDelta(Telemetry::TELEMETRY_TEST_KEYED_COUNT, NS_LITERAL_CSTRING("sample"),
+                                 start + delta, start);
+
+  Telemetry::AccumulateTimeDelta(Telemetry::TELEMETRY_TEST_KEYED_COUNT, NS_LITERAL_CSTRING("sample"),
+                                 start, start);
+
+  // Get a snapshot for all the histograms
+  JS::RootedValue snapshot(cx.GetJSContext());
+  GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_KEYED_COUNT", &snapshot, true);
+
+  // Get the histogram from the snapshot
+  JS::RootedValue histogram(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_KEYED_COUNT", snapshot, &histogram);
+
+  // Get "sample" property from histogram
+  JS::RootedValue expectedKeyData(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "sample", histogram,  &expectedKeyData);
+
+  // Get "sum" property from keyed data
+  JS::RootedValue sum(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "sum", expectedKeyData,  &sum);
+
+  // Check that the sum stored in the histogram matches with |kExpectedValue|
+  uint32_t uSum = 0;
+  JS::ToUint32(cx.GetJSContext(), sum, &uSum);
+  ASSERT_EQ(uSum, kExpectedValue) << "The histogram is not returning expected sum";
+}
