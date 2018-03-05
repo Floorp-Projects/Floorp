@@ -44,8 +44,8 @@ job-defaults:
             default: "https://aus5.mozilla.org"
       include-version:
          by-project:
-            birch: nonbeta
-            mozilla-release: nonbeta
+            birch: beta
+            mozilla-release: beta
             default: null
       last-watershed:
          by-project:
