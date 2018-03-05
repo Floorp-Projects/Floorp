@@ -159,11 +159,11 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * Watch the given document node for mutations using the DOM observer
    * API.
    */
-  watchDocument: function(callback) {
+  watchDocument: function(doc, callback) {
     let node = this.rawNode;
     // Create the observer on the node's actor.  The node will make sure
     // the observer is cleaned up when the actor is released.
-    let observer = new node.defaultView.MutationObserver(callback);
+    let observer = new doc.defaultView.MutationObserver(callback);
     observer.mergeAttributeRecords = true;
     observer.observe(node, {
       nativeAnonymousChildList: true,
