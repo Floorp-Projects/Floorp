@@ -73,7 +73,7 @@ static const opcode_t opcode_table[] =
     {{do2(gtr_eq)},                                 0, "GTR_EQ"},   // 0x18
 
     {{do_(next), NILOP},                            0, "NEXT"},
-    {{do_(next_n), NILOP},                          1, "NEXT_N"},                   // number <= smap.end - map
+    {{NILOP, NILOP},                                1, "NEXT_N"},                   // number <= smap.end - map
     {{do_(next), NILOP},                            0, "COPY_NEXT"},
     {{do_(put_glyph_8bit_obs), NILOP},              1, "PUT_GLYPH_8BIT_OBS"},       // output_class
     {{do_(put_subs_8bit_obs), NILOP},               3, "PUT_SUBS_8BIT_OBS"},        // slot input_class output_class

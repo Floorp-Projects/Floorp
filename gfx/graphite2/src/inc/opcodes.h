@@ -26,7 +26,7 @@ of the License or (at your option) any later version.
 */
 #pragma once
 // This file will be pulled into and integrated into a machine implmentation
-// DO NOT build directly and under no circumstances every #include headers in 
+// DO NOT build directly and under no circumstances ever #include headers in
 // here or you will break the direct_machine.
 //
 // Implementers' notes
@@ -65,7 +65,7 @@ of the License or (at your option) any later version.
      
 
 // #define NOT_IMPLEMENTED     assert(false)
-#define NOT_IMPLEMENTED
+// #define NOT_IMPLEMENTED
 
 #define binop(op)           const uint32 a = pop(); *sp = uint32(*sp) op a
 #define sbinop(op)          const int32 a = pop(); *sp = int32(*sp) op a
@@ -130,8 +130,10 @@ STARTOP(mul)
 ENDOP
 
 STARTOP(div_)
-    if (*sp == 0) DIE;
-    sbinop(/);
+    const int32 b = pop();
+    const int32 a = int32(*sp);
+    if (b == 0 || (a == std::numeric_limits<int32>::min() && b == -1)) DIE;
+    *sp = int32(*sp) / b;
 ENDOP
 
 STARTOP(min_)
@@ -208,12 +210,12 @@ STARTOP(next)
     ++map;
 ENDOP
 
-STARTOP(next_n)
-    use_params(1);
-    NOT_IMPLEMENTED;
+//STARTOP(next_n)
+//    use_params(1);
+//    NOT_IMPLEMENTED;
     //declare_params(1);
     //const size_t num = uint8(*param);
-ENDOP
+//ENDOP
 
 //STARTOP(copy_next)
 //     if (is) is = is->next();
@@ -337,6 +339,7 @@ STARTOP(delete_)
     else
         seg.last(is->prev());
     
+
     if (is == smap.highwater())
             smap.highwater(is->next());
     if (is->prev())
