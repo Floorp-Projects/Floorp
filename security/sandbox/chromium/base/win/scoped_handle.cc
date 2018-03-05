@@ -90,7 +90,10 @@ class ActiveVerifier {
   virtual HMODULE GetModule() const;
 
  private:
-  ~ActiveVerifier();  // Not implemented.
+   ~ActiveVerifier() 
+   {
+     printf("wibble: ~ActiveVerifier\n");
+   }  // Not implemented.
 
   static void InstallVerifier();
 

@@ -56,6 +56,7 @@ private:
   nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
   nsCOMPtr<nsIPrintProgressParams> mPrintProgressParams;
   bool mActive;
+  bool mDialogOpenedSent = false;
 };
 
 } // namespace embedding
