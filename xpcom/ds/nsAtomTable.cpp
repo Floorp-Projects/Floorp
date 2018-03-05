@@ -64,10 +64,37 @@ enum class GCKind {
 // See nsAtom::AddRef() and nsAtom::Release().
 static Atomic<int32_t, ReleaseAcquire> gUnusedAtomCount(0);
 
+// Dynamic atoms need a ref count; this class adds that to nsAtom.
+class nsDynamicAtom : public nsAtom
+{
+public:
+  // We can't use NS_INLINE_DECL_THREADSAFE_REFCOUNTING because the refcounting
+  // of this type is special.
+  MozExternalRefCountType AddRef();
+  MozExternalRefCountType Release();
+
+  static nsDynamicAtom* As(nsAtom* aAtom)
+  {
+    MOZ_ASSERT(aAtom->IsDynamicAtom());
+    return static_cast<nsDynamicAtom*>(aAtom);
+  }
+
+private:
+  friend class nsAtomTable;
+  friend class nsAtomSubTable;
+
+  // Construction is done by |friend|s.
+  nsDynamicAtom(const nsAString& aString, uint32_t aHash)
+    : nsAtom(AtomKind::DynamicAtom, aString, aHash)
+    , mRefCnt(1)
+  {}
+
+  mozilla::ThreadSafeAutoRefCnt mRefCnt;
+};
+
 // This constructor is for dynamic atoms and HTML5 atoms.
 nsAtom::nsAtom(AtomKind aKind, const nsAString& aString, uint32_t aHash)
-  : mRefCnt(1)
-  , mLength(aString.Length())
+  : mLength(aString.Length())
   , mKind(static_cast<uint32_t>(aKind))
   , mHash(aHash)
 {
@@ -88,7 +115,7 @@ nsAtom::nsAtom(AtomKind aKind, const nsAString& aString, uint32_t aHash)
     mString[mLength] = char16_t(0);
   }
 
-  MOZ_ASSERT_IF(IsDynamicAtom(), mHash == HashString(mString, mLength));
+  MOZ_ASSERT_IF(!IsHTML5Atom(), mHash == HashString(mString, mLength));
 
   MOZ_ASSERT(mString[mLength] == char16_t(0), "null terminated");
   MOZ_ASSERT(buf && buf->StorageSize() >= (mLength + 1) * sizeof(char16_t),
@@ -474,7 +501,8 @@ nsAtomSubTable::GCLocked(GCKind aKind)
     }
 
     nsAtom* atom = entry->mAtom;
-    if (atom->mRefCnt == 0) {
+    MOZ_ASSERT(!atom->IsHTML5Atom());
+    if (atom->IsDynamicAtom() && nsDynamicAtom::As(atom)->mRefCnt == 0) {
       i.Remove();
       delete atom;
       ++removedCount;
@@ -516,15 +544,9 @@ GCAtomTable()
   }
 }
 
-MozExternalRefCountType
-nsAtom::AddRef()
+MOZ_ALWAYS_INLINE MozExternalRefCountType
+nsDynamicAtom::AddRef()
 {
-  MOZ_ASSERT(!IsHTML5Atom(), "Attempt to AddRef an HTML5 atom");
-  if (!IsDynamicAtom()) {
-    MOZ_ASSERT(IsStaticAtom());
-    return 2;
-  }
-
   MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
   nsrefcnt count = ++mRefCnt;
   if (count == 1) {
@@ -533,15 +555,9 @@ nsAtom::AddRef()
   return count;
 }
 
-MozExternalRefCountType
-nsAtom::Release()
+MOZ_ALWAYS_INLINE MozExternalRefCountType
+nsDynamicAtom::Release()
 {
-  MOZ_ASSERT(!IsHTML5Atom(), "Attempt to Release an HTML5 atom");
-  if (!IsDynamicAtom()) {
-    MOZ_ASSERT(IsStaticAtom());
-    return 1;
-  }
-
   #ifdef DEBUG
   // We set a lower GC threshold for atoms in debug builds so that we exercise
   // the GC machinery more often.
@@ -559,6 +575,22 @@ nsAtom::Release()
   }
 
   return count;
+}
+
+MozExternalRefCountType
+nsAtom::AddRef()
+{
+  MOZ_ASSERT(!IsHTML5Atom(), "Attempt to AddRef an HTML5 atom");
+
+  return IsStaticAtom() ? 2 : nsDynamicAtom::As(this)->AddRef();
+}
+
+MozExternalRefCountType
+nsAtom::Release()
+{
+  MOZ_ASSERT(!IsHTML5Atom(), "Attempt to Release an HTML5 atom");
+
+  return IsStaticAtom() ? 1 : nsDynamicAtom::As(this)->Release();
 }
 
 //----------------------------------------------------------------------
@@ -706,8 +738,7 @@ nsAtomTable::Atomize(const nsACString& aUTF8String)
   // Actually, now there is, sort of: ForgetSharedBuffer.
   nsString str;
   CopyUTF8toUTF16(aUTF8String, str);
-  RefPtr<nsAtom> atom =
-    dont_AddRef(new nsAtom(nsAtom::AtomKind::DynamicAtom, str, hash));
+  RefPtr<nsAtom> atom = dont_AddRef(new nsDynamicAtom(str, hash));
 
   he->mAtom = atom;
 
@@ -743,8 +774,7 @@ nsAtomTable::Atomize(const nsAString& aUTF16String)
     return atom.forget();
   }
 
-  RefPtr<nsAtom> atom =
-    dont_AddRef(new nsAtom(nsAtom::AtomKind::DynamicAtom, aUTF16String, hash));
+  RefPtr<nsAtom> atom = dont_AddRef(new nsDynamicAtom(aUTF16String, hash));
   he->mAtom = atom;
 
   return atom.forget();
@@ -783,8 +813,7 @@ nsAtomTable::AtomizeMainThread(const nsAString& aUTF16String)
   if (he->mAtom) {
     retVal = he->mAtom;
   } else {
-    RefPtr<nsAtom> newAtom = dont_AddRef(
-      new nsAtom(nsAtom::AtomKind::DynamicAtom, aUTF16String, hash));
+    RefPtr<nsAtom> newAtom = dont_AddRef(new nsDynamicAtom(aUTF16String, hash));
     he->mAtom = newAtom;
     retVal = newAtom.forget();
   }

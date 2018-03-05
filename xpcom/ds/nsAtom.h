@@ -88,15 +88,15 @@ private:
   friend class nsAtomSubTable;
   friend class nsHtml5AtomEntry;
 
-  // Dynamic atom construction is done by |friend|s.
+protected:
+  // Used by nsDynamicAtom and directly (by nsHtml5AtomEntry) for HTML5 atoms.
   nsAtom(AtomKind aKind, const nsAString& aString, uint32_t aHash);
 
-protected:
+  // Used by nsStaticAtom.
   nsAtom(const char16_t* aString, uint32_t aLength, uint32_t aHash);
 
   ~nsAtom();
 
-  mozilla::ThreadSafeAutoRefCnt mRefCnt;
   uint32_t mLength: 30;
   uint32_t mKind: 2; // nsAtom::AtomKind
   uint32_t mHash;
@@ -118,7 +118,7 @@ class nsStaticAtom : public nsAtom
 {
 public:
   // These are deleted so it's impossible to RefPtr<nsStaticAtom>. Raw
-  // nsStaticAtom atoms should be used instead.
+  // nsStaticAtom pointers should be used instead.
   MozExternalRefCountType AddRef() = delete;
   MozExternalRefCountType Release() = delete;
 
