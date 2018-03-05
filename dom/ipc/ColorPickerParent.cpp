@@ -31,7 +31,7 @@ NS_IMETHODIMP
 ColorPickerParent::ColorPickerShownCallback::Done(const nsAString& aColor)
 {
   if (mColorPickerParent) {
-    Unused << mColorPickerParent->Send__delete__(mColorPickerParent,
+    Unused << ColorPickerParent::Send__delete__(mColorPickerParent,
                                                  nsString(aColor));
   }
   return NS_OK;

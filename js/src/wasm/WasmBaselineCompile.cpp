@@ -1133,7 +1133,7 @@ class BaseStackFrame
 #endif
         maxFramePushed_(0),
         stackAddOffset_(0),
-        sp_(masm.getStackPointer())
+        sp_(MacroAssembler::getStackPointer())
     {}
 
     //////////////////////////////////////////////////////////////////////
@@ -3175,9 +3175,9 @@ class BaseCompiler final : public BaseCompilerInterface
             // Initialize funcIndex and flag fields of DebugFrame.
             size_t debugFrame = masm.framePushed() - DebugFrame::offsetOfFrame();
             masm.store32(Imm32(func_.index),
-                         Address(masm.getStackPointer(), debugFrame + DebugFrame::offsetOfFuncIndex()));
+                         Address(MacroAssembler::getStackPointer(), debugFrame + DebugFrame::offsetOfFuncIndex()));
             masm.storePtr(ImmWord(0),
-                          Address(masm.getStackPointer(), debugFrame + DebugFrame::offsetOfFlagsWord()));
+                          Address(MacroAssembler::getStackPointer(), debugFrame + DebugFrame::offsetOfFlagsWord()));
         }
 
         fr.allocStack(ABINonArgReg0, trapOffset);
@@ -3219,7 +3219,7 @@ class BaseCompiler final : public BaseCompilerInterface
     void saveResult() {
         MOZ_ASSERT(debugEnabled_);
         size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
-        Address resultsAddress(masm.getStackPointer(), debugFrameOffset + DebugFrame::offsetOfResults());
+        Address resultsAddress(MacroAssembler::getStackPointer(), debugFrameOffset + DebugFrame::offsetOfResults());
         switch (sig().ret()) {
           case ExprType::Void:
             break;
@@ -3243,7 +3243,7 @@ class BaseCompiler final : public BaseCompilerInterface
     void restoreResult() {
         MOZ_ASSERT(debugEnabled_);
         size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
-        Address resultsAddress(masm.getStackPointer(), debugFrameOffset + DebugFrame::offsetOfResults());
+        Address resultsAddress(MacroAssembler::getStackPointer(), debugFrameOffset + DebugFrame::offsetOfResults());
         switch (sig().ret()) {
           case ExprType::Void:
             break;
@@ -3437,7 +3437,7 @@ class BaseCompiler final : public BaseCompilerInterface
             if (argLoc.kind() == ABIArg::Stack) {
                 ScratchI32 scratch(*this);
                 loadI32(arg, scratch);
-                masm.store32(scratch, Address(masm.getStackPointer(), argLoc.offsetFromArgBase()));
+                masm.store32(scratch, Address(MacroAssembler::getStackPointer(), argLoc.offsetFromArgBase()));
             } else {
                 loadI32(arg, RegI32(argLoc.gpr()));
             }
@@ -3449,7 +3449,7 @@ class BaseCompiler final : public BaseCompilerInterface
                 ScratchI32 scratch(*this);
 #ifdef JS_PUNBOX64
                 loadI64(arg, fromI32(scratch));
-                masm.storePtr(scratch, Address(masm.getStackPointer(), argLoc.offsetFromArgBase()));
+                masm.storePtr(scratch, Address(MacroAssembler::getStackPointer(), argLoc.offsetFromArgBase()));
 #else
                 loadI64Low(arg, scratch);
                 masm.store32(scratch, LowWord(Address(masm.getStackPointer(), argLoc.offsetFromArgBase())));
@@ -3467,7 +3467,7 @@ class BaseCompiler final : public BaseCompilerInterface
               case ABIArg::Stack: {
                 ScratchF64 scratch(*this);
                 loadF64(arg, scratch);
-                masm.storeDouble(scratch, Address(masm.getStackPointer(), argLoc.offsetFromArgBase()));
+                masm.storeDouble(scratch, Address(MacroAssembler::getStackPointer(), argLoc.offsetFromArgBase()));
                 break;
               }
 #if defined(JS_CODEGEN_REGISTER_PAIR)
@@ -3507,7 +3507,7 @@ class BaseCompiler final : public BaseCompilerInterface
               case ABIArg::Stack: {
                 ScratchF32 scratch(*this);
                 loadF32(arg, scratch);
-                masm.storeFloat32(scratch, Address(masm.getStackPointer(), argLoc.offsetFromArgBase()));
+                masm.storeFloat32(scratch, Address(MacroAssembler::getStackPointer(), argLoc.offsetFromArgBase()));
                 break;
               }
               case ABIArg::GPR: {

@@ -329,7 +329,7 @@ nsDOMWindowUtils::GetPhysicalMillimeterInCSSPixels(float* aPhysicalMillimeter)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  *aPhysicalMillimeter = presContext->AppUnitsToFloatCSSPixels(
+  *aPhysicalMillimeter = nsPresContext::AppUnitsToFloatCSSPixels(
     presContext->PhysicalMillimetersToAppUnits(1));
   return NS_OK;
 }

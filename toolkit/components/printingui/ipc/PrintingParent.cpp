@@ -187,9 +187,9 @@ PrintingParent::RecvShowPrintDialog(PPrintSettingsDialogParent* aDialog,
   // with an async message which frees the child process from
   // its nested event loop.
   if (NS_FAILED(rv)) {
-    mozilla::Unused << aDialog->Send__delete__(aDialog, rv);
+    mozilla::Unused << PPrintingParent::PPrintSettingsDialogParent::Send__delete__(aDialog, rv);
   } else {
-    mozilla::Unused << aDialog->Send__delete__(aDialog, resultData);
+    mozilla::Unused << PPrintingParent::PPrintSettingsDialogParent::Send__delete__(aDialog, resultData);
   }
   return IPC_OK();
 }
