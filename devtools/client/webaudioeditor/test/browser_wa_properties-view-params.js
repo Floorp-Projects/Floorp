@@ -14,7 +14,7 @@ add_task(function* () {
 
   let started = once(gFront, "start-context");
 
-  yield loadFrameScripts();
+  yield loadFrameScriptUtils();
 
   let events = Promise.all([
     getN(gFront, "create-node", 15),

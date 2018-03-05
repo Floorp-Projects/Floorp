@@ -166,7 +166,7 @@ add_task(function* () {
   info("Starting test... ");
 
   let waitNetwork = waitForNetworkEvents(monitor, REQUESTS.length);
-  loadCommonFrameScript();
+  loadFrameScriptUtils();
   yield performRequestsInContent(REQUESTS);
   yield waitNetwork;
 
