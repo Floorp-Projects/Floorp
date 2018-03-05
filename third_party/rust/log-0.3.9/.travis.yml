@@ -12,6 +12,7 @@ script:
   - ([ $TRAVIS_RUST_VERSION != nightly ] || cargo build --verbose --features nightly)
   - cargo test --verbose
   - ([ $TRAVIS_RUST_VERSION != nightly ] || cargo test --verbose --no-default-features)
+  - cargo test --verbose --manifest-path log-test/Cargo.toml
   - cargo test --verbose --manifest-path env/Cargo.toml
   - cargo test --verbose --manifest-path env/Cargo.toml --no-default-features
   - cargo run --verbose --manifest-path tests/max_level_features/Cargo.toml
