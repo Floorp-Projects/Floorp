@@ -181,7 +181,7 @@ def craft_paths_per_bouncer_platform(product, bouncer_product, bouncer_platforms
             product=product.lower(),
             version=current_version,
             build_number=current_build_number,
-            update_folder='updates/' if '-mar' in bouncer_product else '',
+            update_folder='update/' if '-mar' in bouncer_product else '',
             ftp_platform=ftp_platform,
             file=file_name,
         )
