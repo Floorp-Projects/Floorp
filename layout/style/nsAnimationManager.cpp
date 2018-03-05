@@ -246,7 +246,12 @@ CSSAnimation::QueueEvents(const StickyTimeDuration& aActiveTime)
                                   const TimeStamp& aTimeStamp) {
     double elapsedTime = aElapsedTime.ToSeconds();
     if (aMessage == eAnimationCancel) {
-      elapsedTime = nsRFPService::ReduceTimePrecisionAsSecs(elapsedTime);
+      // 0 is an inappropriate value for this callsite. What we need to do is
+      // use a single random value for all increasing times reportable.
+      // That is to say, whenever elapsedTime goes negative (because an
+      // animation restarts, something rewinds the animation, or otherwise)
+      // a new random value for the mix-in must be generated.
+      elapsedTime = nsRFPService::ReduceTimePrecisionAsSecs(elapsedTime, 0, TimerPrecisionType::RFPOnly);
     }
     events.AppendElement(AnimationEventInfo(mAnimationName,
                                             mOwningElement.Target(),
