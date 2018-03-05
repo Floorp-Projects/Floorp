@@ -60,8 +60,8 @@ SimpleTest.waitForFocus(function() {
                 .get("CurWorkD", Ci.nsIFile);
     dir.append("tests");
     dir.append("editor");
-    dir.append("composer");
-    dir.append("test");
+    dir.append("spellchecker");
+    dir.append("tests");
 
     var hunspell = Cc["@mozilla.org/spellchecker/engine;1"]
                      .getService(Ci.mozISpellCheckingEngine);
