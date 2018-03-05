@@ -20,6 +20,8 @@ const kAllowedPrefs = new Set([
   "narrate.rate",
   "narrate.voice",
 
+  "privacy.trackingprotection.pbmode.enabled",
+
   "reader.font_size",
   "reader.font_type",
   "reader.color_scheme",
