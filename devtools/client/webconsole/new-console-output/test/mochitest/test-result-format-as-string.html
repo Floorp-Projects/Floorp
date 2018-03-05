@@ -9,6 +9,7 @@
   <body>
     <p>Make sure js eval results are formatted as strings.</p>
     <script>
+      /* eslint-disable */
       document.querySelector("p").toSource = function() {
         var element = document.createElement("div");
         element.id = "foobar";

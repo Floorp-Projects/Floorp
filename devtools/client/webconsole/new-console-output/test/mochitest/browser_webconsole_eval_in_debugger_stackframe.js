@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Test that makes sure web console eval happens in the user-selected stackframe
 // from the js debugger.
 
@@ -76,7 +78,7 @@ add_task(async function () {
   await onResultMessage;
   ok(true, "`foo + foo3` updated in `firstCall()`");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
     is(content.wrappedJSObject.foo, "globalFooBug783499", "`foo` in content window");
     is(content.wrappedJSObject.foo2, "newFoo", "`foo2` in content window");
     ok(!content.wrappedJSObject.foo3, "`foo3` was not added to the content window");

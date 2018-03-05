@@ -4,7 +4,8 @@
 "use strict";
 
 const TEST_FILE = "test-network-request.html";
-const TEST_PATH = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/mochitest/";
+const TEST_PATH = "http://example.com/browser/devtools/client/webconsole/" +
+                  "new-console-output/test/mochitest/";
 const TEST_URI = TEST_PATH + TEST_FILE;
 
 const NET_PREF = "devtools.webconsole.filter.net";
@@ -34,7 +35,6 @@ add_task(async function task() {
 
   let xhrUrl = TEST_PATH + "test-data.json";
   let messageNode = await waitFor(() => findMessage(hud, xhrUrl));
-  let urlNode = messageNode.querySelector(".url");
   let statusCodeNode = messageNode.querySelector(".status-code");
   info("Network message found.");
 
@@ -56,8 +56,10 @@ add_task(async function task() {
 
   for (let testCase of testCases) {
     const { clickEvent } = testCase;
-    let onConsoleMenuOpened = [rightClickMouseEvent, rightClickCtrlOrCmdKeyMouseEvent].includes(clickEvent) ?
-      hud.ui.newConsoleOutput.once("menu-open") : null;
+    let onConsoleMenuOpened = [
+      rightClickMouseEvent,
+      rightClickCtrlOrCmdKeyMouseEvent
+    ].includes(clickEvent) ? hud.ui.newConsoleOutput.once("menu-open") : null;
 
     let { link, where } = await simulateLinkClick(statusCodeNode, testCase.clickEvent);
     is(link, testCase.link, `Clicking the provided link opens ${link}`);
