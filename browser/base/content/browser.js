@@ -1387,9 +1387,8 @@ var gBrowserInit = {
   },
 
   _delayedStartup() {
-    let tmp = {};
-    ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm", tmp);
-    let TelemetryTimestamps = tmp.TelemetryTimestamps;
+    let { TelemetryTimestamps } =
+      ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm", {});
     TelemetryTimestamps.add("delayedStartupStarted");
 
     this._cancelDelayedStartup();
@@ -1543,6 +1542,12 @@ var gBrowserInit = {
 
     gNavToolbox.addEventListener("customizationstarting", CustomizationHandler);
     gNavToolbox.addEventListener("customizationending", CustomizationHandler);
+
+    if (AppConstants.platform == "linux") {
+      let { WindowDraggingElement } =
+        ChromeUtils.import("resource://gre/modules/WindowDraggingUtils.jsm", {});
+      new WindowDraggingElement(document.getElementById("titlebar"));
+    }
 
     SessionStore.promiseInitialized.then(() => {
       // Bail out if the window has been closed in the meantime.
