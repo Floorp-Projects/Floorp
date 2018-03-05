@@ -63,9 +63,9 @@ public class WebViewProvider {
 
             updateBlocking();
 
-            geckoSession.setContentListener(createContentListener());
-            geckoSession.setProgressListener(createProgressListener());
-            geckoSession.setNavigationListener(createNavigationListener());
+            geckoSession.setContentDelegate(createContentDelegate());
+            geckoSession.setProgressDelegate(createProgressDelegate());
+            geckoSession.setNavigationDelegate(createNavigationDelegate());
             geckoSession.setTrackingProtectionDelegate(createTrackingProtectionDelegate());
             geckoSession.setPromptDelegate(createPromptDelegate());
             setSession(geckoSession);
@@ -169,8 +169,8 @@ public class WebViewProvider {
             }
         }
 
-        private GeckoSession.ContentListener createContentListener() {
-            return new GeckoSession.ContentListener() {
+        private GeckoSession.ContentDelegate createContentDelegate() {
+            return new GeckoSession.ContentDelegate() {
                 @Override
                 public void onTitleChange(GeckoSession session, String title) {
                     webViewTitle = title;
@@ -213,8 +213,8 @@ public class WebViewProvider {
             };
         }
 
-        private GeckoSession.ProgressListener createProgressListener() {
-            return new GeckoSession.ProgressListener() {
+        private GeckoSession.ProgressDelegate createProgressDelegate() {
+            return new GeckoSession.ProgressDelegate() {
                 @Override
                 public void onPageStart(GeckoSession session, String url) {
                     if (callback != null) {
@@ -237,15 +237,15 @@ public class WebViewProvider {
 
                 @Override
                 public void onSecurityChange(GeckoSession session,
-                                             GeckoSession.ProgressListener.SecurityInformation securityInfo) {
+                                             GeckoSession.ProgressDelegate.SecurityInformation securityInfo) {
                     // TODO: Split current onPageFinished() callback into two: page finished + security changed
                     isSecure = securityInfo.isSecure;
                 }
             };
         }
 
-        private GeckoSession.NavigationListener createNavigationListener() {
-            return new GeckoSession.NavigationListener() {
+        private GeckoSession.NavigationDelegate createNavigationDelegate() {
+            return new GeckoSession.NavigationDelegate() {
                 public void onLocationChange(GeckoSession session, String url) {
                     currentUrl = url;
                     if (callback != null) {
@@ -262,9 +262,9 @@ public class WebViewProvider {
                 }
 
                 @Override
-                public boolean onLoadUri(GeckoSession session, String uri, GeckoSession.NavigationListener.TargetWindow where) {
+                public boolean onLoadUri(GeckoSession session, String uri, GeckoSession.NavigationDelegate.TargetWindow where) {
                     // If this is trying to load in a new tab, just load it in the current one
-                    if (where == GeckoSession.NavigationListener.TargetWindow.NEW) {
+                    if (where == GeckoSession.NavigationDelegate.TargetWindow.NEW) {
                         geckoSession.loadUri(uri);
                         return true;
                     }

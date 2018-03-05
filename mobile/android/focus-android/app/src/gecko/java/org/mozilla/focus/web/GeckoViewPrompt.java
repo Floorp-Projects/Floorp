@@ -58,6 +58,18 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
     private int mFileType;
     private FileCallback mFileCallback;
 
+    private static class ModifiableChoice {
+        public boolean modifiableSelected;
+        public String modifiableLabel;
+        public final Choice choice;
+
+        public ModifiableChoice(Choice c) {
+            choice = c;
+            modifiableSelected = choice.selected;
+            modifiableLabel = choice.label;
+        }
+    }
+
     public GeckoViewPrompt(final Activity activity) {
         mActivity = activity;
     }
@@ -91,7 +103,8 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
         return builder;
     }
 
-    public void alert(final GeckoSession session, final String title, final String msg,
+    @Override
+    public void onAlert(final GeckoSession session, final String title, final String msg,
                       final AlertCallback callback) {
         final Activity activity = mActivity;
         if (activity == null) {
@@ -106,7 +119,8 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
                 callback).show();
     }
 
-    public void promptForButton(final GeckoSession session, final String title,
+    @Override
+    public void onButtonPrompt(final GeckoSession session, final String title,
                                 final String msg, final String[] btnMsg,
                                 final ButtonCallback callback) {
         final Activity activity = mActivity;
@@ -181,7 +195,8 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
         return dialog;
     }
 
-    public void promptForText(final GeckoSession session, final String title,
+    @Override
+    public void onTextPrompt(final GeckoSession session, final String title,
                               final String msg, final String value,
                               final TextCallback callback) {
         final Activity activity = mActivity;
@@ -208,7 +223,7 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
     }
 
     @Override
-    public void promptForAuth(GeckoSession geckoSession, String s, String s1, AuthenticationOptions authenticationOptions, final AuthCallback authCallback) {
+    public void onAuthPrompt(GeckoSession geckoSession, String s, String s1, AuthOptions authOptions, final AuthCallback authCallback) {
         final Activity activity = mActivity;
         if (activity == null) {
             authCallback.dismiss();
@@ -218,13 +233,13 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
         final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         final LinearLayout container = addStandardLayout(builder, s, s1);
 
-        final int flags = authenticationOptions.flags;
-        final int level = authenticationOptions.level;
+        final int flags = authOptions.flags;
+        final int level = authOptions.level;
         final EditText username;
-        if ((flags & AuthenticationOptions.AUTH_FLAG_ONLY_PASSWORD) == 0) {
+        if ((flags & AuthOptions.AUTH_FLAG_ONLY_PASSWORD) == 0) {
             username = new EditText(builder.getContext());
             username.setHint(R.string.gv_prompt_username_hint);
-            username.setText(authenticationOptions.username);
+            username.setText(authOptions.username);
             container.addView(username);
         } else {
             username = null;
@@ -232,12 +247,12 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
 
         final EditText password = new EditText(builder.getContext());
         password.setHint(R.string.gv_prompt_password_hint);
-        password.setText(authenticationOptions.password);
+        password.setText(authOptions.password);
         password.setInputType(InputType.TYPE_CLASS_TEXT |
                 InputType.TYPE_TEXT_VARIATION_PASSWORD);
         container.addView(password);
 
-        if (level != AuthenticationOptions.AUTH_LEVEL_NONE) {
+        if (level != AuthOptions.AUTH_LEVEL_NONE) {
             final ImageView secure = new ImageView(builder.getContext());
             secure.setImageResource(android.R.drawable.ic_lock_lock);
             container.addView(secure);
@@ -248,7 +263,7 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(final DialogInterface dialog, final int which) {
-                                if ((flags & AuthenticationOptions.AUTH_FLAG_ONLY_PASSWORD) == 0) {
+                                if ((flags & AuthOptions.AUTH_FLAG_ONLY_PASSWORD) == 0) {
                                     authCallback.confirm(username.getText().toString(),
                                             password.getText().toString());
                                 } else {
@@ -259,19 +274,23 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
         createStandardDialog(addCheckbox(builder, container, authCallback), authCallback).show();
     }
 
-    private void addChoiceItems(final int type, final ArrayAdapter<Choice> list,
+    private void addChoiceItems(final int type, final ArrayAdapter<ModifiableChoice> list,
                                 final Choice[] items, final String indent) {
         if (type == Choice.CHOICE_TYPE_MENU) {
-            list.addAll(items);
+            for (final Choice item : items) {
+                list.add(new ModifiableChoice(item));
+            }
             return;
         }
 
         for (final Choice item : items) {
+            final ModifiableChoice modItem = new ModifiableChoice(item);
+
             final Choice[] children = item.items;
             if (indent != null && children == null) {
-                item.label = indent + item.label;
+                modItem.modifiableLabel = indent + modItem.modifiableLabel;
             }
-            list.add(item);
+            list.add(modItem);
 
             if (children != null) {
                 final String newIndent;
@@ -285,7 +304,8 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
         }
     }
 
-    public void promptForChoice(final GeckoSession session, final String title,
+    @Override
+    public void onChoicePrompt(final GeckoSession session, final String title,
                                 final String msg, final int type,
                                 final Choice[] choices, final ChoiceCallback callback) {
         final Activity activity = mActivity;
@@ -301,7 +321,7 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             list.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         }
 
-        final ArrayAdapter<Choice> adapter = new ArrayAdapter<Choice>(
+        final ArrayAdapter<ModifiableChoice> adapter = new ArrayAdapter<ModifiableChoice>(
                 builder.getContext(), android.R.layout.simple_list_item_1) {
             private static final int TYPE_MENU_ITEM = 0;
             private static final int TYPE_MENU_CHECK = 1;
@@ -321,12 +341,12 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
 
             @Override
             public int getItemViewType(final int position) {
-                final Choice item = getItem(position);
-                if (item.separator) {
+                final ModifiableChoice item = getItem(position);
+                if (item.choice.separator) {
                     return TYPE_SEPARATOR;
                 } else if (type == Choice.CHOICE_TYPE_MENU) {
-                    return item.selected ? TYPE_MENU_CHECK : TYPE_MENU_ITEM;
-                } else if (item.items != null) {
+                    return item.modifiableSelected ? TYPE_MENU_CHECK : TYPE_MENU_ITEM;
+                } else if (item.choice.items != null) {
                     return TYPE_GROUP;
                 } else if (type == Choice.CHOICE_TYPE_SINGLE) {
                     return TYPE_SINGLE;
@@ -339,10 +359,10 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
 
             @Override
             public boolean isEnabled(final int position) {
-                final Choice item = getItem(position);
-                return !item.separator && !item.disabled &&
-                        ((type != Choice.CHOICE_TYPE_SINGLE && type != Choice.CHOICE_TYPE_MULTIPLE) |
-                                item.items != null);
+                final ModifiableChoice item = getItem(position);
+                return !item.choice.separator && !item.choice.disabled &&
+                        ((type != Choice.CHOICE_TYPE_SINGLE && type != Choice.CHOICE_TYPE_MULTIPLE)
+                                || item.choice.items != null);
             }
 
             @Override
@@ -382,12 +402,12 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
                     view = mInflater.inflate(layoutId, parent, false);
                 }
 
-                final Choice item = getItem(position);
+                final ModifiableChoice item = getItem(position);
                 final TextView text = (TextView) view;
-                text.setEnabled(!item.disabled);
-                text.setText(item.label);
+                text.setEnabled(!item.choice.disabled);
+                text.setText(item.modifiableLabel);
                 if (view instanceof CheckedTextView) {
-                    final boolean selected = item.selected;
+                    final boolean selected = item.modifiableSelected;
                     if (itemType == TYPE_MULTIPLE) {
                         list.setItemChecked(position, selected);
                     } else {
@@ -409,19 +429,19 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
                 @Override
                 public void onItemClick(final AdapterView<?> parent, final View v,
                                         final int position, final long id) {
-                    final Choice item = adapter.getItem(position);
+                    final ModifiableChoice item = adapter.getItem(position);
                     if (type == Choice.CHOICE_TYPE_MENU) {
-                        final Choice[] children = item.items;
+                        final Choice[] children = item.choice.items;
                         if (children != null) {
                             // Show sub-menu.
                             dialog.setOnDismissListener(null);
                             dialog.dismiss();
-                            promptForChoice(session, item.label, /* msg */ null,
+                            onChoicePrompt(session, item.modifiableLabel, /* msg */ null,
                                     type, children, callback);
                             return;
                         }
                     }
-                    callback.confirm(item);
+                    callback.confirm(item.choice);
                     dialog.dismiss();
                 }
             });
@@ -430,8 +450,8 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
                 @Override
                 public void onItemClick(final AdapterView<?> parent, final View v,
                                         final int position, final long id) {
-                    final Choice item = adapter.getItem(position);
-                    item.selected = ((CheckedTextView) v).isChecked();
+                    final ModifiableChoice item = adapter.getItem(position);
+                    item.modifiableSelected = ((CheckedTextView) v).isChecked();
                 }
             });
             builder.setNegativeButton(android.R.string.cancel, /* listener */ null)
@@ -443,9 +463,9 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
                                     final int len = adapter.getCount();
                                     ArrayList<String> items = new ArrayList<>(len);
                                     for (int i = 0; i < len; i++) {
-                                        final Choice item = adapter.getItem(i);
-                                        if (item.selected) {
-                                            items.add(item.id);
+                                        final ModifiableChoice item = adapter.getItem(i);
+                                        if (item.modifiableSelected) {
+                                            items.add(item.choice.id);
                                         }
                                     }
                                     callback.confirm(items.toArray(new String[items.size()]));
@@ -466,7 +486,8 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
         }
     }
 
-    public void promptForColor(final GeckoSession session, final String title,
+    @Override
+    public void onColorPrompt(final GeckoSession session, final String title,
                                final String value, final TextCallback callback) {
         final Activity activity = mActivity;
         if (activity == null) {
@@ -573,7 +594,8 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
         }
     }
 
-    public void promptForDateTime(final GeckoSession session, final String title,
+    @Override
+    public void onDateTimePrompt(final GeckoSession session, final String title,
                                   final int type, final String value, final String min,
                                   final String max, final TextCallback callback) {
         final Activity activity = mActivity;
@@ -688,8 +710,9 @@ final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
         createStandardDialog(builder, callback).show();
     }
 
-    public void promptForFile(GeckoSession session, String title, int type,
-                              String[] mimeTypes, FileCallback callback) {
+
+    @Override
+    public void onFilePrompt(GeckoSession session, String title, int type, String[] mimeTypes, FileCallback callback) {
         final Activity activity = mActivity;
         if (activity == null) {
             callback.dismiss();
