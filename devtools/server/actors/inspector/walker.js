@@ -139,6 +139,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this._retainedOrphans = new Set();
 
     this.onMutations = this.onMutations.bind(this);
+    this.onSlotchange = this.onSlotchange.bind(this);
     this.onFrameLoad = this.onFrameLoad.bind(this);
     this.onFrameUnload = this.onFrameUnload.bind(this);
     this._throttledEmitNewMutations = throttle(this._emitNewMutations.bind(this),
@@ -308,6 +309,11 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     if (node.nodeType === Ci.nsIDOMNode.DOCUMENT_NODE) {
       actor.watchDocument(this.onMutations);
     }
+
+    if (actor.isShadowRoot) {
+      actor.watchSlotchange(this.onSlotchange);
+    }
+
     return actor;
   },
 
@@ -1644,6 +1650,19 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       target: parentActor.actorID,
       inlineTextChild:
         inlineTextChild ? inlineTextChild.form() : undefined
+    });
+  },
+
+  onSlotchange: function(event) {
+    let target = event.target;
+    let targetActor = this.getNode(target);
+    if (!targetActor) {
+      return;
+    }
+
+    this.queueMutation({
+      type: "slotchange",
+      target: targetActor.actorID
     });
   },
 
