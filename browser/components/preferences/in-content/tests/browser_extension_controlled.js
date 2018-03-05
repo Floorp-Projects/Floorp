@@ -323,8 +323,8 @@ add_task(async function testExtensionControlledDefaultSearch() {
     permissions: [],
     chrome_settings_overrides: {
       search_provider: {
-        name: "Yahoo",
-        search_url: "https://search.yahoo.com/yhs/search?p=%s&ei=UTF-8&hspart=mozilla&hsimp=yhs-002",
+        name: "DuckDuckGo",
+        search_url: "https://duckduckgo.com/?q={searchTerms}",
         is_default: true,
       },
     }
