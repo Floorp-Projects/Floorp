@@ -5871,10 +5871,10 @@ nsContentUtils::RunInStableState(already_AddRefed<nsIRunnable> aRunnable)
 
 /* static */
 void
-nsContentUtils::RunInMetastableState(already_AddRefed<nsIRunnable> aRunnable)
+nsContentUtils::AddPendingIDBTransaction(already_AddRefed<nsIRunnable> aTransaction)
 {
   MOZ_ASSERT(CycleCollectedJSContext::Get(), "Must be on a script thread!");
-  CycleCollectedJSContext::Get()->RunInMetastableState(Move(aRunnable));
+  CycleCollectedJSContext::Get()->AddPendingIDBTransaction(Move(aTransaction));
 }
 
 /* static */
@@ -6933,9 +6933,16 @@ nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent)
   contentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
 
   // If there are 2 viewers for the current docshell, that
-  // means the current document is a zombie document.
-  // Only navigate into the subdocument if it's not a zombie.
-  return !zombieViewer;
+  // means the current document may be a zombie document.
+  // While load and pageshow events are dispatched, zombie viewer is the old,
+  // to be hidden document.
+  if (zombieViewer) {
+    bool inOnLoad = false;
+    docShell->GetIsExecutingOnLoadHandler(&inOnLoad);
+    return inOnLoad;
+  }
+
+  return true;
 }
 
 bool
