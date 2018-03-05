@@ -119,7 +119,11 @@ const mozilla::EmptyLog& operator <<(const mozilla::EmptyLog& log, const T&)
 #define NOTIMPLEMENTED() CHROMIUM_LOG(ERROR)
 
 #undef CHECK
+#ifdef FUZZING
 #define CHECK(condition) LOG_IF(WARNING, condition)
+#else
+#define CHECK(condition) LOG_IF(FATAL, condition)
+#endif
 
 #define DCHECK_EQ(v1, v2) DCHECK((v1) == (v2))
 #define DCHECK_NE(v1, v2) DCHECK((v1) != (v2))
