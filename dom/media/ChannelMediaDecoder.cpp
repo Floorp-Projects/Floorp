@@ -167,9 +167,9 @@ ChannelMediaDecoder::NotifyPrincipalChanged()
     return;
   }
   if (!mSameOriginMedia &&
-      DecoderTraits::CrossOriginRedirectsProhibited(ContainerType())) {
-    // For some content types we block mid-flight channel redirects to cross
-    // origin destinations due to security constraints. See bug 1441153.
+      Preferences::GetBool("media.block-midflight-redirects", true)) {
+    // Block mid-flight redirects to non CORS same origin destinations.
+    // See bugs 1441153, 1443942.
     LOG("ChannnelMediaDecoder prohibited cross origin redirect blocked.");
     NetworkError(MediaResult(NS_ERROR_DOM_BAD_URI,
                              "Prohibited cross origin redirect blocked"));
