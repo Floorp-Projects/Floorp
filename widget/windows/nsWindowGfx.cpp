@@ -388,6 +388,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
         }
         break;
       case LayersBackend::LAYERS_CLIENT:
+      case LayersBackend::LAYERS_WR:
         {
           result = listener->PaintWindow(
             this, LayoutDeviceIntRegion::FromUnknownRegion(region));
@@ -398,11 +399,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
           }
         }
         break;
-      case LayersBackend::LAYERS_WR:
-      {
-        GetLayerManager()->ScheduleComposite();
-        break;
-      }
       default:
         NS_ERROR("Unknown layers backend used!");
         break;
