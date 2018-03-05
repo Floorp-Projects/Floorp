@@ -214,7 +214,6 @@ nsSVGIntegrationUtils::GetSVGCoordContextForNonSVGFrame(nsIFrame* aNonSVGFrame)
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aNonSVGFrame);
   nsRect r = nsLayoutUtils::GetAllInFlowRectsUnion(firstFrame, firstFrame);
-  nsPresContext* presContext = firstFrame->PresContext();
   return gfx::Size(nsPresContext::AppUnitsToFloatCSSPixels(r.width),
                    nsPresContext::AppUnitsToFloatCSSPixels(r.height));
 }
