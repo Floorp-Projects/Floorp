@@ -820,8 +820,6 @@ static PLDHashTable* gHashTable;
 static CallbackNode* gFirstCallback = nullptr;
 static CallbackNode* gLastPriorityNode = nullptr;
 
-static bool gIsAnyPrefLocked = false;
-
 // These are only used during the call to NotifyCallbacks().
 static bool gCallbacksInProgress = false;
 static bool gShouldCleanupDeadNodes = false;
@@ -4185,7 +4183,6 @@ Preferences::LockInAnyProcess(const char* aPrefName)
 
   if (!pref->IsLocked()) {
     pref->SetIsLocked(true);
-    gIsAnyPrefLocked = true;
     NotifyCallbacks(aPrefName);
   }
 
@@ -4223,14 +4220,8 @@ Preferences::IsLocked(const char* aPrefName)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), false);
 
-  if (gIsAnyPrefLocked) {
-    Pref* pref = pref_HashTableLookup(aPrefName);
-    if (pref && pref->IsLocked()) {
-      return true;
-    }
-  }
-
-  return false;
+  Pref* pref = pref_HashTableLookup(aPrefName);
+  return pref && pref->IsLocked();
 }
 
 /* static */ nsresult
