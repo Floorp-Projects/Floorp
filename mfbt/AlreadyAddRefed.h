@@ -37,7 +37,7 @@ struct unused_t;
  * Otherwise, use Move(RefPtr/nsCOMPtr/etc).
  */
 template<class T>
-struct MOZ_MUST_USE_TYPE MOZ_NON_AUTOABLE already_AddRefed
+struct MOZ_TEMPORARY_CLASS MOZ_MUST_USE_TYPE MOZ_NON_AUTOABLE already_AddRefed
 {
   /*
    * We want to allow returning nullptr from functions returning
