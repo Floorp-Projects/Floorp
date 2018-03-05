@@ -140,6 +140,14 @@ if (AppConstants.MOZ_CRASHREPORTER) {
                                      "nsICrashReporter");
 }
 
+XPCOMUtils.defineLazyGetter(this, "gBrowser", function() {
+  // The TabBrowser class only exists in proper browser windows, whereas
+  // browser.js may be loaded in other windows where a non-tabbrowser
+  // browser might try to access the gBrowser property.
+  // eslint-disable-next-line no-undef
+  return (typeof TabBrowser == "function") ? new TabBrowser() : null;
+});
+
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle("chrome://browser/locale/browser.properties");
 });
@@ -223,7 +231,6 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function() {
 
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
-var gBrowser = null; // Will be instantiated by the <tabbbrowser> constructor.
 var gLastValidURLStr = "";
 var gInPrintPreviewMode = false;
 var gContextMenu = null; // nsContextMenu instance
@@ -1302,7 +1309,8 @@ var gBrowserInit = {
 
     if (!gMultiProcessBrowser) {
       // There is a Content:Click message manually sent from content.
-      Services.els.addSystemEventListener(gBrowser.container, "click", contentAreaClick, true);
+      Services.els.addSystemEventListener(gBrowser.mPanelContainer, "click",
+        contentAreaClick, true);
     }
 
     // hook up UI through progress listener
@@ -1419,11 +1427,11 @@ var gBrowserInit = {
 
     gBrowser.addEventListener("InsecureLoginFormsStateChange", function() {
       gIdentityHandler.refreshForInsecureLoginForms();
-    });
+    }, true);
 
     gBrowser.addEventListener("PermissionStateChange", function() {
       gIdentityHandler.refreshIdentityBlock();
-    });
+    }, true);
 
     // Get the service so that it initializes and registers listeners for new
     // tab pages in order to be ready for any early-loading about:newtab pages,
@@ -1921,6 +1929,7 @@ var gBrowserInit = {
     }
 
     // Final window teardown, do this last.
+    gBrowser.destroy();
     window.XULBrowserWindow = null;
     window.QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIWebNavigation)
