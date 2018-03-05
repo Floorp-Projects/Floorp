@@ -186,7 +186,7 @@ function promiseAsync_SyncXHR()
   xhr.open("GET", "testXHR.txt", false);
   xhr.send(null);
 
-  todo(!handlerExecuted, "Sync XHR should not trigger microtask execution.");
+  ok(!handlerExecuted, "Sync XHR should not trigger microtask execution.");
 }
 
 function promiseDoubleThen() {

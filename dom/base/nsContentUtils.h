@@ -2031,17 +2031,12 @@ public:
    */
   static void RunInStableState(already_AddRefed<nsIRunnable> aRunnable);
 
-  /* Add a "synchronous section", in the form of an nsIRunnable run once the
-   * event loop has reached a "metastable state". |aRunnable| must not cause any
-   * queued events to be processed (i.e. must not spin the event loop).
-   * We've reached a metastable state when the currently executing task or
-   * microtask has finished.  This is not specced at this time.
-   * In practice this runs aRunnable once the currently executing task or
-   * microtask finishes.  If called multiple times per microtask, all the
-   * runnables will be executed, in the order in which RunInMetastableState()
-   * was called
+  /* Add a pending IDBTransaction to be cleaned up at the end of performing a
+   * microtask checkpoint.
+   * See the step of "Cleanup Indexed Database Transactions" in
+   * https://html.spec.whatwg.org/multipage/webappapis.html#perform-a-microtask-checkpoint
    */
-  static void RunInMetastableState(already_AddRefed<nsIRunnable> aRunnable);
+  static void AddPendingIDBTransaction(already_AddRefed<nsIRunnable> aTransaction);
 
   /**
    * Returns true if we are doing StableState/MetastableState.
