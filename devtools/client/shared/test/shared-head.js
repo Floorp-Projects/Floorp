@@ -117,9 +117,10 @@ if (DEBUG_ALLOCATIONS) {
 
 var waitForTime = DevToolsUtils.waitForTime;
 
-function getFrameScript() {
-  let mm = gBrowser.selectedBrowser.messageManager;
+function loadFrameScriptUtils(browser = gBrowser.selectedBrowser) {
+  let mm = browser.messageManager;
   let frameURL = "chrome://devtools/content/shared/frame-script-utils.js";
+  info("Loading the helper frame script " + frameURL);
   mm.loadFrameScript(frameURL, false);
   SimpleTest.registerCleanupFunction(() => {
     mm = null;
@@ -278,9 +279,9 @@ function waitForNEvents(target, eventName, numTimes, useCapture = false) {
   let count = 0;
 
   for (let [add, remove] of [
+    ["on", "off"],
     ["addEventListener", "removeEventListener"],
     ["addListener", "removeListener"],
-    ["on", "off"]
   ]) {
     if ((add in target) && (remove in target)) {
       target[add](eventName, function onEvent(...aArgs) {
@@ -382,7 +383,10 @@ function waitForTick() {
  * @return A promise that resolves when the time is passed
  */
 function wait(ms) {
-  return new promise(resolve => setTimeout(resolve, ms));
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+    info("Waiting " + ms / 1000 + " seconds.");
+  });
 }
 
 /**
@@ -482,9 +486,10 @@ function waitUntil(predicate, interval = 10) {
  * in potentially a different process.
  */
 let MM_INC_ID = 0;
-function evalInDebuggee(mm, script) {
-  return new Promise(function (resolve, reject) {
+function evalInDebuggee(script, browser = gBrowser.selectedBrowser) {
+  return new Promise(resolve => {
     let id = MM_INC_ID++;
+    let mm = browser.messageManager;
     mm.sendAsyncMessage("devtools:test:eval", { script, id });
     mm.addMessageListener("devtools:test:eval:response", handler);
 
