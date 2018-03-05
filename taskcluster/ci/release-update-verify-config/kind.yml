@@ -64,11 +64,25 @@ job-defaults:
             # TODO: add esr here when setting up mozilla-esr60
             # let's put mozilla-esr52 in this comment as well, in case
             # somebody is grepping the tree for things they need to do.
-            birch: "57.0"
-            jamun: "56.0b10"
-            maple: "56.0b10"
-            mozilla-beta: "56.0b10"
-            mozilla-release: "57.0"
+            birch:
+               by-build-platform:
+                  linux: "57.0"
+                  linux64: "57.0"
+                  macosx64: "57.0"
+                  win32: "56.0"
+                  win64: "56.0"
+                  default: null
+            jamun: "56.0b3"
+            maple: "56.0b3"
+            mozilla-beta: "56.0b3"
+            mozilla-release:
+               by-build-platform:
+                  linux: "57.0"
+                  linux64: "57.0"
+                  macosx64: "57.0"
+                  win32: "56.0"
+                  win64: "56.0"
+                  default: null
             default: null
 
 jobs:
