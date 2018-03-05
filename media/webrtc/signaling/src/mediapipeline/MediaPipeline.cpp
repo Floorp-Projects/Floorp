@@ -11,6 +11,7 @@
 #include <math.h>
 
 #include "AudioSegment.h"
+#include "AudioConverter.h"
 #include "AutoTaskQueue.h"
 #include "CSFLog.h"
 #include "DOMMediaStream.h"
@@ -487,76 +488,156 @@ public:
     , mTaskQueue(
         new AutoTaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
                           "AudioProxy"))
+    , mAudioConverter(nullptr)
   {
     MOZ_ASSERT(mConduit);
     MOZ_COUNT_CTOR(AudioProxyThread);
   }
 
-  void InternalProcessAudioChunk(TrackRate rate,
-                                 const AudioChunk& chunk,
-                                 bool enabled)
+  // This function is the identity if aInputRate is supported.
+  // Else, it returns a rate that is supported, that ensure no loss in audio
+  // quality: the sampling rate returned is always greater to the inputed
+  // sampling-rate, if they differ..
+  uint32_t AppropriateSendingRateForInputRate(uint32_t aInputRate)
+  {
+    AudioSessionConduit* conduit =
+      static_cast<AudioSessionConduit*>(mConduit.get());
+    if (conduit->IsSamplingFreqSupported(aInputRate)) {
+      return aInputRate;
+    }
+    if (aInputRate < 16000) {
+      return 16000;
+    } else if (aInputRate < 32000) {
+      return 32000;
+    } else if (aInputRate < 44100) {
+      return 44100;
+    } else {
+      return 48000;
+    }
+  }
+
+  // From an arbitrary AudioChunk at sampling-rate aRate, process the audio into
+  // something the conduit can work with (or send silence if the track is not
+  // enabled), and send the audio in 10ms chunks to the conduit.
+  void InternalProcessAudioChunk(TrackRate aRate,
+                                 const AudioChunk& aChunk,
+                                 bool aEnabled)
   {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
-    // Convert to interleaved, 16-bits integer audio, with a maximum of two
+    // Convert to interleaved 16-bits integer audio, with a maximum of two
     // channels (since the WebRTC.org code below makes the assumption that the
-    // input audio is either mono or stereo).
-    uint32_t outputChannels = chunk.ChannelCount() == 1 ? 1 : 2;
-    const int16_t* samples = nullptr;
-    UniquePtr<int16_t[]> convertedSamples;
+    // input audio is either mono or stereo), with a sample-rate rate that is
+    // 16, 32, 44.1, or 48kHz.
+    uint32_t outputChannels = aChunk.ChannelCount() == 1 ? 1 : 2;
+    int32_t transmissionRate = AppropriateSendingRateForInputRate(aRate);
 
     // We take advantage of the fact that the common case (microphone directly
     // to PeerConnection, that is, a normal call), the samples are already
     // 16-bits mono, so the representation in interleaved and planar is the
     // same, and we can just use that.
-    if (enabled && outputChannels == 1 &&
-        chunk.mBufferFormat == AUDIO_FORMAT_S16) {
-      samples = chunk.ChannelData<int16_t>().Elements()[0];
-    } else {
-      convertedSamples =
-        MakeUnique<int16_t[]>(chunk.mDuration * outputChannels);
-
-      if (!enabled || chunk.mBufferFormat == AUDIO_FORMAT_SILENCE) {
-        PodZero(convertedSamples.get(), chunk.mDuration * outputChannels);
-      } else if (chunk.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
-        DownmixAndInterleave(chunk.ChannelData<float>(),
-                             chunk.mDuration,
-                             chunk.mVolume,
-                             outputChannels,
-                             convertedSamples.get());
-      } else if (chunk.mBufferFormat == AUDIO_FORMAT_S16) {
-        DownmixAndInterleave(chunk.ChannelData<int16_t>(),
-                             chunk.mDuration,
-                             chunk.mVolume,
-                             outputChannels,
-                             convertedSamples.get());
-      }
-      samples = convertedSamples.get();
+    if (aEnabled &&
+        outputChannels == 1 &&
+        aChunk.mBufferFormat == AUDIO_FORMAT_S16 &&
+        transmissionRate == aRate) {
+      const int16_t* samples = aChunk.ChannelData<int16_t>().Elements()[0];
+      PacketizeAndSend(samples,
+                       transmissionRate,
+                       outputChannels,
+                       aChunk.mDuration);
+      return;
     }
 
-    MOZ_ASSERT(!(rate % 100)); // rate should be a multiple of 100
+    uint32_t sampleCount = aChunk.mDuration * outputChannels;
+    if (mInterleavedAudio.Length() < sampleCount) {
+      mInterleavedAudio.SetLength(sampleCount);
+    }
 
-    // Check if the rate or the number of channels has changed since the last
-    // time we came through. I realize it may be overkill to check if the rate
-    // has changed, but I believe it is possible (e.g. if we change sources) and
-    // it costs us very little to handle this case.
+    if (!aEnabled || aChunk.mBufferFormat == AUDIO_FORMAT_SILENCE) {
+      PodZero(mInterleavedAudio.Elements(), sampleCount);
+    } else if (aChunk.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
+      DownmixAndInterleave(aChunk.ChannelData<float>(),
+                           aChunk.mDuration,
+                           aChunk.mVolume,
+                           outputChannels,
+                           mInterleavedAudio.Elements());
+    } else if (aChunk.mBufferFormat == AUDIO_FORMAT_S16) {
+      DownmixAndInterleave(aChunk.ChannelData<int16_t>(),
+                           aChunk.mDuration,
+                           aChunk.mVolume,
+                           outputChannels,
+                           mInterleavedAudio.Elements());
+    }
+    int16_t* inputAudio = mInterleavedAudio.Elements();
+    size_t inputAudioFrameCount = aChunk.mDuration;
 
-    uint32_t audio_10ms = rate / 100;
+    AudioConfig inputConfig(AudioConfig::ChannelLayout(outputChannels),
+                            aRate,
+                            AudioConfig::FORMAT_S16);
+    AudioConfig outputConfig(AudioConfig::ChannelLayout(outputChannels),
+                             transmissionRate,
+                             AudioConfig::FORMAT_S16);
+    // Resample to an acceptable sample-rate for the sending side
+    if (!mAudioConverter ||
+        mAudioConverter->InputConfig() != inputConfig ||
+        mAudioConverter->OutputConfig() != outputConfig) {
+      mAudioConverter = MakeUnique<AudioConverter>(inputConfig, outputConfig);
+    }
+
+    int16_t* processedAudio = nullptr;
+    size_t framesProcessed =
+      mAudioConverter->Process(inputAudio, inputAudioFrameCount);
+
+    if (framesProcessed == 0) {
+      // In place conversion not possible, use a buffer.
+      framesProcessed =
+        mAudioConverter->Process(mOutputAudio,
+                                 inputAudio,
+                                 inputAudioFrameCount);
+      processedAudio = mOutputAudio.Data();
+    } else {
+      processedAudio = inputAudio;
+    }
+
+    PacketizeAndSend(processedAudio,
+                     transmissionRate,
+                     outputChannels,
+                     framesProcessed);
+  }
+
+  // This packetizes aAudioData in 10ms chunks and sends it.
+  // aAudioData is interleaved audio data at a rate and with a channel count
+  // that is appropriate to send with the conduit.
+  void PacketizeAndSend(const int16_t* aAudioData,
+                        uint32_t aRate,
+                        uint32_t aChannels,
+                        uint32_t aFrameCount)
+  {
+    MOZ_ASSERT(AppropriateSendingRateForInputRate(aRate) == aRate);
+    MOZ_ASSERT(aChannels == 1 || aChannels == 2);
+    MOZ_ASSERT(aAudioData);
+
+    uint32_t audio_10ms = aRate / 100;
 
     if (!mPacketizer || mPacketizer->PacketSize() != audio_10ms ||
-        mPacketizer->Channels() != outputChannels) {
-      // It's ok to drop the audio still in the packetizer here.
+        mPacketizer->Channels() != aChannels) {
+      // It's the right thing to drop the bit of audio still in the packetizer:
+      // we don't want to send to the conduit audio that has two different
+      // rates while telling it that it has a constante rate.
       mPacketizer = MakeUnique<AudioPacketizer<int16_t, int16_t>>(
-        audio_10ms, outputChannels);
-      mPacket = MakeUnique<int16_t[]>(audio_10ms * outputChannels);
+        audio_10ms, aChannels);
+      mPacket = MakeUnique<int16_t[]>(audio_10ms * aChannels);
     }
 
-    mPacketizer->Input(samples, chunk.mDuration);
+    mPacketizer->Input(aAudioData, aFrameCount);
 
     while (mPacketizer->PacketsAvailable()) {
       mPacketizer->Output(mPacket.get());
-      mConduit->SendAudioFrame(
-        mPacket.get(), mPacketizer->PacketSize(), rate, mPacketizer->Channels(), 0);
+      mConduit->SendAudioFrame(mPacket.get(),
+                               mPacketizer->PacketSize(),
+                               aRate,
+                               mPacketizer->Channels(),
+                               0);
     }
   }
 
@@ -588,6 +669,9 @@ protected:
   UniquePtr<AudioPacketizer<int16_t, int16_t>> mPacketizer;
   // A buffer to hold a single packet of audio.
   UniquePtr<int16_t[]> mPacket;
+  nsTArray<int16_t> mInterleavedAudio;
+  AlignedShortBuffer mOutputAudio;
+  UniquePtr<AudioConverter> mAudioConverter;
 };
 
 static char kDTLSExporterLabel[] = "EXTRACTOR-dtls_srtp";
