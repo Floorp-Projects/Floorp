@@ -14,7 +14,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "formAutofillStorage",
+ChromeUtils.defineModuleGetter(this, "profileStorage",
                                "resource://formautofill/FormAutofillStorage.jsm");
 ChromeUtils.defineModuleGetter(this, "MasterPassword",
                                "resource://formautofill/MasterPassword.jsm");
@@ -24,7 +24,7 @@ FormAutofillUtils.defineLazyLogGetter(this, "manageAddresses");
 
 class ManageRecords {
   constructor(subStorageName, elements) {
-    this._storageInitPromise = formAutofillStorage.initialize();
+    this._storageInitPromise = profileStorage.initialize();
     this._subStorageName = subStorageName;
     this._elements = elements;
     this._newRequest = false;
@@ -67,7 +67,7 @@ class ManageRecords {
    */
   async getStorage() {
     await this._storageInitPromise;
-    return formAutofillStorage[this._subStorageName];
+    return profileStorage[this._subStorageName];
   }
 
   /**
