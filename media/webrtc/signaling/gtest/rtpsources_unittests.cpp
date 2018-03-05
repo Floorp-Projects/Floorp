@@ -112,7 +112,7 @@ public:
   // storage
   void TestAgeIntoLongTerm() {
     RtpSourceHistory history;
-    constexpr int64_t jitterWindow = history.kMinJitterWindow;
+    constexpr int64_t jitterWindow = RtpSourceHistory::kMinJitterWindow;
     constexpr int64_t jitter = jitterWindow / 2;
     constexpr int64_t timeNow0 = 100000;
     constexpr int64_t time0 = timeNow0;
@@ -213,7 +213,7 @@ public:
   void TestSinglePrune() {
     RtpSourceHistory history;
     constexpr int64_t timeNow = 10000;
-    constexpr int64_t jitter = history.kMinJitterWindow / 2;
+    constexpr int64_t jitter = RtpSourceHistory::kMinJitterWindow / 2;
     const int64_t jitterAdjusted = timeNow + jitter;
 
     history.Insert(timeNow, jitterAdjusted, 0, false);

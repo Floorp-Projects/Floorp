@@ -43,7 +43,7 @@ CodeGeneratorX64::ToOperand64(const LInt64Allocation& a64)
     MOZ_ASSERT(!a.isFloatReg());
     if (a.isGeneralReg())
         return Operand(a.toGeneralReg()->reg());
-    return Operand(masm.getStackPointer(), ToStackOffset(a));
+    return Operand(MacroAssembler::getStackPointer(), ToStackOffset(a));
 }
 
 FrameSizeClass

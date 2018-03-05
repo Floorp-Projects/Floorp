@@ -189,7 +189,7 @@ ICWarmUpCounter_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     {
         // Push IonOsrTempData pointer storage
         masm.subFromStackPtr(Imm32(sizeof(void*)));
-        masm.push(masm.getStackPointer());
+        masm.push(MacroAssembler::getStackPointer());
 
         // Push stub pointer.
         masm.push(ICStubReg);
@@ -741,12 +741,12 @@ ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
         // We need: index, receiver, obj
         masm.pushValue(R0);
         masm.pushValue(R1);
-        masm.pushValue(Address(masm.getStackPointer(), sizeof(Value) * 2));
+        masm.pushValue(Address(MacroAssembler::getStackPointer(), sizeof(Value) * 2));
 
         // Push arguments.
         masm.pushValue(R0); // Index
         masm.pushValue(R1); // Reciver
-        masm.pushValue(Address(masm.getStackPointer(), sizeof(Value) * 5)); // Obj
+        masm.pushValue(Address(MacroAssembler::getStackPointer(), sizeof(Value) * 5)); // Obj
         masm.push(ICStubReg);
         pushStubPayload(masm, R0.scratchReg());
 
@@ -943,8 +943,8 @@ ICSetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     // so we push the index, then overwrite the rhs Value with R0
     // and push the rhs value.
     masm.pushValue(R1);
-    masm.loadValue(Address(masm.getStackPointer(), sizeof(Value)), R1);
-    masm.storeValue(R0, Address(masm.getStackPointer(), sizeof(Value)));
+    masm.loadValue(Address(MacroAssembler::getStackPointer(), sizeof(Value)), R1);
+    masm.storeValue(R0, Address(MacroAssembler::getStackPointer(), sizeof(Value)));
     masm.pushValue(R1);
 
     // Push arguments.
@@ -958,7 +958,7 @@ ICSetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Push pointer to stack values, so that the stub can overwrite the object
     // (pushed for the decompiler) with the rhs.
-    masm.computeEffectiveAddress(Address(masm.getStackPointer(), 3 * sizeof(Value)), R0.scratchReg());
+    masm.computeEffectiveAddress(Address(MacroAssembler::getStackPointer(), 3 * sizeof(Value)), R0.scratchReg());
     masm.push(R0.scratchReg());
 
     masm.push(ICStubReg);
@@ -1610,7 +1610,7 @@ ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     // Ensure stack is fully synced for the expression decompiler.
     // Overwrite the RHS value on top of the stack with the object, then push
     // the RHS in R1 on top of that.
-    masm.storeValue(R0, Address(masm.getStackPointer(), 0));
+    masm.storeValue(R0, Address(MacroAssembler::getStackPointer(), 0));
     masm.pushValue(R1);
 
     // Push arguments.
@@ -1619,7 +1619,7 @@ ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Push pointer to stack values, so that the stub can overwrite the object
     // (pushed for the decompiler) with the RHS.
-    masm.computeEffectiveAddress(Address(masm.getStackPointer(), 2 * sizeof(Value)),
+    masm.computeEffectiveAddress(Address(MacroAssembler::getStackPointer(), 2 * sizeof(Value)),
                                  R0.scratchReg());
     masm.push(R0.scratchReg());
 
@@ -2520,7 +2520,7 @@ void
 ICCallStubCompiler::guardSpreadCall(MacroAssembler& masm, Register argcReg, Label* failure,
                                     bool isConstructing)
 {
-    masm.unboxObject(Address(masm.getStackPointer(),
+    masm.unboxObject(Address(MacroAssembler::getStackPointer(),
                      isConstructing * sizeof(Value) + ICStackValueOffset), argcReg);
     masm.loadPtr(Address(argcReg, NativeObject::offsetOfElements()), argcReg);
     masm.load32(Address(argcReg, ObjectElements::offsetOfLength()), argcReg);
@@ -2541,7 +2541,7 @@ ICCallStubCompiler::pushSpreadCallArguments(MacroAssembler& masm,
 {
     // Pull the array off the stack before aligning.
     Register startReg = regs.takeAny();
-    masm.unboxObject(Address(masm.getStackPointer(),
+    masm.unboxObject(Address(MacroAssembler::getStackPointer(),
                              (isConstructing * sizeof(Value)) + STUB_FRAME_SIZE), startReg);
     masm.loadPtr(Address(startReg, NativeObject::offsetOfElements()), startReg);
 
@@ -2601,7 +2601,7 @@ ICCallStubCompiler::guardFunApply(MacroAssembler& masm, AllocatableGeneralRegist
     // Stack looks like:
     //      [..., CalleeV, ThisV, Arg0V, Arg1V <MaybeReturnReg>]
 
-    Address secondArgSlot(masm.getStackPointer(), ICStackValueOffset);
+    Address secondArgSlot(MacroAssembler::getStackPointer(), ICStackValueOffset);
     if (applyThing == FunApply_MagicArgs) {
         // Ensure that the second arg is magic arguments.
         masm.branchTestMagic(Assembler::NotEqual, secondArgSlot, failure);
@@ -2674,7 +2674,7 @@ ICCallStubCompiler::guardFunApply(MacroAssembler& masm, AllocatableGeneralRegist
 
     // Load the callee, ensure that it's fun_apply
     ValueOperand val = regs.takeAnyValue();
-    Address calleeSlot(masm.getStackPointer(), ICStackValueOffset + (3 * sizeof(Value)));
+    Address calleeSlot(MacroAssembler::getStackPointer(), ICStackValueOffset + (3 * sizeof(Value)));
     masm.loadValue(calleeSlot, val);
 
     masm.branchTestObject(Assembler::NotEqual, val, failure);
@@ -2688,7 +2688,7 @@ ICCallStubCompiler::guardFunApply(MacroAssembler& masm, AllocatableGeneralRegist
 
     // Load the |thisv|, ensure that it's a scripted function with a valid baseline or ion
     // script, or a native function.
-    Address thisSlot(masm.getStackPointer(), ICStackValueOffset + (2 * sizeof(Value)));
+    Address thisSlot(MacroAssembler::getStackPointer(), ICStackValueOffset + (2 * sizeof(Value)));
     masm.loadValue(thisSlot, val);
 
     masm.branchTestObject(Assembler::NotEqual, val, failure);
@@ -2803,7 +2803,7 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
         // callee
         masm.pushValue(Address(BaselineFrameReg, valueOffset++ * sizeof(Value) + STUB_FRAME_SIZE));
 
-        masm.push(masm.getStackPointer());
+        masm.push(MacroAssembler::getStackPointer());
         masm.push(ICStubReg);
 
         PushStubPayload(masm, R0.scratchReg());
@@ -2826,7 +2826,7 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 
     pushCallArguments(masm, regs, R0.scratchReg(), /* isJitCall = */ false, isConstructing_);
 
-    masm.push(masm.getStackPointer());
+    masm.push(MacroAssembler::getStackPointer());
     masm.push(R0.scratchReg());
     masm.push(ICStubReg);
 
@@ -2847,7 +2847,7 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     // Load passed-in ThisV into R1 just in case it's needed.  Need to do this before
     // we leave the stub frame since that info will be lost.
     // Current stack:  [...., ThisV, ActualArgc, CalleeToken, Descriptor ]
-    masm.loadValue(Address(masm.getStackPointer(), 3 * sizeof(size_t)), R1);
+    masm.loadValue(Address(MacroAssembler::getStackPointer(), 3 * sizeof(size_t)), R1);
 
     leaveStubFrame(masm, true);
 
@@ -2916,11 +2916,11 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
     // Stack Layout: [ ..., CalleeVal, ThisVal, Arg0Val, ..., ArgNVal, [newTarget] +ICStackValueOffset+ ]
     if (isSpread_) {
         unsigned skipToCallee = (2 + isConstructing_) * sizeof(Value);
-        masm.loadValue(Address(masm.getStackPointer(), skipToCallee + ICStackValueOffset), R1);
+        masm.loadValue(Address(MacroAssembler::getStackPointer(), skipToCallee + ICStackValueOffset), R1);
     } else {
         // Account for newTarget, if necessary
         unsigned nonArgsSkip = (1 + isConstructing_) * sizeof(Value);
-        BaseValueIndex calleeSlot(masm.getStackPointer(), argcReg, ICStackValueOffset + nonArgsSkip);
+        BaseValueIndex calleeSlot(MacroAssembler::getStackPointer(), argcReg, ICStackValueOffset + nonArgsSkip);
         masm.loadValue(calleeSlot, R1);
     }
     regs.take(R1);
@@ -2976,16 +2976,16 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
 
         // Stack now looks like:
         //      [..., Callee, ThisV, Arg0V, ..., ArgNV, NewTarget, StubFrameHeader, ArgC ]
-        masm.loadValue(Address(masm.getStackPointer(), STUB_FRAME_SIZE + sizeof(size_t)), R1);
+        masm.loadValue(Address(MacroAssembler::getStackPointer(), STUB_FRAME_SIZE + sizeof(size_t)), R1);
         masm.push(masm.extractObject(R1, ExtractTemp0));
 
         if (isSpread_) {
-            masm.loadValue(Address(masm.getStackPointer(),
+            masm.loadValue(Address(MacroAssembler::getStackPointer(),
                                    3 * sizeof(Value) + STUB_FRAME_SIZE + sizeof(size_t) +
                                    sizeof(JSObject*)),
                                    R1);
         } else {
-            BaseValueIndex calleeSlot2(masm.getStackPointer(), argcReg,
+            BaseValueIndex calleeSlot2(MacroAssembler::getStackPointer(), argcReg,
                                        2 * sizeof(Value) + STUB_FRAME_SIZE + sizeof(size_t) +
                                        sizeof(JSObject*));
             masm.loadValue(calleeSlot2, R1);
@@ -3017,16 +3017,16 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
         // Stack now looks like:
         //      [..., Callee, ThisV, Arg0V, ..., ArgNV, [NewTarget], StubFrameHeader ]
         if (isSpread_) {
-            masm.storeValue(R0, Address(masm.getStackPointer(),
+            masm.storeValue(R0, Address(MacroAssembler::getStackPointer(),
                                         (1 + isConstructing_) * sizeof(Value) + STUB_FRAME_SIZE));
         } else {
-            BaseValueIndex thisSlot(masm.getStackPointer(), argcReg,
+            BaseValueIndex thisSlot(MacroAssembler::getStackPointer(), argcReg,
                                     STUB_FRAME_SIZE + isConstructing_ * sizeof(Value));
             masm.storeValue(R0, thisSlot);
         }
 
         // Restore the stub register from the baseline stub frame.
-        masm.loadPtr(Address(masm.getStackPointer(), STUB_FRAME_SAVED_STUB_OFFSET), ICStubReg);
+        masm.loadPtr(Address(MacroAssembler::getStackPointer(), STUB_FRAME_SAVED_STUB_OFFSET), ICStubReg);
 
         // Reload callee script. Note that a GC triggered by CreateThis may
         // have destroyed the callee BaselineScript and IonScript. CreateThis
@@ -3036,11 +3036,11 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
         // Just need to load the script now.
         if (isSpread_) {
             unsigned skipForCallee = (2 + isConstructing_) * sizeof(Value);
-            masm.loadValue(Address(masm.getStackPointer(), skipForCallee + STUB_FRAME_SIZE), R0);
+            masm.loadValue(Address(MacroAssembler::getStackPointer(), skipForCallee + STUB_FRAME_SIZE), R0);
         } else {
             // Account for newTarget, if necessary
             unsigned nonArgsSkip = (1 + isConstructing_) * sizeof(Value);
-            BaseValueIndex calleeSlot3(masm.getStackPointer(), argcReg, nonArgsSkip + STUB_FRAME_SIZE);
+            BaseValueIndex calleeSlot3(MacroAssembler::getStackPointer(), argcReg, nonArgsSkip + STUB_FRAME_SIZE);
             masm.loadValue(calleeSlot3, R0);
         }
         callee = masm.extractObject(R0, ExtractTemp0);
@@ -3113,7 +3113,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
         //                  + sizeof(Descriptor) + sizeof(Callee) + sizeof(ActualArgc)
         //                  + stubFrameSize(Descriptor)
         //                  - sizeof(ICStubReg) - sizeof(BaselineFrameReg)
-        Address descriptorAddr(masm.getStackPointer(), 0);
+        Address descriptorAddr(MacroAssembler::getStackPointer(), 0);
         masm.loadPtr(descriptorAddr, BaselineFrameReg);
         masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), BaselineFrameReg);
         masm.addPtr(Imm32((3 - 2) * sizeof(size_t)), BaselineFrameReg);
@@ -3125,7 +3125,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
             // Account for the Array object.
             masm.move32(Imm32(1), argcReg);
         } else {
-            Address argcAddr(masm.getStackPointer(), 2 * sizeof(size_t));
+            Address argcAddr(MacroAssembler::getStackPointer(), 2 * sizeof(size_t));
             masm.loadPtr(argcAddr, argcReg);
         }
 
@@ -3180,7 +3180,7 @@ ICCall_ConstStringSplit::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Guard that callee is native function js::intrinsic_StringSplitString.
     {
-        Address calleeAddr(masm.getStackPointer(), ICStackValueOffset + CALLEE_DEPTH);
+        Address calleeAddr(MacroAssembler::getStackPointer(), ICStackValueOffset + CALLEE_DEPTH);
         ValueOperand calleeVal = regs.takeAnyValue();
 
         // Ensure that callee is an object.
@@ -3203,7 +3203,7 @@ ICCall_ConstStringSplit::Compiler::generateStubCode(MacroAssembler& masm)
     // Guard sep.
     {
         // Ensure that sep is a string.
-        Address sepAddr(masm.getStackPointer(), ICStackValueOffset + SEP_DEPTH);
+        Address sepAddr(MacroAssembler::getStackPointer(), ICStackValueOffset + SEP_DEPTH);
         ValueOperand sepVal = regs.takeAnyValue();
 
         masm.loadValue(sepAddr, sepVal);
@@ -3218,7 +3218,7 @@ ICCall_ConstStringSplit::Compiler::generateStubCode(MacroAssembler& masm)
     // Guard str.
     {
         // Ensure that str is a string.
-        Address strAddr(masm.getStackPointer(), ICStackValueOffset + STR_DEPTH);
+        Address strAddr(MacroAssembler::getStackPointer(), ICStackValueOffset + STR_DEPTH);
         ValueOperand strVal = regs.takeAnyValue();
 
         masm.loadValue(strAddr, strVal);
@@ -3267,7 +3267,7 @@ ICCall_IsSuspendedGenerator::Compiler::generateStubCode(MacroAssembler& masm)
     AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
 
     // Load the argument.
-    Address argAddr(masm.getStackPointer(), ICStackValueOffset);
+    Address argAddr(MacroAssembler::getStackPointer(), ICStackValueOffset);
     ValueOperand argVal = regs.takeAnyValue();
     masm.loadValue(argAddr, argVal);
 
@@ -3318,10 +3318,10 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler& masm)
     // Load the callee in R1.
     if (isSpread_) {
         unsigned skipToCallee = (2 + isConstructing_) * sizeof(Value);
-        masm.loadValue(Address(masm.getStackPointer(), skipToCallee + ICStackValueOffset), R1);
+        masm.loadValue(Address(MacroAssembler::getStackPointer(), skipToCallee + ICStackValueOffset), R1);
     } else {
         unsigned nonArgsSlots = (1 + isConstructing_) * sizeof(Value);
-        BaseValueIndex calleeSlot(masm.getStackPointer(), argcReg, ICStackValueOffset + nonArgsSlots);
+        BaseValueIndex calleeSlot(MacroAssembler::getStackPointer(), argcReg, ICStackValueOffset + nonArgsSlots);
         masm.loadValue(calleeSlot, R1);
     }
     regs.take(R1);
@@ -3395,7 +3395,7 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler& masm)
     masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
     // Load the return value into R0.
-    masm.loadValue(Address(masm.getStackPointer(), NativeExitFrameLayout::offsetOfResult()), R0);
+    masm.loadValue(Address(MacroAssembler::getStackPointer(), NativeExitFrameLayout::offsetOfResult()), R0);
 
     leaveStubFrame(masm);
 
@@ -3421,7 +3421,7 @@ ICCall_ClassHook::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Load the callee in R1.
     unsigned nonArgSlots = (1 + isConstructing_) * sizeof(Value);
-    BaseValueIndex calleeSlot(masm.getStackPointer(), argcReg, ICStackValueOffset + nonArgSlots);
+    BaseValueIndex calleeSlot(MacroAssembler::getStackPointer(), argcReg, ICStackValueOffset + nonArgSlots);
     masm.loadValue(calleeSlot, R1);
     regs.take(R1);
 
@@ -3482,7 +3482,7 @@ ICCall_ClassHook::Compiler::generateStubCode(MacroAssembler& masm)
     masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
     // Load the return value into R0.
-    masm.loadValue(Address(masm.getStackPointer(), NativeExitFrameLayout::offsetOfResult()), R0);
+    masm.loadValue(Address(MacroAssembler::getStackPointer(), NativeExitFrameLayout::offsetOfResult()), R0);
 
     leaveStubFrame(masm);
 
@@ -3691,7 +3691,7 @@ ICCall_ScriptedFunCall::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Load the callee in R1.
     // Stack Layout: [ ..., CalleeVal, ThisVal, Arg0Val, ..., ArgNVal, +ICStackValueOffset+ ]
-    BaseValueIndex calleeSlot(masm.getStackPointer(), argcReg, ICStackValueOffset + sizeof(Value));
+    BaseValueIndex calleeSlot(MacroAssembler::getStackPointer(), argcReg, ICStackValueOffset + sizeof(Value));
     masm.loadValue(calleeSlot, R1);
     regs.take(R1);
 
@@ -3705,7 +3705,7 @@ ICCall_ScriptedFunCall::Compiler::generateStubCode(MacroAssembler& masm)
     masm.branchPtr(Assembler::NotEqual, callee, ImmPtr(fun_call), &failure);
 
     // Ensure |this| is a function with a jit entry.
-    BaseIndex thisSlot(masm.getStackPointer(), argcReg, TimesEight, ICStackValueOffset);
+    BaseIndex thisSlot(MacroAssembler::getStackPointer(), argcReg, TimesEight, ICStackValueOffset);
     masm.loadValue(thisSlot, R1);
 
     masm.branchTestObject(Assembler::NotEqual, R1, &failure);

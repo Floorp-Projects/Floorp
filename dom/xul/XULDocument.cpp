@@ -3351,7 +3351,7 @@ XULDocument::OverlayForwardReference::Resolve()
             return eResolve_Error;
         }
 
-        rv = mDocument->InsertElement(root, mOverlay, notify);
+        rv = XULDocument::InsertElement(root, mOverlay, notify);
         if (NS_FAILED(rv)) return eResolve_Error;
 
         target = mOverlay;
