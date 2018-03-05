@@ -6,7 +6,6 @@ import android.util.Log;
 
 import org.mozilla.focus.architecture.NonNullObserver;
 import org.mozilla.focus.session.Session;
-import org.mozilla.focus.session.SessionManager;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 
 public class AverageLoadTimeObserver extends NonNullObserver<Boolean> {
