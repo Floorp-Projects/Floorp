@@ -14,7 +14,7 @@ add_task(function* () {
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
 
-  loadFrameScripts();
+  loadFrameScriptUtils();
 
   let rendered = waitForGraphRendered(panelWin, 2, 0);
   reload(target);

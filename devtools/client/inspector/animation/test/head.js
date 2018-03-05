@@ -9,7 +9,6 @@
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js", this);
 
-const COMMON_FRAME_SCRIPT_URL = "chrome://devtools/content/shared/frame-script-utils.js";
 const FRAME_SCRIPT_URL = CHROME_URL_ROOT + "doc_frame_script.js";
 const TAB_NAME = "newanimationinspector";
 
@@ -81,8 +80,7 @@ addTab = async function (url) {
   const browser = tab.linkedBrowser;
   info("Loading the helper frame script " + FRAME_SCRIPT_URL);
   browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
-  info("Loading the helper frame script " + COMMON_FRAME_SCRIPT_URL);
-  browser.messageManager.loadFrameScript(COMMON_FRAME_SCRIPT_URL, false);
+  loadFrameScriptUtils(browser);
   return tab;
 };
 
