@@ -1,0 +1,47 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("ChannelWrapper.webidl"):
+    BUG_COMPONENT = ("Toolkit", "WebExtensions: Request Handling")
+
+with Files("HeapSnapshot.webidl"):
+    BUG_COMPONENT = ("Firefox", "Developer Tools: Memory")
+
+with Files("InspectorUtils.webidl"):
+    BUG_COMPONENT = ("Firefox", "Developer Tools: Inspector")
+
+with Files("MatchGlob.webidl"):
+    BUG_COMPONENT = ("Toolkit", "WebExtensions: General")
+
+with Files("MatchPattern.webidl"):
+    BUG_COMPONENT = ("Toolkit", "WebExtensions: General")
+
+with Files("WebExtension*.webidl"):
+    BUG_COMPONENT = ("Toolkit", "WebExtensions: General")
+
+PREPROCESSED_WEBIDL_FILES = [
+    'ChromeUtils.webidl',
+]
+
+WEBIDL_FILES = [
+    'ChannelWrapper.webidl',
+    'DominatorTree.webidl',
+    'HeapSnapshot.webidl',
+    'InspectorUtils.webidl',
+    'MatchGlob.webidl',
+    'MatchPattern.webidl',
+    'MozStorageAsyncStatementParams.webidl',
+    'MozStorageStatementParams.webidl',
+    'MozStorageStatementRow.webidl',
+    'PrecompiledScript.webidl',
+    'PromiseDebugging.webidl',
+    'StructuredCloneHolder.webidl',
+    'WebExtensionContentScript.webidl',
+    'WebExtensionPolicy.webidl',
+]
