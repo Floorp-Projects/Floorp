@@ -95,9 +95,6 @@ var gViewSourceUtils = {
    *          The line number to focus on once the source is loaded.
    */
   viewSourceInBrowser(aArgs) {
-    Services.telemetry
-            .getHistogramById("VIEW_SOURCE_IN_BROWSER_OPENED_BOOLEAN")
-            .add(true);
     let viewSourceBrowser = new ViewSourceBrowser(aArgs.viewSourceBrowser);
     viewSourceBrowser.loadViewSource(aArgs);
   },
@@ -260,11 +257,8 @@ var gViewSourceUtils = {
     }
   },
 
-  // Calls the callback, and record result in telemetry.
+  // Calls the callback.
   handleCallBack(aCallBack, result, data) {
-    Services.telemetry
-            .getHistogramById("VIEW_SOURCE_EXTERNAL_RESULT_BOOLEAN")
-            .add(result);
     aCallBack(result, data);
   },
 
