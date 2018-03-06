@@ -68,6 +68,17 @@ promise_test(async t => {
   var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
+  // If the animation starts at the current timeline time, we need to wait for
+  // one more frame to avoid receiving the fake timer-based MozAfterPaint event.
+  // FIXME: Bug 1419226: Drop this 'animation.ready' and 'waitForFrame'.  Once
+  // MozAfterPaint is fired reliably, we just need to wait for a MozAfterPaint
+  // here.
+  await animation.ready;
+
+  if (animationStartsRightNow(animation)) {
+    await waitForFrame();
+  }
+
   await waitForPaints();
 
   assert_animation_is_running_on_compositor(animation,
