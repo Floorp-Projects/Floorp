@@ -183,10 +183,7 @@ stage-mach: make-stage-dir
 	cp $(topsrcdir)/testing/tools/mach_test_package_bootstrap.py $(PKG_STAGE)/tools/mach_bootstrap.py
 	cp $(topsrcdir)/mach $(PKG_STAGE)
 
-stage-mochitest: make-stage-dir
-ifeq ($(MOZ_BUILD_APP),mobile/android)
-	$(MAKE) -C $(DEPTH)/testing/mochitest stage-package
-endif
+stage-mochitest: make-stage-dir ;
 
 stage-jstests: make-stage-dir
 	$(MAKE) -C $(DEPTH)/js/src/tests stage-package

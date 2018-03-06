@@ -1323,7 +1323,7 @@ pub enum DeclaredValue<'a, T: 'a> {
 /// extra discriminant word) and synthesize dependent DeclaredValues for
 /// PropertyDeclaration instances as needed.
 #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, ToCss)]
 pub enum DeclaredValueOwned<T> {
     /// A known specified value from the stylesheet.
     Value(T),
@@ -1358,6 +1358,19 @@ pub struct UnparsedValue {
     url_data: UrlExtraData,
     /// The shorthand this came from.
     from_shorthand: Option<ShorthandId>,
+}
+
+impl ToCss for UnparsedValue {
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: Write,
+    {
+        // https://drafts.csswg.org/css-variables/#variables-in-shorthands
+        if self.from_shorthand.is_none() {
+            dest.write_str(&*self.css)?;
+        }
+        Ok(())
+    }
 }
 
 impl UnparsedValue {
@@ -1422,25 +1435,6 @@ impl UnparsedValue {
                 keyword,
         })
         })
-    }
-}
-
-impl<'a, T: ToCss> ToCss for DeclaredValue<'a, T> {
-    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
-    where
-        W: Write,
-    {
-        match *self {
-            DeclaredValue::Value(ref inner) => inner.to_css(dest),
-            DeclaredValue::WithVariables(ref with_variables) => {
-                // https://drafts.csswg.org/css-variables/#variables-in-shorthands
-                if with_variables.from_shorthand.is_none() {
-                    dest.write_str(&*with_variables.css)?
-                }
-                Ok(())
-            },
-            DeclaredValue::CSSWideKeyword(ref keyword) => keyword.to_css(dest),
-        }
     }
 }
 
@@ -1742,14 +1736,7 @@ impl ToCss for VariableDeclaration {
     where
         W: fmt::Write,
     {
-        // https://drafts.csswg.org/css-variables/#variables-in-shorthands
-        match self.value.from_shorthand {
-            None => {
-                dest.write_str(&*self.value.css)?
-            }
-            Some(..) => {},
-        }
-        Ok(())
+        self.value.to_css(dest)
     }
 }
 
@@ -1769,7 +1756,7 @@ impl ToCss for CustomDeclaration {
     where
         W: fmt::Write,
     {
-        self.value.borrow().to_css(dest)
+        self.value.to_css(dest)
     }
 }
 
