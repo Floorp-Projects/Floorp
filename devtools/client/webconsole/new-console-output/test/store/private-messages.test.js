@@ -15,26 +15,15 @@ const {
   getVisibleMessages,
 } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 const {
-  clonePacket,
   getFirstMessage,
   getLastMessage,
+  getPrivatePacket,
   setupActions,
   setupStore,
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
 const { stubPackets } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 
 const expect = require("expect");
-
-function getPrivatePacket(key) {
-  const packet = clonePacket(stubPackets.get(key));
-  if (packet.message) {
-    packet.message.private = true;
-  }
-  if (Object.getOwnPropertyNames(packet).includes("private")) {
-    packet.private = true;
-  }
-  return packet;
-}
 
 describe("private messages", () => {
   let actions;
