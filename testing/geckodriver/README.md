@@ -620,10 +620,10 @@ the built executable with `./mach geckodriver -- --other --flags`.
 [commands]: https://docs.rs/webdriver/newest/webdriver/command/index.html
 [responses]: https://docs.rs/webdriver/newest/webdriver/response/index.html
 [errors]: https://docs.rs/webdriver/newest/webdriver/error/enum.ErrorStatus.html
-[Marionette protocol]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/Protocol
+[Marionette protocol]: https://firefox-source-docs.mozilla.org/testing/marionette/marionette/Protocol.html
 [WebDriver]: https://w3c.github.io/webdriver/webdriver-spec.html
 [FirefoxDriver]: https://github.com/SeleniumHQ/selenium/wiki/FirefoxDriver
-[Marionette]: http://searchfox.org/mozilla-central/source/testing/marionette/README
+[Marionette]: https://firefox-source-docs.mozilla.org/testing/marionette/marionette/
 [Firefox CI]: https://treeherder.mozilla.org/
 [mozconfig]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options
 
