@@ -40,7 +40,7 @@ function addTestTab(url) {
   return Task.spawn(function* () {
     let tab = yield addTab(url);
 
-    // Load devtools/shared/frame-script-utils.js
+    // Load devtools/shared/test/frame-script-utils.js
     loadFrameScriptUtils(tab.linkedBrowser);
 
     // Open the Console panel

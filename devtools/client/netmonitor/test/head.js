@@ -621,7 +621,7 @@ function testFilterButtonsCustom(monitor, isChecked) {
  *
  * @param Array requests
  *        An array of objects specifying the requests to perform. See
- *        shared/frame-script-utils.js for more information.
+ *        shared/test/frame-script-utils.js for more information.
  *
  * @return A promise that resolves once the requests complete.
  */
@@ -636,7 +636,7 @@ function performRequestsInContent(requests) {
  *
  * @param String name
  *        The message name. Should be one of the messages defined
- *        shared/frame-script-utils.js
+ *        shared/test/frame-script-utils.js
  * @param Object data
  *        Optional data to send along
  * @param Object objects

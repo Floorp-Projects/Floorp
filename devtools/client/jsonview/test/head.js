@@ -65,7 +65,7 @@ async function addJsonViewTab(url, {
     }, Ci.nsIWebProgress.NOTIFY_LOCATION);
   })]);
 
-  // Load devtools/shared/frame-script-utils.js
+  // Load devtools/shared/test/frame-script-utils.js
   loadFrameScriptUtils();
   let rootDir = getRootDirectory(gTestPath);
 
