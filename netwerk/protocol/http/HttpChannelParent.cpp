@@ -699,7 +699,13 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     cacheChannel->PreferAlternativeDataType(aPreferredAlternativeType);
 
     cacheChannel->SetAllowStaleCacheContent(aAllowStaleCacheContent);
+
+    // This is to mark that the results are going to the content process.
+    if (httpChannelImpl) {
+      httpChannelImpl->SetAltDataForChild(true);
+    }
   }
+
 
   httpChannel->SetContentType(aContentTypeHint);
 
@@ -2276,7 +2282,11 @@ HttpChannelParent::OpenAlternativeOutputStream(const nsACString & type, nsIOutpu
   if (!mCacheEntry) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return mCacheEntry->OpenAlternativeOutputStream(type, _retval);
+  nsresult rv = mCacheEntry->OpenAlternativeOutputStream(type, _retval);
+  if (NS_SUCCEEDED(rv)) {
+    mCacheEntry->SetMetaDataElement("alt-data-from-child", "1");
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
