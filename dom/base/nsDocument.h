@@ -490,19 +490,6 @@ public:
   virtual void AddToNameTable(Element* aElement, nsAtom* aName) override;
   virtual void RemoveFromNameTable(Element* aElement, nsAtom* aName) override;
 
-  /**
-   * Add a new observer of document change notifications. Whenever
-   * content is changed, appended, inserted or removed the observers are
-   * informed.
-   */
-  virtual void AddObserver(nsIDocumentObserver* aObserver) override;
-
-  /**
-   * Remove an observer of document change notifications. This will
-   * return false if the observer cannot be found.
-   */
-  virtual bool RemoveObserver(nsIDocumentObserver* aObserver) override;
-
   // Observation hooks used to propagate notifications to document
   // observers.
   virtual void BeginUpdate(nsUpdateType aUpdateType) override;
@@ -1096,9 +1083,6 @@ protected:
   nsTArray<RefPtr<mozilla::StyleSheet>> mOnDemandBuiltInUASheets;
   nsTArray<RefPtr<mozilla::StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];
 
-  // Array of observers
-  nsTObserverArray<nsIDocumentObserver*> mObservers;
-
   // Array of intersection observers
   nsTHashtable<nsPtrHashKey<mozilla::dom::DOMIntersectionObserver>>
     mIntersectionObservers;
@@ -1140,8 +1124,6 @@ public:
 
   // True if the document has been detached from its content viewer.
   bool mIsGoingAway:1;
-  // True if the document is being destroyed.
-  bool mInDestructor:1;
 
   // True if this document has ever had an HTML or SVG <title> element
   // bound to it
