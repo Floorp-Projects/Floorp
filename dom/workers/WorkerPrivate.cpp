@@ -88,6 +88,9 @@ TimeoutsLog()
   return sWorkerTimeoutsLog;
 }
 
+#ifdef LOG
+#undef LOG
+#endif
 #define LOG(log, _args) MOZ_LOG(log, LogLevel::Debug, _args);
 
 namespace mozilla {
@@ -2616,6 +2619,9 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mIsSecureContext(false)
   , mDebuggerRegistered(false)
   , mIsInAutomation(false)
+#ifndef RELEASE_OR_BETA
+  , mPerformanceCounter(nullptr)
+#endif
 {
   MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
   mLoadInfo.StealFrom(aLoadInfo);
@@ -5238,6 +5244,20 @@ WorkerPrivate::DumpCrashInformation(nsACString& aString)
     aString.Append(holder->Name());
   }
 }
+
+#ifndef RELEASE_OR_BETA
+PerformanceCounter*
+WorkerPrivate::GetPerformanceCounter()
+{
+  AssertIsOnWorkerThread();
+
+  if (!mPerformanceCounter) {
+    mPerformanceCounter = new PerformanceCounter(NS_ConvertUTF16toUTF8(mWorkerName));
+  }
+
+  return mPerformanceCounter;
+}
+#endif
 
 PerformanceStorage*
 WorkerPrivate::GetPerformanceStorage()
