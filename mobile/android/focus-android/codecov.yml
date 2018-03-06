@@ -9,6 +9,7 @@ coverage:
   status:
     project:
       default:
+       threshold: 0.1
        if_not_found: success
     patch:
       default:
