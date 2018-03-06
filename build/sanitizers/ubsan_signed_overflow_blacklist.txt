@@ -8,7 +8,7 @@
 #
 # The rules in this file are applied at compile time; changes to this list
 # usually require a full rebuild to apply. If you can modify the source in
-# question to exempt individual functions using MOZ_NO_SANITIZE_SINT_OVERFLOW,
+# question to exempt specific functions using MOZ_NO_SANITIZE_SIGNED_OVERFLOW,
 # do that instead.
 #
 # The extensive number of entries below is for two reasons.
