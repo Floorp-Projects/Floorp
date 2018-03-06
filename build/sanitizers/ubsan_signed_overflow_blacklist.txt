@@ -241,7 +241,6 @@ src:*/security/manager/ssl/md4.c
 src:*/security/nss/lib/dbm/src/h_func.c
 src:*/security/nss/lib/freebl/sha512.c
 src:*/security/nss/lib/freebl/md5.c
-src:*/XorShift128PlusRNG.h
 src:*/xpcom/ds/PLDHashTable.cpp
 
 # Hash/Cache function in Skia
