@@ -48,18 +48,25 @@ public class GeckoViewActivity extends Activity {
         Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
               " - application start");
 
-        final String[] geckoArgs;
+        String geckoArgs = null;
+        final String intentArgs = getIntent().getStringExtra("args");
 
         if (BuildConfig.DEBUG) {
             // In debug builds, we want to load JavaScript resources fresh with each build.
-            geckoArgs = new String[] { "-purgecaches" };
-        } else {
-            geckoArgs = null;
+            geckoArgs = "-purgecaches";
+        }
+
+        if (!TextUtils.isEmpty(intentArgs)) {
+            if (geckoArgs == null) {
+                geckoArgs = intentArgs;
+            } else {
+                geckoArgs += " " + intentArgs;
+            }
         }
 
         final boolean useMultiprocess = getIntent().getBooleanExtra(USE_MULTIPROCESS_EXTRA,
                                                                     true);
-        GeckoSession.preload(this, geckoArgs, getIntent().getExtras(), useMultiprocess);
+        GeckoSession.preload(this, geckoArgs, useMultiprocess);
 
         setContentView(R.layout.geckoview_activity);
 
