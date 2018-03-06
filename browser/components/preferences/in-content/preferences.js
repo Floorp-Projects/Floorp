@@ -75,6 +75,8 @@ function init_all() {
     this.removeAttribute("keyboard-navigation");
   });
 
+  maybeDisplayPoliciesNotice();
+
   window.addEventListener("hashchange", onHashChange);
   gotoPref();
 
@@ -303,9 +305,9 @@ function getClosestDisplayedHeader(element) {
 }
 
 function scrollContentTo(element) {
-  const SEARCH_CONTAINER_HEIGHT = document.querySelector(".search-container").clientHeight;
+  const STICKY_CONTAINER_HEIGHT = document.querySelector(".sticky-container").clientHeight;
   let mainContent = document.querySelector(".main-content");
-  let top = element.getBoundingClientRect().top - SEARCH_CONTAINER_HEIGHT;
+  let top = element.getBoundingClientRect().top - STICKY_CONTAINER_HEIGHT;
   mainContent.scroll({
     top,
     behavior: "smooth",
@@ -410,4 +412,10 @@ function appendSearchKeywords(aId, keywords) {
     keywords.push(searchKeywords);
   }
   element.setAttribute("searchkeywords", keywords.join(" "));
+}
+
+function maybeDisplayPoliciesNotice() {
+  if (Services.policies.status == Services.policies.ACTIVE) {
+    document.getElementById("policies-container").removeAttribute("hidden");
+  }
 }

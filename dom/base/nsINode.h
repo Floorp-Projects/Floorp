@@ -1011,6 +1011,12 @@ public:
     return mParent;
   }
 
+  /**
+   * This is similar to above, but in case 'this' is ShadowRoot, we return its
+   * host element.
+   */
+  nsINode* GetParentOrHostNode() const;
+
   enum FlattenedParentType { eNotForStyle, eForStyle };
 
   /**

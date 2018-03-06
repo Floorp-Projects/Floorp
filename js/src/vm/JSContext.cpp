@@ -1160,6 +1160,18 @@ js::UseInternalJobQueues(JSContext* cx, bool cooperative)
     return true;
 }
 
+JS_FRIEND_API(bool)
+js::EnqueueJob(JSContext* cx, JS::HandleObject job)
+{
+    MOZ_ASSERT(cx->jobQueue);
+    if (!cx->jobQueue->append(job)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    return true;
+}
+
 JS_FRIEND_API(void)
 js::StopDrainingJobQueue(JSContext* cx)
 {

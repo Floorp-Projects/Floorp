@@ -18,8 +18,8 @@ fuzzy(11,4) fuzzy-if(skiaContent,2,10) == input-customerror.html input-ref.html
 == input-pattern-invalid.html input-withtext-ref.html
 == input-type-barred.html input-button-ref.html
 fuzzy(11,4) == input-type-invalid.html input-ref.html
-== input-disabled-fieldset-1.html input-fieldset-ref.html
-== input-disabled-fieldset-2.html input-fieldset-ref.html
+fuzzy-if(webrender,0-15,0-14) == input-disabled-fieldset-1.html input-fieldset-ref.html
+fuzzy-if(webrender,0-15,0-14) == input-disabled-fieldset-2.html input-fieldset-ref.html
 == input-fieldset-legend.html input-fieldset-legend-ref.html
 fuzzy-if(webrender,0-14,0-8) == input-radio-required.html input-radio-ref.html
 fuzzy-if(skiaContent,2,10) fuzzy-if(webrender,0-14,0-8) == input-radio-customerror.html input-radio-ref.html

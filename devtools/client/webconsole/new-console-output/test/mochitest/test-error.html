@@ -8,13 +8,14 @@
     <h1>Heads Up Display - error test</h1>
     <p><button>generate error</button></p>
 
-    <script type="text/javascript"><!--
+    <script type="text/javascript">
+      /* eslint-disable */
       var button = document.getElementsByTagName("button")[0];
 
       button.addEventListener("click", function  () {
         fooBazBaz.bar();
       }, {once: true});
-    // --></script>
+    </script>
   </body>
 </html>
 

@@ -204,18 +204,19 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 // inner windows belonging to the same outer window, but that's an unimportant
 // side effect of inheriting PRCList).
 
-class nsGlobalWindowInner : public mozilla::dom::EventTarget,
-                            public nsPIDOMWindowInner,
-                            private nsIDOMWindow,
-                            // NOTE: This interface is private, as it's only
-                            // implemented on chrome windows.
-                            private nsIDOMChromeWindow,
-                            public nsIScriptGlobalObject,
-                            public nsIScriptObjectPrincipal,
-                            public nsSupportsWeakReference,
-                            public nsIInterfaceRequestor,
-                            public PRCListStr,
-                            public nsAPostRefreshObserver
+class nsGlobalWindowInner final
+  : public mozilla::dom::EventTarget
+  , public nsPIDOMWindowInner
+  , private nsIDOMWindow
+  // NOTE: This interface is private, as it's only
+  // implemented on chrome windows.
+  , private nsIDOMChromeWindow
+  , public nsIScriptGlobalObject
+  , public nsIScriptObjectPrincipal
+  , public nsSupportsWeakReference
+  , public nsIInterfaceRequestor
+  , public PRCListStr
+  , public nsAPostRefreshObserver
 {
 public:
   typedef mozilla::TimeStamp TimeStamp;

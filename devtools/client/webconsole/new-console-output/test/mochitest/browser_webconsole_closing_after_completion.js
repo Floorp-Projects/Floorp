@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Tests to ensure that errors don't appear when the console is closed while a
 // completion is being performed. See Bug 580001.
 

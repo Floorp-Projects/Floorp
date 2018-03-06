@@ -174,10 +174,6 @@ mochitest-chrome:
     e10s: false
     mozharness:
         mochitest-flavor: chrome
-        config:
-            by-test-platform:
-                macosx.*:
-                    - remove_executables.py
         extra-options:
             by-test-platform:
                 android.*:
@@ -204,10 +200,6 @@ mochitest-clipboard:
             default: true
     mozharness:
         mochitest-flavor: plain
-        config:
-            by-test-platform:
-                macosx.*:
-                    - remove_executables.py
         extra-options:
             by-test-platform:
                 android.*:

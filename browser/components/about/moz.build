@@ -17,6 +17,11 @@ SOURCES += [
     'AboutRedirector.cpp',
 ]
 
+EXTRA_COMPONENTS += [
+    'aboutcapabilities.manifest',
+    'nsAboutCapabilities.js',
+]
+
 FINAL_LIBRARY = 'browsercomps'
 
 LOCAL_INCLUDES += [

@@ -48,30 +48,30 @@ function test() {
       let tabbox = panel.panelDoc.getElementById("sidebar");
       panel.sidebar = new ToolSidebar(tabbox, panel, "testbug865688", true);
 
-      panel.sidebar.on("new-tab-registered", function (event, id) {
+      panel.sidebar.on("new-tab-registered", function (id) {
         registeredTabs[id] = true;
       });
 
-      panel.sidebar.once("tab1-ready", function (event) {
-        info(event);
+      panel.sidebar.once("tab1-ready", function () {
+        info("tab1-ready");
         readyTabs.tab1 = true;
         allTabsReady(panel);
       });
 
-      panel.sidebar.once("tab2-ready", function (event) {
-        info(event);
+      panel.sidebar.once("tab2-ready", function () {
+        info("tab2-ready");
         readyTabs.tab2 = true;
         allTabsReady(panel);
       });
 
-      panel.sidebar.once("tab3-ready", function (event) {
-        info(event);
+      panel.sidebar.once("tab3-ready", function () {
+        info("tab3-ready");
         readyTabs.tab3 = true;
         allTabsReady(panel);
       });
 
-      panel.sidebar.once("tab1-selected", function (event) {
-        info(event);
+      panel.sidebar.once("tab1-selected", function () {
+        info("tab1-selected");
         tab1Selected = true;
         allTabsReady(panel);
       });
@@ -127,8 +127,8 @@ function test() {
   }
 
   function testRemoval(panel) {
-    panel.sidebar.once("tab-unregistered", function (event, id) {
-      info(event);
+    panel.sidebar.once("tab-unregistered", function (id) {
+      info("tab-unregistered");
       registeredTabs[id] = false;
 
       is(id, "tab3", "The right tab must be removed");

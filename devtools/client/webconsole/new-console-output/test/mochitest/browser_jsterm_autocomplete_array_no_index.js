@@ -19,9 +19,7 @@ add_task(async function () {
   let { jsterm } = await openNewTabAndConsole(TEST_URI);
 
   const {
-    autocompletePopup: popup,
-    completeNode,
-    inputNode,
+    autocompletePopup: popup
   } = jsterm;
 
   let onPopUpOpen = popup.once("popup-opened");

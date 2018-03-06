@@ -161,11 +161,6 @@ nsLayoutStatics::Initialize()
   NS_SetStaticAtomsDone();
 
   StartupJSEnvironment();
-  rv = nsRegion::InitStatic();
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize nsRegion");
-    return rv;
-  }
 
   nsGlobalWindowInner::Init();
   nsGlobalWindowOuter::Init();
@@ -422,8 +417,6 @@ nsLayoutStatics::Shutdown()
   nsHtml5Module::ReleaseStatics();
 
   mozilla::dom::FallbackEncoding::Shutdown();
-
-  nsRegion::ShutdownStatic();
 
   mozilla::EventDispatcher::Shutdown();
 

@@ -8,6 +8,9 @@
   </head>
   <body>
     <p>Test for the cd() command (bug 609872) - iframe child</p>
-    <script>window.foobar = "child!";</script>
+    <script>
+      "use strict";
+      window.foobar = "child!";
+    </script>
   </body>
 </html>

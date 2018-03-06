@@ -8,7 +8,8 @@
 // See Bug 597136.
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "new-console-output/test/mochitest/test-external-script-errors.html";
+                 "new-console-output/test/mochitest/" +
+                 "test-external-script-errors.html";
 
 add_task(async function () {
   // On e10s, the exception is triggered in child process

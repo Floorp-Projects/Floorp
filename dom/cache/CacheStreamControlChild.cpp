@@ -125,9 +125,8 @@ CacheStreamControlChild::OpenStream(const nsID& aId, InputStreamResolver&& aReso
   RefPtr<CacheWorkerHolder> holder = GetWorkerHolder();
 
   SendOpenStream(aId)->Then(GetCurrentThreadSerialEventTarget(), __func__,
-  [aResolver, holder](const OptionalIPCStream& aOptionalStream) {
-    nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aOptionalStream);
-    aResolver(Move(stream));
+  [aResolver, holder](const nsCOMPtr<nsIInputStream>& aOptionalStream) {
+    aResolver(nsCOMPtr<nsIInputStream>(aOptionalStream));
   }, [aResolver, holder](ResponseRejectReason aReason) {
     aResolver(nullptr);
   });

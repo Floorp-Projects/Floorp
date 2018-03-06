@@ -19,6 +19,7 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" class="private">
   <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:"/>
     <link id="favicon" rel="icon" type="image/png" href="chrome://browser/skin/privatebrowsing/favicon.svg"/>
     <link rel="stylesheet" href="chrome://browser/content/aboutPrivateBrowsing.css" type="text/css" media="all"/>
     <link rel="stylesheet" href="chrome://browser/skin/privatebrowsing/aboutPrivateBrowsing.css" type="text/css" media="all"/>
@@ -27,11 +28,9 @@
 
   <body dir="&locale.dir;">
     <p class="showNormal">&aboutPrivateBrowsing.notPrivate;</p>
-    <button xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            id="startPrivateBrowsing"
+    <button id="startPrivateBrowsing"
             class="showNormal"
-            label="&privatebrowsingpage.openPrivateWindow.label;"
-            accesskey="&privatebrowsingpage.openPrivateWindow.accesskey;"/>
+            accesskey="&privatebrowsingpage.openPrivateWindow.accesskey;">&privatebrowsingpage.openPrivateWindow.label;</button>
     <div class="showPrivate container">
       <h1 class="title">
         <span id="title">&privateBrowsing.title;</span>

@@ -3402,7 +3402,8 @@ CanAddSpacingAfter(const gfxTextRun* aTextRun, uint32_t aOffset)
   if (aOffset + 1 >= aTextRun->GetLength())
     return true;
   return aTextRun->IsClusterStart(aOffset + 1) &&
-    aTextRun->IsLigatureGroupStart(aOffset + 1);
+    aTextRun->IsLigatureGroupStart(aOffset + 1) &&
+    !aTextRun->CharIsFormattingControl(aOffset);
 }
 
 static gfxFloat

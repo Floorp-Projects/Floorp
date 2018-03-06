@@ -29,7 +29,6 @@ add_task(async function () {
   const {
     autocompletePopup: popup,
     completeNode,
-    inputNode,
   } = jsterm;
 
   let onPopUpOpen = popup.once("popup-opened");

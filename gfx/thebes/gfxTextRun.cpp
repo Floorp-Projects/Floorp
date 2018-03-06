@@ -2160,8 +2160,12 @@ gfxFontGroup::IsInvalidChar(char16_t ch)
     if (ch <= 0x9f) {
         return true;
     }
+    // Word-separating format/bidi control characters are not shaped as part
+    // of words.
     return (((ch & 0xFF00) == 0x2000 /* Unicode control character */ &&
-             (ch == 0x200B/*ZWSP*/ || ch == 0x2028/*LSEP*/ || ch == 0x2029/*PSEP*/)) ||
+             (ch == 0x200B/*ZWSP*/ || ch == 0x2028/*LSEP*/ ||
+              ch == 0x2029/*PSEP*/ || ch == 0x2060/*WJ*/)) ||
+            ch == 0xfeff/*ZWNBSP*/ ||
             IsBidiControl(ch));
 }
 

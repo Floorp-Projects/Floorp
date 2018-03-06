@@ -111,6 +111,12 @@ NS_IMETHODIMP nsReadConfig::Observe(nsISupports *aSubject, const char *aTopic, c
     return rv;
 }
 
+/**
+ * This is the blocklist for known bad autoconfig files.
+ */
+static const char *gBlockedConfigs[] = {
+  "dsengine.cfg"
+};
 
 nsresult nsReadConfig::readConfigFile()
 {
@@ -135,10 +141,17 @@ nsresult nsReadConfig::readConfigFile()
     rv = defaultPrefBranch->GetCharPref("general.config.filename",
                                         lockFileName);
 
-
     MOZ_LOG(MCD, LogLevel::Debug, ("general.config.filename = %s\n", lockFileName.get()));
     if (NS_FAILED(rv))
         return rv;
+
+    for (size_t index = 0, len = mozilla::ArrayLength(gBlockedConfigs); index < len;
+         ++index) {
+      if (lockFileName == gBlockedConfigs[index]) {
+        // This is NS_OK because we don't want to show an error to the user
+        return rv;
+      }
+    }
 
     // This needs to be read only once.
     //

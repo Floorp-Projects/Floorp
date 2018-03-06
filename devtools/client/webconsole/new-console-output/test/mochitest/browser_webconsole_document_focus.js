@@ -16,9 +16,7 @@ add_task(async function () {
   info("Closing console");
   await closeConsole();
   const isFocused = await ContentTask.spawn(gBrowser.selectedBrowser, { }, function () {
-    const cmp = "@mozilla.org/focus-manager;1";
-    const fm = Cc[cmp].getService(Ci.nsIFocusManager);
-    return fm.focusedWindow == content;
+    return Services.focus.focusedWindow == content;
   });
   ok(isFocused, "content document has focus after closing the console");
 });

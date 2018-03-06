@@ -3,11 +3,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Check that message persistence works - bug 705921 / bug 1307881
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/mochitest/test-console.html";
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
+                 "new-console-output/test/mochitest/test-console.html";
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webconsole.persistlog");
@@ -17,10 +20,11 @@ add_task(async function () {
   info("Testing that messages disappear on a refresh if logs aren't persisted");
   let hud = await openNewTabAndConsole(TEST_URI);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
-    content.wrappedJSObject.doLogs(5);
+  const INITIAL_LOGS_NUMBER = 5;
+  await ContentTask.spawn(gBrowser.selectedBrowser, INITIAL_LOGS_NUMBER, (count) => {
+    content.wrappedJSObject.doLogs(count);
   });
-  await waitFor(() => findMessages(hud, "").length === 5);
+  await waitFor(() => findMessages(hud, "").length === INITIAL_LOGS_NUMBER);
   ok(true, "Messages showed up initially");
 
   await refreshTab();
@@ -38,14 +42,18 @@ add_task(async function () {
   hud.ui.outputNode.querySelector(".webconsole-filterbar-primary .filter-checkbox")
     .click();
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
-    content.wrappedJSObject.doLogs(5);
+  const INITIAL_LOGS_NUMBER = 5;
+  await ContentTask.spawn(gBrowser.selectedBrowser, INITIAL_LOGS_NUMBER, (count) => {
+    content.wrappedJSObject.doLogs(count);
   });
-  await waitFor(() => findMessages(hud, "").length === 5);
+  await waitFor(() => findMessages(hud, "").length === INITIAL_LOGS_NUMBER);
   ok(true, "Messages showed up initially");
 
-  await refreshTab();
-  await waitFor(() => findMessages(hud, "").length === 6);
+  const onNavigatedMessage = waitForMessage(hud, "Navigated to");
+  refreshTab();
+  await onNavigatedMessage;
 
-  ok(findMessage(hud, "Navigated"), "Navigated message appeared");
+  ok(true, "Navigation message appeared as expected");
+  is(findMessages(hud, "").length, INITIAL_LOGS_NUMBER + 1,
+    "Messages logged before navigation are still visible");
 });

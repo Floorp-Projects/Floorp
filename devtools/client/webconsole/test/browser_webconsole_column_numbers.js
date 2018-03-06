@@ -33,7 +33,7 @@ function consoleOpened(aHud) {
 
 function testLocationColumn() {
   let messages = hud.outputNode.children;
-  let expected = ["10:7", "10:39", "11:9", "12:11", "13:9", "14:7"];
+  let expected = ["11:7", "11:39", "12:9", "13:11", "14:9", "15:7"];
 
   for (let i = 0, len = messages.length; i < len; i++) {
     let msg = messages[i].textContent;
