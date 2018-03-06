@@ -1481,6 +1481,9 @@ nsIDocument::nsIDocument()
     mIsSVGGlyphsDocument(false),
     mAllowUnsafeHTML(false),
     mInDestructor(false),
+    mIsGoingAway(false),
+    mInXBLUpdate(false),
+    mNeedsReleaseAfterStackRefCntRelease(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
@@ -1513,6 +1516,8 @@ nsIDocument::nsIDocument()
     mIncCounters(),
     mUserHasInteracted(false),
     mUserHasActivatedInteraction(false),
+    mStackRefCnt(0),
+    mUpdateNestLevel(0),
     mServoRestyleRootDirtyBits(0),
     mThrowOnDynamicMarkupInsertionCounter(0),
     mIgnoreOpensDuringUnloadCounter(0)
@@ -1528,12 +1533,10 @@ nsDocument::nsDocument(const char* aContentType)
   , mSubDocuments(nullptr)
   , mFlashClassification(FlashClassification::Unclassified)
   , mHeaderData(nullptr)
-  , mIsGoingAway(false)
   , mMayHaveTitleElement(false)
   , mHasWarnedAboutBoxObjects(false)
   , mDelayFrameLoaderInitialization(false)
   , mSynchronousDOMContentLoaded(false)
-  , mInXBLUpdate(false)
   , mParserAborted(false)
   , mCurrentOrientationAngle(0)
   , mCurrentOrientationType(OrientationType::Portrait_primary)
@@ -1543,7 +1546,6 @@ nsDocument::nsDocument(const char* aContentType)
   , mPendingFullscreenRequests(0)
   , mXMLDeclarationBits(0)
   , mBoxObjectTable(nullptr)
-  , mUpdateNestLevel(0)
   , mOnloadBlockCount(0)
   , mAsyncOnloadBlockCount(0)
 #ifdef DEBUG
@@ -1562,8 +1564,6 @@ nsDocument::nsDocument(const char* aContentType)
   , mValidMaxScale(false)
   , mScaleStrEmpty(false)
   , mWidthStrEmpty(false)
-  , mStackRefCnt(0)
-  , mNeedsReleaseAfterStackRefCntRelease(false)
   , mMaybeServiceWorkerControlled(false)
 #ifdef DEBUG
   , mWillReparent(false)
@@ -3070,13 +3070,6 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   }
   ApplySettingsFromCSP(false);
   return NS_OK;
-}
-
-already_AddRefed<nsIParser>
-nsDocument::CreatorParserOrNull()
-{
-  nsCOMPtr<nsIParser> parser = mParser;
-  return parser.forget();
 }
 
 void
@@ -5174,7 +5167,7 @@ nsDocument::MaybeEndOutermostXBLUpdate()
 }
 
 void
-nsDocument::BeginUpdate(nsUpdateType aUpdateType)
+nsIDocument::BeginUpdate(nsUpdateType aUpdateType)
 {
   // If the document is going away, then it's probably okay to do things to it
   // in the wrong DocGroup. We're unlikely to run JS or do anything else
@@ -7603,7 +7596,7 @@ nsIDocument::CreateEvent(const nsAString& aEventType, CallerType aCallerType,
 }
 
 void
-nsDocument::FlushPendingNotifications(FlushType aType)
+nsIDocument::FlushPendingNotifications(FlushType aType)
 {
   nsDocumentOnStack dos(this);
 
@@ -8032,7 +8025,7 @@ nsDocument::CreateElem(const nsAString& aName, nsAtom *aPrefix,
 }
 
 bool
-nsDocument::IsSafeToFlush() const
+nsIDocument::IsSafeToFlush() const
 {
   nsIPresShell* shell = GetShell();
   if (!shell)

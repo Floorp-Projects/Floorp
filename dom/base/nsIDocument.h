@@ -210,6 +210,7 @@ enum DocumentFlavor {
 
 // Some function forward-declarations
 class nsContentList;
+class nsDocumentOnStack;
 
 //----------------------------------------------------------------------
 
@@ -373,7 +374,11 @@ public:
    */
   virtual void ApplySettingsFromCSP(bool aSpeculative) = 0;
 
-  virtual already_AddRefed<nsIParser> CreatorParserOrNull() = 0;
+  already_AddRefed<nsIParser> CreatorParserOrNull()
+  {
+    nsCOMPtr<nsIParser> parser = mParser;
+    return parser.forget();
+  }
 
   /**
    * Return the referrer policy of the document. Return "default" if there's no
@@ -913,6 +918,9 @@ public:
     return mPresShell && mPresShell->IsObservingDocument()
       ? mPresShell : nullptr;
   }
+
+  // Return whether the presshell for this document is safe to flush.
+  bool IsSafeToFlush() const;
 
   nsPresContext* GetPresContext() const
   {
@@ -1680,8 +1688,9 @@ public:
   // BeginUpdate must be called before any batch of modifications of the
   // content model or of style data, EndUpdate must be called afterward.
   // To make this easy and painless, use the mozAutoDocUpdate helper class.
-  virtual void BeginUpdate(nsUpdateType aUpdateType) = 0;
+  void BeginUpdate(nsUpdateType aUpdateType);
   virtual void EndUpdate(nsUpdateType aUpdateType) = 0;
+
   virtual void BeginLoad() = 0;
   virtual void EndLoad() = 0;
 
@@ -1715,7 +1724,7 @@ public:
    * Flush notifications for this document and its parent documents
    * (since those may affect the layout of this one).
    */
-  virtual void FlushPendingNotifications(mozilla::FlushType aType) = 0;
+  void FlushPendingNotifications(mozilla::FlushType aType);
 
   /**
    * Calls FlushPendingNotifications on any external resources this document
@@ -3226,6 +3235,21 @@ private:
   mozilla::UniquePtr<SelectorCache> mGeckoSelectorCache;
 
 protected:
+  friend class nsDocumentOnStack;
+
+  void IncreaseStackRefCnt()
+  {
+    ++mStackRefCnt;
+  }
+
+  void DecreaseStackRefCnt()
+  {
+    if (--mStackRefCnt == 0 && mNeedsReleaseAfterStackRefCntRelease) {
+      mNeedsReleaseAfterStackRefCntRelease = false;
+      NS_RELEASE_THIS();
+    }
+  }
+
   ~nsIDocument();
   nsPropertyTable* GetExtraPropertyTable(uint16_t aCategory);
 
@@ -3560,7 +3584,14 @@ protected:
   bool mAllowUnsafeHTML : 1;
 
   // True if the document is being destroyed.
-  bool mInDestructor:1;
+  bool mInDestructor: 1;
+
+  // True if the document has been detached from its content viewer.
+  bool mIsGoingAway: 1;
+
+  bool mInXBLUpdate: 1;
+
+  bool mNeedsReleaseAfterStackRefCntRelease: 1;
 
   // Whether <style scoped> support is enabled in this document.
   enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };
@@ -3749,6 +3780,20 @@ protected:
   nsTArray<nsCOMPtr<nsIPrincipal>> mAncestorPrincipals;
   // List of ancestor outerWindowIDs that correspond to the ancestor principals.
   nsTArray<uint64_t> mAncestorOuterWindowIDs;
+
+  // Pointer to our parser if we're currently in the process of being
+  // parsed into.
+  nsCOMPtr<nsIParser> mParser;
+
+  nsrefcnt mStackRefCnt;
+
+  // Weak reference to our sink for in case we no longer have a parser.  This
+  // will allow us to flush out any pending stuff from the sink even if
+  // EndLoad() has already happened.
+  nsWeakPtr mWeakSink;
+
+  // Our update nesting level
+  uint32_t mUpdateNestLevel;
 
   // Restyle root for servo's style system.
   //
