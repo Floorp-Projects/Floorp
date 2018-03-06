@@ -222,7 +222,6 @@
 @RESPATH@/components/dom_workers.xpt
 @RESPATH@/components/dom_xul.xpt
 @RESPATH@/components/dom_presentation.xpt
-@RESPATH@/components/downloads.xpt
 @RESPATH@/components/editor.xpt
 @RESPATH@/components/enterprisepolicies.xpt
 @RESPATH@/components/extensions.xpt
