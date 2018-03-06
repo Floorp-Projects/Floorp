@@ -96,8 +96,7 @@
       "description": "If false, removes access to create a master password.",
       "first_available": "60.0",
 
-      "type": "boolean",
-      "enum": [false]
+      "type": "boolean"
     },
 
     "DisableAppUpdate": {
@@ -154,8 +153,7 @@
       "description": "Disables private browsing.",
       "first_available": "60.0",
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
     "DisableSysAddonUpdate": {
