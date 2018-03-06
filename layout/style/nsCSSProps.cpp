@@ -161,7 +161,7 @@ static nsCSSPropertyID gAliases[eCSSAliasCount != 0 ? eCSSAliasCount : 1] = {
 #undef CSS_PROP_ALIAS
 };
 
-nsStaticCaseInsensitiveNameTable*
+static nsStaticCaseInsensitiveNameTable*
 CreateStaticTable(const char* const aRawTable[], int32_t aLength)
 {
   auto table = new nsStaticCaseInsensitiveNameTable(aRawTable, aLength);

@@ -26,6 +26,7 @@ class IpcResourceUpdateQueue;
 namespace layers {
 
 class CompositorManagerChild;
+class ImageContainer;
 class WebRenderLayerManager;
 
 class SharedSurfacesChild final

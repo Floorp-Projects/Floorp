@@ -906,9 +906,9 @@ DefineTransaction.defineInputProps(["url", "feedUrl", "siteUrl"],
                                    DefineTransaction.urlValidate, null);
 DefineTransaction.defineInputProps(["guid", "parentGuid", "newParentGuid"],
                                    DefineTransaction.guidValidate);
-DefineTransaction.defineInputProps(["title"],
+DefineTransaction.defineInputProps(["title", "postData"],
                                    DefineTransaction.strOrNullValidate, null);
-DefineTransaction.defineInputProps(["keyword", "oldKeyword", "postData", "tag",
+DefineTransaction.defineInputProps(["keyword", "oldKeyword", "tag",
                                     "excludingAnnotation"],
                                    DefineTransaction.strValidate, "");
 DefineTransaction.defineInputProps(["index", "newIndex"],

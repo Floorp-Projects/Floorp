@@ -12,6 +12,7 @@
 #include "gfxTypes.h"
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/gfx/Point.h"          // for IntSize
+#include "mozilla/gfx/Types.h"          // for SurfaceFormat
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
@@ -22,6 +23,12 @@
 #endif
 
 namespace mozilla {
+
+namespace gfx {
+
+class DrawTarget;
+
+} // namespace gfx
 
 namespace layers {
 
@@ -60,14 +67,10 @@ protected:
   const bool mContinuous;
 };
 
-#endif // MOZ_WIDGET_ANDROID
-
-#ifdef MOZ_WIDGET_ANDROID
-
 class AndroidNativeWindowTextureData : public TextureData
 {
 public:
-  static AndroidNativeWindowTextureData* Create(gfx::IntSize aSize, SurfaceFormat aFormat);
+  static AndroidNativeWindowTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
 
   virtual void FillInfo(TextureData::Info& aInfo) const override;
 
@@ -79,14 +82,14 @@ public:
   virtual void Forget(LayersIPCChannel*) override;
   virtual void Deallocate(LayersIPCChannel*) override {}
 
-  virtual already_AddRefed<DrawTarget> BorrowDrawTarget() override;
+  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
 
   virtual void OnForwardedToHost() override;
 
 protected:
   AndroidNativeWindowTextureData(java::GeckoSurface::Param aSurface,
                                  gfx::IntSize aSize,
-                                 SurfaceFormat aFormat);
+                                 gfx::SurfaceFormat aFormat);
 
 private:
   java::GeckoSurface::GlobalRef mSurface;
@@ -96,7 +99,7 @@ private:
   bool mIsLocked;
 
   const gfx::IntSize mSize;
-  const SurfaceFormat mFormat;
+  const gfx::SurfaceFormat mFormat;
 };
 
 #endif // MOZ_WIDGET_ANDROID

@@ -6,7 +6,6 @@
 
 #include "LayerTransactionParent.h"
 #include <vector>                       // for vector
-#include "apz/src/AsyncPanZoomController.h"
 #include "CompositableHost.h"           // for CompositableParent, Get, etc
 #include "ImageLayers.h"                // for ImageLayer
 #include "Layers.h"                     // for Layer, ContainerLayer, etc
@@ -751,25 +750,6 @@ LayerTransactionParent::RecvGetAnimationTransform(const uint64_t& aCompositorAni
   return IPC_OK();
 }
 
-static AsyncPanZoomController*
-GetAPZCForViewID(Layer* aLayer, FrameMetrics::ViewID aScrollID)
-{
-  AsyncPanZoomController* resultApzc = nullptr;
-  ForEachNode<ForwardIterator>(
-      aLayer,
-      [aScrollID, &resultApzc] (Layer* layer)
-      {
-        for (uint32_t i = 0; i < layer->GetScrollMetadataCount(); i++) {
-          if (layer->GetFrameMetrics(i).GetScrollId() == aScrollID) {
-            resultApzc = layer->GetAsyncPanZoomController(i);
-            return TraversalFlag::Abort;
-          }
-        }
-        return TraversalFlag::Continue;
-      });
-  return resultApzc;
-}
-
 mozilla::ipc::IPCResult
 LayerTransactionParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScrollID,
                                                  const float& aX, const float& aY)
@@ -778,11 +758,7 @@ LayerTransactionParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aSc
     return IPC_FAIL_NO_REASON(this);
   }
 
-  AsyncPanZoomController* controller = GetAPZCForViewID(mRoot, aScrollID);
-  if (!controller) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  controller->SetTestAsyncScrollOffset(CSSPoint(aX, aY));
+  mCompositorBridge->SetTestAsyncScrollOffset(GetId(), aScrollID, CSSPoint(aX, aY));
   return IPC_OK();
 }
 
@@ -794,11 +770,7 @@ LayerTransactionParent::RecvSetAsyncZoom(const FrameMetrics::ViewID& aScrollID,
     return IPC_FAIL_NO_REASON(this);
   }
 
-  AsyncPanZoomController* controller = GetAPZCForViewID(mRoot, aScrollID);
-  if (!controller) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  controller->SetTestAsyncZoom(LayerToParentLayerScale(aValue));
+  mCompositorBridge->SetTestAsyncZoom(GetId(), aScrollID, LayerToParentLayerScale(aValue));
   return IPC_OK();
 }
 
