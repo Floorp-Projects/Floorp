@@ -998,6 +998,24 @@ InterpreterActivation::resumeGeneratorFrame(HandleFunction callee, HandleValue n
     return true;
 }
 
+/* static */ inline Maybe<LiveSavedFrameCache::FramePtr>
+LiveSavedFrameCache::FramePtr::create(const FrameIter& iter)
+{
+    if (iter.done())
+        return mozilla::Nothing();
+
+    if (iter.isWasm() && !iter.wasmDebugEnabled())
+        return mozilla::Nothing();
+
+    if (iter.hasUsableAbstractFramePtr())
+        return mozilla::Some(FramePtr(iter.abstractFramePtr()));
+
+    if (iter.isPhysicalIonFrame())
+        return mozilla::Some(FramePtr(iter.physicalIonFrame()));
+
+    return mozilla::Nothing();
+}
+
 struct LiveSavedFrameCache::FramePtr::HasCachedMatcher {
     bool match(AbstractFramePtr f) const { return f.hasCachedSavedFrame(); }
     bool match(jit::CommonFrameLayout* f) const { return f->hasCachedSavedFrame(); }
