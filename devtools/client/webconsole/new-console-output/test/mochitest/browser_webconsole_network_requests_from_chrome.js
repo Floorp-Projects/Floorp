@@ -3,8 +3,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from head.js */
-
 // Tests that network requests from chrome don't cause the Web Console to
 // throw exceptions. See Bug 597136.
 
