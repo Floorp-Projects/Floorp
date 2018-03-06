@@ -35,7 +35,6 @@ from ..frontend.data import (
     ComputedFlags,
     ConfigFileSubstitution,
     ContextDerived,
-    ContextWrapped,
     Defines,
     DirectoryTraversal,
     ExternalLibrary,
@@ -51,7 +50,6 @@ from ..frontend.data import (
     HostSources,
     InstallationTarget,
     JARManifest,
-    JavaJarData,
     Library,
     Linkable,
     LocalInclude,
@@ -652,17 +650,6 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, InstallationTarget):
             self._process_installation_target(obj, backend_file)
-
-        elif isinstance(obj, ContextWrapped):
-            # Process a rich build system object from the front-end
-            # as-is.  Please follow precedent and handle CamelCaseData
-            # in a function named _process_camel_case_data.  At some
-            # point in the future, this unwrapping process may be
-            # automated.
-            if isinstance(obj.wrapped, JavaJarData):
-                self._process_java_jar_data(obj.wrapped, backend_file)
-            else:
-                return False
 
         elif isinstance(obj, RustLibrary):
             self.backend_input_files.add(obj.cargo_file)
