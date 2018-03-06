@@ -43,6 +43,9 @@ with Files("test/unit/test_SitePermissions.js"):
 with Files("AboutNewTab.jsm"):
     BUG_COMPONENT = ("Firefox", "New Tab Page")
 
+with Files('AsyncTabSwitcher.jsm'):
+    BUG_COMPONENT = ('Firefox', 'Tabbed Browser')
+
 with Files("AttributionCode.jsm"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")
 
@@ -122,6 +125,7 @@ XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 EXTRA_JS_MODULES += [
     'AboutHome.jsm',
     'AboutNewTab.jsm',
+    'AsyncTabSwitcher.jsm',
     'AttributionCode.jsm',
     'BrowserErrorReporter.jsm',
     'BrowserUITelemetry.jsm',

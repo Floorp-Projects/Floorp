@@ -14,6 +14,7 @@ Notes to self:
 
 
 #include "nsTransferable.h"
+#include "nsAnonymousTemporaryFile.h"
 #include "nsArray.h"
 #include "nsArrayUtils.h"
 #include "nsString.h"
@@ -35,7 +36,6 @@ Notes to self:
 #include "nsIOutputStream.h"
 #include "nsIInputStream.h"
 #include "nsIWeakReferenceUtils.h"
-#include "nsIFile.h"
 #include "nsILoadContext.h"
 #include "mozilla/UniquePtr.h"
 
@@ -52,10 +52,21 @@ size_t GetDataForFlavor (const nsTArray<DataStruct>& aArray,
   return aArray.NoIndex;
 }
 
+DataStruct::DataStruct(DataStruct&& aRHS)
+  : mData(aRHS.mData.forget()),
+    mDataLen(aRHS.mDataLen),
+    mCacheFD(aRHS.mCacheFD),
+    mFlavor(aRHS.mFlavor)
+{
+  aRHS.mCacheFD = nullptr;
+}
+
 //-------------------------------------------------------------------------
 DataStruct::~DataStruct()
 {
-  if (mCacheFileName) free(mCacheFileName);
+  if (mCacheFD) {
+    PR_Close(mCacheFD);
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -66,10 +77,19 @@ DataStruct::SetData ( nsISupports* aData, uint32_t aDataLen, bool aIsPrivateData
   // as well as ensuring that private browsing mode is disabled
   if (aDataLen > kLargeDatasetSize && !aIsPrivateData) {
     // if so, cache it to disk instead of memory
-    if ( NS_SUCCEEDED(WriteCache(aData, aDataLen)) )
+    if (NS_SUCCEEDED(WriteCache(aData, aDataLen))) {
+      // Clear previously set small data.
+      mData = nullptr;
+      mDataLen = 0;
       return;
-    else
-			NS_WARNING("Oh no, couldn't write data to the cache file");
+    }
+    NS_WARNING("Oh no, couldn't write data to the cache file");
+  }
+
+  if (mCacheFD) {
+    // Clear previously set big data.
+    PR_Close(mCacheFD);
+    mCacheFD = nullptr;
   }
 
   mData    = aData;
@@ -82,7 +102,7 @@ void
 DataStruct::GetData ( nsISupports** aData, uint32_t *aDataLen )
 {
   // check here to see if the data is cached on disk
-  if ( !mData && mCacheFileName ) {
+  if (mCacheFD) {
     // if so, read it in and pass it back
     // ReadCache creates memory and copies the data into it.
     if ( NS_SUCCEEDED(ReadCache(aData, aDataLen)) )
@@ -92,6 +112,8 @@ DataStruct::GetData ( nsISupports** aData, uint32_t *aDataLen )
       NS_WARNING("Oh no, couldn't read data in from the cache file");
       *aData = nullptr;
       *aDataLen = 0;
+      PR_Close(mCacheFD);
+      mCacheFD = nullptr;
       return;
     }
   }
@@ -104,64 +126,31 @@ DataStruct::GetData ( nsISupports** aData, uint32_t *aDataLen )
 
 
 //-------------------------------------------------------------------------
-already_AddRefed<nsIFile>
-DataStruct::GetFileSpec(const char* aFileName)
-{
-  nsCOMPtr<nsIFile> cacheFile;
-  NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(cacheFile));
-
-  if (!cacheFile)
-    return nullptr;
-
-  // if the param aFileName contains a name we should use that
-  // because the file probably already exists
-  // otherwise create a unique name
-  if (!aFileName) {
-    cacheFile->AppendNative(NS_LITERAL_CSTRING("clipboardcache"));
-    nsresult rv = cacheFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
-    if (NS_FAILED(rv))
-      return nullptr;
-  } else {
-    cacheFile->AppendNative(nsDependentCString(aFileName));
-  }
-
-  return cacheFile.forget();
-}
-
-
-//-------------------------------------------------------------------------
 nsresult
 DataStruct::WriteCache(nsISupports* aData, uint32_t aDataLen)
 {
-  // Get a new path and file to the temp directory
-  nsCOMPtr<nsIFile> cacheFile = GetFileSpec(mCacheFileName);
-  if (cacheFile) {
-    // remember the file name
-    if (!mCacheFileName) {
-      nsCString fName;
-      cacheFile->GetNativeLeafName(fName);
-      mCacheFileName = strdup(fName.get());
+  nsresult rv;
+  if (!mCacheFD) {
+    rv = NS_OpenAnonymousTemporaryFile(&mCacheFD);
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_FAILURE;
     }
+  } else if (PR_Seek64(mCacheFD, 0, PR_SEEK_SET) == -1) {
+    return NS_ERROR_FAILURE;
+  }
 
-    // write out the contents of the clipboard
-    // to the file
-    //uint32_t bytes;
-    nsCOMPtr<nsIOutputStream> outStr;
-
-    NS_NewLocalFileOutputStream(getter_AddRefs(outStr),
-                                cacheFile);
-
-    if (!outStr) return NS_ERROR_FAILURE;
-
-    void* buff = nullptr;
-    nsPrimitiveHelpers::CreateDataFromPrimitive ( mFlavor, aData, &buff, aDataLen );
-    if ( buff ) {
-      uint32_t ignored;
-      outStr->Write(reinterpret_cast<char*>(buff), aDataLen, &ignored);
-      free(buff);
+  // write out the contents of the clipboard to the file
+  void* buff = nullptr;
+  nsPrimitiveHelpers::CreateDataFromPrimitive(mFlavor, aData, &buff, aDataLen);
+  if (buff) {
+    int32_t written = PR_Write(mCacheFD, buff, aDataLen);
+    free(buff);
+    if (written) {
       return NS_OK;
     }
   }
+  PR_Close(mCacheFD);
+  mCacheFD = nullptr;
   return NS_ERROR_FAILURE;
 }
 
@@ -170,49 +159,32 @@ DataStruct::WriteCache(nsISupports* aData, uint32_t aDataLen)
 nsresult
 DataStruct::ReadCache(nsISupports** aData, uint32_t* aDataLen)
 {
-  // if we don't have a cache filename we are out of luck
-  if (!mCacheFileName)
+  if (!mCacheFD) {
     return NS_ERROR_FAILURE;
-
-  // get the path and file name
-  nsCOMPtr<nsIFile> cacheFile = GetFileSpec(mCacheFileName);
-  bool exists;
-  if ( cacheFile && NS_SUCCEEDED(cacheFile->Exists(&exists)) && exists ) {
-    // get the size of the file
-    int64_t fileSize;
-    int64_t max32 = 0xFFFFFFFF;
-    cacheFile->GetFileSize(&fileSize);
-    if (fileSize > max32)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    uint32_t size = uint32_t(fileSize);
-    // create new memory for the large clipboard data
-    auto data = mozilla::MakeUnique<char[]>(size);
-    if ( !data )
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    // now read it all in
-    nsCOMPtr<nsIInputStream> inStr;
-    NS_NewLocalFileInputStream( getter_AddRefs(inStr),
-                                cacheFile);
-
-    if (!cacheFile) return NS_ERROR_FAILURE;
-
-    nsresult rv = inStr->Read(data.get(), fileSize, aDataLen);
-
-    // make sure we got all the data ok
-    if (NS_SUCCEEDED(rv) && *aDataLen == size) {
-      nsPrimitiveHelpers::CreatePrimitiveForData(mFlavor, data.get(),
-                                                 fileSize, aData);
-      return *aData ? NS_OK : NS_ERROR_FAILURE;
-    }
-
-    // zero the return params
-    *aData    = nullptr;
-    *aDataLen = 0;
   }
 
-  return NS_ERROR_FAILURE;
+  PRFileInfo fileInfo;
+  if (PR_GetOpenFileInfo(mCacheFD, &fileInfo) != PR_SUCCESS) {
+    return NS_ERROR_FAILURE;
+  }
+  if (PR_Seek64(mCacheFD, 0, PR_SEEK_SET) == -1) {
+    return NS_ERROR_FAILURE;
+  }
+  uint32_t fileSize = fileInfo.size;
+
+  auto data = mozilla::MakeUnique<char[]>(fileSize);
+  if (!data) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  uint32_t actual = PR_Read(mCacheFD, data.get(), fileSize);
+  if (actual != fileSize) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsPrimitiveHelpers::CreatePrimitiveForData(mFlavor, data.get(), fileSize, aData);
+  *aDataLen = fileSize;
+  return NS_OK;
 }
 
 

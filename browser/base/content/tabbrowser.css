@@ -89,7 +89,7 @@ browser[pendingpaint] {
   opacity: 0;
 }
 
-tabbrowser[pendingpaint] {
+#tabbrowser-tabpanels[pendingpaint] {
   background-image: url(chrome://browser/skin/tabbrowser/pendingpaint.png);
   background-repeat: no-repeat;
   background-position: center center;

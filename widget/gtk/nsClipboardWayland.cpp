@@ -390,6 +390,9 @@ nsRetrievalContextWayland::GetClipboardData(const char* aMimeType,
                                             int32_t aWhichClipboard,
                                             uint32_t* aContentLength)
 {
+    NS_ASSERTION(mClipboardData == nullptr && mClipboardDataLength == 0,
+                 "Looks like we're leaking clipboard data here!");
+
     /* If actual clipboard data is owned by us we don't need to go
      * through Wayland but we ask Gtk+ to directly call data
      * getter callback nsClipboard::SelectionGetEvent().
@@ -456,6 +459,14 @@ nsRetrievalContextWayland::GetClipboardData(const char* aMimeType,
 
         g_io_channel_unref(channel);
         close(pipe_fd[0]);
+
+        // We don't have valid clipboard data although
+        // g_io_channel_read_to_end() allocated mClipboardData for us.
+        // Release it now and return nullptr to indicate
+        // we don't have reqested data flavour.
+        if (mClipboardData && mClipboardDataLength == 0) {
+            ReleaseClipboardData(mClipboardData);
+        }
     }
 
     *aContentLength = mClipboardDataLength;
