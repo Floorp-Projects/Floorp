@@ -54,24 +54,6 @@ namespace js {
  */
 const uint32_t ASYNC_STACK_MAX_FRAME_COUNT = 60;
 
-/* static */ Maybe<LiveSavedFrameCache::FramePtr>
-LiveSavedFrameCache::getFramePtr(const FrameIter& iter)
-{
-    if (iter.done())
-        return Nothing();
-
-    if (iter.isWasm() && !iter.wasmDebugEnabled())
-        return Nothing();
-
-    if (iter.hasUsableAbstractFramePtr())
-        return Some(FramePtr(iter.abstractFramePtr()));
-
-    if (iter.isPhysicalIonFrame())
-        return Some(FramePtr(iter.physicalIonFrame()));
-
-    return Nothing();
-}
-
 void
 LiveSavedFrameCache::trace(JSTracer* trc)
 {
@@ -1319,7 +1301,7 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
     RootedString asyncCause(cx, nullptr);
     bool parentIsInCache = false;
     RootedSavedFrame cachedFrame(cx, nullptr);
-    Maybe<LiveSavedFrameCache::FramePtr> framePtr = LiveSavedFrameCache::getFramePtr(iter);
+    Maybe<LiveSavedFrameCache::FramePtr> framePtr = LiveSavedFrameCache::FramePtr::create(iter);
 
     // Accumulate the vector of Lookup objects in |stackChain|.
     SavedFrame::AutoLookupVector stackChain(cx);
@@ -1406,7 +1388,7 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
         }
 
         ++iter;
-        framePtr = LiveSavedFrameCache::getFramePtr(iter);
+        framePtr = LiveSavedFrameCache::FramePtr::create(iter);
 
         if (parentIsInCache &&
             framePtr &&
