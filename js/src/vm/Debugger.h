@@ -289,10 +289,6 @@ typedef mozilla::Variant<JSScript*, WasmInstanceObject*> DebuggerScriptReferent;
 // denoting the synthesized source of a wasm module.
 typedef mozilla::Variant<ScriptSourceObject*, WasmInstanceObject*> DebuggerSourceReferent;
 
-// Either a AbstractFramePtr, for ordinary JS, or a wasm::DebugFrame,
-// for synthesized frame of a wasm code.
-typedef mozilla::Variant<AbstractFramePtr, wasm::DebugFrame*> DebuggerFrameReferent;
-
 class Debugger : private mozilla::LinkedListElement<Debugger>
 {
     friend class Breakpoint;
