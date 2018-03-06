@@ -392,7 +392,7 @@ FreeArgv(char** argv, int argc)
 }
 
 extern "C" APKOPEN_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, jobjectArray jargs, int crashFd, int ipcFd, int crashAnnotationFd)
+Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, jobjectArray jargs, int ipcFd, int crashFd, int crashAnnotationFd)
 {
   int argc = 0;
   char** argv = CreateArgvFromObjectArray(jenv, jargs, &argc);
@@ -407,7 +407,7 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, jo
     gBootstrap->GeckoStart(jenv, argv, argc, sAppData);
     ElfLoader::Singleton.ExpectShutdown(true);
   } else {
-    gBootstrap->XRE_SetAndroidChildFds(jenv, crashFd, ipcFd, crashAnnotationFd);
+    gBootstrap->XRE_SetAndroidChildFds(jenv, ipcFd, crashFd, crashAnnotationFd);
     gBootstrap->XRE_SetProcessType(argv[argc - 1]);
 
     XREChildData childData;
