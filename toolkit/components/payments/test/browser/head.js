@@ -4,7 +4,6 @@
   "no-unused-vars": ["error", {
     vars: "local",
     args: "none",
-    varsIgnorePattern: "^(EXPORTED_SYMBOLS)$",
   }],
 */
 
