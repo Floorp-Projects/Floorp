@@ -464,6 +464,40 @@ CrossProcessCompositorBridgeParent::ApplyAsyncProperties(
 }
 
 void
+CrossProcessCompositorBridgeParent::SetTestAsyncScrollOffset(
+    const uint64_t& aLayersId,
+    const FrameMetrics::ViewID& aScrollId,
+    const CSSPoint& aPoint)
+{
+  MOZ_ASSERT(aLayersId != 0);
+  const CompositorBridgeParent::LayerTreeState* state =
+    CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
+  if (!state) {
+    return;
+  }
+
+  MOZ_ASSERT(state->mParent);
+  state->mParent->SetTestAsyncScrollOffset(aLayersId, aScrollId, aPoint);
+}
+
+void
+CrossProcessCompositorBridgeParent::SetTestAsyncZoom(
+    const uint64_t& aLayersId,
+    const FrameMetrics::ViewID& aScrollId,
+    const LayerToParentLayerScale& aZoom)
+{
+  MOZ_ASSERT(aLayersId != 0);
+  const CompositorBridgeParent::LayerTreeState* state =
+    CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
+  if (!state) {
+    return;
+  }
+
+  MOZ_ASSERT(state->mParent);
+  state->mParent->SetTestAsyncZoom(aLayersId, aScrollId, aZoom);
+}
+
+void
 CrossProcessCompositorBridgeParent::FlushApzRepaints(const uint64_t& aLayersId)
 {
   MOZ_ASSERT(aLayersId != 0);
