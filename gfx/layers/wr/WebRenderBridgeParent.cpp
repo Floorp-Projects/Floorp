@@ -17,6 +17,7 @@
 #include "mozilla/Range.h"
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/layers/APZSampler.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -515,11 +516,11 @@ WebRenderBridgeParent::UpdateAPZ(bool aUpdateHitTestingTree)
   if (!rootWrbp) {
     return;
   }
-  if (RefPtr<APZCTreeManager> apzc = cbp->GetAPZCTreeManager()) {
-    apzc->UpdateFocusState(rootLayersId, GetLayersId(),
-                           mScrollData.GetFocusTarget());
+  if (RefPtr<APZSampler> apz = cbp->GetAPZSampler()) {
+    apz->UpdateFocusState(rootLayersId, GetLayersId(),
+                          mScrollData.GetFocusTarget());
     if (aUpdateHitTestingTree) {
-      apzc->UpdateHitTestingTree(rootLayersId, rootWrbp->GetScrollData(),
+      apz->UpdateHitTestingTree(rootLayersId, rootWrbp->GetScrollData(),
           mScrollData.IsFirstPaint(), GetLayersId(),
           mScrollData.GetPaintSequenceNumber());
     }
@@ -534,7 +535,7 @@ WebRenderBridgeParent::PushAPZStateToWR(wr::TransactionBuilder& aTxn,
   if (!cbp) {
     return false;
   }
-  if (RefPtr<APZCTreeManager> apzc = cbp->GetAPZCTreeManager()) {
+  if (RefPtr<APZSampler> apz = cbp->GetAPZSampler()) {
     TimeStamp animationTime = cbp->GetTestingTimeStamp().valueOr(
         mCompositorScheduler->GetLastComposeTime());
     TimeDuration frameInterval = cbp->GetVsyncInterval();
@@ -543,7 +544,7 @@ WebRenderBridgeParent::PushAPZStateToWR(wr::TransactionBuilder& aTxn,
     if (frameInterval != TimeDuration::Forever()) {
       animationTime += frameInterval;
     }
-    return apzc->PushStateToWR(aTxn, animationTime, aTransformArray);
+    return apz->PushStateToWR(aTxn, animationTime, aTransformArray);
   }
   return false;
 }
