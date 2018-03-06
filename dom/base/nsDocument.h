@@ -499,19 +499,6 @@ public:
 
   virtual void SetReadyStateInternal(ReadyState rs) override;
 
-  virtual void ContentStateChanged(nsIContent* aContent,
-                                   mozilla::EventStates aStateMask)
-                                     override;
-  virtual void DocumentStatesChanged(
-                 mozilla::EventStates aStateMask) override;
-
-  virtual void StyleRuleChanged(mozilla::StyleSheet* aStyleSheet,
-                                mozilla::css::Rule* aStyleRule) override;
-  virtual void StyleRuleAdded(mozilla::StyleSheet* aStyleSheet,
-                              mozilla::css::Rule* aStyleRule) override;
-  virtual void StyleRuleRemoved(mozilla::StyleSheet* aStyleSheet,
-                                mozilla::css::Rule* aStyleRule) override;
-
   void FlushPendingNotifications(mozilla::FlushType aType) final;
   virtual void FlushExternalResources(mozilla::FlushType aType) override;
   virtual void SetXMLDeclaration(const char16_t *aVersion,
