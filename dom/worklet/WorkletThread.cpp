@@ -137,7 +137,12 @@ public:
   virtual void
   CustomGCCallback(JSGCStatus aStatus) override
   {
-    if (aStatus == JSGC_END) {
+    // nsCycleCollector_collect() requires a cycle collector but
+    // ~WorkletJSContext calls nsCycleCollector_shutdown() and the base class
+    // destructor will trigger a final GC.  The nsCycleCollector_collect()
+    // call can be skipped in this GC as ~CycleCollectedJSContext removes the
+    // context from |this|.
+    if (aStatus == JSGC_END && !Contexts().isEmpty()) {
       nsCycleCollector_collect(nullptr);
     }
   }
