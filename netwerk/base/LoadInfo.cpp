@@ -27,6 +27,7 @@
 #include "nsGlobalWindow.h"
 #include "NullPrincipal.h"
 #include "nsRedirectHistoryEntry.h"
+#include "LoadInfo.h"
 
 using namespace mozilla::dom;
 
