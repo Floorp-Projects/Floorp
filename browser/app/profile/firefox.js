@@ -1167,7 +1167,6 @@ pref("services.sync.prefs.sync.browser.download.useDownloadDir", true);
 pref("services.sync.prefs.sync.browser.formfill.enable", true);
 pref("services.sync.prefs.sync.browser.link.open_newwindow", true);
 pref("services.sync.prefs.sync.browser.newtabpage.enabled", true);
-pref("services.sync.prefs.sync.browser.newtabpage.enhanced", true);
 pref("services.sync.prefs.sync.browser.newtabpage.pinned", true);
 pref("services.sync.prefs.sync.browser.offline-apps.notify", true);
 pref("services.sync.prefs.sync.browser.safebrowsing.phishing.enabled", true);
@@ -1257,28 +1256,9 @@ pref("prompts.tab_modal.enabled", true);
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 
-// Remembers if the about:newtab intro has been shown
-// NOTE: This preference is unused but was not removed in case
-//       this information will be valuable in the future.
-pref("browser.newtabpage.introShown", false);
-
-// Toggles the content of 'about:newtab'. Shows the grid when enabled.
+// Is supposed to toggle something to do with about:newtab . Doesn't seem to do
+// anything in activity stream. bug 1443646 covers dealing with this.
 pref("browser.newtabpage.enabled", true);
-
-// Toggles the directory tiles content of 'about:newtab'.
-sticky_pref("browser.newtabpage.enhanced", true);
-
-// enables Activity Stream inspired layout
-pref("browser.newtabpage.compact", false);
-
-// enables showing basic placeholders for missing thumbnails
-pref("browser.newtabpage.thumbnailPlaceholder", false);
-
-// number of rows of newtab grid
-pref("browser.newtabpage.rows", 3);
-
-// number of columns of newtab grid
-pref("browser.newtabpage.columns", 5);
 
 // Activity Stream prefs that control to which page to redirect
 pref("browser.newtabpage.activity-stream.prerender", true);
