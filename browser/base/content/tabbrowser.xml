@@ -73,10 +73,6 @@
 
   <binding id="tabbrowser-tabs"
            extends="chrome://global/content/bindings/tabbox.xml#tabs">
-    <resources>
-      <stylesheet src="chrome://browser/content/tabbrowser.css"/>
-    </resources>
-
     <content>
       <xul:hbox class="tab-drop-indicator-box">
         <xul:image class="tab-drop-indicator" anonid="tab-drop-indicator" collapsed="true"/>
@@ -1486,10 +1482,6 @@
 
   <binding id="tabbrowser-tab" display="xul:hbox"
            extends="chrome://global/content/bindings/tabbox.xml#tab">
-    <resources>
-      <stylesheet src="chrome://browser/content/tabbrowser.css"/>
-    </resources>
-
     <content context="tabContextMenu">
       <xul:stack class="tab-stack" flex="1">
         <xul:vbox xbl:inherits="selected=visuallyselected,fadein"

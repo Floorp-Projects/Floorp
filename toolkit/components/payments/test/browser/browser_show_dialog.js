@@ -56,7 +56,7 @@ add_task(async function test_show_completePayment() {
     tel: "+16172535702",
     email: "timbl@example.org",
   };
-  profileStorage.addresses.add(address);
+  formAutofillStorage.addresses.add(address);
   await onChanged;
 
   onChanged = TestUtils.topicObserved("formautofill-storage-changed",
@@ -68,7 +68,7 @@ add_task(async function test_show_completePayment() {
     "cc-number": "999999999999",
   };
 
-  profileStorage.creditCards.add(card);
+  formAutofillStorage.creditCards.add(card);
   await onChanged;
 
   await BrowserTestUtils.withNewTab({
