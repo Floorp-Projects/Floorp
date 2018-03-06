@@ -6,10 +6,6 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-var gSyncProfile;
-
-gSyncProfile = do_get_profile();
-
 // Init FormHistoryStartup and pretend we opened a profile.
 var fhs = Cc["@mozilla.org/satchel/form-history-startup;1"]
             .getService(Ci.nsIObserver);
