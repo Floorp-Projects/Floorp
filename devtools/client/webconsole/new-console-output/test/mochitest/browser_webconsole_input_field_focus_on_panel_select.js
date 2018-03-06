@@ -5,6 +5,9 @@
 
 /* import-globals-from head.js */
 
+// XXX Remove this when the file is migrated to the new frontend.
+/* eslint-disable no-undef */
+
 // Test that the JS input field is focused when the user switches back to the
 // web console from other tools, see bug 891581.
 
