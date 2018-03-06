@@ -86,7 +86,9 @@ def add_command(config, tasks):
 
         for arg in keyed_by_args:
             thing = "extra.{}".format(arg)
-            resolve_keyed_by(task, thing, thing, **config.params)
+            extra = config.params.copy()
+            extra["build-platform"] = task["attributes"]["build_platform"]
+            resolve_keyed_by(task, thing, thing, **extra)
             # ignore things that resolved to null
             if not task["extra"].get(arg):
                 continue

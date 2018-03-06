@@ -673,7 +673,7 @@ html|input.urlbar-input {
 
 /* ::::: tabbrowser ::::: */
 
-.tabbrowser-tabbox {
+#tabbrowser-tabbox {
   margin: 0;
 }
 

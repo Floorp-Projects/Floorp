@@ -199,7 +199,15 @@
 
     <vbox class="main-content" flex="1" align="start">
       <vbox class="pane-container">
-        <hbox class="search-container" pack="end">
+        <hbox class="sticky-container" pack="end" align="top">
+          <hbox id="policies-container" align="stretch" flex="1" hidden="true">
+            <hbox align="top">
+              <image class="info-icon"></image>
+            </hbox>
+            <hbox align="center" flex="1">
+              <label class="policies-label" flex="1" data-l10n-id="policies-notice"></label>
+            </hbox>
+          </hbox>
           <textbox
             type="search" id="searchInput"
             data-l10n-id="search-input"

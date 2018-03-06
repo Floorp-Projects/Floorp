@@ -93,6 +93,9 @@ protected:
 
   void ResetZoomLevel();
   float GetZoomLevel();
+#if defined(MOZ_WIDGET_ANDROID)
+  float GetResolution();
+#endif
 
   void UpdateSizeFromLayout();
 
@@ -130,6 +133,9 @@ protected:
   bool                          mObservingImageLoader;
 
   float                         mOriginalZoomLevel;
+#if defined(MOZ_WIDGET_ANDROID)
+  float                         mOriginalResolution;
+#endif
 };
 
 } // namespace dom

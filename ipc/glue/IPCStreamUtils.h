@@ -8,6 +8,7 @@
 #define mozilla_ipc_IPCStreamUtils_h
 
 #include "mozilla/ipc/IPCStream.h"
+#include "nsCOMPtr.h"
 #include "nsIInputStream.h"
 
 namespace mozilla {
@@ -185,6 +186,17 @@ private:
   AutoIPCStream(const AutoIPCStream& aOther) = delete;
   AutoIPCStream& operator=(const AutoIPCStream& aOther) = delete;
   AutoIPCStream& operator=(const AutoIPCStream&& aOther) = delete;
+};
+
+template<>
+struct IPDLParamTraits<nsCOMPtr<nsIInputStream>>
+{
+  typedef nsCOMPtr<nsIInputStream> paramType;
+
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    const paramType& aParam);
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, paramType* aResult);
 };
 
 } // namespace ipc

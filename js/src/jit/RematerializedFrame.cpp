@@ -59,9 +59,17 @@ RematerializedFrame::New(JSContext* cx, uint8_t* top, InlineFrameIterator& iter,
 {
     unsigned numFormals = iter.isFunctionFrame() ? iter.calleeTemplate()->nargs() : 0;
     unsigned argSlots = Max(numFormals, iter.numActualArgs());
-    size_t numBytes = sizeof(RematerializedFrame) +
-        (argSlots + iter.script()->nfixed()) * sizeof(Value) -
-        sizeof(Value); // 1 Value included in sizeof(RematerializedFrame)
+    unsigned extraSlots = argSlots + iter.script()->nfixed();
+
+    // One Value slot is included in sizeof(RematerializedFrame), so we can
+    // reduce the extra slot count by one.  However, if there are zero slot
+    // allocations total, then reducing the slots by one will lead to
+    // the memory allocation being smaller  than sizeof(RematerializedFrame).
+    if (extraSlots > 0)
+        extraSlots -= 1;
+
+    size_t numBytes = sizeof(RematerializedFrame) + (extraSlots * sizeof(Value));
+    MOZ_ASSERT(numBytes >= sizeof(RematerializedFrame));
 
     void* buf = cx->pod_calloc<uint8_t>(numBytes);
     if (!buf)

@@ -8743,8 +8743,9 @@ HTMLEditRules::ConfirmSelectionInBody()
   nsINode* temp = selNode;
 
   // check that selNode is inside body
+  //XXXsmaug this code is insane.
   while (temp && !temp->IsHTMLElement(nsGkAtoms::body)) {
-    temp = temp->GetParentNode();
+    temp = temp->GetParentOrHostNode();
   }
 
   // if we aren't in the body, force the issue
@@ -8762,8 +8763,9 @@ HTMLEditRules::ConfirmSelectionInBody()
   temp = selNode;
 
   // check that selNode is inside body
+  //XXXsmaug this code is insane.
   while (temp && !temp->IsHTMLElement(nsGkAtoms::body)) {
-    temp = temp->GetParentNode();
+    temp = temp->GetParentOrHostNode();
   }
 
   // if we aren't in the body, force the issue

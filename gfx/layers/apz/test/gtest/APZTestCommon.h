@@ -265,6 +265,11 @@ public:
     EXPECT_EQ(FLING, mState);
   }
 
+  void AssertStateIsSmoothScroll() const {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    EXPECT_EQ(SMOOTH_SCROLL, mState);
+  }
+
   void AssertNotAxisLocked() const {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     EXPECT_EQ(PANNING, mState);

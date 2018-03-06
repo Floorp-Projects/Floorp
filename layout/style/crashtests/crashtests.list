@@ -252,6 +252,7 @@ load 1404324-1.html
 load 1404324-2.html
 load 1404324-3.html
 load 1404057.html
+load 1405880.html
 load 1409502.html
 load 1409931.html
 load 1410226-1.html
@@ -260,9 +261,10 @@ load 1411143.html
 load 1411478.html
 load 1413288.html
 load 1413361.html
+load 1413670.html
 load 1415663.html
 pref(dom.webcomponents.shadowdom.enabled,true) load 1415353.html
-load 1415021.html # This should have dom.webcomponents.shadowdom.enabled=true, but it leaks the world, see bug 1416296.
+pref(dom.webcomponents.shadowdom.enabled,true) load 1415021.html
 load 1418059.html
 skip-if(!stylo) test-pref(dom.animations-api.core.enabled,true) load 1418867.html
 pref(dom.webcomponents.shadowdom.enabled,true) load 1419554.html

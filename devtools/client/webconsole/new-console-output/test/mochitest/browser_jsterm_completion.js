@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Tests that code completion works properly.
 
 "use strict";
@@ -27,7 +29,8 @@ add_task(async function () {
 
   // Test typing 'window.Ob' and press tab.  Just 'window.O' is
   // ambiguous: could be window.Object, window.Option, etc.
-  await jstermSetValueAndComplete(jsterm, "window.Ob", undefined, jsterm.COMPLETE_FORWARD);
+  await jstermSetValueAndComplete(jsterm, "window.Ob", undefined,
+                                  jsterm.COMPLETE_FORWARD);
   is(input.value, "window.Object", "'window.Ob' tab completion");
 
   // Test typing 'document.getElem'.

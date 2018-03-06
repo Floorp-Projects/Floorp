@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Tests that source URLs in the Web Console can be clicked to display the
 // standard View Source window. As JS exceptions and console.log() messages always
 // have their locations opened in Debugger, we need to test a security message in
@@ -11,7 +13,8 @@
 "use strict";
 
 const TEST_URI = "https://example.com/browser/devtools/client/webconsole/" +
-                 "new-console-output/test/mochitest/test-mixedcontent-securityerrors.html";
+                 "new-console-output/test/mochitest/" +
+                 "test-mixedcontent-securityerrors.html";
 
 add_task(async function () {
   let hud = await openNewTabAndConsole(TEST_URI);
@@ -25,6 +28,6 @@ add_task(async function () {
   let onTabOpen = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
   locationNode.click();
-  let tab = await onTabOpen;
+  await onTabOpen;
   ok(true, "the view source tab was opened in response to clicking the location node");
 });

@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Test that autocomplete doesn't break when trying to reach into objects from
 // a different domain. See Bug 989025.
 

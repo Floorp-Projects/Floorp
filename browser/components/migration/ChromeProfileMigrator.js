@@ -160,7 +160,7 @@ ChromeProfileMigrator.prototype.getSourceProfiles =
 
     let profiles = [];
     try {
-      let localState = await ChromeMigrationUtils.getLocalState();
+      let localState = await ChromeMigrationUtils.getLocalState(this._chromeUserDataPathSuffix);
       let info_cache = localState.profile.info_cache;
       for (let profileFolderName in info_cache) {
         profiles.push({
@@ -486,6 +486,29 @@ CanaryProfileMigrator.prototype.classID = Components.ID("{4bf85aa5-4e21-46ca-825
 
 if (AppConstants.platform == "win" || AppConstants.platform == "macosx") {
   componentsArray.push(CanaryProfileMigrator);
+}
+
+/**
+ * Chrome Dev / Unstable and Beta. Only separate from `regular` chrome on Linux
+ */
+if (AppConstants.platform != "win" && AppConstants.platform != "macosx") {
+  function ChromeDevMigrator() {
+    this._chromeUserDataPathSuffix = "Chrome Dev";
+  }
+  ChromeDevMigrator.prototype = Object.create(ChromeProfileMigrator.prototype);
+  ChromeDevMigrator.prototype.classDescription = "Chrome Dev Profile Migrator";
+  ChromeDevMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=chrome-dev";
+  ChromeDevMigrator.prototype.classID = Components.ID("{7370a02a-4886-42c3-a4ec-d48c726ec30a}");
+
+  function ChromeBetaMigrator() {
+    this._chromeUserDataPathSuffix = "Chrome Beta";
+  }
+  ChromeBetaMigrator.prototype = Object.create(ChromeProfileMigrator.prototype);
+  ChromeBetaMigrator.prototype.classDescription = "Chrome Beta Profile Migrator";
+  ChromeBetaMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=chrome-beta";
+  ChromeBetaMigrator.prototype.classID = Components.ID("{47f75963-840b-4950-a1f0-d9c1864f8b8e}");
+
+  componentsArray.push(ChromeDevMigrator, ChromeBetaMigrator);
 }
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(componentsArray);

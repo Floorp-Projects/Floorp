@@ -3,12 +3,15 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Tests that clicking on a function displays its source in the debugger. See Bug 1050691.
 
 "use strict";
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "new-console-output/test/mochitest/test-click-function-to-source.html";
+                 "new-console-output/test/mochitest/" +
+                 "test-click-function-to-source.html";
 
 // Force the old debugger UI since it's directly used (see Bug 1301705)
 pushPref("devtools.debugger.new-debugger-frontend", false);
@@ -20,16 +23,16 @@ add_task(async function () {
   const {panel} = await openDebugger();
   let panelWin = panel.panelWin;
 
-  info("And right after come back to the Console panel.")
+  info("And right after come back to the Console panel.");
   await openConsole();
 
   info("Log a function");
-  const onLoggedFunction = waitForMessage(hud, "function foo")
+  const onLoggedFunction = waitForMessage(hud, "function foo");
   ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
     content.wrappedJSObject.foo();
   });
   const {node} = await onLoggedFunction;
-  const jumpIcon = node.querySelector(".jump-definition")
+  const jumpIcon = node.querySelector(".jump-definition");
   ok(jumpIcon, "A jump to definition button is rendered, as expected");
 
   info("Click on the jump to definition button.");
@@ -40,5 +43,6 @@ add_task(async function () {
   const {editor} = panelWin.DebuggerView;
   const {line, ch} = editor.getCursor();
   // Source editor starts counting line and column numbers from 0.
-  ok(line === 6 && ch === 0, "Debugger is open at the expected position");
+  is(line, 8, "Debugger is open at the expected line");
+  is(ch, 0, "Debugger is open at the expected character");
 });

@@ -236,13 +236,13 @@ class ConstantOrRegister
 
     // Space to hold either a Value or a TypedOrValueRegister.
     union U {
-        Value constant;
+        JS::UninitializedValue constant;
         TypedOrValueRegister reg;
     } data;
 
-    const Value& dataValue() const {
+    Value dataValue() const {
         MOZ_ASSERT(constant());
-        return data.constant;
+        return data.constant.asValueRef();
     }
     void setDataValue(const Value& value) {
         MOZ_ASSERT(constant());
@@ -278,7 +278,7 @@ class ConstantOrRegister
         return constant_;
     }
 
-    const Value& value() const {
+    Value value() const {
         return dataValue();
     }
 

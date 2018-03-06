@@ -3,15 +3,18 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Test that message source links for js errors and console API calls open in
 // the jsdebugger when clicked.
 
 "use strict";
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-  "new-console-output/test/mochitest/test-stacktrace-location-debugger-link.html";
+                 "new-console-output/test/mochitest/" +
+                 "test-stacktrace-location-debugger-link.html";
 
-add_task(async function() {
+add_task(async function () {
   // Force the new debugger UI, in case this gets uplifted with the old
   // debugger still turned on
   Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", true);

@@ -12,8 +12,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var ChromeMigrationUtils = {
-  _chromeUserDataPath: null,
-
   _extensionVersionDirectoryNames: {},
 
   // The cache for the locale strings.
@@ -173,12 +171,13 @@ var ChromeMigrationUtils = {
 
   /**
    * Get the local state file content.
+   * @param {String} dataPath the type of Chrome data we're looking for (Chromium, Canary, etc.)
    * @returns {Object} The JSON-based content.
    */
-  async getLocalState() {
+  async getLocalState(dataPath = "Chrome") {
     let localState = null;
     try {
-      let localStatePath = OS.Path.join(this.getChromeUserDataPath(), "Local State");
+      let localStatePath = OS.Path.join(this.getDataPath(dataPath), "Local State");
       let localStateJson = await OS.File.read(localStatePath, { encoding: "utf-8" });
       localState = JSON.parse(localStateJson);
     } catch (ex) {
@@ -194,26 +193,16 @@ var ChromeMigrationUtils = {
    * @returns {String} The path of Chrome extension directory.
    */
   getExtensionPath(profileId) {
-    return OS.Path.join(this.getChromeUserDataPath(), profileId, "Extensions");
-  },
-
-  /**
-   * Get the path of the Chrome user data directory.
-   * @returns {String} The path of the Chrome user data directory.
-   */
-  getChromeUserDataPath() {
-    if (!this._chromeUserDataPath) {
-      this._chromeUserDataPath = this.getDataPath("Chrome");
-    }
-    return this._chromeUserDataPath;
+    return OS.Path.join(this.getDataPath(), profileId, "Extensions");
   },
 
   /**
    * Get the path of an application data directory.
-   * @param {String} chromeProjectName - The Chrome project name, e.g. "Chrome", "Chromium" or "Canary".
+   * @param {String} chromeProjectName - The Chrome project name, e.g. "Chrome", "Canary", etc.
+   *                                     Defaults to "Chrome".
    * @returns {String} The path of application data directory.
    */
-  getDataPath(chromeProjectName) {
+  getDataPath(chromeProjectName = "Chrome") {
     const SUB_DIRECTORIES = {
       win: {
         Chrome: ["Google", "Chrome"],
@@ -227,6 +216,8 @@ var ChromeMigrationUtils = {
       },
       linux: {
         Chrome: ["google-chrome"],
+        "Chrome Beta": ["google-chrome-beta"],
+        "Chrome Dev": ["google-chrome-unstable"],
         Chromium: ["chromium"],
         // Canary is not available on Linux.
       },

@@ -1565,6 +1565,14 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(const PinchGestureInput& aEvent
     }
   } else {
     // Otherwise, handle the fingers being lifted.
+
+    // Some of the code paths below, like ScrollSnap() or HandleEndOfPan(),
+    // may start an animation, but otherwise we want to end up in the NOTHING
+    // state. To avoid state change notification churn, we use a
+    // notification blocker.
+    StateChangeNotificationBlocker blocker(this);
+    SetState(NOTHING);
+
     if (mZoomConstraints.mAllowZoom) {
       RecursiveMutexAutoLock lock(mRecursiveMutex);
 

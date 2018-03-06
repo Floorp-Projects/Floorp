@@ -2,86 +2,63 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 const FAVICON_QUESTION = "chrome://global/skin/icons/question-32.png";
+const STRING_BUNDLE = "chrome://browser/locale/aboutPrivateBrowsing.properties";
+const TP_ENABLED_PREF = "privacy.trackingprotection.enabled";
+const TP_PB_ENABLED_PREF = "privacy.trackingprotection.pbmode.enabled";
 
-var stringBundle = Services.strings.createBundle(
-                    "chrome://browser/locale/aboutPrivateBrowsing.properties");
+function updateTPInfo() {
+  let aboutCapabilities = document.aboutCapabilities;
+  let tpButton = document.getElementById("tpButton");
+  let tpToggle = document.getElementById("tpToggle");
+  let title = document.getElementById("title");
+  let titleTracking = document.getElementById("titleTracking");
+  let tpSubHeader = document.getElementById("tpSubHeader");
 
-var prefBranch = Services.prefs.getBranch("privacy.trackingprotection.");
-var prefObserver = {
- QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                        Ci.nsISupportsWeakReference]),
- observe() {
-   let tpSubHeader = document.getElementById("tpSubHeader");
-   let tpToggle = document.getElementById("tpToggle");
-   let tpButton = document.getElementById("tpButton");
-   let title = document.getElementById("title");
-   let titleTracking = document.getElementById("titleTracking");
-   let globalTrackingEnabled = prefBranch.getBoolPref("enabled");
-   let trackingEnabled = globalTrackingEnabled ||
-                         prefBranch.getBoolPref("pbmode.enabled");
+  let globalTrackingEnabled = aboutCapabilities.getBoolPref(TP_ENABLED_PREF, null);
+  let trackingEnabled = globalTrackingEnabled ||
+                        aboutCapabilities.getBoolPref(TP_PB_ENABLED_PREF, null);
 
-   tpButton.classList.toggle("hide", globalTrackingEnabled);
-   tpToggle.checked = trackingEnabled;
-   title.classList.toggle("hide", trackingEnabled);
-   titleTracking.classList.toggle("hide", !trackingEnabled);
-   tpSubHeader.classList.toggle("tp-off", !trackingEnabled);
- }
-};
-prefBranch.addObserver("pbmode.enabled", prefObserver, true);
-prefBranch.addObserver("enabled", prefObserver, true);
+  // if tracking protection is enabled globally we don't even give the user
+  // a choice here by hiding the toggle completely.
+  tpButton.classList.toggle("hide", globalTrackingEnabled);
+  tpToggle.checked = trackingEnabled;
+  title.classList.toggle("hide", trackingEnabled);
+  titleTracking.classList.toggle("hide", !trackingEnabled);
+  tpSubHeader.classList.toggle("tp-off", !trackingEnabled);
+}
 
 document.addEventListener("DOMContentLoaded", function() {
- if (!PrivateBrowsingUtils.isContentWindowPrivate(window)) {
-   document.documentElement.classList.remove("private");
-   document.documentElement.classList.add("normal");
-   document.title = stringBundle.GetStringFromName("title.normal");
-   document.getElementById("favicon")
-           .setAttribute("href", FAVICON_QUESTION);
-   document.getElementById("startPrivateBrowsing")
-           .addEventListener("command", openPrivateWindow);
-   return;
- }
+  let aboutCapabilities = document.aboutCapabilities;
+  if (!aboutCapabilities.isWindowPrivate()) {
+    document.documentElement.classList.remove("private");
+    document.documentElement.classList.add("normal");
+    document.title = aboutCapabilities.getStringFromBundle(STRING_BUNDLE, "title.normal");
+    document.getElementById("favicon").setAttribute("href", FAVICON_QUESTION);
+    document.getElementById("startPrivateBrowsing").addEventListener("click", function() {
+      aboutCapabilities.sendAsyncMessage("OpenPrivateWindow", null);
+    });
+    return;
+  }
 
- let tpToggle = document.getElementById("tpToggle");
- document.getElementById("tpButton").addEventListener("click", () => {
-   tpToggle.click();
- });
+  document.title = aboutCapabilities.getStringFromBundle(STRING_BUNDLE, "title.head");
+  document.getElementById("startTour").addEventListener("click", function() {
+    aboutCapabilities.sendAsyncMessage("DontShowIntroPanelAgain", null);
+  });
+  document.getElementById("startTour").setAttribute("href",
+    aboutCapabilities.formatURLPref("privacy.trackingprotection.introURL"));
+  document.getElementById("learnMore").setAttribute("href",
+    aboutCapabilities.formatURLPref("app.support.baseURL") + "private-browsing");
 
- document.title = stringBundle.GetStringFromName("title.head");
- tpToggle.addEventListener("change", toggleTrackingProtection);
- document.getElementById("startTour")
-         .addEventListener("click", dontShowIntroPanelAgain);
+  let tpToggle = document.getElementById("tpToggle");
+  document.getElementById("tpButton").addEventListener("click", () => {
+    tpToggle.click();
+  });
+  tpToggle.addEventListener("change", function() {
+    aboutCapabilities.setBoolPref(TP_PB_ENABLED_PREF, tpToggle.checked).then(function() {
+      updateTPInfo();
+    });
+  });
 
- document.getElementById("startTour").setAttribute("href",
-   Services.urlFormatter.formatURLPref("privacy.trackingprotection.introURL"));
- document.getElementById("learnMore").setAttribute("href",
-   Services.urlFormatter.formatURLPref("app.support.baseURL") + "private-browsing");
-
- // Update state that depends on preferences.
- prefObserver.observe();
+  updateTPInfo();
 });
-
-function openPrivateWindow() {
- // Ask chrome to open a private window
- document.dispatchEvent(
-   new CustomEvent("AboutPrivateBrowsingOpenWindow", {bubbles: true}));
-}
-
-function toggleTrackingProtection() {
- // Ask chrome to enable tracking protection
- document.dispatchEvent(
-   new CustomEvent("AboutPrivateBrowsingToggleTrackingProtection",
-                   {bubbles: true}));
-}
-
-function dontShowIntroPanelAgain() {
- // Ask chrome to disable the doorhanger
- document.dispatchEvent(
-   new CustomEvent("AboutPrivateBrowsingDontShowIntroPanelAgain",
-                   {bubbles: true}));
-}

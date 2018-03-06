@@ -62,7 +62,6 @@ using mozilla::net::PTCPServerSocketParent;
 using mozilla::dom::TCPServerSocketParent;
 using mozilla::net::PUDPSocketParent;
 using mozilla::dom::UDPSocketParent;
-using mozilla::ipc::AutoIPCStream;
 using mozilla::ipc::OptionalPrincipalInfo;
 using mozilla::ipc::PrincipalInfo;
 using mozilla::ipc::LoadInfoArgsToLoadInfo;
@@ -966,20 +965,17 @@ NeckoParent::RecvGetExtensionStream(const URIParams& aURI,
   // validating the request. Specifically, only URI's for local files that
   // an extension is allowed to access via moz-extension URI's should be
   // accepted.
-  AutoIPCStream autoStream;
   nsCOMPtr<nsIInputStream> inputStream;
   bool terminateSender = true;
   auto inputStreamOrReason = ph->NewStream(deserializedURI, &terminateSender);
   if (inputStreamOrReason.isOk()) {
     inputStream = inputStreamOrReason.unwrap();
-    ContentParent* contentParent = static_cast<ContentParent*>(Manager());
-    Unused << autoStream.Serialize(inputStream, contentParent);
   }
 
   // If NewStream failed, we send back an invalid stream to the child so
   // it can handle the error. MozPromise rejection is reserved for channel
   // errors/disconnects.
-  aResolve(autoStream.TakeOptionalValue());
+  aResolve(inputStream);
 
   if (terminateSender) {
     return IPC_FAIL_NO_REASON(this);

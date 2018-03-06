@@ -116,14 +116,6 @@ panelview[mainview] > .panel-header {
   transition: height var(--panelui-subview-transition-duration);
 }
 
-#navigator-toolbox {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#empty");
-}
-
-tabbrowser {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser");
-}
-
 #tabbrowser-tabs {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tabs");
 }
@@ -291,7 +283,6 @@ window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-but
 }
 
 #titlebar {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
   -moz-window-dragging: drag;
 }
 

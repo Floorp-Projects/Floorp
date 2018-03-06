@@ -18,7 +18,6 @@ DevToolsModules(
     'menu.js',
     'open-request-in-tab.js',
     'prefs.js',
-    'redux-connect.js',
     'request-utils.js',
     'sort-predicates.js',
     'sort-utils.js'

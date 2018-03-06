@@ -128,11 +128,6 @@ PluginProcessChild::Init(int aArgc, char* aArgv[])
 #  error Sorry
 #endif
 
-    if (NS_FAILED(nsRegion::InitStatic())) {
-      NS_ERROR("Could not initialize nsRegion");
-      return false;
-    }
-
     bool retval = mPlugin.InitForChrome(pluginFilename, ParentPid(),
                                         IOThreadChild::message_loop(),
                                         IOThreadChild::channel());
@@ -164,8 +159,6 @@ PluginProcessChild::CleanUp()
     mozilla::KillClearOnShutdown(ShutdownPhase::ShutdownFinal);
     NS_LogTerm();
 #endif
-
-    nsRegion::ShutdownStatic();
 }
 
 } // namespace plugins

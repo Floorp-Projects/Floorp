@@ -176,7 +176,7 @@ function transformNavigationMessagePacket(packet) {
     source: MESSAGE_SOURCE.CONSOLE_API,
     type: MESSAGE_TYPE.LOG,
     level: MESSAGE_LEVEL.LOG,
-    messageText: "Navigated to " + message.url,
+    messageText: l10n.getFormatStr("webconsole.navigated", [message.url]),
     timeStamp: message.timeStamp
   });
 }

@@ -67,7 +67,7 @@ class StackValue
 
     union {
         struct {
-            Value v;
+            JS::UninitializedValue v;
         } constant;
         struct {
             mozilla::AlignedStorage2<ValueOperand> reg;
@@ -112,7 +112,7 @@ class StackValue
     }
     Value constant() const {
         MOZ_ASSERT(kind_ == Constant);
-        return data.constant.v;
+        return data.constant.v.asValueRef();
     }
     ValueOperand reg() const {
         MOZ_ASSERT(kind_ == Register);

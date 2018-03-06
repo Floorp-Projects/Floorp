@@ -5719,6 +5719,7 @@ exports.CSS_PROPERTIES = {
       "font-language-override",
       "font-kerning",
       "font-optical-sizing",
+      "font-variation-settings",
       "font-variant-alternates",
       "font-variant-caps",
       "font-variant-east-asian",

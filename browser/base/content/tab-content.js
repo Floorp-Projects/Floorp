@@ -209,39 +209,6 @@ var AboutHomeListener = {
 };
 AboutHomeListener.init(this);
 
-var AboutPrivateBrowsingListener = {
-  init(chromeGlobal) {
-    chromeGlobal.addEventListener("AboutPrivateBrowsingOpenWindow", this,
-                                  false, true);
-    chromeGlobal.addEventListener("AboutPrivateBrowsingToggleTrackingProtection", this,
-                                  false, true);
-    chromeGlobal.addEventListener("AboutPrivateBrowsingDontShowIntroPanelAgain", this,
-                                  false, true);
-  },
-
-  get isAboutPrivateBrowsing() {
-    return content.document.documentURI.toLowerCase() == "about:privatebrowsing";
-  },
-
-  handleEvent(aEvent) {
-    if (!this.isAboutPrivateBrowsing) {
-      return;
-    }
-    switch (aEvent.type) {
-      case "AboutPrivateBrowsingOpenWindow":
-        sendAsyncMessage("AboutPrivateBrowsing:OpenPrivateWindow");
-        break;
-      case "AboutPrivateBrowsingToggleTrackingProtection":
-        sendAsyncMessage("AboutPrivateBrowsing:ToggleTrackingProtection");
-        break;
-      case "AboutPrivateBrowsingDontShowIntroPanelAgain":
-        sendAsyncMessage("AboutPrivateBrowsing:DontShowIntroPanelAgain");
-        break;
-    }
-  },
-};
-AboutPrivateBrowsingListener.init(this);
-
 var AboutReaderListener = {
 
   _articlePromise: null,

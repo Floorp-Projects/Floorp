@@ -1090,7 +1090,7 @@ EditorEventListener::Focus(InternalFocusEvent* aFocusEvent)
     return NS_OK;
   }
 
-  nsIDOMEventTarget* target = aFocusEvent->GetDOMEventTarget();
+  nsIDOMEventTarget* target = aFocusEvent->GetOriginalDOMEventTarget();
   nsCOMPtr<nsINode> node = do_QueryInterface(target);
   NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
 
@@ -1102,13 +1102,15 @@ EditorEventListener::Focus(InternalFocusEvent* aFocusEvent)
   }
 
   if (node->IsContent()) {
+    nsIContent* content =
+      node->AsContent()->FindFirstNonChromeOnlyAccessContent();
     // XXX If the focus event target is a form control in contenteditable
     // element, perhaps, the parent HTML editor should do nothing by this
     // handler.  However, FindSelectionRoot() returns the root element of the
     // contenteditable editor.  So, the editableRoot value is invalid for
     // the plain text editor, and it will be set to the wrong limiter of
     // the selection.  However, fortunately, actual bugs are not found yet.
-    nsCOMPtr<nsIContent> editableRoot = editorBase->FindSelectionRoot(node);
+    nsCOMPtr<nsIContent> editableRoot = editorBase->FindSelectionRoot(content);
 
     // make sure that the element is really focused in case an earlier
     // listener in the chain changed the focus.

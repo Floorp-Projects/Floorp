@@ -3,13 +3,16 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Check that inspecting an optimized out variable works when execution is
 // paused.
 
 "use strict";
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "new-console-output/test/mochitest/test-closure-optimized-out.html";
+                 "new-console-output/test/mochitest/" +
+                 "test-closure-optimized-out.html";
 
 add_task(async function () {
   // Force the old debugger UI since it's directly used (see Bug 1301705)

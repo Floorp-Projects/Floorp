@@ -121,10 +121,6 @@ button > hbox > label {
   padding-inline-start: 4px;
 }
 
-#searchInput {
-  border-radius: 0;
-}
-
 .ac-site-icon {
   display: -moz-box;
 }
@@ -757,21 +753,40 @@ button > hbox > label {
   margin-bottom: 5px;
 }
 
-.search-container {
+#policies-container,
+#searchInput {
+  min-height: 32px;
+  margin: 20px 0 30px 0px;
+}
+
+#policies-container {
+  background-color: #ededf0;
+  padding: 0px 8px;
+  margin-inline-end: 16px;
+  border-radius: 2px;
+}
+
+.info-icon {
+  list-style-image: url("chrome://browser/skin/identity-icon.svg");
+  fill: currentColor;
+  -moz-context-properties: fill;
+  width: 16px;
+  height: 16px;
+  margin-top: calc((32px - 16px) / 2);
+}
+
+.sticky-container {
   position: sticky;
   background-color: var(--in-content-page-background);
   top: 0;
   z-index: 1;
-  /* The search-container should have the capability to cover all spotlight area. */
+  /* The sticky-container should have the capability to cover all spotlight area. */
   width: calc(100% + 8px);
   margin-left: -4px;
   margin-right: -4px;
   padding-left: 4px;
   padding-right: 4px;
-}
-
-#searchInput {
-  margin: 20px 0 30px 0;
+  font-size: 85%;
 }
 
 #searchInput .textbox-search-icons:not([selectedIndex="1"]) {

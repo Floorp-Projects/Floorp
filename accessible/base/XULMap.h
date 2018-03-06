@@ -5,6 +5,7 @@
 XULMAP_TYPE(browser, OuterDocAccessible)
 XULMAP_TYPE(button, XULButtonAccessible)
 XULMAP_TYPE(checkbox, XULCheckboxAccessible)
+XULMAP_TYPE(description, XULLabelAccessible)
 XULMAP_TYPE(dropMarker, XULDropmarkerAccessible)
 XULMAP_TYPE(editor, OuterDocAccessible)
 XULMAP_TYPE(findbar, XULToolbarAccessible)
@@ -42,16 +43,45 @@ XULMAP_TYPE(toolbarbutton, XULToolbarButtonAccessible)
 XULMAP_TYPE(tooltip, XULTooltipAccessible)
 
 XULMAP(
-  image,
+  colorpicker,
   [](nsIContent* aContent, Accessible* aContext) -> Accessible* {
     if (aContent->IsElement() &&
-        aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::onclick)) {
+        aContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                           nsGkAtoms::button, eIgnoreCase)) {
+      return new XULColorPickerAccessible(aContent, aContext->Document());
+    }
+    return nullptr;
+  }
+)
+
+XULMAP(
+  label,
+  [](nsIContent* aContent, Accessible* aContext) -> Accessible* {
+    if (aContent->IsElement() &&
+        aContent->AsElement()->ClassList()->Contains(NS_LITERAL_STRING("text-link"))) {
+      return new XULLinkAccessible(aContent, aContext->Document());
+    }
+    return new XULLabelAccessible(aContent, aContext->Document());
+  }
+)
+
+XULMAP(
+  image,
+  [](nsIContent* aContent, Accessible* aContext) -> Accessible* {
+    if (!aContent->IsElement()) {
+      return nullptr;
+    }
+
+    if (aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::onclick)) {
       return new XULToolbarButtonAccessible(aContent, aContext->Document());
     }
 
+    if (aContent->AsElement()->ClassList()->Contains(NS_LITERAL_STRING("colorpickertile"))) {
+      return new XULColorPickerTileAccessible(aContent, aContext->Document());
+    }
+
     // Don't include nameless images in accessible tree.
-    if (!aContent->IsElement() ||
-        !aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext)) {
+    if (!aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext)) {
       return nullptr;
     }
 
