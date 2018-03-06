@@ -72,6 +72,7 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "dom.max_script_run_time",
   "dom.mozBrowserFramesEnabled",
   "dom.performance.enable_notify_performance_timing",
+  "dom.performance.enable_scheduler_timing",
   "dom.performance.enable_user_timing_logging",
   "dom.placeholder.show_on_focus",
   "dom.requestIdleCallback.enabled",

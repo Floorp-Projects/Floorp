@@ -13,7 +13,7 @@
 //   * First argument is the name of the getter function.  This defines a
 //     DOMPrefs::FooBar()
 //   * The second argument is the name of the pref.
-// 
+//
 //   DOM_WEBIDL_PREF(FooBar)
 //
 //   * This defines DOMPrefs::FooBar(JSContext* aCx, JSObject* aObj);
@@ -23,6 +23,7 @@ DOM_PREF(ImageBitmapExtensionsEnabled, "canvas.imagebitmap_extensions.enabled")
 DOM_PREF(DOMCachesEnabled, "dom.caches.enabled")
 DOM_PREF(DOMCachesTestingEnabled, "dom.caches.testing.enabled")
 DOM_PREF(PerformanceLoggingEnabled, "dom.performance.enable_user_timing_logging")
+DOM_PREF(SchedulerLoggingEnabled, "dom.performance.enable_scheduler_timing")
 DOM_PREF(NotificationEnabled, "dom.webnotifications.enabled")
 DOM_PREF(NotificationEnabledInServiceWorkers, "dom.webnotifications.serviceworker.enabled")
 DOM_PREF(NotificationRIEnabled, "dom.webnotifications.requireinteraction.enabled")
