@@ -182,7 +182,7 @@ MarkupView.prototype = {
 
   _onToolboxPickerHover: function(nodeFront) {
     this.showNode(nodeFront).then(() => {
-      this._showContainerAsHovered(nodeFront);
+      this._showNodeAsHovered(nodeFront);
     }, console.error);
   },
 
@@ -222,10 +222,10 @@ MarkupView.prototype = {
     }
 
     let container = target.container;
-    if (this._hoveredNode !== container.node) {
+    if (this._hoveredContainer !== container) {
       this._showBoxModel(container.node);
     }
-    this._showContainerAsHovered(container.node);
+    this._showContainerAsHovered(container);
 
     this.emit("node-hover");
   },
@@ -371,7 +371,7 @@ MarkupView.prototype = {
     }
   },
 
-  _hoveredNode: null,
+  _hoveredContainer: null,
 
   /**
    * Show a NodeFront's container as being hovered
@@ -379,17 +379,22 @@ MarkupView.prototype = {
    * @param  {NodeFront} nodeFront
    *         The node to show as hovered
    */
-  _showContainerAsHovered: function(nodeFront) {
-    if (this._hoveredNode === nodeFront) {
+  _showNodeAsHovered: function(nodeFront) {
+    let container = this.getContainer(nodeFront);
+    this._showContainerAsHovered(container);
+  },
+
+  _showContainerAsHovered: function(container) {
+    if (this._hoveredContainer === container) {
       return;
     }
 
-    if (this._hoveredNode) {
-      this.getContainer(this._hoveredNode).hovered = false;
+    if (this._hoveredContainer) {
+      this._hoveredContainer.hovered = false;
     }
 
-    this.getContainer(nodeFront).hovered = true;
-    this._hoveredNode = nodeFront;
+    container.hovered = true;
+    this._hoveredContainer = container;
     // Emit an event that the container view is actually hovered now, as this function
     // can be called by an asynchronous caller.
     this.emit("showcontainerhovered");
@@ -409,10 +414,10 @@ MarkupView.prototype = {
     }
 
     this._hideBoxModel(true);
-    if (this._hoveredNode) {
-      this.getContainer(this._hoveredNode).hovered = false;
+    if (this._hoveredContainer) {
+      this._hoveredContainer.hovered = false;
     }
-    this._hoveredNode = null;
+    this._hoveredContainer = null;
 
     this.emit("leave");
   },
@@ -558,7 +563,9 @@ MarkupView.prototype = {
       "nodeselected",
       "test"
     ];
-    let isHighlight = this._hoveredNode === this.inspector.selection.nodeFront;
+
+    let isHighlight = this._hoveredContainer &&
+      (this._hoveredContainer.node === this.inspector.selection.nodeFront);
     return !isHighlight && reason && !unwantedReasons.includes(reason);
   },
 
@@ -573,9 +580,9 @@ MarkupView.prototype = {
     if (this.htmlEditor) {
       this.htmlEditor.hide();
     }
-    if (this._hoveredNode && this._hoveredNode !== selection.nodeFront) {
-      this.getContainer(this._hoveredNode).hovered = false;
-      this._hoveredNode = null;
+    if (this._hoveredContainer && this._hoveredContainer.node !== selection.nodeFront) {
+      this._hoveredContainer.hovered = false;
+      this._hoveredContainer = null;
     }
 
     if (!selection.isNode()) {
@@ -1777,7 +1784,7 @@ MarkupView.prototype = {
 
     this._clearBriefBoxModelTimer();
 
-    this._hoveredNode = null;
+    this._hoveredContainer = null;
 
     if (this.htmlEditor) {
       this.htmlEditor.destroy();
