@@ -5487,7 +5487,7 @@ nsDocument::UnblockDOMContentLoaded()
 }
 
 void
-nsDocument::ContentStateChanged(nsIContent* aContent, EventStates aStateMask)
+nsIDocument::ContentStateChanged(nsIContent* aContent, EventStates aStateMask)
 {
   NS_PRECONDITION(!nsContentUtils::IsSafeToRunScript(),
                   "Someone forgot a scriptblocker");
@@ -5496,14 +5496,14 @@ nsDocument::ContentStateChanged(nsIContent* aContent, EventStates aStateMask)
 }
 
 void
-nsDocument::DocumentStatesChanged(EventStates aStateMask)
+nsIDocument::DocumentStatesChanged(EventStates aStateMask)
 {
   UpdateDocumentStates(aStateMask);
   NS_DOCUMENT_NOTIFY_OBSERVERS(DocumentStatesChanged, (this, aStateMask));
 }
 
 void
-nsDocument::StyleRuleChanged(StyleSheet* aSheet, css::Rule* aStyleRule)
+nsIDocument::StyleRuleChanged(StyleSheet* aSheet, css::Rule* aStyleRule)
 {
   if (!StyleSheetChangeEventsEnabled()) {
     return;
@@ -5516,7 +5516,7 @@ nsDocument::StyleRuleChanged(StyleSheet* aSheet, css::Rule* aStyleRule)
 }
 
 void
-nsDocument::StyleRuleAdded(StyleSheet* aSheet, css::Rule* aStyleRule)
+nsIDocument::StyleRuleAdded(StyleSheet* aSheet, css::Rule* aStyleRule)
 {
   if (!StyleSheetChangeEventsEnabled()) {
     return;
@@ -5529,7 +5529,7 @@ nsDocument::StyleRuleAdded(StyleSheet* aSheet, css::Rule* aStyleRule)
 }
 
 void
-nsDocument::StyleRuleRemoved(StyleSheet* aSheet, css::Rule* aStyleRule)
+nsIDocument::StyleRuleRemoved(StyleSheet* aSheet, css::Rule* aStyleRule)
 {
   if (!StyleSheetChangeEventsEnabled()) {
     return;
