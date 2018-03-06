@@ -1383,7 +1383,7 @@ nsRect
 nsMenuPopupFrame::ComputeAnchorRect(nsPresContext* aRootPresContext, nsIFrame* aAnchorFrame)
 {
   // Get the root frame for a reference
-  nsIFrame* rootFrame = aRootPresContext->FrameManager()->GetRootFrame();
+  nsIFrame* rootFrame = aRootPresContext->PresShell()->GetRootFrame();
 
   // The dimensions of the anchor
   nsRect anchorRect = aAnchorFrame->GetRectRelativeToSelf();
@@ -1413,7 +1413,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aS
   }
 
   nsPresContext* presContext = PresContext();
-  nsIFrame* rootFrame = presContext->PresShell()->FrameManager()->GetRootFrame();
+  nsIFrame* rootFrame = presContext->PresShell()->GetRootFrame();
   NS_ASSERTION(rootFrame->GetView() && GetView() &&
                rootFrame->GetView() == GetView()->GetParent(),
                "rootFrame's view is not our view's parent???");
