@@ -20,7 +20,6 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../../xre',
     '../alerts',
-    '../downloads',
     '../feeds',
     '../find',
     '../jsdownloads/src',
