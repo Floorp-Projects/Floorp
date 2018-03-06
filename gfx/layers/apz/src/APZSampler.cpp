@@ -78,6 +78,16 @@ APZSampler::NotifyLayerTreeRemoved(uint64_t aLayersId)
 }
 
 bool
+APZSampler::PushStateToWR(wr::TransactionBuilder& aTxn,
+                          const TimeStamp& aSampleTime,
+                          nsTArray<wr::WrTransformProperty>& aTransformArray)
+{
+  // This function will be removed eventually since we'll have WR pull
+  // the transforms from APZ instead.
+  return mApz->PushStateToWR(aTxn, aSampleTime, aTransformArray);
+}
+
+bool
 APZSampler::GetAPZTestData(uint64_t aLayersId,
                            APZTestData* aOutData)
 {
