@@ -143,6 +143,7 @@ let ADDRESSES_1 = {
     "address-level1": "MI",
     "address-level2": "Some City",
     "country": "US",
+    "email": "foo@bar.com",
     "guid": "48bnds6854t",
     "name": "Mr. Foo",
     "postal-code": "90210",
