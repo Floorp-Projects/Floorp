@@ -607,13 +607,12 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       maxNodes = Number.MAX_VALUE;
     }
 
-    let isShadowHost = !!node.rawNode.shadowRoot;
-    let isShadowRoot = !!node.rawNode.host;
+    let { isShadowHost, isShadowRoot, isDirectShadowHostChild } = node;
 
     // Detect special case of unslotted shadow host children that cannot rely on a
     // regular anonymous walker.
     let isUnslottedHostChild = false;
-    if (node.isDirectShadowHostChild) {
+    if (isDirectShadowHostChild) {
       try {
         this.getDocumentWalker(node.rawNode, options.whatToShow, SKIP_TO_SIBLING);
       } catch (e) {
@@ -692,12 +691,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         // Then put it all back together.
         nodes = firstNodes.concat(nodes);
       }
-    }
-
-    // Temporarily filter out shadow host children when a walker returns them in a <slot>.
-    if (!isShadowHost) {
-      // Shadow host children should only be displayed under the host.
-      nodes = nodes.filter(n => !n.isDirectShadowHostChild);
     }
 
     let hasFirst, hasLast;

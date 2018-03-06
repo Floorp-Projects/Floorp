@@ -1670,6 +1670,8 @@ MarkupView.prototype = {
     // If the dirty flag is re-set while we're fetching we'll need to fetch
     // again.
     container.childrenDirty = false;
+
+    let isShadowHost = container.node.isShadowHost;
     let updatePromise =
       this._getVisibleChildren(container, centered).then(children => {
         if (!this._containers) {
@@ -1686,6 +1688,12 @@ MarkupView.prototype = {
         let fragment = this.doc.createDocumentFragment();
 
         for (let child of children.nodes) {
+          let { isDirectShadowHostChild } = child;
+          if (!isShadowHost && isDirectShadowHostChild) {
+            // Temporarily skip light DOM nodes if the container's node is not a host
+            // element, which means that the node is a "slotted" node.
+            continue;
+          }
           let childContainer = this.importNode(child, flash);
           fragment.appendChild(childContainer.elt);
         }

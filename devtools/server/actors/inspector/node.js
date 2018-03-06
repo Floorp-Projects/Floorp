@@ -124,6 +124,8 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       isXBLAnonymous: isXBLAnonymous(this.rawNode),
       isShadowAnonymous: isShadowAnonymous(this.rawNode),
       isShadowRoot: this.isShadowRoot,
+      isShadowHost: this.isShadowHost,
+      isDirectShadowHostChild: this.isDirectShadowHostChild,
       pseudoClassLocks: this.writePseudoClassLocks(),
 
       isDisplayed: this.isDisplayed,
@@ -195,6 +197,11 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   get isShadowRoot() {
     let isFragment = this.rawNode.nodeType === Ci.nsIDOMNode.DOCUMENT_FRAGMENT_NODE;
     return isFragment && this.rawNode.host;
+  },
+
+  get isShadowHost() {
+    let shadowRoot = this.rawNode.shadowRoot;
+    return shadowRoot && shadowRoot.nodeType === Ci.nsIDOMNode.DOCUMENT_FRAGMENT_NODE;
   },
 
   get isDirectShadowHostChild() {
