@@ -440,8 +440,9 @@ nsSimplePageSequenceFrame::StartPrint(nsPresContext*    aPresContext,
   return rv;
 }
 
-void
-GetPrintCanvasElementsInFrame(nsIFrame* aFrame, nsTArray<RefPtr<HTMLCanvasElement> >* aArr)
+static void
+GetPrintCanvasElementsInFrame(nsIFrame* aFrame,
+                              nsTArray<RefPtr<HTMLCanvasElement> >* aArr)
 {
   if (!aFrame) {
     return;

@@ -24,7 +24,6 @@
 #include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
 #include "mozilla/layers/AsyncDragMetrics.h" // for AsyncDragMetrics
 #include "mozilla/layers/CompositorBridgeParent.h" // for CompositorBridgeParent, etc
-#include "mozilla/layers/FocusState.h"  // for FocusState
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/layers/WebRenderScrollDataWrapper.h"
 #include "mozilla/MouseEvents.h"
@@ -223,15 +222,6 @@ private:
   bool mMayChangeFocus;
 };
 
-/*static*/ const ScreenMargin
-APZCTreeManager::CalculatePendingDisplayPort(
-  const FrameMetrics& aFrameMetrics,
-  const ParentLayerPoint& aVelocity)
-{
-  return AsyncPanZoomController::CalculatePendingDisplayPort(
-    aFrameMetrics, aVelocity);
-}
-
 APZCTreeManager::APZCTreeManager(uint64_t aRootLayersId)
     : mInputQueue(new InputQueue()),
       mRootLayersId(aRootLayersId),
@@ -256,13 +246,6 @@ APZCTreeManager::APZCTreeManager(uint64_t aRootLayersId)
 
 APZCTreeManager::~APZCTreeManager()
 {
-}
-
-/*static*/ void
-APZCTreeManager::InitializeGlobalState()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  AsyncPanZoomController::InitializeGlobalState();
 }
 
 void

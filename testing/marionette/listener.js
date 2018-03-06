@@ -668,14 +668,12 @@ function sendError(err, uuid) {
   sendToServer(uuid, err);
 }
 
-async function execute(script, args, timeout, opts) {
-  opts.timeout = timeout;
+async function execute(script, args, opts) {
   let sb = sandbox.createMutable(curContainer.frame);
   return evaluate.sandbox(sb, script, args, opts);
 }
 
-async function executeInSandbox(script, args, timeout, opts) {
-  opts.timeout = timeout;
+async function executeInSandbox(script, args, opts) {
   let sb = sandboxes.get(opts.sandboxName, opts.newSandbox);
   return evaluate.sandbox(sb, script, args, opts);
 }

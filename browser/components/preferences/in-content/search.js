@@ -66,7 +66,7 @@ var gSearchPane = {
     urlbarSuggestsPref.on("change", updateSuggestionCheckboxes);
     let urlbarSuggests = document.getElementById("urlBarSuggestion");
     urlbarSuggests.addEventListener("command", () => {
-      urlbarSuggestsPref.value = !urlbarSuggests.checked;
+      urlbarSuggestsPref.value = urlbarSuggests.checked;
     });
 
     this._initShowSearchSuggestionsFirst();
