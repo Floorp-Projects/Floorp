@@ -110,14 +110,14 @@ LiveSavedFrameCache::find(JSContext* cx, FrameIter& frameIter, MutableHandleSave
     Maybe<FramePtr> maybeFramePtr = getFramePtr(frameIter);
     MOZ_ASSERT(maybeFramePtr.isSome());
 
-    FramePtr framePtr(*maybeFramePtr);
+    Key key(*maybeFramePtr);
     const jsbytecode* pc = frameIter.pc();
     size_t numberStillValid = 0;
 
     frame.set(nullptr);
     for (auto* p = frames->begin(); p < frames->end(); p++) {
         numberStillValid++;
-        if (framePtr == p->framePtr && pc == p->pc) {
+        if (key == p->key && pc == p->pc) {
             frame.set(p->savedFrame);
             break;
         }
