@@ -1002,6 +1002,18 @@ static const struct EVInfo kEVInfos[] = {
     "DBZMdXhUcnVzdCBHbG9iYWwgUm9vdCAy",
     "Cn6m30tEntpqJIWe5rgV0xZ/u7E=",
   },
+  {
+    // CN=GDCA TrustAUTH R5 ROOT,O="GUANG DONG CERTIFICATE AUTHORITY CO.,LTD.",C=CN
+    "1.2.156.112559.1.1.6.1",
+    "GDCA EV OID",
+    { 0xBF, 0xFF, 0x8F, 0xD0, 0x44, 0x33, 0x48, 0x7D, 0x6A, 0x8A, 0xA6,
+      0x0C, 0x1A, 0x29, 0x76, 0x7A, 0x9F, 0xC2, 0xBB, 0xB0, 0x5E, 0x42,
+      0x0F, 0x71, 0x3A, 0x13, 0xB9, 0x92, 0x89, 0x1D, 0x38, 0x93 },
+    "MGIxCzAJBgNVBAYTAkNOMTIwMAYDVQQKDClHVUFORyBET05HIENFUlRJRklDQVRF"
+    "IEFVVEhPUklUWSBDTy4sTFRELjEfMB0GA1UEAwwWR0RDQSBUcnVzdEFVVEggUjUg"
+    "Uk9PVA==",
+    "fQmX/vBH6no=",
+  },
 };
 
 static SECOidTag sEVInfoOIDTags[ArrayLength(kEVInfos)];

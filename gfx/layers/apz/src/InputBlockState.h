@@ -75,7 +75,8 @@ public:
 
   virtual bool SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc,
                                       TargetConfirmationState aState,
-                                      InputData* aFirstInput);
+                                      InputData* aFirstInput,
+                                      bool aForScrollbarDrag);
   const RefPtr<AsyncPanZoomController>& GetTargetApzc() const;
   const RefPtr<const OverscrollHandoffChain>& GetOverscrollHandoffChain() const;
   uint64_t GetBlockId() const;
@@ -230,7 +231,8 @@ public:
   const char* Type() override;
   bool SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc,
                               TargetConfirmationState aState,
-                              InputData* aFirstInput) override;
+                              InputData* aFirstInput,
+                              bool aForScrollbarDrag) override;
 
   WheelBlockState *AsWheelBlock() override {
     return this;
@@ -346,7 +348,8 @@ public:
   const char* Type() override;
   bool SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc,
                               TargetConfirmationState aState,
-                              InputData* aFirstInput) override;
+                              InputData* aFirstInput,
+                              bool aForScrollbarDrag) override;
 
   PanGestureBlockState *AsPanGestureBlock() override {
     return this;

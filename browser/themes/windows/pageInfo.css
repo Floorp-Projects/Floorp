@@ -4,6 +4,14 @@
 
 @import "chrome://global/skin/";
 
+#topBar {
+  -moz-window-dragging: drag;
+  border-bottom: 1px solid ThreeDLightShadow;
+  padding-inline-start: 10px;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+}
+
 /* View buttons */
 #viewGroup {
   padding-inline-start: 10px;
@@ -30,13 +38,6 @@
 #viewGroup > radio > .radio-label-box {
   margin: 0;
   padding: 0 6px;
-}
-
-#topBar {
-  border-bottom: 1px solid ThreeDLightShadow;
-  padding-inline-start: 10px;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
 }
 
 #generalTab {

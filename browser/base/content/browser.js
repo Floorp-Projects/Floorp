@@ -140,6 +140,14 @@ if (AppConstants.MOZ_CRASHREPORTER) {
                                      "nsICrashReporter");
 }
 
+XPCOMUtils.defineLazyGetter(this, "gBrowser", function() {
+  // The TabBrowser class only exists in proper browser windows, whereas
+  // browser.js may be loaded in other windows where a non-tabbrowser
+  // browser might try to access the gBrowser property.
+  // eslint-disable-next-line no-undef
+  return (typeof TabBrowser == "function") ? new TabBrowser() : null;
+});
+
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle("chrome://browser/locale/browser.properties");
 });
@@ -223,7 +231,6 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function() {
 
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
-var gBrowser = null; // Will be instantiated by the <tabbbrowser> constructor.
 var gLastValidURLStr = "";
 var gInPrintPreviewMode = false;
 var gContextMenu = null; // nsContextMenu instance
@@ -1302,7 +1309,8 @@ var gBrowserInit = {
 
     if (!gMultiProcessBrowser) {
       // There is a Content:Click message manually sent from content.
-      Services.els.addSystemEventListener(gBrowser.container, "click", contentAreaClick, true);
+      Services.els.addSystemEventListener(gBrowser.mPanelContainer, "click",
+        contentAreaClick, true);
     }
 
     // hook up UI through progress listener
@@ -1387,9 +1395,8 @@ var gBrowserInit = {
   },
 
   _delayedStartup() {
-    let tmp = {};
-    ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm", tmp);
-    let TelemetryTimestamps = tmp.TelemetryTimestamps;
+    let { TelemetryTimestamps } =
+      ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm", {});
     TelemetryTimestamps.add("delayedStartupStarted");
 
     this._cancelDelayedStartup();
@@ -1420,11 +1427,11 @@ var gBrowserInit = {
 
     gBrowser.addEventListener("InsecureLoginFormsStateChange", function() {
       gIdentityHandler.refreshForInsecureLoginForms();
-    });
+    }, true);
 
     gBrowser.addEventListener("PermissionStateChange", function() {
       gIdentityHandler.refreshIdentityBlock();
-    });
+    }, true);
 
     // Get the service so that it initializes and registers listeners for new
     // tab pages in order to be ready for any early-loading about:newtab pages,
@@ -1543,6 +1550,12 @@ var gBrowserInit = {
 
     gNavToolbox.addEventListener("customizationstarting", CustomizationHandler);
     gNavToolbox.addEventListener("customizationending", CustomizationHandler);
+
+    if (AppConstants.platform == "linux") {
+      let { WindowDraggingElement } =
+        ChromeUtils.import("resource://gre/modules/WindowDraggingUtils.jsm", {});
+      new WindowDraggingElement(document.getElementById("titlebar"));
+    }
 
     SessionStore.promiseInitialized.then(() => {
       // Bail out if the window has been closed in the meantime.
@@ -1916,6 +1929,7 @@ var gBrowserInit = {
     }
 
     // Final window teardown, do this last.
+    gBrowser.destroy();
     window.XULBrowserWindow = null;
     window.QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIWebNavigation)
@@ -2591,7 +2605,7 @@ function readFromClipboard() {
  *        lineNumber (optional):
  *          The line number to focus on once the source is loaded.
  */
-function BrowserViewSourceOfDocument(aArgsOrDocument) {
+async function BrowserViewSourceOfDocument(aArgsOrDocument) {
   let args;
 
   if (aArgsOrDocument instanceof Document) {
@@ -2615,62 +2629,55 @@ function BrowserViewSourceOfDocument(aArgsOrDocument) {
     args = aArgsOrDocument;
   }
 
-  let viewInternal = () => {
-    let tabBrowser = gBrowser;
-    let preferredRemoteType;
-    if (args.browser) {
-      preferredRemoteType = args.browser.remoteType;
-    } else {
-      if (!tabBrowser) {
-        throw new Error("BrowserViewSourceOfDocument should be passed the " +
-                        "subject browser if called from a window without " +
-                        "gBrowser defined.");
-      }
-      // Some internal URLs (such as specific chrome: and about: URLs that are
-      // not yet remote ready) cannot be loaded in a remote browser.  View
-      // source in tab expects the new view source browser's remoteness to match
-      // that of the original URL, so disable remoteness if necessary for this
-      // URL.
-      preferredRemoteType =
-        E10SUtils.getRemoteTypeForURI(args.URL, gMultiProcessBrowser);
-    }
-
-    // In the case of popups, we need to find a non-popup browser window.
-    if (!tabBrowser || !window.toolbar.visible) {
-      // This returns only non-popup browser windows by default.
-      let browserWindow = RecentWindow.getMostRecentBrowserWindow();
-      tabBrowser = browserWindow.gBrowser;
-    }
-
-    // `viewSourceInBrowser` will load the source content from the page
-    // descriptor for the tab (when possible) or fallback to the network if
-    // that fails.  Either way, the view source module will manage the tab's
-    // location, so use "about:blank" here to avoid unnecessary redundant
-    // requests.
-    let tab = tabBrowser.loadOneTab("about:blank", {
-      relatedToCurrent: true,
-      inBackground: false,
-      preferredRemoteType,
-      sameProcessAsFrameLoader: args.browser ? args.browser.frameLoader : null,
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
-    args.viewSourceBrowser = tabBrowser.getBrowserForTab(tab);
-    top.gViewSourceUtils.viewSourceInBrowser(args);
-  };
-
   // Check if external view source is enabled.  If so, try it.  If it fails,
   // fallback to internal view source.
   if (Services.prefs.getBoolPref("view_source.editor.external")) {
-    top.gViewSourceUtils
-       .openInExternalEditor(args, result => {
-      if (!result) {
-        viewInternal();
-      }
-    });
-  } else {
-    // Display using internal view source
-    viewInternal();
+    try {
+      await top.gViewSourceUtils.openInExternalEditor(args);
+      return;
+    } catch (data) {}
   }
+
+  let tabBrowser = gBrowser;
+  let preferredRemoteType;
+  if (args.browser) {
+    preferredRemoteType = args.browser.remoteType;
+  } else {
+    if (!tabBrowser) {
+      throw new Error("BrowserViewSourceOfDocument should be passed the " +
+                      "subject browser if called from a window without " +
+                      "gBrowser defined.");
+    }
+    // Some internal URLs (such as specific chrome: and about: URLs that are
+    // not yet remote ready) cannot be loaded in a remote browser.  View
+    // source in tab expects the new view source browser's remoteness to match
+    // that of the original URL, so disable remoteness if necessary for this
+    // URL.
+    preferredRemoteType =
+      E10SUtils.getRemoteTypeForURI(args.URL, gMultiProcessBrowser);
+  }
+
+  // In the case of popups, we need to find a non-popup browser window.
+  if (!tabBrowser || !window.toolbar.visible) {
+    // This returns only non-popup browser windows by default.
+    let browserWindow = RecentWindow.getMostRecentBrowserWindow();
+    tabBrowser = browserWindow.gBrowser;
+  }
+
+  // `viewSourceInBrowser` will load the source content from the page
+  // descriptor for the tab (when possible) or fallback to the network if
+  // that fails.  Either way, the view source module will manage the tab's
+  // location, so use "about:blank" here to avoid unnecessary redundant
+  // requests.
+  let tab = tabBrowser.loadOneTab("about:blank", {
+    relatedToCurrent: true,
+    inBackground: false,
+    preferredRemoteType,
+    sameProcessAsFrameLoader: args.browser ? args.browser.frameLoader : null,
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+  });
+  args.viewSourceBrowser = tabBrowser.getBrowserForTab(tab);
+  top.gViewSourceUtils.viewSourceInBrowser(args);
 }
 
 /**
