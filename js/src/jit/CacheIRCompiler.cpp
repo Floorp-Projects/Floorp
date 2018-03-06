@@ -929,7 +929,7 @@ CacheIRWriter::copyStubData(uint8_t* dest) const
             *reinterpret_cast<uint64_t*>(destWords) = field.asInt64();
             break;
           case StubField::Type::Value:
-            InitGCPtr<JS::Value>(destWords, field.asInt64());
+            AsGCPtr<Value>(destWords)->init(Value::fromRawBits(uint64_t(field.asInt64())));
             break;
           case StubField::Type::Limit:
             MOZ_CRASH("Invalid type");
