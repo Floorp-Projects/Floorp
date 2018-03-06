@@ -7,10 +7,10 @@
  * Test if sorting columns in the network table works correctly.
  */
 
-add_task(function* () {
+add_task(async function () {
   let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
-  let { monitor } = yield initNetMonitor(SORTING_URL);
+  let { monitor } = await initNetMonitor(SORTING_URL);
   info("Starting test... ");
 
   // It seems that this test may be slow on debug builds. This could be because
@@ -48,8 +48,8 @@ add_task(function* () {
   }];
 
   let wait = waitForNetworkEvents(monitor, 5);
-  yield performRequestsInContent(requests);
-  yield wait;
+  await performRequestsInContent(requests);
+  await wait;
 
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".network-details-panel-toggle"));
@@ -62,133 +62,133 @@ add_task(function* () {
     "The network details panel should be visible after toggle button was pressed.");
 
   testHeaders();
-  yield testContents([0, 2, 4, 3, 1]);
+  await testContents([0, 2, 4, 3, 1]);
 
   info("Testing status sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-status-button"));
   testHeaders("status", "ascending");
-  yield testContents([0, 1, 2, 3, 4]);
+  await testContents([0, 1, 2, 3, 4]);
 
   info("Testing status sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-status-button"));
   testHeaders("status", "descending");
-  yield testContents([4, 3, 2, 1, 0]);
+  await testContents([4, 3, 2, 1, 0]);
 
   info("Testing status sort, ascending. Checking sort loops correctly.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-status-button"));
   testHeaders("status", "ascending");
-  yield testContents([0, 1, 2, 3, 4]);
+  await testContents([0, 1, 2, 3, 4]);
 
   info("Testing method sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-method-button"));
   testHeaders("method", "ascending");
-  yield testContents([0, 1, 2, 3, 4]);
+  await testContents([0, 1, 2, 3, 4]);
 
   info("Testing method sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-method-button"));
   testHeaders("method", "descending");
-  yield testContents([4, 3, 2, 1, 0]);
+  await testContents([4, 3, 2, 1, 0]);
 
   info("Testing method sort, ascending. Checking sort loops correctly.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-method-button"));
   testHeaders("method", "ascending");
-  yield testContents([0, 1, 2, 3, 4]);
+  await testContents([0, 1, 2, 3, 4]);
 
   info("Testing file sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-file-button"));
   testHeaders("file", "ascending");
-  yield testContents([0, 1, 2, 3, 4]);
+  await testContents([0, 1, 2, 3, 4]);
 
   info("Testing file sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-file-button"));
   testHeaders("file", "descending");
-  yield testContents([4, 3, 2, 1, 0]);
+  await testContents([4, 3, 2, 1, 0]);
 
   info("Testing file sort, ascending. Checking sort loops correctly.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-file-button"));
   testHeaders("file", "ascending");
-  yield testContents([0, 1, 2, 3, 4]);
+  await testContents([0, 1, 2, 3, 4]);
 
   info("Testing type sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-type-button"));
   testHeaders("type", "ascending");
-  yield testContents([0, 1, 2, 3, 4]);
+  await testContents([0, 1, 2, 3, 4]);
 
   info("Testing type sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-type-button"));
   testHeaders("type", "descending");
-  yield testContents([4, 3, 2, 1, 0]);
+  await testContents([4, 3, 2, 1, 0]);
 
   info("Testing type sort, ascending. Checking sort loops correctly.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-type-button"));
   testHeaders("type", "ascending");
-  yield testContents([0, 1, 2, 3, 4]);
+  await testContents([0, 1, 2, 3, 4]);
 
   info("Testing transferred sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-transferred-button"));
   testHeaders("transferred", "ascending");
-  yield testContents([0, 1, 2, 3, 4]);
+  await testContents([0, 1, 2, 3, 4]);
 
   info("Testing transferred sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-transferred-button"));
   testHeaders("transferred", "descending");
-  yield testContents([4, 3, 2, 1, 0]);
+  await testContents([4, 3, 2, 1, 0]);
 
   info("Testing transferred sort, ascending. Checking sort loops correctly.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-transferred-button"));
   testHeaders("transferred", "ascending");
-  yield testContents([0, 1, 2, 3, 4]);
+  await testContents([0, 1, 2, 3, 4]);
 
   info("Testing size sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-contentSize-button"));
   testHeaders("contentSize", "ascending");
-  yield testContents([0, 1, 2, 3, 4]);
+  await testContents([0, 1, 2, 3, 4]);
 
   info("Testing size sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-contentSize-button"));
   testHeaders("contentSize", "descending");
-  yield testContents([4, 3, 2, 1, 0]);
+  await testContents([4, 3, 2, 1, 0]);
 
   info("Testing size sort, ascending. Checking sort loops correctly.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-contentSize-button"));
   testHeaders("contentSize", "ascending");
-  yield testContents([0, 1, 2, 3, 4]);
+  await testContents([0, 1, 2, 3, 4]);
 
   info("Testing waterfall sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-waterfall-button"));
   testHeaders("waterfall", "ascending");
-  yield testContents([0, 2, 4, 3, 1]);
+  await testContents([0, 2, 4, 3, 1]);
 
   info("Testing waterfall sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-waterfall-button"));
   testHeaders("waterfall", "descending");
-  yield testContents([4, 2, 0, 1, 3]);
+  await testContents([4, 2, 0, 1, 3]);
 
   info("Testing waterfall sort, ascending. Checking sort loops correctly.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-waterfall-button"));
   testHeaders("waterfall", "ascending");
-  yield testContents([0, 2, 4, 3, 1]);
+  await testContents([0, 2, 4, 3, 1]);
 
   return teardown(monitor);
 
@@ -225,7 +225,7 @@ add_task(function* () {
     }
   }
 
-  function* testContents([a, b, c, d, e]) {
+  async function testContents([a, b, c, d, e]) {
     isnot(getSelectedRequest(store.getState()), undefined,
       "There should still be a selected item after sorting.");
     is(getSelectedIndex(store.getState()), a,
@@ -245,7 +245,7 @@ add_task(function* () {
       requestItem.scrollIntoView();
       let requestsListStatus = requestItem.querySelector(".requests-list-status");
       EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
-      yield waitUntil(() => requestsListStatus.title);
+      await waitUntil(() => requestsListStatus.title);
     }
 
     verifyRequestItemTarget(

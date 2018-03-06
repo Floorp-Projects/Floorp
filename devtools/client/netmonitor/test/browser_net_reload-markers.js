@@ -7,8 +7,8 @@
  * Tests if the empty-requests reload button works.
  */
 
-add_task(function* () {
-  let { monitor } = yield initNetMonitor(SIMPLE_URL);
+add_task(async function () {
+  let { monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
   let { document } = monitor.panelWin;
@@ -18,8 +18,8 @@ add_task(function* () {
   let button = document.querySelector(".requests-list-reload-notice-button");
   button.click();
 
-  yield waitForNetworkEvents(monitor, 1);
-  let markers = yield markersDone;
+  await waitForNetworkEvents(monitor, 1);
+  let markers = await markersDone;
 
   ok(true, "Reloading finished");
 

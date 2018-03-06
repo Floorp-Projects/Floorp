@@ -7,10 +7,10 @@
  * Test if sorting columns in the network table works correctly with new requests.
  */
 
-add_task(function* () {
+add_task(async function () {
   let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
-  let { monitor } = yield initNetMonitor(SORTING_URL);
+  let { monitor } = await initNetMonitor(SORTING_URL);
   info("Starting test... ");
 
   // It seems that this test may be slow on debug builds. This could be because
@@ -48,8 +48,8 @@ add_task(function* () {
   }];
 
   let wait = waitForNetworkEvents(monitor, 5);
-  yield performRequestsInContent(requests);
-  yield wait;
+  await performRequestsInContent(requests);
+  await wait;
 
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".network-details-panel-toggle"));
@@ -62,49 +62,49 @@ add_task(function* () {
     "The network details panel should be visible after toggle button was pressed.");
 
   testHeaders();
-  yield testContents([0, 2, 4, 3, 1], 0);
+  await testContents([0, 2, 4, 3, 1], 0);
 
   info("Testing status sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-status-button"));
   testHeaders("status", "ascending");
-  yield testContents([0, 1, 2, 3, 4], 0);
+  await testContents([0, 1, 2, 3, 4], 0);
 
   info("Performing more requests.");
   wait = waitForNetworkEvents(monitor, 5);
-  yield performRequestsInContent(requests);
-  yield wait;
+  await performRequestsInContent(requests);
+  await wait;
 
   info("Testing status sort again, ascending.");
   testHeaders("status", "ascending");
-  yield testContents([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 0);
+  await testContents([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 0);
 
   info("Testing status sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-status-button"));
   testHeaders("status", "descending");
-  yield testContents([9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 9);
+  await testContents([9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 9);
 
   info("Performing more requests.");
   wait = waitForNetworkEvents(monitor, 5);
-  yield performRequestsInContent(requests);
-  yield wait;
+  await performRequestsInContent(requests);
+  await wait;
 
   info("Testing status sort again, descending.");
   testHeaders("status", "descending");
-  yield testContents([14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 14);
+  await testContents([14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 14);
 
   info("Testing status sort yet again, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-status-button"));
   testHeaders("status", "ascending");
-  yield testContents([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], 0);
+  await testContents([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], 0);
 
   info("Testing status sort yet again, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#requests-list-status-button"));
   testHeaders("status", "descending");
-  yield testContents([14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 14);
+  await testContents([14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 14);
 
   return teardown(monitor);
 
@@ -141,7 +141,7 @@ add_task(function* () {
     return getSortedRequests(state).findIndex(r => r.id === state.requests.selectedId);
   }
 
-  function* testContents(order, selection) {
+  async function testContents(order, selection) {
     isnot(getSelectedRequest(store.getState()), undefined,
       "There should still be a selected item after sorting.");
     is(getSelectedIndex(store.getState()), selection,
@@ -161,7 +161,7 @@ add_task(function* () {
       requestItem.scrollIntoView();
       let requestsListStatus = requestItem.querySelector(".requests-list-status");
       EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
-      yield waitUntil(() => requestsListStatus.title);
+      await waitUntil(() => requestsListStatus.title);
     }
 
     for (let i = 0, len = order.length / 5; i < len; i++) {
