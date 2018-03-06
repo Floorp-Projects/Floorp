@@ -752,7 +752,6 @@ function checkPlugin(data) {
 }
 
 function checkTheme(data) {
-  // "hasBinaryComponents" is not available when testing.
   const EXPECTED_THEME_FIELDS_TYPES = {
     id: "string",
     blocklisted: "boolean",

@@ -27,8 +27,6 @@ ChromeUtils.defineModuleGetter(this, "AppConstants",
                                "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyGetter(this, "CertUtils",
                             () => ChromeUtils.import("resource://gre/modules/CertUtils.jsm", {}));
-ChromeUtils.defineModuleGetter(this, "ChromeManifestParser",
-                               "resource://gre/modules/ChromeManifestParser.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionData",
                                "resource://gre/modules/Extension.jsm");
 ChromeUtils.defineModuleGetter(this, "FileUtils",
@@ -343,7 +341,6 @@ async function loadManifestFromWebManifest(aUri) {
   addon.unpack = false;
   addon.strictCompatibility = true;
   addon.bootstrap = true;
-  addon.hasBinaryComponents = false;
   addon.multiprocessCompatible = true;
   addon.internalName = null;
   addon.updateURL = bss.update_url;
@@ -803,11 +800,6 @@ var loadManifestFromDir = async function(aDir, aInstallLocation) {
     if (icon64File.exists()) {
       addon.icons[64] = "icon64.png";
     }
-
-    let file = getFile("chrome.manifest", aDir);
-    let chromeManifest = ChromeManifestParser.parseSync(Services.io.newFileURI(file));
-    addon.hasBinaryComponents = ChromeManifestParser.hasType(chromeManifest,
-                                                             "binary-component");
     return addon;
   }
 
@@ -874,16 +866,6 @@ var loadManifestFromZipReader = async function(aZipReader, aInstallLocation) {
 
     if (aZipReader.hasEntry("icon64.png")) {
       addon.icons[64] = "icon64.png";
-    }
-
-    // Binary components can only be loaded from unpacked addons.
-    if (addon.unpack) {
-      let uri = buildJarURI(aZipReader.file, "chrome.manifest");
-      let chromeManifest = ChromeManifestParser.parseSync(uri);
-      addon.hasBinaryComponents = ChromeManifestParser.hasType(chromeManifest,
-                                                               "binary-component");
-    } else {
-      addon.hasBinaryComponents = false;
     }
 
     return addon;
@@ -2738,8 +2720,7 @@ UpdateChecker.prototype = {
       ignoreStrictCompat = true;
     } else if (this.addon.type in COMPATIBLE_BY_DEFAULT_TYPES &&
                !AddonManager.strictCompatibility &&
-               !this.addon.strictCompatibility &&
-               !this.addon.hasBinaryComponents) {
+               !this.addon.strictCompatibility) {
       ignoreMaxVersion = true;
     }
 

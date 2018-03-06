@@ -707,7 +707,7 @@ EnvironmentAddonBuilder.prototype = {
             userDisabled: enforceBoolean(addon.userDisabled),
             appDisabled: addon.appDisabled,
             foreignInstall: enforceBoolean(addon.foreignInstall),
-            hasBinaryComponents: addon.hasBinaryComponents,
+            hasBinaryComponents: false,
             installDay: Utils.millisecondsToDays(installDate.getTime()),
             signedState: addon.signedState,
           });
@@ -747,7 +747,7 @@ EnvironmentAddonBuilder.prototype = {
         version: limitStringToLength(theme.version, MAX_ADDON_STRING_LENGTH),
         scope: theme.scope,
         foreignInstall: enforceBoolean(theme.foreignInstall),
-        hasBinaryComponents: theme.hasBinaryComponents,
+        hasBinaryComponents: false,
         installDay: Utils.millisecondsToDays(installDate.getTime()),
         updateDay: Utils.millisecondsToDays(updateDate.getTime()),
       };
