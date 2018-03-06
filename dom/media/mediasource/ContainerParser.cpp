@@ -15,6 +15,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "MediaData.h"
+#include "nsMimeTypes.h"
 #ifdef MOZ_FMP4
 #include "AtomType.h"
 #include "BufferReader.h"
@@ -852,14 +853,14 @@ public:
 /*static*/ ContainerParser*
 ContainerParser::CreateForMIMEType(const MediaContainerType& aType)
 {
-  if (aType.Type() == MEDIAMIMETYPE("video/webm") ||
-      aType.Type() == MEDIAMIMETYPE("audio/webm")) {
+  if (aType.Type() == MEDIAMIMETYPE(VIDEO_WEBM) ||
+      aType.Type() == MEDIAMIMETYPE(AUDIO_WEBM)) {
     return new WebMContainerParser(aType);
   }
 
 #ifdef MOZ_FMP4
-  if (aType.Type() == MEDIAMIMETYPE("video/mp4") ||
-      aType.Type() == MEDIAMIMETYPE("audio/mp4")) {
+  if (aType.Type() == MEDIAMIMETYPE(VIDEO_MP4) ||
+      aType.Type() == MEDIAMIMETYPE(AUDIO_MP4)) {
     return new MP4ContainerParser(aType);
   }
   if (aType.Type() == MEDIAMIMETYPE("audio/aac")) {

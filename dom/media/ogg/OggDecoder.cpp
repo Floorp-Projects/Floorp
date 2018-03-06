@@ -8,6 +8,7 @@
 #include "MediaPrefs.h"
 #include "MediaContainerType.h"
 #include "MediaDecoder.h"
+#include "nsMimeTypes.h"
 
 namespace mozilla {
 
@@ -19,13 +20,13 @@ OggDecoder::IsSupportedType(const MediaContainerType& aContainerType)
     return false;
   }
 
-  if (aContainerType.Type() != MEDIAMIMETYPE("audio/ogg") &&
-      aContainerType.Type() != MEDIAMIMETYPE("video/ogg") &&
+  if (aContainerType.Type() != MEDIAMIMETYPE(AUDIO_OGG) &&
+      aContainerType.Type() != MEDIAMIMETYPE(VIDEO_OGG) &&
       aContainerType.Type() != MEDIAMIMETYPE("application/ogg")) {
     return false;
   }
 
-  const bool isOggVideo = (aContainerType.Type() != MEDIAMIMETYPE("audio/ogg"));
+  const bool isOggVideo = (aContainerType.Type() != MEDIAMIMETYPE(AUDIO_OGG));
 
   const MediaCodecs& codecs = aContainerType.ExtendedType().Codecs();
   if (codecs.IsEmpty()) {

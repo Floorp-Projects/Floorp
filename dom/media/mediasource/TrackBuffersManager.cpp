@@ -11,6 +11,7 @@
 #include "MediaSourceUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
+#include "nsMimeTypes.h"
 #include "SourceBuffer.h"
 #include "SourceBufferResource.h"
 #include "SourceBufferTask.h"
@@ -896,16 +897,16 @@ TrackBuffersManager::CreateDemuxerforMIMEType()
 {
   ShutdownDemuxers();
 
-  if (mType.Type() == MEDIAMIMETYPE("video/webm") ||
-      mType.Type() == MEDIAMIMETYPE("audio/webm")) {
+  if (mType.Type() == MEDIAMIMETYPE(VIDEO_WEBM) ||
+      mType.Type() == MEDIAMIMETYPE(AUDIO_WEBM)) {
     mInputDemuxer = new WebMDemuxer(mCurrentInputBuffer, true /* IsMediaSource*/ );
     DDLINKCHILD("demuxer", mInputDemuxer.get());
     return;
   }
 
 #ifdef MOZ_FMP4
-  if (mType.Type() == MEDIAMIMETYPE("video/mp4") ||
-      mType.Type() == MEDIAMIMETYPE("audio/mp4")) {
+  if (mType.Type() == MEDIAMIMETYPE(VIDEO_MP4) ||
+      mType.Type() == MEDIAMIMETYPE(AUDIO_MP4)) {
     mInputDemuxer = new MP4Demuxer(mCurrentInputBuffer);
     DDLINKCHILD("demuxer", mInputDemuxer.get());
     return;
