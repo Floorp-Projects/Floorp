@@ -95,6 +95,12 @@ public:
                          const TimeStamp& aTime) override;
   void LeaveTestMode(const uint64_t& aId) override;
   void ApplyAsyncProperties(LayerTransactionParent* aLayerTree) override;
+  void SetTestAsyncScrollOffset(const uint64_t& aLayersId,
+                                const FrameMetrics::ViewID& aScrollId,
+                                const CSSPoint& aPoint) override;
+  void SetTestAsyncZoom(const uint64_t& aLayersId,
+                        const FrameMetrics::ViewID& aScrollId,
+                        const LayerToParentLayerScale& aZoom) override;
   void FlushApzRepaints(const uint64_t& aLayersId) override;
   void GetAPZTestData(const uint64_t& aLayersId,
                       APZTestData* aOutData) override;
