@@ -11,7 +11,6 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 for (let script of [
-  "chrome://browser/content/tabbrowser.js",
   "chrome://browser/content/browser.js",
 
   "chrome://browser/content/browser-captivePortal.js",

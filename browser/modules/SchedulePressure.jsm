@@ -12,7 +12,7 @@ ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
 XPCOMUtils.defineLazyPreferenceGetter(this, "SCHEDULE_PRESSURE_ENABLED",
   "browser.schedulePressure.enabled", true);
 XPCOMUtils.defineLazyPreferenceGetter(this, "TIMEOUT_AMOUNT",
-  "browser.schedulePressure.timeoutMs", 1000);
+  "browser.schedulePressure.timeoutMs", 300);
 
 /**
  * The SchedulePressure object provides the ability to alter

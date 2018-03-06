@@ -44,10 +44,14 @@ var gViewSourceUtils = {
    *        lineNumber (optional):
    *          The line number to focus on once the source is loaded.
    */
-  viewSource(aArgs) {
+  async viewSource(aArgs) {
+    // Check if external view source is enabled.  If so, try it.  If it fails,
+    // fallback to internal view source.
     if (Services.prefs.getBoolPref("view_source.editor.external")) {
-      this.openInExternalEditor(aArgs);
-      return;
+      try {
+        await this.openInExternalEditor(aArgs);
+        return;
+      } catch (data) {}
     }
     // Try existing browsers first.
     let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
@@ -95,9 +99,6 @@ var gViewSourceUtils = {
    *          The line number to focus on once the source is loaded.
    */
   viewSourceInBrowser(aArgs) {
-    Services.telemetry
-            .getHistogramById("VIEW_SOURCE_IN_BROWSER_OPENED_BOOLEAN")
-            .add(true);
     let viewSourceBrowser = new ViewSourceBrowser(aArgs.viewSourceBrowser);
     viewSourceBrowser.loadViewSource(aArgs);
   },
@@ -165,107 +166,101 @@ var gViewSourceUtils = {
    *        lineNumber (optional):
    *          The line number to focus on once the source is loaded.
    *
-   * @param aCallBack (required)
-   *        A function accepting two arguments:
-   *          * result (true = success)
-   *          * data object
+   * @return Promise
+   *        The promise will be resolved or rejected based on whether the
+   *        external editor attempt was successful.  Either way, the data object
+   *        is passed along as well.
    */
-  openInExternalEditor(aArgs, aCallBack) {
-    let data;
-    let { URL, browser, lineNumber } = aArgs;
-    data = {
-      url: URL,
-      lineNumber,
-      isPrivate: false,
-    };
-    if (browser) {
-      data.doc = {
-        characterSet: browser.characterSet,
-        contentType: browser.documentContentType,
-        title: browser.contentTitle,
+  openInExternalEditor(aArgs) {
+    return new Promise((resolve, reject) => {
+      let data;
+      let { URL, browser, lineNumber } = aArgs;
+      data = {
+        url: URL,
+        lineNumber,
+        isPrivate: false,
       };
-      data.isPrivate = PrivateBrowsingUtils.isBrowserPrivate(browser);
-    }
-
-
-    try {
-      var editor = this.getExternalViewSourceEditor();
-      if (!editor) {
-        this.handleCallBack(aCallBack, false, data);
-        return;
+      if (browser) {
+        data.doc = {
+          characterSet: browser.characterSet,
+          contentType: browser.documentContentType,
+          title: browser.contentTitle,
+        };
+        data.isPrivate = PrivateBrowsingUtils.isBrowserPrivate(browser);
       }
 
-      // make a uri
-      var charset = data.doc ? data.doc.characterSet : null;
-      var uri = Services.io.newURI(data.url, charset);
-      data.uri = uri;
-
-      var path;
-      var contentType = data.doc ? data.doc.contentType : null;
-      if (uri.scheme == "file") {
-        // it's a local file; we can open it directly
-        path = uri.QueryInterface(Ci.nsIFileURL).file.path;
-
-        var editorArgs = this.buildEditorArgs(path, data.lineNumber);
-        editor.runw(false, editorArgs, editorArgs.length);
-        this.handleCallBack(aCallBack, true, data);
-      } else {
-        // set up the progress listener with what we know so far
-        this.viewSourceProgressListener.contentLoaded = false;
-        this.viewSourceProgressListener.editor = editor;
-        this.viewSourceProgressListener.callBack = aCallBack;
-        this.viewSourceProgressListener.data = data;
-        if (!data.pageDescriptor) {
-          // without a page descriptor, loadPage has no chance of working. download the file.
-          var file = this.getTemporaryFile(uri, data.doc, contentType);
-          this.viewSourceProgressListener.file = file;
-
-          var webBrowserPersist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
-                                  .createInstance(this.mnsIWebBrowserPersist);
-          // the default setting is to not decode. we need to decode.
-          webBrowserPersist.persistFlags = this.mnsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
-          webBrowserPersist.progressListener = this.viewSourceProgressListener;
-          let referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER;
-          webBrowserPersist.savePrivacyAwareURI(uri, null, null, referrerPolicy, null, null, file, data.isPrivate);
-
-          let helperService = Cc["@mozilla.org/uriloader/external-helper-app-service;1"]
-                                .getService(Ci.nsPIExternalAppLauncher);
-          if (data.isPrivate) {
-            // register the file to be deleted when possible
-            helperService.deleteTemporaryPrivateFileWhenPossible(file);
-          } else {
-            // register the file to be deleted on app exit
-            helperService.deleteTemporaryFileOnExit(file);
-          }
-        } else {
-          // we'll use nsIWebPageDescriptor to get the source because it may
-          // not have to refetch the file from the server
-          // XXXbz this is so broken...  This code doesn't set up this docshell
-          // at all correctly; if somehow the view-source stuff managed to
-          // execute script we'd be in big trouble here, I suspect.
-          var webShell = Cc["@mozilla.org/docshell;1"].createInstance();
-          webShell.QueryInterface(Ci.nsIBaseWindow).create();
-          this.viewSourceProgressListener.webShell = webShell;
-          var progress = webShell.QueryInterface(this.mnsIWebProgress);
-          progress.addProgressListener(this.viewSourceProgressListener,
-                                       this.mnsIWebProgress.NOTIFY_STATE_DOCUMENT);
-          var pageLoader = webShell.QueryInterface(this.mnsIWebPageDescriptor);
-          pageLoader.loadPage(data.pageDescriptor, this.mnsIWebPageDescriptor.DISPLAY_AS_SOURCE);
+      try {
+        var editor = this.getExternalViewSourceEditor();
+        if (!editor) {
+          reject(data);
+          return;
         }
-      }
-    } catch (ex) {
-      // we failed loading it with the external editor.
-      Cu.reportError(ex);
-      this.handleCallBack(aCallBack, false, data);
-    }
-  },
 
-  // Calls the callback, and record result in telemetry.
-  handleCallBack(aCallBack, result, data) {
-    Services.telemetry
-            .getHistogramById("VIEW_SOURCE_EXTERNAL_RESULT_BOOLEAN")
-            .add(result);
-    aCallBack(result, data);
+        // make a uri
+        var charset = data.doc ? data.doc.characterSet : null;
+        var uri = Services.io.newURI(data.url, charset);
+        data.uri = uri;
+
+        var path;
+        var contentType = data.doc ? data.doc.contentType : null;
+        if (uri.scheme == "file") {
+          // it's a local file; we can open it directly
+          path = uri.QueryInterface(Ci.nsIFileURL).file.path;
+
+          var editorArgs = this.buildEditorArgs(path, data.lineNumber);
+          editor.runw(false, editorArgs, editorArgs.length);
+          resolve(data);
+        } else {
+          // set up the progress listener with what we know so far
+          this.viewSourceProgressListener.contentLoaded = false;
+          this.viewSourceProgressListener.editor = editor;
+          this.viewSourceProgressListener.resolve = resolve;
+          this.viewSourceProgressListener.reject = reject;
+          this.viewSourceProgressListener.data = data;
+          if (!data.pageDescriptor) {
+            // without a page descriptor, loadPage has no chance of working. download the file.
+            var file = this.getTemporaryFile(uri, data.doc, contentType);
+            this.viewSourceProgressListener.file = file;
+
+            var webBrowserPersist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
+              .createInstance(this.mnsIWebBrowserPersist);
+            // the default setting is to not decode. we need to decode.
+            webBrowserPersist.persistFlags = this.mnsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+            webBrowserPersist.progressListener = this.viewSourceProgressListener;
+            let referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER;
+            webBrowserPersist.savePrivacyAwareURI(uri, null, null, referrerPolicy, null, null, file, data.isPrivate);
+
+            let helperService = Cc["@mozilla.org/uriloader/external-helper-app-service;1"]
+              .getService(Ci.nsPIExternalAppLauncher);
+            if (data.isPrivate) {
+              // register the file to be deleted when possible
+              helperService.deleteTemporaryPrivateFileWhenPossible(file);
+            } else {
+              // register the file to be deleted on app exit
+              helperService.deleteTemporaryFileOnExit(file);
+            }
+          } else {
+            // we'll use nsIWebPageDescriptor to get the source because it may
+            // not have to refetch the file from the server
+            // XXXbz this is so broken...  This code doesn't set up this docshell
+            // at all correctly; if somehow the view-source stuff managed to
+            // execute script we'd be in big trouble here, I suspect.
+            var webShell = Cc["@mozilla.org/docshell;1"].createInstance();
+            webShell.QueryInterface(Ci.nsIBaseWindow).create();
+            this.viewSourceProgressListener.webShell = webShell;
+            var progress = webShell.QueryInterface(this.mnsIWebProgress);
+            progress.addProgressListener(this.viewSourceProgressListener,
+              this.mnsIWebProgress.NOTIFY_STATE_DOCUMENT);
+            var pageLoader = webShell.QueryInterface(this.mnsIWebPageDescriptor);
+            pageLoader.loadPage(data.pageDescriptor, this.mnsIWebPageDescriptor.DISPLAY_AS_SOURCE);
+          }
+        }
+      } catch (ex) {
+        // we failed loading it with the external editor.
+        Cu.reportError(ex);
+        reject(data);
+      }
+    });
   },
 
   // Returns nsIProcess of the external view source editor or null
@@ -304,7 +299,8 @@ var gViewSourceUtils = {
       }
       this.webShell = null;
       this.editor = null;
-      this.callBack = null;
+      this.resolve = null;
+      this.reject = null;
       this.data = null;
       this.file = null;
     },
@@ -380,11 +376,11 @@ var gViewSourceUtils = {
         this.editor.runw(false, editorArgs, editorArgs.length);
 
         this.contentLoaded = true;
-        gViewSourceUtils.handleCallBack(this.callBack, true, this.data);
+        this.resolve(this.data);
       } catch (ex) {
         // we failed loading it with the external editor.
         Cu.reportError(ex);
-        gViewSourceUtils.handleCallBack(this.callBack, false, this.data);
+        this.reject(this.data);
       } finally {
         this.destroy();
       }
@@ -392,7 +388,8 @@ var gViewSourceUtils = {
 
     webShell: null,
     editor: null,
-    callBack: null,
+    resolve: null,
+    reject: null,
     data: null,
     file: null
   },
