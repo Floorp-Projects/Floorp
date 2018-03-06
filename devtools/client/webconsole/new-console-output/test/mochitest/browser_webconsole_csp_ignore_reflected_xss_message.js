@@ -3,8 +3,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from head.js */
-
 // Tests that a file with an unsupported CSP directive ('reflected-xss filter')
 // displays the appropriate message to the console. See Bug 1045902.
 
