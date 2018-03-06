@@ -96,16 +96,6 @@ function waitForWheelEvent(aTarget) {
   });
 }
 
-// Returns true if |aAnimation| begins at the current timeline time.  We
-// sometimes need to detect this case because if we started an animation
-// asynchronously (e.g. using play()) and then ended up running the next frame
-// at precisely the time the animation started (due to aligning with vsync
-// refresh rate) then we won't end up restyling in that frame.
-function startsRightNow(aAnimation) {
-  return aAnimation.startTime === aAnimation.timeline.currentTime &&
-         aAnimation.currentTime === 0;
-}
-
 function tweakExpectedRestyleCount(aAnimation, aExpectedRestyleCount) {
   // Normally we expect one restyling for each requestAnimationFrame (as
   // called by observeRestyling) PLUS one for the last frame because of bug
@@ -123,10 +113,10 @@ function tweakExpectedRestyleCount(aAnimation, aExpectedRestyleCount) {
     // If we have the conformant Promise handling and |aAnimation| begins at
     // the current timeline time, we will not process restyling in the initial
     // frame.
-    if (startsRightNow(aAnimation)) {
+    if (animationStartsRightNow(aAnimation)) {
       return aExpectedRestyleCount - 1;
     }
-  } else if (!startsRightNow(aAnimation)) {
+  } else if (!animationStartsRightNow(aAnimation)) {
     // If we don't have the conformant Promise handling and |aAnimation|
     // doesn't begin at the current timeline time, we will see an additional
     // restyling in the last frame.

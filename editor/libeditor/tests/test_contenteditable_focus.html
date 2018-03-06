@@ -101,8 +101,8 @@ function runTestsInternal()
   var range = selection.getRangeAt(0);
   ok(range.collapsed, "the selection range isn't collapsed");
   var startNode = range.startContainer;
-  is(startNode.nodeType, 1, "the caret isn't set to the div node");
-  is(startNode, editor, "the caret isn't set to the editor");
+  is(startNode.nodeType, Node.TEXT_NODE, "the caret isn't set to the first text node");
+  is(startNode, editor.firstChild, "the caret isn't set to the editor");
   ok(selCon.caretVisible, "caret isn't visible in the editor");
   // Move focus to other editor
   otherEditor.focus();
@@ -113,8 +113,8 @@ function runTestsInternal()
   range = selection.getRangeAt(0);
   ok(range.collapsed, "the selection range isn't collapsed");
   var startNode = range.startContainer;
-  is(startNode.nodeType, 1, "the caret isn't set to the div node");
-  is(startNode, otherEditor, "the caret isn't set to the other editor");
+  is(startNode.nodeType, Node.TEXT_NODE, "the caret isn't set to the text node");
+  is(startNode, otherEditor.firstChild, "the caret isn't set to the other editor");
   ok(selCon.caretVisible, "caret isn't visible in the other editor");
   // Move focus to inputTextInEditor
   inputTextInEditor.focus();
@@ -124,9 +124,9 @@ function runTestsInternal()
   range = selection.getRangeAt(0);
   ok(range.collapsed, "the selection range isn't collapsed");
   var startNode = range.startContainer;
-  is(startNode.nodeType, 1, "the caret isn't set to the div node");
+  is(startNode.nodeType, Node.TEXT_NODE, "the caret isn't set to the first text node");
   // XXX maybe, the caret can stay on the other editor if it's better.
-  is(startNode, editor,
+  is(startNode, editor.firstChild,
      "the caret should stay on the other editor");
   ok(selCon.caretVisible,
      "caret isn't visible in the inputTextInEditor");

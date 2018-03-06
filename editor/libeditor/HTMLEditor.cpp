@@ -508,80 +508,172 @@ HTMLEditor::InitRules()
 NS_IMETHODIMP
 HTMLEditor::BeginningOfDocument()
 {
+  return MaybeCollapseSelectionAtFirstEditableNode(false);
+}
+
+void
+HTMLEditor::InitializeSelectionAncestorLimit(Selection& aSelection,
+                                             nsIContent& aAncestorLimit)
+{
+  // Hack for initializing selection.
+  // HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode() will try to
+  // collapse selection at first editable text node or inline element which
+  // cannot have text nodes as its children.  However, selection has already
+  // set into the new editing host by user, we should not change it.  For
+  // solving this issue, we should do nothing if selection range is in active
+  // editing host except it's not collapsed at start of the editing host since
+  // aSelection.SetAncestorLimiter(aAncestorLimit) will collapse selection
+  // at start of the new limiter if focus node of aSelection is outside of the
+  // editing host.  However, we need to check here if selection is already
+  // collapsed at start of the editing host because it's possible JS to do it.
+  // In such case, we should not modify selection with calling
+  // MaybeCollapseSelectionAtFirstEditableNode().
+
+  // Basically, we should try to collapse selection at first editable node
+  // in HTMLEditor.
+  bool tryToCollapseSelectionAtFirstEditableNode = true;
+  if (aSelection.RangeCount() == 1 && aSelection.IsCollapsed()) {
+    Element* editingHost = GetActiveEditingHost();
+    nsRange* range = aSelection.GetRangeAt(0);
+    if (range->GetStartContainer() == editingHost &&
+        !range->StartOffset()) {
+      // JS or user operation has already collapsed selection at start of
+      // the editing host.  So, we don't need to try to change selection
+      // in this case.
+      tryToCollapseSelectionAtFirstEditableNode = false;
+    }
+  }
+
+  EditorBase::InitializeSelectionAncestorLimit(aSelection, aAncestorLimit);
+
+  // XXX Do we need to check if we still need to change selection?  E.g.,
+  //     we could have already lost focus while we're changing the ancestor
+  //     limiter because it may causes "selectionchange" event.
+  if (tryToCollapseSelectionAtFirstEditableNode) {
+    MaybeCollapseSelectionAtFirstEditableNode(true);
+  }
+}
+
+nsresult
+HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
+              bool aIgnoreIfSelectionInEditingHost)
+{
   // XXX Why doesn't this check if the document is alive?
   if (!IsInitialized()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  // Get the selection
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
-  // Get the root element.
-  nsCOMPtr<Element> rootElement = GetRoot();
-  if (!rootElement) {
-    NS_WARNING("GetRoot() returned a null pointer (mRootElement is null)");
+  // Use editing host.  If you use root element here, selection may be
+  // moved to <head> element, e.g., if there is a text node in <script>
+  // element.  So, we should use active editing host.
+  RefPtr<Element> editingHost = GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost)) {
     return NS_OK;
   }
 
-  // Find first editable thingy
-  bool done = false;
-  nsCOMPtr<nsINode> curNode = rootElement.get(), selNode;
-  int32_t curOffset = 0, selOffset = 0;
-  while (!done) {
-    WSRunObject wsObj(this, curNode, curOffset);
+  // If selection range is already in the editing host and the range is not
+  // start of the editing host, we shouldn't reset selection.  E.g., window
+  // is activated when the editor had focus before inactivated.
+  if (aIgnoreIfSelectionInEditingHost && selection->RangeCount() == 1) {
+    nsRange* range = selection->GetRangeAt(0);
+    if (!range->Collapsed() ||
+        range->GetStartContainer() != editingHost.get() ||
+        range->StartOffset()) {
+      return NS_OK;
+    }
+  }
+
+  // Find first editable and visible node.
+  EditorRawDOMPoint pointToPutCaret(editingHost, 0);
+  for (;;) {
+    WSRunObject wsObj(this, pointToPutCaret.GetContainer(),
+                      pointToPutCaret.Offset());
     int32_t visOffset = 0;
     WSType visType;
     nsCOMPtr<nsINode> visNode;
-    wsObj.NextVisibleNode(curNode, curOffset, address_of(visNode), &visOffset,
-                          &visType);
-    if (visType == WSType::normalWS || visType == WSType::text) {
-      selNode = visNode;
-      selOffset = visOffset;
-      done = true;
-    } else if (visType == WSType::br || visType == WSType::special) {
-      selNode = visNode->GetParentNode();
-      selOffset = selNode ? selNode->ComputeIndexOf(visNode) : -1;
-      done = true;
-    } else if (visType == WSType::otherBlock) {
-      // By definition of WSRunObject, a block element terminates a
-      // whitespace run. That is, although we are calling a method that is
-      // named "NextVisibleNode", the node returned might not be
-      // visible/editable!
-      //
-      // If the given block does not contain any visible/editable items, we
-      // want to skip it and continue our search.
+    wsObj.NextVisibleNode(pointToPutCaret.GetContainer(),
+                          pointToPutCaret.Offset(),
+                          address_of(visNode), &visOffset, &visType);
 
-      if (!IsContainer(visNode)) {
-        // However, we were given a block that is not a container.  Since the
-        // block can not contain anything that's visible, such a block only
-        // makes sense if it is visible by itself, like a <hr>.  We want to
-        // place the caret in front of that block.
-        selNode = visNode->GetParentNode();
-        selOffset = selNode ? selNode->ComputeIndexOf(visNode) : -1;
-        done = true;
-      } else {
-        bool isEmptyBlock;
-        if (NS_SUCCEEDED(IsEmptyNode(visNode, &isEmptyBlock)) &&
-            isEmptyBlock) {
-          // Skip the empty block
-          curNode = visNode->GetParentNode();
-          curOffset = curNode ? curNode->ComputeIndexOf(visNode) : -1;
-          curOffset++;
-        } else {
-          curNode = visNode;
-          curOffset = 0;
-        }
-        // Keep looping
-      }
+    // If we meet a non-editable node first, we should move caret to start of
+    // the editing host (perhaps, user may want to insert something before
+    // the first non-editable node? Chromium behaves so).
+    if (visNode && !visNode->IsEditable()) {
+      pointToPutCaret.Set(editingHost, 0);
+      break;
+    }
+
+    // WSRunObject::NextVisibleNode() returns WSType::special and the "special"
+    // node when it meets empty inline element.  In this case, we should go to
+    // next sibling.  For example, if current editor is:
+    // <div contenteditable><span></span><b><br></b></div>
+    // then, we should put caret at the <br> element.  So, let's check if
+    // found node is an empty inline container element.
+    if (visType == WSType::special && visNode &&
+        TagCanContainTag(*visNode->NodeInfo()->NameAtom(),
+                         *nsGkAtoms::textTagName)) {
+      pointToPutCaret.Set(visNode);
+      DebugOnly<bool> advanced = pointToPutCaret.AdvanceOffset();
+      NS_WARNING_ASSERTION(advanced,
+        "Failed to advance offset from found empty inline container element");
+      continue;
+    }
+
+    // If there is editable and visible text node, move caret at start of it.
+    if (visType == WSType::normalWS || visType == WSType::text) {
+      pointToPutCaret.Set(visNode, visOffset);
+      break;
+    }
+
+    // If there is editable <br> or something inline special element like
+    // <img>, <input>, etc, move caret before it.
+    if (visType == WSType::br || visType == WSType::special) {
+      pointToPutCaret.Set(visNode);
+      break;
+    }
+
+    // If there is no visible/editable node except another block element in
+    // current editing host, we should move caret to very first of the editing
+    // host.
+    // XXX This may not make sense, but Chromium behaves so.  Therefore, the
+    //     reason why we do this is just compatibility with Chromium.
+    if (visType != WSType::otherBlock) {
+      pointToPutCaret.Set(editingHost, 0);
+      break;
+    }
+
+    // By definition of WSRunObject, a block element terminates a whitespace
+    // run. That is, although we are calling a method that is named
+    // "NextVisibleNode", the node returned might not be visible/editable!
+
+    // However, we were given a block that is not a container.  Since the
+    // block can not contain anything that's visible, such a block only
+    // makes sense if it is visible by itself, like a <hr>.  We want to
+    // place the caret in front of that block.
+    if (!IsContainer(visNode)) {
+      pointToPutCaret.Set(visNode);
+      break;
+    }
+
+    // If the given block does not contain any visible/editable items, we want
+    // to skip it and continue our search.
+    bool isEmptyBlock;
+    if (NS_SUCCEEDED(IsEmptyNode(visNode, &isEmptyBlock)) && isEmptyBlock) {
+      // Skip the empty block
+      pointToPutCaret.Set(visNode);
+      DebugOnly<bool> advanced = pointToPutCaret.AdvanceOffset();
+      NS_WARNING_ASSERTION(advanced,
+        "Failed to advance offset from the found empty block node");
     } else {
-      // Else we found nothing useful
-      selNode = curNode;
-      selOffset = curOffset;
-      done = true;
+      pointToPutCaret.Set(visNode, 0);
     }
   }
-  return selection->Collapse(selNode, selOffset);
+  return selection->Collapse(pointToPutCaret);
 }
 
 nsresult
