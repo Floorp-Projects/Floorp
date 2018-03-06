@@ -142,6 +142,18 @@ public:
   static MediaManager* GetIfExists();
   static void StartupInit();
   static void PostTask(already_AddRefed<Runnable> task);
+
+  /**
+   * Posts an async operation to the media manager thread.
+   * FunctionType must be a function that takes a `MozPromiseHolder&`.
+   *
+   * The returned promise is resolved or rejected by aFunction on the media
+   * manager thread.
+   */
+  template<typename MozPromiseType, typename FunctionType>
+  static RefPtr<MozPromiseType>
+  PostTask(const char* aName, FunctionType&& aFunction);
+
 #ifdef DEBUG
   static bool IsInMediaThread();
 #endif
