@@ -3,7 +3,7 @@
 ChromeUtils.import("resource:///modules/ChromeMigrationUtils.jsm");
 
 // Setup chrome user data path for all platforms.
-ChromeMigrationUtils.getChromeUserDataPath = () => {
+ChromeMigrationUtils.getDataPath = () => {
   return do_get_file("Library/Application Support/Google/Chrome/").path;
 };
 

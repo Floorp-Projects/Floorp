@@ -67,6 +67,7 @@
 
 <script type="application/javascript">
   Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser.js", this);
 </script>
 
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the
@@ -1211,12 +1212,28 @@
       <splitter id="sidebar-splitter" class="chromeclass-extrachrome sidebar-splitter" hidden="true"/>
       <vbox id="appcontent" flex="1">
         <notificationbox id="high-priority-global-notificationbox" notificationside="top"/>
-        <tabbrowser flex="1" contenttooltip="aHTMLTooltip"
-                    tabcontainer="tabbrowser-tabs"
-                    contentcontextmenu="contentAreaContextMenu"
-                    autocompletepopup="PopupAutoComplete"
-                    selectmenulist="ContentSelectDropdown"
-                    datetimepicker="DateTimePickerPanel"/>
+        <tabbox id="tabbrowser-tabbox"
+                    flex="1" eventnode="document" tabcontainer="tabbrowser-tabs"
+                    onselect="if (event.target.localName == 'tabpanels') gBrowser.updateCurrentBrowser();">
+          <tabpanels flex="1" class="plain" selectedIndex="0" id="tabbrowser-tabpanels">
+            <notificationbox flex="1" notificationside="top">
+              <hbox flex="1" class="browserSidebarContainer">
+                <vbox flex="1" class="browserContainer">
+                  <stack flex="1" class="browserStack">
+                    <browser id="tabbrowser-initialBrowser" type="content"
+                             message="true" messagemanagergroup="browsers"
+                             primary="true" blank="true"
+                             tooltip="aHTMLTooltip"
+                             contextmenu="contentAreaContextMenu"
+                             autocompletepopup="PopupAutoComplete"
+                             selectmenulist="ContentSelectDropdown"
+                             datetimepicker="DateTimePickerPanel"/>
+                  </stack>
+                </vbox>
+              </hbox>
+            </notificationbox>
+          </tabpanels>
+        </tabbox>
       </vbox>
       <vbox id="browser-border-end" hidden="true" layer="true"/>
     </hbox>

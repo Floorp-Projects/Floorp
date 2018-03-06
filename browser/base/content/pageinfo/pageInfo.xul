@@ -69,7 +69,7 @@
     <menuitem id="menu_copy"      label="&copy.label;"      command="cmd_copy"      accesskey="&copy.accesskey;"/>
   </menupopup>
 
-  <windowdragbox id="topBar" class="viewGroupWrapper">
+  <vbox id="topBar">
     <radiogroup id="viewGroup" class="chromeclass-toolbar" orient="horizontal">
       <radio id="generalTab"  label="&generalTab;"  accesskey="&generalTab.accesskey;"
            oncommand="showTab('general');"/>
@@ -82,7 +82,7 @@
       <radio id="securityTab" label="&securityTab;" accesskey="&securityTab.accesskey;"
            oncommand="showTab('security');"/>
     </radiogroup>
-  </windowdragbox>
+  </vbox>
 
   <deck id="mainDeck" flex="1">
     <!-- General page information -->

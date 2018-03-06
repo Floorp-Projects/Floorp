@@ -292,12 +292,6 @@ private:
   void Shutdown();
 
   /**
-   * Create accessible for the element having XBL bindings.
-   */
-  already_AddRefed<Accessible>
-    CreateAccessibleByType(nsIContent* aContent, DocAccessible* aDoc);
-
-  /**
    * Create an accessible whose type depends on the given frame.
    */
   already_AddRefed<Accessible>

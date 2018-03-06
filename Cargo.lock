@@ -419,7 +419,7 @@ name = "cubeb"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "cubeb-core 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cubeb-core 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -427,12 +427,12 @@ name = "cubeb-backend"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "cubeb-core 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cubeb-core 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "cubeb-core"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2264,7 +2264,7 @@ dependencies = [
 "checksum cstr-macros 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f9f316203d1ea36f4f18316822806f6999aa3dc5ed1adf51e35b77e3b3933d78"
 "checksum cubeb 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ed237804b9799d1c29089e6cab3f4b7160186179981a61865feff13d55a902f8"
 "checksum cubeb-backend 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "4f6d8f189a1cf9cce9aec45eb0aeb1d221514d788b89a1cd6bc2b76110ee4d81"
-"checksum cubeb-core 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)" = "a6558e6b99511df1b4e7ce219b26527b0cb0f6f56df2fd5877aa9473b7c7eafb"
+"checksum cubeb-core 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)" = "7dcedc8ffadc0481f1dfbdeb315e7d7ae9afe6a70815d22efcca8e0bd2ba89e0"
 "checksum cubeb-sys 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "fab28c0e152330f74bcbec1572c374397458957d5ad50605879352ec562f41aa"
 "checksum darling 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d3effd06d4057f275cb7858889f4952920bab78dd8ff0f6e7dfe0c8d2e67ed89"
 "checksum darling_core 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "167dd3e235c2f1da16a635c282630452cdf49191eb05711de1bcd1d3d5068c00"

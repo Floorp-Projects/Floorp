@@ -27,7 +27,7 @@ impl Context {
         let context_name = as_ptr!(context_name);
         let backend_name = as_ptr!(backend_name);
         unsafe {
-            ffi::cubeb_init(&mut context, context_name, backend_name);
+            try_call!(ffi::cubeb_init(&mut context, context_name, backend_name));
             Ok(Context::from_ptr(context))
         }
     }

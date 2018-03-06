@@ -1,0 +1,17 @@
+<html class="reftest-wait">
+<script>
+requestIdleCallback(function(){
+  document.designMode='on';
+  window.frames[0].document.body.appendChild(document.getElementById('a'));
+  document.documentElement.className = "";
+});
+</script>
+<iframe></iframe>
+<base href=''/>
+<body id='a'>
+<kbd contenteditable='true'>
+<li contenteditable='false'>
+</li>
+<label>
+<a href=''>
+</html>
