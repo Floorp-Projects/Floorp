@@ -907,10 +907,11 @@ CompareToRangeStart(nsINode* aCompareNode, int32_t aCompareOffset,
 {
   nsINode* start = aRange->GetStartContainer();
   NS_ENSURE_STATE(aCompareNode && start);
-  // If the nodes that we're comparing are not in the same document,
-  // assume that aCompareNode will fall at the end of the ranges.
+  // If the nodes that we're comparing are not in the same document or in the
+  // same subtree, assume that aCompareNode will fall at the end of the ranges.
   if (aCompareNode->GetComposedDoc() != start->GetComposedDoc() ||
-      !start->GetComposedDoc()) {
+      !start->GetComposedDoc() ||
+      aCompareNode->SubtreeRoot() != start->SubtreeRoot()) {
     *aCmp = 1;
   } else {
     *aCmp = nsContentUtils::ComparePoints(aCompareNode, aCompareOffset,
@@ -925,10 +926,11 @@ CompareToRangeEnd(nsINode* aCompareNode, int32_t aCompareOffset,
 {
   nsINode* end = aRange->GetEndContainer();
   NS_ENSURE_STATE(aCompareNode && end);
-  // If the nodes that we're comparing are not in the same document,
-  // assume that aCompareNode will fall at the end of the ranges.
+  // If the nodes that we're comparing are not in the same document or in the
+  // same subtree, assume that aCompareNode will fall at the end of the ranges.
   if (aCompareNode->GetComposedDoc() != end->GetComposedDoc() ||
-      !end->GetComposedDoc()) {
+      !end->GetComposedDoc() ||
+      aCompareNode->SubtreeRoot() != end->SubtreeRoot()) {
     *aCmp = 1;
   } else {
     *aCmp = nsContentUtils::ComparePoints(aCompareNode, aCompareOffset,
