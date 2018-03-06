@@ -1170,7 +1170,27 @@ struct DefaultHasher<AbstractFramePtr> {
 class LiveSavedFrameCache
 {
   public:
-    using FramePtr = mozilla::Variant<AbstractFramePtr, jit::CommonFrameLayout*>;
+    // The address of a live frame for which we can cache SavedFrames: it has a
+    // 'hasCachedSavedFrame' bit we can examine and set, and can be converted to
+    // a Key to index the cache.
+    class FramePtr {
+        using Ptr = mozilla::Variant<AbstractFramePtr, jit::CommonFrameLayout*>;
+
+        Ptr ptr;
+
+        struct HasCachedMatcher;
+        struct SetHasCachedMatcher;
+
+      public:
+        explicit FramePtr(AbstractFramePtr ptr) : ptr(ptr) { }
+        explicit FramePtr(jit::CommonFrameLayout* ptr) : ptr(ptr) { }
+
+        inline bool hasCachedSavedFrame() const;
+        inline void setHasCachedSavedFrame();
+
+        bool operator==(const FramePtr& rhs) const { return rhs.ptr == this->ptr; }
+        bool operator!=(const FramePtr& rhs) const { return !(rhs == *this); }
+    };
 
   private:
     // A key in the cache: the address of a frame, live or dead, for which we
@@ -1957,10 +1977,6 @@ class FrameIter
     bool isEvalFrame() const;
     bool isFunctionFrame() const;
     bool hasArgs() const { return isFunctionFrame(); }
-
-    // These two methods may not be called with asm frames.
-    inline bool hasCachedSavedFrame() const;
-    inline void setHasCachedSavedFrame();
 
     ScriptSource* scriptSource() const;
     const char* filename() const;
