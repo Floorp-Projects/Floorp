@@ -231,6 +231,8 @@ GetLiveSet()
   return sLiveSet;
 }
 
+MOZ_THREAD_LOCAL(bool) Interceptor::tlsCreatingStdMarshal;
+
 /* static */ HRESULT
 Interceptor::Create(STAUniquePtr<IUnknown> aTarget, IInterceptorSink* aSink,
                     REFIID aInitialIid, void** aOutInterface)
@@ -271,6 +273,9 @@ Interceptor::Interceptor(IInterceptorSink* aSink)
   , mStdMarshalMutex("mozilla::mscom::Interceptor::mStdMarshalMutex")
   , mStdMarshal(nullptr)
 {
+  static const bool kHasTls = tlsCreatingStdMarshal.init();
+  MOZ_ASSERT(kHasTls);
+
   MOZ_ASSERT(aSink);
   RefPtr<IWeakReference> weakRef;
   if (SUCCEEDED(GetWeakReference(getter_AddRefs(weakRef)))) {
@@ -719,6 +724,17 @@ Interceptor::QueryInterfaceTarget(REFIID aIid, void** aOutput,
   // NB: This QI needs to run on the main thread because the target object
   // is probably Gecko code that is not thread-safe. Note that this main
   // thread invocation is *synchronous*.
+  if (!NS_IsMainThread() && tlsCreatingStdMarshal.get()) {
+    mStdMarshalMutex.AssertCurrentThreadOwns();
+    // COM queries for special interfaces such as IFastRundown when creating a
+    // marshaler. We don't want these being dispatched to the main thread,
+    // since this would cause a deadlock on mStdMarshalMutex if the main
+    // thread is also querying for IMarshal. If we do need to respond to these
+    // special interfaces, this should be done before this point; e.g. in
+    // Interceptor::QueryInterface like we do for INoMarshal.
+    return E_NOINTERFACE;
+  }
+
   MainThreadInvoker invoker;
   HRESULT hr;
   auto runOnMainThread = [&]() -> void {
@@ -775,6 +791,8 @@ Interceptor::WeakRefQueryInterface(REFIID aIid, IUnknown** aOutInterface)
     HRESULT hr;
 
     if (!mStdMarshalUnk) {
+      MOZ_ASSERT(!tlsCreatingStdMarshal.get());
+      tlsCreatingStdMarshal.set(true);
       if (XRE_IsContentProcess()) {
         hr = FastMarshaler::Create(static_cast<IWeakReferenceSource*>(this),
                                    getter_AddRefs(mStdMarshalUnk));
@@ -782,6 +800,7 @@ Interceptor::WeakRefQueryInterface(REFIID aIid, IUnknown** aOutInterface)
         hr = ::CoGetStdMarshalEx(static_cast<IWeakReferenceSource*>(this),
                                  SMEXF_SERVER, getter_AddRefs(mStdMarshalUnk));
       }
+      tlsCreatingStdMarshal.set(false);
 
       ENSURE_HR_SUCCEEDED(hr);
     }
