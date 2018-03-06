@@ -57,6 +57,7 @@
 #if defined(MOZ_WIDGET_ANDROID)
 #include <android/log.h>
 #include <android/native_window.h>
+#include "apz/src/APZCTreeManager.h"
 #include "mozilla/widget/AndroidCompositorWidget.h"
 #include "opengl/CompositorOGL.h"
 #include "GLConsts.h"

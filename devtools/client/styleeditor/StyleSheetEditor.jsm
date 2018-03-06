@@ -293,7 +293,8 @@ StyleSheetEditor.prototype = {
         console.error(e);
       } else {
         console.error(e);
-        this.emit("error", { key: LOAD_ERROR, append: this.styleSheet.href });
+        this.emit("error", { key: LOAD_ERROR, append: this.styleSheet.href,
+                             level: "warning" });
         throw e;
       }
     });

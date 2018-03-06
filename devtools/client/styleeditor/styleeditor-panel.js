@@ -87,9 +87,13 @@ StyleEditorPanel.prototype = {
     let notificationBox = this._toolbox.getNotificationBox();
     let notification =
         notificationBox.getNotificationWithValue("styleeditor-error");
-    let level = (data.level === "info") ?
-                notificationBox.PRIORITY_INFO_LOW :
-                notificationBox.PRIORITY_CRITICAL_LOW;
+
+    let level = notificationBox.PRIORITY_CRITICAL_LOW;
+    if (data.level === "info") {
+      level = notificationBox.PRIORITY_INFO_LOW;
+    } else if (data.level === "warning") {
+      level = notificationBox.PRIORITY_WARNING_LOW;
+    }
 
     if (!notification) {
       notificationBox.appendNotification(errorMessage, "styleeditor-error",

@@ -1979,7 +1979,7 @@ ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
 
 // This will not be converted to abstract coordinates because it's only
 // used in CalcQuirkContainingBlockHeight
-nscoord
+static nscoord
 GetBlockMarginBorderPadding(const ReflowInput* aReflowInput)
 {
   nscoord result = 0;
