@@ -10006,7 +10006,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                mLoadType, true, true, true);
 
       nsCOMPtr<nsIInputStream> postData;
-      nsCOMPtr<nsISupports> cacheKey;
+      uint32_t cacheKey = 0;
 
       bool scrollRestorationIsManual = false;
       if (mOSHE) {
@@ -10021,7 +10021,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
         // wouldn't want here.
         if (aLoadType & LOAD_CMD_NORMAL) {
           mOSHE->GetPostData(getter_AddRefs(postData));
-          mOSHE->GetCacheKey(getter_AddRefs(cacheKey));
+          mOSHE->GetCacheKey(&cacheKey);
 
           // Link our new SHEntry to the old SHEntry's back/forward
           // cache data, since the two SHEntries correspond to the
@@ -10057,7 +10057,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
 
         // Make sure we won't just repost without hitting the
         // cache first
-        if (cacheKey) {
+        if (cacheKey != 0) {
           mOSHE->SetCacheKey(cacheKey);
         }
       }
@@ -10890,12 +10890,12 @@ nsDocShell::DoURILoad(nsIURI* aURI,
 
   nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(channel));
   /* Get the cache Key from SH */
-  nsCOMPtr<nsISupports> cacheKey;
+  uint32_t cacheKey = 0;
   if (cacheChannel) {
     if (mLSHE) {
-      mLSHE->GetCacheKey(getter_AddRefs(cacheKey));
+      mLSHE->GetCacheKey(&cacheKey);
     } else if (mOSHE) {  // for reload cases
-      mOSHE->GetCacheKey(getter_AddRefs(cacheKey));
+      mOSHE->GetCacheKey(&cacheKey);
     }
   }
 
@@ -10922,7 +10922,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
      * data *only* from the cache. If it is a normal reload, the
      * cache is free to go to the server for updated postdata.
      */
-    if (cacheChannel && cacheKey) {
+    if (cacheChannel && cacheKey != 0) {
       if (mLoadType == LOAD_HISTORY ||
           mLoadType == LOAD_RELOAD_CHARSET_CHANGE) {
         cacheChannel->SetCacheKey(cacheKey);
@@ -10947,7 +10947,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
         mLoadType == LOAD_RELOAD_CHARSET_CHANGE ||
         mLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE ||
         mLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE) {
-      if (cacheChannel && cacheKey) {
+      if (cacheChannel && cacheKey != 0) {
         cacheChannel->SetCacheKey(cacheKey);
       }
     }
@@ -11517,10 +11517,10 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
                " reloads unless we're in a newly created iframe!");
 
     nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(aChannel));
-    nsCOMPtr<nsISupports> cacheKey;
+    uint32_t cacheKey = 0;
     // Get the Cache Key and store it in SH.
     if (cacheChannel) {
-      cacheChannel->GetCacheKey(getter_AddRefs(cacheKey));
+      cacheChannel->GetCacheKey(&cacheKey);
     }
     // If we already have a loading history entry, store the new cache key
     // in it.  Otherwise, since we're doing a reload and won't be updating
@@ -12091,7 +12091,7 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
   bool loadReplace = false;
   nsCOMPtr<nsIURI> referrerURI;
   uint32_t referrerPolicy = mozilla::net::RP_Unset;
-  nsCOMPtr<nsISupports> cacheKey;
+  uint32_t cacheKey = 0;
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = aTriggeringPrincipal;
   nsCOMPtr<nsIPrincipal> principalToInherit = aPrincipalToInherit;
   bool expired = false;
@@ -12104,7 +12104,7 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
      * in SH.
      */
     if (cacheChannel) {
-      cacheChannel->GetCacheKey(getter_AddRefs(cacheKey));
+      cacheChannel->GetCacheKey(&cacheKey);
     }
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
 
