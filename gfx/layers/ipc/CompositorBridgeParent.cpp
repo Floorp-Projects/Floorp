@@ -1146,6 +1146,17 @@ CompositorBridgeParent::DeallocPAPZCTreeManagerParent(PAPZCTreeManagerParent* aA
   return true;
 }
 
+void
+CompositorBridgeParent::AllocateAPZCTreeManagerParent(const MonitorAutoLock& aProofOfLayerTreeStateLock,
+                                                      const uint64_t& aLayersId,
+                                                      LayerTreeState& aState)
+{
+  MOZ_ASSERT(aState.mParent == this);
+  MOZ_ASSERT(mApzcTreeManager);
+  MOZ_ASSERT(!aState.mApzcTreeManagerParent);
+  aState.mApzcTreeManagerParent = new APZCTreeManagerParent(aLayersId, mApzcTreeManager);
+}
+
 PAPZParent*
 CompositorBridgeParent::AllocPAPZParent(const uint64_t& aLayersId)
 {

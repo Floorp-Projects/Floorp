@@ -443,6 +443,12 @@ public:
   PAPZCTreeManagerParent* AllocPAPZCTreeManagerParent(const uint64_t& aLayersId) override;
   bool DeallocPAPZCTreeManagerParent(PAPZCTreeManagerParent* aActor) override;
 
+  // Helper method so that we don't have to expose mApzcTreeManager to
+  // CrossProcessCompositorBridgeParent.
+  void AllocateAPZCTreeManagerParent(const MonitorAutoLock& aProofOfLayerTreeStateLock,
+                                     const uint64_t& aLayersId,
+                                     LayerTreeState& aLayerTreeStateToUpdate);
+
   PAPZParent* AllocPAPZParent(const uint64_t& aLayersId) override;
   bool DeallocPAPZParent(PAPZParent* aActor) override;
 
