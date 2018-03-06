@@ -119,7 +119,7 @@ var waitForTime = DevToolsUtils.waitForTime;
 
 function loadFrameScriptUtils(browser = gBrowser.selectedBrowser) {
   let mm = browser.messageManager;
-  let frameURL = "chrome://devtools/content/shared/frame-script-utils.js";
+  let frameURL = "chrome://mochitests/content/browser/devtools/client/shared/test/frame-script-utils.js";
   info("Loading the helper frame script " + frameURL);
   mm.loadFrameScript(frameURL, false);
   SimpleTest.registerCleanupFunction(() => {
