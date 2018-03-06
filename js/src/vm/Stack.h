@@ -1119,13 +1119,10 @@ struct DefaultHasher<AbstractFramePtr> {
 // create SavedFrame objects for live stack frames in SavedStacks::insertFrames,
 // we set this bit and append the SavedFrame object to the cache. As we walk the
 // stack, if we encounter a frame that has this bit set, that indicates that we
-// have already captured a SavedFrame object for the given stack frame (but not
-// necessarily the current pc) during a previous call to insertFrames. We know
-// that the frame's parent was also captured and has its bit set as well, but
-// additionally we know the parent was captured at its current pc. For the
-// parent, rather than continuing the expensive stack walk, we do a quick and
-// cache-friendly linear search through the frame cache. Upon finishing search
-// through the frame cache, stale entries are removed.
+// have already captured a SavedFrame object for the given stack frame during a
+// previous call to insertFrames. Rather than continuing the expensive stack
+// walk, we do a quick and cache-friendly linear search through the frame cache.
+// Upon finishing the search, stale entries are removed.
 //
 // The frame cache maintains the invariant that its first E[0] .. E[j-1]
 // entries are live and sorted from oldest to younger frames, where 0 < j < n
@@ -1154,10 +1151,22 @@ struct DefaultHasher<AbstractFramePtr> {
 // not set. Therefore, we have found entry E[j-1] and the subsequent entries
 // are stale and should be purged from the frame cache.
 //
+// Note that the youngest frame with a valid entry may have run some code and
+// advanced to a different pc. Each cache entry records the pc for which its
+// SavedFrame is appropriate, and a pc mismatch causes the entry to be purged.
+//
 // We have a LiveSavedFrameCache for each activation to minimize the number of
 // entries that must be scanned through, and to avoid the headaches of
 // maintaining a cache for each compartment and invalidating stale cache entries
 // in the presence of cross-compartment calls.
+//
+// The entire chain of SavedFrames for a given stack capture is created in the
+// compartment of the code that requested the capture, *not* in that of the
+// frames it represents, so in general, different compartments may have
+// different SavedFrame objects representing the same actual stack frame. The
+// LiveSavedFrameCache simply records whichever SavedFrames were created most
+// recently, so if there's a compartment mismatch, we throw away the whole
+// cache.
 class LiveSavedFrameCache
 {
   public:
@@ -1210,7 +1219,7 @@ class LiveSavedFrameCache
         return true;
     }
 
-    static mozilla::Maybe<FramePtr> getFramePtr(FrameIter& iter);
+    static mozilla::Maybe<FramePtr> getFramePtr(const FrameIter& iter);
     void trace(JSTracer* trc);
 
     void find(JSContext* cx, FrameIter& frameIter, MutableHandleSavedFrame frame) const;

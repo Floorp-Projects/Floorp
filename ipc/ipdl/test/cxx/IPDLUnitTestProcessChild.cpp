@@ -22,9 +22,6 @@ IPDLUnitTestProcessChild::Init(int aArgc, char* aArgv[])
                           ParentPid(),
                           IOThreadChild::message_loop());
 
-    if (NS_FAILED(nsRegion::InitStatic()))
-      return false;
-
     return true;
 }
 
