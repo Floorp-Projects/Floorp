@@ -441,8 +441,9 @@ public class GeckoThread extends Thread {
         GeckoLoader.setupGeckoEnvironment(context, context.getFilesDir().getPath(), mExtras);
 
         // And go.
-        GeckoLoader.nativeRun(args, mExtras.getInt(EXTRA_CRASH_FD, -1),
+        GeckoLoader.nativeRun(args,
                               mExtras.getInt(EXTRA_IPC_FD, -1),
+                              mExtras.getInt(EXTRA_CRASH_FD, -1),
                               mExtras.getInt(EXTRA_CRASH_ANNOTATION_FD, -1));
 
         // And... we're done.
