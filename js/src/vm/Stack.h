@@ -1172,11 +1172,12 @@ class LiveSavedFrameCache
     // 'hasCachedSavedFrame' bit we can examine and set, and can be converted to
     // a Key to index the cache.
     class FramePtr {
+        // We use jit::CommonFrameLayout for both Baseline frames and Ion
+        // physical frames.
         using Ptr = mozilla::Variant<InterpreterFrame*,
-                                     jit::BaselineFrame*,
+                                     jit::CommonFrameLayout*,
                                      jit::RematerializedFrame*,
-                                     wasm::DebugFrame*,
-                                     jit::CommonFrameLayout*>;
+                                     wasm::DebugFrame*>;
 
         Ptr ptr;
 
@@ -1976,7 +1977,7 @@ class FrameIter
 
     inline bool isIon() const;
     inline bool isBaseline() const;
-    inline bool isPhysicalIonFrame() const;
+    inline bool isPhysicalJitFrame() const;
 
     bool isEvalFrame() const;
     bool isFunctionFrame() const;
@@ -2072,8 +2073,8 @@ class FrameIter
     // This can only be called when isInterp():
     inline InterpreterFrame* interpFrame() const;
 
-    // This can only be called when isPhysicalIonFrame():
-    inline jit::CommonFrameLayout* physicalIonFrame() const;
+    // This can only be called when isPhysicalJitFrame():
+    inline jit::CommonFrameLayout* physicalJitFrame() const;
 
     // This is used to provide a raw interface for debugging.
     void* rawFramePtr() const;
@@ -2306,17 +2307,28 @@ FrameIter::interpFrame() const
 }
 
 inline bool
-FrameIter::isPhysicalIonFrame() const
+FrameIter::isPhysicalJitFrame() const
 {
-    return isJSJit() &&
-           jsJitFrame().isIonScripted() &&
-           ionInlineFrames_.frameNo() == 0;
+    if (!isJSJit())
+        return false;
+
+    auto& jitFrame = jsJitFrame();
+
+    if (jitFrame.isBaselineJS())
+        return true;
+
+    if (jitFrame.isIonScripted()) {
+        // Only the bottom of a group of inlined Ion frames is a physical frame.
+        return ionInlineFrames_.frameNo() == 0;
+    }
+
+    return false;
 }
 
 inline jit::CommonFrameLayout*
-FrameIter::physicalIonFrame() const
+FrameIter::physicalJitFrame() const
 {
-    MOZ_ASSERT(isPhysicalIonFrame());
+    MOZ_ASSERT(isPhysicalJitFrame());
     return jsJitFrame().current();
 }
 
