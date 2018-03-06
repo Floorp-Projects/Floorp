@@ -6,7 +6,7 @@
 
 #include "mozilla/layers/APZSampler.h"
 
-#include "mozilla/layers/APZCTreeManager.h"
+#include "APZCTreeManager.h"
 #include "mozilla/layers/CompositorThread.h"
 
 namespace mozilla {
@@ -78,11 +78,49 @@ APZSampler::NotifyLayerTreeRemoved(uint64_t aLayersId)
 }
 
 bool
+APZSampler::PushStateToWR(wr::TransactionBuilder& aTxn,
+                          const TimeStamp& aSampleTime,
+                          nsTArray<wr::WrTransformProperty>& aTransformArray)
+{
+  // This function will be removed eventually since we'll have WR pull
+  // the transforms from APZ instead.
+  return mApz->PushStateToWR(aTxn, aSampleTime, aTransformArray);
+}
+
+bool
 APZSampler::GetAPZTestData(uint64_t aLayersId,
                            APZTestData* aOutData)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   return mApz->GetAPZTestData(aLayersId, aOutData);
+}
+
+void
+APZSampler::SetTestAsyncScrollOffset(uint64_t aLayersId,
+                                     const FrameMetrics::ViewID& aScrollId,
+                                     const CSSPoint& aOffset)
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  RefPtr<AsyncPanZoomController> apzc = mApz->GetTargetAPZC(aLayersId, aScrollId);
+  if (apzc) {
+    apzc->SetTestAsyncScrollOffset(aOffset);
+  } else {
+    NS_WARNING("Unable to find APZC in SetTestAsyncScrollOffset");
+  }
+}
+
+void
+APZSampler::SetTestAsyncZoom(uint64_t aLayersId,
+                             const FrameMetrics::ViewID& aScrollId,
+                             const LayerToParentLayerScale& aZoom)
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  RefPtr<AsyncPanZoomController> apzc = mApz->GetTargetAPZC(aLayersId, aScrollId);
+  if (apzc) {
+    apzc->SetTestAsyncZoom(aZoom);
+  } else {
+    NS_WARNING("Unable to find APZC in SetTestAsyncZoom");
+  }
 }
 
 } // namespace layers
