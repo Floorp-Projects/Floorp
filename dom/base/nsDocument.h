@@ -366,8 +366,6 @@ public:
 
   virtual void ApplySettingsFromCSP(bool aSpeculative) override;
 
-  virtual already_AddRefed<nsIParser> CreatorParserOrNull() override;
-
   /**
    * Set the principal responsible for this document.
    */
@@ -490,16 +488,12 @@ public:
   virtual void AddToNameTable(Element* aElement, nsAtom* aName) override;
   virtual void RemoveFromNameTable(Element* aElement, nsAtom* aName) override;
 
-  // Observation hooks used to propagate notifications to document
-  // observers.
-  virtual void BeginUpdate(nsUpdateType aUpdateType) override;
   virtual void EndUpdate(nsUpdateType aUpdateType) override;
   virtual void BeginLoad() override;
   virtual void EndLoad() override;
 
   virtual void SetReadyStateInternal(ReadyState rs) override;
 
-  void FlushPendingNotifications(mozilla::FlushType aType) final;
   virtual void FlushExternalResources(mozilla::FlushType aType) override;
   virtual void SetXMLDeclaration(const char16_t *aVersion,
                                  const char16_t *aEncoding,
@@ -924,20 +918,6 @@ public:
 
 protected:
   friend class nsNodeUtils;
-  friend class nsDocumentOnStack;
-
-  void IncreaseStackRefCnt()
-  {
-    ++mStackRefCnt;
-  }
-
-  void DecreaseStackRefCnt()
-  {
-    if (--mStackRefCnt == 0 && mNeedsReleaseAfterStackRefCntRelease) {
-      mNeedsReleaseAfterStackRefCntRelease = false;
-      NS_RELEASE_THIS();
-    }
-  }
 
   /**
    * Check that aId is not empty and log a message to the console
@@ -1003,9 +983,6 @@ protected:
   void ResetStylesheetsToURI(nsIURI* aURI);
   void FillStyleSet(mozilla::StyleSetHandle aStyleSet);
 
-  // Return whether all the presshells for this document are safe to flush
-  bool IsSafeToFlush() const;
-
   void DispatchPageTransition(mozilla::dom::EventTarget* aDispatchTarget,
                               const nsAString& aType,
                               bool aPersisted);
@@ -1058,15 +1035,6 @@ protected:
   // Array of owning references to all children
   nsAttrAndChildArray mChildren;
 
-  // Pointer to our parser if we're currently in the process of being
-  // parsed into.
-  nsCOMPtr<nsIParser> mParser;
-
-  // Weak reference to our sink for in case we no longer have a parser.  This
-  // will allow us to flush out any pending stuff from the sink even if
-  // EndLoad() has already happened.
-  nsWeakPtr mWeakSink;
-
   nsTArray<RefPtr<mozilla::StyleSheet>> mOnDemandBuiltInUASheets;
   nsTArray<RefPtr<mozilla::StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];
 
@@ -1109,9 +1077,6 @@ public:
   // Recorded time of change to 'loading' state.
   mozilla::TimeStamp mLoadingTimeStamp;
 
-  // True if the document has been detached from its content viewer.
-  bool mIsGoingAway:1;
-
   // True if this document has ever had an HTML or SVG <title> element
   // bound to it
   bool mMayHaveTitleElement:1;
@@ -1121,8 +1086,6 @@ public:
   bool mDelayFrameLoaderInitialization:1;
 
   bool mSynchronousDOMContentLoaded:1;
-
-  bool mInXBLUpdate:1;
 
   // Parser aborted. True if the parser of this document was forcibly
   // terminated instead of letting it finish at its own pace.
@@ -1162,9 +1125,6 @@ public:
   // A document "without a browsing context" that owns the content of
   // HTMLTemplateElement.
   nsCOMPtr<nsIDocument> mTemplateContentsOwner;
-
-  // Our update nesting level
-  uint32_t mUpdateNestLevel;
 
   // The application cache that this document is associated with, if
   // any.  This can change during the lifetime of the document.
@@ -1289,9 +1249,6 @@ private:
   bool mAutoSize, mAllowZoom, mAllowDoubleTapZoom, mValidScaleFloat, mValidMaxScale, mScaleStrEmpty, mWidthStrEmpty;
   mozilla::CSSSize mViewportSize;
 
-  nsrefcnt mStackRefCnt;
-  bool mNeedsReleaseAfterStackRefCntRelease;
-
   // Set to true when the document is possibly controlled by the ServiceWorker.
   // Used to prevent multiple requests to ServiceWorkerManager.
   bool mMaybeServiceWorkerControlled;
@@ -1317,7 +1274,7 @@ private:
 class nsDocumentOnStack
 {
 public:
-  explicit nsDocumentOnStack(nsDocument* aDoc) : mDoc(aDoc)
+  explicit nsDocumentOnStack(nsIDocument* aDoc) : mDoc(aDoc)
   {
     mDoc->IncreaseStackRefCnt();
   }
@@ -1326,7 +1283,7 @@ public:
     mDoc->DecreaseStackRefCnt();
   }
 private:
-  nsDocument* mDoc;
+  nsIDocument* mDoc;
 };
 
 #endif /* nsDocument_h___ */
