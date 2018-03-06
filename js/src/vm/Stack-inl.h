@@ -998,34 +998,24 @@ InterpreterActivation::resumeGeneratorFrame(HandleFunction callee, HandleValue n
     return true;
 }
 
+struct LiveSavedFrameCache::FramePtr::HasCachedMatcher {
+    bool match(AbstractFramePtr f) const { return f.hasCachedSavedFrame(); }
+    bool match(jit::CommonFrameLayout* f) const { return f->hasCachedSavedFrame(); }
+};
+
 inline bool
-FrameIter::hasCachedSavedFrame() const
-{
-    if (isWasm())
-        return false;
-
-    if (hasUsableAbstractFramePtr())
-        return abstractFramePtr().hasCachedSavedFrame();
-
-    MOZ_ASSERT(jsJitFrame().isIonScripted());
-    // SavedFrame caching is done at the physical frame granularity (rather than
-    // for each inlined frame) for ion. Therefore, it is impossible to have a
-    // cached SavedFrame if this frame is not a physical frame.
-    return isPhysicalIonFrame() && jsJitFrame().current()->hasCachedSavedFrame();
+LiveSavedFrameCache::FramePtr::hasCachedSavedFrame() const {
+    return ptr.match(HasCachedMatcher());
 }
 
+struct LiveSavedFrameCache::FramePtr::SetHasCachedMatcher {
+    void match(AbstractFramePtr f) const { f.setHasCachedSavedFrame(); }
+    void match(jit::CommonFrameLayout* f) const { f->setHasCachedSavedFrame(); }
+};
+
 inline void
-FrameIter::setHasCachedSavedFrame()
-{
-    MOZ_ASSERT(!isWasm());
-
-    if (hasUsableAbstractFramePtr()) {
-        abstractFramePtr().setHasCachedSavedFrame();
-        return;
-    }
-
-    MOZ_ASSERT(isPhysicalIonFrame());
-    jsJitFrame().current()->setHasCachedSavedFrame();
+LiveSavedFrameCache::FramePtr::setHasCachedSavedFrame() {
+    ptr.match(SetHasCachedMatcher());
 }
 
 } /* namespace js */
