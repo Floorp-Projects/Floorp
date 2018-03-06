@@ -138,13 +138,7 @@ var SessionHistoryInternal = {
       entry.subframe = true;
     }
 
-    let cacheKey = shEntry.cacheKey;
-    if (cacheKey && cacheKey instanceof Ci.nsISupportsPRUint32 &&
-        cacheKey.data != 0) {
-      // XXXbz would be better to have cache keys implement
-      // nsISerializable or something.
-      entry.cacheKey = cacheKey.data;
-    }
+    entry.cacheKey = shEntry.cacheKey;
     entry.ID = shEntry.ID;
     entry.docshellUUID = shEntry.docshellID.toString();
 
@@ -391,10 +385,7 @@ var SessionHistoryInternal = {
       shEntry.baseURI = Utils.makeURI(entry.baseURI);
 
     if (entry.cacheKey) {
-      var cacheKey = Cc["@mozilla.org/supports-PRUint32;1"].
-                     createInstance(Ci.nsISupportsPRUint32);
-      cacheKey.data = entry.cacheKey;
-      shEntry.cacheKey = cacheKey;
+      shEntry.cacheKey = entry.cacheKey;
     }
 
     if (entry.ID) {

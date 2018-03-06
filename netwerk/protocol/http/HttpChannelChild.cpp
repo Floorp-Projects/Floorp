@@ -161,6 +161,7 @@ InterceptStreamListener::Cleanup()
 HttpChannelChild::HttpChannelChild()
   : HttpAsyncAborter<HttpChannelChild>(this)
   , NeckoTargetHolder(nullptr)
+  , mCacheKey(0)
   , mSynthesizedStreamLength(0)
   , mIsFromCache(false)
   , mCacheEntryAvailable(false)
@@ -226,7 +227,6 @@ HttpChannelChild::ReleaseMainThreadOnlyReferences()
   }
 
   nsTArray<nsCOMPtr<nsISupports>> arrayToRelease;
-  arrayToRelease.AppendElement(mCacheKey.forget());
   arrayToRelease.AppendElement(mRedirectChannelChild.forget());
 
   // To solve multiple inheritence of nsISupports in InterceptStreamListener
@@ -652,20 +652,7 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-  nsresult rv;
-  nsCOMPtr<nsISupportsPRUint32> container =
-    do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    Cancel(rv);
-    return;
-  }
-
-  rv = container->SetData(cacheKey);
-  if (NS_FAILED(rv)) {
-    Cancel(rv);
-    return;
-  }
-  mCacheKey = container;
+  mCacheKey = cacheKey;
 
   // replace our request headers with what actually got sent in the parent
   mRequestHead.SetHeaders(requestHeaders);
@@ -2735,19 +2722,7 @@ HttpChannelChild::ContinueAsyncOpen()
   openArgs.tlsFlags() = mTlsFlags;
   openArgs.initialRwin() = mInitialRwin;
 
-  uint32_t cacheKey = 0;
-  if (mCacheKey) {
-    nsCOMPtr<nsISupportsPRUint32> container = do_QueryInterface(mCacheKey);
-    if (!container) {
-      return NS_ERROR_ILLEGAL_VALUE;
-    }
-
-    nsresult rv = container->GetData(&cacheKey);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-  openArgs.cacheKey() = cacheKey;
+  openArgs.cacheKey() = mCacheKey;
 
   openArgs.blockAuthPrompt() = mBlockAuthPrompt;
 
@@ -3048,17 +3023,17 @@ HttpChannelChild::GetCacheEntryId(uint64_t *aCacheEntryId)
 }
 
 NS_IMETHODIMP
-HttpChannelChild::GetCacheKey(nsISupports **cacheKey)
+HttpChannelChild::GetCacheKey(uint32_t *cacheKey)
 {
   if (mSynthesizedCacheInfo) {
     return mSynthesizedCacheInfo->GetCacheKey(cacheKey);
   }
 
-  NS_IF_ADDREF(*cacheKey = mCacheKey);
+  *cacheKey = mCacheKey;
   return NS_OK;
 }
 NS_IMETHODIMP
-HttpChannelChild::SetCacheKey(nsISupports *cacheKey)
+HttpChannelChild::SetCacheKey(uint32_t cacheKey)
 {
   if (mSynthesizedCacheInfo) {
     return mSynthesizedCacheInfo->SetCacheKey(cacheKey);

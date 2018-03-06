@@ -57,7 +57,7 @@ public:
 private:
     virtual ~nsWebBrowserPersist();
     nsresult SaveURIInternal(
-        nsIURI *aURI, nsISupports *aCacheKey, nsIURI *aReferrer,
+        nsIURI *aURI, uint32_t aCacheKey, nsIURI *aReferrer,
         uint32_t aReferrerPolicy, nsIInputStream *aPostData,
         const char *aExtraHeaders, nsIURI *aFile,
         bool aCalcFileExt, bool aIsPrivate);

@@ -37,6 +37,7 @@ nsSHEntryShared::Shutdown()
 
 nsSHEntryShared::nsSHEntryShared()
   : mDocShellID({0})
+  , mCacheKey(0)
   , mLastTouched(0)
   , mID(gSHEntrySharedID++)
   , mViewerBounds(0, 0, 0, 0)

@@ -986,7 +986,7 @@ nsWebBrowser::SetProgressListener(nsIWebProgressListener* aProgressListener)
 
 NS_IMETHODIMP
 nsWebBrowser::SaveURI(nsIURI* aURI,
-                      nsISupports* aCacheKey,
+                      uint32_t aCacheKey,
                       nsIURI* aReferrer,
                       uint32_t aReferrerPolicy,
                       nsIInputStream* aPostData,
@@ -1001,7 +1001,7 @@ nsWebBrowser::SaveURI(nsIURI* aURI,
 
 NS_IMETHODIMP
 nsWebBrowser::SavePrivacyAwareURI(nsIURI* aURI,
-                                  nsISupports* aCacheKey,
+                                  uint32_t aCacheKey,
                                   nsIURI* aReferrer,
                                   uint32_t aReferrerPolicy,
                                   nsIInputStream* aPostData,
