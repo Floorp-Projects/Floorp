@@ -1185,11 +1185,13 @@ CompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor)
   return true;
 }
 
+#if defined(MOZ_WIDGET_ANDROID)
 RefPtr<APZCTreeManager>
 CompositorBridgeParent::GetAPZCTreeManager()
 {
   return mApzcTreeManager;
 }
+#endif
 
 RefPtr<APZSampler>
 CompositorBridgeParent::GetAPZSampler()

@@ -464,7 +464,9 @@ public:
   PAPZParent* AllocPAPZParent(const uint64_t& aLayersId) override;
   bool DeallocPAPZParent(PAPZParent* aActor) override;
 
+#if defined(MOZ_WIDGET_ANDROID)
   RefPtr<APZCTreeManager> GetAPZCTreeManager();
+#endif
   RefPtr<APZSampler> GetAPZSampler();
 
   CompositorOptions GetOptions() const {
