@@ -257,11 +257,4 @@
       <children includes="menupopup|template"/>
     </content>
   </binding>
-
-  <binding id="menubutton-item" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
-    <content>
-      <xul:label class="menubutton-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
-      <children includes="menupopup"/>
-    </content>
-  </binding>
 </bindings>
