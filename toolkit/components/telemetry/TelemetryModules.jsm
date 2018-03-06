@@ -76,6 +76,10 @@ var TelemetryModules = Object.freeze({
             if (module.debugName !== null && module.debugName.length > MAX_NAME_LENGTH) {
               module.debugName = module.debugName.substr(0, MAX_NAME_LENGTH - 1) + TRUNCATION_DELIMITER;
             }
+
+            if (module.certSubject !== undefined && module.certSubject.length > MAX_NAME_LENGTH) {
+              module.certSubject = module.certSubject.substr(0, MAX_NAME_LENGTH - 1) + TRUNCATION_DELIMITER;
+            }
           }
 
           TelemetryController.submitExternalPing("modules",
