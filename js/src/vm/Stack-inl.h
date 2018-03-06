@@ -609,31 +609,6 @@ AbstractFramePtr::isDebuggerEvalFrame() const
 }
 
 inline bool
-AbstractFramePtr::hasCachedSavedFrame() const
-{
-    if (isInterpreterFrame())
-        return asInterpreterFrame()->hasCachedSavedFrame();
-    if (isBaselineFrame())
-        return asBaselineFrame()->hasCachedSavedFrame();
-    if (isWasmDebugFrame())
-        return asWasmDebugFrame()->hasCachedSavedFrame();
-    return asRematerializedFrame()->hasCachedSavedFrame();
-}
-
-inline void
-AbstractFramePtr::setHasCachedSavedFrame()
-{
-    if (isInterpreterFrame())
-        asInterpreterFrame()->setHasCachedSavedFrame();
-    else if (isBaselineFrame())
-        asBaselineFrame()->setHasCachedSavedFrame();
-    else if (isWasmDebugFrame())
-        asWasmDebugFrame()->setHasCachedSavedFrame();
-    else
-        asRematerializedFrame()->setHasCachedSavedFrame();
-}
-
-inline bool
 AbstractFramePtr::isDebuggee() const
 {
     if (isInterpreterFrame())
@@ -1004,11 +979,20 @@ LiveSavedFrameCache::FramePtr::create(const FrameIter& iter)
     if (iter.done())
         return mozilla::Nothing();
 
-    if (iter.isWasm() && !iter.wasmDebugEnabled())
-        return mozilla::Nothing();
+    if (iter.hasUsableAbstractFramePtr()) {
+        auto afp = iter.abstractFramePtr();
 
-    if (iter.hasUsableAbstractFramePtr())
-        return mozilla::Some(FramePtr(iter.abstractFramePtr()));
+        if (afp.isInterpreterFrame())
+            return mozilla::Some(FramePtr(afp.asInterpreterFrame()));
+        if (afp.isBaselineFrame())
+            return mozilla::Some(FramePtr(afp.asBaselineFrame()));
+        if (afp.isWasmDebugFrame())
+            return mozilla::Some(FramePtr(afp.asWasmDebugFrame()));
+        if (afp.isRematerializedFrame())
+            return mozilla::Some(FramePtr(afp.asRematerializedFrame()));
+
+        return mozilla::Nothing();
+    }
 
     if (iter.isPhysicalIonFrame())
         return mozilla::Some(FramePtr(iter.physicalIonFrame()));
@@ -1017,8 +1001,8 @@ LiveSavedFrameCache::FramePtr::create(const FrameIter& iter)
 }
 
 struct LiveSavedFrameCache::FramePtr::HasCachedMatcher {
-    bool match(AbstractFramePtr f) const { return f.hasCachedSavedFrame(); }
-    bool match(jit::CommonFrameLayout* f) const { return f->hasCachedSavedFrame(); }
+    template<typename Frame>
+    bool match(Frame* f) const { return f->hasCachedSavedFrame(); }
 };
 
 inline bool
@@ -1027,8 +1011,8 @@ LiveSavedFrameCache::FramePtr::hasCachedSavedFrame() const {
 }
 
 struct LiveSavedFrameCache::FramePtr::SetHasCachedMatcher {
-    void match(AbstractFramePtr f) const { f.setHasCachedSavedFrame(); }
-    void match(jit::CommonFrameLayout* f) const { f->setHasCachedSavedFrame(); }
+    template<typename Frame>
+    void match(Frame* f) const { f->setHasCachedSavedFrame(); }
 };
 
 inline void

@@ -241,8 +241,6 @@ class AbstractFramePtr
     inline bool isModuleFrame() const;
     inline bool isEvalFrame() const;
     inline bool isDebuggerEvalFrame() const;
-    inline bool hasCachedSavedFrame() const;
-    inline void setHasCachedSavedFrame();
 
     inline bool hasScript() const;
     inline JSScript* script() const;
@@ -1174,7 +1172,11 @@ class LiveSavedFrameCache
     // 'hasCachedSavedFrame' bit we can examine and set, and can be converted to
     // a Key to index the cache.
     class FramePtr {
-        using Ptr = mozilla::Variant<AbstractFramePtr, jit::CommonFrameLayout*>;
+        using Ptr = mozilla::Variant<InterpreterFrame*,
+                                     jit::BaselineFrame*,
+                                     jit::RematerializedFrame*,
+                                     wasm::DebugFrame*,
+                                     jit::CommonFrameLayout*>;
 
         Ptr ptr;
 
