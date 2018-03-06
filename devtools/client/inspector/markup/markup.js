@@ -951,8 +951,7 @@ MarkupView.prototype = {
       return;
     }
 
-    let node = container.node;
-    this.markNodeAsSelected(node, "treepanel");
+    this._markContainerAsSelected(container, "treepanel");
   },
 
   /**
@@ -1322,9 +1321,10 @@ MarkupView.prototype = {
           (this.inspector.selection.nodeFront === removedNode && isHTMLTag)) {
         let childContainers = parentContainer.getChildContainers();
         if (childContainers && childContainers[childIndex]) {
-          this.markNodeAsSelected(childContainers[childIndex].node, reason);
-          if (childContainers[childIndex].hasChildren) {
-            this.expandNode(childContainers[childIndex].node);
+          let childContainer = childContainers[childIndex];
+          this._markContainerAsSelected(childContainer, reason);
+          if (childContainer.hasChildren) {
+            this.expandNode(childContainer.node);
           }
           this.emit("reselectedonremoved");
         }
@@ -1507,10 +1507,15 @@ MarkupView.prototype = {
    */
   markNodeAsSelected: function(node, reason = "nodeselected") {
     let container = this.getContainer(node);
+    return this._markContainerAsSelected(container);
+  },
 
-    if (this._selectedContainer === container) {
+  _markContainerAsSelected: function(container, reason) {
+    if (!container || this._selectedContainer === container) {
       return false;
     }
+
+    let { node } = container;
 
     // Un-select and remove focus from the previous container.
     if (this._selectedContainer) {
