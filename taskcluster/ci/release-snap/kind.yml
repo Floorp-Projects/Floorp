@@ -20,6 +20,7 @@ job-defaults:
    scopes:
       by-project:
          mozilla-beta: ["secrets:get:project/releng/snapcraft/firefox/edge"]
+         mozilla-release: ["secrets:get:project/releng/snapcraft/firefox/candidate"]
          default: []
    treeherder:
       platform: linux64/opt
