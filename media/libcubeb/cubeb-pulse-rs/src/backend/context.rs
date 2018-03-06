@@ -118,7 +118,7 @@ impl PulseContext {
     }
 
     fn new(name: Option<&CStr>) -> Result<Box<Self>> {
-        fn server_info_cb(context: &pulse::Context, info: &pulse::ServerInfo, u: *mut c_void) {
+        fn server_info_cb(context: &pulse::Context, info: Option<&pulse::ServerInfo>, u: *mut c_void) {
             fn sink_info_cb(
                 _: &pulse::Context,
                 i: *const pulse::SinkInfo,
@@ -138,11 +138,17 @@ impl PulseContext {
                 ctx.mainloop.signal();
             }
 
-            let _ = context.get_sink_info_by_name(
-                try_cstr_from(info.default_sink_name),
-                sink_info_cb,
-                u,
-            );
+            if let Some(info) = info {
+                let _ = context.get_sink_info_by_name(
+                    try_cstr_from(info.default_sink_name),
+                    sink_info_cb,
+                    u,
+                );
+            } else {
+                // If info is None, then an error occured.
+                let ctx = unsafe { &mut *(u as *mut PulseContext) };
+                ctx.mainloop.signal();
+            }
         }
 
         let name = name.map(|s| s.to_owned());
@@ -349,17 +355,19 @@ impl ContextOps for PulseContext {
 
         fn default_device_names(
             _: &pulse::Context,
-            info: &pulse::ServerInfo,
+            info: Option<&pulse::ServerInfo>,
             user_data: *mut c_void,
         ) {
             let list_data = unsafe { &mut *(user_data as *mut PulseDevListData) };
 
-            list_data.default_sink_name = super::try_cstr_from(info.default_sink_name)
-                .map(|s| s.to_owned())
-                .unwrap_or_default();
-            list_data.default_source_name = super::try_cstr_from(info.default_source_name)
-                .map(|s| s.to_owned())
-                .unwrap_or_default();
+            if let Some(info) = info {
+                list_data.default_sink_name = super::try_cstr_from(info.default_sink_name)
+                    .map(|s| s.to_owned())
+                    .unwrap_or_default();
+                list_data.default_source_name = super::try_cstr_from(info.default_source_name)
+                    .map(|s| s.to_owned())
+                    .unwrap_or_default();
+            }
 
             (*list_data.context).mainloop.signal();
         }
