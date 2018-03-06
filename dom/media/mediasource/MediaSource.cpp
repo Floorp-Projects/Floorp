@@ -30,6 +30,7 @@
 #include "nsIRunnable.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsPIDOMWindow.h"
+#include "nsMimeTypes.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
@@ -86,7 +87,7 @@ static bool
 IsWebMForced(DecoderDoctorDiagnostics* aDiagnostics)
 {
   bool mp4supported =
-    DecoderTraits::IsMP4SupportedType(MediaContainerType(MEDIAMIMETYPE("video/mp4")),
+    DecoderTraits::IsMP4SupportedType(MediaContainerType(MEDIAMIMETYPE(VIDEO_MP4)),
                                       aDiagnostics);
   bool hwsupported = gfx::gfxVars::CanUseHardwareVideoDecoding();
 #ifdef MOZ_WIDGET_ANDROID
