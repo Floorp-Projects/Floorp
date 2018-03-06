@@ -69,7 +69,8 @@ function mockFunctions() {
     email: "user@mozilla.com"
   });
 
-  service.sync = mocked_syncAndReportErrors;
+  // mock service.errorHandler.syncAndReportErrors()
+  service.errorHandler.syncAndReportErrors = mocked_syncAndReportErrors;
 }
 
 function mocked_syncAndReportErrors() {
@@ -78,10 +79,10 @@ function mocked_syncAndReportErrors() {
 
 function restoreValues() {
   UIState.get = getState;
-  service.sync = originalSync;
+  service.syncAndReportErrors = originalSync;
 }
 
 function storeInitialValues() {
   getState = UIState.get;
-  originalSync = service.sync;
+  originalSync = service.syncAndReportErrors;
 }
