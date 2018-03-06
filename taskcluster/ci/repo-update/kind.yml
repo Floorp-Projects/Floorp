@@ -5,6 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+   - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
 
 
@@ -12,38 +13,9 @@ jobs:
    hsts-hpkp-blocklist:
       name: periodic_file_update
       description: HSTS, HPKP, and Blocklist update
+      worker-type: buildbot-bridge/buildbot-bridge
       run-on-projects: []  # Only run via cron
-      treeherder:
-         kind: build
-         platform: linux64/opt
-         symbol: pfu
-         tier: 1
-      worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-      worker:
-         implementation: docker-worker
-         os: linux
-         docker-image: {in-tree: periodic-updates}
-         max-run-time: 3600  # Sometimes takes ~40 minutes
-         env:
-            DO_HSTS: "1"
-            DO_HPKP: "1"
-            DO_BLOCKLIST: "1"
-            USE_MOZILLA_CENTRAL: "1"
-            BRANCH: mozilla-central
-            PRODUCT: firefox
-            REVIEWERS: sfraser
-         command:
-            - /runme.sh
-         artifacts:
-            - name: 'public/build/nsSTSPreloadList.diff'
-              path: '/home/worker/artifacts/nsSTSPreloadList.diff'
-              type: file
-            - name: 'public/build/StaticHPKPins.h.diff'
-              path: '/home/worker/artifacts/StaticHPKPins.h.diff'
-              type: file
-            - name: 'public/build/blocklist.diff'
-              path: '/home/worker/artifacts/blocklist.diff'
-              type: file
-      scopes:
-         - secrets:get:project/releng/gecko/build/level-{level}/arc-phabricator-token
-
+      run:
+         using: buildbot
+         product: firefox
+         buildername: Linux x86-64 {branch} periodic file update
