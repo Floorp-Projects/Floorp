@@ -558,16 +558,25 @@ Set the Gecko and geckodriver log level.  Possible values are `fatal`,
 
 #### <code>--marionette-port <var>PORT</var></code>
 
-Port to use for connecting to the Marionette remote protocol.  By default
-it will pick a free port assigned by the system.
+Selects the port for geckodriver’s connection to the [Marionette]
+remote protocol.
+
+In the default mode where geckodriver starts and manages the Firefox
+process, it will pick a free port assigned by the system and set the
+`marionette.port` preference in the profile.
+
+When [`--connect-existing`] is used and the Firefox process is not
+under geckodriver’s control, it will simply connect to <var>PORT</var>.
+
+[`--connect-existing`]: #connect-existing
 
 
 #### <code>-p <var>PORT</var></code>/<code>--port <var>PORT</var></code>
 
 Port to use for the WebDriver server.  Defaults to 4444.
 
-A helpful trick is that it is possible to bind to 0 to get the system
-to atomically assign a free port.
+A helpful trick is that it is possible to bind to 0 to get the
+system to atomically assign a free port.
 
 
 #### <code>--jsdebugger</code>
@@ -577,11 +586,12 @@ useful for debugging [Marionette] internals.
 
 [browser toolbox]: https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox
 
+
 #### <code>-v<var>[v]</var></code>
 
-Increases the logging verbosity by to debug level when passing a single
-`-v`, or to trace level if `-vv` is passed.  This is analogous to passing
-`--log debug` and `--log trace`, respectively.
+Increases the logging verbosity by to debug level when passing
+a single `-v`, or to trace level if `-vv` is passed.  This is
+analogous to passing `--log debug` and `--log trace`, respectively.
 
 
 Building
