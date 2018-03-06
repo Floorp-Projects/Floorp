@@ -60,7 +60,7 @@ LiveSavedFrameCache::getFramePtr(const FrameIter& iter)
     if (iter.done())
         return Nothing();
 
-    if (iter.isWasm())
+    if (iter.isWasm() && !iter.wasmDebugEnabled())
         return Nothing();
 
     if (iter.hasUsableAbstractFramePtr())
