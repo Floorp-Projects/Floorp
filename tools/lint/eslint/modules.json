@@ -159,7 +159,7 @@
   "policies.js": ["ErrorHandler", "SyncScheduler"],
   "prefs.js": ["PrefsEngine", "PrefRec"],
   "prefs.jsm": ["Preference"],
-  "FormAutofillStorage.jsm": ["profileStorage"],
+  "FormAutofillStorage.jsm": ["formAutofillStorage"],
   "PromiseWorker.jsm": ["BasePromiseWorker"],
   "PushCrypto.jsm": ["PushCrypto", "concatArray"],
   "quit.js": ["goQuitApplication"],

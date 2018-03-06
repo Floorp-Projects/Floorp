@@ -29,7 +29,7 @@ class FormAutofillBase {
   }
 
   get storage() {
-    return profileStorage[this._subStorageName];
+    return formAutofillStorage[this._subStorageName];
   }
 
   Create() {
@@ -55,7 +55,7 @@ class FormAutofillBase {
 
 function DumpStorage(subStorageName) {
   Logger.logInfo(`\ndumping ${subStorageName} list\n`, true);
-  const entries = profileStorage[subStorageName]._data;
+  const entries = formAutofillStorage[subStorageName]._data;
   for (const entry of entries) {
     Logger.logInfo(JSON.stringify(entry), true);
   }
