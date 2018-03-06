@@ -5,7 +5,7 @@
 import sys
 
 from ipdl.cgen import CodePrinter
-from ipdl.cxx.ast import MethodSpec, TypeArray, Visitor
+from ipdl.cxx.ast import MethodSpec, TypeArray, Visitor, DestructorDecl
 
 class CxxCodeGen(CodePrinter, Visitor):
     def __init__(self, outf=sys.stdout, indentCols=4):
@@ -214,10 +214,23 @@ class CxxCodeGen(CodePrinter, Visitor):
                 md.ret.accept(self)
                 self.println()
                 self.printdent()
+
+        if md.cls is not None:
+            assert md.only_for_definition
+
+            self.write(md.cls.name)
+            if md.cls.specializes is not None:
+                self.write('<')
+                md.cls.specializes.accept(self)
+                self.write('>')
+            self.write('::')
+
         if md.typeop is not None:
             self.write('operator ')
             md.typeop.accept(self)
         else:
+            if isinstance(md, DestructorDecl):
+                self.write('~')
             self.write(md.name)
 
         self.write('(')
@@ -283,14 +296,7 @@ class CxxCodeGen(CodePrinter, Visitor):
 
 
     def visitDestructorDecl(self, dd):
-        if dd.methodspec == MethodSpec.VIRTUAL:
-            self.write('virtual ')
-
-        # hack alert
-        parts = dd.name.split('::')
-        parts[-1] = '~'+ parts[-1]
-
-        self.write('::'.join(parts) +'()')
+        self.visitMethodDecl(dd)
 
     def visitDestructorDefn(self, dd):
         self.printdent()

@@ -155,6 +155,9 @@ ImageDocument::ImageDocument()
   , mFirstResize(false)
   , mObservingImageLoader(false)
   , mOriginalZoomLevel(1.0)
+#if defined(MOZ_WIDGET_ANDROID)
+  , mOriginalResolution(1.0)
+#endif
 {
 }
 
@@ -210,6 +213,9 @@ ImageDocument::StartDocumentLoad(const char*         aCommand,
   }
 
   mOriginalZoomLevel = IsSiteSpecific() ? 1.0 : GetZoomLevel();
+#if defined(MOZ_WIDGET_ANDROID)
+  mOriginalResolution = GetResolution();
+#endif
 
   NS_ASSERTION(aDocListener, "null aDocListener");
   *aDocListener = new ImageListener(this);
@@ -294,6 +300,9 @@ ImageDocument::OnPageShow(bool aPersisted,
 {
   if (aPersisted) {
     mOriginalZoomLevel = IsSiteSpecific() ? 1.0 : GetZoomLevel();
+#if defined(MOZ_WIDGET_ANDROID)
+    mOriginalResolution = GetResolution();
+#endif
   }
   RefPtr<ImageDocument> kungFuDeathGrip(this);
   UpdateSizeFromLayout();
@@ -364,19 +373,19 @@ ImageDocument::ShrinkToFit()
     ignored.SuppressException();
     return;
   }
-
-  uint32_t newWidth = std::max(1, NSToCoordFloor(GetRatio() * mImageWidth));
-  uint32_t newHeight = std::max(1, NSToCoordFloor(GetRatio() * mImageHeight));
+#if defined(MOZ_WIDGET_ANDROID)
+  if (GetResolution() != mOriginalResolution && mImageIsResized) {
+    // Don't resize if resolution has changed, e.g., through pinch-zooming on
+    // Android.
+    return;
+  }
+#endif
 
   // Keep image content alive while changing the attributes.
   RefPtr<HTMLImageElement> image = HTMLImageElement::FromContent(mImageContent);
 
-  if (mImageIsResized &&
-      newWidth == image->Width() && newHeight == image->Height()) {
-    // Image has already been resized.
-    return;
-  }
-
+  uint32_t newWidth = std::max(1, NSToCoordFloor(GetRatio() * mImageWidth));
+  uint32_t newHeight = std::max(1, NSToCoordFloor(GetRatio() * mImageHeight));
   image->SetWidth(newWidth, IgnoreErrors());
   image->SetHeight(newHeight, IgnoreErrors());
 
@@ -861,6 +870,19 @@ ImageDocument::GetZoomLevel()
   }
   return zoomLevel;
 }
+
+#if defined(MOZ_WIDGET_ANDROID)
+float
+ImageDocument::GetResolution()
+{
+  float resolution = mOriginalResolution;
+  nsCOMPtr<nsIPresShell> shell = GetShell();
+  if (shell) {
+    resolution = shell->GetResolution();
+  }
+  return resolution;
+}
+#endif
 
 } // namespace dom
 } // namespace mozilla

@@ -127,20 +127,8 @@ CacheStreamControlParent::RecvOpenStream(const nsID& aStreamId,
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
 
-  // This is safe because:
-  //  1. We add ourself to the Manager as an operation Listener in OpenStream().
-  //  2. We remove ourself as a Listener from the Manager in ActorDestroy().
-  //  3. The Manager will not "complete" the operation if the Listener has
-  //     been removed.  This means the lambda will not be invoked.
-  //  4. The ActorDestroy() will also cause the child-side MozPromise for
-  //     this async returning method to be rejected.  So we don't have to
-  //     call the resolver in this case.
-  CacheStreamControlParent* self = this;
-
-  OpenStream(aStreamId, [self, aResolver](nsCOMPtr<nsIInputStream>&& aStream) {
-      AutoIPCStream stream;
-      Unused << stream.Serialize(aStream, self->Manager());
-      aResolver(stream.TakeOptionalValue());
+  OpenStream(aStreamId, [aResolver](nsCOMPtr<nsIInputStream>&& aStream) {
+      aResolver(aStream);
     });
 
   return IPC_OK();
