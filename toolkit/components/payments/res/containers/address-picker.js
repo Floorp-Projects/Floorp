@@ -33,11 +33,13 @@ class AddressPicker extends PaymentStateSubscriberMixin(HTMLElement) {
         optionEl = document.createElement("address-option");
         optionEl.value = guid;
       }
+
       for (let [key, val] of Object.entries(address)) {
         optionEl.setAttribute(key, val);
       }
       desiredOptions.push(optionEl);
     }
+
     let el = null;
     while ((el = this.dropdown.popupBox.querySelector(":scope > address-option"))) {
       el.remove();
