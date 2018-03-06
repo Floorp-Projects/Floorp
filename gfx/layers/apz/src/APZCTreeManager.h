@@ -113,14 +113,6 @@ public:
   explicit APZCTreeManager(uint64_t aRootLayersId);
 
   /**
-   * Initializes the global state used in AsyncPanZoomController.
-   * This is normally called when it is first needed in the constructor
-   * of APZCTreeManager, but can be called manually to force it to be
-   * initialized earlier.
-   */
-  static void InitializeGlobalState();
-
-  /**
    * Notifies this APZCTreeManager that the associated compositor is now
    * responsible for managing another layers id, which got moved over from
    * some other compositor. That other compositor's APZCTreeManager is also
@@ -345,15 +337,6 @@ public:
    * Tests if a screen point intersect an apz in the tree.
    */
   bool HitTestAPZC(const ScreenIntPoint& aPoint);
-
-  /**
-   * See AsyncPanZoomController::CalculatePendingDisplayPort. This
-   * function simply delegates to that one, so that non-layers code
-   * never needs to include AsyncPanZoomController.h
-   */
-  static const ScreenMargin CalculatePendingDisplayPort(
-    const FrameMetrics& aFrameMetrics,
-    const ParentLayerPoint& aVelocity);
 
   /**
    * Sets the dpi value used by all AsyncPanZoomControllers.
