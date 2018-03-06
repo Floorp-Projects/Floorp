@@ -30,6 +30,9 @@
 #endif
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/L10nUtilsBinding.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsAttrValueOrString.h"
 #include "nsBindingManager.h"
@@ -3066,4 +3069,218 @@ DocGroup*
 nsINode::GetDocGroup() const
 {
   return OwnerDoc()->GetDocGroup();
+}
+
+class LocalizationHandler : public PromiseNativeHandler
+{
+public:
+  LocalizationHandler() = default;
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(LocalizationHandler)
+
+  nsTArray<nsCOMPtr<Element>>& Elements() { return mElements; }
+
+  void SetReturnValuePromise(Promise* aReturnValuePromise)
+  {
+    mReturnValuePromise = aReturnValuePromise;
+  }
+
+  virtual void
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    nsTArray<L10nValue> l10nData;
+    if (aValue.isObject()) {
+      JS::ForOfIterator iter(aCx);
+      if (!iter.init(aValue, JS::ForOfIterator::AllowNonIterable)) {
+        mReturnValuePromise->MaybeRejectWithUndefined();
+        return;
+      }
+      if (!iter.valueIsIterable()) {
+        mReturnValuePromise->MaybeRejectWithUndefined();
+        return;
+      }
+
+      JS::Rooted<JS::Value> temp(aCx);
+      while (true) {
+        bool done;
+        if (!iter.next(&temp, &done)) {
+          mReturnValuePromise->MaybeRejectWithUndefined();
+          return;
+        }
+
+        if (done) {
+          break;
+        }
+
+        L10nValue* slotPtr =
+          l10nData.AppendElement(mozilla::fallible);
+        if (!slotPtr) {
+          mReturnValuePromise->MaybeRejectWithUndefined();
+          return;
+        }
+
+        if (!slotPtr->Init(aCx, temp)) {
+          mReturnValuePromise->MaybeRejectWithUndefined();
+          return;
+        }
+      }
+    }
+
+    if (mElements.Length() != l10nData.Length()) {
+      mReturnValuePromise->MaybeRejectWithUndefined();
+      return;
+    }
+
+    JS::Rooted<JSObject*> untranslatedElements(aCx,
+      JS_NewArrayObject(aCx, mElements.Length()));
+    if (!untranslatedElements) {
+      mReturnValuePromise->MaybeRejectWithUndefined();
+      return;
+    }
+
+    ErrorResult rv;
+    for (size_t i = 0; i < l10nData.Length(); ++i) {
+      Element* elem = mElements[i];
+      nsString& content = l10nData[i].mValue;
+      if (!content.IsVoid()) {
+        elem->SetTextContent(content, rv);
+        if (NS_WARN_IF(rv.Failed())) {
+          mReturnValuePromise->MaybeRejectWithUndefined();
+          return;
+        }
+      }
+
+      Nullable<Sequence<AttributeNameValue>>& attributes =
+        l10nData[i].mAttrs;
+      if (!attributes.IsNull()) {
+        for (size_t j = 0; j < attributes.Value().Length(); ++j) {
+          // Use SetAttribute here to validate the attribute name!
+          elem->SetAttribute(attributes.Value()[j].mName,
+                             attributes.Value()[j].mValue,
+                             rv);
+          if (rv.Failed()) {
+            mReturnValuePromise->MaybeRejectWithUndefined();
+            return;
+          }
+        }
+      }
+
+      if (content.IsVoid() && attributes.IsNull()) {
+        JS::Rooted<JS::Value> wrappedElem(aCx);
+        if (!ToJSValue(aCx, elem, &wrappedElem)) {
+          mReturnValuePromise->MaybeRejectWithUndefined();
+          return;
+        }
+
+        if (!JS_DefineElement(aCx, untranslatedElements, i, wrappedElem, JSPROP_ENUMERATE)) {
+          mReturnValuePromise->MaybeRejectWithUndefined();
+          return;
+        }
+      }
+    }
+    mReturnValuePromise->MaybeResolve(untranslatedElements);
+  }
+
+  virtual void
+  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    mReturnValuePromise->MaybeRejectWithUndefined();
+  }
+
+private:
+  ~LocalizationHandler() = default;
+
+  nsTArray<nsCOMPtr<Element>> mElements;
+  RefPtr<Promise> mReturnValuePromise;
+};
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LocalizationHandler)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(LocalizationHandler)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(LocalizationHandler)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(LocalizationHandler)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(LocalizationHandler)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mElements)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReturnValuePromise)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(LocalizationHandler)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElements)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReturnValuePromise)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+
+already_AddRefed<Promise>
+nsINode::Localize(JSContext* aCx,
+                  mozilla::dom::L10nCallback& aCallback,
+                  mozilla::ErrorResult& aRv)
+{
+  Sequence<L10nElement> l10nElements;
+  SequenceRooter<L10nElement> rooter(aCx, &l10nElements);
+  RefPtr<LocalizationHandler> nativeHandler = new LocalizationHandler();
+  nsTArray<nsCOMPtr<Element>>& domElements = nativeHandler->Elements();
+  nsIContent* node = IsContent() ? AsContent() : GetFirstChild();
+  nsAutoString l10nId;
+  nsAutoString l10nArgs;
+  nsAutoString l10nAttrs;
+  nsAutoString type;
+  for (; node; node = node->GetNextNode(this)) {
+    if (!node->IsElement()) {
+      continue;
+    }
+
+    Element* domElement = node->AsElement();
+    if (!domElement->GetAttr(kNameSpaceID_None, nsGkAtoms::datal10nid, l10nId)) {
+      continue;
+    }
+
+    domElement->GetAttr(kNameSpaceID_None, nsGkAtoms::datal10nargs, l10nArgs);
+    domElement->GetAttr(kNameSpaceID_None, nsGkAtoms::datal10nattrs, l10nAttrs);
+    L10nElement* element = l10nElements.AppendElement(fallible);
+    if (!element) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
+    domElements.AppendElement(domElement, fallible);
+
+    domElement->GetNamespaceURI(element->mNamespaceURI);
+    element->mLocalName = domElement->LocalName();
+    domElement->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
+    if (!type.IsEmpty()) {
+      element->mType = type;
+    }
+    element->mL10nId = l10nId;
+    if (!l10nAttrs.IsEmpty()) {
+      element->mL10nAttrs = l10nAttrs;
+    }
+    if (!l10nArgs.IsEmpty()) {
+      JS::Rooted<JS::Value> json(aCx);
+      if (!JS_ParseJSON(aCx, l10nArgs.get(), l10nArgs.Length(), &json) ||
+          !json.isObject()) {
+        aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+        return nullptr;
+      }
+      element->mL10nArgs = &json.toObject();
+    }
+  }
+
+  RefPtr<Promise> callbackResult = aCallback.Call(l10nElements, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  RefPtr<Promise> promise = Promise::Create(OwnerDoc()->GetParentObject(), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  nativeHandler->SetReturnValuePromise(promise);
+  callbackResult->AppendNativeHandler(nativeHandler);
+
+  return promise.forget();
 }

@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization's DOMOverlay functionality</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const { DOMLocalization } =
+    ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm", {});
+  const { MessageContext } =
+    ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
+
+  async function* mockGenerateMessages(locales, resourceIds) {
+    const mc = new MessageContext(locales);
+    mc.addMessages(`
+key1 =
+    .href = https://www.hacked.com
+
+key2 =
+    .href = https://pl.wikipedia.org
+`);
+    yield mc;
+  }
+
+  async function test() {
+    const domLoc = new DOMLocalization(
+      window,
+      [],
+      mockGenerateMessages
+    );
+
+    await domLoc.translateFragment(document.body);
+
+    const key1Elem = document.querySelector("[data-l10n-id=key1]");
+    const key2Elem = document.querySelector("[data-l10n-id=key2]");
+
+
+    is(key1Elem.hasAttribute("href"), false, "href translation should not be allowed");
+    is(key2Elem.getAttribute("href"), "https://pl.wikipedia.org",
+      "href translation should be allowed");
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(test);
+  </script>
+</head>
+<body>
+  <a data-l10n-id="key1"></a>
+  <a data-l10n-id="key2" data-l10n-attrs="href"></a>
+</body>
+</html>

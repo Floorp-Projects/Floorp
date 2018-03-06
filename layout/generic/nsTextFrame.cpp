@@ -5539,7 +5539,7 @@ struct EmphasisMarkInfo
 
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(EmphasisMarkProperty, EmphasisMarkInfo)
 
-already_AddRefed<gfxTextRun>
+static already_AddRefed<gfxTextRun>
 GenerateTextRunForEmphasisMarks(nsTextFrame* aFrame,
                                 nsFontMetrics* aFontMetrics,
                                 nsStyleContext* aStyleContext,

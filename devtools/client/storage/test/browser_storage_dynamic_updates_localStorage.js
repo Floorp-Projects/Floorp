@@ -50,11 +50,9 @@ add_task(function* () {
 
   checkCell("ls2", "value", "ls2-changed");
 
-  // Clearing items. Bug 1233497 makes it so that we can no longer yield
-  // CPOWs from Tasks. We work around this by calling clear via a ContentTask
-  // instead.
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
-    return Task.spawn(content.wrappedJSObject.clear);
+  // Clearing items.
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
+    content.wrappedJSObject.clear();
   });
 
   yield gUI.once("store-objects-cleared");
