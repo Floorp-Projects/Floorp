@@ -9,17 +9,17 @@ add_task(async function() {
 
   // sync -> async
   blocklist._loadBlocklist();
-  Assert.ok(blocklist._isBlocklistLoaded());
+  Assert.ok(blocklist.isLoaded);
   await blocklist._preloadBlocklist();
   Assert.ok(!blocklist._isBlocklistPreloaded());
   blocklist._clear();
 
   // async -> sync
   await blocklist._preloadBlocklist();
-  Assert.ok(!blocklist._isBlocklistLoaded());
+  Assert.ok(!blocklist.isLoaded);
   Assert.ok(blocklist._isBlocklistPreloaded());
   blocklist._loadBlocklist();
-  Assert.ok(blocklist._isBlocklistLoaded());
+  Assert.ok(blocklist.isLoaded);
   Assert.ok(!blocklist._isBlocklistPreloaded());
   blocklist._clear();
 
@@ -35,6 +35,6 @@ add_task(async function() {
   };
 
   await blocklist._preloadBlocklist();
-  Assert.ok(blocklist._isBlocklistLoaded());
+  Assert.ok(blocklist.isLoaded);
   Assert.ok(!blocklist._isBlocklistPreloaded());
 });

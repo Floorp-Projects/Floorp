@@ -283,6 +283,7 @@ const SEARCH_ENGINE_MODIFIED_TOPIC = "browser-search-engine-modified";
 const SEARCH_SERVICE_TOPIC = "browser-search-service";
 const SESSIONSTORE_WINDOWS_RESTORED_TOPIC = "sessionstore-windows-restored";
 const PREF_CHANGED_TOPIC = "nsPref:changed";
+const BLOCKLIST_LOADED_TOPIC = "blocklist-loaded";
 
 /**
  * Enforces the parameter to a boolean value.
@@ -489,6 +490,10 @@ function EnvironmentAddonBuilder(environment) {
   // or a change load.
   this._pendingTask = null;
 
+  // Have we added an observer to listen for blocklist changes that still needs to be
+  // removed:
+  this._blocklistObserverAdded = false;
+
   // Set to true once initial load is complete and we're watching for changes.
   this._loaded = false;
 }
@@ -570,7 +575,21 @@ EnvironmentAddonBuilder.prototype = {
   // nsIObserver
   observe(aSubject, aTopic, aData) {
     this._environment._log.trace("observe - Topic " + aTopic);
-    this._checkForChanges("experiment-changed");
+    if (aTopic == "experiment-changed") {
+      this._checkForChanges("experiment-changed");
+    } else if (aTopic == BLOCKLIST_LOADED_TOPIC) {
+      Services.obs.removeObserver(this, BLOCKLIST_LOADED_TOPIC);
+      this._blocklistObserverAdded = false;
+      let plugins = this._getActivePlugins();
+      let gmpPluginsPromise = this._getActiveGMPlugins();
+      gmpPluginsPromise.then(gmpPlugins => {
+        let {addons} = this._environment._currentEnvironment;
+        addons.activePlugins = plugins;
+        addons.activeGMPlugins = gmpPlugins;
+      }, err => {
+        this._environment._log.error("blocklist observe: Error collecting plugins", err);
+      });
+    }
   },
 
   _checkForChanges(changeReason) {
@@ -596,6 +615,9 @@ EnvironmentAddonBuilder.prototype = {
     if (this._loaded) {
       AddonManager.removeAddonListener(this);
       Services.obs.removeObserver(this, EXPERIMENTS_CHANGED_TOPIC);
+      if (this._blocklistObserverAdded) {
+        Services.obs.removeObserver(this, BLOCKLIST_LOADED_TOPIC);
+      }
     }
 
     // At startup, _pendingTask is set to a Promise that does not resolve
@@ -739,6 +761,20 @@ EnvironmentAddonBuilder.prototype = {
    * @return Object containing the plugins data.
    */
   _getActivePlugins() {
+    // If we haven't yet loaded the blocklist, pass back dummy data for now,
+    // and add an observer to update this data as soon as we get it.
+    if (!Services.blocklist.isLoaded) {
+      if (!this._blocklistObserverAdded) {
+        Services.obs.addObserver(this, BLOCKLIST_LOADED_TOPIC);
+        this._blocklistObserverAdded = true;
+      }
+      return [{
+        name: "dummy", version: "0.1", description: "Blocklist unavailable",
+        blocklisted: false, disabled: true, clicktoplay: false,
+        mimeTypes: ["text/there.is.only.blocklist"],
+        updateDay: Utils.millisecondsToDays(Date.now()),
+      }];
+    }
     let pluginTags =
       Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost).getPluginTags({});
 
@@ -780,6 +816,17 @@ EnvironmentAddonBuilder.prototype = {
    * running this during addon manager shutdown.
    */
   async _getActiveGMPlugins() {
+    // If we haven't yet loaded the blocklist, pass back dummy data for now,
+    // and add an observer to update this data as soon as we get it.
+    if (!Services.blocklist.isLoaded) {
+      if (!this._blocklistObserverAdded) {
+        Services.obs.addObserver(this, BLOCKLIST_LOADED_TOPIC);
+        this._blocklistObserverAdded = true;
+      }
+      return {
+        "dummy-gmp": {version: "0.1", userDisabled: false, applyBackgroundUpdates: true}
+      };
+    }
     // Request plugins, asynchronously.
     let allPlugins = await AddonManager.getAddonsByTypes(["plugin"]);
 
