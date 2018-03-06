@@ -6790,11 +6790,24 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp)
         return;
       }
     }
+  }
 
-    // Recalculate the width and height based on the client area for gecko events.
-    LayoutDeviceIntSize clientSize(newWidth, newHeight);
+  // Notify the widget listener for size change of client area for gecko
+  // events. This needs to be done when either window size is changed,
+  // or window frame is changed. They may not happen together.
+  // However, we don't invoke that for popup when window frame changes,
+  // because popups may trigger frame change before size change via
+  // {Set,Clear}ThemeRegion they invoke in Resize. That would make the
+  // code below call OnResize with a wrong client size first, which can
+  // lead to flickerling for some popups.
+  if (!(wp->flags & SWP_NOSIZE) ||
+      ((wp->flags & SWP_FRAMECHANGED) && !IsPopup())) {
+    RECT r;
+    LayoutDeviceIntSize clientSize;
     if (::GetClientRect(mWnd, &r)) {
       clientSize = WinUtils::ToIntRect(r).Size();
+    } else {
+      clientSize = mBounds.Size();
     }
     // Send a gecko resize event
     OnResize(clientSize);
