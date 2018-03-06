@@ -7603,7 +7603,7 @@ nsIDocument::CreateEvent(const nsAString& aEventType, CallerType aCallerType,
 }
 
 void
-nsDocument::FlushPendingNotifications(FlushType aType, FlushTarget aTarget)
+nsDocument::FlushPendingNotifications(FlushType aType)
 {
   nsDocumentOnStack dos(this);
 
@@ -7653,13 +7653,11 @@ nsDocument::FlushPendingNotifications(FlushType aType, FlushTarget aTarget)
     FlushType parentType = aType;
     if (aType >= FlushType::Style)
       parentType = std::max(FlushType::Layout, aType);
-    mParentDocument->FlushPendingNotifications(parentType, FlushTarget::Normal);
+    mParentDocument->FlushPendingNotifications(parentType);
   }
 
-  if (aTarget == FlushTarget::Normal) {
-    if (nsIPresShell* shell = GetShell()) {
-      shell->FlushPendingNotifications(aType);
-    }
+  if (nsIPresShell* shell = GetShell()) {
+    shell->FlushPendingNotifications(aType);
   }
 }
 
