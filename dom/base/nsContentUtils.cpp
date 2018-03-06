@@ -8498,6 +8498,7 @@ GetSurfaceDataImpl(mozilla::gfx::DataSourceSurface* aSurface,
   mozilla::CheckedInt32 requiredBytes =
     mozilla::CheckedInt32(map.mStride) * mozilla::CheckedInt32(size.height);
   if (!requiredBytes.isValid()) {
+    aSurface->Unmap();
     return GetSurfaceDataContext::NullValue();
   }
 
