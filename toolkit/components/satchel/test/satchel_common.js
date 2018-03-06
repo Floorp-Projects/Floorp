@@ -6,7 +6,6 @@
   "no-unused-vars": ["error", {
     vars: "local",
     args: "none",
-    varsIgnorePattern: "^(Cc|Ci|Cr|Cu|EXPORTED_SYMBOLS)$",
   }],
 */
 
