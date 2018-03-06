@@ -25,13 +25,13 @@ job-defaults:
    scopes:
       by-project:
          mozilla-beta:
-            - project:releng:bouncer:action:submission
+            - project:releng:bouncer:action:aliases
             - project:releng:bouncer:server:production
          mozilla-release:
-            - project:releng:bouncer:action:submission
+            - project:releng:bouncer:action:aliases
             - project:releng:bouncer:server:production
          default:
-            - project:releng:bouncer:action:submission
+            - project:releng:bouncer:action:aliases
             - project:releng:bouncer:server:staging
    run-on-projects: []
    shipping-phase: ship
