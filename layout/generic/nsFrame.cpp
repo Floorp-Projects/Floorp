@@ -863,7 +863,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
   this->~nsFrame();
 
 #ifdef DEBUG
-  {  
+  {
     nsIFrame* rootFrame = shell->GetRootFrame();
     MOZ_ASSERT(rootFrame);
     if (this != rootFrame) {
@@ -1004,7 +1004,7 @@ nsIFrame::RemoveDisplayItemDataForDeletion()
   }
 
   if (IsFrameModified()) {
-    nsIFrame* rootFrame = PresContext()->PresShell()->GetRootFrame();
+    nsIFrame* rootFrame = PresShell()->GetRootFrame();
     MOZ_ASSERT(rootFrame);
 
     nsTArray<nsIFrame*>* modifiedFrames =
@@ -1020,7 +1020,7 @@ nsIFrame::RemoveDisplayItemDataForDeletion()
   }
 
   if (HasOverrideDirtyRegion()) {
-    nsIFrame* rootFrame = PresContext()->PresShell()->GetRootFrame();
+    nsIFrame* rootFrame = PresShell()->GetRootFrame();
     MOZ_ASSERT(rootFrame);
 
     nsTArray<nsIFrame*>* frames =
@@ -1061,7 +1061,7 @@ nsIFrame::MarkNeedsDisplayItemRebuild()
     return;
   }
 
-  nsIFrame* rootFrame = PresContext()->PresShell()->GetRootFrame();
+  nsIFrame* rootFrame = PresShell()->GetRootFrame();
   MOZ_ASSERT(rootFrame);
 
   if (rootFrame->IsFrameModified()) {
@@ -6795,7 +6795,7 @@ nsRect nsIFrame::GetScreenRectInAppUnits() const
 {
   nsPresContext* presContext = PresContext();
   nsIFrame* rootFrame =
-    presContext->PresShell()->FrameManager()->GetRootFrame();
+    presContext->PresShell()->GetRootFrame();
   nsPoint rootScreenPos(0, 0);
   nsPoint rootFrameOffsetInParent(0, 0);
   nsIFrame* rootFrameParent =
@@ -7878,7 +7878,7 @@ nsIFrame::RootFrameList(nsPresContext* aPresContext, FILE* out, const char* aPre
 
   nsIPresShell *shell = aPresContext->GetPresShell();
   if (shell) {
-    nsIFrame* frame = shell->FrameManager()->GetRootFrame();
+    nsIFrame* frame = shell->GetRootFrame();
     if(frame) {
       frame->List(out, aPrefix);
     }

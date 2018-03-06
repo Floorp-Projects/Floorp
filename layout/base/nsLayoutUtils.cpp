@@ -6589,7 +6589,7 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
   }
   if (layer)
     return layer;
-  return aFrame->PresShell()->FrameManager()->GetRootFrame();
+  return aFrame->PresShell()->GetRootFrame();
 }
 
 SamplingFilter
@@ -7494,7 +7494,7 @@ nsLayoutUtils::GetDisplayRootFrame(nsIFrame* aFrame)
   nsIFrame* f = aFrame;
   for (;;) {
     if (!f->HasAnyStateBits(NS_FRAME_IN_POPUP)) {
-      f = f->PresContext()->FrameManager()->GetRootFrame();
+      f = f->PresShell()->GetRootFrame();
       if (!f) {
         return aFrame;
       }

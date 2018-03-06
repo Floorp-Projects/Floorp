@@ -10290,7 +10290,7 @@ void ReflowCountMgr::DoIndiTotalsTree()
     printf("------------------------------------------------\n");
 
     if (mPresShell) {
-      nsIFrame * rootFrame = mPresShell->FrameManager()->GetRootFrame();
+      nsIFrame* rootFrame = mPresShell->GetRootFrame();
       RecurseIndiTotals(mPresContext, mIndiFrameCounts, rootFrame, 0);
       printf("------------------------------------------------\n");
       printf("-- Individual Counts of Frames not in Root Tree\n");
