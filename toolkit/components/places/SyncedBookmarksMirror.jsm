@@ -1273,6 +1273,12 @@ class SyncedBookmarksMirror {
    * Creates local tag folders mentioned in remotely changed tag queries, then
    * rewrites the query URLs in the mirror to point to the new local folders.
    *
+   * For example, an incoming tag query of, say, "place:type=6&folder=3" means
+   * it is a query for whatever tag is defined by the local record with id=3
+   * (and the incoming record has the actual tag in the folderName field).
+   * We need to ensure that the URL is adjusted so the folder ID refers to
+   * whatever local folder ID represents that tag.
+   *
    * This can be removed once bug 1293445 lands.
    */
   async rewriteRemoteTagQueries() {
@@ -1629,7 +1635,7 @@ class SyncedBookmarksMirror {
           tagFolderName = (SELECT b.title FROM moz_bookmarks b
                            WHERE b.id = :tagFolderId AND
                                  b.type = :folderType)
-        WHERE id = :id`);
+        WHERE id = :id`, tagFolderNameParams);
     }
 
     // Record the child GUIDs of locally changed folders, which we use to
@@ -1676,7 +1682,7 @@ class SyncedBookmarksMirror {
 
     let itemRows = await this.db.execute(`
       SELECT id, syncChangeCounter, guid, isDeleted, type, isQuery,
-             smartBookmarkName, IFNULL(tagFolderName, "") AS tagFolderName,
+             smartBookmarkName, tagFolderName,
              loadInSidebar, keyword, tags, url, IFNULL(title, "") AS title,
              description, feedURL, siteURL, position, parentGuid,
              IFNULL(parentTitle, "") AS parentTitle, dateAdded
@@ -1727,7 +1733,8 @@ class SyncedBookmarksMirror {
               bmkUri: row.getResultByName("url"),
               title: row.getResultByName("title"),
               queryId: row.getResultByName("smartBookmarkName"),
-              folderName: row.getResultByName("tagFolderName"),
+              // folderName should never be an empty string or null
+              folderName: row.getResultByName("tagFolderName") || undefined,
             };
             let description = row.getResultByName("description");
             if (description) {
