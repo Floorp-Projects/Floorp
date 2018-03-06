@@ -8448,23 +8448,12 @@ DebuggerFrame_getScript(JSContext* cx, unsigned argc, Value* vp)
     Debugger* debug = Debugger::fromChildJSObject(thisobj);
 
     RootedObject scriptObject(cx);
-    if (frame.isFunctionFrame()) {
-        RootedFunction callee(cx, frame.callee());
-        MOZ_ASSERT(callee->isInterpreted());
-        RootedScript script(cx, callee->nonLazyScript());
-        scriptObject = debug->wrapScript(cx, script);
-        if (!scriptObject)
-            return false;
-    } else if (frame.isWasmDebugFrame()) {
+    if (frame.isWasmDebugFrame()) {
         RootedWasmInstanceObject instance(cx, frame.wasmInstance()->object());
         scriptObject = debug->wrapWasmScript(cx, instance);
         if (!scriptObject)
             return false;
     } else {
-        /*
-         * We got eval, JS_Evaluate*, or JS_ExecuteScript non-function script
-         * frames.
-         */
         RootedScript script(cx, frame.script());
         scriptObject = debug->wrapScript(cx, script);
         if (!scriptObject)
