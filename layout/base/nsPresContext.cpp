@@ -15,6 +15,7 @@
 #include "base/basictypes.h"
 
 #include "nsCOMPtr.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
@@ -34,7 +35,6 @@
 #include "nsHTMLDocument.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsThreadUtils.h"
-#include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
 #include "nsViewManager.h"
 #ifdef MOZ_OLD_STYLE

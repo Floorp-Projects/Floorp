@@ -231,9 +231,6 @@ public:
     return !!mPendingMediaFeatureValuesChange;
   }
 
-  nsFrameManager* FrameManager()
-    { return PresShell()->FrameManager(); }
-
   nsCSSFrameConstructor* FrameConstructor()
     { return PresShell()->FrameConstructor(); }
 
