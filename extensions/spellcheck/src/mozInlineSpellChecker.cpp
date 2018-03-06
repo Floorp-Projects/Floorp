@@ -1398,8 +1398,9 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
     // Now check that we're still looking at a range that's under
     // aWordUtil.GetRootNode()
     nsINode* rootNode = aWordUtil.GetRootNode();
-    if (!nsContentUtils::ContentIsDescendantOf(beginNode, rootNode) ||
-        !nsContentUtils::ContentIsDescendantOf(endNode, rootNode)) {
+    if (!beginNode->IsInComposedDoc() || !endNode->IsInComposedDoc() ||
+        !nsContentUtils::ContentIsShadowIncludingDescendantOf(beginNode, rootNode) ||
+        !nsContentUtils::ContentIsShadowIncludingDescendantOf(endNode, rootNode)) {
       // Just bail out and don't try to spell-check this
       return NS_OK;
     }

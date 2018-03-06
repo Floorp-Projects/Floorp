@@ -134,6 +134,11 @@ StructuredCloneBlob::ReadStructuredCloneInternal(JSContext* aCx, JSStructuredClo
     return false;
   }
   if (blobCount) {
+#ifdef FUZZING
+    if (blobOffset >= aHolder->BlobImpls().Length()) {
+      return false;
+    }
+#endif
     BlobImpls().AppendElements(&aHolder->BlobImpls()[blobOffset], blobCount);
   }
 
