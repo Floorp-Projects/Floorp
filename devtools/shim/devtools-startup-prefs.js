@@ -13,9 +13,9 @@ pref("devtools.jsonview.enabled", true);
 
 // Default theme ("dark" or "light")
 #ifdef MOZ_DEV_EDITION
-sticky_pref("devtools.theme", "dark");
+pref("devtools.theme", "dark", sticky);
 #else
-sticky_pref("devtools.theme", "light");
+pref("devtools.theme", "light", sticky);
 #endif
 
 // Should the devtools toolbar be opened on startup

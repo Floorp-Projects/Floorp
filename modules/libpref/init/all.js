@@ -1089,23 +1089,23 @@ pref("devtools.errorconsole.deprecation_warnings", true);
 
 #ifdef NIGHTLY_BUILD
 // Don't show the Browser Toolbox prompt on local builds / nightly
-sticky_pref("devtools.debugger.prompt-connection", false);
+pref("devtools.debugger.prompt-connection", false, sticky);
 #else
-sticky_pref("devtools.debugger.prompt-connection", true);
+pref("devtools.debugger.prompt-connection", true, sticky);
 #endif
 
 #ifdef MOZILLA_OFFICIAL
 // Disable debugging chrome
-sticky_pref("devtools.chrome.enabled", false);
+pref("devtools.chrome.enabled", false, sticky);
 // Disable remote debugging connections
-sticky_pref("devtools.debugger.remote-enabled", false);
+pref("devtools.debugger.remote-enabled", false, sticky);
 // enable JS dump() function.
-sticky_pref("browser.dom.window.dump.enabled", false);
+pref("browser.dom.window.dump.enabled", false, sticky);
 #else
 // In local builds, enable the browser toolbox by default
-sticky_pref("devtools.chrome.enabled", true);
-sticky_pref("devtools.debugger.remote-enabled", true);
-sticky_pref("browser.dom.window.dump.enabled", true);
+pref("devtools.chrome.enabled", true, sticky);
+pref("devtools.debugger.remote-enabled", true, sticky);
+pref("browser.dom.window.dump.enabled", true, sticky);
 #endif
 
 
