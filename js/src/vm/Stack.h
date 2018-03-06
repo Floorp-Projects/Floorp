@@ -1255,7 +1255,8 @@ class LiveSavedFrameCache
     static mozilla::Maybe<FramePtr> getFramePtr(const FrameIter& iter);
     void trace(JSTracer* trc);
 
-    void find(JSContext* cx, FrameIter& frameIter, MutableHandleSavedFrame frame) const;
+    void find(JSContext* cx, FramePtr& frameptr, const jsbytecode* pc,
+              MutableHandleSavedFrame frame) const;
     bool insert(JSContext* cx, FramePtr& framePtr, const jsbytecode* pc,
                 HandleSavedFrame savedFrame);
 };
