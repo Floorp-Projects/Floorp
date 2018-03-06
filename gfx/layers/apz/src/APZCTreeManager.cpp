@@ -223,15 +223,6 @@ private:
   bool mMayChangeFocus;
 };
 
-/*static*/ const ScreenMargin
-APZCTreeManager::CalculatePendingDisplayPort(
-  const FrameMetrics& aFrameMetrics,
-  const ParentLayerPoint& aVelocity)
-{
-  return AsyncPanZoomController::CalculatePendingDisplayPort(
-    aFrameMetrics, aVelocity);
-}
-
 APZCTreeManager::APZCTreeManager(uint64_t aRootLayersId)
     : mInputQueue(new InputQueue()),
       mRootLayersId(aRootLayersId),
@@ -256,13 +247,6 @@ APZCTreeManager::APZCTreeManager(uint64_t aRootLayersId)
 
 APZCTreeManager::~APZCTreeManager()
 {
-}
-
-/*static*/ void
-APZCTreeManager::InitializeGlobalState()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  AsyncPanZoomController::InitializeGlobalState();
 }
 
 void
