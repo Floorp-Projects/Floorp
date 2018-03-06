@@ -3,8 +3,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from head.js */
-
 // Load a page with tracking elements that get blocked and make sure that a
 // 'learn more' link shows up in the webconsole.
 

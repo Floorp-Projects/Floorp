@@ -3,8 +3,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from head.js */
-
 // Test to make sure that web console commands can fire while paused at a
 // breakpoint that was triggered from a JS call.  Relies on asynchronous js
 // evaluation over the protocol - see Bug 1088861.
