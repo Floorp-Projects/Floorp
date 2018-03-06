@@ -419,3 +419,14 @@ function waitForPaints() {
   // (bug 1341294).
   return waitForAnimationFrames(2);
 }
+
+// Returns true if |aAnimation| begins at the current timeline time.  We
+// sometimes need to detect this case because if we started an animation
+// asynchronously (e.g. using play()) and then ended up running the next frame
+// at precisely the time the animation started (due to aligning with vsync
+// refresh rate) then we won't end up restyling in that frame.
+function animationStartsRightNow(aAnimation) {
+  return aAnimation.startTime === aAnimation.timeline.currentTime &&
+         aAnimation.currentTime === 0;
+}
+
