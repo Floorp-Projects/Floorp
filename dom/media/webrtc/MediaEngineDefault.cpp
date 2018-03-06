@@ -350,7 +350,7 @@ MediaEngineDefaultVideoSource::Pull(const RefPtr<const AllocationHandle>& aHandl
   StreamTime delta = aDesiredTime - aStream->GetEndOfAppendedData(aTrackID);
   if (delta > 0) {
     // nullptr images are allowed
-    IntSize size(image ? mOpts.mWidth : 0, image ? mOpts.mHeight : 0);
+    IntSize size(mOpts.mWidth, mOpts.mHeight);
     segment.AppendFrame(image.forget(), delta, size, aPrincipalHandle);
     // This can fail if either a) we haven't added the track yet, or b)
     // we've removed or finished the track.
