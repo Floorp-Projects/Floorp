@@ -71,8 +71,6 @@ browser/branding/**/firefox-branding.js
 # Gzipped test file.
 browser/base/content/test/general/gZipOfflineChild.html
 browser/base/content/test/urlbar/file_blank_but_not_blank.html
-# New tab is likely to be replaced soon.
-browser/base/content/newtab/**
 # Test files that are really json not js, and don't need to be linted.
 browser/components/sessionstore/test/unit/data/sessionstore_valid.js
 browser/components/sessionstore/test/unit/data/sessionstore_invalid.js

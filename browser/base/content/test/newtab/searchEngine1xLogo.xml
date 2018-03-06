@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
-<ShortName>browser_newtab_search searchEngine1xLogo.xml</ShortName>
-<Url type="text/html" method="GET" template="http://browser-newtab-search.com/1xlogo" rel="searchform"/>
-<!-- #FF0000 -->
-<Image width="65" height="26">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEEAAAAaCAIAAABn3KYmAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gkTADEwS9h64QAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAL0lEQVRYw+3PAREAAAQEsKd/Z3I4W4PV5LyOg4ODg4ODg4ODg4ODg4ODg4PD78MC7cwBM02qquMAAAAASUVORK5CYII=</Image>
-</SearchPlugin>
