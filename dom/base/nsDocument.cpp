@@ -1480,6 +1480,7 @@ nsIDocument::nsIDocument()
     mIsShadowDOMEnabled(false),
     mIsSVGGlyphsDocument(false),
     mAllowUnsafeHTML(false),
+    mInDestructor(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
@@ -1528,7 +1529,6 @@ nsDocument::nsDocument(const char* aContentType)
   , mFlashClassification(FlashClassification::Unclassified)
   , mHeaderData(nullptr)
   , mIsGoingAway(false)
-  , mInDestructor(false)
   , mMayHaveTitleElement(false)
   , mHasWarnedAboutBoxObjects(false)
   , mDelayFrameLoaderInitialization(false)
@@ -5129,7 +5129,7 @@ nsDocument::InternalAllowXULXBL()
 // Note: We don't hold a reference to the document observer; we assume
 // that it has a live reference to the document.
 void
-nsDocument::AddObserver(nsIDocumentObserver* aObserver)
+nsIDocument::AddObserver(nsIDocumentObserver* aObserver)
 {
   NS_ASSERTION(mObservers.IndexOf(aObserver) == nsTArray<int>::NoIndex,
                "Observer already in the list");
@@ -5138,7 +5138,7 @@ nsDocument::AddObserver(nsIDocumentObserver* aObserver)
 }
 
 bool
-nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
+nsIDocument::RemoveObserver(nsIDocumentObserver* aObserver)
 {
   // If we're in the process of destroying the document (and we're
   // informing the observers of the destruction), don't remove the
