@@ -485,6 +485,14 @@ MarkupView.prototype = {
     return this._containers.get(node);
   },
 
+  setContainer: function(node, container) {
+    return this._containers.set(node, container);
+  },
+
+  hasContainer: function(node) {
+    return this._containers.has(node);
+  },
+
   update: function() {
     let updateChildren = (node) => {
       this.getContainer(node).update();
@@ -968,7 +976,7 @@ MarkupView.prototype = {
       return null;
     }
 
-    if (this._containers.has(node)) {
+    if (this.hasContainer(node)) {
       return this.getContainer(node);
     }
 
@@ -991,7 +999,7 @@ MarkupView.prototype = {
       container.flashMutation();
     }
 
-    this._containers.set(node, container);
+    this.setContainer(node, container);
     container.childrenDirty = true;
 
     this._updateChildren(container);
@@ -1653,7 +1661,7 @@ MarkupView.prototype = {
 
       container.setInlineTextChild(container.node.inlineTextChild);
 
-      this._containers.set(container.node.inlineTextChild, container);
+      this.setContainer(container.node.inlineTextChild, container);
       container.childrenDirty = false;
       return promise.resolve(container);
     }
