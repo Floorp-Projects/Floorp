@@ -1119,6 +1119,12 @@ nsViewSourceChannel::SetCorsPreflightParameters(const nsTArray<nsCString>& aUnsa
   mHttpChannelInternal->SetCorsPreflightParameters(aUnsafeHeaders);
 }
 
+void
+nsViewSourceChannel::SetAltDataForChild(bool aIsForChild)
+{
+    mHttpChannelInternal->SetAltDataForChild(aIsForChild);
+}
+
 NS_IMETHODIMP
 nsViewSourceChannel::LogBlockedCORSRequest(const nsAString& aMessage)
 {
