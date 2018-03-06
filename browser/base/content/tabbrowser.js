@@ -116,7 +116,7 @@ class TabBrowser {
       "resumeMedia", "mute", "unmute", "blockedPopups", "lastURI",
       "purgeSessionHistory", "stopScroll", "startScroll",
       "userTypedValue", "userTypedClear", "mediaBlocked",
-      "didStartLoadSinceLastUserTyping", "audioMuted"
+      "didStartLoadSinceLastUserTyping"
     ];
 
     this._removingTabs = [];
@@ -1965,7 +1965,7 @@ class TabBrowser {
       let setter;
       switch (name) {
         case "audioMuted":
-          getter = () => aTab.hasAttribute("muted");
+          getter = () => false;
           break;
         case "contentTitle":
           getter = () => SessionStore.getLazyTabValue(aTab, "title");
