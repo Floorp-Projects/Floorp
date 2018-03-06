@@ -439,8 +439,9 @@ public class GeckoThread extends Thread {
         }
 
         // And go.
-        GeckoLoader.nativeRun(args, mExtras.getInt(EXTRA_CRASH_FD, -1),
+        GeckoLoader.nativeRun(args,
                               mExtras.getInt(EXTRA_IPC_FD, -1),
+                              mExtras.getInt(EXTRA_CRASH_FD, -1),
                               mExtras.getInt(EXTRA_CRASH_ANNOTATION_FD, -1));
 
         // And... we're done.
