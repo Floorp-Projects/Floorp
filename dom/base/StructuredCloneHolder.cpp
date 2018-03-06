@@ -508,6 +508,11 @@ ReadBlob(JSContext* aCx,
          StructuredCloneHolder* aHolder)
 {
   MOZ_ASSERT(aHolder);
+#ifdef FUZZING
+  if (aIndex >= aHolder->BlobImpls().Length()) {
+    return nullptr;
+  }
+#endif
   MOZ_ASSERT(aIndex < aHolder->BlobImpls().Length());
   RefPtr<BlobImpl> blobImpl = aHolder->BlobImpls()[aIndex];
 
@@ -583,7 +588,9 @@ ReadDirectoryInternal(JSStructuredCloneReader* aReader,
   MOZ_ASSERT(aHolder);
 
   nsAutoString path;
-  path.SetLength(aPathLength);
+  if (NS_WARN_IF(!path.SetLength(aPathLength, fallible))) {
+    return nullptr;
+  }
   size_t charSize = sizeof(nsString::char_type);
   if (!JS_ReadBytes(aReader, (void*) path.BeginWriting(),
                     aPathLength * charSize)) {
@@ -657,6 +664,11 @@ ReadFileList(JSContext* aCx,
     // |aCount| is the number of BlobImpls to use from the |index|.
     for (uint32_t i = 0; i < aCount; ++i) {
       uint32_t pos = index + i;
+#ifdef FUZZING
+      if (pos >= aHolder->BlobImpls().Length()) {
+        return nullptr;
+      }
+#endif
       MOZ_ASSERT(pos < aHolder->BlobImpls().Length());
 
       RefPtr<BlobImpl> blobImpl = aHolder->BlobImpls()[pos];
@@ -742,6 +754,11 @@ ReadFormData(JSContext* aCx,
       }
 
       if (tag == SCTAG_DOM_BLOB) {
+#ifdef FUZZING
+        if (indexOrLengthOfString >= aHolder->BlobImpls().Length()) {
+          return nullptr;
+        }
+#endif
         MOZ_ASSERT(indexOrLengthOfString < aHolder->BlobImpls().Length());
 
         RefPtr<BlobImpl> blobImpl =
@@ -772,7 +789,9 @@ ReadFormData(JSContext* aCx,
         MOZ_ASSERT(tag == 0);
 
         nsAutoString value;
-        value.SetLength(indexOrLengthOfString);
+        if (NS_WARN_IF(!value.SetLength(indexOrLengthOfString, fallible))) {
+          return nullptr;
+        }
         size_t charSize = sizeof(nsString::char_type);
         if (!JS_ReadBytes(aReader, (void*) value.BeginWriting(),
                           indexOrLengthOfString * charSize)) {
@@ -883,9 +902,14 @@ ReadWasmModule(JSContext* aCx,
                StructuredCloneHolder* aHolder)
 {
   MOZ_ASSERT(aHolder);
-  MOZ_ASSERT(aIndex < aHolder->WasmModules().Length());
   MOZ_ASSERT(aHolder->CloneScope() == StructuredCloneHolder::StructuredCloneScope::SameProcessSameThread ||
              aHolder->CloneScope() == StructuredCloneHolder::StructuredCloneScope::SameProcessDifferentThread);
+#ifdef FUZZING
+  if (aIndex >= aHolder->WasmModules().Length()) {
+    return nullptr;
+  }
+#endif
+  MOZ_ASSERT(aIndex < aHolder->WasmModules().Length());
 
   return aHolder->WasmModules()[aIndex]->createObject(aCx);
 }
@@ -917,6 +941,11 @@ ReadInputStream(JSContext* aCx,
                 StructuredCloneHolder* aHolder)
 {
   MOZ_ASSERT(aHolder);
+#ifdef FUZZING
+  if (aIndex >= aHolder->InputStreams().Length()) {
+    return nullptr;
+  }
+#endif
   MOZ_ASSERT(aIndex < aHolder->InputStreams().Length());
   nsCOMPtr<nsIInputStream> inputStream = aHolder->InputStreams()[aIndex];
 
@@ -1097,6 +1126,11 @@ StructuredCloneHolder::CustomReadTransferHandler(JSContext* aCx,
   MOZ_ASSERT(mSupportsTransferring);
 
   if (aTag == SCTAG_DOM_MAP_MESSAGEPORT) {
+#ifdef FUZZING
+    if (aExtraData >= mPortIdentifiers.Length()) {
+      return false;
+    }
+#endif
     MOZ_ASSERT(aExtraData < mPortIdentifiers.Length());
     const MessagePortIdentifier& portIdentifier = mPortIdentifiers[aExtraData];
 
@@ -1243,6 +1277,11 @@ StructuredCloneHolder::CustomFreeTransferHandler(uint32_t aTag,
 
   if (aTag == SCTAG_DOM_MAP_MESSAGEPORT) {
     MOZ_ASSERT(!aContent);
+#ifdef FUZZING
+    if (aExtraData >= mPortIdentifiers.Length()) {
+      return;
+    }
+#endif
     MOZ_ASSERT(aExtraData < mPortIdentifiers.Length());
     MessagePort::ForceClose(mPortIdentifiers[aExtraData]);
     return;
