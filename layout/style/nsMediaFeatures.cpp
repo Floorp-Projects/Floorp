@@ -351,7 +351,7 @@ GetDisplayMode(nsIDocument* aDocument, const nsMediaFeature*,
     nsCOMPtr<nsIWidget> mainWidget;
     baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
     if (mainWidget && mainWidget->SizeMode() == nsSizeMode_Fullscreen) {
-      aResult.SetEnumValue(StyleDisplayMode::Standalone);
+      aResult.SetEnumValue(StyleDisplayMode::Fullscreen);
       return;
     }
   }
