@@ -3,8 +3,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from head.js */
-
 // Test for the message timestamps option: check if the preference toggles the
 // display of messages in the console output. See bug 722267.
 
