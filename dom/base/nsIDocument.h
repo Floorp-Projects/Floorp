@@ -1694,22 +1694,22 @@ public:
 
   // notify that a content node changed state.  This must happen under
   // a scriptblocker but NOT within a begin/end update.
-  virtual void ContentStateChanged(nsIContent* aContent,
-                                   mozilla::EventStates aStateMask) = 0;
+  void ContentStateChanged(
+      nsIContent* aContent, mozilla::EventStates aStateMask);
 
   // Notify that a document state has changed.
   // This should only be called by callers whose state is also reflected in the
   // implementation of nsDocument::GetDocumentState.
-  virtual void DocumentStatesChanged(mozilla::EventStates aStateMask) = 0;
+  void DocumentStatesChanged(mozilla::EventStates aStateMask);
 
   // Observation hooks for style data to propagate notifications
   // to document observers
-  virtual void StyleRuleChanged(mozilla::StyleSheet* aStyleSheet,
-                                mozilla::css::Rule* aStyleRule) = 0;
-  virtual void StyleRuleAdded(mozilla::StyleSheet* aStyleSheet,
-                              mozilla::css::Rule* aStyleRule) = 0;
-  virtual void StyleRuleRemoved(mozilla::StyleSheet* aStyleSheet,
-                                mozilla::css::Rule* aStyleRule) = 0;
+  void StyleRuleChanged(mozilla::StyleSheet* aStyleSheet,
+                        mozilla::css::Rule* aStyleRule);
+  void StyleRuleAdded(mozilla::StyleSheet* aStyleSheet,
+                      mozilla::css::Rule* aStyleRule);
+  void StyleRuleRemoved(mozilla::StyleSheet* aStyleSheet,
+                        mozilla::css::Rule* aStyleRule);
 
   /**
    * Flush notifications for this document and its parent documents
