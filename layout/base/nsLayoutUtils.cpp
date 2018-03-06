@@ -42,7 +42,7 @@
 #include "nsIDOMEvent.h"
 #include "nsDisplayList.h"
 #include "nsRegion.h"
-#include "nsFrameManager.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsBlockFrame.h"
 #include "nsBidiPresUtils.h"
 #include "imgIContainer.h"

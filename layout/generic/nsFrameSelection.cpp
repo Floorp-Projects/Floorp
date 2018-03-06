@@ -35,6 +35,7 @@
 #include "nsTextFragment.h"
 #include <algorithm>
 #include "nsContentUtils.h"
+#include "nsCSSFrameConstructor.h"
 
 #include "nsGkAtoms.h"
 #include "nsIFrameTraversal.h"
@@ -1602,7 +1603,7 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent*        aNode,
     return nullptr;
 
   if (!aNode->GetPrimaryFrame() &&
-      !mShell->FrameManager()->GetDisplayContentsStyleFor(aNode)) {
+      !mShell->FrameConstructor()->GetDisplayContentsStyleFor(aNode)) {
     return nullptr;
   }
 

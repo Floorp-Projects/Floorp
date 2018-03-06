@@ -282,8 +282,6 @@ public:
 
   nsCSSFrameConstructor* FrameConstructor() const { return mFrameConstructor; }
 
-  nsFrameManager* FrameManager() const { return mFrameManager; }
-
   /* Enable/disable author style level. Disabling author style disables the entire
    * author level of the cascade, including the HTML preshint level.
    */
