@@ -28,7 +28,6 @@ from .data import (
     ChromeManifestEntry,
     ComputedFlags,
     ConfigFileSubstitution,
-    ContextWrapped,
     Defines,
     DirectoryTraversal,
     Exports,
@@ -1281,9 +1280,6 @@ class TreeMetadataEmitter(LoggingMixin):
 
         for obj in self._process_jar_manifests(context):
             yield obj
-
-        for name, jar in context.get('JAVA_JAR_TARGETS', {}).items():
-            yield ContextWrapped(context, jar)
 
         computed_as_flags.resolve_flags('MOZBUILD',
                                         context.get('ASFLAGS'))
