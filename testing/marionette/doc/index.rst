@@ -2,15 +2,30 @@
 Marionette
 ==========
 
-Marionette is the remote protocol that lets OOP programs communicate
-with, instrument, and control Gecko.
+Marionette is the remote protocol that lets out-of-process programs
+communicate with, instrument, and control Gecko-based browsers.
 
-It can remotely control either the UI or the internal JavaScript of
-Gecko-based browsers, such as Firefox and Fennec.  It can control
-both the chrome and the content document, giving a high level of
-control and ability to replicate user interaction.  In addition
-to performing actions on the browser, Marionette can also ready
-properties and attributes of the DOM.
+It provides interfaces for interacting with both the internal
+JavaScript runtime and UI elements of Gecko-based browsers, such
+as Firefox and Fennec.  It can control both the chrome- and content
+documents, giving a high level of control and ability to replicate,
+or emulate, user interaction.
+
+
+Usage
+=====
+
+Marionette can be activated by passing the `-marionette` flag. To
+start Firefox with the remote protocol turned on::
+
+	% firefox -marionette
+	…
+	1491228343089   Marionette  INFO    Listening on port 2828
+
+This binds to a TCP socket, over which clients can communicate with
+Marionette using the `protocol`_.
+
+.. _protocol: Protocol.html
 
 
 For users
