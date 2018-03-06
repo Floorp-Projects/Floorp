@@ -5,16 +5,15 @@
 package org.mozilla.gecko.process;
 
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.Process;
@@ -75,6 +74,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             final Intent intent = new Intent();
             intent.setClassName(context,
                                 GeckoServiceChildProcess.class.getName() + '$' + mType);
+            GeckoLoader.addEnvironmentToIntent(intent);
 
             if (context.bindService(intent, this, Context.BIND_AUTO_CREATE)) {
                 waitForChildLocked();
@@ -168,13 +168,13 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     @WrapForJNI
     private static int start(final String type, final String[] args,
-                             final int ipcFd, final int crashFd,
+                             final int crashFd, final int ipcFd,
                              final int crashAnnotationFd) {
-        return INSTANCE.start(type, args, ipcFd, crashFd, crashAnnotationFd, /* retry */ false);
+        return INSTANCE.start(type, args, crashFd, ipcFd, crashAnnotationFd, /* retry */ false);
     }
 
-    private int start(final String type, final String[] args, final int ipcFd,
-                      final int crashFd, final int crashAnnotationFd,
+    private int start(final String type, final String[] args, final int crashFd,
+                      final int ipcFd, final int crashAnnotationFd,
                       final boolean retry) {
         final ChildConnection connection = getConnection(type);
         final IChildProcess child = connection.bind();
@@ -182,13 +182,12 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             return 0;
         }
 
-        final Bundle extras = GeckoThread.getActiveExtras();
-        final ParcelFileDescriptor ipcPfd;
         final ParcelFileDescriptor crashPfd;
+        final ParcelFileDescriptor ipcPfd;
         final ParcelFileDescriptor crashAnnotationPfd;
         try {
-            ipcPfd = ParcelFileDescriptor.fromFd(ipcFd);
             crashPfd = (crashFd >= 0) ? ParcelFileDescriptor.fromFd(crashFd) : null;
+            ipcPfd = ParcelFileDescriptor.fromFd(ipcFd);
             crashAnnotationPfd = (crashAnnotationFd >= 0) ? ParcelFileDescriptor.fromFd(crashAnnotationFd) : null;
         } catch (final IOException e) {
             Log.e(LOGTAG, "Cannot create fd for " + type, e);
@@ -197,7 +196,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
         boolean started = false;
         try {
-            started = child.start(this, args, extras, ipcPfd, crashPfd, crashAnnotationPfd);
+            started = child.start(this, args, crashPfd, ipcPfd, crashAnnotationPfd);
         } catch (final RemoteException e) {
         }
 
@@ -208,13 +207,10 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             }
             Log.w(LOGTAG, "Attempting to kill running child " + type);
             connection.unbind();
-            return start(type, args, ipcFd, crashFd, crashAnnotationFd, /* retry */ true);
+            return start(type, args, crashFd, ipcFd, crashAnnotationFd, /* retry */ true);
         }
 
         try {
-            if (crashAnnotationPfd != null) {
-                crashAnnotationPfd.close();
-            }
             if (crashPfd != null) {
                 crashPfd.close();
             }
