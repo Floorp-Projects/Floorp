@@ -12,6 +12,8 @@ DevToolsModules(
     'read-only-container.js',
     'read-only-editor.js',
     'root-container.js',
+    'slotted-node-container.js',
+    'slotted-node-editor.js',
     'text-container.js',
     'text-editor.js',
 )

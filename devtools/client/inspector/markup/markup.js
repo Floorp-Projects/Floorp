@@ -20,6 +20,7 @@ const {PrefObserver} = require("devtools/client/shared/prefs");
 const MarkupElementContainer = require("devtools/client/inspector/markup/views/element-container");
 const MarkupReadOnlyContainer = require("devtools/client/inspector/markup/views/read-only-container");
 const MarkupTextContainer = require("devtools/client/inspector/markup/views/text-container");
+const SlottedNodeContainer = require("devtools/client/inspector/markup/views/slotted-node-container");
 const RootContainer = require("devtools/client/inspector/markup/views/root-container");
 
 const INSPECTOR_L10N =
@@ -87,6 +88,9 @@ function MarkupView(inspector, frame, controllerWindow) {
   this.undo.installController(controllerWindow);
 
   this._containers = new Map();
+  // This weakmap will hold keys used with the _containers map, in order to retrieve the
+  // slotted container for a given node front.
+  this._slottedContainerKeys = new WeakMap();
 
   // Binding functions that need to be called in scope.
   this._handleRejectionIfNotDestroyed = this._handleRejectionIfNotDestroyed.bind(this);
@@ -478,17 +482,64 @@ MarkupView.prototype = {
   /**
    * Get the MarkupContainer object for a given node, or undefined if
    * none exists.
+   *
+   * @param  {NodeFront} nodeFront
+   *         The node to get the container for.
+   * @param  {Boolean} slotted
+   *         true to get the slotted version of the container.
+   * @return {MarkupContainer} The container for the provided node.
    */
-  getContainer: function(node) {
-    return this._containers.get(node);
+  getContainer: function(node, slotted) {
+    let key = this._getContainerKey(node, slotted);
+    return this._containers.get(key);
   },
 
-  setContainer: function(node, container) {
-    return this._containers.set(node, container);
+  /**
+   * Register a given container for a given node/slotted node.
+   *
+   * @param  {NodeFront} nodeFront
+   *         The node to set the container for.
+   * @param  {Boolean} slotted
+   *         true if the container represents the slotted version of the node.
+   */
+  setContainer: function(node, container, slotted) {
+    let key = this._getContainerKey(node, slotted);
+    return this._containers.set(key, container);
   },
 
-  hasContainer: function(node) {
-    return this._containers.has(node);
+  /**
+   * Check if a MarkupContainer object exists for a given node/slotted node
+   *
+   * @param  {NodeFront} nodeFront
+   *         The node to check.
+   * @param  {Boolean} slotted
+   *         true to check for a container matching the slotted version of the node.
+   * @return {Boolean} True if a container exists, false otherwise.
+   */
+  hasContainer: function(node, slotted) {
+    let key = this._getContainerKey(node, slotted);
+    return this._containers.has(key);
+  },
+
+  _getContainerKey: function(node, slotted) {
+    if (!slotted) {
+      return node;
+    }
+
+    if (!this._slottedContainerKeys.has(node)) {
+      this._slottedContainerKeys.set(node, { node });
+    }
+    return this._slottedContainerKeys.get(node);
+  },
+
+  _isContainerSelected: function(container) {
+    if (!container) {
+      return false;
+    }
+
+    let selection = this.inspector.selection;
+    return container.node == selection.nodeFront &&
+           container.isSlotted() == selection.isSlotted();
   },
 
   update: function() {
@@ -568,8 +619,7 @@ MarkupView.prototype = {
       "test"
     ];
 
-    let isHighlight = this._hoveredContainer &&
-      (this._hoveredContainer.node === this.inspector.selection.nodeFront);
+    let isHighlight = this._isContainerSelected(this._hoveredContainer);
     return !isHighlight && reason && !unwantedReasons.includes(reason);
   },
 
@@ -584,7 +634,7 @@ MarkupView.prototype = {
     if (this.htmlEditor) {
       this.htmlEditor.hide();
     }
-    if (this._hoveredContainer && this._hoveredContainer.node !== selection.nodeFront) {
+    if (this._isContainerSelected(this._hoveredContainer)) {
       this._hoveredContainer.hovered = false;
       this._hoveredContainer = null;
     }
@@ -602,14 +652,16 @@ MarkupView.prototype = {
       onShowBoxModel = this._brieflyShowBoxModel(selection.nodeFront);
     }
 
-    onShow = this.showNode(selection.nodeFront).then(() => {
+    let slotted = selection.isSlotted();
+    onShow = this.showNode(selection.nodeFront, { slotted }).then(() => {
       // We could be destroyed by now.
       if (this._destroyer) {
         return promise.reject("markupview destroyed");
       }
 
       // Mark the node as selected.
-      this.markNodeAsSelected(selection.nodeFront);
+      let container = this.getContainer(selection.nodeFront, slotted);
+      this._markContainerAsSelected(container);
 
       // Make sure the new selection is navigated to.
       this.maybeNavigateToNewSelection();
@@ -965,15 +1017,17 @@ MarkupView.prototype = {
    *         The node in the content document.
    * @param  {Boolean} flashNode
    *         Whether the newly imported node should be flashed
+   * @param  {Boolean} slotted
+   *         Whether we are importing the slotted version of the node.
    * @return {MarkupContainer} The MarkupContainer object for this element.
    */
-  importNode: function(node, flashNode) {
+  importNode: function(node, flashNode, slotted) {
     if (!node) {
       return null;
     }
 
-    if (this.hasContainer(node)) {
-      return this.getContainer(node);
+    if (this.hasContainer(node, slotted)) {
+      return this.getContainer(node, slotted);
     }
 
     let container;
@@ -982,6 +1036,8 @@ MarkupView.prototype = {
       container = new RootContainer(this, node);
       this._elt.appendChild(container.elt);
       this._rootNode = node;
+    } else if (slotted) {
+      container = new SlottedNodeContainer(this, node, this.inspector);
     } else if (nodeType == nodeConstants.ELEMENT_NODE && !isPseudoElement) {
       container = new MarkupElementContainer(this, node, this.inspector);
     } else if (nodeType == nodeConstants.COMMENT_NODE ||
@@ -995,7 +1051,7 @@ MarkupView.prototype = {
       container.flashMutation();
     }
 
-    this.setContainer(node, container);
+    this.setContainer(node, container, slotted);
     container.childrenDirty = true;
 
     this._updateChildren(container);
@@ -1135,14 +1191,11 @@ MarkupView.prototype = {
    * Make sure the given node's parents are expanded and the
    * node is scrolled on to screen.
    */
-  showNode: function(node, centered = true) {
-    let parent = node;
-
-    this.importNode(node);
-
-    while ((parent = parent.parentNode())) {
-      this.importNode(parent);
-      this.expandNode(parent);
+  showNode: function(node, {centered = true, slotted} = {}) {
+    if (slotted && !this.hasContainer(node, slotted)) {
+      throw new Error("Tried to show a slotted node not previously imported");
+    } else {
+      this._ensureNodeImported(node);
     }
 
     return this._waitForChildren().then(() => {
@@ -1151,8 +1204,20 @@ MarkupView.prototype = {
       }
       return this._ensureVisible(node);
     }).then(() => {
-      scrollIntoViewIfNeeded(this.getContainer(node).editor.elt, centered);
+      let container = this.getContainer(node, slotted);
+      scrollIntoViewIfNeeded(container.editor.elt, centered);
     }, this._handleRejectionIfNotDestroyed);
+  },
+
+  _ensureNodeImported: function(node) {
+    let parent = node;
+
+    this.importNode(node);
+
+    while ((parent = parent.parentNode())) {
+      this.importNode(parent);
+      this.expandNode(parent);
+    }
   },
 
   /**
@@ -1534,8 +1599,9 @@ MarkupView.prototype = {
     }
 
     // Change the current selection if needed.
-    if (this.inspector.selection.nodeFront !== node) {
-      this.inspector.selection.setNodeFront(node, { reason });
+    if (!this._isContainerSelected(this._selectedContainer)) {
+      let isSlotted = container.isSlotted();
+      this.inspector.selection.setNodeFront(node, { reason, isSlotted });
     }
 
     return true;
@@ -1615,6 +1681,11 @@ MarkupView.prototype = {
    *         (which may be immediately).
    */
   _updateChildren: function(container, options) {
+    // Slotted containers do not display any children.
+    if (container.isSlotted()) {
+      return promise.resolve(container);
+    }
+
     let expand = options && options.expand;
     let flash = options && options.flash;
 
@@ -1704,13 +1775,8 @@ MarkupView.prototype = {
         let fragment = this.doc.createDocumentFragment();
 
         for (let child of children.nodes) {
-          let { isDirectShadowHostChild } = child;
-          if (!isShadowHost && isDirectShadowHostChild) {
-            // Temporarily skip light DOM nodes if the container's node is not a host
-            // element, which means that the node is a "slotted" node.
-            continue;
-          }
-          let childContainer = this.importNode(child, flash);
+          let slotted = !isShadowHost && child.isDirectShadowHostChild;
+          let childContainer = this.importNode(child, flash, slotted);
           fragment.appendChild(childContainer.elt);
         }
 

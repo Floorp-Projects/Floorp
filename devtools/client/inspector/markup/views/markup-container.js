@@ -441,6 +441,10 @@ MarkupContainer.prototype = {
            this.node.parentNode().tagName !== null;
   },
 
+  isSlotted: function() {
+    return false;
+  },
+
   /**
    * Move keyboard focus to a next/previous focusable element inside container
    * that is not part of its children (only if current focus is on first or last
