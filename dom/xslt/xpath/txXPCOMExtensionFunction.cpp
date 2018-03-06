@@ -323,7 +323,7 @@ public:
     void trace(JSTracer* trc) {
         for (uint8_t i = 0; i < mCount; ++i) {
             if (mArray[i].type == nsXPTType::T_JSVAL) {
-                JS::UnsafeTraceRoot(trc, &mArray[i].val.j, "txParam value");
+                JS::UnsafeTraceRoot(trc, &mArray[i].val.j.asValueRef(), "txParam value");
             }
         }
     }
