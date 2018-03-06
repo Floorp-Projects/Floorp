@@ -5,6 +5,9 @@
 
 /* import-globals-from head.js */
 
+// XXX Remove this when the file is migrated to the new frontend.
+/* eslint-disable no-undef */
+
 // Check that inspecting a closure in the variables view sidebar works when
 // execution is paused.
 
