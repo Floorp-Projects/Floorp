@@ -47,6 +47,12 @@ for locale in $locales; do
         "$CANDIDATES_DIR/${VERSION}-candidates/build${BUILD_NUMBER}/linux-x86_64/xpi/${locale}.xpi"
 done
 
+# Extract gtk30.mo from Ubuntu language packs
+apt download language-pack-gnome-*-base
+for i in *.deb; do
+    dpkg-deb --fsys-tarfile $i |tar xv -C "$SOURCE_DEST" --wildcards "./usr/share/locale-langpack/*/LC_MESSAGES/gtk30.mo" || true
+done
+
 # Generate snapcraft manifest
 sed -e "s/@VERSION@/${VERSION}/g" -e "s/@BUILD_NUMBER@/${BUILD_NUMBER}/g" snapcraft.yaml.in > "${WORKSPACE}/snapcraft.yaml"
 cp -v "$SCRIPT_DIRECTORY/mime"{-handler.xml,apps.list} "$WORKSPACE"
