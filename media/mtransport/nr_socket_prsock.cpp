@@ -233,7 +233,7 @@ public:
       // in-use -> idle -- no one forcing it to remain instantiated
       r_log(LOG_GENERIC,LOG_DEBUG,"Shutting down wrapped SingletonThread %p",
             mThread.get());
-      mThread->Shutdown();
+      mThread->AsyncShutdown();
       mThread = nullptr;
       // It'd be nice to use a timer instead...  But be careful of
       // xpcom-shutdown-threads in that case
