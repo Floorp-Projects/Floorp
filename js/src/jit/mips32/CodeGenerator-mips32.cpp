@@ -549,11 +549,6 @@ CodeGeneratorMIPS::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
     MInt64ToFloatingPoint* mir = lir->mir();
     MIRType toType = mir->type();
 
-    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-    regs.take(input.low);
-    regs.take(input.high);
-    Register temp = regs.takeAny();
-
     masm.setupWasmABICall();
     masm.passABIArg(input.high);
     masm.passABIArg(input.low);
