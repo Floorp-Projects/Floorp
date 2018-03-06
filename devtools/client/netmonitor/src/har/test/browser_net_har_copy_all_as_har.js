@@ -6,12 +6,12 @@
 /**
  * Basic tests for exporting Network panel content into HAR format.
  */
-add_task(function* () {
+add_task(async function () {
   // Disable tcp fast open, because it is setting a response header indicator
   // (bug 1352274). TCP Fast Open is not present on all platforms therefore the
   // number of response headers will vary depending on the platform.
   Services.prefs.setBoolPref("network.tcp.tcp_fastopen_enable", false);
-  let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
+  let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
 
   info("Starting test... ");
 
@@ -26,11 +26,11 @@ add_task(function* () {
 
   let wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
-  yield wait;
+  await wait;
 
   let contextMenu = new RequestListContextMenu({ connector });
 
-  yield contextMenu.copyAllAsHar(getSortedRequests(store.getState()));
+  await contextMenu.copyAllAsHar(getSortedRequests(store.getState()));
 
   let jsonString = SpecialPowers.getClipboardData("text/unicode");
   let har = JSON.parse(jsonString);

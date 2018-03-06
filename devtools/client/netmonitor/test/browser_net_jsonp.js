@@ -7,10 +7,10 @@
  * Tests if JSONP responses are handled correctly.
  */
 
-add_task(function* () {
+add_task(async function () {
   let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
-  let { tab, monitor } = yield initNetMonitor(JSONP_URL);
+  let { tab, monitor } = await initNetMonitor(JSONP_URL);
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -23,17 +23,17 @@ add_task(function* () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 2);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
     content.wrappedJSObject.performRequests();
   });
-  yield wait;
+  await wait;
 
   let requestItems = document.querySelectorAll(".request-list-item");
   for (let requestItem of requestItems) {
     requestItem.scrollIntoView();
     let requestsListStatus = requestItem.querySelector(".requests-list-status");
     EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
-    yield waitUntil(() => requestsListStatus.title);
+    await waitUntil(() => requestsListStatus.title);
   }
 
   verifyRequestItemTarget(
@@ -71,7 +71,7 @@ add_task(function* () {
     document.querySelector(".network-details-panel-toggle"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#response-tab"));
-  yield wait;
+  await wait;
 
   testResponseTab("$_0123Fun", "Hello JSONP!");
 
@@ -80,11 +80,11 @@ add_task(function* () {
 
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]);
-  yield wait;
+  await wait;
 
   testResponseTab("$_4567Sad", "Hello weird JSONP!");
 
-  yield teardown(monitor);
+  await teardown(monitor);
 
   function testResponseTab(func, greeting) {
     let tabpanel = document.querySelector("#response-panel");

@@ -6,8 +6,8 @@
 /**
  * Tests for exporting POST data into HAR format.
  */
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(
     HAR_EXAMPLE_URL + "html_har_post-data-test-page.html");
 
   info("Starting test... ");
@@ -23,14 +23,14 @@ add_task(function* () {
 
   // Execute one GET request on the page and wait till its done.
   let wait = waitForNetworkEvents(monitor, 1);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function () {
     content.wrappedJSObject.executeTest3();
   });
-  yield wait;
+  await wait;
 
   // Copy HAR into the clipboard (asynchronous).
   let contextMenu = new RequestListContextMenu({ connector });
-  let jsonString = yield contextMenu.copyAllAsHar(getSortedRequests(store.getState()));
+  let jsonString = await contextMenu.copyAllAsHar(getSortedRequests(store.getState()));
   let har = JSON.parse(jsonString);
 
   // Check out the HAR log.

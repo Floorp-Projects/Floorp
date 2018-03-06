@@ -7,10 +7,10 @@
  * Tests if requests render correct information in the details UI.
  */
 
-add_task(function* () {
+add_task(async function () {
   let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
-  let { tab, monitor } = yield initNetMonitor(SIMPLE_SJS);
+  let { tab, monitor } = await initNetMonitor(SIMPLE_SJS);
   info("Starting test... ");
 
   let { document, store, windowRequire, NetMonitorView } = monitor.panelWin;
@@ -26,7 +26,7 @@ add_task(function* () {
 
   let wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
-  yield wait;
+  await wait;
 
   is(getSelectedRequest(store.getState()), undefined,
     "There shouldn't be any selected item in the requests menu.");
@@ -46,9 +46,9 @@ add_task(function* () {
     "The network details panel should not be hidden after toggle button was pressed.");
 
   testHeadersTab();
-  yield testCookiesTab();
+  await testCookiesTab();
   testParamsTab();
-  yield testResponseTab();
+  await testResponseTab();
   testTimingsTab();
   return teardown(monitor);
 
@@ -161,11 +161,11 @@ add_task(function* () {
       "\"no-cache\"", "The last request header value was incorrect.");
   }
 
-  function* testCookiesTab() {
+  async function testCookiesTab() {
     let onEvent = monitor.panelWin.once(EVENTS.TAB_UPDATED);
     EventUtils.sendMouseEvent({ type: "mousedown" },
       document.querySelectorAll("#details-pane tab")[1]);
-    yield onEvent;
+    await onEvent;
 
     let tabEl = document.querySelectorAll("#details-pane tab")[1];
     let tabpanel = document.querySelectorAll("#details-pane tabpanel")[1];
@@ -204,11 +204,11 @@ add_task(function* () {
       "The request post data textarea box should be hidden.");
   }
 
-  function* testResponseTab() {
+  async function testResponseTab() {
     let onEvent = monitor.panelWin.once(EVENTS.TAB_UPDATED);
     EventUtils.sendMouseEvent({ type: "mousedown" },
       document.querySelectorAll("#details-pane tab")[3]);
-    yield onEvent;
+    await onEvent;
 
     let tabEl = document.querySelectorAll("#details-pane tab")[3];
     let tabpanel = document.querySelectorAll("#details-pane tabpanel")[3];
@@ -229,7 +229,7 @@ add_task(function* () {
       .hasAttribute("hidden"), true,
       "The response content image box should be hidden.");
 
-    let editor = yield NetMonitorView.editor("#response-content-textarea");
+    let editor = await NetMonitorView.editor("#response-content-textarea");
     is(editor.getText(), "Hello world!",
       "The text shown in the source editor is incorrect.");
     is(editor.getMode(), Editor.modes.text,

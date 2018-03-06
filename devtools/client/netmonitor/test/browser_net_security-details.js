@@ -7,8 +7,8 @@
  * Test that Security details tab contains the expected data.
  */
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
@@ -17,16 +17,16 @@ add_task(function* () {
   info("Performing a secure request.");
   const REQUESTS_URL = "https://example.com" + CORS_SJS_PATH;
   let wait = waitForNetworkEvents(monitor, 1);
-  yield ContentTask.spawn(tab.linkedBrowser, REQUESTS_URL, function* (url) {
+  await ContentTask.spawn(tab.linkedBrowser, REQUESTS_URL, async function (url) {
     content.wrappedJSObject.performRequests(1, url);
   });
-  yield wait;
+  await wait;
 
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".network-details-panel-toggle"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#security-tab"));
-  yield waitUntil(() => document.querySelector(
+  await waitUntil(() => document.querySelector(
     "#security-panel .security-info-value"));
 
   let tabpanel = document.querySelector("#security-panel");
@@ -77,5 +77,5 @@ add_task(function* () {
   // cert sha256 fingerprint
   isnot(textboxes[15].value, "", "Label was not empty.");
 
-  yield teardown(monitor);
+  await teardown(monitor);
 });

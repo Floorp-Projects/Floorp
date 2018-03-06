@@ -8,8 +8,8 @@
  * The test also verifies that headers with the same name and headers
  * with an empty value are also displayed.
  */
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(SIMPLE_SJS);
+add_task(async function () {
+  let { tab, monitor } = await initNetMonitor(SIMPLE_SJS);
   info("Starting test... ");
 
   let { document, store, windowRequire } = monitor.panelWin;
@@ -22,14 +22,14 @@ add_task(function* () {
 
   let wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
-  yield wait;
+  await wait;
 
   wait = waitForDOM(document, ".headers-overview");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]);
-  yield wait;
+  await wait;
 
-  yield waitUntil(() => {
+  await waitUntil(() => {
     let request = getSortedRequests(store.getState()).get(0);
     return request.requestHeaders && request.responseHeaders;
   });
@@ -62,5 +62,5 @@ add_task(function* () {
   is(actualRequestHeaders.toString(), expectedRequestHeaders.toString(),
     "Request Headers are sorted");
 
-  yield teardown(monitor);
+  await teardown(monitor);
 });
