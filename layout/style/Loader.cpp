@@ -2273,7 +2273,12 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
 
   nsIPrincipal* principal = aParentSheet->Principal();
   nsresult rv = CheckContentPolicy(loadingPrincipal, principal, aURL, context, false);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (aParentData) {
+      MarkLoadTreeFailed(aParentData);
+    }
+    return rv;
+  }
 
   nsCOMPtr<nsICSSLoaderObserver> observer;
 
