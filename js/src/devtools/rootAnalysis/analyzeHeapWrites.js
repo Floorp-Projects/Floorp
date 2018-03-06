@@ -34,10 +34,7 @@ function checkExternalFunction(entry)
         "Servo_IsWorkerThread",
         /nsIFrame::AppendOwnedAnonBoxes/,
         // Assume that atomic accesses are threadsafe.
-        /^__atomic_fetch_/,
-        /^__atomic_load_/,
-        /^__atomic_store_/,
-        /^__atomic_thread_fence/,
+        /^__atomic_/,
     ];
     if (entry.matches(whitelist))
         return;
