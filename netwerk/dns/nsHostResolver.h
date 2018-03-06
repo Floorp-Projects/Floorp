@@ -143,6 +143,9 @@ public:
     // Checks if the record is usable (not expired and has a value)
     bool HasUsableResult(const mozilla::TimeStamp& now, uint16_t queryFlags = 0) const;
 
+    // Mark hostrecord as not usable
+    void Invalidate();
+
     // hold addr_info_lock when calling the blacklist functions
     bool   Blacklisted(mozilla::net::NetAddr *query);
     void   ResetBlacklist();
@@ -371,7 +374,8 @@ public:
         RES_OFFLINE = nsIDNSService::RESOLVE_OFFLINE,
         //RES_DISABLE_IPv4 = nsIDNSService::RESOLVE_DISABLE_IPV4, // Not Used
         RES_ALLOW_NAME_COLLISION = nsIDNSService::RESOLVE_ALLOW_NAME_COLLISION,
-        RES_DISABLE_TRR = nsIDNSService::RESOLVE_DISABLE_TRR
+        RES_DISABLE_TRR = nsIDNSService::RESOLVE_DISABLE_TRR,
+        RES_REFRESH_CACHE = nsIDNSService::RESOLVE_REFRESH_CACHE
     };
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
