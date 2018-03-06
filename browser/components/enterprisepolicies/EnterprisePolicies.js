@@ -33,6 +33,9 @@ const PREF_TEST_ROOT          = "mochitest.testRoot";
 const PREF_ENABLED            = "browser.policies.enabled";
 const PREF_LOGLEVEL           = "browser.policies.loglevel";
 
+// To force disallowing enterprise-only policies during tests
+const PREF_DISALLOW_ENTERPRISE = "browser.policies.testing.disallowEnterprise";
+
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
   return new ConsoleAPI({
@@ -124,6 +127,11 @@ EnterprisePoliciesManager.prototype = {
 
       if (!policySchema) {
         log.error(`Unknown policy: ${policyName}`);
+        continue;
+      }
+
+      if (policySchema.enterprise_only && !areEnterpriseOnlyPoliciesAllowed()) {
+        log.error(`Policy ${policyName} is only allowed on ESR`);
         continue;
       }
 
@@ -305,6 +313,33 @@ EnterprisePoliciesManager.prototype = {
 
 let DisallowedFeatures = {};
 
+/**
+ * areEnterpriseOnlyPoliciesAllowed
+ *
+ * Checks whether the policies marked as enterprise_only in the
+ * schema are allowed to run on this browser.
+ *
+ * This is meant to only allow policies to run on ESR, but in practice
+ * we allow it to run on channels different than release, to allow
+ * these policies to be tested on pre-release channels.
+ *
+ * @returns {Bool} Whether the policy can run.
+ */
+function areEnterpriseOnlyPoliciesAllowed() {
+  if (Services.prefs.getBoolPref(PREF_DISALLOW_ENTERPRISE, false)) {
+    // This is used as an override to test the "enterprise_only"
+    // functionality itself on tests, which would always return
+    // true due to the Cu.isInAutomation check below.
+    return false;
+  }
+
+  if (AppConstants.MOZ_UPDATE_CHANNEL != "release" ||
+      Cu.isInAutomation) {
+    return true;
+  }
+
+  return false;
+}
 
 /*
  * JSON PROVIDER OF POLICIES
