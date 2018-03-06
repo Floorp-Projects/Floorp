@@ -3,8 +3,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from head.js */
-
 // Tests that the autocomplete input is being blurred and focused when selecting a value.
 // This will help screen-readers notify users of the value that was set in the input.
 
