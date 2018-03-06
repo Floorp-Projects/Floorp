@@ -408,7 +408,7 @@ nsGenericHTMLElement::IntrinsicState() const
 uint32_t
 nsGenericHTMLElement::EditableInclusiveDescendantCount()
 {
-  bool isEditable = IsInUncomposedDoc() && HasFlag(NODE_IS_EDITABLE) &&
+  bool isEditable = IsInComposedDoc() && HasFlag(NODE_IS_EDITABLE) &&
     GetContentEditableValue() == eTrue;
   return EditableDescendantCount() + isEditable;
 }
@@ -429,12 +429,14 @@ nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       aDocument->
         AddToNameTable(this, GetParsedAttr(nsGkAtoms::name)->GetAtomValue());
     }
+  }
 
-    if (HasFlag(NODE_IS_EDITABLE) && GetContentEditableValue() == eTrue) {
-      nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(aDocument);
-      if (htmlDocument) {
-        htmlDocument->ChangeContentEditableCount(this, +1);
-      }
+  if (HasFlag(NODE_IS_EDITABLE) && GetContentEditableValue() == eTrue &&
+      IsInComposedDoc()) {
+    nsCOMPtr<nsIHTMLDocument> htmlDocument =
+      do_QueryInterface(GetComposedDoc());
+    if (htmlDocument) {
+      htmlDocument->ChangeContentEditableCount(this, +1);
     }
   }
 
@@ -459,8 +461,7 @@ nsGenericHTMLElement::UnbindFromTree(bool aDeep, bool aNullParent)
   RemoveFromNameTable();
 
   if (GetContentEditableValue() == eTrue) {
-    //XXXsmaug Fix this for Shadow DOM, bug 1066965.
-    nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(GetUncomposedDoc());
+    nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(GetComposedDoc());
     if (htmlDocument) {
       htmlDocument->ChangeContentEditableCount(this, -1);
     }
@@ -2737,8 +2738,7 @@ MakeContentDescendantsEditable(nsIContent *aContent, nsIDocument *aDocument)
 void
 nsGenericHTMLElement::ChangeEditableState(int32_t aChange)
 {
-  //XXXsmaug Fix this for Shadow DOM, bug 1066965.
-  nsIDocument* document = GetUncomposedDoc();
+  nsIDocument* document = GetComposedDoc();
   if (!document) {
     return;
   }
@@ -2751,7 +2751,8 @@ nsGenericHTMLElement::ChangeEditableState(int32_t aChange)
     }
 
     nsIContent* parent = GetParent();
-    while (parent) {
+    // Don't update across Shadow DOM boundary.
+    while (parent && parent->IsElement()) {
       parent->ChangeEditableDescendantCount(aChange);
       parent = parent->GetParent();
     }
