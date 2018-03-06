@@ -15,6 +15,7 @@ import java.util.zip.ZipFile;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Environment;
 import java.util.ArrayList;
 import android.util.Log;
@@ -26,7 +27,6 @@ import org.mozilla.geckoview.BuildConfig;
 public final class GeckoLoader {
     private static final String LOGTAG = "GeckoLoader";
 
-    private static volatile SafeIntent sIntent;
     private static File sCacheFile;
     private static File sGREDir;
 
@@ -91,10 +91,6 @@ public final class GeckoLoader {
         return tmpDir;
     }
 
-    public static void setLastIntent(SafeIntent intent) {
-        sIntent = intent;
-    }
-
     public static void addEnvironmentToIntent(Intent intent) {
         if (sEnvList != null) {
             for (int ix = 0; ix < sEnvList.length; ix++) {
@@ -103,18 +99,19 @@ public final class GeckoLoader {
         }
     }
 
-    public static void setupGeckoEnvironment(Context context, String profilePath) {
+    public synchronized static void setupGeckoEnvironment(final Context context,
+                                                          final String profilePath,
+                                                          final Bundle extras) {
         // if we have an intent (we're being launched by an activity)
         // read in any environmental variables from it here
-        final SafeIntent intent = sIntent;
-        if (intent != null) {
+        if (extras != null) {
             final ArrayList<String> envList = new ArrayList<String>();
-            String env = intent.getStringExtra("env0");
+            String env = extras.getString("env0");
             Log.d(LOGTAG, "Gecko environment env0: " + env);
             for (int c = 1; env != null; c++) {
                 envList.add(env);
                 putenv(env);
-                env = intent.getStringExtra("env" + c);
+                env = extras.getString("env" + c);
                 Log.d(LOGTAG, "env" + c + ": " + env);
             }
             if (envList.size() > 0) {
@@ -159,27 +156,17 @@ public final class GeckoLoader {
                 Log.d(LOGTAG, "Unable to obtain user manager service on a device with SDK version " + Build.VERSION.SDK_INT);
             }
         }
-        setupLocaleEnvironment();
 
-        // We don't need this any more.
-        sIntent = null;
+        putenv("LANG=" + Locale.getDefault().toString());
+
+        // env from extras could have reset out linker flags; set them again.
+        loadLibsSetupLocked(context);
     }
 
     private static void loadLibsSetupLocked(Context context) {
-        // The package data lib directory isn't placed in ld.so's
-        // search path, so we have to manually load libraries that
-        // libxul will depend on.  Not ideal.
-
-        File cacheFile = getCacheDir(context);
-        putenv("GRE_HOME=" + getGREDir(context).getPath());
-
         // setup the libs cache
-        String linkerCache = System.getenv("MOZ_LINKER_CACHE");
-        if (linkerCache == null) {
-            linkerCache = cacheFile.getPath();
-            putenv("MOZ_LINKER_CACHE=" + linkerCache);
-        }
-
+        putenv("GRE_HOME=" + getGREDir(context).getPath());
+        putenv("MOZ_LINKER_CACHE=" + getCacheDir(context).getPath());
         putenv("MOZ_LINKER_EXTRACT=1");
     }
 
@@ -466,10 +453,6 @@ public final class GeckoLoader {
     public synchronized static void loadGeckoLibs(final Context context, final String apkName) {
         loadLibsSetupLocked(context);
         loadGeckoLibsNative(apkName);
-    }
-
-    private static void setupLocaleEnvironment() {
-        putenv("LANG=" + Locale.getDefault().toString());
     }
 
     @SuppressWarnings("serial")
