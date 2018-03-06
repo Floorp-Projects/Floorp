@@ -10,6 +10,8 @@
 #include "base/basictypes.h"
 #include "base/process.h"
 #include "mozilla/UniquePtr.h"
+#include "ipc/IPCMessageUtils.h"
+#include "mozilla/ipc/IPDLParamTraits.h"
 
 #ifdef XP_WIN
 // Need the HANDLE typedef.
@@ -133,6 +135,14 @@ private:
   Close(PlatformHandleType aHandle);
 
   PlatformHandleType mHandle;
+};
+
+template<>
+struct IPDLParamTraits<FileDescriptor> {
+  typedef FileDescriptor paramType;
+
+  static void Write(IPC::Message* aMsg, IProtocol* aActor, const paramType& aParam);
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor, paramType* aResult);
 };
 
 } // namespace ipc

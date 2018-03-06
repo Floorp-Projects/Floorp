@@ -85,7 +85,9 @@ RemotePrintJobParent::InitializePrintDevice(const nsString& aDocumentTitle,
 
   rv = mPrintDeviceContext->BeginDocument(aDocumentTitle, aPrintToFile,
                                           aStartPage, aEndPage);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    NS_WARNING_ASSERTION(rv == NS_ERROR_ABORT,
+                         "Failed to initialize print device");
     return rv;
   }
 

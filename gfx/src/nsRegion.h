@@ -93,15 +93,6 @@ public:
     aOther->mImpl = tmp;
   }
 
-  static
-  nsresult InitStatic()
-  {
-    return NS_OK;
-  }
-
-  static
-  void ShutdownStatic() {}
-
   void AndWith(const nsRegion& aOther)
   {
     And(*this, aOther);
