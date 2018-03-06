@@ -2623,7 +2623,7 @@ TabChild::RecvRenderLayers(const bool& aEnabled, const uint64_t& aLayerObserverE
     if (nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell()) {
       presShell->SetIsActive(true);
 
-      if (nsIFrame* root = presShell->FrameConstructor()->GetRootFrame()) {
+      if (nsIFrame* root = presShell->GetRootFrame()) {
         FrameLayerBuilder::InvalidateAllLayersForFrame(
           nsLayoutUtils::GetDisplayRootFrame(root));
         root->SchedulePaint();
@@ -2937,7 +2937,7 @@ TabChild::MakeHidden()
     if (nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell()) {
       if (nsPresContext* presContext = presShell->GetPresContext()) {
         nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
-        nsIFrame* rootFrame = presShell->FrameConstructor()->GetRootFrame();
+        nsIFrame* rootFrame = presShell->GetRootFrame();
         rootPresContext->ComputePluginGeometryUpdates(rootFrame, nullptr, nullptr);
         rootPresContext->ApplyPluginGeometryUpdates();
       }

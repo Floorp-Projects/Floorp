@@ -508,7 +508,7 @@ nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(nsIFrame* aFrame,
       // Find the frame under the mouse cursor with the root frame.
       // At this time, don't use the anchor's frame because it may not have
       // fixed positioned frames.
-      nsIFrame* rootFrame = mShell->FrameManager()->GetRootFrame();
+      nsIFrame* rootFrame = mShell->GetRootFrame();
       nsPoint ptInRoot = aPoint + aFrame->GetOffsetTo(rootFrame);
       nsIFrame* cursorFrame =
         nsLayoutUtils::GetFrameForPoint(rootFrame, ptInRoot);
