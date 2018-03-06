@@ -185,8 +185,9 @@ DisplayItemClip::ApproximateIntersectInward(const nsRect& aRect) const
 
 // Test if (aXPoint, aYPoint) is in the ellipse with center (aXCenter, aYCenter)
 // and radii aXRadius, aYRadius.
-bool IsInsideEllipse(nscoord aXRadius, nscoord aXCenter, nscoord aXPoint,
-                     nscoord aYRadius, nscoord aYCenter, nscoord aYPoint)
+static bool
+IsInsideEllipse(nscoord aXRadius, nscoord aXCenter, nscoord aXPoint,
+                nscoord aYRadius, nscoord aYCenter, nscoord aYPoint)
 {
   float scaledX = float(aXPoint - aXCenter) / float(aXRadius);
   float scaledY = float(aYPoint - aYCenter) / float(aYRadius);
