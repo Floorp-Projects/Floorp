@@ -151,6 +151,10 @@ button > hbox > label {
   list-style-image: url("chrome://browser/skin/preferences/in-content/general.svg");
 }
 
+#category-home > .category-icon {
+  list-style-image: url("chrome://browser/skin/home.svg");
+}
+
 #category-search > .category-icon {
   list-style-image: url("chrome://browser/skin/preferences/in-content/search.svg");
 }
