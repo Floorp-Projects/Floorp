@@ -164,8 +164,6 @@ class Theme {
         case "popup":
         case "popup_text":
         case "popup_border":
-        case "popup_highlight":
-        case "popup_highlight_text":
           this.lwtStyles[color] = cssColor;
           break;
       }
