@@ -16,6 +16,7 @@
 #include "mozilla/Types.h"
 
 #include <stdint.h>
+#include <string.h>
 
 MOZ_BEGIN_EXTERN_C
 
@@ -40,10 +41,9 @@ inline void mozWritePoison(void* aPtr, size_t aSize)
   const uintptr_t POISON = mozPoisonValue();
   char* p = (char*)aPtr;
   char* limit = p + (aSize & ~(sizeof(uintptr_t) - 1));
-  MOZ_ASSERT((uintptr_t)aPtr % sizeof(uintptr_t) == 0, "bad alignment");
   MOZ_ASSERT(aSize >= sizeof(uintptr_t), "poisoning this object has no effect");
   for (; p < limit; p += sizeof(uintptr_t)) {
-    *((uintptr_t*)p) = POISON;
+    memcpy(p, &POISON, sizeof(POISON));
   }
 }
 
