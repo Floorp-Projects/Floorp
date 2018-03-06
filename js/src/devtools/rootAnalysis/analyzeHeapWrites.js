@@ -925,6 +925,7 @@ function processAssign(body, entry, location, lhs, edge)
                 return;
         } else if (lhs.Exp[0].Kind == "Fld") {
             const {
+                Name: [ fieldName ],
                 Type: {Kind, Type: fieldType},
                 FieldCSU: {Type: {Kind: containerTypeKind,
                                   Name: containerTypeName}}
@@ -934,11 +935,10 @@ function processAssign(body, entry, location, lhs, edge)
             if (containerTypeKind == 'CSU' &&
                 Kind == 'Pointer' &&
                 isEdgeSafeArgument(entry, containerExpr) &&
-                isSafeMemberPointer(containerTypeName, fieldType))
+                isSafeMemberPointer(containerTypeName, fieldName, fieldType))
             {
                 return;
             }
-
         }
         if (fields.length)
             checkFieldWrite(entry, location, fields);
@@ -1355,8 +1355,12 @@ function isSafeLocalVariable(entry, name)
     return true;
 }
 
-function isSafeMemberPointer(containerType, memberType)
+function isSafeMemberPointer(containerType, memberName, memberType)
 {
+    // nsTArray owns its header.
+    if (containerType.includes("nsTArray_base") && memberName == "mHdr")
+        return true;
+
     if (memberType.Kind != 'Pointer')
         return false;
 
