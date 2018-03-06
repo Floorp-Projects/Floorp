@@ -29,10 +29,6 @@ from mozbuild.frontend.context import (
 )
 from .common import CommonBackend
 from ..frontend.data import (
-    AndroidAssetsDirs,
-    AndroidResDirs,
-    AndroidExtraResDirs,
-    AndroidExtraPackages,
     BaseLibrary,
     BaseProgram,
     ChromeManifestEntry,
