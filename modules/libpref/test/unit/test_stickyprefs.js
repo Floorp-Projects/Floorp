@@ -60,7 +60,7 @@ add_test(function notWrittenWhenUnchanged() {
   run_next_test();
 });
 
-// Loading a sticky_pref then a user_pref for the same pref means it should
+// Loading a sticky `pref` then a `user_pref` for the same pref means it should
 // always be written.
 add_test(function writtenOnceLoadedWithoutChange() {
   // Load the same pref file *as well as* a pref file that has a user_pref for
