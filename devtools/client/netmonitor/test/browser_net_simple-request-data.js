@@ -277,7 +277,7 @@ function test() {
         {
           type: "plain",
           fullMimeType: "text/plain; charset=utf-8",
-          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 342),
+          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 347),
           size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
         }
       );
