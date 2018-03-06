@@ -15,7 +15,7 @@ const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
                      .getService(Ci.nsIPaymentRequestService);
 const paymentUISrv = Cc["@mozilla.org/dom/payments/payment-ui-service;1"]
                      .getService().wrappedJSObject;
-const {profileStorage} = ChromeUtils.import(
+const {formAutofillStorage} = ChromeUtils.import(
   "resource://formautofill/FormAutofillStorage.jsm", {});
 const {PaymentTestUtils: PTU} = ChromeUtils.import(
   "resource://testing-common/PaymentTestUtils.jsm", {});
@@ -134,17 +134,17 @@ function spawnTaskInNewDialog(requestId, contentTaskFn, args = null) {
 async function addSampleAddressesAndBasicCard() {
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "add");
-  profileStorage.addresses.add(PTU.Addresses.TimBL);
+  formAutofillStorage.addresses.add(PTU.Addresses.TimBL);
   await onChanged;
 
   onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                       (subject, data) => data == "add");
-  profileStorage.addresses.add(PTU.Addresses.TimBL2);
+  formAutofillStorage.addresses.add(PTU.Addresses.TimBL2);
   await onChanged;
 
   onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                       (subject, data) => data == "add");
-  profileStorage.creditCards.add(PTU.BasicCards.JohnDoe);
+  formAutofillStorage.creditCards.add(PTU.BasicCards.JohnDoe);
   await onChanged;
 }
 
@@ -217,10 +217,10 @@ async function spawnInDialogForMerchantTask(merchantTaskFn, dialogTaskFn, taskAr
 }
 
 add_task(async function setup_head() {
-  await profileStorage.initialize();
+  await formAutofillStorage.initialize();
   registerCleanupFunction(function cleanup() {
     paymentSrv.cleanup();
-    profileStorage.addresses._nukeAllRecords();
-    profileStorage.creditCards._nukeAllRecords();
+    formAutofillStorage.addresses._nukeAllRecords();
+    formAutofillStorage.creditCards._nukeAllRecords();
   });
 });

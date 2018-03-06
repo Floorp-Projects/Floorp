@@ -269,6 +269,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               // simply closes the popup without trying to fill anything.
               this.popup.selectedIndex = -1;
               break;
+            case KeyEvent.DOM_VK_TAB:
+              this.userSelectionBehavior = "tab";
+              break;
+            case KeyEvent.DOM_VK_UP:
+            case KeyEvent.DOM_VK_DOWN:
+            case KeyEvent.DOM_VK_PAGE_UP:
+            case KeyEvent.DOM_VK_PAGE_DOWN:
+              if (this.userSelectionBehavior != "tab")
+                this.userSelectionBehavior = "arrow";
+              break;
           }
           if (!this.popup.disableKeyNavigation) {
             if (this._shouldDeferKeyEvent(aEvent)) {
@@ -667,7 +677,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             return;
           }
 
-          BrowserUsageTelemetry.recordUrlbarSelectedResultMethod(event);
+          BrowserUsageTelemetry.recordUrlbarSelectedResultMethod(
+            event, this.userSelectionBehavior);
 
           // Determine whether to use the selected one-off search button.  In
           // one-off search buttons parlance, "selected" means that the button
@@ -2052,7 +2063,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // Now that the margins have been set, start adding items (via
           // _invalidate).
           this.mInput = aInput;
-          aInput.controller.setInitiallySelectedIndex(this._isFirstResultHeuristic ? 0 : -1);
+          this.input.controller.setInitiallySelectedIndex(this._isFirstResultHeuristic ? 0 : -1);
+          this.input.userSelectionBehavior = "none";
           this._invalidate();
 
           try {
@@ -2222,7 +2234,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           <![CDATA[
             let parts = [proposedLabel];
 
-            let action = this.mInput._parseActionUrl(item.getAttribute("url"));
+            let action = this.input._parseActionUrl(item.getAttribute("url"));
             if (action) {
               switch (action.type) {
               case "searchengine":
