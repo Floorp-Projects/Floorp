@@ -34,7 +34,6 @@ public final class GeckoLoader {
     private static boolean sSQLiteLibsLoaded;
     private static boolean sNSSLibsLoaded;
     private static boolean sMozGlueLoaded;
-    private static String[] sEnvList;
 
     private GeckoLoader() {
         // prevent instantiation
@@ -91,31 +90,18 @@ public final class GeckoLoader {
         return tmpDir;
     }
 
-    public static void addEnvironmentToIntent(Intent intent) {
-        if (sEnvList != null) {
-            for (int ix = 0; ix < sEnvList.length; ix++) {
-                intent.putExtra("env" + ix, sEnvList[ix]);
-            }
-        }
-    }
-
     public synchronized static void setupGeckoEnvironment(final Context context,
                                                           final String profilePath,
                                                           final Bundle extras) {
         // if we have an intent (we're being launched by an activity)
         // read in any environmental variables from it here
         if (extras != null) {
-            final ArrayList<String> envList = new ArrayList<String>();
             String env = extras.getString("env0");
             Log.d(LOGTAG, "Gecko environment env0: " + env);
             for (int c = 1; env != null; c++) {
-                envList.add(env);
                 putenv(env);
                 env = extras.getString("env" + c);
                 Log.d(LOGTAG, "env" + c + ": " + env);
-            }
-            if (envList.size() > 0) {
-              sEnvList = envList.toArray(new String[envList.size()]);
             }
         }
 
