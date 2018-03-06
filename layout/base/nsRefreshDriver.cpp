@@ -17,6 +17,8 @@
  * implement things like blocking on vsync.
  */
 
+#include "nsRefreshDriver.h"
+
 #ifdef XP_WIN
 #include <windows.h>
 // mmsystem isn't part of WIN32_LEAN_AND_MEAN, so we have
@@ -30,7 +32,6 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/IntegerRange.h"
 #include "nsHostObjectProtocolHandler.h"
-#include "nsRefreshDriver.h"
 #include "nsITimer.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
