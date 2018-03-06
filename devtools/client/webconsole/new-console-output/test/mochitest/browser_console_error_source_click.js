@@ -3,8 +3,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from head.js */
-
 // Check that JS errors and CSS warnings open view source when their source link
 // is clicked in the Browser Console.
 
