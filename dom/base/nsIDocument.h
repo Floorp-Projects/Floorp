@@ -1668,13 +1668,13 @@ public:
    * informed.  An observer that is already observing the document must
    * not be added without being removed first.
    */
-  virtual void AddObserver(nsIDocumentObserver* aObserver) = 0;
+  void AddObserver(nsIDocumentObserver* aObserver);
 
   /**
    * Remove an observer of document change notifications. This will
    * return false if the observer cannot be found.
    */
-  virtual bool RemoveObserver(nsIDocumentObserver* aObserver) = 0;
+  bool RemoveObserver(nsIDocumentObserver* aObserver);
 
   // Observation hooks used to propagate notifications to document observers.
   // BeginUpdate must be called before any batch of modifications of the
@@ -3559,6 +3559,9 @@ protected:
   // documents.
   bool mAllowUnsafeHTML : 1;
 
+  // True if the document is being destroyed.
+  bool mInDestructor:1;
+
   // Whether <style scoped> support is enabled in this document.
   enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };
   unsigned int mIsScopedStyleEnabled : 2;
@@ -3706,6 +3709,9 @@ protected:
 
   // Our live MediaQueryLists
   mozilla::LinkedList<mozilla::dom::MediaQueryList> mDOMMediaQueryLists;
+
+  // Array of observers
+  nsTObserverArray<nsIDocumentObserver*> mObservers;
 
   // Flags for use counters used directly by this document.
   std::bitset<mozilla::eUseCounter_Count> mUseCounters;
