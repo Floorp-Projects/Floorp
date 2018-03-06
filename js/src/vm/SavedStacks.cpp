@@ -103,17 +103,13 @@ LiveSavedFrameCache::insert(JSContext* cx, FramePtr& framePtr, const jsbytecode*
 }
 
 void
-LiveSavedFrameCache::find(JSContext* cx, FrameIter& frameIter, MutableHandleSavedFrame frame) const
+LiveSavedFrameCache::find(JSContext* cx, FramePtr& framePtr, const jsbytecode* pc,
+                          MutableHandleSavedFrame frame) const
 {
     MOZ_ASSERT(initialized());
-    MOZ_ASSERT(!frameIter.done());
 
-    Maybe<FramePtr> maybeFramePtr = getFramePtr(frameIter);
-    MOZ_ASSERT(maybeFramePtr.isSome());
-    MOZ_ASSERT(maybeFramePtr->hasCachedSavedFrame());
-
-    Key key(*maybeFramePtr);
-    const jsbytecode* pc = frameIter.pc();
+    MOZ_ASSERT(framePtr.hasCachedSavedFrame());
+    Key key(framePtr);
     size_t numberStillValid = 0;
 
     frame.set(nullptr);
@@ -1419,7 +1415,7 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
             auto* cache = activation.getLiveSavedFrameCache(cx);
             if (!cache)
                 return false;
-            cache->find(cx, iter, &cachedFrame);
+            cache->find(cx, *framePtr, iter.pc(), &cachedFrame);
             if (cachedFrame)
                 break;
         }
