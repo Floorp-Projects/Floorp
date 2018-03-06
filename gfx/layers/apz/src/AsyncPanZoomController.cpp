@@ -12,6 +12,7 @@
 #include <algorithm>                    // for max, min
 
 #include "APZCTreeManager.h"            // for APZCTreeManager
+#include "AsyncPanZoomAnimation.h"      // for AsyncPanZoomAnimation
 #include "AutoscrollAnimation.h"        // for AutoscrollAnimation
 #include "Axis.h"                       // for AxisX, AxisY, Axis, etc
 #include "CheckerboardEvent.h"          // for CheckerboardEvent
