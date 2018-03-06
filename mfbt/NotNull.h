@@ -155,6 +155,39 @@ WrapNotNull(const T aBasePtr)
   return notNull;
 }
 
+namespace detail {
+
+// Extract the pointed-to type from a pointer type (be it raw or smart).
+// The default implementation uses the dereferencing operator of the pointer
+// type to find what it's pointing to.
+template<typename Pointer>
+struct PointedTo
+{
+  // Remove the reference that dereferencing operators may return.
+  using Type = typename RemoveReference<decltype(*DeclVal<Pointer>())>::Type;
+  using NonConstType = typename RemoveConst<Type>::Type;
+};
+
+// Specializations for raw pointers.
+// This is especially required because VS 2017 15.6 (March 2018) started
+// rejecting the above `decltype(*DeclVal<Pointer>())` trick for raw pointers.
+// See bug 1443367.
+template<typename T>
+struct PointedTo<T*>
+{
+  using Type = T;
+  using NonConstType = T;
+};
+
+template<typename T>
+struct PointedTo<const T*>
+{
+  using Type = const T;
+  using NonConstType = T;
+};
+
+} // namespace detail
+
 // Allocate an object with infallible new, and wrap its pointer in NotNull.
 // |MakeNotNull<Ptr<Ob>>(args...)| will run |new Ob(args...)|
 // and return NotNull<Ptr<Ob>>.
@@ -162,10 +195,7 @@ template<typename T, typename... Args>
 NotNull<T>
 MakeNotNull(Args&&... aArgs)
 {
-  // Extract the pointee type from what T's dereferencing operator returns
-  // (which could be a reference to a const type).
-  using Pointee = typename mozilla::RemoveConst<
-    typename mozilla::RemoveReference<decltype(*DeclVal<T>())>::Type>::Type;
+  using Pointee = typename detail::PointedTo<T>::NonConstType;
   static_assert(!IsArray<Pointee>::value,
                 "MakeNotNull cannot construct an array");
   return NotNull<T>(new Pointee(Forward<Args>(aArgs)...));
