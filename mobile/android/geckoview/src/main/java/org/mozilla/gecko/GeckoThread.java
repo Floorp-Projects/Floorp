@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
@@ -322,6 +323,10 @@ public class GeckoThread extends Thread {
             profile.getDir(); // Make sure the profile dir exists.
             args.add("-P");
             args.add(profile.getName());
+        }
+
+        if (mArgs != null) {
+            args.addAll(Arrays.asList(mArgs));
         }
 
         final String extraArgs = mExtras.getString(EXTRA_ARGS, null);
