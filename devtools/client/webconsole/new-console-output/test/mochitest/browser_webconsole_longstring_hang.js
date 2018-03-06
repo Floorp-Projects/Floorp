@@ -5,6 +5,9 @@
 
 /* import-globals-from head.js */
 
+// XXX Remove this when the file is migrated to the new frontend.
+/* eslint-disable no-undef */
+
 // Test that very long strings do not hang the browser.
 
 "use strict";

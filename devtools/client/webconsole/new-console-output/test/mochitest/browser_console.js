@@ -51,6 +51,7 @@ async function testMessages(hud) {
   expectUncaughtException();
 
   executeSoon(() => {
+    // eslint-disable-next-line no-undef
     foobarException();
   });
 
