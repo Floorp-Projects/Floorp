@@ -37,7 +37,7 @@ function addTestTab(url) {
 
   return new Promise(resolve => {
     addTab(url).then(tab => {
-      // Load devtools/shared/frame-script-utils.js
+      // Load devtools/shared/test/frame-script-utils.js
       loadFrameScriptUtils();
 
       // Select the DOM panel and wait till it's initialized.
